@@ -5,7 +5,7 @@ The scope of this project is to be a game client with an intuitive UI/UX of mode
 
 Pure vanilla JS. No framework, no build step, zero dependencies. The client is a single HTML file that renders with DOM and CSS transforms (not canvas) and persists via localStorage. The multiplayer server is dependency-free Node. The WebSocket protocol itself is hand-rolled straight on net/http. Even the crypto is pure JS.
 
-The goal is to have an intuitive game client that looks nice and is easy to set up and play with your friend group.
+TL;DR: The goal is to have an intuitive game client that looks nice and is easy to set up and play with your friend group.
 
 PLEASE NOTE THIS IS VERY MUCH A WORK IN PROGRESS! All feedback is appreaciated. 🙂
 
