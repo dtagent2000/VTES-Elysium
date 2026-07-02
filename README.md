@@ -3,7 +3,7 @@ Digital card game client for Vampire the Eternal Struggle, playable online throu
 
 The scope of this project is to be a game client with an intuitive UI/UX of modern fidelity that will facilitate synchronized play between multiple people online. It has several basic helper features like a deck builder and small server solution so you can play with your friend group, but players are encouraged to use other specialized tools for deck-building and welcomes other server solutions to facilitate more robust and safe online play with unknown people as well as tournament organization.
 
-Crated with Claude code, almost exclusively through vibe coding (although personal background in HTML/JS has helped). Pure vanilla JS. No framework, no build step, zero dependencies. The client is a single HTML file that renders with DOM and CSS transforms (not canvas) and persists via localStorage. The multiplayer server is dependency-free Node. The WebSocket protocol itself is hand-rolled straight on net/http. Even the crypto is pure JS.
+Crated with Claude code, almost exclusively through vibe coding (although personal background in HTML/JS has helped) with a mix of models from Sonnet through Fable. Pure vanilla JS. No framework, no build step, zero dependencies. The client is a single HTML file that renders with DOM and CSS transforms (not canvas) and persists via localStorage. The multiplayer server is dependency-free Node. The WebSocket protocol itself is hand-rolled straight on net/http. Even the crypto is pure JS.
 
 TL;DR: The goal is to have an intuitive game client that looks nice and is easy to set up and play with your friend group.
 
