@@ -1,6 +1,6 @@
 # ELYSIUM-PROTOCOL.md — the client↔server contract
 
-> **Protocol family 2.5.** This document reflects server **v2.5.37** / client **v2.5.37** and is guarded by
+> **Protocol family 2.5.** This document reflects client **v2.5.73** / server **v2.5.62** (v2.5.62: the reference server's `sanitizePub` whitelist catches up with the §5 pub surface stated below — `tokens`, `clan` and the card fields `actSt`/`_avSeq`/`path`/`sup` are now actually relayed, sanitized; no verb or field-list changes, pub internals are payload not message fields) (v2.5.72 = the A+B branch merge — protocol-wise identical to the v2.5.61 era: the B-branch was client-only and `sup` rides the pub snapshot exactly like `path` does) (v2.5.56: `err` gains an optional `cid` for recall bounces — §8; §3 field lists corrected by the new lint check. v2.5.57–62: new `ctrl` act VALUES + Give back both ride existing generic routing/verbs — no field-list changes. v2.5.61: spectator-name dedup + case-insensitive host lookups, behaviour-only) and is guarded by
 > `node test-protocol-doc.js`, which diffs the verb/message indexes below against the LIVE
 > `GAME_HANDLERS` (server) and `MP_HANDLERS` (client) tables — if this doc and the code drift, the lint
 > fails. **Any protocol change ships with an update here + a green lint run.**
@@ -45,8 +45,8 @@ These are handled by the server's staged pre-dispatch, before the seated `GAME_H
 
 | verb | key fields | semantics |
 |---|---|---|
-| `create` | `room`, `pass`, `name`, `v`, `lobby`, `players`, `minutes`, `react`, `tableView`, `l3shape`, `boardMode`, `chat`, `specChat`, `helperPolicy`, `hostToken` | Create a room (caps: **50 rooms**, **6 players**; loopback-exempt create cap). The creator becomes host; `hostToken` lets a restarted host reclaim the room. Replies `joined`. |
-| `join` | `room`, `pass`, `name`, `v`, `spect`, `token` | Join by room+password (or spectate with `spect`, or resume with `token`). Failed passwords are throttled — see §4. Replies `joined` (or `err`). |
+| `create` | `room`, `pass`, `name`, `lobby`, `minutes`, `react`, `tableView`, `l3shape`, `boardMode`, `chat`, `specChat`, `helperPolicy` | Create a room (caps: **50 rooms**, **6 players**; loopback-exempt create cap). The creator becomes host; the room's `hostToken` is minted SERVER-side from the creator's session token (never client-sent), and the `join` verb's `token` is what lets a restarted host reclaim the room. Replies `joined`. |
+| `join` | `room`, `pass`, `name`, `spect`, `token` | Join by room+password (or spectate with `spect`, or resume with `token`). Failed passwords are throttled — see §4. Replies `joined` (or `err`). |
 
 `chat` and `leave` are additionally honoured pre-seat (lobby chat; abandoning the lobby) — they also
 appear in the seated table below.
@@ -208,6 +208,12 @@ Machine-readable index (guarded by the lint — keep sorted):
 
 <!-- protocol-lint:s2c -->`board` `bounty` `chat` `ctrl` `dealt` `decide` `deckok` `demoted` `drew` `edgePass` `edgeTake` `err` `forceOust` `forceSetPool` `fx` `gave` `given` `helperPolicy` `joined` `lobby` `log` `logTo` `matchSaved` `muted` `openHandGrant` `openHandRevoke` `pileList` `pileN` `recall` `recalled` `revealHand` `revealed` `roll` `roster` `saveList` `say` `started` `sys` `timeup` `took` `tool` `turn`<!-- /protocol-lint:s2c -->
 
+> **Client-side sanitisation contract.** Fields that carry HTML fragments — today only `logTo.html` — are
+> UNTRUSTED input to every client: a client MUST sanitise them at render time. The reference whitelist is
+> `<b>`, `<i>` and the log card-link form `<b class="clog" data-cid="…">` (see `sanRemote()` in the reference
+> client). From server v2.5.38 the reference server also pre-sanitises the field with the same whitelist
+> (`sanHtml()`, defence-in-depth) — but a client MUST NOT rely on any server having done so.
+
 ### Session & roster
 
 | message | fields | semantics |
@@ -219,7 +225,7 @@ Machine-readable index (guarded by the lint — keep sorted):
 | `started` | `boardMode`, `l3shape`, `matchEnd`, `players`, `tableView`, `turn` | Match started: roster, turn, room view locks, matchEnd. |
 | `roster` | `players`, `watcherList`, `watchers` | Seated-game roster refresh (players, watchers, watcherList). |
 | `sys` | `msg` | System line (version-mismatch warning, notices). |
-| `err` | `msg` | Human-readable error line for your last request (`msg`). |
+| `err` | `msg`, `cid` | Human-readable error line for your last request (`msg`). `cid` (v2.5.56, optional): recall bounces echo the failed card id so the client clears only that recall-guard entry - absent on all other errors and on pre-2.5.56 servers (the client falls back to the old wholesale clear). |
 
 ### Turn, table & voice
 
