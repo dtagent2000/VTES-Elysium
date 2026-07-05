@@ -14,4 +14,4 @@ The only file required to try the client is the .html file, which is playable en
 The server requires a few steps that are hopefully not too brutal (two downloads + installs, and two helper files to run). Only one person needs the client and server files, the other players will use the link provided by the host to play the game in their browser (although they might want the client file anyway to explore it offline and maybe complete the tutorial).
 
 
-Server has been tested and works but is currently being polished and new files will be presented. Client and helper files supports Mac and Linux in theory but has not been tested, so any feedback is appreciated. 
+Server has been tested and works. Client and helper files supports Mac and Linux in theory but has not been tested, so any feedback is appreciated. 
