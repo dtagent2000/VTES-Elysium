@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elysium — Start here</title>
+<style>
+  :root{ --bg:#0d0a07; --panel:#16110b; --line:#3a2f1d; --brass:#b08d4f; --brass2:#8a6d3b;
+         --bone:#e8dfc8; --bone2:#b3a888; --red:#c43b3b; }
+  *{box-sizing:border-box}
+  body{margin:0; background:radial-gradient(ellipse at 50% -10%, #1c1510, var(--bg) 60%);
+       color:var(--bone2); font:16px/1.65 Georgia, 'Times New Roman', serif; padding:32px 18px 60px}
+  main{max-width:760px; margin:0 auto}
+  h1{font:700 44px Georgia, serif; color:var(--bone); letter-spacing:.14em; margin:10px 0 2px; text-align:center}
+  .sub{text-align:center; color:var(--brass); font-style:italic; margin:0 0 6px}
+  .vline{text-align:center; font-size:13px; color:#777; margin-bottom:30px}
+  .rule{height:1px; background:linear-gradient(90deg, transparent, var(--brass2), transparent); margin:26px 0}
+  section{background:linear-gradient(160deg, var(--panel), #0e0b08); border:1px solid var(--line);
+          border-radius:14px; padding:22px 26px; margin:18px 0; box-shadow:0 10px 34px rgba(0,0,0,.45)}
+  h2{font:600 15px Georgia, serif; letter-spacing:.28em; text-transform:uppercase; color:var(--brass); margin:0 0 12px}
+  .big{font-size:21px; color:var(--bone)}
+  ol{margin:8px 0 4px; padding-left:24px}
+  li{margin:9px 0}
+  b{color:var(--bone)}
+  code{font:14px Consolas, monospace; background:#000; color:#d8c89a; padding:2px 7px; border-radius:5px; border:1px solid #2b2110}
+  a{color:var(--brass)}
+  .note{font-size:13.5px; color:#8f8468; font-style:italic; margin-top:10px}
+  table{width:100%; border-collapse:collapse; font-size:14px; margin-top:8px}
+  td{border:1px solid #2b2110; padding:8px 11px; vertical-align:top}
+  td:first-child{color:var(--bone); width:42%}
+  .tag{display:inline-block; font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+       border:1px solid var(--brass2); color:var(--brass); border-radius:99px; padding:3px 12px; margin-bottom:10px}
+  footer{text-align:center; font-size:12px; color:#6c6452; margin-top:36px; line-height:1.7}
+</style>
+</head>
+<body>
+<main>
+  <h1>ELYSIUM</h1>
+  <p class="sub">A digital table for Vampire: The Eternal Struggle</p>
+  <p class="vline">Version 1.6 &nbsp;·&nbsp; free &nbsp;·&nbsp; no account &nbsp;·&nbsp; everything runs in the browser</p>
+
+  <section>
+    <span class="tag">Host — 5 minutes, once</span>
+    <p class="big">One person at the table runs the server. This is all of it:</p>
+    <ol>
+      <li><b>Install Node.js</b> (the engine that runs the server): go to <a href="https://nodejs.org">nodejs.org</a>, download the <b>LTS</b> version, run the installer and click through with the defaults. Done in two minutes.</li>
+      <li><b>Download the Elysium files from the project's GitHub page</b> (the same place this guide lives) <b>and put them in a folder of their own</b> — at minimum the server <code>elysium-server.js</code>, the client <code>elysium-vtes-bord.html</code> (the game itself — one single file), and the launcher for your system: <code>start-elysium.bat</code> on Windows, or <code>start-elysium.sh</code> + <code>start-elysium.command</code> on macOS/Linux.</li>
+      <li><b>Start the server:</b><br>
+        <b>Windows</b> — double-click <code>start-elysium.bat</code>.<br>
+        <b>macOS</b> — double-click <code>start-elysium.command</code> (the very first time: right-click → <i>Open</i>, since macOS is wary of new files; if it still refuses, open Terminal in the folder and run <code>bash start-elysium.sh</code>).<br>
+        <b>Linux</b> — in a terminal: <code>bash start-elysium.sh</code> (or once: <code>chmod +x start-elysium.sh</code>, then <code>./start-elysium.sh</code>).<br>
+        A window opens and shows, among other things, a line starting with <b>Network:</b> — <i>that is the address you share with the table.</i> Leave it open while you play (Ctrl+C shuts down and saves the rooms).</li>
+      <li><b>Create the room:</b> open the address yourself in a browser, ☰ → Play online… → fill in a room name, a password and an optional match clock → <b>Create room</b>. Then click <b>📋 invite</b> in the room bar and a ready-made invitation lands on your clipboard — paste it into Discord and send the password separately.</li>
+    </ol>
+    <p class="note">Important: never double-click the <code>.js</code> file itself — Windows will run it with the wrong engine and complain about an "Invalid character" (in your system language). On macOS/Linux a double-clicked <code>.js</code> usually just opens in a text editor. That's exactly why the launchers exist — they check for Node and start it the right way on every system.</p>
+  </section>
+
+  <section>
+    <span class="tag">Guest — 30 seconds</span>
+    <p class="big">Got an address from your host? Then you're nearly done.</p>
+    <ol>
+      <li><b>Open the address in your browser</b> — e.g. <code>http://192.168.1.42:8123</code> or a Tailscale address. The game loads instantly; nothing is installed.</li>
+      <li>Click <b>☰ → Play online…</b> — the server address is already filled in. Enter your name, the room name and the password you were given.</li>
+      <li><b>Join room.</b> Import your deck (or take the demo deck), click <b>Deal</b> — and play.</li>
+    </ol>
+    <p class="note">Just want to watch? Tick <i>Join as spectator</i> and you'll see the whole table without being able to touch anything.</p>
+    <p class="note"><b>Prefer your own copy?</b> You can also download the client file <code>elysium-vtes-bord.html</code> from the project's GitHub page and open it straight from your computer (just double-click it) — then <b>☰ → Play online…</b> and type the host's address yourself. Your saved decks and downloaded card images then live with <i>your</i> file and survive between game nights, and a local <code>images/</code> folder next to it works too.</p>
+    <p class="note"><b>Playing on a tablet?</b> Elysium is touch-native: <b>long-press</b> anything for its menu · <b>drag</b> moves cards · <b>pinch</b> zooms, one finger on the felt pans · <b>tap</b> the ± buttons or a counter badge to adjust pool and blood · tap the Library/Crypt to draw. On an iPad, use Share → <i>Add to Home Screen</i> for a clean fullscreen table.</p>
+  </section>
+
+  <section>
+    <span class="tag">Internet — when the table doesn't share WiFi</span>
+    <p class="big">The easiest road is <b>Tailscale</b> — a free private network between you.</p>
+    <ol>
+      <li>The host creates a free account at <a href="https://tailscale.com">tailscale.com</a> and installs the app.</li>
+      <li>The host sends an <b>invite link</b> (Tailscale panel → Invite) to the players.</li>
+      <li>Each player installs the app via the link and signs in. That's it — you're now on the same "LAN".</li>
+      <li>The host starts Elysium as usual and shares their <b>Tailscale address</b> (starts with <code>100.</code>, shown in the Tailscale app) plus <code>:8123</code>.</li>
+      <li>Guests open <code>http://100.x.y.z:8123</code> in their browsers. Done — encrypted, and without opening a single router port.</li>
+    </ol>
+    <div class="rule"></div>
+    <span class="tag">Alternative — nothing for guests to install</span>
+    <p><b>Cloudflare Quick Tunnel</b> gives you a public https address in seconds. Guests just open the link — no app, no account.</p>
+    <ol>
+      <li><b>Get cloudflared</b> (once):<br>
+        <b>Windows</b> — download <code>cloudflared-windows-amd64.exe</code> from <a href="https://github.com/cloudflare/cloudflared/releases/latest">github.com/cloudflare/cloudflared/releases/latest</a>, <b>rename it to <code>cloudflared.exe</code></b>, and place it in your Elysium folder.<br>
+        <b>macOS</b> — <code>brew install cloudflared</code> (or the release binary above, saved in the folder as <code>cloudflared</code> + <code>chmod +x cloudflared</code>).<br>
+        <b>Linux</b> — the apt/yum repo at <a href="https://pkg.cloudflare.com">pkg.cloudflare.com</a>, or the release binary saved in the folder as <code>cloudflared</code> + <code>chmod +x cloudflared</code>.</li>
+      <li><b>Start the Elysium server</b> as usual (the launcher for your system, per the Host section above).</li>
+      <li><b>Start the tunnel:</b> Windows — double-click <code>start-cloudflare-tunnel.bat</code>; macOS — double-click <code>start-cloudflare-tunnel.command</code> (same first-time right-click → <i>Open</i> as above); Linux — <code>bash start-cloudflare-tunnel.sh</code>. After a few seconds the tunnel address appears, printed in a big banner — and lands <b>on your clipboard</b> automatically (Windows/macOS; Linux too if <code>xclip</code> is installed).</li>
+      <li><b>Paste the address to your players</b> (Ctrl+V). They open it in any browser and connect as normal. Elysium automatically uses an encrypted connection when served over https.</li>
+    </ol>
+    <p class="note">The tunnel address is temporary and changes every time you start it. Closing the tunnel window disconnects guests, but the server and room stay alive — start the tunnel again, share the new address, and everyone reconnects automatically. Don't open a port on your router — that's the road we advise against.</p>
+    <p class="note">Tip: set your computer to <b>never sleep</b> while hosting (Windows: Settings → System → Power; macOS: System Settings → Displays/Battery → prevent sleeping). The Elysium server survives sleep just fine, but the tunnel connection may not — if it drops, restart the tunnel and share the new address.</p>
+  </section>
+
+  <section>
+    <span class="tag">If something snags</span>
+    <table>
+      <tr><td>"Invalid character, line 1" when starting the server</td><td>You double-clicked the .js file. Use <code>start-elysium.bat</code>.</td></tr>
+      <tr><td>Works on the host machine but not for guests</td><td>Windows Firewall: Windows Security → Firewall &amp; network protection → Allow an app → tick <b>Node.js</b> for <b>private</b> networks, and check the network profile is <i>Private</i>. macOS: click <b>Allow</b> when the firewall asks about incoming connections for <i>node</i> (or add it under System Settings → Network → Firewall).</td></tr>
+      <tr><td>The page won't even load for a guest</td><td>Guest networks/mesh with "client isolation" block device-to-device traffic — switch to the main network, or use Tailscale.</td></tr>
+      <tr><td>"cloudflared.exe was not found" when starting the tunnel</td><td>The download from GitHub is called <code>cloudflared-windows-amd64.exe</code> (64-bit) or <code>cloudflared-windows-386.exe</code> (32-bit). Rename it to <code>cloudflared.exe</code> and place it next to <code>start-cloudflare-tunnel.bat</code>. Almost all modern PCs are 64-bit — pick <b>amd64</b>.</td></tr>
+      <tr><td>macOS: "… cannot be opened" for the <code>.command</code> file</td><td>Gatekeeper being careful with a new file. Right-click it → <b>Open</b> → Open (needed once). Or run <code>bash start-elysium.sh</code> in Terminal.</td></tr>
+      <tr><td>"Permission denied" when running a <code>.sh</code></td><td>Either prefix it: <code>bash start-elysium.sh</code> — or make it executable once: <code>chmod +x start-elysium.sh</code>.</td></tr>
+      <tr><td>"cloudflared: command not found" (macOS/Linux)</td><td><code>brew install cloudflared</code> on a Mac; on Linux the <a href="https://pkg.cloudflare.com">pkg.cloudflare.com</a> repo — or save the release binary next to the script as <code>./cloudflared</code> and <code>chmod +x cloudflared</code>.</td></tr>
+      <tr><td>"That name is taken"</td><td>The name is currently signed in to the room. An offline seat is reclaimed with the same name + the room password.</td></tr>
+    </table>
+    <p class="note">More in <b>Elysium — Host guide</b> and the game's built-in Controls tab.</p>
+  </section>
+
+  <footer>
+    Elysium is an unofficial fan project under the Dark Pack agreement.<br>
+    Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.<br>
+    Portions of the materials are the copyrights and trademarks of Paradox Interactive AB, and are used with permission. All rights reserved.
+  </footer>
+</main>
+</body>
+</html>
