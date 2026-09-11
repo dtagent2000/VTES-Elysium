@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elysium — Trainbots: start here</title>
+<style>
+  :root{ --bg:#0d0a07; --panel:#16110b; --line:#3a2f1d; --brass:#b08d4f; --brass2:#8a6d3b;
+         --bone:#e8dfc8; --bone2:#b3a888; --red:#c43b3b; }
+  *{box-sizing:border-box}
+  body{margin:0; background:radial-gradient(ellipse at 50% -10%, #1c1510, var(--bg) 60%);
+       color:var(--bone2); font:16px/1.65 Georgia, 'Times New Roman', serif; padding:32px 18px 60px}
+  main{max-width:760px; margin:0 auto}
+  h1{font:700 44px Georgia, serif; color:var(--bone); letter-spacing:.14em; margin:10px 0 2px; text-align:center}
+  .sub{text-align:center; color:var(--brass); font-style:italic; margin:0 0 6px}
+  .vline{text-align:center; font-size:13px; color:#777; margin-bottom:30px}
+  section{background:linear-gradient(160deg, var(--panel), #0e0b08); border:1px solid var(--line);
+          border-radius:14px; padding:22px 26px; margin:18px 0; box-shadow:0 10px 34px rgba(0,0,0,.45)}
+  h2{font:600 15px Georgia, serif; letter-spacing:.28em; text-transform:uppercase; color:var(--brass); margin:0 0 12px}
+  .big{font-size:21px; color:var(--bone)}
+  ol{margin:8px 0 4px; padding-left:24px}
+  ul{margin:8px 0 4px; padding-left:22px}
+  li{margin:9px 0}
+  b{color:var(--bone)}
+  code{font:14px Consolas, monospace; background:#000; color:#d8c89a; padding:2px 7px; border-radius:5px; border:1px solid #2b2110}
+  a{color:var(--brass)}
+  .note{font-size:13.5px; color:#8f8468; font-style:italic; margin-top:10px}
+  table{width:100%; border-collapse:collapse; font-size:14px; margin-top:8px}
+  td{border:1px solid #2b2110; padding:8px 11px; vertical-align:top}
+  td:first-child{color:var(--bone); width:42%}
+  .tag{display:inline-block; font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+       border:1px solid var(--brass2); color:var(--brass); border-radius:99px; padding:3px 12px; margin-bottom:10px}
+  footer{text-align:center; font-size:12px; color:#6c6452; margin-top:36px; line-height:1.7}
+</style>
+</head>
+<body>
+<main>
+  <h1>ELYSIUM</h1>
+  <p class="sub">Trainbots — practice opponents for your table</p>
+  <p class="vline">Bot v0.3.10 &nbsp;·&nbsp; launcher v1.0.0 &nbsp;·&nbsp; zero dependencies &nbsp;·&nbsp; just Node</p>
+
+  <section>
+    <span class="tag">What is this</span>
+    <p class="big">Trainbots are headless practice opponents that take <b>real seats</b> at your online table.</p>
+    <p>They join a room exactly like a human client does, upload a sample weenie-bleed deck, follow the
+    turn order, influence vampires, announce bleeds on the table's own machine-readable lines, answer
+    the resolvers, play stealth against block attempts, and take damage when a bleed lands on them.
+    <b>Humans and bots mix freely</b> — any combination up to a full five-seat table. The bot follows
+    the core rules: crypt and card uniqueness, one same-named modifier per action, one action per
+    minion per turn, one discard per turn, crypt fetches at the rulebook price (4 transfers +
+    1 pool), and it takes the Edge when a bleed goes through. Card plays and bleeds <b>animate</b>
+    on everyone's table, and with the Played-tab resolvers on, a spoken <b>Block!</b> makes the bot
+    wait for the referendum's verdict line instead of assuming the block lands.</p>
+    <p><b>Files the bots need, side by side:</b> <code>elysium-bot.js</code> and
+    <code>elysium-cardfx.json</code> (the card-knowledge library). On start, look for the
+    <i>cardfx loaded: 2364 lib…</i> line — a <b>⚠ cardfx NOT loaded</b> warning means the bot is
+    running blind: plain bleeds only, no card plays, no stealth. The launcher and the arena need
+    <code>elysium-bot-table.js</code> / <code>elysium-bot-arena.js</code> in the same folder too.</p>
+    <p><b>Pacing:</b> at a human table the bots think in beats — announcements ~2 s apart and
+    reactions ~1.6 s (defaults; tune with <code>--pace-ms</code>). Test suites run them at
+    machine speed.</p>
+    <p><b>The Reaction timer:</b> five seconds into an unanswered <i>Block?</i> the bot rings the
+    table's Reaction timer — the same ⏱ stopwatch you trigger yourself, set per room (3–30 s,
+    default 5). The countdown now shows <b>who called it</b> right above the number, and the bot
+    still waits its own full, patient window (default 25 s, <code>--ask-secs</code>) before moving
+    on: the stopwatch is the nudge, not the deadline. Verdicts pulse too: <i>Block succeeds/fails</i>
+    and <i>Vote passes/fails</i> pop as say-style bubbles for the whole table, and a misclicked
+    Block is taken back out loud with the resolver's × — the bot reopens its window as if nothing
+    happened.</p>
+    <p><b>The host referee kit reaches the bots:</b> right-click any opponent's pool — the mat,
+    the Table panel row, or the L4 globe itself — for ash heap, <b>Set pool… / Pool ±1/−2</b>
+    (Kine Resources Contested and friends), oust/return and pass-their-turn. Bots apply it,
+    acknowledge in chat, and a bot drained to 0 is ousted by it.</p>
+    <p>Three personalities ship out of the box: <b>Novice</b>, <b>Grinder</b> and <b>Shark</b> — same
+    facts, different judgement.</p>
+  </section>
+
+  <section>
+    <span class="tag">Quick start — one bot</span>
+    <ol>
+      <li>Start the server as usual (<code>start-elysium</code>) and open the Elysium client.</li>
+      <li>Create an <b>online room</b> (lobby on), pick your seat and import your deck.</li>
+      <li>In a terminal, from the Elysium folder:<br>
+          <code>node elysium-bot.js --server ws://127.0.0.1:8123 --room ROOMNAME --pass PASSWORD</code></li>
+      <li>The bot picks a free seat, uploads its playbook and greets the table.</li>
+      <li>Press <b>Start</b> in the client. Play.</li>
+    </ol>
+    <p class="note">Optional flags: <code>--persona novice|grinder|shark</code>,
+    <code>--name Alice</code>, <code>--seat N</code>, <code>--ask-secs 25</code>,
+    <code>--deck playbook.json</code>, <code>--cardfx elysium-cardfx.json</code>.</p>
+  </section>
+
+  <section>
+    <span class="tag">A whole table of them</span>
+    <p>Create the room and take your seat first, then seat several bots in one command:</p>
+    <p><code>node elysium-bot-table.js --room ROOMNAME --pass PASSWORD --count 3</code></p>
+    <p>Shark, Grinder and Novice fill the free seats (staggered arrivals, one process,
+    Ctrl+C removes them all). Rotate or repeat with
+    <code>--personas shark,shark,novice</code>, rename with <code>--names A,B,C</code>,
+    and give them real decks with <code>--decks nosferatu,tremere,malkavian</code> (the registered archetypes: hacking, sewer, malkavian, tremere, nosferatu — table.js v1.1.0).</p>
+    <table>
+      <tr><td><b>Novice</b> — aggression 0.8 · insight 0.1</td>
+          <td>Barely reads the table. Spends stealth into obvious intercept. Forgiving to play against.</td></tr>
+      <tr><td><b>Grinder</b> — aggression 1.0 · insight 0.5</td>
+          <td>The default. Solid, unremarkable, respects what it has clearly seen.</td></tr>
+      <tr><td><b>Shark</b> — aggression 1.2 · insight 0.9</td>
+          <td>Reads shown cards hard: if you've flashed intercept, it saves its stealth and takes the fight elsewhere.</td></tr>
+    </table>
+    <p class="note">The read is honest inference — hands never travel the wire, so the bot only knows
+    what you have <i>shown</i>: played cards, disciplines on the board, hand counts.</p>
+  </section>
+
+  <section>
+    <span class="tag">The table the bot likes</span>
+    <p>Bots play <b>best</b> on: <b>Structured board · Tournament mode OFF · the three resolvers ON</b>
+    (Block / Vote / Combat in the Played peek). That gives them the live referendum and the resolve
+    lines — a Block verdict can answer the bot's own "Block?" without anyone typing.</p>
+    <p>A <b>Classic</b> table still works: the bot follows the bleed announces and the say phrases,
+    pitches a tidy camp at its own table edge, and says one polite line about its preferred setup —
+    then plays along. No hard locks, ever: the table referees.</p>
+  </section>
+
+  <section>
+    <span class="tag">Talking to the bot</span>
+    <ul>
+      <li><b>Its native language is the table's own:</b> the Bleed 1/2/3/X… submenu,
+          <code>+X bleed…</code>, the say phrases (<i>Hold on…, Pass, Block!, It resolves</i>)
+          and the resolver verdict lines. Use them and the bot keeps up by itself.</li>
+      <li><b>Chat grammar (blunt overrides):</b> <code>bleed N</code> — the bot takes N pool now ·
+          <code>vote N</code> — the bot loses N pool to a referendum · <code>block</code> /
+          <code>no</code> — answer its question the simple way (<code>block</code> always goes
+          straight to combat).</li>
+      <li>If a bleed at the bot is never resolved, it discards it at the turn wrap with a polite
+          note — it never applies stale damage on its own.</li>
+    </ul>
+  </section>
+
+  <section>
+    <span class="tag">Humans + bots together</span>
+    <p><b>Yes — by design.</b> Bots are ordinary clients: same room, same seats, any mix.
+    Friends can join over your Cloudflare tunnel as usual (<code>https://…</code>), while bots
+    connect with plain <code>ws://</code> <b>next to the server</b> (same machine or LAN) — the
+    tunnel terminates TLS before the server anyway, so that is the natural place for them.</p>
+    <p class="note">Rule of thumb: humans arrive through the front door, bots live in the cellar.</p>
+  </section>
+
+  <section>
+    <span class="tag">Watch them fight — the arena</span>
+    <p>Let the personas settle it among themselves, with statistics:</p>
+    <p><code>node elysium-bot-arena.js --matches 10 --bots 3 --start-pool 15</code></p>
+    <p>Headless matches to last-standing, seat rotation for fairness, and a per-persona
+    summary (wins, damage dealt/taken, decisions). Add <code>--trace DIR</code> for JSONL
+    traces of every decision the bots make — the raw material for tuning them.</p>
+    <p class="note">Small samples lie: seat 1 starts with fewer transfers, so run enough
+    matches before crowning a persona.</p>
+  </section>
+
+  <section>
+    <span class="tag">Not yet</span>
+    <p>The bot does <b>not</b> block as a defender or fight real combat (that is milestone M2 —
+    the duel view is where it will happen), plays no master cards or attachments (v0.4), and joins
+    votes only through the chat grammar. It reads the combat/vote tallies but never writes them.</p>
+  </section>
+
+  <section>
+    <span class="tag">Live-test checklist — this stage</span>
+    <ol>
+      <li><b>Solo smoke</b> (Structured, resolvers on): seat, greeting, turn flow, influence,
+          bleed asks; <code>block</code> → one-round combat, <code>no</code> → through.</li>
+      <li><b>Machine lines:</b> the log shows <i>"NAME bleeds for N."</i> from the bot; card plays
+          read <i>"plays Computer Hacking — bleeds … for 2"</i>.</li>
+      <li><b>Bleed the bot</b> with the Bleed submenu → it says <i>Hold on…</i> then <i>Pass</i>;
+          say <i>It resolves</i> → it applies and acknowledges the exact amount.</li>
+      <li><b><code>+X bleed…</code></b> after your announce → the bot re-passes; resolves at the total.</li>
+      <li><b>Block resolver</b> on the bot's bleed → the verdict line alone answers its question.</li>
+      <li><b>Say <i>Block!</i></b> against its action → it plays stealth (if usable); post
+          <i>"block fails"</i> + <i>Pass</i> → the bleed goes through.</li>
+      <li><b>Personas:</b> show the table a wake/intercept card, then block-attempt a Shark vs a
+          Novice — Shark saves its stealth, Novice spends it.</li>
+      <li><b>Classic table:</b> one polite tip; its globe and cards camp at its own table edge;
+          bleed lines still tracked.</li>
+      <li><b>Full table:</b> <code>elysium-bot-table.js --count 3</code> — bots bleed <i>each other</i>
+          and the loop closes without you (watch the chat).</li>
+      <li><b>Deflection:</b> re-announce the bleed with a pool target naming another player —
+          the bot un-arms and the named target's bot arms.</li>
+      <li><b>Rough edges:</b> kill a bot process mid-game (table continues), wrong password
+          (clean refusal), bleed a bot to 0 (bounty routes to its predator).</li>
+      <li><b>Rate behaviour:</b> a long, fast multi-bot game never drops a bot
+          (the send queue self-paces under the server's limit).</li>
+    </ol>
+  </section>
+
+  <footer>
+    Trainbot v0.3.10 · elysium-bot-table v1.0.0 · elysium-bot-arena v1.0.0 · deeper docs: <code>elysium-bot-spec.md</code><br>
+    The bots are practice partners, not opponents of record — the table always referees. 🦇
+  </footer>
+</main>
+<div style="margin:18px 0;padding:12px 14px;border:1px solid rgba(122,167,240,.4);border-radius:8px">
+<b>New (8 Aug 2026):</b> <b>"Hold on…" pauses the bots</b> — the ❗ quick phrase (or a chat "hold on") freezes every bot's visible play until your next flow phrase (No block / Block! / No reaction / It resolves / Pass) or a chat "carry on". Humans only — the bots' own thinking announces never pause each other. And <b>hotseat bots (alpha)</b>: in Play offline, toggle 🤖 on any seat 2+ — the client loads the bot from the serving host \u2014 or, since v2.6.61, straight from the folder on plain double-click (file://): keep elysium-vtes-bord.html, elysium-bot.js, elysium-cardfx.js and elysium-cardfx.json together \u2014 and a floating 🤖 ▶ button runs the bot turns in seat order.
+</div>
+</body>
+</html>
