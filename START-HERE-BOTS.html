@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elysium bots — start here</title>
+<style>
+:root{
+  --felt:#14100b; --felt2:#1c1710; --ink:#e8e2d0; --ink-dim:#b6ad99; --ink-mute:#877e6c;
+  --brass:#c9a45a; --brass-dim:rgba(201,164,90,.35); --rule:rgba(232,226,208,.13);
+  --blood:#c94a4a; --moss:#7fb37f; --sky:#7aa7f0;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:inherit}
+html{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px)); scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--felt);color:var(--ink);font:16px/1.6 var(--sans)}
+a{color:var(--brass)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+
+/* nav */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:rgba(20,16,11,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+.nav ul{list-style:none;margin:0 auto;padding:0 20px;max-width:960px;display:flex;gap:2px;overflow-x:auto}
+.nav a{display:block;padding:14px 12px;color:var(--ink-dim);text-decoration:none;font-size:14px;white-space:nowrap;border-bottom:2px solid transparent}
+.nav a:hover{color:var(--ink)}
+.nav a.on{color:var(--brass);border-bottom-color:var(--brass)}
+.nav .ver{margin-left:auto;padding:14px 0 14px 12px;color:var(--ink-mute);font-size:13px}
+
+/* hero: the table */
+.hero{max-width:960px;margin:0 auto;padding:48px 20px 20px;display:grid;grid-template-columns:1fr auto;gap:28px;align-items:end}
+.hero h1{font:600 42px/1.1 var(--serif);margin:0 0 14px;color:var(--ink);letter-spacing:-.01em}
+.hero p{margin:0;max-width:60ch;color:var(--ink-dim);font-size:17px}
+.table{width:220px;height:220px;flex:0 0 auto}
+@media (max-width:700px){.hero{grid-template-columns:1fr}.table{width:160px;height:160px}}
+
+/* body */
+main{max-width:960px;margin:0 auto;padding:0 20px 80px}
+section{padding:36px 0 8px;border-top:1px solid var(--rule)}
+h2{font:600 30px/1.2 var(--serif);margin:0 0 6px}
+h3{font:600 21px/1.3 var(--serif);margin:26px 0 8px;color:var(--ink)}
+h4{font:600 16px/1.4 var(--sans);margin:18px 0 6px;color:var(--brass)}
+.lead{color:var(--ink-dim);font-size:17px;max-width:66ch;margin:0 0 18px}
+p,li{max-width:72ch}
+p{margin:10px 0}
+ul,ol{padding-left:22px}
+li{margin:6px 0}
+em{color:var(--ink)}
+code,kbd{font:14px/1.4 ui-monospace,Menlo,Consolas,monospace;background:rgba(232,226,208,.08);padding:1px 6px;border-radius:4px;color:var(--ink)}
+kbd{border:1px solid var(--rule)}
+.phrase{display:inline-block;font:14px/1.2 var(--sans);background:rgba(122,167,240,.16);border:1px solid rgba(122,167,240,.5);color:#dbe6fb;padding:3px 9px;border-radius:14px;white-space:nowrap}
+.menu{display:inline-block;font:14px/1.2 var(--sans);background:rgba(232,226,208,.08);border:1px solid var(--rule);padding:3px 9px;border-radius:5px;white-space:nowrap}
+.bot{display:inline-block;font:14px/1.5 var(--sans);color:var(--ink);background:var(--felt2);border-left:3px solid var(--brass);padding:5px 12px;margin:6px 0;border-radius:0 8px 8px 0;max-width:68ch}
+.bot b{color:var(--brass);font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media (max-width:700px){.two{grid-template-columns:1fr}}
+
+/* collapsibles */
+details{border:1px solid var(--rule);border-radius:10px;margin:12px 0;background:rgba(255,255,255,.025)}
+details>summary{cursor:pointer;list-style:none;padding:12px 16px;font:600 16px/1.4 var(--sans);color:var(--ink);display:flex;gap:12px;align-items:baseline}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"";flex:0 0 auto;width:9px;height:9px;border-right:2px solid var(--brass);border-bottom:2px solid var(--brass);transform:rotate(-45deg) translateY(2px);transition:transform .15s}
+details[open]>summary::before{transform:rotate(45deg) translateY(-1px)}
+details>summary .sub{font-weight:400;color:var(--ink-mute);font-size:14px}
+details>div{padding:0 18px 14px}
+details details{margin:10px 0;background:transparent}
+
+/* tables */
+table{border-collapse:collapse;width:100%;margin:10px 0 14px;font-size:15px}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--rule)}
+th{color:var(--ink-dim);font-weight:600;font-size:13.5px}
+td:first-child{white-space:nowrap}
+@media (max-width:700px){td:first-child{white-space:normal}}
+.wrap{overflow-x:auto}
+
+/* callouts */
+.note,.warn,.gap{padding:12px 16px;border-radius:8px;margin:14px 0;max-width:76ch}
+.note{background:rgba(201,164,90,.10);border:1px solid var(--brass-dim)}
+.warn{background:rgba(201,74,74,.12);border:1px solid rgba(201,74,74,.5)}
+.gap{background:rgba(232,226,208,.05);border:1px dashed var(--rule);color:var(--ink-dim)}
+.gap b,.note b,.warn b{color:var(--ink)}
+
+/* level pills */
+.lvl{display:inline-block;padding:2px 10px;border-radius:12px;font-size:13.5px;font-weight:600;border:1px solid}
+.lvl.x{color:#f2a3a9;border-color:rgba(242,112,122,.8);background:rgba(242,112,122,.18)}
+.lvl.e{color:#e9cf8a;border-color:rgba(217,180,95,.8);background:rgba(217,180,95,.18)}
+.lvl.n{color:#a9e3b8;border-color:rgba(95,211,138,.8);background:rgba(95,211,138,.18)}
+
+/* flow steps */
+.flow{list-style:none;padding:0;margin:14px 0;counter-reset:s}
+.flow li{position:relative;padding:8px 0 8px 46px;margin:0;border-left:1px solid var(--rule);margin-left:15px}
+.flow li::before{counter-increment:s;content:counter(s);position:absolute;left:-15px;top:8px;width:29px;height:29px;border-radius:50%;background:var(--felt2);border:1px solid var(--brass);color:var(--brass);font:600 13px/27px var(--sans);text-align:center}
+.flow li b{color:var(--ink)}
+
+footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-size:13.5px;border-top:1px solid var(--rule)}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Sections"><ul>
+  <li><a href="#about">About the bots</a></li>
+  <li><a href="#setup">Setting up a table</a></li>
+  <li><a href="#play">How a bot plays</a></li>
+  <li><a href="#controls">Controls</a></li>
+  <li class="ver">bot v0.6.155 · client v2.6.125 + card-ctrl fix</li>
+</ul></nav>
+
+<header class="hero">
+  <div>
+    <h1>Playing with Elysium bots</h1>
+    <p>Bots fill the empty seats at a V:TES table. They play their own decks by the rules, talk to the table in the same quick phrases and counters you already use, and can be corrected by hand when they get something wrong. This guide covers how to seat them, what to expect from them, and every way you can steer one.</p>
+  </div>
+  <svg class="table" viewBox="0 0 220 220" aria-hidden="true">
+    <circle cx="110" cy="110" r="72" fill="#1f2a1c" stroke="#c9a45a" stroke-width="1.5"/>
+    <circle cx="110" cy="110" r="58" fill="none" stroke="rgba(201,164,90,.25)"/>
+    <g fill="#e8e2d0" font-family="Segoe UI,system-ui,sans-serif" font-size="11" text-anchor="middle">
+      <circle cx="110" cy="22" r="14" fill="#3a2f22" stroke="#c9a45a"/><text x="110" y="26">you</text>
+      <circle cx="194" cy="83" r="14" fill="#3a2f22" stroke="#c9a45a"/><text x="194" y="88">🤖</text>
+      <circle cx="162" cy="182" r="14" fill="#3a2f22" stroke="#c9a45a"/><text x="162" y="187">🤖</text>
+      <circle cx="58" cy="182" r="14" fill="#3a2f22" stroke="#c9a45a"/><text x="58" y="186">Anna</text>
+      <circle cx="26" cy="83" r="14" fill="#3a2f22" stroke="#c9a45a"/><text x="26" y="88">🤖</text>
+    </g>
+    <path d="M124 26 A88 88 0 0 1 192 70" fill="none" stroke="#c94a4a" stroke-width="1.5" marker-end="url(#a)"/>
+    <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#c94a4a"/></marker></defs>
+  </svg>
+</header>
+
+<main>
+<!-- ============================================================ ABOUT -->
+<section id="about">
+  <h2>About the bots</h2>
+  <p class="lead">The short version: a bot is a fifth player who knows the rules of the actions it takes, plays a fixed deck it has been taught, and asks you when it cannot see what your card does.</p>
+
+  <h3>What a bot knows about cards</h3>
+  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>96 are hand-curated</strong> — checked card by card so the bot plays them exactly right. The four V5 starter decks and the two tournament-style decks in the menu are curated to 100 %.</p>
+  <p>This shapes three things you will notice:</p>
+  <ul>
+    <li><strong>Its own deck it plays well.</strong> Every card in a bot deck has a modelled effect, so the bot never holds a card it cannot use. A card it genuinely cannot play with its current vampires is treated as dead and cycled in the discard phase.</li>
+    <li><strong>Your cards it recognises by their announced effect, not by name.</strong> The bot follows the structured lines the client writes when you use the action menu (<span class="menu">Bleed 2</span>, <span class="menu">Political action</span>, <span class="menu">Block</span>, +X bleed, votes) and the shared counters. For a card play it cannot classify it asks the table one question — <em>“Will this action cause me to lose pool?”</em> — and decides from your answer.</li>
+    <li><strong>It is trained continuously.</strong> Cards are curated in sweeps, new decks are added with each bot release, and every human-vs-bot report feeds the next round. Until a card is curated the bot may need a nudge: correct its pool, its blood or a lock by hand (see <a href="#controls">Controls</a>), and it carries on from the corrected state.</li>
+  </ul>
+
+  <h3>How a bot generally behaves</h3>
+  <p>A bot plays a full turn in the rulebook order — unlock, master, minion, influence, discard — and announces each phase like a human saying “unlock” aloud. Between every visible step it takes a short breath (about three seconds at a human table) so you can follow what it does. When it acts it asks the table for blocks with a quick phrase and waits; when you act against it, it answers with the same phrases. It counts stealth, intercept, votes and combat on the shared resolver counters and reads the numbers you put there.</p>
+  <p>Its play is <em>statistical, not scripted</em>: it tracks what each opponent has shown (bleed sizes, stealth, intercept, damage, blocks) and weighs its own hand against that picture. It knows its own deck's composition exactly, so its odds about its own next draws are real; its picture of your deck is built only from what you have played so far.</p>
+
+  <h3>Decks and archetypes</h3>
+  <p>Each bot plays one of six fixed decks. The deck decides not only the cards but the <em>posture</em> — how eagerly it goes forward, how many bodies it keeps home, and what it builds first.</p>
+  <div class="wrap"><table>
+    <tr><th>Menu name</th><th>Archetype</th><th>How it plays</th></tr>
+    <tr><td>V5 Starter — Malkavian</td><td>Stealth-bleed with intel</td><td>Dementation/Obfuscate bleed engine, Kindred Spirits chip damage, Revelations hand reads. Goes forward hard on a stealth stack and gambles on card churn. The strongest of the starters — it has won tournaments out of the box.</td></tr>
+    <tr><td>V5 Starter — Ventrue</td><td>Vote-and-bleed toolbox</td><td>Princes call Kine Resources Contested and Parity Shift on their own titles, Dominate bleeds between referendums, Deflection and Second Tradition at home, Freak Drive to act twice.</td></tr>
+    <tr><td>V5 Starter — Tremere</td><td>Bounce-wall with Thaumaturgy reach</td><td>Auspex intercept plus Deflection redirect pressure; Theft of Vitae swings blood. A bleed/combat hybrid that nips at both pool and blood.</td></tr>
+    <tr><td>V5 Starter — Nosferatu</td><td>Menace attrition</td><td>Builds permanents first (intercept, damage enhancers), then Fame and Creeping Sabotage pressure with Animalism rushes to keep threats in torpor. A dangerous combat deck once a fight starts.</td></tr>
+    <tr><td>Weenie Bleed (Trainbot)</td><td>Ashur-cycling swarm</td><td>Cheap crypt floods the table, small bleeds every turn, Ashur Tablets recycle the engine. Based on a tournament-winning list — noticeably stronger than the starters.</td></tr>
+    <tr><td>Inside Dirt (Nosferatu)</td><td>Weenie stealth-bleed</td><td>Obfuscate swarm slips small bleeds and Inside Dirt pool damage through every turn; minimal combat. Also tournament-derived and strong.</td></tr>
+  </table></div>
+  <p>For an even table among bots, pair the four V5 starters. Mix in Weenie Bleed or Inside Dirt when you want a harder opponent.</p>
+
+  <h3>Experience level</h3>
+  <p>Every bot seat has a <em>simulated experience</em> setting. It does not change what the bot knows about cards — it changes how it weighs the same facts.</p>
+  <div class="wrap"><table>
+    <tr><th>Level</th><th>Character</th><th>In practice</th></tr>
+    <tr><td><span class="lvl x">Expert</span> (default)</td><td>Full grasp of the table and its own deck</td><td>Plays the decision basis correctly: reads opponents' statistics, blocks with any body when the odds say so, aggressive bleeds, disciplined stealth and bounce timing. The reference the other two are graded against, and the level every test series runs on.</td></tr>
+    <tr><td><span class="lvl e">Experienced</span></td><td>Knows its deck, tunnel vision on the table</td><td>Normal aggression, blocks readily but only spends a “chump” body on a bare block, half the insight into what you are likely holding.</td></tr>
+    <tr><td><span class="lvl n">Novice</span></td><td>Focused on itself</td><td>Hesitant to block, rarely attempts a block without an intercept card, barely reads your hand, slightly over-eager going forward. Makes characteristic beginner mistakes.</td></tr>
+  </table></div>
+
+  <h3>Adjusting a bot by hand</h3>
+  <p>A bot owns its own state — pool, Edge, blood on its vampires, locks, torpor — and publishes it to the table. Because it cannot model every triggered ability (an untap-phase ping from one of your permanents, a diablerie, a referendum it miscounted), <strong>any player may adjust a bot's elements</strong> from the right-click menus. The bot takes the correction as truth and plays on. The full list is under <a href="#controls-elements">Adjusting a bot's board</a>.</p>
+
+  <div class="warn"><b>Bots are pre-alpha.</b> They can misjudge a situation, and a few interactions are still one-sided (listed honestly at the end of each section below). Pause a bot with <span class="phrase">❗ Hold on…</span> whenever you need to think or play a card in its phase, and use <em>Report a problem</em> in the menu when something looks wrong — those reports are what the bots are trained on next.</div>
+</section>
+<!-- ============================================================ SETUP -->
+<section id="setup">
+  <h2>Setting up a table</h2>
+  <p class="lead">Offline hotseat is the fastest way to play against bots: one screen, you and up to five bots, no server round-trips. Online, the host adds bots from the lobby and they sit at the table like any other player.</p>
+
+  <div class="note"><b>Before you start.</b> Bots need <em>Full mode</em> (Lite is online-only and bot-free) and a <em>Structured</em> board. On <em>elysium.cards</em> the bot files are served with the client — nothing to install. If you run the client from your own machine or server, <code>elysium-bot.js</code> (v0.6.147 or newer) and <code>elysium-cardfx.json</code> must sit in the same folder as <code>elysium-vtes-bord.html</code>; opened as a local file, the database is read from <code>elysium-cardfx.js</code> instead. A missing or too-old bot file is refused with a message that says exactly what is wrong.</div>
+
+  <h3>Offline / hotseat</h3>
+  <ol class="flow">
+    <li><b>Open Play offline.</b> The hotseat window lists the seats in turn order. Seat 1 is “You” with your saved decks in the dropdown; more seats come from <span class="menu">+ Add player</span> (up to six).</li>
+    <li><b>Make a seat a bot.</b> Press the <span class="menu">🤖</span> button on the seat's row. It cycles <span class="lvl x">Expert</span> → <span class="lvl e">Experienced</span> → <span class="lvl n">Novice</span> → off, so the first press gives you the default level. The row's deck dropdown switches to the six bot decks, and an <em>alpha</em> tag appears beside the seat. Any seat can be a bot, including seat 1 — turn order is simply the seat order.</li>
+    <li><b>Pick its deck</b> from the dropdown. The name field is the bot's table name; it introduces itself with it and answers to it in chat.</li>
+    <li><b>Check the locks.</b> The moment any seat is a bot, <em>Board style</em> is fixed to Structured and <em>Helpers</em> to “All helpers on”, greyed out. Bots are tuned for that environment; both are released again when the last bot is removed.</li>
+    <li><b>Decide on Debug bot</b> (optional, see below).</li>
+    <li><b>Start hotseat.</b> The bot files load, each bot joins its seat and uploads its deck, and the table deals. At least one seat must be human — an all-bot table is a simulation, not a hotseat. If a bot fails to load you get a dialog naming the reason; the table itself is unaffected.</li>
+  </ol>
+
+  <details>
+    <summary>The opening and the turn cycle <span class="sub">— who plays when</span></summary>
+    <div>
+      <p>Bots take their turns <strong>automatically</strong>. When you end your turn (your Discard, or the Pass handover), every bot between you and the next human plays in seat order: a toast says “🤖 Name is playing…”, the camera visits its board while it acts, and moves on when it passes. If bots sit <em>before</em> the first human, they play their opening turns right after the deal, and then your first turn begins with the usual cue.</p>
+      <p>While a bot plays you keep priority: play reactions, block, put cards on the counters, or say <span class="phrase">❗ Hold on…</span> to stop it while you think. Its turn ends when it says “passes”.</p>
+      <p>If you ever need to run the bot turns by hand — after resolving something manually, say — open the <strong>Bot Activity</strong> panel (the 🤖 badge top right) and press <span class="menu">▶ Run bot turns</span>. It plays exactly the range the Pass handover would.</p>
+      <p>A bot that stays silent for three minutes while it holds the turn (waiting on a combat you resolve by hand, for instance) is not skipped automatically — the table asks you: <em>“Pass the turn for it? (Cancel = keep waiting.)”</em>. The same exit is on the bot's seat menu as <span class="menu">⏭ Pass their turn…</span>.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Debug bot <span class="sub">— see what it is thinking</span></summary>
+    <div>
+      <p>Tick <em>Debug bot</em> in the setup window and every bot at the table plays with an <strong>open hand to all players</strong>, its uncontrolled crypt <strong>face up</strong>, and writes its decision weighting to the log (“master-play: … why”). It announces in chat that it is in debug mode, so nobody is misled. Use it to judge how the bot plays a deck; never in a real game, and it is refused outright in Tournament mode. The setting is read when the bot is added — toggling it later takes effect on the next deal.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Ending or restarting <span class="sub">— nothing lingers</span></summary>
+    <div>
+      <p>Leaving the hotseat closes every bot: their timers, holds and state are torn down together with the 🤖 panel. A new game never inherits old bots. Saved matches store the human boards; bots are re-created from the seat setup when you start again.</p>
+    </div>
+  </details>
+
+  <h3>Online</h3>
+  <p>Online, bots are added by the <strong>host</strong>, in the <strong>lobby</strong>, in a room created as <strong>Structured</strong>. The bots live in the host's browser tab and connect to the room on their own sockets — to the server and to everyone else they are ordinary remote players.</p>
+  <ol class="flow">
+    <li><b>Create the room as Structured</b> (Board style). Board style is fixed at creation; a Classic room cannot host bots and the button says so.</li>
+    <li><b>In the lobby, find the Bots row</b>: a name (a free name is suggested), a deck dropdown, an experience dropdown, and <span class="menu">🤖 Add bot</span>. Add up to the table limit of six seats; a seat picker per bot lets the host place it.</li>
+    <li><b>Helpers lock on.</b> Adding the first bot switches the room's helper policy to “All helpers on” for everyone and shows it in the lobby banner; removing the last bot restores what the room had before.</li>
+    <li><b>Remove a bot</b> with the ✕ on its lobby row — it leaves the seat itself. <em>Debug bot</em> works as offline and is refused in Tournament rooms.</li>
+    <li><b>Start.</b> From here the server drives everything: the bots take their turns when the turn reaches them, the referee menus (pool, oust, pass) and the card controls reach the bot through the server, and the Bot Activity panel is visible to the host only, since only the host's tab holds the bots.</li>
+  </ol>
+  <p>If the host's connection blinks, a bot reconnects to its seat by token just as a human does. If the host closes the tab, the bots go with it.</p>
+
+  <details>
+    <summary>Offline and online compared <span class="sub">— same bot, one difference that matters</span></summary>
+    <div>
+      <p>The bot's decision code is identical in both modes, and every quick phrase, counter, hold and chat command below works the same way. What differs is the transport: online the server relays everything; offline a bridge inside the client plays the server's role. Since bot v0.6.147 and client v2.6.124 the bridge relays counters, ousts and card hand-overs, so block exchanges, bounties and Fame/Pentex on a bot behave alike.</p>
+      <p>The right-click controls on a bot's board — the seat menu and the card menu, Burn included — reach the bot in both modes; at a hotseat the bridge carries them the way the server does online.</p>
+    </div>
+  </details>
+</section>
+<!-- ============================================================ PLAY -->
+<section id="play">
+  <h2>How a bot plays</h2>
+  <p class="lead">A bot's turn looks like a careful human's: it names each phase, announces every action on the shared counters, asks for blocks and reactions, and waits for the table before it moves on. This section walks through a turn, then how it answers your actions, and finally what it weighs when it decides.</p>
+
+  <h3>Its own turn, phase by phase</h3>
+  <details open>
+    <summary>Unlock <span class="sub">— and the triggers that ride on it</span></summary>
+    <div><p>The bot unlocks its cards, announces the phase, and resolves its own unlock-phase permanents (a Smiling Jack it owns ticks here, its Blood Doll / Vessel income moves blood, a Fame it holds is checked). If one of <em>your</em> permanents affects the bot at its unlock, it cannot see that — apply the effect from the right-click menu on its board.</p></div>
+  </details>
+  <details>
+    <summary>Master <span class="sub">— one master a turn, trifles counted</span></summary>
+    <div><p>It plays at most one master card per master phase (plus a trifle's extra action, plus anything a Parthenon-class card grants), paying pool up front and writing the payment to the log so it can be audited. Persistent masters attach to a vampire or go on the table; one-shots resolve straight to the ash heap. Fame is placed on the vampire it intends to rush; Pentex Subversion and Misdirection pick the most useful unlocked target on its prey's board. A master the database only knows partially is played with a note: <em>“(uncurated — adjust if needed)”</em>.</p></div>
+  </details>
+  <details>
+    <summary>Minion <span class="sub">— actions, one bleed and one political action per vampire</span></summary>
+    <div>
+      <p>Every ready, unlocked vampire acts once. A vampire at 0 blood hunts first, as the rules require. The action itself is chosen by the deck's strategy (build permanents first, bleed, call a referendum, rush, hunt, recruit, equip, rescue) and follows this protocol against a human target:</p>
+      <ol class="flow">
+        <li><b>Announce.</b> The action card's clone animates, the frozen log line is written (<em>“Colette bleeds for 2.”</em>), and the Block counter opens with the bot's <em>announced stealth</em> on its side — the card's built-in stealth plus any permanent stealth of the vampire.</li>
+        <li><b>Ask.</b> <span class="bot"><b>Name:</b> Colette plays Govern the Unaligned — bleeds You for 2 (+1 stealth). Block?</span> The window waits up to 20 s for your answer. After 7 s of silence it rings the room's Reaction stopwatch; once the stopwatch has run out it gives you two more seconds and then treats silence as “no block”.</li>
+        <li><b>Your block.</b> Say <span class="phrase">Block!</span> and right-click the blocking minion → <span class="menu">Block</span> (or do the right-click first — either order works). If only the shout arrives the bot asks “Who blocks?” after 2.5 s. Now the contest runs on the counter: put your intercept on your side (play the cards, use the +/− steps, or just type the number in chat — <a href="#chat-intercept">see the chat grammar</a>). The bot compares the real numbers, waits a beat, and answers with its own stealth card if it needs one and has one — telling you when it is already ahead: <span class="bot"><b>Name:</b> Colette currently has 2 stealth — play your intercept, or resolve the block.</span> It never spends a stealth card it does not need.</li>
+        <li><b>Verdict.</b> When you stop adding intercept (say <span class="phrase">Pass</span> or <span class="phrase">No block</span>, press the counter's Resolve, or let the clock run) the bot declares the outcome from the counter: <em>“Block: Stealth 2 vs Intercept 1 — block fails.”</em> A successful block goes to combat (below). Cancelling a block with the counter's ✕ reopens the window fresh.</li>
+        <li><b>Modifiers.</b> After blocks are declined the bot may pump the bleed (<em>Conditioning</em>, <em>Leverage</em>): each modifier is a new log line and a new question — <span class="bot"><b>Name:</b> Colette adds +2 bleed — now 4 on You. Any reaction?</span> This window takes <em>reactions only</em> (a bounce or reduction); the rules do not reopen blocks. Answer <span class="phrase">No reaction</span> or <span class="phrase">Pass</span> to let it through, <span class="phrase">Yes</span> or <span class="phrase">❗ Hold on…</span> to say “wait, I am reacting” and play your Deflection.</li>
+        <li><b>Resolve.</b> <span class="phrase">It resolves</span>, then a log line: <em>“The bleed goes through: You, −4 pool (adjust yours).”</em> The client's helpers deduct the pool for you when they are on; otherwise adjust your pool yourself. A successful bleed gives the bot the Edge.</li>
+      </ol>
+      <p>Undirected actions (hunt, equip, recruit, a political action, rescue from torpor) are announced the same way and both the bot's prey and predator are asked; the window closes when both have declined. A political action is announced with a machine-readable <em>terms</em> line before the frozen action line, so a bot voter at the table can weigh it.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Influence <span class="sub">— tempo versus transfers</span></summary>
+    <div><p>It respects the opening transfer stagger (1, 2, 3, 4 transfers over the table's first four turns) and moves blood to the uncontrolled vampire it wants out next, judged on tempo and how well that vampire fits the deck (disciplines, title, capacity) rather than simply cheapest first. It never influences below its <em>critical pool</em> — a level it raises when its predator has shown big bleeds or high stealth. An influenced vampire stays hidden until it enters play.</p></div>
+  </details>
+  <details>
+    <summary>Discard <span class="sub">— dead cards first, then surplus stealth</span></summary>
+    <div><p>One discard per phase (more with a Barrens-class card): a card none of its ready vampires can use goes first, then a duplicate, then a glut — more stealth cards in hand than one action could ever spend. Then it passes, and the log says so.</p></div>
+  </details>
+
+  <h3>When you act against it</h3>
+  <details open>
+    <summary>Your bleed or vote <span class="sub">— how it decides to block or react</span></summary>
+    <div>
+      <p>Announce with the action menu: right-click your minion → <span class="menu">Actions</span> → <span class="menu">Bleed 1/2/3/X…</span>, <span class="menu">+X bleed…</span>, <span class="menu">Vote → Political action</span>, <span class="menu">Hunt</span>, <span class="menu">Rescue from torpor</span>, <span class="menu">Diablerie</span>. The frozen line the client writes is what the bot reads, so the amount and the target must be on that line — set a target with <span class="menu">⌖ Set as target</span> / <span class="menu">Target their pool</span> first if the action is not simply aimed at your prey.</p>
+      <p>The bot then weighs the block: what the action costs it in pool, how likely the block is to succeed (your announced stealth against the intercept it can raise — cards in hand, permanents, a wake for a locked body), what a fight against that vampire would cost, and what it loses by locking a blocker it may want later. It says <span class="phrase">❗ Hold on…</span> while it decides, then either <span class="phrase">No block</span> or <span class="phrase">Block!</span> with the frozen line <em>“Anarch Convert attempts to block.”</em>, its wake and intercept cards played onto the counter one beat apart. If you add stealth it looks again at the real counter and answers with more intercept when it has it — several cards at once when several are needed.</p>
+      <p><strong>Bouncing.</strong> A bot with a Deflection does not bounce at the announce. Following table custom it lets you pump first: after <span class="phrase">No block</span> it waits for your modifiers (<span class="menu">+X bleed…</span>) and bounces on the <em>total</em> once you say <span class="phrase">It resolves</span> — or, if you play no modifier, about four seconds after your decline. It rarely bounces a bleed of 1 while it holds another bounce for something heavier, and against a known stealth bleeder it may deliberately let small bleeds through to clog your hand.</p>
+      <p><strong>Your action it cannot read</strong> — a card the client logs only as “plays X” — gets this exchange when you prompt <span class="phrase">Any blocks?</span>:</p>
+      <span class="bot"><b>Name:</b> Will this action cause me to lose pool? (Yes / No)</span><br>
+      <span class="bot"><b>Name:</b> How much?</span>
+      <p>Answer with the quick phrases <span class="phrase">Yes</span> / <span class="phrase">No</span> or type <code>yes</code>, <code>no</code>, then a number. Silence within 20 s counts as “no”; a “yes” with no number counts as 1 pool. The answer lives only for that action and is applied when you say <span class="phrase">It resolves</span>. A <span class="menu">Political action</span> from the menu opens this question by itself, no prompt needed.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Rushing a bot's vampire <span class="sub">— set the target, play the card, type rush</span></summary>
+    <div>
+      <p>A rush card of yours (Bum's Rush, Harass and friends) is not yet in the bot's curated set, so the card alone tells it nothing. The table's interim rule, until the rush cards are swept into the database:</p>
+      <ol class="flow">
+        <li><b>Set the target.</b> Right-click the bot's vampire → <span class="menu">⌖ Set as target</span>.</li>
+        <li><b>Play your rush card</b> from hand (or use <span class="menu">Actions → Card action</span> on your vampire). The client's line carries the aim: <em>“Lisa plays Bum's Rush. Target: Name's Colette.”</em></li>
+        <li><b>Type <code>rush</code> in chat.</b> The bot reads the aimed line and treats it exactly like a Deep Song rush: if it has another unlocked minion or a wake it may try to block first (the rulebook allows the owner to block a rush) and asks the usual way; otherwise — or after it passes — Colette locks, and combat begins on the counters with Lisa as the opponent.</li>
+      </ol>
+      <p>If the aim did not reach it (you forgot the target, or several plays went by), name the vampire: <code>rush Colette</code> — a unique prefix is enough. With several bots at the table a bare <code>rush</code> without an aimed line goes to the bot that is your prey; <code>@Name rush Colette</code> reaches any of them. The bot never rushes by chat itself — its own rushes come with the frozen Deep Song line.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Combat <span class="sub">— one round at a time, on the counters</span></summary>
+    <div>
+      <p>When a block succeeds either way, the bot fights by its cards: maneuvers, presses, strikes with weapons or hand strikes, Carrion Crows, Immortal Grapple, dodges, Majesty-class combat-ends, prevention (Hidden Strength pays X to prevent the whole hit). Each play is a log line and a clone; at the end of a round it narrates: <span class="bot"><b>Name combat</b> — Lisa strikes with .44 Magnum for 2; Anarch Convert takes 2 (loses 2 blood, now 1). One round — tell me if your side's damage differs.</span></p>
+      <p>Against a human the bot cannot see your strike as data. It waits a moment for a strike on the counters, and if none arrives it assumes the rulebook default of <strong>1 hand damage</strong> and says so. If you dealt more, or dodged, correct its vampire's blood from the right-click menu. It presses for another round when its cards make that worthwhile and reads a press of yours from the log; it never cancels your press.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Politics <span class="sub">— calling and voting</span></summary>
+    <div>
+      <p>A bot with a title calls referendums when it holds the votes: <em>Kine Resources Contested</em> and <em>Parity Shift</em> against its prey, or a bloat when that pays more. It announces the terms, opens the Vote counter and casts its own votes there; you cast yours with <span class="menu">Vote → Cast votes → For/Against…</span> or the counter's +/−. <span class="phrase">❗ Hold on…</span> buys thinking time; <span class="phrase">Pass</span> or <span class="phrase">No</span> means “no votes from me” (typing <code>abstain</code> does the same); pressing <span class="phrase">It resolves</span> or the counter's Resolve ends the poll and the bot announces the result at once.</p>
+      <p>As a voter the bot is deliberately simple for now: it votes <strong>against</strong> a referendum that costs it pool or that helps its prey more than itself, <strong>for</strong> one that helps it more, and abstains otherwise. No bargaining, no vote-trading, no table diplomacy yet.</p>
+    </div>
+  </details>
+
+  <h3>What it weighs</h3>
+  <p>Every decision passes through one weighing seam with the experience level as the final filter. The main inputs:</p>
+  <ul>
+    <li><strong>Its own deck, exactly.</strong> Composition is known, so “chance of drawing a stealth card on the replacement draw” is a real number, and it counts wakes, bounces and stealth cards left in the library.</li>
+    <li><strong>Your statistics.</strong> Per opponent it records offensive actions, average and maximum pool damage per action, stealth shown, intercept shown, blocks attempted, damage dealt in combat, and classifies your actions as offensive, economy or utility. From that it forecasts how many turns it has left against its predator (the <em>oust range</em> raises every risk weight) and how far its prey is from being ousted.</li>
+    <li><strong>Posture.</strong> A stealth-bleed deck goes forward on a stack of two or more stealth cards and probes with a chump bleed before the big Govern; a wall deck prices keeping a blocker home; a rush deck goes for the famed or most threatening vampire; a grinder keeps its design home quota.</li>
+    <li><strong>The critical pool.</strong> A floor (6 by default) that rises with your shown burst damage; below it the bot stops influencing, drains a Blood Doll to pool, and plays Freak Drive as a survival unlock.</li>
+  </ul>
+  <p>It plays <em>by the rules</em> throughout: action costs are paid so that the action can be completed, one bleed and one political action per vampire per turn, never the same named card twice in a turn, votes only with titles, blocks only by prey and predator on undirected actions, the Edge burned as cost is not refunded on a block.</p>
+
+  <h3>Where its understanding ends</h3>
+  <div class="gap">
+    <p><b>Cards outside the curated set.</b> Your uncurated card is a “plays X” line to the bot; it will ask about pool loss and otherwise let it be. Effects on the bot's board that come from your permanents must be applied by hand.</p>
+    <p><b>Rush cards.</b> Only Deep Song is tagged as a rush in the database today, so your rush needs the target + <code>rush</code> in chat (above) until the rush cards are swept in.</p>
+    <p><b>Combat against a human.</b> Your strike is inferred, not read — check its vampire's blood after a fight.</p>
+    <p><b>Politics is minimal.</b> Straight for/against by self-interest; no deals.</p>
+    <p><b>No deck reading yet.</b> Its picture of your deck is what you have played; a knowledge layer keyed on clan, group and disciplines is the next big piece.</p>
+    <p><b>Diablerie.</b> A bot never diablerises. If you diablerise a bot's torpored vampire, remove it with <span class="menu">🔥 Burn</span> on its card menu; you run your own blood-hunt referendum as usual — the bot does not call one.</p>
+    <p><b>Un-oust.</b> “Return them to the game” on an ousted bot puts the seat back on the table but the bot itself stays ousted — a rare case, noted as an open trade-off.</p>
+  </div>
+</section>
+<!-- ============================================================ CONTROLS -->
+<section id="controls">
+  <h2>Controls</h2>
+  <p class="lead">Everything the bot listens to, in one place: the quick phrases, the chat commands, the counters, the action menu lines it reads, the seat and card menus that adjust its board, and the Bot Activity panel.</p>
+
+  <h3>Quick phrases</h3>
+  <p>The ten phrases on the quick-phrase bar are the fast path. The bot uses the same ten, so a table of humans and bots speaks one language.</p>
+  <div class="wrap"><table>
+    <tr><th>Phrase</th><th>What the bot does with it</th></tr>
+    <tr><td><span class="phrase">❗ Hold on…</span></td><td><strong>Pauses every bot</strong> at its next visible step until someone releases it. Its questions stop counting down. After 90 s it reminds the table once: “Still holding for Anna.” Use it to play a card in a bot's phase, to think, or to sort something out by hand. During a bot's political action it also keeps its vote poll open. If you leave the table while holding, the hold is released.</td></tr>
+    <tr><td><span class="phrase">No block</span></td><td>Declines the <em>block only</em> on the bot's action. After it, the bot may still pump the bleed and asks for reactions. Also releases a hold.</td></tr>
+    <tr><td><span class="phrase">Block!</span></td><td>You attempt to block the bot's action. Follow with right-click your minion → <span class="menu">Block</span> so it knows which vampire (it asks “Who blocks?” after 2.5 s otherwise), then play intercept onto the counter or type the number. Also releases a hold.</td></tr>
+    <tr><td><span class="phrase">No reaction</span></td><td>Declines everything on the bot's action: no block, no bounce, no reduction. Closes the window at once. Also releases a hold.</td></tr>
+    <tr><td><span class="phrase">It resolves</span></td><td>Says the table has moved on. Ends the bot's current action window, ends its vote poll (it announces the result), <strong>releases any hold</strong>, and — when it is <em>your</em> action — tells the bot to apply your resolved bleed or damage to its pool.</td></tr>
+    <tr><td><span class="phrase">Yes</span></td><td>Answers the bot's pool question (“Will this action cause me to lose pool?”). On a reactions-only question (“Any reaction?” after a bleed total) it means <em>“wait, I am reacting”</em> — the bot holds until you play and say <span class="phrase">It resolves</span> or <span class="phrase">No reaction</span>.</td></tr>
+    <tr><td><span class="phrase">No</span></td><td>Answers the pool question with “no”. On a reactions-only question it closes the window at once.</td></tr>
+    <tr><td><span class="phrase">Pass</span></td><td>“Nothing more from me.” Declines a block, ends your intercept adds in a live contest (the bot then declares the verdict from the counter), and means “no votes from me” during a bot's referendum. Also releases a hold.</td></tr>
+    <tr><td><span class="phrase">Any blocks?</span></td><td>Prompts the bot about <em>your</em> action. If it can read the action it answers with its block decision; if it cannot, it asks the pool question.</td></tr>
+    <tr><td><span class="phrase">Any reaction?</span></td><td>Same prompt after blocks are declined — invites its bounce or reduction.</td></tr>
+  </table></div>
+  <p>Silence is never fatal: a bot's own question defaults to “no block” after its clock (20 s, extended while the Reaction stopwatch runs), and the <a href="#controls-panel">Bot Activity</a> panel lets you close any window early.</p>
+
+  <h3 id="chat-intercept">Chat commands</h3>
+  <p>Chat is the fallback and the correction channel. A bot reads every line; a bare command reaches the bot it naturally concerns, and <code>@Name …</code> aims one at a specific bot when several sit at the table. Type <code>help</code> and the bot lists what it understands.</p>
+  <div class="wrap"><table>
+    <tr><th>You type</th><th>When</th><th>Effect</th></tr>
+    <tr><td><code>bleed 3</code></td><td>Your bleed landed on the bot but the normal flow did not resolve it (a block that was announced and never resolved, a turn that ended with it open, a manual bleed)</td><td>The bot takes 3 pool from its own total and confirms: “I take 3. Pool: 9.” A bare <code>bleed N</code> is read only by the bot that is <em>your prey</em>; use <code>@Name bleed 3</code> for a bounced bleed or a non-prey target.</td></tr>
+    <tr><td><code>vote 2</code></td><td>Political pool damage that did not reach the bot through the counters</td><td>As above, with “vote” — <code>@Name vote 2</code> to aim it.</td></tr>
+    <tr><td><code>block</code> · <code>no</code></td><td>While the bot is asking “Block?”</td><td>Typed forms of <span class="phrase">Block!</span> and <span class="phrase">No block</span> (<code>nej</code>, <code>through</code> and <code>pass</code> also count as no).</td></tr>
+    <tr><td><code>2</code> · <code>+1</code></td><td>While you are blocking the bot's action</td><td>A bare number is your <em>total</em> intercept right now (Sport Bike + Bowl of Convergence = <code>2</code>); <code>+N</code> adds to what is already on the counter. The bot books it on the shared counter for you — “Anna has 2 intercept (booked on the counter).” — and judges at once. Only from the blocker (or <code>@Name 2</code>); outside a contest a bare number means nothing.</td></tr>
+    <tr><td><code>rush</code> · <code>rush Colette</code></td><td>After you played a rush card with the bot's vampire as Target</td><td>The bot resolves your rush: block window if it can block, else the named vampire locks and fights. <code>rush &lt;name&gt;</code> names the vampire when the aim did not reach it; <code>@Name rush …</code> aims at one bot. See <a href="#play">Rushing a bot's vampire</a>.</td></tr>
+    <tr><td><code>yes</code> · <code>no</code> · <code>4</code></td><td>While the bot's pool question is open</td><td>Typed answers to “Will this action cause me to lose pool?” and “How much?” (<code>ja</code>/<code>nej</code>, <code>y</code>/<code>n</code> work too).</td></tr>
+    <tr><td><code>hold on</code></td><td>Any time</td><td>Typed <span class="phrase">❗ Hold on…</span>.</td></tr>
+    <tr><td><code>carry on</code> · <code>resume</code> · <code>it resolves</code></td><td>While a hold is on</td><td>Releases the hold. Any human's release clears every hold at the table (at a hotseat, one screen holds for several names).</td></tr>
+    <tr><td><code>any blocks?</code> · <code>any reaction?</code></td><td>Your action</td><td>Typed prompts, same as the quick phrases.</td></tr>
+    <tr><td><code>abstain</code> · <code>no votes from me</code></td><td>During a bot's referendum</td><td>Counts you as heard; the poll closes once everyone has spoken or the counter is resolved.</td></tr>
+    <tr><td><code>help</code></td><td>Any time</td><td>The bot answers with its version and the commands above. With several bots only the lowest-seated one answers a bare <code>help</code>; <code>@Name help</code> reaches that bot.</td></tr>
+  </table></div>
+  <p>Anything else in chat is table talk to the bot — it ignores it.</p>
+
+  <h3>The counters</h3>
+  <p>The shared resolver counters — Block, Vote, Combat — are how numbers travel between you and the bot. The bot writes only its own side and reads yours, so the two of you never overwrite each other.</p>
+  <ul>
+    <li><strong>Block:</strong> stealth on the actor's side, intercept on the blocker's. The bot opens it with its stealth when it acts and adds its intercept when it blocks. Every change you make is read immediately; the ✕ (clear) during a contest against the bot is read as “block withdrawn” and reopens its window; Resolve closes the contest.</li>
+    <li><strong>Vote:</strong> for and against. The bot casts here when it calls or votes; your +/− steps and the <span class="menu">Cast votes</span> menu are both read. Resolve ends a bot's poll.</li>
+    <li><strong>Combat:</strong> damage dealt each way per round. The bot announces its strikes as log lines and narrates the round; use the counter to show your damage so the table agrees.</li>
+  </ul>
+
+  <h3>Action-menu lines the bot reads</h3>
+  <p>These right-click actions on your minion write the frozen lines a bot understands. Announcing an action in free chat instead does <em>not</em> reach it.</p>
+  <div class="wrap"><table>
+    <tr><th>Menu item</th><th>Line written</th><th>The bot…</th></tr>
+    <tr><td>Actions → Bleed 1 / 2 / 3 / X…</td><td>“Lisa bleeds for 2. Target: Name's pool.”</td><td>opens its block decision as the target (or as predator on an undirected read); remembers the action</td></tr>
+    <tr><td>Actions → +X bleed…</td><td>“Lisa adds +2 bleed (= 4).”</td><td>reopens its reaction window on the new total; this is the moment it bounces</td></tr>
+    <tr><td>Actions → Vote → Political action</td><td>“Lisa calls a political action.”</td><td>opens the block step for prey and predator, then asks the pool question</td></tr>
+    <tr><td>Actions → Vote → Cast votes → For/Against…</td><td>“Lisa casts 2 votes for.”</td><td>counts them in a bot-called referendum</td></tr>
+    <tr><td>Actions → Block</td><td>“Lisa blocks.”</td><td>names Lisa as the blocker of its action</td></tr>
+    <tr><td>Actions → Hunt / Rescue from torpor / Diablerie / Card action</td><td>“Lisa hunts.” etc.</td><td>opens the prey/predator window for hunt and rescue; remembers the rest so a later <span class="phrase">Any blocks?</span> has something to ask about</td></tr>
+    <tr><td>Playing a card from hand</td><td>clone animation + “plays X”</td><td>learns the card name (its statistics) and, if the card is curated, its effect</td></tr>
+  </table></div>
+
+  <h3 id="controls-elements">Adjusting a bot's board</h3>
+  <p>Right-click on a bot's seat (its pool globe, or its row in the Table panel) and on its cards. Everything here is meant for correcting what the bot could not see; the bot announces the change and plays on from it.</p>
+  <div class="two">
+    <div>
+      <h4>Seat menu (pool globe / Table panel)</h4>
+      <ul>
+        <li><span class="menu">⚙ Set their pool…</span> — type the new total. The bot clamps it, says “pool set to N by the host”, and a zero ousts it properly (bounty to its predator).</li>
+        <li><span class="menu">⚖ Pool −1</span> / <span class="menu">−2</span> / <span class="menu">+1</span> — step it, for referendum costs and small corrections.</li>
+        <li><span class="menu">💀 Oust this player…</span> — ousts the bot: it clears its board, stops taking turns, and its predator collects the bounty.</li>
+        <li><span class="menu">↩ Return them to the game</span> — see the un-oust note above: the seat returns, the bot does not.</li>
+        <li><span class="menu">⏭ Pass their turn…</span> — advances past a bot that holds the turn (online: while it is its turn; offline: while the sweep is waiting on it).</li>
+        <li><span class="menu">👁 Inspect their hand</span> — appears when the bot plays with an open hand (Debug bot, or Revelations at superior).</li>
+      </ul>
+      <p style="color:var(--ink-mute);font-size:14px">Online these are host- and referee-only, like every referee verb; at a hotseat you are the host.</p>
+    </div>
+    <div>
+      <h4>Card menu (right-click a card on the bot's board)</h4>
+      <ul>
+        <li><span class="menu">Blood +1</span> / <span class="menu">Blood −1</span> — a strike you dealt, a hunt it could not see, a permanent of yours that drains it.</li>
+        <li><span class="menu">Lock</span> / <span class="menu">Unlock</span> — a Misdirection you played, a wake effect.</li>
+        <li><span class="menu">Flip face up</span> / <span class="menu">Flip face down</span></li>
+        <li><span class="menu">Blue +1 / −1</span>, <span class="menu">Green +1 / −1</span> — generic counters (a Fame's tally, corruption, whatever the card needs).</li>
+        <li><span class="menu">Send to torpor</span> / <span class="menu">Leave torpor</span> — vampires only; sending a famed vampire to torpor also triggers the Fame pool loss on the bot's side.</li>
+        <li><span class="menu">🔥 Burn (remove from game)</span> — bot cards only, with a confirm: a diablerised vampire, a final death, or a card an effect of yours removed. The bot drops anything attached to it and says so in chat.</li>
+      </ul>
+      <p style="color:var(--ink-mute);font-size:14px">The bot applies each change, clamps it (blood 0–99), writes “ctrl from Anna: blood− on Colette” to its log and republishes its board — its publish is what everyone then sees.</p>
+    </div>
+  </div>
+
+  <h4>Giving a bot a card</h4>
+  <p>Drag a card from your hand onto the bot's board — onto one of its vampires for an attachment — exactly as you would for a human. Fame and Pentex Subversion dropped on a bot's vampire <em>arm</em>: the bot tracks the Fame's torpor cost and knows the Pentexed vampire cannot block. Works online and offline.</p>
+
+  <h3 id="controls-panel">The Bot Activity panel</h3>
+  <p>The <span class="menu">🤖</span> badge in the top-right corner (a number beside it counts bots waiting on someone) opens a panel with one row per bot: its name, <em>what it is waiting for</em> in table language (“block? (Anna)”, “hold: Anna”, “pool question (how much?)”, “Anna's turn”, “thinking”), a countdown where one honestly exists, and a step button.</p>
+  <ul>
+    <li><span class="menu">▶ Release hold</span> — the same release <span class="phrase">It resolves</span> performs, written to the log as done from the table controls.</li>
+    <li><span class="menu">▶ Close window</span> — closes the bot's open block/reaction window exactly as its clock would have: nobody answered, so a contested window still declares its verdict from the counter.</li>
+    <li><span class="menu">▶ Close question</span> — closes the pool question as its clock would (stage one → “no”, stage two → 1 pool).</li>
+    <li><span class="menu">▶ Run bot turns</span> (offline only) — plays the bot seats between the current turn and the next human, the range the Pass handover would play.</li>
+  </ul>
+  <p>A step can only pull forward a wait the bot would have resolved itself; it never forces a decision the bot could not have reached. A greyed button means the wait is not steppable — the bot is pacing, or a human is mid-answer. Online the panel is visible to the host only.</p>
+</section>
+</main>
+
+<footer>
+  Elysium bots — start here · bot <b>v0.6.155</b>, client <b>v2.6.125</b> with the bot-card control fix (spec-bot-card-ctrl-2026-09-22: card menu offline, Burn item), cardfx 96 curated / 1,670 modelled library effects · 22 September 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+</footer>
+
+<script>
+(function(){
+  const links=[...document.querySelectorAll('.nav a')], secs=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  function on(){ let cur=secs[0]; for(const s of secs){ if(s.getBoundingClientRect().top<=110) cur=s; } links.forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#'+cur.id)); }
+  addEventListener('scroll', on, {passive:true}); on();
+  // opening a hash link into a closed <details> opens it
+  function reveal(){ const h=location.hash&&document.querySelector(location.hash); if(h){ let d=h.closest('details'); while(d){ d.open=true; d=d.parentElement.closest('details'); } } }
+  addEventListener('hashchange', reveal); reveal();
+})();
+</script>
+</body>
+</html>
