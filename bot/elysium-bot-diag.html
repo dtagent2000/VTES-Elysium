@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<!-- elysium-bot-diag.html v0.1.0 (8 Aug 2026, HB1) — the browser spike.
+     PURPOSE: prove elysium-bot.js v0.6.94's env-agnostic seams in a REAL
+     browser — the vm sandbox (suite section 75d) is an honest proxy, this
+     page is the ground truth. Zero changes to the bot are required; if this
+     page cannot go green with the bot as-is, that is an HB0 finding.
+
+     HOW TO RUN (either works):
+       A) serve the folder:   python3 -m http.server 8000
+          then open           http://localhost:8000/elysium-bot-diag.html
+       B) double-click the file (file://). The card database cannot be
+          fetch()ed on file:// (browser CORS) — use the file picker that
+          appears to hand the page elysium-cardfx.json instead.
+
+     The battery below is DOM-FREE and marker-delimited so diag-hb1-smoke.js
+     can extract and run the SAME tests headlessly in the suite's no-Node
+     sandbox (console + timers only) before this page ever meets a browser.
+
+     THE BOT'S SENT-VERB SET (enumerated 8 Aug, the HB2 bridge's inbound
+     contract): join, create (raw handle at connect) + via send(): bounty,
+     chat, decide, deck, draw, drawCrypt, fx, log, logTo, openHand, pass,
+     pileBulk, revealHand, say, seat, tally — 18 verbs total.               -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elysium bot — browser diagnostic (HB1)</title>
+<style>
+  :root { color-scheme: dark; }
+  body { background:#14161c; color:#d8dce6; font:14px/1.5 system-ui, sans-serif; margin:0; padding:24px; }
+  h1 { font-size:19px; margin:0 0 4px; color:#e8ebf2; }
+  .sub { color:#8a93a6; margin:0 0 18px; font-size:13px; }
+  .card { background:#1b1e27; border:1px solid #2a2f3d; border-radius:10px; padding:14px 16px; margin:0 0 14px; max-width:860px; }
+  table { border-collapse:collapse; width:100%; }
+  td { padding:6px 10px; border-top:1px solid #262b38; vertical-align:top; }
+  tr:first-child td { border-top:0; }
+  .nm { white-space:nowrap; color:#aeb6c6; width:190px; }
+  .st { width:64px; font-weight:600; white-space:nowrap; }
+  .pass { color:#5fd38a; } .fail { color:#f2707a; } .skip { color:#d9b45f; } .run { color:#7aa7f0; }
+  .dt { color:#9aa2b4; font-size:13px; word-break:break-word; }
+  #logs { background:#12141a; border:1px solid #262b38; border-radius:8px; padding:10px 12px;
+          font:12px/1.45 ui-monospace, monospace; color:#8fd0a8; max-height:220px; overflow:auto; white-space:pre-wrap; }
+  #summary { font-weight:600; margin:10px 0 0; }
+  #pick { display:none; margin-top:10px; }
+  button { background:#2a2f3d; color:#d8dce6; border:1px solid #3a4152; border-radius:8px; padding:7px 14px; cursor:pointer; font:inherit; }
+  button:hover { background:#333a4c; }
+  code { color:#c8cfdd; background:#232836; padding:1px 5px; border-radius:5px; }
+</style>
+</head>
+<body>
+<h1>Elysium bot — browser diagnostic <span style="color:#7aa7f0">(HB1 spike)</span></h1>
+<p class="sub">Proves the v0.6.94 env-agnostic seams in a real browser: script-tag load, exports on
+<code>globalThis.ElysiumBot</code>, cardfx via <code>o.cardfxData</code>, transport injection, dispatch, drain pacing, timers.</p>
+
+<div class="card">
+  <table id="rows"></table>
+  <div id="summary" class="run">loading elysium-bot.js…</div>
+  <div id="pick">
+    <label>fetch() unavailable here (file:// most likely) — hand me <code>elysium-cardfx.json</code>:
+      <input type="file" id="fxfile" accept=".json"></label>
+  </div>
+  <p style="margin:12px 0 0"><button id="rerun">Run battery again</button></p>
+</div>
+
+<div class="card">
+  <div style="color:#8a93a6; font-size:12px; margin-bottom:6px">bot log (o.log, live)</div>
+  <div id="logs"></div>
+</div>
+
+<script>
+/* Catch a script-tag parse/load failure BEFORE it happens, so an old browser
+   (pre-ES2023 hashbang, most likely) reports a readable row, not a blank page. */
+window.__botLoadError = null;
+window.addEventListener('error', e => {
+  if (e.filename && /elysium-bot\.js/.test(e.filename)) window.__botLoadError = e.message || 'script error';
+}, true);
+</script>
+<script src="elysium-bot.js"></script>
+<script>
+/*HB1-BATTERY-START*/
+/* DOM-free battery. env contract:
+     env.EB        — the ElysiumBot export surface (globalThis.ElysiumBot)
+     env.loadError — a script-tag load/parse error message, or null
+     env.fetchFx() — Promise<parsed cardfx JSON | null> (null = unavailable here)
+     env.state     — scratch shared between tests (fx lands here)
+     env.log(line) — battery-level commentary sink
+   Each test returns { pass: true|false|'skip', detail }.                     */
+
+function mkStubDial(rec){
+  return (url, cb) => {
+    rec.url = url; rec.cb = cb;
+    setTimeout(() => cb.open(), 0);
+    return { send: o => rec.sent.push(o), close(){ rec.closed = true; } };
+  };
+}
+
+const HB1_BATTERY = [
+
+  { name: 'script-tag load', run: async (env) => {
+      if (env.loadError) return { pass: false, detail: 'elysium-bot.js failed to load/parse: ' + env.loadError + ' (pre-ES2023 hashbang browser?)' };
+      const EB = env.EB;
+      if (!EB || typeof EB.Bot !== 'function') return { pass: false, detail: 'globalThis.ElysiumBot missing — either elysium-bot.js is not beside this page (a 404 carries no filename, so it lands here) or the UMD-lite export never ran' };
+      return { pass: true, detail: 'ElysiumBot present — bot v' + EB.BOT_VERSION + ', wire v' + EB.WIRE_V };
+  }},
+
+  { name: 'export surface', run: async (env) => {
+      const EB = env.EB, want = ['Bot','wsConnect','wsFrame','parseArgs','DEFAULT_DECK','WALL_DECK','SEWER_DECK','ARCHETYPES',
+                                 'BOT_VERSION','WIRE_V','SAY','sayIdx','FX_NORM','L12','stripTags','loadCardfx','prepCardfx','PERSONAS','CARD_HANDLERS'];
+      const missing = want.filter(k => !(k in EB));
+      return missing.length ? { pass: false, detail: 'missing: ' + missing.join(', ') }
+                            : { pass: true, detail: want.length + ' exports present (incl. prepCardfx — the HB0 addition)' };
+  }},
+
+  { name: 'prepCardfx gate + index', run: async (env) => {
+      const P = env.EB.prepCardfx, N = env.EB.FX_NORM;
+      if (P(null) !== null || P({}) !== null || P({ fxv: 2, lib: {}, crypt: {} }) !== null)
+        return { pass: false, detail: 'the junk gate accepted junk' };
+      const tiny = P({ fxv: 1, lib: { 'Test Card': { m: [] } }, crypt: {}, alias: { 'TC': 'Test Card' } });
+      if (!tiny || tiny.normIdx.get(N('Test Card')) !== 'Test Card' || tiny.normIdx.get(N('TC')) !== 'Test Card')
+        return { pass: false, detail: 'inline fixture failed to index' };
+      return { pass: true, detail: 'junk rejected; inline fixture indexes (name + alias resolve)' };
+  }},
+
+  { name: 'cardfx acquisition', run: async (env) => {
+      const raw = await env.fetchFx();
+      if (!raw) return { pass: 'skip', detail: 'no cardfx source here — on file:// use the picker below, then re-run' };
+      const fx = env.EB.prepCardfx(raw);
+      if (!fx) return { pass: false, detail: 'cardfx JSON arrived but the shape gate rejected it' };
+      env.state.fxRaw = raw;
+      return { pass: true, detail: 'lib ' + Object.keys(fx.lib).length + ' / crypt ' + Object.keys(fx.crypt).length + ' / norm keys ' + fx.normIdx.size };
+  }},
+
+  { name: 'no-data warning path', run: async (env) => {
+      const logs = [];
+      const b = new env.EB.Bot({ server: 'ws://spike:0', room: 'w', pass: 'p', name: 'WarnBot',
+                                 transport: mkStubDial({ sent: [] }), paceMs: 0, log: (...a) => logs.push(a.join(' ')) });
+      const warned = logs.some(l => /NOT loaded/.test(l));
+      if (b.fx !== null || !warned) return { pass: false, detail: 'fx=' + String(b.fx && 'set') + ', warning ' + (warned ? 'fired' : 'MISSING') };
+      return { pass: true, detail: 'fx === null and the honest warning teaches o.cardfxData (75d’s untested branch, now browser-proven)' };
+  }},
+
+  { name: 'construct with cardfxData', run: async (env) => {
+      if (!env.state.fxRaw) return { pass: 'skip', detail: 'needs the card database — see cardfx acquisition above' };
+      const logs = [];
+      const b = new env.EB.Bot({ server: 'ws://spike:0', room: 'x', pass: 'p', name: 'FxBot', cardfxData: env.state.fxRaw,
+                                 transport: mkStubDial({ sent: [] }), paceMs: 0, log: (...a) => logs.push(a.join(' ')) });
+      if (!b.fx || b.fx.normIdx.size < 1000) return { pass: false, detail: 'fx index missing or implausibly small' };
+      if (!logs.some(l => /cardfx loaded/.test(l))) return { pass: false, detail: 'loaded-log did not fire' };
+      return { pass: true, detail: 'this.fx built from the data rung — ' + b.fx.normIdx.size + ' norm keys, no file system touched' };
+  }},
+
+  { name: 'transport handshake', run: async (env) => {
+      const rec = { sent: [] };
+      env.state.rec = rec;
+      env.state.bot = new env.EB.Bot({ server: 'ws://spike:0', room: 'HB1', pass: 'p', name: 'SpikeBot',
+                                       cardfxData: env.state.fxRaw || null, transport: mkStubDial(rec),
+                                       paceMs: 0, askSecs: 1, log: env.botLog });
+      await env.state.bot.connect();
+      const j = rec.sent[0];
+      if (rec.url !== 'ws://spike:0' || !j || j.t !== 'join' || j.room !== 'HB1' || j.bot !== true || j.v !== env.EB.WIRE_V)
+        return { pass: false, detail: 'join malformed or wsConnect ran: ' + JSON.stringify(j || null) };
+      return { pass: true, detail: 'join(bot:true, v:' + j.v + ') went through the injected dial' };
+  }},
+
+  { name: 'joined → deck upload', run: async (env) => {
+      const { rec, bot } = env.state;
+      rec.cb.msg(JSON.stringify({ t: 'joined', room: 'HB1', seat: 0, token: 'tk-hb1', lobby: true, players: [] }));
+      await new Promise(r => setTimeout(r, 120));               // the deck goes through send() → _drain (timered)
+      const d = rec.sent.find(o => o && o.t === 'deck');
+      if (bot.token !== 'tk-hb1' || !d || !Array.isArray(d.library) || d.library.length === 0)
+        return { pass: false, detail: 'token=' + bot.token + ', deck=' + (d ? 'shape wrong' : 'never sent') };
+      return { pass: true, detail: 'seat/token landed; DEFAULT_DECK uploaded (' + d.library.length + ' library lines) back OUT through the stub' };
+  }},
+
+  { name: 'lobby → seat pick', run: async (env) => {
+      const { rec, bot } = env.state;
+      rec.cb.msg(JSON.stringify({ t: 'lobby', players: [{ name: 'SpikeBot', seat: 0 }], seats: 5 }));
+      await new Promise(r => setTimeout(r, 120));
+      const s = rec.sent.find(o => o && o.t === 'seat');
+      if (!s || s.seat !== 1) return { pass: false, detail: 'expected {t:seat, seat:1}, got ' + JSON.stringify(s || null) };
+      bot._seatPicked = true;
+      return { pass: true, detail: 'first free seat picked (seat 1) — a second dispatch path live in-browser' };
+  }},
+
+  { name: 'drain burst ×12', run: async (env) => {
+      const { rec, bot } = env.state;
+      const before = rec.sent.length;
+      for (let i = 1; i <= 12; i++) bot.send({ t: 'chat', msg: 'hb1 burst ' + i });
+      const t0 = Date.now();
+      while (rec.sent.length < before + 12 && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 25));
+      const got = rec.sent.slice(before).filter(o => o && o.t === 'chat').map(o => o.msg);
+      const ordered = got.length === 12 && got.every((m, i) => m === 'hb1 burst ' + (i + 1));
+      if (!ordered) return { pass: false, detail: got.length + '/12 arrived in ' + (Date.now() - t0) + ' ms; order ' + (ordered ? 'ok' : 'BROKEN') };
+      return { pass: true, detail: '12/12 through _drain in ' + (Date.now() - t0) + ' ms, order preserved — the pacing timers run fine here' };
+  }},
+
+  { name: 'timer drift ×10·50 ms', run: async (env) => {
+      let worst = 0, sum = 0;
+      for (let i = 0; i < 10; i++) {
+        const t0 = Date.now();
+        await new Promise(r => setTimeout(r, 50));
+        const d = Date.now() - t0 - 50;
+        worst = Math.max(worst, d); sum += d;
+      }
+      const avg = Math.round(sum / 10);
+      const ok = worst < 1500;                                   // informational for HB2 — a busy-but-healthy machine must not red-flag; only genuinely broken timers fail
+      return { pass: ok, detail: 'avg +' + avg + ' ms, worst +' + worst + ' ms (focused tab; fails only past 1.5 s). NOTE: background tabs throttle timers hard — that is HB2’s known question, not a failure here.' };
+  }},
+];
+
+async function runHB1Battery(env, report){
+  let pass = 0, fail = 0, skip = 0;
+  for (const t of HB1_BATTERY){
+    let r;
+    try { r = await t.run(env); }
+    catch (e) { r = { pass: false, detail: 'threw: ' + (e && e.message || e) }; }
+    if (r.pass === true) pass++; else if (r.pass === 'skip') skip++; else fail++;
+    report(t.name, r.pass, r.detail);
+  }
+  try { if (env.state.bot) env.state.bot.close(); } catch (e) {}
+  return { pass, fail, skip };
+}
+
+if (typeof globalThis !== 'undefined') globalThis.__HB1 = { HB1_BATTERY, runHB1Battery, mkStubDial };
+/*HB1-BATTERY-END*/
+
+/* ---------------- DOM glue (browser only) ---------------- */
+if (typeof document !== 'undefined') (function(){
+  const rowsEl = document.getElementById('rows'), sumEl = document.getElementById('summary');
+  const logsEl = document.getElementById('logs'), pickEl = document.getElementById('pick');
+  const botLog = (...a) => { logsEl.textContent += a.join(' ') + '\n'; logsEl.scrollTop = logsEl.scrollHeight; };
+  let pickedFx = null;
+
+  function fetchFx(){
+    if (pickedFx) return Promise.resolve(pickedFx);
+    return fetch('elysium-cardfx.json').then(r => r.ok ? r.json() : null).catch(() => null)
+      .then(j => { if (!j) pickEl.style.display = 'block'; return j; });
+  }
+
+  function report(name, status, detail){
+    const tr = document.createElement('tr');
+    const cls = status === true ? 'pass' : status === 'skip' ? 'skip' : 'fail';
+    const word = status === true ? 'PASS' : status === 'skip' ? 'SKIP' : 'FAIL';
+    tr.innerHTML = '<td class="nm">' + name + '</td><td class="st ' + cls + '">' + word + '</td><td class="dt">' + detail + '</td>';
+    rowsEl.appendChild(tr);
+  }
+
+  async function go(){
+    rowsEl.innerHTML = ''; logsEl.textContent = '';
+    sumEl.className = 'run'; sumEl.textContent = 'running…';
+    const env = { EB: (typeof ElysiumBot !== 'undefined' ? ElysiumBot : null),
+                  loadError: window.__botLoadError, fetchFx, state: {}, botLog, log: botLog };
+    const s = await runHB1Battery(env, report);
+    sumEl.className = s.fail ? 'fail' : 'pass';
+    sumEl.textContent = s.pass + ' pass / ' + s.fail + ' fail' + (s.skip ? ' / ' + s.skip + ' skip (card database not reachable here)' : '') +
+                        (s.fail ? '' : ' — the HB0 seams hold in this browser');
+  }
+
+  document.getElementById('rerun').addEventListener('click', go);
+  document.getElementById('fxfile').addEventListener('change', ev => {
+    const f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => { try { pickedFx = JSON.parse(rd.result); pickEl.style.display = 'none'; go(); }
+                        catch (e) { botLog('picker: could not parse that file: ' + e.message); } };
+    rd.readAsText(f);
+  });
+  go();
+})();
+</script>
+</body>
+</html>

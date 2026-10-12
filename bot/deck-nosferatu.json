@@ -1,0 +1,149 @@
+{
+ "name": "V5 Starter — Nosferatu (Black Chantry 2020)",
+ "set": "Fifth Edition",
+ "precon": "Nosferatu",
+ "crypt": [
+  {
+   "name": "Aunt Linda (G6)",
+   "qty": 1
+  },
+  {
+   "name": "Baixinho (G6)",
+   "qty": 1
+  },
+  {
+   "name": "Belinde (G6)",
+   "qty": 2
+  },
+  {
+   "name": "Horace Radcliffe (G6)",
+   "qty": 1
+  },
+  {
+   "name": "Larissa Moreira (G6)",
+   "qty": 2
+  },
+  {
+   "name": "Lenny Burkhead (G6)",
+   "qty": 2
+  },
+  {
+   "name": "Ryan (G6)",
+   "qty": 1
+  },
+  {
+   "name": "The Dowager (G6)",
+   "qty": 1
+  },
+  {
+   "name": "Wauneka (G6)",
+   "qty": 1
+  }
+ ],
+ "library": [
+  {
+   "name": "Carrion Crows",
+   "qty": 2
+  },
+  {
+   "name": "Cats' Guidance",
+   "qty": 4
+  },
+  {
+   "name": "Creeping Sabotage",
+   "qty": 4
+  },
+  {
+   "name": "Deep Song",
+   "qty": 6
+  },
+  {
+   "name": "Fame",
+   "qty": 1
+  },
+  {
+   "name": "Guard Dogs",
+   "qty": 4
+  },
+  {
+   "name": "Guardian Angel",
+   "qty": 1
+  },
+  {
+   "name": "Haven Uncovered",
+   "qty": 1
+  },
+  {
+   "name": "Immortal Grapple",
+   "qty": 4
+  },
+  {
+   "name": "Instinctive Reaction",
+   "qty": 4
+  },
+  {
+   "name": "Lost in Crowds",
+   "qty": 4
+  },
+  {
+   "name": "Murder of Crows",
+   "qty": 2
+  },
+  {
+   "name": "On the Qui Vive",
+   "qty": 5
+  },
+  {
+   "name": "Preternatural Strength",
+   "qty": 2
+  },
+  {
+   "name": "Protected District",
+   "qty": 4
+  },
+  {
+   "name": "Raven Spy",
+   "qty": 2
+  },
+  {
+   "name": "Rebel",
+   "qty": 1
+  },
+  {
+   "name": "Roundhouse",
+   "qty": 8
+  },
+  {
+   "name": "Slum Hunting Ground",
+   "qty": 1
+  },
+  {
+   "name": "Smiling Jack, The Anarch",
+   "qty": 1
+  },
+  {
+   "name": "Taste of Vitae",
+   "qty": 4
+  },
+  {
+   "name": "The Labyrinth",
+   "qty": 1
+  },
+  {
+   "name": "The Warrens",
+   "qty": 4
+  },
+  {
+   "name": "Underbridge Stray",
+   "qty": 2
+  },
+  {
+   "name": "Vessel",
+   "qty": 4
+  },
+  {
+   "name": "Warsaw Station",
+   "qty": 1
+  }
+ ]
+}

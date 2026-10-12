@@ -1,0 +1,122 @@
+# Elysium Bots — PROJEKTINNEHÅLL, SLIMMAT (21 september 2026, bot v0.6.146, arena v1.4.1, cardfx curated 96)
+
+Rensa chattprojektet och ladda upp allt i den här zippen. Läs `READ-ME-FIRST-2026-09-21c.md`, sedan `elysium-bot-TODO-2026-09-21.md`.
+
+## Vad som INTE är med, och varför
+- **Alla `diag-NN.js` (84–120, 20 + 16 st):** fristående kopior av sektioner som redan ligger i `test-bot-logic.js`. De behövs bara i sandlådan för destruktiva kontroller mot en gammal bot; de finns i arkiv-zippen. Kvar: `diag-hb1-smoke.js`, `diag-a1-stash-probe.js`, `diag-give-probe.js` (egna verktyg, inte kopior).
+- **Serie-specifika kör- / pollningsskript:** bara det generiska paret `run-bal.sh` + `poll-bal.sh` och designfilen `design-balanced-serie-bal1.txt` är med (lägg designfilen som `serie-bal1/design.txt` i sandlådan; en ny serie = kopiera paret och byt serienamn och seed-bas — SKILLS.md).
+- **Alla PREDICTIONS:** varje REPORT bär sin förutsägelsetabell med utfall.
+- **Äldre REPORTs:** deras slutsatser står i CLAUDE.md. Kvar: bal1 (baslinjen + designen), null4, home2 (måttstocken), bal5–bal8 (stealth-bleedaren och bounce-stråket).
+- `vtes.json`, klienten, `twd_decks.json`, alla traces: inte projektfiler (arkiv-zippen / uppladdning i chatten).
+
+## Filer (99)
+- `CLAUDE.md`
+- `ELYSIUM-PROTOCOL.md`
+- `PROJECT-INSTRUCTIONS.md`
+- `PROJECT-MANIFEST.md`
+- `README-v0_6_108.md`
+- `SKILLS.md`
+- `START-HERE-BOTS.html`
+- `cardfx-compile.js`
+- `cardfx-curated.json`
+- `cardfx-persistent-lock-design-decisions.md`
+- `cardfx-sweep-audit.md`
+- `deck-coverage-v5-starter-malkavian-black-chantry-2020.md`
+- `deck-coverage-v5-starter-nosferatu-black-chantry-2020.md`
+- `deck-coverage-v5-starter-toreador-black-chantry-2020.md`
+- `deck-coverage-v5-starter-tremere-black-chantry-2020.md`
+- `deck-coverage-v5-starter-ventrue-black-chantry-2020.md`
+- `deck-coverage-ventrue-antitribu-grinder-johan-twda-style.md`
+- `deck-hacking.json`
+- `deck-malkavian.json`
+- `deck-nosferatu.json`
+- `deck-sewer.json`
+- `deck-tremere.json`
+- `deck-ventrue.json`
+- `diag-a1-stash-probe.js`
+- `diag-give-probe.js`
+- `diag-hb1-smoke.js`
+- `elysium-arena-observability-plan.md`
+- `elysium-arena-tournament-gap-review.md`
+- `elysium-bot-CHANGELOG.md`
+- `elysium-bot-arena.js`
+- `elysium-bot-block-doctrine.md`
+- `elysium-bot-combat-v2-plan.md`
+- `elysium-bot-diag.html`
+- `elysium-bot-feedback-loop-spec.md`
+- `elysium-bot-handoff-reply-2026-09-12.md`
+- `elysium-bot-helper-gate-decision.md`
+- `elysium-bot-history-v0_6_9-0_6_21.md`
+- `elysium-bot-influence-planner-spec.md`
+- `elysium-bot-learnings.md`
+- `elysium-bot-logic-recommendations.md`
+- `elysium-bot-persona-spec.md`
+- `elysium-bot-phase-income-v2-plan.md`
+- `elysium-bot-politics-theory.md`
+- `elysium-bot-project-context.md`
+- `elysium-bot-review-2026-09-11.md`
+- `elysium-bot-session-journal.md`
+- `elysium-bot-spec.md`
+- `elysium-bot-strategy.md`
+- `elysium-bot-table-model-spec.md`
+- `elysium-bot-table.js`
+- `elysium-bot-training-backlog.md`
+- `elysium-bot.js`
+- `elysium-cardfx-design.md`
+- `elysium-cardfx-lgd-audit.md`
+- `elysium-cardfx.js`
+- `elysium-cardfx.json`
+- `elysium-hotseat-bots-plan.md`
+- `elysium-server.js`
+- `gen-batch-review.js`
+- `gen-deck-coverage.js`
+- `gen-forecast-calibration.js`
+- `gen-match-dossier.js`
+- `gen-plan-review.js`
+- `gen-sweep-audit.js`
+- `gen-trace-harvest.js`
+- `rig-a1.json`
+- `spec-block-bar-2026-09-18.md`
+- `spec-hotseat-bridge-relays-2026-09-11.md`
+- `spec-referendum-terms-2026-09-18.md`
+- `test-bot-canary.js`
+- `test-bot-logic.js`
+- `test-bot-suffix.js`
+- `test-cardfx.js`
+- `test-eligible.js`
+- `test-fixes.js`
+- `test-grammar.js`
+- `test-handoff.js`
+- `test-persona.js`
+- `test-planner.js`
+- `test-planner2.js`
+- `test-planner3.js`
+- `test-soft.js`
+- `READ-ME-FIRST-2026-09-21c.md`
+- `elysium-bot-TODO-2026-09-21.md`
+- `gen-null-review.js`
+- `ana-cards.py`
+- `ana-home.py`
+- `ana-open.js`
+- `spec-home-pricing-2026-09-19.md`
+- `run-bal.sh`
+- `poll-bal.sh`
+- `REPORT-serie-bal1.md`
+- `REPORT-serie-null4.md`
+- `REPORT-serie-home2.md`
+- `REPORT-serie-bal5.md`
+- `REPORT-serie-bal6.md`
+- `REPORT-serie-bal7.md`
+- `REPORT-serie-bal8.md`
+- `design-balanced-serie-bal1.txt`
+
+
+## Tillagt 21 sep (ny chatt, bot v0.6.147)
+- `elysium-bot-hotseat.js` — hotseat-bordet headless genom klientens riktiga brygga (kräver klientfilen bredvid)
+- `test-bot-hotseat.js` — hotseat-grinden H1–H9
+- `spec-hotseat-parity-2026-09-21.md` — handover till klientprojektet
+
+## Tillagt 21 sep (efter mains handover, bot v0.6.151)
+- `handover-to-bots-parity-2026-09-21.md` — mains handover tillbaka (deras dokument)
+- `reply-to-main-parity-2026-09-21.md` — vårt svar
+- `elysium-server.js` ersatt med srv-2.6.38

@@ -15,3 +15,26 @@ The server requires a few steps that are hopefully not too brutal (two downloads
 
 
 Server has been tested and works. Client and helper files supports Mac and Linux in theory but has not been tested, so any feedback is appreciated. 
+
+## Bots (Elysium Bots)
+
+The client can seat automated opponents — offline (hot-seat) or online. The bot bundle ships with the download:
+`elysium-bot.js`, `elysium-cardfx.json` / `.js` (the card-effect library compiled from KRCG's `vtes.json`),
+`elysium-twd-profile.json` / `.js` and `elysium-twd-archetypes.json` / `.js` (the tournament-deck prior the bots
+read opponents against). Open **`START-HERE-BOTS.html`** for the player guide: what the bots know, the three
+experience levels (Novice / Experienced / Expert), how to seat them and how a bot plays at your table.
+
+Current bot: **v0.6.198** (12 Oct 2026), built against client v2.6.141 / server srv-2.6.43.
+
+## Repository layout
+
+This repository is a monorepo for two sister projects that only consume each other's releases:
+
+| Folder | What |
+| --- | --- |
+| `/` | **the download** — exactly what a player gets: client, server, start scripts, the bot bundle, the guides |
+| `client/` | the client & server project: sources, test harness and suites, `ELYSIUM-PROTOCOL.md`, its own docs |
+| `bot/` | the bot project: `elysium-bot.js`, the arena (`elysium-bot-arena.js`), the cardfx pipeline, the suites, decks, analysis tools, its own docs |
+
+`CLAUDE.md` at the root states the one rule (each half never edits the other's files; deploy = copy to the root).
+Developers start in `bot/CLAUDE.md` or `client/CLAUDE.md`.

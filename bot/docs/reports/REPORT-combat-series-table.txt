@@ -1,0 +1,30 @@
+## serie-cmb1 | handshake n/a (no rows)
+  nosferatu W2 VP 5.0 torp 1 | rounds  90 long  0% d/t 0.00/0.00 | grap17 (fist 6) taste12 (card 4) press 0 man 0 | rush 2/2
+  tremere   W2 VP12.0 torp 2 | rounds 133 long  0% d/t 0.00/0.00 | grap 0 (fist 0) taste 0 (card 0) press14 man 0 | rush 0/0
+  malkavian W6 VP22.0 torp 4 | rounds  76 long  0% d/t 0.00/0.00 | grap 0 (fist 0) taste 0 (card 0) press 0 man 0 | rush 0/0
+  ventrue   W2 VP 9.0 torp 7 | rounds  66 long  0% d/t 0.00/0.00 | grap 0 (fist 0) taste 0 (card 0) press 1 man 0 | rush 0/0
+## serie-cmb1b | handshake 338/338
+  nosferatu W1 VP 4.0 torp 2 | rounds  85 long  0% d/t 1.61/0.82 | grap11 (fist 3) taste11 (card 3) press 0 man 0 | rush 6/8
+  tremere   W4 VP14.0 torp 1 | rounds  77 long  0% d/t 0.60/1.09 | grap 0 (fist 0) taste 0 (card 0) press 8 man 0 | rush 0/0
+  malkavian W4 VP18.0 torp10 | rounds  83 long  0% d/t 1.00/0.93 | grap 0 (fist 0) taste 0 (card 0) press 0 man 0 | rush 0/0
+  ventrue   W3 VP12.0 torp 7 | rounds  69 long  0% d/t 0.74/0.80 | grap 0 (fist 0) taste 0 (card 0) press 2 man 0 | rush 0/0
+## serie-cmb2b | handshake 370/370
+  nosferatu W1 VP 4.5 torp 0 | rounds  84 long  7% d/t 1.39/0.85 | grap10 (fist 2) taste14 (card 12) press 0 man 0 | rush 3/4
+  tremere   W2 VP10.0 torp 3 | rounds  82 long  9% d/t 0.70/1.06 | grap 0 (fist 0) taste 0 (card 0) press 1 man 6 | rush 0/0
+  malkavian W8 VP27.5 torp 8 | rounds 114 long 10% d/t 0.89/0.93 | grap 0 (fist 0) taste 0 (card 0) press 0 man11 | rush 0/0
+  ventrue   W1 VP 5.0 torp 8 | rounds  72 long  8% d/t 0.74/0.76 | grap 0 (fist 0) taste 0 (card 0) press 0 man 0 | rush 0/0
+## serie-cmb3 | handshake 283/283
+  nosferatu W1 VP 3.0 torp 1 | rounds  57 long  3% d/t 1.50/0.79 | grap 5 (fist 0) taste 7 (card 7) press 0 man 0 | rush 1/1
+  tremere   W0 VP 2.0 torp 4 | rounds  67 long 17% d/t 0.54/0.96 | grap 0 (fist 0) taste 0 (card 0) press 0 man11 | rush 0/0
+  malkavian W8 VP29.0 torp 8 | rounds  77 long 18% d/t 0.82/0.92 | grap 0 (fist 0) taste 0 (card 0) press 0 man 6 | rush 0/0
+  ventrue   W3 VP14.0 torp 4 | rounds  68 long  6% d/t 0.77/0.69 | grap 0 (fist 0) taste 0 (card 0) press 0 man 0 | rush 0/0
+## serie-cmb4 | handshake 342/344
+  nosferatu W0 VP 0.0 torp 1 | rounds  96 long  6% d/t 1.36/0.76 | grap12 (fist 0) taste11 (card 9) press 0 man 0 | rush 6/7
+  tremere   W1 VP 7.0 torp 0 | rounds  75 long 12% d/t 0.68/0.95 | grap 0 (fist 0) taste 0 (card 0) press 2 man 7 | rush 0/0
+  malkavian W9 VP30.0 torp12 | rounds  73 long 13% d/t 0.86/1.04 | grap 0 (fist 0) taste 0 (card 0) press 0 man 9 | rush 0/0
+  ventrue   W2 VP11.0 torp 6 | rounds  77 long  6% d/t 0.72/0.68 | grap 0 (fist 0) taste 0 (card 0) press 0 man 0 | rush 0/0
+## serie-cmb5 | handshake 342/343
+  nosferatu W1 VP 4.0 torp 0 | rounds  96 long  3% d/t 1.46/0.80 | grap10 (fist 0) taste 9 (card 9) press 0 man 0 | rush 1/2
+  tremere   W0 VP 1.0 torp 3 | rounds  85 long 10% d/t 0.58/1.10 | grap 0 (fist 0) taste 0 (card 0) press 2 man 8 | rush 0/0
+  malkavian W7 VP28.0 torp10 | rounds  77 long 10% d/t 0.90/0.92 | grap 0 (fist 0) taste 0 (card 0) press 0 man 6 | rush 0/0
+  ventrue   W4 VP15.0 torp 7 | rounds  65 long  8% d/t 0.67/0.63 | grap 0 (fist 0) taste 0 (card 0) press 0 man 0 | rush 0/0

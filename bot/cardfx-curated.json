@@ -1,0 +1,2102 @@
+{
+ "_comment": [
+  "cardfx-curated.json — the HAND tier of the Elysium card-effect library.",
+  "Whole-entry overlay: an entry here REPLACES the auto-extracted entry for",
+  "the same canonical vtes.json name (compile stamps src:'hand'). Keys must",
+  "be canonical names — for vampires that includes the group suffix, e.g.",
+  "'Zip (G3)'. Entries follow the same shape as auto entries (see",
+  "elysium-cardfx-design.md) and MAY carry richer keys (bloodToPool,",
+  "handSize, trifle, unique, costEdge, note, ...) — consumers ignore keys",
+  "they don't know. Every entry below is verified against the printed",
+  "card_text in vtes.json, not written from memory.",
+  "Curation queue policy: (1) all cards in shipped bot playbooks,",
+  "(2) TWDA-frequent staples, (3) anything the auto tier provably mistags.",
+  "18 Sep 2026 (late): +2 crypt (Sybren van Oosten, Alexa Draper), Alexander Silverson no longer docOnly -- 74 lib + 20 crypt = 94.",
+  "18 Sep 2026 (night): + Anarch Troublemaker -- 75 lib + 20 crypt = 95."
+ ],
+ "lib": {
+  "Blood Doll": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bloodToPool": 1
+     },
+     "phase": "master"
+    },
+    {
+     "at": null,
+     "fx": {
+      "poolToBlood": 1
+     },
+     "phase": "master"
+    }
+   ],
+   "note": "Master: put on your vampire; during their master phase move 1 blood vampire→pool OR pool→vampire (printed, verified in vtes.json 11 Sep 2026). TWO modes since track C (11 Sep): bloodToPool (consumed by _applyPhaseIncome, with the v0.6.104 last-blood floor) and poolToBlood (the reverse; consumer = the B2 income-direction decide — until then ignored per the unknown-key rule). `persistent` added 14 July (v1.4.0 follow-up): auto-tier would have given this via \"put this card on\" — added by hand since curated overlay replaces whole entries and never inherits new auto tags."
+  },
+  "Vessel": {
+   "t": [
+    "master"
+   ],
+   "cost": {
+    "pool": 1
+   },
+   "trifle": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bloodToPool": 1
+     },
+     "phase": "unlock"
+    },
+    {
+     "at": null,
+     "fx": {
+      "poolToBlood": 1
+     },
+     "phase": "unlock"
+    }
+   ],
+   "note": "Trifle. Put on a vampire (and you may burn a Blood Doll — unmodelled); during their UNLOCK phase move 1 blood vampire→pool OR pool→vampire (printed, verified in vtes.json 11 Sep 2026). Two modes since track C, same split as Blood Doll; `phase`:'unlock' is a full phase later than Blood Doll's 'master' — the whole reason phase is per-mode data. `persistent` added 14 July (v1.4.0 follow-up)."
+  },
+  "Dreams of the Sphinx": {
+   "t": [
+    "master"
+   ],
+   "cost": {
+    "pool": 1
+   },
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "phase": "master",
+     "fx": {
+      "handSize": 2
+     },
+     "note": "Inside-Dirt-100%-continued (19 July): the card states no phase restriction for this choice either, same as the blood-add mode -- phase:master is this bot implementation checking it at the same sensible point, not a rules requirement. Now WIRED: draws up to base(7)+2 immediately (the rulebook itself: 'immediately discard down to or draw up to your hand size' whenever it changes), tracked via _handSizeBonus and reverted (discard back to 7) at end of turn when the until-end-of-turn bonus expires."
+    },
+    {
+     "at": null,
+     "lock": true,
+     "phase": "unlock",
+     "costEdge": true,
+     "fx": {
+      "poolGain": 1
+     }
+    },
+    {
+     "at": null,
+     "lock": true,
+     "phase": "master",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "unc"
+     },
+     "note": "the card ITSELF states no phase restriction (\"You can lock this card to add 1 blood...\", any time) -- phase:master here is this BOT implementation checking it once per turn at a sensible point, not a rules requirement, matching Arcane Library-class lock-income timing conventions this session already established"
+    }
+   ],
+   "note": "Inside-Dirt-100%-GO (19 July), continuing Life in the City: THREE bundled lock-choices the auto tier collapsed into one mode -- split into three separate modes so 'phase' (already a per-mode field elsewhere) and a new mode-level costEdge can each carry their own precondition. New _considerLockIncome(phaseKey) consumer, called at unlock (pool-gain) and master (blood-add) phases -- same shape as the existing _considerTurnActGrants (scan unlocked board permanents, decide(), lock+apply), generalized for income instead of actGrant so Arcane Library/Chantry (both lock-based income masters) can reuse the same reader later.",
+   "burnAtCounters": 3
+  },
+  "Inside Dirt": {
+   "t": [
+    "action"
+   ],
+   "req": {
+    "clan": [
+     "Nosferatu antitribu"
+    ]
+   },
+   "dir": true,
+   "costEdge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bloodBurn": 3,
+      "poolDmg": 3
+     }
+    }
+   ],
+   "note": "Ⓓ Burn the Edge to burn 3 blood from another Methuselah's vampire OR 3 pool from your prey. Pool damage that is not a bleed — the canonical 'block this even though it isn't a bleed' example. No `persistent`: a one-shot Action, no location/put-in-play text — confirmed correctly excluded by the v1.4.0 sweep."
+  },
+  "The Parthenon": {
+   "t": [
+    "master"
+   ],
+   "cost": {
+    "pool": 2
+   },
+   "unique": true,
+   "persistent": true,
+   "actGrant": {
+    "phase": "master",
+    "amount": 1,
+    "persist": "turn"
+   },
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {}
+    }
+   ],
+   "note": "Unique location. During your master phase, you can lock this card to get +1 master phase action. No host vampire — a Location doesn't attach to one. The text does NOT say \"as a master phase action\", so locking costs no existing action slot: pure profit whenever the card is in play, unlocked, and not yet used this turn. `actGrant` is ENTRY-LEVEL here (verified against `_recomputePhaseActs`'s actual read — `h.e.actGrant`, not per-mode — the design doc's \"per-mode\" wording was aspirational and never actually implemented that way; fixed in cardfx-design.md 14 July). Read by the new `_considerTurnActGrants(phaseKey)` (bot v0.5+, 14 July): the lock decision (`decide('lock-actgrant')`) is currently UNCONDITIONAL for this card since it has no real tradeoff — a future multi-choice `persist:'turn'` card (Dreams-of-the-Sphinx-style) will need its own weighed branch there, not a change to the reader itself."
+  },
+  "Information Highway": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "actGrant": {
+    "phase": "influence",
+    "amount": 2,
+    "persist": "inplay"
+   },
+   "note": "Unique location. +2 transfers — a permanent influence-phase action baseline increase for as long as this stays in play. Read by the EXISTING `_recomputePhaseActs()` (built and unit-tested 14 July against a synthetic card; this is the first REAL card to exercise it). No lock, no choice — pure Passive."
+  },
+  "Ashur Tablets": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "handler": "ashur-tablets",
+   "note": "Put this card in play. Only one Ashur Tablets can be played each turn. If YOU control three copies of this card, remove all copies in play (even controlled by other Methuselahs) from the game to gain 3 pool and choose up to 13 ash-heap cards (1 to hand, shuffle the rest into your library). A THRESHOLD/one-shot-per-trigger mechanic, not recurring income — deliberately given NO `modes`/`phase`/`actGrant` (the auto tier's old `poolGain:3` was a mistag; see `cardfx-persistent-lock-design-decisions.md` §8 for why this doesn't generalize to a schema tag). `handler` (v1.4.2, 14 July): the OWN-side mechanism is now automated via CARD_HANDLERS['ashur-tablets'], dispatched after every play, checking the bot's own copies in `ready`. Removal targets the client's `'burned'` zone (removed-from-the-game, distinct from `'ash'`), a local board mutation exactly like `_toAsh`'s pattern, just a different destination. The 12-copy shuffle-back uses the EXISTING `pileBulk{lib,shuffle}` wire verb (untested by the bot before this card — unlike `drawCrypt`, no prior in-bot usage to lean on). The 1-to-hand pick is scored (`_ashScoreFor`): Master bonus + decklist-scarcity (qty minus everywhere the bot can currently see a copy) + hand-type-mix — a GENERAL v1 foundation, explicitly not persona-weighted yet (Johan's call: theorize/playtest toward tuning later, see the design-decisions doc §11). Deliberately OUT of scope, unbuilt: removing OTHER Methuselahs' copies — `ctrl` is owner-gated, no existing mechanism reaches across the table; the bot's OWN 3 copies are removed regardless, matching the rule as far as it can reach."
+  },
+  "Leverage": {
+   "t": [
+    "mod"
+   ],
+   "costEdge": true,
+   "edgeLock": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": 1
+     }
+    }
+   ],
+   "note": "Verified card_text (16 July, vtes.json upload): 'Only usable during a bleed action. Burn the Edge to get +1 bleed that does not count against the limit. You cannot gain the Edge this action. If you would get the Edge, it is burned instead.' No discipline requirement, no blood/pool cost beyond the Edge itself. `costEdge` (steg 2, 15 July): the auto tier already produced fx.bleed:1 correctly but has no way to extract an Edge REQUIREMENT from prose, so this whole entry moves to the hand tier for that field -- Inside Dirt carries the same flag but nothing else consumes it yet; read by `_bestBleedModifierFor`/`_playBleedModifier`. `edgeLock` (steg 4, 16 July): the 'cannot gain the Edge this action' clause -- steg 2 wrongly assumed a burned-then-regranted Edge was two unrelated rulebook events; the REAL text says the opposite, caught only once the actual card_text was available. Also per the official ruling [LSJ 20100218]/[RTR 20180511-2] quoted on this card: 'A limited bleed modifier can be played before or after' the block decision -- Leverage itself is NOT limited (explicitly exempt: 'does not count against the limit'), but this confirms Conditioning/Bonding's own (limited) modifiers share Leverage's identical 'during a bleed action' timing rather than being pre-block-exclusive."
+  },
+  "Seduction": {
+   "t": [
+    "mod"
+   ],
+   "req": {
+    "disc": [
+     "dom"
+    ]
+   },
+   "note": "Verified card_text (16 July, vtes.json upload): 'Only usable as the action is announced. [dom] Choose a younger vampire. The chosen vampire cannot block this action. [DOM] As above, but choose any vampire.' Genuinely different from Conditioning/Bonding/Leverage: a BLOCK-PREVENTION effect (targets a specific opposing vampire, not a bleed-amount change), strictly pre-announce-only (no 'before or after' flexibility), and the [dom] mode needs GENERATION comparison ('younger') which no current bot code tracks at all. Official ruling on file: must be played (along with any other 'as the action is announced' modifier) BEFORE modifiers that aren't restricted to that moment (e.g. Conditioning) -- a real sequencing constraint once a pre-block window exists. Deliberately NOT built this session (16 July) -- `t`/`req` reproduced here verbatim from the (otherwise-correct) auto tier purely so this curated override doesn't blank them out (curated is a whole-entry replacement -- see cardfx-compile.js), no fx/modes assigned yet. Needs, in order: (1) the pre-block \"when announced\" window itself (design-decisions.md §13 step 2), (2) generation data surfaced somewhere the bot can read it, (3) a new fx concept (e.g. fx.preventBlock naming a target) plus the wire/log convention to tell a defending bot which of ITS OWN vampires is disqualified from _pickBlocker's candidates, (4) the Seduction-before-Conditioning sequencing rule once both can coexist in the same window. Flagged as its own follow-up phase, not invented ahead of that design work."
+  },
+  "Effective Management": {
+   "t": [
+    "master"
+   ],
+   "handler": "effective-management",
+   "note": "Master. Move the top card from your crypt to your uncontrolled region. One-shot: no location/put-in-play text, confirmed NOT persistent by the v1.4.0 sweep — deliberately carries no `persistent` field here either, matching auto. The bot's master-play loop (v0.5+, 14 July) branches on `persistent` and ashes a card like this one instead of leaving it on the board forever — this card was the concrete motivating case for that fix. `handler` (v1.4.1, 14 July): the effect ITSELF is now automated too — CARD_HANDLERS['effective-management'] sends the EXISTING `drawCrypt` wire verb (the same one the bot's own paid Influence-phase vampire fetch already uses), just without paying the 4 transfers + 1 pool. No new crypt-tracking needed; 'top of crypt' isn't a player choice at all (a shuffled stack position, not a decision), so this needed no decide() — just a guard on `cryptN > 0`. No more human ctrl-correction needed for this card."
+  },
+  "Marked Path": {
+   "t": [
+    "mod"
+   ],
+   "req": {
+    "disc": [
+     "obf"
+    ]
+   },
+   "attachAfterSuccess": true,
+   "modes": [
+    {
+     "at": "obf",
+     "fx": {
+      "stealthLater": 1
+     }
+    },
+    {
+     "at": "OBF",
+     "fx": {
+      "stealthLater": 2
+     }
+    }
+   ],
+   "note": "fas C (16 July): the two-step mechanic is BUILT. Step 1 (attach): only after a SUCCESSFUL directed action -- put on the acting vampire, recording the action's target Methuselah and the mode's stealth value. Step 2 (burn): during a LATER action by THIS vampire against the SAME target, burn for +1/+2 stealth (_bestStealthFor offers board-attached copies whose recorded target matches). fx.stealthLater deliberately NOT fx.stealth: the generic hand-scan stealth finders must never misplay it as instant stealth -- the fas-A misplay guard, now structural. v1.5.0 (17 July): persistent:true added -- the curated tier REPLACES auto wholesale, and this entry had silently dropped the flag the auto tier derives from 'put this card on' (found by the fas B/C sweep's curated-drift check).",
+   "persistent": true
+  },
+  "Elder Impersonation": {
+   "t": [
+    "mod"
+   ],
+   "cost": {
+    "blood": 1
+   },
+   "req": {
+    "disc": [
+     "obf"
+    ]
+   },
+   "modes": [
+    {
+     "at": "obf",
+     "fx": {
+      "stealth": 1
+     }
+    },
+    {
+     "at": "OBF",
+     "fx": {
+      "cancelBlock": true
+     }
+    }
+   ],
+   "note": "fas C (16 July): the superior mode is BUILT -- fx.cancelBlock: played when a minion attempts to block; that attempt fails outright and that minion cannot attempt again (the defender's attempted-set, registered at attempt time since fas A+, makes the exclusion automatic on receipt of the frozen cancel line). Basic +1 stealth unchanged. Card text verified fas A."
+  },
+  "Perfectionist": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "archetype": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bloodAfterCleanAction": 1
+     }
+    }
+   ],
+   "note": "fas C (16 July): BUILT. archetype:true -- attaches to a vampire at master play (one archetype per vampire, the attach gate enforces it). fx.bloodAfterCleanAction: once each turn, +1 blood after a successful action during which no reaction cards were played -- the bot's actor-side hook fires on a clean through (conservative v1 read: 'clean' = the ask was never contested and no bounce moved the target; a reaction card played without contesting would be missed, documented). Blood capped at capacity per the rulebook."
+  },
+  "Wider View": {
+   "t": [
+    "master"
+   ],
+   "cost": {
+    "pool": 1
+   },
+   "persistent": true,
+   "trifle": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "transferSwap": true,
+      "transferCost": 1
+     }
+    },
+    {
+     "at": null,
+     "fx": {
+      "transferBurnPool": 2,
+      "transferCost": 4
+     }
+    }
+   ],
+   "note": "Inside-Dirt-100%-GO (19 July), the last card. Source-verified vekn.net first: normal crypt draw costs 4 transfers + 1 pool (already the bots own baseline, elysium-bot.js influence-phase loop); Wider Views 1-transfer swap is dramatically cheaper but FORCES removing an existing uncontrolled crypt card from the game -- Johans own described use case (swap a duplicate you already have). NEITHER ability is lock-gated (unlike Dreams of the Sphinx) -- both are plain transfer-spending options, repeatable while transfers remain. New transferSwap/transferBurnPool fx keys + a shared transferCost (both need it, but for different amounts) -- a new consumer class the bot genuinely lacked until now, wired directly into the EXISTING influence-phase loop rather than a new decide() window, since transfers are already tracked there as this.inf."
+  },
+  "Shadow Cast": {
+   "t": [
+    "mod"
+   ],
+   "req": {
+    "disc": [
+     "obl"
+    ]
+   },
+   "attachAfterSuccess": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": "obl",
+     "fx": {
+      "stealth": 1
+     }
+    },
+    {
+     "at": "OBL",
+     "fx": {
+      "stealthLater": 1
+     }
+    }
+   ],
+   "note": "v1.5.0 (17 July, fas B/C sweep): Marked Path's true twin -- same attach window ('Only usable after resolution of a successful directed action'), same same-target binding ('directed at the same Methuselah or same set'), burn = +1. [obl] is ORDINARY instant stealth (hand-playable via _bestStealthFor); only [OBL] attaches, and the attach flow's per-mode stealthLater scan + _modeUsableBy keeps basic-obl vampires out of it. The other three template siblings (Zip Line, Pass Through Shadow, Under My Skin) attach through their OWN play (action/combat/modifier), NOT the post-success window -- they get stealthLater WITHOUT attachAfterSuccess from the compiler and stay safely inert for the bot."
+  },
+  "Forced Confessional": {
+   "t": [
+    "mod"
+   ],
+   "req": {
+    "disc": [
+     "dom"
+    ]
+   },
+   "modes": [
+    {
+     "at": "DOM",
+     "fx": {
+      "cancelBlock": true
+     }
+    }
+   ],
+   "note": "v1.5.0 (17 July, fas B/C sweep): Elder Impersonation's exact template in DOMINATE -- header 'Only usable if a minion attempts to block', [DOM] 'That attempt fails and the blocking minion cannot attempt to block this action again', zero extra conditions/costs/side-effects (the per-card condition audit that kept 13 template-mates OUT: age comparisons, blocker-type gates, 'other than the acting minion', lock/combat riders -- none of which _bestCancelBlockFor checks). [dom] basic is -1 blocker intercept: no auto vocabulary key, deliberately left unencoded rather than guessed. First cancelBlock for the default Dominate weenie archetype."
+  },
+  "Relentlessness": {
+   "t": [
+    "mod"
+   ],
+   "cost": {
+    "blood": 1
+   },
+   "req": {
+    "disc": [
+     "cel",
+     "for"
+    ]
+   },
+   "modes": [
+    {
+     "at": "cel",
+     "fx": {
+      "stealth": 1
+     }
+    },
+    {
+     "at": "for",
+     "fx": {
+      "stealth": 1
+     }
+    },
+    {
+     "at": "CEL",
+     "fx": {
+      "cancelBlock": true
+     }
+    },
+    {
+     "at": "FOR",
+     "fx": {
+      "cancelBlock": true
+     }
+    }
+   ],
+   "note": "v1.5.0 (17 July, fas B/C sweep): the second EI-exact template hit ('Only usable if a minion attempts to block. That attempt fails and...' verbatim, no extra conditions). OR-headers ('[cel] or [for]' / '[CEL] or [FOR]') follow the v1.5.0 convention: one mode per alternative, so _modeUsableBy keeps its single-requirement view. Costs 1 blood (printed cost, entry-level -- _bestCancelBlockFor checks it against the acting vampire)."
+  },
+  "Enticement": {
+   "t": [
+    "action"
+   ],
+   "req": {
+    "clan": [
+     "Follower of Set"
+    ]
+   },
+   "costEdge": true,
+   "dir": true,
+   "modes": [
+    {
+     "at": "ser",
+     "dir": true,
+     "fx": {}
+    },
+    {
+     "at": "SER",
+     "dir": true,
+     "fx": {}
+    }
+   ],
+   "note": "v1.5.0 (17 July, fas B/C sweep): DELIBERATELY INERT curation -- a live-misplay guard, not a playbook. The auto tier gave this [ser D] poolDmg:2 / [SER D] poolDmg:3 with no costEdge: _bestPoolDmgActionFor would have played it WITHOUT the Edge (it is the cost: 'Burn the Edge to burn 2 pool from your prey') and, worse, ignored the rider 'Minions you control cannot bleed until the end of the turn' -- a self-restriction the engine cannot yet represent, so the bot would bleed right after in the same turn: a rules violation. costEdge:true (v1.5.0 auto also derives it now) + EMPTY mode fx = the card is never picked. Re-arm poolDmg here only when a bleed-lockout mechanism exists (backlog)."
+  },
+  "Stunt Cycle": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "pot"
+    ]
+   },
+   "modes": [
+    {
+     "at": "pot",
+     "fx": {
+      "strike": 3,
+      "prevent": 1,
+      "ranged": true
+     }
+    },
+    {
+     "at": "POT",
+     "fx": {
+      "strike": 4,
+      "prevent": 2,
+      "ranged": true
+     }
+    }
+   ],
+   "note": "Restlist aftermath (18 July): the auto tier double-failed here -- a PHANTOM [cel] mode born from the mid-text bracket in \"If the OPPOSING minion has Celerity [cel] ...\" (an opponent clause, tagged as ours, prevent:all on a scanned combat key), and the [POT] text \"4R damage\" missed the strike pattern so it inherited strike:3. Curated to the printed values; the phantom-at class (47 modes, born from discipline-name-plus-bracket prose) is documented in cardfx-v153-restlist-verification.md with the line-start splitter as the M2 candidate fix."
+  },
+  "Soak": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "for"
+    ]
+   },
+   "modes": [
+    {
+     "at": "for",
+     "fx": {
+      "prevent": 2
+     }
+    },
+    {
+     "at": "FOR",
+     "fx": {
+      "prevent": 4
+     }
+    }
+   ],
+   "note": "Grinder onboarding (18 July): the Wall of Filth pattern -- \"Prevent 2 NON-aggravated damage\" breaks the prevent regex on the middle word AND ghost-tags aggr via the direction-blind /aggravated/ match. Curated to the printed values; the non-aggravated restriction is unmodeled (auto-tolerant: the value is right in the common case, marginally generous against aggravated strikes)."
+  },
+  "Hidden Strength": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "for"
+    ]
+   },
+   "modes": [
+    {
+     "at": "for",
+     "fx": {
+      "prevent": 1,
+      "preventX": true
+     }
+    },
+    {
+     "at": "FOR",
+     "fx": {
+      "prevent": 1,
+      "preventX": true,
+      "press": true
+     }
+    }
+   ],
+   "note": "20 Sep 2026 (Johan): printed 'Prevent X+1 damage' with X = blood paid. fx.prevent 1 stays the FREE floor (X = 0) and fx.preventX marks that the player may pay X blood for X more -- the bot pays what the incoming hit needs (Johan: no real downside to preventing it ALL: mostly used against aggravated damage, and it denies Pulled Fangs-class effects that need the opposing vampire to deal more damage than mine). [FOR] adds the optional press. Was (18 July): the conservative floor only."
+  },
+  "Call the Lamprey": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "obt"
+    ]
+   },
+   "modes": [
+    {
+     "at": "obt",
+     "fx": {}
+    },
+    {
+     "at": "OBT",
+     "fx": {
+      "stealBlood": 1
+     }
+    }
+   ],
+   "note": "Combat GO (steal-blood family, 19 July): the auto tier gave [obt] and [OBT] the SAME stealBlood:1 -- but only [OBT] (superior) reads \"steal 1 blood from the opposing minion\" (unrestricted); [obt] (inferior) is \"steal 1 blood from the opposing ally. Only usable during combat with an ally\" -- a target-type restriction (ally vs vampire) the bot cannot verify (no ally-vs-vampire combat distinction modeled). [obt] emptied to prevent a misplay against a vampire opponent; [OBT] kept clean."
+  },
+  "The Khabar: Honor": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "clan": [
+     "Banu Haqim"
+    ]
+   },
+   "modes": [
+    {
+     "at": null,
+     "fx": {}
+    }
+   ],
+   "note": "Combat GO (strike-bonus family, 19 July): the auto tier tagged strike:3, but the card is \"Only usable if this Assamite has been chosen for a contract on the opposing minion\" -- a per-vampire contract-state precondition the bot cannot verify (2-card class total with Open Dossier; too small for a general req flag). Emptied to prevent an unverifiable-precondition misplay, same discipline as req.title/req.rangeClose."
+  },
+  "Taste of Vitae": {
+   "t": [
+    "combat"
+   ],
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "gainOppLoss": true
+     }
+    }
+   ],
+   "note": "Combat GO, Taste of Vitae (19 July): unique in the whole database -- the only card with \"gains blood equal to the amount lost by the opposing vampire to damage this round\". CORRECTED 25 July (the Nosferatu inventory caught it): the card is DISCIPLINE-FREE -- the 19 July curation's abo gates were a data bug (full text verified: no [abo] anywhere; disciplines: undefined). Dormant until now (no tracked deck carried it); single at:null mode restores reachability."
+  },
+  "Life in the City": {
+   "t": [
+    "master"
+   ],
+   "trifle": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "handler": "life-in-the-city",
+   "note": "Inside-Dirt-100%-GO (19 July): auto tier already gave bloodAdd:1+bloodAddTo:own-ready correctly (v1.6.3 pattern) -- curated purely to ADD the handler key (own-ready target-selection + application is a genuine choice needing code, like Effective Management, not an automatic phase-income trigger the existing _applyPhaseIncome host-scan can reach, since this card has no host and resolves once, not persistently)."
+  },
+  "Ennoia's Theater": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "req": {
+    "clan": [
+     "Gangrel",
+     "Gangrel antitribu"
+    ]
+   },
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "phase": "master",
+     "fx": {
+      "handSize": 1
+     }
+    },
+    {
+     "at": null,
+     "lock": true,
+     "phase": "influence",
+     "note": "the +1 transfer ability -- out of scope for the hand-size sweep (19 July); no transfer-mechanic consumer exists yet, left deliberately untagged rather than guessed at",
+     "fx": {}
+    }
+   ],
+   "note": "Hand-size sweep continued (19 July): auto tier correctly detects handSize:1 as the shape needing curation (lock/phase have never been auto-settable by this compiler -- checked directly, no mode.phase= assignment exists anywhere in cardfx-compile.js). Curated mode 1 mirrors Dreams of the Sphinxs own handSize mode EXACTLY (lock:true, phase:master, fx:{handSize:1}) so _considerLockIncome needs zero new code for this second card -- proving the reader really is reusable, not just built for one card."
+  },
+  "Chantry": {
+   "t": [
+    "master"
+   ],
+   "req": {
+    "clan": [
+     "Tremere"
+    ]
+   },
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "phase": "master",
+     "fx": {
+      "rescueTorpor": 1
+     }
+    }
+   ],
+   "note": "The last card on phase-income-v2-plan.md (19 July). Source-verified vekn.net first: burn 1 pool OR 1 blood from a ready Tremere you control (flexible cost -- the official ruling confirms Rescue-from-Torpor is a standardized action type where cost splits between the payer and the rescued vampire, though Chantry itself only offers the two pure options, not a split). Measured the whole family first: only 3 cards mention torpor+ready-region at all, and the other two (Renewed Vigor -- host-attached, unlock-phase, burn-itself; Torpid Blood -- a global Gehenna-era event) share NOTHING structurally with Chantrys lock-based shape, so rescueTorpor is Chantry-specific vocabulary, not a guessed-at generalization. req.clan (already auto-detected) supplies WHICH clan both the torpor-target and the ready-payer must be -- reused, not duplicated into a new field. v1 scope: only rescues the BOTS OWN torpored Tremere (the card text technically allows helping ANY players Tremere, per official ruling their controller -- multiplayer-diplomacy-style altruism is out of scope, no infrastructure for it)."
+  },
+  "Arcane Library": {
+   "t": [
+    "master"
+   ],
+   "cost": {
+    "pool": 2
+   },
+   "req": {
+    "clan": [
+     "Tremere"
+    ]
+   },
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "phase": "influence",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "unc"
+     }
+    }
+   ],
+   "note": "The cheapest-win pick (19 July), predicted back at Dreams of the Sphinxs own delivery -- _considerLockIncome already reads this exact shape (lock+phase+bloodAdd+bloodAddTo:unc), so only phase/bloodAddTo needed curating (auto tier already had req.clan+bloodAdd:1 right). The ONE new wrinkle: unlike Dreams of the Sphinxs own bloodAdd (any uncontrolled vampire), this card requires the TARGET to also be the matching clan (Tremere) -- _considerLockIncome needed a clan-aware target filter added, since its existing scan had no clan check at all (Dreams of the Sphinx never needed one)."
+  },
+  "Academic Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Asylum Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Biotech Company Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Institution Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Library Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Morgue Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Political Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Park Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Slum Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Society Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Temple Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Underworld Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "University Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Uptown Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Warzone Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Zoo Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Amusement Park Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Base Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Campground Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Corporate Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Fetish Club Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Port Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Shanty Town Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md."
+  },
+  "Papillon": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "req": {
+    "title": true
+   },
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 2,
+      "bloodAddTo": "own-ready"
+     }
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md. Papillon: req.title (superior-Govern's own title-targeting precedent) + 2 blood, not 1."
+  },
+  "Meditative Grove": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "req": {
+    "clan": [
+     "Salubri"
+    ]
+   },
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready"
+     }
+    },
+    {
+     "at": null,
+     "lock": true,
+     "fx": {},
+     "note": "the SEPARATE \"cancel a frenzy card\" lock ability -- a different, undocumented mechanic (frenzy isn't modelled at all), left deliberately untagged"
+    }
+   ],
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md. Meditative Grove: req.clan Salubri for the blood-gain mode specifically; its second mode (frenzy-cancel) is untouched, a genuinely separate mechanic."
+  },
+  "The Barrens": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "phase": "master",
+     "fx": {
+      "handCycle": true
+     }
+    }
+   ],
+   "note": "From the 19 July backlog note (elysium-backlog.md 2.7). Source-verified vekn.net: \"You can lock this card to discard a card (draw up afterward)\" -- NOT phase-restricted by the card itself; phase:master is this bots own sensible-timing pick, matching the SAME precedent already set for Dreams of the Sphinxs own un-phase-restricted choices. New handCycle:true fx key -- a genuinely new effect shape (discard 1, draw 1 back), distinct from every existing bloodAdd/poolGain/handSize/transfer/rescue key. Kept as its own _considerHandCycle function (income/rescue naming doesnt fit a hand-cycling trade), reusing _deadHandIndex verbatim -- only fires when a genuinely dead card exists to discard, never trading away a live card for an unknown one."
+  },
+  "Revelations": {
+   "t": [
+    "action"
+   ],
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "actStealth": 1
+     }
+    },
+    {
+     "at": "aus",
+     "fx": {
+      "peekPreyDiscard": true,
+      "dir": "prey"
+     }
+    },
+    {
+     "at": "AUS",
+     "fx": {
+      "openHandPrey": true,
+      "persistent": true,
+      "dir": "prey"
+     }
+    }
+   ],
+   "note": "R3 (24 July, elysium-bot-revelations-plan.md section 5). Header: +1 stealth action (actStealth, hybrid rule). [aus] (D): look at your prey's hand, discard one of your choice -- PRIVATE to the actor (revealHand to actor's seat), prey-locked, the ACTOR picks (bot: _pickForcedDiscard, Johan's ladder v2); ruling LSJ 20100119: the actor does NOT see the replacement draw (handIntel models it as +1 unknown slot). [AUS]: put this card in play, prey plays with an OPEN hand (openHand grant to all, granter re-sends on change), burnable by any minion as a (D) action; NO (D) on this mode -- undirected, the open Block? model (the stock-branch shape). dir:'prey' is rules-locked targeting for both modes."
+  },
+  "Misdirection": {
+   "t": [
+    "master"
+   ],
+   "cost": {
+    "pool": 1
+   },
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "lockMinion": true
+     }
+    }
+   ],
+   "note": "M1 (25 July, elysium-bot-tremere-plan.md). Full card text: 'Lock a minion.' One-shot targeted lock, resolves to ash. Consumer: the master loop's lockMinion branch -- target via _bestNeutralizeTarget (Johan's heuristic: prey's vampire, capacity + dom/aus weight with superior extra + handIntel bounce-boost; UNLOCKED is a REQUIREMENT for this card -- locking a locked minion is a wasted card). Hold the card when no worthwhile target exists (pre-splice guard)."
+  },
+  "Pentex(TM) Subversion": {
+   "t": [
+    "master"
+   ],
+   "cost": {
+    "pool": 2
+   },
+   "persistent": true,
+   "unique": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "noBlockMinion": true
+     }
+    }
+   ],
+   "note": "M2 (25 July, elysium-bot-tremere-plan.md). 5th-ed text: 'Unique. Put this card on a ready minion. This minion cannot block. Other minions can burn this card as a (D) action.' Block-denial ONLY (the minion still acts). Consumer: the master loop's noBlockMinion branch -- target via _bestNeutralizeTarget WITHOUT needUnlocked (persistent effect: capacity+dom/aus rule, unlocked is just the 0.5 tiebreak). Unique guard (_uniqueInPlay) HOLDs when a copy is visible anywhere. Target-side: standing cannot-block compliance (the blocker picker skips the named vampire) + a leave-play watcher; the burn action is table-handled (bot-initiated burn = a v1.5 candidate). The noBlockMinion key serves the whole 14-card put-on cannot-block family."
+  },
+  "Magic of the Smith": {
+   "t": [
+    "action"
+   ],
+   "modes": [
+    {
+     "at": "tha",
+     "fx": {
+      "actStealth": 1,
+      "fetchEquip": true
+     }
+    },
+    {
+     "at": "THA",
+     "fx": {
+      "actStealth": 3,
+      "fetchEquip": true
+     }
+    }
+   ],
+   "note": "E1 (25 July, elysium-bot-tremere-plan.md). '+1 stealth action. [tha] Search your library for an equipment card and equip this vampire with it (requirements and cost apply as normal; shuffle afterward). [THA] As above, but +3 stealth.' No plain mode -- the card requires tha. Transport (v1, the Ashur precedent): the server's piles are strictly hidden/count-only with no search verb, so the fetch is BOT-LOCAL -- target picked from the remaining-library estimate (deck minus hand minus board names) via Johan's fetch ladder (Bowl-class intercept > weapons > prevent armor > rest), materialized on the acting vampire with cost paid; a _fetchDebt entry makes the later phantom draw of the same copy self-correct (consume debt, redraw, one bookkeeping chat note)."
+  },
+  "Murder of Crows": {
+   "t": [
+    "retainer"
+   ],
+   "cost": {
+    "blood": 1
+   },
+   "modes": [
+    {
+     "at": "ani",
+     "fx": {
+      "envDmgPerRound": 1
+     }
+    },
+    {
+     "at": "ANI",
+     "fx": {
+      "envDmgPerRound": 1
+     }
+    }
+   ],
+   "note": "N0 (25 July, elysium-bot-nosferatu-plan.md). '[ani] Murder of Crows inflicts 1R damage on the opposing minion each round of combat during normal strike resolution. [ANI] As above, but 2 life.' The life difference (1 vs 2) is unmodeled v1 (retainer life/burn = table-handled, same honesty note as equipment durability). Consumer: the borne-crows hook -- _borneEnvFor sums attached retainer/equip envDmgPerRound at combat start and announces with the SAME phrase family as Carrion Crows ('takes N environmental damage each round'), so the existing name-agnostic victim parser applies it with zero new parse code. Employ via the generalized equip action (cost blood 1 from the acting vampire).",
+   "persistent": true
+  },
+  "Cats' Guidance": {
+   "t": [
+    "react"
+   ],
+   "modes": [
+    {
+     "at": "ani",
+     "when": "postBlock",
+     "fx": {
+      "unlock": true
+     }
+    },
+    {
+     "at": "ANI",
+     "fx": {
+      "intercept": 1
+     }
+    }
+   ],
+   "note": "N1 (25 July, elysium-bot-nosferatu-plan.md). '[ani] Only usable by a locked vampire who has blocked, after block resolution. Unlock this vampire. [ANI] +1 intercept.' The WHEN mode-rider (the dir precedent: mode-level, outside fx) carries the text's usage window -- postBlock = the _maybePostBlockUnlock hook after the defender-side combat, refreshing the wall. The [ANI] intercept side rides the existing react finder untouched."
+  },
+  "Guard Dogs": {
+   "t": [
+    "react"
+   ],
+   "modes": [
+    {
+     "at": "ani",
+     "when": "bleedAtMe",
+     "fx": {
+      "unlock": true
+     }
+    },
+    {
+     "at": "ANI",
+     "when": "bleedAtMe",
+     "fx": {
+      "unlock": true,
+      "maneuver": true
+     }
+    }
+   ],
+   "note": "N1 (25 July). 'Only usable by a locked vampire during a bleed action directed at you. [ani] Unlock this vampire. [ANI] As above, with 1 optional maneuver during the resulting combat if this vampire blocks.' when:bleedAtMe = the sleeper slot in _commitBlock (tried BEFORE wake -- a true unlock beats act-as-unlocked); the [ANI] maneuver is a GRANT rider consumed via _reactManeuverGrant in the resulting combat's _bestManeuverFor, not a playable maneuver card (the gated/paired guard stays honest)."
+  },
+  "Deep Song": {
+   "t": [
+    "action"
+   ],
+   "modes": [
+    {
+     "at": "ani",
+     "fx": {
+      "bleedAct": true,
+      "bleed": 1
+     },
+     "dir": true
+    },
+    {
+     "at": "ANI",
+     "fx": {
+      "rush": true,
+      "lockTarget": true
+     },
+     "dir": true
+    }
+   ],
+   "note": "N2 (25 July, elysium-bot-nosferatu-plan.md -- the project's FIRST RUSH). '[ani] (D) Bleed with +1 bleed. [ANI] Frenzy. (D) Enter combat with and lock a vampire. The target vampire is considered the acting minion during that combat.' The [ani] side preserves the auto tier verbatim (bleedAct+bleed, already FULL-consumed). rush = the new action class: directed at PREY's board (v1 scope -- the _actingVamp target plumbing), announce -> block window -> on through the named target LOCKS (lockTarget rider) and BOTH sides enter the combat handshake (actor: the branch awaits _resolveCombat; target-bot: the L12.rush comply mirrors M1's lockM + the defender-combat entry). The acting-minion REVERSAL is announced for the table but has no mechanical consequence in this bot's symmetric combat model (documented). Frenzy = subtype only v1. Human actor vs bot target = the ctrl/human-backup stance (M1 precedent)."
+  },
+  "Fame": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "fameOnTarget": true
+     }
+    }
+   ],
+   "note": "N3 (25 July, elysium-bot-nosferatu-plan.md + rush-theory). 'Unique. Put this card on a ready vampire. After this vampire goes to torpor, their controller burns 3 pool. During each Methuselah's unlock phase, if this vampire is in torpor, that Methuselah burns 1 pool.' KRCG's 'that Methuselah' is ambiguous -- v1 implements the classic operational reading (the CONTROLLER pays), settled at the controller-bot's OWN unlock only: a documented UNDER-claim of the brutal true rate (1 per every player's unlock) until other seats' phases are observable (vekn ruling verification + phase observation on the backlog). The 3-pool fires on EACH torpor entry -- Johan's rescue-and-refell yo-yo is the documented v2 line (needs the enemy-rescue action class). Actor: M2-style TABLED on my board, frozen line names owner+vampire; target-side tracks _famedMine; EVERY observer feeds _famedSeen (the rush-theory Fame-synergy bonus reads it). Doctrine: Fame the vampire you intend to rush."
+  },
+  "Creeping Sabotage": {
+   "t": [
+    "action"
+   ],
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "actStealth": 1,
+      "preyBurnPerCopy": 1
+     }
+    }
+   ],
+   "note": "N3 (25 July). '+1 stealth action. X is the number of copies of this card you control. Put this card in play. During your unlock phase, your prey burns 1 pool. Minions can burn this card as a (D) action.' The STOCK/undirected template tables it persistent; at MY unlock the engine counts my ready copies and sends the frozen L12.creep line -- the NAMED prey complies (pool -= X). Burn-as-(D) = table-handled (the Pentex precedent)."
+  },
+  "Smiling Jack, The Anarch": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "jackEngine": true
+     }
+    }
+   ],
+   "note": "N3 (25 July). 'Unique. Put this card in play. During your unlock phase, move 1 counter from your pool to this card. During each other Methuselah's unlock phase, for each counter on this card, that Methuselah burns 1 pool or burns 1 blood from a vampire they control. Vampires can burn this card as a (D) action.' Actor: the accumulate is MANDATORY wording (pool > 0 guard only) at my unlock, via the general _addCounter pair. Victim side is SELF-SERVE and correctly timed: at MY OWN unlock I scan OTHERS' ready Smiling Jacks and pay counters-worth, CHOOSING pool vs blood (v1: pool if pool >= 4, else blood from the fullest vampire) -- counters are pub-relayed, zero parse needed. Burn-as-(D) = table-handled."
+  },
+  "Warsaw Station": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "cost": {
+    "pool": 2
+   },
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "warsawRefresh": true,
+      "warsawRescue": true
+     }
+    }
+   ],
+   "note": "N4a (26 July, elysium-bot-nosferatu-plan.md -- the 100% push). 'Unique location. You can lock this card as a Nosferatu announces an undirected action; after action resolution, if that action was successful, unlock the acting Nosferatu. You can burn this card (even if it is locked) to move a Nosferatu in torpor to the ready region.' TWO consumers: warsawRefresh -- after a SUCCESSFUL UNDIRECTED action (hunt/equip/stock/creep/[AUS]-peek) by a clan-Nosferatu vampire (fxLookup e.clan, printed and readable), lock the ready Station + truly unlock the actor (the action loop naturally continues -- pure tempo). warsawRescue -- burn the card (locked or not, zone:'burned', the Ashur convention) to move a torpored Nosferatu to ready, cost-free per the text; checked at my unlock. Clan gates fail closed on non-Nosferatu."
+  },
+  "Rebel": {
+   "t": [
+    "master"
+   ],
+   "trifle": true,
+   "persistent": true,
+   "archetype": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "rebelBlood": true
+     }
+    }
+   ],
+   "note": "N4a (26 July). 'Archetype. Trifle. Put this card on a vampire you control. Once each turn, if they block a titled vampire or a political action, this vampire gains 1 blood before block resolution. A vampire can have only one archetype.' The archetype machinery exists (Perfectionist: _hostVampFor + one-per-vampire). The trigger: on MY successful block commit, if pending.actingVampName's PRINTED title is set (fxLookup e.title -- the morning insight: printed titles ARE readable; acquired titles remain politics-scope) -> host gains 1 blood (cap-capped), once per turn (_rebelUsedThisTurn, reset at my unlock beside _perfUsed). Political-action triggers await the politics engine (no bot plays them yet; human political actions = table-handled) -- documented, not a gap in THIS trigger."
+  },
+  "Preternatural Strength": {
+   "t": [
+    "action"
+   ],
+   "persistent": true,
+   "cost": {
+    "blood": 1
+   },
+   "modes": [
+    {
+     "at": "pot",
+     "fx": {
+      "actStealth": 2,
+      "strengthBonus": 1
+     }
+    },
+    {
+     "at": "POT",
+     "fx": {
+      "actStealth": 2,
+      "strengthBonus": 2
+     }
+    }
+   ],
+   "note": "N4b (26 July, the 100% push). '+2 stealth action. [pot] Put this card on this vampire. This vampire gets +1 strength. They cannot play cards named Torn Signpost. A vampire can have only one Preternatural Strength. [POT] As above, but +2 strength.' STRENGTH IS BASE HAND-STRIKE DAMAGE -- the flat printed bonus is addition, not the weapon-family (damage=strength+N) exclusion. Attach-to-SELF via the _doEquip shape (blood 1 from the actor, guarded to leave >= 1); UNDIRECTED action (the STOCK template, +2 stealth tally) so Warsaw's refresh applies -- the fifth site. Richest-mode: [POT] preferred when superior pot. One-per-vampire guard at the finder (the card's own text). Consumers: _strengthBonus(vamp) sums attached fx.strengthBonus into (a) the plain hand strike -- announced via the strikeC channel as 'hands' when boosted, so the FROZEN strikeH 'for 1' grammar stays byte-identical and the opponent's existing number-parser reads it -- (b) handStrike-tagged card strikes, and (c) _rushScore's torpor-feasibility estimate. The Torn Signpost ban is note-documented (zero copies in any registered deck; a _bestStrikeFor name-filter lands the day a deck carries both)."
+  },
+  "Protected District": {
+   "t": [
+    "react"
+   ],
+   "modes": [
+    {
+     "at": null,
+     "req": {
+      "title": "primogen"
+     },
+     "fx": {
+      "reduce": 3
+     }
+    },
+    {
+     "at": null,
+     "req": {
+      "title": "primogen"
+     },
+     "fx": {
+      "votesBonus": 3
+     }
+    }
+   ],
+   "note": "N4c (26 July, the 100% push). 'Requires a primogen. Only usable during a bleed action against you or during the polling step of a political action. Reduce the bleed amount by 3 or this vampire gains +3 votes against the referendum.' TWO curated modes: the REDUCE half is LIVE -- the react window's first fx.reduce consumer (_bestReduceFor + _commitReduce as the fallback branch after bounce/block: the reducer IS the payer, so p.amount drops bot-locally and the log line is table-truth, no comply grammar needed; one per action via p.reducedOnce; amount >= 2 threshold; unlocked-primogen reactor v1, wake-combo = documented v1.1). req.title on the REACTOR checks the vampire's PRINTED title (the N4a insight) -- the crypt carries THREE Primogens. The votesBonus half is HONESTLY UNCONSUMED: referendums do not exist in the bot's game-model yet (the politics engine) -- the card stays PARTIAL by design, playable-in-full for its defensive half. Johan's target formulation: 73/77 FULL + District PLAYABLE = the honest pre-politics maximum."
+  },
+  "Underbridge Stray": {
+   "t": [
+    "ally"
+   ],
+   "persistent": true,
+   "cost": {
+    "blood": 1
+   },
+   "modes": [
+    {
+     "at": "ani",
+     "fx": {
+      "recruitAlly": true,
+      "allyLife": 1,
+      "allyPressLife": true,
+      "allyBurnUnlock": true
+     }
+    },
+    {
+     "at": "ANI",
+     "fx": {
+      "recruitAlly": true,
+      "allyLife": 2,
+      "allyPressLife": true,
+      "allyBurnUnlock": true
+     }
+    }
+   ],
+   "note": "N4d (26 July, the 100% push -- THE MINI-ALLY CLASS IS BORN). 'Animal with 1 life. 0 strength, 0 bleed. [ani] This ally can burn 1 life to give a minion you control 1 press. During an action directed at you (or a card you control), you can burn this ally if it is not blocking to unlock a ready minion you control. [ANI] As above, but this ally has 2 life and 1 strength.' The smallest honest ally model: the Stray never acts or blocks ITSELF -- it sits ready and is SPENT. Recruit = the STOCK/undirected action (Warsaw's SIXTH refresh site), [ani]-gated on the recruiter, richest mode wins (ANI = life 2); tabled as kind:'lib' with a BOT-LOCAL life field (both consumers are my-side, so life visibility is cosmetic -- zero wire risk; the [ANI] 1-strength is note-documented since the ally never strikes in this model, and combat-capable allies are the full ally class's future). Consumer A (allyPressLife): the press-decision FALLBACK in _resolveCombat -- no press card in hand, a Stray with life burns 1 (dying to 'burned' at 0) for the press. Consumer B (allyBurnUnlock): the _commitBlock locked-blocker chain's THIRD rung (unlockReact > wake > STRAY BURN -- the whole ally for a TRUE unlock of the blocker; 'if it is not blocking' is trivially satisfied, the Stray is never the blocker); the rush-at-me window = documented v1.1."
+  },
+  "Spying Mission": {
+   "t": [
+    "mod"
+   ],
+   "modes": [
+    {
+     "at": "obf",
+     "fx": {
+      "stealth": 1
+     }
+    },
+    {
+     "at": "OBF",
+     "fx": {
+      "bleedNullify": true,
+      "bleedBank": 2
+     },
+     "note": "Only usable if a bleed would be successful: the bleed burns NO pool (unsuccessful); the card goes on the acting vampire and the next time it would successfully bleed the SAME Methuselah it burns for +2 bleed. Consumer = B2 (after a redirection you do not want to land, or to bank vs a fat prey); until then the key is ignored — which is exactly the point: the bot no longer plays it as a +2 modifier."
+    }
+   ],
+   "note": "Track C (11 Sep 2026, verified in vtes.json): the auto tier tagged [OBF] as `bleed:2` and the Malkavian bot offered it as a +2 bleed MODIFIER on its own successful bleed, announcing `adds +2 bleed` and dealing phantom pool (4 copies in the V5 list; 4/12 crypt cards have superior obf). The printed superior makes the bleed unsuccessful and banks +2 for later."
+  },
+  "Foreshadowing Destruction": {
+   "t": [
+    "mod"
+   ],
+   "limited": true,
+   "modes": [
+    {
+     "at": "dom",
+     "fx": {
+      "bleed": 1
+     }
+    },
+    {
+     "at": "DOM",
+     "fx": {
+      "bleed": 3
+     },
+     "req": {
+      "targetPoolMax": 9
+     }
+    }
+   ],
+   "note": "Track C (11 Sep 2026, verified in vtes.json): \"[dom] +1 bleed (limited). [DOM] +3 bleed if the target Methuselah has 9 or fewer pool (limited).\" The auto tier carried the +3 unconditionally; _bestBleedModifierFor now reads mode-level req.targetPoolMax against the current target's last pushed pool and fails CLOSED when the pool is unknown or above the cap. `limited` kept entry-level (the overlay replaces the whole entry)."
+  },
+  "Voter Captivation": {
+   "t": [
+    "mod"
+   ],
+   "req": {
+    "disc": [
+     "pre"
+    ]
+   },
+   "modes": [
+    {
+     "at": "pre",
+     "when": "refPassed",
+     "fx": {
+      "bloodPerMargin": 1
+     }
+    },
+    {
+     "at": "PRE",
+     "when": "refPassed",
+     "fx": {
+      "bloodPerMargin": 1,
+      "marginToPool": 2
+     }
+    }
+   ],
+   "note": "18 Sep 2026 (the politics leg, remaining-cards round). 'Only usable after resolution of a political action whose referendum passed. [pre] This vampire gains 1 blood for each vote by which the referendum passed. [PRE] As above, but move up to 2 of those blood to your pool instead of this vampire.' Consumer: _maybeMarginBlood in _callReferendum's passed branch -- BEFORE the act-again look, so the blood can pay Freak Drive (vote -> Captivation -> Freak Drive -> act again is the deck's engine). Blood is capped at capacity; [PRE] sends overflow (and up to 2 when the pool is low) to the pool. Family of two in the db (Amici Noctis is Lasombra-only and distributes) -- curated, not swept."
+  },
+  "Visit from the Capuchin": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "enterCounters": 4,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "handSizePermanent": true,
+      "handSizePerCounter": 1,
+      "replaceBurnsCounter": true
+     }
+    }
+   ],
+   "note": "18 Sep 2026. 'Unique. Put this card in play with 4 counters. You get +1 hand size for each counter on this card. Each time you would replace a card other than this card, instead burn 1 counter from this card. Burn this card if it has no counters.' In effect: draw 4 now, skip the next 4 replacements. Consumers: _handSizePermanentTotal (per-counter term), the master loop (enterCounters + the immediate draw-up), _flushDraws (a replacement burns a counter instead of drawing; the card's OWN replacement is exempt). The only card of its shape in the db -- curated."
+  },
+  "Anarch Troublemaker": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "phase": "unlock",
+     "fx": {
+      "giveToPrey": true,
+      "preyLock": 2
+     }
+    }
+   ],
+   "note": "'Put this card in play. During your unlock phase, you can give your prey control of the Anarch Troublemaker and either lock up to two vampires they control or burn an equipment on one of their minions.' -- fx.giveToPrey + fx.preyLock (bot v0.6.128, _maybeGiveLock at unlock): wire verb `give`, the L12.lockM family line per locked vampire, the receiving bot recreates it via `given` and uses it on ITS prey. The equipment-burn alternative is not built."
+  },
+  "Second Tradition: Domain": {
+   "t": [
+    "react"
+   ],
+   "req": {
+    "title": true,
+    "titles": [
+     "prince",
+     "justicar"
+    ]
+   },
+   "modes": [
+    {
+     "at": null,
+     "use": "react",
+     "fx": {
+      "intercept": 2
+     }
+    },
+    {
+     "at": null,
+     "use": "react",
+     "when": "lockedBlock",
+     "fx": {
+      "unlock": true,
+      "intercept": 2,
+      "payBlood": 1
+     }
+    }
+   ],
+   "note": "20 Sep 2026 (Johan's Ventrue gaps; verified in vtes.json): 'Requires a prince or justicar. [REACTION] +2 intercept. [REACTION] Only usable by a locked prince or justicar. This vampire burns 1 blood to unlock and attempt to block with +2 intercept, even if intercept is not yet needed.' The auto tier had mode 1 only -- a wake and an intercept in one card was read as a plain +2. Mode 2: when:lockedBlock (the sleeper slot in _commitBlock, ANY action kind), fx.unlock + fx.intercept 2 + fx.payBlood 1 (the 1 blood is a price of THIS mode, not a card cost -- mode 1 is free). The card-level req.title is enforced by the bot from v0.6.139 (_titleOk)."
+  },
+  "Bowl of Convergence": {
+   "t": [
+    "equip"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": "aus",
+     "fx": {
+      "intercept": 1
+     }
+    },
+    {
+     "at": "AUS",
+     "fx": {
+      "intercept": 1,
+      "interceptPaid": 1,
+      "interceptPaidBlood": 1
+     }
+    }
+   ],
+   "note": "25 Sep 2026 (sweep pilot): [AUS] the bearer can burn 1 blood during an action to get an additional +1 intercept -- fx.interceptPaid 1 at 1 blood (interceptPaidBlood), read by the bot's _equipPaidIntercept. Text verified in KRCG vtes.json."
+  },
+  "Legion": {
+   "t": [
+    "action"
+   ],
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "actStealth": 1
+     }
+    }
+   ],
+   "note": "25 Sep 2026 (full cardfx sweep): the card's own action is '+1 stealth action' (KRCG). The auto tier took the larger number from the fledgling ability it grants ('as a +2 stealth action') -- a put() max over the whole text. actStealth 1."
+  },
+  "Madman's Quill": {
+   "t": [
+    "action"
+   ],
+   "cost": {
+    "blood": 1
+   },
+   "req": {
+    "disc": [
+     "aus",
+     "dem"
+    ]
+   },
+   "persistent": true,
+   "modes": [
+    {
+     "at": "aus+dem",
+     "dir": true,
+     "fx": {
+      "bleedAct": true,
+      "bleed": 2
+     }
+    },
+    {
+     "at": "AUS+DEM",
+     "dir": true,
+     "fx": {}
+    }
+   ],
+   "note": "25 Sep 2026 (full cardfx sweep): the auto tier added a 'dem' mode with bleed 1 from the attached card's PASSIVE ('Vampires with Dementation get +1 bleed against the attached minion's controller') -- not a mode the bot can play. Dropped; the passive is unmodelled (a persistent bleed bonus against one Methuselah)."
+  }
+ },
+ "crypt": {
+  "Lenny Burkhead (G6)": {
+   "cap": 6,
+   "clan": "Nosferatu",
+   "sect": "Camarilla",
+   "group": "6",
+   "disc": {
+    "all": [
+     "ani",
+     "obf",
+     "pot",
+     "pre"
+    ],
+    "sup": [
+     "ani"
+    ]
+   },
+   "title": "Primogen",
+   "votes": 1,
+   "fx": {
+    "bleedBonus": 1
+   },
+   "note": "Primogen: +1 bleed. Passive, unconditional — VA consumer at the bleed n (V-plan F1)."
+  },
+  "Larissa Moreira (G6)": {
+   "cap": 6,
+   "clan": "Nosferatu",
+   "sect": "Camarilla",
+   "group": "6",
+   "disc": {
+    "all": [
+     "ani",
+     "obf",
+     "pot"
+    ],
+    "sup": [
+     "ani",
+     "obf"
+    ]
+   },
+   "title": "Primogen",
+   "votes": 1,
+   "fx": {
+    "bleedBoostDiscard": {
+     "disc": "ani",
+     "n": 1
+    }
+   },
+   "note": "During a bleed action, may discard a card requiring [ani] to get +1 bleed — VB (activated; surplus-hand judgment, the starve-out machinery is the adjacent precedent)."
+  },
+  "Royce (G2)": {
+   "cap": 1,
+   "clan": "Pander",
+   "sect": "Sabbat",
+   "group": "2",
+   "disc": {
+    "all": [
+     "dom"
+    ],
+    "sup": []
+   },
+   "fx": {
+    "stealthMod": {
+     "n": -1,
+     "when": "bleed"
+    }
+   },
+   "note": "-1 stealth when bleeding — VA at the announce tally a."
+  },
+  "The Dowager (G6)": {
+   "cap": 6,
+   "clan": "Nosferatu",
+   "sect": "Camarilla",
+   "group": "6",
+   "disc": {
+    "all": [
+     "ani",
+     "aus",
+     "obf",
+     "pot"
+    ],
+    "sup": [
+     "ani",
+     "obf"
+    ]
+   },
+   "title": "Primogen",
+   "votes": 1,
+   "fx": {
+    "interceptMod": {
+     "n": 1,
+     "when": "directed"
+    }
+   },
+   "note": "+1 intercept during directed actions — VA beside _equipIntercept at the three agreeing sites."
+  },
+  "Christine Boscacci (G2)": {
+   "cap": 2,
+   "clan": "Pander",
+   "sect": "Sabbat",
+   "group": "2",
+   "disc": {
+    "all": [
+     "dom",
+     "vic"
+    ],
+    "sup": []
+   },
+   "fx": {
+    "interceptMod": {
+     "n": -1,
+     "when": "bleed"
+    }
+   },
+   "note": "-1 intercept during bleed actions — VA; the wire tally floors at 0, pick/verdict math reads the true value."
+  },
+  "Navar McClaren (G1)": {
+   "cap": 1,
+   "clan": "Caitiff",
+   "sect": "Camarilla",
+   "group": "1",
+   "disc": {
+    "all": [
+     "ani"
+    ],
+    "sup": []
+   },
+   "fx": {
+    "blockNotOlder": true
+   },
+   "note": "Cannot block older vampires; older = strictly higher CAPACITY (the age rule, v0.6.15 source-verify) — VA twin-site filter (_pickBlocker + the wake-sleeper find, the M2 lesson)."
+  },
+  "Franciscus (G2)": {
+   "cap": 1,
+   "clan": "Caitiff",
+   "sect": "Camarilla",
+   "group": "2",
+   "disc": {
+    "all": [
+     "aus"
+    ],
+    "sup": []
+   },
+   "fx": {
+    "burnAtDamage": 3
+   },
+   "note": "Burned (without torpor) if he takes >3 damage in a single combat — VB, per-COMBAT damage accumulator (the Carrion per-combat reset is the pattern)."
+  },
+  "Julius (G2)": {
+   "cap": 1,
+   "clan": "Caitiff",
+   "sect": "Camarilla",
+   "group": "2",
+   "disc": {
+    "all": [
+     "qui",
+     "ser"
+    ],
+    "sup": []
+   },
+   "fx": {
+    "burnOnTorpor": true
+   },
+   "note": "If Julius goes into torpor, burn him — VB inside _fameTorporHook (the shared entry at all three torpor-flip sites, the Fame precedent)."
+  },
+  "Blythe Candeleria (G2)": {
+   "cap": 3,
+   "clan": "Tremere",
+   "sect": "Camarilla",
+   "group": "2",
+   "disc": {
+    "all": [
+     "aus",
+     "tha"
+    ],
+    "sup": [
+     "tha"
+    ]
+   },
+   "fx": {
+    "strengthMod": {
+     "n": -1,
+     "vsClan": "Malkavian"
+    }
+   },
+   "note": "-1 strength in combat with a Malkavian — VB in _strengthBonus with opponent-clan context (fxLookup on the combat opponent); hand damage floors at 0."
+  },
+  "Smudge the Ignored (G1)": {
+   "cap": 1,
+   "clan": "Caitiff",
+   "sect": "Camarilla",
+   "group": "1",
+   "fx": {
+    "strengthOnDiablerie": 1
+   },
+   "docOnly": true,
+   "note": "+1 strength after first diablerie of an older vampire — diablerie is unmodeled bot-wide (V-plan F3, INERT-BY-SCOPE)."
+  },
+  "Alexander Silverson (G6)": {
+   "cap": 8,
+   "clan": "Malkavian",
+   "sect": "Camarilla",
+   "group": "6",
+   "disc": {
+    "all": [
+     "aus",
+     "dom",
+     "obf",
+     "pre"
+    ],
+    "sup": [
+     "aus",
+     "dom",
+     "obf"
+    ]
+   },
+   "title": "Prince",
+   "votes": 2,
+   "fx": {
+    "voteTaxAgainst": 1
+   },
+   "note": "Vampires must burn 1 blood to cast votes/ballots against his referendums -- fx.voteTaxAgainst. LIVE since bot v0.6.127: a bot VOTER pays 1 blood per titled vampire it votes against with (a 0-blood vampire's votes stay home) and drops out when nothing but a free ride was at stake; the CALLER prices the table's against-votes with the same rule. The acting vampire is read from the frozen `calls a political action.` line."
+  },
+  "New Blood (ANY)": {
+   "cap": 2,
+   "clan": "Blood Brother",
+   "sect": "Sabbat",
+   "group": "ANY",
+   "disc": {
+    "all": [
+     "san"
+    ],
+    "sup": []
+   },
+   "fx": {
+    "enterPlay": {
+     "drawCrypt": 1
+    }
+   },
+   "note": "Enters play: choose a circle + draw 1 crypt card; Sterile. The circle half is Blood-Brother scope (inert — zero BB cards in any registered deck); Sterile is embrace-scope, moot. The drawCrypt half — VC at the raise commit."
+  },
+  "Anarch Convert (ANY)": {
+   "cap": 1,
+   "clan": "Caitiff",
+   "sect": "Anarch",
+   "group": "ANY",
+   "fx": {
+    "selfRemoveOption": true
+   },
+   "docOnly": true,
+   "note": "MAY remove himself on entry (Anarch conversion + 1 pool or crypt draw) — Anarch state unmodeled. v1 POLICY: always keep the body (Johan 2 Aug: OK as BASELINE; personas may carry their own strategy later — VD knob candidate)."
+  },
+  "Antoinette DuChamp (G2)": {
+   "cap": 1,
+   "clan": "Caitiff",
+   "sect": "Camarilla",
+   "group": "2",
+   "disc": {
+    "all": [
+     "cel",
+     "pre"
+    ],
+    "sup": []
+   },
+   "fx": {
+    "costPlusDisc": {
+     "cel": 1
+    }
+   },
+   "docOnly": true,
+   "note": "[cel] action/strike cards cost +1 blood — INERT-IN-DECK: zero cel-requiring cards in the hacking library (verified 2 Aug). A general consumer is one line at the blood-cost gate if a future deck pairs them."
+  },
+  "Zöe (G2)": {
+   "cap": 3,
+   "clan": "Malkavian",
+   "sect": "Camarilla",
+   "group": "2",
+   "disc": {
+    "all": [
+     "aus",
+     "cel",
+     "obf"
+    ],
+    "sup": [
+     "aus"
+    ]
+   },
+   "fx": {
+    "noHuntStealth": true
+   },
+   "note": "Does not get the usual +1 stealth when hunting — VC: lands as the exception rider when the GENERAL hunt +1 stealth rule builds (audit side-find 2 Aug: hunt books no stealth tally for anyone; Johan GO to take both together)."
+  },
+  "Dan Murdock (G1)": {
+   "cap": 3,
+   "clan": "Caitiff",
+   "sect": "Camarilla",
+   "group": "1",
+   "disc": {
+    "all": [
+     "aus",
+     "obf"
+    ],
+    "sup": []
+   },
+   "fx": {
+    "fetchNamed": {
+     "card": "Giant's Blood"
+    }
+   },
+   "docOnly": true,
+   "note": "Action: search library for Giant's Blood into hand — INERT-IN-DECK: the card is not in deck-wall (verified 2 Aug). _fetchDebt (E1) makes a future consumer cheap."
+  },
+  "Lubomira Hradok (G5)": {
+   "cap": 3,
+   "clan": "Nosferatu antitribu",
+   "sect": "Sabbat",
+   "group": "5",
+   "disc": {
+    "all": [
+     "obf"
+    ],
+    "sup": [
+     "obf"
+    ]
+   },
+   "fx": {
+    "noUnlockAfterTitledBleed": true
+   },
+   "note": "Black Hand: after successfully bleeding a Methuselah who controls a ready TITLED vampire, she does not unlock next unlock phase — VC (_skipUnlock marker at the bleed-success commit; titles via fxLookup, the N4a precedent)."
+  },
+  "Skidmark (G4)": {
+   "cap": 5,
+   "clan": "Nosferatu antitribu",
+   "sect": "Sabbat",
+   "group": "4",
+   "disc": {
+    "all": [
+     "aus",
+     "for",
+     "obf",
+     "pot"
+    ],
+    "sup": [
+     "for",
+     "obf"
+    ]
+   },
+   "fx": {
+    "noReplaceActing": true
+   },
+   "archFull": true,
+   "note": "When acting, no card replacement until end of action — FULL-BY-ARCHITECTURE (verified 2 Aug: all 13 _flushDraws sites sit at action/phase boundaries; the bot universally defers replacement to action end, so this text IS the baseline behavior)."
+  },
+  "Sybren van Oosten (G6)": {
+   "cap": 7,
+   "clan": "Ventrue",
+   "sect": "Camarilla",
+   "group": "6",
+   "disc": {
+    "all": [
+     "dom",
+     "for",
+     "pre",
+     "tha"
+    ],
+    "sup": [
+     "for",
+     "pre"
+    ]
+   },
+   "title": "Prince",
+   "votes": 2,
+   "fx": {
+    "selfUnlock": {
+     "when": "refPassed"
+    }
+   },
+   "note": "'You can unlock Sybren after a referendum called by him passes.' -- fx.selfUnlock {when}: the act-again family's crypt member (Freak Drive's `when` rider vocabulary, no card, no cost). Bot v0.6.127: _maybeActAgain unlocks him BEFORE it looks for a card; keep-a-blocker and the plan decide whether he acts again or stays home."
+  },
+  "Alexa Draper (G6)": {
+   "cap": 8,
+   "clan": "Ventrue",
+   "sect": "Camarilla",
+   "group": "6",
+   "disc": {
+    "all": [
+     "dom",
+     "for",
+     "pot",
+     "pre"
+    ],
+    "sup": [
+     "dom",
+     "pre"
+    ]
+   },
+   "title": "Prince",
+   "votes": 2,
+   "fx": {
+    "voteBoostDiscard": {
+     "disc": "dom",
+     "n": 1
+    }
+   },
+   "note": "'During the polling step of any referendum, Alexa can discard a card requiring Dominate [dom] to get +1 vote.' -- fx.voteBoostDiscard {disc, n}: the SAME shape as Larissa's bleedBoostDiscard (one shared picker, _discardForBoost). Bot v0.6.127: a held boost like Bewitching Oration when I call (spent only when it turns the count); as a VOTER only when the referendum costs me pool. Once per referendum (v1, the Larissa precedent)."
+  }
+ }
+}

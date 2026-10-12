@@ -1,0 +1,28 @@
+[
+ {
+  "hand": [
+   "Fame",
+   "Deep Song",
+   "Deep Song",
+   "Deep Song",
+   "Carrion Crows",
+   "Aid from Bats",
+   "Guard Dogs"
+  ],
+  "ready": [
+   {
+    "name": "Horace Radcliffe (G6)",
+    "blood": 4
+   }
+  ]
+ },
+ {
+  "ready": [
+   {
+    "name": "Larissa Moreira (G6)",
+    "blood": 2
+   }
+  ]
+ },
+ null
+]
