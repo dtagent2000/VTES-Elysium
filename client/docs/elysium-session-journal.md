@@ -1,3 +1,16 @@
+## [INGET AV ANDRAS I REPOT] — vtes.json ut, START-HERE v1.9 (12 oktober 2026, ingen kod)
+
+Inventeringen av roten efter mergen: bara våra egna filer hostas (24 st), och allt guiderna namnger finns där.
+Enda tredjepartsfilen i repot var `bot/vtes.json` (KRCG:s kortdatabas, 7 MB); Johan tog bort den — det är
+skillnad på att *hosta* den synligt och på att klienten hämtar den från KRCG under körning, vilket är det den
+är till för. Nu: `vtes.json` gitignorerad (som `twd_decks.json` redan var), root-`CLAUDE.md` säger hur den
+hämtas (`curl -o bot/vtes.json https://static.krcg.org/data/vtes.json`) och att tredjepartsdata aldrig commitas
+eller hostas. `START-HERE.html` v1.9: bottlistan nämner twd-filerna (saknades — den som följde sidan fick bottar
+utan deckkunskap; hjälpsidan i klienten sa rätt) och en rad om att kortdatabas och bilder hämtas från KRCG.
+Botsidans egna dokument säger fortfarande "vtes.json is in bot/" — deras att rätta (svar skrivet). Kvar som
+Johans fråga, inte repots: lådan servar sedan D5 (27 juli) KRCG:s bildarkiv + en vtes.json-cache under
+`/images/` — tredjepartsfiler hostade av oss, om det ska vara konsekvent.
+
 ## [REPOT ÄR SANNINGEN] — klientsidan in i monorepot (12 oktober 2026, ingen kod; klient v2.6.142 / srv-2.6.43 / bot v0.6.198)
 
 Johan kopplade GitHub och lät botsidan lägga upp sin halva av `dtagent2000/VTES-Elysium` först; deras handoff

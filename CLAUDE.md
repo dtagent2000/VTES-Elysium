@@ -34,11 +34,14 @@ client, server and start scripts from `client/` to `/`. Nothing at the root is e
 ## Gates (summary — the full lists live in each half's CLAUDE.md)
 - Bot: `node --check` on every changed file → `test-bot-logic.js` ×3 (≈300 s; run detached with `timeout 600` and
   poll) → `test-bot-canary.js` (needs the released client + protocol beside it — the copies in `bot/`) →
-  `test-cardfx.js` when cardfx changed (needs `vtes.json` beside it — it is in `bot/`) → `diag-hb1-smoke.js` when the
+  `test-cardfx.js` when cardfx changed (needs `vtes.json` beside it — download it into `bot/` first, see below) → `diag-hb1-smoke.js` when the
   bot's browser surface changed → `test-bot-hotseat.js` when anything near the hotseat bridge changed.
   Run everything from inside `bot/` — the suites, the arena and the tools expect their files beside them.
 - Client: see `client/CLAUDE.md`.
 
 ## Data that is not in git
-`twd_decks.json` (10 MB, KRCG's TWDA) is an input to `bot/twd-profile.py` / `bot/twd-archetypes.py` only; put it in
-`bot/` when rebuilding the profile. Arena traces (`serie-*/`, `bench-*/`) are generated and ignored.
+Third-party data is never committed or hosted here; each session fetches it from its source:
+- `vtes.json` (KRCG's card database, 7 MB): `curl -o bot/vtes.json https://static.krcg.org/data/vtes.json` before
+  `test-cardfx.js` or the profile tools. The client fetches the same file itself at run time.
+- `twd_decks.json` (10 MB, KRCG's TWDA) is an input to `bot/twd-profile.py` / `bot/twd-archetypes.py` only; put it in
+  `bot/` when rebuilding the profile. Arena traces (`serie-*/`, `bench-*/`) are generated and ignored.
