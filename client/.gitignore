@@ -1,0 +1,17 @@
+# The bot bundle is the bot project's release and lives at the repository ROOT (and in bot/).
+# A client session copies it beside the suite to run the LIVE tests, the canary, the soak and
+# the embed drift check (see docs/START-HERE-CLIENT-CHAT.md) -- never commit a third copy here.
+elysium-bot.js
+elysium-cardfx.js
+elysium-cardfx.json
+elysium-twd-profile.js
+elysium-twd-profile.json
+elysium-twd-archetypes.js
+elysium-twd-archetypes.json
+START-HERE-BOTS.html
+# generated / runtime
+elysium-src/
+elysium-rooms.json
+elysium-saves.json
+elysium-errors.log*
+rebuilt.html

@@ -132,6 +132,46 @@ aside{
 #avrDuel .avdatt span[data-card-name]{border-bottom:1px dotted #5a5040}
 #avrDuel .avdatt span[data-card-name]:hover{color:var(--brass)}
 #avrDuel .avdatt span.own{cursor:pointer}
+/* v2.6.129 step-driven combat: the rail in #avrLive, the stage between the combatants, per-side controls */
+#avrLive .avrph.rail{display:inline-flex; align-items:center; gap:3px; min-width:0; flex-wrap:wrap; text-transform:none; letter-spacing:0}
+#avrLive .avrph .crd{font:700 12px "Spectral",Georgia,serif; color:#e06248; margin-right:4px}
+#avrLive .avrph .cph{font:600 9px "Cinzel",serif; letter-spacing:.1em; text-transform:uppercase; color:#6a5d44; padding:2px 6px; border:1px solid #2a2216; border-radius:4px; cursor:pointer; white-space:nowrap}
+#avrLive .avrph .cph:hover{color:var(--brass2); border-color:#3a2f1d}
+#avrLive .avrph .cph.done{color:#8f6a52}
+#avrLive .avrph .cph.skip{opacity:.4; text-decoration:line-through}
+#avrLive .avrph .cph.on{color:#f3dcc4; background:#5a1d14; border-color:#8a2d20}
+#avrLive .avrph .cpill{margin-left:6px; font:600 10.5px "Spectral",Georgia,serif; color:var(--bone2); border:1px solid #2a2216; border-radius:10px; padding:0 8px; white-space:nowrap}
+#avrLive .avrph .cpill.long{color:#e0a24a; border-color:#5a4020}
+#avrLive .avradj.cwide{width:auto; padding:0 9px; font:600 9.5px "Cinzel",serif; letter-spacing:.1em; text-transform:uppercase; color:#f3dcc4; background:#5a1d14; border-color:#8a2d20}
+#avrLive .avradj:disabled{opacity:.35; cursor:default}
+#avrCnt{display:contents}
+#avrDuel .avdstage{flex:0 0 190px; display:flex; flex-direction:column; align-items:center; gap:6px; padding:4px 2px; text-align:center}
+#avrDuel .cst{font:600 10px "Cinzel",serif; letter-spacing:.16em; text-transform:uppercase; color:#c0563c}
+#avrDuel .chint{font:italic 11px/1.35 "Spectral",Georgia,serif; color:#7a7058}
+#avrDuel .crow{display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:center}
+#avrDuel .cnote{font:11px "Spectral",Georgia,serif; color:#8a7d62}
+#avrDuel .cres{font:600 11.5px "Spectral",Georgia,serif; color:var(--bone)}
+#avrDuel .cres.bad{color:#e06248}
+#avrDuel .cseg{display:inline-flex; border:1px solid #3a2f1d; border-radius:5px; overflow:hidden}
+#avrDuel .cseg span{font:600 10px "Cinzel",serif; letter-spacing:.12em; text-transform:uppercase; color:#7a7058; background:#140f09; padding:4px 12px; cursor:pointer}
+#avrDuel .cseg span+span{border-left:1px solid #3a2f1d}
+#avrDuel .cseg span:hover{color:var(--brass2)}
+#avrDuel .cseg span.on{color:#f3dcc4; background:#5a1d14; cursor:default}
+#avrDuel .cseg.lock span{cursor:default}
+#avrDuel .cseg.lock span:not(.on){opacity:.35}
+#avrDuel .cdmg{display:flex; align-items:center; gap:4px}
+#avrDuel .cvs{font:600 9px "Cinzel",serif; letter-spacing:.2em; text-transform:uppercase; color:#5a5040; margin:0 4px}
+#avrDuel .cn{min-width:26px; text-align:center; font:700 15px "Spectral",Georgia,serif; color:#e06248; background:#120d07; border:1px solid #6e2418; border-radius:4px; padding:1px 6px}
+#avrDuel .cn.sm{min-width:18px; font-size:12px; padding:0 4px}
+#avrDuel .cctl{display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin-top:6px}
+#avrDuel .cline{display:flex; align-items:center; gap:3px; flex-wrap:wrap; width:100%}
+#avrDuel .cbtn{font:600 9.5px "Cinzel",serif; letter-spacing:.1em; text-transform:uppercase; color:var(--brass2); background:#1a1309; border:1px solid #3a2f1d; border-radius:4px; padding:3px 8px; cursor:pointer; white-space:nowrap}
+#avrDuel .cbtn:hover:not(:disabled){color:var(--brass); border-color:var(--brass2)}
+#avrDuel .cbtn:disabled{opacity:.38; cursor:not-allowed}
+#avrDuel .cchip{font:600 11px "Spectral",Georgia,serif; color:#e06248; background:#1a0d09; border:1px solid #5a2418; border-radius:4px; padding:1px 7px; white-space:nowrap}
+#avrDuel .chist{font:11px "Spectral",Georgia,serif; color:#8a7d62; border-top:1px solid #2a2216; padding-top:4px; margin-top:2px; line-height:1.4}
+#avrDuel .cagg{color:#e06248}
+#avrDuel .cchip.dim{color:#7a7058; background:transparent; border-color:#2a2216}
 #avrDuel .avdghost{flex:1 1 0; display:flex; align-items:center; justify-content:center; border:1px dashed #2a2216; border-radius:6px; min-height:70px}
 #avrDuel .avdjoin{font:600 10px "Cinzel",serif; letter-spacing:.12em; text-transform:uppercase; color:var(--brass2); background:#1a1309; border:1px solid #3a2f1d; border-radius:4px; padding:4px 10px; cursor:pointer}
 #avrDuel .avdjoin:hover:not(:disabled){color:var(--brass); border-color:var(--brass2)}
@@ -1552,12 +1592,12 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <button class="avrbtn" id="avrVote" title="Vote resolver — votes for vs against"><span class="avrico"></span>Vote</button>
     <button class="avrbtn" id="avrCombat" title="Combat resolver — damage dealt each way"><span class="avrico"></span>Combat</button>
     <div id="avrLive" hidden>
-      <button class="avradj" id="avrPhPrev" title="Previous combat step">◂</button><span id="avrPh" class="avrph" title="The rulebook's seven steps per combat round — Strike covers announce &amp; resolution, incl. additional strikes. Next on End of round wraps to a new round."></span><button class="avradj" id="avrPhNext" title="Next combat step (wraps to a new round after a press)">▸</button>
-      <span id="avrIcoA" class="avrico"></span><span id="avrLblA" class="avrlbl"></span>
+      <button class="avradj" id="avrPhPrev" title="Previous combat step">◂</button><span id="avrPh" class="avrph" title="The rulebook's seven steps per combat round. Click a step to jump there."></span><button class="avradj" id="avrPhNext" title="Next combat step">▸</button>
+      <span id="avrCnt"><span id="avrIcoA" class="avrico"></span><span id="avrLblA" class="avrlbl"></span>
       <button class="avradj" id="avrAm" title="−1 · Shift −5">−</button><span class="avrn" id="avrNa" title="Scroll · Ctrl+click +1 · Shift+click −1">0</span><button class="avradj" id="avrAp" title="+1 · Shift +5">+</button>
       <span class="avrmid">vs</span>
       <button class="avradj" id="avrBm" title="−1 · Shift −5">−</button><span class="avrn" id="avrNb" title="Scroll · Ctrl+click +1 · Shift+click −1">0</span><button class="avradj" id="avrBp" title="+1 · Shift +5">+</button>
-      <span id="avrLblB" class="avrlbl"></span><span id="avrIcoB" class="avrico"></span>
+      <span id="avrLblB" class="avrlbl"></span><span id="avrIcoB" class="avrico"></span></span>
       <button class="pcbtn" id="avrResolve" title="Resolve — log the outcome to the whole table">Resolve</button>
       <button class="pcx" id="avrCancel" title="Clear without resolving">×</button>
     </div>
@@ -2414,7 +2454,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hb-setup">Setting up a table</a></li>
   <li><a href="#hb-play">How a bot plays</a></li>
   <li><a href="#hb-controls">Controls</a></li>
-  <li class="ver">bot v0.6.155 · client v2.6.125 + card-ctrl fix</li>
+  <li class="ver">bot v0.6.198 · client v2.6.141</li>
 </ul></nav>
 
 <header class="hero">
@@ -2454,7 +2494,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 
   <h3>How a bot generally behaves</h3>
   <p>A bot plays a full turn in the rulebook order — unlock, master, minion, influence, discard — and announces each phase like a human saying “unlock” aloud. Between every visible step it takes a short breath (about three seconds at a human table) so you can follow what it does. When it acts it asks the table for blocks with a quick phrase and waits; when you act against it, it answers with the same phrases. It counts stealth, intercept, votes and combat on the shared resolver counters and reads the numbers you put there.</p>
-  <p>Its play is <em>statistical, not scripted</em>: it tracks what each opponent has shown (bleed sizes, stealth, intercept, damage, blocks) and weighs its own hand against that picture. It knows its own deck's composition exactly, so its odds about its own next draws are real; its picture of your deck is built only from what you have played so far.</p>
+  <p>Its play is <em>statistical, not scripted</em>: it tracks what each opponent has shown (bleed sizes, stealth, intercept, damage, blocks) and weighs its own hand against that picture. It knows its own deck's composition exactly, so its odds about its own next draws are real. Its picture of <em>your</em> deck starts from the tournament-winning decks archive (TWDA, about 4,700 decks): from your crypt's clan and every library card you have shown, it expects how much combat, stealth, intercept and bounce your deck runs, and sharpens that as you play. Public evidence only — never your hand. Once it is confident, it says once what it reads your deck as (“I read Johan's deck as Lawfirm (7 of 8 cards typical).”); that line is explanation, it does not steer the bot's play.</p>
 
   <h3>Decks and archetypes</h3>
   <p>Each bot plays one of six fixed decks. The deck decides not only the cards but the <em>posture</em> — how eagerly it goes forward, how many bodies it keeps home, and what it builds first.</p>
@@ -2488,7 +2528,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <h2>Setting up a table</h2>
   <p class="lead">Offline hotseat is the fastest way to play against bots: one screen, you and up to five bots, no server round-trips. Online, the host adds bots from the lobby and they sit at the table like any other player.</p>
 
-  <div class="note"><b>Before you start.</b> Bots need <em>Full mode</em> (Lite is online-only and bot-free) and a <em>Structured</em> board. On <em>elysium.cards</em> the bot files are served with the client — nothing to install. If you run the client from your own machine or server, <code>elysium-bot.js</code> (v0.6.147 or newer) and <code>elysium-cardfx.json</code> must sit in the same folder as <code>elysium-vtes-bord.html</code>; opened as a local file, the database is read from <code>elysium-cardfx.js</code> instead. A missing or too-old bot file is refused with a message that says exactly what is wrong.</div>
+  <div class="note"><b>Before you start.</b> Bots need <em>Full mode</em> (Lite is online-only and bot-free) and a <em>Structured</em> board. On <em>elysium.cards</em> the bot files are served with the client — nothing to install. If you run the client from your own machine or server, four files sit in the same folder as <code>elysium-vtes-bord.html</code>: <code>elysium-bot.js</code> (v0.6.147 or newer), <code>elysium-cardfx.json</code>, <code>elysium-twd-profile.json</code> and <code>elysium-twd-archetypes.json</code>. Opened as a local file, the client reads the <code>.js</code> twin of each data file instead (<code>elysium-cardfx.js</code>, <code>elysium-twd-profile.js</code>, <code>elysium-twd-archetypes.js</code>) — keep those beside it too. Without the two TWD files the bots simply play without reading decks. A missing or too-old bot file is refused with a message that says exactly what is wrong.</div>
 
   <h3>Offline / hotseat</h3>
   <ol class="flow">
@@ -2531,7 +2571,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <li><b>In the lobby, find the Bots row</b>: a name (a free name is suggested), a deck dropdown, an experience dropdown, and <span class="menu">🤖 Add bot</span>. Add up to the table limit of six seats; a seat picker per bot lets the host place it.</li>
     <li><b>Helpers lock on.</b> Adding the first bot switches the room's helper policy to “All helpers on” for everyone and shows it in the lobby banner; removing the last bot restores what the room had before.</li>
     <li><b>Remove a bot</b> with the ✕ on its lobby row — it leaves the seat itself. <em>Debug bot</em> works as offline and is refused in Tournament rooms.</li>
-    <li><b>Start.</b> From here the server drives everything: the bots take their turns when the turn reaches them, the referee menus (pool, oust, pass) and the card controls reach the bot through the server, and the Bot Activity panel is visible to the host only, since only the host's tab holds the bots.</li>
+    <li><b>Start.</b> From here the server drives everything: the bots take their turns when the turn reaches them, the referee menus (pool, oust, pass) and the card controls reach the bot through the server, and every seated player sees the 🤖 Bot Activity badge and its tempo gear. Only the host's tab holds the bots, so only the host's ▶ buttons can step them; everyone else answers with a quick phrase, a line or the <span class="menu">Combat ▸</span> menu.</li>
   </ol>
   <p>If the host's connection blinks, a bot reconnects to its seat by token just as a human does. If the host closes the tab, the bots go with it.</p>
 
@@ -2586,7 +2626,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <summary>Your bleed or vote <span class="sub">— how it decides to block or react</span></summary>
     <div>
       <p>Announce with the action menu: right-click your minion → <span class="menu">Actions</span> → <span class="menu">Bleed 1/2/3/X…</span>, <span class="menu">+X bleed…</span>, <span class="menu">Vote → Political action</span>, <span class="menu">Hunt</span>, <span class="menu">Rescue from torpor</span>, <span class="menu">Diablerie</span>. The frozen line the client writes is what the bot reads, so the amount and the target must be on that line — set a target with <span class="menu">⌖ Set as target</span> / <span class="menu">Target their pool</span> first if the action is not simply aimed at your prey.</p>
-      <p>The bot then weighs the block: what the action costs it in pool, how likely the block is to succeed (your announced stealth against the intercept it can raise — cards in hand, permanents, a wake for a locked body), what a fight against that vampire would cost, and what it loses by locking a blocker it may want later. It says <span class="phrase">❗ Hold on…</span> while it decides, then either <span class="phrase">No block</span> or <span class="phrase">Block!</span> with the frozen line <em>“Anarch Convert attempts to block.”</em>, its wake and intercept cards played onto the counter one beat apart. If you add stealth it looks again at the real counter and answers with more intercept when it has it — several cards at once when several are needed.</p>
+      <p>The bot then weighs the block: what the action costs it in pool, how likely the block is to succeed (your announced stealth against the intercept it can raise — cards in hand, permanents, a wake for a locked body), what a fight against that vampire would cost (a vampire with no blood lets a small bleed through rather than go to torpor; against a hard-hitting deck a weak blocker stays back), and what it loses by locking a blocker it may want later. It says <span class="phrase">❗ Hold on…</span> while it decides, then either <span class="phrase">No block</span> or <span class="phrase">Block!</span> with the frozen line <em>“Anarch Convert attempts to block.”</em>, its wake and intercept cards played onto the counter one beat apart. If you add stealth it looks again at the real counter and answers with more intercept when it has it — several cards at once when several are needed.</p>
       <p><strong>Bouncing.</strong> A bot with a Deflection does not bounce at the announce. Following table custom it lets you pump first: after <span class="phrase">No block</span> it waits for your modifiers (<span class="menu">+X bleed…</span>) and bounces on the <em>total</em> once you say <span class="phrase">It resolves</span> — or, if you play no modifier, about four seconds after your decline. It rarely bounces a bleed of 1 while it holds another bounce for something heavier, and against a known stealth bleeder it may deliberately let small bleeds through to clog your hand.</p>
       <p><strong>Your action it cannot read</strong> — a card the client logs only as “plays X” — gets this exchange when you prompt <span class="phrase">Any blocks?</span>:</p>
       <span class="bot"><b>Name:</b> Will this action cause me to lose pool? (Yes / No)</span><br>
@@ -2609,14 +2649,18 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <details>
     <summary>Combat <span class="sub">— one round at a time, on the counters</span></summary>
     <div>
-      <p>When a block succeeds either way, the bot fights by its cards: maneuvers, presses, strikes with weapons or hand strikes, Carrion Crows, Immortal Grapple, dodges, Majesty-class combat-ends, prevention (Hidden Strength pays X to prevent the whole hit). Each play is a log line and a clone; at the end of a round it narrates: <span class="bot"><b>Name combat</b> — Lisa strikes with .44 Magnum for 2; Anarch Convert takes 2 (loses 2 blood, now 1). One round — tell me if your side's damage differs.</span></p>
-      <p>Against a human the bot cannot see your strike as data. It waits a moment for a strike on the counters, and if none arrives it assumes the rulebook default of <strong>1 hand damage</strong> and says so. If you dealt more, or dodged, correct its vampire's blood from the right-click menu. It presses for another round when its cards make that worthwhile and reads a press of yours from the log; it never cancels your press.</p>
+      <p>When a block succeeds either way, the bot fights by its cards: maneuvers, presses, strikes with weapons or hand strikes, Carrion Crows, Immortal Grapple, dodges, Majesty-class combat-ends, prevention (Hidden Strength pays X to prevent the whole hit). A combat-ends card is played when the strike it faces is worth the card: what you announced, when you strike first, or what your deck is expected to hit for (from what it has shown and the TWDA). A hand strike for 1 is not worth a Majesty; a strike that would send its vampire to torpor, or aggravated damage, always is. A wave deck (the Malkavian) maneuvers to long only when your expected strike could put its vampire in torpor, or when one maneuver ends a dangerous fight because you show no way to press; otherwise it keeps Swallowed by the Night for its stealth. Each play is a log line and a clone; at the end of a round it narrates: <span class="bot"><b>Name combat</b> — Lisa strikes with .44 Magnum for 2; Anarch Convert takes 2 (loses 2 blood, now 1). One round — tell me if your side's damage differs.</span></p>
+      <p><b>Fighting a bot yourself — the vampire's <span class="menu">Combat ▸</span> menu.</b> Right-click your fighting vampire and use <span class="menu">Combat ▸ Strike</span> (Hand, Hand for N…, Weapon or card…, Steal blood…, Dodge…, Combat ends…), <span class="menu">Combat ▸ Maneuver</span> (to long / to close, or <em>Set range</em> for Immortal Grapple- or Sniper Rifle-class cards) and <span class="menu">Combat ▸ Press</span> (continue / end). Each writes one log line the bot reads, and with the combat helper on it also moves the shared combat counter. The bot writes its own strike's damage onto its side of that counter, so your Damage step shows what is coming at you.</p>
+      <p><b>Blocks by chat.</b> When a bot blocks <em>your</em> action, type your stealth in chat: a number is your total stealth (<em>2</em>), <em>+1</em> adds to it. When <em>you</em> block a bot's action, type your intercept the same way. The bot books it on the block counter and answers with its own card if it needs one — it never plays stealth or intercept that is not needed.</p>
+      <p><b>The bot walks the combat steps with you.</b> Fighting your vampire, a bot talks through the rulebook's steps. When <em>you</em> act it asks — <em>“Anything before range?”, “Any maneuvers?”, “Anything before strikes?”, “What is your strike?”, “Any presses?”, “Anything before ending combat?”</em> — and when it acts it says what it does, or <em>“I have nothing before range.”</em> and so on. Answer with the <span class="menu">Combat ▸</span> menu, or say <span class="phrase">No</span> / <span class="phrase">Pass</span> (or type <em>no</em>, <em>pass</em>, <em>go on</em>) to move on; stepping the combat helper forward works too. If you say nothing, a short clock moves the step along.</p>
+      <p><b>What you took.</b> With the combat helper on, your client writes <em>“Name takes N (loses P blood, now M).”</em> for you when the table steps past Damage resolution. On a Classic table (helper off) use <span class="menu">Combat ▸ Damage taken…</span> — that is how the bot learns what your vampire took. If you say nothing, the bot falls back to the rulebook: <strong>1 hand damage</strong> at close range, <strong>0 at long range</strong> unless your vampire shows a ranged option.</p>
+      <p><b>Steals.</b> When a bot steals blood from your vampire (Theft of Vitae), it takes the blood on its side; lower your vampire's blood yourself — the helper never touches the board.</p>
     </div>
   </details>
   <details>
     <summary>Politics <span class="sub">— calling and voting</span></summary>
     <div>
-      <p>A bot with a title calls referendums when it holds the votes: <em>Kine Resources Contested</em> and <em>Parity Shift</em> against its prey, or a bloat when that pays more. It announces the terms, opens the Vote counter and casts its own votes there; you cast yours with <span class="menu">Vote → Cast votes → For/Against…</span> or the counter's +/−. <span class="phrase">❗ Hold on…</span> buys thinking time; <span class="phrase">Pass</span> or <span class="phrase">No</span> means “no votes from me” (typing <code>abstain</code> does the same); pressing <span class="phrase">It resolves</span> or the counter's Resolve ends the poll and the bot announces the result at once.</p>
+      <p>A bot with a title calls referendums when it holds the votes: <em>Kine Resources Contested</em> and <em>Parity Shift</em> against its prey, or a bloat when that pays more. It announces the terms, opens the Vote counter and casts its own votes there; you cast yours with <span class="menu">Vote → Cast votes → For/Against…</span> or the counter's +/−. <span class="phrase">❗ Hold on…</span> buys thinking time; <span class="phrase">Pass</span> or <span class="phrase">No</span> means “no votes from me” (typing <code>abstain</code> does the same); pressing <span class="phrase">It resolves</span> or the counter's Resolve ends the poll and the bot announces the result at once. When its referendum moves its own pool it says so, as any voter does: <span class="bot"><b>Name:</b> I gain 3 pool from the referendum. Pool: 23.</span></p>
       <p>As a voter the bot is deliberately simple for now: it votes <strong>against</strong> a referendum that costs it pool or that helps its prey more than itself, <strong>for</strong> one that helps it more, and abstains otherwise. No bargaining, no vote-trading, no table diplomacy yet.</p>
     </div>
   </details>
@@ -2635,9 +2679,9 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <div class="gap">
     <p><b>Cards outside the curated set.</b> Your uncurated card is a “plays X” line to the bot; it will ask about pool loss and otherwise let it be. Effects on the bot's board that come from your permanents must be applied by hand.</p>
     <p><b>Rush cards.</b> Only Deep Song is tagged as a rush in the database today, so your rush needs the target + <code>rush</code> in chat (above) until the rush cards are swept in.</p>
-    <p><b>Combat against a human.</b> Your strike is inferred, not read — check its vampire's blood after a fight.</p>
+    <p><b>Combat against a human.</b> The bot reads your strikes, maneuvers and presses from the <span class="menu">Combat ▸</span> menu lines; anything you do not announce falls back to the rulebook default. Additional strikes are shown in the log but not yet resolved by the bot.</p>
     <p><b>Politics is minimal.</b> Straight for/against by self-interest; no deals.</p>
-    <p><b>No deck reading yet.</b> Its picture of your deck is what you have played; a knowledge layer keyed on clan, group and disciplines is the next big piece.</p>
+    <p><b>Deck reading is young.</b> The bot reads your deck from your crypt's clan and the cards you have shown, against the TWDA (see <a href="#hb-about">About the bots</a>). Today that expectation shapes its combat choices (how hard it expects you to hit, whether you can press) and its blocks (whether the fight a block buys is worth the bleed it stops); its own bounce timing and the archetype labels themselves do not lean on it yet. A casual deck that looks like no tournament deck simply gets the clan's average.</p>
     <p><b>Diablerie.</b> A bot never diablerises. If you diablerise a bot's torpored vampire, remove it with <span class="menu">🔥 Burn</span> on its card menu; you run your own blood-hunt referendum as usual — the bot does not call one.</p>
     <p><b>Un-oust.</b> “Return them to the game” on an ousted bot puts the seat back on the table but the bot itself stays ousted — a rare case, noted as an open trade-off.</p>
   </div>
@@ -2651,7 +2695,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <p>The ten phrases on the quick-phrase bar are the fast path. The bot uses the same ten, so a table of humans and bots speaks one language.</p>
   <div class="wrap"><table>
     <tr><th>Phrase</th><th>What the bot does with it</th></tr>
-    <tr><td><span class="phrase">❗ Hold on…</span></td><td><strong>Pauses every bot</strong> at its next visible step until someone releases it. Its questions stop counting down. After 90 s it reminds the table once: “Still holding for Anna.” Use it to play a card in a bot's phase, to think, or to sort something out by hand. During a bot's political action it also keeps its vote poll open. If you leave the table while holding, the hold is released.</td></tr>
+    <tr><td><span class="phrase">❗ Hold on…</span></td><td><strong>Pauses every bot</strong> at its next visible step until someone releases it (It resolves, Pass, No block — or Release hold in the Bot Activity panel). Every clock a bot runs on you stops: the block and reaction questions, its pool question, its vote poll, each combat step and the damage step. Each starts again from the beginning when the hold is released, and an answer still counts at once. A bot waiting inside its block question, a combat step or its vote poll says so: “Holding for Anna — say ‘It resolves’ when ready.” Every 90 s it reminds the table: “Still holding for Anna.” Use it to play a card in a bot's phase, to think, or to sort something out by hand. During a bot's political action it also keeps its vote poll open. If you leave the table while holding, the hold is released.</td></tr>
     <tr><td><span class="phrase">No block</span></td><td>Declines the <em>block only</em> on the bot's action. After it, the bot may still pump the bleed and asks for reactions. Also releases a hold.</td></tr>
     <tr><td><span class="phrase">Block!</span></td><td>You attempt to block the bot's action. Follow with right-click your minion → <span class="menu">Block</span> so it knows which vampire (it asks “Who blocks?” after 2.5 s otherwise), then play intercept onto the counter or type the number. Also releases a hold.</td></tr>
     <tr><td><span class="phrase">No reaction</span></td><td>Declines everything on the bot's action: no block, no bounce, no reduction. Closes the window at once. Also releases a hold.</td></tr>
@@ -2662,7 +2706,17 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <tr><td><span class="phrase">Any blocks?</span></td><td>Prompts the bot about <em>your</em> action. If it can read the action it answers with its block decision; if it cannot, it asks the pool question.</td></tr>
     <tr><td><span class="phrase">Any reaction?</span></td><td>Same prompt after blocks are declined — invites its bounce or reduction.</td></tr>
   </table></div>
-  <p>Silence is never fatal: a bot's own question defaults to “no block” after its clock (20 s, extended while the Reaction stopwatch runs), and the <a href="#hb-controls-panel">Bot Activity</a> panel lets you close any window early.</p>
+  <p>Silence is never fatal: a bot's own question defaults to “no block” after its clock, and the <a href="#hb-controls-panel">Bot Activity</a> panel lets you close any window early. <em>How long</em> that clock is, is the table's choice — see <a href="#hb-tempo">the tempo</a> below.</p>
+
+  <h3 id="hb-tempo">The tempo — how long the bots wait for you</h3>
+  <p>Every wait a bot makes on a human — the block question, the reaction question, its pool question, its vote poll, and each of the combat steps — runs on <strong>one tempo</strong> the table sets with the gear on the 🤖 badge (client v2.6.139+; any seated player may change it, and the log says so: <em>“Anna set bot tempo: Adaptive, 3 s.”</em>). A change applies to every bot at the table at once, mid-wait included. Every table with bots starts at <strong>Standard, 3 s</strong>. (A bot that never hears a tempo — an older client — waits as bots always did: 20 s for a block, up to 60 s for a combat step. A terminal-launched table can set one with the launcher's <code>--tempo standard:3</code>.)</p>
+  <div class="wrap"><table>
+    <tr><th>Tempo</th><th>What the bot does</th></tr>
+    <tr><td><strong>Standard</strong></td><td>The slider (1–8 s, default 3 s) is the clock for every question; a combat step gets twice it. The damage step asks nothing — it is your moment to play a prevention card — and lasts one slider (❗ Hold on stops it while you look); when the bot's strike dealt your vampire nothing (you dodged, it stole blood, fists at long range) there is nothing to prevent and it goes straight on, in every tempo. Your activity restarts the clock, and Pass / No / a card line still end a wait at once.</td></tr>
+    <tr><td><strong>Adaptive</strong></td><td>The slider is the ceiling. The bot measures how fast you actually answer (a running median over your last answers) and waits about one and a half times that — never under 0.8 s, never over the ceiling. It also <em>skips</em> a question you cannot act on: no block question while you have no minion that could block (none up, or every one locked with an empty hand), no “anything before …?” in combat with an empty hand. Your strike and your press are always asked — a press is a decision, not a capability.</td></tr>
+    <tr><td><strong>Turn-based</strong></td><td>No clock. The question says <em>“(no clock — I wait for you)”</em> and the bot stands still until you answer — a quick phrase, a line, or the <span class="menu">▶</span> beside the 🤖, which in this mode means <em>“give the bot the word”</em> (it works in the tab that holds the bots: the host's online, the shared screen offline). Safety net: a reminder in chat after two minutes, and after four the wait resolves as a pass, so an abandoned table never hangs. A Hold on stops both; the hold shows on every seat's badge and anyone can release it.</td></tr>
+  </table></div>
+  <p>Bots waiting on <em>each other</em> keep their own short windows in every tempo — the tempo governs only waits on humans. Each wait is written to the bot's log as a <code>wait</code> row (what, which tempo, how long, how it ended), so a session can be measured with <code>ana-wait.py</code>.</p>
 
   <h3 id="hb-chat-intercept">Chat commands</h3>
   <p>Chat is the fallback and the correction channel. A bot reads every line; a bare command reaches the bot it naturally concerns, and <code>@Name …</code> aims one at a specific bot when several sit at the table. Type <code>help</code> and the bot lists what it understands.</p>
@@ -2741,14 +2795,17 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <li><span class="menu">▶ Release hold</span> — the same release <span class="phrase">It resolves</span> performs, written to the log as done from the table controls.</li>
     <li><span class="menu">▶ Close window</span> — closes the bot's open block/reaction window exactly as its clock would have: nobody answered, so a contested window still declares its verdict from the counter.</li>
     <li><span class="menu">▶ Close question</span> — closes the pool question as its clock would (stage one → “no”, stage two → 1 pool).</li>
+    <li><span class="menu">▶ Close step</span> — closes an open combat step (“combat step maneuvers (Anna)”) as its clock would.</li>
+    <li><span class="menu">▶ Close poll</span> — closes the bot's vote poll (“votes (Anna, Bob)”) as its clock would.</li>
+    <li>In the <a href="#hb-tempo">Turn-based tempo</a> these rows show no countdown — the bot waits for you — and the ▶ beside the 🤖 is how you give it the word.</li>
     <li><span class="menu">▶ Run bot turns</span> (offline only) — plays the bot seats between the current turn and the next human, the range the Pass handover would play.</li>
   </ul>
-  <p>A step can only pull forward a wait the bot would have resolved itself; it never forces a decision the bot could not have reached. A greyed button means the wait is not steppable — the bot is pacing, or a human is mid-answer. Online the panel is visible to the host only.</p>
+  <p>A step can only pull forward a wait the bot would have resolved itself; it never forces a decision the bot could not have reached. A greyed button means the wait is not steppable — the bot is pacing, or a human is mid-answer. Online every seated player sees the panel and its tempo gear; the step buttons only act in the host's tab, where the bots run.</p>
 </section>
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.155</b>, client <b>v2.6.125</b> with the bot-card control fix (spec-bot-card-ctrl-2026-09-22: card menu offline, Burn item), cardfx 96 curated / 1,670 modelled library effects · 22 September 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.198</b>, client <b>v2.6.141</b> / server srv-2.6.43, cardfx 99 curated / 1,670 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 12 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 <!-- @@/HELP:bots -->
 </template>
@@ -2760,7 +2817,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hs-internet">Beyond the LAN</a></li>
   <li><a href="#hs-table">Running a table</a></li>
   <li><a href="#hs-reference">Reference</a></li>
-  <li class="ver">server srv-2.6.38 · client v2.6.127</li>
+  <li class="ver">server srv-2.6.43 · client v2.6.141</li>
 </ul></nav>
 
 <header class="hero">
@@ -2808,7 +2865,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <tr><td><code>start-elysium</code> (.bat / .command / .sh)</td><td>Launchers, one per system. They check for Node.js and start the server the right way. Zero questions asked.</td></tr>
     <tr><td><code>start-elysium-guided</code> (.bat / .command / .sh)</td><td>The same, but it asks a few questions first: server password, referee key, single-room mode, tunnel proxy.</td></tr>
     <tr><td><code>start-cloudflare-tunnel</code> (.bat / .command / .sh)</td><td>Opens a temporary public https address for players who are not on your network (see <a href="#hs-internet">Beyond the LAN</a>).</td></tr>
-    <tr><td><code>elysium-bot.js</code>, <code>elysium-cardfx.json</code>, <code>elysium-cardfx.js</code></td><td>Optional — the bots. Put them beside the client and bots work at your server's hotseat and lobby too (Help → Bots).</td></tr>
+    <tr><td><code>elysium-bot.js</code>, <code>elysium-cardfx.json</code>, <code>elysium-twd-profile.json</code>, <code>elysium-twd-archetypes.json</code> — and the <code>.js</code> twins <code>elysium-cardfx.js</code>, <code>elysium-twd-profile.js</code>, <code>elysium-twd-archetypes.js</code></td><td>Optional — the bots. Put them beside the client and bots work at your server's hotseat and lobby too (Help → Bots). The two <code>twd</code> files are the bots' tournament knowledge (how decks with these cards usually play); without them the bots simply read no decks. The <code>.js</code> twins carry the same data for a client opened as a local file, which cannot fetch <code>.json</code> files; the server never needs them.</td></tr>
   </table></div>
   <div class="note"><b>Where the files are.</b> Everything lives on GitHub at <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Download the files you need and keep them together in <em>one folder</em> — the launchers expect to find the server beside them. Node.js itself comes from <a href="https://nodejs.org">nodejs.org</a> (the LTS version).</div>
 </section>
@@ -2869,9 +2926,9 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   </details>
 
   <details>
-    <summary>Bots on your own server <span class="sub">— three files beside the client</span></summary>
+    <summary>Bots on your own server <span class="sub">— the bot files beside the client</span></summary>
     <div>
-      <p>The bots are not part of the server. Put <code>elysium-bot.js</code> and <code>elysium-cardfx.json</code> in the same folder as <code>elysium-vtes-bord.html</code> and the server serves them to every player's client; opened as a local file the client reads <code>elysium-cardfx.js</code> instead. A missing or too-old bot file is refused with a message that says exactly what is wrong — the table itself is unaffected. How to seat and steer them: Help → Bots.</p>
+      <p>The bots are not part of the server. Put <code>elysium-bot.js</code> and <code>elysium-cardfx.json</code> in the same folder as <code>elysium-vtes-bord.html</code> and the server serves them to every player's client. Add <code>elysium-twd-profile.json</code> and <code>elysium-twd-archetypes.json</code> beside them and the bots read your decks the way a tournament player would (a server older than srv-2.6.43 does not serve these two — the bots then play without that knowledge). Opened as a local file, the client cannot fetch <code>.json</code> files, so it reads their <code>.js</code> twins instead: <code>elysium-cardfx.js</code>, <code>elysium-twd-profile.js</code> and <code>elysium-twd-archetypes.js</code> — the same data, from the bot project's release. A missing or too-old bot file is refused with a message that says exactly what is wrong — the table itself is unaffected. How to seat and steer them: Help → Bots.</p>
     </div>
   </details>
 </section>
@@ -2933,7 +2990,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
         <li><strong>A dropped connection keeps the seat</strong> (marked offline). A player who loses Wi-Fi or closes the laptop drops back into their seat within seconds; even after closing the browser, joining the same room with the same name and password reclaims it — deck, board and hand restored.</li>
         <li><strong>Hosting (★) passes on</strong> to the next player if the host leaves for good. <span class="menu">Menu → Leave seat</span> asks a host with company whether to leave alone or close the table for everyone.</li>
         <li><strong>Rooms expire</strong> when everyone has been offline for 60 minutes; a room nobody ever sat in is cleaned up after 10 minutes, and a room with bots but no human online after 10 minutes as well (the bots live in the host's tab). While the server runs, a room otherwise lives as long as you want it to.</li>
-        <li><strong>Persistence.</strong> The rooms — hidden piles, points, tokens and the encrypted hand blobs — are written to <code>elysium-rooms.json</code> every minute and on <kbd>Ctrl</kbd>+<kbd>C</kbd>. A restarted server restores them and the players reconnect into their seats. The file is ignored if it is older than 24 hours.</li>
+        <li><strong>Persistence.</strong> The rooms — hidden piles, points, tokens and the encrypted hand blobs — are written to <code>elysium-rooms.json</code> every minute and on <kbd>Ctrl</kbd>+<kbd>C</kbd>. A restarted server restores them — board style, referee password and the bots' tempo included (srv-2.6.43; older servers forgot those, and swept a restored table within ten minutes unless somebody rejoined it) — and the players reconnect into their seats; a restored table nobody returns to closes after an hour, like any idle table. The file is ignored if it is older than 24 hours.</li>
         <li><strong>Spectators</strong> need the room password if there is one, can only chat (if the host allows it), and do not keep a room alive.</li>
         <li><strong>The match clock</strong> lives on the room; the server announces “Time is called” once when it reaches zero.</li>
       </ul>
@@ -3060,7 +3117,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium — running your own server · matches server <b>srv-2.6.38</b> and client <b>v2.6.127</b> · 22 September 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
+  Elysium — running your own server · matches server <b>srv-2.6.43</b> and client <b>v2.6.141</b> · 11 October 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
 </footer>
 <!-- @@/HELP:server -->
 </template>
@@ -3083,7 +3140,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.128';   // v2.6.128 (22 Sep 2026, THE CLOSE THAT CLOSED SOMETHING ELSE, pure client -- purge; supersedes the never-deployed v2.6.127): Johan's first click -- the Help modal's Close did nothing. Its button was id="helpClose", and a #helpClose already existed (the shortcut overlay's X inside #tableArea, earlier in the document): $() returns the FIRST match, so the listener was bound to a hidden X on the felt. The modal's ids are the helpDoc* family now (helpDocTitle/Tab/Close/Body), and the suite forbids duplicate ids in the static markup from here on. v2.6.127's content (Help... submenu, START-HERE pages embedded, embed-help.js) ships unchanged. Previous note: elysium-CHANGELOG.md.
+const VERSION='2.6.142';   // v2.6.142 (12 Oct 2026, THE BADGE KNOWS THE HOLD, pure client -- purge; srv-2.6.43 unchanged; bot v0.6.198 beside (purge /elysium-bot.js), the three .js twins for the download bundle): the bot project's v0.6.198 makes a Hold on stop every clock a bot runs on a human. (1) Help -> Bots embeds their 12 Oct START-HERE-BOTS.html (verbatim). (2) The hold badge follows the bots' own rule, which it had not done since bot v0.6.108: a bot's own 'Hold on...' (its thinking announce) no longer shows as a hold; a release from any human clears the table, not only the speaker's hold; a typed 'hold on' / 'it resolves' holds and releases like the quick phrases (the chat line's Enter body is now chatSendLine); a holder who is out, vacant or offline is dropped; the panel's Release hold clears the badge once no bot is held. Another player's hold now says that anyone's It resolves resumes the bots (it said only the holder could). (3) Bot settings: one line that Hold on stops every bot clock, left out for a bot file older than v0.6.198. Previous note: elysium-CHANGELOG.md.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3095,7 +3152,7 @@ try{ COARSE.addEventListener('change', applyTouchUI); }catch(_){ COARSE.addListe
 const $  = s => document.querySelector(s);
 const CW = 84, CH = 118;
 let dockS = 1;   // current peek-dock card scale, recalculated by updateDockScale() -- declared early (TDZ discipline) since qrCard() reads it on every hand render
-const net={ ws:null, status:'off', addr:'', sec:false, room:null, token:null, you:null, roster:[], saves:[], retry:null, reconnects:0, lastMsgAt:0 };  // B-63: reconnects counts auto-reconnect attempts, lastMsgAt stamps every inbound ws message -- both feed dump.env.ws. declared early: the load-time phase-bar build calls applyHelper()→hx(), which reads net.helperPolicy
+const net={ ws:null, status:'off', addr:'', sec:false, room:null, token:null, you:null, roster:[], saves:[], retry:null, reconnects:0, lastMsgAt:0, botcfg:null, srvV:'' };   // v2.6.139: botcfg = the table's bot tempo as the server last told us (srv-2.6.43), srvV = the server's version from `joined` (the gear needs srv-2.6.43 to relay)  // B-63: reconnects counts auto-reconnect attempts, lastMsgAt stamps every inbound ws message -- both feed dump.env.ws. declared early: the load-time phase-bar build calls applyHelper()→hx(), which reads net.helperPolicy
 /* Convenience helpers — opt-in and off by default, except auto-lock
    which preserves the original behavior and defaults to on */
 const CONV_KEY='elysium.convenience';
@@ -3104,7 +3161,53 @@ const SAY_TEXT_MODES=['soft','normal','crisp'];   // v2.6.120: the three text re
 const CONV_DEFAULTS=Object.freeze(JSON.parse(JSON.stringify(conv)));   // v2.6.91: the literal above, captured before localStorage is merged in -- settingsDefaults() reads the Settings-dialog subset of it (the two modes differ only in UI_PRESET's trio)
 const RING_MAX=200;   // B-63: the report ring depth (was an inline 40 in B-54); crash pings still send only the last 10
 let errRing=[];   // B-54: last RING_MAX public log lines for crash/report payloads (chat + private lines excluded at the push site in log())
-let avr={ mode:null, a:0, b:0, ph:0, rd:1, duel:{} }, _avrSendT=null, _avrLastBleed=0, _poolTargetUsed=false;   // v2.6.20: the Played-tab resolver state, declared EARLY (TDZ discipline, same class as conv) -- schedulePush / hidePlayedSoon / renderAltIfOpen read avr.mode and are reachable from load-time restore paths; full docs at the resolver block (search "Played-tab resolvers")
+/* v2.6.129 (THE COMBAT STEPS CARRY STATE): the combat round's shared state rides the tally beside a/b/ph/rd.
+   rng close|long (rulebook default close each round) · rl 1 = range SET for this round (the maneuver step is
+   skipped, no effect can reset it -- VEKN general rulings) · nx '' | close | long = a range set for NEXT round
+   (Lam Into-class) · pr null|continue|end (no uncancelled press to continue = the combat ends) · sp strike pair
+   (additional strikes come after the first pair) · ce a combat-ends strike ended it · sa/sb the acting /
+   opposing side's strike label · xa/xb additional strikes · pa/pb damage prevented. a/b are now THIS ROUND's
+   damage dealt by the acting / opposing side. srv-2.6.39 merges these field by field (absent = preserve) and
+   a changed rd starts a fresh round; tallyCombatMerge below is that rule's client twin (hotBridge + MP). */
+const AVR_CMB0=Object.freeze({ rng:'close', rl:0, nx:'', pr:null, sp:1, ce:0, sa:'', sb:'', xa:0, xb:0, pa:0, pb:0, ga:0, gb:0, ea:0, eb:0 });   // v2.6.135 = srv-2.6.41: + ga/gb aggravated dealt this round, ea/eb environmental damage a side inflicts EVERY round (kept by a new round)
+const AVR_CMB_KEYS=Object.keys(AVR_CMB0);
+function avrFresh(mode){ return Object.assign({ mode:mode||null, a:0, b:0, ph:0, rd:1, duel:{} }, AVR_CMB0); }
+function tallyCombatMerge(m, prev){   // the srv-2.6.39 tallyCombat rule, field for field -- prev = the same-mode (combat) state, or null for fresh
+  m=m||{}; const P=prev||AVR_CMB0;
+  const newRound=!!(prev && ('rd' in m) && (Math.max(1,Math.min(99,(m.rd|0)||1))!==((prev.rd|0)||1)));
+  const base=newRound ? Object.assign({}, AVR_CMB0, P.nx ? { rng:P.nx, rl:1 } : {}, { ea:P.ea|0, eb:P.eb|0 }) : P;   // v2.6.135: environmental damage lasts the whole combat
+  const n=(v,lo,hi)=>Math.max(lo,Math.min(hi,v|0));
+  const lab=v=>String(v==null?'':v).replace(/[\u0000-\u001f\u007f<>]/g,'').trim().slice(0,40);
+  const f={ rng:v=>(v==='long'?'long':'close'), rl:v=>(v?1:0), nx:v=>((v==='close'||v==='long')?v:''),
+            pr:v=>((v==='continue'||v==='end')?v:null), sp:v=>n(v||1,1,9), ce:v=>(v?1:0),
+            sa:lab, sb:lab, xa:v=>n(v,0,9), xb:v=>n(v,0,9), pa:v=>n(v,0,99), pb:v=>n(v,0,99),
+            ga:v=>n(v,0,99), gb:v=>n(v,0,99), ea:v=>n(v,0,99), eb:v=>n(v,0,99) };
+  const out={}; AVR_CMB_KEYS.forEach(k=>{ out[k]=(k in m) ? f[k](m[k]) : (base[k]===undefined ? AVR_CMB0[k] : base[k]); }); return out;
+}
+/* v2.6.129: the combat helper's log lines. NAME = cardRefCap(c) (a <b class=clog> link, bots strip tags), CARD =
+   escapeHtml'd free text. hand / handN / card / steal / dodge / ends / man / press / taken are the shapes the
+   released bot already parses (L12.strikeH/strikeC/strikeD/combatEnds, _parseCombatNarration); setr / extra / prev
+   are new (PROTOCOL SS12, bot follow-up). Wording and the em-dash are load-bearing. */
+const CMB_LINE={   // v2.6.134 (Johan): EFFECT ONLY -- no card names (the card's own 'plays' line already shows it), one line per choice
+  hand:   (n,x)=>x===1 ? n+' strikes (hands) for 1.' : n+' strikes with hands for '+x+'.',   // both shapes the released bot parses (L12.strikeH / strikeC)
+  weapon: (n,x)=>n+' strikes with a weapon for '+x+'.',                                         // parsed as a strike for N (L12.strikeC); 'a weapon' kept distinct -- cards trigger on weapons
+  strike: (n,x)=>n+' strikes for '+x+'.',                                                       // NEW: any other strike (a discipline, a card, a strength-boosted hand)
+  steal:  (n,x)=>n+' strikes: steals '+x+' blood.',                                             // NEW: one line (was 'with CARD for 0' + 'with CARD: steals')
+  dodge:  n=>n+' strikes: dodge \u2014 no damage either way this round.',                         // parsed as a dodge (L12.strikeD)
+  ends:   n=>n+' strikes: combat ends.',                                                        // NEW: one line (was the dodge shape + 'Combat ends -- CARD.')
+  man:    (n,r)=>n+' maneuvers to '+r+'.',
+  setr:   (n,r,next)=>n+' sets range to '+r+(next?' next round':'')+'.',
+  press:  (n,d)=>n+' presses to '+d+'.',
+  extra:  n=>n+' gets an additional strike.',
+  prev:   (n,k)=>n+' prevents '+k+' damage.',
+  agg:    (n,x)=>n+' strikes for '+x+' aggravated damage.',                                     // NEW (v2.6.135): cannot be mended
+  env:    (n,x)=>x ? n+' inflicts '+x+' damage on the opposing minion each round.' : n+' inflicts no more damage each round.',   // NEW (v2.6.135): Carrion Crows-class -- not a strike, cannot be dodged
+  taken:  (n,x,p,m,w,b)=>n+' takes '+x+' (loses '+p+' blood, now '+m+')'+(b?' and is burned':(w?' and goes to torpor':''))+'.'   // v2.6.135: + burned (aggravated damage on a wounded vampire it cannot pay for)
+};
+const CMB_STEP_SHORT=['Before range','Range','Before strikes','Strike','Damage','Press','End'];
+const CMB_STEP_HINT=['Cards and effects played before range is determined.','Maneuvers change the range. Close is the default.','Cards and effects played before strikes are chosen.','Choose strikes, acting minion first. They resolve together.','Prevent damage, then mend it with blood.','An uncancelled press to continue starts a new round.','End-of-round effects. This step happens even if the combat ended early.'];
+let _cmbSerial=0, _cmbSnap=null, _cmbDone='', _cmbLastAct=null, _cmbLastBlock=null, _cmbHist=[], _actUndir=false;   // v2.6.137: + my current action is undirected (Hunt, Political action, Undirected card action) -- +1 stealth when I open its block counter   // v2.6.135: + this combat's finished rounds (local, rebuilt by every screen from the same tally)   // v2.6.134: + the minion that last took an action / blocked (the default combatant)   // v2.6.129: combat identity, the blood snapshot taken on entering Damage, and the once-per-round taken-line key (declared early: avrRender runs at load)
+let avr=avrFresh(null), _avrSendT=null, _avrLastBleed=0, _poolTargetUsed=false;   // v2.6.20: the Played-tab resolver state, declared EARLY (TDZ discipline, same class as conv) -- schedulePush / hidePlayedSoon / renderAltIfOpen read avr.mode and are reachable from load-time restore paths; full docs at the resolver block (search "Played-tab resolvers")
 const AVR_DEFS={
   block:  { icoA:'disc/sup/obl', icoB:'disc/sup/aus', fbA:'\ud83d\udd76', fbB:'\ud83d\udc41', lblA:'Stealth', lblB:'Intercept',
             line:(a,b)=>'Block: Stealth '+a+' vs Intercept '+b+' \u2014 block '+(b>=a?'succeeds':'fails')+'.' },
@@ -4886,12 +4989,12 @@ function cardMenu(c,x,y){
     if((c.owner||'') && (c.owner||'')!==(net.you||'') && ((net.hot&&!inRoom())||(inRoom()&&!net.spect)))
       items.push({label:'\u21aa Give back to '+(c.owner||''), fn:()=>giveBack(c)});   // v2.5.62 (2.4.a): the holder-side mirror of the owner's "Take back"
     if(c.zone==='ready' && isMinion(c)){
-      const act=(verb,fxv,resolve=true)=>()=>{ dfxCancel();   // v2.6.115: Block and friends end the Reaction window. The lock clone carries it to the other screens; this line is for the case where autoLock is off or the minion is already locked, so no clone is emitted
-             if(resolve) resolvePlayedActions();   // true actions close the current card-play batch; Block (reaction) passes resolve=false -- and the batch-close MUST stay ahead of targetSuffix() (pool-aim used-flag semantics, see resolvePlayedActions)
+      const act=(verb,fxv,resolve=true,undir=false)=>()=>{ dfxCancel(); if(resolve) actStart(c);   // v2.6.115: Block and friends end the Reaction window. The lock clone carries it to the other screens; this line is for the case where autoLock is off or the minion is already locked, so no clone is emitted
+             if(resolve){ resolvePlayedActions(); _actUndir=!!undir; }   // v2.6.138: the undirected flag is set AFTER the batch-close (which ends the previous action and clears it). True actions close the current card-play batch; Block (reaction) passes resolve=false -- and the batch-close MUST stay ahead of targetSuffix() (pool-aim used-flag semantics, see resolvePlayedActions)
              const _tn=targetShortRef();                          // v2.6.55 (Johan): the lock-clone verb was the ONE surface hiding the target ("X rescues" with no victim) -- ride the short ref on the same free-text channel Bleed X uses
-             if(conv.autoLock && !c.locked){ setLocked(c, true, fxv+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' '+verb+targetSuffix()); tutNotify('minion-action', fxv); };
-      const actBleed=n=>()=>{ dfxCancel(); resolvePlayedActions();   // v2.6.16 Bleed X: act()'s batch-close + autoLock semantics, but the amount rides BOTH the log line and the lock-clone's verb string -- fx `verb` is free text (<=40 chars server-side), so remote clones show the number with zero fx-protocol changes
-             const _tn=targetShortRef(); if(conv.autoLock && !c.locked){ setLocked(c, true, 'bleeds for '+n+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' bleeds for '+n+'.'+targetSuffix()); tutNotify('minion-action', 'bleeds'); _avrLastBleed=n; };
+             if(conv.autoLock && !c.locked){ setLocked(c, true, fxv+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' '+verb+targetSuffix()); tutNotify('minion-action', fxv); if(fxv==='blocks') _cmbLastBlock=c.id; else if(resolve) _cmbLastAct=c.id; };   // v2.6.134: remembered as the default combatant
+      const actBleed=n=>()=>{ dfxCancel(); actStart(c); resolvePlayedActions();   // v2.6.16 Bleed X: act()'s batch-close + autoLock semantics, but the amount rides BOTH the log line and the lock-clone's verb string -- fx `verb` is free text (<=40 chars server-side), so remote clones show the number with zero fx-protocol changes
+             const _tn=targetShortRef(); if(conv.autoLock && !c.locked){ setLocked(c, true, 'bleeds for '+n+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' bleeds for '+n+'.'+targetSuffix()); tutNotify('minion-action', 'bleeds'); _avrLastBleed=n; _cmbLastAct=c.id; };
       const actBleedAdd=x=>()=>{ const t=Math.min(99,(_avrLastBleed|0)+x); _avrLastBleed=t;   // v2.6.18: announce a bleed INCREMENT (Conditioning & co land after the base announce) -- running total is batch-scoped
              const vb='adds +'+x+' bleed (= '+t+')'; cardFx(c, 'lock', { verb: vb });   // presentational clone only (cardFx is state-free and broadcasts itself); the minion is already locked from the base bleed, no batch close, no autoLock
              log(cardRefCap(c)+' adds +'+x+' bleed (= '+t+').'+targetSuffix()); tutNotify('bleed-add'); };   // v2.6.26: tutorial breadcrumb (Structured II's +X step advances on the real thing)
@@ -4909,17 +5012,21 @@ function cardMenu(c,x,y){
           {label:'+X bleed…', fn:async()=>{ const v=await uiDialog({kind:'prompt', title:'Add bleed', message:'Additional bleed (modifiers landing after the announce):', def:'1'}); if(v==null) return; const raw=parseInt(v,10); if(!raw || raw<1) return; actBleedAdd(Math.min(99,raw))(); }}
         ]},
         {label:'Vote', sub:[
-          {label:'Political action', fn:act('calls a political action.','calls a vote')},   // v2.6.106 (Johan): an ACTION like the others -- locks, closes the play batch, carries the target suffix -- so a bot's block step runs on it exactly as it does on a bleed
+          {label:'Political action', fn:act('calls a political action.','calls a vote',true,true)},   // v2.6.106 (Johan): an ACTION like the others -- locks, closes the play batch, carries the target suffix -- so a bot's block step runs on it exactly as it does on a bleed
           '-',
           {label:'Cast votes → For…',     fn:actVote('for')},
           {label:'Cast votes → Against…', fn:actVote('against')}
         ]},
         {label:'Block',              fn:act('blocks.','blocks',false)},
-        {label:'Hunt',               fn:act('hunts.','hunts')},
-        {label:'Rescue from torpor', fn:act('attempts to rescue a vampire from torpor.','rescues')},
+        {label:'Hunt',               fn:act('hunts.','hunts',true,true)},
+        {label:'Rescue from torpor', sub:[   // v2.6.138 (Johan): directed against the opponent whose vampire it is, undirected when it is your own
+          {label:"Opponent's vampire", title:'Directed at the Methuselah whose vampire it is', fn:act('attempts to rescue a vampire from torpor.','rescues')},
+          {label:'My vampire', title:'Undirected: +1 stealth, and both predator and prey may block', fn:act('attempts to rescue their own vampire from torpor.','rescues',true,true)} ]},
         {label:'Diablerie',          fn:act('commits diablerie!','commits diablerie')},
-        {label:'Card action',        fn:act('takes a card action.','acts')}
+        {label:'Card action',        fn:act('takes a card action.','acts')},
+        {label:'Undirected card action', title:'Equip, recruit, employ and other undirected actions: +1 stealth, and both predator and prey may block', fn:act('takes an undirected action.','acts',true,true)}
       ]});
+      items.push({label:'Combat', sub:cmbMenu(c)});   // v2.6.129: range / strike / press as log lines + the shared combat state -- not actions (no lock, no batch close), like Cast votes
     } else if(COUNTER_ZONES.includes(c.zone)){
       items.push({label:'Card action', fn:()=>{
         dfxCancel();   // v2.6.115: a counter-zone card action is an action like any other
@@ -8567,7 +8674,8 @@ function isMaster(c){                                      // master-type card (
   return state.phase===1;
 }
 function resolvePlayedActions(){                           // the current action is over → its played cards become resolved (loose permanents like allies leave the contested tray)
-  if(avr.mode==='block'){ clearTimeout(_avrSendT); avr={ mode:null, a:0, b:0, ph:0, rd:1, duel:{} }; avrRender(); }   // v2.6.28 (Johan): the Block referendum dies with its ACTION — every client runs this on the same triggers (It resolves / res / basic resolve), so the clear is symmetric without a broadcast. v2.6.29: the pending tally DEBOUNCE dies with it too — an adjust ≤120 ms before the resolve used to fire after the clear and resurrect the counters table-wide
+  _actUndir=false;   // v2.6.138: the action is over -- its undirected +1 must not reach the next one (an action declared by playing a card never passes the Actions menu)
+  if(avr.mode==='block'){ clearTimeout(_avrSendT); avr=avrFresh(null); avrRender(); if(mySeat() && mySeat()===(net.turnSeat|0)) tallySendNull(); }   // v2.6.137: ...and the ACTOR's client now says so on the wire (the server / hotseat table kept the old stealth, and a bot read it as the next action's). v2.6.28 (Johan): the Block referendum dies with its ACTION — every client runs this on the same triggers (It resolves / res / basic resolve), so the clear is symmetric without a broadcast. v2.6.29: the pending tally DEBOUNCE dies with it too — an adjust ≤120 ms before the resolve used to fire after the clear and resurrect the counters table-wide
   _avrLastBleed=0;                                         // v2.6.18: the announced bleed total dies with the batch (see the resolver block)
   if(_poolTargetUsed){ _poolTargetUsed=false; if(net.rtarget && net.rtarget.cid==='pool') setRTarget(null); }   // v2.6.23 (Johan's call): a pool aim is PER-ACTION -- it clears when the action that USED it resolves. The used-flag (set by targetSuffix, reset by setPoolTarget) is what makes this safe: actBleed closes the PREVIOUS batch before logging, so an unconditional clear here would eat a fresh aim before its own bleed line; and someone ELSE's resolve never touches your fresh, unused aim. Card targets stay sticky by design (ongoing hostility markers).
   let any=false;
@@ -8770,7 +8878,7 @@ async function pass(){
     if(typeof hotBridge!=='undefined' && Object.keys(hotBridge.seats||{}).length){
       try{ await hotRunBotTurns(net.turnSeat, nxt); }catch(_e){}      // v2.6.72: only the bots BETWEEN this human and the next one, in circle order
     }
-    net.turnSeat=nxt;
+    net.turnSeat=nxt; tallyStaleClose('turn');   // v2.6.137: hotseat -- this screen is the only client, it tells the table
     advanceTurnCounter(nxt);
     if(nxt!==mySeat()) setActivePlayer(nxt, {quiet:true});      // hand the DEVICE over only when the next turn player is another human
     resetTurnTracking(); startYourTurn();
@@ -9088,6 +9196,7 @@ function hotTallySend(m){                                     // the human's res
   try{ hotBridge.tallyIn((net.you||state.playerName||'You'), mySeat()||0, m); }catch(_e){}
 }
 function hotRosterPush(){                                     // after ANY change of `out`: every bot seat gets the server's rosterUpd shape -- without it a bot keeps bleeding the ghost of a fallen prey
+  hotHoldPrune();                                              // v2.6.142: an ousted human's hold goes with them, as the bots drop it
   if(!hotBotsSeated()) return;
   try{ hotBridge.syncRoster(net.roster); hotBridge.pushRoster(); }catch(_e){}
 }
@@ -9305,6 +9414,7 @@ function mpLeave(){
   hotHoldBy.clear(); try{ hotHoldSync(); }catch(_e){}   // v2.6.101: no table, no hold
   net.pass=''; net.escrowKey=null; net.escrowSalt=null; net._escrowKeyFor=null; lastHandSig=''; net._createHelpers=null;   // v2.6.51: the create-time Helpers choice is per-room, like the password
   net.helperPolicy=null; applyHelper();
+  net.botcfg=null; net.srvV='';                       // v2.6.139: the tempo belongs to the room we just left
   endYourTurn();
   clearTimeout(net.retry);
   try{ if(net.ws){ const old=net.ws; net.ws=null; old.close(); } }catch(err){}
@@ -9324,6 +9434,7 @@ function mpLeave(){
 const MP_HANDLERS = {
   joined(m){
     const was=net.status;
+    net.botcfg=null; net.srvV=String(m.srv||'');   // v2.6.139: a fresh view of the table -- the server replays the stored tempo right after this message (srv-2.6.43)
     net.status='in'; net.room=m.room; net.token=m.token; net.you=m.you; net.roster=m.players||[]; net.turnNo=0; net.roundNo=1;
     if(was!=='re'){ net.deckUp=false; net.libN=0; net.cryptN=0; }
     net.boards={};
@@ -9371,6 +9482,7 @@ const MP_HANDLERS = {
         log('Your deck is still alive on the server — resume your saved table to get your board back, or pick <b>New deal</b> to redeal.', true);
     }
     schedulePush();
+    botBtnSync();                                  // v2.6.139: the bot badge follows the table (every seated human at a bot table gets the gear)
   },
   lobby(m){
     net.lobby=true; net.lobbyData=m;
@@ -9379,6 +9491,7 @@ const MP_HANDLERS = {
     const sm=shownModal();
     if(sm===null || sm==='mpModal' || sm==='lobbyModal') openOverlay('lobbyModal');
     if(shownModal()==='lobbyModal') renderLobby();
+    botBtnSync();                                  // v2.6.139: bots are added in the lobby -- the host seeds the tempo once, and the badge appears
   },
   demoted(m){
     net.spect=true; net.deckUp=false; net.libN=0; net.cryptN=0;
@@ -9446,7 +9559,7 @@ const MP_HANDLERS = {
     if(net.lobby){ openOverlay('lobbyModal'); renderLobby(); }
   },
   started(m){
-    avr={ mode:null, a:0, b:0, ph:0, rd:1, duel:{} }; avrRender();   // v2.6.16: a live resolver never rides into a new match
+    avr=avrFresh(null); avrRender();   // v2.6.16: a live resolver never rides into a new match
     net.lobby=false; net.lobbyData=null; net.rolls=[]; net.tournLock=!!m.tournLock;   // v2.5.92: the room's tournament-lock flag rides started too (a joined-mid-lobby client hears it here)
     net.roster=m.players||[]; net.turnSeat=m.turn||null;
     if(typeof m.matchEnd==='number') net.matchEnd=m.matchEnd;
@@ -9575,6 +9688,7 @@ const MP_HANDLERS = {
   },
   turn(m){
     net.turnSeat=m.seat||null;
+    tallyStaleClose('turn', !net.spect && !!net.turnSeat && net.turnSeat===mySeat());   // v2.6.137: nothing in the resolver outlives a turn -- every screen clears, the NEW turn's client says so on the wire
     advanceTurnCounter(net.turnSeat);
     renderStats();
     updatePhaseGlow();
@@ -9656,7 +9770,8 @@ const MP_HANDLERS = {
   say(m){ showSay(m.i, m.who||'?', m.seat|0); hotHoldMark(m.who||'?', m.i|0); if(SAY[m.i|0]==='It resolves') resolvePlayedActions(); },   // v2.6.101: another player's hold is visible too, so a frozen online table explains itself   // v2.6.17: the verbal resolve closes the batch for EVERYONE, not just the speaker — the sender-side check in saySend() never reached remote clients, despite the help text's promise
   decide(m){ runDecide(m.secs||5, m.who||null); },
   fx(m){ cardFx(m.card||null, m.kind, { remote:true, seat:m.seat|0, who:m.who||'', target:m.target||null, actor:m.actor||null, onto:m.onto||null, verb:m.verb||'', reveal:m.reveal, toName:m.toName||'' }); },
-  tally(m){ avr={ mode:(m.mode==='block'||m.mode==='vote'||m.mode==='combat'||m.mode==='free')?m.mode:null, a:Math.max(0,Math.min(99,m.a|0)), b:Math.max(0,Math.min(99,m.b|0)), ph:Math.max(0,Math.min(6,m.ph|0)), rd:Math.max(1,Math.min(99,(m.rd|0)||1)), duel:(m.mode==='combat' && m.duel && typeof m.duel==='object') ? m.duel : {} }; if(avr.mode && hx(AVR_HKEYS[avr.mode]) && !playedIsOpen()) pinPlayed(); avrRender(); if(m.res){ resolvePlayedActions(); applyAvrResolveClear(); } },   // v2.6.24: no auto-pin for a player who keeps that helper off (clean L4)   // v2.6.16 shared resolver counters (whole-state, last-write-wins); v2.6.17: + combat phase index and the res flag — a resolve closes every client's card-play batch and applies THEIR OWN local clear/discard setting; v2.6.37: 'free' rides the exact same shared channel (Johan: it should behave like the others, not act differently)
+  botcfg(m){ const c=botCfgMerge(m.tempo, m.waitSecs, net.botcfg); if(!c) return; net.botcfg=c; try{ botPanelRender(); }catch(_e){} },   // v2.6.139 / srv-2.6.43: the table's bot tempo -- the server sends the WHOLE state (its echo of our own change too); merged tolerantly all the same. The change's log line is the SENDER's own; this only updates what the panel shows
+  tally(m){ const _pv=avr; avr={ mode:(m.mode==='block'||m.mode==='vote'||m.mode==='combat'||m.mode==='free')?m.mode:null, a:Math.max(0,Math.min(99,m.a|0)), b:Math.max(0,Math.min(99,m.b|0)), ph:Math.max(0,Math.min(6,m.ph|0)), rd:Math.max(1,Math.min(99,(m.rd|0)||1)), duel:(m.mode==='combat' && m.duel && typeof m.duel==='object') ? m.duel : {} }; Object.assign(avr, avr.mode==='combat' ? tallyCombatMerge(m, (_pv && _pv.mode==='combat') ? _pv : null) : AVR_CMB0); cmbWatch(_pv, avr, !!m.res); if(avr.mode && hx(AVR_HKEYS[avr.mode]) && !playedIsOpen()) pinPlayed(); avrRender(); if(avr.mode==='combat' && !(_pv && _pv.mode==='combat')) cmbAutoJoin(); if(avr.mode==='block' && !(_pv && _pv.mode==='block')) blockSeedUndir(); if(m.res){ resolvePlayedActions(); applyAvrResolveClear(); } },   // v2.6.24: no auto-pin for a player who keeps that helper off (clean L4)   // v2.6.16 shared resolver counters (whole-state, last-write-wins); v2.6.17: + combat phase index and the res flag — a resolve closes every client's card-play batch and applies THEIR OWN local clear/discard setting; v2.6.37: 'free' rides the exact same shared channel (Johan: it should behave like the others, not act differently)
   logTo(m){
     // Private log note routed to us by the server on behalf of another player.
     // Shown live but never archived (same as reveal private lines).
@@ -9765,6 +9880,7 @@ const MP_HANDLERS = {
   },
   roster(m){
     net.roster=m.players||[];
+    hotHoldPrune();                                // v2.6.142: a holder who went out, left the seat or lost the connection holds nothing -- the bots drop them too (_releaseDeparted)
     if(typeof m.watchers==='number') net.watchers=m.watchers;
     if(Array.isArray(m.watcherList)) net.watcherList=m.watcherList;
     const nb={};                                   // seats can shift — boards follow the NAME
@@ -9787,6 +9903,7 @@ const MP_HANDLERS = {
     else if(net.view==='l2') renderL2();
     else if(net.view==='l4') renderL4();   // Classic: a roster change alters the SET of seats (join/leave/reseat/rename) -> full renderL4() to rebuild the pool globes (renderL4Globes); updateL4Opponents() alone only updates EXISTING globes, so it wouldn't add/remove them. Also clears any stale Target ring left on a departed player's card (rtarget was nulled above at 7144 but the view wasn't repainted in L4).
     refreshOwnTargeted();   // B1: a leaver's aim at my cards must drop its tag too (their board entry is gone)
+    botBtnSync();           // v2.6.139: a bot joining or leaving mid-game shows / hides the badge for the seated humans
   },
   sys(m){ log('<span class="sysline">'+esc(m.msg)+'</span>', true); },
   closed(m){                                       // v2.6.105 (Johan): the room ENDED -- not a drop, not a kick. The order matters: net.status must be 'off' BEFORE mpLeave, so mpLeave skips its `leave` send (there is no room to leave) and ws.onclose sees 'off' instead of 'in' and never starts the 2.5 s rejoin loop against a room the server has already deleted
@@ -9803,7 +9920,7 @@ const MP_HANDLERS = {
   edgePass(m){   // opponent dragged the Edge token onto our mat → auto-accept
     if(+m.toSeat===mySeat() && !state.edge){ pushUndo(); state.edge=true; updateEdge(); ensureEdgeToken(); const et=tokens.get('edge'); if(et && m.pos && Number.isFinite(m.pos.x)){ et.x=m.pos.x; et.y=m.pos.y; placeToken(et); } log('You received <b>the Edge</b> from <b>'+esc(m.fromName||'an opponent')+'</b>.'); }
   },
-  chat(m){ log('<span class="rwho">'+esc(m.who)+':</span> <i>'+esc(m.msg)+'</i>', true, undefined, {noRing:true}); chatBubble(m.who, 0, m.msg, 'wire'); },   // v2.6.115: 'wire' marks the ECHO -- your own line already bubbled at send   // v2.6.113: the \u201cnot mine\u201d test used to live HERE, which is why it could never become a choice -- it is inside chatBubble now, where conv.chatBubbles decides   // v2.6.50 (R1 port): receiver-side bubble (seat resolved from the roster). v2.6.55: the SENDER already bubbled locally at send -- the echo bubble was the double animation Johan reported, so own messages skip it (the echo still carries the sender's LOG line, which the send path never writes)
+  chat(m){ log('<span class="rwho">'+esc(m.who)+':</span> <i>'+esc(m.msg)+'</i>', true, undefined, {noRing:true}); chatBubble(m.who, 0, m.msg, 'wire'); hotHoldMark(m.who||'?', -1, m.msg); },   // v2.6.115: 'wire' marks the ECHO -- your own line already bubbled at send   // v2.6.113: the \u201cnot mine\u201d test used to live HERE, which is why it could never become a choice -- it is inside chatBubble now, where conv.chatBubbles decides   // v2.6.50 (R1 port): receiver-side bubble (seat resolved from the roster). v2.6.55: the SENDER already bubbled locally at send -- the echo bubble was the double animation Johan reported, so own messages skip it (the echo still carries the sender's LOG line, which the send path never writes)
   tool(m){
     if(m.kind==='coin'){
       toast(m.who+' — Coin: '+m.result);
@@ -10039,6 +10156,9 @@ $('#chatIn').addEventListener('keydown',e=>{
   if(e.key!=='Enter') return;
   const v=e.target.value.trim();
   e.target.value='';
+  chatSendLine(v);
+});
+function chatSendLine(v){                                     // v2.6.142: the Enter handler's body, extracted so the suite can drive it (the harness keeps no listeners)
   if(!net.chat || (net.spect && !net.specChat)) return;
   if(net.muted){ toast('You are muted by the host. 🔇'); return; }
   if(!v) return;
@@ -10048,8 +10168,9 @@ $('#chatIn').addEventListener('keydown',e=>{
     hotFanOut({ t:'chat', who:_who, msg:_msg }, _seat);
     log('<span class="rwho">'+esc(_who)+':</span> <i>'+esc(_msg)+'</i>', true, undefined, {noRing:true});
     chatBubble(_who, _seat, _msg);
+    hotHoldMark(_who, -1, _msg);                              // v2.6.142: the bots read a typed 'hold on' / 'it resolves' -- so does the badge (online the echo reaches MP_HANDLERS.chat, which marks it there)
   }
-});
+}
 
 /* ----- 2B.1: while online, the hidden piles live on the server -----
    The client keeps its visible board locally and publishes a filtered
@@ -10642,15 +10763,21 @@ function hotLoadBotRes(){
     { const _bv=(typeof ElysiumBot!=='undefined' && ElysiumBot.BOT_VERSION)||'';   // v2.6.125: the floor was only IMPLIED (the deck menu failed readably for the V5 keys, while `hacking` / `sewer` spawned on any file). Since the bridge relays a bot's Hold on... it is load-bearing: a bot file from before the ask-pause filter deadlocks a 2-bot table. Checked on EVERY call -- a too-old global stays defined, so only a page reload after replacing the file gets past it
       if(!hotBotVersionOk(_bv)) throw new Error('the elysium-bot.js beside the client is v'+(_bv||'?')+' \u2014 this client needs v'+HOT_BOT_MIN+' or newer. Replace the file and reload the page'); }
     let fx=null;
+    let twd=null, ark=null;                                        // v2.6.139: THE KNOWLEDGE LAYER's data (bot v0.6.187 / v0.6.192, HANDOFF 28 Sep): in node the bot reads elysium-twd-profile.json + elysium-twd-archetypes.json beside itself; in a browser it reads only what it is HANDED (twdProfile / twdArchetypes). Without them the knowledge is simply off -- never an error
     if(location.protocol==='file:'){                               // v2.6.61: the file:// vehicle -- elysium-cardfx.js sets globalThis.ELYSIUM_CARDFX via a CORS-exempt classic script; missing stays non-fatal
-      await new Promise(res=>{ const sc=document.createElement('script'); sc.src='elysium-cardfx.js';
-        sc.onload=res; sc.onerror=res; document.head.appendChild(sc); });
+      const inject=src=>new Promise(res=>{ const sc=document.createElement('script'); sc.src=src; sc.onload=res; sc.onerror=res; document.head.appendChild(sc); });
+      await inject('elysium-cardfx.js');
       fx=(typeof ELYSIUM_CARDFX!=='undefined')?ELYSIUM_CARDFX:null;
+      await Promise.all([inject('elysium-twd-profile.js'), inject('elysium-twd-archetypes.js')]);   // v2.6.139: the same vehicle for the knowledge layer -- .js siblings setting ELYSIUM_TWD_PROFILE / ELYSIUM_TWD_ARCHETYPES (shipped with bot v0.6.195, written from the same serialize as the JSONs; a twin that is not beside the client is null -- the bots then read no decks)
+      twd=(typeof ELYSIUM_TWD_PROFILE!=='undefined')?ELYSIUM_TWD_PROFILE:null;
+      ark=(typeof ELYSIUM_TWD_ARCHETYPES!=='undefined')?ELYSIUM_TWD_ARCHETYPES:null;
     } else {
-      const r=await fetch('elysium-cardfx.json').catch(()=>null);
-      fx=r&&r.ok?await r.json().catch(()=>null):null;              // a missing database is not fatal -- the bot warns honestly and plays plain
+      const get=async nm=>{ const r=await fetch(nm).catch(()=>null); return (r&&r.ok) ? await r.json().catch(()=>null) : null; };   // a missing file is not fatal -- the bot warns honestly about the database and plays plain; without the twd files it reads no decks
+      [fx, twd, ark]=await Promise.all([get('elysium-cardfx.json'), get('elysium-twd-profile.json'), get('elysium-twd-archetypes.json')]);
     }
-    return { fx };
+    if(!(twd && typeof twd==='object' && twd.cards && typeof twd.cards==='object')) twd=null;   // shape check: a host that answers every path with its index page must not hand the bot nonsense (the bot itself checks the same two keys)
+    if(!(ark && typeof ark==='object' && ark.archetypes)) ark=null;
+    return { fx, twd, ark };
   })();
   _hotBotRes.catch(()=>{ _hotBotRes=null; });                      // a failed load may be retried after the user fixes the host
   return _hotBotRes;
@@ -10704,11 +10831,12 @@ function netBotName(){                                            // a free name
 async function netBotAdd(nm, deckKey, persona){
   const why=netBotWhy(); if(why){ toast(why); return false; }
   try{
-    const { fx }=await hotLoadBotRes();
+    const { fx, twd, ark }=await hotLoadBotRes();
     deckKey=hotBotDeckKey(deckKey);
     const b=new ElysiumBot.Bot({ name:nm, room:net.room, pass:net.pass||'', transport:netBotDial(),
       reconnect:true,                                             // an injected transport owns its lifecycle (bot v0.6.94); online we WANT a tunnel blink to re-seat it by token, exactly like a human
       cardfxData:fx, deck:hotBotDeckFor(deckKey), deckName:deckKey, persona:persona||HOT_BOT_PERSONA, paceMs:3100, askSecs:20,
+      twdProfile:twd, twdArchetypes:ark,                          // v2.6.139: the knowledge layer -- one object each per page load, shared by every bot (the bot parses nothing itself in a browser)
       debug:botDebugOn(),                                         // v2.6.108: read at ADD time -- the bot arms on the deal (openHand is started-gated), so toggling later takes effect at the next deal
       log:function(){ try{ console.log('[netbot '+nm+']', Array.prototype.join.call(arguments,' ')); }catch(_e){} } });
     netBots[nm]={ bot:b, persona:persona||HOT_BOT_PERSONA, deckKey };
@@ -10723,6 +10851,7 @@ async function netBotAdd(nm, deckKey, persona){
     if(!p) throw new Error('the room never showed '+nm+' \u2014 is it full, or is the pass wrong?');
     if(!p.deck) throw new Error(nm+' joined but its deck never arrived');
     netBotHelperLock();
+    botCfgSeed();                                                 // v2.6.139: the table's tempo starts at Standard, 3 s once a bot sits here (decision 3) -- the server stores it, every bot (now and later) is told
     hotBotBtnShow(true);                                          // v2.6.108 review fix: the panel reads netBots too, but only the offline path ever SHOWED it
     toast('\ud83e\udd16 '+nm+' seated (pre-alpha)');
     return true;
@@ -10790,8 +10919,9 @@ const hotBots={};                                                  // seat -> Bo
 async function hotSpawnBots(botSeats, players, boardMode){
   hotBotsTeardown();                                               // v2.6.68: a new game never inherits the previous game's bots
   try{                                                             // v2.6.62: the silent-death class closed -- ANY spawn failure now tells the human what broke
-    const { fx }=await hotLoadBotRes();
+    const { fx, twd, ark }=await hotLoadBotRes();
     hotBridge.reset(offlineCfg.map(pl=>({ name:pl.name, bot:!!pl.botP })));
+    hotBridge.botcfgIn('', BOTCFG0);                               // v2.6.139: the table starts at Standard, 3 s (tempo spec, decision 3) -- stored BEFORE any bot joins, so each bot gets it right after `joined` (the bridge's late-joiner rule) and the panel shows what the bots were told
     try{ hotBridge.syncRoster(net.roster); }catch(_e){}            // v2.6.122
     hotBridge._boardMode=boardMode||'structured';                  // v2.6.69 (the unc/uncontrolled bug's sibling class, found by Johan's sweep ask): the bot READS joined.boardMode -- classic flips caps.classic (no opening unc deal, drawCrypt as needed)
     for(const seat of botSeats){
@@ -10799,6 +10929,7 @@ async function hotSpawnBots(botSeats, players, boardMode){
       const deckKey=hotBotDeckKey(pl.botDeckKey);
       const b=new ElysiumBot.Bot({ name:nm, room:'hotseat', pass:'', transport:hotBridge.dialFor(seat,nm),
         cardfxData:fx, deck:hotBotDeckFor(deckKey), deckName:deckKey, persona:pl.botP||HOT_BOT_PERSONA, paceMs:3100, askSecs:20,
+        twdProfile:twd, twdArchetypes:ark,                         // v2.6.139: see the online twin
         debug:botDebugOn(),                                        // v2.6.108: see the online twin
         // v2.6.71 (Johan's Hold on report): 2 s closed the bot's Block? window before a human could even read the announce -- at a hotseat table the human is the ONLY decider and the \u2757 button exists to pause, so the window is human-scale now (online default 25)   // paceMs 3100 = Johan's live calibration (round 2): +2 s on the old 1100 so a human can parse and react between visible bot steps; askSecs 2 UNTIL HB2d's ask relay -- silence is the only possible answer today, so the dead air stays short (v2.6.62 amend)
         log:function(){ try{ console.log('[bot '+seat+']', Array.prototype.join.call(arguments,' ')); }catch(_e){} } });
@@ -10843,7 +10974,7 @@ async function hotRunBotTurns(fromSeat, toSeat, opts){             // one sweep 
     for(const seat of botSeats){
       if(isOut(seat) || !hotBridge.seats[seat]) continue;          // v2.6.122: ousted DURING this sweep (an earlier bot's bleed) -- no toast, no camera, no turn
       try{ toast('\ud83e\udd16 '+((hotBridge.seats[seat]||{}).name||('seat '+seat))+' is playing\u2026'); switchView(seat); }catch(_e){}
-      net.turnSeat=seat; try{ updatePhaseGlow(); }catch(_e){}
+      net.turnSeat=seat; tallyStaleClose('turn'); try{ updatePhaseGlow(); }catch(_e){}   // v2.6.137: a bot's turn starts clean
       if(seat!==opts.skipCounterFor) advanceTurnCounter(seat);     // v2.6.67: bot turns ARE game turns -- the transfer ramp and the Round/Turn label both depend on an honest counter (v2.6.72: except the opening's seat 1, already counted by {first:true})
       const how=await hotAwaitPass(seat, opts);
       order.push(seat);
@@ -10898,6 +11029,135 @@ function hotBotsTeardown(){                                        // v2.6.68 (J
   try{ hotBridge.reset([]); }catch(_e){}
   hotBotBtnShow(false);
 }
+/* ======================= v2.6.139: THE BOT TEMPO (spec-bot-tempo-2026-09-27) ==========================
+   The players' main complaint about bots was the WAIT: every block, reaction, vote and combat step a bot
+   asks a human runs on a fixed clock (this client spawns its bots with askSecs 20 -- and a combat step
+   three times that, 60 s). The bot project's spec hands the clock to the humans: a gear in the Bot button
+   opens Bot settings -- Tempo (Standard / Adaptive / Turn-based) and Wait time (1-8 s); any human at the
+   table may change it at any time, it applies to every bot at once, and each change writes ONE log line.
+   The wire is one verb, botcfg {tempo?, waitSecs?}: client -> server -> everyone, stored on the room so a
+   bot seated later gets it (srv-2.6.43); offline hotBridge.botcfgIn plays that part. A partial write keeps
+   the absent field (the v2.6.17 rule), so two humans changing different settings at once cannot undo each
+   other. What a bot DOES with it is the bot project's part: a bot that does not read botcfg keeps today's
+   clocks, and the panel says so wherever it can see the bot (the bots this tab runs).
+   Johan's three decisions are built with the spec's proposed answers, each a one-line change:
+     (1) anyone seated may change it -- the server refuses only bots and spectators; online, the bot badge
+         now shows for every seated human at a table with bots, not only for the host who runs them;
+     (2) in Turn-based the Bot button gives the bots the word: a play button beside the bot badge steps every bot this tab
+         runs that waits on a window or a question (never a hold -- that is a human's pause, released by
+         that human);
+     (3) a table with bots starts at Standard, 3 s: the client SEEDS it (the bridge at spawn, the host
+         online), because a bot without botcfg keeps its spawn clocks. */
+const BOTCFG_TEMPOS=['standard','adaptive','turn'];
+const BOTCFG0=Object.freeze({ tempo:'standard', waitSecs:3 });
+const BOTCFG_LABEL={ standard:'Standard', adaptive:'Adaptive', turn:'Turn-based' };
+const BOTCFG_HELP={
+  standard:'Every wait on a human lasts the wait time (a question in combat: twice that); Pass, No or a line ends it at once.',   // v2.6.140, bot v0.6.196: block / reaction / pool question / vote = the slider, a combat step that asks = 2 x, the silent damage step = 1 x (and none when nothing reaches your minion)
+  adaptive:'Each bot waits a little longer than you usually take to answer \u2014 never past the wait time (a question in combat: twice that) \u2014 and skips questions you have no way to answer.',   // v2.6.140, bot v0.6.195: 1.5 x the median of your last 7 answers, at least 0.8 s, at most the slider (a step 2 x)
+  turn:'No clock: a bot waits until you answer \u2014 Pass, a line or the Combat menu. After 2 minutes it reminds you; after 4 it goes on as if you had said Pass.'   // v2.6.140, bot v0.6.195: the reminder at 2 min, the pass at 4
+};
+const BOTCFG_SRV_MIN='2.6.43';
+const BOTCFG_HOLD='\u2757 Hold on stops every bot clock that waits on you; each starts again from the beginning when the hold is released.';   // v2.6.142, bot v0.6.198: the block and reaction questions, the pool question, the vote poll, every combat step and the damage step -- Turn-based's reminder and give-up too
+const BOTCFG_HOLD_MIN='0.6.198';
+function botCfgHoldLine(){ const v=(typeof ElysiumBot!=='undefined' && ElysiumBot && ElysiumBot.BOT_VERSION) || ''; return (!v || verAtLeast(v, BOTCFG_HOLD_MIN)) ? BOTCFG_HOLD : ''; }   // a loaded bot file older than v0.6.198 runs its pool question and combat steps through a hold -- the line would overclaim there, so it is left out
+function botCfgMerge(tempo, waitSecs, prev){   // the twin of the server's botcfgMerge and hotBridge.botcfgIn, field for field (a suite test drives all three with the same random writes)
+  const P=prev||BOTCFG0;
+  const tOk=typeof tempo==='string' && BOTCFG_TEMPOS.indexOf(tempo)>=0;
+  const w=(typeof waitSecs==='number' || (typeof waitSecs==='string' && waitSecs.trim()!=='')) ? Number(waitSecs) : NaN;
+  const wOk=isFinite(w);
+  if(!tOk && !wOk) return null;
+  return { tempo: tOk ? tempo : P.tempo, waitSecs: wOk ? Math.round(Math.max(1, Math.min(8, w))*10)/10 : P.waitSecs };
+}
+function botCfgRaw(){ return localTable ? ((typeof hotBridge!=='undefined' && hotBridge.botcfg) || null) : (net.botcfg || null); }   // what the table has stored (null = nothing yet)
+function botCfgNow(){ return botCfgRaw() || BOTCFG0; }
+function botCfgSecs(v){ return String(Math.round((+v||0)*10)/10); }                // 3 -> '3', 2.5 -> '2.5'
+function botCfgText(c){ c=c||botCfgNow(); return (BOTCFG_LABEL[c.tempo]||'Standard')+(c.tempo==='turn' ? '' : ', '+botCfgSecs(c.waitSecs)+' s'); }
+function verAtLeast(v, min){                                       // dotted numeric compare (the server's VERSION has no 'srv-' prefix); anything unparseable is false
+  const p=x=>String(x||'').split('.').map(n=>parseInt(n,10)); const a=p(v), b=p(min);
+  if(a.length<3 || a.slice(0,3).some(n=>!(n>=0))) return false;
+  for(let k=0;k<3;k++){ if(a[k]!==b[k]) return a[k]>b[k]; }
+  return true;
+}
+function botCfgWhy(){                                              // '' = this screen may change the tempo; otherwise the reason (the panel greys its controls and says it)
+  if(localTable) return hotBotsSeated() ? '' : 'No bots at this table.';
+  if(!inRoom()) return 'No bots at this table.';
+  if(net.spect) return 'Spectators cannot change the bot tempo.';
+  if(!verAtLeast(net.srvV, BOTCFG_SRV_MIN)) return 'This server (v'+(net.srvV||'?')+') cannot pass bot settings on \u2014 it needs v'+BOTCFG_SRV_MIN+' or newer.';
+  return '';
+}
+function botCfgSet(part){                                          // one human's change: PARTIAL on the wire (only what this click changed), one log line, the panel repaints
+  part=part||{};
+  const why=botCfgWhy(); if(why){ toast(why); return false; }
+  const raw=botCfgRaw(), prev=botCfgNow(), c=botCfgMerge(part.tempo, part.waitSecs, raw);
+  if(!c) return false;
+  if(raw && c.tempo===prev.tempo && c.waitSecs===prev.waitSecs) return false;   // nothing changed -- no line
+  const who=net.you||state.playerName||'You';
+  const msg={ t:'botcfg' }; if(part.tempo!==undefined) msg.tempo=c.tempo; if(part.waitSecs!==undefined) msg.waitSecs=c.waitSecs;
+  if(localTable) hotBridge.botcfgIn(who, msg);
+  else { net.botcfg=c; mpSend(msg); }                             // optimistic; the server's whole-state echo lands on the same values
+  log(esc(who)+' set bot tempo: '+botCfgText(c)+'.');
+  botPanelRender();
+  return true;
+}
+function botCfgSeed(){                                             // decision (3), online half: the host seeds Standard, 3 s ONCE where the room has nothing stored -- quietly (the table's default is nobody's change: no log line)
+  if(localTable || !inRoom() || net.spect || !net.isHost || net.botcfg || botCfgWhy() || !hotHoldTableHasBots()) return false;
+  net.botcfg={ tempo:BOTCFG0.tempo, waitSecs:BOTCFG0.waitSecs };
+  mpSend({ t:'botcfg', tempo:BOTCFG0.tempo, waitSecs:BOTCFG0.waitSecs });
+  return true;
+}
+let _botCfgOpen=false, _botCfgDrag=false;
+function botGiveWordTargets(rows){ return (rows||botPanelSeats().map(r=>({ key:r.key, bot:r.bot, st:botPanelRead(r.bot) }))).filter(r=>r.st.canStep && r.st.step && r.st.step!=='release-hold'); }   // v2.6.140: a FILTER, never an allow-list (the bot project's v0.6.195 ask) -- every rung a bot can be stepped past except a hold: resolve-ask, resolve-pq, resolve-phase (a combat step), resolve-vote (a vote poll), and whatever rung a later bot names. A hold is a human's pause, released by that human
+function botGiveWordWanted(rows){ return botCfgNow().tempo==='turn' && botGiveWordTargets(rows).length>0; }
+function botGiveWord(){                                            // decision (2): Turn-based's "give the bot the word" -- the same step() the panel's rows use, for every bot this tab runs that waits on a human (a window, a question, a combat step, a vote poll -- never a hold)
+  const ts=botGiveWordTargets(); if(!ts.length){ toast('\ud83e\udd16 No bot is waiting on you.'); return 0; }
+  let n=0; ts.forEach(r=>{ let out=null; try{ out=r.bot.step(); }catch(_e){ out=null; } if(out && out.did) n++; });
+  toast(n ? '\u25b6 '+ts.map(r=>r.st.name).join(', ')+' \u2014 go on.' : '\ud83e\udd16 Nothing to step.');
+  botPanelRender();
+  return n;
+}
+function botCfgDeafVer(rows){                                      // the bots this tab runs whose file has NO botcfg handler (bot <= v0.6.193; v0.6.194+ reads it) keep their own clocks -- the panel says so. Reads the bot's dispatch table (_handlers, keyed by wire verb: bot _dispatch); a bot shaped otherwise is not judged
+  for(const r of (rows||[])){ const h=r.bot && r.bot._handlers; if(h && typeof h==='object' && typeof h.botcfg!=='function') return String((typeof ElysiumBot!=='undefined' && ElysiumBot.BOT_VERSION) || '?'); }
+  return '';
+}
+function botCfgSig(rows, give){ const c=botCfgNow(); return (_botCfgOpen?'g':'-')+':'+c.tempo+':'+c.waitSecs+':'+(botCfgRaw()?1:0)+':'+botCfgWhy()+':'+(give?1:0)+':'+botCfgDeafVer(rows); }
+function botGiveWordBtn(){ return '<button type="button" id="botGiveWord" title="Give the bots the word (Turn-based): every bot waiting on you goes on \u2014 a window, a question, a combat step or a vote; never a hold" aria-label="Give the bots the word" style="all:unset;cursor:pointer;padding:5px 6px;font-size:14px;color:#f3c969">\u25b6</button>'; }
+function botCfgGearBtn(open){ const on=open&&_botCfgOpen; return '<button type="button" id="botCfgGear" title="Bot settings \u2014 '+esc(botCfgText())+'" aria-label="Bot settings" aria-expanded="'+(on?'true':'false')+'" style="all:unset;cursor:pointer;'+(open?'padding:0 4px;':'padding:6px 11px 6px 4px;')+'font-size:14px;opacity:'+(on?'1':'.7')+'">\u2699</button>'; }
+function botPanelEmptyText(){ return (!localTable && inRoom() && !botPanelSeats().length) ? 'The bots run in the host\u2019s tab \u2014 the host sees what they are waiting for.' : 'No bots seated.'; }
+function botCfgHtml(rows){                                         // the Bot settings block: the segmented Tempo, the Wait slider (greyed in Turn-based), one line on the mode, who it applies to, and every honest caveat
+  const c=botCfgNow(), why=botCfgWhy(), turn=c.tempo==='turn';
+  const seg=t=>'<button type="button" class="botCfgTempo" data-t="'+t+'" aria-pressed="'+(c.tempo===t?'true':'false')+'"'+(why?' disabled':'')
+    +' style="all:unset;cursor:'+(why?'default':'pointer')+';flex:1 1 0;text-align:center;padding:4px 2px;border-radius:7px;font-size:12px;'
+    +'background:rgba(122,167,240,'+(c.tempo===t?'.45':'.10')+');'+(c.tempo===t?'font-weight:700;':'')+(why?'opacity:.6;':'')+'">'+BOTCFG_LABEL[t]+'</button>';
+  const deaf=botCfgDeafVer(rows);
+  let h='<div style="padding:6px 10px 9px;border-top:1px solid rgba(232,235,242,.10)">'
+    +'<b style="display:block;font-size:11px;letter-spacing:.06em;opacity:.8">BOT SETTINGS</b>'
+    +'<div role="group" aria-label="Bot tempo" style="display:flex;gap:4px;margin-top:6px">'+BOTCFG_TEMPOS.map(seg).join('')+'</div>'
+    +'<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;opacity:'+(turn?'.45':'1')+'">'
+      +'<span style="flex:0 0 auto">Wait time</span>'
+      +'<input type="range" id="botCfgWait" min="1" max="8" step="0.5" value="'+c.waitSecs+'" aria-label="Wait time in seconds"'+((why||turn)?' disabled':'')+' style="flex:1 1 auto;min-width:0">'
+      +'<span id="botCfgWaitVal" style="flex:0 0 auto;min-width:32px;text-align:right;font-variant-numeric:tabular-nums">'+botCfgSecs(c.waitSecs)+' s</span></label>'
+    +'<div style="margin-top:6px;font-size:11.5px;line-height:1.35;opacity:.75">'+esc(BOTCFG_HELP[c.tempo]||'')+(turn && (rows||[]).length ? ' '+esc('\u25b6 beside the \ud83e\udd16 gives the bots the word.') : '')+'</div>'
+    +(botCfgHoldLine() ? '<div style="margin-top:4px;font-size:11.5px;line-height:1.35;opacity:.75">'+esc(botCfgHoldLine())+'</div>' : '')
+    +'<div style="margin-top:4px;font-size:11px;line-height:1.3;opacity:.55">Anyone at the table can change this; it applies to every bot at once.</div>';
+  if(deaf) h+='<div style="margin-top:5px;font-size:11px;line-height:1.3;color:#f3c969">'+esc('This bot file'+(deaf!=='?'?' (v'+deaf+')':'')+' does not read the tempo yet \u2014 its own clocks stay until a bot release that does.')+'</div>';
+  if(why) h+='<div style="margin-top:5px;font-size:11px;line-height:1.3;color:#f3c969">'+esc(why)+'</div>';
+  return h+'</div>';
+}
+function botCfgWire(el){                                           // the panel's new controls; the slider sends on RELEASE (change), the label follows the drag (input), and the 4 Hz loop never rebuilds under a dragging thumb (_botCfgDrag)
+  const gear=el.querySelector('#botCfgGear');
+  if(gear) gear.onclick=()=>{ if(!_botPanelOpen){ _botPanelOpen=true; try{ localStorage.setItem('elysiumBotPanelOpen','1'); }catch(err){} _botCfgOpen=true; } else _botCfgOpen=!_botCfgOpen; botPanelRender(); };
+  const gw=el.querySelector('#botGiveWord'); if(gw) gw.onclick=botGiveWord;
+  Array.prototype.forEach.call(el.querySelectorAll('.botCfgTempo'), b=>{ b.onclick=()=>{ if(!b.disabled) botCfgSet({ tempo:b.dataset.t }); }; });
+  const wr=el.querySelector('#botCfgWait');
+  if(wr){
+    wr.onpointerdown=()=>{ _botCfgDrag=true; };
+    wr.onpointerup=wr.onblur=()=>{ _botCfgDrag=false; };
+    wr.oninput=()=>{ const v=el.querySelector('#botCfgWaitVal'); if(v) v.textContent=botCfgSecs(wr.value)+' s'; };
+    wr.onchange=()=>{ _botCfgDrag=false; botCfgSet({ waitSecs:+wr.value }); };
+  }
+}
+function botBtnWanted(){ return botPanelSeats().length>0 || (inRoom() && !net.spect && hotHoldTableHasBots()); }   // the bots this tab runs -- or, online, any SEATED human at a table with bots (the gear is everyone's; the activity rows stay with the host, who holds the sockets)
+function botBtnSync(){ try{ botCfgSeed(); }catch(_e){} try{ hotBotBtnShow(botBtnWanted()); }catch(_e){} }   // from joined / lobby / roster: the badge follows the table, and the host seeds the tempo once
 /* ======================= v2.6.108: THE BOT PANEL ==========================
    Johan asked for two things the table could not show: a countdown for what a
    bot is waiting on, and a way to push it past a wait by hand. Bot v0.6.109
@@ -10971,7 +11231,7 @@ function botPanelRead(b){                                          // status() i
   return { name:String(st.name||'(bot)'), state:String(st.state||'idle'), waitingFor:String(st.waitingFor||''),
            until:(typeof st.until==='number' && st.until>0) ? st.until : null, step:st.step||null, canStep:!!st.canStep };
 }
-const BOT_STEP_LABEL={ 'release-hold':'Release hold', 'resolve-ask':'Close window', 'resolve-pq':'Close question' };
+const BOT_STEP_LABEL={ 'release-hold':'Release hold', 'resolve-ask':'Close window', 'resolve-pq':'Close question', 'resolve-phase':'Close step', 'resolve-vote':'Close poll' };   // v2.6.140: bot v0.6.195 adds resolve-phase (an open combat step, e.g. 'combat step maneuvers (Anna)') and resolve-vote (its vote poll, e.g. 'votes (Anna, Bob)'); a rung with no label here still renders as 'Step'
 function botPanelCountdown(until, now){                            // a hold has until:null BY DESIGN (bot 615) -- it ends when a human says so, so there is nothing honest to count down to
   if(until==null) return '\u2014';
   const left=Math.max(0, Math.round((until-(now||Date.now()))/1000));
@@ -10985,14 +11245,14 @@ try{ _botPanelOpen = localStorage.getItem('elysiumBotPanelOpen')==='1'; }catch(e
    second floating button competing for the same corner.                        */
 function hotBotBtnShow(on){
   let el=document.getElementById('hotBotBtn');
-  if(!on && !botPanelSeats().length){
+  if(!on && !botBtnWanted()){                                       // v2.6.139: hide only when NOTHING wants it -- no bot in this tab AND not a seated human at an online bot table (v2.6.109: a remove of one of three bots must not kill the panel)
     if(el) el.remove();
     if(_botPanelT){ clearInterval(_botPanelT); _botPanelT=null; }
     return;
   }
   if(!el){
     el=document.createElement('div'); el.id='hotBotBtn';
-    el.style.cssText='position:fixed;right:14px;top:74px;z-index:60;border-radius:10px;background:rgba(122,167,240,.22);border:1px solid rgba(122,167,240,.65);color:#e8ebf2;font-size:13px;max-width:min(320px,86vw)';   // v2.6.112 (Johan): was bottom:64px, where the pool globe covers it on a laptop. Top-right, clear of the menu bar
+    el.style.cssText='position:fixed;right:14px;top:74px;z-index:60;border-radius:10px;background:rgba(122,167,240,.22);border:1px solid rgba(122,167,240,.65);color:#e8ebf2;font-size:13px;max-width:min(320px,86vw);max-height:calc(100vh - 90px);overflow-y:auto';   // v2.6.139: max-height + scroll -- with Bot settings open and several bots the panel can outgrow a landscape phone   // v2.6.112 (Johan): was bottom:64px, where the pool globe covers it on a laptop. Top-right, clear of the menu bar
     document.body.appendChild(el);
     botPanelRender();
   }
@@ -11007,26 +11267,31 @@ function botPanelRender(){
   const el=document.getElementById('hotBotBtn'); if(!el) return;
   const rows=botPanelSeats().map(r=>({ key:r.key, bot:r.bot, st:botPanelRead(r.bot) }));
   const now=Date.now(), waiting=rows.filter(r=>r.st.canStep).length;
+  const give=botGiveWordWanted(rows);                              // v2.6.139: Turn-based -- the play button beside the bot badge (decision 2)
   /* v2.6.108 review fix: the loop runs at 4 Hz, and a button rebuilt under the
      pointer between mousedown and mouseup loses the click. So the DOM is rebuilt
      only when its SHAPE changes -- rows, names, reasons, step rungs, open state --
      and a plain tick only rewrites the countdown text in place. */
-  const sig=(_botPanelOpen?'o':'c')+'|'+rows.map(r=>r.key+':'+r.st.name+':'+r.st.waitingFor+':'+(r.st.step||'')+':'+(r.st.canStep?1:0)+':'+(r.st.until==null?'-':'t')).join('|')+'|'+waiting+'|'+(localTable?'L':'N');
+  const sig=(_botPanelOpen?'o':'c')+'|'+rows.map(r=>r.key+':'+r.st.name+':'+r.st.waitingFor+':'+(r.st.step||'')+':'+(r.st.canStep?1:0)+':'+(r.st.until==null?'-':'t')).join('|')+'|'+waiting+'|'+(localTable?'L':'N')+'|'+botCfgSig(rows, give);
+  if(_botCfgDrag && el._botSig && el._botSig!==sig) return;   // v2.6.139: never rebuild under a dragging slider thumb -- the first tick after the release catches up
   if(el._botSig===sig){
     Array.prototype.forEach.call(el.querySelectorAll('.botPanelCd'), c=>{ const r=rows[+c.dataset.i]; if(r) c.textContent=botPanelCountdown(r.st.until, now); });
     return;
   }
   el._botSig=sig;
   if(!_botPanelOpen){
-    el.innerHTML='<button type="button" id="botPanelHead" title="Bot activity \u2014 what each bot is waiting for" '
-      +'style="all:unset;cursor:pointer;display:block;padding:7px 13px;font-size:17px">\ud83e\udd16'
-      +(waiting?' <span style="font-size:12px;vertical-align:2px;color:#f3c969">'+waiting+'</span>':'')+'</button>';
+    el.innerHTML='<div style="display:flex;align-items:center"><button type="button" id="botPanelHead" title="Bot activity \u2014 what each bot is waiting for" '
+      +'style="all:unset;cursor:pointer;display:block;padding:7px 8px 7px 13px;font-size:17px">\ud83e\udd16'
+      +(waiting?' <span style="font-size:12px;vertical-align:2px;color:#f3c969">'+waiting+'</span>':'')+'</button>'
+      +(give?botGiveWordBtn():'')+botCfgGearBtn(false)+'</div>';   // v2.6.139: the gear IN the Bot button (spec section 1), and the play button in Turn-based
   } else {
     let h='<div style="display:flex;align-items:center;gap:8px;padding:7px 10px 5px">'
       +'<button type="button" id="botPanelHead" style="all:unset;cursor:pointer;font-size:15px">\ud83e\udd16</button>'
       +'<b style="font-size:12px;letter-spacing:.06em;opacity:.8">BOT ACTIVITY</b>'
-      +'<button type="button" id="botPanelHide" title="Collapse" style="all:unset;cursor:pointer;margin-left:auto;opacity:.6;padding:0 4px">\u2715</button></div>';
-    if(!rows.length) h+='<div style="padding:2px 10px 9px;opacity:.6">No bots seated.</div>';
+      +'<span style="margin-left:auto;display:flex;align-items:center;gap:2px">'+(give?botGiveWordBtn():'')+botCfgGearBtn(true)
+      +'<button type="button" id="botPanelHide" title="Collapse" style="all:unset;cursor:pointer;opacity:.6;padding:0 4px">\u2715</button></span></div>';
+    if(_botCfgOpen) h+=botCfgHtml(rows);                           // v2.6.139: Bot settings, under the header
+    if(!rows.length) h+='<div style="padding:2px 10px 9px;opacity:.6">'+esc(botPanelEmptyText())+'</div>';
     rows.forEach((r,i)=>{
       const lbl=BOT_STEP_LABEL[r.st.step]||'Step';
       h+='<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-top:1px solid rgba(232,235,242,.10)">'
@@ -11049,10 +11314,12 @@ function botPanelRender(){
   }
   const head=el.querySelector('#botPanelHead'); if(head) head.onclick=botPanelToggle;
   const hid=el.querySelector('#botPanelHide'); if(hid) hid.onclick=botPanelToggle;
+  botCfgWire(el);                                                  // v2.6.139: the gear, the tempo buttons, the slider, the play button
   Array.prototype.forEach.call(el.querySelectorAll('.botPanelStep'), b=>{
     b.onclick=()=>{ const r=rows[+b.dataset.i]; if(!r||!r.st.canStep) return;
       let out=null; try{ out=r.bot.step(); }catch(_e){ out={ did:null, why:'the bot refused the step' }; }
       if(out && out.did) toast('\ud83e\udd16 '+r.st.name+': '+(out.why||out.did));
+      if(out && out.did==='release-hold') hotHoldAfterPanelRelease();   // v2.6.142: the badge clears once no bot this tab runs is held
       else if(out) toast('\ud83e\udd16 '+r.st.name+': '+(out.why||'nothing to step'));
       botPanelRender(); };
   });
@@ -11085,8 +11352,9 @@ const hotBridge = {
      through syncRoster(); everything client-shaped below is typeof-guarded. */
   tally: null,               // the ONE table tally {mode,a,b,ph,rd[,duel]} -- the server's room.tally
   _out: {}, _vp: {},         // seat -> ousted / victory points -- the server's p.out / p.vp
+  botcfg: null,              // v2.6.139: the server's room.botcfg (srv-2.6.43) -- the table's bot tempo {tempo, waitSecs, who}; a bot that joins later gets it right after `joined`
   players(){ return (this._cfg || []).map((p, i) => ({ name: p.name, seat: i + 1, bot: !!p.bot })); },
-  reset(cfg){ this.seats = {}; this._cfg = cfg || []; this.onPass = null; this.tally = null; this._out = {}; this._vp = {}; },
+  reset(cfg){ this.seats = {}; this._cfg = cfg || []; this.onPass = null; this.tally = null; this._out = {}; this._vp = {}; this.botcfg = null; },
   isBot(seat){ const p = (this._cfg || [])[seat - 1]; return !!(p && p.bot); },
   botSeats(){ return Object.keys(this.seats || {}).map(k => +k); },
   predOf(seat){              // the LIVE predator: the ring predecessor, skipping ousted seats (awardBountyHot's rule; the server's GAME_HANDLERS.bounty skipped nothing until srv-2.6.38)
@@ -11105,8 +11373,9 @@ const hotBridge = {
     m = m || {};
     const mode = (m.mode === 'block' || m.mode === 'vote' || m.mode === 'combat' || m.mode === 'free') ? m.mode : null;
     const prev = (this.tally && this.tally.mode === mode) ? this.tally : null;
-    const a  = ('a'  in m) ? Math.max(0, Math.min(99, m.a | 0)) : (prev ? prev.a  : 0);
-    const b  = ('b'  in m) ? Math.max(0, Math.min(99, m.b | 0)) : (prev ? prev.b  : 0);
+    const newRd = !!(mode === 'combat' && prev && ('rd' in m) && Math.max(1, Math.min(99, (m.rd | 0) || 1)) !== ((prev.rd | 0) || 1));   // v2.6.133 = srv-2.6.40: a new combat round zeroes an absent a/b (per-round damage)
+    const a  = ('a'  in m) ? Math.max(0, Math.min(99, m.a | 0)) : ((prev && !newRd) ? prev.a : 0);
+    const b  = ('b'  in m) ? Math.max(0, Math.min(99, m.b | 0)) : ((prev && !newRd) ? prev.b : 0);
     const ph = ('ph' in m) ? Math.max(0, Math.min(6, m.ph | 0)) : (prev ? prev.ph : 0);
     const rd = ('rd' in m) ? Math.max(1, Math.min(99, (m.rd | 0) || 1)) : (prev ? prev.rd : 1);
     let duel;
@@ -11117,10 +11386,22 @@ const hotBridge = {
         else delete duel[seatNo];
       }
     }
-    this.tally = mode ? (mode === 'combat' ? { mode, a, b, ph, rd, duel } : { mode, a, b, ph, rd }) : null;
+    this.tally = mode ? (mode === 'combat' ? Object.assign({ mode, a, b, ph, rd, duel }, tallyCombatMerge(m, prev)) : { mode, a, b, ph, rd }) : null;   // v2.6.129: + the round's combat state (srv-2.6.39's tallyCombat, same rule)
     const out = { t: 'tally', who, mode, a, b, ph, rd };
-    if (mode === 'combat') out.duel = duel;
+    if (mode === 'combat'){ out.duel = duel; AVR_CMB_KEYS.forEach(k => { out[k] = this.tally[k]; }); }
     if (m.res) out.res = 1;
+    this.botSeats().forEach(k => this.toBot(k, out));
+    return out;
+  },
+  botcfgIn(who, m){          // v2.6.139: GAME_HANDLERS.botcfg (srv-2.6.43), field for field -- tempo one of standard / adaptive / turn, waitSecs 1-8 (tenths); an ABSENT or invalid field keeps the stored value (Standard / 3 s at a table that has none); nothing valid = nothing stored, nothing sent. To EVERY bot seat. Self-contained on purpose (no client function behind it). Returns the broadcast, or null when ignored
+    m = m || {};
+    const P = this.botcfg || { tempo: 'standard', waitSecs: 3 };
+    const tOk = typeof m.tempo === 'string' && ['standard', 'adaptive', 'turn'].indexOf(m.tempo) >= 0;
+    const w = (typeof m.waitSecs === 'number' || (typeof m.waitSecs === 'string' && m.waitSecs.trim() !== '')) ? Number(m.waitSecs) : NaN;
+    const wOk = isFinite(w);
+    if (!tOk && !wOk) return null;
+    this.botcfg = { tempo: tOk ? m.tempo : P.tempo, waitSecs: wOk ? Math.round(Math.max(1, Math.min(8, w)) * 10) / 10 : P.waitSecs, who: String(who || '') };
+    const out = Object.assign({ t: 'botcfg' }, this.botcfg);
     this.botSeats().forEach(k => this.toBot(k, out));
     return out;
   },
@@ -11153,6 +11434,7 @@ const hotBridge = {
         B.toBot(seat, { t: 'joined', room: B.roomName, seat, token: 'hot-' + seat, lobby: true,
                         boardMode: B._boardMode || 'structured',   // v2.6.69: the field the bot reads and the bridge never sent
                         players: B.players(), srv: 'hotseat-bridge ' + VERSION });
+        if (B.botcfg) B.toBot(seat, Object.assign({ t: 'botcfg' }, B.botcfg));   // v2.6.139: the late-joiner rule (srv-2.6.43 joinReply) -- the table's tempo right after `joined`
         break;
       case 'deck':
         rec.deckName = String(m.name || 'deck').slice(0, 60);
@@ -11358,7 +11640,7 @@ function hidePlayedSoon(){ if(playedPinned) return; if(avr.mode && hx(AVR_HKEYS[
 function pinPlayed(){ playedPinned=true; clearTimeout(playedShowT); showPlayed(); }
 function closePlayed(){ playedPinned=false; clearTimeout(playedShowT); clearTimeout(playedHideT); const o=$('#playedOverlay'); if(o) o.classList.remove('show'); const t=$('#playedTab'); if(t) t.classList.remove('on'); }
 function togglePlayed(){ playedPinned ? closePlayed() : pinPlayed(); }
-function clearPlayed(){ if(avr.mode==='block'){ clearTimeout(_avrSendT); avr={ mode:null, a:0, b:0, ph:0, rd:1, duel:{} }; avrRender(); } snapshotPlayed(); renderAltIfOpen(); }   // v2.6.28: a phase change also buries a dangling block referendum   // re-baseline only — cards stay on the board; the view (and tab count) empties
+function clearPlayed(){ if(avr.mode==='block'){ clearTimeout(_avrSendT); avr=avrFresh(null); avrRender(); } snapshotPlayed(); renderAltIfOpen(); }   // v2.6.28: a phase change also buries a dangling block referendum   // re-baseline only — cards stay on the board; the view (and tab count) empties
 async function discardPlayedMine(){ const loose=avLoose(state.zones.ready.map(id=>state.cards.get(id))).filter(c=>!avBaseline.has(c.id)); if(!loose.length){ toast('No played cards of yours to discard'); return; } if(await uiConfirm('Discard '+loose.length+' of your own played card'+(loose.length>1?'s':'')+' to the ash heap?')){ pushUndo(); loose.forEach(c=>{ if(c && c.zone==='ready') move(c,'ash',{}); }); renderAltIfOpen(); } }   // re-check zone at move time: never re-discard a card already sent to ash another way (also covers any duplicate in the list)
 (function(){
   const pt=$('#playedTab'), po=$('#playedOverlay'), hdr=document.querySelector('header');
@@ -11406,7 +11688,8 @@ function avrRender(){
   const host=$('#avResolver'); if(host) host.dataset.mode=avr.mode||'';   // v2.6.17: per-mode accent colours (vote gold, combat red) ride a data attribute
   const isC=avr.mode==='combat';
   ['avrPhPrev','avrPh','avrPhNext'].forEach(id=>{ const el=$('#'+id); if(el) el.style.display = isC ? '' : 'none'; });   // the phase stepper is combat-only
-  if(isC){ const pel=$('#avrPh'); if(pel) pel.textContent='R'+(avr.rd|0)+' · '+(AVR_PHASES[avr.ph|0]||AVR_PHASES[0]); }   // v2.6.18: round counter
+  const cnt=$('#avrCnt'); if(cnt) cnt.style.display = isC ? 'none' : '';   // v2.6.129: combat's damage counters live in the duel stage now (per step); Block / Vote / Free keep the row
+  if(isC) cmbRail();   // v2.6.129: the seven steps as a rail (was 'R1 · Strike' text)
   if(d){
     $('#avrNa').textContent=avr.a|0; $('#avrNb').textContent=avr.b|0;
     if(avrRender._mode!==avr.mode){   // icons + labels only on a mode CHANGE -- adjusting a number never re-fetches an svg
@@ -11418,25 +11701,38 @@ function avrRender(){
   avrGate();
   avrDuelRender();
 }
-function avrPhase(d){ if(avr.mode!=='combat') return;
-  const old=avr.ph|0; avr.ph=(old+d+AVR_PHASES.length)%AVR_PHASES.length;
-  if(d>0 && avr.ph<old) avr.rd=Math.min(99,(avr.rd|0)+1);        // v2.6.18: ▸ past End of round -> a new round begins
-  else if(d<0 && avr.ph>old) avr.rd=Math.max(1,(avr.rd|0)-1);    // ◂ back across the wrap undoes the round bump
-  avrRender(); avrPush(); }   // shared like the numbers
+function avrPhase(d){ if(avr.mode!=='combat' || net.spect) return;   // v2.6.130: a spectator watches -- stepping only desynced their own view   // v2.6.129: steps follow the rulebook -- a set range skips Determine range, a combat-ends strike jumps to End of round, and End of round's Next either starts the next round (an uncancelled press to continue) or ends the combat. Back never crosses into the previous round (its state is gone).
+  const ph=avr.ph|0;
+  if(d<0){ if(ph>0) avrPhaseTo(ph-1); return; }
+  const wd=cmbWounded(avr).length>0;   // v2.6.135: a wounded combatant ends the combat -- Press is skipped, End of round still happens
+  if(ph<6){ let n=avr.ce ? 6 : ph+1; if(n===1 && avr.rl) n=2; if(n===5 && wd) n=6; avrPhaseTo(n); return; }
+  if(avr.pr==='continue' && !avr.ce && !wd) cmbNewRound(); else avrResolve();
+}
+function avrPhaseTo(n){ if(avr.mode!=='combat' || net.spect) return; n=Math.max(0,Math.min(6,n|0)); if(n===(avr.ph|0)) return;
+  const prev=Object.assign({}, avr); avr.ph=n; avrRender(); cmbWatch(prev, avr, false); avrPush(); }   // shared like the numbers (whole-state a/b/ph/rd, debounced)
+function cmbNewRound(){   // v2.6.129: a fresh round -- range back to close unless an effect set it for this round (nx), press / strikes / prevention cleared, damage counters to 0
+  const prev=Object.assign({}, avr), nr=Math.min(99,(avr.rd|0)+1);
+  Object.assign(avr, tallyCombatMerge({ rd:nr }, avr), { a:0, b:0, ph:0, rd:nr });   // v2.6.135: THE new-round rule itself (range close unless nx, press / strikes / prevention / aggravated cleared, every-round damage kept) -- the button used to carry its own copy, and the copy forgot Carrion Crows
+  avrRender(); cmbWatch(prev, avr, false);
+  clearTimeout(_avrSendT); const m={ t:'tally', mode:'combat', a:0, b:0, ph:0, rd:avr.rd }; AVR_CMB_KEYS.forEach(k=>{ m[k]=avr[k]; }); cmbSend(m);
+}
 function avrPush(){ if(net.spect || (!inRoom() && !hotBotsSeated())) return; clearTimeout(_avrSendT); _avrSendT=setTimeout(()=>{ const _m={ t:'tally', mode:avr.mode, a:avr.a|0, b:avr.b|0, ph:avr.ph|0, rd:avr.rd|0 }; if(inRoom()) mpSend(_m); else hotTallySend(_m); }, 120); }   // v2.6.122: offline the bot seats ARE the table -- a human's counters reached nobody (avrPush returned unless inRoom)   // scroll bursts coalesce; whole-state messages make the debounce lossless (the last one carries everything). Spectators watch, never write. v2.6.37 (Johan): 'free' behaves exactly like Block/Vote/Combat -- shared, any seat may adjust -- no special-casing, so the table never sees it act differently.
 function avrOpen(mode){ if(!hx(AVR_HKEYS[mode])) return;   // v2.6.24: helper-gated (button hidden too; belt and braces)
   if(mode==='block' && !activeAnchor()) return;   // the button is disabled too; belt and braces
-  avr={ mode, a:0, b:0, ph:0, rd:1, duel:{} }; avrRender(); avrPush();
+  const _pv=avr; avr=avrFresh(mode);
+  cmbWatch(_pv, avr, false); avrRender(); avrPush(); if(mode==='block') blockSeedUndir();
   if(mode==='block'){ const bi=SAY.indexOf('Block!'); if(bi>=0) saySend(bi); }   // v2.6.28 (Johan): opening the Block resolver IS the block announcement — speak the phrase so the whole table (and the Trainbots) hear it
-  if(mode==='combat'){ const an=activeAnchor(); if(an) avrDuelAnnounce(an.id, an.name); }   // v2.6.19: opening Combat with an anchored ready minion auto-announces it as your combatant
+  if(mode==='combat'){ const an=activeAnchor(); if(an) avrDuelAnnounce(an.id, an.name); else cmbAutoJoin(); }   // v2.6.19: opening Combat with an anchored ready minion auto-announces it as your combatant; v2.6.134: otherwise the minion that acted (your turn) or blocked
 }
 function avrAdjust(side, d){ if(!avr.mode) return; avr[side]=Math.max(0, Math.min(99, (avr[side]|0)+d)); avrRender(); avrPush(); }
-function avrClear(){ avr={ mode:null, a:0, b:0, ph:0, rd:1, duel:{} }; avrRender(); avrPush(); }
+function avrClear(){ const _pv=avr; avr=avrFresh(null); cmbWatch(_pv, avr, false); avrRender(); avrPush(); }   // v2.6.129: the x is a withdrawal, not a resolve -- no taken lines
 function avrResolve(){ if(!avr.mode) return;
   tutNotify('resolver-resolve', avr.mode);   // v2.6.25: tutorial breadcrumb (Structured II advances on resolves)
   const wasBlock = avr.mode==='block';
   const wasFree = avr.mode==='free';   // v2.6.37: the bare fallback counter has no card-play semantics either -- treat it exactly like Block, wire included (shared, like every other resolver)
-  const _vline=AVR_DEFS[avr.mode].line(avr.a|0, avr.b|0);
+  const _tot=avr.mode==='combat' ? cmbTotals() : null;   // v2.6.135: the combat line sums EVERY round's damage dealt (normal + aggravated + each-round), not the last round's
+  const _vline=_tot ? AVR_DEFS.combat.line(_tot.a, _tot.b) : AVR_DEFS[avr.mode].line(avr.a|0, avr.b|0);
+  if(avr.mode==='combat') cmbWatch(Object.assign({}, avr), avrFresh(null), true);   // v2.6.129: resolving straight out of Strike / Damage logs what my side takes (Johan: automatic, no extra buttons)
   log(_vline);               // one fixed-format line to the whole table (mpRelay) -- the Trainbot's structured diet
   maybeVerdictPulse(_vline, net.you||state.playerName||'You', mySeat());   // v2.6.30: the resolver sees the pulse too
   clearTimeout(_avrSendT);                                       // a resolve is discrete -- never let a stale debounced adjust fire after it
@@ -11447,13 +11743,13 @@ function avrResolve(){ if(!avr.mode) return;
     // Locally the resolver is ASKED about the Played tab instead of the setting applying blindly.
     // v2.6.37: the free counter shares this no-close path (it isn't tied to any particular action either) -- and shares the wire clear too, same as Block.
     if(inRoom() && !net.spect) mpSend({ t:'tally', mode:null, a:0, b:0, ph:0, rd:1 }); else if(!inRoom()) hotTallySend({ t:'tally', mode:null, a:0, b:0, ph:0, rd:1 });   // v2.6.122
-    avr={ mode:null, a:0, b:0, ph:0, rd:1, duel:{} }; avrRender();
+    avr=avrFresh(null); avrRender();
     if(conv.avrResolveClear!=='off') uiConfirm((wasFree?'Counter':'Block')+' resolved — also '+(conv.avrResolveClear==='discard'?'clear the Played tab and discard your own played cards':'clear the Played tab')+'? The action may still be live.').then(ok=>{ if(ok) applyAvrResolveClear(); });
     return;
   }
   resolvePlayedActions();                                        // v2.6.17: Vote/Combat Resolve closes the card-play batch, exactly like the "It resolves" phrase
   if(inRoom() && !net.spect) mpSend({ t:'tally', mode:null, a:0, b:0, ph:0, rd:1, res:1 }); else if(!inRoom()) hotTallySend({ t:'tally', mode:null, a:0, b:0, ph:0, rd:1, res:1 });   // res: every client closes THEIR batch + applies THEIR OWN clear setting; the sender's echo is idempotent
-  avr={ mode:null, a:0, b:0, ph:0, rd:1, duel:{} }; avrRender();
+  avr=avrFresh(null); avrRender();
   applyAvrResolveClear();
 }
 function applyAvrResolveClear(){                                 // v2.6.17: Settings → "Resolver Resolve" -- LOCAL per player, each client applies its own choice
@@ -11461,6 +11757,329 @@ function applyAvrResolveClear(){                                 // v2.6.17: Set
   if(m!=='clear' && m!=='discard') return;
   if(m==='discard'){ const loose=avLoose(state.zones.ready.map(id=>state.cards.get(id))).filter(c=>c&&!avBaseline.has(c.id)); if(loose.length){ pushUndo(); loose.forEach(c=>{ if(c && c.zone==='ready') move(c,'ash',{}); }); } }   // discardPlayedMine minus its confirm (undo covers it); zone re-checked at move time + length-gated, so the resolver's own echo is a no-op
   clearPlayed();
+}
+/* ===== Step-driven combat helper (v2.6.129, Johan's spec, rulebook-checked 23 Sep) =====
+   The rulebook's seven steps (VEKN 4. Detailed Turn Sequence) drive what the combat panel shows:
+   the rail picks the step, the STAGE between the two combatants shows the step's shared state
+   (range, damage, press) and each combatant's panel shows what the step asks of it. Every
+   control has two entry points with ONE effect: the panel buttons and the vampire's right-click
+   Combat submenu (cmbMenu) call the same cmb* functions, which (1) write ONE log line (CMB_LINE --
+   the shapes the released bot already parses, protocol SS12) and (2) move the shared tally state
+   (cmbSet -> a PARTIAL tally write, srv-2.6.39 preserves the rest). Nothing is enforced (house
+   style): the helper records what the table declares, and the counters stay adjustable.
+   Damage is never applied to the board -- the players burn their own blood. When the table moves
+   past Damage resolution (or resolves straight out of Strike / Damage), each client logs ITS OWN
+   combatant's frozen taken line once (cmbWatch -> cmbLogTaken), from the blood snapshot taken on
+   entering Damage, so a bot opponent reads certain numbers without anyone typing them. */
+function cmbMe(){ return mySeat() || (inRoom() ? 0 : 1); }   // the seat avrDuelAnnounce writes for this screen (hotseat without a roster seat -> 1)
+function cmbSidesIn(st){   // {act, blk} seats. The acting minion is the turn seat's; a lone combatant who is not the turn seat is the blocker
+  const seats=Object.keys((st && st.duel)||{}).map(Number).filter(n=>n>0), ts=net.turnSeat|0;
+  let act=seats.includes(ts) ? ts : null;
+  if(!act && seats.length>=2) act=seats[0];
+  const blk=seats.find(x=>x!==act) || null;
+  return { act, blk };
+}
+function cmbSideOf(seat, st){ const S=cmbSidesIn(st||avr); return (seat && seat===S.act) ? 'a' : ((seat && seat===S.blk) ? 'b' : null); }
+function cmbDamage(inc, prevented, blood, agg){   // rulebook 5. Damage Resolution (v2.6.135 with aggravated): prevention goes on the aggravated damage first (the player may choose so, and it is always the better choice); normal damage is handled first -- 1 blood mends 1, what cannot be mended leaves the vampire WOUNDED; aggravated damage cannot be mended -- its first point wounds an unwounded vampire, every further point costs 1 blood to prevent destruction, and a vampire that cannot pay is BURNED
+  let P=Math.max(0,prevented|0), G=Math.max(0,agg|0), N=Math.max(0,inc|0);
+  const pg=Math.min(P,G); G-=pg; P-=pg; N=Math.max(0,N-P);
+  const bl=Math.max(0,blood|0), burn=Math.min(N,bl); let left=bl-burn, wounded=N>bl, lost=burn, burned=false;
+  if(G>0){ let rem=G; if(!wounded){ wounded=true; rem--; } const pay=Math.min(rem,left); left-=pay; lost+=pay; burned=rem>pay; }
+  return { net:N+G, burn:lost, left, wounded, burned };
+}
+function cmbEnvOf(st, side){   // v2.6.136: the every-round damage `side` inflicts THIS round. Carrion Crows-class damage lands during the normal strike resolution (VEKN forum rulings: a dodge does not stop it, a combat-ends strike does -- it ends combat before that resolution). So a combat-ends strike in the FIRST pair cancels it; in a later pair it already landed with the first pair
+  return (st.ce && (st.sp|0)<=1) ? 0 : (st['e'+side]|0);
+}
+function cmbStolen(st, side){   // v2.6.140 (bot v0.6.196's steal fix, the same rule on every screen): what `side` loses to the other side's steal this round -- null when nothing is stolen. A dodge stops it; a combat-ends strike in the FIRST pair ends the combat before the strikes resolve (the damage rule, cmbEnvOf / cmbStrike's `ends`), so the steal never lands. The number is the card's: the victim moves what the vampire actually holds (the helper never moves blood)
+  const o=side==='a'?'b':'a', sm=/^Steal (\d+)/.exec((st && st['s'+o])||'');
+  if(!sm || cmbDodged(st, side) || (st.ce && (st.sp|0)<=1)) return null;
+  return { n: +sm[1] };
+}
+function cmbDodged(st, side){ return (st.sp|0)<=1 && /^Dodge/.test(st['s'+side]||''); }   // v2.6.136: `side` dodged this round's (first) pair -- read at COUNT time, so a strike written AFTER the dodge (a bot choosing second) still misses. In a later pair the counters already hold earlier pairs' damage, so the rule stays with the pick-time zeroing there
+function cmbDealt(st, side){ const o=side==='a'?'b':'a', hit=cmbDodged(st, o) ? 0 : (st[side]|0)+(st['g'+side]|0); return hit+cmbEnvOf(st, side); }   // all damage `side` deals this round: its strike (unless dodged) + every-round damage (a dodge does not stop that)
+function cmbSideDamage(st, side){   // what side a / b takes this round: the other side's strikes (normal + aggravated) and its every-round environmental damage, minus this side's prevention, against this side's blood at the start of Damage
+  const o=side==='a'?'b':'a', S=cmbSidesIn(st), seat=side==='a'?S.act:S.blk;
+  const dg=cmbDodged(st, side), N=(dg ? 0 : (st[o]|0))+cmbEnvOf(st, o), G=dg ? 0 : (st['g'+o]|0);   // v2.6.136: my dodge stops their strike (normal and aggravated), never their every-round damage
+  const bl=seat ? cmbBlood(seat, st) : null;
+  const v=cmbDamage(N, st['p'+side], bl==null ? 0 : bl, G); v.inc=N; v.agg=G; v.env=cmbEnvOf(st, o); v.seat=seat;
+  if(bl==null){ v.unknown=true; v.wounded=false; v.burned=false; }   // an unknown vampire is never declared wounded or burned
+  return v;
+}
+function cmbWounded(st){ st=st||avr; if(!st || st.mode!=='combat' || (st.ph|0)<4) return []; const S=cmbSidesIn(st); return ['a','b'].filter(x=>(x==='a'?S.act:S.blk) && cmbSideDamage(st,x).wounded); }   // v2.6.135: rulebook -- a combatant who is no longer ready ends the round AND the combat (Press is skipped; End of round still happens)
+function cmbBlood(seat, st){   // the blood a combatant had when Damage resolution began (snapshot), else its live blood
+  const e=((st && st.duel)||{})[seat]; if(!e) return null;
+  const k=_cmbSerial+':'+((st.rd|0)||1);
+  if(_cmbSnap && _cmbSnap.k===k && (seat in _cmbSnap.b)) return _cmbSnap.b[seat];
+  const r=avrDuelResolve(e, seat); return r.c ? (r.c.blood|0) : null;   // v2.6.135: null = UNKNOWN (the card is not on any board this screen sees) -- never 'no blood', which would call a stranger wounded
+}
+function cmbSnapNow(st){ if(_cmbSnap && _cmbSnap.k===_cmbSerial+':'+((st.rd|0)||1)) return;   // v2.6.135: ONCE per round -- stepping back into Damage after the player burned blood must not re-read the burned blood (it made a healthy vampire look wounded)
+  const b={}; Object.keys(st.duel||{}).forEach(k=>{ const r=avrDuelResolve(st.duel[k], +k); if(r.c) b[k]=r.c.blood|0; }); _cmbSnap={ k:_cmbSerial+':'+((st.rd|0)||1), b }; }
+function cmbWatch(prev, cur, resolved){   // every avr transition passes here: local steps, menu actions, remote tallies, open / clear / resolve
+  if(cur && cur.mode==='combat' && !(prev && prev.mode==='combat')){ _cmbSerial++; _cmbSnap=null; _cmbHist=[]; }
+  if(prev && prev.mode==='combat' && cur && cur.mode==='combat' && (cur.rd|0)>(prev.rd|0)) cmbHistPush(prev);   // v2.6.135: a finished round joins the history
+  if(!prev || prev.mode!=='combat') return;
+  const same = !!(cur && cur.mode==='combat' && (cur.rd|0)===(prev.rd|0));
+  if(same && (cur.ph|0)===4 && (prev.ph|0)!==4) cmbSnapNow(cur);
+  const leftDmg = (prev.ph|0)>=3 && (prev.ph|0)<=4;   // v2.6.130: the table left Strike / Damage WITHOUT this screen seeing a later step
+  const crossed = same ? ((prev.ph|0)<=4 && (cur.ph|0)>4) : ((!!resolved || !!(cur && cur.mode==='combat')) && leftDmg);   // ...a resolve, or (v2.6.130) a new round: another seat clicking Damage -> Press -> End -> Round 2 inside one 120 ms debounce reaches us as 'ph 4' then 'rd 2' -- the step past Damage never arrives, and this seat's taken line was lost
+  if(crossed) cmbLogTaken(same ? cur : prev);
+}
+function cmbLogTaken(st){   // my own combatant only -- every client logs its own side, so a table of humans and bots never doubles a line
+  if(net.spect) return;
+  const me=cmbMe(), key=_cmbSerial+':'+((st.rd|0)||1)+':'+me; if(!me || _cmbDone===key) return;
+  const e=(st.duel||{})[me]; const side=cmbSideOf(me, st); if(!e || !side) return;
+  const c=state.cards.get(e.cid); if(!c) return;
+  const v=cmbSideDamage(st, side), inc=v.inc+v.agg;   // v2.6.136: ONE damage function for the read-out, the line, the history and the totals
+  if(!inc){ if(st.ce) _cmbDone=key; return; }   // nothing came in -- nothing to report. v2.6.134: after a combat-ends strike the round's damage is HANDLED -- a later write (a bot striking anyway, stepping ph back to 4 -> 5) must not produce a line
+  _cmbDone=key;
+  log(CMB_LINE.taken(cardRefCap(c), v.net, v.burn, v.left, v.wounded, v.burned));
+}
+function cmbSend(f){ if(net.spect || (!inRoom() && !hotBotsSeated())) return; const m=Object.assign({ t:'tally', mode:'combat' }, f); if(inRoom()) mpSend(m); else hotTallySend(m); }   // PARTIAL: srv-2.6.39 / hotBridge keep every field this write does not carry
+function cmbSet(f){ if(avr.mode!=='combat' || !f) return; const prev=Object.assign({}, avr); Object.assign(avr, f); avrRender(); cmbWatch(prev, avr, false); cmbSend(f); }
+function cmbMyCard(){ const e=(avr.mode==='combat' && avr.duel) ? avr.duel[cmbMe()] : null; const c=e ? state.cards.get(e.cid) : null; return c || activeAnchor() || null; }
+function cmbEnsure(c){   // a combat control used with no combat open opens one and announces this minion; returns my side ('a' acting / 'b' opposing) or null (helper off -> the log line still goes out)
+  if(!c || !hx('resCombat')) return null;
+  if(avr.mode!=='combat'){ avrOpen('combat'); if(avr.mode==='combat' && !playedIsOpen()) pinPlayed(); }   // v2.6.132: a combat started from the right-click menu SHOWS its panel (the Combat button lives inside the Played window, so avrOpen never had to pin it)
+  if(avr.mode!=='combat') return null;
+  const me=cmbMe(), e=avr.duel[me];
+  if(!e || e.cid!==c.id) avrDuelAnnounce(c.id, c.name);
+  return cmbSideOf(me);
+}
+async function cmbAsk(title, message, def){ const v=await uiDialog({ kind:'prompt', title, message, def: def==null ? '' : def }); return v==null ? null : String(v).trim(); }
+async function cmbAskN(title, def){ const v=await cmbAsk(title, 'How much?', def==null ? '5' : def); if(v==null) return null; const n=parseInt(v,10); return isNaN(n) ? null : Math.max(0, Math.min(99, n)); }   // v2.6.134: the 'N...' row of every number menu
+function cmbNums(title, fn){   // v2.6.134 (Johan): the Bleed pattern -- 1 2 3 4 and N...
+  return [1,2,3,4].map(n=>({ label:String(n), noUndo:true, fn:()=>fn(n) })).concat([{ label:'N\u2026', noUndo:true, fn:async()=>{ const n=await cmbAskN(title); if(n!=null) fn(n); } }]);
+}
+function cmbStrike(kind, c, x){   // v2.6.134: no prompts -- the amount comes from the menu
+  c=c||cmbMyCard(); if(!c) return;
+  x=Math.max(0, Math.min(99, x==null ? 1 : (x|0)));
+  const N=cardRefCap(c); let line, lab, dmg=0, ends=false, dodge=false, ranged=false;
+  if(kind==='hand'){ line=CMB_LINE.hand(N,x); lab='Hand '+x; dmg=x; }
+  else if(kind==='weapon'){ line=CMB_LINE.weapon(N,x); lab='Weapon '+x; dmg=x; ranged=true; }
+  else if(kind==='strike'){ line=CMB_LINE.strike(N,x); lab='Strike '+x; dmg=x; ranged=true; }
+  else if(kind==='agg'){ line=CMB_LINE.agg(N,x); lab='Aggravated '+x; dmg=x; ranged=true; }
+  else if(kind==='steal'){ line=CMB_LINE.steal(N,x); lab='Steal '+x; }
+  else if(kind==='dodge'){ line=CMB_LINE.dodge(N); lab='Dodge'; dodge=true; }
+  else if(kind==='ends'){ line=CMB_LINE.ends(N); lab='Combat ends'; ends=true; }
+  else return;
+  const side=cmbEnsure(c);
+  log(line);
+  if(!side || avr.mode!=='combat') return;
+  const o=side==='a'?'b':'a', f={}; f['s'+side]=lab;
+  if(!ranged && avr.rng==='long') dmg=0;                // rulebook: hand strikes are effective only at close range (a weapon / other strike: the player gives the number)
+  if(/^Dodge/.test(avr['s'+o]||'')) dmg=0;              // the opponent dodged this pair
+  const gk='g'+side, isAgg=kind==='agg';
+  if((avr.sp|0)<=1){ f[side]=isAgg?0:dmg; f[gk]=isAgg?dmg:0; if(dodge){ f[o]=0; f['g'+o]=0; } if(ends){ f.a=0; f.b=0; f.ga=0; f.gb=0; } }   // a strike is ONE kind: re-picking replaces both counters
+  else if(dmg){ if(isAgg) f[gk]=Math.min(99,(avr[gk]|0)+dmg); else f[side]=Math.min(99,(avr[side]|0)+dmg); }   // an additional pair adds to the round's damage
+  if(ends){ f.ce=1; f.ph=6; } else if((avr.ph|0)<3) f.ph=3;   // combat ends resolves first and skips the rest -- End of round still happens. In pair 2+ the earlier pairs' damage STANDS (v2.6.130 note, Johan 23 Sep): play resolves damage per pair (VEKN forum 82464; the rulebook's own 'no longer ready ... combat ends immediately'), so it was already taken -- the 3 -> 6 jump logs it
+  cmbSet(f);
+}
+function cmbExtra(c){
+  c=c||cmbMyCard(); if(!c) return;
+  const side=cmbEnsure(c);
+  log(CMB_LINE.extra(cardRefCap(c)));
+  if(!side || avr.mode!=='combat') return;
+  const f={}; f['x'+side]=Math.min(9,(avr['x'+side]|0)+1); if((avr.ph|0)<3) f.ph=3; cmbSet(f);
+}
+function cmbEnv(c, x){   // v2.6.135: damage this side inflicts on the opposing minion EVERY round (Carrion Crows-class) -- not a strike, cannot be dodged, lasts the whole combat. 0 clears it
+  c=c||cmbMyCard(); if(!c) return;
+  x=Math.max(0, Math.min(99, x|0));
+  const side=cmbEnsure(c);
+  log(CMB_LINE.env(cardRefCap(c), x));
+  if(!side || avr.mode!=='combat') return;
+  const f={}; f['e'+side]=x; cmbSet(f);
+}
+function cmbHistPush(st){ const da=cmbDealt(st,'a'), db=cmbDealt(st,'b'); _cmbHist.push({ rd:st.rd|0, rng:st.rng, sa:st.sa||'', sb:st.sb||'', da, db, ta:cmbSideDamage(st,'a').net, tb:cmbSideDamage(st,'b').net }); if(_cmbHist.length>20) _cmbHist.shift(); }
+function cmbTotals(){ const t={ a:0, b:0 }; _cmbHist.forEach(h=>{ t.a+=h.da; t.b+=h.db; }); t.a+=cmbDealt(avr,'a'); t.b+=cmbDealt(avr,'b'); return t; }   // damage DEALT by the acting / opposing side over the whole combat
+function cmbPairsLeft(){ return Math.max(avr.xa|0, avr.xb|0) >= (avr.sp|0); }
+function cmbNextPair(){ if(avr.mode==='combat' && cmbPairsLeft()) cmbSet({ sp:Math.min(9,(avr.sp|0)+1), sa:'', sb:'' }); }
+function cmbManeuver(c, to){
+  c=c||cmbMyCard(); if(!c) return;
+  const side=cmbEnsure(c), on=avr.mode==='combat';
+  if(on && avr.rl) return;                               // the range is set for this round -- no maneuver can change it
+  to = to || (on ? (avr.rng==='long' ? 'close' : 'long') : 'long');
+  log(CMB_LINE.man(cardRefCap(c), to));
+  if(side && on){ const f={ rng:to }; if((avr.ph|0)<1) f.ph=1; cmbSet(f); }
+}
+function cmbSetRange(to, next, c){
+  c=c||cmbMyCard(); if(!c) return;
+  const side=cmbEnsure(c);
+  log(CMB_LINE.setr(cardRefCap(c), to, !!next));
+  if(side && avr.mode==='combat') cmbSet(next ? { nx:to } : { rng:to, rl:1 });
+}
+function cmbPrevent(c, k){
+  c=c||cmbMyCard(); if(!c) return;
+  k=Math.max(1, Math.min(99, k==null ? 1 : (k|0)));
+  const side=cmbEnsure(c);
+  log(CMB_LINE.prev(cardRefCap(c), k));
+  if(!side || avr.mode!=='combat') return;
+  const f={}; f['p'+side]=Math.min(99,(avr['p'+side]|0)+k); if((avr.ph|0)<4) f.ph=4; cmbSet(f);
+}
+function cmbPress(c, dir){
+  c=c||cmbMyCard(); if(!c) return;
+  const side=cmbEnsure(c), on=avr.mode==='combat';
+  dir = dir || ((on && avr.pr==='continue') ? 'end' : 'continue');   // a press cancels the opponent's last press
+  log(CMB_LINE.press(cardRefCap(c), dir));
+  if(side && on){ const f={ pr:dir }; if((avr.ph|0)<5) f.ph=5; cmbSet(f); }
+}
+function cmbTaken(c, x){   // v2.6.131 (Johan: bots must work on a Classic table without helpers): with the combat helper OFF nothing writes the taken line for you -- this row does, in the same frozen shape. The board is not touched: the player burns the blood. v2.6.134: the amount comes from the number menu
+  c=c||cmbMyCard(); if(!c) return;
+  const d=cmbDamage(Math.max(0, Math.min(99, x|0)), 0, c.blood|0);
+  log(CMB_LINE.taken(cardRefCap(c), d.net, d.burn, d.left, d.wounded));
+}
+function tallySendNull(){ if(net.spect) return; clearTimeout(_avrSendT); const m={ t:'tally', mode:null, a:0, b:0, ph:0, rd:1 }; if(inRoom()) mpSend(m); else if(hotBotsSeated()) hotTallySend(m); }   // v2.6.137: tell the server / the hotseat table that the resolver is closed (the local clears never did)
+function tallyStaleClose(why, send){   // v2.6.137 (bot handoff v0.6.171): a Block / Vote / Combat counter that outlived its action or its turn is closed on EVERY mirror, not only on this screen. `send` false = clear this screen only (another client sends)
+  if(why==='turn') _actUndir=false;
+  if(!(avr.mode==='block' || avr.mode==='vote' || avr.mode==='combat')) return false;
+  const _pv=avr; avr=avrFresh(null); cmbWatch(_pv, avr, false); avrRender(); if(send!==false) tallySendNull(); return true;
+}
+function blockSeedUndir(){   // v2.6.137: the BLOCKER opens the Block counter (it is their 'Block!'), so the +1 stealth of MY undirected action is written by ME, the actor, when the counter appears -- whoever opened it (a bot, another human, this screen). Only onto an untouched 0
+  if(avr.mode!=='block' || net.spect || !_actUndir) return;
+  const me=mySeat() || (inRoom() ? 0 : 1); if(!me || me!==(net.turnSeat|0) || (avr.a|0)!==0) return;
+  avr.a=1; avrRender(); clearTimeout(_avrSendT); const m={ t:'tally', mode:'block', a:1 }; if(inRoom()) mpSend(m); else if(hotBotsSeated()) hotTallySend(m);
+}
+function actStart(c){   // v2.6.137: a NEW action of mine begins -- a finished combat still open at End of round resolves first, a stale block counter closes (v2.6.138: the direction flag is set by the caller after its batch-close)
+  if(avr.mode==='combat' && (avr.ph|0)===6 && !cmbGoesOn()) avrResolve();
+  else if(avr.mode==='block') tallyStaleClose('new action');
+}
+function cmbMyReady(){ return (state.zones.ready||[]).map(id=>state.cards.get(id)).filter(c=>c && isMinion(c)); }
+function cmbAutoJoin(){   // v2.6.134 (Johan): the minion that took the action (your turn) or blocked (theirs) joins as your combatant by default
+  if(avr.mode!=='combat' || net.spect || !hx('resCombat')) return;
+  const me=cmbMe(); if(!me || (avr.duel && avr.duel[me])) return;
+  const want=((net.turnSeat|0)===me) ? _cmbLastAct : _cmbLastBlock;
+  const c=want ? state.cards.get(want) : null;
+  if(c && isMinion(c) && (state.zones.ready||[]).includes(c.id)) avrDuelAnnounce(c.id, c.name);
+}
+function cmbPick(e){   // v2.6.134 (Johan): click your combatant field -> your ready minions, to join or change
+  if(net.spect) return;
+  const me=cmbMe(), cur=(avr.duel && avr.duel[me]) ? avr.duel[me].cid : null;
+  const list=cmbMyReady();
+  const items=list.length ? list.map(c=>({ label:(c.id===cur ? '\u2713 ' : '')+c.name+(c.kind==='crypt' ? ' ('+(c.blood|0)+')' : ''), noUndo:true, fn:()=>{ if(c.id!==cur) avrDuelAnnounce(c.id, c.name); } })) : [{ label:'No ready minions', disabled:true }];
+  if(cur) items.push('-', { label:'Leave the combat', noUndo:true, fn:()=>avrDuelAnnounce(null,'') });
+  showMenu(items, e && e.clientX || 0, e && e.clientY || 0);
+}
+function cmbStrikeRows(c){   // v2.6.134: the strike choices, each amount through a Bleed-style number submenu
+  const long=avr.mode==='combat' && avr.rng==='long';
+  return [
+    { label:'Hand strike'+(long ? ' (no effect at long)' : ''), sub:cmbNums('Hand strike', n=>cmbStrike('hand', c, n)) },
+    { label:'Weapon', sub:cmbNums('Weapon strike', n=>cmbStrike('weapon', c, n)) },
+    { label:'Strike', title:'Any other strike: a discipline, a card, a strength-boosted hand', sub:cmbNums('Strike', n=>cmbStrike('strike', c, n)) },
+    { label:'Aggravated', title:'An aggravated strike (claws, fire): it cannot be mended', sub:cmbNums('Aggravated strike', n=>cmbStrike('agg', c, n)) },
+    { label:'Steal blood', sub:cmbNums('Steal blood', n=>cmbStrike('steal', c, n)) },
+    { label:'Dodge', noUndo:true, fn:()=>cmbStrike('dodge', c) },
+    { label:'Combat ends', noUndo:true, fn:()=>cmbStrike('ends', c) },
+    { label:'Additional strike', noUndo:true, fn:()=>cmbExtra(c) }
+  ];
+}
+function cmbStrikeItems(c){ return cmbStrikeRows(c); }   // the panel's Strike menu opens at the top level, so each row keeps its number submenu
+function cmbMenu(c){   // the vampire's right-click Combat submenu (v2.6.134 layout, Johan): Range | the strikes | Prevent / Damage taken | Press. Three menu levels is the menu system's limit, so the strike rows sit directly here (Combat > Hand strike > 1 2 3 4 N...)
+  const on=avr.mode==='combat', lock=on && !!avr.rl, it=[];
+  const next=on && (avr.ph|0)>=2;   // Set range used after range is determined -> it is for NEXT round (Lam Into-class)
+  const range=[];
+  if(on) range.push({ label:'Maneuver to '+(avr.rng==='long' ? 'close' : 'long'), noUndo:true, disabled:lock, title: lock ? 'The range is set for this round' : '', fn:()=>cmbManeuver(c) });
+  else range.push({ label:'Maneuver to long', noUndo:true, fn:()=>cmbManeuver(c,'long') }, { label:'Maneuver to close', noUndo:true, fn:()=>cmbManeuver(c,'close') });
+  range.push('-', { label:'Set range: close'+(next?' (next round)':''), noUndo:true, fn:()=>cmbSetRange('close', next, c) },
+                  { label:'Set range: long'+(next?' (next round)':''),  noUndo:true, fn:()=>cmbSetRange('long',  next, c) });
+  it.push({ label:'Range', sub:range }, '-');
+  cmbStrikeRows(c).forEach(r=>it.push(r));
+  it.push('-', { label:'Prevent damage', sub:cmbNums('Prevent damage', n=>cmbPrevent(c, n)) },
+    { label:'Damage each round', title:'Environmental damage your minion inflicts every round (Carrion Crows) -- not a strike, cannot be dodged. N... 0 clears it', sub:cmbNums('Damage each round', n=>cmbEnv(c, n)) });
+  if(!hx('resCombat')) it.push({ label:'Damage taken', title:'Tell the table (and a bot) what your vampire takes after prevention -- with the combat helper on, this line is written for you', sub:cmbNums('Damage taken', n=>cmbTaken(c, n)) });   // v2.6.131: helper OFF only
+  it.push('-');
+  if(on) it.push({ label: avr.pr==='continue' ? 'Press to end' : 'Press to continue', noUndo:true, disabled: !!avr.ce, fn:()=>cmbPress(c) });
+  else it.push({ label:'Press to continue', noUndo:true, fn:()=>cmbPress(c,'continue') }, { label:'Press to end', noUndo:true, fn:()=>cmbPress(c,'end') });
+  return it;
+}
+function cmbGoesOn(){ return avr.pr==='continue' && !avr.ce && !cmbWounded(avr).length; }   // v2.6.135: an uncancelled press to continue, no combat-ends strike, nobody wounded
+function cmbNextLabel(){ return (avr.ph|0)<6 ? '\u25b8' : (cmbGoesOn() ? 'Round '+Math.min(99,(avr.rd|0)+1)+' \u25b8' : 'End combat'); }
+function cmbRail(){   // the #avrLive row in combat: round, the seven steps, the range; Next knows whether the combat goes on
+  const pel=$('#avrPh'); if(!pel) return;
+  const ph=avr.ph|0; pel.classList.add('rail');
+  let h='<span class="crd">R'+(avr.rd|0)+'</span>';
+  const _wd=cmbWounded(avr).length>0;
+  CMB_STEP_SHORT.forEach((nm,i)=>{ const skip=(i===1 && avr.rl) || (i===5 && (avr.ce || _wd)); h+='<span class="cph'+(i===ph?' on':'')+(i<ph?' done':'')+(skip?' skip':'')+'" data-ph="'+i+'" title="'+AVR_PHASES[i]+'">'+nm+(i===3 && (avr.sp|0)>1 ? ' \u00b7'+(avr.sp|0) : '')+'</span>'; });
+  h+='<span class="cpill'+(avr.rng==='long'?' long':'')+'" title="'+(avr.rl?'Range set for this round':'Range this round')+'">'+(avr.rng==='long'?'Long':'Close')+(avr.rl?' \ud83d\udd12':'')+'</span>';
+  pel.innerHTML=h;
+  const pn=$('#avrPhNext'); if(pn){ pn.textContent=cmbNextLabel(); pn.classList.toggle('cwide', ph===6); pn.title = ph<6 ? 'Next combat step' : (cmbGoesOn() ? 'Start the next round' : 'End the combat and log the result'); }
+  const pp=$('#avrPhPrev'); if(pp) pp.disabled = ph===0;
+}
+function cmbEl(tag, cls, txt){ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+function cmbBtn(host, txt, fn, dis, title){ const b=cmbEl('button','cbtn',txt); if(title) b.title=title; if(dis) b.disabled=true; else b.addEventListener('click', e=>{ e.stopPropagation(); fn(e); }); host.appendChild(b); return b; }
+function cmbSeg(host, opts, onIdx, fn, locked){   // a two-way switch: click flips (Close/Long, Ends/Continues)
+  const w=cmbEl('div','cseg'+(locked?' lock':'')); host.appendChild(w);
+  opts.forEach((t,i)=>{ const sp=cmbEl('span', i===onIdx ? 'on' : '', t); if(!locked && !net.spect) sp.addEventListener('click', e=>{ e.stopPropagation(); if(i!==onIdx) fn(i); }); w.appendChild(sp); });
+  return w;
+}
+function cmbStage(host){
+  const st=cmbEl('div','avdstage'); host.appendChild(st);
+  const ph=avr.ph|0, spect=!!net.spect, me=cmbMyCard();
+  st.appendChild(cmbEl('div','cst', AVR_PHASES[ph]+(ph===3 && (avr.sp|0)>1 ? ' \u00b7 pair '+(avr.sp|0) : '')));
+  st.appendChild(cmbEl('div','chint', CMB_STEP_HINT[ph]));
+  const row=cmbEl('div','crow');
+  if(ph===0 || ph===2){
+    const next=ph===2;
+    if(next && avr.nx) st.appendChild(cmbEl('div','cnote','Next round: '+avr.nx+' \ud83d\udd12'));
+    if(!next && avr.rl) st.appendChild(cmbEl('div','cnote','Range set: '+avr.rng+' \ud83d\udd12'));
+    row.appendChild(cmbEl('span','cnote', next ? 'Set next round:' : 'Set range:'));
+    ['close','long'].forEach(r=>cmbBtn(row, r, ()=>cmbSetRange(r, next), spect || !me, me ? '' : 'Announce your combatant first'));
+    st.appendChild(row);
+  } else if(ph===1){
+    cmbSeg(st, ['Close','Long'], avr.rng==='long'?1:0, i=>cmbSet({ rng: i ? 'long' : 'close' }), !!avr.rl);
+    st.appendChild(cmbEl('div','cnote', avr.rl ? 'Range set for this round \ud83d\udd12' : 'Maneuvers flip it, or click to correct'));
+  } else if(ph===3){
+    const d=cmbEl('div','cdmg');
+    ['a','b'].forEach((sd,i)=>{
+      if(i) d.appendChild(cmbEl('span','cvs','vs'));
+      cmbBtn(d, '\u2212', ()=>avrAdjust(sd,-1), spect);
+      d.appendChild(cmbEl('span','cn', String(avr[sd]|0)));
+      cmbBtn(d, '+', ()=>avrAdjust(sd,1), spect);
+    });
+    st.appendChild(d); st.appendChild(cmbEl('div','cnote','damage dealt \u00b7 '+(avr.rng==='long'?'long':'close')+' range'));
+    if((avr.ga|0) || (avr.gb|0)) st.appendChild(cmbEl('div','cnote cagg','+ '+(avr.ga|0)+' agg \u00b7 + '+(avr.gb|0)+' agg'));   // v2.6.135
+    if(!spect){ const mc=(avr.duel && avr.duel[cmbMe()]) ? state.cards.get(avr.duel[cmbMe()].cid) : null; if(mc) cmbBtn(st, 'Strike \u25be', e=>showMenu(cmbStrikeItems(mc), e.clientX, e.clientY), false, 'Your strike for '+mc.name); else cmbBtn(st, 'Choose your vampire \u25be', e=>cmbPick(e)); }   // v2.6.134 (Johan): the strike menu in the Strike step itself
+    if(cmbPairsLeft()) cmbBtn(st, 'Next strike pair', ()=>cmbNextPair(), spect, 'Additional strikes are resolved after the first pair');
+  } else if(ph===4){
+    st.appendChild(cmbEl('div','cnote','Next logs what each side takes.'));
+  } else if(ph===5){
+    const wd=cmbWounded(avr);
+    if(avr.ce) st.appendChild(cmbEl('div','cnote','Skipped \u2014 the combat ended.'));
+    else if(wd.length) st.appendChild(cmbEl('div','cnote','Skipped \u2014 a combatant is wounded, the combat ends.'));
+    else { cmbSeg(st, ['Ends','Continues'], avr.pr==='continue'?1:0, i=>cmbSet({ pr: i ? 'continue' : null })); st.appendChild(cmbEl('div','cnote','Presses flip it, or click to correct')); }
+  } else if(ph===6){
+    st.appendChild(cmbEl('div','cres', cmbGoesOn() ? 'Round '+Math.min(99,(avr.rd|0)+1)+' follows.' : 'The combat ends.'));
+  }
+  if(ph>=3 && ((avr.ea|0) || (avr.eb|0))){ const S=cmbSidesIn(avr), nm=x=>{ const e=x && avr.duel[x]; return (e && e.name) || '?'; }; st.appendChild(cmbEl('div','cnote','Each round: '+nm(S.act)+' '+(avr.ea|0)+' \u00b7 '+nm(S.blk)+' '+(avr.eb|0)+((avr.ce && (avr.sp|0)<=1) ? ' (not this round: combat ended first)' : ''))); }   // v2.6.136: names, not arrows   // v2.6.135: environmental damage (Carrion Crows) stays visible
+  if(_cmbHist.length){ const h=cmbEl('div','chist'); _cmbHist.slice(-4).forEach(x=>h.appendChild(cmbEl('div','', 'R'+x.rd+' \u00b7 '+x.rng+' \u00b7 '+(x.sa||'\u2014')+' / '+(x.sb||'\u2014')+' \u00b7 took '+x.ta+' / '+x.tb))); st.appendChild(h); }   // v2.6.135: the finished rounds
+}
+function cmbPanelCtl(info, seat, side, r){   // what the current step asks of THIS combatant: own side gets buttons, the other side a read-out
+  if(avr.mode!=='combat') return;
+  const own=!!r.own && !net.spect, ph=avr.ph|0, o=side==='a'?'b':'a', box=cmbEl('div','cctl');
+  const lab=avr['s'+side]||'', x=avr['x'+side]|0;
+  if(ph===1 && own) cmbBtn(box, '\u21c4 Maneuver to '+(avr.rng==='long'?'close':'long'), ()=>cmbManeuver(r.c), !!avr.rl, avr.rl ? 'The range is set for this round' : 'Play your maneuver, then click');
+  if(ph===3){
+    const can=(avr.sp|0)<=1 || x>=(avr.sp|0)-1;
+    if(lab) box.appendChild(cmbEl('span','cchip', lab)); else if(!can) box.appendChild(cmbEl('span','cchip dim','No strike this pair'));
+    if(own && can) cmbBtn(box, 'Strike \u25be', e=>showMenu(cmbStrikeItems(r.c), e.clientX, e.clientY));
+    if(own) cmbBtn(box, '+ Additional', ()=>cmbExtra(r.c), false, 'Gain additional strikes (resolved after the first pair)');
+    if(x) box.appendChild(cmbEl('span','cchip dim', '+'+x+' strike'+(x>1?'s':'')));
+  }
+  if(ph>=3){ const sv=cmbStolen(avr, side); if(sv) box.appendChild(cmbEl('div','cres bad', 'Stolen: '+sv.n+' blood \u2014 move it')); }   // v2.6.140: through cmbStolen -- a first-pair combat ends stops the steal too (it used to show here regardless). v2.6.137: a steal is not damage -- the victim sees what to move (a bot writes the same 'Steal N' label); the helper never moves blood
+  if(ph>=4){   // v2.6.135: aggravated + every-round damage in the read-out; from Damage on, a wounded vampire of yours gets its torpor button
+    const pv=avr['p'+side]|0, v=cmbSideDamage(avr, side), inc=v.inc+v.agg;
+    if(ph===4){
+      const l1=cmbEl('div','cline'); l1.appendChild(cmbEl('span','', 'Incoming '+v.inc+(v.agg ? ' + '+v.agg+' agg' : '')+(v.env ? ' (incl. '+v.env+' each round)' : '')));
+      if(own){ l1.appendChild(cmbEl('span','cnote',' \u00b7 prevent ')); const f={}; cmbBtn(l1,'\u2212',()=>{ f['p'+side]=Math.max(0,pv-1); cmbSet(f); }, !pv); l1.appendChild(cmbEl('span','cn sm', String(pv))); cmbBtn(l1,'+',()=>{ f['p'+side]=Math.min(99,pv+1); cmbSet(f); }); }
+      else if(pv) l1.appendChild(cmbEl('span','cnote',' \u00b7 prevents '+pv));
+      box.appendChild(l1);
+    }
+    if(ph===4 || v.wounded){
+      const txt=!inc ? 'No damage' : (!v.net ? 'All prevented' : (v.burn ? 'Loses '+v.burn+' blood \u2192 '+v.left+' left' : 'No blood lost')+(v.burned ? ' \u00b7 BURNED' : (v.wounded ? ' \u00b7 wounded \u2192 torpor' : '')));
+      box.appendChild(cmbEl('div','cres'+((v.wounded||v.burned)?' bad':''), txt));
+      if(own && r.c && v.wounded && !v.burned && r.c.zone==='ready') cmbBtn(box, '\u2192 Torpor', ()=>{ pushUndo(); move(r.c,'torpor'); log(cardRefCap(r.c)+' \u2192 torpor.'); }, false, 'Send '+r.c.name+' to torpor (you decide -- the helper never moves cards)');
+    }
+  }
+  if(ph===5 && own && !avr.ce) cmbBtn(box, avr.pr==='continue' ? 'Press to end' : 'Press to continue', ()=>cmbPress(r.c));
+  if(box.childNodes.length) info.appendChild(box);
 }
 /* ===== Duel view (v2.6.19): both combatants side by side while combat is open =====
    Own side manageable, opponent's view-only -- the authority model: a cid resolving in
@@ -11474,6 +12093,7 @@ function applyAvrResolveClear(){                                 // v2.6.17: Set
 function avrDuelAnnounce(cid, name){
   if(!inRoom()){ const sSeat=mySeat()||1; if(cid) avr.duel[sSeat]={ cid, name: name||'', who: net.you||state.playerName||'You' }; else delete avr.duel[sSeat]; avrDuelRender(); hotTallySend({ t:'tally', mode:avr.mode, a:avr.a|0, b:avr.b|0, ph:avr.ph|0, rd:avr.rd|0, duelCid:cid||null, duelName:String(name||'').slice(0,60) }); return; }   // hotseat: local -- and (v2.6.122) into the table tally's per-seat duel map when bots are seated, or a bot's next counter would erase the announcement
   if(net.spect) return;
+  { const _me=mySeat(); if(_me){ if(cid) avr.duel[_me]={ cid, name: name||'', who: net.you||'' }; else delete avr.duel[_me]; } }   // v2.6.129: optimistic -- a combat menu action right after this needs its side before the echo lands; the server's merged map replaces it
   clearTimeout(_avrSendT);   // the announce is discrete -- fold any pending counter push into it (whole-state)
   mpSend({ t:'tally', mode:avr.mode, a:avr.a|0, b:avr.b|0, ph:avr.ph|0, rd:avr.rd|0, duelCid:cid||null, duelName:String(name||'').slice(0,60) });
 }
@@ -11485,7 +12105,7 @@ function avrDuelResolve(entry, seat){
   return { c: pub ? (pub.cards||[]).find(k=>k.id===entry.cid)||null : null, own:false, pub };
 }
 function avrDuelChip(txt, cls){ const sp=document.createElement('span'); sp.textContent=txt; if(cls) sp.className=cls; return sp; }
-function avrDuelPanel(host, seat, entry, role){
+function avrDuelPanel(host, seat, entry, role, side){
   const r=avrDuelResolve(entry, seat);
   const byId = r.own ? null : new Map(((r.pub&&r.pub.cards)||[]).map(k=>[k.id,k]));   // v2.6.40: same {who,byId} shape previewRemote already expects elsewhere -- lets the click-to-enlarge and attached-list hover resolve 'host'/'attached' names instead of falling back to "?"
   const p=document.createElement('div'); p.className='avdp'+(r.own?' own':''); host.appendChild(p);
@@ -11526,18 +12146,19 @@ function avrDuelPanel(host, seat, entry, role){
   if(r.own){
     const row=document.createElement('div');
     const an=activeAnchor();
-    if(an && an.id!==entry.cid){ const sw=document.createElement('button'); sw.className='avdjoin'; sw.textContent='\u2694 Swap to selected'; sw.addEventListener('click',()=>avrDuelAnnounce(an.id, an.name)); row.appendChild(sw); }
+    { const sw=document.createElement('button'); sw.className='avdjoin'; sw.textContent='\u21c4 Change \u25be'; sw.title='Choose another of your ready minions'; sw.addEventListener('click', e=>{ e.stopPropagation(); cmbPick(e); }); row.appendChild(sw); }   // v2.6.134: a list of your ready minions (was: swap to the selected card)
     const lv=document.createElement('span'); lv.className='avdx'; lv.textContent='\u2715 leave'; lv.title='Withdraw your combatant'; lv.addEventListener('click',()=>avrDuelAnnounce(null,''));
     row.appendChild(lv); info.appendChild(row);
   }
+  if(side) cmbPanelCtl(info, seat, side, r);   // v2.6.129: what THIS step asks of this combatant
 }
-function avrDuelGhost(host, label){
+function avrDuelGhost(host, label){   // v2.6.134 (Johan): click to pick one of your ready minions -- no more select-then-join
   const g=document.createElement('div'); g.className='avdghost'; host.appendChild(g);
   const btn=document.createElement('button'); btn.className='avdjoin';
-  const an=(typeof activeAnchor==='function') && activeAnchor();
-  btn.textContent='\u2694 '+label; btn.disabled=!an;
-  btn.title=an ? 'Announce your selected ready minion as combatant' : 'Select one of your ready minions first';
-  if(an) btn.addEventListener('click',()=>avrDuelAnnounce(an.id, an.name));
+  const pick=!net.spect && /^Join/.test(label);
+  btn.textContent='\u2694 '+label+(pick?' \u25be':''); btn.disabled=!pick;
+  btn.title=pick ? 'Choose one of your ready minions' : '';
+  if(pick) btn.addEventListener('click', e=>{ e.stopPropagation(); cmbPick(e); });
   g.appendChild(btn);
 }
 function avrDuelRender(){
@@ -11546,11 +12167,11 @@ function avrDuelRender(){
   host.hidden=!on; if(!on){ host.innerHTML=''; return; }
   host.innerHTML='';   // own strip, rebuilt per render with fresh listeners -- never holds bound-once children
   const seats=Object.keys(avr.duel||{}).map(Number).filter(n=>n>0);
-  const leftSeat = seats.includes(net.turnSeat) ? net.turnSeat : (seats[0]||null);
-  const rightSeat = seats.find(x=>x!==leftSeat) || null;
+  const S=cmbSidesIn(avr), leftSeat=S.act, rightSeat=S.blk;   // v2.6.129: a lone combatant who is NOT the turn seat waits on the right (the blocker announced first)
   const mine=mySeat();
-  if(leftSeat) avrDuelPanel(host, leftSeat, avr.duel[leftSeat], 'ACTING'); else avrDuelGhost(host, (mine && !seats.includes(mine)) ? 'Join as acting' : 'Awaiting acting combatant');
-  if(rightSeat) avrDuelPanel(host, rightSeat, avr.duel[rightSeat], 'BLOCKING'); else avrDuelGhost(host, (mine && !seats.includes(mine)) ? 'Join as blocking' : 'Awaiting blocking combatant');
+  if(leftSeat) avrDuelPanel(host, leftSeat, avr.duel[leftSeat], 'ACTING', 'a'); else avrDuelGhost(host, (mine && !seats.includes(mine)) ? 'Join as acting' : 'Awaiting acting combatant');
+  cmbStage(host);   // v2.6.129: the step's shared state between the two combatants
+  if(rightSeat) avrDuelPanel(host, rightSeat, avr.duel[rightSeat], 'BLOCKING', 'b'); else avrDuelGhost(host, (mine && !seats.includes(mine)) ? 'Join as blocking' : 'Awaiting blocking combatant');
 }
 (function(){
   const B=$('#avrBlock'), V=$('#avrVote'), C=$('#avrCombat'); if(!B) return;   // harness / stripped DOM
@@ -11564,6 +12185,7 @@ function avrDuelRender(){
   const bindAdj=(id, side, d)=>{ const el=$('#'+id); if(el) el.addEventListener('click', e=>avrAdjust(side, d*(e.shiftKey?5:1))); };
   bindAdj('avrAm','a',-1); bindAdj('avrAp','a',1); bindAdj('avrBm','b',-1); bindAdj('avrBp','b',1);
   const pp=$('#avrPhPrev'); if(pp) pp.addEventListener('click', ()=>avrPhase(-1));
+  const pr=$('#avrPh'); if(pr) pr.addEventListener('click', e=>{ const t=e.target && e.target.closest ? e.target.closest('[data-ph]') : null; if(t) avrPhaseTo(+t.dataset.ph); });   // v2.6.129: the rail -- any step, any seat (the table referees)
   const pn=$('#avrPhNext'); if(pn) pn.addEventListener('click', ()=>avrPhase(1));
   const pa=$('#avrPass'); if(pa) pa.addEventListener('click', ()=>saySend(SAY.indexOf('Pass')));   // v2.6.17: rides the quick-phrase machinery -- spect-guard, hotseat path, say identity all come free; string lookup survives SAY reordering
   const r=$('#avrResolve'); if(r) r.addEventListener('click', avrResolve);
@@ -14956,20 +15578,49 @@ function hotHoldSync(){
   const go=el.querySelector('.hbgo');
   if(go){ go.style.display=mine?'':'none'; }                  // online you can only release what you placed -- no dead button for someone else's hold
   el.style.cursor=mine?'pointer':'default';
-  el.title=mine?'The bots are paused. Click to resume them.':('Paused by '+[...hotHoldBy].join(', ')+' \u2014 only they can resume the bots.');
+  el.title=mine?'The bots are paused. Click to resume them.':('Held by '+[...hotHoldBy].join(', ')+' \u2014 they resume it here, or anyone at the table can say It resolves.');   // v2.6.142: it said only they could -- since bot v0.6.108 any human's release frees the table
 }
-function hotHoldMark(who, i){                                 // one path for every hold/release we can see, whoever said it
-  if(!hotHoldTableHasBots()) return;
-  if((i|0)===0) hotHoldBy.add(who);
-  else if(SAY_RELEASE.includes(i|0)) hotHoldBy.delete(who);
+/* v2.6.142 (bot v0.6.198: a Hold on now stops every clock a bot runs on a human). The badge is the
+   table's view of that hold, so it follows the bots' OWN rule -- bot _holdHook since v0.6.108,
+   _releaseDeparted since v0.6.106 -- and no longer the v0.6.107 rule it was written against:
+     - a BOT never holds or releases: its 'Hold on...' is the thinking announce before it answers a
+       block or a reaction, and the bots ignore it (measured with v0.6.198: the badge read 'Bots held
+       by Diagbot' until that bot's own Pass arrived);
+     - a release phrase from ANY human releases the whole table, not only the speaker's own hold;
+     - the chat line holds and releases too, with the bots' patterns /^hold on\b/i and
+       /^(carry on|resume|it resolves)\b/i (measured: a typed 'hold on' held the real bot while the
+       badge stayed empty);
+     - a holder who is out, vacant or offline holds nothing (hotHoldPrune).
+   Online the badge's button stays the holder's (hotHoldRelease) -- a choice now, not a necessity. */
+function hotHoldIsBot(name){ const q=(net.roster||[]).find(r=>r && r.name===name); return !!(q && q.bot); }
+function hotHoldMark(who, i, txt){                            // one path for every hold/release we can see, whoever said it: i is a quick-phrase index, txt a chat line
+  if(!hotHoldTableHasBots() || hotHoldIsBot(who)) return;
+  const t=(txt!=null) ? String(txt).trim() : null;
+  const hold=(t!=null) ? /^hold on\b/i.test(t) : (i|0)===0;
+  const rel=(t!=null) ? /^(carry on|resume|it resolves)\b/i.test(t) : SAY_RELEASE.includes(i|0);
+  if(hold) hotHoldBy.add(who);
+  else if(rel) hotHoldBy.clear();
   hotHoldSync();
+}
+function hotHoldPrune(){                                      // the bots drop a holder who is out, vacant or offline (bot _releaseDeparted) -- so does the badge; a ghost hold also kept hotAwaitPass's idle clock standing
+  if(!hotHoldBy.size) return false;
+  let n=0;
+  (net.roster||[]).forEach(p=>{ if(p && hotHoldBy.has(p.name) && (p.out || p.vacant || p.online===false)){ hotHoldBy.delete(p.name); n++; } });
+  if(n) hotHoldSync();
+  return n>0;
+}
+function hotHoldAfterPanelRelease(){                          // the panel's Release hold frees ONE bot (each bot keeps its own hold set); once no bot this tab runs is held, the badge clears with them
+  if(!hotHoldBy.size) return false;
+  if(botPanelSeats().some(r=>botPanelRead(r.bot).state==='held')) return false;
+  hotHoldBy.clear(); hotHoldSync();
+  return true;
 }
 function hotHoldNote(i){ hotHoldMark(net.you||state.playerName||'You', i); }   // the LOCAL human's own phrase, from saySend
 function hotHoldRelease(){                                    // offline: release EVERY outstanding hold, whoever placed it (one device). online: your own
   if(!hotHoldBy.size) return false;
   if(!localTable){
     const me=net.you||state.playerName||'You';
-    if(!hotHoldBy.has(me)){ toast('Only '+[...hotHoldBy].join(', ')+' can resume the bots.'); return false; }
+    if(!hotHoldBy.has(me)){ const hn=[...hotHoldBy]; toast(hn.join(', ')+(hn.length>1?' hold':' holds')+' the bots \u2014 ask them, or say It resolves to resume them for the whole table.'); return false; }   // v2.6.142: the button stays the holder's (a choice); the old toast claimed nobody else could
     saySend(4);                                               // 'It resolves' in your own name -- the broadcast the bots are waiting for; saySend routes it through hotHoldNote, which clears the badge
     return true;
   }
@@ -17268,7 +17919,7 @@ const TUT_SECTIONS = {
 
       // ---- Combat + the duel view ----
       { id:'sh-combat', target:()=>$('#avrCombat'), place:'bottom', freeInteract:true,
-        text:'With your vampire still selected, press <b>Combat</b> (red accents). You get <b>damage counters</b> both ways, and the <b>phase stepper</b>: the rulebook&rsquo;s seven steps per round &mdash; Before range &middot; Determine range &middot; Before strikes &middot; Strike &middot; Damage resolution &middot; Press &middot; End of round. <b>&#9656;</b> past End of round wraps into a <b>new round</b> and bumps the <b>R-counter</b>. Damage numbers reset <b>manually</b> for now &mdash; a dedicated combat-helper family will grow under this toggle later.',
+        text:'With your vampire still selected, press <b>Combat</b> (red accents). The row becomes the <b>step rail</b>: the rulebook&rsquo;s seven steps per round &mdash; Before range &middot; Range &middot; Before strikes &middot; Strike &middot; Damage &middot; Press &middot; End &mdash; with the round number and the current range. <b>&#9656;</b> moves on, or click any step. Each step shows only what it needs: the <b>range switch</b> for maneuvers, <b>damage both ways</b> in Strike, what each side <b>loses</b> in Damage, the <b>press switch</b> in Press. At End of round, <b>&#9656;</b> starts the next round if someone pressed to continue &mdash; otherwise it ends the combat. The same controls live on your vampire&rsquo;s right-click menu under <b>Combat</b>.',
         advance:{on:'predicate', test:function(){ return avr.mode==='combat'; }} },
       { id:'sh-duel', target:()=>$('#avrDuel'), place:'bottom', freeInteract:true,
         text:'This is the <b>duel view</b>. Press <b>&#9876; Join</b> to announce your selected vampire as a combatant &mdash; your panel appears with card art, blood, tokens and attached cards. <b>Your side is manageable</b> (the blood row opens the counter stepper; attached names open the normal card menu). <b>Either side</b>&rsquo;s card art and attached names can be hovered for a preview, and clicking the card art pins the full view &mdash; tokens and every attached card, exactly like a log card-name click. An opponent&rsquo;s side is otherwise <b>view-only</b>, live from their board &mdash; the same authority rule as everywhere: you only ever touch your own cards. &#9876; Swap changes minions, &#10005; leave withdraws.',

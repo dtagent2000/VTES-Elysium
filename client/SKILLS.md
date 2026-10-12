@@ -1,6 +1,129 @@
 # SKILLS.md — Elysium Development Recipes
 
-> Step-by-step patterns for recurring development tasks, distilled from ~26 sessions of implementation. Each recipe lists the exact touch-points in the codebase and the order they must be done in. Read `CLAUDE.md` for the project overview and constraints. **B1 roundtrip, corrected recipe (12 July):** `split_client.py` reads `/tmp/original.html` and writes fragments to `/home/claude/elysium-src` — but `elysium-build.js` reads `ROOT/elysium-src` (next to the build script). ALWAYS: (1) `cp` the edited client to `/tmp/original.html`, (2) split, (3) `rm -rf elysium-src && cp -r /home/claude/elysium-src elysium-src`, (4) build to a SCRATCH file (`node elysium-build.js /tmp/rebuilt.html`) and `cmp` against the original — never trust the default-overwrite path: a stale fragment dir once produced a byte-identical FALSE PASS against pre-edit content. **Reflects Elysium v2.6.39 (client v2.6.39 / server v2.6.16). Bot track: Trainbot v0.5.7, cardfx v1.4.2, canary v1.0.0** — see the new “Verify a bot-track change” skill below; the client-only recipe above predates the bot track and never mentions it.
+> Step-by-step patterns for recurring development tasks, distilled from ~26 sessions of implementation. Each recipe lists the exact touch-points in the codebase and the order they must be done in. Read `CLAUDE.md` for the project overview and constraints. **B1 roundtrip, corrected recipe (12 July):** `split_client.py` reads `/tmp/original.html` and writes fragments to `/home/claude/elysium-src` — but `elysium-build.js` reads `ROOT/elysium-src` (next to the build script). ALWAYS: (1) `cp` the edited client to `/tmp/original.html`, (2) split, (3) `rm -rf elysium-src && cp -r /home/claude/elysium-src elysium-src`, (4) build to a SCRATCH file (`node elysium-build.js /tmp/rebuilt.html`) and `cmp` against the original — never trust the default-overwrite path: a stale fragment dir once produced a byte-identical FALSE PASS against pre-edit content. **Reflects Elysium v2.6.128 (client v2.6.142 / server v2.6.43 / bot v0.6.198 -- v2.6.142: the consume recipe drives the client's mirrors of bot rules (the hold badge) against the real bot; v2.6.141: the consume recipe notes partial 'changed today' zips; v2.6.140: consuming a bot release has its own recipe, "Consume a bot release"; v2.6.139: a TABLE-STATE verb (botcfg) -- see the new recipe "Add a table-state verb"; the room snapshot is ONE pure pair (roomSnap / roomUnsnap); v2.6.128: the Help modal's ids are helpDoc*, a duplicate-id suite pin; HELP INSIDE THE CLIENT 22 Sep: Help… submenu, START-HERE pages embedded as <template>s + embed-help.js; BOT-CARD CONTROLS 22 Sep: card verbs on a bot seat ride the bridge too, see "Referee verbs on a bot seat"; THE PARITY ROUND 21 Sep: hotBridge owns the server's table state (tally / out / VP) -- see the new recipe "Mirror a server handler in hotBridge"; LITE MODE 9 Sep: the Lite/Full interface mode (see the new recipe "Gate a feature by interface mode (Lite/Full)"), the card database on by default, Tournament lock always on (its checkbox left Create game at v2.6.116), the alpha pill on bot seats. Prior rounds in elysium-CHANGELOG.md.)**
+
+## Add a table-state verb (store + relay + late-join replay + snapshot) — v2.6.139 (`botcfg`), the pattern `tally` started
+A piece of state the whole TABLE shares (the bot tempo, the resolver counters) needs five places, and missing one is silent:
+1. **Server merge rule** as a pure function (`botcfgMerge(field1, field2, prev)`): validate each field, an ABSENT or invalid field keeps `prev`'s value (the v2.6.17 rule — partial writes), a table with nothing stored merges onto a named default, nothing valid → `null` (store nothing, send nothing). Read the fields as `m.x` IN THE HANDLER BODY and pass them in — the protocol lint sees `m.x`, not a helper's reads.
+2. **Server handler**: gate (who may), merge onto `room.<state>`, store WITH the setter's name, `bcast` the WHOLE state to everyone incl. the sender (an idempotent echo).
+3. **Late joiners**: `joinReply` sends the stored state right after `joined` — BEFORE the lobby return when the state matters in the lobby (bots are added there).
+4. **Snapshot**: add the field to `roomSnap` AND `roomUnsnap` (re-validate on the way back in), and to the round-trip test's list.
+5. **Twins**: the client's merge (`botCfgMerge`) for its MP handler, and `hotBridge`'s (`botcfgIn`, SELF-CONTAINED — the bot project lifts the literal; `reset()` clears it; the `join` case replays it after `joined`). One suite test drives server + client + bridge with ~400 random partial writes and a coverage guard (enough partial and ignored writes, or the twin proves nothing).
+Then: the protocol doc (§7 + §8 rows, index blocks, the §3 replay note), the handler counts (both suites + `check-versions.js`), and the client's write path (gate with a reason, PARTIAL on the wire, one log line from the sender, optimistic local merge). A default that must be TRUE for the bots needs a seed (the bridge at spawn, the host online) — a value only shown in a panel is not a value the bots got.
+
+## Work in the monorepo (12 Oct 2026)
+The project lives in https://github.com/dtagent2000/VTES-Elysium: `/` = the download (byte copies of releases), `client/` = this project, `client/docs/` = its docs, `bot/` = the bot project (read, never write). One round:
+1. `git checkout -b <topic> main`. Read `client/docs/START-HERE-CLIENT-CHAT.md`, `client/CLAUDE.md`, the newest journal/context/learnings entries.
+2. **Bundle beside the suite:** `cd client && cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .` (gitignored by `client/.gitignore`; never commit a third copy). A bot release reaches us as their PR copying the bundle to the root — the root is the consume source now, a zip is the exception.
+3. Change `client/` only; version = bytes; gates from `client/` (`node check-versions.js` first and last — its final row asserts the root is a byte copy of the halves; outside a monorepo checkout the row is absent).
+4. Living docs in `client/docs/` + `client/CLAUDE.md` + this file. Our replies to the bot project: `client/docs/handoffs/REPLY-to-bot-<date>-<topic>.md`; their asks: `bot/docs/handoffs/HANDOFF-to-main-*.md`.
+5. A release: copy `elysium-vtes-bord.html`, `elysium-server.js`, the start scripts, `START-HERE.html`, `Elysium_-_Host_Guide.docx` from `client/` to `/`; `check-versions.js` green; bump the version block in `START-HERE-CLIENT-CHAT.md`.
+6. Commit (English; what + why; the attribution trailers the session asks for), `git fetch origin main` (rebase if moved), push, `gh pr create --base main`. Johan merges and deploys. Delete `elysium-rooms.json` / `elysium-saves.json` after live probes (gitignored, but a stale one breaks the next probe).
+
+## Consume a bot release (a handoff from Elysium Bots) — v2.6.140
+The bot project ships a zip and a handoff; main consumes, never edits. In this order:
+1. **In the monorepo (12 Oct 2026):** their release is the bundle at the root — copy it beside the suite with the one-liner in "Work in the monorepo" and skip the unpack. For a zip: **Unpack into its own empty directory** (untrusted data) and copy BY NAME beside the suite: `elysium-bot.js`, `elysium-cardfx.json`, `elysium-twd-profile.json`, `elysium-twd-archetypes.json`, the `.js` twins (`elysium-cardfx.js`, `elysium-twd-profile.js`, `elysium-twd-archetypes.js` — the local-file vehicle, v0.6.195+), `test-bot-canary.js` if re-issued, `START-HERE-BOTS.html`. Never blanket-copy (27 July). A zip of 'everything changed today' leaves the unchanged files out — keep the previous release's copies (the twins included) and read the twin test's pair count. Before asking the other project a question, read their released code: it often answers.
+2. **Version and bytes:** `grep -m1 "BOT_VERSION =" elysium-bot.js`; `cmp` each data file against the deployed copy — an identical file needs no purge.
+3. **Run:** the client suite (the `testB` LIVE tests run only with the bot beside — read the summary's skip count: only the gated ones may skip, and a capability gate must say why), `node test-bot-canary.js`, `node elysium-soak-hotseat.js --control`. The suite's twin test checks each `.js` twin against its JSON.
+4. **Embed their guide:** `node embed-help.js bots START-HERE-BOTS.html`, then `--check` (verbatim — their prose is theirs).
+5. **Their asks:** build main's half, each pinned by a test that FAILS on the previously delivered client; check every claim about the client against the source first (their 'check on your side' items have found real bugs: v2.6.140's steal read-out). **Mirrors (v2.6.142):** where the client mirrors a bot rule (the hold badge `hotHoldBy` ↔ the bot's `_holdBy`), read their guide and changelog for that rule, then drive the real bot and the mirror through the same inputs in a LIVE test (`v2.6.142 LIVE`). A mirror tested only against itself stayed green for a month while the rule moved.
+6. **Record:** PROJECT-MANIFEST §E2 (release, data files, twins, what ran beside the suite), the CHANGELOG's bot section, the runbook's §3b if a deploy artifact changed, and `REPLY-to-bot-<date>-v<bot>.md` (what was verified with numbers, what main changed, findings for them, open decisions for Johan).
+7. **Deploy line:** client purge (+ server restart if srv changed); the bot files beside the server — purge only the URLs whose bytes changed; the `.js` twins into the download bundle (the server never serves them).
+
+## Add or change a combat-helper control (v2.6.129)
+
+The combat helper is the `cmb*` block (search "Step-driven combat helper"). One control = one function with TWO entry points:
+1. **The function** (`cmbStrike` / `cmbManeuver` / `cmbPress` …): take the vampire `c` (default `cmbMyCard()`), ask any prompt FIRST (a cancelled prompt must open nothing), then `const side=cmbEnsure(c)` (opens combat + announces `c` if needed; null when the helper is off), then `log(CMB_LINE.x(...))`, then — only if `side` — `cmbSet({...})` with the fields that changed (a PARTIAL tally write). Auto-advance the stepper forward only (`if((avr.ph|0)<N) f.ph=N`).
+2. **The menu row** in `cmbMenu(c)` (`noUndo:true`; `disabled` + `title` when the state forbids it) and **the panel button** in `cmbPanelCtl` (own side only, for the step it belongs to). Amounts come from `cmbNums(title, fn)` (1 2 3 4 N…), never a free-text prompt, and lines carry the EFFECT, never a card name (v2.6.134). The menu system has THREE levels: `Combat ▸ row ▸ number` is the deepest a right-click row can go.
+3. **A new log line** goes into `CMB_LINE` (pure builder), into PROTOCOL §12, and into the `testB` that runs the released bot's regexes over the builders; a new shape the bot does not parse yet goes into the bot handover spec.
+4. **A new shared field**: add it to `AVR_CMB0` AND `tallyCombatMerge` (client) AND `TALLY_CMB_KEYS` / `TALLY_CMB0` / `tallyCombat` (server) AND the PROTOCOL §7/§8 tally rows. The twin test and the protocol lint both fail until all four agree. Decide per field whether a NEW ROUND clears it (most do) or keeps it (`ea`/`eb`); that decision lives ONLY in the merge functions. `cmbNewRound` calls `tallyCombatMerge`, so never reset fields by hand (v2.6.135).
+5. **Counting rules** (dodge, combat ends vs every-round damage, prevention, aggravated) live in `cmbSideDamage` / `cmbDealt` / `cmbEnvOf` / `cmbDodged` — the ONE place the taken line, the read-out, the history and the totals read. Never add a second sum (v2.6.136).
+6. **Anything that must happen on a step transition** goes into `cmbWatch(prev, cur, resolved)` — it sees local steps, menu actions, remote tallies, open, clear and resolve. Detect STATE ("the damage round is behind us"), not one intermediate step: a sender's debounce can swallow it (v2.6.130).
+8. **A real-bot combat (v2.6.133):** `v2.6.133 LIVE` shows the recipe. Seat the real bot through `HB.dialFor`, give Lisa a ready vampire and wait until `b2._seatOfVamp('Lisa')===1`, move a bot crypt card from `b2.unc` into `b2.board` as ready, set `net.turnSeat` + `b2._actingVamp` + `b2._lastBlockerName`, then `await b2._resolveCombat(bv,'Lisa')` while a loop plays Lisa's side through the `cmb*` functions. Use `phaseSecs: 1` to keep it fast.
+9. **Resolver lifecycle (v2.6.137/138):** shared resolver state is closed on the WIRE by one owner — the actor when its action resolves (`resolvePlayedActions` → `tallySendNull`), the SERVER at every turn change (`turnTallyClear` before each `turn` broadcast, srv-2.6.42; the client's own `tallyStaleClose('turn', send)` stays for older servers), a new action for a finished combat (`actStart`). A local-only clear leaves the server and the bots with stale state. The Block counter is opened by the BLOCKER; anything the ACTOR must add (the undirected +1) is written by the actor when the counter appears (`blockSeedUndir`, local open and MP handler).
+7. **UI touch-points (v2.6.132):** a combat opened from OUTSIDE the Played window must pin it (`cmbEnsure` does); the tutorial step `sh-combat` describes the panel, so update its text when the panel changes.
+6. **Helper-off check (v2.6.131):** every line a bot depends on must also be writable with the combat helper OFF (Classic / tournament) — from the Combat menu, as log lines only. A new automatic line needs a helper-off menu twin shown only while `!hx('resCombat')` (the `cmbTaken` pattern). Test with `conv.tournament = true`.
+
+B1 note: the splitter writes to `/home/claude/elysium-src`; link it (`ln -sfn /home/claude/elysium-src elysium-src`) and build to `/tmp/rebuilt.html`, then `cmp` — never trust a `cmp` after a build that printed an error.
+
+## Update the embedded Help pages (Menu → Help → Bots / Local server) — v2.6.127
+
+The two pages live INSIDE the client as `<template id="helpDocBots">` / `<template id="helpDocServer">`, each around a marker pair `<!-- @@HELP:<key> -->` … `<!-- @@/HELP:<key> -->`. Never edit between the markers by hand.
+
+1. **Bots page (the bot project's release):** put their re-issued `START-HERE-BOTS.html` beside the client and run `node embed-help.js bots START-HERE-BOTS.html`. Their text is embedded verbatim (ids prefixed `hb-`, their `<script>` dropped). Do NOT edit their prose here — ownership rule.
+2. **Local server page (ours):** edit `help-local-server.html` (the authoring source, in the project), then `node embed-help.js server help-local-server.html`. Check every fact against `elysium-server.js` constants / CLI flags and the client's dialog names while you write — the page is the converged replacement for START-HERE + Host Guide and says nothing the code does not do.
+3. **Design changes:** the stylesheet is `<style id="helpCss">` in `<head>`, every rule scoped under `.helpDoc` (or `#helpModal` / `body.helpDoc` / `html.helpPage`). Mirror the bot project's stylesheet changes by hand; re-state any client selector that would reach the page (`main`, `header`, `.modal h3`, `.modal .note` are already re-stated). A suite test refuses an unscoped rule.
+4. **Verify:** `node embed-help.js --check bots START-HERE-BOTS.html` / `--check server help-local-server.html` (the drift test in `test-client-logic.js` does the same — the server file is REQUIRED beside the suite, the bots file optional), then the normal gates. B1 is unaffected (templates sit outside `<script>`), but the client grows by the pages' size — expect the byte count to move.
+5. **Browser check:** Menu → Help → Bots / Local server; the sticky nav marks sections while scrolling the modal; a `#anchor` in a closed `<details>` opens it; `↗ New tab` opens the standalone page (Blob URL) and its links work; Esc / Close leave the address bar untouched.
+
+Mint ids as `helpDoc*` and grep before adding any new id: `$()` returns the first match and a duplicate wires a listener to the wrong element silently (v2.6.128 -- the suite now refuses duplicate ids in the static markup). Never spell a bare `<script>` / `</script>` in the client's own script (even in a string) — `helpStandalone()` writes `'<scr'+'ipt>'` for exactly that reason.
+
+## Add or move a Settings row — v2.6.86
+
+The modal has six sections (Table, Play helpers + the host policy box, Files & storage, Sound, Shortcuts, Fixed controls); each of the first four ends with `<button class="btn set-advbtn">Advanced ▸</button>` immediately followed by `<div class="set-adv" hidden>` (setAdvToggle reads `nextElementSibling` — never put anything between them).
+
+1. A row is `<label class="set-row"><span class="sl">…</span><input …></label>` (or a `div` with a select/buttons). The `.sl` text is ONE line ≤ 100 characters stating the effect; anything longer goes in a `title` on the `.sl` span. No version history, no 'Local only' (the modal's top note says it once). The suite fails on a description over 100 characters.
+2. Common = something a player touches in their first sessions; everything else goes inside the section's `.set-adv` box.
+3. Keep the control's id; the wiring (`addEventListener` by id, `openSettings()` sync) never moves. If you add a NEW control, add its id to the v2.6.86 suite's id list.
+4. Host-only rows live in `#helperHostBox` (JS shows it for hosts); banner rows (`#helperBanner`, `#imgProgressRow`) keep their ids and JS-controlled display.
+5. **v2.6.91 — the header's '(custom)' tag and Reset:** a new PREFERENCE that lives in `conv` must be added to `SETTINGS_CONV_KEYS` (and its live-apply line, if it has one, to `settingsApplyProfile`), or the header will not see it and Reset will not restore it. Helpers (`HELPER_DEFS`), shortcuts (`ACTIONS`) and sound channels (`SFX_CHANNELS`) are picked up automatically. Data controls (downloads, caches, storage rows) are NOT part of the profile — leave them out. The v2.6.91 suite pins the profile shape.
+
+## Gate a feature by interface mode (Lite/Full) — v2.6.74
+
+The mode is `conv.uiMode` ('full' | 'lite'); `uiMode()`/`uiLite()` read it (no overrides since v2.6.75). Presentation = `body.lite`, applied by `applyUiMode()` (and once inline right after loadConv, before the first paint).
+
+1. **Hide the entry point with CSS, scoped to the class.** Full-only element: add its id to the `body.lite #… {display:none !important}` rule (or give it a class and extend the rule). Lite-only element: class `liteOnly` (hidden by `body:not(.lite) .liteOnly`). Inside `#mpModal`, use the halves: `.mpFull` (never in Lite), `.mpCreateOnly` / `.mpJoinOnly` (per `data-mp`), `.mpGs` (folded behind Game settings in Lite's Create). Pair a `.mpfield` with its `.mpdesc` — the grid is field | desc.
+2. **Gate the function behind it with `uiLite()`** — `if(uiLite()){ toast('… is available in Full mode'); return; }` at the top of the opener (openDeckLab / openOffline are the pattern). Hidden buttons are not a gate: the menu, deep links and the tutorial reach functions directly.
+3. **Menu rows:** in the `#btnMenu` handler, branch on `_lite`; a greyed row is `{label, disabled:true, title:'… available in Full mode'}` (`renderItems` sets `title`; `.mi.disabled` keeps pointer events so the tooltip shows).
+4. **Hidden create fields need values.** Anything Lite hides in the Create dialog is still READ by `mpCreate()` — set it in `mpLiteDefaults()` (never leave a stale Full value behind a hidden field). Since v2.6.80 the dialog has two halves in BOTH modes (`data-mp`) and two folds (`.mpGs` Game settings, `.mpSrv` Local server, opened via `mpFold('gs'|'srv', true)`); a field that belongs to one half carries `.mpCreateOnly` / `.mpJoinOnly`, a Full-only one `.mpFull`, a folded one `.mpGs` / `.mpSrv`. A tutorial step that targets a folded field opens the fold in `onEnter`.
+5. **The tutorial audit.** If the element is a tutorial target, nothing to do — opening the tutorial from Lite performs a real switch to Full (`uiSetMode('full',{force:true,quiet:true})` in `openTutorial`, v2.6.75) and the player stays there; the suite asserts the switch is in `openTutorial` and that no `uiLift(` remains. A Lite-only element is therefore never shown during a tutorial.
+6. **Settings the mode should default differently:** add the key to the trio in `uiProfPick` + `UI_PRESET` + `uiProfileSwap` (currently anim / pco / sfxVol) — they are remembered per mode.
+7. **Tests:** pure functions first (`uiFirstRunMode`, `uiProfileSwap`, `mpLiteAddr` are the shape); a source-level assertion for the CSS gate + the dialog classes (the suite walks them); `loadClient(CLIENT, {storage:{'elysium.convenience': JSON.stringify({…})}, location:{protocol, host}})` to boot as a returning / first-time visitor.
+
+## Edit or add a TUTORIAL chapter
+
+Checked against the v2.6.52 online resync. The tutorial is prose that ships, so it drifts like any
+other doc — and until v2.6.52 nothing in the gate chain read it.
+
+1. **`TUT_SECTIONS`** — the chapter object: `name` and `desc` (both shown in the picker), then
+   `steps:[]`. A step is `{ id, target:()=>..., place, text, advance:{on:'manual'} }`; optional
+   `scroll`, `clickThrough`, `freeInteract`, `allowSkip`, `skip`, `gate`, `onEnter`, `onExit`.
+2. **`TUT_ORDER`** — append the key, or the chapter exists but is never listed. The picker numbers
+   sections from this array.
+3. **`TUT_ADVANCED`** — add the key for anything optional. Advanced chapters are always unlocked
+   and `tutNextReady` skips them, so they are never offered as an automatic "continue?".
+4. **`tutLaunch`** — check the prefix routing (`secId.indexOf('online')===0` etc.); a new key that
+   matches no branch falls through to a bare `tutStart` with no view set up.
+5. **Targets must exist.** `target:()=>$('#foo')` with a missing `#foo` does NOT skip unless the
+   step carries `allowSkip` — it renders a bubble with no spotlight. Grep the id before trusting it.
+6. **Fixtures** (`tutDemoLobby` and friends) feed the REAL renderer, which keeps layout honest but
+   not perspective: check whose chair the fixture puts the reader in.
+7. **Gate:** `node test-client-logic.js` now sweeps every `$('#id')` target across all chapters,
+   validates the registry, and asserts both demo-lobby roles. Add a fixture, add its assertion.
+8. Then the usual: `node --check` on the extracted script, B1 roundtrip byte-identical, bump
+   `VERSION`, resync the PROTOCOL header (check-versions gates it even for text-only releases).
+
+## Add a table-wide option the HOST chooses at creation
+
+Checked against the v2.6.51 Helpers choice. The wire may already be done — look before building.
+
+1. **Check whether the field already exists.** `grep` the option name in `elysium-server.js` and
+   `ELYSIUM-PROTOCOL.md` first. `helperPolicy` was already accepted on `create` and already
+   documented; the entire delivery was client-side, with no server bump and no restart.
+2. **One mapping function, not scattered conditionals.** `helperPolicyFor(mode)` turns the named
+   UI modes into the existing state shape. The mode STRINGS then live in exactly two places: that
+   function and the `<select>`. Nothing downstream learns a new vocabulary.
+3. **Read the choice at CREATE time, not at use time.** The dialog may be closed by the time a
+   deferred handler runs — stash it (`net._createHelpers`) and clear it wherever the room is left,
+   alongside the other per-room fields.
+4. **Build the offline sibling in the same pass.** Hotseat has no policy channel, so name the
+   third mode for what it actually is there ("Your local settings", not "Player's choice"), and
+   apply it SESSION-ONLY — no `saveConv`, no `saveHelper`.
+5. **If a control changes id or element type, grep the retired id.** The tutorial referenced
+   `#offTournament` at four sites, two calling `.checked=false`, which fails silently on a
+   `<select>`. `grep -n oldId client.html` after the edit, every time.
+6. **Verify the old default before trusting the comment beside it.** See the learnings entry: the
+   "default tournament for new rooms" fallback had been unreachable for the whole hosting track.
 
 ## Skill: Batch patching — every anchor matches the ORIGINAL file, never an earlier rep's output
 The count-assert pattern (`assert s0.count(old)==1` per rep, apply all at the end) protects against partial writes — but it counts against s0, the untouched original. Twice this project has tripped on an insert whose anchor only exists AFTER another rep in the same batch runs (v2.6.8: a replacement text containing the bare line a later counter hunted; v2.6.13: an insert anchored on a rename's output). Rule: if edit B's anchor depends on edit A's output, merge A+B into ONE rep against original text. A batch is a set, not a sequence. Corollary: after any assert-abort, verify the file is UNWRITTEN (VERSION grep) before re-running — the write-after-loop guarantees it, but confirm rather than assume.
@@ -48,6 +171,8 @@ A setting that lives in the player's browser and controls a client-side behaviou
    ```
 
 7. **Use the setting** — gate your feature on `conv.myField` at its call sites.
+
+7b. **Register it for the Settings header + Reset (v2.6.91)** — add the key to `SETTINGS_CONV_KEYS`; if the change listener does more than `saveConv()` (a repaint, a reload of something), add that same call to `settingsApplyProfile` so Reset applies it live. Its default is read from `CONV_DEFAULTS` (the frozen literal) — no extra registration needed.
 
 8. **Verify** — syntax check + `node test-client-logic.js` (16/16).
 
@@ -274,6 +399,22 @@ function myFeature(targetSeat, data) {
   }
 }
 ```
+
+### Table-scoped override of a persisted setting (v2.6.92)
+
+Never write a `conv` key straight for 'the table's duration': `conv` is saved whole, so the next `saveConv()` persists the override. Use the pair -- `hotTournSession(val)` (snapshot once into `hotTournBefore`, then set) on entry, `hotTournRestore()` in `leaveHotseat` -- and mirror a deliberate Settings edit of that key into the snapshot while an override is in force (see the `#convTournament` handler). For a NEW table-scoped key, copy the pair with its own `*Before` variable, or prefer a session FLAG that `hx()`-style readers consult (the `helperAllOn` pattern) so the persisted object is never touched. The suite counts the bare `conv.tournament` writes (5).
+
+### Referee verbs on a bot seat (v2.6.97)
+
+A bot owns its own pool, board and out state and republishes them, so a client-side edit to the stored pub evaporates on its next push. Any seat-level referee verb aimed at a bot must travel to the bot: `hotBotSeat(seat)` (roster bot AND connected on the bridge AND `localTable`) then `hotBridge.toBot(seat, {...})`. The bot already has `forceSetPool` and `forceOust`. If a new verb's value triggers a transition inside the bot (pool 0 -> self-oust), invoke the transition's own path instead, so the table's bookkeeping stays with one owner. Card-level verbs follow the SAME rule since v2.6.126: `hotCtrl` opens with `if(hotBotSeat(seat))` and sends `{t:'ctrl', cid, act, from}` (srv 927's shape) over the bridge, then returns — the bot's push is the truth; `ctrlOptimistic` gives instant feedback. The client is the author of the stored blob ONLY for human seats (the old `hotCtrl` body, owner-checked). A bot-only verb (`burn`) is sent from a bot-seat-only menu row through the shared `_do`, so one row works online (`ctrlOnline`) and offline (`hotCtrl`). To add a bot-card verb: (1) confirm the bot's `ctrl` handler accepts it and note the bot version, (2) add the row under `(_mine||_botSeat) && (_hs||_on)`, gated `_botSeat` if bot-only, (3) teach `ctrlApply`/`ctrlOptimistic` the optimistic shape, (4) mention it in ELYSIUM-PROTOCOL.md's two `ctrl` rows, (5) a `parityTable` test asserting the wire shape + a `testB` LIVE test against the real bot.
+
+### Online bots (v2.6.99, cap fixed in v2.6.102)
+
+A bot online is just another WebSocket client: `netBotDial()` opens a second socket to `net.addr` (honouring `net.sec`), the bot joins `net.room` with `net.pass`, and the host's client holds that socket — so seating it is `bot.send({t:'seat',seat:N})`, the same verb a human uses, and removing it means closing the socket as well as `kick`. None of the hotseat bridge is involved. The table ceiling is `MP_MAX_PLAYERS` (6), a lockstep mirror of the server's `MAX_PLAYERS` — NOT the lobby snapshot's `seats`, which is `room.players.length` and only the seat-picker's range. Gate additions on `netBotWhy()`; anything that cannot change after room creation (board mode) must be a gate, anything that can (helper policy) should be applied dynamically. Bots live in the host's tab: tear them down wherever the room ends.
+
+### The hotseat bus (v2.6.95, board added in v2.6.98)
+
+Online the server broadcasts every public line to every other player; offline `hotFanOut(msg, fromSeat)` is that bus. The human's own public lines ride `mpRelay` (so `log(msg, localOnly=true)` — which is how bot-injected lines are rendered — can never bounce back out); a bot's log/say/chat/fx fans out to the OTHER bot seats from `_fromBot`, always excluding the sender. If you add a new message shape that a bot both sends and reads, fan it out there too, or it will work online and do nothing at a hotseat. Board pubs ride it too (v2.6.98): each bot's pub fans out to the other bots, and the active human's board goes to every bot seat from `schedulePush`/`pushNow` on the same 600 ms debounce, seeded at `startHotseat`. ONE deliberate exception: a bot's `say` index 0 ("Hold on…") is not relayed to other bots — see the learnings entry. Offline chat rides the same bus and is the channel the bots' opening line advertises.
 
 ### Hotseat commit pattern
 
@@ -1386,3 +1527,70 @@ When bot A needs to react to something bot B (or a human) did on THEIR turn:
 3. **Run once per own turn** — hook into `_playTurn` early (after `_recomputePhaseActs`, before any phase logic).
 4. **No new wire verb needed** — `this.table[seat].pub.cards` is already relayed by the server for every seat's board push, the same data `_inPlayNorms` already reads.
 
+## Skill: HTTP-surface diagnostics + the error-telemetry toolkit (v2.6.55 / srv-2.6.25–26)
+
+- **`diag-deck-lifecycle.js`** — standalone raw-WS probe that spawns the real server (isolated
+  tmp data-dir + random port) and walks five deck-lifecycle scenarios end to end. The template
+  for any "did the server eat it?" question.
+- **Format battery** — see §C third bullet; the harness pattern lives in the B-53 addendum §7
+  and is rebuilt in ~40 lines whenever a parser is under suspicion.
+- **`test-error-endpoint.js`** — the live-smoke pattern: two real server spawns (isolated tmp
+  data-dirs, random ports), 15 assertions end to end over real HTTP (intake, rate limit,
+  oversize, pull route, maintenance control). The template for testing any HTTP surface.
+- **`elysium-error-digest.js`** — zero-dep ops companion; `--dry-run` doubles as its test
+  harness (the four-mode dry-run matrix is the verification ritual).
+
+## Recipe: Mirror a server handler in hotBridge (the v2.6.122 parity pattern)
+
+When a bot sends (or needs) a verb the hotseat bridge does not relay, the offline bot plays a different game from the online one. Steps:
+
+1. **Read the server handler first and list what it READS from the room**, not only what it sends (`room.tally`, `p.out`, `p.vp`, `nextLiveSeat`). That state must live ON `hotBridge` (`tally`, `_out`, `_vp`), never in a client global -- the bridge is the server here.
+2. **Keep the relay self-contained.** The bot project's harness lifts `const hotBridge = {...}` and `function hotFanOut` VERBATIM with no client behind them. Put wire logic in bridge methods (`tallyIn`, `predOf`, `rosterMsg`, `pushRoster`); call client code only through `typeof fn === 'function'` guards inside try/catch (`hotBotOusted`, `hotGivenToHuman`, `MP_HANDLERS`). Verify by lifting it yourself: slice the two constructs out of the HTML into `new Function` with only `localTable` + `VERSION` defined and drive `_fromBot` with fake seats.
+3. **Match the server's recipients exactly**: `bcast(room, out)` with no `except` = every bot seat INCLUDING the sender (`botSeats().forEach`), `bcast(..., conn.sock)` = `hotFanOut(msg, seat)`, a single `wsSend` = `toBot(seat, ...)`. The human is reached through the SAME `MP_HANDLERS.x` an online broadcast takes.
+4. **Give the human's side the twin.** Every `if(inRoom()) mpSend({t:'x'})` site needs an offline branch through one helper that self-gates on `hotBotsSeated()`, so a human-only hotseat stays byte-for-byte what it was. Do not echo the human's own message back into `MP_HANDLERS` unless the online echo is provably idempotent.
+5. **Cross-seat resources: three branches.** Bot seat -> the wire verb (its blob is a placeholder); ACTIVE human -> live `state`; stored human -> blob + pub.
+6. **Probe the ORDER live.** An in-process peer may answer INSIDE your `toBot()` call (the bot's send queue drains synchronously while it has tokens). Log `onEvent` on a real bot and assert the event order and the ABSENCE of the bot's fallback event -- a correct outcome can be the other side's safety net at work (v2.6.123).
+6b. **If the bot already carries a safety net for the missing relay, read its de-duplication and order your sends so both orders are safe**; assert the single effect in a LIVE `testB`.
+7. **Tests:** fake seats (`HB.seats[k]={name, cb:{msg: j=>got.push(JSON.parse(j))}}` + `HB._fromBot(k, HB.seats[k], msg)`) run without the bot file; one LIVE `testB` with real bots. Destructive run with `timeout` -- a parity bug can be a hang.
+8. No wire change -> protocol header note only; PROJECT-MANIFEST §E2 if the consumed bot version moves.
+
+## Recipe: Soak a hotseat change (elysium-soak-hotseat.js)
+
+Run it whenever `hotBridge`, `hotFanOut`, `hotRunBotTurns` / `hotAwaitPass` change, when a relay is added or a filter removed, and when a new bot release is consumed.
+
+1. Put the RELEASED `elysium-bot.js` beside the tool, or `--bot <path>` into the bot project; `elysium-cardfx.json` is picked up from beside the BOT file. Without it nobody is ousted and the tool says so; with it (verified 21 Sep: 7 tables, 9 ousts, 0 stuck, ~7 min) the oust path is exercised.
+2. **Control first:** `node elysium-soak-hotseat.js --control > out.txt 2>&1; echo $?` -> must be 0 ("the trip-wire FIRED"). Exit 2 with *CLIENT FAULT* = `hotAwaitPass`'s idle clock is broken; with *NOTHING FIRED* = the tool is. Never read `$?` after a pipe.
+3. **Battery:** about 15 minutes (a 2-bot table of 10 rounds is ~110 s at `askSecs 1`), i.e. longer than one 300 s tool call. In the sandbox a plain `nohup ... &` DIES with the tool call that started it -- detach properly: `setsid nohup bash -c 'node elysium-soak-hotseat.js > battery.txt 2>&1; echo exit=$? >> battery.txt' >/dev/null 2>&1 </dev/null &`, then poll the file with `sleep`. One table: `--decks hacking,sewer --pool 14 --rounds 14`.
+4. Read the summary line WITH its note: `0 ousts` means bounty / roster / the sweep skipping a fallen seat were not exercised.
+5. A STUCK table prints the parked bot's `status()` -- start there (what it waits on, `pausedBy`, timer). Reproduce with the same `--decks/--pool`.
+6. Quote it beside the bot project's `elysium-bot-hotseat.js` numbers, never instead of them: theirs lifts the bridge and imitates the sweep, ours runs the sweep without a database.
+7. Changing the tool itself: re-run the control against a MUTANT client (`hotAwaitPass`'s comparison -> `return;`) and expect exit 2, not a hang.
+
+## Recipe: exclude elements from a whole-surface gesture (wheel / drag on #board)
+
+*Added v2.6.103 (14 Sep 2026), from the pool-globe zoom.*
+
+`#board` owns two gestures that both mean "act on the bare table": the wheel (zoom
+toward the cursor) and pointerdown (pan). Anything drawn on top of the board is either
+**chrome** (it must swallow the gesture) or **surface** (it must pass it through).
+
+1. **Never encode the rule as "every child stops propagation."** That is an implicit
+   contract with one enforcement point per child and no way to read it whole. Two of nine
+   did not hold and the bug was invisible until a user scrolled over the pool globe.
+2. **One constant, both handlers.** `BOARD_CHROME` (a selector list) + `isBoardChrome(el)`
+   (`el.closest(BOARD_CHROME)`, tolerant of `null` and of targets without `closest`),
+   declared beside `l3on()` so it is initialised long before either handler can fire.
+   Both handlers open with `if(isBoardChrome(e.target)) return;`.
+3. **Controls in, surfaces out.** In the list: `.card`, `.l4globe`, `.l4pbtn`, `#edge`,
+   `#poolWrap`, `#dockPool`, `#z-hand`, `.zone.pile`, `#phases`, `#l2dock`, `#l2dockbg`,
+   `#dockLog`, `#l3zoomCtl`, `#holdBadge`. Deliberately NOT in it: `#z-ready`,
+   `#z-uncontrolled`, `#z-torpor`, `.l3mat`, `#l3stage` — in L3 those are most of the
+   viewport, and blocking them leaves nowhere to zoom from.
+4. **Add the child-level `stopPropagation` anyway**, as belt-and-braces, and keep every
+   wheel *consumer* consistent even outside `#board` (`#phases`, the resolver counters).
+5. **Pin both halves in the suite.** `isBoardChrome` is pure and testable with a fake
+   `{closest}` object — assert the chrome list AND the surface list. Add a source census
+   that counts every `addEventListener('wheel'` and requires `stopPropagation()` in all
+   but one (the board's own zoom), so a new listener has to declare its side of the rule.
+   Match on `stopPropagation()` with the parens: a prose comment containing the word will
+   otherwise pass the census.
