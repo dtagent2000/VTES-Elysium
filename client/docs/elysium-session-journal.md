@@ -1,3 +1,101 @@
+## [GRUPPEN KAN ZONERNA] — v2.6.145: vampyrer i handen, bibliotekskort i torpor (12 oktober 2026, sen natt)
+
+Johan: "vi kör dem absolut" om granskningens två fynd. `zoneRefuses(c, zone)` — torpor och uncontrolled tar bara
+kryptkort, handen bara bibliotekskort — anropas nu av enkeldraget, gruppdraget och gruppkommandot. Gruppdraget
+hade en egen lista med två av de tre zonerna; handen saknades, så en markering med vampyrer som släpptes på
+handen hamnade där med blod och lås nollade. "Send to torpor" (menyn och G) saknade spärren helt.
+Matrisen (60 celler, riktiga musdrag, båda bordstyperna): **0 skillnader** mellan ensamt och grupp.
+
+**Spelarens följdfråga (Kalesoner, via Johan): platser på fria bordet.** "Eftersom det inte verkar finnas ytor för
+spelarna började alla flytta globerna direkt, samma med kryptkorten" — han visade Lackeys upplägg (1:a uppe till
+vänster, 2:a uppe i mitten, 3:a uppe till höger, 4:a nere till höger, 5:a nere till vänster). Tittat i en
+femspelarstart i webbläsaren: globerna ligger i en liten ring mitt på bordet, platsnumret är en liten stolsymbol,
+och ett kryptkort som dras med dubbelklick hamnar på SAMMA mittpunkt för alla platser. Johan har svarat honom
+att numret och standardpositioner kommer. **Förslag, inte byggt:** (1) standardposition längs bordskanten i
+platsordning medurs, fortfarande flyttbar; (2) ordningstal på globen ("1st"); (3) dragna kryptkort landar bredvid
+ägarens glob. Frågor till Johan står i chatten (uppställning för 2/3/4/6 spelare, och dockan som täcker
+nederkanten).
+
+**Verifierat:** syntaxrent, 256/256 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.144: 1 röd = den
+nya), canary 57/0, dispatch 60/0, protokoll 6/0, endpoint 24/0, soak-kontroll exit 0, B1 byte-identisk 1 496 824,
+embed --check, check-versions grön.
+**Väntar på live-test:** att korten som vägras i ett gruppdrag glider tillbaka snyggt (tillståndet är mätt,
+rörelsen inte sedd), online och pekskärm.
+
+## [EN REGEL FÖR ETT OCH FÖR MÅNGA] — v2.6.144: gruppdraget vände upp kryptkort på fria bordet (12 oktober 2026, sen natt)
+
+Johan undrade hur spelarna lyckats vända sina fyra kryptkort av misstag, när det alltid fungerat för honom. Svaret
+låg i *hur korten kom ut*: Johan klickdrar dem från leken (de hamnar i `ready`), spelaren dubbelklickade på leken
+(de hamnar i `uncontrolled`, som på fria bordet saknar ram och alltså inte syns). Ett ensamt drag därifrån behåller
+baksidan — den regeln har ett undantag för fria bordet — men gruppdraget hade en egen kopia av regeln utan
+undantaget. Återskapat med riktiga musdrag i headless Chromium: fyra dubbelklickade kort, ett flyttat ensamt
+(baksidan kvar), sedan alla fyra markerade och dragna (de tre som låg kvar i uncontrolled vändes upp).
+
+**Byggt:** `readyDropFace(c, from)` — regeln har fått ett namn och båda vägarna anropar den.
+
+**Johans följdfråga: finns det fler sådana?** Matris i webbläsaren: fem sorters kort × alla släppmål × ensamt och i
+grupp, på båda bordstyperna (60 celler). Efter fixen skiljer sig grupp från ensamt bara i de 8 cellerna "släpp på
+handen". Två fynd, **inte fixade** (Johans beslut):
+- Ett gruppdrag till handen lägger kryptkort I handen och nollar blod och lås. Ensamt vägrar draget.
+- "Send to torpor" för en markering (menyn och G) skickar bibliotekskort till torpor. Ensamt erbjuds det bara
+  kryptkort, och dragen vägrar.
+Samma klass alla tre: en gruppväg med en egen, tunnare kopia av enkelkortets regel.
+
+**Fälla i verktyget:** första matriskörningen sa att två kortsorter inte gick att dra på fria bordet. Muspekaren
+vilade uppe i mitten och öppnade Played-fliken över korten. Parkera pekaren på tom filt.
+
+**Verifierat:** syntaxrent, 255/255 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.143: 1 röd = den
+nya), canary 57/0, dispatch 60/0, protokoll 6/0, endpoint 24/0, soak-kontroll exit 0, B1 byte-identisk 1 496 059,
+embed --check, check-versions grön. Musdragen omkörda på den fixade klienten: baksidan kvar i båda fallen.
+**Väntar på live-test:** samma drag online med en motspelare som tittar (vad de ser av korten), och på pekskärm.
+
+## [BORDET LYSSNAR] — v2.6.143: advanced-korten, D20 i lobbyn, en pin-knapp man ser (12 oktober 2026, natt)
+
+En spelare skrev efter sin första kväll: importen vägrade advanced-kort, lobbytärningen är en D6, platsvalet var
+oklart, handen fälldes ihop och ingen såg någon pin, poolmarkören flyttade sig, tre av fyra Condemnation i
+öppningshanden, och fyra kryptkort som vändes av misstag. Johan: dekonstruera och se vad som går att laga.
+
+**Först mätt, sedan byggt.** v2.6.142 kördes först (248/0). Varje punkt lästes i koden och de som gick att
+återskapa återskapades:
+- *Advanced-korten:* alla exporter skriver "Kemintiri (ADV)"; KRCG:s namn är "Kemintiri (G2 ADV)" och
+  exportformen står bara i `name_variants`, som v3-parsern aldrig läste (den levande filen är fortfarande v3).
+  65 av 65 okända, och "Legal cards only" är på från start → tvärstopp. Återskapat i headless Chromium genom den
+  riktiga importrutan med KRCG:s fil: v2.6.142 vägrar, v2.6.143 sätter 72 kort på bordet.
+- *Fel text på rätt kort (ingen hade rapporterat det):* `_name` delas av basvampyren och dess advanced-version, och
+  av gamla vampyrer och deras nytryck i ny grupp. Sist-vinner gav det nakna namnet till advanced-kortet för 63 av
+  65 par och till nytrycket för ett dussin (Theo Bell, Mithras, Queen Anne…).
+- *Tärningen:* knappen skickade aldrig `sides`, serverns reserv är 6. Fyra spelare slår lika i 72 % av fallen med
+  D6, 27 % med D20.
+- *Slumpen:* frisk. Fisher–Yates över kryptoslump med omdragning (ingen modulo-skevhet), samma i klient och
+  server. 900 000 blandningar med produktionsfunktionen och 3 miljoner servergivar följer den exakta
+  hypergeometriska fördelningen. 3 av 4 kopior i öppningshanden ur 90 kort: 1 på 870. En första körning på
+  120 000 givar visade 27 % för få sådana händer (3σ) — större stickprov rättade det; värt att minnas åt båda håll.
+
+**Byggt (Johan: "kör på 1"):**
+- `buildCardIndex(list)` — utbruten ur `processCardData`, ren. Regel: kortets eget namn och dess `name_variants`
+  är starka anspråk och vinner alltid; `_name`/`printed_name` fyller bara ett namn ingen gjort anspråk på, baskort
+  före advanced. Oberoende av filordning (mätt framlänges och baklänges på riktiga filen: 0 fel av 6 551 nycklar).
+  `buildPrecons` listar advanced-kortet som egen rad ("Namn (ADV)").
+- `LOBBY_DIE=20`, `rollLine` (tärningen nämns alltid), `lobbyRollPush` — högerklicksmenyns tärning hamnar nu också
+  i lobbyns lista. Ingen server- eller protokolländring.
+- `#l2dockPin` — en riktig knapp bredvid Hand-etiketten när dockan är öppen; `setDockPin` är enda stället flaggan
+  sätts. Att lossa via knappen stänger inte dockan, den lämnas åt hover-regeln; bakgrundsklicket fungerar som förr.
+  Körd med riktig mus i Chromium på båda bordstyperna och granskad på skärmbild.
+
+**Designval:** bildnamnen rördes inte — KRCG verkar servera alias-filer för varianterna (`…adv.webp` svarar som en
+känd bild, ett påhittat namn som 404), men det är en slutsats av svarsklasser, inte en sedd bild. Ägarregeln gjordes
+generell (starkt/svagt anspråk) i stället för ett specialfall för ADV, eftersom nytrycken hade samma fel.
+
+**Inte byggt, Johans beslut (runda 2):** på fria bordet vänder ett GRUPPdrag av uncontrolled-kort upp dem
+(`groupDrop`), medan ett enkeldrag behåller baksidan — troligen så de fyra kryptkorten avslöjades (läst, inte
+kört); handen öppen som standard; en hostknapp "Slumpa platser" (kräver servern). Poolgloben: inte utredd.
+
+**Verifierat:** syntaxrent, 254/254 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.142: 6 röda = de
+6 nya), canary 57/0, dispatch 60/0, protokoll 6/0, endpoint 24/0, soak-kontroll exit 0, B1 byte-identisk
+1 496 021, embed --check båda sidorna, check-versions grön inkl. rotgrinden.
+**Väntar på live-test:** pin-knappen på pekskärm; att advanced-bilderna faktiskt laddas från KRCG; lobbylistan med
+flera riktiga klienter.
+
 ## [INGET AV ANDRAS I REPOT] — vtes.json ut, START-HERE v1.9 (12 oktober 2026, ingen kod)
 
 Inventeringen av roten efter mergen: bara våra egna filer hostas (24 st), och allt guiderna namnger finns där.

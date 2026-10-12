@@ -350,7 +350,15 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   get cardInfo(){ return (typeof cardInfo!=='undefined')?cardInfo:undefined; },
   get cardImageNames(){ return (typeof cardImageNames!=='undefined')?cardImageNames:undefined; },
   get precons(){ return (typeof precons!=='undefined')?precons:undefined; },
-  get catalog(){ return (typeof catalog!=='undefined')?catalog:undefined; }
+  get catalog(){ return (typeof catalog!=='undefined')?catalog:undefined; },
+  buildCardIndex: (typeof buildCardIndex!=='undefined'?buildCardIndex:undefined), cardIsAdv: (typeof cardIsAdv!=='undefined'?cardIsAdv:undefined),   // v2.6.143: who owns a bare card name
+  rollLine: (typeof rollLine!=='undefined'?rollLine:undefined), lobbyRollPush: (typeof lobbyRollPush!=='undefined'?lobbyRollPush:undefined),       // v2.6.143: the lobby's roll list
+  get LOBBY_DIE(){ return (typeof LOBBY_DIE!=='undefined')?LOBBY_DIE:undefined; },
+  setDockPin: (typeof setDockPin!=='undefined'?setDockPin:undefined), setL2Dock: (typeof setL2Dock!=='undefined'?setL2Dock:undefined),             // v2.6.143: the dock pin
+  get dockPinned(){ return (typeof dockPinned!=='undefined')?dockPinned:undefined; },
+  readyDropFace: (typeof readyDropFace!=='undefined'?readyDropFace:undefined),   // v2.6.144: the face a card shows when a drag lands it in ready
+  zoneRefuses: (typeof zoneRefuses!=='undefined'?zoneRefuses:undefined), groupMove: (typeof groupMove!=='undefined'?groupMove:undefined),   // v2.6.145: which zones refuse which kind of card
+  addSel: (typeof addSel!=='undefined'?addSel:undefined), clearSel: (typeof clearSel!=='undefined'?clearSel:undefined)
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',
