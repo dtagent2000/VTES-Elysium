@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.162'; // v0.6.162 (23 Sep 2026, RULES OUT OF THE KNOB -- Johan's pre-spec code review): `combatMind` gated RULES corrections along with Johan's decisions, so the documented rollback (`combatMind: 0`) would have re-introduced rule bugs. Now unconditional: hand strikes deal 0 / are not offered at long range, a silent opponent at long deals 0 unless a ranged option is shown, a continued round waits two strike windows (the race), the victim of a steal loses the blood, Hidden Strength's prevent-bundled press is never a standalone press (it is played in damage resolution, not the press step). `combatMind` now gates DECISIONS only (Grapple gating, bundled-press use, press worth / press-to-end, range posture, Taste threshold, stealth order, rush kit, seize the moment, chase press). v0.6.161 (22 Sep 2026, THE CHASE PRESS -- Johan, from Black Chantry's Nosferatu guide): a chase-posture deck whose opponent maneuvered to long presses to continue (`_wantPress` tag 'chase-wave', any available press -- for the V5 Nosferatu the Underbridge Stray's life), provided it survives the opponent's shown return; the opponent must spend another maneuver or fight at close. combatMind. v0.6.160 (22 Sep 2026, THE VICTIM OF A STEAL -- Johan asked how steals are counted): the victim side of Steal Blood was never built -- since v0.6.19 a Theft of Vitae against a BOT gained the stealer blood while the victim read the frozen 'for 0' and lost nothing. `_parseCombatNarration` reads the stealer's note ('X strikes with CARD: steals N blood') from my combat opponent and takes min(N, blood) from `_combatMyVamp` (not damage -- no torpor from it alone); the combat-round row carries `stole` (mine) and `stolenFromMe`. combatMind. v0.6.159 (22 Sep 2026, THE CONTINUED-ROUND RACE -- found reading serie-cmb4's unmatched rounds): in a round after a press the non-presser starts at once while the presser still waits out its own press window, so a strike wait of one window expired exactly as the presser's strike arrived -- a phantom opp-silent round on one side and a lone extra round on the other (cmb4: Ventrue's Hidden Strength bundled press vs Malkavian, twice). `_strikeWaitMs(continued)`: round 2+ waits two windows (combatMind). v0.6.158 (22 Sep 2026, SEIZE THE MOMENT -- Johan: a torpor-certain rush trumps permanents-first when it is likely to go through): in decide('action') a rush whose damage exceeds the target's blood in one round, or over two with Immortal Grapple behind a damage source, and whose target's controller has no OTHER unlocked ready vampire or ally (`_rushLikelyThrough`), is picked at 97 -- above the permFirst gate (now `sPick < 97`), below the 99+ structural picks. Never with a rusher at 0 blood. Behind combatMind. serie-cmb3: permFirst decided 7 of 13 rush situations, incl. a Grapple + Roundhouse rush on a 1-blood target that lost to laying out Raven Spy. Previous: v0.6.157 THE RUSH KIT + THE SILENT LONG, v0.6.156 THE COMBAT MIND, v0.6.155 THE RUSH BY CHAT -- full notes in elysium-bot-CHANGELOG.md (82c: no line over 4 kB).
+const BOT_VERSION = '0.6.198'; // v0.6.198 (12 Oct 2026, main's reply to v0.6.195-197 + Johan's principle agreed with main): (1) A HOLD STOPS EVERY CLOCK THAT WAITS ON A HUMAN -- the block / reaction window, the pool question, the vote poll, the seven combat steps and the damage step freeze on a Hold on (quick phrase or typed) and start again from the beginning when it is released (_holdFreeze / _holdThaw); the pool question and the combat steps used to time out under a hold, the Turn-based reminders kept running, a bot frozen inside a step now says the hold itself, the stopwatch does not ring on a held table, and a departed holder no longer stands the vote poll, and a release by anyone ends every holder's own pause with the table hold (a target's It resolves in my block window lets the action through). An answer still ends a wait at once. (2) My steal's cap reads the human's own taken line ('now M') within the combat until their board changes -- their client never applies combat damage. Previous: v0.6.197 the referendum line + the calibration -- full notes in elysium-bot-CHANGELOG.md.
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -426,7 +426,7 @@ const FX_NORM = n => String(n || '').replace(/\u2122/g, 'tm')
   .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   .toLowerCase().replace(/[^a-z0-9]/g, '');
 
-const stripTags = h => String(h || '').replace(/<[^>]*>/g, '');
+const stripTags = h => String(h || '').replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#0*39;|&#x0*27;/gi, "'").replace(/&amp;/g, '&');   // v0.6.178 (event-log review): the client's escapeHtml sends & < > as entities -- decoded here (& last), so a card or vampire name with & reads as the table shows it
 const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /* PROTOCOL §12 frozen machine-readable lines — wording/punctuation/em-dash are
@@ -447,21 +447,30 @@ const L12 = {
   rescueE: /^(.+?) rescues (.+?)\u2019s (.+?) from torpor \((.+?) pays (\d+), (.+?) pays (\d+)\)\.$/,   // v0.6.72 (#7): frozen -- m[2]=owner complies, m[3]=vamp, m[5]=their blood share
   strikeD: /^(.+?) strikes: (.+?) \u2014 no damage either way this round\.$/,   // v0.6.4: the OUTBOUND grammar has existed since steg 6 (dodge) / v1 (hands, card) -- only the PARSER was missing, which is exactly why the attacker's "assume incoming 1" phantom survived: the real answer was already on the wire, unread
   strikeC: /^(.+?) strikes with (.+?) for (\d+)\.$/,
-  attempt: /^(.+?) attempts to block\.$/,                    // v0.6.106 (#14): bot-emitted, frozen -- the bare block attempt names the blocking vampire
+  attempt: /^(.+?) attempts to block\.$/,
+  attemptIcp: /^(.+?) attempts to block with \+(\d+) intercept \((.+?)\)\.$/,   // v0.6.163 (bug sweep, 23 Sep): the bot's OWN frozen line for an unlock card that carries its own intercept (Second Tradition, v0.6.139) was never in the parser -- the actor kept the PREVIOUS attempt's name as its opponent (cmb5-7: 9 misnamed combats, all Ventrue blockers)                    // v0.6.106 (#14): bot-emitted, frozen -- the bare block attempt names the blocking vampire
   political: /^(.+?) calls a political action\.(?: Target: (.+?)\.)?$/,   // v0.6.111 (R3, #10): the client's Vote submenu (v2.6.106), frozen in §12 -- an ACTION like any other, so the block step runs on it; the optional Target suffix rides the same grammar family as a bleed's
   votes: /^(.+?) casts (\d+) votes? (for|against)\.$/,                     // v0.6.111 (R3, #10): the client's Cast votes line, frozen -- how every seat's votes reach the table (mine included)
   blockAct: /^(.+?) blocks\.$/,                              // v0.6.110 (R2, #12): the CLIENT's Block menu action (v2.6.106, frozen in §12) -- parsed BESIDE `attempts to block.`, never instead of it: both shapes name the blocking minion, and a human who right-clicks Block before shouting Block! has already blocked
-  actObs: /^(.+?) (bleeds for (\d+)|hunts|calls a political action|attempts to rescue a vampire from torpor|commits diablerie|plays (.+?))[.!]/,   // v0.6.110 (R2, #11): the SHORT-TERM ACTION MEMORY grammar -- the client's action-menu lines plus a card play. Not a window opener: it only remembers WHAT the last other-seat action was, so a later "Any blocks?" has something to ask about
+  actObs: /^(.+?) (bleeds for (\d+)|hunts|calls a political action|attempts to rescue a vampire from torpor|attempts to rescue their own vampire from torpor|takes an undirected action|takes a card action|commits diablerie|plays (.+?))[.!]/,   // v0.6.110 (R2, #11): the SHORT-TERM ACTION MEMORY grammar -- the client's action-menu lines plus a card play. Not a window opener: it only remembers WHAT the last other-seat action was, so a later "Any blocks?" has something to ask about
   interceptPlay: /^(.+?) plays (.+?): \+(\d+) intercept\.$/,   // v0.6.106 (#14): the existing bot-emitted intercept line, now also the blocker-name carrier
   strikeH: /^(.+?) strikes \(hands\) for 1\.$/,
   vote:   /^Vote: (\d+) for vs (\d+) against \u2014 vote (passes|fails)\.$/,
-  combatEnds: /^Combat ends \u2014 (.+?)\.$/,   // v0.6.123 (bot grammar): follows a strikeD-shaped line when the strike ended the combat (Majesty-class)
+  combatEnds: /^Combat ends \u2014 (.+?)\.$/,
+  strikeN:    /^(.+?) strikes for (\d+)\.$/,                          // v0.6.167 (main v2.6.134): a strike without a card name
+  strikeAgg:  /^(.+?) strikes for (\d+) aggravated damage\.$/,        // v0.6.167 (main v2.6.135)
+  strikeSteal:/^(.+?) strikes: steals (\d+) blood\.$/,                // v0.6.167 (main v2.6.134): ONE line (the bot's own steal still writes 'strikes with CARD for 0.' + the steal note)
+  strikeEnds: /^(.+?) strikes: combat ends\.$/,                       // v0.6.167 (main v2.6.134): ONE line, no longer the dodge shape
+  envOn:      /^(.+?) inflicts (\d+) damage on the opposing minion each round\.$/,   // v0.6.167 (main v2.6.135): a human's Carrion Crows-class
+  envOff:     /^(.+?) inflicts no more damage each round\.$/,   // v0.6.123 (bot grammar): follows a strikeD-shaped line when the strike ended the combat (Majesty-class)
   refTerms: /^Referendum terms \u2014 (.+?): (.+)\.$/,          // v0.6.122 (bot grammar, spec-referendum-terms): the caller's machine-readable terms, sent BEFORE the frozen `calls a political action.` line
   refResult: /^Referendum (passes|fails) \u2014 (.+?): (.+)\.$/,   // v0.6.122: the outcome + the same terms (self-contained: a seat applies its own delta from THIS line)
   blockBar: /^(.+?) \u2014 (vampires|allies|minions) cannot block this action\.$/,   // v0.6.127 (bot grammar, cardfx fx.blockBar): m[1] = the card, sent BEFORE the action's announce (the terms-line precedent) so the window opens with the bar known; a human reads it as table talk and complies by hand
   /* v0.6.107 (B1): the UNDIRECTED family -- the bot's own frozen announce lines for actions the rulebook lets the actor's prey AND predator block (prey first). Human clients' wording for these is unverified (main-project ask). */
   uHunt:     /^(.+?) hunts\.$/,
-  uRescue:   /^(.+?) attempts to rescue a vampire from torpor\.$/,   // v0.6.127: the CLIENT's frozen action-menu line (no Target suffix = the actor's OWN vampire, undirected) -- it was only short-term memory (actObs); now it opens the prey/predator window like every other undirected action
+  uRescue:   /^(.+?) attempts to rescue their own vampire from torpor\.$/,   // v0.6.172 (main v2.6.138): the OWN-vampire rescue is its own line and UNDIRECTED; `attempts to rescue a vampire from torpor.` is now DIRECTED (at the owner) and no longer opens a predator/prey window
+  uCardAct:  /^(.+?) takes an undirected action\.$/,   // v0.6.172 (main v2.6.137): the client's 'Undirected card action' row (equip, recruit, employ ...)
+  uRescueOld:/^(.+?) attempts to rescue a vampire from torpor\.$/,   // v0.6.127: the CLIENT's frozen action-menu line (no Target suffix = the actor's OWN vampire, undirected) -- it was only short-term memory (actObs); now it opens the prey/predator window like every other undirected action
   uLeave:    /^(.+?) attempts to leave torpor\.$/,   // v0.6.128 (bot grammar): a torpored vampire's own action (+1 stealth, 2 blood). Blocked by a vampire = NO combat, the blocker may diablerise -- bots never do, so a bot answers Pass at once; a human may block
   uEquip:    /^(.+?) (equips|employs) (.+?)\.$/,
   uRecruit:  /^(.+?) recruits (.+?) \[(.+?)\]\.$/,
@@ -493,6 +502,26 @@ function loadCardfx(file){
 }
 
 /* ============================ The bot ==================================== */
+/* ==================== v0.6.176: THE EVENT LOG (design doc Part 1, phase A: observe only) ====================
+   One typed, append-only record of what the table said -- every log / chat line (mine included), every tally change, every
+   turn. Phase A records beside today's parsers and changes no decision; the readers switch over in later phases. The ring
+   keeps the last `cap` events; the per-seat record of cards SHOWN is kept for the whole match (the knowledge layer's first feed). */
+class EventLog {
+  constructor(cap){ this.cap = cap || 4000; this.ev = []; this.seq = 0; this.byKind = Object.create(null); this.shown = Object.create(null); this.turnMark = 0; }
+  push(e){
+    e.seq = ++this.seq; if(!e.t) e.t = Date.now();
+    this.ev.push(e); if(this.ev.length > this.cap) this.ev.splice(0, this.ev.length - this.cap);
+    this.byKind[e.kind] = (this.byKind[e.kind] || 0) + 1;
+    if(e.kind === 'card-played' && e.seat && e.card){ const o = this.shown[e.seat] = this.shown[e.seat] || Object.create(null); o[e.card] = (o[e.card] || 0) + 1; }
+    if(e.kind === 'discard' && e.seat && e.card){ this.discards = this.discards || Object.create(null); const o = this.discards[e.seat] = this.discards[e.seat] || Object.create(null); o[e.card] = (o[e.card] || 0) + 1; }   // v0.6.186: a discard shows a card of the deck too
+    return e;
+  }
+  since(seq){ return this.ev.filter(e => e.seq > seq); }
+  last(kind, pred){ for(let i = this.ev.length - 1; i >= 0; i--){ const e = this.ev[i]; if(e.kind === kind && (!pred || pred(e))) return e; } return null; }
+  cardsShown(seat){ return Object.assign({}, this.shown[seat] || {}); }
+  cardsDiscarded(seat){ return Object.assign({}, (this.discards || {})[seat] || {}); }
+}
+
 class Bot {
   constructor(opts){
     this.o = Object.assign({
@@ -511,6 +540,19 @@ class Bot {
       whoBlocksGraceMs: 2500,  // v0.6.110 (R2, #12, Johan): after a human shouts Block! I wait this long for a blocker line (`NAME blocks.` / `NAME attempts to block.`) before asking "Who blocks?" -- long enough to right-click the minion, short enough that a forgotten block does not stall the table
       reactPaceMs: null,       // v0.6.109 (#13, the OTHER half): how long I sit on a reaction of my own once the table has declared its intention. null = paceMs (v0.6.152, Johan: one beat everywhere; was paceMs * 0.6 -- 0.9 s of a 1.5 s beat read as 'before' the human's act rather than 'after'). Deliberately its own knob and not paceMs: Johan wants the bot's ANSWERS quicker without speeding up its turn, and the old value (max(paceMs, thinkMs)) made a persona's thinkMs able to lengthen it but never shorten it.
       poolFloor: 6,            // never influence below this pool
+      tempo: null,             // v0.6.194 (THE TEMPO, spec-bot-tempo-2026-09-27.md): an initial `botcfg` ({ tempo: 'standard'|'adaptive'|'turn', waitSecs: 1..8 }) for tables that never send one (tests, arenas). null = no tempo until the table's first botcfg -- the bot then waits exactly as today (askSecs / phaseSecs). Every wait on a HUMAN reads the tempo; bot-vs-bot windows never do.
+      tempoRemindMs: 120000,   // v0.6.194: Turn-based safety net -- a chat reminder after this much silence on a wait
+      tempoGiveUpMs: 240000,   // v0.6.194: Turn-based safety net -- the wait resolves as a pass after this much silence (an abandoned table never hangs)
+      tempoAdaptMin: 0.8,      // v0.6.194: Adaptive never waits less than this many seconds
+      tempoAdaptK: 1.5,        // v0.6.194: Adaptive waits this times the human's median response time (capped by the slider)
+      tempoHist: 7,            // v0.6.194: Adaptive's running median is over the human's last N answers
+    combatPhases: 1,       // v0.6.165 (Johan): 1 = against a HUMAN combat opponent the bot drives the seven combat steps with his phrases and waits for the human on a clock; 0 = v0.6.164's silent handshake. Bot-vs-bot is never affected.
+    dynFloor: 1,             // v0.6.189 (THE KNOWLEDGE LAYER, brick 2 -- 'do not oust yourself'): 1 = the critical pool also counts the RECURRING losses I paid over my last full turn cycle (Creeping Sabotage ticks, Smiling Jack, Fame), read from the event log; 0 = the predator burst alone. v0.6.193: default 1 -- the re-bench (arm dyn2, 48, every seat, the floor PROVEN to fire in 23 of 48 matches) came out -0.12 +/- 0.39 against the control's +0.14 +/- 0.45: inside the noise, no loss shown
+    arkChat: 1,              // v0.6.192 (archetype labels, explanation only): 1 = the bot says once per seat what it reads the deck as (a CONFIDENT label: margin >= 2 and >= 85 % of the shown cards typical), and names the closest archetype in its trace; 0 = trace only. Labels never drive a decision on their own.
+    twdKnow: 1,              // v0.6.187 (THE KNOWLEDGE LAYER, brick 1): 1 = the TWDA profile (elysium-twd-profile.json) shapes the combat prior for each seat from the cards it has shown and its crypt's clan; 0 = the board-only prior. v0.6.188: default 1 -- the bench (48, every seat) showed no loss against the negative control (+0.21 ± 0.46 vs +0.14 ± 0.45)
+    waveNarrow: 1,           // v0.6.197 (Johan 28 Sep: the wave is calibration, the Malkavian guide's narrowed wave): 1 = a wave deck spends its maneuver (for a Malkavian: the stealth half of Swallowed by the Night) only when the expected strike would torpor the vampire, or when one maneuver ends a dangerous combat (P(they press) < 0.5) -- 0 = v0.6.156's wave (any danger >= 0.2). DEFAULT 1 after the bench (Malkavian pinned, 24 + 24: +1.36 vs the control's +1.53, inside the noise; the rule fired 23 times -- kept 11, ranged 5, torpor 5, no-press 2 -- and maneuvers fell 15 -> 7).
+    blockCost: 1,            // v0.6.197 (Johan 28 Sep: the block doctrine is calibration): 1 = a block WITH an intercept card (directed or undirected, a wake-raised body included) weighs the combat it buys -- the blocker's expected loss (the TWDA-fed damage model of _blockRisk, blood at half a pool, P(torpor) x 3) against the action stopped + 0.5; never when desperate (pool damage only). 0 = odds x urgency alone (v0.6.118). DEFAULT 1 after the re-bench (48 + 48: -0.11 vs the control's +0.28; the same seeds with the price INERT gave -0.09 vs +0.20, and active vs inert paired = -0.03 +/- 0.43 -- no loss; 19 blocks let through, the variant's torpors 41 -> 36).
+    combatEndStats: 1,       // v0.6.196 (Johan, 10 Oct 2026: 'build combat ends on expected / statistical damage'): 1 = a combat-ends strike (Majesty) is played only when the opposing strike is worth the card -- KNOWN when they declared first, else EXPECTED from the TWDA-informed table model; torpor and aggravated always end it; a weak striker is not worth it while a more dangerous seat exists or the copies are few. 0 = v0.6.123: always. Default 1 after the bench (Ventrue pinned, 24 + 24 on the same seeds): -0.11 +/- 0.49 against the control's -0.12 +/- 0.50 -- no loss; the rule held 68 times and played 30 where the control played 49.
     combatMind: 1,           // v0.6.156 (Johan's combat rulings, 22 Sep 2026): 1 = the combat mind (Grapple gating, bundled presses, press worth, press-to-end, range posture, long-range fists deal 0); 0 = v0.6.155's thresholds
     rushBackWeight: 1, rushFwdWeight: 1, crossRushWeight: 0,   // v0.6.53 (rush-theory v1.1): direction knobs -- cross soft-ZERO per Johan (sweepable in the arena; the counterfactual log answers R-Q5)
     permFirst: 1,            // v0.6.132 (Johan's GO, 19 Sep; serie-null4 reading 28h): for a deck whose manifest says permFirst (the Black Chantry helpsheet's 'take actions to get permanent intercept and permanent damage enhancers'), a permanent in hand (equip / retainer / strength / ally) is put in play BEFORE a bleed -- structurally, like the stock rule; never on a lunge turn or with the prey within a turn and a half; 0 = the old score contest, kept so the same seeds run both ways
@@ -533,6 +575,13 @@ class Bot {
                  : this.o.cardfx || (IS_NODE ? require('path').join(__dirname, 'elysium-cardfx.json')
                                              : 'no cardfx source in this environment -- pass o.cardfxData');
     this.fx = this.o.cardfxData ? prepCardfx(this.o.cardfxData) : loadCardfx(fxPath);
+    this.ev = new EventLog();   // v0.6.189: the event log exists from birth (it was created lazily at the first line)
+    this.tempo = { mode: null, waitSecs: null, who: null, at: 0 };   // v0.6.194: the table's tempo (spec-bot-tempo-2026-09-27.md) -- null mode = no botcfg yet = the clocks of old
+    this._rt = Object.create(null);   // v0.6.194: per-human response times (ms), the last tempoHist answers -- Adaptive's measurement
+    this.twd = this.o.twdProfile || null;   // v0.6.187: the TWDA profile -- an object passed in, or the file beside the script (optional: without it twdKnow does nothing)
+    this.ark = this.o.twdArchetypes || null;   // v0.6.192: the archetype signatures (elysium-twd-archetypes.json), an object passed in or the file beside the script; parsed once per process
+    if(!this.ark && IS_NODE){ const ap = this.o.twdArchetypesPath || require('path').join(__dirname, 'elysium-twd-archetypes.json'); if(!Bot._arkCache || Bot._arkCache.path !== ap){ let d = null; try { d = JSON.parse(require('fs').readFileSync(ap, 'utf8')); } catch(e){ d = null; } Bot._arkCache = { path: ap, data: d }; } this.ark = Bot._arkCache.data; }
+    if(!this.twd && IS_NODE){ const tp = this.o.twdProfilePath || require('path').join(__dirname, 'elysium-twd-profile.json'); if(!Bot._twdCache || Bot._twdCache.path !== tp){ let d = null; try { d = JSON.parse(require('fs').readFileSync(tp, 'utf8')); } catch(e){ d = null; } Bot._twdCache = { path: tp, data: d }; } this.twd = Bot._twdCache.data; }   // parsed ONCE per process (the suite builds thousands of bots -- a per-instance parse ran the heap out)
     if(this.fx) this.o.log('cardfx loaded: ' + (this.fx.counts.lib || '?') + ' lib / ' +
                            (this.fx.counts.crypt || '?') + ' crypt / ' + this.fx.normIdx.size + ' norm keys');
     else this.o.log('⚠ cardfx NOT loaded (' + fxPath + ') — the bot plays WITHOUT card knowledge: plain bleeds only, no card plays, no stealth, no threat reads. Fix: place elysium-cardfx.json next to elysium-bot.js (or pass --cardfx <path>; a browser passes o.cardfxData).');
@@ -542,6 +591,10 @@ class Bot {
     this.players = [];               // latest roster [{seat,name,out,vacant,...}]
     this.turnSeat = 0; this.ownTurns = 0; this.inf = 0; this._tableBlockAttempts = 0;
     this.pool = 30; this.edge = false;
+    if(typeof process !== 'undefined' && process.env && process.env.ELY_POOL_TRACE){   // v0.6.180: a dev-only trace of EVERY change of my pool with its caller, for the invariant's drift flags (env ELY_POOL_TRACE=1)
+      let pv = this.pool; this._poolChanges = [];
+      Object.defineProperty(this, 'pool', { configurable: true, enumerable: true, get(){ return pv; }, set(v){ if(v !== pv){ const st = (new Error().stack || '').split('\n')[2] || ''; const fn = (st.match(/at (?:Bot\.)?([\w$.]+)/) || [])[1] || '?'; const ln = (st.match(/:(\d+):\d+\)?$/) || [])[1] || '?'; this._poolChanges.push({ d: v - pv, fn, ln }); if(this._poolChanges.length > 60) this._poolChanges.shift(); } pv = v; } });
+    }
     /* v0.5+ (Johan, 14 July): the SAME phase-action economy the client's own
        Structured helpers track (state.phaseActs/phaseUsed + the Trifle-only
        state.masterBonus) -- generalized to all three adjustable phases so a
@@ -578,6 +631,7 @@ class Bot {
       if(key){ this.o.deckName = key; this._deckNameInferred = true; }
     }
     this.onEvent = opts && opts.onEvent || null;   // test hook: (type, msg) for every inbound message
+    if(this.o.tempo) this._tempoSet(Object.assign({}, this.o.tempo), true);   // v0.6.194: a start-up tempo (tests, arenas) -- after onEvent, so its trace row is seen
   }
 
   /* ---------- lifecycle ---------- */
@@ -663,6 +717,10 @@ class Bot {
     }
     const q = this._pq;
     if(q) return mk('asking', 'pool question' + (q.stage === 'amt' ? ' (how much?)' : '') + ' (' + q.who + ')', q.deadline, 'resolve-pq');   // v0.6.110 (R2): my own question to the table -- steppable, and the step runs the clock's own body
+    const pw = this._phaseWait;   // v0.6.194: a combat step waited on a human -- steppable (the Bot button is 'give the bot the word' in Turn-based); the step resolves it the way the clock would
+    if(pw && !pw.done) return mk('asking', 'combat step ' + (['before range', 'maneuvers', 'before strikes', 'strike', 'damage', 'presses', 'before ending combat'][pw.step] || pw.step) + ' (' + pw.who + ')', pw.deadline || null, 'resolve-phase');
+    const rc = this._refCall;     // v0.6.194: my referendum polls -- steppable the same way (closes the polls as the clock would)
+    if(rc && !rc.closed) return mk('asking', 'votes (' + (rc.paused.size ? [...rc.paused].join(', ') + ' thinking' : (this.players || []).filter(pl => pl.seat !== this.seat && this.live(pl.seat) && !rc.heard.has(pl.name)).map(pl => pl.name).join(', ')) + ')', rc.deadline || null, 'resolve-vote');   // v0.6.198: a paused poll stays steppable (it had no clock and no button)
     const p = this.pending;
     if(p) return mk('acting', 'reacting to ' + (p.who || 'an action') + (p.amount ? ' (' + (p.kind || 'action') + ' ' + p.amount + ')' : ''), p.reactAt, null);
     if(this._beatUntil && this._beatUntil > now) return mk('acting', 'thinking', this._beatUntil, null);
@@ -679,20 +737,36 @@ class Bot {
       this._holdBy.clear();
       if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }
       if(this._holdAnnounced){ this._holdAnnounced = false; this.chat('\u25b6 Resuming.'); }   // the same release the table's 'It resolves' performs, announced by the same rule (only the bot that announced the hold speaks)
+      this._releasePauses(names);   // v0.6.198: the panel unsticks the table -- the holders' own pauses end too
+      this._holdThaw();   // v0.6.198: and the same fresh clocks
       this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b>: hold by <b>' + esc(names.join(', ')) + '</b> released from the table controls.' });   // a press that moves the game for everyone is never silent
       return { did: 'release-hold', who: names, why: 'released the hold held by ' + names.join(', ') };
     }
     if(s.step === 'resolve-ask'){
       if(!this._ask) return { did: null, why: 'the ask resolved itself first' };
       this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b>: reaction window closed from the table controls (nobody answered).' });
+      this._ask._end = 'button';   // v0.6.194: the wait row says how it ended
       this._askTimeout();   // NOT _answer('no') -- the clock's own body, so a contested window still declares its verdict from the tally exactly as it would have
-      return { did: 'resolve-ask', why: 'closed the reaction window the way the ' + this.o.askSecs + 's clock would have' };
+      return { did: 'resolve-ask', why: 'closed the reaction window the way the clock would have' };
     }
     if(s.step === 'resolve-pq'){
       if(!this._pq) return { did: null, why: 'the question resolved itself first' };
       this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b>: pool question closed from the table controls (nobody answered).' });
+      this._pq._end = 'button';
       this._pqTimeout();   // the clock's own body: stage yn -> "no", stage amt -> 1
-      return { did: 'resolve-pq', why: 'closed the pool question the way the ' + this.o.askSecs + 's clock would have' };
+      return { did: 'resolve-pq', why: 'closed the pool question the way the clock would have' };
+    }
+    if(s.step === 'resolve-phase'){   // v0.6.194: the Bot button gives the bot the word in a combat step -- the same resolution the clock would have reached
+      const pw = this._phaseWait; if(!pw || pw.done) return { did: null, why: 'the combat step resolved itself first' };
+      this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b>: combat step closed from the table controls.' });
+      pw.resolve('button');
+      return { did: 'resolve-phase', why: 'closed the combat step the way the clock would have' };
+    }
+    if(s.step === 'resolve-vote'){    // v0.6.194: closes my polls the way the clock would
+      const rc = this._refCall; if(!rc || rc.closed) return { did: null, why: 'the polls closed themselves first' };
+      this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b>: polls closed from the table controls.' });
+      rc._end = 'button'; rc.done('closed from the table controls');
+      return { did: 'resolve-vote', why: 'closed the polls the way the clock would have' };
     }
     return { did: null, why: 'nothing to step: ' + s.waitingFor };
   }
@@ -702,7 +776,7 @@ class Bot {
      RATE_N (80 msgs / 10 s) — and a disconnected bot is a dead seat. send()
      therefore drains through a rolling-window queue that stays safely under
      the limit at any paceMs (burst turns at paceMs 0 hit ~20 msg/s raw).   */
-  send(obj){ this._sq.push(obj); this._drain(); }
+  send(obj){ if(obj && this.started && (obj.t === 'log' || obj.t === 'chat')) this._evRecord(this.o.name, obj.t === 'log' ? stripTags(obj.html || '') : String(obj.msg || ''), obj.t, true); this._sq.push(obj); this._drain(); }   // v0.6.176: my own lines enter the event log too -- both sides of every exchange in one place
   _drain(){
     if(this._sqT || !this._sq.length) return;
     const later = ms => { this._sqT = setTimeout(() => { this._sqT = null; this._drain(); }, ms); };
@@ -955,6 +1029,7 @@ class Bot {
         this.out = false; this.ownTurns = 0; this.inf = 0; this._tableBlockAttempts = 0;
         this._holdBy = new Set(); if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }   // v0.6.95: a fresh game holds for nobody
         this._holdAnnounced = false; this._pendingTurn = null;   // v0.6.108: and carries no queued turn or stale hold announcement
+        this._holdThaw();   // v0.6.198: a wait frozen by the old game's hold runs again, as it would have unheld
         this.o.log('game started — I am seat ' + this.seat + ', my prey is ' + this.seatName(this.preySeat()));
       },
       dealt: m => {
@@ -1061,6 +1136,7 @@ class Bot {
         this._releaseDeparted(m.players || []);          // v0.6.106 (#5): a departed holder/thinker no longer freezes the bot
       },
       turn: m => {
+        if(this.started){ if(!this.ev) this.ev = new EventLog(); const e0 = this.ev; const since = e0.since(e0.turnMark); const counts = {}; since.forEach(x => { counts[x.kind] = (counts[x.kind] || 0) + 1; }); if(since.length) this._emit('ev-summary', { turn: this.turnSeat || null, n: since.length, counts, shown: Object.keys(e0.shown).length }); e0.turnMark = e0.seq; this._invOnEvent(e0.push({ kind: 'turn', seat: m.seat })); }   // v0.6.176: one compact trace row per turn
         if(this.pending && m.seat !== this.turnSeat){
           /* the acting turn ended with my pending bleed unresolved — never
              auto-apply stale damage; the chat grammar is the safety valve.  */
@@ -1087,7 +1163,10 @@ class Bot {
       log:   m => this._onLog(m.who, m.html),
       tally: m => {
         const wasVote = this.tally && this.tally.mode === 'vote';
+        { const prevA = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : null; if(m && m.mode === 'block' && (prevA === null || (m.a | 0) !== prevA)){ this._aAt = Date.now(); this._aWho = m.who || null; } }   // v0.6.171: when the block counter's stealth last CHANGED (a bot actor's tally is closed only by a mode change, so a through action leaves its 'a' standing for the next)
+        if(this.started){ if(!this.ev) this.ev = new EventLog(); const prev = this.tally || {}, f = {}; ['mode','a','b','ph','rd','rng','pr','ce','rl','nx','sa','sb','ea','eb','ga','gb','pa','pb'].forEach(k => { if(m[k] !== undefined && m[k] !== prev[k]) f[k] = m[k]; }); if(Object.keys(f).length) this.ev.push({ kind: 'tally', who: m.who || null, seat: m.who ? this._seatOfName(m.who) : 0, fields: f }); }   // v0.6.176; v0.6.178 (review): only the fields that CHANGED -- every relay carries the whole state, so 'fields present' said nothing
         this.caps.tally = true; this.tally = m;
+        if(this._phaseWait && m && m.mode === 'combat' && m.who && m.who !== this.o.name) this._phaseNudge(m.who, m.ph, 'tally');   // v0.6.165: a human stepping ph past the step answers it
         if(m && m.who !== this.o.name) this._fTallyAt = Date.now();   // v0.6.147: a counter written by SOMEBODY ELSE reached me -- the relay carries tally, the net below stands down
         if(m.mode === 'block' && this._ask && this._ask.contested && this._actingVamp && !this.out){ if(m.who && m.who !== this.o.name) this._restartAskTimer(); try { this._stealthSecondLook(); } catch(e){ this.o.log('second-look error:', e.message); } }   // v0.6.143c; v0.6.153: a foreign counter move is table activity -- the verdict clock restarts (v0.6.115's silence principle), so a bot blocker's intercept card landing after ITS beat is never overtaken
         if(m.mode === 'block' && this.pending && this.pending.contested && this.pending.blockerVamp && !this.out){ try { this._interceptSecondLook(); } catch(e){ this.o.log('blocker second-look error:', e.message); } }   // v0.6.143d
@@ -1103,10 +1182,12 @@ class Bot {
           this._armReactTimer();
         } },
       fx:    m => this._onFx(m),
-      chat: m => this._onChat(m.who, m.msg),
+      botcfg: m => this._tempoSet(m, false),   // v0.6.194: the table's tempo (client -> server -> every seat; the server re-sends the latest to a late joiner) -- partial writes, absent fields keep their value
+      chat: m => { if(m && m.who !== this.o.name && this.started) this._evRecord(m.who, stripTags(String(m.msg || '')), 'chat'); this._onChat(m.who, m.msg); },
       sys: m => this.o.log('sys:', m.msg),
       err: m => { this.o.log('err:', m.msg); this._emit('server-err', { msg: m && m.msg }); },   // v0.6.130: a refused verb was invisible in every trace (debt 26a)
       forceSetPool: m => {                             // the host referee kit (hostSetPool → this) — v0.3.7: clamp + oust-on-zero (a host draining a bot to 0 means exactly that)
+        { const nv = Math.max(0, Math.min(999, m.val | 0)); if(this.started && this.ev && nv !== this.pool){ this._invFlag('pool-sync', { model: this.pool, table: nv, diff: nv - this.pool, who: m.who || null }); this._invOnEvent(this.ev.push({ kind: 'pool', delta: nv - this.pool, via: 'table-sync', own: true, seat: this.seat })); } }   // v0.6.180: the TABLE set my pool (a human's correction, or the server) -- flagged, and the ledger follows
         this.pool = Math.max(0, Math.min(999, m.val | 0));
         this.note('Trainbot: pool set to ' + this.pool + ' by the host.');
         if(this.pool <= 0 && !this.out) this._oust(true); else this.push();
@@ -1742,6 +1823,7 @@ class Bot {
   }
   _scanOpp(seat, pub){                 // writer: _onBoard on every push -- the crypt half of the model (public: every ready/torpor card is face-up)
     const o = this._opp(seat);
+    const prevV = o.vamps || {};   // v0.6.198: the last scan's records -- a vampire's blood keeps its change stamp while the count stands
     o.vamps = {}; o.clans = {}; o.disc = {}; o.equip = {}; o.readyN = 0; o.torporN = 0; o.uncN = 0;
     const cards = (pub && pub.cards) || [];
     const byId = {}; cards.forEach(c => { if(c && c.id) byId[c.id] = c; });
@@ -1753,6 +1835,7 @@ class Bot {
       if(c.faceDown || !c.name) return;
       const h = this.fxLookup(c.name); const e = (h && h.kind === 'crypt') ? h.e : null;
       const rec = { clan: (e && e.clan) || null, cap: (e && e.cap) | 0, disc: (e && e.disc) || { all: [], sup: [] }, zone: c.zone, blood: c.blood | 0, locked: !!c.locked, equip: [] };
+      { const pv = prevV[c.name]; rec.bloodAt = (pv && pv.blood === rec.blood && pv.bloodAt) ? pv.bloodAt : Date.now(); }   // v0.6.198 (main 12 Oct §3.2): WHEN the board's count last changed -- a human's client never applies combat damage, so within a combat their own taken line can be fresher
       (c.attached || []).forEach(id => { const a = byId[id]; if(!a || a.kind !== 'lib' || !a.name) return;
         const ah = this.fxLookup(a.name); if(!ah || ah.kind !== 'lib') return;
         const tt = ah.e.t || []; if(!tt.includes('equip') && !tt.includes('retainer')) return;
@@ -1798,13 +1881,66 @@ class Bot {
              bleed: 1 + Math.min(1, bleedDisc / (2 * minionN)),
              dmgPerCombat: 1 + Math.min(2, combatDisc / (2 * minionN) * 1.5 + weapons * 0.5) };
   }
+  /* ==================== v0.6.187: THE KNOWLEDGE LAYER, brick 1 -- what a seat's deck tends to be ====================
+     The TWDA profile (twd-profile.py over KRCG's export, 4,538 decks) gives, per library card, the mean shares of a deck that
+     holds it -- combat, stealth, intercept, bounce -- and, per clan, the same over decks led by that clan. A seat's expectation
+     is the clan prior (from its crypt) plus every library card it has shown (the observation model AND the event log, one weight
+     each, capped at 2 per card). Public evidence only -- never a hand. Returns null without the profile. */
+  _twdExpect(seat){
+    const P = this.twd; if(!P || !P.cards) return null;
+    const o = this._opp(seat); const NF = (P.features && P.features.length) || 4; const acc = new Array(NF).fill(0); let n = 0;   // v0.6.197: press is the fifth share (appended -- an old 4-share profile still reads)
+    const add = (f, w) => { for(let i = 0; i < NF; i++) acc[i] += (f[i] || 0) * w; n += w; };
+    const clans = Object.keys(o.clans || {}).sort((a, b) => (o.clans[b] || 0) - (o.clans[a] || 0));
+    const cp = clans.length && P.clans[clans[0]]; if(cp) add(cp.f, 1);
+    const shown = Object.assign({}, this.ev ? this.ev.cardsShown(seat) : {});
+    Object.keys(o.cards || {}).forEach(c => { shown[c] = Math.max(shown[c] || 0, o.cards[c] | 0); });
+    Object.keys(shown).forEach(c => { const e = P.cards[c]; if(e) add(e.f, Math.min(2, shown[c] | 0) || 1); });
+    if(!n) return null;
+    const f = acc.map(x => x / n);
+    return { combat: f[0], stealth: f[1], intercept: f[2], bounce: f[3], press: NF > 4 ? f[4] : null, n, combatDanger: Math.min(1, f[0] * 1.8), cards: Object.keys(shown).length };
+  }
+  /* ==================== v0.6.192: ARCHETYPE LABELS (explanation only) ====================
+     vtes-skill's reviewed classification x the TWDA: a naive-Bayes signature per archetype (42 with >= 10 decks). From a seat's
+     crypt clan and the library cards it has shown: the best archetype, its margin over the second, and the COVERAGE -- the share
+     of shown cards typical of it (held by >= 20 % of its decks). Offline (REPORT-archetypes-offline.md): inside the classified
+     world 90 % right at 8 cards; in the open world a plain margin is falsely confident on about half of the decks, so a label is
+     CONFIDENT only with margin >= 2 AND coverage >= 0.85 (98 % right, ~1 in 10 outside decks mislabelled). The closest archetype is
+     always available for chat and traces. No decision reads a label on its own. */
+  _archetype(seat){
+    const A = this.ark; if(!A || !A.archetypes) return null;
+    const o = this._opp(seat); const shown = Object.assign({}, this.ev ? this.ev.cardsShown(seat) : {});
+    Object.keys(o.cards || {}).forEach(c => { shown[c] = Math.max(shown[c] || 0, o.cards[c] | 0); });
+    const cards = Object.keys(shown).filter(c => { const h = this.fxLookup(c); return h && h.kind === 'lib'; });
+    const clans = Object.keys(o.clans || {}).sort((a, b) => (o.clans[b] || 0) - (o.clans[a] || 0)); const cl = clans[0] || null;
+    if(cards.length < ((A.gate && A.gate.minShown) || 5) && !cl) return null;
+    const V = (A.vocab | 0) + 1, names = Object.keys(A.archetypes); let tot = 0; names.forEach(g => { tot += A.archetypes[g].n; });
+    const scored = names.map(g => { const s0 = A.archetypes[g]; let sc = Math.log(s0.n / tot);
+      cards.forEach(c => { sc += Math.log(((s0.cards[c] || 0) + 0.5) / (s0.n + 1.0)); });
+      if(cl) sc += Math.log(((s0.clans[cl] || 0) + 0.5) / (s0.n + 2.0));
+      return { g, sc }; }).sort((a, b) => b.sc - a.sc);
+    const best = scored[0], second = scored[1]; if(!best) return null;
+    const margin = second ? best.sc - second.sc : 9;
+    const typical = (A.gate && A.gate.typical) || 0.2, s0 = A.archetypes[best.g];
+    const cov = cards.length ? cards.filter(c => (s0.cards[c] || 0) / Math.max(1, s0.n) >= typical).length / cards.length : 0;
+    const gate = A.gate || {}; const confident = cards.length >= (gate.minShown || 5) && margin >= (gate.margin || 2) && cov >= (gate.coverage || 0.85);
+    return { best: best.g, second: second ? second.g : null, margin: +margin.toFixed(2), coverage: +cov.toFixed(2), shown: cards.length, clan: cl, tier: confident ? 'confident' : 'closest' };
+  }
+  _archetypeSay(seat){                // once per seat: a CONFIDENT label is said at the table; a closest-only read goes to the trace
+    const a = this._archetype(seat); if(!a) return;
+    this._arkSaid = this._arkSaid || {}; const prev = this._arkSaid[seat];
+    if(a.tier === 'confident' && (!prev || prev.best !== a.best)){ this._arkSaid[seat] = a; this._emit('archetype', Object.assign({ seat }, a));
+      if(this.o.arkChat !== 0) this.chat('I read ' + this.seatName(seat) + "'s deck as " + a.best + ' (' + Math.round(a.coverage * a.shown) + ' of ' + a.shown + ' cards typical).'); }
+    else if(a.tier === 'closest' && (!prev || prev.best !== a.best) && a.shown >= 5){ this._arkSaid[seat] = a; this._emit('archetype', Object.assign({ seat }, a)); }
+  }
   oppCombat(seat){                     // 0..1: how dangerous is combat against this seat's minions -- prior (disciplines, weapons) blended with the combat cards seen and the damage they actually dealt me
     const o = this._opp(seat), pr = this._oppPrior(seat);
     const sn = o.seen || {}; const cards = (sn.strike | 0) + (sn.aggr | 0) * 1.5 + (sn.press | 0) * 0.5 + (sn.maneuver | 0) * 0.5 + (sn.combatCard | 0) * 0.5;
     const obsCards = Math.min(1, cards / 4), nCards = (sn.strike | 0) + (sn.aggr | 0) + (sn.press | 0) + (sn.maneuver | 0) + (sn.combatCard | 0);
     const obsDmg = o.combat.n ? Math.min(1, (o.combat.dmgSum / o.combat.n) / 3) : 0;
     const observed = (nCards + o.combat.n) ? (obsCards * nCards + obsDmg * o.combat.n) / (nCards + o.combat.n) : 0;
-    return +Bot._blend(pr.combat, observed, nCards + o.combat.n, 3).toFixed(2);
+    let prior = pr.combat;
+    if(this.o.twdKnow){ const tw = this._twdExpect(seat); if(tw) prior = Bot._blend(pr.combat, tw.combatDanger, tw.n, 2); }   // v0.6.187: the TWDA expectation shapes the prior (weight = evidence: clan 1 + shown cards), then the observations take over as before
+    return +Bot._blend(prior, observed, nCards + o.combat.n, 3).toFixed(2);
   }
   oppStealth(seat){                    // expected announced stealth on this seat's next directed action
     const o = this._opp(seat), pr = this._oppPrior(seat);
@@ -1969,12 +2105,25 @@ class Bot {
       b += m && (m.hitMax | 0) > 0 ? m.hitMax : Math.ceil(pr.bleed) + (pr.bleed > 1.3 ? 1 : 0); });
     return b;
   }
+  _knownLosses(){                      // v0.6.189: what I paid to RECURRING sources over my last full turn cycle (between my last two turn starts): Creeping Sabotage ticks, Smiling Jack, Fame -- the losses that come again next cycle whatever the predator does
+    if(!this.ev) return 0;
+    const a = this.ev.ev; let end = -1, start = -1;
+    for(let i = a.length - 1; i >= 0; i--){ const x = a[i]; if(x.kind === 'turn' && x.seat === this.seat){ if(end < 0) end = i; else { start = i; break; } } }
+    if(end < 0) return 0;
+    let sum = 0; const from = start < 0 ? 0 : start;
+    const me = this.seatName(this.seat);
+    for(let i = from; i < a.length; i++){ const x = a[i]; if(x.kind !== 'pool' || typeof x.delta !== 'number' || x.delta >= 0 || !(x.via === 'creep' || x.via === 'smiling-jack' || x.via === 'fame')) continue;
+      const aboutMe = x.target ? (x.target === me || x.target === 'me') : !!x.own;   // v0.6.191 (review): the creep tick is the PREDATOR's line ('Creeping Sabotage ticks -- <prey> burns N') -- it names me as target and is never my own; v0.6.189 counted own lines only, so real ticks were never seen (the dyn bench measured an inert knob)
+      if(aboutMe) sum += -x.delta; }
+    return sum;
+  }
   _critPool(){                         // v0.6.136: the pool level at which I am ONE predator turn from falling -- Johan: 6 is the floor of it, the rest is dynamic: it RISES with what I face (predBurst) and FALLS with what I can stop now (unlocked bodies whose intercept meets its stealth, wakes for the locked ones, a bounce in hand). critRisk scales the dynamic part (0 = the fixed floor, the original; 1 = full) -- a persona's appetite, to be MEASURED both ways (Johan).
     const floor = this.o.poolFloor | 0, risk = this.o.critRisk == null ? 1 : +this.o.critRisk; const pred = this.predSeat();
     if(!(risk > 0) || !pred) return { crit: floor, burst: 0, stopped: 0, floor, risk };
     const o = this._opp(pred), M = o.minions || {}, pr = this._oppPrior(pred), st = this.oppStealth(pred);
     const hits = Object.keys(o.vamps || {}).filter(n => o.vamps[n].zone === 'ready').map(n => { const m = M[n]; return m && (m.hitMax | 0) > 0 ? m.hitMax : Math.ceil(pr.bleed) + (pr.bleed > 1.3 ? 1 : 0); }).sort((a, b) => b - a);
-    const burst = hits.reduce((a, b) => a + b, 0);
+    const known = this.o.dynFloor ? this._knownLosses() : 0; if(known > 0) this._emit('dyn-floor', { known, pool: this.pool });   // v0.6.191: the trace proves the knob FIRES (the bench gate)
+    const burst = hits.reduce((a, b) => a + b, 0) + known;   // v0.6.189: + the recurring losses (creep, Jack, Fame) that come next cycle whatever the predator does
     const bodies = this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && (c.blood | 0) > 0);
     let wakes = 0; (this.hand || []).forEach(nm => { const h = this.fxLookup(nm); if(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.fx && mo.fx.wake)) wakes++; });
     const stops = []; bodies.forEach(v => { if(v.locked){ if(wakes > 0) wakes--; else return; }
@@ -2055,7 +2204,9 @@ class Bot {
   }
   _onFx(m){                         // structured observation: face-up play clones carry the card name
     if(!this.started || !m || m.kind !== 'play' || m.seat === this.seat) return;
-    if(m.card && m.card.name && !m.card.faceDown) this._noteObserved(m.seat, m.card.name);
+    if(m.card && m.card.name && !m.card.faceDown){ this._noteObserved(m.seat, m.card.name);
+      if(this.ev){ const nm = m.card.name, dup = this.ev.last('card-played', x => x.seat === m.seat && x.card === nm && Date.now() - x.t < 3000); if(!dup) this.ev.push({ kind: 'card-played', seat: m.seat | 0, who: null, card: nm, src: 'fx', crypt: m.card.kind === 'crypt' }); }
+      if(this.started && m.seat && m.seat !== this.seat && this.ark){ try { this._archetypeSay(m.seat | 0); } catch(e){} }   /* v0.6.192 */   /* v0.6.186: the client's play clone is the SECOND feed of cards shown -- a human's play that never produced a 'plays X' line still lands in ev.cardsShown */ }
   }
   /* ---------- hand-intel (R2, plan section 4): legal ground truth about a hand ----
      Populated ONLY by revealHand / openHandGrant / openHandRevoke addressed to this
@@ -2127,6 +2278,16 @@ class Bot {
       n += cm; });
     return n;
   }
+  _equipPaidIntercept(vamp, p){      // v0.6.174 (sweep pilot, 25 Sep): Bowl of Convergence [AUS] -- 'can burn 1 blood during an action to get an additional +1 intercept' (cardfx fx.interceptPaid, cost in blood). Once per action per card; the blocker keeps 1 blood.
+    let best = null;
+    this._attachedEquips(vamp).forEach(c => { const h = this.fxLookup(c.name); if(!h) return;
+      (h.e.modes || []).forEach(mo => { const f = mo.fx || {}; if(!(f.interceptPaid > 0) || !this._modeUsableBy(mo, vamp)) return;
+        const cost = f.interceptPaidBlood | 0 || 1; const key = 'paidIc:' + c.id;
+        if(p && p.reacted && p.reacted.has(key)) return;
+        if((vamp.blood | 0) - cost < 1) return;
+        if(!best) best = { card: c.name, key, n: f.interceptPaid | 0, cost }; }); });
+    return best;
+  }
   _equipPrevent(vamp){               // E1: Kevlar-class -- fx.prevent from borne equipment, ONCE each combat (conservative 1; the 2-vs-guns upgrade is a later refinement)
     if(this._equipPreventUsed) return 0;
     let best = 0;
@@ -2141,7 +2302,7 @@ class Bot {
     let best = null;
     this._attachedEquips(vamp).forEach(c => { const h = this.fxLookup(c.name);
       (h.e.modes || []).forEach(mo => { const v = mo.fx && mo.fx[key];
-        if(typeof v === 'number' && this._modeUsableBy(mo, vamp) && (!best || v > best.n)) best = { name: c.name, n: v, fromEquip: true }; }); });
+        if(typeof v === 'number' && this._modeUsableBy(mo, vamp) && !(key === 'strike' && this._range === 'long' && !mo.fx.ranged) && (!best || v > best.n)) best = { name: c.name, n: v, fromEquip: true }; }); });   // v0.6.175: a melee weapon's strike is not usable at long range
     return best;
   }
   _remainingLibrary(){               // E1 (the Ashur precedent): the server's piles are hidden count-only -- estimate remaining as deck minus hand minus every board name (any zone)
@@ -2307,7 +2468,7 @@ class Bot {
   }
   _emitManifest(){                   // A2 (v0.6.73): deck intent + effective knobs
     const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {};
-    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind']) if(this.o[k] !== undefined) kn[k] = this.o[k];
+    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost']) if(this.o[k] !== undefined) kn[k] = this.o[k];
     this._emit('manifest', { seat: this.o.seat || null, deck: this.o.deckName || null, persona: this.o.persona, strategy: ds.strategy || null, axes: ds.axes || [], knobs: kn });   // v0.6.88: seat carried when the arena provides it -- the manifest is now self-describing for seat order
   }
   _deckAxes(){ const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {}; return ds.axes || []; }   // v0.6.107 (B1): the manifest's axes, finally read
@@ -2365,7 +2526,8 @@ class Bot {
     else if((m = t.match(L12.uTabling))){ sub = 'tabling'; info = { vamp: m[1], card: m[2] }; }
     else if((m = t.match(L12.uFetch))){ sub = 'fetch'; info = { vamp: m[1], card: m[4], via: m[2] }; }
     else if((m = t.match(L12.uStrength))){ sub = 'strength'; info = { vamp: m[1], card: m[2] }; }
-    else if((m = t.match(L12.uRescue))){ sub = 'rescue'; info = { vamp: m[1] }; }   // v0.6.127
+    else if((m = t.match(L12.uRescue))){ sub = 'rescue'; info = { vamp: m[1] }; }   // v0.6.127 / v0.6.172: 'their own vampire'
+    else if((m = t.match(L12.uCardAct))){ sub = 'card'; info = { vamp: m[1] }; }   // v0.6.172: 'Undirected card action'
     else if((m = t.match(L12.uLeave))){ sub = 'leave'; info = { vamp: m[1] }; }   // v0.6.128
     else return false;
     const actorSeat = this._seatOfName(who);
@@ -2789,7 +2951,7 @@ class Bot {
   _park(blood, pool){ const a = this._actingVamp; if(!a) return; a.parked = a.parked || { blood: 0, pool: 0 }; a.parked.blood += blood | 0; a.parked.pool += pool | 0; }
   _returnParked(){ const a = this._actingVamp, pk = a && a.parked; if(!pk || !(pk.blood || pk.pool)) return; a.parked = null;
     const v = a.v; if(pk.blood && v){ const cap = this.fxCryptCap(v.name); v.blood = Math.min(typeof cap === 'number' ? cap : 99, (v.blood | 0) + pk.blood); }
-    if(pk.pool) this.pool = (this.pool | 0) + pk.pool;
+    if(pk.pool){ this.pool = (this.pool | 0) + pk.pool; if(this.ev){ this._invOnEvent(this.ev.push({ kind: 'pool', delta: +pk.pool, via: 'cost-returned', own: true, seat: this.seat })); } }   // v0.6.180: a blocked action's parked pool cost comes back WITHOUT a table line -- the ledger hears it from here
     this.push(); this._emit('cost-returned', { blood: pk.blood, pool: pk.pool }); }
   _bestBlockBarFor(vamp){            // v0.6.127 (cardfx v1.9.0, fx.blockBar): Daring the Dawn-class -- an action modifier that bars VAMPIRES from blocking this action and bills its own vampire afterwards (selfDmg / selfTorpor). v0 keeps to the self-price members: a free bar (Beast Meld [ANI][PRO]) carries a 'non-bleed only' condition the data does not read yet. The cheapest price wins (the superior mode).
     let best = null;
@@ -3148,14 +3310,23 @@ class Bot {
     if(my - pr < 0) return { dir: 'against', why: led + ' \u2014 it feeds my prey' };   // v0.6.124 (Johan, 18 Sep): the rule is symmetric -- a referendum that helps my prey more than me gets my votes against (my prey calling Parity Shift on itself was an abstain)
     return { dir: null, why: 'nothing in it for me' };
   }
-  _refPoll(rc){                      // the vote clock: askSecs of silence closes the polls; every vote, tally move or Hold on restarts it; 'It resolves' (or the tally's Resolve) from anyone closes at once; all other live seats heard = closed
+  _refPoll(rc){                      // the vote clock: askSecs of silence closes the polls; every vote, tally move or Hold on restarts it; 'It resolves' (or the tally's Resolve) from anyone closes at once; all other live seats heard = closed. v0.6.194: the clock is the tempo's when a human is still to be heard (legacy = askSecs + the chat settle)
     return new Promise(resolve => {
-      rc.done = why => { if(rc.closed) return; rc.closed = why; if(rc.timer) clearTimeout(rc.timer); resolve(why); };
-      rc.arm = () => { if(rc.closed) return; if(rc.timer) clearTimeout(rc.timer);
-        if(rc.paused.size) return;                                                  // someone said Hold on: the clock stands until they speak
+      rc.t0 = Date.now(); rc._heardAt = Object.create(null); rc._held = false;   // v0.6.198: a second poll (after a vote boost) is a fresh wait -- no held mark carried over
+      rc.done = why => { if(rc.closed) return; rc.closed = why; if(rc.timer) clearTimeout(rc.timer); if(rc._remT){ clearTimeout(rc._remT); rc._remT = null; }
+        if(!rc._held) Object.keys(rc._heardAt).forEach(nm => this._rtNote(nm, rc._heardAt[nm] - rc.t0));   // Adaptive's measurement: each human's first word in the poll (v0.6.198: not when the poll was held -- a hold is not an answer time)
+        this._waitRow('vote', rc.plan, rc.t0, /clock/.test(why) ? 'clock' : (rc._end || 'answer'), { why, held: rc._held ? 1 : undefined });
+        if(rc.plan && rc.plan.noClock && /clock/.test(why)) this.note('Trainbot: no more votes in ' + Math.round(rc.plan.ms / 60000) + ' min \u2014 closing the polls.');
+        resolve(why); };
+      rc.arm = () => { if(rc.closed) return; if(rc.timer){ clearTimeout(rc.timer); rc.timer = null; }
+        if(rc.paused.size){ this._freezeWait(rc); this._holdAnnounce(); return; }                        // someone said Hold on: the clock stands until they speak (v0.6.198: its deadline and its Turn-based reminder stand with it)
         const others = (this.players || []).filter(pl => pl.seat !== this.seat && this.live(pl.seat)).map(pl => pl.name);
-        if(others.length && others.every(nm => rc.heard.has(nm))) return rc.done('everyone has spoken');
-        rc.timer = setTimeout(() => rc.done('the clock ran out'), this.o.askSecs * 1000 + this._chatSettleMs()); };
+        others.forEach(nm => { if(rc.heard.has(nm) && !rc._heardAt[nm]) rc._heardAt[nm] = Date.now(); });
+        if(others.length && others.every(nm => rc.heard.has(nm))) return rc.done('everyone has spoken');   // completion is not a clock: a held table still closes a poll everybody has answered
+        if(this._held()){ rc.plan = this._waitPlan('vote', others.filter(nm => !rc.heard.has(nm))); this._freezeWait(rc); this._holdAnnounce(); return; }   // v0.6.198: a hold by anyone stops the clock; _holdThaw arms it fresh
+        const plan = rc.plan = this._waitPlan('vote', others.filter(nm => !rc.heard.has(nm)));
+        rc.deadline = plan.noClock ? null : Date.now() + plan.ms; rc.timer = setTimeout(() => rc.done('the clock ran out'), plan.ms);
+        this._remindArm(rc, plan, 'Still waiting for votes from ' + others.filter(nm => !rc.heard.has(nm)).join(', ') + ' \u2014 vote, or Pass (or press the Bot button).'); };
       rc.arm();
     });
   }
@@ -3164,7 +3335,7 @@ class Bot {
     const terms = this._refTermsText(act.deltas);
     this._actingVamp.kind = 'political'; this._actingVamp.target = null;
     if(act.cost && act.cost.blood) { v.blood = Math.max(0, (v.blood | 0) - act.cost.blood); this._park(act.cost.blood, 0); }   // costs at announce (debt 1)
-    if(act.cost && act.cost.pool){ this.pool = Math.max(0, (this.pool | 0) - act.cost.pool); this._park(0, act.cost.pool); }
+    if(act.cost && act.cost.pool){ this.pool = Math.max(0, (this.pool | 0) - act.cost.pool); this._park(0, act.cost.pool); if(this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: -act.cost.pool, via: 'cost', card: act.name || null, own: true, seat: this.seat })); }   // v0.6.180: paid at announce without its own line
     this.push();
     if(this._actingVamp && this._actingVamp.played) this._maybeBlockBarRef(v, act);   // v0.6.129: the bar line goes out before the terms and the announce
     this.send({ t: 'log', html: 'Referendum terms \u2014 <b>' + esc(act.name) + '</b>: ' + esc(terms) + '.' });   // FIRST: every bot reads its stake from this before the block question opens
@@ -3224,7 +3395,9 @@ class Bot {
       this._writeTally({ mode: null, a: 0, b: 0 });
       if(passed){
         const my = act.deltas[this.seat] | 0;
-        if(my){ this.pool = Math.max(0, (this.pool | 0) + my); }
+        if(my){ const p0 = this.pool; this.pool = Math.max(0, (this.pool | 0) + my);
+          if(this.pool > 0){ this.push(); this.chat(my < 0 ? 'I lose ' + (-my) + ' pool to the referendum. Pool: ' + this.pool + '.' : 'I gain ' + my + ' pool from the referendum. Pool: ' + this.pool + '.'); }   // v0.6.197 (Johan, 11 Oct: the fourth silent pool change): my OWN swing is spoken as the voters speak theirs -- and send() types the line into the event log, so it IS the ledger record (no second push)
+          else if(this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: this.pool - p0, via: 'referendum', card: act.name, own: true, seat: this.seat })); }   // v0.6.180: no line at 0 (the oust below speaks) -- the ledger still gets the move
         this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name, kind: 'political' });
         this.say('It resolves');
         this.push();
@@ -3754,7 +3927,7 @@ class Bot {
       if(h.e.req && h.e.req.rangeLong && this._range !== 'long') return;
       (h.e.modes || []).forEach(mo => {
         const st = mo.fx && mo.fx.strike;
-        if(typeof st === 'number' && !mo.fx.maneuver && !mo.fx.press && (!this._handStrikeOnly || mo.fx.handStrike) && !(this._range === 'long' && mo.fx.handStrike) && this._modeUsableBy(mo, vamp) &&   // v0.6.156: a hand strike (Roundhouse) cannot be used at long range -- rulebook 6.4.3   // v0.6.20: co-located maneuver/press = a bundled ability, not a clean strike bonus (Slam's superior, Lam Into) -- same guard as steal's, conservatively also excludes 2 false positives (Pounce, Taming the Beast) where "press" describes an unrelated consequence, not a granted option; a missed tag over a wrong one. v0.6.28 (Immortal Grapple): while _handStrikeOnly is active, only handStrike-tagged modes qualify -- source-verified "strikes that are not hand strikes cannot be used this round (by either combatant)"
+        if(typeof st === 'number' && !mo.fx.maneuver && !mo.fx.press && (!this._handStrikeOnly || mo.fx.handStrike) && !(this._range === 'long' && mo.fx.handStrike) && !(this._range === 'long' && !mo.fx.ranged) && this._modeUsableBy(mo, vamp) &&   /* v0.6.175 (the cardfx sweep): at long range only a RANGED strike (cardfx fx.ranged, the R suffix) -- a melee card strike (Talbot's Chainsaw, Burning Touch, 14 cards) cannot be used */   // v0.6.156: a hand strike (Roundhouse) cannot be used at long range -- rulebook 6.4.3   // v0.6.20: co-located maneuver/press = a bundled ability, not a clean strike bonus (Slam's superior, Lam Into) -- same guard as steal's, conservatively also excludes 2 false positives (Pounce, Taming the Beast) where "press" describes an unrelated consequence, not a granted option; a missed tag over a wrong one. v0.6.28 (Immortal Grapple): while _handStrikeOnly is active, only handStrike-tagged modes qualify -- source-verified "strikes that are not hand strikes cannot be used this round (by either combatant)"
            (vamp.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0) && (!best || st > best.n))
           best = { idx, name: h.name, n: st, cost: h.e.cost || null };
       });
@@ -3772,7 +3945,7 @@ class Bot {
       if(h.e.req && h.e.req.rangeLong && this._range !== 'long') return;
       (h.e.modes || []).forEach(mo => {
         const st = mo.fx && mo.fx.stealBlood;
-        if(typeof st !== 'number' || mo.fx.maneuver || mo.fx.press || (this._handStrikeOnly && !mo.fx.handStrike)) return;   // v0.6.28 (Immortal Grapple): every measured steal-blood card is "Strike, ranged" or similar -- NONE are handStrike-tagged, so this correctly excludes ALL of them while the restriction is active, not a guess
+        if(typeof st !== 'number' || mo.fx.maneuver || mo.fx.press || (this._handStrikeOnly && !mo.fx.handStrike) || (this._range === 'long' && !mo.fx.ranged)) return;   // v0.6.175: a steal at long range must be ranged   // v0.6.28 (Immortal Grapple): every measured steal-blood card is "Strike, ranged" or similar -- NONE are handStrike-tagged, so this correctly excludes ALL of them while the restriction is active, not a guess
         if(this._modeUsableBy(mo, vamp) && (vamp.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0) && (!best || st > best.n))
           best = { idx, name: h.name, n: st, cost: h.e.cost || null };
       });
@@ -3879,11 +4052,46 @@ class Bot {
     const seat = this._seatOfVamp(name); if(!seat || seat === this.seat) return null;
     const o = this._opp(seat); return { seat, o, rec: (o.vamps || {})[name] || null, name };
   }
+  _stealAvail(){                     // v0.6.196 (two-sided ledger, the fix series): what a steal can take -- the rulebook's Steal Blood "moves blood counters ... from the target to the striking minion", so never more than the opposing vampire holds (the board's count); unknown (no crypt record: a human table before any scan, an ally) -> the card's own number, as before
+    const c = this._combatOpp(); if(!c) return Infinity;
+    const board = (c.rec && typeof c.rec.blood === 'number') ? Math.max(0, c.rec.blood | 0) : null;
+    /* v0.6.198 (main's reply, 12 Oct §3.2): a human's client never applies combat damage to the board -- the player keeps track -- so in
+       round 2+ the board can still show the blood from before the damage until the player adjusts it. Their own taken line carries the
+       number ("Lisa takes 1 (loses 1 blood, now 2)."): within THIS combat, for THIS vampire, its "now M" is fresher than the board until
+       the board changes (a manual change reaches us within the 600 ms push debounce, and re-stamps rec.bloodAt). A bot's line and its
+       board agree, so the rule changes nothing between bots. */
+    const lt = this._oppLastTaken;
+    const fresh = lt && lt.now != null && lt.vamp === c.name && lt.at >= (this._combatAt || 0) && (board == null || lt.at > ((c.rec && c.rec.bloodAt) || 0));
+    if(fresh) return Math.max(0, lt.now | 0);
+    return board == null ? Infinity : board;
+  }
   _oppShown(cat){ const c = this._combatOpp(); return c ? ((c.o.seen || {})[cat] | 0) : 0; }   // combat cards this seat has shown (table model categories: dodge = dodge OR combat ends, strike, stealBlood, press, maneuver, aggr)
   _oppExpectedDmg(){                 // what this seat's minions have dealt me per combat, else the disciplines/weapons prior, else the rulebook fist (1)
     const c = this._combatOpp(); if(!c) return 1;
     if(c.o.combat && c.o.combat.n) return Math.max(1, c.o.combat.dmgSum / c.o.combat.n);
     const pr = this._oppPrior(c.seat); return pr && pr.dmgPerCombat ? pr.dmgPerCombat : 1;
+  }
+  _expStrikeDmg(seat){               // v0.6.196: what ONE strike from this seat's minions is expected to do to mine, in blood -- a fist (1) + 2 x the combat danger (oppCombat blends the TWDA expectation, the board's disciplines and weapons, the combat cards shown and the damage dealt me)
+    return seat ? 1 + 2 * this.oppCombat(seat) : 1;
+  }
+  _combatEndCopies(vamp){            // v0.6.196: combat-ends strikes in my hand this vampire could play -- how precious the next one is
+    let n = 0; (this.hand || []).forEach(nm => { const h = this.fxLookup(nm); if(!h || h.kind !== 'lib' || (h.e.t || []).indexOf('combat') < 0) return;
+      if(((h.e.cost && h.e.cost.blood) | 0) <= (vamp.blood | 0) && (h.e.modes || []).some(mo => mo.fx && mo.fx.strikeCE && this._modeUsableBy(mo, vamp))) n++; });
+    return n;
+  }
+  _ceCtx(vamp){                      // v0.6.196: what decide('combat-end') weighs -- the opposing strike THIS round (known or expected), the card's worth if kept, my own strike, the range
+    const c = this._combatOpp(), crows = this._oppCarrionCrows ? (this._oppCarrionCrows.n | 0) : 0;   // Johan (18 Sep): combat ends first -- their crows do not land either
+    const k = this._oppStrike;                                                          // a peek: their strike line, when they declared first (the acting side, or a line that beat my choice)
+    let inc;
+    if(k) inc = { known: true, dodge: !!k.dodge, dmg: (k.dealt | 0) + crows, steal: k.steal | 0, aggr: k.aggr | 0, src: 'their strike line' };   // a steal is not damage: it never torpors, it only costs blood
+    else {
+      const longSafe = this._range === 'long' && !this._oppHasRanged();               // v0.6.157: a hand strike does not reach at long range
+      const aggrSeen = c ? (((c.o.seen || {}).aggr | 0) > 0) : false;
+      inc = { known: false, dodge: false, dmg: +((longSafe ? 0 : this._expStrikeDmg(c ? c.seat : 0)) + crows).toFixed(2), aggr: 0, aggrRisk: aggrSeen && !longSafe, src: c ? 'expected from seat ' + c.seat + (longSafe ? ' (long range, no ranged strike shown)' : '') : 'no opponent on record: a fist' };
+    }
+    const opps = (this.players || []).filter(p => p && p.seat !== this.seat && this.live(p.seat)).map(p => p.seat);
+    const keepThreat = Math.max(1, ...opps.map(s => this._expStrikeDmg(s)));         // the most dangerous strike at the table -- what a kept card is for
+    return { inc, copies: Math.max(1, this._combatEndCopies(vamp)), keepThreat: +keepThreat.toFixed(2), mine: this._myRoundDmg(vamp).dmg | 0, posture: this._combatPosture() };
   }
   _myRoundDmg(vamp, opts){           // the damage (or blood swing) my NEXT strike lands: best strike card > bare fist + strength; steal counts as its blood swing; active Carrion Crows add each round. opts.close = evaluate as if at close range (a bundled Grapple press forces close next round)
     const saveR = this._range; if(opts && opts.close) this._range = 'close';
@@ -3897,13 +4105,223 @@ class Bot {
     return { dmg: dmg + crows, card, crows, fist: 1 + this._strengthBonus(vamp) };
   }
   _strikeWaitMs(continued){          // v0.6.159 (serie-cmb4, the phantom round 3): in a CONTINUED round the presser is still sitting in its own press window (askSecs, waiting to see whether I cancel) while I -- who only received the press -- start the next round at once; with equal windows my strike wait expired exactly as its strike arrived (Malkavian 'opp-silent' at -6402, Ventrue's strike at -6402). Round 2+ waits two windows.
-    const base = (this.o.askSecs || 2) * 1000; return continued ? base * 2 : base;
+    const base = (this.o.askSecs || 2) * 1000; return this._lineGraceMs(continued ? base * 2 : base, 'strike');   // v0.6.195: vs a human under the tempo the strike step already waited -- see _lineGraceMs
   }
+  _stolenFromMe(n, who, via){        // v0.6.196 (found building the combat-ends rule): a steal against MY vampire. It used to land the moment the line arrived -- before I had chosen my own strike when they declared first (a human acting, the phases), and with no refund when I then dodged or ended the combat (rulebook + Johan 18 Sep: combat ends first, a dodge protects -- nothing is stolen). The stealer's side already undid its gain on my dodge / my combat ends (v0.6.172), so a bot victim lost blood that went nowhere.
+    const r = this._rnd, v = this._combatMyVamp; if(!v) return;
+    if(r && r.noSteal){ this.o.log('combat (' + v.name + '): ' + who + "'s steal does not land -- my " + r.noSteal + ' came first'); return; }
+    if(r && r.dealt === null){ r.stealPending = (r.stealPending | 0) + (n | 0); this.o.log('combat (' + v.name + '): ' + who + ' steals ' + n + ' (' + via + ') -- it lands when my strike resolves, unless I dodge or end the combat'); return; }
+    const lost = Math.min(n | 0, v.blood | 0); v.blood = (v.blood | 0) - lost; if(r) r.stolenFromMe = (r.stolenFromMe | 0) + lost;   // my strike is already resolved (and it was neither a dodge nor combat ends): the steal lands now
+    this.o.log('combat (' + v.name + '): ' + who + ' steals ' + lost + ' blood (' + via + ', not damage)'); this.push();
+  }
+  _stealSettle(vamp, how){           // v0.6.196: at my strike's resolution -- a parked steal lands, or (how = 'dodge' / 'combat ends') never does
+    const r = this._rnd; if(!r) return;
+    if(how){ if(r.stealPending) this.o.log('combat (' + vamp.name + '): their steal of ' + r.stealPending + ' never lands -- my ' + how + ' came first'); r.stealPending = 0; r.noSteal = how; return; }
+    const n = r.stealPending | 0; if(!n) return; r.stealPending = 0;
+    const lost = Math.min(n, vamp.blood | 0); vamp.blood = (vamp.blood | 0) - lost; r.stolenFromMe = (r.stolenFromMe | 0) + lost;
+    this.o.log('combat (' + vamp.name + '): their steal lands -- ' + lost + ' blood (not damage)'); this.push();
+  }
+  _lineGraceMs(legacyMs, kind){      // v0.6.195 (main's reply review, 9 Oct): after a combat step has ALREADY waited on a HUMAN under the tempo, the handshake waits (_awaitOppStrike / _awaitOppPress / Taste's _awaitOppTaken) only catch a line already on its way -- they used to add a full askSecs (20 s at the client) after the human had answered, e.g. after 'No' to 'Any presses?' in every combat. Bot-vs-bot and a table with no botcfg keep the handshake's own clock.
+    if(!this._tempoMode() || !this._phasesOn()) return legacyMs;
+    const r = this._phaseLast && this._phaseLast.res;
+    const g = kind === 'taken' ? 1500                                         // the taken line is written by THEIR client when ph steps past Damage: a round trip, whatever they answered
+            : (r === 'pass' || r === 'button' || r === 'skip') ? 300        // they said no / gave the bot the word / could not act: nothing is coming
+            : 1000;                                                           // a clock or a ph step: a line may be a moment behind
+    return Math.min(legacyMs, g);
+  }
+  /* ==================== v0.6.194: THE TEMPO (Johan's design, spec-bot-tempo-2026-09-27.md) ====================
+     Every wait the bot makes on a HUMAN -- the block window, a reactions-only window, the pool question, the vote clock, the seven
+     combat steps and the damage step -- reads ONE tempo object instead of the fixed askSecs / phaseSecs. The table sets it with a
+     `botcfg` message ({ tempo, waitSecs }, partial writes allowed, the v2.6.17 rule); a bot that never receives one keeps the old
+     clocks (askSecs 20 s at a human table, phaseSecs 60 s -- the players' complaint). Modes: STANDARD = the slider is the clock
+     (a combat step twice it); ADAPTIVE = the slider is the ceiling, the bot waits ~1.5x the human's median response time and skips a
+     question the human cannot act on; TURN-BASED = no clock -- the bot says what it waits for and stands still until the human answers
+     (a line, a quick phrase, the Bot button via step()); a reminder after tempoRemindMs, a pass after tempoGiveUpMs. Bot-vs-bot windows
+     are untouched in every mode: the plan is read only when a human is among the seats waited on. Every wait leaves a `wait` trace row. */
+  _tempoSet(m, quiet){
+    const T = this.tempo, modes = { standard: 1, adaptive: 1, turn: 1 }; let changed = false;
+    if(m && typeof m.tempo === 'string' && modes[m.tempo.toLowerCase()]){ const v = m.tempo.toLowerCase(); if(T.mode !== v){ T.mode = v; changed = true; } }
+    if(m && typeof m.waitSecs === 'number' && isFinite(m.waitSecs)){ const v = Math.max(1, Math.min(8, Math.round(m.waitSecs * 10) / 10)); if(T.waitSecs !== v){ T.waitSecs = v; changed = true; } }
+    if(!T.mode && T.waitSecs == null) return false;                       // nothing usable in the message: the tempo stays as it was
+    if(!T.mode) T.mode = 'standard'; if(T.waitSecs == null) T.waitSecs = 3;   // the first partial write fills the other field with the spec's default (Standard, 3.0 s)
+    if(m && m.who) T.who = String(m.who); T.at = Date.now();
+    this._emit('tempo', { mode: T.mode, waitSecs: T.waitSecs, who: T.who, changed });
+    if(changed && !quiet) this.o.log('tempo: ' + T.mode + ', ' + T.waitSecs + ' s' + (T.who ? ' (set by ' + T.who + ')' : ''));
+    if(changed) this._tempoRearm();                                          // the change applies to every bot at once -- an OPEN wait follows the new tempo immediately
+    return changed;
+  }
+  _tempoMode(){ return (this.tempo && this.tempo.mode) || null; }           // null = no botcfg ever = the clocks of old
+  _tempoRearm(){
+    const a = this._ask; if(a && a.timer && !(a.pausedBy && a.pausedBy.size)) this._restartAskTimer();
+    if(this._pq && this._pq.timer) this._pqArm();
+    const pw = this._phaseWait; if(pw && pw.arm) pw.arm();
+    const rc = this._refCall; if(rc && !rc.closed && rc.arm && !(rc.paused && rc.paused.size)) rc.arm();
+  }
+  _humanAt(seat){ const p = (this.players || []).find(q => q && q.seat === seat); return (p && !p.bot && !p.vacant) ? p.name : null; }
+  _rtNote(who, ms){                                                         // Adaptive's measurement: a human's answer time, kept per human over the last tempoHist answers
+    if(!who || !this._isHumanName(who) || !(ms >= 0)) return;
+    const r = this._rt[who] = this._rt[who] || []; r.push(ms); const n = this.o.tempoHist || 7; while(r.length > n) r.shift();
+  }
+  _rtMedian(who){ const r = this._rt[who]; if(!r || !r.length) return null; const s = r.slice().sort((x, y) => x - y), h = s.length >> 1; return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2; }
+  _waitPlan(kind, who){                                                     // kind: block | react | pq | vote | phase | damage; who: the human(s) waited on (a name or an array of names; none = a bot-only wait)
+    const names = (Array.isArray(who) ? who : [who]).filter(n => n && this._isHumanName(n));
+    const combat = kind === 'phase' || kind === 'damage', settle = combat ? 0 : this._chatSettleMs();   // the question's bubble must land before any clock counts (v0.6.100) -- in every mode
+    const legacy = () => combat ? (this.o.phaseSecs || Math.max(6, (this.o.askSecs || 2) * 3)) * 1000 : this.o.askSecs * 1000 + settle;
+    const mode = this._tempoMode();
+    if(!mode || !names.length) return { mode: names.length ? 'legacy' : 'bots', ms: legacy(), remindMs: 0, who: names };
+    const base = (this.tempo.waitSecs || 3) * 1000, cap = kind === 'phase' ? base * 2 : base;   // v0.6.196 (Johan asked what is best): the DAMAGE step waits 1 x the slider -- it asks nothing, it is a window for a prevention card, and 2 x made it the longest silence of every round
+    if(mode === 'turn') return { mode, ms: (this.o.tempoGiveUpMs != null ? this.o.tempoGiveUpMs : 240000), remindMs: (this.o.tempoRemindMs != null ? this.o.tempoRemindMs : 120000), who: names, noClock: true };
+    if(mode === 'adaptive'){
+      let est = null; names.forEach(n => { const md = this._rtMedian(n); if(md != null) est = est == null ? md : Math.max(est, md); });   // several humans: the slowest one's estimate
+      const ms = est == null ? cap : Math.max((this.o.tempoAdaptMin != null ? this.o.tempoAdaptMin : 0.8) * 1000, Math.min(cap, est * (this.o.tempoAdaptK || 1.5)));
+      return { mode, ms: ms + settle, remindMs: 0, who: names, est };
+    }
+    return { mode, ms: cap + settle, remindMs: 0, who: names };
+  }
+  _waitTail(plan, done){ if(this._held()) return ' (the table is on hold \u2014 I wait for you)';   /* v0.6.198: no clock runs while a hold is live, so the tail must not promise one */ return plan.noClock ? ' (no clock \u2014 I wait for you)' : ' (' + Math.max(1, Math.round(plan.ms / 1000)) + 's \u2192 ' + done + ')'; }   // the clock in table words, appended to a question
+  _waitRow(kind, plan, t0, end, extra){ if(plan && plan.mode === 'bots') return; const row = Object.assign({ kind, mode: plan ? plan.mode : 'legacy', who: plan && plan.who && plan.who.length ? plan.who.join(',') : null, ms: Math.max(0, Date.now() - t0), end }, extra || {}); this._emit('wait', row); this.o.log('wait ' + JSON.stringify(row)); }   // also on the process log: a human table has no trace file, and ana-wait.py sums these lines   // one row per human wait: what, which tempo, how long, how it ended (answer | clock | button | skip | left)
+  _remindArm(holder, plan, text){                                            // Turn-based: a chat reminder at remindMs; the wait itself resolves like the clock at plan.ms (the timer the caller armed)
+    if(holder._remT) clearTimeout(holder._remT); holder._remT = null;
+    if(!plan || !plan.remindMs) return;
+    holder._remT = setTimeout(() => { holder._remT = null; if(holder.done || holder.closed) return; this.chat(text); }, plan.remindMs);
+  }
+  _seatCanBlock(seat, reactionsOnly){                                      // Adaptive's skip: can this seat answer the question at all? unknown board = yes (never skip on a guess)
+    const t = this.table && this.table[seat], cs = t && t.pub && t.pub.cards; if(!cs) return true;
+    const handN = (this.opp && this.opp[seat]) ? (this.opp[seat].handN | 0) : 1;
+    const ready = cs.filter(c => c && c.zone === 'ready' && (c.kind === 'crypt' || (() => { const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && ((h.e && h.e.t) || []).includes('ally')); })()));
+    if(!ready.length) return false;                                           // nothing that could ever block or react
+    if(!ready.some(c => !c.locked) && !(handN > 0)) return false;            // every minion locked: only a wake in hand could act -- an empty hand cannot
+    return reactionsOnly ? handN > 0 : true;                                  // a reaction is a card
+  }
+  _phaseSkip(step, who){                                                     // Adaptive's skip for the combat questions: 'anything before ...' with an empty hand has no answer; the strike and the press are always asked (the press is a decision, not a capability)
+    const c = this._combatOpp(); if(!c || !who) return false;
+    const handN = (this.opp && this.opp[c.seat]) ? (this.opp[c.seat].handN | 0) : 1; if(handN > 0) return false;
+    if(step === 0 || step === 2 || step === 6) return true;
+    if(step === 1 || step === 4) return !((c.rec && c.rec.equip) || []).length;   // a maneuver can also come from a gun on the minion, a prevention from a vest: with equipment the step is waited on
+    return false;
+  }
+  /* ==================== v0.6.165: THE COMBAT PHASES (Johan, 22 Sep: the bot DRIVES the steps against a human) ====================
+     Built on LINES and Johan's phrases, never on `ph` (main's spec §6: ph is an optional hint; a Classic table has none). Per step:
+     the ACTING side plays first. Human acting -> the bot asks (\"Anything before range?\") and waits; then the bot plays its own card.
+     Bot acting -> the bot plays or says \"I have nothing before range.\", then waits for the human's answer. The wait ends on the human's
+     combat line for the step, a quick phrase (No / Pass / Nothing / Go on / Done ...), a human moving `ph` past the step, or the clock
+     (restarted by the human's activity, like stealth / votes). Bot-vs-bot and combatPhases 0 skip it entirely.                    */
+  _phaseOppPlayer(){ const c = this._combatOpp(); if(!c) return null; const p = (this.players || [])[c.seat - 1]; return p && !p.bot ? p.name : null; }
+  _phasesOn(){ return this.o.combatPhases !== 0 && this._inCombat && !!this._phaseOppPlayer(); }
+  _phaseAsk(step){ return this._phaseStep(step, 'ask', false); }         // before my play in the step (human acting: ask first)
+  _phaseAfter(step, played){ return this._phaseStep(step, 'after', played); }   // after my play in the step (bot acting: announce / 'nothing', then wait)
+  async _phaseStep(step, when, played){
+    if(!this._phasesOn()) return null;
+    const acting = this._cSide === 'a';
+    if(when === 'ask' && acting) return null;          // I act first in this step: nothing to ask before my own play
+    if(when === 'after' && !acting) return null;       // the human acted first and already answered
+    const reply = when === 'reply';                    // v0.6.195: the human acted first, then I played (a press to continue) -- they may answer it (a press to end); asked again, under the tempo
+    const Q = ['Anything before range?', 'Any maneuvers?', 'Anything before strikes?', 'What is your strike?', null, 'Any presses?', 'Anything before ending combat?'];
+    const N = ['I have nothing before range.', 'I have no maneuver.', 'I have nothing before strikes.', null, null, 'I have no press.', 'I have nothing before ending combat.'];
+    if(!reply) this._cWrite({ ph: step });             // the hint for a helper-on panel (a reply stays in the step it is in)
+    const who = this._phaseOppPlayer(), plan = this._waitPlan('phase', who), t0 = Date.now();   // v0.6.194: the tempo (legacy = phaseSecs)
+    const skip = !reply && plan.mode === 'adaptive' && this._phaseSkip(step, who);   // v0.6.194 (Adaptive): a step the human cannot act on is neither asked nor waited on (my own line in the step is still said)
+    if(when === 'ask' || reply){ if(!skip && Q[step]) this.chat(Q[step] + (plan.noClock ? ' (I wait for you)' : '')); }
+    else if(!played && N[step]) this.chat(N[step] + (plan.noClock && !skip ? ' Your turn \u2014 I wait for you.' : ''));
+    if(skip){
+      this._waitRow('phase', plan, t0, 'skip', { step, when });
+      this._phaseLast = { step, res: 'skip' };
+      this._emit('combat-phase', { step, when, acting, answer: 'skip', ms: 0 });
+      return 'skip';
+    }
+    let pwRef = null;                                  // v0.6.198: the wait outlives the promise for its held mark
+    const res = await new Promise(resolve => {
+      const pw = pwRef = this._phaseWait = { step, who, plan, t0, resolve: why => { if(pw.done) return; pw.done = true; clearTimeout(pw.timer); if(pw._remT) clearTimeout(pw._remT); this._phaseWait = null; resolve(why); } };
+      pw.arm = () => { const pl = pw.plan = this._waitPlan('phase', who); clearTimeout(pw.timer); if(this._held()){ pw.timer = null; this._freezeWait(pw); this._holdAnnounce(); return; }   /* v0.6.198 (main 12 Oct): the step timed out and moved on while the human held -- a hold stops it; activity during the hold restarts nothing */ pw.deadline = pl.noClock ? null : Date.now() + pl.ms; pw.timer = setTimeout(() => pw.resolve('clock'), pl.ms);
+        this._remindArm(pw, pl, 'Still waiting for ' + who + ': ' + (Q[step] || 'your combat step') + ' \u2014 play, say No, or press the Bot button.'); };
+      pw.arm();
+    });
+    const held = !!(pwRef && pwRef._held);
+    if((res === 'line' || res === 'pass') && who && !held) this._rtNote(who, Date.now() - t0);   // Adaptive's measurement: the human's own answer (v0.6.198: not across a hold)
+    this._waitRow('phase', plan, t0, res === 'line' || res === 'pass' || res === 'ph' ? 'answer' : res, { step, when, held: held ? 1 : undefined });
+    if(res === 'clock' && plan.noClock) this.note('Trainbot: no answer in ' + Math.round(plan.ms / 60000) + ' min \u2014 going on as if ' + who + ' passed.');
+    this._phaseLast = { step, res };                   // v0.6.195: how the step ended -- _lineGraceMs reads it
+    this._emit('combat-phase', { step, when, acting, answer: res, ms: Date.now() - t0 });
+    return res;
+  }
+  async _phaseDamage(){               // v0.6.165b (pre-test review): Damage resolution has no question (Johan's list), but the HUMAN's client writes its automatic taken line only when the table steps PAST Damage (main's spec §3) -- with the bot never moving ph off Strike, Taste of Vitae / the torpor shot waited for a line that could not come. ph 4 opens the step (the human may prevent), the wait ends on their taken / prevent line, a pass, ph > 4 or the clock; then ph 5 steps past it so their client writes the taken line.
+    if(!this._phasesOn()) return null;
+    this._cWrite({ ph: 4 });
+    const who = this._phaseOppPlayer(), plan = this._waitPlan('damage', who), t0 = Date.now();   // v0.6.194: the tempo (legacy = phaseSecs)
+    const toThem = ((this._rnd && this._rnd.dealt) | 0) + (this._carrionCrows ? (this._carrionCrows.n | 0) : 0);   // v0.6.196: what my strike and my crows do to THEIR minion this round (0 after their dodge, a steal, long-range fists)
+    let res;
+    if(this._tempoMode() && toThem <= 0){ res = 'skip'; this._waitRow('damage', plan, t0, 'skip', { step: 4, why: 'no damage reaches their minion' }); }   // v0.6.196 (rules-strict, every tempo): nothing to prevent, nothing to wait for
+    else if(plan.mode === 'adaptive' && this._phaseSkip(4, who)){ res = 'skip'; this._waitRow('damage', plan, t0, 'skip', { step: 4 }); }   // v0.6.194 (Adaptive): an empty hand prevents nothing -- straight past the step
+    else {
+      if(plan.noClock) this.chat('Damage: prevent what you can, or say Pass (I wait for you).');
+      let pwRef = null;
+      res = await new Promise(resolve => {
+        const pw = pwRef = this._phaseWait = { step: 4, who, plan, t0, resolve: why => { if(pw.done) return; pw.done = true; clearTimeout(pw.timer); if(pw._remT) clearTimeout(pw._remT); this._phaseWait = null; resolve(why); } };
+        pw.arm = () => { const pl = pw.plan = this._waitPlan('damage', who); clearTimeout(pw.timer); if(this._held()){ pw.timer = null; this._freezeWait(pw); this._holdAnnounce(); return; }   /* v0.6.198: Hold on is how a human finds a prevention card -- the damage step stands while they hold */ pw.deadline = pl.noClock ? null : Date.now() + pl.ms; pw.timer = setTimeout(() => pw.resolve('clock'), pl.ms);
+          this._remindArm(pw, pl, 'Still waiting for ' + who + ': damage prevention \u2014 play, say Pass, or press the Bot button.'); };
+        pw.arm();
+      });
+      const held = !!(pwRef && pwRef._held);
+      if((res === 'line' || res === 'pass') && who && !held) this._rtNote(who, Date.now() - t0);
+      this._waitRow('damage', plan, t0, res === 'line' || res === 'pass' || res === 'ph' ? 'answer' : res, { step: 4, held: held ? 1 : undefined });
+      if(res === 'clock' && plan.noClock) this.note('Trainbot: no answer in ' + Math.round(plan.ms / 60000) + ' min \u2014 going on as if ' + who + ' passed.');
+    }
+    if(res !== 'ph') this._cWrite({ ph: 5 });
+    this._phaseLast = { step: 4, res };
+    this._emit('combat-phase', { step: 4, when: 'damage', acting: this._cSide === 'a', answer: res, ms: Date.now() - t0 });
+    return res;
+  }
+  _phaseNudge(who, txt, kind){                         // called from _onChat / _onLog / the tally handler with the human's activity
+    const pw = this._phaseWait; if(!pw || !who || who !== pw.who) return;
+    if(kind === 'tally'){ if((txt | 0) > pw.step) pw.resolve('ph'); return; }
+    const t = String(txt || '').trim();
+    if(kind === 'chat' && /^(no|nope|pass|nothing|none|no reaction|no maneuvers?|no press(es)?|done|go( on| ahead)?|ok(ay)?|continue|next|nothing here|not? this time|it resolves|carry on|resume)\b[.!]*$/i.test(t)) return pw.resolve('pass');   // v0.6.198: a TYPED "it resolves" answers the step as the quick phrase does (main 12 Oct: the release answers the step)
+    if(/(strikes|maneuvers to|presses to|sets range to|plays immortal grapple|plays carrion crows|inflicts|additional strike|prevents \d+ damage|takes \d+ \(loses)/i.test(t)) return pw.resolve('line');
+    pw.arm();                                          // any other activity from the human: the clock restarts
+  }
+  _cField(k){                        // v0.6.168 (pre-test review): a combat field is honoured only if it CHANGED during this combat. The server keeps absent fields while the mode stays 'combat' (v2.6.17 rule) and every relay carries the whole state, so a ce=1 / rl=1 / pr / rng left by an EARLIER combat could read as 'combat ended' or 'range set' in the next one. Baseline = the tally as it stood when this combat began (per round for the per-round fields, _cBaseRound).
+    const t = this._cTally(); if(!t) return undefined;
+    const perRound = k === 'ce' || k === 'pr' || k === 'rl';
+    const b = (perRound ? this._cBaseRound : this._cBase) || {};
+    return t[k] !== b[k] ? t[k] : undefined;
+  }
+  _cTally(){ const t = this.tally; return (t && t.mode === 'combat') ? t : null; }   // v0.6.164 (main's srv-2.6.39 combat fields): the room's combat tally, or null (helper off / no combat)
+  _isHumanName(who){ const p = (this.players || []).find(x => x && x.name === who); return !!(p && !p.bot); }
+  _cWrite(fields){ this._writeTally(Object.assign({ mode: 'combat' }, fields)); }   // partial write (v2.6.17 rule): only the fields I own
   _oppHasRanged(){                   // v0.6.157: does the combat opponent's seat show a RANGED option -- a strike-granting equipment on the table model, or a steal / ranged strike already seen? Unknown opponent -> false (the rulebook default is a hand strike)
     const c = this._combatOpp(); if(!c) return false;
     const eq = (c.rec && c.rec.equip) || [];
     if(eq.some(n => { const h = this.fxLookup(n); return h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.fx && typeof mo.fx.strike === 'number' && !mo.fx.handStrike); })) return true;
     return ((c.o.seen || {}).stealBlood | 0) > 0;
+  }
+  _oppPressP(seat){                  // v0.6.197: P(this seat can press in the combat now) -- public evidence only: a ready ally that grants a press (Underbridge Stray-class: 'burn 1 life to give a minion you control 1 press') on its board -> 0.9; else the TWDA press share of its clan and shown cards over its hand, 1 - (1 - s)^h. Unknown seat -> 0.5
+    if(!seat) return 0.5;
+    const tb = this.table && this.table[seat]; const cards = (tb && tb.pub && tb.pub.cards) || [];
+    if(cards.some(c => { if(!c || c.zone !== 'ready' || c.faceDown || !c.name) return false; const h = this.fxLookup(c.name); return h && h.kind === 'lib' && (h.e.t || []).includes('ally') && (h.e.modes || []).some(mo => mo.fx && mo.fx.allyPressLife); })) return 0.9;
+    const tw = this.o.twdKnow ? this._twdExpect(seat) : null; const sh = (tw && typeof tw.press === 'number') ? tw.press : 0.05;   // the TWDA knowledge rides twdKnow, as in oppCombat
+    const o = this._opp(seat); const h = (typeof o.handN === 'number' && o.handN > 0) ? Math.min(12, o.handN) : 7;
+    return +Math.min(0.95, 1 - Math.pow(1 - Math.max(0, Math.min(1, sh)), h)).toFixed(2);
+  }
+  _blockRisk(seat, blocker){         // v0.6.197 (blockCost): what blocking this seat's action is expected to cost the minion I would block with, in pool. The combat's damage to a BLOCKER, read from 72 bench matches (1,842 blocks): it lands 85 % of the time (dodges, maneuvers, combat ends make up the rest) as 1 + Poisson(lambda), lambda = 2.1 x (oppCombat - 0.29) -- the hand-strike decks (oppCombat ~0.3) deal exactly 1, the Nosferatu starter (~0.73) has the tail (Roundhouse, Crows, Stray presses). It reproduces the torpor rates measured by the blocker's blood: 0 blood 75-95 % (model 85), 1 blood vs Nosferatu 50 % (51), 4+ blood 0-1 % (<= 1.3). Cost = 0.5 x the expected blood lost + 3 x P(torpor) (the bare block's rescue price); a usable combat-ends / dodge strike caps it at the card
+    const p = this.pending; if(!seat) return null;
+    let b = blocker || (p ? this._pickBlocker(p.reacted, p.attempted, p) : null), via = null;
+    if(!b && p && !blocker){ b = this._wakeRouteBlocker(p); via = b ? 'wake' : null; }   // the first bench (bcN, 11 Oct) found the price never asked about a LOCKED blocker: 14 of the arm's 0-1 blood blocks came through a wake, invisible to _pickBlocker
+    if(!b) return null;
+    const oc = this.oppCombat(seat), lam = Math.max(0, 2.1 * (oc - 0.29)), q = 0.85, blood = b.blood | 0;
+    const P = [1 - q]; let pk = Math.exp(-lam); for(let k = 0; k < 12; k++){ P.push(q * pk); pk = pk * lam / (k + 1); }   // P[d] = P(damage d), d = 0..12
+    let eLoss = 0, pTorpor = 0; P.forEach((pd, d) => { eLoss += pd * Math.min(d, blood); if(d > blood) pTorpor += pd; });
+    let cost = 0.5 * eLoss + 3 * pTorpor + (via ? 0.35 : 0), out = null;   // a wake (or unlock reaction) is a card spent too -- the bare block's own 0.35
+    const ce = this._bestCombatEndFor(b), dg = ce ? null : this._bestDodgeFor(b);
+    if(ce || dg){ const c0 = (ce || dg).cost, bc = typeof c0 === 'number' ? c0 : ((c0 && c0.blood) | 0); const cardCost = 0.35 + 0.5 * bc + (via ? 0.35 : 0); if(cardCost < cost){ cost = cardCost; out = (ce || dg).name; } }   // the combat-ends finder carries cost as a NUMBER (blood), the dodge finder as the card's cost object
+    return { blocker: b.name, via, oc: +oc.toFixed(2), lam: +lam.toFixed(2), blood, eLoss: +eLoss.toFixed(2), pTorpor: +pTorpor.toFixed(2), cost: +cost.toFixed(2), out };
+  }
+  _wakeRouteBlocker(p){              // v0.6.197 (blockCost): the LOCKED vampire _commitBlock's route would raise when no unlocked body can block -- the same three filters and the same order (an unlock reaction on a bleed, a Second Tradition-class unlock, a wake, the Stray); finders only, no side effects
+    const eligible = c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p.actingVampName);
+    const L = (this.board || []).filter(eligible); if(!L.length) return null;
+    if(p.kind === 'bleed'){ const u = L.find(c => this._bestUnlockReactFor(c, 'bleedAtMe')); if(u) return u; }
+    { const u = L.find(c => this._bestUnlockReactFor(c, 'lockedBlock')); if(u) return u; }
+    if(this._wakeCard()){ const u = L.find(c => this._wakeCardFor(c)); if(u) return u; }
+    return this._findStray() ? L[0] : null;
   }
   _wantGrapple(vamp){                // Johan: Grapple only with Roundhouse-class hand damage, active Carrion Crows or a permanent strength bonus -- never for a fist of 1. Too valuable to de-clog with.
     const r = this._myRoundDmg(vamp, { close: true });
@@ -3951,11 +4369,15 @@ class Bot {
   _wantLong(vamp){                   // the range step's question under the combat mind: go to long?
     const post = this._combatPosture();
     if(post === 'chase') return { long: false, why: 'chase: stay close' };
-    if(post === 'snipe'){ const r = this._rangedOptionFor(vamp); return r ? { long: true, why: 'snipe: ' + r.name + ' reaches, their fists do not' } : { long: false, why: 'snipe: no ranged card in hand' }; }
+    if(post === 'snipe'){ const r = this._rangedOptionFor(vamp);
+      if(r && this.o.twdKnow && this._combatOpp()){ const tw = this._twdExpect(this._combatOpp().seat); if(tw && tw.n >= 2 && tw.combatDanger < 0.2 && this._bestPressFor(vamp)) return { long: false, why: 'snipe: a pacifist seat (TWDA combat ' + tw.combat.toFixed(2) + ' over ' + tw.n + ') -- stay close, Theft + press + Theft' }; }   // v0.6.187 (Johan's deferred question, the Tremere guide): press a pacifist, maneuver a fighter
+      return r ? { long: true, why: 'snipe: ' + r.name + ' reaches, their fists do not' } : { long: false, why: 'snipe: no ranged card in hand' }; }
     const saveR = this._range; this._range = 'close'; const close = this._bestStrikeFor(vamp) || this._bestStealStrikeFor(vamp); this._range = saveR;
     if(close) return { long: false, why: 'wave: ' + close.name + ' wants close' };
-    const danger = this._combatOpp() ? this.oppCombat(this._combatOpp().seat) : 0.3;
-    return { long: danger >= 0.2 || this._oppShown('strike') > 0, why: 'wave: no strike card, their danger ' + danger };
+    const co = this._combatOpp(), danger = co ? this.oppCombat(co.seat) : 0.3;
+    const wd = this.decide('wave', { vamp: vamp.name, blood: vamp.blood | 0, danger, base: danger >= 0.2 || this._oppShown('strike') > 0, narrow: !!this.o.waveNarrow,
+      exp: +this._expStrikeDmg(co ? co.seat : 0).toFixed(2), pPress: this._oppPressP(co ? co.seat : 0), ranged: this._oppHasRanged() });   // v0.6.197: one decide row per wave look, both arms (tags old-long / old-close vs torpor / no-press / kept / ranged / harmless)
+    return { long: wd.long, why: 'wave: ' + wd.why };
   }
   _rushLikelyThrough(target){        // v0.6.158 (Johan: a torpor-certain rush trumps permanents-first "if it is likely to go through -- not blocked by another vampire"): the target's controller has no OTHER unlocked ready vampire or ally (the rushed vampire itself blocking still gives me the fight)
     if(!target || target.seat == null) return false;
@@ -4437,8 +4859,15 @@ class Bot {
           const lockCost = this._wakeCard() ? 0 : Math.min(0.3, 0.15 * (ctx.actorUnlocked | 0));
           const score = (odds * w * dirW * combatFit - lockCost) * axis / P.blockShy;
           const parts = { odds: +odds.toFixed(2), w: +w.toFixed(2), dirW: +dirW.toFixed(2), combatFit, lockCost: +lockCost.toFixed(2), axis, posture, blockShy: P.blockShy };
-          return { block: score >= 1, bounce: false, score, parts,
-                   why: ctx.T + '/' + (ctx.sub || '?') + ' as ' + ctx.role + ': odds ' + odds.toFixed(2) + ' \u00d7 w ' + w.toFixed(2) + ' \u00d7 dir ' + dirW.toFixed(2) + ' \u00d7 fit ' + combatFit + ' \u2212 lock ' + lockCost.toFixed(2) + ', \u00d7 axis ' + axis + ' \u00f7 blockShy ' + P.blockShy + ' = ' + score.toFixed(2) };
+          const uWhy = ctx.T + '/' + (ctx.sub || '?') + ' as ' + ctx.role + ': odds ' + odds.toFixed(2) + ' \u00d7 w ' + w.toFixed(2) + ' \u00d7 dir ' + dirW.toFixed(2) + ' \u00d7 fit ' + combatFit + ' \u2212 lock ' + lockCost.toFixed(2) + ', \u00d7 axis ' + axis + ' \u00f7 blockShy ' + P.blockShy + ' = ' + score.toFixed(2);
+          if(score >= 1 && this.o.blockCost && ctx.actorSeat){   // v0.6.197 (blockCost): the same price as the directed block -- an undirected action denied is worth its stake (pool damage) or about 1, + 0.5; 72 matches: 24 hunt blocks from vampires at 0-1 blood
+            const rk = this._blockRisk(ctx.actorSeat | 0);
+            if(rk){ const gain = ((ctx.amount | 0) || 1) + 0.5, tto = this.turnsToOust(ctx.actorSeat | 0), desperate = ctx.T === 'T2' && (tto <= 1 || (ctx.amount | 0) >= (this.pool | 0));   // only a pool-damage action makes a block desperate -- blocking a hunt saves no pool (bcN: a 0-blood vampire blocked a hunt 'desperately')
+              parts.risk = { gain, cost: rk.cost, oc: rk.oc, blood: rk.blood, pTorpor: rk.pTorpor, out: rk.out, blocker: rk.blocker, via: rk.via, desperate };
+              if(!desperate && rk.cost > gain) return { block: false, bounce: false, score, parts, tag: 'combat-cost', why: uWhy + ', but the combat costs ' + rk.blocker + ' ' + rk.cost + ' (' + rk.blood + ' blood, torpor ' + rk.pTorpor + ') > ' + gain + ' \u2014 let through' };
+              return { block: true, bounce: false, score, parts, tag: rk.cost > gain ? 'combat-desperate' : 'combat-ok', why: uWhy + '; the combat costs ' + rk.blocker + ' ' + rk.cost + (rk.cost > gain ? ' > ' + gain + ' -- desperate, block anyway' : ' <= ' + gain) }; }
+          }
+          return { block: score >= 1, bounce: false, score, parts, why: uWhy };
         }
         if(this.o.lateBounce !== 0 && ctx.hasBounce){   // v0.6.144 THE LATE BOUNCE (Johan: bouncing at once, and above all bouncing a bleed of 1, is a beginner's mistake -- the bounce is played on the TOTAL, after the +bleed modifiers). serie-bal5: the first response with a bounce in hand was BOUNCE 11 of 11 times, 6 of them on an announced bleed of 1; no bounce ever caught a pumped bleed.
           if(ctx.blockAllowed === false){                 // the blocks are over: this is the total
@@ -4496,9 +4925,16 @@ class Bot {
         const odds = ctx.stealthA > 0 ? Math.min(1.3, ctx.icp / ctx.stealthA)
                    : 1.3;   // B-55a: a === 0 is KNOWN on the wire (every announce writes a fresh tally since fas A/VC) -- with icp >= 1 the verdict iB >= sA is rules-CERTAIN, priced at the same cap a big surplus already earns. The old 'unknown 0.75' was a div-by-zero dodge that mispriced certainty as risk: the 4/4 zero-block wall of serie-5p30-vtrack. icp <= 0 never reaches this line; urgency and blockShy still weigh the COMBAT/lock risk, which is the persona's honest domain.
         const score = (odds * urgency) / P.blockShy;                                     // blockShy divides: higher = more reluctant (novice 1.3, shark 0.8)
-        return { block: score >= 1, bounce: false,
-                 why: 'odds ' + odds.toFixed(2) + ' (a=' + ctx.stealthA + ')' + ' \u00d7 urgency ' + urgency.toFixed(2) +
-                      ' \u00f7 blockShy ' + P.blockShy + ' = ' + score.toFixed(2) };
+        const oddsWhy = 'odds ' + odds.toFixed(2) + ' (a=' + ctx.stealthA + ')' + ' \u00d7 urgency ' + urgency.toFixed(2) + ' \u00f7 blockShy ' + P.blockShy + ' = ' + score.toFixed(2);
+        if(score >= 1 && this.o.blockCost && ctx.actorSeat){   // v0.6.197 (Johan 28 Sep: the block doctrine is calibration; the guides: do not block a fighter unless you must): the combat this block buys, in pool -- 72 matches: blockers at 1-3 blood vs the Nosferatu starter went to torpor 1 time in 3
+          const rk = this._blockRisk(ctx.actorSeat | 0);
+          if(rk){ const gain = (ctx.amount | 0) + 0.5, tto = this.turnsToOust(ctx.actorSeat | 0), lethal = (ctx.amount | 0) >= (this.pool | 0), desperate = tto <= 1 || lethal;
+            const parts = { gain, cost: rk.cost, oc: rk.oc, eLoss: rk.eLoss, blood: rk.blood, pTorpor: rk.pTorpor, out: rk.out, blocker: rk.blocker, via: rk.via, tto, desperate };
+            if(!desperate && rk.cost > gain) return { block: false, bounce: false, tag: 'combat-cost', parts, why: oddsWhy + ', but the combat costs ' + rk.blocker + ' ' + rk.cost + ' (' + rk.blood + ' blood, their combat ' + rk.oc + ': torpor ' + rk.pTorpor + ') > the bleed stopped ' + gain + ' \u2014 let through' };
+            const over = desperate && rk.cost > gain;   // the tag says whether desperation OVERRODE the price (bcN read 'desperate' on blocks the price allowed anyway)
+            return { block: true, bounce: false, tag: over ? 'combat-desperate' : 'combat-ok', parts, why: oddsWhy + '; the combat costs ' + rk.blocker + ' ' + rk.cost + (rk.out ? ' (' + rk.out + ' gets out)' : '') + (over ? ' > ' + gain + ' -- desperate, block anyway' : ' <= ' + gain) }; }
+        }
+        return { block: score >= 1, bounce: false, why: oddsWhy };
       }
       case 'react-delay':                              // v0.4.5 (Johan, live test): a reaction is still a bot command -- it gets the SAME paceMs floor as a turn action (was capped at thinkMs=1600, under the 2s ask); a persona's thinkMs can only make the pause LONGER, never shorter than a real table's pace
         /* v0.6.109 (#13, Johan, live online test): "the bot's answer to an announced
@@ -4547,8 +4983,35 @@ class Bot {
         return { play: after >= 1, why: after >= 1 ? ctx.card.name + ' after a ' + (ctx.outcome === 'blocked' ? 'blocked' : 'successful') + ' action: unlock (blood ' + after + ' left) \u2014 act again or stay home'
                                                      : ctx.card.name + ' held: it would leave ' + ctx.vamp.name + ' at 0 blood' };
       }
+      case 'wave': {                // v0.6.197 (Johan 28 Sep: the wave is calibration; the Malkavian guide: Swallowed by the Night as a maneuver is narrow -- 0 blood, or a Nosferatu that cannot press). Knob waveNarrow; 0 = v0.6.156
+        if(!ctx.narrow) return { long: !!ctx.base, tag: ctx.base ? 'old-long' : 'old-close', why: 'no strike card, their danger ' + ctx.danger };
+        if(!ctx.base) return { long: false, tag: 'harmless', why: 'no strike card, their danger ' + ctx.danger + ' and no strike shown -- nothing to wave from' };
+        if(ctx.ranged) return { long: false, tag: 'ranged', why: 'their seat shows a ranged strike -- long range does not stop it, the card stays' };
+        if(ctx.exp > ctx.blood) return { long: true, tag: 'torpor', why: 'their expected strike ' + ctx.exp + ' is more than my ' + ctx.blood + ' blood -- the maneuver keeps ' + ctx.vamp + ' out of torpor' };
+        if(ctx.exp >= 2 && ctx.pPress < 0.5) return { long: true, tag: 'no-press', why: 'a dangerous strike (' + ctx.exp + ') and P(they press) ' + ctx.pPress + ' -- one maneuver ends the fight' };
+        return { long: false, tag: 'kept', why: 'their strike ' + ctx.exp + ' against ' + ctx.blood + ' blood, P(they press) ' + ctx.pPress + ' -- the card is worth more than the blood' };
+      }
       case 'combat-end': {          // v0.6.123: Strike: combat ends. v0: always -- this deck has nothing to win in a fight; the [PRE] unlock makes it better than free
-        return { end: !!ctx.ce, why: ctx.ce ? ctx.ce.name + ': combat ends' + (ctx.ce.unlock ? ' and ' + ctx.vamp.name + ' unlocks' : '') : 'no combat-ends strike' };
+        if(!ctx.ce) return { end: false, why: 'no combat-ends strike' };
+        const ul = ctx.ce.unlock ? ' and ' + ctx.vamp.name + ' unlocks' : '';
+        if(!ctx.stats) return { end: true, why: ctx.ce.name + ': combat ends' + ul };   // combatEndStats 0
+        /* v0.6.196 (Johan, 10 Oct): the card is worth what the opposing strike would do -- KNOWN when they declared first, else EXPECTED.
+           In blood: what I save (the damage, capped at my blood) + 3 if it would torpor me + 1 if the [PRE] mode unlocks a locked vampire,
+           minus the card's own blood cost and what my own strike would have done (half for a wave deck, which wants no fight);
+           against what the card is worth KEPT: 0.6 x the most dangerous strike at the table, shared by the copies in hand. Judgment
+           weights (3 / 1 / 0.5 / 0.6), not measurement -- the knob is benched before it is on. */
+        const S = ctx.stats, inc = S.inc, v = ctx.vamp, blood = v.blood | 0, nm = ctx.ce.name;
+        if(inc.known && inc.dodge) return { end: false, tag: 'their-dodge', why: nm + ' held: their dodge -- nothing reaches ' + v.name + ' this round' };
+        if(inc.aggr > 0 || inc.aggrRisk) return { end: true, tag: 'aggravated', why: nm + ': ' + (inc.aggr > 0 ? 'their aggravated strike' : 'this seat has shown aggravated strikes') + ' would torpor ' + v.name + ul };
+        const torpor = inc.dmg + (inc.known ? 0 : 1) > blood;                         // damage EXCEEDING blood torpors; an expected strike may be a point above its mean
+        if(torpor) return { end: true, tag: 'torpor', why: nm + ': ' + (inc.known ? 'their strike for ' + inc.dmg : 'an expected ' + inc.dmg + ' (+1 margin)') + ' would torpor ' + v.name + ' (blood ' + blood + ')' + ul };
+        const save = Math.min(inc.dmg + (inc.steal | 0), blood), unlock = (ctx.ce.unlock && v.locked) ? 1 : 0, cost = ctx.ce.cost | 0;   // the blood I keep: their damage AND their steal (combat ends first -- no strike lands)
+        const giveUp = S.mine * (S.posture === 'wave' ? 0.5 : 1), keep = S.keepThreat * 0.6 / S.copies;
+        const now = save + unlock - cost - giveUp;
+        const parts = { dmg: inc.dmg, known: inc.known, blood, save, unlock, cost, giveUp: +giveUp.toFixed(2), keep: +keep.toFixed(2), now: +now.toFixed(2), copies: S.copies, keepThreat: S.keepThreat };
+        const txt = (inc.known ? 'their strike for ' + inc.dmg + (inc.steal ? ' + a steal of ' + inc.steal : '') : 'an expected ' + inc.dmg + ' (' + inc.src + ')') + ': saves ' + save + (unlock ? ' + unlock 1' : '') + ' - cost ' + cost + ' - my strike ' + parts.giveUp + ' = ' + parts.now + ' vs keeping it ' + parts.keep + ' (' + S.copies + ' in hand, the table\u2019s worst strike ' + S.keepThreat + ')';
+        if(now > keep) return { end: true, tag: inc.known ? 'known' : 'expected', parts, why: nm + ': ' + txt + ul };
+        return { end: false, tag: 'held', parts, why: nm + ' held: ' + txt };
       }
       case 'give-lock': {           // v0.6.128: Anarch Troublemaker-class. The card leaves me for good (it travels on to my prey's prey), so it must take the prey's WHOLE unlocked defence or its full n
         if(!(ctx.mineReady > 0)) return { play: false, why: ctx.card + ' held: I have no vampire to act behind it' };
@@ -4879,7 +5342,7 @@ class Bot {
     if(p.declined && !bounce){ this.say('Pass'); return; }
     this.say('Hold on\u2026');
     const stealthA = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : 0;
-    if(p.lateTimer){ clearTimeout(p.lateTimer); p.lateTimer = null; }
+    if(p.lateTimer){ if(p.lateTimer.cancel) p.lateTimer.cancel(); else clearTimeout(p.lateTimer); p.lateTimer = null; }   // v0.6.198: a hold-aware handle (_heldTimeout)
     const cpD = this._critPool(), actorP = (this.players || []).find(q => q.name === p.who) || {};
     const sbRead = actorSeat ? ((this.oppAxes(actorSeat).axes || []).includes('stealth-bleed') || this.oppStealth(actorSeat) >= 1) : false;   // 'this predator is a stealth bleeder': what the table model has seen (clan / disciplines / a TWD baseline are the later, better reads -- Johan)
     const pumpSeen = actorSeat ? Math.max(0, ...Object.values((this._opp(actorSeat).minions) || {}).map(mm => mm.hitMax | 0)) : 0;
@@ -4901,7 +5364,7 @@ class Bot {
         this.o.log('react window: ' + d.why + ' \u2192 no block; asking for the total'); p.declined = true;
         this.chat('Trainbot: no block. Any bleed modifiers? I may still react to the total.');
         this._emit('defence-plan', { tag: 'ask-total', amount: p.amount | 0 });
-        p.lateTimer = setTimeout(() => { if(this.pending !== p || this.out) return; const b2 = this._bestBounceFor(this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt'), p.reacted); if(b2) this._commitBounce(p, b2).catch(e => this.o.log('late bounce error:', e.message)); else this.say('Pass'); }, (this.o.modGraceMs != null ? this.o.modGraceMs : 4000));
+        p.lateTimer = this._heldTimeout(() => { if(this.pending !== p || this.out) return; const b2 = this._bestBounceFor(this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt'), p.reacted); if(b2) this._commitBounce(p, b2).catch(e => this.o.log('late bounce error:', e.message)); else this.say('Pass'); }, (this.o.modGraceMs != null ? this.o.modGraceMs : 4000));   // v0.6.198: the grace waits on the human's modifiers, so a hold stands it (the bounce used to land while they held)
       }
       else { this.o.log('react window: ' + d.why); p.declined = true; this.say('Pass'); if(p.kind === 'rush') this._complyRush(p); }   // v0.6.107 (B1): declining a rush = the rushed vampire locks and fights   // steg 3: the decline itself -- final for BLOCKS (never set on a failed ATTEMPT; that path re-enters via _onLog's L12.block fail handler with declined still false). steg 5: no longer final for the whole window -- see above.
     }, reactMs);
@@ -5061,7 +5524,16 @@ class Bot {
     this._maybeRebelBlood(blocker, p.actingVampName);   // N4a: extracted for testability (the _revertHandSizeBonus precedent)
     const unIc = (typeof plan !== 'undefined' && plan && plan.kind === 'unlockReact' && plan.un && plan.un.intercept) | 0;   // v0.6.139: the unlock card carried its own intercept (Second Tradition) -- no second card, one reaction per action per card
     if(unIc) p.reacted.add(FX_NORM(plan.un.name));
-    const ic = blocker && !unIc && this._bestInterceptFor(blocker, p.reacted);
+    const baseSt = p.kind === 'undirected' ? 1 : 0;   // the rulebook default: directed 0, undirected +1
+    const humanActor = !!(p.who && this._isHumanName(p.who));
+    const aStanding = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : null;
+    const aFresh = aStanding === null ? null : (!humanActor ? aStanding : ((this._aAt && this._obs && this._obs.who === p.who && (this._aAt >= this._obs.at || (this._aWho === p.who && this._aAt >= this._obs.at - 3000))) ? aStanding : null));   // v0.6.171 (pre-handover review): a HUMAN actor's 'a' counts only if it changed after their announce -- a bot actor's earlier action that went through leaves its stealth on the counter (the tally is closed only by a mode change), and the next human bleed read it as its own
+    const stealthNow = Math.max(aFresh == null ? 0 : aFresh, baseSt);
+    if(humanActor && aFresh == null && blocker) this._writeTally({ mode: 'block', a: baseSt });   // v0.6.171: seed the human's side with the rulebook default (0 directed / 1 undirected) so the counter and the verdict read the true numbers   // v0.6.169 (Johan: the bot played intercept at once against a declared bleed with no stealth): directed actions carry 0 stealth, undirected +1
+    const baseIcp = blocker ? this._equipIntercept(blocker) + this._cryptIntercept(blocker, p) : 0;
+    const icNeeded = stealthNow > baseIcp;   // v0.6.170 (Johan: the base rules forbid adding stealth or intercept that is not needed) -- bot-vs-bot too   // intercept is spent only when the stealth standing NOW beats what the blocker has for free; if the actor adds stealth later, _interceptSecondLook answers (v0.6.143d)
+    if(blocker && !unIc && !icNeeded) this.o.log('block (' + blocker.name + '): no intercept card -- stealth ' + stealthNow + ' vs ' + baseIcp + ' already blocks; the cards wait for a stealth raise');
+    const ic = blocker && !unIc && icNeeded && this._bestInterceptFor(blocker, p.reacted);
     if(unIc){
       this._setTallyB(unIc + this._equipIntercept(blocker) + this._cryptIntercept(blocker, p));
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block with +' + unIc + ' intercept (<b>' + esc(plan.un.name) + '</b>).' });
@@ -5087,39 +5559,45 @@ class Bot {
   }
   _clearCombatStashes(){             // v0.6.103 (#1): the five one-shot stashes + the persistent opponent Carrion Crows + the armed flag -- called at every own announce (actor), at every block commit (defender), at a rush comply, at dealt and at oust. NEVER at _resolveCombat entry: the defender's verdict hand-off runs ahead of the attacker's Blocked branch, so a legitimate opponent line may already sit here (the dodge-branch comment's case)
     this._oppEndedCombat = false; this._oppStrike = null; this._oppTaken = null; this._oppPress = undefined; this._oppManeuver = undefined; this._oppGrapple = undefined; this._oppCarrionCrows = null;
-    this._combatArmed = false; this._combatOppName = null;   // v0.6.105: the previous combat's opponent name must not outrank the next action's blocker in _expectedOppVamp
+    this._combatArmed = false; this._combatOppName = null; this._learnedOpp = null;   // v0.6.105: the previous combat's opponent name must not outrank the next action's blocker in _expectedOppVamp
   }
   _expectedOppVamp(){                // v0.6.103 (#1): who I am fighting (or about to fight): defender side = the announced actor (set by the caller of _resolveCombat); actor side = my blocker's vampire from the B-55e-b chat parse (valid only while I am the acting side -- _actingVamp is live)
     return this._combatOppName || (this._actingVamp ? this._lastBlockerName : null) || null;
   }
+  _learnOpp(vamp){                   // v0.6.163 (bug sweep): 4 % of round-1 rows had NO opponent name (mostly a blocker re-blocking after Guard Dogs / On the Qui Vive) -- every name-gated combat read (_combatOpp: press worth, ranged check, posture danger) fell back to defaults. In combat with no known opponent, the first combat line that names another vampire names them.
+    if(this._inCombat && !this._combatOppName && vamp && !(this.board || []).some(c => c && c.name === vamp)){ this._combatOppName = vamp; this._rowOpp = vamp; if(this.ev) this.ev.push({ kind: 'combat-opp', opp: vamp, how: 'learned' }); this.o.log('combat: opponent learned from the table -- ' + vamp); }
+  }
   _stashAccept(vamp){                // v0.6.103 (#1): may this incoming combat line enter my stash? IN combat: only my known opponent's (unknown opponent, e.g. a human blocker, accepts any -- humans never type the grammar anyway); OUTSIDE combat: only when a block/rush has ARMED me and the line names the vampire I expect (the early-arrival case). A bystander is never armed -> never stashes. The old code accepted every line at the table ("every strike line we receive is the OPPONENT's" was only true at 2-bot tables).
     const exp = this._expectedOppVamp();
-    if(this._inCombat) return !exp || !vamp || vamp === exp;
+    if(this._inCombat && !this._combatOppName && vamp && !(this.board || []).some(c => c && c.name === vamp)){ this._learnOpp(vamp); return true; }   // v0.6.163 (serie-cmb11, the real cause): in a 1-v-1 combat with no CONFIRMED opponent, exp could still be a STALE block-attempt name (_lastBlockerName via a leftover _actingVamp) -- the true opponent's strike line was REFUSED and the round fell back to the rulebook default (15 of ~330 round-1 rows). Only two minions fight at a time, so any other vampire's combat line is my opponent's.
+    if(this._inCombat){ const okIn = !exp || !vamp || vamp === exp; if(!okIn){ this._stashRejects = (this._stashRejects || []).concat([{ vamp, exp, inCombat: true, opp: this._combatOppName || null }]).slice(-6); } return okIn; }   // v0.6.164 diag: every refused combat line is recorded for the round row
+    if(this._combatArmed && !exp && vamp && !(this.board || []).some(c => c && c.name === vamp)){ this._learnedOpp = vamp; return true; }
+    if(this._combatArmed && vamp){ const okA = !!(exp && vamp === exp); if(!okA) this._stashRejects = (this._stashRejects || []).concat([{ vamp, exp, inCombat: false, acting: !!this._actingVamp }]).slice(-6); return okA; }   // v0.6.163 (serie-cmb9): armed for a fight whose opponent I do not know -- their first line arrives BEFORE my combat starts (the defender's hand-off runs ahead); it was REFUSED here and the name lost
     return !!(this._combatArmed && exp && vamp && vamp === exp);
   }
   _awaitOppStrike(ms){               // v0.6.4: the combat handshake's receive half -- returns the opponent's already-stashed strike (they may announce BEFORE our round starts: the defender's verdict hand-off runs ahead of the attacker's Blocked branch), else arms a one-shot waiter with a human-table timeout (a human never types the strike grammar -- null falls back to the old assume-1)
-    if(this._oppStrike){ const s = this._oppStrike; this._oppStrike = null; return Promise.resolve(s); }
+    { const e = this._pendingStrikeEv(); if(e){ e.stk = 'consumed'; return Promise.resolve(this._strikeFromEvent(e)); } }   // v0.6.181: from the event log
     return new Promise(res => {
       this._strikeWaiter = res;
       setTimeout(() => { if(this._strikeWaiter === res){ this._strikeWaiter = null; res(null); } }, ms || 2000);
     });
   }
   _awaitOppTaken(ms){                // v0.6.21 (Taste of Vitae): the SAME one-shot stash/waiter shape as _awaitOppStrike, but for the opponent's END-OF-ROUND "takes N (blood M)" chat narration rather than their strike announcement. This arrives LATER in the causal chain than the strike line (the opponent must first receive OUR strike via their own _awaitOppStrike before they can compute and announce their own final result) -- a human table, or an opponent who hasn't reached that point yet, both fall through to null within the timeout, and Taste of Vitae is simply not played rather than guessed.
-    if(this._oppTaken){ const s = this._oppTaken; this._oppTaken = null; return Promise.resolve(s); }
+    { const e = this._pendingOf('opp-taken'); if(e){ e.stk = 'consumed'; return Promise.resolve(this._takenFromEvent(e)); } }   // v0.6.184: from the event log
     return new Promise(res => {
       this._takenWaiter = res;
       setTimeout(() => { if(this._takenWaiter === res){ this._takenWaiter = null; res(null); } }, ms || 2000);
     });
   }
   _awaitOppPress(ms){                // v0.6.22 (the multi-round loop, Press): the SAME stash/waiter shape again, for the opponent's own "presses to continue/end" announcement -- arrives after THEIR round-end resolution, same causal-chain reasoning as _awaitOppTaken. null on timeout (silent opponent / human table) is treated as "did not press" by the caller, not as "definitely separates" -- see _resolveCombat's own comment for why that distinction matters when I myself already pressed.
-    if(this._oppPress !== undefined){ const s = this._oppPress; this._oppPress = undefined; return Promise.resolve(s); }
+    { const e = this._pendingOf('press'); if(e){ e.stk = 'consumed'; return Promise.resolve(this._pressFromEvent(e)); } }   // v0.6.183: from the event log
     return new Promise(res => {
       this._pressWaiter = res;
       setTimeout(() => { if(this._pressWaiter === res){ this._pressWaiter = null; res(null); } }, ms || 2000);
     });
   }
   _awaitOppManeuver(ms){              // v0.6.24 (the range concept, maneuvers): the SAME stash/waiter shape a third time, for the opponent's "maneuvers to close/long" announcement -- arrives EARLIEST in the causal chain (Determine Range is step 2, before Strike), unlike _awaitOppTaken/_awaitOppPress which arrive late. null on timeout means no evidence they maneuvered -- range stays at whatever I determined from my own side, matching the press handshake's same "absent evidence is not evidence of absence" philosophy.
-    if(this._oppManeuver !== undefined){ const s = this._oppManeuver; this._oppManeuver = undefined; return Promise.resolve(s); }
+    { const e = this._pendingOf('maneuver'); if(e){ e.stk = 'consumed'; return Promise.resolve(this._maneuverFromEvent(e)); } }   // v0.6.183: from the event log
     return new Promise(res => {
       this._maneuverWaiter = res;
       setTimeout(() => { if(this._maneuverWaiter === res){ this._maneuverWaiter = null; res(null); } }, ms || 2000);
@@ -5135,17 +5613,23 @@ class Bot {
   async _resolveCombat(myVamp, oppName){      // v0.6.22 (Johan's combat GO, the multi-round loop): the OUTER wrapper _resolveCombatRound was always meant to grow into (§7.5-C's original design: "plays at most the rounds a press grants"). Deliberately a THIN wrapper, not an internal rewrite -- _resolveCombatRound stays exactly as tested (every existing 37a-37g test calls it directly and is untouched), this just repeats it while there's an uncancelled press. v1 scope (source-verified vekn.net 19 July, combat plan §5.5): "if there is an UNCANCELLED press to continue, a new round begins" -- only ONE side needs to press. My bot NEVER attempts to cancel an incoming press (that decision -- "is it worth spending my own press just to deny theirs" -- is a future addition, not built); it presses when IT wants to (a simple, deliberately-dumb v1 threshold, matching grinderReadyTarget's own precedent: not fragile), and separately just detects whether the opponent pressed at all, treating any detected opponent press as uncancelled. Silent opponent (timeout, human table) is NOT treated as "they definitely didn't press" vs "they definitely did" -- it's simply absent evidence, so it doesn't extend combat on its own; only a DETECTED press (mine or theirs) does.
     this._carrionCrows = null; this._equipPreventUsed = false; this._equipManeuverUsed = false;   // v0.6.103 (#1): the OPPONENT's crows are no longer reset here (an early crows announce was wiped by the late-entering attacker) -- they live in the stash set cleared at announce/commit   // E1: per-combat equipment options
     this._borneEnvDmg = this._borneEnvFor(myVamp); this._borneAnnounced = false;
-    this._combatOppName = oppName || (this._actingVamp ? this._lastBlockerName : null) || null; this._combatDmgTaken = 0;   // v0.6.103 (#1): the actor side learns its opponent from the B-55e-b blocker name (a bot blocker always chats it before the verdict)   // VB: the opposing vampire's NAME when the caller knows it (defender sites: the announced actor; a blocked ACTOR's blocker stays null -- documented v1 under-claim for Blythe-as-actor) + the Franciscus-class per-combat damage accumulator   // N0: the borne crows peck every combat   // v0.6.26: per-COMBAT state (not per-round like _range) -- "only one Carrion Crows each combat", and the opponent's active one persists across every round of THIS combat, reset only when a new one starts
+    this._cepOpen(oppName || (this._actingVamp ? this._lastBlockerName : null) || this._learnedOpp || null); this._learnedOpp = null;   /* v0.6.182: ONE episode per combat */ this._combatDmgTaken = 0; this._cBase = Object.assign({}, this._cTally() || {}); this._cBaseRound = this._cBase;   /* v0.6.168: the field baseline for this combat (at combat ENTRY -- not per round) */   // v0.6.103 (#1): the actor side learns its opponent from the B-55e-b blocker name (a bot blocker always chats it before the verdict)   // VB: the opposing vampire's NAME when the caller knows it (defender sites: the announced actor; a blocked ACTOR's blocker stays null -- documented v1 under-claim for Blythe-as-actor) + the Franciscus-class per-combat damage accumulator   // N0: the borne crows peck every combat   // v0.6.26: per-COMBAT state (not per-round like _range) -- "only one Carrion Crows each combat", and the opponent's active one persists across every round of THIS combat, reset only when a new one starts
     this._inCombat = true;   // v0.6.103 (#1): the handshake window -- _stashAccept reads it
+    this._combatAt = Date.now();   // v0.6.198: a taken line from before this combat never stands in for the board (_stealAvail)
     this._combatMyVamp = myVamp;   // v0.6.160: the victim side of a steal needs to know whose blood goes
     try{
     for(let round = 1; ; round++){
+      this._curRound = round; if(round > 1){ this._cWrite({ rd: round }); this._cBaseRound = Object.assign({}, this._cTally() || {}, { ce: undefined, pr: undefined, rl: undefined }); }   // v0.6.168: a new round clears the per-round fields server-side   // v0.6.164: a changed rd starts a fresh round for every absent per-round field (srv-2.6.39)
       const res = await this._resolveCombatRound(myVamp, round > 1);
-      const rowEnd = why => this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || null, press: null, continuing: false, end: why, blood: myVamp.zone === 'ready' ? (myVamp.blood | 0) : 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156
+      const rowEnd = why => this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: null, continuing: false, end: why, blood: myVamp.zone === 'ready' ? (myVamp.blood | 0) : 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156
       if(myVamp.zone === 'torpor' || myVamp.zone === 'burned'){ rowEnd(myVamp.zone); return; }   // combat already over from my own side
-      if(res && res.ended){ rowEnd('i-ended'); return; }                            // v0.6.123: I ended the combat (Majesty)
-      if(this._oppEndedCombat){ this._oppEndedCombat = false; rowEnd('opp-ended'); return; }   // v0.6.123: THEY did -- no press into a fight that is over
+      if(res && res.oppEnded){ this._oppEndedCombat = false; rowEnd('opp-ended'); await this._phaseAsk(6); await this._phaseAfter(6, false); return; }   // v0.6.167: their combat ends -- straight to End of round (the rulebook keeps the step), no ph below 6
+      if(res && res.ended){ rowEnd('i-ended'); await this._phaseAsk(6); await this._phaseAfter(6, false); return; }                            // v0.6.123: I ended the combat (Majesty)
+      { const tc = this._cTally(); if(tc && (this._cField('ce') | 0) === 1 && tc.who !== this.o.name) this._oppEndedCombat = true; }   // v0.6.164: ce = a combat-ends strike ended it (the field, when the line is missing)
+      if(this._oppEndedCombat){ this._oppEndedCombat = false; if(this._rnd) this._rnd.dealt = 0; rowEnd('opp-ended'); await this._phaseAsk(6); await this._phaseAfter(6, false); return; }
+      { const lt = this._oppLastTaken; if(lt && lt.down && Date.now() - lt.at < 20000 && (!this._combatOppName || lt.vamp === this._combatOppName)){ rowEnd('opp-down'); await this._phaseAsk(6); await this._phaseAfter(6, false); return; } }   // v0.6.167 (main v2.6.135): a wounded combatant ends the combat -- no press, no round 2 (their own taken line says torpor / burned)   // v0.6.163: combat ends resolves first -- my announced strike never landed (the row said dealt 1 against every Majesty)   // v0.6.123: THEY did -- no press into a fight that is over
       if(res && res.opponentSilent){ rowEnd('opp-silent'); return; }                   // v0.6.23: a round-2+ opponent who never even answered the STRIKE handshake is the strongest signal this bot can get that there's no one left to press against -- stop offering more presses into the void rather than looping on phantom rounds
+      await this._phaseAsk(5);   // v0.6.165: human acting -> "Any presses?"
       const press = this._bestPressFor(myVamp);
       let continuing = false, pressTag = null;
       const mind = this._combatMind();
@@ -5173,13 +5657,18 @@ class Bot {
         this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to continue (the Stray).');
         continuing = true;
       }
-      const oppP = await this._awaitOppPress((this.o.askSecs || 2) * 1000);
+      if(continuing) this._cWrite({ pr: 'continue' });   // v0.6.164
+      await this._phaseAfter(5, continuing);   // v0.6.165: "I have no press." / my press line, then the human's: the press state on the tally (my press to continue)
+      if(continuing && this._cSide !== 'a' && this._tempoMode()) await this._phaseStep(5, 'reply', true);   // v0.6.195: the human acted (and answered 'Any presses?') before my press to continue -- their window to press to end is now asked and runs on the tempo (it was a silent askSecs wait)
+      let oppP = await this._awaitOppPress(this._lineGraceMs((this.o.askSecs || 2) * 1000, 'press'));
+      if(!oppP){ const tp = this._cTally(); if(tp && tp.who && tp.who !== this.o.name && this._isHumanName(tp.who) && (this._cField('pr') === 'continue' || this._cField('pr') === 'end')){ oppP = { vamp: null, continue: tp.pr === 'continue' }; this.o.log('press: read from the tally (' + tp.pr + ') -- a human switch without a line'); } }   // main's spec §4.1: pr as DATA, the line stays the contract
       if(oppP && oppP.continue){
         if(!continuing && mind && (press || this._bundledPress) && this._wantPressToEnd(myVamp).end){   // v0.6.156 (Johan): press to END -- Ventrue's use of the press; a chase/snipe deck cancels a round it would lose
           const w = this._wantPressToEnd(myVamp); this.o.log('press (' + myVamp.name + '): ' + w.why);
           if(this._bundledPress){ this._bundledPress = false; pressTag = 'bundled:end'; }
           else { pressTag = press.name + ':end'; this.hand.splice(press.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(press.name); this._emitPlay(press.name, 'combat-press-end', myVamp && myVamp.name); if(press.cost && press.cost.blood) myVamp.blood = Math.max(0, (myVamp.blood | 0) - press.cost.blood); this.fxClone({ name: press.name, kind: 'lib' }, 'presses to end', { actor: myVamp }); }
           this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to end: the press to continue is cancelled.');
+          this._cWrite({ pr: 'end' });   // v0.6.164
           this.push();
           continuing = false;
         } else continuing = true;
@@ -5187,14 +5676,15 @@ class Bot {
         this.o.log('press (' + myVamp.name + '): my press was cancelled by ' + oppP.vamp);
         continuing = false;
       }
-      this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || null, press: pressTag, continuing, blood: myVamp.blood | 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156: the row serie-cmb1 had to infer (range, opponent, strike, dealt, taken)
-      if(!continuing) return;
+      this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: pressTag, continuing, blood: myVamp.blood | 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156: the row serie-cmb1 had to infer (range, opponent, strike, dealt, taken)
+      if(!continuing){ await this._phaseAsk(6); await this._phaseAfter(6, false); return; }   // v0.6.165: "Anything before ending combat?" / "I have nothing before ending combat."
     }
-    } finally { this._inCombat = false; this._combatArmed = false; this._combatOppName = null; }   // v0.6.103 (#1); v0.6.105: the name dies with the combat
+    } finally { this._inCombat = false; this._combatArmed = false; if(this.ev && this._cep) this.ev.push({ kind: 'combat-opp', opp: null, how: 'end', was: this._cep.row || null }); this._cep = null; this._invStrike = null; if(this.tally && this.tally.mode === 'combat' && this.started){ try { this._writeTally({ mode: null, res: 1 }); } catch(e){} } }   // v0.6.103 (#1); v0.6.172 (main v2.6.137): my combat is over -- close the combat tally so the mirror is clean at once; v0.6.195 (main's reply, 9 Oct): + res 1, the client's own Combat-Resolve convention -- every human closes their Played batch and applies their own clear setting (a bare null left it open until their next action); v0.6.105: the name dies with the combat
   }
   async _resolveCombatRound(myVamp, continued){ // v1 CUT LINE (spec §7.5-C): announce-only, one round, applies MY side; the opponent's strike isn't modelled -- assumes the rulebook default (hands, 1) unless I prevent it. Never steps the shared ph/rd counters. v0.6.23 (standing-question fix, the multi-round loop): `continued` is a NEW, backward-compatible optional 2nd arg -- every existing call (all of 37a-37g, all 6 real call sites for round 1) passes nothing, so this defaults falsy and behaves EXACTLY as before. `_resolveCombat` passes true for round 2+ ONLY.
-    this._bundledPress = false; this._rnd = { grapple: false, strike: 'hands', dealt: null, taken: null };   // v0.6.156: per-round -- a bundled optional press (superior Grapple, Hidden Strength [FOR]) is usable only in the round its card was played (EC2010 ruling); _rnd feeds the combat-round trace row
-    this._writeTally({ mode: 'combat', a: 0, b: 0, duelCid: myVamp.id, duelName: myVamp.name });   // combat IS server-merged per seat (v2.6.14); a/b zeroed explicitly (v0.4.2) -- the block referendum's stale stealth/intercept numbers must not masquerade as damage counters (the client's own avrOpen starts fresh too)
+    this._bundledPress = false; this._xtra = 0; this._stealGain = 0; this._noStrikeRound = false; this._rnd = { grapple: false, strike: 'hands', dealt: null, taken: null };   // v0.6.156: per-round -- a bundled optional press (superior Grapple, Hidden Strength [FOR]) is usable only in the round its card was played (EC2010 ruling); _rnd feeds the combat-round trace row
+    this._cSide = (this._actingVamp && (this._actingVamp === myVamp || (this._actingVamp.v && this._actingVamp.v.name === myVamp.name) || this._actingVamp.name === myVamp.name)) ? 'a' : 'b';   // v0.6.164: acting = the turn seat's combatant (main's side mapping) -- my strike's damage goes to a (acting) or b
+    this._writeTally({ mode: 'combat', duelCid: myVamp.id, duelName: myVamp.name });   // v0.6.164 (main's spec §4.0): a:0/b:0 DROPPED -- the server starts fresh on the mode change, and a late announce would wipe damage a human had already entered   // combat IS server-merged per seat (v2.6.14); a/b zeroed explicitly (v0.4.2) -- the block referendum's stale stealth/intercept numbers must not masquerade as damage counters (the client's own avrOpen starts fresh too)
     /* v0.6.26 (Johan's combat GO, Carrion Crows): step 1 of 7, "Before Range" --
        source-verified vekn.net first (envDmgPerRound, §5.5-successor in the combat
        plan). "A vampire can play only one Carrion Crows each combat" -- tracked on
@@ -5202,6 +5692,8 @@ class Bot {
        this runs every round). No real downside to playing it once available (free
        ongoing damage to the opponent, no cost on the card), so the v1 decision is
        simply "play it the first round I can", unlike press/maneuver's threshold. */
+    await this._phaseAsk(0);   // v0.6.165: human acting -> "Anything before range?"
+    let ccPlayed = false;
     if(!this._carrionCrows){
       if(this._borneEnvDmg > 0 && !this._borneAnnounced){
         /* N0: Murder of Crows-class -- announce with the Carrion phrase family so the
@@ -5215,22 +5707,31 @@ class Bot {
         this.hand.splice(cc.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
         this._toAsh(cc.name);
         if(cc.cost && cc.cost.blood) myVamp.blood = Math.max(0, (myVamp.blood | 0) - cc.cost.blood);
-        this._carrionCrows = { n: cc.n };
+        this._carrionCrows = { n: cc.n }; ccPlayed = true;
+        { const f = {}; f['e' + (this._cSide || 'b')] = Math.max(0, Math.min(99, cc.n | 0)); this._cWrite(f); }   // v0.6.167 (main v2.6.135): every-round damage on my side (ea/eb; kept across rounds)
         this.fxClone({ name: cc.name, kind: 'lib' }, 'plays Carrion Crows', { actor: myVamp });
         this._emitPlay('Carrion Crows', 'combat-env', myVamp.name);
         this.note('Trainbot combat \u2014 ' + myVamp.name + ' plays Carrion Crows: opposing minion takes ' + cc.n + ' environmental damage each round for the rest of this combat (unpreventable by strikes, cannot be dodged).');
         this.push();
       }
     }
+    await this._phaseAfter(0, ccPlayed);   // v0.6.165: bot acting -> "I have nothing before range." (or the Crows line), then the human's turn
     this._range = 'close';
+    let lockedRange = null;   // v0.6.164: a range SET for this round -- 'sets range to X next round.' from last round, 'sets range to X.' this round, or the tally's rl=1 (the maneuver step is skipped; no maneuver may change it)
+    if(this._nextRange){ lockedRange = this._nextRange; this._nextRange = null; }
+    if(!lockedRange && this._setRangeNow){ lockedRange = this._setRangeNow; }
+    this._setRangeNow = null;
+    { const tl = this._cTally(); if(!lockedRange && tl && (this._cField('rl') | 0) === 1 && (tl.rng === 'close' || tl.rng === 'long')) lockedRange = tl.rng; }
+    if(lockedRange){ this._range = lockedRange; this.o.log('range (' + myVamp.name + '): set to ' + lockedRange + ' for this round -- no maneuvers'); }
     /* v0.6.28 (Immortal Grapple, superior): "If another round of combat occurs, that
        round is at close range (skip the determine range step for that round)" --
        when set by a PRIOR round's superior Grapple, this round's ENTIRE maneuver/
        range-determination step is skipped outright (not just my own maneuver check),
        consumed (reset false) once used, range stays at the 'close' default above. */
-    if(this._forceCloseNextRound){
+    if(this._forceCloseNextRound || lockedRange){
       this._forceCloseNextRound = false;
     } else {
+      await this._phaseAsk(1);   // v0.6.165: "Any maneuvers?"
       const maneuver = this._bestManeuverFor(myVamp);
       let myManeuvers = 0;
       if(maneuver){
@@ -5251,6 +5752,7 @@ class Bot {
           this.note('Trainbot combat \u2014 ' + myVamp.name + ' maneuvers to long (' + maneuver.name + ').');   // v0.6.156: the frozen phrase the opposing bot's _parseCombatNarration reads (silent since v0.6.114)
           this.push();
           myManeuvers = 1;
+          if(maneuver.fromEquip && !maneuver.fromGrant) this._rnd.gunCommitted = maneuver.name;   // v0.6.174: a gun's maneuver commits the bearer to that gun's (non-hand) strike this round [TOM 19951217]
         }
       }
       /* v0.6.24: a SHORTER timeout than strike/press/taken's askSecs-derived one, on
@@ -5261,11 +5763,15 @@ class Bot {
          one). A real opponent WITH a maneuver still has ample time (network+decide
          latency is milliseconds); a genuinely slow human typing it by hand is the only
          realistic miss, an acceptable trade against doubling every round's latency.  */
+      await this._phaseAfter(1, myManeuvers > 0);   // v0.6.165: "I have no maneuver." / my maneuver line, then the human's
       const oppM = await this._awaitOppManeuver(Math.min(200, (this.o.askSecs || 2) * 1000));
       const oppManeuvers = oppM ? 1 : 0;
-      if((myManeuvers + oppManeuvers) % 2 === 1) this._range = 'long';
+      if(oppM && oppM.range === 'close' && !myManeuvers) this._range = 'close';   // v0.6.164: a human's 'maneuvers to close.' at close is no flip (direction, not parity)
+      else if((myManeuvers + oppManeuvers) % 2 === 1) this._range = 'long';
+      { const tf = this._cTally(); if(tf && tf.who && tf.who !== this.o.name && this._isHumanName(tf.who) && (tf.rng === 'close' || tf.rng === 'long') && tf.rng !== this._range && this._cField('rng') !== undefined){ this.o.log('range (' + myVamp.name + '): the tally says ' + tf.rng + ' (a human\u2019s correction) -- the field wins'); this._range = tf.rng; } }   // main's spec §5: when a field disagrees with the last line, prefer the field
     }
     this._rnd.range = this._range;
+    this._cWrite({ rng: this._range });   // v0.6.164: my view of this round's range on the shared tally
     /* v0.6.28 (Johan's combat GO, Immortal Grapple -- the strike-type restriction
        concept): step 3 of 7, "Pre-Strike", AFTER range is determined (unlike Carrion
        Crows' step-1 window). "Cannot be used this round (by either combatant)" is
@@ -5276,6 +5782,7 @@ class Bot {
        ranged/weapon option I'd rather keep available for myself) -- restricting the
        opponent is free value only when I'm not restricting away something I wanted. */
     this._handStrikeOnly = false;
+    await this._phaseAsk(2);   // v0.6.165: "Anything before strikes?"
     const grapple = this._bestImmortalGrappleFor(myVamp);
     if(grapple){
       const wouldCostMe = this.hand.some(n => {
@@ -5295,16 +5802,30 @@ class Bot {
         this._emitPlay(grapple.name, 'combat-grapple', myVamp && myVamp.name);   // v0.6.139: this spend left no trace row (CLAUDE.md 43c)
         if(grapple.cost && grapple.cost.blood) myVamp.blood = Math.max(0, (myVamp.blood | 0) - grapple.cost.blood);
         this._handStrikeOnly = true;
-        if(grapple.superior) this._forceCloseNextRound = true;   // "if another round of combat occurs, that round is at close range (skip the determine range step for that round)"
+        if(grapple.superior){ this._forceCloseNextRound = true; this.note(myVamp.name + ' sets range to close next round.'); this._cWrite({ nx: 'close' }); }   // v0.6.164: main's frozen line + the nx field (a human without the helper reads the line, with it the field)   // "if another round of combat occurs, that round is at close range (skip the determine range step for that round)"
         this.fxClone({ name: grapple.name, kind: 'lib' }, 'plays Immortal Grapple', { actor: myVamp });
         this.note('Trainbot combat \u2014 ' + myVamp.name + ' plays Immortal Grapple: strikes that are not hand strikes cannot be used this round (by either combatant).');   // v0.6.156: frozen phrase, read by the opponent (silent since v0.6.114)
         this.push();
       }
     }
+    await this._phaseAfter(2, !!this._rnd.grapple);   // v0.6.165
     const oppG = await this._awaitOppGrapple(Math.min(200, (this.o.askSecs || 2) * 1000));
+    await this._phaseAsk(3);   // v0.6.165: human acting -> "What is your strike?" (the acting side announces first; the bot then chooses)
+    { const tc = this._cTally(); if(this._oppEndedCombat || (this._oppStrike && this._oppStrike.ends) || (tc && (this._cField('ce') | 0) === 1 && tc.who && tc.who !== this.o.name)){   // v0.6.167 (main's scripted run, bug B): the human's combat ends came FIRST -- I do not strike at all
+      this._oppEndedCombat = true; this._oppStrike = null; this._rnd.strike = 'none'; this._rnd.dealt = 0; this._rnd.taken = 0;
+      this.o.log('combat (' + myVamp.name + '): their combat ends came first -- no strike from me, no damage either way');
+      return { oppEnded: true }; } }
     if(oppG) this._handStrikeOnly = true;
+    if(this._handStrikeOnly && this._rnd.gunCommitted){   // v0.6.174 (sweep pilot, the Immortal Grapple ruling [TOM 19951217]): committed to a non-hand strike by the gun's maneuver, then Grapple -- NO strike at all this round, not a hand strike
+      this._rnd.strike = 'none (Grapple)'; this._rnd.dealt = 0;
+      this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> gets no strike this round (committed to ' + esc(this._rnd.gunCommitted) + ' by its maneuver; Immortal Grapple).' });
+      { const f = {}; f[this._cSide || 'b'] = 0; f['s' + (this._cSide || 'b')] = 'No strike'; this._cWrite(f); }
+      this._noStrikeRound = true;
+    }
     const ce = this._bestCombatEndFor(myVamp);
-    if(ce && this.decide('combat-end', { ce, vamp: myVamp }).end){   // v0.6.123: Strike: combat ends (Majesty). On the wire it IS the dodge shape -- no damage either way this round -- plus a `Combat ends` line so a bot opponent does not press into a fight that is over. It resolves before every other strike, so environmental damage (Carrion Crows) does not land either.
+    const ceD = (ce && !this._noStrikeRound) ? this.decide('combat-end', { ce, vamp: myVamp, stats: this.o.combatEndStats ? this._ceCtx(myVamp) : null }) : null;   // v0.6.196: the statistics only when the knob is on (0 = v0.6.123, byte for byte)
+    if(ceD && !ceD.end) this.o.log('combat-end (' + myVamp.name + '): ' + ceD.why);
+    if(ceD && ceD.end){   // v0.6.123: Strike: combat ends (Majesty). On the wire it IS the dodge shape -- no damage either way this round -- plus a `Combat ends` line so a bot opponent does not press into a fight that is over. It resolves before every other strike, so environmental damage (Carrion Crows) does not land either.
       this.hand.splice(ce.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(ce.name);
       if(ce.cost) myVamp.blood = Math.max(0, (myVamp.blood | 0) - ce.cost);
       this.fxClone({ name: ce.name, kind: 'lib' }, 'combat ends', { actor: myVamp });
@@ -5312,15 +5833,15 @@ class Bot {
       this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> strikes: <b>' + esc(ce.name) + '</b> \u2014 no damage either way this round.' });
       this.send({ t: 'log', html: 'Combat ends \u2014 <b>' + esc(ce.name) + '</b>.' });
       if(ce.unlock) myVamp.locked = false;
-      this._rnd.strike = ce.name; this._rnd.dealt = 0; this._rnd.taken = 0;
-      await this._awaitOppStrike(this._strikeWaitMs(continued));   // consume their strike line (the dodge branch's reason): keeps the one-slot stash clean for the NEXT combat
+      this._rnd.strike = ce.name; this._rnd.dealt = 0; this._rnd.taken = 0; this._stealSettle(myVamp, 'combat ends');   // v0.6.196: combat ends first -- a parked steal never lands
+      { const o2 = await this._phaseAfter(3, true).then(() => this._awaitOppStrike(this._strikeWaitMs(continued))); if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // consume their strike line (the dodge branch's reason): keeps the one-slot stash clean for the NEXT combat
       this.chat('Trainbot combat \u2014 ' + myVamp.name + ' plays ' + ce.name + ': combat ends, no damage either way' + (ce.unlock ? '; ' + myVamp.name + ' unlocks' : '') + '. Tell me if your side differs.');
       this.push();
       return { ended: true };
     }
     const dodge = this._bestDodgeFor(myVamp);
     const dd = this.decide('combat-strike', { dodge, vamp: myVamp });
-    if(dodge && dd.dodge){           // steg 6 (16 July): Strike: dodge -- no damage in EITHER direction this round FROM THE STRIKE ITSELF (so no prevent needed there); the vampire's own strike slot is consumed by the dodge
+    if(dodge && dd.dodge && !this._noStrikeRound){           // steg 6 (16 July): Strike: dodge -- no damage in EITHER direction this round FROM THE STRIKE ITSELF (so no prevent needed there); the vampire's own strike slot is consumed by the dodge
       this.o.log('combat-strike (' + myVamp.name + '): ' + dd.why);
       this.hand.splice(dodge.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
       this._toAsh(dodge.name);   // v0.6.12 ash sweep
@@ -5328,8 +5849,8 @@ class Bot {
       this.fxClone({ name: dodge.name, kind: 'lib' }, 'dodges', { actor: myVamp });
       this._emitPlay(dodge.name, 'combat-dodge', myVamp.name);
       this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> strikes: <b>' + esc(dodge.name) + '</b> \u2014 no damage either way this round.' });
-      this._rnd.strike = dodge.name; this._rnd.dealt = 0; this._rnd.taken = this._oppCarrionCrows ? this._oppCarrionCrows.n : 0;
-      await this._awaitOppStrike(this._strikeWaitMs(continued));   // v0.6.4: a dodge needs nothing from the opponent (0/0 regardless) -- but consuming their strike line here keeps the one-slot stash clean for the NEXT combat, and synchronises the round's end
+      this._rnd.strike = dodge.name; this._rnd.dealt = 0; this._rnd.taken = this._oppCarrionCrows ? this._oppCarrionCrows.n : 0; this._stealSettle(myVamp, 'dodge');   // v0.6.196: my dodge -- their steal does not reach me
+      { const o2 = await this._phaseAfter(3, true).then(() => this._awaitOppStrike(this._strikeWaitMs(continued))); if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // v0.6.4: a dodge needs nothing from the opponent (0/0 regardless) -- but consuming their strike line here keeps the one-slot stash clean for the NEXT combat, and synchronises the round's end
       /* v0.6.27 (Johan's standing question, checking Carrion Crows for uncertainty --
          the DODGE-BYPASSES-ENVIRONMENTAL-DAMAGE bug): this branch used to `return`
          immediately here, before the code below that applies the opponent's active
@@ -5340,7 +5861,7 @@ class Bot {
          Carrion Crows (2/round) correctly CHOSE to dodge (per the existing fragile
          heuristic) and then incorrectly took 0 damage instead of 2 -- the dodge
          "protected" it from something the rulebook explicitly says it cannot. */
-      if(this._oppCarrionCrows){
+      if(this._oppCarrionCrows && !this._oppEndedCombat){   // v0.6.167: combat ends in the first pair -> no strike resolution, the crows do not land
         const taken2 = this._oppCarrionCrows.n;
         const paid2 = Math.min(taken2, myVamp.blood | 0);
         const unmended2 = taken2 - paid2;
@@ -5392,20 +5913,24 @@ class Bot {
        untested by Malkavian/Tremere today (neither deck ever offers both on one
        vampire), kept simple on purpose. */
     const fistDmg = longFist ? 0 : Math.max(0, 1 + sbN4);   // v0.6.156: what the fist would land this round
-    const stealOk = steal && (this._combatMind()
-      ? (steal.n >= Math.max(fistDmg, strike ? (strike.n | 0) : 0) && ((myVamp.blood | 0) < (myVamp.cap | 0) || fistDmg === 0))   // v0.6.156: a steal DRAINS the opponent whatever my overflow -- at long range (fist 0) it is always better than nothing; at close the v1 tie-break (below capacity) stands
-      : ((myVamp.blood | 0) < (myVamp.cap | 0) && (!strike || steal.n >= (strike.n | 0))));
-    if(stealOk){
+    const stealTake = steal ? Math.min(steal.n, this._stealAvail()) : 0;   // v0.6.196: a steal is worth what the target holds -- against an empty vampire it takes nothing, while a fist for 1 sends them to torpor
+    const stealOk = steal && stealTake > 0 && (this._combatMind()
+      ? (stealTake >= Math.max(fistDmg, strike ? (strike.n | 0) : 0) && ((myVamp.blood | 0) < (myVamp.cap | 0) || fistDmg === 0))   // v0.6.156: a steal DRAINS the opponent whatever my overflow -- at long range (fist 0) it is always better than nothing; at close the v1 tie-break (below capacity) stands
+      : ((myVamp.blood | 0) < (myVamp.cap | 0) && (!strike || stealTake >= (strike.n | 0))));
+    if(this._noStrikeRound){ dealt = 0; strikeLine = myVamp.name + ' gets no strike'; }   // v0.6.174: committed to a gun's strike under Immortal Grapple
+    else if(stealOk){
       this.hand.splice(steal.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
       this._toAsh(steal.name);
       if(steal.cost && steal.cost.blood) myVamp.blood = Math.max(0, (myVamp.blood | 0) - steal.cost.blood);
-      myVamp.blood = Math.min(myVamp.cap | 0, (myVamp.blood | 0) + steal.n);
+      const before = myVamp.blood | 0;
+      myVamp.blood = Math.min(myVamp.cap | 0, before + stealTake);   // v0.6.196: what they hold, not the card's number -- the victim side moves the same min(n, blood)
+      this._stealGain = (myVamp.blood | 0) - before;   // v0.6.172: undone if they dodge
+      if(stealTake < steal.n) this.o.log('combat (' + myVamp.name + '): ' + (this._combatOppName || 'the opponent') + ' holds ' + stealTake + ' blood -- my steal of ' + steal.n + ' takes ' + stealTake);
       this.fxClone({ name: steal.name, kind: 'lib' }, 'steals ' + steal.n + ' blood', { actor: myVamp });
-      this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> strikes with <b>' + esc(steal.name) + '</b> for 0.' });
+      this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> strikes: steals ' + steal.n + ' blood.' });   // v0.6.172 (main v2.6.138, option 1): the client's ONE-line steal shape -- the human's panel shows "Stolen: N blood -- move it"; bot victims parse it (L12.strikeSteal)
       this._emitPlay(steal.name, 'combat-steal', myVamp.name);
-      this.note('Trainbot combat \u2014 ' + myVamp.name + ' strikes with ' + steal.name + ': steals ' + steal.n + ' blood (not damage; blood now ' + myVamp.blood + ').');
       dealt = 0; strikeLine = myVamp.name + ' strikes with ' + steal.name + ' for 0 (steals ' + steal.n + ' blood)';
-      if(this._rnd) this._rnd.stole = steal.n;   // v0.6.160: the steal is its own column (blood swing, not damage)
+      if(this._rnd){ this._rnd.stole = stealTake; this._rnd.stealLabel = 'Steal ' + steal.n; }   // v0.6.160: the steal is its own column (blood swing, not damage); v0.6.172: the client's own strike label
     } else if(strike){
       if(!strike.fromEquip){ this.hand.splice(strike.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; }   // E1: a board-granted strike never splices the hand
       if(!strike.fromEquip) this._toAsh(strike.name);   // E1 guard
@@ -5424,6 +5949,7 @@ class Bot {
       this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> strikes (hands) for 1.' });
     }
     this._rnd.strike = (steal && strikeLine.includes(steal.name)) ? steal.name : (strike && strikeLine.includes(strike.name)) ? strike.name : 'hands'; this._rnd.dealt = dealt;   // v0.6.156: combat-round trace row
+    { const sd = this._cSide || 'b'; const f = {}; f[sd] = Math.max(0, Math.min(99, dealt | 0)); f['s' + sd] = String(this._rnd.stealLabel || (this._rnd.strike === 'hands' ? 'Hand' : this._rnd.strike)).slice(0, 40); this._cWrite(f); }   // v0.6.164 (main's spec §4.0, found in main's pre-deploy review): my strike's damage on MY side of the counter -- a human's Damage step read 'Incoming 0' against a bot
     /* v0.6.4 COMBAT HANDSHAKE (16 July, arena root-cause after the block-verdict
        fix made bot-vs-bot combat REAL): the old `taken = 1` assumed the rulebook
        default no matter what the opponent actually did -- the attacker's vampire
@@ -5435,7 +5961,17 @@ class Bot {
        deadlock) and take what they actually dealt; a silent opponent (a human
        table -- no human types the strike grammar) falls back to the old
        assume-1 within askSecs, with the "tell me if it differs" chat intact. */
-    const opp = await this._awaitOppStrike(this._strikeWaitMs(continued));
+    const opp = await this._phaseAfter(3, true).then(() => this._awaitOppStrike(this._strikeWaitMs(continued)));
+    this._rnd.strikeSeen = !!opp; if(this._stashRejects && this._stashRejects.length){ this._rnd.rejects = this._stashRejects; this._stashRejects = []; }   // v0.6.164 diag
+    if((opp && opp.ends) || this._oppEndedCombat){   // v0.6.167 (main's scripted run, bug A): combat ends resolves FIRST -- my announced strike never lands, and Carrion Crows gets no strike resolution this round (VEKN ruling via main): no damage either way, no 'dealt' narration, no ph writes below 6
+      this._oppEndedCombat = true; this._rnd.dealt = 0; this._rnd.taken = 0;
+      if(this._stealGain){ myVamp.blood = Math.max(0, (myVamp.blood | 0) - this._stealGain); this._stealGain = 0; this._rnd.stole = 0; }   // v0.6.172: no strike resolution -- no steal either
+      { const f = {}; f[this._cSide || 'b'] = 0; this._cWrite(f); }
+      this.o.log('combat (' + myVamp.name + '): ' + ((opp && opp.vamp) || 'the opponent') + ' ends combat -- it resolves first; my strike never lands');
+      return { oppEnded: true };
+    }
+    this._stealSettle(myVamp, null);   // v0.6.196: my strike is resolved and it was not a dodge or combat ends -- a steal they declared first lands now
+    if(opp && opp.vamp) this._learnOpp(opp.vamp);   // v0.6.163 (serie-cmb10): the certain hook -- the strike I just received names my opponent (11 of ~340 round-1 rows still had none: the name-keyed stash paths hand over a stashed strike without passing _stashAccept again)
     /* v0.6.23 (Johan's standing question, checking the multi-round loop for
        uncertainty): a round-2+ timeout is NOT the same evidence as a round-1 timeout.
        Round 1 is only ever reached because combat just started -- the opponent is
@@ -5449,12 +5985,16 @@ class Bot {
        continued-round timeout assumes 0 (not "they dealt nothing", but "no evidence
        they're still here to deal anything") and reports opponentSilent so the caller
        can stop offering more presses into the void. */
+    if(opp && opp.dodge && this._stealGain){ myVamp.blood = Math.max(0, (myVamp.blood | 0) - this._stealGain); this.o.log('combat (' + myVamp.name + '): they dodged -- my steal of ' + this._stealGain + ' never happened'); if(this._rnd) this._rnd.stole = 0; }   // v0.6.172 (main: no Stolen notice when they dodged): a dodge stops a steal too
+    this._stealGain = 0;
+    if(opp && opp.dodge && this._rnd.dealt > 0){ this._rnd.dealt = 0; { const f = {}; f[this._cSide || 'b'] = 0; this._cWrite(f); } strikeLine += ' \u2014 dodged, 0'; }   // v0.6.167 (main v2.6.136): a dodge is counted as a rule -- my strike does not reach them, and my narration says so
     const opponentSilent = continued && !opp;
     const silentLong = !opp && !continued && this._range === 'long' && !this._oppHasRanged();   // v0.6.157 (Johan, before the deploy): a SILENT opponent (a human table) at LONG range -- their rulebook default is a hand strike, which deals 0 at long; assume 1 only when their board shows a ranged option (a gun, a steal / ranged card seen)
     let taken = opp ? (opp.dodge ? 0 : (opp.dealt | 0)) : (continued || silentLong ? 0 : 1);
     this.o.log('combat incoming (' + myVamp.name + '): ' + (opp ? (opp.dodge ? opp.vamp + ' dodged \u2014 0' : opp.vamp + ' dealt ' + opp.dealt) : silentLong ? 'no strike line within the window \u2014 long range and no ranged option seen: a hand strike deals 0' : 'no strike line within the window \u2014 assuming the rulebook default 1'));
     if(taken > 0){ const _ep = this._equipPrevent(myVamp); if(_ep > 0){ taken = Math.max(0, taken - _ep); this.note('Trainbot: equipment prevents ' + _ep + ' (once this combat).'); } }   // E1: Kevlar-class fires BEFORE spending a hand card
-    const prevent = taken > 0 ? this._bestPreventFor(myVamp) : null;   // v0.6.4: never burn a prevent card against zero incoming (a dodge) -- the old code would have wasted it
+    let aggr = opp && !opp.dodge ? (opp.aggr | 0) : 0;   // v0.6.167 (main v2.6.135): aggravated strike damage -- prevention takes it first; it cannot be mended
+    const prevent = (taken + aggr) > 0 ? this._bestPreventFor(myVamp) : null;   // v0.6.4: never burn a prevent card against zero incoming (a dodge) -- the old code would have wasted it
     if(prevent){
       await this._pace();            // v0.4.5: a beat between the strike and the prevent card -- two combat plays no longer land in the same instant
       this.hand.splice(prevent.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
@@ -5467,7 +6007,8 @@ class Bot {
       }
       this.fxClone({ name: prevent.name, kind: 'lib' }, 'prevents damage', { actor: myVamp });
       this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> plays <b>' + esc(prevent.name) + '</b>: prevents ' + (prevent.n === 'all' ? 'all' : prevent.n) + ' damage.' });
-      taken = prevent.n === 'all' ? 0 : Math.max(0, taken - prevent.n);
+      if(prevent.n === 'all'){ taken = 0; aggr = 0; } else { const onAg = Math.min(aggr, prevent.n); aggr -= onAg; taken = Math.max(0, taken - (prevent.n - onAg)); }   // v0.6.167: prevention goes on aggravated first (VEKN 4)
+      { const f = {}; f['p' + (this._cSide || 'b')] = prevent.n === 'all' ? 99 : Math.max(0, Math.min(99, prevent.n | 0)); this._cWrite(f); }   // v0.6.164: damage prevented, per side
       if(prevent.press && this._combatMind()) this._bundledPress = true;   // v0.6.156: Hidden Strength [FOR] -- the prevent grants an optional press this round (Ventrue uses it to press to END)
     }
     /* v1.6.1/v0.6.26 (Johan's combat GO, Carrion Crows): the OPPONENT's active
@@ -5493,24 +6034,29 @@ class Bot {
     const paid = Math.min(taken, myVamp.blood | 0);
     const unmended = taken - paid;
     myVamp.blood = (myVamp.blood | 0) - paid;
+    let aggrWound = false, aggrBurn = false;   // v0.6.167 (main v2.6.135 / VEKN 4): the first unprevented aggravated point wounds without costing blood (none free if already wounded); each further point costs 1 blood, or the vampire is burned
+    if(aggr > 0){ const need = aggr - (unmended > 0 ? 0 : 1); if((myVamp.blood | 0) >= need){ myVamp.blood = (myVamp.blood | 0) - need; aggrWound = true; } else { myVamp.blood = 0; aggrBurn = true; } }
     this._noteOppCombat(this._combatOppName, taken);   // v0.6.118: the combat half of the table model -- certain numbers, my own wounds
     this._rnd.taken = taken;
-    let line = strikeLine + ' dealt; ' + myVamp.name + ' takes ' + taken + ' (loses ' + paid + ' blood, now ' + myVamp.blood + ').';   // v0.6.21 fix (Johan's standing question): the ORIGINAL half-finished Taste of Vitae parser read `taken` (raw damage) here, but the rulebook grants blood equal to what was LOST -- "takes N (blood M)" collapsed the two whenever unmended>0 (torpor: taken > blood-before, but paid caps at what the vampire actually HAD to lose). Explicit "loses P blood" clause added; no test asserted the old exact wording (grep-verified before changing it).
+    let line = strikeLine + ' dealt; ' + myVamp.name + ' takes ' + (taken + aggr) + ' (loses ' + (paid + (aggrWound ? Math.max(0, aggr - (unmended > 0 ? 0 : 1)) : 0)) + ' blood, now ' + myVamp.blood + ').';   // v0.6.21 fix (Johan's standing question): the ORIGINAL half-finished Taste of Vitae parser read `taken` (raw damage) here, but the rulebook grants blood equal to what was LOST -- "takes N (blood M)" collapsed the two whenever unmended>0 (torpor: taken > blood-before, but paid caps at what the vampire actually HAD to lose). Explicit "loses P blood" clause added; no test asserted the old exact wording (grep-verified before changing it).
     const fx = this._cryptFxOf(myVamp.name);   // VB scanner-lesson (5th occurrence caught by the coverage facit): the local MUST be named `fx` so the source scanner sees the literal fx.burnAtDamage
     if(fx && fx.burnAtDamage != null && this._combatDmgTaken > fx.burnAtDamage){   // VB: printed "burned (WITHOUT going into torpor) if he takes MORE THAN N damage during a single combat" -- strict >, mended damage still counts as TAKEN, and the burn PREEMPTS the torpor path (no torpor entry => no Fame trigger)
       myVamp.zone = 'burned';
       line += ' ' + myVamp.name + ' is BURNED (took ' + this._combatDmgTaken + ' this combat, more than ' + fx.burnAtDamage + ' \u2014 his own curse; no torpor).';
-    } else if(unmended > 0){
+    } else if(aggrBurn){
+      myVamp.zone = 'burned';
+      line += ' ' + myVamp.name + ' is burned (aggravated damage it cannot mend).';
+    } else if(unmended > 0 || aggrWound){
       myVamp.zone = 'torpor'; this._fameTorporHook(myVamp);
       if(myVamp.zone === 'burned'){
         line += ' ' + myVamp.name + ' goes into torpor and is BURNED (his own curse).';   // VB review: Julius-consistency -- the hook burns him, the combat line must agree
       } else {
         const tp = this._openSlot('torpor', myVamp);   // v0.4.5: was a hardcoded slot('torpor',0) -- every KO'd vampire landed on the SAME spot, stacking if more than one was ever down at once
         myVamp.x = tp.x; myVamp.y = tp.y;
-        line += ' ' + myVamp.name + ' goes to torpor (' + unmended + ' unmended).';
+        line += ' ' + myVamp.name + ' goes to torpor (' + (unmended + (aggrWound ? 1 : 0)) + ' unmended' + (aggrWound ? ', aggravated' : '') + ').';
       }
     }
-    this.chat('Trainbot combat \u2014 ' + line + ' One round \u2014 tell me if your side\u2019s damage differs.');
+    this.chat('Trainbot combat \u2014 ' + line + (this._phasesOn() ? '' : ' One round \u2014 tell me if your side\u2019s damage differs.'));   // v0.6.167 (main: carried over from the last reply) -- a phased combat against a human already walked every step
     this.push();
     /* v0.6.21 (Johan's combat GO, Taste of Vitae -- completing the half-finished
        parser found via standing-question review, 19 July): end-of-round, AFTER my
@@ -5521,10 +6067,11 @@ class Bot {
        has no visibility into this round's torpor outcome, only hand/discipline/cost).
        "Only one each round" is free: this hook runs once per _resolveCombatRound call,
        and v1 never calls it twice for the same combat (the single-round cut line).  */
+    await this._phaseDamage();   // v0.6.165b: the human's Damage step (prevention), then past it -- their client writes the taken line
     if(unmended === 0){
       const taste = this._bestTasteFor(myVamp);
       if(taste){
-        const oppT = await this._awaitOppTaken((this.o.askSecs || 2) * 1000);
+        const oppT = await this._awaitOppTaken(this._lineGraceMs((this.o.askSecs || 2) * 1000, 'taken'));   // v0.6.195: vs a human under the tempo, their client writes the taken line as ph steps past Damage -- a round trip, not an askSecs
         if(oppT && oppT.n >= (this._combatMind() ? 2 : 1)){   // v0.6.156 (Johan): Taste of Vitae after a Roundhouse / Crows round -- cmb1: 8 of 12 were spent on a fist of 1
           this.hand.splice(taste.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
           this._toAsh(taste.name);
@@ -5595,18 +6142,226 @@ class Bot {
        the pending -- an oust, a turn change, or a fresh deal must not leave a
        stale timer ticking. _clearPending is already the single bottleneck for all
        three paths (l.878, l.971, _oust->_clearPending), so this is enough. */
-    if(this._pq){ if(this._pq.timer) clearTimeout(this._pq.timer); this._pq = null; }
+    if(this._pq){ if(this._pq.timer) clearTimeout(this._pq.timer); if(this._pq._remT) clearTimeout(this._pq._remT); this._pq = null; }   // v0.6.198: its Turn-based reminder dies with it too (it fired after the question was gone)
     this._obs = null;   // v0.6.111 (R3 self-review, simplified): every pending-clear also clears the observation. A bounce supersedes the pending but not the action -- however, a bounced bleed has already opened its own pending and never used _obs, so clearing it is harmless and simpler than a guard that was wrong on null-card actions anyway.
     if(!this.pending) return;
     if(this.pending.passTimer) clearTimeout(this.pending.passTimer);
+    if(this.pending.lateTimer){ if(this.pending.lateTimer.cancel) this.pending.lateTimer.cancel(); else clearTimeout(this.pending.lateTimer); }   // v0.6.198: the late-bounce grace dies with its pending
     this.o.log('pending cleared (' + reason + ')');
     this.pending = null;
   }
 
   /* ---------- §12 line parsing (the `log` relay; sender never echoes) ----- */
+  /* v0.6.181 (PHASE B, step 1 -- design Part 1): the opponent's STRIKE lives in the event log, not in a loose field.
+     A strike event the combat accepts is marked stk 'pending'; _awaitOppStrike consumes it ('consumed'); a new combat /
+     round drop leaves the rest 'dropped'; a second strike after 'gets an additional strike' is 'extra'. `_oppStrike`
+     stays as a VIEW of the first pending event (read) and a way to add one (write) -- the suite and the canary keep
+     their shape, but there is no second copy of the state to reset in the wrong place.                          */
+  /* v0.6.182 (PHASE B, step 2): the combat opponent's NAME lives in one combat EPISODE (`this._cep`), opened at
+     _resolveCombat entry and closed in its finally -- not in three loose fields that each needed its own reset.
+     `_combatOppName` (the live name), `_rowOpp` (the name the round rows keep after a later announce clears the live
+     one) and `_learnedOpp` (a name learned while ARMED, before the combat starts) are views of it; each name the
+     episode takes is also an event in the log (`combat-opp`: start / learned / armed).                           */
+  get _combatOppName(){ return this._cep ? (this._cep.opp || null) : null; }
+  set _combatOppName(v){ if(v == null){ if(this._cep) this._cep.opp = null; return; } if(!this._cep) this._cep = { opp: null, row: null, startSeq: this.ev ? this.ev.seq : 0 }; this._cep.opp = v; if(!this._cep.row) this._cep.row = v; }
+  get _rowOpp(){ return this._cep ? (this._cep.row || null) : null; }
+  set _rowOpp(v){ if(!this._cep){ if(v == null) return; this._cep = { opp: null, row: null, startSeq: this.ev ? this.ev.seq : 0 }; } this._cep.row = v || null; }
+  get _learnedOpp(){ return this._cepArmed || null; }
+  set _learnedOpp(v){ this._cepArmed = v || null; if(v && this.ev) this.ev.push({ kind: 'combat-opp', opp: v, how: 'armed' }); }
+  _cepOpen(opp){ this._cep = { opp: opp || null, row: opp || null, startSeq: this.ev ? this.ev.seq : 0 }; if(this.ev) this.ev.push({ kind: 'combat-opp', opp: opp || null, how: 'start' }); return this._cep; }
+  /* v0.6.183 (PHASE B, step 3): the opponent's PRESS and MANEUVER live in the event log too -- the same pending /
+     consumed / replaced / dropped marks as the strike (v0.6.181), one generic pair of helpers for all three.       */
+  _pendingOf(kind){ if(!this.ev) return null; const a = this.ev.ev; for(let i = 0; i < a.length; i++){ const x = a[i]; if(x.kind === kind && x.stk === 'pending') return x; } return null; }
+  _markPendingOf(kind, who, waiterKey, shape, fallback){
+    if(!this.ev) this.ev = new EventLog();
+    let e = this.ev.last(kind, x => !x.stk && x.who === who);   // v0.6.185 (review): the speaker's own event only; else the parsed fallback
+    if(!e && fallback) e = this.ev.push(Object.assign({ kind, who: who || null, seat: who ? this._seatOfName(who) : 0, tier: 'parsed' }, fallback));   // a line that reached the parser without passing the recorder (a direct call) is recorded here
+    if(!e) return null;
+    this.ev.ev.forEach(x => { if(x !== e && x.kind === kind && x.stk === 'pending') x.stk = 'replaced'; });
+    e.stk = 'pending';
+    if(this[waiterKey]){ const w = this[waiterKey]; this[waiterKey] = null; e.stk = 'consumed'; w(shape(e)); }
+    return e;
+  }
+  _dropPendingOf(kind){ if(this.ev) this.ev.ev.forEach(x => { if(x.kind === kind && x.stk === 'pending') x.stk = 'dropped'; }); }
+  _pressFromEvent(e){ return { vamp: e.vamp, continue: !!e.continue }; }
+  /* v0.6.184 (PHASE B, step 4): the opponent's TAKEN line and every-round damage (Carrion Crows) live in the log.
+     `opp-taken` events carry the parser's semantics (n = the blood they LOST, dmg = damage taken, now, down);
+     `_oppTaken` = the first pending one (consumed by Taste of Vitae's waiter), `_oppLastTaken` = the latest one,
+     consumed or not (the press decision and the wounded rule read it). `opp-env` events hold the opponent's
+     every-round damage; `_oppCarrionCrows` = the latest since the last reset (n 0 = none).                      */
+  _takenFromEvent(e){ return { vamp: e.vamp, n: e.n, down: !!e.down, now: e.now == null ? null : e.now }; }
+  get _oppTaken(){ const e = this._pendingOf('opp-taken'); return e ? this._takenFromEvent(e) : null; }
+  set _oppTaken(v){ if(!this.ev) this.ev = new EventLog(); this._dropPendingOf('opp-taken'); if(v == null) return; const e = this.ev.push({ kind: 'opp-taken', vamp: v.vamp, n: v.n, down: !!v.down, now: v.now == null ? null : v.now, synthetic: true }); e.stk = 'pending'; }
+  get _oppLastTaken(){ const e = this.ev ? this.ev.last('opp-taken') : null; return e ? Object.assign({ at: e.t }, this._takenFromEvent(e)) : null; }
+  set _oppLastTaken(v){ if(!this.ev) this.ev = new EventLog(); if(v == null){ this.ev.push({ kind: 'opp-taken', vamp: null, n: 0, down: false, now: null, t: 1, cleared: true, stk: 'seen' }); return; } this.ev.push({ kind: 'opp-taken', vamp: v.vamp, n: v.n, down: !!v.down, now: v.now == null ? null : v.now, t: v.at || Date.now(), synthetic: true, stk: 'seen' }); }
+  get _oppCarrionCrows(){ const e = this.ev ? this.ev.last('opp-env') : null; return e && e.n > 0 ? { n: e.n } : null; }
+  set _oppCarrionCrows(v){ if(!this.ev) this.ev = new EventLog(); this.ev.push({ kind: 'opp-env', n: v && v.n > 0 ? (v.n | 0) : 0, reset: v == null }); }
+  _maneuverFromEvent(e){ return { vamp: e.vamp, range: e.range }; }
+  get _oppPress(){ const e = this._pendingOf('press'); return e ? this._pressFromEvent(e) : undefined; }
+  set _oppPress(v){ if(!this.ev) this.ev = new EventLog(); this._dropPendingOf('press'); if(v == null) return; const e = this.ev.push({ kind: 'press', vamp: v.vamp, continue: !!v.continue, synthetic: true }); e.stk = 'pending'; }
+  get _oppManeuver(){ const e = this._pendingOf('maneuver'); return e ? this._maneuverFromEvent(e) : undefined; }
+  set _oppManeuver(v){ if(!this.ev) this.ev = new EventLog(); this._dropPendingOf('maneuver'); if(v == null) return; const e = this.ev.push({ kind: 'maneuver', vamp: v.vamp, range: v.range, synthetic: true }); e.stk = 'pending'; }
+  _strikeFromEvent(e){ return { vamp: e.vamp, dodge: e.strike === 'dodge', ends: e.strike === 'ends', steal: e.strike === 'steal' ? (e.n | 0) : 0, aggr: e.strike === 'aggravated' ? (e.n | 0) : 0, dealt: (e.strike === 'hand' || e.strike === 'card' || e.strike === 'damage') ? (e.n | 0) : 0 }; }
+  _pendingStrikeEv(){ if(!this.ev) return null; const a = this.ev.ev; for(let i = 0; i < a.length; i++){ const x = a[i]; if(x.kind === 'strike' && x.stk === 'pending') return x; } return null; }
+  get _oppStrike(){ const e = this._pendingStrikeEv(); return e ? this._strikeFromEvent(e) : null; }
+  set _oppStrike(v){
+    if(!this.ev) this.ev = new EventLog();
+    if(v == null){ this.ev.ev.forEach(x => { if(x.kind === 'strike' && x.stk === 'pending') x.stk = 'dropped'; }); return; }
+    this.ev.ev.forEach(x => { if(x.kind === 'strike' && x.stk === 'pending') x.stk = 'replaced'; });
+    const e = this.ev.push({ kind: 'strike', vamp: v.vamp, strike: v.ends ? 'ends' : v.dodge ? 'dodge' : v.steal ? 'steal' : v.aggr ? 'aggravated' : 'damage', n: v.steal || v.aggr || v.dealt || 0, synthetic: true }); e.stk = 'pending';
+  }
+  _markStrikePending(who, fallback){   // the parser accepted the line it just read: its event (recorded at the top of _onLog) becomes the pending strike
+    if(!this.ev) this.ev = new EventLog();
+    let e = this.ev.last('strike', x => !x.stk && x.who === who);   // v0.6.185 (review): the SPEAKER's own event only -- never another speaker's unmarked (a bystander's rejected) strike
+    if(!e && fallback) e = this.ev.push(Object.assign({ kind: 'strike', who: who || null, seat: who ? this._seatOfName(who) : 0, tier: 'parsed' }, fallback));
+    if(!e) return null;
+    this.ev.ev.forEach(x => { if(x !== e && x.kind === 'strike' && x.stk === 'pending') x.stk = 'replaced'; });   // the LATEST unconsumed strike line wins (a correction), as the old stash did
+    e.stk = 'pending';
+    if(this._strikeWaiter){ const w = this._strikeWaiter; this._strikeWaiter = null; e.stk = 'consumed'; w(this._strikeFromEvent(e)); }
+    return e;
+  }
+  _evClassify(who, t, tier){          // v0.6.176: ONE place that types a table line (phase A: beside the old parsers, which still decide)
+    let m; const S = x => (x || '').trim();
+    t = String(t || '').replace(/^\S+ combat \u2014 /, '');   // the combat-note prefix ('Trainbot combat -- ')
+    { const nm = String(who || this.o.name || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); t = t.replace(new RegExp('^(?:Trainbot|' + nm + '): '), ''); }   // v0.6.180: the SPEAKER's prefix (any seat's note, not only mine)   // v0.6.179: a note's speaker prefix ('Expert-2: Smiling Jack -- pays 1 pool.') hid the bookkeeping behind it
+    if((m = t.match(L12.block))) return { kind: 'verdict', stealth: +m[1], intercept: +m[2], ok: m[3] === 'succeeds' };
+    if((m = t.match(L12.attemptIcp))) return { kind: 'attempt', vamp: S(m[1]), intercept: +m[2], card: m[3] };
+    if((m = t.match(/^(.+?) attempts to block\.$/))) return { kind: 'attempt', vamp: S(m[1]) };
+    if((m = t.match(L12.interceptPlay))) return { kind: 'intercept', vamp: S(m[1]), card: m[2], n: +m[3] };
+    if((m = t.match(NET_STEALTH))) return { kind: 'stealth', vamp: S(m[1]), n: +m[2] };
+    if((m = t.match(/^(.+?) burns (\d+) blood \((.+?)\): \+(\d+) intercept\.$/))) return { kind: 'intercept', vamp: S(m[1]), card: m[3], n: +m[4], paid: +m[2] };
+    if((m = t.match(L12.strikeEnds))) return { kind: 'strike', vamp: S(m[1]), strike: 'ends' };
+    if((m = t.match(L12.strikeSteal))) return { kind: 'strike', vamp: S(m[1]), strike: 'steal', n: +m[2] };
+    if((m = t.match(L12.strikeAgg))) return { kind: 'strike', vamp: S(m[1]), strike: 'aggravated', n: +m[2] };
+    if((m = t.match(L12.strikeN))) return { kind: 'strike', vamp: S(m[1]), strike: 'damage', n: +m[2] };
+    if((m = t.match(L12.strikeD))) return { kind: 'strike', vamp: S(m[1]), strike: /combat ends/i.test(t) ? 'ends' : 'dodge', card: m[2] || null };
+    if((m = t.match(L12.strikeC))) return { kind: 'strike', vamp: S(m[1]), strike: 'card', card: m[2], n: +m[3] };
+    if((m = t.match(L12.strikeH))) return { kind: 'strike', vamp: S(m[1]), strike: 'hand', n: m[2] != null ? +m[2] : 1 };
+    if((m = t.match(/^(.+?) gets no strike this round/))) return { kind: 'strike', vamp: S(m[1]), strike: 'none' };
+    if((m = t.match(/^(.+?) maneuvers to (close|long)/))) return { kind: 'maneuver', vamp: S(m[1]), range: m[2] };
+    if((m = t.match(/^(.+?) sets range to (close|long)( next round)?\./))) return { kind: 'range-set', vamp: S(m[1]), range: m[2], next: !!m[3] };
+    if((m = t.match(/^(.+?) presses to (continue|end)/i))) return { kind: 'press', vamp: S(m[1]), continue: m[2].toLowerCase() === 'continue' };
+    if((m = t.match(/^(.+?) gets (an|\d+) additional strikes?/))) return { kind: 'extra-strike', vamp: S(m[1]), n: m[2] === 'an' ? 1 : +m[2] };
+    if((m = t.match(L12.envOn))) return { kind: 'env', vamp: S(m[1]), n: +m[2] };
+    if((m = t.match(L12.envOff))) return { kind: 'env', vamp: S(m[1]), n: 0 };
+    if((m = t.match(/(?:^|dealt; )([^;]+?) takes (\d+) \(loses (\d+) blood, now (\d+)\)\.?(.*)$/))) return { kind: 'taken', vamp: S(m[1]), n: +m[2], lost: +m[3], now: +m[4], down: /torpor|burned/i.test(m[5] || '') };
+    if((m = t.match(/^(.+?) prevents? (\d+) damage/i))) return { kind: 'prevent', vamp: S(m[1]), n: +m[2] };
+    if((m = t.match(/^(.+?) bleeds for (\d+)/))) return { kind: 'announce', vamp: S(m[1]), action: 'bleed', n: +m[2], directed: true };
+    if((m = t.match(/^(.+?) hunts\./))) return { kind: 'announce', vamp: S(m[1]), action: 'hunt', directed: false };
+    if((m = t.match(/^(.+?) calls a political action/))) return { kind: 'announce', vamp: S(m[1]), action: 'political', directed: false };
+    if((m = t.match(L12.uCardAct))) return { kind: 'announce', vamp: S(m[1]), action: 'card', directed: false };
+    if((m = t.match(L12.uRescue))) return { kind: 'announce', vamp: S(m[1]), action: 'rescue-own', directed: false };
+    if((m = t.match(L12.uRescueOld))) return { kind: 'announce', vamp: S(m[1]), action: 'rescue', directed: true };
+    if((m = t.match(/^(.+?) plays (.+?): prevents (\d+|all) damage/))) return { kind: 'prevent', vamp: S(m[1]), card: S(m[2]), n: m[3] === 'all' ? 99 : +m[3] };   // v0.6.180: the bot's own prevent line starts 'X plays CARD:' -- it was typed as card-played, so the strike-vs-taken check never saw the prevention
+    if((m = t.match(/^equipment prevents (\d+)/))) return { kind: 'prevent', n: +m[1], equipment: true };
+    if((m = t.match(L12.uEquip))){ const c = S(m[3]); return this.fxLookup(c) ? { kind: 'card-played', vamp: S(m[1]), card: (this.fxLookup(c).name || c), role: m[2] === 'employs' ? 'employ' : 'equip' } : { kind: 'announce', vamp: S(m[1]), action: m[2] === 'employs' ? 'employ' : 'equip', directed: false }; }   /* v0.6.186 */
+    if((m = t.match(/^(.+?) recruits (.+?)(?: \[.*?\])?\.$/))){ const c = S(m[2]); return this.fxLookup(c) ? { kind: 'card-played', vamp: S(m[1]), card: (this.fxLookup(c).name || c), role: 'recruit' } : { kind: 'announce', vamp: S(m[1]), action: 'recruit', directed: false }; }
+    if((m = t.match(/^(.+?) (?:plays|burns) (.+?)(?:[:.!]|\s\[|\s\u2014|\son\s)/))){ const card = S(m[2]).replace(/^the /, ''); if(this.fxLookup(card)) return { kind: 'card-played', vamp: S(m[1]), card: (this.fxLookup(card).name || card) }; }
+    if(/^It resolves/.test(t)) return { kind: 'resolves' };
+    /* v0.6.177: the second stage -- the table's bookkeeping lines (the 'other' 40 % of v0.6.176), typed so the conservation
+       invariants (design Part 3) can read pool and blood moves from the log */
+    t = t.replace(/^\S+(?:-\d+)? \(bot\): /, '');
+    if((m = t.match(/^Phase: (\w+)/))) return { kind: 'phase', phase: m[1].toLowerCase() };
+    if(/^Turn passed\./.test(t)) return { kind: 'turn-passed' };
+    if(/^Blocked\. Combat begins\./.test(t)) return { kind: 'blocked' };
+    if((m = t.match(/^The bleed goes through: (.+?), -(\d+) pool/))) return { kind: 'pool', target: S(m[1]), delta: -m[2], via: 'bleed' };
+    if((m = t.match(/^(.+?) adds \+(\d+) bleed \(= (\d+)\)/))) return { kind: 'bleed-mod', vamp: S(m[1]), n: +m[2], total: +m[3] };
+    if((m = t.match(/^I take (\d+)(?: (pool damage|[a-z ]+?))?\. Pool: (\d+)/))) return { kind: 'pool', delta: -m[1], pool: +m[3], via: m[2] ? m[2] : 'bleed' };
+    if((m = t.match(/^I gain (\d+) pool from the referendum\. Pool: (\d+)/))) return { kind: 'pool', delta: +m[1], pool: +m[2], via: 'referendum' };
+    if((m = t.match(/^Smiling Jack \u2014 pays (\d+) pool/))) return { kind: 'pool', delta: -m[1], via: 'smiling-jack' };
+    if(/^Smiling Jack ticks/.test(t)) return { kind: 'pool', delta: -1, via: 'smiling-jack' };   // the tick burns 1 pool as a counter
+    if((m = t.match(/^(.+?) gains \d+ blood \u2014 .+?; (\d+) to pool, now (\d+)\)/))) return { kind: 'pool', delta: +m[2], pool: +m[3], via: 'referendum-blood' };   // v0.6.180: a referendum's blood-or-pool split
+    if((m = t.match(/^(.+?) removes \d+ copies of (.+?) from the game to gain (\d+) pool/))) return { kind: 'pool', delta: +m[3], via: 'remove', card: S(m[2]) };
+    if((m = t.match(/^(.+?): \+(\d+) pool \(pool (\d+)\)/))) return { kind: 'pool', delta: +m[2], pool: +m[3], via: 'card', card: S(m[1]) };
+    if((m = t.match(/^(.+?) locks (.+?) for \+(\d+) pool/))) return { kind: 'pool', delta: +m[3], via: 'card', card: S(m[2]) };
+    if((m = t.match(/^(.+?): \S+ uses (\d+) transfers to burn it for \+(\d+) pool \(pool (\d+)\)/))) return { kind: 'pool', delta: +m[3], pool: +m[4], via: 'burn-for-pool', card: S(m[1]) };   // v0.6.180: Wider View-class 'use 4 transfers to burn this card for +N pool' -- the invariant's +5 drift
+    if((m = t.match(/^(.+?): \S+ locks it and burns (\d+) pool to rescue/))) return { kind: 'pool', delta: -m[2], via: 'rescue', card: S(m[1]) };
+    if((m = t.match(/^Fame \u2014 .+? hits torpor, (\d+) pool burned/))) return { kind: 'pool', delta: -m[1], via: 'fame' };
+    if((m = t.match(/^Fame drains (\d+)/))) return { kind: 'pool', delta: -m[1], via: 'fame' };
+    if((m = t.match(/^(.+?): (\d+) pool \u2192 (.+?) \(pool (\d+)\)/))) return { kind: 'pool', delta: -m[2], pool: +m[4], via: 'pool-to-blood', card: S(m[1]) };
+    if((m = t.match(/^I lose (\d+) pool to the referendum\. Pool: (\d+)/))) return { kind: 'pool', delta: -m[1], pool: +m[2], via: 'referendum' };
+    if((m = t.match(/^(?:Creeping Sabotage.*?(?:\u2014 I|: (.+?)) burns? (\d+)(?: pool)?|Creeping Sabotage ticks \u2014 (.+?) burns (\d+))/))) return { kind: 'pool', target: S(m[1] || m[3] || 'me'), delta: -(m[2] || m[4]), via: 'creep' };
+    if((m = t.match(/^(.+?): (\d+) blood \u2192 pool \(pool (\d+)\)/))) return { kind: 'pool', delta: +m[2], pool: +m[3], card: S(m[1]) };
+    if(/^I influence /.test(t)){ let n = 0; t.replace(/(\d+) blood to/g, (x, d) => { n += +d; return x; }); return { kind: 'influence', n, drawn: /transfers to draw/.test(t), draw: /transfers to draw/.test(t) && n === 0 }; }   // v0.6.179: the sentence can list several parts ('2 blood to X, who enters play, and 1 blood to another uncontrolled vampire')
+    if((m = t.match(/^I use (\d+) transfers to draw/))) return { kind: 'influence', n: 0, transfers: +m[1], drawn: true, draw: true };   // v0.6.180: a crypt draw moves no blood -- it costs 4 TRANSFERS + 1 pool (the ledger read the 4 as pool: the +3 drifts, found by the pool tracer)
+    if((m = t.match(/^(.+?) hunts successfully \u2014 \+(\d+) blood \((\d+)\)/))) return { kind: 'blood', vamp: S(m[1]), delta: +m[2], now: +m[3], via: 'hunt' };
+    if((m = t.match(/^(.+?): (.+?) gains (\d+) blood/))) return { kind: 'blood', vamp: S(m[2]), delta: +m[3], card: S(m[1]) };
+    if((m = t.match(/^(.+?) adds (\d+) blood to (.+?) \(blood now (\d+)\)/))) return { kind: 'blood', vamp: S(m[3]), delta: +m[2], now: +m[4], card: S(m[1]) };
+    if((m = t.match(/^I vote (\d+) (for|against)/))) return { kind: 'vote', n: +m[1], side: m[2] };
+    if((m = t.match(/^(.+?) casts (\d+) votes? (for|against)/))) return { kind: 'vote', n: +m[2], side: m[3], by: S(m[1]) };
+    if((m = t.match(/^The referendum (passes|fails), (\d+) to (\d+)/))) return { kind: 'ref-result', passes: m[1] === 'passes', for: +m[2], against: +m[3] };
+    if((m = t.match(/^(.+?) is ousted/))) return { kind: 'oust', who: S(m[1]).replace(/ \(bot\)$/, '') };
+    if(/Block\? \u2014 say "block"|Any reaction before it resolves\?|Any reaction\? \u2014|blocks were declined this action/.test(t)) return { kind: 'ask', what: /Block\?/.test(t) ? 'block' : 'reaction' };
+    if((m = t.match(/^(.+?) adds \+(\d+) bleed \u2014 now (\d+) on (.+?)\./))) return { kind: 'bleed-mod', vamp: S(m[1]), n: +m[2], total: +m[3], target: S(m[4]) };
+    if((m = t.match(L12.combatEnds))) return { kind: 'strike', strike: 'ends', card: S(m[1]) };
+    if((m = t.match(/^Referendum terms \u2014 (.+?): (.+)\.$/))) return { kind: 'ref-terms', card: S(m[1]), terms: S(m[2]) };
+    if((m = t.match(/^Referendum (passes|fails) \u2014 (.+?):/))) return { kind: 'ref-result', passes: m[1] === 'passes', card: S(m[2]) };
+    if((m = t.match(/^Vote: (\d+) for vs (\d+) against \u2014 vote (passes|fails)/))) return { kind: 'ref-result', passes: m[3] === 'passes', for: +m[1], against: +m[2] };
+    if(/^No votes from me\./.test(t)) return { kind: 'vote', n: 0 };
+    if((m = t.match(/^(.+?) discards (.+?)\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]) };
+    if((m = t.match(/^(.+?) pays (\d+) pool for (.+?) \(pool (\d+)\)/))) return { kind: 'pool', by: S(m[1]), delta: -m[2], pool: +m[4], card: S(m[3]), via: 'cost' };
+    if((m = t.match(/^Gained (\d+) pool from the Edge/))) return { kind: 'pool', delta: +m[1], via: 'edge' };
+    if((m = t.match(/^(.+?) collects the bounty from (.+?): \+(\d+) pool \((\d+)\) and (\d+) VP/))) return { kind: 'pool', by: S(m[1]).replace(/ \(bot\)$/, ''), delta: +m[3], pool: +m[4], via: 'oust', vp: +m[5], from: S(m[2]) };
+    if((m = t.match(/^(\d+) blood banked onto an uncontrolled vampire/))) return { kind: 'blood', delta: +m[1], via: 'stock', uncontrolled: true };   // v0.6.179: superior Govern ADDS blood from the bank ("Add 3 blood to a younger vampire in your uncontrolled region") -- not a pool cost
+    if((m = t.match(/^(.+?) unlocks \u2014 (.+?) \(/))) return { kind: 'unlock', vamp: S(m[1]), card: S(m[2]) };
+    if((m = t.match(/^(.+?) locks and (defends|is the acting minion)/))) return { kind: 'combat-start', vamp: S(m[1]), role: m[2] === 'defends' ? 'defender' : 'actor' };
+    if((m = t.match(/^(.+?) has no counters left \u2014 burned/))) return { kind: 'card-burned', card: S(m[1]) };
+    if(/\(uncurated \u2014 adjust if needed\)|is seated\. We answer to|a bare "bleed N" goes to your prey|please play with an open hand|the next rise comes cheaper/.test(t)) return { kind: 'note' };
+    return null;
+  }
+  /* ==================== v0.6.179: REAL-TIME INVARIANTS (design Part 3, observe only) ====================
+     Read from the event log as it grows; a mismatch writes an `inv-flag` trace row and changes nothing at the table.
+     (1) MY POOL LEDGER: every change of this.pool must be explained by a pool event of mine (bleed taken, cost paid,
+         Edge, bounty, referendum, creep, Blood Doll, transfers ...). At each turn the model's pool is compared with the
+         running sum of those events; a printed pool value is compared at once.
+     (2) STRIKE vs TAKEN: when my combat opponent's own taken line arrives, its damage must equal my strike this round
+         (plus my Carrion Crows) minus what they prevented.                                                        */
+  _invOnEvent(e){
+    try {
+      if(!this.started || this.out) return;
+      const mine = (e.seat && e.seat === this.seat) || e.own;
+      if(this._invPool === undefined) this._invPool = this.pool;
+      // (1) pool ledger
+      if(e.kind === 'pool' && mine && typeof e.delta === 'number'){
+        const aboutMe = e.target ? (e.target === this.o.name || e.target === 'me') : true;   // my OWN line about another seat's pool (my bleed going through on them) is not my pool
+        if(aboutMe){ e.model = this.pool; this._invPool += e.delta;
+          if(typeof e.pool === 'number' && e.pool !== this._invPool){ this._invFlag('pool-print', { printed: e.pool, ledger: this._invPool, via: e.via || e.card || null }); this._invPool = e.pool; } }
+      }
+      if(e.kind === 'influence' && e.own && typeof e.n === 'number') this._invPool -= e.n + (e.drawn ? 1 : 0);   // transfers from pool to an uncontrolled vampire; a crypt draw costs 4 transfers AND 1 pool (rulebook)
+      if(e.kind === 'turn'){
+        if(this.pool !== this._invPool){ const pc = this._poolChanges ? this._poolChanges.splice(0).map(c => (c.d > 0 ? '+' : '') + c.d + '@' + c.fn + ':' + c.ln) : undefined; const since = this.ev ? this.ev.since(this._invTurnSeq | 0).filter(x => (x.kind === 'pool' || x.kind === 'influence') && ((x.seat && x.seat === this.seat) || x.own)).map(x => x.kind + ':' + (x.delta != null ? x.delta : -x.n) + (x.via ? '/' + x.via : '') + (x.card ? '/' + x.card : '') + (x.target ? '>' + x.target : '') + (x.model != null ? '@' + x.model : '') + (x.pool != null ? '=' + x.pool : '')) : []; this._invFlag('pool-drift', { model: this.pool, ledger: this._invPool, diff: this.pool - this._invPool, since: since.slice(-8), poolAtTurnStart: this._invTurnPool, changes: pc }); } else if(this._poolChanges) this._poolChanges.length = 0;
+        this._invTurnSeq = e.seq; this._invTurnPool = this.pool;
+        this._invPool = this.pool;
+      }
+      // (2) strike vs taken
+      if(e.kind === 'prevent' && !mine && this._inCombat && (e.vamp === this._combatOppName || (!e.vamp && e.seat && e.seat === this._seatOfVamp(this._combatOppName)))) this._invPrev = (this._invPrev | 0) + (e.n | 0);   // v0.6.180: an equipment prevent names no vampire -- it counts when it comes from my opponent's seat
+      if(e.kind === 'strike' && e.own && this._inCombat && this._combatOppName){   // v0.6.179: pin MY strike of this round (the round's own event, not a field that may already belong to the next round)
+        const dmg = (e.strike === 'hand' || e.strike === 'card' || e.strike === 'damage' || e.strike === 'aggravated') ? (e.n | 0) : 0;
+        this._invStrike = { opp: this._combatOppName, dealt: dmg, crows: (this._carrionCrows && this._carrionCrows.n) | 0, at: e.t, range: this._range };
+        this._invPrev = 0;
+      }
+      if(e.kind === 'strike' && !mine && this._invStrike && (e.vamp === this._invStrike.opp || (!e.vamp && e.seat && e.seat === this._seatOfVamp(this._invStrike.opp))) && (e.strike === 'dodge' || e.strike === 'ends')){   /* v0.6.182: 'Combat ends -- Majesty.' names no vampire -- it counts from my opponent's seat */ this._invStrike.dealt = 0; if(e.strike === 'ends') this._invStrike.crows = 0; }   // v0.6.180: their dodge stops my strike (the crows still land); their combat ends stops both
+      if(e.kind === 'taken' && !mine && this._invStrike && this._inCombat && e.vamp === this._invStrike.opp && e.t - this._invStrike.at < 15000){   // v0.6.180: only while THIS combat runs -- the same vampire's next combat (a rush, a second block) has its own taken line
+        const k = this._invStrike, exp = (k.range === 'long' && k.dealt && !k.card ? k.dealt : k.dealt) + k.crows, prev = this._invPrev | 0;
+        if(e.n > exp || e.n < exp - prev) this._invFlag('strike-taken', { vamp: e.vamp, taken: e.n, myStrike: k.dealt, crows: k.crows, prevented: prev, range: k.range });
+        this._invStrike = null; this._invPrev = 0;
+      }
+    } catch(err){ this.o.log('invariant check error: ' + err.message); }
+  }
+  _invFlag(inv, data){ this._invFlags = (this._invFlags | 0) + 1; this._emit('inv-flag', Object.assign({ inv }, data)); this.o.log('invariant flag (' + inv + '): ' + JSON.stringify(data)); }
+  _evRecord(who, t, tier, own){
+    try {
+      if(!this.ev) this.ev = new EventLog();
+      const e = this._evClassify(who, t, tier) || { kind: 'other' };
+      e.who = who || null; e.seat = who ? this._seatOfName(who) : 0; e.tier = tier; if(own) e.own = true;
+      if(e.kind !== 'other' || tier === 'log') { if(e.kind === 'other') e.text = String(t).slice(0, 160); this.ev.push(e); this._invOnEvent(e); }
+      if(e.kind === 'other' && typeof process !== 'undefined' && process.env && process.env.ELY_EV_DUMP){ try { require('fs').appendFileSync(process.env.ELY_EV_DUMP, tier + '\t' + String(t).replace(/\s+/g, ' ').slice(0, 200) + '\n'); } catch(e2){} }   // v0.6.177: a dev-only dump of untyped lines (env var), for typing them
+    } catch(err){ this.o.log('event log error: ' + err.message); }
+  }
   _onLog(who, html){
     if(this.out || !this.started) return;
     const t = stripTags(html).trim();
+    if(who !== this.o.name) this._evRecord(who, t, 'log');   // v0.6.176: the event log (my own lines are recorded at send)
     let m;
     /* v0.6.110 (R2, #11, Johan's decision A): the SHORT-TERM ACTION MEMORY.
        Any action-shaped line from another seated player replaces what I
@@ -5708,7 +6463,7 @@ class Bot {
       }
       if(this.pending){
         const blockerVamp = this.pending.blockerVamp;                 // read before _clearPending wipes this.pending
-        const oppName = this.pending.actingVampName || null;          // VB: the combat opponent's name, hoisted the same way (this.pending is null by the _resolveCombat call)
+        const oppName = this.pending.actingVampName || (this._obs && this._obs.vamp && Date.now() - this._obs.at < 60000 ? this._obs.vamp : null) || null;          // VB: the combat opponent's name, hoisted the same way (this.pending is null by the _resolveCombat call)   // v0.6.163 (bug sweep, serie-cmb8): the pending carried no actor name in 14 of ~330 blocks (windows armed from a tally ask / re-blocks) -- the last announced action's vampire (short-term action memory, v0.6.110) is the actor
         if(success){
           this._clearPending('block succeeded');
           if(blockerVamp){
@@ -5830,7 +6585,7 @@ class Bot {
       /* N3: Creeping Sabotage ticked -- the NAMED prey complies. */
       if(m[2] === this.seatName(this.seat) && !this.out){
         const nC = Math.max(0, parseInt(m[3], 10) || 0);
-        if(nC > 0){ this.pool = Math.max(0, this.pool - nC); this._predPressure = (this._predPressure | 0) + nC; this.push(); this.note('Trainbot: Creeping Sabotage \u2014 I burn ' + nC + ' pool.'); }   // v0.6.58: creep loss IS predator pressure -- 'your prey burns' makes the actor MY predator by definition (Jack/Fame payments stay excluded: cross/self, not predator-attributable)
+        if(nC > 0){ this.pool = Math.max(0, this.pool - nC); this._predPressure = (this._predPressure | 0) + nC; this._emit('took-pooldmg', { n: nC, pool: this.pool, via: 'creep', card: 'Creeping Sabotage' }); /* v0.6.163: the ledger row (23 creep placements in cmb5-7, 0 victim rows) */ this.push(); this.note('Trainbot: Creeping Sabotage \u2014 I burn ' + nC + ' pool.'); }   // v0.6.58: creep loss IS predator pressure -- 'your prey burns' makes the actor MY predator by definition (Jack/Fame payments stay excluded: cross/self, not predator-attributable)
       }
       return;
     }
@@ -5863,7 +6618,7 @@ class Bot {
       this.o.log('referendum: ' + who + ' casts ' + vn + ' ' + dir + ' (for ' + this._refVotes.for + ' / against ' + this._refVotes.against + ')');
       return;
     }
-    if((m = t.match(L12.attempt)) || (m = t.match(L12.interceptPlay)) || (m = t.match(L12.blockAct))){   // v0.6.106 (#14): another seat's block attempt -- the blocker's vampire name (latest attempt wins) + the table climate counter; v0.6.110 (R2, #12): + the client's `NAME blocks.`
+    if((m = t.match(L12.attempt)) || (m = t.match(L12.attemptIcp)) || (m = t.match(L12.interceptPlay)) || (m = t.match(L12.blockAct))){   // v0.6.106 (#14): another seat's block attempt -- the blocker's vampire name (latest attempt wins) + the table climate counter; v0.6.110 (R2, #12): + the client's `NAME blocks.`
       { const st = this._seatOfName(who); if(st && st !== this.seat){ const oo = this._opp(st); const ip = t.match(L12.interceptPlay); if(ip) oo.icpSum = (oo.icpSum | 0) + (parseInt(ip[3], 10) | 0); else oo.blockTries = (oo.blockTries | 0) + 1; } }   // v0.6.129: oppIntercept's writers -- an attempt line counts the try, an intercept line adds to it
       this._noteBlockAttempt(m[1], false);
       /* v0.6.110 (R2, #12, Johan): "if the player runs the Block action BEFORE the
@@ -5894,6 +6649,17 @@ class Bot {
       if(a1 && a1.contested && av1){ const n1 = parseInt(m[2], 10) | 0, at1 = Date.now(), mn1 = m[1];
         const tm1 = setTimeout(() => { try { this._tallyNetActor(who, n1, av1, a1, at1, mn1); } catch(e){ this.o.log('tally net error:', e.message); } }, 500); if(tm1.unref) tm1.unref(); }
     }
+    if(who !== this.o.name && this._phaseWait) this._phaseNudge(who, t, 'log');   // v0.6.167: BEFORE the strike parser -- its early return kept a human's strike line from answering "What is your strike?" (the step ran out its clock)
+    if((m = t.match(L12.envOn)) || (m = t.match(L12.envOff))){ if(who !== this.o.name && this._inCombat && this._stashAccept(m[1])){ this._oppCarrionCrows = t.match(L12.envOn) ? { n: parseInt(m[2], 10) } : null; } return; }   // v0.6.167: a human's every-round damage
+    if((m = t.match(L12.strikeAgg)) || (m = t.match(L12.strikeSteal)) || (m = t.match(L12.strikeEnds)) || (m = t.match(L12.strikeN))){
+      if(!this._stashAccept(m[1])) return;
+      if(this._inCombat && (this._xtra | 0) > 0 && ((this._rnd && this._rnd.strikeSeen) || this._oppStrike)){ this._xtra = (this._xtra | 0) - 1; this.o.log('combat: ' + m[1] + ' -- an ADDITIONAL strike this round (not resolved by the bot yet; not carried into the next round): ' + t); this._emit('combat-extra-strike', { vamp: m[1], line: t.slice(0, 120) }); return; }   // v0.6.169 (Johan's pre-test question): a second strike line in the same round was stashed and read as the NEXT round's strike
+      const ag = t.match(L12.strikeAgg), st = t.match(L12.strikeSteal), en = t.match(L12.strikeEnds);
+      if(st && this._inCombat && this._combatMyVamp) this._stolenFromMe(parseInt(st[2], 10), m[1], 'the one-line steal');   // v0.6.196: parked until my strike resolves -- see _stolenFromMe
+      if(en) this._oppEndedCombat = true;
+      this._markStrikePending(who, { vamp: m[1], strike: en ? 'ends' : st ? 'steal' : ag ? 'aggravated' : 'damage', n: st ? parseInt(st[2], 10) : ag ? parseInt(ag[2], 10) : en ? 0 : parseInt(m[2], 10) });   // v0.6.181: the log holds the strike; no copy
+      return;
+    }
     if((m = t.match(L12.strikeD)) || (m = t.match(L12.strikeC)) || (m = t.match(L12.strikeH))){
       /* v0.6.4 (combat handshake): the server never echoes a sender's own log
          lines back (proven in section 36's diagnostics), so EVERY strike line
@@ -5902,17 +6668,18 @@ class Bot {
       const dodge = !!t.match(L12.strikeD);
       const cm = t.match(L12.strikeC);
       if(!this._stashAccept(m[1])) return;   // v0.6.103 (#1): not my opponent (or I am not in/armed for a combat) -- a bystander's view of somebody else's fight
-      this._oppStrike = { vamp: m[1], dodge, dealt: dodge ? 0 : (cm ? parseInt(cm[3], 10) : 1) };
-      if(this._strikeWaiter){ const w = this._strikeWaiter; this._strikeWaiter = null; const s = this._oppStrike; this._oppStrike = null; w(s); }
+      if(this._inCombat && (this._xtra | 0) > 0 && ((this._rnd && this._rnd.strikeSeen) || this._oppStrike)){ this._xtra = (this._xtra | 0) - 1; this.o.log('combat: ' + m[1] + ' -- an ADDITIONAL strike this round (not resolved by the bot yet; not carried into the next round): ' + t); this._emit('combat-extra-strike', { vamp: m[1], line: t.slice(0, 120) }); return; }   // v0.6.169 (Johan's pre-test question): a second strike line in the same round was stashed and read as the NEXT round's strike
+      this._markStrikePending(who, { vamp: m[1], strike: dodge ? (/combat ends/i.test(t) ? 'ends' : 'dodge') : (cm ? 'card' : 'hand'), n: dodge ? 0 : (cm ? parseInt(cm[3], 10) : 1) });   // v0.6.181: the log holds the strike; no copy
       return;
     }
-    if(who !== this.o.name) this._parseCombatNarration(t);   // v0.6.156: combat event lines ride the log tier since v0.6.114 -- parse them here too
+    if(who !== this.o.name){ this._narrWho = who; this._parseCombatNarration(t); this._narrWho = null; }   /* v0.6.183: the speaker, for the log's pending marks */   // v0.6.156: combat event lines ride the log tier since v0.6.114 -- parse them here too
   }
 
   /* ---------- the say channel (SAY broadcast; string-checked) ------------- */
   say(phrase){ const i = sayIdx(phrase); if(i >= 0){ this.send({ t: 'say', i }); this._lastChatAt = Date.now(); } }   // v0.6.108: say creates a timing footprint — the client's say-bubble is 3 s, so _pace's chatHold must gate on it the same way it gates on chat()
   _seatOfName(name){ const p=(this.players||[]).find(q=>q && q.name===name); return p ? (p.seat|0) : 0; }   // R3: roster lookup, 0 when unknown
-  _emit(type, data){ if((type === 'through' || type === 'blocked') && data && data.card !== 'hunt' && (data.kind == null || data.kind === 'bleed') && (data.n | 0) > 0) this._noteMyBleed(type === 'blocked');   // v0.6.143b: my bleed-through ledger against this prey
+  _emit(type, data){ if(type === 'through' && this.tally && this.tally.mode === 'block' && this.started){ try { this._writeTally({ mode: null }); } catch(e){} }   // v0.6.172 (main v2.6.137: the ACTOR closes its block counter when its action resolves) -- every one of my 'through' sites is followed by 'It resolves'
+  if((type === 'through' || type === 'blocked') && data && data.card !== 'hunt' && (data.kind == null || data.kind === 'bleed') && (data.n | 0) > 0) this._noteMyBleed(type === 'blocked');   // v0.6.143b: my bleed-through ledger against this prey
     if(type === 'blocked') this._returnParked(); else if(type === 'through' && this._actingVamp) this._actingVamp.parked = null;   // v0.6.130 (rulebook + Johan, debt 26c): an action's cost is paid only if it SUCCEEDS
     if(type === 'through' || type === 'blocked'){ this._lastAct = { vamp: data && data.vamp, outcome: type, kind: (data && data.kind) || null }; try{ this._offNote(type, data); }catch(e){} }   // v0.6.123: the act-again hook reads the SAME two emits the strategy layer's ledger rides   // v0.6.119: the strategy layer's own offensive ledger rides the two emits that already mark every resolved action
     if(this.onEvent) try{ this.onEvent('bot:' + type, data || {}); }catch(e){} }
@@ -5967,6 +6734,7 @@ class Bot {
     if(hold){
       this._holdBy = this._holdBy || new Set();
       this._holdBy.add(who);
+      this._holdFreeze(who);                                   // v0.6.198: and every clock of mine that waits on a human stops
     } else if(rel && this._holdBy && this._holdBy.size){
       /* a release from ANY non-bot clears the WHOLE set. Holds are keyed by
          name, so at a hotseat (one device, several humans) Alice's hold could
@@ -5974,35 +6742,99 @@ class Bot {
          to relay "It resolves" once per holder name to work around it. The
          phrase is a table-flow assertion: whoever says it is stating that the
          table has moved on, so it releases the table, not just their own row. */
+      const was = [...this._holdBy];
       this._holdBy.clear();
       if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }
       if(this._holdAnnounced){ this._holdAnnounced = false; this.chat('\u25b6 Resuming.'); }   // only the bot that announced the hold announces the release
+      this._releasePauses(was.concat([who]));                  // v0.6.198: the table moved on, so every holder's own pause ends with it -- the same rule as _holdBy (a pause that outlived the release left my poll with no clock and no button, and kept a target's Pass from answering my block window)
+      this._holdThaw();                                        // v0.6.198: every frozen clock starts again from the beginning
     }
+  }
+  _releasePauses(names){             // v0.6.198: these humans' per-holder pauses (my block window's pausedBy, my poll's paused) end with the table hold
+    const a = this._ask, rc = this._refCall;
+    (names || []).forEach(n => { if(a && a.pausedBy) a.pausedBy.delete(n); if(rc && !rc.closed && rc.paused) rc.paused.delete(n); });
   }
   /* v0.6.108: the wait gate — the single place a hold actually costs time.
      The first bot to arrive here while a hold is live announces it and arms
      the reminder; every other bot waits silently. Replaces the three
      half-rules the hold used to be spread across. */
   async _holdGate(){
-    if(!(this._holdBy && this._holdBy.size)) return;
-    if(!this._holdAnnounced){
-      this._holdAnnounced = true;
-      this.chat('\u23f8 Holding for ' + [...this._holdBy].join(', ') + ' \u2014 say "It resolves" when ready.');
-      this._holdRemind();
+    if(!this._held()) return;
+    this._holdAnnounce();
+    while(this._held()) await sleep(150);
+  }
+  /* v0.6.198 (Johan's principle, agreed with main 12 Oct): a Hold on stops EVERY bot clock that waits on a human -- the block / reaction
+     window, the pool question, the vote poll, the seven combat steps and the damage step -- and each clock starts again from the
+     beginning when the hold is released. A frozen wait keeps its question and loses its clock, its deadline and its Turn-based reminder
+     (the four-minute give-up is the same timer, so it stands too). An ANSWER still ends a wait at once (a line, Pass, Yes / No, a vote):
+     the hold stops clocks, never answers. The per-holder pauses of the ask (pausedBy) and the poll (paused) keep their rule: the holder's
+     own answer ends them. Bots never operate the hold, so an arena (no humans) never reaches any of this.                               */
+  _held(){ return !!(this._holdBy && this._holdBy.size); }
+  _holdAnnounce(){                   // the hold line + its 90 s reminder, once per hold, from a bot that is actually waiting (the gate, or a frozen wait)
+    if(this._holdAnnounced || !this._held()) return;
+    this._holdAnnounced = true;
+    this.chat('\u23f8 Holding for ' + [...this._holdBy].join(', ') + ' \u2014 say "It resolves" when ready.');
+    this._holdRemind();
+  }
+  _freezeWait(w){                    // stop one wait's clock: timer, deadline and Turn-based reminder; _held marks it (no Adaptive measurement, `held: 1` on its wait row)
+    if(!w) return;
+    if(w.timer) clearTimeout(w.timer);
+    w.timer = null; w.deadline = null;
+    if(w._remT){ clearTimeout(w._remT); w._remT = null; }
+    w._held = true;
+  }
+  _heldTimeout(fn, ms){              // a one-shot timer that waits on a human: it stands while a hold is live and runs a FRESH ms from the release (_holdFreeze / _holdThaw drive it). Returns { cancel() }.
+    const set = this._heldTimers = this._heldTimers || new Set(), self = this;
+    const h = { t: null, dead: false,
+      cancel(){ h.dead = true; if(h.t){ clearTimeout(h.t); h.t = null; } set.delete(h); },
+      freeze(){ if(h.t){ clearTimeout(h.t); h.t = null; } },
+      arm(){ if(h.dead) return; if(h.t){ clearTimeout(h.t); h.t = null; } if(self._held()) return;
+        h.t = setTimeout(() => { h.t = null; if(h.dead) return; h.dead = true; set.delete(h); fn(); }, ms); } };
+    set.add(h); h.arm(); return h;
+  }
+  _holdFreeze(who){                  // a human's hold landed: freeze every open wait of mine
+    let speak = false;
+    const a = this._ask;
+    if(a){
+      if(a.pausedBy) a.pausedBy.add(who);                                   // the TYPED hold pauses the window exactly as the quick phrase does (the quick phrase's own branch in _onSay repeats this -- a Set, idempotent)
+      if(a.undirected && a.eligible && !a.eligible.has(who)) a.eligible.add(who);   // v0.6.108's soft promotion, the same for both forms
+      this._freezeWait(a);
+      if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; }           // no stopwatch ring on a held table: its countdown would run on every screen while the table waits
+      speak = true;
     }
-    while(this._holdBy && this._holdBy.size) await sleep(150);
+    const rc = this._refCall;
+    if(rc && !rc.closed){ if(!a) rc.paused.add(who); this._freezeWait(rc); speak = true; }
+    if(this._pq) this._freezeWait(this._pq);                                // silent: every bot may hold its own pool question (debt 23c) -- the question is already on the table
+    const pw = this._phaseWait;
+    if(pw && !pw.done){ this._freezeWait(pw); speak = true; }
+    (this._heldTimers ? [...this._heldTimers] : []).forEach(h => h.freeze());   // the one-shot waits on a human (_heldTimeout) stop too
+    if(speak) this._holdAnnounce();                                         // main (12 Oct): a bot frozen inside a step never reaches _holdGate, so the hold went unannounced
+  }
+  _holdThaw(){                       // the hold is released: every open wait re-arms FRESH -- a full clock from now, its reminder too. A per-holder pause still waits for that holder's answer.
+    const a = this._ask; if(a && !(a.pausedBy && a.pausedBy.size)) this._restartAskTimer();
+    if(this._pq) this._pqArm();
+    const pw = this._phaseWait; if(pw && !pw.done && pw.arm) pw.arm();
+    const rc = this._refCall; if(rc && !rc.closed && rc.arm) rc.arm();
+    (this._heldTimers ? [...this._heldTimers] : []).forEach(h => h.arm());   // and the one-shot waits start their full grace again
   }
   _releaseDeparted(players){         // v0.6.106 (#5): anyone offline, vacant or out can no longer say 'It resolves' -- drop their Hold on and their ask pause
     const gone = new Set(players.filter(p => p && (p.out || p.vacant || p.online === false)).map(p => p.name));
     if(!gone.size) return;
+    let thaw = false;
     if(this._holdBy && this._holdBy.size){
       let rel = false; for(const n of [...this._holdBy]) if(gone.has(n)){ this._holdBy.delete(n); rel = true; }
-      if(rel && !this._holdBy.size){ if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; } this.chat('\u25b6 Resuming (the holder left the table).'); }
+      if(rel && !this._holdBy.size){ if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; } this._holdAnnounced = false; this.chat('\u25b6 Resuming (the holder left the table).'); thaw = true; }   // v0.6.198: the announcement flag resets too (it stayed set, and the NEXT hold went unannounced)
     }
     if(this._ask && this._ask.pausedBy && this._ask.pausedBy.size){
       let rel2 = false; for(const n of [...this._ask.pausedBy]) if(gone.has(n)){ this._ask.pausedBy.delete(n); rel2 = true; }
-      if(rel2 && !this._ask.pausedBy.size && !this._ask.timer) this._restartAskTimer();
+      if(rel2 && !this._ask.pausedBy.size && !this._ask.timer && !thaw) this._restartAskTimer();
     }
+    const rc = this._refCall;   // v0.6.198: a departed holder no longer stands my vote poll's clock either (it waited for their word for ever)
+    if(rc && !rc.closed && rc.paused && rc.paused.size){
+      let rel3 = false; for(const n of [...rc.paused]) if(gone.has(n)){ rc.paused.delete(n); rel3 = true; }
+      if(rel3 && !thaw) rc.arm();
+    }
+    if(thaw) this._holdThaw();                                  // v0.6.198: the hold is over -- every frozen clock starts again from the beginning
   }
   _holdRemind(){
     if(this._holdRemT) clearTimeout(this._holdRemT);
@@ -6019,6 +6851,7 @@ class Bot {
     if(!this.started) return;
     const phrase = SAY[m.i]; if(!phrase) return;                     // unknown index: tolerate (reorder safety)
     if(m.who === this.o.name) return;                                // my own broadcast echoes back
+    if(this._phaseWait && /^(No reaction|No|Pass|No block|It resolves)$/.test(phrase)) this._phaseNudge(m.who, phrase === 'No reaction' || phrase === 'No block' || phrase === 'It resolves' ? 'pass' : phrase, 'chat');   // v0.6.165: the quick-phrase buttons answer a combat step
     this._holdHook(m.who, m.i, null);                                // v0.6.95: the general table hold -- runs for EVERY say, never returns early (the ask-window protocol below stays byte-untouched)
     if(phrase === 'It resolves' && this._refActor && this._refActor.who === m.who) this._refActor = null;   // v0.6.127
     if(phrase === 'It resolves' && this._blockBar && this._blockBar.who === m.who) this._blockBar = null;   // v0.6.127: the bar dies with its action
@@ -6089,7 +6922,7 @@ class Bot {
           if(a.eligible.has(m.who)){
             a.passed.add(m.who);
             if([...a.eligible].every(n => a.passed.has(n)) && !a.pausedBy.size){
-              if(a.contested){ if(!a.timer) this._restartAskTimer(); return; }
+              if(a.contested){ if(a.plan && a.plan.noClock && this._isHumanName(m.who)){ this._askTimeout(); return; } if(!a.timer) this._restartAskTimer(); return; }   // v0.6.194 (Turn-based): the human's Pass ends the exchange -- the verdict is declared now, not after the safety net
               return this._answer('no', m.who);
             }
           }
@@ -6099,6 +6932,7 @@ class Bot {
         const curTarget = this.seatName((this._actingVamp && this._actingVamp.target) || this.preySeat());
         if(m.who === curTarget && !a.pausedBy.size){
           if(a.contested){             // fas A+ (16 July): a target's Pass DURING a live contest means "no more cards from me", not "no block happened" -- the referendum already holds a mechanical answer (tally a/b) and the verdict declaration must resolve it, or a winning b>=a block gets swallowed as a through-bleed (the no-candidate decline's Pass raced the verdict timer exactly this way). Make sure the verdict clock is running and let IT decide.
+            if(a.plan && a.plan.noClock && this._isHumanName(m.who)){ this._askTimeout(); return; }   // v0.6.194 (Turn-based): the human's Pass ends the exchange -- the verdict is declared now (the bot's own deferred card still lands first), not after the safety net
             if(!a.timer) this._restartAskTimer();
             return;
           }
@@ -6150,28 +6984,34 @@ class Bot {
     const o = this._obs;
     if(!o || o.seat === this.seat || Date.now() - o.at > 120000) return;   // nothing on record: silence, not a guess
     if(o.poolLoss != null) return this._openAskedWindow();
-    this._pq = { who, phrase, stage: 'yn', deadline: 0, timer: null, obs: o };
-    this.chat('Trainbot: Will this action cause me to lose pool? (Yes / No)');
+    this._pq = { who, phrase, stage: 'yn', deadline: 0, timer: null, obs: o, t0: Date.now() };
+    const pl0 = this._waitPlan('pq', who);   // v0.6.194: the tempo
+    this.chat('Trainbot: Will this action cause me to lose pool? (Yes / No)' + (pl0.noClock ? ' \u2014 I wait for you.' : ''));
     this._pqArm();
   }
   _pqArm(){
     const q = this._pq; if(!q) return;
     if(q.timer) clearTimeout(q.timer);
-    const wait = this.o.askSecs * 1000 + this._chatSettleMs();
-    q.deadline = Date.now() + wait;
+    const plan = q.plan = this._waitPlan('pq', q.who), wait = plan.ms;   // v0.6.194: the tempo (legacy = askSecs + the chat settle)
+    if(this._held()){ q.timer = null; this._freezeWait(q); return; }   // v0.6.198 (main 12 Oct): the stage-one clock answered No -- and the bot said No block -- while the human held; a hold stops it, _holdThaw arms it fresh
+    q.deadline = plan.noClock ? null : Date.now() + wait;
     q.timer = setTimeout(() => this._pqTimeout(), wait);
+    this._remindArm(q, plan, 'Still waiting for ' + q.who + ': ' + (q.stage === 'amt' ? 'how much pool?' : 'does this action cost me pool \u2014 Yes or No?') + ' (or press the Bot button).');
   }
   _pqTimeout(){
     const q = this._pq; if(!q) return;
+    if(q.plan && q.plan.noClock && !q._end) this.note('Trainbot: no answer in ' + Math.round(q.plan.ms / 60000) + ' min \u2014 ' + (q.stage === 'yn' ? 'taking it as No.' : 'taking it as 1 pool.'));   // v0.6.194: Turn-based's safety net spoke
     if(q.stage === 'yn') return this._pqAnswer('no', null);        // decision B: silence means I let it through
     return this._pqAnswer('1', null);                               // a Yes with no number is at least 1 pool
   }
   _pqAnswer(ans, who){
     const q = this._pq; if(!q) return;
     if(q.timer){ clearTimeout(q.timer); q.timer = null; }
+    if(q._remT){ clearTimeout(q._remT); q._remT = null; }
+    if(q.t0){ if(who && !q._held) this._rtNote(who, Date.now() - q.t0); this._waitRow('pq', q.plan, q.t0, who ? 'answer' : (q._end || 'clock'), { stage: q.stage, ans, held: q._held ? 1 : undefined }); q.t0 = 0; q._held = false; }   // v0.6.194: the wait row + Adaptive's measurement (v0.6.198: not across a hold; the mark is per stage)
     if(q.stage === 'yn'){
       if(ans === 'yes'){
-        q.stage = 'amt';
+        q.stage = 'amt'; q.t0 = Date.now(); q._end = null;
         this.chat('Trainbot: How much?');
         this._pqArm();
         return;
@@ -6308,6 +7148,14 @@ class Bot {
     const t = this.tally; if(!t || t.mode !== 'block') return; const b = t.b | 0, a = t.a | 0; if(b >= a) return;   // the block succeeds as it stands
     if((p.icLooks | 0) >= 4) return; p.icLooks = (p.icLooks | 0) + 1;
     const blocker = p.blockerVamp, need = a - b, stack = this._interceptStack(blocker, p.reacted), ic = this._bestInterceptFor(blocker, p.reacted);
+    { const pi = this._equipPaidIntercept(blocker, p);   // v0.6.174: a paid equipment intercept (Bowl [AUS], 1 blood) comes before a card -- only when needed (the b < a guard above)
+      if(pi && (pi.n >= need || (ic && stack.sum + pi.n >= need))){
+        p.reacted.add(pi.key); blocker.blood = (blocker.blood | 0) - pi.cost;
+        this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> burns ' + pi.cost + ' blood (' + esc(pi.card) + '): +' + pi.n + ' intercept.' });
+        this._emit('intercept-stack', { vamp: blocker.name, look: 1 + (p.icLooks | 0), paid: pi.card, n: pi.n, need, tally: { a, b } });
+        this._setTallyB(b + pi.n); this.push();
+        if(pi.n >= need) return;
+      } }
     let tag, go = false;
     if(!ic || stack.S <= 0) tag = 'no-intercept';
     else if(stack.sum < need) tag = 'cannot-reach';
@@ -6539,9 +7387,9 @@ class Bot {
     let tm = txt.match(/(?:dealt; |^(?:\S+ combat \u2014 )?)([^;]+?) (?:takes|dodges the strike .*?takes) (\d+) \(loses (\d+) blood(?:, now (\d+))?/);   // v0.6.156: + 'now M' (their blood after the round)   // v0.6.103 (#1): the vampire that TOOK the damage (after 'dealt; ' in the normal line, after the prefix in the dodge+crows line) -- the old lazy (.+?) captured the whole strike clause
     if(tm && !this._stashAccept(tm[1])) tm = null;   // v0.6.103 (#1): not my opponent -> not my stash
     if(tm){
-      this._oppTaken = { vamp: tm[1], n: parseInt(tm[3], 10), down: /goes to torpor|goes into torpor|is BURNED/.test(txt), now: tm[4] != null ? parseInt(tm[4], 10) : null };   // v0.6.156: down = their own narration says torpor/burn; now = their blood after the round
-      this._oppLastTaken = Object.assign({ at: Date.now() }, this._oppTaken);   // v0.6.156: a NON-consumed copy for _wantPress (the stash above is consumed by Taste of Vitae's waiter)
-      if(this._takenWaiter){ const w = this._takenWaiter; this._takenWaiter = null; const s = this._oppTaken; this._oppTaken = null; w(s); }
+      this._markPendingOf('opp-taken', this._narrWho || null, '_takenWaiter', e => this._takenFromEvent(e), { vamp: tm[1], n: parseInt(tm[3], 10), dmg: parseInt(tm[2], 10), down: /goes to torpor|goes into torpor|is burned/i.test(txt), now: tm[4] != null ? parseInt(tm[4], 10) : null });   /* v0.6.184: the log holds their taken line */   // v0.6.156: down = their own narration says torpor/burn; now = their blood after the round
+      /* v0.6.184: _oppLastTaken is the latest opp-taken event -- no copy */   // v0.6.156: a NON-consumed copy for _wantPress (the stash above is consumed by Taste of Vitae's waiter)
+      /* (the waiter is resolved by _markPendingOf) */
     }
     /* v0.6.22 (Johan's combat GO, the multi-round loop -- Press, source-verified
        vekn.net 19 July): "If there is an UNCANCELLED press to continue, a new round
@@ -6557,25 +7405,23 @@ class Bot {
        note carries the amount ("X strikes with CARD: steals N blood (not damage; ...)"); the victim now loses min(N, blood) -- not
        damage, so no torpor from it on its own (rulebook: a steal is not damage) -- and records it on the round row. */
     const sm = this._inCombat && this._combatMyVamp ? txt.match(/^(?:\S+ combat \u2014 )?(.+?) strikes with (.+?): steals (\d+) blood/) : null;
-    if(sm && this._stashAccept(sm[1])){
-      const v = this._combatMyVamp, n = parseInt(sm[3], 10), lost = Math.min(n, v.blood | 0);
-      v.blood = (v.blood | 0) - lost; if(this._rnd) this._rnd.stolenFromMe = (this._rnd.stolenFromMe | 0) + lost;
-      this.o.log('combat (' + v.name + '): ' + sm[1] + ' steals ' + lost + ' blood with ' + sm[2] + ' (not damage)');
-      this.push();
-    }
+    if(sm && this._stashAccept(sm[1])) this._stolenFromMe(parseInt(sm[3], 10), sm[1], sm[2]);   // v0.6.196: parked until my strike resolves
+    const sr = txt.match(/^(?:\S+ combat \u2014 )?(.+?) sets range to (close|long)( next round)?\./);   // v0.6.164: main's frozen lines (client v2.6.132) -- 'this round' skips the maneuver step, 'next round' carries (Immortal Grapple POT, Lam Into-class)
+    if(sr && this._stashAccept(sr[1])){ if(sr[3]) this._nextRange = sr[2]; else this._setRangeNow = sr[2]; this.o.log('combat: ' + sr[1] + ' sets range to ' + sr[2] + (sr[3] ? ' next round' : '')); }
+    const xs = txt.match(/^(?:\S+ combat \u2014 )?(.+?) gets (an|\d+) additional strikes? ?(?:\((.+?)\))?\./);   // v0.6.164: table talk for now -- the bot resolves one strike pair per round (additional pairs: a later block)
+    if(xs && this._stashAccept(xs[1])){ this._xtra = (this._xtra | 0) + (xs[2] === 'an' ? 1 : parseInt(xs[2], 10) || 1); }   // v0.6.169: the next strike line(s) from them this round are the additional ones -- not the next round's
+    if(xs && this._stashAccept(xs[1])) this.o.log('combat: ' + xs[1] + ' gets ' + xs[2] + ' additional strike(s)' + (xs[3] ? ' (' + xs[3] + ')' : '') + ' -- not resolved by the bot yet');
     const pm0 = txt.match(/^(?:\S+ combat \u2014 )?(.+?) presses to (continue|end)/i);   // v0.6.103 (#1): bare vampire name (the old regex captured 'Trainbot combat -- Lisa')
     const pm = (pm0 && this._stashAccept(pm0[1])) ? pm0 : null;
     if(pm){
-      this._oppPress = { vamp: pm[1], continue: pm[2].toLowerCase() === 'continue' };
-      if(this._pressWaiter){ const w = this._pressWaiter; this._pressWaiter = null; const s = this._oppPress; this._oppPress = undefined; w(s); }
+      this._markPendingOf('press', this._narrWho || null, '_pressWaiter', e => this._pressFromEvent(e), { vamp: pm[1], continue: pm[2].toLowerCase() === 'continue' });   /* v0.6.183: the log holds the press */
     }
     /* v0.6.24 (Johan's combat GO, the range concept): "maneuvers to close/long" --
        mirrors the press parser exactly, same self-filter, same stash/waiter shape. */
     const mm0 = txt.match(/^(?:\S+ combat \u2014 )?(.+?) maneuvers to (close|long)/i);
     const mm = (mm0 && this._stashAccept(mm0[1])) ? mm0 : null;
     if(mm){
-      this._oppManeuver = { vamp: mm[1], range: mm[2].toLowerCase() };
-      if(this._maneuverWaiter){ const w = this._maneuverWaiter; this._maneuverWaiter = null; const s = this._oppManeuver; this._oppManeuver = undefined; w(s); }
+      this._markPendingOf('maneuver', this._narrWho || null, '_maneuverWaiter', e => this._maneuverFromEvent(e), { vamp: mm[1], range: mm[2].toLowerCase() });   /* v0.6.183: the log holds the maneuver */
     }
     /* v0.6.26 (Johan's combat GO, Carrion Crows): unlike every other opp-parser in
        this file, this one is NOT a one-shot stash/waiter -- Carrion Crows announces
@@ -6600,9 +7446,10 @@ class Bot {
     /* v0.6.106 (#14): the B-55e-b chat parse (`^Trainbot: X attempts the block.` / `plays Y (+N intercept).`) is RETIRED -- the blocker's name rides the frozen log lines L12.attempt / L12.interceptPlay (see _onLog → _noteBlockAttempt) and own attempts are counted at _commitBlock; the 'Trainbot:' chat prefix is narration again, free to change. */
     if(who === this.o.name) return;                            // our own lines echo back
     const txt = String(msg || '').trim();
+    if(this._phaseWait) this._phaseNudge(who, txt, 'chat');   // v0.6.165: a human's quick phrase answers the combat step
     this._holdHook(who, -1, txt);                              // v0.6.95: chat-side hold fallback ('hold on' pauses, 'carry on'/'resume'/'it resolves' release)
     if(this._refCall && !this._refCall.closed && /^(no votes from me|i abstain|abstain)\.?$/i.test(txt)){ this._refCall.heard.add(who); this._refCall.paused.delete(who); this._refCall.arm(); }   // v0.6.122: a bot's abstain bubble (and a human typing the same) counts as having spoken
-    this._parseCombatNarration(txt);   // v0.6.156: the four opp-parsers (taken / press / maneuver / Crows / Grapple) now live in ONE method fed from BOTH tiers -- see _parseCombatNarration
+    this._narrWho = who; this._parseCombatNarration(txt); this._narrWho = null;   /* v0.6.183 */   // v0.6.156: the four opp-parsers (taken / press / maneuver / Crows / Grapple) now live in ONE method fed from BOTH tiers -- see _parseCombatNarration
     /* v0.6.110 (R2, #11): typed answers to MY pool question, and the typed form
        of the prompt itself -- the quick phrases are the fast path, chat is the
        fallback the feedback explicitly asked for ("snabbfrasa eller chattskriva"). */
@@ -6633,6 +7480,24 @@ class Bot {
         this.note(who + ' has ' + nb + ' intercept (booked on the counter).');
         this._stealthSecondLook();                             // judge the real counter now; the online echo is deduped by state
         this._restartAskTimer();
+        return;
+      }
+    }
+    /* v0.6.173 (Johan, 25 Sep: "can one use the chat for blocks too, typing +1?"): STEALTH BY CHAT -- the mirror of v0.6.152's intercept by
+       chat, for a HUMAN's action that I am blocking. A bare number N = their total stealth now, +N = stealth added since. Only from the
+       acting human while my block is contested; I book it on the counter (their side -- main agreed the bot may write an untouched a) and
+       answer with my intercept second look. A card's own line ("plays X.") carries no amount, so the number is the way without a helper. */
+    if(this.pending && this.pending.contested && this.pending.blockerVamp && !this.out && who === this.pending.who){
+      const sm = txt.replace(/^\s*@?trainbot[:,]?\s*/i, '').match(/^\s*(\+)?(\d{1,2})\s*(stealth)?\s*$/i) || (namedMe0(this, txt) ? txt.replace(nameRe0(this), '').match(/^\s*(\+)?(\d{1,2})\s*(stealth)?\s*$/i) : null);
+      if(sm){
+        const cur = (this.tally && this.tally.mode === 'block') ? this.tally : { a: this.pending.kind === 'undirected' ? 1 : 0, b: 0 }, n = parseInt(sm[2], 10) | 0;
+        const na = Math.min(99, sm[1] ? (cur.a | 0) + n : n);
+        this._emit('stealth-chat', { from: who, text: txt, a: na, prev: cur.a | 0, b: cur.b | 0 });
+        this.o.log('stealth by chat from ' + who + ': "' + txt + '" \u2192 stealth ' + na + ' (was ' + (cur.a | 0) + ')');
+        this._writeTally({ mode: 'block', a: na });
+        if(this.tally && this.tally.mode === 'block') this.tally = Object.assign({}, this.tally, { a: na }); else this.tally = { mode: 'block', a: na, b: cur.b | 0 };   // local mirror (offline has no echo)
+        this.note(who + ' has ' + na + ' stealth (booked on the counter).');
+        try { this._interceptSecondLook(); } catch(e){ this.o.log('stealth-chat second look error:', e.message); }
         return;
       }
     }
@@ -6709,13 +7574,17 @@ class Bot {
   _answer(what, who){
     const a = this._ask; this._ask = null;
     if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; }   // the answered ask stands the clock trigger down
-    if(a){ if(a.timer) clearTimeout(a.timer); if(a._whoT){ clearTimeout(a._whoT); a._whoT = null; } a.resolve({ what, who }); }   // v0.6.110 (R2, #12): a resolved ask never asks who blocked
+    if(a){ if(a.timer) clearTimeout(a.timer); if(a._whoT){ clearTimeout(a._whoT); a._whoT = null; } if(a._remT){ clearTimeout(a._remT); a._remT = null; } a.done = true;
+      if(a.t0){ const end = who ? 'answer' : (a._end || 'clock'); if(who && !a.contested && !a._held && a.plan && a.plan.who && a.plan.who.includes(who)) this._rtNote(who, Date.now() - a.t0); this._waitRow(a.reactionsOnly ? 'react' : 'block', a.plan, a.t0, end, { what, contested: !!a.contested, held: a._held ? 1 : undefined }); }   // v0.6.198: no Adaptive measurement across a hold   // v0.6.194: the wait row + Adaptive's measurement (a human's own answer to an uncontested window; a contested one measures the exchange, not the human)
+      a.resolve({ what, who }); }   // v0.6.110 (R2, #12): a resolved ask never asks who blocked
   }
   _armReactTimer(){                    // v0.3.10 (Johan): after 5 s of silence, ring the table's EXISTING Reaction timer — the server broadcasts who + the room's reactSecs, every client shows the countdown. The bot's own patient window (askSecs) is untouched: the stopwatch prompts, the ask decides.
+    if(this._ask && this._ask.plan && this._ask.plan.noClock){ if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; } return; }   // v0.6.194 (Turn-based): no stopwatch -- its ring would re-stamp a deadline the mode does not have
     if(this._rcT) clearTimeout(this._rcT);
     this._rcT = setTimeout(() => {
       this._rcT = null;
       const a = this._ask; if(!a) return;
+      if(this._held()) return;   // v0.6.198: no ring while a hold is live -- its countdown would run on every screen while the table waits
       this.send({ t: 'decide' });
       /* v0.6.114 (Johan: "the bot resumes too long after the stopwatch ends"): the window
          used to keep its full askSecs (20 s at a human table) regardless of the stopwatch,
@@ -6760,13 +7629,27 @@ class Bot {
     }, 30000);
   }
   _watchdogKill(){ if(this._wdT){ clearTimeout(this._wdT); this._wdT = null; } }
+  _askWho(a){                         // v0.6.194: the HUMANS this ask still waits on (none = a bot-only window: the tempo stays out of it)
+    if(!a) return [];
+    if(a.undirected && a.eligible) return [...a.eligible].filter(n => !(a.passed && a.passed.has(n)) && this._isHumanName(n));
+    const t = a.target || this.preySeat(), n = t ? this._humanAt(t) : null; return n ? [n] : [];
+  }
+  _askPlan(a){ return this._waitPlan(a && a.reactionsOnly ? 'react' : 'block', this._askWho(a)); }
+  _askRemindText(a){
+    const who = this._askWho(a).join(', ') || 'you';
+    if(a.contested) return 'Still waiting for ' + who + ': more intercept, or Pass to resolve the block (or press the Bot button).';
+    return 'Still waiting for ' + who + ': ' + (a.reactionsOnly ? 'a reaction, or No reaction' : 'Block, or Pass') + ' (or press the Bot button).';
+  }
   _restartAskTimer(){
     const a = this._ask; if(!a) return;
     if(a.timer) clearTimeout(a.timer);
-    const wait = this.o.askSecs * 1000 + this._chatSettleMs();   // v0.6.109 (#1): computed ONCE and stamped, so status() reports the deadline the timer actually holds instead of re-deriving it (and re-reading a _chatSettleMs that has moved on since)
-    a.deadline = Date.now() + wait;
+    if(this._held()){ a.timer = null; a.plan = this._askPlan(a); this._freezeWait(a); if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; } this._holdAnnounce(); return; }   // v0.6.198: a hold stops the clock -- activity during it restarts nothing; _holdThaw arms it fresh; a bot waiting here never reaches _holdGate, so it says the hold
+    const plan = a.plan = this._askPlan(a), wait = plan.ms;   // v0.6.194: the tempo decides the clock (legacy = askSecs + the chat settle, computed ONCE and stamped -- v0.6.109 #1 -- so status() reports the deadline the timer actually holds)
+    a.deadline = plan.noClock ? null : Date.now() + wait;   // Turn-based: no deadline to count down -- the widget shows its button instead (the hold's rule)
     a.timer = setTimeout(() => this._askTimeout(), wait);
-    this._armReactTimer();   // v0.6.115 (self-review): the stopwatch is "N s of table SILENCE" -- silence restarts on activity, so every restart re-arms it. Was armed only at the window's opening (3 sites vs 15 restarts): one reaction played after the ring handed the table a fresh 20 s with no stopwatch -- the dead air v0.6.114 removed, back in exactly the case that happens at a table. Every window now ends <= reactClockMs + reactSecs + grace after the LAST activity, whatever askSecs is.
+    this._remindArm(a, plan, this._askRemindText(a));
+    if(!plan.noClock) this._armReactTimer();   // v0.6.115 (self-review): the stopwatch is "N s of table SILENCE" -- silence restarts on activity, so every restart re-arms it. Was armed only at the window's opening (3 sites vs 15 restarts): one reaction played after the ring handed the table a fresh 20 s with no stopwatch -- the dead air v0.6.114 removed, back in exactly the case that happens at a table. Every window now ends <= reactClockMs + reactSecs + grace after the LAST activity, whatever askSecs is. v0.6.194: never in Turn-based -- the ring re-stamps the deadline, and Turn-based has none.
+    else if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; }
   }
   /* v0.6.109 (#1, the widget seam): the timer's body, extracted VERBATIM so that
      step()'s resolve-ask rung runs the IDENTICAL path the clock would have run --
@@ -6783,6 +7666,9 @@ class Bot {
     const a = this._ask; if(!a) return;
     if(a.contested && this._deferredPending()){   // v0.6.153 (self-review after v0.6.152): with `--ask-secs 3` the clock could beat a deferred stealth / cancel card (react beat 1.5 s + a 2.4 s chat hold after "currently has N stealth") and declare a block that the card was about to break. Wait in short steps until it has landed; _spendStealthCard's own restart then runs the clock afresh.
       if((a._deferWaits | 0) < 20){ a._deferWaits = (a._deferWaits | 0) + 1; a.deadline = Date.now() + 400; a.timer = setTimeout(() => this._askTimeout(), 400); return; } }
+      if(a._remT){ clearTimeout(a._remT); a._remT = null; }
+      if(a.plan && a.plan.noClock && !a._end && a.t0) this.note('Trainbot: no answer in ' + Math.round(a.plan.ms / 60000) + ' min \u2014 ' + (a.contested ? 'resolving the block from the counter.' : 'going on as if nobody blocks.'));   // v0.6.194: Turn-based's safety net spoke
+      if(a.contested && this.tally && this.tally.mode === 'block' && a.t0){ this._waitRow('block', a.plan, a.t0, a._end || 'clock', { what: 'verdict', contested: true, held: a._held ? 1 : undefined }); a.t0 = 0; }   // v0.6.194: the contested verdict resolves below without _answer -- its wait row is written here
       /* v0.6.3 (16 July, arena root-cause): a CONTESTED referendum that times
          out is not "nobody pursued it" -- the contest already has a mechanical
          answer sitting in the shared tally (rulebook: "if the intercept is
@@ -6804,10 +7690,10 @@ class Bot {
         this.push();
         if(iB >= sA) return a.resolve({ what: 'block', who: null });
         /* failed contest: the action continues -- same shape as an inbound 'fails' verdict */
-        this._ask = a; a.contested = false; a.timer = null; this._restartAskTimer();
+        this._ask = a; a.contested = false; a.timer = null; a.t0 = Date.now(); a._end = null; a._held = false; this._restartAskTimer();   // v0.6.194: the reopened window is a wait of its own (its own row)
         return;
       }
-    this._ask = null; a.resolve({ what: 'no', who: null });
+    this._answer('no', null);   // v0.6.194: through _answer, so the wait row is written and the reminder cleared (was: this._ask = null; a.resolve(...))
     // v0.6.100 (Johan): the clock that lands here starts AFTER the declaration bubbles settle -- animation, then declaration, then the stopwatch, in succession. v0.3.8: non-contested silence always means 'no' -- post-stealth quiet is a conceded block (classic); v0.6.3: a CONTESTED timeout now resolves the referendum from the tally instead (see above)
   }
   /* The reaction window as ACTOR (spec §5): the chat grammar, the say phrases
@@ -6817,11 +7703,13 @@ class Bot {
   _askBlock(question, askOpts){
     askOpts = askOpts || {};
     const reactionsOnly = !!askOpts.reactionsOnly;   // v0.6.114: after blocks were declined, only reactions remain (rulebook "Detailed course of an action": a modifier never reopens blocks)
-    const tail = reactionsOnly ? ' \u2014 reduce, bounce or say "no reaction" (' + this.o.askSecs + 's \u2192 resolves)' : ' \u2014 say "block" or "no" (' + this.o.askSecs + 's \u2192 no)';
+    const tailFor = plan => reactionsOnly ? ' \u2014 reduce, bounce or say "no reaction"' + this._waitTail(plan, 'resolves') : ' \u2014 say "block" or "no"' + this._waitTail(plan, 'no');   // v0.6.194: the clock in the tail is the tempo's, not askSecs
     return new Promise(resolve => {
       const targetSeat = (this._actingVamp && this._actingVamp.target) || this.preySeat();   // steg 2 (15 July): the CURRENT target (may differ from prey after a mid-action bounce), falling back to prey for hunt
       const av = this._actingVamp;
       const undirected = !!av && (UND_KINDS.has(av.kind) || (!av.kind && !av.target));   // v0.6.107 (B1): hunt / stock / recruit / strength / creep / equip / fetch -- prey AND predator may block
+      const kind = reactionsOnly ? 'react' : 'block', adaptive = this._tempoMode() === 'adaptive';
+      const skipRow = (names, seats) => { const plan = this._waitPlan(kind, names); this._waitRow(kind, plan, Date.now(), 'skip', { seats }); this.o.log('tempo: no ' + (reactionsOnly ? 'reaction' : 'block') + ' question -- ' + names.join(', ') + ' cannot answer it (no minion up, empty hand)'); };
       if(undirected){
         /* v0.6.108: the eligible set is prey + predator (the players who
            can block by default — range restriction). Intermediate players
@@ -6832,20 +7720,24 @@ class Bot {
            works regardless (line _onBlockAttempt fires outside eligible).
            This keeps the default flow fast (2 players) while letting
            edge cases opt in without forcing everyone to explicitly pass. */
-        const elig = new Set([this.nextLive(this.seat), this.prevLive(this.seat)].filter(sn => sn && sn !== this.seat && this.live(sn)).map(sn => this.seatName(sn)));
+        const eligSeats = [this.nextLive(this.seat), this.prevLive(this.seat)].filter(sn => sn && sn !== this.seat && this.live(sn));
+        if(adaptive){   // v0.6.194 (Adaptive): a human who cannot block is not waited on; with nobody left the question is not asked at all
+          const cant = eligSeats.filter(sn => this._humanAt(sn) && !this._seatCanBlock(sn, reactionsOnly));
+          if(cant.length){ skipRow(cant.map(sn => this.seatName(sn)), cant); cant.forEach(sn => { const i = eligSeats.indexOf(sn); if(i >= 0) eligSeats.splice(i, 1); }); }
+        }
+        const elig = new Set(eligSeats.map(sn => this.seatName(sn)));
         if(!elig.size) return resolve({ what: 'no', who: null });
-        this.chat(question + tail);
-        this._ask = { resolve, timer: null, pausedBy: new Set(), contested: false, target: targetSeat, undirected: true, eligible: elig, passed: new Set(), reactionsOnly };
+        this._ask = { resolve, timer: null, pausedBy: new Set(), contested: false, target: targetSeat, undirected: true, eligible: elig, passed: new Set(), reactionsOnly, t0: Date.now() };
+        this.chat(question + tailFor(this._askPlan(this._ask)));
         this._restartAskTimer();
-        this._armReactTimer();
         return;
       }
       const preyOut = (this.players || []).some(p => p.seat === targetSeat && p.out);
       if(preyOut) return resolve({ what: 'no', who: null });   // never wait on ghosts: an ousted target can't block
-      this.chat(question + tail);
-      this._ask = { resolve, timer: null, pausedBy: new Set(), contested: false, target: targetSeat, reactionsOnly };   // v0.6.106 (#3): the roster hook reads THIS
-      this._restartAskTimer();
-      this._armReactTimer();                                   // v0.3.10: 5 s of table silence → the ROOM's Reaction timer (decide verb); the ask still waits its full askSecs
+      if(adaptive && this._humanAt(targetSeat) && !this._seatCanBlock(targetSeat, reactionsOnly)){ skipRow([this.seatName(targetSeat)], [targetSeat]); return resolve({ what: 'no', who: null }); }   // v0.6.194 (Adaptive): the question the human cannot act on is skipped
+      this._ask = { resolve, timer: null, pausedBy: new Set(), contested: false, target: targetSeat, reactionsOnly, t0: Date.now() };   // v0.6.106 (#3): the roster hook reads THIS
+      this.chat(question + tailFor(this._askPlan(this._ask)));
+      this._restartAskTimer();                                 // v0.3.10: 5 s of table silence → the ROOM's Reaction timer (decide verb) is armed inside (v0.6.194: never in Turn-based); the ask still waits its full clock
     });
   }
 
@@ -7238,7 +8130,7 @@ class Bot {
           this.push();
           this.fxClone(v, 'rescues ' + act.who);
           this._announceTallyA(1);   // v0.6.129 (Johan + rulebook): +1 stealth when rescuer and rescued share a controller; 0 only for another Methuselah's vampire (the enemyRescue branch)
-          this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> attempts to rescue a vampire from torpor.' });
+          this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> attempts to rescue their own vampire from torpor.' });   // v0.6.172 (main v2.6.138): the own-vampire rescue is its own UNDIRECTED line
           const ansO = await this._askBlock('Trainbot: ' + v.name + ' rescues ' + act.who + ' from torpor (+1 stealth). Block?');
           await sleep(150);
           if(ansO.what === 'block'){
@@ -7308,7 +8200,7 @@ class Bot {
           } else {
             this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name, kind: 'recruit' });
             this.say('It resolves');
-            this.pool = Math.max(0, this.pool - act.costPool);
+            this.pool = Math.max(0, this.pool - act.costPool); if(this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: -act.costPool, via: 'cost', card: act.name || null, own: true, seat: this.seat }));   // v0.6.180: the recruit's pool cost has no line of its own
             this.board.push({ id: this.gid(), name: act.name, kind: 'lib', zone: 'ready',
                               faceDown: false, x: 64, y: 64, locked: false, life: act.life });
             this.push();
@@ -7721,6 +8613,10 @@ class Bot {
 }
 
 /* ---------- CLI ---------- */
+function parseTempoArg(str){   // v0.6.194: 'standard:3' / 'adaptive:2.5' / 'turn' -> a botcfg-shaped object, or null
+  const m = String(str || '').toLowerCase().match(/^(standard|adaptive|turn)(?::(\d+(?:\.\d+)?))?$/); if(!m) return null;
+  const t = { tempo: m[1] }; if(m[2]) t.waitSecs = parseFloat(m[2]); return t;
+}
 function parseArgs(argv){
   const o = {};
   for(let i = 0; i < argv.length; i++){
@@ -7732,6 +8628,7 @@ function parseArgs(argv){
     else if(a === '--name') o.name = next();
     else if(a === '--seat') o.seat = parseInt(next(), 10) || 0;
     else if(a === '--ask-secs') o.askSecs = Math.max(3, parseInt(next(), 10) || 25);
+    else if(a === '--tempo'){ const t = parseTempoArg(next()); if(t) o.tempo = t; }   // v0.6.194: a start-up tempo for a table whose client sends no botcfg yet -- standard[:SECS] | adaptive[:SECS] | turn
     else if(a === '--cardfx') o.cardfx = next();
     else if(a === '--persona') o.persona = next();
     else if(a === '--deck'){ const f = next(); o.deck = JSON.parse(fs.readFileSync(f, 'utf8')); }
@@ -7747,6 +8644,7 @@ if(typeof require !== 'undefined' && require.main === module){   // v0.6.94 (HB0
     console.log('Trainbot v' + BOT_VERSION + ' — a sparring-dummy seat for Elysium (protocol 2.6)\n' +
       'usage: node elysium-bot.js --server ws://host:8123 --room NAME --pass PASS\n' +
       '       [--name Trainbot] [--seat N] [--deck playbook.json] [--ask-secs 25]\n' +
+      '       [--tempo standard:3|adaptive:3|turn]   (the tempo until the table sends a botcfg)\n' +
       '       [--cardfx elysium-cardfx.json]   (default: beside this script)\n' +
       '       [--persona novice|experienced|expert]\n' +
       'The room must already exist (create it as a lobby in the client, then start\n' +
@@ -7759,7 +8657,7 @@ if(typeof require !== 'undefined' && require.main === module){   // v0.6.94 (HB0
   process.on('SIGTERM', () => { bot.close(); setTimeout(() => process.exit(0), 300); });
 }
 
-const BOT_EXPORTS = { PERSONA_ALIAS, personaKey, Bot, wsConnect, wsFrame, parseArgs, DEFAULT_DECK, WALL_DECK, SEWER_DECK, ARCHETYPES, BOT_VERSION, WIRE_V,
+const BOT_EXPORTS = { PERSONA_ALIAS, personaKey, Bot, wsConnect, wsFrame, parseArgs, parseTempoArg, DEFAULT_DECK, WALL_DECK, SEWER_DECK, ARCHETYPES, BOT_VERSION, WIRE_V,
                       SAY, sayIdx, FX_NORM, L12, stripTags, loadCardfx, prepCardfx, PERSONAS, CARD_HANDLERS };
 if(IS_NODE && typeof module !== 'undefined' && module.exports) module.exports = BOT_EXPORTS;   // Node: the require() surface is unchanged (+ prepCardfx)
 else if(typeof globalThis !== 'undefined') globalThis.ElysiumBot = BOT_EXPORTS;                // v0.6.96: browser -- ALSO when the page carries a module shim: IS_NODE, not module, discriminates (Johan's first client-page spawn-fail round)

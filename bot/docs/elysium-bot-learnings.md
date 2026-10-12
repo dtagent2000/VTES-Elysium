@@ -1,0 +1,379 @@
+# Elysium Bots — Learnings (started 9 September 2026 at the split)
+
+> **This doc reflects bot v0.6.117 (16 Sep 2026; canary-verified against client v2.6.114. The read-only server copy here is srv-2.6.35 while main is at srv-2.6.37 — refresh before the next arena series).** Seeded from the main project's learnings: every bullet below matched a bot/arena/cardfx keyword and is reproduced verbatim (some are index-style titles whose full story lives in the main project's learnings or its archive `elysium-learnings-archive-2026-09-09.md`). New bot lessons go on top.
+
+**12 Oct — read the other side's code before saying what it does:** I told Johan that the client's ▶ stepped only the block and pool questions, and our 11 Oct handoff still listed the filter as open. Main had shipped it in v2.6.139; our source was our own list of asks, not the client. The released client is usually uploaded — grep it before describing what main's side does or does not do. A list of what we asked for is not a list of what is missing.
+
+**12 Oct — two pause mechanisms are one rule only where they agree:** the bot had a per-holder pause (the ask's `pausedBy`, the poll's `paused` — ended when that holder speaks) and the table hold (`_holdBy` — ended by a flow phrase from anyone). Main read the ask and the poll as already obeying "a hold stops every clock", and by the per-holder rule they did — they differed from the table hold exactly where a holder answers with something that is not a release (a vote, a No). Suite 96e had pinned the per-holder reading ("their vote releases it"). When one principle replaces two mechanisms, list the inputs where they disagree and decide those explicitly; here: answers end waits, only flow phrases release clocks, and a release ends every holder's pause.
+
+**12 Oct (b) — a test you write for your own design choice cannot find that choice's hole:** I kept the per-holder pauses deliberately (a block window should wait for the person who asked for time) and wrote 137j to pin it. An independent review that had not seen the work probed the interaction with two scripts and found the hole in an afternoon's reading: a pause that outlived the table release left my poll with no clock and no button, and swallowed a target's Pass. For timing changes, hand the diff to a reviewer with the principle and ask for deadlocks first.
+
+**11 Oct — an inferred input can invert a finding:** my first read of the blocks inferred the blocker's blood from the combat row (blood at the end + damage taken). A torpored vampire's row says blood 0, so every 0-blood blocker that went to torpor showed up as a 1-blood blocker — and 'blocking at 1 blood against a hand-striking deck is a 38 % torpor' looked like a finding. Reading the blood from the snapshot taken at the reaction window turned it into 11 %, and moved the real problem to 0-blood blockers (75–95 %). Before a number drives a rule, check that its inputs are recorded, not reconstructed — and above all where the outcome itself truncates the reconstruction.
+
+**10 Oct (b) — pair the rows, don't explain the totals:** the ledger audit's steal totals never balanced (stealer 116 vs victim 102 in one arm), and the gap had been explained as capping: the victim cannot lose more than it holds. True — and it hid the other half: the stealer gained the card's full number anyway. Pairing each stealer row with its victim's row took one short script and showed every mismatch was a victim at 0 or 1 blood: a steal from an empty vampire had created blood, in every arm, since v0.6.19. When a two-sided total is off and an explanation is at hand, test the explanation on the pairs before accepting it.
+
+**10 Oct — resolve an effect at its rules moment, not when its line arrives:** the victim of a steal deducted the blood as soon as the opponent's strike line came in. Fine while every strike came after mine; wrong the day the opponent declared FIRST (a human acting under the phases), because my own answer — a dodge, a combat ends — comes after their line and is supposed to stop the steal. The stealer's side was right (it undid its gain), so the blood vanished. Found only because the new combat-ends rule priced the steal and a probe showed the vampire already empty at decision time. When a line announces an effect, ask: is this the moment the rules resolve it, or only the moment I heard about it?
+
+**9 Oct (b) — time the whole flow, not the wait you changed:** v0.6.194 put every combat STEP on the tempo and the suite was green — but a whole round against a human who answered at once still took 7.7 s at askSecs 3, because the handshake waits that FOLLOW the steps (`_awaitOppPress`, `_awaitOppStrike`) still armed askSecs after the human had answered. A stopwatch on the whole round found it in one run; reading the code I had touched never would. And the shortened wait turned out to be somebody's only window (a human's press to end): before shortening a silence, ask who could still be answering inside it.
+
+**9 Oct — a derived default multiplies somebody else's knob:** the combat-step clock was `phaseSecs || max(6, askSecs × 3)` — reasonable at the arena's askSecs 2–3, but the CLIENT spawns bots with `askSecs: 20` for a different reason (a human's block window), so every combat step waited up to 60 s on a human. Nobody set 60; it fell out of a multiplication. When a clock is derived from another clock, write down what the OTHER clock is at every real caller before shipping the formula — and prefer one object the table owns (the tempo) over defaults derived in the bot.
+
+**26 Sep — a trailing `//` comment is a statement killer:** twice in one release a comment added mid-line (`…; // note  nextStatement();`) silently turned the rest of the line into comment text — once removing two resets (the suite caught it: 71b, 127o), once as a syntax error. When a note goes in the middle of a line, use `/* … */`.
+
+**23 Sep — audit the ledger, not the code:** reading code found the knob problem; reading LEDGERS found the rest — pair every pool loss with a bleed, every taken with a dealt, every "opponent" with the vampire that names you back. The Second Tradition attempt line (a frozen phrase the bot itself emits and never parsed) surfaced as "9 combats where two bots disagree who is fighting whom", not from any test. `ana-ledger.py` makes it one command.
+
+**23 Sep — a rollback knob must not carry rules:** `combatMind` was introduced as "0 = v0.6.155" and every combat change of the day went behind it — including the rule corrections (long-range hand strikes, the steal victim, the continued-round race). The README advertised `combatMind: 0` as the rollback; using it would have brought back three rule bugs. Found in a pre-spec code review, not by any test. Rule in CLAUDE.md ("knob hygiene"): knobs gate decisions; rules are unconditional.
+
+**22 Sep — a two-sided effect needs a test from BOTH sides:** Steal Blood was built and tested from the stealer's side in July (gain, cap, the frozen "for 0" line so the victim reads no DAMAGE) — and the victim's blood loss was simply never written. Two months of series had Theft of Vitae creating blood from nowhere, and every gate was green because no test ever asked the victim. Found only because Johan asked how steals are COUNTED. Rule: any effect that moves something between two players (blood, pool, a card) gets one test per side, and the analyser gets a column per side (`stole` / `stolenFromMe`) so the ledger has to balance.
+
+**22 Sep — a new weight can be right and still never fire:** the rush kit scored a Grapple + Roundhouse rush on a 1-blood target at 6.05 — and lost to `permFirst`'s structural 98 seven times in thirteen. Before reading a scorer's effect on outcomes, count how often a STRUCTURAL pick (a gate that returns early) decided the question instead; `ana-rush.py` prints the why of every offered-not-chosen rush for that reason.
+
+**22 Sep — a parser and its phrase are one contract; move the phrase's tier and the parser goes deaf:** v0.6.114 moved the bot's combat event lines from chat to log and deleted four as "duplicates of an fx pair" — every opposing bot's press / maneuver / Grapple / Crows parser ran only in `_onChat`, so bot-vs-bot combat was one-sided for six days and eight series while every gate stayed green (the suite fed the parsers by hand through `_onChat`). Found only by READING a series for something else (why does the pressing side fight round 2 alone?). Rule: a bot-to-bot line is tested by feeding it through the tier it is actually sent on, and `ana-combat2.py`'s matched-rows line is the live check.
+
+**22 Sep — a decision read from the board can be a round late:** `_wantPress` read the opponent's blood from the pub board to find a torpor shot — after my own strike had already sent them to torpor, the board had not caught up and the bot pressed into an empty round twice in four matches. Their own taken narration ("goes to torpor") is the certain source; the board is a prior.
+
+**22 Sep — keep the series' bytes still:** the arena loads `elysium-bot.js` per match, so editing the file mid-series would make match 8 run different code than match 1; fixes found in a pre-read go to a copy (`next/`) and the series is re-run on the final bytes. Also: a detached chain still dies at the turn boundary (cmb2-pre lost matches 11–12) — poll inside the turn or accept the loss.
+
+**22 Sep — a pause measured from your own last act is invisible after a long wait:** the beat gate waited paceMs since the bot's OWN last act to avoid double pauses, which was right for its own turn and wrong the moment a human answered a question the bot had asked seconds earlier — the pause had already elapsed, so the bot moved in the same instant as the answer. Anchor a 'thinking pause' on the last event a HUMAN saw, whoever caused it. Companion: a `Math.max(1, need)` floor hides the case 'I already lead' — a floor that makes the arithmetic safe can also make a whole branch unreachable; test the boundary (a = b + 1) explicitly.
+
+**21 Sep — a fixture written from YOUR side's assumption proves the assumption, not the contract:** section 102c fed `_onGiven` `attachTo: 'Ayelech'` (a name) and stayed green for weeks; the wire carries a card id, and a human's Fame on a bot never armed. Main found it by READING both ends. For every inbound verb, the fixture's shape must be copied from the SENDER's source (client / server), with the line reference beside it.
+
+**21 Sep — when a fallback and the real thing can both do the job, assert WHICH one did:** the gate was green through the new bridge while the no-server net — not the relay — was still collecting every bounty (send order). H8 now demands the net be dormant when the relay exists. 'The outcome is right' hides which mechanism produced it.
+
+**21 Sep — a rename is done when you have grepped everything that SHIPS, not everything that runs:** v0.6.149 renamed the personas in the bot, the arena and the tests, all gates green — and START-HERE-BOTS.html (bundled to main), table.js and the CLI still said Grinder / Shark to a human. Gates do not read help texts. After any rename: `grep -il oldname` across the delivery list, HTML and usage strings included.
+
+**21 Sep — a mirror of shared state must copy the OWNER's write rule, not just its numbers:** the tally net added every intercept line to `b`; the real writer (`_setTallyB`) writes FRESH per blocking minion. Found only on re-reading after delivery — the gate could not see it (second-minion attempts are rare). When a fallback rebuilds somebody else's state, read how that state is WRITTEN first.
+
+**21 Sep — measure the OTHER runtime with its own code, not a model of it:** the hotseat parity hole had been READ twice and never run. Lifting `hotBridge` + `hotFanOut` verbatim out of the client and playing real bots through them took an hour and found what reading had not: the table FREEZES at the first turn handed to an ousted bot (4 of 4), and — unrelated to the bridge — the client never passes `deckName`, so every human table since v0.6.107 ran without deck axes. Rule: when two hosts run the same bot (server / bridge / arena), a release is measured on each, and the harness uses the host's real source.
+
+**21 Sep — every option the ARENA passes is a parity risk:** the arena passes `deckName`, `seat`, `persona: shark`, `startPool`; the client passes none of the first two and `grinder`. Anything a tactic reads from `this.o.*` must have a caller-independent fallback, and the gate must spawn bots the way the CLIENT does (a copied deck object, no deckName).
+
+**21 Sep — a fallback must know when to stand down:** the tally net first fired 3 times even WITH a tally relay, because the bot's paced send queue can put the tally a beat BEFORE the log line; the stand-down window is now 'any foreign tally since the shout'. Test the fallback in the arm where it must be silent, not only in the arm where it must fire.
+
+**21 Sep — sanity-check a classifier against one known case before reporting its list:** I reported 'most played cards with no effect' and it named Kine Resources Contested and Parity Shift — cards the bots play every match. The script read `modes` only; effects also live in `ref`, `actGrant`, `handler`, `archetype`. One known-positive card in the check would have caught it.
+
+**serie-bal8 — a threshold I guessed never fired (21 Sep 2026):**
+- **Before shipping a rule with a threshold, compute how often the condition is TRUE in an existing series.** The 40 % pump line needed three heavy hits in six against me; real rates are 10–25 %. Five minutes on bal7's traces would have shown it fires zero times.
+- **Two series on near-identical logic are the cleanest yardstick there is — and they said 4 wins vs 8.** Never call a table 'even' from one 12-match series; pool, or stay at decision level.
+
+**serie-bal6 — a doctrine has a deck behind it (20 Sep 2026):**
+- **'Never bounce a 1' is advice for a deck with two or three bounces.** A starter deck with 8–10 of them starves under it (bounces 53 → 18) and its hand clogs. Keep the TIMING of a rule, scale its THRESHOLD to the cards in hand.
+- **Follow an event through ITS OWN action when counting outcomes.** Two scripts with fixed look-ahead windows gave 24 of 24 and 8 of 24 for the same question; both ran into the next action. Stop at the actor's `through` / `blocked` AND keep reading until the bleed lands or is bounced.
+
+**v0.6.144 — follow the steps of play, and let old tests tell you what you changed (20 Sep 2026):**
+- **The order of the game's steps is doctrine, not detail:** blocks first, then the total, then the bounce. A bot that bounced at the announce could never catch a pumped bleed; a bleed that was not pumped resolved with no window at all.
+- **When a behaviour change breaks an old live section, read WHAT it pinned before touching it.** Two sections pinned mechanics (a modifier after a bounce; a wake before a bounce) that only exist in the old order — they keep their coverage under the knob (`lateBounce: 0`), the new order gets its own section.
+- **A human-facing courtesy can cost a full timeout per action.** 'No block' vs 'No reaction' carries the human custom exactly — but the suite's harness says 'No block' everywhere and then stays silent. Build it behind a knob, teach the harness, then turn it on.
+- **Reuse a frozen line before inventing one:** the bleed total rides on `adds +0 bleed (= N).` — every client and bot already reopens its window on that grammar.
+
+**v0.6.143 — smoke before a series; read the protocol before a rule (20 Sep 2026):**
+- **One pre-flight match is cheap and found what 25 green unit tests could not:** the rule read a value (`tally.b`) that did not exist yet at decision time. Unit fixtures set the tally by hand — the live order of messages is a fact only a live match shows.
+- **When a decision can only be as good as its inputs' TIMING, find the event that carries the real numbers and decide there** (the tally handler), not where the old code happened to decide (the shout).
+- **Ask 'does this limitation exist elsewhere?' and answer it from traces** (Johan's question): combat was multi-card all along (47 of 318 fights); intercept and stealth alone were one-card.
+- **When Johan states a doctrine, do not generalise it past his words** — I made probe-first the default; he had reserved it for 'no stealth in hand'.
+
+**serie-bal4 — find the binding term before tuning a product (20 Sep 2026):**
+- **In `a × b × c >= t`, check which factor is actually small in the refusals before changing one of them.** I raised `c` (the stakes) — it was capped at 1 and `b` (1 − insight × P(intercept)) sat at 0.19. Print the factors of the NO decisions first.
+- **A per-match count rises when a deck lives longer.** Put the per-ACTION rate beside it (stealth 1.5 → 2.6 per match was 10 % → 12 % per action).
+
+**v0.6.140 — a timeout is a bug report, not a long game (20 Sep 2026):**
+- **Look at the time gaps inside a timed-out trace before calling it a stall of strategy.** One 451-second gap = a protocol freeze; 23 rounds of play = a turtle. They need different fixes.
+- **Every path that sets `out` must still release the turn.** Grep for `if(!this.out)` around protocol sends.
+- **Every pool loss needs the oust check beside it** (Fame's hook had none). Grep `this.pool -` / `this.pool = Math.max(0`.
+
+**v0.6.139 — 'never seen' means 'never emitted' until the emit is proven (20 Sep 2026):**
+- **Before claiming a card is never played, check that the site which plays it writes a trace row.** Eleven sites did not; I told Johan that Second Tradition, Immortal Grapple and Hidden Strength were never played — all three were. Audit: every `hand.splice` must have a play / through / referendum emit beside it.
+- **A finder that ignores a card-level requirement is an illegal play waiting to be seen** (`req.title` on a reaction). Grep every finder for the req fields the data carries.
+- **An auto-tier entry that reads 'FULL' can still miss a printed mode.** For every card whose text has two [REACTION] / [ACTION] lines, check the mode count.
+
+**serie-home2 — measure the noise with a deck whose code did not change (20 Sep 2026):**
+- **An unchanged deck in a paired series is a free noise estimate.** Here: 11–13 points of home share, −16 % damage, VP 9 → 14, on identical logic, seeds and seating. Put that number beside every verdict.
+- **12 matches a side resolve only large decision-level effects** (9 % → 63 %, 0 → 1 timeouts, 26 % → 7 %). Result-level claims (VP, wins) need 50+ matches or pooling across series of one design.
+- **Say which findings of a day stand above the day's own yardstick** — and which do not.
+
+**serie-home A vs B — a rule by the letter, a regression in spirit (20 Sep 2026):**
+- **A two-clause regression rule can be dodged by the very failure it guards against:** a turtle lives longer (clause 2 passes) while it scores less. Add the result line (VP) or damage per MATCH to the rule next time.
+- **Compare like with like inside a decide:** a value scaled by 1 / myTto was compared against a card price in raw score units — it could never win. Put both sides in pool.
+- **A defensive exchange rate needs a forward term.** Turns-to-fall alone cannot see that I out-body the table; five bodies walled for 33 turns.
+- **Per-turn rates lie when match length changes** — report totals, per-turn AND per-match side by side.
+
+**v0.6.137 — write the regression rule before the data (19 Sep 2026):**
+- **A unit fixture can show the risk of a change before any match does** (two of three bodies home at 24 pool). Say it, and register the rule that will catch it — do not tune the formula on a fixture.
+- **A fixture must isolate the change:** the first 111a passed on the OLD gate. Check the control (knob 0) gives a DIFFERENT answer in the same fixture.
+- **Paired design for a behaviour change:** same seeds, same seating, knob 0 / knob 1 — the only honest 'no regression' in a game this noisy.
+
+**serie-crit1 — read the distribution, not the mean (19 Sep 2026):**
+- **A dynamic level that equals the old constant 77 % of the time is not a failure** — it says the constant was well chosen for this table and shows WHERE it is wrong (burst 9–13 against locked bodies).
+- **Spend a paired control where the knob has consumers.** A control run for a level read only by a rare decision measures noise.
+
+**v0.6.136 — announce is not damage (19 Sep 2026):**
+- **The table model counted the ANNOUNCED bleed; modifiers land after the announce.** A maximum must come from what actually resolved (`_noteHit` at the damage site), or a Govern + Conditioning predator looks like a bleed-for-2 deck for ever.
+- **A new general level gets ONE consumer first** (here the survival drain) and its values are read in the trace before anything important depends on it.
+- **Keep the original one knob away (critRisk 0) whenever Johan asks for both to be measured** — and do not let a safety level silently cap the gamble he wants measured (the influence floor was left alone on purpose).
+
+**serie-bal2 — a fixed deviation is not a fixed result (19 Sep 2026):**
+- **'Plays it right' and 'wins' are separate claims and need separate predictions.** All seven behaviour predictions held and nosferatu's VP did not move. That is a result, not a failure: one item off the checklist.
+- **Two balanced 12-match series of near-identical code gave ventrue 4 and 8 wins.** Pool series of the same design before ranking; 12 matches rank nothing below first place.
+
+**v0.6.135 — find the general measure before writing the deck rule (19 Sep 2026):**
+- **'Two superior-Animalism vampires, the primogen preferred' is a special case of 'raise the vampire that can play your library'.** Computing that share per crypt card reproduced the helpsheet's order for nosferatu and gave a sensible order for the other three decks — one term in the general layer instead of four persona rules.
+- **Check a general term on the decks it was NOT built for** (hacking splits 0 / 0.5 — not neutral) and say so before anyone measures them.
+- **A test that encodes my expectation can be the thing that is wrong** (109d: both vampires rose on the same turn, so the fit SHOULD decide). Read the planner's own parts before 'fixing' the code.
+
+**serie-doll1 — one vivid match is not a rate (19 Sep 2026):**
+- **Before predicting an effect size, count how often the bug fires.** The loop was striking in one trace and rare in twelve matches (11 holds); D1 and D4 were sized from the anecdote and failed.
+- **Sandbox: `pgrep -f NAME` matches the calling shell when NAME is in the command text.** Call poll scripts alone on the line (or use `pgrep -x node` + a pid file).
+
+**v0.6.134 — two rules that chase each other (19 Sep 2026):**
+- **A 'may' effect and the rule that reacts to its result must read the same formula.** The doll drained to 1, the hunt rule fired at 1, the hunt refilled to 2, the doll drained again. Neither rule was wrong alone.
+- **An odd repeated why-string ('blood 1/5' three turns running) is a loop until proven otherwise — follow the one vampire through the trace.**
+
+**serie-bal1 — what a balanced table showed (19 Sep 2026):**
+- **Split every deck's VP by who preys on it.** One table (deck × predator) showed in a minute what three series of win counts hid: the 'best deck' was mostly the deck sitting in front of the weakest offence.
+- **Balance the start seat too, and check the design's own counts before match 1** — the first rotation scheme gave 3 / 5 / 1 / 3 starts.
+- **Sandbox runs: detach ONE match and poll `progress.txt`; a process usually survives the call boundary, not always. Never assume — read the file.**
+
+**serie-rush1 — check the design before the result (19 Sep 2026):**
+- **Random seating from 12 seeds is not balanced seating.** Count who preys on whom BEFORE reading wins: here one pairing (nosferatu → ventrue) filled 8 of 12 matches, in three series in a row. For 4 decks run the 6 cyclic orders equally (`--fixed-seats`).
+- **Reusing seeds pairs the seating, which is good for comparing versions and bad for ranking decks** — the same bias repeats every time.
+
+**v0.6.133 — a rule that never ran (19 Sep 2026):**
+- **A hand-built ctx in a test proves the scorer, not the wiring.** The suite fed `tBlood`; the finder sets `blood`. Feed decide() the FINDER'S output at least once per rule.
+- **Read the why strings literally.** Every live rush said `expDmg 1 vs 0` for two months of traces. A zero that is always zero is a bug report.
+- **Ask what happens AFTER the action.** Johan's question (how are rushes followed up in combat?) found in an hour what action histograms had not: 21 rushes, 16 without a combat card, 3 torpors.
+- **Johan's three layers for any new behaviour: statistics (every bot) → general handling (every deck of that kind) → deck persona (this list).** Place a change in the lowest layer it belongs to.
+
+**v0.6.132 + serie-perm1 — a change that works and does not help (19 Sep 2026):**
+- **Following the guide's ACTIONS is not following its POSTURE.** The helpsheet's build-up assumes unlocked bodies and wakes behind it; with 1.5 ready vampires every build action is one more locked blocker. Read the state the advice presumes (bodies, hand) before copying the advice.
+- **Count bodies before tactics.** `avg ready at unlock` per deck belongs in every series read — it explained more than any action histogram.
+- **'Rush deck' = a combat deck that starts fights (Bum's Rush). The sewer deck is Inside Dirt stealth bleed, not that.** None of the six decks here is a rush deck.
+- **A tool that 'exists' in a changelog may not exist in the project.** Check the file's own version line before promising its output (harvest v1.2.0).
+
+**v0.6.131 + serie-null4 — the first null read at decision level (19 Sep 2026):**
+- **A smoke is not a pattern.** Smoke5 (two matches) said ventrue dies before it votes; twelve matches say it calls its first referendum by action #3 in 11 of 12 and wins 8. The rule built on the smoke's picture (23b) fired 0 times. It is still right — it just was not the problem.
+- **A rule change downstream of a ledger needs a walk through every consumer of 'may act'.** The turn ledger (v0.6.129) made a re-bleed illegal; act-again kept paying for it — 8 of 39.
+- **100 % is a finding too.** 40 of 40 voted referendums passed: the estimate never takes a risk AND nobody at this table holds votes.
+- **Sandbox: one arena match per tool call.** A detached chain dies at the call boundary; a call is cut at 300 s (the output is lost, the match may still finish — check `progress.txt` before re-running). `timeout 292 ./run.sh SEED`.
+- **Deck results come from the manifest-reading tool, never from the arena's `Shark-N` lines** — seating is random per seed.
+
+**v0.6.130 — the live probe (18 Sep 2026, night):**
+- **Probe before you theorise.** Two confident suspects for 26a (rate limit, a server `err`) were both wrong; a 40-line probe wrapping `send` and the handlers found the real cause in one run. The pattern (`diag-a1-stash-probe.js`: wrap `Bot.prototype`, call `runArena`) is the project's cheapest live instrument.
+- **Any id that crosses seats must be table-unique.** `'m' + seq` was fine for six weeks because no card had ever left its board.
+- **A silent `return` in a handler is a lost card.** Dedup guards should log what they drop.
+- **BOT_VERSION carries ONLY the current note** (82c pins 4 kB lines). Chaining 'Before it:' four releases deep broke the gate.
+
+**v0.6.129 — the rulings round (18 Sep 2026, night):**
+- **Read the rulebook section before building on a rule from memory.** One fetch settled four open questions and exposed a fifth nobody had asked: one bleed per minion per turn. The act-again measurements of two days were counting illegal actions.
+- **A unit test of each half is not a test of the wire.** `give` and `given` both passed alone; the arena showed the card vanish between them. A feature that crosses the server needs one live two-bot probe before it ships as done.
+- **An arena smoke is worth reading for what did NOT happen** (give-lock 1, given 0).
+
+**v0.6.128 — mitigable or worth it (18 Sep 2026, night):**
+- **A rule about a card's COST usually needs an action the bot lacks.** 'Play it only if the vampire can get back' needed leave-torpor, which needed Freak Drive in torpor, which needed the act-again zone check loosened. Ask 'what would a player do next turn?' before writing the gate.
+- **Source-shape assertions (80e) are tripwires for insertion order.** A new line between two pinned lines fails the suite with no behaviour change — read the failing regex before touching logic.
+- **Generalise a frozen regex with a NON-capturing group** so every consumer's group numbers survive (lockM).
+
+**v0.6.127 — the crypt sweep, the finisher, the rescue (18 Sep 2026, late):**
+- **A new tag gives an empty segment content — and every rule that skipped 'content-free' segments changes meaning.** `blockBar` made Cheat the Fates' mid-text '[tem] cannot block…' segment worthy, and the pin latched onto it. The old test caught it; the fix (inherit the whole mode) is what the grouping step meant all along.
+- **Read the self-inflicted sentence FIRST and strip it.** 'aggravated' and 'goes to torpor' are offensive keys everywhere except when the subject is 'this vampire'. Two cards had been mis-tagged for months; nobody saw it because neither was in a deck.
+- **Ask what the bot CANNOT do, not only which cards are inert.** Coverage said 'Daring the Dawn, 1 of 77'. The bigger hole was beside it: no rescue from torpor at all. Johan's 'maybe look at rescue too' found it; a per-card report never would.
+- **A pick object with a `name` but no `idx` is a loaded gun** (`splice(undefined, 1)` = `splice(0, 1)`). Guard on the type, not on truthiness.
+- **A restored price is an unpaid cost (again):** tagging `selfDmg` without closing the mode to generic finders would have made Force of Will a free bleed card the moment a deck carried it.
+
+**v0.6.126 — review points 6–9 (18 Sep 2026):**
+- **One object, two jobs: find both before removing either.** The R3 'asked' pending looked like a block window that cross-table seats should not get. It is also the thing the actor's It resolves deducts pool through, and the vote's stake. Removing it would have fixed the rule and broken the pool. Keep the object, remove the step.
+- **A clever loop condition is a comment that did not get written.** Moving the act-again look into the body cost one extra `break` and deleted a helper; the behaviour is identical and the next reader sees the order of events.
+- **Allocation rules need the target's state, not just the card's numbers.** '3 on the prey' is wrong the moment the prey has 2.
+
+**v0.6.125 — the remaining Ventrue cards (18 Sep 2026):**
+- **A reverse mode next to a forward mode must not be able to chase it.** Pool→blood at "low blood" and blood→pool at "has blood" would have traded the same counter back and forth every turn. The safe v0 is the one state the forward rule never touches: 0 blood.
+- **A relative threshold is only as good as the option it is relative to.** `poolFloor + 4` read as "comfortable" with the default floor of 6 and as "4 pool" in a suite bot running floor 0 — which promptly stopped hunting. Pair every relative threshold with an absolute one.
+- **Order between two 'after resolution' cards is a design decision.** Voter Captivation before Freak Drive is an engine; the other order is a vampire that cannot pay. Test the chain, not the two cards.
+- **When the mechanism already exists, the card is a term in it.** The Capuchin is not a handler: it is a per-counter term in the permanent hand-size sum plus one branch in the single place draws are flushed.
+- **A smoke that does not show the new code is a result too.** Ventrue made three action decisions per match before dying; nothing built today could be seen. Say so, and carry the question to the null instead of running seeds until it shows.
+
+**v0.6.124 — the self-review round (18 Sep 2026):**
+- **Ask "what looks odd?" BEFORE the measurement, not after.** Twelve points came out of one re-read; three would have bitten at the first human table and one (District erasing the title votes) had been live since v0.6.111. A series would have reported none of them — they do not show in outcomes.
+- **A plan line that was never built is a bug with a paper trail.** "Stagger the voters" was in my own design notes and not in the code. Re-read the plan against the diff before shipping.
+- **A snapshot handed to a handler is stale by the second write.** `_onVoteOpen(m)` kept using the open-edge `m` for every later counter write. Anything that writes twice in one handler must read the live state, and mirror its own write when the echo is asynchronous.
+- **Timeouts on MEMORY are a human-table bug waiting to happen.** Bots finish a referendum in two seconds; people hold. State that belongs to an action should die with the action.
+- **Price the table with the rule the table plays by.** The caller's pass estimate and the voters' rule are one function of the same delta map; when one changed, the other had to.
+
+**v0.6.123 + cardfx v1.8.0 — act again, combat ends (18 Sep 2026):**
+- **When a key exists but cannot say WHEN, the missing thing is a rider, not a new key.** `unlock` was already extracted for Freak Drive; what the bot could not know was the window. The reaction family had solved that with `when`; the modifier family needed the same slot, filled by the auto tier.
+- **Hook where the action is OVER, not where it is decided.** 'through' and 'blocked' are emitted before 'It resolves' and before combat. The act-again look sits between actors (and in the loop's tail condition), reads the outcome those emits left behind and consumes it — one place, thirteen branch ends untouched.
+- **Reuse the queue, not the decision.** Putting the unlocked vampire back on the live actor queue lets keep-a-blocker and the plan decide what the unlock is FOR. A dedicated 'second action' path would have duplicated both.
+- **A new wire shape for an old effect is a cost.** Strike: combat ends is, to the opponent, exactly a dodge this round — so it rides the dodge line, and only the extra fact (no more rounds) gets a new line.
+- **Read the decisions before suspecting the change.** 8 of 11 referendums blocked looked like a Freak Drive side effect; the block-evals said every refusal in the earlier smoke was 'no usable intercept in hand'. Hands, not code.
+
+**v0.6.122 — the referendum (18 Sep 2026):**
+- **Count the record, not the counter.** Three bots writing absolute values to one shared counter on the same edge lose updates. The frozen `casts N votes` lines are per-sender and ordered; the caller sums those and writes the total once. Any shared absolute counter with several automatic writers needs either an additive verb or a single writer.
+- **Put the machine-readable line BEFORE the line that opens the window.** The announce line triggers the block question immediately; the stake has to be on record by then, so the terms line goes first. Order on the wire is part of the grammar.
+- **One application point per effect.** Pool changes land from the result line, both signs, once — not partly through a pending that 'It resolves' settles and partly elsewhere. It also makes gains (Parity Shift, Boon) work with no window at all.
+- **An early exit that says something needs to know what was already said.** The abstain bubble sat on three early returns that ran after the title votes were cast.
+- **Test the await, not the call.** The first draft of the caller tests poked the vote count 30 ms in, before the block step's own 150 ms beat had even opened the polls; the assertions failed for a reason that had nothing to do with the code under test.
+
+**v0.6.121 + cardfx v1.7.0 — referendum terms (18 Sep 2026):**
+- **Find the denominator, then sweep (Johan's rule, restated for politics).** Three Ventrue cards asked for curation; the denominator "a passed referendum changes each Methuselah's pool" gave one extractor, 14 cards with terms and Consanguineous Boon for free. The per-card differences (how much, based on what) are FIELDS of one term shape, not three handlers.
+- **Where a key sits says WHEN it happens.** `poolDmg` in `modes[].fx` means "playing this does it". On a political card that is false until a vote passes — the same lesson as `stealth` → `actStealth`. Move the key, don't teach every finder an exception; then gate the bot too, because data and code ship separately (95b).
+- **A question a human answers is not an information source at a bot table.** The pool-loss ask ladder was the bot's whole political-threat input; in the arena nobody answers it. Before building on an input, ask who produces it when every seat is a bot.
+- **A key-level coverage scan is type-blind.** `unlock` was "consumed", so Freak Drive (modifier) and Majesty (combat) were certified playable for two months. A consumer with a type + rider requirement needs the same requirement in the coverage rule.
+- **Negative examples define the extractor.** Finding the Path matched "chosen Methuselah burns 1" and silently dropped "the others gain 1". The guard list (split text, discipline modes, conditional extras, ongoing drains, X, unknown counters) is as much the specification as the patterns.
+
+**v0.6.117 + cardfx v1.6.14 — the spoken phases and the inherited cost (16 Sep 2026):**
+- **Identify the WRITER of a duplicate line before designing the gate.** The "helper noise" in Johan's online log was the server's resource ledger — unconditional, online-only. Had it been gated on helper policy the bot would have stayed noisy at every helpers-on table and gone quiet where the ledger never existed. `grep` the server for the exact wording first; the answer decides whether there is anything to gate at all.
+- **Whole-entry overlays drop every field the curator did not think about.** 27 curated cards had been free for two months because the curated JSON restated `modes` and not `cost`. An overlay that replaces must either merge the fields the data owns (cost, req, unique) or the report must list what it discarded. We chose inherit-when-absent + a three-list report.
+- **Measure before naming suspects.** In chat I guessed Fame, Information Highway and Smiling Jack were unpaid; the data prices all three at 0. The audit script against vtes.json took thirty lines and was right; the guess cost a sentence of credibility.
+- **A restored cost is a new unpaid cost somewhere else.** The moment Revelations and Magic of the Smith got their blood price back, two finders that had never read `cost.blood` became bugs. Re-run the "any other unpaid costs?" sweep after every cardfx change that adds prices, not only after bot changes.
+- **A sentence assembled across a loop with many exits belongs in a `finally`.** Six `break`/`continue` paths in the influence loop; one collector, one flush, one pure `_influenceSentence` the suite reads directly.
+
+**v0.6.115 — the stopwatch self-review (16 Sep 2026):**
+- **`null` means two things in the same field, and a new reader will pick the wrong one.** `a.deadline === null` meant "no deadline yet" to the code I wrote and "a human is holding this" to the code that nulls it on Hold on. My ring read the first meaning and armed a clock on a held window. When you add a reader of a nullable field, grep every WRITER of that field and ask what each null means — here one grep of `deadline = null` gave the answer.
+- **Count the arm sites against the restart sites.** 3 places armed the stopwatch, 15 restarted the window. Any behaviour defined as "after N s of silence" must be re-armed wherever silence is broken, or it only works for the first stretch of silence — which is exactly the stretch a test measures and a table does not.
+- **The standing question is not a formality.** Both finds came from being asked "anything you're unsure of?" after a green delivery, and both were in the four lines I had written last. A green suite proves the assertions you thought to write; the question is what makes you write the next two.
+
+**v0.6.114 — THE THREE TIERS + four table fixes (16 Sep 2026):**
+- **Classify a message by what it asks of the reader, not by how important it feels.** 129 chat sites sorted cleanly into three buckets with one question: does this line need a human to DO something? Questions and instructions keep the bubble; everything else is an event, and an event that already has an fx clone or a frozen log line is a note or nothing. "Blocked. Combat begins." survived as a note because it says something neither the fx nor the verdict line says as briefly — deletion is for duplicates, demotion is for events.
+- **Look for the field before designing the feature.** The acting minion was a client rendering question until a grep of `cardFx` showed `fx.actor` already drawn and captioned; the bot had sent `actor: null` on 50 sites for months. When the other side of the wire renders something the bot never fills, the feature is a parameter, not a design.
+- **A comment that explains a bug is still a bug.** "blood is being placed — the vampire is now visible in uncontrolled" read as a rule and was an intent error: identity is hidden until the vampire enters play, the counters are not. The reasoning in the comment made the line look deliberate for fifteen versions.
+- **The same rule can be implemented on one side and leak on the other.** The defender knew blocks never reopen after a modifier (`blockAllowed:false`, steg 5); the actor re-asked "Reactions?" through the plain block window, which still contested a `Block!`. When a rule has two sides, grep for both.
+- **Two clocks with no coupling means the longer one always wins.** askSecs and the room's stopwatch ran independently, so the table sat through the difference. Coupling them at the ring — re-stamp to stopwatch-end + grace, never later — made the visible countdown the one that governs, which is what a human expects a countdown to mean.
+- **A renamed helper can collide with a public method.** `status()` was the obvious name and already the widget seam; grep the class before naming. `note()` it is.
+- **When a bubble becomes a log line, the sender stops seeing it.** The server never echoes a sender's own log lines, so three bot-vs-bot assertions that had read the attacker's chat from the attacker's feed went blind; the proof moved to the defender's inbound. Tier changes move where evidence lives, not only how it renders.
+
+**v0.6.113 — THE HELPER GATE (16 Sep 2026):**
+- **A proxy flag is a claim about correlation; check the correlation before you gate on it.** `caps.tally` was "resolvers seen ⇒ helpers on". In the client the bare `free` counter exists exactly when helpers are OFF, so the proxy fired most readily on the table it meant to exclude and never at all offline. One grep of `avrFreeAvailable()` would have shown it. When a flag stands in for a fact the wire could tell you directly, either read the fact or make the behaviour independent of it.
+- **A bug can be load-bearing for another bug.** The client's v2.6.111 policy-nulling fell Johan through to his local tournament setting, gave him the free counter, and his first ± click informed the bot. Fixing the client removed the accidental seed and the bot went quiet. When a fix on one side "breaks" the other side, ask what the broken state had been supplying for free.
+- **A workaround in a harness is a bug report filed to nobody.** The arena seeded a tally on 16 July with a comment that named the chicken-and-egg precisely — and the root stayed for two months because the arena was green. Harness seeds, fixture primes ("prime caps.tally: this table runs resolvers" ×3 in the suite) and belt-and-braces flags are all the same shape: grep for them when a behaviour "works in tests but not at the table".
+- **Separate the game question from the narration question before choosing a gate.** "Do I block?" and "do I say what phase I am in?" had been answered by one flag. Split, the first has no legitimate gate at all, and the second turns out to be the bot's own protocol — unconditional for the same reason `Turn passed.` already was. Most of the design fell out of naming the two questions.
+- **A cursor-walking fixture encodes an ordering the code never promised.** `waitFor` skips everything it passes; one extra paced line ahead of a board push reordered two messages the fixture had assumed and swallowed the `turn` a later wait needed. The harness already had `waitAny` for exactly this. When a timing change breaks an e2e wait, suspect the fixture's ordering assumption before the code's behaviour — and prefer the cursorless wait wherever two messages have no causal order.
+- **Keep the rejected alternative as a document, not a code path.** Reading `helperPolicy` from the wire is a real option with real costs (absent-key semantics, a second `HELPER_KEYS` mirror). Writing it up with its trigger condition ("a table that legitimately needs a quiet bot") costs a page and stops the next session from re-deriving it — or, worse, half-building it behind a flag.
+
+**v0.6.112 — R4, the debug mode (15 Sep 2026):**
+- **Measure a caveat before you write it down.** I told Johan the weighting log would probably look sparse because "several branches return no `why`". Counting them showed 2 of 25 return sites silent, both correctly so — my first regex had simply missed JavaScript shorthand properties (`return { pick, why, scores }` reads as no keys to a naive `(\w+)\s*:` match). A caveat carried into a project's docs becomes something the next reader plans around; an unmeasured one plants a false worry that outlives the conversation. Count first, then write.
+- **Count the mutation sites before you pick the hook.** The hand changes in 34 places. Hooking each one is how you miss the 35th, and the failure is silent: a debug view frozen on a stale hand has someone grading decisions against the wrong cards without ever being told. Every one of those 34 already ended in `push()`, so the queued board-push flush was the single chokepoint — one hook, complete by construction. When a feature needs to observe "every change to X", find the funnel X already flows through rather than enumerating its sources.
+- **When you are about to invent an architecture, check whether the neighbouring project already chose one.** The client re-pushes open hands from `refreshOpenHands()` off `schedulePush()` — the identical shape, for the identical reason. Matching it cost nothing and means one explanation covers both sides.
+- **A tool that reveals information must announce that it is on.** Debug mode hands every opponent perfect information about one seat. The bot says so in chat on the deal. A silent debug mode is not a debug mode, it is an unfair table — and the person who most needs to be told is the one who did *not* set the flag.
+- **Answer "is it live or a snapshot?" from the code on both sides of the wire.** The server stores nothing and only routes what the granter sends, which reads as "snapshot"; the receiving client overwrites and re-renders, which makes a re-push live. Neither half alone answers the question, and the answer determined the whole design.
+
+**v0.6.111 — R3, politics (15 Sep 2026):**
+- **The best feature is the one that turns out to already be built.** Johan's politics requirement — hold the number until the referendum resolves, then reduce pool like a bleed — needed zero new code. R2's pending already survives an arbitrary interval and deducts on `It resolves`, so an entire referendum passes underneath it. Building R2's answer as an *existing object* rather than a new state is what paid here, one round later: that is the return on choosing the boring representation.
+- **Read the data before writing a table.** Title-to-votes looked like a lookup to hardcode (Primogen 1, Prince 2, Justicar 3…). The cardfx crypt entries already carry both `title` and `votes` per vampire — including the cards whose votes do not follow their title. A grep beat a table, and a wrong hardcoded table would have been silently wrong on exactly the unusual cards that matter.
+- **Abstaining is a defensible position; a guess is not.** The bot can tell whether a referendum costs it pool, and nothing more. Voting on anything else would have been theatre dressed as strategy. Scope the behaviour to what the bot can actually justify at the table, and say so in the comment so the next round does not mistake the gap for an oversight.
+- **Check where in a method your new call lands.** `_castTitleVotes` had to run before the Protected District branch, whose three abstain early-returns would have swallowed it entirely — a silent no-op that no assertion about the vote itself would have caught.
+
+**v0.6.110 — R2 (15 Sep 2026):**
+- **Before building a new decision, ask what existing object the answer could BECOME.** The pool question looked like a new state machine with its own scorer. It is not: the answer is "this action costs me N pool if it resolves", and a bleed of N is already an object the bot weighs, reacts to, blocks, and deducts on resolve. Making the answer a T1 pending with `amount = N` bought the scorer, `_reactWindow`, `_commitBlock`, `Pass`, and `_applyPending` for one constructor. The only new decision code is the two questions.
+- **Two carriers for one fact means parsing both, not choosing.** `NAME blocks.` (client) and `NAME attempts to block.` (bot) both name the blocking minion. Choosing one would have forced a client round or broken older peers; parsing both is additive and ships now. The doctrine question ("which is canonical?") was a false choice.
+- **A grace period needs three cases, not one.** Shout then line, line then shout, shout alone. The first two must run the handler exactly once and never ask; only the third asks. Stamping who-shouted and who-lined on the ask object is what makes the three distinguishable.
+- **The suite guards the docs too.** 82c's 4 kB line cap caught a release note before a human would have.
+
+**v0.6.109 — the feedback round: reading the code before accepting the diagnosis (14 Sep 2026):**
+- **"It doesn't do X" is often "it doesn't SHOW X".** Johan reported the bot not paying Vessel's cost; the handoff reasoned from there to a suspected cardfx data fault. The code pays, has paid since v0.5, and the curated entry has always carried `cost.pool: 1`. What was missing was narration — and a trifle's bonus action frequently hands the pool back inside the same phase, so even the number on the globe looked unchanged. Before changing behaviour to fix a report, check whether the behaviour is already correct and merely silent; the fix is then additive and risks nothing.
+- **Ordering bugs at a table are usually PUSH ordering, not logic ordering.** The unlock phase already unlocked first. Nothing synced until the income pushed, so the effects narrated ahead of the visible unlock. Logic order and observed order are different questions, and only one of them is what the player is complaining about.
+- **A frozen rule written before the code stops a bug the tests would not have caught.** "step() may never produce an outcome the bot could not reach alone" was agreed as a design rule. The obvious implementation — `_answer('no')` — violates it in exactly one case: a *contested* window, where the clock declares a verdict from the tally instead. The fix was to extract the timer's body (`_askTimeout`) and have the button call it, turning "same outcome as the clock" from an intention into an identity. A manual-override path that duplicates a code path will drift from it; make it call the path instead.
+- **Give a manual override rungs, and let some waits be readable-only.** Not every wait should be steppable. A pacing beat and an incoming action's own reaction window are shown with a countdown and no button, because the only honest resolutions there belong to a human who may still be typing. A widget that can always advance is a widget that decides the game.
+- **A baseline is only a baseline if it was ever green.** The suite aborted in section 5; it aborted identically on the unchanged v0.6.108, so I wrote "environmental" into four documents. Wrong: v0.6.108 had shipped with the suite UNRUN (its own journal said so, one grep away), so the pre-change bot was not a control — it was the regression. `chat()`'s persona rewrite mangled the combat prefix to `Trainbot (bot) combat` at the default name, and every bot-vs-bot combat parser at every human table had been reading garbage vampire names for two days. Before blaming the host, find the last release the gate actually passed on and run THAT; "it fails on the old one too" only exonerates you if the old one was known good.
+- **An extracted harness is evidence for what it covers and silence about everything else.** `diag-84.js` was 25/0 while the suite, once it could run, found one regression in the bot and eight stale fixtures. The harness was worth building — it proved the new work and gave the destructive half — but it must never be reported as if it stood in for the suite.
+- **A release that skips its gate leaves the NEXT session a false baseline.** v0.6.108's honest "suite not run" note was correct and still cost half a day, because the next reader assumed the bot beneath it was verified. When a gate is skipped, say so in the version handshake itself, not only in the journal prose, so nobody uses that release as a control.
+- **Deleting beats demoting when the channel below already carries the message.** The double bubble looked like a channel-classification problem (chat → log). It was duplication: the two log lines above the chat already said both halves. The §12.0 tiers were the lens that revealed it, not the fix.
+
+**v0.6.108 — influence, multi-bot chat and the unified hold rule (12 Sep 2026, bot v0.6.108):**
+- **A resource the rulebook grants per turn must be assigned, never accumulated.** `this.inf += avail` looked like bookkeeping and was a rules bug: transfers cannot be saved between influence phases. The tell was the downstream symptom — the bot never placed blood incrementally, because an accumulating counter makes the atomic "wait until `inf >= need`" raise look correct. One wrong operator hid a whole missing mechanic.
+- **A stagger that reads `seat` is only right on turn one.** The opening transfer ramp is table-wide, not per-player: `tableTurn = (ownTurns-1)*nPlayers + seat`. With 3+ players the seat shortcut coincides with the truth, which is why it survived — it only diverges at seat 1 of a 2-player game, on its second turn. Rules that ramp need the GAME clock, not the player's.
+- **"Wasted" is a claim about alternatives, not about leftovers.** The planner's first efficiency term counted every unspent transfer as waste, which quietly punished exactly the weenie plans that want a fast crypt pipeline. Modelling the alternative use (4 transfers + 1 pool = a crypt draw) moved the same plan from 23 waste to 3. Before scoring a surplus as a loss, ask what it could have bought.
+- **One replacement in the sink beats a hundred at the sources.** ~100 hardcoded `'Trainbot'` strings became right at once by rewriting in `chat()`. The trap: the same string is also a PROTOCOL prefix that other bots parse, so the sink needs two passes — `Trainbot combat` → bare persona name (parsers widened to `\S+ combat`), everything else → persona + `(bot)`. Cosmetic renames near a machine channel are not cosmetic.
+- **Grammar written for one bot silently misapplies with two.** A bare `bleed N` had no target scoping, so every seated bot deducted pool. Scope to the sender's prey, offer `@Name` to aim — and teach the aimed form in the greeting, because the failure mode of the unscoped version is silent and wrong rather than loud.
+- **Announce where the cost lands, not where the event arrives.** Three hold bugs (client handoff 1/3/4) were one design flaw: the hold lived in `_holdHook`, the `_onSay` pause branch and the `_pace` gate, each with half a rule. Gating the announcement on "am I relevant" (turn/ask) dropped it — and the reminder with it — whenever the hold landed while no bot was acting. Moving the announcement into the wait gate removes the heuristic entirely: the bot that is actually blocked is by definition the right one to speak, so anti-flood is exact and no state can be missed.
+- **A doctrine applied in one place is not applied.** "Bots never operate the hold" was enforced in `_holdHook` and absent from the ask-window pause — a measured permanent deadlock. When a rule is about WHO may do something, grep for every reader of that signal before calling it done; a same-session change (soft promotion) had already landed in the unfiltered branch and made it worse.
+- **A dropped event needs a queue AND a freshness check.** A `turn` arriving while `_acting` was dropped with nothing to retrigger it. Queueing it is half the fix: replaying it unconditionally can act on a turn that has since moved on, so the guard belongs at the replay (`turnSeat === seat`), not at the enqueue.
+- **A ceiling that auto-releases overrides the human it was meant to help.** Declined a `_pace` hold ceiling: a forgotten hold and a deliberate one look identical from inside the loop, and resuming mid-consideration is worse than waiting. The fix for a forgotten hold is a reminder that reliably fires (see the gate note above) plus something a host can surface — not a timer that decides for the table.
+
+**B1 — the undirected block window (11 Sep 2026, bot v0.6.107):**
+- **Rights before scores.** The whole undirected feature is two rules the bot never had: WHO may answer (the actor's prey first, then its predator — `nextLive`/`prevLive` of the actor, not of me) and WHEN the actor may resolve (when every eligible blocker has passed, not when the first one has). The scorer only became meaningful once those two were in place; the old design skipped straight to "should I block?" for directed actions and so never noticed it had no window for anything else.
+- **Isolate a new scorer from the one that is under test coverage.** The threat classes multiply the score by deck axis, posture and lockCost — applying that to the directed T1 path would have shifted 800 tests' worth of bleed behaviour untested. Adding the classes as a separate branch (`ctx.T !== 'T1'`) kept the old path byte-identical and let the arena, not the suite, judge the new one; the T1 axes are a B2 item with its own registered prediction.
+- **Ordering across bots is protocol, not delay.** The predator bot opens its window on the prey's Pass/No block `say`, never on a timer; a human prey who never presses Pass leaves the actor's askSecs as the ceiling — the same behaviour as before B1, so the human table lost nothing.
+- **A class table is worth a test per row.** `_threatClassOf` maps fx keys to T2–T6; one assert per row (Bowl → T2, .44 → T3, recruit → T4b, Govern-stock → T4, 0-blood hunt → T5, Creeping Sabotage → T1 for the prey) caught nothing this time but is the cheapest way to make the next curation honest.
+
+**A3 — robustness (11 Sep 2026, bot v0.6.106):**
+- **A hook that recomputes the thing it is testing tests nothing.** The ghost-prey roster hook compared `preySeat()` — a function that already skips out seats — against `out`, so it was dead from birth (spec'd in v0.3.5, never fired). Store the fact the hook needs (the ask's own target) at the moment it is known; do not re-derive it from state that the same event rewrites.
+- **A rejoin is not a join.** The server's token reconnect reclaims the seat with the server-side piles intact, but the bot's `joined` handler always uploaded the deck — and a deck upload mid-game triggers `dealNow`: a fresh hand, a wiped board, `p.out` reset. Every "resume" path must diff itself from the "start" path field by field before it reuses it.
+- **The machine channel is `log`, the human channel is `chat`.** The blocker's name rode a chat line with a hard-wired `Trainbot:` prefix (B-55e-b); the actor's handshake filter (A1) then hung off that prefix. Anything another bot must PARSE goes on a frozen `log` line (§12, bot-emitted); chat stays narration that may change freely. The retirement re-shaped five fixtures — the tests, again, were where the coupling had been codified.
+- **Anyone who cannot answer any more must not be waited on.** Hold on… and ask pauses are keyed by name; a roster that shows the name offline/vacant/out is the release signal. Every wait keyed on a person needs a departure rule.
+
+**Track C — the cardfx data corrections (11 Sep 2026, bot v0.6.105):**
+- **A coverage verdict can be FULL and wrong.** `gen-deck-coverage` grades whether a mode's fx keys have a consumer, not whether the keys are TRUE: Spying Mission [OBF] was "FULL — bleed@mod-window" while the bot was announcing a phantom +2. The instrument for truth is the publisher's own play guide read against the compiled entry, then the printed text in `vtes.json` — the standing "real card text, never memory" rule now has a second trigger: whenever a play guide describes a card differently from how the bot uses it, check the compile.
+- **Precedence in an `a || b` fallback is a state-lifetime question.** `_expectedOppVamp` read `_combatOppName || _lastBlockerName`; the first outlived its combat and outranked the second at the next action, rejecting a legitimate early strike — a regression A1 introduced and the standing question caught before any arena saw it. Every value that names a counterpart needs the same lifetime as the interaction it belongs to: set at entry, cleared at exit AND at every point that starts a new interaction.
+- **A conditional bonus needs a fail-closed reader.** `req.targetPoolMax` is only honest because the modifier finder refuses the mode when the target's pool is unknown; an "ignore unknown req keys" default would have kept the phantom +3.
+
+**A2 — the sibling sweep (11 Sep 2026, bot v0.6.104):**
+- **A fixture that hand-builds a data shape is a second implementation of the wire.** 49d and 62a put the opponent's pub on the ROSTER entry (`players[].pub`) because that is what the engine read — so the engine and its guard agreed on a shape the server never sends, and the Jack victim side was green while dead. When a test constructs opponent state, build it the way `_onBoard` stores it (`this.table[seat].pub`), and when a read site is fixed, grep the suite for the old shape: the fixture is where the bug went to hide.
+- **`PERSONAS[this.o.persona]` is a name lookup; `this.persona` is the truth.** The effective knob object (named preset, object persona, arena override) exists precisely so sites never re-derive it; three sites had (grinderReadyTarget v0.6.16, the chip-saver, the Jack floor). Rule: no read of `PERSONAS` outside the constructor.
+- **'May' effects need a floor, not a trigger.** Blood Doll/Vessel say *may move*; an unconditional drain turned every 1-blood Malkavian into a minion that cannot pay its own Deflection. Income that costs a minion's last resource must weigh the resource it enables (here: the deck's 1-blood reactions) against the pool it buys — the two-way `poolToBlood` mode (track C) makes it a real decision; the floor is the interim.
+
+**A1 — the deep-review NOW round (11 Sep 2026, bot v0.6.103):**
+- **"Every strike line we receive is the opponent's" was a two-bot truth.** A table-wide parser feeding a one-slot stash is correct exactly when only one other combatant exists. At three seats a bystander stashes other pairs' lines and its next combat consumes them first; each combat then eats the previous one's real line — a cascade, proven in a real arena (2 of 5 consumptions stale). The cure has two halves and needs both: clear the stashes at the entry points YOU control (own announce, block commit, rush comply — never at `_resolveCombat` entry, where a legitimate early line may already sit), and filter every stash by the opponent's name where it is known (the announced actor on the defender side, the B-55e-b blocker name on the actor side), falling back to "in combat" only for nameless human opponents.
+- **`await` on an async function that returns immediately does not yield to I/O.** Microtasks run before the next macrotask, so at paceMs 0 a roster or bounty on the socket cannot be processed between "It resolves" and the next Block? — re-reading `preySeat()` per actor was necessary but not sufficient; the fix needs an explicit bounded wait (`_settleOust`, polling with setTimeout) whenever the last pushed pool cannot survive the hit. Any "did the server tell me yet?" check in a hot loop has the same shape.
+- **Decision/execution drift, third occurrence, same cure.** `interceptPotential` (decision) and `_pickBlocker` (execution) grew separate filter lists (attempted, Pentex, Navar, wake-able). Whenever a pick has a filter, the decision needs the same one; when the two live in different functions, one shared predicate beats two lists. And an announce that commits to a follow-up (Block! → a blocker) must FIND the route before announcing: find → say → play, never say → find.
+- **Fixtures that feed opponent lines with no combat context codify the misplay.** 37a/37l/37n/46e fed strike/crows/grapple lines to bots that were never in combat; the new filter rightly rejected them. Re-contextualise (`_inCombat = true`) rather than delete — the 14a/b/d precedent — and write the new section so it is red against the previous file before it is green against the new one.
+- **A chat review's findings must land in a project file the same day** (`elysium-bot-review-2026-09-11.md`): the session bootstrap reads journal/context/learnings, none of which knew #1–#16 until the ledger existed.
+- **The sandbox tool call has a 300 s ceiling; the suite takes ~190 s here.** ×3 = one run per call, or a backgrounded chain that writes per-run logs (`/tmp/suiteN.log` + an EXIT line) and is polled in a later call — the chained-in-foreground form dies with the call.
+
+**The split (9 Sep 2026):**
+- **Split by OWNERSHIP, then consume releases — never share files between two chats again.** The merge of 9 Sep cost a full session because two chats had edited the same client for a month. The safe shape is two projects with a versioned dependency between them: each side owns its files, keeps read-only copies of the other's releases only where runtime or contract needs them, and any cross-cutting change is two sessions in sequence (contract first). The coupling turned out to be four client-suite tests, now `testB` (skip loudly without the bot).
+
+**Carried in from the main project (verbatim, keyword-selected):**
+- **"Every X, ascending" is a special case that only looks like the rule (9 Sep, v2.6.72).** The bot sweep ran every bot seat in seat order after each human pass — correct for the one configuration ever tested (a lone human at seat 1) and wrong for every other (a bot at seat 1 played out of place; two humans replayed every bot per pass). The general rule was always "the seats strictly between this human and the next, around the circle"; the special case was the accident of the test table. When a feature ships tested on one seating, write the range form anyway — it costs a helper.
+- **A green harness proof narrows the field; it does not close it.** The hotseat Hold on path was proven bot-side in the harness, which is precisely what told us the remaining candidates were things DOM stubs cannot see (a paint throw eating the relay) or tuning (askSecs 2). Order sensitive side effects "wire before picture" so a presentation miss can never swallow a protocol act.
+- **Three brains is the disease, not the bots.** Every "sibling" bug in the bot track (unc vs uncontrolled, boardMode, MAX_PILE) was the same bug: a second implementation of game rules mirroring the first by hand. The cure is structural (one shared core), and the plan for it is its own document so it can start a fresh chat cold.
+- **The serialization format is dual-purpose** - it is both the local autosave and (public-filtered) the multiplayer wire format, and it was designed that way on purpose. Keep new state forward-compatible; don't break the shape casually.
+- **Geometric hit-testing beats `elementsFromPoint` across stacking contexts.** `opponentSurfaceAt(cx,cy)` / `readyZoneAt(cx,cy)` walk `.mat[data-seat]` (and `.matzone-r` for ready) comparing `getBoundingClientRect()` against the cursor. This is robust where `elementsFromPoint` fails — e.g. the Edge token lives on `#board` but the mats live in `#l3stage` (a different stacking context with `pointer-events:none` on the container), so `elementsFromPoint` returned the token or nothing. Card-give already used the geometric path; reuse it for any cross-board drop.
+- **A stale guard inverts into a mask (v2.5.35).** The project snapshot's server (2.5.0) and BOTH test suites (expecting the pre-cross-board 39/45 handler counts) had lagged a month behind the delivered files. The stale server + the stale server-suite AGREED with each other → a false-green 5/0 in the sandbox; the current client against the stale client-suite produced a standing "15/16" that got explained away as a pre-existing quirk. Lessons: (1) when a guard-count assertion fails, first ask WHICH side is stale — the artifact or the guard; (2) sync delivered server/test files into the project with the same discipline as the client (the client habit held; the rest drifted); (3) a re-synced suite must be verified in BOTH directions — green against the current artifact AND red against the stale one, or it guards nothing.
+- **One DOM element can't be in two places.** `#poolWrap` was being driven both as your slot's pool zone AND as the dock-panel pool, so the two writers fought (right size for one, wrong for the other). The fix was a dedicated second element (`#dockPool`) for the dock, with `updatePool()` syncing both. If you're toggling the same node between two contexts on every layout, you probably need two nodes.
+- **`#board { will-change:transform }`** → stacking context → traps `#cardFx` (5900) and everything on the board. To float above the tutorial you need a TOP-LEVEL sibling (`#cardFxTop`).
+- **Top-level (after `</main>`):** `#menu`, `#cardFxTop`, `#hoverCard`, `#tutLayer` — all compete at root, so z-raises work directly.
+- **Per-card "clear" = `avBaseline.add(id)`, not `snapshotPlayed()`.**
+- **Sanitising relayed HTML while keeping one safe tag = placeholder-protect.**
+- **Crypt draw is `influence()`, not `drawCard()`.**
+- **`#cardFx` is `pointer-events:none` on the host, not on its children.**
+- **The `heartbeat()` replacement keeps the same function signature.**
+- **`showSay` "Hold on…" is SAY index 4.**
+- **`cardFx` kind='handreveal' must NOT broadcast via `t:'fx'`.**
+- **The visit mat scale ≈ your home frame scale only when both fill the same area.**
+- **When a grid cell should show X OR Y but not both, branch on the condition.**
+- **A "fly from A to B" effect is a different mechanism from `cardFx`.**
+- **The 5 px threshold separates drag from click at the pointerdown level — not the click level.**
+- **`opts.actor` reversar visuell ordning i `cardFx`, inte ett nytt `kind`-värde.**
+- **`#cardFx` har `pointer-events:none` av god anledning**
+- **`keepLog` must gate `turnLogs` in BOTH `clearTable` AND `restoreGame`.**
+- **pathBlood helper gates till phase 3 (Influence).**
+- **`chosenClan` can hold a path name.**
+- **Fence-rects beat z-index for a spotlight overlay.**
+- **Discard hotkey: zone-agnostic hover beats selection by default.**
+- **The action clone caption is vampire-centric, not player-centric.**
+- **`refreshRTargetMarks()` queried only `#rvCards`, but the remote-card HOST differs per view**
+- **In-place edits on a card you control but don't hold use one generic `ctrl` message.**
+- **There are two give drag-systems; both funnel through `giveTo`.**
+- **A hold-to-repeat driving an `async` action needs a modal guard in the tick.**
+- **Every new hold/repeat control must join the long-press engine's skip-list.**
+- **Slice-and-run beats read-and-reason for geometry bugs.**
+- **Pure proportionalization can beat a base-scale (k-clamp) rearchitecture.**
+- **When a flag and its numeric effect are set together, capture both.**
+- **A numeric proof harness (compute both old and new arrangements, assert identical total + no overlap) is cheap insurance for a "just reorder it" request that turns out to touch a shared-budget system.**
+- **Impersonation-based dev tools must restore in `finally`**
+- **"Both parties can end the arrangement" is a cleaner interaction contract than one-sided rights**
+- **Two branches that both "continued" from one point merge cleanly when their journals are good**
+- **Slice-transplant beats patch-replay for additive features; keep the branch with surgical rewires as base**
+- **A parity fix that only touches ONE branch of an `if(l4on()){…}else{…}` leaves the other branch exactly as broken as before, even when both branches looked like they were "the same feature."**
+- **Two adjacent CSS rules that both touch a shared property can combine in a way that's invisible at one call site's ambient styling and glaring at another's.**
+- **A "watermark behind a large surface" treatment (`.clansym-pool`: faint icon + tinted circle, both sized to the ELEMENT itself) doesn't transplant cleanly onto "decoration behind a much bigger neighbour."**
+- **"X and Y are both too small" does not mean "replace the X+Y composition" — it can mean "keep the composition, scale up its parts."**
+- **When an upstream API you consume announces a breaking format change, "support both, detect per-record" beats "replace and hope the switch lines up."**
+- **Field-level protocol lint bites in BOTH directions, by design.**
+
+## 18 Sep 2026 — the strategy layer (v0.6.119c)
+- **A block that cannot change WHEN I die is not worth an action.** EV per body (pool saved / myTto vs pool dealt / preyTto) looks right and holds racing decks home against a swarm; they die on the same turn with a third less offence. Price defence in TURNS BOUGHT, not pool points.
+- **Five matches cannot separate variants.** Two runs of nearly the same code gave slow-deck through 106 and 82. Register the prediction, report it, and do not tune constants against a series this small.
+- **A registered refutation clause earns its keep.** "Through unchanged → the gap is cards, not allocation" was written before the run; it is the conclusion.
+- **Check the arena's match timeout before a series** (default was 120 s; a 5p30 match runs 170–270 s) — reason 'timeout' and fractional VP are the tell.
+- **A fresh chat starts by checking that the last delivery reached the project** — the three specs and the Stray recompile had not.
+- **Never `pkill -f <pattern>` in the sandbox** — the pattern matches the shell running it.

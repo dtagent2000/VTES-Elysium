@@ -1,0 +1,28 @@
+kind,card,field,finding,cardfx,KRCG
+lib,Academic Hunting Ground,req.clan,missing,,Tremere
+lib,Amusement Park Hunting Ground,req.clan,missing,,Brujah antitribu
+lib,Asylum Hunting Ground,req.clan,missing,,Malkavian
+lib,Base Hunting Ground,req.clan,missing,,Osebo
+lib,Biotech Company Hunting Ground,req.clan,missing,,Hecata
+lib,Campground Hunting Ground,req.clan,missing,,Gangrel antitribu
+lib,Corporate Hunting Ground,req.clan,missing,,Ventrue antitribu
+lib,Creeping Sabotage,cost.blood,missing,,X
+lib,Enticement,req.clan,differs,Follower of Set,
+lib,Fetish Club Hunting Ground,req.clan,missing,,Toreador antitribu
+lib,Hidden Strength,cost.blood,missing,,X
+lib,Institution Hunting Ground,req.clan,missing,,Malkavian antitribu
+lib,Library Hunting Ground,req.clan,missing,,Tzimisce
+lib,Morgue Hunting Ground,req.clan,missing,,Giovanni
+lib,Park Hunting Ground,req.clan,missing,,Ravnos
+lib,Political Hunting Ground,req.clan,missing,,Lasombra
+lib,Port Hunting Ground,req.clan,missing,,Ishtarri
+lib,Shanty Town Hunting Ground,req.clan,missing,,Nosferatu antitribu
+lib,Slum Hunting Ground,req.clan,missing,,Nosferatu
+lib,Society Hunting Ground,req.clan,missing,,Toreador
+lib,Temple Hunting Ground,req.clan,missing,,Ministry
+lib,Underworld Hunting Ground,req.clan,missing,,Banu Haqim
+lib,University Hunting Ground,req.clan,missing,,Tremere antitribu
+lib,Uptown Hunting Ground,req.clan,missing,,Ventrue
+lib,Warsaw Station,req.clan,missing,,Nosferatu
+lib,Warzone Hunting Ground,req.clan,missing,,Brujah
+lib,Zoo Hunting Ground,req.clan,missing,,Gangrel

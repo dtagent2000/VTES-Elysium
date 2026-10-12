@@ -1,0 +1,12 @@
+ventrue,malkavian,tremere,nosferatu
+ventrue,malkavian,nosferatu,tremere
+ventrue,tremere,malkavian,nosferatu
+tremere,nosferatu,malkavian,ventrue
+nosferatu,malkavian,tremere,ventrue
+nosferatu,tremere,malkavian,ventrue
+malkavian,tremere,nosferatu,ventrue
+malkavian,nosferatu,tremere,ventrue
+tremere,malkavian,nosferatu,ventrue
+nosferatu,malkavian,ventrue,tremere
+malkavian,tremere,ventrue,nosferatu
+tremere,malkavian,ventrue,nosferatu
