@@ -1,0 +1,10 @@
+# /etc/systemd/system/elysium-digest.timer
+[Unit]
+Description=Daily Elysium error digest
+
+[Timer]
+OnCalendar=*-*-* 08:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

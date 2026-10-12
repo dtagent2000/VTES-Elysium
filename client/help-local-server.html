@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elysium — running your own server</title>
+<!-- Authoring source for the client's Help → Local server page (v2.6.127). The body of this file is
+     embedded into elysium-vtes-bord.html with `node embed-help.js server help-local-server.html`;
+     the CSS lives in the client (the #helpCss block) and is not lifted from here. -->
+</head>
+<body>
+
+<nav class="nav" aria-label="Sections"><ul>
+  <li><a href="#need">Do you need this?</a></li>
+  <li><a href="#setup">Setting up</a></li>
+  <li><a href="#internet">Beyond the LAN</a></li>
+  <li><a href="#table">Running a table</a></li>
+  <li><a href="#reference">Reference</a></li>
+  <li class="ver">server srv-2.6.43 · client v2.6.141</li>
+</ul></nav>
+
+<header class="hero">
+  <div>
+    <h1>Running your own server</h1>
+    <p>Everything on <em>elysium.cards</em> works without any of this. Your own server is for a table that wants to stay private, play on a LAN with no internet, or run a tournament behind a locked door. It is the same software: one file, no dependencies, and once it runs your players create rooms and join exactly as they do on the public table.</p>
+  </div>
+  <svg class="table" viewBox="0 0 220 220" aria-hidden="true">
+    <rect x="70" y="30" width="80" height="54" rx="6" fill="#1f2a1c" stroke="#c9a45a" stroke-width="1.5"/>
+    <rect x="80" y="40" width="60" height="6" rx="2" fill="rgba(201,164,90,.55)"/>
+    <rect x="80" y="52" width="60" height="6" rx="2" fill="rgba(201,164,90,.35)"/>
+    <rect x="80" y="64" width="40" height="6" rx="2" fill="rgba(201,164,90,.25)"/>
+    <circle cx="136" cy="72" r="3" fill="#7fb37f"/>
+    <circle cx="110" cy="152" r="52" fill="#1f2a1c" stroke="#c9a45a" stroke-width="1.5"/>
+    <circle cx="110" cy="152" r="40" fill="none" stroke="rgba(201,164,90,.25)"/>
+    <g fill="#e8e2d0" font-family="Segoe UI,system-ui,sans-serif" font-size="11" text-anchor="middle">
+      <circle cx="110" cy="102" r="13" fill="#3a2f22" stroke="#c9a45a"/><text x="110" y="106">host</text>
+      <circle cx="158" cy="140" r="13" fill="#3a2f22" stroke="#c9a45a"/><text x="158" y="144">Eva</text>
+      <circle cx="140" cy="195" r="13" fill="#3a2f22" stroke="#c9a45a"/><text x="140" y="199">Ola</text>
+      <circle cx="80" cy="195" r="13" fill="#3a2f22" stroke="#c9a45a"/><text x="80" y="199">Sam</text>
+      <circle cx="62" cy="140" r="13" fill="#3a2f22" stroke="#c9a45a"/><text x="62" y="144">Mia</text>
+    </g>
+    <path d="M110 84 L110 89" stroke="#c9a45a" stroke-width="1.5" stroke-dasharray="2 2"/>
+  </svg>
+</header>
+
+<main>
+<!-- ============================================================ NEED -->
+<section id="need">
+  <h2>Do you need this?</h2>
+  <p class="lead">Probably not. <em>elysium.cards</em> runs a public table around the clock: open it, <span class="menu">Create game</span>, share the room name, play. Nothing to install for anyone. Read on only if one of these is you.</p>
+  <ul>
+    <li><strong>A LAN with no internet</strong> — a club night, a cabin, a hall with bad Wi-Fi. The server runs on one laptop; everyone else opens its address.</li>
+    <li><strong>A closed circle</strong> that would rather not sit on a public server at all.</li>
+    <li><strong>A tournament organiser</strong> who wants a server password (a locked door for the whole server), a referee key that decides who may create rooms, and rooms that never share a list with strangers.</li>
+    <li><strong>Someone who likes to own their tools</strong> — the client and the server are two files you can read, keep and run for as long as you like.</li>
+  </ul>
+
+  <h3>What you get, and what you need</h3>
+  <p>The Elysium server is one file, <code>elysium-server.js</code>, with no dependencies at all — just Node.js. It holds the rooms, keeps every hidden pile (library, crypt and hand never leave it), relays the table, and <strong>also serves the client</strong>: anyone opening the server's address in a browser gets the game immediately, always in the right version. Nobody at the table needs a copy of anything.</p>
+  <div class="wrap"><table>
+    <tr><th>File</th><th>What it is</th></tr>
+    <tr><td><code>elysium-server.js</code></td><td>The server. Runs on Windows, macOS and Linux — anywhere Node.js runs.</td></tr>
+    <tr><td><code>elysium-vtes-bord.html</code></td><td>The client — this very page. The server serves it to your players; it also runs on its own when double-clicked (offline hotseat, the Deck Lab, the tutorial).</td></tr>
+    <tr><td><code>start-elysium</code> (.bat / .command / .sh)</td><td>Launchers, one per system. They check for Node.js and start the server the right way. Zero questions asked.</td></tr>
+    <tr><td><code>start-elysium-guided</code> (.bat / .command / .sh)</td><td>The same, but it asks a few questions first: server password, referee key, single-room mode, tunnel proxy.</td></tr>
+    <tr><td><code>start-cloudflare-tunnel</code> (.bat / .command / .sh)</td><td>Opens a temporary public https address for players who are not on your network (see <a href="#internet">Beyond the LAN</a>).</td></tr>
+    <tr><td><code>elysium-bot.js</code>, <code>elysium-cardfx.json</code>, <code>elysium-twd-profile.json</code>, <code>elysium-twd-archetypes.json</code> — and the <code>.js</code> twins <code>elysium-cardfx.js</code>, <code>elysium-twd-profile.js</code>, <code>elysium-twd-archetypes.js</code></td><td>Optional — the bots. Put them beside the client and bots work at your server's hotseat and lobby too (Help → Bots). The two <code>twd</code> files are the bots' tournament knowledge (how decks with these cards usually play); without them the bots simply read no decks. The <code>.js</code> twins carry the same data for a client opened as a local file, which cannot fetch <code>.json</code> files; the server never needs them.</td></tr>
+  </table></div>
+  <div class="note"><b>Where the files are.</b> Everything lives on GitHub at <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Download the files you need and keep them together in <em>one folder</em> — the launchers expect to find the server beside them. Node.js itself comes from <a href="https://nodejs.org">nodejs.org</a> (the LTS version).</div>
+</section>
+<!-- ============================================================ SETUP -->
+<section id="setup">
+  <h2>Setting up the server</h2>
+  <p class="lead">One person at the table runs the server. Five minutes the first time, thirty seconds every time after.</p>
+
+  <ol class="flow">
+    <li><b>Install Node.js</b> (once). Go to <a href="https://nodejs.org">nodejs.org</a>, download the <em>LTS</em> version and run the installer with the defaults. On a Mac <code>brew install node</code> works too; on Debian/Ubuntu <code>sudo apt install nodejs</code>. That is the only thing you install — no database, no accounts, no packages to fetch.</li>
+    <li><b>Download the Elysium files</b> from <a href="https://github.com/dtagent2000/VTES-Elysium">GitHub</a> into a folder of their own: the server, the client, the launchers for your system, and the bot files if your table wants bot opponents.</li>
+    <li><b>Start the server.</b><br>
+      <em>Windows</em> — double-click <code>start-elysium.bat</code>.<br>
+      <em>macOS</em> — double-click <code>start-elysium.command</code> (the very first time: right-click → <em>Open</em>, since macOS is wary of new files; if it still refuses, open Terminal in the folder and run <code>bash start-elysium.sh</code>).<br>
+      <em>Linux</em> — in a terminal: <code>bash start-elysium.sh</code> (or once <code>chmod +x start-elysium.sh</code>, then <code>./start-elysium.sh</code>).</li>
+    <li><b>Read the banner.</b> A window opens and prints, among other lines, <em>Network: http://192.168.1.42:8123</em> — <strong>that is the address you share with the table.</strong> Leave the window open while you play; <kbd>Ctrl</kbd>+<kbd>C</kbd> shuts down and saves the rooms.</li>
+    <li><b>Create the room.</b> Open the address in your own browser → <span class="menu">Create game</span> → your name, a room name, a password if you like; the <span class="menu">Game settings</span> fold has the match clock, the reaction timer, board style, helpers, the tournament lock and an optional <em>referee password</em> for the table → <span class="menu">Create room</span>. Then click <span class="menu">📋 Invite</span> in the lobby and a ready-made invitation lands on your clipboard — paste it to your players and send the password separately.</li>
+    <li><b>Your players join.</b> They open your address in any browser — nothing installed — click <span class="menu">Join game</span>, and your room is already in the list with the server address filled in: pick it, type the password, import a deck, take a seat, Ready. Play.</li>
+  </ol>
+
+  <div class="warn"><b>Never double-click the <code>.js</code> file itself.</b> Windows runs it with the ancient Windows Script Host and complains about an “Invalid character, line 1” (in your system language); on macOS and Linux it usually just opens in a text editor. The launchers exist precisely to avoid this — they find Node and start the server the right way on every system.</div>
+
+  <details>
+    <summary>The startup banner <span class="sub">— every line, what it means</span></summary>
+    <div>
+      <div class="wrap"><table>
+        <tr><th>Line</th><th>Meaning</th></tr>
+        <tr><td><em>Local</em></td><td><code>http://localhost:8123</code> — the table on your own machine. Use it to create the room yourself.</td></tr>
+        <tr><td><em>Network</em></td><td>The address on your LAN or VPN — the one you share. One line per network interface; over Tailscale one of them starts with <code>100.</code></td></tr>
+        <tr><td><em>Client</em></td><td>Which HTML file is being served. <em>(NOT FOUND!)</em> means the client is not beside the server — move it there.</td></tr>
+        <tr><td><em>Images</em></td><td>An optional <code>images/</code> folder beside the client. If it exists, card art is served from there (Settings → “Check a local images folder”); if not, players fetch art from KRCG as usual.</td></tr>
+        <tr><td><em>Data</em></td><td>Where the rooms and named saves are written (<code>elysium-rooms.json</code>, <code>elysium-saves.json</code>). Beside the server unless you started with <code>--data-dir</code>.</td></tr>
+        <tr><td><em>Door</em> / <em>Admin</em> / <em>Proxy</em> / <em>Bind</em></td><td>Shown only when the matching option is on — a server password, a referee key (and whether room creation is restricted to it), the tunnel proxy switch, or a bind address.</td></tr>
+      </table></div>
+      <p>Default port is <code>8123</code>. If it is busy, start on another one — <code>node elysium-server.js 8200</code> — and share the new address; the client appends <code>:8123</code> only when a typed address has no port.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>The guided launcher <span class="sub">— passwords, referees, single-room mode</span></summary>
+    <div>
+      <p>Double-click <code>start-elysium-guided</code> instead of the plain launcher and it asks four questions before starting; Enter on an empty line means “no” and gives you the plain server.</p>
+      <ol class="flow">
+        <li><b>Server password</b> — a locked door for the <em>whole</em> server: browsing the room list, creating and joining all require it. Players type it under <span class="menu">Join game → Local server → Server password</span> (Full mode). The public table has none.</li>
+        <li><b>Referee key</b> (<code>--referee-pass</code>) — an operator credential. It is <em>not</em> how a judge joins a table (that is the per-room referee password the host sets under Game settings); it is what unlocks the next question, the log pull and the maintenance window (see <a href="#reference">Reference</a>). Players never need it.</li>
+        <li><b>Single-room server</b> (<code>--create-policy admin</code>) — only someone holding the referee key may create rooms. Typed under <span class="menu">Create game → Local server → Server referee key</span>. For a tournament this keeps the room list exactly as the organiser laid it out.</li>
+        <li><b>Behind cloudflared or Caddy on this machine</b> (<code>--trust-proxy</code>) — say yes when the tunnel runs on the same computer as the server, so the per-player throttles see real addresses instead of everyone looking like <code>127.0.0.1</code>. Harmless to leave off for a game night.</li>
+      </ol>
+      <p>Anything the guided launcher can do, the plain command can too: <code>node elysium-server.js [port] [clientfile] [--server-pass P] [--referee-pass P] [--create-policy admin] [--trust-proxy] [--bind ADDR] [--data-dir DIR] [--origin LIST]</code>. A <code>!</code> in a password trips the Windows shell — pick a phrase without one.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Your own copy of the client <span class="sub">— saved decks that travel with you</span></summary>
+    <div>
+      <p>The client is a single file. Double-click <code>elysium-vtes-bord.html</code> and it runs with no server at all: offline hotseat, bots, the Deck Lab and every tutorial work on their own. Your <em>saved decks and downloaded card images</em> then live with <em>your</em> file rather than with a website — which is why regulars keep a copy even when they mostly play on the public table. To reach a server from your own file, open <span class="menu">Join game → Local server</span> and type the address yourself (for the public table: the full <code>https://elysium.cards</code>). A local <code>images/</code> folder beside your file works here too.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Bots on your own server <span class="sub">— the bot files beside the client</span></summary>
+    <div>
+      <p>The bots are not part of the server. Put <code>elysium-bot.js</code> and <code>elysium-cardfx.json</code> in the same folder as <code>elysium-vtes-bord.html</code> and the server serves them to every player's client. Add <code>elysium-twd-profile.json</code> and <code>elysium-twd-archetypes.json</code> beside them and the bots read your decks the way a tournament player would (a server older than srv-2.6.43 does not serve these two — the bots then play without that knowledge). Opened as a local file, the client cannot fetch <code>.json</code> files, so it reads their <code>.js</code> twins instead: <code>elysium-cardfx.js</code>, <code>elysium-twd-profile.js</code> and <code>elysium-twd-archetypes.js</code> — the same data, from the bot project's release. A missing or too-old bot file is refused with a message that says exactly what is wrong — the table itself is unaffected. How to seat and steer them: Help → Bots.</p>
+    </div>
+  </details>
+</section>
+<!-- ============================================================ INTERNET -->
+<section id="internet">
+  <h2>Beyond the LAN</h2>
+  <p class="lead">The banner's address works for everyone on your network. When the table does not share a Wi-Fi, you have two good roads and one to avoid.</p>
+
+  <h3>Tailscale — recommended</h3>
+  <p>A free private network between you and your players. Encrypted, no router port opened, and the “friends around a table” trust model stays intact: nobody outside your network can even see the server.</p>
+  <ol class="flow">
+    <li><b>The host</b> creates a free account at <a href="https://tailscale.com">tailscale.com</a> and installs the app.</li>
+    <li><b>The host sends an invite link</b> (Tailscale panel → Invite) to the players.</li>
+    <li><b>Each player</b> installs the app via the link and signs in. That is it — you are now on the same “LAN”.</li>
+    <li><b>Start Elysium as usual</b> and share your <em>Tailscale address</em> — the Network line that starts with <code>100.</code>, plus <code>:8123</code>.</li>
+    <li><b>Players open</b> <code>http://100.x.y.z:8123</code> in their browsers and join as on a LAN.</li>
+  </ol>
+
+  <h3>Cloudflare quick tunnel — nothing for players to install</h3>
+  <p>A temporary public <em>https</em> address that forwards to your server. Players just open the link — no app, no account. The client switches to an encrypted connection by itself when the page comes over https.</p>
+  <ol class="flow">
+    <li><b>Get cloudflared</b> (once).<br>
+      <em>Windows</em> — download <code>cloudflared-windows-amd64.exe</code> from <a href="https://github.com/cloudflare/cloudflared/releases/latest">github.com/cloudflare/cloudflared/releases/latest</a>, <strong>rename it to <code>cloudflared.exe</code></strong> and put it in your Elysium folder.<br>
+      <em>macOS</em> — <code>brew install cloudflared</code>, or the release binary saved in the folder as <code>cloudflared</code> + <code>chmod +x cloudflared</code>.<br>
+      <em>Linux</em> — the apt/yum repo at <a href="https://pkg.cloudflare.com">pkg.cloudflare.com</a>, or the release binary as above.</li>
+    <li><b>Start the Elysium server</b> as usual.</li>
+    <li><b>Start the tunnel:</b> <code>start-cloudflare-tunnel.bat</code> (Windows), <code>start-cloudflare-tunnel.command</code> (macOS, same first-time right-click → Open), <code>bash start-cloudflare-tunnel.sh</code> (Linux). After a few seconds the address appears in a big banner and lands <em>on your clipboard</em> (Windows and macOS; Linux too with <code>xclip</code> installed).</li>
+    <li><b>Paste the address to your players.</b> They open it and connect as normal.</li>
+  </ol>
+  <div class="note"><b>The tunnel address is temporary</b> and changes every time you start the tunnel. Closing the tunnel window disconnects the players, but the server and the room stay alive — start the tunnel again, share the new address, and everyone reconnects into their seats.</div>
+  <div class="note"><b>Set the host computer to never sleep</b> while hosting (Windows: Settings → System → Power; macOS: System Settings → Displays/Battery). The server survives a nap; the tunnel may not — if it drops, restart the tunnel and share the new address.</div>
+
+  <h3>Opening a router port — advised against</h3>
+  <p>Technically possible, not recommended. An open port is found by scanners within hours, and a plain <code>http</code> table sends the room password in the clear. The server is hardened, but for game nights Tailscale is the right road and the tunnel the easy one.</p>
+
+  <details>
+    <summary>Firewalls <span class="sub">— the most common “it won't connect”</span></summary>
+    <div>
+      <p>The page loads for you, but not for anyone else — that is almost always the firewall on the host machine.</p>
+      <ul>
+        <li><strong>Windows:</strong> the first time Node listens, Windows asks for access. If that dialog was dismissed: Windows Security → Firewall &amp; network protection → <em>Allow an app</em> → tick <strong>Node.js</strong> for <em>private</em> networks. Check that your Wi-Fi is profiled as <em>Private</em>, not Public.</li>
+        <li><strong>macOS:</strong> click <em>Allow</em> when asked about incoming connections for <em>node</em> (or add it under System Settings → Network → Firewall).</li>
+        <li><strong>The wildcard:</strong> guest networks and some mesh systems run <em>client isolation</em>, which blocks all device-to-device traffic — switch to the main network, or use Tailscale.</li>
+      </ul>
+      <p><strong>The diagnosis:</strong> if the <em>page</em> loads at <code>http://your-address:8123</code> from another device, the network and the firewall are cleared — the game travels through the same port as the page.</p>
+    </div>
+  </details>
+</section>
+<!-- ============================================================ TABLE -->
+<section id="table">
+  <h2>Running a table</h2>
+  <p class="lead">Once the server runs, hosting is the same as on the public table. What follows is what a host on their own server tends to ask about.</p>
+
+  <details open>
+    <summary>Rooms and their lifecycle <span class="sub">— seats, drops, hand-overs</span></summary>
+    <div>
+      <ul>
+        <li>Up to <strong>6 seats</strong> per room, <strong>10 spectators</strong>, and <strong>50 rooms</strong> per server.</li>
+        <li><strong>A dropped connection keeps the seat</strong> (marked offline). A player who loses Wi-Fi or closes the laptop drops back into their seat within seconds; even after closing the browser, joining the same room with the same name and password reclaims it — deck, board and hand restored.</li>
+        <li><strong>Hosting (★) passes on</strong> to the next player if the host leaves for good. <span class="menu">Menu → Leave seat</span> asks a host with company whether to leave alone or close the table for everyone.</li>
+        <li><strong>Rooms expire</strong> when everyone has been offline for 60 minutes; a room nobody ever sat in is cleaned up after 10 minutes, and a room with bots but no human online after 10 minutes as well (the bots live in the host's tab). While the server runs, a room otherwise lives as long as you want it to.</li>
+        <li><strong>Persistence.</strong> The rooms — hidden piles, points, tokens and the encrypted hand blobs — are written to <code>elysium-rooms.json</code> every minute and on <kbd>Ctrl</kbd>+<kbd>C</kbd>. A restarted server restores them — board style, referee password and the bots' tempo included (srv-2.6.43; older servers forgot those, and swept a restored table within ten minutes unless somebody rejoined it) — and the players reconnect into their seats; a restored table nobody returns to closes after an hour, like any idle table. The file is ignored if it is older than 24 hours.</li>
+        <li><strong>Spectators</strong> need the room password if there is one, can only chat (if the host allows it), and do not keep a room alive.</li>
+        <li><strong>The match clock</strong> lives on the room; the server announces “Time is called” once when it reaches zero.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Host tools <span class="sub">— the ★ in the room</span></summary>
+    <div>
+      <ul>
+        <li><span class="menu">Menu → Host…</span> holds New deal, Reset table, Randomize seating, Save/Load game to file and — online — <span class="menu">Close table…</span>, which disconnects everyone and removes the room.</li>
+        <li>Every player row in the lobby and in the Table panel carries a red <span class="menu">✕</span> for the host: remove someone from the table (confirmed first). Their seat opens; a spectator can be promoted into it. If they will not take the hint, change the room password.</li>
+        <li>On a player's seat menu: set or step their pool, oust, un-oust, pass their turn, mute. The same tools reach a bot seat.</li>
+        <li><span class="menu">📋 Invite</span> puts address + room name on the clipboard; the password is deliberately never part of it. A <em>link invite</em> works too: <code>your-address/?server=&amp;room=&amp;name=</code> pre-fills and opens the Join dialog — one click from seated, and it never joins on its own.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Referees <span class="sub">— a judge with the host's tools, per table</span></summary>
+    <div>
+      <p>A referee is a spectator with the host's tools, for <em>one</em> table. The host sets a <strong>referee password</strong> under <span class="menu">Create game → Game settings</span> when the room is created; the judge ticks <span class="menu">Join as referee</span> (Full mode) and types it. From then on the referee sees the whole table without a seat and has the host's menu: pausing and passing turns, adjusting the clock, setting pool, ousting, kicking, starting, saving and loading. Rooms with a referee password show ⚖ in the room list. No password set means no referee at that table.</p>
+      <p>This is different from the server's <em>referee key</em> (the guided launcher's second question), which is an operator credential for the server as a whole.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Saving and loading a match <span class="sub">— continue next week</span></summary>
+    <div>
+      <p>Beyond the automatic room snapshot, the host can save a running match under a name and keep it — to continue a game next week, or to recover after a long break.</p>
+      <h4>Saving</h4>
+      <ul>
+        <li>In a running game, click <span class="menu">💾 matches</span> in the room bar (host and referee only), type a name — <em>Friday game</em> — and <span class="menu">Save match</span>.</li>
+        <li>A save captures every seat's deck as it stands, public board, victory points, the turn — and each player's <em>encrypted hand</em>. The server stores the hand only as a blob it cannot read.</li>
+        <li>Saves are kept per <em>room password</em> (the same password = the same group of friends): three per group, and a save untouched for 90 days expires.</li>
+      </ul>
+      <h4>Loading</h4>
+      <ul>
+        <li>Create a <em>fresh room</em> with the <em>same password</em> the match originally used — the password is how a save is found and how the seats are protected.</li>
+        <li>Open <span class="menu">💾 matches</span>: the group's saves appear. <span class="menu">Load</span> drops you straight into your own seat (log in with the name you played under); the other seats wait offline.</li>
+        <li>Everyone else joins the new room with <em>their own name + the same password</em> and lands in their seat — board, deck and hand restored. A hand is restored from the blob only when the password was just typed; a plain page refresh restores it from the browser's own autosave instead.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Bots at your table <span class="sub">— the host adds them from the lobby</span></summary>
+    <div>
+      <p>With the three bot files beside the client, the host adds bots in the lobby of a <em>Structured</em> room (a Classic room cannot hold bots and the button says so): a name, a deck, an experience level, <span class="menu">🤖 Add bot</span>. They live in the host's browser tab and connect to the room on their own sockets, so to the server and to every other player they are ordinary remote players. Everything about seating them, steering them and correcting them is in Help → Bots.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Problem reports <span class="sub">— they land on your server</span></summary>
+    <div>
+      <p>When a player at your table uses <span class="menu">Help → Report a problem…</span>, the report is posted to <em>your</em> server and appended to <code>elysium-errors.log</code> in the Data folder — one JSON line per report, with the last public log lines and a snapshot of the reporter's own view. No IP address is written. With a referee key set, <code>http://your-address/client-errors.txt?key=…</code> serves the log from a browser. Nothing is ever sent anywhere else.</p>
+    </div>
+  </details>
+</section>
+<!-- ============================================================ REFERENCE -->
+<section id="reference">
+  <h2>Reference</h2>
+  <p class="lead">The options, the protections, and the snags — for when you want the exact answer.</p>
+
+  <h3>Command-line options</h3>
+  <p><code>node elysium-server.js [port] [clientfile] [options]</code> — all optional; with none, you get exactly what the plain launcher starts.</p>
+  <div class="wrap"><table>
+    <tr><th>Option</th><th>Effect</th></tr>
+    <tr><td><code>8200</code> (first argument)</td><td>Port to listen on. Default <code>8123</code>.</td></tr>
+    <tr><td><code>my-client.html</code> (second argument)</td><td>Which client file to serve. Default <code>elysium-vtes-bord.html</code> beside the server.</td></tr>
+    <tr><td><code>--server-pass P</code></td><td>A password for the whole server: browsing, creating and joining all require it.</td></tr>
+    <tr><td><code>--referee-pass P</code></td><td>The operator key (<code>--admin-pass</code> is an alias). Unlocks <code>--create-policy admin</code>, the log pull and the maintenance window; bypasses the room-creation throttle.</td></tr>
+    <tr><td><code>--create-policy admin</code></td><td>Only a holder of the referee key may create rooms. Default: anyone.</td></tr>
+    <tr><td><code>--trust-proxy</code></td><td>Believe the forwarding headers from a tunnel or reverse proxy running on the <em>same</em> machine, so per-player throttles see real addresses.</td></tr>
+    <tr><td><code>--bind 127.0.0.1</code></td><td>Listen on one address only. Behind a tunnel, <code>127.0.0.1</code> makes the raw port unreachable even on your LAN.</td></tr>
+    <tr><td><code>--data-dir DIR</code></td><td>Where rooms, saves and the error log are written. Default: beside the server.</td></tr>
+    <tr><td><code>--origin LIST</code></td><td>Comma-separated list of page origins allowed to open a table connection (e.g. <code>https://your-domain,null</code>). Default: off.</td></tr>
+  </table></div>
+
+  <h3>The security model</h3>
+  <p>Room passwords are shared phrases between friends — pick a fun phrase, never a real password. The server keeps the rest honest:</p>
+  <div class="wrap"><table>
+    <tr><th>Protection</th><th>Behaviour</th></tr>
+    <tr><td>Room password</td><td>Compared in constant time and stored only as a hash — in memory and in the persistence file, never in clear text. A wrong password counts as a strike.</td></tr>
+    <tr><td>Lockout</td><td>5 wrong passwords within 10 minutes locks that address out for 10 minutes. Behind a tunnel the strikes are counted per room instead, so one player's typo cannot lock out the whole table. Token reconnection is immune.</td></tr>
+    <tr><td>Rate limiting</td><td>Max 80 messages per 10 seconds per connection — then disconnect. Max 16 concurrent connections per address, 400 in total.</td></tr>
+    <tr><td>Room creation</td><td>Max 4 new rooms per address per hour (the host's own machine is exempt, as is the referee key). Of the 50 room slots, 10 are always held for rooms that have ever seated a player, so squatters cannot fill the server.</td></tr>
+    <tr><td>Identity</td><td>A token per browser tab (survives a refresh, dies with the tab). Name + password reclaims an offline seat; a name that is online can never be taken over.</td></tr>
+    <tr><td>Hidden information</td><td>Library, crypt and hand exist only in server memory. Face-down card names are stripped before anything is relayed; the hand is never relayed at all.</td></tr>
+    <tr><td>Hand escrow</td><td>Your hand is encrypted in your browser with a key derived from the room password. Reconnecting, taking over a seat and loading a saved match restore your exact hand — while the server, the save file and the other players only ever see an opaque blob. Obfuscation-grade, not an audited cipher.</td></tr>
+    <tr><td>Sanitisation</td><td>Every field passing through the server is cleaned and clamped (lengths, ranges, control characters); angle brackets are stripped from names on the server, on top of the client escaping everything it renders.</td></tr>
+    <tr><td>Crash isolation</td><td>Every message is handled in a guarded context; one malformed message cannot take the server down or drop the rooms.</td></tr>
+    <tr><td>Version check</td><td>Client and server compare their version on join and warn when the major.minor differ — the moment to fetch the matching files from GitHub.</td></tr>
+  </table></div>
+
+  <h3>If something snags</h3>
+  <div class="wrap"><table>
+    <tr><th>Symptom</th><th>Remedy</th></tr>
+    <tr><td>“Invalid character, line 1” when starting the server</td><td>You double-clicked the <code>.js</code> file. Use the launcher for your system.</td></tr>
+    <tr><td>Works on the host machine but not for anyone else</td><td>The firewall (Node.js for <em>private</em> networks), the network profile (Private, not Public), or client isolation on a guest network — see <a href="#internet">Firewalls</a>. Test whether the <em>page</em> loads from another device.</td></tr>
+    <tr><td>The page won't even load for a guest</td><td>Guest networks and mesh systems with “client isolation” block device-to-device traffic — switch to the main network, or use Tailscale.</td></tr>
+    <tr><td>Port busy at startup</td><td>Start on another port: <code>node elysium-server.js 8200</code> — and share the new address.</td></tr>
+    <tr><td>“No such room” / “Wrong password”</td><td>Room names are case-sensitive as created; the password is the host's. A server password is a separate thing: <span class="menu">Join game → Local server → Server password</span>.</td></tr>
+    <tr><td>“That name is taken”</td><td>The name is currently online in the room. An offline seat is reclaimed with the same name + the room password.</td></tr>
+    <tr><td>“Too many failed attempts”</td><td>The lockout — wait 10 minutes, or reconnect in the tab that still holds the token.</td></tr>
+    <tr><td>“This room has no referee password” / “Wrong referee password”</td><td>Referees are per table: the host sets the password under Create game → Game settings when the room is created. No password there means no referee at that table.</td></tr>
+    <tr><td>A version warning when joining</td><td>Client and server are from different releases. Fetch both from <a href="https://github.com/dtagent2000/VTES-Elysium">GitHub</a> and put them beside each other.</td></tr>
+    <tr><td>“cloudflared.exe was not found” when starting the tunnel</td><td>The GitHub download is called <code>cloudflared-windows-amd64.exe</code> (64-bit) or <code>-386.exe</code> (32-bit). Rename it to <code>cloudflared.exe</code> and put it next to <code>start-cloudflare-tunnel.bat</code>. Almost every modern PC is 64-bit — pick <em>amd64</em>.</td></tr>
+    <tr><td>“cloudflared: command not found” (macOS/Linux)</td><td><code>brew install cloudflared</code> on a Mac; the <a href="https://pkg.cloudflare.com">pkg.cloudflare.com</a> repo on Linux — or the release binary next to the script as <code>./cloudflared</code> + <code>chmod +x cloudflared</code>.</td></tr>
+    <tr><td>macOS: “… cannot be opened” for a <code>.command</code> file</td><td>Gatekeeper being careful with a new file. Right-click → <em>Open</em> → Open (needed once), or run <code>bash start-elysium.sh</code> in Terminal.</td></tr>
+    <tr><td>“Permission denied” running a <code>.sh</code></td><td>Either prefix it — <code>bash start-elysium.sh</code> — or make it executable once: <code>chmod +x start-elysium.sh</code>.</td></tr>
+    <tr><td>Bots refuse to load</td><td>The three bot files must sit beside the client, and the bot file must be recent enough — the dialog names the exact reason. Fetch the current files from GitHub.</td></tr>
+  </table></div>
+
+  <h3>Bring your own server</h3>
+  <p>The client and the server talk over an open, documented contract — <code>ELYSIUM-PROTOCOL.md</code> on GitHub. If you want Elysium behind your own infrastructure — a matchmaking site, a tournament bracket, a permanent community server — you do not need to touch the client at all.</p>
+  <ul>
+    <li><strong>Point the client anywhere.</strong> The Server address field accepts any host, and the client file can be served from any static hosting. An https page connects with wss on 443 — put your endpoint behind any TLS proxy.</li>
+    <li><strong>The contract is small on purpose:</strong> a minimal server is a relay plus three real duties — hold the hidden piles, advance the turn, store each player's encrypted hand blob. The crypto is entirely client-side; your server just keeps an opaque string.</li>
+    <li><strong>Prove it with the shipped tests.</strong> The <code>test-2a … test-2g</code> suites run against any server that speaks the protocol — they are the conformance suite.</li>
+  </ul>
+  <p>Tournament logic belongs <em>around</em> the table, not inside it: your pre-stage handles accounts, brackets and results, and Elysium stays the sandbox where the game is actually played.</p>
+</section>
+</main>
+
+<footer>
+  Elysium — running your own server · matches server <b>srv-2.6.43</b> and client <b>v2.6.141</b> · 11 October 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
+</footer>
+
+</body>
+</html>

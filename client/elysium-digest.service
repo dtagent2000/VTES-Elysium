@@ -1,0 +1,11 @@
+# /etc/systemd/system/elysium-digest.service
+# Daily Elysium error digest -> Discord webhook.
+# ADJUST the two paths below to match your main elysium unit's layout
+# (the script next to the server, --data-dir same as the server's).
+[Unit]
+Description=Elysium error digest (Discord)
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/elysium/digest.env
+ExecStart=/usr/bin/node /opt/elysium/elysium-error-digest.js --data-dir /opt/elysium/data

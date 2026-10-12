@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.38';   // srv-2.6.38 (21 Sep 2026, AN OUST PAYS THE LIVING AND MOVES THE TURN -- restart): from the bot project's 21 Sep spec (items 3 + 6). `bounty` and `hostOust` paid the ring predecessor without asking whether it was still in the game -- a dead seat collected the VP and the 6 pool (measured live: seat 2 out, seat 3 falls, the bounty went to seat 2). prevLiveSeat() skips `out` (NOT vacant: a vacant seat is still in the game). And an oust of the seat that HOLDS the turn now hands it on (turnOnFromOusted -> nextLiveSeat, after the roster), as vacateSeat always has and as the protocol doc had promised for `bounty` all along; the ousted seat's own late `pass` is silently ignored (bot v0.6.140+ still sends one), a live seat passing out of turn still errs. No new verb, no new field. Previous note: elysium-CHANGELOG.md.
+const VERSION = '2.6.43';   // srv-2.6.43 (9 Oct 2026, THE BOT TEMPO + THE KNOWLEDGE FILES -- restart): (1) botcfg (spec-bot-tempo-2026-09-27): any seated HUMAN sets the table's bot tempo {tempo standard|adaptive|turn, waitSecs 1-8}, lobby or game; a partial write keeps the absent field (Standard / 3 s under a table that has none); stored on the room, broadcast whole to everyone, replayed to a late joiner right after `joined`. (2) GET /elysium-twd-profile.json and /elysium-twd-archetypes.json beside the bot statics (exact match, the knowledge layer's data, bot v0.6.187+). (3) Found on the way: the room snapshot never carried boardMode (a restored Classic table told every rejoining client it was Structured), refHash, matchMins, everPop (srv-2.6.22's squatter flag -- the first 10-minute sweep after a restart deleted every restored table whose players had not come back yet) or the bot flag (the srv-2.6.36 census counted a restored bot as a human); roomSnap / roomUnsnap carry them, and a reconnecting bot keeps its flag. Previous note: elysium-CHANGELOG.md.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -372,7 +372,7 @@ function turnOnFromOusted(room, idx){
   const ni = nextLiveSeat(room, idx);
   if(ni === idx) return;                                            // nobody left to hand it to -- the game is over, leave the marker where it is
   room.turnSeat = ni + 1;
-  bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
+  turnTallyClear(room); bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
 }
 /* Free a seat mid-game: the deck + public board stay (frozen) for a replacement.
    toSpectator → the controller becomes a watcher; otherwise they're disconnected. */
@@ -394,7 +394,7 @@ function vacateSeat(room, q, toSpectator){
   if(room.turnSeat === idx + 1){            // the active seat was vacated — move the turn on
     const ni = nextLiveSeat(room, idx);
     room.turnSeat = ni + 1;
-    bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
+    turnTallyClear(room); bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
   }
 }
 function cleanName(s){ return String(s || '').replace(/[\u0000-\u001f\u007f<>]/g,'').trim().slice(0, 24); }
@@ -437,6 +437,7 @@ function joinReply(sock, room, p){
   if(p.pubOwn || p.pub) msg.myPub = p.pubOwn || p.pub;
   wsSend(sock, msg);
   if(maintActive()) wsSend(sock, { t:'sys', msg: maintNotice() });   // v2.6.26: late joiners hear about the drain too
+  if(room.botcfg) wsSend(sock, Object.assign({ t:'botcfg' }, room.botcfg));   // srv-2.6.43: the table's bot tempo reaches a late joiner -- a bot seated mid-game must get it, and bots are added in the LOBBY, so this sits before the lobby return
   if(!room.started){ wsSend(sock, lobbyState(room)); return; }   // a waiting lobby — no boards to push yet
   /* Newcomers get everyone's current public boards */
   room.players.forEach(q => {
@@ -595,6 +596,60 @@ function fxCard(o){                                   // sanitise an FX card pay
 }
 // In-game message dispatch. One handler per verb (signature: conn, room, p, m). Order-independent;
 // add a verb by adding a key. Runs inside handle()'s try, so a throw lands in its catch.
+/* srv-2.6.39 (THE COMBAT STEPS CARRY STATE): the combat round's shared state, merged field by
+   field under the v2.6.17 rule -- an ABSENT field preserves the room's value while the mode stays
+   combat (prev = the same-mode tally, null after a mode change -> fresh defaults). A CHANGED rd
+   starts a fresh round for every absent per-round field: the rulebook resets range to close each
+   round unless an effect set it for this one (nx carries into rng with rl = 1). The client's
+   tallyCombatMerge and hotBridge.tallyIn run this same rule, field for field. */
+/* srv-2.6.42 (NOTHING OUTLIVES A TURN): the resolver's shared state (Block / Vote / Combat / Free counters) never
+   survives a turn change -- the SERVER owns the turn, so the server clears it, before the turn broadcast, on every
+   path that moves the turn (pass, oust, start). Clients used to clear it themselves (v2.6.137: the new turn's
+   client sent the close), which missed the case where the new turn belongs to a BOT: no human sent anything. */
+function turnTallyClear(room){
+  if(!room || !room.tally) return;
+  room.tally = null;
+  bcast(room, { t:'tally', who:'', mode:null, a:0, b:0, ph:0, rd:1 });
+}
+const TALLY_CMB_KEYS = ['rng', 'rl', 'nx', 'pr', 'sp', 'ce', 'sa', 'sb', 'xa', 'xb', 'pa', 'pb', 'ga', 'gb', 'ea', 'eb'];   // srv-2.6.41: + ga/gb aggravated damage dealt by the acting / opposing side this round, ea/eb environmental damage the side inflicts EVERY round (Carrion Crows-class; it survives a new round)
+const TALLY_CMB0 = { rng:'close', rl:0, nx:'', pr:null, sp:1, ce:0, sa:'', sb:'', xa:0, xb:0, pa:0, pb:0, ga:0, gb:0, ea:0, eb:0 };
+function tallyCombat(m, prev){
+  const P = prev || TALLY_CMB0;
+  const newRound = !!(prev && ('rd' in m) && (Math.max(1, Math.min(99, (m.rd | 0) || 1)) !== (prev.rd | 0 || 1)));
+  const base = newRound ? Object.assign({}, TALLY_CMB0, P.nx ? { rng: P.nx, rl: 1 } : {}, { ea: P.ea | 0, eb: P.eb | 0 }) : P;   // srv-2.6.41: environmental damage lasts the whole combat
+  const n = (v, lo, hi) => Math.max(lo, Math.min(hi, v | 0));
+  const lab = v => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 40);
+  const f = {
+    rng: v => (v === 'long' ? 'long' : 'close'), rl: v => (v ? 1 : 0), nx: v => ((v === 'close' || v === 'long') ? v : ''),
+    pr: v => ((v === 'continue' || v === 'end') ? v : null), sp: v => n(v || 1, 1, 9), ce: v => (v ? 1 : 0),
+    sa: lab, sb: lab, xa: v => n(v, 0, 9), xb: v => n(v, 0, 9), pa: v => n(v, 0, 99), pb: v => n(v, 0, 99),
+    ga: v => n(v, 0, 99), gb: v => n(v, 0, 99), ea: v => n(v, 0, 99), eb: v => n(v, 0, 99)
+  };
+  const out = {};
+  for(const k of TALLY_CMB_KEYS) out[k] = (k in m) ? f[k](m[k]) : (base[k] === undefined ? TALLY_CMB0[k] : base[k]);
+  return out;
+}
+const BOT_STATICS = new Set(['/elysium-bot.js', '/elysium-cardfx.json', '/elysium-twd-profile.json', '/elysium-twd-archetypes.json']);   // srv-2.6.28 + srv-2.6.43: the hosted bot files, EXACT req.url match (see the route)
+/* srv-2.6.43 (the bot project's spec-bot-tempo-2026-09-27): the table's BOT TEMPO. The players' main
+   complaint about bots is the wait -- every block, reaction, vote and combat step a bot asks a human runs on
+   a fixed clock. The humans own that clock now: any seated human may set it, at any time, and it applies to
+   every bot at the table. Stored on the room (room.botcfg) so a bot seated later gets it (joinReply), the
+   same late-joiner rule as the shared tally. A partial write keeps the absent field (the v2.6.17 rule: two
+   humans changing different settings at once cannot undo each other); a table with none yet merges onto
+   Standard / 3 s. Nothing valid = nothing stored, nothing sent. The client's botCfgMerge and the hotseat
+   bridge's botcfgIn run this same rule, field for field (a suite test drives all three with the same
+   random writes). What a bot DOES with it is the bot project's part; a bot that never reads it keeps its
+   own clocks, exactly as before. */
+const BOTCFG_TEMPOS = ['standard', 'adaptive', 'turn'];
+const BOTCFG0 = { tempo: 'standard', waitSecs: 3 };
+function botcfgMerge(tempo, waitSecs, prev){
+  const P = prev || BOTCFG0;
+  const tOk = typeof tempo === 'string' && BOTCFG_TEMPOS.indexOf(tempo) >= 0;
+  const w = (typeof waitSecs === 'number' || (typeof waitSecs === 'string' && waitSecs.trim() !== '')) ? Number(waitSecs) : NaN;
+  const wOk = isFinite(w);
+  if(!tOk && !wOk) return null;
+  return { tempo: tOk ? tempo : P.tempo, waitSecs: wOk ? Math.round(Math.max(1, Math.min(8, w)) * 10) / 10 : P.waitSecs };
+}
 const GAME_HANDLERS = {
   log(conn, room, p, m){
     bcast(room, { t:'log', who: p.name, html: sanHtml(String(m.html || '').slice(0, 4000)) }, conn.sock);   // v2.5.64: whitelist-sanitised like say/logTo (defence-in-depth; the reference client re-sanitises at render)
@@ -708,7 +763,7 @@ const GAME_HANDLERS = {
     if(i > -1 && n){
       const ni = nextLiveSeat(room, i);               // your prey is next, skipping ousted & vacant seats
       room.turnSeat = ni + 1;
-      bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
+      turnTallyClear(room); bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
     }
   },
   /* ---- lobby: roll a die, claim a seat, start the game ---- */
@@ -744,7 +799,7 @@ const GAME_HANDLERS = {
     if(room.matchMins) room.matchEnd = Date.now() + room.matchMins * 60000;
     scheduleRoomList();                                                        // v2.5.68 L2: the lobby list shows lobby->started flips live
     bcast(room, { t:'started', players: roster(room), turn: 1, tournLock: room.tournLock || undefined, matchEnd: room.matchEnd || undefined, tableView: room.tableView || undefined, l3shape: room.l3shape || undefined, boardMode: room.boardMode || undefined });
-    bcast(room, { t:'turn', seat: 1, who: room.players[0].name });
+    turnTallyClear(room); bcast(room, { t:'turn', seat: 1, who: room.players[0].name });
     sys(room, 'The game begins — seats are locked. 🦇');
     room.players.forEach(q => { if(q.sock) dealNow(q, room); });
     rosterUpd(room);
@@ -779,8 +834,9 @@ const GAME_HANDLERS = {
        starts fresh -- stale ph/rd from a previous referendum must not leak into a
        new one. */
     const prev = (room.tally && room.tally.mode === mode) ? room.tally : null;
-    const a  = ('a'  in m) ? Math.max(0, Math.min(99, m.a | 0)) : (prev ? prev.a  : 0);
-    const b  = ('b'  in m) ? Math.max(0, Math.min(99, m.b | 0)) : (prev ? prev.b  : 0);
+    const newRd = !!(mode === 'combat' && prev && ('rd' in m) && Math.max(1, Math.min(99, (m.rd | 0) || 1)) !== ((prev.rd | 0) || 1));   // srv-2.6.40: a/b are THIS ROUND's damage (v2.6.129) -- a new round zeroes them unless the write carries them (a bot writes rd:2 alone; round 1's damage must not become round 2's)
+    const a  = ('a'  in m) ? Math.max(0, Math.min(99, m.a | 0)) : ((prev && !newRd) ? prev.a : 0);
+    const b  = ('b'  in m) ? Math.max(0, Math.min(99, m.b | 0)) : ((prev && !newRd) ? prev.b : 0);
     const ph = ('ph' in m) ? Math.max(0, Math.min(6, m.ph | 0)) : (prev ? prev.ph : 0);   // v2.6.12: combat phase index (the rulebook's 7 steps per round)
     const rd = ('rd' in m) ? Math.max(1, Math.min(99, (m.rd | 0) || 1)) : (prev ? prev.rd : 1);   // v2.6.13: combat round counter (bumped client-side when the phase wraps)
     let duel;
@@ -796,11 +852,22 @@ const GAME_HANDLERS = {
         else delete duel[seat];                                         // duelCid:null = leave
       }
     }
-    room.tally = mode ? (mode === 'combat' ? { mode, a, b, ph, rd, duel } : { mode, a, b, ph, rd }) : null;
+    room.tally = mode ? (mode === 'combat' ? Object.assign({ mode, a, b, ph, rd, duel }, tallyCombat(m, prev)) : { mode, a, b, ph, rd }) : null;
     const out = { t:'tally', who: p.name, mode, a, b, ph, rd };
-    if(mode === 'combat') out.duel = duel;
+    if(mode === 'combat'){ out.duel = duel; for(const k of TALLY_CMB_KEYS) out[k] = room.tally[k]; }   // srv-2.6.39: the round's shared combat state rides the whole-state broadcast
     if(m.res) out.res = 1;                                              // v2.6.12: transient resolve flag -- relayed, never stored (each client closes its batch + applies its OWN clear setting)
     bcast(room, out);   // no `except`: the sender's echo is an idempotent no-op and keeps every client rendering from the SAME broadcast
+  },
+  botcfg(conn, room, p, m){
+    /* srv-2.6.43: the table's bot tempo (see botcfgMerge) -- any seated HUMAN, in the lobby or the game; a bot
+       never sets it (spectators and referees never reach this table: not a REF_VERB). Stored whole on the room,
+       broadcast whole to everyone incl. the sender (an idempotent echo, as tally). The change's log line is the
+       SENDER's own (one line, relayed like any other), so the server says nothing itself. */
+    if(p.bot) return;
+    const c = botcfgMerge(m.tempo, m.waitSecs, room.botcfg);
+    if(!c) return;
+    room.botcfg = { tempo: c.tempo, waitSecs: c.waitSecs, who: p.name };
+    bcast(room, Object.assign({ t:'botcfg' }, room.botcfg));
   },
   fx(conn, room, p, m){
     if(!room.started) return;
@@ -1001,7 +1068,7 @@ const GAME_HANDLERS = {
     const q = room.players[seat - 1];
     const ni = nextLiveSeat(room, seat - 1);
     room.turnSeat = ni + 1;
-    bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
+    turnTallyClear(room); bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
     sys(room, '\u23ed The host passed the turn for ' + (q ? q.name : ('seat ' + seat)) + '.');
   },
   hostSetClock(conn, room, p, m){
@@ -1205,7 +1272,7 @@ const GAME_HANDLERS = {
       room.players.forEach(q => { q.out = false; q.vp = 0; });   // new seating = new game
       room.turnSeat = 1;
       bcast(room, { t:'tool', kind:'seating', who: p.name, order: room.players.map(q => q.name) });
-      bcast(room, { t:'turn', seat: 1, who: room.players[0].name });
+      turnTallyClear(room); bcast(room, { t:'turn', seat: 1, who: room.players[0].name });
       rosterUpd(room);
     }
   },
@@ -1407,6 +1474,7 @@ function handle(conn, raw){
         p.sock = conn.sock; p.last = Date.now(); p.off = 0; room.everPop = true;   // v2.6.22: a seated player marks the room real
         conn.room = room; conn.player = p;
         if(m.anon === true) p.anon = true;           // v2.5.68 L2
+        if(m.bot === true) p.bot = true;             // srv-2.6.43: a bot that reconnects keeps its seat's bot flag (the flag is a self-declaration at join; after a restart it is all the census has)
         joinReply(conn.sock, room, p);
         vWarn(conn, m);
         sys(room, p.name + ' reconnected.');
@@ -1477,9 +1545,10 @@ function handle(conn, raw){
       /* The seat's owner is back without their token (new tab, cleared storage):
          the name + the room password is enough to reclaim an offline seat.   */
       ex.token = token();                      // fresh credential — the old one is dead
-      ex.sock = conn.sock; ex.last = Date.now(); ex.off = 0;
+      ex.sock = conn.sock; ex.last = Date.now(); ex.off = 0; room.everPop = true;   // srv-2.6.43: a reclaimed seat marks the room real too (the token path always did)
       conn.room = room; conn.player = ex;
       if(m.anon === true) ex.anon = true;            // v2.5.68 L2
+      if(m.bot === true) ex.bot = true;              // srv-2.6.43: see the token path
       joinReply(conn.sock, room, ex);
       vWarn(conn, m);
       sys(room, ex.name + ' reconnected.');
@@ -1758,7 +1827,7 @@ const srv = http.createServer((req, res) => {
     });
     return;
   }
-  if(req.method === 'GET' && (req.url === '/elysium-bot.js' || req.url === '/elysium-cardfx.json')){
+  if(req.method === 'GET' && BOT_STATICS.has(req.url)){
     /* srv-2.6.28 (HB2c packaging): the hotseat-bot loader (client v2.6.60, hotLoadBotRes) fetches
        BOTH files from the serving host at start. EXACT req.url match -- no decoding, no user-shaped
        path ever touches the filesystem, so traversal is structurally impossible (the same
@@ -1766,6 +1835,10 @@ const srv = http.createServer((req, res) => {
        artifacts versioned with the code (read-only is fine under the hardened unit -- the
        srv-2.6.20 EACCES class was WRITES). Cache 300 s, not vtes's 86400: the bot iterates fast,
        and the deploy ritual purges these two URLs at the edge (runbook).                        */
+    /* srv-2.6.43: + the knowledge layer's data (bot v0.6.187 / v0.6.192): elysium-twd-profile.json and
+       elysium-twd-archetypes.json. In node the bot reads them beside itself; in a browser the client fetches
+       them from here and hands them to the bot (twdProfile / twdArchetypes). Still an exact Set.has(req.url) --
+       nothing decoded, nothing pattern-matched -- and still purged at the edge on deploy (four URLs now).  */
     const nm = req.url.slice(1);
     fs.readFile(path.join(__dirname, nm), (err, data) => {
       if(err){ res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
@@ -1934,17 +2007,54 @@ function makeAsyncFileWriter(finalPath){                  // H1-d: non-blocking 
   };
 }
 const writeStore = makeAsyncFileWriter(STORE);
+/* srv-2.6.43: one room <-> its snapshot record, as two pure functions (the dispatch suite round-trips them).
+   Found while adding botcfg here -- the snapshot had never carried:
+     boardMode  a restored Classic table told every rejoining client it was Structured (joinReply defaults it);
+     refHash    a restored room lost its referee password ('This room has no referee password.');
+     matchMins  a new match in a restored room started without its clock;
+     everPop    srv-2.6.22's squatter flag: a restored room read as a NEVER-SEATED shell, and the first
+                10-minute sweep after a restart deleted every table whose players had not come back yet --
+                'the table survives a restart' held only for tables someone rejoined within minutes;
+     p.bot      the srv-2.6.36 census (humansLeft) counted a restored bot as a human.
+   A legacy record (no everPop) that holds players WAS populated. Unknown / bad values fall back exactly as
+   the create path would build them. */
+function roomSnap(r){
+  return {
+    name: r.name, passHash: r.passHash, hostToken: r.hostToken, created: r.created,
+    chat: r.chat !== false, specChat: r.specChat !== false, started: r.started !== false,
+    turnSeat: r.turnSeat || null, matchEnd: r.matchEnd || null,
+    reactSecs: r.reactSecs || 5, timeCalled: !!r.timeCalled, escrowSalt: r.escrowSalt || null, tournLock: !!r.tournLock, hasPass: !!r.hasPass, ledger: (r.ledger || []).slice(-800),
+    helperPolicy: r.helperPolicy || null,
+    boardMode: r.boardMode === 'classic' ? 'classic' : 'structured', refHash: r.refHash || null, matchMins: r.matchMins || 0, everPop: !!r.everPop,
+    botcfg: r.botcfg || null,
+    players: r.players.map(p => ({ name: p.name, token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon || undefined,
+      bot: p.bot ? true : undefined,
+      vp: p.vp || 0, out: !!p.out, game: p.game || null, handBlob: p.handBlob || null }))
+  };
+}
+function roomUnsnap(r){
+  const players = (r.players || []).map(p => ({ name: p.name, token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon,
+    sock: null, last: Date.now(), off: Date.now(), bot: p.bot === true ? true : undefined,
+    vp: p.vp || 0, out: !!p.out, game: p.game || null, handBlob: p.handBlob || null }));
+  const bc = (r.botcfg && typeof r.botcfg === 'object') ? botcfgMerge(r.botcfg.tempo, r.botcfg.waitSecs, null) : null;
+  const mm = r.matchMins | 0;
+  return {
+    name: r.name, passHash: r.passHash || (r.pass != null ? passHash(r.pass) : passHash('')), hostToken: r.hostToken || null,
+    created: r.created || Date.now(), turnSeat: r.turnSeat || null,
+    matchEnd: r.matchEnd || null, reactSecs: r.reactSecs || 5, escrowSalt: r.escrowSalt || token(),
+    helperPolicy: cleanHelperPolicy(r.helperPolicy),
+    chat: r.chat !== false, specChat: r.specChat !== false, started: r.started !== false, tournLock: !!r.tournLock, hasPass: !!r.hasPass, ledger: Array.isArray(r.ledger) ? r.ledger.slice(-800) : [],
+    timeCalled: !!r.timeCalled, watchers: [],
+    boardMode: r.boardMode === 'classic' ? 'classic' : 'structured', refHash: (typeof r.refHash === 'string' && r.refHash) ? r.refHash : null,
+    matchMins: (mm >= 5 && mm <= 600) ? mm : 0,
+    everPop: r.everPop === true || players.length > 0,
+    botcfg: bc ? { tempo: bc.tempo, waitSecs: bc.waitSecs, who: String(r.botcfg.who || '').slice(0, 64) } : null,
+    players
+  };
+}
 function snapshot(sync){
   try{
-    const data = [...rooms.values()].map(r => ({
-      name: r.name, passHash: r.passHash, hostToken: r.hostToken, created: r.created,
-      chat: r.chat !== false, specChat: r.specChat !== false, started: r.started !== false,
-      turnSeat: r.turnSeat || null, matchEnd: r.matchEnd || null,
-      reactSecs: r.reactSecs || 5, timeCalled: !!r.timeCalled, escrowSalt: r.escrowSalt || null, tournLock: !!r.tournLock, hasPass: !!r.hasPass, ledger: (r.ledger || []).slice(-800),
-      helperPolicy: r.helperPolicy || null,
-      players: r.players.map(p => ({ name: p.name, token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon || undefined,
-        vp: p.vp || 0, out: !!p.out, game: p.game || null, handBlob: p.handBlob || null }))
-    }));
+    const data = [...rooms.values()].map(roomSnap);   // srv-2.6.43: one pure function per direction (the dispatch suite round-trips them)
     const json = JSON.stringify(data);
     if(sync){ fs.writeFileSync(STORE + '.tmp', json); fs.renameSync(STORE + '.tmp', STORE); }   // exit path only: the process is leaving, sync is CORRECT here (async would race process.exit)
     else writeStore(json);                                // H1-d: the 60s tick no longer blocks the event loop
@@ -1958,17 +2068,7 @@ function restore(){
     let n = 0;
     for(const r of data){
       if(!r || !r.name || rooms.has(r.name)) continue;
-      rooms.set(r.name, {
-        name: r.name, passHash: r.passHash || (r.pass != null ? passHash(r.pass) : passHash('')), hostToken: r.hostToken || null,
-        created: r.created || Date.now(), turnSeat: r.turnSeat || null,
-        matchEnd: r.matchEnd || null, reactSecs: r.reactSecs || 5, escrowSalt: r.escrowSalt || token(),
-        helperPolicy: cleanHelperPolicy(r.helperPolicy),
-        chat: r.chat !== false, specChat: r.specChat !== false, started: r.started !== false, tournLock: !!r.tournLock, hasPass: !!r.hasPass, ledger: Array.isArray(r.ledger) ? r.ledger.slice(-800) : [],
-        timeCalled: !!r.timeCalled, watchers: [],
-        players: (r.players || []).map(p => ({ name: p.name, token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon,
-          sock: null, last: Date.now(), off: Date.now(),
-          vp: p.vp || 0, out: !!p.out, game: p.game || null, handBlob: p.handBlob || null }))
-      });
+      rooms.set(r.name, roomUnsnap(r));   // srv-2.6.43: see roomSnap / roomUnsnap
       n++;
     }
     if(n) console.log('[boot] restored ' + n + ' room(s) from disk — token rejoin works as usual');
