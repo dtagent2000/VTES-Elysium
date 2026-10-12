@@ -76,3 +76,22 @@ A change that needs both sides still goes contract first (your PR), bot second (
   200 ms maneuver window, the R6 audit, a bleed-modifier grace outside the tempo, hold during bot-vs-bot combat vs
   the 2 s handshake. None needs a contract change yet.
 - `twd_decks.json` (10 MB) is ignored by git on purpose; only our profile build reads it.
+
+## 8. Your chat project, after the sync (what we did on the bot side today — same recipe)
+
+Once your PR is merged, slim the client Claude project to TWO files and delete the rest — every other file is a
+copy of something in git and will drift the moment someone commits:
+
+1. **The project instruction** (the paste-in text): "The repo is the truth: https://github.com/dtagent2000/VTES-Elysium —
+   `client/` is ours, `bot/` is the bot project's, the root is the download. Clone, read root `CLAUDE.md` and
+   `client/CLAUDE.md` first, then your journal (newest first), context, learnings. Branch from `main` → change →
+   gates → living docs → commit + push often → PR against `main`; Johan merges. Never touch `bot/`; needs go as a
+   handoff/reply under `client/docs/`. A release = copy client, server and start scripts from `client/` to the root —
+   never edit the root in place." Keep your own gate list and release ritual as they are today; only the file
+   locations change.
+2. **A one-page `START-HERE-CLIENT-CHAT.md`** (also committed in `client/docs/` so it stays current): repo link,
+   current versions and gate numbers, the first five commands, where things are, what is open. Ours is
+   `bot/docs/START-HERE-BOTS-CHAT.md` — copy its shape.
+
+Do it only after the sync PR is merged, so the instruction points at folders that exist. Memory needs nothing from
+Johan: the repo fact is already filed from today's chats.
