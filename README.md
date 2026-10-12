@@ -1,5 +1,5 @@
 # VTES-Elysium
-Digital card game client for Vampire the Eternal Struggle, playable online through private server hosting and offline for tutorial, testing or hot-seat play.
+Digital card game client for Vampire the Eternal Struggle, playable online at https://elysium.cards, through private server hosting as well as offline for tutorial, testing or hot-seat play.
 
 The scope of this project is to be a game client with an intuitive UI/UX of modern fidelity that will facilitate synchronized play between multiple people online. It has several basic helper features like a deck builder and small server solution so you can play with your friend group, but players are encouraged to use other specialized tools for deck-building and welcomes other server solutions to facilitate more robust and safe online play with unknown people as well as tournament organization.
 
