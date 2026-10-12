@@ -51,7 +51,7 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 - `client/docs/handoffs/` — our replies to the bot project (`REPLY-to-bot-<date>-<their version>.md`).
   Their handoffs to us: `bot/docs/handoffs/HANDOFF-to-main-*.md`.
 - `/` — the download, a byte copy of releases. `check-versions.js` fails when it drifts.
-- `bot/` — the bot project. Read it (their handoffs, their START-HERE-BOTS.html, their code when a claim needs
+- `bot/` — the bot project; its own one-pager is `bot/docs/START-HERE-BOTS-CHAT.md`. Read it (their handoffs, their START-HERE-BOTS.html, their code when a claim needs
   checking); never write to it.
 
 ## How a round goes

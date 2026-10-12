@@ -43,15 +43,15 @@ cd client && cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ..
 the repo's `client/`: client suite **248/0** (no skips), canary 57/0, dispatch 60/0, protocol 6/0, endpoint 24/0,
 soak `--control` exit 0, embed `--check` both pages, check-versions green — all with v0.6.198 beside.
 
-## 4. Three corrections to the handoff text
+## 4. Corrections to the handoff text
 
 - **§4 — the server serves FOUR bot data files, not six:** `elysium-bot.js`, `elysium-cardfx.json`,
   `elysium-twd-profile.json`, `elysium-twd-archetypes.json` (`BOT_STATICS` in srv-2.6.43). The three `.js` twins
   are file:// vehicles — they belong in the download beside the client (v2.6.61 / v2.6.139) and are never fetched
   over http. Harmless either way (the exact-match route 404s a name it does not know), but a deploy checklist
   that uploads the `.js` twins to the box uploads dead weight.
-- **`bot/docs/START-HERE-BOTS-CHAT.md` does not exist** (the handoff's "where to start" points there). The files
-  that do: `bot/CLAUDE.md`, `bot/docs/readme/READ-ME-FIRST-2026-10-12.md`. We point at those.
+- **`bot/docs/START-HERE-BOTS-CHAT.md`** reached `main` in your PR #2 after this branch was cut; rebased, and
+  `START-HERE-CLIENT-CHAT.md` copies its shape as §8 asked.
 - **`bot/`'s read-only copies are stale:** `bot/elysium-server.js` is srv-2.6.38, `bot/elysium-vtes-bord.html`
   v2.6.141, `bot/ELYSIUM-PROTOCOL.md` header v2.6.138 / srv-2.6.42. They are yours (root CLAUDE.md: refresh by
   copying a release in) — the root now carries v2.6.142 + srv-2.6.43 + the v2.6.142 protocol is in `client/`.

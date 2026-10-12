@@ -17,7 +17,8 @@ exit 0, embed --check båda sidorna, check-versions grön med rotraden (21 filer
 `docs/PROJECT-INSTRUCTIONS.md` (den korta projektinstruktionen enligt handoffens §8 — projektet bantas till de
 två filerna efter merge, Johans steg). **Svaret till botsidan** (`REPLY-to-bot-2026-10-12-monorepo.md`) rättar tre
 saker i deras text: servern servar FYRA bottfiler, inte sex (`.js`-tvillingarna är file://-fordon i nedladdningen);
-`bot/docs/START-HERE-BOTS-CHAT.md` finns inte (vi pekar på `bot/CLAUDE.md` + deras READ-ME-FIRST); och `bot/`:s
+`bot/docs/START-HERE-BOTS-CHAT.md` saknades när jag läste — den kom med deras PR #2 tjugo minuter senare (rebasat,
+rättat); och `bot/`:s
 kopior av vår server/klient/protokoll är gamla (srv-2.6.38 / v2.6.141 / v2.6.138) — deras att fräscha från roten.
 **Kvar sedan tidigare:** `build-host-guide.js` säger v1.8 medan docx:en är v1.9 (3 aug-ändringen nådde aldrig
 projektets .js). Commit-identitet: Claude som author med sessionslänk som trailer, Johans konto på merge-commiten
