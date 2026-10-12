@@ -4,6 +4,10 @@
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
 
+**12 Oct 2026 (no code, NOTHING OF THEIRS IN THE REPO):**
+- **Hosting a third-party file and fetching it at run time are different acts, even for a public file (12 Oct).** The client has always fetched KRCG's `vtes.json` from KRCG; a copy committed to the repo is us redistributing it. Gitignore such inputs and write the fetch line where the gate that needs them is documented.
+- **An onboarding page's file list drifts behind the help page embedded in the client (12 Oct).** `START-HERE.html` listed three bot files; the in-client help listed seven. Both describe the same download — grep both whenever the bundle changes.
+
 **12 Oct 2026 (no code, THE REPO IS THE TRUTH — the monorepo sync):**
 - **A "root equals the halves" gate must know which half owns each file (12 Oct).** The first root gate compared every root file against `bot/` first and `client/` second, so a stale root server passed because it matched `bot/`'s read-only copy of srv-2.6.38. The gate now names the eight bundle files as `bot/`'s and everything else as `client/`'s; a file nobody owns is a warning. A gate that accepts "matches something" is not a gate.
 - **Suites that read neighbours from `__dirname` want the files copied, not the code changed (12 Oct).** The bot bundle lives at the root and in `bot/`; our suites, canary, soak and `embed-help.js --check` read it from beside themselves. Copying it into `client/` (gitignored) keeps the suites' lookup rule and the consume model intact; teaching every tool a second path would have been a change in eight places for one convenience.

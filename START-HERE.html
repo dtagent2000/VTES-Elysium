@@ -37,7 +37,7 @@
 <main>
   <h1>ELYSIUM</h1>
   <p class="sub">A digital table for Vampire: The Eternal Struggle</p>
-  <p class="vline">Version 1.8 &nbsp;·&nbsp; free &nbsp;·&nbsp; no account &nbsp;·&nbsp; everything runs in the browser</p>
+  <p class="vline">Version 1.9 &nbsp;·&nbsp; free &nbsp;·&nbsp; no account &nbsp;·&nbsp; everything runs in the browser</p>
 
   <section>
     <span class="tag">The easy way — no server at all</span>
@@ -55,7 +55,7 @@
     <p class="big">One person at the table runs the server. This is all of it:</p>
     <ol>
       <li><b>Install Node.js</b> (the engine that runs the server): go to <a href="https://nodejs.org">nodejs.org</a>, download the <b>LTS</b> version, run the installer and click through with the defaults. Done in two minutes.</li>
-      <li><b>Download the Elysium files from the project's GitHub page</b> (the same place this guide lives) <b>and put them in a folder of their own</b>: the server <code>elysium-server.js</code>, the client <code>elysium-vtes-bord.html</code>, the launchers (<code>start-elysium</code>, <code>start-elysium-guided</code> and <code>start-cloudflare-tunnel</code> for your system), and — if your table wants bot opponents in hotseat — <code>elysium-bot.js</code>, <code>elysium-cardfx.json</code> and <code>elysium-cardfx.js</code> (see <code>START-HERE-BOTS.html</code>).</li>
+      <li><b>Download the Elysium files from the project's GitHub page</b> (the same place this guide lives) <b>and put them in a folder of their own</b>: the server <code>elysium-server.js</code>, the client <code>elysium-vtes-bord.html</code>, the launchers (<code>start-elysium</code>, <code>start-elysium-guided</code> and <code>start-cloudflare-tunnel</code> for your system), and — if your table wants bot opponents in hotseat — <code>elysium-bot.js</code>, <code>elysium-cardfx.json</code> / <code>.js</code>, <code>elysium-twd-profile.json</code> / <code>.js</code> and <code>elysium-twd-archetypes.json</code> / <code>.js</code> (see <code>START-HERE-BOTS.html</code>). The card database and card images are fetched by the client from KRCG (<code>static.krcg.org</code>) as it runs; nothing of theirs is shipped here.</li>
       <li><b>Start the server:</b><br>
         <b>Windows</b> — double-click <code>start-elysium.bat</code>.<br>
         <span class="note" style="display:block;margin:4px 0">Want a <b>server password</b> (a locked door for the whole server), a <b>server referee key</b> (only needed if you want to restrict who may create rooms), or a <b>single-room server</b>? Double-click <code>start-elysium-guided</code> instead — it asks a few questions and starts with the right options. The plain launcher stays the zero-questions default.</span>

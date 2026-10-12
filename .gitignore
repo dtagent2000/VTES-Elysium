@@ -6,6 +6,10 @@ bot/progress.txt
 # TWDA raw data (10 MB input, rebuild the profile with bot/twd-profile.py)
 bot/twd_decks.json
 twd_decks.json
+# KRCG card database (theirs, not hosted here): download into bot/ before test-cardfx.js / the profile tools
+#   curl -o bot/vtes.json https://static.krcg.org/data/vtes.json
+vtes.json
+bot/vtes.json
 # scratch
 __pycache__/
 node_modules/
