@@ -3614,6 +3614,105 @@ testB('v2.6.142 LIVE: the badge and the REAL bot agree on the hold -- the bot\'s
     eq(A.hotHoldBy.size, 0);
   } finally { A.MP_HANDLERS.say = origSay; delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); A.net.roster = []; }
 });
+/* ---------- v2.6.143: THE TABLE LISTENS (a player's first-night feedback) ---------- */
+const ADV_DB = [   // KRCG's real v3 shape for the three ways cards share a bare name: a vampire + its advanced version, an old vampire + its new-group reprint, and a card alone
+  { id: 1, name: 'Alan Sovereign (G3)', _name: 'Alan Sovereign', printed_name: 'Alan Sovereign', name_variants: ['Alan Sovereign'], types: ['Vampire'], card_text: 'BASE text', capacity: 6, group: '3' },
+  { id: 2, name: 'Alan Sovereign (G3 ADV)', _name: 'Alan Sovereign', printed_name: 'Alan Sovereign', name_variants: ['Alan Sovereign (ADV)'], adv: true, types: ['Vampire'], card_text: 'ADVANCED text', capacity: 6, group: '3' },
+  { id: 3, name: 'Theo Bell (G2)', _name: 'Theo Bell', printed_name: 'Theo Bell', name_variants: ['Theo Bell'], types: ['Vampire'], card_text: 'OLD Theo', capacity: 7, group: '2' },
+  { id: 4, name: 'Theo Bell (G6)', _name: 'Theo Bell', printed_name: 'Theo Bell', types: ['Vampire'], card_text: 'NEW Theo', capacity: 8, group: '6' },
+  { id: 5, name: 'Tegyrius, Vizier (G2 ADV)', _name: 'Tegyrius, Vizier', printed_name: 'Tegyrius, Vizier', name_variants: ['Tegyrius (G2 ADV)', 'Tegyrius, Vizier (ADV)', 'Tegyrius (ADV)'], adv: true, types: ['Vampire'], card_text: 'ADV Tegyrius', capacity: 9 },
+  { id: 6, name: 'Blood Doll', _name: 'Blood Doll', printed_name: 'Blood Doll', types: ['Master'], card_text: 'doll' }
+];
+test('v2.6.143: every export spelling of an advanced vampire is a known name -- "Name (ADV)" lives only in KRCG\'s name_variants, which the v3 parser never read', () => {
+  if (!API.buildCardIndex || !API.cardIsAdv) throw new Error('buildCardIndex / cardIsAdv not exposed (harness needs updating)');
+  const ix = API.buildCardIndex(ADV_DB), N = API.norm;
+  for (const nm of ['Alan Sovereign (ADV)', 'Alan Sovereign (G3 ADV)', 'Tegyrius (ADV)', 'Tegyrius, Vizier (ADV)', 'Tegyrius (G2 ADV)'])
+    assert(ix.map.get(N(nm)), nm + ' is known');
+  eq(ix.info.get(N('Alan Sovereign (ADV)')).text, 'ADVANCED text', 'and it is the advanced card');
+  const deck = API.parseDeck('Crypt (12 cards)\n2x Alan Sovereign (ADV)     6 AUS DOM for pre  Ventrue:3\n2x Alan Sovereign           6 AUS DOM for      Ventrue:3\n1x Tegyrius, Vizier (ADV)\nLibrary (1)\n1x Blood Doll\n1x Not A Card\n');
+  eq(API.deckUnknownNames(deck, ix.map).join('|'), 'Not A Card', 'a VDB-style list with advanced vampires passes the Legal-cards gate; a real misspelling is still caught');
+  eq(API.cardIsAdv(ADV_DB[1]), true); eq(API.cardIsAdv(ADV_DB[0]), false);
+  eq(API.cardIsAdv({ name: 'X (G1 ADV)' }), true, 'v3 without the flag: the name says so');
+  eq(API.cardIsAdv({ printed_name: 'X', suffix: 'G1 ADV', kind: 'Crypt' }), true, 'v5: the suffix says so');
+  eq(API.cardIsAdv({ name: 'Advocate' }), false, 'a name that merely contains the letters is not advanced');
+});
+test('v2.6.143: the bare name belongs to the card KRCG names it for -- the base vampire, the older printing -- in ANY file order (last-wins gave it to the advanced card and the reprint)', () => {
+  const N = API.norm;
+  for (const list of [ADV_DB, ADV_DB.slice().reverse()]) {
+    const ix = API.buildCardIndex(list);
+    eq(ix.info.get(N('Alan Sovereign')).text, 'BASE text', 'the bare name is the base vampire');
+    eq(ix.info.get(N('Alan Sovereign (G3)')).text, 'BASE text');
+    eq(ix.info.get(N('Theo Bell')).text, 'OLD Theo', 'the bare name is the printing whose name_variants claims it');
+    eq(ix.info.get(N('Theo Bell (G6)')).text, 'NEW Theo', 'the reprint keeps its own full name');
+    eq(ix.info.get(N('Theo Bell (G6)')).cap, 8);
+    eq(ix.info.get(N('Tegyrius, Vizier')).text, 'ADV Tegyrius', 'a bare name nobody else claims still resolves (weak fill)');
+    eq(ix.info.get(N('Blood Doll')).text, 'doll');
+    eq(ix.imgNames.has('alansovereigng3adv'), true, 'the image names are untouched');
+  }
+  const two = API.buildCardIndex([{ name: 'Z (G1 ADV)', _name: 'Z', adv: true, types: ['Vampire'], card_text: 'adv' }, { name: 'Z (G1)', _name: 'Z', types: ['Vampire'], card_text: 'base' }]);
+  eq(two.info.get('z').text, 'base', 'with no name_variants at all, a base card still displaces an advanced card\'s hold on the bare name');
+  const rev = API.buildCardIndex([{ name: 'Z (G1)', _name: 'Z', types: ['Vampire'], card_text: 'base' }, { name: 'Z (G1 ADV)', _name: 'Z', adv: true, types: ['Vampire'], card_text: 'adv' }]);
+  eq(rev.info.get('z').text, 'base', 'in either order');
+});
+test('v2.6.143: the v5 shape keeps its rule -- a suffixed card\'s printed_name is weak, its name_variants are strong', () => {
+  const v5 = (suffix, variants, text) => ({ printed_name: 'Kemintiri', suffix, kind: 'Crypt', name_variants: variants.map(n => ({ type: 'Lexicographical', name: n })), prints: [], types: ['Vampire'], text });
+  for (const list of [[v5('G2', ['Kemintiri', 'Kemintiri (G2)'], 'base'), v5('G2 ADV', ['Kemintiri (ADV)', 'Kemintiri (G2 ADV)'], 'adv')]]) for (const l of [list, list.slice().reverse()]) {
+    const ix = API.buildCardIndex(l);
+    eq(ix.info.get('kemintiri').text, 'base'); eq(ix.info.get('kemintiriadv').text, 'adv'); eq(ix.info.get('kemintirig2adv').text, 'adv');
+  }
+});
+test('v2.6.143: a precon list and the catalog keep an advanced vampire as its own entry, under the name the importer reads', () => {
+  const A = loadClient(CLIENT);
+  const sets = { 'Test Set': [{ precon: 'Starter', copies: 1, release_date: '2001-01-01' }] };
+  A.processCardData([Object.assign({}, ADV_DB[0], { sets }), Object.assign({}, ADV_DB[1], { sets })], 'test-fixture');
+  const pc = A.precons.get('Test Set :: Starter'); assert(pc, 'the precon was built');
+  eq(A.catalog.legacy.concat(A.catalog.v5).map(c => c.name).sort().join('|'), 'Alan Sovereign|Alan Sovereign (ADV)', 'the catalog lists both');
+  const names = [...pc.crypt.keys()].sort().join('|');
+  eq(names, 'Alan Sovereign|Alan Sovereign (ADV)', 'two entries (the bare _name merged them into one before)');
+  for (const nm of pc.crypt.keys()) assert(A.cardInfo.get(A.norm(nm)), nm + ' resolves in the same database');
+});
+test('v2.6.143: the lobby die is a D20 and every roll names its die; a die from the right-click menu lands in the lobby list too', () => {
+  const A = loadClient(CLIENT);
+  if (!A.rollLine || !A.lobbyRollPush) throw new Error('rollLine / lobbyRollPush not exposed (harness needs updating)');
+  eq(A.LOBBY_DIE, 20);
+  eq(A.rollLine('Anna', 14, 20), 'Anna rolled <b>14</b> (D20)');
+  eq(A.rollLine('<b>x</b>', 3, 6), '&lt;b&gt;x&lt;/b&gt; rolled <b>3</b> (D6)', 'the name is escaped');
+  A.net.lobby = false; A.net.rolls = [];
+  eq(A.lobbyRollPush('x'), false, 'no lobby: the caller keeps its toast'); eq(A.net.rolls.length, 0);
+  A.net.lobby = true;
+  A.MP_HANDLERS.roll({ who: 'Anna', n: 14, sides: 20 });
+  A.MP_HANDLERS.roll({ who: 'Old', n: 4 });                       // a pre-2.6.143 client's roll carries no sides to an old server -> the server's default
+  A.MP_HANDLERS.tool({ kind: 'die', who: 'Erik', n: 12, result: 7 });
+  A.MP_HANDLERS.tool({ kind: 'coin', who: 'Erik', result: 'Heads' });
+  eq(A.net.rolls.join(' / '), 'Anna rolled <b>14</b> (D20) / Old rolled <b>4</b> (D6) / Erik rolled <b>7</b> (D12)', 'lobby die, legacy die and menu die in one list; a coin is not a roll');
+  for (let i = 0; i < 14; i++) A.MP_HANDLERS.tool({ kind: 'die', who: 'E', n: 20, result: i + 1 });
+  eq(A.net.rolls.length, 10, 'the list keeps the last ten');
+  A.net.lobby = false; A.net.rolls = [];
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("$('#lobRoll').addEventListener('click',()=>mpSend({t:'roll', sides:LOBBY_DIE}));") > 0, 'the button sends the die');
+  eq(html.indexOf("mpSend({t:'roll'})"), -1, 'and no caller rolls without one');
+  assert(/id="lobRoll"[^>]*>🎲 Roll a D20<\/button>/.test(html), 'the button says which die');
+  const srv = require('fs').readFileSync(require('path').join(__dirname, 'elysium-server.js'), 'utf8');
+  assert(srv.indexOf("const sides = (m.sides >= 2 && m.sides <= 100) ? (m.sides | 0) : 6;") > 0, 'the server already takes sides (no server change, no wire change)');
+});
+test('v2.6.143: the dock pin has ONE setter -- the visible button, the background click and every release go through setDockPin', () => {
+  const A = loadClient(CLIENT);
+  if (!A.setDockPin) throw new Error('setDockPin not exposed (harness needs updating)');
+  eq(A.dockPinned, false);
+  A.setDockPin(true); eq(A.dockPinned, true);
+  A.setDockPin(false); eq(A.dockPinned, false);
+  A.setDockPin(true);
+  A.__stubEl.classList._t.add('l2dockopen');
+  try { A.setL2Dock(false); } finally { A.__stubEl.classList._t.delete('l2dockopen'); }
+  eq(A.dockPinned, false, 'a close that executes releases the pin');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(/<div class="zone" id="z-hand"><span class="zlabel">Hand<\/span><button type="button" id="l2dockPin" aria-pressed="false"/.test(html), 'the button sits beside the Hand label');
+  assert(html.indexOf('#board.l2dockopen #l2dockPin{ display:inline-flex; }') > 0, 'and shows whenever the dock is open');
+  assert(html.indexOf("_pb.addEventListener('click', e=>{ e.stopPropagation(); setDockPin(!dockPinned); });") > 0, 'a click toggles');
+  eq((html.match(/dockPinned\s*=\s*(true|false|!!on)/g) || []).join(), 'dockPinned=false,dockPinned=!!on', 'the flag is assigned at its declaration and in the setter only');
+  eq((html.match(/classList\.(add|remove|toggle)\('pinned'/g) || []).length, 1, 'and the glowing edge moves in the setter only');
+  assert(html.indexOf("#l2dockClose,#l2dockbg,#l2dockPin')) return;") > 0, 'a click on the pin never starts a marquee');
+});
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

@@ -1,3 +1,50 @@
+## [BORDET LYSSNAR] — v2.6.143: advanced-korten, D20 i lobbyn, en pin-knapp man ser (12 oktober 2026, natt)
+
+En spelare skrev efter sin första kväll: importen vägrade advanced-kort, lobbytärningen är en D6, platsvalet var
+oklart, handen fälldes ihop och ingen såg någon pin, poolmarkören flyttade sig, tre av fyra Condemnation i
+öppningshanden, och fyra kryptkort som vändes av misstag. Johan: dekonstruera och se vad som går att laga.
+
+**Först mätt, sedan byggt.** v2.6.142 kördes först (248/0). Varje punkt lästes i koden och de som gick att
+återskapa återskapades:
+- *Advanced-korten:* alla exporter skriver "Kemintiri (ADV)"; KRCG:s namn är "Kemintiri (G2 ADV)" och
+  exportformen står bara i `name_variants`, som v3-parsern aldrig läste (den levande filen är fortfarande v3).
+  65 av 65 okända, och "Legal cards only" är på från start → tvärstopp. Återskapat i headless Chromium genom den
+  riktiga importrutan med KRCG:s fil: v2.6.142 vägrar, v2.6.143 sätter 72 kort på bordet.
+- *Fel text på rätt kort (ingen hade rapporterat det):* `_name` delas av basvampyren och dess advanced-version, och
+  av gamla vampyrer och deras nytryck i ny grupp. Sist-vinner gav det nakna namnet till advanced-kortet för 63 av
+  65 par och till nytrycket för ett dussin (Theo Bell, Mithras, Queen Anne…).
+- *Tärningen:* knappen skickade aldrig `sides`, serverns reserv är 6. Fyra spelare slår lika i 72 % av fallen med
+  D6, 27 % med D20.
+- *Slumpen:* frisk. Fisher–Yates över kryptoslump med omdragning (ingen modulo-skevhet), samma i klient och
+  server. 900 000 blandningar med produktionsfunktionen och 3 miljoner servergivar följer den exakta
+  hypergeometriska fördelningen. 3 av 4 kopior i öppningshanden ur 90 kort: 1 på 870. En första körning på
+  120 000 givar visade 27 % för få sådana händer (3σ) — större stickprov rättade det; värt att minnas åt båda håll.
+
+**Byggt (Johan: "kör på 1"):**
+- `buildCardIndex(list)` — utbruten ur `processCardData`, ren. Regel: kortets eget namn och dess `name_variants`
+  är starka anspråk och vinner alltid; `_name`/`printed_name` fyller bara ett namn ingen gjort anspråk på, baskort
+  före advanced. Oberoende av filordning (mätt framlänges och baklänges på riktiga filen: 0 fel av 6 551 nycklar).
+  `buildPrecons` listar advanced-kortet som egen rad ("Namn (ADV)").
+- `LOBBY_DIE=20`, `rollLine` (tärningen nämns alltid), `lobbyRollPush` — högerklicksmenyns tärning hamnar nu också
+  i lobbyns lista. Ingen server- eller protokolländring.
+- `#l2dockPin` — en riktig knapp bredvid Hand-etiketten när dockan är öppen; `setDockPin` är enda stället flaggan
+  sätts. Att lossa via knappen stänger inte dockan, den lämnas åt hover-regeln; bakgrundsklicket fungerar som förr.
+  Körd med riktig mus i Chromium på båda bordstyperna och granskad på skärmbild.
+
+**Designval:** bildnamnen rördes inte — KRCG verkar servera alias-filer för varianterna (`…adv.webp` svarar som en
+känd bild, ett påhittat namn som 404), men det är en slutsats av svarsklasser, inte en sedd bild. Ägarregeln gjordes
+generell (starkt/svagt anspråk) i stället för ett specialfall för ADV, eftersom nytrycken hade samma fel.
+
+**Inte byggt, Johans beslut (runda 2):** på fria bordet vänder ett GRUPPdrag av uncontrolled-kort upp dem
+(`groupDrop`), medan ett enkeldrag behåller baksidan — troligen så de fyra kryptkorten avslöjades (läst, inte
+kört); handen öppen som standard; en hostknapp "Slumpa platser" (kräver servern). Poolgloben: inte utredd.
+
+**Verifierat:** syntaxrent, 254/254 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.142: 6 röda = de
+6 nya), canary 57/0, dispatch 60/0, protokoll 6/0, endpoint 24/0, soak-kontroll exit 0, B1 byte-identisk
+1 496 021, embed --check båda sidorna, check-versions grön inkl. rotgrinden.
+**Väntar på live-test:** pin-knappen på pekskärm; att advanced-bilderna faktiskt laddas från KRCG; lobbylistan med
+flera riktiga klienter.
+
 ## [INGET AV ANDRAS I REPOT] — vtes.json ut, START-HERE v1.9 (12 oktober 2026, ingen kod)
 
 Inventeringen av roten efter mergen: bara våra egna filer hostas (24 st), och allt guiderna namnger finns där.

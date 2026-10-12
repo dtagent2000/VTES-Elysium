@@ -1,6 +1,6 @@
 # SKILLS.md — Elysium Development Recipes
 
-> Step-by-step patterns for recurring development tasks, distilled from ~26 sessions of implementation. Each recipe lists the exact touch-points in the codebase and the order they must be done in. Read `CLAUDE.md` for the project overview and constraints. **B1 roundtrip, corrected recipe (12 July):** `split_client.py` reads `/tmp/original.html` and writes fragments to `/home/claude/elysium-src` — but `elysium-build.js` reads `ROOT/elysium-src` (next to the build script). ALWAYS: (1) `cp` the edited client to `/tmp/original.html`, (2) split, (3) `rm -rf elysium-src && cp -r /home/claude/elysium-src elysium-src`, (4) build to a SCRATCH file (`node elysium-build.js /tmp/rebuilt.html`) and `cmp` against the original — never trust the default-overwrite path: a stale fragment dir once produced a byte-identical FALSE PASS against pre-edit content. **Reflects Elysium v2.6.128 (client v2.6.142 / server v2.6.43 / bot v0.6.198 -- v2.6.142: the consume recipe drives the client's mirrors of bot rules (the hold badge) against the real bot; v2.6.141: the consume recipe notes partial 'changed today' zips; v2.6.140: consuming a bot release has its own recipe, "Consume a bot release"; v2.6.139: a TABLE-STATE verb (botcfg) -- see the new recipe "Add a table-state verb"; the room snapshot is ONE pure pair (roomSnap / roomUnsnap); v2.6.128: the Help modal's ids are helpDoc*, a duplicate-id suite pin; HELP INSIDE THE CLIENT 22 Sep: Help… submenu, START-HERE pages embedded as <template>s + embed-help.js; BOT-CARD CONTROLS 22 Sep: card verbs on a bot seat ride the bridge too, see "Referee verbs on a bot seat"; THE PARITY ROUND 21 Sep: hotBridge owns the server's table state (tally / out / VP) -- see the new recipe "Mirror a server handler in hotBridge"; LITE MODE 9 Sep: the Lite/Full interface mode (see the new recipe "Gate a feature by interface mode (Lite/Full)"), the card database on by default, Tournament lock always on (its checkbox left Create game at v2.6.116), the alpha pill on bot seats. Prior rounds in elysium-CHANGELOG.md.)**
+> Step-by-step patterns for recurring development tasks, distilled from ~26 sessions of implementation. Each recipe lists the exact touch-points in the codebase and the order they must be done in. Read `CLAUDE.md` for the project overview and constraints. **B1 roundtrip, corrected recipe (12 July):** `split_client.py` reads `/tmp/original.html` and writes fragments to `/home/claude/elysium-src` — but `elysium-build.js` reads `ROOT/elysium-src` (next to the build script). ALWAYS: (1) `cp` the edited client to `/tmp/original.html`, (2) split, (3) `rm -rf elysium-src && cp -r /home/claude/elysium-src elysium-src`, (4) build to a SCRATCH file (`node elysium-build.js /tmp/rebuilt.html`) and `cmp` against the original — never trust the default-overwrite path: a stale fragment dir once produced a byte-identical FALSE PASS against pre-edit content. **Reflects Elysium v2.6.128 (client v2.6.143 / server v2.6.43 / bot v0.6.198 -- v2.6.142: the consume recipe drives the client's mirrors of bot rules (the hold badge) against the real bot; v2.6.141: the consume recipe notes partial 'changed today' zips; v2.6.140: consuming a bot release has its own recipe, "Consume a bot release"; v2.6.139: a TABLE-STATE verb (botcfg) -- see the new recipe "Add a table-state verb"; the room snapshot is ONE pure pair (roomSnap / roomUnsnap); v2.6.128: the Help modal's ids are helpDoc*, a duplicate-id suite pin; HELP INSIDE THE CLIENT 22 Sep: Help… submenu, START-HERE pages embedded as <template>s + embed-help.js; BOT-CARD CONTROLS 22 Sep: card verbs on a bot seat ride the bridge too, see "Referee verbs on a bot seat"; THE PARITY ROUND 21 Sep: hotBridge owns the server's table state (tally / out / VP) -- see the new recipe "Mirror a server handler in hotBridge"; LITE MODE 9 Sep: the Lite/Full interface mode (see the new recipe "Gate a feature by interface mode (Lite/Full)"), the card database on by default, Tournament lock always on (its checkbox left Create game at v2.6.116), the alpha pill on bot seats. Prior rounds in elysium-CHANGELOG.md.)**
 
 ## Add a table-state verb (store + relay + late-join replay + snapshot) — v2.6.139 (`botcfg`), the pattern `tally` started
 A piece of state the whole TABLE shares (the bot tempo, the resolver counters) needs five places, and missing one is silent:
@@ -798,6 +798,24 @@ node test-protocol-doc.js        # asserts §-numbered examples match the code
 
 # 8. Deliver: cp to /mnt/user-data/outputs/, present_files (client/bot file first)
 ```
+
+### What the sandbox CAN verify since 12 Oct 2026 — drive the real client in headless Chromium
+
+Chromium and Playwright are pre-installed (`require('/opt/npm-tools/node_modules/playwright')`; never run `playwright install`). Keep the script in the scratchpad, not in the repo.
+
+```js
+const { chromium } = require('/opt/npm-tools/node_modules/playwright');
+const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: 1500, height: 900 } });
+pg.on('pageerror', e => errs.push(String(e)));              // a clean run has none
+await pg.goto('file:///abs/path/elysium-vtes-bord.html'); await pg.waitForTimeout(700);
+await pg.evaluate(t => { closeOverlay(); startHotseat([{ name:'You', deckText:t }, { name:'Anna', deckText:t }], 'structured'); }, deckText);   // 'classic' = the free board
+await pg.mouse.move(900, 895);                               // real hover: opens the dock
+await pg.screenshot({ path: 'dock.png' });                   // then LOOK at it
+```
+- Top-level `let`/`const`/functions of the client are reachable inside `evaluate` (`state`, `net`, `conv`, `dockPinned`, `processCardData`, …).
+- The card database: no network here — pass a `vtes.json` you have on disk into `evaluate` and call `processCardData(db,'test')`. Card images do not load; text cards render.
+- For a fix, run the SAME script against the previous client (`git show HEAD:client/elysium-vtes-bord.html > /scratch/prev.html`) and report both.
+- Still not verifiable here: touch, sound, animation feel, KRCG's images, online play across machines.
 
 ### What the sandbox CANNOT verify (client track only — the bot track below largely CAN)
 

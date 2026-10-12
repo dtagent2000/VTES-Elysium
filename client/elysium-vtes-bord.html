@@ -1425,6 +1425,13 @@ body.inov.l3zoomopen #l3zoomCtl{ display:flex; }   /* open — position set by J
 body.touchui #board.l2dockopen #l2dockClose{ display:flex; }
 #l2dockClose:active{ background:#2c2010; }
 #l2dockbg{ cursor:pointer; }
+/* v2.6.143 (player feedback: "if there is a pin button there, none of us noticed it"): the pin was a click on the dock's empty
+   background, announced by a tooltip only. A real button beside the Hand label, shown whenever the dock is open; it carries
+   the state in its text, its colour and aria-pressed. The background click still works. */
+#l2dockPin{ display:none; position:absolute; top:1px; left:64px; z-index:3; align-items:center; gap:4px; height:19px; padding:0 8px; border:1px solid rgba(176,141,79,.45); border-radius:10px; background:#1a140d; color:var(--brass2); font:600 9.5px "Cinzel",serif; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
+#board.l2dockopen #l2dockPin{ display:inline-flex; }
+#l2dockPin:hover{ border-color:var(--brass); color:var(--bone); }
+#l2dockPin.on{ background:#3a2d12; border-color:rgba(232,201,106,.85); color:#f0dca0; box-shadow:0 0 8px rgba(232,201,106,.35); }
 #l2dockbg.pinned{ box-shadow:0 -4px 16px rgba(232,201,106,.45), inset 0 2px 0 rgba(232,201,106,.6); }   /* box-shadow avoids the border-top-color specificity fight with the #board.l2mode/.l3mode base rules (2 IDs each) */
 /* ---------- Counter stepper (v2.5.40 · T2) ---------- */
 #ctStepper{ display:none; position:fixed; z-index:8030; background:linear-gradient(#1c150d,#161009); border:1px solid var(--brass2); border-radius:10px; box-shadow:0 12px 36px rgba(0,0,0,.65); padding:8px 10px; }
@@ -1640,7 +1647,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <div class="zone pile" id="z-crypt"><span class="zlabel">Crypt</span><span class="zcount" id="cnt-crypt">0</span></div>
     <div class="zone pile" id="z-library"><span class="zlabel">Library</span><span class="zcount" id="cnt-library">0</span></div>
     <div class="zone pile" id="z-ash"><span class="zlabel">Ash Heap</span><span class="zcount" id="cnt-ash">0</span></div>
-    <div class="zone" id="z-hand"><span class="zlabel">Hand</span><span class="zcount" id="cnt-hand">0</span></div>
+    <div class="zone" id="z-hand"><span class="zlabel">Hand</span><button type="button" id="l2dockPin" aria-pressed="false" title="Keep the dock open &mdash; it stays up when the pointer leaves. Click again to let it fold away.">&#128204;&#xFE0E; Pin open</button><span class="zcount" id="cnt-hand">0</span></div>
     <div class="zone" id="z-pool"><span class="zlabel">Pool</span>
       <div id="dockPool" title="Scroll to adjust · click +/−"><span class="poolnum">30</span>
         <button class="pbtn" id="dpminus" title="-1 pool">−</button>
@@ -2331,7 +2338,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
       </div>
       <div class="lobrow2">
         <button class="btn" id="lobImport">Import deck…</button>
-        <button class="btn" id="lobRoll">🎲 Roll a die</button>
+        <button class="btn" id="lobRoll" title="Roll a D20 to settle the seating order. Everyone in the lobby sees every roll.">🎲 Roll a D20</button>
         <span id="lobDeckState" class="lobdeckstate"></span>
       </div>
       <div id="lobBotWrap" hidden>   <!-- v2.6.99 (Johan): host-only, Full mode, Structured rooms; reactive, so a dropped or no-show player can be replaced mid-lobby -->
@@ -3140,7 +3147,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.142';   // v2.6.142 (12 Oct 2026, THE BADGE KNOWS THE HOLD, pure client -- purge; srv-2.6.43 unchanged; bot v0.6.198 beside (purge /elysium-bot.js), the three .js twins for the download bundle): the bot project's v0.6.198 makes a Hold on stop every clock a bot runs on a human. (1) Help -> Bots embeds their 12 Oct START-HERE-BOTS.html (verbatim). (2) The hold badge follows the bots' own rule, which it had not done since bot v0.6.108: a bot's own 'Hold on...' (its thinking announce) no longer shows as a hold; a release from any human clears the table, not only the speaker's hold; a typed 'hold on' / 'it resolves' holds and releases like the quick phrases (the chat line's Enter body is now chatSendLine); a holder who is out, vacant or offline is dropped; the panel's Release hold clears the badge once no bot is held. Another player's hold now says that anyone's It resolves resumes the bots (it said only the holder could). (3) Bot settings: one line that Hold on stops every bot clock, left out for a bot file older than v0.6.198. Previous note: elysium-CHANGELOG.md.
+const VERSION='2.6.143';   // v2.6.143 (12 Oct 2026, THE TABLE LISTENS, pure client -- purge; srv-2.6.43 unchanged, no wire change; bot v0.6.198 beside): a player's first-night feedback. (1) Advanced vampires import: every deck export writes 'Kemintiri (ADV)', KRCG's own name is 'Kemintiri (G2 ADV)' and the export form lives only in name_variants, which the v3 parser never read -- all 65 were unknown names and 'Legal cards only' (on by default) refused the deck. buildCardIndex (extracted from processCardData) also settles who owns a bare name: a card's own name and its name_variants always win, _name / printed_name only fill a name nobody claimed -- last-wins showed the advanced card's text on 63 base vampires and the new-group reprint's on a dozen more. Precon lists and the catalog keep the advanced card as its own entry. (2) The lobby die is a D20 (LOBBY_DIE; the server always took `sides`, the button never sent it), every roll names its die (rollLine), and a die from the right-click menu lands in the lobby's roll list too (lobbyRollPush). (3) The dock pin is a visible button beside the Hand label (#l2dockPin; setDockPin is the one setter) -- it was a click on the dock's empty background with a tooltip. Previous note: elysium-CHANGELOG.md.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -4255,7 +4262,7 @@ board.addEventListener('pointerdown',e=>{
   if(!e.isPrimary||drag||tdrag||pileDrag||giveDrag) return;      // T0c: never spawn a marquee under an active gesture / from a second finger
   if(l4on() && e.pointerType==='touch'){ if(!_mqArm) return; _mqArm=false; }   // T3b: touch on L4 felt pans by default; only an armed one-shot (say-menu row) marquees. Consumed at down - a wasted tap just re-arms.
   if(state.picking && !e.target.closest('.card')){ stopPicking(); return; }
-  if(e.target.closest('.card,.avc,.qrc,.pile,#poolWrap,#edge,#phases,#empty,#toast,#l2dockClose,#l2dockbg')) return;   // T3c: a chip tap (or a dock-background click, which now pins) must not clear the selection via a zero-size marquee   // .avc (Played tab) + .qrc (Ready/dock cards) keep their own handlers -> never marquee from them. (#altview/#qrbar/.avlib parked -> kodarkivering.md)
+  if(e.target.closest('.card,.avc,.qrc,.pile,#poolWrap,#edge,#phases,#empty,#toast,#l2dockClose,#l2dockbg,#l2dockPin')) return;   // T3c: a chip tap (or a dock-background click, which now pins) must not clear the selection via a zero-size marquee   // .avc (Played tab) + .qrc (Ready/dock cards) keep their own handlers -> never marquee from them. (#altview/#qrbar/.avlib parked -> kodarkivering.md)
   if(l3on() && !l4on() && !e.target.closest('#z-ready,#z-uncontrolled,#z-torpor')) return;   // L3: bare felt pans; L4: marquee works everywhere   // L3: bare-felt pans; but marquee still works inside your own zones
   const br=board.getBoundingClientRect();
   const f=board.clientWidth/br.width;   // screen px -> design px; works for L1, L3 (both fixed 1004x616 scaled canvas) and L2cols (fills area, ratio=1)
@@ -6999,8 +7006,9 @@ function buildPrecons(list){
     } else {
       // ---- v3 shape: sets{name:[...]}, unchanged from the original ----
       if(!card.sets || typeof card.sets!=='object') continue;
-      const disp=card._name || card.name || card.printed_name;
-      if(!disp) continue;
+      const _base=card._name || card.name || card.printed_name;
+      if(!_base) continue;
+      const disp=(cardIsAdv(card) && !/ADV\)\s*$/.test(_base)) ? _base+' (ADV)' : _base;   // v2.6.143: was the bare _name -- an advanced vampire merged into its base card in every precon list and in the catalog
       let anyV5=false;
       for(const setName of Object.keys(card.sets)) if(isV5Set(setName)) anyV5=true;
       let registered=false;
@@ -9546,11 +9554,9 @@ const MP_HANDLERS = {
     if(shownModal()==='savesModal') renderSaves();
   },
   roll(m){
-    const extra=(m.sides && m.sides!==6) ? ' (d'+(m.sides|0)+')' : '';
-    const line=esc(m.who||'?')+' rolled <b>'+(m.n|0)+'</b>'+extra;
+    const line=rollLine(m.who, m.n, m.sides||6);                 // v2.6.143: the die is always named -- a 4 on a D6 and a 4 on a D20 are different results
     log('🎲 '+line, true);
-    if(net.lobby){ net.rolls.push(line); if(net.rolls.length>10) net.rolls.shift(); if(shownModal()==='lobbyModal') renderLobbyRolls(); }
-    else toast('🎲 '+(m.who||'')+' rolled '+(m.n|0));
+    if(!lobbyRollPush(line)) toast('🎲 '+(m.who||'')+' rolled '+(m.n|0));
   },
   deckok(m){
     net.deckUp=false;
@@ -9928,6 +9934,7 @@ const MP_HANDLERS = {
     } else if(m.kind==='die'){
       toast(m.who+' — D'+m.n+': '+m.result);
       log('<b>'+esc(m.who)+'</b> rolled a <b>D'+(+m.n||0)+'</b>: <b>'+(+m.result||0)+'</b>.', true);
+      lobbyRollPush(rollLine(m.who, m.result, m.n));               // v2.6.143 (Johan): a die rolled from the right-click menu while the lobby is up lands in the lobby's own roll list too -- it was in the log and a toast only
     } else if(m.kind==='seating'){
       const o=(m.order||[]).map(esc);
       if(o.length) log('<b>'+esc(m.who)+'</b> randomized seating (predator → prey): <b>'+o.join('</b> → <b>')+'</b> → back to <b>'+o[0]+'</b>.', true);
@@ -9978,6 +9985,13 @@ function shownModal(){
   if(!$('#overlay').classList.contains('show')) return null;
   const m=[...document.querySelectorAll('.modal')].find(x=>x.style.display==='flex');
   return m ? m.id : null;
+}
+function rollLine(who, n, sides){ return esc(who||'?')+' rolled <b>'+(n|0)+'</b> (D'+(sides|0)+')'; }   // v2.6.143 pure: one wording for the lobby die and the menu die
+function lobbyRollPush(line){                                     // v2.6.143: the lobby's roll list (last ten); false = no lobby up, the caller keeps its own feedback
+  if(!net.lobby) return false;
+  net.rolls.push(line); if(net.rolls.length>10) net.rolls.shift();
+  if(shownModal()==='lobbyModal') renderLobbyRolls();
+  return true;
 }
 function renderLobbyRolls(){
   const el=$('#lobbyRolls'); if(!el) return;
@@ -10113,7 +10127,8 @@ $('#mpJoin').addEventListener('click',mpJoin);
 $('#mpLeave').addEventListener('click',mpLeave);
 $('#mpClose').addEventListener('click',closeOverlay);
 $('#lobImport').addEventListener('click',openImport);
-$('#lobRoll').addEventListener('click',()=>mpSend({t:'roll'}));
+const LOBBY_DIE=20;                                              // v2.6.143 (player feedback): the lobby die was a D6 -- with four players two of them tie 72% of the time (five: 91%); a D20 brings that to 27% / 42%. The server has taken `sides` since the verb was born; the button never sent it
+$('#lobRoll').addEventListener('click',()=>mpSend({t:'roll', sides:LOBBY_DIE}));
 { const _dk=$('#lobBotDeck');                                      // v2.6.124: the online preload fires on INTENT -- the host reaching for the bot-deck menu -- never on a lobby render (see hotBotMenuPreload)
   const _go=()=>hotBotMenuPreload(()=>{ try{ renderLobby(); }catch(_e){} });
   if(_dk){ _dk.addEventListener('pointerdown', _go); _dk.addEventListener('focus', _go); } }
@@ -12739,7 +12754,7 @@ function fitBoard(){             // L1: scale the fixed 1004x616 design stage to
 }
 function enterL0(){
   board.classList.remove('l2mode','l3mode','l4mode','l2cols','l2dockopen');   // also drop the bottom-dock class so its open/closed state doesn't ride into the next game
-  dockPinned=false; { const _dbg=document.getElementById('l2dockbg'); if(_dbg) _dbg.classList.remove('pinned'); }   // the pin never rides into the next game either
+  setDockPin(false);   // the pin never rides into the next game either
   board.classList.add('l0mode');
   board.style.transform='';
   setAside(true, false);   // L0 default: collapse the card-viewer panel (non-persistent — does not overwrite the user's saved preference)
@@ -14049,10 +14064,16 @@ function positionL3Hand(){                                       // tucked: a sl
 }
 function l3HandHover(on){ /* PARKED: the L3 hand lives in the shared dock now; the old separate hover-overlay is disabled so it can't pop up over the dock. */ }
 let dockPinned=false;                                            // set by clicking the dock's open background (see #l2dockbg's click listener below); while true, every AUTO-close path skips (hover hysteresis, drag exits, touch felt taps); explicit closes release it in setL2Dock below
+function setDockPin(on){                                         // v2.6.143: the ONE place the pin changes -- the flag, the dock's glowing edge and the button's own state move together
+  dockPinned=!!on;
+  const _dbg=document.getElementById('l2dockbg'); if(_dbg) _dbg.classList.toggle('pinned', dockPinned);
+  const _pb=document.getElementById('l2dockPin');
+  if(_pb){ _pb.classList.toggle('on', dockPinned); _pb.setAttribute('aria-pressed', dockPinned?'true':'false'); _pb.innerHTML='\ud83d\udccc\ufe0e '+(dockPinned?'Pinned':'Pin open'); }
+}
 function setL2Dock(open, light){                                 // L2 redesign: expand / collapse the bottom dock (crypt / library / ash / hand)
   if(open === board.classList.contains('l2dockopen')) return;
   board.classList.toggle('l2dockopen', open);
-  if(!open && dockPinned){ dockPinned=false; const _dbg=document.getElementById('l2dockbg'); if(_dbg) _dbg.classList.remove('pinned'); }   // any close that actually EXECUTES is legit (auto-closers are gated on !dockPinned) -> release the pin
+  if(!open && dockPinned) setDockPin(false);   // any close that actually EXECUTES is legit (auto-closers are gated on !dockPinned) -> release the pin
   if(open && asideCollapsed && typeof fillDockLog==='function') fillDockLog();
   if(typeof placeReady==='function') placeReady();              // the Ready tab/peek rides the dock's top edge -> follow it open/closed
   if(!l2on()) return;   // L2 AND L3 (both carry l2mode) re-flow the dock zones; only L1/Simplified bails
@@ -14069,8 +14090,11 @@ board.addEventListener('pointermove', e=>{                       // L2 redesign:
   else { if(!drag && !pileDrag && yd >= H-36) setL2Dock(true); }
 });
 { const _dk=document.getElementById('l2dock'); if(_dk) _dk.addEventListener('click', ()=> setL2Dock(true)); }   // click the handle to unfold (touch / fallback)
+{ const _pb=document.getElementById('l2dockPin'); if(_pb){                                                       // v2.6.143: the visible pin. Unpinning here does NOT close the dock (the background's second click does) -- it hands the dock back to the hover rule, so it folds when the pointer leaves
+    _pb.addEventListener('pointerdown', e=>e.stopPropagation());                                                    // never a marquee, never a felt tap
+    _pb.addEventListener('click', e=>{ e.stopPropagation(); setDockPin(!dockPinned); }); } }
 { const _dc=document.getElementById('l2dockClose'); if(_dc) _dc.addEventListener('click', e=>{ e.stopPropagation(); setL2Dock(false); }); }   // T3c (D2a): the touchui close chip - the teaching half of dock-close on touch
-{ const _dbg=document.getElementById('l2dockbg'); if(_dbg) _dbg.addEventListener('click', e=>{ if(e.target!==_dbg) return; if(dockPinned){ setL2Dock(false); } else { dockPinned=true; _dbg.classList.add('pinned'); } }); }   // click the exposed dock background (nothing else under the pointer -- piles/cards/chips sit above it in z-index) to pin the dock open, glowing top edge; second click unpins AND closes (setL2Dock's close branch releases the pin)
+{ const _dbg=document.getElementById('l2dockbg'); if(_dbg) _dbg.addEventListener('click', e=>{ if(e.target!==_dbg) return; if(dockPinned){ setL2Dock(false); } else { setDockPin(true); } }); }   // click the exposed dock background (nothing else under the pointer -- piles/cards/chips sit above it in z-index) to pin the dock open, glowing top edge; second click unpins AND closes (setL2Dock's close branch releases the pin)
 { const _rv=document.getElementById('rview'); if(_rv) _rv.addEventListener('pointermove', e=>{   // visiting in L2: #rview covers the board, so mirror the dock hover-reveal here (board's own pointermove can't fire under the overlay)
   if(e.pointerType==='touch') return;
   if(!(typeof net.view==='number' && l2on() && !l3on())) return;
@@ -16559,9 +16583,14 @@ function parseV3Card(card){
                      : /\bLaibon\b/.test(card.card_text||'') ? 'Laibon'
                      : /\bIndependent\b/.test(card.card_text||'') ? 'Independent'
                      : null) };
-  const names=[card.name, card._name, card.printed_name].filter(nm=>typeof nm==='string' && nm);
+  const _nm=[card.name, card._name, card.printed_name];
+  if(Array.isArray(card.name_variants)) for(const v of card.name_variants) _nm.push(typeof v==='string' ? v : (v && v.name));   // v2.6.143 (player feedback): every deck export writes 'Kemintiri (ADV)'; KRCG's own name is 'Kemintiri (G2 ADV)' and the export form lives ONLY here -- unread, all 65 advanced vampires were unknown names and 'Legal cards only' refused the deck
+  const names=_nm.filter(nm=>typeof nm==='string' && nm);
   const imgName=(typeof card.name==='string' && card.name)?norm(card.name):null;
-  return { meta, typesArr: card.types, names, imgName };
+  return { meta, typesArr: card.types, names, imgName, adv: cardIsAdv(card), claims: _nm.filter((nm,i)=>i!==1 && i!==2 && typeof nm==='string' && nm) };   // claims = the card's own name + KRCG's name_variants (strong); _name / printed_name are the bare name several cards share (weak) -- see buildCardIndex
+}
+function cardIsAdv(card){                                          // v2.6.143 pure: an advanced vampire in either KRCG shape (v3: adv:true and a name ending 'ADV)'; v5: the suffix)
+  return !!card && (card.adv===true || /\bADV\)\s*$/.test(String(card.name||'')) || /\bADV\b/.test(String(card.suffix||'')));
 }
 function parseV5Card(card){
   if(!Array.isArray(card.types)) return null;
@@ -16596,20 +16625,38 @@ function parseV5Card(card){
   // no more card.name/_name — printed_name(+suffix) reconstructs the real static.krcg.org image
   // filename exactly (verified: Gratiano's suffix 'G2' -> 'gratianog2', matching its real print url)
   const imgName = card.printed_name ? norm(card.printed_name+(card.suffix||'')) : null;
-  return { meta, typesArr: card.types, names: names.filter(nm=>typeof nm==='string' && nm), imgName };
+  return { meta, typesArr: card.types, names: names.filter(nm=>typeof nm==='string' && nm), imgName, adv: cardIsAdv(card), claims: names.filter((nm,i)=>typeof nm==='string' && nm && !(i===0 && card.suffix)) };   // a suffixed card ('G6', 'ADV') shares its printed_name with a sibling: weak there, strong for an unsuffixed card
 }
-function processCardData(data, src){
-  const list = Array.isArray(data) ? data
-             : Array.isArray(data.cards) ? data.cards
-             : Object.values(data);
-  const map=new Map(), info=new Map(), imgNames=new Set();
+function buildCardIndex(list){                                     // v2.6.143 pure (extracted from processCardData so the suite can drive it): name -> types / meta, plus the image names
+  const map=new Map(), info=new Map(), imgNames=new Set(), weakKey=new Map();   // weakKey: a name held by a WEAK claim only -> was that holder an advanced card
   for(const card of list){
     if(!card) continue;
     const parsed = (typeof card.kind==='string') ? parseV5Card(card) : parseV3Card(card);
     if(!parsed) continue;
     if(parsed.imgName) imgNames.add(parsed.imgName);
-    for(const nm of parsed.names){ map.set(norm(nm), parsed.typesArr); info.set(norm(nm), parsed.meta); }
+    /* Who owns a bare name. Several cards share one _name / printed_name: a vampire and its advanced version
+       ('Alan Sovereign'), an old vampire and its new-group reprint ('Theo Bell' G2 and G6). KRCG says which one
+       the bare name means -- it lists it in that card's name_variants (or it IS the card's name). So a card's own
+       name and its name_variants are STRONG claims and always win; _name / printed_name are WEAK and only fill a
+       name nobody claimed, a base card before an advanced one. Last-wins gave the bare name to the advanced card
+       for 63 of 65 pairs and to the reprint for a dozen vampires -- the wrong card text beside the right image. */
+    const strong=new Set((parsed.claims||parsed.names).map(norm));
+    for(const k of strong){ map.set(k, parsed.typesArr); info.set(k, parsed.meta); weakKey.delete(k); }
+    for(const nm of parsed.names){
+      const k=norm(nm);
+      if(strong.has(k)) continue;
+      if(map.has(k) && !(weakKey.get(k)===true && !parsed.adv)) continue;   // held by a strong claim, or by an earlier weak one -- only a base card displaces an advanced card's weak hold
+      map.set(k, parsed.typesArr); info.set(k, parsed.meta); weakKey.set(k, !!parsed.adv);
+    }
   }
+  return { map, info, imgNames };
+}
+function processCardData(data, src){
+  const list = Array.isArray(data) ? data
+             : Array.isArray(data.cards) ? data.cards
+             : Object.values(data);
+  const built=buildCardIndex(list);
+  const map=built.map, info=built.info, imgNames=built.imgNames;
   if(map.size){
     cardTypes=map; cardInfo=info; cardImageNames=imgNames; cardDBSrc=src||null;   // B-63: remember the tier for dump.env.db.source
     buildPrecons(list);
@@ -18077,7 +18124,7 @@ const TUT_SECTIONS = {
         text:'The <b>seat picker</b> &mdash; numbered buttons, one per seat. Click a number to claim it. Your seat determines the <b>turn order</b> and who your <b>prey</b> and <b>predator</b> are. Seats already taken by others are greyed out. Notice that Carol and Dave still need to pick seats.',
         advance:{on:'manual'} },
       { id:'oh-lobby-roll', target:()=>$('#lobRoll'), place:'bottom', scroll:()=>$('#lobRoll'),
-        text:'Need to randomise who sits where? <b>🎲 Roll a die</b> &mdash; everyone rolls, results appear at the bottom, and you pick seats based on the outcome.',
+        text:'Need to randomise who sits where? <b>🎲 Roll a D20</b> &mdash; everyone rolls, results appear at the bottom, and you pick seats based on the outcome.',
         advance:{on:'manual'} },
       { id:'oh-lobby-rolls', target:()=>$('#lobbyRolls'), place:'top', scroll:()=>$('#lobbyRolls'),
         text:'Here are the <b>dice results</b> &mdash; three players have rolled so far. Everyone can see all rolls.',
@@ -18227,7 +18274,7 @@ function tutDemoLobby(role){
     seats:5
   };
   net.you='You'; net.room='Friday Fangs'; net.lobby=true;
-  net.rolls=['Alice rolled: 8','Bob rolled: 3','You rolled: 11'];
+  net.rolls=['Alice rolled <b>8</b> (D20)','Bob rolled <b>3</b> (D20)','You rolled <b>11</b> (D20)'];
   state.deckName='Ventrue Lawfirm';
   openOverlay('lobbyModal'); renderLobby();
   /* Neutralise all interactive lobby buttons so they don't try to mpSend */
