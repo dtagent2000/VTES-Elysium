@@ -355,7 +355,8 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   rollLine: (typeof rollLine!=='undefined'?rollLine:undefined), lobbyRollPush: (typeof lobbyRollPush!=='undefined'?lobbyRollPush:undefined),       // v2.6.143: the lobby's roll list
   get LOBBY_DIE(){ return (typeof LOBBY_DIE!=='undefined')?LOBBY_DIE:undefined; },
   setDockPin: (typeof setDockPin!=='undefined'?setDockPin:undefined), setL2Dock: (typeof setL2Dock!=='undefined'?setL2Dock:undefined),             // v2.6.143: the dock pin
-  get dockPinned(){ return (typeof dockPinned!=='undefined')?dockPinned:undefined; }
+  get dockPinned(){ return (typeof dockPinned!=='undefined')?dockPinned:undefined; },
+  readyDropFace: (typeof readyDropFace!=='undefined'?readyDropFace:undefined)   // v2.6.144: the face a card shows when a drag lands it in ready
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',

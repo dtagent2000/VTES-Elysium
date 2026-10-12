@@ -1,3 +1,30 @@
+## [EN REGEL FÖR ETT OCH FÖR MÅNGA] — v2.6.144: gruppdraget vände upp kryptkort på fria bordet (12 oktober 2026, sen natt)
+
+Johan undrade hur spelarna lyckats vända sina fyra kryptkort av misstag, när det alltid fungerat för honom. Svaret
+låg i *hur korten kom ut*: Johan klickdrar dem från leken (de hamnar i `ready`), spelaren dubbelklickade på leken
+(de hamnar i `uncontrolled`, som på fria bordet saknar ram och alltså inte syns). Ett ensamt drag därifrån behåller
+baksidan — den regeln har ett undantag för fria bordet — men gruppdraget hade en egen kopia av regeln utan
+undantaget. Återskapat med riktiga musdrag i headless Chromium: fyra dubbelklickade kort, ett flyttat ensamt
+(baksidan kvar), sedan alla fyra markerade och dragna (de tre som låg kvar i uncontrolled vändes upp).
+
+**Byggt:** `readyDropFace(c, from)` — regeln har fått ett namn och båda vägarna anropar den.
+
+**Johans följdfråga: finns det fler sådana?** Matris i webbläsaren: fem sorters kort × alla släppmål × ensamt och i
+grupp, på båda bordstyperna (60 celler). Efter fixen skiljer sig grupp från ensamt bara i de 8 cellerna "släpp på
+handen". Två fynd, **inte fixade** (Johans beslut):
+- Ett gruppdrag till handen lägger kryptkort I handen och nollar blod och lås. Ensamt vägrar draget.
+- "Send to torpor" för en markering (menyn och G) skickar bibliotekskort till torpor. Ensamt erbjuds det bara
+  kryptkort, och dragen vägrar.
+Samma klass alla tre: en gruppväg med en egen, tunnare kopia av enkelkortets regel.
+
+**Fälla i verktyget:** första matriskörningen sa att två kortsorter inte gick att dra på fria bordet. Muspekaren
+vilade uppe i mitten och öppnade Played-fliken över korten. Parkera pekaren på tom filt.
+
+**Verifierat:** syntaxrent, 255/255 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.143: 1 röd = den
+nya), canary 57/0, dispatch 60/0, protokoll 6/0, endpoint 24/0, soak-kontroll exit 0, B1 byte-identisk 1 496 059,
+embed --check, check-versions grön. Musdragen omkörda på den fixade klienten: baksidan kvar i båda fallen.
+**Väntar på live-test:** samma drag online med en motspelare som tittar (vad de ser av korten), och på pekskärm.
+
 ## [BORDET LYSSNAR] — v2.6.143: advanced-korten, D20 i lobbyn, en pin-knapp man ser (12 oktober 2026, natt)
 
 En spelare skrev efter sin första kväll: importen vägrade advanced-kort, lobbytärningen är en D6, platsvalet var

@@ -1,6 +1,6 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.143 / server v2.6.43 / bot v0.6.198 tested beside the suite, last updated 12 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.144 / server v2.6.43 / bot v0.6.198 tested beside the suite, last updated 12 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
 
@@ -13,6 +13,12 @@
 - **Suites that read neighbours from `__dirname` want the files copied, not the code changed (12 Oct).** The bot bundle lives at the root and in `bot/`; our suites, canary, soak and `embed-help.js --check` read it from beside themselves. Copying it into `client/` (gitignored) keeps the suites' lookup rule and the consume model intact; teaching every tool a second path would have been a change in eight places for one convenience.
 - **`project_read` returns small text files inline and a .docx as extracted text (12 Oct).** Transcribe the text files verbatim and take binaries from a real copy (the repo root, Johan's own upload). `cmp` against a file that is MISSING locally prints "differ" too — a missing twin is not a changed one; test existence first.
 - **A handoff can name a file that lands in a LATER PR (12 Oct).** `bot/docs/START-HERE-BOTS-CHAT.md` was in their handoff before it was on `main` (PR #2 brought it twenty minutes later). Before calling a named path missing, fetch `main` again; before writing a path into our docs, check it is there on the branch we rebase onto.
+
+**v2.6.144 (12 Oct 2026, ONE RULE FOR ONE AND FOR MANY):**
+- **A group path that re-states a single-card rule will drift from it (12 Oct).** `groupDrop` had its own line for the face of a card landing in ready; the free-board exception was added to `dropCard` only. Two more of the same kind sit in the group paths (crypt cards into the hand, library cards into torpor). When a rule gets an exception, grep for every other place that states the rule; better, give the rule a name and call it.
+- **'It works for me' and 'it broke for them' can both be true (12 Oct).** Johan click-drags crypt cards out (they land in `ready`); the player double-clicked the pile (they land in `uncontrolled`). Same cards on the same felt, different zone underneath. On the free board the zone is invisible, so behaviour that depends on it looks random.
+- **Audit by matrix, not by reading alone (12 Oct).** Reading the two handlers side by side found the hand case; the browser matrix (every source × every target × single and group) confirmed it, cleared 52 other cells, and cost four minutes. Compare a card's outcome alone with its outcome in a group of two of the same kind.
+- **Where the test pointer rests is part of the test (12 Oct).** Resting at the top centre opened the Played tab over the cards; two card kinds 'could not be dragged'. Park the pointer on empty felt, and treat 'nothing happened' as a tooling question before a product one.
 
 **v2.6.143 (12 Oct 2026, THE TABLE LISTENS):**
 - **A name several cards share needs an owner rule, not an insertion order (12 Oct).** `map.set(norm(name), …)` in a loop is last-wins. KRCG gives every card a `_name` that its siblings share (base and advanced, old printing and reprint) and says who the bare name means in `name_variants`. Read the source's own disambiguation field before inventing one, and test the index in both file orders.

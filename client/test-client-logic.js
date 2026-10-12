@@ -3713,6 +3713,27 @@ test('v2.6.143: the dock pin has ONE setter -- the visible button, the backgroun
   eq((html.match(/classList\.(add|remove|toggle)\('pinned'/g) || []).length, 1, 'and the glowing edge moves in the setter only');
   assert(html.indexOf("#l2dockClose,#l2dockbg,#l2dockPin')) return;") > 0, 'a click on the pin never starts a marquee');
 });
+/* ---------- v2.6.144: ONE RULE FOR ONE AND FOR MANY ---------- */
+test('v2.6.144: a drag into ready shows the same face for one card and for a group -- on the free board an uncontrolled card keeps its face, on a structured board it comes into play face up', () => {
+  const A = loadClient(CLIENT);
+  if (!A.readyDropFace) throw new Error('readyDropFace not exposed (harness needs updating)');
+  const T = A.__stubEl.classList._t; T.delete('l4mode');
+  eq(A.readyDropFace({ faceDown: true }, 'uncontrolled'), false, 'structured: uncontrolled -> ready brings the vampire into play');
+  eq(A.readyDropFace({ faceDown: true }, 'hand'), false, 'a hand card is played face up');
+  eq(A.readyDropFace({ faceDown: true }, 'ready'), true, 'a face-down card already on the felt keeps its face');
+  eq(A.readyDropFace({ faceDown: false }, 'torpor'), false); eq(A.readyDropFace({ faceDown: true }, 'torpor'), true);
+  T.add('l4mode');
+  try {
+    eq(A.readyDropFace({ faceDown: true }, 'uncontrolled'), true, 'free board: a drag only repositions -- the card stays face down');
+    eq(A.readyDropFace({ faceDown: false }, 'uncontrolled'), false, 'and a card already face up stays up');
+    eq(A.readyDropFace({ faceDown: true }, 'hand'), false, 'a hand card is still played face up');
+  } finally { T.delete('l4mode'); }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf('const fd = readyDropFace(c, from);') > 0, 'the single drop asks the rule');
+  assert(html.indexOf('const fd = readyDropFace(m.c, m.c.zone);') > 0, 'the group drop asks the SAME rule (it had its own copy, without the free-board exception)');
+  eq(html.indexOf("m.c.zone==='uncontrolled' ? false : m.c.faceDown"), -1, 'the copy is gone');
+  eq((html.match(/from==='uncontrolled' && !l4on\(\)/g) || []).length, 1, 'the free-board exception is written once');
+});
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

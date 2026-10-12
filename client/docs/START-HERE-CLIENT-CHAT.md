@@ -10,13 +10,13 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.143** (THE TABLE LISTENS) | `client/elysium-vtes-bord.html`, copied to `/` |
+| client | **v2.6.144** (ONE RULE FOR ONE AND FOR MANY; carries v2.6.143 THE TABLE LISTENS) | `client/elysium-vtes-bord.html`, copied to `/` |
 | server | **srv-2.6.43** | `client/elysium-server.js`, copied to `/` |
 | bot (consumed) | **v0.6.198** (12 Oct 2026) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.143 | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **254/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 60/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical 1 496 021 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.144 | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **255/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 60/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical 1 496 059 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
-**Live on elysium.cards:** whatever Johan deployed last — check the journal's newest entry; v2.6.143 + bot v0.6.198
+**Live on elysium.cards:** whatever Johan deployed last — check the journal's newest entry; v2.6.144 + bot v0.6.198
 were delivered on 12 Oct and may still be undeployed (purge the client + `/elysium-bot.js`; the three JSONs are
 byte-identical to v0.6.197's).
 
@@ -33,7 +33,7 @@ head -40 docs/elysium-learnings.md
 # the bundle beside the suite (gitignored — copy, never commit):
 cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
 node check-versions.js             # must end green: code, doc headers, AND the root == client/ + bot/ gate
-node test-client-logic.js          # 254 passed, 0 failed, 0 skipped (with the bundle beside)
+node test-client-logic.js          # 255 passed, 0 failed, 0 skipped (with the bundle beside)
 ```
 
 The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification commands" and `client/SKILLS.md`
@@ -73,10 +73,11 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 
 - **Johan's call:** online, should anyone at the table get the hold badge's Resume button (today only the holder)?
   (v2.6.142; `docs/elysium-session-journal.md` newest entry.)
-- **Deploy:** v2.6.143 + bot v0.6.198 (purge the client + `/elysium-bot.js`).
-- **Johan's call (player feedback, round 2 — analysed, not built):** a group drag of uncontrolled crypt cards on the
-  free board turns them face up while a single drag does not (`groupDrop`); the hand open by default; a host
-  'Randomise seats' button in the lobby (needs the server). `client/CLAUDE.md` top entry.
+- **Deploy:** v2.6.144 + bot v0.6.198 (purge the client + `/elysium-bot.js`).
+- **Johan's call (found by the single-vs-group audit, not fixed):** a group drag onto the hand puts crypt cards in
+  the hand and wipes their blood and lock; 'Send to torpor' for a selection sends library cards to torpor.
+- **Johan's call (player feedback, round 2 — analysed, not built):** the hand open by default; a host
+  'Randomise seats' button in the lobby (needs the server). `client/CLAUDE.md` top entries.
 - **Known limit:** online, after the host's panel release, the other clients' badges clear at the next release phrase.
 - **Pre-existing drift:** `build-host-guide.js` says v1.8, the committed `Elysium_-_Host_Guide.docx` is v1.9
   (the docx was rebuilt on 3 Aug from a generator edit that did not reach the project's copy of the .js). Rebuild
