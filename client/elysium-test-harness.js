@@ -356,7 +356,9 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   get LOBBY_DIE(){ return (typeof LOBBY_DIE!=='undefined')?LOBBY_DIE:undefined; },
   setDockPin: (typeof setDockPin!=='undefined'?setDockPin:undefined), setL2Dock: (typeof setL2Dock!=='undefined'?setL2Dock:undefined),             // v2.6.143: the dock pin
   get dockPinned(){ return (typeof dockPinned!=='undefined')?dockPinned:undefined; },
-  readyDropFace: (typeof readyDropFace!=='undefined'?readyDropFace:undefined)   // v2.6.144: the face a card shows when a drag lands it in ready
+  readyDropFace: (typeof readyDropFace!=='undefined'?readyDropFace:undefined),   // v2.6.144: the face a card shows when a drag lands it in ready
+  zoneRefuses: (typeof zoneRefuses!=='undefined'?zoneRefuses:undefined), groupMove: (typeof groupMove!=='undefined'?groupMove:undefined),   // v2.6.145: which zones refuse which kind of card
+  addSel: (typeof addSel!=='undefined'?addSel:undefined), clearSel: (typeof clearSel!=='undefined'?clearSel:undefined)
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',

@@ -1,6 +1,6 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.144 / server v2.6.43 / bot v0.6.198 tested beside the suite, last updated 12 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.145 / server v2.6.43 / bot v0.6.198 tested beside the suite, last updated 12 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
 
@@ -13,6 +13,11 @@
 - **Suites that read neighbours from `__dirname` want the files copied, not the code changed (12 Oct).** The bot bundle lives at the root and in `bot/`; our suites, canary, soak and `embed-help.js --check` read it from beside themselves. Copying it into `client/` (gitignored) keeps the suites' lookup rule and the consume model intact; teaching every tool a second path would have been a change in eight places for one convenience.
 - **`project_read` returns small text files inline and a .docx as extracted text (12 Oct).** Transcribe the text files verbatim and take binaries from a real copy (the repo root, Johan's own upload). `cmp` against a file that is MISSING locally prints "differ" too — a missing twin is not a changed one; test existence first.
 - **A handoff can name a file that lands in a LATER PR (12 Oct).** `bot/docs/START-HERE-BOTS-CHAT.md` was in their handoff before it was on `main` (PR #2 brought it twenty minutes later). Before calling a named path missing, fetch `main` again; before writing a path into our docs, check it is there on the branch we rebase onto.
+
+**v2.6.145 (12 Oct 2026, THE GROUP KNOWS THE ZONES):**
+- **A list of exclusions written inline is only as complete as the day it was written (12 Oct).** `groupDrop` refused library cards in torpor and in uncontrolled, two lines; the hand was never added. A named predicate (`zoneRefuses`) that every path calls has one place to be wrong.
+- **Rerun the audit that found the bug as the proof of the fix (12 Oct).** The 60-cell matrix went 8 → 0 differences. A unit test pins the rule; the matrix shows no third path was missed.
+- **Players read an empty shared table as 'no seats' (12 Oct).** On the free board every globe starts in a ring in the middle and every seat's drawn crypt cards land on the same centre spot; the first thing five players did was drag everything apart. A free table still needs a starting arrangement.
 
 **v2.6.144 (12 Oct 2026, ONE RULE FOR ONE AND FOR MANY):**
 - **A group path that re-states a single-card rule will drift from it (12 Oct).** `groupDrop` had its own line for the face of a card landing in ready; the free-board exception was added to `dropCard` only. Two more of the same kind sit in the group paths (crypt cards into the hand, library cards into torpor). When a rule gets an exception, grep for every other place that states the rule; better, give the rule a name and call it.

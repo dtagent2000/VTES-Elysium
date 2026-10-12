@@ -3734,6 +3734,28 @@ test('v2.6.144: a drag into ready shows the same face for one card and for a gro
   eq(html.indexOf("m.c.zone==='uncontrolled' ? false : m.c.faceDown"), -1, 'the copy is gone');
   eq((html.match(/from==='uncontrolled' && !l4on\(\)/g) || []).length, 1, 'the free-board exception is written once');
 });
+/* ---------- v2.6.145: THE GROUP KNOWS THE ZONES ---------- */
+test('v2.6.145: a zone refuses the same cards whether one is moved or many -- torpor and uncontrolled take crypt cards only, the hand takes library cards only', () => {
+  const A = loadClient(CLIENT);
+  if (!A.zoneRefuses || !A.groupMove) throw new Error('zoneRefuses / groupMove not exposed (harness needs updating)');
+  const V = { kind: 'crypt' }, L = { kind: 'lib' };
+  eq(A.zoneRefuses(V, 'hand'), true, 'a vampire never goes to the hand'); eq(A.zoneRefuses(L, 'hand'), false);
+  eq(A.zoneRefuses(L, 'torpor'), true, 'a library card never goes to torpor'); eq(A.zoneRefuses(V, 'torpor'), false);
+  eq(A.zoneRefuses(L, 'uncontrolled'), true); eq(A.zoneRefuses(V, 'uncontrolled'), false);
+  for (const z of ['ready', 'ash', 'burned', 'library', 'crypt']) { eq(A.zoneRefuses(V, z), false, z); eq(A.zoneRefuses(L, z), false, z); }
+  // the group command, on real cards
+  A.clearTable({});
+  const v = A.makeCard('Vamp', 'crypt'); A.move(v, 'ready', { x: 50, y: 50, faceDown: false }); v.blood = 3; v.locked = true;
+  const l = A.makeCard('Ally', 'lib'); A.move(l, 'ready', { x: 150, y: 50, faceDown: false });
+  A.clearSel(); A.addSel([v.id, l.id]); A.groupMove('torpor');
+  eq(v.zone, 'torpor', 'the vampire goes'); eq(v.blood, 3, 'with its blood');
+  eq(l.zone, 'ready', 'the library card stays where it was (it went to torpor before)');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  eq((html.match(/zoneRefuses\(c,'(hand|torpor|uncontrolled)'\)\)\{ layout\(\); return; \}/g) || []).length, 3, 'the single drag asks the rule for all three zones');
+  assert(html.indexOf('if(zoneRefuses(m.c,z)) return;') > 0, 'the group drag asks the same rule (it checked torpor and uncontrolled, never the hand)');
+  assert(html.indexOf('!zoneRefuses(c,zone) && move(c,zone)') > 0, 'and so does the group command');
+  eq(html.indexOf("if(z==='torpor' && m.c.kind!=='crypt') return;"), -1, 'the partial copy is gone');
+});
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

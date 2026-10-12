@@ -3147,7 +3147,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.144';   // v2.6.144 (12 Oct 2026, ONE RULE FOR ONE AND FOR MANY, pure client -- purge; srv-2.6.43 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.143, which was never deployed alone): on the free board a GROUP drag of uncontrolled crypt cards turned them face up while a single drag kept the face -- groupDrop carried its own copy of the rule without the free-board exception. readyDropFace(c, from) is now the one rule both paths call. Found by reading a player's report ('4 crypt cards were accidentally revealed when they were moved') and reproduced with real mouse drags in headless Chromium. Previous note: elysium-CHANGELOG.md.
+const VERSION='2.6.145';   // v2.6.145 (12 Oct 2026, THE GROUP KNOWS THE ZONES, pure client -- purge; srv-2.6.43 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.143-144): the two group paths the single-vs-group audit found. A group drag onto the hand put crypt cards IN the hand and wiped their blood and lock (a single drag refuses); 'Send to torpor' for a selection (menu and G) sent library cards to torpor (the single card's menu offers it to crypt cards only). zoneRefuses(c, zone) is the one rule the single drag, the group drag and groupMove all call. Previous note: elysium-CHANGELOG.md.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -5220,7 +5220,7 @@ function groupMove(zone){
   let nn=0;
   [...state.selected].forEach(id=>{
     const c=state.cards.get(id);
-    if(c && !PILES.includes(c.zone) && move(c,zone)) nn++;
+    if(c && !PILES.includes(c.zone) && !zoneRefuses(c,zone) && move(c,zone)) nn++;   // v2.6.145: 'Send to torpor' (menu and G) sent library cards to torpor -- the single card's menu offers torpor to crypt cards only
   });
   clearSel();
   if(nn) log('<b>'+nn+'</b> card'+(nn>1?'s':'')+' → '+zname[zone]+'.');
@@ -13261,6 +13261,10 @@ function tap(c,d){
    face up. Structured: leaving the uncontrolled region for ready IS bringing the vampire into play, so it turns
    face up. Free board (L4): the felt is one open table and the uncontrolled 'zone' is bookkeeping with no box --
    a drag there only repositions, the card keeps its face; double-click / right-click -> Flip face up brings it out. */
+/* Which zones a kind of card can never enter by a player's move -- ONE rule for the single drag, the group drag
+   and the group commands (v2.6.145). Torpor and the uncontrolled region hold crypt cards only; the hand holds
+   library cards only. (The ash heap's 'vampires never go there' lives in move() itself, with its own log line.) */
+function zoneRefuses(c, zone){ return ((zone==='torpor'||zone==='uncontrolled') && c.kind!=='crypt') || (zone==='hand' && c.kind==='crypt'); }
 function readyDropFace(c, from){ return (from==='hand' || (from==='uncontrolled' && !l4on())) ? false : !!c.faceDown; }
 async function dropCard(c,d){
   if(d.group){ groupDrop(c,d); return; }
@@ -13277,16 +13281,16 @@ async function dropCard(c,d){
   }
   else if(z==='ash'){ if(await discardGateOK(c) && move(c,'ash')) log(n+' → the ash heap.'); }
   else if(z==='hand'){
-    if(c.kind==='crypt'){ layout(); return; }   // crypt cards can't go to hand
+    if(zoneRefuses(c,'hand')){ layout(); return; }   // crypt cards can't go to hand
     if(from!=='hand'){ move(c,'hand'); log(who+' was taken to hand.'); } else layout();
   }
   else if(z==='torpor'){
-    if(c.kind!=='crypt'){ layout(); return; }   // library cards can't go to torpor
+    if(zoneRefuses(c,'torpor')){ layout(); return; }   // library cards can't go to torpor
     if(from!=='torpor') log(who+' → torpor.');
     move(c,'torpor',{keepChildren:true});
   }
   else if(z==='uncontrolled'){
-    if(c.kind!=='crypt'){ layout(); return; }   // library cards can't go to uncontrolled
+    if(zoneRefuses(c,'uncontrolled')){ layout(); return; }   // library cards can't go to uncontrolled
     if(from!=='uncontrolled') log(who+' → the uncontrolled region.');
     move(c,'uncontrolled',{faceDown:from==='uncontrolled'?c.faceDown:true, keepChildren:true});
   }
@@ -13354,11 +13358,11 @@ function groupDrop(c,d){
   } else {
     let nn=0;
     all.forEach(m=>{
-      if(z==='torpor' && m.c.kind!=='crypt') return;       // library cards can't go to torpor
-      if(z==='uncontrolled' && m.c.kind!=='crypt') return;  // library cards can't go to uncontrolled
+      if(zoneRefuses(m.c,z)) return;                        // v2.6.145: the single card's rule, by name -- this branch checked torpor and uncontrolled but not the hand, so a group drag put vampires IN the hand and wiped their blood and lock
       if(move(m.c,z)) nn++;
     });
     if(nn) log('<b>'+nn+'</b> card'+(nn>1?'s':'')+' → '+zname[z]+'.');
+    if(nn<all.length) layout();                             // the refused cards glide back to where they were
   }
 }
 
