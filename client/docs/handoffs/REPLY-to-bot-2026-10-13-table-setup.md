@@ -1,12 +1,13 @@
 # REPLY — main to the bot project: the free board gets seats ("Suggested table setup"), and one ask (13 Oct 2026)
 
-**From:** main (client **v2.6.147** — v2.6.146's table setup and, the same day, the dock pin as an icon; server **srv-2.6.44**). **To:** the bot project. **Answers:** nothing of yours — this is a player's request built on our side. It tells you what is new on the wire and what we would like from the bot. Bot **v0.6.198** was run beside the suite unchanged: client 266/0 (no skips), canary 57/0, soak control exit 0, endpoint 24/0.
+**From:** main (client **v2.6.148** — v2.6.146's table setup, v2.6.147's pin icon and v2.6.148's fixes, one delivery; server **srv-2.6.44**). **To:** the bot project. **Answers:** nothing of yours — this is a player's request built on our side. It tells you what is new on the wire and what we would like from the bot. Bot **v0.6.198** was run beside the suite unchanged: client 271/0 (no skips), canary 57/0, soak control exit 0, endpoint 24/0.
 
 ## 0. In short
 - A Classic room can carry a new option, **Suggested table setup** (ticked by default in Create game and Play offline). With it, each seat's pool globe starts at its own spot around the table, in turn order, and each player's first four crypt cards are laid face down beside it at the deal. After that everything moves as before.
 - **Nothing the bot does today breaks.** One optional field is new on the wire; no verb, no message, no log line the bot parses.
 - **While a bot is seated, our client skips the setup** for everyone at that table: your camp ellipse and our seat spots overlap too often (§3). The humans set up by hand as before and get one log line saying why.
-- **The ask (§4):** when the room has the option, pitch camp at your seat spot instead of the ellipse. Then we drop the guard.
+- **Johan's decision (13 Oct): bots sit at Structured tables only for now** — that is where he has tested them under controlled conditions. v2.6.148 enforces it in the online lobby as well (§5). So nothing here is urgent for you.
+- **The ask (§4), for the day bots come to Classic tables:** when the room has the option, pitch camp at your seat spot instead of the ellipse. Then we drop the guard.
 
 ## 1. What is on the wire
 | Message | New | Notes |
@@ -75,7 +76,7 @@ y     = gy + 4.1                                   // clamped to the table
 - Your camp (`campAnchor()`, spec §6 i) is an ellipse around (502, 300), radii 350 × 180, seat 1 at the top. Its three rows run from `anchor.x − 150` in steps of 96.
 - We laid that against the seat blocks above for every table of 2–6 seats with one bot: **14 of 70** bot-seat / human-seat pairs overlap (five slots per row assumed). The worst: four seats, bot at 2 against the human at 3 — 11 of the bot's 16 rectangles (15 card slots and the globe) touch that human's block.
 - So `tableSetupOn()` is false while a non-vacant `bot` is in the roster. Run with v0.6.198 added from the lobby of a Classic room, option ticked: the humans start on the ring as before, your bot camps at (502, 120) with its four cards at y 205, and each human's log says once, after the deal line: *"The suggested table setup is skipped at a table with bots — they sit by their own pattern for now. Drag your pool globe to your seat and draw your crypt cards as usual."*
-- This is the common online case, not a corner: Classic is the default board style and the option is ticked by default.
+- Until v2.6.147 this was the common online case (Classic is the default board style and the lobby offered Add bot there). From v2.6.148 a bot reaches a Classic table only by its own socket; the guard stays as the safety net for that.
 
 ## 4. The ask
 When `joined.tableSetup` is true (it only ever is in a Classic room):
@@ -86,8 +87,8 @@ When `joined.tableSetup` is true (it only ever is in a Classic room):
 **How will our client know?** For a bot the browser hosts (Add bot, hotseat) we can gate on `ElysiumBot.BOT_VERSION`, as we did for the Hold line. A bot on its own socket has no version on the wire; if you want those tables to get the setup too, propose a signal and we will read it. Until one of the two exists, the guard stays.
 
 ## 5. Found while building this — for your records
-- **The lobby's "bots need a Structured table" rule has never applied online.** `netBotWhy()` reads `boardMode` from the lobby message, which has never carried one, so a Classic room has offered Add bot since v2.6.99 — and your bot plays there (your `caps.classic` path). We measured it, changed nothing, and left the decision with Johan. If your guide or tests say online bots are Structured only, they describe the intent, not the client.
-- **A spectator's free-board view is covered by our welcome layer** (the spectator has no cards, and that layer shows on an empty table). Ours to fix; mentioned only because your debugging may run into it.
+- **The lobby's "bots need a Structured table" rule had never applied online.** `netBotWhy()` read `boardMode` from the lobby message, which has never carried one, so a Classic room offered Add bot from v2.6.99 to v2.6.147 — and your bot played there (your `caps.classic` path; run against the real server on 13 Oct: it draws its four crypt cards and camps). **v2.6.148 closes it on Johan's word:** Add bot is offered in Structured rooms only, online as offline. A bot that joins by its own socket is not affected; the server has no such rule. If any of your tests add a bot to a Classic room through our lobby, they need a Structured room now.
+- **Spectating was broken and is fixed in v2.6.148** (a watcher's client pushed a board, was refused, and the logged refusal scheduled the next push; the welcome layer covered the table). Mentioned because a watcher's `board` and `log` messages no longer reach the server at all.
 
 ## 6. Read, nothing for you
 - The dock pin moved to the hand panel's top right corner, became a needle icon with a tooltip (v2.6.147), and the pinned edge is a thin line. DOM and CSS only.
@@ -95,5 +96,5 @@ When `joined.tableSetup` is true (it only ever is in a Classic room):
 - The deal line on a table with the setup: *"New deal (online): the server shuffled and dealt 7 cards — 4 crypt cards were placed face down beside the pool. Pool: 30. Library: 53 / crypt: 8 remain."* You parse neither `New deal` nor `Drew 1 crypt card` (grepped in v0.6.198); the canary is 57/0.
 
 ## Deploy
-- **Server srv-2.6.44:** restart. **Client v2.6.147:** purge.
+- **Server srv-2.6.44:** restart. **Client v2.6.148:** purge.
 - **Bot v0.6.198:** unchanged, nothing to upload.

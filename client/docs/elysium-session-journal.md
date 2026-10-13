@@ -1,3 +1,41 @@
+## [EN PLATS ÅT ÅSKÅDAREN] — v2.6.148: åskådarläget, ankomst mitt i spelet, och bottar bara på Structured (13 oktober 2026, mitt på dagen)
+
+Johan: "kör" på (b)–(e). För (a): bottar bara på Structured just nu, eftersom det är där han kontrollerat dem
+under kontrollerade former.
+
+**Byggt:**
+- *Åskådare.* En åskådares klient skickar varken bord eller loggrader. Spärren sitter både där sändningen
+  schemaläggs och där den avfyras — en sändning som schemalagts innan klienten visste att den var åskådare gick
+  annars iväg ändå. Mätt efteråt: 0 notiser och 0 skickade ramar på 20 sekunders tittande, båda bordstyperna
+  (förut 53 på 35 sekunder). Välkomstrutan visas inte över ett pågående spel man tittar på.
+- *Ankomst.* Efter Join mitt i spelet stängs dialogen och klienten går till bordet. Spelare: hemvyn. Åskådare på
+  fritt bord: filten. Åskådare på Structured: besök hos den vars tur det är. Samma sak när spelet startar medan
+  åskådaren sitter i lobbyn, och Esc leder dit. En automatisk återanslutning behåller vyn man hade.
+- *Återställning från bordsögonblicksbilden* på fritt bord behåller positionerna för ready, uncontrolled och torpor.
+- *Globen* ligger kvar efter omladdning: platsen läses från serverns kopia av det egna bordet.
+- *Bottar:* Add bot erbjuds bara i Structured-rum, online som offline. Överlämningen till botprojektet säger nu att
+  önskemålet om platserna gäller den dag bottarna kommer till Classic.
+- Åskådarens anslutningsrad säger inte längre "seat undefined".
+
+**Fällor i bygget:**
+- Första körningen visade 1 kvarvarande notis per åskådare. Räkningen av skickade ramar avslöjade den: timern var
+  redan laddad när `net.spect` sattes.
+- Platsbesöket för en Structured-åskådare ritade bara tom filt när det gjordes från startvyn. Via hemvyn först
+  ritas bordet. Flaggorna såg rätt ut; skärmbilden visade felet.
+
+**Lämnat utanför med flit:** helikoptervyn för åskådare på Structured; att åskådarens vy följer turen av sig
+själv; `demoted` (spelare som värden gör till åskådare mitt i spelet) hamnar fortfarande på startvyn, men Esc
+leder nu till bordet.
+
+**Verifierat:** syntaxrent; 271/271 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.147: 5 röda = de
+fem nya); dispatch 64/0; protokoll 6/0; canary 57/0; endpoint 24/0; soak-kontroll exit 0; B1 byte-identisk
+1 516 413; embed --check; check-versions grön. Mot riktig server, båda bordstyperna: åskådare från lobbyn och
+mitt i spelet, omladdning med Resume + Join och med Join + återställning (glob och ett kort dragna först — allt
+tillbaka på plats utan Esc), automatisk återanslutning under platsbesök (vyn kvar), Add bot i båda lobbyerna.
+Alla tidigare webbläsarkörningar omkörda på dessa bytes.
+**Väntar på live-test:** riktiga åskådare vid ett riktigt bord; domare (åskådare med värdverb — inte körd här);
+platsövertagande (`took`); pekskärm.
+
 ## [NÅLEN STÅR] — v2.6.147: pinknappen blir en nål, och ett förslag om de fem svagheterna (13 oktober 2026, förmiddag)
 
 Johan om pinknappen: mer diskret. Nålen sned eller liggande när panelen är lös, stående när den är fäst "så att

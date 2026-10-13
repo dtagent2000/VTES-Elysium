@@ -1,7 +1,7 @@
 # PROJECT-MANIFEST.md — what belongs in the Elysium (MAIN) project upload (9 September 2026, after the split)
 
 *The canonical file set for the claude.ai project knowledge, assembled after THE MERGE
-(client v2.6.102 · server srv-2.6.35 · bot v0.6.107 · digest v1.4; versions below refreshed 13 Oct 2026 -- client v2.6.147 · srv-2.6.44 · bot v0.6.198, run beside the suite). One lineage. When a file
+(client v2.6.102 · server srv-2.6.35 · bot v0.6.107 · digest v1.4; versions below refreshed 13 Oct 2026 -- client v2.6.148 · srv-2.6.44 · bot v0.6.198, run beside the suite). One lineage. When a file
 here disagrees with a chat's latest delivery, the newer version wins — update this manifest
 when files are added or retired. Read order for a new chat: CLAUDE.md → the session journal →
 project context → learnings → (for bots) CLAUDE-arena.md → (for the next chapter)
@@ -18,7 +18,7 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 ## A. Shipped code (deployed to the box / the download bundle)
 | File | Role | Version |
 |---|---|---|
-| elysium-vtes-bord.html | The client — ONE file, built from 12 fragments by elysium-build.js; carries the Help pages (Bots = the bot project's START-HERE-BOTS.html embedded verbatim, Local server = help-local-server.html) | v2.6.147 |
+| elysium-vtes-bord.html | The client — ONE file, built from 12 fragments by elysium-build.js; carries the Help pages (Bots = the bot project's START-HERE-BOTS.html embedded verbatim, Local server = help-local-server.html) | v2.6.148 |
 | elysium-server.js | The reference server (rooms, deals, relays, HTTP intake, statics -- four bot files since srv-2.6.43; the room option `tableSetup` since srv-2.6.44) | srv-2.6.44 |
 | elysium-error-digest.js | Daily Discord digest of elysium-errors.log (systemd timer) | v1.4 |
 | elysium-digest.service / .timer | The digest's systemd unit + timer | — |
@@ -31,7 +31,7 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 |---|---|
 | split_client.py / elysium-build.js | Fragment split ↔ single-file build; B1 gate = split → build → byte-identical |
 | elysium-test-harness.js | Loads the client/server under DOM/fs stubs for the suites |
-| test-client-logic.js | Client suite (266/0 with bot v0.6.198 beside it as of v2.6.147; 265/0 at v2.6.146; 256/0 at v2.6.145; 248/0 as of v2.6.142, incl. the LIVE hold test; 241/0 with v0.6.197 at v2.6.141 — no skips: the LIVE tempo test needs a bot that reads `botcfg` and ran; 240/0 + 1 skip with v0.6.193 at v2.6.140; the `testB` tests skip loudly without the bot; sync battery + testA/testB async runners; `loadClient(path, {storage, location, fetch})` -- `fetch` since v2.6.139) |
+| test-client-logic.js | Client suite (271/0 with bot v0.6.198 beside it as of v2.6.148; 266/0 at v2.6.147; 265/0 at v2.6.146; 256/0 at v2.6.145; 248/0 as of v2.6.142, incl. the LIVE hold test; 241/0 with v0.6.197 at v2.6.141 — no skips: the LIVE tempo test needs a bot that reads `botcfg` and ran; 240/0 + 1 skip with v0.6.193 at v2.6.140; the `testB` tests skip loudly without the bot; sync battery + testA/testB async runners; `loadClient(path, {storage, location, fetch})` -- `fetch` since v2.6.139) |
 | test-server-dispatch.js | Server unit suite (64/0 as of srv-2.6.44; 60/0 at srv-2.6.43; 54 c2s handlers) |
 | elysium-soak-hotseat.js | Hotseat soak v1.0.0: real bots on the real bridge through the real sweep; `--control` proves the trip-wire fires; independent watchdog. Needs the released bot beside it; exit 0 / 2 stuck / 3 cannot run |
 | embed-help.js | v1.0.0 (v2.6.127): embeds a START-HERE-styled page into the client's Help `<template>`s between the `@@HELP` markers (ids prefixed, page script dropped); `--check` = drift, exit 1. Bots page from the bot project's START-HERE-BOTS.html (verbatim); server page from help-local-server.html (ours) |
@@ -45,12 +45,12 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 | File | Role |
 |---|---|
 | CLAUDE.md | Session bootstrap: newest-first version entries, gate sequence, rules |
-| elysium-session-journal.md | Narrative journal (Swedish), newest first — 150 entries (13 Oct 2026) |
+| elysium-session-journal.md | Narrative journal (Swedish), newest first — 151 entries (13 Oct 2026) |
 | elysium-project-context.md | State of every subsystem, newest-first entries — COMPACTED 9 Sep (pre-24-July entries + June–July per-version sections indexed by title; full text in the archive zip) |
 | elysium-learnings.md | Hard-won lessons, newest first — COMPACTED 9 Sep (June–July sections reduced to a title-only lesson index; full text + the bot-harness recipe in the archive zip) |
 | SKILLS.md | Recipes for recurring tasks; Reflects-clause = the current round only (history in the archive) |
 | **elysium-CHANGELOG.md** | Release notes, newest first, one entry per bump — the VERSION lines carry only the current note from v2.6.73 / srv-2.6.32 / bot v0.6.102 on |
-| ELYSIUM-PROTOCOL.md | The client↔server contract (header gated by check-versions; v2.6.147 / srv-2.6.44 — the optional `tableSetup` field came with v2.6.146) |
+| ELYSIUM-PROTOCOL.md | The client↔server contract (header gated by check-versions; v2.6.148 / srv-2.6.44 — the optional `tableSetup` field came with v2.6.146) |
 | elysium-security-manifest.md / elysium-ops-runbook.md / elysium-hosting-plan.md | Ops: threat model, runbook (jq recipes, purge ritual), hosting |
 | kodarkivering.md | Parked client code (retired features) — reference, not policy |
 

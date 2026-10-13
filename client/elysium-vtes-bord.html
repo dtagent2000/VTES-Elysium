@@ -3161,7 +3161,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.147';   // v2.6.147 (13 Oct 2026, THE PIN STANDS, pure client -- purge; srv-2.6.44 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.146 in one PR -- together: restart the server, purge the client): Johan on the dock pin, 'more discreet'. The button is the NEEDLE alone, an inline SVG (the pushpin emoji's own tilt differs from font to font, and a turn has to start from a known angle): it LIES on its side while the hand panel is loose and STANDS, point down, when the panel is pinned -- it looks stuck in. A short turn carries the change (none under reduced motion). The words left the button for its tooltip, 'Not pinned' / 'Pinned', set by setDockPin, which no longer rewrites the button's markup; aria-label 'Keep the panel open' is the constant name and aria-pressed the state. Same corner, same click, and a click on the panel's background still pins. Previous note: elysium-CHANGELOG.md.
+const VERSION='2.6.148';   // v2.6.148 (13 Oct 2026, A SEAT FOR THE WATCHER, pure client -- purge; srv-2.6.44 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.146-147 in one PR -- together: restart the server, purge the client): the five weaknesses found with v2.6.146, each measured on v2.6.145 first. (1) SPECTATING: a watcher's client pushed its empty board, the server refused ('Spectators can only chat.'), the refusal was logged, and log -> scheduleSave -> schedulePush sent the next one -- 53 notices in 35 s of watching. schedulePush / pushNow / mpRelay send nothing for a spectator. The welcome layer no longer covers a running game someone watches (mpWatching). (2) ARRIVING: joined (mid-game) and started close the Join dialog and go to the table (mpLandAtTable) -- a player's home view; a watcher's shared felt on the free board, and on a Structured table a visit to the seat whose turn it is (mpLandView; Esc / Home lead there too). An automatic reconnect keeps the view it had. (3) 'Restore your board from the table snapshot' on a free-board table keeps the published positions of ready, uncontrolled and torpor cards (ready was rescaled by the live board, the other two fell to the centre row). (4) A reload keeps the own pool globe where it was: joined reads it from the server's copy of the board (the pool token in myPub). (5) Johan: bots on Structured tables only for now -- the lobby's rule read a key the lobby message never had, so a Classic room offered Add bot since v2.6.99; netBotWhy reads net.boardMode. Previous note: elysium-CHANGELOG.md.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -8016,6 +8016,7 @@ function renderL4Globes(){
     const glob=createL4Globe(p.seat, p.name, pool, mine);
     const prev=savedPos.get(p.seat);
     if(prev){ glob.x=prev.x; glob.y=prev.y; }   // restore saved position
+    else if(mine && net._myGlobeAt){ glob.x=net._myGlobeAt.x; glob.y=net._myGlobeAt.y; }   // v2.6.148: after a reload, where the server last saw it
     else if(_setup){ const so=l4SeatOf(p.seat), sp=l4SeatSpot(so.idx, so.N); glob.x=sp.x; glob.y=sp.y; }   // v2.6.146: the suggested table setup -- every seat starts at its own spot
     else { glob.x=Math.round(cx+R*Math.cos(angle)-32); glob.y=Math.round(cy+R*Math.sin(angle)-32); }   // first render: default circle
     placeL4Globe(glob);
@@ -9250,7 +9251,7 @@ function cleanAddr(a, sec){
   return s;
 }
 function mpRelay(html){
-  if(net.status==='in' && net.ws && net.ws.readyState===1){
+  if(net.status==='in' && !net.spect && net.ws && net.ws.readyState===1){   // v2.6.148: a spectator's log lines are its own -- the server refuses them like the board
     try{ net.ws.send(JSON.stringify({t:'log', html})); }catch(err){}
   }
   hotRelayLog(html);                                          // v2.6.95: the hotseat mirror of the server's broadcast -- same contract, no server
@@ -9356,6 +9357,22 @@ function mpConnect(addr, then, secHint){
   };
 }
 function mpRejoin(){ mpSend({t:'join', room:net.room, token:net.token}); }
+function mpWatching(){ return inRoom() && !!net.spect && !net.lobby; }   // v2.6.148: a spectator at a table whose game is running
+function mpLandView(){                                             // v2.6.148 pure-ish: the view someone ARRIVING at a running game should see
+  if(net.spect && !freeBoard()){                                  // Structured: a watcher's home view is its own empty board -- visit the seat whose turn it is (seat visits are the view that works for a watcher)
+    const live=(net.roster||[]).filter(p=>p && !p.vacant), t=live.find(p=>p.seat===net.turnSeat) || live.find(p=>!p.out) || live[0];
+    if(t) return t.seat;
+  }
+  return baseView();                                               // a player's home view; on the free board also a watcher's (the shared felt)
+}
+function mpLandAtTable(){                                          // v2.6.148: joined / started used to leave a mid-game joiner and every spectator on the start view until Esc
+  if(net.lobby || !inRoom()) return;
+  if(shownModal()==='mpModal') closeOverlay();                    // the Join dialog has nothing left to say
+  const v=mpLandView();
+  if(typeof v==='number' && net.view!=='l2') switchView(baseView());   // a seat visit is drawn inside the home view's frame -- from the start view it showed bare felt
+  switchView(v);
+  if(typeof syncWelcome==='function') syncWelcome();
+}
 function rememberName(){
   const nm=$('#mpName').value.trim();
   if(nm){ state.playerName=nm; $('#pname').textContent=nm;
@@ -9510,7 +9527,7 @@ function mpLeave(){
   if(net.status==='in') mpSend({t:'leave'});
   net.status='off'; net.room=null; net.token=null; net.you=null; net.roster=[];
   if(typeof syncWelcome==='function') syncWelcome();   // v2.6.46: retire the Return-to-room affordance the moment the room is gone
-  net.boardMode='structured'; net.tableSetup=false; net.setupSpots=null; net.tournLock=false; net._undoPush=false;
+  net.boardMode='structured'; net.tableSetup=false; net.setupSpots=null; net._myGlobeAt=null; net.tournLock=false; net._undoPush=false;
   net.deckUp=false; net.libN=0; net.cryptN=0; net.boards={};
   net.lobby=false; net.lobbyData=null; net.rolls=[]; net.isHost=false; net.isRef=false; net.muted=false;
   try{ netBotsTeardown(); }catch(_e){}                 // v2.6.99: the host's bots live in this tab and die with the room
@@ -9544,8 +9561,8 @@ const MP_HANDLERS = {
     mpStore({addr:net.addr, sec:net.sec, room:net.room, token:net.token, name:net.you});
     updateRoomBar(); mpUI();
     net.lobby=!!m.lobby;
-    mpStatus(net.lobby ? 'In the lobby for "'+m.room+'" as '+m.you+'.' : 'In room "'+m.room+'" as '+m.you+' (seat '+m.seat+').');
-    log((was==='re'?'Reconnected to':'Joined')+' '+(net.lobby?'the lobby for':'room')+' <b>'+esc(m.room)+'</b> as <b>'+esc(m.you)+'</b>'+(net.lobby?'.':' — seat '+m.seat+'.'), true);
+    mpStatus(net.lobby ? 'In the lobby for "'+m.room+'" as '+m.you+'.' : 'In room "'+m.room+'" as '+m.you+(m.spect?' (watching).':' (seat '+m.seat+').'));
+    log((was==='re'?'Reconnected to':'Joined')+' '+(net.lobby?'the lobby for':'room')+' <b>'+esc(m.room)+'</b> as <b>'+esc(m.you)+'</b>'+((net.lobby||m.spect)?'.':' — seat '+m.seat+'.'), true);   // v2.6.148: a spectator has no seat (the line said 'seat undefined')
     net.turnSeat=m.turn||null;
     net.matchEnd=m.matchEnd||null; net.reactSecs=m.reactSecs||5; net.tableViewLock=m.tableView||null; net.l3shapeLock=m.l3shape||null; net.boardMode=m.boardMode||'structured'; net.tournLock=!!m.tournLock;
     net.tableSetup=!!m.tableSetup;                                  // v2.6.146 (srv-2.6.44): the room's 'Suggested table setup' option, Classic rooms only
@@ -9569,6 +9586,9 @@ const MP_HANDLERS = {
     if(net.spect) toast('Watching '+esc(m.room||'')+' — you have no seat. 👁');
     net.rtarget=null; updateTargetBtn();
     if(m.escrowSalt){ net.escrowSalt=m.escrowSalt; if(net.pass) setTimeout(ensureEscrowKey, 50); }
+    { const _gt=(!net.lobby && !net.spect && m.myPub && Array.isArray(m.myPub.tokens)) ? m.myPub.tokens.find(t=>t && t.type==='pool' && Number.isFinite(t.x) && Number.isFinite(t.y)) : null;
+      net._myGlobeAt=_gt ? { x:_gt.x, y:_gt.y } : null; }           // v2.6.148: where I left my pool globe, from the server's copy of my board -- the local save holds no globe position, so a reload put it back on its default spot
+    if(was!=='re') mpLandAtTable();                                 // v2.6.148: BEFORE the restore question below, so its dialog does not bring the Join dialog back. Not on an automatic reconnect -- that client is already where its player was looking
     if(!net.lobby && !net.spect && m.myPub && (m.myPub.cards||[]).length && state.cards.size===0){
       const canHand=!!(m.handBlob && net.pass && net.escrowSalt);
       const msg=canHand
@@ -9677,7 +9697,9 @@ const MP_HANDLERS = {
     log('<span class="sysline">The game has begun — seats are locked. Your hand is being dealt.</span>', true);
     startMatchClock();
     renderStats(); updateRoomBar();
-    if(!net.spect){ schedulePush(); switchView(baseView()); }   // online game opens in the home view
+    net._myGlobeAt=null;
+    if(!net.spect) schedulePush();
+    mpLandAtTable();                                               // online game opens at the table -- v2.6.148: for a spectator too (they were left on the start screen)
   },
   err(m){
     if(net._rlTimer){ clearTimeout(net._rlTimer); net._rlTimer=null; }   // v2.5.97: ANY err during the browse window means the server answered -- the 1.5s "predates the lobby" fallback would overwrite the real message (e.g. wrong --server-pass) with a misleading one
@@ -10336,13 +10358,15 @@ function hotSchedulePushBoard(){
 function schedulePush(){
   if(avr.mode==='combat') avrDuelRender();   // v2.6.19: every own-board mutation refreshes the duel panels (cheap: hidden-guard + two small panels); placed before the inRoom gate so hotseat gets it too
   if(!inRoom()){ hotSchedulePushBoard(); return; }   // v2.6.98: offline the bot seats ARE the table -- same board, same 600 ms debounce
+  if(net.spect) return;                              // v2.6.148: a spectator has no board. This push was refused ('Spectators can only chat.'), the refusal was logged, and log -> scheduleSave -> here sent the next one: an echo every 600 ms for as long as anyone watched
   clearTimeout(pushTimer);
-  pushTimer=setTimeout(()=>{ if(inRoom() && net.ws && net.ws.readyState===1){ mpSend({t:'board', pub:buildPub(), undo:net._undoPush||undefined}); net._undoPush=false; } },600);   // v2.5.95: carry + consume the undo mark only on an ACTUAL send (if the socket is down the mark survives until the board really syncs)
+  pushTimer=setTimeout(()=>{ if(inRoom() && !net.spect && net.ws && net.ws.readyState===1){ mpSend({t:'board', pub:buildPub(), undo:net._undoPush||undefined}); net._undoPush=false; } },600);   // v2.5.95: carry + consume the undo mark only on an ACTUAL send (if the socket is down the mark survives until the board really syncs)
   pushEscrow();
   refreshOpenHands();
 }
 function pushNow(){   // v2.5.59 (backlog 2.2 companion): immediate push for actions ANOTHER player is actively waiting on (recall/ctrl on the holder side) - the 600ms debounce exists for typing-speed local edits, not for cross-board round-trips
   if(!inRoom()){ hotPushBoardNow(); return; }        // v2.6.98
+  if(net.spect) return;                              // v2.6.148: see schedulePush
   clearTimeout(pushTimer);
   if(net.ws && net.ws.readyState===1){ mpSend({t:'board', pub:buildPub(), undo:net._undoPush||undefined}); net._undoPush=false; }   // v2.5.95: same undo-mark carry as schedulePush
   pushEscrow();
@@ -10509,7 +10533,7 @@ function freeBoard(){ return net.boardMode==='classic'; }
 function l4on(){ return board.classList.contains('l4mode'); }
 const L4_CARD_S=0.5, L4_TOKEN_S=0.7;   // L4 Free Board element scale: cards at 50%, tokens/globes at 70% — change here to adjust
 function baseView(){ return freeBoard() ? 'l4' : 'l2'; }              // Home view is always L2/Normal (v1.99.27: L1/Simplified retired as a reachable view). A solo table renders fine in L2 (renderL2's no-opponent branch centres your board full-area). The host-lock tableViewLock is no longer checked (only option was Normal vs Simplified).
-function goHome(){ switchView(baseView()); if(typeof syncWelcome==='function') syncWelcome(); }       // Home / Esc / your own seat -> your home view (v2.6.44: refresh the Return-to-room affordance)
+function goHome(){ switchView(mpWatching() ? mpLandView() : baseView()); if(typeof syncWelcome==='function') syncWelcome(); }       // Home / Esc / your own seat -> your home view (v2.6.44: refresh the Return-to-room affordance)
 function cycleView(){                          // § : toggle the overview (L3) <-> your home view (L2/L1 per settings; host-lock overrides via baseView)
   if(freeBoard()) return;
   switchView(net.view==='ov' ? baseView() : 'ov');
@@ -10940,7 +10964,7 @@ const MP_MAX_PLAYERS=6;                                           // mirror of t
 function netBotWhy(){                                             // '' = the host may add one; otherwise the reason, shown on the disabled button
   if(!net.lobby || !net.isHost) return 'Only the host can add bots, and only in the lobby.';
   if(uiLite()) return 'Bots are a Full mode feature.';
-  if(((net.lobbyData||{}).boardMode||'structured')==='classic')
+  if((((net.lobbyData||{}).boardMode)||net.boardMode||'structured')==='classic')   // v2.6.148 (Johan: bots on Structured only for now): net.boardMode (from `joined`) is the room's board style -- the lobby message has NEVER carried one, so this rule read undefined and a Classic room offered Add bot since v2.6.99
     return 'Bots need a Structured table \u2014 create the room as Structured.';   // board mode is fixed at creation; no verb changes it
   /* v2.6.102 (Johan, browser pass): this used to compare against the lobby snapshot's
      `seats`, which is NOT the table's capacity -- srv 318 sets it to room.players.length,
@@ -12900,9 +12924,10 @@ function layout(){
   const _hn=state.zones.hand.length;
   $('#cnt-hand').textContent=_hn+'/'+state.maxHand;
   $('#z-hand').title='Hand: '+_hn+'/'+state.maxHand+' cards — scroll to adjust max hand size';
-  $('#empty').style.display = state.cards.size ? 'none' : 'grid';
+  const _watching=mpWatching();                                   // v2.6.148: a spectator never holds cards -- the welcome layer covered every table they watched
+  $('#empty').style.display = (state.cards.size || _watching) ? 'none' : 'grid';
   syncIdleUI();                                                   // v2.6.79: L0 with an empty table and no game is a LOBBY -- the in-game chrome hides
-  board.classList.toggle('tableEmpty', !state.cards.size);   // E1: while the overlay covers an empty board (a just-joined guest), hide the Edge button so it can't float over the overlay's Settings box (see #board.tableEmpty #edge)
+  board.classList.toggle('tableEmpty', !state.cards.size && !_watching);   // E1: while the overlay covers an empty board (a just-joined guest), hide the Edge button so it can't float over the overlay's Settings box (see #board.tableEmpty #edge)
   document.body.classList.toggle('hotseat', !!localTable);   // offline hotseat -> hand face-down until hover, board + Alt-view (see CSS)
   if(typeof net.view==='number') renderRVHand();
   renderStats();
@@ -15792,17 +15817,18 @@ function showSay(i, who, seat){
 function restoreFromPub(pub){
   const sx=(board.clientWidth-CW)/Math.max(1,(pub.bw||board.clientWidth)-CW);
   const sy=(board.clientHeight-CH)/Math.max(1,(pub.bh||board.clientHeight)-CH);
-  const made=new Map();
+  const made=new Map(), _fb=freeBoard();
   (pub.cards||[]).forEach(pc=>{
     const c=makeCard(String(pc.name||'Card'), pc.kind==='crypt'?'crypt':'lib');
     made.set(pc.id,c);
     move(c, PUBZ.includes(pc.zone)?pc.zone:'ready', {});
+    if(_fb && (pc.zone==='ready'||pc.zone==='uncontrolled'||pc.zone==='torpor') && Number.isFinite(pc.x) && Number.isFinite(pc.y)){ c.x=pc.x; c.y=pc.y; }   // v2.6.148: the free board's coordinates ARE the published ones (canonical felt) -- no scaling, and all three table zones keep their place
     c.faceDown=!!pc.faceDown; c.locked=!!pc.locked;
     c.blood=Math.max(0,pc.blood|0); c.blue=Math.max(0,pc.blue|0); c.green=Math.max(0,pc.green|0);
     c.counters=(pc.counters||[]).slice(0,12).map(String);
     c.owner=pc.owner||null; c.controller=pc.controller||null;
     c._avSeq=pc._avSeq||0;   // carry play-order timestamp so a restored online snapshot keeps Played-tab order
-    if(pc.zone==='ready'){
+    if(pc.zone==='ready' && !_fb){
       c.x=Math.max(4,Math.min((pc.x||0)*sx, board.clientWidth-CW-4));
       c.y=Math.max(34,Math.min((pc.y||0)*sy, board.clientHeight-CH-4));
     }

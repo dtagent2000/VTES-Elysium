@@ -364,7 +364,10 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   l4SetupSpots: (typeof l4SetupSpots!=='undefined'?l4SetupSpots:undefined), l4SeatGeo: (typeof l4SeatGeo!=='undefined'?l4SeatGeo:undefined),
   get L4_SEAT(){ return (typeof L4_SEAT!=='undefined')?L4_SEAT:undefined; }, pubBox: (typeof pubBox!=='undefined'?pubBox:undefined),
   get l4Globes(){ return (typeof l4Globes!=='undefined')?l4Globes:undefined; }, renderL4Globes: (typeof renderL4Globes!=='undefined'?renderL4Globes:undefined),
-  mySeat: (typeof mySeat!=='undefined'?mySeat:undefined), freeBoard: (typeof freeBoard!=='undefined'?freeBoard:undefined)
+  mySeat: (typeof mySeat!=='undefined'?mySeat:undefined), freeBoard: (typeof freeBoard!=='undefined'?freeBoard:undefined),
+  mpWatching: (typeof mpWatching!=='undefined'?mpWatching:undefined), mpLandView: (typeof mpLandView!=='undefined'?mpLandView:undefined),   // v2.6.148: arriving at a running game
+  restoreFromPub: (typeof restoreFromPub!=='undefined'?restoreFromPub:undefined), schedulePush: (typeof schedulePush!=='undefined'?schedulePush:undefined),
+  pushNow: (typeof pushNow!=='undefined'?pushNow:undefined), mpRelay: (typeof mpRelay!=='undefined'?mpRelay:undefined)
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',

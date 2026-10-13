@@ -3941,6 +3941,87 @@ test('v2.6.146: the pin button is the panel\'s own corner and the pinned edge is
   assert(html.indexOf("_pb.title=dockPinned?'Pinned':'Not pinned';") > 0, 'v2.6.147: the button says nothing itself -- the words (Pinned / Not pinned) are its tooltip');
   const A = loadClient(CLIENT); A.setDockPin(true); eq(A.dockPinned, true); A.setDockPin(false); eq(A.dockPinned, false);
 });
+test('v2.6.148: a spectator sends no board and no log line -- the refused push was logged, and the log line scheduled the next push', () => {
+  const A = loadClient(CLIENT), sent = [];
+  A.net.ws = { readyState: 1, send: j => sent.push(JSON.parse(j)) }; A.net.status = 'in'; A.net.you = 'Titta'; A.net.roster = ROSTER146(2);
+  A.net.spect = true;
+  A.pushNow(); A.mpRelay('<b>x</b>'); A.MP_HANDLERS.err({ msg: 'Spectators can only chat.' });
+  eq(sent.length, 0, 'nothing leaves a watching client: ' + JSON.stringify(sent));
+  A.net.spect = false;
+  A.pushNow(); A.mpRelay('<b>x</b>');
+  eq(sent.map(m => m.t).join(), 'board,log', 'a player still pushes and relays');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("pushTimer=setTimeout(()=>{ if(inRoom() && !net.spect && net.ws") > 0, 'the debounced push checks again when it FIRES -- one scheduled before the client knew it was watching still went out');
+  assert(/function schedulePush\(\)\{[\s\S]{0,400}\n  if\(net\.spect\) return;/.test(html), 'and schedulePush stops before arming the timer');
+});
+test('v2.6.148: arriving at a running game -- a watcher is "watching" only once the game runs, lands on the felt of a free board and on the turn-holder\'s seat of a Structured table; a player lands at home; the welcome layer stays off a watched table', () => {
+  const A = loadClient(CLIENT);
+  A.net.status = 'in'; A.net.you = 'Titta'; A.net.roster = ROSTER146(3); A.net.spect = true;
+  A.net.lobby = true; eq(A.mpWatching(), false, 'not in the lobby');
+  A.net.lobby = false; eq(A.mpWatching(), true);
+  A.net.boardMode = 'classic'; eq(A.mpLandView(), 'l4', 'the shared felt');
+  A.net.boardMode = 'structured'; A.net.turnSeat = 2; eq(A.mpLandView(), 2, 'the seat whose turn it is');
+  A.net.turnSeat = null; eq(A.mpLandView(), 1, 'no turn known: the first seat');
+  A.net.roster[0].out = true; eq(A.mpLandView(), 2, 'an ousted seat is passed over');
+  A.net.roster[0].out = false; A.net.roster[0].vacant = true; A.net.turnSeat = 1; eq(A.mpLandView(), 2, 'and a vacant one');
+  A.net.spect = false; A.net.you = 'Johan'; eq(A.mpLandView(), 'l2', 'a player: the home view'); eq(A.mpWatching(), false);
+  A.net.status = 'off'; A.net.spect = true; eq(A.mpWatching(), false, 'not without a room');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("$('#empty').style.display = (state.cards.size || _watching) ? 'none' : 'grid';") > 0, 'the welcome layer');
+  assert(html.indexOf("if(was!=='re') mpLandAtTable();") > 0, 'joined goes to the table -- but an automatic reconnect keeps the view the player had');
+  assert(/if\(!net\.spect\) schedulePush\(\);\n    mpLandAtTable\(\);/.test(html), 'started takes a spectator along too');
+  assert(html.indexOf("function goHome(){ switchView(mpWatching() ? mpLandView() : baseView());") > 0, 'Esc / Home lead a watcher to the same place');
+  assert(html.indexOf("if(typeof v==='number' && net.view!=='l2') switchView(baseView());") > 0, 'a seat visit is entered through the home frame (from the start view it drew bare felt)');
+  assert(html.indexOf("if(shownModal()==='mpModal') closeOverlay();") > 0, 'and the Join dialog closes');
+});
+test('v2.6.148: restoring from the table snapshot on a free-board table keeps every published position; a Structured table restores as before', () => {
+  const A = loadClient(CLIENT);
+  const pub = { bw: 1004, bh: 616, pool: 27, cards: [
+    { id: 'a', name: 'V1', kind: 'crypt', zone: 'ready', x: 602, y: 150, faceDown: true },
+    { id: 'b', name: 'V2', kind: 'crypt', zone: 'uncontrolled', x: 486, y: 29, faceDown: true },
+    { id: 'c', name: 'V3', kind: 'crypt', zone: 'torpor', x: 700, y: 400 },
+    { id: 'd', name: 'L1', kind: 'lib', zone: 'ash' } ] };
+  A.net.status = 'in'; A.net.you = 'Johan'; A.net.roster = ROSTER146(2); A.net.boardMode = 'classic';
+  A.restoreFromPub(pub);
+  const by = n => [...A.state.cards.values()].find(c => c.name === n);
+  eq(JSON.stringify([by('V1').x, by('V1').y]), '[602,150]', 'ready: as published (it was rescaled by the live board)');
+  eq(JSON.stringify([by('V2').x, by('V2').y, by('V2').faceDown]), '[486,29,true]', 'uncontrolled keeps its place and its back (it fell to the centre row)');
+  eq(JSON.stringify([by('V3').x, by('V3').y]), '[700,400]', 'torpor too');
+  eq(A.state.pool, 27);
+  const B = loadClient(CLIENT);
+  B.net.status = 'in'; B.net.you = 'Johan'; B.net.roster = ROSTER146(2); B.net.boardMode = 'structured';
+  B.restoreFromPub(pub);
+  const u = [...B.state.cards.values()].find(c => c.name === 'V2');
+  eq(JSON.stringify([u.x, u.y]), '[0,0]', 'Structured: zone-laid cards carry no position, as before');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("if(pc.zone==='ready' && !_fb){") > 0, 'the old scaling stays for the Structured layout only');
+});
+test('v2.6.148: a reload keeps the own pool globe -- joined reads its place from the server\'s copy of the board, and a new match forgets it', () => {
+  const A = loadClient(CLIENT);
+  A.net.ws = { readyState: 1, send(){} };
+  const J = extra => Object.assign({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(5), boardMode: 'classic', tableSetup: true, lobby: false, srv: '2.6.44' }, extra);
+  A.MP_HANDLERS.joined(J({ myPub: { cards: [], tokens: [{ type: 'edge', x: 1, y: 2 }, { type: 'pool', x: 520, y: 126 }] } }));
+  eq(JSON.stringify(A.net._myGlobeAt), '{"x":520,"y":126}');
+  A.l4Globes.clear(); A.renderL4Globes();
+  eq(JSON.stringify([A.l4Globes.get(1).x, A.l4Globes.get(1).y]), '[520,126]', 'my globe: where the server last saw it');
+  eq(JSON.stringify([A.l4Globes.get(2).x, A.l4Globes.get(2).y]), '[385,25]', 'the others: their seat spots until their boards arrive');
+  A.MP_HANDLERS.joined(J({ myPub: { cards: [] } })); eq(A.net._myGlobeAt, null, 'no token, nothing remembered');
+  A.MP_HANDLERS.joined(J({ spect: true, myPub: { cards: [], tokens: [{ type: 'pool', x: 5, y: 5 }] } })); eq(A.net._myGlobeAt, null, 'a spectator has no globe');
+  A.net._myGlobeAt = { x: 1, y: 1 }; A.MP_HANDLERS.started({ players: ROSTER146(5), turn: 1, boardMode: 'classic', tableSetup: true });
+  eq(A.net._myGlobeAt, null, 'a new match starts from the seats');
+});
+test('v2.6.148: the lobby offers Add bot in a Structured room only -- the rule reads the ROOM\'s board style, because the lobby message never carried one', () => {
+  const A = loadClient(CLIENT);
+  A.net.lobby = true; A.net.isHost = true; A.conv.uiMode = 'full';
+  A.net.lobbyData = { players: [{ name: 'a' }], seats: 1 };         // exactly what the server sends: seats, players, watchers
+  A.net.boardMode = 'classic';
+  assert(/Structured/.test(A.netBotWhy()), 'a Classic room refuses');
+  A.net.boardMode = 'structured';
+  eq(A.netBotWhy(), '', 'a Structured room offers the button');
+  const srv = require('fs').readFileSync(require('path').join(__dirname, 'elysium-server.js'), 'utf8');
+  const ls = srv.slice(srv.indexOf('function lobbyState(room){'), srv.indexOf('function bcastLobby'));
+  eq(/boardMode/.test(ls), false, 'the server\'s lobby message has no boardMode -- which is why the old check never fired');
+});
 test('v2.6.147: the pin is the needle alone -- it lies while the panel is loose and stands when the panel is pinned, the tooltip says which, and the setter never rewrites the button', () => {
   const html = require('fs').readFileSync(CLIENT, 'utf8');
   const m = /<button type="button" id="l2dockPin" aria-pressed="false" aria-label="([^"]+)" title="Not pinned"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="[^"]+"\/><\/svg><\/button>/.exec(html);

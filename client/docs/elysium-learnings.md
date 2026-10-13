@@ -1,8 +1,15 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.147 / server v2.6.44 / bot v0.6.198 tested beside the suite, last updated 13 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.148 / server v2.6.44 / bot v0.6.198 tested beside the suite, last updated 13 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**v2.6.148 (13 Oct 2026, A SEAT FOR THE WATCHER):**
+- **Guard a debounced send where it fires, not only where it is armed (13 Oct).** `schedulePush` returned early for a spectator and one board still went out: the timer had been armed inside `joined`, before the handler set `net.spect`. The condition belongs in the callback too.
+- **Count frames, not symptoms (13 Oct).** 'No more notices' was checked by counting what the watcher's socket SENT (Playwright's `framesent`). The count said 1 when the log looked clean enough — and that one frame was the bug above.
+- **A view entered from the wrong place can draw nothing (13 Oct).** A seat visit from the start view showed bare felt; the same visit from the home view showed the board. Land through the home frame, and look at the screenshot — `net.view` and the overlay's class were both 'right'.
+- **A fix written, reverted and written again is three decisions, not waste (13 Oct).** The Add bot rule: fixed on the way, reverted because Classic is the default, restored when Johan chose Structured-only. The code is the same line; the difference is who decided.
+- **Fixing an arrival path means running every arrival (13 Oct).** Spectator from the lobby, spectator mid-game, reload + Resume + Join, reload + Join + restore, automatic reconnect while visiting a seat — on both board styles. The reconnect case is the one a plain 'switch to the table on joined' would have broken.
 
 **v2.6.147 (13 Oct 2026, THE PIN STANDS):**
 - **An icon that must turn is drawn, not borrowed (13 Oct).** The pushpin emoji is tilted by its font, and each font tilts it differently. A rotation that means something (lying = loose, standing = pinned) has to start from a known angle: one SVG path drawn point down, turned by CSS.
