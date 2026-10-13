@@ -3798,6 +3798,25 @@ test('v2.6.146: the seat spots -- for 1 to 6 seats every seat has its own footpr
   const far = API.l4CryptSpots(960, 500); assert(far.every(c => c.x + G.cw <= 960 && c.x >= T.x), 'near the right edge the cards go to the left'); assert(far[0].y + G.ch <= T.y + T.h, 'and are clamped onto the table');
   const mid = API.l4CryptSpots(500, 250); assert(mid.every(c => c.x >= 500 + G.gw), 'in the middle they go to the right');
 });
+test('v2.6.152 (preview): the table rim -- with Settings handRim=rim on a free board the lower row ends at y 508 (above the pockets\' strip) and the top row sits 8 px lower (clear of the Played tab); the default and a Structured table keep the old spots; rimOn needs the L4 view, rimSeats only the free board (a hotseat deals before the view enters L4)', () => {
+  const API = loadClient(CLIENT);
+  if (!API.rimSeats || !API.rimOn || !API.rimGeo) throw new Error('rimSeats / rimOn / rimGeo not exposed (harness needs updating)');
+  const G = API.l4SeatGeo();
+  eq(API.conv.handRim, 'dock', 'off by default');
+  eq(API.L4_SEAT.rimBottom, 508); eq(API.L4_SEAT.rimTop, 8);
+  API.net.boardMode = 'classic';
+  eq(API.rimSeats(), false); eq(API.l4SeatSpot(4, 5).y, 341, 'default: the old lower spot');
+  API.conv.handRim = 'rim';
+  eq(API.rimSeats(), true); eq(API.rimOn(), false, 'rimOn needs the L4 view (the stub reports l4mode only when seeded)');
+  eq(Math.round(API.l4SeatSpot(4, 5).y + G.dy + G.ch), 508, 'rim: a lower-row card ends at 508 (the globe spot is rounded)');
+  eq(API.l4SeatSpot(0, 5).y, 33, 'rim: the top row at y 33');
+  eq(API.l4SeatSpot(0, 5).x, 26); eq(API.l4SeatSpot(3, 5).x, 933, 'x unchanged');
+  API.net.boardMode = 'structured';
+  eq(API.rimSeats(), false, 'a Structured table never uses the rim'); eq(API.l4SeatSpot(4, 5).y, 341);
+  const g = API.rimGeo();
+  assert(g.hand.w > 3 * g.pw, 'the hand pocket is the widest'); assert(g.crypt.x < g.library.x && g.library.x + g.pw <= g.hand.x && g.hand.x + g.hand.w <= g.ash.x, 'crypt, library, hand, ash heap from left to right');
+  assert(g.raised < g.crypt.tuck && g.hand.tuck < g.crypt.tuck, 'raised is higher than tucked; the hand shows a taller strip (its titles)');
+});
 test('v2.6.146: tableSetupOn -- a Classic table with the option; never a Structured one; never a table with a seated bot (bots camp by their own pattern); a vacant bot seat does not count', () => {
   const A = loadClient(CLIENT);
   if (!A.tableSetupOn) throw new Error('tableSetupOn not exposed (harness needs updating)');
@@ -4190,7 +4209,7 @@ test('v2.6.149 (K5) / v2.6.150: another seat\'s resolver never opens the Played 
   assert(/let playedPinned=false, playedShowT=null, playedHideT=null, playedAutoPin=false;[^\n]*\nlet avr=avrFresh\(null\)/.test(html), 'the tray\'s state is declared beside avr: avrRender runs during start-up and reads it (declared where playedPinned was, the page died in the TDZ -- twice)');
   assert(html.indexOf("if(!_ov($('#playedOverlay')) && !_ov($('#playedTab'))) hidePlayedSoon(); } }") > 0, 'a hover peek the live resolver held open closes with it too (the review found it: hidePlayedSoon refuses while a resolver runs, and nothing hid it afterwards)');
   eq(API.L4_SEAT.topY, undefined, 'v2.6.150: the top row is back at the top edge');
-  assert(html.indexOf("const gy=top ? T.y+L4_SEAT.m : L4_SEAT.lowBottom-G.ch-G.dy;") > 0, 'the seat formula');
+  assert(html.indexOf("const gy=top ? T.y+L4_SEAT.m+(rimSeats()?L4_SEAT.rimTop:0) : (rimSeats()?L4_SEAT.rimBottom:L4_SEAT.lowBottom)-G.ch-G.dy;") > 0, "the seat formula (v2.6.152: the table rim moves both rows)");
   eq(html.indexOf("hx(AVR_HKEYS[avr.mode]) && !playedIsOpen()) pinPlayedAuto(); avrRender();"), -1, 'the tally handler pins nothing');
 });
 test('v2.6.149 (K6): a roster change no longer empties the felt of the other seats\' cards, and a seat that dropped off says so on its globe', () => {

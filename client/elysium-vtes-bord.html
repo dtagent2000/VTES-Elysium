@@ -685,6 +685,15 @@ body.invisit #edge{ display:none !important; }
     #board.l3mode.l2dockopen #l2dockbg{ display:block; position:absolute; left:0; right:0; bottom:0; height:calc(1.5% + (var(--ch) + 34px) * var(--dock-s) + 14px); z-index:4400; background:linear-gradient(to top, rgba(12,9,6,.97) 62%, rgba(12,9,6,.72)); border-top:1px solid rgba(176,141,79,.4); }   /* same hugging height as the L2 rule above (this rule also covers L4, which carries .l3mode) */
     #board.l3mode.l2dockopen #z-crypt, #board.l3mode.l2dockopen #z-library, #board.l3mode.l2dockopen #z-ash, #board.l3mode.l2dockopen #z-hand{ z-index:4600; }
     #board.l3mode:not(.l2dockopen) #z-crypt, #board.l3mode:not(.l2dockopen) #z-library, #board.l3mode:not(.l2dockopen) #z-ash, #board.l3mode:not(.l2dockopen) #z-hand{ display:none; }   /* L3: crypt/library/ash/hand live ONLY in the bottom dock -> hidden on the board when the dock is collapsed (shown only inside the open dock) */
+    /* ===== v2.6.152 (Johan, preview): THE TABLE RIM -- on the free board, with Settings -> 'Tucked into the table edge', there is no dock. The four own zones (crypt, library, hand, ash heap)
+       sit as pockets along the felt's bottom edge, each showing a strip (card backs, the hand's card titles); the pocket under the pointer rises (rimHover). The board keeps .l2dockopen so every
+       dock rule for drops, drags and card scale still holds; .l4rim hides the dock's own chrome and restyles the four zones (positions are inline, set by rimApply). */
+    #board.l4rim #l2dock, #board.l4rim #l2dockbg, #board.l4rim #z-pool, #board.l4rim #dockLog, #board.l4rim #l2dockPin, #board.l4rim #l2dockClose{ display:none !important; }
+    #board.l4rim #z-crypt, #board.l4rim #z-library, #board.l4rim #z-ash, #board.l4rim #z-hand{ bottom:auto; right:auto; border-radius:12px 12px 0 0; border-style:solid; border-color:rgba(176,141,79,.32); background:linear-gradient(to top, rgba(12,9,6,.96), rgba(12,9,6,.74)); transition:top .26s cubic-bezier(.2,.85,.25,1), border-color .2s, box-shadow .2s; }
+    #board.l4rim .zone.rimup{ border-color:rgba(176,141,79,.62); box-shadow:0 -10px 34px rgba(0,0,0,.6); }
+    #board.l4rim .card.rimtuck::after{ content:attr(data-card-name); position:absolute; left:0; right:0; top:0; padding:3px 6px; box-sizing:border-box; border-radius:7px 7px 0 0; background:rgba(12,9,6,.86); color:var(--bone); font:600 11px/1.2 "Spectral", serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; z-index:3; pointer-events:none; }
+    #board.l4rim .card.rimtuck.down::after{ display:none; }
+    @media (prefers-reduced-motion:reduce){ #board.l4rim .zone{ transition:none; } }
     /* ===== L2 redesign step 3: Prey / Predator tabs (fixed chrome menus) + folding columns ===== */
     .l2peektab{ display:none; }
     body.inL2 .l2peektab{ display:flex; align-items:center; justify-content:center; position:fixed; width:26px; height:92px; transform:translateY(-50%); z-index:630; cursor:pointer; box-sizing:border-box; border:1px solid #3a2f1d; background:rgba(14,10,6,.92); transition:border-color .12s, background .12s; }
@@ -2022,6 +2031,10 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
             <select id="convDockDrag"><option value="leave">Stay open until the card leaves</option><option value="close">Close as the drag starts</option></select>
           </div>
           <div class="set-row">
+            <span class="sl" title="Preview. On the free board only: your crypt, library, hand and ash heap sit as pockets along the table's bottom edge, each showing a strip (the hand shows its card titles); the pocket under the pointer rises. The lower seat row moves down and the cards on the felt are drawn a fifth larger. Structured tables keep the dock.">Free board: your hand and piles.</span>
+            <select id="convHandRim"><option value="dock">In the bottom dock</option><option value="rim">Tucked into the table edge (preview)</option></select>
+          </div>
+          <div class="set-row">
             <span class="sl" title="Larger tap targets, always-visible pool buttons and touch-specific menu rows. Auto follows the device.">Touch controls &mdash; Auto follows the device.</span>
             <select id="convTouchUI"><option value="auto">Auto</option><option value="on">On</option><option value="off">Off</option></select>
           </div>
@@ -3175,7 +3188,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.151';   // v2.6.151 (13 Oct 2026, THE EDGE ON THE GLOBE, pure client -- purge; srv-2.6.45 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.150 in one PR): Johan's 'kör' on three small open items. (1) A seat that holds the Edge shows an EDGE mark on its pool globe on the free board, unless that seat has an Edge token of its own on the felt (then the token says it) -- l4GlobeEdges, run on every board update, on taking / releasing the Edge and when the own token comes or goes. A bot's pub carries edge:true and no token, so a bot's Edge was invisible on the felt (the Classic review, §5); the bot project need not change anything. (2) The seat chips in the Table panel, a seat visit's header and the own pool name say 1st, 2nd ... like the globes (they showed a digit). (3) Help -> Local server and START-HERE.html mention the suggested table setup (the Host Guide is a hosting document and does not list room settings). Previous: v2.6.150 (13 Oct 2026, THE TAB SAYS SO, pure client -- purge; srv-2.6.45 unchanged, no wire change; bot v0.6.198 beside): Johan's three adjustments after deploying v2.6.149. (1) The seat chip (chair + ordinal) sits UNDER the pool globe on the free board, the name alone above it (updateL4GlobeHTML, both the first build and the repaint; CSS .l4gseat is its own line). (2) The Played tray no longer opens on anyone's screen because of another seat's resolver: the tally handler pins nothing; instead the Played tab pulses (.live) and names the resolver (#playedTabAvr: VOTE / BLOCK / COMBAT) for players who have that helper on, and each player hovers or pins by themselves. A combat started from the card menu still shows the tray to the one who started it, and takes it away again when it closes (v2.6.149's playedAutoPin). With that, the suggested top row is back at the top edge (y 25; v2.6.149 had moved it to y 132 under the tray). (3) The page title and og:title read 'Elysium: a digital VTES table' (a colon, not the long dash).
+const VERSION='2.6.152';   // v2.6.152 (13 Oct 2026, THE TABLE RIM, pure client -- purge; srv-2.6.45 unchanged, no wire change; bot v0.6.198 beside; a PREVIEW, off by default): Johan's design question about the free board's unused felt under the dock. Settings -> 'Free board: your hand and piles' -> 'Tucked into the table edge': on the free board the dock is gone and the four own zones (crypt, library, hand, ash heap) sit as pockets along the felt's bottom edge, each showing a strip -- the piles their top card and count, the hand its cards spread flat with a title strip on each -- and the pocket under the pointer rises to the dock's full size (rimHover; at once under a dragged card, so drops land in a raised pocket). The board keeps .l2dockopen so every dock rule for drops, drags and dockS holds; setL2Dock refuses to close; CSS #board.l4rim hides the dock's chrome, the dock pool (the globe is the pool on the free board) and the dock log (the left panel has it). With the rim on, the cards on the felt are drawn at 0.6 (L4_CARD_S is a let now) and the suggested lower row ends at y 508 instead of 404 (the top row sits 8 px lower, clear of the Played tab). Structured tables and the default setting are untouched. Previous: v2.6.151 (13 Oct 2026, THE EDGE ON THE GLOBE, pure client -- purge; srv-2.6.45 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.150 in one PR): Johan's 'kör' on three small open items. (1) A seat that holds the Edge shows an EDGE mark on its pool globe on the free board, unless that seat has an Edge token of its own on the felt (then the token says it) -- l4GlobeEdges, run on every board update, on taking / releasing the Edge and when the own token comes or goes. A bot's pub carries edge:true and no token, so a bot's Edge was invisible on the felt (the Classic review, §5); the bot project need not change anything. (2) The seat chips in the Table panel, a seat visit's header and the own pool name say 1st, 2nd ... like the globes (they showed a digit). (3) Help -> Local server and START-HERE.html mention the suggested table setup (the Host Guide is a hosting document and does not list room settings). Previous: v2.6.150 (13 Oct 2026, THE TAB SAYS SO, pure client -- purge; srv-2.6.45 unchanged, no wire change; bot v0.6.198 beside): Johan's three adjustments after deploying v2.6.149. (1) The seat chip (chair + ordinal) sits UNDER the pool globe on the free board, the name alone above it (updateL4GlobeHTML, both the first build and the repaint; CSS .l4gseat is its own line). (2) The Played tray no longer opens on anyone's screen because of another seat's resolver: the tally handler pins nothing; instead the Played tab pulses (.live) and names the resolver (#playedTabAvr: VOTE / BLOCK / COMBAT) for players who have that helper on, and each player hovers or pins by themselves. A combat started from the card menu still shows the tray to the one who started it, and takes it away again when it closes (v2.6.149's playedAutoPin). With that, the suggested top row is back at the top edge (y 25; v2.6.149 had moved it to y 132 under the tray). (3) The page title and og:title read 'Elysium: a digital VTES table' (a colon, not the long dash).
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3191,7 +3204,7 @@ const net={ ws:null, status:'off', addr:'', sec:false, room:null, token:null, yo
 /* Convenience helpers — opt-in and off by default, except auto-lock
    which preserves the original behavior and defaults to on */
 const CONV_KEY='elysium.convenience';
-let conv={cardDB:true, dbDefault:true, uiMode:'full', uiProf:{}, modeHintDone:false, poolToPredator:true, autoLock:true, anim:'on', animSpeed:1.0, sayDur:1.0, chatDur:1.0, sayText:'normal', chatText:'crisp', drawClick:'double', pco:'mine', pcoNeutral:false, qrView:true, l3shape:'square', l3collapseOusted:false, cardTip:true, defaultView:'normal', sfxVol:0, sfxIndiv:{unlock:150,lock:150,logEvent:125}, tournament:true, legalDeck:true, legalCards:true, edgeToken:true, poolPlayerColor:false, hoverPreview:'key', chatBubbles:'others', imgFmt:'webp', imgCache:false, localImg:false, jsonSync:true, imgSync:false, showWelcome:true, debug:false, tutDone:[], playedSort:'new', avrResolveClear:'off', shiftPeek:false, touchUI:'auto', dockDrag:'leave', errPing:true};
+let conv={cardDB:true, dbDefault:true, uiMode:'full', uiProf:{}, modeHintDone:false, poolToPredator:true, autoLock:true, anim:'on', animSpeed:1.0, sayDur:1.0, chatDur:1.0, sayText:'normal', chatText:'crisp', drawClick:'double', pco:'mine', pcoNeutral:false, qrView:true, l3shape:'square', l3collapseOusted:false, cardTip:true, defaultView:'normal', sfxVol:0, sfxIndiv:{unlock:150,lock:150,logEvent:125}, tournament:true, legalDeck:true, legalCards:true, edgeToken:true, poolPlayerColor:false, hoverPreview:'key', chatBubbles:'others', imgFmt:'webp', imgCache:false, localImg:false, jsonSync:true, imgSync:false, showWelcome:true, debug:false, tutDone:[], playedSort:'new', avrResolveClear:'off', shiftPeek:false, touchUI:'auto', dockDrag:'leave', handRim:'dock', errPing:true};
 const SAY_TEXT_MODES=['soft','normal','crisp'];   // v2.6.120: the three text recipes a say/chat bubble can wear (.txt-<mode> on .sayb)
 const CONV_DEFAULTS=Object.freeze(JSON.parse(JSON.stringify(conv)));   // v2.6.91: the literal above, captured before localStorage is merged in -- settingsDefaults() reads the Settings-dialog subset of it (the two modes differ only in UI_PRESET's trio)
 const RING_MAX=200;   // B-63: the report ring depth (was an inline 40 in B-54); crash pings still send only the last 10
@@ -3322,6 +3335,7 @@ try{
   if(typeof s.poolPlayerColor==='boolean') conv.poolPlayerColor=s.poolPlayerColor;
   if(typeof s.shiftPeek==='boolean') conv.shiftPeek=s.shiftPeek;
   if(s.dockDrag==='leave'||s.dockDrag==='close') conv.dockDrag=s.dockDrag;
+  if(s.handRim==='dock'||s.handRim==='rim') conv.handRim=s.handRim;   // v2.6.152: the free board's bottom edge -- the dock, or pockets tucked into the table rim
   if(s.touchUI==='auto'||s.touchUI==='on'||s.touchUI==='off') conv.touchUI=s.touchUI;
   if(typeof s.qrView==='boolean') conv.qrView=s.qrView;
   if(s.l3shape==='circle'||s.l3shape==='square') conv.l3shape=s.l3shape;
@@ -3938,6 +3952,7 @@ board.addEventListener('pointerout', e=>{
   if(_menuPinnedHover && el===_menuPinnedHover.el) return;        // menu open: keep this card lifted
   el.classList.remove('handhover');
 });
+board.addEventListener('pointerdown', e=>{ if(e.pointerType!=='touch' || !rimOn()) return; const br=board.getBoundingClientRect(), f=board.clientWidth/br.width; const z=rimZoneAt((e.clientX-br.left)*f, (e.clientY-br.top)*f); if(z && z!==rimUp) rimSet(z); }, true);   // v2.6.152: on touch, a tap on a tucked pocket raises it (a felt tap sinks it, see the pan handler)
 board.addEventListener('pointerdown', e=>{                       // settle the lift the moment a card is grabbed; set wasLifted so bindCard's drag.oy+26 fires correctly even though the class is already gone by bubbling phase
   const el=e.target && e.target.closest && e.target.closest('.card.handhover'); if(el){ el.classList.remove('handhover'); el.dataset.wasLifted='1'; }
 }, true);
@@ -4281,6 +4296,7 @@ function updateSelVisual(){                                  // local board: rep
 /* ---------- Pointer interaction: drag / tap ---------- */
 let drag=null;
 let pileDrag=false;
+let _rimIn=false;   // v2.6.152: a pile ghost is over the rim's pocket region (dock scale there)
 
 
 /* ---------- Marquee (box select) ---------- */
@@ -5750,7 +5766,7 @@ let pendingRevealDrop = null;   // {x,y} board-canvas coords; consumed by the re
   function libDragTarget(cx, cy){
     const hr=document.getElementById('z-hand').getBoundingClientRect();
     if(cx>=hr.left && cx<=hr.right && cy>=hr.top && cy<=hr.bottom) return 'hand';
-    if(board.classList.contains('l2dockopen')){ const br=board.getBoundingClientRect(), f=board.clientWidth/br.width; if((cy-br.top)*f >= (board.clientHeight||616)*0.66) return 'cancel'; }   // cursor in dock overlay but not on hand → put back in library
+    if(board.classList.contains('l2dockopen')){ const br=board.getBoundingClientRect(), f=board.clientWidth/br.width; if((cy-br.top)*f >= (rimOn()?rimEdgeY():(board.clientHeight||616)*0.66)) return 'cancel'; }   // cursor in dock overlay but not on hand → put back in library; v2.6.152: the rim's pocket region
     if(l4on()){ const br=board.getBoundingClientRect(); if(cx>=br.left && cx<=br.right && cy>=br.top && cy<=br.bottom) return 'ready'; }
     const rr=document.getElementById('z-ready').getBoundingClientRect();
     if(cx>=rr.left && cx<=rr.right && cy>=rr.top && cy<=rr.bottom) return 'ready';
@@ -5759,7 +5775,7 @@ let pendingRevealDrop = null;   // {x,y} board-canvas coords; consumed by the re
 
   function ghostScale(){   // v2.5.76: dock-open ghosts render at dock scale (matches the docked pile tile) instead of jumping straight to felt/board scale the instant the drag starts; falls to felt/board scale once the dock is closed (see the per-move re-apply below, which tracks setL2Dock toggles live)
     const _br=board.getBoundingClientRect(), _f=_br.width/(board.clientWidth||1004);
-    return board.classList.contains('l2dockopen') ? _f*dockS : (l2pub.on ? _f*l2pub.s*(l4on()?L4_CARD_S:1) : _f);
+    return (rimOn() ? _rimIn : board.classList.contains('l2dockopen')) ? _f*dockS : (l2pub.on ? _f*l2pub.s*(l4on()?L4_CARD_S:1) : _f);   // v2.6.152: on the rim, dock scale only over the pockets
   }
   function onMove(e){
     if(!ld) return;
@@ -5773,7 +5789,8 @@ let pendingRevealDrop = null;   // {x,y} board-canvas coords; consumed by the re
     const tgt=libDragTarget(e.clientX, e.clientY);
     ghost.className = tgt==='hand'?'ghost-hand': tgt==='ready'?'ghost-ready':'';
     { const br=board.getBoundingClientRect(), f=board.clientWidth/br.width, yd=(e.clientY-br.top)*f, H=board.clientHeight||616;
-      if(!board.classList.contains('l2dockopen') && yd >= H-36) setL2Dock(true, true);
+      if(rimOn()){ rimHover((e.clientX-br.left)*f, yd, true); _rimIn=(yd>=rimEdgeY()); }   // v2.6.152
+      else if(!board.classList.contains('l2dockopen') && yd >= H-36) setL2Dock(true, true);
       else if(board.classList.contains('l2dockopen') && yd < H*0.66 && !dockPinned) setL2Dock(false); }
     ghost.style.transform='translate(-50%,-50%) scale('+ghostScale()+')';   // re-applied every tick so the ghost rescales the instant the dock toggles above (dock-size while docked, felt-size once it exits)
   }
@@ -5860,7 +5877,7 @@ let pendingRevealDrop = null;   // {x,y} board-canvas coords; consumed by the re
   }
 
   function cryptDragTarget(cx, cy){
-    if(board.classList.contains('l2dockopen')){ const br=board.getBoundingClientRect(), f=board.clientWidth/br.width; if((cy-br.top)*f >= (board.clientHeight||616)*0.66) return 'cancel'; }   // cursor in dock overlay → put back in crypt
+    if(board.classList.contains('l2dockopen')){ const br=board.getBoundingClientRect(), f=board.clientWidth/br.width; if((cy-br.top)*f >= (rimOn()?rimEdgeY():(board.clientHeight||616)*0.66)) return 'cancel'; }   // cursor in dock overlay → put back in crypt; v2.6.152: the rim's pocket region
     if(l4on()){ const br=board.getBoundingClientRect(); if(cx>=br.left && cx<=br.right && cy>=br.top && cy<=br.bottom) return 'ready'; return 'cancel'; }   // L4: entire board is free placement — no zone hit-testing
     const ur=document.getElementById('z-uncontrolled').getBoundingClientRect();
     if(cx>=ur.left && cx<=ur.right && cy>=ur.top && cy<=ur.bottom) return 'uncontrolled';
@@ -5871,7 +5888,7 @@ let pendingRevealDrop = null;   // {x,y} board-canvas coords; consumed by the re
 
   function ghostScale(){   // v2.5.76: same dock-scale-until-exit fix as the library ghost (see its twin comment)
     const _br=board.getBoundingClientRect(), _f=_br.width/(board.clientWidth||1004);
-    return board.classList.contains('l2dockopen') ? _f*dockS : (l2pub.on ? _f*l2pub.s*(l4on()?L4_CARD_S:1) : _f);
+    return (rimOn() ? _rimIn : board.classList.contains('l2dockopen')) ? _f*dockS : (l2pub.on ? _f*l2pub.s*(l4on()?L4_CARD_S:1) : _f);   // v2.6.152
   }
   function onMove(e){
     if(!cd) return;
@@ -5886,7 +5903,8 @@ let pendingRevealDrop = null;   // {x,y} board-canvas coords; consumed by the re
     const tgt=cryptDragTarget(e.clientX, e.clientY);
     ghost.className = tgt==='uncontrolled'?'ghost-uncontrolled': tgt==='ready'?'ghost-ready':'';
     { const br=board.getBoundingClientRect(), f=board.clientWidth/br.width, yd=(e.clientY-br.top)*f, H=board.clientHeight||616;
-      if(!board.classList.contains('l2dockopen') && yd >= H-36) setL2Dock(true, true);
+      if(rimOn()){ rimHover((e.clientX-br.left)*f, yd, true); _rimIn=(yd>=rimEdgeY()); }   // v2.6.152
+      else if(!board.classList.contains('l2dockopen') && yd >= H-36) setL2Dock(true, true);
       else if(board.classList.contains('l2dockopen') && yd < H*0.66 && !dockPinned) setL2Dock(false); }
     ghost.style.transform='translate(-50%,-50%) scale('+ghostScale()+')';   // re-applied every tick so the ghost rescales the instant the dock toggles above
   }
@@ -7978,7 +7996,71 @@ function updateL4GlobePool(seat, pool){
    over it on every screen; v2.6.150 (Johan) stops the tray opening by itself -- each player opens or pins it --
    and the row went back up. The tray still covers canonical x 131-823, y 24-127 (to 156 with cards) for the
    player who opens it. */
-const L4_SEAT={ m:10, gap:10, cgap:4, lowBottom:404 };  // margin to the table edge, globe-to-cards gap, gap between cards, the BOTTOM edge of the lower row's cards, the TOP of the upper row's globe
+const L4_SEAT={ m:10, gap:10, cgap:4, lowBottom:404, rimBottom:508, rimTop:8 };   // v2.6.152: with the table rim the lower row's cards end at y 508 (the pockets' strip begins at ~520-531 on the three laptop/desktop sizes measured) and the top row sits 8 px lower (the larger cards met the Played tab)  // margin to the table edge, globe-to-cards gap, gap between cards, the BOTTOM edge of the lower row's cards, the TOP of the upper row's globe
+/* ---------- v2.6.152 (Johan, preview): THE TABLE RIM ----------
+   Settings -> 'Free board: your hand and piles' -> 'Tucked into the table edge'. On the free board the dock is gone: the four own
+   zones are POCKETS along the felt's bottom edge. Tucked, each shows a strip -- the piles their top card back with the count badge,
+   the hand its cards spread as far as the pocket allows with a title strip drawn on each (.rimtuck). The pocket under the pointer
+   RISES to its full dock size (the same fan and pile the dock showed), and sinks when the pointer leaves it. While a card is dragged
+   the pocket under it rises too, so a drop lands in a raised pocket; dropZone() reads the zones' live rects and needs nothing new.
+   The board keeps .l2dockopen the whole time, so every dock rule (drops, drags out of the hand and the piles, dockS) holds; the
+   dock's own chrome is hidden by CSS (#board.l4rim) and setL2Dock refuses to close. Positions are inline (rimApply), in board px. */
+function rimOn(){ return l4on() && conv.handRim==='rim'; }
+function rimSeats(){ return freeBoard() && conv.handRim==='rim'; }   // the seat spots follow the setting as soon as the table is a free board: a hotseat deals its setup cards BEFORE the view enters L4
+let rimUp=null, rimT=null;                                          // the raised pocket (zone name) and the raise timer
+function rimGeo(){                                                  // pocket boxes in board px, from the same numbers the dock uses
+  const W=board.clientWidth||1004, H=board.clientHeight||616, ds=dockS||1;
+  const cs=getComputedStyle(document.documentElement), cw=parseFloat(cs.getPropertyValue('--cw'))||84, ch=parseFloat(cs.getPropertyValue('--ch'))||118;
+  const pw=(cw+34)*ds, zh=(ch+34)*ds, m=W*0.016, peek=46*ds, handPeek=52*ds, pad=8;
+  const g={ W, H, ds, pw, zh, peek, raised:Math.max(0, H-zh-6) };
+  g.crypt={ x:m, w:pw, tuck:H-peek };
+  g.library={ x:m+pw, w:pw, tuck:H-peek };
+  g.ash={ x:W-m-34-pw, w:pw, tuck:H-peek };                         // 34 px clear of the corner buttons (#l1zoomWrap)
+  g.hand={ x:g.library.x+pw+pad, w:Math.max(pw, g.ash.x-pad-(g.library.x+pw+pad)), tuck:H-handPeek };
+  return g;
+}
+const RIM_ZONES=['crypt','library','ash','hand'];
+function rimRect(z){ const g=rimGeo(), b=g[z]; return { x:b.x, y:(rimUp===z)?g.raised:b.tuck, w:b.w, h:g.zh }; }   // the pocket's target box (zoneRect would read the mid-transition top)
+function rimZoneAt(xd, yd){                                         // which pocket the board point (xd, yd) is in, honouring the raised one's taller box; null outside
+  const g=rimGeo();
+  for(const z of ['crypt','library','ash','hand']){ const b=g[z]; if(xd>=b.x && xd<=b.x+b.w && yd>=((rimUp===z)?g.raised-6:b.tuck-4)) return z; }
+  return null;
+}
+function rimEdgeY(){ const g=rimGeo(); return rimUp ? g.raised : Math.min(g.crypt.tuck, g.hand.tuck); }   // where the pocket region begins for the drag code (dock scale below it)
+function rimApply(){                                                // inline positions for the four pockets; cheap, runs from layout()
+  if(!rimOn()) return;
+  const g=rimGeo();
+  for(const z of ['crypt','library','ash','hand']){
+    const el=$('#z-'+z); if(!el) continue; const b=g[z], up=(rimUp===z);
+    el.style.left=b.x+'px'; el.style.width=b.w+'px'; el.style.height=g.zh+'px'; el.style.top=(up?g.raised:b.tuck)+'px'; el.style.bottom='auto'; el.style.right='auto';
+    el.classList.toggle('rimup', up);
+  }
+}
+function rimClear(){                                                // leaving the rim (or L4): the zones go back to the dock's CSS
+  board.classList.remove('l4rim'); rimUp=null; clearTimeout(rimT); rimT=null;
+  for(const z of ['crypt','library','ash','hand']){ const el=$('#z-'+z); if(!el) continue; el.style.left=''; el.style.width=''; el.style.height=''; el.style.top=''; el.style.bottom=''; el.style.right=''; el.classList.remove('rimup'); }
+  state.cards.forEach(c=>{ if(c.el) c.el.classList.remove('rimtuck'); });
+}
+function rimSync(){                                                 // on entering L4 and when the setting changes: the board class, the dock state and the card scale follow the setting
+  const on=rimOn();
+  L4_CARD_S = on ? 0.6 : 0.5;
+  if(on){ board.classList.add('l4rim'); if(!board.classList.contains('l2dockopen')) board.classList.add('l2dockopen'); setDockPin(false); rimApply(); }
+  else rimClear();
+}
+function rimSet(z){                                                 // raise pocket z (null: sink all) and re-lay its cards
+  if(z===rimUp) return;
+  const was=rimUp; rimUp=z; rimApply();
+  if(was) layoutZone(was);
+  if(z) layoutZone(z);
+}
+function rimHover(xd, yd, now){                                     // pointer at board point (xd, yd): raise the pocket under it after a short delay (at once while dragging), sink when it leaves
+  if(!rimOn()) return;
+  const z=rimZoneAt(xd, yd);
+  if(z===rimUp){ if(rimT){ clearTimeout(rimT); rimT=null; } return; }
+  clearTimeout(rimT); rimT=null;
+  if(!z || now) rimSet(z);
+  else rimT=setTimeout(()=>{ rimT=null; rimSet(z); }, 110);         // a card dragged along the bottom edge does not pop the hand up at the first touch
+}
 const TABLE_SETUP_OLD_SRV_NOTE='This server does not know the suggested table setup yet (it needs server v2.6.44 or later) \u2014 the table starts the usual way: drag your pool globe to your seat and draw your crypt cards.';
 const TABLE_SETUP_BOT_NOTE='The suggested table setup is skipped at a table with bots \u2014 they sit by their own pattern for now. Drag your pool globe to your seat and draw your crypt cards as usual.';
 function ordinal(n){ n=n|0; const t=n%100; return n+((t>10&&t<14)?'th':(['th','st','nd','rd'][n%10]||'th')); }   // 1st 2nd 3rd 4th ... 11th 12th 13th ... 21st
@@ -7996,7 +8078,7 @@ function l4SeatSpot(idx, N){                                        // pure: the
   const cnt=top?topN:botN, k=top?idx:(botN-1-(idx-topN));         // the lower row runs right to left, so the seats go clockwise
   const fr=cnt<=1 ? 0.5 : k/(cnt-1);
   const left=X0+fr*((X1-G.blockW)-X0);                             // the block (globe + four cards) slides from the left edge to the right edge
-  const gy=top ? T.y+L4_SEAT.m : L4_SEAT.lowBottom-G.ch-G.dy;      // v2.6.150 (Johan): the top row is back at the top edge -- the Played tray no longer opens on anyone's screen by itself (v2.6.149 had moved it to y 132 under the tray)
+  const gy=top ? T.y+L4_SEAT.m+(rimSeats()?L4_SEAT.rimTop:0) : (rimSeats()?L4_SEAT.rimBottom:L4_SEAT.lowBottom)-G.ch-G.dy;      // v2.6.150 (Johan): the top row is back at the top edge -- the Played tray no longer opens on anyone's screen by itself (v2.6.149 had moved it to y 132 under the tray)
   return { x:Math.round(fr>0.5 ? left+G.blockW-G.gw : left), y:Math.round(gy) };   // right half: the globe sits on the OUTSIDE, its cards toward the middle
 }
 function l4CryptSpots(gx, gy){                                      // pure: four card spots beside a globe at (gx, gy) -- to its right when they fit on the table, else to its left
@@ -10589,7 +10671,7 @@ function jumpSeat(n){
 function levelOrder(){ return freeBoard() ? ['l4'] : ['l2','ov']; }   // L1 retired as a reachable view (v1.99.27); step only between L2 (Normal) and L3 (Helicopter).
 function freeBoard(){ return net.boardMode==='classic'; }
 function l4on(){ return board.classList.contains('l4mode'); }
-const L4_CARD_S=0.5, L4_TOKEN_S=0.7;   // L4 Free Board element scale: cards at 50%, tokens/globes at 70% — change here to adjust
+let L4_CARD_S=0.5; const L4_TOKEN_S=0.7;   // v2.6.152: L4_CARD_S is 0.6 while the table rim is on (rimSync sets it)   // L4 Free Board element scale: cards at 50%, tokens/globes at 70% — change here to adjust
 function baseView(){ return freeBoard() ? 'l4' : 'l2'; }              // Home view is always L2/Normal (v1.99.27: L1/Simplified retired as a reachable view). A solo table renders fine in L2 (renderL2's no-opponent branch centres your board full-area). The host-lock tableViewLock is no longer checked (only option was Normal vs Simplified).
 function goHome(){ switchView(mpWatching() ? mpLandView() : baseView()); if(typeof syncWelcome==='function') syncWelcome(); }       // Home / Esc / your own seat -> your home view (v2.6.44: refresh the Return-to-room affordance)
 function cycleView(){                          // § : toggle the overview (L3) <-> your home view (L2/L1 per settings; host-lock overrides via baseView)
@@ -12433,7 +12515,7 @@ function placeReady(){ const rt=$('#readyTab'), ro=$('#readyPeek'); if(!rt||!ro)
   if(l2on()){                                          // L2 mode is on in Home, in a seat visit, AND in L3 now -> Ready always rides the real dock's top edge                      // L2: anchor the tab to the TOP edge of the bottom hand dock so it rides up/down as the dock expands/collapses
     const br=board.getBoundingClientRect();
     const open=board.classList.contains('l2dockopen');
-    const dockH = open ? Math.round(br.height*0.32) : 32;        // collapsed handle ~32px; expanded dock occupies the bottom ~32% of the board
+    const dockH = rimOn() ? 60 : open ? Math.round(br.height*0.32) : 32;        // collapsed handle ~32px; expanded dock occupies the bottom ~32% of the board; v2.6.152: the rim's strip
     base = Math.max(0, Math.round(window.innerHeight - br.bottom) + dockH);
   }
   else if(typeof handGate==='function' && handGate()){            // visit / Helicopter: the Dock lives in the board area (#tableArea); ride its top edge (full 32% panel when open, the collapsed 32px handle otherwise), exactly like L2 Home uses the board rect
@@ -12962,6 +13044,7 @@ function fitBoard(){             // L1: scale the fixed 1004x616 design stage to
   board.style.transform='scale('+(s||1)+')';
 }
 function enterL0(){
+  rimClear(); L4_CARD_S=0.5;   // v2.6.152
   board.classList.remove('l2mode','l3mode','l4mode','l2cols','l2dockopen');   // also drop the bottom-dock class so its open/closed state doesn't ride into the next game
   setDockPin(false);   // the pin never rides into the next game either
   board.classList.add('l0mode');
@@ -12985,6 +13068,7 @@ function syncIdleUI(){               // v2.6.79 (Johan): at the lobby the left p
 function layout(){
   syncIdleUI();
   updateDockScale();   // keep dockS current before any layoutZone() call below reads it for the open dock's piles/hand
+  rimApply();          // v2.6.152: the rim's pockets follow the window too
   for(const z of Object.keys(state.zones)) layoutZone(z);
   { const _l4=l4on(); state.cards.forEach(c=>{ if(c.el) c.el.classList.toggle('torp', _l4 && c.zone==='torpor'); }); }   // v2.6.149 (K3): the torpor mark (CSS: #board.l4mode .card.torp)
   PILES.forEach(p=>{
@@ -13043,7 +13127,7 @@ function layoutZone(z){
     });
     return;
   }
-  const r = (l2pub.on && (PUBSCZ.includes(z) || (l3on() && !board.classList.contains('l2dockopen') && (PILES.includes(z)||(z==='hand'&&!l3handOpen))))) ? pubCanon(z) : zoneRect(z);   // L2/L3: scaled zones; hand uses its real rect (overlay) when open
+  const r = (rimOn() && RIM_ZONES.includes(z)) ? rimRect(z) : (l2pub.on && (PUBSCZ.includes(z) || (l3on() && !board.classList.contains('l2dockopen') && (PILES.includes(z)||(z==='hand'&&!l3handOpen))))) ? pubCanon(z) : zoneRect(z);   // L2/L3: scaled zones; hand uses its real rect (overlay) when open; v2.6.152: a pocket's cards go where the pocket is GOING (its top is in transition when this runs)
   if(PILES.includes(z)){
     if(z==='library'||z==='crypt') renderPileGhost(z);           // D1: before the dock-collapse early-return, so a count change while the dock is closed still reflects when it reopens (the ghost lives inside #z-*, so the dock show/hide CSS handles visibility)
     if(board.classList.contains('l2mode') && !board.classList.contains('l2dockopen')){ ids.forEach(id=>{ const c=state.cards.get(id); if(c){ c.el.style.display='none'; c.el.classList.add('inert'); } }); return; }   // L2 AND L3: crypt/library/ash tuck into the bottom dock -> hidden on the board whenever the dock is collapsed
@@ -13052,7 +13136,8 @@ function layoutZone(z){
     ids.forEach((id,i)=>{
       const c=state.cards.get(id);
       const o=Math.min(i,7)*0.5*ds;
-      place(c, r.x+(r.w-CW*ds)/2-o, r.y+(r.h-CH*ds)/2-o, 0, 10+i+_du, dOpen?dockS:undefined);
+      const _ty=(rimOn() && rimUp!==z) ? r.y+8*ds : r.y+(r.h-CH*ds)/2;   // v2.6.152: a tucked pocket shows the pile's top at its strip
+      place(c, r.x+(r.w-CW*ds)/2-o, _ty-o, 0, 10+i+_du, dOpen?dockS:undefined);
       c.el.classList.add('inert');
       c.faceDown = (z==='library'||z==='crypt');
       c.el.classList.toggle('down', c.faceDown);
@@ -13066,7 +13151,8 @@ function layoutZone(z){
       const dOpen=board.classList.contains('l2dockopen'), ds=dOpen?dockS:1;   // same dock scale as the piles above, applied to the hand strip when the dock (not just the L3 hover-peek, which is parked -- see l3HandHover) is open
       const n=ids.length;
       const inner=r.w-CW*ds-24*ds;
-      const step=n>1 ? Math.min(CW*0.72*ds, inner/(n-1)) : 0;
+      const _tk=rimOn() && rimUp!=='hand';                          // v2.6.152: a tucked hand pocket spreads the cards as far as the pocket allows, flat, with a title strip on each
+      const step=n>1 ? Math.min((_tk?1.04:0.72)*CW*ds, inner/(n-1)) : 0;
       const total=step*(n-1);
       const x0=r.x+(r.w-total-CW*ds)/2;
       const _hu=l2dockUp();
@@ -13074,7 +13160,9 @@ function layoutZone(z){
         const c=state.cards.get(id);
         const mid=(n-1)/2;
         c.faceDown=false; ensureImg(c);
-        place(c, x0+i*step, r.y+16*ds+Math.abs(i-mid)*Math.abs(i-mid)*0.9*ds, (i-mid)*2.2, 200+(n-1-i)+_hu, dOpen?dockS:undefined);   // leftmost on top -> a falling stack left->right
+        if(_tk) place(c, x0+i*step, r.y+16*ds, 0, 200+(n-1-i)+_hu, dockS);
+        else place(c, x0+i*step, r.y+16*ds+Math.abs(i-mid)*Math.abs(i-mid)*0.9*ds, (i-mid)*2.2, 200+(n-1-i)+_hu, dOpen?dockS:undefined);   // leftmost on top -> a falling stack left->right
+        c.el.classList.toggle('rimtuck', _tk);
         c.el.classList.remove('inert');
       });
     }
@@ -13164,7 +13252,7 @@ function place(c, x, y, rot, z, forceS){
   c.el.style.transform=cardTransform(x, y, rot, s);
   c.el.style.translate='';   // clear any residual inline translate:none left by a drag (see pointermove) so the CSS .card.handhover lift can apply on hover again
   c.el.style.zIndex=z;
-  if(c.zone!=='hand') c.el.classList.remove('handhover');
+  if(c.zone!=='hand'){ c.el.classList.remove('handhover'); c.el.classList.remove('rimtuck'); }   // v2.6.152: the rim's title strip is a hand thing
   c.el.classList.toggle('down', !!c.faceDown);
   updateBadges(c);
 }
@@ -13334,10 +13422,12 @@ function bindCard(el,c){
     // Dock scale transitions (L3 helicopter + L4 free board) — run BEFORE x,y so regrabAtScale offsets are current. v2.5.76: generalized from l4on()-only to l3on() — real L3 previously had NO defer step at all (see the drag-start block above), so a hand/pile card dragged out of an open L3 dock always jumped straight to felt scale. The L4_CARD_S multiplier still applies only under l4on().
     if(l3on()){
       const H=board.clientHeight||616, yd=(e.clientY-drag.br.top)*drag.f, cs=(l4on()?L4_CARD_S:1);
-      if(drag.l4DockDefer && (yd < H*0.66 || drag.dockCloseNow)){
+      const _rim=rimOn(); if(_rim) rimHover((e.clientX-drag.br.left)*drag.f, yd, true);   // v2.6.152: the pocket under the dragged card rises at once
+      const _exitY=_rim ? rimEdgeY() : H*0.66, _enterY=_rim ? rimEdgeY() : H-36;
+      if(drag.l4DockDefer && (yd < _exitY || drag.dockCloseNow)){
         // Cursor exited dock area: scale card from dock (dockS) to board size; close dock only for hand cards
         drag.l4DockDefer=false; drag.dockCloseNow=false;
-        if((c.zone==='hand' || PILES.includes(c.zone)) && !dockPinned){   // a pinned dock stays open (siblings visible) even as the card rides out to the felt
+        if((c.zone==='hand' || PILES.includes(c.zone)) && !dockPinned && !_rim){   // a pinned dock stays open (siblings visible) even as the card rides out to the felt; v2.6.152: so do the rim's pockets
           if(c.zone==='hand') l3handOpen=false;
           board.classList.remove('l2dockopen');
           ['crypt','library','ash','hand'].forEach(z=>(state.zones[z]||[]).forEach(id=>{ if(id!==c.id){ const k=state.cards.get(id); if(k){ k.el.style.display='none'; k.el.classList.add('inert'); } } }));
@@ -13346,7 +13436,7 @@ function bindCard(el,c){
         const bs=(l2pub.on?l2pub.s:1)*cs;
         drag.ox=bs*CW*0.5; drag.oy=bs*CH*0.5;   // pin grab to centre of scaled card — cursor stays at mid-card through drag and on placement
       }
-      if(!drag.l4DockDefer && yd >= H-36){
+      if(!drag.l4DockDefer && yd >= _enterY){
         // Cursor entered dock area: reopen dock if needed + scale card back to dock size (dockS)
         if(!board.classList.contains('l2dockopen')) setL2Dock(true, true);
         drag.l4DockDefer=true;
@@ -14334,6 +14424,7 @@ function setDockPin(on){                                         // v2.6.143: th
   if(_pb){ _pb.classList.toggle('on', dockPinned); _pb.setAttribute('aria-pressed', dockPinned?'true':'false'); _pb.title=dockPinned?'Pinned':'Not pinned'; }   // v2.6.147: the needle shows the state (.on stands it up, see the CSS) and the tooltip says it; the button's markup is never rewritten
 }
 function setL2Dock(open, light){                                 // L2 redesign: expand / collapse the bottom dock (crypt / library / ash / hand)
+  if(!open && rimOn()) return;                                   // v2.6.152: with the table rim the zones are always out (as pockets); nothing closes them
   if(open === board.classList.contains('l2dockopen')) return;
   board.classList.toggle('l2dockopen', open);
   if(!open && dockPinned) setDockPin(false);   // any close that actually EXECUTES is legit (auto-closers are gated on !dockPinned) -> release the pin
@@ -14349,6 +14440,7 @@ board.addEventListener('pointermove', e=>{                       // L2 redesign:
   if(!l2on()) return;                                            // hover-to-open the dock works in L2 solo, L2 columns AND L3 helicopter (the dock is a hover overlay everywhere l2mode is on)
   const br=board.getBoundingClientRect(), f=board.clientWidth/br.width, H=board.clientHeight||616;
   const yd=(e.clientY-br.top)*f;
+  if(rimOn()){ if(!drag && !pileDrag && !_menuPinnedHover) rimHover((e.clientX-br.left)*f, yd, false); return; }   // v2.6.152: pockets, not a dock (drags call rimHover themselves)
   if(board.classList.contains('l2dockopen')){ if(!drag && !pileDrag && yd < H*0.66 && !readyHover && !_menuPinnedHover && !dockPinned) setL2Dock(false); }   // hysteresis close (never mid-drag, never while hand/pile menu is open, never pinned)
   else { if(!drag && !pileDrag && yd >= H-36) setL2Dock(true); }
 });
@@ -14440,9 +14532,11 @@ function enterL4(){   board.classList.remove('l0mode'); // VIEW: L4 / Classic / 
   l3handOpen=false;
   l3canonAR = (board.clientWidth + (asideCollapsed ? 0 : 244)) / (board.clientHeight || 1);   // v2.5.48: measured BEFORE the toggle — the same stale-measure/flag race as enterL3 (see the comment there); this was the untested twin
   setAside(true, false);   // L4 default: collapse the card-viewer panel (non-persistent)
+  rimSync();               // v2.6.152: the table rim, if chosen (sets the card scale before the first render)
   renderL4();
 }
 function exitL4(){
+  rimClear(); L4_CARD_S=0.5;   // v2.6.152
   setAside(false, false);   // L2 default: re-open the card-viewer panel (non-persistent)
   board.classList.remove('l2mode','l3mode','l4mode','l2cols','l3zoomopen'); document.body.classList.remove('l3zoomopen'); fitBoard();
   { const ht=$('#handTab'); if(ht) delete ht.dataset.l3; }
@@ -14534,6 +14628,7 @@ board.addEventListener('pointerdown', e=>{
   } else {
     if(e.target!==board) return;      // L3: only bare felt pans; cards/mats/zones keep their own handlers
   }
+  if(e.pointerType==='touch' && rimOn()) rimSet(null);   // v2.6.152: a felt touch sinks the raised pocket
   if(e.pointerType==='touch' && board.classList.contains('l2dockopen') && !dockPinned) setL2Dock(false);   // T3c (D2b): a felt touch closes the open dock (unless pinned) - the muscle-memory half (mirrors hover-away; the chip above teaches)
   const sx=e.clientX, sy=e.clientY, px0=l3pan.x, py0=l3pan.y, pid=e.pointerId;   // T0c: pid-scoped so a second finger can't feed the pan
   board.classList.add('l3panning');
@@ -14790,6 +14885,7 @@ function clearL2(){
   ['z-ready','z-uncontrolled','z-torpor'].forEach(id=>{ const e=$('#'+id); if(e){ e.style.left=''; e.style.right=''; e.style.width=''; e.style.top=''; e.style.height=''; const zl=e.querySelector('.zlabel'); if(zl) zl.style.fontSize=''; } });
   ['poolWrap','edge','poolHelp','pseat'].forEach(id=>{ const e=$('#'+id); if(e){ e.style.left=''; e.style.right=''; e.style.top=''; e.style.bottom=''; e.style.width=''; e.style.height=''; e.style.transform=''; e.style.transformOrigin=''; } });
   { const pw=$('#poolWrap'); if(pw) pw.classList.remove('l2pool'); }   // drop the framed-pool styling
+  rimClear(); L4_CARD_S=0.5;   // v2.6.152
   board.classList.remove('l2dockopen','l2cols','l2solo');   // reset the dock + column mode
   const fr=$('#l2frame-me'); if(fr) fr.remove();
   clearL2panels();
@@ -16672,6 +16768,7 @@ function openSettings(){
   updateAnimSpeedLabel();
   $('#convDrawClick').value=conv.drawClick;
   $('#convDockDrag').value=conv.dockDrag;
+  { const _hr=$('#convHandRim'); if(_hr) _hr.value=conv.handRim; }
   $('#convTouchUI').value=conv.touchUI;
   $('#convPco').value=conv.pco;
   $('#convPcoNeutral').checked=conv.pcoNeutral;
@@ -16741,7 +16838,7 @@ $('#keysReset').addEventListener('click',()=>{
    Reset is refused while a table or lobby is live (same guard as the Lite|Full switch): a hotseat
    overrides conv.tournament / helperAllOn for the session, and resetting under it would change
    the running table.                                                                             */
-const SETTINGS_CONV_KEYS=['anim','animSpeed','sayDur','chatDur','sayText','chatText','pco','pcoNeutral','poolPlayerColor','drawClick','cardTip','hoverPreview','chatBubbles','showWelcome','dockDrag','touchUI','playedSort','avrResolveClear','l3collapseOusted','errPing','tournament','autoLock','poolToPredator','legalDeck','legalCards','edgeToken','cardDB','imgCache','localImg','jsonSync','imgSync','imgFmt','sfxVol','shiftPeek'];
+const SETTINGS_CONV_KEYS=['anim','animSpeed','sayDur','chatDur','sayText','chatText','pco','pcoNeutral','poolPlayerColor','drawClick','cardTip','hoverPreview','chatBubbles','showWelcome','dockDrag','handRim','touchUI','playedSort','avrResolveClear','l3collapseOusted','errPing','tournament','autoLock','poolToPredator','legalDeck','legalCards','edgeToken','cardDB','imgCache','localImg','jsonSync','imgSync','imgFmt','sfxVol','shiftPeek'];
 function settingsDefaults(mode){                                  // pure: the profile a fresh install of `mode` would show
   mode=(mode==='lite')?'lite':'full';
   const c={}; for(const k of SETTINGS_CONV_KEYS) c[k]=CONV_DEFAULTS[k];
@@ -17418,6 +17515,7 @@ $('#convAnim').addEventListener('change',e=>{
 });
 $('#convDrawClick').addEventListener('change',e=>{ conv.drawClick=e.target.value; saveConv(); });
 $('#convDockDrag')?.addEventListener('change',e=>{ conv.dockDrag=e.target.value; saveConv(); });
+$('#convHandRim')?.addEventListener('change',e=>{ conv.handRim=(e.target.value==='rim')?'rim':'dock'; saveConv(); if(l4on()){ rimSync(); layout(); if(typeof updateL4Opponents==='function') updateL4Opponents(); } });   // v2.6.152: takes effect on the open table
 $('#convTouchUI')?.addEventListener('change',e=>{ conv.touchUI=e.target.value; saveConv(); applyTouchUI(); });
 $('#convEdgeToken').addEventListener('change',e=>{ conv.edgeToken=e.target.checked; saveConv(); if(conv.edgeToken){ if(state.edge) ensureEdgeToken(); } else removeEdgeToken(); });
 $('#convL3collapse').addEventListener('change',e=>{ conv.l3collapseOusted=e.target.checked; saveConv(); if(net.view==='ov') renderL3(); });
