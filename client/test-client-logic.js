@@ -4255,6 +4255,32 @@ test('v2.6.149: a snapshot restore and a card played onto my board get their fac
   assert(html.indexOf("move(c,'ready',{ faceDown:!!m.faceDown });") > 0 && html.indexOf("    c.faceDown=!!m.faceDown;\n    const hostC=") < 0, 'given: the face goes in with the move');
   eq((html.match(/face down '\+parkWhere\(/g) || []).length, 5, 'the crypt park lines ask: two prompts, the offline menu, the offline drag, the online reveal');
 });
+/* ---------- v2.6.151: THE EDGE ON THE GLOBE, ORDINALS EVERYWHERE ---------- */
+test('v2.6.151: a seat that holds the Edge shows it on its pool globe unless it has an Edge token on the felt; the seat chips in the Table panel, a seat visit and the own pool name say 1st, 2nd ... like the globes; the help pages mention the suggested table setup', () => {
+  const A = loadClient(CLIENT);
+  if (!A.l4GlobeEdges) throw new Error('l4GlobeEdges not exposed (harness needs updating)');
+  A.net.ws = { readyState: 1, send(){} };
+  A.MP_HANDLERS.joined({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(3), boardMode: 'classic', lobby: false, srv: '2.6.45', myPub: { cards: [] } });
+  const on = new Map();
+  A.l4Globes.clear(); A.renderL4Globes();
+  A.l4Globes.forEach(g => { g.el = { classList: { toggle(c, v){ if (c === 'l4gedgeon') on.set(g.seat, !!v); return !!v; }, add(){}, remove(){}, contains(){ return false; } }, querySelector(){ return null; }, querySelectorAll(){ return []; }, style: {} }; });   // the stub element swallows writes; a tiny real one records the class
+  A.net.boards[2] = { who: 'Anna', pub: { cards: [], edge: true } };
+  A.net.boards[3] = { who: 'Erik', pub: { cards: [], edge: true, tokens: [{ type: 'edge', x: 1, y: 1 }] } };
+  A.state.edge = false; A.l4GlobeEdges();
+  eq(on.get(2), true, 'Anna holds the Edge and has no token on the felt: her globe says EDGE (a bot publishes exactly this)');
+  eq(on.get(3), false, 'Erik has an Edge token out: the token says it, not the globe');
+  eq(on.get(1), false, 'I do not hold it');
+  A.state.edge = true; A.conv.edgeToken = false; A.l4GlobeEdges(); eq(on.get(1), true, 'I hold it with the token setting off: my globe says so');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("l4GlobeEdges();                                                   // v2.6.151\n  renderL4OppCards();") > 0, 'every board update refreshes the marks');
+  assert(html.indexOf("if(typeof l4Globes!=='undefined' && l4Globes.size) l4GlobeEdges();   // v2.6.151: my own globe's Edge mark") > 0, 'and so does taking or releasing the Edge');
+  assert(html.indexOf(`'<span class="l4gedge" title="Holds the Edge">EDGE</span>'`) > 0, 'the mark is in the globe');
+  assert(html.indexOf(">🪑'+ordinal(o.seat)+'</span>'") > 0, 'the Table panel chip');
+  assert(html.indexOf("font-size:16.5px\">'+ordinal(seat)+'</span>'") > 0, 'the seat visit header');
+  assert(html.indexOf("ps.textContent=sx ? '🪑'+ordinal(sx) : '';") > 0, 'the own pool name');
+  const help = require('fs').readFileSync(require('path').join(__dirname, 'help-local-server.html'), 'utf8'), start = require('fs').readFileSync(require('path').join(__dirname, 'START-HERE.html'), 'utf8');
+  assert(help.indexOf('Suggested table setup') > 0 && start.indexOf('Suggested table setup') > 0, 'Help -> Local server and START-HERE mention the option');
+});
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

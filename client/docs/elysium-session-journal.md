@@ -1,3 +1,19 @@
+## [EDGE PÅ GLOBEN] — tre små öppna puckar, Johans "kör" (13 oktober 2026, natt, klient v2.6.151)
+
+Johan: "Skulle vi ta punkterna 1, 4 och 5 som du föreslog också lika gärna?" Samma PR som v2.6.150 (#9), bara klient.
+
+**Byggt:** (1) **Edge på globen.** Den plats som har Edge får en liten EDGE-bricka på sin poolglob på fria bordet, om
+inte platsen har en egen Edge-markör ute på filten (då säger markören det). Bottar publicerar `edge:true` utan markör,
+så botens Edge var osynlig på filten (granskningens §5). Kört med en människa och en socketbot på riktig server: Annas
+glob markeras när hennes markörinställning är av, markören tar över när den är på, och bottens glob markeras 16 s in i
+partiet. Frågan till botprojektet om vem som ritar Edge är därmed stängd: vi gör det. (2) **Ordningstal** i Table-
+panelens platskolumn, platsbesökets rubrik och det egna poolnamnet (🪑1st i stället för 🪑1). (3) **Hjälpsidan Local
+server och START-HERE.html** nämner Suggested table setup. Värdguiden listar inga rumsinställningar och lämnades; dess
+generator säger fortfarande v1.8 mot docx v1.9 (öppen sedan tidigare).
+
+**Grindar:** klient 279/0 (1 nytt), protokoll 6/0, server 65/0, kanarie 57/0, embed-check båda sidorna, B1 byte-
+identisk, check-versions grön. **Inte kört:** brickan vid ett bottbord under en Hold on; pekskärm.
+
 ## [FLIKEN SÄGER TILL] — Johans tre justeringar efter v2.6.149 (13 oktober 2026, sen kväll, klient v2.6.150)
 
 Johan var inne på det driftsatta bordet och ville ha tre saker: (1) platschipet (stol + ordningstal) under poolgloben
