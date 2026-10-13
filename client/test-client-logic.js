@@ -3783,17 +3783,17 @@ test('v2.6.146: the seat spots -- for 1 to 6 seats every seat has its own footpr
       if (mirror) assert(b.cards.every(c => c.x + G.cw <= b.g.x), 'N=' + N + ' seat ' + (i + 1) + ': on the right half the globe sits on the outside, its cards toward the middle');
       else assert(b.cards.every(c => c.x >= b.g.x + G.gw), 'N=' + N + ' seat ' + (i + 1) + ': cards to the right of the globe');
       if (i >= topN) eq(b.cards[0].y + G.ch, 404, 'N=' + N + ' seat ' + (i + 1) + ': a lower-row card ends at 404');
-      else eq(b.g.y, 132, 'N=' + N + ' seat ' + (i + 1) + ': the top row starts at y 132, below the Played tray (v2.6.149; it was the top edge, y 25)');
+      else eq(b.g.y, 25, 'N=' + N + ' seat ' + (i + 1) + ': the top row is at the top edge again (v2.6.150; v2.6.149 had it at y 132 under the Played tray, which no longer opens by itself)');
     });
     for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++)
       assert(B[i].right + 8 <= B[j].left || B[j].right + 8 <= B[i].left || B[i].bottom + 8 <= B[j].top || B[j].bottom + 8 <= B[i].top, 'N=' + N + ': seats ' + (i + 1) + ' and ' + (j + 1) + ' do not touch');
     for (let i = 1; i < topN; i++) assert(B[i].g.x > B[i - 1].g.x, 'N=' + N + ': the top row runs left to right');
     for (let i = topN + 1; i < N; i++) assert(B[i].g.x < B[i - 1].g.x, 'N=' + N + ': the lower row runs right to left, so the seats go clockwise');
   }
-  eq(JSON.stringify([0, 1, 2, 3, 4].map(i => { const g = API.l4SeatSpot(i, 5); return [g.x, g.y]; })), '[[26,132],[385,132],[933,132],[933,341],[26,341]]', 'five seats: top left, top centre, top right, lower right, lower left -- the layout a Lackey table uses (v2.6.149: the top row at y 132)');
-  eq(JSON.stringify(API.l4CryptSpots(26, 132).map(c => c.x)), '[81,127,173,219]'); eq(JSON.stringify(API.l4CryptSpots(933, 132).map(c => c.x)), '[743,789,835,881]');
+  eq(JSON.stringify([0, 1, 2, 3, 4].map(i => { const g = API.l4SeatSpot(i, 5); return [g.x, g.y]; })), '[[26,25],[385,25],[933,25],[933,341],[26,341]]', 'five seats: top left, top centre, top right, lower right, lower left -- the layout a Lackey table uses');
+  eq(JSON.stringify(API.l4CryptSpots(26, 25).map(c => c.x)), '[81,127,173,219]'); eq(JSON.stringify(API.l4CryptSpots(933, 25).map(c => c.x)), '[743,789,835,881]');
   eq(JSON.stringify([0, 1, 2, 3].map(i => API.l4SeatSpot(i, 4).x)), '[26,933,933,26]', 'four seats: the corners');
-  eq(JSON.stringify([0, 1].map(i => { const g = API.l4SeatSpot(i, 2); return [g.x, g.y]; })), '[[385,132],[385,341]]', 'two seats face each other');
+  eq(JSON.stringify([0, 1].map(i => { const g = API.l4SeatSpot(i, 2); return [g.x, g.y]; })), '[[385,25],[385,341]]', 'two seats face each other');
   // a globe the player has moved: the cards follow it, on the side where they fit, and never leave the table
   const far = API.l4CryptSpots(960, 500); assert(far.every(c => c.x + G.cw <= 960 && c.x >= T.x), 'near the right edge the cards go to the left'); assert(far[0].y + G.ch <= T.y + T.h, 'and are clamped onto the table');
   const mid = API.l4CryptSpots(500, 250); assert(mid.every(c => c.x >= 500 + G.gw), 'in the middle they go to the right');
@@ -3818,7 +3818,7 @@ test('v2.6.146: online, the deal on a Classic table with the option asks for the
   assert(/4 crypt cards were placed face down beside the pool\./.test(line.html), 'it announces the setup: ' + line.html);
   assert(/crypt: 8 remain/.test(line.html), 'and counts the crypt AFTER it');
   const spots = A.l4SetupSpots(2);
-  eq(JSON.stringify(spots), JSON.stringify(A.l4CryptSpots(385, 132)), 'seat 2 of 5 sits top centre');
+  eq(JSON.stringify(spots), JSON.stringify(A.l4CryptSpots(385, 25)), 'seat 2 of 5 sits top centre');
   for (let i = 0; i < 4; i++) A.MP_HANDLERS.drew({ zone: 'uncontrolled', kind: 'crypt', name: 'V' + i, lib: 53, crypt: 11 - i });
   const unc = () => A.state.zones.uncontrolled.map(id => A.state.cards.get(id));
   eq(unc().length, 4);
@@ -3881,7 +3881,7 @@ test('v2.6.146: the globes START at the seat spots with the option (and on the o
   A.net.tableSetup = false; A.renderL4Globes();
   eq(JSON.stringify([...A.l4Globes.values()].map(g => [g.x, g.y])), '[[470,58],[622,169],[564,347],[376,347],[318,169]]', 'without the option: the ring in the middle, exactly as before');
   A.l4Globes.clear(); A.net.tableSetup = true; A.renderL4Globes();
-  eq(JSON.stringify([...A.l4Globes.values()].map(g => [g.x, g.y])), '[[26,132],[385,132],[933,132],[933,341],[26,341]]', 'with it: each seat at its spot');
+  eq(JSON.stringify([...A.l4Globes.values()].map(g => [g.x, g.y])), '[[26,25],[385,25],[933,25],[933,341],[26,341]]', 'with it: each seat at its spot');
   A.l4Globes.get(1).x = 500; A.l4Globes.get(1).y = 250; A.renderL4Globes();
   eq(JSON.stringify([A.l4Globes.get(1).x, A.l4Globes.get(1).y]), '[500,250]', 'a moved globe is not pulled back by a re-render');
   eq(JSON.stringify(A.l4SetupSpots(1)), JSON.stringify(A.l4CryptSpots(500, 250)), 'and the next deal\'s cards follow it');
@@ -3891,7 +3891,8 @@ test('v2.6.146: the globes START at the seat spots with the option (and on the o
   eq(A.l4Globes.has(3), false, 'the vacant seat has no globe');
   const html = require('fs').readFileSync(CLIENT, 'utf8');
   assert(html.indexOf("if(!l4hintDone && !_setup){") > 0, 'no "drag your pool globe to your seat" hint when the globe already is there');
-  eq((html.match(/<span class="l4gseat">\\u\{1FA91\}\\u00a0'\+ordinal\(glob\.seat\)\+'<\/span>/g) || []).length, 2, 'both label builders write the chair and the ordinal');
+  assert(html.indexOf(`'<div class="l4gseat">\\u{1FA91}\\u00a0'+ordinal(glob.seat)+'</div>'`) > 0 && html.indexOf("sc.textContent='\\u{1FA91}\\u00a0'+ordinal(glob.seat);") > 0, 'v2.6.150: the chair and the ordinal sit in their own line UNDER the globe, written by the first build and the repaint alike; the name line holds the name alone');
+  eq(/<div class="l4glabel">[^\n]*l4gseat/.test(html), false, 'and no longer inside the name line');
 });
 test('v2.6.146: the option on the wire -- joined and started set it, took keeps the room\'s board style when its message carries none (loadMatch on a server before srv-2.6.44), and a host whose server dropped the field is told', () => {
   const A = loadClient(CLIENT);
@@ -4004,7 +4005,7 @@ test('v2.6.148: a reload keeps the own pool globe -- joined reads its place from
   eq(JSON.stringify(A.net._myGlobeAt), '{"x":520,"y":126}');
   A.l4Globes.clear(); A.renderL4Globes();
   eq(JSON.stringify([A.l4Globes.get(1).x, A.l4Globes.get(1).y]), '[520,126]', 'my globe: where the server last saw it');
-  eq(JSON.stringify([A.l4Globes.get(2).x, A.l4Globes.get(2).y]), '[385,132]', 'the others: their seat spots until their boards arrive');
+  eq(JSON.stringify([A.l4Globes.get(2).x, A.l4Globes.get(2).y]), '[385,25]', 'the others: their seat spots until their boards arrive');
   A.MP_HANDLERS.joined(J({ myPub: { cards: [] } })); eq(A.net._myGlobeAt, null, 'no token, nothing remembered');
   A.MP_HANDLERS.joined(J({ spect: true, myPub: { cards: [], tokens: [{ type: 'pool', x: 5, y: 5 }] } })); eq(A.net._myGlobeAt, null, 'a spectator has no globe');
   A.net._myGlobeAt = { x: 1, y: 1 }; A.MP_HANDLERS.started({ players: ROSTER146(5), turn: 1, boardMode: 'classic', tableSetup: true });
@@ -4161,29 +4162,36 @@ test('v2.6.149 (K4 + found on the way): the felt\'s Round/Turn label follows the
   assert(html.indexOf("if(late && !warned){ warned=true; toast('⏳ Five minutes left on the match clock'); }\n    updateL3Timer();") > 0, 'and the felt\'s centre clock ticks with the match clock');
   assert(html.indexOf("clearInterval(net.clockT); net.clockT=null;\n      updateL3Timer();") > 0 && html.indexOf("if(!net.matchEnd){ el.hidden=true; updateL3Timer(); return; }") > 0, '...to the end, and clears with it');
 });
-test('v2.6.149 (K5): a Played tray that a resolver opened closes with the resolver; the player\'s own pin stays -- and the suggested top row starts at y 132, below the tray', () => {
+test('v2.6.149 (K5) / v2.6.150: another seat\'s resolver never opens the Played tray on my screen -- the tab lights up and names it; a combat I start from the card menu shows the tray and takes it away again; my own pin stays', () => {
   const A = loadClient(CLIENT);
   if (!A.pinPlayed || !A.closePlayed || !A.togglePlayed || A.playedAutoPin === undefined) throw new Error('pinPlayed / closePlayed / togglePlayed / playedAutoPin not exposed (harness needs updating)');
   const cls = new Set(); A.__doc._ids.playedOverlay = { classList: { add(c){ cls.add(c); }, remove(c){ cls.delete(c); }, contains(c){ return cls.has(c); }, toggle(c, on){ if (on) cls.add(c); else cls.delete(c); return !!on; } } };
   try {
     A.net.helperPolicy = { allowLocal: false, settings: { resBlock: true, resVote: true, resCombat: true } };   // the table's helpers on, as the host set them
+    const tabCls = new Set(); let lab = { hidden: true, textContent: '' };
+    A.__doc._ids.playedTab = { classList: { add(c){ tabCls.add(c); }, remove(c){ tabCls.delete(c); }, contains(c){ return tabCls.has(c); }, toggle(c, on){ if (on) tabCls.add(c); else tabCls.delete(c); return !!on; } } };
+    A.__doc._ids.playedTabAvr = lab;
     A.MP_HANDLERS.tally({ mode: 'vote', a: 1, b: 0 });
-    eq(A.playedPinned, true, 'someone opens a Vote: the tray shows on my screen, as before'); eq(A.playedAutoPin, true);
+    eq(A.playedPinned, false, 'someone opens a Vote: NOTHING opens on my screen (v2.6.149 pinned the tray; Johan: each player opens or pins by themselves)'); eq(cls.has('show'), false);
+    eq(tabCls.has('live'), true, 'the tab pulses'); eq(lab.hidden, false); eq(lab.textContent, 'VOTE', 'and names the resolver');
     A.MP_HANDLERS.tally({ mode: null, a: 0, b: 0, res: 1 });
-    eq(A.playedPinned, false, 'the Vote resolves: the tray it opened closes (v2.6.148: it stayed pinned over the top row)'); eq(cls.has('show'), false);
+    eq(tabCls.has('live'), false, 'the Vote resolves: the tab goes quiet'); eq(lab.hidden, true);
     A.pinPlayed(); eq(A.playedAutoPin, false, 'a pin of my own');
     A.MP_HANDLERS.tally({ mode: 'vote', a: 0, b: 0 }); A.MP_HANDLERS.tally({ mode: null, a: 0, b: 0 });
     eq(A.playedPinned, true, 'a tray I pinned myself stays'); A.closePlayed();
-    A.MP_HANDLERS.tally({ mode: 'vote', a: 0, b: 0 }); eq(A.playedAutoPin, true);
-    A.togglePlayed(); A.togglePlayed(); eq(A.playedPinned, true); eq(A.playedAutoPin, false, 'two clicks on the tab: mine from then on');
-    A.MP_HANDLERS.tally({ mode: null, a: 0, b: 0 }); eq(A.playedPinned, true, 'and it stays');
-  } finally { delete A.__doc._ids.playedOverlay; A.net.helperPolicy = null; }
+    A.pinPlayedAuto(); eq(A.playedAutoPin, true, 'a combat I start from the card menu shows the tray (cmbEnsure)');
+    A.avr.mode = 'combat'; A.avrRender(); A.avr.mode = null; A.avrRender();
+    eq(A.playedPinned, false, '...and the tray goes with the combat');
+    A.pinPlayedAuto(); A.togglePlayed(); A.togglePlayed(); eq(A.playedPinned, true); eq(A.playedAutoPin, false, 'two clicks on the tab: mine from then on');
+    A.avr.mode = null; A.avrRender(); eq(A.playedPinned, true, 'and it stays');
+  } finally { delete A.__doc._ids.playedOverlay; delete A.__doc._ids.playedTab; delete A.__doc._ids.playedTabAvr; A.net.helperPolicy = null; }
   const html = require('fs').readFileSync(CLIENT, 'utf8');
   assert(html.indexOf("if(avr.mode!=='combat'){ avrOpen('combat'); if(avr.mode==='combat' && !playedIsOpen()) pinPlayedAuto(); }") > 0, 'a combat started from the card menu shows its panel the same way');
   assert(/let playedPinned=false, playedShowT=null, playedHideT=null, playedAutoPin=false;[^\n]*\nlet avr=avrFresh\(null\)/.test(html), 'the tray\'s state is declared beside avr: avrRender runs during start-up and reads it (declared where playedPinned was, the page died in the TDZ -- twice)');
   assert(html.indexOf("if(!_ov($('#playedOverlay')) && !_ov($('#playedTab'))) hidePlayedSoon(); } }") > 0, 'a hover peek the live resolver held open closes with it too (the review found it: hidePlayedSoon refuses while a resolver runs, and nothing hid it afterwards)');
-  eq(API.L4_SEAT.topY, 132, 'the top row');
-  assert(html.indexOf("const gy=top ? L4_SEAT.topY : L4_SEAT.lowBottom-G.ch-G.dy;") > 0, 'the seat formula uses it (it was T.y + m = 25: at 1366 x 768 the tray covers y 24-127, to 156 with a row of cards)');
+  eq(API.L4_SEAT.topY, undefined, 'v2.6.150: the top row is back at the top edge');
+  assert(html.indexOf("const gy=top ? T.y+L4_SEAT.m : L4_SEAT.lowBottom-G.ch-G.dy;") > 0, 'the seat formula');
+  eq(html.indexOf("hx(AVR_HKEYS[avr.mode]) && !playedIsOpen()) pinPlayedAuto(); avrRender();"), -1, 'the tally handler pins nothing');
 });
 test('v2.6.149 (K6): a roster change no longer empties the felt of the other seats\' cards, and a seat that dropped off says so on its globe', () => {
   const A = loadClient(CLIENT);

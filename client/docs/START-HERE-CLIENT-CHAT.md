@@ -10,11 +10,11 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.149** (THE FACE DECIDES: on the free board a crypt card's face decides ready / uncontrolled, torpor stays put and is marked, the felt's turn label and clock follow, a resolver's Played tray closes with it and the top row sits below it, other seats' cards stay on a roster change and a dropped seat says offline; the turn count survives a reconnect or reload; attached cards ride their host in every view, torpor included) | `client/elysium-vtes-bord.html`, copied to `/` |
+| client | **v2.6.150** (THE TAB SAYS SO: the seat chip under the globe, a resolver lights the Played tab instead of opening the tray on every screen, the top row back at the top edge, the title with a colon; carries v2.6.149 THE FACE DECIDES) | `client/elysium-vtes-bord.html`, copied to `/` |
 | server | **srv-2.6.45** (the pub keeps `tn`/`rn`, the turn count; srv-2.6.44: the room option `tableSetup`) | `client/elysium-server.js`, copied to `/` |
 | bot (consumed) | **v0.6.198** (12 Oct 2026) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.149 / srv-2.6.45 | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **278/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 65/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 + a three-bot Structured soak · B1 byte-identical 1 529 758 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.150 / srv-2.6.45 | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **278/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 65/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 + a three-bot Structured soak · B1 byte-identical 1 530 884 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
 **Live on elysium.cards:** client v2.6.149 + server srv-2.6.45 + bot v0.6.198 — Johan merged PR #7 and deployed the full root bundle on 13 Oct 2026 at 16:47 (server restarted, client purged).
 
@@ -70,9 +70,8 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 ## Open right now (13 Oct 2026)
 
 - **Built in v2.6.149 (13 Oct, evening):** K1–K6 from the Classic review, plus the turn count across a reconnect or reload
-  (srv-2.6.45) and attached cards riding their host in every view. `client/CLAUDE.md` top entry. **Known limit:** at 1024 × 600 a
-  Played tray held open by a resolver still covers half the top-centre seat (all of it with a row of cards); 1280 × 720 about half
-  with a row of cards. **Not run:** touch, a referee watching, six humans at once, a socket bot at a Classic table after the change.
+  (srv-2.6.45) and attached cards riding their host in every view. `client/CLAUDE.md` top entry. **v2.6.150:** a resolver no longer opens the tray on other screens, so the
+  top row is back at the top edge; a player who opens the tray covers their own top-centre seat with it. **Not run:** touch, a referee watching, six humans at once, a socket bot at a Classic table after the change.
 - **For the bot project to pick up:** `docs/handoffs/REPLY-to-bot-2026-10-13-classic-review.md` — the hard stop
   (`_openSlot` on a full Classic row), equipment without `host` (Structured too), permanents at fixed felt points, the
   Edge on the felt. The seat spots are final with v2.6.149 (top row at y 132): `docs/handoffs/REPLY-to-bot-2026-10-13-v2.6.149.md`

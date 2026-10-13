@@ -1,3 +1,23 @@
+## [FLIKEN SÄGER TILL] — Johans tre justeringar efter v2.6.149 (13 oktober 2026, sen kväll, klient v2.6.150)
+
+Johan var inne på det driftsatta bordet och ville ha tre saker: (1) platschipet (stol + ordningstal) under poolgloben
+med namnet ensamt ovanför; (2) övre raden tillbaka längst upp, och Played-fliken ska inte styra för alla — var och en
+väljer själv om den ska fästas; (3) sidans titel "Elysium: a digital VTES table" med kolon i stället för det långa
+tankstrecket.
+
+**Byggt:** (1) `.l4gseat` är en egen rad under globen; vid nedre raden slutar chipet 182 px ovanför den öppna handpanelen
+på 1366 × 768. (2) Jag läste "välja själv" som att en resolver inte ska öppna någonting hos de andra (variant B, sagt
+till Johan innan bygget): `tally` nålar inget; i stället pulserar fliken uppe i mitten och visar VOTE / BLOCK / COMBAT
+för dem som har hjälparen på, och den som vill se siffrorna hovrar eller nålar själv. Hovringen hålls öppen så länge
+resolvern pågår (som förut). En combat man själv startar från kortmenyn visar fortfarande fliken och tar bort den igen.
+Övre raden är tillbaka på y 25; `L4_SEAT.topY` borttagen, fyra testvärden flyttade tillbaka. (3) `<title>` och
+`og:title`; tankstrecket står kvar inne i sidan (loggexporten, hjälpsidornas titlar).
+
+**Grindar:** klient 278/0 (K5-testet omskrivet; mot v2.6.149 5 röda), protokoll 6/0, server 65/0 (oförändrad), kanarie
+57/0, B1 byte-identisk, check-versions grön. Riktig server med två webbläsare: Anna öppnar Vote — hos Johan pulserar
+fliken med VOTE, fliken är stängd, öppnas vid hovring, och tystnar vid Resolve. Titeln läst från webbläsaren.
+**Inte kört:** pekskärm; hur pulsen ser ut på en riktig skärm (en skärmdump visar en bildruta).
+
 ## [YTAN AVGÖR] — K1–K6 byggda, plus tre fel hittade på vägen (13 oktober 2026, kväll, klient v2.6.149 + server srv-2.6.45)
 
 Johan: "Yes jag tycker vi kör på med att blockera classic table för bottarna just nu då och kör på K1-K6 samt om du
