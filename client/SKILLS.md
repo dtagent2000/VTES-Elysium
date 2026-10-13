@@ -1,6 +1,6 @@
 # SKILLS.md — Elysium Development Recipes
 
-> Step-by-step patterns for recurring development tasks, distilled from ~26 sessions of implementation. Each recipe lists the exact touch-points in the codebase and the order they must be done in. Read `CLAUDE.md` for the project overview and constraints. **B1 roundtrip, corrected recipe (12 July):** `split_client.py` reads `/tmp/original.html` and writes fragments to `/home/claude/elysium-src` — but `elysium-build.js` reads `ROOT/elysium-src` (next to the build script). ALWAYS: (1) `cp` the edited client to `/tmp/original.html`, (2) split, (3) `rm -rf elysium-src && cp -r /home/claude/elysium-src elysium-src`, (4) build to a SCRATCH file (`node elysium-build.js /tmp/rebuilt.html`) and `cmp` against the original — never trust the default-overwrite path: a stale fragment dir once produced a byte-identical FALSE PASS against pre-edit content. **Reflects Elysium v2.6.128 (client v2.6.145 / server v2.6.43 / bot v0.6.198 -- v2.6.142: the consume recipe drives the client's mirrors of bot rules (the hold badge) against the real bot; v2.6.141: the consume recipe notes partial 'changed today' zips; v2.6.140: consuming a bot release has its own recipe, "Consume a bot release"; v2.6.139: a TABLE-STATE verb (botcfg) -- see the new recipe "Add a table-state verb"; the room snapshot is ONE pure pair (roomSnap / roomUnsnap); v2.6.128: the Help modal's ids are helpDoc*, a duplicate-id suite pin; HELP INSIDE THE CLIENT 22 Sep: Help… submenu, START-HERE pages embedded as <template>s + embed-help.js; BOT-CARD CONTROLS 22 Sep: card verbs on a bot seat ride the bridge too, see "Referee verbs on a bot seat"; THE PARITY ROUND 21 Sep: hotBridge owns the server's table state (tally / out / VP) -- see the new recipe "Mirror a server handler in hotBridge"; LITE MODE 9 Sep: the Lite/Full interface mode (see the new recipe "Gate a feature by interface mode (Lite/Full)"), the card database on by default, Tournament lock always on (its checkbox left Create game at v2.6.116), the alpha pill on bot seats. Prior rounds in elysium-CHANGELOG.md.)**
+> Step-by-step patterns for recurring development tasks, distilled from ~26 sessions of implementation. Each recipe lists the exact touch-points in the codebase and the order they must be done in. Read `CLAUDE.md` for the project overview and constraints. **B1 roundtrip, corrected recipe (12 July):** `split_client.py` reads `/tmp/original.html` and writes fragments to `/home/claude/elysium-src` — but `elysium-build.js` reads `ROOT/elysium-src` (next to the build script). ALWAYS: (1) `cp` the edited client to `/tmp/original.html`, (2) split, (3) `rm -rf elysium-src && cp -r /home/claude/elysium-src elysium-src`, (4) build to a SCRATCH file (`node elysium-build.js /tmp/rebuilt.html`) and `cmp` against the original — never trust the default-overwrite path: a stale fragment dir once produced a byte-identical FALSE PASS against pre-edit content. **Reflects Elysium v2.6.128 (client v2.6.146 / server v2.6.44 / bot v0.6.198 -- v2.6.146: a ROOM OPTION the server only stores (`tableSetup`) -- the checked list under "Add a room-wide setting"; the real server with real browser clients -- see "Drive the real server with real browser clients"; v2.6.142: the consume recipe drives the client's mirrors of bot rules (the hold badge) against the real bot; v2.6.141: the consume recipe notes partial 'changed today' zips; v2.6.140: consuming a bot release has its own recipe, "Consume a bot release"; v2.6.139: a TABLE-STATE verb (botcfg) -- see the new recipe "Add a table-state verb"; the room snapshot is ONE pure pair (roomSnap / roomUnsnap); v2.6.128: the Help modal's ids are helpDoc*, a duplicate-id suite pin; HELP INSIDE THE CLIENT 22 Sep: Help… submenu, START-HERE pages embedded as <template>s + embed-help.js; BOT-CARD CONTROLS 22 Sep: card verbs on a bot seat ride the bridge too, see "Referee verbs on a bot seat"; THE PARITY ROUND 21 Sep: hotBridge owns the server's table state (tally / out / VP) -- see the new recipe "Mirror a server handler in hotBridge"; LITE MODE 9 Sep: the Lite/Full interface mode (see the new recipe "Gate a feature by interface mode (Lite/Full)"), the card database on by default, Tournament lock always on (its checkbox left Create game at v2.6.116), the alpha pill on bot seats. Prior rounds in elysium-CHANGELOG.md.)**
 
 ## Add a table-state verb (store + relay + late-join replay + snapshot) — v2.6.139 (`botcfg`), the pattern `tally` started
 A piece of state the whole TABLE shares (the bot tempo, the resolver counters) needs five places, and missing one is silent:
@@ -692,6 +692,19 @@ A setting chosen by the host that applies to all players.
 
 9. **Bump server VERSION** — this changes the wire protocol.
 
+### Checked against `tableSetup` (v2.6.146 / srv-2.6.44) — what the nine steps leave out
+
+- **`joined` is built in two places and `took` is sent from two.** Players get `joined` from `joinReply`, spectators from their own inline message; `took` comes from promote and from loadMatch. Give the field to all four and assert EACH message in `test-server-dispatch.js` — a count of matches in the source is not a check.
+- **The lobby message carries seats, players and watchers — no room options.** A client guard reads `net.<field>` (set by `joined`), never `net.lobbyData.<field>`. Step 5 above is wrong for every option so far.
+- **The room snapshot needs the field; a saved match does not.** `roomSnap` / `roomUnsnap` (the rooms file that survives a restart) carry every room option — add the field to both and re-validate on the way in (an option tied to a board style is dropped when the record's board style does not match). `saveMatch` stores no room options at all (no `boardMode` either): a loaded match takes the options of the lobby it is loaded into, so step 6 above applies to per-match state only.
+- **`took` keeps the room's value when its message has none** (`if(m.x!==undefined) net.x=…`). An older server's loadMatch sends less, and a default there overwrites what `joined` said.
+- **The offline sibling:** `startHotseat(players, boardMode, opts)` and the bridge's `joined` (`hotBridge._…`, set in `hotSpawnBots`).
+- **An option that belongs to one board style:** one `…Sync()` function greys and disables the box, called from every place that sets the select — including code that assigns `.value` and so fires no `change` (`syncOffBotLock`).
+- **The host on an older server:** read the box once at create (`net._createX`), compare with what `joined` echoes, toast, and write the log line AFTER the deal line — `dealt` clears the log.
+- **The dialog's grid:** a `.mpcheck` row spans both columns. With a description beside it, give the row `grid-column:auto` and look at the dialog in Full and in Lite.
+- **Protocol:** the field goes into the `create` row (§3) and the `joined` / `took` / `started` rows (§8); `test-protocol-doc.js` holds them against the handlers' `m.<field>` reads.
+- **If the server only has to remember the choice, let the client act on it with verbs that exist.** `tableSetup` deals nothing server-side; the client sends four `drawCrypt`. An old peer then needs nothing, and both mixed pairs just work.
+
 ---
 
 ## Skill: Add a tutorial step or section
@@ -818,6 +831,32 @@ await pg.screenshot({ path: 'dock.png' });                   // then LOOK at it
 - **Single vs group audit (v2.6.144):** build two of each kind with `makeCard` + `move` (uncontrolled face down, ready face up with blood and a lock, ready face down, a library card in play, a vampire in torpor), `window.__snap=serializeGame()`, and per trial `restoreGame(window.__snap,{keepLog:true,silent:true})` → select (`clearSel(); addSel([ids])`) or not → real mouse drag to the target zone's rect (for a dock zone, drag to the bottom edge first and wait for the dock) → read `zone / faceDown / locked / blood` of both cards. A cell is suspect when the card's outcome in a group differs from its outcome alone.
 - Park the pointer on empty felt between trials — the top centre opens the Played tab over the cards. Close any dialog a trial opened before the next one.
 - Still not verifiable here: touch, sound, animation feel, KRCG's images, online play across machines.
+
+### Drive the real server with real browser clients (13 Oct 2026, v2.6.146)
+
+For anything online: the unit suites feed handlers made messages; this runs the real pair. Scratch scripts only, one run at a time, never beside the suite.
+
+```js
+const p = spawn('node', [SERVER_JS, String(PORT), CLIENT_HTML, '--data-dir', scratchDir]);      // ready when stdout says 'Local:'
+const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });               // ONE CONTEXT PER PLAYER: own storage, own socket
+const pg = await ctx.newPage(); await pg.goto('http://localhost:' + PORT + '/');                // localhost opens in Full mode
+await pg.evaluate(() => { closeOverlay(); openMP('create'); }); await pg.click('#mpGsToggle');   // Game settings
+await pg.fill('#mpName', 'Johan'); await pg.fill('#mpRoom', 'bord'); await pg.click('#mpCreate');
+await pg.waitForFunction(() => net.lobby === true);
+// a guest: openMP('join'), #mpName, #mpRoom, #mpJoin   (a spectator: check #mpSpect first)
+await pg.evaluate(d => buildDeck(parseDeck(d)), deckText);                                       // then back to the lobby: openOverlay('lobbyModal'); renderLobby()
+await pg.click('.lobseatbtn[data-seat="1"]');                                                    // only after EVERYONE has joined -- the picker's range is the player count
+await host.click('#lobStart');
+```
+- **What one player sees of another:** `net.boards[seat].pub` — `cards` (zone, x, y, faceDown, and no `name` when face down) and `tokens` (the pool globe).
+- **Claim seats in another order than the join order,** or the run says nothing about seat order.
+- **An old client at a new table:** start a second server process that serves the old file (`node elysium-server.js <port2> old-client.html`), open the page from there, and type the first server's address into `#mpAddr` (`mpFold('srv', true)` unfolds it). **An old server:** spawn the old file (`git show <rev>:client/elysium-server.js > scratch/old-server.js`).
+- **The log is shared:** every player's deal line shows in every log (five players, five lines).
+- **A bot from the lobby:** `#lobBotAdd`, then wait until `netBots` holds it and the lobby shows its deck. It claims the first free seat by itself; the humans take what is left. The server needs the bundle beside it.
+- **A mid-game join leaves the Join dialog open** (`#mpClose`) **and the client on the start view until Esc.** Do both before reading the table, or you measure an empty one.
+- **A reloaded tab keeps its seat token** (sessionStorage): Resume on the welcome card restores the saved table, Join game then takes the seat back. `net.ws.close()` in the page is a dropped socket; the client rejoins by itself after 2.5 s.
+- **Run the same script against the previous release** before calling anything a regression — both files as arguments.
+- Kill the server processes in `finally`, end the script with `process.exit(0)`, and give each run a fresh `--data-dir`.
 
 ### What the sandbox CANNOT verify (client track only — the bot track below largely CAN)
 

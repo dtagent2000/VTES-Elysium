@@ -1106,5 +1106,76 @@ test('srv-2.6.43 a reconnecting bot keeps its flag -- by token and by name; a na
   eq(room.players[2].bot, undefined, 'a human never becomes a bot by omission');
 });
 
+/* ---------- srv-2.6.44: THE TABLE IS SET (the room option tableSetup) ---------- */
+const DECK44 = { t:'deck', library:[{ name:'Govern the Unaligned', qty:30 }, { name:'Deflection', qty:30 }], crypt:[{ name:'Gratiano', qty:12 }], name:'D' };
+test('srv-2.6.44 tableSetup: a Classic room created with it stores it and tells every client -- the creator, a late joiner, a spectator, and everyone again at start; the Classic deal itself is untouched', () => {
+  S.rooms.clear(); S.ipFails.clear();
+  const cA = { ip:'10.5.1.1', sock: recSock() };
+  S.handle(cA, JSON.stringify({ t:'create', room:'TS1', name:'Alice', lobby:true, boardMode:'classic', tableSetup:true }));
+  const room = S.rooms.get('TS1');
+  eq(room.tableSetup, true, 'create stores the option');
+  eq(cA.sock.msgs.find(m => m.t === 'joined').tableSetup, true, 'the creator hears it in joined');
+  const cB = { ip:'10.5.1.2', sock: recSock() }; S.handle(cB, JSON.stringify({ t:'join', room:'TS1', pass:'', name:'Bob' }));
+  eq(cB.sock.msgs.find(m => m.t === 'joined').tableSetup, true, 'a later joiner hears it');
+  const cW = { ip:'10.5.1.3', sock: recSock() }; S.handle(cW, JSON.stringify({ t:'join', room:'TS1', pass:'', name:'Wanda', spect:true }));
+  const jw = cW.sock.msgs.find(m => m.t === 'joined'); eq(jw.spect, true); eq(jw.tableSetup, true, 'a spectator hears it');
+  S.handle(cA, JSON.stringify(DECK44)); S.handle(cB, JSON.stringify(DECK44));
+  S.handle(cA, JSON.stringify({ t:'seat', seat:1 })); S.handle(cB, JSON.stringify({ t:'seat', seat:2 }));
+  cA.sock.msgs.length = 0; cB.sock.msgs.length = 0;
+  S.handle(cA, JSON.stringify({ t:'start' }));
+  eq(room.started, true, 'the game started');
+  for (const c of [cA, cB]) {
+    const st = c.sock.msgs.find(m => m.t === 'started'); assert(st, 'started arrived'); eq(st.tableSetup, true, 'started carries it'); eq(st.boardMode, 'classic');
+    const d = c.sock.msgs.find(m => m.t === 'dealt'); assert(d, 'dealt arrived');
+    eq(d.hand.length, 7, 'seven cards'); eq(d.unc.length, 0, 'and NO uncontrolled: the Classic deal is exactly what it was -- the four setup cards are the client\'s own drawCrypt verbs');
+    eq(d.crypt, 12, 'the whole crypt is still on the server');
+  }
+  // the four setup draws are the ordinary verb: private, one card each, nothing broadcast
+  cA.sock.msgs.length = 0; cB.sock.msgs.length = 0;
+  for (let i = 0; i < 4; i++) S.handle(cA, JSON.stringify({ t:'drawCrypt' }));
+  const drews = cA.sock.msgs.filter(m => m.t === 'drew');
+  eq(drews.length, 4); assert(drews.every(m => m.zone === 'uncontrolled' && m.kind === 'crypt'), 'four uncontrolled crypt cards'); eq(drews[3].crypt, 8, 'pile count follows');
+  eq(cB.sock.msgs.length, 0, 'the other seat hears nothing about them (they see the cards through the board push, as with a hand-made setup)');
+});
+test('srv-2.6.44 tableSetup is Classic-only and strict: a Structured room, a room created without it, and a non-boolean value never carry it -- an old client\'s create is unchanged', () => {
+  S.rooms.clear(); S.ipFails.clear();
+  const mk = (name, extra) => { const c = { ip:'10.5.2.' + (S.rooms.size + 1), sock: recSock() }; S.handle(c, JSON.stringify(Object.assign({ t:'create', room:name, name:'H' + name, lobby:true }, extra))); return c; };
+  const cases = [['Struct', { boardMode:'structured', tableSetup:true }], ['Plain', { boardMode:'classic' }], ['Str', { boardMode:'classic', tableSetup:'yes' }], ['One', { boardMode:'classic', tableSetup:1 }], ['Legacy', {}]];
+  for (const [name, extra] of cases) {
+    const c = mk(name, extra), room = S.rooms.get(name), j = c.sock.msgs.find(m => m.t === 'joined');
+    eq(room.tableSetup, false, name + ': not stored'); eq('tableSetup' in j, false, name + ': joined does not mention it');
+  }
+});
+test('srv-2.6.44 the snapshot round-trips tableSetup, re-validated: a legacy record has none, and a Structured record can never carry one', () => {
+  S.rooms.clear(); S.ipFails.clear();
+  const cA = { ip:'10.5.3.1', sock: recSock() };
+  S.handle(cA, JSON.stringify({ t:'create', room:'TS3', name:'Alice', lobby:true, boardMode:'classic', tableSetup:true }));
+  const room = S.rooms.get('TS3');
+  const disk = JSON.parse(JSON.stringify(S.roomSnap(room)));
+  eq(disk.tableSetup, true, 'written');
+  eq(S.roomUnsnap(disk).tableSetup, true, 'and read back -- a restarted server keeps telling rejoining clients');
+  const legacy = Object.assign({}, disk); delete legacy.tableSetup;
+  eq(S.roomUnsnap(legacy).tableSetup, false, 'a pre-2.6.44 record: off');
+  eq(S.roomUnsnap(Object.assign({}, disk, { boardMode:'structured' })).tableSetup, false, 'a Structured record never carries it');
+  eq(S.roomUnsnap(Object.assign({}, disk, { tableSetup:'true' })).tableSetup, false, 'a garbled value is dropped');
+});
+test('srv-2.6.44 both `took` messages carry the room\'s boardMode and tableSetup -- loadMatch\'s never carried boardMode, so the host of a Classic room was told nothing and its client fell back to Structured', () => {
+  if (!S.saves) throw new Error('saves not exposed');
+  S.rooms.clear(); S.ipFails.clear(); S.saves.clear();
+  const cA = { ip:'10.5.4.1', sock: recSock() };
+  S.handle(cA, JSON.stringify({ t:'create', room:'TS4', name:'Alice', lobby:true, boardMode:'classic', tableSetup:true }));
+  const room = S.rooms.get('TS4');
+  S.saves.set('sv44', { name:'sv44', passHash: room.passHash, players:[{ name:'Alice', game:null }, { name:'Bob', game:null }], turnSeat:1, reactSecs:5, touchedAt: Date.now() });
+  cA.sock.msgs.length = 0;
+  S.handle(cA, JSON.stringify({ t:'loadMatch', name:'sv44' }));
+  const tk = cA.sock.msgs.find(m => m.t === 'took'); assert(tk, 'loadMatch answered with took: ' + JSON.stringify(cA.sock.msgs.map(m => m.t + (m.msg ? ':' + m.msg : ''))));
+  eq(tk.loaded, 'sv44'); eq(tk.boardMode, 'classic', 'the host is told the board style'); eq(tk.tableSetup, true, 'and the option');
+  S.saves.clear();
+  const src = require('fs').readFileSync(SRV, 'utf8');
+  const sites = [...src.matchAll(/t:'took'/g)].map(m => m.index);
+  eq(sites.length, 2, 'two took sites (takeover / promote, and loadMatch)');
+  for (const at of sites) assert(src.slice(at, at + 1100).indexOf('boardMode: room.boardMode || undefined, tableSetup: room.tableSetup || undefined,') > 0, 'the took at ' + at + ' carries the pair');
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));
 process.exit(fail ? 1 : 0);

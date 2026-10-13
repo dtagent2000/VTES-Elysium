@@ -3706,7 +3706,8 @@ test('v2.6.143: the dock pin has ONE setter -- the visible button, the backgroun
   try { A.setL2Dock(false); } finally { A.__stubEl.classList._t.delete('l2dockopen'); }
   eq(A.dockPinned, false, 'a close that executes releases the pin');
   const html = require('fs').readFileSync(CLIENT, 'utf8');
-  assert(/<div class="zone" id="z-hand"><span class="zlabel">Hand<\/span><button type="button" id="l2dockPin" aria-pressed="false"/.test(html), 'the button sits beside the Hand label');
+  assert(/<div id="l2dockbg"[^\n]*<\/div><\/div>\n\s*<button type="button" id="l2dockPin" aria-pressed="false"/.test(html), 'the button is the PANEL\'s own, right after its background (v2.6.146: the top right corner -- in v2.6.143 it sat inside the Hand box)');
+  eq(/id="z-hand">[^\n]*l2dockPin/.test(html), false, 'and it is out of the Hand box');
   assert(html.indexOf('#board.l2dockopen #l2dockPin{ display:inline-flex; }') > 0, 'and shows whenever the dock is open');
   assert(html.indexOf("_pb.addEventListener('click', e=>{ e.stopPropagation(); setDockPin(!dockPinned); });") > 0, 'a click toggles');
   eq((html.match(/dockPinned\s*=\s*(true|false|!!on)/g) || []).join(), 'dockPinned=false,dockPinned=!!on', 'the flag is assigned at its declaration and in the setter only');
@@ -3755,6 +3756,190 @@ test('v2.6.145: a zone refuses the same cards whether one is moved or many -- to
   assert(html.indexOf('if(zoneRefuses(m.c,z)) return;') > 0, 'the group drag asks the same rule (it checked torpor and uncontrolled, never the hand)');
   assert(html.indexOf('!zoneRefuses(c,zone) && move(c,zone)') > 0, 'and so does the group command');
   eq(html.indexOf("if(z==='torpor' && m.c.kind!=='crypt') return;"), -1, 'the partial copy is gone');
+});
+/* ---------- v2.6.146: THE TABLE IS SET (the suggested table setup; server srv-2.6.44) ---------- */
+const DECK146 = (() => { let t = 'Deck Name: T\nCrypt\n'; for (let i = 1; i <= 12; i++) t += '1x Vampire ' + i + '\n'; t += 'Library\n'; for (let i = 1; i <= 60; i++) t += '1x Card ' + i + '\n'; return t; })();
+const ROSTER146 = n => ['Johan', 'Anna', 'Erik', 'Maria', 'Olof', 'Sara'].slice(0, n).map((name, i) => ({ seat: i + 1, name }));
+function seatBlock146(A, idx, N){                                   // a seat's footprint: its globe (name line + circle) and its four cards
+  const G = A.l4SeatGeo(), g = A.l4SeatSpot(idx, N), cards = A.l4CryptSpots(g.x, g.y);
+  const xs = [g.x, g.x + G.gw].concat(cards.flatMap(c => [c.x, c.x + G.cw])), ys = [g.y, g.y + G.lbl + G.gw].concat(cards.flatMap(c => [c.y, c.y + G.ch]));
+  return { g, cards, left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys) };
+}
+test('v2.6.146: ordinal -- 1st 2nd 3rd 4th, the teens are all th, and 21st starts over', () => {
+  if (!API.ordinal) throw new Error('ordinal not exposed (harness needs updating)');
+  eq([1, 2, 3, 4, 5, 6, 11, 12, 13, 21, 22, 23, 24, 101, 111, 112].map(API.ordinal).join(' '), '1st 2nd 3rd 4th 5th 6th 11th 12th 13th 21st 22nd 23rd 24th 101st 111th 112th');
+});
+test('v2.6.146: the seat spots -- for 1 to 6 seats every seat has its own footprint inside the shared table, the order runs clockwise from the top left (top row left to right, lower row right to left), and the lower row ends ABOVE the open hand panel', () => {
+  if (!API.l4SeatSpot || !API.l4CryptSpots || !API.pubBox) throw new Error('l4SeatSpot / l4CryptSpots / pubBox not exposed (harness needs updating)');
+  const T = API.pubBox(), G = API.l4SeatGeo();
+  eq(API.L4_SEAT.lowBottom, 404, 'the lower row\'s cards end at canonical y 404');
+  assert(API.L4_SEAT.lowBottom < 410, 'the open hand panel begins at 410-425 on every laptop window measured (14 sizes, card viewer closed; lower with it open) -- a pinned hand must not hide two seats');
+  for (let N = 1; N <= 6; N++) {
+    const B = [...Array(N).keys()].map(i => seatBlock146(API, i, N)), topN = Math.ceil(N / 2);
+    B.forEach((b, i) => {
+      assert(b.left >= T.x && b.right <= T.x + T.w + 0.5 && b.top >= T.y && b.bottom <= T.y + T.h, 'N=' + N + ' seat ' + (i + 1) + ' lies inside the table every client shows in full: ' + JSON.stringify([b.left, b.top, b.right, b.bottom]));
+      eq(b.cards.length, 4); assert(b.cards.every(c => c.y === b.cards[0].y), 'four cards in one row');
+      const mirror = b.g.x > T.x + T.w / 2;
+      if (mirror) assert(b.cards.every(c => c.x + G.cw <= b.g.x), 'N=' + N + ' seat ' + (i + 1) + ': on the right half the globe sits on the outside, its cards toward the middle');
+      else assert(b.cards.every(c => c.x >= b.g.x + G.gw), 'N=' + N + ' seat ' + (i + 1) + ': cards to the right of the globe');
+      if (i >= topN) eq(b.cards[0].y + G.ch, 404, 'N=' + N + ' seat ' + (i + 1) + ': a lower-row card ends at 404');
+      else assert(b.top < 40, 'N=' + N + ' seat ' + (i + 1) + ' is on the top edge');
+    });
+    for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++)
+      assert(B[i].right + 8 <= B[j].left || B[j].right + 8 <= B[i].left || B[i].bottom + 8 <= B[j].top || B[j].bottom + 8 <= B[i].top, 'N=' + N + ': seats ' + (i + 1) + ' and ' + (j + 1) + ' do not touch');
+    for (let i = 1; i < topN; i++) assert(B[i].g.x > B[i - 1].g.x, 'N=' + N + ': the top row runs left to right');
+    for (let i = topN + 1; i < N; i++) assert(B[i].g.x < B[i - 1].g.x, 'N=' + N + ': the lower row runs right to left, so the seats go clockwise');
+  }
+  eq(JSON.stringify([0, 1, 2, 3, 4].map(i => { const g = API.l4SeatSpot(i, 5); return [g.x, g.y]; })), '[[26,25],[385,25],[933,25],[933,341],[26,341]]', 'five seats: top left, top centre, top right, lower right, lower left -- the layout a Lackey table uses');
+  eq(JSON.stringify(API.l4CryptSpots(26, 25).map(c => c.x)), '[81,127,173,219]'); eq(JSON.stringify(API.l4CryptSpots(933, 25).map(c => c.x)), '[743,789,835,881]');
+  eq(JSON.stringify([0, 1, 2, 3].map(i => API.l4SeatSpot(i, 4).x)), '[26,933,933,26]', 'four seats: the corners');
+  eq(JSON.stringify([0, 1].map(i => { const g = API.l4SeatSpot(i, 2); return [g.x, g.y]; })), '[[385,25],[385,341]]', 'two seats face each other');
+  // a globe the player has moved: the cards follow it, on the side where they fit, and never leave the table
+  const far = API.l4CryptSpots(960, 500); assert(far.every(c => c.x + G.cw <= 960 && c.x >= T.x), 'near the right edge the cards go to the left'); assert(far[0].y + G.ch <= T.y + T.h, 'and are clamped onto the table');
+  const mid = API.l4CryptSpots(500, 250); assert(mid.every(c => c.x >= 500 + G.gw), 'in the middle they go to the right');
+});
+test('v2.6.146: tableSetupOn -- a Classic table with the option; never a Structured one; never a table with a seated bot (bots camp by their own pattern); a vacant bot seat does not count', () => {
+  const A = loadClient(CLIENT);
+  if (!A.tableSetupOn) throw new Error('tableSetupOn not exposed (harness needs updating)');
+  A.net.roster = ROSTER146(3);
+  A.net.boardMode = 'classic'; A.net.tableSetup = false; eq(A.tableSetupOn(), false, 'the option is off');
+  A.net.tableSetup = true; eq(A.tableSetupOn(), true, 'Classic + option');
+  A.net.boardMode = 'structured'; eq(A.tableSetupOn(), false, 'a Structured table has its own zones');
+  A.net.boardMode = 'classic'; A.net.roster[1].bot = true; eq(A.tableSetupOn(), false, 'a bot is seated');
+  A.net.roster[1].vacant = true; eq(A.tableSetupOn(), true, 'the bot left');
+});
+test('v2.6.146: online, the deal on a Classic table with the option asks for the first four crypt cards with the ORDINARY verb and lays the answers face down beside the globe; the deal line says so once, and a card drawn later is an ordinary draw', () => {
+  const A = loadClient(CLIENT), sent = [];
+  A.net.ws = { readyState: 1, send: j => sent.push(JSON.parse(j)) }; A.net.status = 'in'; A.net.you = 'Anna';
+  A.net.roster = ROSTER146(5); A.net.boardMode = 'classic'; A.net.tableSetup = true;
+  A.MP_HANDLERS.dealt({ deckName: 'D', hand: ['a', 'b', 'c', 'd', 'e', 'f', 'g'], unc: [], lib: 53, crypt: 12 });
+  eq(JSON.stringify(sent.filter(m => m.t === 'drawCrypt')), JSON.stringify([{ t: 'drawCrypt' }, { t: 'drawCrypt' }, { t: 'drawCrypt' }, { t: 'drawCrypt' }]), 'four bare drawCrypt verbs -- exactly what four double-clicks on the crypt send');
+  const line = sent.find(m => m.t === 'log' && /New deal/.test(m.html)); assert(line, 'the deal line went out');
+  assert(/4 crypt cards were placed face down beside the pool\./.test(line.html), 'it announces the setup: ' + line.html);
+  assert(/crypt: 8 remain/.test(line.html), 'and counts the crypt AFTER it');
+  const spots = A.l4SetupSpots(2);
+  eq(JSON.stringify(spots), JSON.stringify(A.l4CryptSpots(385, 25)), 'seat 2 of 5 sits top centre');
+  for (let i = 0; i < 4; i++) A.MP_HANDLERS.drew({ zone: 'uncontrolled', kind: 'crypt', name: 'V' + i, lib: 53, crypt: 11 - i });
+  const unc = () => A.state.zones.uncontrolled.map(id => A.state.cards.get(id));
+  eq(unc().length, 4);
+  unc().forEach((c, i) => { eq(c.x, spots[i].x, 'card ' + i + ' x'); eq(c.y, spots[i].y, 'card ' + i + ' y'); eq(c.faceDown, true, 'face down'); });
+  eq(A.state.cryptDrawHistory.length, 4, 'they are draws -- Undo last draw takes them back, as after a hand-made setup');
+  eq(sent.filter(m => m.t === 'log' && /Drew/.test(m.html)).length, 0, 'no per-card line: five players would open with twenty of them');
+  A.MP_HANDLERS.drew({ zone: 'uncontrolled', kind: 'crypt', name: 'V4', lib: 53, crypt: 7 });
+  const fifth = unc()[4]; assert(!spots.some(sp => sp.x === fifth.x && sp.y === fifth.y), 'the fifth card is not a setup card');
+  eq(sent.filter(m => m.t === 'log' && /Drew <b>1 crypt card<\/b>/.test(m.html)).length, 1, 'and it logs like any draw');
+  eq(sent.filter(m => m.t === 'drawCrypt').length, 4, 'the client asked exactly four times');
+});
+test('v2.6.146: no setup draws without the option, on a Structured table, or beside a bot; a short crypt gives what it has; a fetched card is never mistaken for a setup card', () => {
+  const run = (cfg, crypt) => { const A = loadClient(CLIENT), sent = [];
+    A.net.ws = { readyState: 1, send: j => sent.push(JSON.parse(j)) }; A.net.status = 'in'; A.net.you = 'Anna';
+    A.net.roster = ROSTER146(4); Object.assign(A.net, cfg.net); if (cfg.bot) A.net.roster[2].bot = true;
+    A.MP_HANDLERS.dealt({ deckName: 'D', hand: ['a', 'b', 'c', 'd', 'e', 'f', 'g'], unc: cfg.unc || [], lib: 53, crypt });
+    return { A, sent, draws: sent.filter(m => m.t === 'drawCrypt').length, line: (sent.find(m => m.t === 'log' && /New deal/.test(m.html)) || {}).html || '' }; };
+  let r = run({ net: { boardMode: 'classic', tableSetup: false } }, 12);
+  eq(r.draws, 0, 'option off: nothing asked'); assert(/draw crypt cards manually from the dock/.test(r.line), 'and the old deal line, word for word'); assert(/crypt: 12 remain/.test(r.line));
+  r.A.MP_HANDLERS.drew({ zone: 'uncontrolled', kind: 'crypt', name: 'V', lib: 53, crypt: 11 });
+  eq(r.sent.filter(m => m.t === 'log' && /Drew <b>1 crypt card<\/b>/.test(m.html)).length, 1, 'a hand-made draw logs as it always did');
+  r = run({ net: { boardMode: 'structured', tableSetup: true }, unc: ['V1', 'V2', 'V3', 'V4'] }, 8);
+  eq(r.draws, 0, 'Structured: the server dealt the four'); assert(/and 4 uncontrolled crypt cards/.test(r.line)); eq(r.A.state.zones.uncontrolled.length, 4);
+  r = run({ net: { boardMode: 'classic', tableSetup: true }, bot: true }, 12);
+  eq(r.draws, 0, 'a bot at the table: the hand-made setup');
+  r = run({ net: { boardMode: 'classic', tableSetup: true } }, 2);
+  eq(r.draws, 2, 'a crypt of two gives two'); assert(/2 crypt cards were placed/.test(r.line)); assert(/crypt: 0 remain/.test(r.line));
+  r = run({ net: { boardMode: 'classic', tableSetup: true } }, 12);
+  r.A.MP_HANDLERS.drew({ zone: 'uncontrolled', kind: 'crypt', name: 'Fetched', took: true, pile: 'crypt', lib: 53, crypt: 11 });
+  eq(r.A.net.setupSpots.length, 4, 'a card fetched by a search keeps out of the setup spots');
+});
+test('v2.6.146: offline, every seat of a Classic hotseat table with the option starts with four crypt cards face down beside ITS spot -- on every seat\'s own board and in what the others see; without the option none; a Structured table deals its four into the zone as before', () => {
+  const start = (mode, opts, n) => { const A = loadClient(CLIENT); A.startHotseat(ROSTER146(n || 4).map(p => ({ name: p.name, deckText: DECK146 })), mode, opts); return A; };
+  const uncOf = (A, seat) => (JSON.parse(A.net.hot.boards[seat]).cards || []).filter(c => c.zone === 'uncontrolled');
+  let A = start('classic', { tableSetup: true });
+  eq(A.net.tableSetup, true); eq(A.tableSetupOn(), true);
+  for (let seat = 1; seat <= 4; seat++) {
+    const g = A.l4SeatSpot(seat - 1, 4), spots = A.l4CryptSpots(g.x, g.y), u = uncOf(A, seat);
+    eq(u.length, 4, 'seat ' + seat + ' has four (the first build dealt NONE: an else that belonged to the loop\'s inner if)');
+    u.sort((p, q) => p.x - q.x);                                  // the saved board lists cards by id, not by the order they were laid out
+    u.forEach((c, i) => { eq(c.x, spots[i].x, 'seat ' + seat + ' card ' + i + ' x'); eq(c.y, spots[i].y, 'seat ' + seat + ' card ' + i + ' y'); eq(c.faceDown, true); });
+    eq(JSON.parse(A.net.hot.boards[seat]).cards.filter(c => c.zone === 'crypt').length, 8, 'and eight left in the crypt');
+    eq(JSON.parse(A.net.hot.boards[seat]).cards.filter(c => c.zone === 'hand').length, 7);
+  }
+  const pub3 = A.net.boards[3].pub.cards.filter(c => c.zone === 'uncontrolled'), g3 = A.l4SeatSpot(2, 4);
+  eq(JSON.stringify(pub3.map(c => [c.x, c.y]).sort((p, q) => p[0] - q[0])), JSON.stringify(A.l4CryptSpots(g3.x, g3.y).map(c => [c.x, c.y])), 'seat 3 as the others see it: four cards beside its globe');
+  assert(pub3.every(c => c.faceDown === true), 'face down');
+  A = start('classic', { tableSetup: false });
+  eq(A.tableSetupOn(), false); eq(uncOf(A, 1).length, 0, 'option off: the hand-made setup, as before'); eq(uncOf(A, 2).length, 0);
+  A = start('classic');                                           // the tutorials and every other caller pass no options
+  eq(A.net.tableSetup, false, 'no options = off (the tutorials teach the hand-made setup)'); eq(uncOf(A, 1).length, 0);
+  A = start('structured', { tableSetup: true });
+  eq(A.net.tableSetup, false, 'the option is Classic-only'); eq(uncOf(A, 1).length, 4, 'a Structured table still deals four into the uncontrolled zone'); eq(uncOf(A, 3).length, 4);
+  A.leaveHotseat(); eq(A.net.tableSetup, false, 'and nothing rides out of the table');
+});
+test('v2.6.146: the globes START at the seat spots with the option (and on the old ring without it); a globe the player moved keeps its place; a new deal lays the cards beside where the globe is NOW', () => {
+  const A = loadClient(CLIENT);
+  if (!A.renderL4Globes || !A.l4Globes) throw new Error('renderL4Globes / l4Globes not exposed (harness needs updating)');
+  A.localTable = true; A.net.you = 'Johan'; A.net.roster = ROSTER146(5); A.net.boardMode = 'classic';
+  A.net.tableSetup = false; A.renderL4Globes();
+  eq(JSON.stringify([...A.l4Globes.values()].map(g => [g.x, g.y])), '[[470,58],[622,169],[564,347],[376,347],[318,169]]', 'without the option: the ring in the middle, exactly as before');
+  A.l4Globes.clear(); A.net.tableSetup = true; A.renderL4Globes();
+  eq(JSON.stringify([...A.l4Globes.values()].map(g => [g.x, g.y])), '[[26,25],[385,25],[933,25],[933,341],[26,341]]', 'with it: each seat at its spot');
+  A.l4Globes.get(1).x = 500; A.l4Globes.get(1).y = 250; A.renderL4Globes();
+  eq(JSON.stringify([A.l4Globes.get(1).x, A.l4Globes.get(1).y]), '[500,250]', 'a moved globe is not pulled back by a re-render');
+  eq(JSON.stringify(A.l4SetupSpots(1)), JSON.stringify(A.l4CryptSpots(500, 250)), 'and the next deal\'s cards follow it');
+  eq(JSON.stringify(A.l4SetupSpots(4)), JSON.stringify(A.l4CryptSpots(933, 341)), 'an untouched seat keeps its spot');
+  A.net.roster[2].vacant = true; A.l4Globes.clear(); A.renderL4Globes();
+  eq(JSON.stringify([A.l4Globes.get(4).x, A.l4Globes.get(4).y]), '[933,341]', 'an ousted seat moves nobody: a spot depends on the seat number and the table size only');
+  eq(A.l4Globes.has(3), false, 'the vacant seat has no globe');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("if(!l4hintDone && !_setup){") > 0, 'no "drag your pool globe to your seat" hint when the globe already is there');
+  eq((html.match(/<span class="l4gseat">\\u\{1FA91\}\\u00a0'\+ordinal\(glob\.seat\)\+'<\/span>/g) || []).length, 2, 'both label builders write the chair and the ordinal');
+});
+test('v2.6.146: the option on the wire -- joined and started set it, took keeps the room\'s board style when its message carries none (loadMatch on a server before srv-2.6.44), and a host whose server dropped the field is told', () => {
+  const A = loadClient(CLIENT);
+  const ring = () => { const r = (typeof A.errRing === 'function') ? A.errRing() : A.errRing; return (r || []).map(e => e.m).join('\n'); };
+  A.MP_HANDLERS.joined({ room: 'R', token: 't', you: 'Anna', seat: 1, players: ROSTER146(2), boardMode: 'classic', tableSetup: true, lobby: true });
+  eq(A.net.tableSetup, true, 'joined sets it'); eq(A.net.boardMode, 'classic');
+  A.MP_HANDLERS.took({ seat: 1, lib: 0, crypt: 0, loaded: 'sv' });
+  eq(A.net.boardMode, 'classic', 'a took without boardMode keeps the room\'s (it flipped the host of a Classic room to Structured)'); eq(A.net.tableSetup, true, 'and the option');
+  A.MP_HANDLERS.took({ seat: 1, lib: 0, crypt: 0, boardMode: 'structured' });
+  eq(A.net.boardMode, 'structured', 'a took that names one is obeyed');
+  A.MP_HANDLERS.started({ players: ROSTER146(2), turn: 1, boardMode: 'classic', tableSetup: true });
+  eq(A.net.tableSetup, true, 'started sets it');
+  A.MP_HANDLERS.started({ players: ROSTER146(2), turn: 1, boardMode: 'classic' });
+  eq(A.net.tableSetup, false, 'and clears it when the room has none');
+  const B = loadClient(CLIENT), ringB = () => { const r = (typeof B.errRing === 'function') ? B.errRing() : B.errRing; return (r || []).map(e => e.m).join('\n'); };
+  B.net._createSetup = true;
+  B.MP_HANDLERS.joined({ room: 'R', token: 't', you: 'Anna', seat: 1, players: ROSTER146(1), boardMode: 'classic', lobby: true });   // an older server: the field is gone
+  eq(B.net.tableSetup, false); eq(B.net._createSetup, false, 'asked once');
+  assert(/does not know the suggested table setup yet/.test(ringB()), 'the host is told, instead of a silent table without it: ' + ringB().slice(-200));
+  eq(B.net._setupMissed, true, 'and it is remembered for the deal');
+  B.net.ws = { readyState: 1, send(){} }; B.net.status = 'in';
+  B.MP_HANDLERS.dealt({ deckName: 'D', hand: ['a', 'b', 'c', 'd', 'e', 'f', 'g'], unc: [], lib: 53, crypt: 12 });
+  eq((ringB().match(/does not know the suggested table setup yet/g) || []).length, 2, 'said again after the deal line -- the deal clears the log, and the lobby covered the first one');
+  eq(B.net._setupMissed, false, 'once');
+  const C = loadClient(CLIENT), ringC = () => { const r = (typeof C.errRing === 'function') ? C.errRing() : C.errRing; return (r || []).map(e => e.m).join('\n'); };
+  C.net.ws = { readyState: 1, send(){} }; C.net.status = 'in'; C.net.you = 'Anna'; C.net.roster = ROSTER146(3); C.net.roster[2].bot = true; C.net.boardMode = 'classic'; C.net.tableSetup = true;
+  C.MP_HANDLERS.dealt({ deckName: 'D', hand: ['a', 'b', 'c', 'd', 'e', 'f', 'g'], unc: [], lib: 53, crypt: 12 });
+  assert(/skipped at a table with bots/.test(ringC()), 'a table with a bot says why there is no setup, after the deal line');
+  assert(!/does not know the suggested table setup/.test(ring()), 'a server that took it says nothing');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("net._createSetup = ($('#mpBoard').value==='classic') && !!($('#mpSetup') && $('#mpSetup').checked);") > 0, 'create reads the box, for a Classic room only');
+  assert(html.indexOf("tableSetup:net._createSetup||undefined,") > 0, 'and sends the field only when it is set -- an old server sees the create it always saw');
+  assert(/<label class="mpcheck mpCreateOnly mpGs" id="mpSetupRow"><input type="checkbox" id="mpSetup" checked> Suggested table setup<\/label>/.test(html), 'Game settings carries the box, ticked, in Lite too (no mpFull)');
+  assert(/<input type="checkbox" id="offSetup" checked> Suggested table setup<\/label>/.test(html), 'and Play offline');
+  assert(html.indexOf("startHotseat(players, boardMode, { tableSetup: !!($('#offSetup') && $('#offSetup').checked) });") > 0, 'which hands it to the table');
+  assert(html.indexOf("tableSetup: B._tableSetup || undefined,") > 0, 'the hotseat bridge tells its bots what the server would');
+  assert(html.indexOf("#mpSetupRow{grid-column:auto}") > 0, 'the row takes ONE cell of the dialog\'s two-column grid, its description the other (a bare .mpcheck spans both, and the description then pushed every later row out of step)');
+  assert(/board\.disabled=false; helpers\.disabled=false;\n  \}\n  tableSetupSync\(\);/.test(html), 'a bot seat forces Structured in code (no change event) -- the box is greyed with it');
+  assert(html.indexOf("['mpBoard','offBoard'].forEach(id=>{ const e=$('#'+id); if(e) e.addEventListener('change', tableSetupSync); });") > 0, 'both board-style selects grey their box');
+});
+test('v2.6.146: the pin button is the panel\'s own corner and the pinned edge is calm', () => {
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("#l2dockPin{ display:none; position:absolute; right:12px; bottom:calc(1.5% + (var(--ch) + 34px) * var(--dock-s) + 14px - 17px); z-index:4610;") > 0, 'top right corner, inside the 14px strip above the dock\'s boxes');
+  eq((html.match(/height:calc\(1\.5% \+ \(var\(--ch\) \+ 34px\) \* var\(--dock-s\) \+ 14px\)/g) || []).length, 2, 'the same height formula the panel\'s two background rules use -- if they change, the button must follow');
+  assert(/#board\.l2dockopen #z-pool\{[^}]*z-index:4600;/.test(html), 'the dock\'s boxes sit at 4600; the button at 4610 is above them and stays clickable');
+  assert(html.indexOf("#l2dockbg.pinned{ box-shadow:0 -2px 8px rgba(232,201,106,.12), inset 0 1px 0 rgba(232,201,106,.42); }") > 0, 'a thin line and a faint light (it was a 16px glow at .45 and a 2px line at .6)');
+  assert(html.indexOf("(dockPinned?'Pinned':'Pin'); }") > 0, 'the button says Pin / Pinned');
+  const A = loadClient(CLIENT); A.setDockPin(true); eq(A.dockPinned, true); A.setDockPin(false); eq(A.dockPinned, false);
 });
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {

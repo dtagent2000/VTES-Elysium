@@ -1,3 +1,79 @@
+## [BORDET ÄR DUKAT] — v2.6.146 + srv-2.6.44: platser på fria bordet, och pinnen i panelens hörn (13 oktober 2026)
+
+Kalesoners följdfråga från kvällen innan — inga ytor för spelarna, alla började dra isär globerna och kryptkorten —
+blev en bordsinställning. Johan styrde formen i tre steg:
+1. Inte "dragna kryptkort landar alltid bredvid globen", utan bara de fyra första, som en hjälp i startögonblicket:
+   "sedan får man fri lejd att lägga ut dem som vanligt".
+2. Inställningen under Game settings, ikryssad från start. Urkryssad ska bordet vara exakt som förut.
+3. Stolsikonen kvar, men 1st, 2nd … i stället för siffran.
+
+Nedre raden avgjordes med bilder. Först en kompromiss mitt emellan förslagen, sedan — efter att Johan provat —
+variant B, allt ovanför handpanelen: "jag trodde det skulle bli så kort avstånd mellan korten till motståndarna
+särskilt på laptop men det ser faktiskt helt okej ut". I samma runda bad han om en lugnare kant på den fästa
+panelen och pinknappen längst upp till höger.
+
+**Byggt:**
+- *Servern (srv-2.6.44)* minns ett enda nytt fält, `tableSetup`, bara för Classic-rum och bara för ett äkta `true`.
+  Den berättar det i `joined` (spelare och åskådare), `started` och båda `took`, och rumsögonblicksbilden bär det.
+  Given är orörd.
+- *Klienten (v2.6.146):* `l4SeatSpot` ger varje plats en egen punkt runt bordet i turordning (Lackeys uppställning,
+  medurs från övre vänstra hörnet; nedre radens kort slutar vid kanoniskt y 404, strax ovanför den öppna panelen).
+  Vid given ber klienten om sina fyra första kryptkort med det vanliga `drawCrypt`-verbet och lägger svaren med
+  baksidan upp bredvid globen. Hotseat gör samma sak lokalt. Därefter är inget speciellt: globen och korten flyttas
+  som alla andra, och ett kort som dras senare hamnar på mittraden som förr.
+- *Rutorna:* "Suggested table setup" under Game settings (syns även i Lite) och i Play offline. De gråas när
+  bordstypen inte är Classic.
+- *Etiketten:* stol + ordningstal, på varje fritt bord.
+- *Pinnen:* knappen sitter längst upp till höger på panelen, och den fästa panelens kant är en tunn guldlinje i
+  stället för ett sken.
+
+**Designval:**
+- Servern delar inte ut korten. Hade den gjort det hade en gammal klient vid ett nytt bord fått fyra kort den inte
+  vet var den ska lägga. Nu behöver den gamla parten ingenting: en gammal klient vid ett nytt bord sätter upp för
+  hand, och en ny klient på en gammal server säger det i loggen och startar som förr. Båda paren är körda.
+- Vid ett bord med en bot hoppas uppställningen över för alla. Boten slår läger på sin egen ellips, och 14 av 70
+  par bot-plats/människoplats skulle krocka. Människorna får en rad i loggen efter givraden. Överlämningen till
+  botprojektet har formeln och önskemålet att boten följer platserna
+  (`handoffs/REPLY-to-bot-2026-10-13-table-setup.md`).
+
+**Lagat på vägen:** `took` från loadMatch bar aldrig `boardMode`, och klienten föll då tillbaka på Structured —
+värden i ett Classic-rum fick ett Structured-bord efter att ha laddat en sparad match.
+
+**Hittat, inte lagat — Johans beslut** (allt mätt även på v2.6.145 + srv-2.6.43):
+- Regeln "bottar kräver Structured-bord" har aldrig gällt online. Knappen läser ett fält som lobbymeddelandet aldrig
+  haft, så Classic-rum erbjuder Add bot sedan v2.6.99 — och boten spelar där. Jag skrev en fix och **tog tillbaka
+  den före leverans**: Classic är standardvalet, så fixen hade ändrat vad värdar gör idag.
+- En åskådares hemvy täcks av välkomstrutan (den visas så fort klienten saknar kort). Åskådare ser bordet via
+  platsbesök (sifferknapparna).
+- Efter en anslutning mitt i spelet — omladdad flik (Resume, sedan Join game) eller en åskådare som kommer in —
+  står klienten kvar på startvyn tills man trycker Esc.
+- "Restore your board from the table snapshot" på ett fritt bord: ready-kort skalas om efter fönstret, och
+  uncontrolled och torpor tappar sin plats och hamnar på mittraden.
+- En omladdning lägger tillbaka den egna globen på standardplatsen (sparfilen har ingen globposition). Med
+  inställningen är det platsen vid bordet, utan den ringen i mitten.
+
+**Fällor i bygget:**
+- `if(!freeBoard()) for(…) if(…) move(…); else if(tableSetupOn()) …` — `else` hörde till det inre `if`. Inga
+  uppställningskort offline förrän klamrarna kom på plats. Ett test håller det.
+- Noterna om gammal server och om bottar skrevs först före given, och given tömmer loggen. De skrivs nu efter
+  givraden.
+- Rutan i skapa-dialogen spände över båda kolumnerna, så beskrivningen knuffade alla senare rader ur led.
+- Första mätningen av en omladdning gjordes med Join-dialogen kvar på skärmen: tom globkarta, kort på (0,0). Det
+  var ett mätfel. Stäng dialogen och tryck Esc som en människa gör, och mät sedan.
+
+**Verifierat:** syntaxrent; 265/265 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.145: 10 röda = de
+9 nya + pin-testet från v2.6.143, som följt knappen till dess nya plats); dispatch 64/0 (destruktivt mot
+srv-2.6.43: 4 röda = de nya); protokoll 6/0; canary 57/0; endpoint 24/0; soak-kontroll exit 0; B1 byte-identisk
+1 511 476; embed --check; check-versions grön.
+Mot riktig server med riktiga webbläsarklienter: två klienter med och utan inställningen; en v2.6.145-klient vid
+ett bord med inställningen; nya klienter på srv-2.6.43; ett Structured-rum; fem klienter som tar platser i annan
+ordning än de anslöt (alla 25 platsvyer rätt, motståndarnas kort utan namn); tappad anslutning (ingen ny giv);
+omgiv vägras av turneringslåset; Classic-rum med bot tillagd från lobbyn; Play offline-dialogen genomklickad;
+dragmatrisen 0 skillnader av 60. Pinknappen klickad med riktig mus i tre fönsterstorlekar, före- och efterbilder.
+**Väntar på live-test:** pekskärm; riktiga spelare på olika maskiner och fönsterstorlekar samtidigt; sex spelare
+online (fem är körda); att ladda en sparad match i ett Classic-rum (serverns meddelanden och klientens hanterare
+är enhetstestade, hela flödet är inte kört); KRCG:s kortbilder bredvid globen.
+
 ## [GRUPPEN KAN ZONERNA] — v2.6.145: vampyrer i handen, bibliotekskort i torpor (12 oktober 2026, sen natt)
 
 Johan: "vi kör dem absolut" om granskningens två fynd. `zoneRefuses(c, zone)` — torpor och uncontrolled tar bara
