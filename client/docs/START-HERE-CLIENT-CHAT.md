@@ -16,8 +16,7 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 | protocol | `ELYSIUM-PROTOCOL.md` header v2.6.149 / srv-2.6.45 | `client/ELYSIUM-PROTOCOL.md` |
 | last gates | client **278/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 65/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 + a three-bot Structured soak · B1 byte-identical 1 529 758 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
-**Live on elysium.cards:** whatever Johan deployed last — check the journal's newest entry. v2.6.148 + srv-2.6.44 were
-merged on 13 Oct (PR #6). v2.6.149 + srv-2.6.45 were delivered the same evening and need BOTH steps: **restart the server** and purge the client (against srv-2.6.44 the new client works, but a reload mid-game counts turns from 1 as before). Bot v0.6.198 is unchanged.
+**Live on elysium.cards:** client v2.6.149 + server srv-2.6.45 + bot v0.6.198 — Johan merged PR #7 and deployed the full root bundle on 13 Oct 2026 at 16:47 (server restarted, client purged).
 
 ## The first ten minutes
 
@@ -78,12 +77,9 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
   (`_openSlot` on a full Classic row), equipment without `host` (Structured too), permanents at fixed felt points, the
   Edge on the felt. The seat spots are final with v2.6.149 (top row at y 132): `docs/handoffs/REPLY-to-bot-2026-10-13-v2.6.149.md`
   has the formula, and says the client now draws equipment on its vampire without waiting for their `host`.
-- **Until v2.6.148 or later is deployed** the lobby offers Add bot in a Classic room, and a lobby bot whose camp row fills
-  freezes the host's tab (run twice on main's pair, 13 Oct; the other player sees every seat online and the turn
-  on the bot, and has no tool).
 - **Johan's call:** online, should anyone at the table get the hold badge's Resume button (today only the holder)?
   (v2.6.142; `docs/elysium-session-journal.md` newest entry.)
-- **Deploy:** v2.6.149 + srv-2.6.45 (it carries v2.6.148 + srv-2.6.44) — restart the server, purge the client. (Bot v0.6.198 from 12 Oct, if not yet up: purge `/elysium-bot.js`.)
+- **Deploy:** nothing pending — v2.6.149 + srv-2.6.45 are live (13 Oct, 16:47).
 - **Left out of v2.6.148 on purpose:** the helicopter view for a watcher on a Structured table (it draws the watcher as
   a seat); a watcher's view does not follow the turn by itself; a player the host moves to spectator mid-game lands on
   the start view (Esc leads to the table).
