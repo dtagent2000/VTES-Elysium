@@ -553,6 +553,11 @@ body.picking, body.picking .card{cursor:crosshair !important}
 body.hotseat #z-hand .card .back{opacity:1}
 body.hotseat #z-hand:hover .card .back{opacity:0}
 .card.down img.front, .card.down .namecard{opacity:0}
+/* v2.6.149 (K3): the free board has no torpor box -- a torpored card says so itself, on every seat's screen (own cards: layout(); others': addRCard) */
+#board.l4mode .card.torp::after{content:'TORPOR'; position:absolute; left:5%; right:5%; bottom:8%; padding:5px 0 4px; text-align:center;
+  font:700 16px/1 "Cinzel", Georgia, serif; letter-spacing:.04em; color:#f3dcc0; background:rgba(74,10,14,.92);
+  border:1px solid rgba(214,168,104,.8); border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,.6); pointer-events:none; z-index:5}   /* under the counter chips (z 6) */
+#board.l4mode .card.torp img.front, #board.l4mode .card.torp .namecard{filter:grayscale(.65) brightness(.7)}
 /* ---------- Card animations: #1 rise (uncontrolled/torpor -> ready) + #2 flip. Tunable: durations/easing/angles below. ---------- */
 .card.anim-rise{ animation:cardRise .5s cubic-bezier(.18,.7,.26,1.12) both; transform-origin:center bottom; }
 @keyframes cardRise{ 0%{rotate:x 86deg; opacity:.45} 62%{rotate:x -8deg; opacity:1} 100%{rotate:x 0deg; opacity:1} }
@@ -1102,6 +1107,8 @@ body.inl4.l3zoomopen #l3zoomCtl{ display:flex; }
 .l4globe .l4gdot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; vertical-align:middle; box-shadow:inset 0 0 0 1px rgba(255,255,255,.25), 0 0 4px rgba(0,0,0,.5); }
 .l4globe .l4gpool{ width:64px; height:64px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #b83030, #8a1e1e 55%, #5c1010); border:2.5px solid; display:flex; align-items:center; justify-content:center; margin:0 auto; box-shadow:0 4px 12px rgba(0,0,0,.5), inset 0 2px 6px rgba(255,255,255,.10), inset 0 -4px 8px rgba(0,0,0,.45); cursor:default; position:relative; }
 .l4globe-mine .l4gpool{ cursor:grab; }
+.l4globe.l4goff .l4gpool{ filter:grayscale(.85) brightness(.6); }   /* v2.6.149 (K6): a seat that has dropped off says so on the felt, where the eye is */
+.l4globe.l4goff::after{ content:'offline'; display:block; margin-top:3px; font:italic 600 13px "Spectral",Georgia,serif; color:#f0a48c; text-shadow:0 2px 4px #000; pointer-events:none; }
 .l4globe .l4gpoolnum{ font:700 24px "Cinzel",serif; color:#f3ece0; text-shadow:0 2px 4px rgba(0,0,0,.6); line-height:1; transform:translateY(0.04em); position:relative; z-index:2; }
 .l4globe .l4pbtn{ position:absolute; top:50%; transform:translateY(-50%); width:20px; height:20px; border-radius:50%; border:1px solid var(--brass2); background:#221a10; color:var(--bone); font:600 12px "Spectral",serif; cursor:pointer; opacity:0; transition:opacity .2s; line-height:1; z-index:4; padding:0; }
 .l4globe .l4pminus{ left:-4px; } .l4globe .l4pplus{ right:-4px; }
@@ -3161,7 +3168,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.148';   // v2.6.148 (13 Oct 2026, A SEAT FOR THE WATCHER, pure client -- purge; srv-2.6.44 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.146-147 in one PR -- together: restart the server, purge the client): the five weaknesses found with v2.6.146, each measured on v2.6.145 first. (1) SPECTATING: a watcher's client pushed its empty board, the server refused ('Spectators can only chat.'), the refusal was logged, and log -> scheduleSave -> schedulePush sent the next one -- 53 notices in 35 s of watching. schedulePush / pushNow / mpRelay send nothing for a spectator. The welcome layer no longer covers a running game someone watches (mpWatching). (2) ARRIVING: joined (mid-game) and started close the Join dialog and go to the table (mpLandAtTable) -- a player's home view; a watcher's shared felt on the free board, and on a Structured table a visit to the seat whose turn it is (mpLandView; Esc / Home lead there too). An automatic reconnect keeps the view it had. (3) 'Restore your board from the table snapshot' on a free-board table keeps the published positions of ready, uncontrolled and torpor cards (ready was rescaled by the live board, the other two fell to the centre row). (4) A reload keeps the own pool globe where it was: joined reads it from the server's copy of the board (the pool token in myPub). (5) Johan: bots on Structured tables only for now -- the lobby's rule read a key the lobby message never had, so a Classic room offered Add bot since v2.6.99; netBotWhy reads net.boardMode. Previous note: elysium-CHANGELOG.md.
+const VERSION='2.6.149';   // v2.6.149 (13 Oct 2026, THE FACE DECIDES -- purge the client AND restart the server: srv-2.6.45 ships with it; bot v0.6.198 beside): Johan's 'kör' on K1-K6 from the bot review, plus three faults found on the way. (K1) On the free board a crypt card's FACE decides between ready and uncontrolled: face down = uncontrolled, face up = ready (torpor apart) -- move() asks freeFaceZone, every flip asks freeFaceSync. A face-down card dragged stayed 'ready' (MINION 1, the Table panel's vampire count, blood on it no transfer); a vampire flipped up where it lay stayed 'uncontrolled' (no clan, no Actions/Combat menu, +1 blood charged as a transfer) -- with the suggested setup that was the ordinary way to bring one out. Minion counts also skip face-down cards (belt for older pubs); a dragged uncontrolled or torpored crypt card never attaches; a snapshot restore and a given card get their face WITH the move; entering the free board puts an older save right. (K2) Leave torpor keeps the vampire where it lies on the free board (it went to the felt's top-left corner). (K3) Torpor survives a drag there, and a torpored card carries a TORPOR band on every seat's screen. (K4) The felt's Round/Turn label and centre clock follow the counter and the match clock (written only when the felt was rebuilt). (K5) A Played tray that a resolver opened (anyone's tally, a combat from the card menu) closes when the resolver closes -- a player's own pin stays; the suggested top row starts at y 132, below the tray (y 25: the top-centre seat sat under it). (K6) A roster change (or a resize, a settings apply) no longer empties the felt of the other seats' cards (clearL4Globes took #l4oppWrap with it; it keeps it now); a seat that dropped off is greyed with 'offline' under its globe. FOUND ON THE WAY: (a) the Round/Turn count survives a reconnect -- kept on an automatic reconnect into the same room, and after a reload, a seat takeover or a loaded match taken from the boards until the next turn (pub.tn / pub.rn, both or nothing; srv-2.6.45 relays them) -- joined zeroed it, so the turn line restarted at 'Round 1 · Turn 1' and the opening transfer ramp with it; (b) another seat's attached cards ride on their host in every view, torpor included (they vanished when the vampire went to torpor), and a card listed in a host's attached list without a host of its own (the released bot's equipment) is drawn on that host, not in a corner; an id left for a card in the ash heap or burned is not drawn, and a snapshot restore puts a torpored vampire's riders back on it. An independent review's fixes are in: a released face-down rider follows the face rule, the felt clock shows its end, a hover peek held open by a live resolver closes with it, and the tray's state is declared beside avr (avrRender reads it at start-up). Previous: v2.6.148 (13 Oct 2026, A SEAT FOR THE WATCHER, pure client -- purge; srv-2.6.44 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.146-147 in one PR -- together: restart the server, purge the client): the five weaknesses found with v2.6.146, each measured on v2.6.145 first. (1) SPECTATING: a watcher's client pushed its empty board, the server refused ('Spectators can only chat.'), the refusal was logged, and log -> scheduleSave -> schedulePush sent the next one -- 53 notices in 35 s of watching. schedulePush / pushNow / mpRelay send nothing for a spectator. The welcome layer no longer covers a running game someone watches (mpWatching). (2) ARRIVING: joined (mid-game) and started close the Join dialog and go to the table (mpLandAtTable) -- a player's home view; a watcher's shared felt on the free board, and on a Structured table a visit to the seat whose turn it is (mpLandView; Esc / Home lead there too). An automatic reconnect keeps the view it had. (3) 'Restore your board from the table snapshot' on a free-board table keeps the published positions of ready, uncontrolled and torpor cards (ready was rescaled by the live board, the other two fell to the centre row). (4) A reload keeps the own pool globe where it was: joined reads it from the server's copy of the board (the pool token in myPub). (5) Johan: bots on Structured tables only for now -- the lobby's rule read a key the lobby message never had, so a Classic room offered Add bot since v2.6.99; netBotWhy reads net.boardMode. Previous note: elysium-CHANGELOG.md.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3228,6 +3235,7 @@ const CMB_LINE={   // v2.6.134 (Johan): EFFECT ONLY -- no card names (the card's
 const CMB_STEP_SHORT=['Before range','Range','Before strikes','Strike','Damage','Press','End'];
 const CMB_STEP_HINT=['Cards and effects played before range is determined.','Maneuvers change the range. Close is the default.','Cards and effects played before strikes are chosen.','Choose strikes, acting minion first. They resolve together.','Prevent damage, then mend it with blood.','An uncancelled press to continue starts a new round.','End-of-round effects. This step happens even if the combat ended early.'];
 let _cmbSerial=0, _cmbSnap=null, _cmbDone='', _cmbLastAct=null, _cmbLastBlock=null, _cmbHist=[], _actUndir=false;   // v2.6.137: + my current action is undirected (Hunt, Political action, Undirected card action) -- +1 stealth when I open its block counter   // v2.6.135: + this combat's finished rounds (local, rebuilt by every screen from the same tally)   // v2.6.134: + the minion that last took an action / blocked (the default combatant)   // v2.6.129: combat identity, the blood snapshot taken on entering Damage, and the once-per-round taken-line key (declared early: avrRender runs at load)
+let playedPinned=false, playedShowT=null, playedHideT=null, playedAutoPin=false;   // v2.6.149 (K5): the Played tray's state, declared HERE beside avr (TDZ discipline -- avrRender runs during start-up and now reads both). playedAutoPin = pinned because a RESOLVER opened it (anyone's tally, or a combat started from the card menu), not by the player
 let avr=avrFresh(null), _avrSendT=null, _avrLastBleed=0, _poolTargetUsed=false;   // v2.6.20: the Played-tab resolver state, declared EARLY (TDZ discipline, same class as conv) -- schedulePush / hidePlayedSoon / renderAltIfOpen read avr.mode and are reachable from load-time restore paths; full docs at the resolver block (search "Played-tab resolvers")
 const AVR_DEFS={
   block:  { icoA:'disc/sup/obl', icoB:'disc/sup/aus', fbA:'\ud83d\udd76', fbB:'\ud83d\udc41', lblA:'Stealth', lblB:'Intercept',
@@ -5071,14 +5079,14 @@ function cardMenu(c,x,y){
       {label:'Add custom token…', fn:()=>addCustom(c)}
     ]});
     items.push({label:c.faceDown?'Flip face up':'Flip face down', fn:()=>{
-      c.faceDown=!c.faceDown; if(!c.faceDown) ensureImg(c); layout(); animCard(c, c.faceDown?'flipdown':'flipup'); cardFx(c, 'flip', { reveal: !c.faceDown });   // #2 flip + centre clone
+      c.faceDown=!c.faceDown; if(!c.faceDown) ensureImg(c); freeFaceSync(c); layout(); animCard(c, c.faceDown?'flipdown':'flipup'); cardFx(c, 'flip', { reveal: !c.faceDown });   // #2 flip + centre clone; v2.6.149 (K1): the zone follows the face on the free board
       if(c.kind==='crypt') updateMyClan();   // v2.5.82: a flip toggles faceDown WITHOUT a zone change, so move()'s ready-zone recompute (line ~8674) never fires for it -- the clan/path cache went stale until some unrelated zone-change action happened to refresh it (Johan's report: flipping 2 crypt cards showed no clan icon, drawing a 3rd fixed it as a side-effect)
       log(n+(c.faceDown?' flipped face down.':' flipped face up.'));
     }});
     items.push('-');
     if(c.host){
       const h=state.cards.get(c.host);
-      items.push({label:'Detach', fn:()=>{ detachFromHost(c); c.x=c.tx+30; c.y=c.ty+10; layout(); log(cardRefCap(c)+' detached from '+cardRef(h)+'.'); }});
+      items.push({label:'Detach', fn:()=>{ detachFromHost(c); c.x=c.tx+30; c.y=c.ty+10; freeFaceSync(c); layout(); log(cardRefCap(c)+' detached from '+cardRef(h)+'.'); }});   // v2.6.149: and follows the face rule, like a released rider
     }
     if(c.attached && c.attached.length){
       items.push({label:'Detach all attached cards', fn:()=>{
@@ -5095,7 +5103,7 @@ function cardMenu(c,x,y){
     const sendSub = [];
     if(c.kind==='crypt'){
       if(c.zone!=='torpor') sendSub.push({label:'To torpor', fn:()=>{ move(c,'torpor'); log(cardRefCap(c)+' → torpor.'); }});
-      if(c.zone==='torpor') sendSub.push({label:'Leave torpor', fn:()=>{ const r=zoneRect('ready'); move(c,'ready',{x:r.x+24,y:r.y+24}); log(cardRefCap(c)+' left torpor.'); }});
+      if(c.zone==='torpor') sendSub.push({label:'Leave torpor', fn:()=>{ if(l4on()) move(c,'ready'); else { const r=zoneRect('ready'); move(c,'ready',{x:r.x+24,y:r.y+24}); } log(cardRefCap(c)+' left torpor.'); }});   // v2.6.149 (K2): on the free board the vampire stays where it lies -- zoneRect('ready') is the whole felt there, so it was thrown to the top-left corner
       sendSub.push({label:'To burned', fn:()=>burnCard(c)});
     } else {
       sendSub.push({label:'To hand', fn:()=>{ const who=cardRefCap(c); move(c,'hand'); log(who+' was taken to hand.'); }});
@@ -5680,7 +5688,7 @@ async function revealTop(){
 async function revealTopCrypt(){
   if(netGame()){
     if(!net.cryptN){ log('The crypt is empty.'); return; }
-    const v=await uiPrompt('Park how many cards from the top of the crypt?\n(They are placed face down in the ready region.)','1');
+    const v=await uiPrompt('Park how many cards from the top of the crypt?\n(They are placed face down '+parkWhere('crypt')+'.)','1');
     if(v===null) return;
     const n=parseInt(v,10);
     if(!(n>0)) return;
@@ -5688,7 +5696,7 @@ async function revealTopCrypt(){
     return;
   }
   if(!state.zones.crypt.length){ log('The crypt is empty.'); return; }
-  const v=await uiPrompt('Park how many cards from the top of the crypt?\n(They are placed face down in the ready region.)','1');
+  const v=await uiPrompt('Park how many cards from the top of the crypt?\n(They are placed face down '+parkWhere('crypt')+'.)','1');
   if(v===null) return;
   let n=parseInt(v,10);
   if(!(n>0)) return;
@@ -5704,7 +5712,7 @@ async function revealTopCrypt(){
     ids.push(c.id);
   }
   addSel(ids);
-  log('Parked the top <b>'+n+'</b> card'+(n>1?'s':'')+' of the crypt face down in the ready region.');
+  log('Parked the top <b>'+n+'</b> card'+(n>1?'s':'')+' of the crypt face down '+parkWhere('crypt')+'.');
 }
 $('#z-library').addEventListener('click',e=>{ if(_tapDrawAt && Date.now()-_tapDrawAt<500) return; if(e.ctrlKey||e.metaKey){ undoDraw(); } else if(conv.drawClick!=='double') drawCard(); });   // T4a guard: the touch path just drew
 let _tapDrawAt=0;                                                 // T4a: set by the pile touch-tap paths; the native click/dblclick listeners yield for 500 ms so no browser can double-draw
@@ -5911,7 +5919,7 @@ let pendingRevealDrop = null;   // {x,y} board-canvas coords; consumed by the re
         move(c,'ready',{x:_sp.x, y:_sp.y, faceDown:true});
         clearSel(); addSel([c.id]);
         undoStack.length=0; updateUndoBtn();
-        log('Parked the top card of the crypt face down in the ready region.');
+        log('Parked the top card of the crypt face down '+parkWhere('crypt')+'.');
       }
     }
     // cancel: pointer released outside target zones -> no action
@@ -7779,7 +7787,7 @@ function tokenMenu(tok,x,y){ const def=TOKEN_DEFS[tok.type]; if(def&&def.menu) s
 /* ---------- L4 pool globes: per-player draggable pool display on the free board ---------- */
 const l4Globes=new Map();
 let l4hintDone=false;
-function clearL4Globes(){ l4Globes.forEach(g=>{ if(g.el) g.el.remove(); }); l4Globes.clear(); const ow=$('#l4oppWrap'); if(ow) ow.remove(); const _lh=$('#l4hint'); if(_lh) _lh.remove(); }
+function clearL4Globes(){ l4Globes.forEach(g=>{ if(g.el) g.el.remove(); }); l4Globes.clear(); const _lh=$('#l4hint'); if(_lh) _lh.remove(); }   // v2.6.149 (K6): #l4oppWrap is NOT removed here any more -- every renderL4 (a roster change, a resize, a setting) tore the other seats' cards down, and nothing drew them again until the next board. renderL4OppCards empties it whenever the free board is not showing
 
 function renderL4OppCards(){
   let wrap=$('#l4oppWrap');
@@ -7799,17 +7807,15 @@ function renderL4OppCards(){
     const byId=new Map(cards.map(c=>[c.id,c]));
     const f0=net.fx&&net.fx[p.seat], fx=(f0&&Date.now()-f0.ts<1600)?f0:null;
     const ctx={seat:p.seat, who:b.who||p.name, byId, tby:targetersOf(p.seat), fx};
-    let z=50;
-    cards.filter(c=>c.zone==='ready'&&!c.host).forEach(c=>{
+    let z=50; const riders=pubRiders(cards);                       // v2.6.149: riders are drawn on their host only
+    const drawStack=c=>{
       const pos=l2pub.on?pubXform(c.x||0,c.y||0):{x:c.x||0,y:c.y||0};
       const kids=c.attached||[], bz=(z+=2+kids.length);
       addRCard(wrap,c,pos.x,pos.y,bz,c.locked?90:0,ctx,sc)._stamp=stamp;
-      kids.forEach((kid,k)=>{ const kc=byId.get(kid); if(kc) addRCard(wrap,kc,pos.x+ADX*sc*(k+1),pos.y-ADY*sc*(k+1),Math.max(1,bz-1-k),kc.locked?90:0,ctx,sc)._stamp=stamp; });
-    });
-    cards.filter(c=>(c.zone==='torpor'||c.zone==='uncontrolled')&&!c.host).forEach(c=>{
-      const pos=l2pub.on?pubXform(c.x||0,c.y||0):{x:c.x||0,y:c.y||0};
-      addRCard(wrap,c,pos.x,pos.y,++z,c.locked?90:0,ctx,sc)._stamp=stamp;
-    });
+      kids.forEach((kid,k)=>{ const kc=byId.get(kid); if(kc && COUNTER_ZONES.includes(kc.zone)) addRCard(wrap,kc,pos.x+ADX*sc*(k+1),pos.y-ADY*sc*(k+1),Math.max(1,bz-1-k),kc.locked?90:0,ctx,sc)._stamp=stamp; });   // v2.6.149: an id left in `attached` for a card now in the ash heap or burned is not drawn on the host
+    };
+    cards.filter(c=>c.zone==='ready'&&!riders.has(c.id)).forEach(drawStack);
+    cards.filter(c=>(c.zone==='torpor'||c.zone==='uncontrolled')&&!riders.has(c.id)).forEach(drawStack);   // v2.6.149: with their attached cards, like ready
     // Tokens (the Edge + any future non-pool token) -- A1 (v2.5.35), keyed + reused since v2.5.36 so a
     // moved Edge GLIDES on its transition instead of teleporting. Read-only marker, kept UNDER cards
     // (per-player card z starts at 50), mirroring buildMat's z:6-under-cards choice.
@@ -7946,8 +7952,12 @@ function updateL4GlobePool(seat, pool){
    drawCrypt verbs, so an older client or a bot at the same table simply sets up by hand.
    THE LOWER ROW sits just ABOVE the open hand panel, not at the table's bottom edge: the panel covers the bottom
    quarter of the felt (it begins at canonical y 410-425 on every laptop window measured, lower with the card
-   viewer open), and a pinned hand must not hide two seats. All coordinates are canonical (the shared felt). */
-const L4_SEAT={ m:10, gap:10, cgap:4, lowBottom:404 };            // margin to the table edge, globe-to-cards gap, gap between cards, the BOTTOM edge of the lower row's cards
+   viewer open), and a pinned hand must not hide two seats. All coordinates are canonical (the shared felt).
+   THE TOP ROW (v2.6.149, K5) starts at y 132, below the Played tray: at 1366 x 768 the tray covers canonical
+   x 131-823, y 24-127 (to 156 with a row of cards in it), and at the old y 25 it hid the whole top-centre seat --
+   seat 1 of a two-seat table -- once any resolver had pinned it open. With an empty tray nothing of the row is
+   covered now; with a row of played cards, the top third of the cards. */
+const L4_SEAT={ m:10, gap:10, cgap:4, lowBottom:404, topY:132 };  // margin to the table edge, globe-to-cards gap, gap between cards, the BOTTOM edge of the lower row's cards, the TOP of the upper row's globe
 const TABLE_SETUP_OLD_SRV_NOTE='This server does not know the suggested table setup yet (it needs server v2.6.44 or later) \u2014 the table starts the usual way: drag your pool globe to your seat and draw your crypt cards.';
 const TABLE_SETUP_BOT_NOTE='The suggested table setup is skipped at a table with bots \u2014 they sit by their own pattern for now. Drag your pool globe to your seat and draw your crypt cards as usual.';
 function ordinal(n){ n=n|0; const t=n%100; return n+((t>10&&t<14)?'th':(['th','st','nd','rd'][n%10]||'th')); }   // 1st 2nd 3rd 4th ... 11th 12th 13th ... 21st
@@ -7965,7 +7975,7 @@ function l4SeatSpot(idx, N){                                        // pure: the
   const cnt=top?topN:botN, k=top?idx:(botN-1-(idx-topN));         // the lower row runs right to left, so the seats go clockwise
   const fr=cnt<=1 ? 0.5 : k/(cnt-1);
   const left=X0+fr*((X1-G.blockW)-X0);                             // the block (globe + four cards) slides from the left edge to the right edge
-  const gy=top ? T.y+L4_SEAT.m : L4_SEAT.lowBottom-G.ch-G.dy;
+  const gy=top ? L4_SEAT.topY : L4_SEAT.lowBottom-G.ch-G.dy;       // v2.6.149: the top row clears the Played tray (it was T.y + m = 25)
   return { x:Math.round(fr>0.5 ? left+G.blockW-G.gw : left), y:Math.round(gy) };   // right half: the globe sits on the OUTSIDE, its cards toward the middle
 }
 function l4CryptSpots(gx, gy){                                      // pure: four card spots beside a globe at (gx, gy) -- to its right when they fit on the table, else to its left
@@ -8019,6 +8029,8 @@ function renderL4Globes(){
     else if(mine && net._myGlobeAt){ glob.x=net._myGlobeAt.x; glob.y=net._myGlobeAt.y; }   // v2.6.148: after a reload, where the server last saw it
     else if(_setup){ const so=l4SeatOf(p.seat), sp=l4SeatSpot(so.idx, so.N); glob.x=sp.x; glob.y=sp.y; }   // v2.6.146: the suggested table setup -- every seat starts at its own spot
     else { glob.x=Math.round(cx+R*Math.cos(angle)-32); glob.y=Math.round(cy+R*Math.sin(angle)-32); }   // first render: default circle
+    glob.off=(!mine && p.online===false);                           // v2.6.149 (K6): a dropped seat says so on the felt (it said so only in the Table panel and the log)
+    if(glob.off){ glob.el.classList.add('l4goff'); glob.el.title='Offline \u2014 waiting for them to reconnect. Right-click: ash heap \u00b7 host tools'; }
     placeL4Globe(glob);
   });
   // Pulsing hint for first-time positioning (only until the user drags their globe once)
@@ -8032,6 +8044,7 @@ function renderL4Globes(){
       board.appendChild(hint);
     }
   }
+  if(l4on()) updateL4Opponents();                                   // v2.6.149 (K6): clearL4Globes took the other seats' cards with it (#l4oppWrap) and nothing drew them again until the next board arrived -- every roster change (a drop, a return, an oust) emptied the felt of everyone else's cards; at a two-player table they stayed gone until you moved a card of your own
 }
 
 function bindL4GlobeDrag(glob){
@@ -8464,7 +8477,7 @@ function statRow(o){
   const ncell    = '<span class="sncell" title="'+esc(o.name)+'">'+nameCore+(o.muted&&!o.vacant?'<span class="smutedtag" title="Muted"> 🔇</span>':'')+'</span>';
   const poolCell = o.edge ? '<span class="sedge" title="Pool — EDGE">'+o.pool+'</span>' : '<span class="spool" title="Pool">'+o.pool+'</span>';
   const libCell  = '<span class="slib" title="Cards left in the library">📚'+o.lib+'</span>';
-  const minCell  = '<span class="smin" title="Minions in play (crypt cards in the ready region)">🧛'+o.minions+'</span>';
+  const minCell  = '<span class="smin" title="Minions in play (face-up crypt cards in the ready region)">🧛'+o.minions+'</span>';
   const vpCell   = (o.seat&&!o.vacant)||o.vp>0
     ? '<span class="svp" title="'+((o.me||localTable)?'Victory points — click +0.5, Shift-click −0.5':'Victory points')+'">🏆'+fmtVp(o.vp)+'</span>'
     : '<span></span>';
@@ -8493,7 +8506,7 @@ function renderStats(){
   const host=$('#statsBody');
   if(!host) return;
   host.innerHTML='<div class="srow-hdr" style="grid-template-columns:14px 1fr 28px 18px 30px 34px 34px 30px auto"><span></span><span class="shdr-name">Player</span><span title="Seat">🪑</span><span title="Clan">⚝</span><span title="Pool">Pool</span><span title="Library size">📚</span><span title="Minions in play">🧛</span><span title="Victory points">🏆</span><span></span></div>';
-  const myMinions=state.zones.ready.map(id=>state.cards.get(id)).filter(c=>c&&c.kind==='crypt').length;
+  const myMinions=state.zones.ready.map(id=>state.cards.get(id)).filter(c=>c&&c.kind==='crypt'&&!c.faceDown).length;   // v2.6.149: a face-down crypt card is never a minion (belt: older clients put dragged face-down cards in ready)
   if(inRoom() || net.status==='re'){
     const meIsHost=!!((net.roster.find(q=>q.name===net.you&&!q.vacant)||{}).host) || !!net.isRef;   // v2.6.83
     net.roster.forEach(p=>{
@@ -8512,7 +8525,7 @@ function renderStats(){
           pool:pub?pub.pool:'–',
           edge:pub?pub.edge:false,
           lib:pub?pub.counts.library:'–',
-          minions:pub?(pub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt').length:'–'}));
+          minions:pub?(pub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt'&&!c.faceDown).length:'–'}));
       }
     });
     if(meIsHost && (net.watcherList||[]).length){
@@ -8539,7 +8552,7 @@ function renderStats(){
           out:p.out, vp:p.vp||0,
           pool:pub?pub.pool:'–', edge:pub?pub.edge:false,
           lib:pub?pub.counts.library:'–',
-          minions:pub?(pub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt').length:'–'}));
+          minions:pub?(pub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt'&&!c.faceDown).length:'–'}));
       }
     });
   } else {
@@ -8670,7 +8683,7 @@ function helperPolicyFor(mode){
   return { settings:{...helper}, allowLocal:true, tournament:false };
 }
 function unlockedMinions(){
-  return state.zones.ready.map(id=>state.cards.get(id)).filter(c=>c && c.kind==='crypt' && !c.locked).length;
+  return state.zones.ready.map(id=>state.cards.get(id)).filter(c=>c && c.kind==='crypt' && !c.locked && !c.faceDown).length;   // v2.6.149: face down is never a minion
 }
 function phaseActKey(i){ return i===1?'master' : i===3?'influence' : i===4?'discard' : null; }   // adjustable phases (Minion is derived)
 function phaseActDefault(i){ return i===3?4:1; }
@@ -8943,10 +8956,26 @@ applyHelper();
 
 function advanceTurnCounter(seat, opts){
   opts=opts||{};
-  if(opts.first || !net.turnNo){ net.turnNo=1; net.roundNo=1; return; }
-  net.turnNo++;
-  const seats=(net.roster||[]).filter(q=>!q.out).map(q=>q.seat).sort((a,b)=>a-b);
-  if(seats.length>1 && seat===seats[0]) net.roundNo=(net.roundNo||1)+1;   // wrapped back to the first seat -> a new round
+  if(opts.first || !net.turnNo){ net.turnNo=1; net.roundNo=1; }
+  else {
+    net.turnNo++;
+    const seats=(net.roster||[]).filter(q=>!q.out).map(q=>q.seat).sort((a,b)=>a-b);
+    if(seats.length>1 && seat===seats[0]) net.roundNo=(net.roundNo||1)+1;   // wrapped back to the first seat -> a new round
+  }
+  updateL3Timer();                                                 // v2.6.149 (K4): the felt's Round/Turn label follows the counter -- it was written only when the whole felt was rebuilt, so it read 'Round 1 · Turn 1' all game
+}
+/* v2.6.149: the count survives a reconnect. `joined` zeroed it, so after any reconnect or reload the turn line said
+   'Round 1 · Turn 1' again and the opening transfer ramp started over (1 transfer in the next Influence with the
+   helpers on). An automatic reconnect now keeps its count, every pub carries it (tn / rn), and right after joining a
+   running game -- until the next turn -- the client takes the highest count the boards (its own server copy first)
+   carry. No server change: a table of older clients simply counts as before. */
+function tnAdopt(pub){
+  if(!pub || !(pub.tn>0) || !(pub.rn>0)) return false;              // both or nothing: a turn without its round would reset the round
+  const tn=Math.min(9999, pub.tn|0), rn=Math.max(1, Math.min(9999, pub.rn|0));
+  if(tn<=(net.turnNo|0)) return false;
+  net.turnNo=tn; net.roundNo=rn;
+  updateL3Timer(); renderPhaseCounts();
+  return true;
 }
 function turnLabel(){
   return ((net.roster||[]).length>1) ? ('Round '+(net.roundNo||1)+' · Turn '+(net.turnNo||1)) : ('Turn '+(net.turnNo||1));
@@ -9553,9 +9582,11 @@ function mpLeave(){
 // add a new verb by adding a key. Errors propagate to ws.onmessage's try/catch -> dbg('mpOnMsg').
 const MP_HANDLERS = {
   joined(m){
-    const was=net.status;
+    const was=net.status, wasRoom=net.room;
     net.botcfg=null; net.srvV=String(m.srv||'');   // v2.6.139: a fresh view of the table -- the server replays the stored tempo right after this message (srv-2.6.43)
-    net.status='in'; net.room=m.room; net.token=m.token; net.you=m.you; net.roster=m.players||[]; net.turnNo=0; net.roundNo=1;
+    net.status='in'; net.room=m.room; net.token=m.token; net.you=m.you; net.roster=m.players||[];
+    if(was!=='re' || wasRoom!==m.room){ net.turnNo=0; net.roundNo=1; }   // v2.6.149: an automatic reconnect keeps its Round/Turn count (it zeroed it) -- into the SAME room only: a client still retrying a lost server can join another room by hand
+    net.tnSync=!m.lobby; if(net.tnSync) tnAdopt(m.myPub);           // v2.6.149: a running game -- take the count from the boards until the next turn (my own server copy first)
     if(was!=='re'){ net.deckUp=false; net.libN=0; net.cryptN=0; }
     net.boards={};
     mpStore({addr:net.addr, sec:net.sec, room:net.room, token:net.token, name:net.you});
@@ -9631,6 +9662,8 @@ const MP_HANDLERS = {
     net.lobby=false; net.spect=false; net.muted=false;
     if(m.token){ net.token=m.token; mpStore({addr:net.addr, sec:net.sec, room:net.room, token:net.token, name:net.you}); }
     net.turnSeat=m.turn||null;
+    if(m.loaded){ net.turnNo=0; net.roundNo=1; }                    // v2.6.149: a loaded match is at ITS count, whatever this client counted before
+    net.tnSync=true; tnAdopt(m.pub);                                // v2.6.149: a seat taken over or a match loaded -- the count from the board handed over, then from the others' boards until the next turn (the players rejoining a loaded match take theirs from joined.myPub)
     if(typeof m.matchEnd==='number') net.matchEnd=m.matchEnd;
     if(m.reactSecs) net.reactSecs=m.reactSecs;
     net.tableViewLock=m.tableView||null; net.l3shapeLock=m.l3shape||null; net.boardMode=m.boardMode||net.boardMode||'structured';   // v2.6.146: an ABSENT boardMode keeps the room's (you are already in it) -- loadMatch's took never carried one before srv-2.6.44, and the old 'structured' default flipped the host of a Classic room to a Structured board
@@ -9787,7 +9820,7 @@ const MP_HANDLERS = {
       });
       addSel(ids);
       undoStack.length=0; updateUndoBtn();
-      log('Parked the top <b>'+names.length+'</b> card'+(names.length>1?'s':'')+' of the '+(m.kind==='crypt'?'crypt':'library')+' face down in the ready region.');
+      log('Parked the top <b>'+names.length+'</b> card'+(names.length>1?'s':'')+' of the '+(m.kind==='crypt'?'crypt':'library')+' face down '+parkWhere(m.kind==='crypt'?'crypt':'lib')+'.');
     }
     setPileN(m);
   },
@@ -9823,7 +9856,7 @@ const MP_HANDLERS = {
         : 'Helpers: you may use your own settings');
   },
   turn(m){
-    net.turnSeat=m.seat||null;
+    net.turnSeat=m.seat||null; net.tnSync=false;                   // v2.6.149: the count is ours from here
     tallyStaleClose('turn', !net.spect && !!net.turnSeat && net.turnSeat===mySeat());   // v2.6.137: nothing in the resolver outlives a turn -- every screen clears, the NEW turn's client says so on the wire
     advanceTurnCounter(net.turnSeat);
     renderStats();
@@ -9840,8 +9873,7 @@ const MP_HANDLERS = {
     c.counters=(Array.isArray(m.counters)?m.counters:[]).slice(0,12).map(String);
     c.locked=!!m.locked;
     c.owner=String(m.owner||m.from||'').slice(0,24)||null;
-    move(c,'ready',{});
-    c.faceDown=!!m.faceDown;
+    move(c,'ready',{ faceDown:!!m.faceDown });                         // v2.6.149: the face goes IN with the move, so the free board's face rule (K1) sees it -- it was set after
     const hostC=m.attachTo?state.cards.get(String(m.attachTo)):null;
     if(hostC && hostC.zone==='ready'){
       attach(c,hostC);
@@ -9898,7 +9930,7 @@ const MP_HANDLERS = {
     else if(m.act==='green+') c.green=Math.min(99,(c.green|0)+1);
     else if(m.act==='green-') c.green=Math.max(0,(c.green|0)-1);
     else if(m.act==='lock'||m.act==='unlock'){ const want=(m.act==='lock'); if(!!c.locked!==want) setLocked(c, want, 'by '+(m.from||'owner')); }   // no-op if already in the requested state (double-send safe)
-    else if(m.act==='flip'){ c.faceDown=!c.faceDown; if(!c.faceDown) ensureImg(c); layout(); animCard(c, c.faceDown?'flipdown':'flipup'); cardFx(c, 'flip', { reveal: !c.faceDown }); if(c.kind==='crypt') updateMyClan(); }   // same central flip sequence as the holder's own #2 flip -- v2.5.82: including the clan-recompute gap it shared
+    else if(m.act==='flip'){ c.faceDown=!c.faceDown; if(!c.faceDown) ensureImg(c); freeFaceSync(c); layout(); animCard(c, c.faceDown?'flipdown':'flipup'); cardFx(c, 'flip', { reveal: !c.faceDown }); if(c.kind==='crypt') updateMyClan(); }   // same central flip sequence as the holder's own #2 flip -- v2.5.82: including the clan-recompute gap it shared
     else if(m.act==='torpor'||m.act==='untorpor'){ if(c.kind==='crypt'){ const z=(m.act==='torpor')?'torpor':'ready'; if(c.zone!==z) move(c,z); } }   // v0.4.4 (Johan, 13 July): the zone-move controller verb -- vampires only, reuses the full move() bookkeeping (zone arrays, layout, rise/flip fx) since this card is a genuine local card (given/makeCard'd), not a bare pub object
     else return;
     renderCounters(c); c.el.title=cardTitle(c); pushNow();   // v2.5.59: same immediate push as recall - the owner's optimistic copy heals fastest this way
@@ -9907,7 +9939,7 @@ const MP_HANDLERS = {
   decide(m){ runDecide(m.secs||5, m.who||null); },
   fx(m){ cardFx(m.card||null, m.kind, { remote:true, seat:m.seat|0, who:m.who||'', target:m.target||null, actor:m.actor||null, onto:m.onto||null, verb:m.verb||'', reveal:m.reveal, toName:m.toName||'' }); },
   botcfg(m){ const c=botCfgMerge(m.tempo, m.waitSecs, net.botcfg); if(!c) return; net.botcfg=c; try{ botPanelRender(); }catch(_e){} },   // v2.6.139 / srv-2.6.43: the table's bot tempo -- the server sends the WHOLE state (its echo of our own change too); merged tolerantly all the same. The change's log line is the SENDER's own; this only updates what the panel shows
-  tally(m){ const _pv=avr; avr={ mode:(m.mode==='block'||m.mode==='vote'||m.mode==='combat'||m.mode==='free')?m.mode:null, a:Math.max(0,Math.min(99,m.a|0)), b:Math.max(0,Math.min(99,m.b|0)), ph:Math.max(0,Math.min(6,m.ph|0)), rd:Math.max(1,Math.min(99,(m.rd|0)||1)), duel:(m.mode==='combat' && m.duel && typeof m.duel==='object') ? m.duel : {} }; Object.assign(avr, avr.mode==='combat' ? tallyCombatMerge(m, (_pv && _pv.mode==='combat') ? _pv : null) : AVR_CMB0); cmbWatch(_pv, avr, !!m.res); if(avr.mode && hx(AVR_HKEYS[avr.mode]) && !playedIsOpen()) pinPlayed(); avrRender(); if(avr.mode==='combat' && !(_pv && _pv.mode==='combat')) cmbAutoJoin(); if(avr.mode==='block' && !(_pv && _pv.mode==='block')) blockSeedUndir(); if(m.res){ resolvePlayedActions(); applyAvrResolveClear(); } },   // v2.6.24: no auto-pin for a player who keeps that helper off (clean L4)   // v2.6.16 shared resolver counters (whole-state, last-write-wins); v2.6.17: + combat phase index and the res flag — a resolve closes every client's card-play batch and applies THEIR OWN local clear/discard setting; v2.6.37: 'free' rides the exact same shared channel (Johan: it should behave like the others, not act differently)
+  tally(m){ const _pv=avr; avr={ mode:(m.mode==='block'||m.mode==='vote'||m.mode==='combat'||m.mode==='free')?m.mode:null, a:Math.max(0,Math.min(99,m.a|0)), b:Math.max(0,Math.min(99,m.b|0)), ph:Math.max(0,Math.min(6,m.ph|0)), rd:Math.max(1,Math.min(99,(m.rd|0)||1)), duel:(m.mode==='combat' && m.duel && typeof m.duel==='object') ? m.duel : {} }; Object.assign(avr, avr.mode==='combat' ? tallyCombatMerge(m, (_pv && _pv.mode==='combat') ? _pv : null) : AVR_CMB0); cmbWatch(_pv, avr, !!m.res); if(avr.mode && hx(AVR_HKEYS[avr.mode]) && !playedIsOpen()) pinPlayedAuto(); avrRender(); if(avr.mode==='combat' && !(_pv && _pv.mode==='combat')) cmbAutoJoin(); if(avr.mode==='block' && !(_pv && _pv.mode==='block')) blockSeedUndir(); if(m.res){ resolvePlayedActions(); applyAvrResolveClear(); } },   // v2.6.24: no auto-pin for a player who keeps that helper off (clean L4)   // v2.6.16 shared resolver counters (whole-state, last-write-wins); v2.6.17: + combat phase index and the res flag — a resolve closes every client's card-play batch and applies THEIR OWN local clear/discard setting; v2.6.37: 'free' rides the exact same shared channel (Johan: it should behave like the others, not act differently)
   logTo(m){
     // Private log note routed to us by the server on behalf of another player.
     // Shown live but never archived (same as reveal private lines).
@@ -10000,6 +10032,7 @@ const MP_HANDLERS = {
       if(neu.size||chg.size) net.fx[m.seat]={neu, chg, ts:Date.now()};
     }
     net.boards[m.seat]={who:String(m.who||'Player'), pub:m.pub, ts:Date.now()};
+    if(net.tnSync) tnAdopt(m.pub);                                  // v2.6.149: just (re)joined a running game -- the table's Round/Turn count
     if(net.turnSeat===m.seat) updatePhaseGlow();   // the active player's phase may have changed
     if(net.rtarget && net.rtarget.seat===m.seat){
       const tc=((m.pub&&m.pub.cards)||[]).find(c=>c.id===net.rtarget.cid);
@@ -11740,7 +11773,7 @@ function avRenderCard(host, c, scale, colHex, interactive, hoverName){
 /* PARKED: avTap / avFocus (Reaction-window tray helpers) -> kodarkivering.md */
 function avLoose(cards){ return cards.filter(c=>c && c.zone==='ready' && c.kind!=='crypt' && !c.host); }
 /* PARKED: avFitScale / avRenderSlots / renderAlt / avRefreshSelection / openAlt / closeAlt / toggleAlt (Reaction-window tray) -> kodarkivering.md */
-let playedPinned=false, playedShowT=null, playedHideT=null;
+/* (playedPinned / playedShowT / playedHideT / playedAutoPin are declared EARLY, beside avr -- avrRender reads them during start-up) */
 function playedIsOpen(){ const o=$('#playedOverlay'); return !!(o && o.classList.contains('show')); }
 function renderPlayed(){                                      // Played-cards tab/overlay: window-fixed, local, glanceable view of everything played since the last clear / phase change, each card outlined in its owner's colour
   const tab=$('#playedTab'); if(!tab) return;
@@ -11790,8 +11823,10 @@ function renderPlayed(){                                      // Played-cards ta
 }
 function showPlayed(){ clearTimeout(playedHideT); const o=$('#playedOverlay'); if(o) o.classList.add('show'); $('#playedTab') && $('#playedTab').classList.add('on'); renderPlayed(); }
 function hidePlayedSoon(){ if(playedPinned) return; if(avr.mode && hx(AVR_HKEYS[avr.mode])) return; /* v2.6.18: a live resolver holds the peek open -- a five-round combat must not blink away on every mouse glide */ clearTimeout(playedHideT); playedHideT=setTimeout(()=>{ if(!playedPinned){ const o=$('#playedOverlay'); if(o) o.classList.remove('show'); const t=$('#playedTab'); if(t) t.classList.remove('on'); } }, 140); }
-function pinPlayed(){ playedPinned=true; clearTimeout(playedShowT); showPlayed(); }
-function closePlayed(){ playedPinned=false; clearTimeout(playedShowT); clearTimeout(playedHideT); const o=$('#playedOverlay'); if(o) o.classList.remove('show'); const t=$('#playedTab'); if(t) t.classList.remove('on'); }
+function pinPlayed(){ playedPinned=true; playedAutoPin=false; clearTimeout(playedShowT); showPlayed(); }
+function pinPlayedAuto(){ if(playedIsOpen()) return; pinPlayed(); playedAutoPin=true; }   // v2.6.149 (K5): a resolver shows its panel -- and takes it away again when it closes (playedAutoClose)
+function playedAutoClose(){ if(!playedAutoPin) return; playedAutoPin=false; closePlayed(); }   // the player's own pin (the tab, the pin) is never closed by a resolver
+function closePlayed(){ playedPinned=false; playedAutoPin=false; clearTimeout(playedShowT); clearTimeout(playedHideT); const o=$('#playedOverlay'); if(o) o.classList.remove('show'); const t=$('#playedTab'); if(t) t.classList.remove('on'); }
 function togglePlayed(){ playedPinned ? closePlayed() : pinPlayed(); }
 function clearPlayed(){ if(avr.mode==='block'){ clearTimeout(_avrSendT); avr=avrFresh(null); avrRender(); } snapshotPlayed(); renderAltIfOpen(); }   // v2.6.28: a phase change also buries a dangling block referendum   // re-baseline only — cards stay on the board; the view (and tab count) empties
 async function discardPlayedMine(){ const loose=avLoose(state.zones.ready.map(id=>state.cards.get(id))).filter(c=>!avBaseline.has(c.id)); if(!loose.length){ toast('No played cards of yours to discard'); return; } if(await uiConfirm('Discard '+loose.length+' of your own played card'+(loose.length>1?'s':'')+' to the ash heap?')){ pushUndo(); loose.forEach(c=>{ if(c && c.zone==='ready') move(c,'ash',{}); }); renderAltIfOpen(); } }   // re-check zone at move time: never re-discard a card already sent to ash another way (also covers any duplicate in the list)
@@ -11831,6 +11866,9 @@ function avrIco(el, sub, fb){ if(!el) return; el.innerHTML=''; if(!sub){ el.text
 function avrGate(){ const b=$('#avrBlock'); if(!b) return; const ok=!!activeAnchor(); b.disabled=!ok; b.title = ok ? 'Block resolver \u2014 stealth vs intercept' : 'Block resolver \u2014 select one of your ready minions first'; }
 function avrRender(){
   const live=$('#avrLive'); if(!live) return;
+  if(!avr.mode){ playedAutoClose();                                // v2.6.149 (K5): every way a resolver ends (Resolve, x, a remote clear, the turn, a new match) renders it closed -- a tray IT opened goes with it
+    if(!playedPinned && playedIsOpen()){ const _ov=e=>!!(e && typeof e.matches==='function' && e.matches(':hover'));   // a hover peek the live resolver held open (hidePlayedSoon refuses while one runs) closes too -- unless the pointer is on it, then its own mouseleave does
+      if(!_ov($('#playedOverlay')) && !_ov($('#playedTab'))) hidePlayedSoon(); } }
   if(!avr.mode && avrFreeAvailable()) avr.mode='free';   // v2.6.36 (Johan): no named resolver active for this player -> fall back to a bare, always-available counter instead of a dead, stuck-open strip. v2.6.37 (Johan): shared over the network exactly like Block/Vote/Combat -- any seat may adjust it, so it never behaves differently from the other three.
   const freeNeeded = avr.mode==='free' && avrFreeAvailable();   // v2.6.39 (Johan): a stale shared `free` (left over from before a helper was switched back on) must NOT keep hiding this viewer's own Block/Vote/Combat buttons -- only mask them while THIS viewer still has zero named helpers. avr.mode itself is left untouched (still whatever the table's actually running) so a genuine ongoing free counter for a table-mate who's still helper-less isn't disturbed; the moment anyone actually presses a real named button, avrOpen() clobbers avr.mode for everyone anyway.
   const d=avr.mode ? AVR_DEFS[avr.mode] : null;
@@ -11992,7 +12030,7 @@ function cmbSet(f){ if(avr.mode!=='combat' || !f) return; const prev=Object.assi
 function cmbMyCard(){ const e=(avr.mode==='combat' && avr.duel) ? avr.duel[cmbMe()] : null; const c=e ? state.cards.get(e.cid) : null; return c || activeAnchor() || null; }
 function cmbEnsure(c){   // a combat control used with no combat open opens one and announces this minion; returns my side ('a' acting / 'b' opposing) or null (helper off -> the log line still goes out)
   if(!c || !hx('resCombat')) return null;
-  if(avr.mode!=='combat'){ avrOpen('combat'); if(avr.mode==='combat' && !playedIsOpen()) pinPlayed(); }   // v2.6.132: a combat started from the right-click menu SHOWS its panel (the Combat button lives inside the Played window, so avrOpen never had to pin it)
+  if(avr.mode!=='combat'){ avrOpen('combat'); if(avr.mode==='combat' && !playedIsOpen()) pinPlayedAuto(); }   // v2.6.132: a combat started from the right-click menu SHOWS its panel (the Combat button lives inside the Played window, so avrOpen never had to pin it)
   if(avr.mode!=='combat') return null;
   const me=cmbMe(), e=avr.duel[me];
   if(!e || e.cid!==c.id) avrDuelAnnounce(c.id, c.name);
@@ -12634,11 +12672,13 @@ function detachFromHost(c){
 }
 
 function releaseChildren(c){
+  const freed=[];
   c.attached.forEach(id=>{
     const k=state.cards.get(id);
-    if(k){ k.x=k.tx; k.y=k.ty; k.z=k.zc||k.z; k.host=null; }
+    if(k){ k.x=k.tx; k.y=k.ty; k.z=k.zc||k.z; k.host=null; freed.push(k); }
   });
   c.attached=[];
+  freed.forEach(k=>freeFaceSync(k));                                // v2.6.149: a released rider is an ordinary card again -- on the free board a face-down crypt card among them is uncontrolled
 }
 
 function dropLocal(c){
@@ -12685,7 +12725,7 @@ function move(c, zone, opts={}){
   if(!opts.keepHost) detachFromHost(c);
   if(c.attached.length && !COUNTER_ZONES.includes(zone) && !opts.keepChildren) releaseChildren(c);   // keep attachments when host moves to uncontrolled/torpor, or when caller requests it
   if(c.zone){ const a=state.zones[c.zone]; const i=a.indexOf(c.id); if(i>-1) a.splice(i,1); }
-  const from=c.zone, wasFD=c.faceDown;
+  const from=c.zone, wasFD=c.faceDown, asked=zone;
   if(zone==='ash') state.discardHistory.push({id:c.id, from:from||null});
   c.zone=zone;
   if(opts.bottom) state.zones[zone].unshift(c.id); else state.zones[zone].push(c.id);
@@ -12695,16 +12735,18 @@ function move(c, zone, opts={}){
   else if(zone==='ash'||zone==='hand'||zone==='burned'){ c.faceDown=false; c.locked=false; c.blood=0; c.blue=0; c.green=0; c.counters=[]; renderCounters(c); c.controller=null; c.owner=null; c.sup=null; updateBadges(c); c.el.title=c.name; }
   else if(zone==='uncontrolled'){ c.faceDown = opts.faceDown!==undefined ? opts.faceDown : (from==='uncontrolled'?c.faceDown:true); }
   else { c.faceDown = opts.faceDown!==undefined ? opts.faceDown : (from==='hand'?false:c.faceDown); }
+  { const fz=freeFaceZone(c, zone);                                 // v2.6.149 (K1): on the free board a crypt card's FACE says which of ready / uncontrolled it is in -- the felt has no boxes to say it
+    if(fz!==zone){ const a=state.zones[zone], i=a.indexOf(c.id); if(i>-1) a.splice(i,1); if(opts.bottom) state.zones[fz].unshift(c.id); else state.zones[fz].push(c.id); c.zone=zone=fz; } }
 
-  if(zone==='ready'){
+  if(asked==='ready' || opts.disp){                                 // v2.6.149: the coordinates follow what the CALLER asked for -- a drag passes display coords whichever zone the card ends in (opts.disp: a free-board drag that keeps a card in torpor)
     // opts.x/y (and the default spot) are DISPLAY coords; store them canonically so
     // layoutZone can map them into whatever the live ready rect is (identity at level 1).
     let vx, vy;
     if(opts.x!==undefined){ vx=opts.x; vy=opts.y; }
-    else if(c.x===0 && c.y===0){ const r=zoneRect('ready'); vx=r.x+r.w/2-CW/2+(Math.random()*40-20); vy=r.y+r.h/2-CH/2; }
+    else if(asked==='ready' && c.x===0 && c.y===0){ const r=zoneRect('ready'); vx=r.x+r.w/2-CW/2+(Math.random()*40-20); vy=r.y+r.h/2-CH/2; }
     if(vx!==undefined){ const cc=readyToCanon(vx,vy); c.x=cc.x; c.y=cc.y; }
   } else if(opts.x!==undefined){ c.x=opts.x; c.y=opts.y; }
-  if(zone==='ready'||zone==='torpor') c.z=++state.topZ;
+  if(zone==='ready'||zone==='torpor'||(zone==='uncontrolled' && l4on())) c.z=++state.topZ;   // v2.6.149: on the free board an uncontrolled card shares the felt too -- the one just moved lies on top
   if(state.target===c.id && !COUNTER_ZONES.includes(zone)) setTarget(null,true);
   if(state.selected.has(c.id) && PILES.includes(zone)) deselect(c);
   trackMove(from, zone);
@@ -12829,6 +12871,7 @@ function buildPub(){
     deckName:state.deckName||'', pool:state.pool, edge:state.edge, phase:state.phase,
     tokens:(()=>{ const out=[]; tokens.forEach(t=>{ if(Number.isFinite(t.x)) out.push({type:t.type, x:Math.round(t.x), y:Math.round(t.y)}); }); const _pg=typeof l4Globes!=='undefined'&&l4Globes.get(mySeat()); if(_pg&&Number.isFinite(_pg.x)) out.push({type:'pool',x:Math.round(_pg.x),y:Math.round(_pg.y)}); return out.length?out:undefined; })(),   // public token positions (Edge + any future tokens) so they render on every board's mat like cards do
     clan:displaySymbol()||undefined,
+    tn:(inRoom() && net.turnNo>0) ? net.turnNo : undefined, rn:(inRoom() && net.turnNo>0) ? (net.roundNo||1) : undefined,   // v2.6.149: the Round/Turn count, for a client that (re)joins mid-game
     bw:1004, bh:616,                                  // canonical design-stage size (NOT the live board, which fills the area in column/L3 mode) so card coords + scale match everywhere
     counts:{ hand:state.zones.hand.length,
              library:netGame()?net.libN:state.zones.library.length,
@@ -12915,6 +12958,7 @@ function layout(){
   syncIdleUI();
   updateDockScale();   // keep dockS current before any layoutZone() call below reads it for the open dock's piles/hand
   for(const z of Object.keys(state.zones)) layoutZone(z);
+  { const _l4=l4on(); state.cards.forEach(c=>{ if(c.el) c.el.classList.toggle('torp', _l4 && c.zone==='torpor'); }); }   // v2.6.149 (K3): the torpor mark (CSS: #board.l4mode .card.torp)
   PILES.forEach(p=>{
     const el=$('#cnt-'+p); if(!el) return;
     el.textContent = (netGame() && p==='library') ? net.libN
@@ -13382,7 +13426,7 @@ function tap(c,d){
     if(c.zone==='hand'){ pushUndo(); playFromHand(c,false); return; }
     pushUndo();
     if(c.faceDown){
-      c.faceDown=false; ensureImg(c); layout(); animCard(c, 'flipup'); cardFx(c, 'flip', { reveal: true });
+      c.faceDown=false; ensureImg(c); freeFaceSync(c); layout(); animCard(c, 'flipup'); cardFx(c, 'flip', { reveal: true });   // v2.6.149 (K1): on the free board a vampire flipped up where it lies is in play
       if(c.kind==='crypt') updateMyClan();   // v2.5.82: same recompute gap as the menu flip above
       log(cardRefCap(c)+' flipped face up.');
     } else {
@@ -13404,7 +13448,30 @@ function tap(c,d){
    and the group commands (v2.6.145). Torpor and the uncontrolled region hold crypt cards only; the hand holds
    library cards only. (The ash heap's 'vampires never go there' lives in move() itself, with its own log line.) */
 function zoneRefuses(c, zone){ return ((zone==='torpor'||zone==='uncontrolled') && c.kind!=='crypt') || (zone==='hand' && c.kind==='crypt'); }
+function parkWhere(kind){ return (kind==='crypt' && l4on()) ? 'on the table' : 'in the ready region'; }   // v2.6.149: on the free board a face-down crypt card is an uncontrolled one (K1) -- the line no longer says 'ready region'
 function readyDropFace(c, from){ return (from==='hand' || (from==='uncontrolled' && !l4on())) ? false : !!c.faceDown; }
+/* v2.6.149 (K1): THE FACE DECIDES. The free board has no zone boxes, so a crypt card's zone used to follow the gesture:
+   a face-down card dragged anywhere became 'ready' (a minion -- MINION 1, the Table panel's vampire count, blood on it
+   no transfer) and a vampire flipped face up where it lay stayed 'uncontrolled' (no clan, no Actions menu, +1 blood
+   charged as a transfer). With the suggested table setup (v2.6.146) the second is the ordinary way to bring one out.
+   Now, on the free board, a crypt card between ready and uncontrolled is where its face says: face down = uncontrolled,
+   face up = ready. Torpor is left alone -- only "To torpor" / "Leave torpor" move a card in or out of it (K3). Cards
+   riding on another card keep the zone attach() gave them. move() asks this; every flip asks freeFaceSync. */
+function freeFaceZone(c, zone){
+  if(!l4on() || !c || c.kind!=='crypt' || c.host) return zone;
+  if(zone==='ready' && c.faceDown) return 'uncontrolled';
+  if(zone==='uncontrolled' && !c.faceDown) return 'ready';
+  return zone;
+}
+function freeFaceSync(c){                                           // after a flip: the card stays where it lies and its zone follows its face (free board). true = the zone changed
+  if(!c || !COUNTER_ZONES.includes(c.zone)) return false;
+  const fz=freeFaceZone(c, c.zone); if(fz===c.zone) return false;
+  const a=state.zones[c.zone], i=a.indexOf(c.id); if(i>-1) a.splice(i,1);
+  state.zones[fz].push(c.id); c.zone=fz; c.z=++state.topZ;            // both zones store canonical felt coordinates on the free board, so x/y stay as they are
+  renderReady();                                                    // the Ready peek-tab count
+  return true;
+}
+function freeFaceSyncAll(){ let n=0; state.cards.forEach(c=>{ if(freeFaceSync(c)) n++; }); if(n) layout(); return n; }   // a board restored from an older client's save or snapshot
 async function dropCard(c,d){
   if(d.group){ groupDrop(c,d); return; }
   const cx = l2on() ? d.x+d.ox : d.x+CW/2;   // L2: the true cursor (scale-independent); L1: card centre
@@ -13440,7 +13507,8 @@ async function dropCard(c,d){
     else { X=d.x; Y=d.y; }
     X=Math.max(r.x+PAD, Math.min(X, Math.max(r.x+PAD, r.x+r.w-ecw-PAD)));
     Y=Math.max(r.y+PAD, Math.min(Y, Math.max(r.y+PAD, r.y+r.h-ech-PAD)));   // display; move() stores canonical
-    const target=attachTargetAt(cx,cy,c);
+    const keepZone=freeDragKeepsZone(c, from);                     // v2.6.149 (K1/K3): on the free board a drag of an uncontrolled or torpored crypt card only repositions it
+    const target=keepZone ? null : attachTargetAt(cx,cy,c);
     if(target){
       const verb = from==='hand' ? 'played on' : 'attached to';
       if(attach(c,target)){ log(who+' '+verb+' '+cardRef(target)+'.'); if(from==='hand'){ qrPhasePlayed.add(c.id); cardFx(c, 'play', { target }); } }
@@ -13448,7 +13516,8 @@ async function dropCard(c,d){
     } else {
       if(from==='hand' && !(await masterPlayGate(c))){ layout(); return; }    // Master-phase gate/count (same as the double-click play)
       const fd = readyDropFace(c, from);
-      move(c,'ready',{x:X,y:Y,faceDown:fd,keepChildren:c.attached.length>0});
+      const dz = (l4on() && from==='torpor') ? 'torpor' : 'ready';   // v2.6.149 (K3): torpor survives a drag on the free board; 'ready' + a face-down crypt card lands in uncontrolled (freeFaceZone, in move)
+      move(c,dz,{x:X,y:Y,faceDown:fd,keepChildren:c.attached.length>0,disp:true});
       // Move attached children to match the new host position (canonical coords)
       if(c.attached.length){
         const hcc=readyToCanon(X,Y);
@@ -13462,11 +13531,15 @@ async function dropCard(c,d){
         tagPlayed(c, a || undefined);
         log(a ? cardRefCap(a)+' plays '+cardRef(c)+'.' : cardRef(c)+' was played.');
       }
-      else if(from==='uncontrolled') log(cardRef(c)+' moved to the ready region.');
-      else if(from!=='ready') log(who+' → the ready region.');
+      else if(c.zone!==from){                                        // v2.6.149: the line says where the card ENDED -- on the free board a face-down card stays uncontrolled and a torpored one stays in torpor (no line: a reposition)
+        if(c.zone==='uncontrolled') log(who+' → the uncontrolled region.');
+        else if(from==='uncontrolled') log(cardRef(c)+' moved to the ready region.');
+        else log(who+' → '+zname[c.zone]+'.');
+      }
     }
   }
 }
+function freeDragKeepsZone(c, from){ return l4on() && c.kind==='crypt' && (from==='torpor' || (from==='uncontrolled' && c.faceDown)); }   // v2.6.149: such a card never attaches to what it is dropped on -- that would make it a ready child
 
 function groupDrop(c,d){
   const L2=l2on(), s=L2?(l2pub.s*(l4on()?L4_CARD_S:1)):1, ecw=CW*s, ech=CH*s;
@@ -13488,7 +13561,8 @@ function groupDrop(c,d){
     all.forEach(m=>{
       const X=bx+m.dx, Y=by+m.dy;   // display; move() stores canonical
       const fd = readyDropFace(m.c, m.c.zone);                    // v2.6.144: was its own copy of the rule, WITHOUT the free-board exception -- four uncontrolled crypt cards dragged together turned face up
-      move(m.c,'ready',{x:X,y:Y,faceDown:fd,keepHost:true});
+      const dz = (l4on() && m.c.zone==='torpor') ? 'torpor' : 'ready';   // v2.6.149: the single drag's rule -- torpor survives a drag on the free board, a face-down crypt card stays uncontrolled (move asks freeFaceZone)
+      move(m.c,dz,{x:X,y:Y,faceDown:fd,keepHost:true,disp:true});
     });
     log('Moved <b>'+all.length+'</b> cards.');
   } else if(z==='library'||z==='crypt'){
@@ -13616,6 +13690,12 @@ function qrDragGive(c, ev0){                                  // Alt-panel hand-
   document.addEventListener('pointermove',mv); document.addEventListener('pointerup',up);
 }
 
+/* v2.6.149: which of a seat's published cards ride on another one -- by their own `host`, or listed in a host's
+   `attached` (the released bot's equipment carries no host, so it was ALSO drawn at its own x/y; one element per seat
+   and card, the last draw won, and the bot's equipment sat in a corner on both board styles). Every renderer of another
+   seat's board draws a host's riders ON the host -- in ready, torpor and uncontrolled alike (a torpored vampire's
+   equipment vanished from every other screen) -- and never draws a rider on its own. */
+function pubRiders(cards){ const s=new Set(); (cards||[]).forEach(c=>{ if(!c) return; if(c.host) s.add(c.id); else if(COUNTER_ZONES.includes(c.zone)) (c.attached||[]).forEach(id=>s.add(id)); }); return s; }
 function addRCard(host,c,x,y,zi,rot,ctx,scale){
   // A3b (v2.5.36): reconcile-aware. If the caller did NOT wipe the host, the element for this
   // seat+cid is REUSED: transform/z/badges/rings/tags update in place, so position and lock/unlock
@@ -13642,7 +13722,7 @@ function addRCard(host,c,x,y,zi,rot,ctx,scale){
     fEl.addEventListener('error',()=>{ if(/\.webp$/.test(fEl.src)) fEl.src=fEl.src.replace(/\.webp$/,'.jpg'); else el.classList.add('noimg'); });
   }
   const keep=fresh?[]:[...el.classList].filter(k=>k.indexOf('anim-')===0||k==='noimg');   // survive the class reset below: a mid-flight flip animation + the image-failed marker
-  el.className='card '+(ctx?'rc':'inert')+' '+(c.kind==='crypt'?'kcrypt':'klib')+(c.faceDown?' down':'');
+  el.className='card '+(ctx?'rc':'inert')+' '+(c.kind==='crypt'?'kcrypt':'klib')+(c.faceDown?' down':'')+((ctx && c.zone==='torpor' && l4on())?' torp':'');   // v2.6.149 (K3): another seat's torpored card carries the mark too
   keep.forEach(k=>el.classList.add(k));
   el.querySelector('.namecard').textContent = c.faceDown?'':String(c.name||'Card');
   const f=el.querySelector('img.front');
@@ -13862,14 +13942,14 @@ function renderFull(host, seat){
   const _rcs=(host._rcpass=(host._rcpass||0)+1);   // v2.5.38 reconcile pass-stamp (mark-and-sweep at the end)
   const sx=(board.clientWidth-CW-8)/Math.max(1,(pub.bw||board.clientWidth)-CW);
   const sy=(board.clientHeight-CH-8)/Math.max(1,(pub.bh||board.clientHeight)-CH);
-  let z=200;
-  cards.filter(c=>c.zone==='ready' && !c.host).forEach(c=>{
+  let z=200; const riders=pubRiders(cards);                        // v2.6.149: riders are drawn on their host only
+  cards.filter(c=>c.zone==='ready' && !riders.has(c.id)).forEach(c=>{
     const x=Math.max(4,Math.min(c.x*sx, board.clientWidth-CW-4));
     const y=Math.max(34,Math.min(c.y*sy, board.clientHeight-CH-4));
     const kids=c.attached||[];
     const bz=(z+=2+kids.length);
     addRCard(host,c,x,y,bz,undefined,ctx)._stamp=_rcs;
-    kids.forEach((kid,k)=>{ const kc=byId.get(kid); if(kc) addRCard(host,kc,x+ADX*(k+1),y-ADY*(k+1),Math.max(1,bz-1-k),undefined,ctx)._stamp=_rcs; });
+    kids.forEach((kid,k)=>{ const kc=byId.get(kid); if(kc && COUNTER_ZONES.includes(kc.zone)) addRCard(host,kc,x+ADX*(k+1),y-ADY*(k+1),Math.max(1,bz-1-k),undefined,ctx)._stamp=_rcs; });
   });
   (pub.tokens||[]).forEach(pt=>{ const def=TOKEN_DEFS[pt.type]; if(!def) return;   // v2.5.38: the visit inspector finally renders tokens too (the Edge was invisible here — the last renderer missing the A1 token pass). Keyed + transitioned like the mat pass.
     let tEl=host.querySelector(':scope > .mattok.tok-'+pt.type);
@@ -13882,12 +13962,15 @@ function renderFull(host, seat){
     }
     tEl.style.left=(pt.x*sx)+'px'; tEl.style.top=(pt.y*sy)+'px'; tEl.style.zIndex=6; tEl._stamp=_rcs; });
   [['torpor','Torpor'],['uncontrolled','Uncontrolled']].forEach(([zone,label])=>{
-    const cs=cards.filter(c=>c.zone===zone);
+    const cs=cards.filter(c=>c.zone===zone && !riders.has(c.id));
     const r=zoneRect(zone);
     rvLab(host,label+(cs.length?' · '+cs.length:''), r.x+8, r.y+3);
     const n=cs.length;
     const step=n>1?Math.min(CW*0.62,(r.w-CW-20)/(n-1)):0;
-    cs.forEach((c,i)=>{ addRCard(host,c, r.x+12+i*step, r.y+(r.h-CH)/2+8, 50+i, undefined, ctx)._stamp=_rcs; });
+    let zz=50;
+    cs.forEach((c,i)=>{ const hx=r.x+12+i*step, hy=r.y+(r.h-CH)/2+8, kids=c.attached||[], bz=(zz+=1+kids.length);
+      addRCard(host,c, hx, hy, bz, undefined, ctx)._stamp=_rcs;
+      kids.forEach((kid,k)=>{ const kc=byId.get(kid); if(kc && COUNTER_ZONES.includes(kc.zone)) addRCard(host,kc, hx+CX*(k+1), hy-CY*(k+1), Math.max(1,bz-1-k), undefined, ctx)._stamp=_rcs; }); });   // v2.6.149: with its attached cards
   });
   const ash=cards.filter(c=>c.zone==='ash');
   const ra=zoneRect('ash');
@@ -13942,7 +14025,7 @@ function buildMat(pp, matW, matH, rot, noLabel, flip, host){
   else if(!lab){ lab=document.createElement('div'); lab.className='matlab'; mat.appendChild(lab); }
   let stats;
   if(pub){
-    const minions=(pub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt').length;
+    const minions=(pub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt'&&!c.faceDown).length;
     stats=(pub.edge?'<span style="color:#e05a5a">EDGE</span> · ':'')+'<span class="matpool" data-seat="'+seat+'" title="Right-click: view ash heap">Pool <b>'+pub.pool+'</b></span> · ✋'+pub.counts.hand+' · 📚'+pub.counts.library+' · 🧛'+minions;
   } else stats='no board yet';
   const state2 = pp.vacant ? ' — <i>open seat</i>' : (pp.online?'':' — <i>reconnecting…</i>');
@@ -14003,19 +14086,22 @@ function buildMat(pp, matW, matH, rot, noLabel, flip, host){
       if(tEl._tsz!==tsz){ tEl.innerHTML=def.svg(tsz); tEl._tsz=tsz; }   // re-render the SVG only when the mat scale changed
       tEl.style.left=X(pt.x)+'px'; tEl.style.top=Y(pt.y)+'px'; tEl.style.zIndex=6; tEl._stamp=_rcs; });
     // row arranger mirroring layoutZone's uncontrolled/torpor spacing, in canonical space
-    const arrange=(list,r,z0)=>{ const n=list.length, step=n>1?Math.min(CW*0.62,(r.w-CW-20)/(n-1)):0;
-      list.slice(0,18).forEach((c,i)=>{ addRCard(mat,c, X(r.x+12+i*step), Y(r.y+(r.h-CH)/2+8), z0+i, crot(c), ctx, s)._stamp=_rcs; }); };
-    const unc=cards.filter(c=>c.zone==='uncontrolled'); arrange(unc, cz.unc, 40);
+    const riders=pubRiders(cards);                                 // v2.6.149: riders are drawn on their host only
+    const arrange=(list,r,z0)=>{ const n=list.length, step=n>1?Math.min(CW*0.62,(r.w-CW-20)/(n-1)):0; let zz=z0;
+      list.slice(0,18).forEach((c,i)=>{ const hx=X(r.x+12+i*step), hy=Y(r.y+(r.h-CH)/2+8), kids=c.attached||[], bz=(zz+=1+kids.length);
+        addRCard(mat,c, hx, hy, bz, crot(c), ctx, s)._stamp=_rcs;
+        kids.forEach((kid,k)=>{ const kc=byId.get(kid); if(kc && COUNTER_ZONES.includes(kc.zone)) addRCard(mat,kc, hx+CX*s*(k+1), hy-CY*s*(k+1), Math.max(1,bz-1-k), crot(kc), ctx, s)._stamp=_rcs; }); }); };   // v2.6.149: a torpored vampire's equipment rides on it, as its owner sees it
+    const unc=cards.filter(c=>c.zone==='uncontrolled'&&!riders.has(c.id)); arrange(unc, cz.unc, 40);
     let z=100;                                              // ready: free placement at canonical c.x/c.y, uniform scale
     const rX0=X(cz.rdy.x), rX1=X(cz.rdy.x+cz.rdy.w)-s*CW, rY0=Y(cz.rdy.y), rY1=Y(cz.rdy.y+cz.rdy.h)-s*CH;
-    cards.filter(c=>c.zone==='ready'&&!c.host).forEach(c=>{
+    cards.filter(c=>c.zone==='ready'&&!riders.has(c.id)).forEach(c=>{
       const cy=flip ? 2*pby+pbh-c.y-CH : c.y;   // flip card Y within the canonical box (Ready is at the bottom when flipped)
       const rx=Math.max(rX0,Math.min(X(c.x),Math.max(rX0,rX1))), ry=Math.max(rY0,Math.min(Y(cy),Math.max(rY0,rY1)));
       const kids=c.attached||[], bz=(z+=2+kids.length);
       addRCard(mat,c, rx, ry, bz, crot(c), ctx, s)._stamp=_rcs;
-      kids.forEach((kid,k)=>{ const kc=byId.get(kid); if(kc) addRCard(mat,kc, rx+ADX*s*(k+1), ry-ADY*s*(k+1), Math.max(1,bz-1-k), crot(kc), ctx, s)._stamp=_rcs; });
+      kids.forEach((kid,k)=>{ const kc=byId.get(kid); if(kc && COUNTER_ZONES.includes(kc.zone)) addRCard(mat,kc, rx+ADX*s*(k+1), ry-ADY*s*(k+1), Math.max(1,bz-1-k), crot(kc), ctx, s)._stamp=_rcs; });
     });
-    const tor=cards.filter(c=>c.zone==='torpor'); arrange(tor, cz.tor, 60);
+    const tor=cards.filter(c=>c.zone==='torpor'&&!riders.has(c.id)); arrange(tor, cz.tor, 60);
     mat.querySelectorAll('.card.rc, .mattok').forEach(n=>{ if(n._stamp!==_rcs) n.remove(); });   // mark-and-sweep: departed cards / vanished tokens (same pattern as renderL4OppCards)
   }
   if(freshMat) mat.addEventListener('click',e=>{ if(!e.target.closest('.card') && !l2on() && !l3on()) jumpSeat(seat); });
@@ -14157,7 +14243,7 @@ function renderL3(){
       lab.classList.add('l3lab');
       { const _lclan=lpub&&lpub.clan;
         const _limg=_lclan?'<img class="clansym" src="'+esc(clanSymUrl(_lclan))+'" alt="'+esc(_lclan)+'" style="width:12px;height:12px;vertical-align:middle;opacity:.75;margin-right:1px" onerror="this.style.display=\'none\'">':'';
-        const _lcnt=lpub?(' · ✋'+lpub.counts.hand+' · 📚'+lpub.counts.library+' · 🧛'+(lpub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt').length):'';   // L2 Visit-style at-a-glance counts: cards in hand / library / minions
+        const _lcnt=lpub?(' · ✋'+lpub.counts.hand+' · 📚'+lpub.counts.library+' · 🧛'+(lpub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt'&&!c.faceDown).length):'';   // L2 Visit-style at-a-glance counts: cards in hand / library / minions
         lab.innerHTML='<div class="mname">'+(lc?'<span class="mcol" style="background:'+lc.hex+'">'+pp.seat+'</span>':'')+(pp.seat===net.turnSeat?'▶ ':'')+(pp.out?'💀 ':'')+_limg+esc(pp.name)+(lpub?(' · '+lpub.pool+'🩸'):'')+((pp.vp||0)>0?' · 🏆'+fmtVp(pp.vp):'')+_lcnt+'</div>'; } }
     mat.style.left=r.x+'px'; mat.style.top=r.y+'px';
     mat.style.transformOrigin='center center';
@@ -14322,6 +14408,7 @@ function enterL4(){   board.classList.remove('l0mode'); // VIEW: L4 / Classic / 
   { const rt=$('#readyTab'); if(rt) rt.dataset.l3='1'; }
   { const rb=$('#l3resetBtn'); if(rb) rb.hidden=false; }
   l3zoom=1; l3pan={x:0,y:0};   // L4: zoom 1.0 (fills view); element scale multipliers handle sizing
+  freeFaceSyncAll();           // v2.6.149 (K1): a board saved by an older client may hold face-down crypt cards in ready -- on the free board the face decides
   l3handOpen=false;
   l3canonAR = (board.clientWidth + (asideCollapsed ? 0 : 244)) / (board.clientHeight || 1);   // v2.5.48: measured BEFORE the toggle — the same stale-measure/flag race as enterL3 (see the comment there); this was the untested twin
   setAside(true, false);   // L4 default: collapse the card-viewer panel (non-persistent)
@@ -14654,7 +14741,7 @@ function buildL2mat(id, pp, role, side, fx, fy, w, h, foldKey){
   if(pp.seat!=null) pane.dataset.seat=pp.seat;   // tag the folded-out pane with its seat -> the unified give finds the opponent board by its full pane rect (robust even if the inner mat letterboxes)
   const pub=net.boards[pp.seat]&&net.boards[pp.seat].pub;
   let stat='';
-  if(pub){ const minions=(pub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt').length;
+  if(pub){ const minions=(pub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt'&&!c.faceDown).length;
     stat=' · <span class="matpool" data-seat="'+pp.seat+'" title="Right-click: view ash heap">Pool '+pub.pool+'</span>'+(pub.edge?' · EDGE':'')+' · ✋'+pub.counts.hand+' · 📚'+pub.counts.library+' · 🧛'+minions; }
   let hd=fresh?null:pane.querySelector(':scope > .l2hd');
   if(!hd){ hd=document.createElement('div'); hd.className='l2hd'; hd.addEventListener('click',()=>{ net.l2fold[foldKey]=true; renderL2(); }); pane.appendChild(hd); }   // v2.5.58: fold listener binds on fresh only; the header TEXT updates in place every pass
@@ -15094,7 +15181,7 @@ function destroyLocal(c, opts){
 function startMatchClock(){
   clearInterval(net.clockT); net.clockT=null;
   const el=$('#matchClock');
-  if(!net.matchEnd){ el.hidden=true; return; }
+  if(!net.matchEnd){ el.hidden=true; updateL3Timer(); return; }     // v2.6.149: the felt's centre clock clears with it
   el.hidden=false;
   let warned=false, called=false;
   const tick=()=>{
@@ -15103,6 +15190,7 @@ function startMatchClock(){
       el.textContent='⏳ 0:00:00'; el.classList.add('late');
       if(!called){ called=true; }
       clearInterval(net.clockT); net.clockT=null;
+      updateL3Timer();                                             // v2.6.149: the felt shows the end too (it stopped at 0:00:01)
       return;
     }
     const s=Math.floor(rem/1000), h=Math.floor(s/3600), mn=Math.floor(s%3600/60), sc=s%60;
@@ -15110,6 +15198,7 @@ function startMatchClock(){
     const late=rem<5*60000;
     el.classList.toggle('late', late);
     if(late && !warned){ warned=true; toast('⏳ Five minutes left on the match clock'); }
+    updateL3Timer();                                               // v2.6.149 (K4): the felt's centre clock is the same text -- it stood still between full rebuilds
   };
   tick();
   net.clockT=setInterval(tick,1000);
@@ -15821,7 +15910,7 @@ function restoreFromPub(pub){
   (pub.cards||[]).forEach(pc=>{
     const c=makeCard(String(pc.name||'Card'), pc.kind==='crypt'?'crypt':'lib');
     made.set(pc.id,c);
-    move(c, PUBZ.includes(pc.zone)?pc.zone:'ready', {});
+    move(c, PUBZ.includes(pc.zone)?pc.zone:'ready', { faceDown:!!pc.faceDown });   // v2.6.149: the face goes in WITH the move (the free board's face rule reads it; a fresh card is face down until told otherwise)
     if(_fb && (pc.zone==='ready'||pc.zone==='uncontrolled'||pc.zone==='torpor') && Number.isFinite(pc.x) && Number.isFinite(pc.y)){ c.x=pc.x; c.y=pc.y; }   // v2.6.148: the free board's coordinates ARE the published ones (canonical felt) -- no scaling, and all three table zones keep their place
     c.faceDown=!!pc.faceDown; c.locked=!!pc.locked;
     c.blood=Math.max(0,pc.blood|0); c.blue=Math.max(0,pc.blue|0); c.green=Math.max(0,pc.green|0);
@@ -15835,7 +15924,7 @@ function restoreFromPub(pub){
     renderCounters(c); c.el.title=cardTitle(c);
   });
   (pub.cards||[]).forEach(pc=>{
-    if(pc.host){ const cc=made.get(pc.id), h=made.get(pc.host); if(cc&&h&&h.zone==='ready') attach(cc,h); }
+    if(pc.host){ const cc=made.get(pc.id), h=made.get(pc.host); if(cc&&h&&COUNTER_ZONES.includes(h.zone)) attach(cc,h); }   // v2.6.149: a torpored vampire's equipment comes back ON it (it came back loose)
   });
   state.pool=Math.max(-99,Math.min(999,pub.pool|0)); updatePool();
   state.edge=!!pub.edge; updateEdge();
@@ -16259,7 +16348,7 @@ function groupFlipUp(){
   state.selected.forEach(id=>{
     const c=state.cards.get(id);
     if(c && COUNTER_ZONES.includes(c.zone) && c.faceDown){
-      c.faceDown=false; ensureImg(c); animCard(c,'flipup'); cardFx(c,'flip',{reveal:true});
+      c.faceDown=false; ensureImg(c); freeFaceSync(c); animCard(c,'flipup'); cardFx(c,'flip',{reveal:true});   // v2.6.149 (K1)
       if(c.kind==='crypt') anyCrypt=true;
       log(cardRefCap(c)+' flipped face up.');
     }
@@ -16271,7 +16360,7 @@ function flipSelected(){
   let nn=0, anyCrypt=false;
   state.selected.forEach(id=>{
     const c=state.cards.get(id);
-    if(c && COUNTER_ZONES.includes(c.zone)){ c.faceDown=!c.faceDown; if(!c.faceDown) ensureImg(c); animCard(c, c.faceDown?'flipdown':'flipup'); cardFx(c, 'flip', { reveal: !c.faceDown }); nn++; if(c.kind==='crypt') anyCrypt=true; }
+    if(c && COUNTER_ZONES.includes(c.zone)){ c.faceDown=!c.faceDown; if(!c.faceDown) ensureImg(c); freeFaceSync(c); animCard(c, c.faceDown?'flipdown':'flipup'); cardFx(c, 'flip', { reveal: !c.faceDown }); nn++; if(c.kind==='crypt') anyCrypt=true; }
   });
   if(anyCrypt) updateMyClan();   // v2.5.82: same recompute gap
   layout();
@@ -17529,8 +17618,8 @@ const tut = { active:false, secId:null, steps:[], idx:-1, raf:0, esc:null,
               clickEl:null, clickFn:null, pred:null, evName:null, _dlMode:null, _click:false, _loadSeq:0, _pickBase:0 };
 
 // ---- Tutorial helpers for the Classic (L4) gameplay sections ----
-// On the free board a dragged crypt card lands in 'ready' FACE-DOWN; double-click sends it to
-// 'uncontrolled'. Either way it is a crypt-kind card out on the felt, so we count those rather than
+// On the free board a crypt card's face says its zone (v2.6.149, K1): face down = uncontrolled, face up =
+// ready (torpor apart). Either way it is a crypt-kind card out on the felt, so we count those rather than
 // trusting a single zone, and treat a face-up flip as "influenced into play".
 function tutVampsOnFelt(faceDownOnly){
   const out=[];
@@ -17776,7 +17865,7 @@ const TUT_SECTIONS = {
         onEnter:function(){ tut._poolBase=state.pool; }, gate:function(){ return state.pool<tut._poolBase; }, gateHint:'Lower your pool to continue.', advance:{on:'manual'} },
       { id:'cc-influence', target:()=>null, freeInteract:true, ringRect:tutFaceDownVampRect,
         onEnter:function(){ tut._vampRef={}; tutVampsOnFelt(false).forEach(function(c){ tut._vampRef[c.id]={x:c.x, y:c.y}; }); },
-        text:'Last step: <b>double-click</b> the influenced vampire to flip it <b>face-up</b> (or right-click → <b>Flip face up</b>), then <b>drag it</b> to the spot you want as your <b>Ready</b> region. Once it is in place that vampire is in play &mdash; and you&rsquo;re ready for the next part.',
+        text:'Last step: <b>double-click</b> the influenced vampire to flip it <b>face-up</b> (or right-click → <b>Flip face up</b>) &mdash; face up, it is in play. Then <b>drag it</b> to the spot you want as your <b>Ready</b> region, and you&rsquo;re ready for the next part.',
         gate:function(){ const ref=tut._vampRef||{}; return tutVampsOnFelt(false).some(function(c){ if(c.faceDown) return false; const r=ref[c.id]; return !r || Math.abs((c.x||0)-(r.x||0))>6 || Math.abs((c.y||0)-(r.y||0))>6; }); }, gateHint:'Flip a vampire face-up and move it to continue.', advance:{on:'manual'} }
     ]
   },
