@@ -10,11 +10,11 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.150** (THE TAB SAYS SO: the seat chip under the globe, a resolver lights the Played tab instead of opening the tray on every screen, the top row back at the top edge, the title with a colon; carries v2.6.149 THE FACE DECIDES) | `client/elysium-vtes-bord.html`, copied to `/` |
+| client | **v2.6.151** (THE EDGE ON THE GLOBE: a seat's Edge on its globe when no token lies out, ordinals on every seat chip, the help pages mention the table setup; carries v2.6.150 THE TAB SAYS SO and v2.6.149 THE FACE DECIDES) | `client/elysium-vtes-bord.html`, copied to `/` |
 | server | **srv-2.6.45** (the pub keeps `tn`/`rn`, the turn count; srv-2.6.44: the room option `tableSetup`) | `client/elysium-server.js`, copied to `/` |
 | bot (consumed) | **v0.6.198** (12 Oct 2026) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.150 / srv-2.6.45 | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **278/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 65/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 + a three-bot Structured soak · B1 byte-identical 1 530 884 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.151 / srv-2.6.45 | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **279/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 65/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 + a three-bot Structured soak · B1 byte-identical 1 531 407 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
 **Live on elysium.cards:** whatever Johan deployed last — check the journal's newest entry. v2.6.148 + srv-2.6.44 were
 merged on 13 Oct (PR #6). v2.6.149 + srv-2.6.45 were delivered the same evening and need BOTH steps: **restart the server** and purge the client (against srv-2.6.44 the new client works, but a reload mid-game counts turns from 1 as before). Bot v0.6.198 is unchanged.
@@ -74,8 +74,8 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
   (srv-2.6.45) and attached cards riding their host in every view. `client/CLAUDE.md` top entry. **v2.6.150:** a resolver no longer opens the tray on other screens, so the
   top row is back at the top edge; a player who opens the tray covers their own top-centre seat with it. **Not run:** touch, a referee watching, six humans at once, a socket bot at a Classic table after the change.
 - **For the bot project to pick up:** `docs/handoffs/REPLY-to-bot-2026-10-13-classic-review.md` — the hard stop
-  (`_openSlot` on a full Classic row), equipment without `host` (Structured too), permanents at fixed felt points, the
-  Edge on the felt. The seat spots are final with v2.6.149 (top row at y 132): `docs/handoffs/REPLY-to-bot-2026-10-13-v2.6.149.md`
+  (`_openSlot` on a full Classic row), equipment without `host` (Structured too), permanents at fixed felt points. The
+  Edge on the felt is ours since v2.6.151 (`docs/handoffs/REPLY-to-bot-2026-10-13-v2.6.151.md`). The seat spots are final with v2.6.149 (top row at y 132): `docs/handoffs/REPLY-to-bot-2026-10-13-v2.6.149.md`
   has the formula, and says the client now draws equipment on its vampire without waiting for their `host`.
 - **Until v2.6.148 or later is deployed** the lobby offers Add bot in a Classic room, and a lobby bot whose camp row fills
   freezes the host's tab (run twice on main's pair, 13 Oct; the other player sees every seat online and the turn
@@ -89,8 +89,7 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 - **Bots: Structured tables only (Johan, 13 Oct)**, online as offline. The handoff
   `docs/handoffs/REPLY-to-bot-2026-10-13-table-setup.md` says so and keeps the seat-spot ask for the day bots come to
   Classic; `tableSetupOn()`'s bot guard is the safety net for a bot on its own socket.
-- **Small, open:** the other seat chips (Table panel, a seat visit's header, the own pool name) still show a digit, the
-  globes say 1st, 2nd …; the Host Guide and Help → Local server do not mention the option.
+- **Small, open:** the Host Guide (a hosting document) lists no room settings; its generator says v1.8 against the v1.9 docx.
 - **Johan's call (player feedback, round 2 — analysed, not built):** the hand open by default; a host
   'Randomise seats' button in the lobby (needs the server). `client/CLAUDE.md` top entries.
 - **Known limit:** online, after the host's panel release, the other clients' badges clear at the next release phrase.

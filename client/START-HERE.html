@@ -44,7 +44,7 @@
     <p class="big">Elysium runs a public table at <a href="https://elysium.cards"><b>elysium.cards</b></a>. Nothing to install, no account.</p>
     <ol>
       <li>Open <a href="https://elysium.cards">elysium.cards</a>. The first time you land in <b>Lite</b> mode — online play on a Classic open table, nothing extra. The small <b>Lite | Full</b> pill (and the <b>?</b> beside it) in the corner of the start card switches to <b>Full</b>: the Deck Lab, offline hotseat, bots (alpha), animations and every option.</li>
-      <li><b>Create game</b> — a name for you, a name for the room, a password if you want one; the <b>Game settings</b> fold has the match clock, the reaction timer, board style and helpers (Full), and an optional <b>referee password</b> for the table. Share the room name (and password) with your friends.</li>
+      <li><b>Create game</b> — a name for you, a name for the room, a password if you want one; the <b>Game settings</b> fold has the match clock, the reaction timer, board style (Classic: <b>Suggested table setup</b> seats everyone around the table), helpers (Full), and an optional <b>referee password</b> for the table. Share the room name (and password) with your friends.</li>
       <li>Your friends click <b>Join game</b>, pick your room in the list — or type its name — import a deck, take a seat, click Ready. Play.</li>
     </ol>
     <p class="note">Everything below is for tables that want their <b>own</b> server — on a LAN, over Tailscale, or through a tunnel. Same client, same game; you just run <code>elysium-server.js</code> yourself.</p>
@@ -62,7 +62,7 @@
         <b>macOS</b> — double-click <code>start-elysium.command</code> (the very first time: right-click → <i>Open</i>, since macOS is wary of new files; if it still refuses, open Terminal in the folder and run <code>bash start-elysium.sh</code>).<br>
         <b>Linux</b> — in a terminal: <code>bash start-elysium.sh</code> (or once: <code>chmod +x start-elysium.sh</code>, then <code>./start-elysium.sh</code>).<br>
         A window opens and shows, among other things, a line starting with <b>Network:</b> — <i>that is the address you share with the table.</i> Leave it open while you play (Ctrl+C shuts down and saves the rooms).</li>
-      <li><b>Create the room:</b> open the address yourself in a browser → <b>Create game</b> → your name, a room name, a password if you like; open <b>Game settings</b> for the match clock, board style, helpers and a table <b>referee password</b> → <b>Create room</b>. Then click <b>📋 invite</b> in the room bar and a ready-made invitation lands on your clipboard — paste it to your players.</li>
+      <li><b>Create the room:</b> open the address yourself in a browser → <b>Create game</b> → your name, a room name, a password if you like; open <b>Game settings</b> for the match clock, board style (and the suggested table setup on Classic), helpers and a table <b>referee password</b> → <b>Create room</b>. Then click <b>📋 invite</b> in the room bar and a ready-made invitation lands on your clipboard — paste it to your players.</li>
     </ol>
     <p class="note">Important: never double-click the <code>.js</code> file itself — Windows will run it with the wrong engine and complain about an "Invalid character" (in your system language). On macOS/Linux a double-clicked <code>.js</code> usually just opens in a text editor. That's exactly why the launchers exist — they check for Node and start it the right way on every system.</p>
   </section>

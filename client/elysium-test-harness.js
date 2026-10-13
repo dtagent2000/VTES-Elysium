@@ -377,7 +377,8 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   pinPlayed: (typeof pinPlayed!=='undefined'?pinPlayed:undefined), pinPlayedAuto: (typeof pinPlayedAuto!=='undefined'?pinPlayedAuto:undefined),   // v2.6.149 (K5): a tray a resolver opened
   closePlayed: (typeof closePlayed!=='undefined'?closePlayed:undefined), togglePlayed: (typeof togglePlayed!=='undefined'?togglePlayed:undefined),
   avrRender: (typeof avrRender!=='undefined'?avrRender:undefined), get playedAutoPin(){ return (typeof playedAutoPin!=='undefined')?playedAutoPin:undefined; },
-  pubRiders: (typeof pubRiders!=='undefined'?pubRiders:undefined), updateL4Opponents: (typeof updateL4Opponents!=='undefined'?updateL4Opponents:undefined)   // v2.6.149: riders drawn on their host
+  pubRiders: (typeof pubRiders!=='undefined'?pubRiders:undefined), updateL4Opponents: (typeof updateL4Opponents!=='undefined'?updateL4Opponents:undefined),   // v2.6.149: riders drawn on their host
+  l4GlobeEdges: (typeof l4GlobeEdges!=='undefined'?l4GlobeEdges:undefined)   // v2.6.151: the Edge on the globe
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',
