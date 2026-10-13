@@ -367,7 +367,17 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   mySeat: (typeof mySeat!=='undefined'?mySeat:undefined), freeBoard: (typeof freeBoard!=='undefined'?freeBoard:undefined),
   mpWatching: (typeof mpWatching!=='undefined'?mpWatching:undefined), mpLandView: (typeof mpLandView!=='undefined'?mpLandView:undefined),   // v2.6.148: arriving at a running game
   restoreFromPub: (typeof restoreFromPub!=='undefined'?restoreFromPub:undefined), schedulePush: (typeof schedulePush!=='undefined'?schedulePush:undefined),
-  pushNow: (typeof pushNow!=='undefined'?pushNow:undefined), mpRelay: (typeof mpRelay!=='undefined'?mpRelay:undefined)
+  pushNow: (typeof pushNow!=='undefined'?pushNow:undefined), mpRelay: (typeof mpRelay!=='undefined'?mpRelay:undefined),
+  freeFaceZone: (typeof freeFaceZone!=='undefined'?freeFaceZone:undefined), freeFaceSync: (typeof freeFaceSync!=='undefined'?freeFaceSync:undefined),   // v2.6.149 (K1): the face decides the zone on the free board
+  freeFaceSyncAll: (typeof freeFaceSyncAll!=='undefined'?freeFaceSyncAll:undefined), freeDragKeepsZone: (typeof freeDragKeepsZone!=='undefined'?freeDragKeepsZone:undefined),
+  parkWhere: (typeof parkWhere!=='undefined'?parkWhere:undefined), tap: (typeof tap!=='undefined'?tap:undefined), unlockedMinions: (typeof unlockedMinions!=='undefined'?unlockedMinions:undefined),
+  readyToCanon: (typeof readyToCanon!=='undefined'?readyToCanon:undefined),
+  advanceTurnCounter: (typeof advanceTurnCounter!=='undefined'?advanceTurnCounter:undefined), turnLabel: (typeof turnLabel!=='undefined'?turnLabel:undefined),   // v2.6.149: the Round/Turn count
+  tnAdopt: (typeof tnAdopt!=='undefined'?tnAdopt:undefined), openingXfMalus: (typeof openingXfMalus!=='undefined'?openingXfMalus:undefined),
+  pinPlayed: (typeof pinPlayed!=='undefined'?pinPlayed:undefined), pinPlayedAuto: (typeof pinPlayedAuto!=='undefined'?pinPlayedAuto:undefined),   // v2.6.149 (K5): a tray a resolver opened
+  closePlayed: (typeof closePlayed!=='undefined'?closePlayed:undefined), togglePlayed: (typeof togglePlayed!=='undefined'?togglePlayed:undefined),
+  avrRender: (typeof avrRender!=='undefined'?avrRender:undefined), get playedAutoPin(){ return (typeof playedAutoPin!=='undefined')?playedAutoPin:undefined; },
+  pubRiders: (typeof pubRiders!=='undefined'?pubRiders:undefined), updateL4Opponents: (typeof updateL4Opponents!=='undefined'?updateL4Opponents:undefined)   // v2.6.149: riders drawn on their host
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',

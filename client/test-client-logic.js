@@ -3783,17 +3783,17 @@ test('v2.6.146: the seat spots -- for 1 to 6 seats every seat has its own footpr
       if (mirror) assert(b.cards.every(c => c.x + G.cw <= b.g.x), 'N=' + N + ' seat ' + (i + 1) + ': on the right half the globe sits on the outside, its cards toward the middle');
       else assert(b.cards.every(c => c.x >= b.g.x + G.gw), 'N=' + N + ' seat ' + (i + 1) + ': cards to the right of the globe');
       if (i >= topN) eq(b.cards[0].y + G.ch, 404, 'N=' + N + ' seat ' + (i + 1) + ': a lower-row card ends at 404');
-      else assert(b.top < 40, 'N=' + N + ' seat ' + (i + 1) + ' is on the top edge');
+      else eq(b.g.y, 132, 'N=' + N + ' seat ' + (i + 1) + ': the top row starts at y 132, below the Played tray (v2.6.149; it was the top edge, y 25)');
     });
     for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++)
       assert(B[i].right + 8 <= B[j].left || B[j].right + 8 <= B[i].left || B[i].bottom + 8 <= B[j].top || B[j].bottom + 8 <= B[i].top, 'N=' + N + ': seats ' + (i + 1) + ' and ' + (j + 1) + ' do not touch');
     for (let i = 1; i < topN; i++) assert(B[i].g.x > B[i - 1].g.x, 'N=' + N + ': the top row runs left to right');
     for (let i = topN + 1; i < N; i++) assert(B[i].g.x < B[i - 1].g.x, 'N=' + N + ': the lower row runs right to left, so the seats go clockwise');
   }
-  eq(JSON.stringify([0, 1, 2, 3, 4].map(i => { const g = API.l4SeatSpot(i, 5); return [g.x, g.y]; })), '[[26,25],[385,25],[933,25],[933,341],[26,341]]', 'five seats: top left, top centre, top right, lower right, lower left -- the layout a Lackey table uses');
-  eq(JSON.stringify(API.l4CryptSpots(26, 25).map(c => c.x)), '[81,127,173,219]'); eq(JSON.stringify(API.l4CryptSpots(933, 25).map(c => c.x)), '[743,789,835,881]');
+  eq(JSON.stringify([0, 1, 2, 3, 4].map(i => { const g = API.l4SeatSpot(i, 5); return [g.x, g.y]; })), '[[26,132],[385,132],[933,132],[933,341],[26,341]]', 'five seats: top left, top centre, top right, lower right, lower left -- the layout a Lackey table uses (v2.6.149: the top row at y 132)');
+  eq(JSON.stringify(API.l4CryptSpots(26, 132).map(c => c.x)), '[81,127,173,219]'); eq(JSON.stringify(API.l4CryptSpots(933, 132).map(c => c.x)), '[743,789,835,881]');
   eq(JSON.stringify([0, 1, 2, 3].map(i => API.l4SeatSpot(i, 4).x)), '[26,933,933,26]', 'four seats: the corners');
-  eq(JSON.stringify([0, 1].map(i => { const g = API.l4SeatSpot(i, 2); return [g.x, g.y]; })), '[[385,25],[385,341]]', 'two seats face each other');
+  eq(JSON.stringify([0, 1].map(i => { const g = API.l4SeatSpot(i, 2); return [g.x, g.y]; })), '[[385,132],[385,341]]', 'two seats face each other');
   // a globe the player has moved: the cards follow it, on the side where they fit, and never leave the table
   const far = API.l4CryptSpots(960, 500); assert(far.every(c => c.x + G.cw <= 960 && c.x >= T.x), 'near the right edge the cards go to the left'); assert(far[0].y + G.ch <= T.y + T.h, 'and are clamped onto the table');
   const mid = API.l4CryptSpots(500, 250); assert(mid.every(c => c.x >= 500 + G.gw), 'in the middle they go to the right');
@@ -3818,7 +3818,7 @@ test('v2.6.146: online, the deal on a Classic table with the option asks for the
   assert(/4 crypt cards were placed face down beside the pool\./.test(line.html), 'it announces the setup: ' + line.html);
   assert(/crypt: 8 remain/.test(line.html), 'and counts the crypt AFTER it');
   const spots = A.l4SetupSpots(2);
-  eq(JSON.stringify(spots), JSON.stringify(A.l4CryptSpots(385, 25)), 'seat 2 of 5 sits top centre');
+  eq(JSON.stringify(spots), JSON.stringify(A.l4CryptSpots(385, 132)), 'seat 2 of 5 sits top centre');
   for (let i = 0; i < 4; i++) A.MP_HANDLERS.drew({ zone: 'uncontrolled', kind: 'crypt', name: 'V' + i, lib: 53, crypt: 11 - i });
   const unc = () => A.state.zones.uncontrolled.map(id => A.state.cards.get(id));
   eq(unc().length, 4);
@@ -3881,7 +3881,7 @@ test('v2.6.146: the globes START at the seat spots with the option (and on the o
   A.net.tableSetup = false; A.renderL4Globes();
   eq(JSON.stringify([...A.l4Globes.values()].map(g => [g.x, g.y])), '[[470,58],[622,169],[564,347],[376,347],[318,169]]', 'without the option: the ring in the middle, exactly as before');
   A.l4Globes.clear(); A.net.tableSetup = true; A.renderL4Globes();
-  eq(JSON.stringify([...A.l4Globes.values()].map(g => [g.x, g.y])), '[[26,25],[385,25],[933,25],[933,341],[26,341]]', 'with it: each seat at its spot');
+  eq(JSON.stringify([...A.l4Globes.values()].map(g => [g.x, g.y])), '[[26,132],[385,132],[933,132],[933,341],[26,341]]', 'with it: each seat at its spot');
   A.l4Globes.get(1).x = 500; A.l4Globes.get(1).y = 250; A.renderL4Globes();
   eq(JSON.stringify([A.l4Globes.get(1).x, A.l4Globes.get(1).y]), '[500,250]', 'a moved globe is not pulled back by a re-render');
   eq(JSON.stringify(A.l4SetupSpots(1)), JSON.stringify(A.l4CryptSpots(500, 250)), 'and the next deal\'s cards follow it');
@@ -4004,7 +4004,7 @@ test('v2.6.148: a reload keeps the own pool globe -- joined reads its place from
   eq(JSON.stringify(A.net._myGlobeAt), '{"x":520,"y":126}');
   A.l4Globes.clear(); A.renderL4Globes();
   eq(JSON.stringify([A.l4Globes.get(1).x, A.l4Globes.get(1).y]), '[520,126]', 'my globe: where the server last saw it');
-  eq(JSON.stringify([A.l4Globes.get(2).x, A.l4Globes.get(2).y]), '[385,25]', 'the others: their seat spots until their boards arrive');
+  eq(JSON.stringify([A.l4Globes.get(2).x, A.l4Globes.get(2).y]), '[385,132]', 'the others: their seat spots until their boards arrive');
   A.MP_HANDLERS.joined(J({ myPub: { cards: [] } })); eq(A.net._myGlobeAt, null, 'no token, nothing remembered');
   A.MP_HANDLERS.joined(J({ spect: true, myPub: { cards: [], tokens: [{ type: 'pool', x: 5, y: 5 }] } })); eq(A.net._myGlobeAt, null, 'a spectator has no globe');
   A.net._myGlobeAt = { x: 1, y: 1 }; A.MP_HANDLERS.started({ players: ROSTER146(5), turn: 1, boardMode: 'classic', tableSetup: true });
@@ -4048,6 +4048,204 @@ test('v2.6.147: the pin is the needle alone -- it lies while the panel is loose 
     try { A.setL2Dock(false); } finally { A.__stubEl.classList._t.delete('l2dockopen'); }
     eq(A.dockPinned, false); eq(btn.title, 'Not pinned', 'a close that executes releases the pin, and the tooltip follows through the same setter');
   } finally { delete A.__doc._ids.l2dockPin; }
+});
+/* ---------- v2.6.149: THE FACE DECIDES (Johan's 'kör' on K1-K6, and three faults found on the way) ---------- */
+function l4mode149(A, on){ const T = A.__stubEl.classList._t; if (on) T.add('l4mode'); else T.delete('l4mode'); }
+test('v2.6.149 (K1): on the free board a crypt card between ready and uncontrolled is where its FACE says -- a face-down card dragged stays uncontrolled, a vampire flipped up where it lies is in play; torpor, library cards, riders and the Structured board are left alone', () => {
+  const A = loadClient(CLIENT);
+  if (!A.freeFaceZone || !A.freeFaceSync || !A.freeFaceSyncAll || !A.unlockedMinions || !A.tap || !A.readyToCanon) throw new Error('freeFaceZone / freeFaceSync / freeFaceSyncAll / unlockedMinions / tap / readyToCanon not exposed (harness needs updating)');
+  A.clearTable({});
+  const L = A.l2pub; L.on = true; L.s = 1.2; L.ox = 40; L.oy = 30; L.bx = 0; L.by = 0;
+  try {
+    l4mode149(A, false);
+    const s1 = A.makeCard('V1', 'crypt'); A.move(s1, 'ready', { x: 100, y: 100, faceDown: true });
+    eq(s1.zone, 'ready', 'Structured: nothing changes -- a face-down card moved into ready is in ready, as before');
+    l4mode149(A, true);
+    eq(A.freeFaceZone({ kind: 'crypt', faceDown: true }, 'ready'), 'uncontrolled');
+    eq(A.freeFaceZone({ kind: 'crypt', faceDown: false }, 'uncontrolled'), 'ready');
+    eq(A.freeFaceZone({ kind: 'crypt', faceDown: false }, 'torpor'), 'torpor'); eq(A.freeFaceZone({ kind: 'crypt', faceDown: true }, 'torpor'), 'torpor', 'torpor is left alone: only To torpor / Leave torpor move a card in or out (K3)');
+    eq(A.freeFaceZone({ kind: 'lib', faceDown: true }, 'ready'), 'ready', 'a library card played face down is still in ready');
+    eq(A.freeFaceZone({ kind: 'crypt', faceDown: true, host: 'c9' }, 'ready'), 'ready', 'a card riding on another keeps the zone attach() gave it');
+    // a drag of a face-down card -- what dropCard asks for: 'ready' at a DISPLAY point
+    const v = A.makeCard('V2', 'crypt'); A.move(v, 'uncontrolled', { faceDown: true, x: 300, y: 200 });
+    A.move(v, 'ready', { x: 520, y: 260, faceDown: true, disp: true });
+    eq(v.zone, 'uncontrolled', 'free board: dragged face down, still uncontrolled (v2.6.148: ready -- MINION 1, the vampire count +1, blood on it no transfer)');
+    assert(A.state.zones.uncontrolled.includes(v.id) && !A.state.zones.ready.includes(v.id), 'and the zone lists agree');
+    const cc = A.readyToCanon(520, 260); approx(v.x, cc.x, 1e-9); approx(v.y, cc.y, 1e-9);
+    // flipped up where it lies
+    const x0 = v.x, y0 = v.y; v.faceDown = false;
+    eq(A.freeFaceSync(v), true); eq(v.zone, 'ready', 'flipped up where it lies: in play (v2.6.148: still uncontrolled -- no clan, no Actions menu, +1 blood charged as a transfer)'); eq(v.x, x0); eq(v.y, y0);
+    eq(A.unlockedMinions(), 1, 'counted as a minion -- and the face-down card left in ready while Structured is not (the belt)');
+    v.faceDown = true; A.freeFaceSync(v); eq(v.zone, 'uncontrolled', 'flipped back down: uncontrolled again'); eq(A.unlockedMinions(), 0);
+    // the double-click
+    const w = A.makeCard('V3', 'crypt'); A.move(w, 'uncontrolled', { faceDown: true, x: 50, y: 60 });
+    A.tap(w, {}); A.tap(w, {});
+    eq(w.faceDown, false); eq(w.zone, 'ready', 'a double-click: face up AND in play');
+    const u = A.makeCard('V4', 'crypt'); A.move(u, 'uncontrolled', { faceDown: false }); eq(u.zone, 'ready', 'a face-up card asked into uncontrolled is in play');
+    l4mode149(A, false); const old = A.makeCard('V5', 'crypt'); A.move(old, 'ready', { faceDown: true }); l4mode149(A, true);
+    eq(old.zone, 'ready'); A.freeFaceSyncAll(); eq(old.zone, 'uncontrolled', 'a board an older client saved is put right on entering the free board');
+    const host = A.makeCard('V6', 'crypt'); A.move(host, 'ready', { x: 10, y: 10, faceDown: false });
+    const rider = A.makeCard('V7', 'crypt'); A.move(rider, 'ready', { x: 12, y: 12, faceDown: false }); A.attach(rider, host); rider.faceDown = true; A.freeFaceSync(rider);
+    eq(rider.zone, 'ready', 'a rider keeps the zone attach() gave it, face down or not');
+    A.move(host, 'torpor', { keepChildren: false }); eq(rider.host, host.id, 'torpor keeps its riders');
+    A.attach(host, A.makeCard('V8', 'crypt'));                    // the host is stacked elsewhere: its own riders are released
+    eq(rider.host, null); eq(rider.zone, 'uncontrolled', 'a released face-down rider is an uncontrolled card (it stayed ready with no host -- the review\'s finding)');
+  } finally { l4mode149(A, false); L.on = false; }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  eq((html.match(/ensureImg\(c\); freeFaceSync\(c\);/g) || []).length, 5, 'every flip asks: the double-click, the card menu, the controller\'s ctrl flip, Flip face up selected, Flip selected');
+  assert(html.indexOf("{ const fz=freeFaceZone(c, zone);") > 0, 'move() asks');
+  assert(html.indexOf("freed.forEach(k=>freeFaceSync(k));") > 0 && html.indexOf("detachFromHost(c); c.x=c.tx+30; c.y=c.ty+10; freeFaceSync(c); layout();") > 0, 'released and detached riders ask');
+});
+test('v2.6.149 (K3, K2): torpor survives a drag on the free board, a dragged uncontrolled or torpored crypt card never attaches to what it lands on, and Leave torpor leaves the vampire where it lies', () => {
+  const A = loadClient(CLIENT);
+  if (!A.freeDragKeepsZone) throw new Error('freeDragKeepsZone not exposed (harness needs updating)');
+  const L = A.l2pub; L.on = true; L.s = 1.5; L.ox = 20; L.oy = 10; L.bx = 0; L.by = 0;
+  A.clearTable({});
+  try {
+    l4mode149(A, true);
+    eq(A.freeDragKeepsZone({ kind: 'crypt', faceDown: false }, 'torpor'), true);
+    eq(A.freeDragKeepsZone({ kind: 'crypt', faceDown: true }, 'uncontrolled'), true);
+    eq(A.freeDragKeepsZone({ kind: 'crypt', faceDown: false }, 'ready'), false, 'a ready vampire may still be stacked on another card');
+    eq(A.freeDragKeepsZone({ kind: 'lib', faceDown: false }, 'hand'), false, 'a card from the hand is still played onto a vampire');
+    const t = A.makeCard('T1', 'crypt'); A.move(t, 'ready', { x: 100, y: 100, faceDown: false });
+    const at0 = { x: t.x, y: t.y }; A.move(t, 'torpor'); eq(t.zone, 'torpor'); eq(t.x, at0.x, 'To torpor: where it lies on the free board'); eq(t.y, at0.y);
+    A.move(t, 'torpor', { x: 400, y: 300, faceDown: false, disp: true });   // what dropCard now asks for a torpored card on the free board
+    eq(t.zone, 'torpor', 'dragged: still in torpor (v2.6.148: ready, "→ the ready region.")');
+    const cc = A.readyToCanon(400, 300); approx(t.x, cc.x, 1e-9); approx(t.y, cc.y, 1e-9);
+    const at = { x: t.x, y: t.y }; A.move(t, 'ready'); eq(t.zone, 'ready'); eq(t.x, at.x, 'Leave torpor (the menu\'s move on the free board): where it lies'); eq(t.y, at.y);
+    l4mode149(A, false);
+    eq(A.freeDragKeepsZone({ kind: 'crypt', faceDown: false }, 'torpor'), false, 'Structured: a drag out of the torpor box is leaving torpor, as before');
+  } finally { l4mode149(A, false); L.on = false; }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("const target=keepZone ? null : attachTargetAt(cx,cy,c);") > 0, 'the single drop asks before it attaches');
+  assert(html.indexOf("const dz = (l4on() && from==='torpor') ? 'torpor' : 'ready';") > 0 && html.indexOf("move(c,dz,{x:X,y:Y,faceDown:fd,keepChildren:c.attached.length>0,disp:true});") > 0, 'the single drop keeps torpor on the free board');
+  assert(html.indexOf("const dz = (l4on() && m.c.zone==='torpor') ? 'torpor' : 'ready';") > 0 && html.indexOf("move(m.c,dz,{x:X,y:Y,faceDown:fd,keepHost:true,disp:true});") > 0, 'and so does the group drop');
+  assert(html.indexOf("fn:()=>{ if(l4on()) move(c,'ready'); else { const r=zoneRect('ready'); move(c,'ready',{x:r.x+24,y:r.y+24}); } log(cardRefCap(c)+' left torpor.'); }") > 0, 'K2: the menu item -- zoneRect(\'ready\') is the whole felt there, so the vampire landed in its top-left corner');
+  assert(html.indexOf("#board.l4mode .card.torp::after{content:'TORPOR';") > 0, 'K3: the mark');
+  assert(html.indexOf("c.el.classList.toggle('torp', _l4 && c.zone==='torpor');") > 0, 'own cards carry it (one pass in layout)');
+  assert(html.indexOf("((ctx && c.zone==='torpor' && l4on())?' torp':'')") > 0, 'and every other seat\'s cards (addRCard)');
+});
+test('v2.6.149 (K4 + found on the way): the felt\'s Round/Turn label follows the counter, and the counter survives a reconnect -- kept on an automatic reconnect, taken from the boards after a reload until the next turn', () => {
+  const A = loadClient(CLIENT);
+  if (!A.tnAdopt || !A.turnLabel) throw new Error('tnAdopt / turnLabel not exposed (harness needs updating)');
+  A.net.ws = { readyState: 1, send(){} };
+  const J = extra => Object.assign({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(2), boardMode: 'classic', lobby: false, srv: '2.6.44', myPub: { cards: [] } }, extra);
+  const PB = (tn, rn) => ({ cards: [], counts: { hand: 7, library: 40, crypt: 8 }, pool: 30, tn, rn });   // a pub as clients send it
+  A.MP_HANDLERS.joined(J({}));
+  eq(A.net.turnNo, 0); eq(A.net.tnSync, true, 'a running game: the count comes from the boards');
+  A.MP_HANDLERS.board({ seat: 2, who: 'Anna', pub: PB(5, 3) });
+  eq(A.net.turnNo, 5); eq(A.net.roundNo, 3, 'a reload: the table\'s count, from another seat\'s board'); eq(A.turnLabel(), 'Round 3 · Turn 5');
+  A.MP_HANDLERS.board({ seat: 2, who: 'Anna', pub: PB(4, 2) }); eq(A.net.turnNo, 5, 'never down');
+  A.MP_HANDLERS.turn({ seat: 2, who: 'Anna' });
+  eq(A.net.turnNo, 6); eq(A.net.tnSync, false, 'the next turn closes the window -- the count is the client\'s own again');
+  A.MP_HANDLERS.board({ seat: 2, who: 'Anna', pub: PB(40, 20) }); eq(A.net.turnNo, 6, 'outside the window a board does not move it');
+  A.net.status = 're'; A.MP_HANDLERS.joined(J({}));
+  eq(A.net.turnNo, 6, 'an automatic reconnect keeps the count (v2.6.148 zeroed it: "▶ Round 1 · Turn 1" and the opening transfer ramp again)'); eq(A.net.roundNo, 3);
+  A.MP_HANDLERS.board({ seat: 2, who: 'Anna', pub: PB(8, 4) }); eq(A.net.turnNo, 8, '...and catches up with turns it missed while away');
+  A.net.status = 'off'; A.MP_HANDLERS.joined(J({ myPub: { cards: [], tn: 11, rn: 6 } })); eq(A.net.turnNo, 11, 'a reload with nobody else answering: my own board, as the server kept it');
+  A.MP_HANDLERS.joined(J({ lobby: true })); eq(A.net.tnSync, false, 'the lobby: nothing to take');
+  A.net.turnNo = 9; A.net.roundNo = 5; A.net.status = 're'; A.net.room = 'old';
+  A.MP_HANDLERS.joined(J({ room: 'new' })); eq(A.net.turnNo, 0, 'still retrying a lost server and joining ANOTHER room by hand: the old count does not ride in (the review\'s finding)');
+  A.net.turnNo = 3; A.net.roundNo = 2;
+  A.MP_HANDLERS.took({ seat: 2, token: 't2', pub: { cards: [], tn: 12, rn: 6 }, loaded: 'sv' });
+  eq(A.net.turnNo, 12); eq(A.net.roundNo, 6, 'a loaded match: its own count, from the board handed back');
+  A.net.turnNo = 20; A.net.roundNo = 9; A.MP_HANDLERS.took({ seat: 2, token: 't2', pub: { cards: [], tn: 12, rn: 6 }, loaded: 'sv' }); eq(A.net.turnNo, 12, 'whatever this client counted before');
+  A.net.turnNo = 2; A.net.roundNo = 1; A.MP_HANDLERS.took({ seat: 3, token: 't3', pub: { cards: [], tn: 15, rn: 8 } }); eq(A.net.turnNo, 15, 'a seat taken over: the seat\'s count'); eq(A.net.tnSync, true, 'and the window is open until the next turn');
+  eq(A.tnAdopt({ tn: 40 }), false, 'a turn without its round is not taken (it would reset the round)'); eq(A.net.turnNo, 15);
+  A.net.status = 'in'; A.net.turnNo = 7; A.net.roundNo = 4;
+  const pub = A.buildPub(); eq(pub.tn, 7); eq(pub.rn, 4, 'every pub carries the count online');
+  A.net.status = 'off'; eq(A.buildPub().tn, undefined, 'and not offline');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const atc = html.slice(html.indexOf('function advanceTurnCounter('), html.indexOf('function tnAdopt('));
+  assert(atc.indexOf('updateL3Timer();') > 0, 'advanceTurnCounter writes the felt label (it was written only when the felt was rebuilt -- "Round 1 · Turn 1" all game)');
+  assert(html.indexOf("if(late && !warned){ warned=true; toast('⏳ Five minutes left on the match clock'); }\n    updateL3Timer();") > 0, 'and the felt\'s centre clock ticks with the match clock');
+  assert(html.indexOf("clearInterval(net.clockT); net.clockT=null;\n      updateL3Timer();") > 0 && html.indexOf("if(!net.matchEnd){ el.hidden=true; updateL3Timer(); return; }") > 0, '...to the end, and clears with it');
+});
+test('v2.6.149 (K5): a Played tray that a resolver opened closes with the resolver; the player\'s own pin stays -- and the suggested top row starts at y 132, below the tray', () => {
+  const A = loadClient(CLIENT);
+  if (!A.pinPlayed || !A.closePlayed || !A.togglePlayed || A.playedAutoPin === undefined) throw new Error('pinPlayed / closePlayed / togglePlayed / playedAutoPin not exposed (harness needs updating)');
+  const cls = new Set(); A.__doc._ids.playedOverlay = { classList: { add(c){ cls.add(c); }, remove(c){ cls.delete(c); }, contains(c){ return cls.has(c); }, toggle(c, on){ if (on) cls.add(c); else cls.delete(c); return !!on; } } };
+  try {
+    A.net.helperPolicy = { allowLocal: false, settings: { resBlock: true, resVote: true, resCombat: true } };   // the table's helpers on, as the host set them
+    A.MP_HANDLERS.tally({ mode: 'vote', a: 1, b: 0 });
+    eq(A.playedPinned, true, 'someone opens a Vote: the tray shows on my screen, as before'); eq(A.playedAutoPin, true);
+    A.MP_HANDLERS.tally({ mode: null, a: 0, b: 0, res: 1 });
+    eq(A.playedPinned, false, 'the Vote resolves: the tray it opened closes (v2.6.148: it stayed pinned over the top row)'); eq(cls.has('show'), false);
+    A.pinPlayed(); eq(A.playedAutoPin, false, 'a pin of my own');
+    A.MP_HANDLERS.tally({ mode: 'vote', a: 0, b: 0 }); A.MP_HANDLERS.tally({ mode: null, a: 0, b: 0 });
+    eq(A.playedPinned, true, 'a tray I pinned myself stays'); A.closePlayed();
+    A.MP_HANDLERS.tally({ mode: 'vote', a: 0, b: 0 }); eq(A.playedAutoPin, true);
+    A.togglePlayed(); A.togglePlayed(); eq(A.playedPinned, true); eq(A.playedAutoPin, false, 'two clicks on the tab: mine from then on');
+    A.MP_HANDLERS.tally({ mode: null, a: 0, b: 0 }); eq(A.playedPinned, true, 'and it stays');
+  } finally { delete A.__doc._ids.playedOverlay; A.net.helperPolicy = null; }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("if(avr.mode!=='combat'){ avrOpen('combat'); if(avr.mode==='combat' && !playedIsOpen()) pinPlayedAuto(); }") > 0, 'a combat started from the card menu shows its panel the same way');
+  assert(/let playedPinned=false, playedShowT=null, playedHideT=null, playedAutoPin=false;[^\n]*\nlet avr=avrFresh\(null\)/.test(html), 'the tray\'s state is declared beside avr: avrRender runs during start-up and reads it (declared where playedPinned was, the page died in the TDZ -- twice)');
+  assert(html.indexOf("if(!_ov($('#playedOverlay')) && !_ov($('#playedTab'))) hidePlayedSoon(); } }") > 0, 'a hover peek the live resolver held open closes with it too (the review found it: hidePlayedSoon refuses while a resolver runs, and nothing hid it afterwards)');
+  eq(API.L4_SEAT.topY, 132, 'the top row');
+  assert(html.indexOf("const gy=top ? L4_SEAT.topY : L4_SEAT.lowBottom-G.ch-G.dy;") > 0, 'the seat formula uses it (it was T.y + m = 25: at 1366 x 768 the tray covers y 24-127, to 156 with a row of cards)');
+});
+test('v2.6.149 (K6): a roster change no longer empties the felt of the other seats\' cards, and a seat that dropped off says so on its globe', () => {
+  const A = loadClient(CLIENT);
+  A.net.ws = { readyState: 1, send(){} };
+  const P = on => [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'Anna', online: on }];
+  A.MP_HANDLERS.joined({ room: 'r', token: 't', you: 'Johan', seat: 1, players: P(false), boardMode: 'classic', lobby: false, srv: '2.6.44', myPub: { cards: [] } });
+  A.l4Globes.clear(); A.renderL4Globes();
+  eq(A.l4Globes.get(2).off, true, 'Anna is offline: her globe says so'); eq(A.l4Globes.get(1).off, false, 'never my own');
+  A.net.roster = P(true); A.renderL4Globes(); eq(A.l4Globes.get(2).off, false, 'back online');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const rg = html.slice(html.indexOf('function renderL4Globes(){'), html.indexOf('function bindL4GlobeDrag('));
+  assert(rg.indexOf('clearL4Globes();') > 0 && rg.lastIndexOf('if(l4on()) updateL4Opponents();') > rg.indexOf('clearL4Globes();'), 'clearL4Globes takes #l4oppWrap with it -- the other seats are drawn again at the end (v2.6.148: gone until the next board, or your own card move)');
+  assert(html.indexOf('.l4globe.l4goff::after{ content:\'offline\';') > 0, 'the mark');
+  const cl = html.slice(html.indexOf('function clearL4Globes(){'), html.indexOf('function renderL4OppCards(){'));
+  eq(/l4oppWrap'\); if\(ow\) ow\.remove\(\)/.test(cl), false, 'and clearL4Globes no longer tears the layer down (every renderL4 -- a resize too -- rebuilt it from scratch)');
+});
+test('v2.6.149 (found on the way): another seat\'s attached cards ride on their host in every view -- torpor included -- and a card listed in a host\'s attached list without a host of its own (the released bot\'s equipment) is never drawn on its own', () => {
+  if (!API.pubRiders) throw new Error('pubRiders not exposed (harness needs updating)');
+  const R = API.pubRiders([
+    { id: 'v1', kind: 'crypt', zone: 'ready', attached: ['e1', 'k1'] },
+    { id: 'e1', kind: 'lib', zone: 'ready' },                            // the bot's equipment: in the list, no host
+    { id: 'k1', kind: 'lib', zone: 'ready', host: 'v1' },
+    { id: 'v2', kind: 'crypt', zone: 'torpor', attached: ['k2'] },
+    { id: 'k2', kind: 'lib', zone: 'ready', host: 'v2' },
+    { id: 'a1', kind: 'lib', zone: 'ready' }, { id: 'x1', kind: 'lib', zone: 'ash', attached: ['z9'] } ]);
+  eq([...R].sort().join(), 'e1,k1,k2', 'riders: by host, or by a host\'s list; an ash card has no riders');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const l4 = html.slice(html.indexOf('function renderL4OppCards(){'), html.indexOf('function createL4Globe('));
+  assert(l4.indexOf("cards.filter(c=>(c.zone==='torpor'||c.zone==='uncontrolled')&&!riders.has(c.id)).forEach(drawStack);") > 0, 'the free board: torpor and uncontrolled hosts carry their cards (v2.6.148: a torpored vampire\'s equipment vanished from every other screen)');
+  assert(l4.indexOf("cards.filter(c=>c.zone==='ready'&&!riders.has(c.id)).forEach(drawStack);") > 0, 'and no rider is drawn on its own (the bot\'s equipment went to its corner)');
+  const bm = html.slice(html.indexOf('function buildMat('), html.indexOf('function l3geom('));
+  assert(bm.indexOf("const riders=pubRiders(cards);") > 0 && bm.indexOf("hx+CX*s*(k+1), hy-CY*s*(k+1)") > 0, 'the Structured mats: the same');
+  const rf = html.slice(html.indexOf('function renderFull(host, seat){'), html.indexOf('function buildMat('));
+  assert(rf.indexOf("const riders=pubRiders(cards);") > 0 && rf.indexOf("hx+CX*(k+1), hy-CY*(k+1)") > 0, 'and the single-board inspector');
+  eq((html.match(/if\(kc && COUNTER_ZONES\.includes\(kc\.zone\)\) addRCard\(/g) || []).length, 5, 'every kids loop skips an id left in `attached` for a card in the ash heap or burned');
+  const A = loadClient(CLIENT); A.net.status = 'in'; A.net.you = 'Johan'; A.net.roster = ROSTER146(2); A.net.boardMode = 'structured';
+  A.restoreFromPub({ pool: 30, cards: [ { id: 'v', name: 'V1', kind: 'crypt', zone: 'torpor', attached: ['k'] }, { id: 'k', name: 'Card 1', kind: 'lib', zone: 'ready', host: 'v' } ] });
+  const v = [...A.state.cards.values()].find(c => c.name === 'V1'), k = [...A.state.cards.values()].find(c => c.name === 'Card 1');
+  eq(k.host, v.id, 'a snapshot restore puts a torpored vampire\'s equipment back ON it (it came back loose)');
+});
+test('v2.6.149: a snapshot restore and a card played onto my board get their face WITH the move, so the free board\'s face rule sees it; a parked crypt card is "on the table" there', () => {
+  const A = loadClient(CLIENT);
+  if (!A.parkWhere) throw new Error('parkWhere not exposed (harness needs updating)');
+  A.net.status = 'in'; A.net.you = 'Johan'; A.net.roster = ROSTER146(2); A.net.boardMode = 'classic';
+  l4mode149(A, true);
+  try {
+    A.restoreFromPub({ pool: 30, cards: [
+      { id: 'a', name: 'V1', kind: 'crypt', zone: 'ready', x: 100, y: 100 },
+      { id: 'b', name: 'V2', kind: 'crypt', zone: 'ready', x: 200, y: 100, faceDown: true },
+      { id: 'c', name: 'V3', kind: 'crypt', zone: 'uncontrolled', x: 300, y: 100 },
+      { id: 'd', name: 'V4', kind: 'crypt', zone: 'uncontrolled', x: 400, y: 100, faceDown: true } ] });
+    const z = n => { const c = [...A.state.cards.values()].find(k => k.name === n); return c.zone + '/' + (c.faceDown ? 'down' : 'up') + '@' + c.x + ',' + c.y; };
+    eq(z('V1'), 'ready/up@100,100', 'a face-up vampire stays in play (made face down, it would have been filed uncontrolled)');
+    eq(z('V2'), 'uncontrolled/down@200,100', 'an older client\'s dragged face-down card is put right');
+    eq(z('V3'), 'ready/up@300,100', 'and so is a vampire it flipped where it lay');
+    eq(z('V4'), 'uncontrolled/down@400,100');
+    eq(A.parkWhere('crypt'), 'on the table'); eq(A.parkWhere('lib'), 'in the ready region');
+  } finally { l4mode149(A, false); }
+  eq(A.parkWhere('crypt'), 'in the ready region', 'Structured: unchanged');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("move(c,'ready',{ faceDown:!!m.faceDown });") > 0 && html.indexOf("    c.faceDown=!!m.faceDown;\n    const hostC=") < 0, 'given: the face goes in with the move');
+  eq((html.match(/face down '\+parkWhere\(/g) || []).length, 5, 'the crypt park lines ask: two prompts, the offline menu, the offline drag, the online reveal');
 });
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {

@@ -1177,5 +1177,25 @@ test('srv-2.6.44 both `took` messages carry the room\'s boardMode and tableSetup
   for (const at of sites) assert(src.slice(at, at + 1100).indexOf('boardMode: room.boardMode || undefined, tableSetup: room.tableSetup || undefined,') > 0, 'the took at ' + at + ' carries the pair');
 });
 
+test('srv-2.6.45 a pub keeps the Turn/Round count (tn / rn) -- positive integers capped at 9999, anything else dropped -- so a client that reloads or reconnects mid-game can take it from the boards (cli-2.6.149)', () => {
+  S.rooms.clear(); S.ipFails.clear();
+  const cA = { ip:'10.6.0.1', sock: recSock() }, cB = { ip:'10.6.0.2', sock: recSock() };
+  S.handle(cA, JSON.stringify({ t:'create', room:'TN', name:'Alice', lobby:true }));
+  S.handle(cB, JSON.stringify({ t:'join', room:'TN', pass:'', name:'Bob' }));
+  const room = S.rooms.get('TN'); room.started = true; room.turnSeat = 1;
+  cA.sock.msgs.length = 0;
+  S.handle(cB, JSON.stringify({ t:'board', pub:{ pool:30, cards:[], tn:7, rn:4 } }));
+  const b = cA.sock.msgs.find(m => m.t === 'board'); assert(b, 'relayed');
+  eq(b.pub.tn, 7); eq(b.pub.rn, 4, 'the count rides the relay (srv-2.6.44 dropped it: the pub is a whitelist)');
+  eq(room.players[1].pubOwn.tn, 7, 'and the stored copy the owner is handed back on a reload');
+  for (const [tn, rn] of [[0, 0], [-3, 2.5], ['x', null], [12, 'y']]) {
+    cA.sock.msgs.length = 0; S.handle(cB, JSON.stringify({ t:'board', pub:{ pool:30, cards:[], tn, rn } }));
+    const m = cA.sock.msgs.find(x => x.t === 'board');
+    eq(m.pub.tn, tn === 12 ? 12 : undefined, 'tn ' + JSON.stringify(tn)); eq(m.pub.rn, rn === 2.5 ? 2 : undefined, 'rn ' + JSON.stringify(rn));
+  }
+  cA.sock.msgs.length = 0; S.handle(cB, JSON.stringify({ t:'board', pub:{ pool:30, cards:[], tn:123456, rn:99999 } }));
+  const big = cA.sock.msgs.find(x => x.t === 'board'); eq(big.pub.tn, 9999); eq(big.pub.rn, 9999, 'capped');
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));
 process.exit(fail ? 1 : 0);

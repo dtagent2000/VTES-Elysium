@@ -10,15 +10,14 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.148** (A SEAT FOR THE WATCHER: spectating, arriving mid-game, the snapshot restore and the globe after a reload fixed; bots on Structured only; carries v2.6.147 THE PIN STANDS and v2.6.146 THE TABLE IS SET — the room option 'Suggested table setup', seats on the free board) | `client/elysium-vtes-bord.html`, copied to `/` |
-| server | **srv-2.6.44** (the room option `tableSetup`; loadMatch's `took` carries `boardMode`) | `client/elysium-server.js`, copied to `/` |
+| client | **v2.6.149** (THE FACE DECIDES: on the free board a crypt card's face decides ready / uncontrolled, torpor stays put and is marked, the felt's turn label and clock follow, a resolver's Played tray closes with it and the top row sits below it, other seats' cards stay on a roster change and a dropped seat says offline; the turn count survives a reconnect or reload; attached cards ride their host in every view, torpor included) | `client/elysium-vtes-bord.html`, copied to `/` |
+| server | **srv-2.6.45** (the pub keeps `tn`/`rn`, the turn count; srv-2.6.44: the room option `tableSetup`) | `client/elysium-server.js`, copied to `/` |
 | bot (consumed) | **v0.6.198** (12 Oct 2026) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.148 / srv-2.6.44 | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **271/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 64/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical 1 516 413 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.149 / srv-2.6.45 | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **278/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 65/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 + a three-bot Structured soak · B1 byte-identical 1 529 758 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
 **Live on elysium.cards:** whatever Johan deployed last — check the journal's newest entry. v2.6.148 + srv-2.6.44 were
-delivered on 13 Oct (one PR; v2.6.146 and v2.6.147 were never deployed alone) and need BOTH steps: **restart the server** and purge the client (the option is a server field; a new
-client on the old server just starts the old way and says so). Bot v0.6.198 is unchanged.
+merged on 13 Oct (PR #6). v2.6.149 + srv-2.6.45 were delivered the same evening and need BOTH steps: **restart the server** and purge the client (against srv-2.6.44 the new client works, but a reload mid-game counts turns from 1 as before). Bot v0.6.198 is unchanged.
 
 ## The first ten minutes
 
@@ -33,7 +32,7 @@ head -40 docs/elysium-learnings.md
 # the bundle beside the suite (gitignored — copy, never commit):
 cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
 node check-versions.js             # must end green: code, doc headers, AND the root == client/ + bot/ gate
-node test-client-logic.js          # 271 passed, 0 failed, 0 skipped (with the bundle beside)
+node test-client-logic.js          # 278 passed, 0 failed, 0 skipped (with the bundle beside)
 ```
 
 The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification commands" and `client/SKILLS.md`
@@ -71,23 +70,20 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 
 ## Open right now (13 Oct 2026)
 
-- **Johan's call — the free board, six client items analysed and NOT built (13 Oct, the Classic review;
-  `client/CLAUDE.md` top entry, journal newest entry):** **K1** the face decides the zone for crypt cards on the free
-  board (today a dragged face-down card counts as a minion and a vampire flipped where it lies does not); **K2** card
-  menu ▸ Leave torpor throws the card to the felt's corner; **K3** a torpored card dragged becomes ready; **K4** the
-  felt's Round/Turn label never advances; **K5** the Played tray covers the suggested top row and a resolver pins it
-  there (v2.6.146's seat spots were measured against the hand panel only); **K6** the other seats' cards vanish from
-  the felt when the roster changes, until the next board arrives (a dropped opponent's cards stay gone at a
-  two-player table).
+- **Built in v2.6.149 (13 Oct, evening):** K1–K6 from the Classic review, plus the turn count across a reconnect or reload
+  (srv-2.6.45) and attached cards riding their host in every view. `client/CLAUDE.md` top entry. **Known limit:** at 1024 × 600 a
+  Played tray held open by a resolver still covers half the top-centre seat (all of it with a row of cards); 1280 × 720 about half
+  with a row of cards. **Not run:** touch, a referee watching, six humans at once, a socket bot at a Classic table after the change.
 - **For the bot project to pick up:** `docs/handoffs/REPLY-to-bot-2026-10-13-classic-review.md` — the hard stop
   (`_openSlot` on a full Classic row), equipment without `host` (Structured too), permanents at fixed felt points, the
-  Edge on the felt. The seat formulas of the table-setup handoff are NOT final while K5 is open.
-- **Until v2.6.148 is deployed** the lobby offers Add bot in a Classic room, and a lobby bot whose camp row fills
+  Edge on the felt. The seat spots are final with v2.6.149 (top row at y 132): `docs/handoffs/REPLY-to-bot-2026-10-13-v2.6.149.md`
+  has the formula, and says the client now draws equipment on its vampire without waiting for their `host`.
+- **Until v2.6.148 or later is deployed** the lobby offers Add bot in a Classic room, and a lobby bot whose camp row fills
   freezes the host's tab (run twice on main's pair, 13 Oct; the other player sees every seat online and the turn
   on the bot, and has no tool).
 - **Johan's call:** online, should anyone at the table get the hold badge's Resume button (today only the holder)?
   (v2.6.142; `docs/elysium-session-journal.md` newest entry.)
-- **Deploy:** v2.6.148 + srv-2.6.44 — restart the server, purge the client. (Bot v0.6.198 from 12 Oct, if not yet up: purge `/elysium-bot.js`.)
+- **Deploy:** v2.6.149 + srv-2.6.45 (it carries v2.6.148 + srv-2.6.44) — restart the server, purge the client. (Bot v0.6.198 from 12 Oct, if not yet up: purge `/elysium-bot.js`.)
 - **Left out of v2.6.148 on purpose:** the helicopter view for a watcher on a Structured table (it draws the watcher as
   a seat); a watcher's view does not follow the turn by itself; a player the host moves to spectator mid-game lands on
   the start view (Esc leads to the table).
@@ -103,7 +99,7 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
   (the docx was rebuilt on 3 Aug from a generator edit that did not reach the project's copy of the .js). Rebuild
   from the .js the next time the guide changes, and bump the .js to v1.9+ first.
 - **For the bot project** (in `docs/handoffs/REPLY-to-bot-2026-10-12-monorepo.md`): `bot/`'s read-only copies of
-  our server / client / protocol are stale (srv-2.6.38 / v2.6.141) — theirs to refresh from `/`.
+  our server / client / protocol are stale (srv-2.6.38 / v2.6.141; the release is now srv-2.6.45 / v2.6.149) — theirs to refresh from `/`.
 
 ## Conventions that bite
 

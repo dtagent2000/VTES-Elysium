@@ -1,3 +1,82 @@
+## [YTAN AVGÖR] — K1–K6 byggda, plus tre fel hittade på vägen (13 oktober 2026, kväll, klient v2.6.149 + server srv-2.6.45)
+
+Johan: "Yes jag tycker vi kör på med att blockera classic table för bottarna just nu då och kör på K1-K6 samt om du
+upptäcker något mer rimligt längs vägen. Jag har mergat PR6. :)" Ny gren `free-board-v2.6.149` från main (77ce1bd).
+Bottarna förblir blockerade från Classic: lobbyn (v2.6.148) och offline (`syncOffBotLock`, sedan v2.6.93) gör det
+redan. En bot som startas för hand från kommandoraden kan fortfarande gå in i ett Classic-rum med flit — så
+botprojektet kommer att testa sin fix — så den vägen lämnades öppen.
+
+**Byggt, varje punkt mätt på v2.6.148 + srv-2.6.44 först och sedan på det nya paret, samma skript (två riktiga
+webbläsare, riktig mus för drag, dubbelklick och kortmenyn):**
+- **K1 Ytan avgör zonen på fria bordet.** Nedvänt = uncontrolled, uppvänt = ready (torpor lämnas ifred).
+  `freeFaceZone` i `move()`, `freeFaceSync` efter varje vändning (dubbelklick, kortmenyn, ägarens `ctrl`-vändning,
+  Flip face up selected, Flip selected). Före → efter: ett nedvänt kort som dras: ready, MINION 1 → uncontrolled,
+  MINION 0. En vampyr som dubbelklickas där den ligger: uncontrolled, menyn bara "Card action" → ready, Actions
+  och Combat. +1 blod i Influence på det nedvända kortet: ingen pool dras → 1 pool (en transfer); på vampyren i
+  spel: 1 pool → ingen. Minionräkningar hoppar över nedvända kort (bälte för äldre klienters bord), ett draget
+  uncontrolled- eller torporkort fäster aldrig på det det släpps på, och en återställd ögonblicksbild får sin yta
+  *med* flytten.
+- **K2** Leave torpor låter vampyren ligga kvar (den hamnade i filtens övre vänstra hörn).
+- **K3** Torpor överlever ett drag, och ett kort i torpor bär ett TORPOR-band med mörkare bild hos alla vid bordet.
+- **K4** Round/Turn-etiketten och klockan mitt på filten följer räknaren och matchklockan. Före: "Round 1 · Turn 1"
+  hela partiet.
+- **K5** Played-fliken som en resolver öppnat stängs när resolvern stängs; en egen nål sitter kvar. Övre raden
+  börjar på y 132 (förut 25). Mätt på 1366 × 768: tom flik slutar 20 px ovanför den egna globen.
+- **K6** De andras kort ligger kvar vid rosterändringar, och en plats som tappat anslutningen gråas med "offline"
+  under globen. Före: Annas fyra kort borta från Johans filt hela tiden hon var borta.
+
+**Hittat på vägen och byggt:**
+- **Tur-räknaren börjar om efter återanslutning eller omladdning.** `joined` nollade den. Mätt på v2.6.148: Johan
+  på Round 3 · Turn 5 återansluter; vid nästa tur säger hans logg "Round 1 · Turn 1" och Annas "Round 3 · Turn 6",
+  och med hjälparna på får han 1 transfer i stället för 4. Nu behålls räknaren vid automatisk återanslutning, varje
+  bord bär `tn`/`rn`, och direkt efter att man kommit in i ett pågående parti tar klienten den högsta räknaren från
+  borden (sitt eget sparade bord först) fram till nästa tur. **Serverns `sanitizePub` är en vitlista och släppte
+  båda fälten** — därför en liten serverändring, srv-2.6.45. Mätt på nya paret: återanslutning R2 T4 kvar,
+  omladdning R2 T4 hämtad, nästa tur R3 T5 hos båda; en åskådare som kommer in vid R3 T6 läser R3 T6
+  (v2.6.148: R1 T0).
+- **Kort fästa på en annan spelares vampyr försvann när vampyren gick i torpor**, på båda bordstyperna och i alla
+  tre ritarna (fria bordet, Structured-mattorna, enbordsvyn). Nu en gemensam hjälpare, `pubRiders`.
+- **Bottarnas utrustning ritas på vampyren** även utan `host` (kortet står i vampyrens `attached`-lista). Med
+  botens `rig`, båda bordstyperna: Sport Bike 13–22 px från Nassir i stället för 488 px bort / hörnet.
+
+**Oberoende granskning** (en agent som inte sett arbetet läste diffen och påståendena, körde sviterna och sondskriptet på
+slutbygget): sju kodfynd, inget allvarligt, alla rättade och fästa med test. Ett var en regression: en klient som
+fortfarande försökte nå en förlorad server och för hand gick in i ett *annat* rum tog med sig den gamla räknaren (nu
+bara samma rum). Övriga: en laddad match lämnade värdens räknare kvar på 1 medan de andra hämtade sin; ett
+nedvänt kryptkort som släpps från en stapel blev liggande i ready; filtens klocka missade sista sekunden; en
+hovrad flik som resolvern höll öppen stängdes aldrig; varje `renderL4` byggde om de andras kort från noll (även
+vid fönsterändring); ett `tn` utan `rn` nollade rundan. Dessutom: kort i askhögen som ligger kvar i en värds
+`attached` ritades på värden, och en återställning lade en torporvampyrs utrustning löst. Två påståenden rättades:
+överlämningen sa att alla dragna nedvända kort slutar fästa (bara kryptkort), och "mätt på v2.6.148 först" gällde
+inte K2, klockan och gruppdraget. *När hovringsfelet rättades slog TDZ till igen* — `avrRender` läser nu
+`playedPinned` vid uppstart — så flikens tillstånd deklareras nu bredvid `avr`.
+
+**Kollat och lämnat:** offline tvingar redan bottar till Structured; ett bälte i startvägen bröt ett v2.6.93-test
+som säger just att det inte behövs — testet hade rätt, bältet togs bort. Bordstypen kan inte ändras efter att rummet
+skapats. En laddad match skapar inga bottar.
+
+**Fällor:**
+- *Receptet fanns.* SKILLS.md har "Add a field to the public board" med just varningen om `sanitizePub`. Jag
+  öppnade det inte förrän riktig server visade felet — harnessen matar handlern direkt och gick grönt.
+- *TDZ vid uppstart.* En ny flagga som `avrRender` läser deklarerades bredvid `playedPinned`, ungefär 8 500 rader
+  för sent; `avrRender` körs när klienten startar. Harnessen dog vid inläsningen — en webbläsare hade gjort detsamma.
+  Flaggan står nu bredvid `avr`.
+- *En regel i `move()` ser bara det anroparen satt innan.* `restoreFromPub` och `given` satte ytan efter flytten;
+  ett nytt kort är nedvänt, så en vampyr i spel hade arkiverats som uncontrolled. Ytan skickas nu in i flytten.
+- *Omladdningen återansluter inte själv.* Sondskriptet väntade förgäves; en omladdad flik tar tillbaka sin plats
+  via Join game (samma namn och rum, tokenet sitter i sessionStorage).
+
+**Grindar:** klient 278/0 (7 nya tester, 4 platsvärden flyttade till y 132; mot v2.6.148 11 röda), server 65/0 (1
+nytt; mot srv-2.6.44 1 rött), protokoll 6/0, kanariefågel 57/0, felendpunkt 24/0, soak `--control` exit 0 och ett
+treboottars Structured-soak (12 och, på slutbygget, 14 turer; 0 fast), B1 byte-identisk, hjälpsidorna aktuella, check-versions grön.
+**Skrivet:** `handoffs/REPLY-to-bot-2026-10-13-v2.6.149.md`.
+**Fliken vid fyra fönsterstorlekar** (platsen uppe i mitten vid två spelare, medan en resolver håller fliken öppen):
+1920 × 1080 och 1366 × 768 — tom flik täcker ingenting (1366: en rad kort i fliken täcker 28 % av globen och en tredjedel
+av korten); 1280 × 720 — tom: bara namnradens nedersta 5 px, med en rad kort ungefär hälften; 1024 × 600 — tom: namnraden
+och ungefär halva globen och korten, med en rad kort allt. Fliken stängs med resolvern.
+**Inte kört:** pekskärm; domare som tittar på; sex människor samtidigt; en socketbot vid ett Classic-bord efter
+ändringen.
+
 ## [FRIA BORDET, LÄST FÖR BOTTARNA] — botens Classic-väg granskad med klientens ögon (13 oktober 2026, eftermiddag, ingen kod)
 
 Johan: "Du får gärna granska bottkoden med klientsidans ögon :)" — frågan bakom: finns det direkta hinder för att
