@@ -70,6 +70,8 @@ skapats. En laddad match skapar inga bottar.
 nytt; mot srv-2.6.44 1 rött), protokoll 6/0, kanariefågel 57/0, felendpunkt 24/0, soak `--control` exit 0 och ett
 treboottars Structured-soak (12 och, på slutbygget, 14 turer; 0 fast), B1 byte-identisk, hjälpsidorna aktuella, check-versions grön.
 **Skrivet:** `handoffs/REPLY-to-bot-2026-10-13-v2.6.149.md`.
+**Deploy:** Johan mergade PR #7 och lade ut hela rotpaketet (klient, server, bottpaketet, startskripten) 13 oktober
+16:47 — servern omstartad, klienten purgad. Frysvägen för lobbybottar på Classic är därmed stängd i drift.
 **Fliken vid fyra fönsterstorlekar** (platsen uppe i mitten vid två spelare, medan en resolver håller fliken öppen):
 1920 × 1080 och 1366 × 768 — tom flik täcker ingenting (1366: en rad kort i fliken täcker 28 % av globen och en tredjedel
 av korten); 1280 × 720 — tom: bara namnradens nedersta 5 px, med en rad kort ungefär hälften; 1024 × 600 — tom: namnraden
