@@ -1,3 +1,287 @@
+## [FRIA BORDET, LÄST FÖR BOTTARNA] — botens Classic-väg granskad med klientens ögon (13 oktober 2026, eftermiddag, ingen kod)
+
+Johan: "Du får gärna granska bottkoden med klientsidans ögon :)" — frågan bakom: finns det direkta hinder för att
+köra bottar på Classic? Inget är byggt. `bot/` är läst och körd, inte rörd.
+
+**Hur:** läst `campAnchor` / `slot` / `_openSlot` och dess tretton anropare, varje fast koordinat, botens
+läsningar av andras `zone`. Kört: (1) en bot utan socket; (2) projektets egen soak per bordstyp, ett bord per
+process — åtta bord × två stilar med en *mätvakt* (sökningen ger upp efter 200 steg och antecknar det), sedan sju
+bord utan vakt; (3) riktig server + webbläsare (v2.6.148, en människa på plats 1 som bara passar) + tre bottar på
+egna sockets i egna processer, tre körningar; (4) main-paret som det ligger idag (v2.6.145 + srv-2.6.43) med
+bottar tillagda från lobbyn; (5) zonerna: två webbläsare och en bot i processen, drag och dubbelklick med riktig
+mus. Sist lästes överlämningen av en oberoende granskare som inte sett arbetet (se "Fällor").
+
+**Botens sida, i ordning:**
+1. **Det hårda stoppet.** På ett Classic-bord kommer `_openSlot` aldrig tillbaka när en lägerrad har slut på
+   platser: x kläms till högst 908, så alla index efter det ger samma punkt, och sökningen har ingen övre gräns.
+   Platser per rad: 4 på högersidans platser, 5–11 på övriga. Mätt: enhetsprov (dödad efter 4 s, tre fall); soak
+   med vakt — 7 mättnader vid ett sexbottarsbord (plats 3 uncontrolled med 4 i raden, plats 2 ready med 5–9);
+   soak utan vakt — **6 av 6 Classic-bord slutade andas efter 27–50 s**, samma sex lekar på Structured gick klart
+   på 170 s; live — botten på plats 2 stannade två gånger: i sin tredje tur (85 s in, 4 ready och 2 uncontrolled,
+   Influence stod på tur) och, i den spårade körningen, redan i sin första (20 s in: Effective Management med fyra
+   uncontrolled i en rad med fyra platser — spårets sista rad är frågan utan svar). Även en människas "Send to
+   torpor" på en bottvampyr går genom samma sökning (enhetsprov). En värdad mästare som ligger kvar på sin värds
+   gamla plats håller platsen, så stoppet kan komma innan raden är full av vampyrer.
+   *Vad bordet ser (socketbot):* ingenting på en och en halv minut. Sedan "Bot2-hacking disconnected." — servern
+   släpper en socket som tigit i 75 s, och botens socket svarar på ping i JavaScript. Turen står kvar hos platsen.
+   Värdens ⏭ Pass their turn… flyttar den; ett varv senare är den tillbaka. 💀 Oust this player… löser det, och
+   bordet spelar vidare.
+2. **Utrustning ritas inte på sin vampyr — även på Structured.** `_doEquip` lägger kortet på (64, 64) utan `host`.
+   Klienten ritar det först på vampyren och flyttar sedan samma element till (64, 64). Sett på båda bordstyperna.
+3. **Kort på fasta punkter.** Allierade, Creeping Sabotage, Fame, Smiling Jack, Pentex och givna kort på (64, 64),
+   mästarkort utan värd på y 40. På Structured är det botens egen matta; på fria bordet den delade filtens hörn.
+   Live: tre kort från en bot på samma punkt, två bottars mästarkort på samma punkt, allt ovanpå människans glob
+   och krypta uppe till vänster.
+4. **Lägret och bordets möbler.** Raderna stegar 96 px för kort som är 42 breda. Nedre platsernas torpor- och
+   uncontrolled-rader ligger 1 px isär. Det som ligger under y 413 är bakom handpanelen, det som ligger över
+   y 127–156 bakom Played-fliken.
+5. **Edge** syns inte på filten när en bot har den (ingen `edge`-markör i `tokens`).
+
+**Det som gäller redan idag:** main-paret erbjuder Add bot i Classic-rum. Kört där, med lobbyns egna reglage:
+hacking på plats 2 av 3. Sidan svarade fram till 262 s; från 272 s svarade den inte alls, inte efter 20 s, inte
+efter 60 s, och gick inte att fotografera. En lobbybot kör i värdens flik — hela klienten fryser.
+Omkört med en andra människa vid bordet (hacking på plats 2 av 4): botten spelade Effective Management i sin
+första tur och värdens sida tystnade. **Den andra spelaren såg ingenting ändras på 150 s — turen hos plats 2 och
+alla som online, värden och båda bottarna.** Webbläsaren svarar själv på serverns ping även när sidan står
+still, så ingen släpps. När värdens flik stängdes gick värden och bottarna offline tillsammans; turen stod kvar,
+och den andra spelaren blev inte värd på de 90 s vi tittade. Ingen vid bordet hade något verktyg kvar.
+v2.6.148 stänger den vägen.
+
+**Vår sida — hittat på vägen, gäller även bord utan bottar:**
+- **Zonen följer inte kortet på fria bordet.** Drar man ett nedvänt kryptkort blir det `ready`: fasraden säger
+  MINION 1, bordspanelen 🧛1, och blod på kortet i Influence räknas inte som transfer (ingen pool dras). Vänder
+  man upp en vampyr där den ligger stannar den i `uncontrolled`: MINION 0, 🧛0, ingen klansymbol, och +1 blod
+  räknas som transfer och drar 1 pool. Det andra fallet är mitt: sedan v2.6.146 ligger korten redan vid globen,
+  så "vänd där den ligger" är det naturliga draget. Botens bild av människan blir fel på samma sätt.
+- **Leave torpor** (kortmenyn) flyttar vampyren till filtens övre vänstra hörn.
+- **Ett kort i torpor som dras** blir `ready` igen ("→ the ready region.").
+- **Round/Turn-etiketten mitt på filten** står kvar på "Round 1 · Turn 1" (räknaren går rätt). Samma på v2.6.145.
+- **De andras kort försvinner från filten när rostern ändras.** `renderL4()` ritar de andras kort (via `layout()`)
+  och river sedan lagret de sitter i (`renderL4Globes()` → `clearL4Globes()`), utan att rita om. Rosterhanteraren
+  anropar `renderL4()` vid varje ändring: någon tappar anslutningen, kommer tillbaka, oustas. Korten kommer åter
+  när nästa bord från någon annan anländer — 0,6 s senare om en annan människa sitter kvar, eftersom varje klient
+  skickar sitt bord efter rosterändringen — eller när man själv flyttar ett kort. Vid ett tvåmannabord finns
+  ingen annan: **när Annas flik stängdes var hennes kort borta från Johans filt efter 2, 10, 30 och 60 s**, och
+  kom tillbaka först när han drog ett eget kort. Samma på main-paret. Hittat för att botbordet stod alldeles
+  stilla efter stoppet. Globen på filten visar inte heller att en plats är frånkopplad: det står bara i
+  Table-panelen ("reconnecting…") och i loggen.
+- **Played-fliken täcker övre radens platser, och det missade jag i v2.6.146** — jag mätte handpanelen, inte
+  fliken. På 1366 × 768 täcker den x 131–823, y 24–127 (till 156 med en rad kort): hela platsen uppe i mitten
+  och 2–3 kort på hörnplatserna. Någon annans resolver *nålar fast* fliken hos alla som har hjälparen på, och den
+  sitter kvar efter Resolve. Mätt med två människor: Anna öppnar Vote, Johans egen glob och alla fyra kort är
+  100 % täckta, och förblir det.
+
+**Förslag, inte byggt — väntar på "kör":**
+- **K1** På fria bordet avgör kortets yta zonen för kryptkort: nedvänt = uncontrolled, uppvänt = ready (om det
+  inte skickats till torpor); ett drag ändrar aldrig zonen. Rättar MINION, 🧛, klansymbolen, transferräkningen
+  och det bottar och andra klienter ser, i ett svep.
+- **K2** Leave torpor låter kortet ligga kvar.
+- **K3** Torpor överlever ett drag, och syns som en liten märkning på kortet (annars är tillståndet osynligt).
+- **K4** Etiketten följer turen.
+- **K5** Fliken som en resolver öppnat stängs med resolvern (eget klick nålar som förut), och övre raden flyttas
+  ned under flikens räckvidd (y 132). Kostar ungefär en kortrad i höjd för de övre platserna.
+- **K6** De andras kort ritas om efter `renderL4()` (en rad), och globen för en frånkopplad plats får en markering.
+
+**Det som gick bra:** Classic-given (fyra `drawCrypt` före första turen), turloopen, frågorna. Med mätvakten gick
+8 av 8 Classic-bord klart, och sju av dem bad aldrig om fler platser än raden har. Det avgörs av vilken lek som
+sitter var: tre rader nådde som mest exakt sin gräns, och utan vakten stannade alla sex bord vi provade.
+
+**Fällor i själva granskningen:**
+- *En pekare som vilar på ett uppvänt kort* har kortets tooltip under nästa klick, och *avslöjandeklonen* ligger
+  över filtens mitt i ungefär tre sekunder efter en vändning. Två drag "fungerade inte" förrän pekaren parkerades
+  på tom filt och skriptet väntade ut klonen.
+- *"Exakt vid gränsen"* fyra gånger i rad (hacking nådde 7 vampyrer på en plats med 7 platser) såg ut som en dold
+  spärr. Mätt tur för tur på båda bordstyperna: ingen skillnad i öppningen, spridningen mellan två körningar är
+  större. Inget påstående om tempo gick vidare.
+- *En hängd process* känns igen på två saker samtidigt: den skriver inget och den bränner en hel kärna. Bara
+  tystnad kan vara en väntan.
+- *"Bordet väntar för alltid" höll i en minut.* Min bevakning efter stoppet var 68 s; serverns regel släpper en
+  tyst socket efter 75. Den oberoende granskaren läste regeln i serverkoden; omkört med 140 s bevakning och
+  värdens verktyg. Av ungefär 190 påståenden i överlämningen fann granskaren en slutsats som koden motsade, en
+  felräkning ("50 px steg dubblar varje rad" — det ger 13 för 7 men bara 6–7 för 4), ett fall jag inte sett (en
+  värdad mästare som håller en lägerplats) och ett tiotal oskarpa formuleringar. En andra läsning efter
+  rättningarna fann nio småsaker till, bland dem att min nya mening "filten visar ingen förändring" motsades av
+  bilden från samma körning, där alla bottarnas kort var borta. Alla är rättade.
+- *Nio kryptkort är inte en lek.* Provleken byggdes av nio namn med ett kort var i stället för tolv kort; Start
+  förblev grå tills antalet stämde. Mitt skript, inte klienten.
+
+**Skrivet:** `handoffs/REPLY-to-bot-2026-10-13-classic-review.md` (sex önskemål i ordning, med ett sexraders
+skript som visar stoppet).
+**Inte tittat på:** en människas övriga `ctrl`-verb på bottkort vid Classic; återanslutning av en socketbot;
+Turn-based; pekskärm; fönster mindre än 1366 × 768; om någon faktiskt fått sin flik fryst — vägen har varit öppen
+sedan v2.6.99, och vi har ingen rapport åt något håll.
+
+## [EN PLATS ÅT ÅSKÅDAREN] — v2.6.148: åskådarläget, ankomst mitt i spelet, och bottar bara på Structured (13 oktober 2026, mitt på dagen)
+
+Johan: "kör" på (b)–(e). För (a): bottar bara på Structured just nu, eftersom det är där han kontrollerat dem
+under kontrollerade former.
+
+**Byggt:**
+- *Åskådare.* En åskådares klient skickar varken bord eller loggrader. Spärren sitter både där sändningen
+  schemaläggs och där den avfyras — en sändning som schemalagts innan klienten visste att den var åskådare gick
+  annars iväg ändå. Mätt efteråt: 0 notiser och 0 skickade ramar på 20 sekunders tittande, båda bordstyperna
+  (förut 53 på 35 sekunder). Välkomstrutan visas inte över ett pågående spel man tittar på.
+- *Ankomst.* Efter Join mitt i spelet stängs dialogen och klienten går till bordet. Spelare: hemvyn. Åskådare på
+  fritt bord: filten. Åskådare på Structured: besök hos den vars tur det är. Samma sak när spelet startar medan
+  åskådaren sitter i lobbyn, och Esc leder dit. En automatisk återanslutning behåller vyn man hade.
+- *Återställning från bordsögonblicksbilden* på fritt bord behåller positionerna för ready, uncontrolled och torpor.
+- *Globen* ligger kvar efter omladdning: platsen läses från serverns kopia av det egna bordet.
+- *Bottar:* Add bot erbjuds bara i Structured-rum, online som offline. Överlämningen till botprojektet säger nu att
+  önskemålet om platserna gäller den dag bottarna kommer till Classic.
+- Åskådarens anslutningsrad säger inte längre "seat undefined".
+
+**Fällor i bygget:**
+- Första körningen visade 1 kvarvarande notis per åskådare. Räkningen av skickade ramar avslöjade den: timern var
+  redan laddad när `net.spect` sattes.
+- Platsbesöket för en Structured-åskådare ritade bara tom filt när det gjordes från startvyn. Via hemvyn först
+  ritas bordet. Flaggorna såg rätt ut; skärmbilden visade felet.
+
+**Lämnat utanför med flit:** helikoptervyn för åskådare på Structured; att åskådarens vy följer turen av sig
+själv; `demoted` (spelare som värden gör till åskådare mitt i spelet) hamnar fortfarande på startvyn, men Esc
+leder nu till bordet.
+
+**Verifierat:** syntaxrent; 271/271 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.147: 5 röda = de
+fem nya); dispatch 64/0; protokoll 6/0; canary 57/0; endpoint 24/0; soak-kontroll exit 0; B1 byte-identisk
+1 516 413; embed --check; check-versions grön. Mot riktig server, båda bordstyperna: åskådare från lobbyn och
+mitt i spelet, omladdning med Resume + Join och med Join + återställning (glob och ett kort dragna först — allt
+tillbaka på plats utan Esc), automatisk återanslutning under platsbesök (vyn kvar), Add bot i båda lobbyerna.
+Alla tidigare webbläsarkörningar omkörda på dessa bytes.
+**Väntar på live-test:** riktiga åskådare vid ett riktigt bord; domare (åskådare med värdverb — inte körd här);
+platsövertagande (`took`); pekskärm.
+
+## [NÅLEN STÅR] — v2.6.147: pinknappen blir en nål, och ett förslag om de fem svagheterna (13 oktober 2026, förmiddag)
+
+Johan om pinknappen: mer diskret. Nålen sned eller liggande när panelen är lös, stående när den är fäst "så att
+den ser fäst ut", och orden i en tooltip i stället för på knappen.
+
+**Byggt:** knappen är bara nålen, 22 × 16 px i samma hörn. En SVG-bana ritad med spetsen nedåt; CSS lägger den
+på sidan (spetsen åt vänster) och `.on` reser den. En kort vridning (160 ms) bär bytet, ingen vid reduced motion.
+`setDockPin` sätter tooltipen "Pinned" / "Not pinned" och skriver inte längre om knappens innehåll.
+`aria-label` "Keep the panel open" är namnet, `aria-pressed` läget.
+
+**Två val, båda sedda på bild innan de gjordes:**
+- *Liggande, inte sned.* Vid 12 px på en vanlig skärm blir en 45°-nål en kludd; 0° och 90° ligger rent i
+  pixelrutnätet. Tre former i 45° och 90° renderades och förstorades pixel för pixel.
+- *SVG, inte emoji.* 📌 lutar olika i olika typsnitt, och en vridning måste börja från en känd vinkel.
+
+**Johans fråga: ska de fem svagheterna rättas innan överlämningen går till botprojektet?** Analyserat och
+föreslaget, **inte byggt** — väntar på "kör".
+
+*Svaret per punkt:* bara (a) rör botten. Om bottar får sitta vid Classic-bord online avgör vad överlämningen ber
+om, så det beslutet kommer först. (b)–(e) är rena klientfixar och oberoende av botprojektet.
+
+*Det läsningen hittade:* (b) är större än den rapporterades. Åskådarläget är trasigt idag:
+1. En åskådares klient skickar sitt (tomma) bord som en spelare. Servern svarar "Spectators can only chat.",
+   klienten loggar och toastar det, och loggraden schemalägger nästa sändning (`log` → `scheduleSave` →
+   `schedulePush`). Ett eko som aldrig slutar: **53 meddelanden på ungefär 35 sekunders rent tittande** vid ett
+   Classic-bord, 35 vid Structured. Samma på v2.6.145 + srv-2.6.43.
+2. Välkomstrutan täcker bordet.
+3. På Structured är åskådarens hemvy dess eget tomma bord, och helikoptervyn ritar åskådaren som en spelare med
+   tom plats — en av två spelare ritades inte alls. Platsbesök (siffertangenterna 1–6) fungerar.
+
+**Förslag (en klientrunda, v2.6.148, ingen serverändring):**
+- **(a) är ett beslut, inte en bugg.** A1: bottar bara på Structured, som offline — stäng luckan (en rad; fixen
+  skrevs och togs tillbaka i går). Botprojektet behöver då inte göra något nu. A2: bottar får sitta på Classic
+  online — ta bort den döda regeln; överlämningens önskemål gäller, och tills boten följer platserna hoppas
+  uppställningen över vid botbord.
+- **(b) Åskådare.** En åskådares klient skickar aldrig bord (en spärr i sändvägen, inte i varje anropare).
+  Välkomstrutan visas inte för en åskådare i ett startat rum. Classic: bordet direkt. Structured: besök hos
+  spelaren vars tur det är. Helikoptervyn för åskådare lämnas — ett eget, större jobb.
+- **(c) Anslutning mitt i spelet.** Join-dialogen stängs och klienten går till bordsvyn, för spelare och åskådare,
+  och för åskådare även när spelet startar medan de sitter i lobbyn. Inte vid automatisk återanslutning: där står
+  man redan rätt.
+- **(d) Återställning från bordsögonblicksbilden** på fritt bord: behåll de kanoniska positionerna för ready,
+  uncontrolled och torpor. Idag skalas ready om efter fönstret, och de andra två tappar sin plats.
+- **(e) Globens plats efter omladdning:** ta den från serverns kopia av det egna bordet (pool-markören i `myPub`).
+
+Varje punkt får ett test som går rött mot v2.6.147 och körs i e2e-skripten som redan finns: båda bordstyperna,
+med förra versionen som jämförelse.
+
+**Verifierat:** syntaxrent; 266/266 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.146: 2 röda = det
+nya testet + pin-testet från v2.6.146, vars etikettrad nu läser tooltipen); dispatch 64/0; protokoll 6/0; canary
+57/0; endpoint 24/0; soak-kontroll exit 0; B1 byte-identisk 1 512 026; embed --check; check-versions grön.
+Riktig mus på 1024×600, 1280×720 (1× och 2×) och 1920×1080, båda bordstyperna: knappen träffas, nålen vrids,
+tooltipen följer, lossning via knappen låter panelen fällas, och ett klick på panelens bakgrund pinnar som förut.
+Alla webbläsarkörningar från v2.6.146 är omkörda på dessa bytes.
+**Väntar på live-test:** tooltipens fördröjning och utseende är webbläsarens egna och är inte sedda här; pekskärm
+(ingen tooltip där — nålens läge och färg bär tillståndet).
+
+## [BORDET ÄR DUKAT] — v2.6.146 + srv-2.6.44: platser på fria bordet, och pinnen i panelens hörn (13 oktober 2026)
+
+Kalesoners följdfråga från kvällen innan — inga ytor för spelarna, alla började dra isär globerna och kryptkorten —
+blev en bordsinställning. Johan styrde formen i tre steg:
+1. Inte "dragna kryptkort landar alltid bredvid globen", utan bara de fyra första, som en hjälp i startögonblicket:
+   "sedan får man fri lejd att lägga ut dem som vanligt".
+2. Inställningen under Game settings, ikryssad från start. Urkryssad ska bordet vara exakt som förut.
+3. Stolsikonen kvar, men 1st, 2nd … i stället för siffran.
+
+Nedre raden avgjordes med bilder. Först en kompromiss mitt emellan förslagen, sedan — efter att Johan provat —
+variant B, allt ovanför handpanelen: "jag trodde det skulle bli så kort avstånd mellan korten till motståndarna
+särskilt på laptop men det ser faktiskt helt okej ut". I samma runda bad han om en lugnare kant på den fästa
+panelen och pinknappen längst upp till höger.
+
+**Byggt:**
+- *Servern (srv-2.6.44)* minns ett enda nytt fält, `tableSetup`, bara för Classic-rum och bara för ett äkta `true`.
+  Den berättar det i `joined` (spelare och åskådare), `started` och båda `took`, och rumsögonblicksbilden bär det.
+  Given är orörd.
+- *Klienten (v2.6.146):* `l4SeatSpot` ger varje plats en egen punkt runt bordet i turordning (Lackeys uppställning,
+  medurs från övre vänstra hörnet; nedre radens kort slutar vid kanoniskt y 404, strax ovanför den öppna panelen).
+  Vid given ber klienten om sina fyra första kryptkort med det vanliga `drawCrypt`-verbet och lägger svaren med
+  baksidan upp bredvid globen. Hotseat gör samma sak lokalt. Därefter är inget speciellt: globen och korten flyttas
+  som alla andra, och ett kort som dras senare hamnar på mittraden som förr.
+- *Rutorna:* "Suggested table setup" under Game settings (syns även i Lite) och i Play offline. De gråas när
+  bordstypen inte är Classic.
+- *Etiketten:* stol + ordningstal, på varje fritt bord.
+- *Pinnen:* knappen sitter längst upp till höger på panelen, och den fästa panelens kant är en tunn guldlinje i
+  stället för ett sken.
+
+**Designval:**
+- Servern delar inte ut korten. Hade den gjort det hade en gammal klient vid ett nytt bord fått fyra kort den inte
+  vet var den ska lägga. Nu behöver den gamla parten ingenting: en gammal klient vid ett nytt bord sätter upp för
+  hand, och en ny klient på en gammal server säger det i loggen och startar som förr. Båda paren är körda.
+- Vid ett bord med en bot hoppas uppställningen över för alla. Boten slår läger på sin egen ellips, och 14 av 70
+  par bot-plats/människoplats skulle krocka. Människorna får en rad i loggen efter givraden. Överlämningen till
+  botprojektet har formeln och önskemålet att boten följer platserna
+  (`handoffs/REPLY-to-bot-2026-10-13-table-setup.md`).
+
+**Lagat på vägen:** `took` från loadMatch bar aldrig `boardMode`, och klienten föll då tillbaka på Structured —
+värden i ett Classic-rum fick ett Structured-bord efter att ha laddat en sparad match.
+
+**Hittat, inte lagat — Johans beslut** (allt mätt även på v2.6.145 + srv-2.6.43):
+- Regeln "bottar kräver Structured-bord" har aldrig gällt online. Knappen läser ett fält som lobbymeddelandet aldrig
+  haft, så Classic-rum erbjuder Add bot sedan v2.6.99 — och boten spelar där. Jag skrev en fix och **tog tillbaka
+  den före leverans**: Classic är standardvalet, så fixen hade ändrat vad värdar gör idag.
+- En åskådares hemvy täcks av välkomstrutan (den visas så fort klienten saknar kort). Åskådare ser bordet via
+  platsbesök (sifferknapparna).
+- Efter en anslutning mitt i spelet — omladdad flik (Resume, sedan Join game) eller en åskådare som kommer in —
+  står klienten kvar på startvyn tills man trycker Esc.
+- "Restore your board from the table snapshot" på ett fritt bord: ready-kort skalas om efter fönstret, och
+  uncontrolled och torpor tappar sin plats och hamnar på mittraden.
+- En omladdning lägger tillbaka den egna globen på standardplatsen (sparfilen har ingen globposition). Med
+  inställningen är det platsen vid bordet, utan den ringen i mitten.
+
+**Fällor i bygget:**
+- `if(!freeBoard()) for(…) if(…) move(…); else if(tableSetupOn()) …` — `else` hörde till det inre `if`. Inga
+  uppställningskort offline förrän klamrarna kom på plats. Ett test håller det.
+- Noterna om gammal server och om bottar skrevs först före given, och given tömmer loggen. De skrivs nu efter
+  givraden.
+- Rutan i skapa-dialogen spände över båda kolumnerna, så beskrivningen knuffade alla senare rader ur led.
+- Första mätningen av en omladdning gjordes med Join-dialogen kvar på skärmen: tom globkarta, kort på (0,0). Det
+  var ett mätfel. Stäng dialogen och tryck Esc som en människa gör, och mät sedan.
+
+**Verifierat:** syntaxrent; 265/265 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.145: 10 röda = de
+9 nya + pin-testet från v2.6.143, som följt knappen till dess nya plats); dispatch 64/0 (destruktivt mot
+srv-2.6.43: 4 röda = de nya); protokoll 6/0; canary 57/0; endpoint 24/0; soak-kontroll exit 0; B1 byte-identisk
+1 511 476; embed --check; check-versions grön.
+Mot riktig server med riktiga webbläsarklienter: två klienter med och utan inställningen; en v2.6.145-klient vid
+ett bord med inställningen; nya klienter på srv-2.6.43; ett Structured-rum; fem klienter som tar platser i annan
+ordning än de anslöt (alla 25 platsvyer rätt, motståndarnas kort utan namn); tappad anslutning (ingen ny giv);
+omgiv vägras av turneringslåset; Classic-rum med bot tillagd från lobbyn; Play offline-dialogen genomklickad;
+dragmatrisen 0 skillnader av 60. Pinknappen klickad med riktig mus i tre fönsterstorlekar, före- och efterbilder.
+**Väntar på live-test:** pekskärm; riktiga spelare på olika maskiner och fönsterstorlekar samtidigt; sex spelare
+online (fem är körda); att ladda en sparad match i ett Classic-rum (serverns meddelanden och klientens hanterare
+är enhetstestade, hela flödet är inte kört); KRCG:s kortbilder bredvid globen.
+
 ## [GRUPPEN KAN ZONERNA] — v2.6.145: vampyrer i handen, bibliotekskort i torpor (12 oktober 2026, sen natt)
 
 Johan: "vi kör dem absolut" om granskningens två fynd. `zoneRefuses(c, zone)` — torpor och uncontrolled tar bara

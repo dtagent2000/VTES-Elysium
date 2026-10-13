@@ -791,6 +791,8 @@ body:not(.lite) .liteOnly{display:none !important}
 body.lite #emptyToolRow, body.lite #emptyPlayLine, body.lite #btnEmptyOffline, body.lite #lobDeckLab, body.lite #btnDeckLab, body.lite #mpModal .mpFull{display:none !important}
 #mpModal[data-mp="create"] .mpJoinOnly, #mpModal[data-mp="join"] .mpCreateOnly{display:none !important}   /* v2.6.80: the two halves live in BOTH modes now */
 #mpModal:not(.gsOpen) .mpGs, #mpModal:not(.srvOpen) .mpSrv{display:none !important}   /* v2.6.80: Game settings + Local server are folds */
+.mpcheck.setupoff, .mpdesc.setupoff{opacity:.45}   /* v2.6.146: 'Suggested table setup' is a Classic option -- greyed while the board style is Structured */
+#mpSetupRow{grid-column:auto}   /* v2.6.146: a .mpcheck spans both columns of the dialog's grid; this one has a description, so it takes the left cell and #mpSetupDesc the right one, like every field above it (without this the description fell into the left column and pushed every later row out of step) */
 #mpModal:not(.refOn) .mpRefPass{display:none !important}   /* v2.6.80: the referee password shows once Join as referee is ticked */
 #mpRefRow.off{opacity:.45}
 .roomTag{display:inline-block; vertical-align:1px; margin-left:2px; font:600 9px "Cinzel",serif; letter-spacing:.12em; text-transform:uppercase; color:rgba(232,217,184,.7); border:1px solid rgba(176,141,79,.4); border-radius:99px; padding:1px 6px}   /* v2.6.78: a Full table's deviation from Lite conditions */
@@ -1096,7 +1098,7 @@ body.inl4.l3zoomopen #l3zoomCtl{ display:flex; }
 /* L4 pool globes */
 .l4globe{ position:absolute; text-align:center; pointer-events:auto; user-select:none; z-index:72; }
 .l4globe .l4glabel{ font:600 11px "Cinzel",serif; color:var(--bone); white-space:nowrap; margin-bottom:3px; text-shadow:0 2px 4px #000; pointer-events:none; }
-.l4globe .l4gseat{ opacity:.55; font-size:10px; letter-spacing:.04em; }
+.l4globe .l4gseat{ opacity:.92; font-size:10.5px; letter-spacing:.04em; color:#d9b45f; }   /* v2.6.146: the seat's place in the turn order ('1st', '2nd' ...) -- brass and nearly opaque; it was a faint digit */
 .l4globe .l4gdot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; vertical-align:middle; box-shadow:inset 0 0 0 1px rgba(255,255,255,.25), 0 0 4px rgba(0,0,0,.5); }
 .l4globe .l4gpool{ width:64px; height:64px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #b83030, #8a1e1e 55%, #5c1010); border:2.5px solid; display:flex; align-items:center; justify-content:center; margin:0 auto; box-shadow:0 4px 12px rgba(0,0,0,.5), inset 0 2px 6px rgba(255,255,255,.10), inset 0 -4px 8px rgba(0,0,0,.45); cursor:default; position:relative; }
 .l4globe-mine .l4gpool{ cursor:grab; }
@@ -1426,13 +1428,21 @@ body.touchui #board.l2dockopen #l2dockClose{ display:flex; }
 #l2dockClose:active{ background:#2c2010; }
 #l2dockbg{ cursor:pointer; }
 /* v2.6.143 (player feedback: "if there is a pin button there, none of us noticed it"): the pin was a click on the dock's empty
-   background, announced by a tooltip only. A real button beside the Hand label, shown whenever the dock is open; it carries
-   the state in its text, its colour and aria-pressed. The background click still works. */
-#l2dockPin{ display:none; position:absolute; top:1px; left:64px; z-index:3; align-items:center; gap:4px; height:19px; padding:0 8px; border:1px solid rgba(176,141,79,.45); border-radius:10px; background:#1a140d; color:var(--brass2); font:600 9.5px "Cinzel",serif; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
+   background, announced by a tooltip only -- now a real button that carries the state in its text, its colour and aria-pressed.
+   v2.6.146 (Johan): it sits in the PANEL'S top right corner (a child of #board, above the dock's zone boxes at z 4600), inside
+   the 14px strip the panel keeps above its boxes -- so it never meets the POOL label, the count badges or a card, at any width.
+   The same height formula as #l2dockbg places it. The button shows 'pinned' in gold, so the panel's edge can stay calm.
+   v2.6.147 (Johan: 'more discreet'): the button is the NEEDLE alone. It LIES while the panel is loose and STANDS when the panel
+   is pinned -- it looks stuck in -- and the words moved to the tooltip ('Not pinned' / 'Pinned', set by setDockPin). An inline
+   SVG, not the pushpin emoji: that glyph's own tilt differs from font to font, and a turn has to start from a known angle. */
+#l2dockPin{ display:none; position:absolute; right:12px; bottom:calc(1.5% + (var(--ch) + 34px) * var(--dock-s) + 14px - 17px); z-index:4610; align-items:center; justify-content:center; width:22px; height:16px; padding:0; border:1px solid rgba(176,141,79,.4); border-radius:8px; background:#1a140d; color:var(--brass); cursor:pointer; }
 #board.l2dockopen #l2dockPin{ display:inline-flex; }
+#l2dockPin svg{ width:12px; height:12px; fill:currentColor; transform:rotate(90deg); transition:transform .16s ease; pointer-events:none; }   /* lying, point to the left: not pinned */
 #l2dockPin:hover{ border-color:var(--brass); color:var(--bone); }
-#l2dockPin.on{ background:#3a2d12; border-color:rgba(232,201,106,.85); color:#f0dca0; box-shadow:0 0 8px rgba(232,201,106,.35); }
-#l2dockbg.pinned{ box-shadow:0 -4px 16px rgba(232,201,106,.45), inset 0 2px 0 rgba(232,201,106,.6); }   /* box-shadow avoids the border-top-color specificity fight with the #board.l2mode/.l3mode base rules (2 IDs each) */
+#l2dockPin.on{ background:#3a2d12; border-color:rgba(232,201,106,.8); color:#f0dca0; }
+#l2dockPin.on svg{ transform:none; }   /* standing, point down: pinned */
+@media (prefers-reduced-motion:reduce){ #l2dockPin svg{ transition:none } }
+#l2dockbg.pinned{ box-shadow:0 -2px 8px rgba(232,201,106,.12), inset 0 1px 0 rgba(232,201,106,.42); }   /* v2.6.146 (Johan: 'a little less marked'): a thin gold line and a faint breath of light -- it was a 16px glow at .45 and a 2px line at .6. box-shadow still, to stay out of the border-top-color specificity fight with the #board.l2mode/.l3mode base rules (2 IDs each) */
 /* ---------- Counter stepper (v2.5.40 · T2) ---------- */
 #ctStepper{ display:none; position:fixed; z-index:8030; background:linear-gradient(#1c150d,#161009); border:1px solid var(--brass2); border-radius:10px; box-shadow:0 12px 36px rgba(0,0,0,.65); padding:8px 10px; }
 .ctstep{ display:flex; flex-direction:column; gap:6px; }
@@ -1647,7 +1657,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <div class="zone pile" id="z-crypt"><span class="zlabel">Crypt</span><span class="zcount" id="cnt-crypt">0</span></div>
     <div class="zone pile" id="z-library"><span class="zlabel">Library</span><span class="zcount" id="cnt-library">0</span></div>
     <div class="zone pile" id="z-ash"><span class="zlabel">Ash Heap</span><span class="zcount" id="cnt-ash">0</span></div>
-    <div class="zone" id="z-hand"><span class="zlabel">Hand</span><button type="button" id="l2dockPin" aria-pressed="false" title="Keep the dock open &mdash; it stays up when the pointer leaves. Click again to let it fold away.">&#128204;&#xFE0E; Pin open</button><span class="zcount" id="cnt-hand">0</span></div>
+    <div class="zone" id="z-hand"><span class="zlabel">Hand</span><span class="zcount" id="cnt-hand">0</span></div>
     <div class="zone" id="z-pool"><span class="zlabel">Pool</span>
       <div id="dockPool" title="Scroll to adjust · click +/−"><span class="poolnum">30</span>
         <button class="pbtn" id="dpminus" title="-1 pool">−</button>
@@ -1659,6 +1669,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <div id="poolHelp" data-tip="Help">?</div>
     <div id="pseat"></div>
     <div id="l2dockbg" title="Click to pin the dock open (click again to unpin)"><div id="l2dockClose" title="Close dock" aria-label="Close dock">&#9662;</div></div>
+    <button type="button" id="l2dockPin" aria-pressed="false" aria-label="Keep the panel open" title="Not pinned"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M5 1h6a.7.7 0 0 1 .7.7v.9a.7.7 0 0 1-.7.7h-.6v3.5l2.3 2v1.4H8.75L8 15.4l-.75-5.2H3.3V8.8l2.3-2V3.3H5a.7.7 0 0 1-.7-.7v-.9A.7.7 0 0 1 5 1z"/></svg></button>   <!-- v2.6.146 (Johan): the panel's own top right corner -- it belongs to the whole panel, not to the Hand box it sat in (v2.6.143). v2.6.147: the needle alone (drawn point down; CSS lays it on its side until the panel is pinned) -->
     <div id="l2dock"><span class="l2dlabel">Crypt &middot; Library &middot; Ash heap &middot; Hand</span><span class="l2darrow">&#9650;</span></div>
     <div id="dockLog"><div class="docklog-h">Log</div><ul id="dockLogList"></ul></div>
 
@@ -2283,7 +2294,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
         <div class="mpfield mpJoinOnly mpFull mpRefPass"><label>Referee password</label><input id="mpRefPass" maxlength="40" type="password" placeholder="from the host of the table"></div>
         <div class="mpdesc mpJoinOnly mpFull mpRefPass">A referee watches, never plays, and can pause turns, adjust the clock, oust and pass for others at this table. The host set the password when creating the room; a &#9878; in the list marks tables that have one.</div>
 
-        <div class="mpcheck mpCreateOnly" style="cursor:default"><button class="btn" id="mpGsToggle" type="button" aria-expanded="false" title="Match length, reaction timer, board style, helpers, the lock, the referee password and chat">Game settings &#9656;</button></div>   <!-- v2.6.74/80: the fold -->
+        <div class="mpcheck mpCreateOnly" style="cursor:default"><button class="btn" id="mpGsToggle" type="button" aria-expanded="false" title="Match length, reaction timer, board style, the suggested table setup, helpers, the referee password and chat">Game settings &#9656;</button></div>   <!-- v2.6.74/80: the fold -->
 
         <div class="mpfield mpCreateOnly mpGs"><label>Match length</label><input id="mpTime" maxlength="3" inputmode="numeric" placeholder="e.g. 120"></div>
         <div class="mpdesc mpCreateOnly mpGs">Optional clock, in minutes.</div>
@@ -2293,6 +2304,8 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 
         <div class="mpfield mpCreateOnly mpGs mpFull"><label>Board style</label><select id="mpBoard"><option value="classic">Classic (open table)</option><option value="structured">Structured</option></select></div>
         <div class="mpdesc mpCreateOnly mpGs mpFull">Structured: guided zones with columns and helicopter views. Classic: open table &mdash; place cards freely, like Lackey. Applies to everyone in the room.</div>
+        <label class="mpcheck mpCreateOnly mpGs" id="mpSetupRow"><input type="checkbox" id="mpSetup" checked> Suggested table setup</label>   <!-- v2.6.146 (a player's feedback): shown in Lite too (a Lite room is always Classic); greyed for a Structured room -->
+        <div class="mpdesc mpCreateOnly mpGs" id="mpSetupDesc">Classic tables: every seat starts at its own spot around the table, in turn order, and each player&rsquo;s first four crypt cards are placed face down beside their pool. Everything can still be moved. Off: everyone drags their pool globe and draws their crypt cards themselves.</div>
 
         <div class="mpfield mpCreateOnly mpGs mpFull"><label>Helpers</label><select id="mpHelpers"><option value="local">Player&rsquo;s choice &mdash; each player decides</option><option value="all">All helpers on &mdash; locked for everyone</option><option value="tournament">Tournament mode &mdash; all helpers off</option></select></div>
         <div class="mpdesc mpCreateOnly mpGs mpFull">Who governs the table helpers. <b>Player&rsquo;s choice</b>: everyone keeps their own Settings. <b>All helpers on</b>: every helper on for everyone, locked. <b>Tournament mode</b>: every helper off for everyone, locked &mdash; for practising under real tournament conditions. The host can still change this later under Settings &rarr; Helpers.</div>
@@ -2371,6 +2384,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <div class="mbody">
       <p class="note" style="margin-top:0">Seat each player and give them a deck &mdash; one screen, pass-and-play. Take priority from the <b>PRIORITY</b> bar to control whoever's acting; a player's hand stays hidden until you take their seat.</p>
       <div class="mpfield" style="margin-bottom:6px"><label>Board style</label><select id="offBoard"><option value="classic">Classic (open table)</option><option value="structured">Structured</option></select></div>
+      <label class="mpcheck" id="offSetupRow" style="margin:0 0 8px" title="Classic tables: every seat starts at its own spot around the table, in turn order, and each player's first four crypt cards are placed face down beside their pool. Everything can still be moved."><input type="checkbox" id="offSetup" checked> Suggested table setup</label>   <!-- v2.6.146 -->
       <div class="mpfield" style="margin-bottom:6px"><label>Helpers</label><select id="offHelpers"><option value="local">Your local settings</option><option value="all">All helpers on</option><option value="tournament">Tournament mode — all helpers off</option></select></div>
       <div class="mpdesc" style="margin-bottom:14px">The same three modes an online table offers. Hotseat is one screen with one set of Settings, so the online <b>Player's choice</b> mode is simply <b>your local settings</b> here. Applies to this table only — your stored preferences are left alone.</div>
       <div id="offlineSeats"></div>
@@ -3147,7 +3161,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.145';   // v2.6.145 (12 Oct 2026, THE GROUP KNOWS THE ZONES, pure client -- purge; srv-2.6.43 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.143-144): the two group paths the single-vs-group audit found. A group drag onto the hand put crypt cards IN the hand and wiped their blood and lock (a single drag refuses); 'Send to torpor' for a selection (menu and G) sent library cards to torpor (the single card's menu offers it to crypt cards only). zoneRefuses(c, zone) is the one rule the single drag, the group drag and groupMove all call. Previous note: elysium-CHANGELOG.md.
+const VERSION='2.6.148';   // v2.6.148 (13 Oct 2026, A SEAT FOR THE WATCHER, pure client -- purge; srv-2.6.44 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.146-147 in one PR -- together: restart the server, purge the client): the five weaknesses found with v2.6.146, each measured on v2.6.145 first. (1) SPECTATING: a watcher's client pushed its empty board, the server refused ('Spectators can only chat.'), the refusal was logged, and log -> scheduleSave -> schedulePush sent the next one -- 53 notices in 35 s of watching. schedulePush / pushNow / mpRelay send nothing for a spectator. The welcome layer no longer covers a running game someone watches (mpWatching). (2) ARRIVING: joined (mid-game) and started close the Join dialog and go to the table (mpLandAtTable) -- a player's home view; a watcher's shared felt on the free board, and on a Structured table a visit to the seat whose turn it is (mpLandView; Esc / Home lead there too). An automatic reconnect keeps the view it had. (3) 'Restore your board from the table snapshot' on a free-board table keeps the published positions of ready, uncontrolled and torpor cards (ready was rescaled by the live board, the other two fell to the centre row). (4) A reload keeps the own pool globe where it was: joined reads it from the server's copy of the board (the pool token in myPub). (5) Johan: bots on Structured tables only for now -- the lobby's rule read a key the lobby message never had, so a Classic room offered Add bot since v2.6.99; netBotWhy reads net.boardMode. Previous note: elysium-CHANGELOG.md.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -7583,12 +7597,14 @@ function resetForDeal(){
 function dealOpening(){
   setTimeout(()=>{
     for(let i=0;i<7;i++) if(state.zones.library.length) move(state.cards.get(state.zones.library.at(-1)),'hand');
-    if(!freeBoard()) for(let i=0;i<4;i++) if(state.zones.crypt.length) move(state.cards.get(state.zones.crypt.at(-1)),'uncontrolled');
+    if(!freeBoard()){ for(let i=0;i<4;i++) if(state.zones.crypt.length) move(state.cards.get(state.zones.crypt.at(-1)),'uncontrolled'); }
+    else if(tableSetupOn()) l4SetupDealLocal(mySeat());           // v2.6.146: the suggested table setup -- four crypt cards face down beside the pool globe (the braces above matter: without them this else belongs to the loop's inner if)
   },80);
 }
-function dealOpeningSync(){                                    // same as dealOpening but synchronous — used when building hotseat boards in sequence
+function dealOpeningSync(seat){                                // same as dealOpening but synchronous — used when building hotseat boards in sequence (seat: the board being built -- mySeat() is still the previous table's there)
   for(let i=0;i<7;i++) if(state.zones.library.length) move(state.cards.get(state.zones.library.at(-1)),'hand');
-  if(!freeBoard()) for(let i=0;i<4;i++) if(state.zones.crypt.length) move(state.cards.get(state.zones.crypt.at(-1)),'uncontrolled');
+  if(!freeBoard()){ for(let i=0;i<4;i++) if(state.zones.crypt.length) move(state.cards.get(state.zones.crypt.at(-1)),'uncontrolled'); }
+  else if(tableSetupOn()) l4SetupDealLocal(seat||mySeat());      // v2.6.146
 }
 function deal(){
   if(inRoom()){
@@ -7599,7 +7615,7 @@ function deal(){
   if(!state.cards.size){ log('No deck loaded yet.'); return; }
   resetForDeal();
   dealOpening();
-  log('<b>New deal:</b> shuffled'+(freeBoard()?', drew 7 cards. Pool: 30. Draw crypt cards manually from the dock.':', drew 7 cards and 4 uncontrolled crypt cards. Pool: 30.'));
+  log('<b>New deal:</b> shuffled'+(freeBoard()?(tableSetupOn()?', drew 7 cards and placed 4 crypt cards face down beside the pool. Pool: 30.':', drew 7 cards. Pool: 30. Draw crypt cards manually from the dock.'):', drew 7 cards and 4 uncontrolled crypt cards. Pool: 30.'));
 }
 
 /* ---------- Pool, Edge ---------- */
@@ -7851,7 +7867,7 @@ function updateL4GlobeHTML(glob, name, pool){
     // is safe here since bindHold/wheel/contextmenu are attached by the CALLER right after this returns.
     const _clanImg=_clan?'<img class="clansym-pool" src="'+clanSymUrl(_clan)+'" alt="'+esc(_clan)+'" onerror="this.style.display=\'none\'">':'';
     glob.el.innerHTML=
-      '<div class="l4glabel">'+(col?'<span class="l4gdot" style="background:'+colHex+'"></span>':'')+esc(name||'?')+' <span class="l4gseat">\u{1FA91}'+glob.seat+'</span></div>'+
+      '<div class="l4glabel">'+(col?'<span class="l4gdot" style="background:'+colHex+'"></span>':'')+esc(name||'?')+' <span class="l4gseat">\u{1FA91}\u00a0'+ordinal(glob.seat)+'</span></div>'+
       '<div class="l4gpool" style="border-color:'+colHex+';'+((conv.poolPlayerColor&&col)?'background:'+poolGradient(colHex):'')+'"><span class="l4gpoolnum">'+pool+'</span>'+_clanImg+(glob.mine?'<button class="l4pbtn l4pminus" title="-1 pool">−</button><button class="l4pbtn l4pplus" title="+1 pool">+</button>':'')+'</div>';
     return;
   }
@@ -7862,7 +7878,7 @@ function updateL4GlobeHTML(glob, name, pool){
   // when updateMyClan()'s call sites went from 1 to 5; wheel/contextmenu are on the persistent glob.el itself
   // so those were never actually affected, only the buttons, which live inside the replaced innerHTML).
   const lbl=glob.el.querySelector('.l4glabel');
-  if(lbl) lbl.innerHTML=(col?'<span class="l4gdot" style="background:'+colHex+'"></span>':'')+esc(name||'?')+' <span class="l4gseat">\u{1FA91}'+glob.seat+'</span>';
+  if(lbl) lbl.innerHTML=(col?'<span class="l4gdot" style="background:'+colHex+'"></span>':'')+esc(name||'?')+' <span class="l4gseat">\u{1FA91}\u00a0'+ordinal(glob.seat)+'</span>';
   const poolDiv=glob.el.querySelector('.l4gpool');
   if(poolDiv){
     poolDiv.style.borderColor=colHex;
@@ -7917,6 +7933,71 @@ function updateL4GlobePool(seat, pool){
   const pn=g.el.querySelector('.l4gpoolnum'); if(pn) pn.textContent=pool;
 }
 
+/* ---------- v2.6.146: the suggested table setup (Classic) ----------
+   A player's first night on the free board: "it doesn't seem there are spaces designated to players -- everybody
+   started to move the globes as soon as they started, same with the crypt cards". Every globe started on a small
+   ring in the middle, and a crypt card drawn by double-click landed on the same centre spot for every seat.
+   With the room option on (Game settings -> Suggested table setup, srv-2.6.44's `tableSetup`):
+     - each seat's globe STARTS at its own spot around the table, in turn order, clockwise from the top left --
+       the layout Lackey players use (1st top left ... the lower row runs right to left);
+     - the first four crypt cards are placed face down beside the globe at the deal.
+   After that nothing is special: the globe and the cards move like any others, and a card drawn later lands where
+   it always did. The option changes nothing on the wire except the flag itself -- the four cards are four ordinary
+   drawCrypt verbs, so an older client or a bot at the same table simply sets up by hand.
+   THE LOWER ROW sits just ABOVE the open hand panel, not at the table's bottom edge: the panel covers the bottom
+   quarter of the felt (it begins at canonical y 410-425 on every laptop window measured, lower with the card
+   viewer open), and a pinned hand must not hide two seats. All coordinates are canonical (the shared felt). */
+const L4_SEAT={ m:10, gap:10, cgap:4, lowBottom:404 };            // margin to the table edge, globe-to-cards gap, gap between cards, the BOTTOM edge of the lower row's cards
+const TABLE_SETUP_OLD_SRV_NOTE='This server does not know the suggested table setup yet (it needs server v2.6.44 or later) \u2014 the table starts the usual way: drag your pool globe to your seat and draw your crypt cards.';
+const TABLE_SETUP_BOT_NOTE='The suggested table setup is skipped at a table with bots \u2014 they sit by their own pattern for now. Drag your pool globe to your seat and draw your crypt cards as usual.';
+function ordinal(n){ n=n|0; const t=n%100; return n+((t>10&&t<14)?'th':(['th','st','nd','rd'][n%10]||'th')); }   // 1st 2nd 3rd 4th ... 11th 12th 13th ... 21st
+function tableSetupOn(){                                            // the option is ON for this table and nothing stands in its way
+  return freeBoard() && !!net.tableSetup && !(net.roster||[]).some(p=>p && p.bot && !p.vacant);   // bots: they camp on their own ellipse (bot spec 6 i) -- measured, one human seat in five would be overlapped; the guard goes when the bot project follows the seats
+}
+function l4SeatGeo(){                                               // sizes on the free board, canonical px
+  const cw=CW*L4_CARD_S, ch=CH*L4_CARD_S, gw=64*L4_TOKEN_S, lbl=16*L4_TOKEN_S;   // a card; the globe's circle (64 px at token scale); the name line above it
+  return { cw, ch, gw, lbl, rowW:4*cw+3*L4_SEAT.cgap, blockW:gw+L4_SEAT.gap+4*cw+3*L4_SEAT.cgap, dy:lbl+(gw-ch)/2 };   // dy: card top relative to the globe's top, so the circle and the cards share a centre line
+}
+function l4SeatSpot(idx, N){                                        // pure: the globe's top-left for seat index idx (0-based) of N seats
+  N=Math.max(1, N|0); idx=Math.max(0, Math.min(N-1, idx|0));
+  const T=pubBox(), G=l4SeatGeo(), X0=T.x+L4_SEAT.m, X1=T.x+T.w-L4_SEAT.m;
+  const topN=Math.ceil(N/2), botN=N-topN, top=idx<topN;
+  const cnt=top?topN:botN, k=top?idx:(botN-1-(idx-topN));         // the lower row runs right to left, so the seats go clockwise
+  const fr=cnt<=1 ? 0.5 : k/(cnt-1);
+  const left=X0+fr*((X1-G.blockW)-X0);                             // the block (globe + four cards) slides from the left edge to the right edge
+  const gy=top ? T.y+L4_SEAT.m : L4_SEAT.lowBottom-G.ch-G.dy;
+  return { x:Math.round(fr>0.5 ? left+G.blockW-G.gw : left), y:Math.round(gy) };   // right half: the globe sits on the OUTSIDE, its cards toward the middle
+}
+function l4CryptSpots(gx, gy){                                      // pure: four card spots beside a globe at (gx, gy) -- to its right when they fit on the table, else to its left
+  const T=pubBox(), G=l4SeatGeo(), X0=T.x, X1=T.x+T.w;
+  const right=(gx+G.blockW <= X1-L4_SEAT.m+1);
+  let x0=right ? gx+G.gw+L4_SEAT.gap : gx-L4_SEAT.gap-G.rowW;
+  x0=Math.max(X0, Math.min(X1-G.rowW, x0));
+  const y=Math.max(T.y, Math.min(T.y+T.h-G.ch, gy+G.dy));
+  return [0,1,2,3].map(i=>({ x:Math.round(x0+i*(G.cw+L4_SEAT.cgap)), y:Math.round(y) }));
+}
+function l4SeatOf(seat){ const all=net.roster||[]; return { idx:Math.max(0, all.findIndex(p=>p && p.seat===seat)), N:Math.max(1, all.length) }; }   // by position in the WHOLE roster (vacant seats keep theirs), so nobody's spot moves when someone is ousted
+function l4SetupSpots(seat){                                        // where seat's four setup cards go: beside its globe where that is NOW (a new deal follows a moved globe), else beside its seat spot
+  const g=l4Globes.get(seat), so=l4SeatOf(seat);
+  const p=(g && Number.isFinite(g.x) && (g.x||g.y)) ? { x:g.x, y:g.y } : l4SeatSpot(so.idx, so.N);
+  return l4CryptSpots(p.x, p.y);
+}
+function l4SetupDealLocal(seat){                                    // hotseat / offline: the four cards come straight off the local crypt
+  const spots=l4SetupSpots(seat||mySeat()); let n=0;
+  for(const sp of spots){
+    if(!state.zones.crypt.length) break;
+    const c=state.cards.get(state.zones.crypt.at(-1));
+    move(c,'uncontrolled',{ faceDown:true, x:sp.x, y:sp.y });
+    state.cryptDrawHistory.push(c.id); n++;                         // they are draws like any other -- 'Undo last draw' takes them back, as it does after a hand-made setup
+  }
+  return n;
+}
+function l4SetupDealNet(cryptN){                                    // online: ask for them with the ordinary verb; MP_HANDLERS.drew places each as it arrives
+  const n=Math.max(0, Math.min(4, cryptN|0));
+  net.setupSpots=l4SetupSpots(mySeat()).slice(0, n);
+  for(let i=0;i<n;i++) mpSend({t:'drawCrypt'});
+  return n;
+}
 function renderL4Globes(){
   // Preserve manually positioned globe coords across re-renders (resize / panel toggle)
   const savedPos=new Map();
@@ -7927,6 +8008,7 @@ function renderL4Globes(){
   const seats=(net.roster||[]).filter(p=>!p.vacant);
   const N=seats.length; if(!N) return;
   const cx=502, cy=250, R=Math.max(80, Math.min(160, 50+N*22));
+  const _setup=tableSetupOn();
   seats.forEach((p,i)=>{
     const angle=(i/N)*2*Math.PI - Math.PI/2;
     const mine=(p.seat===me);
@@ -7934,12 +8016,14 @@ function renderL4Globes(){
     const glob=createL4Globe(p.seat, p.name, pool, mine);
     const prev=savedPos.get(p.seat);
     if(prev){ glob.x=prev.x; glob.y=prev.y; }   // restore saved position
+    else if(mine && net._myGlobeAt){ glob.x=net._myGlobeAt.x; glob.y=net._myGlobeAt.y; }   // v2.6.148: after a reload, where the server last saw it
+    else if(_setup){ const so=l4SeatOf(p.seat), sp=l4SeatSpot(so.idx, so.N); glob.x=sp.x; glob.y=sp.y; }   // v2.6.146: the suggested table setup -- every seat starts at its own spot
     else { glob.x=Math.round(cx+R*Math.cos(angle)-32); glob.y=Math.round(cy+R*Math.sin(angle)-32); }   // first render: default circle
     placeL4Globe(glob);
   });
   // Pulsing hint for first-time positioning (only until the user drags their globe once)
   const _oldHint=$('#l4hint'); if(_oldHint) _oldHint.remove();
-  if(!l4hintDone){
+  if(!l4hintDone && !_setup){                                       // v2.6.146: with the suggested setup the globe already IS at the seat -- nothing to ask for
     const _me=seats.find(p=>p.seat===me);
     if(_me){
       const _col=seatColor(me), _hex=_col?_col.hex:'#c43b3b';
@@ -9167,7 +9251,7 @@ function cleanAddr(a, sec){
   return s;
 }
 function mpRelay(html){
-  if(net.status==='in' && net.ws && net.ws.readyState===1){
+  if(net.status==='in' && !net.spect && net.ws && net.ws.readyState===1){   // v2.6.148: a spectator's log lines are its own -- the server refuses them like the board
     try{ net.ws.send(JSON.stringify({t:'log', html})); }catch(err){}
   }
   hotRelayLog(html);                                          // v2.6.95: the hotseat mirror of the server's broadcast -- same contract, no server
@@ -9273,6 +9357,22 @@ function mpConnect(addr, then, secHint){
   };
 }
 function mpRejoin(){ mpSend({t:'join', room:net.room, token:net.token}); }
+function mpWatching(){ return inRoom() && !!net.spect && !net.lobby; }   // v2.6.148: a spectator at a table whose game is running
+function mpLandView(){                                             // v2.6.148 pure-ish: the view someone ARRIVING at a running game should see
+  if(net.spect && !freeBoard()){                                  // Structured: a watcher's home view is its own empty board -- visit the seat whose turn it is (seat visits are the view that works for a watcher)
+    const live=(net.roster||[]).filter(p=>p && !p.vacant), t=live.find(p=>p.seat===net.turnSeat) || live.find(p=>!p.out) || live[0];
+    if(t) return t.seat;
+  }
+  return baseView();                                               // a player's home view; on the free board also a watcher's (the shared felt)
+}
+function mpLandAtTable(){                                          // v2.6.148: joined / started used to leave a mid-game joiner and every spectator on the start view until Esc
+  if(net.lobby || !inRoom()) return;
+  if(shownModal()==='mpModal') closeOverlay();                    // the Join dialog has nothing left to say
+  const v=mpLandView();
+  if(typeof v==='number' && net.view!=='l2') switchView(baseView());   // a seat visit is drawn inside the home view's frame -- from the start view it showed bare felt
+  switchView(v);
+  if(typeof syncWelcome==='function') syncWelcome();
+}
 function rememberName(){
   const nm=$('#mpName').value.trim();
   if(nm){ state.playerName=nm; $('#pname').textContent=nm;
@@ -9280,6 +9380,7 @@ function rememberName(){
 }
 function mpCreate(){
   rememberName();
+  net._createSetup = ($('#mpBoard').value==='classic') && !!($('#mpSetup') && $('#mpSetup').checked);   // v2.6.146: read once, like the helpers choice -- sent below, and the joined handler checks the server took it
   net._createHelpers = ($('#mpHelpers') && $('#mpHelpers').value) || 'local';   // v2.6.51: read ONCE here -- the joined-handler fallback below fires 200 ms later, by which time the dialog may already be closed
   net.pass=$('#mpPass').value;                     // kept in memory only (escrow key); never stored
   mpConnect($('#mpAddr').value, ()=>{
@@ -9287,6 +9388,7 @@ function mpCreate(){
     mpSend({t:'create', lobby:true,
     room:$('#mpRoom').value.trim(), pass:$('#mpPass').value, name:$('#mpName').value.trim(),
     minutes:parseInt($('#mpTime').value,10)||0, react:parseInt($('#mpReact').value,10)||0, l3shape:null, boardMode:$('#mpBoard').value||'structured',   // cli-2.6.43: tableView field removed (vestigial lock); server still accepts it for back-compat, client no longer sends it
+    tableSetup:net._createSetup||undefined,   // v2.6.146 (srv-2.6.44): 'Suggested table setup' -- Classic rooms only; an older server ignores the field
     chat:$('#mpChat').checked, specChat:$('#mpSpecChat').checked, tournLock:true,   // v2.6.116 (Johan): always on -- the checkbox left the dialog; the wire key and the server are untouched
     refPass:$('#mpRefRoom').value||undefined,   // v2.6.83: this table's referee password (srv-2.6.35)
     helperPolicy: helperPolicyFor(net._createHelpers),   // v2.6.51: the Helpers choice rides the create message, so the room is BORN with the right policy instead of being corrected 200 ms after joining
@@ -9354,6 +9456,15 @@ function mpFoldSync(){                                            // v2.6.80: fo
   const go=M.classList.contains('gsOpen'), so=M.classList.contains('srvOpen');
   if(g){ g.textContent='Game settings '+(go?'\u25be':'\u25b8'); g.setAttribute('aria-expanded', go?'true':'false'); }
   if(sv){ sv.textContent='Local server '+(so?'\u25be':'\u25b8'); sv.setAttribute('aria-expanded', so?'true':'false'); }
+  tableSetupSync();
+}
+function tableSetupSync(){                                         // v2.6.146: the option exists for Classic tables only -- grey the row (and its description) while the board style beside it says Structured
+  [['mpBoard','mpSetup','mpSetupRow','mpSetupDesc'],['offBoard','offSetup','offSetupRow',null]].forEach(([bid,cid,rid,did])=>{
+    const b=$('#'+bid), c=$('#'+cid); if(!b||!c) return;
+    const off=(b.value!=='classic');
+    c.disabled=off;
+    [rid,did].forEach(id=>{ const e=id&&$('#'+id); if(e) e.classList.toggle('setupoff', off); });
+  });
 }
 function mpFold(which, open){                                     // v2.6.80: 'gs' | 'srv'; open undefined = toggle. The tutorial opens folds through this before spotlighting a folded field
   const M=$('#mpModal'); if(!M) return false;
@@ -9373,6 +9484,7 @@ function mpLiteDefaults(){                                        // v2.6.74: th
   $('#mpSrvPass').value=''; $('#mpAdmin').value=''; $('#mpRefPass').value=''; $('#mpRef').checked=false; $('#mpSpect').checked=false;
 }
 $('#mpGsToggle').addEventListener('click',()=>mpFold('gs'));       // v2.6.74/80: the folds
+['mpBoard','offBoard'].forEach(id=>{ const e=$('#'+id); if(e) e.addEventListener('change', tableSetupSync); });   // v2.6.146: each board-style select greys its own 'Suggested table setup' box
 $('#mpSrvToggle').addEventListener('click',()=>mpFold('srv'));
 $('#mpRef').addEventListener('change',()=>{ mpRefSync(); if($('#mpRef').checked){ const p=$('#mpRefPass'); if(p&&p.focus) p.focus(); } });
 /* v2.6.105: does closing this table differ from just leaving it? Only if somebody
@@ -9415,7 +9527,7 @@ function mpLeave(){
   if(net.status==='in') mpSend({t:'leave'});
   net.status='off'; net.room=null; net.token=null; net.you=null; net.roster=[];
   if(typeof syncWelcome==='function') syncWelcome();   // v2.6.46: retire the Return-to-room affordance the moment the room is gone
-  net.boardMode='structured'; net.tournLock=false; net._undoPush=false;
+  net.boardMode='structured'; net.tableSetup=false; net.setupSpots=null; net._myGlobeAt=null; net.tournLock=false; net._undoPush=false;
   net.deckUp=false; net.libN=0; net.cryptN=0; net.boards={};
   net.lobby=false; net.lobbyData=null; net.rolls=[]; net.isHost=false; net.isRef=false; net.muted=false;
   try{ netBotsTeardown(); }catch(_e){}                 // v2.6.99: the host's bots live in this tab and die with the room
@@ -9449,10 +9561,13 @@ const MP_HANDLERS = {
     mpStore({addr:net.addr, sec:net.sec, room:net.room, token:net.token, name:net.you});
     updateRoomBar(); mpUI();
     net.lobby=!!m.lobby;
-    mpStatus(net.lobby ? 'In the lobby for "'+m.room+'" as '+m.you+'.' : 'In room "'+m.room+'" as '+m.you+' (seat '+m.seat+').');
-    log((was==='re'?'Reconnected to':'Joined')+' '+(net.lobby?'the lobby for':'room')+' <b>'+esc(m.room)+'</b> as <b>'+esc(m.you)+'</b>'+(net.lobby?'.':' — seat '+m.seat+'.'), true);
+    mpStatus(net.lobby ? 'In the lobby for "'+m.room+'" as '+m.you+'.' : 'In room "'+m.room+'" as '+m.you+(m.spect?' (watching).':' (seat '+m.seat+').'));
+    log((was==='re'?'Reconnected to':'Joined')+' '+(net.lobby?'the lobby for':'room')+' <b>'+esc(m.room)+'</b> as <b>'+esc(m.you)+'</b>'+((net.lobby||m.spect)?'.':' — seat '+m.seat+'.'), true);   // v2.6.148: a spectator has no seat (the line said 'seat undefined')
     net.turnSeat=m.turn||null;
     net.matchEnd=m.matchEnd||null; net.reactSecs=m.reactSecs||5; net.tableViewLock=m.tableView||null; net.l3shapeLock=m.l3shape||null; net.boardMode=m.boardMode||'structured'; net.tournLock=!!m.tournLock;
+    net.tableSetup=!!m.tableSetup;                                  // v2.6.146 (srv-2.6.44): the room's 'Suggested table setup' option, Classic rooms only
+    if(net._createSetup){ net._createSetup=false;                    // the host ticked the box and an older server dropped the field -- say so instead of failing silently
+      if(net.boardMode==='classic' && !net.tableSetup){ net._setupMissed=true; toast('This server does not know the suggested table setup yet \u2014 the table starts the usual way.'); log('<span class="sysline">'+TABLE_SETUP_OLD_SRV_NOTE+'</span>', true); } }
     net.spect=!!m.spect; net.isRef=!!m.ref;   // v2.6.83: a referee watcher (srv-2.6.35) -- host controls show, no seat
     net.chat=m.chat!==false; net.specChat=m.specChat!==false;
     net.helperPolicy=m.helperPolicy||null; applyHelper();
@@ -9471,6 +9586,9 @@ const MP_HANDLERS = {
     if(net.spect) toast('Watching '+esc(m.room||'')+' — you have no seat. 👁');
     net.rtarget=null; updateTargetBtn();
     if(m.escrowSalt){ net.escrowSalt=m.escrowSalt; if(net.pass) setTimeout(ensureEscrowKey, 50); }
+    { const _gt=(!net.lobby && !net.spect && m.myPub && Array.isArray(m.myPub.tokens)) ? m.myPub.tokens.find(t=>t && t.type==='pool' && Number.isFinite(t.x) && Number.isFinite(t.y)) : null;
+      net._myGlobeAt=_gt ? { x:_gt.x, y:_gt.y } : null; }           // v2.6.148: where I left my pool globe, from the server's copy of my board -- the local save holds no globe position, so a reload put it back on its default spot
+    if(was!=='re') mpLandAtTable();                                 // v2.6.148: BEFORE the restore question below, so its dialog does not bring the Join dialog back. Not on an automatic reconnect -- that client is already where its player was looking
     if(!net.lobby && !net.spect && m.myPub && (m.myPub.cards||[]).length && state.cards.size===0){
       const canHand=!!(m.handBlob && net.pass && net.escrowSalt);
       const msg=canHand
@@ -9515,7 +9633,8 @@ const MP_HANDLERS = {
     net.turnSeat=m.turn||null;
     if(typeof m.matchEnd==='number') net.matchEnd=m.matchEnd;
     if(m.reactSecs) net.reactSecs=m.reactSecs;
-    net.tableViewLock=m.tableView||null; net.l3shapeLock=m.l3shape||null; net.boardMode=m.boardMode||'structured';
+    net.tableViewLock=m.tableView||null; net.l3shapeLock=m.l3shape||null; net.boardMode=m.boardMode||net.boardMode||'structured';   // v2.6.146: an ABSENT boardMode keeps the room's (you are already in it) -- loadMatch's took never carried one before srv-2.6.44, and the old 'structured' default flipped the host of a Classic room to a Structured board
+    if(m.tableSetup!==undefined) net.tableSetup=!!m.tableSetup;
     closeOverlay();
     clearTable();
     if(m.deckName){ state.deckName=m.deckName; $('#deckName').textContent='· '+state.deckName; }
@@ -9570,13 +9689,17 @@ const MP_HANDLERS = {
     net.roster=m.players||[]; net.turnSeat=m.turn||null;
     if(typeof m.matchEnd==='number') net.matchEnd=m.matchEnd;
     net.tableViewLock=m.tableView||null; net.l3shapeLock=m.l3shape||null; net.boardMode=m.boardMode||'structured';
+    net.tableSetup=!!m.tableSetup; net.setupSpots=null;
+    if(freeBoard() && net.tableSetup) clearL4Globes();              // v2.6.146: a new match starts from the seats -- a globe dragged in the previous match (or keyed to a seat number someone else holds now) must not ride in
     closeOverlay();
     const me=net.roster.find(p=>p.name===net.you);
     mpStatus('The game has begun — you are seat '+(me?me.seat:'?')+'.');
     log('<span class="sysline">The game has begun — seats are locked. Your hand is being dealt.</span>', true);
     startMatchClock();
     renderStats(); updateRoomBar();
-    if(!net.spect){ schedulePush(); switchView(baseView()); }   // online game opens in the home view
+    net._myGlobeAt=null;
+    if(!net.spect) schedulePush();
+    mpLandAtTable();                                               // online game opens at the table -- v2.6.148: for a spectator too (they were left on the start screen)
   },
   err(m){
     if(net._rlTimer){ clearTimeout(net._rlTimer); net._rlTimer=null; }   // v2.5.97: ANY err during the browse window means the server answered -- the 1.5s "predates the lobby" fallback would overwrite the real message (e.g. wrong --server-pass) with a misleading one
@@ -9609,14 +9732,21 @@ const MP_HANDLERS = {
       const c=makeCard(String(n),'crypt'); state.zones.uncontrolled.push(c.id); c.zone='uncontrolled'; c.faceDown=true;
     }); }
     setPileN(m);
+    net.setupSpots=null;
+    const _sn=tableSetupOn() ? l4SetupDealNet(m.crypt) : 0;        // v2.6.146: the suggested table setup -- the server's Classic deal carries no uncontrolled, so the client draws its first four with the ordinary verb (what a player does by hand, and what the bot has done since v0.6.98)
     layout(); schedulePush();
     requestAnimationFrame(()=> board.classList.remove('no-anim'));
-    log('<b>New deal (online):</b> the server shuffled and dealt 7 cards'+(freeBoard()?' — draw crypt cards manually from the dock.':' and 4 uncontrolled crypt cards.')+' Pool: 30. Library: '+(m.lib||0)+' / crypt: '+(m.crypt||0)+' remain.');   // B-53 layer 3: the deal line carries its own diagnosis
+    log('<b>New deal (online):</b> the server shuffled and dealt 7 cards'+(freeBoard()?(_sn?' — '+_sn+' crypt card'+(_sn===1?' was':'s were')+' placed face down beside the pool.':' — draw crypt cards manually from the dock.'):' and 4 uncontrolled crypt cards.')+' Pool: 30. Library: '+(m.lib||0)+' / crypt: '+((m.crypt||0)-_sn)+' remain.');   // B-53 layer 3: the deal line carries its own diagnosis
+    if(freeBoard() && !_sn){                                        // v2.6.146: the option was asked for and is not being honoured -- say why HERE, after the deal line: clearTable above wiped whatever the lobby logged
+      if(net._setupMissed){ net._setupMissed=false; log('<span class="sysline">'+TABLE_SETUP_OLD_SRV_NOTE+'</span>', true); }
+      else if(net.tableSetup && !tableSetupOn()) log('<span class="sysline">'+TABLE_SETUP_BOT_NOTE+'</span>', true);
+    }
   },
   drew(m){
     const c=makeCard(String(m.name||'Card'), m.kind==='crypt'?'crypt':'lib');
     const z=['hand','uncontrolled','ash','burned'].includes(m.zone)?m.zone:'hand';
-    move(c, z, z==='uncontrolled'?{faceDown:true}:{});
+    const _su=(z==='uncontrolled' && !m.took && net.setupSpots && net.setupSpots.length) ? net.setupSpots.shift() : null;   // v2.6.146: one of the four setup cards -- it goes beside the pool globe instead of the centre row
+    move(c, z, z==='uncontrolled'?(_su?{faceDown:true, x:_su.x, y:_su.y}:{faceDown:true}):{});
     if(z==='hand' && !m.took) state.drawHistory.push(c.id);
     if(z==='uncontrolled' && !m.took) state.cryptDrawHistory.push(c.id);
     if(z==='ash' && state.discardHistory.length) state.discardHistory[state.discardHistory.length-1].from='library';
@@ -9627,7 +9757,7 @@ const MP_HANDLERS = {
     const n='<b>'+esc(m.name)+'</b>';
     if(m.took) log(m.pile==='crypt' ? 'A card was fetched from the crypt to uncontrolled.' : 'A card was fetched from the library.');
     else if(z==='hand') log('Drew <b>1 card</b> from the library.');
-    else if(z==='uncontrolled') log('Drew <b>1 crypt card</b> to the uncontrolled region.');
+    else if(z==='uncontrolled'){ if(!_su) log('Drew <b>1 crypt card</b> to the uncontrolled region.'); }   // the deal line already announced the setup cards -- four more lines per player would bury everyone's log at the start
     else if(z==='ash') log('Discarded the top card of the library: '+n+'.');
     else log('Burned the top card of the '+(m.kind==='crypt'?'crypt':'library')+': '+n+'.');
   },
@@ -10191,7 +10321,7 @@ function chatSendLine(v){                                     // v2.6.142: the E
    The client keeps its visible board locally and publishes a filtered
    public snapshot; library/crypt exist only server-side. */
 net.deckUp=false; net.libN=0; net.cryptN=0; net.boards={}; net.openHandFrom={}; net.turnSeat=null; net.giving=null; net.recalling={}; net.rtarget=null; net.fx={}; net.matchEnd=null; net.reactSecs=5; net.tableViewLock=null; net.l3shapeLock=null; net.clockT=null; net.dfxT=null; net.spect=false; net.watchers=0; net.chat=true; net.specChat=true; net.helperPolicy=null;
-net.lobby=false; net.lobbyData=null; net.isHost=false; net.isRef=false; net.rolls=[]; net.muted=false; net.watcherList=[]; net.boardMode='structured'; net.tournLock=false; net._undoPush=false;
+net.lobby=false; net.lobbyData=null; net.isHost=false; net.isRef=false; net.rolls=[]; net.muted=false; net.watcherList=[]; net.boardMode='structured'; net.tableSetup=false; net.setupSpots=null; net.tournLock=false; net._undoPush=false;
 const PUBZ=['ready','torpor','uncontrolled','ash','burned'];
 function netGame(){ return inRoom() && net.deckUp; }
 function setPileN(m){
@@ -10228,13 +10358,15 @@ function hotSchedulePushBoard(){
 function schedulePush(){
   if(avr.mode==='combat') avrDuelRender();   // v2.6.19: every own-board mutation refreshes the duel panels (cheap: hidden-guard + two small panels); placed before the inRoom gate so hotseat gets it too
   if(!inRoom()){ hotSchedulePushBoard(); return; }   // v2.6.98: offline the bot seats ARE the table -- same board, same 600 ms debounce
+  if(net.spect) return;                              // v2.6.148: a spectator has no board. This push was refused ('Spectators can only chat.'), the refusal was logged, and log -> scheduleSave -> here sent the next one: an echo every 600 ms for as long as anyone watched
   clearTimeout(pushTimer);
-  pushTimer=setTimeout(()=>{ if(inRoom() && net.ws && net.ws.readyState===1){ mpSend({t:'board', pub:buildPub(), undo:net._undoPush||undefined}); net._undoPush=false; } },600);   // v2.5.95: carry + consume the undo mark only on an ACTUAL send (if the socket is down the mark survives until the board really syncs)
+  pushTimer=setTimeout(()=>{ if(inRoom() && !net.spect && net.ws && net.ws.readyState===1){ mpSend({t:'board', pub:buildPub(), undo:net._undoPush||undefined}); net._undoPush=false; } },600);   // v2.5.95: carry + consume the undo mark only on an ACTUAL send (if the socket is down the mark survives until the board really syncs)
   pushEscrow();
   refreshOpenHands();
 }
 function pushNow(){   // v2.5.59 (backlog 2.2 companion): immediate push for actions ANOTHER player is actively waiting on (recall/ctrl on the holder side) - the 600ms debounce exists for typing-speed local edits, not for cross-board round-trips
   if(!inRoom()){ hotPushBoardNow(); return; }        // v2.6.98
+  if(net.spect) return;                              // v2.6.148: see schedulePush
   clearTimeout(pushTimer);
   if(net.ws && net.ws.readyState===1){ mpSend({t:'board', pub:buildPub(), undo:net._undoPush||undefined}); net._undoPush=false; }   // v2.5.95: same undo-mark carry as schedulePush
   pushEscrow();
@@ -10401,7 +10533,7 @@ function freeBoard(){ return net.boardMode==='classic'; }
 function l4on(){ return board.classList.contains('l4mode'); }
 const L4_CARD_S=0.5, L4_TOKEN_S=0.7;   // L4 Free Board element scale: cards at 50%, tokens/globes at 70% — change here to adjust
 function baseView(){ return freeBoard() ? 'l4' : 'l2'; }              // Home view is always L2/Normal (v1.99.27: L1/Simplified retired as a reachable view). A solo table renders fine in L2 (renderL2's no-opponent branch centres your board full-area). The host-lock tableViewLock is no longer checked (only option was Normal vs Simplified).
-function goHome(){ switchView(baseView()); if(typeof syncWelcome==='function') syncWelcome(); }       // Home / Esc / your own seat -> your home view (v2.6.44: refresh the Return-to-room affordance)
+function goHome(){ switchView(mpWatching() ? mpLandView() : baseView()); if(typeof syncWelcome==='function') syncWelcome(); }       // Home / Esc / your own seat -> your home view (v2.6.44: refresh the Return-to-room affordance)
 function cycleView(){                          // § : toggle the overview (L3) <-> your home view (L2/L1 per settings; host-lock overrides via baseView)
   if(freeBoard()) return;
   switchView(net.view==='ov' ? baseView() : 'ov');
@@ -10431,13 +10563,15 @@ function toggleActiveHome(){                     // Tab: flip between the active
 
 /* ---------- Placeholder opponent names for the offline (hotseat) setup window ---------- */
 const DEMO_NAMES=['Astrid','Bram','Caine','Dorian','Esme'];
-function startHotseat(players, boardMode){                               board.classList.remove('l0mode'); // the offline core — fed by both quick-start and (next) the setup window
+function startHotseat(players, boardMode, opts){                         board.classList.remove('l0mode'); // the offline core — fed by both quick-start and (next) the setup window
   if(inRoom()){ toast('Leave the online room first'); return; }
   if(!players || !players.length) return;
   players=players.slice(0,6);
   localTable=true;
   tutGameLive=false;       // a freshly seated table is not the tutorial game until a classic-* section claims it (see tutStart)
   net.boardMode=boardMode||'structured';
+  net.tableSetup=(net.boardMode==='classic') && !!(opts && opts.tableSetup); net.setupSpots=null;   // v2.6.146: the Play offline checkbox; every other caller (the tutorials, a resumed tutorial game) leaves it off -- they teach the hand-made setup
+  if(net.tableSetup) clearL4Globes();                              // a new table starts from the seats, not from where the previous table's globes were dragged
   net.room='Hotseat'; net.turnSeat=1;
   const _act=(players.findIndex(p=>p&&!p.bot)+1)||1;               // v2.6.72: the ACTIVE seat is the first HUMAN's -- seat 1 may be a bot now (offline seating is 'write the name where it sits'); turn 1 still belongs to seat 1, the opening sweep plays the leading bots
   net.roster=players.map((p,i)=>({ seat:i+1, name:p.name||('Player '+(i+1)), host:i===_act-1, online:true, vp:0, bot:!!p.bot }));
@@ -10446,7 +10580,7 @@ function startHotseat(players, boardMode){                               board.c
   players.forEach((p,i)=>{                                    // build each seat's full board, then capture its public view
     const seat=i+1;
     if(p.boardJson) restoreGame(p.boardJson, {keepLog:true, silent:true});
-    else if(p.deckText) { buildDeck(parseDeck(p.deckText)); dealOpeningSync(); }
+    else if(p.deckText) { buildDeck(parseDeck(p.deckText)); dealOpeningSync(seat); }
     else clearTable({keepLog:true});
     net.hot.boards[seat]=serializeGame();
     net.boards[seat]={ who:net.roster[i].name, pub:buildPub(), ts:Date.now() };
@@ -10459,6 +10593,7 @@ function startHotseat(players, boardMode){                               board.c
   hotPushBoardNow();                                          // v2.6.98: seed the bots with the human's opening board -- online a joiner is handed every existing pub, so a bot is never blind at turn 1
   if(_act===1){ resetTurnTracking(); startYourTurn(); }        // seat 1's turn begins (first-turn cue, like online); with a bot at seat 1 the cue comes from the opening sweep's handover (hotSpawnBots)
   log('<span class="sysline">Hotseat — '+net.roster.length+' players seated. Use the <b>PRIORITY</b> bar to take control of a player; their board, hand and Alt-view follow.</span>', true);
+  if(net.tableSetup && !tableSetupOn()) log('<span class="sysline">'+TABLE_SETUP_BOT_NOTE+'</span>', true);
   log('<span class="sysline">▶ '+turnLabel()+' — '+esc(net.roster[0].name)+'.</span>', true);
   toast('Hotseat: '+net.roster.length+' players');
 }
@@ -10471,7 +10606,7 @@ function leaveHotseat(){
   updateRoomBar();                                            // v2.6.95: and the chat line goes away with the table
   helperAllOn=false; hotTournRestore(); syncHelperUI();   // v2.6.92: the table's Tournament override goes with it (hotTournRestore re-syncs); v2.6.51: the hotseat's "All helpers on" mode is per-table — the player's own Settings take over again the moment the table closes
   net.roster=[]; net.boards={}; net.turnSeat=null; net.you=null; net.room=null; net.turnNo=0; net.roundNo=1;
-  net.boardMode='structured';
+  net.boardMode='structured'; net.tableSetup=false; net.setupSpots=null;
   net.hot=null;
   switchView(null);
   clearTable(); $('#deckName').textContent=''; enterL0();
@@ -10666,7 +10801,7 @@ async function startOfflineFromCfg(){
     helperAllOn     = (hmEl.value==='all');   // v2.6.51: a session flag hx() reads — NOT helper[k]=true, which saveHelper() would later persist over the player's own settings
     applyHelper(); syncHelperUI();
   }
-  startHotseat(players, boardMode);
+  startHotseat(players, boardMode, { tableSetup: !!($('#offSetup') && $('#offSetup').checked) });   // v2.6.146
   if(_botSeats.length) hotSpawnBots(_botSeats, players, boardMode); // v2.6.69: the bots must know the board mode -- classic deals no opening uncontrolled
   tutNotify('hotseat-started');   // tutorial breadcrumb: lobby started a game (fires AFTER closeOverlay so the next-section prompt is not torn down)
 }
@@ -10686,6 +10821,7 @@ function syncOffBotLock(){                                       // v2.6.93 (Joh
     if(helpers._preBotVal){ helpers.value=helpers._preBotVal; helpers._preBotVal=null; }
     board.disabled=false; helpers.disabled=false;
   }
+  tableSetupSync();                                              // v2.6.146: the forced Structured greys the 'Suggested table setup' box too (a value set in code fires no change event)
 }
 $('#offBoard').addEventListener('change', botDebugSync);        // v2.6.108: Classic defaults Helpers to Tournament, which refuses debug
 $('#offHelpers').addEventListener('change', botDebugSync);
@@ -10828,7 +10964,7 @@ const MP_MAX_PLAYERS=6;                                           // mirror of t
 function netBotWhy(){                                             // '' = the host may add one; otherwise the reason, shown on the disabled button
   if(!net.lobby || !net.isHost) return 'Only the host can add bots, and only in the lobby.';
   if(uiLite()) return 'Bots are a Full mode feature.';
-  if(((net.lobbyData||{}).boardMode||'structured')==='classic')
+  if((((net.lobbyData||{}).boardMode)||net.boardMode||'structured')==='classic')   // v2.6.148 (Johan: bots on Structured only for now): net.boardMode (from `joined`) is the room's board style -- the lobby message has NEVER carried one, so this rule read undefined and a Classic room offered Add bot since v2.6.99
     return 'Bots need a Structured table \u2014 create the room as Structured.';   // board mode is fixed at creation; no verb changes it
   /* v2.6.102 (Johan, browser pass): this used to compare against the lobby snapshot's
      `seats`, which is NOT the table's capacity -- srv 318 sets it to room.players.length,
@@ -10938,6 +11074,7 @@ async function hotSpawnBots(botSeats, players, boardMode){
     hotBridge.reset(offlineCfg.map(pl=>({ name:pl.name, bot:!!pl.botP })));
     hotBridge.botcfgIn('', BOTCFG0);                               // v2.6.139: the table starts at Standard, 3 s (tempo spec, decision 3) -- stored BEFORE any bot joins, so each bot gets it right after `joined` (the bridge's late-joiner rule) and the panel shows what the bots were told
     try{ hotBridge.syncRoster(net.roster); }catch(_e){}            // v2.6.122
+    hotBridge._tableSetup=!!net.tableSetup;                          // v2.6.146: the room option, as srv-2.6.44's joined carries it (the reference bot does not read it yet)
     hotBridge._boardMode=boardMode||'structured';                  // v2.6.69 (the unc/uncontrolled bug's sibling class, found by Johan's sweep ask): the bot READS joined.boardMode -- classic flips caps.classic (no opening unc deal, drawCrypt as needed)
     for(const seat of botSeats){
       const pl=offlineCfg[seat-1], nm=pl.name||('Bot '+seat);
@@ -11448,6 +11585,7 @@ const hotBridge = {
       case 'join': case 'create':
         B.toBot(seat, { t: 'joined', room: B.roomName, seat, token: 'hot-' + seat, lobby: true,
                         boardMode: B._boardMode || 'structured',   // v2.6.69: the field the bot reads and the bridge never sent
+                        tableSetup: B._tableSetup || undefined,     // v2.6.146: srv-2.6.44's room option, mirrored
                         players: B.players(), srv: 'hotseat-bridge ' + VERSION });
         if (B.botcfg) B.toBot(seat, Object.assign({ t: 'botcfg' }, B.botcfg));   // v2.6.139: the late-joiner rule (srv-2.6.43 joinReply) -- the table's tempo right after `joined`
         break;
@@ -12786,9 +12924,10 @@ function layout(){
   const _hn=state.zones.hand.length;
   $('#cnt-hand').textContent=_hn+'/'+state.maxHand;
   $('#z-hand').title='Hand: '+_hn+'/'+state.maxHand+' cards — scroll to adjust max hand size';
-  $('#empty').style.display = state.cards.size ? 'none' : 'grid';
+  const _watching=mpWatching();                                   // v2.6.148: a spectator never holds cards -- the welcome layer covered every table they watched
+  $('#empty').style.display = (state.cards.size || _watching) ? 'none' : 'grid';
   syncIdleUI();                                                   // v2.6.79: L0 with an empty table and no game is a LOBBY -- the in-game chrome hides
-  board.classList.toggle('tableEmpty', !state.cards.size);   // E1: while the overlay covers an empty board (a just-joined guest), hide the Edge button so it can't float over the overlay's Settings box (see #board.tableEmpty #edge)
+  board.classList.toggle('tableEmpty', !state.cards.size && !_watching);   // E1: while the overlay covers an empty board (a just-joined guest), hide the Edge button so it can't float over the overlay's Settings box (see #board.tableEmpty #edge)
   document.body.classList.toggle('hotseat', !!localTable);   // offline hotseat -> hand face-down until hover, board + Alt-view (see CSS)
   if(typeof net.view==='number') renderRVHand();
   renderStats();
@@ -14078,7 +14217,7 @@ function setDockPin(on){                                         // v2.6.143: th
   dockPinned=!!on;
   const _dbg=document.getElementById('l2dockbg'); if(_dbg) _dbg.classList.toggle('pinned', dockPinned);
   const _pb=document.getElementById('l2dockPin');
-  if(_pb){ _pb.classList.toggle('on', dockPinned); _pb.setAttribute('aria-pressed', dockPinned?'true':'false'); _pb.innerHTML='\ud83d\udccc\ufe0e '+(dockPinned?'Pinned':'Pin open'); }
+  if(_pb){ _pb.classList.toggle('on', dockPinned); _pb.setAttribute('aria-pressed', dockPinned?'true':'false'); _pb.title=dockPinned?'Pinned':'Not pinned'; }   // v2.6.147: the needle shows the state (.on stands it up, see the CSS) and the tooltip says it; the button's markup is never rewritten
 }
 function setL2Dock(open, light){                                 // L2 redesign: expand / collapse the bottom dock (crypt / library / ash / hand)
   if(open === board.classList.contains('l2dockopen')) return;
@@ -15678,17 +15817,18 @@ function showSay(i, who, seat){
 function restoreFromPub(pub){
   const sx=(board.clientWidth-CW)/Math.max(1,(pub.bw||board.clientWidth)-CW);
   const sy=(board.clientHeight-CH)/Math.max(1,(pub.bh||board.clientHeight)-CH);
-  const made=new Map();
+  const made=new Map(), _fb=freeBoard();
   (pub.cards||[]).forEach(pc=>{
     const c=makeCard(String(pc.name||'Card'), pc.kind==='crypt'?'crypt':'lib');
     made.set(pc.id,c);
     move(c, PUBZ.includes(pc.zone)?pc.zone:'ready', {});
+    if(_fb && (pc.zone==='ready'||pc.zone==='uncontrolled'||pc.zone==='torpor') && Number.isFinite(pc.x) && Number.isFinite(pc.y)){ c.x=pc.x; c.y=pc.y; }   // v2.6.148: the free board's coordinates ARE the published ones (canonical felt) -- no scaling, and all three table zones keep their place
     c.faceDown=!!pc.faceDown; c.locked=!!pc.locked;
     c.blood=Math.max(0,pc.blood|0); c.blue=Math.max(0,pc.blue|0); c.green=Math.max(0,pc.green|0);
     c.counters=(pc.counters||[]).slice(0,12).map(String);
     c.owner=pc.owner||null; c.controller=pc.controller||null;
     c._avSeq=pc._avSeq||0;   // carry play-order timestamp so a restored online snapshot keeps Played-tab order
-    if(pc.zone==='ready'){
+    if(pc.zone==='ready' && !_fb){
       c.x=Math.max(4,Math.min((pc.x||0)*sx, board.clientWidth-CW-4));
       c.y=Math.max(34,Math.min((pc.y||0)*sy, board.clientHeight-CH-4));
     }

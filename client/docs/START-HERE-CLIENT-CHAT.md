@@ -10,15 +10,15 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.145** (THE GROUP KNOWS THE ZONES; carries v2.6.143 THE TABLE LISTENS and v2.6.144 ONE RULE FOR ONE AND FOR MANY) | `client/elysium-vtes-bord.html`, copied to `/` |
-| server | **srv-2.6.43** | `client/elysium-server.js`, copied to `/` |
+| client | **v2.6.148** (A SEAT FOR THE WATCHER: spectating, arriving mid-game, the snapshot restore and the globe after a reload fixed; bots on Structured only; carries v2.6.147 THE PIN STANDS and v2.6.146 THE TABLE IS SET — the room option 'Suggested table setup', seats on the free board) | `client/elysium-vtes-bord.html`, copied to `/` |
+| server | **srv-2.6.44** (the room option `tableSetup`; loadMatch's `took` carries `boardMode`) | `client/elysium-server.js`, copied to `/` |
 | bot (consumed) | **v0.6.198** (12 Oct 2026) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.145 | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **256/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 60/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical 1 496 824 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.148 / srv-2.6.44 | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **271/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 64/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical 1 516 413 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
-**Live on elysium.cards:** whatever Johan deployed last — check the journal's newest entry; v2.6.145 + bot v0.6.198
-were delivered on 12 Oct and may still be undeployed (purge the client + `/elysium-bot.js`; the three JSONs are
-byte-identical to v0.6.197's).
+**Live on elysium.cards:** whatever Johan deployed last — check the journal's newest entry. v2.6.148 + srv-2.6.44 were
+delivered on 13 Oct (one PR; v2.6.146 and v2.6.147 were never deployed alone) and need BOTH steps: **restart the server** and purge the client (the option is a server field; a new
+client on the old server just starts the old way and says so). Bot v0.6.198 is unchanged.
 
 ## The first ten minutes
 
@@ -33,7 +33,7 @@ head -40 docs/elysium-learnings.md
 # the bundle beside the suite (gitignored — copy, never commit):
 cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
 node check-versions.js             # must end green: code, doc headers, AND the root == client/ + bot/ gate
-node test-client-logic.js          # 256 passed, 0 failed, 0 skipped (with the bundle beside)
+node test-client-logic.js          # 271 passed, 0 failed, 0 skipped (with the bundle beside)
 ```
 
 The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification commands" and `client/SKILLS.md`
@@ -69,13 +69,33 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 7. Commit (English, what and why), push, open a PR against `main`. Johan merges.
 8. Update this file's version block when a release went out.
 
-## Open right now (12 Oct 2026)
+## Open right now (13 Oct 2026)
 
+- **Johan's call — the free board, six client items analysed and NOT built (13 Oct, the Classic review;
+  `client/CLAUDE.md` top entry, journal newest entry):** **K1** the face decides the zone for crypt cards on the free
+  board (today a dragged face-down card counts as a minion and a vampire flipped where it lies does not); **K2** card
+  menu ▸ Leave torpor throws the card to the felt's corner; **K3** a torpored card dragged becomes ready; **K4** the
+  felt's Round/Turn label never advances; **K5** the Played tray covers the suggested top row and a resolver pins it
+  there (v2.6.146's seat spots were measured against the hand panel only); **K6** the other seats' cards vanish from
+  the felt when the roster changes, until the next board arrives (a dropped opponent's cards stay gone at a
+  two-player table).
+- **For the bot project to pick up:** `docs/handoffs/REPLY-to-bot-2026-10-13-classic-review.md` — the hard stop
+  (`_openSlot` on a full Classic row), equipment without `host` (Structured too), permanents at fixed felt points, the
+  Edge on the felt. The seat formulas of the table-setup handoff are NOT final while K5 is open.
+- **Until v2.6.148 is deployed** the lobby offers Add bot in a Classic room, and a lobby bot whose camp row fills
+  freezes the host's tab (run twice on main's pair, 13 Oct; the other player sees every seat online and the turn
+  on the bot, and has no tool).
 - **Johan's call:** online, should anyone at the table get the hold badge's Resume button (today only the holder)?
   (v2.6.142; `docs/elysium-session-journal.md` newest entry.)
-- **Deploy:** v2.6.145 + bot v0.6.198 (purge the client + `/elysium-bot.js`).
-- **Proposed, not built — seats on the free board:** default globe positions along the table edge in seating order,
-  an ordinal on the globe, drawn crypt cards landing beside the owner's globe (journal, 12 Oct late night).
+- **Deploy:** v2.6.148 + srv-2.6.44 — restart the server, purge the client. (Bot v0.6.198 from 12 Oct, if not yet up: purge `/elysium-bot.js`.)
+- **Left out of v2.6.148 on purpose:** the helicopter view for a watcher on a Structured table (it draws the watcher as
+  a seat); a watcher's view does not follow the turn by itself; a player the host moves to spectator mid-game lands on
+  the start view (Esc leads to the table).
+- **Bots: Structured tables only (Johan, 13 Oct)**, online as offline. The handoff
+  `docs/handoffs/REPLY-to-bot-2026-10-13-table-setup.md` says so and keeps the seat-spot ask for the day bots come to
+  Classic; `tableSetupOn()`'s bot guard is the safety net for a bot on its own socket.
+- **Small, open:** the other seat chips (Table panel, a seat visit's header, the own pool name) still show a digit, the
+  globes say 1st, 2nd …; the Host Guide and Help → Local server do not mention the option.
 - **Johan's call (player feedback, round 2 — analysed, not built):** the hand open by default; a host
   'Randomise seats' button in the lobby (needs the server). `client/CLAUDE.md` top entries.
 - **Known limit:** online, after the host's panel release, the other clients' badges clear at the next release phrase.

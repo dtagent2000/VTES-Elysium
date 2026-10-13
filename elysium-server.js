@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.43';   // srv-2.6.43 (9 Oct 2026, THE BOT TEMPO + THE KNOWLEDGE FILES -- restart): (1) botcfg (spec-bot-tempo-2026-09-27): any seated HUMAN sets the table's bot tempo {tempo standard|adaptive|turn, waitSecs 1-8}, lobby or game; a partial write keeps the absent field (Standard / 3 s under a table that has none); stored on the room, broadcast whole to everyone, replayed to a late joiner right after `joined`. (2) GET /elysium-twd-profile.json and /elysium-twd-archetypes.json beside the bot statics (exact match, the knowledge layer's data, bot v0.6.187+). (3) Found on the way: the room snapshot never carried boardMode (a restored Classic table told every rejoining client it was Structured), refHash, matchMins, everPop (srv-2.6.22's squatter flag -- the first 10-minute sweep after a restart deleted every restored table whose players had not come back yet) or the bot flag (the srv-2.6.36 census counted a restored bot as a human); roomSnap / roomUnsnap carry them, and a reconnecting bot keeps its flag. Previous note: elysium-CHANGELOG.md.
+const VERSION = '2.6.44';   // srv-2.6.44 (13 Oct 2026, THE TABLE IS SET -- restart): (1) the room option `tableSetup` ('Suggested table setup', Classic rooms only): `create` stores it, `joined` (players and spectators), `started` and both `took` messages carry it when set, and the room snapshot round-trips it. The server does NOTHING else with it -- the Classic deal still deals no uncontrolled; a client that reads the option arranges its own seat and draws its first four crypt cards with the ordinary drawCrypt verb, so an older client (or the bot) at the same table simply sets up by hand. (2) Found on the way: the `took` sent by loadMatch never carried boardMode, and the client's handler defaults an absent one to 'structured' -- the host of a Classic room saw a Structured board after loading a saved match. Previous note: elysium-CHANGELOG.md.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -426,6 +426,7 @@ function joinReply(sock, room, p){
   if(room.tableView) msg.tableView = room.tableView;
   if(room.l3shape) msg.l3shape = room.l3shape;
   msg.boardMode = room.boardMode || 'structured';
+  if(room.tableSetup) msg.tableSetup = true;           // srv-2.6.44
   if(room.tournLock) msg.tournLock = true;             // v2.5.64: the client can surface the lock (e.g. in the lobby)
   msg.chat = room.chat !== false; msg.specChat = room.specChat !== false;
   msg.srv = VERSION;
@@ -798,7 +799,7 @@ const GAME_HANDLERS = {
     room.tally = null;                                                         // v2.6.11: a resolver never rides into a fresh match
     if(room.matchMins) room.matchEnd = Date.now() + room.matchMins * 60000;
     scheduleRoomList();                                                        // v2.5.68 L2: the lobby list shows lobby->started flips live
-    bcast(room, { t:'started', players: roster(room), turn: 1, tournLock: room.tournLock || undefined, matchEnd: room.matchEnd || undefined, tableView: room.tableView || undefined, l3shape: room.l3shape || undefined, boardMode: room.boardMode || undefined });
+    bcast(room, { t:'started', players: roster(room), turn: 1, tournLock: room.tournLock || undefined, matchEnd: room.matchEnd || undefined, tableView: room.tableView || undefined, l3shape: room.l3shape || undefined, boardMode: room.boardMode || undefined, tableSetup: room.tableSetup || undefined });
     turnTallyClear(room); bcast(room, { t:'turn', seat: 1, who: room.players[0].name });
     sys(room, 'The game begins — seats are locked. 🦇');
     room.players.forEach(q => { if(q.sock) dealNow(q, room); });
@@ -1183,7 +1184,7 @@ const GAME_HANDLERS = {
         escrowSalt: room.escrowSalt || undefined,
         handBlob: target.handBlob || undefined,       // the AFK player's encrypted hand — restored on takeover
         turn: room.turnSeat || null, matchEnd: room.matchEnd || undefined, reactSecs: room.reactSecs || 5,
-        boardMode: room.boardMode || undefined,
+        boardMode: room.boardMode || undefined, tableSetup: room.tableSetup || undefined,
         srv: VERSION });
       sys(room, w.name + ' took over seat ' + seatNo + '. 🪑');
       console.log('[room] ' + w.name + ' took over seat ' + seatNo + ' in "' + room.name + '"');
@@ -1371,6 +1372,7 @@ const GAME_HANDLERS = {
       escrowSalt: room.escrowSalt || undefined,
       handBlob: meP.handBlob || undefined,
       turn: room.turnSeat, matchEnd: room.matchEnd || undefined, reactSecs: room.reactSecs,
+      boardMode: room.boardMode || undefined, tableSetup: room.tableSetup || undefined,   // srv-2.6.44: this `took` never carried boardMode -- the client's handler defaults an absent one to 'structured', so the HOST of a Classic room saw a Structured board after loading a saved match (everyone else rejoins through `joined`, which carries it)
       loaded: sv.name, srv: VERSION
     });
     sys(room, p.name + ' loaded the saved match “' + sv.name + '”. Other players: rejoin with your names to retake your seats. 💾');
@@ -1445,6 +1447,7 @@ function handle(conn, raw){
                    reactSecs: (rs >= 3 && rs <= 30) ? rs : 5,
                    tableView: (m.tableView === 'normal' || m.tableView === 'simplified') ? m.tableView : null, l3shape: (m.l3shape === 'square' || m.l3shape === 'circle') ? m.l3shape : null,
                    boardMode: m.boardMode === 'classic' ? 'classic' : 'structured',
+                   tableSetup: m.boardMode === 'classic' && m.tableSetup === true,   // srv-2.6.44: 'Suggested table setup' (Classic only) -- a room OPTION the server stores and tells every client; the setup itself is the clients' (seat spots + four ordinary drawCrypt verbs), the deal below is untouched
                    tournLock: m.tournLock === true,            // v2.5.64 referee kit: after start, locks deck swaps + vp self-adjust + self-unoust (the host's own verbs are unaffected)
                    hasPass: !!(m.pass),                        // v2.5.68 L2: the lobby list shows a lock icon without revealing anything else
                    ledger: [] };                               // v2.5.65: server-authored resource history (see ledgerDiff)
@@ -1522,7 +1525,7 @@ function handle(conn, raw){
       const msg = { t:'joined', room: room.name, spect: true, ref: refJoin || undefined, you: pname,
                     players: roster(room), watchers: room.watchers.length,
                     chat: room.chat !== false, specChat: room.specChat !== false, tournLock: room.tournLock || undefined,
-                    srv: VERSION, reactSecs: room.reactSecs || 5, tableView: room.tableView || undefined, l3shape: room.l3shape || undefined, boardMode: room.boardMode || undefined, lobby: !room.started };
+                    srv: VERSION, reactSecs: room.reactSecs || 5, tableView: room.tableView || undefined, l3shape: room.l3shape || undefined, boardMode: room.boardMode || undefined, tableSetup: room.tableSetup || undefined, lobby: !room.started };
       if(room.escrowSalt) msg.escrowSalt = room.escrowSalt;
       if(room.turnSeat) msg.turn = room.turnSeat;
       if(room.matchEnd) msg.matchEnd = room.matchEnd;
@@ -2026,6 +2029,7 @@ function roomSnap(r){
     reactSecs: r.reactSecs || 5, timeCalled: !!r.timeCalled, escrowSalt: r.escrowSalt || null, tournLock: !!r.tournLock, hasPass: !!r.hasPass, ledger: (r.ledger || []).slice(-800),
     helperPolicy: r.helperPolicy || null,
     boardMode: r.boardMode === 'classic' ? 'classic' : 'structured', refHash: r.refHash || null, matchMins: r.matchMins || 0, everPop: !!r.everPop,
+    tableSetup: !!r.tableSetup,
     botcfg: r.botcfg || null,
     players: r.players.map(p => ({ name: p.name, token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon || undefined,
       bot: p.bot ? true : undefined,
@@ -2046,6 +2050,7 @@ function roomUnsnap(r){
     chat: r.chat !== false, specChat: r.specChat !== false, started: r.started !== false, tournLock: !!r.tournLock, hasPass: !!r.hasPass, ledger: Array.isArray(r.ledger) ? r.ledger.slice(-800) : [],
     timeCalled: !!r.timeCalled, watchers: [],
     boardMode: r.boardMode === 'classic' ? 'classic' : 'structured', refHash: (typeof r.refHash === 'string' && r.refHash) ? r.refHash : null,
+    tableSetup: r.boardMode === 'classic' && r.tableSetup === true,   // srv-2.6.44: re-validated as the create path stores it
     matchMins: (mm >= 5 && mm <= 600) ? mm : 0,
     everPop: r.everPop === true || players.length > 0,
     botcfg: bc ? { tempo: bc.tempo, waitSecs: bc.waitSecs, who: String(r.botcfg.who || '').slice(0, 64) } : null,
