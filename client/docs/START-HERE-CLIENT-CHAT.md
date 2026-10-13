@@ -16,7 +16,7 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 | protocol | `ELYSIUM-PROTOCOL.md` header v2.6.151 / srv-2.6.45 | `client/ELYSIUM-PROTOCOL.md` |
 | last gates | client **279/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 65/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 + a three-bot Structured soak · B1 byte-identical 1 531 407 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
-**Live on elysium.cards:** client v2.6.149 + server srv-2.6.45 + bot v0.6.198 — Johan merged PR #7 and deployed the full root bundle on 13 Oct 2026 at 16:47 (server restarted, client purged).
+**Live on elysium.cards:** server srv-2.6.45 + bot v0.6.198 since 13 Oct 16:47 (PR #7, the full root bundle). Client v2.6.150 (PR #9) and v2.6.151 (PR #10) were merged the same evening and need only a client purge; the journal's newest entry says whether Johan has put them up.
 
 ## The first ten minutes
 
@@ -78,7 +78,7 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
   has the formula, and says the client now draws equipment on its vampire without waiting for their `host`.
 - **Johan's call:** online, should anyone at the table get the hold badge's Resume button (today only the holder)?
   (v2.6.142; `docs/elysium-session-journal.md` newest entry.)
-- **Deploy:** nothing pending — v2.6.149 + srv-2.6.45 are live (13 Oct, 16:47).
+- **Deploy:** client v2.6.151 (carries v2.6.150) — purge the client; server unchanged. If Johan has already purged, nothing is pending.
 - **Left out of v2.6.148 on purpose:** the helicopter view for a watcher on a Structured table (it draws the watcher as
   a seat); a watcher's view does not follow the turn by itself; a player the host moves to spectator mid-game lands on
   the start view (Esc leads to the table).
