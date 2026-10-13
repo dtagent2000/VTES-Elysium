@@ -1,8 +1,11 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.150 / server v2.6.45 / bot v0.6.198 tested beside the suite, last updated 13 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.151 / server v2.6.45 / bot v0.6.198 tested beside the suite, last updated 13 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**13 Oct 2026, night (THE EDGE ON THE GLOBE — v2.6.151):**
+- **A one-line function at a fragment seam has a shape the splitter depends on (13 Oct).** `removeEdgeToken` is the last line of the token-engine fragment, and the splitter asserts that fragment ends with a bare `}`. A trailing `// comment` on that line broke the B1 round trip. The seams are listed in `split_client.py` (`*_START` / `*_END`); a function named there keeps its closing brace alone on its line.
 
 **13 Oct 2026, evening (THE FACE DECIDES — v2.6.149 / srv-2.6.45):**
 - **Open the recipe before designing, not after (13 Oct).** The turn count was planned client-only: every pub carries `tn`/`rn`, a reloaded client takes it from the boards. The harness passed — it fed hand-made pubs straight into the handler. The real server's `sanitizePub` is a whitelist and dropped both, so the reload run still said 'Round 1 · Turn 1'. SKILLS.md has a recipe for exactly this ('Add a field to the public board': 'skip this and the feature … silently dies online'); it was not opened. The real-server run caught it; the recipe would have caught it before any code.

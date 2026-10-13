@@ -1112,6 +1112,8 @@ body.inl4.l3zoomopen #l3zoomCtl{ display:flex; }
 .l4globe .l4gdot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; vertical-align:middle; box-shadow:inset 0 0 0 1px rgba(255,255,255,.25), 0 0 4px rgba(0,0,0,.5); }
 .l4globe .l4gpool{ width:64px; height:64px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #b83030, #8a1e1e 55%, #5c1010); border:2.5px solid; display:flex; align-items:center; justify-content:center; margin:0 auto; box-shadow:0 4px 12px rgba(0,0,0,.5), inset 0 2px 6px rgba(255,255,255,.10), inset 0 -4px 8px rgba(0,0,0,.45); cursor:default; position:relative; }
 .l4globe-mine .l4gpool{ cursor:grab; }
+.l4globe .l4gedge{ display:none; position:absolute; top:-6px; right:-10px; padding:1px 5px; border-radius:7px; background:#4a0a0e; border:1px solid #d6a868; color:#f3dcc0; font:700 8px/1.3 "Cinzel",serif; letter-spacing:.1em; box-shadow:0 1px 4px rgba(0,0,0,.6); pointer-events:none; z-index:3; }
+.l4globe.l4gedgeon .l4gedge{ display:block; }   /* v2.6.151: a seat holding the Edge says so on its globe when no Edge token of its own lies on the felt (a bot's pub carries edge:true and no token) */
 .l4globe.l4goff .l4gpool{ filter:grayscale(.85) brightness(.6); }   /* v2.6.149 (K6): a seat that has dropped off says so on the felt, where the eye is */
 .l4globe.l4goff::after{ content:'offline'; display:block; margin-top:3px; font:italic 600 13px "Spectral",Georgia,serif; color:#f0a48c; text-shadow:0 2px 4px #000; pointer-events:none; }
 .l4globe .l4gpoolnum{ font:700 24px "Cinzel",serif; color:#f3ece0; text-shadow:0 2px 4px rgba(0,0,0,.6); line-height:1; transform:translateY(0.04em); position:relative; z-index:2; }
@@ -2915,7 +2917,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
       <em>macOS</em> — double-click <code>start-elysium.command</code> (the very first time: right-click → <em>Open</em>, since macOS is wary of new files; if it still refuses, open Terminal in the folder and run <code>bash start-elysium.sh</code>).<br>
       <em>Linux</em> — in a terminal: <code>bash start-elysium.sh</code> (or once <code>chmod +x start-elysium.sh</code>, then <code>./start-elysium.sh</code>).</li>
     <li><b>Read the banner.</b> A window opens and prints, among other lines, <em>Network: http://192.168.1.42:8123</em> — <strong>that is the address you share with the table.</strong> Leave the window open while you play; <kbd>Ctrl</kbd>+<kbd>C</kbd> shuts down and saves the rooms.</li>
-    <li><b>Create the room.</b> Open the address in your own browser → <span class="menu">Create game</span> → your name, a room name, a password if you like; the <span class="menu">Game settings</span> fold has the match clock, the reaction timer, board style, helpers, the tournament lock and an optional <em>referee password</em> for the table → <span class="menu">Create room</span>. Then click <span class="menu">📋 Invite</span> in the lobby and a ready-made invitation lands on your clipboard — paste it to your players and send the password separately.</li>
+    <li><b>Create the room.</b> Open the address in your own browser → <span class="menu">Create game</span> → your name, a room name, a password if you like; the <span class="menu">Game settings</span> fold has the match clock, the reaction timer, board style (Classic also offers <em>Suggested table setup</em>: every seat's pool globe and first four crypt cards start at their own spot around the table), helpers, the tournament lock and an optional <em>referee password</em> for the table → <span class="menu">Create room</span>. Then click <span class="menu">📋 Invite</span> in the lobby and a ready-made invitation lands on your clipboard — paste it to your players and send the password separately.</li>
     <li><b>Your players join.</b> They open your address in any browser — nothing installed — click <span class="menu">Join game</span>, and your room is already in the list with the server address filled in: pick it, type the password, import a deck, take a seat, Ready. Play.</li>
   </ol>
 
@@ -3173,7 +3175,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.150';   // v2.6.150 (13 Oct 2026, THE TAB SAYS SO, pure client -- purge; srv-2.6.45 unchanged, no wire change; bot v0.6.198 beside): Johan's three adjustments after deploying v2.6.149. (1) The seat chip (chair + ordinal) sits UNDER the pool globe on the free board, the name alone above it (updateL4GlobeHTML, both the first build and the repaint; CSS .l4gseat is its own line). (2) The Played tray no longer opens on anyone's screen because of another seat's resolver: the tally handler pins nothing; instead the Played tab pulses (.live) and names the resolver (#playedTabAvr: VOTE / BLOCK / COMBAT) for players who have that helper on, and each player hovers or pins by themselves. A combat started from the card menu still shows the tray to the one who started it, and takes it away again when it closes (v2.6.149's playedAutoPin). With that, the suggested top row is back at the top edge (y 25; v2.6.149 had moved it to y 132 under the tray). (3) The page title and og:title read 'Elysium: a digital VTES table' (a colon, not the long dash). Previous: v2.6.149 (13 Oct 2026, THE FACE DECIDES -- purge the client AND restart the server: srv-2.6.45 ships with it; bot v0.6.198 beside): Johan's 'kör' on K1-K6 from the bot review, plus three faults found on the way. (K1) On the free board a crypt card's FACE decides between ready and uncontrolled: face down = uncontrolled, face up = ready (torpor apart) -- move() asks freeFaceZone, every flip asks freeFaceSync. A face-down card dragged stayed 'ready' (MINION 1, the Table panel's vampire count, blood on it no transfer); a vampire flipped up where it lay stayed 'uncontrolled' (no clan, no Actions/Combat menu, +1 blood charged as a transfer) -- with the suggested setup that was the ordinary way to bring one out. Minion counts also skip face-down cards (belt for older pubs); a dragged uncontrolled or torpored crypt card never attaches; a snapshot restore and a given card get their face WITH the move; entering the free board puts an older save right. (K2) Leave torpor keeps the vampire where it lies on the free board (it went to the felt's top-left corner). (K3) Torpor survives a drag there, and a torpored card carries a TORPOR band on every seat's screen. (K4) The felt's Round/Turn label and centre clock follow the counter and the match clock (written only when the felt was rebuilt). (K5) A Played tray that a resolver opened (anyone's tally, a combat from the card menu) closes when the resolver closes -- a player's own pin stays; the suggested top row starts at y 132, below the tray (y 25: the top-centre seat sat under it). (K6) A roster change (or a resize, a settings apply) no longer empties the felt of the other seats' cards (clearL4Globes took #l4oppWrap with it; it keeps it now); a seat that dropped off is greyed with 'offline' under its globe. FOUND ON THE WAY: (a) the Round/Turn count survives a reconnect -- kept on an automatic reconnect into the same room, and after a reload, a seat takeover or a loaded match taken from the boards until the next turn (pub.tn / pub.rn, both or nothing; srv-2.6.45 relays them) -- joined zeroed it, so the turn line restarted at 'Round 1 · Turn 1' and the opening transfer ramp with it; (b) another seat's attached cards ride on their host in every view, torpor included (they vanished when the vampire went to torpor), and a card listed in a host's attached list without a host of its own (the released bot's equipment) is drawn on that host, not in a corner; an id left for a card in the ash heap or burned is not drawn, and a snapshot restore puts a torpored vampire's riders back on it. An independent review's fixes are in: a released face-down rider follows the face rule, the felt clock shows its end, a hover peek held open by a live resolver closes with it, and the tray's state is declared beside avr (avrRender reads it at start-up).
+const VERSION='2.6.151';   // v2.6.151 (13 Oct 2026, THE EDGE ON THE GLOBE, pure client -- purge; srv-2.6.45 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.150 in one PR): Johan's 'kör' on three small open items. (1) A seat that holds the Edge shows an EDGE mark on its pool globe on the free board, unless that seat has an Edge token of its own on the felt (then the token says it) -- l4GlobeEdges, run on every board update, on taking / releasing the Edge and when the own token comes or goes. A bot's pub carries edge:true and no token, so a bot's Edge was invisible on the felt (the Classic review, §5); the bot project need not change anything. (2) The seat chips in the Table panel, a seat visit's header and the own pool name say 1st, 2nd ... like the globes (they showed a digit). (3) Help -> Local server and START-HERE.html mention the suggested table setup (the Host Guide is a hosting document and does not list room settings). Previous: v2.6.150 (13 Oct 2026, THE TAB SAYS SO, pure client -- purge; srv-2.6.45 unchanged, no wire change; bot v0.6.198 beside): Johan's three adjustments after deploying v2.6.149. (1) The seat chip (chair + ordinal) sits UNDER the pool globe on the free board, the name alone above it (updateL4GlobeHTML, both the first build and the repaint; CSS .l4gseat is its own line). (2) The Played tray no longer opens on anyone's screen because of another seat's resolver: the tally handler pins nothing; instead the Played tab pulses (.live) and names the resolver (#playedTabAvr: VOTE / BLOCK / COMBAT) for players who have that helper on, and each player hovers or pins by themselves. A combat started from the card menu still shows the tray to the one who started it, and takes it away again when it closes (v2.6.149's playedAutoPin). With that, the suggested top row is back at the top edge (y 25; v2.6.149 had moved it to y 132 under the tray). (3) The page title and og:title read 'Elysium: a digital VTES table' (a colon, not the long dash).
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -7661,6 +7663,7 @@ function updateEdge(){
   const ec=$('#edgeChrome');                                        // v2.5.47: the chrome relocation mirrors #edge's icon + lit state
   if(ec){ if(!ec.querySelector('.vtesmark')) ec.innerHTML=vtesSymbol({size:16, noOpacity:true}); ec.classList.toggle('lit',state.edge); }
   renderStats();
+  if(typeof l4Globes!=='undefined' && l4Globes.size) l4GlobeEdges();   // v2.6.151: my own globe's Edge mark
 }
 function toggleEdge(){
   pushUndo(); state.edge=!state.edge; updateEdge();
@@ -7879,7 +7882,7 @@ function updateL4GlobeHTML(glob, name, pool){
     const _clanImg=_clan?'<img class="clansym-pool" src="'+clanSymUrl(_clan)+'" alt="'+esc(_clan)+'" onerror="this.style.display=\'none\'">':'';
     glob.el.innerHTML=
       '<div class="l4glabel">'+(col?'<span class="l4gdot" style="background:'+colHex+'"></span>':'')+esc(name||'?')+'</div>'+
-      '<div class="l4gpool" style="border-color:'+colHex+';'+((conv.poolPlayerColor&&col)?'background:'+poolGradient(colHex):'')+'"><span class="l4gpoolnum">'+pool+'</span>'+_clanImg+(glob.mine?'<button class="l4pbtn l4pminus" title="-1 pool">−</button><button class="l4pbtn l4pplus" title="+1 pool">+</button>':'')+'</div>'+
+      '<div class="l4gpool" style="border-color:'+colHex+';'+((conv.poolPlayerColor&&col)?'background:'+poolGradient(colHex):'')+'"><span class="l4gpoolnum">'+pool+'</span>'+_clanImg+'<span class="l4gedge" title="Holds the Edge">EDGE</span>'+(glob.mine?'<button class="l4pbtn l4pminus" title="-1 pool">−</button><button class="l4pbtn l4pplus" title="+1 pool">+</button>':'')+'</div>'+
       '<div class="l4gseat">\u{1FA91}\u00a0'+ordinal(glob.seat)+'</div>';   // v2.6.150: the seat chip under the globe
     return;
   }
@@ -7898,6 +7901,7 @@ function updateL4GlobeHTML(glob, name, pool){
     poolDiv.style.background=(conv.poolPlayerColor&&col)?poolGradient(colHex):'';
     const pn=poolDiv.querySelector('.l4gpoolnum'); if(pn) pn.textContent=pool;
     poolDiv.querySelectorAll('.clansym-pool').forEach(e=>e.remove());
+    if(!poolDiv.querySelector('.l4gedge')){ const eb=document.createElement('span'); eb.className='l4gedge'; eb.title='Holds the Edge'; eb.textContent='EDGE'; const fb=poolDiv.querySelector('.l4pbtn'); if(fb) poolDiv.insertBefore(eb, fb); else poolDiv.appendChild(eb); }   // v2.6.151: a globe built before this element existed
     if(_clan){
       const img=document.createElement('img');
       img.className='clansym-pool'; img.alt=_clan; img.title=_clan; img.src=clanSymUrl(_clan);
@@ -7917,6 +7921,15 @@ function placeL4Globe(glob){
 }
 
 function layoutL4Globes(){ l4Globes.forEach(placeL4Globe); }
+function l4GlobeEdges(){                                           // v2.6.151: the Edge on the globe of the seat that holds it -- unless that seat has an Edge token of its own on the felt (then the token says it)
+  const me=mySeat();
+  l4Globes.forEach(g=>{
+    let on=false;
+    if(g.seat===me) on=!!state.edge && !(conv.edgeToken && tokens.get('edge'));
+    else { const pub=(net.boards[g.seat]||{}).pub; on=!!(pub && pub.edge && !(pub.tokens||[]).some(t=>t && t.type==='edge')); }
+    g.el.classList.toggle('l4gedgeon', on);
+  });
+}
 
 function updateL4Opponents(){
   if(!l4on()) return;
@@ -7939,6 +7952,7 @@ function updateL4Opponents(){
     const poolTok=(b.pub.tokens||[]).find(t=>t.type==='pool');
     if(poolTok&&Number.isFinite(poolTok.x)){ g.x=poolTok.x; g.y=poolTok.y; placeL4Globe(g); }
   });
+  l4GlobeEdges();                                                   // v2.6.151
   renderL4OppCards();
 }
 function updateL4GlobePool(seat, pool){
@@ -8051,6 +8065,7 @@ function renderL4Globes(){
       board.appendChild(hint);
     }
   }
+  l4GlobeEdges();                                                   // v2.6.151: fresh globes carry the Edge mark from the start
   if(l4on()) updateL4Opponents();                                   // v2.6.149 (K6): clearL4Globes took the other seats' cards with it (#l4oppWrap) and nothing drew them again until the next board arrived -- every roster change (a drop, a return, an oust) emptied the felt of everyone else's cards; at a two-player table they stayed gone until you moved a card of your own
 }
 
@@ -8108,8 +8123,11 @@ function ensureEdgeToken(){
     tok.x=cc.x; tok.y=cc.y;
   }
   tok.z=++state.topZ; placeToken(tok);
+  if(typeof l4Globes!=='undefined' && l4Globes.size) l4GlobeEdges();   // v2.6.151: a token on the felt replaces the globe's mark
 }
-function removeEdgeToken(){ removeToken('edge'); }
+function removeEdgeToken(){   // v2.6.151: without a token the globe carries the mark (l4GlobeEdges) -- the closing brace stays alone on its line: the B1 splitter ends the token fragment here
+  removeToken('edge'); if(typeof l4Globes!=='undefined' && l4Globes.size) l4GlobeEdges();
+}
 function edgeHandoffHotseat(toSeat, dropPos){   // hotseat: move Edge control to another seat. The ACTIVE seat is live (state.edge); non-active seats are JSON strings in net.hot.boards; net.boards[seat].pub is the rendered mat view.
   if(!net.hot || !net.hot.boards) return;
   const mine=mySeat();
@@ -8488,7 +8506,7 @@ function statRow(o){
   const vpCell   = (o.seat&&!o.vacant)||o.vp>0
     ? '<span class="svp" title="'+((o.me||localTable)?'Victory points — click +0.5, Shift-click −0.5':'Victory points')+'">🏆'+fmtVp(o.vp)+'</span>'
     : '<span></span>';
-  const seatCol = (o.seat && pcol) ? '<span class="sseatcol" style="color:'+pcol.hex+'">🪑'+o.seat+'</span>' : '<span></span>';
+  const seatCol = (o.seat && pcol) ? '<span class="sseatcol" style="color:'+pcol.hex+'">🪑'+ordinal(o.seat)+'</span>' : '<span></span>';   // v2.6.151: 1st, 2nd ... like the globes (it was a digit)
   // Clan symbol column: from pub.clan if opponent, from activeClan() if me
   const _clanForCol = o.seat ? (o.me ? activeClan() : ((net.boards[o.seat]&&net.boards[o.seat].pub&&net.boards[o.seat].pub.clan)||null)) : null;
   const clanColEl = clanSymBadge(_clanForCol, 20);
@@ -13899,7 +13917,7 @@ function renderRemote(seat){   // VIEW alias: "besök" / visit, a single opponen
   { const _pub=net.boards[seat]&&net.boards[seat].pub, _clan=_pub&&_pub.clan;
     const _csym=_clan?('<img class="clansym" src="'+esc(clanSymUrl(_clan))+'" alt="'+esc(_clan)+'" title="'+esc(_clan)+'" style="width:16px;height:16px;vertical-align:middle;opacity:.82;margin-right:0" onerror="this.style.display=\'none\'">'):'';
     $('#rvTitle').innerHTML=_csym+'👁 <span style="color:'+_hex+';font-weight:700">'+escapeHtml(who)+'</span>'
-    +' — <span style="color:'+_hex+'">🪑</span><span style="color:'+_hex+';font-weight:600;font-size:16.5px">'+seat+'</span>'
+    +' — <span style="color:'+_hex+'">🪑</span><span style="color:'+_hex+';font-weight:600;font-size:16.5px">'+ordinal(seat)+'</span>'   // v2.6.151: the ordinal, like the globes
     +(p&&!p.online?' <span style="opacity:.6">(offline)</span>':''); }
   const host=$('#rvCards');
   // v2.5.38: reconcile instead of the old innerHTML='' wipe — the visited board's cards now glide/flip
@@ -14660,7 +14678,7 @@ function setPname(){                                   // permanent seat-colour 
   el.style.setProperty('--pdotcol', col?col.hex:'transparent');
   el.classList.toggle('hasdot', !!col);
   const ps=$('#pseat');
-  if(ps){ ps.textContent=sx ? '🪑'+sx : ''; ps.style.color=col?col.hex:'rgba(176,141,79,.5)'; }
+  if(ps){ ps.textContent=sx ? '🪑'+ordinal(sx) : ''; ps.style.color=col?col.hex:'rgba(176,141,79,.5)'; }   // v2.6.151: the ordinal
 }
 function setCenterFrameA(fx, fy, fw, fh){                 // fx..fh are BASE (zoom=1) slot coords; zoom+pan fold in below (L3 only)
   let fr=$('#l2frame-me');
