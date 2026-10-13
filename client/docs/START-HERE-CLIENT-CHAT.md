@@ -71,6 +71,20 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 
 ## Open right now (13 Oct 2026)
 
+- **Johan's call — the free board, six client items analysed and NOT built (13 Oct, the Classic review;
+  `client/CLAUDE.md` top entry, journal newest entry):** **K1** the face decides the zone for crypt cards on the free
+  board (today a dragged face-down card counts as a minion and a vampire flipped where it lies does not); **K2** card
+  menu ▸ Leave torpor throws the card to the felt's corner; **K3** a torpored card dragged becomes ready; **K4** the
+  felt's Round/Turn label never advances; **K5** the Played tray covers the suggested top row and a resolver pins it
+  there (v2.6.146's seat spots were measured against the hand panel only); **K6** the other seats' cards vanish from
+  the felt when the roster changes, until the next board arrives (a dropped opponent's cards stay gone at a
+  two-player table).
+- **For the bot project to pick up:** `docs/handoffs/REPLY-to-bot-2026-10-13-classic-review.md` — the hard stop
+  (`_openSlot` on a full Classic row), equipment without `host` (Structured too), permanents at fixed felt points, the
+  Edge on the felt. The seat formulas of the table-setup handoff are NOT final while K5 is open.
+- **Until v2.6.148 is deployed** the lobby offers Add bot in a Classic room, and a lobby bot whose camp row fills
+  freezes the host's tab (run twice on main's pair, 13 Oct; the other player sees every seat online and the turn
+  on the bot, and has no tool).
 - **Johan's call:** online, should anyone at the table get the hold badge's Resume button (today only the holder)?
   (v2.6.142; `docs/elysium-session-journal.md` newest entry.)
 - **Deploy:** v2.6.148 + srv-2.6.44 — restart the server, purge the client. (Bot v0.6.198 from 12 Oct, if not yet up: purge `/elysium-bot.js`.)

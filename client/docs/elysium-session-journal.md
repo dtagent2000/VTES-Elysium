@@ -1,3 +1,116 @@
+## [FRIA BORDET, LÄST FÖR BOTTARNA] — botens Classic-väg granskad med klientens ögon (13 oktober 2026, eftermiddag, ingen kod)
+
+Johan: "Du får gärna granska bottkoden med klientsidans ögon :)" — frågan bakom: finns det direkta hinder för att
+köra bottar på Classic? Inget är byggt. `bot/` är läst och körd, inte rörd.
+
+**Hur:** läst `campAnchor` / `slot` / `_openSlot` och dess tretton anropare, varje fast koordinat, botens
+läsningar av andras `zone`. Kört: (1) en bot utan socket; (2) projektets egen soak per bordstyp, ett bord per
+process — åtta bord × två stilar med en *mätvakt* (sökningen ger upp efter 200 steg och antecknar det), sedan sju
+bord utan vakt; (3) riktig server + webbläsare (v2.6.148, en människa på plats 1 som bara passar) + tre bottar på
+egna sockets i egna processer, tre körningar; (4) main-paret som det ligger idag (v2.6.145 + srv-2.6.43) med
+bottar tillagda från lobbyn; (5) zonerna: två webbläsare och en bot i processen, drag och dubbelklick med riktig
+mus. Sist lästes överlämningen av en oberoende granskare som inte sett arbetet (se "Fällor").
+
+**Botens sida, i ordning:**
+1. **Det hårda stoppet.** På ett Classic-bord kommer `_openSlot` aldrig tillbaka när en lägerrad har slut på
+   platser: x kläms till högst 908, så alla index efter det ger samma punkt, och sökningen har ingen övre gräns.
+   Platser per rad: 4 på högersidans platser, 5–11 på övriga. Mätt: enhetsprov (dödad efter 4 s, tre fall); soak
+   med vakt — 7 mättnader vid ett sexbottarsbord (plats 3 uncontrolled med 4 i raden, plats 2 ready med 5–9);
+   soak utan vakt — **6 av 6 Classic-bord slutade andas efter 27–50 s**, samma sex lekar på Structured gick klart
+   på 170 s; live — botten på plats 2 stannade två gånger: i sin tredje tur (85 s in, 4 ready och 2 uncontrolled,
+   Influence stod på tur) och, i den spårade körningen, redan i sin första (20 s in: Effective Management med fyra
+   uncontrolled i en rad med fyra platser — spårets sista rad är frågan utan svar). Även en människas "Send to
+   torpor" på en bottvampyr går genom samma sökning (enhetsprov). En värdad mästare som ligger kvar på sin värds
+   gamla plats håller platsen, så stoppet kan komma innan raden är full av vampyrer.
+   *Vad bordet ser (socketbot):* ingenting på en och en halv minut. Sedan "Bot2-hacking disconnected." — servern
+   släpper en socket som tigit i 75 s, och botens socket svarar på ping i JavaScript. Turen står kvar hos platsen.
+   Värdens ⏭ Pass their turn… flyttar den; ett varv senare är den tillbaka. 💀 Oust this player… löser det, och
+   bordet spelar vidare.
+2. **Utrustning ritas inte på sin vampyr — även på Structured.** `_doEquip` lägger kortet på (64, 64) utan `host`.
+   Klienten ritar det först på vampyren och flyttar sedan samma element till (64, 64). Sett på båda bordstyperna.
+3. **Kort på fasta punkter.** Allierade, Creeping Sabotage, Fame, Smiling Jack, Pentex och givna kort på (64, 64),
+   mästarkort utan värd på y 40. På Structured är det botens egen matta; på fria bordet den delade filtens hörn.
+   Live: tre kort från en bot på samma punkt, två bottars mästarkort på samma punkt, allt ovanpå människans glob
+   och krypta uppe till vänster.
+4. **Lägret och bordets möbler.** Raderna stegar 96 px för kort som är 42 breda. Nedre platsernas torpor- och
+   uncontrolled-rader ligger 1 px isär. Det som ligger under y 413 är bakom handpanelen, det som ligger över
+   y 127–156 bakom Played-fliken.
+5. **Edge** syns inte på filten när en bot har den (ingen `edge`-markör i `tokens`).
+
+**Det som gäller redan idag:** main-paret erbjuder Add bot i Classic-rum. Kört där, med lobbyns egna reglage:
+hacking på plats 2 av 3. Sidan svarade fram till 262 s; från 272 s svarade den inte alls, inte efter 20 s, inte
+efter 60 s, och gick inte att fotografera. En lobbybot kör i värdens flik — hela klienten fryser.
+Omkört med en andra människa vid bordet (hacking på plats 2 av 4): botten spelade Effective Management i sin
+första tur och värdens sida tystnade. **Den andra spelaren såg ingenting ändras på 150 s — turen hos plats 2 och
+alla som online, värden och båda bottarna.** Webbläsaren svarar själv på serverns ping även när sidan står
+still, så ingen släpps. När värdens flik stängdes gick värden och bottarna offline tillsammans; turen stod kvar,
+och den andra spelaren blev inte värd på de 90 s vi tittade. Ingen vid bordet hade något verktyg kvar.
+v2.6.148 stänger den vägen.
+
+**Vår sida — hittat på vägen, gäller även bord utan bottar:**
+- **Zonen följer inte kortet på fria bordet.** Drar man ett nedvänt kryptkort blir det `ready`: fasraden säger
+  MINION 1, bordspanelen 🧛1, och blod på kortet i Influence räknas inte som transfer (ingen pool dras). Vänder
+  man upp en vampyr där den ligger stannar den i `uncontrolled`: MINION 0, 🧛0, ingen klansymbol, och +1 blod
+  räknas som transfer och drar 1 pool. Det andra fallet är mitt: sedan v2.6.146 ligger korten redan vid globen,
+  så "vänd där den ligger" är det naturliga draget. Botens bild av människan blir fel på samma sätt.
+- **Leave torpor** (kortmenyn) flyttar vampyren till filtens övre vänstra hörn.
+- **Ett kort i torpor som dras** blir `ready` igen ("→ the ready region.").
+- **Round/Turn-etiketten mitt på filten** står kvar på "Round 1 · Turn 1" (räknaren går rätt). Samma på v2.6.145.
+- **De andras kort försvinner från filten när rostern ändras.** `renderL4()` ritar de andras kort (via `layout()`)
+  och river sedan lagret de sitter i (`renderL4Globes()` → `clearL4Globes()`), utan att rita om. Rosterhanteraren
+  anropar `renderL4()` vid varje ändring: någon tappar anslutningen, kommer tillbaka, oustas. Korten kommer åter
+  när nästa bord från någon annan anländer — 0,6 s senare om en annan människa sitter kvar, eftersom varje klient
+  skickar sitt bord efter rosterändringen — eller när man själv flyttar ett kort. Vid ett tvåmannabord finns
+  ingen annan: **när Annas flik stängdes var hennes kort borta från Johans filt efter 2, 10, 30 och 60 s**, och
+  kom tillbaka först när han drog ett eget kort. Samma på main-paret. Hittat för att botbordet stod alldeles
+  stilla efter stoppet. Globen på filten visar inte heller att en plats är frånkopplad: det står bara i
+  Table-panelen ("reconnecting…") och i loggen.
+- **Played-fliken täcker övre radens platser, och det missade jag i v2.6.146** — jag mätte handpanelen, inte
+  fliken. På 1366 × 768 täcker den x 131–823, y 24–127 (till 156 med en rad kort): hela platsen uppe i mitten
+  och 2–3 kort på hörnplatserna. Någon annans resolver *nålar fast* fliken hos alla som har hjälparen på, och den
+  sitter kvar efter Resolve. Mätt med två människor: Anna öppnar Vote, Johans egen glob och alla fyra kort är
+  100 % täckta, och förblir det.
+
+**Förslag, inte byggt — väntar på "kör":**
+- **K1** På fria bordet avgör kortets yta zonen för kryptkort: nedvänt = uncontrolled, uppvänt = ready (om det
+  inte skickats till torpor); ett drag ändrar aldrig zonen. Rättar MINION, 🧛, klansymbolen, transferräkningen
+  och det bottar och andra klienter ser, i ett svep.
+- **K2** Leave torpor låter kortet ligga kvar.
+- **K3** Torpor överlever ett drag, och syns som en liten märkning på kortet (annars är tillståndet osynligt).
+- **K4** Etiketten följer turen.
+- **K5** Fliken som en resolver öppnat stängs med resolvern (eget klick nålar som förut), och övre raden flyttas
+  ned under flikens räckvidd (y 132). Kostar ungefär en kortrad i höjd för de övre platserna.
+- **K6** De andras kort ritas om efter `renderL4()` (en rad), och globen för en frånkopplad plats får en markering.
+
+**Det som gick bra:** Classic-given (fyra `drawCrypt` före första turen), turloopen, frågorna. Med mätvakten gick
+8 av 8 Classic-bord klart, och sju av dem bad aldrig om fler platser än raden har. Det avgörs av vilken lek som
+sitter var: tre rader nådde som mest exakt sin gräns, och utan vakten stannade alla sex bord vi provade.
+
+**Fällor i själva granskningen:**
+- *En pekare som vilar på ett uppvänt kort* har kortets tooltip under nästa klick, och *avslöjandeklonen* ligger
+  över filtens mitt i ungefär tre sekunder efter en vändning. Två drag "fungerade inte" förrän pekaren parkerades
+  på tom filt och skriptet väntade ut klonen.
+- *"Exakt vid gränsen"* fyra gånger i rad (hacking nådde 7 vampyrer på en plats med 7 platser) såg ut som en dold
+  spärr. Mätt tur för tur på båda bordstyperna: ingen skillnad i öppningen, spridningen mellan två körningar är
+  större. Inget påstående om tempo gick vidare.
+- *En hängd process* känns igen på två saker samtidigt: den skriver inget och den bränner en hel kärna. Bara
+  tystnad kan vara en väntan.
+- *"Bordet väntar för alltid" höll i en minut.* Min bevakning efter stoppet var 68 s; serverns regel släpper en
+  tyst socket efter 75. Den oberoende granskaren läste regeln i serverkoden; omkört med 140 s bevakning och
+  värdens verktyg. Av ungefär 190 påståenden i överlämningen fann granskaren en slutsats som koden motsade, en
+  felräkning ("50 px steg dubblar varje rad" — det ger 13 för 7 men bara 6–7 för 4), ett fall jag inte sett (en
+  värdad mästare som håller en lägerplats) och ett tiotal oskarpa formuleringar. En andra läsning efter
+  rättningarna fann nio småsaker till, bland dem att min nya mening "filten visar ingen förändring" motsades av
+  bilden från samma körning, där alla bottarnas kort var borta. Alla är rättade.
+- *Nio kryptkort är inte en lek.* Provleken byggdes av nio namn med ett kort var i stället för tolv kort; Start
+  förblev grå tills antalet stämde. Mitt skript, inte klienten.
+
+**Skrivet:** `handoffs/REPLY-to-bot-2026-10-13-classic-review.md` (sex önskemål i ordning, med ett sexraders
+skript som visar stoppet).
+**Inte tittat på:** en människas övriga `ctrl`-verb på bottkort vid Classic; återanslutning av en socketbot;
+Turn-based; pekskärm; fönster mindre än 1366 × 768; om någon faktiskt fått sin flik fryst — vägen har varit öppen
+sedan v2.6.99, och vi har ingen rapport åt något håll.
+
 ## [EN PLATS ÅT ÅSKÅDAREN] — v2.6.148: åskådarläget, ankomst mitt i spelet, och bottar bara på Structured (13 oktober 2026, mitt på dagen)
 
 Johan: "kör" på (b)–(e). För (a): bottar bara på Structured just nu, eftersom det är där han kontrollerat dem
