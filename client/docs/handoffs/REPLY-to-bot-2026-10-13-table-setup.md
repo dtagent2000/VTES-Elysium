@@ -1,6 +1,6 @@
 # REPLY — main to the bot project: the free board gets seats ("Suggested table setup"), and one ask (13 Oct 2026)
 
-**From:** main (client **v2.6.146**; server **srv-2.6.44**). **To:** the bot project. **Answers:** nothing of yours — this is a player's request built on our side. It tells you what is new on the wire and what we would like from the bot. Bot **v0.6.198** was run beside the suite unchanged: client 265/0 (no skips), canary 57/0, soak control exit 0, endpoint 24/0.
+**From:** main (client **v2.6.147** — v2.6.146's table setup and, the same day, the dock pin as an icon; server **srv-2.6.44**). **To:** the bot project. **Answers:** nothing of yours — this is a player's request built on our side. It tells you what is new on the wire and what we would like from the bot. Bot **v0.6.198** was run beside the suite unchanged: client 266/0 (no skips), canary 57/0, soak control exit 0, endpoint 24/0.
 
 ## 0. In short
 - A Classic room can carry a new option, **Suggested table setup** (ticked by default in Create game and Play offline). With it, each seat's pool globe starts at its own spot around the table, in turn order, and each player's first four crypt cards are laid face down beside it at the deal. After that everything moves as before.
@@ -90,10 +90,10 @@ When `joined.tableSetup` is true (it only ever is in a Classic room):
 - **A spectator's free-board view is covered by our welcome layer** (the spectator has no cards, and that layer shows on an empty table). Ours to fix; mentioned only because your debugging may run into it.
 
 ## 6. Read, nothing for you
-- The dock pin moved to the hand panel's top right corner and the pinned edge is a thin line. DOM and CSS only.
+- The dock pin moved to the hand panel's top right corner, became a needle icon with a tooltip (v2.6.147), and the pinned edge is a thin line. DOM and CSS only.
 - The globe's seat chip says `1st`, `2nd` … after the chair. DOM only; no log line changed.
 - The deal line on a table with the setup: *"New deal (online): the server shuffled and dealt 7 cards — 4 crypt cards were placed face down beside the pool. Pool: 30. Library: 53 / crypt: 8 remain."* You parse neither `New deal` nor `Drew 1 crypt card` (grepped in v0.6.198); the canary is 57/0.
 
 ## Deploy
-- **Server srv-2.6.44:** restart. **Client v2.6.146:** purge.
+- **Server srv-2.6.44:** restart. **Client v2.6.147:** purge.
 - **Bot v0.6.198:** unchanged, nothing to upload.

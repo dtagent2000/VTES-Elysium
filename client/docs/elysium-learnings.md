@@ -1,8 +1,16 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.146 / server v2.6.44 / bot v0.6.198 tested beside the suite, last updated 13 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.147 / server v2.6.44 / bot v0.6.198 tested beside the suite, last updated 13 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**v2.6.147 (13 Oct 2026, THE PIN STANDS):**
+- **An icon that must turn is drawn, not borrowed (13 Oct).** The pushpin emoji is tilted by its font, and each font tilts it differently. A rotation that means something (lying = loose, standing = pinned) has to start from a known angle: one SVG path drawn point down, turned by CSS.
+- **Choose a small icon's angle on the pixel grid (13 Oct).** At 12 px on an ordinary-density screen a 45° needle is a smudge; 0° and 90° are crisp. Render the candidates at device scale 1 and enlarge them pixel for pixel (`image-rendering:pixelated`) before choosing — a 2× screenshot flatters every option.
+- **When the words leave a button, three attributes take over (13 Oct).** `aria-label` names what the button does and never changes, `aria-pressed` carries the state, `title` says the state in words for the pointer. The setter then writes attributes only; rewriting `innerHTML` on every toggle would throw the icon away and restart its transition.
+- **A proposal is better for an hour of reading the code it is about (13 Oct).** 'The welcome layer covers a spectator's table' was the finding. Reading the paths for the proposal showed the layer is the smallest part: a spectator's client pushes a board, the server refuses, the refusal is logged, and the log line starts the next push — 53 notices in 35 seconds of watching. Count what a watcher's client SENDS before describing what it shows.
+- **An error reply that makes the client act again is a loop (13 Oct).** `err` → `log` → `scheduleSave` → `schedulePush` → `board` → `err`. Each step is reasonable alone. A client path that reacts to a refusal must not be able to produce the refused message.
+- **'Fix it first?' has a different answer per item (13 Oct).** Of five findings one was a product decision that decides what the other project is asked for; four were independent client fixes. Sorting them by what they block answered the question better than a yes or a no.
 
 **v2.6.146 / srv-2.6.44 (13 Oct 2026, THE TABLE IS SET):**
 - **An `else` after a one-line `for … if …` belongs to the inner `if` (13 Oct).** `if(!freeBoard()) for(…) if(crypt.length) move(…); else if(tableSetupOn()) …` parsed, ran, and dealt no setup cards offline. Brace the outer branch whenever an `else` follows a loop written on one line. A unit test pins it.

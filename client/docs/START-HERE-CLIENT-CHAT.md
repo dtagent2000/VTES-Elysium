@@ -10,14 +10,14 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.146** (THE TABLE IS SET: the room option 'Suggested table setup', seats on the free board, the pin in the panel's corner) | `client/elysium-vtes-bord.html`, copied to `/` |
+| client | **v2.6.147** (THE PIN STANDS: the dock pin is a needle icon with a tooltip; carries v2.6.146 THE TABLE IS SET — the room option 'Suggested table setup', seats on the free board) | `client/elysium-vtes-bord.html`, copied to `/` |
 | server | **srv-2.6.44** (the room option `tableSetup`; loadMatch's `took` carries `boardMode`) | `client/elysium-server.js`, copied to `/` |
 | bot (consumed) | **v0.6.198** (12 Oct 2026) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.146 / srv-2.6.44 | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **265/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 64/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical 1 511 476 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.147 / srv-2.6.44 | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **266/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 64/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical 1 512 026 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
-**Live on elysium.cards:** whatever Johan deployed last — check the journal's newest entry. v2.6.146 + srv-2.6.44 were
-delivered on 13 Oct and need BOTH steps: **restart the server** and purge the client (the option is a server field; a new
+**Live on elysium.cards:** whatever Johan deployed last — check the journal's newest entry. v2.6.147 + srv-2.6.44 were
+delivered on 13 Oct (one PR; v2.6.146 was never deployed alone) and need BOTH steps: **restart the server** and purge the client (the option is a server field; a new
 client on the old server just starts the old way and says so). Bot v0.6.198 is unchanged.
 
 ## The first ten minutes
@@ -33,7 +33,7 @@ head -40 docs/elysium-learnings.md
 # the bundle beside the suite (gitignored — copy, never commit):
 cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
 node check-versions.js             # must end green: code, doc headers, AND the root == client/ + bot/ gate
-node test-client-logic.js          # 265 passed, 0 failed, 0 skipped (with the bundle beside)
+node test-client-logic.js          # 266 passed, 0 failed, 0 skipped (with the bundle beside)
 ```
 
 The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification commands" and `client/SKILLS.md`
@@ -73,16 +73,22 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 
 - **Johan's call:** online, should anyone at the table get the hold badge's Resume button (today only the holder)?
   (v2.6.142; `docs/elysium-session-journal.md` newest entry.)
-- **Deploy:** v2.6.146 + srv-2.6.44 — restart the server, purge the client. (Bot v0.6.198 from 12 Oct, if not yet up: purge `/elysium-bot.js`.)
-- **Found on 13 Oct, NOT fixed — Johan's call** (each also measured on v2.6.145 + srv-2.6.43; `client/CLAUDE.md` top entry):
-  (a) the lobby's 'bots need a Structured table' rule has never applied online (`netBotWhy` reads a key the lobby message
-  never had) — Classic rooms offer Add bot, and Classic is the default; (b) a spectator's home view is covered by the
-  welcome layer, they watch through seat visits; (c) after a mid-game join the client stays on the start view until Esc;
-  (d) 'Restore your board from the table snapshot' misplaces cards on a free-board table; (e) a reload returns the own
-  globe to its default spot.
-- **Waiting on the bot project:** follow the seat spots when a room has `tableSetup`
-  (`docs/handoffs/REPLY-to-bot-2026-10-13-table-setup.md`). Until then the client skips the setup at a table with a bot;
-  the guard is one line in `tableSetupOn()`.
+- **Deploy:** v2.6.147 + srv-2.6.44 — restart the server, purge the client. (Bot v0.6.198 from 12 Oct, if not yet up: purge `/elysium-bot.js`.)
+- **Proposed on 13 Oct, NOT built — waiting for Johan's 'kör'** (the journal's newest entry has it item by item; every
+  finding was also measured on v2.6.145 + srv-2.6.43):
+  (a) *a decision, and the only item that touches the bots:* the lobby's 'bots need a Structured table' rule has never
+  applied online (`netBotWhy` reads a key the lobby message never had), Classic rooms offer Add bot, and Classic is the
+  default. Close it (bots Structured-only, as offline) or make it official — the answer decides what the bot handoff asks.
+  (b) **spectating is broken:** a spectator's client pushes its empty board, the server refuses, the refusal is logged,
+  and the log line schedules the next push — 53 'Spectators can only chat.' notices in 35 s of watching; the welcome
+  layer covers the table; on Structured the home view is the watcher's own empty board and the helicopter view misses a
+  player. Seat visits (keys 1–6) work. (c) after a mid-game join the client stays on the start view until Esc.
+  (d) 'Restore your board from the table snapshot' misplaces cards on a free-board table. (e) a reload returns the own
+  globe to its default spot. Proposed as one client-only round (v2.6.148).
+- **For the bot project, not yet handed over:** follow the seat spots when a room has `tableSetup`
+  (`docs/handoffs/REPLY-to-bot-2026-10-13-table-setup.md`). Johan holds it until (a) above is decided — if bots stay
+  Structured-only, the ask is for later. Until the bot follows the seats the client skips the setup at a table with a
+  bot; the guard is one line in `tableSetupOn()`.
 - **Small, open:** the other seat chips (Table panel, a seat visit's header, the own pool name) still show a digit, the
   globes say 1st, 2nd …; the Host Guide and Help → Local server do not mention the option.
 - **Johan's call (player feedback, round 2 — analysed, not built):** the hand open by default; a host

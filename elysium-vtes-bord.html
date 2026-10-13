@@ -1431,11 +1431,17 @@ body.touchui #board.l2dockopen #l2dockClose{ display:flex; }
    background, announced by a tooltip only -- now a real button that carries the state in its text, its colour and aria-pressed.
    v2.6.146 (Johan): it sits in the PANEL'S top right corner (a child of #board, above the dock's zone boxes at z 4600), inside
    the 14px strip the panel keeps above its boxes -- so it never meets the POOL label, the count badges or a card, at any width.
-   The same height formula as #l2dockbg places it. The button shows 'pinned' in gold, so the panel's edge can stay calm. */
-#l2dockPin{ display:none; position:absolute; right:12px; bottom:calc(1.5% + (var(--ch) + 34px) * var(--dock-s) + 14px - 17px); z-index:4610; align-items:center; gap:4px; height:16px; padding:0 8px; border:1px solid rgba(176,141,79,.5); border-radius:9px; background:#1a140d; color:var(--brass2); font:600 9px "Cinzel",serif; letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
+   The same height formula as #l2dockbg places it. The button shows 'pinned' in gold, so the panel's edge can stay calm.
+   v2.6.147 (Johan: 'more discreet'): the button is the NEEDLE alone. It LIES while the panel is loose and STANDS when the panel
+   is pinned -- it looks stuck in -- and the words moved to the tooltip ('Not pinned' / 'Pinned', set by setDockPin). An inline
+   SVG, not the pushpin emoji: that glyph's own tilt differs from font to font, and a turn has to start from a known angle. */
+#l2dockPin{ display:none; position:absolute; right:12px; bottom:calc(1.5% + (var(--ch) + 34px) * var(--dock-s) + 14px - 17px); z-index:4610; align-items:center; justify-content:center; width:22px; height:16px; padding:0; border:1px solid rgba(176,141,79,.4); border-radius:8px; background:#1a140d; color:var(--brass); cursor:pointer; }
 #board.l2dockopen #l2dockPin{ display:inline-flex; }
+#l2dockPin svg{ width:12px; height:12px; fill:currentColor; transform:rotate(90deg); transition:transform .16s ease; pointer-events:none; }   /* lying, point to the left: not pinned */
 #l2dockPin:hover{ border-color:var(--brass); color:var(--bone); }
 #l2dockPin.on{ background:#3a2d12; border-color:rgba(232,201,106,.8); color:#f0dca0; }
+#l2dockPin.on svg{ transform:none; }   /* standing, point down: pinned */
+@media (prefers-reduced-motion:reduce){ #l2dockPin svg{ transition:none } }
 #l2dockbg.pinned{ box-shadow:0 -2px 8px rgba(232,201,106,.12), inset 0 1px 0 rgba(232,201,106,.42); }   /* v2.6.146 (Johan: 'a little less marked'): a thin gold line and a faint breath of light -- it was a 16px glow at .45 and a 2px line at .6. box-shadow still, to stay out of the border-top-color specificity fight with the #board.l2mode/.l3mode base rules (2 IDs each) */
 /* ---------- Counter stepper (v2.5.40 · T2) ---------- */
 #ctStepper{ display:none; position:fixed; z-index:8030; background:linear-gradient(#1c150d,#161009); border:1px solid var(--brass2); border-radius:10px; box-shadow:0 12px 36px rgba(0,0,0,.65); padding:8px 10px; }
@@ -1663,7 +1669,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <div id="poolHelp" data-tip="Help">?</div>
     <div id="pseat"></div>
     <div id="l2dockbg" title="Click to pin the dock open (click again to unpin)"><div id="l2dockClose" title="Close dock" aria-label="Close dock">&#9662;</div></div>
-    <button type="button" id="l2dockPin" aria-pressed="false" title="Keep the panel open &mdash; it stays up when the pointer leaves. Click again to let it fold away.">&#128204;&#xFE0E; Pin</button>   <!-- v2.6.146 (Johan): the panel's own top right corner -- it belongs to the whole panel, not to the Hand box it sat in (v2.6.143) -->
+    <button type="button" id="l2dockPin" aria-pressed="false" aria-label="Keep the panel open" title="Not pinned"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M5 1h6a.7.7 0 0 1 .7.7v.9a.7.7 0 0 1-.7.7h-.6v3.5l2.3 2v1.4H8.75L8 15.4l-.75-5.2H3.3V8.8l2.3-2V3.3H5a.7.7 0 0 1-.7-.7v-.9A.7.7 0 0 1 5 1z"/></svg></button>   <!-- v2.6.146 (Johan): the panel's own top right corner -- it belongs to the whole panel, not to the Hand box it sat in (v2.6.143). v2.6.147: the needle alone (drawn point down; CSS lays it on its side until the panel is pinned) -->
     <div id="l2dock"><span class="l2dlabel">Crypt &middot; Library &middot; Ash heap &middot; Hand</span><span class="l2darrow">&#9650;</span></div>
     <div id="dockLog"><div class="docklog-h">Log</div><ul id="dockLogList"></ul></div>
 
@@ -3155,7 +3161,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.146';   // v2.6.146 (13 Oct 2026, THE TABLE IS SET, client + srv-2.6.44 -- purge the client, restart the server; bot v0.6.198 beside): a player's follow-up on the free board -- 'no spaces designated to players, everybody started to move the globes, same with the crypt cards'. (1) The room option 'Suggested table setup' (Game settings and Play offline, ticked by default, Classic only; srv-2.6.44's tableSetup): every seat's pool globe STARTS at its own spot around the table, in turn order clockwise from the top left (l4SeatSpot; the lower row sits just above the open hand panel, so a pinned hand hides no seat), and the first four crypt cards are laid face down beside it at the deal (online: four ordinary drawCrypt verbs, placed by MP_HANDLERS.drew; hotseat: l4SetupDealLocal). After that everything moves as before, and a card drawn later lands where it always did. Skipped at a table with a seated bot. Unticked: exactly the old table. (2) The globe's seat chip keeps the chair and says 1st, 2nd ... instead of a faint digit. (3) The dock pin sits in the panel's top right corner (a child of #board, inside the strip above the dock's boxes) and the pinned edge is a thin gold line instead of a glow. (4) Found on the way: the took handler defaulted an absent boardMode to Structured (loadMatch, see srv-2.6.44). Previous note: elysium-CHANGELOG.md.
+const VERSION='2.6.147';   // v2.6.147 (13 Oct 2026, THE PIN STANDS, pure client -- purge; srv-2.6.44 unchanged, no wire change; bot v0.6.198 beside; ships with v2.6.146 in one PR -- together: restart the server, purge the client): Johan on the dock pin, 'more discreet'. The button is the NEEDLE alone, an inline SVG (the pushpin emoji's own tilt differs from font to font, and a turn has to start from a known angle): it LIES on its side while the hand panel is loose and STANDS, point down, when the panel is pinned -- it looks stuck in. A short turn carries the change (none under reduced motion). The words left the button for its tooltip, 'Not pinned' / 'Pinned', set by setDockPin, which no longer rewrites the button's markup; aria-label 'Keep the panel open' is the constant name and aria-pressed the state. Same corner, same click, and a click on the panel's background still pins. Previous note: elysium-CHANGELOG.md.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -14186,7 +14192,7 @@ function setDockPin(on){                                         // v2.6.143: th
   dockPinned=!!on;
   const _dbg=document.getElementById('l2dockbg'); if(_dbg) _dbg.classList.toggle('pinned', dockPinned);
   const _pb=document.getElementById('l2dockPin');
-  if(_pb){ _pb.classList.toggle('on', dockPinned); _pb.setAttribute('aria-pressed', dockPinned?'true':'false'); _pb.innerHTML='\ud83d\udccc\ufe0e '+(dockPinned?'Pinned':'Pin'); }
+  if(_pb){ _pb.classList.toggle('on', dockPinned); _pb.setAttribute('aria-pressed', dockPinned?'true':'false'); _pb.title=dockPinned?'Pinned':'Not pinned'; }   // v2.6.147: the needle shows the state (.on stands it up, see the CSS) and the tooltip says it; the button's markup is never rewritten
 }
 function setL2Dock(open, light){                                 // L2 redesign: expand / collapse the bottom dock (crypt / library / ash / hand)
   if(open === board.classList.contains('l2dockopen')) return;

@@ -1,3 +1,60 @@
+## [NÅLEN STÅR] — v2.6.147: pinknappen blir en nål, och ett förslag om de fem svagheterna (13 oktober 2026, förmiddag)
+
+Johan om pinknappen: mer diskret. Nålen sned eller liggande när panelen är lös, stående när den är fäst "så att
+den ser fäst ut", och orden i en tooltip i stället för på knappen.
+
+**Byggt:** knappen är bara nålen, 22 × 16 px i samma hörn. En SVG-bana ritad med spetsen nedåt; CSS lägger den
+på sidan (spetsen åt vänster) och `.on` reser den. En kort vridning (160 ms) bär bytet, ingen vid reduced motion.
+`setDockPin` sätter tooltipen "Pinned" / "Not pinned" och skriver inte längre om knappens innehåll.
+`aria-label` "Keep the panel open" är namnet, `aria-pressed` läget.
+
+**Två val, båda sedda på bild innan de gjordes:**
+- *Liggande, inte sned.* Vid 12 px på en vanlig skärm blir en 45°-nål en kludd; 0° och 90° ligger rent i
+  pixelrutnätet. Tre former i 45° och 90° renderades och förstorades pixel för pixel.
+- *SVG, inte emoji.* 📌 lutar olika i olika typsnitt, och en vridning måste börja från en känd vinkel.
+
+**Johans fråga: ska de fem svagheterna rättas innan överlämningen går till botprojektet?** Analyserat och
+föreslaget, **inte byggt** — väntar på "kör".
+
+*Svaret per punkt:* bara (a) rör botten. Om bottar får sitta vid Classic-bord online avgör vad överlämningen ber
+om, så det beslutet kommer först. (b)–(e) är rena klientfixar och oberoende av botprojektet.
+
+*Det läsningen hittade:* (b) är större än den rapporterades. Åskådarläget är trasigt idag:
+1. En åskådares klient skickar sitt (tomma) bord som en spelare. Servern svarar "Spectators can only chat.",
+   klienten loggar och toastar det, och loggraden schemalägger nästa sändning (`log` → `scheduleSave` →
+   `schedulePush`). Ett eko som aldrig slutar: **53 meddelanden på ungefär 35 sekunders rent tittande** vid ett
+   Classic-bord, 35 vid Structured. Samma på v2.6.145 + srv-2.6.43.
+2. Välkomstrutan täcker bordet.
+3. På Structured är åskådarens hemvy dess eget tomma bord, och helikoptervyn ritar åskådaren som en spelare med
+   tom plats — en av två spelare ritades inte alls. Platsbesök (siffertangenterna 1–6) fungerar.
+
+**Förslag (en klientrunda, v2.6.148, ingen serverändring):**
+- **(a) är ett beslut, inte en bugg.** A1: bottar bara på Structured, som offline — stäng luckan (en rad; fixen
+  skrevs och togs tillbaka i går). Botprojektet behöver då inte göra något nu. A2: bottar får sitta på Classic
+  online — ta bort den döda regeln; överlämningens önskemål gäller, och tills boten följer platserna hoppas
+  uppställningen över vid botbord.
+- **(b) Åskådare.** En åskådares klient skickar aldrig bord (en spärr i sändvägen, inte i varje anropare).
+  Välkomstrutan visas inte för en åskådare i ett startat rum. Classic: bordet direkt. Structured: besök hos
+  spelaren vars tur det är. Helikoptervyn för åskådare lämnas — ett eget, större jobb.
+- **(c) Anslutning mitt i spelet.** Join-dialogen stängs och klienten går till bordsvyn, för spelare och åskådare,
+  och för åskådare även när spelet startar medan de sitter i lobbyn. Inte vid automatisk återanslutning: där står
+  man redan rätt.
+- **(d) Återställning från bordsögonblicksbilden** på fritt bord: behåll de kanoniska positionerna för ready,
+  uncontrolled och torpor. Idag skalas ready om efter fönstret, och de andra två tappar sin plats.
+- **(e) Globens plats efter omladdning:** ta den från serverns kopia av det egna bordet (pool-markören i `myPub`).
+
+Varje punkt får ett test som går rött mot v2.6.147 och körs i e2e-skripten som redan finns: båda bordstyperna,
+med förra versionen som jämförelse.
+
+**Verifierat:** syntaxrent; 266/266 klienttester med bot v0.6.198 bredvid (destruktivt mot v2.6.146: 2 röda = det
+nya testet + pin-testet från v2.6.146, vars etikettrad nu läser tooltipen); dispatch 64/0; protokoll 6/0; canary
+57/0; endpoint 24/0; soak-kontroll exit 0; B1 byte-identisk 1 512 026; embed --check; check-versions grön.
+Riktig mus på 1024×600, 1280×720 (1× och 2×) och 1920×1080, båda bordstyperna: knappen träffas, nålen vrids,
+tooltipen följer, lossning via knappen låter panelen fällas, och ett klick på panelens bakgrund pinnar som förut.
+Alla webbläsarkörningar från v2.6.146 är omkörda på dessa bytes.
+**Väntar på live-test:** tooltipens fördröjning och utseende är webbläsarens egna och är inte sedda här; pekskärm
+(ingen tooltip där — nålens läge och färg bär tillståndet).
+
 ## [BORDET ÄR DUKAT] — v2.6.146 + srv-2.6.44: platser på fria bordet, och pinnen i panelens hörn (13 oktober 2026)
 
 Kalesoners följdfråga från kvällen innan — inga ytor för spelarna, alla började dra isär globerna och kryptkorten —

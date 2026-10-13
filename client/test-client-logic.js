@@ -3938,8 +3938,35 @@ test('v2.6.146: the pin button is the panel\'s own corner and the pinned edge is
   eq((html.match(/height:calc\(1\.5% \+ \(var\(--ch\) \+ 34px\) \* var\(--dock-s\) \+ 14px\)/g) || []).length, 2, 'the same height formula the panel\'s two background rules use -- if they change, the button must follow');
   assert(/#board\.l2dockopen #z-pool\{[^}]*z-index:4600;/.test(html), 'the dock\'s boxes sit at 4600; the button at 4610 is above them and stays clickable');
   assert(html.indexOf("#l2dockbg.pinned{ box-shadow:0 -2px 8px rgba(232,201,106,.12), inset 0 1px 0 rgba(232,201,106,.42); }") > 0, 'a thin line and a faint light (it was a 16px glow at .45 and a 2px line at .6)');
-  assert(html.indexOf("(dockPinned?'Pinned':'Pin'); }") > 0, 'the button says Pin / Pinned');
+  assert(html.indexOf("_pb.title=dockPinned?'Pinned':'Not pinned';") > 0, 'v2.6.147: the button says nothing itself -- the words (Pinned / Not pinned) are its tooltip');
   const A = loadClient(CLIENT); A.setDockPin(true); eq(A.dockPinned, true); A.setDockPin(false); eq(A.dockPinned, false);
+});
+test('v2.6.147: the pin is the needle alone -- it lies while the panel is loose and stands when the panel is pinned, the tooltip says which, and the setter never rewrites the button', () => {
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const m = /<button type="button" id="l2dockPin" aria-pressed="false" aria-label="([^"]+)" title="Not pinned"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="[^"]+"\/><\/svg><\/button>/.exec(html);
+  assert(m, 'an icon button: one SVG path and no text, the name in aria-label, the state in aria-pressed, "Not pinned" as the first tooltip');
+  eq(m[1], 'Keep the panel open', 'the name says what the button does and never changes -- a toggle button\'s state is aria-pressed');
+  eq(/id="l2dockPin"[^\n]*&#128204;/.test(html), false, 'the pushpin emoji is gone: its own tilt differs from font to font, and a turn has to start from a known angle');
+  assert(html.indexOf('#l2dockPin svg{ width:12px; height:12px; fill:currentColor; transform:rotate(90deg);') > 0, 'lying on its side while the panel is loose');
+  assert(html.indexOf('#l2dockPin.on svg{ transform:none; }') > 0, 'standing, point down, when the panel is pinned');
+  assert(html.indexOf('@media (prefers-reduced-motion:reduce){ #l2dockPin svg{ transition:none } }') > 0, 'no turning animation for reduced motion');
+  assert(/#l2dockPin\{[^}]*width:22px; height:16px; padding:0;/.test(html), 'a small chip -- no room kept for words');
+  const A = loadClient(CLIENT);
+  const cls = new Set(), attrs = {};
+  const btn = { innerHTML: '<svg/>', textContent: '', title: 'Not pinned', classList: { toggle(c, on){ if(on) cls.add(c); else cls.delete(c); return !!on; } }, setAttribute(k, v){ attrs[k] = v; } };
+  A.__doc._ids.l2dockPin = btn;
+  try {
+    A.setDockPin(true);
+    eq(btn.title, 'Pinned'); eq(attrs['aria-pressed'], 'true'); eq(cls.has('on'), true, 'the class that stands the needle up');
+    A.setDockPin(false);
+    eq(btn.title, 'Not pinned'); eq(attrs['aria-pressed'], 'false'); eq(cls.has('on'), false, 'and lays it down again');
+    eq(btn.innerHTML, '<svg/>', 'the icon is static markup -- the setter writes nothing into the button');
+    eq(btn.textContent, '');
+    A.setDockPin(true);
+    A.__stubEl.classList._t.add('l2dockopen');
+    try { A.setL2Dock(false); } finally { A.__stubEl.classList._t.delete('l2dockopen'); }
+    eq(A.dockPinned, false); eq(btn.title, 'Not pinned', 'a close that executes releases the pin, and the tooltip follows through the same setter');
+  } finally { delete A.__doc._ids.l2dockPin; }
 });
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
