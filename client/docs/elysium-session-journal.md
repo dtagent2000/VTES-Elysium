@@ -1,3 +1,28 @@
+## [SPELTEST: EN MÄNNISKA MOT TVÅ BOTTAR] (14 oktober 2026, klient v2.6.157 + server srv-2.6.46, bot v0.6.198)
+
+Johan: "Kör absolut 3-4 rundor … Få gärna med lite duster med stealth/intercept och combat … testa både standard-flödet
+för bottarna men även turn-based ett par rundor." Ett helt parti spelat på riktig server (rotens paket), en huvudlös
+Chromium som värd med bottarna i samma flik, Structured, Expert: jag (Malkavian-startleken) mot Hanna (Tremere, mitt
+byte) och Viktor (Nosferatu, min jägare). Rundorna 1–4 i Standard 3 s, 5–8 i Turn-based; partiet slutade i runda 8 när
+båda bottarna blödits ut. Inspelat: alla websocketramar, bottarnas konsol (även deras `wait`-rader) och Bot Activity-
+panelens `status()` var 0,3 s. Mina svar tar 5–15 s, så i Standard svarade en liten reflex åt mig efter 1,6 s (Hold on
+när jag hade ett beslut, annars det enkla nejet); en strid kördes helt utan svar.
+
+**Till botprojektet:** `handoffs/REPLY-to-bot-2026-10-14-playtest.md` (24 punkter med tider). Det viktigaste: frågorna i
+chatten kommer efter att väntan börjat (presses-frågan ofta efter att steget redan stängts), Hold on stoppar klockorna men
+inte bottens egna stridsdrag, båda bottarna svarade på en fråga som bara gällde den ena, en strid mellan två bottar är 2 s
+text och sedan ~19 s tystnad, ett låst blockutslag i Turn-based (179 s tills jag tryckte ▶), bleed-reduktion och Immortal
+Grapple ignorerades mellan bottarna, och bottarna skickar aldrig `edgeTake` (två Edge-innehavare).
+
+**Våra egna fynd (klienten, inte åtgärdade):** (1) `cmbAutoJoin` lade min senaste blockerare i tre strider mellan bottarna
+(standardkombattanten nollställs aldrig). (2) `cardFx`-klonens felhanterare sätter samma kortbaksida igen när den inte
+kan laddas, ~2 000 gånger per sekund per klon (offline/LAN utan nät): CPU-slukare. (3) "Play on <vampyr>" och släpp på en
+vampyr förbrukar inte masterhandlingen. (4) Stridshjälparens rad "X takes N (loses P blood, now M)" ändrar inte kortets
+blod; jag upptäckte fyra missade blodpoäng sent. (5) Ett spelat stealthkort bokas inte på blockräknaren (man måste skriva
+`+1`). (6) Nivåväljaren föreslår överlägsen nivå om någon redo vampyr har den, inte den agerande. (7) Inget slutläge när
+sista motståndaren åker ut; en oust skriver en ledgerrad per borttaget kort. **Ej testat:** fler än tre platser,
+Adaptive, Classic-bord, människa mot människa med bottar.
+
 ## [BORDETS LAYOUT OCH DEN DISKRETA PANELEN] — handen i bordskanten (14 oktober 2026, klient v2.6.157 + server srv-2.6.46)
 
 Johans designfråga: den öppna handpanelen täcker nedersta fjärdedelen av fria bordet (202 av 719 px på 1366 × 768),
