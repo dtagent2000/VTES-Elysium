@@ -1,3 +1,32 @@
+## [SPELTESTETS FYND OCH RIGGEN I REPOT] (14 oktober 2026, eftermiddag, klient v2.6.158)
+
+Johan: "Snyggt ja men då tar vi buggarna direkt iallafall … Vill du förresten kanske spara verktygen/processen för hur
+du spelade matchen (plus förbättringar) till repot också så vi kan göra samma sak igen senare?"
+
+**Beslut (Johan):** människan sköter sina egna värden för hand (blod efter strid, kortkostnader, Edge, pool) och
+bottarna sköter sina. Raden "X takes N (loses P blood, now M)" förblir en rapport till bordet. De två meningarna i
+bottguiden som lovar mer (poolen dras av åt dig; "play the cards" bokar räknaren) är botprojektets text och står i
+handoffens §F; vi bäddar in den ordagrant.
+
+**Fixat (v2.6.158, ren klient, purge):** (1) Standardkombattanten löper ut: vid turbyte, vid ett misslyckat block
+(blockräknaren stängs utan strid med stealth över intercept), när striden slutar och vid mitt eget ✕ på ett block; och
+`cmbAutoJoin` går inte in när en annan plats redan möter den agerande. (2) `imgFallbackOnce`: en reservbild per bild på
+fem ställen; utan nät gick kortbaksidan inte att ladda och varje klon begärde om den ~2 000 gånger i sekunden.
+(3) En master spelad PÅ en vampyr (menyns Play on, släpp på vampyren) förbrukar masterhandlingen. (4) Nivåväljaren
+föreslår nivån efter vampyren som spelar kortet (ankaret); `parseV5Card` behåller `disciplines` som väljaren läser.
+
+**Riggen i repot:** `client/playtest/` (playtest-rig.js, playtest.js, playtest-page.js, playtest-report.js,
+scenarios/three-seat.json, PLAYTEST.md). Förbättringar mot första körningen: en loggpost kan inte skrivas över av sina
+egna fält (alla panelrader försvann ur flödet), konsolbruset räknas i stället för att loggas, reflexen räknar från
+frågan i chatten (det en människa reagerar på) och bara mina egna fraser räknas som svar, `setup` från en scenariofil,
+`smoke`, rapportskriptet mäter frågans fördröjning direkt, `--offline` med en genererad kortbaksida, `--no-backs`.
+
+**Grindar:** klient 288/0 (5 nya, alla röda mot v2.6.157), B1 byte-identisk, check-versions grön (resten i
+CLAUDE.md:s toppost). Live med riggen från repot mot v2.6.158: setup och smoke på 68 s utan sidfel; Blood Doll via
+Play on lämnade masterräknaren på 0; kortbaksidor som inte laddar gav 3–6 laddningsfel per 10 s i stället för loopen.
+**Inte live-testat:** nivåväljaren och standardkombattanten i en riktig match (testerna kör de riktiga funktionerna),
+pekskärm.
+
 ## [SPELTEST: EN MÄNNISKA MOT TVÅ BOTTAR] (14 oktober 2026, klient v2.6.157 + server srv-2.6.46, bot v0.6.198)
 
 Johan: "Kör absolut 3-4 rundor … Få gärna med lite duster med stealth/intercept och combat … testa både standard-flödet

@@ -20,6 +20,7 @@ what is open) → `CLAUDE.md` → `docs/elysium-session-journal.md` (newest firs
 | `embed-help.js`, `help-local-server.html` | the Help-page embed tool and our Local-server authoring source (the bot project's `START-HERE-BOTS.html` is embedded verbatim) |
 | `start-elysium*`, `start-cloudflare-tunnel*`, `START-HERE.html`, `Elysium_-_Host_Guide.docx`, `build-host-guide.js` | the download's launchers and guides |
 | `elysium-error-digest.js`, `elysium-digest.service`, `elysium-digest.timer` | the ops digest (Discord) and its systemd units |
+| `playtest/` | the play-test rig (v2.6.158): a real game against the bots in headless Chromium, recorded and measured -- `PLAYTEST.md` is the process; Playwright, a dev tool, never shipped; `playtest/runs/` is gitignored |
 | `docs/` | the living docs (journal, context, learnings, CHANGELOG, PROJECT-MANIFEST), ops (runbook, hosting plan, security manifest), the plans, `kodarkivering.md`, and `handoffs/` — our replies to the bot project |
 
 ## The bot bundle beside the suite

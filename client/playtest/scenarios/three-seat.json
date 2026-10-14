@@ -1,0 +1,12 @@
+{
+  "about": "The first play-test (14 Oct 2026): a human with the V5 Malkavian starter against Tremere (the human's prey) and Nosferatu (the predator), Structured, Expert, Standard 3 s. Seats follow the order: the human, then the bots as listed.",
+  "room": "playtest",
+  "board": "structured",
+  "human": { "name": "Claude", "deck": "bot:malkavian", "seat": 1 },
+  "bots": [
+    { "name": "Hanna", "deck": "tremere", "persona": "expert" },
+    { "name": "Viktor", "deck": "nosferatu", "persona": "expert" }
+  ],
+  "tempo": { "tempo": "standard", "waitSecs": 3 },
+  "reflex": { "on": true, "delayMs": 1600, "anchor": "chat", "block": "hold", "verdict": "hold", "react": "no", "pq": "hold", "combat": "no", "strike": "hold", "vote": "hold" }
+}

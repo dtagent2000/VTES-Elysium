@@ -4359,6 +4359,87 @@ test('v2.6.151: a seat that holds the Edge shows it on its pool globe unless it 
   const help = require('fs').readFileSync(require('path').join(__dirname, 'help-local-server.html'), 'utf8'), start = require('fs').readFileSync(require('path').join(__dirname, 'START-HERE.html'), 'utf8');
   assert(help.indexOf('Suggested table setup') > 0 && start.indexOf('Suggested table setup') > 0, 'Help -> Local server and START-HERE mention the option');
 });
+/* ---------- v2.6.158: what the play-test found (one human, two bots, a full game; client/playtest/) ---------- */
+testA('v2.6.158 (the play-test) the default combatant: a blocker from an earlier turn, a failed block, or a combat between two OTHER seats never pulls my minion in; my own block that held still does', async () => {
+  const mk = turnSeat => { const A = loadClient(CLIENT); const T = parityTable(A, [['You'], ['B2', true], ['B3', true]]);
+    A.conv.tournament = false; A.net.helperPolicy = null; A.net.turnSeat = turnSeat;
+    A.clearTable({}); const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false }); v.blood = 3;
+    let shown = null; A.showMenu = items => { shown = items; };
+    const block = () => { A.cardMenu(v, 0, 0); shown.find(x => x && x.label === 'Actions').sub.find(x => x.label === 'Block').fn(); };
+    return { A, T, v, block, done: () => { A.localTable = false; T.HB.reset([]); } }; };
+  let k = mk(2); k.block(); k.T.from(2, { t: 'tally', mode: null });
+  k.A.net.turnSeat = 3; k.A.tallyStaleClose('turn', false);
+  k.T.from(3, { t: 'tally', mode: 'combat', duelCid: 'x3', duelName: 'Ryan' });
+  eq(k.A.avr.mode, 'combat'); eq(k.A.avr.duel[1], undefined, 'a blocker from an earlier turn stays out (it joined three bot fights in the play-test)'); k.done();
+  k = mk(2); k.block();
+  k.T.from(3, { t: 'tally', mode: 'combat', duelCid: 'x3', duelName: 'Ryan' });
+  eq(k.A.avr.duel[1], undefined, 'B3 already faces the acting seat B2: a combat between two others is not mine'); k.done();
+  k = mk(2); k.block(); k.T.from(2, { t: 'tally', mode: 'block', a: 3, b: 1 }); k.T.from(2, { t: 'tally', mode: null });
+  k.T.from(2, { t: 'tally', mode: 'combat', duelCid: 'x2', duelName: 'Lauren' });
+  eq(k.A.avr.duel[1], undefined, 'my block failed (stealth 3 vs intercept 1): no combat of mine'); k.done();
+  k = mk(2); k.block(); k.T.from(2, { t: 'tally', mode: 'block', a: 1, b: 1 });
+  k.T.from(2, { t: 'tally', mode: 'combat', duelCid: 'x2', duelName: 'Lauren' });
+  eq(k.A.avr.duel[1] && k.A.avr.duel[1].cid, k.v.id, 'my block held: Lisa joins by default, straight from the Block counter'); k.done();
+  k = mk(2); k.block(); k.T.from(2, { t: 'tally', mode: 'block', a: 1, b: 2 }); k.T.from(2, { t: 'tally', mode: null });
+  k.T.from(2, { t: 'tally', mode: 'combat', duelCid: 'x2', duelName: 'Lauren' });
+  eq(k.A.avr.duel[1] && k.A.avr.duel[1].cid, k.v.id, '...and when the counter was cleared before the combat opened (a human resolving it)'); 
+  k.T.from(2, { t: 'tally', mode: null, res: 1 });
+  k.T.from(2, { t: 'tally', mode: 'combat', duelCid: 'x2', duelName: 'Lauren' });
+  eq(k.A.avr.duel[1], undefined, 'that combat ended: the next one in the same turn starts without me'); k.done();
+});
+test('v2.6.158 (the play-test) an image whose fallback cannot load either gets ONE fallback, not a loop: imgFallbackOnce, and the card-event clone through it', () => {
+  const A = loadClient(CLIENT);
+  const fake = () => { const img = { sets: [], h: [], pending: 0, classList: { add(){}, remove(){}, toggle(){} }, addEventListener(t, f){ if (t === 'error') this.h.push(f); } };
+    let src = ''; Object.defineProperty(img, 'src', { get(){ return src; }, set(v){ src = v; img.sets.push(v); img.pending++; } }); return img; };
+  const pump = img => { let n = 0; while (img.pending && n < 200){ img.pending--; n++; img.h.forEach(f => f()); } return n; };   // every load fails: one error event per src set
+  const i1 = fake(); i1.src = 'face.jpg'; A.imgFallbackOnce(i1, 'back.jpg'); pump(i1);
+  eq(i1.sets.join(' '), 'face.jpg back.jpg', 'the face fails, the back is tried once, and its failure ends it');
+  const made = [], doc = A.__doc, orig = doc.createElement;
+  doc.createElement = t => { if (t === 'img'){ const f = fake(); made.push(f); return f; } return orig(t); };
+  try { const c = A.makeCard('Govern the Unaligned', 'lib'); c.faceDown = true; A.cardFx(c, 'play', { remote: true, who: 'Anna', seat: 2 }); }
+  finally { doc.createElement = orig; }
+  assert(made.length >= 1, 'the clone made its image');
+  const n = made.map(m => { pump(m); return m.sets.length; });
+  assert(n.every(x => x <= 2), 'at most the start and one fallback per image, got ' + n.join(',') + ' (v2.6.157: 201, the cap of this pump)');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  eq((html.match(/addEventListener\('error',\(\)=>\{ *[a-z0-9]+\.src=/g) || []).length, 0, 'no handler in the client sets a src on every error any more');
+});
+testA('v2.6.158 (the play-test) a master played ON a vampire uses up the master action: Play on X passes the master gate, and so does a drop onto the vampire', async () => {
+  const A = loadClient(CLIENT); A.conv.tournament = false; A.net.helperPolicy = null;
+  A.clearTable({}); const v = A.makeCard('Ashley', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false }); v.blood = 3;
+  const doll = A.makeCard('Blood Doll', 'lib'); A.move(doll, 'hand');
+  A.state.phase = 1; A.state.phaseUsed.master = 0;
+  A.selectOnly(v); eq(A.activeAnchor() && A.activeAnchor().id, v.id, 'Ashley is the anchor');
+  await A.playOnActive(doll, false);
+  eq(doll.host, v.id, 'played on Ashley');
+  eq(A.state.phaseUsed.master, 1, 'Play on Ashley used up the master action (v2.6.157: 0, and the phase bar went on offering one)');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("if(from==='hand' && !(await masterPlayGate(c))){ layout(); return; }    // v2.6.158: a master dropped ON a vampire counts") > 0, 'the drop onto a vampire runs the same gate');
+});
+testA('v2.6.158 (the play-test) the level chooser follows the vampire playing the card: an anchored obf-only vampire is offered inferior first though another ready vampire has OBF; with no anchor the old rule (any ready vampire) holds', async () => {
+  const A = loadClient(CLIENT); A.conv.tournament = false; A.net.helperPolicy = null;
+  A.processCardData([
+    { id: 1, name: 'Ashley', _name: 'Ashley', printed_name: 'Ashley', types: ['Vampire'], card_text: 'Camarilla.', capacity: 3, disciplines: ['dom', 'obf'], clans: ['Malkavian'] },
+    { id: 2, name: 'Dr. Stephen Norton', _name: 'Dr. Stephen Norton', printed_name: 'Dr. Stephen Norton', types: ['Vampire'], card_text: 'Camarilla.', capacity: 4, disciplines: ['aus', 'OBF'], clans: ['Malkavian'] },
+    { id: 3, name: 'Lost in Crowds', _name: 'Lost in Crowds', printed_name: 'Lost in Crowds', types: ['Action Modifier'], card_text: '[obf] +1 stealth.\n[OBF] As above, but for +2 stealth.', disciplines: ['obf'] }
+  ], 'fixture');
+  A.clearTable({});
+  const ash = A.makeCard('Ashley', 'crypt'); A.move(ash, 'ready', { x: 100, y: 60, faceDown: false });
+  const nor = A.makeCard('Dr. Stephen Norton', 'crypt'); A.move(nor, 'ready', { x: 200, y: 60, faceDown: false });
+  const lic = A.makeCard('Lost in Crowds', 'lib'); A.move(lic, 'hand');
+  let asked = null; A.uiDialog = o => { asked = o; return Promise.resolve('ok'); };
+  A.selectOnly(ash); await A.modeChooseGate(lic, false);
+  eq(asked && asked.okText, 'Inferior [obf]', 'Ashley plays it: inferior first (the play-test logged [OBF] for her)'); eq(asked.altText, 'Superior [OBF]'); eq(lic._modeTxt, '[obf]');
+  A.selectOnly(nor); asked = null; await A.modeChooseGate(lic, false); eq(asked && asked.okText, 'Superior [OBF]', 'Norton plays it: superior first');
+  A.state.selected.clear(); A.state.anchor = null; asked = null; await A.modeChooseGate(lic, false); eq(asked && asked.okText, 'Superior [OBF]', 'no anchor: any ready vampire, as before');
+});
+test('v2.6.158 a v5 crypt card keeps its disciplines with their case (the level chooser reads them; the v5 parser had only the joined string)', () => {
+  const A = loadClient(CLIENT); A.processCardData([V5_LIB, V5_CRYPT, V3_CARD], 'test-fixture');   // a fresh client: later tests reload the shared API's database
+  const g = A.cardInfo.get(A.norm('Gratiano'));
+  assert(g && Array.isArray(g.disciplines), 'v5 crypt meta has a disciplines array');
+  eq(g.disciplines.join(' '), 'obf pot DOM OBT', 'case kept: UPPER = superior');
+  eq(A.cardInfo.get(A.norm('Test Elder')).disciplines.join(' '), 'obf oblivion DOM', 'v3 unchanged');
+});
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

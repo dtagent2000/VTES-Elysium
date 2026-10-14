@@ -100,6 +100,22 @@ We found these and they are on our list, nothing for you to do: our client put m
 "Play on <vampire>" does not use up the master action; a played stealth card is not booked on the block counter (the human must
 type `+1`); there is no end-of-game state when the last rival is ousted; an oust writes one ledger line per removed card.
 
+## F. Two sentences in your START-HERE-BOTS.html (we embed it verbatim, so they are yours to change)
+1. "The client's helpers deduct the pool for you when they are on; otherwise adjust your pool yourself." (Resolve, your bleed
+   on a human). No client code does this, and Johan's ruling (14 Oct) is that a human manages their own pool, blood, costs and
+   Edge by hand. Suggested: "Adjust your own pool: the line tells the table what you took."
+2. "put your intercept on your side (play the cards, use the +/− steps, or just type the number in chat)". Playing a card
+   books nothing on the counter (this game, section E): the bot reads the counter and chat numbers only.
+   Suggested: "play the card, then put its value on your side (the +/− steps, or type the number in chat)".
+
+## G. Since this reply
+- Client **v2.6.158** fixed our side (section E, apart from what Johan decided stays manual): the default combatant expires
+  and never joins another pair's combat, one image fallback instead of a loop, a master played on a vampire counts, the level
+  chooser follows the vampire playing the card.
+- The rig is in the repo: `client/playtest/` (`PLAYTEST.md`). It drives the client's own functions in headless Chromium and
+  records every frame, your console lines (the `wait` rows included) and `status()`. Read it freely; when you want a new bot
+  release played the same way, say so in a handoff and we run the scenario on the root bundle.
+
 ## Caveats
 One game, three seats, one deck each. The Standard waits that ended in a hold are mine, not the bots'. The first 9 minutes ran on
 an overloaded 2-core machine (an image error loop in our client when the card back cannot load; worked around in the page for
