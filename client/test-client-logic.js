@@ -3850,6 +3850,13 @@ test('v2.6.153: the Table layout on the wire -- joined, started and took set it 
   assert(html.indexOf("tableLayout:net._createLayout?'large':undefined,") > 0, 'and sends the field only when it is Large -- an old server sees the create it always saw');
   assert(/id="mpSetupDesc">[^\n]*\n\s*<div class="mpfield mpCreateOnly mpGs mpFull" id="mpLayoutRow">/.test(html), 'the Table layout row follows the setup\'s description (the dialog pairs a row with its description)');
 });
+test('v2.6.154: the hand\'s pin on the table edge pins the hand only -- a second click releases it; the other pockets are untouched', () => {
+  const A = loadClient(CLIENT);
+  if (!A.rimIsUp || !A.rimPinToggle) throw new Error('rimIsUp / rimPinToggle not exposed (harness needs updating)');
+  eq(A.rimIsUp('hand'), false); A.rimPinToggle(); eq(A.rimIsUp('hand'), true, 'pinned up');
+  eq(A.rimIsUp('library'), false); eq(A.rimIsUp('pool'), false, 'only the hand');
+  A.rimPinToggle(); eq(A.rimIsUp('hand'), false, 'released');
+});
 test('v2.6.153: Play offline hands the Table layout to the table before the deal -- a Large Classic hotseat with the setup lays every seat\'s four cards at the Large spots (0.6 apart), and its globes start on the Large rows', () => {
   const A = loadClient(CLIENT);
   if (!A.startHotseat) throw new Error('startHotseat not exposed (harness needs updating)');
