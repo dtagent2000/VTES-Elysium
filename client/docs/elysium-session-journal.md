@@ -1,3 +1,57 @@
+## [SPELTESTETS FYND OCH RIGGEN I REPOT] (14 oktober 2026, eftermiddag, klient v2.6.158)
+
+Johan: "Snyggt ja men då tar vi buggarna direkt iallafall … Vill du förresten kanske spara verktygen/processen för hur
+du spelade matchen (plus förbättringar) till repot också så vi kan göra samma sak igen senare?"
+
+**Beslut (Johan):** människan sköter sina egna värden för hand (blod efter strid, kortkostnader, Edge, pool) och
+bottarna sköter sina. Raden "X takes N (loses P blood, now M)" förblir en rapport till bordet. De två meningarna i
+bottguiden som lovar mer (poolen dras av åt dig; "play the cards" bokar räknaren) är botprojektets text och står i
+handoffens §F; vi bäddar in den ordagrant.
+
+**Fixat (v2.6.158, ren klient, purge):** (1) Standardkombattanten löper ut: vid turbyte, vid ett misslyckat block
+(blockräknaren stängs utan strid med stealth över intercept), när striden slutar och vid mitt eget ✕ på ett block; och
+`cmbAutoJoin` går inte in när en annan plats redan möter den agerande. (2) `imgFallbackOnce`: en reservbild per bild på
+fem ställen; utan nät gick kortbaksidan inte att ladda och varje klon begärde om den ~2 000 gånger i sekunden.
+(3) En master spelad PÅ en vampyr (menyns Play on, släpp på vampyren) förbrukar masterhandlingen. (4) Nivåväljaren
+föreslår nivån efter vampyren som spelar kortet (ankaret); `parseV5Card` behåller `disciplines` som väljaren läser.
+
+**Riggen i repot:** `client/playtest/` (playtest-rig.js, playtest.js, playtest-page.js, playtest-report.js,
+scenarios/three-seat.json, PLAYTEST.md). Förbättringar mot första körningen: en loggpost kan inte skrivas över av sina
+egna fält (alla panelrader försvann ur flödet), konsolbruset räknas i stället för att loggas, reflexen räknar från
+frågan i chatten (det en människa reagerar på) och bara mina egna fraser räknas som svar, `setup` från en scenariofil,
+`smoke`, rapportskriptet mäter frågans fördröjning direkt, `--offline` med en genererad kortbaksida, `--no-backs`.
+
+**Grindar:** klient 288/0 (5 nya, alla röda mot v2.6.157), B1 byte-identisk, check-versions grön (resten i
+CLAUDE.md:s toppost). Live med riggen från repot mot v2.6.158: setup och smoke på 68 s utan sidfel; Blood Doll via
+Play on lämnade masterräknaren på 0; kortbaksidor som inte laddar gav 3–6 laddningsfel per 10 s i stället för loopen.
+**Inte live-testat:** nivåväljaren och standardkombattanten i en riktig match (testerna kör de riktiga funktionerna),
+pekskärm.
+
+## [SPELTEST: EN MÄNNISKA MOT TVÅ BOTTAR] (14 oktober 2026, klient v2.6.157 + server srv-2.6.46, bot v0.6.198)
+
+Johan: "Kör absolut 3-4 rundor … Få gärna med lite duster med stealth/intercept och combat … testa både standard-flödet
+för bottarna men även turn-based ett par rundor." Ett helt parti spelat på riktig server (rotens paket), en huvudlös
+Chromium som värd med bottarna i samma flik, Structured, Expert: jag (Malkavian-startleken) mot Hanna (Tremere, mitt
+byte) och Viktor (Nosferatu, min jägare). Rundorna 1–4 i Standard 3 s, 5–8 i Turn-based; partiet slutade i runda 8 när
+båda bottarna blödits ut. Inspelat: alla websocketramar, bottarnas konsol (även deras `wait`-rader) och Bot Activity-
+panelens `status()` var 0,3 s. Mina svar tar 5–15 s, så i Standard svarade en liten reflex åt mig efter 1,6 s (Hold on
+när jag hade ett beslut, annars det enkla nejet); en strid kördes helt utan svar.
+
+**Till botprojektet:** `handoffs/REPLY-to-bot-2026-10-14-playtest.md` (24 punkter med tider). Det viktigaste: frågorna i
+chatten kommer efter att väntan börjat (presses-frågan ofta efter att steget redan stängts), Hold on stoppar klockorna men
+inte bottens egna stridsdrag, båda bottarna svarade på en fråga som bara gällde den ena, en strid mellan två bottar är 2 s
+text och sedan ~19 s tystnad, ett låst blockutslag i Turn-based (179 s tills jag tryckte ▶), bleed-reduktion och Immortal
+Grapple ignorerades mellan bottarna, och bottarna skickar aldrig `edgeTake` (två Edge-innehavare).
+
+**Våra egna fynd (klienten, inte åtgärdade):** (1) `cmbAutoJoin` lade min senaste blockerare i tre strider mellan bottarna
+(standardkombattanten nollställs aldrig). (2) `cardFx`-klonens felhanterare sätter samma kortbaksida igen när den inte
+kan laddas, ~2 000 gånger per sekund per klon (offline/LAN utan nät): CPU-slukare. (3) "Play on <vampyr>" och släpp på en
+vampyr förbrukar inte masterhandlingen. (4) Stridshjälparens rad "X takes N (loses P blood, now M)" ändrar inte kortets
+blod; jag upptäckte fyra missade blodpoäng sent. (5) Ett spelat stealthkort bokas inte på blockräknaren (man måste skriva
+`+1`). (6) Nivåväljaren föreslår överlägsen nivå om någon redo vampyr har den, inte den agerande. (7) Inget slutläge när
+sista motståndaren åker ut; en oust skriver en ledgerrad per borttaget kort. **Ej testat:** fler än tre platser,
+Adaptive, Classic-bord, människa mot människa med bottar.
+
 ## [BORDETS LAYOUT OCH DEN DISKRETA PANELEN] — handen i bordskanten (14 oktober 2026, klient v2.6.157 + server srv-2.6.46)
 
 Johans designfråga: den öppna handpanelen täcker nedersta fjärdedelen av fria bordet (202 av 719 px på 1366 × 768),

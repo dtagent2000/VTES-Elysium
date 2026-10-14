@@ -3213,7 +3213,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.157';   // v2.6.157 (14 Oct 2026, THE TABLE LAYOUT AND THE DISCREET PANEL -- purge the client AND restart the server: srv-2.6.46 ships with it; bot v0.6.198 beside): Johan's design question about the felt under the dock, built over five test rounds (v2.6.152-156, never released). Two choices, kept apart so every screen at a table draws the same table. (1) The ROOM's Table layout (Game settings in Full mode, Play offline; srv-2.6.46's tableLayout): 'Large cards' draws every card on the free board a fifth larger (L4_CARD_S 0.6, set by tableLayoutSync as the room's value arrives, before a deal places the setup cards), puts the suggested lower row at the bottom edge (y 508), the top row 8 px lower, and widens the table box by L4_WIDE (19) on both sides so the corner seats sit further out -- for everyone. An older server drops it: Standard, and the host is told (again after the deal line). (2) Each player's DISCREET PANEL (the button beside the dock's pin, in the corner on the discreet panel; or Settings): crypt, library, hand, ash heap and pool globe as pockets along the bottom edge, each showing a strip (the hand its cards with title strips and no box, the pool its globe's top with half its number); the pocket under the pointer rises (rimHover, at once under a dragged card); a pin above the design button pins the hand's fan; the hand is centred on the table's middle. The board keeps .l2dockopen so every dock rule for drops and drags holds; setL2Dock refuses to close; CSS #board.l4rim hides the dock's chrome.
+const VERSION='2.6.158';   // v2.6.158 (14 Oct 2026, WHAT THE PLAY-TEST FOUND, pure client -- purge; srv-2.6.46 unchanged, no wire change; bot v0.6.198 beside): four faults from one human playing a full game against two bots (client/playtest/, docs/handoffs/REPLY-to-bot-2026-10-14-playtest.md). (1) The default combatant went stale: the minion that last blocked joined combats between two OTHER players, turns later (three times in one game). The defaults now die with the turn, with a failed block and with the combat, and a combat whose acting seat already faces another seat is not joined (cmbAutoJoin, cmbWatch, tallyStaleClose, avrClear). (2) An image whose fallback could not load either (offline: no card backs) re-set the fallback on every error event, about 2,000 requests a second per card-event clone -- one fallback per image now (imgFallbackOnce, five sites). (3) A master played ON a vampire (the menu's Play on X, or a drop onto the vampire) did not use up the master action -- the master gate runs there too. (4) The level chooser offered superior when ANY ready vampire had it; it follows the vampire playing the card (the anchor) now, and parseV5Card keeps the crypt disciplines the chooser reads (a v5 database would have offered inferior with a warning every time).
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3520,6 +3520,7 @@ const BACKS = {
   get crypt(){ return ((conv.localImg||localImgAuto) && !localImgMissing.has('back:crypt')) ? LOCAL_IMG_DIR+'/cardbackcrypt.jpg' : BACKS_NET.crypt; },
   get lib(){ return ((conv.localImg||localImgAuto) && !localImgMissing.has('back:lib')) ? LOCAL_IMG_DIR+'/cardbacklibrary.jpg' : BACKS_NET.lib; }
 };
+function imgFallbackOnce(img, src){ img.addEventListener('error', ()=>{ if(img._fbOnce) return; img._fbOnce=1; img.src=src; }); }   // v2.6.158 (the play-test): ONE fallback per image. The old handlers set the fallback on every error -- when it cannot load either (offline: no card backs reachable) each error re-set it, about 2,000 requests a second per card-event clone, for as long as the clone lived
 /* v2.6.6: pre-warm both backs at load. The pre-v2.6.4 CSS url() preloaded them implicitly at
    stylesheet-parse time; after moving the ghost background to JS-at-drag-start, a cold cache
    could flash a BLANK ghost for the very first drag while the image fetched. These two throwaway
@@ -4439,7 +4440,7 @@ function logInspectRender(found){
     box.style.width=Math.round(CW*s+12)+'px'; box.style.height=Math.round(CH*s+12)+'px';
     const im=document.createElement('img');
     im.style.cssText='position:absolute; left:6px; top:6px; width:'+Math.round(CW*s)+'px; height:'+Math.round(CH*s)+'px; border-radius:11px; object-fit:cover; background:#0c0907';
-    im.src=imgUrl(c.name); im.alt=''; im.addEventListener('error',()=>{ im.src=BACKS.lib; });
+    im.src=imgUrl(c.name); im.alt=''; imgFallbackOnce(im, BACKS.lib);   // v2.6.158: one fallback, never a loop
     box.appendChild(im); return;
   }
   const att=(c.attached||[]).map(id=>getK(id)).filter(Boolean), off=att.length;
@@ -4911,9 +4912,9 @@ function _cardPlayModes(c){                       // -> {inf:[tri..], sup:[tri..
   const sup=[...new Set((info.text.match(/\[([A-Z]{3})\]/g)||[]).map(x=>x.slice(1,4).toLowerCase()))];
   return (inf.length && sup.length) ? {inf, sup} : null;
 }
-function _readyDiscSets(){                        // {any:Set, sup:Set} of lowercase trigrams across MY ready vampires (KRCG crypt case: UPPER = superior)
+function _readyDiscSets(only){                    // {any:Set, sup:Set} of lowercase trigrams across MY ready vampires (KRCG crypt case: UPPER = superior); v2.6.158: `only` = one vampire, the one playing the card
   const any=new Set(), sup=new Set();
-  state.zones.ready.forEach(id=>{
+  (only ? [only.id] : state.zones.ready).forEach(id=>{
     const v=state.cards.get(id); if(!v || v.kind!=='crypt') return;
     const info=cardInfo && cardInfo.get(norm(v.name)); const ds=(info && info.disciplines)||[];
     ds.forEach(d=>{ const t=String(d); if(/^[A-Za-z]{3}$/.test(t)){ any.add(t.toLowerCase()); if(t===t.toUpperCase()) sup.add(t.toLowerCase()); } });
@@ -4924,9 +4925,10 @@ async function modeChooseGate(c, faceDown){       // false = cancel the play (ca
   if(faceDown || !hx('modeChoice')) return true;  // face-down plays skip in v1: a mode line would leak the card; choose at flip instead
   const modes=_cardPlayModes(c); if(!modes) return true;
   const rd=_readyDiscSets();
-  const supTri = modes.sup.find(t=>rd.sup.has(t)) || modes.sup[0];
-  const infTri = modes.inf.find(t=>rd.any.has(t)) || modes.inf[0];
-  const primarySup = modes.sup.some(t=>rd.sup.has(t));
+  const _an=activeAnchor(), who=(_an && _an.kind==='crypt') ? _readyDiscSets(_an) : rd;   // v2.6.158 (the play-test): the default level follows the vampire playing the card -- Lost in Crowds came up [OBF] for an obf-only Ashley because another ready vampire had OBF
+  const supTri = modes.sup.find(t=>who.sup.has(t)) || modes.sup[0];
+  const infTri = modes.inf.find(t=>who.any.has(t)) || modes.inf[0];
+  const primarySup = modes.sup.some(t=>who.sup.has(t));
   const anyKnown = modes.inf.concat(modes.sup).some(t=>rd.any.has(t));
   const supLbl='Superior ['+supTri.toUpperCase()+']', infLbl='Inferior ['+infTri+']';
   const msg=c.name + (anyKnown ? '' : '\n\u26a0 No ready vampire you control shows this discipline (printed crypt data) \u2014 the table\u2019s call stands.');
@@ -4957,9 +4959,10 @@ async function playFromHand(c,faceDown){
     log((a ? cardRefCap(a)+' plays '+cardRef(c)+_mt+'.' : cardRef(c)+_mt+' was played.')+targetSuffix());
   }
 }
-function playOnActive(c,faceDown){   // v2.6.50 note: modeChooseGate deliberately NOT wired here in R1 (attach-to-active plays) -- revisited at R3; sibling audit on record
+async function playOnActive(c,faceDown){   // v2.6.50 note: modeChooseGate deliberately NOT wired here in R1 (attach-to-active plays) -- revisited at R3; sibling audit on record
   const a=activeAnchor();
   if(!a){ playFromHand(c,faceDown); return; }
+  if(!(await masterPlayGate(c))) return;   // v2.6.158 (the play-test): a master played ON a vampire (Blood Doll) never used up the master action -- the phase bar went on offering one
   attach(c,a);
   if(faceDown){
     c.faceDown=true; layout();
@@ -12101,7 +12104,7 @@ function avrOpen(mode){ if(!hx(AVR_HKEYS[mode])) return;   // v2.6.24: helper-ga
   if(mode==='combat'){ const an=activeAnchor(); if(an) avrDuelAnnounce(an.id, an.name); else cmbAutoJoin(); }   // v2.6.19: opening Combat with an anchored ready minion auto-announces it as your combatant; v2.6.134: otherwise the minion that acted (your turn) or blocked
 }
 function avrAdjust(side, d){ if(!avr.mode) return; avr[side]=Math.max(0, Math.min(99, (avr[side]|0)+d)); avrRender(); avrPush(); }
-function avrClear(){ const _pv=avr; avr=avrFresh(null); cmbWatch(_pv, avr, false); avrRender(); avrPush(); }   // v2.6.129: the x is a withdrawal, not a resolve -- no taken lines
+function avrClear(){ const _pv=avr; if(_pv && _pv.mode==='block') _cmbLastBlock=null; avr=avrFresh(null); cmbWatch(_pv, avr, false); avrRender(); avrPush(); }   // v2.6.129: the x is a withdrawal, not a resolve -- no taken lines
 function avrResolve(){ if(!avr.mode) return;
   tutNotify('resolver-resolve', avr.mode);   // v2.6.25: tutorial breadcrumb (Structured II advances on resolves)
   const wasBlock = avr.mode==='block';
@@ -12191,6 +12194,8 @@ function cmbBlood(seat, st){   // the blood a combatant had when Damage resoluti
 function cmbSnapNow(st){ if(_cmbSnap && _cmbSnap.k===_cmbSerial+':'+((st.rd|0)||1)) return;   // v2.6.135: ONCE per round -- stepping back into Damage after the player burned blood must not re-read the burned blood (it made a healthy vampire look wounded)
   const b={}; Object.keys(st.duel||{}).forEach(k=>{ const r=avrDuelResolve(st.duel[k], +k); if(r.c) b[k]=r.c.blood|0; }); _cmbSnap={ k:_cmbSerial+':'+((st.rd|0)||1), b }; }
 function cmbWatch(prev, cur, resolved){   // every avr transition passes here: local steps, menu actions, remote tallies, open / clear / resolve
+  if(prev && prev.mode==='block' && !(cur && (cur.mode==='block' || cur.mode==='combat')) && (prev.a|0)>(prev.b|0)) _cmbLastBlock=null;   // v2.6.158: a block that FAILED (stealth over intercept) ends without a combat -- that blocker is nobody's default any more
+  if(prev && prev.mode==='combat' && !(cur && cur.mode==='combat')){ _cmbLastAct=null; _cmbLastBlock=null; }   // v2.6.158: and a finished combat retires both defaults
   if(cur && cur.mode==='combat' && !(prev && prev.mode==='combat')){ _cmbSerial++; _cmbSnap=null; _cmbHist=[]; }
   if(prev && prev.mode==='combat' && cur && cur.mode==='combat' && (cur.rd|0)>(prev.rd|0)) cmbHistPush(prev);   // v2.6.135: a finished round joins the history
   if(!prev || prev.mode!=='combat') return;
@@ -12305,7 +12310,7 @@ function cmbTaken(c, x){   // v2.6.131 (Johan: bots must work on a Classic table
 }
 function tallySendNull(){ if(net.spect) return; clearTimeout(_avrSendT); const m={ t:'tally', mode:null, a:0, b:0, ph:0, rd:1 }; if(inRoom()) mpSend(m); else if(hotBotsSeated()) hotTallySend(m); }   // v2.6.137: tell the server / the hotseat table that the resolver is closed (the local clears never did)
 function tallyStaleClose(why, send){   // v2.6.137 (bot handoff v0.6.171): a Block / Vote / Combat counter that outlived its action or its turn is closed on EVERY mirror, not only on this screen. `send` false = clear this screen only (another client sends)
-  if(why==='turn') _actUndir=false;
+  if(why==='turn'){ _actUndir=false; _cmbLastAct=null; _cmbLastBlock=null; }   // v2.6.158 (the play-test): the default combatants die with the turn -- a blocker from an earlier turn joined two bots' combat
   if(!(avr.mode==='block' || avr.mode==='vote' || avr.mode==='combat')) return false;
   const _pv=avr; avr=avrFresh(null); cmbWatch(_pv, avr, false); avrRender(); if(send!==false) tallySendNull(); return true;
 }
@@ -12322,7 +12327,9 @@ function cmbMyReady(){ return (state.zones.ready||[]).map(id=>state.cards.get(id
 function cmbAutoJoin(){   // v2.6.134 (Johan): the minion that took the action (your turn) or blocked (theirs) joins as your combatant by default
   if(avr.mode!=='combat' || net.spect || !hx('resCombat')) return;
   const me=cmbMe(); if(!me || (avr.duel && avr.duel[me])) return;
-  const want=((net.turnSeat|0)===me) ? _cmbLastAct : _cmbLastBlock;
+  const _ts=net.turnSeat|0;
+  if(_ts!==me && Object.keys(avr.duel||{}).some(k=>{ const s=+k; return s>0 && s!==me && s!==_ts; })) return;   // v2.6.158 (the play-test): another seat already faces the acting seat -- a combat between two other players is not mine to join
+  const want=(_ts===me) ? _cmbLastAct : _cmbLastBlock;
   const c=want ? state.cards.get(want) : null;
   if(c && isMinion(c) && (state.zones.ready||[]).includes(c.id)) avrDuelAnnounce(c.id, c.name);
 }
@@ -13706,6 +13713,7 @@ async function dropCard(c,d){
     const keepZone=freeDragKeepsZone(c, from);                     // v2.6.149 (K1/K3): on the free board a drag of an uncontrolled or torpored crypt card only repositions it
     const target=keepZone ? null : attachTargetAt(cx,cy,c);
     if(target){
+      if(from==='hand' && !(await masterPlayGate(c))){ layout(); return; }    // v2.6.158: a master dropped ON a vampire counts, like one dropped on the felt
       const verb = from==='hand' ? 'played on' : 'attached to';
       if(attach(c,target)){ log(who+' '+verb+' '+cardRef(target)+'.'); if(from==='hand'){ qrPhasePlayed.add(c.id); cardFx(c, 'play', { target }); } }
       else move(c,'ready',{x:X,y:Y});
@@ -15728,7 +15736,7 @@ function cardFx(c, kind, opts){
     if(kind==='rise') img.classList.add('cfxrev'); }
   else { _startSrc = c.faceDown ? _back : _face; }
   img.src = _startSrc;
-  img.addEventListener('error',()=>{ img.src=_back; });
+  imgFallbackOnce(img, _back);   // v2.6.158: the play-test's CPU burn -- offline the back failed too and this handler re-set it on every error
   if(_endSrc){ const _fxk=(kind==='rise')?FX_TIMING.rise:FX_TIMING.flip; const _swapAt=_fxk.dur*_fxk.mid*1000*(conv.animSpeed||1.0); setTimeout(()=>{ try{ img.src=_endSrc; }catch(e){} }, _swapAt); }   // swap at the edge-on midpoint so the flip reveals (v2.5.59: derived from FX_TIMING — was hard-coded 450/575ms); scaled by animSpeed
   row.appendChild(img);
   if(kind==='play' && opts.target){                                          // target AFTER the card: [card] ➤ [target]
@@ -15736,14 +15744,14 @@ function cardFx(c, kind, opts){
     const ar=document.createElement('div'); ar.className='cfxarrow'; ar.textContent='➤'; row.appendChild(ar);
     const ti=document.createElement('img'); ti.className='cfximg tgt'; ti.alt=''; ti.draggable=false;
     ti.src = tg.faceDown ? (tg.kind==='crypt'?BACKS.crypt:BACKS.lib) : imgUrl(tg.name||'');
-    ti.addEventListener('error',()=>{ ti.src=(tg.kind==='crypt'?BACKS.crypt:BACKS.lib); });
+    imgFallbackOnce(ti, tg.kind==='crypt'?BACKS.crypt:BACKS.lib);   // v2.6.158: one fallback
     row.appendChild(ti);
   }
   if(kind==='play' && opts.actor){                                           // actor BEFORE the card: [actor] ➤ [card] ➤ [target]
     const ac=opts.actor;
     const ai=document.createElement('img'); ai.className='cfximg act'; ai.alt=''; ai.draggable=false;   // 'act' (not 'tgt') so the onto-ring below never lands on the actor
     ai.src = ac.faceDown ? BACKS.crypt : imgUrl(ac.name||'');
-    ai.addEventListener('error',()=>{ ai.src=BACKS.crypt; });
+    imgFallbackOnce(ai, BACKS.crypt);   // v2.6.158: one fallback
     const ar=document.createElement('div'); ar.className='cfxarrow'; ar.textContent='➤';
     row.insertBefore(ar, row.firstChild);
     row.insertBefore(ai, row.firstChild);   // vampyr hamnar längst till vänster
@@ -15851,7 +15859,7 @@ function cardFx(c, kind, opts){
       const im2=document.createElement('img'); im2.className='cfximg cfxrev'; im2.alt=''; im2.draggable=false;
       const _b2=(ci.kind==='crypt'?BACKS.crypt:BACKS.lib);
       im2.src=_b2;   // start face-down, flip to face
-      im2.addEventListener('error',()=>{ im2.src=_b2; });
+      imgFallbackOnce(im2, _b2);   // v2.6.158: one fallback
       const _swapAt2=FX_TIMING.handreveal.flipDur*FX_TIMING.handreveal.mid*1000*(conv.animSpeed||1.0); setTimeout((el=>()=>{ try{ el.src=imgUrl(ci.name||''); }catch(e){} })(im2), _swapAt2);   // v2.5.59: =350ms at defaults, now the SAME number the keyframe midpoint uses
       row.appendChild(im2);
     });
@@ -17056,7 +17064,7 @@ function parseV5Card(card){
     else if(card.cost.type==='blood') blood=String(card.cost.amount||'');
   }
   const meta={ text, types: card.types.join(' / '), cap: card.capacity||null,
-               disc: discArr.join(' '), clans: clansArr.join(' '), clansArr,
+               disc: discArr.join(' '), clans: clansArr.join(' '), clansArr, disciplines: discArr.slice(0,12).map(String),   // v2.6.158: the v3 parser's field, case kept (UPPER = superior) -- the level chooser reads it; without it a v5 database offered inferior with a warning every time
                pool, blood, path: pathVal,
                sect: card.sect || (/\bSabbat\b/.test(text) ? 'Sabbat'   // neither real sample carries a `sect` field at all — regex-on-text is the only source, same as v3 already was in practice
                    : /\bCamarilla\b/.test(text) ? 'Camarilla'

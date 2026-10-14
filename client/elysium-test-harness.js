@@ -379,7 +379,10 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   closePlayed: (typeof closePlayed!=='undefined'?closePlayed:undefined), togglePlayed: (typeof togglePlayed!=='undefined'?togglePlayed:undefined),
   avrRender: (typeof avrRender!=='undefined'?avrRender:undefined), get playedAutoPin(){ return (typeof playedAutoPin!=='undefined')?playedAutoPin:undefined; },
   pubRiders: (typeof pubRiders!=='undefined'?pubRiders:undefined), updateL4Opponents: (typeof updateL4Opponents!=='undefined'?updateL4Opponents:undefined),   // v2.6.149: riders drawn on their host
-  l4GlobeEdges: (typeof l4GlobeEdges!=='undefined'?l4GlobeEdges:undefined)   // v2.6.151: the Edge on the globe
+  l4GlobeEdges: (typeof l4GlobeEdges!=='undefined'?l4GlobeEdges:undefined),   // v2.6.151: the Edge on the globe
+  cardFx: (typeof cardFx!=='undefined'?cardFx:undefined), imgFallbackOnce: (typeof imgFallbackOnce!=='undefined'?imgFallbackOnce:undefined),   // v2.6.158: the image fallback loop
+  modeChooseGate: (typeof modeChooseGate!=='undefined'?modeChooseGate:undefined), selectOnly: (typeof selectOnly!=='undefined'?selectOnly:undefined), activeAnchor: (typeof activeAnchor!=='undefined'?activeAnchor:undefined),   // v2.6.158: the level chooser follows the anchor
+  playOnActive: (typeof playOnActive!=='undefined'?playOnActive:undefined), masterPlayGate: (typeof masterPlayGate!=='undefined'?masterPlayGate:undefined)   // v2.6.158: a master played on a vampire counts
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',

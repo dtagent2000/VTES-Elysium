@@ -1,7 +1,7 @@
 # PROJECT-MANIFEST.md — what belongs in the Elysium (MAIN) project upload (9 September 2026, after the split)
 
 *The canonical file set for the claude.ai project knowledge, assembled after THE MERGE
-(client v2.6.102 · server srv-2.6.35 · bot v0.6.107 · digest v1.4; versions below refreshed 14 Oct 2026 -- client v2.6.157 · srv-2.6.46 · bot v0.6.198, run beside the suite). One lineage. When a file
+(client v2.6.102 · server srv-2.6.35 · bot v0.6.107 · digest v1.4; versions below refreshed 14 Oct 2026 -- client v2.6.158 · srv-2.6.46 · bot v0.6.198, run beside the suite). One lineage. When a file
 here disagrees with a chat's latest delivery, the newer version wins — update this manifest
 when files are added or retired. Read order for a new chat: CLAUDE.md → the session journal →
 project context → learnings → (for bots) CLAUDE-arena.md → (for the next chapter)
@@ -18,8 +18,8 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 ## A. Shipped code (deployed to the box / the download bundle)
 | File | Role | Version |
 |---|---|---|
-| elysium-vtes-bord.html | The client — ONE file, built from 12 fragments by elysium-build.js; carries the Help pages (Bots = the bot project's START-HERE-BOTS.html embedded verbatim, Local server = help-local-server.html) | v2.6.151 |
-| elysium-server.js | The reference server (rooms, deals, relays, HTTP intake, statics -- four bot files since srv-2.6.43; the room option `tableSetup` since srv-2.6.44; the pub's turn count `tn`/`rn` since srv-2.6.45; the room option `tableLayout` since srv-2.6.46) | srv-2.6.45 |
+| elysium-vtes-bord.html | The client — ONE file, built from 12 fragments by elysium-build.js; carries the Help pages (Bots = the bot project's START-HERE-BOTS.html embedded verbatim, Local server = help-local-server.html) | v2.6.158 |
+| elysium-server.js | The reference server (rooms, deals, relays, HTTP intake, statics -- four bot files since srv-2.6.43; the room option `tableSetup` since srv-2.6.44; the pub's turn count `tn`/`rn` since srv-2.6.45; the room option `tableLayout` since srv-2.6.46) | srv-2.6.46 |
 | elysium-error-digest.js | Daily Discord digest of elysium-errors.log (systemd timer) | v1.4 |
 | elysium-digest.service / .timer | The digest's systemd unit + timer | — |
 | START-HERE.html | The GitHub front door for people who do not have the client yet (the client's Help → Local server is the converged in-app guide since v2.6.127) | 1.8 |
@@ -31,7 +31,7 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 |---|---|
 | split_client.py / elysium-build.js | Fragment split ↔ single-file build; B1 gate = split → build → byte-identical |
 | elysium-test-harness.js | Loads the client/server under DOM/fs stubs for the suites |
-| test-client-logic.js | Client suite (283/0 with bot v0.6.198 beside it as of v2.6.157; 279/0 as of v2.6.151; 278/0 at v2.6.150 and v2.6.149; 271/0 at v2.6.148; 266/0 at v2.6.147; 265/0 at v2.6.146; 256/0 at v2.6.145; 248/0 as of v2.6.142, incl. the LIVE hold test; 241/0 with v0.6.197 at v2.6.141 — no skips: the LIVE tempo test needs a bot that reads `botcfg` and ran; 240/0 + 1 skip with v0.6.193 at v2.6.140; the `testB` tests skip loudly without the bot; sync battery + testA/testB async runners; `loadClient(path, {storage, location, fetch})` -- `fetch` since v2.6.139) |
+| test-client-logic.js | Client suite (288/0 with bot v0.6.198 beside it as of v2.6.158; 283/0 as of v2.6.157; 279/0 as of v2.6.151; 278/0 at v2.6.150 and v2.6.149; 271/0 at v2.6.148; 266/0 at v2.6.147; 265/0 at v2.6.146; 256/0 at v2.6.145; 248/0 as of v2.6.142, incl. the LIVE hold test; 241/0 with v0.6.197 at v2.6.141 — no skips: the LIVE tempo test needs a bot that reads `botcfg` and ran; 240/0 + 1 skip with v0.6.193 at v2.6.140; the `testB` tests skip loudly without the bot; sync battery + testA/testB async runners; `loadClient(path, {storage, location, fetch})` -- `fetch` since v2.6.139) |
 | test-server-dispatch.js | Server unit suite (65/0 as of srv-2.6.45; 64/0 at srv-2.6.44; 60/0 at srv-2.6.43; 54 c2s handlers) |
 | elysium-soak-hotseat.js | Hotseat soak v1.0.0: real bots on the real bridge through the real sweep; `--control` proves the trip-wire fires; independent watchdog. Needs the released bot beside it; exit 0 / 2 stuck / 3 cannot run |
 | embed-help.js | v1.0.0 (v2.6.127): embeds a START-HERE-styled page into the client's Help `<template>`s between the `@@HELP` markers (ids prefixed, page script dropped); `--check` = drift, exit 1. Bots page from the bot project's START-HERE-BOTS.html (verbatim); server page from help-local-server.html (ours) |
@@ -40,6 +40,8 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 | test-protocol-doc.js | Lints ELYSIUM-PROTOCOL.md §8 against the live handler tables (6/0) |
 | test-bot-canary.js | The §12 log-grammar CONTRACT test between the client and the bot's parsers — the bot project's file, identical in both projects; skips loudly without the released elysium-bot.js beside it, 57/0 with v0.6.198 (v2.6.142) |
 | check-versions.js | Version lockstep across code + doc headers ("everything agrees"); reads headers from `docs/` too; in the monorepo its last row asserts every root file is a byte copy of `client/<name>` or (the bundle) `bot/<name>` (12 Oct 2026) |
+
+| playtest/playtest-rig.js, playtest.js, playtest-page.js, playtest-report.js, scenarios/three-seat.json, PLAYTEST.md | v1.0.0 (v2.6.158): the play-test rig -- a real game against the bots in headless Chromium (Playwright; a dev tool, never shipped), recorded frame by frame and measured; PLAYTEST.md is the process, SKILLS.md 'Play-test a change for real' the short recipe; runs go to `playtest/runs/` (gitignored) or `--out` |
 
 ## C. Living documents (update after EVERY implementation)
 | File | Role |

@@ -10,13 +10,13 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.157** (THE TABLE LAYOUT AND THE DISCREET PANEL: the room's Table layout *Large cards*, and each player's discreet panel with the hand, piles and pool tucked into the bottom edge; carries v2.6.151 THE EDGE ON THE GLOBE and earlier) | `client/elysium-vtes-bord.html`, copied to `/` |
+| client | **v2.6.158** (WHAT THE PLAY-TEST FOUND: the default combatant expires, one image fallback instead of a loop, a master played on a vampire counts, the level chooser follows the vampire playing the card; carries v2.6.157 THE TABLE LAYOUT AND THE DISCREET PANEL and earlier) | `client/elysium-vtes-bord.html`, copied to `/` |
 | server | **srv-2.6.46** (the room option `tableLayout`; srv-2.6.45: the pub keeps `tn`/`rn`; srv-2.6.44: the room option `tableSetup`) | `client/elysium-server.js`, copied to `/` |
 | bot (consumed) | **v0.6.198** (12 Oct 2026) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.157 / srv-2.6.46 | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **283/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 68/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.158 / srv-2.6.46 | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **288/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 68/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
-**Live on elysium.cards:** server srv-2.6.45 + bot v0.6.198 since 13 Oct 16:47 (PR #7). Client v2.6.150/151 (PRs #9, #10) were merged that evening. Client v2.6.157 + server srv-2.6.46 (PR from `rim-preview`, 14 Oct) need a client purge AND a server restart together; the journal's newest entry says whether Johan has put them up.
+**Live on elysium.cards:** server srv-2.6.45 + bot v0.6.198 since 13 Oct 16:47 (PR #7). Client v2.6.150/151 (PRs #9, #10) were merged that evening. Client v2.6.157 + server srv-2.6.46 were merged with PR #12 on 14 Oct (a client purge AND a server restart together). Client v2.6.158 (PR from `playtest-2026-10-14`, with the play-test handoff) needs a client purge only.
 
 ## The first ten minutes
 
@@ -31,7 +31,7 @@ head -40 docs/elysium-learnings.md
 # the bundle beside the suite (gitignored — copy, never commit):
 cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
 node check-versions.js             # must end green: code, doc headers, AND the root == client/ + bot/ gate
-node test-client-logic.js          # 278 passed, 0 failed, 0 skipped (with the bundle beside)
+node test-client-logic.js          # 288 passed, 0 failed, 0 skipped (with the bundle beside)
 ```
 
 The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification commands" and `client/SKILLS.md`
@@ -67,7 +67,11 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 7. Commit (English, what and why), push, open a PR against `main`. Johan merges.
 8. Update this file's version block when a release went out.
 
-## Open right now (13 Oct 2026)
+## Open right now (14 Oct 2026)
+
+- **The play-test (14 Oct):** `client/playtest/` plays a real game against the bots and measures it (`client/playtest/PLAYTEST.md`). Its 24 bot findings wait in
+  `docs/handoffs/REPLY-to-bot-2026-10-14-playtest.md`; our four are fixed in v2.6.158. **Decided (Johan):** the human handles their own values by hand
+  (combat blood, card costs, the Edge, pool) -- the bots theirs. Re-run the same scenario after a bot release to compare.
 
 - **Built in v2.6.149 (13 Oct, evening):** K1–K6 from the Classic review, plus the turn count across a reconnect or reload
   (srv-2.6.45) and attached cards riding their host in every view. `client/CLAUDE.md` top entry. **v2.6.150:** a resolver no longer opens the tray on other screens, so the
