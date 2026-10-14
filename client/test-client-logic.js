@@ -3798,6 +3798,84 @@ test('v2.6.146: the seat spots -- for 1 to 6 seats every seat has its own footpr
   const far = API.l4CryptSpots(960, 500); assert(far.every(c => c.x + G.cw <= 960 && c.x >= T.x), 'near the right edge the cards go to the left'); assert(far[0].y + G.ch <= T.y + T.h, 'and are clamped onto the table');
   const mid = API.l4CryptSpots(500, 250); assert(mid.every(c => c.x >= 500 + G.gw), 'in the middle they go to the right');
 });
+test('v2.6.153: the Table layout is the ROOM\'s -- Large cards (srv-2.6.46 tableLayout) draws the free board\'s cards at 0.6 and puts the lower row at y 508, the top row 8 px lower, for everyone; Standard, a Structured table and an absent value keep 0.5 and the old spots; the personal table edge (conv.handRim) changes neither', () => {
+  const API = loadClient(CLIENT);
+  if (!API.tableLarge || !API.tableLayoutSync || !API.rimGeo) throw new Error('tableLarge / tableLayoutSync / rimGeo not exposed (harness needs updating)');
+  eq(API.conv.handRim, 'dock', 'the edge is off by default'); eq(API.L4_SEAT.largeBottom, 508); eq(API.L4_SEAT.largeTop, 8);
+  API.net.boardMode = 'classic'; API.net.tableLayout = '';
+  eq(API.tableLarge(), false); API.tableLayoutSync(false); eq(API.L4_CARD_S, 0.5);
+  eq(API.l4SeatSpot(4, 5).y, 341, 'standard: the old lower spot'); eq(API.l4SeatSpot(0, 5).y, 25);
+  API.conv.handRim = 'rim';
+  eq(API.tableLarge(), false, 'the personal edge does not make a Large table'); eq(API.l4SeatSpot(4, 5).y, 341, 'and does not move the rows (v2.6.152 did)');
+  API.net.tableLayout = 'large';
+  eq(API.tableLarge(), true); eq(API.tableLayoutSync(false), true, 'the size changed'); eq(API.L4_CARD_S, 0.6, 'cards a fifth larger');
+  const G = API.l4SeatGeo();
+  eq(Math.round(API.l4SeatSpot(4, 5).y + G.dy + G.ch), 508, 'large: a lower-row card ends at 508');
+  eq(API.l4SeatSpot(0, 5).y, 33, 'large: the top row at y 33'); eq(API.l4SeatSpot(0, 5).x, 7, 'v2.6.155: the corner seats 19 px further out'); eq(API.l4SeatSpot(3, 5).x, 952, 'on both sides');
+  eq(Math.round(API.pubBox().w), 1010, 'the Large box is 2 x 19 wider (972 + 38)');
+  eq(JSON.stringify([0, 1, 2, 3, 4].map(i => { const g = API.l4SeatSpot(i, 5); return [g.x, g.y]; })), '[[7,33],[368,33],[952,33],[952,439],[7,439]]', 'five seats at a Large table, as REPLY-to-bot-2026-10-14-table-layout.md \u00a72 states them'); eq(Math.round(API.l4SeatSpot(1, 5).x + (API.l4SeatGeo().blockW) / 2), 502, 'the centre seat stays in the middle');
+  API.conv.handRim = 'dock'; eq(API.l4SeatSpot(4, 5).y + 0, API.l4SeatSpot(4, 5).y, 'the dock choice does not matter either'); eq(API.L4_CARD_S, 0.6);
+  API.net.boardMode = 'structured';
+  eq(API.tableLarge(), false, 'a Structured table is never Large'); API.tableLayoutSync(false); eq(API.L4_CARD_S, 0.5); eq(API.l4SeatSpot(4, 5).y, 341);
+  API.net.boardMode = 'classic'; API.net.tableLayout = ''; API.tableLayoutSync(false); eq(API.L4_CARD_S, 0.5, 'back to standard');
+  const g = API.rimGeo();
+  assert(g.hand.w > 3 * g.pw, 'the hand pocket is the widest');
+  assert(g.crypt.x < g.library.x && g.library.x + g.pw <= g.hand.x && g.hand.x + g.hand.w <= g.ash.x && g.ash.x + g.pw <= g.pool.x, 'crypt, library, hand, ash heap, pool globe from left to right');
+  assert(g.pool.x + g.pool.w <= g.W - 34, 'the pool pocket stays clear of the corner buttons');
+  assert(g.raised < g.crypt.tuck && g.hand.tuck < g.crypt.tuck, 'raised is higher than tucked; the hand shows a taller strip (its titles)');
+});
+test('v2.6.153: the Table layout on the wire -- joined, started and took set it (an absent value in took keeps the room\'s), a Structured room is never Large, the host whose server dropped the field is told; the create dialog sends it only for a Classic room', () => {
+  const A = loadClient(CLIENT);
+  A.MP_HANDLERS.joined({ room: 'R', token: 't', you: 'Anna', seat: 1, players: ROSTER146(2), boardMode: 'classic', tableLayout: 'large', lobby: true });
+  eq(A.net.tableLayout, 'large', 'joined sets it'); eq(A.L4_CARD_S, 0.6, 'and the card size with it');
+  A.MP_HANDLERS.took({ seat: 1, lib: 0, crypt: 0, loaded: 'sv' });
+  eq(A.net.tableLayout, 'large', 'a took without it keeps the room\'s');
+  A.MP_HANDLERS.started({ players: ROSTER146(2), turn: 1, boardMode: 'classic' });
+  eq(A.net.tableLayout, '', 'started without it: standard'); eq(A.L4_CARD_S, 0.5);
+  A.MP_HANDLERS.started({ players: ROSTER146(2), turn: 1, boardMode: 'classic', tableLayout: 'large' });
+  eq(A.net.tableLayout, 'large'); eq(A.L4_CARD_S, 0.6);
+  A.MP_HANDLERS.started({ players: ROSTER146(2), turn: 1, boardMode: 'structured', tableLayout: 'large' });
+  eq(A.L4_CARD_S, 0.5, 'a Structured room is never Large');
+  A.MP_HANDLERS.joined({ room: 'R', token: 't', you: 'Anna', seat: 1, players: ROSTER146(2), boardMode: 'classic', tableLayout: 'huge', lobby: true });
+  eq(A.net.tableLayout, '', 'an unknown value is standard');
+  const B = loadClient(CLIENT), ringB = () => { const r = (typeof B.errRing === 'function') ? B.errRing() : B.errRing; return (r || []).map(e => e.m).join('\n'); };
+  B.net._createLayout = true;
+  B.MP_HANDLERS.joined({ room: 'R', token: 't', you: 'Anna', seat: 1, players: ROSTER146(1), boardMode: 'classic', lobby: true });   // an older server: the field is gone
+  eq(B.net.tableLayout, ''); eq(B.net._createLayout, false, 'asked once');
+  assert(/does not know the table layout yet/.test(ringB()), 'the host is told: ' + ringB().slice(-200));
+  eq(B.net._layoutMissed, true, 'and it is remembered for the deal');
+  B.net.ws = { readyState: 1, send(){} }; B.net.status = 'in';
+  B.MP_HANDLERS.dealt({ deckName: 'D', hand: ['a', 'b', 'c', 'd', 'e', 'f', 'g'], unc: [], lib: 53, crypt: 12 });
+  eq((ringB().match(/does not know the table layout yet/g) || []).length, 2, 'said again after the deal line (the deal clears the log)'); eq(B.net._layoutMissed, false, 'once');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("net._createLayout = ($('#mpBoard').value==='classic') && !!($('#mpLayout') && $('#mpLayout').value==='large');") > 0, 'create reads the select, for a Classic room only');
+  assert(html.indexOf("tableLayout:net._createLayout?'large':undefined,") > 0, 'and sends the field only when it is Large -- an old server sees the create it always saw');
+  assert(/id="mpSetupDesc">[^\n]*\n\s*<div class="mpfield mpCreateOnly mpGs mpFull" id="mpLayoutRow">/.test(html), 'the Table layout row follows the setup\'s description (the dialog pairs a row with its description)');
+});
+test('v2.6.154: the hand\'s pin on the table edge pins the hand only -- a second click releases it; the other pockets are untouched', () => {
+  const A = loadClient(CLIENT);
+  if (!A.rimIsUp || !A.rimPinToggle) throw new Error('rimIsUp / rimPinToggle not exposed (harness needs updating)');
+  eq(A.rimIsUp('hand'), false); A.rimPinToggle(); eq(A.rimIsUp('hand'), true, 'pinned up');
+  eq(A.rimIsUp('library'), false); eq(A.rimIsUp('pool'), false, 'only the hand');
+  A.rimPinToggle(); eq(A.rimIsUp('hand'), false, 'released');
+});
+test('v2.6.153: Play offline hands the Table layout to the table before the deal -- a Large Classic hotseat with the setup lays every seat\'s four cards at the Large spots (0.6 apart), and its globes start on the Large rows', () => {
+  const A = loadClient(CLIENT);
+  if (!A.startHotseat) throw new Error('startHotseat not exposed (harness needs updating)');
+  A.startHotseat([{ name: 'You', deckText: DECK146 }, { name: 'Erik', deckText: DECK146 }, { name: 'Anna', deckText: DECK146 }, { name: 'Sara', deckText: DECK146 }, { name: 'Nils', deckText: DECK146 }], 'classic', { tableSetup: true, tableLayout: 'large' });
+  eq(A.net.tableLayout, 'large'); eq(A.L4_CARD_S, 0.6);
+  const unc = A.state.zones.uncontrolled.map(id => A.state.cards.get(id)).sort((a, b) => a.x - b.x);
+  eq(unc.length, 4, 'four setup cards for the seat in front of the screen');
+  const g = A.l4SeatSpot(0, 5), spots = A.l4CryptSpots(g.x, g.y);
+  eq(JSON.stringify(unc.map(c => [c.x, c.y])), JSON.stringify(spots.map(p => [p.x, p.y])), 'at the Large spots');
+  eq(spots[1].x - spots[0].x, Math.round(84 * 0.6 + 4), 'a Large card plus the 4 px gap apart');
+  const B = loadClient(CLIENT);
+  B.startHotseat([{ name: 'You', deckText: DECK146 }, { name: 'Erik', deckText: DECK146 }], 'classic', { tableSetup: true });
+  eq(B.net.tableLayout, '', 'no layout given: standard'); eq(B.L4_CARD_S, 0.5);
+  const C = loadClient(CLIENT);
+  C.startHotseat([{ name: 'You', deckText: DECK146 }, { name: 'Erik', deckText: DECK146 }], 'structured', { tableSetup: true, tableLayout: 'large' });
+  eq(C.net.tableLayout, '', 'a Structured table ignores it'); eq(C.L4_CARD_S, 0.5);
+});
 test('v2.6.146: tableSetupOn -- a Classic table with the option; never a Structured one; never a table with a seated bot (bots camp by their own pattern); a vacant bot seat does not count', () => {
   const A = loadClient(CLIENT);
   if (!A.tableSetupOn) throw new Error('tableSetupOn not exposed (harness needs updating)');
@@ -3927,7 +4005,7 @@ test('v2.6.146: the option on the wire -- joined and started set it, took keeps 
   assert(html.indexOf("tableSetup:net._createSetup||undefined,") > 0, 'and sends the field only when it is set -- an old server sees the create it always saw');
   assert(/<label class="mpcheck mpCreateOnly mpGs" id="mpSetupRow"><input type="checkbox" id="mpSetup" checked> Suggested table setup<\/label>/.test(html), 'Game settings carries the box, ticked, in Lite too (no mpFull)');
   assert(/<input type="checkbox" id="offSetup" checked> Suggested table setup<\/label>/.test(html), 'and Play offline');
-  assert(html.indexOf("startHotseat(players, boardMode, { tableSetup: !!($('#offSetup') && $('#offSetup').checked) });") > 0, 'which hands it to the table');
+  assert(html.indexOf("startHotseat(players, boardMode, { tableSetup: !!($('#offSetup') && $('#offSetup').checked), tableLayout:") > 0, 'which hands it to the table (v2.6.153: beside the Table layout)');
   assert(html.indexOf("tableSetup: B._tableSetup || undefined,") > 0, 'the hotseat bridge tells its bots what the server would');
   assert(html.indexOf("#mpSetupRow{grid-column:auto}") > 0, 'the row takes ONE cell of the dialog\'s two-column grid, its description the other (a bare .mpcheck spans both, and the description then pushed every later row out of step)');
   assert(/board\.disabled=false; helpers\.disabled=false;\n  \}\n  tableSetupSync\(\);/.test(html), 'a bot seat forces Structured in code (no change event) -- the box is greyed with it');
@@ -4190,7 +4268,7 @@ test('v2.6.149 (K5) / v2.6.150: another seat\'s resolver never opens the Played 
   assert(/let playedPinned=false, playedShowT=null, playedHideT=null, playedAutoPin=false;[^\n]*\nlet avr=avrFresh\(null\)/.test(html), 'the tray\'s state is declared beside avr: avrRender runs during start-up and reads it (declared where playedPinned was, the page died in the TDZ -- twice)');
   assert(html.indexOf("if(!_ov($('#playedOverlay')) && !_ov($('#playedTab'))) hidePlayedSoon(); } }") > 0, 'a hover peek the live resolver held open closes with it too (the review found it: hidePlayedSoon refuses while a resolver runs, and nothing hid it afterwards)');
   eq(API.L4_SEAT.topY, undefined, 'v2.6.150: the top row is back at the top edge');
-  assert(html.indexOf("const gy=top ? T.y+L4_SEAT.m : L4_SEAT.lowBottom-G.ch-G.dy;") > 0, 'the seat formula');
+  assert(html.indexOf("const gy=top ? T.y+L4_SEAT.m+(tableLarge()?L4_SEAT.largeTop:0) : (tableLarge()?L4_SEAT.largeBottom:L4_SEAT.lowBottom)-G.ch-G.dy;") > 0, "the seat formula (v2.6.153: the room's Table layout moves both rows)");
   eq(html.indexOf("hx(AVR_HKEYS[avr.mode]) && !playedIsOpen()) pinPlayedAuto(); avrRender();"), -1, 'the tally handler pins nothing');
 });
 test('v2.6.149 (K6): a roster change no longer empties the felt of the other seats\' cards, and a seat that dropped off says so on its globe', () => {

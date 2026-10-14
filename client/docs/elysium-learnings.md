@@ -1,8 +1,15 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.151 / server v2.6.45 / bot v0.6.198 tested beside the suite, last updated 13 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.157 / server v2.6.46 / bot v0.6.198 tested beside the suite, last updated 14 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**14 Oct 2026 (THE TABLE LAYOUT AND THE DISCREET PANEL — v2.6.157 / srv-2.6.46):**
+- **On a shared felt, size is shared state.** Positions are canonical and travel in the pub; how big a card is drawn was each client's own constant. v2.6.152 let a personal setting change it, and a mixed table drew the same cards at two sizes (overlaps on one screen, gaps on another) and put one player's seat under another's dock. Anything that changes footprint (card size, seat rows, the table box) belongs to the ROOM; only chrome (dock vs pockets) is personal.
+- **Measure the binding dimension before promising a zoom.** The free board is width-bound on every window measured (16:9: +4–6 % possible, 16:10: 0 %): freeing height (the dock) cannot grow the table by zooming, only by laying the table out into the freed space — which is a table-wide change.
+- **Set geometry when the option arrives, not when the view opens.** A hotseat deals its setup cards before the view enters L4, and `l4SeatGeo` reads the card size: `tableLayoutSync` runs in startHotseat/joined/started/took, and enterL4 only re-applies it.
+- **Lay cards into a box's TARGET rect while it animates.** `zoneRect` reads offsetTop mid-transition; the pockets' cards used `rimRect` (where the pocket is going) or landed half-way.
+- **Centre on the table, not on the room left over.** The hand pocket was centred between the piles; one more pocket on the right (the pool) pushed the fan left of the gap between the lower seats.
 
 **13 Oct 2026, night (THE EDGE ON THE GLOBE — v2.6.151):**
 - **A one-line function at a fragment seam has a shape the splitter depends on (13 Oct).** `removeEdgeToken` is the last line of the token-engine fragment, and the splitter asserts that fragment ends with a bare `}`. A trailing `// comment` on that line broke the B1 round trip. The seams are listed in `split_client.py` (`*_START` / `*_END`); a function named there keeps its closing brace alone on its line.
