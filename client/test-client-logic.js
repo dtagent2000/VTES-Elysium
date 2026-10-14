@@ -3812,7 +3812,8 @@ test('v2.6.153: the Table layout is the ROOM\'s -- Large cards (srv-2.6.46 table
   const G = API.l4SeatGeo();
   eq(Math.round(API.l4SeatSpot(4, 5).y + G.dy + G.ch), 508, 'large: a lower-row card ends at 508');
   eq(API.l4SeatSpot(0, 5).y, 33, 'large: the top row at y 33'); eq(API.l4SeatSpot(0, 5).x, 7, 'v2.6.155: the corner seats 19 px further out'); eq(API.l4SeatSpot(3, 5).x, 952, 'on both sides');
-  eq(Math.round(API.pubBox().w), 1010, 'the Large box is 2 x 19 wider (972 + 38)'); eq(Math.round(API.l4SeatSpot(1, 5).x + (API.l4SeatGeo().blockW) / 2), 502, 'the centre seat stays in the middle');
+  eq(Math.round(API.pubBox().w), 1010, 'the Large box is 2 x 19 wider (972 + 38)');
+  eq(JSON.stringify([0, 1, 2, 3, 4].map(i => { const g = API.l4SeatSpot(i, 5); return [g.x, g.y]; })), '[[7,33],[368,33],[952,33],[952,439],[7,439]]', 'five seats at a Large table, as REPLY-to-bot-2026-10-14-table-layout.md \u00a72 states them'); eq(Math.round(API.l4SeatSpot(1, 5).x + (API.l4SeatGeo().blockW) / 2), 502, 'the centre seat stays in the middle');
   API.conv.handRim = 'dock'; eq(API.l4SeatSpot(4, 5).y + 0, API.l4SeatSpot(4, 5).y, 'the dock choice does not matter either'); eq(API.L4_CARD_S, 0.6);
   API.net.boardMode = 'structured';
   eq(API.tableLarge(), false, 'a Structured table is never Large'); API.tableLayoutSync(false); eq(API.L4_CARD_S, 0.5); eq(API.l4SeatSpot(4, 5).y, 341);

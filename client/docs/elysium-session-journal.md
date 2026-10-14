@@ -1,3 +1,29 @@
+## [BORDETS LAYOUT OCH DEN DISKRETA PANELEN] — handen i bordskanten (14 oktober 2026, klient v2.6.157 + server srv-2.6.46)
+
+Johans designfråga: den öppna handpanelen täcker nedersta fjärdedelen av fria bordet (202 av 719 px på 1366 × 768),
+och två av dess sex rutor är dubbletter där (poolen är globen, loggen finns i vänsterpanelen). Kan handen ligga infälld
+i kanten som i Slay the Spire, och korten bli större?
+
+**Hur det gick till:** mätt i klienten, skisser på en designduk ("Handen i bordskanten", förslag A handfacket och B
+bordskanten), Johan valde B utan list: varje zon sticker upp en bit och fälls upp vid hovring. Fem testomgångar som han
+spelade offline (v2.6.152–156 på grenen `rim-preview`, aldrig släppta). v2.6.152 lät det personliga valet styra
+kortstorlek och sätesrader — vid ett blandat bord ritades samma kort i två storlekar. Johan frågade om det kunde bli en
+ren zoom som vänsterpanelen; mätt: bordet begränsas av bredden, så en zoom ger 4–6 % på 16:9 och 0 % på 16:10. Därför
+delades det i två val.
+
+**Byggt:** (1) **Rummets Table layout** (Game settings i Full-läget, Play offline): *Large cards* ger alla vid bordet kort
+i 0,6, nedre raden längst ner (y 508), övre raden 8 px lägre och ett bord som når 19 px längre ut på båda sidor.
+srv-2.6.46 lagrar och skickar `tableLayout` som `tableSetup`. Äldre server: Standard, och värden får veta det.
+(2) **Den diskreta panelen** (eget val, knappen bredvid nålen): krypta, bibliotek, hand, askhög och pool som fickor i
+nederkanten; den under pekaren fälls upp; handen utan ruta och centrerad mellan nedre hörnsätena; en egen nål för handens
+solfjäder; poolglobens topp med halva siffran.
+
+**Grindar:** klient 283/0 (5 röda mot v2.6.151), server 68/0 (3 röda mot srv-2.6.45), protokoll 6/0, kanarie 57/0,
+endpoint 24/0, soak control 0, B1 byte-identisk, båda hjälpsidorna inbäddade, check-versions grön. Webbläsare: offline
+Large + diskret (dra, spela, kasta, pool ±, nål, växla), online tre människor på srv-2.6.46 (samma storlek och samma
+globplatser på alla skärmar), mot srv-2.6.45 (Standard + notis). **Inte kört:** pekskärm, Lite-läget (raden finns bara
+i Full), en panelspelare vid ett Large-bord har nedre raden under den öppna panelen (avsiktligt, står i tooltipen).
+
 ## [EDGE PÅ GLOBEN] — tre små öppna puckar, Johans "kör" (13 oktober 2026, natt, klient v2.6.151)
 
 Johan: "Skulle vi ta punkterna 1, 4 och 5 som du föreslog också lika gärna?" Samma PR som v2.6.150 (#9), bara klient.

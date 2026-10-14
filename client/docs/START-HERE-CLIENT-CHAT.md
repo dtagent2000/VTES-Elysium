@@ -10,13 +10,13 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.151** (THE EDGE ON THE GLOBE: a seat's Edge on its globe when no token lies out, ordinals on every seat chip, the help pages mention the table setup; carries v2.6.150 THE TAB SAYS SO and v2.6.149 THE FACE DECIDES) | `client/elysium-vtes-bord.html`, copied to `/` |
-| server | **srv-2.6.45** (the pub keeps `tn`/`rn`, the turn count; srv-2.6.44: the room option `tableSetup`) | `client/elysium-server.js`, copied to `/` |
+| client | **v2.6.157** (THE TABLE LAYOUT AND THE DISCREET PANEL: the room's Table layout *Large cards*, and each player's discreet panel with the hand, piles and pool tucked into the bottom edge; carries v2.6.151 THE EDGE ON THE GLOBE and earlier) | `client/elysium-vtes-bord.html`, copied to `/` |
+| server | **srv-2.6.46** (the room option `tableLayout`; srv-2.6.45: the pub keeps `tn`/`rn`; srv-2.6.44: the room option `tableSetup`) | `client/elysium-server.js`, copied to `/` |
 | bot (consumed) | **v0.6.198** (12 Oct 2026) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.151 / srv-2.6.45 | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **279/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 65/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 + a three-bot Structured soak · B1 byte-identical 1 531 407 · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.157 / srv-2.6.46 | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **283/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 68/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
-**Live on elysium.cards:** server srv-2.6.45 + bot v0.6.198 since 13 Oct 16:47 (PR #7, the full root bundle). Client v2.6.150 (PR #9) and v2.6.151 (PR #10) were merged the same evening and need only a client purge; the journal's newest entry says whether Johan has put them up.
+**Live on elysium.cards:** server srv-2.6.45 + bot v0.6.198 since 13 Oct 16:47 (PR #7). Client v2.6.150/151 (PRs #9, #10) were merged that evening. Client v2.6.157 + server srv-2.6.46 (PR from `rim-preview`, 14 Oct) need a client purge AND a server restart together; the journal's newest entry says whether Johan has put them up.
 
 ## The first ten minutes
 
