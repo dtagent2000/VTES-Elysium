@@ -1197,5 +1197,45 @@ test('srv-2.6.45 a pub keeps the Turn/Round count (tn / rn) -- positive integers
   const big = cA.sock.msgs.find(x => x.t === 'board'); eq(big.pub.tn, 9999); eq(big.pub.rn, 9999, 'capped');
 });
 
+/* ---------- srv-2.6.46: THE TABLE LAYOUT (the room option tableLayout) ---------- */
+test('srv-2.6.46 tableLayout: a Classic room created with "large" stores it and tells every client -- the creator, a later joiner, a spectator and everyone at start -- beside tableSetup, independent of it', () => {
+  S.rooms.clear(); S.ipFails.clear();
+  const cA = { ip:'10.6.1.1', sock: recSock() };
+  S.handle(cA, JSON.stringify({ t:'create', room:'TL1', name:'Alice', lobby:true, boardMode:'classic', tableLayout:'large' }));
+  const room = S.rooms.get('TL1');
+  eq(room.tableLayout, 'large', 'create stores it'); eq(room.tableSetup, false, 'and tableSetup stays its own option');
+  eq(cA.sock.msgs.find(m => m.t === 'joined').tableLayout, 'large', 'the creator hears it in joined');
+  const cB = { ip:'10.6.1.2', sock: recSock() }; S.handle(cB, JSON.stringify({ t:'join', room:'TL1', pass:'', name:'Bob' }));
+  eq(cB.sock.msgs.find(m => m.t === 'joined').tableLayout, 'large', 'a later joiner hears it');
+  const cW = { ip:'10.6.1.3', sock: recSock() }; S.handle(cW, JSON.stringify({ t:'join', room:'TL1', pass:'', name:'Wanda', spect:true }));
+  const jw = cW.sock.msgs.find(m => m.t === 'joined'); eq(jw.spect, true); eq(jw.tableLayout, 'large', 'a spectator hears it');
+  S.handle(cA, JSON.stringify(DECK44)); S.handle(cB, JSON.stringify(DECK44));
+  S.handle(cA, JSON.stringify({ t:'seat', seat:1 })); S.handle(cB, JSON.stringify({ t:'seat', seat:2 }));
+  cA.sock.msgs.length = 0; cB.sock.msgs.length = 0;
+  S.handle(cA, JSON.stringify({ t:'start' }));
+  for (const c of [cA, cB]) { const st = c.sock.msgs.find(m => m.t === 'started'); assert(st, 'started arrived'); eq(st.tableLayout, 'large', 'started carries it'); eq('tableSetup' in st, false, 'tableSetup off, so absent'); }
+});
+test('srv-2.6.46 tableLayout is Classic-only and strict: a Structured room, an absent value, "standard", a boolean or any other string never carry it -- an old client\'s create is unchanged', () => {
+  S.rooms.clear(); S.ipFails.clear();
+  const mk = (name, extra) => { const c = { ip:'10.6.2.' + (S.rooms.size + 1), sock: recSock() }; S.handle(c, JSON.stringify(Object.assign({ t:'create', room:name, name:'H' + name, lobby:true }, extra))); return c; };
+  const cases = [['Struct', { boardMode:'structured', tableLayout:'large' }], ['Plain', { boardMode:'classic' }], ['Std', { boardMode:'classic', tableLayout:'standard' }], ['Bool', { boardMode:'classic', tableLayout:true }], ['Caps', { boardMode:'classic', tableLayout:'LARGE' }], ['Legacy', {}]];
+  for (const [name, extra] of cases) {
+    const c = mk(name, extra), room = S.rooms.get(name), j = c.sock.msgs.find(m => m.t === 'joined');
+    eq(room.tableLayout, null, name + ': not stored'); eq('tableLayout' in j, false, name + ': joined does not mention it');
+  }
+});
+test('srv-2.6.46 the snapshot round-trips tableLayout, re-validated: a legacy record has none, a Structured record can never carry one, a garbled value is dropped', () => {
+  S.rooms.clear(); S.ipFails.clear();
+  const cA = { ip:'10.6.3.1', sock: recSock() };
+  S.handle(cA, JSON.stringify({ t:'create', room:'TL3', name:'Alice', lobby:true, boardMode:'classic', tableLayout:'large', tableSetup:true }));
+  const disk = JSON.parse(JSON.stringify(S.roomSnap(S.rooms.get('TL3'))));
+  eq(disk.tableLayout, 'large', 'written'); eq(disk.tableSetup, true);
+  eq(S.roomUnsnap(disk).tableLayout, 'large', 'and read back');
+  const legacy = Object.assign({}, disk); delete legacy.tableLayout;
+  eq(S.roomUnsnap(legacy).tableLayout, null, 'a pre-2.6.46 record: standard');
+  eq(S.roomUnsnap(Object.assign({}, disk, { boardMode:'structured' })).tableLayout, null, 'a Structured record never carries it');
+  eq(S.roomUnsnap(Object.assign({}, disk, { tableLayout:'huge' })).tableLayout, null, 'a garbled value is dropped');
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));
 process.exit(fail ? 1 : 0);
