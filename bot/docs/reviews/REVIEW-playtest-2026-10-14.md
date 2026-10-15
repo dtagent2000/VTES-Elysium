@@ -166,25 +166,32 @@
 - **Fix:** R0 corrects the guide (done in v0.6.199). R4: curate the six masters — Haven Uncovered held until a rush consumer exists (doctrine 344) or played on an opponent's vampire (Johan's call), The Labyrinth's lock-for-stealth from the board (the Marked Path shape), Guardian Angel's intercept and prevent, Wasserschloss's bank; the coverage tool credits a master only with a board consumer. **Test:** test-cardfx asserts every master in the four V5 decks is `src:'hand'` (red today with these six names).
 
 ## Added 15 Oct — two tester reports
-- **Debug mode, offline and on a private server: the bots' hands and ash heaps cannot be seen.** See section E (filled in when the audit is done).
+- **Debug mode, offline and on a private server: the bots' hands and ash heaps cannot be seen.** See section E.
 - **Odd discards** — F22 above.
 
-## E. Debug mode: hands and ash heaps
-*(pending — see the 15 Oct journal entry)*
+## E. Debug mode: hands and ash heaps (15 Oct, a tester who plays offline or on a private server)
+An audit like the others (client v2.6.158, srv-2.6.46, bot v0.6.198), reproduced in headless Chromium and with a scripted human beside a debug bot on a copy of the server. **The bot's side of the wire works; the faults that hide the hand are mostly in the client.**
+- **Offline — the hand is never offered (client).** The bridge forwards the bot's `openHand` (client line 11874) and `net.openHandFrom[2]` holds its 7 cards, but `openHandCardsFor()` (6346–6367) reads only the stored board for that seat when offline — for a bot seat a placeholder (`openHand: []`, built at 10802) — so "👁 Inspect their hand" never appears. A bot's Revelations [AUS] open hand is hidden the same way (read). Patching `openHandCardsFor` in the page to use `net.openHandFrom` made the item appear with the right cards. Their test 2779–2784 checks `net.openHandFrom[2]`, not what the menu reads.
+- **Online — the wire works.** The grant arrives after `started` / `dealt` (the server's `started` gate, srv 939), 13 live updates in the run; the item "👁 Inspect their hand (7)" shows the bot's real cards. **But it is only in the pool globe's right-click menu**, and on a Structured table the other seats' globes are not on the Home view — only in the overview (V), a seat visit (1–6) or the Table panel; the tooltip mentions only the ash heap.
+- **Enabling debug (client):** `botDebugAllowed()` (11563) reads the offline Helpers dropdown `#offHelpers`, which is always in the page — after Play offline was opened once with its Classic default (Tournament), a normal online room refuses Debug with a false "Tournament mode" tooltip. Offline, `renderOfflineSeats()` runs `botDebugSync()` before `syncOffBotLock()` (10951–10952), so the first bot toggle greys Debug with the same false tooltip until something redraws. Debug is fixed when a bot is created (11208); our guide said "toggling it later takes effect on the next deal" — wrong (fixed in v0.6.199's guide).
+- **Command-line bot (bot):** `parseArgs` (8629–8646) has no `--debug` flag and ignores it silently — a private-server table launched from the command line cannot have a debug bot. A CLI bot is also not under any client's tournament check, so the flag must come with the bot's own refusal in a Tournament room (the room's helper policy reaches the bot in `joined`).
+- **The ash heap works in every path (not debug-specific):** a remote ash heap is built from the seat's published cards with `zone: 'ash'`, kept with names by the server (srv 484, ≤ 400 cards), published by the bot the way a human client does (bot 924–937, `_toAsh` 6700–6704). "🜂 View their ash heap (N)" shows the right names online and offline. It is hard to find: Structured mats (`buildMat`) draw no ash pile, and our guide's seat-menu list did not mention the item (added in v0.6.199).
+- **Nearby:** `net.openHandFrom` is cleared only at page load — the next room or game can offer an old hand for that seat number (client, read); **a debug bot's open hand also reaches the other bots, which treat it as certain knowledge** (bot 2225 → `_pCat` 2249 → the intercept odds at 7189, 7238, 8038), so a table with debug bots does not play like a normal one (bot; the guide now says so).
+- **Rounds:** the guide in R0 (done); the bot's `--debug` / `--no-debug-weights` flags with a Tournament refusal, and the debug grant sent to human seats only, in R1; the client items in `HANDOFF-to-main-2026-10-15-v0_6_199.md`.
 
 ## The rounds
 
 | Round | Content | Size |
 | --- | --- | --- |
 | **R0** (v0.6.199, 15 Oct) | the read-only copies (client v2.6.158, srv-2.6.46, protocol); the guide (main's §F, Release hold per bot, curated → covered, the taken line is a report, versions); the data lines (root + bot CLAUDE.md, README, SKILLS, `bot/.gitignore`); `_openSlot` bounded; this review | small |
-| **R1** | F8, F9, F1 (the right to block), F15, F20 (+ handoff for the bridge), F22, Creeping ×3, the F19 wording | medium |
+| **R1** | F8, F9, F1 (the right to block), F15, F20 (+ handoff for the bridge), F22 (incl. Johan's Theft of Vitae case), Creeping ×3, the F19 wording; debug: `--debug` on the command line with a Tournament refusal, the open hand to human seats only (E) | medium |
 | **R2** | the bot-vs-bot step handshake (F16, F17a, F7's "does not press"); the range correction only from my human opponent (F17b); `_holdGate` in every step (F5); pacing bot-vs-bot combat when a human is seated (F7); the Roundhouse class `handBonus` (F18); the double-Theft edge case (F19) | larger |
 | **R3** | the clock starts when the question leaves the queue (F3, F11); stale hold lines dropped (F4); the blocker's verdict wait (F10); one spokesbot for remarks and the pool question (F1 chorus, F2); the tempo levers (F12, F13) | largest risk |
 | **R4** | the six masters curated; the coverage tool's master rule; Revelations against a bot (F21) | medium |
 
 Gates beyond the suite for R2: a series with the handshake integrity line at 100 % (`ana-combat2.py`) and `ana-ledger.py`. After the rounds: the same scenario in main's rig (`client/playtest/`, `--dir` on a scratch copy of the root with the bot branch), compared with the 14 Oct report's numbers.
 
-**For main (handoff with R1 / R4):** the bridge relays `edgeTake`; offline `revealHand` / `logTo` for Revelations.
+**For main (`HANDOFF-to-main-2026-10-15-v0_6_199.md`):** the offline open hand (`openHandCardsFor`), `botDebugAllowed()` online, the Debug row's first draw, stale `net.openHandFrom`, the ash pile / hand on the mat; the bridge relays `edgeTake` (R1); offline `revealHand` / `logTo` for Revelations (R4).
 
 ## Open with Johan
 1. The order of R1–R4 (proposed as above; R3 before R2 if the flow towards the human weighs more than combat between bots).

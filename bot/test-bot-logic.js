@@ -2395,9 +2395,9 @@ async function connectWithRetry(client, tries = 30){
       await h17.waitFor(m => m.t === 'lobby' && (m.players || []).some(p => p.name === 'BotDefender2' && p.seat === 2 && p.deck), 'botDef2 seated');
       h17.send({ t: 'start' });
       await h17.waitFor(m => m.t === 'dealt', 'h17 dealt');
-      h17.send({ t: 'tally', mode: 'block', a: 1, b: 0 });   // v0.6.118: stealth 1 announced -- at stealth 0 the unlocked Zip would bare-block now (B2 step 1); this section tests the DECLINE path
       h17.send({ t: 'pass' });
       await h17.waitFor(m => m.t === 'turn' && m.seat === 1, 'turn back (r17 t1)', 9000);
+      h17.send({ t: 'tally', mode: 'block', a: 1, b: 0 });   // v0.6.118: stealth 1 announced -- at stealth 0 the unlocked Zip would bare-block now (B2 step 1); this section tests the DECLINE path. v0.6.199: announced in the turn of the action -- srv-2.6.42+ clears the tally at every turn (turnTallyClear), and the stealth announced before the pass used to survive it on srv-2.6.38
 
       botDef2.hand = [];   // nothing to bounce or intercept with — guarantees a genuine decline, regardless of whatever its own turn drew
       h17.send({ t: 'log', html: '<b>Ghoul</b> bleeds for 1.' });

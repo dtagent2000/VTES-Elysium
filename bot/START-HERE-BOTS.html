@@ -202,7 +202,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <details>
     <summary>Debug bot <span class="sub">— see what it is thinking</span></summary>
     <div>
-      <p>Tick <em>Debug bot</em> in the setup window and every bot at the table plays with an <strong>open hand to all players</strong>, its uncontrolled crypt <strong>face up</strong>, and writes its decision weighting to the log (“master-play: … why”). It announces in chat that it is in debug mode, so nobody is misled. Use it to judge how the bot plays a deck; never in a real game, and it is refused outright in Tournament mode. The setting is read when the bot is added — toggling it later takes effect on the next deal.</p>
+      <p>Tick <em>Debug bot</em> in the setup window and every bot at the table plays with an <strong>open hand to all players</strong>, its uncontrolled crypt <strong>face up</strong>, and writes its decision weighting to the log (“master-play: … why”). It announces in chat that it is in debug mode, so nobody is misled. Use it to judge how the bot plays a deck; never in a real game, and it is refused outright in Tournament mode. The setting is read when the bot is added: tick <em>Debug bot</em> before you add the bot (offline: before Start); to change it, remove the bot and add it again. To look: right-click the bot's pool globe → <span class="menu">👁 Inspect their hand</span>, and <span class="menu">🜂 View their ash heap</span> for its discards (see the seat menu below). The other bots at the table see an open hand too and use it, so a table with debug bots does not play the way a normal table does.</p>
     </div>
   </details>
 
@@ -219,7 +219,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
     <li><b>Create the room as Structured</b> (Board style). Board style is fixed at creation; a Classic room cannot host bots and the button says so.</li>
     <li><b>In the lobby, find the Bots row</b>: a name (a free name is suggested), a deck dropdown, an experience dropdown, and <span class="menu">🤖 Add bot</span>. Add up to the table limit of six seats; a seat picker per bot lets the host place it.</li>
     <li><b>Helpers lock on.</b> Adding the first bot switches the room's helper policy to “All helpers on” for everyone and shows it in the lobby banner; removing the last bot restores what the room had before.</li>
-    <li><b>Remove a bot</b> with the ✕ on its lobby row — it leaves the seat itself. <em>Debug bot</em> works as offline and is refused in Tournament rooms.</li>
+    <li><b>Remove a bot</b> with the ✕ on its lobby row — it leaves the seat itself. <em>Debug bot</em> works as offline (tick it before <em>Add bot</em>) and is refused in Tournament rooms. If the box is greyed with a Tournament tooltip in a room that is not one, reload the page and add the bot before opening Play offline (client v2.6.158 reads the Play offline setting there; the fix is with the client project).</li>
     <li><b>Start.</b> From here the server drives everything: the bots take their turns when the turn reaches them, the referee menus (pool, oust, pass) and the card controls reach the bot through the server, and every seated player sees the 🤖 Bot Activity badge and its tempo gear. Only the host's tab holds the bots, so only the host's ▶ buttons can step them; everyone else answers with a quick phrase, a line or the <span class="menu">Combat ▸</span> menu.</li>
   </ol>
   <p>If the host's connection blinks, a bot reconnects to its seat by token just as a human does. If the host closes the tab, the bots go with it.</p>
@@ -407,7 +407,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   </table></div>
 
   <h3 id="controls-elements">Adjusting a bot's board</h3>
-  <p>Right-click on a bot's seat (its pool globe, or its row in the Table panel) and on its cards. Everything here is meant for correcting what the bot could not see; the bot announces the change and plays on from it.</p>
+  <p>Right-click on a bot's seat (its pool globe, or its row in the Table panel) and on its cards. On a Structured table the other seats' globes show in the table overview (<kbd>V</kbd>) and on a seat visit (the number keys <kbd>1</kbd>–<kbd>6</kbd>; <kbd>0</kbd> goes home); the Table panel opens from the tab at the right edge. Everything here is meant for correcting what the bot could not see; the bot announces the change and plays on from it.</p>
   <div class="two">
     <div>
       <h4>Seat menu (pool globe / Table panel)</h4>
@@ -417,7 +417,8 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
         <li><span class="menu">💀 Oust this player…</span> — ousts the bot: it clears its board, stops taking turns, and its predator collects the bounty.</li>
         <li><span class="menu">↩ Return them to the game</span> — see the un-oust note above: the seat returns, the bot does not.</li>
         <li><span class="menu">⏭ Pass their turn…</span> — advances past a bot that holds the turn (online: while it is its turn; offline: while the sweep is waiting on it).</li>
-        <li><span class="menu">👁 Inspect their hand</span> — appears when the bot plays with an open hand (Debug bot, or Revelations at superior).</li>
+        <li><span class="menu">👁 Inspect their hand</span> — appears when the bot plays with an open hand (Debug bot, or Revelations at superior). In client v2.6.158 and earlier it does not appear at an offline table; the fix is with the client project.</li>
+        <li><span class="menu">🜂 View their ash heap</span> — the bot's discarded and spent cards by name, for any bot, at any time.</li>
       </ul>
       <p style="color:var(--ink-mute);font-size:14px">Online these are host- and referee-only, like every referee verb; at a hotseat you are the host.</p>
     </div>
