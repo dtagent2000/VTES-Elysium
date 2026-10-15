@@ -8960,6 +8960,38 @@ async function connectWithRetry(client, tries = 30){
       ok(u._stealAvail() === 2, '137l no board record at all: their own line still gives the number (was: the card’s own number)'); }
   }
 
+  console.log('\n[138] v0.6.199 -- a placement always returns: a full Classic row stacks the next card instead of scanning for ever (main’s Classic review, the hard stop)');
+  { const botFile = path.join(__dirname, 'elysium-bot.js');
+    // The scan runs in a CHILD process: on v0.6.198 it never returned, and a spin inside THIS process would hang the suite. The child is killed after 8 s and the assertion FAILS.
+    const probe = body => { const r = require('child_process').spawnSync(process.execPath, ['-e', 'const B = require(' + JSON.stringify(botFile) + '); ' + body], { timeout: 8000, encoding: 'utf8' });
+      let j = null; try{ j = JSON.parse((r.stdout || '').trim().split('\n').pop()); }catch(e){} return { done: r.status === 0 && !r.signal, j }; };
+    const setup = "const b = new B.Bot({ name: 'B', room: 'x', deck: B.ARCHETYPES.hacking, log(){} }); b.send = () => {}; b.caps.classic = true; b.seat = 2; b.players = [1, 2, 3, 4].map(s => ({ seat: s, name: 'P' + s }));"
+      + " const put = (z, n) => { for(let i = 0; i < n; i++){ const p = b._openSlot(z); b.board.push({ id: z + b.board.length, name: 'V' + b.board.length, kind: 'crypt', zone: z, x: p.x, y: p.y }); } };"
+      + " const pos = z => b.board.filter(c => c.zone === z).map(c => c.x + ',' + c.y);";
+    const onFelt = q => q && q.x >= 0 && q.y >= 0 && q.x <= 1004 - 42 && q.y <= 616 - 59;
+    // a) main's twenty-second repro: seat 2 of 4, its ready row holds four points (702 / 798 / 894 / 908, y 225)
+    const a = probe(setup + " put('ready', 4); const p = b._openSlot('ready'); console.log(JSON.stringify({ row: pos('ready'), p }));");
+    ok(a.done, '138a main’s repro (Classic, seat 2 of 4): the fifth ready vampire gets a place -- the scan returns (v0.6.198: spun until killed)');
+    ok(a.j && a.j.row.join(' ') === '702,225 798,225 894,225 908,225', '138a ...the row is the four points the review measured (got ' + (a.j && a.j.row.join(' ')) + ')');
+    ok(a.j && onFelt(a.j.p) && !a.j.row.includes(a.j.p.x + ',' + a.j.p.y) && a.j.row.some(k => { const [x, y] = k.split(',').map(Number); return Math.abs(x - a.j.p.x) <= 12 && Math.abs(y - a.j.p.y) <= 14; }),
+      '138a ...stacked on the felt, fanned off one of the row’s points, never exactly on a held card (got ' + JSON.stringify(a.j && a.j.p) + ')');
+    // b) many beyond the row: round the points in turn, each lap fanned further, every card on the felt and no two on the same spot
+    const b2 = probe(setup + " put('ready', 13); console.log(JSON.stringify({ all: pos('ready') }));");
+    ok(b2.done && b2.j && b2.j.all.length === 13 && new Set(b2.j.all).size === 13, '138b thirteen vampires on a four-point row: thirteen distinct places (got ' + (b2.j && b2.j.all.join(' ')) + ')');
+    ok(b2.j && b2.j.all.every(k => { const [x, y] = k.split(',').map(Number); return onFelt({ x, y }); }), '138b ...all of them on the felt');
+    // c) a card leaving frees its point, and the scan takes that point before stacking again
+    const c3 = probe(setup + " put('ready', 6); b.board = b.board.filter(c => !(c.x === 798 && c.y === 225)); const p = b._openSlot('ready'); console.log(JSON.stringify({ p }));");
+    ok(c3.done && c3.j && c3.j.p.x === 798 && c3.j.p.y === 225, '138c a freed point of a full row is taken first (got ' + JSON.stringify(c3.j && c3.j.p) + ')');
+    // d) a human's "Send to torpor" on my vampire with my torpor row full: the ctrl handler (bot-elements exception) returns and files the card
+    const d4 = probe(setup + " put('torpor', 4); b.board.push({ id: 'r9', name: 'Victim', kind: 'crypt', zone: 'ready', x: 702, y: 225 }); b._dispatch({ t: 'ctrl', cid: 'r9', act: 'torpor', from: 'P1' }); const v = b.board.find(c => c.id === 'r9'); console.log(JSON.stringify({ zone: v.zone, x: v.x, y: v.y }));");
+    ok(d4.done && d4.j && d4.j.zone === 'torpor' && onFelt(d4.j), '138d a human’s Send to torpor with my torpor row full: the handler returns, the vampire lies in torpor on the felt (got ' + JSON.stringify(d4.j) + ')');
+    // e) Structured: no clamp, so the first free index -- byte for byte the old placement, a freed middle slot reused
+    { const u = new Bot({ name: 'S', room: 'x', deck: require('./elysium-bot.js').ARCHETYPES.hacking, log(){} }); u.send = () => {}; u.seat = 2; u.players = [1, 2, 3, 4].map(s => ({ seat: s, name: 'P' + s }));
+      for(let i = 0; i < 9; i++){ const q = u._openSlot('ready'); u.board.push({ id: 'k' + i, kind: 'crypt', zone: 'ready', x: q.x, y: q.y }); }
+      ok(u.board.every((c, i) => c.x === 40 + i * 96 && c.y === 175), '138e Structured: nine vampires on GEO’s row, one per index, exactly as before');
+      u.board = u.board.filter(c => c.id !== 'k3'); const q = u._openSlot('ready'); ok(q.x === 40 + 3 * 96 && q.y === 175, '138e ...a freed middle slot is reused'); }
+  }
+
 
     }
 

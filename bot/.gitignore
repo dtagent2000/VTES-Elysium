@@ -1,0 +1,7 @@
+# Third-party data, never committed (the root .gitignore already keeps vtes.json and twd_decks.json out).
+# Fetch from the source; when a session cannot reach it, copy from the private data repo
+# dtagent2000/VTES-Elysium-data (see CLAUDE.md, "Data that is not in git").
+/twda.json
+/twda-vdb.json
+# gen-deck-coverage.js writes its report beside itself by default; snapshots worth keeping go to docs/coverage/
+/deck-coverage-*.md

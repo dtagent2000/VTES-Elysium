@@ -1,8 +1,8 @@
-# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (12 October 2026)
+# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (15 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.198 (deploy candidate) · arena v1.4.7 · cardfx compiler v1.9.1 · built against
-client v2.6.141 / srv-2.6.43 · gates on `main`: suite 1933/0, canary 57/0, HB1 11/0, hotseat 10/0, test-cardfx 261/0.
+**State at writing:** bot v0.6.199 (deploy candidate; R0 of the 14 Oct play-test review) · arena v1.4.7 · cardfx
+compiler v1.9.1 · built against client v2.6.158 / srv-2.6.46 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
 ```
@@ -23,18 +23,21 @@ Then `bot/docs/elysium-bot-project-context.md`, `bot/docs/elysium-bot-learnings.
   `reports/`, `specs/`, `reviews/`, `coverage/`, `archive/` (old manifests/TODOs; the 21 Sep TODO still maps the
   older debts).
 - `bot/tools/mutants/` — the hold-gate mutant isolation (`python3 tools/mutants/mutate-v0_6_198.py /tmp/mut`).
-- NOT in git: `twd_decks.json` (10 MB TWDA input to `twd-profile.py` / `twd-archetypes.py` — Johan uploads it
-  when the profile is rebuilt), arena traces (`serie-*/`, `bench-*/`).
+- NOT in git: third-party data — `vtes.json` (KRCG, v3 shape; `test-cardfx.js`, the cardfx compiler, the coverage
+  and profile tools) and the TWDA (`twda.json` + optional `twda-vdb.json`, only to rebuild the profile). Fetch from
+  the source; when the sandbox cannot reach it, attach the private repo `dtagent2000/VTES-Elysium-data` and copy
+  from there (root `CLAUDE.md`, 'Data that is not in git'). Arena traces (`serie-*/`, `bench-*/`) are generated.
 
 ## The loop
 branch → change → gates (inside `bot/`) → living docs + READ-ME-FIRST (+ HANDOFF when main must act) →
 commit + push often → PR against `main` with the gate numbers in the body → Johan merges.
 A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repository root.
 
-## Open at hand-over (12 Oct 2026)
-Johan's playtest with two bots → his picks from `bot/docs/REVIEW-vtes-player-2026-10-11.md` (suggested first:
-paired bench read, flip counts, one bot asks the pool question) → the knowledge-layer remainder → the meta layer.
-Open leads: the late steal line, the 200 ms maneuver window, the R6 audit, bleed-modifier grace outside the tempo,
-hold during bot-vs-bot combat vs the 2 s handshake. Main is syncing its half into `client/`
-(`bot/docs/handoffs/HANDOFF-to-main-2026-10-12-monorepo.md`); after that, refresh `bot/elysium-server.js` to
-srv-2.6.43 from `client/` and re-run canary + hotseat gate.
+## Open at hand-over (15 Oct 2026)
+The 14 Oct play-test (main's rig, PR #13) is reviewed finding by finding in
+`bot/docs/reviews/REVIEW-playtest-2026-10-14.md`: 16 bot bugs plus a side find, each with code lines, a fix and a
+round. R0 shipped as v0.6.199; next R1 (rules and deadlocks: the Turn-based block deadlock, "Any presses?" that does
+not wait, the right to block a directed action, bleed reduction between bots, `edgeTake`, turn-1 discards, the
+Creeping Sabotage count), then R2 (the bot-vs-bot combat handshake, Roundhouse's damage), R3 (clocks start when the
+question is sent, one spokesbot), R4 (the six uncurated V5 masters, Revelations against a bot). Johan's open answers
+are listed at the end of the review. After the rounds: the same scenario again in `client/playtest/`.

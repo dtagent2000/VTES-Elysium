@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.198'; // v0.6.198 (12 Oct 2026, main's reply to v0.6.195-197 + Johan's principle agreed with main): (1) A HOLD STOPS EVERY CLOCK THAT WAITS ON A HUMAN -- the block / reaction window, the pool question, the vote poll, the seven combat steps and the damage step freeze on a Hold on (quick phrase or typed) and start again from the beginning when it is released (_holdFreeze / _holdThaw); the pool question and the combat steps used to time out under a hold, the Turn-based reminders kept running, a bot frozen inside a step now says the hold itself, the stopwatch does not ring on a held table, and a departed holder no longer stands the vote poll, and a release by anyone ends every holder's own pause with the table hold (a target's It resolves in my block window lets the action through). An answer still ends a wait at once. (2) My steal's cap reads the human's own taken line ('now M') within the combat until their board changes -- their client never applies combat damage. Previous: v0.6.197 the referendum line + the calibration -- full notes in elysium-bot-CHANGELOG.md.
+const BOT_VERSION = '0.6.199'; // v0.6.199 (15 Oct 2026, R0 of the 14 Oct play-test review -- the groundwork): (1) A PLACEMENT ALWAYS RETURNS -- main's Classic review (13 Oct) found _openSlot scanning for ever once a Classic row's 4-11 distinct points were held (slot() clamps x at the felt's edge): the bot's process spun, and a lobby bot froze the host's whole tab. The scan now stops after 200 indices and a full row stacks the next card round the row's points, fanned toward the table's middle and kept on the felt (_stackSlot); a freed point is taken first again; Structured is unchanged byte for byte. (2) START-HERE-BOTS.html: main's two sentences (the human manages their own pool, blood, costs and Edge; a played card books nothing on the counter), the panel's Release hold frees one bot, 'curated to 100 %' corrected (four V5 masters do nothing for the bot yet), the taken line is a report. (3) The read-only copies are client v2.6.158 / srv-2.6.46 / protocol v2.6.158, so the suite, the arena and the canary run on what is live. Previous: v0.6.198 the hold freeze -- full notes in elysium-bot-CHANGELOG.md.
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -7365,10 +7365,19 @@ class Bot {
      else while a card that already carries this zone (e.g. its zone was
      just set before x/y is assigned) doesn't block its own placement.    */
   _openSlot(zone, exclude){
-    for(let idx = 0; ; idx++){
+    for(let idx = 0; idx < 200; idx++){              // v0.6.199 (main's Classic review 13 Oct, section 2 -- the one hard stop): slot() clamps a Classic row at the felt's edge, so once the row's 4-11 distinct points were held no index was ever free and `for(;;)` never returned -- the bot's process spun, and a lobby bot froze the host's whole tab. Structured has no clamp: the first free index comes long before 200, exactly as before.
       const p = this.slot(zone, idx);
       if(!this.board.some(c => c !== exclude && c.zone === zone && c.x === p.x && c.y === p.y)) return p;
     }
+    return this._stackSlot(zone, exclude);
+  }
+  _stackSlot(zone, exclude){                         // v0.6.199: every point of a full row is held -- humans stack theirs on the free board, so do I. The cards beyond the row go round the row's points in turn, each fanned 10 / 12 px toward the table's middle per lap, and stay on the felt. A card that leaves the row frees its point, and the scan above takes that point first again.
+    const pts = [];
+    for(let idx = 0; idx < 16; idx++){ const p = this.slot(zone, idx); if(!pts.some(q => q.x === p.x && q.y === p.y)) pts.push(p); }
+    const extra = Math.max(0, this.board.filter(c => c !== exclude && c.zone === zone).length - pts.length);   // the cards already stacked
+    const p = pts[extra % pts.length], lap = 1 + Math.floor(extra / pts.length);
+    const sx = p.x > GEO.bw / 2 ? -1 : 1, sy = p.y > GEO.bh / 2 ? -1 : 1;
+    return { x: Math.max(4, Math.min(GEO.bw - 46, p.x + sx * 10 * lap)), y: Math.max(4, Math.min(GEO.bh - 63, p.y + sy * 12 * lap)) };
   }
 
   /* ---------- the chat contract (incoming) ---------- */

@@ -1,7 +1,7 @@
 # bot/ — Elysium Bots (automated V:TES opponents for the Elysium client)
 
-Bot **v0.6.198** (12 Oct 2026) · arena v1.4.7 · cardfx compiler v1.9.1 · built against client v2.6.141 / srv-2.6.43.
-Start with `CLAUDE.md` (session bootstrap, version handshake, every gate), then `docs/readme/READ-ME-FIRST-2026-10-12.md`.
+Bot **v0.6.199** (15 Oct 2026) · arena v1.4.7 · cardfx compiler v1.9.1 · built against client v2.6.158 / srv-2.6.46.
+Start with `CLAUDE.md` (session bootstrap, version handshake, every gate), then `docs/readme/READ-ME-FIRST-2026-10-15.md`.
 The folder is deliberately FLAT: the suites, the arena and every tool expect their inputs beside them. Run everything from here.
 
 ## The bundle (what the client project consumes — copied to the repository root at a release)
@@ -15,12 +15,12 @@ The folder is deliberately FLAT: the suites, the arena and every tool expect the
 | `elysium-bot-table.js` | seat bots at a live table |
 | `elysium-bot-hotseat.js` | the client's real `hotBridge` driven headless (needs `elysium-vtes-bord.html` beside it) |
 | `cardfx-compile.js`, `cardfx-curated.json` → `elysium-cardfx.json` / `.js` | the card-effect library pipeline (`node cardfx-compile.js --report`; needs `vtes.json`) |
-| `twd-profile.py`, `twd-archetypes.py` → `elysium-twd-profile.json`, `elysium-twd-archetypes.json` | the TWDA prior (need `twd_decks.json`, not in git) |
+| `twd-profile.py`, `twd-archetypes.py` → `elysium-twd-profile.json`, `elysium-twd-archetypes.json` | the TWDA prior (need `vtes.json`, `twda.json` and optionally `twda-vdb.json` beside them — none in git; root `CLAUDE.md`, 'Data that is not in git') |
 | `deck-*.json`, `rig-a1.json` | the arena decks (the four V5 starters + hacking + sewer) and a rig |
 | `elysium-bot-diag.html` | the browser battery (HB1) |
 
 ## Gates
-`node --check <file>` → `node test-bot-logic.js` (1933 assertions, ≈300 s — run detached: `timeout 600 node test-bot-logic.js > suite.log &` and poll) → `node test-bot-canary.js` (57/0; pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (261/0, when cardfx changed; needs `vtes.json`) → `node diag-hb1-smoke.js` (11/0, when the browser surface changed) → `node test-bot-hotseat.js` (10/0, when anything near the hotseat bridge changed).
+`node --check <file>` → `node test-bot-logic.js` (1942 assertions, ≈300 s — run detached: `timeout 600 node test-bot-logic.js > suite.log &` and poll) → `node test-bot-canary.js` (57/0; pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (261/0, when cardfx changed; needs `vtes.json` — fetched, see root `CLAUDE.md`) → `node diag-hb1-smoke.js` (11/0, when the browser surface changed) → `node test-bot-hotseat.js` (10/0, when anything near the hotseat bridge changed).
 Mutant isolation for the hold gate: `python3 tools/mutants/mutate-v0_6_198.py /tmp/mut` (every mutant must fail or hang).
 
 Legacy ad-hoc tests from the v0.6.10x era (`test-soft.js`, `test-planner*.js`, `test-persona.js`, `test-handoff.js`, `test-eligible.js`, `test-fixes.js`, `test-grammar.js`, `test-bot-suffix.js`) are kept for history; they are not gates. Known stale reds: `test-fixes.js` Fix C, `test-eligible.js` (3), `test-grammar.js` Test 4, `test-soft.js` Test 3 — all pre-existing, the suite covers those behaviours.
@@ -31,8 +31,8 @@ Analysis after a series: `ana-ledger.py` (the ledger gate), `ana-block.py` (the 
 Probes: `diag-give-probe.js`, `diag-a1-stash-probe.js`.
 
 ## Read-only copies of the client project's releases (never edit here)
-`elysium-server.js` (srv-2.6.38 — the arena spawns it; main is at srv-2.6.43, refresh when a series needs it), `ELYSIUM-PROTOCOL.md`, `elysium-vtes-bord.html` (v2.6.141), `elysium-hotseat-bots-plan.md`.
+`elysium-server.js` (srv-2.6.46 — the arena and the suite spawn it), `ELYSIUM-PROTOCOL.md` (v2.6.158), `elysium-vtes-bord.html` (v2.6.158), `elysium-hotseat-bots-plan.md` — refreshed 15 Oct 2026 by copying `client/`'s release in.
 
 ## docs/
 - living docs: `elysium-bot-session-journal.md` (newest first), `elysium-bot-project-context.md`, `elysium-bot-learnings.md`, `elysium-bot-CHANGELOG.md`, `PROJECT-INSTRUCTIONS.md`, `REVIEW-vtes-player-2026-10-11.md`
-- `readme/` every delivery's READ-ME-FIRST (22 Sep → 12 Oct) · `handoffs/` handoffs to main and main's replies · `reports/` series and bench reports · `specs/` design canon and specs to main · `reviews/` the 11 Sep deep review · `coverage/` deck-coverage snapshots (regenerate with `gen-deck-coverage.js`) · `archive/` superseded manifests and TODOs (the 21 Sep TODO is still the best map of the older debts)
+- `readme/` every delivery's READ-ME-FIRST (22 Sep → 12 Oct) · `handoffs/` handoffs to main and main's replies · `reports/` series and bench reports · `specs/` design canon and specs to main · `reviews/` the 11 Sep deep review and the 14 Oct play-test review (`REVIEW-playtest-2026-10-14.md`) · `coverage/` deck-coverage snapshots (regenerate with `gen-deck-coverage.js`) · `archive/` superseded manifests and TODOs (the 21 Sep TODO is still the best map of the older debts)

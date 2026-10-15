@@ -43,5 +43,10 @@ client, server and start scripts from `client/` to `/`. Nothing at the root is e
 Third-party data is never committed or hosted here; each session fetches it from its source:
 - `vtes.json` (KRCG's card database, 7 MB): `curl -o bot/vtes.json https://static.krcg.org/data/vtes.json` before
   `test-cardfx.js` or the profile tools. The client fetches the same file itself at run time.
-- `twd_decks.json` (10 MB, KRCG's TWDA) is an input to `bot/twd-profile.py` / `bot/twd-archetypes.py` only; put it in
-  `bot/` when rebuilding the profile. Arena traces (`serie-*/`, `bench-*/`) are generated and ignored.
+- The TWDA (VEKN's Tournament Winning Deck Archive) is an input to `bot/twd-profile.py` / `bot/twd-archetypes.py` only,
+  when the profile is rebuilt: `twda.json` (KRCG's list-shaped export, the base) and optionally `twda-vdb.json` (the
+  VDB-style dict, merged in). Both are ignored in `bot/`. Arena traces (`serie-*/`, `bench-*/`) are generated and ignored.
+- **When a session cannot reach the source** (a sandbox whose network policy blocks static.krcg.org), copy the files
+  from the private data repo `dtagent2000/VTES-Elysium-data` (attach it read-only): `vtes.json` (v3 shape — the one
+  the bot's compiler reads), `vtes-v5.json` (reference only) and `twda-vdb.json`; its README lists source, date and
+  hash. That repo is ours only: players still get the data from its original sources.
