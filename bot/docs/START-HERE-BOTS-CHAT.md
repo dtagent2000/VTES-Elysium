@@ -1,7 +1,7 @@
-# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (15 October 2026)
+# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (16 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.199 (deploy candidate; R0 of the 14 Oct play-test review) · arena v1.4.7 · cardfx
+**State at writing:** bot v0.6.200 (deploy candidate; R1 of the 14 Oct play-test review; R0 = v0.6.199, merged) · arena v1.4.7 · cardfx
 compiler v1.9.1 · built against client v2.6.158 / srv-2.6.46 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
@@ -33,11 +33,13 @@ branch → change → gates (inside `bot/`) → living docs + READ-ME-FIRST (+ H
 commit + push often → PR against `main` with the gate numbers in the body → Johan merges.
 A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repository root.
 
-## Open at hand-over (15 Oct 2026)
+## Open at hand-over (16 Oct 2026)
 The 14 Oct play-test (main's rig, PR #13) is reviewed finding by finding in
 `bot/docs/reviews/REVIEW-playtest-2026-10-14.md`: 16 bot bugs plus a side find, each with code lines, a fix and a
-round. R0 shipped as v0.6.199; next R1 (rules and deadlocks: the Turn-based block deadlock, "Any presses?" that does
-not wait, the right to block a directed action, bleed reduction between bots, `edgeTake`, turn-1 discards, the
-Creeping Sabotage count), then R2 (the bot-vs-bot combat handshake, Roundhouse's damage), R3 (clocks start when the
-question is sent, one spokesbot), R4 (the six uncurated V5 masters, Revelations against a bot). Johan's open answers
-are listed at the end of the review. After the rounds: the same scenario again in `client/playtest/`.
+round. R0 shipped as v0.6.199 (merged); R1 as v0.6.200 (rules and deadlocks, debug for humans only). Next, in the
+order Johan set on 16 Oct: R2 (the bot-vs-bot combat handshake, pacing bot-vs-bot combat when a human is seated, a
+hold stops the bot's own combat moves, Roundhouse's damage), R3 (clocks start when the question is sent, stale hold
+lines, one spokesbot for table remarks — the pool question stays per bot), R4 (the uncurated V5 masters,
+Revelations against a bot). After R3 we run the same scenario ourselves in `client/playtest/` with `--dir`.
+Main's open items are in `bot/docs/handoffs/HANDOFF-to-main-2026-10-16-v0_6_200.md` (the bridge's `edgeTake`, the
+15 Oct debug items).

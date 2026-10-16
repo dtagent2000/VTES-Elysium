@@ -8419,10 +8419,10 @@ async function connectWithRetry(client, tries = 30){
   // y) v0.6.189: THE KNOWLEDGE LAYER, brick 2 -- recurring losses raise the critical pool
   { const mk = dyn => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Y', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {}, dynFloor: dyn });
       u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Y', bot: true }]; u.pool = 12;
-      u.ev.push({ kind: 'turn', seat: 2 }); u._evRecord('Johan', 'Johan: Creeping Sabotage ticks \u2014 Y burns 2.', 'chat'); u.send({ t: 'chat', msg: 'Y: Smiling Jack \u2014 pays 1 pool.' });   // v0.6.191: the tick is the PREDATOR's line naming me
+      u.ev.push({ kind: 'turn', seat: 2 }); u._evRecord('Johan', 'Creeping Sabotage (x2): Y burns 2 pool.', 'log'); u.send({ t: 'chat', msg: 'Y: Smiling Jack \u2014 pays 1 pool.' });   // v0.6.191: the tick is the PREDATOR's line naming me
       u.ev.push({ kind: 'turn', seat: 1 }); u.ev.push({ kind: 'turn', seat: 2 }); return u; };
     const on = mk(1), off = mk(0);
-    ok(on._knownLosses() === 3, '127y the recurring losses of my last cycle are read from the log: 2 (Creeping Sabotage ticks) + 1 (Smiling Jack) = ' + on._knownLosses());
+    ok(on._knownLosses() === 3, '127y the recurring losses of my last cycle are read from the log: 2 (the predator\'s frozen Creeping Sabotage line) + 1 (Smiling Jack) = ' + on._knownLosses());
     const cOn = on._critPool(), cOff = off._critPool();
     ok(cOn.burst === cOff.burst + 3, '127y dynFloor 1 adds them to the predator burst (' + cOn.burst + ' vs ' + cOff.burst + '); dynFloor 0 is unchanged'); }
   // z) v0.6.192: archetype labels -- explanation only, never a jump to conclusions
@@ -8991,6 +8991,197 @@ async function connectWithRetry(client, tries = 30){
       ok(u.board.every((c, i) => c.x === 40 + i * 96 && c.y === 175), '138e Structured: nine vampires on GEO’s row, one per index, exactly as before');
       u.board = u.board.filter(c => c.id !== 'k3'); const q = u._openSlot('ready'); ok(q.x === 40 + 3 * 96 && q.y === 175, '138e ...a freed middle slot is reused'); }
   }
+
+    /* 139) v0.6.200 -- R1 of the play-test review (docs/reviews/REVIEW-playtest-2026-10-14.md): the rules and
+       the deadlocks the 14 Oct game found. Every item is pinned by an assertion that fails on v0.6.199; the
+       ones marked 'as before' are guards that pass on both. */
+    console.log('\n[139] v0.6.200 -- R1 of the play-test review: Turn-based deadlock, the taken line, directed actions, reduced bleeds, the Edge, dead cards, Creeping Sabotage, the steal line, debug for humans');
+    {
+      const B139 = require('./elysium-bot.js');
+      const mk139 = (name, seat, players, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} }, extra || {}));
+        u.seat = seat; u.started = true; u.players = players; u.sent = []; u.chats = []; u.says = [];
+        u.send = m => u.sent.push(m); u.push = () => {}; u.chat = m => u.chats.push(m); u.say = p => u.says.push(p); u.fxClone = () => {};
+        return u; };
+      const P3 = () => [{ seat: 1, name: 'Hanna', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Viktor', online: true, bot: true }];
+      const logs139 = u => u.sent.filter(m => m.t === 'log').map(m => String(m.html).replace(/<[^>]*>/g, ''));
+      const quiet139 = u => { if(u._pq){ if(u._pq.timer) clearTimeout(u._pq.timer); if(u._pq._remT) clearTimeout(u._pq._remT); u._pq = null; } if(u.pending){ if(u.pending.passTimer) clearTimeout(u.pending.passTimer); u.pending = null; } };
+
+      // a) point 8: Turn-based, a contested undirected block -- the LAST Pass ends it, whoever says it
+      { const u = mk139('U', 2, P3());
+        let timeouts = 0, restarts = 0; u._askTimeout = () => { timeouts++; }; u._restartAskTimer = () => { restarts++; };
+        const a = u._ask = { undirected: true, eligible: new Set(['Hanna', 'Viktor']), passed: new Set(['Hanna']), pausedBy: new Set(), contested: true, plan: { noClock: true }, timer: null };
+        u._onSay({ who: 'Viktor', i: SI('Pass') });
+        ok(timeouts === 1 && restarts === 0 && a._end === 'answer', '139a point 8: Turn-based, a contested undirected block -- a BOT’s last Pass declares the verdict (v0.6.199 waited for a clock that Turn-based never arms: the table stood still)');
+        ok(u._askRemindText(a) === '', '139a ...and with everybody passed the reminder has nobody to name: no line (v0.6.199: "Still waiting for you")');
+        const h = {}; let txt = 'Still waiting for Hanna'; u.chats.length = 0;
+        u._remindArm(h, { remindMs: 20 }, () => txt); txt = ''; await sleep(50);
+        ok(u.chats.length === 0, '139a ...the reminder reads its text when it FIRES: a Pass in between leaves it silent'); u._ask = null; }
+
+      // b) point 9: the damage step's own lines answer the damage step only
+      { const u = mk139('U', 2, P3()); const got = []; let armed = 0;
+        u._phaseWait = { step: 5, who: 'Hanna', resolve: w => got.push(w), arm: () => { armed++; } };
+        u._phaseNudge('Hanna', 'Lisa takes 1 (loses 1 blood, now 3).', 'log');
+        ok(got.length === 0 && armed === 0, '139b point 9: the human’s automatic taken line, arriving after I stepped past Damage, answers nothing (v0.6.199 took it as the answer to "Any presses?")');
+        u._phaseNudge('Hanna', 'Lisa prevents 1 damage (Hidden Strength).', 'log');
+        ok(got.length === 0, '139b ...nor does a prevent line outside the damage step');
+        u._phaseWait.step = 4; u._phaseNudge('Hanna', 'Lisa takes 1 (loses 1 blood, now 3).', 'log');
+        ok(got[0] === 'line', '139b ...in the damage step it is the answer, as before');
+        got.length = 0; u._phaseWait.step = 5; u._phaseNudge('Hanna', 'Lisa presses to continue.', 'log');
+        ok(got[0] === 'line', '139b ...and a press line still answers the press step, as before'); u._phaseWait = null; }
+
+      // c) point 1: a directed action is its target's business -- seat 1 (Hanna) acts; seat 2 is her prey, seat 3 her predator
+      { const asks = (u, lines) => { lines.forEach(l => u._onLog('Hanna', l)); u._onAnyBlocks('Hanna', 'Any blocks?'); const r = !!u._pq || u.chats.some(c => /lose pool/.test(c)); quiet139(u); return r; };
+        ok(!asks(mk139('Viktor', 3, P3()), ['Lisa takes a card action.']), '139c point 1: a card action with no aim is directed at the actor’s prey -- her PREDATOR neither asks what it costs nor may block it (v0.6.199: both bots asked)');
+        ok(asks(mk139('U', 2, P3()), ['Lisa takes a card action.']), '139c ...her prey does, as before');
+        ok(!asks(mk139('U', 2, P3()), ["Lisa takes a card action. Target: Viktor's Bob."]), '139c ...aimed at the predator (the client’s Target suffix), the prey stays out');
+        ok(asks(mk139('Viktor', 3, P3()), ["Lisa takes a card action. Target: Viktor's Bob."]), '139c ...and the predator, its target, answers, as before');
+        ok(!asks(mk139('U', 2, P3()), ["Lisa plays Revelations [aus]. Target: Viktor's Bob.", 'Lisa takes a card action.']), '139c ...the action row inherits the aim of the card played just before it (the play line carries it, the row does not)');
+        const P4 = () => [{ seat: 1, name: 'Hanna' }, { seat: 2, name: 'X', bot: true }, { seat: 3, name: 'W', bot: true }, { seat: 4, name: 'Y', bot: true }];
+        const w = mk139('W', 3, P4()); w._onLog('Hanna', 'Lisa takes an undirected action.'); w._obs.poolLoss = 0; w._openAskedWindow(); quiet139(w);
+        ok(!w.says.includes('No block'), '139c ...an undirected action: a cross-table seat has no block to decline and says nothing (v0.6.199 said "No block" -- only for a referendum did it keep quiet)');
+        const x = mk139('X', 2, P4()); x._obs = { who: 'Hanna', seat: 1, vamp: 'Lisa', verb: 'takes an undirected action', line: 'Lisa takes an undirected action.', at: Date.now(), poolLoss: 0, directed: false }; x._openAskedWindow(); quiet139(x);   // set by hand: the real line arms the prey's own undirected window first (B1)
+        ok(x.says.includes('No block'), '139c ...her prey declines out loud, as before'); }
+
+      // d) point 15: a reduced bleed stays reduced, and a bleed of 0 moves no Edge
+      { const t = mk139('U', 2, P3()); t._reactWindow = () => {};
+        t.pending = { who: 'Hanna', kind: 'bleed', amount: 1, reducedOnce: true, actingVampName: 'Lisa', reacted: new Set() };
+        t._onLog('Hanna', 'Lisa adds +1 bleed (= 3).');
+        ok(t.pending.amount === 2, '139d point 15 (target): I reduced the bleed to 1, the actor adds +1 -- 2, though its "(= 3)" still counts the bleed before my card (v0.6.199: 3, the reduction undone; got ' + t.pending.amount + ')');
+        t.pending = { who: 'Hanna', kind: 'bleed', amount: 1, actingVampName: 'Lisa', reacted: new Set() };
+        t._onLog('Hanna', 'Lisa adds +1 bleed (= 2).');
+        ok(t.pending.amount === 2, '139d ...with no reduction of mine the stated total stands, as before');
+        t.pending = { who: 'Hanna', kind: 'bleed', amount: 0, reducedOnce: true, actingVampName: 'Lisa', reacted: new Set() }; t.edge = true; t.pool = 20;
+        t._applyPending('test');
+        ok(t.edge === true && t.pool === 20, '139d ...a bleed reduced to 0 is not a successful bleed: my Edge stays (v0.6.199 handed it over)');
+        t.pending = { who: 'Hanna', kind: 'bleed', amount: 1, actingVampName: 'Lisa', reacted: new Set() }; t.edge = true;
+        t._applyPending('test');
+        ok(t.edge === false && t.pool === 19, '139d ...a bleed of 1 takes it, as before');
+        t.pending = { who: 'Hanna', kind: 'asked', sub: 'asked', amount: 2, directed: false, actingVampName: 'Lisa', reacted: new Set() }; t.edge = true;
+        t._applyPending('test');
+        ok(t.edge === true && t.pool === 17, '139d ...and a human’s referendum that cost me 2 pool is no bleed: I pay, my Edge stays (v0.6.199 handed it over on any pool loss through the asked window)'); }
+      { const u = mk139('U', 2, P3());
+        u._actingVamp = { v: { name: 'Sully' }, target: 3, n: 3, played: new Set() };
+        u._onLog('Viktor', '<b>Bob</b> plays <b>Telepathic Misdirection</b> — reduces the bleed by 2 (now 1).');
+        ok(u._actingVamp.n === 1, '139d point 15 (actor): my target’s reduction line lowers my bleed to its "now" -- the total I state next is 1, not 3 (got ' + u._actingVamp.n + ')');
+        u._actingVamp = { v: { name: 'Sully' }, target: 3, n: 3, played: new Set() };
+        u._onLog('Hanna', '<b>Lisa</b> plays <b>Telepathic Misdirection</b> — reduces the bleed by 2 (now 1).');
+        ok(u._actingVamp.n === 3, '139d ...the same line from a seat that is not my target changes nothing'); u._actingVamp = null; }
+      { const u = mk139('L', 2, P3()); u._toAsh = () => {}; u._emitPlay = () => {};
+        const LM = { name: 'Larissa Moreira (G6)', kind: 'crypt', zone: 'ready', blood: 6, cap: 6 }; u.board = [LM]; u.hand = ['Deep Song', 'Deep Song', 'Deep Song'];
+        const act = { n: 1, st: 0 }; u._actingVamp = { v: LM, n: 1, played: new Set(), target: 3 };
+        u._maybeLarissaBoost(LM, act);
+        ok(act.n === 2 && u._actingVamp.n === 2, '139d (found by the R1 arena smoke) Larissa\u2019s +1 reaches the acting record too -- the bleed total, the modifiers and the resolve line carry 2, not the unboosted 1 (v0.6.199: a bot target took 1 on her announced 2)'); u._actingVamp = null; }
+
+      // e) point 20: the Edge is unique -- lost when another seat takes it, mine when it is passed to me, said out loud when I gain it
+      { const u = mk139('U', 2, P3()); u.edge = true;
+        u._dispatch({ t: 'edgeTake', bySeat: 1, clearOnly: false });
+        ok(u.edge === false, '139e point 20: another seat took the Edge (edgeTake) -- mine is gone (v0.6.199 had no handler: two Edges on the table)');
+        u.edge = true; u._dispatch({ t: 'edgeTake', bySeat: 2 });
+        ok(u.edge === true, '139e ...my own take echoed back changes nothing');
+        u.edge = false; u._dispatch({ t: 'edgePass', toSeat: 2, fromName: 'Hanna' });
+        ok(u.edge === true, '139e ...the Edge dragged onto my seat (edgePass) is mine');
+        u.edge = false; u.sent.length = 0;
+        if(typeof u._takeEdge === 'function'){ u._takeEdge(); u._takeEdge(); }
+        ok(u.edge === true && u.sent.filter(m => m.t === 'edgeTake').length === 1, '139e ...and when I gain it I SAY so: one edgeTake on the wire, none for an Edge I already hold'); }
+
+      // f) the Creeping Sabotage count (the review's side find): one tick, counted once
+      { const u = mk139('Y', 2, [{ seat: 1, name: 'Nos', online: true, bot: true }, { seat: 2, name: 'Y', online: true, bot: true }]);
+        const c1 = u._evClassify('Nos', 'Creeping Sabotage (x2): Y burns 2 pool.', 'log'), c2 = u._evClassify('Nos', 'Creeping Sabotage ticks — Y burns 2.', 'log'), c3 = u._evClassify('Y', 'Creeping Sabotage — I burn 2.', 'log');
+        ok([c1, c2, c3].every(c => c && c.kind === 'pool' && c.via === 'creep') && c1.form === 'line' && c2.form === 'note' && c3.form === 'ack', '139f the three ways one tick reaches the log are told apart -- line / note / ack, all still pool events for the invariants (' + JSON.stringify([c1, c2, c3].map(c => c && c.form)) + ')');
+        u.ev.push({ kind: 'turn', seat: 2 });
+        u._evRecord('Nos', 'Creeping Sabotage (x2): Y burns 2 pool.', 'log'); u._evRecord('Nos', 'Creeping Sabotage ticks — Y burns 2.', 'log');
+        u.ev.push({ kind: 'turn', seat: 1 }); u.ev.push({ kind: 'turn', seat: 2 });
+        ok(u._knownLosses() === 2, '139f ...the frozen line and an older bot’s note of the SAME tick count 2, not 4 (got ' + u._knownLosses() + ')'); }
+      { const u = mk139('Nos', 1, [{ seat: 1, name: 'Nos', bot: true }, { seat: 2, name: 'Prey' }]); u.pool = 10;
+        u.board = [{ id: 'c1', name: 'Creeping Sabotage', kind: 'lib', zone: 'ready' }, { id: 'c2', name: 'Creeping Sabotage', kind: 'lib', zone: 'ready' }];
+        u._menaceUnlockEngine();
+        const cl = u.sent.filter(m => m.t === 'log' && /Creeping Sabotage/.test(m.html));
+        ok(cl.length === 1 && cl[0].html === 'Creeping Sabotage (x2): <b>Prey</b> burns 2 pool.', '139f ...and the predator writes the frozen line ONLY -- its "ticks" note said the same tick a second time (got ' + cl.length + ' lines)'); }
+
+      // g) point 19: stolen blood over capacity drains (rules-correct) -- the round line now says so
+      { const u = mk139('Q9', 2, [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Q9', bot: true }], { deckName: 'tremere', askSecs: 0.05, phaseSecs: 0.08 });
+        u.caps.tally = true; u.note = () => {}; u._emit = () => {};
+        u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
+        const v = { id: 'v1', name: 'Trevon Parker (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 6 }; u.board = [v]; u.hand = ['Theft of Vitae'];
+        u._actingVamp = { v, n: 1, played: new Set() };
+        u._awaitOppStrike = () => Promise.resolve({ vamp: 'Lisa', dodge: false, dealt: 0 });
+        await u._resolveCombat(v, 'Lisa');
+        const line = u.chats.find(c => /strikes with Theft of Vitae for 0/.test(c)) || '';
+        ok(/steals 2 blood; 1 drains off at capacity 6\)/.test(line) && v.blood === 6, '139g point 19: the steal is rules-correct (before mending; over capacity drains) and now SAYS what drained: ' + JSON.stringify(line.slice(0, 160))); u._actingVamp = null; }
+
+      // h) point 22 and Johan's report: a card is dead only when NO vampire of mine can use it -- ready, in torpor or not yet out
+      { const u = mk139('T', 2, [{ seat: 1, name: 'A' }, { seat: 2, name: 'T', bot: true }], { deckName: 'tremere', deck: B139.ARCHETYPES.tremere });
+        u.board = [{ id: 'u1', name: 'Ayelech', kind: 'crypt', zone: 'uncontrolled', faceDown: true }, { id: 'u2', name: 'Nassir', kind: 'crypt', zone: 'uncontrolled', faceDown: true }];
+        u.hand = ['Theft of Vitae', 'Deep Song', 'Govern the Unaligned', 'Deflection', 'Conditioning', 'Telepathic Misdirection', 'Magic of the Smith', 'Theft of Vitae'];
+        u._handSizeBonus = 1; u._revertHandSizeBonus();
+        ok(u.hand.filter(n => n === 'Theft of Vitae').length === 2 && !u.hand.includes('Deep Song'), '139h point 22: no vampire out yet, and the Tremere sheds Deep Song (no [ani] in its crypt) -- not the Theft of Vitae every one of its vampires can play (v0.6.199 judged the READY vampires only: the whole hand was dead and the first card went; hand now ' + JSON.stringify(u.hand) + ')');
+        u.board = []; u.hand = ['Theft of Vitae', 'Deep Song'];
+        ok(typeof u._deadJudgeVamps === 'function' && u._deadHandIndex(u._deadJudgeVamps()) === 1, '139h ...with every vampire gone the deck’s crypt list judges');
+        u.board = [{ id: 't1', name: 'Ayelech', kind: 'crypt', zone: 'torpor' }];
+        ok(typeof u._deadJudgeVamps === 'function' && u._deadHandIndex(u._deadJudgeVamps()) === 1, '139h ...and a vampire in torpor still counts: it comes back'); }
+
+      // i) debug is for humans only (Johan, 16 Oct); --debug on the command line; never at a Tournament table
+      { const P4h = on1 => [{ seat: 1, name: 'Hanna', online: on1 !== false }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Viktor', online: true, bot: true }, { seat: 4, name: 'Anna', online: true }];
+        const dbg = players => { const u = mk139('U', 2, players, { debug: true }); u._debugHand = true; u.hand = ['Govern the Unaligned', 'Conditioning']; return u; };
+        const oh = u => u.sent.filter(m => m.t === 'openHand');
+        const u = dbg(P4h()); u._syncOpenHand();
+        ok(oh(u).length === 2 && oh(u).every(m => m.cards.length === 2 && !m.revoke) && oh(u).map(m => m.to).join(',') === '1,4', '139i debug with another bot at the table: the hand goes to each HUMAN seat (1 and 4), never to the bot at 3 (v0.6.199: to all -- the other bots read it as certain knowledge; got ' + JSON.stringify(oh(u).map(m => m.to)) + ')');
+        u.sent.length = 0; u._syncOpenHand();
+        ok(oh(u).length === 0, '139i ...an unchanged hand and audience sends nothing');
+        u._dispatch({ t: 'roster', players: P4h(false) }); u.sent.length = 0;
+        u._dispatch({ t: 'roster', players: P4h(true) });
+        ok(oh(u).some(m => m.to === 1 && !m.revoke), '139i ...a human back online gets the grant again (the server routes a seat’s grant to a live socket only)');
+        u._openHandActive = { seat: 1, seen: true }; u.sent.length = 0; u._syncOpenHand(true);
+        ok(oh(u).length === 1 && oh(u)[0].to === 'all', '139i ...Revelations [AUS] opens my hand to every player by its text, the bots too, as before');
+        u.sent.length = 0; u._onBoard({ seat: 1, pub: { cards: [] } });
+        const rv = oh(u).filter(m => m.revoke), gr = oh(u).filter(m => !m.revoke);
+        ok(!u._openHandActive && rv.map(m => m.to).join(',') === '3' && gr.map(m => m.to).join(',') === '1,4', '139i ...when the Revelations leaves play, the bot at 3 is revoked on its own and the humans keep the debug view, no blink (got revoke ' + JSON.stringify(rv.map(m => m.to)) + ', grant ' + JSON.stringify(gr.map(m => m.to)) + ')');
+        const v = dbg(P3()); v._syncOpenHand(); v.sent.length = 0;
+        v._dispatch({ t: 'helperPolicy', policy: { tournament: true, allowLocal: true, settings: {} } });
+        ok(v._debugHand === false && oh(v).filter(m => m.revoke).map(m => m.to).join(',') === '1' && logs139(v).some(l => /leaves DEBUG mode/.test(l)), '139i ...a table that turns Tournament mid-game ends the debug view at once (v0.6.199 never read the helper policy)'); }
+      { const u = mk139('U', 2, P3(), { debug: true }); u.deck = B139.ARCHETYPES.hacking;
+        u._dispatch({ t: 'joined', seat: 2, token: 't', lobby: true, room: 'r', srv: '2.6.46', players: P3(), helperPolicy: { tournament: true, allowLocal: true, settings: {} } });
+        u.started = true; u._dispatch({ t: 'dealt', hand: ['Conditioning'], unc: [], pool: 30, seat: 2 });
+        ok(u._debugHand !== true && logs139(u).some(l => /no DEBUG mode at a Tournament table/.test(l)) && !logs139(u).some(l => /is in DEBUG mode/.test(l)), '139i a CLI bot asked for debug at a Tournament table refuses by itself, and says so (no client checks it)'); }
+      { const o = B139.parseArgs(['--room', 'r', '--debug', '--no-debug-weights']);
+        ok(o.debug === true && o.debugWeights === false, '139i --debug and --no-debug-weights on the command line (v0.6.199 ignored both silently: a private-server table could not have a debug bot)'); }
+
+      // m) LIVE on the real server: a bleed reduced to 0 moves no Edge; a bleed of 1 takes it -- and says so on the wire
+      { const R139 = 'r139' + Date.now().toString(36).slice(-5);
+        const h = mkClient('Alice'); await connectWithRetry(h);
+        h.send({ t: 'create', room: R139, pass: 'x', name: 'Alice', lobby: true, v: '2.6.0' });
+        await h.waitFor(m => m.t === 'joined', 'h139 joined');
+        h.send({ t: 'seat', seat: 1 });
+        h.send({ t: 'deck', name: 'D139', library: [{ name: 'Govern the Unaligned', qty: 60 }], crypt: [{ name: 'Lucinde, Alastor', qty: 12 }] });
+        await h.waitFor(m => m.t === 'deckok', 'h139 deckok');
+        const bot = new Bot({ server: URL, room: R139, pass: 'x', name: 'BotEdge', seat: 2, paceMs: 0, askSecs: 3, log: () => {},
+                              deck: { name: 'E139', crypt: [{ name: 'Zip', qty: 12 }], library: [{ name: 'Govern the Unaligned', qty: 60 }] } });
+        await bot.connect();
+        await h.waitFor(m => m.t === 'lobby' && (m.players || []).some(p => p.name === 'BotEdge' && p.seat === 2 && p.deck), 'BotEdge seated');
+        h.send({ t: 'start' });
+        await h.waitFor(m => m.t === 'dealt', 'h139 dealt');
+        const strip = m => String(m.html || '').replace(/<[^>]*>/g, '');
+        const rig = () => { bot.board = [{ id: 'z1', name: 'Zip (G3)', kind: 'crypt', zone: 'ready', locked: false, blood: 2, x: 100, y: 100 }]; bot.unc = []; bot.hand = []; bot.edge = false; };
+        rig();
+        h.send({ t: 'pass' });
+        await h.waitFor(m => m.t === 'turn' && m.seat === 2, 'turn to BotEdge (1)', 9000);
+        await h.waitFor(m => m.t === 'log' && m.who === 'BotEdge' && /bleeds for 1/.test(strip(m)), 'BotEdge bleeds Alice for 1', 9000);
+        h.send({ t: 'log', html: '<b>Lisa</b> plays <b>Telepathic Misdirection</b> — reduces the bleed by 1 (now 0).' });
+        await sleep(200);
+        h.send({ t: 'say', i: SI('Pass') });
+        const at0 = await h.waitFor(m => m.t === 'log' && m.who === 'BotEdge' && /The bleed goes through/.test(strip(m)), 'the bleed resolves (1)', 9000);
+        ok(/goes through at 0: Alice loses no pool/.test(strip(at0)) && bot.edge === false && !h.sawAny(m => m.t === 'edgeTake'), '139m LIVE point 15: the target’s seat writes the frozen reduce line (a reducing bot’s shape; the client has none yet) and the bleed of 1 is 0 -- the bot says it went through at 0 and takes no Edge (v0.6.199: "-1 pool" and the Edge; got "' + strip(at0) + '")');
+        await h.waitFor(m => m.t === 'turn' && m.seat === 1, 'turn back to Alice', 15000);
+        rig();
+        h.send({ t: 'pass' });
+        await h.waitFor(m => m.t === 'turn' && m.seat === 2, 'turn to BotEdge (2)', 9000);
+        await h.waitFor(m => m.t === 'log' && m.who === 'BotEdge' && /bleeds for 1/.test(strip(m)), 'BotEdge bleeds Alice for 1 again', 9000);
+        h.send({ t: 'say', i: SI('Pass') });
+        await h.waitFor(m => m.t === 'log' && m.who === 'BotEdge' && /The bleed goes through: Alice, -1 pool/.test(strip(m)), 'the bleed resolves (2)', 9000);
+        const et = await h.waitAny(m => m.t === 'edgeTake' && m.bySeat === 2, 'edgeTake from BotEdge', 3000).catch(() => null);
+        ok(!!et && bot.edge === true, '139m LIVE point 20: a bleed of 1 goes through -- the bot takes the Edge AND says so: edgeTake reaches Alice, whose client clears its own (v0.6.199 sent nothing: two Edges on screen)');
+        bot.close(); h.ws.close(); }
+    }
 
 
     }
