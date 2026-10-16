@@ -1,8 +1,30 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.161 / server v2.6.46 / bot v0.6.201 tested beside the suite, last updated 16 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.162 / server v2.6.46 / bot v0.6.204 tested beside the suite, last updated 16 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**16 Oct 2026, evening (THE VERDICT WAIT — v2.6.162):**
+- **A probe that drives a real bot must wait for the bot's own deal.** The bot's `dealt` handler resets `board`, `unc`
+  and the pending action. In one run of thirteen, the blocker my probe had pushed 1.5 s after `started` was gone, and the
+  bot said Pass instead of blocking.
+  - Wait until `unc` and `hand` are filled.
+  - Then check the precondition with the bot's own function (`_pickBlocker`) before acting.
+- **A check that waits for a bot's line must know the bot's pacing.** After a chat line the bot sends nothing for
+  1.6 × `paceMs`, which is 4.96 s at the client's 3.1 s.
+  - My first probe gave the verdict line 4 s after the click and called it failed. The bot had decided in 0.13 s.
+  - Measure the decision (the status) and the line separately.
+- **A 4 Hz panel's DOM lags its source.** The first sample after a status change still showed the previous row ("0s",
+  "▶ Step") for up to 250 ms. Read the status at once, and judge the DOM from the first sample that agrees with it.
+- **A B1 round trip has to read what the split wrote.**
+  - `split_client.py` writes to `/home/claude/elysium-src`, but `elysium-build.js` reads `client/elysium-src`.
+  - In the monorepo checkout the default build stopped with ENOENT, and `cmp` then compared the untouched monolith with
+    its own copy: a false "byte-identical".
+  - Copy the fragments over, build to a scratch file (SKILLS' recipe), and read the build's own line before the `cmp`.
+- **The Write tool turns `\uXXXX` into the character, as heredocs do** (CLAUDE.md, anchor rules).
+  - A Python patch script written with Write had its `'\u2014'` already turned into '—'. That is harmless in a Python
+    string, but wrong for a JS string that must keep the escape.
+  - The test patch used a placeholder (`@u2014` → `chr(92) + 'u' + hex`).
 
 **16 Oct 2026, late afternoon (THE VISIT FROM ABOVE — v2.6.161):**
 - **A backstop must not swallow the real signal.** `setAside`'s 250 ms timer was there for a `transitionend` that never
