@@ -339,8 +339,13 @@ function extractFx(t0){
      counter (Invoke Poison Glands' superior "+X damage, where X is the number of
      Orun") fails the finder's typeof==='number' check automatically -- no extra guard
      needed here, the type mismatch IS the guard.                                     */
-  if((m = t.match(/hand strike at \+([0-9]+|X) damage/i))) put('strike', num(m[1]));
-  if((m = t.match(/this strike is at \+([0-9]+|X) damage/i))) put('strike', num(m[1]));
+  /* v1.9.2 (16 Oct 2026, bot v0.6.202 -- the 14 Oct play-test, point 18): these two phrasings are a BONUS on the hand strike, not
+     absolute damage -- "hand strike at +2 damage" deals the minion's strength (1 by default) + 2, so Roundhouse with a plain vampire
+     is 3, and 4 with Preternatural Strength [pot]. They wrote `strike: N`, the field "Strike: N damage" uses for ABSOLUTE damage, and
+     every Roundhouse landed one short. Now `handBonus: N` (handStrike is still tagged below); the bot adds it to the vampire's own hand
+     damage. 36 library cards share the two patterns (25 + 11, vtes.json 14 Oct); in our six decks only Roundhouse. */
+  if((m = t.match(/hand strike at \+([0-9]+|X) damage/i))) put('handBonus', num(m[1]));
+  if((m = t.match(/this strike is at \+([0-9]+|X) damage/i))) put('handBonus', num(m[1]));
   /* v1.6.0 (Johan's standing question, checking the strike-bonus family for
      uncertainty): a THIRD phrasing found by chance while reading Compress -- "Strike:
      N aggravated damage" (aggravated sitting BETWEEN the number and "damage" breaks

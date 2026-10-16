@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.36 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.37 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -96,6 +96,7 @@ for (const m of botSrc.matchAll(/\bfx\.([a-zA-Z]+)\b/g)) if (!NON_FX.has(m[1])) 
 const CLASS = {
   bleedAct: 'play', stealth: 'play', intercept: 'play', bounce: 'play',
   wake: 'play', prevent: 'play', cancelBlock: 'play', dodge: 'play',   // dodge: _bestDodgeFor (steg 6) -- the v1.0.0 report itself flagged it unclassified; a Strike:-choice pick, same family as strike/prevent
+  handBonus: 'contextual',   // v1.1.37 (bot v0.6.202, cardfx v1.9.2, play-test point 18): 'hand strike at +N damage' / 'this strike is at +N damage' -- a bonus on the hand strike, consumed through the same strike@ special-case as strike (_modeStrikeDmg)
   strike: 'contextual',   // v1.1.3: consumed via the strike@ special-case above (combat-typed + no co-located maneuver/press + no unverifiable req flags) -- 'contextual' here only silences the unknown-key warning for the EQUIPMENT-typed instances (.44 Magnum-class: attached-weapon consumption is still a future board-scan, correctly NOT matching the special case's combat-type requirement)
   gainOppLoss: 'contextual',   // v1.1.4 (Johan's combat GO, Taste of Vitae): consumed via the gainOppLoss@ special-case below (combat-typed only -- no req-flag/co-located guard needed, since Taste of Vitae's own restrictions -- end-of-round timing, not-if-torporing -- are STATE the combat-loop hook checks directly, not unverifiable preconditions like range/round-count)
   envDmgPerRound: 'contextual',   // v1.1.7 (Johan's combat GO, Carrion Crows): consumed via the envDmgPerRound@ special-case below (combat-typed only -- "only usable before range is determined" is verifiable now that _resolveCombatRound has that exact play window, so no req-flag exclusion needed here either)
@@ -231,7 +232,7 @@ function modeConsumed(mo, e){
      co-located-maneuver/press guards. A blanket 'play' classification would have
      misreported Blood Fury/Cauldron of Blood/Loving Agony/Slam's superior as consumed
      the instant any of them entered a deck's coverage run.                          */
-  if (typeof f.strike === 'number' && !f.maneuver && !f.press
+  if ((typeof f.strike === 'number' || typeof f.handBonus === 'number') && !f.maneuver && !f.press   // v1.1.37: + handBonus (Roundhouse class)
       && (e && (e.t || []).includes('combat'))
       && !(e && e.req && (e.req.beforeRangeDetermined || e.req.notFirstRound)))
     return { ok: true, via: 'strike' };
@@ -243,7 +244,7 @@ function modeConsumed(mo, e){
      (Apportation) is consumed -- a mode co-located with maneuver/strike/stealBlood
      is a bundled ability (Grasp of the Python, Slam's superior), documented in the
      combat plan §5.6 as a future extension, not built. */
-  if (f.press && !f.maneuver && typeof f.strike !== 'number' && !f.stealBlood
+  if (f.press && !f.maneuver && typeof f.strike !== 'number' && typeof f.handBonus !== 'number' && !f.stealBlood
       && (e && (e.t || []).includes('combat'))
       && !(e && e.req && (e.req.beforeRangeDetermined || e.req.notFirstRound)))
     return { ok: true, via: 'press@resolveCombat' };
@@ -252,7 +253,7 @@ function modeConsumed(mo, e){
      the CASH-IN, above: rangeClose/rangeLong no longer blanket-exclude stealBlood/
      strike/press -- the bot can now maneuver to the needed range when it holds one of
      those 17 previously-excluded cards, so they are genuinely consumed, not a guess. */
-  if (f.maneuver && !f.press && typeof f.strike !== 'number' && !f.stealBlood
+  if (f.maneuver && !f.press && typeof f.strike !== 'number' && typeof f.handBonus !== 'number' && !f.stealBlood
       && (e && (e.t || []).includes('combat'))
       && !(e && e.req && (e.req.beforeRangeDetermined || e.req.notFirstRound)))
     return { ok: true, via: 'maneuver@resolveCombat' };

@@ -2593,15 +2593,15 @@ async function connectWithRetry(client, tries = 30){
       let potSup = null; for(const nm in nw32g.crypt){ const d = nw32g.crypt[nm].disc; if(d && d.sup && d.sup.includes('pot')){ potSup = nm; break; } }
       const vamp32g = { id: 'p1', name: potSup, kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 8 };
       u5.hand = ['Roundhouse'];
-      ok(u5._bestStrikeFor(vamp32g) && u5._bestStrikeFor(vamp32g).n === 3,
-         '_bestStrikeFor: Roundhouse (the strike-bonus family original target) now found via the two new "hand strike at +N"/"This strike is at +N" patterns -- superior n=3');
+      ok(u5._bestStrikeFor(vamp32g) && u5._bestStrikeFor(vamp32g).n === 4,
+         '_bestStrikeFor: Roundhouse (the strike-bonus family original target) now found via the two new "hand strike at +N"/"This strike is at +N" patterns -- superior: strength 1 + 3 = 4 (v0.6.202, play-test point 18: a bonus on the hand strike, it read the absolute 3)');
       u5.hand = ['Blood Fury'];
       ok(u5._bestStrikeFor(vamp32g) === null, '_bestStrikeFor: Blood Fury rejected — req.rangeClose is unverifiable in the v1 no-range architecture, same guard steal already had');
       u5.hand = ['Cauldron of Blood'];
       ok(u5._bestStrikeFor(vamp32g) === null, '_bestStrikeFor: Cauldron of Blood rejected — req.notFirstRound');
       u5.hand = ['Slam'];
       const slamPick = u5._bestStrikeFor(vamp32g);
-      ok(slamPick && slamPick.n === 2, '_bestStrikeFor: Slam base [pot] mode (n=2) IS found — the superior [POT] co-locates maneuver (excluded), but the finder correctly falls back to the clean base mode rather than rejecting the whole card');
+      ok(slamPick && slamPick.n === 3, '_bestStrikeFor: Slam base [pot] mode (strength 1 + 2 = 3, v0.6.202) IS found — the superior [POT] co-locates maneuver (excluded), but the finder correctly falls back to the clean base mode rather than rejecting the whole card');
       u5.hand = ['.44 Magnum'];
       ok(u5._bestStrikeFor(vamp32g) === null, '_bestStrikeFor: .44 Magnum (EQUIPMENT-typed) never offered from hand — attached-weapon consumption is still a future board-scan, not a hand play (the type filter, unchanged)');
     }
@@ -7385,10 +7385,10 @@ async function connectWithRetry(client, tries = 30){
   ok(d3.pick === bleedSide, '107b ...so Deep Song BLEEDS (Johan: the stronger bleed is the play without combat cards): ' + d3.why);
   preyV.blood = 0; const r0 = a._bestRushFor(dow); const d0 = a.decide('action', { plain: { n: 1 }, rush: r0, card: bleedSide, readyCrypt: 2 });
   ok(d0.scores.rushParts.mult === 1.35 && d0.pick === r0, '107c an empty vampire is still rushed with bare hands (the three torpors of the series)');
-  preyV.blood = 3; a.hand = ['Deep Song', 'Roundhouse']; const rR = a._bestRushFor(dow);
-  ok(rR.exp.expDmg === 2 && rR.exp.nCombat === 1 && a.decide('action', { plain: { n: 1 }, rush: rR, card: bleedSide, readyCrypt: 2 }).scores.rushParts.mult === 1.0, '107d a Roundhouse in hand, The Dowager has only [pot]: 2 damage against 3 blood = one short, mult 1.0');
+  preyV.blood = 4; a.hand = ['Deep Song', 'Roundhouse']; const rR = a._bestRushFor(dow);
+  ok(rR.exp.expDmg === 3 && rR.exp.nCombat === 1 && a.decide('action', { plain: { n: 1 }, rush: rR, card: bleedSide, readyCrypt: 2 }).scores.rushParts.mult === 1.0, '107d a Roundhouse in hand, The Dowager has only [pot]: strength 1 + 2 = 3 damage against 4 blood = one short, mult 1.0 (v0.6.202, point 18: it read 2 -- the target is a 4 now to keep the one-short case)');
   const hor = { id: 'v2', kind: 'crypt', name: 'Horace Radcliffe (G6)', zone: 'ready', blood: 4, locked: false, attached: [] }; a.board.push(hor); const rH = a._bestRushFor(hor);
-  ok(rH && rH.exp.expDmg === 3 && a.decide('action', { plain: { n: 1 }, rush: rH, card: bleedSide, readyCrypt: 2 }).scores.rushParts.mult === 1.35, '107d Horace Radcliffe ([ANI] + [POT], the one vampire who both rushes and hits for 3): 3 meets 3, mult 1.35'); a.board.pop();
+  ok(rH && rH.exp.expDmg === 4 && a.decide('action', { plain: { n: 1 }, rush: rH, card: bleedSide, readyCrypt: 2 }).scores.rushParts.mult === 1.35, '107d Horace Radcliffe ([ANI] + [POT], the one vampire who both rushes and hits hard): Roundhouse [POT] 1 + 3 = 4 meets 4, mult 1.35'); a.board.pop(); preyV.blood = 3;
   a.hand = ['Deep Song', 'Carrion Crows']; const rC = a._bestRushFor(dow);
   ok(rC.exp.env === 2 && rC.exp.expDmg === 3 && rC.exp.nCombat === 1, '107e GENERAL COMBAT: a Carrion Crows [ANI] in hand counts (1 hand + 2 crows = 3) -- the expectation could not see damage beside the strike');
   a.board.push({ id: 'm1', kind: 'lib', name: 'Murder of Crows', zone: 'ready' }); dow.attached = ['m1']; a.hand = ['Deep Song'];
@@ -8095,7 +8095,7 @@ async function connectWithRetry(client, tries = 30){
   const sNone = b._decide('action', ctx(['Deep Song'])).scores.rush;
   ok(sKit > sOne && sOne > sNone, '126b the rush score ranks the kit: Grapple + Roundhouse > Roundhouse > nothing (' + sKit + ' > ' + sOne + ' > ' + sNone + ')');
   const dKit = b._decide('action', ctx(['Deep Song', 'Immortal Grapple', 'Roundhouse']));
-  ok(dKit.pick && dKit.pick.kind === 'rush' && /reach 6 with Grapple/.test(dKit.why), '126b with Grapple + Roundhouse vs a 5-blood target the rush beats the bleed (reach 6 >= 5, the why says so)');
+  ok(dKit.pick && dKit.pick.kind === 'rush' && /reach 8 with Grapple/.test(dKit.why), '126b with Grapple + Roundhouse vs a 5-blood target the rush beats the bleed (reach 8 >= 5, the why says so; v0.6.202: Roundhouse [POT] is strength 1 + 3 = 4 a round -- it read 3)');
   const dNone = b._decide('action', ctx(['Deep Song']));
   ok(!dNone.pick || dNone.pick.kind !== 'rush', '126b with the combat cards spent Deep Song is not a rush (Johan: bleed with it)');
   b.o.combatMind = 0; const s0 = b._decide('action', ctx(['Deep Song', 'Immortal Grapple', 'Roundhouse'])).scores.rushParts; ok(s0.kitW === 1 && s0.reach === s0.expDmg, '126b combatMind 0: no kit weight, no reach');
@@ -8196,11 +8196,12 @@ async function connectWithRetry(client, tries = 30){
   await fk._resolveCombat(fv, 'Lisa');
   const tw = fk.sent.filter(m => m.t === 'tally' && m.mode === 'combat');
   ok(tw.length && !('a' in tw[0]) && !('b' in tw[0]) && tw[0].duelCid === 'w1', '127k the combat announce no longer zeroes a/b (main: a late announce wiped a human\u2019s entered damage)');
-  ok(tw.some(m => m.b === 3 && m.sb === 'Roundhouse'), '127k a blocker\u2019s Roundhouse for 3 lands on b with its label (main: the human\u2019s Damage step read Incoming 0)');
+  ok(tw.some(m => m.b === 4 && m.sb === 'Roundhouse'), '127k a blocker\u2019s Roundhouse for 4 (Wauneka [POT]: strength 1 + 3, v0.6.202) lands on b with its label (main: the human\u2019s Damage step read Incoming 0)');
   ok(tw.some(m => m.rng === 'close'), '127k the round\u2019s range is written after the range step');
   const fk2 = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'F2', persona: 'expert', deckName: 'tremere', paceMs: 0, askSecs: 1, log: () => {} });
   fk2.seat = 2; fk2.started = true; fk2.caps.tally = true; fk2.push = () => {}; fk2.say = () => {}; fk2.chat = () => {}; fk2.note = () => {}; fk2._emit = () => {}; fk2.send = () => {};
   fk2.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'F2', bot: true }];
+  fk2.table = { 1: { pub: { cards: [{ id: 'l1', kind: 'crypt', name: 'Lisa', zone: 'ready', blood: 3 }] } } }; fk2._combatOppName = 'Lisa';   // v0.6.202 (point 17b): the tally's range fields are read from the human I FIGHT -- the fixture names him
   fk2._awaitOppStrike = () => Promise.resolve(null); fk2._awaitOppTaken = () => Promise.resolve(null); fk2._awaitOppPress = () => Promise.resolve(null); fk2._awaitOppManeuver = () => Promise.resolve(null); fk2._awaitOppGrapple = () => Promise.resolve(null);
   const tv = { id: 't1', name: 'Trevon Parker (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3, cap: 6 }; fk2.board = [tv]; fk2.hand = ['Apportation', 'Theft of Vitae'];
   fk2.tally = { mode: 'combat', who: 'Johan', rng: 'close', rl: 1 };
@@ -8866,8 +8867,11 @@ async function connectWithRetry(client, tries = 30){
       ok(/everyone has spoken/.test(why), '137f ...but completion is not a clock: when everybody has spoken the poll closes, hold or not'); }
     { const { u } = mk(std1); u._holdBy = new Set(['Anna']); u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b';
       const p = u._phaseStep(1, 'ask', false); await sleep(10);
-      ok(u._phaseWait && u._phaseWait.timer === null && u.chats.filter(c => /^\u23f8 Holding for Anna/.test(c)).length === 1, '137f a combat step that opens under a live hold stands and says the hold (review: it froze silently)');
+      ok(!u._phaseWait && !u.chats.some(c => /Any maneuvers/.test(c)) && u.chats.filter(c => /^\u23f8 Holding for Anna/.test(c)).length === 1, '137f a combat step that would open under a live hold waits in FRONT of it and says the hold (v0.6.202, play-test point 5 + Johan 16 Oct: a hold stops my own combat moves, the next question too -- v0.6.198 opened the step and froze only its clock)');
+      u._onSay({ who: 'Anna', i: 4 }); await sleep(200);
+      ok(!!u._phaseWait && u.chats.some(c => /Any maneuvers/.test(c)), '137f ...the release opens it');
       u._onChat('Johan', 'No'); await p;
+      u._holdBy = new Set(['Anna']); u._holdAnnounced = false;
       const pa = u._askBlock('Q?'); await sleep(10); ok(u.chats.some(c => /^Q\? .*\(the table is on hold \u2014 I wait for you\)$/.test(c)), '137f ...and a question asked under a hold does not promise a clock in its tail: ' + u.chats[u.chats.length - 1]);
       u._onSay({ who: 'Anna', i: 4 }); u._onChat('Johan', 'no'); await pa; }
     { const { u } = mk(std1); u._holdBy = new Set(['Anna']); const p = u._askBlock('Q?'); await sleep(10);
@@ -9314,6 +9318,217 @@ async function connectWithRetry(client, tries = 30){
         const v = mk140('Viktor', 3, P3x()); v.pool = 5; v._onLog('U', 'Creeping Sabotage (x1): Viktor burns 1 pool.');
         ok(v.pool === 4 && !v.out && !v.sent.some(m => m.t === 'bounty'), '140j ...above 0 the tick is paid and play goes on, as before'); }
     }
+
+    console.log('\n[141] v0.6.202 -- R2 of the play-test review: the bot-vs-bot step handshake, a hold stops my combat, the range from my own human opponent, Roundhouse, two steals at once, pool lost in my unlock');
+    /* 141) v0.6.202 -- R2 of REVIEW-playtest-2026-10-14.md: points 16 / 17a / 7 (between bots the acting side speaks first in the
+       maneuver, before-strikes and press steps, and a 'nothing' line ends each wait), 17b (the tally's range only from the human I
+       fight), 5 (a hold stops my own combat moves), 18 (Roundhouse = strength + 2), 19 (two steals at once) and the v0.6.140 audit
+       (Smiling Jack and Fame can oust me in my own unlock phase, and the turn stops there). */
+    {
+      const strip141 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const AV = over => Object.assign({ id: 'a1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 6, attached: [] }, over || {});
+      const DV = over => Object.assign({ id: 'd1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 5, attached: [] }, over || {});
+      /* Two bots on an in-memory relay: every log / chat line reaches the other bot `delay` ms later. At the client's pace a line came
+         ~600 ms after the 200 ms waits of v0.6.201 had given up -- the play-test's ignored Grapple and missed maneuver. A = the acting
+         bot (Hanna, seat 1), D = the bot that blocked it (Viktor, seat 2). */
+      const duel141 = o => {
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }].concat(o.human ? [{ seat: 3, name: 'Claude', online: true }] : []);
+        const mk = (name, seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: o.paceMs || 0, askSecs: o.askSecs || 3, twdKnow: 0, log: () => {} });
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.o.deckName = deck; u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = [];
+          u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); };
+          return u; };
+        const A = mk('Hanna', 1, o.aDeck || 'tremere'), D = mk('Viktor', 2, o.dDeck || 'nosferatu');
+        const wire = (from, to) => { from.send = m => {
+          if(!m || (m.t !== 'log' && m.t !== 'chat')) return;                            // tallies, boards, fx: not needed between two bots here
+          const txt = m.t === 'log' ? strip141(m.html) : String(m.msg || '');
+          from._evRecord(from.o.name, txt, m.t, true);                                  // my own lines enter my event log, as the real send does
+          from.lines.push({ at: Date.now(), tier: m.t, txt });
+          const d = Object.assign({}, m, { who: from.o.name });
+          setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0);
+        }; };
+        wire(A, D); wire(D, A);
+        const aV = AV(o.aV), dV = DV(o.dV);
+        A.board = [aV]; D.board = [dV]; A.hand = (o.aHand || []).slice(); D.hand = (o.dHand || []).slice();
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: dV.name, zone: 'ready', blood: dV.blood }] } } };
+        D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: aV.name, zone: 'ready', blood: aV.blood }] } } };
+        A._actingVamp = { v: aV, n: 1, played: new Set() }; A._lastBlockerName = dV.name;
+        D._clearCombatStashes(); D._combatArmed = true;
+        const run = async () => { const t0 = Date.now();
+          await Promise.race([Promise.all([A._resolveCombat(aV), D._resolveCombat(dV, aV.name)]), sleep(o.cap || 15000)]);
+          return Date.now() - t0; };
+        return { A, D, aV, dV, run };
+      };
+      const lines141 = (u, re) => u.lines.filter(l => re.test(l.txt));
+
+      // a) point 16: the defender's Immortal Grapple reaches the acting bot BEFORE it chooses its strike
+      { const g = duel141({ delay: 300, aHand: ['Theft of Vitae'], dHand: ['Immortal Grapple', 'Roundhouse'] });
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(g.A.hand.includes('Theft of Vitae') && aRow.strike === 'hands' && dRow.grapple === 'superior',
+           '141a point 16: the defender plays Immortal Grapple and the acting bot, holding Theft of Vitae, strikes with its hands and keeps Theft -- the Grapple line came 300 ms later than the old 200 ms wait (the play-test: Theft of Vitae through a Grapple; got ' + JSON.stringify({ a: aRow.strike, keep: g.A.hand.includes('Theft of Vitae'), g: dRow.grapple }) + ')');
+        const aT = lines141(g.A, /has nothing before strikes/), dG = lines141(g.D, /plays Immortal Grapple/);
+        ok(aT.length === 1 && dG.length === 1 && aT[0].at <= dG[0].at, '141a ...the acting bot spoke first ("has nothing before strikes"), the Grapple answered it');
+        ok(dRow.strike === 'Roundhouse' && dRow.dealt === 4, '141a ...and Wauneka’s Roundhouse [POT] is strength 1 + 3 = 4 (point 18; got ' + dRow.dealt + ')'); }
+
+      // b) point 17a: a maneuver to long reaches the other bot before it strikes -- both ways
+      { const g = duel141({ delay: 300, aHand: ['Apportation', 'Theft of Vitae'], dHand: ['Roundhouse'] });
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(aRow.range === 'long' && dRow.range === 'long' && g.D.hand.includes('Roundhouse') && dRow.dealt === 0,
+           '141b point 17a: the acting bot maneuvers to long, and the defender holding Roundhouse knows it before it strikes -- a hand strike does not reach: it keeps Roundhouse and its fist deals 0 (the play-test: Roundhouse at long; got ' + JSON.stringify({ a: aRow.range, d: dRow.range, keep: g.D.hand.includes('Roundhouse'), dealt: dRow.dealt }) + ')'); }
+      { const g = duel141({ delay: 300, aDeck: 'nosferatu', dDeck: 'tremere', aV: { name: 'Wauneka (G6)', cap: 5 }, dV: { name: 'Anxo Vilela (G6)', cap: 6 }, aHand: ['Roundhouse'], dHand: ['Apportation', 'Theft of Vitae'] });
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(aRow.range === 'long' && dRow.range === 'long' && g.A.hand.includes('Roundhouse'),
+           '141b ...and the other way round: the defender maneuvers in its answer, and the acting bot waits for that answer before it strikes (got ' + JSON.stringify({ a: aRow.range, d: dRow.range, keep: g.A.hand.includes('Roundhouse') }) + ')'); }
+
+      // c) point 7: nobody presses -- the 'nothing' lines end the waits, no askSecs of silence
+      { const g = duel141({ delay: 5, askSecs: 5, aHand: [], dHand: [] });
+        const ms = await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(ms < 1500 && aRow.continuing === false && dRow.continuing === false, '141c point 7: two bots that do not press finish the combat in ' + ms + ' ms at askSecs 5 (v0.6.201 sat out the whole press wait: 19 s at the client)');
+        const want = [/does not maneuver/, /has nothing before strikes/, /does not press/];
+        ok(want.every(re => lines141(g.A, re).length === 1 && lines141(g.D, re).length === 1), '141c ...each bot said each ‘nothing’ line once (the step’s answer)');
+        ok(!(aRow.hsMiss || dRow.hsMiss) && aRow.hs === 'a' && dRow.hs === 'b', '141c ...no wait ran into its safety net, and the rows say who spoke first (' + JSON.stringify([aRow.hs, dRow.hs, aRow.hsMiss || null, dRow.hsMiss || null]) + ')'); }
+
+      // d) the press step: a press to continue answered with a press to end; a press that stands; the defender's press answered
+      { const g = duel141({ delay: 30, aDeck: 'nosferatu', dDeck: 'ventrue', aV: { name: 'Wauneka (G6)', cap: 5, blood: 5 }, dV: { name: 'Alexa Draper (G6)', cap: 8, blood: 8 },
+                            aHand: ['Immortal Grapple', 'Roundhouse', 'Roundhouse'], dHand: ['Disengage'] });
+        await g.run();
+        const aR = g.A.rows.filter(r => r.round === 1), dR = g.D.rows.filter(r => r.round === 1);
+        ok(aR.length === 1 && dR.length === 1 && aR[0].continuing === false && dR[0].continuing === false && /end/.test(String(dR[0].press)) && !g.A.rows.some(r => r.round === 2) && !g.D.rows.some(r => r.round === 2),
+           '141d the acting Nosferatu presses to continue (its Grapple’s press) and the Ventrue defender answers with a press to end: both end the combat after round 1 (' + JSON.stringify([aR[0] && aR[0].press, dR[0] && dR[0].press]) + ')'); }
+      { const g = duel141({ delay: 30, aDeck: 'nosferatu', dDeck: 'ventrue', aV: { name: 'Wauneka (G6)', cap: 5, blood: 5 }, dV: { name: 'Alexa Draper (G6)', cap: 8, blood: 8 },
+                            aHand: ['Immortal Grapple', 'Roundhouse', 'Roundhouse'], dHand: [] });
+        await g.run();
+        const a1 = g.A.rows.find(r => r.round === 1) || {}, d1 = g.D.rows.find(r => r.round === 1) || {};
+        ok(a1.continuing === true && d1.continuing === true && g.A.rows.some(r => r.round === 2) && g.D.rows.some(r => r.round === 2),
+           '141d ...with no press to end the press stands: both bots fight round 2 (' + JSON.stringify([a1.continuing, d1.continuing, g.A.rows.length, g.D.rows.length]) + ')'); }
+      { const g = duel141({ delay: 30, aDeck: 'ventrue', dDeck: 'nosferatu', aV: { name: 'Alexa Draper (G6)', cap: 8, blood: 8, locked: true }, dV: { name: 'Wauneka (G6)', cap: 5, blood: 5 },
+                            aHand: ['Disengage'], dHand: ['Immortal Grapple', 'Roundhouse', 'Roundhouse'] });
+        await g.run();
+        const a1 = g.A.rows.find(r => r.round === 1) || {}, d1 = g.D.rows.find(r => r.round === 1) || {};
+        const dP = lines141(g.D, /presses to continue/), aE = lines141(g.A, /presses to end/), aN = lines141(g.A, /does not press/);
+        ok(a1.continuing === false && d1.continuing === false && dP.length === 1 && aE.length === 1 && aN.length === 1 && aN[0].at <= dP[0].at && dP[0].at <= aE[0].at,
+           '141d ...the acting Ventrue does not press, the defending Nosferatu presses to continue, and the Ventrue answers it with a press to end -- in that order, and both end (' + JSON.stringify([a1.press, d1.press]) + ')'); }
+
+      // e) point 7: a human watches a combat between bots -- each line waits a beat (a play the step beat, a 'nothing' line the short fx beat)
+      { const g = duel141({ delay: 5, paceMs: 300, human: true, aHand: [], dHand: [] });
+        await g.run();
+        const all = g.A.lines.concat(g.D.lines).sort((x, y) => x.at - y.at);
+        const gaps = []; for(let i = 1; i < all.length; i++){ const L = all[i]; if(/does not maneuver|has nothing before strikes|does not press/.test(L.txt)) gaps.push({ k: 'nothing', ms: L.at - all[i - 1].at }); else if(/ strikes /.test(L.txt) && L.tier === 'log') gaps.push({ k: 'strike', ms: L.at - all[i - 1].at }); }
+        const nothingOk = gaps.filter(x => x.k === 'nothing').every(x => x.ms >= 100), strikeFirst = gaps.filter(x => x.k === 'strike').map(x => x.ms);
+        ok(all.filter(L => /does not maneuver|has nothing before strikes|does not press/.test(L.txt)).length === 6 && gaps.filter(x => x.k === 'nothing').length >= 5 && nothingOk && Math.max(...strikeFirst) >= 250,
+           '141e point 7: with a human seated and paceMs 300, every ‘nothing’ line waits its beat (>= 100 ms) and the strikes the step beat (v0.6.201: the whole round in ~2 s, then silence; gaps ' + JSON.stringify(gaps.map(x => x.k[0] + x.ms)) + ')'); }
+      { const g = duel141({ delay: 5, paceMs: 300, human: false, aHand: [], dHand: [] });
+        const ms = await g.run();
+        ok(ms < 1500, '141e ...a table of bots alone is not paced in combat (the arena; ' + ms + ' ms)'); }
+
+      // f) point 17b: the tally's range is the HUMAN opponent's -- a bystander's counter write never moves a fight between bots
+      { const g = duel141({ delay: 0, human: true, aHand: ['Apportation', 'Theft of Vitae'], dHand: ['Roundhouse'] });
+        const base = { mode: 'combat' }, human = { mode: 'combat', who: 'Claude', rng: 'close' };   // Claude watches -- an auto-join wrote the counter's default range once the fight had begun
+        g.D._cTally = () => (g.D._inCombat ? human : base); g.A._cTally = () => (g.A._inCombat ? human : base);
+        await g.run();
+        const dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(dRow.range === 'long' && g.D.hand.includes('Roundhouse'), '141f point 17b: a bystander human’s counter (range close) does not override the maneuver to long the defender saw (the play-test: "the tally says close (a human’s correction)", then a fist at long; got ' + dRow.range + ')'); }
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, combatPhases: 0, log: () => {} });
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Claude', online: true }, { seat: 2, name: 'U', online: true, bot: true }]; u.send = () => {}; u.push = () => {}; u.fxClone = () => {}; u.chat = () => {}; u.note = () => {};
+        const v = DV(); u.board = [v]; u.hand = []; u.table = { 1: { pub: { cards: [{ kind: 'crypt', name: 'Lisa', zone: 'ready', blood: 3 }] } } };
+        u._inCombat = true; u._combatOppName = 'Lisa'; u._cBase = { mode: 'combat' }; let tl = { mode: 'combat' }; u._cTally = () => tl;
+        u._awaitOppManeuver = () => { tl = { mode: 'combat', who: 'Claude', rng: 'long' }; return Promise.resolve(null); };
+        u._awaitOppStrike = () => Promise.resolve({ vamp: 'Lisa', dodge: false, dealt: 1 }); u._awaitOppGrapple = () => Promise.resolve(null); u._awaitOppTaken = () => Promise.resolve(null);
+        await u._resolveCombatRound(v);
+        ok(u._rnd.range === 'long', '141f ...the human I fight still corrects my range from the tally, as before (got ' + u._rnd.range + ')'); u._inCombat = false; }
+
+      // g) point 5: a hold stops my own combat moves against a human -- the next step, and my strike after the human's own strike line
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Claude', online: true }, { seat: 2, name: 'U', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {};
+        u._tempoSet({ tempo: 'standard', waitSecs: 1 }, true);
+        const v = DV(); u.board = [v]; u.hand = []; u.table = { 1: { pub: { cards: [{ kind: 'crypt', name: 'Lisa', zone: 'ready', blood: 3 }] } } };
+        u._inCombat = true; u._combatOppName = 'Lisa';
+        u._holdBy = new Set(['Claude']);
+        let done = false; const p = u._phaseStep(1, 'ask', false).then(() => { done = true; });
+        await sleep(150);
+        const asked = u.sent.some(m => (m.t === 'chat' && /Any maneuvers/.test(m.msg)) || (m.t === 'tally' && m.ph === 1));
+        ok(!asked && !done, '141g point 5: while a human holds, my next combat step waits -- no question, no ph write (v0.6.198 froze only the clocks)');
+        u._holdBy.clear(); u._holdAnnounced = false;
+        await sleep(250);
+        ok(u.sent.some(m => m.t === 'chat' && /Any maneuvers/.test(m.msg)), '141g ...and after the release the step is asked');
+        if(u._phaseWait) u._phaseWait.resolve('pass'); await p; u._inCombat = false; }
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Claude', online: true }, { seat: 2, name: 'U', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {};
+        u._tempoSet({ tempo: 'turn', waitSecs: 3 }, true);
+        const v = DV(); u.board = [v]; u.hand = []; u.table = { 1: { pub: { cards: [{ kind: 'crypt', name: 'Lisa', zone: 'ready', blood: 3 }] } } };
+        u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = v;
+        const strikes = () => u.sent.filter(m => m.t === 'log' && /strikes/.test(strip141(m.html)) && /Wauneka/.test(strip141(m.html))).length;
+        let fin = false; const pr = u._resolveCombatRound(v).then(() => { fin = true; });
+        for(let i = 0; i < 100 && !(u._phaseWait && u._phaseWait.step === 3); i++){ if(u._phaseWait) u._onChat('Claude', 'No'); await sleep(20); }
+        const atStrike = !!(u._phaseWait && u._phaseWait.step === 3);
+        u._holdBy = new Set(['Claude']); u._holdFreeze('Claude');
+        u._onLog('Claude', '<b>Lisa</b> strikes (hands) for 1.');            // the human's own strike answers the held step
+        await sleep(200);
+        const heldStrikes = strikes();
+        u._holdBy.clear(); u._holdAnnounced = false; u._holdThaw();
+        for(let i = 0; i < 40 && !strikes(); i++) await sleep(20);
+        ok(atStrike && heldStrikes === 0 && strikes() === 1, '141g ...the human’s strike line ends the held strike step, but my own strike waits for the release (the play-test: the steal, ph 4 / 5 and "Any presses?" all went out under the hold; got held ' + heldStrikes + ', after ' + strikes() + ')');
+        for(let i = 0; i < 60 && !fin; i++){ if(u._phaseWait) u._onChat('Claude', 'No'); await sleep(20); }
+        u._inCombat = false; }
+
+      // h) point 18: Roundhouse is the vampire's hand damage + 2
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        const ryan = { id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', blood: 4, cap: 4, attached: [] };
+        u.board = [ryan]; u.hand = ['Roundhouse']; u._range = 'close';
+        const s1 = u._bestStrikeFor(ryan);
+        u.board.push({ id: 'ps1', name: 'Preternatural Strength', kind: 'lib', zone: 'ready' }); ryan.attached = ['ps1'];
+        const s2 = u._bestStrikeFor(ryan);
+        ok(s1 && s1.n === 3 && s2 && s2.n === 4, '141h point 18: Roundhouse [pot] with Ryan deals 1 + 2 = 3, and 4 with Preternatural Strength [pot] (v0.6.201: 2 and 2 -- "+2 damage" was compiled as the absolute strike 2; got ' + (s1 && s1.n) + ' / ' + (s2 && s2.n) + ')'); }
+
+      // i) point 19: two Thefts at once -- the blood moves by the total of gain and loss, and nothing drains off
+      { const g = duel141({ delay: 30, aDeck: 'tremere', dDeck: 'tremere', aV: { name: 'Anxo Vilela (G6)', cap: 6, blood: 5 }, dV: { name: 'Chrysanthemum (G6)', cap: 5, blood: 4 },
+                            aHand: ['Theft of Vitae'], dHand: ['Theft of Vitae'] });
+        await g.run();
+        ok(g.aV.blood === 5 && g.dV.blood === 4, '141i point 19: both combatants play Theft of Vitae [THA] -- they resolve together: Anxo 5 + 2 - 2 = 5, Chrysanthemum 4 + 2 - 2 = 4 [ANK 20200123] (v0.6.201: 5 + 2 = 7 -> 6 at capacity -> 4; got ' + g.aV.blood + ' / ' + g.dV.blood + ')'); }
+
+      // j) the v0.6.140 audit: pool lost in my own unlock phase
+      { const mkU = () => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+          u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }]; u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; return u; };
+        { const u = mkU(); u.pool = 1; u.board = [{ id: 'j1', name: 'Smiling Jack, The Anarch', kind: 'lib', zone: 'ready', counters: [] }];
+          u._menaceUnlockEngine();
+          ok(u.out === true && u.sent.some(m => m.t === 'bounty'), '141j the v0.6.140 audit: my last pool moved to my own Smiling Jack ousts me (v0.6.201: on at 0 pool)'); }
+        { const u = mkU(); u.pool = 3; const v = { id: 'v1', name: 'Zip', kind: 'crypt', zone: 'ready', blood: 2, cap: 3 }; u.board = [v];
+          u.table = { 1: { pub: { cards: [{ id: 'jj', kind: 'lib', zone: 'ready', name: 'Smiling Jack, The Anarch', counters: ['pool', 'pool', 'pool'] }] } } };
+          u._menaceUnlockEngine();
+          ok(v.blood === 0 && u.pool === 2 && !u.out, '141j ...an opponent’s Jack with 3 counters below my pool floor: 2 blood from Zip, the last 1 from pool -- an empty vampire does not lessen it [LSJ 19971212] (v0.6.201: Zip 2 -> 0 and the third counter forgiven; got blood ' + v.blood + ', pool ' + u.pool + ')'); }
+        { const u = mkU(); const fl = Math.round(4 * ((u.persona && u.persona.aggression) || 1)); u.pool = fl; const v = { id: 'v1', name: 'Zip', kind: 'crypt', zone: 'ready', blood: 3, cap: 3 }; u.board = [v];
+          u.table = { 1: { pub: { cards: [{ id: 'jj', kind: 'lib', zone: 'ready', name: 'Smiling Jack, The Anarch', counters: Array(fl).fill('pool') }] } } };
+          u._menaceUnlockEngine();
+          ok(u.pool === 1 && v.blood === 2 && !u.out, '141j ...as many counters as my pool (' + fl + ', at my pool floor): ' + (fl - 1) + ' pool and 1 blood -- never my last pool while blood can pay (v0.6.201: pool 0, and the bot played on; got pool ' + u.pool + ', blood ' + v.blood + ')'); }
+        { const u = mkU(); u.pool = 1; u._famedMine = new Set(['Zip']); u.board = [{ id: 'v1', name: 'Zip', kind: 'crypt', zone: 'torpor', blood: 0, cap: 3 }];
+          u._menaceUnlockEngine();
+          ok(u.out === true, '141j ...Fame’s unlock drain on my last pool ousts me'); }
+        { const u = mkU(); u.pool = 1; u.board = [{ id: 'j1', name: 'Smiling Jack, The Anarch', kind: 'lib', zone: 'ready', counters: [] }, { id: 'v1', name: 'Zip', kind: 'crypt', zone: 'ready', blood: 2, cap: 3, locked: true }];
+          u.hand = ['Govern the Unaligned']; u.unc = []; u.turnSeat = 2; let terr = null;
+          try { await u._playTurn(); } catch(e){ terr = e.message; }
+          const after = u.sent.map(m => m.t === 'log' ? strip141(m.html) : null).filter(Boolean);
+          const io = after.findIndex(l => /is ousted/.test(l));
+          ok(!terr && u.out === true && u.sent.some(m => m.t === 'pass') && io >= 0 && !after.slice(io + 1).some(l => /^Phase:|Turn passed/.test(l)), '141j ...and the turn stops there: no master phase, no actions, no "Turn passed." -- the pass hands the turn on (got ' + (terr ? 'error ' + terr : JSON.stringify(after.slice(io))) + ')'); }
+      }
+
+      // k) the event-log doctrine: the three new frozen lines have their kinds in the same release; a stale line is dropped
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        const ks = ['Viktor combat — Wauneka (G6) does not maneuver.', 'Viktor combat — Wauneka (G6) has nothing before strikes.', 'Viktor combat — Wauneka (G6) does not press.'].map(t => u._evClassify('Viktor', t, 'log'));
+        ok(ks.every(e => e && e.none === true && e.vamp === 'Wauneka (G6)') && ks.map(e => e.kind).join() === 'maneuver,pre-strike,press', '141k the three ‘nothing’ lines are typed in the same release: maneuver / pre-strike / press, none (' + JSON.stringify(ks.map(e => e && e.kind)) + ')');
+        u.seat = 1; u.started = true; u.players = [{ seat: 1, name: 'U', bot: true }, { seat: 2, name: 'Viktor', bot: true }]; u.send = () => {}; u.push = () => {};
+        u._inCombat = true; u._combatOppName = 'Wauneka (G6)';
+        u._onLog('Viktor', 'Viktor combat — Wauneka (G6) plays Immortal Grapple: strikes that are not hand strikes cannot be used this round (by either combatant).');
+        u._onLog('Viktor', '<b>Wauneka (G6)</b> strikes (hands) for 1.');
+        await u._awaitOppStrike(50);
+        const dropped = typeof u._hsDropStale === 'function' ? u._hsDropStale() : 0;
+        ok(dropped === 1 && u._oppGrapple === undefined, '141k a Grapple line still unconsumed when its round’s strike was taken is dropped at the next round -- it never restricts round 2 (point 16’s second bug)'); u._inCombat = false; }
+    }
+
 
 
     }
