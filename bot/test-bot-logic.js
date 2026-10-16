@@ -6843,7 +6843,7 @@ async function connectWithRetry(client, tries = 30){
   let pressed = 0; const bp = d._bestPressFor.bind(d); d._bestPressFor = vv => { pressed++; return bp(vv); };
   await d._resolveCombat(al, 'Lenny Burkhead');
   const Ld = logs(d);
-  ok(Ld.indexOf('Alexa Draper strikes: Majesty \u2014 no damage either way this round.') >= 0 && Ld.indexOf('Combat ends \u2014 Majesty.') > Ld.indexOf('Alexa Draper strikes: Majesty \u2014 no damage either way this round.'), '97d the wire: the dodge-shaped strike line (a bot opponent takes and deals 0), then `Combat ends`');
+  ok(Ld.indexOf('Alexa Draper strikes: combat ends.') >= 0 && Ld.indexOf('Combat ends \u2014 Majesty.') > Ld.indexOf('Alexa Draper strikes: combat ends.'), '97d the wire: the protocol\u2019s one-line combat-ends strike (v0.6.202; the dodge-shaped line was read as a dodge by a bot that resolved before the second line came), then `Combat ends` with the card');
   ok(al.blood === 2 && al.locked === false && al.zone === 'ready' && d.hand.indexOf('Majesty') < 0 && d.hand.indexOf('Hidden Strength') >= 0, '97d 1 blood paid, Alexa UNLOCKS, no prevent card wasted');
   ok(pressed === 0 && d._inCombat === false, '97d no press step after I ended the combat');
   const o = mk97(); o._inCombat = true; o._onLog('Alice', 'Combat ends \u2014 <b>Majesty</b>.'); ok(o._oppEndedCombat === true, '97d the OPPONENT side: the line marks the combat as over (no press into it)');
@@ -9339,6 +9339,7 @@ async function connectWithRetry(client, tries = 30){
           return u; };
         const A = mk('Hanna', 1, o.aDeck || 'tremere'), D = mk('Viktor', 2, o.dDeck || 'nosferatu');
         const wire = (from, to) => { from.send = m => {
+          if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0); return; }   // the quick phrases (a rushed bot's Pass)
           if(!m || (m.t !== 'log' && m.t !== 'chat')) return;                            // tallies, boards, fx: not needed between two bots here
           const txt = m.t === 'log' ? strip141(m.html) : String(m.msg || '');
           from._evRecord(from.o.name, txt, m.t, true);                                  // my own lines enter my event log, as the real send does
@@ -9527,6 +9528,41 @@ async function connectWithRetry(client, tries = 30){
         await u._awaitOppStrike(50);
         const dropped = typeof u._hsDropStale === 'function' ? u._hsDropStale() : 0;
         ok(dropped === 1 && u._oppGrapple === undefined, '141k a Grapple line still unconsumed when its round’s strike was taken is dropped at the next round -- it never restricts round 2 (point 16’s second bug)'); u._inCombat = false; }
+
+      // l) found by R2's arena smoke: a Deep Song rush between two bots. The rushed bot that cannot block now says Pass, so the rusher's directed
+      //    ask closes at once (it ran its whole clock while the target was already fighting, and the first handshake wait gave up on it); and
+      //    Deep Song makes the RUSHED vampire the acting minion ("the target vampire is considered the acting minion during that combat") -- it speaks first
+      { const g = duel141({ delay: 5, askSecs: 2, aDeck: 'nosferatu', dDeck: 'malkavian', aV: { name: 'Wauneka (G6)', cap: 5, blood: 5, locked: true }, dV: { name: 'Gelasia Fotiou', cap: 6, blood: 5, locked: false } });
+        g.A._actingVamp = { v: g.aV, n: 1, played: new Set(), target: 2, kind: 'rush' }; g.A._combatArmed = true;   // the rusher's branch arms at the announce (v0.6.202)
+        const t0 = Date.now(); const ask = g.A._askBlock('Trainbot: Wauneka (G6) rushes Gelasia Fotiou (Deep Song [ANI]). Block?');
+        g.A.send({ t: 'log', html: '<b>Wauneka (G6)</b> plays <b>Deep Song</b> [ANI] — rushes <b>Viktor</b>\'s <b>Gelasia Fotiou</b>.' });
+        const ans = await Promise.race([ask, sleep(3000).then(() => ({ what: 'timeout' }))]); const askMs = Date.now() - t0;
+        ok(ans.what === 'no' && askMs < 600 && g.dV.locked === true, '141l a Deep Song rush at a bot with no other unlocked minion: it says Pass as it complies, and the rusher’s window closes at once (' + askMs + ' ms; v0.6.201 stayed silent and the rusher waited out askSecs while the target already fought)');
+        if(g.A._ask) g.A._answer('no', null);
+        g.A._actingVamp.targetActs = true;                                           // the rusher's through path (v0.6.202)
+        await Promise.race([g.A._resolveCombat(g.aV, g.dV.name), sleep(8000)]);
+        for(let i = 0; i < 100 && g.D._inCombat; i++) await sleep(20);
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        const dM = lines141(g.D, /does not maneuver/), aM = lines141(g.A, /does not maneuver/);
+        ok(dRow.hs === 'a' && aRow.hs === 'b' && !aRow.hsMiss && !dRow.hsMiss && dM.length === 1 && aM.length === 1 && dM[0].at <= aM[0].at,
+           '141l ...and the RUSHED vampire is the acting minion of that combat (Deep Song): it speaks first, the rusher answers, no wait runs into its safety net (got ' + JSON.stringify([dRow.hs, aRow.hs, dRow.hsMiss || null, aRow.hsMiss || null]) + ')'); }
+
+      // m) found by R2's arena smoke: a combat-ends strike is one line now -- a bot that resolved its strike before a second line came read a DODGE
+      { const g = duel141({ delay: 5, askSecs: 2, aDeck: 'ventrue', dDeck: 'tremere', aV: { name: 'Alexa Draper', cap: 8, blood: 4, locked: true }, dV: { name: 'Anxo Vilela (G6)', cap: 6, blood: 5 },
+                            aHand: ['Majesty'], dHand: ['Theft of Vitae'] });
+        { const d0 = g.A.decide.bind(g.A); g.A.decide = (q, ctx) => q === 'combat-end' ? { end: true, why: 'test: the Majesty is played' } : d0(q, ctx); }   // the decision is section 97's; this test is the wire
+        const ms = await g.run();
+        const dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(dRow.end === 'opp-ended' && !dRow.hsMiss && g.dV.blood === 5 && ms < 1500, '141m the acting Ventrue plays Majesty: the Tremere reads ONE line, "strikes: combat ends." -- its steal never lands, and it ends the combat without a press step (v0.6.201 read the dodge-shaped line as a dodge and waited out a press step nobody answered; got ' + JSON.stringify({ end: dRow.end, miss: dRow.hsMiss || null, blood: g.dV.blood, ms }) + ')'); }
+
+      // n) found by R2's arena smoke: the press decision reads THIS round's taken line -- round 1's 'now 2' passed for round 2's
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 1; u.players = [{ seat: 1, name: 'U', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
+        const v = DV(); u.board = [v]; u.hand = ['Roundhouse']; u._range = 'close'; u._combatOppName = 'Donny Kowalczyk';
+        u._oppLastTaken = { vamp: 'Donny Kowalczyk', n: 1, down: false, now: 2, at: Date.now() - 1000 };   // round 1's line, a second ago
+        u._rndAt = Date.now() - 200;                                                                       // round 2 began after it
+        const w = u._wantPress(v, true);
+        ok(w.tag !== 'torpor-shot', '141n round 1’s taken line ("now 2") does not stand in for round 2’s: no torpor shot decided on it (the smoke: a Stray burned for a press into a vampire already in torpor, then a phantom round 3; got ' + w.tag + ')'); }
     }
 
 
