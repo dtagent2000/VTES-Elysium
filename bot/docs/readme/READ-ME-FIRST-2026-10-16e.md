@@ -96,10 +96,19 @@ Johan (16 Oct, 18:01): bake the dodge into R4. Start a fresh chat for it, and br
 - **R4 of the review:** the uncurated V5 masters (Haven Uncovered as Johan decided: not played until the bot can rush through it, then on an opponent's vampire) and Revelations against a bot (F21).
 - **The dodge.** Johan, 16 Oct 17:47: "for now, play it against everything with 2 or more damage, that is when my own strike no longer gives equal or better output; more dynamic once the knowledge layer can assume what the opponent does (a deck that probably never hits for more than 1: play the dodge anyway); and play it when holding several."
   - **Today**, in `decide('combat-strike')`: a known strike is dodged only when it would empty or torpor the vampire or is aggravated; an unknown one only at blood ≤ 1.
-  - **My proposal.** Points 2 and 3 need Johan's answer at the start of the round; the recommendations stand if he has none.
+  - **Decided with Johan (16 Oct, 18:06):** points 1–3 as below, point 4 later.
     1. A known strike (it came first: a bot actor's, a human acting under the phases, the Deep Song rusher's): dodge when it would do more to me (damage + steal; aggravated always) than my own best strike would deal this round (fists with strength, a strike card or weapon, a steal; fists deal 0 at long range). With fists for 1 that is exactly "2 or more". The survival rule stays.
-    2. With two or more dodges in hand, the tie goes to the dodge (equal output). Recommended.
-    3. An unknown strike (the bot strikes first): dodge at an expected strike of 2 or more that is also more than mine, using the expected strike Majesty already uses (`_ceCtx`, knob `combatEndStats`). Or keep today's blood-≤-1 rule until the layer grows. Recommended: the expected strike.
+    2. With two or more dodges in hand, the tie goes to the dodge (equal output). Johan: yes.
+    3. An unknown strike (the bot strikes first): dodge at an expected strike of 2 or more that is also more than mine, using the expected strike Majesty already uses (`_ceCtx`, knob `combatEndStats`). Johan: yes.
     4. Later, with the knowledge layer: a deck that never hits for more than 1 → dodge against 1 too.
   - **Where:** `decide('combat-strike')`, plus a helper with no side effects for "my output this round", cut from the strike choice in the combat round (the same `_bestStrikeFor` / `_bestStealStrikeFor` / fist arithmetic, never splicing the hand).
-- **Then:** the scenario in main's rig with `--dir`, compared with the 14 Oct numbers, and the larger re-measure Johan asked for once every fix is in.
+- **After R4** (R4 is the review's last round):
+  1. The play-test scenario in main's rig, run by us with `--dir` on a scratch copy of the root with the bot branch (decision 6), compared with the 14 Oct report's numbers. This is the proof that R0–R4 fixed what the play-test found.
+  2. The larger re-measure in the arena, once every fix is in (Johan's answer 4).
+  3. Parked, outside the review:
+     - one pool question with per-seat answers at a political action ("Hanna 3, Viktor 0"; designed after R4, decision 4);
+     - a human's bounce of a bot's bleed (handoff v0.6.203 §3);
+     - a bot new target bouncing onward;
+     - when a bot target plays its reduce card;
+     - the dodge's knowledge-layer step (point 4);
+     - the tempo lever for a watched bot-vs-bot combat (Johan: wait and see).
