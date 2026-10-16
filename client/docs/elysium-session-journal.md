@@ -1,3 +1,81 @@
+## [BESÖKET OVANIFRÅN] (16 oktober 2026, sen eftermiddag, klient v2.6.161)
+
+Johan, efter att PR #18 mergats: "Känner vi oss klara då? Eller fanns det något mer? :)". Om ?-knappen sa han: "Jag
+känner inte att vi behöver göra något särskilt med frågetecken-ikonen just nu." Jag körde ögats två otestade punkter
+(online och pekskärm), hittade ett gammalt fel i platsbesöket och föreslog en fix. Johan: "Aha ja men absolut gör det".
+Jag tog det som ja till både fixen (v2.6.161) och en ny projektkopia av START-HERE.
+
+**Ögat online och på pekskärm (v2.6.160, kört efteråt):** 21 av 21.
+- **Upplägg:** två människor på den riktiga servern i ett Structured-rum. Bob hade emulerad pekskärm (`hasTouch`), och
+  klienten slog själv på `body.touchui`.
+- **Lägena:**
+  - svagt vid given;
+  - på 0,6 s efter Alices kast, vilket är pushens 600 ms;
+  - tänt direkt vid beviljan (8 ms), med antalet kort;
+  - antalet följer med när hon kastar igen;
+  - tillbaka till på direkt vid återkallan.
+- **Raderna:** Inspect visar hennes riktiga hand och askhögen visar rätt kort.
+- **Pekskärm:** tryck och långtryck öppnar raderna i besöket, i helikoptervyn och i den utfällda prey-kolumnen i Normal
+  vy. Långtrycket gick genom klientens egen långtrycksmotor, via CDP. Ingenting hoppar till en annan plats, bordet
+  panorerar inte och kolumnen fälls inte in.
+- **Edge-token i hörnet:** dras en Edge-token dit ligger ögat överst (z 7 mot 6) och täcker en bit av den. Båda syns och
+  ögat går att klicka på. Ingen ändring.
+
+**Funnet på vägen, och gammalt:** felet finns likadant i v2.6.158 och v2.6.159.
+- Ett platsbesök från helikoptervyn (V, sedan en siffra) stod på det pensionerade L1-stadiet. `exitL3` tar bort
+  `l2cols`, så `fitBoard` skalade den fasta 1004 × 616-scenen, och handdockan (`#l2dock`) fanns inte.
+- I headless Chromium blev besöket dessutom för stort: 1172 px brett i en yta på 1098 px vid 1366×768. Det gav 37 px
+  under panelen och 37 px utanför fönstret, med ⌂ Home och poolzonen delvis utanför. Vid 1024×768 försvann Home och hela
+  poolzonen.
+
+**Storleken hade en egen orsak: `setAside` mätte panelen vid fel tidpunkt.**
+- Reservtimern på 250 ms avgjorde loppet. Kom panelens egen `transitionend` senare än timern, kastades den.
+- I headless kom ingen bildruta på 225 ms efter vyväxlingen, medan timrarna gick som vanligt; tidslinjen stod på 15 ms.
+  Övergången startade vid 215 ms och slutade vid 365 ms. Timern vid 250 ms såg panelen på 24 px, och sedan mätte ingen
+  igen.
+- På en dator vars bildrutor hinner med blev det gamla besöket troligen brevlådeformat och utan docka i stället. Båda
+  utfallen är fel, och fixen tar bort båda.
+
+**Byggt (v2.6.161, ren klient, purge; ingen wire-ändring):**
+- `switchView`: ett besök som kommer från helikoptervyn går in i L2 först (`enterL2()`), precis som ett besök från
+  Normal vy står på L2. Det sker innan `renderReady` och `renderHand` körs.
+- `setAside`:
+  - det nyaste anropet äger panelens övergång, med en lyssnare och en reservtimer;
+  - panelens egen `transitionend` skickar alltid den sista resize-händelsen;
+  - reservtimern skickar bara om den inte redan har kommit;
+  - ett barnelements övergång räknas inte.
+- Ett Classic-besök (L4, sedan en siffra) får samma sista mätning.
+
+**Kört i Chromium** (`visit-161.js`, den riktiga servern):
+
+| Bord | v2.6.161 | v2.6.160 |
+| --- | --- | --- |
+| Tre människor online, Structured | 13/13 | 8/13 |
+| Hotseat med två bottar | 13/13 | 8/13 |
+| Classic, fem besök | 5/5 rätt efter 1 och 2,5 s | 3 av 5 fastnade för stora |
+| Ögat online med pekskärm | 21/21 | – |
+
+Structured-körningarna gick igenom:
+- hem → besök (kontrollen);
+- helikopter → besök, mätt vid 0,3, 1 och 2,5 s;
+- vägarna ut: Home, Esc, samt V tillbaka till helikoptervyn utan peek-flikar;
+- besök → besök;
+- fönstren 1366×768, 1920×1080, 1280×720 och 1024×768.
+
+**Grindar:**
+- klientsviten 301/0. De 2 nya är röda på v2.6.160, och det asynkrona faller just på "panelens eget slut efter
+  reservtimern". 10 av 10 mutanter fångas;
+- kanariefågeln 69/0, dispatch 68/0, protokoll 6/0, endpoint 24/0;
+- soak `--control` exit 0;
+- B1 byte-identisk;
+- embed `--check` på båda sidorna;
+- check-versions grön.
+
+**Otestat:**
+- en riktig telefon eller iPad (bara emulerad pekskärm);
+- en riktig webbläsare på en långsam dator, där loppet kan uppstå;
+- en åskådare som besöker från helikoptervyn (samma väg, men inte körd).
+
 ## [ÖGAT] (16 oktober 2026, eftermiddag, klient v2.6.160)
 
 Johan, efter att v2.6.159 mergats: "i structured är det ju perfekt att lägga öga-symbolen bredvid poolen på samma ställe som

@@ -1,8 +1,30 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.160 / server v2.6.46 / bot v0.6.201 tested beside the suite, last updated 16 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.161 / server v2.6.46 / bot v0.6.201 tested beside the suite, last updated 16 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**16 Oct 2026, late afternoon (THE VISIT FROM ABOVE — v2.6.161):**
+- **A backstop must not swallow the real signal.** `setAside`'s 250 ms timer was there for a `transitionend` that never
+  comes. In practice it settled the race: when it fired first, a late `transitionend` was dropped, and whatever had been
+  measured mid-transition stayed.
+  - Frames can stall while timers run. In headless Chromium there was one frame in 225 ms, and the document timeline
+    stood at 15 ms while `setInterval` ticked every 25 ms. A CSS transition then starts late, and a timer that measures
+    sees the old geometry.
+  - The fix: the backstop is provisional and the element's own end is final.
+- **A view with no frame of its own falls back to the oldest one.** `exitL3` and `exitL4` leave the board without
+  `l2cols`, and in `fitBoard` that means the retired L1 stage. A visit from L2 stands on L2. A visit from L3 had stood on L1
+  for months, without the hand dock.
+  - When a view can be entered from several places, measure it from each: Home → visit, helicopter → visit, visit →
+    visit, and out again by Home, Esc and V, at several window sizes. The recipe is in SKILLS.md.
+- **Check what the probe itself assumes.**
+  - `offsetParent` is null for `position:fixed` elements such as the L2 peek tabs. Use `getClientRects().length` to ask
+    whether an element is shown.
+  - A check at a fixed delay can land in the middle of an animation. The Classic visit is sized in code and follows the
+    panel when its transition ends, so judge it once it has settled (1 s and 2.5 s), not mid-flight.
+- **What headless shows is not always what a player sees.** Headless Chromium produced the overflow every time (37 px
+  past each side at 1366×768). On a machine whose frames keep up, the old visit was more likely letterboxed and without
+  the dock. Both are wrong, and the fix removes both, but the description to Johan had to say which one we had measured.
 
 **16 Oct 2026, afternoon (THE EYE — v2.6.160):**
 - **A check that cannot fail needs a control beside it.** "A wheel over the eye does not zoom" means something only

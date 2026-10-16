@@ -389,7 +389,9 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   hotRevealToBots: (typeof hotRevealToBots!=='undefined'?hotRevealToBots:undefined), hotOpenHandToBots: (typeof hotOpenHandToBots!=='undefined'?hotOpenHandToBots:undefined),
   revealHandTo: (typeof revealHandTo!=='undefined'?revealHandTo:undefined), openHandGrant: (typeof openHandGrant!=='undefined'?openHandGrant:undefined), openHandRevoke: (typeof openHandRevoke!=='undefined'?openHandRevoke:undefined), refreshOpenHands: (typeof refreshOpenHands!=='undefined'?refreshOpenHands:undefined),
   setNameTarget: (typeof setNameTarget!=='undefined'?setNameTarget:undefined), openHandCardsFor: (typeof openHandCardsFor!=='undefined'?openHandCardsFor:undefined), canSeeOpenHand: (typeof canSeeOpenHand!=='undefined'?canSeeOpenHand:undefined), oppPoolMenuItems: (typeof oppPoolMenuItems!=='undefined'?oppPoolMenuItems:undefined),
-  botDebugSync: (typeof botDebugSync!=='undefined'?botDebugSync:undefined), get BLEED_LINE(){ return (typeof BLEED_LINE!=='undefined')?BLEED_LINE:undefined; }
+  botDebugSync: (typeof botDebugSync!=='undefined'?botDebugSync:undefined), get BLEED_LINE(){ return (typeof BLEED_LINE!=='undefined')?BLEED_LINE:undefined; },
+  setAside: (typeof setAside!=='undefined'?setAside:undefined),   // v2.6.161: the side panel's settle (a late transitionend still sends the final resize)
+  switchView: (typeof switchView!=='undefined'?switchView:undefined)   // v2.6.161: a seat visit from the helicopter view stands on L2
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',
@@ -404,7 +406,8 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   // api.__stubEl.classList._t to turn a view mode on (e.g. 'l4mode' for the Classic free board).
   try { Object.defineProperty(api, '__stubEl', { value: env.documentStub.getElementById(), enumerable:false }); } catch (e) {}
   try { Object.defineProperty(api, '__ls', { value: env.localStorageStub, enumerable:false }); } catch (e) {}   // v2.6.117: the localStorage stub, so a test can read what an autosave actually wrote
-  try { Object.defineProperty(api, '__doc', { value: env.documentStub, enumerable:false }); } catch (e) {}   // v2.6.110: the document stub itself, so tests can inject named IDs for $()
+  try { Object.defineProperty(api, '__doc', { value: env.documentStub, enumerable:false }); } catch (e) {}
+  try { Object.defineProperty(api, '__win', { value: env.windowStub, enumerable:false }); } catch (e) {}   // v2.6.161: the window stub (its writes persist), so a test can count the resize events the client dispatches   // v2.6.110: the document stub itself, so tests can inject named IDs for $()
   return api;
 }
 
