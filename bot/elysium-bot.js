@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.199'; // v0.6.199 (15 Oct 2026, R0 of the 14 Oct play-test review -- the groundwork): (1) A PLACEMENT ALWAYS RETURNS -- main's Classic review (13 Oct) found _openSlot scanning for ever once a Classic row's 4-11 distinct points were held (slot() clamps x at the felt's edge): the bot's process spun, and a lobby bot froze the host's whole tab. The scan now stops after 200 indices and a full row stacks the next card round the row's points, fanned toward the table's middle and kept on the felt (_stackSlot); a freed point is taken first again; Structured is unchanged byte for byte. (2) START-HERE-BOTS.html: main's two sentences (the human manages their own pool, blood, costs and Edge; a played card books nothing on the counter), the panel's Release hold frees one bot, 'curated to 100 %' corrected (four V5 masters do nothing for the bot yet), the taken line is a report. (3) The read-only copies are client v2.6.158 / srv-2.6.46 / protocol v2.6.158, so the suite, the arena and the canary run on what is live. Previous: v0.6.198 the hold freeze -- full notes in elysium-bot-CHANGELOG.md.
+const BOT_VERSION = '0.6.200'; // v0.6.200 (16 Oct 2026, R1 of the 14 Oct play-test review -- rules and deadlocks): (1) Turn-based: the LAST Pass of a contested undirected block ends it whoever says it (a bot passing last left the table waiting for a clock Turn-based never arms), and a reminder names only who is still awaited. (2) The human's automatic taken line answers the damage step only, never 'Any presses?'. (3) A directed action is its target's business: the client's Target suffix (inherited by the card's own action row) or the actor's prey -- no other seat asks what it costs or may block it; a cross-table seat says nothing about an undirected action. (4) A reduced bleed stays reduced on both sides (the target's reduce line lowers the actor's total; the actor's '(= T)' no longer undoes the target's reduction), and a bleed of 0 moves no Edge. (5) The Edge is unique: taking it is said on the wire (edgeTake), another seat's edgeTake clears mine, an edgePass gives it to me. (6) A card is dead only when no vampire of mine can use it -- ready, in torpor or still uncontrolled (Johan's Tremere threw away Theft of Vitae with no vampire out yet). (7) One Creeping Sabotage tick is counted once (the predator's 'ticks' note is gone; the event log tells line / note / ack apart). (8) The steal's round line says what drained off at capacity. (9) Debug is for the humans only: the open hand goes seat by seat to the humans when another bot sits at the table; --debug / --no-debug-weights on the command line; refused at a Tournament table. Previous: v0.6.199 a placement always returns -- full notes in elysium-bot-CHANGELOG.md.
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -434,6 +434,7 @@ const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 const L12 = {
   bleed:  /^(.+?) bleeds for (\d+)\.(?: Target: (.+?)\.)?$/,
   add:    /^(.+?) adds \+(\d+) bleed \(= (\d+)\)\.(?: Target: (.+?)\.)?$/,
+  reduce: /^(.+?) plays (.+?) \u2014 reduces the bleed by (\d+) \(now (\d+)\)\.$/,   // v0.6.200 (play-test 14 Oct, point 15): the TARGET's own frozen line since N4c (_commitReduce) -- the acting bot never read it, so its +0 total (= the old n) undid the reduction. The event log keeps typing it card-played (the knowledge layer's feed)
   block:  /^Block: Stealth (-?\d+) vs Intercept (-?\d+) \u2014 block (succeeds|fails)\.$/,   // VA review (2 Aug, rulebook-verified): stealth/intercept 'can decrease even below 0' (vekn.net Detailed Turn Sequence) and the verdict is the RAW comparison -- the grammar accepts negatives so a bare Christine's -1 or a Royce-taxed announce parses
   poolDmg: /^(.+?) plays (.+?)(?:: burns the Edge)? \u2014 (\d+) pool damage to (.+?)\.$/,   // fas B (16 July)
   cancel: /^(.+?) plays (.+?): cancels the block attempt by (.+?) \u2014 that minion cannot try again\.$/,   // fas C (16 July): Elder Impersonation-class superior -- the attempt fails outright; the defender's own attempted-set (registered at ATTEMPT time, fas A+) already excludes the minion, so the receiving side is exactly the fails-branch code path   // fas B (16 July): Inside Dirt-class -- DIRECTED pool damage that is NOT a bleed (unbouncable: Deflection's own text is "only usable by the Methuselah being bled"); the Edge phrase is optional so future non-Edge poolDmg cards share the grammar
@@ -744,7 +745,7 @@ class Bot {
     }
     if(s.step === 'resolve-ask'){
       if(!this._ask) return { did: null, why: 'the ask resolved itself first' };
-      this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b>: reaction window closed from the table controls (nobody answered).' });
+      { const a0 = this._ask, by = [...((a0 && a0.passed) || [])]; this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b>: reaction window closed from the table controls (' + (a0 && a0.contested ? 'the block is resolved from the counter' : by.length ? esc(by.join(', ')) + ' passed' : 'nobody answered') + ').' }); }   // v0.6.200 (point 8): it said 'nobody answered' after both blockers had passed
       this._ask._end = 'button';   // v0.6.194: the wait row says how it ended
       this._askTimeout();   // NOT _answer('no') -- the clock's own body, so a contested window still declares its verdict from the tally exactly as it would have
       return { did: 'resolve-ask', why: 'closed the reaction window the way the clock would have' };
@@ -969,6 +970,8 @@ class Bot {
   _mkHandlers(){
     return {
       revealHand:     m => this._onRevealHand(m),     // R2 (v0.6.43): hand-intel -- see the block above interceptPotential
+      edgeTake:       m => this._onEdgeTake(m),       // v0.6.200 (play-test 14 Oct, point 20): someone took the Edge with their button -- it is unique, mine is gone
+      edgePass:       m => this._onEdgePass(m),       // v0.6.200: a player dragged the Edge onto my seat
       openHandGrant:  m => this._onOpenHandGrant(m),
       openHandRevoke: m => this._onOpenHandRevoke(m),
       logTo: m => {                                    // R3: private line -- Revelations' discard command is the only consumed shape today
@@ -988,6 +991,7 @@ class Bot {
       joined: m => {
         this.seat = m.seat; this.token = m.token; this.players = m.players || [];
         this.started = !m.lobby;
+        if(m.helperPolicy && typeof m.helperPolicy === 'object') this._helperPolicy = m.helperPolicy;   // v0.6.200: the TABLE's mode (Tournament refuses debug) -- the policy, never the tournament lock (every client room carries the lock since client v2.6.116)
         this._noServer = /^hotseat-bridge/.test(String(m.srv || ''));   // v0.6.147: the client's hotseat bridge names itself in `srv` -- there is no server behind it to keep the roster or route the bounty (see _onBoard)
         if(m.reactSecs > 0) this._reactSecs = m.reactSecs | 0;   // v0.6.114: the room's Reaction stopwatch length -- the window re-stamps against it once the stopwatch has rung
         if(m.turn) this.turnSeat = m.turn;
@@ -1045,8 +1049,12 @@ class Bot {
            silently dropped. Announced in chat because a table that can see my hand
            must KNOW it can; a silent debug mode is an unfair table, not a debug mode. */
         if(this.o.debug && !this._debugHand){
-          this._debugHand = true;
-          this.note('Trainbot is in DEBUG mode: open hand, crypt face up' + (this.o.debugWeights !== false ? ', decision weighting in the log' : '') + '.');
+          if(this._tournamentTable()){   // v0.6.200 (play-test review, the tester's report): a CLI bot is checked by no client -- it refuses by itself
+            if(!this._debugRefused){ this._debugRefused = true; this.note('Trainbot: no DEBUG mode at a Tournament table \u2014 my hand stays hidden.'); }
+          } else {
+            this._debugHand = true; this._openHandTo = null; this._openHandSig = null; this._openHandAud = null;
+            this.note('Trainbot is in DEBUG mode: open hand to the human players, crypt face up' + (this.o.debugWeights !== false ? ', decision weighting in the log' : '') + '.');
+          }
         }
         (m.unc || []).forEach(name => this._addUnc(name));
         /* v0.6.17 (Johan's practical-testing GO, T2-adjacent "rigged path"): o.rig lets
@@ -1134,6 +1142,7 @@ class Bot {
         if(this._ask && this._ask.target && !this.live(this._ask.target))   // v0.6.106 (#3): the ask's OWN target (ousted or vacant) -- the old `preySeat() && p.out` could never hold, preySeat() already skips out seats
           this._answer('no', null);                      // the target left mid-ask — the window dies with them
         this._releaseDeparted(m.players || []);          // v0.6.106 (#5): a departed holder/thinker no longer freezes the bot
+        if(this._debugHand && this.started && !this.out) this._syncOpenHand();   // v0.6.200: the debug audience follows the roster (a human back online gets the grant again)
       },
       turn: m => {
         if(this.started){ if(!this.ev) this.ev = new EventLog(); const e0 = this.ev; const since = e0.since(e0.turnMark); const counts = {}; since.forEach(x => { counts[x.kind] = (counts[x.kind] || 0) + 1; }); if(since.length) this._emit('ev-summary', { turn: this.turnSeat || null, n: since.length, counts, shown: Object.keys(e0.shown).length }); e0.turnMark = e0.seq; this._invOnEvent(e0.push({ kind: 'turn', seat: m.seat })); }   // v0.6.176: one compact trace row per turn
@@ -1182,6 +1191,7 @@ class Bot {
           this._armReactTimer();
         } },
       fx:    m => this._onFx(m),
+      helperPolicy: m => this._onHelperPolicy(m.policy || m.helperPolicy),   // v0.6.200: the host changed the table's helpers (srv 1055 sends `policy`)
       botcfg: m => this._tempoSet(m, false),   // v0.6.194: the table's tempo (client -> server -> every seat; the server re-sends the latest to a late joiner) -- partial writes, absent fields keep their value
       chat: m => { if(m && m.who !== this.o.name && this.started) this._evRecord(m.who, stripTags(String(m.msg || '')), 'chat'); this._onChat(m.who, m.msg); },
       sys: m => this.o.log('sys:', m.msg),
@@ -1282,7 +1292,7 @@ class Bot {
     const isReq = nm => { const h = this.fxLookup(nm); if(!h || h.kind !== 'lib') return false; const ms = h.e.modes || []; return ms.length > 0 && ms.every(mo => ((mo.at || '') + '').toLowerCase() === need); };
     const q = (this.hand || []).map((nm, i) => ({ nm, i })).filter(o => isReq(o.nm) && !(skip && skip.indexOf(o.nm) >= 0));
     if(!q.length) return null;
-    const di = this._deadHandIndex((this.board || []).filter(c => c.kind === 'crypt' && c.zone === 'ready'));
+    const di = this._deadHandIndex(this._deadJudgeVamps());   // v0.6.200 (point 22): every vampire of mine, not only the ready ones
     const dup = q.find(o => q.some(x => x.i !== o.i && x.nm === o.nm));
     return q.find(o => o.i === di) || dup || (q.length >= 3 ? q[0] : null) || (force ? q[0] : null);
   }
@@ -1346,7 +1356,7 @@ class Bot {
     const isReq = nm => { const h = this.fxLookup(nm); if(!h || h.kind !== 'lib') return false; const ms = h.e.modes || []; return ms.length > 0 && ms.every(mo => ((mo.at || '') + '').toLowerCase() === need); };
     const q = this.hand.map((nm, i) => ({ nm, i })).filter(o => isReq(o.nm));
     if(!q.length) return false;
-    const di = this._deadHandIndex(this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready'));
+    const di = this._deadHandIndex(this._deadJudgeVamps());   // v0.6.200 (point 22)
     const pick = q.find(o => o.i === di) || (q.length >= 3 ? q[0] : null);
     if(!pick) return false;
     this.hand.splice(pick.i, 1); this._drawOwed = (this._drawOwed || 0) + 1;
@@ -1418,6 +1428,10 @@ class Bot {
     const seen = {}; let dup = null; for(const e of st){ if(seen[e.name]){ dup = e; break; } seen[e.name] = 1; }
     const shed = dup || st.slice().sort((a, b) => a.s - b.s)[0];
     return shed.idx;
+  }
+  _deadJudgeVamps(){                 // v0.6.200 (point 22): who can still use a card -- my vampires ready, in torpor or uncontrolled; none at all (every one burned): the deck's crypt list
+    const vs = (this.board || []).filter(c => c && c.kind === 'crypt' && (c.zone === 'ready' || c.zone === 'torpor' || c.zone === 'uncontrolled'));
+    return vs.length ? vs : (((this.deck && this.deck.crypt) || []).map(e => ({ name: e.name, kind: 'crypt' })));
   }
   _deadHandIndex(vamps){             // v0.5 (§7.6 D, extracted for direct testability like _unlockPhase): the FIRST hand card no ready vampire can do anything with -- masters included now that module A can play the known income assets (no more unconditional master death); a bounce-only mode's 2-live-player deadness comes for free via _modeUsable → _modeUsableBy
     return this.hand.findIndex(n => {
@@ -2113,6 +2127,7 @@ class Bot {
     let sum = 0; const from = start < 0 ? 0 : start;
     const me = this.seatName(this.seat);
     for(let i = from; i < a.length; i++){ const x = a[i]; if(x.kind !== 'pool' || typeof x.delta !== 'number' || x.delta >= 0 || !(x.via === 'creep' || x.via === 'smiling-jack' || x.via === 'fame')) continue;
+      if(x.via === 'creep' && x.form && x.form !== 'line') continue;   // v0.6.200: a tick is counted ONCE, from the predator's frozen line -- the note and my own acknowledgement are the same tick (my ack stays a pool event for the invariants)
       const aboutMe = x.target ? (x.target === me || x.target === 'me') : !!x.own;   // v0.6.191 (review): the creep tick is the PREDATOR's line ('Creeping Sabotage ticks -- <prey> burns N') -- it names me as target and is never my own; v0.6.189 counted own lines only, so real ticks were never seen (the dyn bench measured an inert knob)
       if(aboutMe) sum += -x.delta; }
     return sum;
@@ -2234,6 +2249,34 @@ class Bot {
     if(hi && hi.mode) return Promise.resolve({ cards: hi.cards.slice() });
     return new Promise(res=>{ this._revealWaiter={ seat: seat|0, res, t: setTimeout(()=>{ if(this._revealWaiter && this._revealWaiter.res===res){ this._revealWaiter=null; res(null); } }, Math.max(500, ms|0)) }; });
   }
+  _debugTargets(){                        // v0.6.200 (Johan, 16 Oct: 'debug mode is for humans only'): who sees my DEBUG hand -- the whole table ('all', spectators too, as before) while no other bot sits at it, else every seated HUMAN by seat. A bot that received it took it as certain knowledge (handIntel): an unfair table, not a debug view.
+    const others = (this.players || []).filter(p => p && p.seat && p.seat !== this.seat && !p.vacant);
+    if(!others.some(p => p.bot)) return ['all'];
+    return others.filter(p => !p.bot).map(p => p.seat | 0);
+  }
+  _openHandRetarget(to){                  // v0.6.200: whoever leaves the audience is revoked one seat at a time, so the humans who stay never see the view blink (the client closes an open inspector on a revoke)
+    const prev = this._openHandTo || [];
+    if(prev.includes('all') && !to.includes('all')){
+      (this.players || []).forEach(p => { const s = p && (p.seat | 0); if(s && s !== this.seat && !to.includes(s)) this.send({ t: 'openHand', to: s, revoke: true }); });
+    } else if(!to.includes('all')) prev.forEach(s => { if(s !== 'all' && !to.includes(s)) this.send({ t: 'openHand', to: s, revoke: true }); });
+    this._openHandTo = to.slice();
+  }
+  _openHandEnd(){                         // v0.6.200: revoke what is granted -- the whole table for an 'all' grant, else seat by seat
+    const to = this._openHandTo || ['all'];
+    if(to.includes('all')) this.send({ t: 'openHand', to: 'all', revoke: true }); else to.forEach(s => this.send({ t: 'openHand', to: s, revoke: true }));
+    this._openHandTo = null; this._openHandSig = null; this._openHandAud = null;
+  }
+  _tournamentTable(){ const hp = this._helperPolicy; return !!(hp && hp.tournament); }   // v0.6.200: the room's helper policy says Tournament (joined / helperPolicy)
+  _onHelperPolicy(pol){                   // v0.6.200: a table that turns Tournament mid-game ends my debug view at once
+    if(!pol || typeof pol !== 'object') return;
+    this._helperPolicy = pol;
+    if(this._debugHand && pol.tournament){
+      this._debugHand = false;
+      if(!this._openHandActive) this._openHandEnd();   // a Revelations grant is the card's, not debug's -- it stays
+      this.note('Trainbot leaves DEBUG mode: the table is in Tournament mode now.');
+      this.push();
+    }
+  }
   _syncOpenHand(force){                   // R3: the granter owns the open-hand state (server design) -- re-send the live list on every change while active
     if(!this._openHandActive && !this._debugHand) return;
     /* v0.6.112 (R4): called from the board-push flush, i.e. potentially on every
@@ -2241,9 +2284,14 @@ class Bot {
        reaches the wire -- order included, since a reordered hand is a different
        view even at the same length. */
     const sig = this.hand.join('\u0001');
-    if(!force && sig === this._openHandSig) return;
-    this._openHandSig = sig;
-    this.send({ t:'openHand', to:'all', cards: this.hand.map(n=>({ name:n, kind:'lib' })) });
+    const to = this._openHandActive ? ['all'] : this._debugTargets();   // Revelations [AUS] opens my hand to EVERY player by its text -- the bots included
+    const on = (this.players || []).filter(p => p && to.includes(p.seat | 0) && p.online !== false).map(p => p.seat | 0);   // a human back online needs the grant again: the server routes a per-seat grant to a live socket only
+    const aud = to.join(',') + '|' + on.join(',');
+    if(!force && sig === this._openHandSig && aud === this._openHandAud) return;
+    this._openHandRetarget(to);
+    this._openHandSig = sig; this._openHandAud = aud;
+    const cards = this.hand.map(n => ({ name: n, kind: 'lib' }));
+    to.forEach(t => this.send({ t: 'openHand', to: t, cards }));
   }
   _onOpenHandRevoke(m){ if(!m || !this.handIntel) return; delete this.handIntel[m.seat|0]; if(this._emit) this._emit('hand-intel', { seat: m.seat|0, mode: null, n: 0 }); }
   _pCat(seat, cat){                 // ground-truth-aware P(seat holds cat): intel overrides the readP inference
@@ -3733,8 +3781,7 @@ class Bot {
       const burn = Math.min(g.n * g.per, g.cap);
       if(burn <= 0) continue;
       const preyN = this.seatName(this.preySeat());
-      this.send({ t: 'log', html: nm + ' (x' + g.n + '): <b>' + esc(preyN) + '</b> burns ' + burn + ' pool.' });
-      this.note('Trainbot: ' + nm + ' ticks \u2014 ' + preyN + ' burns ' + burn + '.');
+      this.send({ t: 'log', html: nm + ' (x' + g.n + '): <b>' + esc(preyN) + '</b> burns ' + burn + ' pool.' });   // v0.6.200 (play-test 14 Oct, point 2): the frozen line alone -- its 'ticks' note said the same thing a second time
     }
     const jack = myReady('Smiling Jack, The Anarch')[0];
     if(jack && this.pool > 0){       // MANDATORY wording ('move 1 counter from your pool') -- the only guard is having pool at all
@@ -4183,7 +4230,7 @@ class Bot {
   _remindArm(holder, plan, text){                                            // Turn-based: a chat reminder at remindMs; the wait itself resolves like the clock at plan.ms (the timer the caller armed)
     if(holder._remT) clearTimeout(holder._remT); holder._remT = null;
     if(!plan || !plan.remindMs) return;
-    holder._remT = setTimeout(() => { holder._remT = null; if(holder.done || holder.closed) return; this.chat(text); }, plan.remindMs);
+    holder._remT = setTimeout(() => { holder._remT = null; if(holder.done || holder.closed) return; const t = typeof text === 'function' ? text() : text; if(t) this.chat(t); }, plan.remindMs);   // v0.6.200 (point 8): a function is read when the reminder FIRES -- the block window's text was fixed when armed and named a human who had passed in the meantime
   }
   _seatCanBlock(seat, reactionsOnly){                                      // Adaptive's skip: can this seat answer the question at all? unknown board = yes (never skip on a guess)
     const t = this.table && this.table[seat], cs = t && t.pub && t.pub.cards; if(!cs) return true;
@@ -4276,7 +4323,8 @@ class Bot {
     if(kind === 'tally'){ if((txt | 0) > pw.step) pw.resolve('ph'); return; }
     const t = String(txt || '').trim();
     if(kind === 'chat' && /^(no|nope|pass|nothing|none|no reaction|no maneuvers?|no press(es)?|done|go( on| ahead)?|ok(ay)?|continue|next|nothing here|not? this time|it resolves|carry on|resume)\b[.!]*$/i.test(t)) return pw.resolve('pass');   // v0.6.198: a TYPED "it resolves" answers the step as the quick phrase does (main 12 Oct: the release answers the step)
-    if(/(strikes|maneuvers to|presses to|sets range to|plays immortal grapple|plays carrion crows|inflicts|additional strike|prevents \d+ damage|takes \d+ \(loses)/i.test(t)) return pw.resolve('line');
+    if(/(prevents \d+ damage|takes \d+ \(loses)/i.test(t)){ if(pw.step === 4) return pw.resolve('line'); return; }   // v0.6.200 (play-test 14 Oct, point 9): the damage step's lines answer the DAMAGE step only. The human's client writes its taken line when the table steps past Damage resolution -- after my ph 5, i.e. once 'Any presses?' was already open -- and it ended that step as an answer within 1-4 s, in 4 of 5 Turn-based combats. Elsewhere it is a report: it neither answers nor restarts a clock
+    if(/(strikes|maneuvers to|presses to|sets range to|plays immortal grapple|plays carrion crows|inflicts|additional strike)/i.test(t)) return pw.resolve('line');
     pw.arm();                                          // any other activity from the human: the clock restarts
   }
   _cField(k){                        // v0.6.168 (pre-test review): a combat field is honoured only if it CHANGED during this combat. The server keeps absent fields while the mode stays 'combat' (v2.6.17 rule) and every relay carries the whole state, so a ce=1 / rl=1 / pr / rng left by an EARLIER combat could read as 'combat ended' or 'range set' in the next one. Baseline = the tally as it stood when this combat began (per round for the per-round fields, _cBaseRound).
@@ -4562,7 +4610,7 @@ class Bot {
     let excess = this.hand.length - base;
     while(excess > 0){
       const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt');
-      let di = this._deadHandIndex(vamps);
+      let di = this._deadHandIndex(this._deadJudgeVamps());   // v0.6.200 (point 22): dead = no vampire of mine can use it
       if(di < 0){ const si = this._surplusStealthIndex(vamps); if(si >= 0){ di = si; this.o.log('starve-out counter: cycling a surplus stealth card (streak ' + this._unblockedStreak + ')'); } }   // v0.6.79 (improvement 3): reuses the EXISTING discard path
       if(di < 0){
         di = 0;
@@ -4706,8 +4754,7 @@ class Bot {
       const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') continue;
       for(const mo of h.e.modes || []){
         if(!mo.lock || mo.phase !== phaseKey || !mo.fx.handCycle) continue;
-        const vamps = this.board.filter(v => v.zone === 'ready' && v.kind === 'crypt');
-        const di = this._deadHandIndex(vamps);
+        const di = this._deadHandIndex(this._deadJudgeVamps());   // v0.6.200 (point 22)
         if(di < 0) continue;   // nothing genuinely dead to discard -- don't trade a live card for a random one
         const d = this.decide('lock-handcycle', { name: c.name });
         if(!d.lock) continue;
@@ -5271,10 +5318,11 @@ class Bot {
            and the misleading chat that are suppressed. */
         this._openHandActive = null;
         if(!this._debugHand){
-          this.send({ t:'openHand', to:'all', revoke: true });
+          this.send({ t:'openHand', to:'all', revoke: true }); this._openHandTo = null; this._openHandSig = null; this._openHandAud = null;
           this.note('Trainbot: Revelations left play \u2014 open hand ends.');
         } else {
-          this.o.log('Revelations left play — open hand stays (debug mode)');
+          this._syncOpenHand(true);   // v0.6.200: debug keeps it open for the HUMANS only -- the other bots are revoked seat by seat
+          this.o.log('Revelations left play — open hand stays for the humans (debug mode)');
         }
       }
     }
@@ -5929,7 +5977,7 @@ class Bot {
       this.fxClone({ name: steal.name, kind: 'lib' }, 'steals ' + steal.n + ' blood', { actor: myVamp });
       this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> strikes: steals ' + steal.n + ' blood.' });   // v0.6.172 (main v2.6.138, option 1): the client's ONE-line steal shape -- the human's panel shows "Stolen: N blood -- move it"; bot victims parse it (L12.strikeSteal)
       this._emitPlay(steal.name, 'combat-steal', myVamp.name);
-      dealt = 0; strikeLine = myVamp.name + ' strikes with ' + steal.name + ' for 0 (steals ' + steal.n + ' blood)';
+      { const drained = Math.max(0, before + stealTake - (myVamp.cap | 0)); dealt = 0; strikeLine = myVamp.name + ' strikes with ' + steal.name + ' for 0 (steals ' + steal.n + ' blood' + (drained ? '; ' + drained + ' drains off at capacity ' + (myVamp.cap | 0) : '') + ')'; }   // v0.6.200 (point 19): stolen blood over capacity drains at once (it comes before mending) -- the line hid it and the play-test read a lost blood
       if(this._rnd){ this._rnd.stole = stealTake; this._rnd.stealLabel = 'Steal ' + steal.n; }   // v0.6.160: the steal is its own column (blood swing, not damage); v0.6.172: the client's own strike label
     } else if(strike){
       if(!strike.fromEquip){ this.hand.splice(strike.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; }   // E1: a board-granted strike never splices the hand
@@ -6129,7 +6177,7 @@ class Bot {
       return;
     }
     this._noteHit(p); this._emit('took-bleed', { n: p.amount, pool: this.pool });
-    if(this.edge) this.edge = false;                     // the successful bleeder takes the Edge from me
+    if(this.edge && (p.amount | 0) >= 1 && p.directed !== false) this.edge = false;   // the successful bleeder takes the Edge from me (v0.6.200 review: never on an UNDIRECTED action -- a human's referendum that cost me pool took my Edge; only a bleed moves it) (v0.6.200, point 15: 'successful' = 1 pool or more -- a bleed reduced to 0 left the Edge where it was)
     if(this.pool > 0){
       this.push();
       this.chat('I take ' + p.amount + '. Pool: ' + this.pool + '.');   // v0.6.117: spoken -- "I take 3, pool 27" is how the bled player answers at a table
@@ -6280,7 +6328,8 @@ class Bot {
     if((m = t.match(/^Fame drains (\d+)/))) return { kind: 'pool', delta: -m[1], via: 'fame' };
     if((m = t.match(/^(.+?): (\d+) pool \u2192 (.+?) \(pool (\d+)\)/))) return { kind: 'pool', delta: -m[2], pool: +m[4], via: 'pool-to-blood', card: S(m[1]) };
     if((m = t.match(/^I lose (\d+) pool to the referendum\. Pool: (\d+)/))) return { kind: 'pool', delta: -m[1], pool: +m[2], via: 'referendum' };
-    if((m = t.match(/^(?:Creeping Sabotage.*?(?:\u2014 I|: (.+?)) burns? (\d+)(?: pool)?|Creeping Sabotage ticks \u2014 (.+?) burns (\d+))/))) return { kind: 'pool', target: S(m[1] || m[3] || 'me'), delta: -(m[2] || m[4]), via: 'creep' };
+    if((m = t.match(L12.creep))) return { kind: 'pool', target: S(m[2]), delta: -(+m[3]), via: 'creep', form: 'line' };   // v0.6.200 (review side find): ONE tick reached the log three ways -- the predator's frozen line, its 'ticks' note and the victim's own 'I burn N' -- and _knownLosses counted it three times
+    if((m = t.match(/^(?:Creeping Sabotage.*?(?:\u2014 I|: (.+?)) burns? (\d+)(?: pool)?|Creeping Sabotage ticks \u2014 (.+?) burns (\d+))/))) return { kind: 'pool', target: S(m[1] || m[3] || 'me'), delta: -(m[2] || m[4]), via: 'creep', form: m[3] ? 'note' : (m[1] ? 'line' : 'ack') };   // a ': <prey> burns N' that missed the exact frozen shape is still the predator's line
     if((m = t.match(/^(.+?): (\d+) blood \u2192 pool \(pool (\d+)\)/))) return { kind: 'pool', delta: +m[2], pool: +m[3], card: S(m[1]) };
     if(/^I influence /.test(t)){ let n = 0; t.replace(/(\d+) blood to/g, (x, d) => { n += +d; return x; }); return { kind: 'influence', n, drawn: /transfers to draw/.test(t), draw: /transfers to draw/.test(t) && n === 0 }; }   // v0.6.179: the sentence can list several parts ('2 blood to X, who enters play, and 1 blood to another uncontrolled vampire')
     if((m = t.match(/^I use (\d+) transfers to draw/))) return { kind: 'influence', n: 0, transfers: +m[1], drawn: true, draw: true };   // v0.6.180: a crypt draw moves no blood -- it costs 4 TRANSFERS + 1 pool (the ledger read the 4 as pool: the +3 drifts, found by the pool tracer)
@@ -6375,7 +6424,14 @@ class Bot {
     if(who !== this.o.name && (m = t.match(L12.actObs))){
       const oseat = this._seatOfName(who);
       if(oseat && oseat !== this.seat){
-        this._obs = { who, seat: oseat, vamp: m[1], verb: m[2], card: m[4] || null, line: t, at: Date.now(), poolLoss: null };
+        /* v0.6.200 (play-test 14 Oct, point 1): the action's AIM and whether it is directed. The client writes the aim as
+           a ` Target: NAME's X.` suffix; a card's own action row ('takes a card action.') follows its play line and the
+           aim rode on that line (a pool aim is used up there), so the row inherits it from the play line of the same
+           vampire. Only the target of a DIRECTED action may block it or ask what it costs (_obsTarget). */
+        const prevObs = this._obs, tgtName = (t.match(/ Target: (.+?)'s /) || [])[1] || null;
+        let targetSeat = tgtName ? this._seatOfName(tgtName) : 0;
+        if(!targetSeat && /^takes (a card|an undirected) action$/.test(m[2]) && prevObs && prevObs.who === who && prevObs.vamp === m[1] && /^plays /.test(prevObs.verb || '') && Date.now() - prevObs.at < 30000) targetSeat = prevObs.targetSeat || 0;
+        this._obs = { who, seat: oseat, vamp: m[1], verb: m[2], card: m[4] || null, line: t, at: Date.now(), poolLoss: null, targetSeat: targetSeat || null, directed: this._actDirected(m[2], m[4] || null, oseat, targetSeat) };
         if(this._blockBar){ if(this._blockBar.who === who && this._blockBar.fresh) this._blockBar.fresh = false; else if(this._blockBar.who !== who) this._blockBar = null; }   // v0.6.127: the bar belongs to the announce that follows it; another Methuselah's action ends it
         /* v0.6.118: the per-minion ledger the forecast reads -- flush the previous action's stealth first */
         if(this._oppLastAct && this._oppLastAct.a > 0) this._opp(this._oppLastAct.seat).stealthUsed.push(this._oppLastAct.a);
@@ -6437,12 +6493,16 @@ class Bot {
       }
       return;
     }
+    if((m = t.match(L12.reduce)) && this._actingVamp && this._actingVamp.target && who === this.seatName(this._actingVamp.target)){   // v0.6.200 (point 15): my bleed's target reduced it -- the amount is theirs to state ('now N'); no return: the line is still a card play for the event log
+      const now = parseInt(m[4], 10);
+      if(Number.isFinite(now) && now < (this._actingVamp.n | 0)){ this.o.log('bleed reduced (' + m[2] + '): ' + this._actingVamp.n + ' -> ' + now); this._actingVamp.n = now; this._actingVamp.reducedTo = now; }
+    }
     if((m = t.match(L12.add))){
       /* v1.4.3: same fix as above — `who` (message sender) may be a bouncer, not the
          original owner; match on pending.who (the real owner) OR on the acting vampire
          name (m[1] in L12.add).  The vampire name is the most stable anchor.           */
       if(this.pending && (this.pending.who === who || (this.pending.actingVampName && this.pending.actingVampName === m[1]))){
-        this.pending.amount = parseInt(m[3], 10);                    // T, the running total
+        this.pending.amount = this.pending.reducedOnce ? Math.max(0, (this.pending.amount | 0) + parseInt(m[2], 10)) : parseInt(m[3], 10);   // T, the running total. v0.6.200 (point 15): after MY reduction the actor's '(= T)' still counts the bleed before it (a human's client, an older bot) -- the +N on top of the reduced amount is the rules' number; Viktor took 3 after Protected District said 'now 0'
         this.pending.contested = false;
         this._reactWindow();                                         // every +X REOPENS the window
       }
@@ -6678,6 +6738,30 @@ class Bot {
   /* ---------- the say channel (SAY broadcast; string-checked) ------------- */
   say(phrase){ const i = sayIdx(phrase); if(i >= 0){ this.send({ t: 'say', i }); this._lastChatAt = Date.now(); } }   // v0.6.108: say creates a timing footprint — the client's say-bubble is 3 s, so _pace's chatHold must gate on it the same way it gates on chat()
   _seatOfName(name){ const p=(this.players||[]).find(q=>q && q.name===name); return p ? (p.seat|0) : 0; }   // R3: roster lookup, 0 when unknown
+  _takeEdge(){                       // v0.6.200 (play-test 14 Oct, point 20): the Edge is unique -- the server tells every other seat (edgeTake, bySeat = mine) and their clients clear their own; until now a bot only published edge:true and the human's client kept its Edge lit
+    if(this.edge) return;
+    this.edge = true;
+    this.send({ t: 'edgeTake' });
+  }
+  _onEdgeTake(m){ if(!m || (m.bySeat | 0) === this.seat || !this.edge) return; this.edge = false; this.push(); }   // v0.6.200: another seat took the Edge
+  _onEdgePass(m){ if(!m || (m.toSeat | 0) !== this.seat || this.edge) return; this.edge = true; this.push(); this.o.log('the Edge was passed to me by ' + (m.fromName || 'a player')); }   // v0.6.200: the server sends edgePass to the receiving seat only
+  _actDirected(verb, card, actorSeat, targetSeat){   // v0.6.200 (point 1): true = a directed action (only its target may block), false = undirected (prey and predator), null = unknown (no narrowing -- the old behaviour)
+    if(targetSeat && targetSeat === actorSeat) return false;   // aimed at the actor's own minion: not directed at another Methuselah
+    if(/^(bleeds for|takes a card action|attempts to rescue a vampire from torpor|commits diablerie)/.test(verb || '')) return true;
+    if(/^(hunts|calls a political action|attempts to rescue their own vampire|takes an undirected action)/.test(verb || '')) return false;
+    if(/^plays /.test(verb || '') && card){   // a bare play line: directed only when the card's played mode carries the D symbol; the action row that usually follows decides otherwise
+      const mm = String(card).match(/^(.+?) \[([a-zA-Z]+)\]$/), h = this.fxLookup(mm ? mm[1] : card);
+      if(!h || h.kind !== 'lib' || !((h.e.t || []).includes('action'))) return null;
+      const ms = h.e.modes || [], mo = mm ? ms.find(x => x.at === mm[2]) : (ms.length === 1 ? ms[0] : null);
+      return (mo && mo.dir === true) ? true : null;
+    }
+    return null;
+  }
+  _obsTarget(o){                     // v0.6.200 (point 1): the seat a remembered human action is directed at (0 = undirected or unknown). No aim on a bleed, a card action or a directed card = the actor's prey
+    if(!o || o.directed !== true) return 0;
+    if(o.targetSeat) return o.targetSeat;
+    return /^(bleeds for|takes a card action|plays )/.test(o.verb || '') ? this.nextLive(o.seat) : 0;
+  }
   _emit(type, data){ if(type === 'through' && this.tally && this.tally.mode === 'block' && this.started){ try { this._writeTally({ mode: null }); } catch(e){} }   // v0.6.172 (main v2.6.137: the ACTOR closes its block counter when its action resolves) -- every one of my 'through' sites is followed by 'It resolves'
   if((type === 'through' || type === 'blocked') && data && data.card !== 'hunt' && (data.kind == null || data.kind === 'bleed') && (data.n | 0) > 0) this._noteMyBleed(type === 'blocked');   // v0.6.143b: my bleed-through ledger against this prey
     if(type === 'blocked') this._returnParked(); else if(type === 'through' && this._actingVamp) this._actingVamp.parked = null;   // v0.6.130 (rulebook + Johan, debt 26c): an action's cost is paid only if it SUCCEEDS
@@ -6922,7 +7006,7 @@ class Bot {
           if(a.eligible.has(m.who)){
             a.passed.add(m.who);
             if([...a.eligible].every(n => a.passed.has(n)) && !a.pausedBy.size){
-              if(a.contested){ if(a.plan && a.plan.noClock && this._isHumanName(m.who)){ this._askTimeout(); return; } if(!a.timer) this._restartAskTimer(); return; }   // v0.6.194 (Turn-based): the human's Pass ends the exchange -- the verdict is declared now, not after the safety net
+              if(a.contested){ if(a.plan && a.plan.noClock){ a._end = 'answer'; this._askTimeout(); return; } if(!a.timer) this._restartAskTimer(); return; }   // v0.6.194 (Turn-based): the last Pass ends the exchange -- the verdict is declared now, not after the safety net. v0.6.200 (play-test 14 Oct, point 8): WHOEVER passes last -- the human passed first, the other bot second, and the speaker test (`_isHumanName(m.who)`) left a Turn-based table on 'block verdict' with nobody listed until the Bot button (179 s); `_end` keeps the give-up's note away
               return this._answer('no', m.who);
             }
           }
@@ -6932,7 +7016,7 @@ class Bot {
         const curTarget = this.seatName((this._actingVamp && this._actingVamp.target) || this.preySeat());
         if(m.who === curTarget && !a.pausedBy.size){
           if(a.contested){             // fas A+ (16 July): a target's Pass DURING a live contest means "no more cards from me", not "no block happened" -- the referendum already holds a mechanical answer (tally a/b) and the verdict declaration must resolve it, or a winning b>=a block gets swallowed as a through-bleed (the no-candidate decline's Pass raced the verdict timer exactly this way). Make sure the verdict clock is running and let IT decide.
-            if(a.plan && a.plan.noClock && this._isHumanName(m.who)){ this._askTimeout(); return; }   // v0.6.194 (Turn-based): the human's Pass ends the exchange -- the verdict is declared now (the bot's own deferred card still lands first), not after the safety net
+            if(a.plan && a.plan.noClock && this._isHumanName(m.who)){ a._end = 'answer'; this._askTimeout(); return; }   // v0.6.194 (Turn-based): the human's Pass ends the exchange -- the verdict is declared now (the bot's own deferred card still lands first), not after the safety net. v0.6.200: `_end` -- without it the give-up's 'no answer in 4 min' note was written on every such Pass
             if(!a.timer) this._restartAskTimer();
             return;
           }
@@ -6983,6 +7067,7 @@ class Bot {
     if(!this.started || this.out || this._ask || this.pending || this._pq) return;
     const o = this._obs;
     if(!o || o.seat === this.seat || Date.now() - o.at > 120000) return;   // nothing on record: silence, not a guess
+    { const tg = this._obsTarget(o); if(tg && tg !== this.seat) return; }   // v0.6.200 (play-test 14 Oct, point 1): a directed action is its target's business -- both bots asked about a Revelations aimed at Hanna, and Viktor (the actor's predator) could block it or lose pool to it. Political and other undirected actions still ask at every bot (Johan, 16 Oct: the answer is each bot's stake for the vote)
     if(o.poolLoss != null) return this._openAskedWindow();
     this._pq = { who, phrase, stage: 'yn', deadline: 0, timer: null, obs: o, t0: Date.now() };
     const pl0 = this._waitPlan('pq', who);   // v0.6.194: the tempo
@@ -7031,7 +7116,9 @@ class Bot {
   }
   _openAskedWindow(){
     const o = this._obs; if(!o || this.pending || this.out) return;
-    if(!(o.poolLoss > 0)){ if(!(/calls a political action/.test(o.verb || '') && this.nextLive(o.seat) !== this.seat && this.prevLive(o.seat) !== this.seat)) this.say('No block'); return; }   // v0.6.126: a seat with no block rights does not announce that it will not block
+    { const tg = this._obsTarget(o); if(tg && tg !== this.seat) return; }   // v0.6.200 (point 1): a directed action aimed elsewhere -- no window, no stake, nothing said
+    const crossTable = this.nextLive(o.seat) !== this.seat && this.prevLive(o.seat) !== this.seat;
+    if(!(o.poolLoss > 0)){ if(!((/calls a political action/.test(o.verb || '') || o.directed === false) && crossTable)) this.say('No block'); return; }   // v0.6.126: a seat with no block rights does not announce that it will not block (v0.6.200: any undirected action, not only a political one)
     const tpub = this.table[o.seat] && this.table[o.seat].pub;
     const actorUnlocked = ((tpub && tpub.cards) || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && c.name !== o.vamp).length;
     /* v0.6.126 (self-review 8): a political action is UNDIRECTED -- only the actor's prey and predator may block it. The
@@ -7039,8 +7126,8 @@ class Bot {
        cross-table seat still needs the pending (the actor's It resolves deducts the pool through it, and the vote reads
        the stake from _obs) -- it just gets no block step: declined from birth, no react window, nothing said. */
     const political = /calls a political action/.test(o.verb || '');
-    const noRights = political && this.nextLive(o.seat) !== this.seat && this.prevLive(o.seat) !== this.seat;
-    this.pending = { who: o.who, amount: o.poolLoss, kind: 'asked', sub: 'asked', T: 'T1', role: 'target', actorSeat: o.seat, actorUnlocked,
+    const noRights = (political || o.directed === false) && crossTable;   // v0.6.200 (point 1): every undirected action -- only the actor's prey and predator may block one (the rulebook); a cross-table seat keeps the stake, as for a referendum
+    this.pending = { who: o.who, amount: o.poolLoss, kind: 'asked', sub: 'asked', T: 'T1', role: 'target', actorSeat: o.seat, actorUnlocked, directed: o.directed,   // v0.6.200: an undirected action (a referendum, a hunt) is never a bleed -- the Edge stays where it is
                      actingVampName: o.vamp, contested: false, reacted: new Set(), blockerVamp: null, declined: noRights, attempted: new Set(), waitingFor: null };
     this.o.log('asked window: ' + o.verb + ' by ' + o.who + ' (' + o.poolLoss + ' pool if it resolves)' + (noRights ? ' -- cross-table: no block rights on an undirected action, the stake stands for the vote' : ''));
     if(noRights) return;
@@ -7645,7 +7732,7 @@ class Bot {
   }
   _askPlan(a){ return this._waitPlan(a && a.reactionsOnly ? 'react' : 'block', this._askWho(a)); }
   _askRemindText(a){
-    const who = this._askWho(a).join(', ') || 'you';
+    const who = this._askWho(a).join(', '); if(!who) return '';   // v0.6.200: nobody left to wait for -- no reminder
     if(a.contested) return 'Still waiting for ' + who + ': more intercept, or Pass to resolve the block (or press the Bot button).';
     return 'Still waiting for ' + who + ': ' + (a.reactionsOnly ? 'a reaction, or No reaction' : 'Block, or Pass') + ' (or press the Bot button).';
   }
@@ -7656,7 +7743,7 @@ class Bot {
     const plan = a.plan = this._askPlan(a), wait = plan.ms;   // v0.6.194: the tempo decides the clock (legacy = askSecs + the chat settle, computed ONCE and stamped -- v0.6.109 #1 -- so status() reports the deadline the timer actually holds)
     a.deadline = plan.noClock ? null : Date.now() + wait;   // Turn-based: no deadline to count down -- the widget shows its button instead (the hold's rule)
     a.timer = setTimeout(() => this._askTimeout(), wait);
-    this._remindArm(a, plan, this._askRemindText(a));
+    this._remindArm(a, plan, () => this._askRemindText(a));
     if(!plan.noClock) this._armReactTimer();   // v0.6.115 (self-review): the stopwatch is "N s of table SILENCE" -- silence restarts on activity, so every restart re-arms it. Was armed only at the window's opening (3 sites vs 15 restarts): one reaction played after the ring handed the table a fresh 20 s with no stopwatch -- the dead air v0.6.114 removed, back in exactly the case that happens at a table. Every window now ends <= reactClockMs + reactSecs + grace after the LAST activity, whatever askSecs is. v0.6.194: never in Turn-based -- the ring re-stamps the deadline, and Turn-based has none.
     else if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; }
   }
@@ -7787,7 +7874,7 @@ class Bot {
        has no hand and will push no further board updates, so the receiver would sit
        on a stale empty card list forever. The _clearPending above already killed _pq
        and _obs; this closes the visual half. */
-    if(this._debugHand || this._openHandActive){ this.send({ t:'openHand', to:'all', revoke: true }); this._debugHand = false; this._openHandActive = null; this._openHandSig = null; }
+    if(this._debugHand || this._openHandActive){ this.send({ t:'openHand', to:'all', revoke: true }); this._debugHand = false; this._openHandActive = null; this._openHandSig = null; this._openHandTo = null; this._openHandAud = null; }
     this.edge = false;                                 // rulebook: the Edge leaves play with its ousted holder
     this.out = true; this.pool = Math.min(this.pool, 0);
     this.board = []; this.unc = []; this.pool = 0;
@@ -8539,10 +8626,10 @@ class Bot {
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: this._actingVamp.n, by: this._lastBlockerName || curAns.who || null });
             await this._resolveCombat(v);   // v0.6.22: multi-round wrapper (was the single-round primitive directly)
           } else {
-            if(!this._actingVamp.edgeLocked) this.edge = true;   // rulebook: a successful bleed gives the acting Methuselah the Edge
+            if(!this._actingVamp.edgeLocked && this._actingVamp.n >= 1) this._takeEdge();   // rulebook: a successful bleed gives the acting Methuselah the Edge. v0.6.200 (points 15 + 20): only a bleed of 1 or more is successful, and taking the Edge is SAID on the wire (edgeTake) -- the humans' clients kept their own Edge lit, two holders at once
             if(this._actingVamp.n >= 1) this._maybeLubomiraMark(v);   // VC: 'successfully bleeds' = bleed amount >= 1 (the rulebook's own definition) -- UNLESS a card played this action locks that out (Leverage, steg 4/16 July: "You cannot gain the Edge this action. If you would get the Edge, it is burned instead." -- steg 2 wrongly assumed burn-then-regrant was fine, corrected once the real card_text was available)
             this.say('It resolves');
-            this.note('The bleed goes through: ' + this.seatName(this._actingVamp.target) + ', -' + this._actingVamp.n + ' pool (adjust yours).');
+            this.note(this._actingVamp.n >= 1 ? 'The bleed goes through: ' + this.seatName(this._actingVamp.target) + ', -' + this._actingVamp.n + ' pool (adjust yours).' : 'The bleed goes through at 0: ' + this.seatName(this._actingVamp.target) + ' loses no pool.');   // v0.6.200: a reduced bleed says so
             this.push();
             await this._maybeAttachMarkedPath(v, this._actingVamp.target, this._actingVamp.played);   // fas C: "after a successful directed action" -- the attach window
             this._maybePerfectionist(v);                                     // fas C: the clean-action blood hook
@@ -8588,8 +8675,7 @@ class Bot {
          one shared place, no parallel special-case here.                  */
       await this._announcePhase('Discard');
       while(!this.out && this._phaseAvail('discard') > 0){
-        const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt');
-        let di = this._deadHandIndex(vamps);
+        let di = this._deadHandIndex(this._deadJudgeVamps());   // v0.6.200 (play-test 14 Oct, point 22, and Johan's Tremere that threw away Theft of Vitae): judged against the READY vampires only, a hand with no vampire out yet was dead from end to end and the FIRST card went -- every Tremere has [tha], so that was the only way Theft of Vitae could die
         if(di < 0){ di = this._stealthGlutIndex(); if(di >= 0){ this._emit('shed', { card: this.hand[di], why: 'stealth-glut' }); this.o.log('discard: ' + this.hand[di] + ' -- more stealth in hand than one action can use'); } }   // v0.6.120: a dead card first, then the glut
         if(di < 0) break;
         await pace();                             // v0.4.5: the discard used to fire the instant influence ended
@@ -8640,6 +8726,8 @@ function parseArgs(argv){
     else if(a === '--tempo'){ const t = parseTempoArg(next()); if(t) o.tempo = t; }   // v0.6.194: a start-up tempo for a table whose client sends no botcfg yet -- standard[:SECS] | adaptive[:SECS] | turn
     else if(a === '--cardfx') o.cardfx = next();
     else if(a === '--persona') o.persona = next();
+    else if(a === '--debug') o.debug = true;                       // v0.6.200 (a tester's report): a private-server table launched from the CLI can have a debug bot -- open hand to the humans, crypt face up, the weighting in the log; refused at a Tournament table
+    else if(a === '--no-debug-weights') o.debugWeights = false;    // v0.6.200: the hand and crypt without the weighting lines
     else if(a === '--deck'){ const f = next(); o.deck = JSON.parse(fs.readFileSync(f, 'utf8')); }
     else if(a === '--help' || a === '-h') o.help = true;
   }
@@ -8656,6 +8744,7 @@ if(typeof require !== 'undefined' && require.main === module){   // v0.6.94 (HB0
       '       [--tempo standard:3|adaptive:3|turn]   (the tempo until the table sends a botcfg)\n' +
       '       [--cardfx elysium-cardfx.json]   (default: beside this script)\n' +
       '       [--persona novice|experienced|expert]\n' +
+      '       [--debug] [--no-debug-weights]   (open hand to the humans; never at a Tournament table)\n' +
       'The room must already exist (create it as a lobby in the client, then start\n' +
       'the bot, pick seats, Start). Table chat: "help" for the bot\'s grammar.');
     process.exit(o.help ? 0 : 1);
