@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.205'; // v0.6.205 (16 Oct 2026, R4 of the 14 Oct play-test review with the dodge, one PR -- Johan, 16 Oct): (1) THE DODGE (Johan 16 Oct 17:47 + 18:06, and 21:20 + 21:27 on open question A; knob dodgeOut, default 1, 0 = v0.6.204's rule): a dodge answers what the opposing strike does to me (damage + steal; their crows land anyway) against what MY strike would deal this round (_strikePick: the steal, card, weapon or fist the round really plays -- cut out of the strike choice and played by it; 0 at long range with fists): with one dodge a strike of 2+ that is more than mine; with two a strike of 1+ that does at least as much as mine (when mine does more -- Roundhouse first -- I strike); an unknown one (I strike first) on the expected strike Majesty reads (_expOppStrike; combatEndStats 0 keeps blood <= 1); aggravated and the survival rule as before; EXCEPT when my strike finishes their vampire and theirs does not finish mine (0 blood or torpor with two dodges, torpor with one -- a meta-layer note: what that is worth depends on the table position); never a dodge their crows make useless. (2) F21, Revelations against a bot: armed when the actor's prey is me, whatever the line's suffix (a vampire aim, no aim and a bare play line armed nothing); after the reveal a HUMAN actor is told how to pick, and the pick is read from their targeting logTo or a typed 'discard CARD' -- once, until the turn ends. (3) F23, the six V5 masters curated (99 -> 105): The Labyrinth locks for +1 stealth to a Nosferatu; Guardian Angel on my sturdiest ready vampire (+1 intercept on a bleed at me, prevent 1 each combat, burned at the host's torpor); Wasserschloss Anif banks 1 blood a master phase from a Tremere that can spare it (decide 'bank-in') and pays out at my influence phase onto an uncontrolled Tremere; Haven Uncovered only on the vampire a rusher of mine would rush THIS turn through it (decide('action')'s own pick -- found by the release's own smoke), and any minion of mine may rush its host through it (+1 stealth, no lock, the rusher acts; frozen 'VAMP enters combat with OWNER's HOST (Haven Uncovered).'); Elder Library and Ventrue HQ as they were. (4) Found on the way: Arcane Library's influence lock never fired in play; a vampire already at capacity in the uncontrolled region never rose -- and stalled the influence phase for the rest of the game -- it rises free now (and Wasserschloss may fill one exactly). Sections 146-149 (70; on v0.6.204: 4/16, 6/7, 4/19, 1/13).
+const BOT_VERSION = '0.6.206'; // v0.6.206 (17 Oct 2026, the round after R4 -- agreed with Johan 16 Oct 21:27): (1) THE LATE BOUNCE (R4's final smoke, READ-ME-FIRST-2026-10-16f section 6): a bot target bounced a bot's bleed after the actor had resolved it, twice in ~470 bleeds through, each right after a Magic of the Smith. The fetch's note ('fetches X from the library and equips V (...).') parsed as an undirected EQUIP announce: the actor's prey and predator opened a window for an action that never was, and that Pass answered the actor's NEXT Block? while its bleed was still in the actor's send queue -- every answer after it fell one window late. Three layers, each enough alone: the note says it otherwise; a bot's line that names no minion on its public board opens no window (_parseUndirected); a bot's answer that reaches me while the line that opened my window is still in my send queue answers an earlier window (_askSeen / _staleAnswer anchored on _openLine -- my last action line, never a note; trace row stale-answer; a human's answer is never second-guessed). (2) FOUND BY THE RELEASE'S OWN SMOKE: the guard's first cut waited for everything queued before the question, and a modifier's add line is followed by my board push -- 19 answers taken for stale in 7 matches, one bounce's block attempt dropped; and an older race (since v0.6.144): a 150 ms sleep between the add line / the bleed total's +0 line and the reactions-only window lost answers that came in ~50 ms -- two bleed-total windows in three ran out their clock in every arena smoke, and a bounce's new target's block was never taken up (the bleed landed on the blocker). The window now opens with its line. Both need an answer inside 150 ms: pace 0, the arena. (3) THE PROBE RESERVATION (v0.6.143, reset two lines after it was set): _probeOrder owns it; knob probeHold: 0 = as it played since v0.6.143 (the default), 1 = the reservation as designed, 2 = only when my actors out-number my prey's unlocked bodies (Johan's bait read); trace rows probe-order (hold, outnumber, reserved) and probe-hold; measured in the lab (lab-probe.js). Arena v1.4.8 whitelists dodgeOut (missed in v0.6.205) and probeHold. Sections 150-152 (17).
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -559,6 +559,7 @@ class Bot {
     waveNarrow: 1,           // v0.6.197 (Johan 28 Sep: the wave is calibration, the Malkavian guide's narrowed wave): 1 = a wave deck spends its maneuver (for a Malkavian: the stealth half of Swallowed by the Night) only when the expected strike would torpor the vampire, or when one maneuver ends a dangerous combat (P(they press) < 0.5) -- 0 = v0.6.156's wave (any danger >= 0.2). DEFAULT 1 after the bench (Malkavian pinned, 24 + 24: +1.36 vs the control's +1.53, inside the noise; the rule fired 23 times -- kept 11, ranged 5, torpor 5, no-press 2 -- and maneuvers fell 15 -> 7).
     blockCost: 1,            // v0.6.197 (Johan 28 Sep: the block doctrine is calibration): 1 = a block WITH an intercept card (directed or undirected, a wake-raised body included) weighs the combat it buys -- the blocker's expected loss (the TWDA-fed damage model of _blockRisk, blood at half a pool, P(torpor) x 3) against the action stopped + 0.5; never when desperate (pool damage only). 0 = odds x urgency alone (v0.6.118). DEFAULT 1 after the re-bench (48 + 48: -0.11 vs the control's +0.28; the same seeds with the price INERT gave -0.09 vs +0.20, and active vs inert paired = -0.03 +/- 0.43 -- no loss; 19 blocks let through, the variant's torpors 41 -> 36).
     combatEndStats: 1,       // v0.6.196 (Johan, 10 Oct 2026: 'build combat ends on expected / statistical damage'): 1 = a combat-ends strike (Majesty) is played only when the opposing strike is worth the card -- KNOWN when they declared first, else EXPECTED from the TWDA-informed table model; torpor and aggravated always end it; a weak striker is not worth it while a more dangerous seat exists or the copies are few. 0 = v0.6.123: always. Default 1 after the bench (Ventrue pinned, 24 + 24 on the same seeds): -0.11 +/- 0.49 against the control's -0.12 +/- 0.50 -- no loss; the rule held 68 times and played 30 where the control played 49.
+    probeHold: 0,            // v0.6.206 (Johan 16 Oct: measure the probe reservation before and after): 0 = as since v0.6.143 -- the probe ORDER (small bleeders first, the puncher last) without the reservation, which was reset right after it was set; 1 = the reservation as designed (the probers keep their hands off the heavy card); 2 = the reservation only when my actors out-number my prey's unlocked bodies (Johan's bait read). A decision knob: 0 until the measurement and Johan say otherwise
     dodgeOut: 1,             // v0.6.205 (R4, Johan 16 Oct 2026: 'play the dodge against everything with 2 or more damage -- when my own strike no longer gives equal or better output -- and when holding several'): 1 = a dodge answers what the opposing strike does to me against what my own strike would deal this round (_strikePick): a known strike of 2+ that is more than mine, or equal with two dodges in hand; an unknown one on the expected strike (combatEndStats); aggravated and the survival rule as before; 0 = v0.6.204's rule (survival only), byte for byte
     combatMind: 1,           // v0.6.156 (Johan's combat rulings, 22 Sep 2026): 1 = the combat mind (Grapple gating, bundled presses, press worth, press-to-end, range posture, long-range fists deal 0); 0 = v0.6.155's thresholds
     rushBackWeight: 1, rushFwdWeight: 1, crossRushWeight: 0,   // v0.6.53 (rush-theory v1.1): direction knobs -- cross soft-ZERO per Johan (sweepable in the arena; the counterfactual log answers R-Q5)
@@ -792,7 +793,7 @@ class Bot {
      RATE_N (80 msgs / 10 s) — and a disconnected bot is a dead seat. send()
      therefore drains through a rolling-window queue that stays safely under
      the limit at any paceMs (burst turns at paceMs 0 hit ~20 msg/s raw).   */
-  send(obj){ if(obj && this.started && (obj.t === 'log' || obj.t === 'chat')) this._evRecord(this.o.name, obj.t === 'log' ? stripTags(obj.html || '') : String(obj.msg || ''), obj.t, true); this._sq.push(obj); this._drain(); }   // v0.6.176: my own lines enter the event log too -- both sides of every exchange in one place
+  send(obj){ if(obj && this.started && (obj.t === 'log' || obj.t === 'chat')) this._evRecord(this.o.name, obj.t === 'log' ? stripTags(obj.html || '') : String(obj.msg || ''), obj.t, true); if(obj && obj.t === 'log' && !this._noting) this._openLine = obj; this._sq.push(obj); this._drain(); }   // v0.6.206: _openLine = my last action line (a note is an explanation, never what a window opens on) -- _askSeen anchors on it   // v0.6.176: my own lines enter the event log too -- both sides of every exchange in one place
   _drain(){
     if(this._sqT || !this._sq.length) return;
     const later = ms => { this._sqT = setTimeout(() => { this._sqT = null; this._drain(); }, ms); };
@@ -906,7 +907,8 @@ class Bot {
     const S = '\u0001';
     let out = String(msg).replace(/^Trainbot:\s*/, '');
     out = out.replace(/Trainbot combat/g, S).replace(/Trainbot/g, this.o.name + ' (bot)').replace(new RegExp(S, 'g'), this.o.name + ' combat');
-    this.send({ t: 'log', html: esc(out.slice(0, 300)) }); if(this._wdT) this._watchdogArm();
+    this._noting = true; try{ this.send({ t: 'log', html: esc(out.slice(0, 300)) }); } finally { this._noting = false; }   // v0.6.206: a note is never a window's opening line (_openLine)
+    if(this._wdT) this._watchdogArm();
   }
 
   /* Pacing GATE (v0.4.5, Johan: 2s between every visible bot command in a
@@ -2642,7 +2644,7 @@ class Bot {
   }
   _emitManifest(){                   // A2 (v0.6.73): deck intent + effective knobs
     const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {};
-    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut']) if(this.o[k] !== undefined) kn[k] = this.o[k];
+    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold']) if(this.o[k] !== undefined) kn[k] = this.o[k];
     this._emit('manifest', { seat: this.o.seat || null, deck: this.o.deckName || null, persona: this.o.persona, strategy: ds.strategy || null, axes: ds.axes || [], knobs: kn });   // v0.6.88: seat carried when the arena provides it -- the manifest is now self-describing for seat order
   }
   _deckAxes(){ const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {}; return ds.axes || []; }   // v0.6.107 (B1): the manifest's axes, finally read
@@ -2706,6 +2708,8 @@ class Bot {
     else return false;
     const actorSeat = this._seatOfName(who);
     if(!actorSeat || actorSeat === this.seat) return true;             // not a seated actor (or my own echo) -- parsed, no window
+    { const apl = (this.players || []).find(q => q && q.seat === actorSeat), apub = this.table && this.table[actorSeat] && this.table[actorSeat].pub;   // v0.6.206: a BOT announces an action with its acting minion's own name -- a bot line that reads like an announce but names no minion on its public board is an explanation (a fetch's note matched L12.uEquip: a window for an action that never was, and its Pass answered the actor's NEXT question). Humans' lines are untouched: their names are the client's
+      if(apl && apl.bot && apub && Array.isArray(apub.cards) && apub.cards.length && info.vamp && !apub.cards.some(c => c && c.name === info.vamp)){ this.o.log('not an action: ' + who + "'s line names no minion of theirs (" + info.vamp + ') -- no window'); return true; } }
     const role = (this.nextLive(actorSeat) === this.seat) ? 'prey' : (this.prevLive(actorSeat) === this.seat) ? 'predator' : null;
     if(!role) return true;                                             // neither prey nor predator of the actor: no block rights
     if(this.pending) this._clearPending('superseded by ' + sub);
@@ -3084,6 +3088,29 @@ class Bot {
   _noteTurnAct(v, act){ const s = (this._turnActs = this._turnActs || {})[v.id] = (this._turnActs[v.id] || new Set());
     if(!act.kind || act.kind === 'bleed') s.add('bleed'); if(act.kind === 'political') s.add('political');
     if(act.name && typeof act.idx === 'number') s.add('card:' + FX_NORM(act.name)); }
+  /* v0.6.143 PROBE THEN PUNCH (Johan): with a heavy bleed in hand, under two stealth cards and a prey body up, the SMALL bleeders go first -- the threat of a modifier draws the block (or a wake, or an intercept card),
+     and the heavy bleed goes last into what is left. Only for a stealth-bleed deck, and only when the plan keeps nobody home (the order otherwise decides WHO stays: v0.6.118b). The chump bleeder with combat cover goes first of all.
+     v0.6.206: cut out of the minion phase, which set `this._probe` here and reset it two lines later -- since v0.6.143 the ORDER worked and the
+     RESERVATION (the probers keep their hands off the heavy card, _actionCtxAdjust) never did: v0.6.143's measurements were made with it dead.
+     Knob probeHold (Johan 16 Oct: measure before and after): 0 = as it played since v0.6.143 (the order, no reservation); 1 = the reservation as
+     designed; 2 = the reservation only when my actors out-number my prey's unlocked bodies -- Johan's read: with more minions than the
+     opponent, 1-bleeds that threaten a Conditioning draw the blocks, and the Govern goes last with the best chance of an unblocked action. */
+  _probeOrder(actors){
+    this._probe = null;
+    if(!(this.o.stealthStack !== 0 && this._stealthAxis() && !((this.plan && this.plan.home) | 0) && actors.length >= 2 && this._preyUnlockedN() > 0)) return null;
+    const vals = new Map(actors.map(a => [a.id, ((this._actValue(a) || {}).n) || 0])); const heavy = Math.max(...vals.values());
+    const maxS = Math.max(...actors.map(a => this._stealthStack(a, new Set()).S));
+    const preyInt = this._pCat(this.preySeat(), 'intercept');
+    if(!(heavy >= 2 && (maxS === 0 || (maxS === 1 && preyInt >= 0.5)))) return null;   // v0.6.143d (Johan, 20 Sep): the bleed of 1 is RESERVED for making the best conditions for a stronger action when I hold NO stealth -- perhaps with one card when worried (an intercept-heavy prey); otherwise it is better to roll more cards and draw into more +bleed for later
+    actors.sort((a, b) => (((a.blood | 0) === 0 ? 0 : 1) - ((b.blood | 0) === 0 ? 0 : 1)) || (vals.get(a.id) - vals.get(b.id)) || ((this._combatCover(b) ? 1 : 0) - (this._combatCover(a) ? 1 : 0)));
+    /* the PUNCHER goes last: the body with the biggest stealth stack among those who can land the heavy bleed. Everyone before it keeps its hands off the heavy card (see _decideAction) -- otherwise the first actor simply plays the Govern and there is no probe. */
+    const heavyOnes = actors.filter(a => vals.get(a.id) === heavy && (a.blood | 0) > 0); const puncher = heavyOnes.sort((a, b) => this._stealthStack(b, new Set()).S - this._stealthStack(a, new Set()).S)[0];
+    const preyUp = this._preyUnlockedN(), hold = this.o.probeHold | 0, outnumber = actors.length > preyUp;
+    if(puncher && actors.length >= 2){ const ix = actors.indexOf(puncher); actors.splice(ix, 1); actors.push(puncher);
+      if(hold === 1 || (hold === 2 && outnumber)) this._probe = { puncherId: puncher.id, heavy }; }
+    this._emit('probe-order', { order: actors.map(a => ({ vamp: a.name, n: vals.get(a.id), cover: this._combatCover(a) })), puncher: puncher ? puncher.name : null, heavy, stealth: maxS, preyUp, hold, outnumber, reserved: !!this._probe });
+    return this._probe;
+  }
   _actionCtxFor(v, over){            // v0.6.205: the minion phase's action ctx for v -- ONE builder for the minion loop and the Haven Uncovered play's look ahead (over.rush: a rush that does not exist yet). Every finder here is side-effect free; the rush finders are asked quietly by a look ahead (no counterfactual row)
     const rush = (over && Object.prototype.hasOwnProperty.call(over, 'rush')) ? over.rush : this._bestRushFor(v);
     return { plain: { n: 1 + this._cryptBleedBonus(v) }, card: this._bestBleedCardFor(v), pd: this._bestPoolDmgActionFor(v), pol: this._bestPoliticalFor(v), stock: this._bestBloodStockFor(v), peek: this._bestPeekFor(v), equip: this._bestEquipActionFor(v), fetch: this._bestFetchFor(v), rush, creep: this._bestCreepFor(), strength: this._bestStrengthFor(v), recruit: this._bestRecruitFor(v), enemyRescue: this._bestEnemyRescueFor(v), ownRescue: this._bestOwnRescueFor(v), readyCrypt: this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready').length, edge: this.edge };   // fas B: edge in the ctx -- the arena traces need it to distinguish 'Dirt unfound' from 'Edge not held' (in 2-player the opponent's intervening bleed usually reclaims it, so Dirt windows are rare and PRECIOUS)   // VA: plain bleed carries the Lenny-class crypt bonus from birth
@@ -3102,6 +3129,7 @@ class Bot {
       if(done.has('bleed')){ ctx.card = null; ctx.plain = { n: 0, illegal: true }; }
     }
     if(!ahead && this._probe && v.id !== this._probe.puncherId && ctx.card && (ctx.card.n | 0) >= 2 && this.board.some(c => c && c.id === this._probe.puncherId && c.zone === 'ready' && !c.locked)){   // v0.6.143: a prober bleeds small -- the heavy card waits for the puncher
+      this._emit('probe-hold', { vamp: v.name, card: ctx.card.name, n: ctx.card.n | 0 });   // v0.6.206: the reservation's own row -- the measurement counts it
       ctx.cardReserved = ctx.card.name; ctx.card = null; }
     if(this.o.stealthStack !== 0 && ctx.card && (ctx.card.n | 0) >= 2 && !(ctx.card.st | 0)){   // v0.6.143 HOLD THE GOVERN (Johan): a heavy bleed with NO stealth in hand into a prey with a body up is a card thrown at a blocker -- a weight, not a ban ('room to hold back')
       const up = this._preyUnlockedN(), stk = this._stealthStack(v, new Set());
@@ -7301,6 +7329,7 @@ class Bot {
           const tm1 = setTimeout(() => { try { this._tallyNetActor(who, n1, av1, a1, at1, m[1]); } catch(e){ this.o.log('tally net error:', e.message); } }, 500); if(tm1.unref) tm1.unref(); } }
       const a = this._ask;
       if(a && !a.contested && this._seatOfName(who) && who !== this.o.name){
+        if(this._staleAnswer(a, who, 'block line', 'log')) return;   // v0.6.206: a bot's block of an earlier window
         if(a._whoT){ clearTimeout(a._whoT); a._whoT = null; }
         if(a._sayBlockFrom === who) return;                       // the shout came first; this line only names the minion
         a._lineBlockFrom = who; a._lineBlockAt = Date.now();
@@ -7560,6 +7589,7 @@ class Bot {
     /* as ACTOR: my Block? window listens to the table's phrases */
     if(this._ask){
       const a = this._ask;
+      if((phrase === 'Block!' || phrase === 'No block' || phrase === 'No reaction' || phrase === 'Pass' || (a.reactionsOnly && phrase === 'No')) && this._staleAnswer(a, m.who, phrase)) return;   // v0.6.206
       if(phrase === 'Hold on\u2026'){                               // someone is thinking — pause my timeout
         /* v0.6.108 (client handoff item 1, MEASURED deadlock): bots never
            operate the hold — the same doctrine _holdHook already applies,
@@ -8477,6 +8507,7 @@ class Bot {
         const elig = new Set(eligSeats.map(sn => this.seatName(sn)));
         if(!elig.size) return resolve({ what: 'no', who: null });
         this._ask = { resolve, timer: null, pausedBy: new Set(), contested: false, target: targetSeat, undirected: true, eligible: elig, passed: new Set(), reactionsOnly, t0: Date.now() };
+        this._askSeen(this._ask);   // v0.6.206: before the question is queued -- what the table can answer is what I sent before it
         this.chat(question + tailFor(this._askPlan(this._ask)));
         this._restartAskTimer();
         return;
@@ -8485,11 +8516,35 @@ class Bot {
       if(preyOut) return resolve({ what: 'no', who: null });   // never wait on ghosts: an ousted target can't block
       if(adaptive && this._humanAt(targetSeat) && !this._seatCanBlock(targetSeat, reactionsOnly)){ skipRow([this.seatName(targetSeat)], [targetSeat]); return resolve({ what: 'no', who: null }); }   // v0.6.194 (Adaptive): the question the human cannot act on is skipped
       this._ask = { resolve, timer: null, pausedBy: new Set(), contested: false, target: targetSeat, reactionsOnly, t0: Date.now() };   // v0.6.106 (#3): the roster hook reads THIS
+      this._askSeen(this._ask);   // v0.6.206
       this.chat(question + tailFor(this._askPlan(this._ask)));
       this._restartAskTimer();                                 // v0.3.10: 5 s of table silence → the ROOM's Reaction timer (decide verb) is armed inside (v0.6.194: never in Turn-based); the ask still waits its full clock
     });
   }
 
+  /* v0.6.206 (the late bounce of R4's smokes): a BOT answers my action on its announce line, so an answer of a bot that reaches me while that
+     line is still in my send queue answers something else -- an earlier window. My queue can hold a turn's lines for a second (the token
+     bucket); a Pass from my prey's window for a line that was no action (a fetch's note read as an equip) landed in that gap and declined my
+     bleed's Block? before my prey had seen the bleed; its real answers then fell one window late, and its bounce came after the bleed had
+     resolved. `announced` flips when the line that OPENS the window is on the wire: the last action line I queued (`_openLine` -- the
+     announce, a modifier's add line, the bleed total), never a note. Not 'everything I queued before the question': the first cut waited for
+     that, and a modifier's add line is followed by my board push -- my prey answered the add line while the board was still queued, the Pass
+     was taken for stale and the window ran out its clock (17 times in the release's own smoke), and once a bounce's new target's Block! was
+     dropped the same way and the bleed landed on it. Without a socket (the fixtures) `announced` is true at once. */
+  _askSeen(a){
+    const m = this._openLine;
+    if(!m || !this.ws || this._sq.indexOf(m) < 0){ a.announced = true; return; }
+    a.announced = false;
+    const cbs = this._wireCbs || (this._wireCbs = new WeakMap()), l = cbs.get(m), f = () => { a.announced = true; };
+    if(l) l.push(f); else cbs.set(m, [f]);
+  }
+  _staleAnswer(a, who, phrase, via){
+    if(!a || a.announced !== false) return false;
+    const sp = (this.players || []).find(q => q && q.name === who); if(!(sp && sp.bot)) return false;   // a human may answer what the fx clone showed; only a bot's answer is provably early
+    this.o.log('stale ' + phrase + ' from ' + who + ' ignored: my action is not on the wire yet -- it answers an earlier window');
+    this._emit('stale-answer', { who, phrase, via: via || 'say' });
+    return true;
+  }
   _settleMs(){ return Math.max(300, Math.min(1500, this.o.paceMs | 0 || 600)); }   // v0.6.103 (#2): how long to wait for a roster after a possible oust -- bounded, pace-scaled
   async _settleOust(seat, n){        // v0.6.103 (#2): after a directed through-resolution of n against `seat`: if their last pushed pool cannot survive it, wait (bounded) until the roster marks them out -- at paceMs 0 the next Block? would otherwise open before the prey's bounty/roster is even read (no macrotask yield between 'It resolves' and the next ask)
     const tp = this.table && this.table[seat] && this.table[seat].pub;
@@ -8794,23 +8849,10 @@ class Bot {
       let prey = this.decide('bleed-target', {}).seat;
       const actors = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && !c.locked)
                                 .sort((a, b) => (((a.blood | 0) === 0 ? 0 : 1) - ((b.blood | 0) === 0 ? 0 : 1)) || (this._blockerWorth(a) - this._blockerWorth(b)));   // v0.5: 0-blood vampires FIRST — the mandatory-hunt precondition; v0.6.118b: then the WORST blockers first, so the body that stays home (last) is the one worth keeping
-      /* v0.6.143 PROBE THEN PUNCH (Johan): with a heavy bleed in hand, under two stealth cards and a prey body up, the SMALL bleeders go first -- the threat of a modifier draws the block (or a wake, or an intercept card),
-         and the heavy bleed goes last into what is left. Only for a stealth-bleed deck, and only when the plan keeps nobody home (the order otherwise decides WHO stays: v0.6.118b). The chump bleeder with combat cover goes first of all. */
-      if(this.o.stealthStack !== 0 && this._stealthAxis() && !((this.plan && this.plan.home) | 0) && actors.length >= 2 && this._preyUnlockedN() > 0){
-        const vals = new Map(actors.map(a => [a.id, ((this._actValue(a) || {}).n) || 0])); const heavy = Math.max(...vals.values());
-        const maxS = Math.max(...actors.map(a => this._stealthStack(a, new Set()).S));
-        const preyInt = this._pCat(this.preySeat(), 'intercept');
-        if(heavy >= 2 && (maxS === 0 || (maxS === 1 && preyInt >= 0.5))){   // v0.6.143d (Johan, 20 Sep): the bleed of 1 is RESERVED for making the best conditions for a stronger action when I hold NO stealth -- perhaps with one card when worried (an intercept-heavy prey); otherwise it is better to roll more cards and draw into more +bleed for later
-          actors.sort((a, b) => (((a.blood | 0) === 0 ? 0 : 1) - ((b.blood | 0) === 0 ? 0 : 1)) || (vals.get(a.id) - vals.get(b.id)) || ((this._combatCover(b) ? 1 : 0) - (this._combatCover(a) ? 1 : 0)));
-          /* the PUNCHER goes last: the body with the biggest stealth stack among those who can land the heavy bleed. Everyone before it keeps its hands off the heavy card (see _decideAction) -- otherwise the first actor simply plays the Govern and there is no probe. */
-          const heavyOnes = actors.filter(a => vals.get(a.id) === heavy && (a.blood | 0) > 0); const puncher = heavyOnes.sort((a, b) => this._stealthStack(b, new Set()).S - this._stealthStack(a, new Set()).S)[0];
-          if(puncher && actors.length >= 2){ const ix = actors.indexOf(puncher); actors.splice(ix, 1); actors.push(puncher); this._probe = { puncherId: puncher.id, heavy }; }
-          this._emit('probe-order', { order: actors.map(a => ({ vamp: a.name, n: vals.get(a.id), cover: this._combatCover(a) })), puncher: puncher ? puncher.name : null, heavy, stealth: maxS, preyUp: this._preyUnlockedN() });
-        }
-      }
+      this._probeOrder(actors);   // v0.6.143 PROBE THEN PUNCH; v0.6.206: cut out (the reservation was reset two lines after it was set -- see _probeOrder)
       this.board.filter(c => c.kind === 'crypt' && c.zone === 'torpor' && !c.locked && (c.blood | 0) >= 2).forEach(c => actors.unshift(c));   // v0.6.128: a torpored vampire with 2 blood walks out on its OWN action, before any ready body considers rescuing it
       this._actorQueue = actors;   // v0.6.64 (B-fix): the LIVE queue -- Warsaw's refresh pushes the actor back on and the index loop revisits it
-      this._turnAttempts = 0; this._probe = null;   // v0.6.143: block attempts my prey has made against me THIS turn; the probe order's reservation
+      this._turnAttempts = 0;   // v0.6.143: block attempts my prey has made against me THIS turn. v0.6.206: `this._probe = null` sat here, after _probeOrder had set it -- the reservation never took effect (it is reset at the top of _probeOrder now)
       this._actAgainUsed = new Set(); this._actAgainN = {}; this._lastAct = null; this._turnActs = {};   // v0.6.123: per minion phase; v0.6.129: + the per-minion ledger of what was already done this turn
       for(let _ai = 0; ; _ai++){   // v0.6.64: index form over the LIVE queue (a for..of snapshot made the refreshed vampire's extra action an illusion). v0.6.126: the act-again look is ONE visible step at the top of every pass -- including the pass AFTER the last actor, which is why the exit test sits below it (it was hidden in the for-condition as _actAgainTail)
         if(this.out) break;
@@ -9156,7 +9198,7 @@ class Bot {
             this._doEquip(v, act.target.name, act.target.cost | 0);
             this._fetchDebt = this._fetchDebt || {};
             this._fetchDebt[act.target.name] = (this._fetchDebt[act.target.name] | 0) + 1;
-            this.note('Trainbot: fetches ' + act.target.name + ' from the library and equips ' + v.name + ' (library shuffled \u2014 the fetched copy is off the top).');
+            this.note('Trainbot: ' + act.target.name + ' comes from the library onto ' + v.name + ' (library shuffled \u2014 the fetched copy is off the top).');   // v0.6.206: was '... from the library and equips V (...).' -- it parsed as an undirected EQUIP announce (L12.uEquip), so my prey and predator opened a window for an action that never was and said Pass; that Pass then answered my NEXT action's Block? before they had seen it (the late bounce of R4's smokes: every one followed a Magic of the Smith)
             this._maybePerfectionist(v);
           }
           this._actingVamp = null;
@@ -9313,8 +9355,7 @@ class Bot {
             if(!d.play) break;
             await pace();
             if(!this._playBleedModifier(v, mod)) break;   // card/vampire shifted under the await -- stop rather than loop forever
-            pumped++;
-            await sleep(150);
+            pumped++;   // v0.6.206: the window opens WITH its line, no beat between -- an answer to the add line found no ask open in that gap (see the bleed total below)
             curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +' + mod.n + ' bleed \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });   // v0.6.114 (Johan's rule): blocks were finally declined before the modifier -- this window takes REACTIONS only (reduce/bounce); a Block! is refused, not contested   // steg 5 (16 July, rulebook-verified): a modifier NEVER reopens blocks ("Detailed course of an action", C: only a target change does) -- so the prompt invites REACTIONS (Deflection/Pass), not a block. Sandbox tolerance below is deliberate: if a human insists on a late block anyway, the table is the referee (house rule, agreed take-back) -- the bot follows the rules itself but never enforces them on others.
             await sleep(150);
             if(curAns.what === 'block') break;   // a late block ends the window outright -- combat, not more offers (sandbox: the table allowed it, so honour it)
@@ -9327,7 +9368,10 @@ class Bot {
           if(this.o.lateBounce !== 0 && (tgtBot || humanWantsTotal) && !pumped && curAns.what !== 'block' && !this._actingVamp.bounced && (this._actingVamp.n | 0) >= 1 && this._actingVamp.target){
             this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> adds +0 bleed (= ' + this._actingVamp.n + ').' });
             this._emit('bleed-total', { vamp: v.name, n: this._actingVamp.n, pumped: 0 });
-            await sleep(150);
+            /* v0.6.206 (found by the release's own smoke): no beat between the line and its window. A 150 ms sleep sat here and after a
+               modifier's add line; a bot answers that line in ~50 ms, so a Pass, a bounce's new target's Block! landed with no ask open and
+               were lost -- the window then ran out its clock (about one modifier window in four in R4's smokes), and a block attempt was
+               never taken up: the bleed landed on the blocker (a desperate Nosferatu ousted by a bleed it had blocked, section 152). */
             curAns = await this._askBlock('Trainbot: ' + v.name + ' \u2014 bleed total ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + ', no more modifiers. Any reaction before it resolves?', { reactionsOnly: true });
             await sleep(150);
           }
@@ -9363,6 +9407,7 @@ class Bot {
          (v0.5+: phaseActs.influence + any bonus from in-play `actGrant`
          cards, e.g. a curated Information Highway, raises the PERMANENT
          baseline via _recomputePhaseActs and this reads it generically.) */
+      this._probe = null;   // v0.6.206: the reservation lives for the minion phase it was made in
       await this._announcePhase('Influence');
       const availInf = this._phaseAvail('influence');
       const nPlayers = Math.max(1, (this.players || []).length);
