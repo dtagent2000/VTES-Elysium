@@ -3226,7 +3226,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.160';   // v2.6.160 (16 Oct 2026, THE EYE, pure client -- purge; srv-2.6.46 unchanged, no wire change; bot v0.6.201 beside): Johan's answer to the bot project's wish (item 5, their 15 Oct audit): on every other seat's mat -- Structured's helicopter view, the columns and a seat visit, all drawn by buildMat -- an eye sits in the pool zone's corner where your own Edge sits on your board, and opens what you may look at there (oppLookItems: their open hand when it is open to you, the ash heap, the burned cards -- the same rows as the pool's right-click, which now reuses them). Quiet (greyed) until there is something to see, 'on' while the ash heap or burned pile holds cards, gold while their hand is open to you (mateyeState; not the Edge's red, which in that corner means the Edge on your own board). A grant or a revoke repaints the eyes in every view (mateyeSync -- the seat visit was the only repaint); the eye is board chrome (no pan, no wheel zoom) and its click never jumps the seat. The look rows are pure UI now (noUndo). Classic is unchanged: the pool globe's right-click has offered the same rows since v2.6.28.
+const VERSION='2.6.161';   // v2.6.161 (16 Oct 2026, THE VISIT FROM ABOVE, pure client -- purge; srv-2.6.46 unchanged, no wire change; bot v0.6.201 beside): found while running v2.6.160's eye online. (1) A seat visit entered from the helicopter view (V, then a number key) stood on the retired L1 stage: exitL3 drops l2cols, so fitBoard scaled the fixed 1004 x 616 board, and the visit had no hand dock. switchView now enters L2 under a visit that comes from L3, exactly as a visit from L2 stands on it. (2) setAside's settle: its 250 ms backstop no longer swallows a later transitionend. When frames stall right after a view switch (headless Chromium drew none for 225 ms while timers ran), the transition starts late, the backstop measured the panel before it moved and nothing measured it again -- the visit above was drawn 1172 px wide in a 1098 px area at 1366 x 768 (37 px under the panel, 37 px past the window). The panel's own transitionend now always sends the final resize, the newest call owns the transition (one listener, one backstop) and a child's transition does not count; a Classic visit (L4, then a number) gets the same final resize.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -8521,7 +8521,7 @@ function applyAside(){
   document.body.classList.toggle('aside-collapsed', asideCollapsed);
   document.documentElement.style.setProperty('--aside-w', asideCollapsed ? '0px' : '268px');   // sync CSS var explicitly — fixes tab-centering for position:fixed elements that may not inherit from body
 }
-let _asideResize=false;
+let _asideResize=false, _asideTe=null, _asideBack=0;   // v2.6.161: the newest setAside owns the panel's width transition -- its transitionend listener (_asideTe) and its backstop timer (_asideBack)
 function setAside(on, persist=true){
   asideCollapsed=on; applyAside();
   if(on && board.classList.contains('l2dockopen') && typeof fillDockLog==='function') fillDockLog();
@@ -8530,11 +8530,15 @@ function setAside(on, persist=true){
   _asideResize=true;
   requestAnimationFrame(()=>{ window.dispatchEvent(new Event('resize')); });   // immediate: lets non-geometry consumers (placePlayed/placeReady, the plain layout() resize listener) react right away -- _asideResize is still true here, so l3canonAR correctly ignores this mid-transition width
   // v2.5.76: the authoritative correction used to be a guessed 200ms setTimeout, which raced the aside's real 140ms width transition on a slow frame/tab and could leave L3/L4 (they read live board.clientWidth) stuck rendering the pre-collapse width -- the reported symptom was dead space on the right after L2->L3 that only cleared on an unrelated click or a manual view round-trip. transitionend is the actual end-of-transition signal, so wait for THAT instead of a duration guess; a timeout remains only as a backstop for the rare case transitionend never fires (e.g. a display:none ancestor, or the transition being skipped entirely under prefers-reduced-motion).
+  // v2.6.161: the backstop used to SETTLE the race -- when it fired first, the panel's own transitionend was swallowed. Frames can stall right after a view switch (headless Chromium drew none for 225 ms while timers ran; a slow device can too): the transition then starts late, the backstop measured the panel before it had moved, and nothing measured it again (a seat visit from the helicopter view stayed 1172 px wide in a 1098 px area). Now the backstop covers only a transition that has not ended yet or never runs, and a later transitionend still sends the final resize.
   const _asideEl=$('aside');
-  let _asideSettled=false;
-  const _asideFinish=()=>{ if(_asideSettled) return; _asideSettled=true; _asideResize=false; window.dispatchEvent(new Event('resize')); };
-  if(_asideEl) _asideEl.addEventListener('transitionend', function _te(e){ if(e.propertyName!=='width') return; _asideEl.removeEventListener('transitionend', _te); _asideFinish(); });
-  setTimeout(_asideFinish, 250);   // backstop; 250ms comfortably clears the 140ms CSS transition even under load
+  if(_asideEl && _asideTe) _asideEl.removeEventListener('transitionend', _asideTe);   // a newer call owns the transition
+  clearTimeout(_asideBack);
+  let _ended=false;
+  const _asideFinish=()=>{ _asideResize=false; window.dispatchEvent(new Event('resize')); };
+  const _te=e=>{ if(e.propertyName!=='width' || e.target!==_asideEl) return; _asideEl.removeEventListener('transitionend', _te); if(_asideTe===_te) _asideTe=null; _ended=true; _asideFinish(); };   // the panel's OWN width: a child's transition bubbles here too
+  if(_asideEl){ _asideTe=_te; _asideEl.addEventListener('transitionend', _te); }
+  _asideBack=setTimeout(()=>{ if(!_ended) _asideFinish(); }, 250);   // backstop: a transition that has not ended by now (if it still comes, it sends the final resize) or never runs (a display:none ancestor, no width change, reduced motion)
 }
 $('#asideToggle').addEventListener('click',()=>setAside(true));
 $('#asideTab').addEventListener('click',()=>setAside(false));
@@ -10809,6 +10813,7 @@ function switchView(target, instant){
   document.body.classList.toggle('invisit', typeof target==='number');   // a seat VISIT -> hide the prey/predator peek tabs (focused on one opponent; the left tab would otherwise sit over the log)
   document.body.classList.toggle('inov', target==='ov');   // L3 Helicopter -> hide prey/predator peek tabs. See TEMPLATE EXCEPTIONS.
   document.body.classList.toggle('inl4', target==='l4');   // L4 Free Board mode
+  if(prev==='ov' && typeof target==='number') enterL2();   // v2.6.161: a seat visit from the helicopter view stands on L2, as a visit from L2 does (it keeps L2 mode, above) -- exitL3 alone left the board on the retired L1 stage (no l2cols: fitBoard scaled the 1004 x 616 board) with no hand dock; here, before renderReady/renderHand, so they see the board a visit from L2 sees
   renderReady(); renderHand();                       // show/hide the Ready + Hand menus for the new view (both gated to an opponent visit / Helicopter)
   if(target==='l2'){ enterL2(); return; }
   if(target==='l4'){ enterL4(); return; }

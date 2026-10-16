@@ -4747,6 +4747,57 @@ test('v2.6.160 the eye: a grant or a revoke repaints every eye of that seat (the
   assert(A.isBoardChrome({ closest: sel => (sel.split(',').indexOf('.mateye') >= 0 ? {} : null) }), 'board chrome: a press on the eye never starts the L3 pan, the wheel never zooms');
   assert(/\.mateye\.quiet\{ opacity:\.4; \}/.test(html) && /\.mateye\.lit\{ border-color:var\(--brass\);/.test(html), 'greyed when quiet, brass when lit');
 });
+test('v2.6.161 a seat visit from the helicopter view stands on L2, as a visit from L2 does -- switchView enters L2 under it (v2.6.160: exitL3 alone left the board on the retired L1 stage, where fitBoard scales the 1004 x 616 board, and the visit had no hand dock; found running the eye online)', () => {
+  const A = loadClient(CLIENT), D = A.__doc, synced = [];
+  const tab = id => ({ classList: { toggle(c){ synced.push(id + ':' + c); }, add(){}, remove(){}, contains(){ return false; } }, title: '', style: {} });
+  D._ids.l2preyTab = tab('prey'); D._ids.l2predTab = tab('pred');                    // renderL2 syncs these two tabs (l2syncTabs): the trace that L2 was entered
+  A.net.roster = [{ seat: 1, name: 'Me' }, { seat: 2, name: 'Astrid' }, { seat: 3, name: 'Bo' }];
+  const pub = { pool: 30, cards: [], counts: { hand: 7, library: 40, crypt: 8 } };
+  A.net.boards = { 2: { who: 'Astrid', pub }, 3: { who: 'Bo', pub } };
+  A.net.view = 'ov'; A.switchView(2);
+  eq(A.net.view, 2, 'the visit');
+  assert(synced.length > 0, 'from the helicopter view the visit stands on L2: renderL2 ran under it (v2.6.160: it did not)');
+  synced.length = 0; A.switchView(3);
+  eq(synced.length, 0, 'a visit to another visit stays where it stands');
+  synced.length = 0; A.net.view = 'l2'; A.switchView(2);
+  eq(synced.length, 0, 'a visit from L2 keeps L2 as it was (no second render)');
+  synced.length = 0; A.switchView('l2');
+  assert(synced.length > 0, 'Home from a visit: L2, as before');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const sv = html.slice(html.indexOf('function switchView(target, instant){'), html.indexOf('function jumpSeat(n){'));
+  const iView = sv.indexOf('net.view=target;'), iFix = sv.indexOf("if(prev==='ov' && typeof target==='number') enterL2();"), iMenus = sv.indexOf('renderReady(); renderHand();');
+  assert(iView > 0 && iFix > iView && iMenus > iFix, 'entered once net.view is the visit and before renderReady/renderHand, so they see the board a visit from L2 sees');
+  const fb = html.slice(html.indexOf('function fitBoard(){'), html.indexOf('function enterL0(){'));
+  assert(fb.indexOf("if(board.classList.contains('l2cols')){ board.style.transform='';") > 0 && fb.indexOf("board.style.transform='scale('+(s||1)+')';") > 0, 'why: L2 columns fill the area by CSS; without l2cols (what exitL3 leaves) fitBoard scales the 1004 x 616 stage');
+});
+testA('v2.6.161 the side panel settles on its OWN transitionend: a 250 ms backstop that fires first no longer swallows it (when frames stalled after a view switch, the backstop measured the panel before it moved and nothing measured it again -- a seat visit from the helicopter view stayed 1172 px wide in a 1098 px area); the newest call owns the transition; a child\'s transition does not count', async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const A = loadClient(CLIENT), D = A.__doc, W = A.__win, q0 = D.querySelector, tes = [];
+  const aside = { addEventListener(t, f){ if (t === 'transitionend') tes.push(f); }, removeEventListener(t, f){ const i = tes.indexOf(f); if (i >= 0) tes.splice(i, 1); } };
+  await sleep(320);                                                                      // the boot's own setAside (enterL0) settles first
+  let n = 0; W.dispatchEvent = e => { if (e && e.type === 'resize') n++; return true; };   // requestAnimationFrame never calls back in the harness: only the settle's resizes are counted
+  D.querySelector = sel => sel === 'aside' ? aside : q0(sel);
+  const end = (target = aside, propertyName = 'width') => { const f = tes[tes.length - 1]; if (f) f({ propertyName, target }); };
+  try {
+    A.setAside(false, false);
+    eq(tes.length, 1, 'one listener waits for the panel');
+    await sleep(320);
+    eq(n, 1, 'a stalled transition: the backstop sends one resize');
+    eq(tes.length, 1, 'and the listener still waits');
+    end();
+    eq(n, 2, 'the panel\'s own end, AFTER the backstop, sends the final resize (v2.6.160: swallowed -- the geometry measured before the panel moved stayed)');
+    eq(tes.length, 0, 'and the listener leaves');
+    n = 0; A.setAside(true, false); end();
+    eq(n, 1, 'the usual order: the end sends the resize');
+    await sleep(320); eq(n, 1, 'and the backstop then stays quiet');
+    n = 0; A.setAside(false, false); A.setAside(false, false);
+    eq(tes.length, 1, 'two calls in a row: only the newest listens');
+    end({}); eq(n, 0, 'a child\'s width transition bubbling up does not count');
+    end(aside, 'opacity'); eq(n, 0, 'nor does another property');
+    await sleep(320); eq(n, 1, 'one backstop, not two (the older call\'s was cleared)');
+    end(); eq(n, 2, 'and the real end still comes through');
+  } finally { D.querySelector = q0; }
+});
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

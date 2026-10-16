@@ -4,19 +4,20 @@
 a release bumps it in the same commit.*
 
 **Repository:** https://github.com/dtagent2000/VTES-Elysium — branch `main`. The repo is the truth; the Claude
-project holds only this file and `PROJECT-INSTRUCTIONS.md`.
+project holds only `PROJECT-INSTRUCTIONS.md` and a version-free copy of this file that points here (rewritten 16 Oct 2026;
+it had stood still at v2.6.142). The versions live in this file only.
 
 ## Where we stand
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.160** (THE EYE: on every other seat's Structured mat, in the pool zone's corner where your own Edge sits, an eye opens their open hand, ash heap and burned cards -- greyed until there is something to see, brass while their hand is open to you; carries v2.6.159 THE BRIDGE ANSWERS BOTH WAYS: the hotseat bridge relays the Edge, reveals and logTo both ways; a Debug bot's hand is inspectable offline; the Bleed menu's Reduce row; the bridge stays liftable; carries v2.6.158 WHAT THE PLAY-TEST FOUND and earlier) | `client/elysium-vtes-bord.html`, copied to `/` |
+| client | **v2.6.161** (THE VISIT FROM ABOVE: a seat visit from the helicopter view stands on the Normal view, with the hand dock -- it stood on the retired L1 stage; the side panel's late transitionend is no longer swallowed, so a Classic visit settles at the right size too; carries v2.6.160 THE EYE: on every other seat's Structured mat, in the pool zone's corner where your own Edge sits, an eye opens their open hand, ash heap and burned cards -- greyed until there is something to see, brass while their hand is open to you; carries v2.6.159 THE BRIDGE ANSWERS BOTH WAYS and earlier) | `client/elysium-vtes-bord.html`, copied to `/` |
 | server | **srv-2.6.46** (the room option `tableLayout`; srv-2.6.45: the pub keeps `tn`/`rn`; srv-2.6.44: the room option `tableSetup`) | `client/elysium-server.js`, copied to `/` |
 | bot (consumed) | **v0.6.201** (16 Oct 2026; v0.6.199–201 read in one round) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.160 / srv-2.6.46 (no change at v2.6.160; §12: the Reduce line + the DEBUG lines; §12.2: the bridge's relays, v2.6.159) | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **299/0** (no skips, bot v0.6.201 beside) · canary 69/0 · dispatch 68/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.161 / srv-2.6.46 (no change at v2.6.160–161; §12: the Reduce line + the DEBUG lines; §12.2: the bridge's relays, v2.6.159) | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **301/0** (no skips, bot v0.6.201 beside) · canary 69/0 · dispatch 68/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
-**Live on elysium.cards:** server srv-2.6.45 + bot v0.6.198 since 13 Oct 16:47 (PR #7). Client v2.6.150/151 (PRs #9, #10) were merged that evening. Client v2.6.157 + server srv-2.6.46 were merged with PR #12 on 14 Oct (a client purge AND a server restart together). Client v2.6.158 (PR #13, with the play-test handoff) needs a client purge only. Bot v0.6.199–201 were merged on 15–16 Oct (PRs #14–16). Client v2.6.159 (PR #17) needs a client purge and a purge of `/elysium-bot.js`; the server is unchanged. Client v2.6.160 (PR from `mat-eye-v2.6.160`) needs a client purge only.
+**Live on elysium.cards:** server srv-2.6.45 + bot v0.6.198 since 13 Oct 16:47 (PR #7). Client v2.6.150/151 (PRs #9, #10) were merged that evening. Client v2.6.157 + server srv-2.6.46 were merged with PR #12 on 14 Oct (a client purge AND a server restart together). Client v2.6.158 (PR #13, with the play-test handoff) needs a client purge only. Bot v0.6.199–201 were merged on 15–16 Oct (PRs #14–16). Client v2.6.159 (PR #17) needs a client purge and a purge of `/elysium-bot.js`; the server is unchanged. Client v2.6.160 (PR #18, merged 16 Oct) needs a client purge only. Client v2.6.161 (PR from `visit-from-helicopter-v2.6.161`) needs a client purge only; it carries v2.6.160, so one purge covers both.
 
 ## The first ten minutes
 
@@ -31,7 +32,7 @@ head -40 docs/elysium-learnings.md
 # the bundle beside the suite (gitignored — copy, never commit):
 cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
 node check-versions.js             # must end green: code, doc headers, AND the root == client/ + bot/ gate
-node test-client-logic.js          # 299 passed, 0 failed, 0 skipped (with the bundle beside)
+node test-client-logic.js          # 301 passed, 0 failed, 0 skipped (with the bundle beside)
 ```
 
 The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification commands" and `client/SKILLS.md`
@@ -69,7 +70,7 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 
 ## Open right now (16 Oct 2026)
 
-- **v2.6.159 (16 Oct):** the client half of bot v0.6.199–201 is built (`docs/handoffs/REPLY-to-bot-2026-10-16-v0.6.201.md`). **Built in v2.6.160:** the eye on every other seat's Structured mat (Johan's placement). **Still parked -- follow up when it becomes relevant:** the same eye as a chip on Classic's pool globes (the globe's right-click already has the rows), and new rows in the eye's menu as the bots need them. **Seen in v2.6.160's browser run, Johan's call:** in a seat visit your own pool's '?' help button (`#poolHelp`) sits in the visited seat's pool zone (`body.invisit` hides `#edge` and `#pseat`, not it). Earlier record: (1) the bot project's wish (item 5) to make an opponent's open hand and ash heap findable. Today both sit in the right-click menu of the seat's pool in every view (Structured: the mat's pool box, the seat visit's 'Pool N', the Table panel row; Classic: the pool globe, since v2.6.28), and no mat draws an opponent's ash heap. Proposed: tooltips that name the open hand + a 👁 chip; Johan's idea for later: one 👁 icon per opponent with a submenu of what you may look at (hand, ash heap, anything else), decided when the bots need it. (2) Reduce at a hotseat: while a bot acts the camera shows its board, so the Reduce row on your own minion needs ⌂ Home first (a Hold on gives the time); options when it matters: bring the camera home when a bot's action is aimed at you, or a Reduce entry in the quick-phrase menu with your minions to pick from. **For the bot project:** copy our canary §5; lift `AVR_CMB0` / `AVR_CMB_KEYS` / `tallyCombatMerge` if they want the combat fields in their hotseat tool.
+- **v2.6.159–161 (16 Oct):** the client half of bot v0.6.199–201 is built (`docs/handoffs/REPLY-to-bot-2026-10-16-v0.6.201.md`). **v2.6.160:** the eye on every other seat's Structured mat (Johan's placement); run online afterwards (two humans on the real server, one with an emulated touch screen): 21 of 21, a tap and a long-press included. **v2.6.161:** a seat visit from the helicopter view stands on the Normal view, with the hand dock (it stood on the retired L1 stage, scaled while the side panel opened -- in headless Chromium 37 px under the panel and 37 px past the window at 1366×768); the side panel's settle no longer swallows a late transitionend, so a Classic visit settles at the right size too. **Decided (Johan, 16 Oct):** the '?' of your own pool (`#poolHelp`) in a seat visit stays as it is. **Still parked -- follow up when it becomes relevant:** the eye as a chip on Classic's pool globes (the globe's right-click already has the rows); new rows in the eye's menu as the bots need them; Reduce at a hotseat (while a bot acts the camera shows its board, so the Reduce row on your own minion needs ⌂ Home first; options when it matters: bring the camera home when a bot's action is aimed at you, or a Reduce entry in the quick-phrase menu). **For the bot project:** copy our canary §5; lift `AVR_CMB0` / `AVR_CMB_KEYS` / `tallyCombatMerge` if they want the combat fields in their hotseat tool.
 
 - **The play-test (14 Oct):** `client/playtest/` plays a real game against the bots and measures it (`client/playtest/PLAYTEST.md`). Its 24 bot findings wait in
   `docs/handoffs/REPLY-to-bot-2026-10-14-playtest.md`; our four are fixed in v2.6.158. **Decided (Johan):** the human handles their own values by hand
