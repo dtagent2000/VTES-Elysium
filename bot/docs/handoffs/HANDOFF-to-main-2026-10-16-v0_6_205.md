@@ -11,7 +11,7 @@
 - **Please re-embed `START-HERE-BOTS.html`** (§5).
 
 ## 1. What changed for you in v0.6.205
-- **The dodge (Johan, 16 Oct).** A bot dodges a strike of 2 or more that would do more to its vampire (damage + steal) than its own strike would do this round. It dodges an equal strike only when it holds two dodges. It always dodges aggravated damage or a strike that would empty or torpor its vampire, as before. When the bot strikes first it reads your expected strike (the number its Majesty already uses).
+- **The dodge (Johan, 16 Oct).** With one dodge in hand a bot dodges a strike of 2 or more that would do more to its vampire (damage + steal) than its own strike would do this round. With two it spares one even against a strike for 1, as long as yours does at least as much as its own (when its own does more — a Roundhouse — it strikes). It always dodges aggravated damage or a strike that would empty or torpor its vampire, as before. Otherwise it keeps the dodge and strikes when its own strike would put your vampire into torpor (with two dodges, also when it would empty it), or when environmental damage that lands anyway (Carrion Crows) would put its vampire into torpor regardless. When the bot strikes first it reads your expected strike (the number its Majesty already uses).
   - The yardstick is the strike the bot would really play this round: its strike card or weapon, a steal, or its hand (1 + strength; 0 at long range).
   - Between bots nothing changes in the handshake: the answering bot already knows the acting bot's strike when it chooses (v0.6.203).
   - Against a human the bot reads your announced strike when you strike first (the combat steps ask the acting minion first), and your expected strike when it strikes first — the same rule as its Majesty.
@@ -55,7 +55,8 @@
 - The host's own action to burn Haven Uncovered, and Wasserschloss Anif's burn action, are not built.
 - Guardian Angel's prevention covers normal damage only (as the equipment prevent does); an all-aggravated strike is not prevented by it.
 - Older, unchanged: a human's bounce of a bot's bleed is not read by the acting bot (handoff v0.6.203, §3).
-- **Your finding 1 (REPLY v0.6.204, §4.1), not built here:** after a question, everything the bot sends waits the chat beat (~4.96 s at the client's pace), the verdict line and the booking of a typed stealth included. Your idea (status lines skip the chat beat, or the next wait shows only once the verdict is on the wire) is a design question; it goes to Johan with our proposal in the next round.
+- Between bots only, found in our final smoke (older than this release): a bot target can bounce a bot's bleed after the acting bot has resolved it — the bleed lands on the new target (the ledger pairs it), but the new target's block attempt is not taken up. Twice in ~470 bleeds through in our smokes; our next round, nothing for you.
+- **Your finding 1 (REPLY v0.6.204, §4.1), not built here:** after a question, everything the bot sends waits the chat beat (~4.96 s at the client's pace), the verdict line and the booking of a typed stealth included. Your idea (status lines skip the chat beat, or the next wait shows only once the verdict is on the wire) is a design question; Johan wants it analysed properly, so it goes to him with our analysis and proposal in the next round.
 
 ## 5. The bundle
 - Changed and copied to the root in this PR: `elysium-bot.js` (v0.6.205), `elysium-cardfx.json` / `.js` (curated 99 → 105: the six masters) and `START-HERE-BOTS.html`. The twd files are byte-identical.
@@ -63,24 +64,30 @@
   - your two findings (REPLY v0.6.204, §4.2): the nav chip and the footer now say bot v0.6.205 · client v2.6.162, and the Controls list names the rung **▶ Declare verdict**;
   - the curated masters (the "four masters do nothing" paragraph is replaced);
   - Haven Uncovered and Guardian Angel in the master phase;
-  - the dodge rule in Combat;
+  - the dodge rule in Combat (with Johan's answer on two dodges and the finishing strike);
   - "Revelations against a bot" and "Haven Uncovered on your vampire" under "Where its understanding ends";
   - the version and the curated count.
 - **Deploy:** purge `/elysium-bot.js`, `/elysium-cardfx.json` and `/elysium-cardfx.js`, and re-embed the guide at your next client release.
 
 ## Gates (v0.6.205, from `bot/`)
-All from `bot/`, on the final bytes (`elysium-bot.js` 859b7b72…, `test-bot-logic.js` 047d87e8…, `elysium-cardfx.json` bea73088…):
+All from `bot/`, on the final bytes (`elysium-bot.js` bad643d0…, `test-bot-logic.js` 0dcdba3f…, `elysium-cardfx.json` bea73088…) — re-run in full after Johan's answer to question A went in:
 - `node --check` on every changed JS file (the bot, the suite, `test-cardfx.js`, `gen-deck-coverage.js`).
-- `test-bot-logic.js` **2178/0 ×3**, alone, detached, each run in a frozen snapshot of `bot/` (v0.6.204: 2112; +66 = sections 146–149).
+- `test-bot-logic.js` **2182/0 ×3**, alone, detached, each run in a frozen snapshot of `bot/` (v0.6.204: 2112; +70 = sections 146–149).
 - `test-bot-canary.js` **69/0**, against the read-only copies of main's current client (v2.6.162 with PR #24's §12 wording).
 - `test-cardfx.js` **271/0** (265/6 on the old curated file).
 - `diag-hb1-smoke.js` **11/11**; `test-bot-hotseat.js` **11/0** (alone, against the v2.6.162 copy).
 - `client/check-versions.js` after the root copy: everything agrees (the root's 21 files, each a byte copy of `client/` or `bot/`).
-- Destructive on v0.6.204: 146 4/12, 147 6/7, 148 4/19, 149 1/13 — no abort; the late assertions are red on their own pre-change bytes (13/1, 12/1, 22/1).
+- Destructive on v0.6.204: 146 4/16, 147 6/7, 148 4/19, 149 1/13 — no abort; the late assertions are red on their own pre-change bytes (13/1, 12/1, 22/1; the new 146 on the PR's first head 13/7).
 - Beside main's client (a scratch copy of this branch — origin/main with this PR — with the bot bundle beside `client/`): the client suite **303/1** — the one red is the embed drift (Help ▸ Bots embeds v0.6.204's guide; one re-embed closes it), and their two v2.6.162 LIVE tests with the real bot (the verdict wait, its clock from the wire) are green beside v0.6.205; their canary **69/0**.
-- **The arena smoke on the final bytes** (seed 4003, 3 matches, 4 Expert bots: malkavian, tremere, nosferatu, ventrue; pool 30): no timeouts (7, 10 and 8 rounds; 209–279 s a match).
-  - `ana-ledger.py`: every bleed paired (64 equal), **VANISHED 0**; the combat names 100 right; dealt = taken in 88 rows, and the 12 others explained (7 Guardian Angel prevents on its host, 3 Hidden Strength, 2 Carrion Crows); steal pairs 6 of 6 equal (11 stolen = 11 lost).
-  - `ana-combat2.py`: handshake integrity 104/0, range agreement 104/0, press agreement 74/0, no wait ran into the safety net.
-  - `ana-inv.py`: **0 flags**. `ana-block.py` (now counting The Labyrinth's lock as stealth): no violation (168 actions, 46 blocked).
-  - R4 in play: Haven Uncovered played once and held twice (no rusher's action); four rushes went through it — two by its placer's Nosferatu (back, at its predator's Chelsea Blake) and two by the Tremere (forward, the same host: any minion may) — and one was blocked. Four free rises, each a stock that filled a vampire exactly (superior Govern for Tremere and Malkavian ×2, Enchant Kindred for Ventrue). Guardian Angel twice, seven prevents. Arcane Library: four influence locks. Wasserschloss Anif once (no blood banked: the pool was in danger twice, nobody waited once). Two Revelations discards between bots.
-- **The pre-flight smokes** (before the last changes): seed 4003 ×3 twice and seed 4005 ×2 twice with hacking, sewer, nosferatu and tremere (the four V5 decks hold no dodge card). The same audits were clean; one "range differs" pair in the first was two back-to-back combats of the same two vampires paired across by the tool's 9 s window, each combat agreeing with itself. Dodges: survival 22, known-survival 2, `unknown-out` 2; kept: `known-keep` 3, `unknown-keep` 6, `known-nothing` 1. The first seed-4005 run found the Haven played without a rush (READ-ME-FIRST-2026-10-16f §5).
+- **The arena smokes on the final bytes:**
+  - **Seed 4003, 3 matches, 4 Expert bots** (malkavian, tremere, nosferatu, ventrue; pool 30): no timeouts (8, 7 and 8 rounds; 195–226 s a match).
+    - `ana-ledger.py`: every bleed paired (64 equal), **VANISHED 0**; the combat names 74 right; dealt = taken in 63 rows, and the 11 others explained — 3 Guardian Angel prevents on its host (Wauneka), 3 Hidden Strength, 1 Kevlar Vest; 3 by the Murder of Crows Wauneka carried, 1 Carrion Crows; steal pairs 6 of 6 equal (11 stolen = 11 lost).
+    - `ana-combat2.py`: handshake integrity 74/0, range agreement 74/0, press agreement 62/0, no wait ran into the safety net.
+    - `ana-inv.py`: **0 flags**. `ana-block.py`: 156 actions, 37 blocked; its one R6 ("the same vampire attempted twice in one action") is two actions in one of its windows — a late bounce between bots (READ-ME-FIRST-2026-10-16f §6: the new target's block attempt came after the actor's `through` row), then the next action, blocked by the same vampire.
+    - R4 in play: Haven Uncovered picked four times and held each time (no rusher would rush through it that turn — the strict rule); Guardian Angel once (three prevents); three free rises (Meaghan, Dr. Stephen Norton, Nassir); two Revelations discards between bots; Ventrue Headquarters once.
+  - **Seed 4005, 3 matches** with hacking, sewer, nosferatu and tremere (the four V5 decks hold no dodge card): no timeouts (7, 7 and 5 rounds; 168–224 s).
+    - `ana-ledger.py`: every bleed paired (92 equal), **VANISHED 0**; the names 74 right; dealt = taken in 73 rows, the one other a superior Carrion Crows (2) beside a hand strike; steal pairs 7 of 7 equal (9 = 9).
+    - `ana-combat2.py`: 78/0, 78/0, 70/0, no safety-net wait. `ana-inv.py`: **0 flags**. `ana-block.py`: no violation (163 actions, 37 blocked).
+    - **The dodge:** 16 played — survival 15, `unknown-out` 1 (an expected 2.84 against hands for 1). Kept: **`known-finisher` 2** — two dodges in hand, their strike for 1 = mine, and my hands took their vampire from 1 blood to 0 (Johan's exception; both checked on the other bot's side: 0 blood after the round) — `known-keep` 1 (one dodge, their 1), `known-nothing` 3. `known-two`, `unknown-two` and `known-wasted` did not come up.
+    - Wasserschloss Anif banked once (`spare`) and paid out once (1 → Ayelech), held twice (`danger`); The Labyrinth locked twice; Arcane Library played once (no uncontrolled Tremere left: nothing to lock for); one free rise (Patrik Söderberg).
+- **The earlier smokes** (on the PR's first head and before): seed 4003 ×3 three times and seed 4005 ×2 twice. The same audits were clean. There the Haven chain ran live (held twice, then played on the predator's Chelsea Blake and rushed through four times — two by its placer's Nosferatu, two by the Tremere — one blocked), four free rises, four Arcane Library influence locks; one "range differs" pair was two back-to-back combats of the same two vampires paired across by the tool's 9 s window. The first seed-4005 run found the Haven played without a rush (READ-ME-FIRST-2026-10-16f §5).

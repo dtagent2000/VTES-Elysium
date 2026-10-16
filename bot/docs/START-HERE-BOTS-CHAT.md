@@ -36,14 +36,15 @@ A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repo
 ## Open at hand-over (16 Oct 2026, night)
 The 14 Oct play-test (main's rig, PR #13) is reviewed finding by finding in
 `bot/docs/reviews/REVIEW-playtest-2026-10-14.md`; R0–R3 shipped as v0.6.199–204 (all merged). v0.6.205 is R4, the review's
-last round, with the dodge (Johan, 16 Oct: one PR): the dodge rule (a known strike of 2+ that does more than the bot's own
-strike, an equal one with two dodges, an unknown one on the expected strike; the floor of 2 holds at a tie — open question A,
-my default); Revelations against a bot (F21: armed by the prey, the human's pick read); the six V5 masters curated (F23: The
+last round, with the dodge (Johan, 16 Oct: one PR): the dodge rule (one dodge: a known strike of 2+ that does more than the bot's
+own strike; two: one spared even against a 1 that does at least as much, Roundhouse first; an unknown one on the expected
+strike; except when the bot's strike finishes their vampire — Johan's answer to question A, 21:20 + 21:27); Revelations against a bot (F21: armed by the prey, the human's pick read); the six V5 masters curated (F23: The
 Labyrinth, Guardian Angel, Wasserschloss Anif's bank, Haven Uncovered with the rush through it — two frozen lines for main);
 found on the way: Arcane Library's influence lock never fired, and a vampire at capacity in the uncontrolled region stalled
-the influence phase for good (the free rise). Main's client v2.6.162 (PR #23) is consumed. **Open for Johan:** question A (the
-dodge's tie); the probe-then-punch reservation that never takes effect (since v0.6.143 — READ-ME-FIRST-2026-10-16f §6); main's
-finding that the chat beat after a question delays the verdict line ~5 s (their REPLY to v0.6.204, §4.1) — a design question.
+the influence phase for good (the free rise). Main's client v2.6.162 (PR #23) is consumed. **Next round, agreed with Johan (21:27):** the
+probe-then-punch reservation that never takes effect (since v0.6.143 — READ-ME-FIRST-2026-10-16f §6), measured before and after;
+main's finding that the chat beat after a question delays the verdict line ~5 s (their REPLY to v0.6.204, §4.1), analysed;
+and, found in the final smoke (older): a bot target bouncing a bot's bleed after the actor resolved it (READ-ME-FIRST-2026-10-16f §6).
 Next, in Johan's order: the 14 Oct scenario in `client/playtest/` with `--dir` on a scratch copy of the root with the bot
 branch, compared with the report's numbers (the proof R0–R4 fixed what the play-test found); then a larger re-measure once
 every fix is in; the parked items in READ-ME-FIRST-2026-10-16f, 'Next'. Known, not built: a human's bounce of a bot's bleed is
