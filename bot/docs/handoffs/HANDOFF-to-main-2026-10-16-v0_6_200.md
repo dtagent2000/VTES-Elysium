@@ -2,6 +2,8 @@
 
 **From:** Elysium Bots. **To:** main (client v2.6.158, srv-2.6.46). **Follows:** `HANDOFF-to-main-2026-10-15-v0_6_199.md` (R0). Everything in its §3 (debug) is still open; this note adds to it rather than repeating it.
 
+> **Corrected the same day by `HANDOFF-to-main-2026-10-16-v0_6_201.md`:** the debug hand goes to the whole table again, so the tooltip change in §3 and the `to:'humans'` wish are withdrawn; the §4 wish about a human's bleed reduction is now a concrete ask (a Reduce row on the Bleed menu). §2 (`edgeTake` in the bridge) and the rest still stand.
+
 ## 0. In short
 - **v0.6.200 is R1 of our plan:** your points 8, 9, 1, 15, 20 and 22, the Creeping Sabotage count, the steal's wording, and debug for humans only (Johan, 16 Oct).
 - **The bridge needs one relay now:** the bot sends `edgeTake` from this release (§2). Online it already works through your server. Offline the bridge drops it, and the human's Edge stays lit as before.
