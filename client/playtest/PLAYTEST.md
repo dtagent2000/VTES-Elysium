@@ -75,7 +75,9 @@ dialog matches. `menu` walks any right-click menu by its labels (`Combat>Hand st
 - **The clock starts with the question** (bot v0.6.204): while a bot's question is still queued its wait has no
   deadline (the panel shows the dash, and an early answer still counts); the number the question announces is the
   clock. The rig records when each clock starts (`askArmed`, rig v1.1.0) and the report prints it as `clock`
-  (question → clock; negative means the clock ran before the question, as with bot v0.6.203 and older).
+  (question → clock; negative means the clock ran before the question, as with bot v0.6.203 and older). The
+  summary counts "clock before the question" only when the clock ran more than 0.35 s (one panel sample) before it.
+  A wait answered before its clock started has no `clock` (rig v1.1.1).
 - **What the reflex answers** (rig v1.1.0):
   - In a combat it answers a step only after that step's own question. A late "Anything before range?" no longer
     anchors the maneuver step.
@@ -83,6 +85,8 @@ dialog matches. `menu` walks any right-click menu by its labels (`Combat>Hand st
     Bot v0.6.204+ starts the clock when the question is sent, so the reflex no longer answers a question you have
     not seen.
   - Rig v1.0.0 did both, and on 16 Oct it answered three combat steps before their questions.
+  - The questions it recognises are the bots' own wording, which is not frozen (PROTOCOL §12.0). When a bot
+    rewords one, update `QUESTION` and `STEP_Q` in the rig.
 - **Turn-based**: turn the reflex off (`pol '{"on":false}'`); the bots wait for you. `give` is the play button
   beside the bot badge (it gives every waiting bot the word).
 - Phrases by name: `say pass`, `say no block`, `say block`, `say hold on`, `say it resolves`, `say any blocks`.
@@ -116,6 +120,9 @@ The client leaves the human's own values to the human (Johan, 14 Oct). The bots 
   your `say block`.
 - **After a bot's Deep Song rush on your vampire** (bot v0.6.203) the bot asks you first in every combat step: the
   rushed vampire is the acting minion of that combat.
+- **Your own bounce of a bot's bleed** (Deflection and friends) is not read by the acting bot yet (bot v0.6.203, its
+  handoff §3). Its resolve line still names the original target, and a bot that became the new target does not know.
+  Burn the pool by hand. This is a known gap, not a new finding.
 - **Clear the played cards** after each action (`clear`), or the next card lands on a pile.
 - Revelations [aus] against a bot: it reveals its hand to you (online, and at a hotseat from client v2.6.159); it does
   not act on the card you pick yet (the bot project's R4).

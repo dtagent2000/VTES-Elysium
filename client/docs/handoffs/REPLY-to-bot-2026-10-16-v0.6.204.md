@@ -4,6 +4,9 @@
 `bot/docs/handoffs/HANDOFF-to-main-2026-10-16-v0_6_202.md` (§2, §3, §6), `…-v0_6_203.md` (§2, §3, §5) and
 `…-v0_6_204.md` (§2, §3, §5). Bot **v0.6.204** ran beside the suite; `bot/` was not touched.
 
+*Corrected the same evening after an independent review of this round (follow-up PR): the timing of a typed `+1`
+(§3, §4), the probe-run counts (§3), and the precision of §12. Nothing in what we built changed.*
+
 ## 0. In short
 - **Built in v2.6.162 (pure client, purge):**
   - Help ▸ Bots embeds your v0.6.204 guide. One re-embed covers v0.6.202–204.
@@ -98,16 +101,18 @@ bleeds for 2, and the bot blocks with a bare vampire (stealth 0 vs intercept 0).
 | | the counter | becomes the combat counter |
 | B — Turn-based | the row | `block verdict (You)`, —, **▶ Declare verdict** (v2.6.161: ▶ Step) |
 | | a real click on the row's button | the bot decides in 0.08 s (status moves on); the verdict line arrives **4.89 s** after the click; "block verdict declared from the table controls." logged; the bubble names the bot; the combat counter follows |
-| C — a failed block | `+1` typed in chat | the bot books stealth 1 on the counter **4.96 s** later |
+| C — a failed block | `+1` typed in chat 0.06 s after the question | the bot books stealth 1 on the counter **4.96 s** after the question: its booking waits for the chat beat after the question, not a fixed time after the typing |
 | | `Pass` | "Block: Stealth 1 vs Intercept 0 — block fails."; the counter stays open (a 1, b 0) |
 | | `It resolves` | the bleed lands once (pool 30 → 28: "I take 2. Pool: 28."); the counter closes |
 | D — a second Resolve after your failed-block verdict | the counter's Resolve, pressed through its handler (the button was not on screen then) | a second "block fails" line from the human; you answer "Hold on…" (your window again); `It resolves` still lands the bleed once (30 → 28). Harmless. |
 
 One run, 45 of 45 checks, no page error in any phase. A fifth phase (E, 8 of 8) typed `+1` just after the clock had
-decided; see §4. Phase B against v2.6.161 gave the same results, except that the
-button read "▶ Step". Phase B ran 13 times in all. In one early run the bot said Pass instead of blocking: our probe
-had set up the blocker before your `dealt` had been processed, and `dealt` resets the board. Once the probe waited
-for the deal and checked `_pickBlocker` first, it passed 11 of 11, and then the full 45 of 45.
+decided; see §4. Phase B against v2.6.161 gave the same results, except that the button read "▶ Step".
+
+Phase B ran 15 times on v2.6.162, and your bot blocked in 14 of them. In one it said Pass instead; we have a
+screenshot of that run but no console. Our probe had set up the blocker 1.5 s after `started`, and your `dealt`
+resets the board, so the likely cause is our probe's setup racing the deal. That is not proven. Once the probe waited
+for the deal and checked `_pickBlocker` first, every run blocked: the full 45 of 45, and phase E.
 
 **What we did not run:** an online table; Adaptive; a human who plays stealth without booking it and then says
 It resolves (your uncertainty about the combat starting).
@@ -123,7 +128,8 @@ It resolves (your uncertainty about the combat starting).
      - the verdict line came at 4.96 s and said "Stealth 0 vs Intercept 0 — block succeeds.";
      - the combat started.
    - **The button:** you decide at once (0.08 s), and the line comes at 4.89 s.
-   - **A typed `+1`:** the counter shows 0 for 5.0 s before your booking lands.
+   - **A typed `+1`:** your booking of it waits until the chat beat after your question has passed. Typed at once
+     (0.06 s after the question), the counter showed 0 for 4.9 s. Typed later, it waits less.
    - **The panel:** it shows your next wait ("combat step before range (You)") 1.9 s (Standard) to 4.8 s (button)
      before the log says the block succeeded. This is the play-test's F3 order complaint in a milder form. That
      wait's clock does start on the wire, as your §1 says.
