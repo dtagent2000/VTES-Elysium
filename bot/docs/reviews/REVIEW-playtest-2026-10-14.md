@@ -227,4 +227,5 @@ Gates beyond the suite for R2: a series with the handshake integrity line at 100
 - **Found by the release's own arena smoke, fixed:** a Creeping Sabotage tick that took Ventrue to 0 pool did not oust it (it played two more turns). Smiling Jack's pool payment with no vampire and Fame's own-unlock drain still lack the check (the v0.6.140 audit, still owed).
 - **Pinned:** section 140, 21 assertions, three of them live; 13 red on v0.6.200, 8 guards green on both.
 - **Proposed, not built:** a `reduce N` chat line (like `bleed N`) would work today, before the client's row exists.
+- **Known limit of the look-away (checked 16 Oct, nothing built):** it rests on the debug announcement, sent at the deal. The client adds bots only in the lobby (online) or at Start (offline), and a bot whose connection drops reconnects with its token in the same process, so every bot at the table has seen the line. The one gap: a command-line bot restarted mid-game that reclaims its seat by name is a fresh process that never saw it.
 

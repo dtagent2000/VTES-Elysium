@@ -14,6 +14,8 @@ Grindar: sviten 2006/0 ×3 på slutbytena; sektion 140 ensam 21/0, mot v0.6.200 
 
 Inte byggt, ett förslag till Johan: en chattrad `reduce N` (som `bleed N`) skulle fungera redan i dag, utan att vänta på klientens rad.
 
+Johans svar efter leveransen (PR #16, 16 okt): (1) fritt fram att kombinera fixar som passar i samma runda — creep-fixet var rätt; regeln står nu i bot/CLAUDE.md (designfrågor går fortfarande via förslag och "kör"). (2) En bott som ansluter efter debug-raden — går det ens? Kontrollerat i klienten och servern: online lägger klienten bara till bottar i lobbyn (`netBotWhy`: "only in the lobby"), offline vid Start, och en bott vars anslutning blinkar återansluter med sin token i samma process (`reconnect:true`) och minns raden. Kvar finns bara en kommandoradsbott som startas om och tar tillbaka sin plats via namnet (serverns name-reclaim) — en ny process utan minne. Känd gräns, inget byggt. (3–4) Reduce-raden och den offline debug-handen följs upp i klientprojektet via handoffarna (v0.6.201 §2; 15 okt §3 punkt 1, upprepad i v0.6.201 §4). (5) följs upp senare.
+
 ## [R1: REGLER OCH LÅSNINGAR — bot v0.6.199 → v0.6.200] (16 oktober 2026)
 
 Johans svar (16 okt): ordningen R1→R2→R3→R4; bot-mot-bot-striden pacas när en människa sitter vid bordet (R2); Adaptives hopp stannar utanför Standard; poolfrågan stannar per bott vid politiska handlingar (svaret är varje botts insats i omröstningen) — senare ett enkelt "how will you allocate the damage?"-system (design efter R4); Haven Uncovered spelas inte förrän botten kan rusha igenom den (R4); vi kör riggen själva med `--dir`; ett hold stoppar även bottens egna stridsdrag (R2); debug gäller bara människor; de okurerade mastrarna väntar till R4. PR #14 (R0) är mergad.
