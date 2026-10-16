@@ -9724,6 +9724,143 @@ async function connectWithRetry(client, tries = 30){
       }
     }
 
+    /* 143) v0.6.203 -- Johan (16 Oct): "the bot should answer known strikes". The strike step in the rulebook's order between bots too
+       -- "the minions first choose their respective strikes (the acting minion first, then their opponent)" [6.4.3]: the acting bot
+       strikes first, the answering bot looks at that strike (a peek: the line stays pending for its consuming wait) and chooses
+       knowing it -- no card spent into a dodge, a dodge for the strike that would empty or torpor it, none against a strike for 0.
+       And Deep Song's rushed vampire acts first in the human phase walk too (R2 read it for the bot handshake only). */
+    {
+      console.log('\n[143] v0.6.203 -- the strike step in the rulebook’s order between bots; Deep Song’s acting minion in the human phase walk');
+      const strip143 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const AV3 = over => Object.assign({ id: 'a1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 6, attached: [] }, over || {});
+      const DV3 = over => Object.assign({ id: 'd1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 5, attached: [] }, over || {});
+      const duel143 = o => {   // the section 141 relay: two bots, every log / chat / say line reaches the other `delay` ms later; A = the acting bot (Hanna), D = the bot that blocked it (Viktor)
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }].concat(o.human ? [{ seat: 3, name: 'Claude', online: true }] : []);
+        const mk = (name, seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: o.paceMs || 0, askSecs: o.askSecs || 3, twdKnow: 0, log: () => {} });
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.o.deckName = deck; u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = [];
+          u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); };
+          return u; };
+        const A = mk('Hanna', 1, o.aDeck || 'tremere'), D = mk('Viktor', 2, o.dDeck || 'nosferatu');
+        const wire = (from, to) => { from.send = m => {
+          if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0); return; }
+          if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
+          const txt = m.t === 'log' ? strip143(m.html) : String(m.msg || '');
+          from._evRecord(from.o.name, txt, m.t, true);
+          from.lines.push({ at: Date.now(), tier: m.t, txt });
+          const d = Object.assign({}, m, { who: from.o.name });
+          setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0);
+        }; };
+        wire(A, D); wire(D, A);
+        const aV = AV3(o.aV), dV = DV3(o.dV);
+        A.board = [aV]; D.board = [dV]; A.hand = (o.aHand || []).slice(); D.hand = (o.dHand || []).slice();
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: dV.name, zone: 'ready', blood: dV.blood }] } } };
+        D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: aV.name, zone: 'ready', blood: aV.blood }] } } };
+        A._actingVamp = { v: aV, n: 1, played: new Set() }; A._lastBlockerName = dV.name;
+        D._clearCombatStashes(); D._combatArmed = true;
+        const run = async () => { const t0 = Date.now();
+          await Promise.race([Promise.all([A._resolveCombat(aV), D._resolveCombat(dV, aV.name)]), sleep(o.cap || 15000)]);
+          return Date.now() - t0; };
+        return { A, D, aV, dV, run };
+      };
+      const lines143 = (u, re) => u.lines.filter(l => re.test(l.txt));
+
+      // a) the acting bot dodges first: the answering bot keeps its strike card (its strike cannot reach) -- the old simultaneous choice spent Roundhouse into the dodge
+      { const g = duel143({ delay: 30, aDeck: 'hacking', dDeck: 'nosferatu', aV: { blood: 1 }, aHand: ['Dodge'], dHand: ['Roundhouse'] });
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        const aD = lines143(g.A, /\) strikes: Dodge/), dS = lines143(g.D, /\) strikes[ :]/);   // the strike lines (not 'has nothing before strikes.')
+        ok(aRow.strike === 'Dodge' && dRow.strike === 'hands' && g.D.hand.includes('Roundhouse') && aD.length === 1 && dS.length >= 1 && aD[0].at <= dS[0].at && !(aRow.hsMiss || dRow.hsMiss),
+           '143a the acting bot (blood 1) dodges FIRST; the answering bot sees it and strikes with its hands -- Roundhouse stays in hand (v0.6.202 chose at the same time and spent it into the dodge; got ' + JSON.stringify({ a: aRow.strike, d: dRow.strike, keep: g.D.hand.includes('Roundhouse'), miss: [aRow.hsMiss || null, dRow.hsMiss || null] }) + ')'); }
+
+      // b) the acting bot's Roundhouse (strength 1 + 3) comes first; the answering bot at blood 3 dodges it -- the assumed 1 would have struck, and taken 4 into torpor
+      { const g = duel143({ delay: 30, aDeck: 'nosferatu', dDeck: 'tremere', aV: { name: 'Wauneka (G6)', cap: 5, blood: 5 }, dV: { name: 'Anxo Vilela (G6)', cap: 6, blood: 3 }, aHand: ['Roundhouse'], dHand: ['Absorb the Mind'] });
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(aRow.strike === 'Roundhouse' && dRow.strike === 'Absorb the Mind' && g.dV.blood === 3 && g.dV.zone === 'ready',
+           '143b the acting bot strikes with Roundhouse for 4 first; the answering Anxo Vilela (blood 3) dodges it with Absorb the Mind and keeps every blood (v0.6.202: blood 3 > 1, struck, took 4 -> torpor; got ' + JSON.stringify({ a: aRow.strike, d: dRow.strike, blood: g.dV.blood, zone: g.dV.zone }) + ')'); }
+
+      // c) ...and against a strike for 0 the dodge is saved: the range was set to long for this round (no ranged strike in hand), the acting bot's fist cannot reach
+      { const g = duel143({ delay: 30, aDeck: 'tremere', dDeck: 'hacking', aV: { blood: 5 }, dV: { name: 'Anxo Vilela (G6)', id: 'd1', cap: 6, blood: 1 }, aHand: [], dHand: ['Dodge'] });
+        g.A._setRangeNow = 'long'; g.D._setRangeNow = 'long';
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(aRow.range === 'long' && dRow.range === 'long' && aRow.dealt === 0 && dRow.strike !== 'Dodge' && g.D.hand.includes('Dodge') && g.dV.blood === 1,
+           '143c at long range the acting bot’s fist is a strike for 0: the answering bot (blood 1) keeps its Dodge and its blood (the assumed 1 spent the card; got ' + JSON.stringify({ range: [aRow.range, dRow.range], aDealt: aRow.dealt, d: dRow.strike, keep: g.D.hand.includes('Dodge'), blood: g.dV.blood }) + ')'); }
+
+      // d) the decision itself
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        const v = b => ({ name: 'X', blood: b }), D = (b, inc) => u.decide('combat-strike', { dodge: { name: 'Dodge' }, vamp: v(b), inc });
+        const K = o => Object.assign({ known: true, dodge: false, ends: false, dealt: 0, steal: 0, aggr: 0, crows: 0 }, o);
+        ok(D(3, K({ dealt: 3 })).dodge === true && D(3, K({ dealt: 2 })).dodge === false && D(1, K({ dealt: 1 })).dodge === true,
+           '143d a known strike: dodge what would empty or torpor me (3 at blood 3, 1 at blood 1), take what leaves blood (2 at blood 3)');
+        ok(D(1, K({ dodge: true })).dodge === false && D(1, K({ ends: true })).dodge === false && D(1, K({ dealt: 0 })).dodge === false,
+           '143d ...never against their dodge, their combat ends or a strike for 0 -- the card is saved');
+        ok(D(5, K({ aggr: 1 })).dodge === true && D(2, K({ steal: 2 })).dodge === true && D(1, K({ dealt: 1, crows: 2 })).dodge === false,
+           '143d ...aggravated damage is dodged at any blood, a steal of my last blood too; when the crows take me down anyway the dodge is wasted');
+        ok(D(1, null).dodge === true && D(2, null).dodge === false, '143d an unknown strike keeps the v0.6.4 rule (the assumed 1 at blood 1)'); }
+
+      // e) Deep Song: the rushed vampire is the acting minion -- in the human phase walk too
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 1; u.started = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m);
+        u.players = [{ seat: 1, name: 'U', online: true, bot: true }, { seat: 2, name: 'Johan', online: true }];
+        const mine = { id: 'm1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 };
+        u.board = [mine]; u._combatMyVamp = mine; u._inCombat = true; u._cSide = 'a';
+        u._combatOpp = () => ({ seat: 2, name: 'Lisa Noble' });
+        u._actingVamp = { v: mine, n: 0, played: new Set(), kind: 'rush', target: 2, targetActs: true };
+        const IA = () => typeof u._combatIActing === 'function' ? u._combatIActing() : null;   // a pre-v0.6.203 bot has no such rule: the asserts fail clean, never abort the suite
+        ok(IA() === false, '143e my Deep Song rushed Johan’s vampire: IT is the acting minion, not mine (the turn seat’s side said mine)');
+        const pr = u._phaseStep(0, 'ask', false); await sleep(30);
+        const asked = u.sent.some(m => m.t === 'chat' && /Anything before range\?/.test(String(m.msg)));
+        if(u._phaseWait) u._phaseWait.resolve('pass'); await pr;
+        ok(asked, '143e ...so the phase walk ASKS Johan first ("Anything before range?") -- v0.6.202 spoke first in every step');
+        u._actingVamp.targetActs = false;
+        ok(IA() === true, '143e ...a plain rush: the turn seat’s combatant acts, as before');
+        u._actingVamp = null; u._combatActing = 'Wauneka (G6)'; u._cSide = 'b';
+        ok(IA() === true, '143e ...and a vampire of mine rushed by Deep Song acts first on the defending side');
+        u._inCombat = false; u._combatActing = null; }
+    }
+
+    /* 144) v0.6.203 -- hygiene from R2's smokes (READ-ME-FIRST-2026-10-16c section 5's 'older, observe-only' flags): the bot's own
+       prevent line was typed with 'X plays CARD:' as the vampire, so the strike-vs-taken invariant never subtracted an opponent's
+       Hidden Strength (all 6 'strike-taken' flags of the R2 smokes); the bot's notes say 'NAME (bot)', so the Wider View and rescue
+       burns never reached the pool ledger (the +2 drift); an equipment's pool cost was paid silently; the range was undefined until
+       the first combat. */
+    {
+      console.log('\n[144] v0.6.203 -- hygiene: the invariants hear prevention, the burn-for-pool notes and an equipment’s cost');
+      const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Ann', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+      u.seat = 1; u.started = true; u.push = () => {}; u.send = () => {};
+      u.players = [{ seat: 1, name: 'Ann', bot: true }, { seat: 2, name: 'Tor', bot: true }];
+      ok(u._range === 'close', '144a a new bot’s combat range is the rulebook default, close (was undefined until its first combat)');
+      const pv = u._evClassify('Tor', 'Brock Sterling (G6) plays Hidden Strength: prevents 1 damage.', 'log') || {};
+      ok(pv.kind === 'prevent' && pv.vamp === 'Brock Sterling (G6)' && pv.n === 1 && pv.card === 'Hidden Strength', '144b a bot’s own prevent line names the VAMPIRE (got ' + JSON.stringify(pv) + ')');
+      const gp = u._evClassify('Tor', 'Lisa Noble prevents 2 damage.', 'log') || {};
+      ok(gp.kind === 'prevent' && gp.vamp === 'Lisa Noble' && gp.n === 2, '144b ...and the client’s own shape still reads');
+      // the invariant: my strike for 3, their Hidden Strength prevents 1, they take 2 -- no flag
+      u._inCombat = true; u._combatOppName = 'Brock Sterling (G6)'; u._invFlags = 0;
+      u._evRecord('Ann', 'Wauneka (G6) strikes with Roundhouse for 3.', 'log', true);
+      u._evRecord('Tor', 'Brock Sterling (G6) plays Hidden Strength: prevents 1 damage.', 'log');
+      u._evRecord('Tor', 'Brock Sterling (G6) takes 2 (loses 2 blood, now 3).', 'log');
+      ok((u._invFlags | 0) === 0, '144b ...so the strike-vs-taken invariant subtracts the prevention: strike 3, prevented 1, taken 2 raises no flag (v0.6.202 flagged it: ' + (u._invFlags | 0) + ' flag(s))');
+      u._inCombat = false; u._combatOppName = null;
+      const wv = u._evClassify('Ann', 'Wider View: Ann (bot) uses 4 transfers to burn it for +2 pool (pool 7) -- nothing better to spend the transfers on this turn.', 'log') || {};
+      const rs = u._evClassify('Ann', 'Gratiano: Ann (bot) locks it and burns 2 pool to rescue Zip.', 'log') || {};
+      ok(wv.kind === 'pool' && wv.delta === 2 && wv.card === 'Wider View' && rs.kind === 'pool' && rs.delta === -2, '144c the burn-for-pool and rescue notes reach the pool ledger with the bot’s real name ‘Ann (bot)’ in them (got ' + JSON.stringify([wv.delta, rs.delta]) + ')');
+      u.pool = 10; const v = { id: 'v1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', blood: 3, attached: [] }; u.board = [v];
+      const n0 = u.ev.ev.length; u._doEquip(v, 'Sport Bike', 2, 0);
+      const pe = u.ev.ev.slice(n0).find(e => e.kind === 'pool');
+      ok(u.pool === 8 && !!pe && pe.delta === -2 && pe.own === true, '144d an equipment’s pool cost reaches the pool ledger (' + JSON.stringify(pe ? { delta: pe.delta, via: pe.via } : null) + ')');
+      // e) found by v0.6.203's own arena smoke ('taken 2, my strike 1, crows 2'): a borne Murder of Crows and a played Carrion Crows are two sources -- both land each round
+      { const w = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Tor', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        w.seat = 2; w.started = true; w.push = () => {}; w.send = () => {}; w.players = [{ seat: 1, name: 'Ann', bot: true }, { seat: 2, name: 'Tor', bot: true }];
+        w._inCombat = true; w._combatOppName = 'Baixinho (G6)'; w._stashAccept = () => true;
+        const crow = s2 => w._onLog('Ann', 'Ann combat \u2014 Baixinho (G6)' + s2 + ': opposing minion takes 1 environmental damage each round for the rest of this combat (unpreventable by strikes, cannot be dodged).');
+        crow("'s Murder of Crows"); crow(' plays Carrion Crows'); const both = (w._oppCarrionCrows || {}).n;
+        crow(' plays Carrion Crows'); const again = (w._oppCarrionCrows || {}).n;
+        w._oppCarrionCrows = null; const reset = w._oppCarrionCrows;
+        ok(both === 2 && again === 2 && reset === null, '144e a borne Murder of Crows and a played Carrion Crows both peck me each round: 2 (v0.6.202 kept the last announce: 1); a repeated announce replaces its own source, and a new combat starts clean (got ' + JSON.stringify([both, again, reset]) + ')');
+        w._inCombat = false; }
+    }
+
 
 
     }
