@@ -10250,6 +10250,11 @@ async function connectWithRetry(client, tries = 30){
         ok(u.hand.includes('Deflection'), '147c a typed "discard" from another seat is table talk');
         u._onChat('Hanna', 'discard computer hacking');
         ok(!u.hand.includes('Computer Hacking') && u.msgs.some(m => m.t === 'draw'), '147c ...the actor’s typed "discard computer hacking" is the pick, in any case (got ' + JSON.stringify(u.hand) + ')');
+        const u4 = mk147(); u4.hand = ['Deflection', 'Computer Hacking'];
+        u4.pending = { who: 'Hanna', amount: 0, kind: 'peek', peekSup: false, actorName: 'Hanna', reacted: new Set(), attempted: new Set() };
+        u4._applyPending('test'); u4.msgs.length = 0;
+        u4._onChat('Hanna', '@U discard Deflection.');
+        ok(!u4.hand.includes('Deflection') && u4.msgs.some(m => m.t === 'draw'), '147c ...addressed the way the bleed grammar is ("@U discard Deflection.") it is the pick too (got ' + JSON.stringify(u4.hand) + ')');
         const u2 = mk147(); u2.hand = ['Deflection']; u2.started = false; u2.turnSeat = 1;
         u2.pending = { who: 'Hanna', amount: 0, kind: 'peek', peekSup: false, actorName: 'Hanna', reacted: new Set(), attempted: new Set() };
         u2._applyPending('test'); u2._handlers.turn({ seat: 3 }); u2.msgs.length = 0;
@@ -10353,10 +10358,16 @@ async function connectWithRetry(client, tries = 30){
         u2.board = [ws2, tre2]; u2.unc = []; u2.hand = [];
         if(IF8(u2, '_considerBankIn')) await u2._considerBankIn('master');
         ok(ws2.blood === 0 && tre2.blood === 5, '148c ...nothing is banked while no Tremere waits in my uncontrolled region');
-        const unc3 = { id: 'u3', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', faceDown: true, locked: false, blood: 2, cap: 4 };
+        const unc3 = { id: 'u3', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', faceDown: true, locked: false, blood: 3, cap: 4 };
         u2.board.push(unc3); u2.unc = [unc3]; ws2.blood = 2;
         await u2._considerLockIncome('influence');
-        ok(ws2.blood === 2 && unc3.blood === 2 && !ws2.locked, '148c ...and the payout never fills a vampire to its capacity (2 + 2 = 4 = Lauren’s capacity: the transfers would have nothing left to pay and v0.6.204’s loop no path to ready -- the bank waits)'); }
+        const over = ws2.blood === 2 && unc3.blood === 3 && !ws2.locked;   // 3 + 2 = 5 > 4: blood past capacity drains off -- the bank waits
+        unc3.blood = 2;   // 2 + 2 = 4 = Lauren's capacity: paid out, and she rises free in the same influence phase (the payout runs before the loop)
+        await u2._considerLockIncome('influence');
+        const filled = ws2.locked === true && ws2.blood === 0 && unc3.blood === 4;
+        u2.inf = 4; u2.cryptN = 0; u2._infSaid = [];
+        if(filled) await u2._influenceLoopInner();
+        ok(over && filled && unc3.zone === 'ready' && u2.inf === 4, '148c ...the payout never goes over capacity (3 + 2 > 4: the bank waits), and filled exactly (2 + 2 = 4) the vampire rises free in the same influence phase, no transfer spent (got ' + JSON.stringify({ over, filled, zone: unc3.zone, inf: u2.inf }) + ')'); }
 
       // d) found on the way: Arcane Library's lock in the influence phase of a real turn, and the rise of a vampire already at capacity
       { const u = mk148('U', 'tremere'); u.pool = 20; u.turnSeat = 2; u.ownTurns = 5; u.cryptN = 0;
