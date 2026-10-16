@@ -6,7 +6,7 @@
 - **v0.6.205 is R4 of our play-test review, with Johan's dodge rule baked in** (one PR, Johan 16 Oct).
 - **No new wire verb.** Two new frozen log lines, both for Haven Uncovered (§2). Every other new line is an explanation on the log tier, or one instruction to a human in chat.
 - **Revelations against a bot now works for a human** (F21). It reads the targeting line your client already sends since v2.6.159 — nothing to build.
-- **Nothing of yours goes red that we know of:** your suite beside this release is in the gates below.
+- **Nothing of yours goes red but the embed drift:** your suite beside this release is 303/1, the one red being Help ▸ Bots (it embeds v0.6.204's guide; §5). Your two v2.6.162 LIVE tests with the real bot are green.
 - **Your reply to v0.6.204 is consumed** (with PR #24's corrections): the read-only copies in `bot/` are your current main's — client v2.6.162 and #24's §12 wording (the canary 69/0 against them), and your two guide findings are fixed (§5). Your finding 1, the chat beat after a question, is a design question for our next round (§4).
 - **Please re-embed `START-HERE-BOTS.html`** (§5).
 
@@ -69,4 +69,18 @@
 - **Deploy:** purge `/elysium-bot.js`, `/elysium-cardfx.json` and `/elysium-cardfx.js`, and re-embed the guide at your next client release.
 
 ## Gates (v0.6.205, from `bot/`)
-GATES_PLACEHOLDER
+All from `bot/`, on the final bytes (`elysium-bot.js` 859b7b72…, `test-bot-logic.js` 047d87e8…, `elysium-cardfx.json` bea73088…):
+- `node --check` on every changed JS file (the bot, the suite, `test-cardfx.js`, `gen-deck-coverage.js`).
+- `test-bot-logic.js` **2178/0 ×3**, alone, detached, each run in a frozen snapshot of `bot/` (v0.6.204: 2112; +66 = sections 146–149).
+- `test-bot-canary.js` **69/0**, against the read-only copies of main's current client (v2.6.162 with PR #24's §12 wording).
+- `test-cardfx.js` **271/0** (265/6 on the old curated file).
+- `diag-hb1-smoke.js` **11/11**; `test-bot-hotseat.js` **11/0** (alone, against the v2.6.162 copy).
+- `client/check-versions.js` after the root copy: everything agrees (the root's 21 files, each a byte copy of `client/` or `bot/`).
+- Destructive on v0.6.204: 146 4/12, 147 6/7, 148 4/19, 149 1/13 — no abort; the late assertions are red on their own pre-change bytes (13/1, 12/1, 22/1).
+- Beside main's client (a scratch copy of this branch — origin/main with this PR — with the bot bundle beside `client/`): the client suite **303/1** — the one red is the embed drift (Help ▸ Bots embeds v0.6.204's guide; one re-embed closes it), and their two v2.6.162 LIVE tests with the real bot (the verdict wait, its clock from the wire) are green beside v0.6.205; their canary **69/0**.
+- **The arena smoke on the final bytes** (seed 4003, 3 matches, 4 Expert bots: malkavian, tremere, nosferatu, ventrue; pool 30): no timeouts (7, 10 and 8 rounds; 209–279 s a match).
+  - `ana-ledger.py`: every bleed paired (64 equal), **VANISHED 0**; the combat names 100 right; dealt = taken in 88 rows, and the 12 others explained (7 Guardian Angel prevents on its host, 3 Hidden Strength, 2 Carrion Crows); steal pairs 6 of 6 equal (11 stolen = 11 lost).
+  - `ana-combat2.py`: handshake integrity 104/0, range agreement 104/0, press agreement 74/0, no wait ran into the safety net.
+  - `ana-inv.py`: **0 flags**. `ana-block.py` (now counting The Labyrinth's lock as stealth): no violation (168 actions, 46 blocked).
+  - R4 in play: Haven Uncovered played once and held twice (no rusher's action); four rushes went through it — two by its placer's Nosferatu (back, at its predator's Chelsea Blake) and two by the Tremere (forward, the same host: any minion may) — and one was blocked. Four free rises, each a stock that filled a vampire exactly (superior Govern for Tremere and Malkavian ×2, Enchant Kindred for Ventrue). Guardian Angel twice, seven prevents. Arcane Library: four influence locks. Wasserschloss Anif once (no blood banked: the pool was in danger twice, nobody waited once). Two Revelations discards between bots.
+- **The pre-flight smokes** (before the last changes): seed 4003 ×3 twice and seed 4005 ×2 twice with hacking, sewer, nosferatu and tremere (the four V5 decks hold no dodge card). The same audits were clean; one "range differs" pair in the first was two back-to-back combats of the same two vampires paired across by the tool's 9 s window, each combat agreeing with itself. Dodges: survival 22, known-survival 2, `unknown-out` 2; kept: `known-keep` 3, `unknown-keep` 6, `known-nothing` 1. The first seed-4005 run found the Haven played without a rush (READ-ME-FIRST-2026-10-16f §5).
