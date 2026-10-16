@@ -18,8 +18,9 @@ frame, and turns the recording into numbers, so the same game can be played agai
   repository root (the release). For an unreleased client use `--dir client` with the bundle copied beside the
   suite (`client/docs/START-HERE-CLIENT-CHAT.md` has the one-liner).
 - The card database. With internet the client fetches it from KRCG as usual. Without (a sandbox), keep a copy of
-  KRCG's `vtes.json` **outside the repository** and pass `--vtes <path> --offline`. It is third-party data:
-  never commit it, never host it.
+  KRCG's `vtes.json` **outside the repository** and pass `--vtes <path> --offline`; a sandbox that cannot reach KRCG
+  copies it from the private data repo `dtagent2000/VTES-Elysium-data` (root `CLAUDE.md`, 'Data that is not in git').
+  It is third-party data: never commit it, never host it.
 
 ## Start
 
@@ -82,13 +83,18 @@ The client leaves the human's own values to the human (Johan, 14 Oct). The bots 
 - **Pay costs** yourself: a reaction's blood (Telepathic Misdirection), a master's pool. Nothing deducts them.
 - **Take combat damage** off your vampires: the line "X takes N (loses P blood, now M)" is your report to the table
   and the bots; the card does not change (`menu X 'Tokens>Blood −1'`). Steals likewise.
-- **Take the Edge** after a successful bleed (`edge`); a bot never hands it over on the wire.
+- **Take the Edge** after a successful bleed (`edge`). A bot that takes it (bot v0.6.200+: a bleed of 1 or more) says so
+  on the wire (`edgeTake`) and your client clears yours: online, and at a hotseat from client v2.6.159.
 - **Burn pool** for the other side's effects (Creeping Sabotage: `burn 1 Creeping Sabotage`), and the bleeds that
   land on you.
+- **Reduce a bot's bleed** with your reaction card, then say by how much (client v2.6.159):
+  `menu <minion> 'Actions>Bleed>Reduce bleed −1'` (or `−2`, `−X…`). The bot (v0.6.201+) lowers its bleed, and a bleed of 0
+  moves no Edge. Adjust your own pool by what landed.
 - **Book stealth and intercept on the counter**: play the card, then `chat +1` (or the total, `chat 2`).
 - **When a bot blocks your action and needs no card, it waits for you without a clock**: add stealth or `resolve`.
 - **Clear the played cards** after each action (`clear`), or the next card lands on a pile.
-- A bot's hand cannot be looked at: Revelations [aus] has no effect against one (open in the handoff).
+- Revelations [aus] against a bot: it reveals its hand to you (online, and at a hotseat from client v2.6.159); it does
+  not act on the card you pick yet (the bot project's R4).
 
 ## What to watch (the checklist from 14 Oct)
 
