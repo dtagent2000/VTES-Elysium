@@ -10087,7 +10087,8 @@ async function connectWithRetry(client, tries = 30){
     /* 146) v0.6.205 -- R4 (docs/specs/spec-r4-2026-10-16.md section 1): THE DODGE, decided with Johan 16 Oct (17:47 + 18:06):
        'for now, play it against everything with 2 or more damage -- when my own strike no longer gives equal or better
        output -- and play it when holding several'. A known strike is weighed against _strikePick's out (the strike the
-       round would really play), the tie goes to the dodge with two in hand, an unknown strike is read on the expected
+       round would really play), with two in hand even a 1 that does at least as much as mine (Johan 21:20), unless my strike
+       finishes their vampire (0 or torpor with two dodges, torpor with one; 21:27), an unknown strike is read on the expected
        strike Majesty uses (_expOppStrike); the survival rule and aggravated stay; knob dodgeOut (0 = v0.6.204's rule). */
     {
       console.log('\n[146] v0.6.205 -- R4: the dodge weighs the strike against my own output (Johan, 16 Oct)');
@@ -10127,22 +10128,36 @@ async function connectWithRetry(client, tries = 30){
       { const mkU = kn => new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} }, kn != null ? { dodgeOut: kn } : {}));
         const u = mkU(), u0 = mkU(0);
         const K = o => Object.assign({ known: true, dodge: false, ends: false, dealt: 0, steal: 0, aggr: 0, crows: 0 }, o);
-        const D = (bot, b, inc, mine, copies, exp) => bot.decide('combat-strike', { dodge: { name: 'Dodge' }, vamp: { name: 'X', blood: b }, inc, mine, copies, exp });
+        const D = (bot, b, inc, mine, copies, exp, x) => bot.decide('combat-strike', Object.assign({ dodge: { name: 'Dodge' }, vamp: { name: 'X', blood: b }, inc, mine, copies, exp }, x || {}));
         const dg = (...a) => !!D(u, ...a).dodge;
         ok(dg(5, K({ dealt: 2 }), 1, 1) === true && dg(5, K({ dealt: 3 }), 2, 1) === true && dg(5, K({ dealt: 2 }), 3, 1) === false,
            '146a a known strike of 2 or more that does more than my own strike is dodged (2 against hands for 1, 3 against a card for 2); one my strike beats is taken (2 against Roundhouse for 3)');
         ok(dg(5, K({ dealt: 2 }), 2, 1) === false && dg(5, K({ dealt: 2 }), 2, 2) === true,
            '146a ...an equal one is struck with one dodge in hand and dodged with two (Johan: the tie goes to the dodge when holding several)');
-        ok(dg(5, K({ dealt: 1 }), 1, 2) === false && dg(5, K({ dealt: 1 }), 0, 1) === false && dg(5, K({ dealt: 2 }), 0, 1) === true,
-           '146a ...under 2 never: 1 against 1 with two dodges, a ranged 1 against my fist at long range (which deals 0); a ranged 2 against that fist is dodged');
-        ok(dg(5, K({ steal: 2 }), 1, 1) === true && dg(5, K({ aggr: 1 }), 3, 1) === true && dg(1, K({ dealt: 1 }), 1, 1) === true && dg(1, K({ dealt: 1, crows: 2 }), 1, 2) === false,
-           '146a ...a steal counts what it does to me, aggravated is always dodged, the survival rule stays (1 at blood 1); when their crows take me down anyway the dodge is wasted');
+        ok(dg(5, K({ dealt: 1 }), 1, 1) === false && dg(5, K({ dealt: 1 }), 0, 1) === false && dg(5, K({ dealt: 2 }), 0, 1) === true,
+           '146a ...with ONE dodge never under 2: 1 against 1, a ranged 1 against my fist at long range (which deals 0); a ranged 2 against that fist is dodged');
+        ok(dg(5, K({ dealt: 1 }), 1, 2) === true && dg(5, K({ dealt: 1 }), 0, 2) === true && dg(5, K({ dealt: 1 }), 3, 2) === false && dg(5, K({ dealt: 2 }), 3, 2) === false,
+           '146a ...with TWO the bot spares one even against a 1 that does at least as much as mine (Johan, 21:20: 1 against 1, 1 against my fist for 0); when mine does more it strikes (21:27: "Roundhouse first" -- 1 or 2 against Roundhouse for 3)');
+        ok(dg(5, K({ steal: 2 }), 1, 1) === true && dg(5, K({ aggr: 1 }), 3, 1) === true && dg(1, K({ dealt: 1 }), 1, 1) === true && dg(1, K({ dealt: 1, crows: 2 }), 1, 2) === false && dg(1, K({ dealt: 2, crows: 2 }), 1, 1) === false,
+           '146a ...a steal counts what it does to me, aggravated is always dodged, the survival rule stays (1 at blood 1); when their crows take me down anyway the dodge is wasted, two in hand or not');
         ok(dg(5, K({ dodge: true }), 0, 2) === false && dg(5, K({ ends: true }), 0, 2) === false && dg(5, K({ dealt: 0 }), 0, 2) === false,
            '146a ...never against their dodge, their combat ends or a strike for 0');
-        ok(dg(5, null, 1, 1, 2.2) === true && dg(5, null, 1, 1, 1.8) === false && dg(5, null, 2, 1, 2) === false && dg(5, null, 2, 2, 2) === true && dg(5, null, 1, 1, null) === false && dg(1, null, 1, 1, null) === true,
-           '146a an unknown strike (I strike first): dodged at an expected 2 or more that is more than mine (2.2 against hands for 1), not at 1.8; an equal one only with two dodges; without an expectation (combatEndStats 0) the old blood <= 1');
-        const tags = [D(u, 5, K({ dealt: 2 }), 1, 1).tag, D(u, 5, K({ dealt: 2 }), 2, 2).tag, D(u, 5, K({ dealt: 1 }), 1, 1).tag, D(u, 5, null, 1, 1, 2.2).tag, D(u, 1, K({ dealt: 1 }), 1, 1).tag];
-        ok(tags.join() === 'known-out,known-tie,known-keep,unknown-out,known-survival', '146a the decide row carries the rule that fired (' + tags.join() + ') -- the smoke counts them');
+        ok(dg(5, null, 1, 1, 2.2) === true && dg(5, null, 1, 1, 1.8) === false && dg(5, null, 2, 1, 2) === false && dg(5, null, 2, 2, 2) === true && dg(5, null, 1, 2, 1.5) === true && dg(5, null, 2, 2, 1.5) === false && dg(5, null, 1, 1, null) === false && dg(1, null, 1, 1, null) === true,
+           '146a an unknown strike (I strike first): with one dodge at an expected 2 or more that is more than mine (2.2 against hands for 1), not at 1.8 or at an equal 2; with two at any expected 1 or more that is at least mine (1.5 against hands for 1), not under mine (1.5 against 2); without an expectation (combatEndStats 0) the old blood <= 1');
+        const tags = [D(u, 5, K({ dealt: 2 }), 1, 1).tag, D(u, 5, K({ dealt: 2 }), 2, 2).tag, D(u, 5, K({ dealt: 1 }), 1, 1).tag, D(u, 5, null, 1, 1, 2.2).tag, D(u, 1, K({ dealt: 1 }), 1, 1).tag, D(u, 5, null, 1, 2, 1.5).tag];
+        ok(tags.join() === 'known-out,known-two,known-keep,unknown-out,known-survival,unknown-two', '146a the decide row carries the rule that fired (' + tags.join() + ') -- the smoke counts them');
+        /* Johan (16 Oct, 21:20 + 21:27): EXCEPT when my strike takes their vampire to 0 blood or into torpor, as long as theirs does
+           not do the same to me -- with two dodges 0 or torpor, with one torpor only (my recommendation he took, a meta-layer note) */
+        const fx = (b, inc, mine, copies, ob, env, exp) => D(u, b, inc, mine, copies, exp, { oppBlood: ob, env: env || 0 });
+        const f1 = fx(5, K({ dealt: 1 }), 1, 2, 1), f2 = fx(5, K({ dealt: 1 }), 1, 2, 0), f3 = fx(5, K({ dealt: 1 }), 1, 2, 3), f4 = fx(5, K({ dealt: 1 }), 1, 2, null);
+        ok(f1.dodge === false && f1.tag === 'known-finisher' && f2.dodge === false && f3.dodge === true && f4.dodge === true,
+           '146a the finisher, two dodges: 1 against my hands for 1 is struck when it empties (blood 1) or torpors (blood 0) their vampire, dodged against blood 3 or an unknown blood (' + JSON.stringify([f1.tag, f2.tag, f3.tag, f4.tag]) + ')');
+        const g1 = fx(5, K({ dealt: 2 }), 1, 1, 1), g2 = fx(5, K({ dealt: 2 }), 1, 1, 0), g3 = fx(1, K({ dealt: 1 }), 1, 2, 0);
+        ok(g1.dodge === true && g2.dodge === false && g2.tag === 'known-finisher' && g3.dodge === true && g3.tag === 'known-survival',
+           '146a ...one dodge: torpor only (2 against hands for 1 is dodged when it would only empty them, struck when it torpors them); survival first: a strike that empties me is dodged even when mine would torpor them (' + JSON.stringify([g1.tag, g2.tag, g3.tag]) + ')');
+        const h1 = fx(5, K({ dealt: 1 }), 1, 2, 1, 1), h2 = fx(5, K({ dealt: 1 }), 1, 2, 1, 2), h3 = fx(5, null, 1, 2, 1, 0, 1.5), h4 = fx(5, null, 1, 1, 0, 0, 2.2);
+        ok(h1.dodge === false && h2.dodge === true && h3.dodge === false && h3.tag === 'unknown-finisher' && h4.dodge === false && h4.tag === 'unknown-finisher',
+           '146a ...my crows count only when the strike makes the difference (crows 1 empty them, my strike torpors them: struck; crows 2 torpor them anyway: dodged), and an unknown strike gets the same exception (' + JSON.stringify([h1.tag, h2.tag, h3.tag, h4.tag]) + ')');
         ok(D(u0, 3, K({ dealt: 2 }), 1, 2).dodge === false && D(u0, 3, K({ dealt: 3 }), 1, 1).dodge === true && D(u0, 5, null, 1, 1, 3).dodge === false && D(u0, 1, null, 1, 1, null).dodge === true,
            '146a dodgeOut 0 = v0.6.204: a known strike only when it would empty or torpor me, an unknown one only at blood <= 1');
         let man = null; u._emit = (k, m) => { if(k === 'manifest') man = m; }; u._emitManifest();
