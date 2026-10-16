@@ -9306,6 +9306,13 @@ async function connectWithRetry(client, tries = 30){
         ok(g.length === 1 && g[0].to === 'all' && !g[0].revoke && g[0].cards.length === 2, '140i a spectator who joins a debug table mid-game gets the hand at once -- the roster\u2019s watcher list is part of the audience (v0.6.200 waited for the next change of hand; got ' + JSON.stringify(g.map(m => m.to)) + ')');
         u.sent.length = 0; u._dispatch({ t: 'roster', players: P3x(), watchers: 1, watcherList: [{ name: 'Eve' }] });
         ok(u.sent.filter(m => m.t === 'openHand').length === 0, '140i ...and an unchanged roster sends nothing'); }
+
+      // j) found by this release's own arena smoke (seed 4002): a Creeping Sabotage tick that takes my pool to 0 ousts me at once
+      { const u = mk140('Viktor', 3, P3x()); u.pool = 1; let ousted = 0; const o0 = u._oust.bind(u); u._oust = b => { ousted++; o0(b); };
+        u._onLog('U', 'Creeping Sabotage (x1): Viktor burns 1 pool.');
+        ok(ousted === 1 && u.out === true && u.sent.some(m => m.t === 'bounty'), '140j (found by the v0.6.201 arena smoke) a Creeping Sabotage tick that takes my pool to 0 ousts me at once, and my predator is sent the bounty (v0.6.200: Ventrue lived on at 0 pool, drained its Blood Doll to 1 and played two more turns)');
+        const v = mk140('Viktor', 3, P3x()); v.pool = 5; v._onLog('U', 'Creeping Sabotage (x1): Viktor burns 1 pool.');
+        ok(v.pool === 4 && !v.out && !v.sent.some(m => m.t === 'bounty'), '140j ...above 0 the tick is paid and play goes on, as before'); }
     }
 
 
