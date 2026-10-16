@@ -103,7 +103,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <li><a href="#setup">Setting up a table</a></li>
   <li><a href="#play">How a bot plays</a></li>
   <li><a href="#controls">Controls</a></li>
-  <li class="ver">bot v0.6.199 · client v2.6.158</li>
+  <li class="ver">bot v0.6.200 · client v2.6.158</li>
 </ul></nav>
 
 <header class="hero">
@@ -202,7 +202,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <details>
     <summary>Debug bot <span class="sub">— see what it is thinking</span></summary>
     <div>
-      <p>Tick <em>Debug bot</em> in the setup window and every bot at the table plays with an <strong>open hand to all players</strong>, its uncontrolled crypt <strong>face up</strong>, and writes its decision weighting to the log (“master-play: … why”). It announces in chat that it is in debug mode, so nobody is misled. Use it to judge how the bot plays a deck; never in a real game, and it is refused outright in Tournament mode. The setting is read when the bot is added: tick <em>Debug bot</em> before you add the bot (offline: before Start); to change it, remove the bot and add it again. To look: right-click the bot's pool globe → <span class="menu">👁 Inspect their hand</span>, and <span class="menu">🜂 View their ash heap</span> for its discards (see the seat menu below). The other bots at the table see an open hand too and use it, so a table with debug bots does not play the way a normal table does.</p>
+      <p>Tick <em>Debug bot</em> in the setup window and every bot at the table plays with an <strong>open hand to the human players</strong>, its uncontrolled crypt <strong>face up</strong>, and writes its decision weighting to the log (“master-play: … why”). It announces in chat that it is in debug mode, so nobody is misled. Use it to judge how the bot plays a deck; never in a real game, and it is refused outright in Tournament mode. The setting is read when the bot is added: tick <em>Debug bot</em> before you add the bot (offline: before Start); to change it, remove the bot and add it again. To look: right-click the bot's pool globe → <span class="menu">👁 Inspect their hand</span>, and <span class="menu">🜂 View their ash heap</span> for its discards (see the seat menu below). The other bots never see a debug bot’s hand (bot v0.6.200): with only humans beside it, the hand goes to the whole table, spectators included; with other bots at the table it goes to each human player’s seat, and spectators then see no hand. Its face-up crypt is on the table for everyone. A bot started from the command line takes <code>--debug</code> (and <code>--no-debug-weights</code> for the hand without the log lines), and refuses debug by itself at a Tournament table.</p>
     </div>
   </details>
 
@@ -256,7 +256,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
         <li><b>Your block.</b> Say <span class="phrase">Block!</span> and right-click the blocking minion → <span class="menu">Block</span> (or do the right-click first — either order works). If only the shout arrives the bot asks “Who blocks?” after 2.5 s. Now the contest runs on the counter: play your card, then put its value on your side (the +/− steps, or just type the number in chat — <a href="#chat-intercept">see the chat grammar</a>). Playing a card books nothing on the counter by itself; the bot reads the counter and the numbers in chat. The bot compares the real numbers, waits a beat, and answers with its own stealth card if it needs one and has one — telling you when it is already ahead: <span class="bot"><b>Name:</b> Colette currently has 2 stealth — play your intercept, or resolve the block.</span> It never spends a stealth card it does not need.</li>
         <li><b>Verdict.</b> When you stop adding intercept (say <span class="phrase">Pass</span> or <span class="phrase">No block</span>, press the counter's Resolve, or let the clock run) the bot declares the outcome from the counter: <em>“Block: Stealth 2 vs Intercept 1 — block fails.”</em> A successful block goes to combat (below). Cancelling a block with the counter's ✕ reopens the window fresh.</li>
         <li><b>Modifiers.</b> After blocks are declined the bot may pump the bleed (<em>Conditioning</em>, <em>Leverage</em>): each modifier is a new log line and a new question — <span class="bot"><b>Name:</b> Colette adds +2 bleed — now 4 on You. Any reaction?</span> This window takes <em>reactions only</em> (a bounce or reduction); the rules do not reopen blocks. Answer <span class="phrase">No reaction</span> or <span class="phrase">Pass</span> to let it through, <span class="phrase">Yes</span> or <span class="phrase">❗ Hold on…</span> to say “wait, I am reacting” and play your Deflection.</li>
-        <li><b>Resolve.</b> <span class="phrase">It resolves</span>, then a log line: <em>“The bleed goes through: You, −4 pool (adjust yours).”</em> Adjust your own pool: the line tells the table what you took. The client never changes your pool, blood or Edge for you — you manage your own values, the bots manage theirs. A successful bleed gives the bot the Edge.</li>
+        <li><b>Resolve.</b> <span class="phrase">It resolves</span>, then a log line: <em>“The bleed goes through: You, −4 pool (adjust yours).”</em> Adjust your own pool: the line tells the table what you took. The client never changes your pool, blood or Edge for you — you manage your own values, the bots manage theirs. A successful bleed (1 pool or more) gives the bot the Edge; online your client clears your own Edge when the bot takes it (at an offline table, for now, clear it yourself). A bleed you reduce to 0 is said as such — <em>“The bleed goes through at 0”</em> — and moves no Edge.</li>
       </ol>
       <p>Undirected actions (hunt, equip, recruit, a political action, rescue from torpor) are announced the same way and both the bot's prey and predator are asked; the window closes when both have declined. A political action is announced with a machine-readable <em>terms</em> line before the frozen action line, so a bot voter at the table can weigh it.</p>
     </div>
@@ -455,7 +455,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.199</b>, client <b>v2.6.158</b> / server srv-2.6.46, cardfx 99 curated / 1,670 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 15 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.200</b>, client <b>v2.6.158</b> / server srv-2.6.46, cardfx 99 curated / 1,670 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 16 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 
 <script>
