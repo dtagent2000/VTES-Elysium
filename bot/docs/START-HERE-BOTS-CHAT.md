@@ -1,7 +1,7 @@
-# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (16 October 2026, night)
+# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (17 October 2026, night)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.205 (deploy candidate = PR #25, awaiting Johan's merge; R4 of the play-test review, with the dodge; v0.6.204 = PR #22, merged) · arena v1.4.7 ·
+**State at writing:** bot v0.6.206 (deploy candidate = PR #26, awaiting Johan's merge; the round after R4; v0.6.205 = PR #25, merged) · arena v1.4.8 ·
 cardfx compiler v1.9.2, curated 105 · built against client v2.6.162 / srv-2.6.46 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
@@ -33,20 +33,19 @@ branch → change → gates (inside `bot/`) → living docs + READ-ME-FIRST (+ H
 commit + push often → PR against `main` with the gate numbers in the body → Johan merges.
 A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repository root.
 
-## Open at hand-over (16 Oct 2026, night)
-The 14 Oct play-test (main's rig, PR #13) is reviewed finding by finding in
-`bot/docs/reviews/REVIEW-playtest-2026-10-14.md`; R0–R3 shipped as v0.6.199–204 (all merged). v0.6.205 is R4, the review's
-last round, with the dodge (Johan, 16 Oct: one PR): the dodge rule (one dodge: a known strike of 2+ that does more than the bot's
-own strike; two: one spared even against a 1 that does at least as much, Roundhouse first; an unknown one on the expected
-strike; except when the bot's strike finishes their vampire — Johan's answer to question A, 21:20 + 21:27); Revelations against a bot (F21: armed by the prey, the human's pick read); the six V5 masters curated (F23: The
-Labyrinth, Guardian Angel, Wasserschloss Anif's bank, Haven Uncovered with the rush through it — two frozen lines for main);
-found on the way: Arcane Library's influence lock never fired, and a vampire at capacity in the uncontrolled region stalled
-the influence phase for good (the free rise). Main's client v2.6.162 (PR #23) is consumed. **Next round, agreed with Johan (21:27):** the
-probe-then-punch reservation that never takes effect (since v0.6.143 — READ-ME-FIRST-2026-10-16f §6), measured before and after;
-main's finding that the chat beat after a question delays the verdict line ~5 s (their REPLY to v0.6.204, §4.1), analysed;
-and, found in the final smoke (older): a bot target bouncing a bot's bleed after the actor resolved it (READ-ME-FIRST-2026-10-16f §6).
-Next, in Johan's order: the 14 Oct scenario in `client/playtest/` with `--dir` on a scratch copy of the root with the bot
-branch, compared with the report's numbers (the proof R0–R4 fixed what the play-test found); then a larger re-measure once
-every fix is in; the parked items in READ-ME-FIRST-2026-10-16f, 'Next'. Known, not built: a human's bounce of a bot's bleed is
-not read by the acting bot; a human's Haven Uncovered is not read by the bots. Johan's rule since 16 Oct: fixes that belong
-together may be combined in one round; design questions still go through a proposal and "kör".
+## Open at hand-over (17 Oct 2026, night)
+The 14 Oct play-test (main's rig, PR #13) was reviewed finding by finding in `bot/docs/reviews/REVIEW-playtest-2026-10-14.md`;
+R0–R4 shipped as v0.6.199–205 (all merged). v0.6.206 is the round agreed with Johan on 16 Oct 21:27
+(`bot/docs/specs/spec-next-2026-10-17.md`): the late bounce of R4's final smoke fixed (a Magic of the Smith's note read as an
+equip announce; three layers); two faults in the actor's block windows found by the release's own smoke and fixed (the stale
+guard anchors on the line that opens the window; a window opens in the same tick as its line — a 150 ms sleep since v0.6.144
+lost bot answers at pace 0, so every arena number since then carried ~3 s of dead clock per bleed total); the probe
+reservation behind knob `probeHold`, measured in the new probe lab (`lab-probe.js`): +0.80 pool per probe turn when the actor
+out-numbers its prey's unlocked bodies, nothing otherwise. **Waiting for Johan:** the probe default (the proposal is 2 — his
+bait read), and main's finding 1, the chat beat after a question (proposal A: the beat separates two chat bubbles only; "kör"
+builds it). Next, in Johan's order: the 14 Oct scenario in `client/playtest/` with `--dir` on a scratch copy of the root with
+the bot branch, compared with the report's numbers; then the larger re-measure, against a baseline run on v0.6.206 (not on
+older numbers — the dead clock); the parked items in READ-ME-FIRST-2026-10-16f, 'Next'. Known, not built: a human's bounce of a
+bot's bleed is not read by the acting bot; a human's Haven Uncovered is not read by the bots; between bots a contested block's
+verdict waits for the actor's clock (~3 s at the arena's askSecs). Johan's rule since 16 Oct: fixes that belong together may be
+combined in one round; design questions still go through a proposal and "kör".
