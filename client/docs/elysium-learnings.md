@@ -1,8 +1,18 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.159 / server v2.6.46 / bot v0.6.201 tested beside the suite, last updated 16 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.160 / server v2.6.46 / bot v0.6.201 tested beside the suite, last updated 16 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**16 Oct 2026, afternoon (THE EYE — v2.6.160):**
+- **A check that cannot fail needs a control beside it.** "A wheel over the eye does not zoom" means something only
+  because the same wheel over the mat does zoom. My drag test had no such partner at first, and it turned out it never
+  could have one: in the helicopter view only bare felt pans (`e.target!==board`). That check is now recorded as one that
+  cannot bite.
+- **A colour already means something in a given corner.** On your own board a red-lit circle in the pool's corner is the
+  Edge. A red-lit eye in the same corner of an opponent's mat would read as "they hold the Edge", so the eye lights in brass.
+- **A scale floor moves things.** The 10 px minimum is anchored at the eye's right edge, so it grows inward. Measured at
+  12 px on a five-seat mat, it sits 2.8 px clear of the globe.
 
 **16 Oct 2026 (THE BRIDGE ANSWERS BOTH WAYS — v2.6.159):**
 - **A contract that was verified once decays; pin it with the consumer's own cut.** v2.6.122 wrote "the bridge is
