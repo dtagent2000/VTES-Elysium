@@ -10,13 +10,13 @@ project holds only this file and `PROJECT-INSTRUCTIONS.md`.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.158** (WHAT THE PLAY-TEST FOUND: the default combatant expires, one image fallback instead of a loop, a master played on a vampire counts, the level chooser follows the vampire playing the card; carries v2.6.157 THE TABLE LAYOUT AND THE DISCREET PANEL and earlier) | `client/elysium-vtes-bord.html`, copied to `/` |
+| client | **v2.6.159** (THE BRIDGE ANSWERS BOTH WAYS: the hotseat bridge relays the Edge, reveals and logTo both ways; a Debug bot's hand is inspectable offline; the Bleed menu's Reduce row; the bridge stays liftable; carries v2.6.158 WHAT THE PLAY-TEST FOUND and earlier) | `client/elysium-vtes-bord.html`, copied to `/` |
 | server | **srv-2.6.46** (the room option `tableLayout`; srv-2.6.45: the pub keeps `tn`/`rn`; srv-2.6.44: the room option `tableSetup`) | `client/elysium-server.js`, copied to `/` |
-| bot (consumed) | **v0.6.198** (12 Oct 2026) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.158 / srv-2.6.46 | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **288/0** (no skips, bot v0.6.198 beside) · canary 57/0 · dispatch 68/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
+| bot (consumed) | **v0.6.201** (16 Oct 2026; v0.6.199–201 read in one round) | the 8-file bundle at `/` and in `bot/` — never edited here |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.159 / srv-2.6.46 (§12: the Reduce line + the DEBUG lines; §12.2: the bridge's relays) | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **297/0** (no skips, bot v0.6.201 beside) · canary 69/0 · dispatch 68/0 · protocol 6/0 · endpoint 24/0 · soak `--control` exit 0 · B1 byte-identical · embed `--check` both pages · check-versions green incl. the root gate | run from `client/` |
 
-**Live on elysium.cards:** server srv-2.6.45 + bot v0.6.198 since 13 Oct 16:47 (PR #7). Client v2.6.150/151 (PRs #9, #10) were merged that evening. Client v2.6.157 + server srv-2.6.46 were merged with PR #12 on 14 Oct (a client purge AND a server restart together). Client v2.6.158 (PR from `playtest-2026-10-14`, with the play-test handoff) needs a client purge only.
+**Live on elysium.cards:** server srv-2.6.45 + bot v0.6.198 since 13 Oct 16:47 (PR #7). Client v2.6.150/151 (PRs #9, #10) were merged that evening. Client v2.6.157 + server srv-2.6.46 were merged with PR #12 on 14 Oct (a client purge AND a server restart together). Client v2.6.158 (PR #13, with the play-test handoff) needs a client purge only. Bot v0.6.199–201 were merged on 15–16 Oct (PRs #14–16). Client v2.6.159 (PR from `client-bot-v0.6.201`) needs a client purge and a purge of `/elysium-bot.js`; the server is unchanged.
 
 ## The first ten minutes
 
@@ -31,7 +31,7 @@ head -40 docs/elysium-learnings.md
 # the bundle beside the suite (gitignored — copy, never commit):
 cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
 node check-versions.js             # must end green: code, doc headers, AND the root == client/ + bot/ gate
-node test-client-logic.js          # 288 passed, 0 failed, 0 skipped (with the bundle beside)
+node test-client-logic.js          # 297 passed, 0 failed, 0 skipped (with the bundle beside)
 ```
 
 The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification commands" and `client/SKILLS.md`
@@ -67,7 +67,9 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
 7. Commit (English, what and why), push, open a PR against `main`. Johan merges.
 8. Update this file's version block when a release went out.
 
-## Open right now (14 Oct 2026)
+## Open right now (16 Oct 2026)
+
+- **v2.6.159 (16 Oct):** the client half of bot v0.6.199–201 is built (`docs/handoffs/REPLY-to-bot-2026-10-16-v0.6.201.md`). **Parked by Johan (16 Oct) -- follow up when it becomes relevant:** (1) the bot project's wish (item 5) to make an opponent's open hand and ash heap findable. Today both sit in the right-click menu of the seat's pool in every view (Structured: the mat's pool box, the seat visit's 'Pool N', the Table panel row; Classic: the pool globe, since v2.6.28), and no mat draws an opponent's ash heap. Proposed: tooltips that name the open hand + a 👁 chip; Johan's idea for later: one 👁 icon per opponent with a submenu of what you may look at (hand, ash heap, anything else), decided when the bots need it. (2) Reduce at a hotseat: while a bot acts the camera shows its board, so the Reduce row on your own minion needs ⌂ Home first (a Hold on gives the time); options when it matters: bring the camera home when a bot's action is aimed at you, or a Reduce entry in the quick-phrase menu with your minions to pick from. **For the bot project:** copy our canary §5; lift `AVR_CMB0` / `AVR_CMB_KEYS` / `tallyCombatMerge` if they want the combat fields in their hotseat tool.
 
 - **The play-test (14 Oct):** `client/playtest/` plays a real game against the bots and measures it (`client/playtest/PLAYTEST.md`). Its 24 bot findings wait in
   `docs/handoffs/REPLY-to-bot-2026-10-14-playtest.md`; our four are fixed in v2.6.158. **Decided (Johan):** the human handles their own values by hand

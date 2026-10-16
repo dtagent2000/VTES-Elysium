@@ -1,8 +1,34 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.158 / server v2.6.46 / bot v0.6.198 tested beside the suite, last updated 14 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.159 / server v2.6.46 / bot v0.6.201 tested beside the suite, last updated 16 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**16 Oct 2026 (THE BRIDGE ANSWERS BOTH WAYS — v2.6.159):**
+- **A contract that was verified once decays; pin it with the consumer's own cut.** v2.6.122 wrote "the bridge is
+  self-contained on purpose — the bot project lifts it verbatim" and checked it once. Seven releases later (v2.6.129)
+  `tallyIn` called `tallyCombatMerge` bare, and in their lift a bot's combat tally threw silently (the dial's `catch`).
+  Nobody noticed for a month, because the real client has the function.
+  - The test that holds it now uses THEIR cut markers and THEIR context keys.
+  - It checks statically: the client's top-level names that the cut mentions must be `typeof`-guarded or in the context.
+  - It also runs every `_fromBot` case there.
+  - A mutant with an invented bare call proves the runtime half is not redundant.
+- **Read the producer's shape before you watch for it.** My browser script waited for `_actingVamp.kind === 'bleed'`
+  because my own LIVE test had built that object by hand. The real bot never sets `kind` on a bleed, and the name is in
+  `v.name`. Result: nine minutes, a dozen bleeds in the log, zero seen.
+  - A fixture you wrote proves your assumption, not the producer. When a watcher sees nothing, print what IS there
+    before blaming the game.
+- **At a hotseat the camera is on the bot.** `hotRunBotTurns` visits the acting bot's seat. During its turn, a
+  right-click on "your" vampire lands on `#rview` and opens the quick-phrase menu.
+  - Any reaction on your own minion at a bot's turn (the Reduce row, a Block from the minion menu) is one ⌂ Home away.
+  - A browser test that skips that step tests a different game than the player plays.
+- **A flag flips before its message leaves.** The bot sets `this.edge = true` and queues `edgeTake` on its paced send
+  queue. A check made the instant the flag flips sees the human's Edge still lit. Wait for the message, not the flag.
+- **The same script on the previous release is the cheapest proof.** 11 of 11 on v2.6.159 and 9 of 11 red on v2.6.158
+  says more than either number alone.
+  - The two that stayed green are the setup checks: the bot is seated, and I hold the Edge.
+  - One red shows a consequence worth knowing. On v2.6.158 the human still "held" the Edge the bot had taken, so the
+    click meant to take it back RELEASED it instead.
 
 **14 Oct 2026, afternoon (WHAT THE PLAY-TEST FOUND — v2.6.158):**
 - **Play the game, not only the rules.** One full game against two bots found four client faults that 283 green tests had never touched (a stale default, an error-handler loop, an uncounted master, a chooser reading the wrong vampire) and 24 bot items. Every one sat on a path a test exercised in isolation but no test followed across turns, players and an unreachable network. The rig (`client/playtest/`) makes the game repeatable.

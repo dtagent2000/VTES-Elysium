@@ -382,7 +382,13 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   l4GlobeEdges: (typeof l4GlobeEdges!=='undefined'?l4GlobeEdges:undefined),   // v2.6.151: the Edge on the globe
   cardFx: (typeof cardFx!=='undefined'?cardFx:undefined), imgFallbackOnce: (typeof imgFallbackOnce!=='undefined'?imgFallbackOnce:undefined),   // v2.6.158: the image fallback loop
   modeChooseGate: (typeof modeChooseGate!=='undefined'?modeChooseGate:undefined), selectOnly: (typeof selectOnly!=='undefined'?selectOnly:undefined), activeAnchor: (typeof activeAnchor!=='undefined'?activeAnchor:undefined),   // v2.6.158: the level chooser follows the anchor
-  playOnActive: (typeof playOnActive!=='undefined'?playOnActive:undefined), masterPlayGate: (typeof masterPlayGate!=='undefined'?masterPlayGate:undefined)   // v2.6.158: a master played on a vampire counts
+  playOnActive: (typeof playOnActive!=='undefined'?playOnActive:undefined), masterPlayGate: (typeof masterPlayGate!=='undefined'?masterPlayGate:undefined),   // v2.6.158: a master played on a vampire counts
+  hotEdgeTaken: (typeof hotEdgeTaken!=='undefined'?hotEdgeTaken:undefined), edgeTakeover: (typeof edgeTakeover!=='undefined'?edgeTakeover:undefined), edgeHandoffHotseat: (typeof edgeHandoffHotseat!=='undefined'?edgeHandoffHotseat:undefined),   // v2.6.159: the bridge relays (bot v0.6.199-201 handoffs)
+  hotRevealToHuman: (typeof hotRevealToHuman!=='undefined'?hotRevealToHuman:undefined), hotLogToHuman: (typeof hotLogToHuman!=='undefined'?hotLogToHuman:undefined), mpLogTo: (typeof mpLogTo!=='undefined'?mpLogTo:undefined),
+  hotRevealToBots: (typeof hotRevealToBots!=='undefined'?hotRevealToBots:undefined), hotOpenHandToBots: (typeof hotOpenHandToBots!=='undefined'?hotOpenHandToBots:undefined),
+  revealHandTo: (typeof revealHandTo!=='undefined'?revealHandTo:undefined), openHandGrant: (typeof openHandGrant!=='undefined'?openHandGrant:undefined), openHandRevoke: (typeof openHandRevoke!=='undefined'?openHandRevoke:undefined), refreshOpenHands: (typeof refreshOpenHands!=='undefined'?refreshOpenHands:undefined),
+  setNameTarget: (typeof setNameTarget!=='undefined'?setNameTarget:undefined), openHandCardsFor: (typeof openHandCardsFor!=='undefined'?openHandCardsFor:undefined), canSeeOpenHand: (typeof canSeeOpenHand!=='undefined'?canSeeOpenHand:undefined), oppPoolMenuItems: (typeof oppPoolMenuItems!=='undefined'?oppPoolMenuItems:undefined),
+  botDebugSync: (typeof botDebugSync!=='undefined'?botDebugSync:undefined), get BLEED_LINE(){ return (typeof BLEED_LINE!=='undefined')?BLEED_LINE:undefined; }
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',

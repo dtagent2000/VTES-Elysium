@@ -131,5 +131,32 @@ if(cmbMatch){
   u = mk(); u._onLog('Johan', CMB_LINE.taken('Lisa', 1, 1, 3, false, false)); ok(u._oppLastTaken && u._oppLastTaken.now === 3 && u._oppLastTaken.down === false, 'CMB_LINE.taken -> now 3, not down');
 }
 
+/* ---- 5) v2.6.159 (bot v0.6.201's ask): the client's Reduce line (BLEED_LINE, the Bleed menu's Reduce row) -- extracted
+   and EXECUTED, fed through the bot's L12.reduceBy and through a live bot's _onLog mid-bleed; and the two bot-emitted
+   DEBUG lines the bots now read from each other, as PROTOCOL section 12 documents them */
+const blMatch = CLIENT.match(/const BLEED_LINE=\{[\s\S]*?\n\};/);
+ok(!!blMatch, 'extraction anchor: BLEED_LINE block found in the client source (client >= v2.6.159, the Reduce row)');
+if(blMatch){
+  const BLEED_LINE = new Function('return (' + blMatch[0].replace(/^const BLEED_LINE=/, '').replace(/;$/, '') + ');')();
+  const N = '<b class="clog" data-cid="c1">Lisa Noble</b>', strip = s => String(s).replace(/<[^>]*>/g, '');
+  const line = strip(BLEED_LINE.reduce(N, 2));
+  ok(line === 'Lisa Noble reduces the bleed by 2.', 'BLEED_LINE.reduce builds the frozen shape: "' + line + '"');
+  const m = line.match(L12.reduceBy || /$^/);
+  ok(!!m && m[1] === 'Lisa Noble' && m[2] === '2' && !m[3], 'bot L12.reduceBy parses the LIVE client line (name, amount, no card)');
+  ok(!(line.match(L12.reduce || /$^/)), 'and the bot\'s OWN reduce shape (em-dash, now M) does not match it -- one reduction, counted once');
+  const { Bot } = require('./elysium-bot.js');
+  const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Bot', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} });
+  u.seat = 2; u.started = true; u.send = () => {}; u.push = () => {};
+  u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Bot', bot: true }];
+  u._actingVamp = { name: 'Sully', n: 2, target: 1, kind: 'bleed' };
+  u._onLog('Johan', BLEED_LINE.reduce(N, 1)); ok(u._actingVamp.n === 1, 'a live bot bleeding Johan for 2 hears his Reduce line: 2 -> 1');
+  u._onLog('Johan', BLEED_LINE.reduce(N, 5)); ok(u._actingVamp.n === 0, '...and never below 0');
+  u._actingVamp = { name: 'Sully', n: 2, target: 1, kind: 'bleed' }; u._onLog('Anna', BLEED_LINE.reduce(N, 1)); ok(u._actingVamp.n === 2, 'a line from a seat it is NOT bleeding changes nothing');
+}
+ok(sec12.includes('reduces the bleed by N.'), 'PROTOCOL \u00a712 documents the client\'s Reduce line');
+['(bot) is in DEBUG mode', '(bot) leaves DEBUG mode'].forEach(tag => ok(sec12.includes(tag), 'PROTOCOL \u00a712 documents the bot-emitted "' + tag + '" line (the bots read it from each other since v0.6.201)'));
+ok(!!(L12.debugOn && 'Ann (bot) is in DEBUG mode: open hand for the humans (the bots look away), crypt face up.'.match(L12.debugOn)), 'bot L12.debugOn parses the documented announcement');
+ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament mode now.'.match(L12.debugOff)), 'bot L12.debugOff parses the documented exit');
+
 console.log('\n' + passN + '/' + failN + (failN ? ' \u2014 FAIL' : ' \u2014 all green'));
 process.exit(failN ? 1 : 0);

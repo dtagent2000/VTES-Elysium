@@ -4440,6 +4440,259 @@ test('v2.6.158 a v5 crypt card keeps its disciplines with their case (the level 
   eq(g.disciplines.join(' '), 'obf pot DOM OBT', 'case kept: UPPER = superior');
   eq(A.cardInfo.get(A.norm('Test Elder')).disciplines.join(' '), 'obf oblivion DOM', 'v3 unchanged');
 });
+/* ---------- v2.6.159: the bot project's 15-16 Oct handoffs (bot v0.6.199-201) -- the bridge relays, the Debug bot's hand, the Reduce row ---------- */
+function captureLog(A){   // what log() wrote -- private lines included (they reach neither curLines nor the error ring): a #log list and plain <li> objects
+  const doc = A.__doc, lines = [], origCE = doc.createElement;
+  doc._ids['log'] = { children: [], prepend(li){ lines.push(String(li.innerHTML)); this.children.unshift(li); }, get lastChild(){ const c = this.children; return { remove(){ c.pop(); } }; } };
+  doc.createElement = t => (t === 'li' ? { innerHTML: '', cloneNode(){ return this; } } : origCE(t));
+  const strip = s => String(s).replace(/<[^>]*>/g, '');
+  return { lines, text: () => lines.map(strip), restore(){ delete doc._ids['log']; doc.createElement = origCE; } };
+}
+test('v2.6.159 the Edge at a hotseat: a bot\'s edgeTake reaches the human (a stored human\'s board and every mat too) and the other bots in the server\'s shape; the human\'s take reaches every bot, a hand-off to a bot is its edgePass (bot v0.6.200, play-test point 20: two Edge holders)', () => {
+  const A = loadClient(CLIENT); const T = parityTable(A, [['You'], ['B2', true], ['Anna'], ['B4', true]]);
+  A.net.hot.boards[3] = JSON.stringify({ pool: 30, cards: [], zones: {}, edge: true, edgeTok: { x: 5, y: 6 } });   // a stored human who held it
+  A.net.boards[3] = { who: 'Anna', pub: { edge: true, tokens: [{ type: 'edge', x: 5, y: 6 }], cards: [], pool: 30, counts: { hand: 7, library: 40, crypt: 8 } } };
+  A.state.edge = true;                                                                                           // ...and the active human too
+  T.from(2, { t: 'edgeTake' });
+  eq(A.state.edge, false, 'the active human\'s Edge clears (v2.6.158: the bridge had no case -- dropped, two holders)');
+  const st = JSON.parse(A.net.hot.boards[3]); eq(st.edge, false, 'a stored human\'s saved board too'); eq(st.edgeTok, null);
+  eq(A.net.boards[3].pub.edge, false, 'and their public mat'); eq(A.net.boards[3].pub.tokens.length, 0);
+  const ET = k => T.got[k].filter(m => m.t === 'edgeTake' || m.t === 'edgePass');   // (the human's own 'B2 took the Edge.' line rides the log relay to every bot, as online)
+  eq(JSON.stringify(ET(4)), JSON.stringify([{ t: 'edgeTake', bySeat: 2, clearOnly: false }]), 'the other bot hears it in the server\'s shape');
+  eq(ET(2).length, 0, 'never back to the taker');
+  T.clear(); A.state.edge = true; A.edgeTakeover();
+  eq(JSON.stringify(ET(2)), JSON.stringify([{ t: 'edgeTake', bySeat: 1, clearOnly: false }]), 'the human\'s take reaches every bot (v2.6.158: online only -- a bot that held it re-lit it at its next push)');
+  eq(ET(4).length, 1);
+  T.clear(); A.state.edge = true; A.edgeHandoffHotseat(4, { x: 10, y: 20 });
+  eq(JSON.stringify(ET(4)), JSON.stringify([{ t: 'edgePass', toSeat: 4, fromName: 'You', pos: { x: 10, y: 20 } }]), 'a hand-off to a bot is the server\'s edgePass, to that seat only');
+  eq(ET(2).length, 0); eq(A.state.edge, false);
+  T.clear(); A.state.edge = true; A.edgeHandoffHotseat(3, { x: 1, y: 1 }); eq(ET(2).length + ET(4).length, 0, 'a hand-off to a human seat sends no bot anything');
+  A.localTable = false; T.HB.reset([]);
+});
+test('v2.6.159 Revelations at a hotseat, the bot\'s side: its revealHand reaches the human recipient as a private list (a stored human\'s names them), every other seat the card-free public line; its logTo (the discard command) reaches the seat it names (bot R3 -- the bridge dropped both)', () => {
+  const A = loadClient(CLIENT); const T = parityTable(A, [['You'], ['B2', true], ['Anna'], ['B4', true]]);
+  const L = captureLog(A);
+  try {
+    const cards = [{ name: 'Govern the Unaligned', kind: 'lib', junk: 1 }, { name: '' }];
+    const pub = '<b>B2</b> reveals their hand to <b>You</b> (Revelations).';
+    T.from(2, { t: 'revealHand', to: 1, cards, pub });
+    assert(L.text().includes('B2 revealed to you: Govern the Unaligned.'), 'the active human reads the list, privately: ' + JSON.stringify(L.text()));
+    eq(JSON.stringify(T.got[4]), JSON.stringify([{ t: 'log', who: 'B2', html: pub }]), 'the other bot gets the public line only');
+    eq(T.got[2].length, 0, 'never back to the sender');
+    T.clear(); L.lines.length = 0;
+    T.from(2, { t: 'revealHand', to: 4, cards, pub: 'P' });
+    eq(T.got[4][0].t, 'revealHand'); eq(T.got[4][0].seat, 2); eq(T.got[4][0].from, 'B2');
+    eq(JSON.stringify(T.got[4][0].cards), JSON.stringify([{ name: 'Govern the Unaligned', kind: 'lib' }]), 'a bot recipient gets the list, whitelisted like the server\'s');
+    assert(L.text().includes('[B2] P'), 'the human, a third party this time, reads the public line: ' + JSON.stringify(L.text()));
+    T.clear(); L.lines.length = 0;
+    T.from(2, { t: 'revealHand', to: 3, cards, pub: 'P' });
+    assert(L.text().includes('B2 revealed to Anna: Govern the Unaligned.'), 'a stored human\'s list names its recipient (one screen, one log): ' + JSON.stringify(L.text()));
+    eq(JSON.stringify(T.got[4]), JSON.stringify([{ t: 'log', who: 'B2', html: 'P' }]));
+    T.clear(); L.lines.length = 0;
+    T.from(2, { t: 'revealHand', to: 'all', cards });
+    assert(L.text().includes('B2 revealed to you: Govern the Unaligned.'), 'to all: the human'); eq(T.got[4][0].t, 'revealHand', '...and every other bot');
+    T.clear(); L.lines.length = 0;
+    T.from(2, { t: 'logTo', toSeat: 1, html: 'Revelations: discard <b>Deflection</b>.' });
+    assert(L.text().includes('[B2] Revelations: discard Deflection.'), 'the bot\'s discard command reaches the human it names: ' + JSON.stringify(L.text()));
+    T.from(2, { t: 'logTo', toSeat: 3, html: 'Revelations: discard <b>Deflection</b>.' });
+    assert(L.text().includes('[B2 → Anna] Revelations: discard Deflection.'), 'a stored human\'s line names them: ' + JSON.stringify(L.text()));
+    T.from(2, { t: 'logTo', toSeat: 4, html: 'x' }); eq(JSON.stringify(T.got[4]), JSON.stringify([{ t: 'logTo', from: 'B2', html: 'x' }]), 'a bot recipient');
+    T.clear(); L.lines.length = 0;
+    T.from(2, { t: 'logTo', toSeat: 2, html: 'x' }); T.from(2, { t: 'logTo', toSeat: 9, html: 'x' }); T.from(2, { t: 'revealHand', to: 2, cards }); T.from(2, { t: 'revealHand', to: 1, cards: [] });
+    eq(T.got[2].length + T.got[4].length + L.lines.length, 0, 'to itself, out of range, an empty list: nothing anywhere');
+  } finally { L.restore(); A.localTable = false; T.HB.reset([]); }
+});
+test('v2.6.159 Revelations at a hotseat, the human\'s side: Reveal hand to a bot, an open hand toward the bots and a target picked from a bot\'s hand reach the bot seats as the server routes them (a bot\'s Revelations [aus] on you waited 30 s for the reveal and gave up)', () => {
+  const A = loadClient(CLIENT); const T = parityTable(A, [['You'], ['B2', true], ['Anna'], ['B4', true]]);
+  A.clearTable({}); const g = A.makeCard('Govern the Unaligned', 'lib'); A.move(g, 'hand'); const d = A.makeCard('Deflection', 'lib'); A.move(d, 'hand');
+  A.revealHandTo([g, d], 2);
+  const rv = T.got[2][0];
+  assert(rv && rv.t === 'revealHand' && rv.seat === 1 && rv.from === 'You' && rv.who === 'You', 'the recipient bot gets the server\'s private list (v2.6.158: a local line and an animation, nothing for the bot): ' + JSON.stringify(rv));
+  eq(rv.cards.map(c => c.name).join(), 'Govern the Unaligned,Deflection');
+  eq(T.got[4][0].t, 'log'); assert(/revealed their hand to/.test(T.got[4][0].html) && !/Govern/.test(T.got[4][0].html), 'the other bot the card-free public line');
+  T.clear(); A.revealHandTo([g], 'all'); eq(T.got[2][0].t, 'revealHand'); eq(T.got[4][0].t, 'revealHand', 'to all: every bot');
+  T.clear(); A.state.openHand = []; A.openHandGrant('all');
+  const og = T.got[2].find(m => m.t === 'openHandGrant'); assert(og && og.seat === 1 && og.cards.length === 2 && og.who === 'You', 'an open hand toward all reaches the bots (v2.6.158: online only)');
+  T.clear(); A.hotPushBoardNow(); assert(T.got[4].some(m => m.t === 'openHandGrant'), 'and it follows every board push, as schedulePush does online');
+  T.clear(); A.openHandRevoke('all'); eq(T.got[2].filter(m => m.t === 'openHandRevoke').length, 1, 'the revoke too');
+  T.clear(); A.openHandGrant(4); eq(T.got[4].filter(m => m.t === 'openHandGrant').length, 1); eq(T.got[2].filter(m => m.t === 'openHandGrant').length, 0, 'a grant to one bot reaches that bot only');
+  A.openHandRevoke(4); eq(T.got[4].filter(m => m.t === 'openHandRevoke').length, 1);
+  T.clear(); A.setNameTarget({ name: 'Deflection', seat: 2, who: 'B2', visibility: 'private' });
+  const lt = T.got[2].find(m => m.t === 'logTo');
+  assert(lt && lt.from === 'You' && /targets <b>Deflection<\/b> \(revealed to you/.test(lt.html), 'the pick reaches the bot that revealed (v2.6.158: online only): ' + JSON.stringify(T.got[2]));
+  eq(T.got[4].filter(m => m.t === 'logTo').length, 0, '...that bot only'); assert(T.got[4].some(m => m.t === 'log' && /targets a revealed card/.test(m.html)), 'everyone gets the public line, as before');
+  T.clear(); A.setNameTarget({ name: 'X', seat: 3, who: 'Anna', visibility: 'hand' });
+  eq(T.got[2].filter(m => m.t === 'logTo').length + T.got[4].filter(m => m.t === 'logTo').length, 0, 'a human hand owner at this screen gets nothing on the wire');
+  A.setNameTarget(null);
+  A.localTable = false; T.HB.reset([]);
+});
+test('v2.6.159 Debug bot offline: Inspect their hand reads a BOT seat\'s grant, not its empty stored board; a human seat still reads its stored board; the hands opened to me belong to the room or table (the bot project\'s 15 Oct audit, items 1 and 4)', () => {
+  const A = loadClient(CLIENT); const T = parityTable(A, [['You'], ['B2', true], ['Anna']]);
+  A.net.hot.boards[2] = JSON.stringify({ pool: 30, cards: [], zones: { hand: [] }, openHand: [] });   // the placeholder startHotseat files for a bot seat
+  T.from(2, { t: 'openHand', to: 'all', cards: [{ name: 'Govern the Unaligned', kind: 'lib' }, { name: 'Deflection', kind: 'lib' }] });
+  eq(JSON.stringify(A.openHandCardsFor(2)), JSON.stringify([{ name: 'Govern the Unaligned', kind: 'lib' }, { name: 'Deflection', kind: 'lib' }]), 'the bot\'s grant (v2.6.158: null -- it read the placeholder board)');
+  eq(A.oppPoolMenuItems(2)[0].label, '👁 Inspect their hand (2)', 'so the pool menu offers it');
+  A.net.hot.boards[3] = JSON.stringify({ pool: 30, openHand: ['all'], cards: [{ id: 'h1', name: 'Bonding', kind: 'lib' }], zones: { hand: ['h1'] } });
+  eq(JSON.stringify(A.openHandCardsFor(3)), JSON.stringify([{ name: 'Bonding', kind: 'lib' }]), 'a human seat at a hotseat still reads its stored board');
+  T.from(2, { t: 'openHand', to: 'all', revoke: true }); eq(A.openHandCardsFor(2), null, 'a revoke ends it');
+  A.net.openHandFrom[2] = [{ name: 'X', kind: 'lib' }]; A.leaveHotseat(); eq(JSON.stringify(A.net.openHandFrom), '{}', 'leaving the table clears them (v2.6.158: only a page load did)');
+  A.net.openHandFrom[2] = [{ name: 'X', kind: 'lib' }]; A.startHotseat([{ name: 'You' }, { name: 'B' }], 'structured'); eq(JSON.stringify(A.net.openHandFrom), '{}', 'a new table starts without them'); A.leaveHotseat();
+  A.net.ws = { readyState: 1, send(){} };
+  const J = extra => Object.assign({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(2), boardMode: 'structured', lobby: false, srv: '2.6.46', myPub: { cards: [] } }, extra);
+  A.net.openHandFrom[2] = [{ name: 'X', kind: 'lib' }]; A.MP_HANDLERS.joined(J({})); eq(JSON.stringify(A.net.openHandFrom), '{}', 'a fresh join starts empty');
+  A.net.openHandFrom[2] = [{ name: 'X', kind: 'lib' }]; A.net.status = 're'; A.MP_HANDLERS.joined(J({})); eq((A.net.openHandFrom[2] || []).length, 1, 'an automatic reconnect into the SAME room keeps what it was shown (the server keeps no grants)');
+  A.net.status = 're'; A.MP_HANDLERS.joined(J({ room: 'other' })); eq(JSON.stringify(A.net.openHandFrom), '{}', 'another room: empty');
+  A.net.openHandFrom[2] = [{ name: 'X', kind: 'lib' }]; A.mpLeave(); eq(JSON.stringify(A.net.openHandFrom), '{}', 'leaving the room clears them');
+});
+test('v2.6.159 Debug bot: online the ROOM\'s policy decides alone -- a Play offline dropdown left on Tournament no longer greys Debug in an ordinary room; offline the first bot toggle paints the row AFTER the lock forces Helpers on (the bot project\'s 15 Oct audit, items 2 and 3)', () => {
+  const A = loadClient(CLIENT); A.conv.tournament = false;
+  const off = { value: 'tournament', disabled: false }; A.__doc._ids['offHelpers'] = off;   // Play offline was opened once with its Classic default
+  try {
+    A.net.status = 'in'; A.net.helperPolicy = { settings: {}, allowLocal: false, tournament: false };
+    eq(A.botDebugAllowed(), true, 'an ordinary room may run a debug bot (v2.6.158: false -- the hidden offline dropdown said Tournament)');
+    A.net.helperPolicy = { tournament: true }; eq(A.botDebugAllowed(), false, 'a Tournament room refuses it');
+    A.net.helperPolicy = null; A.conv.tournament = true; eq(A.botDebugAllowed(), false, 'a room with no policy at all (a pre-2.6 server): the stored preference, failing closed');
+    A.conv.tournament = false; eq(A.botDebugAllowed(), true);
+    A.net.status = 'off'; eq(A.botDebugAllowed(), false, 'offline the dropdown is the table\'s mode, as before'); off.value = 'all'; eq(A.botDebugAllowed(), true);
+    const board = { value: 'classic', disabled: false }, row = { style: { display: '', opacity: '' }, title: '' }, chk = { checked: false, disabled: false }, note = { style: { display: '' } };
+    Object.assign(A.__doc._ids, { offBoard: board, offBotDebugRow: row, offBotDebug: chk, offAlphaNote: note });
+    off.value = 'tournament';
+    A.offlineCfg = [{ name: 'You', deckIdx: -1 }, { name: 'Bot', deckIdx: -1, botP: 'expert' }];
+    A.renderOfflineSeats();
+    eq(off.value, 'all', 'the lock forced Helpers on'); eq(chk.disabled, false, 'and the Debug box is usable (v2.6.158: greyed by the value the lock was about to replace)'); eq(row.title, '', 'with no false Tournament tooltip');
+    off.value = 'tournament'; chk.disabled = true; A.syncOffBotLock(); eq(chk.disabled, false, 'the lock repaints the row itself -- openOffline calls it last, after syncOffTournament set the dropdown in code');
+    A.offlineCfg = [{ name: 'You', deckIdx: -1 }, { name: 'Ann', deckIdx: -1 }]; A.renderOfflineSeats();   // no bots: the lock lets go
+    off.value = 'local'; chk.disabled = false; board.value = 'classic'; A.syncOffTournament();
+    eq(off.value, 'tournament'); eq(chk.disabled, true, 'a switch to Classic (Tournament by default) repaints the row after the value is set in code -- the #offBoard listener that painted it runs first, on the old value');
+  } finally { for (const k of ['offHelpers', 'offBoard', 'offBotDebugRow', 'offBotDebug', 'offAlphaNote']) delete A.__doc._ids[k]; A.net.status = 'off'; A.net.helperPolicy = null; }
+});
+test('v2.6.159 the bridge stays liftable: the bot project lifts `const hotBridge = {...}` and `function hotFanOut` VERBATIM (bot/elysium-bot-hotseat.js, the same cut markers) into a context with no client functions -- every client name the lift refers to is typeof-guarded or part of that context, and every relay runs there, a COMBAT tally included (tallyIn called tallyCombatMerge / AVR_CMB_KEYS bare since v2.6.129: in the lift a bot\'s combat tally threw and the dial swallowed it)', () => {
+  const vm = require('vm'), html = require('fs').readFileSync(CLIENT, 'utf8');
+  const span = (from, to) => { const i = html.indexOf(from); assert(i >= 0, 'client marker missing: ' + from); const j = html.indexOf(to, i); assert(j >= 0, 'end marker missing after: ' + from); return [i, j + to.length]; };
+  const [b0, b1] = span('const hotBridge = {', 'hotBridge.reset([]);'), [f0, f1] = span('function hotFanOut(msg, fromSeat){', '\n}');
+  const src = html.slice(b0, b1) + '\n' + html.slice(f0, f1);
+  // (1) static: the client's top-level names (outside the lift) that the lift mentions -- each one guarded by typeof, or one the lift's context provides
+  const rest = html.slice(0, f0) + html.slice(f1, b0) + html.slice(b1), top = new Set();
+  for (const m of rest.matchAll(/^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/gm)) top.add(m[1]);
+  for (const m of rest.matchAll(/^(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/gm)) top.add(m[1]);
+  const code = src.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/'(?:\\.|[^'\\\n])*'/g, "''").replace(/`(?:\\.|[^`\\])*`/g, '``');
+  const CTX = ['VERSION', 'net', 'log', 'localTable', 'MP_HANDLERS'], used = new Set();
+  for (const m of code.matchAll(/(^|[^.\w$])([A-Za-z_$][\w$]*)\b/g)) if (top.has(m[2])) used.add(m[2]);
+  const bare = [...used].filter(n => CTX.indexOf(n) < 0 && !new RegExp('typeof\\s+' + n + '\\b').test(code));
+  eq(bare.join(', '), '', 'client names the lift calls bare (v2.6.158: tallyCombatMerge, AVR_CMB_KEYS)');
+  assert(used.has('hotEdgeTaken') && used.has('MP_HANDLERS'), 'the scan sees the guarded calls too (it is not vacuous)');
+  // (2) run it: the lift's own context, three bots, every case from seat 1
+  const ctx = vm.createContext({ console: { log(){}, warn(){} }, setTimeout, clearTimeout, JSON, Math, Object, Array, String, Date, parseInt, VERSION: 'lift', localTable: true,
+    net: { boards: {}, roster: [] }, MP_HANDLERS: { board(){}, log(){}, say(){}, chat(){}, fx(){} }, log(){} });
+  vm.runInContext(src + '\nthis.hotBridge = hotBridge; this.hotFanOut = hotFanOut;', ctx);
+  const HB = ctx.hotBridge, got = { 1: [], 2: [], 3: [] };
+  HB.reset([{ name: 'B1', bot: true }, { name: 'B2', bot: true }, { name: 'B3', bot: true }]);
+  [1, 2, 3].forEach(s => HB.dialFor(s, 'B' + s)('hot', { open(){}, msg(j){ got[s].push(JSON.parse(j)); }, close(){} }));
+  const card = { name: 'Govern the Unaligned', kind: 'lib' }, errs = [];
+  [{ t: 'join' }, { t: 'deck', name: 'd', library: [{ name: 'Govern the Unaligned', qty: 2 }], crypt: [{ name: 'Lisa', qty: 1 }] }, { t: 'seat', seat: 1 },
+   { t: 'draw' }, { t: 'drawCrypt' }, { t: 'board', pub: { pool: 30, cards: [] } }, { t: 'log', html: 'x' }, { t: 'say', i: 1 }, { t: 'chat', msg: 'x' }, { t: 'fx', kind: 'rise' },
+   { t: 'tally', mode: 'block', a: 1 }, { t: 'tally', mode: 'combat', a: 2, rng: 'long', duelCid: 'c1', duelName: 'Lisa' }, { t: 'tally', mode: null },
+   { t: 'openHand', to: 'all', cards: [card] }, { t: 'openHand', to: 'all', revoke: true }, { t: 'edgeTake' },
+   { t: 'revealHand', to: 2, cards: [card], pub: 'B1 reveals a card to B2.' }, { t: 'revealHand', to: 'all', cards: [card] }, { t: 'logTo', toSeat: 3, html: 'Revelations: discard <b>X</b>.' },
+   { t: 'give', seat: 2, gid: 'g1', card: { name: 'Anarch Troublemaker' } }, { t: 'bounty' }, { t: 'pass' }
+  ].forEach(m => { try { HB._fromBot(1, HB.seats[1], m); } catch (e) { errs.push(m.t + (m.mode ? '/' + m.mode : '') + ': ' + e.message); } });
+  eq(errs.join(' | '), '', 'every case runs in the lift (v2.6.158: "tally/combat: tallyCombatMerge is not defined")');
+  const of = (s, t) => got[s].filter(x => x.t === t);
+  const ct = of(2, 'tally').find(x => x.mode === 'combat');
+  assert(ct && ct.a === 2 && ct.duel && ct.duel[1] && ct.duel[1].cid === 'c1', 'the combat tally reaches the other bots, its duel included (the lift relays the base fields, as a pre-2.6.39 server did)');
+  assert(of(3, 'tally').some(x => x.mode === 'combat'), 'to every other bot');
+  eq(JSON.stringify(of(2, 'edgeTake')[0]), JSON.stringify({ t: 'edgeTake', bySeat: 1, clearOnly: false }), 'edgeTake in the server\'s shape');
+  assert(of(2, 'revealHand').length === 2 && of(3, 'revealHand').length === 1 && of(3, 'log').some(x => /reveals a card to B2/.test(x.html)), 'revealHand: the recipient gets the cards, a third party the public line, "all" reaches both');
+  assert(of(3, 'logTo').length === 1 && of(2, 'logTo').length === 0, 'logTo reaches the seat it names only');
+  assert(of(2, 'openHandGrant').length === 1 && of(3, 'openHandRevoke').length === 1, 'the open hand and its revoke');
+  assert(of(2, 'given').length === 1 && of(1, 'gave').length === 1, 'give -> given + gave');
+  assert(of(3, 'bounty').length === 1 && of(2, 'roster').length >= 1, 'bounty pays the live predator (seat 3) and the roster goes out');
+  // the real client keeps the combat fields (the guard degrades only where the client is absent)
+  const A = loadClient(CLIENT); A.hotBridge.reset([{ name: 'B1', bot: true }, { name: 'B2', bot: true }]);
+  const out = A.hotBridge.tallyIn('B1', 1, { mode: 'combat', a: 2, rng: 'long' });
+  eq(out.rng, 'long', 'in the client the combat tally still carries its combat fields (tallyCombatMerge)');
+  A.hotBridge.reset([]);
+});
+testA('v2.6.159 the Bleed menu\'s Reduce row (bot v0.6.201\'s ask): Actions > Bleed > Reduce bleed -1 / -2 / -X writes "NAME reduces the bleed by N." from the reacting minion -- no lock, no batch close, no target suffix -- and the line reaches the bots', async () => {
+  const { A, T, v, lines, answer } = cmbTable(2);
+  let shown = null; A.showMenu = items => { shown = items; };
+  const row = lbl => { A.cardMenu(v, 0, 0); return shown.find(x => x.label === 'Actions').sub.find(x => x.label === 'Bleed').sub.find(x => x && x.label === lbl); };
+  assert(row('Reduce bleed −1') && row('Reduce bleed −2') && row('Reduce bleed −X…'), 'three rows under Bleed (v2.6.158: none)');
+  A.net.rtarget = { cid: 'pool', seat: 2, who: 'B2' };                                 // an aim on the felt must NOT ride the line
+  T.clear(); row('Reduce bleed −1').fn();
+  eq(lines()[lines().length - 1], 'Lisa reduces the bleed by 1.', 'the line, exactly -- no target suffix (the bot\'s L12.reduceBy ends at the period)');
+  eq(v.locked, false, 'a reaction: no lock');
+  assert(T.got[2].some(m => m.t === 'log' && /Lisa<\/b> reduces the bleed by 1\.$/.test(m.html) && m.who === 'You'), 'the bot bleeding you hears it, from your seat');
+  row('Reduce bleed −2').fn(); eq(lines()[lines().length - 1], 'Lisa reduces the bleed by 2.');
+  answer('3'); await row('Reduce bleed −X…').fn(); eq(lines()[lines().length - 1], 'Lisa reduces the bleed by 3.');
+  answer(null); const n0 = lines().length; await row('Reduce bleed −X…').fn(); eq(lines().length, n0, 'a cancelled prompt writes nothing');
+  answer('0'); await row('Reduce bleed −X…').fn(); eq(lines().length, n0, 'nor does 0');
+  eq(A.BLEED_LINE.reduce('Lisa', 2), 'Lisa reduces the bleed by 2.', 'one builder (the canary runs it against the bot)');
+  A.net.rtarget = null; A.localTable = false; T.HB.reset([]);
+});
+testB('v2.6.159 LIVE: the REAL bot hears the Reduce row (its bleed at you drops by N through the bridge) and shares the Edge with you -- its edgeTake clears yours, your take clears its, your hand-off lights its own (play-test points 15 and 20)', async () => {
+  const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
+  if (!(BOT.L12 && BOT.L12.reduceBy)){ const e = new Error('SKIP -- the bot beside the suite predates v0.6.201 (no L12.reduceBy)'); e.skip = true; throw e; }
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  HB.reset([{ name: 'You' }, { name: 'Edgebot', bot: true }]);
+  A.net.roster = [{ seat: 1, name: 'You' }, { seat: 2, name: 'Edgebot', bot: true }];
+  A.net.you = 'You'; A.localTable = true; A.net.boards = {};
+  A.net.hot = { boards: { 1: JSON.stringify({ pool: 30, cards: [], zones: {} }), 2: JSON.stringify({ pool: 30, cards: [], zones: { hand: [] }, openHand: [] }) }, undo: {} };
+  const b = new BOT.Bot({ room: 'hot', pass: '', name: 'Edgebot', paceMs: 0, askSecs: 1, transport: HB.dialFor(2, 'Edgebot'), log: () => {} });
+  const until = async (fn, ms) => { const t = Date.now(); while (!fn() && Date.now() - t < (ms || 3000)) await sleep(30); return fn(); };
+  try {
+    await b.connect(); await until(() => HB.seats[2] && HB.seats[2].deck, 4000);
+    assert(HB.startFor(2) === true, 'the deal fired'); await sleep(150);
+    A.clearTable({}); const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false });
+    b._actingVamp = { name: 'Botvamp', n: 2, target: 1, kind: 'bleed' };
+    let shown = null; A.showMenu = items => { shown = items; };
+    A.cardMenu(v, 0, 0); shown.find(x => x.label === 'Actions').sub.find(x => x.label === 'Bleed').sub.find(x => x && x.label === 'Reduce bleed −1').fn();
+    await until(() => b._actingVamp.n !== 2);
+    eq(b._actingVamp.n, 1, 'the real bot\'s bleed at me dropped from 2 to 1');
+    b._actingVamp = null;
+    A.state.edge = true; b._takeEdge();
+    await until(() => !A.state.edge);
+    eq(A.state.edge, false, 'the bot\'s edgeTake cleared mine (v2.6.158: dropped -- two holders)'); eq(b.edge, true);
+    A.state.edge = true; A.edgeTakeover(); await until(() => !b.edge);
+    eq(b.edge, false, 'my take cleared the bot\'s (v2.6.158: its next push re-lit it)');
+    A.edgeHandoffHotseat(2, { x: 10, y: 20 }); await until(() => b.edge);
+    eq(b.edge, true, 'my hand-off lit the bot\'s own Edge');
+  } finally { b.close(); A.localTable = false; HB.reset([]); A.net.roster = []; A.net.hot = null; }
+});
+testB('v2.6.159 LIVE: a REAL Debug bot at a hotseat -- its grant reaches the human, the pool menu offers "Inspect their hand" with its actual cards (the tester\'s report: v2.6.158 read the empty placeholder board); and Revelations both ways -- the bot\'s reveal reaches you, yours reaches its waiter, your open hand its intel', async () => {
+  const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  HB.reset([{ name: 'You' }, { name: 'Debugbot', bot: true }]);
+  A.net.roster = [{ seat: 1, name: 'You' }, { seat: 2, name: 'Debugbot', bot: true }];
+  A.net.you = 'You'; A.localTable = true; A.net.boards = {}; A.net.openHandFrom = {};
+  A.net.hot = { boards: { 1: JSON.stringify({ pool: 30, cards: [], zones: {} }), 2: JSON.stringify({ pool: 30, cards: [], zones: { hand: [] }, openHand: [] }) }, undo: {} };
+  const b = new BOT.Bot({ room: 'hot', pass: '', name: 'Debugbot', paceMs: 0, askSecs: 1, debug: true, transport: HB.dialFor(2, 'Debugbot'), log: () => {} });
+  const until = async (fn, ms) => { const t = Date.now(); while (!fn() && Date.now() - t < (ms || 3000)) await sleep(30); return fn(); };
+  const L = captureLog(A);
+  try {
+    await b.connect(); await until(() => HB.seats[2] && HB.seats[2].deck, 4000);
+    assert(HB.startFor(2) === true, 'the deal fired');
+    await until(() => A.canSeeOpenHand(2), 4000);
+    eq(A.oppPoolMenuItems(2)[0].label, '👁 Inspect their hand (' + b.hand.length + ')', 'the menu item, with the bot\'s hand size');
+    eq(A.openHandCardsFor(2).map(c => c.name).join('|'), b.hand.join('|'), 'the bot\'s actual hand');
+    // the bot as the TARGET of Revelations [aus]: its reveal reaches me privately
+    b._armPending('You', 0, 'Lisa', null, 'peek'); if (b.pending){ b.pending.peekSup = false; b.pending.actorName = 'You'; }
+    L.lines.length = 0; b._applyPending('test');
+    await until(() => L.text().some(l => /^Debugbot revealed to you: /.test(l)));
+    const rl = L.text().find(l => /^Debugbot revealed to you: /.test(l));
+    assert(rl && b.hand.every(n => rl.indexOf(n) >= 0), 'the bot\'s Revelations reveal reaches me, every card in it (v2.6.158: dropped): ' + rl);
+    // the bot as the ACTOR: it waits for my reveal -- the bridge hands it over
+    A.clearTable({}); const g = A.makeCard('Govern the Unaligned', 'lib'); A.move(g, 'hand');
+    const w = b._awaitReveal(1, 3000); A.revealHandTo([g], 2); const got = await w;
+    eq(got && got.cards.map(c => c.name).join(), 'Govern the Unaligned', 'its reveal waiter gets my cards (v2.6.158: 30 s, then "no reveal received")');
+    A.state.openHand = []; A.openHandGrant('all'); await until(() => b._handIntel(1) && b._handIntel(1).mode === 'open');
+    eq(b._handIntel(1) && b._handIntel(1).mode, 'open', 'my open hand reaches its intel (a bot\'s Revelations [AUS] reads the grant)');
+    A.openHandRevoke('all'); await until(() => !b._handIntel(1)); eq(b._handIntel(1), null, 'and the revoke ends it');
+    b.send({ t: 'logTo', toSeat: 1, html: 'Revelations: discard <b>Govern the Unaligned</b>.' });
+    await until(() => L.text().includes('[Debugbot] Revelations: discard Govern the Unaligned.'));
+    assert(L.text().includes('[Debugbot] Revelations: discard Govern the Unaligned.'), 'its discard command reaches me');
+  } finally { L.restore(); b.close(); A.localTable = false; HB.reset([]); A.net.roster = []; A.net.hot = null; A.net.openHandFrom = {}; }
+});
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

@@ -1,3 +1,97 @@
+## [BRYGGAN SVARAR ÅT BÅDA HÅLLEN] (16 oktober 2026, klient v2.6.159)
+
+Johan: "Hejsan! Vi håller parallellt på med buggfixar och föräbttringar på bottsidan där vi sett ett antal saker vi
+behöver uppdatera på klientsidan också, vill du kika igenom handovern och köra klientuppdateringen utifrån vad som finns
+däri nu? :)"
+
+**Vad botprojektet bad om** (tre handoffs: v0.6.199 15 okt, v0.6.200 och v0.6.201 16 okt; svaret är
+`docs/handoffs/REPLY-to-bot-2026-10-16-v0.6.201.md`):
+- hotseat-bryggan måste vidarebefordra `edgeTake` (speltestets punkt 20: två Edge-hållare offline) och, inför deras R4,
+  `revealHand` och `logTo` åt båda hållen;
+- fyra debugfel från en testares rapport:
+  - handen syns inte offline;
+  - `botDebugAllowed` läste offline-rullistan online;
+  - första bot-växlingen gråade Debug;
+  - `net.openHandFrom` rensades bara vid sidladdning;
+- en önskan om att hand och askhög ska synas på matten (punkt 5);
+- en Reduce-rad på Bleed-menyn som skriver `NAME reduces the bleed by N.` (bot v0.6.201 läser den redan);
+- att vi bäddar in deras nya guide och för in raden och deras två DEBUG-rader i §12.
+
+**Byggt (v2.6.159, ren klient, purge; srv-2.6.46 oförändrad, inget nytt wire-verb).**
+
+*Bryggan* speglar nu servern:
+- en bots `edgeTake` når människan (`hotEdgeTaken`: handlaren, en lagrad människas bräde, matterna) och de andra bottarna;
+- människans eget tag i Edge och en överlämning till en bot (`edgePass`) når bottarna;
+- en bots `revealHand` och `logTo` når sina mottagare;
+- människans Reveal hand, Open hand (beviljan och återkallan, skickas om efter varje bräd-push) och mål-`logTo` når en
+  botplats offline.
+
+PROTOCOL §12.2 är tabellen.
+
+*Debug:*
+- `openHandCardsFor` läser botens egen beviljan i stället för platshållarbrädet;
+- online gäller rummets policy ensam;
+- `syncOffBotLock` målar om Debug-raden;
+- `net.openHandFrom` rensas på fyra ställen.
+
+*Reduce-raden:* Actions ▸ Bleed ▸ Reduce bleed −1 / −2 / −X…, raden utan målsuffix, inget lås. Kanariefågeln (vår kopia, §5)
+kör deras riktiga `L12.reduceBy` och en levande bots `_onLog`.
+
+**Hittat på vägen, fixat.** `tallyIn` i bryggan anropade `tallyCombatMerge` och `AVR_CMB_KEYS` oskyddat sedan v2.6.129.
+- Botprojektets hotseat-verktyg lyfter bryggan ordagrant in i en tom `vm`-kontext. Där kastade en strids-tally, och
+  dialens `catch` svalde den.
+- Jag körde deras snitt och nycklar i en skrapprob, så det är kört och inte bara läst: v2.6.158 kastar.
+- Båda är nu `typeof`-skyddade, som allt annat i literalen.
+- Ett nytt test håller kontraktet på två sätt:
+  - statiskt: varje klientnamn snittet nämner är skyddat eller hör till lyftets kontext;
+  - körning: varje `_fromBot`-fall går i den kontexten.
+- Mutanter: båda oskyddade formerna fångas, och ett påhittat oskyddat anrop fångas av körningshalvan.
+
+**Webbläsaren.** Headless Chromium med en riktig Debug-bot v0.6.201 vid ett hotseat-bord: den riktiga servern serverar
+klienten och paketet, tempot är Turn-based och allt sker med riktiga klick. Utfall: 11 av 11 på v2.6.159 och 9 av 11 röda
+på v2.6.158 med samma skript.
+- **Det skriptet lärde mig:**
+  - Mitt första skript såg noll bleeds på nio minuter, trots ett dussin i loggen. Jag läste `_actingVamp.kind === 'bleed'`
+    därför att mitt eget LIVE-test satte `kind` för hand. Den riktiga botten sätter aldrig `kind` på en bleed, och namnet
+    ligger i `v.name`.
+  - Den andra körningen hittade inte Actions alls. Medan botten agerar visar kameran BOTTENS bräde (svepet besöker den
+    agerande platsen). Högerklicket landade på `#rview` och gav snabbfrasmenyn.
+  - En människa måste alltså trycka ⌂ Home innan hon kan reagera med sin egen minion. Det är inte byggt, bara noterat;
+    ett Hold on ger tiden.
+- **Kontrollen av Edge** fick vänta på botens takt: botens flagga slår om innan dess `edgeTake` lämnar sändkön.
+
+**Förslag:** punkt 5, att hitta handen och askhögen. (c) Tooltips som säger det, tillsammans med (a) ett 👁-märke vid
+platsens pool där handen är öppen för dig. Jag avråder från (b), en ritad askhög; den får inte plats på en Structured-matta.
+
+**Johan, efter leverans: låt båda vila, följ upp när de blir aktuella.**
+- **Var askhögen syns i dag** (läst i koden):
+  - Ingen matta ritar en motståndares askhög. `buildMat` ritar Ready Region, Uncontrolled, Torpor och poolen; askhögen
+    som syns i dockan är ens egen.
+  - Motståndarens askhög nås från högerklicksmenyn på hens pool, i alla vyer: mattans poolruta, "Pool N" vid ett
+    platsbesök och Table-panelens rad.
+  - På Classic nås den från poolglobens högerklicksmeny, sedan v2.6.28, och där står 👁 Inspect their hand överst när
+    handen är öppen för dig.
+- **Johans idé till senare:** en 👁-ikon per motståndare med en undermeny över det man får titta på (hand, askhög, annat).
+  Avgörs när bottarna behöver det.
+- **Reduce vid hotseat:** kamerafrågan (⌂ Home först medan en bot agerar) följs upp om den blir aktuell.
+
+**Grindar:**
+- klientsviten 297/0;
+- kanariefågeln 69/0, dispatch 68/0, protokoll 6/0, endpoint 24/0;
+- soak `--control` exit 0;
+- B1 byte-identisk;
+- embed `--check` på båda sidorna;
+- check-versions grön.
+
+Destruktivt mot v2.6.158: de 9 nya testerna röda plus den väntade embed-driften. 21 av 22 mutanter fångas; den missade är en
+anropsordning som inte längre spelar roll.
+
+**Osäkert, otestat:**
+- två människor plus bottar vid ett hotseat-bord i webbläsaren (bara enhetstester);
+- debuggrinden online mot en server äldre än 2.6;
+- att en återanslutning till samma rum behåller en beviljan tills nästa push;
+- att botten inte agerar på en människas Revelations-val ännu (deras R4).
+
 ## [SPELTESTETS FYND OCH RIGGEN I REPOT] (14 oktober 2026, eftermiddag, klient v2.6.158)
 
 Johan: "Snyggt ja men då tar vi buggarna direkt iallafall … Vill du förresten kanske spara verktygen/processen för hur
