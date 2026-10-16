@@ -5,6 +5,9 @@ import json,glob,sys,collections
 S=sys.argv[1]; per=collections.defaultdict(lambda: collections.defaultdict(float)); press=collections.defaultdict(collections.Counter); ends=collections.defaultdict(collections.Counter)
 strikes=collections.defaultdict(collections.Counter); n=0; matched=0; unmatched=0; res=collections.Counter(); vp=collections.Counter(); torp=collections.Counter()
 agree=collections.Counter(); hsrows=0; hsmiss=collections.Counter()
+def crossed(x,d):   # v0.6.202: both names crossed when both rows know their opponent -- two fights of one vampire within 9 s (a Ventrue blocked twice) were paired across combats
+    if x.get('opp') and d.get('opp'): return x.get('opp')==d.get('vamp') and x.get('vamp')==d.get('opp')
+    return x.get('opp')==d.get('vamp') or x.get('vamp')==d.get('opp')
 for f in sorted(glob.glob(S+'/match-*.jsonl')):
     rows=[json.loads(l) for l in open(f)]; n+=1
     deck={r['bot']:r['data']['deck'] for r in rows if r['type']=='manifest'}
@@ -24,7 +27,7 @@ for f in sorted(glob.glob(S+'/match-*.jsonl')):
         if d.get('round')==1: p['combats']+=1
         press[dk][d.get('press') or '-']+=1; ends[dk][d.get('end') or ('continue' if d.get('continuing') else 'separate')]+=1; strikes[dk][d.get('strike')]+=1
         # integrity: opponent's row for the same round, crossed names, within 4 s
-        m=[x for x in cr if x['bot']!=r['bot'] and x['data'].get('round')==d.get('round') and abs(x["t"]-r["t"])<9000 and (x['data'].get('opp')==d.get('vamp') or x['data'].get('vamp')==d.get('opp'))]
+        m=[x for x in cr if x['bot']!=r['bot'] and x['data'].get('round')==d.get('round') and abs(x["t"]-r["t"])<9000 and crossed(x['data'],d)]
         if m: matched+=1
         else: unmatched+=1
         if d.get('hs'): hsrows+=1

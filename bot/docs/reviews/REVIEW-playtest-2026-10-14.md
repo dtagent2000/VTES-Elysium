@@ -229,3 +229,26 @@ Gates beyond the suite for R2: a series with the handshake integrity line at 100
 - **Proposed, not built:** a `reduce N` chat line (like `bleed N`) would work today, before the client's row exists.
 - **Known limit of the look-away (checked 16 Oct, nothing built):** it rests on the debug announcement, sent at the deal. The client adds bots only in the lobby (online) or at Start (offline), and a bot whose connection drops reconnects with its token in the same process, so every bot at the table has seen the line. The one gap: a command-line bot restarted mid-game that reclaims its seat by name is a fresh process that never saw it.
 
+
+## R2 delivered (v0.6.202, 16 Oct)
+- **Done as planned:**
+  - F16 / F17a / F7: the bot-vs-bot step handshake. The acting minion speaks first in the maneuver, before-strikes and press steps, with its card line or a frozen 'nothing' line (`NAME does not maneuver.` / `NAME has nothing before strikes.` / `NAME does not press.`); the other bot decides knowing it and answers; a press to continue is answered with a press to end or `does not press.`. The waits' safety net is askSecs, frozen under a hold; a line from an earlier round is dropped at the next round's start; the Grapple stash is an event.
+  - F7 pacing: with a human seated and paceMs > 0, a beat before each line of a bot-vs-bot combat (a play the step beat, a 'nothing' line the fx beat).
+  - F5: a hold stops the next combat step, the bot's strike and its press (Johan's decision 7). The v0.6.198 test that pinned a step opening under a live hold (137f) now pins the step waiting in front of it.
+  - F17b: the tally's range correction, range lock, combat-ends and press fields only from the human the bot fights.
+  - F18: cardfx v1.9.2 `handBonus`; Roundhouse = strength + 2 (35 cards share the two phrasings).
+  - F19: two steals at once resolve together.
+- **Added (Johan: combining fixes is fine):** the rest of the v0.6.140 audit — Smiling Jack and Fame's unlock drain oust the bot at 0 pool and its turn stops; a Jack is paid from pool and blood across vampires, never the last pool while blood can pay.
+- **Found by this release's own arena smoke, fixed:**
+  - a Deep Song rush at a bot with no other unlocked minion complied silently, so the rusher's directed window ran its whole clock while the target already fought — it says Pass now;
+  - Deep Song makes the target the acting minion: between bots the rushed vampire speaks first;
+  - a combat-ends strike went out in the old dodge shape plus a second line, and a bot that resolved before the second line read a dodge — the protocol's one-line `NAME strikes: combat ends.` now;
+  - the press decision read the previous round's taken line, and after a press into a downed vampire the bot fought a phantom round — this round's line only, and a downed opponent ends the combat after the press step;
+  - found by the second smoke (seed 4003): a superior Immortal Grapple in a combat's LAST round set "close next round" for a round that never came, and the flag outlived the combat on both sides (`_forceCloseNextRound` for the player, `_nextRange` for its opponent). Both bots' next combats skipped the maneuver step: one side never said its maneuver line, the other waited out the safety net and maneuvered to long alone — Roundhouse at close against Theft of Vitae at long. A range set for the next round now dies with its combat. The leak is old (v0.6.28 / v0.6.164); against a human it cost the bot its maneuver in that round;
+  - the same class, swept in the same release: the round's range and Immortal Grapple's "hand strikes only" also outlived the round and the combat. The next round's (or next combat's) maneuver step read the restriction — a sniping Tremere found no ranged card under it and stayed close — and the finders that plan between fights (a block's price, a chump bleed's cover, a rush's reach) saw "hand strikes only" or "long" from the previous fight. 16 combats in the R2 smokes began after a final-round Grapple. The restriction resets at each round's start; a combat's end leaves no restriction and a close range.
+- **Pinned:** section 141, 36 assertions; 32 red on v0.6.201 (run with its own cardfx), 4 guards green on both; the five for the leaks (141o, 141p) red on the pre-fix bytes too.
+- **Not done, left for later:**
+  - the optional net at the strike (an incoming hand strike counts 0 at long range): with both bots agreeing on the range, it would only paper over a disagreement;
+  - a counter-maneuver (a chase deck answering a maneuver to long with one to close): the bot only ever maneuvers to long; the Nosferatu answers a wave with its press (v0.6.161);
+  - Deep Song in a combat with a HUMAN: the phases still treat the turn seat as acting (the handoff's known limit);
+  - the strike step is unchanged — both strikes are announced and resolved together, the defender does not wait for the acting minion's strike before choosing its own.

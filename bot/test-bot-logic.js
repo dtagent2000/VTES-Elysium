@@ -9337,7 +9337,8 @@ async function connectWithRetry(client, tries = 30){
           u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.o.deckName = deck; u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = [];
           u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); };
           return u; };
-        const A = mk('Hanna', 1, o.aDeck || 'tremere'), D = mk('Viktor', 2, o.dDeck || 'nosferatu');
+        const A = o.A || mk('Hanna', 1, o.aDeck || 'tremere'), D = o.D || mk('Viktor', 2, o.dDeck || 'nosferatu');
+        if(o.A) A._clearCombatStashes();                                                  // a bot from an earlier duel acts again: its announce clears its stashes (a reused D is armed below, as a block commit does)
         const wire = (from, to) => { from.send = m => {
           if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0); return; }   // the quick phrases (a rushed bot's Pass)
           if(!m || (m.t !== 'log' && m.t !== 'chat')) return;                            // tallies, boards, fx: not needed between two bots here
@@ -9563,6 +9564,43 @@ async function connectWithRetry(client, tries = 30){
         u._rndAt = Date.now() - 200;                                                                       // round 2 began after it
         const w = u._wantPress(v, true);
         ok(w.tag !== 'torpor-shot', '141n round 1’s taken line ("now 2") does not stand in for round 2’s: no torpor shot decided on it (the smoke: a Stray burned for a press into a vampire already in torpor, then a phantom round 3; got ' + w.tag + ')'); }
+
+      // o) found by R2's second arena smoke: a superior Immortal Grapple in a combat's LAST round set "close next round" for a round that never
+      //    came -- and the flags outlived the combat. The Grapple player's next combat skipped its maneuver step (no "does not maneuver."), the
+      //    other bot waited out the safety net and maneuvered to long alone: Roundhouse at close against Theft of Vitae at long. The opponent's
+      //    `_nextRange` did the same to its own next combat.
+      { const g1 = duel141({ delay: 5, askSecs: 2, aDeck: 'nosferatu', dDeck: 'ventrue', aV: { name: 'Wauneka (G6)', cap: 5, blood: 5 }, dV: { name: 'Alexa Draper (G6)', cap: 8, blood: 8 },
+                             aHand: ['Immortal Grapple', 'Roundhouse', 'Roundhouse'], dHand: ['Disengage'] });
+        await g1.run();
+        const a1 = g1.A.rows.find(r => r.round === 1) || {};
+        ok(a1.grapple === 'superior' && a1.continuing === false && g1.A._forceCloseNextRound === false && g1.D._nextRange == null,
+           '141o a superior Immortal Grapple in a combat’s last round: "close next round" dies with the combat on both sides (got ' + JSON.stringify({ g: a1.grapple, cont: a1.continuing, force: g1.A._forceCloseNextRound, next: g1.D._nextRange == null ? null : g1.D._nextRange }) + ')');
+        const n0 = g1.A.rows.length, l0 = g1.A.lines.length;
+        const g2 = duel141({ delay: 5, askSecs: 2, A: g1.A, aDeck: 'nosferatu', dDeck: 'tremere', aV: { name: 'Wauneka (G6)', cap: 5, blood: 5 }, dV: { name: 'Anxo Vilela (G6)', cap: 6, blood: 5 },
+                             aHand: ['Roundhouse'], dHand: ['Apportation', 'Theft of Vitae'] });
+        const ms = await g2.run();
+        const aRow = g2.A.rows.slice(n0).find(r => r.round === 1) || {}, dRow = g2.D.rows.find(r => r.round === 1) || {};
+        const aM = g2.A.lines.slice(l0).filter(l => /does not maneuver/.test(l.txt));
+        ok(aM.length === 1 && !aRow.hsMiss && !dRow.hsMiss && aRow.range === 'long' && dRow.range === 'long' && g2.A.hand.includes('Roundhouse') && ms < 1500,
+           '141o ...and the Nosferatu’s NEXT combat has its maneuver step: it says "does not maneuver.", the Tremere answers with its maneuver to long, both rows say long, no safety net, Roundhouse kept (the smoke: a 3 s miss, then Roundhouse at close; got ' + JSON.stringify({ said: aM.length, a: aRow.range, d: dRow.range, miss: [aRow.hsMiss || null, dRow.hsMiss || null], keep: g2.A.hand.includes('Roundhouse'), ms }) + ')');
+        ok(g2.A._range === 'close' && g2.D._range === 'close', '141o ...and a combat that ended at long range leaves no long range behind it: the finders that plan between fights (a rush’s reach, a block’s price) see a fresh combat at close (got ' + JSON.stringify([g2.A._range, g2.D._range]) + ')'); }
+
+      // p) the same sweep: Immortal Grapple's "hand strikes only" is THIS round's -- it outlived the round and the combat. The next round's (or the
+      //    next combat's) maneuver step read it: a sniping Tremere found no ranged card under it and stayed close; between fights a block's
+      //    price and a chump bleed's cover could not see a Majesty or a dodge. 16 combats in the R2 smokes began after a final-round Grapple.
+      { const g1 = duel141({ delay: 5, askSecs: 2, aDeck: 'nosferatu', dDeck: 'tremere', aV: { name: 'Agrippina (G1)', cap: 4, blood: 4 }, dV: { name: 'Anxo Vilela (G6)', cap: 6, blood: 5 },
+                             aHand: ['Immortal Grapple', 'Roundhouse'], dHand: [] });
+        await g1.run();
+        const a1 = g1.A.rows.find(r => r.round === 1) || {};
+        ok(a1.grapple === 'inferior' && a1.continuing === false && g1.A._handStrikeOnly === false && g1.D._handStrikeOnly === false,
+           '141p an inferior Immortal Grapple in a combat’s only round: its "hand strikes only" ends with the combat on both sides (got ' + JSON.stringify({ g: a1.grapple, cont: a1.continuing, a: g1.A._handStrikeOnly, d: g1.D._handStrikeOnly }) + ')');
+        const n0 = g1.D.rows.length;
+        const g2 = duel141({ delay: 5, askSecs: 2, D: g1.D, aDeck: 'ventrue', dDeck: 'tremere', aV: { name: 'Alexa Draper (G6)', cap: 8, blood: 8 }, dV: { name: 'Anxo Vilela (G6)', cap: 6, blood: 5 },
+                             aHand: [], dHand: ['Apportation', 'Theft of Vitae'] });
+        await g2.run();
+        const dRow = g2.D.rows.slice(n0).find(r => r.round === 1) || {};
+        ok(dRow.range === 'long' && !g2.D.hand.includes('Apportation') && !dRow.hsMiss,
+           '141p ...so the Tremere that saw a Grapple in its last fight still snipes in its next one: Apportation to long, Theft of Vitae in reach (v0.6.201: "snipe: no ranged card in hand", close; got ' + JSON.stringify({ range: dRow.range, keep: g2.D.hand.includes('Apportation'), miss: dRow.hsMiss || null }) + ')'); }
     }
 
 
