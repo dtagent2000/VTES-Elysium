@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-/* test-bot-hotseat.js v1.1.0 (21 Sep 2026) -- THE HOTSEAT GATE. Online / hotseat parity as a test, not a hope (CLAUDE.md 66d: every release of 18-21 Sep was
+/* test-bot-hotseat.js v1.2.0 (16 Oct 2026; H11 = the lift carries the combat merge, main's REPLY v2.6.159 section 6) -- THE HOTSEAT GATE. Online / hotseat parity as a test, not a hope (CLAUDE.md 66d: every release of 18-21 Sep was
    measured on the server only). Plays one short four-starter table through the client's REAL hotBridge (lifted verbatim by elysium-bot-hotseat.js) and asserts
    the things that broke silently: the table finishes, every bot knows its deck, block exchanges are two-sided, an oust is seen and paid.
    Needs the released client (elysium-vtes-bord.html) + elysium-cardfx.json beside it; SKIPS LOUDLY otherwise (the canary's rule). ~1-3 min. Run ALONE.      */
 const fs = require('fs'), path = require('path');
 const client = path.join(__dirname, 'elysium-vtes-bord.html'), cardfx = path.join(__dirname, 'elysium-cardfx.json');
 if(!fs.existsSync(client) || !fs.existsSync(cardfx)){ console.log('\n*** SKIPPED: test-bot-hotseat.js needs ' + (!fs.existsSync(client) ? 'elysium-vtes-bord.html' : 'elysium-cardfx.json') + ' beside it -- NOT a pass. Upload the released client and re-run. ***\n0/0 — SKIPPED'); process.exit(0); }
-const { runTable, liftBridge } = require('./elysium-bot-hotseat.js');
+const { runTable, liftBridge, bridgeIn } = require('./elysium-bot-hotseat.js');
 let passN = 0, failN = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  ✗ ') + m); c ? passN++ : failN++; };
 (async () => {
   const L = liftBridge(client), relaysTally = /case 'tally'/.test(L.bridgeSrc), relaysBounty = /case 'bounty'/.test(L.bridgeSrc);
@@ -24,5 +24,11 @@ let passN = 0, failN = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  
   ok(relaysBounty ? (c.bountyInferred === 0 && c.oustInferred === 0) : (c.oustInferred >= c.ousted && c.bountyInferred >= 1), relaysBounty ? 'H8 the bridge routes bounty / roster and the bot\'s no-server net stayed ASLEEP (' + c.oustInferred + ' oust reads, ' + c.bountyInferred + ' self-collected; v0.6.150 scored 9 / 3 here because its pool-0 board left before its bounty)' : 'H8 with no roster from the bridge the ousts were READ from the boards (' + c.oustInferred + ' seat-views) and a predator collected its 6 pool (' + c.bountyInferred + ')');
   ok(r.turnsHandedToOustedBots === 0 || c.oustedPass >= r.turnsHandedToOustedBots, r.turnsHandedToOustedBots === 0 ? 'H9 the sweep (following the bridge\'s roster) never handed an ousted bot the turn' : 'H9 every turn the sweep handed to an ousted bot was passed on (' + c.oustedPass + ' of ' + r.turnsHandedToOustedBots + ')');
   ok(r.pools.filter(x => x > 0).length === 1 && r.finished, 'H10 exactly one pool is left standing (' + r.pools.join('/') + ')');
+  if(L.cmbNeeded){   // v1.2.0: the bridge's tallyIn names the client's combat merge -- the lift must carry it, or a bot's combat tally relays base fields only (v2.6.159+) or throws (v2.6.129-158)
+    const HB = bridgeIn(L).hotBridge; HB.reset([{ name: 'A', bot: true }, { name: 'B', bot: true }]);
+    const o1 = HB.tallyIn('A', 1, { mode: 'combat', a: 2, rng: 'long', nx: 'close', sa: 'Hand strike' }), o2 = HB.tallyIn('B', 2, { mode: 'combat', rd: 2 });
+    ok(o1.rng === 'long' && o1.sa === 'Hand strike' && o1.a === 2 && o2.rd === 2 && o2.rng === 'close' && o2.rl === 1 && o2.a === 0 && o2.sa === '',
+      'H11 the lift carries the combat merge: a combat tally relays its combat fields (rng ' + o1.rng + ', sa "' + o1.sa + '"), and a new round takes "close next round" (rng ' + o2.rng + ', rl ' + o2.rl + ') and zeroes an absent a (' + o2.a + ')');
+  } else ok(true, 'H11 the bridge names no combat merge (a client before v2.6.129) -- nothing to lift');
   console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green')); process.exit(failN ? 1 : 0);
 })().catch(e => { console.error('\n  ✗ HOTSEAT GATE ABORT: ' + e.message); console.log('\n' + passN + '/' + (failN + 1) + ' — FAIL'); process.exit(1); });

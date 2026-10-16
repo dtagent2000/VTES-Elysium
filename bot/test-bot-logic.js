@@ -9603,6 +9603,264 @@ async function connectWithRetry(client, tries = 30){
            '141p ...so the Tremere that saw a Grapple in its last fight still snipes in its next one: Apportation to long, Theft of Vitae in reach (v0.6.201: "snipe: no ranged card in hand", close; got ' + JSON.stringify({ range: dRow.range, keep: g2.D.hand.includes('Apportation'), miss: dRow.hsMiss || null }) + ')'); }
     }
 
+    /* 142) v0.6.203 -- THE VANISHED BLEED (READ-ME-FIRST-2026-10-16c section 6, found by R2's arena smokes: 21 bleeds in 12 matches,
+       3 of them on v0.6.201). Deflection, Redirection, Telepathic Misdirection and My Enemy's Enemy say "Change the target of the bleed
+       to ... (that Methuselah can attempt to block)". A bounce played on the bleed total (the late bounce, v0.6.144) lands in my
+       reactions-only window, where the v0.6.114 rule refused every Block!; the new target had shouted, its pending was contested, and
+       on my It resolves it dropped the bleed. Now: (a) the actor gives the bounce's new target a block step of its own -- the refusal
+       stays for every other seat; (b) a target whose live attempt a BOT actor never took up takes the bleed on its It resolves;
+       (c) a bot actor's modifier closes the target's block step; (d) 'through' is emitted at the resolution; (e) a live table. */
+    {
+      console.log('\n[142] v0.6.203 -- the vanished bleed: the new target of a late bounce may block; a refused attempt costs nothing');
+      const strip142 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const mk142 = (name, seat, o) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, o || {}));
+        u.seat = seat; u.started = true; u.pool = 20; u.push = () => {}; u.fxClone = () => {}; u.sent = []; u.send = m => { u.sent.push(m); };
+        u.players = [{ seat: 1, name: 'Ann', online: true, bot: true }, { seat: 2, name: 'Tor', online: true, bot: true }, { seat: 3, name: 'Ulla', online: true, bot: true }, { seat: 4, name: 'Johan', online: true }];
+        u.table = {}; u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); return u; };
+      const chats142 = u => u.sent.filter(m => m && m.t === 'chat').map(m => String(m.msg || ''));
+      const GD = () => ({ id: 'a1', name: 'Gilbert Duane (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 });
+      const actor142 = () => { const A = mk142('Ann', 1); const v = GD(); A.board = [v]; A.hand = []; A.res = null;
+        A._actingVamp = { v, n: 2, played: new Set(), target: 2 };
+        A.tally = { mode: 'block', a: 1, b: 0, ph: 0, rd: 1 };
+        A._ask = { resolve: x => { A.res = x; }, timer: null, pausedBy: new Set(), contested: false, target: 2, reactionsOnly: true, t0: Date.now() };   // the bleed-total window: blocks were declined
+        return A; };
+      const done142 = u => { const a = u._ask; if(a){ if(a.timer) clearTimeout(a.timer); if(a._remT) clearTimeout(a._remT); } if(u._rcT) clearTimeout(u._rcT); u._ask = null; u.out = true; };
+
+      // a) the actor: the old target's Block! after blocks were declined is refused (v0.6.114 stands); the bounce's new target gets a block step
+      { const A = actor142();
+        A._onBlockAttempt('Tor');
+        ok(!A._ask.contested && chats142(A).some(c => /blocks were declined this action/.test(c)), '142a the original target’s Block! after blocks were declined is still refused (v0.6.114: a modifier or the total never reopens blocks)');
+        A.sent.length = 0;
+        A._onLog('Tor', '<b>Gilbert Duane (G6)</b> bleeds for 2. Target: Ulla\'s pool.');
+        ok(A._actingVamp.target === 3 && A._actingVamp.bounced === true && A._actingVamp.blockStepSeat === 3 && A._ask.target === 3,
+           '142a a late bounce re-targets my bleed to Ulla, opens HER block step, and the open ask follows the bleed (status, the roster hook and the tempo read its target; got ' + JSON.stringify({ t: A._actingVamp.target, step: A._actingVamp.blockStepSeat, ask: A._ask.target }) + ')');
+        A._onSay({ who: 'Ulla', i: SI('Block!') });
+        ok(A._ask && A._ask.contested === true && !chats142(A).some(c => /blocks were declined/.test(c)), '142a ...and Ulla’s Block! is taken up -- the bounce card says "(that Methuselah can attempt to block)"; v0.6.202 refused it and the bleed vanished');
+        A._ask.contested = false; A.sent.length = 0;
+        A._onBlockAttempt('Tor');
+        ok(!A._ask.contested && chats142(A).some(c => /blocks were declined/.test(c)), '142a ...while every other seat’s Block! is still refused (Tor has passed the bleed on)');
+        done142(A); }
+      { const A = actor142(); A.tally.b = 1;
+        A._onLog('Tor', '<b>Gilbert Duane (G6)</b> bleeds for 2. Target: Ulla\'s pool.');
+        const tw = A.sent.filter(m => m && m.t === 'tally');
+        ok(tw.length === 1 && tw[0].mode === 'block' && tw[0].b === 0 && !('a' in tw[0]) && A.tally.a === 1,
+           '142a the old target’s intercept is stale for the new one: b goes back to 0, my stealth (a = 1) stays with the action (got ' + JSON.stringify(tw) + ')');
+        A._onSay({ who: 'Ulla', i: SI('Pass') });
+        ok(A.res && A.res.what === 'no', '142a the new target’s Pass closes the window: the bleed resolves on Ulla (got ' + JSON.stringify(A.res) + ')');
+        done142(A); }
+      { const A = actor142();
+        A._onLog('Tor', '<b>Gilbert Duane (G6)</b> bleeds for 2. Target: Johan\'s pool.');
+        const c = chats142(A).find(x => /now bleeds Johan for 2/.test(x)) || '';
+        ok(A._ask.target === 4 && /Johan may block it/.test(c) && /\(\d+s/.test(c), '142a a HUMAN new target is told, with the clock: "' + c + '"');
+        done142(A); }
+
+      // b) the target: a BOT actor resolves over my live attempt -> the attempt was never taken up, and the bleed lands
+      { const T = mk142('Ulla', 3); T.board = [{ id: 'u1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }]; T.hand = [];
+        T.pending = { who: 'Ann', amount: 2, kind: 'bleed', actingVampName: 'Gilbert Duane (G6)', contested: true, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        T._onSay({ who: 'Ann', i: SI('It resolves') });
+        ok(T.pool === 18 && !T.pending && !chats142(T).some(c => /never resolved/.test(c)), '142b a bot actor’s It resolves over my live attempt: the attempt was not taken up and the bleed of 2 lands (pool ' + T.pool + '; v0.6.202 dropped it as "contested, unresolved")');
+        done142(T);
+        const H = mk142('Ulla', 3); H.board = T.board.slice(); H.hand = [];
+        H.pending = { who: 'Johan', amount: 2, kind: 'bleed', actingVampName: 'Lisa Noble', contested: true, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        H._onSay({ who: 'Johan', i: SI('It resolves') });
+        ok(H.pool === 20 && !H.pending && chats142(H).some(c => /A block was announced but never resolved/.test(c)), '142b ...a HUMAN actor may have forgotten the verdict: the bot still asks, and its pool waits for the human’s word');
+        done142(H); }
+
+      // c) the target: a bot actor's modifier closes my block step (only reactions remain); a human actor's does not
+      { const T = mk142('Tor', 2); T.board = [{ id: 't1', name: 'Ulrike Rothbart (G4)', kind: 'crypt', zone: 'ready', locked: false, blood: 3 }]; T.hand = [];
+        T.pending = { who: 'Ann', amount: 2, kind: 'bleed', actingVampName: 'Gilbert Duane (G6)', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        T._onLog('Ann', '<b>Gilbert Duane (G6)</b> adds +1 bleed (= 3).');
+        ok(T.pending && T.pending.declined === true && T.pending.amount === 3, '142c a BOT actor plays its modifier only after its block question closed: my block step is over, the reopened window takes reactions only');
+        done142(T);
+        const H = mk142('Tor', 2); H.board = T.board.slice(); H.hand = [];
+        H.pending = { who: 'Johan', amount: 2, kind: 'bleed', actingVampName: 'Lisa Noble', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        H._onLog('Johan', '<b>Lisa Noble</b> adds +1 bleed (= 3).');
+        ok(H.pending && H.pending.declined === false, '142c ...a HUMAN actor may be out of turn: the block stays mine to offer');
+        if(H.pending && H.pending.passTimer) clearTimeout(H.pending.passTimer); done142(H); }
+
+      // d) 'through' is emitted at the resolution, after the windows a bounce's new target may block in
+      { const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
+        const iTot = src.indexOf("this._emit('bleed-total'"), iThr = src.indexOf("this._emit('through', { vamp: v.name, n: act.n, card: act.name || null, final:");
+        ok(iTot > 0 && iThr > iTot && src.indexOf("this._emit('through', { vamp: v.name, n: act.n, card: act.name || null });") < 0,
+           '142d the bleed’s through (which closes my block counter and commits my parked cost) is emitted at the resolution, after the modifier and total windows -- carrying `final`');
+      }
+
+      // e) a live table: Ann bleeds Tor with Dominate Kine (2, +1 stealth); Tor holds Deflection for the total and bounces it to Ulla; Ulla blocks
+      { const h = mkClient('Johan'); await connectWithRetry(h);
+        const R = 'vb' + Date.now().toString(36).slice(-6);
+        h.send({ t: 'create', room: R, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+        await h.waitFor(m => m.t === 'joined', 'h142 joined');
+        h.send({ t: 'seat', seat: 1 });
+        h.send({ t: 'deck', name: 'D142', library: [{ name: 'Govern the Unaligned', qty: 60 }], crypt: [{ name: 'Lucinde, Alastor', qty: 12 }] });
+        await h.waitFor(m => m.t === 'deckok', 'h142 deckok');
+        const ev = {}, mkB = (name, seat) => { ev[name] = []; return new Bot({ server: URL, room: R, pass: 'x', name, seat, paceMs: 0, askSecs: 2, persona: 'expert', log: () => {},
+          onEvent: (t, d) => ev[name].push({ t, d, at: Date.now() }),
+          deck: { name: 'D' + seat, crypt: [{ name: 'Zip', qty: 12 }], library: [{ name: 'Govern the Unaligned', qty: 60 }] } }); };
+        const A = mkB('Ann', 2), T1 = mkB('Tor', 3), T2 = mkB('Ulla', 4);
+        await A.connect(); await T1.connect(); await T2.connect();
+        await h.waitFor(m => m.t === 'lobby' && ['Ann', 'Tor', 'Ulla'].every(n => (m.players || []).some(p => p.name === n && p.deck)), 'h142 three bots seated', 9000);
+        h.send({ t: 'start' });
+        await h.waitFor(m => m.t === 'dealt', 'h142 dealt');
+        h.send({ t: 'tally', mode: null, a: 0, b: 0 });
+        A.board = [{ id: 'a1', name: 'Gilbert Duane (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, x: 100, y: 100 }]; A.hand = ['Dominate Kine'];
+        T1.board = [{ id: 't1', name: 'Ulrike Rothbart (G4)', kind: 'crypt', zone: 'ready', locked: false, blood: 3, x: 100, y: 100 }]; T1.hand = ['Deflection'];
+        T2.board = [{ id: 'u1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, x: 100, y: 100 }]; T2.hand = ['Enhanced Senses']; T2.pool = 2;
+        A.push(); T1.push(); T2.push();
+        await sleep(300);
+        h.send({ t: 'pass' });   // Johan (seat 1) passes -- Ann's turn
+        await h.waitFor(m => m.t === 'turn' && m.seat === 2, 'h142 turn to Ann', 9000);
+        const lineAt = (re, who) => h.waitAny(m => m.t === 'log' && (!who || m.who === who) && re.test(strip142(m.html)), String(re), 20000);
+        const tot = await lineAt(/^Gilbert Duane \(G6\) adds \+0 bleed \(= 2\)\.$/, 'Ann');
+        const bnc = await lineAt(/plays Deflection: the bleed is redirected to Ulla\.$/, 'Tor');
+        ok(h.inbox.indexOf(tot) < h.inbox.indexOf(bnc), '142e precondition: Ann bled Tor for 2 at stealth 1, Tor declined and bounced it to Ulla on the TOTAL (the late bounce, in Ann’s reactions-only window)');
+        let ver = null; try { ver = await lineAt(/^Block: Stealth 1 vs Intercept 1 — block succeeds\.$/, 'Ann'); } catch(e){}
+        const refused = h.inbox.some(m => m.t === 'chat' && m.who === 'Ann' && /blocks were declined this action/.test(String(m.msg)));
+        ok(!!ver && !refused, '142e Ulla blocks with Enhanced Senses and Ann takes the attempt up: "Block: Stealth 1 vs Intercept 1 — block succeeds." (v0.6.202: "blocks were declined this action", and the bleed vanished)' + (refused ? ' -- REFUSED' : ''));
+        await sleep(600);
+        const aEv = ev.Ann.filter(e => (e.t === 'bot:through' || e.t === 'bot:blocked') && e.d && e.d.vamp === 'Gilbert Duane (G6)');
+        ok(aEv.length >= 1 && aEv[0].t === 'bot:blocked' && !aEv.some(e => e.t === 'bot:through'), '142e ...Ann records the action as BLOCKED, never as through (got ' + JSON.stringify(aEv.map(e => e.t)) + ')');
+        ok(T2.pool === 2 && !h.inbox.some(m => m.t === 'log' && m.who === 'Ann' && /The bleed goes through: Ulla/.test(strip142(m.html))), '142e ...and no bleed lands on Ulla (pool ' + T2.pool + '): the block stopped it, in combat');
+        A.close(); T1.close(); T2.close(); h.ws.close();
+      }
+    }
+
+    /* 143) v0.6.203 -- Johan (16 Oct): "the bot should answer known strikes". The strike step in the rulebook's order between bots too
+       -- "the minions first choose their respective strikes (the acting minion first, then their opponent)" [6.4.3]: the acting bot
+       strikes first, the answering bot looks at that strike (a peek: the line stays pending for its consuming wait) and chooses
+       knowing it -- no card spent into a dodge, a dodge for the strike that would empty or torpor it, none against a strike for 0.
+       And Deep Song's rushed vampire acts first in the human phase walk too (R2 read it for the bot handshake only). */
+    {
+      console.log('\n[143] v0.6.203 -- the strike step in the rulebook’s order between bots; Deep Song’s acting minion in the human phase walk');
+      const strip143 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const AV3 = over => Object.assign({ id: 'a1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 6, attached: [] }, over || {});
+      const DV3 = over => Object.assign({ id: 'd1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 5, attached: [] }, over || {});
+      const duel143 = o => {   // the section 141 relay: two bots, every log / chat / say line reaches the other `delay` ms later; A = the acting bot (Hanna), D = the bot that blocked it (Viktor)
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }].concat(o.human ? [{ seat: 3, name: 'Claude', online: true }] : []);
+        const mk = (name, seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: o.paceMs || 0, askSecs: o.askSecs || 3, twdKnow: 0, log: () => {} });
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.o.deckName = deck; u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = [];
+          u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); };
+          return u; };
+        const A = mk('Hanna', 1, o.aDeck || 'tremere'), D = mk('Viktor', 2, o.dDeck || 'nosferatu');
+        const wire = (from, to) => { from.send = m => {
+          if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0); return; }
+          if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
+          const txt = m.t === 'log' ? strip143(m.html) : String(m.msg || '');
+          from._evRecord(from.o.name, txt, m.t, true);
+          from.lines.push({ at: Date.now(), tier: m.t, txt });
+          const d = Object.assign({}, m, { who: from.o.name });
+          setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0);
+        }; };
+        wire(A, D); wire(D, A);
+        const aV = AV3(o.aV), dV = DV3(o.dV);
+        A.board = [aV]; D.board = [dV]; A.hand = (o.aHand || []).slice(); D.hand = (o.dHand || []).slice();
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: dV.name, zone: 'ready', blood: dV.blood }] } } };
+        D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: aV.name, zone: 'ready', blood: aV.blood }] } } };
+        A._actingVamp = { v: aV, n: 1, played: new Set() }; A._lastBlockerName = dV.name;
+        D._clearCombatStashes(); D._combatArmed = true;
+        const run = async () => { const t0 = Date.now();
+          await Promise.race([Promise.all([A._resolveCombat(aV), D._resolveCombat(dV, aV.name)]), sleep(o.cap || 15000)]);
+          return Date.now() - t0; };
+        return { A, D, aV, dV, run };
+      };
+      const lines143 = (u, re) => u.lines.filter(l => re.test(l.txt));
+
+      // a) the acting bot dodges first: the answering bot keeps its strike card (its strike cannot reach) -- the old simultaneous choice spent Roundhouse into the dodge
+      { const g = duel143({ delay: 30, aDeck: 'hacking', dDeck: 'nosferatu', aV: { blood: 1 }, aHand: ['Dodge'], dHand: ['Roundhouse'] });
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        const aD = lines143(g.A, /\) strikes: Dodge/), dS = lines143(g.D, /\) strikes[ :]/);   // the strike lines (not 'has nothing before strikes.')
+        ok(aRow.strike === 'Dodge' && dRow.strike === 'hands' && g.D.hand.includes('Roundhouse') && aD.length === 1 && dS.length >= 1 && aD[0].at <= dS[0].at && !(aRow.hsMiss || dRow.hsMiss),
+           '143a the acting bot (blood 1) dodges FIRST; the answering bot sees it and strikes with its hands -- Roundhouse stays in hand (v0.6.202 chose at the same time and spent it into the dodge; got ' + JSON.stringify({ a: aRow.strike, d: dRow.strike, keep: g.D.hand.includes('Roundhouse'), miss: [aRow.hsMiss || null, dRow.hsMiss || null] }) + ')'); }
+
+      // b) the acting bot's Roundhouse (strength 1 + 3) comes first; the answering bot at blood 3 dodges it -- the assumed 1 would have struck, and taken 4 into torpor
+      { const g = duel143({ delay: 30, aDeck: 'nosferatu', dDeck: 'tremere', aV: { name: 'Wauneka (G6)', cap: 5, blood: 5 }, dV: { name: 'Anxo Vilela (G6)', cap: 6, blood: 3 }, aHand: ['Roundhouse'], dHand: ['Absorb the Mind'] });
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(aRow.strike === 'Roundhouse' && dRow.strike === 'Absorb the Mind' && g.dV.blood === 3 && g.dV.zone === 'ready',
+           '143b the acting bot strikes with Roundhouse for 4 first; the answering Anxo Vilela (blood 3) dodges it with Absorb the Mind and keeps every blood (v0.6.202: blood 3 > 1, struck, took 4 -> torpor; got ' + JSON.stringify({ a: aRow.strike, d: dRow.strike, blood: g.dV.blood, zone: g.dV.zone }) + ')'); }
+
+      // c) ...and against a strike for 0 the dodge is saved: the range was set to long for this round (no ranged strike in hand), the acting bot's fist cannot reach
+      { const g = duel143({ delay: 30, aDeck: 'tremere', dDeck: 'hacking', aV: { blood: 5 }, dV: { name: 'Anxo Vilela (G6)', id: 'd1', cap: 6, blood: 1 }, aHand: [], dHand: ['Dodge'] });
+        g.A._setRangeNow = 'long'; g.D._setRangeNow = 'long';
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(aRow.range === 'long' && dRow.range === 'long' && aRow.dealt === 0 && dRow.strike !== 'Dodge' && g.D.hand.includes('Dodge') && g.dV.blood === 1,
+           '143c at long range the acting bot’s fist is a strike for 0: the answering bot (blood 1) keeps its Dodge and its blood (the assumed 1 spent the card; got ' + JSON.stringify({ range: [aRow.range, dRow.range], aDealt: aRow.dealt, d: dRow.strike, keep: g.D.hand.includes('Dodge'), blood: g.dV.blood }) + ')'); }
+
+      // d) the decision itself
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        const v = b => ({ name: 'X', blood: b }), D = (b, inc) => u.decide('combat-strike', { dodge: { name: 'Dodge' }, vamp: v(b), inc });
+        const K = o => Object.assign({ known: true, dodge: false, ends: false, dealt: 0, steal: 0, aggr: 0, crows: 0 }, o);
+        ok(D(3, K({ dealt: 3 })).dodge === true && D(3, K({ dealt: 2 })).dodge === false && D(1, K({ dealt: 1 })).dodge === true,
+           '143d a known strike: dodge what would empty or torpor me (3 at blood 3, 1 at blood 1), take what leaves blood (2 at blood 3)');
+        ok(D(1, K({ dodge: true })).dodge === false && D(1, K({ ends: true })).dodge === false && D(1, K({ dealt: 0 })).dodge === false,
+           '143d ...never against their dodge, their combat ends or a strike for 0 -- the card is saved');
+        ok(D(5, K({ aggr: 1 })).dodge === true && D(2, K({ steal: 2 })).dodge === true && D(1, K({ dealt: 1, crows: 2 })).dodge === false,
+           '143d ...aggravated damage is dodged at any blood, a steal of my last blood too; when the crows take me down anyway the dodge is wasted');
+        ok(D(1, null).dodge === true && D(2, null).dodge === false, '143d an unknown strike keeps the v0.6.4 rule (the assumed 1 at blood 1)'); }
+
+      // e) Deep Song: the rushed vampire is the acting minion -- in the human phase walk too
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 1; u.started = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m);
+        u.players = [{ seat: 1, name: 'U', online: true, bot: true }, { seat: 2, name: 'Johan', online: true }];
+        const mine = { id: 'm1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 };
+        u.board = [mine]; u._combatMyVamp = mine; u._inCombat = true; u._cSide = 'a';
+        u._combatOpp = () => ({ seat: 2, name: 'Lisa Noble' });
+        u._actingVamp = { v: mine, n: 0, played: new Set(), kind: 'rush', target: 2, targetActs: true };
+        const IA = () => typeof u._combatIActing === 'function' ? u._combatIActing() : null;   // a pre-v0.6.203 bot has no such rule: the asserts fail clean, never abort the suite
+        ok(IA() === false, '143e my Deep Song rushed Johan’s vampire: IT is the acting minion, not mine (the turn seat’s side said mine)');
+        const pr = u._phaseStep(0, 'ask', false); await sleep(30);
+        const asked = u.sent.some(m => m.t === 'chat' && /Anything before range\?/.test(String(m.msg)));
+        if(u._phaseWait) u._phaseWait.resolve('pass'); await pr;
+        ok(asked, '143e ...so the phase walk ASKS Johan first ("Anything before range?") -- v0.6.202 spoke first in every step');
+        u._actingVamp.targetActs = false;
+        ok(IA() === true, '143e ...a plain rush: the turn seat’s combatant acts, as before');
+        u._actingVamp = null; u._combatActing = 'Wauneka (G6)'; u._cSide = 'b';
+        ok(IA() === true, '143e ...and a vampire of mine rushed by Deep Song acts first on the defending side');
+        u._inCombat = false; u._combatActing = null; }
+    }
+
+    /* 144) v0.6.203 -- hygiene from R2's smokes (READ-ME-FIRST-2026-10-16c section 5's 'older, observe-only' flags): the bot's own
+       prevent line was typed with 'X plays CARD:' as the vampire, so the strike-vs-taken invariant never subtracted an opponent's
+       Hidden Strength (all 6 'strike-taken' flags of the R2 smokes); the bot's notes say 'NAME (bot)', so the Wider View and rescue
+       burns never reached the pool ledger (the +2 drift); an equipment's pool cost was paid silently; the range was undefined until
+       the first combat. */
+    {
+      console.log('\n[144] v0.6.203 -- hygiene: the invariants hear prevention, the burn-for-pool notes and an equipment’s cost');
+      const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Ann', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+      u.seat = 1; u.started = true; u.push = () => {}; u.send = () => {};
+      u.players = [{ seat: 1, name: 'Ann', bot: true }, { seat: 2, name: 'Tor', bot: true }];
+      ok(u._range === 'close', '144a a new bot’s combat range is the rulebook default, close (was undefined until its first combat)');
+      const pv = u._evClassify('Tor', 'Brock Sterling (G6) plays Hidden Strength: prevents 1 damage.', 'log') || {};
+      ok(pv.kind === 'prevent' && pv.vamp === 'Brock Sterling (G6)' && pv.n === 1 && pv.card === 'Hidden Strength', '144b a bot’s own prevent line names the VAMPIRE (got ' + JSON.stringify(pv) + ')');
+      const gp = u._evClassify('Tor', 'Lisa Noble prevents 2 damage.', 'log') || {};
+      ok(gp.kind === 'prevent' && gp.vamp === 'Lisa Noble' && gp.n === 2, '144b ...and the client’s own shape still reads');
+      // the invariant: my strike for 3, their Hidden Strength prevents 1, they take 2 -- no flag
+      u._inCombat = true; u._combatOppName = 'Brock Sterling (G6)'; u._invFlags = 0;
+      u._evRecord('Ann', 'Wauneka (G6) strikes with Roundhouse for 3.', 'log', true);
+      u._evRecord('Tor', 'Brock Sterling (G6) plays Hidden Strength: prevents 1 damage.', 'log');
+      u._evRecord('Tor', 'Brock Sterling (G6) takes 2 (loses 2 blood, now 3).', 'log');
+      ok((u._invFlags | 0) === 0, '144b ...so the strike-vs-taken invariant subtracts the prevention: strike 3, prevented 1, taken 2 raises no flag (v0.6.202 flagged it: ' + (u._invFlags | 0) + ' flag(s))');
+      u._inCombat = false; u._combatOppName = null;
+      const wv = u._evClassify('Ann', 'Wider View: Ann (bot) uses 4 transfers to burn it for +2 pool (pool 7) -- nothing better to spend the transfers on this turn.', 'log') || {};
+      const rs = u._evClassify('Ann', 'Gratiano: Ann (bot) locks it and burns 2 pool to rescue Zip.', 'log') || {};
+      ok(wv.kind === 'pool' && wv.delta === 2 && wv.card === 'Wider View' && rs.kind === 'pool' && rs.delta === -2, '144c the burn-for-pool and rescue notes reach the pool ledger with the bot’s real name ‘Ann (bot)’ in them (got ' + JSON.stringify([wv.delta, rs.delta]) + ')');
+      u.pool = 10; const v = { id: 'v1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', blood: 3, attached: [] }; u.board = [v];
+      const n0 = u.ev.ev.length; u._doEquip(v, 'Sport Bike', 2, 0);
+      const pe = u.ev.ev.slice(n0).find(e => e.kind === 'pool');
+      ok(u.pool === 8 && !!pe && pe.delta === -2 && pe.own === true, '144d an equipment’s pool cost reaches the pool ledger (' + JSON.stringify(pe ? { delta: pe.delta, via: pe.via } : null) + ')');
+      // e) found by v0.6.203's own arena smoke ('taken 2, my strike 1, crows 2'): a borne Murder of Crows and a played Carrion Crows are two sources -- both land each round
+      { const w = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Tor', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        w.seat = 2; w.started = true; w.push = () => {}; w.send = () => {}; w.players = [{ seat: 1, name: 'Ann', bot: true }, { seat: 2, name: 'Tor', bot: true }];
+        w._inCombat = true; w._combatOppName = 'Baixinho (G6)'; w._stashAccept = () => true;
+        const crow = s2 => w._onLog('Ann', 'Ann combat \u2014 Baixinho (G6)' + s2 + ': opposing minion takes 1 environmental damage each round for the rest of this combat (unpreventable by strikes, cannot be dodged).');
+        crow("'s Murder of Crows"); crow(' plays Carrion Crows'); const both = (w._oppCarrionCrows || {}).n;
+        crow(' plays Carrion Crows'); const again = (w._oppCarrionCrows || {}).n;
+        w._oppCarrionCrows = null; const reset = w._oppCarrionCrows;
+        ok(both === 2 && again === 2 && reset === null, '144e a borne Murder of Crows and a played Carrion Crows both peck me each round: 2 (v0.6.202 kept the last announce: 1); a repeated announce replaces its own source, and a new combat starts clean (got ' + JSON.stringify([both, again, reset]) + ')');
+        w._inCombat = false; }
+    }
+
 
 
     }

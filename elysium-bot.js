@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.202'; // v0.6.202 (16 Oct 2026, R2 of the 14 Oct play-test review, docs/reviews/REVIEW-playtest-2026-10-14.md): (1) THE BOT-VS-BOT STEP HANDSHAKE (points 16, 17a, 7): between bots the ACTING side speaks first in the maneuver, before-strikes and press steps -- its card line, or a frozen 'nothing' line on the log tier (`NAME does not maneuver.` / `NAME has nothing before strikes.` / `NAME does not press.`) -- and the other bot decides knowing it and answers the same way; a press to continue is answered with a press to end or `does not press.`. The 200 ms waits that lost the race at the client's pace (an Immortal Grapple ignored, a maneuver to long missed) are gone between bots, a press step nobody presses in no longer sits out askSecs (19 s at the client), and a line from an earlier round is dropped at the next round's start; the safety net is askSecs, frozen while a human holds. (2) A watched bot-vs-bot combat is paced: with a human seated and paceMs > 0, a beat before each of my lines (a play the step beat, a 'nothing' line the short fx beat); the arena is untouched. (3) A hold stops my own combat moves (point 5): the next step, my strike, my press -- not only the clocks. (4) The tally's range, range lock, combat-ends and press fields count only from the human I fight (point 17b). (5) Roundhouse is strength + 2 (point 18): cardfx v1.9.2 writes `handBonus` for 'hand strike at +N damage' / 'this strike is at +N damage' (35 cards) and `_modeStrikeDmg` adds it to the hand damage. (6) Two steals at once resolve together (point 19): the blood moves by the total, only the net is held to capacity. (7) The v0.6.140 audit: my last pool on my own Smiling Jack, an opponent's Jack, or Fame's unlock drain ousts me and the turn stops there; a Jack is paid from pool and blood across vampires, never my last pool while blood can pay. (8) Found by this release's own arena smokes: a rushed bot with nothing else to block with says Pass (a silent comply ran the rusher's directed window to its clock); Deep Song makes the rushed vampire the acting minion, so it speaks first between bots; a combat-ends strike is the one line `NAME strikes: combat ends.` (the two-line form was read as a dodge); the press decision reads only this round's taken line, and an opponent down after the press step ends the combat (a phantom round 3); 'close next round' dies with its combat (a superior Immortal Grapple in a combat's last round took the maneuver step from both bots' next combats), and so do the round's range and its Grapple restriction (a Tremere that saw a Grapple in its last fight stayed close in its next; between fights a block's price could not see a Majesty). Previous: v0.6.201 Johan's answers to the R1 uncertainties -- full notes in elysium-bot-CHANGELOG.md.
+const BOT_VERSION = '0.6.203'; // v0.6.203 (16 Oct 2026, the first step of R3, Johan's 'Kor pa!' of 16 Oct): (1) THE VANISHED BLEED (READ-ME-FIRST-2026-10-16c section 6; found by R2's arena smokes, 21 bleeds in 12 matches, 3 on v0.6.201): Deflection, Redirection, Telepathic Misdirection and My Enemy's Enemy say "(that Methuselah can attempt to block)" -- a bounce now opens its new target's block step in whatever window of mine it lands (_bouncedTo); a late bounce lands in a reactions-only window, where v0.6.114 refused every Block!, the new target's pending stayed contested and it dropped the bleed on my It resolves. The refusal stays for every other seat and after a modifier; the open ask follows the bleed (status, the roster hook, the tempo); the old target's intercept goes back to 0 (my stealth stays with the action); a human new target is told it may block. My bleed's 'through' emit moved to the resolution (n = announced, `final` = what lands): emitted before the late windows it closed my block counter (a late blocker's verdict read stealth 0 from a fresh counter) and committed my parked cost. As the target: a BOT actor's It resolves over my live attempt lands the bleed (the attempt was never taken up -- a human actor is still asked), and a bot actor's modifier closes my block step. (2) THE STRIKE STEP IN THE RULEBOOK'S ORDER BETWEEN BOTS (Johan, 16 Oct: 'the bot should answer known strikes'; [6.4.3] the acting minion chooses first): the acting bot strikes first, the answering bot looks at that strike (_awaitOppStrikePeek -- the line stays pending for its consuming wait) and chooses knowing it: no card into a dodge, a dodge against the strike that would empty or torpor it (the known strike, not the assumed 1; aggravated always), none against a strike for 0; the acting bot waits at least the handshake's safety net for the answer, and none after its own combat ends. (3) DEEP SONG AGAINST A HUMAN: the rushed vampire is the acting minion in the human phase walk too (_combatIActing, shared with the bot handshake) -- the bot asks the human first. (4) Hygiene from R2's smokes: the bot's own prevent line ('X plays CARD: prevents N damage.') is typed with the vampire's name (the generic shape read 'X plays CARD:' -- the strike-vs-taken invariant never subtracted an opponent's Hidden Strength), the burn-for-pool and rescue notes reach the pool ledger with the bot's real name 'NAME (bot)' in them (one word never matched: the Wider View drift), an equipment's pool cost writes a pool event, and _range starts at 'close'. (5) Found by its own arena smoke (the invariant's 'taken 2, my strike 1, crows 2'): a borne Murder of Crows and a played Carrion Crows are two damage sources and both land each round -- the victim kept only the last announce (the opp-env event now carries the amount per source). Previous: v0.6.202 R2 of the 14 Oct play-test review -- full notes in elysium-bot-CHANGELOG.md.
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -620,6 +620,7 @@ class Bot {
     this._gid = 0; this._acting = false; this._seatPicked = false;
     this._sq = []; this._sqT = null;                    // paced outbound queue (token bucket — see _drain())
     this._ask = null;                // pending Block? question {resolve, timer, pausedBy:Set}
+    this._range = 'close';           // v0.6.203 (hygiene): the combat range starts at the rulebook default -- it was undefined until the first combat (every reader takes anything but 'long' as close, so no decision changes)
     /* --- v0.2 perception state --- */
     this.table = {};                 // seat -> { pub, seen:Set(ids), seeded:bool } (per-seat: cids collide cross-seat!)
     this.reads = {};                 // seat -> { seen: {...} } — the honest hand-READ memory; v0.6.118: `seen` is the SAME object as this.opp[seat].seen (readP keeps its signature)
@@ -2407,7 +2408,8 @@ class Bot {
     return null;
   }
   _doEquip(vamp, name, cost, costBlood){   // E1: pay + materialize on the bearer; N0: retainers pay BLOOD from the bearer
-    this.pool = Math.max(0, this.pool - (cost | 0));
+    const p0 = this.pool; this.pool = Math.max(0, this.pool - (cost | 0));
+    if(this.pool !== p0 && this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: this.pool - p0, via: 'cost', card: name, own: true, seat: this.seat }));   // v0.6.203 (hygiene): the pool ledger hears an equipment's cost (it was paid silently)
     if(costBlood) vamp.blood = Math.max(0, (vamp.blood | 0) - (costBlood | 0));
     const id = this.gid();
     this.board.push({ id, name, kind: 'lib', zone: 'ready', faceDown: false, x: 64, y: 64, locked: false });
@@ -4162,6 +4164,7 @@ class Bot {
     const crows = this._carrionCrows ? (this._carrionCrows.n | 0) : 0;
     return { dmg: dmg + crows, card, crows, fist: 1 + this._strengthBonus(vamp) };
   }
+  _strikeWaitHs(continued, hs){ return hs ? Math.max(this._strikeWaitMs(continued), this._hsWaitMs()) : this._strikeWaitMs(continued); }   // v0.6.203: between bots the answering side chooses AFTER my strike (and a watched duel paces its line) -- my wait is at least the handshake's safety net
   _strikeWaitMs(continued){          // v0.6.159 (serie-cmb4, the phantom round 3): in a CONTINUED round the presser is still sitting in its own press window (askSecs, waiting to see whether I cancel) while I -- who only received the press -- start the next round at once; with equal windows my strike wait expired exactly as its strike arrived (Malkavian 'opp-silent' at -6402, Ventrue's strike at -6402). Round 2+ waits two windows.
     const base = (this.o.askSecs || 2) * 1000; return this._lineGraceMs(continued ? base * 2 : base, 'strike');   // v0.6.195: vs a human under the tempo the strike step already waited -- see _lineGraceMs
   }
@@ -4285,7 +4288,7 @@ class Bot {
   async _phaseStep(step, when, played){
     if(!this._phasesOn()) return null;
     await this._holdGate();                            // v0.6.202 (play-test 14 Oct, point 5): a hold stops the next combat step itself, not only the clocks -- an answer ends a held wait, and the bot used to ask on, play and resolve under the hold
-    const acting = this._cSide === 'a';
+    const acting = this._combatIActing();             // v0.6.203: Deep Song's rushed vampire acts first (was: the turn seat's side)
     if(when === 'ask' && acting) return null;          // I act first in this step: nothing to ask before my own play
     if(when === 'after' && !acting) return null;       // the human acted first and already answered
     const reply = when === 'reply';                    // v0.6.195: the human acted first, then I played (a press to continue) -- they may answer it (a press to end); asked again, under the tempo
@@ -4342,7 +4345,7 @@ class Bot {
     }
     if(res !== 'ph') this._cWrite({ ph: 5 });
     this._phaseLast = { step: 4, res };
-    this._emit('combat-phase', { step: 4, when: 'damage', acting: this._cSide === 'a', answer: res, ms: Date.now() - t0 });
+    this._emit('combat-phase', { step: 4, when: 'damage', acting: this._combatIActing(), answer: res, ms: Date.now() - t0 });
     return res;
   }
   _phaseNudge(who, txt, kind){                         // called from _onChat / _onLog / the tally handler with the human's activity
@@ -5020,6 +5023,13 @@ class Bot {
            still zeroes it: the suite and the arena keep the fast lane byte-for-byte. */
         return { ms: this.o.paceMs ? (this.o.reactPaceMs != null ? this.o.reactPaceMs : this.o.paceMs) : 40 };   // v0.6.152: default 1.0 x pace (was 0.6) -- Johan wants the same breathing room after every table event
       case 'combat-strike': {       // steg 6 (16 July): dodge vs strike -- deliberately DUMB v1 per Johan ("okej att ha det som 'dum' grundstrategi just nu"): dodge exactly when taking the assumed default incoming 1 would torpor me (survival), else strike for value and save the dodge. No persona weighting yet -- a future refinement alongside the blood-cost weighing decide('bleed-modifier') also defers.
+        if(ctx.inc && ctx.inc.known){   // v0.6.203: their strike came first -- the dodge answers what it does, not the assumed 1 (a strike for 3 at blood 2 used to be taken into torpor; a dodge was spent against a dodge)
+          const I = ctx.inc, blood = ctx.vamp.blood | 0, saved = (I.dealt | 0) + (I.steal | 0) + (I.aggr | 0), crows = I.crows | 0;   // what a dodge keeps off me (environmental damage lands anyway)
+          if(!ctx.dodge) return { dodge: false, why: 'no dodge in hand' };
+          if(I.dodge || I.ends || saved <= 0) return { dodge: false, tag: 'known-nothing', why: 'their ' + (I.dodge ? 'dodge' : I.ends ? 'combat ends' : 'strike for 0') + ' came first: nothing to dodge -- the dodge is saved' };
+          const go = (I.aggr | 0) > 0 || (crows <= blood && saved + crows >= blood);   // aggravated damage wounds whatever my blood; else the strike (not the crows, which land anyway) takes my last blood or more
+          return { dodge: go, tag: 'known', why: 'their strike ' + (I.steal ? 'steals ' + I.steal : I.aggr ? 'for ' + I.aggr + ' aggravated' : 'for ' + I.dealt) + (crows ? ' (+' + crows + ' crows)' : '') + ' at blood ' + blood + (go ? ': it would ' + (I.aggr ? 'wound' : 'empty or torpor') + ' me -- dodge' : ': I can take it -- strike for value, save the dodge') };
+        }
         const fragile = (ctx.vamp.blood | 0) <= 1;
         return { dodge: !!ctx.dodge && fragile,
                  why: !ctx.dodge ? 'no dodge in hand'
@@ -5654,6 +5664,10 @@ class Bot {
     { const e = this._pendingStrikeEv(); if(e){ e.stk = 'consumed'; this._hsSeen(e); return Promise.resolve(this._strikeFromEvent(e)); } }   // v0.6.181: from the event log
     return this._waitOn('_strikeWaiter', ms);   // v0.6.202: the safety net stands while a human holds the table
   }
+  _awaitOppStrikePeek(ms){           // v0.6.203: the strike step's answer half between bots -- wait for the acting side's strike line WITHOUT consuming it (the decisions below read it through _oppStrike; my own consuming wait after my strike takes it at once)
+    { const e = this._pendingStrikeEv(); if(e) return Promise.resolve(this._strikeFromEvent(e)); }
+    return this._waitOn('_strikePeekWaiter', ms);
+  }
   _awaitOppTaken(ms){                // v0.6.21 (Taste of Vitae): the SAME one-shot stash/waiter shape as _awaitOppStrike, but for the opponent's END-OF-ROUND "takes N (blood M)" chat narration rather than their strike announcement. This arrives LATER in the causal chain than the strike line (the opponent must first receive OUR strike via their own _awaitOppStrike before they can compute and announce their own final result) -- a human table, or an opponent who hasn't reached that point yet, both fall through to null within the timeout, and Taste of Vitae is simply not played rather than guessed.
     { const e = this._pendingOf('opp-taken'); if(e){ e.stk = 'consumed'; return Promise.resolve(this._takenFromEvent(e)); } }   // v0.6.184: from the event log
     return this._waitOn('_takenWaiter', ms);
@@ -5693,6 +5707,11 @@ class Bot {
      combat waits a beat (a play the step beat, a 'nothing' line the short fx beat); a hold stops my own combat moves, against a bot or
      a human (point 5). The strike step is unchanged: both strikes are announced and resolved together. */
   _humanSeated(){ return (this.players || []).some(p => p && !p.bot && !p.vacant); }
+  _combatIActing(myVamp){            // v0.6.203: is MY combatant the acting minion of this combat? The turn seat's combatant -- except Deep Song [ANI]: "The target vampire is considered the acting minion during that combat". R2 read it for the bot handshake only; the human phase walk asked in the turn seat's order (a bot that rushed a human with Deep Song spoke first in every step)
+    const mv = myVamp || this._combatMyVamp;
+    if(this._combatActing) return !!(mv && this._combatActing === mv.name);
+    return this._cSide === 'a' && !(this._actingVamp && this._actingVamp.targetActs);
+  }
   _hsOn(){                           // the handshake runs: in combat, no human combat phases, and my opponent is a BOT seat -- known, or unknown at a table with no human (a blocker that re-blocked after Guard Dogs reaches the actor without a name, ~4 % of combats); an unknown opponent at a human table keeps the old short waits
     if(!this._inCombat || this._phasesOn()) return false;
     const c = this._combatOpp(); let seat = c ? c.seat : 0;
@@ -5790,7 +5809,7 @@ class Bot {
       if(hsP && !continuing){ await this._combatGate(false); this._hsNothing(myVamp, 'press'); }   // v0.6.202: the step's answer when I do not press
       if(continuing) this._cWrite({ pr: 'continue' });   // v0.6.164
       await this._phaseAfter(5, continuing);   // v0.6.165: "I have no press." / my press line, then the human's: the press state on the tally (my press to continue)
-      if(continuing && this._cSide !== 'a' && this._tempoMode()) await this._phaseStep(5, 'reply', true);   // v0.6.195: the human acted (and answered 'Any presses?') before my press to continue -- their window to press to end is now asked and runs on the tempo (it was a silent askSecs wait)
+      if(continuing && !this._combatIActing(myVamp) && this._tempoMode()) await this._phaseStep(5, 'reply', true);   // v0.6.195: the human acted (and answered 'Any presses?') before my press to continue -- their window to press to end is now asked and runs on the tempo (it was a silent askSecs wait)
       let oppP = null;
       if(hsP){
         if(!hsFirstP || continuing){ oppP = await this._awaitOppPress(this._hsWaitMs()); if(!oppP) this._hsMiss('press'); }   // v0.6.202: the acting side waits for the other bot's answer; the answering side waits only after its own press to continue (for a press to end)
@@ -5828,7 +5847,7 @@ class Bot {
     this._cSide = (this._actingVamp && (this._actingVamp === myVamp || (this._actingVamp.v && this._actingVamp.v.name === myVamp.name) || this._actingVamp.name === myVamp.name)) ? 'a' : 'b';   // v0.6.164: acting = the turn seat's combatant (main's side mapping) -- my strike's damage goes to a (acting) or b
     if(continued) this._hsDropStale();   // v0.6.202 (R2): a maneuver / before-strikes / press line from an earlier round never answers this one
     const hs = this._hsOn();   // v0.6.202 (R2, points 16 / 17a / 7): the bot-vs-bot step handshake -- the acting minion speaks first in the maneuver, before-strikes and press steps
-    const hsActing = this._combatActing ? this._combatActing === myVamp.name : (this._cSide === 'a' && !(this._actingVamp && this._actingVamp.targetActs));   // Deep Song [ANI]: "The target vampire is considered the acting minion during that combat" -- the rushed vampire speaks first, the rusher answers (the counter's sides, _cSide, keep main's mapping: the turn seat's combatant is a)
+    const hsActing = this._combatIActing(myVamp);   // Deep Song [ANI]: "The target vampire is considered the acting minion during that combat" -- the rushed vampire speaks first, the rusher answers (the counter's sides, _cSide, keep main's mapping: the turn seat's combatant is a)
     const hsFirst = hs && !hsActing;   // I answer: I wait for the acting minion's line before I decide
     if(hs) this._rnd.hs = hsActing ? 'a' : 'b';
     this._writeTally({ mode: 'combat', duelCid: myVamp.id, duelName: myVamp.name });   // v0.6.164 (main's spec §4.0): a:0/b:0 DROPPED -- the server starts fresh on the mode change, and a late announce would wipe damage a human had already entered   // combat IS server-merged per seat (v2.6.14); a/b zeroed explicitly (v0.4.2) -- the block referendum's stale stealth/intercept numbers must not masquerade as damage counters (the client's own avrOpen starts fresh too)
@@ -5988,6 +6007,7 @@ class Bot {
     if(!hs) oppG = await this._awaitOppGrapple(Math.min(200, (this.o.askSecs || 2) * 1000));   // a human or an unknown opponent: the old short wait
     else if(!hsFirst){ oppG = await this._awaitOppGrapple(this._hsWaitMs()); if(!oppG) this._hsMiss('before-strikes'); }   // v0.6.202: the acting side waits for the other bot's answer before it strikes
     await this._phaseAsk(3);   // v0.6.165: human acting -> "What is your strike?" (the acting side announces first; the bot then chooses)
+    if(hsFirst && !(await this._awaitOppStrikePeek(this._hsWaitMs()))) this._hsMiss('strike');   // v0.6.203 (Johan, 16 Oct: "the bot should answer known strikes"): between bots too, "the minions first choose their respective strikes (the acting minion first, then their opponent)" [6.4.3] -- I look at the acting bot's strike (it stays pending: the consuming wait after my own strike takes it) and choose knowing it
     { const tc = this._cTally(); if(this._oppEndedCombat || (this._oppStrike && this._oppStrike.ends) || (tc && this._phaseOppPlayer() && (this._cField('ce') | 0) === 1 && tc.who && tc.who !== this.o.name)){   // v0.6.202 (point 17b): the ce field is a HUMAN opponent's   // v0.6.167 (main's scripted run, bug B): the human's combat ends came FIRST -- I do not strike at all
       this._oppEndedCombat = true; this._oppStrike = null; this._rnd.strike = 'none'; this._rnd.dealt = 0; this._rnd.taken = 0;
       this.o.log('combat (' + myVamp.name + '): their combat ends came first -- no strike from me, no damage either way');
@@ -6012,13 +6032,15 @@ class Bot {
       this.send({ t: 'log', html: 'Combat ends \u2014 <b>' + esc(ce.name) + '</b>.' });   // the card's name for the table
       if(ce.unlock) myVamp.locked = false;
       this._rnd.strike = ce.name; this._rnd.dealt = 0; this._rnd.taken = 0; this._stealSettle(myVamp, 'combat ends');   // v0.6.196: combat ends first -- a parked steal never lands
-      { const o2 = await this._phaseAfter(3, true).then(() => this._awaitOppStrike(this._strikeWaitMs(continued))); if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // consume their strike line (the dodge branch's reason): keeps the one-slot stash clean for the NEXT combat
+      if(!(hs && !hsFirst)){ const o2 = await this._phaseAfter(3, true).then(() => this._awaitOppStrike(this._strikeWaitHs(continued, hs))); if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // consume their strike line (the dodge branch's reason): keeps the one-slot stash clean for the NEXT combat. v0.6.203: not when I am the acting bot -- the answering bot sees my combat ends first and strikes no more (an older bot's late line is dropped at the next announce, _clearCombatStashes)
       this.chat('Trainbot combat \u2014 ' + myVamp.name + ' plays ' + ce.name + ': combat ends, no damage either way' + (ce.unlock ? '; ' + myVamp.name + ' unlocks' : '') + '. Tell me if your side differs.');
       this.push();
       return { ended: true };
     }
     const dodge = this._bestDodgeFor(myVamp);
-    const dd = this.decide('combat-strike', { dodge, vamp: myVamp });
+    const kn = this._oppStrike;   // v0.6.203: their strike, when it came first (the acting bot's, or a human acting under the phases) -- a peek, the line stays pending
+    const inc = kn ? { known: true, dodge: !!kn.dodge, ends: !!kn.ends, dealt: kn.dealt | 0, steal: kn.steal | 0, aggr: kn.aggr | 0, crows: this._oppCarrionCrows ? (this._oppCarrionCrows.n | 0) : 0 } : null;
+    const dd = this.decide('combat-strike', { dodge, vamp: myVamp, inc });
     if(dodge && dd.dodge && !this._noStrikeRound){           // steg 6 (16 July): Strike: dodge -- no damage in EITHER direction this round FROM THE STRIKE ITSELF (so no prevent needed there); the vampire's own strike slot is consumed by the dodge
       this.o.log('combat-strike (' + myVamp.name + '): ' + dd.why);
       this.hand.splice(dodge.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
@@ -6028,7 +6050,7 @@ class Bot {
       this._emitPlay(dodge.name, 'combat-dodge', myVamp.name);
       this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> strikes: <b>' + esc(dodge.name) + '</b> \u2014 no damage either way this round.' });
       this._rnd.strike = dodge.name; this._rnd.dealt = 0; this._rnd.taken = this._oppCarrionCrows ? this._oppCarrionCrows.n : 0; this._stealSettle(myVamp, 'dodge');   // v0.6.196: my dodge -- their steal does not reach me
-      { const o2 = await this._phaseAfter(3, true).then(() => this._awaitOppStrike(this._strikeWaitMs(continued))); if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // v0.6.4: a dodge needs nothing from the opponent (0/0 regardless) -- but consuming their strike line here keeps the one-slot stash clean for the NEXT combat, and synchronises the round's end
+      { const o2 = await this._phaseAfter(3, true).then(() => this._awaitOppStrike(this._strikeWaitHs(continued, hs))); if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // v0.6.4: a dodge needs nothing from the opponent (0/0 regardless) -- but consuming their strike line here keeps the one-slot stash clean for the NEXT combat, and synchronises the round's end
       /* v0.6.27 (Johan's standing question, checking Carrion Crows for uncertainty --
          the DODGE-BYPASSES-ENVIRONMENTAL-DAMAGE bug): this branch used to `return`
          immediately here, before the code below that applies the opponent's active
@@ -6069,8 +6091,10 @@ class Bot {
       return;
     }
     if(dodge) this.o.log('combat-strike (' + myVamp.name + '): ' + dd.why);   // a dodge was available but the decision chose to strike -- log the why either way
-    const strike = this._bestStrikeFor(myVamp);
-    const steal = this._bestStealStrikeFor(myVamp);
+    const theirDodge = !!(inc && inc.dodge);   // v0.6.203: their dodge came first -- no strike of mine reaches them this round (a steal neither): the hands, and the card stays in hand
+    if(theirDodge) this.o.log('combat-strike (' + myVamp.name + '): their dodge came first -- my strike cannot reach, no card spent');
+    const strike = theirDodge ? null : this._bestStrikeFor(myVamp);
+    const steal = theirDodge ? null : this._bestStealStrikeFor(myVamp);
     let dealt = 1, strikeLine = myVamp.name + ' strikes (hands) for 1';
     const longFist = this._range === 'long';   // v0.6.156: hand strikes cannot be used at long range (rulebook 6.4.3) -- a fist at long deals 0; the frozen strikeC channel carries 'for 0' so the opponent's parser reads the truth
     const sbN4 = this._strengthBonus(myVamp) + this._cryptStrengthMod(myVamp, this._combatOppName || this._duelOppName());   // N4b: strength IS base hand damage   // VB: + the crypt vsClan mod (Blythe -1 vs Malkavian); negatives are rules-real (FAQ 3.22), a hand strike floors at 0. VB review: the lazy _duelOppName fallback CLOSES the 13-site blocked-ACTOR under-claim -- the defender's duel write provably precedes their strike line, which we have already awaited
@@ -6139,7 +6163,7 @@ class Bot {
        deadlock) and take what they actually dealt; a silent opponent (a human
        table -- no human types the strike grammar) falls back to the old
        assume-1 within askSecs, with the "tell me if it differs" chat intact. */
-    const opp = await this._phaseAfter(3, true).then(() => this._awaitOppStrike(this._strikeWaitMs(continued)));
+    const opp = await this._phaseAfter(3, true).then(() => this._awaitOppStrike(this._strikeWaitHs(continued, hs)));
     this._rnd.strikeSeen = !!opp; if(this._stashRejects && this._stashRejects.length){ this._rnd.rejects = this._stashRejects; this._stashRejects = []; }   // v0.6.164 diag
     if((opp && opp.ends) || this._oppEndedCombat){   // v0.6.167 (main's scripted run, bug A): combat ends resolves FIRST -- my announced strike never lands, and Carrion Crows gets no strike resolution this round (VEKN ruling via main): no damage either way, no 'dealt' narration, no ph writes below 6
       this._oppEndedCombat = true; this._rnd.dealt = 0; this._rnd.taken = 0;
@@ -6373,8 +6397,8 @@ class Bot {
   set _oppTaken(v){ if(!this.ev) this.ev = new EventLog(); this._dropPendingOf('opp-taken'); if(v == null) return; const e = this.ev.push({ kind: 'opp-taken', vamp: v.vamp, n: v.n, down: !!v.down, now: v.now == null ? null : v.now, synthetic: true }); e.stk = 'pending'; }
   get _oppLastTaken(){ const e = this.ev ? this.ev.last('opp-taken') : null; return e ? Object.assign({ at: e.t }, this._takenFromEvent(e)) : null; }
   set _oppLastTaken(v){ if(!this.ev) this.ev = new EventLog(); if(v == null){ this.ev.push({ kind: 'opp-taken', vamp: null, n: 0, down: false, now: null, t: 1, cleared: true, stk: 'seen' }); return; } this.ev.push({ kind: 'opp-taken', vamp: v.vamp, n: v.n, down: !!v.down, now: v.now == null ? null : v.now, t: v.at || Date.now(), synthetic: true, stk: 'seen' }); }
-  get _oppCarrionCrows(){ const e = this.ev ? this.ev.last('opp-env') : null; return e && e.n > 0 ? { n: e.n } : null; }
-  set _oppCarrionCrows(v){ if(!this.ev) this.ev = new EventLog(); this.ev.push({ kind: 'opp-env', n: v && v.n > 0 ? (v.n | 0) : 0, reset: v == null }); }
+  get _oppCarrionCrows(){ const e = this.ev ? this.ev.last('opp-env') : null; return e && e.n > 0 ? (e.src ? { n: e.n, src: Object.assign({}, e.src) } : { n: e.n }) : null; }   // v0.6.203: + the per-source amounts (a borne Murder of Crows and a played Carrion Crows both land)
+  set _oppCarrionCrows(v){ if(!this.ev) this.ev = new EventLog(); const e = { kind: 'opp-env', n: v && v.n > 0 ? (v.n | 0) : 0, reset: v == null }; if(v && v.src) e.src = Object.assign({}, v.src); this.ev.push(e); }
   _maneuverFromEvent(e){ return Object.assign({ vamp: e.vamp, range: e.range }, e.none ? { none: true } : null); }   // v0.6.202: none = 'NAME does not maneuver.'
   _preFromEvent(e){ return e.grapple ? { vamp: e.vamp, grapple: true } : { vamp: e.vamp, none: true }; }   // v0.6.202: the before-strikes answer -- Immortal Grapple, or 'NAME has nothing before strikes.'
   get _oppGrapple(){ const e = this._pendingOf('pre-strike'); return e && e.grapple ? true : undefined; }   // v0.6.202: the Grapple stash is an event now (it was a field a late line could carry into the next round)
@@ -6400,6 +6424,7 @@ class Bot {
     this.ev.ev.forEach(x => { if(x !== e && x.kind === 'strike' && x.stk === 'pending') x.stk = 'replaced'; });   // the LATEST unconsumed strike line wins (a correction), as the old stash did
     e.stk = 'pending';
     if(this._strikeWaiter){ const w = this._strikeWaiter; this._strikeWaiter = null; e.stk = 'consumed'; this._hsSeen(e); w(this._strikeFromEvent(e)); }
+    else if(this._strikePeekWaiter){ const w = this._strikePeekWaiter; this._strikePeekWaiter = null; w(this._strikeFromEvent(e)); }   // v0.6.203: a look, not a take -- the line stays pending
     return e;
   }
   _evClassify(who, t, tier){          // v0.6.176: ONE place that types a table line (phase A: beside the old parsers, which still decide)
@@ -6430,6 +6455,7 @@ class Bot {
     if((m = t.match(L12.envOn))) return { kind: 'env', vamp: S(m[1]), n: +m[2] };
     if((m = t.match(L12.envOff))) return { kind: 'env', vamp: S(m[1]), n: 0 };
     if((m = t.match(/(?:^|dealt; )([^;]+?) takes (\d+) \(loses (\d+) blood, now (\d+)\)\.?(.*)$/))) return { kind: 'taken', vamp: S(m[1]), n: +m[2], lost: +m[3], now: +m[4], down: /torpor|burned/i.test(m[5] || '') };
+    if((m = t.match(/^(.+?) plays (.+?): prevents (\d+|all) damage/))) return { kind: 'prevent', vamp: S(m[1]), card: S(m[2]), n: m[3] === 'all' ? 99 : +m[3] };   // v0.6.203 (the R2 smokes' 'strike-taken' flags, all on a Hidden Strength): the bot's own prevent line FIRST -- the generic shape below matched it too and read 'X plays CARD:' as the vampire, so the invariant never subtracted an opponent's prevention (moved up from below, where v0.6.180 put it)
     if((m = t.match(/^(.+?) prevents? (\d+) damage/i))) return { kind: 'prevent', vamp: S(m[1]), n: +m[2] };
     if((m = t.match(/^(.+?) bleeds for (\d+)/))) return { kind: 'announce', vamp: S(m[1]), action: 'bleed', n: +m[2], directed: true };
     if((m = t.match(/^(.+?) hunts\./))) return { kind: 'announce', vamp: S(m[1]), action: 'hunt', directed: false };
@@ -6437,7 +6463,7 @@ class Bot {
     if((m = t.match(L12.uCardAct))) return { kind: 'announce', vamp: S(m[1]), action: 'card', directed: false };
     if((m = t.match(L12.uRescue))) return { kind: 'announce', vamp: S(m[1]), action: 'rescue-own', directed: false };
     if((m = t.match(L12.uRescueOld))) return { kind: 'announce', vamp: S(m[1]), action: 'rescue', directed: true };
-    if((m = t.match(/^(.+?) plays (.+?): prevents (\d+|all) damage/))) return { kind: 'prevent', vamp: S(m[1]), card: S(m[2]), n: m[3] === 'all' ? 99 : +m[3] };   // v0.6.180: the bot's own prevent line starts 'X plays CARD:' -- it was typed as card-played, so the strike-vs-taken check never saw the prevention
+    /* v0.6.180's 'X plays CARD: prevents N damage' shape moved ABOVE the generic prevent shape (v0.6.203) */
     if((m = t.match(/^equipment prevents (\d+)/))) return { kind: 'prevent', n: +m[1], equipment: true };
     if((m = t.match(L12.uEquip))){ const c = S(m[3]); return this.fxLookup(c) ? { kind: 'card-played', vamp: S(m[1]), card: (this.fxLookup(c).name || c), role: m[2] === 'employs' ? 'employ' : 'equip' } : { kind: 'announce', vamp: S(m[1]), action: m[2] === 'employs' ? 'employ' : 'equip', directed: false }; }   /* v0.6.186 */
     if((m = t.match(/^(.+?) recruits (.+?)(?: \[.*?\])?\.$/))){ const c = S(m[2]); return this.fxLookup(c) ? { kind: 'card-played', vamp: S(m[1]), card: (this.fxLookup(c).name || c), role: 'recruit' } : { kind: 'announce', vamp: S(m[1]), action: 'recruit', directed: false }; }
@@ -6459,8 +6485,8 @@ class Bot {
     if((m = t.match(/^(.+?) removes \d+ copies of (.+?) from the game to gain (\d+) pool/))) return { kind: 'pool', delta: +m[3], via: 'remove', card: S(m[2]) };
     if((m = t.match(/^(.+?): \+(\d+) pool \(pool (\d+)\)/))) return { kind: 'pool', delta: +m[2], pool: +m[3], via: 'card', card: S(m[1]) };
     if((m = t.match(/^(.+?) locks (.+?) for \+(\d+) pool/))) return { kind: 'pool', delta: +m[3], via: 'card', card: S(m[2]) };
-    if((m = t.match(/^(.+?): \S+ uses (\d+) transfers to burn it for \+(\d+) pool \(pool (\d+)\)/))) return { kind: 'pool', delta: +m[3], pool: +m[4], via: 'burn-for-pool', card: S(m[1]) };   // v0.6.180: Wider View-class 'use 4 transfers to burn this card for +N pool' -- the invariant's +5 drift
-    if((m = t.match(/^(.+?): \S+ locks it and burns (\d+) pool to rescue/))) return { kind: 'pool', delta: -m[2], via: 'rescue', card: S(m[1]) };
+    if((m = t.match(/^(.+?): .+? uses (\d+) transfers to burn it for \+(\d+) pool \(pool (\d+)\)/))) return { kind: 'pool', delta: +m[3], pool: +m[4], via: 'burn-for-pool', card: S(m[1]) };   // v0.6.180: Wider View-class 'use 4 transfers to burn this card for +N pool' -- the invariant's +5 drift
+    if((m = t.match(/^(.+?): .+? locks it and burns (\d+) pool to rescue/))) return { kind: 'pool', delta: -m[2], via: 'rescue', card: S(m[1]) };
     if((m = t.match(/^Fame \u2014 .+? hits torpor, (\d+) pool burned/))) return { kind: 'pool', delta: -m[1], via: 'fame' };
     if((m = t.match(/^Fame drains (\d+)/))) return { kind: 'pool', delta: -m[1], via: 'fame' };
     if((m = t.match(/^(.+?): (\d+) pool \u2192 (.+?) \(pool (\d+)\)/))) return { kind: 'pool', delta: -m[2], pool: +m[4], via: 'pool-to-blood', card: S(m[1]) };
@@ -6597,6 +6623,7 @@ class Bot {
         if(seat) this._actingVamp.target = seat;
         this._actingVamp.bounced = true;   // v0.6.144 (Johan): a bot very rarely pumps a bleed AFTER it was bounced (only a strong meta reason -- table talk a bot does not have)
         this._actingVamp.reactionsSeen = true;   // fas C: a bounce IS a reaction card played -- Perfectionist's clean-action test fails
+        if(seat) this._bouncedTo(seat);          // v0.6.203: the new target's block step, and the open ask follows the bleed
       }
       const mine = poolT ? (poolT === this.o.name)
                          : (!target && who === this.predName());     // spec §5 arming rule
@@ -6650,6 +6677,7 @@ class Bot {
       if(this.pending && (this.pending.who === who || (this.pending.actingVampName && this.pending.actingVampName === m[1]))){
         this.pending.amount = this.pending.reducedOnce ? Math.max(0, (this.pending.amount | 0) + parseInt(m[2], 10)) : parseInt(m[3], 10);   // T, the running total. v0.6.200 (point 15): after MY reduction the actor's '(= T)' still counts the bleed before it (a human's client, an older bot) -- the +N on top of the reduced amount is the rules' number; Viktor took 3 after Protected District said 'now 0'
         this.pending.contested = false;
+        if(((this.players || []).find(q => q && q.name === this.pending.who) || {}).bot) this.pending.declined = true;   // v0.6.203: a BOT actor plays a modifier only after its block question closed -- blocks are over, the reopened window takes reactions only (a Block! here is refused and used to cost the bleed). A human actor may be out of turn: the block stays mine to offer.
         this._reactWindow();                                         // every +X REOPENS the window
       }
       return;
@@ -7181,7 +7209,11 @@ class Bot {
       }
       if(phrase === 'Block!'){ this.pending.contested = true; return; }
       if(phrase === 'It resolves' && m.who === this.pending.who){
-        if(this.pending.contested){
+        const actorBot = !!((this.players || []).find(q => q && q.name === m.who) || {}).bot;
+        if(this.pending.contested && actorBot){   // v0.6.203 (the vanished bleed): a BOT actor declares the verdict of every attempt it takes up before it resolves (_askTimeout) -- its It resolves over my live attempt means the attempt was never taken up (refused in a reactions-only window, or it came after the window closed): the action resolved unblocked, and the bleed lands. Dropping it here made bleeds vanish.
+          this.o.log('my block attempt was not taken up by ' + m.who + ' \u2014 the action resolved unblocked');
+          this._applyPending("say 'It resolves' (attempt not taken up)");
+        } else if(this.pending.contested){
           this.chat('A block was announced but never resolved — if the bleed landed anyway, tell me "bleed ' + this.pending.amount + '".');
           this._clearPending('contested, unresolved');
         } else this._applyPending("say 'It resolves'");
@@ -7492,9 +7524,26 @@ class Bot {
                                      return this.hand[st.idx] === st.name || !!st.fromBoard; },
                               () => this._spendStealthCard(st, av, a));
   }
+  /* v0.6.203 (the vanished bleed, READ-ME-FIRST-2026-10-16c section 6): Deflection, Redirection, Telepathic Misdirection and My Enemy's
+     Enemy all say "Change the target of the bleed to ... (that Methuselah can attempt to block)". A bounce gives its new target a block
+     step of its own -- in whatever window of mine it landed. A late bounce (v0.6.144) lands in a reactions-only window, where the
+     v0.6.114 rule refused every Block!: the new target had shouted, its pending was contested, and on my It resolves it dropped the
+     bleed (21 in the 12 smoke matches of R2). The refusal stays for every other seat, and for everyone after a modifier. */
+  _bouncedTo(seat){
+    const av = this._actingVamp; if(!av || !seat) return;
+    av.blockStepSeat = seat;
+    const a = this._ask; if(!a || a.undirected) return;
+    a.target = seat;                                         // the open ask follows the bleed: status(), the roster hook and the tempo's who read it
+    if(this.tally && this.tally.mode === 'block' && (this.tally.b | 0) !== 0) this._writeTally({ mode: 'block', b: 0 });   // the old target's intercept is stale for the new one (the announce's own rule: b starts at 0); my stealth (a) stays -- it belongs to the action
+    const paused = !!(a.pausedBy && a.pausedBy.size);
+    if(!a.contested && !paused) this._restartAskTimer();     // a fresh clock for the new target (a bot bouncer's own Pass restarts it too)
+    const human = this._humanAt(seat);
+    if(human) this.chat('Trainbot: ' + av.v.name + ' now bleeds ' + human + ' for ' + (av.n | 0) + ' \u2014 ' + human + ' may block it (the bounce allows that), react, or say "no"' + this._waitTail(this._askPlan(a), 'resolves'));
+  }
+  _blockStepFor(who){ const av = this._actingVamp; return !!(av && av.blockStepSeat && who && who === this.seatName(av.blockStepSeat)); }
   _onBlockAttempt(who){
     { const a0 = this._ask;
-      if(a0 && a0.reactionsOnly){        // v0.6.114 (Johan): blocks were FINALLY declined before my modifier -- the block step is over, only reactions remain. Refuse out loud (the human may not have noticed), keep the window open for reduce/bounce/No reaction, never contest.
+      if(a0 && a0.reactionsOnly && !this._blockStepFor(who)){        // v0.6.114 (Johan): blocks were FINALLY declined before my modifier -- the block step is over, only reactions remain. Refuse out loud (the human may not have noticed), keep the window open for reduce/bounce/No reaction, never contest. v0.6.203: NOT the new target of a bounce -- the bounce cards say "(that Methuselah can attempt to block)", so its block step opens in whatever window the bounce landed (_bouncedTo)
         this.chat('Trainbot: blocks were declined this action \u2014 only reactions (reduce, bounce) remain. Say "no reaction" or play yours.');
         this._restartAskTimer();
         return;
@@ -7675,7 +7724,7 @@ class Bot {
        cleared until _resolveCombat resets it for a new combat. */
     const ccm0 = txt.match(/^(?:\S+ combat \u2014 )?(.+?)(?: plays carrion crows|'s murder of crows): opposing minion takes (\d+) environmental damage each round/i);
     const ccm = (ccm0 && this._stashAccept(ccm0[1])) ? [ccm0[0], ccm0[2]] : null;   // v0.6.103 (#1): a bystander's view of somebody else's crows must not peck ME in my next combat   // N0: the borne crows share the frozen phrase family -- one parser, one taken+= line
-    if(ccm) this._oppCarrionCrows = { n: parseInt(ccm[1], 10) };
+    if(ccm){ const src = /murder of crows/i.test(ccm0[0]) ? 'borne' : 'played', prev = this._oppCarrionCrows, s2 = Object.assign({}, (prev && prev.src) || {}); s2[src] = parseInt(ccm[1], 10); this._oppCarrionCrows = { n: (s2.played | 0) + (s2.borne | 0), src: s2 }; }   // v0.6.203 (found by its own arena smoke: the strike-taken flag 'taken 2, my strike 1, crows 2'): a borne Murder of Crows and a played Carrion Crows are two damage sources and both land each round -- the second announce overwrote the first, so the victim took one of them. Summed per source (a repeated announce replaces its own source)
     /* v0.6.28 (Immortal Grapple): a normal one-shot stash/waiter (like maneuver/
        press), NOT persistent like Carrion Crows -- "cannot be used THIS round" is
        reset every round by _resolveCombatRound's own `this._handStrikeOnly = false`. */
@@ -8738,7 +8787,10 @@ class Bot {
           await this._resolveCombat(v);   // v0.6.22: multi-round wrapper (was the single-round primitive directly)            // M2: data-driven (strike/prevent), the acting vampire's own side (_resolveCombatRound places its own torpor slot); v0.4.5: now async (paces strike->prevent), already inside _playTurn so a direct await
         } else {
           if(act.name) this._toAsh(act.name);          // a resolved action card goes to the ash heap (public)
-          this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name || null });
+          /* v0.6.203: the 'through' emit (and the unblocked streak) moved to the resolution below. Emitted here -- before the modifier and
+             bleed-total windows -- it closed my block counter (_emit: mode null) and committed my parked cost while the action could still be
+             blocked: a bounce's new target blocks in those windows, and its verdict read stealth 0 from a fresh counter; a late block kept the
+             cost and the ledgers saw a bleed go through that never landed (the vanished bleed). */
           /* steg 2 (15 July, cardfx-persistent-lock-design-decisions.md §13): "all
              declined" opens MY OWN modifier window (Leverage's spot) -- each play
              sends a real L12.add re-announce (a receiving bot's _onLog already
@@ -8785,6 +8837,7 @@ class Bot {
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: this._actingVamp.n, by: this._lastBlockerName || curAns.who || null });
             await this._resolveCombat(v);   // v0.6.22: multi-round wrapper (was the single-round primitive directly)
           } else {
+            this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name || null, final: this._actingVamp.n | 0, bounced: this._actingVamp.bounced ? true : undefined });   // v0.6.203: emitted at the resolution -- n stays the announced amount (the tools read it so), `final` is what lands
             if(!this._actingVamp.edgeLocked && this._actingVamp.n >= 1) this._takeEdge();   // rulebook: a successful bleed gives the acting Methuselah the Edge. v0.6.200 (points 15 + 20): only a bleed of 1 or more is successful, and taking the Edge is SAID on the wire (edgeTake) -- the humans' clients kept their own Edge lit, two holders at once
             if(this._actingVamp.n >= 1) this._maybeLubomiraMark(v);   // VC: 'successfully bleeds' = bleed amount >= 1 (the rulebook's own definition) -- UNLESS a card played this action locks that out (Leverage, steg 4/16 July: "You cannot gain the Edge this action. If you would get the Edge, it is burned instead." -- steg 2 wrongly assumed burn-then-regrant was fine, corrected once the real card_text was available)
             this.say('It resolves');
