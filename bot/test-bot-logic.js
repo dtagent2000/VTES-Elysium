@@ -10578,6 +10578,31 @@ async function connectWithRetry(client, tries = 30){
         ok(!!ansH && ansH.what === 'no' && H.stale.length === 0, '150c ...a HUMAN\'s answer is never second-guessed (the fx clone may have shown the action before my line): it answers at once');
         [A, H].forEach(u => { if(u._ask && u._ask.timer) clearTimeout(u._ask.timer); u._ask = null; if(u._sqT){ clearTimeout(u._sqT); u._sqT = null; } u._sq = []; }); }
 
+      // e) found by this release's own smoke: the window opens on my ACTION LINE, not on what I queue behind it. A modifier's add line is followed by
+      //    my board push; my prey answered the add line while the board was still queued, the first cut took that Pass for stale (17 windows ran out
+      //    their clock in seven matches), and once a bounce's new target's Block! was dropped the same way -- the bleed landed on the blocker
+      { const mkE = () => { const a = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Hanna', persona: 'expert', paceMs: 0, askSecs: 2, log: () => {} });
+          a.seat = 1; a.started = true; a.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Nora', bot: true }];
+          a.wire = []; a.ws = { send: o => a.wire.push(o) }; a.stale = []; a.onEvent = (t, m) => { if(t === 'bot:stale-answer') a.stale.push(m); };
+          a.board = [{ id: 'a2', name: 'Lloyd Brooks', kind: 'crypt', zone: 'ready', locked: false, blood: 5 }]; a.hand = [];
+          a._actingVamp = { v: a.board[0], n: 2, target: 2, played: new Set() };
+          a._tok = 0; a._tokT = Date.now();   // the empty token bucket of a busy arena turn: one message per 150 ms
+          return a; };
+        const R = mkE(); R.send({ t: 'log', html: '<b>Lloyd Brooks</b> adds +1 bleed (= 2).' }); R.push(); R.note('Trainbot: an explanation behind it.');
+        let ansR = null; R._askBlock('Trainbot: Lloyd Brooks adds +1 bleed — now 2 on Viktor. Any reaction?', { reactionsOnly: true }).then(r => { ansR = r; });
+        await sleep(220);   // the add line is on the wire (~150 ms); my board, the note and the question are still queued
+        const onWireR = R.wire.map(o => o.t);
+        R._dispatch({ t: 'say', i: SI('Pass'), who: 'Viktor' }); await sleep(30);
+        ok(!!ansR && ansR.what === 'no' && R.stale.length === 0 && onWireR.length === 1 && onWireR[0] === 'log',
+           '150e my prey\'s Pass on my modifier\'s add line answers the window while my board push is still queued behind that line (got ' + JSON.stringify({ ans: ansR && ansR.what, stale: R.stale.length, onWire: onWireR }) + ')');
+        const B = mkE(); B._actingVamp.n = 1; B.send({ t: 'log', html: '<b>Lloyd Brooks</b> bleeds for 1.' }); B.push(); B.send({ t: 'tally', mode: 'block', a: 0, b: 0 });
+        B._askBlock('Trainbot: Lloyd Brooks bleeds Viktor for 1. Block?').then(() => {});
+        await sleep(220);
+        B._dispatch({ t: 'say', i: SI('Block!'), who: 'Viktor' }); await sleep(30);
+        ok(B.stale.length === 0 && B._combatArmed === true && !!B._ask && B._ask.contested === true,
+           '150e ...and a Block! once my announce is on the wire is a block attempt, whatever I queued behind the announce (got ' + JSON.stringify({ stale: B.stale.length, armed: !!B._combatArmed, contested: !!(B._ask && B._ask.contested) }) + ')');
+        [R, B].forEach(u => { if(u._ask && u._ask.timer) clearTimeout(u._ask.timer); u._ask = null; if(u._sqT){ clearTimeout(u._sqT); u._sqT = null; } u._sq = []; }); }
+
       // d) end to end on the bots' own send queues (the arena's token bucket): A fetches, then bleeds Viktor, who passes the block and bounces on the total
       { const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }, { seat: 3, name: 'Nora', online: true, bot: true }];
         const mk = (name, seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck, paceMs: 0, askSecs: 2, phaseSecs: 0.3, twdKnow: 0, log: () => {} });
@@ -10658,6 +10683,50 @@ async function connectWithRetry(client, tries = 30){
          '151c ...two against two: no bait to spare, the order only, as at 0 (' + JSON.stringify(r2b.bleeds) + ')');
       let man = null; const um = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {}, probeHold: 2 }); um._emit = (k, m) => { if(k === 'manifest') man = m; }; um._emitManifest();
       ok(!!(man && man.knobs && man.knobs.probeHold === 2), '151d the knob is in the manifest (probeHold ' + (man && man.knobs ? man.knobs.probeHold : '?') + ')');
+    }
+
+    /* 152) v0.6.206 -- THE REACTIONS-ONLY WINDOWS OPEN WITH THEIR LINE (found by the release's own smoke). After a modifier's add line and
+       after the bleed total's +0 line the actor slept 150 ms before it opened the window; a bot answers that line in ~50 ms, so its Pass, a
+       bounce's new target's Block! found no ask open and were lost. The window then ran out its clock -- two bleed-total windows in three in
+       every smoke since v0.6.144 (R4's v0.6.205 smokes: 253 of 379) -- and a block attempt was never taken up: the bleed landed on the blocker.
+       Three bots wired at the socket (each line through its sender's own queue, 10 ms relay), the whole turn. */
+    {
+      console.log('\n[152] v0.6.206 -- the reactions-only windows open with their line: an early answer finds the window open');
+      const strip152 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const turn152 = async (vHand, nPool) => {
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }, { seat: 3, name: 'Nora', online: true, bot: true }];
+        const mk = (name, seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck, paceMs: 0, askSecs: 2, phaseSecs: 0.3, twdKnow: 0, log: () => {} });
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.fxClone = () => {}; u.lines = []; u.ev152 = [];
+          u.onEvent = (t, m) => { if(/^bot:(through|blocked|took-bleed|block-made|bleed-total|play)$/.test(t)) u.ev152.push({ t: t.slice(4), m, at: Date.now() }); };
+          return u; };
+        const A = mk('Hanna', 1, 'tremere'), V = mk('Viktor', 2, 'ventrue'), N = mk('Nora', 3, 'nosferatu'), all = [A, V, N];
+        for(const from of all) from.ws = { send: obj => {
+          if(!obj || !(obj.t === 'log' || obj.t === 'chat' || obj.t === 'say')) return;
+          const d = obj.t === 'say' ? { t: 'say', i: obj.i, who: from.o.name } : Object.assign({}, obj, { who: from.o.name });
+          from.lines.push(obj.t === 'say' ? SAY[obj.i] : (obj.t === 'log' ? strip152(obj.html) : obj.msg));
+          for(const to of all) if(to !== from) setTimeout(() => { if(!to.out) to._dispatch(d); }, 10); } };
+        A.board = [{ id: 'a2', name: 'Lloyd Brooks', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 6, attached: [] }]; A.hand = []; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
+        V.board = [{ id: 'v1', name: 'Alice Chen (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 1, cap: 7, attached: [] }]; V.hand = vHand.slice(); V.pool = 20; V.turnSeat = 1;   // blood 1: the block costs it too much
+        N.board = [{ id: 'n1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] }]; N.hand = []; N.pool = nPool; N.turnSeat = 1;
+        const pubOf = u => ({ pool: u.pool, cards: u.board.map(c => ({ id: c.id, kind: c.kind, name: c.name, zone: c.zone, blood: c.blood, locked: c.locked })) });
+        for(const u of all){ u.table = {}; for(const o of all) if(o !== u) u.table[o.seat] = { pub: pubOf(o), seen: new Set(), seeded: true }; }
+        let terr = null;
+        await Promise.race([A._playTurn().catch(e => { terr = e.message; }), sleep(20000)]);
+        await sleep(700);
+        const r = { terr, A: A.ev152, V: V.ev152, N: N.ev152, nOut: !!N.out, nPool: N.pool, lines: A.lines };
+        all.forEach(u => { u.out = true; if(u._sqT){ clearTimeout(u._sqT); u._sqT = null; } u._sq = []; if(u.pending && u.pending.passTimer) clearTimeout(u.pending.passTimer); });
+        return r; };
+      // a) Viktor bounces the total to Nora, who is at 1 pool and blocks at once: the block is taken up -- the bleed does not land on her
+      const ra = await turn152(['Deflection', 'Deflection', 'Deflection'], 1);
+      const aBl = ra.A.find(e => e.t === 'blocked'), aTh = ra.A.find(e => e.t === 'through' && e.m && e.m.vamp === 'Lloyd Brooks'), nBm = ra.N.find(e => e.t === 'block-made'), nTook = ra.N.find(e => e.t === 'took-bleed');
+      ok(!ra.terr && !!ra.V.find(e => e.t === 'play' && e.m && e.m.card === 'Deflection') && !!nBm && !!aBl && aBl.m.by === 'Ryan (G6)' && !aTh && !nTook && !ra.nOut,
+         '152a Viktor bounces the bleed total to Nora, Ryan blocks at once: Lloyd\'s window takes the attempt up -- blocked by Ryan, Nora keeps her last pool (got ' + JSON.stringify({ blocked: aBl && aBl.m.by, through: !!aTh, noraTook: !!nTook, noraOut: ra.nOut }) + ')');
+      // b) Viktor holds nothing: its Pass on the total answers the window -- the bleed resolves at once, not when the 2 s clock runs out
+      const rb = await turn152([], 20);
+      const bt = rb.A.find(e => e.t === 'bleed-total'), bth = rb.A.find(e => e.t === 'through' && e.m && e.m.vamp === 'Lloyd Brooks');
+      const gap = bt && bth ? bth.at - bt.at : null;
+      ok(!rb.terr && !!bt && !!bth && gap !== null && gap < 1200 && !!rb.V.find(e => e.t === 'took-bleed'),
+         '152b Viktor passes on the bleed total: its Pass answers the window -- the bleed resolves ' + gap + ' ms after the total (the clock is 2 s)');
     }
 
 

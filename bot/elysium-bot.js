@@ -793,7 +793,7 @@ class Bot {
      RATE_N (80 msgs / 10 s) — and a disconnected bot is a dead seat. send()
      therefore drains through a rolling-window queue that stays safely under
      the limit at any paceMs (burst turns at paceMs 0 hit ~20 msg/s raw).   */
-  send(obj){ if(obj && this.started && (obj.t === 'log' || obj.t === 'chat')) this._evRecord(this.o.name, obj.t === 'log' ? stripTags(obj.html || '') : String(obj.msg || ''), obj.t, true); this._sq.push(obj); this._drain(); }   // v0.6.176: my own lines enter the event log too -- both sides of every exchange in one place
+  send(obj){ if(obj && this.started && (obj.t === 'log' || obj.t === 'chat')) this._evRecord(this.o.name, obj.t === 'log' ? stripTags(obj.html || '') : String(obj.msg || ''), obj.t, true); if(obj && obj.t === 'log' && !this._noting) this._openLine = obj; this._sq.push(obj); this._drain(); }   // v0.6.206: _openLine = my last action line (a note is an explanation, never what a window opens on) -- _askSeen anchors on it   // v0.6.176: my own lines enter the event log too -- both sides of every exchange in one place
   _drain(){
     if(this._sqT || !this._sq.length) return;
     const later = ms => { this._sqT = setTimeout(() => { this._sqT = null; this._drain(); }, ms); };
@@ -907,7 +907,8 @@ class Bot {
     const S = '\u0001';
     let out = String(msg).replace(/^Trainbot:\s*/, '');
     out = out.replace(/Trainbot combat/g, S).replace(/Trainbot/g, this.o.name + ' (bot)').replace(new RegExp(S, 'g'), this.o.name + ' combat');
-    this.send({ t: 'log', html: esc(out.slice(0, 300)) }); if(this._wdT) this._watchdogArm();
+    this._noting = true; try{ this.send({ t: 'log', html: esc(out.slice(0, 300)) }); } finally { this._noting = false; }   // v0.6.206: a note is never a window's opening line (_openLine)
+    if(this._wdT) this._watchdogArm();
   }
 
   /* Pacing GATE (v0.4.5, Johan: 2s between every visible bot command in a
@@ -8525,8 +8526,18 @@ class Bot {
      line is still in my send queue answers something else -- an earlier window. My queue can hold a turn's lines for a second (the token
      bucket); a Pass from my prey's window for a line that was no action (a fetch's note read as an equip) landed in that gap and declined my
      bleed's Block? before my prey had seen the bleed; its real answers then fell one window late, and its bounce came after the bleed had
-     resolved. `announced` flips when everything I queued before the question is on the wire (at once without a socket: the fixtures). */
-  _askSeen(a){ a.announced = false; this._afterWire(() => { a.announced = true; }); }
+     resolved. `announced` flips when the line that OPENS the window is on the wire: the last action line I queued (`_openLine` -- the
+     announce, a modifier's add line, the bleed total), never a note. Not 'everything I queued before the question': the first cut waited for
+     that, and a modifier's add line is followed by my board push -- my prey answered the add line while the board was still queued, the Pass
+     was taken for stale and the window ran out its clock (17 times in the release's own smoke), and once a bounce's new target's Block! was
+     dropped the same way and the bleed landed on it. Without a socket (the fixtures) `announced` is true at once. */
+  _askSeen(a){
+    const m = this._openLine;
+    if(!m || !this.ws || this._sq.indexOf(m) < 0){ a.announced = true; return; }
+    a.announced = false;
+    const cbs = this._wireCbs || (this._wireCbs = new WeakMap()), l = cbs.get(m), f = () => { a.announced = true; };
+    if(l) l.push(f); else cbs.set(m, [f]);
+  }
   _staleAnswer(a, who, phrase, via){
     if(!a || a.announced !== false) return false;
     const sp = (this.players || []).find(q => q && q.name === who); if(!(sp && sp.bot)) return false;   // a human may answer what the fx clone showed; only a bot's answer is provably early
@@ -9344,8 +9355,7 @@ class Bot {
             if(!d.play) break;
             await pace();
             if(!this._playBleedModifier(v, mod)) break;   // card/vampire shifted under the await -- stop rather than loop forever
-            pumped++;
-            await sleep(150);
+            pumped++;   // v0.6.206: the window opens WITH its line, no beat between -- an answer to the add line found no ask open in that gap (see the bleed total below)
             curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +' + mod.n + ' bleed \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });   // v0.6.114 (Johan's rule): blocks were finally declined before the modifier -- this window takes REACTIONS only (reduce/bounce); a Block! is refused, not contested   // steg 5 (16 July, rulebook-verified): a modifier NEVER reopens blocks ("Detailed course of an action", C: only a target change does) -- so the prompt invites REACTIONS (Deflection/Pass), not a block. Sandbox tolerance below is deliberate: if a human insists on a late block anyway, the table is the referee (house rule, agreed take-back) -- the bot follows the rules itself but never enforces them on others.
             await sleep(150);
             if(curAns.what === 'block') break;   // a late block ends the window outright -- combat, not more offers (sandbox: the table allowed it, so honour it)
@@ -9358,7 +9368,10 @@ class Bot {
           if(this.o.lateBounce !== 0 && (tgtBot || humanWantsTotal) && !pumped && curAns.what !== 'block' && !this._actingVamp.bounced && (this._actingVamp.n | 0) >= 1 && this._actingVamp.target){
             this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> adds +0 bleed (= ' + this._actingVamp.n + ').' });
             this._emit('bleed-total', { vamp: v.name, n: this._actingVamp.n, pumped: 0 });
-            await sleep(150);
+            /* v0.6.206 (found by the release's own smoke): no beat between the line and its window. A 150 ms sleep sat here and after a
+               modifier's add line; a bot answers that line in ~50 ms, so a Pass, a bounce's new target's Block! landed with no ask open and
+               were lost -- the window then ran out its clock (about one modifier window in four in R4's smokes), and a block attempt was
+               never taken up: the bleed landed on the blocker (a desperate Nosferatu ousted by a bleed it had blocked, section 152). */
             curAns = await this._askBlock('Trainbot: ' + v.name + ' \u2014 bleed total ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + ', no more modifiers. Any reaction before it resolves?', { reactionsOnly: true });
             await sleep(150);
           }

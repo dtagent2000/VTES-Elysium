@@ -8,7 +8,10 @@
    out-number my prey's unlocked bodies) -- against real bots: the prey decides its blocks, bounces and clogs with its own
    logic, a third seat takes what is bounced. Same seed, same table in every arm: the only difference is the knob.
    Usage (from bot/): node lab-probe.js [N=120] [SEED=1] [ARMS=0,1,2] > lab.jsonl ; then python3 ana-lab.py lab.jsonl
-   Each line: { i, arm, fired, reserved, outnumber, holds, acts: [{vamp, card, n, final, end}], preyLoss, thirdLoss, heavy }   */
+   Several processes with different SEEDs give different tables (ana-lab.py keys a table on seed + i). Arm 2 is arm 1 where my actors
+   out-number my prey's unlocked bodies and arm 0 where they do not (the lab is deterministic per table), so ana-lab.py derives it when
+   a file carries arms 0 and 1 only, and checks the derivation where arm 2 was run.
+   Each line: { i, seed, arm, fired, reserved, outnumber, holds, acts: [{vamp, card, n, final, end}], preyLoss, thirdLoss, heavy }   */
 const path = require('path');
 const { Bot, SAY } = require(path.join(__dirname, 'elysium-bot.js'));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -81,7 +84,7 @@ async function playArm(tb, arm){
 (async () => {
   for(let i = 1; i <= N; i++){
     const tb = buildTable(i);
-    for(const arm of ARMS){ const r = await playArm(tb, arm); r.i = i; process.stdout.write(JSON.stringify(r) + '\n'); }
+    for(const arm of ARMS){ const r = await playArm(tb, arm); r.i = i; r.seed = SEED; process.stdout.write(JSON.stringify(r) + '\n'); }
   }
   process.exit(0);
 })();
