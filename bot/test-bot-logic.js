@@ -8262,10 +8262,10 @@ async function connectWithRetry(client, tries = 30){
     u.chat = m => { u.chats.push(m); if(m === 'What is your strike?') setTimeout(() => u._onLog('Johan', 'Lisa strikes: combat ends.'), 5); else if(/\?$/.test(m)) setTimeout(() => u._onChat('Johan', 'No'), 5); };
     await u._resolveCombat(v, 'Lisa');
     ok(!u.sentAll.some(m => m.t === 'log' && /Sully<\/b> strikes/.test(m.html || '')) && u.hand.includes('Roundhouse'), '127n bug B: the human acted and ended combat first -- the bot does not strike at all (Roundhouse stays in hand)'); }
-  { const { u, v } = mkP('N3', 'nosferatu', true); u.hand = ['Roundhouse']; u.sentAll = []; u.send = m => u.sentAll.push(m);
+  { const { u, v } = mkP('N3', 'nosferatu', true); u.hand = ['Roundhouse']; u.sentAll = []; u.send = m => u.sentAll.push(m); u.notes = []; u.note = m => u.notes.push(m);
     u._awaitOppStrike = () => Promise.resolve({ vamp: 'Lisa', dodge: true, dealt: 0 });
     await u._resolveCombat(v, 'Lisa');
-    ok(u.chats.some(c => /dodged, 0 dealt;/.test(c)) && u.sentAll.some(m => m.t === 'tally' && m.a === 0), '127n their dodge: my Roundhouse reaches nothing -- the narration says dodged and my side of the counter is 0'); }
+    ok(u.chats.concat(u.notes).some(c => /dodged, 0 dealt;/.test(c)) && u.sentAll.some(m => m.t === 'tally' && m.a === 0), '127n their dodge: my Roundhouse reaches nothing -- the narration says dodged and my side of the counter is 0'); }
   { const { u, v } = mkP('N4', 'malkavian', false); v.blood = 4;
     u._awaitOppStrike = () => Promise.resolve({ vamp: 'Lisa', dodge: false, aggr: 2, dealt: 0 });
     await u._resolveCombat(v, 'Lisa');
@@ -8433,8 +8433,8 @@ async function connectWithRetry(client, tries = 30){
     u._opp(1).clans = { Ventrue: 5 };
     ['Kine Resources Contested', 'Parity Shift', 'Voter Captivation', 'Govern the Unaligned', 'Deflection', 'Second Tradition: Domain', 'Freak Drive', 'Villein'].forEach(c => u._onLog('Johan', 'Lisa plays ' + c + '.'));
     const a = u._archetype(1); ok(a && a.best === 'Lawfirm' && a.tier === 'confident' && a.coverage >= 0.85, '127z a Ventrue seat showing the Lawfirm kit reads as Lawfirm, CONFIDENT: ' + JSON.stringify(a));
-    u._archetypeSay(1); u._archetypeSay(1);
-    ok(u.chats.length === 1 && /I read Johan's deck as Lawfirm/.test(u.chats[0]) && u.rows.filter(r => r.ty === 'archetype').length === 1, '127z ...said ONCE at the table and traced once: ' + JSON.stringify(u.chats));
+    u.notes = []; u.note = m => u.notes.push(m); u._archetypeSay(1); u._archetypeSay(1);
+    ok(u.notes.length === 1 && /^Trainbot reads Johan's deck as Lawfirm/.test(u.notes[0]) && !u.chats.length && u.rows.filter(r => r.ty === 'archetype').length === 1, '127z ...said ONCE at the table (v0.6.204: by the spokesbot, on the log tier) and traced once: ' + JSON.stringify(u.notes));
     u = mkA(); u._opp(1).clans = { Gangrel: 4 };
     ['Blood Doll', 'Deep Song', 'Carrion Crows', "Bum's Rush", "Wake with Evening's Freshness", 'On the Qui Vive', 'Dodge', 'Immortal Grapple'].forEach(c => u._onLog('Johan', 'Lisa plays ' + c + '.'));
     const b = u._archetype(1); u._archetypeSay(1);
@@ -8555,7 +8555,7 @@ async function connectWithRetry(client, tries = 30){
       ok(u.sent.some(m => m.t === 'tally' && m.ph === 5), '128e ...and ph 5 is written after the button (the human’s client writes its taken line)');
       u.players[0].bot = true; ok(u._waitPlan('phase', 'Johan').mode === 'bots', '128e a bot opponent: no tempo'); u.players[0].bot = false; }
     { const { u } = mkT({ tempo: { tempo: 'turn' }, tempoGiveUpMs: 8000 }); u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b';
-      const t0 = Date.now(); const p = u._phaseStep(0, 'ask', false); await sleep(50); u._dispatch({ t: 'botcfg', who: 'Johan', tempo: 'standard', waitSecs: 1 });
+      const t0 = Date.now(); const p = u._phaseStep(1, 'ask', false); await sleep(50); u._dispatch({ t: 'botcfg', who: 'Johan', tempo: 'standard', waitSecs: 1 });   // v0.6.204: the maneuver step (2 x); 'Anything before range?' is 1 x now (lever d, 145b)
       const r = await p; const dt = Date.now() - t0; ok(r === 'clock' && dt >= 1900 && dt < 3500, '128e botcfg MID-COMBAT: the open step follows the new tempo at once (turn -> standard 1 s: ' + dt + ' ms)'); }
     { const { u } = mkT({ tempo: { tempo: 'standard', waitSecs: 8 } }); const t0 = Date.now(); const p = u._askBlock('Q?'); await sleep(50);
       u._dispatch({ t: 'botcfg', who: 'Johan', waitSecs: 1 }); const r = await p; ok(r.what === 'no' && Date.now() - t0 < 2500, '128e botcfg mid-window: the 8 s block window closes on the new 1 s (' + (Date.now() - t0) + ' ms)'); }
@@ -8598,8 +8598,9 @@ async function connectWithRetry(client, tries = 30){
       ok(dt < 4000 && u.chats.includes('Any presses?') && u.chats.includes('Anything before ending combat?'), '128i a whole round vs a human who answers at once: ' + dt + ' ms under Standard 1 s with askSecs 3 (v0.6.194 took ~7.7 s: "No" to Any presses? still waited askSecs for a press line)'); }
     { const { u, v } = mkC({ tempo: 'standard', waitSecs: 1 }, (m) => /\?$/.test(m) ? { say: 'No' } : null); u.o.phaseSecs = 1;
       let tq = 0, ts = 0; const c0 = u.chat; u.chat = m => { if(m === 'What is your strike?') tq = Date.now(); if(/^Trainbot combat/.test(m) && !ts) ts = Date.now(); c0(m); };
+      const n0 = u.note; u.note = m => { if(/^Trainbot combat/.test(m) && !ts) ts = Date.now(); n0(m); };   // v0.6.204 (lever c): a phased combat's summary is a note
       await u._resolveCombat(v, 'Lisa');
-      ok(ts && ts - tq < 900 && u.chats.some(c => /Sully takes 1/.test(c)), '128i "No" to What is your strike?: the default hand strike follows within the grace (' + (ts - tq) + ' ms), not another askSecs'); }
+      ok(ts && ts - tq < 900 && u.chats.concat(u.notes).some(c => /Sully takes 1/.test(c)), '128i "No" to What is your strike?: the default hand strike follows within the grace (' + (ts - tq) + ' ms), not another askSecs'); }
     { const { u } = mkC({ tempo: 'standard', waitSecs: 1 }, () => null); u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b';
       u._phaseLast = { step: 5, res: 'pass' }; const a = u._lineGraceMs(3000, 'press'); u._phaseLast = { step: 5, res: 'clock' }; const b = u._lineGraceMs(3000, 'press'); const c = u._lineGraceMs(3000, 'taken');
       ok(a === 300 && b === 1000 && c === 1500, '128i the grace: 0.3 s after No / the button / a skip, 1 s after a clock or a ph step, 1.5 s for the taken line their client writes (' + [a, b, c].join(' / ') + ')');
@@ -9104,13 +9105,13 @@ async function connectWithRetry(client, tries = 30){
 
       // g) point 19: stolen blood over capacity drains (rules-correct) -- the round line now says so
       { const u = mk139('Q9', 2, [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Q9', bot: true }], { deckName: 'tremere', askSecs: 0.05, phaseSecs: 0.08 });
-        u.caps.tally = true; u.note = () => {}; u._emit = () => {};
+        u.caps.tally = true; u.notes = []; u.note = m => u.notes.push(m); u._emit = () => {};
         u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
         const v = { id: 'v1', name: 'Trevon Parker (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 6 }; u.board = [v]; u.hand = ['Theft of Vitae'];
         u._actingVamp = { v, n: 1, played: new Set() };
         u._awaitOppStrike = () => Promise.resolve({ vamp: 'Lisa', dodge: false, dealt: 0 });
         await u._resolveCombat(v, 'Lisa');
-        const line = u.chats.find(c => /strikes with Theft of Vitae for 0/.test(c)) || '';
+        const line = u.chats.concat(u.notes).find(c => /strikes with Theft of Vitae for 0/.test(c)) || '';   // v0.6.204 (lever c): the note tier in a phased combat
         ok(/steals 2 blood; 1 drains off at capacity 6\)/.test(line) && v.blood === 6, '139g point 19: the steal is rules-correct (before mending; over capacity drains) and now SAYS what drained: ' + JSON.stringify(line.slice(0, 160))); u._actingVamp = null; }
 
       // h) point 22 and Johan's report: a card is dead only when NO vampire of mine can use it -- ready, in torpor or not yet out
@@ -9464,7 +9465,7 @@ async function connectWithRetry(client, tries = 30){
         u._tempoSet({ tempo: 'turn', waitSecs: 3 }, true);
         const v = DV(); u.board = [v]; u.hand = []; u.table = { 1: { pub: { cards: [{ kind: 'crypt', name: 'Lisa', zone: 'ready', blood: 3 }] } } };
         u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = v;
-        const strikes = () => u.sent.filter(m => m.t === 'log' && /strikes/.test(strip141(m.html)) && /Wauneka/.test(strip141(m.html))).length;
+        const strikes = () => u.sent.filter(m => m.t === 'log' && /strikes/.test(strip141(m.html)) && /Wauneka/.test(strip141(m.html)) && !/ combat — /.test(strip141(m.html))).length;   // v0.6.204 (lever c): the round summary is a log line too -- not a strike
         let fin = false; const pr = u._resolveCombatRound(v).then(() => { fin = true; });
         for(let i = 0; i < 100 && !(u._phaseWait && u._phaseWait.step === 3); i++){ if(u._phaseWait) u._onChat('Claude', 'No'); await sleep(20); }
         const atStrike = !!(u._phaseWait && u._phaseWait.step === 3);
@@ -9859,6 +9860,228 @@ async function connectWithRetry(client, tries = 30){
         w._oppCarrionCrows = null; const reset = w._oppCarrionCrows;
         ok(both === 2 && again === 2 && reset === null, '144e a borne Murder of Crows and a played Carrion Crows both peck me each round: 2 (v0.6.202 kept the last announce: 1); a repeated announce replaces its own source, and a new combat starts clean (got ' + JSON.stringify([both, again, reset]) + ')');
         w._inCombat = false; }
+    }
+
+    /* 145) v0.6.204 -- R3 proper of the play-test review (docs/reviews/REVIEW-playtest-2026-10-14.md): a wait's clock starts when its
+       question is ON THE WIRE (F3 / F11); the hold lines go first and a stale one is dropped (F4); the verdict wait when I block a
+       human's action (F10); one spokesbot for the table remarks (F2); a bot target's thinking after a bot actor's question (F6);
+       the tempo levers (a)-(d) of F12 / F13. */
+    {
+      console.log('\n[145] v0.6.204 -- R3: clocks from the wire, the hold lines, the verdict wait, one spokesbot, the tempo levers');
+      const IF = (o, fn) => !!(o && typeof o[fn] === 'function');   // the pre-change bytes lack the new methods: they must fail clean, never abort
+      const until145 = async (pred, ms) => { const t0 = Date.now(); while(!pred() && Date.now() - t0 < (ms || 4000)) await sleep(15); return pred(); };
+      // a recorded wire: a human Johan at seat 1, the bot W at seat 2; paceMs 300 = a chat holds the next line 480 ms
+      const mkW = async (extra) => {
+        const rec = []; const dial = (u2, cb) => { setTimeout(() => cb.open(), 0); return { send: o => rec.push({ t: Date.now(), m: o }), close(){} }; };
+        const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'w145', pass: 'p', name: 'W', persona: 'expert', deckName: 'malkavian', paceMs: 300, askSecs: 1, transport: dial, log: () => {} }, extra || {}));
+        await u.connect(); await sleep(150);
+        u.seat = 2; u.started = true; u.caps.tally = true;
+        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'W', bot: true }];
+        u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
+        const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
+        await sleep(600); rec.length = 0;
+        return { u, v, rec }; };
+      const sentAt = (rec, re) => { const r = rec.find(x => x.m && x.m.t === 'chat' && re.test(String(x.m.msg || ''))); return r ? r.t : null; };
+      const chatsOf = rec => rec.filter(x => x.m && x.m.t === 'chat').map(x => String(x.m.msg || ''));
+      // a) F3 / F11: the block window
+      { const { u, rec } = await mkW({ tempo: { tempo: 'standard', waitSecs: 1 } });
+        u._actingVamp = { v: u.board[0], n: 1, played: new Set(), target: 1, kind: 'bleed' };
+        u.chat('First, a word.'); u.chat('And another.');
+        const p = u._askBlock('Trainbot: Sully bleeds Johan for 1.');
+        const d0 = u._ask ? u._ask.deadline : 'no ask', s0 = u.status();
+        await until145(() => sentAt(rec, /bleeds Johan for 1/) != null, 3000); await sleep(30);
+        const at = sentAt(rec, /bleeds Johan for 1/), a = u._ask, dl = a && a.deadline, pl = (a && a.plan) || {};
+        const q = chatsOf(rec).find(m => /bleeds Johan for 1/.test(m)) || '';
+        const tail = +((q.match(/\((\d+)s → no\)$/) || [])[1] || NaN);
+        ok(IF(u, '_wireWait') && d0 == null && s0.until === null && s0.step === 'resolve-ask', '145a F3: while my question waits in the queue the window has no deadline -- status() says until: null (an answer still counts): ' + JSON.stringify({ d0, until: s0.until }));
+        ok(at && dl && Math.abs((dl - at) - pl.ms) <= 50 && pl.ms === 1000, '145a ...and its clock starts when the question is on the wire: deadline - sentAt = ' + (dl && at ? dl - at : '?') + ' ms, the plan ' + pl.ms + ' ms (v0.6.203 armed it at the queue and added a settle)');
+        ok(tail === pl.ms / 1000, '145a F11: the number the question announces IS the clock ("' + q + '")');
+        u._onChat('Johan', 'no'); const r = await p; ok(r.what === 'no', '145a ...and the answer closes it as before');
+        u.close(); }
+      // b) F3: a combat step behind a bubble; lever (d)
+      { const { u, rec } = await mkW({ tempo: { tempo: 'standard', waitSecs: 1 } });
+        u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b';
+        u.chat('A round summary ahead of it.');
+        const p1 = u._phaseStep(1, 'ask', false); await until145(() => !!u._phaseWait, 300); const d0 = u._phaseWait ? u._phaseWait.deadline : 'no wait';   // _phaseStep is async (its hold gate first): the wait exists a tick later, its question still behind the bubble
+        await until145(() => sentAt(rec, /^Any maneuvers\?/) != null, 3000); await sleep(30);
+        const s1 = sentAt(rec, /^Any maneuvers\?/), dl1 = u._phaseWait && u._phaseWait.deadline;
+        ok(d0 == null && s1 && dl1 && Math.abs((dl1 - s1) - 2000) <= 50, '145b F3: a combat step behind a bubble -- no deadline while queued, then 2 x the slider from the wire (deadline - sentAt = ' + (dl1 && s1 ? dl1 - s1 : '?') + ' ms; the play-test: a 6 s step reached the wire with 1.5 s left)');
+        u._onChat('Johan', 'No'); await p1;
+        const p2 = u._phaseStep(2, 'ask', false);
+        await until145(() => sentAt(rec, /^Anything before strikes\?/) != null, 3000); await sleep(30);
+        const s2 = sentAt(rec, /^Anything before strikes\?/), dl2 = u._phaseWait && u._phaseWait.deadline;
+        ok(s2 && dl2 && Math.abs((dl2 - s2) - 1000) <= 50 && u._waitPlan('phase', 'Johan', 1).ms === 2000 && u._waitPlan('phase', 'Johan', 3).ms === 2000 && u._waitPlan('phase', 'Johan', 5).ms === 2000 && u._waitPlan('phase', 'Johan', 0).ms === 1000 && u._waitPlan('phase', 'Johan', 6).ms === 1000,
+           '145b lever (d): an "Anything before ..." step waits 1 x the slider (' + (dl2 && s2 ? dl2 - s2 : '?') + ' ms from the wire); the maneuver, the strike and the presses keep 2 x');
+        u._onChat('Johan', 'No'); await p2;
+        u.close(); }
+      // c) F3: the pool question and the vote poll
+      { const { u, rec } = await mkW({ tempo: { tempo: 'standard', waitSecs: 1 } });
+        u.chat('A bubble ahead.');
+        u._obs = { who: 'Johan', seat: 1, vamp: 'Lisa', verb: 'takes a card action', card: null, line: 'Lisa takes a card action.', at: Date.now(), poolLoss: null, targetSeat: 2, directed: true };
+        u._onAnyBlocks('Johan', 'Any blocks?'); const q0 = u._pq ? u._pq.deadline : 'no question';
+        await until145(() => sentAt(rec, /lose pool\?/) != null, 3000); await sleep(30);
+        const sq = sentAt(rec, /lose pool\?/), dq = u._pq && u._pq.deadline;
+        ok(!q0 && sq && dq && Math.abs((dq - sq) - 1000) <= 50, '145c F3: the pool question’s clock starts on the wire too (' + (dq && sq ? dq - sq : '?') + ' ms)');
+        u._onChat('Johan', 'no');
+        u.chat('Another bubble.'); u.chat('I vote 1 for.');
+        const rc = u._refCall = { for: 0, against: 0, by: {}, heard: new Set(), paused: new Set(), lastA: 0, lastB: 0, closed: null, timer: null, line: null };
+        const pr = u._refPoll(rc); const r0 = rc.deadline;
+        await until145(() => sentAt(rec, /^I vote 1 for\./) != null, 3000); await sleep(30);
+        const sv = sentAt(rec, /^I vote 1 for\./);
+        ok(!r0 && sv && rc.deadline && Math.abs((rc.deadline - sv) - 1000) <= 50, '145c ...and my vote poll’s from the wire of my vote line (' + (rc.deadline && sv ? rc.deadline - sv : '?') + ' ms)');
+        rc.done('test'); await pr; u._refCall = null;
+        u.close(); }
+      // d) F3: an answer before the question reached the wire
+      { const { u, rec } = await mkW({ tempo: { tempo: 'standard', waitSecs: 1 } });
+        u._actingVamp = { v: u.board[0], n: 1, played: new Set(), target: 1, kind: 'bleed' };
+        u.chat('One.'); u.chat('Two.'); u.chat('Three.');
+        const p = u._askBlock('Trainbot: Sully bleeds Johan for 1.');
+        u._onChat('Johan', 'no');
+        const r = await p;
+        await until145(() => sentAt(rec, /bleeds Johan for 1/) != null, 4000); await sleep(150);
+        ok(r.what === 'no' && !u._ask && !rec.some(x => x.m && x.m.t === 'decide'), '145d an answer that came before my question reached the wire still closes the window, and no clock or stopwatch arms after it');
+        ok(!(u._rt && u._rt['Johan'] && u._rt['Johan'].length), '145d ...and Adaptive records no answer time for it (the question was not on the table yet): ' + JSON.stringify(u._rt || {}));
+        u.close(); }
+      // e) F4: the hold lines
+      { const { u, rec } = await mkW();
+        const tag = m => /Resuming/.test(m) ? 'RESUME' : /Holding/.test(m) ? 'HOLD' : m;
+        u.chat('c1'); u.chat('c2'); u.chat('c3');
+        u._holdBy = new Set(['Johan']); u._holdAnnounce();
+        await until145(() => chatsOf(rec).length >= 4, 4000);
+        const o1 = chatsOf(rec).map(tag);
+        ok(o1[0] === 'c1' && o1[1] === 'HOLD', '145e F4: the hold line goes to the head of the queue -- said before the lines that were waiting (' + o1.join(', ') + '; the play-test: 14 s late, behind a question)');
+        u._holdHook('Johan', 4, null);                                   // released the table's way: the resume line follows, and the table has seen both
+        await until145(() => chatsOf(rec).some(m => /Resuming/.test(m)), 3000); await sleep(700); rec.length = 0;
+        u.chat('d1'); u.chat('d2');
+        u._holdBy = new Set(['Johan']); u._holdAnnounce();
+        u._holdHook('Johan', 4, null);                                   // It resolves: released before the hold line went out
+        await until145(() => chatsOf(rec).length >= 2, 3000); await sleep(1200);
+        const o2 = chatsOf(rec).map(tag);
+        ok(o2.length === 2 && o2[0] === 'd1' && o2[1] === 'd2', '145e ...a hold released before its line went out: neither the hold nor the resume is said (' + o2.join(', ') + ')');
+        await sleep(300); rec.length = 0;
+        u._holdBy = new Set(['Johan']); u._holdAnnounced = false; u._holdAnnounce();
+        await until145(() => chatsOf(rec).some(m => /Holding/.test(m)), 2000);
+        u._holdHook('Johan', 4, null);                                   // released: the resume waits out the hold line's bubble
+        u._holdHook('Johan', 0, null); u._holdAnnounce();                // held again before it went out (a bot that waits says the new hold)
+        await sleep(1500);
+        const o3 = chatsOf(rec).map(tag);
+        ok(o3.length === 2 && o3[0] === 'HOLD' && o3[1] === 'HOLD', '145e ...a resume overtaken by a new hold is dropped -- never a "Resuming" during a hold (' + o3.join(', ') + '; the play-test: the release’s Resuming came after the next hold)');
+        u._holdBy = new Set(); if(u._holdRemT){ clearTimeout(u._holdRemT); u._holdRemT = null; }
+        u.close(); }
+      // f) F10: the verdict wait when I block a human's action
+      { const mkV = (extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Tor', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {}, tempo: { tempo: 'standard', waitSecs: 1 } }, extra || {}));
+          u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m); u.says = []; u.say = m => u.says.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.notes = []; u.note = m => u.notes.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
+          u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Tor', bot: true }];
+          const v = { id: 'v1', name: 'Trevon Parker', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 6 }; u.board = [v]; u.hand = [];
+          u.tally = { mode: 'block', a: 0, b: 0 };
+          u.fought = null; u._resolveCombat = (bv, opp) => { u.fought = [bv.name, opp]; return Promise.resolve(); }; u._maybePostBlockUnlock = () => {};
+          u.reopened = 0; u._reactWindow = () => { u.reopened++; };
+          const p = u.pending = { who: 'Johan', amount: 2, kind: 'bleed', actingVampName: 'Lisa', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+          return { u, v, p }; };
+        const verdicts = u => u.sent.filter(m => m.t === 'log' && /^Block: Stealth/.test(m.html || '')).map(m => m.html);
+        { const { u, v, p } = mkV(); await u._commitBlock(p, { why: 'test', parts: {} });
+          const c = u.chats.find(m => /blocks \(stealth/.test(m)) || '', st = u.status();
+          ok(/^Trainbot: Trevon Parker blocks \(stealth 0 vs intercept 0\) — Johan, add stealth, or say Pass to resolve it \(1s → the block succeeds\)$/.test(c) && st.step === 'resolve-verdict' && st.until > Date.now(),
+             '145f F10: I block a human’s bleed with no card -- one line says it is their move, on the tempo’s clock, steppable ("' + c + '"; v0.6.203: "attempts to block." and silence)');
+          await sleep(1150);
+          ok(verdicts(u).length === 1 && /block succeeds/.test(verdicts(u)[0]) && !u.pending && u.fought && u.fought[0] === 'Trevon Parker' && u.fought[1] === 'Lisa' && v.locked === true,
+             '145f ...on the clock I declare the verdict from the counter (the §12 line) and fight, as when the table resolves it: ' + JSON.stringify(verdicts(u)));
+          const w = u.rows.find(r => r.ty === 'wait' && r.d.kind === 'verdict'); ok(!!w && w.d.end === 'clock' && w.d.who === 'Johan', '145f ...one wait row, kind verdict: ' + JSON.stringify(w && w.d)); }
+        { const { u, p } = mkV(); await u._commitBlock(p, { why: 'test', parts: {} });
+          u._onSay({ who: 'Johan', i: 7 });
+          ok(verdicts(u).length === 1 && !!u.fought && u.rows.some(r => r.ty === 'wait' && r.d.kind === 'verdict' && r.d.end === 'pass'), '145f ...the actor’s Pass is an answer: the verdict at once (v0.6.203 did not read it)'); }
+        { const { u, p } = mkV(); await u._commitBlock(p, { why: 'test', parts: {} });
+          await sleep(600); const d1 = u._vWait ? u._vWait.deadline : 0;
+          u._dispatch({ t: 'tally', who: 'Johan', mode: 'block', a: 1, b: 0 });
+          const d2 = u._vWait ? u._vWait.deadline : 0;
+          await sleep(1200);
+          ok(d2 > d1 + 400 && verdicts(u).length === 1 && /Stealth 1 vs Intercept 0 — block fails/.test(verdicts(u)[0]) && u.reopened === 1 && p.contested === false && !u.fought,
+             '145f ...the actor’s stealth restarts the clock, and a failed verdict reopens my window as the table’s own line does (' + JSON.stringify(verdicts(u)) + ')'); }
+        { const { u } = mkV({ tempo: { tempo: 'turn' }, tempoRemindMs: 150, tempoGiveUpMs: 5000 }); await u._commitBlock(u.pending, { why: 'test', parts: {} });
+          const st = u.status(), c = u.chats.find(m => /blocks \(stealth/.test(m)) || '';
+          ok(st.step === 'resolve-verdict' && st.until === null && /no clock — I wait for you\)$/.test(c), '145f Turn-based: no deadline (the widget shows its button), and the line says so: "' + c + '"');
+          await sleep(260); ok(u.chats.some(m => /^Still waiting for Johan: add stealth, or say Pass/.test(m)), '145f ...the reminder names the move');
+          const s = u.step(); ok(s.did === 'resolve-verdict' && verdicts(u).length === 1 && !!u.fought, '145f ...and the Bot button declares the verdict the clock would have'); }
+        { const { u } = mkV(); await u._commitBlock(u.pending, { why: 'test', parts: {} });
+          u._holdHook('Johan', 0, null);
+          const fz = u._vWait ? u._vWait.deadline : 'gone';
+          await sleep(1200);
+          const still = !!u._vWait && !verdicts(u).length;
+          u._holdHook('Johan', 4, null);
+          const re = u._vWait ? u._vWait.deadline : 0;
+          ok(fz === null && still && re > Date.now() + 800, '145f a hold freezes the verdict wait and the release starts it from the beginning (the hold gate)');
+          if(IF(u, '_vwEnd')) u._vwEnd(null); if(u._holdRemT){ clearTimeout(u._holdRemT); u._holdRemT = null; } }
+        { const { u } = mkV(); u.players[0].bot = true; await u._commitBlock(u.pending, { why: 'test', parts: {} });
+          ok(!u._vWait && !u.chats.some(m => /blocks \(stealth/.test(m)), '145f a BOT actor declares every verdict itself: no wait, no line'); }
+        { const { u, p } = mkV(); await u._commitBlock(p, { why: 'test', parts: {} });
+          await sleep(600); const d1 = u._vWait ? u._vWait.deadline : 0;
+          u._onChat('Johan', '+1');
+          const d2 = u._vWait ? u._vWait.deadline : 0;
+          await sleep(1200);
+          ok(d2 > d1 + 400 && verdicts(u).length === 1 && /Stealth 1 vs Intercept 0 — block fails/.test(verdicts(u)[0]) && u.notes.some(m => /Johan has 1 stealth/.test(m)),
+             '145f ...a stealth typed in chat is booked and restarts the clock as the counter does (' + (d2 && d1 ? d2 - d1 : '?') + ' ms later; ' + JSON.stringify(verdicts(u)) + ')'); }
+        { const { u, p } = mkV(); const pool0 = u.pool; await u._commitBlock(p, { why: 'test', parts: {} });
+          u._dispatch({ t: 'tally', who: 'Johan', mode: 'block', a: 1, b: 0 });
+          u._onSay({ who: 'Johan', i: 4 });
+          ok(verdicts(u).length === 1 && /Stealth 1 vs Intercept 0 — block fails/.test(verdicts(u)[0]) && !u.pending && u.reopened === 0 && !u.fought && u.pool === pool0 - 2,
+             '145f ...the actor’s It resolves over a counter that says my block fails: the verdict, and the bleed lands (pool ' + pool0 + ' -> ' + u.pool + ', windows reopened ' + u.reopened + '; no second window after their word)'); }
+        { const { u, p } = mkV(); await u._commitBlock(p, { why: 'test', parts: {} });
+          u._onChat('Johan', 'it resolves');
+          ok(verdicts(u).length === 1 && /block succeeds/.test(verdicts(u)[0]) && !!u.fought && !u.pending, '145f ...over a counter that says it succeeds the counter wins (typed): the verdict, and we fight ' + JSON.stringify(verdicts(u))); } }
+      // g) F2: one spokesbot; the archetype remark on the log tier, after the contest; the actor's repeated notes are gone
+      { const mkA = (name, seat, players) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
+          u.seat = seat; u.started = true; u.push = () => {}; u.send = () => {}; u.chats = []; u.chat = m => u.chats.push(m); u.notes = []; u.note = m => u.notes.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d }); u.players = players; return u; };
+        const PO = () => [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Hanna', bot: true, out: true }, { seat: 3, name: 'Viktor', bot: true }];
+        const h = mkA('Hanna', 2, PO()), vk = mkA('Viktor', 3, PO()); h.out = true;
+        ok(vk._isSpokesBot() && !h._isSpokesBot(), '145g F2: an ousted bot is no longer the spokesbot -- the next bot in seat order is (the play-test probe: an ousted Hanna still spoke)');
+        const kit = ['Kine Resources Contested', 'Parity Shift', 'Voter Captivation', 'Govern the Unaligned', 'Deflection', 'Second Tradition: Domain', 'Freak Drive', 'Villein'];
+        const PL = () => [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Hanna', bot: true }, { seat: 3, name: 'Viktor', bot: true }];
+        const s1 = mkA('Hanna', 2, PL()), s2 = mkA('Viktor', 3, PL());
+        [s1, s2].forEach(u => { u._opp(1).clans = { Ventrue: 5 }; kit.forEach(c => u._onLog('Johan', 'Lisa plays ' + c + '.')); u.tally = { mode: 'block', a: 0, b: 0 }; u._archetypeSay(1); });
+        ok(!s1.chats.length && !s1.notes.length && !s2.chats.length && !s2.notes.length && s1.rows.some(r => r.ty === 'archetype') && s2.rows.some(r => r.ty === 'archetype'),
+           '145g ...a confident read while a counter is live: nothing is said yet by either bot (both trace it)');
+        s1.tally = { mode: null }; s2.tally = { mode: null }; await sleep(1700);
+        ok(s1.notes.length === 1 && /^Trainbot reads Johan's deck as Lawfirm \(\d+ of \d+ cards typical\)\.$/.test(s1.notes[0]) && !s1.chats.length && !s2.notes.length && !s2.chats.length,
+           '145g ...once the table is quiet the SPOKESBOT says it, once, on the log tier; the other bot stays silent (' + JSON.stringify(s1.notes) + '; the play-test: two bubbles mid-contest)');
+        [s1, s2, h, vk].forEach(u => u.close());
+        { const q = mkA('Viktor', 3, PL()); q.tally = { mode: 'free', a: 0, b: 0 }; const qf = IF(q, '_arkQuiet') ? q._arkQuiet() : null; q.tally = { mode: 'vote', a: 0, b: 0 }; const qv = IF(q, '_arkQuiet') ? q._arkQuiet() : null; q.close();
+          ok(qf === true && qv === false, '145g ...a resting counter (mode free: a client with the helper off) holds nothing; a live one (vote) holds the remark (free ' + qf + ', vote ' + qv + ')'); }
+        const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
+        ok(!/Clearing the lane\./.test(src) && !/torpor will cost them\./.test(src) && !/_nbT\.name \+ ' cannot block\.'\);/.test(src),
+           '145g ...and the actor’s notes that repeated its own Misdirection / Fame / Pentex play line are gone (the target’s own note explains its side)'); }
+      // h) F6: a bot target's thinking line after a bot actor's question
+      { const mk6 = (actorBot, paceMs) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Viktor', persona: 'expert', deckName: 'malkavian', paceMs, askSecs: 1, log: () => {} });
+          u.seat = 2; u.started = true; u.push = () => {}; u.send = () => {}; u.says = []; u.say = m => u.says.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.note = () => {}; u._emit = () => {};
+          u.players = [{ seat: 1, name: 'Hanna', bot: actorBot }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Johan' }];
+          u.board = [{ id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4 }]; u.hand = [];
+          u._armPending('Hanna', 2, 'Lisa'); return u; };
+        const HO = 'Hold on…';
+        const b1 = mk6(true, 300), early = b1.says.includes(HO);
+        b1._onChat('Hanna', 'Hanna (bot): Lisa bleeds Viktor for 2 — say "block" or "no" (20s → no)');
+        const late = b1.says.includes(HO);
+        ok(!early && late, '145h F6: against a BOT actor my thinking line waits for its question (the play-test: "Hold on…" 0.2 s before the actor’s own "Block?")');
+        const b2 = mk6(false, 300), b3 = mk6(true, 0);
+        ok(b2.says.includes(HO) && b3.says.includes(HO), '145h ...against a human it is said at once, as before; at paceMs 0 (the arena) nothing changes');
+        [b1, b2, b3].forEach(u => { if(u.pending && u.pending.passTimer) clearTimeout(u.pending.passTimer); u.pending = null; }); }
+      // i) levers (a) + (b) + (c)
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'L', persona: 'expert', deckName: 'malkavian', paceMs: 300, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m); u._emit = () => {};
+        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'L', bot: true }];
+        u._lastActAt = Date.now(); u._lastTableAt = 0; u._lastChatAt = 0;
+        let t0 = Date.now(); await u._announcePhase('Master'); const dm = Date.now() - t0;
+        u._lastActAt = Date.now(); t0 = Date.now(); await u._announcePhase('Unlock', 'none'); const du = Date.now() - t0;
+        ok(dm >= 90 && dm < 250 && du < 60 && u.sent.filter(m => m.t === 'log' && /^Phase: /.test(m.html || '')).length === 2,
+           '145i levers (a) + (b): a phase line rides the short fx beat (' + dm + ' ms at paceMs 300; v0.6.203: the full 300), and Unlock follows the turn’s own beat with no second one (' + du + ' ms)'); }
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'C', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 0.05, phaseSecs: 0.08, log: () => {} });
+        u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.say = () => {}; u.send = () => {}; u.chats = []; u.chat = m => u.chats.push(m); u.notes = []; u.note = m => u.notes.push(m); u._emit = () => {};
+        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'C', bot: true }];
+        u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
+        const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
+        u._actingVamp = { v, n: 1, played: new Set() };
+        u._awaitOppStrike = () => Promise.resolve({ vamp: 'Lisa', dodge: false, dealt: 1 });
+        await u._resolveCombat(v, 'Lisa');
+        const sumN = u.notes.filter(m => /^Trainbot combat — /.test(m)), sumC = u.chats.filter(m => /^Trainbot combat — /.test(m));
+        ok(sumN.length >= 1 && !sumC.length && !u.chats.some(m => /One round|side differs/.test(m)), '145i lever (c): a phased combat’s round summary is a report on the log tier (' + JSON.stringify((sumN[0] || '').slice(0, 90)) + '); as a chat it held the next question ~5 s (F3)'); }
     }
 
 
