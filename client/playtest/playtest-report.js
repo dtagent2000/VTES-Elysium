@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================
-   playtest-report.js v1.0.0 (14 Oct 2026, client v2.6.158) -- the numbers from a play-test run
+   playtest-report.js v1.1.0 (16 Oct 2026, client v2.6.162; v1.0.0 14 Oct) -- the numbers from a play-test run
    ------------------------------------------------------------
      node playtest-report.js <run dir | timeline.jsonl>
    Reads the timeline playtest-rig.js wrote and prints: the turns (how long each bot turn took, how
@@ -52,20 +52,22 @@ for (const b of bots) { const ls = ev.filter(e => e.src === 'log' && e.who === b
   out.push('  ' + b + ': ' + g.length + ' gaps, median ' + f1(med(g)) + ' s, min ' + f1(g.length ? Math.min(...g) : null) + ', max ' + f1(g.length ? Math.max(...g) : null)); }
 
 // ---- waits on the human ----
-H('Waits on the human (lag = wait opened to its question in chat; open = how long the wait stayed open)');
+H('Waits on the human (lag = wait opened to its question in chat; clock = question to its clock, negative = the clock ran before the question; open = how long the wait stayed open)');
 const asks = []; const openA = {};
 for (const e of ev) {
-  if (e.src === 'ask') { openA[e.bot] = { t: e.t, bot: e.bot, kind: e.kind, w: e.w, lag: null, open: null, reflex: null, tempo }; asks.push(openA[e.bot]); }
+  if (e.src === 'ask') { openA[e.bot] = { t: e.t, bot: e.bot, kind: e.kind, w: e.w, lag: null, armed: null, open: null, reflex: null, tempo }; asks.push(openA[e.bot]); }
+  else if (e.src === 'askArmed' && openA[e.bot]) openA[e.bot].armed = e.after / 1000;   // v1.1.0: seconds from the wait's opening to its clock
   else if (e.src === 'botcfg') tempo = e.m.tempo;
   else if (e.src === 'askChat' && openA[e.bot]) openA[e.bot].lag = e.lag / 1000;
   else if (e.src === 'askEnd' && openA[e.bot]) { openA[e.bot].open = e.ms / 1000; delete openA[e.bot]; }
   else if (e.src === 'reflex' && openA[e.bot]) openA[e.bot].reflex = e.act || e.skip;
 }
 tempo = 'standard';
-for (const a of asks) out.push('  ' + f1(a.t).padStart(7) + 's ' + a.tempo.padEnd(9) + a.kind.padEnd(8) + ' ' + String(a.bot).padEnd(8) + ' lag ' + (a.lag == null ? '   -' : f1(a.lag).padStart(4)) + 's  open ' + (a.open == null ? '    -' : f1(a.open).padStart(5)) + 's' + (a.lag != null && a.open != null && a.lag > a.open ? '  QUESTION AFTER THE WAIT CLOSED' : '') + (a.reflex ? '  reflex ' + a.reflex : '') + '  ' + a.w);
+for (const a of asks) out.push('  ' + f1(a.t).padStart(7) + 's ' + a.tempo.padEnd(9) + a.kind.padEnd(8) + ' ' + String(a.bot).padEnd(8) + ' lag ' + (a.lag == null ? '   -' : f1(a.lag).padStart(4)) + 's  clock ' + (a.lag == null || a.armed == null ? '   -' : f1(a.armed - a.lag).padStart(4)) + 's  open ' + (a.open == null ? '    -' : f1(a.open).padStart(5)) + 's' + (a.lag != null && a.open != null && a.lag > a.open ? '  QUESTION AFTER THE WAIT CLOSED' : '') + (a.reflex ? '  reflex ' + a.reflex : '') + '  ' + a.w);
 const kinds = [...new Set(asks.map(a => a.kind))];
+const early = a => a.lag != null && a.armed != null && a.armed < a.lag - 0.35;   // v1.1.0: the clock ran before the question was in chat (more than one 0.3 s panel sample)
 for (const k of kinds) { const as = asks.filter(a => a.kind === k), lags = as.map(a => a.lag).filter(x => x != null), late = as.filter(a => a.lag != null && a.open != null && a.lag > a.open).length;
-  out.push('  ' + k + ': ' + as.length + ' waits, question lag median ' + f1(med(lags)) + ' s, max ' + f1(lags.length ? Math.max(...lags) : null) + ' s, question after the wait closed: ' + late); }
+  out.push('  ' + k + ': ' + as.length + ' waits, question lag median ' + f1(med(lags)) + ' s, max ' + f1(lags.length ? Math.max(...lags) : null) + ' s, question after the wait closed: ' + late + ', clock before the question: ' + as.filter(early).length); }
 
 // ---- speech ----
 H('Two bots within 1.0 s of each other');

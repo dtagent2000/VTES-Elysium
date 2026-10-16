@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================
-   playtest-rig.js v1.0.0 (14 Oct 2026, client v2.6.158) -- play a REAL game against the bots
+   playtest-rig.js v1.1.0 (16 Oct 2026, client v2.6.162; v1.0.0 14 Oct, v2.6.158) -- play a REAL game against the bots
    ------------------------------------------------------------
    Starts the Elysium server, ONE headless Chromium tab (the human -- and, as the host, the tab
    the lobby's bots run in, exactly as on elysium.cards), records everything, and opens a small
@@ -13,6 +13,8 @@
      con       the page console -- the bots' own lines ('[netbot NAME] ...', their `wait` rows included)
      panel     the Bot Activity panel's status() per bot, sampled every 0.3 s, on change
      ask/askEnd  a bot started / stopped waiting on the human (from the panel), with the kind
+     askArmed  v1.1.0: the moment that wait's clock first runs (the panel's countdown leaves the dash;
+               bot v0.6.204+ starts it when the question is sent, older bots when it was queued)
      reflex    what the reflex said for the human (see below)
      dialog    the client's own dialogs the rig answered
    and a readable <out>/feed.txt (what the human saw: chat, phrases, log lines, turns, counters,
@@ -106,7 +108,7 @@ function askKind(w, bot){
   if (/^votes/.test(w)) return 'vote';
   return null;
 }
-const QUESTION = /Block\?|Any reaction|lose pool\?|How much\?|Anything before|Any maneuvers\?|What is your strike\?|Any presses\?|Damage: prevent|votes\?/;
+const QUESTION = /Block\?|Any reaction|lose pool\?|How much\?|Anything before|Any maneuvers\?|What is your strike\?|Any presses\?|Damage: prevent|votes\?|add stealth|may block it/;   // v1.1.0: + bot v0.6.204's verdict question ('X blocks (stealth A vs intercept B) -- You, add stealth, or say Pass to resolve it') and v0.6.203's bounce question ('X now bleeds You for N -- You may block it ...')
 const panelLast = {};
 async function samplePanel(){
   if (!page || !ME) return;
@@ -115,6 +117,7 @@ async function samplePanel(){
   if (!rows) return;
   const meRx = new RegExp('\\b' + ME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
   for (const r of rows) {
+    { const a0 = asks[r.bot]; if (a0 && a0.armT == null && r.left != null) { a0.armT = Date.now(); rec('askArmed', { bot: r.bot, kind: a0.kind, after: a0.armT - a0.t0, left: r.left }, 'CLOCK ' + r.bot + ': ' + r.left + 's'); } }   // v1.1.0: when the wait's clock starts (bot v0.6.204: once its question is sent)
     const sig = r.st + '|' + r.w + '|' + (r.step || '');
     if (panelLast[r.bot] === sig) continue;
     panelLast[r.bot] = sig;
@@ -125,6 +128,7 @@ async function samplePanel(){
       const a = { kind, w: r.w, t0: Date.now(), fired: false, armed: null };
       asks[r.bot] = a;
       rec('ask', { bot: r.bot, kind, w: r.w }, 'ASK ' + kind + ' <- ' + r.bot + ': ' + r.w, true);
+      if (r.left != null) { a.armT = a.t0; rec('askArmed', { bot: r.bot, kind, after: 0, left: r.left }, 'CLOCK ' + r.bot + ': ' + r.left + 's (running when the wait was first seen)'); }
       if (policy.anchor === 'status') armReflex(r.bot, a, 'status');
       else setTimeout(() => armReflex(r.bot, a, 'status-fallback'), 6000);
     } else if (asks[r.bot]) { const a = asks[r.bot]; rec('askEnd', { bot: r.bot, kind: a.kind, ms: Date.now() - a.t0 }); delete asks[r.bot]; }

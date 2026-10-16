@@ -3550,7 +3550,7 @@ testB('v2.6.140 LIVE, the tempo meets the REAL bot through the bridge: the seede
   HB.botcfgIn('', A.BOTCFG0);   // the seed hotSpawnBots stores before any bot joins
   let passes = 0; HB.onPass = s => { if (s === 2) passes++; };
   const b = new BOT.Bot({ room: 'hot', pass: '', name: 'Two', paceMs: 0, askSecs: 20, transport: HB.dialFor(2, 'Two'), deck: BOT.ARCHETYPES.ventrue, deckName: 'ventrue', persona: 'expert', log: () => {} });
-  const waitOnHuman = async ms => { const t = Date.now(); let st = null; while (Date.now() - t < ms){ st = A.botPanelRead(b); if (st.canStep && st.step && st.step !== 'release-hold') return st; await sleep(50); } return st; };
+  const waitOnHuman = async (ms, armed) => { const t = Date.now(); let st = null; while (Date.now() - t < ms){ st = A.botPanelRead(b); if (st.canStep && st.step && st.step !== 'release-hold' && (!armed || st.until != null)) return st; await sleep(50); } return st; };   // v2.6.162: armed -- bot v0.6.204 arms a wait's clock when its question is ON THE WIRE; while the question is still queued the wait is steppable with until: null (the bot project's handoff v0.6.204 section 3), so the Standard half waits for the clock itself
   const nextTurn = async (n) => { b.hand.length = 0; HB.turn(2); };   // an empty hand: a plain bleed -- the flow under test is the WAIT, not the bot's card choice (the hidden-randomness class)
   try {
     await b.connect(); const t0 = Date.now(); while ((!HB.seats[2] || !HB.seats[2].deck) && Date.now() - t0 < 6000) await sleep(40);
@@ -3560,7 +3560,7 @@ testB('v2.6.140 LIVE, the tempo meets the REAL bot through the bridge: the seede
     const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false }); v.blood = 3;   // the human could block -- so every tempo asks
     A.hotBots[2] = b; await sleep(700);
     // 1. Standard 3 s, seeded: the window closes on the table's clock, not the spawn's 20 s
-    await nextTurn(); let st = await waitOnHuman(10000);
+    await nextTurn(); let st = await waitOnHuman(10000, true);
     assert(st && st.canStep, 'Standard: the bot waits on the human: ' + JSON.stringify(st));
     assert(st.until != null && st.until - Date.now() <= 6500, 'the seeded Standard 3 s is what the bot keeps, not askSecs 20 (left: ' + (st.until == null ? 'none' : Math.round(st.until - Date.now()) + ' ms') + ')');
     let t = Date.now(); while (passes < 1 && Date.now() - t < 20000) await sleep(100);
@@ -4797,6 +4797,111 @@ testA('v2.6.161 the side panel settles on its OWN transitionend: a 250 ms backst
     await sleep(320); eq(n, 1, 'one backstop, not two (the older call\'s was cleared)');
     end(); eq(n, 2, 'and the real end still comes through');
   } finally { D.querySelector = q0; }
+});
+test('v2.6.162 bot v0.6.204\'s new rung: resolve-verdict (a bot blocked YOUR action and waits for your stealth or your word) reads "Declare verdict" -- v2.6.161 drew "Step"; the Turn-based play button steps it and its title names a block verdict; a wait whose question is still queued shows the dash with its button live', () => {
+  const A = loadClient(CLIENT); const HB = A.hotBridge;
+  eq(A.BOT_STEP_LABEL['resolve-verdict'], 'Declare verdict', 'the label the bot project suggested');
+  ['release-hold', 'resolve-ask', 'resolve-pq', 'resolve-phase', 'resolve-vote'].forEach(k => assert(A.BOT_STEP_LABEL[k] && A.BOT_STEP_LABEL[k] !== 'Declare verdict', 'every older rung keeps its own label: ' + k));
+  const el = { innerHTML: '', _botSig: null, querySelector: () => null, querySelectorAll: () => [], remove(){} }; A.__doc._ids.hotBotBtn = el;
+  A.localTable = true; HB.reset([{ name: 'Lisa' }, { name: 'B2', bot: true }]); HB.seats[2] = { cb: { msg(){} }, name: 'B2' }; HB.botcfgIn('', A.BOTCFG0); HB.botcfgIn('Lisa', { tempo: 'turn' });
+  let stepped = 0;
+  const fake = { status: () => ({ name: 'B2', state: 'asking', waitingFor: 'block verdict (Lisa)', until: null, step: 'resolve-verdict', canStep: true }),
+    step: () => { stepped++; return { did: 'resolve-verdict', why: 'declared the block verdict from the counter the way the clock would have' }; }, _handlers: { botcfg(){} } };
+  A.hotBots[2] = fake;
+  try {
+    A.botPanelOpen = true; A.botCfgOpen = false; A.botPanelRender();
+    assert(/\u25b6 Declare verdict<\/button>/.test(el.innerHTML), 'the row says Declare verdict (v2.6.161: Step)');
+    assert(/block verdict \(Lisa\)/.test(el.innerHTML), 'what it waits for, in the bot\'s own words');
+    assert(/class="botPanelCd" data-i="0"[^>]*>\u2014<\/span>/.test(el.innerHTML), 'no clock yet: the dash (bot v0.6.204: the clock starts when the question is sent; until then until is null)');
+    assert(!/class="botPanelStep" data-i="0" disabled/.test(el.innerHTML), 'and the button is live meanwhile -- an answer before the question is on the wire still counts');
+    assert(/id="botGiveWord" title="[^"]*a block verdict; never a hold"/.test(el.innerHTML), 'Turn-based: the play button is there, and its title names the block verdict');
+    eq(A.botGiveWord(), 1, 'the play button steps it (a filter since v2.6.140, so no allow-list to grow)'); eq(stepped, 1);
+  } finally { delete A.hotBots[2]; A.localTable = false; HB.reset([]); delete A.__doc._ids.hotBotBtn; }
+});
+testB('v2.6.162 LIVE: a REAL bot (v0.6.204+) blocks your bleed and waits for your word -- the panel reads "block verdict (You)" and Declare verdict, no clock in Turn-based, the play button gives it the word, the verdict line comes from the BLOCKER\'s seat (the bubble names the bot that declared it) and the combat counter follows; an older bot skips loudly', async () => {
+  const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
+  if (typeof BOT.Bot.prototype._vwArm !== 'function'){ const e = new Error('SKIP -- bot v' + BOT.BOT_VERSION + ' beside the suite has no verdict wait; this needs v0.6.204+'); e.skip = true; throw e; }
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const until = async (fn, ms) => { const t = Date.now(); let v = fn(); while (!v && Date.now() - t < (ms || 3000)){ await sleep(30); v = fn(); } return v; };
+  HB.reset([{ name: 'You' }, { name: 'Wallbot', bot: true }]);
+  A.net.roster = [{ seat: 1, name: 'You', vp: 0 }, { seat: 2, name: 'Wallbot', bot: true, vp: 0 }];
+  A.net.you = 'You'; A.net.boards = {}; A.net.hot = { boards: { 1: JSON.stringify({ pool: 30 }), 2: '{}' }, undo: {} }; A.localTable = true; A.conv.tournament = false;
+  HB.botcfgIn('', A.BOTCFG0); HB.botcfgIn('You', { tempo: 'turn' });
+  const b = new BOT.Bot({ room: 'hot', pass: '', name: 'Wallbot', paceMs: 0, askSecs: 20, transport: HB.dialFor(2, 'Wallbot'), deck: BOT.ARCHETYPES.ventrue, deckName: 'ventrue', persona: 'expert', log: () => {} });
+  const dec0 = b.decide.bind(b);
+  b.decide = (k, ctx) => { const d = dec0(k, ctx); return k === 'block-as-target' ? Object.assign({}, d, { block: true, bounce: false, why: 'the test: block' }) : d; };   // the flow under test is the WAIT, not the bot's choice (the hidden-randomness class)
+  const logs = [], chats = []; const log0 = A.MP_HANDLERS.log, chat0 = A.MP_HANDLERS.chat;
+  A.MP_HANDLERS.log = m => { logs.push({ who: m.who, txt: String(m.html || '').replace(/<[^>]*>/g, '') }); return log0(m); };
+  A.MP_HANDLERS.chat = m => { chats.push({ who: m.who, msg: String(m.msg || '') }); return chat0(m); };
+  const el = { innerHTML: '', _botSig: null, querySelector: () => null, querySelectorAll: () => [], remove(){} };
+  try {
+    await b.connect(); await until(() => HB.seats[2] && HB.seats[2].deck, 6000);
+    assert(HB.startFor(2), 'dealt'); await sleep(300);
+    const u = b.unc.shift(); b.board.push({ id: u.id, name: u.name, kind: 'crypt', zone: 'ready', x: 0, y: 0, locked: false, faceDown: false, blood: u.cap || 5, cap: u.cap || 5 }); b.hand.length = 0; b.push();   // a blocker and no intercept card: a bare block, stealth 0 vs intercept 0 holds
+    A.hotBots[2] = b;
+    A.clearTable({}); const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false }); v.blood = 3;
+    HB.turn(1); await sleep(150);
+    let shown = null; A.showMenu = items => { shown = items; };
+    A.cardMenu(v, 0, 0); shown.find(x => x.label === 'Actions').sub.find(x => x.label === 'Bleed').sub.find(x => x && x.label === 'Bleed 2').fn();
+    const st = await until(() => { const s = A.botPanelRead(b); return s.step === 'resolve-verdict' ? s : null; }, 10000);
+    assert(st, 'the bot blocked and waits on the actor (v0.6.203: "attempts to block." and then silence): ' + JSON.stringify(A.botPanelRead(b)));
+    eq(st.waitingFor, 'block verdict (You)'); eq(st.state, 'asking'); assert(st.canStep, 'steppable');
+    eq(st.until, null, 'Turn-based: no clock -- the panel shows the dash');
+    assert(logs.some(l => l.who === 'Wallbot' && /attempts to block\.$/.test(l.txt)), 'the bare attempt reached the client');
+    const qm = await until(() => { for (const c of chats){ const mm = c.who === 'Wallbot' && /blocks \(stealth 0 vs intercept (-?\d+)\) \u2014 You, add stealth, or say Pass to resolve it \(no clock \u2014 I wait for you\)$/.exec(c.msg); if (mm) return mm; } return null; }, 3000);
+    assert(qm, 'the question names the counter, whose move it is and the tempo (Turn-based: no clock): ' + JSON.stringify(chats.map(c => c.msg)));
+    const B = +qm[1], ok = B >= 0;   // a crypt card may carry its own intercept (Dowager-class); the deal is random, so the test reads the number the bot wrote
+    eq(A.avr.mode, 'block', 'the shared counter is open in block mode');
+    A.__doc._ids.hotBotBtn = el; A.botPanelOpen = true; A.botCfgOpen = false; A.botPanelRender();
+    assert(/\u25b6 Declare verdict<\/button>/.test(el.innerHTML), 'the real bot\'s rung reads Declare verdict (v2.6.161: Step)');
+    assert(A.botGiveWordWanted(), 'Turn-based: the play button is offered');
+    const n0 = logs.length;
+    eq(A.botGiveWord(), 1, 'the play button gives the bot the word');
+    const vline = await until(() => logs.slice(n0).find(l => /^Block: Stealth \d+ vs Intercept \d+ \u2014 block (succeeds|fails)\.$/.test(l.txt)), 5000);
+    assert(vline, 'the verdict line reached the client: ' + JSON.stringify(logs.slice(n0)));
+    eq(vline.txt, 'Block: Stealth 0 vs Intercept ' + B + ' \u2014 block ' + (ok ? 'succeeds' : 'fails') + '.', 'declared from the counter the question named');
+    eq(vline.who, 'Wallbot', 'from the BLOCKER\'s seat -- the bubble (maybeVerdictPulse) names the bot that declared it, as a human\'s Resolve names that human');
+    assert(logs.slice(n0).some(l => l.who === 'Wallbot' && /block verdict declared from the table controls\.$/.test(l.txt)), 'the press is said out loud');
+    if (ok) eq(await until(() => A.avr.mode === 'combat' ? 'combat' : null, 5000), 'combat', 'the counter becomes the combat counter (block -> combat, as after a bot actor\'s own verdict)');
+  } finally { delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); A.MP_HANDLERS.log = log0; A.MP_HANDLERS.chat = chat0; A.net.roster = []; A.net.hot = null; delete A.__doc._ids.hotBotBtn; }
+});
+testB('v2.6.162 LIVE: a REAL bot\'s verdict clock (v0.6.204+) starts when its question reaches you -- the question arrives with no clock running, then the panel counts the seeded Standard 3 s from that moment (not less), and on the clock the blocker declares the verdict itself', async () => {
+  const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
+  if (typeof BOT.Bot.prototype._vwArm !== 'function'){ const e = new Error('SKIP -- bot v' + BOT.BOT_VERSION + ' beside the suite has no verdict wait; this needs v0.6.204+'); e.skip = true; throw e; }
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const until = async (fn, ms) => { const t = Date.now(); let v = fn(); while (!v && Date.now() - t < (ms || 3000)){ await sleep(20); v = fn(); } return v; };
+  HB.reset([{ name: 'You' }, { name: 'Gatebot', bot: true }]);
+  A.net.roster = [{ seat: 1, name: 'You', vp: 0 }, { seat: 2, name: 'Gatebot', bot: true, vp: 0 }];
+  A.net.you = 'You'; A.net.boards = {}; A.net.hot = { boards: { 1: JSON.stringify({ pool: 30 }), 2: '{}' }, undo: {} }; A.localTable = true; A.conv.tournament = false;
+  HB.botcfgIn('', A.BOTCFG0);   // Standard 3 s, the seed hotSpawnBots stores before any bot joins
+  const b = new BOT.Bot({ room: 'hot', pass: '', name: 'Gatebot', paceMs: 0, askSecs: 20, transport: HB.dialFor(2, 'Gatebot'), deck: BOT.ARCHETYPES.ventrue, deckName: 'ventrue', persona: 'expert', log: () => {} });
+  const dec0 = b.decide.bind(b);
+  b.decide = (k, ctx) => { const d = dec0(k, ctx); return k === 'block-as-target' ? Object.assign({}, d, { block: true, bounce: false, why: 'the test: block' }) : d; };
+  const logs = [], qs = []; const log0 = A.MP_HANDLERS.log, chat0 = A.MP_HANDLERS.chat;
+  A.MP_HANDLERS.log = m => { logs.push({ t: Date.now(), who: m.who, txt: String(m.html || '').replace(/<[^>]*>/g, '') }); return log0(m); };
+  A.MP_HANDLERS.chat = m => { if (m.who === 'Gatebot' && /add stealth, or say Pass/.test(String(m.msg || ''))) qs.push({ t: Date.now(), until: A.botPanelRead(b).until, msg: String(m.msg) }); return chat0(m); };
+  try {
+    await b.connect(); await until(() => HB.seats[2] && HB.seats[2].deck, 6000);
+    assert(HB.startFor(2), 'dealt'); await sleep(300);
+    const u = b.unc.shift(); b.board.push({ id: u.id, name: u.name, kind: 'crypt', zone: 'ready', x: 0, y: 0, locked: false, faceDown: false, blood: u.cap || 5, cap: u.cap || 5 }); b.hand.length = 0; b.push();
+    A.hotBots[2] = b;
+    A.clearTable({}); const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false }); v.blood = 3;
+    HB.turn(1); await sleep(150);
+    let shown = null; A.showMenu = items => { shown = items; };
+    A.cardMenu(v, 0, 0); shown.find(x => x.label === 'Actions').sub.find(x => x.label === 'Bleed').sub.find(x => x && x.label === 'Bleed 2').fn();
+    const q = await until(() => qs[0], 10000);
+    assert(q, 'the verdict question reached the client');
+    assert(/\(3s \u2192 the block (succeeds|fails)\)$/.test(q.msg), 'it announces the seeded 3 s and what happens then: ' + q.msg);
+    eq(q.until, null, 'when the question arrives no clock runs yet (bot v0.6.203 and older armed a wait when its line was QUEUED)');
+    const st = await until(() => { const s = A.botPanelRead(b); return s.until != null ? s : null; }, 1000);
+    assert(st, 'right after the question, the clock runs');
+    eq(st.step, 'resolve-verdict');
+    const left = st.until - q.t; assert(left >= 2700 && left <= 3300, 'the full 3 s count from the question (' + left + ' ms)');
+    const vl = await until(() => logs.find(l => /^Block: Stealth \d+ vs Intercept \d+ \u2014 block (succeeds|fails)\.$/.test(l.txt)), 6000);
+    assert(vl, 'on the clock the blocker declares the verdict');
+    eq(vl.who, 'Gatebot'); assert(/^Block: Stealth 0 vs Intercept -?\d+ \u2014 block (succeeds|fails)\.$/.test(vl.txt), vl.txt);
+    assert(vl.t - q.t >= 2800, 'not before its 3 s were up (' + (vl.t - q.t) + ' ms after the question)');
+  } finally { delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); A.MP_HANDLERS.log = log0; A.MP_HANDLERS.chat = chat0; A.net.roster = []; A.net.hot = null; }
 });
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
