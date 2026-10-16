@@ -1,6 +1,6 @@
-# deck-coverage — V5 Starter — Nosferatu (Black Chantry 2020) (2026-09-18)
+# deck-coverage — V5 Starter — Nosferatu (Black Chantry 2020) (2026-10-16)
 
-Genererad av `gen-deck-coverage.js` v1.1.34 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-nosferatu.json.
+Genererad av `gen-deck-coverage.js` v1.1.38 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-nosferatu.json.
 
 Syfte: göra "kan botten spela den här leken?" till en mekanisk kontroll — curated-djup och
 handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPPORT, inte en gate.
@@ -17,10 +17,10 @@ Per verdict: FULL 77
 
 ## Konsumtionsläget (skannat ur bottens källa vid körning)
 
-- Spel-nycklar botten läser: `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bloodPerMargin`, `bounce`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `intercept`, `jackEngine`, `lockMinion`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `stealth`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
-- Fas-inkomst (kräver `phase` på moden): `bloodToPool`, `handCycle`, `handSize`, `handSizePerCounter`, `poolGain`, `poolToBlood`, `rescueTorpor`, `transferBurnPool`, `transferSwap`
+- Spel-nycklar botten läser: `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bloodPerMargin`, `bounce`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockMinion`, `lockStealth`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `rushGrant`, `stealth`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
+- Fas-inkomst (kräver `phase` på moden): `bankIn`, `bankOut`, `bloodToPool`, `handCycle`, `handSize`, `handSizePerCounter`, `poolGain`, `poolToBlood`, `rescueTorpor`, `transferBurnPool`, `transferSwap`
 - Hotläsning (motståndarkort, gör ALDRIG egna kort spelbara): `bloodBurn`, `poolDmg`, `stealBlood`
-- ⚠ OKLASSADE nycklar hittade i botkällan (uppdatera CLASS-kartan i verktyget): `bleedBonus`, `bleedBoostDiscard`, `bleedNullify`, `blockNotOlder`, `burnAtDamage`, `burnCap`, `burnOnTorpor`, `enterPlay`, `equip`, `interceptMod`, `noHuntStealth`, `noUnlockAfterTitledBleed`, `selfUnlock`, `stealthMod`, `strengthMod`, `voteBoostDiscard`, `voteTaxAgainst`
+- ⚠ OKLASSADE nycklar hittade i botkällan (uppdatera CLASS-kartan i verktyget): `bleedBonus`, `bleedBoostDiscard`, `bleedNullify`, `blockNotOlder`, `burnAtDamage`, `burnCap`, `burnOnTorpor`, `enterPlay`, `equip`, `interceptMod`, `interceptPaid`, `noHuntStealth`, `noUnlockAfterTitledBleed`, `payBlood`, `preventX`, `ranged`, `referendum`, `selfUnlock`, `stealthMod`, `strengthMod`, `voteBoostDiscard`, `voteTaxAgainst`
 
 ## Bibliotek (26 unika, 77 kopior)
 
@@ -32,8 +32,8 @@ Per verdict: FULL 77
 | Deep Song | 6 | FULL | [ani D] bleedAct,bleed → ✓(bleedAct)/✓<br>[ANI D] rush,lockTarget → ✓(rush)/✓ | curated |
 | Fame | 1 | FULL | [—] fameOnTarget → ✓(fameOnTarget)/✓ | curated · persist |
 | Guard Dogs | 4 | FULL | [ani] unlock → ✓(unlock)/✓<br>[ANI] unlock,maneuver → ✓(unlock)/✓ | curated |
-| Guardian Angel | 1 | FULL | [—] intercept,prevent → ✓(intercept)/✓ | auto · persist |
-| Haven Uncovered | 1 | FULL | [— D] stealth → ✓(stealth)/✓ | auto · persist |
+| Guardian Angel | 1 | FULL | [—] hostIntercept,hostInterceptOn,hostPrevent → ✓(hostIntercept)/✓ | curated · persist |
+| Haven Uncovered | 1 | FULL | [—] rushGrant → ✓(rushGrant)/✓ | curated · persist |
 | Immortal Grapple | 4 | FULL | [pot] restrictHandStrike → ✓(restrictHandStrike@preStrike)/✓<br>[POT] restrictHandStrike,press → ✓(restrictHandStrike@preStrike)/✓ | auto |
 | Instinctive Reaction | 4 | FULL | [ani] intercept → ✓(intercept)/✓<br>[ANI] intercept,maneuver → ✓(intercept)/✓ | auto |
 | Lost in Crowds | 4 | FULL | [obf] stealth → ✓(stealth)/✓<br>[OBF] stealth → ✓(stealth)/✓ | auto |
@@ -43,11 +43,11 @@ Per verdict: FULL 77
 | Protected District | 4 | FULL | [—] reduce → ✓(reduce)/✓<br>[—] votesBonus → ✓(votesBonus)/✓ | curated |
 | Raven Spy | 2 | FULL | [ani] intercept → ✓(attach-grant (bearer readers))/✓<br>[ANI] intercept → ✓(attach-grant (bearer readers))/✓ | auto · persist |
 | Rebel | 1 | FULL | [—] rebelBlood → ✓(rebelBlood)/✓ | curated · persist · trifle |
-| Roundhouse | 8 | FULL | [pot] strike,handStrike → ✓(strike)/✓<br>[POT] strike,handStrike → ✓(strike)/✓ | auto |
+| Roundhouse | 8 | FULL | [pot] handBonus,handStrike → ✓(strike)/✓<br>[POT] handBonus,handStrike → ✓(strike)/✓ | auto |
 | Slum Hunting Ground | 1 | FULL | [—] bloodAdd,bloodAddTo → ✓(bloodAdd@hunting-ground)/✓ | curated · persist |
 | Smiling Jack, The Anarch | 1 | FULL | [—] jackEngine → ✓(jackEngine)/✓ | curated · persist |
 | Taste of Vitae | 4 | FULL | [—] gainOppLoss → ✓(gainOppLoss@endOfRound)/✓ | curated |
-| The Labyrinth | 1 | FULL | [—] stealth → ✓(stealth)/✓ | auto · persist |
+| The Labyrinth | 1 | FULL | [—] lockStealth,lockStealthClan → ✓(lockStealth)/✓ | curated · persist |
 | The Warrens | 4 | FULL | [—] intercept → ✓(intercept)/✓ | auto |
 | Underbridge Stray | 2 | FULL | [ani] recruitAlly,allyLife,allyPressLife,allyBurnUnlock → ✓(recruitAlly)/✓<br>[ANI] recruitAlly,allyLife,allyPressLife,allyBurnUnlock → ✓(recruitAlly)/✓ | curated · persist |
 | Vessel | 4 | FULL | [—] bloodToPool → ✓(bloodToPool@unlock)/✓<br>[—] poolToBlood → ✓(poolToBlood@unlock)/✓ | curated · persist · trifle |

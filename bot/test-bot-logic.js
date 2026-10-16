@@ -7852,9 +7852,9 @@ async function connectWithRetry(client, tries = 30){
     const u5 = mk121(); u5.push = () => u5.sent.push({ t: '__board' }); u5._oust(true); ok(!u5.sent.some(m => m.t === 'bounty') && u5.sent.some(m => m.t === '__board'), '121h a HOST oust still sends no bounty (the host\'s own verb routes it)'); }
   // f) the lines the net reads are the lines the bot sends
   const src121 = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
-  const NS = /^(.+?) (?:plays|burns) .+?: \+(\d+) stealth\.$/, NU = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;
-  ok(NS.test('Colette plays Lost in Crowds: +1 stealth.') && NS.test('Colette burns The Path of Night: +1 stealth.') && NU.test('Oshri attempts to block with +2 intercept (Second Tradition: Domain).'), '121f the net\'s two readers match the bot\'s own stealth line and the unlock-reaction attempt line');
-  ok(/\(st\.fromBoard \? 'burns' : 'plays'\) \+ ' ' \+ esc\(st\.name\) \+ ': \+' \+ st\.s \+ ' stealth\.'/.test(src121) && /attempts to block with \+' \+ unIc \+ ' intercept \(<b>'/.test(src121), '121f ...and those strings are still what the source emits');
+  const NS = /^(.+?) (?:plays|burns|locks) .+?: \+(\d+) stealth\.$/, NU = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;   // v0.6.205: + 'locks' (The Labyrinth)
+  ok(NS.test('Colette plays Lost in Crowds: +1 stealth.') && NS.test('Colette burns The Path of Night: +1 stealth.') && NS.test('Ryan (G6) locks The Labyrinth: +1 stealth.') && NU.test('Oshri attempts to block with +2 intercept (Second Tradition: Domain).'), '121f the net\'s two readers match the bot\'s own stealth line and the unlock-reaction attempt line');
+  ok(/\(st\.fromBoard \? \(st\.lock \? 'locks' : 'burns'\) : 'plays'\) \+ ' ' \+ esc\(st\.name\) \+ ': \+' \+ st\.s \+ ' stealth\.'/.test(src121) && /attempts to block with \+' \+ unIc \+ ' intercept \(<b>'/.test(src121), '121f ...and those strings are still what the source emits');
     }
 
     /* 122) v0.6.152 — THE BREATH: the beat anchored on the table's last event, the stealth first look after the beat, 'I currently have N stealth', intercept by chat */
@@ -9040,7 +9040,7 @@ async function connectWithRetry(client, tries = 30){
         ok(asks(mk139('U', 2, P3()), ['Lisa takes a card action.']), '139c ...her prey does, as before');
         ok(!asks(mk139('U', 2, P3()), ["Lisa takes a card action. Target: Viktor's Bob."]), '139c ...aimed at the predator (the client’s Target suffix), the prey stays out');
         ok(asks(mk139('Viktor', 3, P3()), ["Lisa takes a card action. Target: Viktor's Bob."]), '139c ...and the predator, its target, answers, as before');
-        ok(!asks(mk139('U', 2, P3()), ["Lisa plays Revelations [aus]. Target: Viktor's Bob.", 'Lisa takes a card action.']), '139c ...the action row inherits the aim of the card played just before it (the play line carries it, the row does not)');
+        ok(!asks(mk139('U', 2, P3()), ["Lisa plays Bum's Rush. Target: Viktor's Bob.", 'Lisa takes a card action.']), '139c ...the action row inherits the aim of the card played just before it (the play line carries it, the row does not; v0.6.205: the card was Revelations, which is prey-locked by its text whatever the aim -- section 147)');
         const P4 = () => [{ seat: 1, name: 'Hanna' }, { seat: 2, name: 'X', bot: true }, { seat: 3, name: 'W', bot: true }, { seat: 4, name: 'Y', bot: true }];
         const w = mk139('W', 3, P4()); w._onLog('Hanna', 'Lisa takes an undirected action.'); w._obs.poolLoss = 0; w._openAskedWindow(); quiet139(w);
         ok(!w.says.includes('No block'), '139c ...an undirected action: a cross-table seat has no block to decline and says nothing (v0.6.199 said "No block" -- only for a referendum did it keep quiet)');
@@ -9788,12 +9788,12 @@ async function connectWithRetry(client, tries = 30){
         ok(aRow.range === 'long' && dRow.range === 'long' && aRow.dealt === 0 && dRow.strike !== 'Dodge' && g.D.hand.includes('Dodge') && g.dV.blood === 1,
            '143c at long range the acting bot’s fist is a strike for 0: the answering bot (blood 1) keeps its Dodge and its blood (the assumed 1 spent the card; got ' + JSON.stringify({ range: [aRow.range, dRow.range], aDealt: aRow.dealt, d: dRow.strike, keep: g.D.hand.includes('Dodge'), blood: g.dV.blood }) + ')'); }
 
-      // d) the decision itself
-      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+      // d) the decision itself -- v0.6.205: pinned to dodgeOut 0 (v0.6.204's survival rule, the knob's rollback); the output rule of R4 is section 146a
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, dodgeOut: 0, log: () => {} });
         const v = b => ({ name: 'X', blood: b }), D = (b, inc) => u.decide('combat-strike', { dodge: { name: 'Dodge' }, vamp: v(b), inc });
         const K = o => Object.assign({ known: true, dodge: false, ends: false, dealt: 0, steal: 0, aggr: 0, crows: 0 }, o);
         ok(D(3, K({ dealt: 3 })).dodge === true && D(3, K({ dealt: 2 })).dodge === false && D(1, K({ dealt: 1 })).dodge === true,
-           '143d a known strike: dodge what would empty or torpor me (3 at blood 3, 1 at blood 1), take what leaves blood (2 at blood 3)');
+           '143d (dodgeOut 0) a known strike: dodge what would empty or torpor me (3 at blood 3, 1 at blood 1), take what leaves blood (2 at blood 3)');
         ok(D(1, K({ dodge: true })).dodge === false && D(1, K({ ends: true })).dodge === false && D(1, K({ dealt: 0 })).dodge === false,
            '143d ...never against their dodge, their combat ends or a strike for 0 -- the card is saved');
         ok(D(5, K({ aggr: 1 })).dodge === true && D(2, K({ steal: 2 })).dodge === true && D(1, K({ dealt: 1, crows: 2 })).dodge === false,
@@ -10082,6 +10082,420 @@ async function connectWithRetry(client, tries = 30){
         await u._resolveCombat(v, 'Lisa');
         const sumN = u.notes.filter(m => /^Trainbot combat — /.test(m)), sumC = u.chats.filter(m => /^Trainbot combat — /.test(m));
         ok(sumN.length >= 1 && !sumC.length && !u.chats.some(m => /One round|side differs/.test(m)), '145i lever (c): a phased combat’s round summary is a report on the log tier (' + JSON.stringify((sumN[0] || '').slice(0, 90)) + '); as a chat it held the next question ~5 s (F3)'); }
+    }
+
+    /* 146) v0.6.205 -- R4 (docs/specs/spec-r4-2026-10-16.md section 1): THE DODGE, decided with Johan 16 Oct (17:47 + 18:06):
+       'for now, play it against everything with 2 or more damage -- when my own strike no longer gives equal or better
+       output -- and play it when holding several'. A known strike is weighed against _strikePick's out (the strike the
+       round would really play), with two in hand even a 1 that does at least as much as mine (Johan 21:20), unless my strike
+       finishes their vampire (0 or torpor with two dodges, torpor with one; 21:27), an unknown strike is read on the expected
+       strike Majesty uses (_expOppStrike); the survival rule and aggravated stay; knob dodgeOut (0 = v0.6.204's rule). */
+    {
+      console.log('\n[146] v0.6.205 -- R4: the dodge weighs the strike against my own output (Johan, 16 Oct)');
+      const IF6 = (o, fn) => !!(o && typeof o[fn] === 'function');   // the pre-change bytes lack the new methods: they must fail clean, never abort
+      const strip146 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const duel146 = o => {   // the section 141 / 143 relay: two bots, every log / chat / say line reaches the other `delay` ms later; A = the acting bot (Hanna), D = the bot that blocked it (Viktor)
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        const mk = (name, seat, deck, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: o.askSecs || 3, twdKnow: 0, log: () => {} }, extra || {}));
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.o.deckName = deck; u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = []; u.decs = [];
+          u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); if(t === 'bot:decide' && m && m.q === 'combat-strike') u.decs.push(m); };
+          return u; };
+        const A = mk('Hanna', 1, o.aDeck || 'tremere', o.aOpts), D = mk('Viktor', 2, o.dDeck || 'nosferatu', o.dOpts);
+        const wire = (from, to) => { from.send = m => {
+          if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0); return; }
+          if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
+          const txt = m.t === 'log' ? strip146(m.html) : String(m.msg || '');
+          from._evRecord(from.o.name, txt, m.t, true);
+          from.lines.push({ at: Date.now(), tier: m.t, txt });
+          const d = Object.assign({}, m, { who: from.o.name });
+          setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0);
+        }; };
+        wire(A, D); wire(D, A);
+        const aV = Object.assign({ id: 'a1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4, attached: [] }, o.aV || {});
+        const dV = Object.assign({ id: 'd1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 6, attached: [] }, o.dV || {});
+        A.board = [aV]; D.board = [dV]; A.hand = (o.aHand || []).slice(); D.hand = (o.dHand || []).slice();
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: dV.name, zone: 'ready', blood: dV.blood }] } } };
+        D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: aV.name, zone: 'ready', blood: aV.blood }] } } };
+        A._actingVamp = { v: aV, n: 1, played: new Set() }; A._lastBlockerName = dV.name;
+        D._clearCombatStashes(); D._combatArmed = true;
+        const run = async () => { const t0 = Date.now();
+          await Promise.race([Promise.all([A._resolveCombat(aV), D._resolveCombat(dV, aV.name)]), sleep(o.cap || 15000)]);
+          return Date.now() - t0; };
+        return { A, D, aV, dV, run };
+      };
+
+      // a) the decision itself
+      { const mkU = kn => new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} }, kn != null ? { dodgeOut: kn } : {}));
+        const u = mkU(), u0 = mkU(0);
+        const K = o => Object.assign({ known: true, dodge: false, ends: false, dealt: 0, steal: 0, aggr: 0, crows: 0 }, o);
+        const D = (bot, b, inc, mine, copies, exp, x) => bot.decide('combat-strike', Object.assign({ dodge: { name: 'Dodge' }, vamp: { name: 'X', blood: b }, inc, mine, copies, exp }, x || {}));
+        const dg = (...a) => !!D(u, ...a).dodge;
+        ok(dg(5, K({ dealt: 2 }), 1, 1) === true && dg(5, K({ dealt: 3 }), 2, 1) === true && dg(5, K({ dealt: 2 }), 3, 1) === false,
+           '146a a known strike of 2 or more that does more than my own strike is dodged (2 against hands for 1, 3 against a card for 2); one my strike beats is taken (2 against Roundhouse for 3)');
+        ok(dg(5, K({ dealt: 2 }), 2, 1) === false && dg(5, K({ dealt: 2 }), 2, 2) === true,
+           '146a ...an equal one is struck with one dodge in hand and dodged with two (Johan: the tie goes to the dodge when holding several)');
+        ok(dg(5, K({ dealt: 1 }), 1, 1) === false && dg(5, K({ dealt: 1 }), 0, 1) === false && dg(5, K({ dealt: 2 }), 0, 1) === true,
+           '146a ...with ONE dodge never under 2: 1 against 1, a ranged 1 against my fist at long range (which deals 0); a ranged 2 against that fist is dodged');
+        ok(dg(5, K({ dealt: 1 }), 1, 2) === true && dg(5, K({ dealt: 1 }), 0, 2) === true && dg(5, K({ dealt: 1 }), 3, 2) === false && dg(5, K({ dealt: 2 }), 3, 2) === false,
+           '146a ...with TWO the bot spares one even against a 1 that does at least as much as mine (Johan, 21:20: 1 against 1, 1 against my fist for 0); when mine does more it strikes (21:27: "Roundhouse first" -- 1 or 2 against Roundhouse for 3)');
+        ok(dg(5, K({ steal: 2 }), 1, 1) === true && dg(5, K({ aggr: 1 }), 3, 1) === true && dg(1, K({ dealt: 1 }), 1, 1) === true && dg(1, K({ dealt: 1, crows: 2 }), 1, 2) === false && dg(1, K({ dealt: 2, crows: 2 }), 1, 1) === false,
+           '146a ...a steal counts what it does to me, aggravated is always dodged, the survival rule stays (1 at blood 1); when their crows take me down anyway the dodge is wasted, two in hand or not');
+        ok(dg(5, K({ dodge: true }), 0, 2) === false && dg(5, K({ ends: true }), 0, 2) === false && dg(5, K({ dealt: 0 }), 0, 2) === false,
+           '146a ...never against their dodge, their combat ends or a strike for 0');
+        ok(dg(5, null, 1, 1, 2.2) === true && dg(5, null, 1, 1, 1.8) === false && dg(5, null, 2, 1, 2) === false && dg(5, null, 2, 2, 2) === true && dg(5, null, 1, 2, 1.5) === true && dg(5, null, 2, 2, 1.5) === false && dg(5, null, 1, 1, null) === false && dg(1, null, 1, 1, null) === true,
+           '146a an unknown strike (I strike first): with one dodge at an expected 2 or more that is more than mine (2.2 against hands for 1), not at 1.8 or at an equal 2; with two at any expected 1 or more that is at least mine (1.5 against hands for 1), not under mine (1.5 against 2); without an expectation (combatEndStats 0) the old blood <= 1');
+        const tags = [D(u, 5, K({ dealt: 2 }), 1, 1).tag, D(u, 5, K({ dealt: 2 }), 2, 2).tag, D(u, 5, K({ dealt: 1 }), 1, 1).tag, D(u, 5, null, 1, 1, 2.2).tag, D(u, 1, K({ dealt: 1 }), 1, 1).tag, D(u, 5, null, 1, 2, 1.5).tag];
+        ok(tags.join() === 'known-out,known-two,known-keep,unknown-out,known-survival,unknown-two', '146a the decide row carries the rule that fired (' + tags.join() + ') -- the smoke counts them');
+        /* Johan (16 Oct, 21:20 + 21:27): EXCEPT when my strike takes their vampire to 0 blood or into torpor, as long as theirs does
+           not do the same to me -- with two dodges 0 or torpor, with one torpor only (my recommendation he took, a meta-layer note) */
+        const fx = (b, inc, mine, copies, ob, env, exp) => D(u, b, inc, mine, copies, exp, { oppBlood: ob, env: env || 0 });
+        const f1 = fx(5, K({ dealt: 1 }), 1, 2, 1), f2 = fx(5, K({ dealt: 1 }), 1, 2, 0), f3 = fx(5, K({ dealt: 1 }), 1, 2, 3), f4 = fx(5, K({ dealt: 1 }), 1, 2, null);
+        ok(f1.dodge === false && f1.tag === 'known-finisher' && f2.dodge === false && f3.dodge === true && f4.dodge === true,
+           '146a the finisher, two dodges: 1 against my hands for 1 is struck when it empties (blood 1) or torpors (blood 0) their vampire, dodged against blood 3 or an unknown blood (' + JSON.stringify([f1.tag, f2.tag, f3.tag, f4.tag]) + ')');
+        const g1 = fx(5, K({ dealt: 2 }), 1, 1, 1), g2 = fx(5, K({ dealt: 2 }), 1, 1, 0), g3 = fx(1, K({ dealt: 1 }), 1, 2, 0);
+        ok(g1.dodge === true && g2.dodge === false && g2.tag === 'known-finisher' && g3.dodge === true && g3.tag === 'known-survival',
+           '146a ...one dodge: torpor only (2 against hands for 1 is dodged when it would only empty them, struck when it torpors them); survival first: a strike that empties me is dodged even when mine would torpor them (' + JSON.stringify([g1.tag, g2.tag, g3.tag]) + ')');
+        const h1 = fx(5, K({ dealt: 1 }), 1, 2, 1, 1), h2 = fx(5, K({ dealt: 1 }), 1, 2, 1, 2), h3 = fx(5, null, 1, 2, 1, 0, 1.5), h4 = fx(5, null, 1, 1, 0, 0, 2.2);
+        ok(h1.dodge === false && h2.dodge === true && h3.dodge === false && h3.tag === 'unknown-finisher' && h4.dodge === false && h4.tag === 'unknown-finisher',
+           '146a ...my crows count only when the strike makes the difference (crows 1 empty them, my strike torpors them: struck; crows 2 torpor them anyway: dodged), and an unknown strike gets the same exception (' + JSON.stringify([h1.tag, h2.tag, h3.tag, h4.tag]) + ')');
+        ok(D(u0, 3, K({ dealt: 2 }), 1, 2).dodge === false && D(u0, 3, K({ dealt: 3 }), 1, 1).dodge === true && D(u0, 5, null, 1, 1, 3).dodge === false && D(u0, 1, null, 1, 1, null).dodge === true,
+           '146a dodgeOut 0 = v0.6.204: a known strike only when it would empty or torpor me, an unknown one only at blood <= 1');
+        let man = null; u._emit = (k, m) => { if(k === 'manifest') man = m; }; u._emitManifest();
+        ok(!!(man && man.knobs && man.knobs.dodgeOut === 1), '146a the knob is in the manifest (dodgeOut ' + (man && man.knobs ? man.knobs.dodgeOut : '?') + ')'); }
+
+      // b) _strikePick: the strike the round would play, nothing leaves the hand
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'P', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        const v = { id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', blood: 4, cap: 4, attached: [] };
+        u.board = [v]; u.hand = ['Roundhouse'];
+        const pk = (bot, vv, th) => IF6(bot, '_strikePick') ? bot._strikePick(vv, th) : {};
+        u._range = 'close'; const pc = pk(u, v, false); u._range = 'long'; const pl = pk(u, v, false); u._range = 'close'; const pd = pk(u, v, true);
+        ok(pc.kind === 'strike' && pc.out === 3 && pc.card === 'Roundhouse' && pl.kind === 'fist' && pl.out === 0 && pd.kind === 'fist' && pd.out === 1 && u.hand.length === 1,
+           '146b _strikePick: Ryan (G6) at close plays Roundhouse for 3 (strength 1 + 2); at long a hand strike cannot be used -- hands for 0; after their dodge, the hands; nothing leaves the hand (' + JSON.stringify([pc.kind, pc.out, pl.kind, pl.out, pd.kind, pd.out]) + ')');
+        const t = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'T', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        const tv = { id: 't1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', blood: 3, cap: 6, attached: [] };
+        t.board = [tv]; t.hand = ['Theft of Vitae']; t._range = 'long'; t._stealAvail = () => 1;   // the opposing vampire holds 1
+        const ps = pk(t, tv, false);
+        ok(ps.kind === 'steal' && ps.out === 1 && t.hand.length === 1, '146b ...a steal counts what it takes: Theft of Vitae [THA] (steal 2) at long range from a vampire holding 1 is worth 1 (' + JSON.stringify([ps.kind, ps.out]) + ')');
+        u._noStrikeRound = true; const pn = pk(u, v, false); u._noStrikeRound = false;
+        ok(pn.kind === 'none' && pn.out === 0, '146b ...committed to a gun under Immortal Grapple: no strike, 0'); }
+
+      // c) between bots: the acting Ryan's Roundhouse for 3 comes first; the answering Anxo Vilela (blood 5, hands for 1) dodges it -- v0.6.204 struck back and took 3
+      { const g = duel146({ delay: 30, aDeck: 'nosferatu', dDeck: 'tremere', aHand: ['Roundhouse'], dHand: ['Dodge'] });
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        const dd = g.D.decs.find(x => x && x.out && x.out.tag) || {};
+        ok(aRow.strike === 'Roundhouse' && dRow.strike === 'Dodge' && g.dV.blood === 5 && g.dV.zone === 'ready' && !g.D.hand.includes('Dodge') && dd.out && dd.out.tag === 'known-out',
+           '146c the acting Ryan strikes with Roundhouse for 3 first; Anxo Vilela (blood 5, hands for 1) dodges it and keeps every blood (v0.6.204: 3 < 5, struck back, took 3; got ' + JSON.stringify({ a: aRow.strike, d: dRow.strike, blood: g.dV.blood, zone: g.dV.zone, tag: dd.out ? dd.out.tag : null }) + ')'); }
+
+      // d) ...and Roundhouse in Anxo's place (the steal is gone: Theft of Vitae for 2 against Ryan holding 4 at close = the tie with one dodge -> it steals)
+      { const g = duel146({ delay: 30, aDeck: 'nosferatu', dDeck: 'tremere', aHand: [], aV: { blood: 4 }, dV: { blood: 5 }, dHand: ['Dodge', 'Theft of Vitae'] });
+        g.A._strengthBonus = () => 1;   // Ryan's hands for 2 (an attached strength, Preternatural Strength's +1)
+        await g.run();
+        const dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(dRow.strike === 'Theft of Vitae' && g.D.hand.includes('Dodge'),
+           '146d the acting Ryan strikes with hands for 2; Anxo Vilela steals 2 back (equal output, one dodge in hand): the dodge is saved (got ' + JSON.stringify({ d: dRow.strike, keep: g.D.hand.includes('Dodge'), blood: g.dV.blood }) + ')'); }
+
+      // e) the acting bot strikes first: an unknown strike, read on the expected strike (the table model says 2.4)
+      { const g = duel146({ delay: 30, aDeck: 'tremere', dDeck: 'nosferatu', aV: { id: 'a1', name: 'Anxo Vilela (G6)', blood: 5, cap: 6 }, dV: { id: 'd1', name: 'Ryan (G6)', blood: 4, cap: 4 }, aHand: ['Dodge'], dHand: ['Roundhouse'] });
+        g.A._expStrikeDmg = () => 2.4;
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(aRow.strike === 'Dodge' && dRow.strike === 'hands' && g.D.hand.includes('Roundhouse') && g.aV.blood === 5,
+           '146e the acting Anxo Vilela (blood 5, hands for 1) expects 2.4 from Ryan and dodges first; Ryan sees it and keeps Roundhouse (v0.6.204: blood 5 > 1, struck; got ' + JSON.stringify({ a: aRow.strike, d: dRow.strike, keep: g.D.hand.includes('Roundhouse'), blood: g.aV.blood }) + ')');
+        const g2 = duel146({ delay: 30, aDeck: 'tremere', dDeck: 'nosferatu', aOpts: { combatEndStats: 0 }, aV: { id: 'a1', name: 'Anxo Vilela (G6)', blood: 5, cap: 6 }, dV: { id: 'd1', name: 'Ryan (G6)', blood: 4, cap: 4 }, aHand: ['Dodge'], dHand: ['Roundhouse'] });
+        g2.A._expStrikeDmg = () => 2.4;
+        await g2.run();
+        const aRow2 = g2.A.rows.find(r => r.round === 1) || {};
+        ok(aRow2.strike === 'hands' && g2.A.hand.includes('Dodge'), '146e ...with combatEndStats 0 there is no expectation to weigh: the old blood <= 1, it strikes (got ' + JSON.stringify({ a: aRow2.strike }) + ')'); }
+    }
+
+    /* 147) v0.6.205 -- R4, the play-test's F21: Revelations against a bot. Only a human line aimed at my POOL armed the [aus]
+       mode (a vampire aim or none never did, a bare "plays Revelations." matched nothing), and after the reveal the human's
+       pick -- the client's private Target line -- was dropped. Revelations is prey-locked by its text: both modes arm when the
+       actor's prey is me, whatever the suffix; the pick comes by the client's logTo or a typed "discard CARD", from that actor,
+       until the turn ends. */
+    {
+      console.log('\n[147] v0.6.205 -- R4 (F21): Revelations against a bot -- armed by the prey, the human’s pick read');
+      const mk147 = () => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.players = [{ seat: 1, name: 'Hanna', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Viktor', online: true }];
+        u.seat = 2; u.started = true; u.pool = 10; u.msgs = []; u.chats = []; u.notes = [];
+        u.send = m => u.msgs.push(m); u.chat = m => u.chats.push(m); u.note = m => u.notes.push(m); u.push = () => {}; u.fxClone = () => {};
+        u._reactWindow = () => {}; u._restartAskTimer = () => {};
+        u.board = [{ id: 'w1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 3 }];
+        return u; };
+      const armed = (u, who, line) => { u._onLog(who, line); const p = u.pending; const r = p ? { kind: p.kind, sup: p.peekSup, who: p.who } : null; if(u.pending){ u._clearPending('test'); } return r; };
+
+      // a) the arming: every shape of the human client's line, the actor's prey only
+      { const u = mk147();
+        const r1 = armed(u, 'Hanna', "Lisa plays Revelations [aus]. Target: U's Wauneka (G6).");
+        const r2 = armed(u, 'Hanna', 'Lisa plays Revelations.');
+        const r3 = armed(u, 'Hanna', 'Lisa plays Revelations [aus].');
+        const r4 = armed(u, 'Hanna', "Lisa plays Revelations [aus]. Target: U's pool.");
+        const r5 = armed(u, 'Hanna', "Lisa plays Revelations [AUS].");
+        const r6 = armed(u, 'Hanna', "Lisa plays Revelations [aus]. Target: Viktor's Bob.");
+        const ok1 = r => !!(r && r.kind === 'peek' && r.sup === false && r.who === 'Hanna');
+        ok(ok1(r1) && ok1(r2) && ok1(r3), '147a F21: the actor’s prey arms the [aus] peek on a VAMPIRE aim, on a bare play line (no mode chooser) and with no aim (v0.6.204: only "Target: U’s pool." armed; got ' + JSON.stringify([r1, r2, r3]) + ')');
+        ok(ok1(r4) && !!(r5 && r5.kind === 'peek' && r5.sup === true), '147a ...the pool aim still arms, and [AUS] arms the open hand, as before');
+        ok(ok1(r6), '147a ...a stale aim at another seat’s vampire changes nothing: Revelations reads "your prey" (got ' + JSON.stringify(r6) + ')');
+        const r7 = armed(u, 'Viktor', "Bob plays Revelations [aus]. Target: U's pool.");
+        ok(r7 === null, '147a ...and a Methuselah whose prey I am not never arms me, aim or not (got ' + JSON.stringify(r7) + ')'); }
+
+      // b) the human actor's pick by the client's Target: the private line, from that actor
+      { const u = mk147(); u.hand = ['Deflection', 'Computer Hacking', "Cats' Guidance"];
+        u.pending = { who: 'Hanna', amount: 0, kind: 'peek', peekSup: false, actorName: 'Hanna', reacted: new Set(), attempted: new Set() };
+        u._applyPending('test');
+        const rv = u.msgs.find(m => m.t === 'revealHand');
+        const told = u.chats.find(c => /pick the card I discard \(Revelations\)/.test(c));
+        ok(!!rv && rv.to === 1 && !!told && /Hanna/.test(told) && /discard CARD/.test(told), '147b after the reveal the human actor is told how to pick: the client’s Target, or "discard CARD" (' + JSON.stringify(told || null) + ')');
+        u.msgs.length = 0;
+        u._handlers.logTo({ from: 'Viktor', html: '⋖ <b>Viktor</b> targets <b>Deflection</b> (revealed to you — they are targeting it).' });
+        ok(u.hand.includes('Deflection') && !u.msgs.some(m => m.t === 'draw'), '147b ...a Target line from another Methuselah is not the pick');
+        u._handlers.logTo({ from: 'Hanna', html: '⋖ <b>Hanna</b> targets <b>Cats&#39; Guidance</b> (revealed to you — they are targeting it).' });
+        ok(!u.hand.includes("Cats' Guidance") && u.board.some(c => c.zone === 'ash' && c.name === "Cats' Guidance") && u.msgs.some(m => m.t === 'draw') && !u._revPick,
+           '147b ...the actor’s Target line is the pick: the card goes to the ash heap and I draw (the client escapes the apostrophe; got hand ' + JSON.stringify(u.hand) + ')');
+        u.msgs.length = 0;
+        u._handlers.logTo({ from: 'Hanna', html: '⋖ <b>Hanna</b> targets <b>Deflection</b> (revealed to you — they are targeting it).' });
+        ok(u.hand.includes('Deflection') && !u.msgs.some(m => m.t === 'draw'), '147b ...one pick per Revelations: a second Target line discards nothing'); }
+
+      // c) the typed pick, the old bot actor's command, and the end of the turn
+      { const u = mk147(); u.hand = ['Deflection', 'Computer Hacking'];
+        u.pending = { who: 'Hanna', amount: 0, kind: 'peek', peekSup: false, actorName: 'Hanna', reacted: new Set(), attempted: new Set() };
+        u._applyPending('test'); u.msgs.length = 0;
+        u._onChat('Viktor', 'discard Deflection');
+        ok(u.hand.includes('Deflection'), '147c a typed "discard" from another seat is table talk');
+        u._onChat('Hanna', 'discard computer hacking');
+        ok(!u.hand.includes('Computer Hacking') && u.msgs.some(m => m.t === 'draw'), '147c ...the actor’s typed "discard computer hacking" is the pick, in any case (got ' + JSON.stringify(u.hand) + ')');
+        const u4 = mk147(); u4.hand = ['Deflection', 'Computer Hacking'];
+        u4.pending = { who: 'Hanna', amount: 0, kind: 'peek', peekSup: false, actorName: 'Hanna', reacted: new Set(), attempted: new Set() };
+        u4._applyPending('test'); u4.msgs.length = 0;
+        u4._onChat('Hanna', '@U discard Deflection.');
+        ok(!u4.hand.includes('Deflection') && u4.msgs.some(m => m.t === 'draw'), '147c ...addressed the way the bleed grammar is ("@U discard Deflection.") it is the pick too (got ' + JSON.stringify(u4.hand) + ')');
+        const u2 = mk147(); u2.hand = ['Deflection']; u2.started = false; u2.turnSeat = 1;
+        u2.pending = { who: 'Hanna', amount: 0, kind: 'peek', peekSup: false, actorName: 'Hanna', reacted: new Set(), attempted: new Set() };
+        u2._applyPending('test'); u2._handlers.turn({ seat: 3 }); u2.msgs.length = 0;
+        u2._onChat('Hanna', 'discard Deflection');
+        ok(u2.hand.includes('Deflection') && !u2.msgs.some(m => m.t === 'draw'), '147c ...the pick belongs to its action: after the turn has passed a "discard" discards nothing');
+        const u3 = mk147(); u3.hand = ['Deflection'];
+        u3._handlers.logTo({ html: 'Revelations: discard <b>Deflection</b>.' });
+        ok(!u3.hand.includes('Deflection') && u3.msgs.some(m => m.t === 'draw'), '147c ...a bot actor’s own "Revelations: discard X." works as before'); }
+    }
+
+    /* 148) v0.6.205 -- R4, the play-test's F23: the masters of the V5 decks the auto tier had certified FULL. The Labyrinth
+       (lock for +1 stealth to a Nosferatu), Guardian Angel (on a READY vampire: +1 intercept against a bleed at me, prevent 1
+       each combat, burned when the host goes to torpor), Wasserschloss Anif (a blood bank: in from a ready Tremere in the
+       master phase, out onto an uncontrolled Tremere in the influence phase), and found on the way: Arcane Library's lock
+       ('during your influence phase') had never fired in play, and a vampire filled to capacity before the transfers had no
+       way to ready. */
+    {
+      console.log('\n[148] v0.6.205 -- R4 (F23): The Labyrinth, Guardian Angel, Wasserschloss Anif, Arcane Library in play');
+      const IF8 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const strip148 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const mk148 = (name, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', deckName: deck || 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: name || 'U', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.notes = []; u.note = m => u.notes.push(m); u.chat = () => {}; u._emit = () => {};
+        return u; };
+
+      // a) The Labyrinth
+      { const u = mk148('U', 'nosferatu');
+        const lab = { id: 'lb', name: 'The Labyrinth', kind: 'lib', zone: 'ready', locked: false };
+        const nos = { id: 'n1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3, cap: 4, attached: [] };
+        const tre = { id: 't1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3, cap: 6, attached: [] };
+        u.board = [lab, nos, tre]; u.hand = ['Lost in Crowds'];
+        const fx = u.fxLookup('The Labyrinth');
+        ok(!!(fx && fx.e && fx.e.src === 'hand' && (fx.e.modes || []).some(mo => mo.lock && mo.fx && mo.fx.lockStealth === 1)), '148a the curated entry: a lock for +1 stealth (lockStealth), src hand (the auto tier: fx.stealth, which only the hand finder reads)');
+        const st = u._bestStealthFor(nos, new Set(), 1);
+        ok(!!(st && st.name === 'The Labyrinth' && st.s === 1 && st.lock), '148a a Nosferatu actor: the Labyrinth is offered first on a tie with Lost in Crowds [obf] +1 -- a lock, the hand card is kept (got ' + JSON.stringify(st) + ')');
+        const st2 = u._bestStealthFor(tre, new Set(), 1);
+        ok(!(st2 && st2.name === 'The Labyrinth'), '148a ...never to a vampire of another clan ("a Nosferatu you control")');
+        const sk = u._stealthStack(nos, new Set());
+        ok(sk.S === 2 && sk.sum === 2, '148a ...and the stealth stack counts it like a card (' + JSON.stringify(sk) + ')');
+        const av = { v: nos, n: 1, played: new Set(), target: 1 }, a = { contested: false };
+        u._bumpTallyA = () => {}; u._restartAskTimer = () => {};
+        if(st && st.lock) u._spendStealthCard(st, av, a);
+        const line = u.sent.filter(m => m.t === 'log').map(m => strip148(m.html)).find(l => /The Labyrinth/.test(l));
+        ok(lab.locked === true && u.board.includes(lab) && u.hand.includes('Lost in Crowds') && line === 'Ryan (G6) locks The Labyrinth: +1 stealth.', '148a spent: the card LOCKS and stays in play, the hand keeps its card ("' + line + '")');
+        const st3 = u._bestStealthFor(nos, new Set(), 1);
+        ok(!!(st3 && st3.name === 'Lost in Crowds'), '148a ...locked, it is not offered again this turn (the hand card next)');
+        const ev = u._evClassify('U', 'Ryan (G6) locks The Labyrinth: +1 stealth.', 'log');
+        ok(!!(ev && ev.kind === 'stealth' && ev.n === 1), '148a ...and the line is typed as stealth (NET_STEALTH reads "locks" too)'); }
+
+      // b) Guardian Angel: the host, the intercept, the prevent, the burn
+      { const u = mk148('U', 'nosferatu');
+        const big = { id: 'b1', name: 'Belinde (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 6, attached: [] };
+        const small = { id: 's1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] };
+        const torp = { id: 'p1', name: 'The Dowager (G6)', kind: 'crypt', zone: 'torpor', locked: false, blood: 0, cap: 6, attached: [] };
+        u.board = [small, torp, big];
+        const h = IF8(u, '_hostReadyFor') ? u._hostReadyFor('Guardian Angel') : null;
+        ok(!!(h && h.name === 'Belinde (G6)'), '148b Guardian Angel goes on a READY vampire: the highest capacity (Belinde 6, not The Dowager 6 in torpor, not Ryan 4; got ' + (h && h.name) + ')');
+        u.pool = 10; u.hand = ['Guardian Angel'];
+        const cands = u._bestMasterFor(new Set());
+        ok(cands.length === 1 && cands[0].host === 'ready' && cands[0].curated === true, '148b ...the master candidate carries host "ready" and is curated');
+        const ga = { id: 'ga', name: 'Guardian Angel', kind: 'lib', zone: 'ready', locked: false, host: 'b1' }; big.attached = ['ga']; u.board.push(ga);
+        const h2 = IF8(u, '_hostReadyFor') ? u._hostReadyFor('Guardian Angel') : null;
+        ok(!!(h2 && h2.name === 'Ryan (G6)'), '148b ...never a second one on the same vampire (got ' + (h2 && h2.name) + ')');
+        const icB = u.interceptPotential(null, { kind: 'bleed', attempted: new Set() }), icP = u.interceptPotential(null, { kind: 'pool', attempted: new Set() });
+        ok(icB === 1 && icP === 0, '148b its +1 intercept counts in a block of a BLEED at me, not of another action (bleed ' + icB + ', pool ' + icP + ')');
+        ok(u._blockerWorth(big) > u._blockerWorth(Object.assign({}, big, { attached: [] })), '148b ...and my forecasts price the host as the better blocker against my predator’s bleeds');
+        // the prevent, once each combat (145i's fast human table)
+        { const c = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'C', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 0.05, phaseSecs: 0.08, log: () => {} });
+          c.seat = 2; c.started = true; c.caps.tally = true; c.push = () => {}; c.say = () => {}; c.send = () => {}; c.chats = []; c.chat = m => c.chats.push(m); c.notes = []; c.note = m => c.notes.push(m); c.fxClone = () => {};
+          c.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'C', bot: true }];
+          c.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
+          const bv = { id: 'b1', name: 'Belinde (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 6, attached: ['ga'] };
+          c.board = [bv, { id: 'ga', name: 'Guardian Angel', kind: 'lib', zone: 'ready', locked: false, host: 'b1' }]; c.hand = [];
+          c._actingVamp = { v: bv, n: 1, played: new Set() };
+          c._awaitOppStrike = () => Promise.resolve({ vamp: 'Lisa', dodge: false, dealt: 2 });
+          await c._resolveCombat(bv, 'Lisa');
+          const pv = c.notes.filter(n => /prevents 1 damage \(Guardian Angel/.test(n));
+          ok(pv.length === 1 && bv.blood === 3, '148b in combat the host prevents 1 damage, once: a strike for 2 costs Belinde 1 (blood ' + bv.blood + '; ' + pv.length + ' prevent line)'); }
+        const evp = u._evClassify('U', 'Belinde (G6) prevents 1 damage (Guardian Angel, once this combat).', 'log');
+        ok(!!(evp && evp.kind === 'prevent' && evp.n === 1 && evp.vamp === 'Belinde (G6)'), '148b ...the line is typed as a prevention, so the opposing bot’s strike-vs-taken invariant hears it');
+        // the burn at torpor
+        u._fameTorporHook(big);
+        ok(!u.board.includes(ga) && !(big.attached || []).includes('ga') && u.board.some(c => c.zone === 'ash' && c.name === 'Guardian Angel'), '148b the host goes to torpor: Guardian Angel burns ("If this vampire is in torpor, burn this card")'); }
+
+      // c) Wasserschloss Anif: the bank
+      { const u = mk148('U', 'tremere'); u.pool = 20;
+        const ws = { id: 'ws', name: 'Wasserschloss Anif, Austria', kind: 'lib', zone: 'ready', locked: false, blood: 0 };
+        const tre = { id: 't1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 6, attached: [] };
+        const unc = { id: 'u1', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', faceDown: true, locked: false, blood: 1, cap: 4 };
+        u.board = [ws, tre, unc]; u.unc = [unc]; u.hand = [];
+        if(IF8(u, '_considerBankIn')) await u._considerBankIn('master');
+        ok(ws.blood === 1 && tre.blood === 4, '148c master phase: a ready Tremere that can spare it moves 1 blood onto the bank (bank ' + ws.blood + ', Anxo ' + tre.blood + ')');
+        if(IF8(u, '_considerBankIn')) await u._considerBankIn('master');
+        ok(ws.blood === 2, '148c ...each master phase (one move a phase; bank ' + ws.blood + ')');
+        await u._considerLockIncome('influence');
+        ok(ws.locked === true && ws.blood === 0 && unc.blood === 3 && u.sent.some(m => m.t === 'log' && /locks <b>Wasserschloss Anif, Austria<\/b> to move 2 blood to an uncontrolled vampire/.test(m.html)),
+           '148c influence phase: the bank locks and moves every counter onto the uncontrolled Tremere (Lauren 1 -> ' + unc.blood + '), the target unnamed (it is face down)');
+        const u2 = mk148('U2', 'tremere'); u2.pool = 20;
+        const ws2 = { id: 'ws', name: 'Wasserschloss Anif, Austria', kind: 'lib', zone: 'ready', locked: false, blood: 0 };
+        const tre2 = { id: 't1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 6, attached: [] };
+        u2.board = [ws2, tre2]; u2.unc = []; u2.hand = [];
+        if(IF8(u2, '_considerBankIn')) await u2._considerBankIn('master');
+        ok(ws2.blood === 0 && tre2.blood === 5, '148c ...nothing is banked while no Tremere waits in my uncontrolled region');
+        const unc3 = { id: 'u3', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', faceDown: true, locked: false, blood: 3, cap: 4 };
+        u2.board.push(unc3); u2.unc = [unc3]; ws2.blood = 2;
+        await u2._considerLockIncome('influence');
+        const over = ws2.blood === 2 && unc3.blood === 3 && !ws2.locked;   // 3 + 2 = 5 > 4: blood past capacity drains off -- the bank waits
+        unc3.blood = 2;   // 2 + 2 = 4 = Lauren's capacity: paid out, and she rises free in the same influence phase (the payout runs before the loop)
+        await u2._considerLockIncome('influence');
+        const filled = ws2.locked === true && ws2.blood === 0 && unc3.blood === 4;
+        u2.inf = 4; u2.cryptN = 0; u2._infSaid = [];
+        if(filled) await u2._influenceLoopInner();
+        ok(over && filled && unc3.zone === 'ready' && u2.inf === 4, '148c ...the payout never goes over capacity (3 + 2 > 4: the bank waits), and filled exactly (2 + 2 = 4) the vampire rises free in the same influence phase, no transfer spent (got ' + JSON.stringify({ over, filled, zone: unc3.zone, inf: u2.inf }) + ')'); }
+
+      // d) found on the way: Arcane Library's lock in the influence phase of a real turn, and the rise of a vampire already at capacity
+      { const u = mk148('U', 'tremere'); u.pool = 20; u.turnSeat = 2; u.ownTurns = 5; u.cryptN = 0;
+        const al = { id: 'al', name: 'Arcane Library', kind: 'lib', zone: 'ready', locked: false };
+        const tp = { id: 'tp', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'torpor', locked: false, blood: 0, cap: 6, attached: [] };
+        const unc = { id: 'u1', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', faceDown: true, locked: false, blood: 1, cap: 4 };
+        u.board = [al, tp, unc]; u.unc = [unc]; u.hand = []; let terr = null;
+        try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const logs = u.sent.filter(m => m.t === 'log').map(m => strip148(m.html));
+        ok(!terr && logs.some(l => /locks Arcane Library to add 1 blood to an uncontrolled vampire/.test(l)), '148d Arcane Library locks in the influence phase of a real turn (v0.6.204: it was played and never used -- the phase never asked; ' + (terr || logs.filter(l => /Arcane|influence/i.test(l)).join(' | ')) + ')');
+        const u2 = mk148('U2', 'tremere'); u2.pool = 10; u2.inf = 1; u2.cryptN = 0;
+        const full = { id: 'f1', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', faceDown: true, locked: false, blood: 4, cap: 4 };
+        u2.board = [full]; u2.unc = [full]; u2._infSaid = [];
+        await u2._influenceLoopInner();
+        ok(full.zone === 'ready' && u2.pool === 10 && u2.inf === 1, '148d a vampire already at capacity rises for free -- no transfer, no pool (v0.6.204 stopped the phase at "need 0" and left it in the uncontrolled region; got ' + full.zone + ', pool ' + u2.pool + ')');
+        ok(u2._influenceSentence(u2._infSaid) === 'Lauren enters play at capacity.', '148d ...said once, without a "0 blood" ("' + u2._influenceSentence(u2._infSaid) + '")'); }
+    }
+
+    /* 149) v0.6.205 -- R4, the play-test's F23 and Johan's decision 5 (16 Oct): Haven Uncovered is not played until the bot can
+       rush through it, then on an opponent's vampire. The rush through it: any minion enters combat with the host as a +1
+       stealth (D) action, no card from hand, the Haven stays, nobody locks, the rusher is the acting minion; the frozen
+       placement and rush lines (L12.havenM / L12.havenRush), heard by every observer and answered by the host's owner. */
+    {
+      console.log('\n[149] v0.6.205 -- R4 (F23): Haven Uncovered -- played on the rush target, the rush through it on both sides');
+      const IF9 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const strip149 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const L12h = require('./elysium-bot.js').L12;
+
+      // a) the data and the frozen lines
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        const fx = u.fxLookup('Haven Uncovered');
+        ok(!!(fx && fx.e && fx.e.src === 'hand' && (fx.e.modes || []).some(mo => mo.fx && mo.fx.rushGrant === 1)), '149a the curated entry: rushGrant (the +1 stealth of the granted rush), src hand (the auto tier: fx.stealth, tabled on the bot’s own board)');
+        ok(!!(L12h.havenM && 'Hanna plays Haven Uncovered — on Viktor\'s Anxo Vilela (G6).'.match(L12h.havenM)) && !!(L12h.havenRush && "Ryan (G6) enters combat with Viktor's Anxo Vilela (G6) (Haven Uncovered).".match(L12h.havenRush)),
+           '149a the frozen placement and rush lines parse');
+        const e1 = u._evClassify('Hanna', "Ryan (G6) enters combat with Viktor's Anxo Vilela (G6) (Haven Uncovered).", 'log');
+        const e2 = u._evClassify('Hanna', 'Hanna plays Haven Uncovered — on Viktor\'s Anxo Vilela (G6).', 'log');
+        ok(!!(e1 && e1.kind === 'announce' && e1.action === 'rush' && e1.directed === true && e1.target === 'Anxo Vilela (G6)') && !!(e2 && e2.kind === 'card-played' && e2.card === 'Haven Uncovered'),
+           '149a ...and the event log types both in the same release (' + JSON.stringify([e1 && e1.kind, e2 && e2.kind]) + ')'); }
+
+      // b) the hold and the pick
+      { const mk = () => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Hanna', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
+          u.seat = 1; u.started = true; u.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
+          u.table = { 2: { pub: { cards: [{ id: 'x1', kind: 'crypt', name: 'Anxo Vilela (G6)', zone: 'ready', blood: 1 }] } } }; u._emit = () => {}; return u; };
+        const u = mk(); u.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 0, cap: 4, attached: [] }];
+        ok(IF9(u, '_havenHostPick') && u._havenHostPick() === null, '149b no ready rusher with blood: the Haven is held (Johan: not played until the bot can rush through it)');
+        const u2 = mk(); u2.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] }];
+        const pk = IF9(u2, '_havenHostPick') ? u2._havenHostPick() : null;
+        ok(!!(pk && pk.name === 'Anxo Vilela (G6)' && pk.seat === 2 && pk.rusher === 'Ryan (G6)'), '149b ...a rusher with a target: the Haven goes on the vampire the rush doctrine picks -- an opponent’s, never mine (got ' + JSON.stringify(pk && { name: pk.name, seat: pk.seat, rusher: pk.rusher }) + ')');
+        /* found by the release's own smoke (seed 4005): the Haven went down, then its rusher equipped Raven Spy (permanents first) and
+           a plain bleed outscored the rush anyway -- the rush through the Haven must be the action the rusher would choose now */
+        const u3 = mk(); u3.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] }]; u3.hand = ['Raven Spy'];
+        const u4 = mk(); u4.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] }]; u4.table[2].pub.cards[0].blood = 5;
+        const p3 = IF9(u3, '_havenHostPick') ? u3._havenHostPick() : 'n/a', p4 = IF9(u4, '_havenHostPick') ? u4._havenHostPick() : 'n/a';
+        ok(p3 === null && p4 === null, '149b ...but a target is not a rush: held when the rusher would rather put a permanent in play (Raven Spy, permanents first) or bleed (Anxo at 5 blood: the bleed outscores the rush) -- the smoke’s case (got ' + JSON.stringify([p3 && p3.name, p4 && p4.name]) + ')');
+        u2._havenSeen = { 'Anxo Vilela (G6)': { owner: 'Viktor', seat: 2, by: 'Viktor', bySeat: 2, cardId: null } };
+        u2.table[2].pub.cards.push({ id: 'hv', kind: 'lib', name: 'Haven Uncovered', zone: 'ready' });
+        const hr = IF9(u2, '_bestHavenRushFor') ? u2._bestHavenRushFor(u2.board[0]) : null;
+        ok(!!(hr && hr.kind === 'rush' && hr.via === 'haven' && hr.idx === null && hr.st === 1 && hr.target.name === 'Anxo Vilela (G6)'), '149b any Haven on the table is a rush for my minion: +1 stealth, no card from hand (idx null), at its host (got ' + JSON.stringify(hr && { via: hr.via, idx: hr.idx, st: hr.st, t: hr.target && hr.target.name }) + ')');
+        u2.hand = ['Deep Song']; u2.board[0] = { id: 'w1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 5, attached: [] };
+        const both = u2._bestRushFor(u2.board[0]);
+        ok(!!(both && both.via === 'haven'), '149b ...preferred over Deep Song on the same target (no card spent, +1 stealth; got ' + (both && (both.via || both.name)) + ')');
+        u2.table[2].pub.cards = u2.table[2].pub.cards.filter(c => c.name !== 'Haven Uncovered');
+        const gone = IF9(u2, '_bestHavenRushFor') ? u2._bestHavenRushFor(u2.board[0]) : null;
+        ok(gone === null, '149b ...and gone with the card: a Haven that left its placer’s board grants nothing'); }
+
+      // c) the target side: a window when I can block, the comply without the lock
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Viktor', persona: 'expert', deckName: 'tremere', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
+        u.send = () => {}; u.push = () => {}; u.says = []; u.say = p => u.says.push(p); u.notes = []; u.note = m => u.notes.push(m); u._reactWindow = () => {};
+        const host = { id: 'h1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 6, attached: [] };
+        u.board = [host, { id: 'h2', name: 'Lauren', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4, attached: [] }];
+        u._onLog('Hanna', "Ryan (G6) enters combat with Viktor's Anxo Vilela (G6) (Haven Uncovered).");
+        const p = u.pending;
+        ok(!!(p && p.kind === 'rush' && p.noLock === true && p.targetActs === false && p.rushTarget === 'Anxo Vilela (G6)'), '149c the host’s owner may block with any unlocked minion: the window opens -- the rush locks nobody and the rusher acts (got ' + JSON.stringify(p && { kind: p.kind, noLock: p.noLock, targetActs: p.targetActs }) + ')');
+        let fought = null; u._resolveCombat = (v, opp) => { fought = { v: v.name, opp }; return Promise.resolve(); };
+        if(p) u._complyRush(p);
+        ok(!!fought && fought.v === 'Anxo Vilela (G6)' && fought.opp === 'Ryan (G6)' && host.locked === false && !u._combatActing && u.notes.some(n => /defends \(rushed by Ryan \(G6\), Haven Uncovered\)/.test(n)),
+           '149c ...on my Pass the host fights the rusher without locking, and it is not the acting minion (Deep Song’s reversal stays Deep Song’s)'); }
+
+      // d) between bots, a whole turn: the Haven goes on the rush target in the master phase, the rush goes through it in the minion phase
+      { const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        const mk = (name, seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck, paceMs: 0, askSecs: 0.4, phaseSecs: 0.3, twdKnow: 0, log: () => {} });
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = []; u.evs = [];
+          u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); if(t === 'bot:through' || t === 'bot:haven') u.evs.push({ t, m }); };
+          return u; };
+        const A = mk('Hanna', 1, 'nosferatu'), D = mk('Viktor', 2, 'tremere');
+        const wire = (from, to) => { from.send = m => {
+          if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, 30); return; }
+          if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
+          const txt = m.t === 'log' ? strip149(m.html) : String(m.msg || '');
+          from._evRecord(from.o.name, txt, m.t, true); from.lines.push({ at: Date.now(), tier: m.t, txt });
+          const d = Object.assign({}, m, { who: from.o.name }); setTimeout(() => { if(!to.out) to._dispatch(d); }, 30); }; };
+        wire(A, D); wire(D, A);
+        const ry = { id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] };
+        const ax = { id: 'x1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 1, cap: 6, attached: [] };
+        A.board = [ry]; A.hand = ['Haven Uncovered', 'Roundhouse']; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
+        D.board = [ax]; D.hand = []; D.pool = 20; D.turnSeat = 1;
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: ax.name, zone: 'ready', blood: 1 }] } } };
+        D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: ry.name, zone: 'ready', blood: 4 }] } } };
+        let terr = null;
+        await Promise.race([A._playTurn().catch(e => { terr = e.message; }), sleep(12000)]);
+        A.table[1] = { pub: { cards: A.board.slice() } };   // what D would read of A's board (the placer's Haven)
+        const aL = A.lines.map(l => l.txt);
+        const placed = aL.find(l => /plays Haven Uncovered — on Viktor's Anxo Vilela \(G6\)\./.test(l));
+        const rushed = aL.find(l => /^Ryan \(G6\) enters combat with Viktor's Anxo Vilela \(G6\) \(Haven Uncovered\)\.$/.test(l));
+        ok(!terr && !!placed && A.board.some(c => c.name === 'Haven Uncovered' && c.zone === 'ready') && !A.hand.includes('Haven Uncovered'),
+           '149d master phase: the Haven goes on the opponent’s vampire the rush targets, tabled on my board with the frozen line (' + (terr || placed || aL.filter(l => /Haven|master/i.test(l)).join(' | ')) + ')');
+        ok(!!rushed && !!(D._havenSeen && D._havenSeen['Anxo Vilela (G6)'] && D._havenSeen['Anxo Vilela (G6)'].by === 'Hanna'),
+           '149d minion phase: Ryan enters combat with Anxo through it (the observer recorded the placement; ' + (rushed || aL.filter(l => /Ryan/.test(l)).join(' | ')) + ')');
+        const thr = A.evs.find(e => e.t === 'bot:through' && e.m && e.m.via === 'haven');
+        const aRow = A.rows.find(r => r.round === 1) || {}, dRow = D.rows.find(r => r.round === 1) || {};
+        ok(!!thr && aRow.strike === 'Roundhouse' && !!dRow.round && ax.zone === 'torpor' && A.hand.includes('Haven Uncovered') === false,
+           '149d ...it goes through (Viktor cannot block: no other unlocked minion), both bots fight it, Roundhouse puts Anxo (blood 1) into torpor (got ' + JSON.stringify({ through: !!thr, a: aRow.strike, d: dRow.strike, zone: ax.zone }) + ')'); }
     }
 
 

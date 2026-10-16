@@ -12,7 +12,8 @@
   "Curation queue policy: (1) all cards in shipped bot playbooks,",
   "(2) TWDA-frequent staples, (3) anything the auto tier provably mistags.",
   "18 Sep 2026 (late): +2 crypt (Sybren van Oosten, Alexa Draper), Alexander Silverson no longer docOnly -- 74 lib + 20 crypt = 94.",
-  "18 Sep 2026 (night): + Anarch Troublemaker -- 75 lib + 20 crypt = 95."
+  "18 Sep 2026 (night): + Anarch Troublemaker -- 75 lib + 20 crypt = 95.",
+  "16 Oct 2026 (R4): + the six V5 masters the auto tier mis-certified (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Austria, Haven Uncovered) -- 85 lib + 20 crypt = 105."
  ],
  "lib": {
   "Blood Doll": {
@@ -1690,6 +1691,131 @@
     }
    ],
    "note": "25 Sep 2026 (full cardfx sweep): the auto tier added a 'dem' mode with bleed 1 from the attached card's PASSIVE ('Vampires with Dementation get +1 bleed against the attached minion's controller') -- not a mode the bot can play. Dropped; the passive is unmodelled (a persistent bleed bonus against one Methuselah)."
+  },
+  "Elder Library": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "cost": {
+    "pool": 1
+   },
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "handSize": 1,
+      "handSizePermanent": true
+     }
+    }
+   ],
+   "note": "R4 (16 Oct 2026, the play-test review's F23: the six masters of the V5 decks the auto tier had certified FULL while four did nothing). 'Unique location. +1 hand size.' (verified in vtes.json). The auto tier had it right: the permanent hand size is read from the freestanding board card by _handSizePermanentTotal (drawn up at once when it enters play, kept by the discard phase's revert). Curated so every master of the V5 Malkavian deck is hand-checked."
+  },
+  "Ventrue Headquarters": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "cost": {
+    "pool": 1
+   },
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "votes": 3
+     }
+    }
+   ],
+   "note": "R4 (16 Oct 2026, the play-test review's F23: the six masters of the V5 decks the auto tier had certified FULL while four did nothing). 'Unique location. You can lock this card during the polling step of any referendum to get +3 votes.' The auto tier had it right: _voteBoosts offers the unlocked card in MY referendum's polling, spent only when the count needs it (v0.6.122). Known limit, not built: as a voter in another Methuselah's referendum the bot does not lock it."
+  },
+  "The Labyrinth": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "cost": {
+    "pool": 1
+   },
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockStealth": 1,
+      "lockStealthClan": "Nosferatu"
+     }
+    }
+   ],
+   "note": "R4 (16 Oct 2026, the play-test review's F23: the six masters of the V5 decks the auto tier had certified FULL while four did nothing). 'Unique location. You can lock this card to give a Nosferatu you control +1 stealth.' The auto tier wrote fx.stealth, which only the HAND finder reads (type-filtered to modifiers) -- tabled and never used. Now lockStealth: _bestStealthFor offers the unlocked card from my board to a Nosferatu acting minion (lockStealthClan -- the clan of the vampire that gets the stealth; a master's clan icon is no play requirement, cardfx v1.9.1), _stealthStack counts it, _spendStealthCard LOCKS it instead of burning; it unlocks at my unlock phase like every board card."
+  },
+  "Guardian Angel": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "cost": {
+    "pool": 2
+   },
+   "host": "ready",
+   "burnOnHostTorpor": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "hostIntercept": 1,
+      "hostInterceptOn": "bleed",
+      "hostPrevent": 1
+     }
+    }
+   ],
+   "note": "R4 (16 Oct 2026, the play-test review's F23: the six masters of the V5 decks the auto tier had certified FULL while four did nothing). 'Put this card on a ready vampire you control. This vampire gets +1 intercept during bleed actions directed at you. This vampire can prevent 1 damage each combat. If this vampire is in torpor, burn this card.' The auto tier wrote intercept + prevent with no host: tabled loose, read by nobody. Now: host 'ready' -- the master loop puts it on a READY vampire of mine (_hostVampFor's ready-only pick: the highest capacity without a Guardian Angel); hostIntercept on a bleed at me (the _cryptIntercept(v, p) shape: kind 'bleed', at the block sites that know the action; my own forecasts read it as a bleed defence); hostPrevent once each combat beside the equipment prevent; burnOnHostTorpor in the shared torpor hook."
+  },
+  "Wasserschloss Anif, Austria": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "master",
+     "fx": {
+      "bankIn": 1,
+      "bankClan": "Tremere"
+     }
+    },
+    {
+     "at": null,
+     "lock": true,
+     "phase": "influence",
+     "fx": {
+      "bankOut": "unc",
+      "bankClan": "Tremere"
+     }
+    }
+   ],
+   "note": "R4 (16 Oct 2026, the play-test review's F23: the six masters of the V5 decks the auto tier had certified FULL while four did nothing). 'Unique location. During your master phase, a Tremere you control can move 1 blood from themselves to this card. Lock during your influence phase to move all counters on this card to a Tremere in your uncontrolled region. Any minion can burn this card as a (D) action; Malkavians get +1 stealth during that action.' The auto tier wrote a (D) stealth mode -- tabled for nothing. Now the bank: bankIn -- in my master phase one ready Tremere that can spare it (the Blood Doll rule, decide('income-drain'): its last blood, its reserve for the cards in hand, its hunt bar) moves 1 blood onto the card, only while a Tremere waits in my uncontrolled region; bankOut -- in my influence phase the card locks and every counter moves to the uncontrolled Tremere nearest to rising (_considerLockIncome('influence')). Not built: the burn action (any minion; nobody burns an opponent's location today)."
+  },
+  "Haven Uncovered": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "rushGrant": 1
+     }
+    }
+   ],
+   "note": "R4 (16 Oct 2026, the play-test review's F23: the six masters of the V5 decks the auto tier had certified FULL while four did nothing). 'Put this card on a ready vampire. Minions can enter combat with this vampire as a +1 stealth (D) action. This vampire can burn this card as a +1 stealth (D) action.' The auto tier wrote fx.stealth and the bot tabled it on its OWN board (the play-test's F23). Johan, 16 Oct (decision 5): not played until the bot can rush through it, then on an opponent's vampire. rushGrant = the +1 stealth of the granted rush: the master loop plays it only on the vampire my rush chooser would rush this turn (tabled on my board, the frozen line names owner and host -- Fame's placement), every observer records it, and _bestRushFor offers 'enter combat with the host' for each Haven on the table (no card from hand, the Haven stays, the host is not locked, the rusher is the acting minion). Not built: the host burning it as its own action."
   }
  },
  "crypt": {
