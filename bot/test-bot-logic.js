@@ -9265,6 +9265,12 @@ async function connectWithRetry(client, tries = 30){
         const g = await h.waitAny(m => m.t === 'openHandGrant' && m.seat === 2, 'the debug grant reaches Alice', 6000).catch(() => null);
         await sleep(400);
         ok(!!g && g.cards.length > 0 && other._handIntel(2) === null && !!other._debugSeats && other._debugSeats.has(2), '140g LIVE: the debug bot’s open hand reaches Alice through the server, and the other bot at the table looks away (got ' + (g ? g.cards.length + ' cards' : 'no grant') + ')');
+        const eve = mkClient('Eve'); await connectWithRetry(eve);
+        eve.send({ t: 'join', room: R, pass: 'x', name: 'Eve', spect: true, v: '2.6.0' });
+        await eve.waitFor(m => m.t === 'joined', 'Eve joined as a spectator');
+        const ge = await eve.waitAny(m => m.t === 'openHandGrant' && m.seat === 2, 'the debug grant reaches the late spectator', 6000).catch(() => null);
+        ok(!!ge && ge.cards.length > 0, '140g LIVE: a spectator who joins after the deal gets the debug hand at once -- the roster names her (v0.6.200 sent spectators no hand at a table with two bots; got ' + (ge ? ge.cards.length + ' cards' : 'no grant') + ')');
+        eve.ws.close();
         dbgBot.close(); other.close(); h.ws.close(); }
 
       // h) LIVE on the real server: a human's Reduce line takes the bot's bleed of 1 to 0 -- no Edge
@@ -9292,6 +9298,14 @@ async function connectWithRetry(client, tries = 30){
         const at0 = await h.waitFor(m => m.t === 'log' && m.who === 'BotRed' && /The bleed goes through/.test(strip(m)), 'the bleed resolves', 9000);
         ok(/goes through at 0: Alice loses no pool/.test(strip(at0)) && bot.edge === false && !h.sawAny(m => m.t === 'edgeTake'), '140h LIVE: Alice’s Reduce line (the client’s shape, asked of main) takes the bot’s bleed of 1 to 0 -- it says so and takes no Edge (got "' + strip(at0) + '")');
         bot.close(); h.ws.close(); }
+
+      // i) a spectator who joins a debug table mid-game gets the hand at once (the roster's watcher list is part of the audience)
+      { const u = mk140('U', 2, P3x(), { debug: true }); u._debugHand = true; u.hand = ['Govern the Unaligned', 'Conditioning']; u._syncOpenHand(); u.sent.length = 0;
+        u._dispatch({ t: 'roster', players: P3x(), watchers: 1, watcherList: [{ name: 'Eve' }] });
+        const g = u.sent.filter(m => m.t === 'openHand');
+        ok(g.length === 1 && g[0].to === 'all' && !g[0].revoke && g[0].cards.length === 2, '140i a spectator who joins a debug table mid-game gets the hand at once -- the roster\u2019s watcher list is part of the audience (v0.6.200 waited for the next change of hand; got ' + JSON.stringify(g.map(m => m.to)) + ')');
+        u.sent.length = 0; u._dispatch({ t: 'roster', players: P3x(), watchers: 1, watcherList: [{ name: 'Eve' }] });
+        ok(u.sent.filter(m => m.t === 'openHand').length === 0, '140i ...and an unchanged roster sends nothing'); }
     }
 
 
