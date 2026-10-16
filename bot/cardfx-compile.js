@@ -91,7 +91,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.9.0';   // 18 Sep 2026 (late): THE BLOCK BAR + SELF DAMAGE sweep -- `blockBar` ('vampires'|'allies'|'all'|'chosen'|'titled'|'cond') on the 'cannot block THIS ACTION' / 'unblockable' family, `selfDmg` (+ `selfAggr`) on 'this vampire takes N unpreventable ... damage', `selfTorpor` on 'the acting vampire goes to torpor after'; the self-inflicted sentence no longer leaks `aggr` / `torpor` (Daring the Dawn read as an aggravated STRIKER, Day Operation as a torpor SENDER). Before it: 1.8.0 // 18 Sep 2026: the act-again rider (`when: actSuccess|actBlocked|actFailed`) on unlocking action modifiers + `oncePerTurn`. Before it:
+const FXC_VERSION = '1.9.2';   // 16 Oct 2026 (bot v0.6.202, the 14 Oct play-test's point 18): `handBonus` -- 'hand strike at +N damage' / 'this strike is at +N damage' are a bonus on the hand strike, no longer the absolute `strike` (35 cards; Roundhouse). v1.9.1 (25 Sep, the sweep's pass 2: curated entries inherit requirements and costs) never bumped this constant.
+// const FXC_VERSION_190 = '1.9.0';   // 18 Sep 2026 (late): THE BLOCK BAR + SELF DAMAGE sweep -- `blockBar` ('vampires'|'allies'|'all'|'chosen'|'titled'|'cond') on the 'cannot block THIS ACTION' / 'unblockable' family, `selfDmg` (+ `selfAggr`) on 'this vampire takes N unpreventable ... damage', `selfTorpor` on 'the acting vampire goes to torpor after'; the self-inflicted sentence no longer leaks `aggr` / `torpor` (Daring the Dawn read as an aggravated STRIKER, Day Operation as a torpor SENDER). Before it: 1.8.0 // 18 Sep 2026: the act-again rider (`when: actSuccess|actBlocked|actFailed`) on unlocking action modifiers + `oncePerTurn`. Before it:
 // const FXC_VERSION_170 = '1.7.0';   // 18 Sep 2026 (Johan, the politics leg's first brick): REFERENDUM TERMS -- `ref` on political entries; outcome fx keys leave modes[].fx (the structural gate for bot debt 14). Previous: 1.6.14 (16 Sep, inherited costs).
 // 1.6.14:   // 16 Sep 2026 (Johan's Academic Hunting Ground report): curated entries INHERIT the data's numeric cost when they do not restate it (see overlay); the report lists inherited / mismatched / X costs.
 // FXC_VERSION history: '1.6.13';   // 8 Aug (HB2c-file): every compile now ALSO emits elysium-cardfx.js (globalThis.ELYSIUM_CARDFX = <same object>) beside the json -- the file:// vehicle for double-click hotseat bots; kept in lockstep by construction (one serialize, two writes).   // 17 July: fas B/C mechanism sweep -- OR-mode split (22 cards), As-[ref]-above resolution (89), attach-burn->stealthLater (5), action-type actStealth (176+), keyword-token trifle/archetype (Master:-colon + combination forms), imperative costEdge. v1.4.2 (16 July): wake-sweep.
@@ -339,8 +340,13 @@ function extractFx(t0){
      counter (Invoke Poison Glands' superior "+X damage, where X is the number of
      Orun") fails the finder's typeof==='number' check automatically -- no extra guard
      needed here, the type mismatch IS the guard.                                     */
-  if((m = t.match(/hand strike at \+([0-9]+|X) damage/i))) put('strike', num(m[1]));
-  if((m = t.match(/this strike is at \+([0-9]+|X) damage/i))) put('strike', num(m[1]));
+  /* v1.9.2 (16 Oct 2026, bot v0.6.202 -- the 14 Oct play-test, point 18): these two phrasings are a BONUS on the hand strike, not
+     absolute damage -- "hand strike at +2 damage" deals the minion's strength (1 by default) + 2, so Roundhouse with a plain vampire
+     is 3, and 4 with Preternatural Strength [pot]. They wrote `strike: N`, the field "Strike: N damage" uses for ABSOLUTE damage, and
+     every Roundhouse landed one short. Now `handBonus: N` (handStrike is still tagged below); the bot adds it to the vampire's own hand
+     damage. 36 library cards share the two patterns (25 + 11, vtes.json 14 Oct); in our six decks only Roundhouse. */
+  if((m = t.match(/hand strike at \+([0-9]+|X) damage/i))) put('handBonus', num(m[1]));
+  if((m = t.match(/this strike is at \+([0-9]+|X) damage/i))) put('handBonus', num(m[1]));
   /* v1.6.0 (Johan's standing question, checking the strike-bonus family for
      uncertainty): a THIRD phrasing found by chance while reading Compress -- "Strike:
      N aggravated damage" (aggravated sitting BETWEEN the number and "damage" breaks

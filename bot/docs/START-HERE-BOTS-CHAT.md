@@ -1,8 +1,8 @@
 # START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (16 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.201 (deploy candidate; Johan's answers to the R1 uncertainties; R1 = v0.6.200, merged) · arena v1.4.7 · cardfx
-compiler v1.9.1 · built against client v2.6.158 / srv-2.6.46 · gates: see the newest READ-ME-FIRST.
+**State at writing:** bot v0.6.202 (deploy candidate; R2 of the 14 Oct play-test review; v0.6.201 = PR #16, merged) · arena v1.4.7 ·
+cardfx compiler v1.9.2 · built against client v2.6.158 / srv-2.6.46 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
 ```
@@ -36,12 +36,20 @@ A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repo
 ## Open at hand-over (16 Oct 2026)
 The 14 Oct play-test (main's rig, PR #13) is reviewed finding by finding in
 `bot/docs/reviews/REVIEW-playtest-2026-10-14.md`: 16 bot bugs plus a side find, each with code lines, a fix and a
-round. R0 shipped as v0.6.199 (merged); R1 as v0.6.200 (rules and deadlocks; merged); v0.6.201 carries Johan's
-answers to R1's uncertainties (the debug hand to the whole table while the other bots look away; a human's Reduce
-line). Next, in the
-order Johan set on 16 Oct: R2 (the bot-vs-bot combat handshake, pacing bot-vs-bot combat when a human is seated, a
-hold stops the bot's own combat moves, Roundhouse's damage), R3 (clocks start when the question is sent, stale hold
-lines, one spokesbot for table remarks — the pool question stays per bot), R4 (the uncurated V5 masters,
-Revelations against a bot). After R3 we run the same scenario ourselves in `client/playtest/` with `--dir`.
-Main's open items are in `bot/docs/handoffs/HANDOFF-to-main-2026-10-16-v0_6_201.md` (the Reduce row on the Bleed
-menu) and its predecessors (the bridge's `edgeTake`, the 15 Oct debug items).
+round. R0 shipped as v0.6.199, R1 as v0.6.200 (rules and deadlocks), v0.6.201 Johan's answers to R1's uncertainties
+(all merged). R2 is v0.6.202: between bots the acting minion speaks first in the maneuver, before-strikes and press
+steps (a card line or a frozen 'nothing' line), a watched bot-vs-bot combat is paced, a hold stops the bots' own
+combat moves, Roundhouse = strength + 2 (cardfx `handBonus`), two steals at once, and Smiling Jack / Fame oust in the
+bot's own unlock. Its own arena smokes found five more bugs, all fixed — among them an old one: per-combat state
+('close next round', the round's range, Grapple's 'hand strikes only') outlived its combat; it now dies in
+`_resolveCombat`'s finally. The smokes also found an OLDER bug, not fixed in R2: a bleed bounced late and then
+blocked by its new target vanishes (READ-ME-FIRST-2026-10-16c §6 — a fix is proposed first; Johan decides). Then
+consume main's replies of 16 Oct (client v2.6.159 / v2.6.160 built the Reduce
+row, the bridge relays, the debug items and the eye — `client/docs/handoffs/REPLY-to-bot-2026-10-16-*.md`; the list
+of what we take is in the v0.6.202 handoff §5 and READ-ME-FIRST-2026-10-16c 'Next'). Then, in the order Johan set on
+16 Oct: R3 (clocks start when the question is sent, stale hold
+lines, a verdict wait when a bot blocks without a card, one spokesbot for table remarks — the pool question stays
+per bot, the tempo levers), R4 (the uncurated V5 masters, Revelations against a bot). After R3 we run the same
+scenario ourselves in `client/playtest/` with `--dir`. Johan's rule since 16 Oct: fixes that belong together may be
+combined in one round; design questions still go through a proposal and "kör".
+Nothing is open on main's side from v0.6.199–201; the v0.6.202 handoff asks only for §12 records and a re-embed.

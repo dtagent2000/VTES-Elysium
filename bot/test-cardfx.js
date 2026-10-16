@@ -330,20 +330,28 @@ ok(fx.counts.libLock >= 140,
   /* v1.5.9 (Johan's combat GO, strike-bonus family): 33-card measurement, two new
      phrasings beyond the original "Strike: N damage" shape. */
   const rh = mode('Roundhouse', 'POT');
-  ok(rh && rh.fx.strike === 3 && mode('Roundhouse', 'pot').fx.strike === 2, 'Roundhouse: the original target -- [pot] strike:2, [POT] strike:3, both from "hand strike at +N damage"');
-  ok(mode('Anticipation', 'aus').fx.strike === 2, 'Pattern B "This strike is at +N damage": Anticipation strike:2');
-  ok(mode('Brute Force', 'pot').fx.strike === 1 && mode('Brute Force', 'POT').fx.strike === 2,
+  /* v1.9.2 (bot v0.6.202, the 14 Oct play-test, point 18): the two bonus phrasings write handBonus, not strike -- "hand strike at
+     +2 damage" is the minion's strength + 2 (Roundhouse with a plain vampire: 3), and strike is ABSOLUTE damage. */
+  ok(rh && rh.fx.handBonus === 3 && mode('Roundhouse', 'pot').fx.handBonus === 2 && rh.fx.strike === undefined && mode('Roundhouse', 'pot').fx.strike === undefined,
+     'Roundhouse: [pot] handBonus 2, [POT] handBonus 3, and NO absolute strike -- "hand strike at +N damage" is a bonus on the hand strike (v1.9.2, play-test point 18: it landed one short as strike 2)');
+  ok(rh.fx.handStrike === true, 'Roundhouse: handStrike is still tagged beside the bonus');
+  ok(mode('Anticipation', 'aus').fx.handBonus === 2 && mode('Anticipation', 'aus').fx.strike === undefined, 'Pattern B "This strike is at +N damage": Anticipation handBonus 2, no absolute strike');
+  ok(mode('Brute Force', 'pot').fx.handBonus === 1 && mode('Brute Force', 'POT').fx.handBonus === 2,
      'Brute Force: dual-choice sentence ("hand strike at +1 OR use a melee weapon strike at +2") — the conservative FIRST number (hand strike) is tagged, not the alternative melee option; a missed choice, not a wrong one');
   const ipgSup = mode('Invoke Poison Glands', 'ABO');
-  ok(typeof ipgSup.fx.strike !== 'number' && mode('Invoke Poison Glands', 'abo').fx.strike === 1,
+  ok(typeof ipgSup.fx.handBonus !== 'number' && typeof ipgSup.fx.strike !== 'number' && mode('Invoke Poison Glands', 'abo').fx.handBonus === 1,
      'Invoke Poison Glands: superior "+X damage, where X is the number of Orun" captures the STRING \'X\' (num()\'s own contract) — typeof !== number fails the finder\'s check automatically, no extra guard needed; base mode\'s fixed +1 stays clean');
+  ok(mode('Compress', 'pot').fx.handBonus === 2 && mode('Compress', 'thn').fx.strike === 2, 'Compress: the [pot] hand-strike bonus and the [thn] absolute aggravated strike stay apart');
+  { let both = 0; for(const n in fx.lib) for(const mo of fx.lib[n].modes || []) if(typeof mo.fx.handBonus === 'number' && typeof mo.fx.strike === 'number') both++;
+    ok(both === 0, 'no mode carries both a hand-strike bonus and an absolute strike (' + both + ')'); }
   ok(!fx.lib['Blood Fury'].req.title && fx.lib['Blood Fury'].req.rangeClose === true && fx.lib['Loving Agony'].req.rangeClose === true && fx.lib['Cauldron of Blood'].req.notFirstRound === true,
      'strike-bonus cards inherit the SAME req flags as steal (rangeClose/notFirstRound) — Blood Fury, Loving Agony, Cauldron of Blood all correctly gated');
   ok(mode('Slam', 'POT').fx.maneuver === true && mode('Slam', 'pot').fx.maneuver === undefined,
      'Slam: superior mode co-locates maneuver with strike (bundled, excluded by the finder guard); base [pot] mode stays clean');
   ok(!fx.lib['The Khabar: Honor'].modes[0].fx.strike, 'The Khabar: Honor curated: an unverifiable per-vampire "contract" precondition (2-card class) emptied rather than left to misplay');
-  let sVol = 0; for(const n in fx.lib) for(const mo of fx.lib[n].modes || []) if(typeof mo.fx.strike === 'number') sVol++;
-  ok(sVol >= 55, 'strike volume grew substantially with the two new patterns (' + sVol + ' numeric-strike modes, was ~30 pre-v1.5.9)');
+  let sVol = 0, hbVol = 0; for(const n in fx.lib) for(const mo of fx.lib[n].modes || []){ if(typeof mo.fx.strike === 'number' || typeof mo.fx.handBonus === 'number') sVol++; if(typeof mo.fx.handBonus === 'number') hbVol++; }
+  ok(sVol >= 55, 'strike volume grew substantially with the two new patterns (' + sVol + ' numeric strike or hand-bonus modes, was ~30 pre-v1.5.9)');
+  ok(hbVol >= 50 && hbVol < sVol, 'hand-bonus volume (v1.9.2): the two bonus patterns are a real subset of the strike modes (' + hbVol + ' of ' + sVol + ')');
 
   /* v1.6.0 (Johan's standing question, round 4): a THIRD strike phrasing found while
      checking the v1.5.9 work for uncertainty -- "Strike: N aggravated damage" (6
@@ -392,7 +400,7 @@ ok(fx.counts.libLock >= 140,
   ok(!mode('Immortal Grapple', 'pot').fx.handStrike && !mode('Immortal Grapple', 'POT').fx.handStrike,
      'Immortal Grapple: NOT tagged handStrike itself -- the restriction sentence ("strikes that are NOT hand strikes cannot be used") literally contains the phrase "hand strikes", which the naive regex matched before the negative lookahead fix; this locks that fix in');
   let totalStrikeModes = 0, hsVol = 0;
-  for(const n in fx.lib) for(const mo of fx.lib[n].modes || []) if(typeof mo.fx.strike === 'number' || typeof mo.fx.stealBlood === 'number'){ totalStrikeModes++; if(mo.fx.handStrike) hsVol++; }
+  for(const n in fx.lib) for(const mo of fx.lib[n].modes || []) if(typeof mo.fx.strike === 'number' || typeof mo.fx.handBonus === 'number' || typeof mo.fx.stealBlood === 'number'){ totalStrikeModes++; if(mo.fx.handStrike) hsVol++; }   // v1.9.2: + handBonus
   ok(hsVol >= 30 && hsVol < totalStrikeModes, 'handStrike volume is a real subset of the ' + totalStrikeModes + ' strike/stealBlood-carrying modes, not all of them and not none (' + hsVol + ')');
 
   /* v1.6.3 (Johan's "push Inside Dirt to 100%" GO, Life in the City): a THIRD

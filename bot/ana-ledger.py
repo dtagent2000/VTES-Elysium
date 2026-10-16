@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # ana-ledger.py <serie>... -- the two-sided ledger audit (v0.6.163 bug sweep): every effect that moves something between two bots must balance.
-#  1 bleed: each took-bleed pairs with an actor 'through' within 6 s (victim > actor only with the actor's modifier plays; victim < actor only with the victim's own reduction -- v0.6.200)
+#  1 bleed: each took-bleed pairs with an actor 'through' within 6 s (victim > actor only with the actor's modifier plays; victim < actor only with the victim's own reduction -- v0.6.200);
+#           and (v0.6.202) each bleed 'through' of 1+ pairs with a victim row within 8 s -- 'VANISHED' = a block attempt in the actor's reactions-only window was refused and the
+#           target dropped the bleed as 'contested, unresolved' (an open bug found by R2's smokes: after a late bounce the new target may block by the card text; after a modifier it may not)
 #  2 combat names: round-1 rows whose opponent is null / not the vampire that names me back
 #  3 combat numbers: my dealt vs the opponent's taken on reciprocal rows (prevent / Crows / combat ends explain the differences)
 #  4 steal: stole (stealer) vs stolenFromMe (victim) totals; v0.6.196: and PER ROUND -- each stealer row paired with its victim's row (a total can hide two errors behind one excuse: 'capping' hid the stealer gaining from an empty vampire)
@@ -19,6 +21,15 @@ for S in sys.argv[1:]:
                 mods=[p for p in plays if p['bot']==a['bot'] and a['t']-3000<=p['t']<=r['t']]
                 red=[p for p in plays if p['bot']==r['bot'] and p['data'].get('window')=='react-reduce' and a['t']-8000<=p['t']<=r['t']]   # v0.6.200: the target's own reduction (Protected District / Telepathic Misdirection class) -- honoured since R1, so a smaller hit is the rule working
                 R['1 bleed: equal' if diff==0 else ('1 bleed: more, actor modifiers' if diff>0 and mods else ('1 bleed: MORE, UNEXPLAINED' if diff>0 else ('1 bleed: less, target reduced' if red else '1 bleed: LESS, UNEXPLAINED')))]+=1
+        for i,r in enumerate(rows):   # v0.6.202: the other direction -- a bleed that went THROUGH and that no seat took. The pairing above starts from the victim's row, so a bleed nobody took was invisible: R2's smokes found 17 in 10 matches (and 3 in 2 on v0.6.201), every one bounced late and then BLOCKED by the new target
+            d=r['data'] if isinstance(r.get('data'),dict) else {}
+            if r['type']!='through' or d.get('kind') not in (None,'bleed') or d.get('card')=='hunt' or (d.get('n') or 0)<1: continue
+            after=[x for x in rows[i+1:i+400] if x['t']-r['t']<=8000]
+            if any(x['type'] in ('took-bleed','ousted') and x['bot']!=r['bot'] for x in after): continue
+            bounced=any(x['type']=='play' and x['data'].get('window')=='react-bounce' and abs(x['t']-r['t'])<=6000 for x in rows[max(0,i-40):i+200])
+            blk=any(x['type']=='block-made' and x['bot']!=r['bot'] and x['t']-r['t']<=6000 for x in after)
+            red=any(x['type']=='play' and x['data'].get('window')=='react-reduce' and abs(x['t']-r['t'])<=8000 for x in rows[max(0,i-40):i+200])
+            R['1 bleed: VANISHED -- bounced late, the new target blocked (refused)' if bounced and blk else ('1 bleed: VANISHED -- a block attempt after blocks were declined (refused)' if blk else ('1 bleed: through, reduced to nothing' if red else '1 bleed: THROUGH, NO SEAT TOOK IT'))]+=1
         cr=[r for r in rows if r['type']=='combat-round']
         for r in cr:
             d=r['data']
