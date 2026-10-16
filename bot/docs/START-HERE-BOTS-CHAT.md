@@ -42,7 +42,9 @@ verdict wait when a bot blocks a human (F10: a question, the tempo's clock, the 
 failed counter lands the action); one spokesbot, the archetype read on the log tier (F2); a bot target's Hold on after a bot
 actor's question (F6); the tempo levers (a)–(d) (F12, F13). **Main must change one LIVE test** (v2.6.140, the tempo: it reads
 the first steppable status, now often the queued moment with `until: null`) — the handoff gives the line. Next, in Johan's
-order: R4 (the uncurated V5 masters, Revelations against a bot), the scenario in `client/playtest/` with `--dir`, and a larger
-re-measure once every fix is in (Johan, 16 Oct). Known, not built: a human's bounce of a bot's bleed is not read by the acting
+order: **R4 + the dodge as v0.6.205** (Johan, 16 Oct: bake the dodge into R4 — the uncurated V5 masters, Revelations against a
+bot, and the dodge rule "for now against 2 or more damage"; the proposal and its two open questions are in
+READ-ME-FIRST-2026-10-16e, 'Next'), then the scenario in `client/playtest/` with `--dir`, and a larger re-measure once every
+fix is in (Johan, 16 Oct). Known, not built: a human's bounce of a bot's bleed is not read by the acting
 bot (READ-ME-FIRST-2026-10-16d §6); the tempo lever for a watched bot-vs-bot combat (Johan: wait and see). Johan's rule since
 16 Oct: fixes that belong together may be combined in one round; design questions still go through a proposal and "kör".
