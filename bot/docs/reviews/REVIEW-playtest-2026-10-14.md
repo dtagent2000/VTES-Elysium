@@ -224,6 +224,7 @@ Gates beyond the suite for R2: a series with the handshake integrity line at 100
 - **Debug (decision 9):** one grant `to:'all'` again (a spectator who joins mid-game gets it at once: the roster's watcher list is part of the audience); the other bots look away from a seat that announced DEBUG mode (`_lookAway`, keyed on the frozen announcement and its sender), except through their own Revelations [AUS] on that seat while it is in play. A debug grant never answers a Revelations [aus] waiter. v0.6.200's seat-by-seat grants are gone, and so are its two open items above about spectators and `to:'humans'`.
 - **A human's reduction (decision 10):** the bot reads `NAME reduces the bleed by N.` from its bleed's target seat; main is asked for the Reduce row that writes it (`HANDOFF-to-main-2026-10-16-v0_6_201.md`). Until the row exists the old behaviour stands (the bot's line states the full amount).
 - **Targets (decision 11):** the guide's target sentence is firmer; nothing forced.
-- **Pinned:** section 140, 19 assertions, three of them live; 12 red on v0.6.200, 7 guards green on both.
+- **Found by the release's own arena smoke, fixed:** a Creeping Sabotage tick that took Ventrue to 0 pool did not oust it (it played two more turns). Smiling Jack's pool payment with no vampire and Fame's own-unlock drain still lack the check (the v0.6.140 audit, still owed).
+- **Pinned:** section 140, 21 assertions, three of them live; 13 red on v0.6.200, 8 guards green on both.
 - **Proposed, not built:** a `reduce N` chat line (like `bleed N`) would work today, before the client's row exists.
 

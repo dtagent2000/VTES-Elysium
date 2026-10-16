@@ -9,6 +9,7 @@
   - The optional `to:'humans'` wish is **withdrawn**.
 - **One ask: a Reduce row on the Bleed menu** that writes `NAME reduces the bleed by N.` (§2). The bot reads it from v0.6.201. It is backward compatible, so the bot ships first.
 - **Two bot-emitted frozen lines for §12** (§3). Nothing to build on your side.
+- **Also fixed (found by our own arena smoke):** a bot that a Creeping Sabotage tick took to 0 pool was not ousted and played on. It is ousted at once now, and its predator gets the bounty.
 - **Still open from earlier:** the bridge's `edgeTake` relay (v0.6.200 §2), the 15 Oct debug items, and the `PLAYTEST.md` lines (§4).
 
 ## 1. Debug: the whole table again (Johan, 16 Oct)

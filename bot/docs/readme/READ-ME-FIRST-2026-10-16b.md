@@ -22,7 +22,13 @@
 - **Main is asked for the row** (handoff §2). Until it exists, nothing changes at the table.
 - **Found while building:** the first pattern also matched the bot's own reduce line (`… — reduces the bleed by 2 (now 1).`) and counted one reduction twice. The pattern now excludes it, and 140d guards it.
 
-## 3. Targets, events, the guide
+## 3. Found by this release's arena smoke: a bot at 0 pool played on
+- **Seen:** a Creeping Sabotage tick took Ventrue to 0 pool. It was not ousted: it drained its Blood Doll to 1 and played two more turns.
+- **Cause:** the creep victim's handler burned the pool with no oust check.
+- **Now:** a tick that reaches 0 ousts the bot at once, and its predator is sent the bounty (140j).
+- **Still without the check** (the v0.6.140 audit of involuntary pool losses, still owed; an R2 candidate): Smiling Jack paid from pool when no vampire can pay, and Fame's drain at my own unlock.
+
+## 4. Targets, events, the guide
 - **Targets (Johan: player education, nothing forced):** the guide's sentence is firmer: set the target first whenever the action is aimed at anyone but your prey.
 - **Event kinds** `reduce` and `debug`, in the same release as their parsers.
 - **The guide:** the debug passage, the Reduce sentence, the target sentence, and the versions.
