@@ -14,7 +14,7 @@ for S in sys.argv[1:]:
         for i in ends:
             end=rows[i]; A=end['bot']; win=rows[prev+1:i+1]; prev=i
             kind=end['data'].get('kind') or ('bleed' if end['data'].get('card') in (None,) else 'card')
-            st=[r for r in win if r['bot']==A and r['type']=='play' and r['data'].get('window')=='stealth']
+            st=[r for r in win if r['bot']==A and r['type']=='play' and r['data'].get('window') in ('stealth','stealth-lock')]   # v0.6.205: + The Labyrinth's lock (window 'stealth-lock'), spent by the same contest as a stealth card
             ic=[r for r in win if r['bot']!=A and r['type']=='play' and r['data'].get('window')=='react-intercept']
             bm=[r for r in win if r['bot']!=A and r['type']=='block-made']
             R['actions']+=1

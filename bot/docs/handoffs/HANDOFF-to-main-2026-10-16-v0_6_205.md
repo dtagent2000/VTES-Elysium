@@ -7,7 +7,7 @@
 - **No new wire verb.** Two new frozen log lines, both for Haven Uncovered (§2). Every other new line is an explanation on the log tier, or one instruction to a human in chat.
 - **Revelations against a bot now works for a human** (F21). It reads the targeting line your client already sends since v2.6.159 — nothing to build.
 - **Nothing of yours goes red that we know of:** your suite beside this release is in the gates below.
-- **Your reply to v0.6.204 is consumed:** the read-only copies in `bot/` are client v2.6.162's (the canary 69/0 against them), and your two guide findings are fixed (§5). Your finding 1, the chat beat after a question, is a design question for our next round (§4).
+- **Your reply to v0.6.204 is consumed** (with PR #24's corrections): the read-only copies in `bot/` are your current main's — client v2.6.162 and #24's §12 wording (the canary 69/0 against them), and your two guide findings are fixed (§5). Your finding 1, the chat beat after a question, is a design question for our next round (§4).
 - **Please re-embed `START-HERE-BOTS.html`** (§5).
 
 ## 1. What changed for you in v0.6.205
@@ -17,7 +17,7 @@
   - Against a human the bot reads your announced strike when you strike first (the combat steps ask the acting minion first), and your expected strike when it strikes first — the same rule as its Majesty.
 - **Revelations against a bot (F21).** The bot armed Revelations only on `Revelations [aus]. Target: <bot>'s pool.`. A vampire aim, no aim, or a bare `plays Revelations.` (no mode chooser) armed nothing, and after the reveal your pick was dropped.
   - Now it arms whenever the actor's prey is that bot, whatever the line's Target suffix says (the card says "your prey"). A bare play line is read as [aus].
-  - After it reveals its hand to a human actor, the bot says how to pick (§2) and reads the pick from your client's private line `⋖ NAME targets CARD (revealed to you — they are targeting it).` or from a typed `discard CARD`. Only that actor's pick counts, once, until the turn ends. The card goes to the ash heap and the bot draws.
+  - After it reveals its hand to a human actor, the bot says how to pick (§2) and reads the pick from your client's private line `⋖ NAME targets CARD (revealed to you — they are targeting it).` or from a typed `discard CARD` (bare, or `@BotName discard CARD` as in the bleed grammar). Only that actor's pick counts, once, until the turn ends. The card goes to the ash heap and the bot draws.
   - This is not a wait: no clock, no rung. The human's own action goes on, and the table never stands on the pick.
   - At superior ([AUS]) nothing changes: the bot plays with an open hand.
 - **The six uncurated V5 masters (F23).** All of them are hand-curated now; the guide's "four masters do nothing" paragraph is gone.
@@ -26,7 +26,7 @@
   - **Guardian Angel:** goes on the bot's sturdiest ready vampire. That vampire gets +1 intercept when it blocks a bleed at the bot, and prevents 1 damage once each combat (a log line, §2). The card burns when its vampire goes to torpor (a log line).
   - **Wasserschloss Anif:** in its master phase, a ready Tremere that can spare it moves 1 blood to the card; in its influence phase the bot locks the card and moves every counter to an uncontrolled Tremere (log lines, §2). It banks only while an uncontrolled Tremere can take the counters.
   - **Haven Uncovered:** the bot plays it only on an opponent's vampire that one of its ready vampires would rush that turn through it — the rush must be the action that vampire would choose (Johan's decision 5 of 16 Oct: not played until the bot can rush through it). After that any minion may enter combat with that vampire as a +1 stealth directed action; the bot's own minions do it with a frozen line (§2). The host does not lock, and the rushing vampire is the acting minion.
-- **Found on the way:** Arcane Library's lock in the influence phase never fired in play (only a unit test called it), and a vampire already at capacity in the uncontrolled region (superior Govern can fill one exactly) never rose. Both fixed; the second shows in the influence sentence (§2).
+- **Found on the way:** Arcane Library's lock in the influence phase never fired in play (only a unit test called it), and a vampire already at capacity in the uncontrolled region (superior Govern and Enchant Kindred fill one exactly, often) never rose — and from then on the bot spent no transfers and drew no vampires for the rest of the game. Both fixed; the second shows in the influence sentence (§2). Tremere, Malkavian and Ventrue results before v0.6.205 may carry that stall.
 
 ## 2. For §12
 - **New frozen lines** (log tier, bot-emitted; every bot reads them):

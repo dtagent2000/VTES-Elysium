@@ -17,7 +17,7 @@
 - **What it was:** only `… Revelations [aus]. Target: <bot>'s pool.` armed the [aus] mode. A vampire aim, no aim, or a bare `plays Revelations.` armed nothing, and the human's pick after the reveal was dropped.
 - **Now:** Revelations is prey-locked by its text, so it arms when the actor's prey is this bot, whatever the line's suffix says. A bare play line is [aus].
 - After the reveal to a HUMAN actor the bot says how to pick: `NAME, pick the card I discard (Revelations): ⌖ target it in the hand I revealed to you, or type "discard CARD".`
-- The pick is read from that actor's targeting `logTo` (client v2.6.159+) or a typed `discard CARD` (any case or punctuation), once, until the turn ends (`_revPick`). The card goes to the ash heap and the bot draws (`_revDiscard`, one body with a bot actor's `Revelations: discard X.`).
+- The pick is read from that actor's targeting `logTo` (client v2.6.159+) or a typed `discard CARD` (any case or punctuation; bare, or addressed `@Name discard CARD` as the bleed grammar is), once, until the turn ends (`_revPick`). The card goes to the ash heap and the bot draws (`_revDiscard`, one body with a bot actor's `Revelations: discard X.`).
 - Not a wait: no clock, no rung. The human's own action goes on.
 
 ## 3. F23 — the six V5 masters (curated 99 → 105)
@@ -29,18 +29,18 @@
   - Burned when its vampire goes to torpor (`burnOnHostTorpor`, the shared torpor hook).
 - **Wasserschloss Anif:** the blood bank.
   - In my master phase a ready Tremere that can spare it moves 1 blood to the card (`_considerBankIn`, `decide('bank-in')` on the Blood Doll drain's rule: `nobody-waits`, `danger`, `last-blood`, `hunting-anyway`, `nothing-better`, `keeps-action`, `reserve`, `spare`). Only while an uncontrolled Tremere can take the counters.
-  - In my influence phase it locks and moves every counter to the uncontrolled Tremere nearest to rising that stays under its capacity (`_bankTarget`); the transfers finish it.
+  - In my influence phase it locks and moves every counter to the uncontrolled Tremere nearest to rising that does not go over its capacity (`_bankTarget`; blood past capacity drains off). Filled exactly, it rises free in the same phase: the payout runs before `_influenceLoop`, whose first look is the free rise (§4). Under it, the transfers finish it.
   - The auto tier's `stealth 1` is gone.
 - **Haven Uncovered** (Johan's decision 5: not played until the bot can rush through it, then on an opponent's vampire):
   - Played in my master phase only when a ready, unlocked rusher of mine would rush THIS turn through it: the rush doctrine's best target (never a second Haven on one host), AND the rush through the Haven is what `decide('action')` would pick for that rusher now (§5). Held otherwise.
   - Tabled on my board with the host recorded: `X plays Haven Uncovered — on OWNER's VAMP.` Every bot records it (`L12.havenM`).
   - Any of my minions may then rush its host through it (`_bestHavenRushFor`, preferred to a rush card on an equal or better target): a +1 stealth directed action, no card from hand, the host not locked, the rusher the acting minion. `VAMP enters combat with OWNER's HOST (Haven Uncovered).` (`L12.havenRush`).
   - The target bot opens its rush window (any unlocked minion may block) and on its Pass defends without the lock: `X defends (rushed by Y, Haven Uncovered).`
-  - Not built: the host burning the card as its own action; reading a human's Haven play (the client's generic line). A human's rush through a Haven on a bot's vampire goes by `rush` in chat and the bot locks its vampire as for a rush card (the guide says to unlock it by hand).
+  - Not built: the host burning the card as its own action; reading a human's Haven play (the client's generic line); the per-minion turn ledger does not count a Haven rush (card-in-play actions are a known gap since v0.6.129), so a minion that acts again could rush through it twice in one turn. A human's rush through a Haven on a bot's vampire goes by `rush` in chat and the bot locks its vampire as for a rush card (the guide says to unlock it by hand).
 
 ## 4. Found on the way, fixed
 - **Arcane Library's influence lock never fired in play.** `_considerLockIncome` was called for the unlock and master phases only; the unit test 19l-13 called it with 'influence' directly. `_playTurn` now calls it before `_influenceLoop()` (Wasserschloss's payout rides the same call). The smoke: 4 locks in one match.
-- **A vampire already at capacity in the uncontrolled region never rose — and stalled the influence phase for the rest of the game.** The planner picked it (a need of 0) and the loop broke: from then on no transfer was spent and no vampire drawn. A probe on v0.6.204 (Lauren 4/4 and Chrysanthemum 0/5 uncontrolled): Chrysanthemum rises, then four transfers a turn go unused. Superior Govern can fill a vampire exactly — the smoke saw it twice (Lauren 1 → 4) — and so can Arcane Library now. It rises free at the top of the loop (`_riseFromUnc`, one body with the transfer rise); the influence sentence says `NAME enters play at capacity`.
+- **A vampire already at capacity in the uncontrolled region never rose — and stalled the influence phase for the rest of the game.** The planner picked it (a need of 0) and the loop broke: from then on no transfer was spent and no vampire drawn. A probe on v0.6.204 (Lauren 4/4 and Chrysanthemum 0/5 uncontrolled): Chrysanthemum rises, then four transfers a turn go unused. The grinder's stock fills a vampire exactly all the time — superior Govern the Unaligned (Tremere, Malkavian) and Enchant Kindred (Ventrue): the final smoke rose four that way in three matches (Nassir, Dr. Stephen Norton, Oshri Dahan, Sully), and on v0.6.204 each of those bots would have stopped influencing from then on. Arcane Library and Wasserschloss can fill one too now. It rises free at the top of the loop (`_riseFromUnc`, one body with the transfer rise); the influence sentence says `NAME enters play at capacity`.
 
 ## 5. Found by the release's own pre-flight smoke (seed 4005), fixed
 - The first cut played Haven Uncovered on the rush chooser's target alone. The Haven went on Christine Boscacci; then its rusher equipped Raven Spy (permanents first, 98), and a plain bleed outscored the rush anyway (1.2 vs 1.1). A target is not a rush.
@@ -55,12 +55,18 @@
 - The four V5 starter reports in `docs/coverage/` regenerated (they were from 18 Sep): Malkavian FULL 71 · PARTIAL 4 · HANDLER 2; Nosferatu FULL 77; Tremere FULL 75 · INERT 1 (.44 Magnum) · PARTIAL 1 (Bowl of Convergence [AUS]); Ventrue FULL 77.
 - `test-cardfx.js` 271/0: every master in the four V5 decks is `src: 'hand'`, plus the six shapes (265/6 on the old curated file).
 
-## 8. Tests
+## 8. Main's client v2.6.162, consumed
+- Main merged client v2.6.162 (PR #23) and its follow-up (PR #24: docs, rig, tests — no client change) during this round; the branch merges origin/main. The read-only copies in `bot/` (`elysium-vtes-bord.html`, `ELYSIUM-PROTOCOL.md`) are the current main's (v2.6.162 with #24's §12 wording); the server and the hotseat plan were already identical.
+- Their `REPLY-to-bot-2026-10-16-v0.6.204.md`, §4:
+  - finding 2 (the guide): the nav chip said v0.6.203, and the Controls list called the new rung "▶ Step" — both fixed (the chip and the footer now say client v2.6.162; the rung is ▶ Declare verdict, their label);
+  - finding 1: after a question, everything the bot sends waits the chat beat (~4.96 s at the client's pace) — the verdict line, the booking of a typed stealth, the hold lines. Their idea: status lines (log / tally) skip the chat beat, or the next wait shows only once the verdict is on the wire. A design question: an analysis and a proposal for Johan in the next round, not built here.
+
+## 9. Tests
 - **Section 146** (16): the dodge — known and unknown strikes, the tie with one and two dodges, long range, a steal, aggravated, survival, `combatEndStats` 0, `dodgeOut` 0, and a two-bot relay where the strike played is the one the dodge weighed.
-- **Section 147** (12): Revelations — the arming shapes, a non-prey actor, the pick by logTo and by chat, a pick from another seat, the turn's end, a bot actor's line.
-- **Section 148** (23): The Labyrinth (offered, counted, locked, typed as stealth), Guardian Angel (the host, the bleed-only intercept, the forecasts, the prevent typed as a prevention, the burn at torpor), Wasserschloss (in, out, nobody waiting, never filled to capacity), a whole `_playTurn` with Arcane Library, the free rise. Elder Library and Ventrue HQ are pinned in `test-cardfx.js`.
+- **Section 147** (13): Revelations — the arming shapes, a non-prey actor, the pick by logTo and by chat (bare and addressed), a pick from another seat, the turn's end, a bot actor's line.
+- **Section 148** (23): The Labyrinth (offered, counted, locked, typed as stealth), Guardian Angel (the host, the bleed-only intercept, the forecasts, the prevent typed as a prevention, the burn at torpor), Wasserschloss (in, out, nobody waiting, never over capacity, filled exactly and risen free), a whole `_playTurn` with Arcane Library, the free rise. Elder Library and Ventrue HQ are pinned in `test-cardfx.js`.
 - **Section 149** (14): Haven Uncovered — the data and frozen lines, the hold and the pick, the smoke's case (a permanent first, a better bleed), the target side, and a whole turn between two bots through the rush.
-- **Destructive on v0.6.204:** 146 4/12, 147 6/6, 148 5/18, 149 1/13 — no abort. The smoke's assertion is red on the first cut too (13/1).
+- **Destructive on v0.6.204:** 146 4/12, 147 6/7, 148 4/19, 149 1/13 — no abort. The late assertions are red on their own pre-change bytes: 149's smoke case 13/1, 147's addressed discard 12/1, 148's exact fill 22/1.
 - **Old tests moved:** 143d runs with `dodgeOut: 0` (it pins the survival rule); 139c's Revelations line became a Bum's Rush (Revelations no longer reads its Target suffix); 121f reads `locks`.
 
 ## Gates
@@ -68,14 +74,23 @@ GATES_PLACEHOLDER
 
 ## For main
 - Send `HANDOFF-to-main-2026-10-16-v0_6_205.md`: the two frozen Haven lines for §12, the `locks` stealth verb, the new log notes and the one new chat instruction, the rig and PLAYTEST.md notes, the guide re-embed.
-- Deploy `elysium-bot.js` v0.6.205 and the cardfx files (curated 105); re-embed `START-HERE-BOTS.html` (their embedded copy is v0.6.201's).
+- Deploy `elysium-bot.js` v0.6.205 and the cardfx files (curated 105); re-embed `START-HERE-BOTS.html` (v2.6.162 embeds v0.6.204's).
 
 ## Things I am not sure about
-UNSURE_PLACEHOLDER
+- **Question A, the dodge's tie.** I read "against everything with 2 or more damage" as a floor that holds at a tie too: 1 against 1 with two dodges in hand strikes. If Johan meant that two dodges always take a tie, it is one line.
+- **The dodge rule barely shows at these tables.** Most strikes in the starter decks are for 1, so in the smokes almost every dodge was the old survival rule; the new branches fired twice (`unknown-out`, the pre-flight dodge smoke). The unknown case leans on the table model's expected strike (1 + 2 × the seat's combat share, prior-blended), which read 1.5–2.2 for these decks: a seat that has shown a strike for 2 tips it over the floor fast. Not benched; `dodgeOut` is there for the larger re-measure.
+- **The Haven's look ahead approximates the minion phase.** It asks each rusher as if it acted now; the real phase orders its actors (the worst blocker first, keep-a-blocker, the probe order), and an earlier actor can change the picture, so a Haven can still sit unused for a turn now and then. Live, the final smoke ran it once: held twice, then played on the predator's Chelsea Blake and rushed through four times (two by the Nosferatu, two by the Tremere) — one smoke, no measurement.
+- **Guardian Angel prevents normal damage only**, as the equipment prevent does: an all-aggravated strike is not prevented by it. Rare at these tables; one line if it matters.
+- **The free-rise fix changes three decks' play more than its size suggests.** Before it, a Tremere, Malkavian or Ventrue bot whose stock action (superior Govern, Enchant Kindred) filled a vampire exactly stopped influencing for the rest of the game — four times in the final smoke's three matches. Older numbers for those decks (series, benches, the balanced baselines) may carry that stall; I have not measured how often it happened in them.
+- **A human's Haven Uncovered is not read**, and a human's rush through a Haven on a bot's vampire makes the bot lock that vampire (the generic rush-by-chat path). The guide says so; a fix needs the client's Haven line or a rule on the chat path.
+- **The Revelations pick has no clock.** If the human never picks, nothing is discarded and the bot draws nothing; the pick closes at the end of the turn. I think that is the right reading of a sandbox table, but it is a choice.
+- **The probe reservation (§6)** has been dead since v0.6.143. I did not fix it, because v0.6.143's measurements were made with it dead.
+- **Main's finding 1 (§8)** is untouched: the verdict line still waits the chat beat after the question.
 
 ## Next
 R4 was the review's last round. In Johan's order (READ-ME-FIRST-2026-10-16e, "After R4"):
 1. The play-test scenario in main's rig, run by us with `--dir` on a scratch copy of the root with the bot branch, compared with the 14 Oct report's numbers — the proof that R0–R4 fixed what the play-test found.
 2. The larger re-measure in the arena once every fix is in (Johan's answer 4); the dodge's knob `dodgeOut` can be benched there.
 3. The probe reservation (§6): Johan's call.
-4. Parked, outside the review: one pool question with per-seat answers at a political action; a human's bounce of a bot's bleed; a bot new target bouncing onward; when a bot target plays its reduce card; the dodge's knowledge-layer step; the tempo lever for a watched bot-vs-bot combat; a human's Haven Uncovered read by the bots.
+4. Main's finding 1 (§8): the chat beat after a question — an analysis and a proposal for Johan.
+5. Parked, outside the review: one pool question with per-seat answers at a political action; a human's bounce of a bot's bleed; a bot new target bouncing onward; when a bot target plays its reduce card; the dodge's knowledge-layer step; the tempo lever for a watched bot-vs-bot combat; a human's Haven Uncovered read by the bots.
