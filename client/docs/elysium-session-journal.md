@@ -64,7 +64,8 @@ klientens takt 3,1 s. Botten blockerar människans Bleed 2 med en bar vampyr. 45
   - raden visar "block verdict (You)", "—" och "▶ Declare verdict" (v2.6.161: "▶ Step");
   - efter ett riktigt klick bestämmer sig botten på 0,08 s, och raden kommer 4,89 s senare.
 - **Misslyckat block:**
-  - `+1` i chatten bokförs av botten 4,96 s senare;
+  - en `+1` som skrevs 0,06 s efter frågan bokfördes av botten 4,96 s efter frågan. Chattakten räknas från frågan,
+    inte från när man skriver;
   - Pass ger "Stealth 1 vs Intercept 0 — block fails.", och räknaren står kvar resten av actionen;
   - It resolves låter bleeden landa en gång (30 → 28) och stänger räknaren.
 - **En andra Resolve efter bottens misslyckade utslag:** ofarlig. Det blir en andra rad, botten säger Hold on igen, och
@@ -80,7 +81,7 @@ sedan en strid):
   utslaget, som då kom 8,9 s efter mitt Pass.
 
 **Fynd till botprojektet:**
-- **Chattakten:** efter en fråga väntar allt botten skickar 1,6 × 3,1 s = 4,96 s. Det gäller utslagsraden,
+- **Chattakten:** efter en fråga skickar botten ingenting förrän 1,6 × 3,1 s = 4,96 s har gått sedan frågan. Det gäller utslagsraden,
   bokföringen av en skriven stealth och raden om knapptrycket.
   - I Standard avgör klockan vid 3 s, men bordet ser utslaget vid 5 s. En stealth som skrivs däremellan räknas inte.
     Kört: `+1` 3,13 s efter frågan, alltså strax efter att klockan avgjort vid 3,05 s. Utslaget kom vid 4,96 s med
@@ -90,9 +91,10 @@ sedan en strid):
 - **Guiden:** menyn säger v0.6.203 och sidfoten v0.6.204. Dess Controls-lista kallar fortfarande knappen "▶ Step",
   medan vår knapp heter "▶ Declare verdict" (syns i Help ▸ Bots i webbläsaren).
 
-**Sondens egen lärdom:** i en körning av tretton sa botten Pass i stället för att blockera. Sonden satte upp
-blockeraren innan bottens `dealt` hade behandlats, och `dealt` nollställer brädet. Nu väntar sonden på given (`unc` och
-`hand` fyllda) och kontrollerar `_pickBlocker` först. Efter det: 11 av 11, och sedan 45 av 45.
+**Sondens egen lärdom:** i en av femton körningar av fas B sa botten Pass i stället för att blockera. Troligen satte
+sonden upp blockeraren innan bottens `dealt` hade behandlats, eftersom `dealt` nollställer brädet. Det är inte bevisat,
+för konsolen sparades inte i den körningen. Nu väntar sonden på given (`unc` och `hand` fyllda) och kontrollerar
+`_pickBlocker` först. Efter det blockerade botten varje gång: 45 av 45, och fas E.
 
 **Grindar:**
 - klientsviten 304/0 med 3 nya tester. På v2.6.161 blir det 301/3: inbäddningen och de två etikettesterna.
@@ -110,6 +112,22 @@ blockeraren innan bottens `dealt` hade behandlats, och `dealt` nollställer brä
 - en människa som spelar stealth utan att bokföra den och säger It resolves. Det är bottens egen osäkerhet: då startar
   striden;
 - riktig pekskärm.
+
+**Efter granskningen (samma kväll, en uppföljnings-PR utan klientändring):** en oberoende granskare gick igenom ändringen
+innan Johan mergade #23; rapporten kom efteråt. Inget behövde rättas i klienten. Det här rättades:
+- **Riggen v1.1.1:** en klocka krediteras bara den väntan som fortfarande står på raden. Annars fick en väntan som
+  besvarades innan dess klocka startat nästa rads nedräkning.
+- **Texterna om `+1`:** bokföringen väntar på chattakten efter frågan, inte en fast tid efter att man skrivit. Vi skrev
+  0,06 s efter frågan, därför blev det 4,96 s.
+- **Antalet körningar:** fas B kördes femton gånger. I en sa botten Pass; orsaken är trolig men inte bevisad.
+- **PROTOCOL §12:** vem som skickar utslaget, var påståendet om räknaren är kört, och combat-ends-raderna utan
+  motsägelse.
+- **LIVE-testerna** tål negativ intercept, och titeln lovar inte längre bubblan.
+- **PLAYTEST.md:** tröskeln för "clock before the question", att bottarnas frågor inte är frysta, och bottens kända
+  lucka med människans egen studs.
+
+**Parkerat till nästa klientversion:** `VERDICT_RE` matchar `Intercept \d+`. En bots utslag med negativ intercept (en
+bar Christine Boscacci skriver −1) får därför ingen bubbla. Det är bara presentation; själva raden är rätt.
 
 ## [BESÖKET OVANIFRÅN] (16 oktober 2026, sen eftermiddag, klient v2.6.161)
 

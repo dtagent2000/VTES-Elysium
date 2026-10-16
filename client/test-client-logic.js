@@ -4818,7 +4818,7 @@ test('v2.6.162 bot v0.6.204\'s new rung: resolve-verdict (a bot blocked YOUR act
     eq(A.botGiveWord(), 1, 'the play button steps it (a filter since v2.6.140, so no allow-list to grow)'); eq(stepped, 1);
   } finally { delete A.hotBots[2]; A.localTable = false; HB.reset([]); delete A.__doc._ids.hotBotBtn; }
 });
-testB('v2.6.162 LIVE: a REAL bot (v0.6.204+) blocks your bleed and waits for your word -- the panel reads "block verdict (You)" and Declare verdict, no clock in Turn-based, the play button gives it the word, the verdict line comes from the BLOCKER\'s seat (the bubble names the bot that declared it) and the combat counter follows; an older bot skips loudly', async () => {
+testB('v2.6.162 LIVE: a REAL bot (v0.6.204+) blocks your bleed and waits for your word -- the panel reads "block verdict (You)" and Declare verdict, no clock in Turn-based, the play button gives it the word, the verdict line comes from the BLOCKER\'s seat (its `who` is the bot, the name the bubble shows) and the combat counter follows; an older bot skips loudly', async () => {
   const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
   if (typeof BOT.Bot.prototype._vwArm !== 'function'){ const e = new Error('SKIP -- bot v' + BOT.BOT_VERSION + ' beside the suite has no verdict wait; this needs v0.6.204+'); e.skip = true; throw e; }
   const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -4857,7 +4857,7 @@ testB('v2.6.162 LIVE: a REAL bot (v0.6.204+) blocks your bleed and waits for you
     assert(A.botGiveWordWanted(), 'Turn-based: the play button is offered');
     const n0 = logs.length;
     eq(A.botGiveWord(), 1, 'the play button gives the bot the word');
-    const vline = await until(() => logs.slice(n0).find(l => /^Block: Stealth \d+ vs Intercept \d+ \u2014 block (succeeds|fails)\.$/.test(l.txt)), 5000);
+    const vline = await until(() => logs.slice(n0).find(l => /^Block: Stealth \d+ vs Intercept -?\d+ \u2014 block (succeeds|fails)\.$/.test(l.txt)), 5000);
     assert(vline, 'the verdict line reached the client: ' + JSON.stringify(logs.slice(n0)));
     eq(vline.txt, 'Block: Stealth 0 vs Intercept ' + B + ' \u2014 block ' + (ok ? 'succeeds' : 'fails') + '.', 'declared from the counter the question named');
     eq(vline.who, 'Wallbot', 'from the BLOCKER\'s seat -- the bubble (maybeVerdictPulse) names the bot that declared it, as a human\'s Resolve names that human');
@@ -4897,7 +4897,7 @@ testB('v2.6.162 LIVE: a REAL bot\'s verdict clock (v0.6.204+) starts when its qu
     assert(st, 'right after the question, the clock runs');
     eq(st.step, 'resolve-verdict');
     const left = st.until - q.t; assert(left >= 2700 && left <= 3300, 'the full 3 s count from the question (' + left + ' ms)');
-    const vl = await until(() => logs.find(l => /^Block: Stealth \d+ vs Intercept \d+ \u2014 block (succeeds|fails)\.$/.test(l.txt)), 6000);
+    const vl = await until(() => logs.find(l => /^Block: Stealth \d+ vs Intercept -?\d+ \u2014 block (succeeds|fails)\.$/.test(l.txt)), 6000);
     assert(vl, 'on the clock the blocker declares the verdict');
     eq(vl.who, 'Gatebot'); assert(/^Block: Stealth 0 vs Intercept -?\d+ \u2014 block (succeeds|fails)\.$/.test(vl.txt), vl.txt);
     assert(vl.t - q.t >= 2800, 'not before its 3 s were up (' + (vl.t - q.t) + ' ms after the question)');
