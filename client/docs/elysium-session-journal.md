@@ -1,3 +1,116 @@
+## [UTSLAGET VÄNTAR] (16 oktober 2026, kväll, klient v2.6.162)
+
+Johan: "Hejsan! Vi har gjort en uppdatering på bottsidan där det finns en handovern till klienten, vill du slå en kik i
+repot tro? :)". Jag läste deras tre handoffs (v0.6.202, v0.6.203 och v0.6.204), körde våra grindar med v0.6.204 bredvid
+och föreslog v2.6.162. Johan: "Yes kör!". Svaret till dem är `docs/handoffs/REPLY-to-bot-2026-10-16-v0.6.204.md`.
+
+**Vad bottarna har gjort (16 okt):**
+- **v0.6.202:**
+  - strid mellan två bottar går i regelbokens ordning: den agerande talar först i varje steg, och en bot som inte
+    spelar något säger "does not maneuver", "has nothing before strikes" eller "does not press";
+  - striden går i jämn takt när en människa sitter med;
+  - Hold on stoppar även bottarnas egna stridsdrag;
+  - Majesty skickar vår enradiga `NAME strikes: combat ends.`.
+- **v0.6.203:**
+  - en bleed som studsades sent och sedan blockerades försvann (sedan v0.6.144). Det är fixat, och en människa som
+    blir nytt mål får en fråga;
+  - strike-steget mellan bottar går i ordning;
+  - efter Deep Song mot en människa frågar botten människan först.
+- **v0.6.204 (R3):**
+  - klockan startar först när frågan har skickats;
+  - Hold on och Resuming går först i kön;
+  - när en bot blockerar en människas action frågar den och väntar på tempot. I speltestet stod bordet still i fyra
+    minuter där. Det nya steget heter `resolve-verdict`;
+  - en enda bot säger lekläsningen, och den hamnar i loggen;
+  - tempospakarna (a)–(d).
+
+**Före bygget** (v2.6.161 med v0.6.204 bredvid): sviten 299/2, precis de två röda som de förutsåg.
+- Bottguiden var v0.6.201:s.
+- v2.6.140 LIVE läste klockan innan frågan skickats ("left: none"). Deras enradsfix gav 300/1 i en skrapkopia.
+
+Kanariefågeln 69/0, dispatch 68/0, protokoll 6/0 och soak control ok.
+
+**Byggt (v2.6.162, ren klient, purge; srv-2.6.46 oförändrad, inget nytt wire-verb):**
+- Help ▸ Bots bäddar in deras v0.6.204-guide, som täcker v0.6.202–204.
+- Bot Activity-panelen: `resolve-verdict` heter "Declare verdict", deras förslag. Före det stod det "Step", vilket
+  fungerade. Turn-based-▶:ns titel nämner nu blockutslaget; knappen stegade det redan, eftersom den är ett filter sedan
+  v2.6.140.
+- Testerna:
+  - LIVE-testets Standard-halva väntar på en startad klocka;
+  - ett synktest för etiketten;
+  - två nya LIVE-tester med en riktig bot genom bryggan. Turn-based: frågan, raden, ▶, utslaget från blockerarens
+    plats och stridsräknaren. Standard: ingen klocka när frågan kommer, sedan hela 3 s från frågan och utslaget på
+    klockan.
+- PROTOCOL §12: deras tre stridsrader, combat-ends-formen och att blockutslaget nu kan komma från blockeraren. §12.0
+  noterar logg-flyttarna och de två frågorna; de är inte frysta.
+- Riggen v1.1.0:
+  - QUESTION känner igen `add stealth` och studsfrågan (`may block it`), som saknades sedan deras v0.6.203;
+  - samplaren loggar när en klocka startar (`askArmed`);
+  - rapporten visar `clock` (fråga → klocka) och räknar "clock before the question".
+  - reflexens reservsvar efter 6 s väntar på klockan när botten inte har startat den (v0.6.204 startar den när frågan
+    skickas), och ett stridssteg svarar bara på sin egen fråga.
+- PLAYTEST.md: den inaktuella meningen är ersatt, studsen och Deep Song är tillagda, och en lista säger vad som ska se
+  annorlunda ut vid omkörningen av 14 oktobers scenario.
+
+**I headless Chromium:** den riktiga servern, den riktiga Play offline-dialogen och en riktig Expert-bot v0.6.204 i
+klientens takt 3,1 s. Botten blockerar människans Bleed 2 med en bar vampyr. 45 av 45 i en körning.
+- **Standard 3 s:**
+  - ingen deadline medan frågan står i kön (strecket);
+  - nedräkningen börjar 0,04 s efter frågan, med 2,97 s kvar;
+  - väntan slutar på klockan efter 3,04 s;
+  - men utslagsraden kommer först 4,96 s efter frågan;
+  - bubblan säger "Wallbot — Block succeeds!", och räknaren blir stridsräknare.
+- **Turn-based:**
+  - raden visar "block verdict (You)", "—" och "▶ Declare verdict" (v2.6.161: "▶ Step");
+  - efter ett riktigt klick bestämmer sig botten på 0,08 s, och raden kommer 4,89 s senare.
+- **Misslyckat block:**
+  - `+1` i chatten bokförs av botten 4,96 s senare;
+  - Pass ger "Stealth 1 vs Intercept 0 — block fails.", och räknaren står kvar resten av actionen;
+  - It resolves låter bleeden landa en gång (30 → 28) och stänger räknaren.
+- **En andra Resolve efter bottens misslyckade utslag:** ofarlig. Det blir en andra rad, botten säger Hold on igen, och
+  bleeden landar ändå en gång. Resolve-knappen syntes inte ens på skärmen då.
+
+**Riggen mot en riktig bot v0.6.204** (14 oktobers scenario, Standard 3 s, Hanna tvingad att blockera min Bleed 2,
+sedan en strid):
+- Körning 1, före de två riggfixarna: reflexens reservsvar svarade på "before range" vid 125,5 s, och frågan "Anything
+  before range?" kom först vid 127,6 s. Två steg till gick likadant.
+- Körning 2, efter fixarna: varje reflex kom 1,6 s efter sin egen fråga. Rapporten visar `clock` 0,0–0,3 s på alla 8
+  väntor, "question after the wait closed: 0" och "clock before the question: 0".
+- Hold-raderna väntade också på chattakten. "⏸ Holding" kom 3,4 s efter mitt Hold on, och "▶ Resuming." gick före
+  utslaget, som då kom 8,9 s efter mitt Pass.
+
+**Fynd till botprojektet:**
+- **Chattakten:** efter en fråga väntar allt botten skickar 1,6 × 3,1 s = 4,96 s. Det gäller utslagsraden,
+  bokföringen av en skriven stealth och raden om knapptrycket.
+  - I Standard avgör klockan vid 3 s, men bordet ser utslaget vid 5 s. En stealth som skrivs däremellan räknas inte.
+    Kört: `+1` 3,13 s efter frågan, alltså strax efter att klockan avgjort vid 3,05 s. Utslaget kom vid 4,96 s med
+    "Stealth 0 vs Intercept 0 — block succeeds.", och striden startade.
+  - Panelen visar nästa väntan 2–5 s före utslaget.
+  - Det är deras sak. Mitt förslag: låt statusrader och räknarskrivningar slippa chattakten.
+- **Guiden:** menyn säger v0.6.203 och sidfoten v0.6.204. Dess Controls-lista kallar fortfarande knappen "▶ Step",
+  medan vår knapp heter "▶ Declare verdict" (syns i Help ▸ Bots i webbläsaren).
+
+**Sondens egen lärdom:** i en körning av tretton sa botten Pass i stället för att blockera. Sonden satte upp
+blockeraren innan bottens `dealt` hade behandlats, och `dealt` nollställer brädet. Nu väntar sonden på given (`unc` och
+`hand` fyllda) och kontrollerar `_pickBlocker` först. Efter det: 11 av 11, och sedan 45 av 45.
+
+**Grindar:**
+- klientsviten 304/0 med 3 nya tester. På v2.6.161 blir det 301/3: inbäddningen och de två etikettesterna.
+  Standard-klocktestet är grönt även där, eftersom det fäster bottens kontrakt;
+- 4 av 4 mutanter fångas;
+- kanariefågeln 69/0, dispatch 68/0, protokoll 6/0, endpoint 24/0;
+- soak `--control` exit 0;
+- B1 byte-identisk;
+- embed `--check` på båda sidorna;
+- check-versions grön.
+
+**Otestat:**
+- ett onlinebord (samma väg, men inte kört);
+- Adaptive;
+- en människa som spelar stealth utan att bokföra den och säger It resolves. Det är bottens egen osäkerhet: då startar
+  striden;
+- riktig pekskärm.
+
 ## [BESÖKET OVANIFRÅN] (16 oktober 2026, sen eftermiddag, klient v2.6.161)
 
 Johan, efter att PR #18 mergats: "Känner vi oss klara då? Eller fanns det något mer? :)". Om ?-knappen sa han: "Jag

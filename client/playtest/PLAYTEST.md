@@ -49,7 +49,7 @@ node client/playtest/playtest.js menu Ashley 'Actions>Bleed>Bleed 3'  # the froz
 node client/playtest/playtest.js ev 20 2                              # the bot's Hold on, then Block! or No block
 node client/playtest/playtest.js play "Lost in Crowds" --by Ashley    # blocked: add stealth...
 node client/playtest/playtest.js chat +1                              # ...and BOOK it on the counter (the bot reads the counter)
-node client/playtest/playtest.js resolve                              # the counter's Resolve: the verdict line
+node client/playtest/playtest.js resolve                              # the counter's Resolve: the verdict line (or `say pass`: the bot declares it, bot v0.6.204)
 node client/playtest/playtest.js say it resolves                      # the bleed lands: the bot takes it
 node client/playtest/playtest.js clear                                # the played action cards to the ash heap
 node client/playtest/playtest.js phase influence
@@ -72,6 +72,17 @@ dialog matches. `menu` walks any right-click menu by its labels (`Combat>Hand st
   clock run. Set it per kind (`block`, `verdict`, `react`, `pq`, `combat`, `strike`, `vote`) and per bot:
   `node client/playtest/playtest.js pol '{"block":"no","byBot":{"Viktor":{"block":"hold"}}}'`. Only your own
   phrases and chat lines count as an answer. Say in the report which waits ended in your holds.
+- **The clock starts with the question** (bot v0.6.204): while a bot's question is still queued its wait has no
+  deadline (the panel shows the dash, and an early answer still counts); the number the question announces is the
+  clock. The rig records when each clock starts (`askArmed`, rig v1.1.0) and the report prints it as `clock`
+  (question → clock; negative means the clock ran before the question, as with bot v0.6.203 and older).
+- **What the reflex answers** (rig v1.1.0):
+  - In a combat it answers a step only after that step's own question. A late "Anything before range?" no longer
+    anchors the maneuver step.
+  - When no question has come after 6 s and the bot has not started the wait's clock, the reflex waits for the clock.
+    Bot v0.6.204+ starts the clock when the question is sent, so the reflex no longer answers a question you have
+    not seen.
+  - Rig v1.0.0 did both, and on 16 Oct it answered three combat steps before their questions.
 - **Turn-based**: turn the reflex off (`pol '{"on":false}'`); the bots wait for you. `give` is the play button
   beside the bot badge (it gives every waiting bot the word).
 - Phrases by name: `say pass`, `say no block`, `say block`, `say hold on`, `say it resolves`, `say any blocks`.
@@ -91,7 +102,20 @@ The client leaves the human's own values to the human (Johan, 14 Oct). The bots 
   `menu <minion> 'Actions>Bleed>Reduce bleed −1'` (or `−2`, `−X…`). The bot (v0.6.201+) lowers its bleed, and a bleed of 0
   moves no Edge. Adjust your own pool by what landed.
 - **Book stealth and intercept on the counter**: play the card, then `chat +1` (or the total, `chat 2`).
-- **When a bot blocks your action and needs no card, it waits for you without a clock**: add stealth or `resolve`.
+- **When a bot blocks your action, it asks you and waits on the tempo** (bot v0.6.204): "X blocks (stealth A vs
+  intercept B) — you, add stealth, or say Pass to resolve it (3s → the block succeeds)". Standard counts the slider
+  from that question; Turn-based has no clock (a reminder after two minutes). Answer with stealth (`chat +1`, or the
+  counter: the clock starts again), `say pass` or `say it resolves` (the bot declares the verdict from the counter:
+  combat when the block holds, its block window again when it fails, and after It resolves a failed block lets your
+  action land), `resolve` (the counter's own verdict line), or `give` (the play button: the bot declares). The Bot
+  Activity panel's row reads `block verdict (you)` with ▶ Declare verdict (client v2.6.162). The verdict bubble then
+  names the bot, because the bot sent the line. A failed block leaves the counter open for the rest of the action
+  (stealth stays in effect); your `say it resolves` or the next action closes it.
+- **A bleed bounced onto you** (bot v0.6.203: another bot's Deflection-class card on a bot's bleed): the acting bot asks
+  you ("X now bleeds you for N — you may block it (the bounce allows that), react, or say 'no'") and takes up
+  your `say block`.
+- **After a bot's Deep Song rush on your vampire** (bot v0.6.203) the bot asks you first in every combat step: the
+  rushed vampire is the acting minion of that combat.
 - **Clear the played cards** after each action (`clear`), or the next card lands on a pile.
 - Revelations [aus] against a bot: it reveals its hand to you (online, and at a hotseat from client v2.6.159); it does
   not act on the card you pick yet (the bot project's R4).
@@ -102,6 +126,16 @@ Message order (a question after its own answer, a hold announced after the relea
 the same remark from two bots, the lag between a wait and its question (the report measures it), whether Hold on
 stops the bots' own plays, bot-vs-bot combat (a burst, then silence), bleed reductions, ranges and Immortal Grapple
 between bots, stolen blood, the Edge, cards logged "(uncurated — adjust if needed)", turn-1 discards.
+
+**What should look different after bot v0.6.202–204** (re-run the 14 Oct scenario and compare):
+- A combat between two bots is one line per bot per step ("— VAMPIRE does not maneuver.", "has nothing before
+  strikes.", "does not press." when a bot plays nothing; the acting bot first), evenly paced while a human is seated:
+  about 14 s for a silent round at 3.1 s instead of the 2 s burst and ~19 s of silence.
+- A Hold on stops a bot's own combat moves too, and "⏸ Holding for …" / "▶ Resuming." come at the head of its queue.
+- The deck-reading remark comes from one bot, once, in the log ("NAME (bot) reads <you>'s deck as …"), and in a
+  combat with you the round summaries are log lines.
+- "QUESTION AFTER THE WAIT CLOSED" should be gone for waits that ended on the clock, and the `clock` column near 0.
+- No table stands still after a bot blocks you (the 14 Oct play-test: four minutes).
 
 ## After the game
 
