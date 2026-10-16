@@ -734,6 +734,18 @@ body.invisit #edge{ display:none !important; }
 #edge svg{display:block; margin:0 0 2px; width:18px; height:18px; opacity:.55}   /* VTES symbol; bottom-margin nudges it 2px up optically */
 #edge.lit{background:radial-gradient(circle at 50% 20%, #6b1a20, #2c0a0c); color:var(--bone); border-color:var(--brass); box-shadow:0 0 18px rgba(156,31,38,.45)}
 #edge.lit svg{opacity:.95}
+/* v2.6.160 (Johan): THE EYE -- on every other seat's mat (Structured: the helicopter view, the columns, a seat visit), in the
+   pool zone's corner where your own Edge sits on your board: what you may look at there (their open hand, ash heap,
+   burned cards). Quiet until there is something to see; GOLD while their hand is open to you -- not the Edge's red,
+   which in that corner means the Edge on your own board. A div like #edge (no tab stop: the keymap owns Tab). */
+.mateye{ position:absolute; box-sizing:border-box; padding:0; margin:0; border-radius:50%; border:1px solid var(--brass2); background:#1a140c; color:var(--bone);
+  display:grid; place-items:center; cursor:pointer; z-index:7; line-height:0; transition:opacity .2s, box-shadow .2s, border-color .2s; }
+.mateye svg{ display:block; width:72%; height:72%; opacity:.6; pointer-events:none; }   /* 72 %: at the 12 px of a five-seat helicopter mat the almond and its pupil still read (looked at 4x) */
+.mateye:hover svg{ opacity:.95; }
+.mateye.quiet{ opacity:.4; }
+.mateye.quiet:hover{ opacity:.85; }
+.mateye.lit{ border-color:var(--brass); background:radial-gradient(circle at 50% 30%, #5a4617, #1a140c 72%); box-shadow:0 0 10px rgba(217,180,95,.55); }
+.mateye.lit svg{ opacity:.95; }
 /* Tokens — draggable felt tokens (the Edge and any future ones). No transition: drag is instant like cards. */
 .token{ position:absolute; left:0; top:0; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:none; will-change:transform; filter:drop-shadow(0 4px 8px rgba(0,0,0,.5)); }
 .token.dragging{ cursor:grabbing; filter:drop-shadow(0 12px 20px rgba(0,0,0,.8)); }
@@ -2527,7 +2539,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hb-setup">Setting up a table</a></li>
   <li><a href="#hb-play">How a bot plays</a></li>
   <li><a href="#hb-controls">Controls</a></li>
-  <li class="ver">bot v0.6.198 · client v2.6.141</li>
+  <li class="ver">bot v0.6.201 · client v2.6.158</li>
 </ul></nav>
 
 <header class="hero">
@@ -2557,7 +2569,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <p class="lead">The short version: a bot is a fifth player who knows the rules of the actions it takes, plays a fixed deck it has been taught, and asks you when it cannot see what your card does.</p>
 
   <h3>What a bot knows about cards</h3>
-  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>96 are hand-curated</strong> — checked card by card so the bot plays them exactly right. The four V5 starter decks and the two tournament-style decks in the menu are curated to 100 %.</p>
+  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>99 are hand-curated</strong> (79 library, 20 crypt) — checked card by card so the bot plays them exactly right. In the six decks in the menu the bot has a use for nearly every card, but they are not all curated: four masters in the V5 starters do nothing for the bot yet when it plays them — Guardian Angel, Haven Uncovered and The Labyrinth (Nosferatu) and Wasserschloss Anif (Tremere). Haven Uncovered even goes on one of the bot's own vampires, where it only helps its opponents.</p>
   <p>This shapes three things you will notice:</p>
   <ul>
     <li><strong>Its own deck it plays well.</strong> Every card in a bot deck has a modelled effect, so the bot never holds a card it cannot use. A card it genuinely cannot play with its current vampires is treated as dead and cycled in the discard phase.</li>
@@ -2626,7 +2638,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <details>
     <summary>Debug bot <span class="sub">— see what it is thinking</span></summary>
     <div>
-      <p>Tick <em>Debug bot</em> in the setup window and every bot at the table plays with an <strong>open hand to all players</strong>, its uncontrolled crypt <strong>face up</strong>, and writes its decision weighting to the log (“master-play: … why”). It announces in chat that it is in debug mode, so nobody is misled. Use it to judge how the bot plays a deck; never in a real game, and it is refused outright in Tournament mode. The setting is read when the bot is added — toggling it later takes effect on the next deal.</p>
+      <p>Tick <em>Debug bot</em> in the setup window and every bot at the table plays with an <strong>open hand to the whole table</strong>, its uncontrolled crypt <strong>face up</strong>, and writes its decision weighting to the log (“master-play: … why”). It announces in chat that it is in debug mode, so nobody is misled. Use it to judge how the bot plays a deck; never in a real game, and it is refused outright in Tournament mode. The setting is read when the bot is added: tick <em>Debug bot</em> before you add the bot (offline: before Start); to change it, remove the bot and add it again. To look: right-click the bot's pool globe → <span class="menu">👁 Inspect their hand</span>, and <span class="menu">🜂 View their ash heap</span> for its discards (see the seat menu below). Every human at the table sees the hand, players and spectators alike; the other bots look away from it (bot v0.6.201) and learn its cards only the way you would, through a Revelations of their own. Its face-up crypt is on the table for everyone. A bot started from the command line takes <code>--debug</code> (and <code>--no-debug-weights</code> for the hand without the log lines), and refuses debug by itself at a Tournament table.</p>
     </div>
   </details>
 
@@ -2643,7 +2655,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <li><b>Create the room as Structured</b> (Board style). Board style is fixed at creation; a Classic room cannot host bots and the button says so.</li>
     <li><b>In the lobby, find the Bots row</b>: a name (a free name is suggested), a deck dropdown, an experience dropdown, and <span class="menu">🤖 Add bot</span>. Add up to the table limit of six seats; a seat picker per bot lets the host place it.</li>
     <li><b>Helpers lock on.</b> Adding the first bot switches the room's helper policy to “All helpers on” for everyone and shows it in the lobby banner; removing the last bot restores what the room had before.</li>
-    <li><b>Remove a bot</b> with the ✕ on its lobby row — it leaves the seat itself. <em>Debug bot</em> works as offline and is refused in Tournament rooms.</li>
+    <li><b>Remove a bot</b> with the ✕ on its lobby row — it leaves the seat itself. <em>Debug bot</em> works as offline (tick it before <em>Add bot</em>) and is refused in Tournament rooms. If the box is greyed with a Tournament tooltip in a room that is not one, reload the page and add the bot before opening Play offline (client v2.6.158 reads the Play offline setting there; the fix is with the client project).</li>
     <li><b>Start.</b> From here the server drives everything: the bots take their turns when the turn reaches them, the referee menus (pool, oust, pass) and the card controls reach the bot through the server, and every seated player sees the 🤖 Bot Activity badge and its tempo gear. Only the host's tab holds the bots, so only the host's ▶ buttons can step them; everyone else answers with a quick phrase, a line or the <span class="menu">Combat ▸</span> menu.</li>
   </ol>
   <p>If the host's connection blinks, a bot reconnects to its seat by token just as a human does. If the host closes the tab, the bots go with it.</p>
@@ -2668,7 +2680,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   </details>
   <details>
     <summary>Master <span class="sub">— one master a turn, trifles counted</span></summary>
-    <div><p>It plays at most one master card per master phase (plus a trifle's extra action, plus anything a Parthenon-class card grants), paying pool up front and writing the payment to the log so it can be audited. Persistent masters attach to a vampire or go on the table; one-shots resolve straight to the ash heap. Fame is placed on the vampire it intends to rush; Pentex Subversion and Misdirection pick the most useful unlocked target on its prey's board. A master the database only knows partially is played with a note: <em>“(uncurated — adjust if needed)”</em>.</p></div>
+    <div><p>It plays at most one master card per master phase (plus a trifle's extra action, plus anything a Parthenon-class card grants), paying pool up front and writing the payment to the log so it can be audited. Persistent masters attach to a vampire or go on the table; one-shots resolve straight to the ash heap. Fame is placed on the vampire it intends to rush; Pentex Subversion and Misdirection pick the most useful unlocked target on its prey's board. A master that is not hand-curated is played with a note: <em>“(uncurated — adjust if needed)”</em> — the bot may not know what that card does.</p></div>
   </details>
   <details>
     <summary>Minion <span class="sub">— actions, one bleed and one political action per vampire</span></summary>
@@ -2677,10 +2689,10 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
       <ol class="flow">
         <li><b>Announce.</b> The action card's clone animates, the frozen log line is written (<em>“Colette bleeds for 2.”</em>), and the Block counter opens with the bot's <em>announced stealth</em> on its side — the card's built-in stealth plus any permanent stealth of the vampire.</li>
         <li><b>Ask.</b> <span class="bot"><b>Name:</b> Colette plays Govern the Unaligned — bleeds You for 2 (+1 stealth). Block?</span> The window waits up to 20 s for your answer. After 7 s of silence it rings the room's Reaction stopwatch; once the stopwatch has run out it gives you two more seconds and then treats silence as “no block”.</li>
-        <li><b>Your block.</b> Say <span class="phrase">Block!</span> and right-click the blocking minion → <span class="menu">Block</span> (or do the right-click first — either order works). If only the shout arrives the bot asks “Who blocks?” after 2.5 s. Now the contest runs on the counter: put your intercept on your side (play the cards, use the +/− steps, or just type the number in chat — <a href="#hb-chat-intercept">see the chat grammar</a>). The bot compares the real numbers, waits a beat, and answers with its own stealth card if it needs one and has one — telling you when it is already ahead: <span class="bot"><b>Name:</b> Colette currently has 2 stealth — play your intercept, or resolve the block.</span> It never spends a stealth card it does not need.</li>
+        <li><b>Your block.</b> Say <span class="phrase">Block!</span> and right-click the blocking minion → <span class="menu">Block</span> (or do the right-click first — either order works). If only the shout arrives the bot asks “Who blocks?” after 2.5 s. Now the contest runs on the counter: play your card, then put its value on your side (the +/− steps, or just type the number in chat — <a href="#hb-chat-intercept">see the chat grammar</a>). Playing a card books nothing on the counter by itself; the bot reads the counter and the numbers in chat. The bot compares the real numbers, waits a beat, and answers with its own stealth card if it needs one and has one — telling you when it is already ahead: <span class="bot"><b>Name:</b> Colette currently has 2 stealth — play your intercept, or resolve the block.</span> It never spends a stealth card it does not need.</li>
         <li><b>Verdict.</b> When you stop adding intercept (say <span class="phrase">Pass</span> or <span class="phrase">No block</span>, press the counter's Resolve, or let the clock run) the bot declares the outcome from the counter: <em>“Block: Stealth 2 vs Intercept 1 — block fails.”</em> A successful block goes to combat (below). Cancelling a block with the counter's ✕ reopens the window fresh.</li>
         <li><b>Modifiers.</b> After blocks are declined the bot may pump the bleed (<em>Conditioning</em>, <em>Leverage</em>): each modifier is a new log line and a new question — <span class="bot"><b>Name:</b> Colette adds +2 bleed — now 4 on You. Any reaction?</span> This window takes <em>reactions only</em> (a bounce or reduction); the rules do not reopen blocks. Answer <span class="phrase">No reaction</span> or <span class="phrase">Pass</span> to let it through, <span class="phrase">Yes</span> or <span class="phrase">❗ Hold on…</span> to say “wait, I am reacting” and play your Deflection.</li>
-        <li><b>Resolve.</b> <span class="phrase">It resolves</span>, then a log line: <em>“The bleed goes through: You, −4 pool (adjust yours).”</em> The client's helpers deduct the pool for you when they are on; otherwise adjust your pool yourself. A successful bleed gives the bot the Edge.</li>
+        <li><b>Resolve.</b> <span class="phrase">It resolves</span>, then a log line: <em>“The bleed goes through: You, −4 pool (adjust yours).”</em> Adjust your own pool: the line tells the table what you took. The client never changes your pool, blood or Edge for you — you manage your own values, the bots manage theirs. A successful bleed (1 pool or more) gives the bot the Edge; online your client clears your own Edge when the bot takes it (at an offline table, for now, clear it yourself). A bleed you reduce to 0 is said as such — <em>“The bleed goes through at 0”</em> — and moves no Edge. The bot knows the reduction cards it plays itself; for any other, tell it the amount after your card. When your client’s Bleed menu has the <span class="menu">Reduce</span> row (asked of the client project; it writes <em>“Lisa reduces the bleed by 1.”</em>), use it and the bot bleeds for the rest. Until then the bot’s line states the full amount: adjust your own pool by what actually landed.</li>
       </ol>
       <p>Undirected actions (hunt, equip, recruit, a political action, rescue from torpor) are announced the same way and both the bot's prey and predator are asked; the window closes when both have declined. A political action is announced with a machine-readable <em>terms</em> line before the frozen action line, so a bot voter at the table can weigh it.</p>
     </div>
@@ -2698,7 +2710,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <details open>
     <summary>Your bleed or vote <span class="sub">— how it decides to block or react</span></summary>
     <div>
-      <p>Announce with the action menu: right-click your minion → <span class="menu">Actions</span> → <span class="menu">Bleed 1/2/3/X…</span>, <span class="menu">+X bleed…</span>, <span class="menu">Vote → Political action</span>, <span class="menu">Hunt</span>, <span class="menu">Rescue from torpor</span>, <span class="menu">Diablerie</span>. The frozen line the client writes is what the bot reads, so the amount and the target must be on that line — set a target with <span class="menu">⌖ Set as target</span> / <span class="menu">Target their pool</span> first if the action is not simply aimed at your prey.</p>
+      <p>Announce with the action menu: right-click your minion → <span class="menu">Actions</span> → <span class="menu">Bleed 1/2/3/X…</span>, <span class="menu">+X bleed…</span>, <span class="menu">Vote → Political action</span>, <span class="menu">Hunt</span>, <span class="menu">Rescue from torpor</span>, <span class="menu">Diablerie</span>. The frozen line the client writes is what the bot reads, so the amount and the target must be on that line. <strong>Set the target first</strong> with <span class="menu">⌖ Set as target</span> / <span class="menu">Target their pool</span> whenever the action is aimed at anyone but your prey: a directed action with no target on its line is read as aimed at your prey, and only the target of a directed action may block it.</p>
       <p>The bot then weighs the block: what the action costs it in pool, how likely the block is to succeed (your announced stealth against the intercept it can raise — cards in hand, permanents, a wake for a locked body), what a fight against that vampire would cost (a vampire with no blood lets a small bleed through rather than go to torpor; against a hard-hitting deck a weak blocker stays back), and what it loses by locking a blocker it may want later. It says <span class="phrase">❗ Hold on…</span> while it decides, then either <span class="phrase">No block</span> or <span class="phrase">Block!</span> with the frozen line <em>“Anarch Convert attempts to block.”</em>, its wake and intercept cards played onto the counter one beat apart. If you add stealth it looks again at the real counter and answers with more intercept when it has it — several cards at once when several are needed.</p>
       <p><strong>Bouncing.</strong> A bot with a Deflection does not bounce at the announce. Following table custom it lets you pump first: after <span class="phrase">No block</span> it waits for your modifiers (<span class="menu">+X bleed…</span>) and bounces on the <em>total</em> once you say <span class="phrase">It resolves</span> — or, if you play no modifier, about four seconds after your decline. It rarely bounces a bleed of 1 while it holds another bounce for something heavier, and against a known stealth bleeder it may deliberately let small bleeds through to clog your hand.</p>
       <p><strong>Your action it cannot read</strong> — a card the client logs only as “plays X” — gets this exchange when you prompt <span class="phrase">Any blocks?</span>:</p>
@@ -2726,7 +2738,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
       <p><b>Fighting a bot yourself — the vampire's <span class="menu">Combat ▸</span> menu.</b> Right-click your fighting vampire and use <span class="menu">Combat ▸ Strike</span> (Hand, Hand for N…, Weapon or card…, Steal blood…, Dodge…, Combat ends…), <span class="menu">Combat ▸ Maneuver</span> (to long / to close, or <em>Set range</em> for Immortal Grapple- or Sniper Rifle-class cards) and <span class="menu">Combat ▸ Press</span> (continue / end). Each writes one log line the bot reads, and with the combat helper on it also moves the shared combat counter. The bot writes its own strike's damage onto its side of that counter, so your Damage step shows what is coming at you.</p>
       <p><b>Blocks by chat.</b> When a bot blocks <em>your</em> action, type your stealth in chat: a number is your total stealth (<em>2</em>), <em>+1</em> adds to it. When <em>you</em> block a bot's action, type your intercept the same way. The bot books it on the block counter and answers with its own card if it needs one — it never plays stealth or intercept that is not needed.</p>
       <p><b>The bot walks the combat steps with you.</b> Fighting your vampire, a bot talks through the rulebook's steps. When <em>you</em> act it asks — <em>“Anything before range?”, “Any maneuvers?”, “Anything before strikes?”, “What is your strike?”, “Any presses?”, “Anything before ending combat?”</em> — and when it acts it says what it does, or <em>“I have nothing before range.”</em> and so on. Answer with the <span class="menu">Combat ▸</span> menu, or say <span class="phrase">No</span> / <span class="phrase">Pass</span> (or type <em>no</em>, <em>pass</em>, <em>go on</em>) to move on; stepping the combat helper forward works too. If you say nothing, a short clock moves the step along.</p>
-      <p><b>What you took.</b> With the combat helper on, your client writes <em>“Name takes N (loses P blood, now M).”</em> for you when the table steps past Damage resolution. On a Classic table (helper off) use <span class="menu">Combat ▸ Damage taken…</span> — that is how the bot learns what your vampire took. If you say nothing, the bot falls back to the rulebook: <strong>1 hand damage</strong> at close range, <strong>0 at long range</strong> unless your vampire shows a ranged option.</p>
+      <p><b>What you took.</b> With the combat helper on, your client writes <em>“Name takes N (loses P blood, now M).”</em> for you when the table steps past Damage resolution. The line is a report to the table: it does not change your card, so take the blood off your vampire yourself (and add any blood your vampire stole). On a Classic table (helper off) use <span class="menu">Combat ▸ Damage taken…</span> — that is how the bot learns what your vampire took. If you say nothing, the bot falls back to the rulebook: <strong>1 hand damage</strong> at close range, <strong>0 at long range</strong> unless your vampire shows a ranged option.</p>
       <p><b>Steals.</b> When a bot steals blood from your vampire (Theft of Vitae), it takes the blood on its side; lower your vampire's blood yourself — the helper never touches the board.</p>
     </div>
   </details>
@@ -2768,7 +2780,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <p>The ten phrases on the quick-phrase bar are the fast path. The bot uses the same ten, so a table of humans and bots speaks one language.</p>
   <div class="wrap"><table>
     <tr><th>Phrase</th><th>What the bot does with it</th></tr>
-    <tr><td><span class="phrase">❗ Hold on…</span></td><td><strong>Pauses every bot</strong> at its next visible step until someone releases it (It resolves, Pass, No block — or Release hold in the Bot Activity panel). Every clock a bot runs on you stops: the block and reaction questions, its pool question, its vote poll, each combat step and the damage step. Each starts again from the beginning when the hold is released, and an answer still counts at once. A bot waiting inside its block question, a combat step or its vote poll says so: “Holding for Anna — say ‘It resolves’ when ready.” Every 90 s it reminds the table: “Still holding for Anna.” Use it to play a card in a bot's phase, to think, or to sort something out by hand. During a bot's political action it also keeps its vote poll open. If you leave the table while holding, the hold is released.</td></tr>
+    <tr><td><span class="phrase">❗ Hold on…</span></td><td><strong>Pauses every bot</strong> at its next visible step until someone releases it (It resolves, Pass, No block — or Release hold in the Bot Activity panel, which frees only the bot on that row). Every clock a bot runs on you stops: the block and reaction questions, its pool question, its vote poll, each combat step and the damage step. Each starts again from the beginning when the hold is released, and an answer still counts at once. A bot waiting inside its block question, a combat step or its vote poll says so: “Holding for Anna — say ‘It resolves’ when ready.” Every 90 s it reminds the table: “Still holding for Anna.” Use it to play a card in a bot's phase, to think, or to sort something out by hand. During a bot's political action it also keeps its vote poll open. If you leave the table while holding, the hold is released.</td></tr>
     <tr><td><span class="phrase">No block</span></td><td>Declines the <em>block only</em> on the bot's action. After it, the bot may still pump the bleed and asks for reactions. Also releases a hold.</td></tr>
     <tr><td><span class="phrase">Block!</span></td><td>You attempt to block the bot's action. Follow with right-click your minion → <span class="menu">Block</span> so it knows which vampire (it asks “Who blocks?” after 2.5 s otherwise), then play intercept onto the counter or type the number. Also releases a hold.</td></tr>
     <tr><td><span class="phrase">No reaction</span></td><td>Declines everything on the bot's action: no block, no bounce, no reduction. Closes the window at once. Also releases a hold.</td></tr>
@@ -2831,7 +2843,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   </table></div>
 
   <h3 id="hb-controls-elements">Adjusting a bot's board</h3>
-  <p>Right-click on a bot's seat (its pool globe, or its row in the Table panel) and on its cards. Everything here is meant for correcting what the bot could not see; the bot announces the change and plays on from it.</p>
+  <p>Right-click on a bot's seat (its pool globe, or its row in the Table panel) and on its cards. On a Structured table the other seats' globes show in the table overview (<kbd>V</kbd>) and on a seat visit (the number keys <kbd>1</kbd>–<kbd>6</kbd>; <kbd>0</kbd> goes home); the Table panel opens from the tab at the right edge. Everything here is meant for correcting what the bot could not see; the bot announces the change and plays on from it.</p>
   <div class="two">
     <div>
       <h4>Seat menu (pool globe / Table panel)</h4>
@@ -2841,7 +2853,8 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
         <li><span class="menu">💀 Oust this player…</span> — ousts the bot: it clears its board, stops taking turns, and its predator collects the bounty.</li>
         <li><span class="menu">↩ Return them to the game</span> — see the un-oust note above: the seat returns, the bot does not.</li>
         <li><span class="menu">⏭ Pass their turn…</span> — advances past a bot that holds the turn (online: while it is its turn; offline: while the sweep is waiting on it).</li>
-        <li><span class="menu">👁 Inspect their hand</span> — appears when the bot plays with an open hand (Debug bot, or Revelations at superior).</li>
+        <li><span class="menu">👁 Inspect their hand</span> — appears when the bot plays with an open hand (Debug bot, or Revelations at superior). In client v2.6.158 and earlier it does not appear at an offline table; the fix is with the client project.</li>
+        <li><span class="menu">🜂 View their ash heap</span> — the bot's discarded and spent cards by name, for any bot, at any time.</li>
       </ul>
       <p style="color:var(--ink-mute);font-size:14px">Online these are host- and referee-only, like every referee verb; at a hotseat you are the host.</p>
     </div>
@@ -2865,7 +2878,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <h3 id="hb-controls-panel">The Bot Activity panel</h3>
   <p>The <span class="menu">🤖</span> badge in the top-right corner (a number beside it counts bots waiting on someone) opens a panel with one row per bot: its name, <em>what it is waiting for</em> in table language (“block? (Anna)”, “hold: Anna”, “pool question (how much?)”, “Anna's turn”, “thinking”), a countdown where one honestly exists, and a step button.</p>
   <ul>
-    <li><span class="menu">▶ Release hold</span> — the same release <span class="phrase">It resolves</span> performs, written to the log as done from the table controls.</li>
+    <li><span class="menu">▶ Release hold</span> — releases the bot on that row only (each bot keeps its own hold), written to the log as done from the table controls. To release every bot at once, say <span class="phrase">It resolves</span>.</li>
     <li><span class="menu">▶ Close window</span> — closes the bot's open block/reaction window exactly as its clock would have: nobody answered, so a contested window still declares its verdict from the counter.</li>
     <li><span class="menu">▶ Close question</span> — closes the pool question as its clock would (stage one → “no”, stage two → 1 pool).</li>
     <li><span class="menu">▶ Close step</span> — closes an open combat step (“combat step maneuvers (Anna)”) as its clock would.</li>
@@ -2878,7 +2891,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.198</b>, client <b>v2.6.141</b> / server srv-2.6.43, cardfx 99 curated / 1,670 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 12 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.201</b>, client <b>v2.6.158</b> / server srv-2.6.46, cardfx 99 curated / 1,670 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 16 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 <!-- @@/HELP:bots -->
 </template>
@@ -3213,7 +3226,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.158';   // v2.6.158 (14 Oct 2026, WHAT THE PLAY-TEST FOUND, pure client -- purge; srv-2.6.46 unchanged, no wire change; bot v0.6.198 beside): four faults from one human playing a full game against two bots (client/playtest/, docs/handoffs/REPLY-to-bot-2026-10-14-playtest.md). (1) The default combatant went stale: the minion that last blocked joined combats between two OTHER players, turns later (three times in one game). The defaults now die with the turn, with a failed block and with the combat, and a combat whose acting seat already faces another seat is not joined (cmbAutoJoin, cmbWatch, tallyStaleClose, avrClear). (2) An image whose fallback could not load either (offline: no card backs) re-set the fallback on every error event, about 2,000 requests a second per card-event clone -- one fallback per image now (imgFallbackOnce, five sites). (3) A master played ON a vampire (the menu's Play on X, or a drop onto the vampire) did not use up the master action -- the master gate runs there too. (4) The level chooser offered superior when ANY ready vampire had it; it follows the vampire playing the card (the anchor) now, and parseV5Card keeps the crypt disciplines the chooser reads (a v5 database would have offered inferior with a warning every time).
+const VERSION='2.6.161';   // v2.6.161 (16 Oct 2026, THE VISIT FROM ABOVE, pure client -- purge; srv-2.6.46 unchanged, no wire change; bot v0.6.201 beside): found while running v2.6.160's eye online. (1) A seat visit entered from the helicopter view (V, then a number key) stood on the retired L1 stage: exitL3 drops l2cols, so fitBoard scaled the fixed 1004 x 616 board, and the visit had no hand dock. switchView now enters L2 under a visit that comes from L3, exactly as a visit from L2 stands on it. (2) setAside's settle: its 250 ms backstop no longer swallows a later transitionend. When frames stall right after a view switch (headless Chromium drew none for 225 ms while timers ran), the transition starts late, the backstop measured the panel before it moved and nothing measured it again -- the visit above was drawn 1172 px wide in a 1098 px area at 1366 x 768 (37 px under the panel, 37 px past the window). The panel's own transitionend now always sends the final resize, the newest call owns the transition (one listener, one backstop) and a child's transition does not count; a Classic visit (L4, then a number) gets the same final resize.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3261,6 +3274,9 @@ function tallyCombatMerge(m, prev){   // the srv-2.6.39 tallyCombat rule, field 
    escapeHtml'd free text. hand / handN / card / steal / dodge / ends / man / press / taken are the shapes the
    released bot already parses (L12.strikeH/strikeC/strikeD/combatEnds, _parseCombatNarration); setr / extra / prev
    are new (PROTOCOL SS12, bot follow-up). Wording and the em-dash are load-bearing. */
+const BLEED_LINE={   // v2.6.159 (bot v0.6.201's ask, Johan 16 Oct: the interim for every reduction card the bots do not know yet): the TARGET's reacting minion says by how much it reduced the bleed. Effect only, like CMB_LINE; frozen in PROTOCOL section 12 and pinned by the canary against the bot's L12.reduceBy
+  reduce: (n,x)=>n+' reduces the bleed by '+x+'.'                                              // NOT the bot's own shape ('NAME plays CARD — reduces the bleed by N (now M).'): no em dash, no '(now N)' -- the bot counts each reduction once
+};
 const CMB_LINE={   // v2.6.134 (Johan): EFFECT ONLY -- no card names (the card's own 'plays' line already shows it), one line per choice
   hand:   (n,x)=>x===1 ? n+' strikes (hands) for 1.' : n+' strikes with hands for '+x+'.',   // both shapes the released bot parses (L12.strikeH / strikeC)
   weapon: (n,x)=>n+' strikes with a weapon for '+x+'.',                                         // parsed as a strike for N (L12.strikeC); 'a weapon' kept distinct -- cards trigger on weapons
@@ -3856,7 +3872,7 @@ function l3on(){ return board.classList.contains('l3mode'); }   // true in L3 / 
    opponents' mats ARE the table, and in L3 they are most of the screen -- block
    them and there is nowhere left to zoom. Johan's rule: chrome and cards swallow
    the wheel (with or without an effect of their own), open board zooms. */
-const BOARD_CHROME = '.card,.l4globe,.l4pbtn,#edge,#poolWrap,#dockPool,#z-hand,.zone.pile,#phases,#l2dock,#l2dockbg,#dockLog,#l3zoomCtl,#holdBadge,#hotBotBtn';   // v2.6.108: +#hotBotBtn -- the bot panel is a control that sits over the table, so it swallows the wheel and never starts a pan. Adding it HERE is the whole point of the constant: one line, both gestures
+const BOARD_CHROME = '.card,.l4globe,.l4pbtn,#edge,.mateye,#poolWrap,#dockPool,#z-hand,.zone.pile,#phases,#l2dock,#l2dockbg,#dockLog,#l3zoomCtl,#holdBadge,#hotBotBtn';   // v2.6.108: +#hotBotBtn -- the bot panel is a control that sits over the table, so it swallows the wheel and never starts a pan. Adding it HERE is the whole point of the constant: one line, both gestures
 function isBoardChrome(el){ return !!(el && typeof el.closest==='function' && el.closest(BOARD_CHROME)); }
 function effectiveL3Shape(){ return 'square'; }   // PARKED: circle/round helicopter retired -> kodarkivering.md. Square is the only L3 layout now (ignores conv.l3shape + net.l3shapeLock).
 function effectiveL3CollapseOusted(){ return !!conv.l3collapseOusted; }   // LOCAL view option: when on, L3 drops ousted seats and re-flows to the living players (off -> dead boards stay in place with a skull). Could be promoted to a host lock later, like l3shape.
@@ -4763,20 +4779,16 @@ function setNameTarget(r){
       // Privat till mig + hand-ägaren; publik rad till alla andra
       log('⋖ Target: '+tRef+' (in '+escapeHtml(r.who)+"'s hand).", true, true);
       const pubLine = '<b>'+escapeHtml(me)+'</b> targets a card in <b>'+escapeHtml(r.who)+"</b>'s hand.";
-      if(inRoom()){
-        if(r.seat) mpSend({ t:'logTo', toSeat:r.seat, html:'⋖ <b>'+escapeHtml(me)+'</b> targets <b>'+escapeHtml(r.name)+"</b> in your hand." });
-        log(pubLine);
-      } else if(localTable){
+      if(inRoom() || localTable){
+        if(r.seat) mpLogTo(r.seat, '⋖ <b>'+escapeHtml(me)+'</b> targets <b>'+escapeHtml(r.name)+"</b> in your hand.");   // v2.6.159: both transports -- at a hotseat a BOT hand owner gets it through the bridge (it was sent only online)
         log(pubLine);
       }
     } else if(r.visibility==='private'){
       // Privat till mig + avsändaren (via logTo); publik rad till alla andra
       log('⋖ Target: '+tRef+' (from reveal by '+escapeHtml(r.who)+').', true, true);
       const pubLine = '<b>'+escapeHtml(me)+'</b> targets a revealed card.';
-      if(inRoom()){
-        if(r.seat) mpSend({ t:'logTo', toSeat:r.seat, html:'⋖ <b>'+escapeHtml(me)+'</b> targets <b>'+escapeHtml(r.name)+'</b> (revealed to you — they are targeting it).' });
-        log(pubLine);
-      } else if(localTable){
+      if(inRoom() || localTable){
+        if(r.seat) mpLogTo(r.seat, '⋖ <b>'+escapeHtml(me)+'</b> targets <b>'+escapeHtml(r.name)+'</b> (revealed to you — they are targeting it).');   // v2.6.159: both transports -- the bot that revealed to you (Revelations [aus] against a bot) hears your pick at a hotseat too (the bot project's R4 reads it)
         log(pubLine);
       }
     } else {
@@ -5081,6 +5093,9 @@ function cardMenu(c,x,y){
       const actBleedAdd=x=>()=>{ const t=Math.min(99,(_avrLastBleed|0)+x); _avrLastBleed=t;   // v2.6.18: announce a bleed INCREMENT (Conditioning & co land after the base announce) -- running total is batch-scoped
              const vb='adds +'+x+' bleed (= '+t+')'; cardFx(c, 'lock', { verb: vb });   // presentational clone only (cardFx is state-free and broadcasts itself); the minion is already locked from the base bleed, no batch close, no autoLock
              log(cardRefCap(c)+' adds +'+x+' bleed (= '+t+').'+targetSuffix()); tutNotify('bleed-add'); };   // v2.6.26: tutorial breadcrumb (Structured II's +X step advances on the real thing)
+      const actReduce=x=>()=>{ dfxCancel();   // v2.6.159 (bot v0.6.201's ask, Johan 16 Oct): the BLED player's reaction -- a reduction card the bots may not know; the line says by how much, and a bot bleeding you lowers its bleed (a bleed of 0 moves no Edge). A reaction, not an action: no lock, no batch close (the bleed is still live), no target suffix (the bot's L12.reduceBy ends at the period); it ends the Reaction window like Block does
+             cardFx(c, 'lock', { verb:'reduces the bleed by '+x });                       // presentational clone only, like +X bleed
+             log(BLEED_LINE.reduce(cardRefCap(c), x)); };
       const actVote=dir=>async()=>{   // v2.6.106: casting votes is NOT an action -- no batch close, no autoLock (a minion with a title keeps its votes while locked). Pure announce, so a bot can weigh a referendum it cannot otherwise see
              const v=await uiDialog({kind:'prompt', title:'Cast votes', message:'How many votes '+dir+'?', def:'1'});
              if(v==null) return; const n=Math.max(1, Math.min(99, parseInt(v,10)||0)); if(!n) return;
@@ -5092,7 +5107,11 @@ function cardMenu(c,x,y){
           {label:'Bleed 2', fn:actBleed(2)},
           {label:'Bleed 3', fn:actBleed(3)},
           {label:'Bleed X…', fn:async()=>{ const v=await uiDialog({kind:'prompt', title:'Bleed X', message:'Bleed amount:', def:'4'}); if(v==null) return; const n=Math.max(1, Math.min(99, parseInt(v,10)||0)); if(n) actBleed(n)(); }},
-          {label:'+X bleed…', fn:async()=>{ const v=await uiDialog({kind:'prompt', title:'Add bleed', message:'Additional bleed (modifiers landing after the announce):', def:'1'}); if(v==null) return; const raw=parseInt(v,10); if(!raw || raw<1) return; actBleedAdd(Math.min(99,raw))(); }}
+          {label:'+X bleed…', fn:async()=>{ const v=await uiDialog({kind:'prompt', title:'Add bleed', message:'Additional bleed (modifiers landing after the announce):', def:'1'}); if(v==null) return; const raw=parseInt(v,10); if(!raw || raw<1) return; actBleedAdd(Math.min(99,raw))(); }},
+          '-',
+          {label:'Reduce bleed −1', title:'A bleed aimed at you was reduced (your reaction card): tells the table, and a bot bleeding you, by how much', fn:actReduce(1)},   // v2.6.159
+          {label:'Reduce bleed −2', title:'A bleed aimed at you was reduced (your reaction card): tells the table, and a bot bleeding you, by how much', fn:actReduce(2)},
+          {label:'Reduce bleed −X…', title:'A bleed aimed at you was reduced (your reaction card): tells the table, and a bot bleeding you, by how much', fn:async()=>{ const v=await uiDialog({kind:'prompt', title:'Reduce bleed', message:'Reduce the bleed by:', def:'1'}); if(v==null) return; const raw=parseInt(v,10); if(!raw || raw<1) return; actReduce(Math.min(99,raw))(); }}
         ]},
         {label:'Vote', sub:[
           {label:'Political action', fn:act('calls a political action.','calls a vote',true,true)},   // v2.6.106 (Johan): an ACTION like the others -- locks, closes the play batch, carries the target suffix -- so a bot's block step runs on it exactly as it does on a bleed
@@ -5602,6 +5621,7 @@ function revealHandTo(cards, toSeat){
     // online recipient gets their own private "X revealed to you" line on their own screen, which
     // hotseat's shared-log model cannot reproduce. Verify the recipient's view online when it matters.
     cardFx(cardInfos[0], 'handreveal', { cards:cardInfos, toName });
+    hotRevealToBots(cardInfos, toSeat, pubLine);   // v2.6.159: a BOT recipient is not at this screen -- it gets the server's private list (a bot's Revelations [aus] waits for exactly this), the other bots the public line
   }
   // Solo: the sender's own log line above is all there is
 }
@@ -5622,15 +5642,17 @@ function _seatName(seat){
   const rp = net.roster && net.roster.find(q=>q.seat===seat);
   return rp ? rp.name : ('Seat '+seat);
 }
-/* Push the current hand to one grantee (or 'all'). Online only — hotseat/solo read live. */
+/* Push the current hand to one grantee (or 'all'). Online; and (v2.6.159) at a hotseat to the BOT
+   seats -- a human grantee there reads the live/stored board, a bot is not at this screen. */
 function _pushOpenHand(toSeat){
-  if(!inRoom()) return;
+  if(!inRoom()){ hotOpenHandToBots(toSeat, false); return; }
   mpSend({ t:'openHand', to: toSeat==='all'?'all':toSeat, cards: _openHandCardInfos() });
 }
-/* Re-push the live hand to every active grantee. Called from schedulePush on any board change. */
+/* Re-push the live hand to every active grantee. Called from schedulePush on any board change
+   (online) and from hotPushBoardNow (a hotseat with bots, v2.6.159). */
 function refreshOpenHands(){
   if(!Array.isArray(state.openHand) || !state.openHand.length) return;
-  if(!inRoom()) return;                 // hotseat/solo grantees read the stored/live board directly
+  if(!inRoom() && !hotBotsSeated()) return;   // hotseat/solo HUMAN grantees read the stored/live board directly; v2.6.159: a bot grantee needs the push
   if(openHandIsAll()){ _pushOpenHand('all'); return; }
   state.openHand.forEach(seat=>{ if(seat!=='all') _pushOpenHand(seat); });
 }
@@ -5647,7 +5669,7 @@ function openHandGrant(toSeat){
   const toName = _seatName(isAll?'all':toSeat);
   // Public, archived log line — everyone sees that the grant was given.
   log('<b>'+escapeHtml(me)+'</b> is now playing with an open hand toward <b>'+escapeHtml(toName)+'</b>.', true);
-  if(inRoom()) _pushOpenHand(isAll?'all':toSeat);   // initial push of the current hand
+  _pushOpenHand(isAll?'all':toSeat);   // initial push of the current hand (online; v2.6.159: and to the bot seats at a hotseat -- _pushOpenHand routes)
   saveDirty=true;
 }
 /* Revoke open-hand from a seat (or 'all' / everyone). */
@@ -5657,11 +5679,11 @@ function openHandRevoke(target){
   if(target==='all' || target==='everyone'){
     state.openHand = [];
     toName = 'all players';
-    if(inRoom()) mpSend({ t:'openHand', to:'all', revoke:true });
+    if(inRoom()) mpSend({ t:'openHand', to:'all', revoke:true }); else hotOpenHandToBots('all', true);   // v2.6.159: the bots' copy ends too
   } else {
     state.openHand = (state.openHand||[]).filter(v=>v!==target);
     toName = _seatName(target);
-    if(inRoom()) mpSend({ t:'openHand', to:target, revoke:true });
+    if(inRoom()) mpSend({ t:'openHand', to:target, revoke:true }); else hotOpenHandToBots(target, true);
   }
   log('<b>'+escapeHtml(me)+'</b> stopped playing with an open hand toward <b>'+escapeHtml(toName)+'</b>.', true);
   saveDirty=true;
@@ -6342,9 +6364,10 @@ function viewOppBurned(seat){                                 // a read-only loo
 }
 /* Read-only inspection of a hand that a player has opened to you.
    Online: cards come from net.openHandFrom[seat] (pushed live).
-   Hotseat: read straight from the granter's stored board blob. */
+   Hotseat: a HUMAN granter's hand is read straight from their stored board blob; a BOT's
+   grant arrives through the bridge into net.openHandFrom, as online (v2.6.159). */
 function openHandCardsFor(seat){
-  if(localTable && net.hot && net.hot.boards){          // hotseat: parse the stored board
+  if(localTable && net.hot && net.hot.boards && !hotBotSeat(seat)){   // hotseat HUMAN seat: parse the stored board. v2.6.159 (the bot project's 15 Oct audit, item 1): a BOT seat's stored board is the empty placeholder startHotseat files for it -- read here, a Debug bot's hand and a bot's Revelations [AUS] grant never showed offline
     try{
       const blob = net.hot.boards[seat];
       if(blob){
@@ -6403,20 +6426,33 @@ function canSeeOpenHand(seat){
   const c = openHandCardsFor(seat);
   return Array.isArray(c);
 }
-function oppPoolMenuItems(seat){                              // the right-click menu for an OPPONENT's public pool (ash + burned, plus host controls). Shared by the pool globe/zone AND the Table panel row.
+function oppLookItems(seat){                                 // v2.6.160: what you may LOOK at of another seat -- the rows the pool's right-click and the mat's eye share (one builder, so the two never drift). Pure UI: no undo point (T3b's noUndo)
   const opub=(net.boards[seat]||{}).pub;
   const cnt=z=>((opub&&opub.cards)||[]).filter(c=>c.zone===z).length;
   const items=[
-    {label:'🜂 View their ash heap ('+cnt('ash')+')', fn:()=>viewOppAsh(seat)},
-    {label:'🔥 View their burned cards ('+cnt('burned')+')', fn:()=>viewOppBurned(seat)},
+    {label:'🜂 View their ash heap ('+cnt('ash')+')', noUndo:true, fn:()=>viewOppAsh(seat)},
+    {label:'🔥 View their burned cards ('+cnt('burned')+')', noUndo:true, fn:()=>viewOppBurned(seat)} ];
+  if(canSeeOpenHand(seat)){ const _ohc=openHandCardsFor(seat)||[]; items.unshift({label:'👁 Inspect their hand ('+_ohc.length+')', noUndo:true, fn:()=>viewOppHand(seat)}); }
+  return items;
+}
+function mateyeState(seat){                                  // v2.6.160 (Johan): the eye's look -- 'lit' while their hand is open to you, 'on' while their ash heap or burned pile holds cards, 'quiet' (greyed) until there is something to see
+  const opub=(net.boards[seat]||{}).pub;
+  const cnt=z=>((opub&&opub.cards)||[]).filter(c=>c.zone===z).length;
+  const hand=canSeeOpenHand(seat) ? (openHandCardsFor(seat)||[]).length : null, ash=cnt('ash'), burned=cnt('burned');
+  const cls=(hand!=null) ? 'lit' : ((ash||burned) ? 'on' : 'quiet');
+  const title=(hand!=null ? 'Their hand is open to you ('+hand+') · ' : '')+'Ash heap '+ash+' · burned '+burned+' — click to look';
+  return { cls, title, hand, ash, burned };
+}
+function mateyePaint(el, seat){ const st=mateyeState(seat); el.className='mateye '+st.cls; el.title=st.title; return st; }
+function mateyeSync(seat){ seat=seat|0; document.querySelectorAll('.mateye[data-seat="'+seat+'"]').forEach(el=>mateyePaint(el, seat)); }   // a grant or a revoke changes the eye without a board push: repaint the eyes, not the views
+function mateyeSvg(){ return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 5C6.6 5 2.8 8.9 1.4 12c1.4 3.1 5.2 7 10.6 7s9.2-3.9 10.6-7C21.2 8.9 17.4 5 12 5zm0 2.6c3.6 0 6.2 2.5 7.3 4.4-1.1 1.9-3.7 4.4-7.3 4.4S5.8 13.9 4.7 12C5.8 10.1 8.4 7.6 12 7.6zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>'; }   // one path, currentColor (the v2.6.147 icon rule: an emoji's shape differs from font to font)
+function oppPoolMenuItems(seat){                              // the right-click menu for an OPPONENT's public pool (ash + burned, plus host controls). Shared by the pool globe/zone AND the Table panel row.
+  const opub=(net.boards[seat]||{}).pub;                     // the host rows below read its pool
+  const items=oppLookItems(seat).concat([                    // v2.6.160: the look rows (hand when open, ash heap, burned) come from the ONE builder the mat's eye uses
     (net.rtarget && net.rtarget.cid==='pool' && net.rtarget.seat===seat)
       ? {label:'⌖ Clear pool target', fn:()=>setRTarget(null)}
       : {label:'⌖ Target their pool', fn:()=>setPoolTarget(seat)}   // v2.6.21: player-level aim -- shared by the L4 globe, the Table panel row and the L3 surface, so the affordance exists in every view via this ONE function
-  ];
-  if(canSeeOpenHand(seat)){
-    const _ohc=openHandCardsFor(seat)||[];
-    items.unshift({label:'👁 Inspect their hand ('+_ohc.length+')', fn:()=>viewOppHand(seat)});
-  }
+  ]);
   if(localTable || (inRoom() && (net.isHost||net.isRef))){   // v2.6.83: a referee moderates too
     const _pl=(net.roster||[]).find(q=>q.seat===seat)||{};
     const _nm=_pl.name||(net.boards[seat]&&net.boards[seat].who)||('Seat '+seat);
@@ -7732,6 +7768,7 @@ function edgeTakeover(){   // I now hold the Edge (via the button). Make it uniq
   (net.roster||[]).forEach(p=>{ if(p.seat===mine) return; const nb=net.boards[p.seat]; if(nb&&nb.pub){ nb.pub.edge=false; nb.pub.tokens=(nb.pub.tokens||[]).filter(t=>t.type!=='edge'); } });
   // online: tell everyone else they lost the Edge
   if(inRoom()) mpSend({t:'edgeTake', bySeat:mine});
+  else hotFanOut({t:'edgeTake', bySeat:mine, clearOnly:false}, mine);   // v2.6.159: at a hotseat the bots are 'everyone else' too -- the server's broadcast shape (srv 1246); a bot that held it (v0.6.200 _onEdgeTake) clears its own, or its next push re-lit it
   // my token: fresh at my Ready default position (remove any stale one first so we re-seat cleanly)
   removeEdgeToken(); ensureEdgeToken();
   if(l3on()&&!l4on()) renderL3();   // refresh mats (skip in L4 — no opponent mats) so the old holder's Edge/token clears immediately
@@ -8288,6 +8325,8 @@ function edgeHandoffHotseat(toSeat, dropPos){   // hotseat: move Edge control to
   (net.roster||[]).forEach(p=>{ const nb=net.boards[p.seat]; if(nb&&nb.pub){ nb.pub.edge=(p.seat===toSeat); nb.pub.tokens=(p.seat===toSeat && dropPos)?[{type:'edge', x:Math.round(dropPos.x), y:Math.round(dropPos.y)}]:(nb.pub.tokens||[]).filter(t=>t.type!=='edge'); } });
   // 4) If the TARGET happens to be the currently-active seat (rare: gave to self via UI), light my own edge
   if(toSeat===mine){ state.edge=true; updateEdge(); ensureEdgeToken(); const et=tokens.get('edge'); if(et && dropPos){ et.x=dropPos.x; et.y=dropPos.y; placeToken(et); } }
+  // 5) v2.6.159: a BOT seat owns its own Edge -- the mirror above lasted until its next push. The server's edgePass, to that seat only (srv 1242); the bot (v0.6.200 _onEdgePass) lights its own and publishes it
+  if(hotBotSeat(toSeat)){ try{ hotBridge.toBot(toSeat, { t:'edgePass', toSeat, fromName:String(net.you||state.playerName||'You').slice(0,32), pos:dropPos||undefined }); }catch(_e){} }
   renderL3();   // refresh mats: target shows EDGE, all others clear
 }
 function burnEdge(){
@@ -8482,7 +8521,7 @@ function applyAside(){
   document.body.classList.toggle('aside-collapsed', asideCollapsed);
   document.documentElement.style.setProperty('--aside-w', asideCollapsed ? '0px' : '268px');   // sync CSS var explicitly — fixes tab-centering for position:fixed elements that may not inherit from body
 }
-let _asideResize=false;
+let _asideResize=false, _asideTe=null, _asideBack=0;   // v2.6.161: the newest setAside owns the panel's width transition -- its transitionend listener (_asideTe) and its backstop timer (_asideBack)
 function setAside(on, persist=true){
   asideCollapsed=on; applyAside();
   if(on && board.classList.contains('l2dockopen') && typeof fillDockLog==='function') fillDockLog();
@@ -8491,11 +8530,15 @@ function setAside(on, persist=true){
   _asideResize=true;
   requestAnimationFrame(()=>{ window.dispatchEvent(new Event('resize')); });   // immediate: lets non-geometry consumers (placePlayed/placeReady, the plain layout() resize listener) react right away -- _asideResize is still true here, so l3canonAR correctly ignores this mid-transition width
   // v2.5.76: the authoritative correction used to be a guessed 200ms setTimeout, which raced the aside's real 140ms width transition on a slow frame/tab and could leave L3/L4 (they read live board.clientWidth) stuck rendering the pre-collapse width -- the reported symptom was dead space on the right after L2->L3 that only cleared on an unrelated click or a manual view round-trip. transitionend is the actual end-of-transition signal, so wait for THAT instead of a duration guess; a timeout remains only as a backstop for the rare case transitionend never fires (e.g. a display:none ancestor, or the transition being skipped entirely under prefers-reduced-motion).
+  // v2.6.161: the backstop used to SETTLE the race -- when it fired first, the panel's own transitionend was swallowed. Frames can stall right after a view switch (headless Chromium drew none for 225 ms while timers ran; a slow device can too): the transition then starts late, the backstop measured the panel before it had moved, and nothing measured it again (a seat visit from the helicopter view stayed 1172 px wide in a 1098 px area). Now the backstop covers only a transition that has not ended yet or never runs, and a later transitionend still sends the final resize.
   const _asideEl=$('aside');
-  let _asideSettled=false;
-  const _asideFinish=()=>{ if(_asideSettled) return; _asideSettled=true; _asideResize=false; window.dispatchEvent(new Event('resize')); };
-  if(_asideEl) _asideEl.addEventListener('transitionend', function _te(e){ if(e.propertyName!=='width') return; _asideEl.removeEventListener('transitionend', _te); _asideFinish(); });
-  setTimeout(_asideFinish, 250);   // backstop; 250ms comfortably clears the 140ms CSS transition even under load
+  if(_asideEl && _asideTe) _asideEl.removeEventListener('transitionend', _asideTe);   // a newer call owns the transition
+  clearTimeout(_asideBack);
+  let _ended=false;
+  const _asideFinish=()=>{ _asideResize=false; window.dispatchEvent(new Event('resize')); };
+  const _te=e=>{ if(e.propertyName!=='width' || e.target!==_asideEl) return; _asideEl.removeEventListener('transitionend', _te); if(_asideTe===_te) _asideTe=null; _ended=true; _asideFinish(); };   // the panel's OWN width: a child's transition bubbles here too
+  if(_asideEl){ _asideTe=_te; _asideEl.addEventListener('transitionend', _te); }
+  _asideBack=setTimeout(()=>{ if(!_ended) _asideFinish(); }, 250);   // backstop: a transition that has not ended by now (if it still comes, it sends the final resize) or never runs (a display:none ancestor, no width change, reduced motion)
 }
 $('#asideToggle').addEventListener('click',()=>setAside(true));
 $('#asideTab').addEventListener('click',()=>setAside(false));
@@ -9512,6 +9555,52 @@ function hotGivenToHuman(seat, given){                        // a bot's `give` 
   log('<b>'+esc(given.from)+'</b> plays <b>'+esc(given.name)+'</b> on <b>'+esc(who)+'</b>\u2019s board.', true);
   if(typeof net.view==='number') renderRemote(net.view); else if(net.view==='ov') renderL3(); else if(net.view==='l2') renderL2(); else if(net.view==='l4') updateL4Opponents();
 }
+/* v2.6.159 (the bot project's 15-16 Oct handoffs, bot v0.6.199-201): five more of the server's relays, both
+   directions. The bridge plays the server's role and passed none of them on, so at a hotseat: a bot that took
+   the Edge left the human's lit (two holders, play-test point 20); a bot's Revelations reveal and its discard
+   command reached nobody; a human's reveal, open hand, targeting line, Edge take and Edge hand-off never
+   reached a bot. The bridge keeps its server half self-contained (the bot project lifts it); the human half
+   lives here, typeof-guarded from the bridge like hotGivenToHuman. */
+function hotEdgeTaken(m){                                    // a BOT took the Edge. Online every human's client clears its own; at a hotseat one client keeps every human's book
+  const by=+m.bySeat, me=mySeat();
+  if(net.hot && net.hot.boards) Object.keys(net.hot.boards).forEach(k=>{ const s=+k; if(s===by || s===me) return;   // a stored human seat: its saved board (edgeHandoffHotseat's shape)
+    try{ const o=JSON.parse(net.hot.boards[k]); if(o && (o.edge || o.edgeTok)){ o.edge=false; o.edgeTok=null; net.hot.boards[k]=JSON.stringify(o); } }catch(_e){} });
+  (net.roster||[]).forEach(p=>{ if(p.seat===by || p.seat===me) return; const nb=net.boards&&net.boards[p.seat]; if(nb&&nb.pub){ nb.pub.edge=false; nb.pub.tokens=(nb.pub.tokens||[]).filter(t=>t.type!=='edge'); } });   // every other seat's public mat, as edgeTakeover does
+  MP_HANDLERS.edgeTake(m);                                     // the active human: state.edge, the token, the 'X took the Edge' line
+  renderStats();
+  if(typeof net.view==='number') renderRemote(net.view); else if(net.view==='ov') renderL3(); else if(net.view==='l2') renderL2(); else if(net.view==='l4') updateL4Opponents();
+}
+function hotRevealToHuman(to, payload, pub){                 // a bot's revealHand, the human side (to 0 = 'all'): the active seat reads a list addressed to it through the online handler; a stored human's list names its recipient (one screen, one log); a human who is neither reads the card-free public line
+  if(!to || to===mySeat()){ MP_HANDLERS.revealHand(payload); return; }
+  if(hotBotSeat(to)){ if(pub) MP_HANDLERS.log(pub); return; }
+  const rcpt=((net.roster||[]).find(q=>q.seat===to)||{}).name||('Seat '+to);
+  const cardHtml=(payload.cards||[]).map(ci=>'<b class="clog" data-name="'+escapeHtml(ci.name)+'" data-from-seat="'+(payload.seat|0)+'">'+escapeHtml(ci.name)+'</b>').join(', ');
+  log('<b>'+escapeHtml(String(payload.from||'?'))+'</b> revealed to <b>'+escapeHtml(rcpt)+'</b>: '+cardHtml+'.', true, true);   // private + never archived, like the online recipient's own line
+}
+function hotLogToHuman(to, m){                               // a bot's logTo, the human side: the active seat reads it through the online handler; a stored human's line names its recipient
+  if(to===mySeat()){ MP_HANDLERS.logTo(m); return; }
+  const rcpt=((net.roster||[]).find(q=>q.seat===to)||{}).name||('Seat '+to), html=String(m.html||'');
+  if(html) log('<span class="rwho">['+esc(String(m.from||'Someone'))+' \u2192 '+esc(rcpt)+']</span> '+sanRemote(html), true, true);
+}
+function mpLogTo(toSeat, html){                              // the server's logTo, both transports: online through the server; at a hotseat the bridge hands it to a BOT seat (a human at this screen already reads the shared log)
+  toSeat=toSeat|0; if(!toSeat) return;
+  if(inRoom()){ mpSend({ t:'logTo', toSeat, html }); return; }
+  if(hotBotSeat(toSeat)){ try{ hotBridge.toBot(toSeat, { t:'logTo', from:(net.you||state.playerName||'You'), html:String(html) }); }catch(_e){} }
+}
+function hotRevealToBots(cardInfos, toSeat, pubLine){        // a human's revealHand at a hotseat (srv 897): the private list to a BOT recipient (every bot for 'all'), the card-free public line to the other bots. A bot that played Revelations [aus] on you waited 30 s for this and gave up
+  if(!hotBotsSeated()) return;
+  const me=net.you||state.playerName||'You', seat=mySeat()||0;
+  const payload={ t:'revealHand', from:me, seat, who:me, cards:cardInfos };
+  if(toSeat==='all'){ hotFanOut(payload, seat); return; }
+  hotBridge.botSeats().forEach(k=>{ if(k===seat) return; try{ if(k===toSeat) hotBridge.toBot(k, payload); else if(pubLine) hotBridge.toBot(k, { t:'log', who:me, html:String(pubLine) }); }catch(_e){} });
+}
+function hotOpenHandToBots(toSeat, revoke){                  // a human's standing open-hand grant at a hotseat (srv 934): it reaches the BOT seats (a human grantee reads the stored board, as before). A bot that played Revelations [AUS] on you reads the grant
+  if(!hotBotsSeated()) return;
+  const me=net.you||state.playerName||'You', seat=mySeat()||0;
+  const payload=revoke ? { t:'openHandRevoke', from:me, seat } : { t:'openHandGrant', from:me, seat, who:me, cards:_openHandCardInfos() };
+  if(toSeat==='all') hotFanOut(payload, seat);
+  else if(hotBotSeat(toSeat|0)){ try{ hotBridge.toBot(toSeat|0, payload); }catch(_e){} }
+}
 function mpSend(o){ try{ net.ws.send(JSON.stringify(o)); }catch(err){} }
 function mpStatus(msg){ const el=$('#mpStatus'); if(el) el.textContent=msg; }
 
@@ -9733,6 +9822,7 @@ function mpLeave(){
   if(typeof syncWelcome==='function') syncWelcome();   // v2.6.46: retire the Return-to-room affordance the moment the room is gone
   net.boardMode='structured'; net.tableSetup=false; net.tableLayout=''; net.setupSpots=null; net._myGlobeAt=null; net.tournLock=false; net._undoPush=false;
   net.deckUp=false; net.libN=0; net.cryptN=0; net.boards={};
+  net.openHandFrom={};                                  // v2.6.159 (the bot project's 15 Oct audit, item 4): the hands opened to me belong to the room I leave -- this was cleared only at page load, so the next room or table offered a stale hand for that seat number
   net.lobby=false; net.lobbyData=null; net.rolls=[]; net.isHost=false; net.isRef=false; net.muted=false;
   try{ netBotsTeardown(); }catch(_e){}                 // v2.6.99: the host's bots live in this tab and die with the room
   hotHoldBy.clear(); try{ hotHoldSync(); }catch(_e){}   // v2.6.101: no table, no hold
@@ -9760,7 +9850,7 @@ const MP_HANDLERS = {
     const was=net.status, wasRoom=net.room;
     net.botcfg=null; net.srvV=String(m.srv||'');   // v2.6.139: a fresh view of the table -- the server replays the stored tempo right after this message (srv-2.6.43)
     net.status='in'; net.room=m.room; net.token=m.token; net.you=m.you; net.roster=m.players||[];
-    if(was!=='re' || wasRoom!==m.room){ net.turnNo=0; net.roundNo=1; }   // v2.6.149: an automatic reconnect keeps its Round/Turn count (it zeroed it) -- into the SAME room only: a client still retrying a lost server can join another room by hand
+    if(was!=='re' || wasRoom!==m.room){ net.turnNo=0; net.roundNo=1; net.openHandFrom={}; }   // v2.6.149: an automatic reconnect keeps its Round/Turn count (it zeroed it) -- into the SAME room only: a client still retrying a lost server can join another room by hand. v2.6.159: the hands opened to me follow the same rule -- the server keeps no grants, so a reconnect into the same room keeps what it was shown (a bot re-sends to a human who comes back online), any other join starts empty
     net.tnSync=!m.lobby; if(net.tnSync) tnAdopt(m.myPub);           // v2.6.149: a running game -- take the count from the boards until the next turn (my own server copy first)
     if(was!=='re'){ net.deckUp=false; net.libN=0; net.cryptN=0; }
     net.boards={};
@@ -10034,6 +10124,7 @@ const MP_HANDLERS = {
        broadcast actually carries. */
     net.helperPolicy=m.policy||m.helperPolicy||null;
     applyHelper(); syncHelperUI();
+    try{ botDebugSync(); }catch(_e){}                         // v2.6.159: the lobby's Debug row follows the room's policy -- which the gate now reads alone online
     toast(net.helperPolicy && net.helperPolicy.tournament ? 'Tournament mode — helpers off'
         : net.helperPolicy && !net.helperPolicy.allowLocal ? 'Helpers locked to the host’s settings'
         : 'Helpers: you may use your own settings');
@@ -10150,12 +10241,14 @@ const MP_HANDLERS = {
     net.openHandFrom[seat]=cardInfos;
     renderAltIfOpen();
     if(net.view===seat) renderRemote(seat);
+    try{ mateyeSync(seat); }catch(_e){}                       // v2.6.160: the eye lights in every view that shows this seat (the visit was the only repaint)
   },
   openHandRevoke(m){
     const seat=m.seat|0;
     delete net.openHandFrom[seat];
     if(browseZone==='openhand') closeOverlay();   // close the inspector if it was open on this seat
     renderAltIfOpen();
+    try{ mateyeSync(seat); }catch(_e){}                       // v2.6.160: and goes back to quiet / on
   },
   timeup(m){ bell(); toast('⏰ Time is called'); if(net.clockT) startMatchClock(); },
   clock(m){ net.matchEnd=(typeof m.matchEnd==='number')?m.matchEnd:null; startMatchClock(); },   // v2.5.92: host adjusted (or called) the match clock -- re-sync the countdown; null hides it
@@ -10565,6 +10658,7 @@ function hotPushBoardNow(){
   const seat=(typeof mySeat==='function')?mySeat():0; if(!seat) return;
   let pub=null; try{ pub=buildPub(); }catch(_e){ return; }
   hotFanOut({ t:'board', seat, who:(net.you||state.playerName||'You'), pub }, seat);   // the ACTIVE seat's board: at a two-human hotseat each human's pub lands while they hold the device, exactly as each client pushes its own online
+  refreshOpenHands();                                         // v2.6.159: an open hand toward the bots follows every board change, as schedulePush does online
 }
 function hotSchedulePushBoard(){
   if(!localTable || typeof hotBridge==='undefined') return;
@@ -10719,6 +10813,7 @@ function switchView(target, instant){
   document.body.classList.toggle('invisit', typeof target==='number');   // a seat VISIT -> hide the prey/predator peek tabs (focused on one opponent; the left tab would otherwise sit over the log)
   document.body.classList.toggle('inov', target==='ov');   // L3 Helicopter -> hide prey/predator peek tabs. See TEMPLATE EXCEPTIONS.
   document.body.classList.toggle('inl4', target==='l4');   // L4 Free Board mode
+  if(prev==='ov' && typeof target==='number') enterL2();   // v2.6.161: a seat visit from the helicopter view stands on L2, as a visit from L2 does (it keeps L2 mode, above) -- exitL3 alone left the board on the retired L1 stage (no l2cols: fitBoard scaled the 1004 x 616 board) with no hand dock; here, before renderReady/renderHand, so they see the board a visit from L2 sees
   renderReady(); renderHand();                       // show/hide the Ready + Hand menus for the new view (both gated to an opponent visit / Helicopter)
   if(target==='l2'){ enterL2(); return; }
   if(target==='l4'){ enterL4(); return; }
@@ -10793,7 +10888,7 @@ function startHotseat(players, boardMode, opts){                         board.c
   const _act=(players.findIndex(p=>p&&!p.bot)+1)||1;               // v2.6.72: the ACTIVE seat is the first HUMAN's -- seat 1 may be a bot now (offline seating is 'write the name where it sits'); turn 1 still belongs to seat 1, the opening sweep plays the leading bots
   net.roster=players.map((p,i)=>({ seat:i+1, name:p.name||('Player '+(i+1)), host:i===_act-1, online:true, vp:0, bot:!!p.bot }));
   net.you=net.roster[_act-1].name;
-  net.boards={}; net.hot={ boards:{}, undo:{} };
+  net.boards={}; net.hot={ boards:{}, undo:{} }; net.openHandFrom={};   // v2.6.159: a new table starts with no hand opened to anyone (a debug bot of the last table left its grant behind)
   players.forEach((p,i)=>{                                    // build each seat's full board, then capture its public view
     const seat=i+1;
     if(p.boardJson) restoreGame(p.boardJson, {keepLog:true, silent:true});
@@ -10824,7 +10919,7 @@ function leaveHotseat(){
   helperAllOn=false; hotTournRestore(); syncHelperUI();   // v2.6.92: the table's Tournament override goes with it (hotTournRestore re-syncs); v2.6.51: the hotseat's "All helpers on" mode is per-table — the player's own Settings take over again the moment the table closes
   net.roster=[]; net.boards={}; net.turnSeat=null; net.you=null; net.room=null; net.turnNo=0; net.roundNo=1;
   net.boardMode='structured'; net.tableSetup=false; net.tableLayout=''; net.setupSpots=null;
-  net.hot=null;
+  net.hot=null; net.openHandFrom={};                        // v2.6.159: the bots' grants go with the table
   switchView(null);
   clearTable(); $('#deckName').textContent=''; enterL0();
   updateHotHud();
@@ -10948,8 +11043,8 @@ function renderOfflineSeats(){
   });
   const aBtn=$('#offAdd'); if(aBtn) aBtn.disabled=offlineCfg.length>=6;
   const _an=$('#offAlphaNote'); if(_an) _an.style.display=offlineCfg.some(q=>q&&q.botP)?'':'none';   // v2.6.74: the modal-level alpha note shows once any seat is a bot
-  botDebugSync();                                                  // v2.6.108 review fix: the debug row is the note's sibling and must follow the same toggle -- it only ever re-synced on a dropdown change
   syncOffBotLock();                                              // v2.6.93: every re-render checks the bot lock (add/remove/toggle all land here)
+  botDebugSync();                                                  // v2.6.108 review fix: the debug row is the note's sibling and must follow the same toggle -- it only ever re-synced on a dropdown change. v2.6.159 (the bot project's 15 Oct audit, item 3): AFTER the lock -- the first bot toggle forces Helpers to 'all', and painted before it the row read the Classic default (Tournament) and greyed itself with a false tooltip. (syncOffBotLock repaints at its end too, for openOffline; this call is the belt for the alpha note just above)
   offlineSyncStart();                                            // v2.6.72: readiness -> Start button + hint
 }
 function offlineReady(){                                          // v2.6.72 (Johan): Start was clickable with no decks chosen and 'started' an empty table (the pool-globe welcome) -- the modal now says exactly what is missing
@@ -11039,12 +11134,14 @@ function syncOffBotLock(){                                       // v2.6.93 (Joh
     board.disabled=false; helpers.disabled=false;
   }
   tableSetupSync();                                              // v2.6.146: the forced Structured greys the 'Suggested table setup' box too (a value set in code fires no change event)
+  botDebugSync();                                                // v2.6.159: so does the Debug row -- it reads the Helpers value this function just set in code (openOffline calls it last)
 }
 $('#offBoard').addEventListener('change', botDebugSync);        // v2.6.108: Classic defaults Helpers to Tournament, which refuses debug
 $('#offHelpers').addEventListener('change', botDebugSync);
 function syncOffTournament(){   // v2.6.51: default the hotseat Helpers mode by board style — Classic → Tournament, Structured → your local settings. Same rule the checkbox carried; the name stays so both call sites (openOffline + the #offBoard listener) are unchanged.
   const el=$('#offHelpers'); if(!el) return;
   el.value = ($('#offBoard') && $('#offBoard').value==='classic') ? 'tournament' : 'local';
+  botDebugSync();                                                // v2.6.159: a value set in code fires no change event -- and the #offBoard listener that paints the Debug row runs BEFORE this one, on the old value
 }
 $('#offBoard').addEventListener('change', syncOffTournament);
 
@@ -11558,8 +11655,14 @@ function botDebugAllowed(){
      the conventions check") and replaced it with the mirror image: a conventions check
      that swallowed the dropdown.
      Still unbranched, still failing closed: when in doubt (no dropdown AND no policy),
-     conv.tournament is the only signal and earns the veto. */
+     conv.tournament is the only signal and earns the veto.
+     v2.6.159 (the bot project's 15 Oct audit, item 2): ONLINE the room's policy is the table's mode,
+     ALONE. #offHelpers is in the page for good, and once Play offline had been opened with its
+     Classic default (Tournament) it greyed Debug in an ordinary Structured room, with the false
+     'Tournament mode' tooltip. Only a room with no policy at all (a pre-2.6 server) falls back to
+     the stored preference. */
   if(net.helperPolicy && net.helperPolicy.tournament) return false;
+  if(inRoom()) return !(!net.helperPolicy && conv.tournament);
   const off=$('#offHelpers');
   if(off) return off.value!=='tournament';                         // the dropdown IS the table's mode offline, and it has been picked deliberately -- conv.tournament must not override it
   if(conv.tournament) return false;                                // no dropdown, no room: the stored preference is all we have
@@ -11755,9 +11858,9 @@ const hotBridge = {
         else delete duel[seatNo];
       }
     }
-    this.tally = mode ? (mode === 'combat' ? Object.assign({ mode, a, b, ph, rd, duel }, tallyCombatMerge(m, prev)) : { mode, a, b, ph, rd }) : null;   // v2.6.129: + the round's combat state (srv-2.6.39's tallyCombat, same rule)
+    this.tally = mode ? (mode === 'combat' ? Object.assign({ mode, a, b, ph, rd, duel }, (typeof tallyCombatMerge === 'function') ? tallyCombatMerge(m, prev) : {}) : { mode, a, b, ph, rd }) : null;   // v2.6.129: + the round's combat state (srv-2.6.39's tallyCombat, same rule). v2.6.159: typeof-guarded like every other client call in this literal -- the bot project LIFTS the literal (bot/elysium-bot-hotseat.js) and there the bare call threw, so a bot's combat tally never reached the other bot (the lift relays the base fields now, as a pre-2.6.39 server did)
     const out = { t: 'tally', who, mode, a, b, ph, rd };
-    if (mode === 'combat'){ out.duel = duel; AVR_CMB_KEYS.forEach(k => { out[k] = this.tally[k]; }); }
+    if (mode === 'combat'){ out.duel = duel; if (typeof AVR_CMB_KEYS !== 'undefined') AVR_CMB_KEYS.forEach(k => { out[k] = this.tally[k]; }); }
     if (m.res) out.res = 1;
     this.botSeats().forEach(k => this.toBot(k, out));
     return out;
@@ -11895,7 +11998,33 @@ const hotBridge = {
         else { try { if (typeof hotGivenToHuman === 'function') hotGivenToHuman(to, given); } catch (e) {} }
         B.toBot(seat, { t: 'gave', to: ((B._cfg || [])[to - 1] || {}).name || ('Seat ' + to) });
         break; }
-      default: break;        // logTo / revealHand / decide: not used between bots today -- tolerated silently, never thrown on
+      case 'edgeTake': {     // v2.6.159 (bot v0.6.200 sends it when a bleed of 1 or more gives it the Edge; play-test point 20): the server's edgeTake (srv 1244) -- to EVERY other seat, the taker's seat as bySeat. Dropped here until now, so offline the human's Edge stayed lit beside the bot's: two holders
+        const out = { t: 'edgeTake', bySeat: seat, clearOnly: !!m.clearOnly };
+        try { if (typeof hotEdgeTaken === 'function') hotEdgeTaken(out); } catch (e) {}   // the client's book: the active human through MP_HANDLERS.edgeTake, a stored human's saved board, the public mats
+        hotFanOut(out, seat);                                      // ...and the other bots, who clear their own (v0.6.200 _onEdgeTake)
+        break; }
+      case 'revealHand': {   // v2.6.159: the server's revealHand (srv 897) -- a bot that is the TARGET of Revelations [aus] reveals its hand to the actor (R3, since v0.6.44). The card list goes to the recipient(s) only, the card-free public line to everyone else; dropped here until now, so a human's Revelations showed them nothing offline
+        const cards = (Array.isArray(m.cards) ? m.cards : []).slice(0, 30).map(c => ({ name: String((c && c.name) || '').slice(0, 64), kind: (c && c.kind === 'crypt') ? 'crypt' : 'lib' })).filter(c => c.name);
+        if (!cards.length) break;
+        const payload = { t: 'revealHand', from: who, seat, who, cards };
+        const pub = m.pub ? { t: 'log', who, html: String(m.pub).slice(0, 4000) } : null;
+        if (m.to === 'all'){
+          try { if (typeof hotRevealToHuman === 'function') hotRevealToHuman(0, payload, null); } catch (e) {}
+          hotFanOut(payload, seat);
+          break; }
+        const to = m.to | 0;
+        if (to < 1 || to > (B._cfg || []).length || to === seat) break;
+        try { if (typeof hotRevealToHuman === 'function') hotRevealToHuman(to, payload, pub); } catch (e) {}   // a human recipient reads the private list; a human third party reads the public line
+        B.botSeats().forEach(k => { if (k === seat) return; if (k === to) B.toBot(k, payload); else if (pub) B.toBot(k, pub); });
+        break; }
+      case 'logTo': {        // v2.6.159: the server's logTo (srv 923) -- one private line to one seat: a bot that played Revelations [aus] tells its human target what to discard ('Revelations: discard X.'). Dropped here until now
+        const to = m.toSeat | 0, html = String(m.html || '').slice(0, 2000);
+        if (!html || to < 1 || to > (B._cfg || []).length || to === seat) break;
+        const out = { t: 'logTo', from: who, html };
+        if (B.seats[to]) B.toBot(to, out);
+        else { try { if (typeof hotLogToHuman === 'function') hotLogToHuman(to, out); } catch (e) {} }
+        break; }
+      default: break;        // decide: not used between bots today -- tolerated silently, never thrown on (v2.6.159: logTo / revealHand / edgeTake are relayed above)
     }
   },
   startFor(seat){            // the deal -- mirrors the server's dealNow shapes exactly (7 hand / 4 unc, lib+crypt counts)
@@ -14278,6 +14407,16 @@ function buildMat(pp, matW, matH, rot, noLabel, flip, host){
       g.style.width=gd+'px'; g.style.height=gd+'px'; g.style.borderWidth=Math.max(1,Math.round(s*2))+'px'; g.style.borderStyle='solid'; g.style.borderColor='var(--brass2)';
       g.style.left=(X(cz.pl.x)+(s*cz.pl.w-gd)/2)+'px'; g.style.top=(Y(cz.pl.y)+s*cz.pl.h*0.27)+'px';
       g.style.fontSize=Math.max(8,Math.round(gd*0.333))+'px'; g.innerHTML='<span class="poolnum">'+pub.pool+'</span>'+(pub.clan?'<img class="clansym-pool" src="'+esc(clanSymUrl(pub.clan))+'" alt="'+esc(pub.clan)+'" title="'+esc(pub.clan)+'" onerror="this.style.display=\'none\'">':''); if(!me && seat!=null){ g.dataset.seat=seat; g.classList.add('matpool'); g.style.cursor='context-menu'; g.title='Right-click: ash heap / burned cards'; } mat.appendChild(g); }   // all views: red pool globe matching your own live board exactly (Cinzel numeral, 0.333 ratio, .poolnum optical-centre); L3 mats now use the same globe instead of a plain text number
+    if(!me && seat!=null){                                    // v2.6.160 (Johan): the eye, in the pool zone's corner where your own Edge sits on your board (L2 stage: left 0.94 x top 0.668 -- the zone's top right, 8 px in from its right edge, 14 px down) -- the same X/Y/s mapping as the globe, so a flipped mat keeps it in the zone's top right on screen
+      const ey=document.createElement('div'); ey.dataset.seat=seat; ey.setAttribute('role','button'); ey.setAttribute('aria-label','Look at their open hand, ash heap and burned cards');
+      mateyePaint(ey, seat); ey.innerHTML=mateyeSvg();
+      const esz=Math.max(10, Math.round(s*32));               // the Edge marker's 32 px at the mat's scale; never under 10 px on a small helicopter mat
+      ey.style.width=esz+'px'; ey.style.height=esz+'px';
+      ey.style.left=(X(cz.pl.x+cz.pl.w)-s*0.00807*bw-esz)+'px'; ey.style.top=(Y(cz.pl.y)+s*0.023*bh)+'px';   // anchored by its RIGHT edge, so the 10 px floor grows it inward
+      const look=e=>{ e.preventDefault(); e.stopPropagation(); const r=ey.getBoundingClientRect(); showMenu(oppLookItems(seat), e.clientX||r.right, e.clientY||r.bottom); };
+      ey.addEventListener('click', look); ey.addEventListener('contextmenu', look);   // a click, a right-click or a long-press: the same rows (the mat's own click must not also jump the seat)
+      mat.appendChild(ey);
+    }
     (pub.tokens||[]).forEach(pt=>{ const def=TOKEN_DEFS[pt.type]; if(!def) return;   // controlled tokens (Edge + future) on this mat: same X/Y/s mapping as cards, read-only. Keyed + reused (v2.5.38) so a moved Edge GLIDES on its transition; .l3panning .mattok suppresses it during drag-pan.
       const tsz=Math.round(s*def.size);
       let tEl=mat.querySelector(':scope > .mattok.tok-'+pt.type);

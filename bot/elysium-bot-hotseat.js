@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* elysium-bot-hotseat.js v1.1.0 (21 Sep 2026) -- THE HOTSEAT TABLE, headless.
+/* elysium-bot-hotseat.js v1.2.0 (16 Oct 2026) -- THE HOTSEAT TABLE, headless.
    Lifts `const hotBridge = {...}` and `function hotFanOut` VERBATIM out of the client source beside it (elysium-vtes-bord.html, READ-ONLY here) and drives real
    Bot instances through them the way the client's hotRunBotTurns does: one `turn` per bot seat round the ring from the CONFIG (not the roster), waiting for
    that seat's `pass`. Whatever the bridge drops is dropped here too -- this is the client's relay, not a model of it.
@@ -9,12 +9,24 @@
           tally = + the server's tally relay (field-preserving merge, fanned to ALL seats incl. the sender)  -- "what if main ships rule 1"
           nohold = the shipped bridge with its v2.6.95 'a bot's Hold on... is not relayed to bots' filter REMOVED (main's open question D, 21 Sep)
           full  = + bounty / roster-on-oust with server semantics, ousted seats skipped by the sweep          -- "what if main ships all of it"
-   Module: require('./elysium-bot-hotseat.js').runTable(opts) -> Promise<result>  (test-bot-hotseat.js is the gate built on it)                          */
+   Module: require('./elysium-bot-hotseat.js').runTable(opts) -> Promise<result>  (test-bot-hotseat.js is the gate built on it)
+   v1.2.0 (main's REPLY v2.6.159 section 6): the bridge's tallyIn calls tallyCombatMerge / AVR_CMB_KEYS (bare v2.6.129-158, typeof-guarded since v2.6.159), and this
+   context had neither -- a bot's COMBAT tally threw in the lift and never reached the other bot (v2.6.159+: it relayed its base fields only). The lift now cuts
+   the three self-contained definitions beside the literal (AVR_CMB0, AVR_CMB_KEYS, tallyCombatMerge -- the rule the real client and srv-2.6.39+ apply), so a
+   combat tally carries rng / rl / nx / pr / sp / ce / sa / sb / xa / xb / pa / pb / ga / gb / ea / eb as at a real table. bridgeIn(L) is the one context. */
 const fs = require('fs'), vm = require('vm'), path = require('path');
 function liftBridge(clientPath){
   const html = fs.readFileSync(clientPath, 'utf8');
   const cut = (from, to) => { const i = html.indexOf(from); if(i < 0) throw new Error('client marker missing: ' + from); const j = html.indexOf(to, i); if(j < 0) throw new Error('client marker end missing after: ' + from); return html.slice(i, j + to.length); };
-  return { version: (html.match(/VERSION='([^']+)'/) || [])[1] || '?', bridgeSrc: cut('const hotBridge = {', 'hotBridge.reset([]);'), fanSrc: cut('function hotFanOut(msg, fromSeat){', '\n}') };
+  const bridgeSrc = cut('const hotBridge = {', 'hotBridge.reset([]);'), cmbNeeded = /tallyCombatMerge|AVR_CMB_KEYS/.test(bridgeSrc);
+  const cmb = cmbNeeded ? [cut('const AVR_CMB0=', '});'), cut('const AVR_CMB_KEYS=', ';'), cut('function tallyCombatMerge(m, prev){', '\n}')] : [];   // v1.2.0: needed = the bridge names them; then a missing definition is an error, not a silent base-fields relay
+  return { version: (html.match(/VERSION='([^']+)'/) || [])[1] || '?', bridgeSrc, fanSrc: cut('function hotFanOut(msg, fromSeat){', '\n}'), cmbNeeded, cmbSrc: cmb.join('\n') };
+}
+function bridgeIn(L, extra){   // v1.2.0: the ONE context the lift runs in -- main's lift contract names VERSION, net, log, localTable, MP_HANDLERS; everything else the literal calls is typeof-guarded
+  const ctx = vm.createContext(Object.assign({ console, setTimeout, clearTimeout, JSON, Math, Object, Array, String, Date, parseInt, VERSION: L.version, localTable: true, net: { boards: {}, roster: [] },
+    MP_HANDLERS: { board(){}, log(){}, say(){}, chat(){}, fx(){} }, log(){} }, extra || {}));
+  vm.runInContext((L.cmbSrc ? L.cmbSrc + '\n' : '') + L.bridgeSrc + '\n' + L.fanSrc + '\nthis.hotBridge = hotBridge; this.hotFanOut = hotFanOut;', ctx);
+  return ctx;
 }
 
 async function runTable(opts){
@@ -25,9 +37,7 @@ async function runTable(opts){
   try {
     const L = liftBridge(o.client), dropped = {}, humanLog = [];
     if(o.arm === 'nohold'){ const F = "if (!(m.i === 0 && (hotBridge._cfg || [])[seat - 1] && (hotBridge._cfg || [])[seat - 1].bot))"; if(L.bridgeSrc.indexOf(F) < 0) throw new Error('arm nohold: the bridge has no Hold-on filter to remove (already gone?)'); L.bridgeSrc = L.bridgeSrc.replace(F, 'if (true)'); }   // v1.1.0: 'what if main removes the v2.6.95 filter' -- a bot's say{i:0} then reaches every bot, as on the server
-    const ctx = vm.createContext({ console, setTimeout, clearTimeout, JSON, Math, Object, Array, String, Date, parseInt, VERSION: L.version, localTable: true, net: { boards: {}, roster: [] },
-      MP_HANDLERS: { board(){}, log(m){ humanLog.push(m); }, say(){}, chat(){}, fx(){} }, log(){} });
-    vm.runInContext(L.bridgeSrc + '\n' + L.fanSrc + '\nthis.hotBridge = hotBridge; this.hotFanOut = hotFanOut;', ctx);
+    const ctx = bridgeIn(L, { MP_HANDLERS: { board(){}, log(m){ humanLog.push(m); }, say(){}, chat(){}, fx(){} } });
     const HB = ctx.hotBridge, orig = HB._fromBot.bind(HB), room = { tally: null }, roster = [];
     let holdsRelayed = 0; const toBot0 = HB.toBot.bind(HB); HB.toBot = function(seat, m){ if(m && m.t === 'say' && m.i === 0 && ((HB._cfg || [])[(m.seat | 0) - 1] || {}).bot) holdsRelayed++; return toBot0(seat, m); };   // v1.1.0: how many times one bot's 'Hold on...' reached another bot
     const HANDLED = new Set((L.bridgeSrc.match(/case '([A-Za-z]+)'/g) || []).map(x => x.slice(6, -1)));   // v1.0.1: read from the LIFTED source -- when main adds a case, the verb leaves the dropped list by itself
@@ -66,7 +76,7 @@ async function runTable(opts){
         if(!okPass){ stuck = { round, seat, seatOut: !!bots[seat - 1].out }; break outer; }
         if(bots.filter(b => !b.out).length <= 1) break outer; } }
     const c = t => ev.filter(e => e.type === t), plays = c('play'), w = x => plays.filter(e => e.d.window === x).length;
-    const res = { tool: 'elysium-bot-hotseat 1.1.0', bot: BOT_VERSION, client: L.version, arm: o.arm, deckNamePassed: !!o.deckname, seed: o.seed, decks: o.decks, rounds: Math.min(round, o.rounds), secs: Math.round((Date.now() - t0) / 1000),
+    const res = { tool: 'elysium-bot-hotseat 1.2.0', bot: BOT_VERSION, client: L.version, combatMerge: !!L.cmbSrc, arm: o.arm, deckNamePassed: !!o.deckname, seed: o.seed, decks: o.decks, rounds: Math.min(round, o.rounds), secs: Math.round((Date.now() - t0) / 1000),
       finished: !stuck && bots.filter(b => !b.out).length <= 1, stuck, alive: bots.filter(b => !b.out).map(b => b.o.name), pools: bots.map(b => b.pool), turnsHandedToOustedBots: turnsToOusted, droppedVerbs: dropped, botHoldsRelayedToBots: holdsRelayed,
       manifest: c('manifest').map(e => ({ deck: e.deck, key: e.d.deck, axes: e.d.axes })),
       counts: { through: c('through').length, blocked: c('blocked').length, blockMade: c('block-made').length, stealthCards: w('stealth'), interceptCards: w('react-intercept'), stealthLooks: c('stealth-stack').length,
@@ -77,7 +87,7 @@ async function runTable(opts){
   } finally { Math.random = realRandom; }
 }
 
-module.exports = { runTable, liftBridge };
+module.exports = { runTable, liftBridge, bridgeIn };
 if(require.main === module){
   const A = process.argv.slice(2), opt = k => { const i = A.indexOf('--' + k); return i < 0 ? null : A[i + 1]; }, o = { progress: l => process.stderr.write(l + '\n') };
   if(opt('decks')) o.decks = opt('decks').split(','); ['seed', 'rounds'].forEach(k => { if(opt(k)) o[k] = +opt(k); });
