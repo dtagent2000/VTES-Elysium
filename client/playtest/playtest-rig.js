@@ -23,7 +23,10 @@
    THE REFLEX. A model answering through this rig takes 5-15 s per reply; a bot's Standard tempo
    gives a human 3 s. The reflex answers for the human after `delayMs`, counted from the moment
    the QUESTION appears in chat (what a human reacts to) -- or from the bot's status when no
-   question line arrives within 6 s. Per kind (block, verdict, react, pq, combat, strike, vote)
+   question line arrives within 6 s (v1.1.0: a combat step's question must be that step's own -- a late question for
+   the step before does not anchor the next; and when the bot has not started the wait's clock after 6 s -- bot
+   v0.6.204+ starts it when the question is sent -- the fallback waits for the clock instead of answering a question
+   the human has not seen). Per kind (block, verdict, react, pq, combat, strike, vote)
    it says Hold on (`hold`), the plain negative (`no`), or nothing (`none`). Turn the reflex off
    for Turn-based tempo, where the bots wait anyway. Only the human's own phrases and chat lines
    count as an answer -- a log line (a blood correction) does not.
@@ -109,6 +112,8 @@ function askKind(w, bot){
   return null;
 }
 const QUESTION = /Block\?|Any reaction|lose pool\?|How much\?|Anything before|Any maneuvers\?|What is your strike\?|Any presses\?|Damage: prevent|votes\?|add stealth|may block it/;   // v1.1.0: + bot v0.6.204's verdict question ('X blocks (stealth A vs intercept B) -- You, add stealth, or say Pass to resolve it') and v0.6.203's bounce question ('X now bleeds You for N -- You may block it ...')
+const STEP_Q = { 'before range': /Anything before range\?/, 'maneuvers': /Any maneuvers\?/, 'before strikes': /Anything before strikes\?/, 'strike': /What is your strike\?/, 'damage': /Damage: prevent/, 'presses': /Any presses\?/, 'before ending combat': /Anything before ending combat\?/ };   // v1.1.0: the bot's own question per combat step (the bot's Q[] in _phaseStep)
+function questionFits(a, msg){ if (!QUESTION.test(msg)) return false; const st = /^combat step (.+?) \(/.exec(a.w || ''); return !(st && STEP_Q[st[1]]) || STEP_Q[st[1]].test(msg); }   // v1.1.0: a late question for the step before must not anchor this step's reflex
 const panelLast = {};
 async function samplePanel(){
   if (!page || !ME) return;
@@ -117,7 +122,8 @@ async function samplePanel(){
   if (!rows) return;
   const meRx = new RegExp('\\b' + ME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
   for (const r of rows) {
-    { const a0 = asks[r.bot]; if (a0 && a0.armT == null && r.left != null) { a0.armT = Date.now(); rec('askArmed', { bot: r.bot, kind: a0.kind, after: a0.armT - a0.t0, left: r.left }, 'CLOCK ' + r.bot + ': ' + r.left + 's'); } }   // v1.1.0: when the wait's clock starts (bot v0.6.204: once its question is sent)
+    { const a0 = asks[r.bot]; if (a0 && a0.armT == null && r.left != null) { a0.armT = Date.now(); rec('askArmed', { bot: r.bot, kind: a0.kind, after: a0.armT - a0.t0, left: r.left }, 'CLOCK ' + r.bot + ': ' + r.left + 's');
+        if (a0.waitClock) setTimeout(() => armReflex(r.bot, a0, 'clock'), policy.delayMs); } }   // v1.1.0: a fallback that waited for the clock fires delayMs after it starts   // v1.1.0: when the wait's clock starts (bot v0.6.204: once its question is sent)
     const sig = r.st + '|' + r.w + '|' + (r.step || '');
     if (panelLast[r.bot] === sig) continue;
     panelLast[r.bot] = sig;
@@ -130,7 +136,7 @@ async function samplePanel(){
       rec('ask', { bot: r.bot, kind, w: r.w }, 'ASK ' + kind + ' <- ' + r.bot + ': ' + r.w, true);
       if (r.left != null) { a.armT = a.t0; rec('askArmed', { bot: r.bot, kind, after: 0, left: r.left }, 'CLOCK ' + r.bot + ': ' + r.left + 's (running when the wait was first seen)'); }
       if (policy.anchor === 'status') armReflex(r.bot, a, 'status');
-      else setTimeout(() => armReflex(r.bot, a, 'status-fallback'), 6000);
+      else setTimeout(() => { if (a.armT == null && !a.chatT) { a.waitClock = true; return; } armReflex(r.bot, a, 'status-fallback'); }, 6000);   // v1.1.0: no clock yet = the bot (v0.6.204+) has not sent its question: wait for it
     } else if (asks[r.bot]) { const a = asks[r.bot]; rec('askEnd', { bot: r.bot, kind: a.kind, ms: Date.now() - a.t0 }); delete asks[r.bot]; }
   }
 }
@@ -157,7 +163,7 @@ function onFrame(info, dir, payload){
   if (dir !== 'in' || info.name !== ME) return;      // what the table shows the human: their own socket's inbound frames
   const t = m.t;
   if (t === 'chat') { lastBotChat[m.who] = m.msg;
-    const a = asks[m.who]; if (a && QUESTION.test(m.msg) && !a.chatT) { a.chatT = Date.now(); rec('askChat', { bot: m.who, kind: a.kind, lag: a.chatT - a.t0 }); if (policy.anchor === 'chat') armReflex(m.who, a, 'chat'); }
+    const a = asks[m.who]; if (a && questionFits(a, m.msg) && !a.chatT) { a.chatT = Date.now(); rec('askChat', { bot: m.who, kind: a.kind, lag: a.chatT - a.t0 }); if (policy.anchor === 'chat') armReflex(m.who, a, 'chat'); }
     rec('chat', { who: m.who, msg: m.msg }, 'CHAT ' + m.who + ': ' + m.msg, ME && new RegExp('\\b' + ME + '\\b').test(m.msg) && /\?|[Hh]olding/.test(m.msg)); }
   else if (t === 'say') rec('say', { who: m.who, i: m.i }, 'SAY ' + m.who + ': ' + SAY[m.i], m.who !== ME && m.i === 0);
   else if (t === 'log') rec('log', { who: m.who, txt: strip(m.html) }, 'LOG ' + (m.who || '') + ': ' + strip(m.html));

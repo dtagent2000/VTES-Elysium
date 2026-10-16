@@ -76,6 +76,13 @@ dialog matches. `menu` walks any right-click menu by its labels (`Combat>Hand st
   deadline (the panel shows the dash, and an early answer still counts); the number the question announces is the
   clock. The rig records when each clock starts (`askArmed`, rig v1.1.0) and the report prints it as `clock`
   (question → clock; negative means the clock ran before the question, as with bot v0.6.203 and older).
+- **What the reflex answers** (rig v1.1.0):
+  - In a combat it answers a step only after that step's own question. A late "Anything before range?" no longer
+    anchors the maneuver step.
+  - When no question has come after 6 s and the bot has not started the wait's clock, the reflex waits for the clock.
+    Bot v0.6.204+ starts the clock when the question is sent, so the reflex no longer answers a question you have
+    not seen.
+  - Rig v1.0.0 did both, and on 16 Oct it answered three combat steps before their questions.
 - **Turn-based**: turn the reflex off (`pol '{"on":false}'`); the bots wait for you. `give` is the play button
   beside the bot badge (it gives every waiting bot the word).
 - Phrases by name: `say pass`, `say no block`, `say block`, `say hold on`, `say it resolves`, `say any blocks`.
