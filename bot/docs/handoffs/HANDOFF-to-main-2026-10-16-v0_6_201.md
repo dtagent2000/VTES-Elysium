@@ -78,4 +78,16 @@ Both have existed since v0.6.112 and v0.6.200. From v0.6.201, other bots **read*
 - **Deploy:** purge `/elysium-bot.js` and re-embed the guide at your next client release.
 
 ## Gates (v0.6.201, from `bot/`)
-GATES-PLACEHOLDER
+- `node --check` on every changed file.
+- Suite **2006/0 ×3** on the final bytes (srv-2.6.46).
+- Section 140 run alone: 21/0. Against v0.6.200 in a scratch directory: 13 red, the 8 guards green on both, no abort. A mutant without the watcher read fails 140g and 140i.
+- Canary **57/0** against v2.6.158 and protocol v2.6.158.
+- HB1 **11/0**.
+- Hotseat gate **10/0** against v2.6.158 (tally relayed, the net asleep).
+- Main's client suite with v0.6.201 beside it (copied in and removed again): 287 passed, 1 red — the expected embed drift for START-HERE-BOTS.html. All 11 LIVE bot tests green.
+- `check-versions.js`, root row: "everything agrees".
+- test-cardfx not run: the cardfx files are unchanged.
+- **Arena smoke** (the four starters, Expert, pool 30, seed 4002): two matches on the final bytes (261 s and 370 s), no timeouts.
+  - `ana-ledger.py`: every bleed pairs (equal, or more by the actor's modifiers); the steal pairs are equal; the creep rows pair.
+  - `ana-inv.py`: 2 flags, both the known "my strike 1, the Ventrue opponent took 0" (R2's lead).
+  - The first smoke (one match on the bytes before the fix, same seed) is the one that found the creep oust. No tick reached 0 in the final two; 140j pins it.

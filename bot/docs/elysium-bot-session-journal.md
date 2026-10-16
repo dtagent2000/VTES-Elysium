@@ -10,7 +10,7 @@ Hittat av releasens egen arenarök (seed 4002, 1 match): en Creeping Sabotage-ti
 
 Tester: sektion 140 (21 påståenden; tre LIVE mot riktiga servern — debug-granten når människan medan den andra botten tittar bort, en sen åskådare får handen direkt, och Alices Reduce-rad tar bottens bleed på 1 till 0 utan Edge; 140j är creep-oustet). Destruktivt mot v0.6.200 i en separat katalog: 13 röda, de 8 vakterna gröna på båda, ingen abort; en mutant utan åskådarlistan fälls av två påståenden. Åskådarfallet hittades i min egen genomgång efter första svitkörningen (servern skickar ingen grant till den som ansluter senare — bara bottens nästa sändning når henne). 139i omskriven till helbordsgranten (43/0 ensam).
 
-Grindar: GATES-PLACEHOLDER
+Grindar: sviten 2006/0 ×3 på slutbytena; sektion 140 ensam 21/0, mot v0.6.200 13 röda + 8 vakter, ingen abort (en mutant utan åskådarlistan fälls av 140g och 140i); kanariefågeln 57/0; HB1 11/0; hotseat 10/0; mains klientsvit med v0.6.201 bredvid 287/1 (den väntade inbäddningsdriften, alla 11 LIVE-bottester gröna); check-versions grönt; test-cardfx inte körd (cardfx oförändrad). Arenarök (de fyra startdeckarna, Expert, pool 30, seed 4002): två matcher på slutbytena (261 s och 370 s), inga timeouts; ledgern parar varje bleed (lika, eller mer genom aktörens modifierare), stöldparen lika, creep-raderna parade; ana-inv 2 flaggor, båda det kända "mitt slag 1, Ventrue-motståndaren tog 0" (R2:s lead). Den första röken (en match på bytena före fixet, samma seed) är den som hittade creep-oustet; ingen tick nådde 0 i de två sista — 140j fäster det.
 
 Inte byggt, ett förslag till Johan: en chattrad `reduce N` (som `bleed N`) skulle fungera redan i dag, utan att vänta på klientens rad.
 
