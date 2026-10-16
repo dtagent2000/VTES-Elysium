@@ -1,7 +1,7 @@
 # START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (16 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.200 (deploy candidate; R1 of the 14 Oct play-test review; R0 = v0.6.199, merged) · arena v1.4.7 · cardfx
+**State at writing:** bot v0.6.201 (deploy candidate; Johan's answers to the R1 uncertainties; R1 = v0.6.200, merged) · arena v1.4.7 · cardfx
 compiler v1.9.1 · built against client v2.6.158 / srv-2.6.46 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
@@ -36,10 +36,12 @@ A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repo
 ## Open at hand-over (16 Oct 2026)
 The 14 Oct play-test (main's rig, PR #13) is reviewed finding by finding in
 `bot/docs/reviews/REVIEW-playtest-2026-10-14.md`: 16 bot bugs plus a side find, each with code lines, a fix and a
-round. R0 shipped as v0.6.199 (merged); R1 as v0.6.200 (rules and deadlocks, debug for humans only). Next, in the
+round. R0 shipped as v0.6.199 (merged); R1 as v0.6.200 (rules and deadlocks; merged); v0.6.201 carries Johan's
+answers to R1's uncertainties (the debug hand to the whole table while the other bots look away; a human's Reduce
+line). Next, in the
 order Johan set on 16 Oct: R2 (the bot-vs-bot combat handshake, pacing bot-vs-bot combat when a human is seated, a
 hold stops the bot's own combat moves, Roundhouse's damage), R3 (clocks start when the question is sent, stale hold
 lines, one spokesbot for table remarks — the pool question stays per bot), R4 (the uncurated V5 masters,
 Revelations against a bot). After R3 we run the same scenario ourselves in `client/playtest/` with `--dir`.
-Main's open items are in `bot/docs/handoffs/HANDOFF-to-main-2026-10-16-v0_6_200.md` (the bridge's `edgeTake`, the
-15 Oct debug items).
+Main's open items are in `bot/docs/handoffs/HANDOFF-to-main-2026-10-16-v0_6_201.md` (the Reduce row on the Bleed
+menu) and its predecessors (the bridge's `edgeTake`, the 15 Oct debug items).

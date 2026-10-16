@@ -202,6 +202,9 @@ Gates beyond the suite for R2: a series with the handshake integrity line at 100
 6. **The rig:** we run the scenario ourselves with `--dir` once R1–R3 are in; main can repeat it on the root bundle after the release.
 7. **A hold stops the bot's own combat moves too,** not only the clocks (R2).
 8. **Debug is for humans only:** the debug bot's open hand goes to human seats, not to the other bots (R1).
+9. **(16 Oct, after R1) Debug, refined:** every human sees the debug hand, spectators too, without patching around the base system — the grant goes to the whole table and the other bots never inspect a hand shown only by debug (v0.6.201).
+10. **(16 Oct) A human's reduction:** an interim Reduce row on the client's Bleed menu for every reduction card the bot does not know; curated reduction cards later (v0.6.201 reads the line; main is asked for the row).
+11. **(16 Oct) Targets:** setting the target is player education; the bots do not force a target on the prey (the guide says set it first).
 
 ## R1 delivered (v0.6.200, 16 Oct)
 - **Done as planned:** F8 (whoever passes last ends a contested undirected block under Turn-based; the reminder is read when it fires), F9 (taken / prevent lines answer step 4 only), F1 (the aim from the Target suffix, inherited by the card's action row, else the prey; only the target asks or may block; a cross-table seat is quiet for every undirected action), F15 (both sides; a bleed of 0 moves no Edge and says so), F20 (`edgeTake` sent, `edgeTake` / `edgePass` read), F22 (`_deadJudgeVamps`, all five call sites), Creeping ×3 (`form` line / note / ack; the note gone), the F19 wording, debug for humans (`_debugTargets`, the roster resync, the Tournament refusal through `helperPolicy`, `--debug` / `--no-debug-weights`).
@@ -216,4 +219,11 @@ Gates beyond the suite for R2: a series with the handshake integrity line at 100
   - the client writes no reduce line for a HUMAN's reduction, so a bot actor keeps its number and takes the Edge even at 0 (the human manages their own pool; a wish for main);
   - with several bots at the table, spectators see no debug hand (the server cannot address a watcher; an optional `to:'humans'` route for main);
   - a debug bot's face-up uncontrolled crypt is still on the table for everyone — no bot reads uncontrolled names today (`_scanOpp` counts them only).
+
+## After R1: Johan's answers (v0.6.201, 16 Oct)
+- **Debug (decision 9):** one grant `to:'all'` again (a spectator who joins mid-game gets it at once: the roster's watcher list is part of the audience); the other bots look away from a seat that announced DEBUG mode (`_lookAway`, keyed on the frozen announcement and its sender), except through their own Revelations [AUS] on that seat while it is in play. A debug grant never answers a Revelations [aus] waiter. v0.6.200's seat-by-seat grants are gone, and so are its two open items above about spectators and `to:'humans'`.
+- **A human's reduction (decision 10):** the bot reads `NAME reduces the bleed by N.` from its bleed's target seat; main is asked for the Reduce row that writes it (`HANDOFF-to-main-2026-10-16-v0_6_201.md`). Until the row exists the old behaviour stands (the bot's line states the full amount).
+- **Targets (decision 11):** the guide's target sentence is firmer; nothing forced.
+- **Pinned:** section 140, 19 assertions, three of them live; 12 red on v0.6.200, 7 guards green on both.
+- **Proposed, not built:** a `reduce N` chat line (like `bleed N`) would work today, before the client's row exists.
 
