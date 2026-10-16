@@ -253,3 +253,13 @@ Gates beyond the suite for R2: a series with the handshake integrity line at 100
   - a counter-maneuver (a chase deck answering a maneuver to long with one to close): the bot only ever maneuvers to long; the Nosferatu answers a wave with its press (v0.6.161);
   - Deep Song in a combat with a HUMAN: the phases still treat the turn seat as acting (the handoff's known limit);
   - the strike step is unchanged — both strikes are announced and resolved together, the defender does not wait for the acting minion's strike before choosing its own.
+
+## R3, first step delivered (v0.6.203, 16 Oct)
+Johan's "Kör på!" (16 Oct) set the order: main's replies, then the vanished bleed as R3's first step, then R3 proper. His answers to R2's open questions: the bots answer known strikes; fix Deep Song against a human; the tempo lever for a watched bot-vs-bot combat waits until players react; re-measure with the smoke now and a larger series once every fix is in; the Jack payment stays.
+- **Main's replies consumed** (client v2.6.159–161): the read-only copies, their canary §5 (69/0), the hotseat lift's combat merge (H11), the guide's sentences.
+- **The vanished bleed (R2's find), fixed:** a bounce opens its new target's block step in whatever window it lands (the bounce cards: "that Methuselah can attempt to block"); the refusal stays for every other seat and after a modifier; the bleed's `through` is emitted at the resolution; a bot actor's It resolves lands an attempt it never took up; a bot actor's modifier closes the target's block step. Section 142; the smoke's `VANISHED` is 0.
+- **The strike step between bots** in the rulebook's order: the acting bot strikes first, the other chooses knowing it (R2's "Not done": "the strike step is unchanged"). Section 143.
+- **Deep Song against a human** (R2's "Not done"): the rushed vampire acts first in the human phase walk too. 143e.
+- **Hygiene (R1's leads):** an opponent's prevention reaches the strike-vs-taken invariant (the bot's own prevent line was typed with `X plays CARD:` as the vampire — the "Ventrue opponent took 0" flags); `_doEquip`'s pool cost and the burn-for-pool notes reach the pool ledger. Section 144.
+- **Found by the release's own smoke, fixed:** a borne Murder of Crows and a played Carrion Crows both land each round; the victim kept the last announce (144e).
+- **Next:** R3 proper (F3 / F11 clocks from the wire, F4 hold lines, F10 the verdict wait, F2 the spokesbot, F12 / F13 levers (a)–(d)) as v0.6.204.
