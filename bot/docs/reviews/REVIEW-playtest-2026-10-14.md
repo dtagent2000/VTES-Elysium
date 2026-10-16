@@ -205,7 +205,9 @@ Gates beyond the suite for R2: a series with the handshake integrity line at 100
 
 ## R1 delivered (v0.6.200, 16 Oct)
 - **Done as planned:** F8 (whoever passes last ends a contested undirected block under Turn-based; the reminder is read when it fires), F9 (taken / prevent lines answer step 4 only), F1 (the aim from the Target suffix, inherited by the card's action row, else the prey; only the target asks or may block; a cross-table seat is quiet for every undirected action), F15 (both sides; a bleed of 0 moves no Edge and says so), F20 (`edgeTake` sent, `edgeTake` / `edgePass` read), F22 (`_deadJudgeVamps`, all five call sites), Creeping ×3 (`form` line / note / ack; the note gone), the F19 wording, debug for humans (`_debugTargets`, the roster resync, the Tournament refusal through `helperPolicy`, `--debug` / `--no-debug-weights`).
-- **Pinned:** section 139, 42 assertions, one of them live on the real server; 31 red on v0.6.199, 11 guards green on both.
+- **Pinned:** section 139, 43 assertions, one of them live on the real server; 32 red on v0.6.199, 11 guards green on both.
+- **Found by the R1 arena smoke, fixed:** Larissa's +1-bleed discard missed the acting record, so a bot target took 1 on her announced 2.
+- **Seen in the smoke, R2's:** one range disagreement (a maneuver to long the other bot never saw, F17a) and Roundhouse's taken 3 against dealt 2 (F18).
 - **Found in the review of the change, fixed:** the target dropped its Edge on any pool loss resolved through the asked window, so a human's referendum that cost the bot pool took its Edge. An undirected action never moves it now.
 - **Found while building, left open:**
   - the client writes no reduce line for a HUMAN's reduction, so a bot actor keeps its number and takes the Edge even at 0 (the human manages their own pool; a wish for main);

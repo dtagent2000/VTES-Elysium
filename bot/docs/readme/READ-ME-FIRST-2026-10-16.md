@@ -19,6 +19,7 @@
   - The target that reduced counts the actor's `+N` on top of its own amount.
   - A bleed of 0 is not successful: no Edge, and the line says "The bleed goes through at 0".
   - Found in the review of this change: a human's referendum that cost the bot pool took the bot's Edge. An undirected action never moves the Edge now.
+  - Found by the arena smoke (v0.6.200 against v0.6.199): Larissa's +1-bleed discard did not reach the bot's own record of the bleed, so a bot target took 1 on her announced 2. Fixed. `ana-ledger.py` now tells a reduced bleed from an unexplained one.
 - **Point 20, the Edge.** Taking it is said on the wire (`edgeTake`). Another seat's `edgeTake` clears mine; an `edgePass` to my seat gives it to me. Online the human's client now clears its own Edge; offline that waits for main's bridge.
 - **Point 22 and Johan's Tremere.** A card counted as dead when no READY vampire could use it. With no vampire out yet, the first card went (Theft of Vitae). Now every vampire of mine judges — ready, in torpor or uncontrolled — and with none at all, the deck's crypt.
 

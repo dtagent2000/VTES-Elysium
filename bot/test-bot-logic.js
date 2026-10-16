@@ -9066,6 +9066,11 @@ async function connectWithRetry(client, tries = 30){
         u._actingVamp = { v: { name: 'Sully' }, target: 3, n: 3, played: new Set() };
         u._onLog('Hanna', '<b>Lisa</b> plays <b>Telepathic Misdirection</b> — reduces the bleed by 2 (now 1).');
         ok(u._actingVamp.n === 3, '139d ...the same line from a seat that is not my target changes nothing'); u._actingVamp = null; }
+      { const u = mk139('L', 2, P3()); u._toAsh = () => {}; u._emitPlay = () => {};
+        const LM = { name: 'Larissa Moreira (G6)', kind: 'crypt', zone: 'ready', blood: 6, cap: 6 }; u.board = [LM]; u.hand = ['Deep Song', 'Deep Song', 'Deep Song'];
+        const act = { n: 1, st: 0 }; u._actingVamp = { v: LM, n: 1, played: new Set(), target: 3 };
+        u._maybeLarissaBoost(LM, act);
+        ok(act.n === 2 && u._actingVamp.n === 2, '139d (found by the R1 arena smoke) Larissa\u2019s +1 reaches the acting record too -- the bleed total, the modifiers and the resolve line carry 2, not the unboosted 1 (v0.6.199: a bot target took 1 on her announced 2)'); u._actingVamp = null; }
 
       // e) point 20: the Edge is unique -- lost when another seat takes it, mine when it is passed to me, said out loud when I gain it
       { const u = mk139('U', 2, P3()); u.edge = true;

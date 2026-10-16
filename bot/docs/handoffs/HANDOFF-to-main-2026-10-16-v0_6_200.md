@@ -22,6 +22,7 @@
   - A target that reduced counts the actor's `+N` on top of its own reduced amount.
   - A bleed of 0 moves no Edge, and its resolve line says "The bleed goes through at 0: NAME loses no pool."
   - Found while reviewing the change: a human's referendum that cost a bot pool also took the bot's Edge. An undirected action never moves the Edge now.
+  - Found by our arena smoke: Larissa's +1-bleed discard did not reach the bot's own record of the bleed. A human target saw "bleeds for 2", then "−1 pool". Both lines now say 2.
 - **Point 20 — the Edge is unique.**
   - The bot sends `edgeTake` when it gains the Edge (a bleed of 1 or more), so the human's client clears its own Edge.
   - It clears its own Edge on another seat's `edgeTake`, and accepts an `edgePass` to its seat.
