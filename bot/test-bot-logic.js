@@ -9603,6 +9603,127 @@ async function connectWithRetry(client, tries = 30){
            '141p ...so the Tremere that saw a Grapple in its last fight still snipes in its next one: Apportation to long, Theft of Vitae in reach (v0.6.201: "snipe: no ranged card in hand", close; got ' + JSON.stringify({ range: dRow.range, keep: g2.D.hand.includes('Apportation'), miss: dRow.hsMiss || null }) + ')'); }
     }
 
+    /* 142) v0.6.203 -- THE VANISHED BLEED (READ-ME-FIRST-2026-10-16c section 6, found by R2's arena smokes: 21 bleeds in 12 matches,
+       3 of them on v0.6.201). Deflection, Redirection, Telepathic Misdirection and My Enemy's Enemy say "Change the target of the bleed
+       to ... (that Methuselah can attempt to block)". A bounce played on the bleed total (the late bounce, v0.6.144) lands in my
+       reactions-only window, where the v0.6.114 rule refused every Block!; the new target had shouted, its pending was contested, and
+       on my It resolves it dropped the bleed. Now: (a) the actor gives the bounce's new target a block step of its own -- the refusal
+       stays for every other seat; (b) a target whose live attempt a BOT actor never took up takes the bleed on its It resolves;
+       (c) a bot actor's modifier closes the target's block step; (d) 'through' is emitted at the resolution; (e) a live table. */
+    {
+      console.log('\n[142] v0.6.203 -- the vanished bleed: the new target of a late bounce may block; a refused attempt costs nothing');
+      const strip142 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const mk142 = (name, seat, o) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, o || {}));
+        u.seat = seat; u.started = true; u.pool = 20; u.push = () => {}; u.fxClone = () => {}; u.sent = []; u.send = m => { u.sent.push(m); };
+        u.players = [{ seat: 1, name: 'Ann', online: true, bot: true }, { seat: 2, name: 'Tor', online: true, bot: true }, { seat: 3, name: 'Ulla', online: true, bot: true }, { seat: 4, name: 'Johan', online: true }];
+        u.table = {}; u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); return u; };
+      const chats142 = u => u.sent.filter(m => m && m.t === 'chat').map(m => String(m.msg || ''));
+      const GD = () => ({ id: 'a1', name: 'Gilbert Duane (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 });
+      const actor142 = () => { const A = mk142('Ann', 1); const v = GD(); A.board = [v]; A.hand = []; A.res = null;
+        A._actingVamp = { v, n: 2, played: new Set(), target: 2 };
+        A.tally = { mode: 'block', a: 1, b: 0, ph: 0, rd: 1 };
+        A._ask = { resolve: x => { A.res = x; }, timer: null, pausedBy: new Set(), contested: false, target: 2, reactionsOnly: true, t0: Date.now() };   // the bleed-total window: blocks were declined
+        return A; };
+      const done142 = u => { const a = u._ask; if(a){ if(a.timer) clearTimeout(a.timer); if(a._remT) clearTimeout(a._remT); } if(u._rcT) clearTimeout(u._rcT); u._ask = null; u.out = true; };
+
+      // a) the actor: the old target's Block! after blocks were declined is refused (v0.6.114 stands); the bounce's new target gets a block step
+      { const A = actor142();
+        A._onBlockAttempt('Tor');
+        ok(!A._ask.contested && chats142(A).some(c => /blocks were declined this action/.test(c)), '142a the original target’s Block! after blocks were declined is still refused (v0.6.114: a modifier or the total never reopens blocks)');
+        A.sent.length = 0;
+        A._onLog('Tor', '<b>Gilbert Duane (G6)</b> bleeds for 2. Target: Ulla\'s pool.');
+        ok(A._actingVamp.target === 3 && A._actingVamp.bounced === true && A._actingVamp.blockStepSeat === 3 && A._ask.target === 3,
+           '142a a late bounce re-targets my bleed to Ulla, opens HER block step, and the open ask follows the bleed (status, the roster hook and the tempo read its target; got ' + JSON.stringify({ t: A._actingVamp.target, step: A._actingVamp.blockStepSeat, ask: A._ask.target }) + ')');
+        A._onSay({ who: 'Ulla', i: SI('Block!') });
+        ok(A._ask && A._ask.contested === true && !chats142(A).some(c => /blocks were declined/.test(c)), '142a ...and Ulla’s Block! is taken up -- the bounce card says "(that Methuselah can attempt to block)"; v0.6.202 refused it and the bleed vanished');
+        A._ask.contested = false; A.sent.length = 0;
+        A._onBlockAttempt('Tor');
+        ok(!A._ask.contested && chats142(A).some(c => /blocks were declined/.test(c)), '142a ...while every other seat’s Block! is still refused (Tor has passed the bleed on)');
+        done142(A); }
+      { const A = actor142(); A.tally.b = 1;
+        A._onLog('Tor', '<b>Gilbert Duane (G6)</b> bleeds for 2. Target: Ulla\'s pool.');
+        const tw = A.sent.filter(m => m && m.t === 'tally');
+        ok(tw.length === 1 && tw[0].mode === 'block' && tw[0].b === 0 && !('a' in tw[0]) && A.tally.a === 1,
+           '142a the old target’s intercept is stale for the new one: b goes back to 0, my stealth (a = 1) stays with the action (got ' + JSON.stringify(tw) + ')');
+        A._onSay({ who: 'Ulla', i: SI('Pass') });
+        ok(A.res && A.res.what === 'no', '142a the new target’s Pass closes the window: the bleed resolves on Ulla (got ' + JSON.stringify(A.res) + ')');
+        done142(A); }
+      { const A = actor142();
+        A._onLog('Tor', '<b>Gilbert Duane (G6)</b> bleeds for 2. Target: Johan\'s pool.');
+        const c = chats142(A).find(x => /now bleeds Johan for 2/.test(x)) || '';
+        ok(A._ask.target === 4 && /Johan may block it/.test(c) && /\(\d+s/.test(c), '142a a HUMAN new target is told, with the clock: "' + c + '"');
+        done142(A); }
+
+      // b) the target: a BOT actor resolves over my live attempt -> the attempt was never taken up, and the bleed lands
+      { const T = mk142('Ulla', 3); T.board = [{ id: 'u1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }]; T.hand = [];
+        T.pending = { who: 'Ann', amount: 2, kind: 'bleed', actingVampName: 'Gilbert Duane (G6)', contested: true, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        T._onSay({ who: 'Ann', i: SI('It resolves') });
+        ok(T.pool === 18 && !T.pending && !chats142(T).some(c => /never resolved/.test(c)), '142b a bot actor’s It resolves over my live attempt: the attempt was not taken up and the bleed of 2 lands (pool ' + T.pool + '; v0.6.202 dropped it as "contested, unresolved")');
+        done142(T);
+        const H = mk142('Ulla', 3); H.board = T.board.slice(); H.hand = [];
+        H.pending = { who: 'Johan', amount: 2, kind: 'bleed', actingVampName: 'Lisa Noble', contested: true, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        H._onSay({ who: 'Johan', i: SI('It resolves') });
+        ok(H.pool === 20 && !H.pending && chats142(H).some(c => /A block was announced but never resolved/.test(c)), '142b ...a HUMAN actor may have forgotten the verdict: the bot still asks, and its pool waits for the human’s word');
+        done142(H); }
+
+      // c) the target: a bot actor's modifier closes my block step (only reactions remain); a human actor's does not
+      { const T = mk142('Tor', 2); T.board = [{ id: 't1', name: 'Ulrike Rothbart (G4)', kind: 'crypt', zone: 'ready', locked: false, blood: 3 }]; T.hand = [];
+        T.pending = { who: 'Ann', amount: 2, kind: 'bleed', actingVampName: 'Gilbert Duane (G6)', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        T._onLog('Ann', '<b>Gilbert Duane (G6)</b> adds +1 bleed (= 3).');
+        ok(T.pending && T.pending.declined === true && T.pending.amount === 3, '142c a BOT actor plays its modifier only after its block question closed: my block step is over, the reopened window takes reactions only');
+        done142(T);
+        const H = mk142('Tor', 2); H.board = T.board.slice(); H.hand = [];
+        H.pending = { who: 'Johan', amount: 2, kind: 'bleed', actingVampName: 'Lisa Noble', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        H._onLog('Johan', '<b>Lisa Noble</b> adds +1 bleed (= 3).');
+        ok(H.pending && H.pending.declined === false, '142c ...a HUMAN actor may be out of turn: the block stays mine to offer');
+        if(H.pending && H.pending.passTimer) clearTimeout(H.pending.passTimer); done142(H); }
+
+      // d) 'through' is emitted at the resolution, after the windows a bounce's new target may block in
+      { const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
+        const iTot = src.indexOf("this._emit('bleed-total'"), iThr = src.indexOf("this._emit('through', { vamp: v.name, n: act.n, card: act.name || null, final:");
+        ok(iTot > 0 && iThr > iTot && src.indexOf("this._emit('through', { vamp: v.name, n: act.n, card: act.name || null });") < 0,
+           '142d the bleed’s through (which closes my block counter and commits my parked cost) is emitted at the resolution, after the modifier and total windows -- carrying `final`');
+      }
+
+      // e) a live table: Ann bleeds Tor with Dominate Kine (2, +1 stealth); Tor holds Deflection for the total and bounces it to Ulla; Ulla blocks
+      { const h = mkClient('Johan'); await connectWithRetry(h);
+        const R = 'vb' + Date.now().toString(36).slice(-6);
+        h.send({ t: 'create', room: R, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+        await h.waitFor(m => m.t === 'joined', 'h142 joined');
+        h.send({ t: 'seat', seat: 1 });
+        h.send({ t: 'deck', name: 'D142', library: [{ name: 'Govern the Unaligned', qty: 60 }], crypt: [{ name: 'Lucinde, Alastor', qty: 12 }] });
+        await h.waitFor(m => m.t === 'deckok', 'h142 deckok');
+        const ev = {}, mkB = (name, seat) => { ev[name] = []; return new Bot({ server: URL, room: R, pass: 'x', name, seat, paceMs: 0, askSecs: 2, persona: 'expert', log: () => {},
+          onEvent: (t, d) => ev[name].push({ t, d, at: Date.now() }),
+          deck: { name: 'D' + seat, crypt: [{ name: 'Zip', qty: 12 }], library: [{ name: 'Govern the Unaligned', qty: 60 }] } }); };
+        const A = mkB('Ann', 2), T1 = mkB('Tor', 3), T2 = mkB('Ulla', 4);
+        await A.connect(); await T1.connect(); await T2.connect();
+        await h.waitFor(m => m.t === 'lobby' && ['Ann', 'Tor', 'Ulla'].every(n => (m.players || []).some(p => p.name === n && p.deck)), 'h142 three bots seated', 9000);
+        h.send({ t: 'start' });
+        await h.waitFor(m => m.t === 'dealt', 'h142 dealt');
+        h.send({ t: 'tally', mode: null, a: 0, b: 0 });
+        A.board = [{ id: 'a1', name: 'Gilbert Duane (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, x: 100, y: 100 }]; A.hand = ['Dominate Kine'];
+        T1.board = [{ id: 't1', name: 'Ulrike Rothbart (G4)', kind: 'crypt', zone: 'ready', locked: false, blood: 3, x: 100, y: 100 }]; T1.hand = ['Deflection'];
+        T2.board = [{ id: 'u1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, x: 100, y: 100 }]; T2.hand = ['Enhanced Senses']; T2.pool = 2;
+        A.push(); T1.push(); T2.push();
+        await sleep(300);
+        h.send({ t: 'pass' });   // Johan (seat 1) passes -- Ann's turn
+        await h.waitFor(m => m.t === 'turn' && m.seat === 2, 'h142 turn to Ann', 9000);
+        const lineAt = (re, who) => h.waitAny(m => m.t === 'log' && (!who || m.who === who) && re.test(strip142(m.html)), String(re), 20000);
+        const tot = await lineAt(/^Gilbert Duane \(G6\) adds \+0 bleed \(= 2\)\.$/, 'Ann');
+        const bnc = await lineAt(/plays Deflection: the bleed is redirected to Ulla\.$/, 'Tor');
+        ok(h.inbox.indexOf(tot) < h.inbox.indexOf(bnc), '142e precondition: Ann bled Tor for 2 at stealth 1, Tor declined and bounced it to Ulla on the TOTAL (the late bounce, in Ann’s reactions-only window)');
+        let ver = null; try { ver = await lineAt(/^Block: Stealth 1 vs Intercept 1 — block succeeds\.$/, 'Ann'); } catch(e){}
+        const refused = h.inbox.some(m => m.t === 'chat' && m.who === 'Ann' && /blocks were declined this action/.test(String(m.msg)));
+        ok(!!ver && !refused, '142e Ulla blocks with Enhanced Senses and Ann takes the attempt up: "Block: Stealth 1 vs Intercept 1 — block succeeds." (v0.6.202: "blocks were declined this action", and the bleed vanished)' + (refused ? ' -- REFUSED' : ''));
+        await sleep(600);
+        const aEv = ev.Ann.filter(e => (e.t === 'bot:through' || e.t === 'bot:blocked') && e.d && e.d.vamp === 'Gilbert Duane (G6)');
+        ok(aEv.length >= 1 && aEv[0].t === 'bot:blocked' && !aEv.some(e => e.t === 'bot:through'), '142e ...Ann records the action as BLOCKED, never as through (got ' + JSON.stringify(aEv.map(e => e.t)) + ')');
+        ok(T2.pool === 2 && !h.inbox.some(m => m.t === 'log' && m.who === 'Ann' && /The bleed goes through: Ulla/.test(strip142(m.html))), '142e ...and no bleed lands on Ulla (pool ' + T2.pool + '): the block stopped it, in combat');
+        A.close(); T1.close(); T2.close(); h.ws.close();
+      }
+    }
+
 
 
     }

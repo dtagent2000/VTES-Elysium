@@ -6597,6 +6597,7 @@ class Bot {
         if(seat) this._actingVamp.target = seat;
         this._actingVamp.bounced = true;   // v0.6.144 (Johan): a bot very rarely pumps a bleed AFTER it was bounced (only a strong meta reason -- table talk a bot does not have)
         this._actingVamp.reactionsSeen = true;   // fas C: a bounce IS a reaction card played -- Perfectionist's clean-action test fails
+        if(seat) this._bouncedTo(seat);          // v0.6.203: the new target's block step, and the open ask follows the bleed
       }
       const mine = poolT ? (poolT === this.o.name)
                          : (!target && who === this.predName());     // spec §5 arming rule
@@ -6650,6 +6651,7 @@ class Bot {
       if(this.pending && (this.pending.who === who || (this.pending.actingVampName && this.pending.actingVampName === m[1]))){
         this.pending.amount = this.pending.reducedOnce ? Math.max(0, (this.pending.amount | 0) + parseInt(m[2], 10)) : parseInt(m[3], 10);   // T, the running total. v0.6.200 (point 15): after MY reduction the actor's '(= T)' still counts the bleed before it (a human's client, an older bot) -- the +N on top of the reduced amount is the rules' number; Viktor took 3 after Protected District said 'now 0'
         this.pending.contested = false;
+        if(((this.players || []).find(q => q && q.name === this.pending.who) || {}).bot) this.pending.declined = true;   // v0.6.203: a BOT actor plays a modifier only after its block question closed -- blocks are over, the reopened window takes reactions only (a Block! here is refused and used to cost the bleed). A human actor may be out of turn: the block stays mine to offer.
         this._reactWindow();                                         // every +X REOPENS the window
       }
       return;
@@ -7181,7 +7183,11 @@ class Bot {
       }
       if(phrase === 'Block!'){ this.pending.contested = true; return; }
       if(phrase === 'It resolves' && m.who === this.pending.who){
-        if(this.pending.contested){
+        const actorBot = !!((this.players || []).find(q => q && q.name === m.who) || {}).bot;
+        if(this.pending.contested && actorBot){   // v0.6.203 (the vanished bleed): a BOT actor declares the verdict of every attempt it takes up before it resolves (_askTimeout) -- its It resolves over my live attempt means the attempt was never taken up (refused in a reactions-only window, or it came after the window closed): the action resolved unblocked, and the bleed lands. Dropping it here made bleeds vanish.
+          this.o.log('my block attempt was not taken up by ' + m.who + ' \u2014 the action resolved unblocked');
+          this._applyPending("say 'It resolves' (attempt not taken up)");
+        } else if(this.pending.contested){
           this.chat('A block was announced but never resolved — if the bleed landed anyway, tell me "bleed ' + this.pending.amount + '".');
           this._clearPending('contested, unresolved');
         } else this._applyPending("say 'It resolves'");
@@ -7492,9 +7498,26 @@ class Bot {
                                      return this.hand[st.idx] === st.name || !!st.fromBoard; },
                               () => this._spendStealthCard(st, av, a));
   }
+  /* v0.6.203 (the vanished bleed, READ-ME-FIRST-2026-10-16c section 6): Deflection, Redirection, Telepathic Misdirection and My Enemy's
+     Enemy all say "Change the target of the bleed to ... (that Methuselah can attempt to block)". A bounce gives its new target a block
+     step of its own -- in whatever window of mine it landed. A late bounce (v0.6.144) lands in a reactions-only window, where the
+     v0.6.114 rule refused every Block!: the new target had shouted, its pending was contested, and on my It resolves it dropped the
+     bleed (21 in the 12 smoke matches of R2). The refusal stays for every other seat, and for everyone after a modifier. */
+  _bouncedTo(seat){
+    const av = this._actingVamp; if(!av || !seat) return;
+    av.blockStepSeat = seat;
+    const a = this._ask; if(!a || a.undirected) return;
+    a.target = seat;                                         // the open ask follows the bleed: status(), the roster hook and the tempo's who read it
+    if(this.tally && this.tally.mode === 'block' && (this.tally.b | 0) !== 0) this._writeTally({ mode: 'block', b: 0 });   // the old target's intercept is stale for the new one (the announce's own rule: b starts at 0); my stealth (a) stays -- it belongs to the action
+    const paused = !!(a.pausedBy && a.pausedBy.size);
+    if(!a.contested && !paused) this._restartAskTimer();     // a fresh clock for the new target (a bot bouncer's own Pass restarts it too)
+    const human = this._humanAt(seat);
+    if(human) this.chat('Trainbot: ' + av.v.name + ' now bleeds ' + human + ' for ' + (av.n | 0) + ' \u2014 ' + human + ' may block it (the bounce allows that), react, or say "no"' + this._waitTail(this._askPlan(a), 'resolves'));
+  }
+  _blockStepFor(who){ const av = this._actingVamp; return !!(av && av.blockStepSeat && who && who === this.seatName(av.blockStepSeat)); }
   _onBlockAttempt(who){
     { const a0 = this._ask;
-      if(a0 && a0.reactionsOnly){        // v0.6.114 (Johan): blocks were FINALLY declined before my modifier -- the block step is over, only reactions remain. Refuse out loud (the human may not have noticed), keep the window open for reduce/bounce/No reaction, never contest.
+      if(a0 && a0.reactionsOnly && !this._blockStepFor(who)){        // v0.6.114 (Johan): blocks were FINALLY declined before my modifier -- the block step is over, only reactions remain. Refuse out loud (the human may not have noticed), keep the window open for reduce/bounce/No reaction, never contest. v0.6.203: NOT the new target of a bounce -- the bounce cards say "(that Methuselah can attempt to block)", so its block step opens in whatever window the bounce landed (_bouncedTo)
         this.chat('Trainbot: blocks were declined this action \u2014 only reactions (reduce, bounce) remain. Say "no reaction" or play yours.');
         this._restartAskTimer();
         return;
@@ -8738,7 +8761,10 @@ class Bot {
           await this._resolveCombat(v);   // v0.6.22: multi-round wrapper (was the single-round primitive directly)            // M2: data-driven (strike/prevent), the acting vampire's own side (_resolveCombatRound places its own torpor slot); v0.4.5: now async (paces strike->prevent), already inside _playTurn so a direct await
         } else {
           if(act.name) this._toAsh(act.name);          // a resolved action card goes to the ash heap (public)
-          this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name || null });
+          /* v0.6.203: the 'through' emit (and the unblocked streak) moved to the resolution below. Emitted here -- before the modifier and
+             bleed-total windows -- it closed my block counter (_emit: mode null) and committed my parked cost while the action could still be
+             blocked: a bounce's new target blocks in those windows, and its verdict read stealth 0 from a fresh counter; a late block kept the
+             cost and the ledgers saw a bleed go through that never landed (the vanished bleed). */
           /* steg 2 (15 July, cardfx-persistent-lock-design-decisions.md §13): "all
              declined" opens MY OWN modifier window (Leverage's spot) -- each play
              sends a real L12.add re-announce (a receiving bot's _onLog already
@@ -8785,6 +8811,7 @@ class Bot {
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: this._actingVamp.n, by: this._lastBlockerName || curAns.who || null });
             await this._resolveCombat(v);   // v0.6.22: multi-round wrapper (was the single-round primitive directly)
           } else {
+            this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name || null, final: this._actingVamp.n | 0, bounced: this._actingVamp.bounced ? true : undefined });   // v0.6.203: emitted at the resolution -- n stays the announced amount (the tools read it so), `final` is what lands
             if(!this._actingVamp.edgeLocked && this._actingVamp.n >= 1) this._takeEdge();   // rulebook: a successful bleed gives the acting Methuselah the Edge. v0.6.200 (points 15 + 20): only a bleed of 1 or more is successful, and taking the Edge is SAID on the wire (edgeTake) -- the humans' clients kept their own Edge lit, two holders at once
             if(this._actingVamp.n >= 1) this._maybeLubomiraMark(v);   // VC: 'successfully bleeds' = bleed amount >= 1 (the rulebook's own definition) -- UNLESS a card played this action locks that out (Leverage, steg 4/16 July: "You cannot gain the Edge this action. If you would get the Edge, it is burned instead." -- steg 2 wrongly assumed burn-then-regrant was fine, corrected once the real card_text was available)
             this.say('It resolves');

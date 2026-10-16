@@ -2,7 +2,8 @@
 # ana-ledger.py <serie>... -- the two-sided ledger audit (v0.6.163 bug sweep): every effect that moves something between two bots must balance.
 #  1 bleed: each took-bleed pairs with an actor 'through' within 6 s (victim > actor only with the actor's modifier plays; victim < actor only with the victim's own reduction -- v0.6.200);
 #           and (v0.6.202) each bleed 'through' of 1+ pairs with a victim row within 8 s -- 'VANISHED' = a block attempt in the actor's reactions-only window was refused and the
-#           target dropped the bleed as 'contested, unresolved' (an open bug found by R2's smokes: after a late bounce the new target may block by the card text; after a modifier it may not)
+#           target dropped the bleed as 'contested, unresolved' (found by R2's smokes: after a late bounce the new target may block by the card text; after a modifier it may not).
+#           v0.6.203 fixed it (the new target's block step; a bot actor's It resolves lands an attempt it never took up; 'through' moved to the resolution, with `final`): the gate is 0.
 #  2 combat names: round-1 rows whose opponent is null / not the vampire that names me back
 #  3 combat numbers: my dealt vs the opponent's taken on reciprocal rows (prevent / Crows / combat ends explain the differences)
 #  4 steal: stole (stealer) vs stolenFromMe (victim) totals; v0.6.196: and PER ROUND -- each stealer row paired with its victim's row (a total can hide two errors behind one excuse: 'capping' hid the stealer gaining from an empty vampire)
@@ -17,7 +18,7 @@ for S in sys.argv[1:]:
             if r['type']=='took-bleed':
                 prev=[x for x in rows[max(0,i-60):i] if x['type']=='through' and x['bot']!=r['bot'] and x['data'].get('kind') in (None,'bleed') and r['t']-x['t']<6000]
                 if not prev: R['1 bleed: no actor row']+=1; continue
-                a=prev[-1]; diff=r['data']['n']-a['data'].get('n',0)
+                a=prev[-1]; diff=r['data']['n']-(a['data']['final'] if 'final' in a['data'] else a['data'].get('n',0))   # v0.6.203: 'through' is emitted at the resolution and carries `final` (what lands); older traces compare the announced n
                 mods=[p for p in plays if p['bot']==a['bot'] and a['t']-3000<=p['t']<=r['t']]
                 red=[p for p in plays if p['bot']==r['bot'] and p['data'].get('window')=='react-reduce' and a['t']-8000<=p['t']<=r['t']]   # v0.6.200: the target's own reduction (Protected District / Telepathic Misdirection class) -- honoured since R1, so a smaller hit is the rule working
                 R['1 bleed: equal' if diff==0 else ('1 bleed: more, actor modifiers' if diff>0 and mods else ('1 bleed: MORE, UNEXPLAINED' if diff>0 else ('1 bleed: less, target reduced' if red else '1 bleed: LESS, UNEXPLAINED')))]+=1
