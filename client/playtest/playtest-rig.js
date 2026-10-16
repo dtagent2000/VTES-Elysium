@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================
-   playtest-rig.js v1.1.0 (16 Oct 2026, client v2.6.162; v1.0.0 14 Oct, v2.6.158) -- play a REAL game against the bots
+   playtest-rig.js v1.1.1 (16 Oct 2026, client v2.6.162; v1.0.0 14 Oct, v2.6.158) -- play a REAL game against the bots
    ------------------------------------------------------------
    Starts the Elysium server, ONE headless Chromium tab (the human -- and, as the host, the tab
    the lobby's bots run in, exactly as on elysium.cards), records everything, and opens a small
@@ -14,7 +14,8 @@
      panel     the Bot Activity panel's status() per bot, sampled every 0.3 s, on change
      ask/askEnd  a bot started / stopped waiting on the human (from the panel), with the kind
      askArmed  v1.1.0: the moment that wait's clock first runs (the panel's countdown leaves the dash;
-               bot v0.6.204+ starts it when the question is sent, older bots when it was queued)
+               bot v0.6.204+ starts it when the question is sent, older bots when it was queued);
+               v1.1.1: only while the row still shows that ask (a wait answered before its clock has none)
      reflex    what the reflex said for the human (see below)
      dialog    the client's own dialogs the rig answered
    and a readable <out>/feed.txt (what the human saw: chat, phrases, log lines, turns, counters,
@@ -122,7 +123,8 @@ async function samplePanel(){
   if (!rows) return;
   const meRx = new RegExp('\\b' + ME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
   for (const r of rows) {
-    { const a0 = asks[r.bot]; if (a0 && a0.armT == null && r.left != null) { a0.armT = Date.now(); rec('askArmed', { bot: r.bot, kind: a0.kind, after: a0.armT - a0.t0, left: r.left }, 'CLOCK ' + r.bot + ': ' + r.left + 's');
+    { const a0 = asks[r.bot]; if (a0 && a0.armT == null && r.left != null && r.st === 'asking' && r.w === a0.w) {   // v1.1.1: only the ask still on the row -- the next row's countdown (e.g. 'reacting to You') is not this wait's clock
+      a0.armT = Date.now(); rec('askArmed', { bot: r.bot, kind: a0.kind, after: a0.armT - a0.t0, left: r.left }, 'CLOCK ' + r.bot + ': ' + r.left + 's');
         if (a0.waitClock) setTimeout(() => armReflex(r.bot, a0, 'clock'), policy.delayMs); } }   // v1.1.0: a fallback that waited for the clock fires delayMs after it starts   // v1.1.0: when the wait's clock starts (bot v0.6.204: once its question is sent)
     const sig = r.st + '|' + r.w + '|' + (r.step || '');
     if (panelLast[r.bot] === sig) continue;

@@ -6,8 +6,9 @@
 
 **16 Oct 2026, evening (THE VERDICT WAIT — v2.6.162):**
 - **A probe that drives a real bot must wait for the bot's own deal.** The bot's `dealt` handler resets `board`, `unc`
-  and the pending action. In one run of thirteen, the blocker my probe had pushed 1.5 s after `started` was gone, and the
-  bot said Pass instead of blocking.
+  and the pending action. In one run of fifteen the bot said Pass instead of blocking. The likely cause is that the
+  blocker my probe pushed 1.5 s after `started` was wiped by a later `dealt`. That is not proven: the run kept no
+  console.
   - Wait until `unc` and `hand` are filled.
   - Then check the precondition with the bot's own function (`_pickBlocker`) before acting.
 - **A check that waits for a bot's line must know the bot's pacing.** After a chat line the bot sends nothing for
@@ -25,6 +26,14 @@
   - A Python patch script written with Write had its `'\u2014'` already turned into '—'. That is harmless in a Python
     string, but wrong for a JS string that must keep the escape.
   - The test patch used a placeholder (`@u2014` → `chr(92) + 'u' + hex`).
+- **A sampler that credits an event to "the open item" must check that the item is still the one shown.** The rig's
+  clock detector gave a wait the next row's countdown when that wait had ended before its own clock started. The
+  review caught it, and rig v1.1.1 checks the row.
+- **Name the anchor of every delay you measure.** "Booked 4.96 s later" was 4.96 s after the bot's question, because the
+  probe typed 0.06 s after it. A `+1` typed at 3 s waits about 2 s. The bot's chat beat counts from its last chat line.
+- **An independent review finds what the author repeats.** Its report found nothing must-fix, but three should-fix
+  items: the manifest's claim about the guide, the rig's clock attribution, and the delay anchor. The delay anchor had
+  been written the same way in four documents.
 
 **16 Oct 2026, late afternoon (THE VISIT FROM ABOVE — v2.6.161):**
 - **A backstop must not swallow the real signal.** `setAside`'s 250 ms timer was there for a `transitionend` that never
