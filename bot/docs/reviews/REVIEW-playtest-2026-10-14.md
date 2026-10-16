@@ -208,6 +208,9 @@ Gates beyond the suite for R2: a series with the handshake integrity line at 100
 - **Pinned:** section 139, 43 assertions, one of them live on the real server; 32 red on v0.6.199, 11 guards green on both.
 - **Found by the R1 arena smoke, fixed:** Larissa's +1-bleed discard missed the acting record, so a bot target took 1 on her announced 2.
 - **Seen in the smoke, R2's:** one range disagreement (a maneuver to long the other bot never saw, F17a) and Roundhouse's taken 3 against dealt 2 (F18).
+- **Leads from the smoke for R2 / R3:**
+  - `ana-inv.py`'s strike-taken flags are mostly "my strike 1, the Ventrue opponent took 0", in v0.6.199 too. Likely Majesty or a prevention that lands before the strike is counted.
+  - `_doEquip` pays an equipment's pool cost with no event, so the invariant ledger drifts (seen with .44 Magnum, which the Tremere now keeps — point 22).
 - **Found in the review of the change, fixed:** the target dropped its Edge on any pool loss resolved through the asked window, so a human's referendum that cost the bot pool took its Edge. An undirected action never moves it now.
 - **Found while building, left open:**
   - the client writes no reduce line for a HUMAN's reduction, so a bot actor keeps its number and takes the Edge even at 0 (the human manages their own pool; a wish for main);

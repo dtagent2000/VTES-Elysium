@@ -10,7 +10,7 @@ Hittat under bygget: (0) i min egen granskning av ändringen: målet släppte si
 
 Handoff: `HANDOFF-to-main-2026-10-16-v0_6_200.md` — bryggan behöver relaya `edgeTake` nu, debugtooltipen och PLAYTEST.md:s Edge-rad är inaktuella, 15 okt-punkterna om debug står kvar.
 
-GATES-JOURNAL
+Grindar: sviten 1985/0 ×3 på slutbytena; kanariefågeln 57/0; HB1 11/0; hotseat 10/0; mains klientsvit med v0.6.200 bredvid 287/1 (den väntade inbäddningsdriften, alla 11 LIVE-bottester gröna); check-versions grönt. Arenarök (de fyra startdeckarna, Expert, pool 30): v0.6.200 mot v0.6.199 på seed 4001 (2 + 2 matcher) och 2 matcher till på slutbytena (seed 4002), inga timeouts; ledgern parar varje bleed (lika, mer genom aktörens modifierare, mindre genom målets egen reduktion), stöldparen lika; ana-inv 1 / 2 / 8 flaggor — mest "mitt slag 1, Ventrue-motståndaren tog 0" i båda versionerna, en rad i en Nosferatu-strid (stridsrundan, R2) och en pool-drift från en utrustnings poolkostnad som saknar händelse (`_doEquip`, äldre än den här releasen). Ny lead: Ventrue-mönstret och `_doEquip` till R2/R3.
 
 ## [SPELTESTET GRANSKAT + R0 — bot v0.6.198 → v0.6.199] (14–15 oktober 2026)
 

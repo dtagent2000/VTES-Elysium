@@ -37,7 +37,19 @@
 - **Tournament:** the bot reads the room's helper policy. It refuses debug at a Tournament table and leaves debug when the table turns Tournament.
 
 ## Gates
-GATES-README
+- `node --check` on every changed file; `ana-ledger.py` compiles.
+- Suite **1985/0 ×3** on the final bytes (srv-2.6.46).
+- Section 139 run alone: 43/0. Against v0.6.199 in a scratch directory: 32 red, the 11 guards green on both, no abort.
+- Canary **57/0** against v2.6.158 and protocol v2.6.158.
+- HB1 **11/0**.
+- Hotseat gate **10/0** against v2.6.158 (tally relayed, the net asleep).
+- Main's client suite with v0.6.200 beside it (copied in and removed again): 287 passed, 1 red — the expected embed drift for START-HERE-BOTS.html. All 11 LIVE bot tests green.
+- `check-versions.js`, root row: "everything agrees".
+- test-cardfx not run: the cardfx files are unchanged.
+- **Arena smoke** (the four starters, Expert, pool 30): no timeouts.
+  - v0.6.200 against v0.6.199 on seed 4001, 2 + 2 matches, then 2 more on the final bytes (seed 4002).
+  - `ana-ledger.py` on the final bytes: every bleed pairs — equal, more by the actor's modifiers, or less by the target's own reduction. The steal pairs are equal. The seed-4001 arm had found one unexplained short bleed (Larissa's lost +1), fixed since.
+  - `ana-inv.py`: 1 / 2 / 8 flags. Most are "my strike 1, the Ventrue opponent took 0", in both versions. The rest: one taken-above-dealt row in a Nosferatu fight (the combat round, R2), and one pool drift from an equipment's pool cost that has no event (`_doEquip`, older than this release).
 
 ## For main
 - Send `HANDOFF-to-main-2026-10-16-v0_6_200.md`:
