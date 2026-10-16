@@ -1,3 +1,59 @@
+## [ÖGAT] (16 oktober 2026, eftermiddag, klient v2.6.160)
+
+Johan, efter att v2.6.159 mergats: "i structured är det ju perfekt att lägga öga-symbolen bredvid poolen på samma ställe som
+edge-symbolen på det egna brädet". Och på min fråga: "Ja det kan vara utgråat/svagt om ingenting ännu finns i askhögen
+exempelvis och ingen hand visas absolut." Jag tog det som klartecken; förslaget var komplett och hans svar avgjorde den enda
+öppna frågan.
+
+**Byggt (v2.6.160, ren klient, purge; ingen wire-ändring).**
+- **Var:** ett öga på varje annan plats matta i Structured, i poolzonens hörn där ens eget Edge-märke sitter (scenens
+  0,94 × 0,668).
+  - Det ritas av `buildMat` och finns därför i helikoptervyn, kolumnerna och platsbesöket.
+  - Storleken är 32 px i mattans skala, aldrig under 10 px. Ögat ankras i sin högerkant, så golvet växer inåt.
+- **Vad:** klick, högerklick och långtryck ger raderna för det man får titta på (`oppLookItems`).
+  - Raderna är 👁 handen när den är öppen, 🜂 askhögen och 🔥 de brända korten.
+  - Poolens högerklick använder samma rader nu.
+  - Raderna gör ingen ångra-punkt (`noUndo`).
+- **Lägen (`mateyeState`):**
+  - svag när inget finns;
+  - på när askhögen eller de brända har kort;
+  - tänd när handen är öppen för dig.
+
+  Tänd är mässing, inte Edge-rött: rött i det hörnet betyder Edge på ens eget bräde.
+- En beviljan eller återkallan målar om ögonen i alla vyer (`mateyeSync`).
+- Ögat är en div utan tab-stopp (Tab hör till tangentkartan) och står i `BOARD_CHROME`. Klicket når inte mattan.
+- Classic är orört; globens högerklick har haft raderna sedan v2.6.28.
+
+**Kört i Chromium:**
+- en Debug-bot vid 1366×768, ögat tänt:
+  - besöket: 35 px, inuti poolrutan och 7,5 px från globen; raderna stämmer och handen (7) öppnas;
+  - helikoptervyn: 19 px;
+- fem platser: fyra ögon på 12 px, alla inuti rutan och fria från globen. Förstorat 4× läses mandeln och pupillen fortfarande,
+  efter att jag höjde glyfen från 64 till 72 %;
+- hjulet över ögat zoomar inte, medan samma hjul över mattan gör det (kontrollen);
+- en vanlig bot vid 1920×1080: ögat svagt vid given och på efter botens första askkort, 33 s senare.
+
+**Lärt av skriptet:**
+- Esc går Hem, så ett skript stänger menyn med `hideMenu()`.
+- I helikoptervyn panorerar bara bar filt (`e.target!==board`). Ett dragtest på en matta kan alltså inte bita, men hjultestet
+  kan.
+
+**Sett, inte ändrat:** vid ett platsbesök sitter ens EGEN pools ?-knapp (`#poolHelp`) i den besöktas poolzon.
+`body.invisit` döljer `#edge` och `#pseat`, men inte den. Det är Johans sak att avgöra.
+
+**Grindar:**
+- klientsviten 299/0; de 2 nya är röda på v2.6.159, och 12 av 12 mutanter fångas;
+- kanariefågeln 69/0, dispatch 68/0, protokoll 6/0, endpoint 24/0;
+- soak `--control` exit 0;
+- B1 byte-identisk;
+- embed `--check` på båda sidorna;
+- check-versions grön.
+
+**Otestat:**
+- pekskärm (långtrycket är den gemensamma vägen);
+- online i webbläsare (ögat läser samma pubar och beviljanden);
+- en Edge-token som en motståndare dragit just till hörnet (ögat ligger över tokens, z 7 mot 6, men det är inte prövat).
+
 ## [BRYGGAN SVARAR ÅT BÅDA HÅLLEN] (16 oktober 2026, klient v2.6.159)
 
 Johan: "Hejsan! Vi håller parallellt på med buggfixar och föräbttringar på bottsidan där vi sett ett antal saker vi

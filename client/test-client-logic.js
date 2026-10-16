@@ -4693,6 +4693,60 @@ testB('v2.6.159 LIVE: a REAL Debug bot at a hotseat -- its grant reaches the hum
     assert(L.text().includes('[Debugbot] Revelations: discard Govern the Unaligned.'), 'its discard command reaches me');
   } finally { L.restore(); b.close(); A.localTable = false; HB.reset([]); A.net.roster = []; A.net.hot = null; A.net.openHandFrom = {}; }
 });
+test('v2.6.160 the eye (Johan, the bot project\'s item 5): its state -- quiet until there is something to see, on with an ash heap or burned pile, gold (lit) while their hand is open to you -- and its rows are the pool menu\'s look rows, now pure UI (noUndo)', () => {
+  const A = loadClient(CLIENT);
+  A.localTable = false; A.net.openHandFrom = {};
+  A.net.boards = { 2: { who: 'Astrid', pub: { pool: 30, cards: [], counts: { hand: 7, library: 40, crypt: 8 } } } };
+  let st = A.mateyeState(2);
+  eq(st.cls, 'quiet', 'nothing to see yet: greyed'); eq(st.hand, null); eq(st.ash, 0); eq(st.burned, 0);
+  eq(st.title, 'Ash heap 0 · burned 0 — click to look');
+  A.net.boards[2].pub.cards = [{ id: 'b1', zone: 'burned', name: 'Bum' }];
+  eq(A.mateyeState(2).cls, 'on', 'a burned card is something to see');
+  A.net.boards[2].pub.cards.push({ id: 'a1', zone: 'ash', name: 'Deflection' }, { id: 'a2', zone: 'ash', name: 'Govern the Unaligned' });
+  st = A.mateyeState(2); eq(st.cls, 'on'); eq(st.ash, 2); eq(st.burned, 1);
+  A.net.openHandFrom[2] = [{ name: 'Computer Hacking', kind: 'lib' }, { name: 'Leverage', kind: 'lib' }, { name: 'Dodge', kind: 'lib' }];
+  st = A.mateyeState(2);
+  eq(st.cls, 'lit', 'their hand is open to me'); eq(st.hand, 3);
+  eq(st.title, 'Their hand is open to you (3) · Ash heap 2 · burned 1 — click to look');
+  const rows = A.oppLookItems(2);
+  eq(rows.map(r => r.label).join(' | '), '👁 Inspect their hand (3) | 🜂 View their ash heap (2) | 🔥 View their burned cards (1)');
+  assert(rows.every(r => r.noUndo === true && typeof r.fn === 'function'), 'look rows make no undo point (pure UI, T3b)');
+  const pool = A.oppPoolMenuItems(2).filter(x => x && x !== '-');
+  eq(pool.slice(0, 3).map(r => r.label).join(' | '), rows.map(r => r.label).join(' | '), 'the pool\'s right-click starts with the SAME rows (one builder)');
+  eq(pool[3].label, '⌖ Target their pool', 'then the pool target, as before');
+  const el = { className: '', title: '' };
+  A.mateyePaint(el, 2); eq(el.className, 'mateye lit'); assert(/^Their hand is open to you \(3\)/.test(el.title));
+  delete A.net.openHandFrom[2]; A.net.boards[2].pub.cards = [];
+  A.mateyePaint(el, 2); eq(el.className, 'mateye quiet', 'back to greyed');
+  const svg = A.mateyeSvg();
+  assert(/^<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="[^"]+"\/><\/svg>$/.test(svg), 'one path, currentColor (the v2.6.147 icon rule)');
+});
+test('v2.6.160 the eye: a grant or a revoke repaints every eye of that seat (the seat visit was the only repaint); and the eye sits on the mat as board chrome, at the pool zone\'s corner where your own Edge sits', () => {
+  const A = loadClient(CLIENT), D = A.__doc, saved = D.querySelectorAll;
+  A.localTable = false; A.net.openHandFrom = {}; A.net.view = 'ov';
+  A.net.boards = { 2: { who: 'Astrid', pub: { pool: 30, cards: [{ id: 'a1', zone: 'ash', name: 'Deflection' }], counts: { hand: 7, library: 40, crypt: 8 } } } };
+  const eyes = [{ className: 'mateye on', title: '' }, { className: 'mateye on', title: '' }], asked = [];
+  D.querySelectorAll = sel => { asked.push(sel); return sel === '.mateye[data-seat="2"]' ? eyes : []; };
+  try {
+    A.MP_HANDLERS.openHandGrant({ t: 'openHandGrant', seat: 2, from: 'Astrid', cards: [{ name: 'Dodge', kind: 'lib' }] });
+    assert(eyes.every(e => e.className === 'mateye lit'), 'both eyes of seat 2 lit (the helicopter mat and a column, say) (got ' + eyes.map(e => e.className) + ')');
+    A.MP_HANDLERS.openHandRevoke({ t: 'openHandRevoke', seat: 2, from: 'Astrid' });
+    assert(eyes.every(e => e.className === 'mateye on'), 'and back to on (an ash heap is still there)');
+    assert(asked.includes('.mateye[data-seat="2"]'), 'it looked the eyes up by seat');
+  } finally { D.querySelectorAll = saved; }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const bm = html.slice(html.indexOf('function buildMat('), html.indexOf('function l3geom('));
+  const i = bm.indexOf('if(!me && seat!=null){                                    // v2.6.160');
+  assert(i > 0, 'the eye block in buildMat, for another seat only');
+  const blk = bm.slice(i, bm.indexOf('(pub.tokens||[]).forEach', i));
+  assert(blk.indexOf('mateyePaint(ey, seat)') >= 0 && blk.indexOf('mateyeSvg()') >= 0, 'painted from mateyeState, drawn from the one SVG');
+  assert(blk.indexOf("X(cz.pl.x+cz.pl.w)-s*0.00807*bw-esz") >= 0 && blk.indexOf('Y(cz.pl.y)+s*0.023*bh') >= 0, 'in the pool zone\'s top right -- the own Edge marker\'s 0.94 x 0.668 of the stage');
+  assert(blk.indexOf("showMenu(oppLookItems(seat)") >= 0, 'it opens the look rows');
+  assert(blk.indexOf("addEventListener('click', look)") >= 0 && blk.indexOf("addEventListener('contextmenu', look)") >= 0 && /const look=e=>\{ e\.preventDefault\(\); e\.stopPropagation\(\);/.test(blk), 'a click and a right-click (or a long-press), and neither reaches the mat (no seat jump) or the quick-phrase fallback');
+  assert(blk.indexOf("createElement('div')") >= 0, 'a div like #edge: no tab stop (Tab is the keymap\'s)');
+  assert(A.isBoardChrome({ closest: sel => (sel.split(',').indexOf('.mateye') >= 0 ? {} : null) }), 'board chrome: a press on the eye never starts the L3 pan, the wheel never zooms');
+  assert(/\.mateye\.quiet\{ opacity:\.4; \}/.test(html) && /\.mateye\.lit\{ border-color:var\(--brass\);/.test(html), 'greyed when quiet, brass when lit');
+});
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){
