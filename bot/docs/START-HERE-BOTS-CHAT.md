@@ -42,7 +42,9 @@ steps (a card line or a frozen 'nothing' line), a watched bot-vs-bot combat is p
 combat moves, Roundhouse = strength + 2 (cardfx `handBonus`), two steals at once, and Smiling Jack / Fame oust in the
 bot's own unlock. Its own arena smokes found five more bugs, all fixed — among them an old one: per-combat state
 ('close next round', the round's range, Grapple's 'hand strikes only') outlived its combat; it now dies in
-`_resolveCombat`'s finally. Next: first consume main's replies of 16 Oct (client v2.6.159 / v2.6.160 built the Reduce
+`_resolveCombat`'s finally. The smokes also found an OLDER bug, not fixed in R2: a bleed bounced late and then
+blocked by its new target vanishes (READ-ME-FIRST-2026-10-16c §6 — a fix is proposed first; Johan decides). Then
+consume main's replies of 16 Oct (client v2.6.159 / v2.6.160 built the Reduce
 row, the bridge relays, the debug items and the eye — `client/docs/handoffs/REPLY-to-bot-2026-10-16-*.md`; the list
 of what we take is in the v0.6.202 handoff §5 and READ-ME-FIRST-2026-10-16c 'Next'). Then, in the order Johan set on
 16 Oct: R3 (clocks start when the question is sent, stale hold
