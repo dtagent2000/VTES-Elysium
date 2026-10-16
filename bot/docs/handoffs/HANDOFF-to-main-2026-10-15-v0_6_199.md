@@ -77,7 +77,7 @@ The tester plays offline or on his own server, never on elysium.cards. Read on v
 | --- | --- |
 | R1 | Rules and deadlocks: points 8, 9, 1 (the right to block a directed action), 15, 20, 22, the Creeping Sabotage count, the steal wording, the debug flags |
 | R2 | The bot-vs-bot combat handshake (16, 17, 7), the range correction only from my own human opponent, a hold stops my own combat moves (5), Roundhouse's damage (18) |
-| R3 | A clock starts when its question reaches the wire (3, 11); stale hold lines are dropped (4); a verdict wait when a bot blocks without a card (10); one spokesbot (1, 2); tempo levers (12, 13) |
+| R3 | A clock starts when its question reaches the wire (3, 11); stale hold lines are dropped (4); a verdict wait when a bot blocks without a card (10); one spokesbot for table remarks (2) — the pool question stays per bot, it is each bot's stake for the vote (Johan, 16 Oct); tempo levers (12, 13) |
 | R4 | The six uncurated V5 masters (23); Revelations against a bot (21) |
 
 **When R1–R3 are in, could you run the same scenario in your rig on our bot branch** (or we run it with `--dir`) and compare with the 14 Oct numbers?

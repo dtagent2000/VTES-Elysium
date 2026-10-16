@@ -50,7 +50,7 @@
 - **Probe:** with no aim, a vampire aim or a bare card action both bots ask the pool question; Viktor (the actor's PREDATOR) opens a `role:'target'` window and says `Block!` when he holds intercept; without intercept he loses 2 pool on the actor's "It resolves" (20 → 18).
 - **Rules (KRCG):** Revelations [aus] is Ⓓ (directed at the prey: only the prey may block); [AUS] puts the card in play with no Ⓓ (undirected: prey and predator may block). The right to block follows the MODE's direction, not the card name.
 - **Fix (rules, unconditional):** store the target on `_obs` (` Target: (.+?)'s `), carried to a following line from the same vampire; for a directed action only the target may ask or block, with the actor's prey as the default when no suffix; every other bot stays silent, without even "No block".
-- **The chorus (debt 23c):** `_isSpokesBot()` (7607) exists (lowest-seated bot; greeting 1107, bare `help` 7568) but does not skip ousted / vacant seats (probe: an ousted Hanna is still the spokesbot). Decision change for R3: the spokesbot asks the pool question; the others arm `_pq` silently and take the same answer.
+- **The chorus (debt 23c) stays for political actions — Johan, 16 Oct:** the pool question's answer is each bot's own STAKE, and a human-called referendum is voted on it (`stake = pending.amount` or `_obs.poolLoss`, 3124–3125: votes against only when the stake is > 0), so a shared answer would vote every bot as if it had the same stake. Every bot keeps its own question at a political action until a better way to allocate the pool loss is worked out (an idea for later: one question with per-seat answers, "Hanna 3, Viktor 0"). At a DIRECTED action only the target asks (the rules fix above, R1). `_isSpokesBot()` (7607; greeting 1107, bare `help` 7568) is kept for remarks that are the same for everyone (F2) and must skip ousted / vacant seats (probe: an ousted Hanna is still the spokesbot).
 - **Test:** three bots and a human; "Meaghan takes a card action. Target: S2's Lauren." then say 8 — only S2 asks; S3 / S4 keep their pool after "It resolves" (red on v0.6.198).
 
 ### F2 — the same remark twice (confirmed, three sources)
@@ -184,19 +184,21 @@ An audit like the others (client v2.6.158, srv-2.6.46, bot v0.6.198), reproduced
 | Round | Content | Size |
 | --- | --- | --- |
 | **R0** (v0.6.199, 15 Oct) | the read-only copies (client v2.6.158, srv-2.6.46, protocol); the guide (main's §F, Release hold per bot, curated → covered, the taken line is a report, versions); the data lines (root + bot CLAUDE.md, README, SKILLS, `bot/.gitignore`); `_openSlot` bounded; this review | small |
-| **R1** | F8, F9, F1 (the right to block), F15, F20 (+ handoff for the bridge), F22 (incl. Johan's Theft of Vitae case), Creeping ×3, the F19 wording; debug: `--debug` on the command line with a Tournament refusal, the open hand to human seats only (E) | medium |
+| **R1** | F8, F9, F1 (the right to block), F15, F20 (+ handoff for the bridge), F22 (incl. Johan's Theft of Vitae case), Creeping ×3, the F19 wording; debug: `--debug` on the command line with a Tournament refusal, the open hand to human seats only (E — Johan 16 Oct: debug is for humans only) | medium |
 | **R2** | the bot-vs-bot step handshake (F16, F17a, F7's "does not press"); the range correction only from my human opponent (F17b); `_holdGate` in every step (F5); pacing bot-vs-bot combat when a human is seated (F7); the Roundhouse class `handBonus` (F18); the double-Theft edge case (F19) | larger |
-| **R3** | the clock starts when the question leaves the queue (F3, F11); stale hold lines dropped (F4); the blocker's verdict wait (F10); one spokesbot for remarks and the pool question (F1 chorus, F2); the tempo levers (F12, F13) | largest risk |
-| **R4** | the six masters curated; the coverage tool's master rule; Revelations against a bot (F21) | medium |
+| **R3** | the clock starts when the question leaves the queue (F3, F11); stale hold lines dropped (F4); the blocker's verdict wait (F10); one spokesbot for table remarks (F2 — the pool question stays per bot, Johan 16 Oct); the tempo levers (a)–(d) of F12 / F13, not Adaptive's skip under Standard | largest risk |
+| **R4** | the six masters curated (Haven Uncovered: not played until the bot can rush through it, then on an opponent's vampire — Johan 16 Oct); the coverage tool's master rule; Revelations against a bot (F21) | medium |
 
 Gates beyond the suite for R2: a series with the handshake integrity line at 100 % (`ana-combat2.py`) and `ana-ledger.py`. After the rounds: the same scenario in main's rig (`client/playtest/`, `--dir` on a scratch copy of the root with the bot branch), compared with the 14 Oct report's numbers.
 
 **For main (`HANDOFF-to-main-2026-10-15-v0_6_199.md`):** the offline open hand (`openHandCardsFor`), `botDebugAllowed()` online, the Debug row's first draw, stale `net.openHandFrom`, the ash pile / hand on the mat; the bridge relays `edgeTake` (R1); offline `revealHand` / `logTo` for Revelations (R4).
 
-## Open with Johan
-1. The order of R1–R4 (proposed as above; R3 before R2 if the flow towards the human weighs more than combat between bots).
-2. Pacing bot-vs-bot combat when a human is seated (≈15 s per round instead of a 2 s burst and 19 s of silence).
-3. Adaptive's rules-strict step skip under Standard too (redefines Standard).
-4. One spokesbot asks the pool question; the others listen silently.
-5. Haven Uncovered: hold it until a rush consumer exists, or play it on an opponent's vampire now.
-6. The rig: run it ourselves with `--dir`, or ask main to run the scenario.
+## Decided with Johan (16 Oct)
+1. **The order:** R1 → R2 → R3 → R4.
+2. **Bot-vs-bot combat is paced** step by step when a human is seated (R2); the arena at paceMs 0 is untouched.
+3. **Adaptive's skip stays in Adaptive;** Standard keeps asking every question (the rules-safe levers (a)–(d) in R3 only).
+4. **The pool question stays per bot** at political actions — its answer is the bot's stake and its vote. Only a directed action narrows it to the target (R1). A better allocation (per-seat answers in one question) is for later.
+5. **Haven Uncovered:** not played until the bot can rush through it, then on an opponent's vampire (R4).
+6. **The rig:** we run the scenario ourselves with `--dir` once R1–R3 are in; main can repeat it on the root bundle after the release.
+7. **A hold stops the bot's own combat moves too,** not only the clocks (R2).
+8. **Debug is for humans only:** the debug bot's open hand goes to human seats, not to the other bots (R1).
