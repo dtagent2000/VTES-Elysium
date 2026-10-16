@@ -60,9 +60,20 @@ på v2.6.158 med samma skript.
     ett Hold on ger tiden.
 - **Kontrollen av Edge** fick vänta på botens takt: botens flagga slår om innan dess `edgeTake` lämnar sändkön.
 
-**Förslag, väntar på "kör":** punkt 5, att hitta handen och askhögen. (c) Tooltips som säger det, tillsammans med (a) ett
-👁-märke vid platsens pool där handen är öppen för dig. Jag avråder från (b), en ritad askhög; den får inte plats på en
-Structured-matta.
+**Förslag:** punkt 5, att hitta handen och askhögen. (c) Tooltips som säger det, tillsammans med (a) ett 👁-märke vid
+platsens pool där handen är öppen för dig. Jag avråder från (b), en ritad askhög; den får inte plats på en Structured-matta.
+
+**Johan, efter leverans: låt båda vila, följ upp när de blir aktuella.**
+- **Var askhögen syns i dag** (läst i koden):
+  - Ingen matta ritar en motståndares askhög. `buildMat` ritar Ready Region, Uncontrolled, Torpor och poolen; askhögen
+    som syns i dockan är ens egen.
+  - Motståndarens askhög nås från högerklicksmenyn på hens pool, i alla vyer: mattans poolruta, "Pool N" vid ett
+    platsbesök och Table-panelens rad.
+  - På Classic nås den från poolglobens högerklicksmeny, sedan v2.6.28, och där står 👁 Inspect their hand överst när
+    handen är öppen för dig.
+- **Johans idé till senare:** en 👁-ikon per motståndare med en undermeny över det man får titta på (hand, askhög, annat).
+  Avgörs när bottarna behöver det.
+- **Reduce vid hotseat:** kamerafrågan (⌂ Home först medan en bot agerar) följs upp om den blir aktuell.
 
 **Grindar:**
 - klientsviten 297/0;

@@ -11,7 +11,7 @@
   items of 15 Oct (§3, items 1–4).
 - **Recorded in `ELYSIUM-PROTOCOL.md`:** §12 has the client's Reduce line and your two DEBUG lines. A new §12.2
   lists what the hotseat bridge relays.
-- **Item 5 (the wish):** a proposal for Johan, not built (§5).
+- **Item 5 (the wish):** parked by Johan for now; a follow-up, not built (§5).
 - **One finding in your hotseat tool, found while checking the bridge:** a combat tally could not run in the
   lifted bridge. We fixed our side; see §6 for yours.
 - **No new wire verb.** The server is unchanged. The new frozen line rides the `log` verb.
@@ -84,7 +84,7 @@
   Both are log tier. Our canary checks that your `L12.debugOn` and `L12.debugOff` parse the documented samples.
 - **§12.2:** the bridge table above, and the lift contract in §6.
 
-## 5. Item 5, the wish: finding the hand and the ash heap (a proposal; Johan decides)
+## 5. Item 5, the wish: finding the hand and the ash heap (parked by Johan, 16 Oct)
 **What players meet today:**
 - Both items live only in a seat's pool menu. That menu opens from the seat visit's pool, the helicopter view's mat,
   the Classic globe and the Table panel row.
@@ -99,6 +99,11 @@
 
 **Our recommendation to Johan:** (c) together with (a). We would leave out (b): a drawn pile does not fit a
 Structured mat, and a chip says little the menu does not.
+
+**Johan's decision (16 Oct): not now; a follow-up when it becomes relevant.** As your note says, both items already sit
+in the right-click menu of an opponent's pool in every view (the Classic globe since v2.6.28), and no mat draws an
+opponent's ash heap. His idea for later is one 👁 icon per opponent with a submenu of what you may look at (hand, ash
+heap, anything else), decided when the bots need it.
 
 **Nothing for you either way:** the hand still comes from your grant.
 
