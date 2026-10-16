@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.204'; // v0.6.204 (16 Oct 2026, R3 proper of the 14 Oct play-test review, Johan's 'Kor pa!' of 16 Oct): (1) F3 / F11 -- a wait's clock starts when its question is ON THE WIRE: every wait on a human (the block / reaction window, the pool question, the vote poll, the seven combat steps, the damage step, the late-bounce grace, the new verdict wait) armed when its question was QUEUED, and at the client's pace each chat ahead of it costs ~5 s -- a 6 s step reached the wire with 1.5 s left, and the block window put the queue on its clock as a 'settle' (3 s announced, 8.2 s real). Now no clock arms while a line of mine is still queued (_wireWait / _afterWire: _drain starts the waits armed on a line right after it is sent): no deadline before that (status() until: null; an answer still counts), the settle is gone, the number a question announces IS its clock, and t0 (the wait row, Adaptive's answer time) starts on the wire. (2) F4 -- the hold and resume lines go to the HEAD of the queue, tagged with the hold state they describe (chat(msg, { hold })); _drain drops a line the table has moved past (a resume during the next hold, a hold after its release, a resume of a hold never seen). (3) F10 -- when I block a HUMAN's action, one line says it is their move ('X blocks (stealth A vs intercept B) -- add stealth, or say Pass to resolve it' + the clock); on the tempo's clock (kind 'verdict'), the actor's Pass / It resolves or the Bot button (rung 'resolve-verdict') I declare the verdict from the counter and go on as the table would (_verdictAsTarget: combat, or the window again) -- the actor's It resolves over a counter that says my block fails lands the action at once (no second window after their word); the actor's counter move (or a stealth typed in chat) and my own second intercept restart it; a hold freezes it. (4) F2 -- one spokesbot (an ousted bot no longer is one); the archetype read from it alone, on the log tier, held while a question, contest, combat or live counter (block / vote / combat) is open; the actor's notes that repeated its Misdirection / Fame / Pentex play line are gone. (5) F6 -- against a BOT actor at the client's pace a bot target's 'Hold on...' waits for the actor's question (it came 0.2 s before it); against a human, and at paceMs 0, unchanged. (6) F12 / F13 levers: (a) no second beat before 'Phase: Unlock.'; (b) a phase line rides the short fx beat; (c) a phased combat's summaries on the log tier; (d) the 'Anything before ...' steps wait 1 x the slider (the maneuver, the strike and the presses keep 2 x). Section 145 (35; 4/31 on v0.6.203, no abort).
+const BOT_VERSION = '0.6.205'; // v0.6.205 (16 Oct 2026, R4 of the 14 Oct play-test review with the dodge, one PR -- Johan, 16 Oct): (1) THE DODGE (Johan 16 Oct 17:47 + 18:06; knob dodgeOut, default 1, 0 = v0.6.204's rule): a dodge answers what the opposing strike does to me (damage + steal; their crows land anyway) against what MY strike would deal this round (_strikePick: the steal, card, weapon or fist the round really plays -- cut out of the strike choice and played by it; 0 at long range with fists): a known strike of 2+ that is more than mine is dodged, an equal one only with two dodges in hand; an unknown one (I strike first) on the expected strike Majesty reads (_expOppStrike; combatEndStats 0 keeps blood <= 1); aggravated and the survival rule as before; the floor of 2 holds at a tie too (Johan's open question A). (2) F21, Revelations against a bot: armed when the actor's prey is me, whatever the line's suffix (a vampire aim, no aim and a bare play line armed nothing); after the reveal a HUMAN actor is told how to pick, and the pick is read from their targeting logTo or a typed 'discard CARD' -- once, until the turn ends. (3) F23, the six V5 masters curated (99 -> 105): The Labyrinth locks for +1 stealth to a Nosferatu; Guardian Angel on my sturdiest ready vampire (+1 intercept on a bleed at me, prevent 1 each combat, burned at the host's torpor); Wasserschloss Anif banks 1 blood a master phase from a Tremere that can spare it (decide 'bank-in') and pays out at my influence phase onto an uncontrolled Tremere; Haven Uncovered only on the vampire a rusher of mine would rush THIS turn through it (decide('action')'s own pick -- found by the release's own smoke), and any minion of mine may rush its host through it (+1 stealth, no lock, the rusher acts; frozen 'VAMP enters combat with OWNER's HOST (Haven Uncovered).'); Elder Library and Ventrue HQ as they were. (4) Found on the way: Arcane Library's influence lock never fired in play; a vampire already at capacity in the uncontrolled region never rose -- it rises free now. Sections 146-149 (65; on v0.6.204: 4/12, 6/6, 5/18, 1/13).
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -3084,23 +3084,31 @@ class Bot {
   _noteTurnAct(v, act){ const s = (this._turnActs = this._turnActs || {})[v.id] = (this._turnActs[v.id] || new Set());
     if(!act.kind || act.kind === 'bleed') s.add('bleed'); if(act.kind === 'political') s.add('political');
     if(act.name && typeof act.idx === 'number') s.add('card:' + FX_NORM(act.name)); }
+  _actionCtxFor(v, over){            // v0.6.205: the minion phase's action ctx for v -- ONE builder for the minion loop and the Haven Uncovered play's look ahead (over.rush: a rush that does not exist yet). Every finder here is side-effect free; the rush finders are asked quietly by a look ahead (no counterfactual row)
+    const rush = (over && Object.prototype.hasOwnProperty.call(over, 'rush')) ? over.rush : this._bestRushFor(v);
+    return { plain: { n: 1 + this._cryptBleedBonus(v) }, card: this._bestBleedCardFor(v), pd: this._bestPoolDmgActionFor(v), pol: this._bestPoliticalFor(v), stock: this._bestBloodStockFor(v), peek: this._bestPeekFor(v), equip: this._bestEquipActionFor(v), fetch: this._bestFetchFor(v), rush, creep: this._bestCreepFor(), strength: this._bestStrengthFor(v), recruit: this._bestRecruitFor(v), enemyRescue: this._bestEnemyRescueFor(v), ownRescue: this._bestOwnRescueFor(v), readyCrypt: this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready').length, edge: this.edge };   // fas B: edge in the ctx -- the arena traces need it to distinguish 'Dirt unfound' from 'Edge not held' (in 2-player the opponent's intervening bleed usually reclaims it, so Dirt windows are rare and PRECIOUS)   // VA: plain bleed carries the Lenny-class crypt bonus from birth
+  }
   _decideAction(v, ctx){
-    const done = this._turnActs && this._turnActs[v.id];
+    this._actionCtxAdjust(v, ctx, false);
+    const choice = this.decide('action', ctx);
+    if(choice.pick && choice.pick.illegal) return { pick: null, why: 'already bled this turn and nothing else worth doing \u2014 stays home (one bleed per minion per turn)' };
+    return choice;
+  }
+  _actionCtxAdjust(v, ctx, ahead){   // the turn's own corrections to the finders' ctx (v0.6.129 ledger, v0.6.143 probe and hold-the-Govern). v0.6.205: ahead = a look ahead from the master phase -- the ledger and the probe describe a minion phase not yet begun (the ledger still holds LAST turn's acts until it starts), so only the hold applies
+    const done = !ahead && this._turnActs && this._turnActs[v.id];
     if(done && done.size){
       Object.keys(ctx).forEach(k => { const c = ctx[k]; if(c && typeof c === 'object' && c.name && typeof c.idx === 'number' && done.has('card:' + FX_NORM(c.name))) ctx[k] = null; });
       if(done.has('political')) ctx.pol = null;
       if(done.has('bleed')){ ctx.card = null; ctx.plain = { n: 0, illegal: true }; }
     }
-    if(this._probe && v.id !== this._probe.puncherId && ctx.card && (ctx.card.n | 0) >= 2 && this.board.some(c => c && c.id === this._probe.puncherId && c.zone === 'ready' && !c.locked)){   // v0.6.143: a prober bleeds small -- the heavy card waits for the puncher
+    if(!ahead && this._probe && v.id !== this._probe.puncherId && ctx.card && (ctx.card.n | 0) >= 2 && this.board.some(c => c && c.id === this._probe.puncherId && c.zone === 'ready' && !c.locked)){   // v0.6.143: a prober bleeds small -- the heavy card waits for the puncher
       ctx.cardReserved = ctx.card.name; ctx.card = null; }
     if(this.o.stealthStack !== 0 && ctx.card && (ctx.card.n | 0) >= 2 && !(ctx.card.st | 0)){   // v0.6.143 HOLD THE GOVERN (Johan): a heavy bleed with NO stealth in hand into a prey with a body up is a card thrown at a blocker -- a weight, not a ban ('room to hold back')
       const up = this._preyUnlockedN(), stk = this._stealthStack(v, new Set());
       if(up > 0 && stk.S === 0){ const pT = this._pBleedThrough(); const w = +Math.max(0.4, Math.min(1, pT / 0.7)).toFixed(2);   // v0.6.143b: the weight IS the statistic -- at the prior (0.7 through) nothing is held, at 0.3 through the card is worth x0.43
         if(w < 1) ctx.holdBleed = { up, w, why: 'no stealth in hand, my prey has ' + up + ' unlocked ' + (up === 1 ? 'body' : 'bodies') + ' and lets ' + Math.round(pT * 100) + ' % of my bleeds through' }; }
     }
-    const choice = this.decide('action', ctx);
-    if(choice.pick && choice.pick.illegal) return { pick: null, why: 'already bled this turn and nothing else worth doing \u2014 stays home (one bleed per minion per turn)' };
-    return choice;
+    return ctx;
   }
   oppIntercept(seat){                // v0.6.129: the intercept this seat has actually shown per block attempt, blended with a 0.5 prior (weight 2) -- public lines only
     const o = this._opp(seat); return (0.5 * 2 + (o.icpSum | 0)) / (2 + (o.blockTries | 0)); }
@@ -3998,11 +4006,24 @@ class Bot {
     return out;
   }
   _havenOnName(name){ const r = this._havenSeen && this._havenSeen[name]; return !!r && this._havenHosts().some(h => h.name === name); }
-  _havenHostPick(){                  // v0.6.205 (R4, F23; Johan, 16 Oct: 'not played until the bot can rush through it, then on an opponent's vampire'): the vampire my rush chooser would rush this turn -- a ready, unlocked rusher of mine with blood, its best target by the rush doctrine's weights; null = hold the card
+  _havenHostPick(){                  // v0.6.205 (R4, F23; Johan, 16 Oct: 'not played until the bot can rush through it, then on an opponent's vampire'): the vampire one of my ready, unlocked rushers would rush THIS turn through it -- its best target by the rush doctrine's weights, AND the rush through the Haven is the action that rusher would choose now; null = hold the card
     let best = null;
     (this.board || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && (c.blood | 0) > 0).forEach(v => {
       const t = this._bestRushTargetFor(v, { quiet: true, filter: c => !(this._havenSeen && this._havenSeen[c.name] && this._havenOnName(c.name)) });   // never a second Haven on one host
-      if(t && (!best || t.w > best.w)) best = Object.assign({ rusher: v.name }, t); });
+      if(!t || (best && !(t.w > best.w))) return;
+      /* Found by this release's own smoke (seed 4005): a target alone is not a rush. The Haven went on a vampire, then its rusher
+         equipped Raven Spy (permanents first, 98) -- and a plain bleed outscored the rush anyway (1.2 vs 1.1). The Haven is played
+         only when the rush through it is what decide('action') would pick for this rusher now: the minion loop's own ctx
+         (_actionCtxFor) with the Haven's rush in it, the hold-the-Govern weight applied (_actionCtxAdjust ahead), the scorer
+         without its trace row. A rush card on a better target, or a Haven already on the table that does as well, needs no new one. */
+      const hv = { idx: null, name: 'Haven Uncovered', kind: 'rush', via: 'haven', target: t, lockTarget: false, st: 1, n: 1, exp: this._rushExpectation(v), myBlood: v.blood | 0 };
+      const card = this._bestCardRushFor(v, { quiet: true }), old = this._bestHavenRushFor(v);
+      if(card && (card.target.w || 0) > (t.w || 0)) return;
+      if(old && (old.target.w || 0) >= (t.w || 0)) return;
+      const ctx = this._actionCtxAdjust(v, this._actionCtxFor(v, { rush: hv }), true);
+      const out = this._decide('action', ctx);
+      if(!(out && out.pick === hv)){ this.o.log('haven (' + v.name + ' -> ' + t.name + '): the rush would not be my action -- ' + ((out && out.why) || 'no pick')); return; }
+      best = Object.assign({ rusher: v.name, why: out.why }, t); });
     return best;
   }
   _bestHavenRushFor(vamp){           // v0.6.205 (R4, F23): 'Minions can enter combat with this vampire as a +1 stealth (D) action.' -- the rush through a Haven Uncovered on the table, chosen by the same doctrine as a rush card (direction weights, torpor reach, the chump lesson); no card leaves the hand (idx null), the Haven stays
@@ -4017,14 +4038,14 @@ class Bot {
     if(hv && (!card || (hv.target.w || 0) >= (card.target.w || 0))) return hv;
     return card;
   }
-  _bestCardRushFor(vamp){            // N2: a usable rush card (fx.rush) + a live target (v0.6.204's _bestRushFor, renamed)
+  _bestCardRushFor(vamp, ro){        // N2: a usable rush card (fx.rush) + a live target (v0.6.204's _bestRushFor, renamed; v0.6.205: ro passed to the targeter -- { quiet } for a look ahead)
     if(!this.fx) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('action')) continue;
       let ok2 = false, lockT = false;
       (h.e.modes || []).forEach(mo => { if(mo.fx && mo.fx.rush && this._modeUsableBy(mo, vamp)){ ok2 = true; if(mo.fx.lockTarget) lockT = true; } });
       if(!ok2) continue;
-      const target = this._bestRushTargetFor(vamp);
+      const target = this._bestRushTargetFor(vamp, ro);
       if(!target) return null;
       return { idx, name: h.name, kind: 'rush', target, lockTarget: lockT, st: 0, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 };   // v0.6.74: the expectation rides the pick
     }
@@ -8812,7 +8833,7 @@ class Bot {
           this._flushDraws();
           continue;
         }
-        const choice = this._decideAction(v, { plain: { n: 1 + this._cryptBleedBonus(v) }, card: this._bestBleedCardFor(v), pd: this._bestPoolDmgActionFor(v), pol: this._bestPoliticalFor(v), stock: this._bestBloodStockFor(v), peek: this._bestPeekFor(v), equip: this._bestEquipActionFor(v), fetch: this._bestFetchFor(v), rush: this._bestRushFor(v), creep: this._bestCreepFor(), strength: this._bestStrengthFor(v), recruit: this._bestRecruitFor(v), enemyRescue: this._bestEnemyRescueFor(v), ownRescue: this._bestOwnRescueFor(v), readyCrypt: this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready').length, edge: this.edge });   // fas B: edge in the ctx -- the arena traces need it to distinguish 'Dirt unfound' from 'Edge not held' (in 2-player the opponent's intervening bleed usually reclaims it, so Dirt windows are rare and PRECIOUS)   // VA: plain bleed carries the Lenny-class crypt bonus from birth
+        const choice = this._decideAction(v, this._actionCtxFor(v));   // v0.6.205: the ctx builder is _actionCtxFor (shared with the Haven Uncovered play's look ahead)
         const act = choice.pick; this.o.log('action (' + v.name + '): ' + choice.why);
         if(!act){ this._emit('stays-home', { vamp: v.name, why: 'no legal action left this turn' }); continue; }   // v0.6.129: everything it could do, it has already done this turn
         this._noteTurnAct(v, act);

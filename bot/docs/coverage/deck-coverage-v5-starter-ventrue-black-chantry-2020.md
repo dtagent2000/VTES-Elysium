@@ -1,6 +1,6 @@
-# deck-coverage — V5 Starter — Ventrue (Black Chantry 2020) (2026-09-18)
+# deck-coverage — V5 Starter — Ventrue (Black Chantry 2020) (2026-10-16)
 
-Genererad av `gen-deck-coverage.js` v1.1.34 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-ventrue.json.
+Genererad av `gen-deck-coverage.js` v1.1.38 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-ventrue.json.
 
 Syfte: göra "kan botten spela den här leken?" till en mekanisk kontroll — curated-djup och
 handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPPORT, inte en gate.
@@ -17,10 +17,10 @@ Per verdict: FULL 77
 
 ## Konsumtionsläget (skannat ur bottens källa vid körning)
 
-- Spel-nycklar botten läser: `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bloodPerMargin`, `bounce`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `intercept`, `jackEngine`, `lockMinion`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `stealth`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
-- Fas-inkomst (kräver `phase` på moden): `bloodToPool`, `handCycle`, `handSize`, `handSizePerCounter`, `poolGain`, `poolToBlood`, `rescueTorpor`, `transferBurnPool`, `transferSwap`
+- Spel-nycklar botten läser: `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bloodPerMargin`, `bounce`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockMinion`, `lockStealth`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `rushGrant`, `stealth`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
+- Fas-inkomst (kräver `phase` på moden): `bankIn`, `bankOut`, `bloodToPool`, `handCycle`, `handSize`, `handSizePerCounter`, `poolGain`, `poolToBlood`, `rescueTorpor`, `transferBurnPool`, `transferSwap`
 - Hotläsning (motståndarkort, gör ALDRIG egna kort spelbara): `bloodBurn`, `poolDmg`, `stealBlood`
-- ⚠ OKLASSADE nycklar hittade i botkällan (uppdatera CLASS-kartan i verktyget): `bleedBonus`, `bleedBoostDiscard`, `bleedNullify`, `blockNotOlder`, `burnAtDamage`, `burnCap`, `burnOnTorpor`, `enterPlay`, `equip`, `interceptMod`, `noHuntStealth`, `noUnlockAfterTitledBleed`, `selfUnlock`, `stealthMod`, `strengthMod`, `voteBoostDiscard`, `voteTaxAgainst`
+- ⚠ OKLASSADE nycklar hittade i botkällan (uppdatera CLASS-kartan i verktyget): `bleedBonus`, `bleedBoostDiscard`, `bleedNullify`, `blockNotOlder`, `burnAtDamage`, `burnCap`, `burnOnTorpor`, `enterPlay`, `equip`, `interceptMod`, `interceptPaid`, `noHuntStealth`, `noUnlockAfterTitledBleed`, `payBlood`, `preventX`, `ranged`, `referendum`, `selfUnlock`, `stealthMod`, `strengthMod`, `voteBoostDiscard`, `voteTaxAgainst`
 
 ## Bibliotek (23 unika, 77 kopior)
 
@@ -31,7 +31,7 @@ Per verdict: FULL 77
 | Information Highway | 1 | FULL | — | curated · persist · actGrant |
 | Misdirection | 1 | FULL | [—] lockMinion → ✓(lockMinion)/✓ | curated |
 | Uptown Hunting Ground | 1 | FULL | [—] bloodAdd,bloodAddTo → ✓(bloodAdd@hunting-ground)/✓ | curated · persist |
-| Ventrue Headquarters | 1 | FULL | [—] votes → ✓(votes)/✓ | auto · persist |
+| Ventrue Headquarters | 1 | FULL | [—] votes → ✓(votes)/✓ | curated · persist |
 | Visit from the Capuchin | 1 | FULL | [—] handSizePermanent,handSizePerCounter,replaceBurnsCounter → ✓(handSizePerCounter@permanent)/✓ | curated · persist |
 | Wider View | 2 | FULL | [—] transferSwap,transferCost → ✓(transferSwap@influence-loop)/✓<br>[—] transferBurnPool,transferCost → ✓(transferBurnPool@influence-loop)/✓ | curated · persist · trifle |
 | Enchant Kindred | 8 | FULL | [pre D] bleedAct,bleed → ✓(bleedAct)/✓<br>[PRE] bloodAdd,bloodAddTo,bloodAddYounger,actStealth → ✓(bloodAdd@unc-stock)/✓ | auto |
@@ -44,10 +44,10 @@ Per verdict: FULL 77
 | Daring the Dawn | 1 | FULL | [for] blockBar,selfDmg,selfAggr → ✓(blockBar@announce)/✓<br>[FOR] blockBar,selfDmg,selfAggr → ✓(blockBar@announce)/✓ | auto |
 | Freak Drive | 6 | FULL | [for] unlock → ✓(unlock)/✓<br>[FOR] unlock → ✓(unlock)/✓ | auto |
 | Voter Captivation | 2 | FULL | [pre] bloodPerMargin → ✓(bloodPerMargin)/✓<br>[PRE] bloodPerMargin,marginToPool → ✓(bloodPerMargin)/✓ | curated |
-| Hidden Strength | 4 | FULL | [for] prevent → ✓(prevent)/✓<br>[FOR] prevent,press → ✓(press@resolveCombat)/✓ | curated |
+| Hidden Strength | 4 | FULL | [for] prevent,preventX → ✓(prevent)/✓<br>[FOR] prevent,preventX,press → ✓(press@resolveCombat)/✓ | curated |
 | Majesty | 6 | FULL | [pre] combatEnds,strikeCE → ✓(strikeCE)/✓<br>[PRE] combatEnds,strikeCE,unlock → ✓(strikeCE)/✓ | auto |
 | Deflection | 6 | FULL | [dom] bounce → ✓(bounce)/✓<br>[DOM] bounce → ✓(bounce)/✓ | auto |
-| Second Tradition: Domain | 4 | FULL | [—] intercept → ✓(intercept)/✓ | auto |
+| Second Tradition: Domain | 4 | FULL | [—] intercept → ✓(intercept)/✓<br>[—] unlock,intercept,payBlood → ✓(unlock)/✓ | curated |
 | Wake with Evening's Freshness | 4 | FULL | [—] wake → ✓(wake)/✓ | auto |
 
 ## Crypt (9 unika, 12 kopior)

@@ -10405,6 +10405,12 @@ async function connectWithRetry(client, tries = 30){
         const u2 = mk(); u2.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] }];
         const pk = IF9(u2, '_havenHostPick') ? u2._havenHostPick() : null;
         ok(!!(pk && pk.name === 'Anxo Vilela (G6)' && pk.seat === 2 && pk.rusher === 'Ryan (G6)'), '149b ...a rusher with a target: the Haven goes on the vampire the rush doctrine picks -- an opponent’s, never mine (got ' + JSON.stringify(pk && { name: pk.name, seat: pk.seat, rusher: pk.rusher }) + ')');
+        /* found by the release's own smoke (seed 4005): the Haven went down, then its rusher equipped Raven Spy (permanents first) and
+           a plain bleed outscored the rush anyway -- the rush through the Haven must be the action the rusher would choose now */
+        const u3 = mk(); u3.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] }]; u3.hand = ['Raven Spy'];
+        const u4 = mk(); u4.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] }]; u4.table[2].pub.cards[0].blood = 5;
+        const p3 = IF9(u3, '_havenHostPick') ? u3._havenHostPick() : 'n/a', p4 = IF9(u4, '_havenHostPick') ? u4._havenHostPick() : 'n/a';
+        ok(p3 === null && p4 === null, '149b ...but a target is not a rush: held when the rusher would rather put a permanent in play (Raven Spy, permanents first) or bleed (Anxo at 5 blood: the bleed outscores the rush) -- the smoke’s case (got ' + JSON.stringify([p3 && p3.name, p4 && p4.name]) + ')');
         u2._havenSeen = { 'Anxo Vilela (G6)': { owner: 'Viktor', seat: 2, by: 'Viktor', bySeat: 2, cardId: null } };
         u2.table[2].pub.cards.push({ id: 'hv', kind: 'lib', name: 'Haven Uncovered', zone: 'ready' });
         const hr = IF9(u2, '_bestHavenRushFor') ? u2._bestHavenRushFor(u2.board[0]) : null;

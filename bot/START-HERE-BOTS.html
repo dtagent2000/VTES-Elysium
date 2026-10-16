@@ -292,7 +292,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
         <li><b>Play your rush card</b> from hand (or use <span class="menu">Actions → Card action</span> on your vampire). The client's line carries the aim: <em>“Lisa plays Bum's Rush. Target: Name's Colette.”</em></li>
         <li><b>Type <code>rush</code> in chat.</b> The bot reads the aimed line and treats it exactly like a Deep Song rush: if it has another unlocked minion or a wake it may try to block first (the rulebook allows the owner to block a rush) and asks the usual way; otherwise — or after it passes — Colette locks, and combat begins on the counters with Lisa as the opponent.</li>
       </ol>
-      <p>If the aim did not reach it (you forgot the target, or several plays went by), name the vampire: <code>rush Colette</code> — a unique prefix is enough. With several bots at the table a bare <code>rush</code> without an aimed line goes to the bot that is your prey; <code>@Name rush Colette</code> reaches any of them. The bot never rushes by chat itself — its own rushes come with the frozen Deep Song line.</p>
+      <p>If the aim did not reach it (you forgot the target, or several plays went by), name the vampire: <code>rush Colette</code> — a unique prefix is enough. With several bots at the table a bare <code>rush</code> without an aimed line goes to the bot that is your prey; <code>@Name rush Colette</code> reaches any of them. The bot never rushes by chat itself — its own rushes come with the frozen Deep Song or Haven Uncovered line.</p>
     </div>
   </details>
   <details>
@@ -328,7 +328,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <h3>Where its understanding ends</h3>
   <div class="gap">
     <p><b>Revelations against a bot.</b> Play it with the bot as your prey (whatever your target says, the card goes to your prey). At inferior the bot reveals its hand to you privately and asks you to pick: <span class="menu">⌖ target</span> the card in what it revealed, or type <code>discard CARD</code>; it discards that card and draws. At superior it plays with an open hand until the card leaves play.</p>
-    <p><b>Haven Uncovered on your vampire.</b> When a bot puts it there, the log says so (<em>“Hanna plays Haven Uncovered — on Lisa's Colette.”</em>); any minion may then enter combat with Colette. A bot's rush through it reads <em>“Ryan enters combat with Lisa's Colette (Haven Uncovered).”</em> and asks <em>Block?</em> as usual; Colette does not lock, and the rushing vampire is the acting minion.</p>
+    <p><b>Haven Uncovered on your vampire.</b> When a bot puts it there, the log says so (<em>“Hanna plays Haven Uncovered — on Lisa's Colette.”</em>); any minion may then enter combat with Colette. A bot's rush through it reads <em>“Ryan enters combat with Lisa's Colette (Haven Uncovered).”</em> and asks <em>Block?</em> as usual; Colette does not lock, and the rushing vampire is the acting minion. The bot does not read a Haven Uncovered that you play, and your own rush through one on a bot's vampire goes by <code>rush</code> in chat like a rush card — the bot then locks its vampire as it would for a rush card, which a Haven rush does not do: unlock it by hand.</p>
     <p><b>Cards outside the curated set.</b> Your uncurated card is a “plays X” line to the bot; it will ask about pool loss and otherwise let it be. Effects on the bot's board that come from your permanents must be applied by hand.</p>
     <p><b>Rush cards.</b> Only Deep Song is tagged as a rush in the database today, so your rush needs the target + <code>rush</code> in chat (above) until the rush cards are swept in.</p>
     <p><b>Combat against a human.</b> The bot reads your strikes, maneuvers and presses from the <span class="menu">Combat ▸</span> menu lines; anything you do not announce falls back to the rulebook default. Additional strikes are shown in the log but not yet resolved by the bot.</p>
@@ -450,7 +450,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
     <li><span class="menu">▶ Close question</span> — closes the pool question as its clock would (stage one → “no”, stage two → 1 pool).</li>
     <li><span class="menu">▶ Close step</span> — closes an open combat step (“combat step maneuvers (Anna)”) as its clock would.</li>
     <li><span class="menu">▶ Close poll</span> — closes the bot's vote poll (“votes (Anna, Bob)”) as its clock would.</li>
-    <li><span class="menu">▶ Step</span> on “block verdict (Anna)” — a bot blocked your action and waits for your move: declares the verdict from the counter as its clock would.</li>
+    <li><span class="menu">▶ Declare verdict</span> on “block verdict (Anna)” — a bot blocked your action and waits for your move: declares the verdict from the counter as its clock would.</li>
     <li>In the <a href="#tempo">Turn-based tempo</a> these rows show no countdown — the bot waits for you — and the ▶ beside the 🤖 is how you give it the word.</li>
     <li><span class="menu">▶ Run bot turns</span> (offline only) — plays the bot seats between the current turn and the next human, the range the Pass handover would play.</li>
   </ul>

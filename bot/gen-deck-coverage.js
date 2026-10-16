@@ -437,7 +437,7 @@ const badge = e => [e.src === 'hand' ? 'curated' : 'auto',
 
 P('# deck-coverage — ' + (deck.name || '(namnlös lek)') + ' (' + today + ')');
 P('');
-P('Genererad av `gen-deck-coverage.js` v1.1.34 mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: this string is the SECOND version site (the header comment is the first) -- bump BOTH when a version note is added, or every generated report inherits a stale self-identification
+P('Genererad av `gen-deck-coverage.js` v1.1.38 mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: this string is the SECOND version site (the header comment is the first) -- bump BOTH when a version note is added, or every generated report inherits a stale self-identification
   ', ' + (fx.counts.lib || '?') + ' lib / ' + (fx.counts.crypt || '?') + ' crypt / ' +
   (fx.counts.alias || '?') + ' alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden ' +
   '(skannad vid körning, inte handunderhållen). Leken: ' + loaded.source + '.');
