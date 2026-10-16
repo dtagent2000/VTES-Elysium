@@ -9040,7 +9040,7 @@ async function connectWithRetry(client, tries = 30){
         ok(asks(mk139('U', 2, P3()), ['Lisa takes a card action.']), '139c ...her prey does, as before');
         ok(!asks(mk139('U', 2, P3()), ["Lisa takes a card action. Target: Viktor's Bob."]), '139c ...aimed at the predator (the client’s Target suffix), the prey stays out');
         ok(asks(mk139('Viktor', 3, P3()), ["Lisa takes a card action. Target: Viktor's Bob."]), '139c ...and the predator, its target, answers, as before');
-        ok(!asks(mk139('U', 2, P3()), ["Lisa plays Revelations [aus]. Target: Viktor's Bob.", 'Lisa takes a card action.']), '139c ...the action row inherits the aim of the card played just before it (the play line carries it, the row does not)');
+        ok(!asks(mk139('U', 2, P3()), ["Lisa plays Bum's Rush. Target: Viktor's Bob.", 'Lisa takes a card action.']), '139c ...the action row inherits the aim of the card played just before it (the play line carries it, the row does not; v0.6.205: the card was Revelations, which is prey-locked by its text whatever the aim -- section 147)');
         const P4 = () => [{ seat: 1, name: 'Hanna' }, { seat: 2, name: 'X', bot: true }, { seat: 3, name: 'W', bot: true }, { seat: 4, name: 'Y', bot: true }];
         const w = mk139('W', 3, P4()); w._onLog('Hanna', 'Lisa takes an undirected action.'); w._obs.poolLoss = 0; w._openAskedWindow(); quiet139(w);
         ok(!w.says.includes('No block'), '139c ...an undirected action: a cross-table seat has no block to decline and says nothing (v0.6.199 said "No block" -- only for a referendum did it keep quiet)');
@@ -9788,12 +9788,12 @@ async function connectWithRetry(client, tries = 30){
         ok(aRow.range === 'long' && dRow.range === 'long' && aRow.dealt === 0 && dRow.strike !== 'Dodge' && g.D.hand.includes('Dodge') && g.dV.blood === 1,
            '143c at long range the acting bot’s fist is a strike for 0: the answering bot (blood 1) keeps its Dodge and its blood (the assumed 1 spent the card; got ' + JSON.stringify({ range: [aRow.range, dRow.range], aDealt: aRow.dealt, d: dRow.strike, keep: g.D.hand.includes('Dodge'), blood: g.dV.blood }) + ')'); }
 
-      // d) the decision itself
-      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+      // d) the decision itself -- v0.6.205: pinned to dodgeOut 0 (v0.6.204's survival rule, the knob's rollback); the output rule of R4 is section 146a
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, dodgeOut: 0, log: () => {} });
         const v = b => ({ name: 'X', blood: b }), D = (b, inc) => u.decide('combat-strike', { dodge: { name: 'Dodge' }, vamp: v(b), inc });
         const K = o => Object.assign({ known: true, dodge: false, ends: false, dealt: 0, steal: 0, aggr: 0, crows: 0 }, o);
         ok(D(3, K({ dealt: 3 })).dodge === true && D(3, K({ dealt: 2 })).dodge === false && D(1, K({ dealt: 1 })).dodge === true,
-           '143d a known strike: dodge what would empty or torpor me (3 at blood 3, 1 at blood 1), take what leaves blood (2 at blood 3)');
+           '143d (dodgeOut 0) a known strike: dodge what would empty or torpor me (3 at blood 3, 1 at blood 1), take what leaves blood (2 at blood 3)');
         ok(D(1, K({ dodge: true })).dodge === false && D(1, K({ ends: true })).dodge === false && D(1, K({ dealt: 0 })).dodge === false,
            '143d ...never against their dodge, their combat ends or a strike for 0 -- the card is saved');
         ok(D(5, K({ aggr: 1 })).dodge === true && D(2, K({ steal: 2 })).dodge === true && D(1, K({ dealt: 1, crows: 2 })).dodge === false,
@@ -10082,6 +10082,116 @@ async function connectWithRetry(client, tries = 30){
         await u._resolveCombat(v, 'Lisa');
         const sumN = u.notes.filter(m => /^Trainbot combat — /.test(m)), sumC = u.chats.filter(m => /^Trainbot combat — /.test(m));
         ok(sumN.length >= 1 && !sumC.length && !u.chats.some(m => /One round|side differs/.test(m)), '145i lever (c): a phased combat’s round summary is a report on the log tier (' + JSON.stringify((sumN[0] || '').slice(0, 90)) + '); as a chat it held the next question ~5 s (F3)'); }
+    }
+
+    /* 146) v0.6.205 -- R4 (docs/specs/spec-r4-2026-10-16.md section 1): THE DODGE, decided with Johan 16 Oct (17:47 + 18:06):
+       'for now, play it against everything with 2 or more damage -- when my own strike no longer gives equal or better
+       output -- and play it when holding several'. A known strike is weighed against _strikePick's out (the strike the
+       round would really play), the tie goes to the dodge with two in hand, an unknown strike is read on the expected
+       strike Majesty uses (_expOppStrike); the survival rule and aggravated stay; knob dodgeOut (0 = v0.6.204's rule). */
+    {
+      console.log('\n[146] v0.6.205 -- R4: the dodge weighs the strike against my own output (Johan, 16 Oct)');
+      const IF6 = (o, fn) => !!(o && typeof o[fn] === 'function');   // the pre-change bytes lack the new methods: they must fail clean, never abort
+      const strip146 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const duel146 = o => {   // the section 141 / 143 relay: two bots, every log / chat / say line reaches the other `delay` ms later; A = the acting bot (Hanna), D = the bot that blocked it (Viktor)
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        const mk = (name, seat, deck, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: o.askSecs || 3, twdKnow: 0, log: () => {} }, extra || {}));
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.o.deckName = deck; u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = []; u.decs = [];
+          u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); if(t === 'bot:decide' && m && m.q === 'combat-strike') u.decs.push(m); };
+          return u; };
+        const A = mk('Hanna', 1, o.aDeck || 'tremere', o.aOpts), D = mk('Viktor', 2, o.dDeck || 'nosferatu', o.dOpts);
+        const wire = (from, to) => { from.send = m => {
+          if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0); return; }
+          if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
+          const txt = m.t === 'log' ? strip146(m.html) : String(m.msg || '');
+          from._evRecord(from.o.name, txt, m.t, true);
+          from.lines.push({ at: Date.now(), tier: m.t, txt });
+          const d = Object.assign({}, m, { who: from.o.name });
+          setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0);
+        }; };
+        wire(A, D); wire(D, A);
+        const aV = Object.assign({ id: 'a1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4, attached: [] }, o.aV || {});
+        const dV = Object.assign({ id: 'd1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 6, attached: [] }, o.dV || {});
+        A.board = [aV]; D.board = [dV]; A.hand = (o.aHand || []).slice(); D.hand = (o.dHand || []).slice();
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: dV.name, zone: 'ready', blood: dV.blood }] } } };
+        D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: aV.name, zone: 'ready', blood: aV.blood }] } } };
+        A._actingVamp = { v: aV, n: 1, played: new Set() }; A._lastBlockerName = dV.name;
+        D._clearCombatStashes(); D._combatArmed = true;
+        const run = async () => { const t0 = Date.now();
+          await Promise.race([Promise.all([A._resolveCombat(aV), D._resolveCombat(dV, aV.name)]), sleep(o.cap || 15000)]);
+          return Date.now() - t0; };
+        return { A, D, aV, dV, run };
+      };
+
+      // a) the decision itself
+      { const mkU = kn => new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} }, kn != null ? { dodgeOut: kn } : {}));
+        const u = mkU(), u0 = mkU(0);
+        const K = o => Object.assign({ known: true, dodge: false, ends: false, dealt: 0, steal: 0, aggr: 0, crows: 0 }, o);
+        const D = (bot, b, inc, mine, copies, exp) => bot.decide('combat-strike', { dodge: { name: 'Dodge' }, vamp: { name: 'X', blood: b }, inc, mine, copies, exp });
+        const dg = (...a) => !!D(u, ...a).dodge;
+        ok(dg(5, K({ dealt: 2 }), 1, 1) === true && dg(5, K({ dealt: 3 }), 2, 1) === true && dg(5, K({ dealt: 2 }), 3, 1) === false,
+           '146a a known strike of 2 or more that does more than my own strike is dodged (2 against hands for 1, 3 against a card for 2); one my strike beats is taken (2 against Roundhouse for 3)');
+        ok(dg(5, K({ dealt: 2 }), 2, 1) === false && dg(5, K({ dealt: 2 }), 2, 2) === true,
+           '146a ...an equal one is struck with one dodge in hand and dodged with two (Johan: the tie goes to the dodge when holding several)');
+        ok(dg(5, K({ dealt: 1 }), 1, 2) === false && dg(5, K({ dealt: 1 }), 0, 1) === false && dg(5, K({ dealt: 2 }), 0, 1) === true,
+           '146a ...under 2 never: 1 against 1 with two dodges, a ranged 1 against my fist at long range (which deals 0); a ranged 2 against that fist is dodged');
+        ok(dg(5, K({ steal: 2 }), 1, 1) === true && dg(5, K({ aggr: 1 }), 3, 1) === true && dg(1, K({ dealt: 1 }), 1, 1) === true && dg(1, K({ dealt: 1, crows: 2 }), 1, 2) === false,
+           '146a ...a steal counts what it does to me, aggravated is always dodged, the survival rule stays (1 at blood 1); when their crows take me down anyway the dodge is wasted');
+        ok(dg(5, K({ dodge: true }), 0, 2) === false && dg(5, K({ ends: true }), 0, 2) === false && dg(5, K({ dealt: 0 }), 0, 2) === false,
+           '146a ...never against their dodge, their combat ends or a strike for 0');
+        ok(dg(5, null, 1, 1, 2.2) === true && dg(5, null, 1, 1, 1.8) === false && dg(5, null, 2, 1, 2) === false && dg(5, null, 2, 2, 2) === true && dg(5, null, 1, 1, null) === false && dg(1, null, 1, 1, null) === true,
+           '146a an unknown strike (I strike first): dodged at an expected 2 or more that is more than mine (2.2 against hands for 1), not at 1.8; an equal one only with two dodges; without an expectation (combatEndStats 0) the old blood <= 1');
+        const tags = [D(u, 5, K({ dealt: 2 }), 1, 1).tag, D(u, 5, K({ dealt: 2 }), 2, 2).tag, D(u, 5, K({ dealt: 1 }), 1, 1).tag, D(u, 5, null, 1, 1, 2.2).tag, D(u, 1, K({ dealt: 1 }), 1, 1).tag];
+        ok(tags.join() === 'known-out,known-tie,known-keep,unknown-out,known-survival', '146a the decide row carries the rule that fired (' + tags.join() + ') -- the smoke counts them');
+        ok(D(u0, 3, K({ dealt: 2 }), 1, 2).dodge === false && D(u0, 3, K({ dealt: 3 }), 1, 1).dodge === true && D(u0, 5, null, 1, 1, 3).dodge === false && D(u0, 1, null, 1, 1, null).dodge === true,
+           '146a dodgeOut 0 = v0.6.204: a known strike only when it would empty or torpor me, an unknown one only at blood <= 1');
+        let man = null; u._emit = (k, m) => { if(k === 'manifest') man = m; }; u._emitManifest();
+        ok(!!(man && man.knobs && man.knobs.dodgeOut === 1), '146a the knob is in the manifest (dodgeOut ' + (man && man.knobs ? man.knobs.dodgeOut : '?') + ')'); }
+
+      // b) _strikePick: the strike the round would play, nothing leaves the hand
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'P', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        const v = { id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', blood: 4, cap: 4, attached: [] };
+        u.board = [v]; u.hand = ['Roundhouse'];
+        const pk = (bot, vv, th) => IF6(bot, '_strikePick') ? bot._strikePick(vv, th) : {};
+        u._range = 'close'; const pc = pk(u, v, false); u._range = 'long'; const pl = pk(u, v, false); u._range = 'close'; const pd = pk(u, v, true);
+        ok(pc.kind === 'strike' && pc.out === 3 && pc.card === 'Roundhouse' && pl.kind === 'fist' && pl.out === 0 && pd.kind === 'fist' && pd.out === 1 && u.hand.length === 1,
+           '146b _strikePick: Ryan (G6) at close plays Roundhouse for 3 (strength 1 + 2); at long a hand strike cannot be used -- hands for 0; after their dodge, the hands; nothing leaves the hand (' + JSON.stringify([pc.kind, pc.out, pl.kind, pl.out, pd.kind, pd.out]) + ')');
+        const t = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'T', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        const tv = { id: 't1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', blood: 3, cap: 6, attached: [] };
+        t.board = [tv]; t.hand = ['Theft of Vitae']; t._range = 'long'; t._stealAvail = () => 1;   // the opposing vampire holds 1
+        const ps = pk(t, tv, false);
+        ok(ps.kind === 'steal' && ps.out === 1 && t.hand.length === 1, '146b ...a steal counts what it takes: Theft of Vitae [THA] (steal 2) at long range from a vampire holding 1 is worth 1 (' + JSON.stringify([ps.kind, ps.out]) + ')');
+        u._noStrikeRound = true; const pn = pk(u, v, false); u._noStrikeRound = false;
+        ok(pn.kind === 'none' && pn.out === 0, '146b ...committed to a gun under Immortal Grapple: no strike, 0'); }
+
+      // c) between bots: the acting Ryan's Roundhouse for 3 comes first; the answering Anxo Vilela (blood 5, hands for 1) dodges it -- v0.6.204 struck back and took 3
+      { const g = duel146({ delay: 30, aDeck: 'nosferatu', dDeck: 'tremere', aHand: ['Roundhouse'], dHand: ['Dodge'] });
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        const dd = g.D.decs.find(x => x && x.out && x.out.tag) || {};
+        ok(aRow.strike === 'Roundhouse' && dRow.strike === 'Dodge' && g.dV.blood === 5 && g.dV.zone === 'ready' && !g.D.hand.includes('Dodge') && dd.out && dd.out.tag === 'known-out',
+           '146c the acting Ryan strikes with Roundhouse for 3 first; Anxo Vilela (blood 5, hands for 1) dodges it and keeps every blood (v0.6.204: 3 < 5, struck back, took 3; got ' + JSON.stringify({ a: aRow.strike, d: dRow.strike, blood: g.dV.blood, zone: g.dV.zone, tag: dd.out ? dd.out.tag : null }) + ')'); }
+
+      // d) ...and Roundhouse in Anxo's place (the steal is gone: Theft of Vitae for 2 against Ryan holding 4 at close = the tie with one dodge -> it steals)
+      { const g = duel146({ delay: 30, aDeck: 'nosferatu', dDeck: 'tremere', aHand: [], aV: { blood: 4 }, dV: { blood: 5 }, dHand: ['Dodge', 'Theft of Vitae'] });
+        g.A._strengthBonus = () => 1;   // Ryan's hands for 2 (an attached strength, Preternatural Strength's +1)
+        await g.run();
+        const dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(dRow.strike === 'Theft of Vitae' && g.D.hand.includes('Dodge'),
+           '146d the acting Ryan strikes with hands for 2; Anxo Vilela steals 2 back (equal output, one dodge in hand): the dodge is saved (got ' + JSON.stringify({ d: dRow.strike, keep: g.D.hand.includes('Dodge'), blood: g.dV.blood }) + ')'); }
+
+      // e) the acting bot strikes first: an unknown strike, read on the expected strike (the table model says 2.4)
+      { const g = duel146({ delay: 30, aDeck: 'tremere', dDeck: 'nosferatu', aV: { id: 'a1', name: 'Anxo Vilela (G6)', blood: 5, cap: 6 }, dV: { id: 'd1', name: 'Ryan (G6)', blood: 4, cap: 4 }, aHand: ['Dodge'], dHand: ['Roundhouse'] });
+        g.A._expStrikeDmg = () => 2.4;
+        await g.run();
+        const aRow = g.A.rows.find(r => r.round === 1) || {}, dRow = g.D.rows.find(r => r.round === 1) || {};
+        ok(aRow.strike === 'Dodge' && dRow.strike === 'hands' && g.D.hand.includes('Roundhouse') && g.aV.blood === 5,
+           '146e the acting Anxo Vilela (blood 5, hands for 1) expects 2.4 from Ryan and dodges first; Ryan sees it and keeps Roundhouse (v0.6.204: blood 5 > 1, struck; got ' + JSON.stringify({ a: aRow.strike, d: dRow.strike, keep: g.D.hand.includes('Roundhouse'), blood: g.aV.blood }) + ')');
+        const g2 = duel146({ delay: 30, aDeck: 'tremere', dDeck: 'nosferatu', aOpts: { combatEndStats: 0 }, aV: { id: 'a1', name: 'Anxo Vilela (G6)', blood: 5, cap: 6 }, dV: { id: 'd1', name: 'Ryan (G6)', blood: 4, cap: 4 }, aHand: ['Dodge'], dHand: ['Roundhouse'] });
+        g2.A._expStrikeDmg = () => 2.4;
+        await g2.run();
+        const aRow2 = g2.A.rows.find(r => r.round === 1) || {};
+        ok(aRow2.strike === 'hands' && g2.A.hand.includes('Dodge'), '146e ...with combatEndStats 0 there is no expectation to weigh: the old blood <= 1, it strikes (got ' + JSON.stringify({ a: aRow2.strike }) + ')'); }
     }
 
 
