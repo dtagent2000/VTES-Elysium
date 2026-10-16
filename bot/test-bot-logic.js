@@ -9125,20 +9125,19 @@ async function connectWithRetry(client, tries = 30){
         const dbg = players => { const u = mk139('U', 2, players, { debug: true }); u._debugHand = true; u.hand = ['Govern the Unaligned', 'Conditioning']; return u; };
         const oh = u => u.sent.filter(m => m.t === 'openHand');
         const u = dbg(P4h()); u._syncOpenHand();
-        ok(oh(u).length === 2 && oh(u).every(m => m.cards.length === 2 && !m.revoke) && oh(u).map(m => m.to).join(',') === '1,4', '139i debug with another bot at the table: the hand goes to each HUMAN seat (1 and 4), never to the bot at 3 (v0.6.199: to all -- the other bots read it as certain knowledge; got ' + JSON.stringify(oh(u).map(m => m.to)) + ')');
+        ok(oh(u).length === 1 && oh(u)[0].to === 'all' && oh(u)[0].cards.length === 2 && !oh(u)[0].revoke, '139i (v0.6.201, Johan 16 Oct) debug with another bot at the table: ONE grant to the whole table, as the base system has it -- every human sees it, spectators too; the bot at 3 looks away (section 140) (got ' + JSON.stringify(oh(u).map(m => m.to)) + ')');
         u.sent.length = 0; u._syncOpenHand();
         ok(oh(u).length === 0, '139i ...an unchanged hand and audience sends nothing');
         u._dispatch({ t: 'roster', players: P4h(false) }); u.sent.length = 0;
         u._dispatch({ t: 'roster', players: P4h(true) });
-        ok(oh(u).some(m => m.to === 1 && !m.revoke), '139i ...a human back online gets the grant again (the server routes a seat’s grant to a live socket only)');
+        ok(oh(u).some(m => m.to === 'all' && !m.revoke), '139i ...a human back online gets the grant again (the server sends a grant to the sockets that are there)');
         u._openHandActive = { seat: 1, seen: true }; u.sent.length = 0; u._syncOpenHand(true);
         ok(oh(u).length === 1 && oh(u)[0].to === 'all', '139i ...Revelations [AUS] opens my hand to every player by its text, the bots too, as before');
         u.sent.length = 0; u._onBoard({ seat: 1, pub: { cards: [] } });
-        const rv = oh(u).filter(m => m.revoke), gr = oh(u).filter(m => !m.revoke);
-        ok(!u._openHandActive && rv.map(m => m.to).join(',') === '3' && gr.map(m => m.to).join(',') === '1,4', '139i ...when the Revelations leaves play, the bot at 3 is revoked on its own and the humans keep the debug view, no blink (got revoke ' + JSON.stringify(rv.map(m => m.to)) + ', grant ' + JSON.stringify(gr.map(m => m.to)) + ')');
+        ok(!u._openHandActive && oh(u).length === 0, '139i ...when the Revelations leaves play the debug grant simply stays -- no revoke, no blink (got ' + JSON.stringify(oh(u)) + ')');
         const v = dbg(P3()); v._syncOpenHand(); v.sent.length = 0;
         v._dispatch({ t: 'helperPolicy', policy: { tournament: true, allowLocal: true, settings: {} } });
-        ok(v._debugHand === false && oh(v).filter(m => m.revoke).map(m => m.to).join(',') === '1' && logs139(v).some(l => /leaves DEBUG mode/.test(l)), '139i ...a table that turns Tournament mid-game ends the debug view at once (v0.6.199 never read the helper policy)'); }
+        ok(v._debugHand === false && oh(v).filter(m => m.revoke).map(m => m.to).join(',') === 'all' && logs139(v).some(l => /leaves DEBUG mode/.test(l)), '139i ...a table that turns Tournament mid-game ends the debug view at once (v0.6.199 never read the helper policy)'); }
       { const u = mk139('U', 2, P3(), { debug: true }); u.deck = B139.ARCHETYPES.hacking;
         u._dispatch({ t: 'joined', seat: 2, token: 't', lobby: true, room: 'r', srv: '2.6.46', players: P3(), helperPolicy: { tournament: true, allowLocal: true, settings: {} } });
         u.started = true; u._dispatch({ t: 'dealt', hand: ['Conditioning'], unc: [], pool: 30, seat: 2 });
@@ -9180,6 +9179,118 @@ async function connectWithRetry(client, tries = 30){
         await h.waitFor(m => m.t === 'log' && m.who === 'BotEdge' && /The bleed goes through: Alice, -1 pool/.test(strip(m)), 'the bleed resolves (2)', 9000);
         const et = await h.waitAny(m => m.t === 'edgeTake' && m.bySeat === 2, 'edgeTake from BotEdge', 3000).catch(() => null);
         ok(!!et && bot.edge === true, '139m LIVE point 20: a bleed of 1 goes through -- the bot takes the Edge AND says so: edgeTake reaches Alice, whose client clears its own (v0.6.199 sent nothing: two Edges on screen)');
+        bot.close(); h.ws.close(); }
+    }
+
+    console.log('\n[140] v0.6.201 -- the debug hand is for the humans (the bots look away), a human\'s Reduce line');
+    /* 140) v0.6.201 -- Johan's answers of 16 Oct to the R1 uncertainties: the debug bot's open hand goes to the
+       whole table again (the base system), and the other bots look away from a seat that announced DEBUG mode;
+       a human target's 'NAME reduces the bleed by N.' (the client's Bleed menu, asked of main) lowers my bleed. */
+    {
+      const B140 = require('./elysium-bot.js');
+      const mk140 = (name, seat, players, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} }, extra || {}));
+        u.seat = seat; u.started = true; u.players = players; u.sent = []; u.chats = []; u.says = [];
+        u.send = m => u.sent.push(m); u.push = () => {}; u.chat = m => u.chats.push(m); u.say = p => u.says.push(p); u.fxClone = () => {};
+        return u; };
+      const P3x = () => [{ seat: 1, name: 'Hanna', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Viktor', online: true, bot: true }];
+      const DBG = 'Viktor (bot) is in DEBUG mode: open hand for the humans (the bots look away), crypt face up, decision weighting in the log.';
+      const grant = (u, seat, who, names) => u._dispatch({ t: 'openHandGrant', from: who, seat, who, cards: names.map(n => ({ name: n, kind: 'lib' })) });
+
+      // a) the look-away
+      { const u = mk140('U', 2, P3x());
+        u._onLog('Viktor', DBG); grant(u, 3, 'Viktor', ['Deflection']);
+        ok(u._handIntel(3) === null, '140a a bot that announced DEBUG mode: the other bots look away from its open hand -- no intel (v0.6.200 sent it seat by seat to the humans; before that every bot read it as certain knowledge)');
+        grant(u, 1, 'Hanna', ['Deflection']);
+        ok(!!u._handIntel(1) && u._handIntel(1).cards.length === 1, '140a ...a HUMAN who opens their hand is read as before');
+        u._onLog('Viktor', 'Viktor (bot) leaves DEBUG mode: the table is in Tournament mode now.'); grant(u, 3, 'Viktor', ['Govern the Unaligned']);
+        ok(!!u._handIntel(3) && u._handIntel(3).cards.length === 1, '140a ...and a seat that left debug mode is read again (its next open hand is the card’s: Revelations)'); }
+      { const u = mk140('U', 2, P3x()); u._onLog('Viktor', 'Viktor (bot) is in DEBUG mode: open hand, crypt face up, decision weighting in the log.'); grant(u, 3, 'Viktor', ['Deflection']);
+        ok(u._handIntel(3) === null, '140a ...an older bot’s announcement (v0.6.199 and before) is read the same way'); }
+
+      // b) the one exception: my own Revelations [AUS] on that seat
+      { const u = mk140('U', 2, P3x()); u._onLog('Viktor', DBG);
+        u.board = [{ id: 'rv1', name: 'Revelations', kind: 'lib', zone: 'ready' }]; u._myRevAus = { seat: 3, id: 'rv1' };
+        grant(u, 3, 'Viktor', ['Deflection', 'Conditioning']);
+        ok(!!u._handIntel(3) && u._handIntel(3).mode === 'open' && u._handIntel(3).cards.length === 2, '140b my own Revelations [AUS] on the debug seat earns me the view -- the card says so');
+        u.board = [];
+        ok(u._handIntel(3) === null, '140b ...and the view ends with the card: when my Revelations leaves play the open hand is dropped on the next read'); }
+
+      // c) Revelations [aus] against a debug bot: its PRIVATE reveal answers, not the debug grant
+      { const u = mk140('U', 2, P3x()); u._onLog('Viktor', DBG);
+        let got = 'pending'; u._awaitReveal(3, 2000).then(r => { got = r; });
+        grant(u, 3, 'Viktor', ['Deflection']); await sleep(20);
+        const stillWaiting = got === 'pending';
+        u._dispatch({ t: 'revealHand', from: 'Viktor', seat: 3, cards: [{ name: 'Deflection', kind: 'lib' }, { name: 'Conditioning', kind: 'lib' }] }); await sleep(20);
+        ok(stillWaiting && got && got.cards && got.cards.length === 2, '140c Revelations [aus] against a debug bot is answered by its private reveal, not by the debug grant (v0.6.200: the grant answered first)'); }
+
+      // d) a human target's Reduce line
+      { const u = mk140('U', 2, P3x()); u._actingVamp = { v: { name: 'Sully' }, target: 1, n: 2, played: new Set() };
+        u._onLog('Hanna', '<b>Lisa</b> reduces the bleed by 1.');
+        ok(u._actingVamp.n === 1, '140d a human target’s Reduce line lowers my bleed: 2 -> 1 (the interim for every reduction card the bot does not know yet, Johan 16 Oct)');
+        u._onLog('Hanna', '<b>Lisa</b> reduces the bleed by 2 (Telepathic Misdirection).');
+        ok(u._actingVamp.n === 0, '140d ...the card in brackets is optional, and the bleed never goes below 0');
+        u._actingVamp = { v: { name: 'Sully' }, target: 1, n: 2, played: new Set() }; u._onLog('Viktor', '<b>Bob</b> reduces the bleed by 1.');
+        ok(u._actingVamp.n === 2, '140d ...a seat that is not my target changes nothing');
+        u._actingVamp = { v: { name: 'Sully' }, target: 1, n: 2, played: new Set(), kind: 'pool' }; u._onLog('Hanna', '<b>Lisa</b> reduces the bleed by 1.');
+        ok(u._actingVamp.n === 2, '140d ...and a pool-damage action is no bleed: nothing to reduce');
+        u._actingVamp = { v: { name: 'Sully' }, target: 1, n: 3, played: new Set() }; u._onLog('Hanna', '<b>Lisa</b> plays <b>Telepathic Misdirection</b> — reduces the bleed by 2 (now 1).');
+        ok(u._actingVamp.n === 1, '140d ...a reducing bot’s own shape ("plays X — reduces the bleed by 2 (now 1)") is counted ONCE: 3 -> 1, never 0 (the new line’s pattern keeps it out; got ' + u._actingVamp.n + ')'); u._actingVamp = null; }
+
+      // e) event kinds (the event-log doctrine: a new frozen line gets its kind in the same release)
+      { const u = mk140('U', 2, P3x());
+        const e1 = u._evClassify('Hanna', 'Lisa reduces the bleed by 2.', 'log'), e2 = u._evClassify('Viktor', DBG, 'log'), e3 = u._evClassify('Viktor', 'Viktor (bot) leaves DEBUG mode: the table is in Tournament mode now.', 'log');
+        ok(!!e1 && e1.kind === 'reduce' && e1.n === 2 && !!e2 && e2.kind === 'debug' && e2.on === true && !!e3 && e3.kind === 'debug' && e3.on === false, '140e the Reduce line and the two debug lines have their event kinds in the same release (' + JSON.stringify([e1, e2, e3].map(e => e && e.kind)) + ')'); }
+
+      // f) the sender's own announcement is what the receivers read
+      { const d = mk140('U', 2, P3x(), { debug: true }); d.deck = B140.ARCHETYPES.hacking; d._dispatch({ t: 'dealt', hand: ['Conditioning'], unc: [], pool: 30, seat: 2 });
+        const line = d.sent.filter(m => m.t === 'log').map(m => String(m.html).replace(/<[^>]*>/g, '')).find(l => /DEBUG/.test(l)) || '';
+        const r = mk140('Viktor', 3, P3x()); r._onLog('U', line);
+        ok(!!r._debugSeats && r._debugSeats.has(2), '140f the debug bot’s own announcement is the line the others read -- one frozen line, sender and receivers (got "' + line + '")'); }
+
+      // g) LIVE on the real server: the debug grant reaches the human, the other bot looks away
+      { const R = 'r140g' + Date.now().toString(36).slice(-5);
+        const h = mkClient('Alice'); await connectWithRetry(h);
+        h.send({ t: 'create', room: R, pass: 'x', name: 'Alice', lobby: true, v: '2.6.0' });
+        await h.waitFor(m => m.t === 'joined', 'h140g joined');
+        h.send({ t: 'seat', seat: 1 });
+        h.send({ t: 'deck', name: 'D140', library: [{ name: 'Govern the Unaligned', qty: 60 }], crypt: [{ name: 'Lucinde, Alastor', qty: 12 }] });
+        await h.waitFor(m => m.t === 'deckok', 'h140g deckok');
+        const mkB = (name, seat, extra) => new Bot(Object.assign({ server: URL, room: R, pass: 'x', name, seat, paceMs: 0, askSecs: 3, log: () => {},
+                                deck: { name: 'G140', crypt: [{ name: 'Zip', qty: 12 }], library: [{ name: 'Govern the Unaligned', qty: 60 }] } }, extra || {}));
+        const dbgBot = mkB('BotDbg', 2, { debug: true }), other = mkB('BotOther', 3);
+        await dbgBot.connect(); await other.connect();
+        await h.waitFor(m => m.t === 'lobby' && ['BotDbg', 'BotOther'].every(n => (m.players || []).some(p => p.name === n && p.deck)), 'both bots seated');
+        h.send({ t: 'start' });
+        await h.waitFor(m => m.t === 'dealt', 'h140g dealt');
+        const g = await h.waitAny(m => m.t === 'openHandGrant' && m.seat === 2, 'the debug grant reaches Alice', 6000).catch(() => null);
+        await sleep(400);
+        ok(!!g && g.cards.length > 0 && other._handIntel(2) === null && !!other._debugSeats && other._debugSeats.has(2), '140g LIVE: the debug bot’s open hand reaches Alice through the server, and the other bot at the table looks away (got ' + (g ? g.cards.length + ' cards' : 'no grant') + ')');
+        dbgBot.close(); other.close(); h.ws.close(); }
+
+      // h) LIVE on the real server: a human's Reduce line takes the bot's bleed of 1 to 0 -- no Edge
+      { const R = 'r140h' + Date.now().toString(36).slice(-5);
+        const h = mkClient('Alice'); await connectWithRetry(h);
+        h.send({ t: 'create', room: R, pass: 'x', name: 'Alice', lobby: true, v: '2.6.0' });
+        await h.waitFor(m => m.t === 'joined', 'h140h joined');
+        h.send({ t: 'seat', seat: 1 });
+        h.send({ t: 'deck', name: 'D140h', library: [{ name: 'Govern the Unaligned', qty: 60 }], crypt: [{ name: 'Lucinde, Alastor', qty: 12 }] });
+        await h.waitFor(m => m.t === 'deckok', 'h140h deckok');
+        const bot = new Bot({ server: URL, room: R, pass: 'x', name: 'BotRed', seat: 2, paceMs: 0, askSecs: 3, log: () => {},
+                              deck: { name: 'E140', crypt: [{ name: 'Zip', qty: 12 }], library: [{ name: 'Govern the Unaligned', qty: 60 }] } });
+        await bot.connect();
+        await h.waitFor(m => m.t === 'lobby' && (m.players || []).some(p => p.name === 'BotRed' && p.seat === 2 && p.deck), 'BotRed seated');
+        h.send({ t: 'start' });
+        await h.waitFor(m => m.t === 'dealt', 'h140h dealt');
+        const strip = m => String(m.html || '').replace(/<[^>]*>/g, '');
+        bot.board = [{ id: 'z1', name: 'Zip (G3)', kind: 'crypt', zone: 'ready', locked: false, blood: 2, x: 100, y: 100 }]; bot.unc = []; bot.hand = []; bot.edge = false;
+        h.send({ t: 'pass' });
+        await h.waitFor(m => m.t === 'turn' && m.seat === 2, 'turn to BotRed', 9000);
+        await h.waitFor(m => m.t === 'log' && m.who === 'BotRed' && /bleeds for 1/.test(strip(m)), 'BotRed bleeds Alice for 1', 9000);
+        h.send({ t: 'log', html: '<b>Lisa</b> reduces the bleed by 1.' });
+        await sleep(200);
+        h.send({ t: 'say', i: SI('Pass') });
+        const at0 = await h.waitFor(m => m.t === 'log' && m.who === 'BotRed' && /The bleed goes through/.test(strip(m)), 'the bleed resolves', 9000);
+        ok(/goes through at 0: Alice loses no pool/.test(strip(at0)) && bot.edge === false && !h.sawAny(m => m.t === 'edgeTake'), '140h LIVE: Alice’s Reduce line (the client’s shape, asked of main) takes the bot’s bleed of 1 to 0 -- it says so and takes no Edge (got "' + strip(at0) + '")');
         bot.close(); h.ws.close(); }
     }
 

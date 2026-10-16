@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.200'; // v0.6.200 (16 Oct 2026, R1 of the 14 Oct play-test review -- rules and deadlocks): (1) Turn-based: the LAST Pass of a contested undirected block ends it whoever says it (a bot passing last left the table waiting for a clock Turn-based never arms), and a reminder names only who is still awaited. (2) The human's automatic taken line answers the damage step only, never 'Any presses?'. (3) A directed action is its target's business: the client's Target suffix (inherited by the card's own action row) or the actor's prey -- no other seat asks what it costs or may block it; a cross-table seat says nothing about an undirected action. (4) A reduced bleed stays reduced on both sides (the target's reduce line lowers the actor's total; the actor's '(= T)' no longer undoes the target's reduction), and a bleed of 0 moves no Edge. (5) The Edge is unique: taking it is said on the wire (edgeTake), another seat's edgeTake clears mine, an edgePass gives it to me. (6) A card is dead only when no vampire of mine can use it -- ready, in torpor or still uncontrolled (Johan's Tremere threw away Theft of Vitae with no vampire out yet). (7) One Creeping Sabotage tick is counted once (the predator's 'ticks' note is gone; the event log tells line / note / ack apart). (8) The steal's round line says what drained off at capacity. (9) Debug is for the humans only: the open hand goes seat by seat to the humans when another bot sits at the table; --debug / --no-debug-weights on the command line; refused at a Tournament table. (10) Found by the R1 arena smoke: Larissa's +1 bleed reaches the acting record, so the total, the modifiers and the resolve line carry it (a bot target took 1 on her announced 2); an undirected action that costs me pool never moves my Edge. Previous: v0.6.199 a placement always returns -- full notes in elysium-bot-CHANGELOG.md.
+const BOT_VERSION = '0.6.201'; // v0.6.201 (16 Oct 2026, Johan's answers to the R1 uncertainties): (1) Debug: the debug bot's open hand goes to the WHOLE table again, as the base system has it (`openHand to:'all'` -- every human sees it, players and spectators, online and offline; v0.6.200 sent it seat by seat to the humans and the spectators saw nothing), and the OTHER bots look away from a seat that announced DEBUG mode (`_lookAway`, keyed on the frozen announcement -- an older bot's too): no hand intel, and a debug grant never answers a Revelations [aus] waiter (the private revealHand does); the one exception is my own Revelations [AUS] on that seat while it is in play (`_myRevAus`), and the view ends with the card. (2) A HUMAN target's Reduce line, `NAME reduces the bleed by N.` (the card in brackets optional -- the client's Bleed menu, asked of main), lowers my bleed: the interim for every reduction card the bot does not know yet; the bot's own reduce shape is still counted once. (3) Both lines have their event kinds (`reduce`, `debug`). Previous: v0.6.200 R1 of the 14 Oct play-test review (rules and deadlocks) -- full notes in elysium-bot-CHANGELOG.md.
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -435,6 +435,9 @@ const L12 = {
   bleed:  /^(.+?) bleeds for (\d+)\.(?: Target: (.+?)\.)?$/,
   add:    /^(.+?) adds \+(\d+) bleed \(= (\d+)\)\.(?: Target: (.+?)\.)?$/,
   reduce: /^(.+?) plays (.+?) \u2014 reduces the bleed by (\d+) \(now (\d+)\)\.$/,   // v0.6.200 (play-test 14 Oct, point 15): the TARGET's own frozen line since N4c (_commitReduce) -- the acting bot never read it, so its +0 total (= the old n) undid the reduction. The event log keeps typing it card-played (the knowledge layer's feed)
+  reduceBy: /^([^\u2014]+?) reduces the bleed by (\d+)(?: \((?!now \d)([^()]+)\))?\.$/,   // v0.6.201 (Johan, 16 Oct -- the interim for every reduction the bot does not know yet): a HUMAN target's line from the client's Bleed menu (asked of main), 'NAME reduces the bleed by N.' -- the client's effect-line style, the card optional. The em dash and '(now N)' keep the bot's own shape (L12.reduce) out: one reduction must never be counted twice
+  debugOn:  /^(.+?) \(bot\) is in DEBUG mode\b/,   // v0.6.201: a bot's frozen debug announcement (v0.6.112+) -- the other bots look away from its open hand
+  debugOff: /^(.+?) \(bot\) leaves DEBUG mode\b/,   // v0.6.201: ...and when the table turns Tournament it leaves debug
   block:  /^Block: Stealth (-?\d+) vs Intercept (-?\d+) \u2014 block (succeeds|fails)\.$/,   // VA review (2 Aug, rulebook-verified): stealth/intercept 'can decrease even below 0' (vekn.net Detailed Turn Sequence) and the verdict is the RAW comparison -- the grammar accepts negatives so a bare Christine's -1 or a Royce-taxed announce parses
   poolDmg: /^(.+?) plays (.+?)(?:: burns the Edge)? \u2014 (\d+) pool damage to (.+?)\.$/,   // fas B (16 July)
   cancel: /^(.+?) plays (.+?): cancels the block attempt by (.+?) \u2014 that minion cannot try again\.$/,   // fas C (16 July): Elder Impersonation-class superior -- the attempt fails outright; the defender's own attempted-set (registered at ATTEMPT time, fas A+) already excludes the minion, so the receiving side is exactly the fails-branch code path   // fas B (16 July): Inside Dirt-class -- DIRECTED pool damage that is NOT a bleed (unbouncable: Deflection's own text is "only usable by the Methuselah being bled"); the Edge phrase is optional so future non-Edge poolDmg cards share the grammar
@@ -1052,8 +1055,8 @@ class Bot {
           if(this._tournamentTable()){   // v0.6.200 (play-test review, the tester's report): a CLI bot is checked by no client -- it refuses by itself
             if(!this._debugRefused){ this._debugRefused = true; this.note('Trainbot: no DEBUG mode at a Tournament table \u2014 my hand stays hidden.'); }
           } else {
-            this._debugHand = true; this._openHandTo = null; this._openHandSig = null; this._openHandAud = null;
-            this.note('Trainbot is in DEBUG mode: open hand to the human players, crypt face up' + (this.o.debugWeights !== false ? ', decision weighting in the log' : '') + '.');
+            this._debugHand = true; this._openHandSig = null; this._openHandAud = null;
+            this.note('Trainbot is in DEBUG mode: open hand for the humans (the bots look away), crypt face up' + (this.o.debugWeights !== false ? ', decision weighting in the log' : '') + '.');
           }
         }
         (m.unc || []).forEach(name => this._addUnc(name));
@@ -2228,7 +2231,7 @@ class Bot {
      Populated ONLY by revealHand / openHandGrant / openHandRevoke addressed to this
      seat (the server routes the private list to recipients only) -- never from pub,
      never from anything else. Decay lives in _onBoard. */
-  _handIntel(seat){ return (this.handIntel && this.handIntel[seat|0]) || null; }
+  _handIntel(seat){ const hi = (this.handIntel && this.handIntel[seat|0]) || null; if(hi && hi.mode === 'open' && this._lookAway(seat)){ delete this.handIntel[seat|0]; if(this._emit) this._emit('hand-intel', { seat: seat|0, mode: null, n: 0 }); return null; } return hi; }   // v0.6.201: an open hand from a debug seat is dropped the moment I may no longer look (my Revelations [AUS] on it left play)
   _setHandIntel(seat, mode, cards){
     this.handIntel = this.handIntel || {};
     this.handIntel[seat|0] = {
@@ -2238,7 +2241,9 @@ class Bot {
     if(this._emit) this._emit('hand-intel', { seat: seat|0, mode, n: this.handIntel[seat|0].cards.length });
   }
   _onRevealHand(m){ if(!m || !(m.seat|0) || (m.seat|0)===this.seat || !Array.isArray(m.cards)) return; this._setHandIntel(m.seat, 'snap', m.cards); this._resolveRevealWaiter(m.seat); }
-  _onOpenHandGrant(m){ if(!m || !(m.seat|0) || (m.seat|0)===this.seat || !Array.isArray(m.cards)) return; this._setHandIntel(m.seat, 'open', m.cards); this._resolveRevealWaiter(m.seat); }
+  _onOpenHandGrant(m){ if(!m || !(m.seat|0) || (m.seat|0)===this.seat || !Array.isArray(m.cards)) return;
+    if(this._lookAway(m.seat)) return;   // v0.6.201: a debug bot's hand is for the humans -- no intel, and no reveal waiter answered by it (a [aus] target sends its private revealHand)
+    this._setHandIntel(m.seat, 'open', m.cards); this._resolveRevealWaiter(m.seat); }
   _resolveRevealWaiter(seat){        // R3: an [aus] actor may be awaiting exactly this reveal (a grant counts too)
     const w=this._revealWaiter; if(!w || w.seat!==(seat|0)) return;
     this._revealWaiter=null; clearTimeout(w.t);
@@ -2250,22 +2255,16 @@ class Bot {
     if(hi && hi.mode) return Promise.resolve({ cards: hi.cards.slice() });
     return new Promise(res=>{ this._revealWaiter={ seat: seat|0, res, t: setTimeout(()=>{ if(this._revealWaiter && this._revealWaiter.res===res){ this._revealWaiter=null; res(null); } }, Math.max(500, ms|0)) }; });
   }
-  _debugTargets(){                        // v0.6.200 (Johan, 16 Oct: 'debug mode is for humans only'): who sees my DEBUG hand -- the whole table ('all', spectators too, as before) while no other bot sits at it, else every seated HUMAN by seat. A bot that received it took it as certain knowledge (handIntel): an unfair table, not a debug view.
-    const others = (this.players || []).filter(p => p && p.seat && p.seat !== this.seat && !p.vacant);
-    if(!others.some(p => p.bot)) return ['all'];
-    return others.filter(p => !p.bot).map(p => p.seat | 0);
+  _openHandEnd(){                         // v0.6.200: revoke the standing grant -- one grant to the whole table (v0.6.201), so one revoke
+    this.send({ t: 'openHand', to: 'all', revoke: true });
+    this._openHandSig = null; this._openHandAud = null;
   }
-  _openHandRetarget(to){                  // v0.6.200: whoever leaves the audience is revoked one seat at a time, so the humans who stay never see the view blink (the client closes an open inspector on a revoke)
-    const prev = this._openHandTo || [];
-    if(prev.includes('all') && !to.includes('all')){
-      (this.players || []).forEach(p => { const s = p && (p.seat | 0); if(s && s !== this.seat && !to.includes(s)) this.send({ t: 'openHand', to: s, revoke: true }); });
-    } else if(!to.includes('all')) prev.forEach(s => { if(s !== 'all' && !to.includes(s)) this.send({ t: 'openHand', to: s, revoke: true }); });
-    this._openHandTo = to.slice();
-  }
-  _openHandEnd(){                         // v0.6.200: revoke what is granted -- the whole table for an 'all' grant, else seat by seat
-    const to = this._openHandTo || ['all'];
-    if(to.includes('all')) this.send({ t: 'openHand', to: 'all', revoke: true }); else to.forEach(s => this.send({ t: 'openHand', to: s, revoke: true }));
-    this._openHandTo = null; this._openHandSig = null; this._openHandAud = null;
+  _lookAway(seat){ return !!(this._debugSeats && this._debugSeats.has(seat | 0)) && !this._myRevAusLive(seat); }   // v0.6.201 (Johan, 16 Oct: 'the bots never choose to inspect a hand shown only by the debug function'): a debug bot's open hand is for the humans -- unless my own Revelations [AUS] on that seat earned me the view
+  _myRevAusLive(seat){ const r = this._myRevAus; return !!(r && r.seat === (seat | 0) && (this.board || []).some(c => c && c.id === r.id && c.zone === 'ready')); }   // v0.6.201: my tabled Revelations [AUS], played at that seat, is still in play
+  _debugSeatSet(who, on){                 // v0.6.201: a seat that announced DEBUG mode (the frozen note) -- its open hand is not mine to read
+    const s = this._seatOfName(who); if(!s || s === this.seat) return;
+    this._debugSeats = this._debugSeats || new Set();
+    if(on){ this._debugSeats.add(s); this._handIntel(s); } else this._debugSeats.delete(s);   // reading the intel drops an open hand already stored from that seat
   }
   _tournamentTable(){ const hp = this._helperPolicy; return !!(hp && hp.tournament); }   // v0.6.200: the room's helper policy says Tournament (joined / helperPolicy)
   _onHelperPolicy(pol){                   // v0.6.200: a table that turns Tournament mid-game ends my debug view at once
@@ -2285,14 +2284,10 @@ class Bot {
        reaches the wire -- order included, since a reordered hand is a different
        view even at the same length. */
     const sig = this.hand.join('\u0001');
-    const to = this._openHandActive ? ['all'] : this._debugTargets();   // Revelations [AUS] opens my hand to EVERY player by its text -- the bots included
-    const on = (this.players || []).filter(p => p && to.includes(p.seat | 0) && p.online !== false).map(p => p.seat | 0);   // a human back online needs the grant again: the server routes a per-seat grant to a live socket only
-    const aud = to.join(',') + '|' + on.join(',');
+    const aud = (this.players || []).filter(p => p && !p.bot && p.seat !== this.seat && p.online !== false).map(p => p.seat | 0).join(',');   // v0.6.200: a human back online needs the grant again (the server sends a grant to the sockets that are there)
     if(!force && sig === this._openHandSig && aud === this._openHandAud) return;
-    this._openHandRetarget(to);
     this._openHandSig = sig; this._openHandAud = aud;
-    const cards = this.hand.map(n => ({ name: n, kind: 'lib' }));
-    to.forEach(t => this.send({ t: 'openHand', to: t, cards }));
+    this.send({ t: 'openHand', to: 'all', cards: this.hand.map(n => ({ name: n, kind: 'lib' })) });   // v0.6.201 (Johan, 16 Oct): ONE grant to the whole table, as the base system has it -- every human sees it (players and spectators, online and offline); the other bots look away from a debug seat (_lookAway). Revelations [AUS] opens it to every player by its text, the bots included
   }
   _onOpenHandRevoke(m){ if(!m || !this.handIntel) return; delete this.handIntel[m.seat|0]; if(this._emit) this._emit('hand-intel', { seat: m.seat|0, mode: null, n: 0 }); }
   _pCat(seat, cat){                 // ground-truth-aware P(seat holds cat): intel overrides the readP inference
@@ -5319,11 +5314,10 @@ class Bot {
            and the misleading chat that are suppressed. */
         this._openHandActive = null;
         if(!this._debugHand){
-          this.send({ t:'openHand', to:'all', revoke: true }); this._openHandTo = null; this._openHandSig = null; this._openHandAud = null;
+          this.send({ t:'openHand', to:'all', revoke: true }); this._openHandSig = null; this._openHandAud = null;
           this.note('Trainbot: Revelations left play \u2014 open hand ends.');
         } else {
-          this._syncOpenHand(true);   // v0.6.200: debug keeps it open for the HUMANS only -- the other bots are revoked seat by seat
-          this.o.log('Revelations left play — open hand stays for the humans (debug mode)');
+          this.o.log('Revelations left play — open hand stays (debug mode; the bots look away again)');   // v0.6.201: the actor's own view ends with its Revelations (_myRevAusLive)
         }
       }
     }
@@ -6329,6 +6323,9 @@ class Bot {
     if((m = t.match(/^Fame drains (\d+)/))) return { kind: 'pool', delta: -m[1], via: 'fame' };
     if((m = t.match(/^(.+?): (\d+) pool \u2192 (.+?) \(pool (\d+)\)/))) return { kind: 'pool', delta: -m[2], pool: +m[4], via: 'pool-to-blood', card: S(m[1]) };
     if((m = t.match(/^I lose (\d+) pool to the referendum\. Pool: (\d+)/))) return { kind: 'pool', delta: -m[1], pool: +m[2], via: 'referendum' };
+    if((m = t.match(L12.reduceBy))) return { kind: 'reduce', vamp: S(m[1]), n: +m[2], card: m[3] || null };   // v0.6.201: a human's Reduce line (the bot's own reduce shape stays a card play for the knowledge layer)
+    if(L12.debugOn.test(t)) return { kind: 'debug', on: true };   // v0.6.201: the frozen debug announcement
+    if(L12.debugOff.test(t)) return { kind: 'debug', on: false };
     if((m = t.match(L12.creep))) return { kind: 'pool', target: S(m[2]), delta: -(+m[3]), via: 'creep', form: 'line' };   // v0.6.200 (review side find): ONE tick reached the log three ways -- the predator's frozen line, its 'ticks' note and the victim's own 'I burn N' -- and _knownLosses counted it three times
     if((m = t.match(/^(?:Creeping Sabotage.*?(?:\u2014 I|: (.+?)) burns? (\d+)(?: pool)?|Creeping Sabotage ticks \u2014 (.+?) burns (\d+))/))) return { kind: 'pool', target: S(m[1] || m[3] || 'me'), delta: -(m[2] || m[4]), via: 'creep', form: m[3] ? 'note' : (m[1] ? 'line' : 'ack') };   // a ': <prey> burns N' that missed the exact frozen shape is still the predator's line
     if((m = t.match(/^(.+?): (\d+) blood \u2192 pool \(pool (\d+)\)/))) return { kind: 'pool', delta: +m[2], pool: +m[3], card: S(m[1]) };
@@ -6413,6 +6410,7 @@ class Bot {
     const t = stripTags(html).trim();
     if(who !== this.o.name) this._evRecord(who, t, 'log');   // v0.6.176: the event log (my own lines are recorded at send)
     let m;
+    if(who !== this.o.name){ if(L12.debugOn.test(t)) this._debugSeatSet(who, true); else if(L12.debugOff.test(t)) this._debugSeatSet(who, false); }   // v0.6.201: a bot at the table announced DEBUG mode -- I look away from its open hand
     /* v0.6.110 (R2, #11, Johan's decision A): the SHORT-TERM ACTION MEMORY.
        Any action-shaped line from another seated player replaces what I
        remember; the memory lives until the actor's "It resolves" or until the
@@ -6497,6 +6495,11 @@ class Bot {
     if((m = t.match(L12.reduce)) && this._actingVamp && this._actingVamp.target && who === this.seatName(this._actingVamp.target)){   // v0.6.200 (point 15): my bleed's target reduced it -- the amount is theirs to state ('now N'); no return: the line is still a card play for the event log
       const now = parseInt(m[4], 10);
       if(Number.isFinite(now) && now < (this._actingVamp.n | 0)){ this.o.log('bleed reduced (' + m[2] + '): ' + this._actingVamp.n + ' -> ' + now); this._actingVamp.n = now; this._actingVamp.reducedTo = now; }
+    }
+    if((m = t.match(L12.reduceBy)) && this._actingVamp && this._actingVamp.target && who === this.seatName(this._actingVamp.target) && (!this._actingVamp.kind || this._actingVamp.kind === 'bleed')){   // v0.6.201 (Johan, 16 Oct): a HUMAN target reduced my bleed with a card I do not know -- the client's Reduce line says by how much
+      const by = parseInt(m[2], 10) | 0, was = this._actingVamp.n | 0;
+      if(by > 0){ this._actingVamp.n = Math.max(0, was - by); this._actingVamp.reducedTo = this._actingVamp.n; this.o.log('bleed reduced by ' + who + (m[3] ? ' (' + m[3] + ')' : '') + ': ' + was + ' -> ' + this._actingVamp.n); }
+      return;
     }
     if((m = t.match(L12.add))){
       /* v1.4.3: same fix as above — `who` (message sender) may be a bouncer, not the
@@ -7875,7 +7878,7 @@ class Bot {
        has no hand and will push no further board updates, so the receiver would sit
        on a stale empty card list forever. The _clearPending above already killed _pq
        and _obs; this closes the visual half. */
-    if(this._debugHand || this._openHandActive){ this.send({ t:'openHand', to:'all', revoke: true }); this._debugHand = false; this._openHandActive = null; this._openHandSig = null; this._openHandTo = null; this._openHandAud = null; }
+    if(this._debugHand || this._openHandActive){ this.send({ t:'openHand', to:'all', revoke: true }); this._debugHand = false; this._openHandActive = null; this._openHandSig = null; this._openHandAud = null; }
     this.edge = false;                                 // rulebook: the Edge leaves play with its ousted holder
     this.out = true; this.pool = Math.min(this.pool, 0);
     this.board = []; this.unc = []; this.pool = 0;
@@ -8491,8 +8494,10 @@ class Bot {
             this.say('It resolves');
             if(act.supMode) this._maybeWarsawRefresh(v);   // v0.6.71 (#8, review-fix): the finder's field is supMode (TRUE iff the [AUS] openHandPrey stock-shape) -- 'at' never existed, site 6 was a dead branch until the seventh review caught it
             if(act.supMode){
-              this.board.push({ id: this.gid(), name: act.name, kind: 'lib', zone: 'ready',
+              const revId = this.gid();
+              this.board.push({ id: revId, name: act.name, kind: 'lib', zone: 'ready',
                                 faceDown: false, x: 60, y: 60, locked: false });   // burnable by any minion as a (D) action -- the table handles that; a bot-initiated burn is the v1.5 candidate
+              this._myRevAus = { seat: prey, id: revId };   // v0.6.201: the card earns me the prey's open hand even when the prey is a debug bot (_lookAway)
               this.push();
               this.chat('Trainbot: Revelations is in play \u2014 ' + preyName + ', please play with an open hand (hand menu \u2192 Open hand \u2192 everyone). I read the grants.');
             } else {
