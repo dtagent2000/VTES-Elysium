@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.203'; // v0.6.203 (16 Oct 2026, the first step of R3, Johan's 'Kor pa!' of 16 Oct): (1) THE VANISHED BLEED (READ-ME-FIRST-2026-10-16c section 6; found by R2's arena smokes, 21 bleeds in 12 matches, 3 on v0.6.201): Deflection, Redirection, Telepathic Misdirection and My Enemy's Enemy say "(that Methuselah can attempt to block)" -- a bounce now opens its new target's block step in whatever window of mine it lands (_bouncedTo); a late bounce lands in a reactions-only window, where v0.6.114 refused every Block!, the new target's pending stayed contested and it dropped the bleed on my It resolves. The refusal stays for every other seat and after a modifier; the open ask follows the bleed (status, the roster hook, the tempo); the old target's intercept goes back to 0 (my stealth stays with the action); a human new target is told it may block. My bleed's 'through' emit moved to the resolution (n = announced, `final` = what lands): emitted before the late windows it closed my block counter (a late blocker's verdict read stealth 0 from a fresh counter) and committed my parked cost. As the target: a BOT actor's It resolves over my live attempt lands the bleed (the attempt was never taken up -- a human actor is still asked), and a bot actor's modifier closes my block step. (2) THE STRIKE STEP IN THE RULEBOOK'S ORDER BETWEEN BOTS (Johan, 16 Oct: 'the bot should answer known strikes'; [6.4.3] the acting minion chooses first): the acting bot strikes first, the answering bot looks at that strike (_awaitOppStrikePeek -- the line stays pending for its consuming wait) and chooses knowing it: no card into a dodge, a dodge against the strike that would empty or torpor it (the known strike, not the assumed 1; aggravated always), none against a strike for 0; the acting bot waits at least the handshake's safety net for the answer, and none after its own combat ends. (3) DEEP SONG AGAINST A HUMAN: the rushed vampire is the acting minion in the human phase walk too (_combatIActing, shared with the bot handshake) -- the bot asks the human first. (4) Hygiene from R2's smokes: the bot's own prevent line ('X plays CARD: prevents N damage.') is typed with the vampire's name (the generic shape read 'X plays CARD:' -- the strike-vs-taken invariant never subtracted an opponent's Hidden Strength), the burn-for-pool and rescue notes reach the pool ledger with the bot's real name 'NAME (bot)' in them (one word never matched: the Wider View drift), an equipment's pool cost writes a pool event, and _range starts at 'close'. (5) Found by its own arena smoke (the invariant's 'taken 2, my strike 1, crows 2'): a borne Murder of Crows and a played Carrion Crows are two damage sources and both land each round -- the victim kept only the last announce (the opp-env event now carries the amount per source). Previous: v0.6.202 R2 of the 14 Oct play-test review -- full notes in elysium-bot-CHANGELOG.md.
+const BOT_VERSION = '0.6.204'; // v0.6.204 (16 Oct 2026, R3 proper of the 14 Oct play-test review, Johan's 'Kor pa!' of 16 Oct): (1) F3 / F11 -- a wait's clock starts when its question is ON THE WIRE: every wait on a human (the block / reaction window, the pool question, the vote poll, the seven combat steps, the damage step, the late-bounce grace, the new verdict wait) armed when its question was QUEUED, and at the client's pace each chat ahead of it costs ~5 s -- a 6 s step reached the wire with 1.5 s left, and the block window put the queue on its clock as a 'settle' (3 s announced, 8.2 s real). Now no clock arms while a line of mine is still queued (_wireWait / _afterWire: _drain starts the waits armed on a line right after it is sent): no deadline before that (status() until: null; an answer still counts), the settle is gone, the number a question announces IS its clock, and t0 (the wait row, Adaptive's answer time) starts on the wire. (2) F4 -- the hold and resume lines go to the HEAD of the queue, tagged with the hold state they describe (chat(msg, { hold })); _drain drops a line the table has moved past (a resume during the next hold, a hold after its release, a resume of a hold never seen). (3) F10 -- when I block a HUMAN's action, one line says it is their move ('X blocks (stealth A vs intercept B) -- add stealth, or say Pass to resolve it' + the clock); on the tempo's clock (kind 'verdict'), the actor's Pass / It resolves or the Bot button (rung 'resolve-verdict') I declare the verdict from the counter and go on as the table would (_verdictAsTarget: combat, or the window again) -- the actor's It resolves over a counter that says my block fails lands the action at once (no second window after their word); the actor's counter move (or a stealth typed in chat) and my own second intercept restart it; a hold freezes it. (4) F2 -- one spokesbot (an ousted bot no longer is one); the archetype read from it alone, on the log tier, held while a question, contest, combat or live counter (block / vote / combat) is open; the actor's notes that repeated its Misdirection / Fame / Pentex play line are gone. (5) F6 -- against a BOT actor at the client's pace a bot target's 'Hold on...' waits for the actor's question (it came 0.2 s before it); against a human, and at paceMs 0, unchanged. (6) F12 / F13 levers: (a) no second beat before 'Phase: Unlock.'; (b) a phase line rides the short fx beat; (c) a phased combat's summaries on the log tier; (d) the 'Anything before ...' steps wait 1 x the slider (the maneuver, the strike and the presses keep 2 x). Section 145 (35; 4/31 on v0.6.203, no abort).
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -682,7 +682,7 @@ class Bot {
       }).catch(e => { this.o.log('reconnect: dial failed' + (e && e.message ? ' (' + e.message + ')' : '')); this._maybeReconnect(e); });
     }, delay);
   }
-  close(){ this._closing = true; if(this._reconnT){ clearTimeout(this._reconnT); this._reconnT = null; } if(this._rejoinT){ clearTimeout(this._rejoinT); this._rejoinT = null; } if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; } if(this.ws) this.ws.close(); }   // v0.6.106 (#11): an explicit close never reconnects
+  close(){ this._closing = true; if(this._reconnT){ clearTimeout(this._reconnT); this._reconnT = null; } if(this._rejoinT){ clearTimeout(this._rejoinT); this._rejoinT = null; } if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; } if(this._arkT){ clearTimeout(this._arkT); this._arkT = null; } if(this.ws) this.ws.close(); }   // v0.6.106 (#11): an explicit close never reconnects
 
   /* ---------- the widget seam (v0.6.109, #1) --------------------------------
      Two public methods, no wire change: online and offline alike the bots live
@@ -727,6 +727,8 @@ class Bot {
     const rc = this._refCall;     // v0.6.194: my referendum polls -- steppable the same way (closes the polls as the clock would)
     if(rc && !rc.closed) return mk('asking', 'votes (' + (rc.paused.size ? [...rc.paused].join(', ') + ' thinking' : (this.players || []).filter(pl => pl.seat !== this.seat && this.live(pl.seat) && !rc.heard.has(pl.name)).map(pl => pl.name).join(', ')) + ')', rc.deadline || null, 'resolve-vote');   // v0.6.198: a paused poll stays steppable (it had no clock and no button)
     const p = this.pending;
+    const vw = this._vWait;     // v0.6.204 (F10): my block on a human's action waits for their verdict -- steppable, the step declares it from the counter
+    if(vw && !vw.done) return mk('asking', 'block verdict (' + vw.who + ')', vw.deadline || null, 'resolve-verdict');
     if(p) return mk('acting', 'reacting to ' + (p.who || 'an action') + (p.amount ? ' (' + (p.kind || 'action') + ' ' + p.amount + ')' : ''), p.reactAt, null);
     if(this._beatUntil && this._beatUntil > now) return mk('acting', 'thinking', this._beatUntil, null);
     if(this._acting)  return mk('acting', 'my turn', null, null);
@@ -741,7 +743,7 @@ class Bot {
       if(!names.length) return { did: null, why: 'the hold released itself first' };   // single-flight: two panicked presses must not release twice
       this._holdBy.clear();
       if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }
-      if(this._holdAnnounced){ this._holdAnnounced = false; this.chat('\u25b6 Resuming.'); }   // the same release the table's 'It resolves' performs, announced by the same rule (only the bot that announced the hold speaks)
+      if(this._holdAnnounced){ this._holdAnnounced = false; this.chat('\u25b6 Resuming.', { hold: false }); }   // the same release the table's 'It resolves' performs, announced by the same rule (only the bot that announced the hold speaks)
       this._releasePauses(names);   // v0.6.198: the panel unsticks the table -- the holders' own pauses end too
       this._holdThaw();   // v0.6.198: and the same fresh clocks
       this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b>: hold by <b>' + esc(names.join(', ')) + '</b> released from the table controls.' });   // a press that moves the game for everyone is never silent
@@ -773,6 +775,12 @@ class Bot {
       rc._end = 'button'; rc.done('closed from the table controls');
       return { did: 'resolve-vote', why: 'closed the polls the way the clock would have' };
     }
+    if(s.step === 'resolve-verdict'){ // v0.6.204 (F10): the verdict the clock would declare, from the counter
+      const w = this._vWait; if(!w || w.done) return { did: null, why: 'the verdict landed first' };
+      this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b>: block verdict declared from the table controls.' });
+      this._vwResolve('button');
+      return { did: 'resolve-verdict', why: 'declared the block verdict from the counter the way the clock would have' };
+    }
     return { did: null, why: 'nothing to step: ' + s.waitingFor };
   }
 
@@ -803,9 +811,11 @@ class Bot {
       if(gw > 0) return later(gw);
     }
     this._tok -= 1;
-    let obj = null;
+    let obj = null, ent = null;
     try{
-      obj = this._sq.shift();
+      obj = ent = this._sq.shift();
+      const ht = (ent && this._holdTags) ? this._holdTags.get(ent) : undefined;   // v0.6.204 (play-test 14 Oct, F4): a hold / resume line carries the hold state it describes
+      if(ht !== undefined && this._holdLineStale(ht)){ this._tok += 1; this.o.log('hold line dropped (the table moved on): ' + ent.msg); return; }   // a resume heard during the NEXT hold, a hold after its release, a resume of a hold the table never saw -- dropped; the finally still re-enters and starts any wait armed on it
       if(obj && obj.__board){
         this._pushQ = false; obj = { t: 'board', pub: this.buildPub() };
         /* v0.6.112 (R4): the open-hand grant re-syncs HERE and nowhere else.
@@ -823,10 +833,15 @@ class Bot {
       this.ws.send(obj);
       this._lastSendAt = Date.now(); this._lastSentT = obj && obj.t;
       if(obj && obj.t === 'chat') this._lastChatAt = this._lastSendAt;   // the bubble starts when the wire carries it -- _pace's chat-hold and _chatSettleMs read this
+      if(ht !== undefined) this._holdShown = ht;   // v0.6.204 (F4): what the table last SAW of my hold
     }catch(e){ this.o.log('drain error:', e.message); }   // one bad frame must never stop the queue
-    finally{ if(this._sq.length) later(this.o.paceMs ? 60 : 30); }   // re-enter; the top gate does the pacing
+    finally{
+      if(this._sq.length) later(this.o.paceMs ? 60 : 30);   // re-enter; the top gate does the pacing
+      const cbs = (ent && this._wireCbs) ? this._wireCbs.get(ent) : null;   // v0.6.204 (play-test 14 Oct, F3 / F11): the waits armed on this line start NOW -- after the re-entry is scheduled, so a hook that speaks queues behind it; a failed or dropped frame starts them too (a wait must never hang on a frame that is gone)
+      if(cbs){ this._wireCbs.delete(ent); for(const f of cbs){ try{ f(); }catch(e){ this.o.log('wire hook error:', e.message); } } }
+    }
   }
-  chat(msg){
+  chat(msg, opt){
     /* v0.6.109 (FOUND BY THE SUITE, section 5): the v0.6.108 rewrite protected the
        combat handshake prefix with `.replace(/Trainbot combat/, name + ' combat')`
        FIRST -- which is a no-op when the bot is literally named "Trainbot" (the
@@ -839,8 +854,42 @@ class Bot {
        sentinel makes the protection independent of what the name happens to be. */
     const S = '\u0001';
     const out = String(msg).replace(/Trainbot combat/g, S).replace(/Trainbot/g, this.o.name + ' (bot)').replace(new RegExp(S, 'g'), this.o.name + ' combat');
-    this.send({ t: 'chat', msg: out.slice(0, 300) }); if(this._wdT) this._watchdogArm();
+    const obj = { t: 'chat', msg: out.slice(0, 300) };
+    if(opt && opt.hold !== undefined) this._sendHold(obj, !!opt.hold); else this.send(obj);   // v0.6.204 (F4): { hold: true | false } = a hold / resume line
+    if(this._wdT) this._watchdogArm();
   }   // v0.6.108: persona name + (bot) suffix; re-arm watchdog on visible output
+  /* v0.6.204 (R3, play-test 14 Oct F4): the hold and resume lines. Both sat in the ordinary queue, so a '\u25b6 Resuming.' reached the
+     table after the NEXT hold, and a '\u23f8 Holding' 14 s late, behind a question and after the step had moved on. They go to the HEAD
+     of the queue now (chat(msg, { hold })) (behind earlier hold lines, in order), tagged with the hold state they describe; _drain drops a line whose state
+     the table has already left, and a resume of a hold line the table never saw (_holdShown: what the wire last carried). */
+  _sendHold(obj, st){
+    (this._holdTags || (this._holdTags = new WeakMap())).set(obj, st);
+    if(this.started) this._evRecord(this.o.name, obj.msg, 'chat', true);
+    let i = 0; while(i < this._sq.length && this._holdTags.has(this._sq[i])) i++;
+    this._sq.splice(i, 0, obj); this._drain();
+  }
+  _holdLineStale(st){ return st !== this._held() || (!st && !this._holdShown); }
+  /* v0.6.204 (R3, play-test 14 Oct F3 / F11): a clock starts when the human can SEE what it waits on. Every wait on a human armed when
+     its question was QUEUED; at the client's pace each chat ahead of it costs ~5 s (_drain's chat beat), so a 6 s combat step reached
+     the wire with 1.5 s left -- or after it had closed -- and the block window put the queue on its clock as a 'settle' that the
+     question had announced without (3 s announced, 8.2 s real). Now no clock arms while a line of mine is still queued: the wait is
+     held for the wire (no deadline, so status() says until: null; an answer still counts) and arms the moment the last line queued at
+     that arm has been sent. t0 -- the wait row, Adaptive's answer time -- starts there too. Every arm function asks _wireWait first. */
+  _afterWire(fn){                    // run fn once the LAST message queued so far has been sent -- at once when nothing is queued
+    const last = (this._sq.length && this.ws) ? this._sq[this._sq.length - 1] : null;   // not connected: nothing reaches the wire before the reconnect -- the old way (at once)
+    if(!last){ fn(); return; }
+    const m = this._wireCbs || (this._wireCbs = new WeakMap()), l = m.get(last);
+    if(l) l.push(fn); else m.set(last, [fn]);
+  }
+  _wireWait(w, rearm){               // true = the wait is held for the wire (rearm runs when it gets there); false = arm now
+    if(w._wireGo){ w._wireGo = false; return false; }                     // the wire callback itself: arm now, whatever I queued after that line
+    if(!this._sq.length || !this.ws){ if(!w._wired){ w._wired = true; w.t0 = Date.now(); } return false; }
+    if(w.timer){ clearTimeout(w.timer); w.timer = null; }
+    w.deadline = null; if(w._remT){ clearTimeout(w._remT); w._remT = null; }
+    const gen = w._wireGen = (w._wireGen | 0) + 1;                        // a newer arm supersedes a pending one: the clock starts after everything queued at the LAST arm
+    this._afterWire(() => { if(w._wireGen !== gen) return; if(!w._wired){ w._wired = true; w.t0 = Date.now(); } w._wireGo = true; try { rearm(); } finally { w._wireGo = false; } });
+    return true;
+  }
   /* v0.6.114 (Johan, THE THREE TIERS): the bot's SYSTEM text. PROTOCOL §12.0 has three
      render tiers -- `log` (status, no bubble), `chat` (a calm bubble), `say` (the quick-
      phrase animation) -- and until now the bot spoke on chat tier about nearly everything,
@@ -919,8 +968,8 @@ class Bot {
      bot, not to whatever helpers the humans have switched on. Same class as
      `Turn passed.` (unconditional since v0.5). A helpers-off client still
      renders remote log lines; only its own buttons are hidden. */
-  async _announcePhase(name){
-    await this._pace();
+  async _announcePhase(name, beat){   // v0.6.204 (play-test 14 Oct F12, levers a + b): the phase line rides the short fx beat -- an empty phase used to cost a full 3.1 s beat, and the act that follows a line still takes its own full beat; 'none' = the turn's own beat just ran (Unlock), so it is not paid twice
+    if(beat === 'none') await this._holdGate(); else await this._pace(beat || 'fx');
     this.send({ t: 'log', html: 'Phase: <b>' + name + '</b>.' });
   }
 
@@ -1183,6 +1232,7 @@ class Bot {
         if(this._phaseWait && m && m.mode === 'combat' && m.who && m.who !== this.o.name) this._phaseNudge(m.who, m.ph, 'tally');   // v0.6.165: a human stepping ph past the step answers it
         if(m && m.who !== this.o.name) this._fTallyAt = Date.now();   // v0.6.147: a counter written by SOMEBODY ELSE reached me -- the relay carries tally, the net below stands down
         if(m.mode === 'block' && this._ask && this._ask.contested && this._actingVamp && !this.out){ if(m.who && m.who !== this.o.name) this._restartAskTimer(); try { this._stealthSecondLook(); } catch(e){ this.o.log('second-look error:', e.message); } }   // v0.6.143c; v0.6.153: a foreign counter move is table activity -- the verdict clock restarts (v0.6.115's silence principle), so a bot blocker's intercept card landing after ITS beat is never overtaken
+        if(this._vWait && m.who && m.who !== this.o.name){ if(m.mode === 'block') this._vWait.arm(); else this._vwEnd('left'); }   // v0.6.204 (F10): the actor moved the counter -- a fresh clock; the counter closed or changed mode -- the wait's premise is gone
         if(m.mode === 'block' && this.pending && this.pending.contested && this.pending.blockerVamp && !this.out){ try { this._interceptSecondLook(); } catch(e){ this.o.log('blocker second-look error:', e.message); } }   // v0.6.143d
         if(m.mode === 'block' && this._oppLastAct && (m.a | 0) > (this._oppLastAct.a | 0)) this._oppLastAct.a = m.a | 0;   // v0.6.118: announced stealth, remembered per action (the max the window reached)
         if(m.mode === 'vote' && !wasVote && !this.out) this._onVoteOpen(m).catch(e => this.o.log('vote-open error:', e.message));   // P0: the polling window IS this edge; v0.6.68: .catch (fire-and-forget hardening)
@@ -1949,8 +1999,17 @@ class Bot {
     const a = this._archetype(seat); if(!a) return;
     this._arkSaid = this._arkSaid || {}; const prev = this._arkSaid[seat];
     if(a.tier === 'confident' && (!prev || prev.best !== a.best)){ this._arkSaid[seat] = a; this._emit('archetype', Object.assign({ seat }, a));
-      if(this.o.arkChat !== 0) this.chat('I read ' + this.seatName(seat) + "'s deck as " + a.best + ' (' + Math.round(a.coverage * a.shown) + ' of ' + a.shown + ' cards typical).'); }
+      if(this.o.arkChat !== 0 && this._isSpokesBot()) this._arkTell(seat, a); }   // v0.6.204 (play-test 14 Oct F2): one bot speaks for the table (two said it, in the middle of a live block contest), on the log tier, after the contest
     else if(a.tier === 'closest' && (!prev || prev.best !== a.best) && a.shown >= 5){ this._arkSaid[seat] = a; this._emit('archetype', Object.assign({ seat }, a)); }
+  }
+  _arkTell(seat, a){ (this._arkQ || (this._arkQ = new Map())).set(seat, a); this._arkPump(); }
+  _arkQuiet(){ return !this._ask && !this.pending && !this._pq && !(this._phaseWait && !this._phaseWait.done) && !this._inCombat && !this._vWait && !(this._refCall && !this._refCall.closed) && !(this.tally && /^(block|vote|combat)$/.test(this.tally.mode || '')); }   // no question, contest, combat or LIVE counter of anybody's (a resting counter mode -- 'free' -- holds nothing: it would hold the remark for the rest of the game)
+  _arkPump(){                        // v0.6.204 (F2): the read waits for a quiet table (re-checked every 1.5 s; dies with the bot)
+    if(this._arkT || !this._arkQ || !this._arkQ.size) return;
+    if(this.out || this._closing){ this._arkQ.clear(); return; }
+    if(!this._arkQuiet()){ this._arkT = setTimeout(() => { this._arkT = null; this._arkPump(); }, 1500); return; }
+    for(const [seat, a] of this._arkQ){ if(this.live(seat)) this.note('Trainbot reads ' + this.seatName(seat) + "'s deck as " + a.best + ' (' + Math.round(a.coverage * a.shown) + ' of ' + a.shown + ' cards typical).'); }
+    this._arkQ.clear();
   }
   oppCombat(seat){                     // 0..1: how dangerous is combat against this seat's minions -- prior (disciplines, weapons) blended with the combat cards seen and the damage they actually dealt me
     const o = this._opp(seat), pr = this._oppPrior(seat);
@@ -3360,9 +3419,9 @@ class Bot {
   }
   _refPoll(rc){                      // the vote clock: askSecs of silence closes the polls; every vote, tally move or Hold on restarts it; 'It resolves' (or the tally's Resolve) from anyone closes at once; all other live seats heard = closed. v0.6.194: the clock is the tempo's when a human is still to be heard (legacy = askSecs + the chat settle)
     return new Promise(resolve => {
-      rc.t0 = Date.now(); rc._heardAt = Object.create(null); rc._held = false;   // v0.6.198: a second poll (after a vote boost) is a fresh wait -- no held mark carried over
+      rc.t0 = Date.now(); rc._heardAt = Object.create(null); rc._held = false; rc._wired = false;   // v0.6.198: a second poll (after a vote boost) is a fresh wait -- no held mark carried over
       rc.done = why => { if(rc.closed) return; rc.closed = why; if(rc.timer) clearTimeout(rc.timer); if(rc._remT){ clearTimeout(rc._remT); rc._remT = null; }
-        if(!rc._held) Object.keys(rc._heardAt).forEach(nm => this._rtNote(nm, rc._heardAt[nm] - rc.t0));   // Adaptive's measurement: each human's first word in the poll (v0.6.198: not when the poll was held -- a hold is not an answer time)
+        if(!rc._held && rc._wired) Object.keys(rc._heardAt).forEach(nm => this._rtNote(nm, rc._heardAt[nm] - rc.t0));   // Adaptive's measurement: each human's first word in the poll (v0.6.198: not when the poll was held -- a hold is not an answer time)
         this._waitRow('vote', rc.plan, rc.t0, /clock/.test(why) ? 'clock' : (rc._end || 'answer'), { why, held: rc._held ? 1 : undefined });
         if(rc.plan && rc.plan.noClock && /clock/.test(why)) this.note('Trainbot: no more votes in ' + Math.round(rc.plan.ms / 60000) + ' min \u2014 closing the polls.');
         resolve(why); };
@@ -3372,6 +3431,7 @@ class Bot {
         others.forEach(nm => { if(rc.heard.has(nm) && !rc._heardAt[nm]) rc._heardAt[nm] = Date.now(); });
         if(others.length && others.every(nm => rc.heard.has(nm))) return rc.done('everyone has spoken');   // completion is not a clock: a held table still closes a poll everybody has answered
         if(this._held()){ rc.plan = this._waitPlan('vote', others.filter(nm => !rc.heard.has(nm))); this._freezeWait(rc); this._holdAnnounce(); return; }   // v0.6.198: a hold by anyone stops the clock; _holdThaw arms it fresh
+        if(this._wireWait(rc, () => { if(this._refCall === rc && !rc.closed) rc.arm(); })){ rc.plan = this._waitPlan('vote', others.filter(nm => !rc.heard.has(nm))); return; }   // v0.6.204 (F3): my vote line is still queued -- the poll's clock starts when it is on the wire
         const plan = rc.plan = this._waitPlan('vote', others.filter(nm => !rc.heard.has(nm)));
         rc.deadline = plan.noClock ? null : Date.now() + plan.ms; rc.timer = setTimeout(() => rc.done('the clock ran out'), plan.ms);
         this._remindArm(rc, plan, 'Still waiting for votes from ' + others.filter(nm => !rc.heard.has(nm)).join(', ') + ' \u2014 vote, or Pass (or press the Bot button).'); };
@@ -4231,6 +4291,7 @@ class Bot {
     if(this._pq && this._pq.timer) this._pqArm();
     const pw = this._phaseWait; if(pw && pw.arm) pw.arm();
     const rc = this._refCall; if(rc && !rc.closed && rc.arm && !(rc.paused && rc.paused.size)) rc.arm();
+    if(this._vWait && this._vWait.arm) this._vWait.arm();   // v0.6.204 (F10)
   }
   _humanAt(seat){ const p = (this.players || []).find(q => q && q.seat === seat); return (p && !p.bot && !p.vacant) ? p.name : null; }
   _rtNote(who, ms){                                                         // Adaptive's measurement: a human's answer time, kept per human over the last tempoHist answers
@@ -4238,20 +4299,20 @@ class Bot {
     const r = this._rt[who] = this._rt[who] || []; r.push(ms); const n = this.o.tempoHist || 7; while(r.length > n) r.shift();
   }
   _rtMedian(who){ const r = this._rt[who]; if(!r || !r.length) return null; const s = r.slice().sort((x, y) => x - y), h = s.length >> 1; return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2; }
-  _waitPlan(kind, who){                                                     // kind: block | react | pq | vote | phase | damage; who: the human(s) waited on (a name or an array of names; none = a bot-only wait)
+  _waitPlan(kind, who, step){                                               // kind: block | react | pq | vote | phase | damage | verdict (v0.6.204); who: the human(s) waited on (a name or an array of names; none = a bot-only wait); step: a combat step's number (phase)
     const names = (Array.isArray(who) ? who : [who]).filter(n => n && this._isHumanName(n));
-    const combat = kind === 'phase' || kind === 'damage', settle = combat ? 0 : this._chatSettleMs();   // the question's bubble must land before any clock counts (v0.6.100) -- in every mode
-    const legacy = () => combat ? (this.o.phaseSecs || Math.max(6, (this.o.askSecs || 2) * 3)) * 1000 : this.o.askSecs * 1000 + settle;
+    const combat = kind === 'phase' || kind === 'damage';   // v0.6.204 (play-test 14 Oct, F3 / F11): no 'settle' any more -- the clock arms when its question is ON THE WIRE (_wireWait), so the queue ahead of it is never on the clock and the number the question announces IS the clock (v0.6.100 put the queue's bubbles on the clock instead)
+    const legacy = () => combat ? (this.o.phaseSecs || Math.max(6, (this.o.askSecs || 2) * 3)) * 1000 : this.o.askSecs * 1000;
     const mode = this._tempoMode();
     if(!mode || !names.length) return { mode: names.length ? 'legacy' : 'bots', ms: legacy(), remindMs: 0, who: names };
-    const base = (this.tempo.waitSecs || 3) * 1000, cap = kind === 'phase' ? base * 2 : base;   // v0.6.196 (Johan asked what is best): the DAMAGE step waits 1 x the slider -- it asks nothing, it is a window for a prevention card, and 2 x made it the longest silence of every round
+    const base = (this.tempo.waitSecs || 3) * 1000, cap = kind === 'phase' && !(step === 0 || step === 2 || step === 6) ? base * 2 : base;   // v0.6.204 (play-test 14 Oct F13, lever d): the 'Anything before ...' steps (0, 2, 6) wait 1 x the slider; the maneuver, the strike and the presses keep 2 x   // v0.6.196 (Johan asked what is best): the DAMAGE step waits 1 x the slider -- it asks nothing, it is a window for a prevention card, and 2 x made it the longest silence of every round
     if(mode === 'turn') return { mode, ms: (this.o.tempoGiveUpMs != null ? this.o.tempoGiveUpMs : 240000), remindMs: (this.o.tempoRemindMs != null ? this.o.tempoRemindMs : 120000), who: names, noClock: true };
     if(mode === 'adaptive'){
       let est = null; names.forEach(n => { const md = this._rtMedian(n); if(md != null) est = est == null ? md : Math.max(est, md); });   // several humans: the slowest one's estimate
       const ms = est == null ? cap : Math.max((this.o.tempoAdaptMin != null ? this.o.tempoAdaptMin : 0.8) * 1000, Math.min(cap, est * (this.o.tempoAdaptK || 1.5)));
-      return { mode, ms: ms + settle, remindMs: 0, who: names, est };
+      return { mode, ms, remindMs: 0, who: names, est };
     }
-    return { mode, ms: cap + settle, remindMs: 0, who: names };
+    return { mode, ms: cap, remindMs: 0, who: names };
   }
   _waitTail(plan, done){ if(this._held()) return ' (the table is on hold \u2014 I wait for you)';   /* v0.6.198: no clock runs while a hold is live, so the tail must not promise one */ return plan.noClock ? ' (no clock \u2014 I wait for you)' : ' (' + Math.max(1, Math.round(plan.ms / 1000)) + 's \u2192 ' + done + ')'; }   // the clock in table words, appended to a question
   _waitRow(kind, plan, t0, end, extra){ if(plan && plan.mode === 'bots') return; const row = Object.assign({ kind, mode: plan ? plan.mode : 'legacy', who: plan && plan.who && plan.who.length ? plan.who.join(',') : null, ms: Math.max(0, Date.now() - t0), end }, extra || {}); this._emit('wait', row); this.o.log('wait ' + JSON.stringify(row)); }   // also on the process log: a human table has no trace file, and ana-wait.py sums these lines   // one row per human wait: what, which tempo, how long, how it ended (answer | clock | button | skip | left)
@@ -4295,7 +4356,7 @@ class Bot {
     const Q = ['Anything before range?', 'Any maneuvers?', 'Anything before strikes?', 'What is your strike?', null, 'Any presses?', 'Anything before ending combat?'];
     const N = ['I have nothing before range.', 'I have no maneuver.', 'I have nothing before strikes.', null, null, 'I have no press.', 'I have nothing before ending combat.'];
     if(!reply) this._cWrite({ ph: step });             // the hint for a helper-on panel (a reply stays in the step it is in)
-    const who = this._phaseOppPlayer(), plan = this._waitPlan('phase', who), t0 = Date.now();   // v0.6.194: the tempo (legacy = phaseSecs)
+    const who = this._phaseOppPlayer(), plan = this._waitPlan('phase', who, step), t0 = Date.now();   // v0.6.194: the tempo (legacy = phaseSecs)
     const skip = !reply && plan.mode === 'adaptive' && this._phaseSkip(step, who);   // v0.6.194 (Adaptive): a step the human cannot act on is neither asked nor waited on (my own line in the step is still said)
     if(when === 'ask' || reply){ if(!skip && Q[step]) this.chat(Q[step] + (plan.noClock ? ' (I wait for you)' : '')); }
     else if(!played && N[step]) this.chat(N[step] + (plan.noClock && !skip ? ' Your turn \u2014 I wait for you.' : ''));
@@ -4308,13 +4369,13 @@ class Bot {
     let pwRef = null;                                  // v0.6.198: the wait outlives the promise for its held mark
     const res = await new Promise(resolve => {
       const pw = pwRef = this._phaseWait = { step, who, plan, t0, resolve: why => { if(pw.done) return; pw.done = true; clearTimeout(pw.timer); if(pw._remT) clearTimeout(pw._remT); this._phaseWait = null; resolve(why); } };
-      pw.arm = () => { const pl = pw.plan = this._waitPlan('phase', who); clearTimeout(pw.timer); if(this._held()){ pw.timer = null; this._freezeWait(pw); this._holdAnnounce(); return; }   /* v0.6.198 (main 12 Oct): the step timed out and moved on while the human held -- a hold stops it; activity during the hold restarts nothing */ pw.deadline = pl.noClock ? null : Date.now() + pl.ms; pw.timer = setTimeout(() => pw.resolve('clock'), pl.ms);
+      pw.arm = () => { const pl = pw.plan = this._waitPlan('phase', who, step); clearTimeout(pw.timer); if(this._held()){ pw.timer = null; this._freezeWait(pw); this._holdAnnounce(); return; }   /* v0.6.198 (main 12 Oct): the step timed out and moved on while the human held -- a hold stops it; activity during the hold restarts nothing */ if(this._wireWait(pw, () => { if(this._phaseWait === pw && !pw.done) pw.arm(); })) return;   /* v0.6.204 (F3): the step's question is still queued */ pw.deadline = pl.noClock ? null : Date.now() + pl.ms; pw.timer = setTimeout(() => pw.resolve('clock'), pl.ms);
         this._remindArm(pw, pl, 'Still waiting for ' + who + ': ' + (Q[step] || 'your combat step') + ' \u2014 play, say No, or press the Bot button.'); };
       pw.arm();
     });
-    const held = !!(pwRef && pwRef._held);
-    if((res === 'line' || res === 'pass') && who && !held) this._rtNote(who, Date.now() - t0);   // Adaptive's measurement: the human's own answer (v0.6.198: not across a hold)
-    this._waitRow('phase', plan, t0, res === 'line' || res === 'pass' || res === 'ph' ? 'answer' : res, { step, when, held: held ? 1 : undefined });
+    const held = !!(pwRef && pwRef._held), wt0 = (pwRef && pwRef.t0) || t0;   // v0.6.204 (F3): the wait counts from the wire
+    if((res === 'line' || res === 'pass') && who && !held && pwRef && pwRef._wired) this._rtNote(who, Date.now() - wt0);   // Adaptive's measurement: the human's own answer (v0.6.198: not across a hold; v0.6.204: not before the question was on the wire)
+    this._waitRow('phase', (pwRef && pwRef.plan) || plan, wt0, res === 'line' || res === 'pass' || res === 'ph' ? 'answer' : res, { step, when, held: held ? 1 : undefined });
     if(res === 'clock' && plan.noClock) this.note('Trainbot: no answer in ' + Math.round(plan.ms / 60000) + ' min \u2014 going on as if ' + who + ' passed.');
     this._phaseLast = { step, res };                   // v0.6.195: how the step ended -- _lineGraceMs reads it
     this._emit('combat-phase', { step, when, acting, answer: res, ms: Date.now() - t0 });
@@ -4334,13 +4395,13 @@ class Bot {
       let pwRef = null;
       res = await new Promise(resolve => {
         const pw = pwRef = this._phaseWait = { step: 4, who, plan, t0, resolve: why => { if(pw.done) return; pw.done = true; clearTimeout(pw.timer); if(pw._remT) clearTimeout(pw._remT); this._phaseWait = null; resolve(why); } };
-        pw.arm = () => { const pl = pw.plan = this._waitPlan('damage', who); clearTimeout(pw.timer); if(this._held()){ pw.timer = null; this._freezeWait(pw); this._holdAnnounce(); return; }   /* v0.6.198: Hold on is how a human finds a prevention card -- the damage step stands while they hold */ pw.deadline = pl.noClock ? null : Date.now() + pl.ms; pw.timer = setTimeout(() => pw.resolve('clock'), pl.ms);
+        pw.arm = () => { const pl = pw.plan = this._waitPlan('damage', who); clearTimeout(pw.timer); if(this._held()){ pw.timer = null; this._freezeWait(pw); this._holdAnnounce(); return; }   /* v0.6.198: Hold on is how a human finds a prevention card -- the damage step stands while they hold */ if(this._wireWait(pw, () => { if(this._phaseWait === pw && !pw.done) pw.arm(); })) return;   /* v0.6.204 (F3): ph 4 (and its question) still queued */ pw.deadline = pl.noClock ? null : Date.now() + pl.ms; pw.timer = setTimeout(() => pw.resolve('clock'), pl.ms);
           this._remindArm(pw, pl, 'Still waiting for ' + who + ': damage prevention \u2014 play, say Pass, or press the Bot button.'); };
         pw.arm();
       });
-      const held = !!(pwRef && pwRef._held);
-      if((res === 'line' || res === 'pass') && who && !held) this._rtNote(who, Date.now() - t0);
-      this._waitRow('damage', plan, t0, res === 'line' || res === 'pass' || res === 'ph' ? 'answer' : res, { step: 4, held: held ? 1 : undefined });
+      const held = !!(pwRef && pwRef._held), wt0 = (pwRef && pwRef.t0) || t0;   // v0.6.204 (F3): from the wire
+      if((res === 'line' || res === 'pass') && who && !held && pwRef && pwRef._wired) this._rtNote(who, Date.now() - wt0);
+      this._waitRow('damage', (pwRef && pwRef.plan) || plan, wt0, res === 'line' || res === 'pass' || res === 'ph' ? 'answer' : res, { step: 4, held: held ? 1 : undefined });
       if(res === 'clock' && plan.noClock) this.note('Trainbot: no answer in ' + Math.round(plan.ms / 60000) + ' min \u2014 going on as if ' + who + ' passed.');
     }
     if(res !== 'ph') this._cWrite({ ph: 5 });
@@ -5424,8 +5485,13 @@ class Bot {
        Johan's block-finality rule to reactions too). Only when declined AND
        nothing to bounce with is the immediate no-theatre Pass right. */
     if(p.declined && !bounce){ this.say('Pass'); return; }
-    this.say('Hold on\u2026');
+    /* v0.6.204 (R3, play-test 14 Oct F6, cosmetic): against a BOT actor my 'Hold on...' is theatre (bots never operate the hold), and at
+       the client's pace it reached the table between the actor's announce and its question ("Block? (21s -> no)" 0.2 s after it). It
+       now waits for that question, and is dropped once my answer has gone out. Against a human it is said at once, as before; paceMs 0
+       (the arena) is unchanged. */
+    if(this.o.paceMs && ((this.players || []).find(q => q && q.name === p.who) || {}).bot) p._thinkQ = true; else this.say('Hold on\u2026');
     const stealthA = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : 0;
+    p._lateGen = (p._lateGen | 0) + 1;   // v0.6.204: a grace still waiting for the wire is void too
     if(p.lateTimer){ if(p.lateTimer.cancel) p.lateTimer.cancel(); else clearTimeout(p.lateTimer); p.lateTimer = null; }   // v0.6.198: a hold-aware handle (_heldTimeout)
     const cpD = this._critPool(), actorP = (this.players || []).find(q => q.name === p.who) || {};
     const sbRead = actorSeat ? ((this.oppAxes(actorSeat).axes || []).includes('stealth-bleed') || this.oppStealth(actorSeat) >= 1) : false;   // 'this predator is a stealth bleeder': what the table model has seen (clan / disciplines / a TWD baseline are the later, better reads -- Johan)
@@ -5440,6 +5506,7 @@ class Bot {
     const reactMs = this.decide('react-delay', {}).ms;
     p.reactAt = Date.now() + reactMs;   // v0.6.109 (#1): the widget can SHOW this wait ("reacting to Alice's bleed, 1.2s") but step() deliberately does not resolve it -- the only honest resolutions here are the bot's own decision (which is already running) or the actor resolving their action, and inventing a third would let a button reach a game state the bot could not reach alone
     p.passTimer = setTimeout(() => {
+      p._thinkQ = false;   // v0.6.204 (F6): my answer goes out now -- a thinking line after it would be out of order
       if(this.pending !== p || this.out) return;
       if(d.bounce && bounce) this._commitBounce(p, bounce).catch(e => this.o.log('commitBounce error:', e.message));   // steg 6: async now (may pace a wake->bounce combo) -- fire-and-forget like _commitBlock just below
       else if(d.block && !p.declined) this._commitBlock(p, d).catch(e => this.o.log('commitBlock error:', e.message));   // v0.4.5: _commitBlock is now async (paces a wake->intercept combo) -- fire-and-forget like _playTurn(); steg 5: the !declined belt to the decide()-level suspender -- a block after a final decline must never fire from EITHER layer
@@ -5448,7 +5515,8 @@ class Bot {
         this.o.log('react window: ' + d.why + ' \u2192 no block; asking for the total'); p.declined = true;
         this.chat('Trainbot: no block. Any bleed modifiers? I may still react to the total.');
         this._emit('defence-plan', { tag: 'ask-total', amount: p.amount | 0 });
-        p.lateTimer = this._heldTimeout(() => { if(this.pending !== p || this.out) return; const b2 = this._bestBounceFor(this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt'), p.reacted); if(b2) this._commitBounce(p, b2).catch(e => this.o.log('late bounce error:', e.message)); else this.say('Pass'); }, (this.o.modGraceMs != null ? this.o.modGraceMs : 4000));   // v0.6.198: the grace waits on the human's modifiers, so a hold stands it (the bounce used to land while they held)
+        { const gen = p._lateGen = (p._lateGen | 0) + 1; this._afterWire(() => { if(this.pending !== p || p._lateGen !== gen || this.out) return;   // v0.6.204 (F3): the grace starts when the question is on the wire
+        p.lateTimer = this._heldTimeout(() => { if(this.pending !== p || this.out) return; const b2 = this._bestBounceFor(this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt'), p.reacted); if(b2) this._commitBounce(p, b2).catch(e => this.o.log('late bounce error:', e.message)); else this.say('Pass'); }, (this.o.modGraceMs != null ? this.o.modGraceMs : 4000)); }); }   // v0.6.198: the grace waits on the human's modifiers, so a hold stands it (the bounce used to land while they held)
       }
       else { this.o.log('react window: ' + d.why); p.declined = true; this.say('Pass'); if(p.kind === 'rush') this._complyRush(p); }   // v0.6.107 (B1): declining a rush = the rushed vampire locks and fights   // steg 3: the decline itself -- final for BLOCKS (never set on a failed ATTEMPT; that path re-enters via _onLog's L12.block fail handler with declined still false). steg 5: no longer final for the whole window -- see above.
     }, reactMs);
@@ -5640,6 +5708,69 @@ class Bot {
     this._noteBlockAttempt(blocker && blocker.name, true);   // v0.6.106 (#14): OWN attempts count toward the table climate here (the server never echoes my log lines)
     this._emit('block-made', { vamp: (blocker && blocker.name) || null });   // A2b (9th review): emitted at the chain's END -- three blocker sources converge here. B-55e (3 Aug): the emit sat INSIDE the else-if(blocker) bare-attempt branch, so the CARD-playing path (ic -- the common path for real intercept decks) never emitted since A2b's birth: the measurement series' 5 yes-decisions all played Enhanced Senses/Forced Awakening, blocked successfully, fought combats -- and left zero block-made events. Baixinho's bare attempts (the else path) were the only ones ever counted. Moved to the chain's TRUE end.
     this.push();
+    if(humanActor && blocker && this.pending === p && p.contested && !this.out) this._vwArm(p, blocker);   // v0.6.204 (F10): the actor's move -- said, and on a clock
+  }
+  /* v0.6.204 (R3, play-test 14 Oct F10): I blocked a HUMAN's action, and it is the actor's move -- more stealth, or the verdict. It was
+     "Trevon Parker attempts to block." and then silence: no line, no clock, no Bot-button rung, and the actor's Pass was not read (a
+     Standard table stood for four minutes). Now one line says whose move it is, on the tempo's clock (kind 'verdict'; Turn-based: no
+     clock, the reminder, the give-up); on the clock, the actor's Pass (or It resolves) or the Bot button I declare the verdict from the
+     counter -- the §12 line, as my own actions do (_askTimeout) -- and go on as the table would: combat when it succeeds, the window
+     again when it fails. The actor's counter move and my own second intercept restart the clock; a hold freezes it; it dies with the
+     pending. A BOT actor declares every verdict itself, so there is no wait against one. */
+  _vwArm(p, blocker){
+    const who = p && p.who; if(!who || !this._isHumanName(who) || !blocker) return;
+    this._vwEnd(null);
+    const w = this._vWait = { p, who, vamp: blocker.name, t0: Date.now(), timer: null, deadline: null, plan: null, done: false };
+    const t = (this.tally && this.tally.mode === 'block') ? this.tally : null, A = t ? (t.a | 0) : 0, B = t ? (t.b | 0) : 0;
+    const plan = w.plan = this._waitPlan('verdict', who);
+    this.chat('Trainbot: ' + blocker.name + ' blocks (stealth ' + A + ' vs intercept ' + B + ') \u2014 ' + who + ', add stealth, or say Pass to resolve it' + this._waitTail(plan, 'the block ' + (B >= A ? 'succeeds' : 'fails')));
+    w.arm = () => { if(this._vWait !== w || w.done) return; if(w.timer){ clearTimeout(w.timer); w.timer = null; }
+      const pl = w.plan = this._waitPlan('verdict', who);
+      if(this._held()){ this._freezeWait(w); this._holdAnnounce(); return; }
+      if(this._wireWait(w, () => w.arm())) return;
+      w.deadline = pl.noClock ? null : Date.now() + pl.ms; w.timer = setTimeout(() => this._vwResolve('clock'), pl.ms);
+      this._remindArm(w, pl, () => 'Still waiting for ' + who + ': add stealth, or say Pass to resolve the block (or press the Bot button).'); };
+    w.arm();
+  }
+  _vwResolve(end, resolved){          // the clock, the actor's Pass (or It resolves), the Bot button: the verdict from the counter -- true when it was declared (or is about to be), false when there is nothing to declare and the caller's old path applies
+    const w = this._vWait; if(!w || w.done) return false;
+    const p = this.pending;
+    if(p === w.p && p._icQ && (w._deferWaits | 0) < 20){ w._deferWaits = (w._deferWaits | 0) + 1; if(w.timer) clearTimeout(w.timer); w.deadline = Date.now() + 400; w.timer = setTimeout(() => this._vwResolve(end, resolved), 400); return true; }   // my own intercept card is still waiting out its beat -- the verdict must not land over its head (the actor's v0.6.153 rule)
+    this._vwEnd(end);
+    if(p !== w.p || !p.contested || this.out) return false;              // the verdict landed meanwhile, or my attempt ended
+    const t = this.tally; if(!t || t.mode !== 'block') return false;    // no counter to read: the table's own line or It resolves decides, as before
+    const sA = t.a | 0, iB = t.b | 0, ok = iB >= sA;
+    if(end === 'clock' && w.plan && w.plan.noClock) this.note('Trainbot: no answer in ' + Math.round(w.plan.ms / 60000) + ' min \u2014 resolving the block from the counter.');
+    this.send({ t: 'log', html: 'Block: Stealth ' + sA + ' vs Intercept ' + iB + ' \u2014 block ' + (ok ? 'succeeds' : 'fails') + '.' });   // PROTOCOL §12, the frozen wording
+    this.push();
+    if(!ok && resolved){                                                 // the actor's It resolves over a counter that says my block fails: they have resolved the action -- it lands, and no second window opens after their word (the v0.6.203 rule for a bot actor's It resolves)
+      p.contested = false; this._applyPending("say 'It resolves' (my block failed on the counter)");
+      if(this._obs && this._obs.who === w.who) this._obs = null;
+      return true;
+    }
+    this._verdictAsTarget(ok);
+    return true;
+  }
+  _vwEnd(end){                        // the verdict wait is over -- end: answer | pass | clock | button | line | left; null = silently replaced
+    const w = this._vWait; if(!w) return;
+    this._vWait = null; w.done = true;
+    if(w.timer){ clearTimeout(w.timer); w.timer = null; } if(w._remT){ clearTimeout(w._remT); w._remT = null; }
+    if(!end) return;
+    if((end === 'answer' || end === 'pass') && w._wired && !w._held) this._rtNote(w.who, Date.now() - w.t0);   // Adaptive's measurement: the human's own answer
+    this._waitRow('verdict', w.plan, w.t0, end, { vamp: w.vamp, held: w._held ? 1 : undefined });
+  }
+  _verdictAsTarget(success){          // v0.6.204 (F10): the target's side of a block verdict -- a §12 line from the table, or my own (the verdict wait declares it; my log lines are not echoed back)
+    if(!this.pending) return;
+    const blockerVamp = this.pending.blockerVamp;                 // read before _clearPending wipes this.pending
+    const oppName = this.pending.actingVampName || (this._obs && this._obs.vamp && Date.now() - this._obs.at < 60000 ? this._obs.vamp : null) || null;          // VB: the combat opponent's name, hoisted the same way (this.pending is null by the _resolveCombat call)   // v0.6.163 (bug sweep, serie-cmb8): the pending carried no actor name in 14 of ~330 blocks (windows armed from a tally ask / re-blocks) -- the last announced action's vampire (short-term action memory, v0.6.110) is the actor
+    if(success){
+      this._clearPending('block succeeded');
+      if(blockerVamp){
+        blockerVamp.locked = true;                                // v0.4.3 (rulebook): "If a block attempt is successful, then the blocking minion LOCKS and enters combat" -- the wake path arrives here already locked, idempotent either way
+        this._resolveCombat(blockerVamp, oppName).then(() => { this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
+      }
+    }
+    else { this.pending.contested = false; if(!(this.pending.role === 'predator' && this.pending.waitingFor)) this._reactWindow(); } // action continues, bleed still live -- M2: try again (another card, or give up -> Pass). v0.6.107: a PREDATOR-role window stays shut until the prey has declined (rulebook order)
   }
   _clearCombatStashes(){             // v0.6.103 (#1): the five one-shot stashes + the persistent opponent Carrion Crows + the armed flag -- called at every own announce (actor), at every block commit (defender), at a rush comply, at dealt and at oust. NEVER at _resolveCombat entry: the defender's verdict hand-off runs ahead of the attacker's Blocked branch, so a legitimate opponent line may already sit here (the dodge-branch comment's case)
     this._oppEndedCombat = false; this._oppStrike = null; this._oppTaken = null; this._oppPress = undefined; this._oppManeuver = undefined; this._oppGrapple = undefined; this._oppCarrionCrows = null;
@@ -6033,7 +6164,7 @@ class Bot {
       if(ce.unlock) myVamp.locked = false;
       this._rnd.strike = ce.name; this._rnd.dealt = 0; this._rnd.taken = 0; this._stealSettle(myVamp, 'combat ends');   // v0.6.196: combat ends first -- a parked steal never lands
       if(!(hs && !hsFirst)){ const o2 = await this._phaseAfter(3, true).then(() => this._awaitOppStrike(this._strikeWaitHs(continued, hs))); if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // consume their strike line (the dodge branch's reason): keeps the one-slot stash clean for the NEXT combat. v0.6.203: not when I am the acting bot -- the answering bot sees my combat ends first and strikes no more (an older bot's late line is dropped at the next announce, _clearCombatStashes)
-      this.chat('Trainbot combat \u2014 ' + myVamp.name + ' plays ' + ce.name + ': combat ends, no damage either way' + (ce.unlock ? '; ' + myVamp.name + ' unlocks' : '') + '. Tell me if your side differs.');
+      { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' plays ' + ce.name + ': combat ends, no damage either way' + (ce.unlock ? '; ' + myVamp.name + ' unlocks' : '') + '.'; if(this._phasesOn()) this.note(ln); else this.chat(ln + ' Tell me if your side differs.'); }   // v0.6.204 (lever c)
       this.push();
       return { ended: true };
     }
@@ -6082,11 +6213,11 @@ class Bot {
             line2 += ' ' + myVamp.name + ' goes to torpor (' + unmended2 + ' unmended).';
           }
         }
-        this.chat('Trainbot combat \u2014 ' + line2 + ' Tell me if your side differs.');
+        if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + line2); else this.chat('Trainbot combat \u2014 ' + line2 + ' Tell me if your side differs.');   // v0.6.204 (lever c)
         this.push();
         return;
       }
-      this.chat('Trainbot combat \u2014 ' + myVamp.name + ' dodges: no damage dealt or taken this round. Tell me if your side differs.');
+      { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' dodges: no damage dealt or taken this round.'; if(this._phasesOn()) this.note(ln); else this.chat(ln + ' Tell me if your side differs.'); }   // v0.6.204 (lever c)
       this.push();
       return;
     }
@@ -6259,7 +6390,7 @@ class Bot {
         line += ' ' + myVamp.name + ' goes to torpor (' + (unmended + (aggrWound ? 1 : 0)) + ' unmended' + (aggrWound ? ', aggravated' : '') + ').';
       }
     }
-    this.chat('Trainbot combat \u2014 ' + line + (this._phasesOn() ? '' : ' One round \u2014 tell me if your side\u2019s damage differs.'));   // v0.6.167 (main: carried over from the last reply) -- a phased combat against a human already walked every step
+    if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + line); else this.chat('Trainbot combat \u2014 ' + line + ' One round \u2014 tell me if your side\u2019s damage differs.');   // v0.6.204 (play-test 14 Oct F12, lever c): a phased combat against a human walked every step, so its summary is a report on the log tier -- as a chat it cost the next question a 5 s bubble (F3)   // v0.6.167 (main: carried over from the last reply) -- a phased combat against a human already walked every step
     this.push();
     /* v0.6.21 (Johan's combat GO, Taste of Vitae -- completing the half-finished
        parser found via standing-question review, 19 July): end-of-round, AFTER my
@@ -6339,6 +6470,7 @@ class Bot {
     } else this._oust(false);
   }
   _clearPending(reason){
+    if(this._vWait) this._vwEnd('left');   // v0.6.204 (F10): the verdict wait dies with the pending
     this._reactManeuverGrant = false;   // N1 belt: a failed block means no resulting combat -- the Guard Dogs rider dies with the pending
     this._actStealthRaw = null;         // VA review belt: the actor-side raw stealth total dies with the action (the next announce re-seeds it)
     /* v0.6.111 (R3 self-review): the pool question and the observation die with
@@ -6349,6 +6481,7 @@ class Bot {
     this._obs = null;   // v0.6.111 (R3 self-review, simplified): every pending-clear also clears the observation. A bounce supersedes the pending but not the action -- however, a bounced bleed has already opened its own pending and never used _obs, so clearing it is harmless and simpler than a guard that was wrong on null-card actions anyway.
     if(!this.pending) return;
     if(this.pending.passTimer) clearTimeout(this.pending.passTimer);
+    this.pending._lateGen = (this.pending._lateGen | 0) + 1;   // v0.6.204: a grace still waiting for the wire dies too
     if(this.pending.lateTimer){ if(this.pending.lateTimer.cancel) this.pending.lateTimer.cancel(); else clearTimeout(this.pending.lateTimer); }   // v0.6.198: the late-bounce grace dies with its pending
     this.o.log('pending cleared (' + reason + ')');
     this.pending = null;
@@ -6695,18 +6828,7 @@ class Bot {
         this._restartAskTimer();
         return;
       }
-      if(this.pending){
-        const blockerVamp = this.pending.blockerVamp;                 // read before _clearPending wipes this.pending
-        const oppName = this.pending.actingVampName || (this._obs && this._obs.vamp && Date.now() - this._obs.at < 60000 ? this._obs.vamp : null) || null;          // VB: the combat opponent's name, hoisted the same way (this.pending is null by the _resolveCombat call)   // v0.6.163 (bug sweep, serie-cmb8): the pending carried no actor name in 14 of ~330 blocks (windows armed from a tally ask / re-blocks) -- the last announced action's vampire (short-term action memory, v0.6.110) is the actor
-        if(success){
-          this._clearPending('block succeeded');
-          if(blockerVamp){
-            blockerVamp.locked = true;                                // v0.4.3 (rulebook): "If a block attempt is successful, then the blocking minion LOCKS and enters combat" -- the wake path arrives here already locked, idempotent either way
-            this._resolveCombat(blockerVamp, oppName).then(() => { this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
-          }
-        }
-        else { this.pending.contested = false; if(!(this.pending.role === 'predator' && this.pending.waitingFor)) this._reactWindow(); } // action continues, bleed still live -- M2: try again (another card, or give up -> Pass). v0.6.107: a PREDATOR-role window stays shut until the prey has declined (rulebook order)
-      }
+      if(this.pending){ if(this._vWait) this._vwEnd(who && who === this._vWait.who ? 'answer' : 'line'); this._verdictAsTarget(success); }   // v0.6.204 (F10): one body for the table's verdict and mine
       return;
     }
     if((m = t.match(L12.cancel))){
@@ -7005,7 +7127,7 @@ class Bot {
       const was = [...this._holdBy];
       this._holdBy.clear();
       if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }
-      if(this._holdAnnounced){ this._holdAnnounced = false; this.chat('\u25b6 Resuming.'); }   // only the bot that announced the hold announces the release
+      if(this._holdAnnounced){ this._holdAnnounced = false; this.chat('\u25b6 Resuming.', { hold: false }); }   // only the bot that announced the hold announces the release
       this._releasePauses(was.concat([who]));                  // v0.6.198: the table moved on, so every holder's own pause ends with it -- the same rule as _holdBy (a pause that outlived the release left my poll with no clock and no button, and kept a target's Pass from answering my block window)
       this._holdThaw();                                        // v0.6.198: every frozen clock starts again from the beginning
     }
@@ -7033,7 +7155,7 @@ class Bot {
   _holdAnnounce(){                   // the hold line + its 90 s reminder, once per hold, from a bot that is actually waiting (the gate, or a frozen wait)
     if(this._holdAnnounced || !this._held()) return;
     this._holdAnnounced = true;
-    this.chat('\u23f8 Holding for ' + [...this._holdBy].join(', ') + ' \u2014 say "It resolves" when ready.');
+    this.chat('\u23f8 Holding for ' + [...this._holdBy].join(', ') + ' \u2014 say "It resolves" when ready.', { hold: true });   // v0.6.204 (F4): the head of the queue, tagged
     this._holdRemind();
   }
   _freezeWait(w){                    // stop one wait's clock: timer, deadline and Turn-based reminder; _held marks it (no Adaptive measurement, `held: 1` on its wait row)
@@ -7065,6 +7187,7 @@ class Bot {
     const rc = this._refCall;
     if(rc && !rc.closed){ if(!a) rc.paused.add(who); this._freezeWait(rc); speak = true; }
     if(this._pq) this._freezeWait(this._pq);                                // silent: every bot may hold its own pool question (debt 23c) -- the question is already on the table
+    if(this._vWait && !this._vWait.done){ this._freezeWait(this._vWait); speak = true; }   // v0.6.204 (F10)
     const pw = this._phaseWait;
     if(pw && !pw.done){ this._freezeWait(pw); speak = true; }
     (this._heldTimers ? [...this._heldTimers] : []).forEach(h => h.freeze());   // the one-shot waits on a human (_heldTimeout) stop too
@@ -7075,6 +7198,7 @@ class Bot {
     if(this._pq) this._pqArm();
     const pw = this._phaseWait; if(pw && !pw.done && pw.arm) pw.arm();
     const rc = this._refCall; if(rc && !rc.closed && rc.arm) rc.arm();
+    if(this._vWait && this._vWait.arm) this._vWait.arm();   // v0.6.204 (F10)
     (this._heldTimers ? [...this._heldTimers] : []).forEach(h => h.arm());   // and the one-shot waits start their full grace again
   }
   _releaseDeparted(players){         // v0.6.106 (#5): anyone offline, vacant or out can no longer say 'It resolves' -- drop their Hold on and their ask pause
@@ -7083,7 +7207,7 @@ class Bot {
     let thaw = false;
     if(this._holdBy && this._holdBy.size){
       let rel = false; for(const n of [...this._holdBy]) if(gone.has(n)){ this._holdBy.delete(n); rel = true; }
-      if(rel && !this._holdBy.size){ if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; } this._holdAnnounced = false; this.chat('\u25b6 Resuming (the holder left the table).'); thaw = true; }   // v0.6.198: the announcement flag resets too (it stayed set, and the NEXT hold went unannounced)
+      if(rel && !this._holdBy.size){ if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; } this._holdAnnounced = false; this.chat('\u25b6 Resuming (the holder left the table).', { hold: false }); thaw = true; }   // v0.6.198: the announcement flag resets too (it stayed set, and the NEXT hold went unannounced)
     }
     if(this._ask && this._ask.pausedBy && this._ask.pausedBy.size){
       let rel2 = false; for(const n of [...this._ask.pausedBy]) if(gone.has(n)){ this._ask.pausedBy.delete(n); rel2 = true; }
@@ -7102,7 +7226,7 @@ class Bot {
       this._holdRemT = null;
       if(!this._holdBy || !this._holdBy.size){ this._holdAnnounced = false; return; }
       if(this._holdAnnounced && !this.out)                     // v0.6.108: keyed on WHO ANNOUNCED, not on whose turn it is — a blocked bot is not necessarily the bot on turn
-        this.chat('\u23f8 Still holding for ' + [...this._holdBy].join(', ') + '.');
+        this.chat('\u23f8 Still holding for ' + [...this._holdBy].join(', ') + '.', { hold: true });
       this._holdRemind();
     }, 90000);
   }
@@ -7202,6 +7326,7 @@ class Bot {
         return;
       }
     }
+    if(this._vWait && m.who === this._vWait.who && (phrase === 'Pass' || phrase === 'No' || phrase === 'No reaction' || phrase === 'It resolves') && this._vwResolve('pass', phrase === 'It resolves')) return;   // v0.6.204 (F10): the actor adds no stealth -- the verdict from the counter, now (It resolves over a failed verdict lands the action); nothing to declare: the old paths below
     /* as TARGET: resolution + contest signals for the pending bleed */
     if(this.pending){
       if(this.pending.role === 'predator' && this.pending.waitingFor === m.who && (phrase === 'No block' || phrase === 'No reaction' || phrase === 'Pass')){   // v0.6.107 (B1): the prey declined -- the predator's window opens now (rulebook: prey first, then predator)
@@ -7259,6 +7384,7 @@ class Bot {
     if(q.timer) clearTimeout(q.timer);
     const plan = q.plan = this._waitPlan('pq', q.who), wait = plan.ms;   // v0.6.194: the tempo (legacy = askSecs + the chat settle)
     if(this._held()){ q.timer = null; this._freezeWait(q); return; }   // v0.6.198 (main 12 Oct): the stage-one clock answered No -- and the bot said No block -- while the human held; a hold stops it, _holdThaw arms it fresh
+    if(this._wireWait(q, () => { if(this._pq === q) this._pqArm(); })) return;   // v0.6.204 (F3): the question is still queued -- its clock starts on the wire
     q.deadline = plan.noClock ? null : Date.now() + wait;
     q.timer = setTimeout(() => this._pqTimeout(), wait);
     this._remindArm(q, plan, 'Still waiting for ' + q.who + ': ' + (q.stage === 'amt' ? 'how much pool?' : 'does this action cost me pool \u2014 Yes or No?') + ' (or press the Bot button).');
@@ -7273,10 +7399,10 @@ class Bot {
     const q = this._pq; if(!q) return;
     if(q.timer){ clearTimeout(q.timer); q.timer = null; }
     if(q._remT){ clearTimeout(q._remT); q._remT = null; }
-    if(q.t0){ if(who && !q._held) this._rtNote(who, Date.now() - q.t0); this._waitRow('pq', q.plan, q.t0, who ? 'answer' : (q._end || 'clock'), { stage: q.stage, ans, held: q._held ? 1 : undefined }); q.t0 = 0; q._held = false; }   // v0.6.194: the wait row + Adaptive's measurement (v0.6.198: not across a hold; the mark is per stage)
+    if(q.t0){ if(who && !q._held && q._wired) this._rtNote(who, Date.now() - q.t0); this._waitRow('pq', q.plan, q.t0, who ? 'answer' : (q._end || 'clock'), { stage: q.stage, ans, held: q._held ? 1 : undefined }); q.t0 = 0; q._held = false; }   // v0.6.194: the wait row + Adaptive's measurement (v0.6.198: not across a hold; the mark is per stage)
     if(q.stage === 'yn'){
       if(ans === 'yes'){
-        q.stage = 'amt'; q.t0 = Date.now(); q._end = null;
+        q.stage = 'amt'; q.t0 = Date.now(); q._end = null; q._wired = false;
         this.chat('Trainbot: How much?');
         this._pqArm();
         return;
@@ -7420,7 +7546,7 @@ class Bot {
         p.reacted.add(pi.key); blocker.blood = (blocker.blood | 0) - pi.cost;
         this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> burns ' + pi.cost + ' blood (' + esc(pi.card) + '): +' + pi.n + ' intercept.' });
         this._emit('intercept-stack', { vamp: blocker.name, look: 1 + (p.icLooks | 0), paid: pi.card, n: pi.n, need, tally: { a, b } });
-        this._setTallyB(b + pi.n); this.push();
+        this._setTallyB(b + pi.n); this.push(); if(this._vWait) this._vWait.arm();   // v0.6.204 (F10): my answer restarts the actor's clock
         if(pi.n >= need) return;
       } }
     let tag, go = false;
@@ -7441,7 +7567,7 @@ class Bot {
       if(ic.cost && ic.cost.blood) blocker.blood = Math.max(0, (blocker.blood | 0) - ic.cost.blood);
       this.fxClone({ name: ic.name, kind: 'lib' }, '+' + ic.s + ' intercept', { actor: blocker });
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> plays <b>' + esc(ic.name) + '</b>: +' + ic.s + ' intercept.' });
-      this._setTallyB(b2 + ic.s); this.push();
+      this._setTallyB(b2 + ic.s); this.push(); if(this._vWait) this._vWait.arm();   // v0.6.204 (F10): my answer restarts the actor's clock
     });
   }
   _stealthSecondLook(){               // v0.6.143c THE SECOND LOOK (smoke1: `need` was 1 in 20 of 20 decisions -- the first look fires on the blocker's 'Block!' SHOUT, before it has played its intercept and written the tally; and nothing ever looked again, so no second stealth card was ever played). When the tally moves and the block currently SUCCEEDS, the actor looks at the real numbers: can my remaining stealth reach it?
@@ -7536,9 +7662,9 @@ class Bot {
     a.target = seat;                                         // the open ask follows the bleed: status(), the roster hook and the tempo's who read it
     if(this.tally && this.tally.mode === 'block' && (this.tally.b | 0) !== 0) this._writeTally({ mode: 'block', b: 0 });   // the old target's intercept is stale for the new one (the announce's own rule: b starts at 0); my stealth (a) stays -- it belongs to the action
     const paused = !!(a.pausedBy && a.pausedBy.size);
-    if(!a.contested && !paused) this._restartAskTimer();     // a fresh clock for the new target (a bot bouncer's own Pass restarts it too)
     const human = this._humanAt(seat);
     if(human) this.chat('Trainbot: ' + av.v.name + ' now bleeds ' + human + ' for ' + (av.n | 0) + ' \u2014 ' + human + ' may block it (the bounce allows that), react, or say "no"' + this._waitTail(this._askPlan(a), 'resolves'));
+    if(!a.contested && !paused) this._restartAskTimer();     // a fresh clock for the new target (a bot bouncer's own Pass restarts it too) -- v0.6.204 (F3): after its question, so it starts when that line is on the wire
   }
   _blockStepFor(who){ const av = this._actingVamp; return !!(av && av.blockStepSeat && who && who === this.seatName(av.blockStepSeat)); }
   _onBlockAttempt(who){
@@ -7748,6 +7874,8 @@ class Bot {
     this._holdHook(who, -1, txt);                              // v0.6.95: chat-side hold fallback ('hold on' pauses, 'carry on'/'resume'/'it resolves' release)
     if(this._refCall && !this._refCall.closed && /^(no votes from me|i abstain|abstain)\.?$/i.test(txt)){ this._refCall.heard.add(who); this._refCall.paused.delete(who); this._refCall.arm(); }   // v0.6.122: a bot's abstain bubble (and a human typing the same) counts as having spoken
     this._narrWho = who; this._parseCombatNarration(txt); this._narrWho = null;   /* v0.6.183 */   // v0.6.156: the four opp-parsers (taken / press / maneuver / Crows / Grapple) now live in ONE method fed from BOTH tiers -- see _parseCombatNarration
+    if(this._vWait && who === this._vWait.who && /^(pass|no|nope|done|it resolves|resolve( it)?|go on)\b[.!]*$/i.test(txt) && this._vwResolve('pass', /^it resolves/i.test(txt))) return;   // v0.6.204 (F10): typed, the same answer
+    if(this.pending && this.pending._thinkQ && who === this.pending.who){ this.pending._thinkQ = false; this.say('Hold on\u2026'); }   // v0.6.204 (F6): the bot actor's question is on the table -- now my thinking
     /* v0.6.110 (R2, #11): typed answers to MY pool question, and the typed form
        of the prompt itself -- the quick phrases are the fast path, chat is the
        fallback the feedback explicitly asked for ("snabbfrasa eller chattskriva"). */
@@ -7795,6 +7923,7 @@ class Bot {
         this._writeTally({ mode: 'block', a: na });
         if(this.tally && this.tally.mode === 'block') this.tally = Object.assign({}, this.tally, { a: na }); else this.tally = { mode: 'block', a: na, b: cur.b | 0 };   // local mirror (offline has no echo)
         this.note(who + ' has ' + na + ' stealth (booked on the counter).');
+        if(this._vWait) this._vWait.arm();   // v0.6.204 (F10): the actor's move restarts the verdict clock, typed as on the counter (my own counter write is not heard as theirs)
         try { this._interceptSecondLook(); } catch(e){ this.o.log('stealth-chat second look error:', e.message); }
         return;
       }
@@ -7873,7 +8002,7 @@ class Bot {
     const a = this._ask; this._ask = null;
     if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; }   // the answered ask stands the clock trigger down
     if(a){ if(a.timer) clearTimeout(a.timer); if(a._whoT){ clearTimeout(a._whoT); a._whoT = null; } if(a._remT){ clearTimeout(a._remT); a._remT = null; } a.done = true;
-      if(a.t0){ const end = who ? 'answer' : (a._end || 'clock'); if(who && !a.contested && !a._held && a.plan && a.plan.who && a.plan.who.includes(who)) this._rtNote(who, Date.now() - a.t0); this._waitRow(a.reactionsOnly ? 'react' : 'block', a.plan, a.t0, end, { what, contested: !!a.contested, held: a._held ? 1 : undefined }); }   // v0.6.198: no Adaptive measurement across a hold   // v0.6.194: the wait row + Adaptive's measurement (a human's own answer to an uncontested window; a contested one measures the exchange, not the human)
+      if(a.t0){ const end = who ? 'answer' : (a._end || 'clock'); if(who && !a.contested && !a._held && a._wired && a.plan && a.plan.who && a.plan.who.includes(who)) this._rtNote(who, Date.now() - a.t0); this._waitRow(a.reactionsOnly ? 'react' : 'block', a.plan, a.t0, end, { what, contested: !!a.contested, held: a._held ? 1 : undefined }); }   // v0.6.198: no Adaptive measurement across a hold   // v0.6.194: the wait row + Adaptive's measurement (a human's own answer to an uncontested window; a contested one measures the exchange, not the human)
       a.resolve({ what, who }); }   // v0.6.110 (R2, #12): a resolved ask never asks who blocked
   }
   _armReactTimer(){                    // v0.3.10 (Johan): after 5 s of silence, ring the table's EXISTING Reaction timer — the server broadcasts who + the room's reactSecs, every client shows the countdown. The bot's own patient window (askSecs) is untouched: the stopwatch prompts, the ask decides.
@@ -7889,6 +8018,7 @@ class Bot {
          so the table sat through ~8 s of silence after the countdown hit zero. The ring now
          re-stamps the deadline to stopwatch-end + reactGraceMs -- never LATER than the
          deadline already held. reactSecs is the room's (joined.reactSecs), default 5. */
+      if(a._wireGen && !a._wired) return;   // v0.6.204 (F3): the question is still on its way -- no deadline yet
       if(a.pausedBy && a.pausedBy.size) return;   // v0.6.115 (self-review): a Hold on... nulls timer AND deadline (4363) -- `!a.deadline` below would have armed a clock on a window a human is holding, closing it after ~7 s despite the hold. The stopwatch may ring; it never overrules a hold.
       const secs = (this._reactSecs > 0 ? this._reactSecs : 5);
       const wait = secs * 1000 + (this.o.reactGraceMs != null ? this.o.reactGraceMs : 2000);
@@ -7903,7 +8033,8 @@ class Bot {
      answers table-wide questions ("help") so N bots don't all reply at once.
      No bots in the roster (roster not yet read) = fail-safe yes. */
   _isSpokesBot(){
-    const seats = (this.players || []).filter(p => p.bot && !p.vacant).map(p => p.seat).sort((a, b) => a - b);
+    if(this.out) return false;                                                     // v0.6.204 (play-test 14 Oct F2): an ousted bot no longer speaks for the table
+    const seats = (this.players || []).filter(p => p.bot && !p.vacant && !p.out).map(p => p.seat).sort((a, b) => a - b);
     return !seats.length || seats[0] === this.seat;
   }
   /* v0.6.108: turn watchdog — heartbeat during the bot's own turn.
@@ -7942,7 +8073,8 @@ class Bot {
     const a = this._ask; if(!a) return;
     if(a.timer) clearTimeout(a.timer);
     if(this._held()){ a.timer = null; a.plan = this._askPlan(a); this._freezeWait(a); if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; } this._holdAnnounce(); return; }   // v0.6.198: a hold stops the clock -- activity during it restarts nothing; _holdThaw arms it fresh; a bot waiting here never reaches _holdGate, so it says the hold
-    const plan = a.plan = this._askPlan(a), wait = plan.ms;   // v0.6.194: the tempo decides the clock (legacy = askSecs + the chat settle, computed ONCE and stamped -- v0.6.109 #1 -- so status() reports the deadline the timer actually holds)
+    if(this._wireWait(a, () => { if(this._ask === a) this._restartAskTimer(); })){ a.plan = this._askPlan(a); if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; } return; }   // v0.6.204 (F3 / F11): my question -- or another line of mine -- is still queued: the clock starts when it reaches the wire
+    const plan = a.plan = this._askPlan(a), wait = plan.ms;   // v0.6.194: the tempo decides the clock (v0.6.204: from the wire; legacy = askSecs, computed ONCE and stamped -- v0.6.109 #1 -- so status() reports the deadline the timer actually holds)
     a.deadline = plan.noClock ? null : Date.now() + wait;   // Turn-based: no deadline to count down -- the widget shows its button instead (the hold's rule)
     a.timer = setTimeout(() => this._askTimeout(), wait);
     this._remindArm(a, plan, () => this._askRemindText(a));
@@ -7988,7 +8120,7 @@ class Bot {
         this.push();
         if(iB >= sA) return a.resolve({ what: 'block', who: null });
         /* failed contest: the action continues -- same shape as an inbound 'fails' verdict */
-        this._ask = a; a.contested = false; a.timer = null; a.t0 = Date.now(); a._end = null; a._held = false; this._restartAskTimer();   // v0.6.194: the reopened window is a wait of its own (its own row)
+        this._ask = a; a.contested = false; a.timer = null; a.t0 = Date.now(); a._end = null; a._held = false; a._wired = false; this._restartAskTimer();   // v0.6.194: the reopened window is a wait of its own (its own row)
         return;
       }
     this._answer('no', null);   // v0.6.194: through _answer, so the wait row is written and the reminder cleared (was: this._ask = null; a.resolve(...))
@@ -8109,7 +8241,7 @@ class Bot {
        felt BEFORE the cards visibly turned upright. Syncing the unlock on its
        own, here, puts the phase back in the order the phase actually has. */
     if(n) this.push();
-    await this._announcePhase('Unlock');
+    await this._announcePhase('Unlock', 'none');   // v0.6.204 (lever a): _playTurn's beat precedes it
     if(this.edge){                       // v0.5 (Johan, 13 July + correction 14 July): PASSIVE, not an exchange -- still holding the Edge at your own unlock phase (i.e. held it a full round) just ALSO gives +1 pool from the blood bank; the Edge itself is untouched (stays held -- burning it is a SEPARATE active choice, e.g. Leverage's bleed-boost or burning it for +1 Vote as a base action). Bots ALWAYS take the passive bonus (no reason to ever decline free pool); a human still has to remember it themselves.
       this.pool++;
       this.send({ t: 'log', html: 'Gained <b>1 pool</b> from the Edge.' });   // exact client wording (the human Edge-helper's own line) for parity
@@ -8224,7 +8356,6 @@ class Bot {
             this._toAsh(d.pick.name);
             this.fxClone({ name: d.pick.name, kind: 'lib' }, 'locks ' + _lockT.name);
             this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> plays <b>Misdirection</b> \u2014 locks <b>' + esc(this.seatName(_lockT.seat)) + "</b>'s <b>" + esc(_lockT.name) + '</b>.' });
-            this.note('Trainbot: Misdirection \u2014 ' + _lockT.name + ' locks. Clearing the lane.');
             this.push();
             played.add(FX_NORM(d.pick.name));
             this.phaseUsed.master++;
@@ -8238,7 +8369,6 @@ class Bot {
                               faceDown: false, x: 64, y: 64, locked: false });
             this.fxClone({ name: d.pick.name, kind: 'lib' }, 'on ' + _fmT.name);
             this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> plays <b>Fame</b> \u2014 on <b>' + esc(this.seatName(_fmT.seat)) + "</b>'s <b>" + esc(_fmT.name) + '</b>.' });
-            this.note('Trainbot: Fame on ' + _fmT.name + ' \u2014 torpor will cost them.');
             this._famedSeen = this._famedSeen || {};
             this._famedSeen[_fmT.name] = { owner: this.seatName(_fmT.seat), by: this.o.name };
             this.push();
@@ -8270,7 +8400,6 @@ class Bot {
                               faceDown: false, x: 64, y: 64, locked: false });
             this.fxClone({ name: d.pick.name, kind: 'lib' }, 'on ' + _nbT.name);
             this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> plays <b>' + esc(d.pick.name) + '</b> \u2014 on <b>' + esc(this.seatName(_nbT.seat)) + "</b>'s <b>" + esc(_nbT.name) + '</b>.' });
-            this.note('Trainbot: ' + d.pick.name + ' \u2014 ' + _nbT.name + ' cannot block.');
             this.push();
             played.add(FX_NORM(d.pick.name));
             this.phaseUsed.master++;
