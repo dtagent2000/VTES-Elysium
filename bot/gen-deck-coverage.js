@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.37 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.38 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -132,6 +132,10 @@ const CLASS = {
   bloodAdd: 'paired', bloodAddTo: 'paired', bloodAddYounger: 'paired',   // v1.1.2: consumed via the unc-stock window special-case above; 'paired' here only silences the unknown-key warning
   stealthLater: 'gated', bloodAfterCleanAction: 'attached',
   maneuver: 'contextual',   // v1.1.6 (Johan's combat GO, the range concept): consumed via the maneuver@ special-case below (combat-typed, clean standalone shape only -- Apportation [THA], Swallowed by the Night [OBF]) -- 'contextual' here only silences the unknown-key warning for the excluded bundled instances (Grasp of the Python, Slam's superior, etc.)
+  lockStealth: 'play', lockStealthClan: 'paired',   // v1.1.38 (bot v0.6.205, R4 / the play-test's F23): The Labyrinth -- _lockStealthFor, offered by _bestStealthFor from the board, locked by _spendStealthCard
+  hostIntercept: 'play', hostInterceptOn: 'paired', hostPrevent: 'play',   // v1.1.38: Guardian Angel on its host -- _hostedIntercept (the block sites and forecasts), _hostedPrevent (the combat damage step)
+  bankIn: 'income', bankOut: 'income', bankClan: 'paired',   // v1.1.38: Wasserschloss Anif -- _considerBankIn (master phase, no lock) and _considerLockIncome('influence') (the lock-gated payout)
+  rushGrant: 'play',   // v1.1.38: Haven Uncovered -- the master loop's rushGrant branch (placed on the rush target) and _bestHavenRushFor (the rush through it)
   press: 'contextual',   // v1.1.5: consumed via the press@ special-case below (Apportation's clean standalone shape only) -- 'contextual' here only silences the unknown-key warning for the excluded instances (co-located maneuver/strike/stealBlood, or an unverifiable req flag)
 };
 const cls = k => String(CLASS[k] || '');
@@ -140,7 +144,17 @@ const consumedPlayKeys = [...scanned].filter(k => cls(k).includes('play')).sort(
 const consumedIncomeKeys = [...scanned].filter(k => cls(k) === 'income').sort();
 const threatKeys = [...scanned].filter(k => cls(k).includes('threat')).sort();
 
+/* v1.1.38 (bot v0.6.205, R4 / the play-test's F23): the keys a MASTER is consumed through -- the readers that act on a master
+   ON THE BOARD (or the master loop's own branches). The generic 'play' keys (stealth, intercept, prevent, dodge, strike ...)
+   belong to the hand finders, which are type-filtered to modifiers, reactions and combat cards; on a master they certified
+   Guardian Angel, Haven Uncovered, The Labyrinth and Wasserschloss Anif FULL while the bot did nothing with them. */
+const MASTER_KEYS = new Set(['poolGain', 'bloodToPool', 'poolToBlood', 'handSize', 'handSizePermanent', 'handSizePerCounter', 'replaceBurnsCounter',
+  'transferSwap', 'transferBurnPool', 'transferCost', 'rescueTorpor', 'handCycle', 'lockMinion', 'noBlockMinion', 'fameOnTarget', 'jackEngine',
+  'warsawRefresh', 'warsawRescue', 'rebelBlood', 'votes', 'bloodAdd', 'bloodAddTo', 'bloodAddYounger', 'preyLock', 'giveToPrey', 'bloodAfterCleanAction',
+  'lockStealth', 'lockStealthClan', 'hostIntercept', 'hostInterceptOn', 'hostPrevent', 'bankIn', 'bankOut', 'bankClan', 'rushGrant']);
 function modeConsumed(mo, e){
+  if(((e && e.t) || []).includes('master') && !Object.keys(mo.fx || {}).some(k => MASTER_KEYS.has(k)))
+    return { ok: false, via: 'master: no board consumer for ' + (Object.keys(mo.fx || {}).join(',') || '\u2014') };
   /* v1.1.31 (18 Sep 2026, found while loading Ventrue): the UNLOCK false positive. fx.unlock has exactly ONE
      consumer, _bestUnlockReactFor, which demands a REACTION mode with a curated `when` rider. Freak Drive (a
      modifier, "after action resolution") and Majesty [PRE] (combat) carry a bare fx.unlock and were certified

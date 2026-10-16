@@ -7852,9 +7852,9 @@ async function connectWithRetry(client, tries = 30){
     const u5 = mk121(); u5.push = () => u5.sent.push({ t: '__board' }); u5._oust(true); ok(!u5.sent.some(m => m.t === 'bounty') && u5.sent.some(m => m.t === '__board'), '121h a HOST oust still sends no bounty (the host\'s own verb routes it)'); }
   // f) the lines the net reads are the lines the bot sends
   const src121 = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
-  const NS = /^(.+?) (?:plays|burns) .+?: \+(\d+) stealth\.$/, NU = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;
-  ok(NS.test('Colette plays Lost in Crowds: +1 stealth.') && NS.test('Colette burns The Path of Night: +1 stealth.') && NU.test('Oshri attempts to block with +2 intercept (Second Tradition: Domain).'), '121f the net\'s two readers match the bot\'s own stealth line and the unlock-reaction attempt line');
-  ok(/\(st\.fromBoard \? 'burns' : 'plays'\) \+ ' ' \+ esc\(st\.name\) \+ ': \+' \+ st\.s \+ ' stealth\.'/.test(src121) && /attempts to block with \+' \+ unIc \+ ' intercept \(<b>'/.test(src121), '121f ...and those strings are still what the source emits');
+  const NS = /^(.+?) (?:plays|burns|locks) .+?: \+(\d+) stealth\.$/, NU = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;   // v0.6.205: + 'locks' (The Labyrinth)
+  ok(NS.test('Colette plays Lost in Crowds: +1 stealth.') && NS.test('Colette burns The Path of Night: +1 stealth.') && NS.test('Ryan (G6) locks The Labyrinth: +1 stealth.') && NU.test('Oshri attempts to block with +2 intercept (Second Tradition: Domain).'), '121f the net\'s two readers match the bot\'s own stealth line and the unlock-reaction attempt line');
+  ok(/\(st\.fromBoard \? \(st\.lock \? 'locks' : 'burns'\) : 'plays'\) \+ ' ' \+ esc\(st\.name\) \+ ': \+' \+ st\.s \+ ' stealth\.'/.test(src121) && /attempts to block with \+' \+ unIc \+ ' intercept \(<b>'/.test(src121), '121f ...and those strings are still what the source emits');
     }
 
     /* 122) v0.6.152 — THE BREATH: the beat anchored on the table's last event, the stealth first look after the beat, 'I currently have N stealth', intercept by chat */
@@ -10192,6 +10192,278 @@ async function connectWithRetry(client, tries = 30){
         await g2.run();
         const aRow2 = g2.A.rows.find(r => r.round === 1) || {};
         ok(aRow2.strike === 'hands' && g2.A.hand.includes('Dodge'), '146e ...with combatEndStats 0 there is no expectation to weigh: the old blood <= 1, it strikes (got ' + JSON.stringify({ a: aRow2.strike }) + ')'); }
+    }
+
+    /* 147) v0.6.205 -- R4, the play-test's F21: Revelations against a bot. Only a human line aimed at my POOL armed the [aus]
+       mode (a vampire aim or none never did, a bare "plays Revelations." matched nothing), and after the reveal the human's
+       pick -- the client's private Target line -- was dropped. Revelations is prey-locked by its text: both modes arm when the
+       actor's prey is me, whatever the suffix; the pick comes by the client's logTo or a typed "discard CARD", from that actor,
+       until the turn ends. */
+    {
+      console.log('\n[147] v0.6.205 -- R4 (F21): Revelations against a bot -- armed by the prey, the human’s pick read');
+      const mk147 = () => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.players = [{ seat: 1, name: 'Hanna', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Viktor', online: true }];
+        u.seat = 2; u.started = true; u.pool = 10; u.msgs = []; u.chats = []; u.notes = [];
+        u.send = m => u.msgs.push(m); u.chat = m => u.chats.push(m); u.note = m => u.notes.push(m); u.push = () => {}; u.fxClone = () => {};
+        u._reactWindow = () => {}; u._restartAskTimer = () => {};
+        u.board = [{ id: 'w1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 3 }];
+        return u; };
+      const armed = (u, who, line) => { u._onLog(who, line); const p = u.pending; const r = p ? { kind: p.kind, sup: p.peekSup, who: p.who } : null; if(u.pending){ u._clearPending('test'); } return r; };
+
+      // a) the arming: every shape of the human client's line, the actor's prey only
+      { const u = mk147();
+        const r1 = armed(u, 'Hanna', "Lisa plays Revelations [aus]. Target: U's Wauneka (G6).");
+        const r2 = armed(u, 'Hanna', 'Lisa plays Revelations.');
+        const r3 = armed(u, 'Hanna', 'Lisa plays Revelations [aus].');
+        const r4 = armed(u, 'Hanna', "Lisa plays Revelations [aus]. Target: U's pool.");
+        const r5 = armed(u, 'Hanna', "Lisa plays Revelations [AUS].");
+        const r6 = armed(u, 'Hanna', "Lisa plays Revelations [aus]. Target: Viktor's Bob.");
+        const ok1 = r => !!(r && r.kind === 'peek' && r.sup === false && r.who === 'Hanna');
+        ok(ok1(r1) && ok1(r2) && ok1(r3), '147a F21: the actor’s prey arms the [aus] peek on a VAMPIRE aim, on a bare play line (no mode chooser) and with no aim (v0.6.204: only "Target: U’s pool." armed; got ' + JSON.stringify([r1, r2, r3]) + ')');
+        ok(ok1(r4) && !!(r5 && r5.kind === 'peek' && r5.sup === true), '147a ...the pool aim still arms, and [AUS] arms the open hand, as before');
+        ok(ok1(r6), '147a ...a stale aim at another seat’s vampire changes nothing: Revelations reads "your prey" (got ' + JSON.stringify(r6) + ')');
+        const r7 = armed(u, 'Viktor', "Bob plays Revelations [aus]. Target: U's pool.");
+        ok(r7 === null, '147a ...and a Methuselah whose prey I am not never arms me, aim or not (got ' + JSON.stringify(r7) + ')'); }
+
+      // b) the human actor's pick by the client's Target: the private line, from that actor
+      { const u = mk147(); u.hand = ['Deflection', 'Computer Hacking', "Cats' Guidance"];
+        u.pending = { who: 'Hanna', amount: 0, kind: 'peek', peekSup: false, actorName: 'Hanna', reacted: new Set(), attempted: new Set() };
+        u._applyPending('test');
+        const rv = u.msgs.find(m => m.t === 'revealHand');
+        const told = u.chats.find(c => /pick the card I discard \(Revelations\)/.test(c));
+        ok(!!rv && rv.to === 1 && !!told && /Hanna/.test(told) && /discard CARD/.test(told), '147b after the reveal the human actor is told how to pick: the client’s Target, or "discard CARD" (' + JSON.stringify(told || null) + ')');
+        u.msgs.length = 0;
+        u._handlers.logTo({ from: 'Viktor', html: '⋖ <b>Viktor</b> targets <b>Deflection</b> (revealed to you — they are targeting it).' });
+        ok(u.hand.includes('Deflection') && !u.msgs.some(m => m.t === 'draw'), '147b ...a Target line from another Methuselah is not the pick');
+        u._handlers.logTo({ from: 'Hanna', html: '⋖ <b>Hanna</b> targets <b>Cats&#39; Guidance</b> (revealed to you — they are targeting it).' });
+        ok(!u.hand.includes("Cats' Guidance") && u.board.some(c => c.zone === 'ash' && c.name === "Cats' Guidance") && u.msgs.some(m => m.t === 'draw') && !u._revPick,
+           '147b ...the actor’s Target line is the pick: the card goes to the ash heap and I draw (the client escapes the apostrophe; got hand ' + JSON.stringify(u.hand) + ')');
+        u.msgs.length = 0;
+        u._handlers.logTo({ from: 'Hanna', html: '⋖ <b>Hanna</b> targets <b>Deflection</b> (revealed to you — they are targeting it).' });
+        ok(u.hand.includes('Deflection') && !u.msgs.some(m => m.t === 'draw'), '147b ...one pick per Revelations: a second Target line discards nothing'); }
+
+      // c) the typed pick, the old bot actor's command, and the end of the turn
+      { const u = mk147(); u.hand = ['Deflection', 'Computer Hacking'];
+        u.pending = { who: 'Hanna', amount: 0, kind: 'peek', peekSup: false, actorName: 'Hanna', reacted: new Set(), attempted: new Set() };
+        u._applyPending('test'); u.msgs.length = 0;
+        u._onChat('Viktor', 'discard Deflection');
+        ok(u.hand.includes('Deflection'), '147c a typed "discard" from another seat is table talk');
+        u._onChat('Hanna', 'discard computer hacking');
+        ok(!u.hand.includes('Computer Hacking') && u.msgs.some(m => m.t === 'draw'), '147c ...the actor’s typed "discard computer hacking" is the pick, in any case (got ' + JSON.stringify(u.hand) + ')');
+        const u2 = mk147(); u2.hand = ['Deflection']; u2.started = false; u2.turnSeat = 1;
+        u2.pending = { who: 'Hanna', amount: 0, kind: 'peek', peekSup: false, actorName: 'Hanna', reacted: new Set(), attempted: new Set() };
+        u2._applyPending('test'); u2._handlers.turn({ seat: 3 }); u2.msgs.length = 0;
+        u2._onChat('Hanna', 'discard Deflection');
+        ok(u2.hand.includes('Deflection') && !u2.msgs.some(m => m.t === 'draw'), '147c ...the pick belongs to its action: after the turn has passed a "discard" discards nothing');
+        const u3 = mk147(); u3.hand = ['Deflection'];
+        u3._handlers.logTo({ html: 'Revelations: discard <b>Deflection</b>.' });
+        ok(!u3.hand.includes('Deflection') && u3.msgs.some(m => m.t === 'draw'), '147c ...a bot actor’s own "Revelations: discard X." works as before'); }
+    }
+
+    /* 148) v0.6.205 -- R4, the play-test's F23: the masters of the V5 decks the auto tier had certified FULL. The Labyrinth
+       (lock for +1 stealth to a Nosferatu), Guardian Angel (on a READY vampire: +1 intercept against a bleed at me, prevent 1
+       each combat, burned when the host goes to torpor), Wasserschloss Anif (a blood bank: in from a ready Tremere in the
+       master phase, out onto an uncontrolled Tremere in the influence phase), and found on the way: Arcane Library's lock
+       ('during your influence phase') had never fired in play, and a vampire filled to capacity before the transfers had no
+       way to ready. */
+    {
+      console.log('\n[148] v0.6.205 -- R4 (F23): The Labyrinth, Guardian Angel, Wasserschloss Anif, Arcane Library in play');
+      const IF8 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const strip148 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const mk148 = (name, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', deckName: deck || 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: name || 'U', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.notes = []; u.note = m => u.notes.push(m); u.chat = () => {}; u._emit = () => {};
+        return u; };
+
+      // a) The Labyrinth
+      { const u = mk148('U', 'nosferatu');
+        const lab = { id: 'lb', name: 'The Labyrinth', kind: 'lib', zone: 'ready', locked: false };
+        const nos = { id: 'n1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3, cap: 4, attached: [] };
+        const tre = { id: 't1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3, cap: 6, attached: [] };
+        u.board = [lab, nos, tre]; u.hand = ['Lost in Crowds'];
+        const fx = u.fxLookup('The Labyrinth');
+        ok(!!(fx && fx.e && fx.e.src === 'hand' && (fx.e.modes || []).some(mo => mo.lock && mo.fx && mo.fx.lockStealth === 1)), '148a the curated entry: a lock for +1 stealth (lockStealth), src hand (the auto tier: fx.stealth, which only the hand finder reads)');
+        const st = u._bestStealthFor(nos, new Set(), 1);
+        ok(!!(st && st.name === 'The Labyrinth' && st.s === 1 && st.lock), '148a a Nosferatu actor: the Labyrinth is offered first on a tie with Lost in Crowds [obf] +1 -- a lock, the hand card is kept (got ' + JSON.stringify(st) + ')');
+        const st2 = u._bestStealthFor(tre, new Set(), 1);
+        ok(!(st2 && st2.name === 'The Labyrinth'), '148a ...never to a vampire of another clan ("a Nosferatu you control")');
+        const sk = u._stealthStack(nos, new Set());
+        ok(sk.S === 2 && sk.sum === 2, '148a ...and the stealth stack counts it like a card (' + JSON.stringify(sk) + ')');
+        const av = { v: nos, n: 1, played: new Set(), target: 1 }, a = { contested: false };
+        u._bumpTallyA = () => {}; u._restartAskTimer = () => {};
+        if(st && st.lock) u._spendStealthCard(st, av, a);
+        const line = u.sent.filter(m => m.t === 'log').map(m => strip148(m.html)).find(l => /The Labyrinth/.test(l));
+        ok(lab.locked === true && u.board.includes(lab) && u.hand.includes('Lost in Crowds') && line === 'Ryan (G6) locks The Labyrinth: +1 stealth.', '148a spent: the card LOCKS and stays in play, the hand keeps its card ("' + line + '")');
+        const st3 = u._bestStealthFor(nos, new Set(), 1);
+        ok(!!(st3 && st3.name === 'Lost in Crowds'), '148a ...locked, it is not offered again this turn (the hand card next)');
+        const ev = u._evClassify('U', 'Ryan (G6) locks The Labyrinth: +1 stealth.', 'log');
+        ok(!!(ev && ev.kind === 'stealth' && ev.n === 1), '148a ...and the line is typed as stealth (NET_STEALTH reads "locks" too)'); }
+
+      // b) Guardian Angel: the host, the intercept, the prevent, the burn
+      { const u = mk148('U', 'nosferatu');
+        const big = { id: 'b1', name: 'Belinde (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 6, attached: [] };
+        const small = { id: 's1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] };
+        const torp = { id: 'p1', name: 'The Dowager (G6)', kind: 'crypt', zone: 'torpor', locked: false, blood: 0, cap: 6, attached: [] };
+        u.board = [small, torp, big];
+        const h = IF8(u, '_hostReadyFor') ? u._hostReadyFor('Guardian Angel') : null;
+        ok(!!(h && h.name === 'Belinde (G6)'), '148b Guardian Angel goes on a READY vampire: the highest capacity (Belinde 6, not The Dowager 6 in torpor, not Ryan 4; got ' + (h && h.name) + ')');
+        u.pool = 10; u.hand = ['Guardian Angel'];
+        const cands = u._bestMasterFor(new Set());
+        ok(cands.length === 1 && cands[0].host === 'ready' && cands[0].curated === true, '148b ...the master candidate carries host "ready" and is curated');
+        const ga = { id: 'ga', name: 'Guardian Angel', kind: 'lib', zone: 'ready', locked: false, host: 'b1' }; big.attached = ['ga']; u.board.push(ga);
+        const h2 = IF8(u, '_hostReadyFor') ? u._hostReadyFor('Guardian Angel') : null;
+        ok(!!(h2 && h2.name === 'Ryan (G6)'), '148b ...never a second one on the same vampire (got ' + (h2 && h2.name) + ')');
+        const icB = u.interceptPotential(null, { kind: 'bleed', attempted: new Set() }), icP = u.interceptPotential(null, { kind: 'pool', attempted: new Set() });
+        ok(icB === 1 && icP === 0, '148b its +1 intercept counts in a block of a BLEED at me, not of another action (bleed ' + icB + ', pool ' + icP + ')');
+        ok(u._blockerWorth(big) > u._blockerWorth(Object.assign({}, big, { attached: [] })), '148b ...and my forecasts price the host as the better blocker against my predator’s bleeds');
+        // the prevent, once each combat (145i's fast human table)
+        { const c = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'C', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 0.05, phaseSecs: 0.08, log: () => {} });
+          c.seat = 2; c.started = true; c.caps.tally = true; c.push = () => {}; c.say = () => {}; c.send = () => {}; c.chats = []; c.chat = m => c.chats.push(m); c.notes = []; c.note = m => c.notes.push(m); c.fxClone = () => {};
+          c.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'C', bot: true }];
+          c.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
+          const bv = { id: 'b1', name: 'Belinde (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 6, attached: ['ga'] };
+          c.board = [bv, { id: 'ga', name: 'Guardian Angel', kind: 'lib', zone: 'ready', locked: false, host: 'b1' }]; c.hand = [];
+          c._actingVamp = { v: bv, n: 1, played: new Set() };
+          c._awaitOppStrike = () => Promise.resolve({ vamp: 'Lisa', dodge: false, dealt: 2 });
+          await c._resolveCombat(bv, 'Lisa');
+          const pv = c.notes.filter(n => /prevents 1 damage \(Guardian Angel/.test(n));
+          ok(pv.length === 1 && bv.blood === 3, '148b in combat the host prevents 1 damage, once: a strike for 2 costs Belinde 1 (blood ' + bv.blood + '; ' + pv.length + ' prevent line)'); }
+        const evp = u._evClassify('U', 'Belinde (G6) prevents 1 damage (Guardian Angel, once this combat).', 'log');
+        ok(!!(evp && evp.kind === 'prevent' && evp.n === 1 && evp.vamp === 'Belinde (G6)'), '148b ...the line is typed as a prevention, so the opposing bot’s strike-vs-taken invariant hears it');
+        // the burn at torpor
+        u._fameTorporHook(big);
+        ok(!u.board.includes(ga) && !(big.attached || []).includes('ga') && u.board.some(c => c.zone === 'ash' && c.name === 'Guardian Angel'), '148b the host goes to torpor: Guardian Angel burns ("If this vampire is in torpor, burn this card")'); }
+
+      // c) Wasserschloss Anif: the bank
+      { const u = mk148('U', 'tremere'); u.pool = 20;
+        const ws = { id: 'ws', name: 'Wasserschloss Anif, Austria', kind: 'lib', zone: 'ready', locked: false, blood: 0 };
+        const tre = { id: 't1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 6, attached: [] };
+        const unc = { id: 'u1', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', faceDown: true, locked: false, blood: 1, cap: 4 };
+        u.board = [ws, tre, unc]; u.unc = [unc]; u.hand = [];
+        if(IF8(u, '_considerBankIn')) await u._considerBankIn('master');
+        ok(ws.blood === 1 && tre.blood === 4, '148c master phase: a ready Tremere that can spare it moves 1 blood onto the bank (bank ' + ws.blood + ', Anxo ' + tre.blood + ')');
+        if(IF8(u, '_considerBankIn')) await u._considerBankIn('master');
+        ok(ws.blood === 2, '148c ...each master phase (one move a phase; bank ' + ws.blood + ')');
+        await u._considerLockIncome('influence');
+        ok(ws.locked === true && ws.blood === 0 && unc.blood === 3 && u.sent.some(m => m.t === 'log' && /locks <b>Wasserschloss Anif, Austria<\/b> to move 2 blood to an uncontrolled vampire/.test(m.html)),
+           '148c influence phase: the bank locks and moves every counter onto the uncontrolled Tremere (Lauren 1 -> ' + unc.blood + '), the target unnamed (it is face down)');
+        const u2 = mk148('U2', 'tremere'); u2.pool = 20;
+        const ws2 = { id: 'ws', name: 'Wasserschloss Anif, Austria', kind: 'lib', zone: 'ready', locked: false, blood: 0 };
+        const tre2 = { id: 't1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 6, attached: [] };
+        u2.board = [ws2, tre2]; u2.unc = []; u2.hand = [];
+        if(IF8(u2, '_considerBankIn')) await u2._considerBankIn('master');
+        ok(ws2.blood === 0 && tre2.blood === 5, '148c ...nothing is banked while no Tremere waits in my uncontrolled region');
+        const unc3 = { id: 'u3', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', faceDown: true, locked: false, blood: 2, cap: 4 };
+        u2.board.push(unc3); u2.unc = [unc3]; ws2.blood = 2;
+        await u2._considerLockIncome('influence');
+        ok(ws2.blood === 2 && unc3.blood === 2 && !ws2.locked, '148c ...and the payout never fills a vampire to its capacity (2 + 2 = 4 = Lauren’s capacity: the transfers would have nothing left to pay and v0.6.204’s loop no path to ready -- the bank waits)'); }
+
+      // d) found on the way: Arcane Library's lock in the influence phase of a real turn, and the rise of a vampire already at capacity
+      { const u = mk148('U', 'tremere'); u.pool = 20; u.turnSeat = 2; u.ownTurns = 5; u.cryptN = 0;
+        const al = { id: 'al', name: 'Arcane Library', kind: 'lib', zone: 'ready', locked: false };
+        const tp = { id: 'tp', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'torpor', locked: false, blood: 0, cap: 6, attached: [] };
+        const unc = { id: 'u1', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', faceDown: true, locked: false, blood: 1, cap: 4 };
+        u.board = [al, tp, unc]; u.unc = [unc]; u.hand = []; let terr = null;
+        try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const logs = u.sent.filter(m => m.t === 'log').map(m => strip148(m.html));
+        ok(!terr && logs.some(l => /locks Arcane Library to add 1 blood to an uncontrolled vampire/.test(l)), '148d Arcane Library locks in the influence phase of a real turn (v0.6.204: it was played and never used -- the phase never asked; ' + (terr || logs.filter(l => /Arcane|influence/i.test(l)).join(' | ')) + ')');
+        const u2 = mk148('U2', 'tremere'); u2.pool = 10; u2.inf = 1; u2.cryptN = 0;
+        const full = { id: 'f1', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', faceDown: true, locked: false, blood: 4, cap: 4 };
+        u2.board = [full]; u2.unc = [full]; u2._infSaid = [];
+        await u2._influenceLoopInner();
+        ok(full.zone === 'ready' && u2.pool === 10 && u2.inf === 1, '148d a vampire already at capacity rises for free -- no transfer, no pool (v0.6.204 stopped the phase at "need 0" and left it in the uncontrolled region; got ' + full.zone + ', pool ' + u2.pool + ')');
+        ok(u2._influenceSentence(u2._infSaid) === 'Lauren enters play at capacity.', '148d ...said once, without a "0 blood" ("' + u2._influenceSentence(u2._infSaid) + '")'); }
+    }
+
+    /* 149) v0.6.205 -- R4, the play-test's F23 and Johan's decision 5 (16 Oct): Haven Uncovered is not played until the bot can
+       rush through it, then on an opponent's vampire. The rush through it: any minion enters combat with the host as a +1
+       stealth (D) action, no card from hand, the Haven stays, nobody locks, the rusher is the acting minion; the frozen
+       placement and rush lines (L12.havenM / L12.havenRush), heard by every observer and answered by the host's owner. */
+    {
+      console.log('\n[149] v0.6.205 -- R4 (F23): Haven Uncovered -- played on the rush target, the rush through it on both sides');
+      const IF9 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const strip149 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const L12h = require('./elysium-bot.js').L12;
+
+      // a) the data and the frozen lines
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        const fx = u.fxLookup('Haven Uncovered');
+        ok(!!(fx && fx.e && fx.e.src === 'hand' && (fx.e.modes || []).some(mo => mo.fx && mo.fx.rushGrant === 1)), '149a the curated entry: rushGrant (the +1 stealth of the granted rush), src hand (the auto tier: fx.stealth, tabled on the bot’s own board)');
+        ok(!!(L12h.havenM && 'Hanna plays Haven Uncovered — on Viktor\'s Anxo Vilela (G6).'.match(L12h.havenM)) && !!(L12h.havenRush && "Ryan (G6) enters combat with Viktor's Anxo Vilela (G6) (Haven Uncovered).".match(L12h.havenRush)),
+           '149a the frozen placement and rush lines parse');
+        const e1 = u._evClassify('Hanna', "Ryan (G6) enters combat with Viktor's Anxo Vilela (G6) (Haven Uncovered).", 'log');
+        const e2 = u._evClassify('Hanna', 'Hanna plays Haven Uncovered — on Viktor\'s Anxo Vilela (G6).', 'log');
+        ok(!!(e1 && e1.kind === 'announce' && e1.action === 'rush' && e1.directed === true && e1.target === 'Anxo Vilela (G6)') && !!(e2 && e2.kind === 'card-played' && e2.card === 'Haven Uncovered'),
+           '149a ...and the event log types both in the same release (' + JSON.stringify([e1 && e1.kind, e2 && e2.kind]) + ')'); }
+
+      // b) the hold and the pick
+      { const mk = () => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Hanna', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
+          u.seat = 1; u.started = true; u.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
+          u.table = { 2: { pub: { cards: [{ id: 'x1', kind: 'crypt', name: 'Anxo Vilela (G6)', zone: 'ready', blood: 1 }] } } }; u._emit = () => {}; return u; };
+        const u = mk(); u.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 0, cap: 4, attached: [] }];
+        ok(IF9(u, '_havenHostPick') && u._havenHostPick() === null, '149b no ready rusher with blood: the Haven is held (Johan: not played until the bot can rush through it)');
+        const u2 = mk(); u2.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] }];
+        const pk = IF9(u2, '_havenHostPick') ? u2._havenHostPick() : null;
+        ok(!!(pk && pk.name === 'Anxo Vilela (G6)' && pk.seat === 2 && pk.rusher === 'Ryan (G6)'), '149b ...a rusher with a target: the Haven goes on the vampire the rush doctrine picks -- an opponent’s, never mine (got ' + JSON.stringify(pk && { name: pk.name, seat: pk.seat, rusher: pk.rusher }) + ')');
+        u2._havenSeen = { 'Anxo Vilela (G6)': { owner: 'Viktor', seat: 2, by: 'Viktor', bySeat: 2, cardId: null } };
+        u2.table[2].pub.cards.push({ id: 'hv', kind: 'lib', name: 'Haven Uncovered', zone: 'ready' });
+        const hr = IF9(u2, '_bestHavenRushFor') ? u2._bestHavenRushFor(u2.board[0]) : null;
+        ok(!!(hr && hr.kind === 'rush' && hr.via === 'haven' && hr.idx === null && hr.st === 1 && hr.target.name === 'Anxo Vilela (G6)'), '149b any Haven on the table is a rush for my minion: +1 stealth, no card from hand (idx null), at its host (got ' + JSON.stringify(hr && { via: hr.via, idx: hr.idx, st: hr.st, t: hr.target && hr.target.name }) + ')');
+        u2.hand = ['Deep Song']; u2.board[0] = { id: 'w1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 5, attached: [] };
+        const both = u2._bestRushFor(u2.board[0]);
+        ok(!!(both && both.via === 'haven'), '149b ...preferred over Deep Song on the same target (no card spent, +1 stealth; got ' + (both && (both.via || both.name)) + ')');
+        u2.table[2].pub.cards = u2.table[2].pub.cards.filter(c => c.name !== 'Haven Uncovered');
+        const gone = IF9(u2, '_bestHavenRushFor') ? u2._bestHavenRushFor(u2.board[0]) : null;
+        ok(gone === null, '149b ...and gone with the card: a Haven that left its placer’s board grants nothing'); }
+
+      // c) the target side: a window when I can block, the comply without the lock
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Viktor', persona: 'expert', deckName: 'tremere', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
+        u.send = () => {}; u.push = () => {}; u.says = []; u.say = p => u.says.push(p); u.notes = []; u.note = m => u.notes.push(m); u._reactWindow = () => {};
+        const host = { id: 'h1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 6, attached: [] };
+        u.board = [host, { id: 'h2', name: 'Lauren', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4, attached: [] }];
+        u._onLog('Hanna', "Ryan (G6) enters combat with Viktor's Anxo Vilela (G6) (Haven Uncovered).");
+        const p = u.pending;
+        ok(!!(p && p.kind === 'rush' && p.noLock === true && p.targetActs === false && p.rushTarget === 'Anxo Vilela (G6)'), '149c the host’s owner may block with any unlocked minion: the window opens -- the rush locks nobody and the rusher acts (got ' + JSON.stringify(p && { kind: p.kind, noLock: p.noLock, targetActs: p.targetActs }) + ')');
+        let fought = null; u._resolveCombat = (v, opp) => { fought = { v: v.name, opp }; return Promise.resolve(); };
+        if(p) u._complyRush(p);
+        ok(!!fought && fought.v === 'Anxo Vilela (G6)' && fought.opp === 'Ryan (G6)' && host.locked === false && !u._combatActing && u.notes.some(n => /defends \(rushed by Ryan \(G6\), Haven Uncovered\)/.test(n)),
+           '149c ...on my Pass the host fights the rusher without locking, and it is not the acting minion (Deep Song’s reversal stays Deep Song’s)'); }
+
+      // d) between bots, a whole turn: the Haven goes on the rush target in the master phase, the rush goes through it in the minion phase
+      { const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        const mk = (name, seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck, paceMs: 0, askSecs: 0.4, phaseSecs: 0.3, twdKnow: 0, log: () => {} });
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = []; u.evs = [];
+          u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); if(t === 'bot:through' || t === 'bot:haven') u.evs.push({ t, m }); };
+          return u; };
+        const A = mk('Hanna', 1, 'nosferatu'), D = mk('Viktor', 2, 'tremere');
+        const wire = (from, to) => { from.send = m => {
+          if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, 30); return; }
+          if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
+          const txt = m.t === 'log' ? strip149(m.html) : String(m.msg || '');
+          from._evRecord(from.o.name, txt, m.t, true); from.lines.push({ at: Date.now(), tier: m.t, txt });
+          const d = Object.assign({}, m, { who: from.o.name }); setTimeout(() => { if(!to.out) to._dispatch(d); }, 30); }; };
+        wire(A, D); wire(D, A);
+        const ry = { id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] };
+        const ax = { id: 'x1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 1, cap: 6, attached: [] };
+        A.board = [ry]; A.hand = ['Haven Uncovered', 'Roundhouse']; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
+        D.board = [ax]; D.hand = []; D.pool = 20; D.turnSeat = 1;
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: ax.name, zone: 'ready', blood: 1 }] } } };
+        D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: ry.name, zone: 'ready', blood: 4 }] } } };
+        let terr = null;
+        await Promise.race([A._playTurn().catch(e => { terr = e.message; }), sleep(12000)]);
+        A.table[1] = { pub: { cards: A.board.slice() } };   // what D would read of A's board (the placer's Haven)
+        const aL = A.lines.map(l => l.txt);
+        const placed = aL.find(l => /plays Haven Uncovered — on Viktor's Anxo Vilela \(G6\)\./.test(l));
+        const rushed = aL.find(l => /^Ryan \(G6\) enters combat with Viktor's Anxo Vilela \(G6\) \(Haven Uncovered\)\.$/.test(l));
+        ok(!terr && !!placed && A.board.some(c => c.name === 'Haven Uncovered' && c.zone === 'ready') && !A.hand.includes('Haven Uncovered'),
+           '149d master phase: the Haven goes on the opponent’s vampire the rush targets, tabled on my board with the frozen line (' + (terr || placed || aL.filter(l => /Haven|master/i.test(l)).join(' | ')) + ')');
+        ok(!!rushed && !!(D._havenSeen && D._havenSeen['Anxo Vilela (G6)'] && D._havenSeen['Anxo Vilela (G6)'].by === 'Hanna'),
+           '149d minion phase: Ryan enters combat with Anxo through it (the observer recorded the placement; ' + (rushed || aL.filter(l => /Ryan/.test(l)).join(' | ')) + ')');
+        const thr = A.evs.find(e => e.t === 'bot:through' && e.m && e.m.via === 'haven');
+        const aRow = A.rows.find(r => r.round === 1) || {}, dRow = D.rows.find(r => r.round === 1) || {};
+        ok(!!thr && aRow.strike === 'Roundhouse' && !!dRow.round && ax.zone === 'torpor' && A.hand.includes('Haven Uncovered') === false,
+           '149d ...it goes through (Viktor cannot block: no other unlocked minion), both bots fight it, Roundhouse puts Anxo (blood 1) into torpor (got ' + JSON.stringify({ through: !!thr, a: aRow.strike, d: dRow.strike, zone: ax.zone }) + ')'); }
     }
 
 

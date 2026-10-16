@@ -582,7 +582,7 @@ ok(fx.counts.libLock >= 140,
   ok(c['Skidmark (G4)'].archFull === true && c['Skidmark (G4)'].fx.noReplaceActing === true, 'Skidmark: archFull — FULL-BY-ARCHITECTURE, the _flushDraws proof lives in the note');
   ok(['Wauneka (G6)', 'Rosalina Cortez (G6)', 'Mustafa Rahman (G2)', 'Ayelech (G6)'].every(n => c[n] && !c[n].fx),
      'vanilla/title-only vampires stay fx-free (Wauneka, Rosalina, Mustafa, Ayelech)');
-  ok(fx.counts.curated === 99, 'curated count = 79 lib + 20 crypt = 99 (got ' + fx.counts.curated + ') -- 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep)');
+  ok(fx.counts.curated === 105, 'curated count = 85 lib + 20 crypt = 105 (got ' + fx.counts.curated + ') -- 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered)');
   { const bw = fx.lib['Bowl of Convergence']; const am = bw && (bw.modes || []).find(m => m.at === 'AUS');
     ok(!!am && am.fx.intercept === 1 && am.fx.interceptPaid === 1 && am.fx.interceptPaidBlood === 1, 'Bowl of Convergence [AUS]: +1 intercept, and +1 more for 1 blood (sweep pilot, text verified in vtes.json)'); }
   { const R = (n, at) => { const e = fx.lib[n]; const m = e && (e.modes || []).find(mo => (mo.at || null) === at); return !!(m && m.fx && m.fx.ranged); };
@@ -667,6 +667,30 @@ ok(fx.counts.libLock >= 140,
   ok(!(L['Sound of a Breaking Oath'].modes || []).some(mo => mo.fx.selfDmg) && !(L['Rant!'].modes || []).some(mo => mo.fx && mo.fx.selfDmg) && !(L['Car Bomb'].modes || []).some(mo => mo.fx && mo.fx.selfDmg), "NEGATIVES: the opponent's acting minion, a conditional hit");
   ok(C['Sybren van Oosten (G6)'].fx.selfUnlock.when === 'refPassed' && C['Alexa Draper (G6)'].fx.voteBoostDiscard.disc === 'dom' && C['Alexander Silverson (G6)'].fx.voteTaxAgainst === 1 && !C['Alexander Silverson (G6)'].docOnly, 'crypt: Sybren, Alexa, Silverson (live)');
   ok(C['Sybren van Oosten (G6)'].votes === 2 && C['Alexa Draper (G6)'].cap === 8 && C['Alexa Draper (G6)'].disc.sup.join() === 'dom,pre', 'a curated crypt entry keeps the structured fields');
+}
+
+/* ---- R4 (bot v0.6.205, 16 Oct 2026, the play-test review's F23): every master of the four V5 decks is hand-checked ---- */
+{
+  console.log('\nthe V5 decks\u2019 masters are curated -- R4 (the play-test review, F23)');
+  const L = res.out.lib, A = res.out.alias || {};
+  const bad = [], seen = [];
+  ['malkavian', 'tremere', 'nosferatu', 'ventrue'].forEach(d => {
+    const deck = JSON.parse(fs.readFileSync(here('deck-' + d + '.json'), 'utf8'));
+    (deck.library || []).forEach(e => { const k = L[e.name] ? e.name : A[String(e.name).toLowerCase()]; const ent = k && L[k];
+      if(ent && (ent.t || []).includes('master')){ seen.push(k); if(ent.src !== 'hand') bad.push(d + ': ' + k); } }); });
+  ok(seen.length >= 30 && !bad.length, 'every master in the four V5 decks is src:hand (' + seen.length + ' copies of masters; not curated: ' + (bad.join(', ') || 'none') + ')');
+  const lab = L['The Labyrinth'].modes[0];
+  ok(lab.lock === true && lab.fx.lockStealth === 1 && lab.fx.lockStealthClan === 'Nosferatu' && lab.fx.stealth === undefined, 'The Labyrinth: a lock for +1 stealth to a Nosferatu (lockStealth), no hand-finder stealth');
+  const ga = L['Guardian Angel'];
+  ok(ga.host === 'ready' && ga.burnOnHostTorpor === true && ga.modes[0].fx.hostIntercept === 1 && ga.modes[0].fx.hostInterceptOn === 'bleed' && ga.modes[0].fx.hostPrevent === 1 && ga.cost && ga.cost.pool === 2,
+     'Guardian Angel: on a ready vampire of mine, +1 intercept on a bleed at me, prevent 1 each combat, burned at torpor, 2 pool');
+  const ws = L['Wasserschloss Anif, Austria'];
+  ok(ws.modes.length === 2 && ws.modes[0].phase === 'master' && !ws.modes[0].lock && ws.modes[0].fx.bankIn === 1 && ws.modes[1].lock === true && ws.modes[1].phase === 'influence' && ws.modes[1].fx.bankOut === 'unc' && ws.modes.every(mo => mo.fx.bankClan === 'Tremere' && mo.fx.stealth === undefined),
+     'Wasserschloss Anif: the bank -- in at my master phase, out (a lock) at my influence phase, Tremere; no stealth');
+  const hv = L['Haven Uncovered'];
+  ok(hv.modes.length === 1 && hv.modes[0].fx.rushGrant === 1 && hv.modes[0].fx.stealth === undefined, 'Haven Uncovered: rushGrant 1 (the granted rush\u2019s +1 stealth), no stealth');
+  ok(L['Elder Library'].modes[0].fx.handSize === 1 && L['Elder Library'].modes[0].fx.handSizePermanent === true && L['Ventrue Headquarters'].modes[0].lock === true && L['Ventrue Headquarters'].modes[0].fx.votes === 3,
+     'Elder Library and Ventrue Headquarters keep the auto tier\u2019s right shapes (+1 hand size; a lock for +3 votes)');
 }
 
 console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green'));

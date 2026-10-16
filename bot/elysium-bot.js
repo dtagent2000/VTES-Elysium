@@ -446,6 +446,8 @@ const L12 = {
   lockM: /^(.+?) plays (?:.+?) \u2014 locks (.+?)'s (.+?)\.$/,   // v0.6.128: the FAMILY -- any card (was hard-coded Misdirection; Anarch Troublemaker is the second member). Group numbers unchanged.  //   // M1: frozen -- m[2]=owner seat name, m[3]=vampire; the named owner complies by locking
   pentexM: /^(.+?) plays Pentex(?:\(TM\)|\u2122) Subversion \u2014 on (.+?)'s (.+?)\.$/,   // M2: frozen -- TM/\u2122 tolerant; m[2]=owner, m[3]=the vampire that cannot block
   rush: /^(.+?) plays Deep Song \[ANI\] \u2014 rushes (.+?)'s (.+?)\.$/,   // N2: frozen -- m[2]=target OWNER seat name, m[3]=the rushed vampire; the named owner complies (lock + defender handshake)
+  havenM: /^(.+?) plays Haven Uncovered \u2014 on (.+?)'s (.+?)\.$/,   // v0.6.205 (R4, F23): frozen -- m[1]=the Methuselah who placed it, m[2]=the host's OWNER, m[3]=the host; every observer records it (any minion may rush the host through it)
+  havenRush: /^(.+?) enters combat with (.+?)'s (.+?) \(Haven Uncovered\)\.$/,   // v0.6.205 (R4, F23): frozen -- m[1]=the rusher, m[2]=the host's OWNER, m[3]=the host; a +1 stealth directed action the owner may block; the host is NOT locked and the rusher is the acting minion
   fameM: /^(.+?) plays Fame \u2014 on (.+?)'s (.+?)\.$/,   // N3: frozen -- m[2]=owner, m[3]=the famed vampire; ALL observers track it, the owner arms the torpor hook
   creep: /^Creeping Sabotage \(x(\d+)\): (.+?) burns (\d+) pool\.$/,   // N3: frozen -- m[2]=the named prey complies
   rescueE: /^(.+?) rescues (.+?)\u2019s (.+?) from torpor \((.+?) pays (\d+), (.+?) pays (\d+)\)\.$/,   // v0.6.72 (#7): frozen -- m[2]=owner complies, m[3]=vamp, m[5]=their blood share
@@ -1090,7 +1092,7 @@ class Bot {
       dealt: m => {
         this.hand = [...(m.hand || [])];
         this.libN = m.lib || 0; this.cryptN = m.crypt || 0;
-        this.pool = this.o.startPool; this.edge = false; this.board = []; this.unc = []; this._handSizeBonus = 0; this._revPick = null;   /* v0.6.205 (R4, F21) */ this._handSizePermanentPrev = 0;
+        this.pool = this.o.startPool; this.edge = false; this.board = []; this.unc = []; this._handSizeBonus = 0; this._revPick = null; this._havenSeen = null; this._hostPreventUsed = null;   /* v0.6.205 (R4, F21 / F23) */ this._handSizePermanentPrev = 0;
         this.phaseActs = { master: 1, influence: 4, discard: 1 };
         this.phaseBonus = { master: 0, influence: 0, discard: 0 };
         this.phaseUsed = { master: 0, influence: 0, discard: 0 };
@@ -1619,10 +1621,11 @@ class Bot {
       if(!c || c.kind !== 'lib' || c.locked || c.host || this._outOfPlay(c)) return;
       const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') return;
       if(played && played.has(FX_NORM(h.name))) return;   // once per action, as every stealth source
-      (h.e.modes || []).forEach(mo => { const f = mo.fx || {};
-        if(!mo.lock || typeof f.lockStealth !== 'number' || f.lockStealth <= 0) return;
-        if(f.lockStealthClan && this._vampClan(vamp) !== f.lockStealthClan) return;
-        if(!best || f.lockStealth > best.s) best = { name: h.name, s: f.lockStealth, fromBoard: c.id, lock: true }; });
+      (h.e.modes || []).forEach(mo => { if(!mo.lock || !mo.fx) return;
+        const n = mo.fx.lockStealth;   // fx.lockStealth / fx.lockStealthClan -- literal reads, the coverage scanner tracks fx.<key>
+        if(typeof n !== 'number' || n <= 0) return;
+        if(mo.fx.lockStealthClan && this._vampClan(vamp) !== mo.fx.lockStealthClan) return;
+        if(!best || n > best.s) best = { name: h.name, s: n, fromBoard: c.id, lock: true }; });
     });
     return best;
   }
@@ -1723,13 +1726,16 @@ class Bot {
   _influenceSentence(parts){   // v0.6.117: pure -- the suite reads it directly
     const seg = []; let uncN = 0;
     parts.filter(q => q.kind !== 'draw').forEach(q => {
+      if(q.rise && !(q.n > 0)) return;   // v0.6.205: a free rise (already at capacity) moved no blood -- said after the transfers
       if(q.rise) seg.push(q.n + ' blood to ' + q.name + ', who enters play');
       else seg.push(q.n + ' blood to ' + (uncN++ ? 'another' : 'an') + ' uncontrolled vampire');
     });
+    const free = parts.filter(q => q.kind !== 'draw' && q.rise && !(q.n > 0)).map(q => q.name);
     const draw = parts.find(q => q.kind === 'draw');
     let line = '';
     if(seg.length) line = 'I influence ' + (seg.length > 1 ? seg.slice(0, -1).join(', ') + ', and ' + seg[seg.length - 1] : seg[0]);
     if(draw) line += (line ? ', and ' : 'I ') + 'use ' + draw.transfers + ' transfers to draw a new vampire';
+    if(free.length) line += (line ? ', and ' : '') + free.join(' and ') + (free.length > 1 ? ' enter' : ' enters') + ' play at capacity';   // v0.6.205: the free rise -- no transfers, no pool
     return line + '.';
   }
   async _influenceLoopInner(){   // v0.6.37 (Johan's ask, Wider View -- the last Inside Dirt card): extracted verbatim from _playTurn's own influence-phase while-loop, specifically so it's directly testable on its own (matching the same reasoning that pulled _revertHandSizeBonus out of the discard-phase block) -- no behavioral change to the pre-existing raise/draw logic, just a name and a call site. Wider View's own two abilities (a 1-transfer duplicate-swap, a 4-transfer burn-for-2-pool) are new branches inside this same loop, since transfers (this.inf) were already tracked here and both abilities are plain transfer-spending options, NOT lock-gated like Dreams of the Sphinx.
@@ -1775,6 +1781,12 @@ class Bot {
         }
       }
       const raiseables = this.unc.filter(c => this.fxCryptUnique(c.name) === false || !inPlay.has(c.name));   // tag-aware: the five true non-uniques MAY duplicate
+      /* v0.6.205 (R4): a vampire ALREADY at capacity rises for free -- the rulebook moves it to ready in the influence phase without a
+         transfer. Checked before any transfer is planned: the loop below spends transfers only on a need of 1 or more and stopped at
+         'need 0' (and the planner may pick another vampire first and run out of transfers), so a full one stayed in the uncontrolled
+         region for good (Arcane Library, live from this release, can fill one exactly; superior Govern could). */
+      { const fullV = raiseables.find(c => (c.cap | 0) > 0 && (c.blood | 0) >= (c.cap | 0));
+        if(fullV){ await this._pace(); this._riseFromUnc(fullV, 0); brought++; continue; } }
       const cheapest = this._planInfluence(raiseables);   // v2 (influence planner, 12 Sep 2026): multi-vampire transfer allocation replaces the greedy single-pick; _pickRaise kept for test compat
       const zeroReady = !this.board.some(c => c.kind === 'crypt' && c.zone === 'ready');   // v0.6.69 (#1): the survival exception -- a bot with zero ready minions is dead anyway; the floor drops to 1 (never 0 = self-oust)
       const floorEff = zeroReady ? 1 : this._poolFloorEff();   // v0.6.119: the plan raises the knob to one expected predator turn of pool
@@ -1823,25 +1835,27 @@ class Bot {
          blood counters on the face-down card are public, as on a physical table. The rise
          branch flips it, and the rise fx (reveal:true) is the table's flip. */
       if(cheapest.blood >= cheapest.cap){
-        /* RISE — blood reached capacity, move to ready */
-        cheapest.zone = 'ready'; cheapest.locked = false; cheapest.faceDown = false;
-        cheapest.blood = cheapest.cap;                  // clamp (defensive — shouldn't exceed, but safe)
-        this._maybeEnterPlayDraw(cheapest);   // VC: New Blood's printed enter-play crypt draw
-        const rp = this._openSlot('ready', cheapest);   // v0.4.5: was a naive "current ready count" index -- collided whenever an earlier vampire had already left ready out of turn (torpor); see _openSlot
-        cheapest.x = rp.x; cheapest.y = rp.y;
-        this.unc = this.unc.filter(c => c !== cheapest);
-        const preStocked = cheapest.cap - canSpend;     // blood that was already there before this turn's transfers
-        this._emit('raise', { name: cheapest.name, need: canSpend, turn: this.ownTurns | 0, poolAfter: this.pool, infAfter: this.inf });   // v0.6.77 (A5): the turn field makes influence tempo EXACT   // v0.6.76: REALITY beside the reasoning -- phantoms are now exposable
+        /* RISE — blood reached capacity, move to ready (v0.6.205: the body is _riseFromUnc, shared with the free rise above) */
+        this._riseFromUnc(cheapest, canSpend);
         brought++;
-        this.push();
-        this.fxClone({ name: cheapest.name, kind: 'crypt' }, 'rises', { kind: 'rise', reveal: true });   // v0.4.5: the table SEES it now -- was missing entirely; mirrors the client's own cardFx(c,'rise',{reveal}) for a human's uncontrolled/torpor->ready move()
-        if(this._infSaid) this._infSaid.push({ rise: true, name: cheapest.name, n: canSpend });   // v0.6.117: the rise fx + the ledger carry the event; the phase's ONE chat bubble carries the words
       } else {
         /* PARTIAL — blood placed but vampire stays in uncontrolled */
         this.push();
         if(this._infSaid) this._infSaid.push({ rise: false, n: canSpend });   // v0.6.117: nameless (v0.6.114 rule), said in the phase's chat bubble   // v0.6.109 (#3a, Johan): a PARTIAL fill leaks nothing any more -- the card is still face down in my uncontrolled region, so naming it (and its cap, and its progress) handed the table a free read on what is coming. The RISE line below keeps the name deliberately: the moment it rises the card is public on the felt anyway (fxClone reveal:true), so hiding it there would be theatre, not secrecy.
       }
     }
+  }
+  _riseFromUnc(c, paid){             // the RISE: blood reached capacity, the vampire moves to ready. v0.6.205 (R4): one body for the transfer rise (paid = this phase's transfers) and the free rise of a vampire already at capacity (paid 0)
+    c.zone = 'ready'; c.locked = false; c.faceDown = false;
+    c.blood = c.cap;                  // clamp (defensive — shouldn't exceed, but safe)
+    this._maybeEnterPlayDraw(c);   // VC: New Blood's printed enter-play crypt draw
+    const rp = this._openSlot('ready', c);   // v0.4.5: was a naive "current ready count" index -- collided whenever an earlier vampire had already left ready out of turn (torpor); see _openSlot
+    c.x = rp.x; c.y = rp.y;
+    this.unc = this.unc.filter(x => x !== c);
+    this._emit('raise', { name: c.name, need: paid, turn: this.ownTurns | 0, poolAfter: this.pool, infAfter: this.inf });   // v0.6.77 (A5): the turn field makes influence tempo EXACT   // v0.6.76: REALITY beside the reasoning -- phantoms are now exposable
+    this.push();
+    this.fxClone({ name: c.name, kind: 'crypt' }, 'rises', { kind: 'rise', reveal: true });   // v0.4.5: the table SEES it now -- was missing entirely; mirrors the client's own cardFx(c,'rise',{reveal}) for a human's uncontrolled/torpor->ready move()
+    if(this._infSaid) this._infSaid.push({ rise: true, name: c.name, n: paid });   // v0.6.117: the rise fx + the ledger carry the event; the phase's ONE chat bubble carries the words
   }
   _bestBleedModifierFor(vamp, played, limitedUsed){   // steg 2 (15 July, cardfx-persistent-lock-design-decisions.md §13): a usable POST-announce bleed modifier (Leverage-class -- fx.bleed WITHOUT bleedAct, the flag that marks _bestBleedCardFor's own domain, the base action card itself) for the acting vampire's already-live, unblocked action. `costEdge` (Inside Dirt carries the same flag, unconsumed until now) gates on the bot CURRENTLY holding the Edge -- checked entry-level, before even looking at modes, since a card that needs it is simply unplayable without it, exactly like a blood cost the vampire can't pay. steg 4 (16 July, real card_text from vtes.json): `limitedUsed` enforces "only one (limited) bleed modifier per action" (Conditioning/Bonding both carry it; Leverage explicitly does not, per its own "does not count against the limit" text) -- checked entry-level exactly like costEdge, before modes. Any mode granting fx.stealth is skipped outright: stealth has no purpose once the block phase is already over (Bonding's own ruling, "[DOM] cannot be used if you do not need the stealth at the time you play it"), and this is the ONLY window this finder is offered in today -- a general rule, not a Bonding-specific carve-out.
     let best = null;
@@ -2425,9 +2439,9 @@ class Bot {
     const kind = (typeof pOrKind === 'string') ? pOrKind : (pOrKind && pOrKind.kind);
     let n = 0;
     this._hostedMasters(vamp).forEach(c => { const h = this.fxLookup(c.name);
-      (h.e.modes || []).forEach(mo => { const f = mo.fx || {}; if(typeof f.hostIntercept !== 'number') return;
-        if(f.hostInterceptOn === 'bleed' && kind !== 'bleed') return;
-        n += f.hostIntercept; }); });
+      (h.e.modes || []).forEach(mo => { if(!mo.fx || typeof mo.fx.hostIntercept !== 'number') return;   // fx.hostIntercept / fx.hostInterceptOn -- literal reads for the coverage scanner
+        if(mo.fx.hostInterceptOn === 'bleed' && kind !== 'bleed') return;
+        n += mo.fx.hostIntercept; }); });
     return n;
   }
   _hostedPrevent(vamp){              // v0.6.205 (R4, F23): Guardian Angel -- 'This vampire can prevent 1 damage each combat.' Once each combat per card (the equipment prevent's own shape, keyed by the card)
@@ -2706,22 +2720,25 @@ class Bot {
     if(!waitingFor) this._reactWindow();
     return true;
   }
-  _rushWindowOpens(who, rusherVamp, vc){   // v0.6.107 (B1): a Deep Song rush at MY vampire -- a directed action I may block with any unlocked minion; returns true when a window opened (comply follows my own Pass)
+  _rushWindowOpens(who, rusherVamp, vc, ro){   // v0.6.107 (B1): a Deep Song rush at MY vampire -- a directed action I may block with any unlocked minion; returns true when a window opened (comply follows my own Pass). v0.6.205 (R4): ro = { noLock, targetActs, via } for a rush through Haven Uncovered (no lock, the rusher acts)
     if(!this.started || this.out) return false;
     const actorSeat = this._seatOfName(who); if(!actorSeat) return false;
     const unlocked = this.board.some(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && c !== vc) || !!this._wakeCard();
     if(!unlocked) return false;                                        // nobody to block with -- comply as before
     if(this.pending) this._clearPending('superseded by rush');
     const role = (this.nextLive(actorSeat) === this.seat) ? 'prey' : (this.prevLive(actorSeat) === this.seat) ? 'predator' : 'cross';
-    this.pending = { who, amount: 0, kind: 'rush', sub: 'rush', T: 'T5', role, actorSeat, actorUnlocked: 0, actingVampName: rusherVamp, rushTarget: vc.name, targetActs: true, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: !!(this._famedMine && this._famedMine.has(vc.name)) };   // v0.6.202: targetActs -- Deep Song [ANI]: the rushed vampire is the acting minion of the combat
+    this.pending = { who, amount: 0, kind: 'rush', sub: 'rush', T: 'T5', role, actorSeat, actorUnlocked: 0, actingVampName: rusherVamp, rushTarget: vc.name, targetActs: !(ro && ro.targetActs === false), noLock: !!(ro && ro.noLock), via: (ro && ro.via) || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: !!(this._famedMine && this._famedMine.has(vc.name)) };   // v0.6.202: targetActs -- Deep Song [ANI]: the rushed vampire is the acting minion of the combat
     this._reactWindow();
     return true;
   }
   _complyRush(p){                     // v0.6.107 (B1): the rushed vampire locks and fights the rusher (the pre-B1 comply, now on MY Pass)
     const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === p.rushTarget);
     if(!vc) return;
+    if(p.noLock){ this.push(); this.note('Trainbot: ' + vc.name + ' defends (rushed by ' + p.actingVampName + ', Haven Uncovered).'); }   // v0.6.205 (R4, F23): a rush through Haven Uncovered locks nobody
+    else {
     vc.locked = true; this.push();
     this.note('Trainbot: ' + vc.name + ' locks and defends (rushed by ' + p.actingVampName + ').');   // v0.6.155: the rusher's name -- Deep Song's line and a human's rush by chat share this path
+    }
     this._emit('rushed', { vamp: vc.name, by: p.actingVampName });
     this._clearCombatStashes(); this._combatArmed = true;
     if(p.targetActs) this._combatActing = vc.name;   // v0.6.202: Deep Song [ANI] -- my rushed vampire is the acting minion (a human's rush by chat names no card: the rusher stays acting)
@@ -3938,21 +3955,21 @@ class Bot {
       if(drained > 0){ this.pool = Math.max(0, this.pool - drained); this.push(); this.note('Trainbot: Fame drains ' + drained + ' (own-unlock settle).'); if(this.pool <= 0 && !this.out){ this._oust(false); return; } }   // v0.6.202 (the v0.6.140 audit): Fame's unlock drain can oust me too
     }
   }
-  _bestRushTargetFor(vamp){          // v1.1 (rush-theory section 3): the DIRECTION CHOOSER with tunable weights + the counterfactual log
+  _bestRushTargetFor(vamp, ro){      // v1.1 (rush-theory section 3): the DIRECTION CHOOSER with tunable weights + the counterfactual log. v0.6.205 (R4): ro.filter (only these vampires -- the hosts of a Haven Uncovered), ro.quiet (a planning look: no counterfactual row, no counter)
     const press = this._predPressureLast | 0;
     const wB = ((this.o.rushBackWeight ?? 1)) * (1 + Math.min(3, press) * 0.5);   // felt pressure scales the backrush appetite
     const wF = (this.o.rushFwdWeight ?? 1);
     const wC = (this.o.crossRushWeight ?? 0);
     this._rushScoreExp = null;   // v0.6.157: fresh kit per targeting pass
     const evalDir = (seat) => { let b = null;
-      for(const c of this._rushCandidates(seat)){ const r = this._rushScore(vamp, c); if(!b || r > b.raw) b = Object.assign({ raw: r }, c); }
+      for(const c of this._rushCandidates(seat)){ if(ro && ro.filter && !ro.filter(c)) continue; const r = this._rushScore(vamp, c); if(!b || r > b.raw) b = Object.assign({ raw: r }, c); }
       return b; };
     const bPred = evalDir(this.predSeat());
     const bPrey = evalDir(this.preySeat());
     let bCross = null;
     (this.players || []).forEach(p => { if(!p || p.seat === this.seat || p.seat === this.preySeat() || p.seat === this.predSeat() || p.out) return;
       const c = evalDir(p.seat); if(c && (!bCross || c.raw > bCross.raw)) bCross = c; });
-    if(bCross && wC === 0 && (!bPred || bCross.raw > bPred.raw) && (!bPrey || bCross.raw > bPrey.raw)){
+    if(bCross && wC === 0 && !(ro && ro.quiet) && (!bPred || bCross.raw > bPred.raw) && (!bPrey || bCross.raw > bPrey.raw)){
       this._cfCross = (this._cfCross | 0) + 1;             // R-Q5's dataset: the doctrine silenced a raw-threat top pick
       const tPred = this._tableThreat(this.predSeat()), tPrey = this._tableThreat(this.preySeat()), tCross = this._tableThreat(bCross.seat);   // v0.6.58: the R-Q5 dominance triple -- _tableThreat's consumer; the trace carries the gate variable the sweep analyzes
       this._emit('rush-counterfactual', { target: bCross.name, owner: bCross.owner, raw: bCross.raw, tPred, tPrey, tCross });
@@ -3966,7 +3983,41 @@ class Bot {
     for(const o2 of opts) if(o2.w > 0 && (!best || o2.w > best.w || (o2.w === best.w && o2.dir === 'fwd'))) best = o2;   // tie prefers FORWARD (the race clock)
     return best;
   }
-  _bestRushFor(vamp){                // N2: a usable rush card (fx.rush) + a live target
+  _havenHosts(){                     // v0.6.205 (R4, F23): every Haven Uncovered on the table and its host -- anyone's (any minion may enter combat with the host through it), while the card is still in play on its placer's board and the host is READY on its owner's
+    const out = [], seen = this._havenSeen || {};
+    Object.keys(seen).forEach(host => { const r = seen[host]; if(!r) return;
+      const bySeat = r.bySeat || this._seatOfName(r.by), ownSeat = r.seat || this._seatOfName(r.owner);
+      if(!ownSeat || ownSeat === this.seat) return;   // a Haven on my own vampire is the others' business
+      const cardIn = bySeat === this.seat ? this.board.some(c => c && c.id === r.cardId && c.zone === 'ready' && !this._outOfPlay(c))
+        : (((this.table[bySeat] || {}).pub || {}).cards || []).some(c => c && c.kind === 'lib' && c.name === 'Haven Uncovered' && c.zone === 'ready');
+      if(!cardIn) return;
+      const hc = (((this.table[ownSeat] || {}).pub || {}).cards || []).find(c => c && c.kind === 'crypt' && c.name === host && c.zone === 'ready');
+      if(!hc) return;
+      const p = (this.players || []).find(q => q && q.seat === ownSeat);
+      out.push({ name: host, owner: (p && p.name) || r.owner || this.seatName(ownSeat), seat: ownSeat, blood: hc.blood | 0, by: r.by }); });
+    return out;
+  }
+  _havenOnName(name){ const r = this._havenSeen && this._havenSeen[name]; return !!r && this._havenHosts().some(h => h.name === name); }
+  _havenHostPick(){                  // v0.6.205 (R4, F23; Johan, 16 Oct: 'not played until the bot can rush through it, then on an opponent's vampire'): the vampire my rush chooser would rush this turn -- a ready, unlocked rusher of mine with blood, its best target by the rush doctrine's weights; null = hold the card
+    let best = null;
+    (this.board || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && (c.blood | 0) > 0).forEach(v => {
+      const t = this._bestRushTargetFor(v, { quiet: true, filter: c => !(this._havenSeen && this._havenSeen[c.name] && this._havenOnName(c.name)) });   // never a second Haven on one host
+      if(t && (!best || t.w > best.w)) best = Object.assign({ rusher: v.name }, t); });
+    return best;
+  }
+  _bestHavenRushFor(vamp){           // v0.6.205 (R4, F23): 'Minions can enter combat with this vampire as a +1 stealth (D) action.' -- the rush through a Haven Uncovered on the table, chosen by the same doctrine as a rush card (direction weights, torpor reach, the chump lesson); no card leaves the hand (idx null), the Haven stays
+    const hs = this._havenHosts(); if(!hs.length) return null;
+    const names = new Set(hs.map(h => h.name));
+    const t = this._bestRushTargetFor(vamp, { quiet: true, filter: c => names.has(c.name) }); if(!t) return null;
+    return { idx: null, name: 'Haven Uncovered', kind: 'rush', via: 'haven', target: t, lockTarget: false, st: 1, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 };
+  }
+  _bestRushFor(vamp){                // N2: a usable rush card (fx.rush) + a live target. v0.6.205 (R4): or the rush through a Haven Uncovered -- preferred on an equal or better target (+1 stealth, no card spent)
+    const hv = this._bestHavenRushFor(vamp);
+    const card = this._bestCardRushFor(vamp);
+    if(hv && (!card || (hv.target.w || 0) >= (card.target.w || 0))) return hv;
+    return card;
+  }
+  _bestCardRushFor(vamp){            // N2: a usable rush card (fx.rush) + a live target (v0.6.204's _bestRushFor, renamed)
     if(!this.fx) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('action')) continue;
@@ -4814,6 +4865,37 @@ class Bot {
     this._handSizeBonus = 0;
     this.push();
   }
+  _bankTarget(clan, n){              // v0.6.205 (R4, F23): Wasserschloss Anif's payout -- the uncontrolled vampire of the bank's clan that takes n blood and stays UNDER its capacity, nearest to rising first (null: none can)
+    let best = null;
+    (this.unc || []).forEach(v => { if(!v) return;
+      if(clan && this._vampClan(v) !== clan) return;
+      const cap = (v.cap | 0) || this.fxCryptCap(v.name) || 0, after = (v.blood | 0) + (n | 0);
+      if(!(cap > 0) || after >= cap) return;
+      if(!best || after > best.after || (after === best.after && cap < best.cap)) best = { v, after, cap }; });
+    return best ? best.v : null;
+  }
+  async _considerBankIn(phaseKey){   // v0.6.205 (R4, F23): Wasserschloss Anif -- 'During your master phase, a Tremere you control can move 1 blood from themselves to this card.' Once each master phase (the card's ability, not a master phase action), while the bank can still pay out (an uncontrolled vampire of its clan with room for the counters + 1); the vampire is the one that can best spare it (decide('bank-in'), the Blood Doll drain's rule)
+    for(const c of this.board){
+      if(!c || c.kind !== 'lib' || c.host || this._outOfPlay(c)) continue;
+      const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') continue;
+      const mo = (h.e.modes || []).find(m => m.phase === phaseKey && m.fx && (m.fx.bankIn | 0) > 0); if(!mo) continue;
+      const n = mo.fx.bankIn | 0, clan = mo.fx.bankClan || null;
+      const waiting = !!this._bankTarget(clan, (c.blood | 0) + n);
+      const vamps = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && (v.blood | 0) > n && (!clan || this._vampClan(v) === clan)).sort((a, b) => (b.blood | 0) - (a.blood | 0));
+      for(const v of vamps){
+        const d = this.decide('bank-in', Object.assign(this._drainCtx(v), { waiting, card: c.name }));
+        this._emit('bank', { card: c.name, dir: 'in', vamp: v.name, bank: !!d.bank, tag: d.tag || null });
+        if(!d.bank){ this.o.log('bank-in: ' + d.why); if(d.tag === 'nobody-waits' || d.tag === 'danger') break; continue; }
+        await this._pace();
+        v.blood = (v.blood | 0) - n; c.blood = (c.blood | 0) + n;
+        this.o.log('bank-in: ' + d.why);
+        this.fxClone({ name: c.name, kind: 'lib' }, '+' + n + ' blood');
+        this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> moves ' + n + ' blood to <b>' + esc(c.name) + '</b> (' + c.blood + ' on it).' });
+        this.push();
+        break;
+      }
+    }
+  }
   async _considerLockIncome(phaseKey){   // v1.6.4/v0.6.31-32 (Johan's "push Inside Dirt to 100%" GO, Dreams of the Sphinx): the income-flavoured sibling of _considerTurnActGrants -- SAME shape (scan in-play UNLOCKED library permanents, check an eligible lock-gated mode for THIS phase, decide(), lock+apply), generalized so Arcane Library/Chantry (both lock-based income masters, phase-income-v2-plan.md) can reuse this reader later, not just Dreams of the Sphinx. THREE fx shapes handled: poolGain (optionally costEdge-gated at the MODE level -- distinct from Leverage's entry-level costEdge), bloodAdd+bloodAddTo:'unc' (target-selection mirrors _bestBloodStockFor's own spirit), and handSize (source-verified vekn.net: hand size is an ACTIVE target, not a passive ceiling -- "discard down to or draw up to your hand size" whenever it changes; draws immediately up to base(7)+bonus, reverted at end of turn via _revertHandSizeBonus).
     for(const c of this.board){
       if(c.kind !== 'lib' || c.locked || c.host || this._outOfPlay(c)) continue;   // freestanding only -- host-attached recurring income already goes through _applyPhaseIncome
@@ -4852,6 +4934,21 @@ class Bot {
           this.o.log('lock-income: ' + d.why);
           this.fxClone({ name: c.name, kind: 'lib' }, 'is locked');
           this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(c.name) + '</b> to add ' + mo.fx.bloodAdd + ' blood to an uncontrolled vampire' + esc(counterNote2) + '.' });   // uncontrolled is face-down, same "never name the target" convention as superior-Govern's own announce
+          this.push();
+        } else if(mo.fx.bankOut === 'unc'){
+          /* v0.6.205 (R4, F23): Wasserschloss Anif -- 'Lock during your influence phase to move all counters on this card to a
+             Tremere in your uncontrolled region.' All of them, onto one vampire of the bank's clan whose blood stays UNDER its
+             capacity (the transfers that follow in this phase finish it and it rises the usual way; a vampire filled exactly to
+             capacity has no path to ready in _influenceLoop, which spends transfers only on a need of 1 or more). Nearest to rising first. */
+          const n = c.blood | 0; if(n <= 0) continue;
+          const t = this._bankTarget(mo.fx.bankClan, n); if(!t) continue;
+          await this._pace();
+          c.locked = true; c.blood = 0;
+          t.blood = (t.blood | 0) + n;
+          this.o.log('bank-out: ' + c.name + ' -> ' + t.name + ' (' + n + ', now ' + t.blood + '/' + (t.cap | 0) + ')');
+          this._emit('bank', { card: c.name, dir: 'out', n, to: t.name });
+          this.fxClone({ name: c.name, kind: 'lib' }, 'is locked');
+          this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(c.name) + '</b> to move ' + n + ' blood to an uncontrolled vampire.' });   // never name the face-down target (superior Govern's convention)
           this.push();
         } else if(typeof mo.fx.handSize === 'number'){
           const target = 7 + this._handSizePermanentTotal() + (this._handSizeBonus || 0) + mo.fx.handSize;   // v0.6.32/33 (Johan's ask, continuing Dreams of the Sphinx): source-verified vekn.net first -- hand size is NOT a passive ceiling, it's an ACTIVE target: "whenever they don't match... immediately discard down to or draw up to your hand size". 7 is VTES's universal base, UNIFIED with any permanent sources already in play (Elder Library etc.) and any temporary bonus already active THIS turn (a second lock-based card, stacking) -- computing this mode's amount in isolation would under-draw whenever another source is simultaneously active. Only worth locking if there's something to actually gain THIS moment (hand already below the new target) -- otherwise it spends one of the card's 3 total lock-uses for zero benefit, same "don't waste a lock" spirit as Life in the City's own capacity check.
@@ -5235,6 +5332,20 @@ class Bot {
         }
         if(after < (ctx.reserve | 0)) return { drain: false, tag: 'reserve', why: ctx.host.name + ' keeps ' + ctx.reserve + ' blood for the cards in hand (would be left with ' + after + ')' };
         return { drain: true, tag: 'spare', why: ctx.host.name + ' can spare it (' + after + ' left, reserve ' + (ctx.reserve | 0) + ')' };
+      }
+      case 'bank-in': {             // v0.6.205 (R4, F23): Wasserschloss Anif -- 1 blood from a ready Tremere onto the bank, paid out later onto an uncontrolled Tremere (a transfer the pool never pays). The Blood Doll drain's rule (income-drain) with two differences: the bank needs somebody to pay (an uncontrolled vampire of its clan with room), and a pool in danger keeps the blood where a Vessel can still turn it into pool
+        const b = ctx.host.blood | 0, cap = ctx.cap || 99, after = b - 1;
+        const huntScore = x => (Math.max(0, cap - x) / Math.max(1, cap)) * 1.5 / P.aggression;   // hunt-or-bleed's own formula, as income-drain
+        if(!ctx.waiting) return { bank: false, tag: 'nobody-waits', why: (ctx.card || 'the bank') + ': no uncontrolled vampire of its clan can take the counters -- nothing banked' };
+        if(ctx.danger) return { bank: false, tag: 'danger', why: 'pool ' + ctx.pool + (ctx.crit != null ? ' at or under the critical level ' + ctx.crit : '') + ': the blood stays where it can still become pool' };
+        if(after <= 0) return { bank: false, tag: 'last-blood', why: ctx.host.name + ' keeps its last blood' };
+        if(huntScore(b) >= 1) return { bank: true, tag: 'hunting-anyway', why: ctx.host.name + ' (' + b + '/' + cap + ') hunts this turn with or without it: the blood is free for the bank' };
+        if(huntScore(after) >= 1){
+          if(!ctx.hasAction) return { bank: true, tag: 'nothing-better', why: ctx.host.name + ' has no card action worth a turn: 1 blood to the bank and a hunt' };
+          return { bank: false, tag: 'keeps-action', why: ctx.host.name + ' (' + b + '/' + cap + ') would drop under its hunt bar and lose ' + ctx.hasAction };
+        }
+        if(after < (ctx.reserve | 0)) return { bank: false, tag: 'reserve', why: ctx.host.name + ' keeps ' + ctx.reserve + ' blood for the cards in hand (would be left with ' + after + ')' };
+        return { bank: true, tag: 'spare', why: ctx.host.name + ' can spare 1 for the bank (' + after + ' left, reserve ' + (ctx.reserve | 0) + ')' };
       }
       case 'income-direction': {    // v0.6.125: feed a 0-blood host from a comfortable pool (max(10, poolFloor + 4) -- the forced hunt it spares is a whole action; below that the pool is worth more than the action)
         const dry = (ctx.host.blood | 0) === 0, rich = (ctx.pool | 0) >= Math.max(10, (this.o.poolFloor | 0) + 4);   // an ABSOLUTE floor too: the suite's own 0-blood scenario (pool 5) must still hunt -- 5 pool is nobody's comfortable
@@ -6787,6 +6898,9 @@ class Bot {
     if((m = t.match(/^(\d+) blood banked onto an uncontrolled vampire/))) return { kind: 'blood', delta: +m[1], via: 'stock', uncontrolled: true };   // v0.6.179: superior Govern ADDS blood from the bank ("Add 3 blood to a younger vampire in your uncontrolled region") -- not a pool cost
     if((m = t.match(/^(.+?) unlocks \u2014 (.+?) \(/))) return { kind: 'unlock', vamp: S(m[1]), card: S(m[2]) };
     if((m = t.match(/^(.+?) locks and (defends|is the acting minion)/))) return { kind: 'combat-start', vamp: S(m[1]), role: m[2] === 'defends' ? 'defender' : 'actor' };
+    if((m = t.match(/^(.+?) defends \(rushed by (.+?), Haven Uncovered\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'defender', by: S(m[2]) };   // v0.6.205 (R4): a rush through Haven Uncovered locks nobody
+    if((m = t.match(/^Combat begins: (.+?) against (.+?) \(Haven Uncovered\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'actor', opp: S(m[2]) };
+    if((m = t.match(L12.havenRush))) return { kind: 'announce', vamp: S(m[1]), action: 'rush', directed: true, card: 'Haven Uncovered', owner: S(m[2]), target: S(m[3]) };   // v0.6.205 (R4, F23): the frozen rush line
     if((m = t.match(/^(.+?) has no counters left \u2014 burned/))) return { kind: 'card-burned', card: S(m[1]) };
     if(/\(uncurated \u2014 adjust if needed\)|is seated\. We answer to|a bare "bleed N" goes to your prey|please play with an open hand|the next rise comes cheaper|pick the card I discard \(Revelations\)/.test(t)) return { kind: 'note' };   // v0.6.205: + the Revelations pick instruction
     return null;
@@ -7045,6 +7159,28 @@ class Bot {
           this._clearCombatStashes(); this._combatArmed = true;   // v0.6.103 (#1): a fresh handshake against the named rusher
           this._combatActing = vc.name;   // v0.6.202: Deep Song [ANI] -- "the target vampire is considered the acting minion during that combat": mine speaks first in the bot-vs-bot handshake
           this._resolveCombat(vc, m[1]).catch(e => this.o.log('rush defend error:', e.message));   // VB: the rush ACTOR is the combat opponent -- Blythe's vsClan mod sees the right clan
+        }
+      }
+      return;
+    }
+    if((m = t.match(L12.havenM))){
+      /* v0.6.205 (R4, F23): Haven Uncovered landed on a vampire -- EVERY observer records it: any minion may enter combat with
+         the host as a +1 stealth (D) action (_bestHavenRushFor). The record lives while the card is on its placer's board and
+         the host is ready (_havenHosts reads both on every look). My own placement is recorded where I play it. */
+      if(who !== this.o.name){ this._havenSeen = this._havenSeen || {};
+        this._havenSeen[m[3]] = { owner: m[2], seat: this._seatOfName(m[2]) || null, by: who, bySeat: this._seatOfName(who) || null, cardId: null }; }   // no note: the play line says it (the v0.6.117 duplicate rule)
+      return;
+    }
+    if((m = t.match(L12.havenRush))){
+      /* v0.6.205 (R4, F23): a rush through Haven Uncovered at one of MY vampires -- a +1 stealth directed action I may block with
+         any unlocked minion (the Deep Song window, _rushWindowOpens); on my Pass the host fights WITHOUT locking, and the rusher
+         is the acting minion (Haven makes nobody else acting). */
+      if(m[2] === this.seatName(this.seat) && !this.out && who !== this.o.name){
+        const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === m[3]);
+        if(vc && this._rushWindowOpens(who, m[1], vc, { noLock: true, targetActs: false, via: 'haven' })) return;
+        if(vc){
+          this.say('Pass');   // nobody to block with: the window path's Pass (v0.6.202's lesson -- silent, the rusher's directed ask ran its whole clock)
+          this._complyRush({ who, actingVampName: m[1], rushTarget: vc.name, noLock: true, targetActs: false, via: 'haven' });
         }
       }
       return;
@@ -8444,6 +8580,7 @@ class Bot {
       await this._considerLockIncome('master');   // v0.6.31: Dreams of the Sphinx's blood-add-to-uncontrolled choice (this bot's own sensible-timing pick, not a rules-mandated phase -- the card itself states no restriction)
       await this._considerLockRescue('master');   // v0.6.39: Chantry's own stated phase -- "during your master phase"
       await this._considerHandCycle('master');   // v0.6.42: The Barrens -- not phase-restricted by the card itself, master is this bot's own sensible-timing pick
+      await this._considerBankIn('master');   // v0.6.205 (R4, F23): Wasserschloss Anif -- 'during your master phase, a Tremere you control can move 1 blood from themselves to this card'
       {
         const played = new Set();
         while(this._phaseAvail('master') > 0 && !this.out){
@@ -8471,6 +8608,12 @@ class Bot {
             if(this._uniqueInPlay(d.pick.name)){ played.add(FX_NORM(d.pick.name)); continue; }
             _fmT = this._bestNeutralizeTarget(this.preySeat(), {});   // the rush doctrine: Fame the vampire you intend to rush -- the value pick
             if(!_fmT){ played.add(FX_NORM(d.pick.name)); continue; }
+          }
+          const _hvM = !!(_lk && _lk.kind === 'lib' && (_lk.e.modes || []).some(mo => mo.fx && mo.fx.rushGrant > 0));   // v0.6.205 (R4, F23): fx.rushGrant -- literal read (Haven Uncovered)
+          let _hvT = null;
+          if(_hvM){
+            _hvT = this._havenHostPick();   // Johan (16 Oct, decision 5): only on the vampire my rush chooser would rush this turn -- on an opponent's vampire, never my own
+            if(!_hvT){ this.o.log('master-play: ' + d.pick.name + ' held -- no rusher of mine has a target to enter combat with this turn'); played.add(FX_NORM(d.pick.name)); continue; }   // HOLD pre-splice
           }
           const _sjM = !!(_lk && _lk.kind === 'lib' && (_lk.e.modes || []).some(mo => mo.fx && mo.fx.jackEngine));   // N3: fx.jackEngine -- literal read
           if(_sjM && this._uniqueInPlay(d.pick.name)){ played.add(FX_NORM(d.pick.name)); continue; }
@@ -8516,6 +8659,23 @@ class Bot {
             this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> plays <b>Fame</b> \u2014 on <b>' + esc(this.seatName(_fmT.seat)) + "</b>'s <b>" + esc(_fmT.name) + '</b>.' });
             this._famedSeen = this._famedSeen || {};
             this._famedSeen[_fmT.name] = { owner: this.seatName(_fmT.seat), by: this.o.name };
+            this.push();
+            played.add(FX_NORM(d.pick.name));
+            this.phaseUsed.master++;
+            if(d.pick.trifle) this._grantTrifleBonus();
+            continue;
+          }
+          if(_hvM && _hvT){
+            /* v0.6.205 (R4, F23): Haven Uncovered -- tabled on MY board (Fame's placement: the card cannot sit on another
+               Methuselah's mat), the frozen line names owner and host so EVERY observer records it; any minion may now
+               enter combat with the host as a +1 stealth (D) action (_bestHavenRushFor). */
+            const hid = this.gid();
+            this.board.push({ id: hid, name: d.pick.name, kind: 'lib', zone: 'ready', faceDown: false, x: 64, y: 64, locked: false });
+            this.fxClone({ name: d.pick.name, kind: 'lib' }, 'on ' + _hvT.name);
+            this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> plays <b>Haven Uncovered</b> \u2014 on <b>' + esc(this.seatName(_hvT.seat)) + "</b>'s <b>" + esc(_hvT.name) + '</b>.' });
+            this._havenSeen = this._havenSeen || {};
+            this._havenSeen[_hvT.name] = { owner: this.seatName(_hvT.seat), seat: _hvT.seat, by: this.o.name, bySeat: this.seat, cardId: hid };
+            this._emit('haven', { host: _hvT.name, owner: this.seatName(_hvT.seat), rusher: _hvT.rusher, w: +(_hvT.w || 0).toFixed(2), dir: _hvT.dir || null });
             this.push();
             played.add(FX_NORM(d.pick.name));
             this.phaseUsed.master++;
@@ -8849,6 +9009,32 @@ class Bot {
              mechanically moot in this symmetric model. */
           this._actingVamp.kind = 'rush';
           this._actingVamp.target = act.target.seat;   // v1.1: a BACKRUSH asks the predator, not the default prey
+          if(act.via === 'haven'){
+            /* v0.6.205 (R4, F23): a rush through Haven Uncovered -- 'Minions can enter combat with this vampire as a +1 stealth (D)
+               action.' No card leaves my hand and the Haven stays in play; +1 stealth on the counter; the host's controller may
+               block; on through nobody locks and I am the acting minion (the host only defends). Its own frozen line
+               (L12.havenRush) -- the target bot opens its block window on it, as on Deep Song's. */
+            this.push();
+            this.fxClone({ name: 'Haven Uncovered', kind: 'lib' }, 'enters combat with ' + act.target.name, { actor: v });
+            this._announceTallyA(act.st | 0);
+            this._combatArmed = true;
+            this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> enters combat with <b>' + esc(act.target.owner) + "</b>'s <b>" + esc(act.target.name) + '</b> (Haven Uncovered).' });
+            const ansH = await this._askBlock('Trainbot: ' + v.name + ' enters combat with ' + act.target.name + ' (Haven Uncovered, +' + (act.st | 0) + ' stealth). Block?');
+            await sleep(150);
+            if(ansH.what === 'block'){
+              this.note('Blocked' + (ansH.who ? ' by ' + ansH.who : '') + '. Combat begins.');
+              this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, kind: 'rush', via: 'haven', dir: act.target.dir, by: this._lastBlockerName || null });
+              await this._resolveCombat(v);
+            } else {
+              this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: 'Haven Uncovered', kind: 'rush', via: 'haven', target: act.target.name, dir: act.target.dir, owner: act.target.owner, tBlood: act.target.blood, famed: !!(this._famedSeen && this._famedSeen[act.target.name]) });
+              this.say('It resolves');
+              this.note('Trainbot: Combat begins: ' + v.name + ' against ' + act.target.name + ' (Haven Uncovered).');
+              await this._resolveCombat(v, act.target.name);   // the host is my combat opponent
+            }
+            this._actingVamp = null;
+            this._flushDraws();
+            continue;
+          }
           if(act.cost && act.cost.blood) { v.blood = Math.max(0, (v.blood | 0) - act.cost.blood); this._park(act.cost.blood, 0); }   // v0.6.116 round 2: the finder (_bestRushFor) already gated on cost.blood and carried it, but the branch never paid it -- latent (no compiled rush card costs blood today), closed for symmetry with the bleed/stock/pool branches
           this.push();
           this.fxClone({ name: act.name, kind: 'lib' }, '[ANI] rushes ' + act.target.name, { actor: v });
@@ -9144,6 +9330,7 @@ class Bot {
       const tableTurn = (this.ownTurns - 1) * nPlayers + this.seat;
       this.inf = (tableTurn <= 4) ? Math.min(availInf, tableTurn) : availInf;
       this.phaseUsed.influence = this.inf;
+      await this._considerLockIncome('influence');   // v0.6.205 (R4, found while curating F23's masters): Arcane Library's lock ('during your influence phase') had never fired in play -- only the unit test 19l-13 called this with 'influence'; Wasserschloss Anif's payout rides the same call. Before the transfers: the blood it adds lowers what they must pay
       await this._influenceLoop();
 
       /* DISCARD — v0.5+ (Johan, 14 July): generalized to the SAME phase-
