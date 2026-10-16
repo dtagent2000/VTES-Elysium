@@ -1,7 +1,7 @@
 # START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (16 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.203 (deploy candidate; the first step of R3; v0.6.202 = PR #19, merged) · arena v1.4.7 ·
+**State at writing:** bot v0.6.204 (deploy candidate; R3 of the play-test review; v0.6.203 = PR #21, merged) · arena v1.4.7 ·
 cardfx compiler v1.9.2 · built against client v2.6.161 / srv-2.6.46 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
@@ -33,17 +33,16 @@ branch → change → gates (inside `bot/`) → living docs + READ-ME-FIRST (+ H
 commit + push often → PR against `main` with the gate numbers in the body → Johan merges.
 A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repository root.
 
-## Open at hand-over (16 Oct 2026, late)
+## Open at hand-over (16 Oct 2026, night)
 The 14 Oct play-test (main's rig, PR #13) is reviewed finding by finding in
-`bot/docs/reviews/REVIEW-playtest-2026-10-14.md`; R0–R2 shipped as v0.6.199–202 (all merged). v0.6.203 is R3's first step
-(Johan's "Kör på!" of 16 Oct): main's replies of 16 Oct consumed (read-only copies = client v2.6.161, their canary §5, the
-hotseat lift's combat merge, the guide); the vanished bleed fixed (a bounce opens its new target's block step; the bleed's
-`through` at the resolution; `VANISHED` 0 in the smoke); the strike step between bots in the rulebook's order (Johan: the bots
-answer known strikes); Deep Song against a human; hygiene for the invariants; and an old crows bug its own smoke found.
-Next, in the order Johan set: **R3 proper as v0.6.204** — a clock starts when its question reaches the wire (F3, F11), stale
-hold lines are dropped (F4), a verdict wait when a bot blocks a human without a card (F10), one spokesbot for table remarks
-(F2; the pool question stays per bot), the tempo levers (a)–(d) of F12 / F13 (Adaptive's skip stays in Adaptive). Then R4
-(the uncurated V5 masters, Revelations against a bot), the scenario in `client/playtest/` with `--dir`, and a larger
+`bot/docs/reviews/REVIEW-playtest-2026-10-14.md`; R0–R2 shipped as v0.6.199–202 and R3's first step as v0.6.203 (all merged).
+v0.6.204 is R3 proper (Johan's "Kör på!" of 16 Oct): a wait's clock starts when its question is on the wire (F3, F11: no
+deadline while queued, the announced number is the clock); the hold lines go first and a stale one is dropped (F4); the
+verdict wait when a bot blocks a human (F10: a question, the tempo's clock, the rung `resolve-verdict`; It resolves over a
+failed counter lands the action); one spokesbot, the archetype read on the log tier (F2); a bot target's Hold on after a bot
+actor's question (F6); the tempo levers (a)–(d) (F12, F13). **Main must change one LIVE test** (v2.6.140, the tempo: it reads
+the first steppable status, now often the queued moment with `until: null`) — the handoff gives the line. Next, in Johan's
+order: R4 (the uncurated V5 masters, Revelations against a bot), the scenario in `client/playtest/` with `--dir`, and a larger
 re-measure once every fix is in (Johan, 16 Oct). Known, not built: a human's bounce of a bot's bleed is not read by the acting
-bot (READ-ME-FIRST-2026-10-16d §6). Johan's rule since 16 Oct: fixes that belong together may be combined in one round;
-design questions still go through a proposal and "kör". The v0.6.203 handoff asks main for a re-embed of the guide only.
+bot (READ-ME-FIRST-2026-10-16d §6); the tempo lever for a watched bot-vs-bot combat (Johan: wait and see). Johan's rule since
+16 Oct: fixes that belong together may be combined in one round; design questions still go through a proposal and "kör".
