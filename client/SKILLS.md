@@ -1,6 +1,6 @@
 # SKILLS.md — Elysium Development Recipes
 
-> Step-by-step patterns for recurring development tasks, distilled from ~26 sessions of implementation. Each recipe lists the exact touch-points in the codebase and the order they must be done in. Read `CLAUDE.md` for the project overview and constraints. **B1 roundtrip, corrected recipe (12 July):** `split_client.py` reads `/tmp/original.html` and writes fragments to `/home/claude/elysium-src` — but `elysium-build.js` reads `ROOT/elysium-src` (next to the build script). ALWAYS: (1) `cp` the edited client to `/tmp/original.html`, (2) split, (3) `rm -rf elysium-src && cp -r /home/claude/elysium-src elysium-src`, (4) build to a SCRATCH file (`node elysium-build.js /tmp/rebuilt.html`) and `cmp` against the original — never trust the default-overwrite path: a stale fragment dir once produced a byte-identical FALSE PASS against pre-edit content. **Reflects Elysium v2.6.128 (client v2.6.164 / server v2.6.48 / bot v0.6.207 -- v2.6.164: an optional field changes a verb for new peers only (decide the new-client / old-server case on purpose); the hotseat bridge mirrors a server behaviour as a method of the literal; v2.6.163: a peer's string in HTML goes through `escapeHtml` (quotes included) and a text sink gets it raw; the harness HTML recorder tests what renderers write; B1 copies the client to /tmp/original.html first; v2.6.162: a real bot driven through its verdict wait in headless Chromium (wait for the bot's own deal before touching its board; a bot's lines after a question wait 1.6 × paceMs, so measure its decision and its line apart), the play-test report's clock column; v2.6.161: touch in headless Chromium (a tap and a real long-press), a view measured from every way in, and how to see that frames stalled; v2.6.160: a control beside every 'nothing happens' browser check (the eye's wheel vs the mat's), Esc goes Home in a script; v2.6.159: the hotseat bridge must stay LIFTABLE (the bot project cuts it verbatim; a suite test pins it -- see 'The hotseat bus'), and a browser run at a hotseat with bots goes ⌂ Home before reacting on your own minion (the camera is on the acting bot -- see the headless Chromium recipe); v2.6.158: what the play-test found -- the default combatant expires, one image fallback, a master on a vampire counts, the level chooser follows the anchor, and the play-test rig (recipe below); v2.6.157: a second room option (`tableLayout`) followed the room-wide-setting recipe, and the client sets the geometry it drives wherever the value arrives, before a deal; v2.6.149: a pub field (`tn`/`rn`) went through "Add a field to the public board" only after the real-server run found the whitelist -- open that recipe BEFORE designing; 13 Oct, no code: the recipe "Review the other half's code path against ours"; v2.6.148: the arrival runs and frame counting, added to "Drive the real server with real browser clients"; v2.6.147: an icon button that turns -- see "Judge a small icon on the pixel grid" under the browser recipe; v2.6.146: a ROOM OPTION the server only stores (`tableSetup`) -- the checked list under "Add a room-wide setting"; the real server with real browser clients -- see "Drive the real server with real browser clients"; v2.6.142: the consume recipe drives the client's mirrors of bot rules (the hold badge) against the real bot; v2.6.141: the consume recipe notes partial 'changed today' zips; v2.6.140: consuming a bot release has its own recipe, "Consume a bot release"; v2.6.139: a TABLE-STATE verb (botcfg) -- see the new recipe "Add a table-state verb"; the room snapshot is ONE pure pair (roomSnap / roomUnsnap); v2.6.128: the Help modal's ids are helpDoc*, a duplicate-id suite pin; HELP INSIDE THE CLIENT 22 Sep: Help… submenu, START-HERE pages embedded as <template>s + embed-help.js; BOT-CARD CONTROLS 22 Sep: card verbs on a bot seat ride the bridge too, see "Referee verbs on a bot seat"; THE PARITY ROUND 21 Sep: hotBridge owns the server's table state (tally / out / VP) -- see the new recipe "Mirror a server handler in hotBridge"; LITE MODE 9 Sep: the Lite/Full interface mode (see the new recipe "Gate a feature by interface mode (Lite/Full)"), the card database on by default, Tournament lock always on (its checkbox left Create game at v2.6.116), the alpha pill on bot seats. Prior rounds in elysium-CHANGELOG.md.)**
+> Step-by-step patterns for recurring development tasks, distilled from ~26 sessions of implementation. Each recipe lists the exact touch-points in the codebase and the order they must be done in. Read `CLAUDE.md` for the project overview and constraints. **B1 roundtrip, corrected recipe (12 July):** `split_client.py` reads `/tmp/original.html` and writes fragments to `/home/claude/elysium-src` — but `elysium-build.js` reads `ROOT/elysium-src` (next to the build script). ALWAYS: (1) `cp` the edited client to `/tmp/original.html`, (2) split, (3) `rm -rf elysium-src && cp -r /home/claude/elysium-src elysium-src`, (4) build to a SCRATCH file (`node elysium-build.js /tmp/rebuilt.html`) and `cmp` against the original — never trust the default-overwrite path: a stale fragment dir once produced a byte-identical FALSE PASS against pre-edit content. **Reflects Elysium v2.6.128 (client v2.6.165 / server v2.6.49 / bot v0.6.207 -- v2.6.165: send only what changed, and again on every arrival (the roster); refuse what needs the server while the connection is down; the gates in CI; v2.6.164: an optional field changes a verb for new peers only (decide the new-client / old-server case on purpose); the hotseat bridge mirrors a server behaviour as a method of the literal; v2.6.163: a peer's string in HTML goes through `escapeHtml` (quotes included) and a text sink gets it raw; the harness HTML recorder tests what renderers write; B1 copies the client to /tmp/original.html first; v2.6.162: a real bot driven through its verdict wait in headless Chromium (wait for the bot's own deal before touching its board; a bot's lines after a question wait 1.6 × paceMs, so measure its decision and its line apart), the play-test report's clock column; v2.6.161: touch in headless Chromium (a tap and a real long-press), a view measured from every way in, and how to see that frames stalled; v2.6.160: a control beside every 'nothing happens' browser check (the eye's wheel vs the mat's), Esc goes Home in a script; v2.6.159: the hotseat bridge must stay LIFTABLE (the bot project cuts it verbatim; a suite test pins it -- see 'The hotseat bus'), and a browser run at a hotseat with bots goes ⌂ Home before reacting on your own minion (the camera is on the acting bot -- see the headless Chromium recipe); v2.6.158: what the play-test found -- the default combatant expires, one image fallback, a master on a vampire counts, the level chooser follows the anchor, and the play-test rig (recipe below); v2.6.157: a second room option (`tableLayout`) followed the room-wide-setting recipe, and the client sets the geometry it drives wherever the value arrives, before a deal; v2.6.149: a pub field (`tn`/`rn`) went through "Add a field to the public board" only after the real-server run found the whitelist -- open that recipe BEFORE designing; 13 Oct, no code: the recipe "Review the other half's code path against ours"; v2.6.148: the arrival runs and frame counting, added to "Drive the real server with real browser clients"; v2.6.147: an icon button that turns -- see "Judge a small icon on the pixel grid" under the browser recipe; v2.6.146: a ROOM OPTION the server only stores (`tableSetup`) -- the checked list under "Add a room-wide setting"; the real server with real browser clients -- see "Drive the real server with real browser clients"; v2.6.142: the consume recipe drives the client's mirrors of bot rules (the hold badge) against the real bot; v2.6.141: the consume recipe notes partial 'changed today' zips; v2.6.140: consuming a bot release has its own recipe, "Consume a bot release"; v2.6.139: a TABLE-STATE verb (botcfg) -- see the new recipe "Add a table-state verb"; the room snapshot is ONE pure pair (roomSnap / roomUnsnap); v2.6.128: the Help modal's ids are helpDoc*, a duplicate-id suite pin; HELP INSIDE THE CLIENT 22 Sep: Help… submenu, START-HERE pages embedded as <template>s + embed-help.js; BOT-CARD CONTROLS 22 Sep: card verbs on a bot seat ride the bridge too, see "Referee verbs on a bot seat"; THE PARITY ROUND 21 Sep: hotBridge owns the server's table state (tally / out / VP) -- see the new recipe "Mirror a server handler in hotBridge"; LITE MODE 9 Sep: the Lite/Full interface mode (see the new recipe "Gate a feature by interface mode (Lite/Full)"), the card database on by default, Tournament lock always on (its checkbox left Create game at v2.6.116), the alpha pill on bot seats. Prior rounds in elysium-CHANGELOG.md.)**
 
 ## Add a table-state verb (store + relay + late-join replay + snapshot) — v2.6.139 (`botcfg`), the pattern `tally` started
 A piece of state the whole TABLE shares (the bot tempo, the resolver counters) needs five places, and missing one is silent:
@@ -18,6 +18,69 @@ A full game in a real browser, one human against the bots, recorded and measured
 3. **Play** with the CLI (`phase`, `influence`, `out`, `play --by/--on [--alt Superior]`, `menu <card> 'Actions>Bleed>Bleed 3'`, `chat +1`, `resolve`, `say <phrase>`, `clear`, `pass`); follow with `ev <wait>`. Standard tempo: the reflex answers for the human (`pol`), say which waits ended in your holds (rig v1.1.0: after the bot's question for that very step, or once the wait's clock has started -- bot v0.6.204+ starts it when the question is sent; v1.0.0 answered queued questions). Turn-based: `pol '{"on":false}'`, `give` is the play button.
 4. **The human's own values are the human's** (Johan, 14 Oct): pay card costs, take combat damage off your vampires (the 'takes N' line is a report), take the Edge, burn pool for others' effects, book stealth/intercept on the counter.
 5. **Report:** `node client/playtest/playtest-report.js <run dir>` (turns, pacing, waits and question lag, double speech, combat silence, the bots' wait rows; rig/report v1.1.0: `clock` = question → the wait's clock, negative when the clock ran before the question -- with bot v0.6.204+ it sits at 0–0.35 s, one panel sample). Bot findings → `docs/handoffs/REPLY-to-bot-<date>-playtest.md` with timestamps; ours → the journal and a fix round, each pinned by a test that fails on the previous client. Keep runs out of git (`playtest/runs/` is ignored).
+
+## Send only what changed (a push that echoes or floods) — v2.6.165 (`mpSendBoard`, `_pushOpenHand`)
+
+1. **Find the loop before you dedupe.** Here: `layout()` always ends in `scheduleSave()` → `schedulePush()`, and every
+   view renders through `layout()`, so a RECEIVED board re-rendered ours and sent it back. Trace it with a counting
+   probe: the real server and N real clients over fake sockets (`serverTable` in the suite, `echo-probe-n.js`-style),
+   idle for 10 s after one change, messages counted per verb and per client, the server's 80 per 10 s replicated.
+2. **Dedupe at the send site, on the bytes that go on the wire** (`JSON.stringify(buildPub())` against the last send;
+   the open hand per target, its card list as the signature). Record a send only when it really went out (socket
+   open); otherwise the next push must try again. A debounce that every received board re-arms needs a ceiling
+   (`pushDue`: at most 1.5 s), or a busy table postpones the push for ever.
+3. **Forget the memory wherever the peer's copy may be stale:** a fresh `joined` (a reconnect included: the last send
+   can die with the socket), `took`, leaving the room, a new hotseat table. Otherwise an unchanged board after a
+   rejoin never goes out.
+4. **Re-send on every arrival, and only on arrivals.** The server keeps no open-hand grants, and the receiver's copy
+   dies in ways the sender cannot see: a token rejoin that only swaps the socket (the roster comes out identical), a
+   reload, a new spectator. Compare each `roster` with a snapshot (`_ohSeen`): a seat that came back gets its grant (and
+   a grant to all goes again), a roster in which no seat changed re-sends every grant, a seat that left gets nothing --
+   so a flapping connection costs one message per return. (The first build missed the three cases; the second re-sent
+   everything on every roster.)
+5. **A forced send stays forced:** a new grant goes out even when its signature matches an old one.
+6. **Test it the way it failed:** a quiet window over the real server (0 boards, 0 open hands from anyone), then one real
+   change that gets through exactly once per target; run it against the previous version (red there). Old tests that
+   pinned the flood ('it follows every board push') describe the old mechanism; rewrite them to the new contract and
+   say so in the journal.
+7. **The hotseat twin:** the bridge's fan-out to the bots dedupes per seat the same way (`_hotPubSent`), reset with the
+   table.
+
+## Refuse what needs the server while the connection is down — v2.6.165 (`mpReconnecting`, `mpOfflineRefuse`)
+
+1. **One predicate:** `mpReconnecting()` = `net.status==='re' && !localTable`. The reconnecting state lasts as long as
+   the server is gone; keyed on the status alone it blocked a local game started meanwhile (the review's first find).
+2. **At the top of every user action whose online branch talks to the server** (a pile verb, a card back to the deck,
+   a roll, the Edge, a give, an un-oust): `if(mpOfflineRefuse('<what>')) return;`. The toast says what and when; a
+   function with a result returns its "nothing happened" value (`move` → false, `qrGiveToTarget` → true = handled).
+   The offline branches are for a table with no server, and while reconnecting they act on one nobody else sees (a card
+   returned to the deck was simply lost). Read the callers of a function that can now refuse: refuse at the entry
+   point before any history is touched (Undo draw), log only on success (a drop on the pile), and push a server step
+   back on the undo stack instead of spending it.
+3. **Speech is the exception:** `MP_QUEUE_VERBS` (chat) waits in `net.outbox`, goes out after the rejoin into the same
+   room, and a refused rejoin says the lines were not sent.
+4. **A new mode ends the old state:** `startHotseat` calls `mpAbandonReconnect()` (retries stop, the session is kept so
+   Join game reclaims the seat), and a socket closing under a local table starts no retries.
+5. **Retries:** every 2.5 s through the server's `GRACE_MS` (30 s, while nobody can take the seat), then back off;
+   `mpRetryNow` (network or tab back) never while a socket is connecting or open.
+6. **Test:** each action with status 're' (nothing local changes, one toast each), the same action connected (it
+   works), and a local table with status 're' (nothing refused).
+
+## The gates in CI — v2.6.165 (`.github/workflows/client-gates.yml`)
+
+1. **What runs:** on every PR and every push to `main` that touches `client/` or a root file we release (the client,
+   the server, `START-HERE.html`, the host guide, `start-*`), plus `workflow_dispatch` for any branch: the bot bundle
+   copied from the root beside the suite, then `check-versions.js`, the dispatch suite, the protocol lint, the client
+   suite, the canary, the error endpoint, the soak `--control`, both `embed-help --check` and B1 (split and build in
+   `$RUNNER_TEMP` via `SPLIT_SRC` / `SPLIT_OUT`, then `cmp`).
+2. **Not on the bot project's files:** their re-issued `START-HERE-BOTS.html` turns our embed checks red until we
+   re-embed it, which is our job, not a fault in their release. They may add their own workflow beside ours.
+3. **A gate added to "Verification commands" belongs in the workflow too**, in the same commit. Every step carries
+   `if: ${{ !cancelled() }}` (check-versions runs first and must not hide the rest), and the workflow has
+   `permissions: contents: read`.
+4. **Read a red run:** `gh pr checks <n> -R dtagent2000/VTES-Elysium`, `gh run list --workflow client-gates.yml -R
+   dtagent2000/VTES-Elysium`, `gh run view <id> --log-failed -R dtagent2000/VTES-Elysium`. A timing test that is red only
+   in CI (two vCPUs) is a finding about the test's margin, not noise to re-run away.
 
 ## Work in the monorepo (12 Oct 2026)
 The project lives in https://github.com/dtagent2000/VTES-Elysium: `/` = the download (byte copies of releases), `client/` = this project, `client/docs/` = its docs, `bot/` = the bot project (read, never write). One round:
@@ -631,7 +694,7 @@ After editing the monolith, re-derive the `elysium-src/` fragments and prove the
 
 ### Steps
 
-1. **Snapshot the pristine monolith** — the splitter reads from `/tmp/original.html`:
+1. **Snapshot the pristine monolith** — the splitter reads from `/tmp/original.html` (since v2.6.165 `SPLIT_SRC` and `SPLIT_OUT` override the input and the fragment directory, e.g. `SPLIT_SRC=$TMP/original.html SPLIT_OUT=$TMP/elysium-src python3 split_client.py`, then `ln -sfn $TMP/elysium-src elysium-src` before the build and `rm -f elysium-src` after; CI does exactly this):
    ```bash
    cp elysium-vtes-bord.html /tmp/original.html
    ```

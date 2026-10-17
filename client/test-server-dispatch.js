@@ -622,8 +622,18 @@ test('deriveIp believes forwarding headers only from loopback and only under the
   eq(D('127.0.0.1', { 'cf-connecting-ip':'1.2.3.4' }), '127.0.0.1', 'flag off => transport peer');
   S.CFG.trustProxy = true;
   eq(D('127.0.0.1', { 'cf-connecting-ip':'1.2.3.4' }), '1.2.3.4', 'loopback + flag => CF header');
-  eq(D('127.0.0.1', { 'x-forwarded-for':'5.6.7.8, 9.9.9.9' }), '5.6.7.8', 'XFF first hop as fallback');
+  eq(D('127.0.0.1', { 'x-forwarded-for':'5.6.7.8, 9.9.9.9' }), '9.9.9.9', 'srv-2.6.49: XFF as fallback -- the RIGHTMOST entry, the one the local proxy appended (srv-2.6.48 took the first, which the client writes)');
+  eq(D('127.0.0.1', { 'x-forwarded-for':'203.0.113.9' }), '203.0.113.9', 'a single entry is that entry');
+  eq(D('127.0.0.1', { 'x-forwarded-for':'10.9.9.9, 198.51.100.4' }), '198.51.100.4', 'a forged first entry behind an appending proxy (nginx) is not believed');
+  eq(D('127.0.0.1', { 'x-forwarded-for':' , ' }), '127.0.0.1', 'an empty header falls back to the peer');
   eq(D('203.0.113.7', { 'cf-connecting-ip':'1.2.3.4' }), '203.0.113.7', 'NON-loopback peer with a forged header must be ignored');
+  eq(D('127.0.0.1', { 'x-forwarded-for':'5.6.7.8, 9.9.9.9:443' }), '9.9.9.9', 'srv-2.6.49: an IPv4 entry written with a port is that address');
+  eq(D('127.0.0.1', { 'x-forwarded-for':'[2001:db8::7]:51234' }), '2001:db8::7', 'so is a bracketed IPv6 entry with a port');
+  eq(D('127.0.0.1', { 'cf-connecting-ip':'1.2.3.4', 'x-forwarded-for':'198.51.100.4' }), '1.2.3.4', 'plain --trust-proxy: CF-Connecting-IP first (behind Cloudflare a client cannot write it)');
+  S.CFG.trustProxy = 'xff';
+  eq(D('127.0.0.1', { 'cf-connecting-ip':'10.66.0.1', 'x-forwarded-for':'198.51.100.4' }), '198.51.100.4', 'srv-2.6.49 --trust-proxy xff: a CF-Connecting-IP written by the client (nginx and Caddy pass it on) is ignored -- five such connections from one address were keyed as five');
+  eq(D('127.0.0.1', { 'cf-connecting-ip':'10.66.0.1' }), '127.0.0.1', '...even when no X-Forwarded-For came with it');
+  eq(D('203.0.113.7', { 'x-forwarded-for':'1.2.3.4' }), '203.0.113.7', 'xff mode still believes nothing from a non-loopback peer');
   S.CFG.trustProxy = false;
 });
 
@@ -1612,6 +1622,33 @@ test('srv-2.6.48 (the review) the crown goes to a human who is here: an online h
   const t2 = seatTable(['Q1', 'B2*', 'Q3']); S.drop(t2.cs[2]);
   S.handle(t2.cs[0], JSON.stringify({ t:'leave' }));
   eq(t2.room.hostToken, t2.room.players[2].token, 'with no human online, the offline human still beats the bot');
+});
+
+test('srv-2.6.49 frames: a large frame dripped in one byte at a time arrives whole, in linear time, and keeps no object per chunk (srv-2.6.48 re-copied the buffer on every chunk -- quadratic; the first srv-2.6.49 build kept every chunk alive until the frame was whole)', () => {
+  const w = wsPeer();
+  const body = JSON.stringify({ t:'chat', msg: 'x'.repeat(150000) });
+  const fr = cframe(0x1, body);
+  const realConcat = Buffer.concat; let concats = 0;
+  Buffer.concat = function(){ concats++; return realConcat.apply(Buffer, arguments); };
+  try { quiet(() => { for (let i = 0; i < fr.length; i++) w.feed(fr.subarray(i, i + 1)); }); }
+  finally { Buffer.concat = realConcat; }
+  eq(w.got.msgs.length, 1, 'one message'); eq(w.got.msgs[0], body, 'intact');
+  assert(concats < 20, 'a handful of copies for ' + fr.length + ' one-byte chunks, not one per chunk: ' + concats);
+  const w2 = wsPeer();
+  const two = Buffer.concat([cframe(0x1, '{"t":"a"}'), cframe(0x1, '{"t":"b"}')]);
+  quiet(() => { w2.feed(two.subarray(0, 3)); w2.feed(two.subarray(3, 13)); w2.feed(two.subarray(13)); });
+  eq(JSON.stringify(w2.got.msgs), JSON.stringify(['{"t":"a"}', '{"t":"b"}']), 'frames split across chunks at odd places still parse, in order');
+  // what stays alive while a big frame is incomplete: one-byte chunks with their own backing store, as socket reads get
+  require('v8').setFlagsFromString('--expose-gc'); const gc = require('vm').runInNewContext('gc');
+  const w3 = wsPeer(), L = 200000, head = Buffer.alloc(14);
+  head[0] = 0x81; head[1] = 0x80 | 127; head.writeUInt32BE(0, 2); head.writeUInt32BE(L, 6);   // masked, with a zero key
+  w3.feed(head);
+  gc(); const h0 = process.memoryUsage().heapUsed;
+  for (let i = 0; i < 150000; i++){ const b = Buffer.allocUnsafeSlow(1); b[0] = 0x61; w3.feed(b); }
+  gc(); const grew = process.memoryUsage().heapUsed - h0;
+  assert(grew < 8 * 1048576, 'bounded while the frame is incomplete (the chunk queue kept ~31 MB here): ' + (grew / 1048576).toFixed(1) + ' MB');
+  for (let i = 0; i < L - 150000; i++){ const b = Buffer.allocUnsafeSlow(1); b[0] = 0x61; w3.feed(b); }
+  eq(w3.got.msgs.length, 1, 'and the frame still arrives whole'); eq(w3.got.msgs[0].length, L);
 });
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));

@@ -16,7 +16,7 @@
   <li><a href="#internet">Beyond the LAN</a></li>
   <li><a href="#table">Running a table</a></li>
   <li><a href="#reference">Reference</a></li>
-  <li class="ver">server srv-2.6.43 · client v2.6.141</li>
+  <li class="ver">server srv-2.6.49 · client v2.6.165</li>
 </ul></nav>
 
 <header class="hero">
@@ -111,9 +111,9 @@
         <li><b>Server password</b> — a locked door for the <em>whole</em> server: browsing the room list, creating and joining all require it. Players type it under <span class="menu">Join game → Local server → Server password</span> (Full mode). The public table has none.</li>
         <li><b>Referee key</b> (<code>--referee-pass</code>) — an operator credential. It is <em>not</em> how a judge joins a table (that is the per-room referee password the host sets under Game settings); it is what unlocks the next question, the log pull and the maintenance window (see <a href="#reference">Reference</a>). Players never need it.</li>
         <li><b>Single-room server</b> (<code>--create-policy admin</code>) — only someone holding the referee key may create rooms. Typed under <span class="menu">Create game → Local server → Server referee key</span>. For a tournament this keeps the room list exactly as the organiser laid it out.</li>
-        <li><b>Behind cloudflared or Caddy on this machine</b> (<code>--trust-proxy</code>) — say yes when the tunnel runs on the same computer as the server, so the per-player throttles see real addresses instead of everyone looking like <code>127.0.0.1</code>. Harmless to leave off for a game night.</li>
+        <li><b>Behind a Cloudflare tunnel on this machine</b> (<code>--trust-proxy</code>) — say yes when the tunnel runs on the same computer as the server, so the per-player throttles see real addresses instead of everyone looking like <code>127.0.0.1</code>. Harmless to leave off for a game night. The launcher's yes is right for cloudflared; for Caddy or nginx with no Cloudflare in front, start the server with <code>--trust-proxy xff</code> instead (the plain command below).</li>
       </ol>
-      <p>Anything the guided launcher can do, the plain command can too: <code>node elysium-server.js [port] [clientfile] [--server-pass P] [--referee-pass P] [--create-policy admin] [--trust-proxy] [--bind ADDR] [--data-dir DIR] [--origin LIST]</code>. A <code>!</code> in a password trips the Windows shell — pick a phrase without one.</p>
+      <p>Anything the guided launcher can do, the plain command can too: <code>node elysium-server.js [port] [clientfile] [--server-pass P] [--referee-pass P] [--create-policy admin] [--trust-proxy [xff]] [--bind ADDR] [--data-dir DIR] [--origin LIST]</code>. A <code>!</code> in a password trips the Windows shell — pick a phrase without one.</p>
     </div>
   </details>
 
@@ -264,7 +264,8 @@
     <tr><td><code>--server-pass P</code></td><td>A password for the whole server: browsing, creating and joining all require it.</td></tr>
     <tr><td><code>--referee-pass P</code></td><td>The operator key (<code>--admin-pass</code> is an alias). Unlocks <code>--create-policy admin</code>, the log pull and the maintenance window; bypasses the room-creation throttle.</td></tr>
     <tr><td><code>--create-policy admin</code></td><td>Only a holder of the referee key may create rooms. Default: anyone.</td></tr>
-    <tr><td><code>--trust-proxy</code></td><td>Believe the forwarding headers from a tunnel or reverse proxy running on the <em>same</em> machine, so per-player throttles see real addresses.</td></tr>
+    <tr><td><code>--trust-proxy</code></td><td>Believe the forwarding headers from a tunnel or reverse proxy running on the <em>same</em> machine, so per-player throttles see real addresses. Cloudflare's <code>CF-Connecting-IP</code> is read first; otherwise the <em>last</em> address in <code>X-Forwarded-For</code>, the one your proxy added (the first one is whatever the player's browser sent). That is right behind Cloudflare (a tunnel, or the orange cloud), which writes the header itself.</td></tr>
+    <tr><td><code>--trust-proxy xff</code></td><td>For a proxy that is <em>not</em> Cloudflare — nginx or Caddy straight to the internet. A player can write <code>CF-Connecting-IP</code> themselves and such a proxy passes it on, so with plain <code>--trust-proxy</code> they could claim a new address on every connection. With <code>xff</code> only the last <code>X-Forwarded-For</code> address counts.</td></tr>
     <tr><td><code>--bind 127.0.0.1</code></td><td>Listen on one address only. Behind a tunnel, <code>127.0.0.1</code> makes the raw port unreachable even on your LAN.</td></tr>
     <tr><td><code>--data-dir DIR</code></td><td>Where rooms, saves and the error log are written. Default: beside the server.</td></tr>
     <tr><td><code>--origin LIST</code></td><td>Comma-separated list of page origins allowed to open a table connection (e.g. <code>https://your-domain,null</code>). Default: off.</td></tr>
@@ -297,6 +298,7 @@
     <tr><td>“No such room” / “Wrong password”</td><td>Room names are case-sensitive as created; the password is the host's. A server password is a separate thing: <span class="menu">Join game → Local server → Server password</span>.</td></tr>
     <tr><td>“That name is taken”</td><td>The name is currently online in the room. An offline seat is reclaimed with the same name + the room password.</td></tr>
     <tr><td>“Too many failed attempts”</td><td>The lockout — wait 10 minutes, or reconnect in the tab that still holds the token.</td></tr>
+    <tr><td>“Connection lost — reconnecting in … s”</td><td>The table finds its way back on its own: it tries every few seconds for half a minute (the time in which the host cannot hand your seat to someone else), then less often (about every 15 seconds), and at once when the network or the tab comes back. Your seat waits much longer than that. Chat written meanwhile waits and goes out when you are back in, to whoever is at the table then. A pass, a draw, an oust, a card back to the deck, a shuffle, the dice, the Edge, a give, a reveal and stopping an open hand are refused until then — the table says so; do it again once you are back. On a server with a server password the reconnect carries the password you typed — clients before v2.6.165 were refused there and dropped out of the table, to be joined again by hand. Starting Play offline meanwhile leaves the lost table; Join game takes you back to your seat.</td></tr>
     <tr><td>“Too many wrong admin passwords”</td><td>The referee-key lockout — wait 10 minutes. Behind a tunnel without <code>--trust-proxy</code>, every guest's wrong guesses count together.</td></tr>
     <tr><td>“This room has no referee password” / “Wrong referee password”</td><td>Referees are per table: the host sets the password under Create game → Game settings when the room is created. No password there means no referee at that table.</td></tr>
     <tr><td>A version warning when joining</td><td>Client and server are from different releases. Fetch both from <a href="https://github.com/dtagent2000/VTES-Elysium">GitHub</a> and put them beside each other.</td></tr>
@@ -319,7 +321,7 @@
 </main>
 
 <footer>
-  Elysium — running your own server · matches server <b>srv-2.6.43</b> and client <b>v2.6.141</b> · 11 October 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
+  Elysium — running your own server · matches server <b>srv-2.6.49</b> and client <b>v2.6.165</b> · 17 October 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
 </footer>
 
 </body>

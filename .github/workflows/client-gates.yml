@@ -1,0 +1,83 @@
+# The client/server project's gates (client/CLAUDE.md, "Verification commands"), on every pull request and
+# every push to main that touches the client half or the files it releases to the root. The bot project's
+# own files (bot/ and the bot bundle at the root) do not trigger it; that project may add its own workflow
+# beside this one. Added with client v2.6.165 (17 Oct 2026, the code review's group C).
+name: client gates
+
+on:
+  pull_request:
+    paths:
+      - 'client/**'
+      - 'elysium-vtes-bord.html'
+      - 'elysium-server.js'
+      - 'START-HERE.html'
+      - 'Elysium_-_Host_Guide.docx'
+      - 'start-*'
+      - '.github/workflows/client-gates.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'client/**'
+      - 'elysium-vtes-bord.html'
+      - 'elysium-server.js'
+      - 'START-HERE.html'
+      - 'Elysium_-_Host_Guide.docx'
+      - 'start-*'
+      - '.github/workflows/client-gates.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: client-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: The bot bundle beside the suite (the root release; never committed under client/)
+        run: cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
+      - name: Versions, doc headers and the root copy
+        if: ${{ !cancelled() }}
+        run: node check-versions.js
+      - name: Server dispatch suite
+        if: ${{ !cancelled() }}
+        run: node test-server-dispatch.js
+      - name: Protocol lint
+        if: ${{ !cancelled() }}
+        run: node test-protocol-doc.js
+      - name: Client suite (with the released bot beside it)
+        if: ${{ !cancelled() }}
+        run: node test-client-logic.js
+      - name: Section 12 canary
+        if: ${{ !cancelled() }}
+        run: node test-bot-canary.js
+      - name: Error endpoint
+        if: ${{ !cancelled() }}
+        run: node test-error-endpoint.js
+      - name: Hotseat soak, control run (the trip-wire must fire)
+        if: ${{ !cancelled() }}
+        run: node elysium-soak-hotseat.js --control
+      - name: Embedded help pages
+        if: ${{ !cancelled() }}
+        run: |
+          node embed-help.js --check server help-local-server.html
+          node embed-help.js --check bots START-HERE-BOTS.html
+      - name: B1 round trip (split, build, byte compare)
+        if: ${{ !cancelled() }}
+        run: |
+          cp elysium-vtes-bord.html "$RUNNER_TEMP/original.html"
+          SPLIT_SRC="$RUNNER_TEMP/original.html" SPLIT_OUT="$RUNNER_TEMP/elysium-src" python3 split_client.py
+          ln -sfn "$RUNNER_TEMP/elysium-src" elysium-src
+          node elysium-build.js "$RUNNER_TEMP/rebuilt.html"
+          cmp elysium-vtes-bord.html "$RUNNER_TEMP/rebuilt.html"

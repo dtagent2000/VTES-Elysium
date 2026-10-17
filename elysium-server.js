@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.48';   // srv-2.6.48 (17 Oct 2026, THE TABLE KEEPS ITS SEATS -- restart; ships with client v2.6.164): group B of the 16 Oct code review (Johan: 'vill du ta det tillsammans med B?' on allowing values below 0). (1) A LEAVE mid-game vacates the seat instead of splicing the player list -- seat = index + 1 for every verb, so everyone after the leaver changed seat, the turn moved to someone else without a broadcast and their own pass was refused; humansLeft counts no vacant seat (the reaper's bot grace still sees one); a table whose every seat is open closes out loud (`closed` reaches the spectators, whom the silent delete left in a room that was gone); a named save keeps vacant seats (and the room's board style) so its turnSeat still points at the right seat, and loadMatch moves an older save's turnSeat onto a live seat. (2) An oust ALWAYS takes the seat out of the rotation: `bounty` carries award:false when the ousted player's automatic award is off (nothing moves) -- except under the tournament lock, where VP comes only from ousts (it is paid; the pool stays manual). (3) VP once per oust: a `bounty` from a seat already out is ignored, and an unoust takes back the VP that oust paid (vpSeat). (4) The Block counter may go below 0 (the rulebook: stealth and intercept can be decreased below 0): `tally` keeps a/b down to -99 in block mode. (5) After an independent review: roomUnsnap restores seatPick, muted, vacant and anon again -- srv-2.6.47 had put a comment in front of them, so a restart turned an open seat into an offline one its old name could reclaim and unmuted the muted; a mid-game join under an open seat's name is refused (two seats with one name put every client on the empty one -- watch, and the host promotes you back); mute by name skips open seats; vpSeat records what THIS oust paid and a fresh deal, a new match or a new seating forgets it; the crown prefers an online human.
+const VERSION = '2.6.49';   // srv-2.6.49 (17 Oct 2026, THE QUIET TABLE -- restart; ships with client v2.6.165): the two server findings the independent review of round A left open, and what the review of this round found in them. (1) deriveIp (only with --trust-proxy, only from a loopback peer) takes the RIGHTMOST X-Forwarded-For entry, the one the local proxy appended -- the leftmost is whatever the client sent, so behind an appending proxy (nginx) every connection could claim a fresh address and walk past the per-address limits; an entry written with a port counts as its address. CF-Connecting-IP still comes first, which is right only behind Cloudflare: `--trust-proxy xff` (new) ignores it, for nginx or Caddy straight to the internet, where a client can write that header too. (2) wsAttach keeps ONE growable buffer per connection: a TCP chunk is copied in once (the buffer doubles), frames are read at an offset, the rest moves to the front -- srv-2.6.48 ran Buffer.concat on every chunk (one frame dripped in byte by byte: quadratic CPU), and the first srv-2.6.49 build, which queued the chunks, kept every tiny chunk alive until the frame was whole (~85 MB for 256 KB dripped byte by byte); the buffer never grows past one largest frame plus its header (unless the bytes already there need more), and one grown past 64 KB shrinks back once it is nearly empty.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -20,6 +20,9 @@ const VERSION = '2.6.48';   // srv-2.6.48 (17 Oct 2026, THE TABLE KEEPS ITS SEAT
    --create-policy anyone|admin   who may create rooms (default anyone)
    --trust-proxy       behind cloudflared/Caddy on LOOPBACK only: read CF-Connecting-IP /
                        X-Forwarded-For as the connection IP, restoring per-IP limits
+   --trust-proxy xff   (srv-2.6.49) the same for a proxy that is NOT Cloudflare (nginx, Caddy straight to the
+                       internet): CF-Connecting-IP is ignored (a client could write it and such a proxy passes it
+                       on), only the rightmost X-Forwarded-For entry counts
    --bind <host>       listen address (default: all interfaces). A tunnel deployment binds
                        127.0.0.1 so the raw port is unreachable even from the LAN (plan H1-a)
    --data-dir <path>   where elysium-rooms.json / elysium-saves.json live (default: beside this
@@ -39,7 +42,7 @@ for(let i = 0; i < _argv.length; i++){
   if(a === '--server-pass'){ CFG.srvPassHash = passHashLater(_argv[++i]); }
   else if(a === '--admin-pass' || a === '--referee-pass'){ CFG.adminPassHash = passHashLater(_argv[++i]); }   // srv-2.6.34: --referee-pass is the clearer name (a referee = spectator with host powers); the wire field stays `admin`
   else if(a === '--create-policy'){ CFG.createPolicy = _argv[++i] === 'admin' ? 'admin' : 'anyone'; }
-  else if(a === '--trust-proxy'){ CFG.trustProxy = true; }
+  else if(a === '--trust-proxy'){ if(String(_argv[i + 1] || '').toLowerCase() === 'xff'){ CFG.trustProxy = 'xff'; i++; } else CFG.trustProxy = true; }   // srv-2.6.49: 'xff' = believe only X-Forwarded-For
   else if(a === '--bind'){ CFG.bind = String(_argv[++i] || '') || null; }
   else if(a === '--data-dir'){ CFG.dataDir = String(_argv[++i] || '') || null; }
   else if(a === '--origin'){ const v = String(_argv[++i] || '').trim(); CFG.origin = v ? new Set(v.split(',').map(x => x.trim()).filter(Boolean)) : null; }
@@ -132,41 +135,58 @@ function wsUnmaskedNote(){                                         // counted pe
   console.log('[ws] unmasked client frames (RFC 6455 \u00a75.1) on ' + wsUnmaskedN + ' connection(s) since start -- accepted');
 }
 const MAX_CTRL  = 125;   // RFC 6455 §5.5
+const WS_BUF0 = 4096, WS_BUF_KEEP = 65536, WS_EMPTY = Buffer.alloc(0);
 function wsAttach(sock, cb){
-  let buf = Buffer.alloc(0);
+  // srv-2.6.49: ONE growable buffer per connection. A TCP chunk is copied in once (the buffer doubles when it is full,
+  // so a frame costs O(n) however it is chunked), nothing is parsed until `need` bytes are there (the next header or the
+  // whole frame), frames are read at an offset, and what was consumed is dropped by moving the rest to the front.
+  // srv-2.6.48 ran Buffer.concat([buf, d]) on every chunk: one frame dripped in byte by byte cost quadratic CPU. The first
+  // srv-2.6.49 build queued the chunks instead, and every tiny chunk stayed alive as its own object until the frame was
+  // whole (the independent review: ~85 MB for 256 KB dripped byte by byte). A buffer that grew past WS_BUF_KEEP shrinks
+  // back once it is nearly empty, so a big message does not keep its memory for the life of the connection.
+  let buf = WS_EMPTY, len = 0, need = 2;
   let frags = [], fragOp = 0, fragLen = 0, dead = false, unmaskedSeen = false;
-  const fail = () => { dead = true; buf = Buffer.alloc(0); frags = []; wsClose(sock); };
+  const fail = () => { dead = true; buf = WS_EMPTY; len = 0; frags = []; wsClose(sock); };
   sock.on('data', d => {
     if(dead) return;
-    buf = Buffer.concat([buf, d]);
+    if(len + d.length > buf.length){
+      let cap = buf.length || WS_BUF0; while(cap < len + d.length) cap *= 2;
+      cap = Math.min(cap, Math.max(len + d.length, MAX_MSG + 14));   // never past one largest frame plus its header, unless the bytes already there need more
+      const nb = Buffer.allocUnsafe(cap); buf.copy(nb, 0, 0, len); buf = nb;
+    }
+    d.copy(buf, len); len += d.length;
+    if(len < need) return;
+    let pos = 0;
     while(!dead){
-      if(buf.length < 2) break;
-      const b0 = buf[0], b1 = buf[1];
+      need = 2;                                                     // `need` counts from the start of the frame being read (pos)
+      const avail = len - pos;
+      if(avail < 2) break;
+      const b0 = buf[pos], b1 = buf[pos + 1];
       const fin    = (b0 & 0x80) !== 0;
       const op     =  b0 & 0x0f;
       const masked = (b1 & 0x80) !== 0;
       const ctrl   = (op & 0x08) !== 0;
       if((b0 & 0x70) || (ctrl ? (op > 0xA || !fin || (b1 & 0x7f) > MAX_CTRL) : op > 0x1)){ fail(); return; }
-      let len = b1 & 0x7f, off = 2;
-      if(len === 126){
-        if(buf.length < 4) break;
-        len = buf.readUInt16BE(2); off = 4;
-      } else if(len === 127){
-        if(buf.length < 10) break;
-        const hi = buf.readUInt32BE(2);
-        len = buf.readUInt32BE(6); off = 10;
-        if(hi !== 0 || len > MAX_MSG){ fail(); return; }
+      let plen = b1 & 0x7f, off = 2;
+      if(plen === 126){
+        if(avail < 4){ need = 4; break; }
+        plen = buf.readUInt16BE(pos + 2); off = 4;
+      } else if(plen === 127){
+        if(avail < 10){ need = 10; break; }
+        const hi = buf.readUInt32BE(pos + 2);
+        plen = buf.readUInt32BE(pos + 6); off = 10;
+        if(hi !== 0 || plen > MAX_MSG){ fail(); return; }
       }
-      if(len > MAX_MSG){ fail(); return; }
+      if(plen > MAX_MSG){ fail(); return; }                         // refused at the header, before any of the payload is buffered
       let mask = null;
       if(masked){
-        if(buf.length < off + 4) break;
-        mask = buf.subarray(off, off + 4); off += 4;
+        if(avail < off + 4){ need = off + 4; break; }
+        mask = buf.subarray(pos + off, pos + off + 4); off += 4;
       }
-      if(buf.length < off + len) break;
+      if(avail < off + plen){ need = off + plen; break; }
       if(!masked && !unmaskedSeen){ unmaskedSeen = true; wsUnmaskedNote(); }
-      let payload = Buffer.from(buf.subarray(off, off + len));
-      buf = buf.subarray(off + len);
+      const payload = Buffer.from(buf.subarray(pos + off, pos + off + plen));   // a copy: the buffer is reused
+      pos += off + plen;
       if(mask) for(let i = 0; i < payload.length; i++) payload[i] ^= mask[i & 3];
 
       if(op === 0x8){ dead = true; cb.close(); wsClose(sock); return; }
@@ -187,6 +207,9 @@ function wsAttach(sock, cb){
         if(cb.msg(whole.toString('utf8')) === false){ dead = true; return; }
       }
     }
+    if(dead) return;
+    if(pos){ if(pos < len) buf.copy(buf, 0, pos, len); len -= pos; }   // drop what was read; the frame in progress moves to the front
+    if(buf.length > WS_BUF_KEEP && len <= WS_BUF0){ const nb = Buffer.allocUnsafe(WS_BUF0); buf.copy(nb, 0, 0, len); buf = nb; }
   });
   sock.on('error', ()=>cb.close());
   sock.on('close', ()=>cb.close());
@@ -262,6 +285,12 @@ function passMatch(hashHex, given){
 if(CFG.srvPassHash   && CFG.srvPassHash._raw   !== undefined) CFG.srvPassHash   = passHash(CFG.srvPassHash._raw);     // v2.5.68: argv parsed before passHash existed
 if(CFG.adminPassHash && CFG.adminPassHash._raw !== undefined) CFG.adminPassHash = passHash(CFG.adminPassHash._raw);
 function isLoopback(ip){ return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1'; }
+function ipBare(v){                   // srv-2.6.49: '1.2.3.4:443' -> '1.2.3.4', '[2001:db8::7]:51234' -> '2001:db8::7' (some proxies write the port); anything else as written
+  const s = String(v || '').trim();
+  let m = /^\[([0-9a-fA-F:.]+)\](?::\d+)?$/.exec(s); if(m) return m[1];
+  m = /^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/.exec(s); if(m) return m[1];
+  return s;
+}
 function deriveIp(remoteAddr, headers){
   // v2.5.68 (L1 --trust-proxy): ONLY when the flag is on AND the transport peer is loopback
   // (i.e. the proxy itself) do we believe forwarding headers -- a remote client sending a
@@ -269,9 +298,9 @@ function deriveIp(remoteAddr, headers){
   const ra = remoteAddr || '?';
   if(!CFG.trustProxy || !isLoopback(ra)) return ra;
   const h = headers || {};
-  const cf = String(h['cf-connecting-ip'] || '').trim();
+  const cf = CFG.trustProxy === 'xff' ? '' : ipBare(h['cf-connecting-ip']);   // srv-2.6.49: Cloudflare writes this one and a client cannot forge it through Cloudflare -- behind any other proxy it can, so `--trust-proxy xff` ignores it
   if(cf) return cf.slice(0, 45);
-  const xff = String(h['x-forwarded-for'] || '').split(',')[0].trim();
+  const xff = ipBare(String(h['x-forwarded-for'] || '').split(',').map(x => x.trim()).filter(Boolean).pop());   // srv-2.6.49: the RIGHTMOST entry -- the one the trusted local proxy appended. The leftmost is whatever the client sent: behind an appending proxy (nginx's $proxy_add_x_forwarded_for) every connection could claim a fresh address and walk past the per-address limits
   return xff ? xff.slice(0, 45) : ra;
 }
 /* ---------- The lobby door + room list (v2.5.68, L1+L2) ---------- */
@@ -2268,7 +2297,7 @@ srv.listen(PORT, CFG.bind || undefined, () => {         // H1-a: --bind 127.0.0.
   console.log('  Images:   ' + IMAGES_DIR + '  (optional -- served at /images/<file> when present; see Settings \u2192 "Check a local images folder")');
   if(CFG.srvPassHash)   console.log('  Door:     --server-pass is ON (hello/create/join require it)');
   if(CFG.adminPassHash) console.log('  Admin:    --admin-pass is ON' + (CFG.createPolicy === 'admin' ? ' (room creation is admin-only)' : ''));
-  if(CFG.trustProxy)    console.log('  Proxy:    --trust-proxy is ON (CF-Connecting-IP/X-Forwarded-For believed from loopback)');
+  if(CFG.trustProxy)    console.log('  Proxy:    --trust-proxy' + (CFG.trustProxy === 'xff' ? ' xff is ON (the rightmost X-Forwarded-For believed from loopback; CF-Connecting-IP ignored)' : ' is ON (CF-Connecting-IP, else the rightmost X-Forwarded-For, believed from loopback)'));
   if(CFG.bind) console.log('  Bind:     --bind ' + CFG.bind + (CFG.bind === '127.0.0.1' || CFG.bind === '::1' ? '  (loopback only -- LAN addresses below are NOT served)' : ''));
   const ifs = os.networkInterfaces();
   if(!CFG.bind || CFG.bind === '0.0.0.0' || CFG.bind === '::') Object.keys(ifs).forEach(k => (ifs[k] || []).forEach(a => {

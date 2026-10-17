@@ -2907,7 +2907,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hs-internet">Beyond the LAN</a></li>
   <li><a href="#hs-table">Running a table</a></li>
   <li><a href="#hs-reference">Reference</a></li>
-  <li class="ver">server srv-2.6.43 · client v2.6.141</li>
+  <li class="ver">server srv-2.6.49 · client v2.6.165</li>
 </ul></nav>
 
 <header class="hero">
@@ -3002,9 +3002,9 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
         <li><b>Server password</b> — a locked door for the <em>whole</em> server: browsing the room list, creating and joining all require it. Players type it under <span class="menu">Join game → Local server → Server password</span> (Full mode). The public table has none.</li>
         <li><b>Referee key</b> (<code>--referee-pass</code>) — an operator credential. It is <em>not</em> how a judge joins a table (that is the per-room referee password the host sets under Game settings); it is what unlocks the next question, the log pull and the maintenance window (see <a href="#hs-reference">Reference</a>). Players never need it.</li>
         <li><b>Single-room server</b> (<code>--create-policy admin</code>) — only someone holding the referee key may create rooms. Typed under <span class="menu">Create game → Local server → Server referee key</span>. For a tournament this keeps the room list exactly as the organiser laid it out.</li>
-        <li><b>Behind cloudflared or Caddy on this machine</b> (<code>--trust-proxy</code>) — say yes when the tunnel runs on the same computer as the server, so the per-player throttles see real addresses instead of everyone looking like <code>127.0.0.1</code>. Harmless to leave off for a game night.</li>
+        <li><b>Behind a Cloudflare tunnel on this machine</b> (<code>--trust-proxy</code>) — say yes when the tunnel runs on the same computer as the server, so the per-player throttles see real addresses instead of everyone looking like <code>127.0.0.1</code>. Harmless to leave off for a game night. The launcher's yes is right for cloudflared; for Caddy or nginx with no Cloudflare in front, start the server with <code>--trust-proxy xff</code> instead (the plain command below).</li>
       </ol>
-      <p>Anything the guided launcher can do, the plain command can too: <code>node elysium-server.js [port] [clientfile] [--server-pass P] [--referee-pass P] [--create-policy admin] [--trust-proxy] [--bind ADDR] [--data-dir DIR] [--origin LIST]</code>. A <code>!</code> in a password trips the Windows shell — pick a phrase without one.</p>
+      <p>Anything the guided launcher can do, the plain command can too: <code>node elysium-server.js [port] [clientfile] [--server-pass P] [--referee-pass P] [--create-policy admin] [--trust-proxy [xff]] [--bind ADDR] [--data-dir DIR] [--origin LIST]</code>. A <code>!</code> in a password trips the Windows shell — pick a phrase without one.</p>
     </div>
   </details>
 
@@ -3155,7 +3155,8 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <tr><td><code>--server-pass P</code></td><td>A password for the whole server: browsing, creating and joining all require it.</td></tr>
     <tr><td><code>--referee-pass P</code></td><td>The operator key (<code>--admin-pass</code> is an alias). Unlocks <code>--create-policy admin</code>, the log pull and the maintenance window; bypasses the room-creation throttle.</td></tr>
     <tr><td><code>--create-policy admin</code></td><td>Only a holder of the referee key may create rooms. Default: anyone.</td></tr>
-    <tr><td><code>--trust-proxy</code></td><td>Believe the forwarding headers from a tunnel or reverse proxy running on the <em>same</em> machine, so per-player throttles see real addresses.</td></tr>
+    <tr><td><code>--trust-proxy</code></td><td>Believe the forwarding headers from a tunnel or reverse proxy running on the <em>same</em> machine, so per-player throttles see real addresses. Cloudflare's <code>CF-Connecting-IP</code> is read first; otherwise the <em>last</em> address in <code>X-Forwarded-For</code>, the one your proxy added (the first one is whatever the player's browser sent). That is right behind Cloudflare (a tunnel, or the orange cloud), which writes the header itself.</td></tr>
+    <tr><td><code>--trust-proxy xff</code></td><td>For a proxy that is <em>not</em> Cloudflare — nginx or Caddy straight to the internet. A player can write <code>CF-Connecting-IP</code> themselves and such a proxy passes it on, so with plain <code>--trust-proxy</code> they could claim a new address on every connection. With <code>xff</code> only the last <code>X-Forwarded-For</code> address counts.</td></tr>
     <tr><td><code>--bind 127.0.0.1</code></td><td>Listen on one address only. Behind a tunnel, <code>127.0.0.1</code> makes the raw port unreachable even on your LAN.</td></tr>
     <tr><td><code>--data-dir DIR</code></td><td>Where rooms, saves and the error log are written. Default: beside the server.</td></tr>
     <tr><td><code>--origin LIST</code></td><td>Comma-separated list of page origins allowed to open a table connection (e.g. <code>https://your-domain,null</code>). Default: off.</td></tr>
@@ -3188,6 +3189,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <tr><td>“No such room” / “Wrong password”</td><td>Room names are case-sensitive as created; the password is the host's. A server password is a separate thing: <span class="menu">Join game → Local server → Server password</span>.</td></tr>
     <tr><td>“That name is taken”</td><td>The name is currently online in the room. An offline seat is reclaimed with the same name + the room password.</td></tr>
     <tr><td>“Too many failed attempts”</td><td>The lockout — wait 10 minutes, or reconnect in the tab that still holds the token.</td></tr>
+    <tr><td>“Connection lost — reconnecting in … s”</td><td>The table finds its way back on its own: it tries every few seconds for half a minute (the time in which the host cannot hand your seat to someone else), then less often (about every 15 seconds), and at once when the network or the tab comes back. Your seat waits much longer than that. Chat written meanwhile waits and goes out when you are back in, to whoever is at the table then. A pass, a draw, an oust, a card back to the deck, a shuffle, the dice, the Edge, a give, a reveal and stopping an open hand are refused until then — the table says so; do it again once you are back. On a server with a server password the reconnect carries the password you typed — clients before v2.6.165 were refused there and dropped out of the table, to be joined again by hand. Starting Play offline meanwhile leaves the lost table; Join game takes you back to your seat.</td></tr>
     <tr><td>“Too many wrong admin passwords”</td><td>The referee-key lockout — wait 10 minutes. Behind a tunnel without <code>--trust-proxy</code>, every guest's wrong guesses count together.</td></tr>
     <tr><td>“This room has no referee password” / “Wrong referee password”</td><td>Referees are per table: the host sets the password under Create game → Game settings when the room is created. No password there means no referee at that table.</td></tr>
     <tr><td>A version warning when joining</td><td>Client and server are from different releases. Fetch both from <a href="https://github.com/dtagent2000/VTES-Elysium">GitHub</a> and put them beside each other.</td></tr>
@@ -3210,7 +3212,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium — running your own server · matches server <b>srv-2.6.43</b> and client <b>v2.6.141</b> · 11 October 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
+  Elysium — running your own server · matches server <b>srv-2.6.49</b> and client <b>v2.6.165</b> · 17 October 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
 </footer>
 <!-- @@/HELP:server -->
 </template>
@@ -3233,7 +3235,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.164';   // v2.6.164 (17 Oct 2026, THE TABLE KEEPS ITS SEATS -- purge the client AND restart the server: srv-2.6.48 ships with it; bot v0.6.207 beside): group B of the 16 Oct code review, and Johan's yes to values below 0. (1) pass() and the P key work only on your own turn (online it logged 'Turn passed.' to everyone and moved its own turn while the server refused; at a hotseat P during a bot's turn passed for the bot and the sweep never ended; a held key repeated). (2) The hotseat bridge clears the table tally at every turn change and tells the bots, as the server does (a bot's stale stealth met the human's next block: wrong verdict). (3) A hotseat hand-off restores the seat's phase without setPhase's side effects (it emptied the reacting player's Played tray, closed the counter, resolved the action and reset the master bonus). (4) The oust always reaches the server (award:false when the automatic award is off) -- it is what takes the seat out of the rotation; an older server reads no `award` and pays as before, and the ousted player is told so. (5) The Block counter goes below 0 (stealth and intercept may, by the rulebook); the verdict bubble reads a negative number. (6) The bridge relays boards like the server: no deck name, no face-down name. (7) The counter is cleared when you leave a hotseat table, and your own click survives a write that lands inside its 120 ms debounce (only while its send is really pending). (8) After an independent review: a pass that waited on a torn-down bot sweep no longer blocks every later pass; mySeat() skips an open seat (it keeps its leaver's name); the first human's turn after the opening sweep starts clean; at a hotseat an un-oust takes back the VP its oust paid and an oust pays once; against a server older than 2.6.48 an oust with the award off is not sent (as v2.6.163) and the player is told why. Help > Bots embeds bot v0.6.207's guide.
+const VERSION='2.6.165';   // v2.6.165 (17 Oct 2026, THE QUIET TABLE -- purge the client AND restart the server: srv-2.6.49 ships with it; bot v0.6.207 beside): group C of the 16 Oct code review, which closes it. (1) A board leaves this client only when it changed (mpSendBoard; the hotseat fan-out the same): layout() ends in scheduleSave() -> schedulePush(), so in the Structured view every board received re-rendered ours and sent it back -- about one board a second per client with nobody touching anything. The push waits at most 1.5 s however busy the table (each received board re-armed the debounce). (2) An open hand is re-sent when it changed; a roster re-sends a returning seat's grant, and every grant when no seat changed (a token rejoin that only swaps the socket, a reload's rejoin, a new spectator -- the server keeps no grants), never to an absent seat; it went out on every render: with grants to four seats about 100 messages in 10 s against the server's 80, so the server cut the granter off. (3) A reconnect carries the server password (memory only, for the server it was typed for): on a --server-pass server the rejoin was refused (a strike against the address) and the client gave the session up -- the player left the table and had to join again by hand. (4) While reconnecting, a chat line waits in an outbox and goes out after the rejoin; a pass, an oust, a draw and every other move that needs the server (an undone draw, a card back to the deck, a shuffle, the pile tools, a roll, the Edge, an un-oust, a give, a recall, a reveal, an open-hand revoke, the host's pool / oust / pass tools) is refused out loud -- their offline paths acted on a table that is not this one (a card returned to the deck was lost, a revoke never reached the grantees); the board goes out again after the rejoin, changed or not; the retries run every 2.5 s through the server's 30 s reconnect window, then back off to 15 s (+-20 %), and start at once when the network or the tab comes back; a local game started meanwhile leaves the lost table (its retries ran into the local game). (5) Saved decks: 60 instead of 24, a drop is named, a full storage is said; the local game save: a full storage frees other rooms' stale saves, then keeps a shorter turn history, and says so (it failed silently); the duel panel runs one live-refresh timer, not one per click.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3835,8 +3837,24 @@ function flushSave(){      // actually write the local resume-save, honouring th
   try{
     if(state.cards.size) localStorage.setItem(saveKey(), serializeGame());
     else localStorage.removeItem(saveKey());
-  }catch(err){}
+  }catch(err){ if(isQuotaErr(err)) saveQuotaRescue(); else if(String(err&&err.name||'')!=='SecurityError'){ try{ onClientError('autosave: '+(err&&err.message||err), 'autosave', 0, 0, err&&err.stack); }catch(_e){} } }   // SecurityError = the browser blocks site storage: no save, and nothing to report   // cli-2.6.165: only a full storage runs the rescue (it frees other saves and says 'full'); anything else is a bug, reported
 }
+function isQuotaErr(err){ const n=String(err&&err.name||''), m=String(err&&err.message||''); return /quota/i.test(n) || /QuotaExceeded|exceeded the quota|quota (has been )?exceeded/i.test(m) || n==='NS_ERROR_DOM_QUOTA_REACHED' || !!(err && (err.code===22 || err.code===1014)); }   // DOMException QuotaExceededError (code 22; old Firefox NS_ERROR_DOM_QUOTA_REACHED, 1014)
+const SAVE_STALE_MS=14*86400000;   // cli-2.6.165 (C-16): another room's resume-save untouched this long goes first when the storage is full
+let _saveFullTold={};   // cli-2.6.165: per message ('trim' / 'fail') -- the mild note must not silence a later total failure
+function saveQuotaRescue(){        // cli-2.6.165 (C-16): the write failed -- the save, which keeps every turn's log, has outgrown the browser's storage (a long match), or other saves filled it. Free stale saves, then write a copy with a shorter history; say so once
+  const key=saveKey(), now=Date.now();
+  try{ for(let i=localStorage.length-1;i>=0;i--){ const k=localStorage.key(i);
+    if(!k || k===key || k.indexOf(SAVE_KEY+'::')!==0) continue;   // other ROOMS' resume-saves only -- the bare key is the offline game's
+    let t=0; try{ t=(JSON.parse(localStorage.getItem(k)||'{}')||{}).t||0; }catch(_e){}
+    if(now-t>SAVE_STALE_MS) localStorage.removeItem(k); } }catch(_e){}
+  for(const keep of [Infinity, 40, 10, 0]){
+    try{ localStorage.setItem(key, serializeGame(keep)); if(keep!==Infinity) saveFullTell('trim', 'The game is saved in this browser '+(keep ? 'with only its last '+keep+' turns of log' : 'without the log of its earlier turns')+' \u2014 the storage is full.'); return true; }catch(_e){}
+  }
+  saveFullTell('fail', 'This game could not be saved in the browser: the storage is full. Use \u201cSave game to file\u201d, or delete old saved decks or games.');
+  return false;
+}
+function saveFullTell(kind, msg){ if(_saveFullTold[kind]) return; _saveFullTold[kind]=true; toast(msg, 7000); log('<span class="sysline">'+esc(msg)+'</span>', true); }
 function applyAutosaveMode(){
   clearInterval(autosaveInterval); autosaveInterval=null;
   if(autoSaveMode==='minute') autosaveInterval=setInterval(flushSave, 60000);
@@ -4036,6 +4054,7 @@ async function discardGateOK(c){   // UI-layer gate: confirm a discretionary HAN
 /* ---------- Pile actions ---------- */
 async function drawCard(){
   if(hx('hand') && hx('warn') && state.zones.hand.length>=state.maxHand && !(await uiConfirm('Your hand is already at your max size ('+state.zones.hand.length+'/'+state.maxHand+'). Draw anyway?'))) return;
+  if(mpOfflineRefuse('draw')) return;                         // cli-2.6.165 (C-15): offline it drew from a library this client does not hold ('The library is empty.')
   if(netGame()){ mpSend({t:'draw'}); return; }
   const top=state.zones.library.at(-1);
   if(top===undefined){ log('The library is empty.'); return; }
@@ -4046,6 +4065,7 @@ async function drawCard(){
   log('Drew <b>1 card</b> from the library.');
 }
 function undoDraw(){
+  if(net.deckUp && mpOfflineRefuse('undo the draw')) return;   // cli-2.6.165: before the history is touched
   pushUndo();
   while(state.drawHistory.length){
     const id=state.drawHistory[state.drawHistory.length-1];
@@ -4081,6 +4101,7 @@ function undoDrawStep(){
   updateUndoBtn();
 }
 function undoCryptDraw(){
+  if(net.deckUp && mpOfflineRefuse('undo the draw')) return;   // cli-2.6.165
   pushUndo();
   while(state.cryptDrawHistory.length){
     const id=state.cryptDrawHistory[state.cryptDrawHistory.length-1];
@@ -4116,6 +4137,7 @@ function undoDiscard(){
   log('Nothing to undo — no discarded card is still in the ash heap.');
 }
 function influence(){
+  if(mpOfflineRefuse('draw from the crypt')) return;          // cli-2.6.165 (C-15)
   if(netGame()){ mpSend({t:'drawCrypt'}); return; }
   const top=state.zones.crypt.at(-1);
   if(top===undefined){ log('The crypt is empty.'); return; }
@@ -4129,6 +4151,7 @@ function shuffleFx(zone){
   // Animation disabled — pending redesign
 }
 function shuffleZone(z){
+  if((z==='library'||z==='crypt') && mpOfflineRefuse('shuffle')) return;   // cli-2.6.165
   if(netGame() && (z==='library'||z==='crypt')){
     mpSend({t:'shufPile', pile:z==='crypt'?'crypt':'library'}); shuffleFx(z);
     log((z==='library'?'The library':'The crypt')+' was shuffled.');
@@ -5053,6 +5076,7 @@ function flyToPile(c){
 }
 function returnToPile(c,pos,opts){
   opts=opts||{};
+  if(net.deckUp && mpOfflineRefuse('return a card to the deck')) return;   // cli-2.6.165
   const pile=c.kind==='crypt'?'crypt':'library';
   const label=pile==='crypt'?'the crypt':'the library';
   const who=cardRefCap(c);
@@ -5344,6 +5368,7 @@ function alignSelected(){
   groupAlign((a&&state.selected.has(a.id))?a:null);
 }
 function groupShuffleIn(){
+  if(net.deckUp && mpOfflineRefuse('shuffle cards into the deck')) return;   // cli-2.6.165
   const piles=new Set(); let nn=0;
   [...state.selected].forEach(id=>{
     const c=state.cards.get(id);
@@ -5449,6 +5474,7 @@ function restoreSnap(s){
   renderAltIfOpen();
 }
 function applyUndoEntry(s){   // handle the non-snapshot undo steps (draw sentinel + cross-board give/take-back). Returns true if it consumed the entry.
+  if((s===UNDO_DRAW || (s && s.t==='give-net')) && mpReconnecting()){ undoStack.push(s); mpOfflineRefuse('undo that'); updateUndoBtn(); return true; }   // cli-2.6.165: the step needs the server -- it stays on the stack for later
   if(s===UNDO_DRAW){ undoDrawStep(); return true; }
   if(s && typeof s==='object' && s.t){   // only semantic entries carry a .t; wrapped snapshots {s,label} fall through to restoreSnap in undo()
     if(s.t==='give') undoGiveStep(s);
@@ -5477,6 +5503,7 @@ $('#btnUndo').addEventListener('click',undo);
 
 /* ---------- Pile click & context menus ---------- */
 function burnTopLibrary(){   // single-card variant — kept for shortcuts
+  if(mpOfflineRefuse('burn from the deck')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   if(netGame()){ mpSend({t:'pileTop', action:'burn', n:1}); return; }
   const top=state.zones.library.at(-1);
   if(top===undefined){ log('The library is empty.'); return; }
@@ -5494,6 +5521,7 @@ function discardHover(){   // discard the card under the pointer — felt or han
   log('Discarded '+cardRef(c)+' to the ash heap.');
 }
 function discardTopLibrary(){   // single-card variant — kept for shortcuts
+  if(mpOfflineRefuse('discard from the deck')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   if(netGame()){ mpSend({t:'pileTop', action:'discard', n:1}); return; }
   const top=state.zones.library.at(-1);
   if(top===undefined){ log('The library is empty.'); return; }
@@ -5502,6 +5530,7 @@ function discardTopLibrary(){   // single-card variant — kept for shortcuts
   log('Discarded the top card of the library: <b>'+escapeHtml(c.name)+'</b>.');
 }
 async function discardTopLibraryN(){
+  if(mpOfflineRefuse('discard from the deck')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   const lib=state.zones.library; if(!lib.length){ log('The library is empty.'); return; }
   const n=await _promptN('Discard how many cards from the top of the library?', lib); if(!n) return;
   if(netGame()){ mpSend({t:'pileTop', action:'discard', n}); return; }
@@ -5514,6 +5543,7 @@ async function discardTopLibraryN(){
   if(n>1) log('Discarded <b>'+n+'</b> cards from the top of the library.');
 }
 async function burnTopLibraryN(){
+  if(mpOfflineRefuse('burn from the deck')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   const lib=state.zones.library; if(!lib.length){ log('The library is empty.'); return; }
   const n=await _promptN('Burn how many cards from the top of the library?', lib); if(!n) return;
   if(netGame()){ mpSend({t:'pileTop', action:'burn', n}); return; }
@@ -5526,6 +5556,7 @@ async function burnTopLibraryN(){
   if(n>1) log('Burned <b>'+n+'</b> cards from the top of the library.');
 }
 async function burnTopCryptN(){
+  if(mpOfflineRefuse('burn from the crypt')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   const crypt=state.zones.crypt; if(!crypt.length){ log('The crypt is empty.'); return; }
   const n=await _promptN('Burn how many cards from the top of the crypt?', crypt); if(!n) return;
   if(netGame()){ mpSend({t:'pileTop', action:'burn', kind:'crypt', n}); return; }
@@ -5597,6 +5628,7 @@ function _requireSelected(fn){
    toSeat – a seat number (online: specific player) or 'all' (everyone else)
    Works in solo (no-op), hotseat (logs locally for recipient) and online (server routes privately). */
 function revealHandTo(cards, toSeat){
+  if(mpOfflineRefuse('reveal your hand')) return;          // cli-2.6.165: it logged 'You revealed to …' and sent nothing
   if(!cards.length){ uiAlert('No cards to reveal.'); return; }
   const isAll = (toSeat === 'all');
   // Recipient display name. For "all" we say "everyone"; for one player, their name.
@@ -5651,9 +5683,24 @@ function _seatName(seat){
 }
 /* Push the current hand to one grantee (or 'all'). Online; and (v2.6.159) at a hotseat to the BOT
    seats -- a human grantee there reads the live/stored board, a bot is not at this screen. */
-function _pushOpenHand(toSeat){
-  if(!inRoom()){ hotOpenHandToBots(toSeat, false); return; }
-  mpSend({ t:'openHand', to: toSeat==='all'?'all':toSeat, cards: _openHandCardInfos() });
+let _openHandSent={};   // cli-2.6.165 (C-13): target ('all' or a seat) -> the hand last sent to it. With grants to four seats the per-call re-send was about 100 messages in 10 s against the server's 80
+function _pushOpenHand(toSeat, force){
+  const key=(toSeat==='all')?'all':String(toSeat), cards=_openHandCardInfos(), sig=JSON.stringify(cards);
+  if(!force && _openHandSent[key]===sig) return;
+  if(!inRoom()){ if(!hotBotsSeated()) return; _openHandSent[key]=sig; hotOpenHandToBots(toSeat, false); return; }
+  if(!(net.ws && net.ws.readyState===1)) return;               // nothing went out: the next push tries again
+  _openHandSent[key]=sig;
+  mpSend({ t:'openHand', to: key==='all'?'all':toSeat, cards });
+}
+let _ohSeen=null;                                               // cli-2.6.165 (C-13): seat -> 'name|here' as the last roster showed it (null: none seen on this table yet)
+function ohSeenOf(players){ const o={}; (players||[]).forEach(p=>{ o[p.seat]=p.name+'|'+(p.online!==false && !p.vacant); }); return o; }
+function openHandRosterCheck(){                                 // cli-2.6.165 (C-13): the server keeps no grants, and a roster is what every arrival looks like. A seat that came back gets its grant (and a grant to all goes again); a roster in which no seat changed -- a token rejoin that only swaps the socket, a reload's rejoin, a new spectator, a mute -- re-sends every grant. A seat that left gets nothing, so a flapping connection costs one message per return
+  const now=ohSeenOf(net.roster), prev=_ohSeen; _ohSeen=now;
+  if(!Array.isArray(state.openHand) || !state.openHand.length) return;
+  const changed=Object.keys(now).filter(k=>!prev || prev[k]!==now[k]);
+  if(prev && !changed.length){ _openHandSent={}; refreshOpenHands(); return; }
+  let back=false; changed.forEach(k=>{ delete _openHandSent[k]; if(/\|true$/.test(now[k])) back=true; });
+  if(back){ delete _openHandSent.all; refreshOpenHands(); }
 }
 /* Re-push the live hand to every active grantee. Called from schedulePush on any board change
    (online) and from hotPushBoardNow (a hotseat with bots, v2.6.159). */
@@ -5661,7 +5708,9 @@ function refreshOpenHands(){
   if(!Array.isArray(state.openHand) || !state.openHand.length) return;
   if(!inRoom() && !hotBotsSeated()) return;   // hotseat/solo HUMAN grantees read the stored/live board directly; v2.6.159: a bot grantee needs the push
   if(openHandIsAll()){ _pushOpenHand('all'); return; }
-  state.openHand.forEach(seat=>{ if(seat!=='all') _pushOpenHand(seat); });
+  state.openHand.forEach(seat=>{ if(seat==='all') return;
+    if(inRoom()){ const q=(net.roster||[]).find(r=>r.seat===seat); if(q && (q.online===false || q.vacant)) return; }   // cli-2.6.165: the server drops a hand sent to an absent seat -- it goes when the seat's roster says it is back
+    _pushOpenHand(seat); });
 }
 /* Grant open-hand to a seat (or 'all'). */
 function openHandGrant(toSeat){
@@ -5676,19 +5725,20 @@ function openHandGrant(toSeat){
   const toName = _seatName(isAll?'all':toSeat);
   // Public, archived log line — everyone sees that the grant was given.
   log('<b>'+escapeHtml(me)+'</b> is now playing with an open hand toward <b>'+escapeHtml(toName)+'</b>.', true);
-  _pushOpenHand(isAll?'all':toSeat);   // initial push of the current hand (online; v2.6.159: and to the bot seats at a hotseat -- _pushOpenHand routes)
+  _pushOpenHand(isAll?'all':toSeat, true);   // initial push of the current hand (online; v2.6.159: and to the bot seats at a hotseat -- _pushOpenHand routes); cli-2.6.165: forced past the dedupe
   saveDirty=true;
 }
 /* Revoke open-hand from a seat (or 'all' / everyone). */
 function openHandRevoke(target){
+  if(mpOfflineRefuse('stop the open hand')) return;        // cli-2.6.165: the revoke was lost and the grantees kept seeing the hand
   const me = net.you || 'A player';
   let toName;
   if(target==='all' || target==='everyone'){
-    state.openHand = [];
+    state.openHand = []; _openHandSent={};
     toName = 'all players';
     if(inRoom()) mpSend({ t:'openHand', to:'all', revoke:true }); else hotOpenHandToBots('all', true);   // v2.6.159: the bots' copy ends too
   } else {
-    state.openHand = (state.openHand||[]).filter(v=>v!==target);
+    state.openHand = (state.openHand||[]).filter(v=>v!==target); delete _openHandSent[String(target)];
     toName = _seatName(target);
     if(inRoom()) mpSend({ t:'openHand', to:target, revoke:true }); else hotOpenHandToBots(target, true);
   }
@@ -5740,6 +5790,7 @@ function _revealToMenu(cards){
 }
 
 async function revealTop(){
+  if(mpOfflineRefuse('park cards from the deck')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   if(netGame()){
     if(!net.libN){ log('The library is empty.'); return; }
     const v=await uiPrompt('Park how many cards from the top of the library?\n(They are placed face down in the ready region.)','3');
@@ -5769,6 +5820,7 @@ async function revealTop(){
   log('Parked the top <b>'+n+'</b> card'+(n>1?'s':'')+' of the library face down in the ready region.');
 }
 async function revealTopCrypt(){
+  if(mpOfflineRefuse('park cards from the crypt')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   if(netGame()){
     if(!net.cryptN){ log('The crypt is empty.'); return; }
     const v=await uiPrompt('Park how many cards from the top of the crypt?\n(They are placed face down '+parkWhere('crypt')+'.)','1');
@@ -6239,6 +6291,7 @@ function _makeBrowseCard(c){
   return d;
 }
 function browse(z, mode){
+  if((z==='library'||z==='crypt') && mpOfflineRefuse('look through the deck')) return;   // cli-2.6.165
   if(netGame() && (z==='library'||z==='crypt')){
     log('<b>'+(z==='library'?'The library':'The crypt')+'</b> is being browsed.');
     mpSend({t:'browse', pile:z==='crypt'?'crypt':'library'});
@@ -6506,7 +6559,7 @@ function selfPoolMenuItems(){                                 // the right-click
     {label:'⚙ Set pool…', fn:setPoolPrompt},
     {label:'⚝ Choose clan…', sub:clanChoiceItems()},
     (mineOut
-      ? {label:'↩ Return to the game (undo oust)', fn:()=> inRoom()?mpSend({t:'unoust'}):unoustHot() }
+      ? {label:'↩ Return to the game (undo oust)', fn:()=> mpOfflineRefuse('return to the game') || (inRoom()?mpSend({t:'unoust'}):unoustHot()) }
       : {label:'💀 Ousted…', fn:ousted})
   ];
 }
@@ -6708,11 +6761,17 @@ function loadDecks(){
     return [];
   }
 }
-function saveDecks(a){ try{ localStorage.setItem(DECKS_KEY, JSON.stringify(a.slice(0,24))); }catch(err){} }
-function storeDeck(name,text,era){
+const DECKS_MAX=60;   // cli-2.6.165 (C-16): was 24, and the 25th save dropped the oldest deck without a word
+function saveDecks(a){ try{ localStorage.setItem(DECKS_KEY, JSON.stringify(a.slice(0,DECKS_MAX))); return true; }catch(err){ return false; } }   // false = the browser refused (storage full)
+function storeDeck(name,text,era,okMsg){   // cli-2.6.165 (C-16): okMsg = the caller's success line -- a later toast would cover this function's own (toast() rewrites one element)
   const a=loadDecks().filter(d=>d.name!==name);
   a.unshift({name, text, ts:Date.now(), era: era||null});
-  saveDecks(a);
+  const dropped=a.slice(DECKS_MAX).map(d=>d.name);
+  if(!saveDecks(a)){ toast('The deck could not be saved: this browser\'s storage is full. Delete a saved deck or an old game save and try again.', 6000); return false; }
+  const _dropTxt=dropped.length ? 'The deck list holds '+DECKS_MAX+' decks, so the oldest, \u201c'+dropped.join('\u201d, \u201c')+'\u201d, was removed.' : '';
+  if(okMsg) toast(okMsg+(_dropTxt?' '+_dropTxt:''), _dropTxt?6000:undefined);
+  else if(_dropTxt) toast('Saved. '+_dropTxt, 6000);
+  return true;
 }
 function eraFromCardNames(names){     // 'legacy' if ANY card is legacy-only, 'v5' if every known card is V5-printed, null if undetermined
   if(!catalog || !catalog.legacy || !catalog.legacy.length || !names || !names.length) return null;
@@ -7633,10 +7692,10 @@ $('#labSaveLib').addEventListener('click', async ()=>{                     // v2
   const _prior=loadDecks().find(d=>d.name===finalName);                   // B-53: the lab save is the OTHER silent-overwrite vector -- same guard as impOk (overwrite only; a small WIP save is legitimate here, so no sanity confirm)
   const _ow=_prior ? deckOverwriteText(_prior.text, parsed, finalName) : null;
   if(_ow && !(await uiConfirm(_ow, 'Replace saved deck?'))) return;
-  storeDeck(finalName, deckToText({...parsed, name:finalName}), deckEra()); refreshDeckSel(); refreshLabDeckSel();
+  const _ok=storeDeck(finalName, deckToText({...parsed, name:finalName}), deckEra(), 'Saved "'+finalName+'" to your decks — pick it in the lobby.'); refreshDeckSel(); refreshLabDeckSel();   // cli-2.6.165: the success line rides storeDeck (it covered the storage-full and dropped-deck notices)
+  if(!_ok) return;
   if(labDuo==='offlineModal') renderOfflineSeats();
   else if(labDuo==='lobbyModal' && typeof renderLobby==='function') renderLobby();
-  toast('Saved "'+finalName+'" to your decks — pick it in the lobby.');
 });
 { const _o=$('#offDeckLab'); if(_o) _o.addEventListener('click',()=>openDeckLabBeside('offlineModal'));
   const _l=$('#lobDeckLab'); if(_l) _l.addEventListener('click',()=>openDeckLabBeside('lobbyModal')); }
@@ -7759,6 +7818,7 @@ function updateEdge(){
   if(typeof l4Globes!=='undefined' && l4Globes.size) l4GlobeEdges();   // v2.6.151: my own globe's Edge mark
 }
 function toggleEdge(){
+  if(mpOfflineRefuse('take or release the Edge')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   pushUndo(); state.edge=!state.edge; updateEdge();
   if(state.edge){
     let from=null;
@@ -7871,6 +7931,7 @@ function bindTokenDrag(el,tok){
           if(inRoom() && typeof schedulePush==='function') schedulePush();
           return; }
         const oppSeat=rz.seat, oppName=(net.roster||[]).find(p=>p.seat===oppSeat)?.name||('seat '+oppSeat);   // dropped on an opponent's ready → hand off
+        if(mpOfflineRefuse('pass the Edge')){ placeToken(tok); return; }   // cli-2.6.165: the hotseat hand-off ran on the online seats
         pushUndo();
         if(inRoom()){ state.edge=false; updateEdge(); removeEdgeToken(); mpSend({t:'edgePass', toSeat:oppSeat, fromName:net.you, pos:dropPos}); }
         else { edgeHandoffHotseat(oppSeat, dropPos); }
@@ -8392,6 +8453,7 @@ function adjustHotVp(seat, d){                                 // hotseat: manua
   renderStats();
 }
 async function hostSetPoolPrompt(seat, who, cur){                   // host: set ANY seat's pool (online relays to that client; hotseat edits the stored board)
+  if(mpOfflineRefuse('set a pool')) return;                         // cli-2.6.165
   const v=await uiPrompt('Set pool for '+who+' to:', cur);
   if(v===null) return;
   const n=parseInt(v,10); if(isNaN(n)||n<0) return;
@@ -8425,12 +8487,14 @@ function hostSetPoolHot(seat, n){                             // hotseat: write 
   renderStats(); if(typeof net.view==='number') switchView(net.view); else if(l4on()) updateL4Opponents(); else if(l3on()) renderL3();
 }
 async function hostOustSeat(seat, who, undo){                       // host: oust / un-oust ANY seat
+  if(mpOfflineRefuse(undo ? 'return a seat to the game' : 'oust a seat')) return;   // cli-2.6.165
   if(undo){ if(inRoom()) mpSend({t:'hostUnoust', seat}); else if(localTable) hostUnoustHot(seat); return; }
   if(!(await uiConfirm('Oust '+who+'? Their predator collects +6 pool / +1 VP.'))) return;
   if(inRoom()) mpSend({t:'hostOust', seat});
   else if(localTable) hostOustHot(seat);
 }
 async function hostPassSeat(seat, who){                             // host: advance the turn past a stuck/AFK seat (online only -- hotseat already controls every seat via the PRIORITY bar)
+  if(mpOfflineRefuse('pass a turn')) return;                        // cli-2.6.165: it ran the hotseat force-pass on the online table
   if(!(await uiConfirm('Pass the turn for '+who+'? Use this when a player is stuck or away — nobody is removed.'))) return;
   if(!inRoom()){ hotForcePass(seat); return; }                       // v2.6.122: the hotseat twin -- resolves the sweep's await on that bot
   mpSend({t:'hostPass', seat});
@@ -8457,6 +8521,7 @@ function hostUnoustHot(seat){                                 // hotseat: host r
 }
 const OUST_AWARD_SRV_MIN='2.6.48';   // cli-2.6.164: the first server that reads bounty's `award`
 async function ousted(opts){ opts=opts||{};
+  if(mpOfflineRefuse('oust')) return;                         // cli-2.6.165 (C-15): the bounty never reached the server and the cards went back on this screen only
   if(!state.cards.size && !netGame()){ log('No deck on the table.'); return; }
   if(!opts.forced && !(await uiConfirm('Ousted — return all cards to the crypt and library?'))) return;
   stopPicking(); setTarget(null,true);
@@ -8510,7 +8575,7 @@ $('#pool').addEventListener('contextmenu',e=>{ e.preventDefault();
   showMenu([
     {label:'Set pool…', fn:setPoolPrompt},
     ((inRoom()||localTable) && (rosterMe()||{}).out
-      ? {label:'Return to the game (undo oust)', fn:()=> inRoom()?mpSend({t:'unoust'}):unoustHot() }
+      ? {label:'Return to the game (undo oust)', fn:()=> mpOfflineRefuse('return to the game') || (inRoom()?mpSend({t:'unoust'}):unoustHot()) }
       : {label:'Ousted…', fn:ousted}),
     '-',
     {label:'Burned cards… ('+state.zones.burned.length+')', fn:()=>browse('burned')}
@@ -9094,6 +9159,7 @@ async function phaseLeaveOK(from){                               // advancing pa
 }
 function resetTurnTracking(){ state.phaseUsed={ master:0, influence:0, discard:0 }; state.trifleUsed=false; state.masterBonus=0; renderPhaseCounts(); }
 function influencePaid(){                                  // generic influence action: 4 transfers + 1 pool → a crypt card to uncontrolled
+  if(mpOfflineRefuse('draw from the crypt')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   if(state.pool<1){ toast('A generic influence needs 1 pool.'); return; }
   if(netGame() ? !net.cryptN : state.zones.crypt.at(-1)===undefined){ log('The crypt is empty.'); return; }
   pushUndo();
@@ -9224,6 +9290,7 @@ let _passBusy=0, _passSeq=0;   // cli-2.6.164 (B-5): the pass in progress (0 = n
 function passBusyReset(){ _passBusy=0; }   // a table that goes away takes its pass with it: hotAwaitPass never resolves on a torn-down table (on purpose), so a pass that waited on the sweep never reaches its finally (the review: every later pass said 'The bell is already ringing.' until a reload)
 function passBlockedWhy(){   // cli-2.6.164 (B-5): null = this screen may pass now; else the reason, for the toast
   if(_passBusy) return 'The bell is already ringing.';
+  if(mpReconnecting()) return 'Reconnecting \u2014 pass once the connection is back.';   // cli-2.6.165 (C-15): it passed locally and the server never heard it
   if(inRoom()){
     if(net.spect) return 'Spectators do not pass.';
     if(net._passPending && Date.now()-net._passPending<8000) return 'Your pass is on its way.';   // until the server's `turn` arrives (a held key sent several)
@@ -9481,6 +9548,7 @@ const ESC = (function(){
   return { deriveKeys, encrypt, decrypt, sha256hex, hmachex, pbkdf2hex, ITER };
 })();
 function inRoom(){ return net.status==='in'; }
+function mpReconnecting(){ return net.status==='re' && !localTable; }   // cli-2.6.165 (C-15): an online table whose connection is being restored -- never while a local table is up (a lost table's retries outlive it)
 let localTable=false;                                    // local practice table (demo opponents) — no server
 function tableView(){ return inRoom() || localTable; }   // VIEW/NAV gate only; networking still keys off inRoom()
 const MP_TOK='elysium.mptoken';   // sessionStorage: per TAB, survives reload, dies with the tab
@@ -9542,7 +9610,7 @@ function cleanAddr(a, sec){
   return s;
 }
 function mpRelay(html){
-  if(net.status==='in' && !net.spect && net.ws && net.ws.readyState===1){   // v2.6.148: a spectator's log lines are its own -- the server refuses them like the board
+  if(net.status==='in' && !net.spect && net.ws && net.ws.readyState===1){   // v2.6.148: a spectator's log lines are its own -- the server refuses them like the board. cli-2.6.165: a log line is NOT queued while reconnecting -- the line an offline path writes then ('The library is empty.') is not this table's
     try{ net.ws.send(JSON.stringify({t:'log', html})); }catch(err){}
   }
   hotRelayLog(html);                                          // v2.6.95: the hotseat mirror of the server's broadcast -- same contract, no server
@@ -9647,7 +9715,29 @@ function hotOpenHandToBots(toSeat, revoke){                  // a human's standi
   if(toSeat==='all') hotFanOut(payload, seat);
   else if(hotBotSeat(toSeat|0)){ try{ hotBridge.toBot(toSeat|0, payload); }catch(_e){} }
 }
-function mpSend(o){ try{ net.ws.send(JSON.stringify(o)); }catch(err){} }
+const MP_QUEUE_VERBS=new Set(['chat']);   // cli-2.6.165 (C-15): speech keeps its meaning when it lands a few seconds late; a move does not (it is refused while reconnecting, see mpOfflineRefuse)
+function mpSend(o){
+  if(net.ws && net.ws.readyState===1){ try{ net.ws.send(JSON.stringify(o)); }catch(err){} return true; }
+  if(o && MP_QUEUE_VERBS.has(o.t) && (mpReconnecting() || (net.status==='in' && net.ws && net.ws.readyState>1))){   // a dropped socket before its close event, too
+    (net.outbox=net.outbox||[]).push(o); if(net.outbox.length>50) net.outbox.shift();
+  }
+  return false;                                               // v2.6.164 and older swallowed every send on a closed socket without a word
+}
+function mpOutboxFlush(){ const q=net.outbox||[]; net.outbox=[]; q.forEach(o=>mpSend(o)); return q.length; }
+function mpOfflineRefuse(what){                               // cli-2.6.165 (C-15): while the connection is restored, a move that needs the server is refused out loud -- its offline path acted on a table that is not this one (an empty library, a local turn) and reached nobody
+  if(!mpReconnecting()) return false;
+  toast('Reconnecting \u2014 '+what+' once the connection is back.');
+  return true;
+}
+const MP_RETRY_FAST=12;                                       // cli-2.6.165 (C-15): ~30 s of 2.5 s retries -- the server keeps a dropped seat from being taken for GRACE_MS (30 s), so a blip finds its way back inside that window
+function mpRetryDelay(n){ n=n|0; const base=n<=MP_RETRY_FAST ? 2500 : Math.min(15000, 2500*Math.pow(2, n-MP_RETRY_FAST)); return Math.round(base*(0.8+0.4*Math.random())); }   // then 5, 10, 15, 15 ... s, each +-20 % (a restarted server is not met by every client in the same second)
+function mpRetryNow(){                                        // the network or the tab came back: try at once instead of waiting out the back-off
+  if(net.status!=='re' || !net.addr) return;
+  if(net.ws && net.ws.readyState<=1) return;                  // an attempt is under way: connecting, or open with its rejoin waiting for `joined` (a second join made the server announce the reconnect twice, and the second `joined` read as a fresh join)
+  clearTimeout(net.retry); net.retryN=0;
+  mpConnect(net.addr, mpRejoin, net.sec);
+}
+try{ window.addEventListener('online', mpRetryNow); document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) mpRetryNow(); }); }catch(_e){}   // cli-2.6.165 (C-15): a laptop that wakes up or a Wi-Fi that returns reconnects at once
 function mpStatus(msg){ const el=$('#mpStatus'); if(el) el.textContent=msg; }
 
 function mpConnect(addr, then, secHint){
@@ -9676,24 +9766,32 @@ function mpConnect(addr, then, secHint){
   ws.onerror=()=>{};
   // Auto-reconnect. If a socket we still own drops mid-game (a tunnel hiccup, a laptop
   // going to sleep, a Wi-Fi blip), flip to the "re" (reconnecting) state and retry the
-  // SAME address every 2.5s, rejoining with our saved token so we reclaim our seat. The
+  // SAME address (every 2.5 s for half a minute, then backing off to 15 s -- mpRetryDelay, cli-2.6.165), rejoining with our saved token so we reclaim our seat. The
   // net.ws!==ws guard ignores close events fired by an OLD socket we already replaced
   // (e.g. the user reconnected by hand), so a stale close can't tear down a live session.
   // If we weren't in a game, a close just means "not connected".
   ws.onclose=()=>{
     if(net.ws!==ws) return;                       // a superseded socket closing -> ignore
     if(net.status==='in' || net.status==='re'){
+      if(localTable){ net.status='off'; mpStatus('Not connected.'); return; }   // cli-2.6.165: a socket closing under a local game never starts the online retries
       net.status='re'; updateRoomBar();
-      mpStatus('Connection lost — reconnecting…');
       clearTimeout(net.retry);
       net.reconnects=(net.reconnects||0)+1;   // B-63: dump.env.ws.reconnects -- how bumpy has THIS session's connection been
-      net.retry=setTimeout(()=>mpConnect(net.addr, mpRejoin, net.sec), 2500);   // same addr (+sec); mpRejoin replays our token
+      const _d=mpRetryDelay(net.retryN=(net.retryN||0)+1);   // cli-2.6.165 (C-15): backs off (it retried every 2.5 s for as long as the server was gone)
+      mpStatus('Connection lost \u2014 reconnecting in '+Math.max(1, Math.round(_d/1000))+' s\u2026');
+      net.retry=setTimeout(()=>mpConnect(net.addr, mpRejoin, net.sec), _d);   // same addr (+sec); mpRejoin replays our token
     } else {
       mpStatus('Not connected.');
     }
   };
 }
-function mpRejoin(){ mpSend({t:'join', room:net.room, token:net.token}); }
+function mpSrvPassNow(){                                       // cli-2.6.165 (C-14): kept in memory for the reconnect, never stored -- called once connected, so net.addr is the server it is for
+  const v=String($('#mpSrvPass').value||'');
+  if(v){ net.srvPass=v; net.srvPassAt=net.addr; }
+  else if(net.srvPassAt!==net.addr){ net.srvPass=''; net.srvPassAt=null; }   // an empty field on the same server keeps it (Lite empties the hidden field); another server never gets it
+  return v||undefined;
+}
+function mpRejoin(){ mpSend({t:'join', room:net.room, token:net.token, srvPass:(net.srvPass && net.srvPassAt===net.addr) ? net.srvPass : undefined}); }   // cli-2.6.165 (C-14): on a server with --server-pass the rejoin carried no password -- the server refused it (a strike against the address) and MP_HANDLERS.err gave the session up: the player left the table and had to join again by hand
 function mpWatching(){ return inRoom() && !!net.spect && !net.lobby; }   // v2.6.148: a spectator at a table whose game is running
 function mpLandView(){                                             // v2.6.148 pure-ish: the view someone ARRIVING at a running game should see
   if(net.spect && !freeBoard()){                                  // Structured: a watcher's home view is its own empty board -- visit the seat whose turn it is (seat visits are the view that works for a watcher)
@@ -9722,7 +9820,7 @@ function mpCreate(){
   net._createHelpers = ($('#mpHelpers') && $('#mpHelpers').value) || 'local';   // v2.6.51: read ONCE here -- the joined-handler fallback below fires 200 ms later, by which time the dialog may already be closed
   net.pass=$('#mpPass').value;                     // kept in memory only (escrow key); never stored
   mpConnect($('#mpAddr').value, ()=>{
-    if($('#mpAdmin').value) mpSend({t:'hello', srvPass:$('#mpSrvPass').value||undefined, admin:$('#mpAdmin').value});   // v2.6.11: same as mpJoin — conn.admin exists only via hello; needed here for --create-policy admin. Empty field => no hello => identical old flow.
+    if($('#mpAdmin').value) mpSend({t:'hello', srvPass:mpSrvPassNow(), admin:$('#mpAdmin').value});   // v2.6.11: same as mpJoin — conn.admin exists only via hello; needed here for --create-policy admin. Empty field => no hello => identical old flow.
     mpSend({t:'create', lobby:true,
     room:$('#mpRoom').value.trim(), pass:$('#mpPass').value, name:$('#mpName').value.trim(),
     minutes:parseInt($('#mpTime').value,10)||0, react:parseInt($('#mpReact').value,10)||0, l3shape:null, boardMode:$('#mpBoard').value||'structured',   // cli-2.6.43: tableView field removed (vestigial lock); server still accepts it for back-compat, client no longer sends it
@@ -9731,7 +9829,7 @@ function mpCreate(){
     chat:$('#mpChat').checked, specChat:$('#mpSpecChat').checked, tournLock:true,   // v2.6.116 (Johan): always on -- the checkbox left the dialog; the wire key and the server are untouched
     refPass:$('#mpRefRoom').value||undefined,   // v2.6.83: this table's referee password (srv-2.6.35)
     helperPolicy: helperPolicyFor(net._createHelpers),   // v2.6.51: the Helpers choice rides the create message, so the room is BORN with the right policy instead of being corrected 200 ms after joining
-    srvPass:$('#mpSrvPass').value||undefined, v:VERSION});   // v2.6.80: 'Hide my name' (anon) parked -> kodarkivering.md
+    srvPass:mpSrvPassNow(), v:VERSION});   // v2.6.80: 'Hide my name' (anon) parked -> kodarkivering.md
   });
 }
 function mpJoin(){
@@ -9748,7 +9846,7 @@ function mpJoin(){
     if($('#mpRef').checked && !_ref){ toast('Enter the referee password'); const p=$('#mpRefPass'); if(p&&p.focus) p.focus(); return; }   // v2.6.82: never a silent downgrade to plain spectator
     mpSend({t:'join', room, pass:$('#mpPass').value,
     name:$('#mpName').value.trim(), token:tok, v:VERSION,
-    srvPass:$('#mpSrvPass').value||undefined,
+    srvPass:mpSrvPassNow(),
     spect:(_ref?true:$('#mpSpect').checked)||undefined, refPass:_ref||undefined});   // v2.6.80/83: a referee is spectator only; the key rides the join
   }, (st && st.addr===addr && st.sec)||undefined);
 }
@@ -9777,7 +9875,7 @@ function mpBrowse(){                                              // v2.5.96 L2:
   $('#mpStatus').textContent='Fetching room list…';
   if(net._rlTimer){ clearTimeout(net._rlTimer); }
   mpConnect(addr, ()=>{
-    mpSend({t:'hello', srvPass:$('#mpSrvPass').value||undefined});   // v2.6.83: the list request carries NO key at all -- the room's referee password rides the join (srv-2.6.35); the server operator key rides create only
+    mpSend({t:'hello', srvPass:mpSrvPassNow()});   // v2.6.83: the list request carries NO key at all -- the room's referee password rides the join (srv-2.6.35); the server operator key rides create only
     net._rlTimer=setTimeout(()=>{ net._rlTimer=null; $('#mpStatus').textContent='No room list — the server predates the lobby (needs v2.5.68+). Join by room name as usual.'; },1500);
   });
 }
@@ -9874,6 +9972,8 @@ function mpLeave(){
   hotHoldBy.clear(); try{ hotHoldSync(); }catch(_e){}   // v2.6.101: no table, no hold
   net.pass=''; net.escrowKey=null; net.escrowSalt=null; net._escrowKeyFor=null; lastHandSig=''; net._createHelpers=null;   // v2.6.51: the create-time Helpers choice is per-room, like the password
   net.helperPolicy=null; applyHelper();
+  _lastPubSent=''; _openHandSent={}; _ohSeen=null;     // cli-2.6.165 (C-12/13): what was sent belongs to the room we left
+  net.outbox=[]; net.retryN=0; net.srvPass=''; net.srvPassAt=null;   // cli-2.6.165 (C-14/15): so does the queue, the back-off and the remembered server password
   net.botcfg=null; net.srvV=''; net._passPending=0; passBusyReset();   // v2.6.139: the tempo belongs to the room we just left; cli-2.6.164: so does a pass in flight
   endYourTurn();
   clearTimeout(net.retry);
@@ -9894,8 +9994,12 @@ function mpLeave(){
 const MP_HANDLERS = {
   joined(m){
     const was=net.status, wasRoom=net.room;
+    _lastPubSent=''; _openHandSent={}; _ohSeen=ohSeenOf(m.players); // cli-2.6.165 (C-12/13): a fresh view of the table (a reconnect included) -- the server may hold an older board than our last send (it can die in flight with the socket), so the schedulePush() at the end of this handler sends ours whatever was sent before
     net.botcfg=null; net.srvV=String(m.srv||''); net._passPending=0;   // v2.6.139: a fresh view of the table -- the server replays the stored tempo right after this message (srv-2.6.43); cli-2.6.164: no pass in flight on a fresh view (a rejoin's `joined` carries the turn)
     net.status='in'; net.room=m.room; net.token=m.token; net.you=m.you; net.roster=m.players||[];
+    net.retryN=0;                                                   // cli-2.6.165 (C-15): in again -- the next drop starts the back-off from 2.5 s
+    { const _q=(was==='re' && wasRoom===m.room) ? mpOutboxFlush() : 0; if(!_q) net.outbox=[];   // cli-2.6.165 (C-15): the lines written while reconnecting go out now (into the same room only)
+      if(_q) log('<span class="sysline">'+_q+' chat line'+(_q>1?'s':'')+' sent after the reconnect.</span>', true); }
     if(was!=='re' || wasRoom!==m.room){ net.turnNo=0; net.roundNo=1; net.openHandFrom={}; }   // v2.6.149: an automatic reconnect keeps its Round/Turn count (it zeroed it) -- into the SAME room only: a client still retrying a lost server can join another room by hand. v2.6.159: the hands opened to me follow the same rule -- the server keeps no grants, so a reconnect into the same room keeps what it was shown (a bot re-sends to a human who comes back online), any other join starts empty
     net.tnSync=!m.lobby; if(net.tnSync) tnAdopt(m.myPub);           // v2.6.149: a running game -- take the count from the boards until the next turn (my own server copy first)
     if(was!=='re'){ net.deckUp=false; net.libN=0; net.cryptN=0; }
@@ -9975,6 +10079,7 @@ const MP_HANDLERS = {
   },
   took(m){
     net.lobby=false; net.spect=false; net.muted=false;
+    _lastPubSent=''; _openHandSent={};                              // cli-2.6.165 (C-12/13): a seat taken over or a match loaded -- the next push goes out whatever was sent before
     if(m.token){ net.token=m.token; mpStore({addr:net.addr, sec:net.sec, room:net.room, token:net.token, name:net.you}); }
     net.turnSeat=m.turn||null;
     if(m.loaded){ net.turnNo=0; net.roundNo=1; }                    // v2.6.149: a loaded match is at ITS count, whatever this client counted before
@@ -10065,6 +10170,8 @@ const MP_HANDLERS = {
       if(typeof syncWelcome==='function') syncWelcome();   // v2.6.46: same staleness guard on the disconnect path
       net.deckUp=false; net.boards={};
       clearTimeout(net.retry);                 // stop any pending reconnect attempt (defensive; mirrors mpLeave teardown)
+      { const _lost=(net.outbox||[]).length; net.outbox=[]; net.retryN=0;   // cli-2.6.165 (C-15): the lines written while reconnecting did not reach anyone -- say so
+        if(_lost) log('<span class="sysline">'+_lost+' chat line'+(_lost>1?'s':'')+' written while reconnecting could not be sent.</span>', true); }
       switchView(null,true);
       mpStore(null); updateRoomBar(); mpUI();
       log('Could not rejoin the room: '+esc(m.msg), true);
@@ -10395,6 +10502,7 @@ const MP_HANDLERS = {
     else if(net.view==='l4') renderL4();   // Classic: a roster change alters the SET of seats (join/leave/reseat/rename) -> full renderL4() to rebuild the pool globes (renderL4Globes); updateL4Opponents() alone only updates EXISTING globes, so it wouldn't add/remove them. Also clears any stale Target ring left on a departed player's card (rtarget was nulled above at 7144 but the view wasn't repainted in L4).
     refreshOwnTargeted();   // B1: a leaver's aim at my cards must drop its tag too (their board entry is gone)
     botBtnSync();           // v2.6.139: a bot joining or leaving mid-game shows / hides the badge for the seated humans
+    openHandRosterCheck();                         // cli-2.6.165 (C-13): whoever arrived gets the standing hands again
   },
   sys(m){ log('<span class="sysline">'+esc(m.msg)+'</span>', true); },
   closed(m){                                       // v2.6.105 (Johan): the room ENDED -- not a drop, not a kick. The order matters: net.status must be 'off' BEFORE mpLeave, so mpLeave skips its `leave` send (there is no room to leave) and ws.onclose sees 'off' instead of 'in' and never starts the 2.5 s rejoin loop against a room the server has already deleted
@@ -10663,7 +10771,7 @@ function chatSendLine(v){                                     // v2.6.142: the E
   if(net.muted){ toast('You are muted by the host. 🔇'); return; }
   if(!v) return;
   const _msg=v.slice(0,300), _who=net.you||state.playerName||'You', _seat=(typeof mySeat==='function')?mySeat():0;
-  if(inRoom()){ mpSend({t:'chat', msg:_msg}); chatBubble(_who, _seat, _msg); }   // v2.6.50 (R1 port): sender-side bubble too -- BOTH endpoints per the v2.6.17 sender-only lesson
+  if(inRoom() || mpReconnecting()){ mpSend({t:'chat', msg:_msg}); chatBubble(_who, _seat, _msg); }   // v2.6.50 (R1 port): sender-side bubble too -- BOTH endpoints per the v2.6.17 sender-only lesson. cli-2.6.165 (C-15): while reconnecting the line waits in the outbox (it vanished)
   else if(localTable){                                        // v2.6.95: offline the bots ARE the table -- speak straight onto the bus (this is the channel their own intro instructs the human to use)
     hotFanOut({ t:'chat', who:_who, msg:_msg }, _seat);
     log('<span class="rwho">'+esc(_who)+':</span> <i>'+esc(_msg)+'</i>', true, undefined, {noRing:true});
@@ -10684,7 +10792,7 @@ function setPileN(m){
   if(typeof m.crypt==='number') net.cryptN=m.crypt;
   layout();
 }
-let pushTimer=null;
+let pushTimer=null, pushDue=0;   // cli-2.6.165: pushDue = the latest moment the pending push may go out -- every received board re-renders and re-arms the 600 ms debounce, so a busy table postponed our board (and now our open hand) indefinitely
 /* ---------- v2.6.98 (Johan): the human's board reaches the bots offline ----------
    Measured after a full 2-bot hotseat game: every bot's this.table was EMPTY.
    Online the server broadcasts each board push and hands a joiner every existing
@@ -10702,13 +10810,15 @@ function hotTurnTallyClear(){   // cli-2.6.164 (B-6): the server clears the tabl
   avrSendCancel();                                               // the review: a click inside the debounce would have pushed the old counter into the new turn
   if(avr.mode){ const _pv=avr; avr=avrFresh(null); try{ cmbWatch(_pv, avr, false); }catch(_e){} avrRender(); }
 }
+let _hotPubSent={};   // cli-2.6.165 (C-12): seat -> the board last fanned out to the bots (a render that changed nothing sends nothing)
 function hotPushBoardNow(){
   clearTimeout(hotPushTimer);
   if(!localTable || typeof hotBridge==='undefined') return;
   if(!Object.keys(hotBridge.seats||{}).length) return;
   const seat=(typeof mySeat==='function')?mySeat():0; if(!seat) return;
   let pub=null; try{ pub=buildPub(); }catch(_e){ return; }
-  hotFanOut({ t:'board', seat, who:(net.you||state.playerName||'You'), pub:hotBridge.pubPublic(pub) }, seat);   // cli-2.6.164 (B-11): sanitised as the server would. The ACTIVE seat's board: at a two-human hotseat each human's pub lands while they hold the device, exactly as each client pushes its own online
+  const _out=hotBridge.pubPublic(pub), _js=JSON.stringify(_out);
+  if(_hotPubSent[seat]!==_js){ _hotPubSent[seat]=_js; hotFanOut({ t:'board', seat, who:(net.you||state.playerName||'You'), pub:_out }, seat); }   // cli-2.6.164 (B-11): sanitised as the server would. The ACTIVE seat's board: at a two-human hotseat each human's pub lands while they hold the device, exactly as each client pushes its own online
   refreshOpenHands();                                         // v2.6.159: an open hand toward the bots follows every board change, as schedulePush does online
 }
 function hotSchedulePushBoard(){
@@ -10720,16 +10830,24 @@ function schedulePush(){
   if(avr.mode==='combat') avrDuelRender();   // v2.6.19: every own-board mutation refreshes the duel panels (cheap: hidden-guard + two small panels); placed before the inRoom gate so hotseat gets it too
   if(!inRoom()){ hotSchedulePushBoard(); return; }   // v2.6.98: offline the bot seats ARE the table -- same board, same 600 ms debounce
   if(net.spect) return;                              // v2.6.148: a spectator has no board. This push was refused ('Spectators can only chat.'), the refusal was logged, and log -> scheduleSave -> here sent the next one: an echo every 600 ms for as long as anyone watched
+  const _now=Date.now(); if(!pushDue) pushDue=_now+1500;
   clearTimeout(pushTimer);
-  pushTimer=setTimeout(()=>{ if(inRoom() && !net.spect && net.ws && net.ws.readyState===1){ mpSend({t:'board', pub:buildPub(), undo:net._undoPush||undefined}); net._undoPush=false; } },600);   // v2.5.95: carry + consume the undo mark only on an ACTUAL send (if the socket is down the mark survives until the board really syncs)
+  pushTimer=setTimeout(()=>{ if(inRoom() && !net.spect && net.ws && net.ws.readyState===1){ mpSendBoard(); refreshOpenHands(); } pushDue=0; }, Math.max(0, Math.min(600, pushDue-_now)));   // cli-2.6.165 (C-13): the open hands ride the same debounce (they went out on EVERY call, synchronously -- a drag sent dozens)   // v2.5.95: carry + consume the undo mark only on an ACTUAL send (if the socket is down the mark survives until the board really syncs)
   pushEscrow();
-  refreshOpenHands();
+}
+let _lastPubSent='';   // cli-2.6.165 (C-12): the board this client last sent. layout() ends in scheduleSave() -> schedulePush(), and every view renders through layout(): in the Structured view each received board re-rendered ours and sent it back, about one board a second per client with nobody touching anything
+function mpSendBoard(){                                       // the one place a board leaves this client online; false = nothing new
+  const pub=buildPub(), js=JSON.stringify(pub);
+  if(js===_lastPubSent){ net._undoPush=false; return false; }   // nothing changed since the last send (an undo mark with nothing to mark is spent too)
+  _lastPubSent=js;
+  mpSend({t:'board', pub, undo:net._undoPush||undefined}); net._undoPush=false;   // v2.5.95: the undo mark rides an actual send only
+  return true;
 }
 function pushNow(){   // v2.5.59 (backlog 2.2 companion): immediate push for actions ANOTHER player is actively waiting on (recall/ctrl on the holder side) - the 600ms debounce exists for typing-speed local edits, not for cross-board round-trips
   if(!inRoom()){ hotPushBoardNow(); return; }        // v2.6.98
   if(net.spect) return;                              // v2.6.148: see schedulePush
-  clearTimeout(pushTimer);
-  if(net.ws && net.ws.readyState===1){ mpSend({t:'board', pub:buildPub(), undo:net._undoPush||undefined}); net._undoPush=false; }   // v2.5.95: same undo-mark carry as schedulePush
+  clearTimeout(pushTimer); pushDue=0;
+  if(net.ws && net.ws.readyState===1) mpSendBoard();   // v2.5.95: same undo-mark carry as schedulePush; cli-2.6.165: and the same dedupe
   pushEscrow();
   refreshOpenHands();
 }
@@ -10926,11 +11044,29 @@ function toggleActiveHome(){                     // Tab: flip between the active
 
 /* ---------- Placeholder opponent names for the offline (hotseat) setup window ---------- */
 const DEMO_NAMES=['Astrid','Bram','Caine','Dorian','Esme'];
+function mpAbandonReconnect(){                                   // cli-2.6.165: a local game starts while an online table is lost. Its retries kept running into the local game (a rejoin as room 'Hotseat', a refused join that wiped the felt), and every reconnect refusal blocked the local pass, draw and chat. The session is kept, so Join game takes the player back to the seat while the server holds it
+  clearTimeout(net.retry); net.retryN=0;
+  const _lost=(net.outbox||[]).length; net.outbox=[];
+  try{ if(net.ws){ const old=net.ws; net.ws=null; old.close(); } }catch(_e){}
+  try{ netBotsTeardown(); }catch(_e){}
+  net.status='off'; net.room=null; net.token=null; net.you=null; net.roster=[]; net.boards={}; net.openHandFrom={}; net.turnSeat=null;
+  net.deckUp=false; net.libN=0; net.cryptN=0; net.lobby=false; net.lobbyData=null; net.isHost=false; net.isRef=false; net.muted=false; net.spect=false;
+  net.botcfg=null; net.srvV=''; net._passPending=0; net._undoPush=false; net.giving=null; net.recalling={};
+  net.helperPolicy=null; try{ applyHelper(); }catch(_e){}          // the online room's helper lock must not rule the local table
+  net.rtarget=null; try{ updateTargetBtn(); }catch(_e){}           // nor its cross-board target ride the local boards
+  net.matchEnd=null; try{ startMatchClock(); }catch(_e){}          // nor its match clock keep counting
+  try{ hotHoldBy.clear(); hotHoldSync(); }catch(_e){}               // nor a hold by one of its players stay on the badge
+  _lastPubSent=''; _openHandSent={}; _ohSeen=null;
+  mpStatus('Not connected.'); try{ updateRoomBar(); }catch(_e){}
+  log('<span class="sysline">The online table you lost was left for this game'+(_lost ? ' \u2014 '+_lost+' chat line'+(_lost>1?'s':'')+' written meanwhile '+(_lost>1?'were':'was')+' not sent' : '')+'. Join game takes you back to your seat while the server keeps it.</span>', true);
+}
 function startHotseat(players, boardMode, opts){                         board.classList.remove('l0mode'); // the offline core — fed by both quick-start and (next) the setup window
   if(inRoom()){ toast('Leave the online room first'); return; }
   if(!players || !players.length) return;
+  if(net.status==='re') mpAbandonReconnect();
   players=players.slice(0,6);
   passBusyReset();                                                 // cli-2.6.164: a new table starts with no pass in progress
+  _hotPubSent={}; _openHandSent={}; _ohSeen=null;                  // cli-2.6.165 (C-12/13): a new table has sent nothing yet
   localTable=true;
   tutGameLive=false;       // a freshly seated table is not the tutorial game until a classic-* section claims it (see tutStart)
   net.boardMode=boardMode||'structured';
@@ -10964,6 +11100,7 @@ function startHotseat(players, boardMode, opts){                         board.c
 }
 function leaveHotseat(){
   passBusyReset();                                                 // cli-2.6.164: the sweep a pass waits on dies here
+  _hotPubSent={}; _openHandSent={}; _ohSeen=null;                  // cli-2.6.165 (C-12/13)
   try{ hotBotsTeardown(); }catch(_e){}                             // v2.6.68: the \u25b6 button and the bot instances die with the table
   if(!localTable) return;
   if(tutGameLive){ try{ const snap=tutGameSnapshot(); if(snap) localStorage.setItem(TUT_GAME_KEY, snap); }catch(e){} }   // capture the tutorial game's final state so a later launch resumes exactly here
@@ -12687,6 +12824,7 @@ function avrDuelAnnounce(cid, name){
   avrSendCancel();   // the announce is discrete -- fold any pending counter push into it (whole-state)
   mpSend({ t:'tally', mode:avr.mode, a:avr.a|0, b:avr.b|0, ph:avr.ph|0, rd:avr.rd|0, duelCid:cid||null, duelName:String(name||'').slice(0,60) });
 }
+let _duelStepT=null;   // cli-2.6.165 (C-16): the duel panel's live refresh while the counter stepper is open
 function avrDuelResolve(entry, seat){
   if(seat === mySeat()){                                      // v2.6.20: ownership is SEAT-based, never an id lookup -- card ids are per-client sequential ('c'+state.seq), so the opponent's c12 CAN collide with your own c12, and a naive state.cards.get() would render (and let you mutate!) the wrong card
     return { c: state.cards.get(entry.cid) || null, own:true, pub:null };
@@ -12712,7 +12850,7 @@ function avrDuelPanel(host, seat, entry, role, side){
   const line1=document.createElement('div');
   const ct=avrDuelChip('\ud83e\ude78 '+(r.c.blood|0)+((r.c.blue|0)?' \u00b7 \ud83d\udd35 '+(r.c.blue|0):'')+((r.c.green|0)?' \u00b7 \ud83d\udfe2 '+(r.c.green|0):''), r.own?'avdct':'');
   if(r.own){ ct.title='Open the counter stepper (blood / counters)'; ct.addEventListener('click', e=>{ openCtStepper(r.c, e.clientX, e.clientY);
-      const iv=setInterval(()=>{ const st=$('#ctStepper'); if(!st || st.style.display!=='block'){ clearInterval(iv); } avrDuelRender(); }, 300); });   // live-refresh the panel while the stepper is open; self-terminating
+      clearInterval(_duelStepT); _duelStepT=setInterval(()=>{ const st=$('#ctStepper'); if(!st || st.style.display!=='block'){ clearInterval(_duelStepT); _duelStepT=null; } avrDuelRender(); }, 300); });   // live-refresh the panel while the stepper is open; self-terminating. cli-2.6.165 (C-16): ONE timer -- each click started another, and each re-render made a new chip to click
   }
   line1.appendChild(ct);
   line1.appendChild(avrDuelChip('  '+(r.c.locked?'\ud83d\udd12 locked':'\ud83d\udd13 ready')));
@@ -12974,6 +13112,7 @@ function qrCard(host, c, scale, mode){
 }
 function qrGiveToTarget(c){                                 // play a hand card straight onto a cross-board target — the give mechanism does the attach + removal (on the 'gave' reply)
   const rt=net.rtarget; if(!rt || c.zone!=='hand') return false;
+  if(mpOfflineRefuse('give a card')) return true;           // cli-2.6.165: handled -- nothing is played locally either
   if(net.hot && !inRoom()){ giveHot(rt.seat, rt.cid||null, 0.5, 0.5, c); return true; }   // hotseat: inject locally, attaching onto the targeted minion
   const _gid=mintGid();   // giver-assigned id (v2.6.45: monotonic mintGid), so both sides reference the same card (enables recall + undo of the give)
   net.giving={ id:c.id, att: rt.name||null, gid:_gid, seat:rt.seat };
@@ -13110,6 +13249,7 @@ function move(c, zone, opts={}){
     logCo('noash',()=>log('Vampires never go to the ash heap — burn them or send them to torpor instead.'));
     return false;
   }
+  if((zone==='library'||zone==='crypt') && net.deckUp && mpOfflineRefuse('return a card to the deck')) return false;   // cli-2.6.165: the local path put it in a pile the table never sees -- the card was lost
   if(netGame() && (zone==='library'||zone==='crypt')){
     /* Online: the piles live on the server — return the card there and drop it locally.
        Returning to a pile normally resets undo (can't cross the deck boundary); the smart
@@ -13166,7 +13306,8 @@ function move(c, zone, opts={}){
   return true;
 }
 
-function serializeGame(){
+function serializeGame(maxTurnLogs){   // cli-2.6.165 (C-16): maxTurnLogs (optional) keeps only the newest N turns' logs -- the quota rescue's smaller copy
+  const _tl=(Number.isFinite(maxTurnLogs) && maxTurnLogs>=0) ? (maxTurnLogs ? state.turnLogs.slice(-maxTurnLogs) : []) : state.turnLogs;
   return JSON.stringify({
     v:VERSION, lay:2, t:Date.now(),
     deckName:state.deckName||'',
@@ -13180,7 +13321,7 @@ function serializeGame(){
     l4hintDone:l4hintDone,
     myClan:state.myClan||undefined, chosenClan:state.chosenClan||undefined,
     myPath:state.myPath||undefined,
-    turn:state.turn, turnLogs:state.turnLogs, curLines:curLines,
+    turn:state.turn, turnLogs:_tl, curLines:curLines,
     drawHistory:[...state.drawHistory], cryptDrawHistory:[...state.cryptDrawHistory], discardHistory:[...state.discardHistory], masterBonus:state.masterBonus||0,
     seq:state.seq, topZ:state.topZ,
     target:state.target||null,
@@ -13893,7 +14034,7 @@ async function dropCard(c,d){
 
   if(z==='library'||z==='crypt'){
     const dest=c.kind==='crypt'?'crypt':'library';   // never cross the deck boundary on a drag
-    move(c,dest); log(who+' was put on top of '+zname[dest]+'.');
+    if(move(c,dest)) log(who+' was put on top of '+zname[dest]+'.'); else layout();   // cli-2.6.165: refused while reconnecting -- the card goes back where it was
   }
   else if(z==='ash'){ if(await discardGateOK(c) && move(c,'ash')) log(n+' → the ash heap.'); }
   else if(z==='hand'){
@@ -15280,6 +15421,7 @@ function giveTo(seat, surfaceEl, targetEl, clientX, clientY, c){   // THE govern
   const br=(surfaceEl||board).getBoundingClientRect();
   const rx=Math.max(0,Math.min(1,(clientX-br.left)/Math.max(1,br.width)));
   const ry=Math.max(0,Math.min(1,(clientY-br.top)/Math.max(1,br.height)));
+  if(mpOfflineRefuse('give a card')) return;                // cli-2.6.165: the give went nowhere and left net.giving set
   if(net.hot && !inRoom()){ giveHot(seat, targetEl?(targetEl.dataset.cid||null):null, rx, ry, c); return; }   // hotseat has no server -> apply the give locally
   const _gid=mintGid();   // giver-assigned id (v2.6.45: monotonic mintGid), so both sides reference the same card (enables recall + undo of the give)
   net.giving={ id:c.id, att: targetEl ? (targetEl.title||null) : null, gid:_gid, seat };
@@ -15443,6 +15585,7 @@ function recallOnline(seat, cid, dest){
   // Online controller pull: ask the holder (seat) to hand card `cid` back. It returns to your
   // hand ('hand') or ash ('ash') when 'recalled' arrives. The destination is remembered here,
   // owner-side - the holder only removes the card - and net.recalling guards against a stray reply.
+  if(mpOfflineRefuse('take the card back')) return;          // cli-2.6.165
   if(!inRoom()) return;
   net.recalling=net.recalling||{}; net.recalling[cid]=(dest==='ash'?'ash':'hand');
   mpSend({ t:'recall', seat, cid });
@@ -16481,18 +16624,21 @@ $('#savesClose').addEventListener('click',closeOverlay);
 
 /* ---------- Tools: coin, dice & seating ---------- */
 function flipCoin(){
+  if(mpOfflineRefuse('flip the coin')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   if(inRoom()){ mpSend({t:'tool', kind:'coin'}); return; }
   const r = rnd(2)===0 ? 'Heads' : 'Tails';
   toast('Coin: '+r);
   log('Coin flip: <b>'+r+'</b>.');
 }
 function rollDie(n){
+  if(mpOfflineRefuse('roll')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   if(inRoom()){ mpSend({t:'tool', kind:'die', n}); return; }
   const r = rnd(n)+1;
   toast('D'+n+': '+r);
   log('Rolled a <b>D'+n+'</b>: <b>'+r+'</b>.');
 }
 async function randomSeating(){
+  if(mpOfflineRefuse('draw the seating')) return;   // cli-2.6.165: its offline path ran (an empty pile, a result only this screen saw)
   if(inRoom()){ mpSend({t:'tool', kind:'seating'}); return; }
   const v=await uiPrompt('Player names, comma separated (e.g. Johan, Anna, Erik):','');
   if(v===null) return;
@@ -17991,7 +18137,7 @@ $('#autosaveMode').addEventListener('change',()=>{
 });
 applyAutosaveMode();
 window.addEventListener('beforeunload',()=>{
-  if(autoSaveMode!=='off' && state.cards.size){ try{ localStorage.setItem(saveKey(), serializeGame()); }catch(err){} }
+  if(autoSaveMode!=='off' && state.cards.size){ try{ localStorage.setItem(saveKey(), serializeGame()); }catch(err){ if(isQuotaErr(err)) saveQuotaRescue(); } }   // cli-2.6.165: a full storage keeps a shorter copy instead of nothing
 });
 /* Brightness (applied to the table only, so menus and panels stay readable) */
 let brightVal=100;

@@ -20,8 +20,10 @@
 # Glue between named fragments is numbered app-1..app-N. Pure text op: fragments reassemble byte-for-byte.
 import io, os, glob
 
-SRC = '/tmp/original.html'
-OUTDIR = '/home/claude/elysium-src'
+# 17 Oct 2026 (client v2.6.165, CI): both paths may be overridden from the environment -- the GitHub Actions runner
+# has no /home/claude. The defaults are the session's, unchanged.
+SRC = os.environ.get('SPLIT_SRC') or '/tmp/original.html'
+OUTDIR = os.environ.get('SPLIT_OUT') or '/home/claude/elysium-src'
 os.makedirs(OUTDIR, exist_ok=True)
 for f in glob.glob(os.path.join(OUTDIR, '*')):   # clear stale fragments so a renumbered manifest leaves no orphans
     os.remove(f)
