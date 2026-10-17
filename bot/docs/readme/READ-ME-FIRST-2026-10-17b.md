@@ -95,6 +95,16 @@ v0.6.206 smoke still shows 0 of 80 lost, with 5 contests, all blocked.
     Strength, 1 Carrion Crows; steal pairs 13 of 13 equal.
 - **For comparison, v0.6.206's final smoke** (the same seeds, `probeHold` 0): bleed 77/77, 0 of 80 windows lost (5
   contests, all blocked), the probe order 6 times and reserved 0, one right `stale-answer` row, 188/0, 188/0, 150/0.
+- **Beside main's open PR #27** (client v2.6.163 + srv-2.6.47, their security release; a scratch tree of its head
+  b618adb with this branch's `bot/` and bundle on top — a courtesy check, not a gate):
+  - check-versions agrees;
+  - their client suite 307/1. The one red is the Bots-page embed drift: they embed v0.6.206's guide, and v0.6.207's chip
+    and 'Posture' sentence differ. All 16 LIVE tests with the real bot are green. Their canary 69/0;
+  - our canary 69/0 and hotseat 11/0 with their v2.6.163 client and protocol copied in (scratch only);
+  - one arena match against srv-2.6.47 (seed 4003): 10 rounds, no timeout, no dropped connection, bleed 20/20 paired, 0
+    of 22 reactions-only windows lost (2 contests, both blocked), no `stale-answer` row, handshake / range / press 68/0,
+    68/0, 47/0, invariants 0 flags, the block audit 0 violations, no late bounce;
+  - found there, older than this release: one steal pair disagrees (below, 'Next').
 
 ## For main
 - Send `HANDOFF-to-main-2026-10-17-v0_6_207.md`:
@@ -121,6 +131,10 @@ v0.6.206 smoke still shows 0 of 80 lost, with 5 contests, all blocked.
   the panel) is the fallback.
 - **The smoke ran on the code before the version bump.** The release bytes differ from the smoke's only in comments and
   the version line; the suite and every gate ran on the release bytes.
+- **Against main's srv-2.6.47 I ran one arena match, not a series.** Its rate bucket (80 messages per 10 s per
+  connection; over it, the connection is closed) now counts pings and pongs too. The bot's own send bucket tops out at
+  about 75 in any 10 s (a burst of 8, then one per 150 ms), plus one pong per 30 s. That is inside the limit, as before,
+  but with a margin of about five.
 - **Still open from v0.6.206:**
   - the stale guard is a heuristic: a late answer that arrives after my opening line is on the wire is still taken;
   - every arena number since v0.6.144 carried the dead bleed-total clock, so the next re-measure needs a fresh baseline;
@@ -132,5 +146,15 @@ v0.6.206 smoke still shows 0 of 80 lost, with 5 contests, all blocked.
    - the 14 Oct play-test scenario in main's rig (`--dir` on a scratch copy of the root with the bot branch);
    - then the larger re-measure, against a baseline run on v0.6.207. Every arena number since v0.6.144 carried the dead
      bleed-total clock, and the probe default changed here. `dodgeOut` and `probeHold` can be benched there.
-2. The knowledge layer, when its turn comes: the prey's wakes as blockers in the probe's 'out-number' (65f).
-3. Parked, as in READ-ME-FIRST-2026-10-16f "Next" §6.
+2. Consume main's v2.6.163 / srv-2.6.47 once PR #27 is merged: refresh the read-only copies, and read their
+   `REPLY-to-bot-2026-10-17-v0.6.206.md`. It holds two points for us:
+   - their counter clamps a negative intercept to 0, while the bot computes −1 (a bare Christine Boscacci). Johan decides
+     whether the client follows the rulebook; if it does, main announces a protocol change first;
+   - at a hotseat their bridge relays face-down card names unsanitised (their fix). Check whether any bot logic reads
+     `name` on a face-down card.
+3. Found beside their PR, older than this release: a Tremere's Theft of Vitae was booked as stolen 2 while its Ventrue
+   victim's Majesty ended the combat, and the victim booked nothing. By v0.6.196's rule a combat-ends strike stops the
+   steal, but the stealer's side does not apply that rule. The stealer's vampire was at capacity, so no blood moved; the
+   two books still disagree (`ana-ledger.py`: `STOLE > VICTIM LOST`).
+4. The knowledge layer, when its turn comes: the prey's wakes as blockers in the probe's 'out-number' (65f).
+5. Parked, as in READ-ME-FIRST-2026-10-16f "Next" §6.

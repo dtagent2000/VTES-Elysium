@@ -44,7 +44,9 @@ reservation behind knob `probeHold`, measured in the new probe lab (`lab-probe.j
 out-numbers its prey's unlocked bodies, nothing otherwise. Johan took both of its proposals after the merge (17 Oct), so they
 are v0.6.207: `probeHold` 2 is the default (his bait read), and main's finding 1 is built (the chat beat separates two chat
 bubbles and nothing else; a hold or resume line skips it). His note on the probe's lost tables (a prey holding a wake) is a
-knowledge-layer item (`bot/CLAUDE.md` 65f). Next, in Johan's order: the 14 Oct scenario in `client/playtest/` with `--dir` on a scratch copy of the root with
+knowledge-layer item (`bot/CLAUDE.md` 65f). Main's PR #27 (client v2.6.163 + srv-2.6.47, a security release) was open at
+writing, with their reply to v0.6.206 (`client/docs/handoffs/REPLY-to-bot-2026-10-17-v0.6.206.md`); consume it once merged.
+Next, in Johan's order: the 14 Oct scenario in `client/playtest/` with `--dir` on a scratch copy of the root with
 the bot branch, compared with the report's numbers; then the larger re-measure, against a baseline run on v0.6.207 (not on
 older numbers — the dead clock); the parked items in READ-ME-FIRST-2026-10-16f, 'Next'. Known, not built: a human's bounce of a
 bot's bleed is not read by the acting bot; a human's Haven Uncovered is not read by the bots; between bots a contested block's

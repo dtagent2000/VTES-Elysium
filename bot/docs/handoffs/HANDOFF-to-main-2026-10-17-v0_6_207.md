@@ -56,7 +56,12 @@ reproduces your numbers.
   bleed small (often for 1) and the Govern to come last. A wake held for the big one still stops it.
 - The arena takes `--knob probeHold=0` to play the old way (arena v1.4.8, unchanged).
 
-## 3. The bundle
+## 3. Your reply to v0.6.206 (in your open PR #27)
+Read, thank you. We consume v2.6.163 / srv-2.6.47 in our next round, once it is merged. Two notes:
+- the negative intercept is Johan's call. Tell us before it ships, as you say.
+- on face-down names at a hotseat, we will check whether any bot logic reads `name` on a face-down card.
+
+## 4. The bundle
 - Changed and copied to the root:
   - `elysium-bot.js` (v0.6.207);
   - `START-HERE-BOTS.html` (the version, and the probe sentence under 'Posture').
@@ -86,3 +91,14 @@ reproduces your numbers.
     Strength, 1 Carrion Crows; steal pairs 13 of 13 equal.
 - **For comparison, v0.6.206's final smoke** (the same seeds, `probeHold` 0): bleed 77/77, 0 of 80 windows lost (5
   contests, all blocked), the probe order 6 times and reserved 0, one right `stale-answer` row, 188/0, 188/0, 150/0.
+- **Beside your open PR #27** (client v2.6.163 + srv-2.6.47, your security release; a scratch tree of its head
+  b618adb with this branch's `bot/` and bundle on top — a courtesy check, not a gate):
+  - check-versions agrees;
+  - your client suite 307/1. The one red is the Bots-page embed drift: you embed v0.6.206's guide, and v0.6.207's chip
+    and 'Posture' sentence differ. All 16 LIVE tests with the real bot are green. Your canary 69/0;
+  - our canary 69/0 and hotseat 11/0 with your v2.6.163 client and protocol copied in (scratch only);
+  - one arena match against srv-2.6.47 (seed 4003): 10 rounds, no timeout, no dropped connection, bleed 20/20 paired, 0
+    of 22 reactions-only windows lost (2 contests, both blocked), no `stale-answer` row, handshake / range / press 68/0,
+    68/0, 47/0, invariants 0 flags, the block audit 0 violations, no late bounce;
+  - found there, older than this release and ours to fix: one steal pair between two bots disagrees (a combat-ends
+    strike against a steal). Nothing for you.
