@@ -2493,7 +2493,8 @@ test('v2.6.115: only the wire side is tagged -- the send path stays the one that
   const html = require('fs').readFileSync(CLIENT, 'utf8');
   const h = html.slice(html.indexOf('  chat(m){'), html.indexOf('  chat(m){') + 340);
   assert(/chatBubble\(m\.who, 0, m\.msg, 'wire'\)/.test(h), 'the handler marks its call as the echo');
-  const send = html.slice(html.indexOf("if(inRoom()){ mpSend({t:'chat'"), html.indexOf("if(inRoom()){ mpSend({t:'chat'") + 320);
+  const _sa = html.indexOf("if(inRoom() || mpReconnecting()){ mpSend({t:'chat'"); assert(_sa > 0, 'the send path (cli-2.6.165: the reconnect outbox joined its condition)');
+  const send = html.slice(_sa, _sa + 320);
   assert(/chatBubble\(_who, _seat, _msg\)/.test(send) && !/'wire'/.test(send), 'the sender-side paint is untagged: it is the one your own line keeps');
 });
 test('v2.6.115: dfxCancel is the ONE way a Reaction window stops early', () => {
@@ -4513,7 +4514,9 @@ test('v2.6.159 Revelations at a hotseat, the human\'s side: Reveal hand to a bot
   T.clear(); A.revealHandTo([g], 'all'); eq(T.got[2][0].t, 'revealHand'); eq(T.got[4][0].t, 'revealHand', 'to all: every bot');
   T.clear(); A.state.openHand = []; A.openHandGrant('all');
   const og = T.got[2].find(m => m.t === 'openHandGrant'); assert(og && og.seat === 1 && og.cards.length === 2 && og.who === 'You', 'an open hand toward all reaches the bots (v2.6.158: online only)');
-  T.clear(); A.hotPushBoardNow(); assert(T.got[4].some(m => m.t === 'openHandGrant'), 'and it follows every board push, as schedulePush does online');
+  T.clear(); A.hotPushBoardNow(); eq(T.got[4].filter(m => m.t === 'openHandGrant').length, 0, 'an unchanged hand does not ride every board push (v2.6.165, as online: the per-render re-send flooded the server)');
+  A.move(A.makeCard('Bum\'s Rush', 'lib'), 'hand'); T.clear(); A.hotPushBoardNow();
+  const og2 = T.got[4].find(m => m.t === 'openHandGrant'); assert(og2 && og2.cards.length === 3, 'a changed hand follows the next board push, as schedulePush does online');
   T.clear(); A.openHandRevoke('all'); eq(T.got[2].filter(m => m.t === 'openHandRevoke').length, 1, 'the revoke too');
   T.clear(); A.openHandGrant(4); eq(T.got[4].filter(m => m.t === 'openHandGrant').length, 1); eq(T.got[2].filter(m => m.t === 'openHandGrant').length, 0, 'a grant to one bot reaches that bot only');
   A.openHandRevoke(4); eq(T.got[4].filter(m => m.t === 'openHandRevoke').length, 1);
@@ -5216,6 +5219,306 @@ testA('v2.6.164 (the review) at a hotseat an un-oust takes back the VP its oust 
   eq(bob.vp, 1, 'B3 falls: Bob, its live predator, is paid');
   A.hostUnoustHot(3); eq(bob.vp, 0, 'the host\'s un-oust takes it back'); eq(b3.vpSeat, 0);
   A.localTable = false; T.HB.reset([]); A.net.roster = []; A.net.hot = null;
+});
+
+/* ---------- v2.6.165: group C of the 16 Oct code review (robustness) ---------- */
+function serverTable(names){   // the real server + N real clients over fake sockets: frames decoded, each side's input delivered on setImmediate
+  const { loadServer } = require('./elysium-test-harness.js');
+  const S = loadServer(require('path').join(__dirname, 'elysium-server.js'));
+  const sent = {};
+  const decode = (buf, cb) => { const b = Buffer.isBuffer(buf) ? buf : Buffer.from(buf); let i = 0;
+    while (i < b.length){ const op = b[i] & 0x0f, l7 = b[i + 1] & 0x7f; let off = i + 2, len = l7;
+      if (l7 === 126){ len = b.readUInt16BE(i + 2); off = i + 4; } else if (l7 === 127){ len = Number(b.readBigUInt64BE(i + 2)); off = i + 10; }
+      if (op === 1) cb(b.slice(off, off + len).toString('utf8')); i = off + len; } };
+  const wire = (A, name, ip) => {   // a fresh socket for client A: what the server writes reaches A, what A sends reaches the server on it
+    const conn = { ip, sock: null };
+    conn.sock = { destroyed: false, writable: true, dead: false, write(buf){ if (!this.dead) decode(buf, txt => setImmediate(() => { try { A.mpOnMsg(txt); } catch (e) {} })); return true; }, end(){}, destroy(){ this.destroyed = true; }, on(){}, once(){} };
+    A.net.ws = { readyState: 1, send(j){ const m = JSON.parse(j); (sent[name] = sent[name] || []).push(m.t); setImmediate(() => S.handle(conn, j)); }, close(){} };
+    return conn;
+  };
+  const C = names.map((name, i) => {
+    const A = loadClient(CLIENT); A.toast = () => {}; A.uiDialog = () => Promise.resolve(true);
+    const conn = wire(A, name, '10.7.0.' + (i + 1));
+    A.net.addr = 'x'; A.net.you = name;
+    return { A, conn, name };
+  });
+  S.handle(C[0].conn, JSON.stringify({ t: 'create', room: 'QT', name: names[0], pass: '' }));
+  C.slice(1).forEach((c, i) => setTimeout(() => S.handle(c.conn, JSON.stringify({ t: 'join', room: 'QT', name: c.name, pass: '' })), 30 * (i + 1)));
+  return { S, C, sent, wire };
+}
+testA('v2.6.165 (C-12/13) a quiet table sends nothing: in the Structured view a received board no longer sends ours back, and an open hand is not re-sent to its grantees on every render (v2.6.164: about one board a second per client, and the hand to every grantee with each)', async () => {
+  const { C, sent } = serverTable(['Anna', 'Bob', 'Cleo']);
+  await new Promise(r => setTimeout(r, 300));
+  C.forEach(c => { c.A.net.view = 'l2'; for (let k = 0; k < 3; k++){ const v = c.A.makeCard('Vamp ' + k, 'crypt'); c.A.move(v, 'ready', { x: 100 + 90 * k, y: 60, faceDown: false }); v.blood = 3; } });
+  C[0].A.state.openHand = [2, 3];
+  for (let t = 0; t < 50 && !C.every(c => (sent[c.name] || []).includes('board')); t++) await new Promise(r => setTimeout(r, 100));   // the setup's own pushes go out
+  assert(C.every(c => (sent[c.name] || []).includes('board')), 'set up: every seat sent its board: ' + JSON.stringify(sent));
+  await new Promise(r => setTimeout(r, 1200));                     // ...and land everywhere
+  assert((sent.Anna || []).filter(t => t === 'openHand').length >= 2, 'set up: the hand reached both grantees');
+  for (const k in sent) sent[k].length = 0;
+  await new Promise(r => setTimeout(r, 2600));                     // nobody touches anything
+  C.forEach(c => eq((sent[c.name] || []).filter(t => t === 'board').length, 0, c.name + ' sends no board while the table is quiet'));
+  eq((sent.Anna || []).filter(t => t === 'openHand').length, 0, 'and Anna no open hand');
+  const h = C[0].A.makeCard('New Card', 'lib'); C[0].A.move(h, 'hand', {});
+  await new Promise(r => setTimeout(r, 900));
+  eq((sent.Anna || []).filter(t => t === 'openHand').length, 2, 'a real change of the hand reaches each grantee once');
+  C.forEach(c => { c.A.net.ws = null; c.A.net.status = 'off'; });
+});
+test('v2.6.165 (C-13) a roster re-sends the standing hands: to a seat that came back, and all of them when no seat changed (a token rejoin that only swaps the socket, a reload, a new spectator) -- never to an absent seat, and a flapping connection costs one message per return', () => {
+  const A = loadClient(CLIENT); A.toast = () => {};
+  const sent = sentLog(A);
+  A.net.status = 'in'; A.net.you = 'Ann';
+  const R = (bob, cy) => [{ seat: 1, name: 'Ann', online: true }, { seat: 2, name: 'Bob', online: bob }, { seat: 3, name: 'Cy', online: cy }];
+  A.MP_HANDLERS.joined({ t: 'joined', room: 'QR', token: 't', you: 'Ann', seat: 1, players: R(true, true), srv: '2.6.49' });
+  A.state.openHand = [2];
+  sent.length = 0;
+  A.refreshOpenHands(); A.refreshOpenHands();
+  const oh = () => sent.filter(m => m.t === 'openHand');
+  eq(oh().length, 1, 'sent once, not once per call');
+  A.MP_HANDLERS.roster({ t: 'roster', players: R(false, true) }); eq(oh().length, 1, 'Bob drops: nothing goes to an absent seat');
+  A.MP_HANDLERS.roster({ t: 'roster', players: R(true, true) }); eq(oh().length, 2, 'Bob is back: the hand goes to him again'); eq(oh()[1].to, 2);
+  A.MP_HANDLERS.roster({ t: 'roster', players: R(true, true) }); eq(oh().length, 3, 'a roster in which no seat changed re-sends it (a token rejoin swaps the socket and the roster comes out the same; a reload)');
+  A.MP_HANDLERS.roster({ t: 'roster', players: R(true, false) }); eq(oh().length, 3, 'a roster where only a seat without a grant changed sends nothing');
+  assert(oh().every(m => m.to === 2), 'only ever to the grantee: ' + JSON.stringify(oh().map(m => m.to)));
+  A.state.openHand = [2, 3]; A.MP_HANDLERS.roster({ t: 'roster', players: R(true, true) }); sent.length = 0;
+  for (let k = 0; k < 3; k++){ A.MP_HANDLERS.roster({ t: 'roster', players: R(false, true) }); A.MP_HANDLERS.roster({ t: 'roster', players: R(true, true) }); }
+  eq(JSON.stringify(oh().map(m => m.to)), '[2,2,2]', 'Bob\'s connection flaps three times: three messages, all to him (re-sending every grant on every roster cost two per flap per grant)');
+  A.state.openHand = ['all']; sent.length = 0;
+  A.MP_HANDLERS.roster({ t: 'roster', players: R(true, true), watchers: 2, watcherList: [{ name: 'Wes' }] });
+  eq(JSON.stringify(oh().map(m => m.to)), '["all"]', 'an open hand to all goes out once more when a spectator arrives (no seat changed)');
+  A.state.openHand = []; sent.length = 0;
+  A.MP_HANDLERS.roster({ t: 'roster', players: R(true, true) }); eq(oh().length, 0, 'no grant, nothing');
+  A.net.ws = null; A.net.status = 'off'; A.net.roster = [];
+});
+testA('v2.6.165 (C-13) over the real server: a spectator who arrives after an open hand to all sees it, and a grantee whose socket a token rejoin swapped sees the hand as it is now (the first v2.6.165 build: neither)', async () => {
+  const { S, C, wire } = serverTable(['Anna', 'Bob']);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  await wait(300);
+  const [an, bob] = C;
+  for (const n of ['Govern the Unaligned', 'Deflection']) an.A.move(an.A.makeCard(n, 'lib'), 'hand', {});
+  an.A.openHandGrant('all');
+  await wait(200);
+  eq(((bob.A.net.openHandFrom || {})[1] || []).length, 2, 'set up: Bob sees two cards');
+  const cleo = loadClient(CLIENT); cleo.toast = () => {}; cleo.uiDialog = () => Promise.resolve(true);
+  const cc = wire(cleo, 'Cleo', '10.7.0.9'); cleo.net.addr = 'x'; cleo.net.you = 'Cleo';
+  S.handle(cc, JSON.stringify({ t: 'join', room: 'QT', name: 'Cleo', pass: '', spect: true }));
+  await wait(300);
+  eq(((cleo.net.openHandFrom || {})[1] || []).length, 2, 'the spectator who came later sees Anna\'s open hand');
+  bob.conn.sock.dead = true;                                       // Bob's socket dies without a close the server sees
+  an.A.move(an.A.makeCard('Bum\'s Rush', 'lib'), 'hand', {});
+  await wait(900);                                                 // the changed hand went out -- and reached nobody on Bob's side
+  eq(((bob.A.net.openHandFrom || {})[1] || []).length, 2, 'set up: Bob missed the change');
+  const nc = wire(bob.A, 'Bob', '10.7.0.2');
+  S.handle(nc, JSON.stringify({ t: 'join', room: 'QT', token: bob.A.net.token, pass: '' }));
+  await wait(400);
+  eq(((bob.A.net.openHandFrom || {})[1] || []).length, 3, 'after the token rejoin Bob sees the hand as it is now');
+  [an, bob].forEach(c => { c.A.net.ws = null; c.A.net.status = 'off'; }); cleo.net.ws = null; cleo.net.status = 'off';
+});
+testA('v2.6.165 (C-14/15) a reconnect gets back in and loses nothing silently: the rejoin carries the server password, a chat line waits and goes out after it, a pass / draw / oust is refused out loud, the board goes out again, the retries back off', async () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m)); A.uiDialog = () => Promise.resolve(true);
+  A.__doc._ids.mpSrvPass = { value: 'door' };
+  eq(A.mpSrvPassNow(), 'door'); eq(A.net.srvPass, 'door', 'kept in memory for the reconnect');
+  let sent = sentLog(A); A.net.room = 'QR'; A.net.token = 'tok1';
+  A.mpRejoin();
+  const j = sent.pop(); eq(j.t, 'join'); eq(j.token, 'tok1'); eq(j.srvPass, 'door', 'the rejoin carries it (v2.6.164 sent none: a --server-pass server refused the rejoin and the client gave the session up)');
+  A.net.chat = true; A.net.you = 'Ann'; A.net.roster = [{ seat: 1, name: 'Ann', online: true }, { seat: 2, name: 'Bob', online: true }];
+  // the board sent just before the drop dies in flight with the socket
+  A.net.status = 'in'; A.net.ws = { readyState: 1, send(){} };
+  assert(A.mpSendBoard(), 'set up: a board goes out just before the drop'); assert(!A.mpSendBoard(), 'set up: an unchanged board is not sent twice');
+  // the connection drops
+  A.net.status = 're'; A.net.ws = { readyState: 3, send(){ throw new Error('closed'); } };
+  A.chatSendLine('still here?');
+  eq((A.net.outbox || []).length, 1, 'the chat line waits (v2.6.164 dropped it without a word)');
+  eq(A.passBlockedWhy(), 'Reconnecting — pass once the connection is back.', 'a pass is refused, not played locally');
+  const t0 = A.state.turn; await A.pass(); eq(A.state.turn, t0, 'the turn did not move here');
+  toasts.length = 0; await A.drawCard();
+  assert(toasts.some(t => /^Reconnecting — draw once the connection is back\.$/.test(t)), 'a draw is refused out loud: ' + toasts.join(' | '));
+  toasts.length = 0; await A.ousted({});
+  assert(toasts.some(t => /oust once the connection is back/.test(t)), 'so is an oust');
+  // back in
+  sent = sentLog(A);
+  const L = captureLog(A);
+  try {
+    A.MP_HANDLERS.joined({ t: 'joined', room: 'QR', token: 'tok1', you: 'Ann', seat: 1, players: A.net.roster, srv: '2.6.49' });
+    const chat = sent.find(m => m.t === 'chat'); assert(chat && chat.msg === 'still here?', 'the waiting line goes out after the rejoin: ' + JSON.stringify(sent.map(m => m.t)));
+    eq((A.net.outbox || []).length, 0);
+    assert(L.text().some(t => t === '1 chat line sent after the reconnect.'), 'and the player is told');
+    await new Promise(r => setTimeout(r, 750));
+    assert(sent.some(m => m.t === 'board'), 'the board goes out again after the rejoin although it did not change (the last send died with the socket, so the server may hold an older one)');
+  } finally { L.restore(); }
+  for (const [n, lo, hi] of [[1, 2000, 3000], [6, 2000, 3000], [12, 2000, 3000], [13, 4000, 6000], [14, 8000, 12000], [15, 12000, 18000], [40, 12000, 18000]])   // every 2.5 s through the server's 30 s reconnect window, then backing off
+    for (let k = 0; k < 20; k++){ const d = A.mpRetryDelay(n); assert(d >= lo && d <= hi, 'retry ' + n + ' waits ' + lo + '-' + hi + ' ms, got ' + d); }
+  A.net.ws = null; A.net.status = 'off'; A.net.roster = [];
+});
+test('v2.6.165 (C-16) saved decks: 60 of them, a dropped one is named, a full storage is said (v2.6.164 kept 24 and dropped the oldest without a word, and swallowed a storage error)', () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m));
+  eq(A.DECKS_MAX, 60);
+  for (let i = 0; i < 60; i++) A.storeDeck('Deck ' + i, 'Crypt\n1x V\nLibrary\n1x C\n');
+  eq(A.loadDecks().length, 60); eq(toasts.length, 0, 'no warning while there is room');
+  A.storeDeck('Deck 60', 'Crypt\n1x V\nLibrary\n1x C\n');
+  eq(A.loadDecks().length, 60);
+  assert(toasts.some(t => /oldest, “Deck 0”, was removed/.test(t)), 'the dropped deck is named: ' + toasts.join(' | '));
+  assert(!A.loadDecks().some(d => d.name === 'Deck 0'), 'and it is the oldest that went');
+  toasts.length = 0; A.storeDeck('Deck 62', 'Crypt\n1x V\nLibrary\n1x C\n', null, 'Saved "Deck 62" to your decks.');
+  eq(JSON.stringify(toasts), JSON.stringify(['Saved "Deck 62" to your decks. The deck list holds 60 decks, so the oldest, “Deck 1”, was removed.']), 'a caller\'s success line carries the drop (the Deck Lab\'s own toast covered it)');
+  const realSet = A.__ls.setItem; A.__ls.setItem = (k, v) => { if (k === 'elysium.decks') throw new Error('QuotaExceededError'); return realSet(k, v); };
+  toasts.length = 0;
+  eq(A.storeDeck('Deck 61', 'x', null, 'Saved "Deck 61" to your decks.'), false, 'a refused write is reported');
+  assert(toasts.some(t => /storage is full/.test(t)), 'and said: ' + toasts.join(' | '));
+  assert(!toasts.some(t => /^Saved/.test(t)), 'and no success line covers it');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(/const _ok=storeDeck\(finalName, deckToText\(\{\.\.\.parsed, name:finalName\}\), deckEra\(\), 'Saved "'\+finalName\+'" to your decks — pick it in the lobby\.'\);[^\n]*\n  if\(!_ok\) return;/.test(html), 'the Deck Lab passes its line to storeDeck and stops on a refused write (its own toast covered the warnings)');
+  A.__ls.setItem = realSet;
+});
+test('v2.6.165 (C-16) a full storage does not lose the game save silently: stale saves of other rooms go first, then the turn history shrinks, and the player is told once (v2.6.164 swallowed the error)', () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m));
+  const ls = A.__ls, now = Date.now(), realSet = ls.setItem;
+  ls.setItem('elysium.game::OldRoom::Ann', JSON.stringify({ t: now - 20 * 86400000, cards: [] }));
+  ls.setItem('elysium.game::Recent::Ann', JSON.stringify({ t: now - 86400000, cards: [] }));
+  ls.setItem('elysium.decks', '[]');
+  A.clearTable({}); A.move(A.makeCard('V', 'crypt'), 'ready', { x: 10, y: 10, faceDown: false });
+  A.state.turnLogs = Array.from({ length: 120 }, (_, i) => ({ turn: i + 1, lines: ['line '.repeat(40)] }));
+  const LIMIT = A.serializeGame(40).length + 50;                   // the "quota": room for 40 turns of history, not 120
+  ls.setItem = (k, v) => { if (String(v).length > LIMIT) throw new Error('QuotaExceededError'); return realSet(k, v); };
+  A.saveEnabled = true; A.saveDirty = true; A.flushSave();
+  const saved = JSON.parse(ls.getItem('elysium.game') || 'null');
+  assert(saved && saved.turnLogs.length === 40, 'saved with the last 40 turns: ' + (saved && saved.turnLogs.length));
+  eq(saved.turnLogs[0].turn, 81, 'the newest ones');
+  eq(ls.getItem('elysium.game::OldRoom::Ann'), null, 'a stale save of another room went first');
+  assert(ls.getItem('elysium.game::Recent::Ann'), 'a recent one stays');
+  eq(toasts.filter(t => /storage is full/.test(t)).length, 1, 'told once');
+  A.saveDirty = true; A.flushSave();
+  eq(toasts.filter(t => /storage is full/.test(t)).length, 1, 'and not again');
+  ls.setItem = () => { throw new Error('QuotaExceededError'); };
+  const B = loadClient(CLIENT); const bt = []; B.toast = m => bt.push(String(m)); B.__ls.setItem = () => { throw new Error('QuotaExceededError'); };
+  B.clearTable({}); B.move(B.makeCard('V', 'crypt'), 'ready', { x: 10, y: 10, faceDown: false });
+  B.saveEnabled = true; B.saveDirty = true; B.flushSave();
+  assert(bt.some(t => /could not be saved in the browser/.test(t)), 'nothing fits at all: said so: ' + bt.join(' | '));
+  ls.setItem = realSet;
+});
+test('v2.6.165 (review) the save rescue: only a full storage runs it, the offline game\'s save is never "another room\'s", and a total failure is said even after the milder note', () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m));
+  const ls = A.__ls, realSet = ls.setItem, now = Date.now();
+  ls.setItem('elysium.game', JSON.stringify({ t: now - 30 * 86400000, cards: [] }));
+  ls.setItem('elysium.game::Old::Ann', JSON.stringify({ t: now - 30 * 86400000, cards: [] }));
+  A.net.room = 'Live'; A.net.you = 'Ann';
+  A.clearTable({}); A.move(A.makeCard('V', 'crypt'), 'ready', { x: 10, y: 10, faceDown: false });
+  ls.setItem = (k, v) => { if (k === 'elysium.game::Live::Ann') throw new TypeError('a bug elsewhere'); return realSet(k, v); };
+  A.saveEnabled = true; A.saveDirty = true; A.flushSave();
+  assert(ls.getItem('elysium.game::Old::Ann'), 'another error deletes nothing (the first build ran the rescue on any error)');
+  eq(toasts.filter(t => /storage is full/.test(t)).length, 0, 'and claims no full storage');
+  A.state.turnLogs = Array.from({ length: 60 }, (_, i) => ({ turn: i + 1, lines: ['x '.repeat(50)] }));
+  const LIMIT = A.serializeGame(40).length + 50;
+  ls.setItem = (k, v) => { if (String(v).length > LIMIT) throw new Error('QuotaExceededError'); return realSet(k, v); };
+  A.saveDirty = true; A.flushSave();
+  eq(ls.getItem('elysium.game::Old::Ann'), null, 'another room\'s stale save goes');
+  assert(ls.getItem('elysium.game'), 'the offline game\'s save stays, however old');
+  eq(toasts.filter(t => /with only its last 40 turns/.test(t)).length, 1, 'the milder note');
+  ls.setItem = () => { throw new Error('QuotaExceededError'); };
+  A.saveDirty = true; A.flushSave();
+  eq(toasts.filter(t => /could not be saved in the browser/.test(t)).length, 1, 'a total failure after the milder note is still said (one flag silenced it)');
+  eq(A.isQuotaErr({ name: 'QuotaExceededError' }), true); eq(A.isQuotaErr({ name: 'NS_ERROR_DOM_QUOTA_REACHED', code: 1014 }), true); eq(A.isQuotaErr({ name: 'Error', message: "Failed to execute 'setItem' on 'Storage': Setting the value of 'x' exceeded the quota." }), true); eq(A.isQuotaErr(new TypeError('x')), false); eq(A.isQuotaErr(new TypeError('not a quota problem')), false);
+  ls.setItem = realSet; A.net.room = null; A.net.you = null;
+});
+testA('v2.6.165 (review) a local game started while an online table is reconnecting leaves that table: its retry stops, its queued chat is not posted later, and the local pass and chat work (the first build refused them for as long as the retries ran)', async () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m));
+  A.net.status = 're'; A.net.room = 'R'; A.net.token = 'tok'; A.net.you = 'Ann'; A.net.addr = 'x';
+  let fired = false; A.net.retry = setTimeout(() => { fired = true; }, 40);
+  A.net.ws = { readyState: 3, send(){}, close(){} };
+  A.net.outbox = [{ t: 'chat', msg: 'hi' }];
+  A.net.helperPolicy = { tournament: true, allowLocal: false }; A.net.rtarget = { seat: 2, cid: 'c3', name: 'X' }; A.net.matchEnd = Date.now() + 600000; A.hotHoldBy.add('Bob');
+  const L = captureLog(A);
+  try {
+    A.startHotseat([{ name: 'Ann' }, { name: 'Bob' }], 'structured');
+    eq(A.net.helperPolicy, null, 'the online room\'s helper lock does not rule the local table'); eq(A.net.rtarget, null, 'nor its target'); eq(A.net.matchEnd, null, 'nor its match clock'); eq(A.hotHoldBy.size, 0, 'nor a hold by one of its players');
+    eq(A.net.status, 'off', 'the lost table is left'); eq(A.net.token, null);
+    eq((A.net.outbox || []).length, 0, 'its queued chat is dropped, not posted into it later');
+    assert(L.text().some(t => /^The online table you lost was left for this game — 1 chat line written meanwhile was not sent\./.test(t)), 'and the player is told: ' + JSON.stringify(L.text().slice(-3)));
+  } finally { L.restore(); }
+  await new Promise(r => setTimeout(r, 80));
+  eq(fired, false, 'the pending retry was cancelled');
+  A.net.status = 're';                                             // even with the flag still set by a late socket close
+  eq(A.mpReconnecting(), false, 'a local table is never "reconnecting"');
+  eq(A.passBlockedWhy(), null, 'the local pass is not refused');
+  toasts.length = 0; A.chatSendLine('hold on'); eq((A.net.outbox || []).length, 0, 'local chat goes to the table, not into an outbox');
+  eq(toasts.filter(t => /^Reconnecting/.test(t)).length, 0);
+  A.net.status = 'off'; A.leaveHotseat();
+});
+test('v2.6.165 (review) reconnect odds and ends: mpRetryNow never sends a second join, a refused rejoin says what happened to the queued chat, and the remembered server password stays with its server', () => {
+  const prevWS = global.WebSocket; const made = [];
+  global.WebSocket = function (url) { made.push(url); this.readyState = 0; this.send = () => {}; this.close = () => { this.readyState = 3; }; };
+  try {
+    const A = loadClient(CLIENT); A.toast = () => {};
+    A.net.status = 're'; A.net.room = 'R'; A.net.token = 'tok'; A.net.addr = 'host:8123'; A.net.sec = false; A.net.you = 'Ann';
+    const sent = []; A.net.ws = { readyState: 1, send: j => sent.push(JSON.parse(j)), close(){} };
+    A.mpRejoin(); A.mpRetryNow();
+    eq(sent.filter(m => m.t === 'join').length, 1, 'an open socket waiting for its joined gets no second join (the server announced the reconnect twice)');
+    A.net.ws = { readyState: 0, send(){}, close(){} }; A.mpRetryNow(); eq(made.length, 0, 'no new socket while one connects');
+    A.net.ws = { readyState: 3, send(){}, close(){} }; A.net.retryN = 5; A.mpRetryNow(); A.mpRetryNow();
+    eq(made.length, 1, 'after a failed attempt: exactly one new socket'); eq(A.net.retryN, 0, 'and the back-off starts over');
+    const L = captureLog(A);
+    try {
+      A.net.status = 're'; A.net.outbox = [{ t: 'chat', msg: 'a' }, { t: 'chat', msg: 'b' }];
+      A.MP_HANDLERS.err({ t: 'err', msg: 'This server requires a password.' });
+      assert(L.text().some(t => t === '2 chat lines written while reconnecting could not be sent.'), 'a refused rejoin says so: ' + JSON.stringify(L.text().slice(-3)));
+      eq((A.net.outbox || []).length, 0);
+    } finally { L.restore(); }
+    const B = loadClient(CLIENT); B.toast = () => {};
+    B.__doc._ids.mpSrvPass = { value: 'door' }; B.net.addr = 'a.example:8123';
+    eq(B.mpSrvPassNow(), 'door');
+    B.__doc._ids.mpSrvPass.value = '';                                // Lite empties the hidden field
+    eq(B.mpSrvPassNow(), undefined, 'the hello carries what the field says'); eq(B.net.srvPass, 'door', 'the reconnect keeps it for the same server');
+    let s2 = sentLog(B); B.net.room = 'R'; B.net.token = 't'; B.mpRejoin(); eq(s2.pop().srvPass, 'door');
+    B.net.addr = 'b.example:8123'; s2 = sentLog(B); B.mpRejoin(); eq(s2.pop().srvPass, undefined, 'never to another server');
+    B.mpSrvPassNow(); eq(B.net.srvPass, '', 'an empty field on another server forgets it');
+    B.net.ws = null; A.net.ws = null;
+  } finally { global.WebSocket = prevWS; }
+});
+testA('v2.6.165 (review) while reconnecting, every move that needs the server is refused out loud instead of running its offline path: a card back to the deck (it was lost), a shuffle, the pile tools, a roll, the Edge, a give, an undone draw, a reveal, a revoke, a recall', async () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m)); A.uiDialog = () => Promise.resolve(true);
+  A.net.status = 're'; A.net.room = 'R'; A.net.you = 'Ann'; A.net.deckUp = true; A.net.libN = 40; A.net.cryptN = 8;
+  A.net.ws = { readyState: 3, send(){ throw new Error('closed'); }, close(){} };
+  A.net.roster = [{ seat: 1, name: 'Ann', online: true }, { seat: 2, name: 'Bob', online: true }];
+  const c = A.makeCard('Some Card', 'lib'); A.move(c, 'hand', {});
+  eq(A.move(c, 'library', {}), false, 'a card back to the library is refused'); eq(c.zone, 'hand', 'and stays in the hand (v2.6.164 put it in a pile the table never sees)');
+  A.returnToPile(c, 'top'); eq(c.zone, 'hand', 'so does Return to the deck');
+  A.state.selected.add(c.id); A.groupShuffleIn(); eq(c.zone, 'hand', 'and a group shuffle-in'); A.state.selected.clear();
+  const pool0 = A.state.pool, edge0 = A.state.edge;
+  const L = captureLog(A);
+  try {
+    A.shuffleZone('library'); A.burnTopLibrary(); A.discardTopLibrary(); A.flipCoin(); A.rollDie(6); A.browse('library'); A.influencePaid(); A.toggleEdge();
+    eq(L.text().length, 0, 'no line about a shuffle or a roll only this screen saw: ' + JSON.stringify(L.text()));
+  } finally { L.restore(); }
+  eq(A.state.pool, pool0, 'no pool spent'); eq(A.state.edge, edge0, 'the Edge did not move');
+  A.giveTo(2, null, null, 0, 0, c); eq(A.net.giving || null, null, 'no give left pending'); eq(c.zone, 'hand');
+  const L2 = captureLog(A);
+  try {
+    A.state.drawHistory.push(c.id); A.undoDraw(); eq(A.state.drawHistory.length, 1, 'Undo draw keeps its history'); eq(c.zone, 'hand');
+    A.undoStack.push(A.UNDO_DRAW); A.undo(); eq(A.undoStack[A.undoStack.length - 1], A.UNDO_DRAW, 'the Undo button\'s draw step stays on the stack for later'); eq(c.zone, 'hand');
+    A.revealHandTo([c], 2); A.state.openHand = [2]; A.openHandRevoke(2); eq(JSON.stringify(A.state.openHand), '[2]', 'a revoke is refused, not lost (the grantee kept seeing the hand)');
+    A.recallOnline(2, 'c9', 'hand'); eq(Object.keys(A.net.recalling || {}).length, 0, 'no recall left pending');
+    eq(L2.text().length, 0, 'none of them wrote a line about something that never happened: ' + JSON.stringify(L2.text()));
+  } finally { L2.restore(); }
+  A.state.openHand = []; A.undoStack.length = 0;
+  eq(toasts.filter(t => /^Reconnecting — .+ once the connection is back\.$/.test(t)).length, 17, 'each one says why: ' + toasts.join(' | '));
+  A.net.status = 'in'; toasts.length = 0; const sent = sentLog(A);
+  A.flipCoin(); eq(sent.filter(m => m.t === 'tool').length, 1, 'connected, the same button works'); eq(toasts.length, 0);
+  A.net.ws = null; A.net.status = 'off'; A.net.roster = [];
+});
+testA('v2.6.165 (review) a busy table cannot postpone our push forever: re-armed by every received board, the debounce still sends within 1.5 s', async () => {
+  const A = loadClient(CLIENT); A.toast = () => {};
+  const sent = sentLog(A); A.net.status = 'in'; A.net.you = 'Ann'; A.net.roster = [{ seat: 1, name: 'Ann', online: true }];
+  A.move(A.makeCard('V', 'crypt'), 'ready', { x: 10, y: 10, faceDown: false });
+  const t0 = Date.now(); let tSent = 0;
+  for (let i = 0; i < 30 && !tSent; i++){ await new Promise(r => setTimeout(r, 100)); A.schedulePush(); if (sent.some(m => m.t === 'board')) tSent = Date.now() - t0; }
+  assert(tSent && tSent <= 1900, 'the board went out within the max wait although the debounce was re-armed every 100 ms: ' + (tSent || 'never in 3 s'));
+  A.net.ws = null; A.net.status = 'off'; A.net.roster = [];
+});
+test('v2.6.165 (C-16) the duel panel keeps ONE live-refresh timer while the counter stepper is open (each click on the chip started another)', () => {
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(/let _duelStepT=null;/.test(html), 'a single module-level handle');
+  assert(/clearInterval\(_duelStepT\); _duelStepT=setInterval\(/.test(html), 'cleared before it is set again');
+  assert(!/const iv=setInterval\(\(\)=>\{ const st=\$\('#ctStepper'\)/.test(html), 'the per-click timer is gone');
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */

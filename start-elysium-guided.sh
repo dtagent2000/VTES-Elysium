@@ -39,7 +39,7 @@ if [ -n "${ADMPASS}" ]; then
   case "${ONEROOM}" in [yY]*) ARGS+=(--create-policy admin); SHOWN="${SHOWN} --create-policy admin";; esac
 fi
 
-read -r -p "  Behind cloudflared/Caddy running on THIS machine? (--trust-proxy) [y/N] " PROXY
+read -r -p "  Behind a Cloudflare tunnel (cloudflared) on THIS machine? (--trust-proxy) [y/N] " PROXY
 case "${PROXY}" in [yY]*) ARGS+=(--trust-proxy); SHOWN="${SHOWN} --trust-proxy"; echo "  Remember: start the tunnel separately with start-cloudflare-tunnel once the server is up.";; esac
 
 echo

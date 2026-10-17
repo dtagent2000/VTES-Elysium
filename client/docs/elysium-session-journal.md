@@ -1,3 +1,154 @@
+## [DET TYSTA BORDET] (17 oktober 2026, eftermiddag, klient v2.6.165 / srv-2.6.49)
+
+Johan, 17 okt, efter att B (PR #29) var mergad: "Yes då kör vi C och knyter ihop säcken, jag har mergat B :D"
+C är robusthetsgruppen från granskningen 16 okt (punkt 12–16), plus de två serverfynden som den oberoende granskningen
+av A lämnade öppna (`deriveIp`, `Buffer.concat`) och CI för grindarna. Med det är granskningen stängd.
+
+**Mätt före bygget** (den riktiga servern och riktiga klienter över fejkade socketar; ett drag, sedan 10 s utan att
+någon rör något, i Structured-vyn; serverns gräns 80 meddelanden per 10 s räknad i proben):
+- tre spelare, Annas hand öppen mot två: Anna 9 bräden och 34 öppna händer, Bob 8 och Cleo 9 bräden;
+- fem spelare, Annas hand öppen mot fyra: Anna 96 meddelanden, över gränsen, så servern hade kastat ut henne;
+- med v2.6.165: ett bräde per spelare, och Annas hand en gång per mottagare.
+
+**Byggt (C, klient v2.6.165 + srv-2.6.49; purge av klienten OCH omstart av servern):**
+1. **Brädesekot (punkt 12).** `layout()` slutar alltid i `scheduleSave()` → `schedulePush()`, och varje vy ritas genom
+   `layout()`. I Structured-vyn ritade varje mottaget bräde om vårt och skickade tillbaka det. Nu går ett bräde ut bara
+   när det har ändrats (`mpSendBoard()` jämför `JSON.stringify(buildPub())` med det senast skickade, `_lastPubSent`).
+   Minnet glöms vid `joined` (en återanslutning också: det sista brädet kan ha dött med socketen), `took` och
+   `mpLeave`, så brädet går ut igen efter en återanslutning även oförändrat. I hotseat gör bryggan samma sak per plats
+   (`_hotPubSent`, nollas med bordet). Debouncen väntar nu högst 1,5 s (`pushDue`): varje mottaget bräde startade om
+   den, så ett livligt bord kunde skjuta upp vårt bräde hur länge som helst.
+2. **Den öppna handen (punkt 13).** Servern sparar inga grants, så den som visar handen skickar om den. Förut gick
+   handen till varje mottagare vid varje rendering. Nu går en ny grant ut direkt och en ändrad hand med nästa brädpush
+   (direkt efter brädet). En `roster` skickar om (`openHandRosterCheck()`): en plats som kom tillbaka får sin grant (och
+   en grant till alla går igen), och en roster där ingen plats ändrats -- en token-återanslutning som bara byter
+   socket, en omladdning, en ny åskådare -- skickar alla grants igen. En frånvarande plats får ingenting, så en
+   anslutning som fladdrar kostar ett meddelande per återkomst.
+3. **Återanslutning med serverlösenord (punkt 14).** `mpRejoin()` skickade inget `srvPass`. På en server med
+   `--server-pass` nekades återanslutningen (en prick mot adressen), och klienten gav upp sessionen: spelaren åkte ut
+   från bordet och fick gå in igen för hand, och chatt som skrivits under tiden försvann. Nu sparas lösenordet i minnet
+   för den server det skrevs för (`net.srvPass`, `net.srvPassAt`, aldrig i `localStorage`) och följer med varje
+   återanslutning dit.
+4. **Återanslutningen tappar inget tyst (punkt 15).** Medan klienten återansluter (`mpReconnecting()`) väntar en
+   chattrad i en utkorg (högst 50) och går ut efter `joined`, bara i samma rum, med raden "N chat line(s) sent after
+   the reconnect.". Nekas återanslutningen sägs att raderna inte kom fram. Allt som servern måste se nekas med en toast
+   i stället för att spelas lokalt mot ett bord som ingen annan ser: pass, oust, dra kort och crypt, ett kort tillbaka
+   till leken (det försvann förut), att ångra ett drag, blandning, verktygen på högarnas topp, tärning och mynt, the
+   Edge, unoust, give, att ta tillbaka ett kort, att visa handen, att sluta visa en öppen hand (återkallandet nådde
+   aldrig mottagarna) och värdens verktyg för pool, oust och pass.
+   Försöken görs var 2,5:e s i 30 s (serverns `GRACE_MS`, då ingen kan ta den tappade platsen), sedan 5, 10 och var
+   15:e s (±20 %), och genast när nätet eller fliken kommer tillbaka. Startar spelaren Play offline under tiden lämnas
+   det tappade bordet (`mpAbandonReconnect()`), och Join game tar spelaren tillbaka till platsen.
+5. **Småsaker (punkt 16).** Sparade lekar: 60 i stället för 24, en lek som faller bort nämns vid namn, och en full
+   lagring sägs (`storeDeck` tar anroparens egen rad, så Deck Labs "Saved" inte täcker varningen). Den lokala
+   sparningen av partiet svalde ett `QuotaExceededError` tyst; nu tar `saveQuotaRescue()` bort andra rums sparningar som
+   inte rörts på 14 dagar (aldrig offlinepartiets), försöker sedan med de senaste 40, 10 och 0 turernas logg och säger
+   det: den milda raden en gång och ett totalt misslyckande en gång. Bara ett riktigt quota-fel startar räddningen; ett
+   annat fel rapporteras. Sparningen när sidan stängs gör samma räddning. Duellpanelen har en enda uppdateringstimer.
+6. **Servern srv-2.6.49.** `deriveIp` (bara med `--trust-proxy`, bara från loopback) tar den SISTA posten i
+   `X-Forwarded-For`, den som proxyn själv lade till; en post med port räknas som sin adress. `CF-Connecting-IP` går
+   fortfarande först, vilket bara är rätt bakom Cloudflare; nya `--trust-proxy xff` struntar i den, för nginx eller Caddy
+   direkt mot nätet, där en klient kan skriva den headern själv. `wsAttach` har en enda växande buffert per anslutning:
+   varje TCP-bit kopieras in en gång, ramar läses vid en offset och resten flyttas fram; en buffert som vuxit över 64 KB
+   krymper tillbaka när den är nästan tom.
+7. **CI.** `.github/workflows/client-gates.yml` kör grindarna på varje PR och push till main som rör `client/` eller
+   filerna vi släpper till roten, med läsrättighet bara, och varje steg körs även om ett tidigare föll (så att
+   check-versions inte gömmer resten). `split_client.py` läser `SPLIT_SRC`/`SPLIT_OUT`, och `client/.gitignore` täcker
+   B1-symlänken `elysium-src`.
+8. **Dokument:** PROTOCOL (huvudet, §2, §3 `join` tar `srvPass`, §6.1 vilken header `--trust-proxy` läser och när
+   `xff` behövs, §7 `board` och `openHand`); Help ▸ Local server (`--trust-proxy`, `--trust-proxy xff`, en
+   felsökningsrad för "Connection lost", och versionschippet, som stod på v2.6.141).
+
+**Tre gamla tester mötte ändringen:**
+- v2.6.142:s källfästa rad om rostern bröts av min första version; koden ändrades i stället, så raden står kvar.
+- v2.6.115:s ankare för chattens sändväg fick ett nytt ankare (villkoret har fått utkorgen). Samma påstående.
+- v2.6.159:s hotseat-test sa att den öppna handen "följer varje brädpush". Det var floden. Nu: en oförändrad hand
+  följer inte med, en ändrad hand går ut med nästa push.
+
+**Oberoende granskning före PR:en** (en separat agent; åtta fel, sju återskapade eller bevisade i koden, alla åtgärdade
+och fästa med tester):
+1. **Lokalt spel gick sönder medan ett tappat bord försökte återansluta.** `net.status==='re'` varar så länge servern är
+   borta. Startade man Play offline under tiden nekades pass, dra kort och oust, och chatten hamnade i det döda rummets
+   utkorg (även "hold on" som bottarna läser). Nu: `mpReconnecting()` är falsk vid ett lokalt bord, och ett lokalt parti
+   lämnar det tappade bordet.
+2. **Den nya ramläsaren höll mycket minne.** Min kö av TCP-bitar höll varje bit vid liv tills ramen var hel: 256 KB
+   droppat en byte i taget kostade ungefär 85 MB per anslutning. Nu en växande buffert: 200 000 enbytesbitar ger
+   +0,1 MB heap (kön: +42 MB; srv-2.6.48: +0,1 MB men 1,9 s CPU mot 0,03 s).
+3. **`deriveIp` gick att lura med en förfalskad `CF-Connecting-IP`** bakom nginx eller Caddy, just där min fix skulle
+   hjälpa, och mina dokument lovade för mycket. Nu `--trust-proxy xff` och ärliga dokument.
+4. **Öppna händer nådde inte alla.** En åskådare som kom efter en grant till alla, en mottagare vars socket byttes av en
+   token-återanslutning och en omladdning fick ingen eller en gammal hand. Nu skickar varje roster om grants.
+5. **`mpRetryNow` kunde skicka en andra join** medan den första väntade på `joined`; servern meddelade återanslutningen
+   två gånger och klienten läste den andra som en ny join (öppnade händer och turräkningen nollades).
+6. **Deck Labs "Saved"-toast täckte** både "storage is full" och raden om leken som föll bort.
+7. **Räddningen av sparningen** hade en enda "sagt"-flagga (ett totalt fel efter den milda raden blev tyst), körde på
+   alla fel, räknade offlinepartiets sparning som ett annat rums, och sparningen vid stängning svalde felet.
+8. **Fler drag som behöver servern spelades lokalt** under återanslutningen (fanns förut, men backoffen gjorde fönstret
+   längre): ett kort tillbaka till leken försvann, blandning, tärning, the Edge, unoust och give.
+- Också från granskningen: försöken går nu var 2,5:e s genom serverns 30 s-fönster innan de backar; debouncen har ett
+  tak; en nekad återanslutning säger vad som hände med den köade chatten; lösenordet följer bara sin server (Lite tömmer
+  fältet); CI kör alla steg och har läsrättighet; `.gitignore` täcker symlänken; dokumenten beskrev det gamla felet fel
+  (klienten försökte inte om och om igen, den gav upp efter första nekandet) och sa att pass "väntar" när det nekas.
+- **Rimligt men inte nåbart i dag:** en bott som sätts vid ett hotseat-bord efter människans senaste brädsändning får
+  inte det brädet förrän det ändras. Alla platser finns innan första sändningen, så det händer inte nu.
+
+**Andra omgången av granskningen** (samma agent, på fixarna): alla åtta bekräftat lagade, ingen regression i vanligt
+spel, och några små saker i själva fixarna, alla åtgärdade:
+- `mpAbandonReconnect` lämnade onlinerummets hjälplås, mål, matchklocka och en "hold" kvar vid det lokala bordet;
+- anropare av ett nekat `move()`: Ångra drag tömde sin historik och skrev en rad, och ett kort som släpptes på leken
+  fick raden "put on top"; nu nekas de före historiken, och undo-steget för servern ligger kvar på stacken;
+- att skicka om alla grants vid varje roster kostade två meddelanden per grant och fladder; nu jämförs rostern med
+  en ögonblicksbild (en plats som kom tillbaka får sin grant, en oförändrad roster skickar alla);
+- ett `SecurityError` (blockerad lagring) gav krasch-toasten och en felrapport; nu tyst;
+- hjälpen och PROTOCOL sa för mycket om `GRACE_MS` (platsen lever längre; bara värden hindras) och om vad som nekas;
+- gästlanseringsskripten frågade "cloudflared/Caddy" och skickade vanliga `--trust-proxy`; nu frågar de bara om en
+  Cloudflare-tunnel, och hjälpen säger `--trust-proxy xff` för Caddy och nginx;
+- bufferten växte till 512 KB för en 256 KB-ram; nu aldrig över en största ram plus header.
+
+**Mina egna misstag på vägen:**
+- En mutant överlevde: jag hade lagt till ett extra `schedulePush()` i `joined`, men handlern slutar redan i ett. Död
+  vikt, borttagen; testet fäster nu nollningen av `_lastPubSent` som faktiskt bär.
+- Kön av TCP-bitar löste CPU-problemet och skapade ett minnesproblem. Mitt test räknade bara `Buffer.concat`.
+- Jag beskrev det gamla återanslutningsfelet utan att ha kört det. Webbläsarproben visade att klienten gav upp efter
+  första nekandet; formuleringen rättades överallt.
+- Mitt test för "ett annat fel än quota" använde meddelandet "not a quota problem" och träffade min egen
+  quota-heuristik. Heuristiken matchar nu felets namn och de riktiga meddelandena, inte ordet.
+- `drip-time.js` hängde (serverns intervall håller processen vid liv) och en `node -e` med klienten likaså; båda
+  stoppade med PID eller task-id.
+
+**Grindar:**
+- klientsviten **333/0** med bot v0.6.207 bredvid, inga skip, 12 nya tester (6 för C, 6 för granskningens fynd). Mot
+  v2.6.164: 319/14 -- 11 av de 12 nya röda, plus v2.6.115:s ankare, inbäddningen och v2.6.159:s hotseat-kontrakt. Det
+  tolfte (den öppna handen över den riktiga servern) är grönt mot v2.6.164 med avsikt: floden skickade om handen. Mot
+  den första C-builden var det rött, och mot builden före granskningens andra omgång är sviten 329/4;
+- dispatch **88/0**, 2 nya. Mot srv-2.6.48: 86/2; mot den första C-builden: 86/2 (minnesgränsen och `xff`);
+- protokoll 6/0, kanariefågeln 69/0, endpoint 24/0, soak `--control` exit 0, och hela soak-batteriet med riktiga
+  bottar genom bryggan: 7 bord, 96 turer, 238 Hold-ons mellan bottar, 8 ousts, 0 som fastnade. B1 byte-identisk, embed
+  `--check` på båda sidorna, check-versions grön med roten;
+- mutanter: klienten 46 av 46 dödade, servern 4 av 4 (en ekvivalent räknas inte: `need`-grinden sparar bara tid);
+- differentiell fuzz av ramläsaren mot srv-2.6.48: 2 100 slumpade strömmar och uppdelningar plus granskarens 12
+  kantfall, 0 skillnader.
+
+**Live, före mot efter:**
+- Riktig server med `--server-pass`, två spelare i headless Chromium, servern stoppad (Ctrl+C) i 25 s och startad på
+  samma datamapp: v2.6.164 försökte 9 gånger var, nekades en gång och åkte ut från bordet, och chattraden som skrevs
+  under tiden försvann. v2.6.165 försökte 9 gånger var (2,5 s-fönstret), båda tillbaka på sina platser inom en sekund efter omstarten, och raden kom fram.
+- Samma sak med 60 s nere: v2.6.164 23 försök var och ute från bordet; v2.6.165 15 försök var och tillbaka 10 och 16 s efter omstarten (backoffen). Annas köade rad gick ut när hon kom tillbaka, innan Bob var där, så Bob missade den: servern sparar ingen chatthistorik.
+- Ramläsaren: 250 KB droppat en byte i taget, 4,2 s serverns tid före, 0,09 s efter.
+
+**Kvar:**
+- **Omaskerade WebSocket-ramar** tas fortfarande emot och räknas (`[ws] unmasked client frames …`, högst en rad i
+  minuten). Efter en tid på elysium.cards: grep i serverloggen; syns raden aldrig, neka dem.
+- **Riggen och PLAYTEST.md** känner inte bottarnas v0.6.205–206-rader än.
+- **CSP** (granskningen nämnde den som "senare").
+- **B:s öppna ändar:** en cachad v2.6.163-flik skriver tillbaka en negativ räknare som 0 (purga); en gammal klients
+  `mySeat()` när värden befordrar en åskådare till en annan öppen plats än den med hennes namn.
+- **Räknaren (`tally`) under en återanslutning** skrivs lokalt och skickas inte; nästa klick skickar igen. Ett kort som
+  släpps på leken medan anslutningen är nere: koden nekar och lägger tillbaka kortet, men det är inte testat med en
+  riktig drag-och-släpp. Att ett `SecurityError` inte rapporteras är kodläst, inte testat.
+- **Inte kört:** elysium.cards, en riktig GitHub Actions-körning före PR:en, riktiga proxyheaders (från dokumentation),
+  touch.
+
 ## [BORDET BEHÅLLER SINA PLATSER] (17 oktober 2026, förmiddag, klient v2.6.164 / srv-2.6.48)
 
 Johan, 17 okt, efter att A (PR #27) var mergad: "Yes vi kan tillåta värden under 0, vill du ta det tillsammans med B?"

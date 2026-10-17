@@ -42,7 +42,7 @@ if not "!ADMPASS!"=="" (
   )
 )
 
-choice /c YN /n /m "  Behind cloudflared/Caddy running on THIS machine? (--trust-proxy) [Y/N] "
+choice /c YN /n /m "  Behind a Cloudflare tunnel (cloudflared) on THIS machine? (--trust-proxy) [Y/N] "
 if !errorlevel!==1 (
   set ARGS=!ARGS! --trust-proxy
   set SHOWN=!SHOWN! --trust-proxy

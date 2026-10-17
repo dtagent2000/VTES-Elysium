@@ -1,8 +1,53 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.164 / server v2.6.48 / bot v0.6.207 tested beside the suite, last updated 17 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.165 / server v2.6.49 / bot v0.6.207 tested beside the suite, last updated 17 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**17 Oct 2026, afternoon (THE QUIET TABLE — v2.6.165 / srv-2.6.49):**
+- **A render that publishes is a feedback loop waiting for a second reader.** `layout()` ends in `scheduleSave()` →
+  `schedulePush()`, harmless while only your own changes rendered; once a received board re-rendered the Structured
+  view, every board came back as another board. Find such loops with a counting probe (N clients on the real server,
+  idle, messages per verb per client), not by reading: nobody touching anything is the test.
+- **Dedupe at the send site, on the wire bytes, and forget the memory where the peer's copy may be stale** (`joined`,
+  a reconnect included: the last send can die with the socket; `took`; leaving). Record a send only when it really
+  went out.
+- **"Only on change" still needs "again on every arrival", and a departure is not an arrival.** The receiver's copy
+  of an open hand dies in ways the sender cannot see: a token rejoin that only swaps the socket (the roster comes out
+  identical), a reload, a new spectator. My first build re-sent only when a seat came back online and missed all
+  three; the second re-sent every grant on every roster, and a flapping peer cost two messages per grant per flap. The
+  rule that holds: a seat that came back gets its grant, a roster in which no seat changed re-sends them all, a seat
+  that left gets nothing.
+- **A state that outlives its mode leaks into the next one.** `net.status==='re'` lasts as long as the server is gone,
+  and every reconnect refusal keyed on it alone, so a local game started meanwhile could not pass, draw or chat. Gate
+  on the mode too (`mpReconnecting()` = `re && !localTable`), and end the old state when the new mode starts
+  (`mpAbandonReconnect()`).
+- **Trading CPU for memory is not a fix until both are measured.** Queuing TCP chunks instead of concatenating them
+  removed the quadratic CPU and kept every tiny chunk alive as its own object (~85 MB for 256 KB dripped byte by byte).
+  One growable buffer with a read offset is linear in both. The test now bounds the retained heap (`--expose-gc` set at
+  run time: `v8.setFlagsFromString('--expose-gc')`, `vm.runInNewContext('gc')`), not just a call count.
+- **A fix to one header does not make a proxy setup safe while another header is believed first.** Taking the
+  rightmost `X-Forwarded-For` entry meant nothing behind nginx or Caddy while `CF-Connecting-IP`, which any client can
+  write there, still won. Which proxy is in front is the host's knowledge: make it a mode (`--trust-proxy xff`).
+- **Match an error by its name, not by a word in its message.** My quota heuristic tested `/quota/i` on the message,
+  and my own test's "not a quota problem" matched it.
+- **A guard that makes a function return "nothing happened" needs its callers read.** `move()` now returns false
+  while reconnecting; Undo draw popped its history and logged "returned the last drawn card" anyway, and a drop on the
+  pile logged "put on top". Refuse at the entry point, before any history is touched, and keep a server step on the
+  undo stack.
+- **A function that toasts its own warning loses it to the caller's next toast.** `toast()` rewrites one element, so
+  the Deck Lab's "Saved" covered "the storage is full". Let the function take the caller's line.
+- **Describe an old bug from a run, not from the code you think ran.** I wrote that v2.6.164 retried and was refused
+  every time; the browser probe showed it was refused once and gave the session up. Run the "before" too.
+- **A mutant that survives can mean dead code.** The extra `schedulePush()` in `joined` changed nothing; removing it and
+  pinning what carries the behaviour (the `_lastPubSent` reset) beat a test that tries to see the redundant line.
+- **Old tests can pin the bug.** Three tests encoded the flood or the code shape around it. Prefer changing the code
+  over the pin when the pin's intent holds (the roster pin, the spectator pin); rewrite the ones that describe the old
+  mechanism, and say which.
+- **CI must run every gate even when the first fails** (`if: ${{ !cancelled() }}`), or check-versions hides the rest;
+  and give the workflow read-only permissions.
+- Node scripts that load the client or the server need `process.exit(0)`: their intervals keep the process alive (a
+  `node -e` hung this round too).
 
 **17 Oct 2026, late morning (THE TABLE KEEPS ITS SEATS — v2.6.164 / srv-2.6.48):**
 - **A restore is not a transition.** The hotseat hand-off restored a seat through `setPhase()`, whose job is a phase

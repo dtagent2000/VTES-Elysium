@@ -10,7 +10,7 @@ elysium-twd-archetypes.js
 elysium-twd-archetypes.json
 START-HERE-BOTS.html
 # generated / runtime
-elysium-src/
+elysium-src
 elysium-rooms.json
 elysium-saves.json
 elysium-errors.log*
