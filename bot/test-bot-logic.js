@@ -10639,8 +10639,9 @@ async function connectWithRetry(client, tries = 30){
     /* 151) v0.6.206 -- THE PROBE RESERVATION (READ-ME-FIRST-2026-10-16f §6; Johan 16 Oct: measure it before and after). Since v0.6.143
        the minion phase set this._probe and reset it two lines later: the probe ORDER worked (the small bleeders first, the puncher last)
        and the RESERVATION never did, so the first actor simply played the Govern -- 117g set _probe by hand and never saw it. _probeOrder
-       owns it now; knob probeHold: 0 = as it played (no reservation), 1 = as designed, 2 = only when my actors out-number my prey's
-       unlocked bodies (Johan's bait read). Through the whole minion phase, as the look-ahead doctrine says to test a phase effect. */
+       owns it now; knob probeHold: 0 = as it played (no reservation, the rollback), 1 = as designed, 2 = only when my actors out-number my
+       prey's unlocked bodies (Johan's bait read; the default since v0.6.207, 17 Oct). Through the whole minion phase, as the look-ahead doctrine says
+       to test a phase effect. */
     {
       console.log('\n[151] v0.6.206 -- the probe reservation through the minion phase: probeHold 0 / 1 / 2');
       const strip151 = h => String(h || '').replace(/<[^>]*>/g, '');
@@ -10672,23 +10673,25 @@ async function connectWithRetry(client, tries = 30){
         const po = (A.evs.find(e => e.t === 'bot:probe-order') || {}).m || null, ph = A.evs.filter(e => e.t === 'bot:probe-hold').map(e => e.m);
         return { terr, bleeds, po, ph };
       };
-      const r0 = await turn151(null, 1), r1 = await turn151(1, 1), r2 = await turn151(2, 1), r2b = await turn151(2, 2);
+      const r0 = await turn151(0, 1), r1 = await turn151(1, 1), r2 = await turn151(2, 1), r2b = await turn151(2, 2), rd = await turn151(null, 1);
       ok(!r0.terr && !!r0.po && r0.po.hold === 0 && r0.po.reserved === false && r0.po.puncher === 'Colette' && r0.bleeds.join() === 'Gelasia Fotiou bleeds for 3.,Colette bleeds for 1.' && r0.ph.length === 0,
-         '151a probeHold 0 (the default: as it played since v0.6.143): the ORDER puts the puncher (Colette) last, and the first actor plays the Govern anyway -- no probe at all (' + JSON.stringify(r0.bleeds) + ')');
+         '151a probeHold 0 (the rollback: as it played since v0.6.143): the ORDER puts the puncher (Colette) last, and the first actor plays the Govern anyway -- no probe at all (' + JSON.stringify(r0.bleeds) + ')');
       ok(!r1.terr && !!r1.po && r1.po.reserved === true && r1.bleeds.join() === 'Gelasia Fotiou bleeds for 1.,Colette bleeds for 3.' && r1.ph.length === 1 && r1.ph[0].vamp === 'Gelasia Fotiou' && r1.ph[0].card === 'Govern the Unaligned',
          '151b probeHold 1 (as designed): Gelasia probes for 1 with the Govern reserved (a probe-hold row), Colette punches for 3 with it (' + JSON.stringify(r1.bleeds) + ')');
       ok(!r2.terr && !!r2.po && r2.po.outnumber === true && r2.po.reserved === true && r2.bleeds.join() === 'Gelasia Fotiou bleeds for 1.,Colette bleeds for 3.',
          '151c probeHold 2 (Johan\'s read): two actors against one unlocked body of my prey -- I out-number its blockers, the reservation holds (' + JSON.stringify(r2.bleeds) + ')');
       ok(!r2b.terr && !!r2b.po && r2b.po.outnumber === false && r2b.po.reserved === false && r2b.bleeds.join() === 'Gelasia Fotiou bleeds for 3.,Colette bleeds for 1.',
          '151c ...two against two: no bait to spare, the order only, as at 0 (' + JSON.stringify(r2b.bleeds) + ')');
-      let man = null; const um = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {}, probeHold: 2 }); um._emit = (k, m) => { if(k === 'manifest') man = m; }; um._emitManifest();
-      ok(!!(man && man.knobs && man.knobs.probeHold === 2), '151d the knob is in the manifest (probeHold ' + (man && man.knobs ? man.knobs.probeHold : '?') + ')');
+      let man = null; const um = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} }); um._emit = (k, m) => { if(k === 'manifest') man = m; }; um._emitManifest();
+      ok(!!(man && man.knobs && man.knobs.probeHold === 2), '151d the knob is in the manifest, and unset it is 2 (probeHold ' + (man && man.knobs ? man.knobs.probeHold : '?') + ')');
+      ok(!rd.terr && !!rd.po && rd.po.hold === 2 && rd.po.reserved === true && rd.bleeds.join() === 'Gelasia Fotiou bleeds for 1.,Colette bleeds for 3.',
+         '151e the default (Johan 17 Oct: his bait read, after the probe lab) plays as 2: out-numbering the one unlocked body, Gelasia probes and Colette punches with the Govern (' + JSON.stringify(rd.bleeds) + ')');
     }
 
     /* 152) v0.6.206 -- THE REACTIONS-ONLY WINDOWS OPEN WITH THEIR LINE (found by the release's own smoke). After a modifier's add line and
        after the bleed total's +0 line the actor slept 150 ms before it opened the window; a bot answers that line in ~50 ms, so its Pass, a
        bounce's new target's Block! found no ask open and were lost. The window then ran out its clock -- two bleed-total windows in three in
-       every smoke since v0.6.144 (R4's v0.6.205 smokes: 253 of 379) -- and a block attempt was never taken up: the bleed landed on the blocker.
+       every smoke since v0.6.144 (R4's v0.6.205 smokes: 245 of 379 lost their answer) -- and a block attempt was never taken up: the bleed landed on the blocker.
        Three bots wired at the socket (each line through its sender's own queue, 10 ms relay), the whole turn. */
     {
       console.log('\n[152] v0.6.206 -- the reactions-only windows open with their line: an early answer finds the window open');
@@ -10727,6 +10730,44 @@ async function connectWithRetry(client, tries = 30){
       const gap = bt && bth ? bth.at - bt.at : null;
       ok(!rb.terr && !!bt && !!bth && gap !== null && gap < 1200 && !!rb.V.find(e => e.t === 'took-bleed'),
          '152b Viktor passes on the bleed total: its Pass answers the window -- the bleed resolves ' + gap + ' ms after the total (the clock is 2 s)');
+    }
+
+    /* 153) v0.6.207 -- THE CHAT BEAT SEPARATES TWO CHAT BUBBLES AND NOTHING ELSE (main's finding 1, REPLY v0.6.204 §4.1; Johan's 'kör' 17 Oct:
+       proposal A, spec-next-2026-10-17 §3). After a chat line EVERY message -- the verdict line, a counter write, the table button's line, a quick
+       phrase, the hold line -- waited the chat beat (4.96 s at the client's 3.1 s pace). Now only the next CHAT waits it; everything else rides
+       the 200 ms cascade, and a hold or resume line skips the beat. The analysis' scenarios on the bot's own drain with a recording socket,
+       run side by side (one bot each). */
+    {
+      console.log('\n[153] v0.6.207 -- the chat beat separates two chat bubbles and nothing else (paceMs 3100)');
+      const mk153 = () => { const b = new Bot({ server: 'ws://127.0.0.1:1', room: 'b153', pass: 'p', name: 'Anna', paceMs: 3100, log: () => {} });
+        b.rec153 = []; b.ws = { send: o => b.rec153.push({ t: Date.now(), m: o }) }; return b; };
+      const Q = 'Trainbot: your move -- play stealth or Pass. Block verdict in 3 s.';
+      const VERDICT = 'Block: Stealth 0 vs Intercept 0 — block succeeds.';
+      const E = mk153(), B = mk153(), S = mk153(), P = mk153(), H = mk153(), C = mk153();
+      const t0 = Date.now(), at = (b, pred) => { const r = b.rec153.find(x => x.m && pred(x.m)); return r ? r.t - t0 : null; };
+      [E, B, S, P, H, C].forEach(b => b.chat(Q)); C.chat('Trainbot: second instruction line.');
+      await Promise.all([
+        (async () => { await sleep(3040); E.send({ t: 'log', html: VERDICT }); E.send({ t: 'tally', mode: 'combat' }); })(),
+        (async () => { await sleep(80); B.send({ t: 'log', html: 'Anna: block verdict declared from the table controls.' }); B.send({ t: 'log', html: VERDICT }); })(),
+        (async () => { await sleep(60); S.send({ t: 'tally', mode: 'block', a: 1 }); S.send({ t: 'log', html: 'Lisa has 1 stealth (booked on the counter).' }); })(),
+        (async () => { await sleep(50); P.say('It resolves'); })(),
+        (async () => { await sleep(1600); H._holdBy = new Set(['Lisa']); H.chat('⏸ Holding for Lisa.', { hold: true });
+                       await sleep(4400); H._holdBy = new Set(); H.chat('▶ Resuming.', { hold: false }); H.send({ t: 'log', html: VERDICT }); })()
+      ]);
+      await sleep(1100);
+      const eLog = at(E, m => m.t === 'log'), eTally = at(E, m => m.t === 'tally');
+      ok(eLog !== null && eLog >= 2900 && eLog <= 3600 && eTally !== null && eTally > eLog,
+         '153a the verdict on the 3 s clock reaches the wire at ' + eLog + ' ms, not when the question\'s 4.96 s beat ends (the counter write after it at ' + eTally + ' ms, in order)');
+      const bLog = at(B, m => m.t === 'log'), sTally = at(S, m => m.t === 'tally'), pSay = at(P, m => m.t === 'say');
+      ok(bLog !== null && bLog <= 700 && sTally !== null && sTally <= 700 && pSay !== null && pSay <= 700,
+         '153b after a question the table button\'s line (' + bLog + ' ms), a typed +1 on the counter (' + sTally + ' ms) and a quick phrase (' + pSay + ' ms) ride the 200 ms cascade');
+      const hHold = at(H, m => m.t === 'chat' && /Holding/.test(m.msg)), hRes = at(H, m => m.t === 'chat' && /Resuming/.test(m.msg)), hLog = at(H, m => m.t === 'log');
+      ok(hHold !== null && hHold >= 1550 && hHold <= 2200 && hRes !== null && hRes >= 5950 && hRes <= 6600 && hLog !== null && hLog <= 7000,
+         '153c a hold line skips the beat: Hold on at 1.6 s, the hold line at ' + hHold + ' ms; Pass at 6.0 s, the resume line at ' + hRes + ' ms and the verdict at ' + hLog + ' ms (were 4.96 / 9.93 / 14.89 s)');
+      const c2 = at(C, m => m.t === 'chat' && /second instruction/.test(m.msg));
+      ok(c2 !== null && c2 >= 4800 && c2 <= 5700,
+         '153d two chat bubbles still wait the beat between them: the second instruction line at ' + c2 + ' ms (the beat is 4.96 s at paceMs 3100)');
+      [E, B, S, P, H, C].forEach(b => { if(b._sqT){ clearTimeout(b._sqT); b._sqT = null; } b._sq = []; });
     }
 
 
