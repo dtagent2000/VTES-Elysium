@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.47';   // srv-2.6.47 (17 Oct 2026, THE REVIEW'S THREE LOCKS -- restart; ships with client v2.6.163): three findings of the 16 Oct code review, each reproduced first. (1) A player name, a clan or a path can no longer carry a double quote, a card field no longer an '=', and every card id is id-shaped (cleanId) -- a client older than v2.6.163 drew them inside "..." attributes with only & < > escaped, so another player could run script in its tab (cleanName, cleanCard, sanitizePub, give, the duel cid). (2) wsAttach enforces RFC 6455's limits and ends the connection on a violation: a stream of empty continuation frames stalled the event loop (/healthz stopped answering after ~40,000 from one socket); pings and pongs now count in the per-connection rate limit (connRateOk). (3) hello{admin} shares the admin HTTP routes' lockout (ipLogAuth, ERR_MAX per ERR_WIN, checked before the compare) -- it counted wrong keys in the server door's bucket and never read them back. (4) After an independent review: a room and its players restored from disk, and a saved match's players and boards, are cleaned by the same rules as they load (roomUnsnap, restore's key, saveUnsnap) -- a name stored with a quote was no longer found; adminLocked(ip) for all three admin doors, 4x for loopback like the server door; fx names and verb cleaned; the unmasked-frame log line at most once a minute.
+const VERSION = '2.6.48';   // srv-2.6.48 (17 Oct 2026, THE TABLE KEEPS ITS SEATS -- restart; ships with client v2.6.164): group B of the 16 Oct code review (Johan: 'vill du ta det tillsammans med B?' on allowing values below 0). (1) A LEAVE mid-game vacates the seat instead of splicing the player list -- seat = index + 1 for every verb, so everyone after the leaver changed seat, the turn moved to someone else without a broadcast and their own pass was refused; humansLeft counts no vacant seat (the reaper's bot grace still sees one); a table whose every seat is open closes out loud (`closed` reaches the spectators, whom the silent delete left in a room that was gone); a named save keeps vacant seats (and the room's board style) so its turnSeat still points at the right seat, and loadMatch moves an older save's turnSeat onto a live seat. (2) An oust ALWAYS takes the seat out of the rotation: `bounty` carries award:false when the ousted player's automatic award is off (nothing moves) -- except under the tournament lock, where VP comes only from ousts (it is paid; the pool stays manual). (3) VP once per oust: a `bounty` from a seat already out is ignored, and an unoust takes back the VP that oust paid (vpSeat). (4) The Block counter may go below 0 (the rulebook: stealth and intercept can be decreased below 0): `tally` keeps a/b down to -99 in block mode. (5) After an independent review: roomUnsnap restores seatPick, muted, vacant and anon again -- srv-2.6.47 had put a comment in front of them, so a restart turned an open seat into an offline one its old name could reclaim and unmuted the muted; a mid-game join under an open seat's name is refused (two seats with one name put every client on the empty one -- watch, and the host promotes you back); mute by name skips open seats; vpSeat records what THIS oust paid and a fresh deal, a new match or a new seating forgets it; the crown prefers an online human.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -367,7 +367,7 @@ function sys(room, msg){ bcast(room, { t:'sys', msg }); }
    human who drops their connection is still a player and keeps their room
    (that is what the reconnect window is for), while a human who really LEAVES
    is gone and a table of bots alone has nobody to play for. */
-function humansLeft(room){ return (room.players || []).filter(q => !q.bot).length; }
+function humansLeft(room){ return (room.players || []).filter(q => !q.bot && !q.vacant).length; }   // srv-2.6.48: a vacant seat holds nobody (a mid-game leave vacates now)
 function closeRoomNow(room, msg){
   if(!room || !rooms.has(room.name)) return false;                 // idempotent: two paths may race to close the same room
   const socks = [];
@@ -414,6 +414,30 @@ function prevLiveSeat(room, fromIdx){
   const n = room.players.length;
   for(let k = 1; k < n; k++){ const c = ((fromIdx - k) % n + n) % n; const q = room.players[c]; if(q && !q.out) return c; }
   return -1;
+}
+/* srv-2.6.48 (the 16 Oct review, B-8 + B-9): one body for both oust paths (a player's own `bounty`, the host's
+   `hostOust`). The VP goes to the LIVE predator and the paying seat is remembered on the ousted one (`vpSeat`, a seat
+   number -- stable now that a leave vacates), so an unoust takes back exactly what the oust gave. With the ousted
+   player's automatic award off (`award` false) nothing moves and the table settles pool and VP by hand -- except under
+   the tournament lock (every room the reference client creates since v2.6.116), where VP comes only from ousts: the
+   VP is paid, the 6 pool stays manual. The predator's client adds the pool when it hears `bounty`. */
+function ousterPays(room, i, q, award, how){
+  const pi = prevLiveSeat(room, i), pred = pi > -1 ? room.players[pi] : null;   // srv-2.6.38: the LIVE predator (q.out is already set, so q is never its own)
+  if(!pred){ q.vpSeat = 0; sys(room, q.name + ' was ousted' + how + '.'); return; }
+  const payVp = award || !!room.tournLock;
+  q.vpSeat = payVp ? pi + 1 : 0;                                    // what THIS oust paid (the review: a stale seat from an earlier oust was taken back after one that paid nothing)
+  if(payVp) pred.vp = Math.min(10, (pred.vp || 0) + 1);             // rulebook: 1 VP + 6 pool to the predator
+  if(award && pred.sock) wsSend(pred.sock, { t:'bounty', from: q.name });
+  sys(room, q.name + ' was ousted' + how + (award ? ' — the 6 pool bounty and 1 VP go to ' + pred.name + '.'
+    : payVp ? ' — 1 VP goes to ' + pred.name + ' (tournament lock); the 6 pool is settled by hand.'
+    : ' — the bounty is settled by hand.'));
+}
+function vpBack(room, q){                     // srv-2.6.48 (B-9): an unoust returns the VP its oust paid (once); the pool, client-authored, is settled by hand
+  const s = q.vpSeat | 0; q.vpSeat = 0;
+  const pr = s ? room.players[s - 1] : null;
+  if(!pr || !(pr.vp > 0)) return '';
+  pr.vp = Math.max(0, pr.vp - 1);
+  return ' The 1 VP goes back from ' + pr.name + '.';
 }
 function turnOnFromOusted(room, idx){
   if(!room.started || room.turnSeat !== idx + 1) return;
@@ -724,7 +748,7 @@ const GAME_HANDLERS = {
     p.game = { deckName: cleanCard(m.name), deckLib: lib, deckCrypt: crypt, lib: [], crypt: [] };
     if(room.started) dealNow(p, room);
     else { wsSend(conn.sock, { t:'deckok', deckName: p.game.deckName }); bcastLobby(room); }
-    if(p.out){ p.out = false; rosterUpd(room); }   // a fresh deal puts you back in the game
+    if(p.out){ p.out = false; p.vpSeat = 0; rosterUpd(room); }   // a fresh deal puts you back in the game (srv-2.6.48: the predator keeps the VP; nothing is left to take back)
     console.log('[game] ' + p.name + ' loaded a deck (' + crypt.length + ' crypt / ' + lib.length + ' library) in "' + room.name + '"' + (room.started ? '' : ' (lobby)'));
   },
   redeal(conn, room, p, m){
@@ -845,7 +869,7 @@ const GAME_HANDLERS = {
     if(!(picks.every(s => s >= 1 && s <= N) && new Set(picks).size === N))
       return wsSend(conn.sock, { t:'err', msg:'Everyone must pick a seat first.' });
     room.players.sort((a, b) => a.seatPick - b.seatPick);     // claimed seats become the turn order
-    room.players.forEach(q => { q.seatPick = null; q.out = false; q.vp = 0; });
+    room.players.forEach(q => { q.seatPick = null; q.out = false; q.vp = 0; q.vpSeat = 0; });
     room.started = true;
     room.turnSeat = 1;
     room.tally = null;                                                         // v2.6.11: a resolver never rides into a fresh match
@@ -888,8 +912,9 @@ const GAME_HANDLERS = {
        new one. */
     const prev = (room.tally && room.tally.mode === mode) ? room.tally : null;
     const newRd = !!(mode === 'combat' && prev && ('rd' in m) && Math.max(1, Math.min(99, (m.rd | 0) || 1)) !== ((prev.rd | 0) || 1));   // srv-2.6.40: a/b are THIS ROUND's damage (v2.6.129) -- a new round zeroes them unless the write carries them (a bot writes rd:2 alone; round 1's damage must not become round 2's)
-    const a  = ('a'  in m) ? Math.max(0, Math.min(99, m.a | 0)) : ((prev && !newRd) ? prev.a : 0);
-    const b  = ('b'  in m) ? Math.max(0, Math.min(99, m.b | 0)) : ((prev && !newRd) ? prev.b : 0);
+    const lo = (mode === 'block') ? -99 : 0;   // srv-2.6.48 (B-10, Johan 17 Oct): stealth and intercept can be decreased below 0 (the rulebook) -- a bare Christine Boscacci blocks with -1, and the 0 this clamp echoed back turned the bots' own 'fails' into 'succeeds'. Votes and damage stay >= 0
+    const a  = ('a'  in m) ? Math.max(lo, Math.min(99, m.a | 0)) : ((prev && !newRd) ? prev.a : 0);
+    const b  = ('b'  in m) ? Math.max(lo, Math.min(99, m.b | 0)) : ((prev && !newRd) ? prev.b : 0);
     const ph = ('ph' in m) ? Math.max(0, Math.min(6, m.ph | 0)) : (prev ? prev.ph : 0);   // v2.6.12: combat phase index (the rulebook's 7 steps per round)
     const rd = ('rd' in m) ? Math.max(1, Math.min(99, (m.rd | 0) || 1)) : (prev ? prev.rd : 1);   // v2.6.13: combat round counter (bumped client-side when the phase wraps)
     let duel;
@@ -1052,16 +1077,11 @@ const GAME_HANDLERS = {
     wsSend(q.sock, { t:'ctrl', cid, act: String(m.act || '').slice(0, 16), from: p.name });
   },
   bounty(conn, room, p, m){
+    if(p.out) return;                               // srv-2.6.48 (B-9): a seat already out pays no second bounty -- srv-2.6.47 paid one per message, so a double send was a second VP
     const i = room.players.indexOf(p);
     p.out = true;                                   // ousted Methuselahs leave the rotation
-    if(room.players.length > 1 && i > -1){
-      const pi = prevLiveSeat(room, i), pred = pi > -1 ? room.players[pi] : null;   // srv-2.6.38: the LIVE predator
-      if(pred){
-        pred.vp = Math.min(10, (pred.vp || 0) + 1); // rulebook: 1 VP + 6 pool to the predator
-        if(pred.sock) wsSend(pred.sock, { t:'bounty', from: p.name });
-        sys(room, p.name + ' was ousted — the 6 pool bounty and 1 VP go to ' + pred.name + '.');
-      } else sys(room, p.name + ' was ousted.');
-    }
+    if(room.players.length > 1 && i > -1) ousterPays(room, i, p, m.award !== false, '');   // srv-2.6.48 (B-8): award:false = the ousted player's automatic award is off (cli-2.6.164 sends the oust either way)
+    else sys(room, p.name + ' was ousted.');
     rosterUpd(room);
     if(i > -1) turnOnFromOusted(room, i);           // srv-2.6.38: after the roster, so every client knows WHY the turn moved
   },
@@ -1079,14 +1099,8 @@ const GAME_HANDLERS = {
     if(!q || q.vacant) return wsSend(conn.sock, { t:'err', msg:'No such player.' });
     if(q.out) return wsSend(conn.sock, { t:'err', msg:'That player is already ousted.' });
     q.out = true;                                                      // server-authoritative: works even if the target is disconnected
-    if(room.players.length > 1){
-      const pi = prevLiveSeat(room, i), pred = pi > -1 ? room.players[pi] : null;   // srv-2.6.38: the LIVE predator (q.out is already set, so q is never its own)
-      if(pred){
-        pred.vp = Math.min(10, (pred.vp || 0) + 1);
-        if(pred.sock) wsSend(pred.sock, { t:'bounty', from: q.name });
-        sys(room, q.name + ' was ousted by the host — the 6 pool bounty and 1 VP go to ' + pred.name + '.');
-      } else sys(room, q.name + ' was ousted by the host.');
-    } else sys(room, q.name + ' was ousted by the host.');
+    if(room.players.length > 1) ousterPays(room, i, q, true, ' by the host');   // srv-2.6.48: one body with `bounty` (the VP remembered for an unoust)
+    else sys(room, q.name + ' was ousted by the host.');
     if(q.sock) wsSend(q.sock, { t:'forceOust' });                      // tell the (connected) target to return its cards; cosmetic, skipped if offline
     rosterUpd(room);
     turnOnFromOusted(room, i);                                         // srv-2.6.38
@@ -1095,7 +1109,7 @@ const GAME_HANDLERS = {
     if(!hostOrRef(conn, room, p)) return wsSend(conn.sock, { t:'err', msg:'Only the host can do that.' });
     const q = room.players[(m.seat | 0) - 1];
     if(!q) return wsSend(conn.sock, { t:'err', msg:'No such player.' });
-    if(q.out){ q.out = false; sys(room, q.name + ' was returned to the game by the host.'); rosterUpd(room); }
+    if(q.out){ q.out = false; const back = vpBack(room, q); sys(room, q.name + ' was returned to the game by the host.' + back); rosterUpd(room); }   // srv-2.6.48 (B-9): the oust's VP goes back
   },
   setHelperPolicy(conn, room, p, m){
     if(!hostOrRef(conn, room, p))
@@ -1256,7 +1270,7 @@ const GAME_HANDLERS = {
   mute(conn, room, p, m){
     if(!hostOrRef(conn, room, p)) return wsSend(conn.sock, { t:'err', msg:'Only the host can mute.' });
     const nm = cleanName(m.name), on = m.on !== false;
-    const q = room.players.find(x => x.name.toLowerCase() === nm.toLowerCase()) || (room.watchers || []).find(x => x.name.toLowerCase() === nm.toLowerCase());   // v2.5.61 (Finding 1)
+    const q = room.players.find(x => x.name.toLowerCase() === nm.toLowerCase() && !x.vacant) || (room.watchers || []).find(x => x.name.toLowerCase() === nm.toLowerCase());   // v2.5.61 (Finding 1); srv-2.6.48: an open seat is nobody to mute -- its leaver may be watching under the same name
     if(!q || q === p) return wsSend(conn.sock, { t:'err', msg:'No such player.' });
     q.muted = on;
     if(q.sock) wsSend(q.sock, { t:'muted', on });
@@ -1282,7 +1296,7 @@ const GAME_HANDLERS = {
   unoust(conn, room, p, m){
     if(room.started && room.tournLock)                           // v2.5.64: under the lock only the host may reverse an oust (hostUnoust)
       return wsSend(conn.sock, { t:'err', msg:'Un-oust is host-only for this match (tournament lock).' });
-    if(p.out){ p.out = false; sys(room, p.name + ' returns to the game.'); rosterUpd(room); }
+    if(p.out){ p.out = false; const back = vpBack(room, p); sys(room, p.name + ' returns to the game.' + back); rosterUpd(room); }   // srv-2.6.48 (B-9)
   },
   edgePass(conn, room, p, m){   // relay Edge handoff to the target player; sender already released it locally
     if(!room.started) return;
@@ -1322,7 +1336,7 @@ const GAME_HANDLERS = {
     } else if(m.kind === 'seating'){
       if(room.started) return wsSend(conn.sock, { t:'err', msg:'Seating is drawn in the lobby \u2014 the game has already started.' });   // v2.5.64: unconditional gate; mid-match this zeroed EVERYONE's vp/out and reshuffled the seats
       shuffle(room.players);
-      room.players.forEach(q => { q.out = false; q.vp = 0; });   // new seating = new game
+      room.players.forEach(q => { q.out = false; q.vp = 0; q.vpSeat = 0; });   // new seating = new game
       room.turnSeat = 1;
       bcast(room, { t:'tool', kind:'seating', who: p.name, order: room.players.map(q => q.name) });
       turnTallyClear(room); bcast(room, { t:'turn', seat: 1, who: room.players[0].name });
@@ -1368,8 +1382,8 @@ const GAME_HANDLERS = {
     if(sv.passHash !== room.passHash)
       return wsSend(conn.sock, { t:'err', msg:'That match has a different password. Create the room with the match’s original password, then load.' });
     const myName = p.name.toLowerCase();
-    const mine = (sv.players || []).find(sp => sp.name.toLowerCase() === myName);
-    if(!mine) return wsSend(conn.sock, { t:'err', msg:'Your name “' + p.name + '” wasn’t a player in this match. Rejoin the lobby as one of: ' + (sv.players || []).map(s => s.name).join(', ') + ' — then load.' });
+    const mine = (sv.players || []).find(sp => !sp.vacant && sp.name.toLowerCase() === myName);   // srv-2.6.48: an open seat is nobody's to load as
+    if(!mine) return wsSend(conn.sock, { t:'err', msg:'Your name “' + p.name + '” wasn’t a player in this match. Rejoin the lobby as one of: ' + (sv.players || []).filter(s => !s.vacant).map(s => s.name).join(', ') + ' — then load.' });
     sv.touchedAt = Date.now(); persistSaves();            // H1-e: an active campaign never expires -- the 90-day TTL counts from the last save OR load
 
     /* any other sockets in this lobby lose their seats — they rejoin by name */
@@ -1379,14 +1393,14 @@ const GAME_HANDLERS = {
 
     const hostTok = p.token;
     room.players = (sv.players || []).map(sp => {
-      const isMe = sp.name.toLowerCase() === myName;
+      const isMe = !sp.vacant && sp.name.toLowerCase() === myName;
       return {
-        name: sp.name, seatPick: sp.seatPick || null, vp: sp.vp || 0, out: !!sp.out, muted: !!sp.muted, vacant: false,
+        name: sp.name, seatPick: sp.seatPick || null, vp: sp.vp || 0, out: !!sp.out, muted: !!sp.muted, vacant: !!sp.vacant, vpSeat: (sp.vpSeat | 0) || undefined,   // srv-2.6.48: an open seat stays open (its deck and board wait for the host's takeover)
         game: sp.game || null, pub: sp.pub || null, pubOwn: sp.pubOwn || sp.pub || null,
         handBlob: sp.handBlob || undefined,
         token: isMe ? hostTok : token(),
         sock: isMe ? conn.sock : null,
-        last: Date.now(), off: isMe ? 0 : Date.now()
+        last: Date.now(), off: (isMe || sp.vacant) ? 0 : Date.now()   // srv-2.6.48: an open seat has no clock
       };
     });
     room.watchers = [];
@@ -1394,9 +1408,15 @@ const GAME_HANDLERS = {
     room.started = true;
     room.escrowSalt = sv.escrowSalt || room.escrowSalt || token();   // keep the salt the blobs were sealed under
     room.turnSeat = sv.turnSeat || 1;
+    { const tq = room.players[room.turnSeat - 1]; if(!tq || tq.out || tq.vacant) room.turnSeat = nextLiveSeat(room, Math.max(0, Math.min(room.players.length, room.turnSeat | 0)) - 1) + 1; }   // srv-2.6.48: a save from srv-2.6.47 or older dropped its open seats, so its turnSeat can point past the table or at the wrong seat -- the turn goes to the next live seat
     room.reactSecs = sv.reactSecs || 5;
     room.helperPolicy = cleanHelperPolicy(sv.helperPolicy);
     room.chat = sv.chat !== false; room.specChat = sv.specChat !== false; room.tournLock = !!sv.tournLock;
+    if(sv.boardMode === 'classic' || sv.boardMode === 'structured'){   // srv-2.6.48: the board style the boards were laid out in (a save from srv-2.6.47 or older carries none: the room keeps its own)
+      room.boardMode = sv.boardMode;
+      room.tableSetup = sv.boardMode === 'classic' && sv.tableSetup === true;
+      room.tableLayout = (sv.boardMode === 'classic' && sv.tableLayout === 'large') ? 'large' : null;
+    }
     room.ledger = Array.isArray(sv.ledger) ? sv.ledger.slice(-800) : [];   // v2.5.65: a loaded match keeps its evidence trail
     room.matchMins = sv.matchMins || 0;
     if(sv.timeCalled){ room.timeCalled = true; room.matchEnd = null; }
@@ -1600,6 +1620,8 @@ function handle(conn, raw){
       return;
     }
     const ex = room.players.find(p => p.name.toLowerCase() === pname.toLowerCase() && !p.vacant);
+    if(!ex && room.started && room.players.some(q => q.vacant && q.name.toLowerCase() === pname.toLowerCase()))   // srv-2.6.48 (the review): an OPEN seat keeps its leaver's name, so this join would add a second seat with the same name -- every client then finds its seat by name and lands on the empty one
+      return wsSend(conn.sock, { t:'err', msg:'That name belongs to an open seat at this table — join as a spectator, and the host can promote you into it.' });
     if(ex){
       if(ex.sock && !ex.off)
         return wsSend(conn.sock, { t:'err', msg:'That name is taken in this room.' });
@@ -1683,17 +1705,29 @@ function dropPlayer(conn, forGood){
   if(!room || !p) return;
   conn.room = null; conn.player = null;
   if(forGood){
-    const i = room.players.indexOf(p);
-    if(i > -1) room.players.splice(i, 1);
-    if(p.token === room.hostToken && room.players[0]) room.hostToken = room.players[0].token;
+    const wasHost = p.token === room.hostToken;
+    if(room.started){
+      /* srv-2.6.48 (the 16 Oct review, B-4): mid-game a LEAVE VACATES the seat, as the host's kick and
+         demote always did. Seat = index + 1 for every verb, the turn, the tally's duel map and every
+         client's boards: splicing the list renumbered everyone after the leaver -- the turn silently
+         passed to the next player (no broadcast) and the real turn holder's pass was refused. The
+         seat's deck and board wait for a replacement (the host's takeover); its credential is
+         orphaned; the leaver's socket stays connected, so no 'removed' message and no close. */
+      p.sock = null;
+      vacateSeat(room, p, false);
+    } else {
+      const i = room.players.indexOf(p);
+      if(i > -1) room.players.splice(i, 1);
+    }
+    if(wasHost){ const nh = room.players.find(q => !q.vacant && !q.bot && q.sock) || room.players.find(q => !q.vacant && !q.bot) || room.players.find(q => !q.vacant); if(nh) room.hostToken = nh.token; }   // srv-2.6.48: the first seat still held -- an online human first, then any human (the review: an offline one was picked over one who was there)
     if(!room.started) room.players.forEach(q => { if(q.seatPick > room.players.length) q.seatPick = null; });
-    sys(room, p.name + ' left the ' + (room.started ? 'table.' : 'lobby.'));
+    sys(room, p.name + (room.started ? ' left the table — the seat is open: the host can promote a spectator to take it over. 🪑' : ' left the lobby.'));   // srv-2.6.48: mid-game the seat stays (vacant)
     console.log('[room] ' + p.name + ' left "' + room.name + '"');
   } else {
     p.sock = null; p.off = Date.now();
     sys(room, p.name + ' disconnected.');
   }
-  if(!room.players.length){ rooms.delete(room.name); scheduleRoomList(); console.log('[room] "' + room.name + '" closed (empty)'); }
+  if(!room.players.some(q => !q.vacant)) closeRoomNow(room, 'The last player left — the table closed.');   // srv-2.6.48: every seat vacant = nobody left (a mid-game leave vacates now); closed out loud -- the silent delete left the spectators in a room that no longer existed
   else if(forGood && !humansLeft(room)){                            // srv-2.6.36 (Johan): the last human LEFT and only bots are seated -- close now instead of letting the hour-long all-offline rule hold an unplayable room in the list. Only on a real leave: a disconnect keeps its reconnect window (see the reaper's bot grace)
     closeRoomNow(room, 'The last player left — the table closed.');
   }
@@ -2035,7 +2069,7 @@ setInterval(() => {
        bounds the one case v2.6.104 could not reach -- a host who closes the TAB sends no
        helper-policy restore, so the locked policy dies with the room instead of outliving
        the session by an hour. */
-    const botGrace = room.players.some(p => p.bot) && humansLeft(room) > 0;
+    const botGrace = room.players.some(p => p.bot) && room.players.some(p => !p.bot);   // srv-2.6.48: a human SEAT, held or open -- humansLeft no longer counts an open seat, and a bot table whose humans were all moved out keeps the short grace it had
     const ttl = botGrace ? BOT_ROOM_GRACE_MS : 60 * 60000;
     if(allOff && room.players.length && now - oldest > ttl){
       rooms.delete(name); scheduleRoomList();
@@ -2085,13 +2119,13 @@ function roomSnap(r){
     botcfg: r.botcfg || null,
     players: r.players.map(p => ({ name: p.name, token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon || undefined,
       bot: p.bot ? true : undefined,
-      vp: p.vp || 0, out: !!p.out, game: p.game || null, handBlob: p.handBlob || null }))
+      vp: p.vp || 0, out: !!p.out, vpSeat: p.vpSeat || undefined, game: p.game || null, handBlob: p.handBlob || null }))   // srv-2.6.48: + vpSeat
   };
 }
 function roomUnsnap(r){
-  const players = (r.players || []).map(p => ({ name: cleanName(p.name), token: p.token,   // srv-2.6.47: cleanName -- a name stored by srv-2.6.46 may carry a quote, and every lookup now cleans what it is given seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon,
+  const players = (r.players || []).map(p => ({ name: cleanName(p.name), token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon,   // srv-2.6.47: cleanName -- a name stored by srv-2.6.46 may carry a quote, and every lookup now cleans what it is given. srv-2.6.48: that comment had been put IN FRONT of seatPick / muted / vacant / anon, so srv-2.6.47 restored none of them (an open seat came back as an offline seat its old name could reclaim; a muted player came back unmuted)
     sock: null, last: Date.now(), off: Date.now(), bot: p.bot === true ? true : undefined,
-    vp: p.vp || 0, out: !!p.out, game: p.game || null, handBlob: p.handBlob || null }));
+    vp: p.vp || 0, out: !!p.out, vpSeat: (p.vpSeat | 0) || undefined, game: p.game || null, handBlob: p.handBlob || null }));   // srv-2.6.48: + vpSeat
   const bc = (r.botcfg && typeof r.botcfg === 'object') ? botcfgMerge(r.botcfg.tempo, r.botcfg.waitSecs, null) : null;
   const mm = r.matchMins | 0;
   return {
@@ -2195,8 +2229,10 @@ function buildSave(room, name){
     helperPolicy: room.helperPolicy || null,
     chat: room.chat !== false, specChat: room.specChat !== false, tournLock: !!room.tournLock,
     ledger: (room.ledger || []).slice(-800),
-    players: room.players.filter(q => !q.vacant).map(q => ({
+    boardMode: room.boardMode === 'classic' ? 'classic' : 'structured', tableSetup: !!room.tableSetup || undefined, tableLayout: room.tableLayout || undefined,   // srv-2.6.48: the board style the boards were laid out in (a Classic save loaded into a Structured lobby drew on the wrong board)
+    players: room.players.map(q => ({   // srv-2.6.48: vacant seats kept (marked) -- dropping them renumbered the seats and the saved turnSeat could point past the table
       name: q.name, seatPick: q.seatPick || null, vp: q.vp || 0, out: !!q.out, muted: !!q.muted,
+      vacant: !!q.vacant || undefined, vpSeat: q.vpSeat || undefined,   // srv-2.6.48
       game: q.game || null, pub: q.pub || null, pubOwn: q.pubOwn || q.pub || null,
       handBlob: q.handBlob || null
     }))
@@ -2208,7 +2244,7 @@ function saveList(room){
     .filter(s => s.passHash === room.passHash)
     .sort((a, b) => b.savedAt - a.savedAt)
     .map(s => ({ name: s.name, savedAt: s.savedAt, roomName: s.roomName,
-                 turn: s.turnSeat || 1, players: (s.players || []).map(q => q.name) }));
+                 turn: s.turnSeat || 1, players: (s.players || []).filter(q => !q.vacant).map(q => q.name) }));   // srv-2.6.48: an open seat is nobody's
 }
 
 /* Match clocks: call time once when a room's clock runs out */

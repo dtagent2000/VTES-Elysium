@@ -1,8 +1,39 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.163 / server v2.6.47 / bot v0.6.206 tested beside the suite, last updated 17 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.164 / server v2.6.48 / bot v0.6.207 tested beside the suite, last updated 17 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**17 Oct 2026, late morning (THE TABLE KEEPS ITS SEATS — v2.6.164 / srv-2.6.48):**
+- **A restore is not a transition.** The hotseat hand-off restored a seat through `setPhase()`, whose job is a phase
+  CHANGE: it re-baselined the Played tray, resolved the acting player's action, closed the counter and reset the
+  Trifle bonus. Give the transition function a restore mode, and follow the whole restore path: `clearTable()` ran its
+  own `setPhase(-1)` before `restoreGame()`'s, and that first one did the damage the test caught.
+- **A new test that is green on the previous version tests nothing.** The turn-change test passed on v2.6.163,
+  because it skipped the probe's precondition (this screen's own counter closed first, so `tallyStaleClose` sent
+  nothing). Run every new test against the previous release and read which ones pass there.
+- **Index = identity means never splice.** Seat = `room.players` index + 1 for every verb, the turn, the tally's duel
+  map, `vpSeat` and every client's boards. Removing an element renumbers all of them at once. Mark the element
+  (`vacant`) and let the readers skip it.
+- **A helper with two callers can mean two things.** `humansLeft` decides "the last human left" in `dropPlayer` and
+  the bot grace in the reaper. Excluding open seats was right for the first and silently changed the second; the
+  reaper now asks its own question.
+- **An optional field has two mixed-version cases, not one.** An old client against the new server is the easy one:
+  absent = the old meaning. A new client against an old server gets the old behaviour whatever it sends, so the
+  client must choose on purpose what to do there. Here the first build sent anyway; the review showed that a table
+  settling by hand was then paid twice, so against an older server the client keeps the old behaviour and says why.
+- **A comment inserted mid-line eats the code after it.** Round A put `// srv-2.6.47: cleanName -- …` in front of
+  `seatPick`, `muted`, `vacant` and `anon` in `roomUnsnap`; the line still parsed, the suite stayed green, and a
+  restart lost all four. A round trip must be tested field by field, and a diff can be scanned for tokens that moved
+  from code into a comment (the scan found only this one, in both rounds).
+- **A promise that never resolves by design poisons every flag set around it.** `hotAwaitPass` stays pending when
+  the table is torn down, so the `finally` that cleared `_passBusy` never ran. Reset such a flag where the thing it
+  waits on dies, and make it a token so a late `finally` cannot clear a newer one.
+- **A memory of 'not yet sent' must die with the send.** `_avrDirty` was cleared only when the debounce fired; every
+  path that cancelled the timer (or never armed it, for a spectator) left it behind to freeze later counters.
+- **An independent reviewer earns its keep.** It found five defects after 316 green tests, two of them serious, one of
+  them from the previous round.
+- `pkill -f` matched my own shell again (exit 144). Keep the PID; `kill <pid>`.
 
 **17 Oct 2026, night (THE REVIEW'S THREE LOCKS — v2.6.163 / srv-2.6.47):**
 - **An HTML escaper that feeds attributes must escape both quotes.** `escapeHtml` escaped `& < >` for years and was
