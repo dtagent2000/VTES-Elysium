@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.46';   // srv-2.6.46 (14 Oct 2026, THE TABLE LAYOUT -- restart; ships with client v2.6.157): a Classic room carries one more option, `tableLayout` ('large' or nothing), stored at create, re-validated from a snapshot, and told to every client wherever tableSetup is told (joined for players and spectators, started, both took). 'large' = the free board's cards a fifth larger and the lower seat row at the bottom edge, the same on every screen; the client draws it. Nothing else changed.
+const VERSION = '2.6.47';   // srv-2.6.47 (17 Oct 2026, THE REVIEW'S THREE LOCKS -- restart; ships with client v2.6.163): three findings of the 16 Oct code review, each reproduced first. (1) A player name, a clan or a path can no longer carry a double quote, a card field no longer an '=', and every card id is id-shaped (cleanId) -- a client older than v2.6.163 drew them inside "..." attributes with only & < > escaped, so another player could run script in its tab (cleanName, cleanCard, sanitizePub, give, the duel cid). (2) wsAttach enforces RFC 6455's limits and ends the connection on a violation: a stream of empty continuation frames stalled the event loop (/healthz stopped answering after ~40,000 from one socket); pings and pongs now count in the per-connection rate limit (connRateOk). (3) hello{admin} shares the admin HTTP routes' lockout (ipLogAuth, ERR_MAX per ERR_WIN, checked before the compare) -- it counted wrong keys in the server door's bucket and never read them back. (4) After an independent review: a room and its players restored from disk, and a saved match's players and boards, are cleaned by the same rules as they load (roomUnsnap, restore's key, saveUnsnap) -- a name stored with a quote was no longer found; adminLocked(ip) for all three admin doors, 4x for loopback like the server door; fx names and verb cleaned; the unmasked-frame log line at most once a minute.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -110,18 +110,43 @@ function wsClose(sock){
   setTimeout(()=>{ try{ sock.destroy(); }catch(err){} }, 400);
 }
 /* Incremental frame parser: handles chunked TCP, masking, fragmentation,
-   ping/pong and close. Calls cb.msg(text) / cb.close(). */
+   ping/pong and close. Calls cb.msg(text) / cb.ctrl() / cb.alive() / cb.close().
+   srv-2.6.47 (the 16 Oct code review; a denial of service reproduced by probe first): RFC 6455's limits hold, and a
+   violation ends the connection (a close frame, then the socket) -- after which nothing more is read:
+   - a message has at most MAX_FRAGS frames and MAX_MSG bytes, counted as they arrive. srv-2.6.46 stored every
+     fragment and re-summed them all on each frame, so a stream of EMPTY continuation frames grew without limit at
+     quadratic cost: /healthz stopped answering after ~40,000 of them from one socket;
+   - a control frame carries at most 125 bytes and is never fragmented (§5.5); a continuation needs an open message and
+     a new message a closed one (§5.4); no RSV bit (no extension is negotiated, §5.2); no reserved opcode; and no
+     binary frame -- this protocol is JSON text, and a binary message was never counted by the rate limit;
+   - cb.msg and cb.ctrl may return false (the rate limit, connRateOk -- pings and pongs count there now): the
+     connection is over.
+   Unmasked client frames (§5.1 says to fail them) are still accepted and logged once per connection: browsers and the
+   bot always mask, and this stays lenient until we know that no proxy in front of a server forwards them unmasked. */
+const MAX_FRAGS = 64;    // frames per message (a browser sends one; the bot's client one)
+let wsUnmaskedN = 0, wsUnmaskedAt = 0;
+function wsUnmaskedNote(){                                         // counted per connection, logged at most once a minute (a busy server would otherwise log one line per connection)
+  wsUnmaskedN++;
+  if(Date.now() - wsUnmaskedAt < 60000) return;
+  wsUnmaskedAt = Date.now();
+  console.log('[ws] unmasked client frames (RFC 6455 \u00a75.1) on ' + wsUnmaskedN + ' connection(s) since start -- accepted');
+}
+const MAX_CTRL  = 125;   // RFC 6455 §5.5
 function wsAttach(sock, cb){
   let buf = Buffer.alloc(0);
-  let frags = [], fragOp = 0;
+  let frags = [], fragOp = 0, fragLen = 0, dead = false, unmaskedSeen = false;
+  const fail = () => { dead = true; buf = Buffer.alloc(0); frags = []; wsClose(sock); };
   sock.on('data', d => {
+    if(dead) return;
     buf = Buffer.concat([buf, d]);
-    while(true){
+    while(!dead){
       if(buf.length < 2) break;
       const b0 = buf[0], b1 = buf[1];
       const fin    = (b0 & 0x80) !== 0;
       const op     =  b0 & 0x0f;
       const masked = (b1 & 0x80) !== 0;
+      const ctrl   = (op & 0x08) !== 0;
+      if((b0 & 0x70) || (ctrl ? (op > 0xA || !fin || (b1 & 0x7f) > MAX_CTRL) : op > 0x1)){ fail(); return; }
       let len = b1 & 0x7f, off = 2;
       if(len === 126){
         if(buf.length < 4) break;
@@ -130,31 +155,36 @@ function wsAttach(sock, cb){
         if(buf.length < 10) break;
         const hi = buf.readUInt32BE(2);
         len = buf.readUInt32BE(6); off = 10;
-        if(hi !== 0 || len > MAX_MSG){ wsClose(sock); return; }
+        if(hi !== 0 || len > MAX_MSG){ fail(); return; }
       }
-      if(len > MAX_MSG){ wsClose(sock); return; }
+      if(len > MAX_MSG){ fail(); return; }
       let mask = null;
       if(masked){
         if(buf.length < off + 4) break;
         mask = buf.subarray(off, off + 4); off += 4;
       }
       if(buf.length < off + len) break;
+      if(!masked && !unmaskedSeen){ unmaskedSeen = true; wsUnmaskedNote(); }
       let payload = Buffer.from(buf.subarray(off, off + len));
       buf = buf.subarray(off + len);
       if(mask) for(let i = 0; i < payload.length; i++) payload[i] ^= mask[i & 3];
 
-      if(op === 0x8){ cb.close(); wsClose(sock); return; }
-      else if(op === 0x9){ wsSendFrame(sock, 0xA, payload); cb.alive(); }
-      else if(op === 0xA){ cb.alive(); }
-      else if(op === 0x1 || op === 0x2 || op === 0x0){
+      if(op === 0x8){ dead = true; cb.close(); wsClose(sock); return; }
+      if(ctrl){                                                     // 0x9 ping, 0xA pong
+        if(cb.ctrl && cb.ctrl() === false){ dead = true; return; }
+        if(op === 0x9) wsSendFrame(sock, 0xA, payload);
         cb.alive();
-        if(op !== 0x0){ fragOp = op; frags = [payload]; }
-        else frags.push(payload);
-        if(frags.reduce((s,f)=>s+f.length,0) > MAX_MSG){ wsClose(sock); return; }
-        if(fin){
-          const whole = Buffer.concat(frags); frags = [];
-          if(fragOp === 0x1) cb.msg(whole.toString('utf8'));
-        }
+        continue;
+      }
+      if(op === 0x0 ? !fragOp : fragOp){ fail(); return; }          // a continuation needs an open message; a new message a closed one
+      if(op !== 0x0){ fragOp = op; frags = []; fragLen = 0; }
+      frags.push(payload); fragLen += payload.length;
+      if(frags.length > MAX_FRAGS || fragLen > MAX_MSG){ fail(); return; }
+      cb.alive();
+      if(fin){
+        const whole = frags.length === 1 ? frags[0] : Buffer.concat(frags, fragLen);
+        frags = []; fragLen = 0; fragOp = 0;
+        if(cb.msg(whole.toString('utf8')) === false){ dead = true; return; }
       }
     }
   });
@@ -169,6 +199,19 @@ const FAIL_MAX    = 5;             // wrong passwords per IP…
 const FAIL_WIN    = 10 * 60000;    // …per 10 minutes → lockout
 const CREATE_MAX  = 4;             // rooms created per IP…
 const CREATE_WIN  = 60 * 60000;    // …per hour
+/* srv-2.6.47: one bucket per connection for EVERYTHING the peer sends -- finished messages and control frames alike.
+   srv-2.6.46 counted messages only, so a ping flood was answered pong for pong. Browsers send no pings of their own;
+   they answer the server's, one every 30 s. False = over the limit: the peer is told, the connection is closed. */
+function connRateOk(conn){
+  conn.last = Date.now();
+  conn.rate = conn.rate.filter(t => conn.last - t < RATE_WIN);
+  conn.rate.push(conn.last);
+  if(conn.rate.length <= RATE_N) return true;
+  wsSend(conn.sock, { t:'err', msg:'Slow down — too many messages.' });
+  console.log('[abuse] rate limit hit by ' + conn.ip);
+  wsClose(conn.sock);
+  return false;
+}
 const ipFails   = new Map();       // ip -> [timestamps]
 const ipCreates = new Map();
 const ERR_MAX      = 10;                 // B-54: client-error posts per IP...
@@ -206,6 +249,11 @@ function strike(map, ip){
   map.set(ip, a);
 }
 function passHash(s){ return crypto.createHash('sha256').update(String(s || '')).digest('hex'); }
+/* srv-2.6.47: one lockout for every admin door -- hello{admin} on the socket, the log pull and the maintenance window
+   over HTTP -- read BEFORE the compare. ERR_MAX wrong keys per address per ERR_WIN; an all-loopback server (a tunnel
+   without --trust-proxy: everyone is 127.0.0.1) gets the server door's 4x tolerance, so a fat-fingered guest does not
+   lock the host out at once. A deliberate guest still can: --trust-proxy gives every player their own bucket. */
+function adminLocked(ip){ return strikes(ipLogAuth, ip, ERR_WIN) >= (isLoopback(ip) ? ERR_MAX * 4 : ERR_MAX); }
 function passMatch(hashHex, given){
   const a = Buffer.from(passHash(given), 'utf8');
   const b = Buffer.from(String(hashHex || ''), 'utf8');
@@ -397,7 +445,7 @@ function vacateSeat(room, q, toSpectator){
     turnTallyClear(room); bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
   }
 }
-function cleanName(s){ return String(s || '').replace(/[\u0000-\u001f\u007f<>]/g,'').trim().slice(0, 24); }
+function cleanName(s){ return String(s || '').replace(/[\u0000-\u001f\u007f<>"]/g,'').trim().slice(0, 24); }   // srv-2.6.47: + the double quote -- every client draws a name inside "..." attributes (title, data-name), and one older than v2.6.163 escaped only & < > there
 function sanHtml(s){                       // server-side twin of the client's sanRemote() (v2.5.38, defence-in-depth):
   s = String(s || '');                     // the logTo html field legitimately carries a tiny tag whitelist -- <b>, <i>
   const links = [];                        // and the log card-link form <b class="clog" data-cid="..."> -- so a plain
@@ -454,7 +502,8 @@ function joinReply(sock, room, p){
 const MAX_PILE = 250, MAX_NAME = 64, MAX_PUB_CARDS = 400;
 
 function cleanId(s){ return String(s || '').replace(/[^a-zA-Z0-9_-]/g,'').slice(0, 32); }   // sanitize a card id (gid/cid) for the give/recall verbs
-function cleanCard(s){ return String(s || '').replace(/[\u0000-\u001f\u007f<>]/g,'').trim().slice(0, MAX_NAME); }
+function cleanCard(s){ return String(s || '').replace(/[\u0000-\u001f\u007f<>=]/g,'').trim().slice(0, MAX_NAME); }   // srv-2.6.47: + '=' -- no card name has one, and the quotes stay (the Imbued and some vampires carry them: Felix "Fix" Hessian). Without '=' a quote can never become an attribute VALUE on a client older than v2.6.163
+function cleanSym(s){ return cleanCard(s).replace(/["']/g,''); }   // srv-2.6.47: a clan or path name never holds a quote
 function expandDeck(list){
   const out = [];
   if(Array.isArray(list)) for(const e of list){
@@ -488,7 +537,7 @@ function sanitizePub(pub, keepHidden){
     deckName: keepHidden ? cleanCard(pub.deckName) : '',    // owner's own pubOwn keeps the name; never relay it to opponents
     pool:  Math.max(-99, Math.min(999, parseInt(pub.pool, 10) || 0)),
     edge:  !!pub.edge,
-    clan:  (typeof pub.clan === 'string' && pub.clan) ? (cleanCard(pub.clan).slice(0, 40) || undefined) : undefined,   // v2.5.62: majority-clan / path symbol for the opponent pool globes — sent by the client for ages, silently dropped by this whitelist (hotseat always worked; online never did)
+    clan:  (typeof pub.clan === 'string' && pub.clan) ? (cleanSym(pub.clan).slice(0, 40) || undefined) : undefined,   // v2.5.62: majority-clan / path symbol for the opponent pool globes — sent by the client for ages, silently dropped by this whitelist (hotseat always worked; online never did). srv-2.6.47: cleanSym -- the review's probe ran script through this field on v2.6.162 (the pool globe's alt="..." title="...")
     phase: Math.max(-1, Math.min(9, parseInt(pub.phase, 10) ?? -1)),
     tn: (parseInt(pub.tn, 10) > 0) ? Math.min(9999, parseInt(pub.tn, 10)) : undefined,   // srv-2.6.45 (cli-2.6.149): the table's Turn / Round count as this client holds it -- a client that reloads or
     rn: (parseInt(pub.rn, 10) > 0) ? Math.min(9999, parseInt(pub.rn, 10)) : undefined,   // reconnects mid-game takes it from the boards (and from its own stored copy); this whitelist dropped it
@@ -502,7 +551,7 @@ function sanitizePub(pub, keepHidden){
     cards: []
   };
   if(pub.target && typeof pub.target === 'object'){
-    const ts = parseInt(pub.target.seat, 10), tc = cleanCard(String(pub.target.cid || '')).slice(0, 16);
+    const ts = parseInt(pub.target.seat, 10), tc = cleanId(String(pub.target.cid || '')).slice(0, 16);   // srv-2.6.47: ids are id-shaped (cleanId)
     if(ts >= 1 && ts <= MAX_PLAYERS && tc) out.target = { seat: ts, cid: tc };   // v2.5.61 (review Finding 2): keyed to the constant so a raised seat cap can't silently stop relaying target markers for seat 7+
   }
   if(Array.isArray(pub.tokens)){                       // v2.5.62: felt tokens (the Edge) + the pool-globe position — exported by the client since the token family landed, but this whitelist predates them and dropped the field, so online opponents saw neither the Edge token nor globe moves (the default L4 globe circle is client-local). Hotseat pubs bypass the server, which is why everything "worked offline".
@@ -521,7 +570,7 @@ function sanitizePub(pub, keepHidden){
   for(const c of cards){
     if(!c || !PUB_ZONES.includes(c.zone)) continue;     // hand/library/crypt never relay
     out.cards.push({
-      id: cleanCard(c.id).slice(0, 16),
+      id: cleanId(c.id).slice(0, 16),                                                            // srv-2.6.47: cleanId -- the client's 'c12', mintGid's 'g...', the bots' 'bot3_x1y2' all fit
       name: (c.faceDown && !keepHidden) ? undefined : cleanCard(c.name) || undefined,
       kind: c.kind === 'crypt' ? 'crypt' : 'lib',
       zone: c.zone,
@@ -532,13 +581,13 @@ function sanitizePub(pub, keepHidden){
       blue:  Math.max(0, Math.min(99, parseInt(c.blue, 10)  || 0)) || undefined,
       green: Math.max(0, Math.min(99, parseInt(c.green, 10) || 0)) || undefined,
       counters: Array.isArray(c.counters) ? c.counters.slice(0, 12).map(cleanCard).filter(Boolean) : undefined,
-      owner: c.owner ? cleanCard(c.owner) : undefined,
-      controller: c.controller ? cleanCard(c.controller) : undefined,
-      host: c.host ? cleanCard(String(c.host)).slice(0, 16) : undefined,
-      attached: Array.isArray(c.attached) ? c.attached.slice(0, 30).map(a => cleanCard(String(a)).slice(0, 16)) : undefined,
+      owner: c.owner ? cleanName(c.owner) : undefined,                                           // srv-2.6.47: a player name, cleaned like one
+      controller: c.controller ? cleanName(c.controller) : undefined,
+      host: c.host ? cleanId(String(c.host)).slice(0, 16) : undefined,
+      attached: Array.isArray(c.attached) ? c.attached.slice(0, 30).map(a => cleanId(String(a)).slice(0, 16)) : undefined,
       actSt: (c.actSt === 'played' || c.actSt === 'resolved') ? c.actSt : undefined,             // v2.5.62: Played-tab action batching for opponents' cards (client sent it; whitelist dropped it)
       _avSeq: (Number.isFinite(+c._avSeq) && +c._avSeq > 0) ? Math.round(+c._avSeq) : undefined, // v2.5.62: wall-clock play order — the cross-seat Played-tab interleave was broken online without it
-      path: c.path ? (cleanCard(String(c.path)).slice(0, 40) || undefined) : undefined,          // v2.5.62: chosen-path badge on remote cards (crypt-only + chosen-only enforced client-side per the v2.5.72 merge decision)
+      path: c.path ? (cleanSym(String(c.path)).slice(0, 40) || undefined) : undefined,          // v2.5.62: chosen-path badge on remote cards (crypt-only + chosen-only enforced client-side per the v2.5.72 merge decision)
       sup: (typeof c.sup === 'string' && /^[a-z]{3}$/i.test(c.sup)) ? c.sup.toLowerCase() : undefined // v2.5.62: superior-discipline trigram badge on remote library cards
     });
   }
@@ -595,7 +644,7 @@ function fxCard(o){                                   // sanitise an FX card pay
   if(!o || typeof o !== 'object') return null;
   const kind = (o.kind === 'crypt') ? 'crypt' : 'lib';
   const faceDown = !!o.faceDown;
-  const name = faceDown ? '' : String(o.name || '').slice(0, 120);
+  const name = faceDown ? '' : cleanCard(o.name);   // srv-2.6.47 (the independent review): cleaned like every card field (it went out raw, < > " = and all; the clients escape it, this is the second lock)
   return { name, kind, faceDown };
 }
 // In-game message dispatch. One handler per verb (signature: conn, room, p, m). Order-independent;
@@ -852,7 +901,7 @@ const GAME_HANDLERS = {
       duel = Object.assign({}, (room.tally && room.tally.mode === 'combat' && room.tally.duel) || {});
       if(m.duelCid !== undefined){
         const seat = room.players.indexOf(p) + 1;
-        if(m.duelCid){ duel[seat] = { cid: cleanCard(String(m.duelCid)).slice(0, 16), name: cleanCard(String(m.duelName || '')).slice(0, 60), who: p.name }; }
+        if(m.duelCid){ duel[seat] = { cid: cleanId(String(m.duelCid)).slice(0, 16), name: cleanCard(String(m.duelName || '')).slice(0, 60), who: p.name }; }   // srv-2.6.47: the cid is id-shaped
         else delete duel[seat];                                         // duelCid:null = leave
       }
     }
@@ -884,7 +933,7 @@ const GAME_HANDLERS = {
     const card = fxCard(m.card);
     if(!card) return;
     if(kind === 'flip' && m.reveal === false && m.card && typeof m.card === 'object')
-      card.name = String(m.card.name || '').slice(0, 120);   // conceal-flip: the face it flips AWAY from was public one frame earlier -- the remote clone needs the name to show face->back (fx is cosmetic; no state trusts it)
+      card.name = cleanCard(m.card.name);   // srv-2.6.47: cleaned (see fxCard). conceal-flip: the face it flips AWAY from was public one frame earlier -- the remote clone needs the name to show face->back (fx is cosmetic; no state trusts it)
     const target = (kind === 'play') ? fxCard(m.target) : null;
     const actor  = (kind === 'play') ? fxCard(m.actor)  : null;
     const onto   = (kind === 'play' && m.onto && typeof m.onto === 'object' && (m.onto.seat|0) >= 1 && (m.onto.seat|0) <= 8)
@@ -892,7 +941,7 @@ const GAME_HANDLERS = {
     const reveal = (m.reveal === true) ? true : (m.reveal === false ? false : undefined);
     bcast(room, { t:'fx', who: p.name, seat: room.players.indexOf(p) + 1, kind, card,
                   target, actor, onto, reveal, toName: cleanName(String(m.toName || '')).slice(0, 40) || undefined,
-                  verb: String(m.verb || '').slice(0, 40) }, conn.sock);
+                  verb: cleanCard(m.verb).slice(0, 40) }, conn.sock);   // srv-2.6.47: cleaned too
   },
   revealHand(conn, room, p, m){
     // Hand reveal. The private card list goes ONLY to the recipient(s). A public line
@@ -971,8 +1020,8 @@ const GAME_HANDLERS = {
       faceDown: !!card.faceDown, locked: !!card.locked,
       blood: ci(card.blood), blue: ci(card.blue), green: ci(card.green),
       counters: Array.isArray(card.counters) ? card.counters.slice(0, 12).map(cleanCard).filter(Boolean) : [],
-      owner: cleanCard(card.owner) || p.name,                       // auto-stamp the giver
-      attachTo: m.attachTo ? cleanCard(String(m.attachTo)) : null,
+      owner: cleanName(card.owner) || p.name,                       // auto-stamp the giver (srv-2.6.47: a name, cleaned like one)
+      attachTo: m.attachTo ? (cleanId(String(m.attachTo)) || null) : null,   // srv-2.6.47: a card id
       rx: typeof m.rx === 'number' ? Math.max(0, Math.min(1, m.rx)) : null,
       ry: typeof m.ry === 'number' ? Math.max(0, Math.min(1, m.ry)) : null
     });
@@ -1401,10 +1450,15 @@ function handle(conn, raw){
     // connection for live roomList pushes, and answers with the current list.
     if(CFG.srvPassHash && !conn.authed && m.srvPass !== undefined && !doorCheck(conn, m)) return;
     if(CFG.adminPassHash && m.admin !== undefined){
-      const key = isLoopback(conn.ip) ? 'srv:*' : ('srv:' + conn.ip);
+      // srv-2.6.47 (the 16 Oct code review): the admin HTTP routes' lockout -- one bucket per address (ipLogAuth,
+      // ERR_MAX wrong keys per ERR_WIN), read BEFORE the compare, so even the right key waits the window out.
+      // srv-2.6.46 struck the server door's bucket and never read it back: unlimited guesses on the socket (350 in
+      // 2.5 s in the probe), and behind a tunnel without --trust-proxy one person's wrong admin keys could lock the
+      // door for everyone.
+      if(adminLocked(conn.ip)) return wsSend(conn.sock, { t:'err', msg:'Too many wrong admin passwords. Wait a bit.' });
       if(passMatch(CFG.adminPassHash, m.admin)){ conn.admin = true; }
       else {
-        strike(ipFails, key);
+        strike(ipLogAuth, conn.ip);
         return wsSend(conn.sock, { t:'err', msg:'Wrong admin password.' });
       }
     }
@@ -1760,7 +1814,7 @@ function handleLogFetch(req, res){             // v2.6.25 amend (Johan): the pul
   const nope=()=>{ try{ res.writeHead(404, { 'Cache-Control':'no-store' }); res.end('Not found\n'); }catch(e){} };
   if(!CFG.adminPassHash) return nope();        // no --admin-pass => the route is OFF
   let ip='?'; try{ ip=deriveIp(req.socket.remoteAddress, req.headers); }catch(e){}
-  if(strikes(ipLogAuth, ip, ERR_WIN) >= ERR_MAX) return nope();   // brute lockout: even a correct key waits out the window
+  if(adminLocked(ip)) return nope();   // brute lockout: even a correct key waits out the window (srv-2.6.47: adminLocked, the loopback tolerance)
   let key=''; try{ key=new URL(req.url, 'http://x').searchParams.get('key') || ''; }catch(e){}
   if(!passMatch(CFG.adminPassHash, key)){ strike(ipLogAuth, ip); return nope(); }
   let body='';                                  // rotated first keeps chronology; total is capped at 4 MB by construction
@@ -1774,7 +1828,7 @@ function handleMaintenance(req, res){          // v2.6.26: GET /admin/maintenanc
   const nope=()=>{ try{ res.writeHead(404, { 'Cache-Control':'no-store' }); res.end('Not found\n'); }catch(e){} };
   if(!CFG.adminPassHash) return nope();
   let ip='?'; try{ ip=deriveIp(req.socket.remoteAddress, req.headers); }catch(e){}
-  if(strikes(ipLogAuth, ip, ERR_WIN) >= ERR_MAX) return nope();
+  if(adminLocked(ip)) return nope();
   let q=null; try{ q=new URL(req.url, 'http://x').searchParams; }catch(e){ return nope(); }
   if(!passMatch(CFG.adminPassHash, q.get('key') || '')){ strike(ipLogAuth, ip); return nope(); }
   if(q.get('on') === '1'){                     // strict: ?on=0 must not arm (truthy-string trap)
@@ -1928,17 +1982,10 @@ srv.on('upgrade', (req, sock) => {
                  ip: deriveIp(req.socket.remoteAddress, req.headers), rate: [] };   // v2.5.68: --trust-proxy aware (spoof-safe: headers only believed from loopback)
   wsAttach(sock, {
     msg: raw => {
-      conn.last = Date.now();
-      conn.rate = conn.rate.filter(t => conn.last - t < RATE_WIN);
-      conn.rate.push(conn.last);
-      if(conn.rate.length > RATE_N){
-        wsSend(conn.sock, { t:'err', msg:'Slow down — too many messages.' });
-        console.log('[abuse] rate limit hit by ' + conn.ip);
-        wsClose(conn.sock);
-        return;
-      }
+      if(!connRateOk(conn)) return false;
       handle(conn, raw);
     },
+    ctrl: () => connRateOk(conn),                                   // srv-2.6.47: pings and pongs count too
     alive: ()  => { conn.last = Date.now(); if(conn.player) conn.player.last = conn.last; },
     close: ()  => {
       if(conn.closed) return;
@@ -2042,13 +2089,13 @@ function roomSnap(r){
   };
 }
 function roomUnsnap(r){
-  const players = (r.players || []).map(p => ({ name: p.name, token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon,
+  const players = (r.players || []).map(p => ({ name: cleanName(p.name), token: p.token,   // srv-2.6.47: cleanName -- a name stored by srv-2.6.46 may carry a quote, and every lookup now cleans what it is given seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon,
     sock: null, last: Date.now(), off: Date.now(), bot: p.bot === true ? true : undefined,
     vp: p.vp || 0, out: !!p.out, game: p.game || null, handBlob: p.handBlob || null }));
   const bc = (r.botcfg && typeof r.botcfg === 'object') ? botcfgMerge(r.botcfg.tempo, r.botcfg.waitSecs, null) : null;
   const mm = r.matchMins | 0;
   return {
-    name: r.name, passHash: r.passHash || (r.pass != null ? passHash(r.pass) : passHash('')), hostToken: r.hostToken || null,
+    name: cleanName(r.name), passHash: r.passHash || (r.pass != null ? passHash(r.pass) : passHash('')), hostToken: r.hostToken || null,
     created: r.created || Date.now(), turnSeat: r.turnSeat || null,
     matchEnd: r.matchEnd || null, reactSecs: r.reactSecs || 5, escrowSalt: r.escrowSalt || token(),
     helperPolicy: cleanHelperPolicy(r.helperPolicy),
@@ -2078,8 +2125,9 @@ function restore(){
     const data = JSON.parse(fs.readFileSync(STORE, 'utf8'));
     let n = 0;
     for(const r of data){
-      if(!r || !r.name || rooms.has(r.name)) continue;
-      rooms.set(r.name, roomUnsnap(r));   // srv-2.6.43: see roomSnap / roomUnsnap
+      const room = (r && r.name) ? roomUnsnap(r) : null;   // srv-2.6.47: keyed by the CLEANED name -- join looks up rooms.get(cleanName(m.room)); a room stored as 'The "Club"' answered 'No such room.' after the restart
+      if(!room || !room.name || rooms.has(room.name)) continue;
+      rooms.set(room.name, room);   // srv-2.6.43: see roomSnap / roomUnsnap
       n++;
     }
     if(n) console.log('[boot] restored ' + n + ' room(s) from disk — token rejoin works as usual');
@@ -2117,11 +2165,23 @@ function loadSaves(){
   try{
     if(!fs.existsSync(SAVES)) return;
     const data = JSON.parse(fs.readFileSync(SAVES, 'utf8'));
-    if(Array.isArray(data)) for(const s of data){ if(s && s.name){ if(!s.touchedAt) s.touchedAt = s.savedAt || Date.now(); saves.set(s.name, s); } }   // H1-e: legacy saves (pre-2.6.18) get their TTL clock backfilled from savedAt
+    if(Array.isArray(data)) for(const s of data){ if(s && s.name){ if(!s.touchedAt) s.touchedAt = s.savedAt || Date.now(); saves.set(s.name, saveUnsnap(s)); } }   // H1-e: legacy saves (pre-2.6.18) get their TTL clock backfilled from savedAt
     if(saves.size) console.log('[boot] loaded ' + saves.size + ' saved match(es)');
   }catch(err){ console.log('[boot] could not load saved matches: ' + err.message); }
 }
 loadSaves();
+/* srv-2.6.47 (the independent review): a save written under older rules is cleaned as it loads -- player names as
+   cleanName (loadMatch matches them against the cleaned name of whoever loads, so 'Ann "A"' could no longer reclaim
+   her seat), and each board through sanitizePub again (the clans and ids of a srv-2.6.46 save kept their quotes). */
+function saveUnsnap(s){
+  if(Array.isArray(s.players)) s.players.forEach(sp => {
+    if(!sp) return;
+    sp.name = cleanName(sp.name);
+    if(sp.pub) sp.pub = sanitizePub(sp.pub, false);
+    if(sp.pubOwn) sp.pubOwn = sanitizePub(sp.pubOwn, true);
+  });
+  return s;
+}
 /* a self-contained snapshot of a started game, including every seat's public board */
 function buildSave(room, name){
   return {

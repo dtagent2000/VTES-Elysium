@@ -1,8 +1,50 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.162 / server v2.6.46 / bot v0.6.204 tested beside the suite, last updated 16 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.163 / server v2.6.47 / bot v0.6.206 tested beside the suite, last updated 17 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**17 Oct 2026, night (THE REVIEW'S THREE LOCKS — v2.6.163 / srv-2.6.47):**
+- **An HTML escaper that feeds attributes must escape both quotes.** `escapeHtml` escaped `& < >` for years and was
+  used inside `alt="…"`, `title="…"` and `data-name="…"` with other players' names, clans and card names. A quote
+  ended the attribute; the rest became markup. The fix belongs at the sink (the escaper); the server's cleaning only
+  protects tabs that still run the old client.
+  - The other half of the same rule: a TEXT sink (`toast`, dialogs, `.title=`) must get the raw string, or an
+    apostrophe reads `&#39;`. Escaping is for HTML strings only.
+  - Removing `=` from card fields neutralises attribute injection on an old client (no value can follow a
+    quote) while keeping the quotes real card names carry (the Imbued, Felix "Fix" Hessian).
+- **Test what a renderer writes, not what it means.** The harness stubs discard every DOM write, so a renderer could
+  emit anything. The recorder (`api.__htmlRec`) only looks at the HTML strings; feeding payload-laden peers through
+  every view and grepping for the raw payload found all 30 unescaped writes at once, and proves 0 after the fix.
+  Add coverage asserts (the escaped payload must appear where you expect it), or a renderer that silently stops early
+  passes the test.
+- **A harness expose can shadow an accessor.** The expose object already had `set toast(v){ toast=v; }`; adding
+  `toast: (...)` later in the same literal replaced the pair, and two unrelated tests that capture toasts went red.
+  Grep the expose list for the name (`set NAME`, `get NAME`, `NAME:`) before adding one.
+- **A parser that re-sums its buffer on every frame is a denial of service.** `frags.reduce(...)` per frame plus no
+  frame cap: empty continuation frames cost nothing to send and O(n) each to receive. Count as you go, cap the count,
+  and stop reading after a violation (a `dead` flag): `wsClose` only destroys the socket 400 ms later, and the data
+  handler would otherwise keep parsing what the peer sends in between.
+- **Every lockout must be READ before the compare.** `hello{admin}` called `strike()` and never `strikes()`. Grep for
+  `passMatch(` and check that each one sits behind a read of its own bucket.
+- **Do not tighten a protocol rule you cannot observe.** RFC 6455 says to fail unmasked client frames, but a proxy
+  that re-frames without masking would lock every player out at deploy. Log it first (once per connection), decide
+  from the logs.
+- **Tighten a cleaning rule and the data at rest still follows the old one.** srv-2.6.47 cleaned names on the way in,
+  and every lookup cleans what it is given; a room restored from disk was keyed by its OLD name, so after the restart
+  the deploy needs it answered 'No such room.' Apply the new rule where stored data comes back in (`roomUnsnap`,
+  `restore()`'s key, `saveUnsnap`). The independent review caught it, not my own probes.
+- **Trace an escaped value through its variables to the sink.** My scan of text sinks matched direct calls; the log
+  link's menu label was built in a variable two lines up and handed to `showMenu`, whose `renderItems` writes text.
+  A real-browser right-click showed `&amp;#39;`.
+- **A test helper that reads HTML as text must decode entities like the reader does.** `captureLog` stripped tags
+  only; once the escaper escaped `'`, a LIVE test with a real bot failed about one run in three -- whenever the bot's
+  random hand held Wake with Evening's Freshness. A flake that follows a content change is a real finding: force the
+  random input (here: put the card in the hand) and the test fails every time.
+- **B1's splitter reads `/tmp/original.html`.** A stale copy from an earlier session split an older client; the
+  `cmp` caught it (the rebuilt file carried the old guide). Always `cp elysium-vtes-bord.html /tmp/original.html` first.
+- **`pkill -f PATTERN` matches the shell that runs it** when the pattern is in the same command line. Keep the PID
+  (`node … & PID=$!`) and kill that.
 
 **16 Oct 2026, evening (THE VERDICT WAIT — v2.6.162):**
 - **A probe that drives a real bot must wait for the bot's own deal.** The bot's `dealt` handler resets `board`, `unc`

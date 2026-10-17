@@ -2539,7 +2539,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hb-setup">Setting up a table</a></li>
   <li><a href="#hb-play">How a bot plays</a></li>
   <li><a href="#hb-controls">Controls</a></li>
-  <li class="ver">bot v0.6.203 · client v2.6.161</li>
+  <li class="ver">bot v0.6.206 · client v2.6.162</li>
 </ul></nav>
 
 <header class="hero">
@@ -2569,7 +2569,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <p class="lead">The short version: a bot is a fifth player who knows the rules of the actions it takes, plays a fixed deck it has been taught, and asks you when it cannot see what your card does.</p>
 
   <h3>What a bot knows about cards</h3>
-  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>99 are hand-curated</strong> (79 library, 20 crypt) — checked card by card so the bot plays them exactly right. In the six decks in the menu the bot has a use for nearly every card, but they are not all curated: four masters in the V5 starters do nothing for the bot yet when it plays them — Guardian Angel, Haven Uncovered and The Labyrinth (Nosferatu) and Wasserschloss Anif (Tremere). Haven Uncovered even goes on one of the bot's own vampires, where it only helps its opponents.</p>
+  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>105 are hand-curated</strong> (85 library, 20 crypt) — checked card by card so the bot plays them exactly right. Every master in the four V5 starters is among them: The Labyrinth locks for +1 stealth for a Nosferatu, Guardian Angel sits on the bot's sturdiest ready vampire (+1 intercept against your bleeds, 1 damage prevented each combat, gone when that vampire goes to torpor), Wasserschloss Anif banks blood from a ready Tremere for the next Tremere to come out, and Haven Uncovered goes on an opponent's vampire the bot means to rush — after that any minion, yours included, may enter combat with that vampire as a +1 stealth directed action. The other cards of the six decks in the menu all have a modelled effect, most of them compiled rather than curated.</p>
   <p>This shapes three things you will notice:</p>
   <ul>
     <li><strong>Its own deck it plays well.</strong> Every card in a bot deck has a modelled effect, so the bot never holds a card it cannot use. A card it genuinely cannot play with its current vampires is treated as dead and cycled in the discard phase.</li>
@@ -2680,7 +2680,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   </details>
   <details>
     <summary>Master <span class="sub">— one master a turn, trifles counted</span></summary>
-    <div><p>It plays at most one master card per master phase (plus a trifle's extra action, plus anything a Parthenon-class card grants), paying pool up front and writing the payment to the log so it can be audited. Persistent masters attach to a vampire or go on the table; one-shots resolve straight to the ash heap. Fame is placed on the vampire it intends to rush; Pentex Subversion and Misdirection pick the most useful unlocked target on its prey's board. A master that is not hand-curated is played with a note: <em>“(uncurated — adjust if needed)”</em> — the bot may not know what that card does.</p></div>
+    <div><p>It plays at most one master card per master phase (plus a trifle's extra action, plus anything a Parthenon-class card grants), paying pool up front and writing the payment to the log so it can be audited. Persistent masters attach to a vampire or go on the table; one-shots resolve straight to the ash heap. Fame is placed on the vampire it intends to rush, and so is Haven Uncovered — only when one of its ready vampires has a rush target that turn, otherwise it keeps the card; Guardian Angel goes on its sturdiest ready vampire; Pentex Subversion and Misdirection pick the most useful unlocked target on its prey's board. A master that is not hand-curated is played with a note: <em>“(uncurated — adjust if needed)”</em> — the bot may not know what that card does.</p></div>
   </details>
   <details>
     <summary>Minion <span class="sub">— actions, one bleed and one political action per vampire</span></summary>
@@ -2728,13 +2728,13 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
         <li><b>Play your rush card</b> from hand (or use <span class="menu">Actions → Card action</span> on your vampire). The client's line carries the aim: <em>“Lisa plays Bum's Rush. Target: Name's Colette.”</em></li>
         <li><b>Type <code>rush</code> in chat.</b> The bot reads the aimed line and treats it exactly like a Deep Song rush: if it has another unlocked minion or a wake it may try to block first (the rulebook allows the owner to block a rush) and asks the usual way; otherwise — or after it passes — Colette locks, and combat begins on the counters with Lisa as the opponent.</li>
       </ol>
-      <p>If the aim did not reach it (you forgot the target, or several plays went by), name the vampire: <code>rush Colette</code> — a unique prefix is enough. With several bots at the table a bare <code>rush</code> without an aimed line goes to the bot that is your prey; <code>@Name rush Colette</code> reaches any of them. The bot never rushes by chat itself — its own rushes come with the frozen Deep Song line.</p>
+      <p>If the aim did not reach it (you forgot the target, or several plays went by), name the vampire: <code>rush Colette</code> — a unique prefix is enough. With several bots at the table a bare <code>rush</code> without an aimed line goes to the bot that is your prey; <code>@Name rush Colette</code> reaches any of them. The bot never rushes by chat itself — its own rushes come with the frozen Deep Song or Haven Uncovered line.</p>
     </div>
   </details>
   <details>
     <summary>Combat <span class="sub">— one round at a time, on the counters</span></summary>
     <div>
-      <p>When a block succeeds either way, the bot fights by its cards: maneuvers, presses, strikes with weapons or hand strikes, Carrion Crows, Immortal Grapple, dodges, Majesty-class combat-ends, prevention (Hidden Strength pays X to prevent the whole hit). A combat-ends card is played when the strike it faces is worth the card: what you announced, when you strike first, or what your deck is expected to hit for (from what it has shown and the TWDA). A hand strike for 1 is not worth a Majesty; a strike that would send its vampire to torpor, or aggravated damage, always is. A wave deck (the Malkavian) maneuvers to long only when your expected strike could put its vampire in torpor, or when one maneuver ends a dangerous fight because you show no way to press; otherwise it keeps Swallowed by the Night for its stealth. Each play is a log line and a clone; at the end of a round, fighting you, it writes the round to the log: <em>“Name combat — Lisa strikes with .44 Magnum for 2; Anarch Convert takes 2 (loses 2 blood, now 1).”</em> (between two bots it is a chat line, as before).</p>
+      <p>When a block succeeds either way, the bot fights by its cards: maneuvers, presses, strikes with weapons or hand strikes, Carrion Crows, Immortal Grapple, dodges, Majesty-class combat-ends, prevention (Hidden Strength pays X to prevent the whole hit). A combat-ends card is played when the strike it faces is worth the card: what you announced, when you strike first, or what your deck is expected to hit for (from what it has shown and the TWDA). A hand strike for 1 is not worth a Majesty; a strike that would send its vampire to torpor, or aggravated damage, always is. A dodge follows the same idea with the bot's own strike as the yardstick. With one dodge in hand it dodges a strike of 2 or more that would do more to it than its own strike would do to you (a steal counts); with two it spares one even against a strike for 1, as long as yours does at least as much as its own. It always dodges aggravated damage or a strike that would empty or torpor its vampire. Otherwise it keeps the dodge and strikes when its own strike would put your vampire into torpor (with two dodges in hand, also when it would empty it). When it strikes first it reads your expected strike instead. A wave deck (the Malkavian) maneuvers to long only when your expected strike could put its vampire in torpor, or when one maneuver ends a dangerous fight because you show no way to press; otherwise it keeps Swallowed by the Night for its stealth. Each play is a log line and a clone; at the end of a round, fighting you, it writes the round to the log: <em>“Name combat — Lisa strikes with .44 Magnum for 2; Anarch Convert takes 2 (loses 2 blood, now 1).”</em> (between two bots it is a chat line, as before).</p>
       <p><b>Fighting a bot yourself — the vampire's <span class="menu">Combat ▸</span> menu.</b> Right-click your fighting vampire and use <span class="menu">Combat ▸ Strike</span> (Hand, Hand for N…, Weapon or card…, Steal blood…, Dodge…, Combat ends…), <span class="menu">Combat ▸ Maneuver</span> (to long / to close, or <em>Set range</em> for Immortal Grapple- or Sniper Rifle-class cards) and <span class="menu">Combat ▸ Press</span> (continue / end). Each writes one log line the bot reads, and with the combat helper on it also moves the shared combat counter. The bot writes its own strike's damage onto its side of that counter, so your Damage step shows what is coming at you.</p>
       <p><b>Blocks by chat.</b> When a bot blocks <em>your</em> action, type your stealth in chat: a number is your total stealth (<em>2</em>), <em>+1</em> adds to it. When <em>you</em> block a bot's action, type your intercept the same way. The bot books it on the block counter and answers with its own card if it needs one — it never plays stealth or intercept that is not needed.</p>
       <p><b>The bot walks the combat steps with you.</b> Fighting your vampire, a bot talks through the rulebook's steps. When <em>you</em> act it asks — <em>“Anything before range?”, “Any maneuvers?”, “Anything before strikes?”, “What is your strike?”, “Any presses?”, “Anything before ending combat?”</em> — and when it acts it says what it does, or <em>“I have nothing before range.”</em> and so on. Answer with the <span class="menu">Combat ▸</span> menu, or say <span class="phrase">No</span> / <span class="phrase">Pass</span> (or type <em>no</em>, <em>pass</em>, <em>go on</em>) to move on; stepping the combat helper forward works too. If you say nothing, a short clock moves the step along.</p>
@@ -2763,6 +2763,8 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 
   <h3>Where its understanding ends</h3>
   <div class="gap">
+    <p><b>Revelations against a bot.</b> Play it with the bot as your prey (whatever your target says, the card goes to your prey). At inferior the bot reveals its hand to you privately and asks you to pick: <span class="menu">⌖ target</span> the card in what it revealed, or type <code>discard CARD</code>; it discards that card and draws. At superior it plays with an open hand until the card leaves play.</p>
+    <p><b>Haven Uncovered on your vampire.</b> When a bot puts it there, the log says so (<em>“Hanna plays Haven Uncovered — on Lisa's Colette.”</em>); any minion may then enter combat with Colette. A bot's rush through it reads <em>“Ryan enters combat with Lisa's Colette (Haven Uncovered).”</em> and asks <em>Block?</em> as usual; Colette does not lock, and the rushing vampire is the acting minion. The bot does not read a Haven Uncovered that you play, and your own rush through one on a bot's vampire goes by <code>rush</code> in chat like a rush card — the bot then locks its vampire as it would for a rush card, which a Haven rush does not do: unlock it by hand.</p>
     <p><b>Cards outside the curated set.</b> Your uncurated card is a “plays X” line to the bot; it will ask about pool loss and otherwise let it be. Effects on the bot's board that come from your permanents must be applied by hand.</p>
     <p><b>Rush cards.</b> Only Deep Song is tagged as a rush in the database today, so your rush needs the target + <code>rush</code> in chat (above) until the rush cards are swept in.</p>
     <p><b>Combat against a human.</b> The bot reads your strikes, maneuvers and presses from the <span class="menu">Combat ▸</span> menu lines; anything you do not announce falls back to the rulebook default. Additional strikes are shown in the log but not yet resolved by the bot.</p>
@@ -2884,7 +2886,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <li><span class="menu">▶ Close question</span> — closes the pool question as its clock would (stage one → “no”, stage two → 1 pool).</li>
     <li><span class="menu">▶ Close step</span> — closes an open combat step (“combat step maneuvers (Anna)”) as its clock would.</li>
     <li><span class="menu">▶ Close poll</span> — closes the bot's vote poll (“votes (Anna, Bob)”) as its clock would.</li>
-    <li><span class="menu">▶ Step</span> on “block verdict (Anna)” — a bot blocked your action and waits for your move: declares the verdict from the counter as its clock would.</li>
+    <li><span class="menu">▶ Declare verdict</span> on “block verdict (Anna)” — a bot blocked your action and waits for your move: declares the verdict from the counter as its clock would.</li>
     <li>In the <a href="#hb-tempo">Turn-based tempo</a> these rows show no countdown — the bot waits for you — and the ▶ beside the 🤖 is how you give it the word.</li>
     <li><span class="menu">▶ Run bot turns</span> (offline only) — plays the bot seats between the current turn and the next human, the range the Pass handover would play.</li>
   </ul>
@@ -2893,7 +2895,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.204</b>, client <b>v2.6.161</b> / server srv-2.6.46, cardfx 99 curated / 1,670 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 16 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.206</b>, client <b>v2.6.162</b> / server srv-2.6.46, cardfx 105 curated / 1,670 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 16 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 <!-- @@/HELP:bots -->
 </template>
@@ -3164,12 +3166,13 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <tr><th>Protection</th><th>Behaviour</th></tr>
     <tr><td>Room password</td><td>Compared in constant time and stored only as a hash — in memory and in the persistence file, never in clear text. A wrong password counts as a strike.</td></tr>
     <tr><td>Lockout</td><td>5 wrong passwords within 10 minutes locks that address out for 10 minutes. Behind a tunnel the strikes are counted per room instead, so one player's typo cannot lock out the whole table. Token reconnection is immune.</td></tr>
-    <tr><td>Rate limiting</td><td>Max 80 messages per 10 seconds per connection — then disconnect. Max 16 concurrent connections per address, 400 in total.</td></tr>
+    <tr><td>Rate limiting</td><td>Max 80 messages per 10 seconds per connection, pings included — then disconnect. A malformed or oversized WebSocket frame ends the connection at once. Max 16 concurrent connections per address, 400 in total.</td></tr>
+    <tr><td>Referee key</td><td>10 wrong keys within 10 minutes from one address lock the key out for that address for 10 minutes — the in-game key, the log pull and the maintenance window count together. Behind a tunnel without <code>--trust-proxy</code> every player counts as the same address, which gets 40 tries instead of 10; turn the option on so each player has their own count.</td></tr>
     <tr><td>Room creation</td><td>Max 4 new rooms per address per hour (the host's own machine is exempt, as is the referee key). Of the 50 room slots, 10 are always held for rooms that have ever seated a player, so squatters cannot fill the server.</td></tr>
     <tr><td>Identity</td><td>A token per browser tab (survives a refresh, dies with the tab). Name + password reclaims an offline seat; a name that is online can never be taken over.</td></tr>
     <tr><td>Hidden information</td><td>Library, crypt and hand exist only in server memory. Face-down card names are stripped before anything is relayed; the hand is never relayed at all.</td></tr>
     <tr><td>Hand escrow</td><td>Your hand is encrypted in your browser with a key derived from the room password. Reconnecting, taking over a seat and loading a saved match restore your exact hand — while the server, the save file and the other players only ever see an opaque blob. Obfuscation-grade, not an audited cipher.</td></tr>
-    <tr><td>Sanitisation</td><td>Every field passing through the server is cleaned and clamped (lengths, ranges, control characters); angle brackets are stripped from names on the server, on top of the client escaping everything it renders.</td></tr>
+    <tr><td>Sanitisation</td><td>Every field passing through the server is cleaned and clamped (lengths, ranges, control characters); angle brackets and double quotes are stripped from names on the server, and card fields lose any <code>=</code>, on top of the client escaping everything it renders, quotes included.</td></tr>
     <tr><td>Crash isolation</td><td>Every message is handled in a guarded context; one malformed message cannot take the server down or drop the rooms.</td></tr>
     <tr><td>Version check</td><td>Client and server compare their version on join and warn when the major.minor differ — the moment to fetch the matching files from GitHub.</td></tr>
   </table></div>
@@ -3184,6 +3187,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <tr><td>“No such room” / “Wrong password”</td><td>Room names are case-sensitive as created; the password is the host's. A server password is a separate thing: <span class="menu">Join game → Local server → Server password</span>.</td></tr>
     <tr><td>“That name is taken”</td><td>The name is currently online in the room. An offline seat is reclaimed with the same name + the room password.</td></tr>
     <tr><td>“Too many failed attempts”</td><td>The lockout — wait 10 minutes, or reconnect in the tab that still holds the token.</td></tr>
+    <tr><td>“Too many wrong admin passwords”</td><td>The referee-key lockout — wait 10 minutes. Behind a tunnel without <code>--trust-proxy</code>, every guest's wrong guesses count together.</td></tr>
     <tr><td>“This room has no referee password” / “Wrong referee password”</td><td>Referees are per table: the host sets the password under Create game → Game settings when the room is created. No password there means no referee at that table.</td></tr>
     <tr><td>A version warning when joining</td><td>Client and server are from different releases. Fetch both from <a href="https://github.com/dtagent2000/VTES-Elysium">GitHub</a> and put them beside each other.</td></tr>
     <tr><td>“cloudflared.exe was not found” when starting the tunnel</td><td>The GitHub download is called <code>cloudflared-windows-amd64.exe</code> (64-bit) or <code>-386.exe</code> (32-bit). Rename it to <code>cloudflared.exe</code> and put it next to <code>start-cloudflare-tunnel.bat</code>. Almost every modern PC is 64-bit — pick <em>amd64</em>.</td></tr>
@@ -3228,7 +3232,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.162';   // v2.6.162 (16 Oct 2026, THE VERDICT WAIT, pure client -- purge; srv-2.6.46 unchanged, no wire change; bot v0.6.204 beside): consumes bot v0.6.202-204 (the bot project's three handoffs of 16 Oct). (1) Help > Bots embeds their 16 Oct guide (v0.6.204): combat between two bots in the rulebook's order, a hold stops the bots' own combat moves, a bleed bounced onto you may be blocked, the bot's move after it blocks you, the clock that starts when its question is sent. (2) The Bot Activity panel names v0.6.204's new rung: resolve-verdict (a bot blocked your action and waits for your stealth or your word, 'block verdict (Anna)') reads 'Declare verdict' -- it read 'Step', which worked; the Turn-based play button already stepped it (a filter since v2.6.140) and its title now says so. Nothing else in the client changes: the verdict line from the blocker's seat, the bots' new questions and their log-tier lines need no reader (PROTOCOL section 12 records the frozen ones).
+const VERSION='2.6.163';   // v2.6.163 (17 Oct 2026, THE REVIEW'S THREE LOCKS -- purge the client AND restart the server: srv-2.6.47 ships with it; bot v0.6.206 beside): the client half of finding 1 of the 16 Oct code review (Johan: 'kör A'). escapeHtml escapes " and ' too: another player's name, clan or card name went into "..." attributes (alt, title, data-name) with only & < > escaped, so a quote ended the attribute and the rest became markup -- the review's probe ran script in a second tab through a board's clan (no click needed) and through a name (on hover). Four toasts no longer escape what they show (a toast is text: an apostrophe would have read &#39;). Help > Bots embeds the bot project's v0.6.206 guide (v0.6.205-206 read in this round). After an independent review: the log link's Target menu row shows its name raw (a menu label is text), and the error-report ring decodes entities. The server half (names, clans, ids; the WebSocket limits; the admin lockout) is srv-2.6.47.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3791,7 +3795,7 @@ function rnd(n){
   return x%n;
 }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } }
-function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }   // v2.6.63: null-hardened -- a live Firefox crash ("can't access property replace, s is null") proved at least one caller can pass null (many candidates: c.name, ri.text); killing the class at the sink beats guessing the caller
+function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }   // v2.6.163 (the 16 Oct review): + " and ' -- the same helper feeds attribute values (alt, title, data-name), where a bare quote ended the value and the rest of a remote name or clan became markup. The bots' stripTags (v0.6.178+) and the play-test rig decode both. v2.6.63: null-hardened -- a live Firefox crash ("can't access property replace, s is null") proved at least one caller can pass null (many candidates: c.name, ri.text); killing the class at the sink beats guessing the caller
 /* Log references: a card's name is public only while it is face up.
    Face-down cards are always referred to anonymously in the log.   */
 function cardRef(c){ return c.faceDown ? '<b class="clog" data-cid="'+c.id+'">a face-down card</b>' : '<b class="clog" data-cid="'+c.id+'">'+escapeHtml(c.name)+'</b>'; }
@@ -3841,7 +3845,7 @@ function applyAutosaveMode(){
 function log(msg, localOnly, privateLine, opts){
   if(_undoCap && typeof msg==='string'){ _undoCap.label=msg; _undoCap=null; }   // auto-label the pending undo entry with the action's own log line
   if(!privateLine) curLines.push(msg);   // private lines (e.g. hand reveals) show live but are never archived to turnLogs
-  if(!privateLine && !(opts&&opts.noRing)){ const _p=String(msg).replace(/<[^>]*>/g,''); errRing.push({t:Date.now(), m:_p.slice(0,200)}); if(errRing.length>RING_MAX) errRing.shift(); }   // B-54: report/crash context ring -- HTML stripped; chat opts out; private lines never enter
+  if(!privateLine && !(opts&&opts.noRing)){ const _p=String(msg).replace(/<[^>]*>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&'); errRing.push({t:Date.now(), m:_p.slice(0,200)}); if(errRing.length>RING_MAX) errRing.shift(); }   // B-54: report/crash context ring -- HTML stripped; chat opts out; private lines never enter
   const li=document.createElement('li'); li.innerHTML=msg;
   const ul=$('#log'); ul.prepend(li);
   while(ul.children.length>90) ul.lastChild.remove();
@@ -4519,7 +4523,7 @@ function unpinLogInspect(){ logInspectPinned=false; logInspectHide(); }
       const name=b.getAttribute('data-name')||b.textContent;
       const fromSeat=parseInt(b.getAttribute('data-from-seat')||'0',10)||0;
       // Resolve the card: own card, remote card, or name-only
-      let targetFn=null, clearFn=null, label='⋖ Target: '+escapeHtml(name);
+      let targetFn=null, clearFn=null, label='⋖ Target: '+name;   // v2.6.163 (the independent review): a menu label is TEXT (renderItems sets textContent) -- escaping it showed &#39; once quotes were escaped
       const mine=cid && state.cards.get(cid);
       if(mine){
         // Own live card — use setTarget (local, with outline)
@@ -9883,9 +9887,9 @@ const MP_HANDLERS = {
     const verMM = v => String(v||'').split('.').slice(0,2).join('.');   // "2.4.3" -> "2.4"
     if(m.srv && verMM(m.srv)!==verMM(VERSION)){
       log('<span class="sysline">⚠ Version mismatch — this client is v'+VERSION+', the server v'+esc(m.srv)+'. Update the older one.</span>', true);
-      toast('⚠ Client v'+VERSION+' / server v'+esc(m.srv));
+      toast('⚠ Client v'+VERSION+' / server v'+String(m.srv));   // v2.6.163: a toast is text (textContent) -- no escaping, or an entity shows
     }
-    if(net.spect) toast('Watching '+esc(m.room||'')+' — you have no seat. 👁');
+    if(net.spect) toast('Watching '+String(m.room||'')+' — you have no seat. 👁');
     net.rtarget=null; updateTargetBtn();
     if(m.escrowSalt){ net.escrowSalt=m.escrowSalt; if(net.pass) setTimeout(ensureEscrowKey, 50); }
     { const _gt=(!net.lobby && !net.spect && m.myPub && Array.isArray(m.myPub.tokens)) ? m.myPub.tokens.find(t=>t && t.type==='pool' && Number.isFinite(t.x) && Number.isFinite(t.y)) : null;
@@ -10163,7 +10167,7 @@ const MP_HANDLERS = {
     layout();
     const nm=cardRef(c);
     log('<b>'+esc(m.from)+'</b> plays '+nm+' on your board'+(hostC?' (on '+cardRefCap(hostC)+')':'')+'.', true);
-    toast(esc(m.from)+' plays a card on your board');
+    toast(String(m.from||'')+' plays a card on your board');
   },
   gave(m){
     const pend=net.giving; net.giving=null;
@@ -10185,7 +10189,7 @@ const MP_HANDLERS = {
     pushNow();                                          // v2.5.59: the owner is actively waiting - push at once instead of the 600ms debounce
     mpSend({ t:'recalled', seat:m.fromSeat|0, cid:m.cid, ok:true, name:nm, kind:kd });
     log('<b>'+esc(m.from)+'</b> took their card back from your board.', true);
-    toast(esc(m.from)+' took a card back');
+    toast(String(m.from||'')+' took a card back');
   },
   recalled(m){                                          // I am the OWNER: my recall (take-back / burn / an undone give) resolved
     const cid=String(m.cid||''); if(!net.recalling || !net.recalling[cid]) return;   // ignore anything I did not ask for (no duplicate spawns)

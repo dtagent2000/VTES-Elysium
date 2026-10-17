@@ -1237,5 +1237,162 @@ test('srv-2.6.46 the snapshot round-trips tableLayout, re-validated: a legacy re
   eq(S.roomUnsnap(Object.assign({}, disk, { tableLayout:'huge' })).tableLayout, null, 'a garbled value is dropped');
 });
 
+/* === srv-2.6.47 (the 16 Oct code review, Johan: 'kör A'): names, clans and ids; the WebSocket limits; the admin lockout === */
+function wsPeer(cbOver){                                 // wsAttach on a fake socket: feed client bytes, read what the server wrote back
+  const handlers = {}, out = [], got = { msgs: [], ctrl: 0, alive: 0, close: 0 };
+  const sock = { destroyed:false, writable:true, write(b){ out.push(Buffer.from(b)); return true; }, end(){}, destroy(){ this.destroyed = true; }, on(ev, fn){ handlers[ev] = fn; }, once(){} };
+  const cb = Object.assign({ msg: t => { got.msgs.push(t); }, ctrl: () => { got.ctrl++; return true; }, alive: () => { got.alive++; }, close: () => { got.close++; } }, cbOver || {});
+  S.wsAttach(sock, cb);
+  return { feed: b => handlers.data(b), got, closed: () => out.some(b => b[0] === 0x88), pongs: () => out.filter(b => b[0] === 0x8A).length };
+}
+function cframe(op, payload, o){                         // a CLIENT frame, masked unless o.mask === false (RFC 6455 §5.2)
+  o = o || {};
+  const p = Buffer.from(payload || ''), b0 = (o.fin === false ? 0 : 0x80) | (o.rsv || 0) | op, mk = o.mask === false ? 0 : 0x80;
+  let head;
+  if (p.length < 126) head = Buffer.from([b0, mk | p.length]);
+  else if (p.length < 65536) { head = Buffer.alloc(4); head[0] = b0; head[1] = mk | 126; head.writeUInt16BE(p.length, 2); }
+  else { head = Buffer.alloc(10); head[0] = b0; head[1] = mk | 127; head.writeUInt32BE(0, 2); head.writeUInt32BE(p.length, 6); }
+  if (!mk) return Buffer.concat([head, p]);
+  const mask = Buffer.from([0x11, 0x22, 0x33, 0x44]), body = Buffer.from(p);
+  for (let i = 0; i < body.length; i++) body[i] ^= mask[i & 3];
+  return Buffer.concat([head, mask, body]);
+}
+function quiet(fn){ const l = console.log; console.log = () => {}; try { return fn(); } finally { console.log = l; } }
+
+test('srv-2.6.47 frames: ordinary traffic still flows -- a text message, the same message in three fragments, a ping (through the rate bucket) and its pong, an unmasked frame (accepted)', () => {
+  if (!S.wsAttach) throw new Error('wsAttach not exposed by the harness');
+  const w = wsPeer();
+  quiet(() => {
+    w.feed(cframe(0x1, '{"t":"x"}'));
+    w.feed(Buffer.concat([cframe(0x1, '{"t":', { fin: false }), cframe(0x0, '"y"', { fin: false }), cframe(0x0, '}')]));
+    w.feed(cframe(0x9, 'hi'));
+    w.feed(cframe(0x1, '{"t":"z"}', { mask: false }));
+  });
+  eq(JSON.stringify(w.got.msgs), JSON.stringify(['{"t":"x"}', '{"t":"y"}', '{"t":"z"}']), 'three messages, the fragmented one whole');
+  eq(w.pongs(), 1, 'the ping got its pong');
+  eq(w.got.ctrl, 1, 'the ping went through cb.ctrl -- the rate bucket (srv-2.6.46 answered every ping uncounted)');
+  assert(!w.closed(), 'nothing was closed');
+});
+
+test('srv-2.6.47 frames: a stream of empty continuation frames ends the connection at MAX_FRAGS, and nothing is read after (srv-2.6.46 kept them all and re-summed each time -- /healthz stopped answering)', () => {
+  const w = wsPeer();
+  const parts = [cframe(0x1, '', { fin: false })];
+  for (let i = 0; i < 200; i++) parts.push(cframe(0x0, '', { fin: false }));
+  w.feed(Buffer.concat(parts));
+  assert(w.closed(), 'the connection was ended');
+  w.feed(cframe(0x1, '{"t":"after"}'));
+  eq(w.got.msgs.length, 0, 'nothing is read after the end');
+  eq(S.MAX_FRAGS, 64, 'MAX_FRAGS');
+});
+
+test('srv-2.6.47 frames: every RFC 6455 violation ends the connection -- oversized or fragmented control frames, reserved opcodes, an RSV bit, binary, a stray continuation, a message inside a message, a message over MAX_MSG', () => {
+  const cases = {
+    'a ping over 125 bytes': cframe(0x9, 'x'.repeat(126)),
+    'a fragmented ping': cframe(0x9, 'x', { fin: false }),
+    'a reserved data opcode': cframe(0x3, '{}'),
+    'a reserved control opcode': cframe(0xB, ''),
+    'an RSV bit': cframe(0x1, '{}', { rsv: 0x40 }),
+    'a binary frame': cframe(0x2, '{}'),
+    'a continuation with no message open': cframe(0x0, '{}'),
+    'a new message inside an open one': Buffer.concat([cframe(0x1, '{', { fin: false }), cframe(0x1, '{}')]),
+    'fragments over MAX_MSG': Buffer.concat([cframe(0x1, 'a'.repeat(200000), { fin: false }), cframe(0x0, 'a'.repeat(200000))])
+  };
+  for (const [nm, b] of Object.entries(cases)){
+    const w = wsPeer(); w.feed(b);
+    assert(w.closed(), nm + ' ends the connection');
+    eq(w.pongs(), 0, nm + ': no pong'); eq(w.got.msgs.length, 0, nm + ': no message');
+  }
+  eq(S.MAX_CTRL, 125, 'MAX_CTRL (RFC 6455 §5.5)');
+});
+
+test('srv-2.6.47 the rate bucket counts control frames: connRateOk passes RATE_N in the window and refuses the next; a false from cb.ctrl ends the reading', () => {
+  if (!S.connRateOk) throw new Error('connRateOk not exposed by the harness');
+  eq(S.RATE_N, 80, 'RATE_N');
+  const conn = { sock: fakeSock(), rate: [], ip: '203.0.113.7' };
+  let ok = 0; quiet(() => { for (let i = 0; i < S.RATE_N; i++) if (S.connRateOk(conn)) ok++; });
+  eq(ok, S.RATE_N, 'RATE_N pass');
+  eq(quiet(() => S.connRateOk(conn)), false, 'the next is refused');
+  let n = 0; const w = wsPeer({ ctrl: () => (++n < 3) });
+  w.feed(Buffer.concat([cframe(0x9, ''), cframe(0x9, ''), cframe(0x9, ''), cframe(0x9, ''), cframe(0x1, '{}')]));
+  eq(w.pongs(), 2, 'two pongs, then the bucket said no');
+  eq(w.got.msgs.length, 0, 'and nothing after it was read');
+});
+
+test('srv-2.6.47 names and card fields: a name loses its double quote, a card field its "=", a clan or path both quotes, every id is id-shaped -- and the Imbued keep their quotes', () => {
+  eq(S.cleanName('Ann" onmouseover="x'), 'Ann onmouseover=x');
+  eq(S.cleanCard('Felix "Fix" Hessian'), 'Felix "Fix" Hessian', 'a card name keeps its quotes');
+  eq(S.cleanCard('x" onmouseover="alert(1)'), 'x" onmouseover"alert(1)', 'no "=": a quote can never open an attribute value');
+  const out = S.sanitizePub({ pool: 30, clan: 'x" onerror="y', target: { seat: 2, cid: 'c4"' },
+    cards: [ { id: 'c1" x="1', name: 'Felix "Fix" Hessian', zone: 'ready', owner: 'O"wn', controller: 'C"tl', host: 'c2"', attached: ['c3"'], path: 'Path" of', counters: ['a=b'] } ] }, false);
+  eq(out.clan, 'x onerrory', 'the clan (the probe\'s vector: the pool globe\'s alt and title)');
+  const c = out.cards[0];
+  eq(c.id, 'c1x1'); eq(c.host, 'c2'); eq(c.attached[0], 'c3'); eq(out.target.cid, 'c4');
+  eq(c.name, 'Felix "Fix" Hessian'); eq(c.owner, 'Own'); eq(c.controller, 'Ctl'); eq(c.path, 'Path of'); eq(c.counters[0], 'ab');
+  S.rooms.clear();
+  const conn = { ip: '127.0.0.1', sock: fakeSock() };
+  S.handle(conn, JSON.stringify({ t: 'create', room: 'q"room', name: 'Ann" x="1' }));
+  const room = S.rooms.get('qroom');
+  assert(room, 'the room name lost its quote too');
+  eq(room.players[0].name, 'Ann x=1', 'the seated name');
+});
+
+test('srv-2.6.47 hello{admin} shares the admin routes\' lockout: ERR_MAX wrong keys, then even the right key waits the window out -- and the server door\'s bucket is untouched', () => {
+  const saved = S.CFG.adminPassHash; S.CFG.adminPassHash = S.passHash('right-key');
+  try {
+    const ip = '192.0.2.77'; S.ipLogAuth.delete(ip);
+    const sock = recSock(), conn = { ip, sock };
+    for (let i = 0; i < S.ERR_MAX; i++) S.handle(conn, JSON.stringify({ t: 'hello', admin: 'guess' + i }));
+    eq(sock.msgs.filter(m => m.t === 'err' && /Wrong admin password/.test(m.msg)).length, S.ERR_MAX, 'each wrong key is told');
+    S.handle(conn, JSON.stringify({ t: 'hello', admin: 'right-key' }));
+    assert(!conn.admin, 'the right key waits the window out (srv-2.6.46 granted it: unlimited guesses)');
+    assert(sock.msgs.some(m => m.t === 'err' && /Too many wrong admin passwords/.test(m.msg)), 'and the client is told why');
+    assert(![...S.ipFails.keys()].some(k => k.includes(ip)), 'the server door\'s bucket is untouched (srv-2.6.46 struck it)');
+    function fReq(url){ return { url, socket:{ remoteAddress: ip }, headers:{} }; }
+    function fRes(){ return { code:0, writeHead(c){ this.code = c; }, end(){} }; }
+    const r = fRes(); S.handleLogFetch(fReq('/client-errors.txt?key=right-key'), r);
+    eq(r.code, 404, 'the HTTP admin routes read the same bucket');
+    S.ipLogAuth.delete(ip);
+    S.handle(conn, JSON.stringify({ t: 'hello', admin: 'right-key' }));
+    assert(conn.admin === true, 'after the window the right key works');
+  } finally { S.CFG.adminPassHash = saved; }
+});
+
+test('srv-2.6.47 frames: MAX_FRAGS is the boundary -- a message of 64 frames arrives whole, one of 65 ends the connection', () => {
+  const mk = n => { const parts = [cframe(0x1, '{"t":"', { fin: false })]; for (let i = 1; i < n - 1; i++) parts.push(cframe(0x0, '', { fin: false })); parts.push(cframe(0x0, 'x"}')); return Buffer.concat(parts); };
+  const ok = wsPeer(); ok.feed(mk(64));
+  eq(JSON.stringify(ok.got.msgs), JSON.stringify(['{"t":"x"}']), '64 frames: delivered'); assert(!ok.closed(), '64 frames: still open');
+  const over = wsPeer(); over.feed(mk(65));
+  eq(over.got.msgs.length, 0, '65 frames: nothing delivered'); assert(over.closed(), '65 frames: closed');
+});
+
+test('srv-2.6.47 what was stored under the old rules is cleaned as it loads: a restored room and its players (join looks up the cleaned name), a saved match\'s players and boards, and the fx relay\'s names and verb', () => {
+  const r = S.roomUnsnap({ name: 'The "Club"', players: [{ name: 'Ann "A"', token: 't1' }] });
+  eq(r.name, 'The Club', 'the room name'); eq(r.players[0].name, 'Ann A', 'a player name');
+  const sv = S.saveUnsnap({ name: 'sv', players: [{ name: 'Bo "B"', pub: { pool: 20, clan: 'x" onerror="y', cards: [{ id: 'c1"', name: 'Felix "Fix" Hessian', zone: 'ready' }] }, pubOwn: { pool: 20, deckName: 'Deck=1', cards: [] } }] });
+  const sp = sv.players[0];
+  eq(sp.name, 'Bo B'); eq(sp.pub.clan, 'x onerrory'); eq(sp.pub.cards[0].id, 'c1'); eq(sp.pub.cards[0].name, 'Felix "Fix" Hessian'); eq(sp.pubOwn.deckName, 'Deck1');
+  const f = S.fxCard({ name: 'Bad <b>"x"</b> =1', kind: 'lib' });
+  eq(f.name, 'Bad b"x"/b 1', 'an fx name is cleaned like a card field');
+  eq(S.fxCard({ name: 'Secret', faceDown: true }).name, '', 'face-down still carries no name');
+});
+
+test('srv-2.6.47 the admin lockout keeps the server door\'s loopback tolerance: an all-loopback server (a tunnel without --trust-proxy) allows 4 x ERR_MAX wrong keys, a real address ERR_MAX -- for the socket and the HTTP routes alike', () => {
+  const saved = S.CFG.adminPassHash; S.CFG.adminPassHash = S.passHash('right-key');
+  try {
+    S.ipLogAuth.delete('127.0.0.1');
+    const sock = recSock(), conn = { ip: '127.0.0.1', sock };
+    for (let i = 0; i < S.ERR_MAX; i++) S.handle(conn, JSON.stringify({ t: 'hello', admin: 'guess' + i }));
+    assert(!S.adminLocked('127.0.0.1'), 'ERR_MAX wrong keys from loopback do not lock yet');
+    S.handle(conn, JSON.stringify({ t: 'hello', admin: 'right-key' }));
+    assert(conn.admin === true, 'so the host who mistyped still gets in');
+    const c2 = { ip: '127.0.0.1', sock: recSock() };
+    for (let i = 0; i < 3 * S.ERR_MAX; i++) S.handle(c2, JSON.stringify({ t: 'hello', admin: 'more' + i }));
+    assert(S.adminLocked('127.0.0.1'), '4 x ERR_MAX locks loopback');
+    const r = { code: 0, writeHead(c){ this.code = c; }, end(){} };
+    S.handleLogFetch({ url: '/client-errors.txt?key=right-key', socket: { remoteAddress: '127.0.0.1' }, headers: {} }, r);
+    eq(r.code, 404, 'and the HTTP route reads the same rule');
+  } finally { S.ipLogAuth.delete('127.0.0.1'); S.CFG.adminPassHash = saved; }
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));
 process.exit(fail ? 1 : 0);
