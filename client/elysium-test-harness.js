@@ -16,6 +16,10 @@
 const fs = require('fs');
 
 /* ---------- compact chainable DOM stub ---------- */
+/* v2.6.163: an opt-in recorder of the HTML the client writes (innerHTML / outerHTML assignments, insertAdjacentHTML).
+   Off by default (null), and writes stay no-ops either way: the recorder only LOOKS. A test turns it on with
+   api.__htmlRec.start() and takes the list with stop() -- the XSS test reads every string a renderer built. */
+let HTML_REC = null;
 function makeStub() {
   const f = function () { return stub; };
   /* v2.6.51: `_t` is a TEST-ONLY seed set for reads. Writes stay no-ops on purpose — the client
@@ -42,10 +46,11 @@ function makeStub() {
         if (p === 'getBoundingClientRect') return () => ({ left:0, top:0, right:0, bottom:0, width:0, height:0, x:0, y:0 });
         if (['querySelectorAll','getElementsByClassName','getElementsByTagName'].includes(p)) return () => [];
         if (p === 'getContext') return () => makeStub();
+        if (p === 'insertAdjacentHTML') return (pos, html) => { if (HTML_REC) HTML_REC.push(String(html)); };   // v2.6.163: the recorder
       }
       return stub;
     },
-    apply() { return stub; }, set() { return true; }, has() { return true; }
+    apply() { return stub; }, set(t, p, v) { if (HTML_REC && (p === 'innerHTML' || p === 'outerHTML')) HTML_REC.push(String(v)); return true; }, has() { return true; }
   });
   return stub;
 }
@@ -234,7 +239,7 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   cmbParseCardN: (typeof cmbParseCardN!=='undefined'?cmbParseCardN:undefined),
   set uiDialog(v){ uiDialog=v; },
   get playedPinned(){ return (typeof playedPinned!=='undefined')?playedPinned:undefined; },          // v2.6.132: a menu-started combat pins the Played window
-  set toast(v){ toast=v; },
+  set toast(v){ toast=v; }, get toast(){ return (typeof toast!=='undefined')?toast:undefined; },   // v2.6.163: + the getter (the toast-is-text test calls the real one). A data property here would replace this pair and every toast capture
   cardMenu: (typeof cardMenu!=='undefined'?cardMenu:undefined),                                    // v2.6.134: tests walk the REAL card menu (Actions > Block, Bleed)
   set showMenu(v){ showMenu=v; },                                                                   // v2.6.134: ...by capturing what it would show
   cmbPick: (typeof cmbPick!=='undefined'?cmbPick:undefined),
@@ -391,7 +396,11 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   setNameTarget: (typeof setNameTarget!=='undefined'?setNameTarget:undefined), openHandCardsFor: (typeof openHandCardsFor!=='undefined'?openHandCardsFor:undefined), canSeeOpenHand: (typeof canSeeOpenHand!=='undefined'?canSeeOpenHand:undefined), oppPoolMenuItems: (typeof oppPoolMenuItems!=='undefined'?oppPoolMenuItems:undefined),
   botDebugSync: (typeof botDebugSync!=='undefined'?botDebugSync:undefined), get BLEED_LINE(){ return (typeof BLEED_LINE!=='undefined')?BLEED_LINE:undefined; },
   setAside: (typeof setAside!=='undefined'?setAside:undefined),   // v2.6.161: the side panel's settle (a late transitionend still sends the final resize)
-  switchView: (typeof switchView!=='undefined'?switchView:undefined)   // v2.6.161: a seat visit from the helicopter view stands on L2
+  switchView: (typeof switchView!=='undefined'?switchView:undefined),   // v2.6.161: a seat visit from the helicopter view stands on L2
+  escapeHtml: (typeof escapeHtml!=='undefined'?escapeHtml:undefined), esc: (typeof esc!=='undefined'?esc:undefined),   // v2.6.163: the XSS test -- the escaper and every renderer that draws another player's name, clan or cards
+  renderL3: (typeof renderL3!=='undefined'?renderL3:undefined), renderL2: (typeof renderL2!=='undefined'?renderL2:undefined), renderL4: (typeof renderL4!=='undefined'?renderL4:undefined),
+  renderRemote: (typeof renderRemote!=='undefined'?renderRemote:undefined), renderStats: (typeof renderStats!=='undefined'?renderStats:undefined), renderLobby: (typeof renderLobby!=='undefined'?renderLobby:undefined),
+  updateTurnText: (typeof updateTurnText!=='undefined'?updateTurnText:undefined), sayBubble: (typeof sayBubble!=='undefined'?sayBubble:undefined), previewRemote: (typeof previewRemote!=='undefined'?previewRemote:undefined)
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',
@@ -408,6 +417,7 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   try { Object.defineProperty(api, '__ls', { value: env.localStorageStub, enumerable:false }); } catch (e) {}   // v2.6.117: the localStorage stub, so a test can read what an autosave actually wrote
   try { Object.defineProperty(api, '__doc', { value: env.documentStub, enumerable:false }); } catch (e) {}
   try { Object.defineProperty(api, '__win', { value: env.windowStub, enumerable:false }); } catch (e) {}   // v2.6.161: the window stub (its writes persist), so a test can count the resize events the client dispatches   // v2.6.110: the document stub itself, so tests can inject named IDs for $()
+  try { Object.defineProperty(api, '__htmlRec', { value: { start(){ HTML_REC = []; }, stop(){ const r = HTML_REC || []; HTML_REC = null; return r; } }, enumerable:false }); } catch (e) {}   // v2.6.163: the HTML recorder (see makeStub)
   return api;
 }
 
@@ -475,7 +485,12 @@ function loadServer(serverPath) {
   joinReply: (typeof joinReply!=='undefined'?joinReply:undefined),                             // srv-2.6.43: the late-joiner replay
   roomSnap: (typeof roomSnap!=='undefined'?roomSnap:undefined),                                // srv-2.6.43: the snapshot record, both directions
   roomUnsnap: (typeof roomUnsnap!=='undefined'?roomUnsnap:undefined),
-  BOT_STATICS: (typeof BOT_STATICS!=='undefined'?BOT_STATICS:undefined)
+  BOT_STATICS: (typeof BOT_STATICS!=='undefined'?BOT_STATICS:undefined),
+  wsAttach: (typeof wsAttach!=='undefined'?wsAttach:undefined), connRateOk: (typeof connRateOk!=='undefined'?connRateOk:undefined),   // srv-2.6.47: the frame limits and the shared rate bucket
+  MAX_FRAGS: (typeof MAX_FRAGS!=='undefined'?MAX_FRAGS:undefined), MAX_CTRL: (typeof MAX_CTRL!=='undefined'?MAX_CTRL:undefined), RATE_N: (typeof RATE_N!=='undefined'?RATE_N:undefined),
+  cleanName: (typeof cleanName!=='undefined'?cleanName:undefined), cleanCard: (typeof cleanCard!=='undefined'?cleanCard:undefined), cleanSym: (typeof cleanSym!=='undefined'?cleanSym:undefined),
+  sanitizePub: (typeof sanitizePub!=='undefined'?sanitizePub:undefined), ERR_WIN: (typeof ERR_WIN!=='undefined'?ERR_WIN:undefined),
+  saveUnsnap: (typeof saveUnsnap!=='undefined'?saveUnsnap:undefined), fxCard: (typeof fxCard!=='undefined'?fxCard:undefined), adminLocked: (typeof adminLocked!=='undefined'?adminLocked:undefined)   // srv-2.6.47: the independent review's three
 };`;
   const factory = new Function('require', 'module', 'exports', '__dirname', '__filename', src + expose);
   const mod = { exports: {} };

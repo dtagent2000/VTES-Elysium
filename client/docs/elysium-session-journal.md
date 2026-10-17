@@ -1,3 +1,134 @@
+## [GRANSKNINGENS TRE LÅS] (17 oktober 2026, natt, klient v2.6.163 / srv-2.6.47)
+
+Johan, 16 okt kväll: "Skulle du vilja göra en granskning av koden om det är något särskilt du är osäker på eller som
+ser konstigt ut som kan behöva justeras (buggar, förbättringar eller avvikelser från best practice sett till syftet
+etc)". Granskningen gick i fyra spår: säkerhet och server, spelstatus och hotseat, prestanda och robusthet, best
+practice. De viktigaste fynden reproducerades med sonder lokalt (riktig server, headless Chromium, harness), aldrig mot
+elysium.cards. Listan gick till Johan i tre grupper: A säkerhet, B spellogik, C robusthet. Johan, 17 okt 00:38:
+"SUPERBRA jobbat! ... Kör absolut gärna igång med A".
+
+**Byggt (A, klient v2.6.163 + srv-2.6.47; purge av klienten OCH omstart av servern):**
+1. **XSS via citattecken.** `escapeHtml` escapade `& < >` men inte `"` och `'`, och samma hjälpare fyller attribut
+   (`alt`, `title`, `data-name`). Servern släppte igenom `"` i namn och i brädets `clan`. En medspelare kunde alltså
+   köra skript i en annan flik: i sonden gav ett namn en `onmouseover`, och en klan en `onerror` utan klick.
+   - Klienten: `escapeHtml` escapar `"` → `&quot;` och `'` → `&#39;`. Fyra `toast()`-anrop slutade escapa, eftersom
+     en toast är text (en apostrof hade visats som `&#39;`).
+   - Servern, som försvar för flikar som ännu kör en äldre klient: `cleanName` tar bort `"`; `cleanCard` tar bort `=`
+     (inget kortnamn har ett, och citattecknen får stå kvar: Imbued och t.ex. Felix "Fix" Hessian har dem);
+     `cleanSym` (klan, path) tar bort båda citattecknen; alla kort-id i pub, `give` och duellen går genom `cleanId`;
+     `owner`/`controller` rensas som namn.
+2. **En anslutning kunde sänka servern.** `wsAttach` sparade varje fragment och summerade om alla vid varje ram, så
+   tomma fortsättningsramar växte utan gräns till kvadratisk kostnad. Nu gäller RFC 6455: högst 64 ramar och 256 KB per
+   meddelande (löpande räkning), kontrollramar högst 125 byte och aldrig fragmenterade, inga RSV-bitar, inga reserverade
+   opkoder, ingen binärram, och en fortsättning bara i ett öppet meddelande. Ett brott stänger anslutningen, och sedan
+   läses ingenting mer. Ping och pong räknas i samma hink som meddelandena (`connRateOk`, 80 per 10 s).
+3. **Admin-lösenordet gick att gissa fritt.** `hello{admin}` bokförde fel i serverdörrens hink men läste den aldrig.
+   Nu delar det spärren med adminroutarna över HTTP (`ipLogAuth`, 10 fel per 10 min per adress, läses före
+   jämförelsen, så även rätt nyckel får vänta). Serverdörrens hink rörs inte längre.
+4. **Bottarna v0.6.205–206** lästes in i samma runda: Help ▸ Bots bäddar in deras v0.6.206-guide (deras enda önskan
+   till oss). Help ▸ Local server: säkerhetstabellen (ping räknas, felaktiga ramar, referee-nyckelns spärr, citattecken
+   och `=`) och en felsökningsrad för "Too many wrong admin passwords".
+5. **Harness:** en HTML-inspelare (`api.__htmlRec.start()/stop()`) som bara tittar på innerHTML/outerHTML och
+   insertAdjacentHTML; renderarna exponerade; `get toast` bredvid den befintliga settern. Servern exponerar
+   `wsAttach`, `connRateOk`, `MAX_FRAGS`, `MAX_CTRL`, `RATE_N`, `cleanName`, `cleanCard`, `cleanSym`, `sanitizePub`,
+   `ERR_WIN`.
+6. **PROTOCOL:** §1 ramgränserna, §2 rate limit med ping, §4.2 rensningen och att en klient MÅSTE escapa citattecken i
+   attribut, §4.3 adminspärren.
+
+**Avvikelse från förslaget:** omaskerade klientramar avvisas inte. RFC:n säger att de ska avvisas, men om någon proxy
+framför servern skickar dem omaskerade skulle alla spelare låsas ute vid deployen. Webbläsare och bottens klient
+maskerar alltid. Servern loggar i stället `[ws] an unmasked client frame` en gång per anslutning; när loggarna visar att
+det aldrig händer kan vi slå på avvisningen.
+
+**Kört före och efter (lokalt):**
+- **Webbläsarsonden** (riktig server, två Chromium-kontexter, angriparen med citattecken i namnet och i klanen):
+  - gammal klient + gammal server: injicerade attribut på plats (en `img[onerror]` med koden, `onmouseover` på en span
+    och en knapp);
+  - ny klient + ny server, ny klient + gammal server och gammal klient + ny server: 0 injicerade, 0 körda. Varje halva
+    räcker alltså ensam för de här vektorerna.
+- **Fragmentfloden** (20 000 tomma fortsättningsramar per omgång från en socket): srv-2.6.46 svarade på `/healthz`
+  efter 374 ms vid 20 000 och sedan inte alls inom 3 s från 40 000; srv-2.6.47 svarade på 1–2 ms hela tiden och
+  stängde socketen.
+- **Pingfloden** (300 ping): gammal 300 pong och ingen stängning; ny 80 pong, sedan "Slow down" och stängning. En ping
+  på 200 KB: gammal skickade tillbaka den, ny stänger utan pong.
+- **Admingissningar** (350 fel över fem socketar på 3 s, sedan rätt nyckel): gammal 350 "Wrong" och sedan beviljad;
+  ny 10 "Wrong", 340 "Too many wrong admin passwords" och även rätt nyckel nekad.
+- **Rendertestet i harness:** v2.6.162 hade 30 av 65 HTML-skrivningar med rå payload, v2.6.163 har 0 (30 escapade).
+
+**Mitt eget misstag på vägen:** jag exponerade `toast` som en dataegenskap i harnessens objekt. Den ersatte den
+befintliga `set toast(v)` (samma namn i samma objektliteral), så två orelaterade tester som fångar toasts blev röda.
+Lösningen blev en `get toast` bredvid settern. Sedan föll v2.6.159:s LIVE-test om Revelations ungefär var tredje
+körning: sviten `captureLog` tog bort taggar men avkodade inte entiteter, och när den riktiga bottens slumpade hand
+innehöll Wake with Evening's Freshness stod det `Evening&#39;s` i texten. Tvingat i en skrapkörning: gammal hjälpare
+röd, ny grön. Hjälparen avkodar nu som textContent, och ett nytt test fäster det. Dessutom läser B1:s splitter `/tmp/original.html`, och en gammal kopia
+där delade en äldre klient; `cmp` fångade det.
+
+**Oberoende granskning före PR:en** (en separat agent som inte sett arbetet; inget must-fix):
+- **Åtgärdat:**
+  - Högerklicksmenyn på en loggad kortlänk visade `⋖ Target: Wake with Evening&amp;#39;s Freshness`. Etiketten byggdes
+    med `escapeHtml` men menyn skriver text. Etiketten är nu rå, och ett nytt test vägrar menyetiketter som escapas.
+    Min egen genomsökning hade missat den, eftersom värdet gick via en variabel.
+  - Ett rum eller en spelare från disk med `"` i namnet kom inte in igen efter omstarten. Servern slår upp det rensade
+    namnet, men `restore()` använde det lagrade som nyckel. Nu rensar `roomUnsnap` rums- och spelarnamn och `restore()`
+    nycklar på dem. En sparad match går genom `saveUnsnap` när den laddas: namnen rensas och varje bräde går genom
+    `sanitizePub` igen.
+  - Adminspärren: alla tre admindörrar använder `adminLocked(ip)`. En loopback-adress (tunnel utan `--trust-proxy`)
+    får 40 försök i stället för 10, som serverdörren har haft. En gäst med avsikt kan fortfarande låsa nyckeln där;
+    `--trust-proxy` skiljer räkningarna åt.
+  - `fx`-kortnamn och verb rensas som kortfält; de gick ut helt orensade.
+  - Loggraden om omaskerade ramar skrivs högst en gång i minuten, med antal.
+  - Felrapportens ring avkodar entiteter, ett gränstest för `MAX_FRAGS` (64 levereras, 65 stänger) och en dubblerad
+    kommentar bort.
+- **Kvar, öppet:**
+  - `deriveIp` tar den vänstra posten i `X-Forwarded-For`. Bakom en proxy som lägger till (nginx) kan varje anslutning
+    påstå en ny adress. Cloudflare påverkas inte, eftersom CF-Connecting-IP går först. Det fanns före den här rundan.
+  - `Buffer.concat([buf, d])` för varje TCP-bit kostar kvadratiskt när en stor ram droppar in byte för byte
+    (granskarens mätning: ~0,6 s server-CPU per 256 KB över localhost, och angriparen betalar ungefär lika mycket).
+    Min uppskattning: utspritt över tid och många anslutningar kan det bli en billig CPU-attack. Fanns också före.
+
+**Grindar:**
+- klientsviten 308/0 med bot v0.6.206 bredvid, inga skip, körd tre gånger (4 nya tester). Mot v2.6.162: 303/5, de fyra
+  nya och inbäddningen;
+- dispatch 77/0 (9 nya). Mot srv-2.6.46: 68/9, alla nio röda där;
+- protokoll 6/0, kanariefågeln 69/0, endpoint 24/0, soak `--control` exit 0, B1 byte-identisk, embed `--check` på båda
+  sidorna, check-versions grön med roten.
+
+**Kvar från granskningen (B och C, för nästa runda):**
+- **B, spellogik** (alla reproducerade med sonder):
+  - 4: den som lämnar mitt i en match flyttar allas platser (`splice`; `vacateSeat` finns);
+  - 5: P (Pass) fungerar utanför din tur, online och i hotseat, där svepet aldrig blir klart;
+  - 6: hotseat-räknaren nollställs inte vid turbyte, så en gammal stealth gav fel utslag;
+  - 7: överlämningen i hotseat går via `setPhase()`: räknaren stängs, actionen blir resolved och masterbonusen nollas;
+  - 8: en oust med automatisk bounty avstängd når aldrig servern, så spelaren stannar i turordningen;
+  - 9: dubbel VP, eftersom unoust inte tar tillbaka VP:n och en andra bounty räknas;
+  - 10: negativ intercept klämps till 0. Regelboken tillåter under 0; det är **Johans beslut**, en protokolländring och
+    en REPLY till bottarna;
+  - 11: mindre saker: bryggan skickar osanerade bräden till bottarna, räknaren överlever hotseat-bordet, en sparad match
+    pekar på en plats som inte finns, och ett klick inom 120 ms från en botts skrivning försvinner.
+- **C, robusthet:**
+  - 12: brädena ekar i L2/L3, ungefär en gång per sekund och klient;
+  - 13: öppen hand plus ekot ger utkastning (118 meddelanden på 10 s);
+  - 14: `mpRejoin` saknar serverlösenordet, så man kommer aldrig in igen på en server med `--server-pass`;
+  - 15: engångsmeddelanden försvinner under en återanslutning;
+  - 16: småsaker (24 lekar kapas tyst, `turnLogs` växer och quota-fel sväljs, duelpanelens intervall staplas), CI för
+    grindarna och CSP senare.
+- **Från bottarna:** deras förslag om chattakten (finding 1) väntar på Johan. Riggen känner inte igen v0.6.205:s nya
+  rader (Haven Uncovered, stealth-verbet `locks`, Revelations-instruktionen) eller v0.6.206:s nya Magic of the
+  Smith-formulering. PLAYTEST.md:s rad om Revelations mot en bot är inaktuell.
+
+**Otestat och osäkert:**
+- Ingenting är kört mot elysium.cards. Flikar som har den gamla klienten kvar efter deployen skyddas av serverns
+  rensning för namn, klaner, paths och id, och av `=`-borttagningen för kortnamn. De får den nya klienten först när de
+  laddas om.
+- Om någon proxy framför servern skickar omaskerade ramar vet vi inte; loggen visar det.
+- Adminspärren bakom en tunnel utan `--trust-proxy` är en enda hink för alla: tio fel från vem som helst låser
+  admin i tio minuter, precis som HTTP-routarna redan gjorde. Enligt hostingplanen kör elysium.cards med
+  `--trust-proxy`, men det har jag inte sett på maskinen.
+- Rendertestet täcker renderarna jag anropar. Andra ställen skyddas av ändringen i `escapeHtml` om de går via den, och
+  genomsökningen hittade inga andra attribut med rå data från andra spelare.
+- Mobil och touch är inte körda. Host Guide (docx) är inte genererad på nytt; dess säkerhetstabell stämmer men är
+  äldre.
+
 ## [UTSLAGET VÄNTAR] (16 oktober 2026, kväll, klient v2.6.162)
 
 Johan: "Hejsan! Vi har gjort en uppdatering på bottsidan där det finns en handovern till klienten, vill du slå en kik i

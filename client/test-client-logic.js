@@ -4445,7 +4445,7 @@ function captureLog(A){   // what log() wrote -- private lines included (they re
   const doc = A.__doc, lines = [], origCE = doc.createElement;
   doc._ids['log'] = { children: [], prepend(li){ lines.push(String(li.innerHTML)); this.children.unshift(li); }, get lastChild(){ const c = this.children; return { remove(){ c.pop(); } }; } };
   doc.createElement = t => (t === 'li' ? { innerHTML: '', cloneNode(){ return this; } } : origCE(t));
-  const strip = s => String(s).replace(/<[^>]*>/g, '');
+  const strip = s => String(s).replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');   // v2.6.163: decode like textContent -- escapeHtml escapes quotes now, and a real bot's random hand holding Wake with Evening's Freshness failed the Revelations check about one run in three
   return { lines, text: () => lines.map(strip), restore(){ delete doc._ids['log']; doc.createElement = origCE; } };
 }
 test('v2.6.159 the Edge at a hotseat: a bot\'s edgeTake reaches the human (a stored human\'s board and every mat too) and the other bots in the server\'s shape; the human\'s take reaches every bot, a hand-off to a bot is its edgePass (bot v0.6.200, play-test point 20: two Edge holders)', () => {
@@ -4903,6 +4903,61 @@ testB('v2.6.162 LIVE: a REAL bot\'s verdict clock (v0.6.204+) starts when its qu
     assert(vl.t - q.t >= 2800, 'not before its 3 s were up (' + (vl.t - q.t) + ' ms after the question)');
   } finally { delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); A.MP_HANDLERS.log = log0; A.MP_HANDLERS.chat = chat0; A.net.roster = []; A.net.hot = null; }
 });
+/* === v2.6.163 (the 16 Oct code review, finding 1; Johan: 'kör A'): another player's name, clan and cards are escaped in attributes too === */
+test('v2.6.163 escapeHtml escapes " and \' as well as & < > (and still takes null)', () => {
+  eq(API.escapeHtml('a"b\'c<d>&e'), 'a&quot;b&#39;c&lt;d&gt;&amp;e');
+  eq(API.escapeHtml(null), ''); eq(API.esc(undefined), '');
+  eq(API.escapeHtml('Felix "Fix" Hessian'), 'Felix &quot;Fix&quot; Hessian', 'a card name with quotes (the Imbued carry them)');
+});
+test('v2.6.163 XSS: another player\'s name, clan and card fields reach no attribute raw, in any view (v2.6.162: a quote ended alt="..." -- the review ran script in a second tab through a board\'s clan, no click needed)', () => {
+  const R = loadClient(CLIENT);
+  const P1 = 'Q" data-pwn="1', P2 = "Q' data-pwn='1";   // no < or >: the server strips those, quotes it relayed (srv-2.6.46)
+  R.net.status = 'in'; R.net.room = 'R'; R.net.you = 'Me'; R.net.started = true; R.net.turnSeat = 2;
+  R.net.roster = [ { seat: 1, name: 'Me', vp: 0, online: true, host: true }, { seat: 2, name: P1, vp: 1, online: true }, { seat: 3, name: P2, vp: 0, online: false } ];
+  R.net.watchers = 1; R.net.watcherList = [ { name: P1 } ];
+  const card = (id, extra) => Object.assign({ id, name: P1, kind: 'crypt', zone: 'ready', x: 100, y: 60, blood: 2, owner: P1, controller: P2, counters: [P1] }, extra || {});
+  const pub = clan => ({ pool: 30, clan, edge: false, counts: { hand: 7, library: 40, crypt: 8 }, bw: 1004, bh: 616,
+    cards: [ card('c1'), card('c2', { kind: 'lib', host: 'c1', name: P2 }), card('c3', { zone: 'torpor' }) ] });
+  R.net.boards = { 2: { who: P1, pub: pub(P1) }, 3: { who: P2, pub: pub(P2) } };
+  const errs = [], run = (nm, fn) => { try { fn(); } catch (e) { errs.push(nm + ': ' + e.message); } };
+  R.__htmlRec.start();
+  for (const v of ['ov', 'l2', 'l4', 2, 3]){
+    R.net.view = v;
+    run('view ' + v, () => { if (v === 'ov') R.renderL3(); else if (v === 'l2') R.renderL2(); else if (v === 'l4') { R.renderL4(); R.updateL4Opponents(); R.renderL4Globes(); } else R.renderRemote(v); });
+  }
+  run('renderStats', () => R.renderStats()); run('renderLobby', () => R.renderLobby()); run('updateRoomBar', () => R.updateRoomBar());
+  run('updateTurnText', () => R.updateTurnText()); run('sayBubble', () => R.sayBubble(P1, P1, 2, P1));
+  run('previewRemote', () => R.previewRemote(card('c9'), { who: P1 }));
+  const html = R.__htmlRec.stop();
+  eq(errs.length, 0, 'every renderer ran under the harness: ' + errs.join(' | '));
+  const bad = html.filter(h => /data-pwn=["']1/.test(h));
+  const at = h => { const i = h.search(/data-pwn=["']1/); return h.slice(Math.max(0, i - 70), i + 14); };
+  eq(bad.length, 0, 'a raw quote from another player reached the HTML: ' + bad.slice(0, 2).map(at).join(' || '));
+  const all = html.join('\n');   // coverage: the sites the review named were drawn here -- escaped
+  assert(/alt="Q&quot; data-pwn=&quot;1"/.test(all), 'a clan symbol\'s alt (the pool globe, the mat label), escaped');
+  assert(/alt="Q&#39; data-pwn=&#39;1"/.test(all), 'the single-quote payload, escaped');
+  assert(/title="Q&quot; data-pwn=&quot;1"/.test(all), 'a name in a title attribute (the stats row), escaped');
+  assert(html.length >= 30, 'the renderers wrote HTML (' + html.length + ' writes)');
+});
+test('v2.6.163 the suite\'s log capture reads a line as the player does: an escaped apostrophe or quote decodes (a LIVE test failed whenever a real bot\'s hand held Wake with Evening\'s Freshness)', () => {
+  const R = loadClient(CLIENT), L = captureLog(R);
+  try { R.log('<b>' + R.esc("Wake with Evening's Freshness") + '</b> and <b>' + R.esc('Felix "Fix" Hessian') + '</b> & co', true); }
+  finally { L.restore(); }
+  assert(/Evening&#39;s/.test(L.lines[0]), 'the log line carries the entity (v2.6.163): ' + L.lines[0]);
+  eq(L.text()[0], "Wake with Evening's Freshness and Felix \"Fix\" Hessian & co");
+});
+test('v2.6.163 a toast or a menu label is text: none is built with esc/escapeHtml (an escaped name read O&#39;Neil once quotes were escaped; the review found the log link\'s "⋖ Target:" row)', () => {
+  const src = require('fs').readFileSync(CLIENT, 'utf8');
+  const hits = src.match(/toast\([^;\n]*?(?:esc|escapeHtml)\(/g) || [];
+  eq(hits.length, 0, 'toast() calls that escape: ' + hits.slice(0, 3).join(' | '));
+  const labels = src.match(/\blabel\s*[:=]\s*[^,;\n]*?(?<![A-Za-z0-9_$.])(?:esc|escapeHtml)\(/g) || [];
+  eq(labels.length, 0, 'menu labels built with escaping (renderItems sets textContent): ' + labels.slice(0, 3).join(' | '));
+  const R = loadClient(CLIENT), el = { textContent: '', classList: { add(){}, remove(){} } };
+  R.__doc._ids.toast = el;
+  R.toast("O'Neil & Sons took a card back");
+  eq(el.textContent, "O'Neil & Sons took a card back", 'toast() is textContent');
+});
+
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){
