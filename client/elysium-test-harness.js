@@ -400,7 +400,13 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   escapeHtml: (typeof escapeHtml!=='undefined'?escapeHtml:undefined), esc: (typeof esc!=='undefined'?esc:undefined),   // v2.6.163: the XSS test -- the escaper and every renderer that draws another player's name, clan or cards
   renderL3: (typeof renderL3!=='undefined'?renderL3:undefined), renderL2: (typeof renderL2!=='undefined'?renderL2:undefined), renderL4: (typeof renderL4!=='undefined'?renderL4:undefined),
   renderRemote: (typeof renderRemote!=='undefined'?renderRemote:undefined), renderStats: (typeof renderStats!=='undefined'?renderStats:undefined), renderLobby: (typeof renderLobby!=='undefined'?renderLobby:undefined),
-  updateTurnText: (typeof updateTurnText!=='undefined'?updateTurnText:undefined), sayBubble: (typeof sayBubble!=='undefined'?sayBubble:undefined), previewRemote: (typeof previewRemote!=='undefined'?previewRemote:undefined)
+  updateTurnText: (typeof updateTurnText!=='undefined'?updateTurnText:undefined), sayBubble: (typeof sayBubble!=='undefined'?sayBubble:undefined), previewRemote: (typeof previewRemote!=='undefined'?previewRemote:undefined),
+  pass: (typeof pass!=='undefined'?pass:undefined), passBlockedWhy: (typeof passBlockedWhy!=='undefined'?passBlockedWhy:undefined), setActivePlayer: (typeof setActivePlayer!=='undefined'?setActivePlayer:undefined),   // v2.6.164: group B of the review
+  collectPlayed: (typeof collectPlayed!=='undefined'?collectPlayed:undefined), snapshotPlayed: (typeof snapshotPlayed!=='undefined'?snapshotPlayed:undefined), ousted: (typeof ousted!=='undefined'?ousted:undefined),
+  hotTurnTallyClear: (typeof hotTurnTallyClear!=='undefined'?hotTurnTallyClear:undefined), tallyClamp: (typeof tallyClamp!=='undefined'?tallyClamp:undefined), maybeVerdictPulse: (typeof maybeVerdictPulse!=='undefined'?maybeVerdictPulse:undefined),
+  setPhase: (typeof setPhase!=='undefined'?setPhase:undefined), get _avrDirty(){ return (typeof _avrDirty!=='undefined')?_avrDirty:undefined; }, get AVR_DEFS(){ return (typeof AVR_DEFS!=='undefined')?AVR_DEFS:undefined; },
+  rosterMe: (typeof rosterMe!=='undefined'?rosterMe:undefined), unoustHot: (typeof unoustHot!=='undefined'?unoustHot:undefined), hotFirstHumanTurn: (typeof hotFirstHumanTurn!=='undefined'?hotFirstHumanTurn:undefined),   // v2.6.164: the independent review's findings
+  avrCanPush: (typeof avrCanPush!=='undefined'?avrCanPush:undefined), avrSendCancel: (typeof avrSendCancel!=='undefined'?avrSendCancel:undefined), get _passBusy(){ return (typeof _passBusy!=='undefined')?_passBusy:undefined; }
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',

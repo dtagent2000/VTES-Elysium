@@ -2539,7 +2539,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hb-setup">Setting up a table</a></li>
   <li><a href="#hb-play">How a bot plays</a></li>
   <li><a href="#hb-controls">Controls</a></li>
-  <li class="ver">bot v0.6.206 · client v2.6.162</li>
+  <li class="ver">bot v0.6.207 · client v2.6.162</li>
 </ul></nav>
 
 <header class="hero">
@@ -2756,7 +2756,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <ul>
     <li><strong>Its own deck, exactly.</strong> Composition is known, so “chance of drawing a stealth card on the replacement draw” is a real number, and it counts wakes, bounces and stealth cards left in the library.</li>
     <li><strong>Your statistics.</strong> Per opponent it records offensive actions, average and maximum pool damage per action, stealth shown, intercept shown, blocks attempted, damage dealt in combat, and classifies your actions as offensive, economy or utility. From that it forecasts how many turns it has left against its predator (the <em>oust range</em> raises every risk weight) and how far its prey is from being ousted.</li>
-    <li><strong>Posture.</strong> A stealth-bleed deck goes forward on a stack of two or more stealth cards and probes with a chump bleed before the big Govern; a wall deck prices keeping a blocker home; a rush deck goes for the famed or most threatening vampire; a grinder keeps its design home quota.</li>
+    <li><strong>Posture.</strong> A stealth-bleed deck goes forward on a stack of two or more stealth cards; when it has more vampires ready than you have blockers up, it probes with chump bleeds and keeps the big Govern for the last one; a wall deck prices keeping a blocker home; a rush deck goes for the famed or most threatening vampire; a grinder keeps its design home quota.</li>
     <li><strong>The critical pool.</strong> A floor (6 by default) that rises with your shown burst damage; below it the bot stops influencing, drains a Blood Doll to pool, and plays Freak Drive as a survival unlock.</li>
   </ul>
   <p>It plays <em>by the rules</em> throughout: action costs are paid so that the action can be completed, one bleed and one political action per vampire per turn, never the same named card twice in a turn, votes only with titles, blocks only by prey and predator on undirected actions, the Edge burned as cost is not refunded on a block.</p>
@@ -2895,7 +2895,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.206</b>, client <b>v2.6.162</b> / server srv-2.6.46, cardfx 105 curated / 1,670 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 16 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.207</b>, client <b>v2.6.162</b> / server srv-2.6.46, cardfx 105 curated / 1,670 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 16 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 <!-- @@/HELP:bots -->
 </template>
@@ -3079,6 +3079,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
         <li>Up to <strong>6 seats</strong> per room, <strong>10 spectators</strong>, and <strong>50 rooms</strong> per server.</li>
         <li><strong>A dropped connection keeps the seat</strong> (marked offline). A player who loses Wi-Fi or closes the laptop drops back into their seat within seconds; even after closing the browser, joining the same room with the same name and password reclaims it — deck, board and hand restored.</li>
         <li><strong>Hosting (★) passes on</strong> to the next player if the host leaves for good. <span class="menu">Menu → Leave seat</span> asks a host with company whether to leave alone or close the table for everyone.</li>
+        <li><strong>Leaving mid-game opens the seat</strong> (srv-2.6.48): the deck and the board stay, nobody else changes seat, and the turn stays where it is (it moves on if it was the leaver's). The host can promote a spectator into the open seat, including the player who left: they join as a spectator under their name, and the host promotes them back. Older servers removed the seat and moved everyone after it up one place.</li>
         <li><strong>Rooms expire</strong> when everyone has been offline for 60 minutes; a room nobody ever sat in is cleaned up after 10 minutes, and a room with bots but no human online after 10 minutes as well (the bots live in the host's tab). While the server runs, a room otherwise lives as long as you want it to.</li>
         <li><strong>Persistence.</strong> The rooms — hidden piles, points, tokens and the encrypted hand blobs — are written to <code>elysium-rooms.json</code> every minute and on <kbd>Ctrl</kbd>+<kbd>C</kbd>. A restarted server restores them — board style, referee password and the bots' tempo included (srv-2.6.43; older servers forgot those, and swept a restored table within ten minutes unless somebody rejoined it) — and the players reconnect into their seats; a restored table nobody returns to closes after an hour, like any idle table. The file is ignored if it is older than 24 hours.</li>
         <li><strong>Spectators</strong> need the room password if there is one, can only chat (if the host allows it), and do not keep a room alive.</li>
@@ -3093,7 +3094,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
       <ul>
         <li><span class="menu">Menu → Host…</span> holds New deal, Reset table, Randomize seating, Save/Load game to file and — online — <span class="menu">Close table…</span>, which disconnects everyone and removes the room.</li>
         <li>Every player row in the lobby and in the Table panel carries a red <span class="menu">✕</span> for the host: remove someone from the table (confirmed first). Their seat opens; a spectator can be promoted into it. If they will not take the hint, change the room password.</li>
-        <li>On a player's seat menu: set or step their pool, oust, un-oust, pass their turn, mute. The same tools reach a bot seat.</li>
+        <li>On a player's seat menu: set or step their pool, oust, un-oust, pass their turn, mute. The same tools reach a bot seat. An un-oust takes back the 1 VP its oust paid (srv-2.6.48); the 6 pool is moved by hand.</li>
         <li><span class="menu">📋 Invite</span> puts address + room name on the clipboard; the password is deliberately never part of it. A <em>link invite</em> works too: <code>your-address/?server=&amp;room=&amp;name=</code> pre-fills and opens the Join dialog — one click from seated, and it never joins on its own.</li>
       </ul>
     </div>
@@ -3232,7 +3233,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.163';   // v2.6.163 (17 Oct 2026, THE REVIEW'S THREE LOCKS -- purge the client AND restart the server: srv-2.6.47 ships with it; bot v0.6.206 beside): the client half of finding 1 of the 16 Oct code review (Johan: 'kör A'). escapeHtml escapes " and ' too: another player's name, clan or card name went into "..." attributes (alt, title, data-name) with only & < > escaped, so a quote ended the attribute and the rest became markup -- the review's probe ran script in a second tab through a board's clan (no click needed) and through a name (on hover). Four toasts no longer escape what they show (a toast is text: an apostrophe would have read &#39;). Help > Bots embeds the bot project's v0.6.206 guide (v0.6.205-206 read in this round). After an independent review: the log link's Target menu row shows its name raw (a menu label is text), and the error-report ring decodes entities. The server half (names, clans, ids; the WebSocket limits; the admin lockout) is srv-2.6.47.
+const VERSION='2.6.164';   // v2.6.164 (17 Oct 2026, THE TABLE KEEPS ITS SEATS -- purge the client AND restart the server: srv-2.6.48 ships with it; bot v0.6.207 beside): group B of the 16 Oct code review, and Johan's yes to values below 0. (1) pass() and the P key work only on your own turn (online it logged 'Turn passed.' to everyone and moved its own turn while the server refused; at a hotseat P during a bot's turn passed for the bot and the sweep never ended; a held key repeated). (2) The hotseat bridge clears the table tally at every turn change and tells the bots, as the server does (a bot's stale stealth met the human's next block: wrong verdict). (3) A hotseat hand-off restores the seat's phase without setPhase's side effects (it emptied the reacting player's Played tray, closed the counter, resolved the action and reset the master bonus). (4) The oust always reaches the server (award:false when the automatic award is off) -- it is what takes the seat out of the rotation; an older server reads no `award` and pays as before, and the ousted player is told so. (5) The Block counter goes below 0 (stealth and intercept may, by the rulebook); the verdict bubble reads a negative number. (6) The bridge relays boards like the server: no deck name, no face-down name. (7) The counter is cleared when you leave a hotseat table, and your own click survives a write that lands inside its 120 ms debounce (only while its send is really pending). (8) After an independent review: a pass that waited on a torn-down bot sweep no longer blocks every later pass; mySeat() skips an open seat (it keeps its leaver's name); the first human's turn after the opening sweep starts clean; at a hotseat an un-oust takes back the VP its oust paid and an oust pays once; against a server older than 2.6.48 an oust with the award off is not sent (as v2.6.163) and the player is told why. Help > Bots embeds bot v0.6.207's guide.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -6497,7 +6498,7 @@ function clanChoiceItems(){                                    // submenu items:
   return items;
 }
 function selfPoolMenuItems(){                                 // the right-click menu for YOUR OWN pool from the Table panel
-  const mineOut = (inRoom()||localTable) && (net.roster.find(q=>q.name===net.you)||{}).out;
+  const mineOut = (inRoom()||localTable) && (rosterMe()||{}).out;
   return [
     {label:'🜂 Browse ash heap ('+state.zones.ash.length+')…', sub:[{label:'View only',fn:()=>browse('ash','view')},{label:'Pick card(s)',fn:()=>browse('ash')},{label:'Burn card(s)',fn:()=>browse('ash','burn')}]},
     {label:'🔥 Burned cards… ('+state.zones.burned.length+')', fn:()=>browse('burned')},
@@ -6914,7 +6915,7 @@ function _dumpCard(c, zone, seat, ownBoard){                       // one compac
   return e;
 }
 function buildDumpBoard(){                                         // the whole visible table: own public zones + every other seat's published pub (online AND hotseat both keep net.boards); spectators dump the boards they watch
-  const out=[]; const me=(net.roster||[]).find(p=>p.name===net.you); const ms=me?me.seat:null;
+  const out=[]; const me=rosterMe(); const ms=me?me.seat:null;
   const bs=net.boards||{};                                         // a fresh local page has no boards yet -- the roster/hotseat handlers create them
   for(const z of PUBZ){ for(const id of state.zones[z]){ const c=state.cards.get(id); if(!c) continue;
       out.push(_dumpCard(c, z, ms, true)); if(out.length>=600) return out; } }
@@ -6924,7 +6925,7 @@ function buildDumpBoard(){                                         // the whole 
   return out;
 }
 async function buildDump(){                                        // the full player-visible snapshot -- only ever called inside openErrReport's try/catch (T7: a dump failure must never cost the report)
-  const me=(net.roster||[]).find(p=>p.name===net.you); const ms=me?me.seat:null;   // null = spectator / unseated (mySeat() coerces to 0, which would lie here)
+  const me=rosterMe(); const ms=me?me.seat:null;   // null = spectator / unseated (mySeat() coerces to 0, which would lie here)
   const game={ turn:state.turn|0, phase:state.phase|0,
     activeSeat:(inRoom() && net.turnSeat!=null) ? net.turnSeat|0 : ms,             // hotseat: net.you tracks the ACTIVE player, so the reporting seat is the active one
     mySeat:ms,
@@ -7011,7 +7012,8 @@ function clearTable(opts){
   state.trifleUsed=false;
   l4hintDone=false;
   state.myClan=null; state.chosenClan=null; state.myPath=null; refreshClanDisplay();
-  updatePool(); updateEdge(); setPhase(-1);
+  state.masterBonus=0;   // cli-2.6.164: an empty table has no Trifle bonus (setPhase(-1) only zeroed it when the phase changed -- and a hand-off no longer changes it)
+  updatePool(); updateEdge(); setPhase(-1, opts.restore ? { restore:true } : undefined);   // cli-2.6.164 (B-7): a hotseat hand-off empties the seat it is about to restore -- that is not a phase change either (it re-baselined the Played tray before the restore could skip it)
   layout();
 }
 function buildDeck(parsed){
@@ -8366,12 +8368,20 @@ function awardBountyHot(oustSeat, opts){                      // hotseat: credit
     if(net.boards[pr.seat]&&net.boards[pr.seat].pub) net.boards[pr.seat].pub.pool=(net.boards[pr.seat].pub.pool|0)+6;
   }
   pr.vp=Math.min(10,(pr.vp||0)+1);
+  net.roster[idx].vpSeat=pr.seat;                            // cli-2.6.164: remembered, as srv-2.6.48 does, so an un-oust takes back exactly this VP
   log('Bounty: <b>'+escapeHtml(pr.name)+'</b> (predator) claims <b>+6 pool</b> and <b>+1 VP</b> (now 🏆'+fmtVp(pr.vp)+').', true);
+}
+function vpBackHot(pl){                                       // cli-2.6.164 = srv vpBack: the VP the oust paid goes back once, never below 0 (the 6 pool is the players' to move)
+  const s=pl.vpSeat|0; pl.vpSeat=0;
+  const pr=s ? (net.roster||[]).find(q=>q.seat===s) : null;
+  if(!pr || !(pr.vp>0)) return '';
+  pr.vp=Math.max(0, pr.vp-1);
+  return ' The 1 VP goes back from <b>'+escapeHtml(pr.name)+'</b>.';
 }
 function unoustHot(){                                          // hotseat: undo an oust (un-mark out; the board stays as it was returned)
   const me=net.roster.find(q=>q.name===net.you); if(!me) return;
   me.out=false;
-  log('<b>'+escapeHtml(me.name)+'</b> returns to the game.', true);
+  log('<b>'+escapeHtml(me.name)+'</b> returns to the game.'+vpBackHot(me), true);
   hotRosterPush();                                             // v2.6.122
   renderStats(); updateHotHud();
 }
@@ -8441,10 +8451,11 @@ function hostOustHot(seat){                                   // hotseat: host o
 function hostUnoustHot(seat){                                 // hotseat: host returns an ousted seat to the rotation
   const pl=(net.roster||[]).find(q=>q.seat===seat); if(!pl) return;
   pl.out=false;
-  log('Host returned <b>'+escapeHtml(pl.name)+'</b> to the game.', true);
+  log('Host returned <b>'+escapeHtml(pl.name)+'</b> to the game.'+vpBackHot(pl), true);
   hotRosterPush();                                             // v2.6.122 (known limit: a BOT that ousted itself has no un-oust receiver -- it stays out inside and passes any turn handed to it)
   renderStats(); updateHotHud();
 }
+const OUST_AWARD_SRV_MIN='2.6.48';   // cli-2.6.164: the first server that reads bounty's `award`
 async function ousted(opts){ opts=opts||{};
   if(!state.cards.size && !netGame()){ log('No deck on the table.'); return; }
   if(!opts.forced && !(await uiConfirm('Ousted — return all cards to the crypt and library?'))) return;
@@ -8481,18 +8492,24 @@ async function ousted(opts){ opts=opts||{};
   sfxFinalDeath(); log('<b>'+escapeHtml(state.playerName)+'</b> has been <b>ousted</b>! All cards return to the crypt and library.', opts.forced);
   foreign.forEach((nn,o)=>log('<b>'+nn+'</b> card'+(nn>1?'s':'')+' owned by <b>'+escapeHtml(o)+'</b> → their ash heap.', opts.forced));
   if(kept) log('<b>'+kept+'</b> card'+(kept>1?'s':'')+' controlled by other Methuselahs remain in play.', opts.forced);
-  if(localTable && net.roster && net.roster.length>1){ const me=net.roster.find(q=>q.name===net.you); if(me) me.out=true; }   // the ousted player leaves the rotation
-  if(conv.poolToPredator && !opts.forced){
-    if(netGame()) mpSend({t:'bounty'});
-    else if(localTable && net.roster && net.roster.length>1) awardBountyHot();
-    else log('The predator would claim the <b>6 pool</b> bounty (no predator at a solo table).');
+  let _wasOut=false;
+  if(localTable && net.roster && net.roster.length>1){ const me=net.roster.find(q=>q.name===net.you); if(me){ _wasOut=!!me.out; me.out=true; } }   // the ousted player leaves the rotation
+  if(!opts.forced){
+    if(netGame()){
+      const _oldSrv=!!net.srvV && !verAtLeast(net.srvV, OUST_AWARD_SRV_MIN);   // an older server reads no `award` and would pay the full bounty
+      if(conv.poolToPredator) mpSend({t:'bounty'});
+      else if(!_oldSrv) mpSend({t:'bounty', award:false});   // cli-2.6.164 (B-8): the server's `bounty` is what takes this seat out of the rotation (and, under the tournament lock, the only way the predator's VP can come). Off sent nothing: the seat stayed in the turn order
+      else log('<span class="sysline">The oust was not sent: this server (v'+escapeHtml(net.srvV)+') pays the bounty with every oust, and your automatic award is off. Leaving it to the table needs server v'+OUST_AWARD_SRV_MIN+' or newer; until then the host can pass your turns.</span>', true);   // the review: sending it anyway paid a table that settles by hand twice -- an older server keeps v2.6.163's behaviour
+    }
+    else if(conv.poolToPredator && localTable && net.roster && net.roster.length>1){ if(!_wasOut) awardBountyHot(); }   // the hotseat marked `out` above already; cli-2.6.164: an oust pays once (srv-2.6.48 ignores a second bounty)
+    else if(conv.poolToPredator) log('The predator would claim the <b>6 pool</b> bounty (no predator at a solo table).');
   }
   if(localTable){ hotRosterPush(); renderStats(); updateHotHud(); }   // v2.6.122: the roster goes out synchronously, ahead of the debounced pool-0 board
 }
 $('#pool').addEventListener('contextmenu',e=>{ e.preventDefault();
   showMenu([
     {label:'Set pool…', fn:setPoolPrompt},
-    ((inRoom()||localTable) && (net.roster.find(q=>q.name===net.you)||{}).out
+    ((inRoom()||localTable) && (rosterMe()||{}).out
       ? {label:'Return to the game (undo oust)', fn:()=> inRoom()?mpSend({t:'unoust'}):unoustHot() }
       : {label:'Ousted…', fn:ousted}),
     '-',
@@ -9002,7 +9019,7 @@ function isMaster(c){                                      // master-type card (
 }
 function resolvePlayedActions(){                           // the current action is over → its played cards become resolved (loose permanents like allies leave the contested tray)
   _actUndir=false;   // v2.6.138: the action is over -- its undirected +1 must not reach the next one (an action declared by playing a card never passes the Actions menu)
-  if(avr.mode==='block'){ clearTimeout(_avrSendT); avr=avrFresh(null); avrRender(); if(mySeat() && mySeat()===(net.turnSeat|0)) tallySendNull(); }   // v2.6.137: ...and the ACTOR's client now says so on the wire (the server / hotseat table kept the old stealth, and a bot read it as the next action's). v2.6.28 (Johan): the Block referendum dies with its ACTION — every client runs this on the same triggers (It resolves / res / basic resolve), so the clear is symmetric without a broadcast. v2.6.29: the pending tally DEBOUNCE dies with it too — an adjust ≤120 ms before the resolve used to fire after the clear and resurrect the counters table-wide
+  if(avr.mode==='block'){ avrSendCancel(); avr=avrFresh(null); avrRender(); if(mySeat() && mySeat()===(net.turnSeat|0)) tallySendNull(); }   // v2.6.137: ...and the ACTOR's client now says so on the wire (the server / hotseat table kept the old stealth, and a bot read it as the next action's). v2.6.28 (Johan): the Block referendum dies with its ACTION — every client runs this on the same triggers (It resolves / res / basic resolve), so the clear is symmetric without a broadcast. v2.6.29: the pending tally DEBOUNCE dies with it too — an adjust ≤120 ms before the resolve used to fire after the clear and resurrect the counters table-wide
   _avrLastBleed=0;                                         // v2.6.18: the announced bleed total dies with the batch (see the resolver block)
   if(_poolTargetUsed){ _poolTargetUsed=false; if(net.rtarget && net.rtarget.cid==='pool') setRTarget(null); }   // v2.6.23 (Johan's call): a pool aim is PER-ACTION -- it clears when the action that USED it resolves. The used-flag (set by targetSuffix, reset by setPoolTarget) is what makes this safe: actBleed closes the PREVIOUS batch before logging, so an unconditional clear here would eat a fresh aim before its own bleed line; and someone ELSE's resolve never touches your fresh, unused aim. Card targets stay sticky by design (ongoing hostility markers).
   let any=false;
@@ -9120,11 +9137,12 @@ function updatePhaseGlow(){
   else { bar.style.removeProperty('--pc'); bar.classList.remove('pcturn'); }
   bar.classList.toggle('pcother', !!(tableView() && net.turnSeat && net.turnSeat!==mySeat()));   // read-only on others' turns (online + hotseat)
 }
-function setPhase(i){
-  if(i!==state.phase){ qrPhasePlayed.clear(); snapshotPlayed(); renderAltIfOpen(); state.masterBonus=0; }   // new phase -> clear the strip, re-baseline the played-cards display, reset the temporary Trifle bonus
+function setPhase(i, opts){
+  const _restore=!!(opts && opts.restore);   // cli-2.6.164 (B-7): a hotseat hand-off RESTORES a seat's phase -- not a phase change. It re-baselined the table's Played tray (the reacting player saw the action vanish), reset the restored master bonus, and resolvePlayedActions() closed the counter the reacting player had opened and marked the action resolved
+  if(i!==state.phase && !_restore){ qrPhasePlayed.clear(); snapshotPlayed(); renderAltIfOpen(); state.masterBonus=0; }   // new phase -> clear the strip, re-baseline the played-cards display, reset the temporary Trifle bonus
   if(i===3 && state.phase!==3) state.cards.forEach(c=>{ if(c.zone==='uncontrolled') c._xfBase=c.blood; });      // v2.5.57 (Johan): stamp each uncontrolled vampire's blood at Influence entry — reductions BELOW this level are paid returns (2 transfers/blood). Transient (same class as _cs_/_xf): never serialized; bumpCounter lazily re-stamps mid-phase arrivals.
   if(state.phase===3 && i!==3) state.cards.forEach(c=>{ if(c._xfBase!==undefined) delete c._xfBase; });         // leaving Influence: baselines expire with the phase
-  resolvePlayedActions();                                   // leaving a phase ends the current action(s)
+  if(!_restore) resolvePlayedActions();                     // leaving a phase ends the current action(s)
   state.phase=i;
   updatePhaseGlow();
 }
@@ -9202,7 +9220,29 @@ function tnAdopt(pub){
 function turnLabel(){
   return ((net.roster||[]).length>1) ? ('Round '+(net.roundNo||1)+' · Turn '+(net.turnNo||1)) : ('Turn '+(net.turnNo||1));
 }
+let _passBusy=0, _passSeq=0;   // cli-2.6.164 (B-5): the pass in progress (0 = none) -- a held P repeats, and a hotseat pass awaits the bots' sweep
+function passBusyReset(){ _passBusy=0; }   // a table that goes away takes its pass with it: hotAwaitPass never resolves on a torn-down table (on purpose), so a pass that waited on the sweep never reaches its finally (the review: every later pass said 'The bell is already ringing.' until a reload)
+function passBlockedWhy(){   // cli-2.6.164 (B-5): null = this screen may pass now; else the reason, for the toast
+  if(_passBusy) return 'The bell is already ringing.';
+  if(inRoom()){
+    if(net.spect) return 'Spectators do not pass.';
+    if(net._passPending && Date.now()-net._passPending<8000) return 'Your pass is on its way.';   // until the server's `turn` arrives (a held key sent several)
+    const me=mySeat(), ts=net.turnSeat|0;
+    if(me && ts && ts!==me) return 'It is not your turn \u2014 '+(((net.roster||[]).find(q=>q.seat===ts)||{}).name||('seat '+ts))+' holds it.';
+    return null;
+  }
+  if(localTable && net.roster && net.roster.length>1){
+    const me=mySeat(), ts=net.turnSeat|0;
+    if(ts && ts!==me) return (typeof hotBotSeat==='function' && hotBotSeat(ts)) ? ((((net.roster||[]).find(q=>q.seat===ts)||{}).name||('Seat '+ts))+' is playing.') : 'It is not your turn.';
+  }
+  return null;
+}
 async function pass(){
+  const _why=passBlockedWhy(); if(_why){ toast(_why); return; }   // cli-2.6.164 (B-5): online it logged 'Turn passed.' to the whole table and moved this screen's turn while the server refused; at a hotseat, P during a bot's turn passed for the bot and the sweep never ended
+  const _id=++_passSeq; _passBusy=_id;
+  try{ await passNow(); } finally { if(_passBusy===_id) _passBusy=0; }
+}
+async function passNow(){
   if(state.phase>=0 && !(await phaseLeaveOK(state.phase))) return;       // leaving the current phase to end the turn
   if(hx('on') && hx('passConfirm') && !(await uiConfirm('Ready to pass the turn?'))) return;
   endYourTurn();
@@ -9215,13 +9255,13 @@ async function pass(){
   if(!localTable && !inRoom()) log('<b>Turn '+state.turn+'</b> begins.');   // solo keeps the simple line; multiplayer uses the shared Round/Turn
   resetTurnTracking();
   setPhase(-1);
-  if(inRoom()) mpSend({t:'pass'});
+  if(inRoom()){ net._passPending=Date.now(); mpSend({t:'pass'}); }   // cli-2.6.164: cleared by the server's `turn`
   if(localTable && net.roster && net.roster.length>1){          // hotseat: rotate the turn AND hand control to the next HUMAN -- v2.6.65 (Johan's round 3): control must NEVER enter a bot seat; the bots take their turns via the sweep right here instead
     const nxt=hotNextHuman(net.turnSeat);                          // v2.6.72: shared helper (same rule as before: the next non-bot seat around the circle)
     if(typeof hotBridge!=='undefined' && Object.keys(hotBridge.seats||{}).length){
       try{ await hotRunBotTurns(net.turnSeat, nxt); }catch(_e){}      // v2.6.72: only the bots BETWEEN this human and the next one, in circle order
     }
-    net.turnSeat=nxt; tallyStaleClose('turn');   // v2.6.137: hotseat -- this screen is the only client, it tells the table
+    net.turnSeat=nxt; hotTurnTallyClear(); tallyStaleClose('turn');   // v2.6.137: hotseat -- this screen is the only client, it tells the table; cli-2.6.164 (B-6): the bridge's table tally too
     advanceTurnCounter(nxt);
     if(nxt!==mySeat()) setActivePlayer(nxt, {quiet:true});      // hand the DEVICE over only when the next turn player is another human
     resetTurnTracking(); startYourTurn();
@@ -9834,7 +9874,7 @@ function mpLeave(){
   hotHoldBy.clear(); try{ hotHoldSync(); }catch(_e){}   // v2.6.101: no table, no hold
   net.pass=''; net.escrowKey=null; net.escrowSalt=null; net._escrowKeyFor=null; lastHandSig=''; net._createHelpers=null;   // v2.6.51: the create-time Helpers choice is per-room, like the password
   net.helperPolicy=null; applyHelper();
-  net.botcfg=null; net.srvV='';                       // v2.6.139: the tempo belongs to the room we just left
+  net.botcfg=null; net.srvV=''; net._passPending=0; passBusyReset();   // v2.6.139: the tempo belongs to the room we just left; cli-2.6.164: so does a pass in flight
   endYourTurn();
   clearTimeout(net.retry);
   try{ if(net.ws){ const old=net.ws; net.ws=null; old.close(); } }catch(err){}
@@ -9854,7 +9894,7 @@ function mpLeave(){
 const MP_HANDLERS = {
   joined(m){
     const was=net.status, wasRoom=net.room;
-    net.botcfg=null; net.srvV=String(m.srv||'');   // v2.6.139: a fresh view of the table -- the server replays the stored tempo right after this message (srv-2.6.43)
+    net.botcfg=null; net.srvV=String(m.srv||''); net._passPending=0;   // v2.6.139: a fresh view of the table -- the server replays the stored tempo right after this message (srv-2.6.43); cli-2.6.164: no pass in flight on a fresh view (a rejoin's `joined` carries the turn)
     net.status='in'; net.room=m.room; net.token=m.token; net.you=m.you; net.roster=m.players||[];
     if(was!=='re' || wasRoom!==m.room){ net.turnNo=0; net.roundNo=1; net.openHandFrom={}; }   // v2.6.149: an automatic reconnect keeps its Round/Turn count (it zeroed it) -- into the SAME room only: a client still retrying a lost server can join another room by hand. v2.6.159: the hands opened to me follow the same rule -- the server keeps no grants, so a reconnect into the same room keeps what it was shown (a bot re-sends to a human who comes back online), any other join starts empty
     net.tnSync=!m.lobby; if(net.tnSync) tnAdopt(m.myPub);           // v2.6.149: a running game -- take the count from the boards until the next turn (my own server copy first)
@@ -10136,7 +10176,7 @@ const MP_HANDLERS = {
         : 'Helpers: you may use your own settings');
   },
   turn(m){
-    net.turnSeat=m.seat||null; net.tnSync=false;                   // v2.6.149: the count is ours from here
+    net.turnSeat=m.seat||null; net.tnSync=false; net._passPending=0;   // v2.6.149: the count is ours from here; cli-2.6.164: a pass in flight has landed
     tallyStaleClose('turn', !net.spect && !!net.turnSeat && net.turnSeat===mySeat());   // v2.6.137: nothing in the resolver outlives a turn -- every screen clears, the NEW turn's client says so on the wire
     advanceTurnCounter(net.turnSeat);
     renderStats();
@@ -10219,7 +10259,7 @@ const MP_HANDLERS = {
   decide(m){ runDecide(m.secs||5, m.who||null); },
   fx(m){ cardFx(m.card||null, m.kind, { remote:true, seat:m.seat|0, who:m.who||'', target:m.target||null, actor:m.actor||null, onto:m.onto||null, verb:m.verb||'', reveal:m.reveal, toName:m.toName||'' }); },
   botcfg(m){ const c=botCfgMerge(m.tempo, m.waitSecs, net.botcfg); if(!c) return; net.botcfg=c; try{ botPanelRender(); }catch(_e){} },   // v2.6.139 / srv-2.6.43: the table's bot tempo -- the server sends the WHOLE state (its echo of our own change too); merged tolerantly all the same. The change's log line is the SENDER's own; this only updates what the panel shows
-  tally(m){ const _pv=avr; avr={ mode:(m.mode==='block'||m.mode==='vote'||m.mode==='combat'||m.mode==='free')?m.mode:null, a:Math.max(0,Math.min(99,m.a|0)), b:Math.max(0,Math.min(99,m.b|0)), ph:Math.max(0,Math.min(6,m.ph|0)), rd:Math.max(1,Math.min(99,(m.rd|0)||1)), duel:(m.mode==='combat' && m.duel && typeof m.duel==='object') ? m.duel : {} }; Object.assign(avr, avr.mode==='combat' ? tallyCombatMerge(m, (_pv && _pv.mode==='combat') ? _pv : null) : AVR_CMB0); cmbWatch(_pv, avr, !!m.res); avrRender(); if(avr.mode==='combat' && !(_pv && _pv.mode==='combat')) cmbAutoJoin(); if(avr.mode==='block' && !(_pv && _pv.mode==='block')) blockSeedUndir(); if(m.res){ resolvePlayedActions(); applyAvrResolveClear(); } },   // v2.6.24: no auto-pin for a player who keeps that helper off (clean L4)   // v2.6.16 shared resolver counters (whole-state, last-write-wins); v2.6.17: + combat phase index and the res flag — a resolve closes every client's card-play batch and applies THEIR OWN local clear/discard setting; v2.6.37: 'free' rides the exact same shared channel (Johan: it should behave like the others, not act differently)
+  tally(m){ const _pv=avr; const _md=(m.mode==='block'||m.mode==='vote'||m.mode==='combat'||m.mode==='free')?m.mode:null; avr={ mode:_md, a:tallyClamp(_md, m.a), b:tallyClamp(_md, m.b), ph:Math.max(0,Math.min(6,m.ph|0)), rd:Math.max(1,Math.min(99,(m.rd|0)||1)), duel:(m.mode==='combat' && m.duel && typeof m.duel==='object') ? m.duel : {} }; Object.assign(avr, avr.mode==='combat' ? tallyCombatMerge(m, (_pv && _pv.mode==='combat') ? _pv : null) : AVR_CMB0); if(_avrDirty && (m.res || !avr.mode || _avrDirty.mode!==avr.mode || Date.now()-(_avrDirty.at||0)>400)) _avrDirty=null; if(_avrDirty && _pv && _pv.mode===avr.mode) ['a','b'].forEach(k=>{ if((k in _avrDirty) && _pv[k]===_avrDirty[k]) avr[k]=_pv[k]; });   /* cli-2.6.164 (B-11): my unsent click stands -- the debounce sends it with the rest; a resolve, a mode change or a click older than the debounce ends that */ cmbWatch(_pv, avr, !!m.res); avrRender(); if(avr.mode==='combat' && !(_pv && _pv.mode==='combat')) cmbAutoJoin(); if(avr.mode==='block' && !(_pv && _pv.mode==='block')) blockSeedUndir(); if(m.res){ resolvePlayedActions(); applyAvrResolveClear(); } },   // v2.6.24: no auto-pin for a player who keeps that helper off (clean L4)   // v2.6.16 shared resolver counters (whole-state, last-write-wins); v2.6.17: + combat phase index and the res flag — a resolve closes every client's card-play batch and applies THEIR OWN local clear/discard setting; v2.6.37: 'free' rides the exact same shared channel (Johan: it should behave like the others, not act differently)
   logTo(m){
     // Private log note routed to us by the server on behalf of another player.
     // Shown live but never archived (same as reveal private lines).
@@ -10398,7 +10438,7 @@ function updateRoomBar(){
   bar.hidden=false;
   chat.hidden = !(net.chat && (!net.spect || net.specChat));
   bar.classList.toggle('re', net.status==='re');
-  const me=(net.roster||[]).find(p=>p.name===net.you);
+  const me=rosterMe();
   if(me) net.isHost=!!me.host;          // in a started game the roster is authoritative (the lobby sets it via renderLobby)
   const hostBtn = ((net.isHost && !net.spect) || net.isRef) ? ' <span id="savesBtn" title="Save or load this match">💾 matches</span>' : '';
   bar.innerHTML='<span class="dot">⬤</span> '+esc(net.room||'')+' <span id="invBtn" title="Copy an invite to paste in Discord">📋 invite</span>'+(net.lobby?' <span id="lobbyBtn" title="Open the lobby">⬢ lobby</span>':'')+hostBtn+(net.watchers>0?' · 👁'+net.watchers:'')+(net.status==='re'?' <span class="sysline">— reconnecting…</span>':'');
@@ -10657,13 +10697,18 @@ let pushTimer=null;
    blind to the table. Same debounce as the online path (600 ms) -- buildPub() is
    not free and a board mutates in bursts. */
 let hotPushTimer=null;
+function hotTurnTallyClear(){   // cli-2.6.164 (B-6): the server clears the table tally before EVERY turn broadcast and tells every client (srv-2.6.42); at a hotseat this screen is the server -- the bridge's tally, every bot, and this screen's counter (a free counter included, as the server's null clears it online)
+  try{ if(typeof hotBridge!=='undefined') hotBridge.turnTallyClear(); }catch(_e){}
+  avrSendCancel();                                               // the review: a click inside the debounce would have pushed the old counter into the new turn
+  if(avr.mode){ const _pv=avr; avr=avrFresh(null); try{ cmbWatch(_pv, avr, false); }catch(_e){} avrRender(); }
+}
 function hotPushBoardNow(){
   clearTimeout(hotPushTimer);
   if(!localTable || typeof hotBridge==='undefined') return;
   if(!Object.keys(hotBridge.seats||{}).length) return;
   const seat=(typeof mySeat==='function')?mySeat():0; if(!seat) return;
   let pub=null; try{ pub=buildPub(); }catch(_e){ return; }
-  hotFanOut({ t:'board', seat, who:(net.you||state.playerName||'You'), pub }, seat);   // the ACTIVE seat's board: at a two-human hotseat each human's pub lands while they hold the device, exactly as each client pushes its own online
+  hotFanOut({ t:'board', seat, who:(net.you||state.playerName||'You'), pub:hotBridge.pubPublic(pub) }, seat);   // cli-2.6.164 (B-11): sanitised as the server would. The ACTIVE seat's board: at a two-human hotseat each human's pub lands while they hold the device, exactly as each client pushes its own online
   refreshOpenHands();                                         // v2.6.159: an open hand toward the bots follows every board change, as schedulePush does online
 }
 function hotSchedulePushBoard(){
@@ -10757,7 +10802,8 @@ let escrowTimer=null, lastHandSig='';
 net.view=null;                      // null | seat number | 'ov' | 'l2'
 net.l2fold={prey:true, pred:true};   // level 2: each neighbour folded IN (true) by default -> only your board; a tab folds one OUT
 let rvHideT=null;
-function mySeat(){ const p=net.roster.find(q=>q.name===net.you); return p?p.seat:0; }
+function rosterMe(){ return (net.roster||[]).find(q=>q.name===net.you && !q.vacant) || null; }   // cli-2.6.164: an OPEN seat keeps its leaver's name (srv-2.6.48 vacates on a mid-game leave), and a spectator promoted into another open seat shares it -- the first match by name could be the empty seat
+function mySeat(){ const p=rosterMe(); return p?p.seat:0; }
 /* =====================================================================
    VIEW GLOSSARY  --  the names we say  ->  what they map to in the code.
    The active view is held in  net.view . Grep any alias below to land here.
@@ -10884,6 +10930,7 @@ function startHotseat(players, boardMode, opts){                         board.c
   if(inRoom()){ toast('Leave the online room first'); return; }
   if(!players || !players.length) return;
   players=players.slice(0,6);
+  passBusyReset();                                                 // cli-2.6.164: a new table starts with no pass in progress
   localTable=true;
   tutGameLive=false;       // a freshly seated table is not the tutorial game until a classic-* section claims it (see tutStart)
   net.boardMode=boardMode||'structured';
@@ -10916,11 +10963,13 @@ function startHotseat(players, boardMode, opts){                         board.c
   toast('Hotseat: '+net.roster.length+' players');
 }
 function leaveHotseat(){
+  passBusyReset();                                                 // cli-2.6.164: the sweep a pass waits on dies here
   try{ hotBotsTeardown(); }catch(_e){}                             // v2.6.68: the \u25b6 button and the bot instances die with the table
   if(!localTable) return;
   if(tutGameLive){ try{ const snap=tutGameSnapshot(); if(snap) localStorage.setItem(TUT_GAME_KEY, snap); }catch(e){} }   // capture the tutorial game's final state so a later launch resumes exactly here
   localTable=false;
   hotHoldBy.clear(); hotHoldSync();                            // v2.6.96: no table, no hold
+  if(avr.mode){ avrSendCancel(); avr=avrFresh(null); avrRender(); }   // cli-2.6.164 (B-11): no table, no counter (a vote 3/1 outlived the table)
   updateRoomBar();                                            // v2.6.95: and the chat line goes away with the table
   helperAllOn=false; hotTournRestore(); syncHelperUI();   // v2.6.92: the table's Tournament override goes with it (hotTournRestore re-syncs); v2.6.51: the hotseat's "All helpers on" mode is per-table — the player's own Settings take over again the moment the table closes
   net.roster=[]; net.boards={}; net.turnSeat=null; net.you=null; net.room=null; net.turnNo=0; net.roundNo=1;
@@ -10947,8 +10996,8 @@ function setActivePlayer(seat, opts){
   // become the target player
   net.you=tgt.name;
   const stored=net.hot.boards[seat];
-  if(stored) restoreGame(stored, {keepLog:true, silent:true});
-  else clearTable({keepLog:true});
+  if(stored) restoreGame(stored, {keepLog:true, silent:true, handoff:true});   // cli-2.6.164 (B-7)
+  else clearTable({keepLog:true, restore:true});
   delete net.boards[seat];                                    // active player is shown via live state, not a pub
   undoStack.length=0;
   if(Array.isArray(net.hot.undo[seat])) for(const u of net.hot.undo[seat]) undoStack.push(u);
@@ -11417,11 +11466,14 @@ async function hotSpawnBots(botSeats, players, boardMode){
     const _firstHuman=(offlineCfg.findIndex(q=>q&&!q.botP)+1)||1;   // v2.6.72: THE OPENING -- bots seated BEFORE the first human take their turns now, then the human's first turn begins with the usual cue
     if(_firstHuman>1){
       try{ await hotRunBotTurns(0, _firstHuman, {skipCounterFor:1}); }catch(_e){}
-      net.turnSeat=_firstHuman; advanceTurnCounter(_firstHuman);
-      resetTurnTracking(); startYourTurn();
-      log('<span class="sysline">\u25b6 '+turnLabel()+' \u2014 '+esc((net.roster.find(q=>q.seat===_firstHuman)||{}).name||('Seat '+_firstHuman))+'.</span>');
+      hotFirstHumanTurn(_firstHuman);
     }
   }catch(e){ try{ await uiAlert('Bot spawn failed: '+(e&&e.message||e)+'. The table works without them \u2014 the \ud83e\udd16 seats just will not act.','Bot spawn failed'); }catch(_e){} }
+}
+function hotFirstHumanTurn(seat){                              // the opening sweep's handover: the first human's turn begins with the usual cue
+  net.turnSeat=seat; hotTurnTallyClear(); tallyStaleClose('turn'); advanceTurnCounter(seat);   // cli-2.6.164 (the review): it starts clean, as every later turn does (the sweep's last bot could leave a tally behind)
+  resetTurnTracking(); startYourTurn();
+  log('<span class="sysline">\u25b6 '+turnLabel()+' \u2014 '+esc((net.roster.find(q=>q.seat===seat)||{}).name||('Seat '+seat))+'.</span>');
 }
 function hotNextHuman(from){                                     // v2.6.72: the next HUMAN seat after `from` around the circle (skipping ousted and bot seats); the seat itself if it is the only human
   const isBot=k=>!!(offlineCfg[k-1]&&offlineCfg[k-1].botP);
@@ -11446,7 +11498,7 @@ async function hotRunBotTurns(fromSeat, toSeat, opts){             // one sweep 
     for(const seat of botSeats){
       if(isOut(seat) || !hotBridge.seats[seat]) continue;          // v2.6.122: ousted DURING this sweep (an earlier bot's bleed) -- no toast, no camera, no turn
       try{ toast('\ud83e\udd16 '+((hotBridge.seats[seat]||{}).name||('seat '+seat))+' is playing\u2026'); switchView(seat); }catch(_e){}
-      net.turnSeat=seat; tallyStaleClose('turn'); try{ updatePhaseGlow(); }catch(_e){}   // v2.6.137: a bot's turn starts clean
+      net.turnSeat=seat; hotTurnTallyClear(); tallyStaleClose('turn'); try{ updatePhaseGlow(); }catch(_e){}   // v2.6.137: a bot's turn starts clean; cli-2.6.164 (B-6): on the bridge and every bot too
       if(seat!==opts.skipCounterFor) advanceTurnCounter(seat);     // v2.6.67: bot turns ARE game turns -- the transfer ramp and the Round/Turn label both depend on an honest counter (v2.6.72: except the opening's seat 1, already counted by {first:true})
       const how=await hotAwaitPass(seat, opts);
       order.push(seat);
@@ -11852,8 +11904,9 @@ const hotBridge = {
     const mode = (m.mode === 'block' || m.mode === 'vote' || m.mode === 'combat' || m.mode === 'free') ? m.mode : null;
     const prev = (this.tally && this.tally.mode === mode) ? this.tally : null;
     const newRd = !!(mode === 'combat' && prev && ('rd' in m) && Math.max(1, Math.min(99, (m.rd | 0) || 1)) !== ((prev.rd | 0) || 1));   // v2.6.133 = srv-2.6.40: a new combat round zeroes an absent a/b (per-round damage)
-    const a  = ('a'  in m) ? Math.max(0, Math.min(99, m.a | 0)) : ((prev && !newRd) ? prev.a : 0);
-    const b  = ('b'  in m) ? Math.max(0, Math.min(99, m.b | 0)) : ((prev && !newRd) ? prev.b : 0);
+    const lo = (mode === 'block') ? -99 : 0;   // cli-2.6.164 = srv-2.6.48 (B-10): stealth and intercept may go below 0
+    const a  = ('a'  in m) ? Math.max(lo, Math.min(99, m.a | 0)) : ((prev && !newRd) ? prev.a : 0);
+    const b  = ('b'  in m) ? Math.max(lo, Math.min(99, m.b | 0)) : ((prev && !newRd) ? prev.b : 0);
     const ph = ('ph' in m) ? Math.max(0, Math.min(6, m.ph | 0)) : (prev ? prev.ph : 0);
     const rd = ('rd' in m) ? Math.max(1, Math.min(99, (m.rd | 0) || 1)) : (prev ? prev.rd : 1);
     let duel;
@@ -11869,6 +11922,20 @@ const hotBridge = {
     if (mode === 'combat'){ out.duel = duel; if (typeof AVR_CMB_KEYS !== 'undefined') AVR_CMB_KEYS.forEach(k => { out[k] = this.tally[k]; }); }
     if (m.res) out.res = 1;
     this.botSeats().forEach(k => this.toBot(k, out));
+    return out;
+  },
+  turnTallyClear(){          // cli-2.6.164 (B-6) = srv turnTallyClear (srv-2.6.42), field for field: EVERY turn change closes the table tally on every bot. The bridge kept it -- a bot's stealth from the last action met the human's next block and the verdict was wrong
+    if (!this.tally) return null;
+    this.tally = null;
+    const out = { t: 'tally', who: '', mode: null, a: 0, b: 0, ph: 0, rd: 1 };
+    this.botSeats().forEach(k => this.toBot(k, out));
+    return out;
+  },
+  pubPublic(pub){            // cli-2.6.164 (B-11) = srv sanitizePub's hidden-information half: an opponent never receives a deck name, a face-down card's name or a card outside the public zones. The bridge relayed both raw (a human's to the bots, a bot's to the human and the others)
+    if (!pub || typeof pub !== 'object') return pub;
+    const Z = ['ready', 'torpor', 'uncontrolled', 'ash', 'burned'];
+    const out = Object.assign({}, pub, { deckName: '' });
+    out.cards = (Array.isArray(pub.cards) ? pub.cards : []).filter(c => c && Z.indexOf(c.zone) >= 0).map(c => (c.faceDown ? Object.assign({}, c, { name: undefined }) : c));
     return out;
   },
   botcfgIn(who, m){          // v2.6.139: GAME_HANDLERS.botcfg (srv-2.6.43), field for field -- tempo one of standard / adaptive / turn, waitSecs 1-8 (tenths); an ABSENT or invalid field keeps the stored value (Standard / 3 s at a table that has none); nothing valid = nothing stored, nothing sent. To EVERY bot seat. Self-contained on purpose (no client function behind it). Returns the broadcast, or null when ignored
@@ -11933,11 +12000,12 @@ const hotBridge = {
       case 'pass':
         if (typeof B.onPass === 'function') B.onPass(seat);
         break;
-      case 'board':
-        try { MP_HANDLERS.board({ t: 'board', seat, who, pub: m.pub }); }
-        catch (e) { net.boards[seat] = { who, pub: m.pub }; }
-        hotFanOut({ t: 'board', seat, who, pub: m.pub }, seat);   // v2.6.98: and on to the OTHER bots -- this is what fills their this.table, which _tableThreat / _rushCandidates / _checkAshurTableWide all read
-        break;
+      case 'board': {
+        const pub = B.pubPublic(m.pub);   // cli-2.6.164 (B-11): what the server would relay
+        try { MP_HANDLERS.board({ t: 'board', seat, who, pub }); }
+        catch (e) { net.boards[seat] = { who, pub }; }
+        hotFanOut({ t: 'board', seat, who, pub }, seat);   // v2.6.98: and on to the OTHER bots -- this is what fills their this.table, which _tableThreat / _rushCandidates / _checkAshurTableWide all read
+        break; }
       case 'log':
         try { MP_HANDLERS.log({ t: 'log', who, html: m.html }); }
         catch (e) { try { log('<b>' + who + ':</b> ' + (m.html || ''), true); } catch (_e) {} }
@@ -12148,7 +12216,7 @@ function pinPlayedAuto(){ if(playedIsOpen()) return; pinPlayed(); playedAutoPin=
 function playedAutoClose(){ if(!playedAutoPin) return; playedAutoPin=false; closePlayed(); }   // the player's own pin (the tab, the pin) is never closed by a resolver
 function closePlayed(){ playedPinned=false; playedAutoPin=false; clearTimeout(playedShowT); clearTimeout(playedHideT); const o=$('#playedOverlay'); if(o) o.classList.remove('show'); const t=$('#playedTab'); if(t) t.classList.remove('on'); }
 function togglePlayed(){ playedPinned ? closePlayed() : pinPlayed(); }
-function clearPlayed(){ if(avr.mode==='block'){ clearTimeout(_avrSendT); avr=avrFresh(null); avrRender(); } snapshotPlayed(); renderAltIfOpen(); }   // v2.6.28: a phase change also buries a dangling block referendum   // re-baseline only — cards stay on the board; the view (and tab count) empties
+function clearPlayed(){ if(avr.mode==='block'){ avrSendCancel(); avr=avrFresh(null); avrRender(); } snapshotPlayed(); renderAltIfOpen(); }   // v2.6.28: a phase change also buries a dangling block referendum   // re-baseline only — cards stay on the board; the view (and tab count) empties
 async function discardPlayedMine(){ const loose=avLoose(state.zones.ready.map(id=>state.cards.get(id))).filter(c=>!avBaseline.has(c.id)); if(!loose.length){ toast('No played cards of yours to discard'); return; } if(await uiConfirm('Discard '+loose.length+' of your own played card'+(loose.length>1?'s':'')+' to the ash heap?')){ pushUndo(); loose.forEach(c=>{ if(c && c.zone==='ready') move(c,'ash',{}); }); renderAltIfOpen(); } }   // re-check zone at move time: never re-discard a card already sent to ash another way (also covers any duplicate in the list)
 (function(){
   const pt=$('#playedTab'), po=$('#playedOverlay'), hdr=document.querySelector('header');
@@ -12228,9 +12296,11 @@ function cmbNewRound(){   // v2.6.129: a fresh round -- range back to close unle
   const prev=Object.assign({}, avr), nr=Math.min(99,(avr.rd|0)+1);
   Object.assign(avr, tallyCombatMerge({ rd:nr }, avr), { a:0, b:0, ph:0, rd:nr });   // v2.6.135: THE new-round rule itself (range close unless nx, press / strikes / prevention / aggravated cleared, every-round damage kept) -- the button used to carry its own copy, and the copy forgot Carrion Crows
   avrRender(); cmbWatch(prev, avr, false);
-  clearTimeout(_avrSendT); const m={ t:'tally', mode:'combat', a:0, b:0, ph:0, rd:avr.rd }; AVR_CMB_KEYS.forEach(k=>{ m[k]=avr[k]; }); cmbSend(m);
+  avrSendCancel(); const m={ t:'tally', mode:'combat', a:0, b:0, ph:0, rd:avr.rd }; AVR_CMB_KEYS.forEach(k=>{ m[k]=avr[k]; }); cmbSend(m);
 }
-function avrPush(){ if(net.spect || (!inRoom() && !hotBotsSeated())) return; clearTimeout(_avrSendT); _avrSendT=setTimeout(()=>{ const _m={ t:'tally', mode:avr.mode, a:avr.a|0, b:avr.b|0, ph:avr.ph|0, rd:avr.rd|0 }; if(inRoom()) mpSend(_m); else hotTallySend(_m); }, 120); }   // v2.6.122: offline the bot seats ARE the table -- a human's counters reached nobody (avrPush returned unless inRoom)   // scroll bursts coalesce; whole-state messages make the debounce lossless (the last one carries everything). Spectators watch, never write. v2.6.37 (Johan): 'free' behaves exactly like Block/Vote/Combat -- shared, any seat may adjust -- no special-casing, so the table never sees it act differently.
+function avrCanPush(){ return !(net.spect || (!inRoom() && !hotBotsSeated())); }   // cli-2.6.164: who has a table to send to
+function avrSendCancel(){ clearTimeout(_avrSendT); _avrDirty=null; }   // cli-2.6.164 (the review): every path that drops the pending send drops what it would have carried -- a stale _avrDirty froze later counters and was written back over the table
+function avrPush(){ if(!avrCanPush()) return; clearTimeout(_avrSendT); _avrSendT=setTimeout(()=>{ _avrDirty=null; const _m={ t:'tally', mode:avr.mode, a:avr.a|0, b:avr.b|0, ph:avr.ph|0, rd:avr.rd|0 }; if(inRoom()) mpSend(_m); else hotTallySend(_m); }, 120); }   // v2.6.122: offline the bot seats ARE the table -- a human's counters reached nobody (avrPush returned unless inRoom)   // scroll bursts coalesce; whole-state messages make the debounce lossless (the last one carries everything). Spectators watch, never write. v2.6.37 (Johan): 'free' behaves exactly like Block/Vote/Combat -- shared, any seat may adjust -- no special-casing, so the table never sees it act differently.
 function avrOpen(mode){ if(!hx(AVR_HKEYS[mode])) return;   // v2.6.24: helper-gated (button hidden too; belt and braces)
   if(mode==='block' && !activeAnchor()) return;   // the button is disabled too; belt and braces
   const _pv=avr; avr=avrFresh(mode);
@@ -12238,7 +12308,9 @@ function avrOpen(mode){ if(!hx(AVR_HKEYS[mode])) return;   // v2.6.24: helper-ga
   if(mode==='block'){ const bi=SAY.indexOf('Block!'); if(bi>=0) saySend(bi); }   // v2.6.28 (Johan): opening the Block resolver IS the block announcement — speak the phrase so the whole table (and the Trainbots) hear it
   if(mode==='combat'){ const an=activeAnchor(); if(an) avrDuelAnnounce(an.id, an.name); else cmbAutoJoin(); }   // v2.6.19: opening Combat with an anchored ready minion auto-announces it as your combatant; v2.6.134: otherwise the minion that acted (your turn) or blocked
 }
-function avrAdjust(side, d){ if(!avr.mode) return; avr[side]=Math.max(0, Math.min(99, (avr[side]|0)+d)); avrRender(); avrPush(); }
+function tallyClamp(mode, v){ return Math.max(mode==='block' ? -99 : 0, Math.min(99, v|0)); }   // cli-2.6.164 (B-10, Johan 17 Oct): stealth and intercept can be decreased below 0 (the rulebook) -- votes and damage cannot. The server (srv-2.6.48) and the bridge keep the same floor
+let _avrDirty=null;   // cli-2.6.164 (B-11): {mode, a?, b?} -- the values this screen set since its last send. A write landing inside the 120 ms debounce replaced the whole state, and the debounce then sent the OTHER side's numbers: the click was lost
+function avrAdjust(side, d){ if(!avr.mode) return; avr[side]=tallyClamp(avr.mode, (avr[side]|0)+d); if(avrCanPush()) _avrDirty=Object.assign((_avrDirty && _avrDirty.mode===avr.mode) ? _avrDirty : { mode:avr.mode }, { [side]: avr[side], at: Date.now() }); avrRender(); avrPush(); }   // a spectator's or a referee's click is never sent, so it is never 'unsent' either
 function avrClear(){ const _pv=avr; if(_pv && _pv.mode==='block') _cmbLastBlock=null; avr=avrFresh(null); cmbWatch(_pv, avr, false); avrRender(); avrPush(); }   // v2.6.129: the x is a withdrawal, not a resolve -- no taken lines
 function avrResolve(){ if(!avr.mode) return;
   tutNotify('resolver-resolve', avr.mode);   // v2.6.25: tutorial breadcrumb (Structured II advances on resolves)
@@ -12249,7 +12321,7 @@ function avrResolve(){ if(!avr.mode) return;
   if(avr.mode==='combat') cmbWatch(Object.assign({}, avr), avrFresh(null), true);   // v2.6.129: resolving straight out of Strike / Damage logs what my side takes (Johan: automatic, no extra buttons)
   log(_vline);               // one fixed-format line to the whole table (mpRelay) -- the Trainbot's structured diet
   maybeVerdictPulse(_vline, net.you||state.playerName||'You', mySeat());   // v2.6.30: the resolver sees the pulse too
-  clearTimeout(_avrSendT);                                       // a resolve is discrete -- never let a stale debounced adjust fire after it
+  avrSendCancel();                                               // a resolve is discrete -- never let a stale debounced adjust fire after it
   if(wasBlock || wasFree){
     // v2.6.18: Block NEVER closes the card-play batch -- a failed block means the action continues
     // (more reactions may come, then the action resolves), and a successful one leads to combat
@@ -12443,7 +12515,7 @@ function cmbTaken(c, x){   // v2.6.131 (Johan: bots must work on a Classic table
   const d=cmbDamage(Math.max(0, Math.min(99, x|0)), 0, c.blood|0);
   log(CMB_LINE.taken(cardRefCap(c), d.net, d.burn, d.left, d.wounded));
 }
-function tallySendNull(){ if(net.spect) return; clearTimeout(_avrSendT); const m={ t:'tally', mode:null, a:0, b:0, ph:0, rd:1 }; if(inRoom()) mpSend(m); else if(hotBotsSeated()) hotTallySend(m); }   // v2.6.137: tell the server / the hotseat table that the resolver is closed (the local clears never did)
+function tallySendNull(){ if(net.spect) return; avrSendCancel(); const m={ t:'tally', mode:null, a:0, b:0, ph:0, rd:1 }; if(inRoom()) mpSend(m); else if(hotBotsSeated()) hotTallySend(m); }   // v2.6.137: tell the server / the hotseat table that the resolver is closed (the local clears never did)
 function tallyStaleClose(why, send){   // v2.6.137 (bot handoff v0.6.171): a Block / Vote / Combat counter that outlived its action or its turn is closed on EVERY mirror, not only on this screen. `send` false = clear this screen only (another client sends)
   if(why==='turn'){ _actUndir=false; _cmbLastAct=null; _cmbLastBlock=null; }   // v2.6.158 (the play-test): the default combatants die with the turn -- a blocker from an earlier turn joined two bots' combat
   if(!(avr.mode==='block' || avr.mode==='vote' || avr.mode==='combat')) return false;
@@ -12452,7 +12524,7 @@ function tallyStaleClose(why, send){   // v2.6.137 (bot handoff v0.6.171): a Blo
 function blockSeedUndir(){   // v2.6.137: the BLOCKER opens the Block counter (it is their 'Block!'), so the +1 stealth of MY undirected action is written by ME, the actor, when the counter appears -- whoever opened it (a bot, another human, this screen). Only onto an untouched 0
   if(avr.mode!=='block' || net.spect || !_actUndir) return;
   const me=mySeat() || (inRoom() ? 0 : 1); if(!me || me!==(net.turnSeat|0) || (avr.a|0)!==0) return;
-  avr.a=1; avrRender(); clearTimeout(_avrSendT); const m={ t:'tally', mode:'block', a:1 }; if(inRoom()) mpSend(m); else if(hotBotsSeated()) hotTallySend(m);
+  avr.a=1; avrRender(); avrSendCancel(); const m={ t:'tally', mode:'block', a:1 }; if(inRoom()) mpSend(m); else if(hotBotsSeated()) hotTallySend(m);
 }
 function actStart(c){   // v2.6.137: a NEW action of mine begins -- a finished combat still open at End of round resolves first, a stale block counter closes (v2.6.138: the direction flag is set by the caller after its batch-close)
   if(avr.mode==='combat' && (avr.ph|0)===6 && !cmbGoesOn()) avrResolve();
@@ -12612,7 +12684,7 @@ function avrDuelAnnounce(cid, name){
   if(!inRoom()){ const sSeat=mySeat()||1; if(cid) avr.duel[sSeat]={ cid, name: name||'', who: net.you||state.playerName||'You' }; else delete avr.duel[sSeat]; avrDuelRender(); hotTallySend({ t:'tally', mode:avr.mode, a:avr.a|0, b:avr.b|0, ph:avr.ph|0, rd:avr.rd|0, duelCid:cid||null, duelName:String(name||'').slice(0,60) }); return; }   // hotseat: local -- and (v2.6.122) into the table tally's per-seat duel map when bots are seated, or a bot's next counter would erase the announcement
   if(net.spect) return;
   { const _me=mySeat(); if(_me){ if(cid) avr.duel[_me]={ cid, name: name||'', who: net.you||'' }; else delete avr.duel[_me]; } }   // v2.6.129: optimistic -- a combat menu action right after this needs its side before the echo lands; the server's merged map replaces it
-  clearTimeout(_avrSendT);   // the announce is discrete -- fold any pending counter push into it (whole-state)
+  avrSendCancel();   // the announce is discrete -- fold any pending counter push into it (whole-state)
   mpSend({ t:'tally', mode:avr.mode, a:avr.a|0, b:avr.b|0, ph:avr.ph|0, rd:avr.rd|0, duelCid:cid||null, duelName:String(name||'').slice(0,60) });
 }
 function avrDuelResolve(entry, seat){
@@ -13133,7 +13205,7 @@ function restoreGame(json, opts){
     if(!opts.silent) uiAlert('That does not look like a valid Elysium save.');
     return false;
   }
-  clearTable({keepLog:opts.keepLog});
+  clearTable({keepLog:opts.keepLog, restore:!!opts.handoff});   // cli-2.6.164 (B-7)
   board.classList.add('no-anim');   // suppress the .42s card transition so newly-created cards don't fly in from (0,0); removed after the current call stack (rAF fires after any caller's own layout() calls too)
   state.deckName=d.deckName||'';
   $('#deckName').textContent=state.deckName ? '· '+state.deckName : '';
@@ -13186,7 +13258,7 @@ function restoreGame(json, opts){
   state.myClan=d.myClan||null; state.chosenClan=d.chosenClan||null;
   state.myPath=d.myPath||null;
   refreshClanDisplay();
-  setPhase(Number.isFinite(d.phase)?d.phase:-1);
+  setPhase(Number.isFinite(d.phase)?d.phase:-1, { restore: !!opts.handoff });   // cli-2.6.164 (B-7): a hand-off restores (a resume from a save still re-baselines, as before)
   layout();
   if(!opts.silent) log('<b>Game restored</b>'+(state.deckName?' — '+escapeHtml(state.deckName):'')+' (turn '+state.turn+').');
   requestAnimationFrame(()=> board.classList.remove('no-anim'));
@@ -16124,7 +16196,7 @@ function sayBubble(role, who, seat, text, variant){      // v2.6.30: the say-bub
   host.appendChild(d);
   sayFxRelayout();   // any already-mounted bubbles glide to their new (shifted-left) slot to make room -- this is the "moves left when a new one appears" Johan asked for
 }
-const VERDICT_RE=[ [/^Block: Stealth \d+ vs Intercept \d+ \u2014 block (succeeds|fails)\.$/, m=>'Block '+m[1]+'!'],
+const VERDICT_RE=[ [/^Block: Stealth -?\d+ vs Intercept -?\d+ \u2014 block (succeeds|fails)\.$/, m=>'Block '+m[1]+'!'],   // cli-2.6.164: a stealth or intercept below 0 (a bare Christine Boscacci) showed no bubble
                    [/^Vote: \d+ for vs \d+ against \u2014 vote (passes|fails)\.$/, m=>'Vote '+m[1]+'!'] ];
 function maybeVerdictPulse(text, who, seat){             // v2.6.30 (Johan): the frozen verdict LINE is the wire; this bubble is pure presentation
   for(const [re, mk] of VERDICT_RE){ const m=re.exec(text); if(m){ sayBubble(sayLabel(seat, who), who, seat, mk(m)); return true; } }

@@ -1,3 +1,140 @@
+## [BORDET BEHÅLLER SINA PLATSER] (17 oktober 2026, förmiddag, klient v2.6.164 / srv-2.6.48)
+
+Johan, 17 okt, efter att A (PR #27) var mergad: "Yes vi kan tillåta värden under 0, vill du ta det tillsammans med B?"
+Svaret: punkt 10 (negativ intercept) går in i B; bottarnas v0.6.207 läses in i samma runda; REPLY:n ligger i PR:en så
+att bottprojektet kan köra sin svit före merge. Standard för punkt 8: en oust når alltid servern, pool och VP går
+automatiskt bara när inställningen är på, utom under tournament lock där VP:n alltid ges.
+
+**Byggt (B, klient v2.6.164 + srv-2.6.48; purge av klienten OCH omstart av servern):**
+1. **Den som lämnar mitt i en match flyttar inte längre allas platser (punkt 4).** `dropPlayer` lämnar platsen öppen
+   med `vacateSeat` när matchen har startat, i stället för `splice`. Alla andra behåller sitt nummer, turen stannar där
+   den är (den går vidare bara om den som gick hade den), och platsens lek och bräde väntar på en åskådare som värden
+   befordrar. I lobbyn frigörs platsen som förut.
+   - Värdkronan går först till en människa som är online, sedan till en människa, sedan till första platsen som inte
+     är öppen (onlineordningen kom efter granskningen).
+   - `humansLeft` räknar inte en öppen plats, så "den sista människan gick" stänger ett bottbord även nu när platsen
+     blir kvar. Reaperns bot-grace frågar i stället om det finns en mänsklig plats alls (hållen eller öppen), som
+     srv-2.6.47 i praktiken gjorde.
+   - Ett rum där varje plats är öppen stängs med `closeRoomNow`, så åskådarna får `closed`. Förut raderades rummet
+     tyst under dem.
+   - Ny sys-rad: `X left the table — the seat is open: the host can promote a spectator to take it over. 🪑`
+2. **P (Pass) bara på din egen tur (punkt 5).** `pass()` frågar `passBlockedWhy()` först. Online stoppas en åskådare,
+   en pass som redan är på väg (tills serverns `turn` kommer, högst 8 s) och en annan plats tur; toasten säger vems
+   tur det är. I hotseat stoppas en annan plats tur ("B2 is playing." för en bott). Den gamla kroppen heter
+   `passNow()`. `net._passPending` nollas av `turn`, `joined` och `mpLeave`.
+3. **Hotseat-bryggan tömmer räknaren vid varje turbyte (punkt 6).** `hotBridge.turnTallyClear()` gör det serverns
+   `turnTallyClear` gör (srv-2.6.42), fält för fält, och `hotTurnTallyClear()` anropas i bott-svepet och i `pass()`.
+   Förut levde bordets räknare kvar när din skärm redan hade stängt sin, och en Free-räknare stängdes aldrig.
+4. **Överlämningen i hotseat är en återställning, inte ett fasbyte (punkt 7).** `setPhase(i, {restore:true})`,
+   `clearTable({restore:true})` och `restoreGame(…, {handoff:true})` hoppar över `setPhase`:s bieffekter. Förut
+   tömdes den reagerande spelarens Played-fack, räknaren stängdes, Anns action blev resolved och hennes masterbonus
+   från Trifle nollades. `clearTable` nollar masterbonusen själv.
+5. **En oust når alltid servern (punkt 8).** Med automatisk bounty av skickar klienten `{t:'bounty', award:false}`:
+   platsen går ut och turen går vidare, men ingen VP flyttas och predatorn får inget `bounty` ("the bounty is settled
+   by hand"). Under tournament lock betalas VP:n ändå, eftersom VP bara kommer från ousts där; poolen sköts för hand.
+   Mot en server äldre än 2.6.48, som inte läser `award` och skulle betala hela bountyn, skickas ingenting (som i
+   v2.6.163), och den utslagna spelaren får en privat rad om varför.
+6. **VP en gång per oust (punkt 9).** En `bounty` från en plats som redan är ute ignoreras. Platsen som fick VP:n
+   sparas (`vpSeat`, även i snapshot och sparad match), och `unoust`/`hostUnoust` tar tillbaka just den VP:n, en gång
+   och aldrig under 0. `ousterPays` och `vpBack` är en enda kropp för `bounty` och `hostOust`.
+7. **Stealth och intercept får gå under 0 (punkt 10, Johans beslut).** Servern håller `a`/`b` mellan −99 och 99 i
+   block-läge; röster och skada stannar på 0. Klientens `tallyClamp`, räknarens minus, den inkommande `tally` och
+   bryggans `tallyIn` behåller tecknet, och `VERDICT_RE` läser `-?\d+`, så utslagsbubblan visar en negativ siffra.
+   Bottens `L12.block` har alltid läst `-?\d+`.
+8. **Mindre (punkt 11):**
+   - bryggan skickar bräden genom serverns filter (`hotBridge.pubPublic`: inget leknamn, inga namn på nedvända kort,
+     bara publika zoner), åt båda hållen;
+   - räknaren stängs när du lämnar hotseat-bordet;
+   - ditt klick på räknaren överlever en skrivning som landar inom 120 ms (`_avrDirty`);
+   - en sparad match behåller öppna platser (märkta) och rummets board style; `loadMatch` återställer dem, vägrar
+     ladda som en öppen plats och flyttar en äldre sparad turnSeat till nästa levande plats.
+9. **Bottarna v0.6.207:** Help ▸ Bots bäddar in deras guide (deras enda önskan). Help ▸ Local server har en rad om att
+   den som lämnar mitt i en match lämnar en öppen plats, och att en unoust tar tillbaka VP:n.
+10. **PROTOCOL:** `bounty.award`, `leave`, `unoust`/`hostUnoust`/`hostOust`, block-intervallet i `tally`, sparade
+    matcher, s2c `bounty`, verdiktraden i §12 och bryggan i §12.2.
+
+**Oberoende granskning före PR:en** (en separat agent som inte sett arbetet; fem fel, två allvarliga, alla åtgärdade):
+1. **Pass kunde sluta fungera för resten av sessionen.** `pass()` väntar på bott-svepet, och `hotAwaitPass` löser
+   aldrig upp sig när bordet rivs (med avsikt). Lämnade man bordet mitt i en botts tur sa varje senare pass "The bell
+   is already ringing." tills sidan laddades om. Nu är passet en token (`_passBusy`) som `leaveHotseat`,
+   `startHotseat` och `mpLeave` nollar.
+2. **En öppen plats överlevde inte en omstart, och felet var mitt eget från A.** I srv-2.6.47 lade jag en kommentar
+   mitt på en rad i `roomUnsnap`, framför `seatPick`, `muted`, `vacant` och `anon`, så ingen av dem återställdes efter
+   en omstart. En öppen plats kom tillbaka som en offline-plats som det gamla namnet kunde ta tillbaka, och en tystad
+   spelare blev otystad. Rättat, med ett omstartstest för alla fyra. En skanning av båda rundornas diffar efter samma
+   felklass (kod som hamnat i en kommentar) hittade inget mer.
+3. **Den som lämnade och kom tillbaka under samma namn hamnade på fel plats.** Den öppna platsen behåller namnet,
+   servern lade till en ny plats med samma namn, och klientens `mySeat()` tog den första träffen, alltså den tomma.
+   Nu vägrar servern en spelaranslutning mitt i matchen under en öppen plats namn (gå in som åskådare, så kan värden
+   befordra tillbaka), `mute` på namn hoppar över öppna platser, och klientens `rosterMe()`/`mySeat()` gör det också.
+4. **`_avrDirty` kunde bli kvar.** En åskådares eller domares klick skickas aldrig, och sju vägar avbröt debouncen
+   utan att rensa minnet; det frös senare räknare och skrev tillbaka gamla värden. Nu sätts minnet bara när en
+   sändning verkligen är schemalagd (`avrCanPush`), `avrSendCancel()` rensar det överallt där sändningen avbryts
+   (även vid turbytet i hotseat), och en inkommande `res`, ett lägesbyte eller ett klick äldre än 400 ms avslutar det.
+5. **`vpSeat` kunde vara inaktuell.** En ny giv, en ny match och en ny placering glömmer den nu, och en oust som inte
+   betalade något minns inget.
+6. **Mindre:**
+   - värdkronan går först till en människa som är online;
+   - första mänskliga turen efter öppningssvepet börjar ren (`hotFirstHumanTurn`);
+   - i hotseat tar en unoust tillbaka VP:n och en oust betalar en gång;
+   - **en ny klient mot en äldre server** skickar inte oust med `award:false`. Den gamla servern betalade hela
+     bountyn ändå, så ett bord som gör upp för hand betalade två gånger. Klienten beter sig som v2.6.163 och säger
+     varför.
+- **Kvar, som granskaren också nämnde:** en cachad v2.6.163-klient på den nya servern klämmer negativa värden till 0
+  och skriver tillbaka nollan. Därför ska klienten purgas vid deployen.
+- **Mutanter för granskningens fixar:** servern 8 av 8 dödade, sedan två tester skärpts; klienten 9 av 10. Den som
+  överlever (ingen avbrytning i `hotTurnTallyClear`) är ekvivalent: den sena sändningen skickar det aktuella, tömda
+  läget.
+
+**Mina egna misstag på vägen:**
+- Överlämningstestet föll först. Jag hade fixat `restoreGame`:s `setPhase`, men `clearTable` körs före den och gjorde
+  ett eget `setPhase(-1)` som baslinjerade om Played-facket. Rättat i `clearTable`.
+- Testet för turbytet var grönt även mot v2.6.163. Det återskapade inte sondens fall, där din egen skärm stänger sin
+  räknare först. Skrivet om efter sonden, och Free-läget lagt till; nu rött mot v2.6.163.
+- Jag körde `pkill -f` igen, fast learnings säger att det dödar det egna skalet. Inget gick sönder.
+
+**Grindar:**
+- klientsviten **321/0** med bot v0.6.207 bredvid, inga skip, 13 nya tester (8 för B, 5 för granskningens fynd). Mot
+  v2.6.163: 305/16 -- alla 13 nya röda, plus bryggtestet (filtret), en källfäst rad om `avrPush` och inbäddningen;
+- dispatch **87/0**, 10 nya. Mot srv-2.6.47: 77/10, alla tio röda. Reaper-testet är grönt där med avsikt: det fäster
+  ett beteende som ska vara kvar, och en mutant dödar det;
+- protokoll 6/0, kanariefågeln 69/0, endpoint 24/0, soak `--control` exit 0, och hela soak-batteriet med riktiga
+  bottar genom bryggan: 7 bord, 99 turer, 245 Hold-ons mellan bottar, 9 ousts, 0 som fastnade. B1 byte-identisk, embed
+  `--check` på båda sidorna, check-versions grön med roten;
+- mutanter: servern 19 av 20 dödade, klienten 16 av 17 (varsin ekvivalent);
+- mot en riktig serverprocess, ny mot gammal, med samma sekvens: den som lämnar lämnar en öppen plats och turen står
+  kvar (gamla: alla flyttar upp och Cids pass nekas); `award:false` betalar inget; en andra bounty betalar inget och
+  en unoust tar tillbaka VP:n (gamla: 2 VP kvar); intercept −1 kommer tillbaka som −1 (gamla: 0). Över en riktig
+  omstart (Ctrl+C, sedan start mot samma datamapp) står den öppna platsen och tystnaden kvar, och Bob nekas att ta en
+  ny plats under sitt namn (srv-2.6.47: Bobs plats var borta, Cid otystad och Bob fick en ny plats 3);
+- headless Chromium mot riktig server och en riktig bott: räknaren −2 och botten håller den, utslagsbubblan visas, P
+  under bottens tur ger "Wallbot is playing." och flyttar ingenting. Ny klient 5 av 5, gamla 1 av 5.
+
+**Kvar:**
+- **C, robusthet** (från granskningen): brädesekot i L2/L3, öppen hand plus ekot ger utkastning, `mpRejoin` utan
+  serverlösenord, engångsmeddelanden som försvinner under en återanslutning, 24 lekar som kapas tyst, `turnLogs` som
+  växer och quota-fel som sväljs, CI för grindarna, CSP senare.
+- Från granskningens oberoende granskare i A, fortfarande öppet: `deriveIp` och den vänstra posten i
+  `X-Forwarded-For`, och `Buffer.concat` per TCP-bit.
+- Riggen känner inte igen bottarnas nya rader från v0.6.205–206, och PLAYTEST.md:s rad om Revelations mot en bott är
+  inaktuell.
+
+**Otestat och osäkert:**
+- Ingenting är kört mot elysium.cards.
+- Blandade versioner: en cachad v2.6.163-flik på den nya servern klämmer ett negativt block-värde till 0 och skriver
+  tillbaka nollan med sin helstatus-push, så "fails" kan bli "succeeds" vid ett bord med både gammal och ny klient tills
+  alla laddat om. Därför purge av klienten.
+- En gammal klient (v2.6.163) hittar fortfarande sin plats på namn. Servern hindrar nu två platser med samma namn via
+  join, men om värden befordrar en åskådare till en ANNAN öppen plats än den som bär hennes namn får två platser samma
+  namn, och då hamnar en gammal klient fel. Den nya klienten klarar det.
+- Ett nytt namn som ansluter som spelare mitt i en match får fortfarande en ny tom plats, som förut. Inte ändrat.
+- Ett bott-svep på ett rivet hotseat-bord ligger kvar som ett väntande löfte, med avsikt. Om ett nytt bord startas inom
+  en sekund och bottarna får samma platsnummer kan det gamla svepet i teorin vakna. Det fanns före den här rundan och är
+  inte testat.
+- Bottprojektet har inte kört sin svit mot den här PR:en än; REPLY:n ligger i PR:en. Speltestriggen är inte körd mot
+  v2.6.164.
+- Mobil och touch är inte körda, och Host Guide (docx) är inte genererad på nytt.
+
 ## [GRANSKNINGENS TRE LÅS] (17 oktober 2026, natt, klient v2.6.163 / srv-2.6.47)
 
 Johan, 16 okt kväll: "Skulle du vilja göra en granskning av koden om det är något särskilt du är osäker på eller som

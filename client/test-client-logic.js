@@ -1800,7 +1800,7 @@ test('v2.6.98: the push paths route offline, on the same debounce as online, and
   assert(/hotPushTimer=setTimeout\(hotPushBoardNow, 600\);/.test(html), 'same 600 ms debounce as the online push -- buildPub is not free and boards mutate in bursts');
   assert(/hotPushBoardNow\(\);\s+\/\/ v2\.6\.98: seed the bots with the human's opening board/.test(html),
          'startHotseat seeds, the way the server hands a joiner every existing pub -- otherwise a bot is blind until the human first acts');
-  assert(/hotFanOut\(\{ t: 'board', seat, who, pub: m\.pub \}, seat\);/.test(html), 'bot -> other bots');
+  assert(/hotFanOut\(\{ t: 'board', seat, who, pub \}, seat\);/.test(html), 'bot -> other bots (v2.6.164: the pub the server would relay, B.pubPublic)');
 });
 
 /* === v2.6.99: online bots, added from the lobby === */
@@ -2722,7 +2722,7 @@ test('v2.6.122 tally: the combat duel map is merged PER SEAT and dropped when th
   T.from(3, { t: 'tally', mode: 'combat', duelCid: null }); assert(!T.HB.tally.duel[3] && T.HB.tally.duel[2], 'duelCid:null leaves, for that seat only');
   A.hotTallySend({ t: 'tally', mode: null, a: 0, b: 0, ph: 0, rd: 1 }); eq(T.HB.tally, null);
   const html = require('fs').readFileSync(CLIENT, 'utf8');
-  assert(/function avrPush\(\)\{ if\(net\.spect \|\| \(!inRoom\(\) && !hotBotsSeated\(\)\)\) return;/.test(html), 'avrPush no longer returns just because there is no room');
+  assert(/function avrCanPush\(\)\{ return !\(net\.spect \|\| \(!inRoom\(\) && !hotBotsSeated\(\)\)\); \}/.test(html) && /function avrPush\(\)\{ if\(!avrCanPush\(\)\) return;/.test(html), 'avrPush no longer returns just because there is no room');   // v2.6.164: the guard lives in avrCanPush (the unsent-click memory reads it too)
   eq((html.match(/else if\(!inRoom\(\)\) hotTallySend\(\{ t:'tally', mode:null/g) || []).length, 2, 'both the Block clear and the Vote/Combat resolve have the hotseat twin');
   assert(/avrDuelRender\(\); hotTallySend\(\{ t:'tally', mode:avr\.mode/.test(html), 'and so does the duel announcement');
   A.localTable = false; T.HB.reset([]);
@@ -4956,6 +4956,266 @@ test('v2.6.163 a toast or a menu label is text: none is built with esc/escapeHtm
   R.__doc._ids.toast = el;
   R.toast("O'Neil & Sons took a card back");
   eq(el.textContent, "O'Neil & Sons took a card back", 'toast() is textContent');
+});
+
+/* === v2.6.164 (group B of the 16 Oct code review; Johan 17 Oct: values below 0 too) === */
+function sentLog(A){ const sent = []; A.net.ws = { readyState: 1, send: j => sent.push(JSON.parse(j)) }; return sent; }
+testA('v2.6.164 pass() only on your own turn, online: another seat\'s turn sends nothing and moves nothing (v2.6.163 logged "Turn passed." to the table and moved its own turn while the server refused); a held key passes once until the server\'s turn arrives', async () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m)); A.uiDialog = () => Promise.resolve(true);
+  A.net.status = 'in'; A.net.deckUp = true; A.net.you = 'You'; A.net.roster = [{ seat: 1, name: 'You' }, { seat: 2, name: 'Bo' }];
+  const sent = sentLog(A); A.state.phase = -1; const t0 = A.state.turn;
+  A.net.turnSeat = 2;
+  await A.pass();
+  eq(sent.filter(m => m.t === 'pass' || m.t === 'log').length, 0, 'nothing on the wire: ' + JSON.stringify(sent.map(m => m.t)));
+  eq(A.state.turn, t0, 'the turn did not move here');
+  assert(toasts.some(t => /not your turn/.test(t) && /Bo/.test(t)), 'the toast says whose turn it is: ' + toasts.join(' | '));
+  A.net.turnSeat = 1; toasts.length = 0;
+  await A.pass();
+  eq(sent.filter(m => m.t === 'pass').length, 1, 'my turn: one pass');
+  await A.pass(); await A.pass();
+  eq(sent.filter(m => m.t === 'pass').length, 1, 'a held key: still one pass while it is on its way');
+  A.MP_HANDLERS.turn({ t: 'turn', seat: 1, who: 'You' });
+  await A.pass();
+  eq(sent.filter(m => m.t === 'pass').length, 2, 'after the server\'s turn the next pass goes out');
+  assert(A.net._passPending > 0, 'set up: a pass in flight');
+  A.mpLeave();
+  eq(A.net._passPending, 0, 'leaving the room drops the pass in flight (the next room starts clean)');
+  A.net.ws = null; A.net.status = 'off';
+});
+testA('v2.6.164 pass() at a hotseat during a bot\'s turn does nothing (v2.6.163 passed for the bot and the sweep never ended)', async () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m)); A.uiDialog = () => Promise.resolve(true);
+  const T = parityTable(A, [['You'], ['B2', true]]);
+  A.state.phase = -1; const t0 = A.state.turn;
+  A.net.turnSeat = 2;
+  const p = A.pass();   // not awaited: v2.6.163 would hang in its sweep
+  await new Promise(r => setTimeout(r, 30));
+  eq(A.state.turn, t0, 'the turn did not move');
+  assert(toasts.some(t => /B2 is playing/.test(t)), 'the toast names the bot: ' + toasts.join(' | '));
+  await Promise.race([p, new Promise(r => setTimeout(r, 50))]);
+  A.localTable = false; T.HB.reset([]); A.net.roster = []; A.net.hot = null;
+});
+testA('v2.6.164 the hotseat bridge clears the table tally at every turn change and tells the bots, as the server does (v2.6.163 kept a bot\'s stealth 2 into the next turn: its next block read "Stealth 2 vs Intercept 1")', async () => {
+  const A = loadClient(CLIENT); A.toast = () => {};
+  const T = parityTable(A, [['You'], ['B2', true], ['B3', true]]);
+  A.conv.tournament = false; A.net.helperPolicy = null; A.net.turnSeat = 2;
+  T.from(2, { t: 'tally', mode: 'block', a: 2 });                   // B2 acts: stealth 2 on the table
+  eq(T.HB.tally && T.HB.tally.a, 2, 'set up: a stealth 2 on the table'); eq(A.avr.mode, 'block', 'and on my screen');
+  A.resolvePlayedActions();                                         // my screen closes its counter by itself (I am not the turn seat: nothing goes on the wire)
+  eq(A.avr.mode, null, 'my counter is closed'); eq(T.HB.tally && T.HB.tally.a, 2, 'the table\'s is not');
+  T.clear();
+  const sw = A.hotRunBotTurns(2, 1);                                // the turn moves on to B3 (the seats after 2, up to 1)
+  await new Promise(r => setTimeout(r, 30));
+  eq(T.HB.tally, null, 'the bridge\'s tally is closed at the turn change (v2.6.163: tallyStaleClose saw no counter on my screen and sent nothing)');
+  assert(T.got[3].some(m => m.t === 'tally' && m.mode === null), 'and the bot whose turn it is is told (the server\'s turnTallyClear shape)');
+  T.from(3, { t: 'tally', mode: 'block', b: 1 });
+  eq(T.HB.tally.a, 0, 'a fresh block starts at stealth 0'); eq(T.HB.tally.b, 1);
+  T.from(3, { t: 'tally', mode: 'free', a: 1, b: 1 });             // a free counter is table state too
+  eq(A.avr.mode, 'free', 'set up: a free counter on my screen');
+  T.from(3, { t: 'pass' }); await sw;
+  T.clear();
+  const sw2 = A.hotRunBotTurns(1, 3);                               // the next turn change (B2's turn)
+  await new Promise(r => setTimeout(r, 30));
+  eq(T.HB.tally, null, 'a free counter is closed at the turn change as well (v2.6.163: tallyStaleClose skips free mode)'); eq(A.avr.mode, null, 'on my screen too');
+  assert(T.got[2].some(m => m.t === 'tally' && m.mode === null), 'B2 is told');
+  T.from(2, { t: 'pass' }); await sw2;
+  A.localTable = false; T.HB.reset([]); A.net.roster = []; A.net.hot = null;
+});
+test('v2.6.164 a hotseat hand-off restores the seat, it does not change its phase: the counter the reacting player opened survives the hand-back, the action stays played, the master bonus stays (v2.6.163: closed, resolved, 0)', () => {
+  const A = loadClient(CLIENT); A.toast = () => {};
+  const T = parityTable(A, [['Ann'], ['Bob'], ['B3', true]]);
+  A.conv.tournament = false; A.net.helperPolicy = null; A.net.turnSeat = 1; A.net.you = 'Ann';
+  A.clearTable({ keepLog: true }); A.setPhase(1); A.snapshotPlayed();
+  A.state.masterBonus = 1;
+  const act = A.makeCard('Some Action', 'lib'); A.move(act, 'ready', { x: 100, y: 60, faceDown: false }); act.actSt = 'played';
+  A.setActivePlayer(2, { quiet: true });
+  assert(A.collectPlayed().some(x => x.c.name === 'Some Action'), 'Bob, reacting, sees Ann\'s action in the Played tray (v2.6.163 re-baselined it away)');
+  A.avr = A.avrFresh('block'); A.avrAdjust('b', 2); T.HB.tallyIn('Bob', 2, { mode: 'block', a: 0, b: 2 }); T.clear();
+  A.setActivePlayer(1, { quiet: true });
+  eq(A.state.masterBonus, 1, 'Ann\'s master bonus is hers again');
+  eq((A.state.cards.get(act.id) || {}).actSt, 'played', 'her action is still played');
+  eq(A.avr.mode, 'block', 'Bob\'s block counter is still open'); eq(T.HB.tally && T.HB.tally.b, 2, 'on the bridge too');
+  assert(!T.got[3].some(m => m.t === 'tally' && m.mode === null), 'no bot was told the counter closed');
+  A.localTable = false; T.HB.reset([]); A.net.roster = []; A.net.hot = null;
+});
+testA('v2.6.164 an oust reaches the server whatever the award setting: award:false when it is off (v2.6.163 sent nothing -- the seat stayed in the turn order); an older server, which would pay anyway, keeps v2.6.163\'s behaviour and the player is told', async () => {
+  const A = loadClient(CLIENT); A.toast = () => {}; A.uiDialog = () => Promise.resolve(true);
+  const sent = sentLog(A);
+  A.net.status = 'in'; A.net.deckUp = true; A.net.roster = [{ seat: 1, name: 'Me' }, { seat: 2, name: 'Pred' }]; A.net.you = 'Me';
+  A.clearTable({ keepLog: true }); A.move(A.makeCard('V', 'crypt'), 'ready', { x: 50, y: 50, faceDown: false });
+  A.conv.poolToPredator = false;
+  await A.ousted({});
+  const b1 = sent.filter(m => m.t === 'bounty');
+  eq(b1.length, 1, 'the oust is sent'); eq(b1[0].award, false, 'with award:false');
+  sent.length = 0; A.conv.poolToPredator = true;
+  A.move(A.makeCard('V2', 'crypt'), 'ready', { x: 60, y: 60, faceDown: false });
+  await A.ousted({});
+  const b2 = sent.filter(m => m.t === 'bounty');
+  eq(b2.length, 1); assert(!('award' in b2[0]), 'the setting on: the plain bounty, as before');
+  const L = captureLog(A);
+  try {
+    A.conv.poolToPredator = false; A.net.srvV = '2.6.47'; sent.length = 0;
+    A.move(A.makeCard('V3', 'crypt'), 'ready', { x: 70, y: 70, faceDown: false }); await A.ousted({});
+    eq(sent.filter(m => m.t === 'bounty').length, 0, 'an older server reads no `award` and would pay the full bounty: nothing is sent, as v2.6.163 (the review: a table that settles by hand was paid twice)');
+    assert(L.text().some(t => /^The oust was not sent: this server \(v2\.6\.47\) pays the bounty with every oust, and your automatic award is off\. Leaving it to the table needs server v2\.6\.48 or newer; until then the host can pass your turns\.$/.test(t)), 'and the player is told why (' + JSON.stringify(L.text().slice(0, 3)) + ')');
+    L.lines.length = 0; A.net.srvV = '2.6.48'; sent.length = 0;
+    A.move(A.makeCard('V4', 'crypt'), 'ready', { x: 80, y: 80, faceDown: false }); await A.ousted({});
+    eq(sent.filter(m => m.t === 'bounty' && m.award === false).length, 1, 'srv-2.6.48 reads the field: award:false goes out');
+    assert(!L.text().some(t => /was not sent/.test(t)), 'and no note');
+  } finally { L.restore(); }
+  A.net.ws = null; A.net.status = 'off'; A.net.roster = [];
+});
+test('v2.6.164 the Block counter goes below 0 (the rulebook; Johan 17 Oct): the counter, an incoming tally, the bridge, the verdict line and its bubble -- votes and damage still stop at 0', () => {
+  const A = loadClient(CLIENT);
+  eq(A.tallyClamp('block', -3), -3); eq(A.tallyClamp('block', -120), -99); eq(A.tallyClamp('vote', -1), 0); eq(A.tallyClamp('combat', -1), 0); eq(A.tallyClamp('free', -1), 0);
+  A.avr = A.avrFresh('block'); A.avrAdjust('b', -1);
+  eq(A.avr.b, -1, 'the counter\'s minus goes below 0');
+  A.avr = A.avrFresh('vote'); A.avrAdjust('a', -1);
+  eq(A.avr.a, 0, 'a vote does not');
+  A.MP_HANDLERS.tally({ t: 'tally', mode: 'block', a: 0, b: -1 });
+  eq(A.avr.b, -1, 'an incoming block keeps its negative intercept');
+  eq(A.AVR_DEFS.block.line(0, -1), 'Block: Stealth 0 vs Intercept -1 — block fails.', 'and the verdict follows the rule');
+  assert(A.maybeVerdictPulse('Block: Stealth 0 vs Intercept -1 — block fails.', 'Bot', 2), 'the bubble reads a negative number (VERDICT_RE)');
+  const T = parityTable(A, [['You'], ['B2', true]]);
+  T.from(2, { t: 'tally', mode: 'block', b: -1 });
+  eq(T.HB.tally.b, -1, 'the bridge keeps it'); assert(T.got[2].some(m => m.t === 'tally' && m.b === -1), 'and relays it to the bots');
+  A.localTable = false; T.HB.reset([]); A.net.roster = []; A.net.hot = null; A.avr = A.avrFresh(null);
+});
+test('v2.6.164 the hotseat bridge relays boards as the server would: no deck name, no face-down card\'s name, no card outside the public zones -- a human\'s to the bots, a bot\'s to the human and the others (v2.6.163 relayed both raw)', () => {
+  const A = loadClient(CLIENT); A.toast = () => {};
+  const T = parityTable(A, [['You'], ['B2', true], ['B3', true]]);
+  A.clearTable({ keepLog: true }); A.state.deckName = 'My Secret Deck';
+  const h = A.makeCard('Secret Vampire', 'crypt'); A.move(h, 'uncontrolled', { x: 30, y: 20, faceDown: true });
+  const o = A.makeCard('Open Vampire', 'crypt'); A.move(o, 'ready', { x: 90, y: 20, faceDown: false });
+  A.hotPushBoardNow();
+  const pb = (T.got[2].filter(m => m.t === 'board').pop() || {}).pub || {};
+  eq(pb.deckName, '', 'no deck name');
+  const ch = (pb.cards || []).find(c => c.id === h.id), co = (pb.cards || []).find(c => c.id === o.id);
+  assert(ch && ch.name === undefined, 'the face-down card carries no name'); eq(co && co.name, 'Open Vampire', 'a face-up card keeps its name');
+  T.clear();
+  T.from(2, { t: 'board', pub: { deckName: 'Bot Deck', pool: 30, cards: [{ id: 'b1', name: 'Hidden', kind: 'crypt', zone: 'uncontrolled', faceDown: true }, { id: 'b2', name: 'Shown', kind: 'crypt', zone: 'ready' }, { id: 'b3', name: 'InHand', kind: 'lib', zone: 'hand' }] } });
+  const seen = (A.net.boards[2] || {}).pub || {};
+  eq(seen.deckName, '', 'the human sees no bot deck name');
+  eq((seen.cards || []).map(c => c.id + ':' + (c.name || '-')).join(','), 'b1:-,b2:Shown', 'no face-down name, no hand card');
+  const relay = (T.got[3].filter(m => m.t === 'board').pop() || {}).pub || {};
+  eq((relay.cards || []).map(c => c.id + ':' + (c.name || '-')).join(','), 'b1:-,b2:Shown', 'the other bot sees the same');
+  A.localTable = false; T.HB.reset([]); A.net.roster = []; A.net.hot = null;
+});
+testA('v2.6.164 my counter click survives a write that lands inside its 120 ms debounce (v2.6.163 replaced it and then sent the other side\'s numbers); leaving a hotseat table closes the counter', async () => {
+  const A = loadClient(CLIENT); A.toast = () => {};
+  const T = parityTable(A, [['You'], ['B2', true]]);
+  A.conv.tournament = false; A.net.helperPolicy = null; A.net.turnSeat = 1;
+  T.from(2, { t: 'tally', mode: 'block', a: 0, b: 0 });
+  A.avrAdjust('a', 1);
+  T.from(2, { t: 'tally', mode: 'block', b: 1 });
+  eq(A.avr.a, 1, 'my +1 stealth is still on my screen'); eq(A.avr.b, 1, 'beside the bot\'s +1 intercept');
+  await new Promise(r => setTimeout(r, 250));
+  eq(T.HB.tally.a, 1, 'and the debounce sent it'); eq(T.HB.tally.b, 1);
+  eq(A._avrDirty, null, 'nothing left pending');
+  A.avr = A.avrFresh('vote'); A.avr.a = 3;
+  A.leaveHotseat();
+  eq(A.avr.mode, null, 'no table, no counter (v2.6.163 kept a vote 3/1)');
+  T.HB.reset([]); A.net.roster = []; A.net.hot = null;
+});
+
+testA('v2.6.164 (the review) a pass that waited on the bots\' sweep does not outlive its table: leave mid-sweep and every later pass still works (the first build said "The bell is already ringing." until a reload)', async () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m)); A.uiDialog = () => Promise.resolve(true);
+  const T = parityTable(A, [['You'], ['B2', true]]);
+  A.offlineCfg = [{ name: 'You' }, { name: 'B2', botP: true }];
+  A.state.phase = -1; A.net.turnSeat = 1;
+  A.pass();                                                          // my turn: the sweep hands B2 the turn and waits for its pass
+  await new Promise(r => setTimeout(r, 50));
+  assert(T.got[2].some(m => m.t === 'turn'), 'set up: the bot holds the turn');
+  eq(A.passBlockedWhy(), 'The bell is already ringing.', 'while the sweep runs, a second pass waits');
+  A.leaveHotseat();                                                  // the human gives up on the slow bot
+  eq(A._passBusy, 0, 'the table took its pass with it');
+  eq(A.passBlockedWhy(), null, 'a solo table may pass');
+  const t0 = A.state.turn; await A.pass();
+  eq(A.state.turn, t0 + 1, 'and does');
+});
+test('v2.6.164 (the review) my seat is a seat I hold: an open seat keeps its leaver\'s name, so a name match must skip it (srv-2.6.48 vacates on a leave; the first build found the empty seat and refused my own pass)', () => {
+  const A = loadClient(CLIENT); A.toast = () => {};
+  A.net.status = 'in'; A.net.you = 'P2';
+  A.net.roster = [{ seat: 1, name: 'P1' }, { seat: 2, name: 'P2', vacant: true }, { seat: 3, name: 'P3' }, { seat: 4, name: 'P2' }];
+  eq(A.mySeat(), 4, 'the seat P2 holds, not the open seat with the old name');
+  eq(A.rosterMe().seat, 4);
+  A.net.turnSeat = 4; eq(A.passBlockedWhy(), null, 'so my own turn is mine');
+  A.net.roster = [{ seat: 1, name: 'P1' }, { seat: 2, name: 'P2', vacant: true }];
+  eq(A.mySeat(), 0, 'a spectator whose old seat is open holds no seat');
+  A.net.status = 'off'; A.net.roster = [];
+});
+testA('v2.6.164 (the review) the unsent-click memory lives only while a send is pending: a spectator\'s click, a resolve inside the debounce, a mode change and a turn change all end it (the first build froze later counters and wrote them back over the table)', async () => {
+  const A = loadClient(CLIENT); A.toast = () => {}; A.uiDialog = () => Promise.resolve(true);
+  A.net.status = 'in'; A.net.deckUp = true; A.net.roster = [{ seat: 1, name: 'Ann' }, { seat: 2, name: 'Bob' }];
+  let sent = sentLog(A);
+  // a referee / spectator: the click is never sent, so it is never "unsent"
+  A.net.spect = true; A.net.you = 'Ref';
+  A.MP_HANDLERS.tally({ t: 'tally', who: 'Ann', mode: 'block', a: 0, b: 0 });
+  A.avrAdjust('a', 1);
+  eq(A._avrDirty, null, 'no memory for a click that is never sent');
+  A.MP_HANDLERS.tally({ t: 'tally', who: 'Ann', mode: 'block', a: 3, b: 0 });
+  eq(A.avr.a, 3, 'the table\'s 3 shows (the first build kept the stray 1)');
+  // a seated player clicks and resolves at once
+  A.net.spect = false; A.net.you = 'Bob'; A.net.turnSeat = 1;
+  A.MP_HANDLERS.tally({ t: 'tally', who: 'Ann', mode: null, a: 0, b: 0 });
+  A.MP_HANDLERS.tally({ t: 'tally', who: 'Ann', mode: 'block', a: 0, b: 0 });
+  A.avrAdjust('b', 1);
+  assert(A._avrDirty && A._avrDirty.b === 1, 'set up: a click waiting for its send');
+  A.avrResolve();
+  eq(A._avrDirty, null, 'the resolve drops the pending send and what it carried');
+  for (const m of [{ a: 0, b: 0 }, { a: 1, b: 0 }, { a: 1, b: 1 }, { a: 1, b: 2 }]) A.MP_HANDLERS.tally(Object.assign({ t: 'tally', who: 'Cy', mode: 'block' }, m));
+  eq(A.avr.b, 2, 'a later block shows the table\'s 2 (the first build kept 1)');
+  sent.length = 0; A.avrAdjust('a', 1);
+  await new Promise(r => setTimeout(r, 250));
+  const push = sent.filter(m => m.t === 'tally').pop();
+  assert(push && push.a === 2 && push.b === 2, 'my next push carries the table\'s intercept, not my old 1: ' + JSON.stringify(push));
+  // a mode change in the message ends the memory
+  A.avrAdjust('a', 1); A.MP_HANDLERS.tally({ t: 'tally', who: 'Cy', mode: 'vote', a: 4, b: 0 });
+  eq(A._avrDirty, null, 'a mode change ends it'); eq(A.avr.a, 4);
+  // a click older than the debounce is no longer "unsent"
+  A.MP_HANDLERS.tally({ t: 'tally', who: 'Cy', mode: 'block', a: 0, b: 0 });
+  A.avrAdjust('a', 1); A._avrDirty.at -= 1000;
+  A.MP_HANDLERS.tally({ t: 'tally', who: 'Cy', mode: 'block', a: 0, b: 1 });
+  eq(A.avr.a, 0, 'a stale memory does not override the table');
+  A.avrSendCancel(); A.net.ws = null; A.net.status = 'off'; A.net.roster = [];
+  // at a hotseat the turn change cancels a pending send, so the old counter cannot ride into the next turn
+  const B = loadClient(CLIENT); B.toast = () => {};
+  const T = parityTable(B, [['You'], ['B2', true]]);
+  B.conv.tournament = false; B.net.helperPolicy = null; B.net.turnSeat = 1;
+  T.from(2, { t: 'tally', mode: 'block', a: 2 });
+  B.avrAdjust('b', 1);
+  B.hotTurnTallyClear();
+  await new Promise(r => setTimeout(r, 250));
+  eq(T.HB.tally, null, 'the turn change closed the table tally, and no late debounced push reopened it');
+  B.localTable = false; T.HB.reset([]); B.net.roster = []; B.net.hot = null;
+});
+test('v2.6.164 (the review) the first human\'s turn after the opening sweep starts clean, as every later turn does: the bridge\'s tally closes and the bots are told', () => {
+  const A = loadClient(CLIENT); A.toast = () => {};
+  const T = parityTable(A, [['B1', true], ['You']]);
+  A.conv.tournament = false; A.net.helperPolicy = null; A.net.turnSeat = 1;
+  T.from(1, { t: 'tally', mode: 'block', a: 2 });                    // the sweep's last bot left a stealth on the table
+  T.clear();
+  A.hotFirstHumanTurn(2);
+  eq(A.net.turnSeat, 2); eq(T.HB.tally, null, 'closed');
+  assert(T.got[1].some(m => m.t === 'tally' && m.mode === null), 'and the bot is told');
+  A.localTable = false; T.HB.reset([]); A.net.roster = []; A.net.hot = null;
+});
+testA('v2.6.164 (the review) at a hotseat an un-oust takes back the VP its oust paid, as srv-2.6.48 does, and an oust pays once', async () => {
+  const A = loadClient(CLIENT); A.toast = () => {}; A.uiDialog = () => Promise.resolve(true);
+  const T = parityTable(A, [['Ann'], ['Bob'], ['B3', true]]);
+  A.conv.poolToPredator = true; A.net.turnSeat = 1; A.net.you = 'Bob';
+  A.clearTable({ keepLog: true }); A.move(A.makeCard('V', 'crypt'), 'ready', { x: 50, y: 50, faceDown: false });
+  await A.ousted({});
+  const ann = A.net.roster.find(q => q.name === 'Ann'), bob = A.net.roster.find(q => q.name === 'Bob');
+  eq(ann.vp, 1, 'Bob falls: Ann, his predator, gets the VP'); eq(bob.vpSeat, 1, 'remembered');
+  A.move(A.makeCard('V2', 'crypt'), 'ready', { x: 60, y: 60, faceDown: false });
+  await A.ousted({});
+  eq(ann.vp, 1, 'a second oust of an ousted seat pays nothing');
+  A.unoustHot();
+  eq(bob.out, false); eq(ann.vp, 0, 'the un-oust takes the VP back'); eq(bob.vpSeat, 0);
+  A.hostOustHot(3); const b3 = A.net.roster.find(q => q.seat === 3);
+  eq(bob.vp, 1, 'B3 falls: Bob, its live predator, is paid');
+  A.hostUnoustHot(3); eq(bob.vp, 0, 'the host\'s un-oust takes it back'); eq(b3.vpSeat, 0);
+  A.localTable = false; T.HB.reset([]); A.net.roster = []; A.net.hot = null;
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */

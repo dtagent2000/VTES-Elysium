@@ -63,7 +63,12 @@ test('tally clamps + stores whole-state on the room, clears on null-mode, and is
   S.GAME_HANDLERS.tally(conn, room, p1, { t: 'tally', mode: 'block', a: 120, b: -5, ph: 99, rd: 500, res: 1 });
   assert(room.tally && room.tally.mode === 'block', 'mode stored on the room');
   eq(room.tally.a, 99, 'a clamped to 99');
-  eq(room.tally.b, 0, 'negative b clamped to 0');
+  eq(room.tally.b, -5, 'srv-2.6.48 (Johan, 17 Oct): a negative intercept is KEPT in block mode -- the rulebook lets stealth and intercept go below 0 (srv-2.6.47 clamped it to 0)');
+  S.GAME_HANDLERS.tally(conn, room, p1, { t: 'tally', mode: 'block', a: -120 });
+  eq(room.tally.a, -99, 'block a floors at -99');
+  S.GAME_HANDLERS.tally(conn, room, p1, { t: 'tally', mode: 'vote', a: -3, b: -1 });
+  eq(room.tally.a, 0, 'votes never go below 0'); eq(room.tally.b, 0, 'votes never go below 0');
+  S.GAME_HANDLERS.tally(conn, room, p1, { t: 'tally', mode: 'block', a: 120, b: -5, ph: 99, rd: 500 });
   eq(room.tally.ph, 6, 'phase clamped to the last rulebook step (0-6)');   // v2.6.12
   eq(room.tally.rd, 99, 'round counter clamped to 99');   // v2.6.13
   assert(!('res' in room.tally), 'the resolve flag is transient -- relayed, never stored');   // v2.6.12
@@ -1392,6 +1397,221 @@ test('srv-2.6.47 the admin lockout keeps the server door\'s loopback tolerance: 
     S.handleLogFetch({ url: '/client-errors.txt?key=right-key', socket: { remoteAddress: '127.0.0.1' }, headers: {} }, r);
     eq(r.code, 404, 'and the HTTP route reads the same rule');
   } finally { S.ipLogAuth.delete('127.0.0.1'); S.CFG.adminPassHash = saved; }
+});
+
+/* === srv-2.6.48: THE TABLE KEEPS ITS SEATS (the 16 Oct code review, group B) === */
+let _stN = 0;
+function seatTable(names, opts){                    // names: 'P1', 'B2*' (a bot); the first creates the room and hosts
+  S.rooms.clear(); S.ipFails.clear(); const cs = [], net = ++_stN;   // a fresh address block per table: the per-IP create limit is not under test
+  names.forEach((nm, k) => { const bot = /\*$/.test(nm), name = nm.replace(/\*$/, ''); const c = { ip:'127.1.' + net + '.' + (k + 1), sock: recSock() }; cs.push(c);
+    S.handle(c, JSON.stringify(k ? { t:'join', room:'ST', pass:'', name, bot: bot || undefined } : { t:'create', room:'ST', name, lobby:true })); });
+  const room = S.rooms.get('ST');
+  if (!(opts && opts.lobby)){ room.started = true; room.turnSeat = 1; }
+  cs.forEach(c => { c.sock.msgs.length = 0; });
+  return { room, cs };
+}
+test('srv-2.6.48 a LEAVE mid-game vacates the seat: nobody after the leaver changes seat, the turn stays with its holder and their own pass works (srv-2.6.47 spliced the list -- the turn passed silently and the holder\'s pass was refused)', () => {
+  const { room, cs } = seatTable(['P1', 'P2', 'P3', 'P4']);
+  room.turnSeat = 3;
+  S.handle(cs[1], JSON.stringify({ t:'leave' }));                   // P2 leaves on P3's turn
+  eq(room.players.length, 4, 'four seats still');
+  assert(room.players[1].vacant === true, 'seat 2 is open'); eq(room.players[2].name, 'P3', 'P3 is still seat 3');
+  eq(room.turnSeat, 3, 'the turn did not move');
+  assert(!cs[2].sock.msgs.some(x => x.t === 'turn'), 'and nobody was told it did');
+  assert(cs[3].sock.msgs.some(x => x.t === 'sys' && /^P2 left the table — the seat is open: the host can promote a spectator to take it over\./.test(x.msg)), 'the table is told the seat is open');
+  const ro = cs[3].sock.msgs.filter(x => x.t === 'roster').pop();
+  assert(ro && ro.players.length === 4 && ro.players[1].vacant === true, 'the roster shows the open seat: ' + JSON.stringify(ro && ro.players));
+  assert(!cs[1].sock.msgs.some(x => x.t === 'err' || x.t === 'closed'), 'the leaver is neither told off nor disconnected');
+  eq(cs[1].room, null, 'and is out of the room');
+  eq(S.humansLeft(room), 3, 'humansLeft counts no open seat');
+  cs[2].sock.msgs.length = 0;
+  S.handle(cs[2], JSON.stringify({ t:'pass' }));
+  eq(cs[2].sock.msgs.filter(x => x.t === 'err').length, 0, 'P3 passes its own turn'); eq(room.turnSeat, 4);
+  S.handle(cs[3], JSON.stringify({ t:'pass' })); eq(room.turnSeat, 1);
+  S.handle(cs[0], JSON.stringify({ t:'pass' })); eq(room.turnSeat, 3, 'the rotation steps over the open seat');
+  cs.forEach(c => { c.sock.msgs.length = 0; });
+  S.handle(cs[2], JSON.stringify({ t:'leave' }));                   // the turn HOLDER leaves
+  eq(room.turnSeat, 4, 'the turn goes on to the next live seat');
+  const tm = cs[0].sock.msgs.find(x => x.t === 'turn'); assert(tm && tm.seat === 4 && tm.who === 'P4', 'and the table is told: ' + JSON.stringify(tm));
+});
+test('srv-2.6.48 leaving: the host\'s crown goes to the first seat still held by a human; the last human leaving a bot table closes it; the last of the humans closes a human table; a lobby leave still frees the place', () => {
+  let { room, cs } = seatTable(['P1', 'B2*', 'P3']);
+  S.handle(cs[0], JSON.stringify({ t:'leave' }));
+  eq(room.hostToken, (room.players.find(q => q.name === 'P3') || {}).token, 'P3 hosts now -- not the bot in seat 2');
+  S.handle(cs[2], JSON.stringify({ t:'leave' }));
+  eq(S.rooms.size, 0, 'the last human left: the bot table closes (srv-2.6.36), the open seats do not keep it');
+  assert(cs[1].sock.msgs.some(x => x.t === 'closed'), 'the bot is told');
+  ({ room, cs } = seatTable(['P1', 'P2']));
+  const cW = { ip:'127.0.3.9', sock: recSock() }; S.handle(cW, JSON.stringify({ t:'join', room:'ST', pass:'', name:'Wat', spect:true }));
+  assert(room.watchers.length === 1, 'a spectator watches');
+  S.handle(cs[0], JSON.stringify({ t:'leave' })); eq(S.rooms.size, 1, 'P2 still plays');
+  S.handle(cs[1], JSON.stringify({ t:'leave' })); eq(S.rooms.size, 0, 'every seat open: the room is gone');
+  assert(cW.sock.msgs.some(x => x.t === 'closed'), 'and the spectator is told (srv-2.6.47 deleted the room under it without a word)');
+  ({ room, cs } = seatTable(['P1', 'P2', 'P3'], { lobby: true }));
+  S.handle(cs[1], JSON.stringify({ t:'leave' }));
+  eq(room.players.map(q => q.name).join(','), 'P1,P3', 'in the lobby the place is freed, as before');
+  assert(cs[0].sock.msgs.some(x => x.t === 'sys' && x.msg === 'P2 left the lobby.'));
+});
+test('srv-2.6.48 bounty award:false -- the seat leaves the rotation and the table settles by hand; under the tournament lock the VP is still paid (VP comes only from ousts) and the pool stays manual; no field = the full bounty, as before', () => {
+  let { room, cs } = seatTable(['P1', 'P2', 'P3']);
+  room.turnSeat = 2;
+  S.handle(cs[1], JSON.stringify({ t:'bounty', award:false }));
+  assert(room.players[1].out === true, 'out'); eq(room.players[0].vp || 0, 0, 'no VP');
+  assert(!cs[0].sock.msgs.some(x => x.t === 'bounty'), 'the predator is not told to add 6 pool');
+  assert(cs[2].sock.msgs.some(x => x.t === 'sys' && x.msg === 'P2 was ousted — the bounty is settled by hand.'), JSON.stringify(cs[2].sock.msgs.filter(x => x.t === 'sys')));
+  eq(room.turnSeat, 3, 'the turn moves on (cli-2.6.163 sent nothing at all: the seat stayed in the rotation)');
+  ({ room, cs } = seatTable(['P1', 'P2', 'P3'])); room.tournLock = true;
+  S.handle(cs[1], JSON.stringify({ t:'bounty', award:false }));
+  eq(room.players[0].vp, 1, 'tournament lock: the VP is paid -- nobody can add it by hand there');
+  assert(!cs[0].sock.msgs.some(x => x.t === 'bounty'), 'the 6 pool stays manual');
+  assert(cs[2].sock.msgs.some(x => x.t === 'sys' && x.msg === 'P2 was ousted — 1 VP goes to P1 (tournament lock); the 6 pool is settled by hand.'));
+  ({ room, cs } = seatTable(['P1', 'P2', 'P3']));
+  S.handle(cs[1], JSON.stringify({ t:'bounty' }));
+  eq(room.players[0].vp, 1); assert(cs[0].sock.msgs.some(x => x.t === 'bounty' && x.from === 'P2'), 'an older client\'s bounty is the full award');
+  assert(cs[2].sock.msgs.some(x => x.t === 'sys' && x.msg === 'P2 was ousted — the 6 pool bounty and 1 VP go to P1.'), 'the line is unchanged');
+});
+test('srv-2.6.48 VP once per oust: a second bounty from a seat already out pays nothing; an unoust takes back exactly what its oust paid -- once, never below 0, nothing when nothing was paid; the host\'s pair does the same and a restart keeps the memory', () => {
+  let { room, cs } = seatTable(['P1', 'P2', 'P3']);
+  S.handle(cs[1], JSON.stringify({ t:'bounty' }));
+  cs.forEach(c => { c.sock.msgs.length = 0; });
+  S.handle(cs[1], JSON.stringify({ t:'bounty' }));
+  eq(room.players[0].vp, 1, 'one VP (srv-2.6.47 paid one per message)');
+  assert(!cs[0].sock.msgs.length, 'and the second message moved nothing: ' + JSON.stringify(cs[0].sock.msgs));
+  eq(room.players[1].vpSeat, 1, 'the oust remembers the seat it paid');
+  S.handle(cs[1], JSON.stringify({ t:'unoust' }));
+  assert(!room.players[1].out); eq(room.players[0].vp, 0, 'the unoust takes the VP back');
+  assert(cs[2].sock.msgs.some(x => x.t === 'sys' && x.msg === 'P2 returns to the game. The 1 VP goes back from P1.'), JSON.stringify(cs[2].sock.msgs.filter(x => x.t === 'sys')));
+  S.handle(cs[1], JSON.stringify({ t:'unoust' })); eq(room.players[0].vp, 0, 'not out: nothing happens');
+  S.handle(cs[1], JSON.stringify({ t:'bounty' })); eq(room.players[0].vp, 1, 'ousted again: paid again');
+  room.players[0].vp = 0;                                            // corrected by hand in between
+  S.handle(cs[1], JSON.stringify({ t:'unoust' })); eq(room.players[0].vp, 0, 'never below 0');
+  S.handle(cs[1], JSON.stringify({ t:'bounty', award:false })); room.players[0].vp = 3;
+  S.handle(cs[1], JSON.stringify({ t:'unoust' })); eq(room.players[0].vp, 3, 'an oust that paid nothing takes nothing back');
+  ({ room, cs } = seatTable(['P1', 'P2', 'P3'])); room.tournLock = true;
+  S.handle(cs[2], JSON.stringify({ t:'bounty' })); eq(room.players[1].vp, 1, 'P3 falls, P2 is paid');
+  S.handle(cs[0], JSON.stringify({ t:'hostUnoust', seat: 3 })); eq(room.players[1].vp, 0, 'the host\'s unoust takes it back');
+  assert(cs[0].sock.msgs.some(x => x.t === 'sys' && x.msg === 'P3 was returned to the game by the host. The 1 VP goes back from P2.'));
+  S.handle(cs[0], JSON.stringify({ t:'hostOust', seat: 3 })); eq(room.players[1].vp, 1); eq(room.players[2].vpSeat, 2, 'the host\'s oust is remembered too');
+  const back = S.roomUnsnap(JSON.parse(JSON.stringify(S.roomSnap(room))));
+  eq(back.players[2].vpSeat, 2, 'the snapshot keeps it across a restart');
+});
+test('srv-2.6.48 a named save keeps an open seat (marked) and the board style; loadMatch restores both -- the saved turn points at the right seat, an open seat is nobody\'s to load as, a legacy save\'s turn is pulled back onto the table', () => {
+  if (!S.saves) throw new Error('saves not exposed');
+  S.saves.clear();
+  let { room, cs } = seatTable(['P1', 'P2', 'P3']);
+  room.boardMode = 'classic'; room.tableSetup = true; room.tableLayout = 'large'; room.turnSeat = 3;
+  S.handle(cs[1], JSON.stringify({ t:'leave' }));
+  S.handle(cs[0], JSON.stringify({ t:'saveMatch', name:'sv48' }));
+  const sv = S.saves.get('sv48'); assert(sv, 'saved: ' + JSON.stringify(cs[0].sock.msgs.filter(x => x.t === 'err')));
+  eq(sv.players.length, 3, 'three seats (srv-2.6.47 dropped the open one, and turnSeat 3 pointed past a two-seat table)');
+  eq(sv.players[1].vacant, true); eq(sv.turnSeat, 3);
+  eq(sv.boardMode, 'classic'); eq(sv.tableSetup, true); eq(sv.tableLayout, 'large');
+  const ms = cs[0].sock.msgs.find(x => x.t === 'matchSaved'); eq(ms.saves[0].players.join(','), 'P1,P3', 'the save list names the players, not the open seat');
+  S.rooms.clear();
+  const cC = { ip:'127.0.2.3', sock: recSock() };
+  S.handle(cC, JSON.stringify({ t:'create', room:'LD48', name:'P3', lobby:true }));
+  const lr = S.rooms.get('LD48'); eq(lr.boardMode, 'structured', 'a Structured lobby');
+  sv.passHash = lr.passHash;
+  S.handle(cC, JSON.stringify({ t:'loadMatch', name:'sv48' }));
+  const tk = cC.sock.msgs.find(x => x.t === 'took'); assert(tk, 'loaded: ' + JSON.stringify(cC.sock.msgs.filter(x => x.t === 'err')));
+  eq(lr.players.length, 3); eq(lr.players[1].vacant, true, 'the open seat is still open'); eq(lr.players[1].off, 0, 'with no offline clock');
+  eq(lr.players[2].sock, cC.sock, 'P3 sits in seat 3'); eq(tk.seat, 3); eq(lr.turnSeat, 3, 'and holds the turn, as saved');
+  eq(lr.boardMode, 'classic', 'the save\'s board style wins over the lobby\'s'); eq(lr.tableSetup, true); eq(lr.tableLayout, 'large'); eq(tk.boardMode, 'classic');
+  S.rooms.clear();
+  const cB = { ip:'127.0.2.2', sock: recSock() };
+  S.handle(cB, JSON.stringify({ t:'create', room:'LB48', name:'P2', lobby:true }));
+  sv.passHash = S.rooms.get('LB48').passHash;
+  S.handle(cB, JSON.stringify({ t:'loadMatch', name:'sv48' }));
+  const er = cB.sock.msgs.find(x => x.t === 'err'); assert(er && /one of: P1, P3 —/.test(er.msg), 'the open seat\'s old name cannot load it: ' + JSON.stringify(er));
+  S.rooms.clear();
+  const cL = { ip:'127.0.2.4', sock: recSock() };
+  S.handle(cL, JSON.stringify({ t:'create', room:'LL48', name:'P1', lobby:true, boardMode:'classic' }));
+  const ll = S.rooms.get('LL48');
+  S.saves.set('legacy48', { name:'legacy48', passHash: ll.passHash, players:[{ name:'P1', game:null }, { name:'P3', game:null }], turnSeat:3, reactSecs:5, touchedAt: Date.now() });
+  S.handle(cL, JSON.stringify({ t:'loadMatch', name:'legacy48' }));
+  eq(ll.turnSeat, 1, 'a srv-2.6.47 save with turnSeat 3 on two seats: the turn goes to the next live seat instead of nobody');
+  eq(ll.boardMode, 'classic', 'a save without a board style keeps the room\'s');
+  S.saves.clear(); S.rooms.clear();
+});
+test('srv-2.6.48 the reaper\'s bot grace still sees an OPEN human seat (humansLeft no longer counts it); a bot-only room keeps the hour', () => {
+  const _si = global.setInterval, cbs = [];
+  global.setInterval = (fn, ms) => { cbs.push({ fn, ms }); return { unref(){}, ref(){} }; };
+  let S2; try { S2 = loadServer(SRV); } finally { global.setInterval = _si; }
+  const reap = cbs.find(c => /expired \(everyone offline/.test(String(c.fn)));
+  assert(reap, 'the housekeeping tick was captured');
+  const now = Date.now(), old = now - S2.BOT_ROOM_GRACE_MS - 5000;
+  const mk = (name, players) => S2.rooms.set(name, { name, created: now - 7200e3, everPop: true, watchers: [], players });
+  mk('open', [{ name:'Ann', vacant:true, sock:null, off:0 }, { name:'B2', bot:true, sock:null, off: old }]);
+  mk('held', [{ name:'Ann', sock:null, off: old }, { name:'B2', bot:true, sock:null, off: old }]);
+  mk('bots', [{ name:'B1', bot:true, sock:null, off: old }, { name:'B2', bot:true, sock:null, off: old }]);
+  reap.fn();
+  assert(!S2.rooms.has('open'), 'a bot table whose human seat is open expires on the bot grace (as srv-2.6.47)');
+  assert(!S2.rooms.has('held'), 'so does one whose human is offline');
+  assert(S2.rooms.has('bots'), 'a room of bots alone keeps the hour');
+});
+
+test('srv-2.6.48 (the review) a restart keeps an open seat open, a muted player muted, a lobby seat pick and the anon flag -- srv-2.6.47 put a comment in front of the four fields and restored none of them', () => {
+  const { room, cs } = seatTable(['P1', 'P2', 'P3', 'P4']);
+  room.turnSeat = 1;
+  S.handle(cs[1], JSON.stringify({ t:'leave' }));                    // seat 2 open
+  room.players[2].muted = true; room.players[3].anon = true;
+  const back = S.roomUnsnap(JSON.parse(JSON.stringify(S.roomSnap(room))));
+  eq(back.players[1].vacant, true, 'the open seat stays open');
+  eq(back.players[2].muted, true, 'the muted player stays muted');
+  eq(back.players[3].anon, true, 'anon survives');
+  const lob = seatTable(['L1', 'L2'], { lobby: true }); lob.room.players[1].seatPick = 2;
+  eq(S.roomUnsnap(JSON.parse(JSON.stringify(S.roomSnap(lob.room)))).players[1].seatPick, 2, 'a lobby seat pick survives');
+  S.rooms.clear(); const r2 = S.roomUnsnap(JSON.parse(JSON.stringify(S.roomSnap(room)))); S.rooms.set(r2.name, r2);
+  const c = { ip:'127.0.4.2', sock: recSock() };
+  S.handle(c, JSON.stringify({ t:'join', room: r2.name, pass:'', name:'P2' }));
+  assert(r2.players[1].vacant === true && r2.players[1].sock !== c.sock, 'after a restart the leaver cannot reclaim the open seat by name (srv-2.6.47 handed it back through the offline-seat reclaim)');
+  eq(S.humansLeft(r2), 3, 'and humansLeft still counts three');
+});
+test('srv-2.6.48 (the review) a mid-game join under an open seat\'s name is refused -- it added a second seat with the same name, and every client landed on the empty one; as a spectator the leaver can watch and be promoted back', () => {
+  const { room, cs } = seatTable(['P1', 'P2', 'P3']);
+  S.handle(cs[1], JSON.stringify({ t:'leave' }));
+  const c = { ip:'127.0.4.7', sock: recSock() };
+  S.handle(c, JSON.stringify({ t:'join', room:'ST', pass:'', name:'p2' }));
+  const er = c.sock.msgs.find(x => x.t === 'err');
+  assert(er && /open seat/.test(er.msg), 'refused with a reason: ' + JSON.stringify(c.sock.msgs.map(x => x.t + ':' + (x.msg || ''))));
+  eq(room.players.length, 3, 'no fourth seat');
+  const w = { ip:'127.0.4.8', sock: recSock() };
+  S.handle(w, JSON.stringify({ t:'join', room:'ST', pass:'', name:'P2', spect:true }));
+  eq(room.watchers.length, 1, 'as a spectator they may watch');
+  S.handle(cs[0], JSON.stringify({ t:'mute', name:'P2', on:true }));
+  assert(room.watchers[0].muted === true && !room.players[1].muted, 'mute by name finds the spectator, not the open seat');
+  S.handle(cs[0], JSON.stringify({ t:'promote', name:'P2', seat: 2 }));
+  assert(!room.players[1].vacant && room.players[1].sock === w.sock, 'the host promotes them back into their seat');
+  const fresh = { ip:'127.0.4.9', sock: recSock() };
+  S.handle(fresh, JSON.stringify({ t:'join', room:'ST', pass:'', name:'Newcomer' }));
+  eq(room.players.length, 4, 'a new name still joins mid-game as before');
+});
+test('srv-2.6.48 (the review) vpSeat says what THIS oust paid: a fresh deal, a new match and a new seating forget it, so an oust that paid nothing takes nothing back', () => {
+  const { room, cs } = seatTable(['P1', 'P2', 'P3']);
+  S.handle(cs[1], JSON.stringify({ t:'bounty' })); eq(room.players[0].vp, 1); eq(room.players[1].vpSeat, 1);
+  S.handle(cs[1], JSON.stringify({ t:'deck', name:'D', crypt:[{ name:'V', qty:6 }], library:[{ name:'C', qty:49 }] }));
+  eq(room.players[1].out, false, 'a fresh deal puts P2 back'); eq(room.players[1].vpSeat || 0, 0, 'and forgets the paid seat');
+  room.players[1].vpSeat = 3;                                        // whatever a seat carried before (any stale state)
+  S.handle(cs[1], JSON.stringify({ t:'bounty', award:false })); eq(room.players[1].vpSeat || 0, 0, 'an oust that paid nothing remembers nothing -- whatever was there before');
+  S.handle(cs[1], JSON.stringify({ t:'unoust' }));
+  eq(room.players[0].vp, 1, 'so the un-oust takes nothing back (the first build took the stale VP)');
+  const t3 = seatTable(['S1', 'S2'], { lobby: true }); t3.room.players.forEach(q => { q.vpSeat = 2; });
+  S.handle(t3.cs[0], JSON.stringify({ t:'tool', kind:'seating' }));
+  assert(t3.room.players.every(q => !q.vpSeat), 'a new seating forgets it');
+  const t2 = seatTable(['A1', 'A2'], { lobby: true });
+  t2.cs.forEach((c, k) => { S.handle(c, JSON.stringify({ t:'deck', name:'D', crypt:[{ name:'V', qty:6 }], library:[{ name:'C', qty:49 }] })); S.handle(c, JSON.stringify({ t:'seat', seat: k + 1 })); });
+  t2.room.players[1].vpSeat = 1;                                      // carried over from an earlier match in this room
+  S.handle(t2.cs[0], JSON.stringify({ t:'start' }));
+  assert(t2.room.started, 'started'); eq(t2.room.players[1].vpSeat || 0, 0, 'a new match forgets it');
+});
+test('srv-2.6.48 (the review) the crown goes to a human who is here: an online human before an offline one, a human before a bot', () => {
+  const { room, cs } = seatTable(['P1', 'B2*', 'P3', 'P4']);
+  S.drop(cs[2]);                                                     // P3 disconnects (keeps the seat, offline)
+  S.handle(cs[0], JSON.stringify({ t:'leave' }));
+  eq(room.hostToken, room.players[3].token, 'P4, online, hosts -- not offline P3, not the bot');
+  const t2 = seatTable(['Q1', 'B2*', 'Q3']); S.drop(t2.cs[2]);
+  S.handle(t2.cs[0], JSON.stringify({ t:'leave' }));
+  eq(t2.room.hostToken, t2.room.players[2].token, 'with no human online, the offline human still beats the bot');
 });
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));
