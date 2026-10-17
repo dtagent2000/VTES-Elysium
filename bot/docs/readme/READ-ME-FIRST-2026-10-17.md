@@ -46,7 +46,8 @@ windows. Both are fixed here, by the combining rule. The analysis, the measureme
 - After a modifier's add line, and after the bleed total's `+0` line, the actor slept 150 ms before it opened the
   reactions-only window. A bot answers that line in ~50 ms at pace 0.
 - A Pass that came in that gap found no ask open and was lost, so the window ran out its clock. In R4's smokes
-  (v0.6.205 and its cuts) 253 of 379 bleed-total windows and 22 of 97 modifier windows did.
+  (v0.6.205 and its cuts) 245 of 379 bleed-total windows and 14 of 97 modifier windows did. (First counted as 253 and
+  22; v0.6.207's `ana-windows.py` splits out the block contests that failed at the clock.)
 - And a bounce's new target's Block! was lost the same way, so the bleed landed on the blocker. Section 152 reproduces
   it: a Nosferatu at 1 pool blocks the bounced bleed and is ousted by it on v0.6.205.
 - Fixed: both windows open in the same tick as their line.

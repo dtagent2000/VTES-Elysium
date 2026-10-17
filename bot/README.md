@@ -1,7 +1,7 @@
 # bot/ — Elysium Bots (automated V:TES opponents for the Elysium client)
 
-Bot **v0.6.205** (16 Oct 2026) · arena v1.4.7 · cardfx compiler v1.9.2, curated 105 · built against client v2.6.162 / srv-2.6.46.
-Start with `CLAUDE.md` (session bootstrap, version handshake, every gate), then the newest `docs/readme/READ-ME-FIRST-*.md` (at v0.6.205: `READ-ME-FIRST-2026-10-16f.md`).
+Bot **v0.6.207** (17 Oct 2026) · arena v1.4.8 · cardfx compiler v1.9.2, curated 105 · built against client v2.6.162 / srv-2.6.46.
+Start with `CLAUDE.md` (session bootstrap, version handshake, every gate), then the newest `docs/readme/READ-ME-FIRST-*.md` (at v0.6.207: `READ-ME-FIRST-2026-10-17b.md`).
 The folder is deliberately FLAT: the suites, the arena and every tool expect their inputs beside them. Run everything from here.
 
 ## The bundle (what the client project consumes — copied to the repository root at a release)
@@ -20,7 +20,7 @@ The folder is deliberately FLAT: the suites, the arena and every tool expect the
 | `elysium-bot-diag.html` | the browser battery (HB1) |
 
 ## Gates
-`node --check <file>` → `node test-bot-logic.js` (2199 assertions, ≈300 s — run detached: `timeout 600 node test-bot-logic.js > suite.log &` and poll) → `node test-bot-canary.js` (69/0; pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (271/0, when cardfx changed; needs `vtes.json` — fetched, see root `CLAUDE.md`) → `node diag-hb1-smoke.js` (11/0, when the browser surface changed) → `node test-bot-hotseat.js` (11/0, when anything near the hotseat bridge changed).
+`node --check <file>` → `node test-bot-logic.js` (2204 assertions, ≈300 s — run detached: `timeout 600 node test-bot-logic.js > suite.log &` and poll) → `node test-bot-canary.js` (69/0; pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (271/0, when cardfx changed; needs `vtes.json` — fetched, see root `CLAUDE.md`) → `node diag-hb1-smoke.js` (11/0, when the browser surface changed) → `node test-bot-hotseat.js` (11/0, when anything near the hotseat bridge changed).
 Mutant isolation for the hold gate: `python3 tools/mutants/mutate-v0_6_198.py /tmp/mut` (every mutant must fail or hang).
 One suite section against any bot file (the destructive check of a new section, sub-minute): `bash tools/run-section.sh <bot.js> <section.js>`.
 
@@ -28,7 +28,7 @@ Legacy ad-hoc tests from the v0.6.10x era (`test-soft.js`, `test-planner*.js`, `
 
 ## Series tools
 `gen-match-dossier.js` (one match → one reviewable file) · `gen-trace-harvest.js` (metrics + the price referee) · `gen-batch-review.js` (a series) · `gen-null-review.js` · `gen-plan-review.js` · `gen-forecast-calibration.js` · `gen-deck-coverage.js <deck.json>` (can the bot play this deck?) · `gen-sweep-audit.js`.
-Analysis after a series: `ana-ledger.py` (the ledger gate), `ana-block.py` (the block gate, 0 violations), `ana-inv.py` (invariants), `ana-windows.py` (the actor's reactions-only windows: ran out their clock and went through = 0; the `stale-answer` rows), `ana-wait.py` (tempo), `ana-probe.py` (the probe order in arena traces), `ana-bench.py` + `bench.sh` (the mirror bench, 48 matches), `ana-cards.py`, `ana-home.py`, `ana-open.js`, `ana-combat*.py`, `ana-rush.py`, the `sweep-*.py` cardfx sweeps. The probe lab: `node lab-probe.js N SEED ARMS > lab.jsonl` then `python3 ana-lab.py lab*.jsonl` — one minion phase per table and arm, the same table in every arm (count in the arena, weigh in the lab). Run scripts: `run-bal.sh` / `poll-bal.sh` (+ `design-balanced-serie-bal1.txt`), `run-m.sh`, `run-t.sh`, `run-cmb.sh`, `run-ser.sh`, `make-bench-report.sh` — they carry sandbox paths from the chat era; set the paths for your machine.
+Analysis after a series: `ana-ledger.py` (the ledger gate), `ana-block.py` (the block gate, 0 violations), `ana-inv.py` (invariants), `ana-windows.py` (the actor's reactions-only windows: lost their answer = 0, block contests at the clock split blocked / failed; the `stale-answer` rows), `ana-wait.py` (tempo), `ana-probe.py` (the probe order in arena traces), `ana-bench.py` + `bench.sh` (the mirror bench, 48 matches), `ana-cards.py`, `ana-home.py`, `ana-open.js`, `ana-combat*.py`, `ana-rush.py`, the `sweep-*.py` cardfx sweeps. The probe lab: `node lab-probe.js N SEED ARMS > lab.jsonl` then `python3 ana-lab.py lab*.jsonl` — one minion phase per table and arm, the same table in every arm (count in the arena, weigh in the lab). Run scripts: `run-bal.sh` / `poll-bal.sh` (+ `design-balanced-serie-bal1.txt`), `run-m.sh`, `run-t.sh`, `run-cmb.sh`, `run-ser.sh`, `make-bench-report.sh` — they carry sandbox paths from the chat era; set the paths for your machine.
 Probes: `diag-give-probe.js`, `diag-a1-stash-probe.js`.
 
 ## Read-only copies of the client project's releases (never edit here)
