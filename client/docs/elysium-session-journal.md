@@ -1,3 +1,63 @@
+## [HANDEN DU FÖLJER] (18 oktober 2026, förmiddag, klient v2.6.166 / srv-2.6.49 oförändrad)
+
+Johan: "Kan man ha bottens hand öppen i debug mode och då följa hur den spelar kort, alltså att man ser korten spelas
+och fyllas på?" Svaret var ja och nej: en Debug-bott visar handen för hela bordet och skickar om den vid varje ändring,
+men "Inspect their hand" var en ögonblicksbild som aldrig ritades om. Johan: "Du kan köra på alla tre".
+
+**Byggt (ren klient, purge; ingen ändring på tråden):**
+1. **Den inspekterade handen är live.** Varje grant som kommer in medan rutan är öppen ritar om den (`ohRefresh` från
+   `MP_HANDLERS.openHandGrant`, som även hotseat-bryggan går genom). `ohDiff` är en ren multimängdsdiff på namn: ett
+   kort som kom lyser upp (`.ohNew`), ett kort som gick tonar ut innan det försvinner (`.ohGone`); två kopior räknas
+   två gånger. Rutans status `_ohInspect.open` sätts av `viewOppHand` och nollas av `closeOverlay` och av varje annan
+   modal som tar scenen, så en stängd ruta ritas aldrig om, och en ny öppning är en första målning utan markeringar.
+   Ett återkallande stänger rutan och säger det (toast och privat loggrad).
+2. **Den fästa handen.** "📌 Pin their hand" i ögats och poolens meny: en liten remsa (`#ohStrip`, `position:fixed`)
+   med platsens öppna hand som ligger kvar i alla vyer, ritas om likadant vid varje grant, dras i sin rubrik
+   (platsen minns i `localStorage`, hålls inom fönstret vid resize), och tas bort med X, från menyn, vid ett
+   återkallande och när bordet lämnas (`mpLeave`, `leaveHotseat`, `mpAbandonReconnect`, ett nytt `joined`).
+3. **Samma kortbyggare** (`ohCardEl`) för rutan och remsan: dubbelklick sätter namnmålet som förut.
+
+**Kört:** headless Chromium mot riktig server, hotseat med en riktig Debug-bott (v0.6.207): remsan fäst och rutan
+öppen, ett pass, botten spelade Effective Management och drog The Parthenon; rutan och remsan ritade om sig själva
+(17 målningar var), visade handen som den är, med två `.ohNew` och två `.ohGone`; remsan stod kvar efter ett vybyte,
+drogs 400 px och platsen sparades; X tog bort den. Inga sidfel. Bildfilerna saknas i sandlådan (krcg.org är
+blockerat), så bara namnen syns på skärmdumparna.
+
+**Oberoende granskning före PR:en** (en separat agent; tre bekräftade fel, alla åtgärdade och fästa):
+1. **Remsan var inte bordskrom:** ett drag i dess rubrik ritade också en markeringsram, ett klick på ett kort tömde
+   urvalet, och mushjulet över korten zoomade bordet. Nu står `#ohStrip` i `BOARD_CHROME` och i marquee-listan,
+   draget stoppar propageringen och hjulet stannar i remsan.
+2. **En människas öppna hand i hotseat uppdaterades aldrig:** den läses ur det sparade brädet, och inget
+   grant-meddelande kommer. Nu ritar överlämningen (`setActivePlayer`, där brädet sparas) om remsan och rutan.
+3. **En dialog över rutan lämnade den synlig men död:** `uiDialog` öppnar `dialogModal` (rutan släcks) och återställer
+   sedan `browseModal` utan att tända den. Nu tänder `openOverlay('browseModal')` en släckt ruta igen och ritar om
+   den med det som hann ändras.
+- Mindre: en grant mitt i ett drag flyttade tillbaka remsan (platsen sätts nu bara när remsan visas); spökkortet
+  ritas där kortet satt, inte sist, och "Their hand is empty." kommer när det sista spökkortet försvunnit; den
+  målade ordningen behålls mellan omritningar så att inget hoppar (`diff.order` är nästa jämförelses bas).
+- Kvar som granskaren också nämnde: `net.openHandFrom[seat]` rensas inte när platsen lämnar rummet (förut så);
+  ett mål satt i remsan syns i rutan först vid nästa grant; remsan ligger `position:fixed` inuti `#board`, som ingen
+  nåbar vy transformerar.
+
+**Mina misstag på vägen:**
+- `pgrep -f | xargs kill` dödade mitt eget skal (exit 144), samma klass som `pkill -f`. Leta på port eller spara PID.
+- `page.evaluate(() => pass())` hängde: `pass()` väntar på bott-svepet, och Playwright väntar på löftet. Returnera
+  något annat.
+- Sondens pass gick aldrig igenom första gångerna: `passNow` frågar `phaseLeaveOK`/`uiConfirm`, och en dialog över
+  rutan tar scenen (och avslutar, med rätta, live-visningen). Sonden stubbar dialogerna.
+
+**Grindar:** klientsviten **336/0** med bot v0.6.207 bredvid, inga skip, 3 nya tester (mot v2.6.165: 330/6 -- de tre nya
+plus tre källfästa rader som flyttade: hjul-lyssnarna, marquee-listan och ögats rader); dispatch 88/0, protokoll 6/0,
+kanariefågeln 69/0, endpoint 24/0, soak `--control` exit 0, B1 byte-identisk, embed `--check` båda sidorna,
+check-versions grön med roten. Webbläsarproben ovan: 11 av 11 efter granskningens fixar.
+
+**Kvar / osäkert:**
+- Bottprojektets guide (Help ▸ Bots, deras START-HERE-BOTS.html) nämner "Inspect their hand" men inte nålen; svaret
+  till dem föreslår en mening.
+- Touch-drag av remsan (pointer-events; `touch-action:none` satt) är inte provat på en riktig pekskärm.
+- En människas öppna hand i hotseat ritas om vid överlämningen, inte vid varje kort hon spelar (hennes bräde sparas
+  först då).
+
 ## [DET TYSTA BORDET] (17 oktober 2026, eftermiddag, klient v2.6.165 / srv-2.6.49)
 
 Johan, 17 okt, efter att B (PR #29) var mergad: "Yes då kör vi C och knyter ihop säcken, jag har mergat B :D"

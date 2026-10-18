@@ -2082,7 +2082,7 @@ test('v2.6.103: BOTH board handlers read the one constant, and every wheel consu
   const bodies = [];
   for (let i = html.indexOf("addEventListener('wheel'"); i > -1; i = html.indexOf("addEventListener('wheel'", i + 1))
     bodies.push({ at: i, src: html.slice(i, html.indexOf('passive:false', i)) });
-  eq(bodies.length, 10, 'found every wheel listener -- a new one must declare which side of the rule it is on');
+  eq(bodies.length, 11, 'found every wheel listener -- a new one must declare which side of the rule it is on');   // v2.6.166: +#ohStrip, a consumer (it scrolls its own cards)
   const bare = bodies.filter(b => !/stopPropagation\(\)/.test(b.src));
   eq(bare.length, 1, 'exactly one listener forwards the wheel: the board zoom itself (was 3 -- #pool and #dockPool leaked into it)');
   assert(html.slice(Math.max(0, bare[0].at - 6), bare[0].at).indexOf('board.') > -1, 'and that one is #board, not a consumer');
@@ -3713,7 +3713,7 @@ test('v2.6.143: the dock pin has ONE setter -- the visible button, the backgroun
   assert(html.indexOf("_pb.addEventListener('click', e=>{ e.stopPropagation(); setDockPin(!dockPinned); });") > 0, 'a click toggles');
   eq((html.match(/dockPinned\s*=\s*(true|false|!!on)/g) || []).join(), 'dockPinned=false,dockPinned=!!on', 'the flag is assigned at its declaration and in the setter only');
   eq((html.match(/classList\.(add|remove|toggle)\('pinned'/g) || []).length, 1, 'and the glowing edge moves in the setter only');
-  assert(html.indexOf("#l2dockClose,#l2dockbg,#l2dockPin')) return;") > 0, 'a click on the pin never starts a marquee');
+  assert(html.indexOf("#l2dockClose,#l2dockbg,#l2dockPin,#ohStrip')) return;") > 0, 'a click on the pin never starts a marquee');   // v2.6.166: the pinned hand joined the list
 });
 /* ---------- v2.6.144: ONE RULE FOR ONE AND FOR MANY ---------- */
 test('v2.6.144: a drag into ready shows the same face for one card and for a group -- on the free board an uncontrolled card keeps its face, on a structured board it comes into play face up', () => {
@@ -4712,11 +4712,11 @@ test('v2.6.160 the eye (Johan, the bot project\'s item 5): its state -- quiet un
   eq(st.cls, 'lit', 'their hand is open to me'); eq(st.hand, 3);
   eq(st.title, 'Their hand is open to you (3) · Ash heap 2 · burned 1 — click to look');
   const rows = A.oppLookItems(2);
-  eq(rows.map(r => r.label).join(' | '), '👁 Inspect their hand (3) | 🜂 View their ash heap (2) | 🔥 View their burned cards (1)');
+  eq(rows.map(r => r.label).join(' | '), '👁 Inspect their hand (3) | 📌 Pin their hand (stays on screen) | 🜂 View their ash heap (2) | 🔥 View their burned cards (1)');   // v2.6.166: the pin row after Inspect
   assert(rows.every(r => r.noUndo === true && typeof r.fn === 'function'), 'look rows make no undo point (pure UI, T3b)');
   const pool = A.oppPoolMenuItems(2).filter(x => x && x !== '-');
-  eq(pool.slice(0, 3).map(r => r.label).join(' | '), rows.map(r => r.label).join(' | '), 'the pool\'s right-click starts with the SAME rows (one builder)');
-  eq(pool[3].label, '⌖ Target their pool', 'then the pool target, as before');
+  eq(pool.slice(0, rows.length).map(r => r.label).join(' | '), rows.map(r => r.label).join(' | '), 'the pool\'s right-click starts with the SAME rows (one builder)');
+  eq(pool[rows.length].label, '⌖ Target their pool', 'then the pool target, as before');
   const el = { className: '', title: '' };
   A.mateyePaint(el, 2); eq(el.className, 'mateye lit'); assert(/^Their hand is open to you \(3\)/.test(el.title));
   delete A.net.openHandFrom[2]; A.net.boards[2].pub.cards = [];
@@ -5519,6 +5519,86 @@ test('v2.6.165 (C-16) the duel panel keeps ONE live-refresh timer while the coun
   assert(/let _duelStepT=null;/.test(html), 'a single module-level handle');
   assert(/clearInterval\(_duelStepT\); _duelStepT=setInterval\(/.test(html), 'cleared before it is set again');
   assert(!/const iv=setInterval\(\(\)=>\{ const st=\$\('#ctStepper'\)/.test(html), 'the per-click timer is gone');
+});
+
+/* ---------- v2.6.166: the hand you watch ---------- */
+test('v2.6.166 ohDiff is a multiset diff by name: what came, what went, duplicates counted', () => {
+  const A = loadClient(CLIENT);
+  const D = (a, b) => JSON.stringify(A.ohDiff(a, b));
+  eq(D(null, ['a', 'b']), '{"added":[],"gone":[]}', 'a first paint marks nothing');
+  eq(D(['a', 'b'], ['a', 'b', 'c']), '{"added":[2],"gone":[]}', 'a draw: the new card by index');
+  eq(D(['a', 'b', 'c'], ['a', 'c']), '{"added":[],"gone":["b"]}', 'a play: the card that left');
+  eq(D(['a', 'a', 'b'], ['a', 'b', 'd']), '{"added":[2],"gone":["a"]}', 'two copies: one played, one drawn');
+  eq(D(['a', 'b'], ['b', 'a']), '{"added":[],"gone":[]}', 'a reorder is nothing');
+  eq(D(['a'], []), '{"added":[],"gone":["a"]}', 'the last card played');
+});
+test('v2.6.166 an inspected open hand is live: a re-sent grant redraws it with the draw and the play marked while it is open, not after it closed or another modal took the stage; a revoke closes it and says so (v2.6.165: a snapshot -- close and open again)', () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m));
+  const T = parityTable(A, [['You'], ['B2', true], ['Anna']]);
+  A.net.hot.boards[2] = JSON.stringify({ pool: 30, cards: [], zones: { hand: [] }, openHand: [] });
+  const grant = names => T.from(2, { t: 'openHand', to: 'all', cards: names.map(n => ({ name: n, kind: 'lib' })) });
+  grant(['Govern the Unaligned', 'Deflection', 'Bum\'s Rush']);
+  eq(JSON.stringify(A.viewOppHand(2)), '{"added":[],"gone":[],"order":["Govern the Unaligned","Deflection","Bum\'s Rush"]}', 'opened: a first paint');
+  assert(A.ohInspectLive(2), 'live while open');
+  let r = A.ohRefresh(2); eq(r.inspect && r.inspect.added.length, 0, 'the same hand again: nothing marked');
+  grant(['Govern the Unaligned', 'Bum\'s Rush', 'Conditioning']);   // the bot played Deflection and drew Conditioning
+  eq(JSON.stringify(A._ohInspect.names), '["Govern the Unaligned","Bum\'s Rush","Conditioning"]', 'the grant redrew the inspector (the handler called ohRefresh)');
+  r = A.ohRefresh(2); eq(JSON.stringify(r.inspect.added) + JSON.stringify(r.inspect.gone), '[][]', 'and the redraw was marked once, not again'); eq(r.pin, null);
+  A.closeOverlay();
+  eq(A.ohInspectLive(2), false, 'closed: no longer live');
+  grant(['Conditioning']); eq(JSON.stringify(A._ohInspect.names), '["Govern the Unaligned","Bum\'s Rush","Conditioning"]', 'a grant after the close paints nothing');
+  { const d = A.viewOppHand(2); eq(d.added.length + d.gone.length, 0, 'reopened: a first paint again, not a diff against the old snapshot'); }
+  A.openOverlay('settingsModal'); eq(A.ohInspectLive(2), false, 'another modal on the stage: not live');
+  A.viewOppHand(2); grant(['Conditioning', 'Dodge']);
+  A.openOverlay('dialogModal'); eq(A.ohInspectLive(2), false, 'a dialog over it: not live');
+  grant(['Dodge']);                                                  // the hand changed under the dialog
+  A.openOverlay('browseModal');                                      // the dialog's finish brings the browse modal back
+  assert(A.ohInspectLive(2), 'the stage back on the inspector: live again'); eq(JSON.stringify(A._ohInspect.names), '["Dodge"]', 'and repainted with what changed meanwhile (the review: it came back visible but dead)');
+  eq(JSON.stringify(A.viewOppHand(2)), '{"added":[],"gone":[],"order":["Dodge"]}', 'opening it again is not a re-entry');
+  toasts.length = 0; const L = captureLog(A);
+  try {
+    T.from(2, { t: 'openHand', to: 'all', revoke: true });
+    eq(A.ohInspectLive(2), false, 'a revoke closes the inspector');
+    assert(toasts.some(t => /closed their hand/.test(t)), 'and says so: ' + toasts.join(' | '));
+    assert(L.text().some(t => /no longer plays with an open hand toward you/.test(t)), 'in the log too');
+  } finally { L.restore(); }
+  A.leaveHotseat();
+});
+test('v2.6.166 the pinned hand: a strip of one seat\'s open hand that follows every grant, is offered by the eye, and goes with the table', () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m));
+  const T = parityTable(A, [['You'], ['B2', true], ['Anna']]);
+  A.net.hot.boards[2] = JSON.stringify({ pool: 30, cards: [], zones: { hand: [] }, openHand: [] });
+  const grant = (seat, names) => T.from(seat, { t: 'openHand', to: 'all', cards: names.map(n => ({ name: n, kind: 'lib' })) });
+  eq(A.ohPin(2), false, 'nothing to pin before a grant');
+  grant(2, ['Govern the Unaligned', 'Deflection']);
+  const items = A.oppLookItems(2).map(i => i.label);
+  assert(items[0] === '👁 Inspect their hand (2)' && items[1] === '📌 Pin their hand (stays on screen)', 'the eye offers the pin: ' + JSON.stringify(items));
+  { const d = A.ohPin(2); eq(d.added.length + d.gone.length, 0, 'pinned: a first paint'); } assert(A.ohPinned(2));
+  eq(A.oppLookItems(2)[1].label, '📌 Unpin their hand', 'the row flips');
+  grant(2, ['Deflection', 'Conditioning']);
+  eq(JSON.stringify(A._ohPin.names), '["Deflection","Conditioning"]', 'a grant redraws the strip');
+  const r = A.ohRefresh(2); eq(r.pin.added.length + r.pin.gone.length, 0, 'marked once');
+  const prev = A._ohPin.names.slice(); A._ohPin.names = ['Deflection', 'Govern the Unaligned'];   // pretend the last paint showed Govern
+  grant(2, ['Deflection', 'Conditioning']);
+  eq(JSON.stringify(A._ohPin.names), '["Deflection","Conditioning"]');
+  A._ohPin.names = ['Deflection']; { const d = A.ohPin(2); eq(JSON.stringify([d.added, d.gone, d.order]), '[[1],[],["Deflection","Conditioning"]]', 'the diff marks the card that came, painted last'); }
+  A._ohPin.names = ['Conditioning', 'Deflection', 'Bum\'s Rush']; { const d = A.ohPin(2); eq(JSON.stringify([d.added, d.gone, d.order]), '[[],["Bum\'s Rush"],["Conditioning","Deflection"]]', 'the card that went, and the old order kept so nothing jumps'); }
+  // a hotseat HUMAN's open hand is read from the stored board: the hand-off repaints the strip (the review: it never did)
+  A.net.hot.boards[3] = JSON.stringify({ pool: 30, openHand: ['all'], cards: [{ id: 'h1', name: 'Bonding', kind: 'lib' }, { id: 'h2', name: 'Govern the Unaligned', kind: 'lib' }], zones: { hand: ['h1', 'h2'] } });
+  A.ohPin(3); eq(JSON.stringify(A._ohPin.names), '["Bonding","Govern the Unaligned"]');
+  A.net.hot.boards[3] = JSON.stringify({ pool: 30, openHand: ['all'], cards: [{ id: 'h2', name: 'Govern the Unaligned', kind: 'lib' }], zones: { hand: ['h2'] } });
+  { const r3 = A.ohRefresh(3); eq(JSON.stringify(r3.pin.gone), '["Bonding"]', 'the stored board changed: the strip follows'); }
+  A.ohPin(2);
+  assert(/net\.hot\.boards\[cur\]=serializeGame\(\);\n\s*try\{ ohRefresh\(cur\); \}/.test(require('fs').readFileSync(CLIENT, 'utf8')), 'and the hand-off, which is when that board is stored, calls it');
+  A.ohUnpin(); eq(A.ohPinned(), false); eq(A.oppLookItems(2)[1].label, '📌 Pin their hand (stays on screen)');
+  A.ohPin(2); T.from(2, { t: 'openHand', to: 'all', revoke: true }); eq(A.ohPinned(), false, 'a revoke unpins'); assert(toasts.some(t => /closed their hand/.test(t)));
+  grant(2, ['X']); A.ohPin(2); A.leaveHotseat(); eq(A.ohPinned(), false, 'leaving the table unpins');
+  A.net.status = 'in'; A.net.you = 'Ann'; A.net.ws = { readyState: 1, send(){} }; A.net.roster = [{ seat: 1, name: 'Ann', online: true }, { seat: 2, name: 'Bob', online: true }];
+  A.MP_HANDLERS.openHandGrant({ t: 'openHandGrant', seat: 2, who: 'Bob', cards: [{ name: 'Y', kind: 'lib' }] });
+  A.ohPin(2); assert(A.ohPinned(2), 'online too');
+  A.MP_HANDLERS.joined({ t: 'joined', room: 'Other', token: 't', you: 'Ann', seat: 1, players: A.net.roster, srv: '2.6.49' });
+  eq(A.ohPinned(), false, 'a fresh join into another room unpins');
+  A.net.ws = null; A.net.status = 'off';
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */
