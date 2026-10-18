@@ -1246,6 +1246,22 @@ body.inov.l3zoomopen #l3zoomCtl{ display:flex; }   /* open — position set by J
 #holdBadge .hbdot{font-size:14px; letter-spacing:0}
 #holdBadge .hbgo{color:var(--bone); border-left:1px solid #3a2d19; padding-left:9px; letter-spacing:.1em}
 @keyframes hbpulse{0%,100%{opacity:.82} 50%{opacity:1}}
+/* v2.6.166: the pinned open hand (#ohStrip) and the live marks an inspected or pinned hand draws (.ohNew / .ohGone) */
+#ohStrip{position:fixed; right:14px; bottom:14px; z-index:5950; width:min(92vw, 300px); background:#241c12; border:1px solid var(--brass2); border-radius:8px; box-shadow:0 3px 14px rgba(0,0,0,.6); color:var(--bone2)}
+#ohStrip[hidden]{display:none}
+#ohStrip .ohHead{display:flex; align-items:center; gap:8px; padding:6px 9px; cursor:move; font:600 11px "Cinzel", serif; letter-spacing:.12em; text-transform:uppercase; color:var(--brass); border-bottom:1px solid #3a2d19; user-select:none; touch-action:none}
+#ohStrip .ohHead .ohN{color:var(--bone2); letter-spacing:.06em; text-transform:none; font-family:inherit; font-size:11px}
+#ohStrip .ohX{margin-left:auto; cursor:pointer; color:var(--bone2); font:600 15px/1 sans-serif; padding:0 2px}
+#ohStrip .ohX:hover{color:var(--bone)}
+#ohStrip .ohCards{display:flex; gap:6px; padding:8px; overflow-x:auto; min-height:92px}
+#ohStrip .bcard{flex:0 0 54px}
+#ohStrip .bcard .bname{font-size:9px}
+#ohStrip .ohEmpty{align-self:center; padding:0 6px; font-size:11px; color:var(--bone2)}
+.bcard.ohNew .bimg{animation:ohNew 1.8s ease-out}
+@keyframes ohNew{0%{box-shadow:0 0 0 2px var(--brass), 0 0 18px var(--brass); transform:translateY(-6px)} 60%{box-shadow:0 0 0 2px var(--brass), 0 0 6px var(--brass); transform:none} 100%{box-shadow:none; transform:none}}
+.bcard.ohGone{animation:ohGone .8s ease-in forwards; pointer-events:none}
+@keyframes ohGone{0%{opacity:1} 100%{opacity:0; transform:scale(.82) translateY(10px)}}
+@media (prefers-reduced-motion:reduce){ .bcard.ohNew .bimg{animation:none; box-shadow:0 0 0 2px var(--brass)} .bcard.ohGone{animation:none; opacity:0} }
 .sayb{position:absolute; left:50%; transform:translate(-50%,-50%); text-align:center; animation:sayb 3s ease-out forwards; transition:left .45s cubic-bezier(.22,.61,.36,1); max-width:min(92vw, 92%); overflow-wrap:break-word; word-wrap:break-word}   /* v2.6.94 (Johan): dropped white-space:nowrap + added max-width clamp so long bot chat / chat bubbles wrap instead of spilling outside the board; v2.6.38: the transition is what turns sayFxRelayout()'s left-percentage changes into a glide */
 .sayb .saycircle{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:190px; height:190px; border-radius:50%; opacity:.4; z-index:0; pointer-events:none}   /* soft player-colour medallion behind the name/phrase, same gradient poolGradient() paints on the pool globe */
 .sayb .sayclan{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:175px; height:175px; object-fit:contain; opacity:.5; clip-path:circle(50%); z-index:0; pointer-events:none}   /* v2.5.80: was a PERCENTAGE of .sayb -- but .sayb auto-sizes to the phrase's text width (white-space:nowrap), not to .saycircle's fixed 190px, so a short phrase ("Yes.") gave a narrow .sayb and the icon's percentage-based size came out well under the circle. Fixed px (92% of 190, matching .clansym-pool's own 90%-of-globe ratio) stays proportional to the circle regardless of phrase length. Opacity back to .5, exactly matching .clansym-pool on #pool/#dockPool (Johan's explicit reference) -- .85 was an overcorrection for what was actually a sizing bug, not an opacity one. */
@@ -1753,6 +1769,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <div id="cardFx"></div>
     <div id="turnFx"><div class="yt">Your turn!</div><div class="yth">(Click Unlock to start your turn)</div></div>
     <div id="toast"></div>
+    <div id="ohStrip" hidden><div class="ohHead"><span>👁</span><span class="ohWho"></span><span class="ohN"></span><span class="ohX" title="Unpin">×</span></div><div class="ohCards"></div></div>   <!-- v2.6.166: the pinned open hand -->
     <div id="rview">
       <div id="rvHud">
         <span id="rvTitle"></span>
@@ -3235,7 +3252,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.165';   // v2.6.165 (17 Oct 2026, THE QUIET TABLE -- purge the client AND restart the server: srv-2.6.49 ships with it; bot v0.6.207 beside): group C of the 16 Oct code review, which closes it. (1) A board leaves this client only when it changed (mpSendBoard; the hotseat fan-out the same): layout() ends in scheduleSave() -> schedulePush(), so in the Structured view every board received re-rendered ours and sent it back -- about one board a second per client with nobody touching anything. The push waits at most 1.5 s however busy the table (each received board re-armed the debounce). (2) An open hand is re-sent when it changed; a roster re-sends a returning seat's grant, and every grant when no seat changed (a token rejoin that only swaps the socket, a reload's rejoin, a new spectator -- the server keeps no grants), never to an absent seat; it went out on every render: with grants to four seats about 100 messages in 10 s against the server's 80, so the server cut the granter off. (3) A reconnect carries the server password (memory only, for the server it was typed for): on a --server-pass server the rejoin was refused (a strike against the address) and the client gave the session up -- the player left the table and had to join again by hand. (4) While reconnecting, a chat line waits in an outbox and goes out after the rejoin; a pass, an oust, a draw and every other move that needs the server (an undone draw, a card back to the deck, a shuffle, the pile tools, a roll, the Edge, an un-oust, a give, a recall, a reveal, an open-hand revoke, the host's pool / oust / pass tools) is refused out loud -- their offline paths acted on a table that is not this one (a card returned to the deck was lost, a revoke never reached the grantees); the board goes out again after the rejoin, changed or not; the retries run every 2.5 s through the server's 30 s reconnect window, then back off to 15 s (+-20 %), and start at once when the network or the tab comes back; a local game started meanwhile leaves the lost table (its retries ran into the local game). (5) Saved decks: 60 instead of 24, a drop is named, a full storage is said; the local game save: a full storage frees other rooms' stale saves, then keeps a shorter turn history, and says so (it failed silently); the duel panel runs one live-refresh timer, not one per click.
+const VERSION='2.6.166';   // v2.6.166 (18 Oct 2026, THE HAND YOU WATCH, pure client -- purge; srv-2.6.49 unchanged, no wire change; bot v0.6.207 beside): Johan: follow a Debug bot's hand as it plays. (1) An inspected open hand ('Inspect their hand') is LIVE: every re-sent grant redraws it while it is open -- a card the granter just drew lights up, a card they played fades out before it goes (it was a snapshot; close and open again to see a change). A revoke closes it and says so. (2) 'Pin their hand': a small strip of the open hand that stays on screen while you play, in every view, with the same live redraw; drag it by its header (the spot is remembered in this browser), unpin from the eye's menu or its X; it goes with the table. Online, at a hotseat and for a human's open hand alike. The bot project's guide (Help > Bots) is theirs to update.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3897,7 +3914,7 @@ function l3on(){ return board.classList.contains('l3mode'); }   // true in L3 / 
    opponents' mats ARE the table, and in L3 they are most of the screen -- block
    them and there is nowhere left to zoom. Johan's rule: chrome and cards swallow
    the wheel (with or without an effect of their own), open board zooms. */
-const BOARD_CHROME = '.card,.l4globe,.l4pbtn,#edge,.mateye,#poolWrap,#dockPool,#z-hand,.zone.pile,#phases,#l2dock,#l2dockbg,#dockLog,#l3zoomCtl,#holdBadge,#hotBotBtn';   // v2.6.108: +#hotBotBtn -- the bot panel is a control that sits over the table, so it swallows the wheel and never starts a pan. Adding it HERE is the whole point of the constant: one line, both gestures
+const BOARD_CHROME = '.card,.l4globe,.l4pbtn,#edge,.mateye,#poolWrap,#dockPool,#z-hand,.zone.pile,#phases,#l2dock,#l2dockbg,#dockLog,#l3zoomCtl,#holdBadge,#hotBotBtn,#ohStrip';   // v2.6.166: +#ohStrip -- the pinned hand sits over the table too   // v2.6.108: +#hotBotBtn -- the bot panel is a control that sits over the table, so it swallows the wheel and never starts a pan. Adding it HERE is the whole point of the constant: one line, both gestures
 function isBoardChrome(el){ return !!(el && typeof el.closest==='function' && el.closest(BOARD_CHROME)); }
 function effectiveL3Shape(){ return 'square'; }   // PARKED: circle/round helicopter retired -> kodarkivering.md. Square is the only L3 layout now (ignores conv.l3shape + net.l3shapeLock).
 function effectiveL3CollapseOusted(){ return !!conv.l3collapseOusted; }   // LOCAL view option: when on, L3 drops ousted seats and re-flows to the living players (off -> dead boards stay in place with a skull). Could be promoted to a host lock later, like l3shape.
@@ -4382,7 +4399,7 @@ board.addEventListener('pointerdown',e=>{
   if(!e.isPrimary||drag||tdrag||pileDrag||giveDrag) return;      // T0c: never spawn a marquee under an active gesture / from a second finger
   if(l4on() && e.pointerType==='touch'){ if(!_mqArm) return; _mqArm=false; }   // T3b: touch on L4 felt pans by default; only an armed one-shot (say-menu row) marquees. Consumed at down - a wasted tap just re-arms.
   if(state.picking && !e.target.closest('.card')){ stopPicking(); return; }
-  if(e.target.closest('.card,.avc,.qrc,.pile,#poolWrap,#edge,#phases,#empty,#toast,#l2dockClose,#l2dockbg,#l2dockPin')) return;   // T3c: a chip tap (or a dock-background click, which now pins) must not clear the selection via a zero-size marquee   // .avc (Played tab) + .qrc (Ready/dock cards) keep their own handlers -> never marquee from them. (#altview/#qrbar/.avlib parked -> kodarkivering.md)
+  if(e.target.closest('.card,.avc,.qrc,.pile,#poolWrap,#edge,#phases,#empty,#toast,#l2dockClose,#l2dockbg,#l2dockPin,#ohStrip')) return;   // v2.6.166: +#ohStrip   // T3c: a chip tap (or a dock-background click, which now pins) must not clear the selection via a zero-size marquee   // .avc (Played tab) + .qrc (Ready/dock cards) keep their own handlers -> never marquee from them. (#altview/#qrbar/.avlib parked -> kodarkivering.md)
   if(l3on() && !l4on() && !e.target.closest('#z-ready,#z-uncontrolled,#z-torpor')) return;   // L3: bare felt pans; L4: marquee works everywhere   // L3: bare-felt pans; but marquee still works inside your own zones
   const br=board.getBoundingClientRect();
   const f=board.clientWidth/br.width;   // screen px -> design px; works for L1, L3 (both fixed 1004x616 scaled canvas) and L2cols (fills area, ratio=1)
@@ -6448,39 +6465,121 @@ function openHandCardsFor(seat){
   const arr = net.openHandFrom && net.openHandFrom[seat];   // online: live-pushed list
   return Array.isArray(arr) ? arr : null;
 }
+/* v2.6.166: an open hand you look at is LIVE. The granter re-sends the hand whenever it changes (a Debug bot on
+   every card it plays or draws); the inspector and the pinned strip redraw on each grant, marking what came
+   (.ohNew) and letting what went fade (.ohGone). ohDiff is pure: a multiset diff by name, so two copies of a card
+   count twice. */
+function ohDiff(prevNames, names){                           // prevNames null = a first paint, nothing to mark
+  if(!Array.isArray(prevNames)) return { added:[], gone:[] };
+  const left={}; prevNames.forEach(n=>{ left[n]=(left[n]||0)+1; });
+  const added=[]; names.forEach((n,i)=>{ if(left[n]>0) left[n]--; else added.push(i); });
+  const gone=[]; Object.keys(left).forEach(n=>{ for(let k=0;k<left[n];k++) gone.push(n); });
+  return { added, gone };
+}
+function ohCardEl(c, seat, who, grid, marks){                // one card of an open hand, for the inspector and the strip alike; double-click = the name target
+  const d=document.createElement('div'); d.className='bcard'+(marks||'');
+  const nm = c.name || 'Unknown card';
+  if(c.name) d.dataset.cardName=c.name;
+  d.innerHTML='<div class="bimg"><img alt="" loading="lazy"><div class="bfall" style="display:none">'+escapeHtml(nm)+'</div></div><div class="bname">'+escapeHtml(nm)+'</div>';
+  const im=d.querySelector('img');
+  im.src=imgUrl(nm); im.addEventListener('error',()=>{ im.style.display='none'; d.querySelector('.bfall').style.display='block'; });
+  const _ohTgt=net.rtarget && !net.rtarget.cid && net.rtarget.seat===seat ? net.rtarget.name : null;
+  if(_ohTgt && c.name===_ohTgt) d.classList.add('btarget');
+  bindDbl(d,()=>{
+    const isT=net.rtarget && !net.rtarget.cid && net.rtarget.seat===seat && net.rtarget.name===c.name;
+    grid.querySelectorAll('.bcard.btarget').forEach(el=>el.classList.remove('btarget'));
+    if(isT){
+      setNameTarget(null);
+    } else {
+      d.classList.add('btarget');
+      setNameTarget({ name:c.name, seat, who, visibility:'hand' });
+    }
+  });
+  return d;
+}
+function ohFill(grid, seat, who, cards, prevNames, emptyCls){   // paints the hand into grid; returns the diff it marked
+  const names=cards.map(c=>String(c.name||'')), diff=ohDiff(prevNames, names);
+  grid.innerHTML='';
+  if(!cards.length && !diff.gone.length){ const d=document.createElement('div'); d.className=emptyCls||'rzlab'; if(!emptyCls) d.style.position='static'; d.textContent='Their hand is empty.'; grid.appendChild(d); }
+  const ghosts={}; diff.gone.forEach(n=>{ ghosts[n]=(ghosts[n]||0)+1; });
+  const ghostAt=(n)=>{ if(!ghosts[n]) return; ghosts[n]--; const g=ohCardEl({name:n}, seat, who, grid, ' ohGone'); grid.appendChild(g); setTimeout(()=>{ try{ g.remove(); }catch(_e){} }, 900); };   // what left: shown where it was last, fading
+  // paint in the OLD order with the ghosts in their old places, then the cards that came
+  const left=cards.slice(); const painted=new Set(); diff.order=[];   // order = the names as painted (the old order kept, the new cards last), for the next diff
+  (prevNames||[]).forEach(n=>{ const k=left.findIndex((c,idx)=>!painted.has(idx) && String(c.name||'')===n); if(k>=0){ painted.add(k); diff.order.push(n); grid.appendChild(ohCardEl(left[k], seat, who, grid, '')); } else ghostAt(n); });
+  cards.forEach((c,i)=>{ if(!painted.has(i)){ diff.order.push(String(c.name||'')); grid.appendChild(ohCardEl(c, seat, who, grid, diff.added.includes(i) ? ' ohNew' : '')); } });   // the cards that came, last and lit
+  if(!cards.length && diff.gone.length) setTimeout(()=>{ if(!grid.querySelector('.bcard')){ const d=document.createElement('div'); d.className=emptyCls||'rzlab'; if(!emptyCls) d.style.position='static'; d.textContent='Their hand is empty.'; grid.appendChild(d); } }, 950);
+  return diff;
+}
+let _ohInspect=null;                                          // { seat, names } while 'Inspect their hand' is open (the overlay's state decides whether it still is)
+function ohInspectLive(seat){ return !!(_ohInspect && _ohInspect.open && _ohInspect.seat===seat && browseZone==='openhand'); }   // open = set by viewOppHand, cleared by closeOverlay and by any other modal taking the stage
 function viewOppHand(seat){
   const cards = openHandCardsFor(seat) || [];
   const who = (net.boards[seat]&&net.boards[seat].who) || _seatName(seat);
+  const prev = ohInspectLive(seat) ? _ohInspect.names : null;   // reopened or another seat: a first paint, nothing to mark
   browseZone='openhand'; browseDirty=false;                 // nothing to reshuffle
   $('#browseTitle').textContent = who+' — open hand';
-  $('#browseNote').textContent = cards.length ? 'Hand opened to you — view only.' : '';
-  const grid=$('#browseGrid'); grid.innerHTML='';
-  if(!cards.length){ const d=document.createElement('div'); d.className='rzlab'; d.style.position='static'; d.textContent='Their hand is empty.'; grid.appendChild(d); }
-  // mark any existing name-target for this seat when the modal opens
-  const _ohTgt=net.rtarget && !net.rtarget.cid && net.rtarget.seat===seat ? net.rtarget.name : null;
-  $('#browseNote').textContent = cards.length ? 'Hand opened to you — double-click a card to set/clear target.' : '';
-  cards.forEach(c=>{
-    const d=document.createElement('div'); d.className='bcard';
-    const nm = c.name || 'Unknown card';
-    if(c.name) d.dataset.cardName=c.name;
-    d.innerHTML='<div class="bimg"><img alt="" loading="lazy"><div class="bfall" style="display:none">'+escapeHtml(nm)+'</div></div><div class="bname">'+escapeHtml(nm)+'</div>';
-    const im=d.querySelector('img');
-    im.src=imgUrl(nm); im.addEventListener('error',()=>{ im.style.display='none'; d.querySelector('.bfall').style.display='block'; });
-    if(_ohTgt && c.name===_ohTgt) d.classList.add('btarget');
-    bindDbl(d,()=>{
-      const isT=net.rtarget && !net.rtarget.cid && net.rtarget.seat===seat && net.rtarget.name===c.name;
-      grid.querySelectorAll('.bcard.btarget').forEach(el=>el.classList.remove('btarget'));
-      if(isT){
-        setNameTarget(null);
-      } else {
-        d.classList.add('btarget');
-        setNameTarget({ name:c.name, seat, who, visibility:'hand' });
-      }
-    });
-    grid.appendChild(d);
-  });
+  $('#browseNote').textContent = cards.length ? 'Hand opened to you — live; double-click a card to set/clear target.' : 'Hand opened to you — live.';
+  const diff = ohFill($('#browseGrid'), seat, who, cards, prev);
+  _ohInspect={ seat, names:diff.order, open:true };          // before the overlay opens: openOverlay('browseModal') re-arms a dialog-covered inspector, and must not re-enter here
   openOverlay('browseModal');
+  return diff;
 }
+/* The pinned hand: one seat's open hand in a small strip that stays on screen in every view. */
+let _ohPin=null, _ohDrag=false;                               // { seat, names } while pinned; _ohDrag while its header is held
+const OH_STRIP_KEY='elysium.ohstrip';                         // where the player dragged it (this browser only)
+function ohPinned(seat){ return !!(_ohPin && (seat===undefined || _ohPin.seat===seat)); }
+function ohPin(seat){
+  seat=seat|0; if(!seat || !canSeeOpenHand(seat)) return false;
+  const el=$('#ohStrip'); if(!el) return false;
+  const who=(net.boards[seat]&&net.boards[seat].who) || _seatName(seat);
+  const cards=openHandCardsFor(seat)||[];
+  const prev=(_ohPin && _ohPin.seat===seat) ? _ohPin.names : null;
+  const w=el.querySelector('.ohWho'); if(w) w.textContent=who;
+  const n=el.querySelector('.ohN'); if(n) n.textContent='hand · '+cards.length;
+  const diff=ohFill(el.querySelector('.ohCards'), seat, who, cards, prev, 'ohEmpty');
+  _ohPin={ seat, names:diff.order };
+  if(el.hidden){ el.hidden=false; ohStripPlace(); }           // the remembered spot when it appears; a repaint mid-drag or mid-game leaves it where it is
+  return diff;
+}
+function ohUnpin(){ _ohPin=null; const el=$('#ohStrip'); if(el){ el.hidden=true; const g=el.querySelector('.ohCards'); if(g) g.innerHTML=''; } }
+function ohStripPlace(){                                      // the remembered spot, kept inside the window
+  const el=$('#ohStrip'); if(!el) return;
+  let pos=null; try{ pos=JSON.parse(localStorage.getItem(OH_STRIP_KEY)||'null'); }catch(_e){}
+  if(!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)){ el.style.left=''; el.style.top=''; el.style.right='14px'; el.style.bottom='14px'; return; }
+  const W=window.innerWidth||1366, H=window.innerHeight||768, ew=el.offsetWidth||300, eh=el.offsetHeight||130;
+  el.style.right='auto'; el.style.bottom='auto';
+  el.style.left=Math.max(0, Math.min(W-ew, pos.x))+'px'; el.style.top=Math.max(0, Math.min(H-eh, pos.y))+'px';
+}
+function ohRefresh(seat){                                     // a grant (re)arrived for seat: redraw whatever shows it; returns what was marked
+  seat=seat|0; const out={ inspect:null, pin:null };
+  if(ohInspectLive(seat)) out.inspect=viewOppHand(seat);
+  if(_ohPin && _ohPin.seat===seat) out.pin=ohPin(seat);
+  return out;
+}
+function ohRevoked(seat){                                     // the hand closed: the inspector closes, the strip goes, and the player is told once
+  seat=seat|0; let told=false;
+  const who=(net.boards[seat]&&net.boards[seat].who) || _seatName(seat);
+  if(ohInspectLive(seat)){ closeOverlay(); _ohInspect=null; told=true; }
+  if(_ohPin && _ohPin.seat===seat){ ohUnpin(); told=true; }
+  if(told){ toast(who+' closed their hand.'); log('<span class="sysline">'+esc(who)+' no longer plays with an open hand toward you.</span>', true, true); }
+  return told;
+}
+{ const el=$('#ohStrip'); if(el){                              // drag by the header; the X unpins
+  const head=el.querySelector('.ohHead'), x=el.querySelector('.ohX');
+  if(x) x.addEventListener('click', e=>{ e.stopPropagation(); ohUnpin(); });
+  el.addEventListener('wheel', e=>e.stopPropagation(), {passive:true});   // the strip scrolls its own cards; the table's zoom stays out of it
+  if(head) head.addEventListener('pointerdown', e=>{
+    if(e.target===x || e.button>0) return;
+    e.preventDefault(); e.stopPropagation(); _ohDrag=true;
+    const r=el.getBoundingClientRect(), dx=e.clientX-r.left, dy=e.clientY-r.top;
+    const mv=ev=>{ const W=window.innerWidth, H=window.innerHeight; const nx=Math.max(0, Math.min(W-r.width, ev.clientX-dx)), ny=Math.max(0, Math.min(H-r.height, ev.clientY-dy));
+      el.style.right='auto'; el.style.bottom='auto'; el.style.left=nx+'px'; el.style.top=ny+'px'; };
+    const up=()=>{ _ohDrag=false; window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+      try{ localStorage.setItem(OH_STRIP_KEY, JSON.stringify({ x:parseInt(el.style.left,10)||0, y:parseInt(el.style.top,10)||0 })); }catch(_e){} };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  });
+  try{ window.addEventListener('resize', ()=>{ if(!el.hidden) ohStripPlace(); }); }catch(_e){}
+} }
 /* Does this seat currently let ME inspect their hand? */
 function canSeeOpenHand(seat){
   const c = openHandCardsFor(seat);
@@ -6492,7 +6591,9 @@ function oppLookItems(seat){                                 // v2.6.160: what y
   const items=[
     {label:'🜂 View their ash heap ('+cnt('ash')+')', noUndo:true, fn:()=>viewOppAsh(seat)},
     {label:'🔥 View their burned cards ('+cnt('burned')+')', noUndo:true, fn:()=>viewOppBurned(seat)} ];
-  if(canSeeOpenHand(seat)){ const _ohc=openHandCardsFor(seat)||[]; items.unshift({label:'👁 Inspect their hand ('+_ohc.length+')', noUndo:true, fn:()=>viewOppHand(seat)}); }
+  if(canSeeOpenHand(seat)){ const _ohc=openHandCardsFor(seat)||[];
+    items.unshift({label:'👁 Inspect their hand ('+_ohc.length+')', noUndo:true, fn:()=>viewOppHand(seat)},
+                  ohPinned(seat) ? {label:'📌 Unpin their hand', noUndo:true, fn:()=>ohUnpin()} : {label:'📌 Pin their hand (stays on screen)', noUndo:true, fn:()=>ohPin(seat)}); }   // v2.6.166: the strip
   return items;
 }
 function mateyeState(seat){                                  // v2.6.160 (Johan): the eye's look -- 'lit' while their hand is open to you, 'on' while their ash heap or burned pile holds cards, 'quiet' (greyed) until there is something to see
@@ -6578,8 +6679,12 @@ function openOverlay(id){
   $('#overlay').classList.remove('duo'); labDuo=null;
   $('#overlay').classList.add('show');
   document.querySelectorAll('.modal').forEach(m=>m.style.display = m.id===id ? 'flex' : 'none');
+  if(typeof _ohInspect!=='undefined' && _ohInspect){            // v2.6.166: another modal took the stage -- the inspected hand is no longer on screen; the browse modal back (a dialog's finish) brings it back live, repainted
+    if(id!=='browseModal') _ohInspect.open=false;
+    else if(!_ohInspect.open && browseZone==='openhand'){ _ohInspect.open=true; try{ ohRefresh(_ohInspect.seat); }catch(_e){} }
+  }
 }
-function closeOverlay(){ $('#overlay').classList.remove('show'); }
+function closeOverlay(){ $('#overlay').classList.remove('show'); if(typeof _ohInspect!=='undefined' && _ohInspect) _ohInspect.open=false; }   // v2.6.166
 function dismissRoute(duoLab, shown, hasReturn, inLobby){   // v2.6.56 (Johan: an accidental click OUTSIDE the online lobby dismissed it, and the way back — Play online → Join — is not discoverable): the ONE decision ladder for the two dismissal GESTURES, the backdrop pointerdown and the global Escape. Extracted pure (every input is an argument) so the suite can walk the whole table and the two call sites can never drift apart again — the exact sibling-drift class the learnings keep cataloguing: Esc grew its lobby-aware rungs in v2.5.73, the backdrop click never did. Explicit closeOverlay() callers — Leave, started(), the tutorial's own calls — do NOT route through here, so they keep working while net.lobby is true; that also covers the tutorial demo lobby (net.lobby=true there), whose capture-phase Esc handler pre-empts the global one anyway and whose fences eat backdrop clicks.
   if(duoLab) return 'lab';                                  // deck lab beside a lobby: the gesture closes ONLY the lab; the lobby beside it stays (Esc parity — the backdrop used to close BOTH)
   if(shown==='importModal' && hasReturn) return 'lobby';    // import displaced a lobby: route back to it, never strand on the welcome screen (Esc parity, v2.5.73; closeToLobby() re-checks liveness and handles the offlineModal return too)
@@ -9966,7 +10071,7 @@ function mpLeave(){
   if(typeof syncWelcome==='function') syncWelcome();   // v2.6.46: retire the Return-to-room affordance the moment the room is gone
   net.boardMode='structured'; net.tableSetup=false; net.tableLayout=''; net.setupSpots=null; net._myGlobeAt=null; net.tournLock=false; net._undoPush=false;
   net.deckUp=false; net.libN=0; net.cryptN=0; net.boards={};
-  net.openHandFrom={};                                  // v2.6.159 (the bot project's 15 Oct audit, item 4): the hands opened to me belong to the room I leave -- this was cleared only at page load, so the next room or table offered a stale hand for that seat number
+  net.openHandFrom={}; ohUnpin(); _ohInspect=null;      // v2.6.159 (the bot project's 15 Oct audit, item 4): the hands opened to me belong to the room I leave; v2.6.166: so does the pinned one -- this was cleared only at page load, so the next room or table offered a stale hand for that seat number
   net.lobby=false; net.lobbyData=null; net.rolls=[]; net.isHost=false; net.isRef=false; net.muted=false;
   try{ netBotsTeardown(); }catch(_e){}                 // v2.6.99: the host's bots live in this tab and die with the room
   hotHoldBy.clear(); try{ hotHoldSync(); }catch(_e){}   // v2.6.101: no table, no hold
@@ -10000,7 +10105,7 @@ const MP_HANDLERS = {
     net.retryN=0;                                                   // cli-2.6.165 (C-15): in again -- the next drop starts the back-off from 2.5 s
     { const _q=(was==='re' && wasRoom===m.room) ? mpOutboxFlush() : 0; if(!_q) net.outbox=[];   // cli-2.6.165 (C-15): the lines written while reconnecting go out now (into the same room only)
       if(_q) log('<span class="sysline">'+_q+' chat line'+(_q>1?'s':'')+' sent after the reconnect.</span>', true); }
-    if(was!=='re' || wasRoom!==m.room){ net.turnNo=0; net.roundNo=1; net.openHandFrom={}; }   // v2.6.149: an automatic reconnect keeps its Round/Turn count (it zeroed it) -- into the SAME room only: a client still retrying a lost server can join another room by hand. v2.6.159: the hands opened to me follow the same rule -- the server keeps no grants, so a reconnect into the same room keeps what it was shown (a bot re-sends to a human who comes back online), any other join starts empty
+    if(was!=='re' || wasRoom!==m.room){ net.turnNo=0; net.roundNo=1; net.openHandFrom={}; ohUnpin(); _ohInspect=null; }   // v2.6.149: an automatic reconnect keeps its Round/Turn count (it zeroed it) -- into the SAME room only: a client still retrying a lost server can join another room by hand. v2.6.159: the hands opened to me follow the same rule -- the server keeps no grants, so a reconnect into the same room keeps what it was shown (a bot re-sends to a human who comes back online), any other join starts empty
     net.tnSync=!m.lobby; if(net.tnSync) tnAdopt(m.myPub);           // v2.6.149: a running game -- take the count from the boards until the next turn (my own server copy first)
     if(was!=='re'){ net.deckUp=false; net.libN=0; net.cryptN=0; }
     net.boards={};
@@ -10395,11 +10500,12 @@ const MP_HANDLERS = {
     renderAltIfOpen();
     if(net.view===seat) renderRemote(seat);
     try{ mateyeSync(seat); }catch(_e){}                       // v2.6.160: the eye lights in every view that shows this seat (the visit was the only repaint)
+    try{ ohRefresh(seat); }catch(_e){}                        // v2.6.166: the inspector and the pinned strip follow the hand live
   },
   openHandRevoke(m){
     const seat=m.seat|0;
     delete net.openHandFrom[seat];
-    if(browseZone==='openhand') closeOverlay();   // close the inspector if it was open on this seat
+    if(!ohRevoked(seat) && browseZone==='openhand') closeOverlay();   // v2.6.166: the inspector and the strip close, and say so; (the old close for an inspector on another seat's hand stays)
     renderAltIfOpen();
     try{ mateyeSync(seat); }catch(_e){}                       // v2.6.160: and goes back to quiet / on
   },
@@ -11049,7 +11155,7 @@ function mpAbandonReconnect(){                                   // cli-2.6.165:
   const _lost=(net.outbox||[]).length; net.outbox=[];
   try{ if(net.ws){ const old=net.ws; net.ws=null; old.close(); } }catch(_e){}
   try{ netBotsTeardown(); }catch(_e){}
-  net.status='off'; net.room=null; net.token=null; net.you=null; net.roster=[]; net.boards={}; net.openHandFrom={}; net.turnSeat=null;
+  net.status='off'; net.room=null; net.token=null; net.you=null; net.roster=[]; net.boards={}; net.openHandFrom={}; net.turnSeat=null; ohUnpin(); _ohInspect=null;
   net.deckUp=false; net.libN=0; net.cryptN=0; net.lobby=false; net.lobbyData=null; net.isHost=false; net.isRef=false; net.muted=false; net.spect=false;
   net.botcfg=null; net.srvV=''; net._passPending=0; net._undoPush=false; net.giving=null; net.recalling={};
   net.helperPolicy=null; try{ applyHelper(); }catch(_e){}          // the online room's helper lock must not rule the local table
@@ -11099,6 +11205,7 @@ function startHotseat(players, boardMode, opts){                         board.c
   toast('Hotseat: '+net.roster.length+' players');
 }
 function leaveHotseat(){
+  ohUnpin(); _ohInspect=null;                                      // v2.6.166: the pinned hand belongs to the table
   passBusyReset();                                                 // cli-2.6.164: the sweep a pass waits on dies here
   _hotPubSent={}; _openHandSent={}; _ohSeen=null;                  // cli-2.6.165 (C-12/13)
   try{ hotBotsTeardown(); }catch(_e){}                             // v2.6.68: the \u25b6 button and the bot instances die with the table
@@ -11128,6 +11235,7 @@ function setActivePlayer(seat, opts){
   if(!tgt) return;
   // hand off the current player: stash full state, refresh their public board, stash their undo
   net.hot.boards[cur]=serializeGame();
+  try{ ohRefresh(cur); }catch(_e){}                              // v2.6.166: a human's open hand is read from this stored board -- the hand-off is when it changes
   net.boards[cur]={ who:net.you, pub:buildPub(), ts:Date.now() };
   net.hot.undo[cur]=[...undoStack];
   // become the target player

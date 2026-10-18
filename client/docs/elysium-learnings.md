@@ -1,8 +1,24 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.165 / server v2.6.49 / bot v0.6.207 tested beside the suite, last updated 17 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.166 / server v2.6.49 / bot v0.6.207 tested beside the suite, last updated 18 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**18 Oct 2026, morning (THE HAND YOU WATCH — v2.6.166):**
+- **A view of live data that paints once is a snapshot, and the player cannot tell.** The grant already arrived on
+  every change; only the inspector never repainted. Give every such view an "is it on screen" flag the open/close paths
+  maintain, and repaint from the one handler that receives the data.
+- **Diff by multiset, not by set.** Two copies of a card in a hand are two cards; a set diff would miss one copy played.
+- **A dialog that takes the stage ends the live view, and that is right** -- but a probe that passes the turn must stub
+  the pass dialogs (`phaseLeaveOK`, `uiConfirm`) or the bot never plays.
+- **Playwright awaits what `evaluate` returns.** `pass()` returns a promise that resolves after the bot sweep; return
+  something else or the probe hangs.
+- **A new control over the table is board chrome until it says so.** `BOARD_CHROME`, the marquee exclusion list and a
+  `stopPropagation` on its drag: without them a drag on the strip drew a marquee and the wheel zoomed the table.
+- **A modal that is restored after a dialog must be re-armed by the restore, not by the first open.** `uiDialog` reopens
+  the browse modal through `openOverlay`; the inspector's live flag has to come back there, with a repaint.
+- `pgrep -f … | xargs kill` matches the shell that runs it, exactly like `pkill -f` (exit 144 again). Find a process
+  by its port or keep the PID from spawn.
 
 **17 Oct 2026, afternoon (THE QUIET TABLE — v2.6.165 / srv-2.6.49):**
 - **A render that publishes is a feedback loop waiting for a second reader.** `layout()` ends in `scheduleSave()` →
