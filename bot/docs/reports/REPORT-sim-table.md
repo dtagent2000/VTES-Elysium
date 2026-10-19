@@ -30,8 +30,8 @@ SAME-PLAY = every bot made every decision and every card play the same; only som
 time-windowed tally count one higher, a statistic in the second decimal). SAME-PLAY* = the same per bot, but two bots' rows interleaved in another order (a reaction and the
 next action at the same instant). No decision differed in any of the eight.
 
-Determinism: two virtual runs of the same spec give byte-identical traces (the result row's wall / cpu fields aside) — fixed epoch,
-seeded deal, one process per match.
+Determinism: two virtual runs of the same 24-match design gave byte-identical traces, timestamps included (the result row's wall /
+cpu fields aside) — fixed epoch, seeded deal, one process per match.
 
 ## 3. The first all-seatings baseline (v0.6.209, the four V5 starters)
 Design: every seating of malkavian / tremere / nosferatu / ventrue (24 = every cyclic order × every starting seat) × 10 deals

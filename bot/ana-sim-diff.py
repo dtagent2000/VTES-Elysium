@@ -2,7 +2,7 @@
 # ana-sim-diff.py A B -- two runs of the same design, match by match (19 Oct 2026, with elysium-bot-sim.js v1.0.0).
 #   A and B are trace directories (match-NNNN.jsonl) or two single match files. Same spec + same bytes = the same match: the sim's
 #   virtual clock and fixed epoch make a trace repeat byte for byte, so ANY difference is a change in the code or the settings.
-#   Per match it prints: IDENTICAL (every row, minus wall/cpu timing), SAME-PLAY (every decision and every card play the same,
+#   Per match it prints: IDENTICAL (every row, minus timestamps and the result's wall/cpu timing), SAME-PLAY (every decision and every card play the same,
 #   some payload differs -- a statistic, a time), SAME-PLAY* (every bot made the same decisions, two bots' rows interleaved in another
 #   order), or DIVERGED with the first decision that differs for some bot (its n-th decision: round, bot, question, A vs B),
 #   and the outcome on both sides (winner, VP, rounds).
