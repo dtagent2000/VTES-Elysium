@@ -1,8 +1,8 @@
-# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (17 October 2026, night)
+# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (19 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.207 (deploy candidate, awaiting Johan's merge: his two answers on v0.6.206's proposals; v0.6.206 = PR #26, merged) · arena v1.4.8 ·
-cardfx compiler v1.9.2, curated 105 · built against client v2.6.162 / srv-2.6.46 · gates: see the newest READ-ME-FIRST.
+**State at writing:** bot v0.6.208 (deploy candidate, PR #34, awaiting Johan's merge: `FX_NORM` client-identical again, main's REPLY 2026-10-19; v0.6.207 = PR #28, merged) · arena v1.4.8 ·
+cardfx compiler v1.9.2, curated 105 · built against client v2.6.167 / srv-2.6.49 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
 ```
@@ -33,7 +33,14 @@ branch → change → gates (inside `bot/`) → living docs + READ-ME-FIRST (+ H
 commit + push often → PR against `main` with the gate numbers in the body → Johan merges.
 A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repository root.
 
-## Open at hand-over (17 Oct 2026, night)
+## Open at hand-over (19 Oct 2026)
+v0.6.208 (this round): main's client v2.6.167 made `norm()` transliterate ł ø œ æ ß đ ð þ ı (Przemysław rendered blank);
+`FX_NORM` now does the same (`FX_NORM_LETTERS`), so a deck typed in plain letters finds its cards, and section 154f compares
+`FX_NORM` with the released client's `norm()` over every cardfx name. Main's optional point (the TWD profile's exact-key
+lookups) is parked. Main's PRs #27, #29, #30, #32 and #33 are merged (client v2.6.163–167, srv-2.6.47–49); their replies to
+v0.6.206, v0.6.207, the robustness review and the open hand (`client/docs/handoffs/REPLY-to-bot-2026-10-1[7-8]-*.md`) are
+not yet consumed in a bot round. The text below is the 17 Oct hand-over, still valid for what comes next.
+
 The 14 Oct play-test (main's rig, PR #13) was reviewed finding by finding in `bot/docs/reviews/REVIEW-playtest-2026-10-14.md`;
 R0–R4 shipped as v0.6.199–205 (all merged). v0.6.206 (PR #26, merged) is the round agreed with Johan on 16 Oct 21:27
 (`bot/docs/specs/spec-next-2026-10-17.md`): the late bounce of R4's final smoke fixed (a Magic of the Smith's note read as an
