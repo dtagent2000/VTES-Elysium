@@ -44,7 +44,7 @@ outcomes and the table seconds were identical. No decision differed.
   four minions (me −4, prey −4) scored +3.8 and ousted both. Now `_bestPoliticalFor` never calls a referendum whose
   passing ousts me (its pool cost plus my share of the terms ≥ my pool).
 - **Footprint** (`ana-sim-diff.py`, the same 240-match design on v0.6.208 and v0.6.209): 224 SAME-PLAY, 16 DIVERGED —
-  every one at a Ventrue referendum (12 KRC splits, 4 Ancilla calls) — 3 of them with another outcome; post-game ousts 1 → 0.
+  every one at a Ventrue referendum (10 KRC splits moved off the caller; 6 calls the guard dropped: 2 KRC, 4 Ancilla) — 3 of them with another outcome; post-game ousts 1 → 0.
 - **Section 155** (7): the 2-player splits at prey pool 1 and 2, the three-player split unchanged, Ancilla not called at
   pool 4 and callable at pool 6, KRC not called when both sit at pool 1. On v0.6.208: 3/4 (155a, b, d, f red; the value
   check, 155c and 155e green by design).

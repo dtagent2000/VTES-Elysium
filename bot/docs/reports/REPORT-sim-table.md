@@ -82,7 +82,7 @@ the reason every deck-level claim now uses all seatings.
 - **The self-ousting referendum** (that second rotated match, and match 175 of the first 240-match baseline): a 2-player Ancilla Empowerment at pool 4 with four
   minions (me −4, prey −4) scored +3.8 and ousted both. Fixed: `_bestPoliticalFor` never calls a referendum whose passing ousts me.
 - **The footprint, version against version** (`ana-sim-diff.py` on the same 240-match design, v0.6.208 vs v0.6.209): 224 SAME-PLAY,
-  16 DIVERGED — every one at a Ventrue referendum (12 KRC splits, 4 Ancilla Empowerment calls) — and 3 with another outcome (#50
+  16 DIVERGED — every one at a Ventrue referendum: 10 KRC splits that moved the overflow off the caller, and 6 calls the self-oust guard dropped (2 KRC, 4 Ancilla Empowerment) — and 3 with another outcome (#50
   Nosferatu → Ventrue, #175 the post-game "winner" Malkavian → Ventrue, #194 the same winner after 14 rounds instead of 10). The
   post-game ousts: 1 → 0.
 
