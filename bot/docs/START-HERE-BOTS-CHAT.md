@@ -1,7 +1,7 @@
 # START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (19 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.208 (deploy candidate, awaiting Johan's merge: `FX_NORM` client-identical again, main's REPLY 2026-10-19; v0.6.207 = PR #28, merged) · arena v1.4.8 ·
+**State at writing:** bot v0.6.208 (deploy candidate, PR #34, awaiting Johan's merge: `FX_NORM` client-identical again, main's REPLY 2026-10-19; v0.6.207 = PR #28, merged) · arena v1.4.8 ·
 cardfx compiler v1.9.2, curated 105 · built against client v2.6.167 / srv-2.6.49 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
