@@ -46,6 +46,11 @@
   once with `compile(cards, null).out` and once with the overlay, then diff the field
   per curated name (`/tmp/costaudit.js` pattern: 15 lines, prints `name | auto | curated`).
   It found 27 free cards in one run; the guess list from memory had three wrong names.
+- **Key a curated entry by the printed name (19 Oct 2026, compile v1.9.3):** the compiler's report line "curated names NOT in
+  vtes.json" is a real miss, not noise. A variant key (Pentex(TM)) left the printed name on its empty auto entry, so a deck written
+  from the data paid for nothing. Variant keys are now mirrored onto the printed name ("written under the printed name" in the
+  report); a NEW curation still goes under the printed name. Never rename a key a bot list uses: `fxLookup(name).name` must keep
+  equalling the hand's own name, because the master loop re-anchors by name.
 - **Chat-tier e2e fixtures: capture the actual text in the ok() message** (`(got: ' +
   m.msg + ')'`) on the first run — two of nine retargets failed on wording I had not
   predicted (two rises in one sentence; the playbook's lowercase name) and the second

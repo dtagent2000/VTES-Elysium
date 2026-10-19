@@ -1,6 +1,6 @@
 globalThis.ELYSIUM_CARDFX = {
  "fxv": 1,
- "generated": "2026-10-16T17:52:15.017Z",
+ "generated": "2026-10-19T20:39:52.956Z",
  "source": "vtes.json — 4149 cards (KRCG, Dark Pack)",
  "counts": {"crypt":1785,"lib":2365,"libWithFx":1670,"libPersistent":1197,"libLock":150,"curated":105,"alias":2422,"formats":{"v3":4149,"v5":0}},
  "crypt": {
@@ -3188,7 +3188,7 @@ globalThis.ELYSIUM_CARDFX = {
   "Peacemaker": {"t":["react"],"req":{"disc":["obe","pre"]},"modes":[{"at":"pre","lock":true,"fx":{}},{"at":"obe","lock":true,"fx":{"unlock":true}},{"at":"OBE","lock":true,"fx":{"unlock":true}}],"src":"auto"},
   "Penitent Resilience": {"t":["mod","combat"],"req":{"disc":["for","obe"]},"modes":[{"at":"for","use":"combat","fx":{"aggr":true}},{"at":"for+obe","use":"combat","fx":{"aggr":true}},{"at":"FOR+OBE","use":"mod","fx":{"blockBar":"chosen"}}],"src":"auto"},
   "Pentex™ Loves You!": {"t":["master"],"cost":{"pool":2},"persistent":true,"modes":[{"at":null,"lock":true,"fx":{"bleed":1}}],"src":"auto"},
-  "Pentex™ Subversion": {"t":["master"],"cost":{"pool":2},"unique":true,"persistent":true,"modes":[{"at":null,"dir":true,"fx":{}}],"src":"auto"},
+  "Pentex™ Subversion": {"t":["master"],"cost":{"pool":2},"persistent":true,"unique":true,"modes":[{"at":null,"fx":{"noBlockMinion":true}}],"note":"M2 (25 July, elysium-bot-tremere-plan.md). 5th-ed text: 'Unique. Put this card on a ready minion. This minion cannot block. Other minions can burn this card as a (D) action.' Block-denial ONLY (the minion still acts). Consumer: the master loop's noBlockMinion branch -- target via _bestNeutralizeTarget WITHOUT needUnlocked (persistent effect: capacity+dom/aus rule, unlocked is just the 0.5 tiebreak). Unique guard (_uniqueInPlay) HOLDs when a copy is visible anywhere. Target-side: standing cannot-block compliance (the blocker picker skips the named vampire) + a leave-play watcher; the burn action is table-handled (bot-initiated burn = a v1.5 candidate). The noBlockMinion key serves the whole 14-card put-on cannot-block family.","src":"hand"},
   "Père Lachaise, France": {"t":["master"],"cost":{"pool":3},"unique":true,"persistent":true,"modes":[{"at":null,"dir":true,"fx":{"bloodAdd":1}}],"src":"auto"},
   "Perfect Clarity": {"t":["mod"],"cost":{"blood":2},"req":{"disc":["tha"]},"src":"auto"},
   "Perfect Paragon": {"t":["mod"],"cost":{"blood":1},"req":{"disc":["pre"]},"modes":[{"at":"pre","fx":{"votes":3}}],"src":"auto"},

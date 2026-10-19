@@ -93,3 +93,33 @@ design: the four V5 starters, every seating × 10 deals. Experiments ran on a sc
 2. Johan's choice for Kevlar and Magnum.
 3. Spying Mission per his rule.
 4. Then the gates, the sim baseline and the footprint, and one PR stacked on #36.
+
+## 5. Decided and shipped (v0.6.211, the same night)
+**Johan, 22:36:**
+- Equipment: "with Govern or Kevlar to choose from you usually choose Govern, but with only a bleed of 1 you probably choose
+  the equipment … so they should weigh more than 1-bleeds (without modifiers) at least".
+- Kevlar becomes interesting in the knowledge layer, against Gangrel and statistically frequent aggravated damage.
+- The Magnum is stable except at the end of the game when you are low on pool.
+- Spying Mission: **B**. "That is why you have the card in the deck, and so you usually play it as stealth last of the stealth
+  cards you already have in hand."
+
+**Shipped:**
+- **Pentex:** as §1. The ™-list experiment (72 matches): 18 uncurated picks on v0.6.210, 31 curated on v0.6.211.
+- **Equipment:** neither A nor B. A weapon or an armour beats a **bare** plain bleed of 1 (no crypt bonus, no bleed modifier in
+  hand). It never beats a bleed card, never with the prey within reach, and a pool-cost item at 6 pool or less keeps the flat
+  price (knob `equipOverPlain`).
+- **Spying Mission:** B with threshold 2 (knob `spyCancelMin`). At equal stealth the card goes last; a combat dual card is still
+  kept over it.
+
+**Measured** (240-match design, v0.6.210 → v0.6.211):
+
+| | v0.6.210 | v0.6.211 |
+|---|---:|---:|
+| Kevlar Vest equipped | 0 | 29 |
+| .44 Magnum arrived / strikes | 11 / 7 | 44 / 39 |
+| Spying Mission as stealth / bleeds cancelled / banks paid | 278 / 0 / 0 | 248 / 7 / 1 |
+| VP/match malkavian · ventrue · tremere · nosferatu | 1.94 · 1.04 · 0.76 · 0.25 | 1.94 · 1.05 · 0.73 · 0.28 |
+
+- All 7 cancels were bleeds bounced onto my prey's prey, of 2–5 pool. Every VP move is inside one SE.
+- Footprint: 157 diverged — 93 first at a Malkavian stealth play, 63 at a Tremere action, 1 at a cancel.
+- **Left for later:** Kevlar in the knowledge layer (aggravated damage, e.g. Gangrel).
