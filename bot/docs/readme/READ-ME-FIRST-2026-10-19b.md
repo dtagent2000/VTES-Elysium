@@ -73,7 +73,17 @@ per-seat and per-predator tables are in the report. Invariant flags: 10 in 240 m
 - Bowl of Convergence works; `gen-deck-coverage.js` calls it PARTIAL because its class map predates `interceptPaid`.
 
 ## 6. Gates (on the release bytes)
-GATES_PLACEHOLDER
+- `node --check` on every changed JS file, `py_compile` on `ana-sim-diff.py`.
+- **Suite 2217/0 ×3** (alone, frozen snapshot with the root client v2.6.167 one level up, so 154f ran each time; v0.6.208: 2210, +7 = section 155;
+  release bytes `elysium-bot.js` 35d23437…, `test-bot-logic.js` 24329b6b…, `elysium-cardfx.json` bea73088… unchanged).
+- **Canary 69/0** with `bot/`'s read-only copies and **69/0** with main's v2.6.167 client + protocol and srv-2.6.49.
+- **Hotseat gate 11/0** (hotseat table v1.3.0), **HB1 11/11**.
+- **Section 155 destructively:** 3/4 on v0.6.208's `elysium-bot.js` (155a, b, d, f red; three green by design).
+- **check-versions:** agrees (the root's 21 files are byte copies of client/ or bot/).
+- `test-cardfx.js` not run (cardfx unchanged).
+- **The sim's own checks:** real vs virtual clock 8/8 the same decisions; the same 24-match design twice: IDENTICAL 24;
+  the 240-match client baseline re-run on the final bytes (two comments changed since): IDENTICAL 240; three 240-match baselines
+  (v0.6.208, v0.6.209, arena profile) with 0 crashes and 0 stuck tables.
 
 ## 7. Release
 `BOT_VERSION` 0.6.209; the CHANGELOG carries the v0.6.209 entry on top (Bot) and the sim table (Tools). The handshake in
