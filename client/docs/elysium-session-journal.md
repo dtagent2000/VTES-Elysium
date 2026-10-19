@@ -1,3 +1,23 @@
+## [BOKSTÄVERNA SOM ÄR SINA EGNA] (19 oktober 2026, förmiddag, klient v2.6.167 / srv-2.6.49 oförändrad)
+
+Johan: "Kortet Przemysław, War Beast blir blankt i klienten, jag misstänker att det är en misstämning i namnet för
+specialbokstaven." Det stämde. `norm()` tar bort accenter med `normalize('NFD')` och rensar sedan `[^a-z0-9]`. Men ł är
+ingen bokstav med accent utan en egen bokstav, så NFD lämnar den orörd och rensningen tar bort den: klienten bad
+static.krcg.org om `przemysawwarbeastg6`, medan KRCG har `przemyslawwarbeastg6`. Samma sak gäller ø och œ. I dagens
+databas drabbas fyra kort: Przemysław, War Beast; Bolesław Gutowski; Clara Hjortshøj; Sacré-Cœur Cathedral, France.
+KRCG:s filnamn kontrollerades på api.krcg.org.
+
+**Byggt:** `NORM_LETTERS` och en `replace` före NFD. Bokstäverna stavas som KRCG stavar dem: ł→l, ø→o, œ→oe, æ→ae,
+ß→ss, đ/ð→d, þ→th, ı→i, även versaler. Eftersom `norm()` också är nyckeln i kortdatabasen hittar en lek som skriver
+`Przemyslaw` nu kortet.
+
+**Botten:** `FX_NORM` har samma lucka. Inom botten är den konsekvent, men ett namn skrivet med vanliga bokstäver missar
+cardfx, och twd-profilens uppslag kräver exakt nyckel. Det står i `docs/handoffs/REPLY-to-bot-2026-10-19-norm-letters.md`.
+
+Verifierat: syntaxrent, 337/0 klienttester med bot v0.6.207 bredvid (det nya testet fallerar på v2.6.166), canary 69/0,
+dispatch 88/0, protokoll 6/0, endpoint 24/0, B1 byteidentisk, check-versions grön. Väntar på live-test: att bilden
+faktiskt laddas från static.krcg.org (sandlådan når inte KRCG).
+
 ## [HANDEN DU FÖLJER] (18 oktober 2026, förmiddag, klient v2.6.166 / srv-2.6.49 oförändrad)
 
 Johan: "Kan man ha bottens hand öppen i debug mode och då följa hur den spelar kort, alltså att man ser korten spelas

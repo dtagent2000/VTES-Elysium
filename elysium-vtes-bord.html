@@ -3252,7 +3252,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.166';   // v2.6.166 (18 Oct 2026, THE HAND YOU WATCH, pure client -- purge; srv-2.6.49 unchanged, no wire change; bot v0.6.207 beside): Johan: follow a Debug bot's hand as it plays. (1) An inspected open hand ('Inspect their hand') is LIVE: every re-sent grant redraws it while it is open -- a card the granter just drew lights up, a card they played fades out before it goes (it was a snapshot; close and open again to see a change). A revoke closes it and says so. (2) 'Pin their hand': a small strip of the open hand that stays on screen while you play, in every view, with the same live redraw; drag it by its header (the spot is remembered in this browser), unpin from the eye's menu or its X; it goes with the table. Online, at a hotseat and for a human's open hand alike. The bot project's guide (Help > Bots) is theirs to update.
+const VERSION='2.6.167';   // v2.6.167 (19 Oct 2026, THE LETTERS OF THEIR OWN, pure client -- purge; srv-2.6.49 unchanged, no wire change; bot v0.6.207 beside): Johan: Przemysław, War Beast showed a blank card. The name used for a card's picture and its database key dropped the letters that are letters of their own rather than an accented Latin letter (ł ø œ æ ß đ ð þ ı), so the client asked KRCG for 'przemysawwarbeastg6' instead of 'przemyslawwarbeastg6'. They are now spelled the way KRCG spells them: Przemysław, War Beast, Bolesław Gutowski, Clara Hjortshøj and Sacré-Cœur Cathedral, France show their pictures, and a deck that writes them in plain letters ('Przemyslaw') finds them in the card database too.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3464,8 +3464,15 @@ const zname = { library:'the library', crypt:'the crypt', hand:'the hand', ready
                 uncontrolled:'uncontrolled', torpor:'torpor', ash:'the ash heap', burned:'the burned pile' };
 
 /* ---------- Helpers ---------- */
+// v2.6.167 (Johan: Przemyslaw, War Beast shows blank): NFD only splits a letter that IS a base letter plus a mark (e -> e + acute).
+// These letters are letters of their own and survive NFD, so the [^a-z0-9] strip below deleted them: 'Przemysław' became
+// 'przemysaw' while static.krcg.org's file is 'przemyslawwarbeastg6'. KRCG transliterates them (unidecode), so do the same first.
+// Every caller goes through here (image names AND the card-index keys), so both sides of a lookup move together.
+const NORM_LETTERS = { '\u0142':'l', '\u0141':'l', '\u00f8':'o', '\u00d8':'o', '\u0153':'oe', '\u0152':'oe', '\u00e6':'ae', '\u00c6':'ae',
+                       '\u00df':'ss', '\u0111':'d', '\u0110':'d', '\u00f0':'d', '\u00d0':'d', '\u00fe':'th', '\u00de':'th', '\u0131':'i' };
 function norm(name){
   return name.replace(/\u2122/g,'tm')
+    .replace(/[\u0142\u0141\u00f8\u00d8\u0153\u0152\u00e6\u00c6\u00df\u0111\u0110\u00f0\u00d0\u00fe\u00de\u0131]/g, ch => NORM_LETTERS[ch])
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .toLowerCase().replace(/[^a-z0-9]/g,'');
 }

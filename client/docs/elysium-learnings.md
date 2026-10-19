@@ -1,8 +1,16 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.166 / server v2.6.49 / bot v0.6.207 tested beside the suite, last updated 18 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.167 / server v2.6.49 / bot v0.6.207 tested beside the suite, last updated 19 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**19 Oct 2026, morning (THE LETTERS OF THEIR OWN — v2.6.167):**
+- **NFD folds accents, not letters.** `normalize('NFD')` splits é into e + a combining mark, but ł, ø, œ, æ, ß, đ, ð,
+  þ and ı are letters of their own and come through unchanged; a later `[^a-z0-9]` strip then deletes them silently.
+  A key built that way agrees with itself (both sides lose the letter) and disagrees with anyone who transliterates
+  (KRCG's file names, a deck typed in plain letters). Transliterate first, then fold.
+- **A normalizer copied into another half drifts with it.** The bot's `FX_NORM` is documented as client-identical;
+  changing the client's makes that comment false until their release. Say so in the REPLY the same day.
 
 **18 Oct 2026, morning (THE HAND YOU WATCH — v2.6.166):**
 - **A view of live data that paints once is a snapshot, and the player cannot tell.** The grant already arrived on

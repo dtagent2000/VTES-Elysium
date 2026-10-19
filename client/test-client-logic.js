@@ -291,6 +291,25 @@ test('image name registration: v5 suffix baked into the key (matches the real pr
   assert(API.cardImageNames.has('testelder'), 'v3 Test Elder image key should come from .name');
 });
 
+test('norm spells the letters NFD cannot split the way KRCG does (v2.6.167: Przemysław, War Beast showed blank)', () => {
+  const N = API.norm;
+  // the image file names static.krcg.org actually serves (api.krcg.org, 19 Oct 2026)
+  eq(N('Przemysław, War Beast' + 'G6'), 'przemyslawwarbeastg6', 'ł -> l');
+  eq(N('Bolesław Gutowski' + 'G6'), 'boleslawgutowskig6', 'ł -> l');
+  eq(N('Clara Hjortshøj' + 'G6'), 'clarahjortshojg6', 'ø -> o');
+  eq(N('Sacré-Cœur Cathedral, France'), 'sacrecoeurcathedralfrance', 'œ -> oe, é still drops its accent');
+  eq(N('ŁØŒÆßĐðÞı'), 'looeaessddthi', 'the capitals and the rest of the set');
+  eq(N('Æternal Đaþ'), 'aeternaldath');
+  eq(N('Gratiano (G2)'), 'gratianog2', 'plain names are unchanged');
+  eq(N('Pentex\u2122 Subversion'), 'pentextmsubversion', 'the trademark rule still runs');
+  // a v5 card with the letter: the image key and the database key, and a deck that types it in plain letters
+  const ix = API.buildCardIndex([{ id: 201537, printed_name: 'Przemysław, War Beast', suffix: 'G6', kind: 'Crypt',
+    name_variants: [{ type: 'Lexicographical', name: 'Przemysław, War Beast (G6)' }], types: ['Vampire'], text: 'Sabbat.', clan: 'Tzimisce', path: '', capacity: 9, disciplines: [] }]);
+  assert(ix.imgNames.has('przemyslawwarbeastg6'), 'the image key is the file KRCG serves');
+  assert(ix.map.has(N('Przemyslaw, War Beast (G6)')), 'a deck typed in plain letters finds the card');
+  assert(ix.map.has(N('Przemysław, War Beast (G6)')), 'and so does the printed spelling');
+});
+
 test('buildPrecons: v5 prints[] and v3 sets{} both build correct precon entries + v5/legacy catalog split, in the same load', () => {
   const swpl = API.precons.get('SW :: PL');
   assert(swpl, 'v5 precon "SW :: PL" not built from Gratiano\'s Sabbat-War/PL occurrence');
