@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.209'; // v0.6.209 (19 Oct 2026, found by the new sim table on its first rotated batch -- Johan's 'kör' on the sim table the same day): a KRC-class referendum with more points than my prey has pool (`_refDeltas`, alloc scope) put the overflow on a side seat that could be MYSELF -- with two Methuselahs left the only side seat is the caller, so a 2-player KRC at prey pool 1 burned 3 of my own pool (prey -1, me -3). Two of the first 24 rotated sim matches ended with nobody standing: one this split (Daring the Dawn and Fame then burned the rest of the winner's pool), one the referendum below. Now the overflow goes to a side seat that is not me, and stays on the prey when there is none (prey -3, me -1); three or more Methuselahs: unchanged (v0.6.126's lethal-plus-side split). And the same class one step further (that second match, and match 175 of the first 240-match baseline): `_bestPoliticalFor` never calls a referendum whose passing ousts me (its pool cost plus my share of the terms >= my pool) -- a 2-player Ancilla Empowerment at pool 4 with four minions (me -4, prey -4) scored +3.8 and ousted both. Section 155.
+const BOT_VERSION = '0.6.210'; // v0.6.210 (19 Oct 2026, found by the sim table while v0.6.209's numbers were checked): THE LAST POOL -- `_bestMasterFor` let a master through at `cost > pool`, so a bot at pool 1 paid its last pool for Vessel (or Wider View, Ventrue Headquarters, The Labyrinth) and one at pool 2 for a Hunting Ground (or Arcane Library, Pentex Subversion, Guardian Angel): 35 bots in 33 of the 240 baseline matches, every one in its own master phase. A Methuselah with no pool is ousted -- but nothing ousted the bot: it played on at 0 (in those matches 101 actions through, 65 card plays, 46 blocks and 5 referendums called after the payment) until a bleed took it below 0, while the other bots had already read it as out. Now a pool cost leaves me >= 1 pool in the master finder and its re-check, the equip finder (.44 Magnum costs 2) and the fetch finder's target -- the ally finder's 'leave >= 1 pool' and the political finder's `>=` were already right -- and the turn engine is the net behind them (the v0.6.140 / v0.6.202 audit one phase further): 0 pool after my master phase or before a minion's action ousts me at once, and a master-phase oust stops the turn like an unlock-phase one. Section 156; 19c's 'with 1 pool both are affordable' was the bug, now pool 2.
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -2522,7 +2522,7 @@ class Bot {
       const tt = (h.e.t) || []; const isRet = tt.includes('retainer');
       if(!tt.includes('equip') && !isRet) return;
       const cP = (h.e.cost && h.e.cost.pool) || 0, cB = (h.e.cost && h.e.cost.blood) || 0;
-      if(cP > this.pool) return;
+      if(cP && cP >= (this.pool | 0)) return;   // v0.6.210: leave >= 1 pool (.44 Magnum costs 2 -- at pool 2 it was taken and paid at resolution, an oust)
       if(cB > 0 && (vamp.blood | 0) <= cB) return;   // employ must leave the bearer >= 1 blood
       const tier = this._equipLadderTier(h.name, vamp, ['equip','retainer']); if(!tier) return;
       if(!best || tier < best.tier) best = { idx, name: h.name, kind: 'equip', cost: cP, costBlood: cB, isRetainer: isRet, tier, st: 0, n: 1 };
@@ -2543,7 +2543,7 @@ class Bot {
       for(const nm in left){ if(left[nm] <= 0) continue;
         const tier = this._equipLadderTier(nm, vamp); if(!tier) continue;
         const th = this.fxLookup(nm); const cost = (th.e.cost && th.e.cost.pool) || 0;
-        if(cost > this.pool) continue;
+        if(cost && cost >= (this.pool | 0)) continue;   // v0.6.210: the target's pool price leaves me >= 1 pool
         if(!target || tier < target.tier) target = { name: th.name, cost, tier }; }
       if(!target) return null;
       return { idx, name: h.name, kind: 'fetch', st, target, cost: target.cost, tier: target.tier, n: 1, costBlood: cB };
@@ -4745,7 +4745,7 @@ class Bot {
       if(excludeNorms && excludeNorms.has(FX_NORM(h.name))) return;
       if(!this._mayPlay(h.name, h.e, null)) return;             // the general unique-in-play gate (forward-compatible; neither Blood Doll nor Vessel is unique today)
       const cost = (h.e.cost && h.e.cost.pool) || 0;
-      if(cost > this.pool) return;
+      if(cost && cost >= (this.pool | 0)) return;   // v0.6.210 (the sim, 19 Oct): a pool cost leaves me >= 1 pool -- paying the last one ousts me ('a Methuselah with no pool is ousted'). `cost > pool` let Vessel through at pool 1 and a Hunting Ground at pool 2: 35 bots in 33 of 240 baseline matches paid their last pool in their own master phase and played on at 0 (the ally finder's 'leave >= 1 pool' and the political finder's `>=` were already right)
       const known = (h.e.modes || []).some(mo => mo.phase && mo.fx && (typeof mo.fx.poolGain === 'number' || typeof mo.fx.bloodToPool === 'number'));
       // v1.4.0 follow-up (14 July): `persistent`/`curated` are SEPARATE questions from `known` -- known only ever meant "has a phase-tagged income fx that attaches to a host vampire" (true for exactly Blood Doll/Vessel). Parthenon/Information Highway/Ashur Tablets are now curated too but are Locations (no host) with no recognized income fx, so they'd have been wrongly bucketed as "uncurated" by the old known-only messaging -- see the MASTER play loop and decide('master-play') below.
       const persistent = !!h.e.persistent;
@@ -8709,7 +8709,7 @@ class Bot {
           this.o.log('master-play: ' + d.why);
           await pace();
           const j = this.hand.indexOf(d.pick.name);      // re-anchor by NAME after the pace() await (v0.4.2's bounce lesson: idx computed before a pause may no longer hold)
-          if(j < 0 || d.pick.cost > this.pool){ played.add(FX_NORM(d.pick.name)); continue; }   // shifted under us — exclude and let the loop try the next candidate (guaranteed to terminate: played only grows)
+          if(j < 0 || (d.pick.cost && d.pick.cost >= (this.pool | 0))){ played.add(FX_NORM(d.pick.name)); continue; }   // v0.6.210: the finder's own rule (leave >= 1 pool), re-read after the pace. Shifted under us — exclude and let the loop try the next candidate (guaranteed to terminate: played only grows)
           const _lk = this.fxLookup(d.pick.name);
           const _lockM = !!(_lk && _lk.kind === 'lib' && (_lk.e.modes || []).some(mo => mo.fx && mo.fx.lockMinion));   // fx.lockMinion -- literal read, the coverage scanner tracks fx.<key> (the R3 lesson, second time)
           let _lockT = null;
@@ -8852,6 +8852,8 @@ class Bot {
       }
       this._flushDraws();
       this._applyPhaseIncome('master');   // Blood-Doll-class recurring triggers on permanents ALREADY in play (from a previous turn)
+      if(!this.out && (this.pool | 0) <= 0) this._oust(false);   // v0.6.210 (the v0.6.140 / v0.6.202 audit, one phase further): my own master phase left me at 0 pool -- I am ousted now, not when the next bleed lands (the finders above leave >= 1 pool; this is the net behind them)
+      if(this.out){ this.send({ t: 'pass' }); return; }   // ...and the turn stops: no minion phase, no 'Turn passed.' (the unlock phase's v0.6.202 rule)
 
       /* MINION — every ready, unlocked vampire acts once. Mandatory hunt at
          0 blood (rulebook, vekn.net: "vampires with no blood are forced to
@@ -8876,6 +8878,7 @@ class Bot {
       this._turnAttempts = 0;   // v0.6.143: block attempts my prey has made against me THIS turn. v0.6.206: `this._probe = null` sat here, after _probeOrder had set it -- the reservation never took effect (it is reset at the top of _probeOrder now)
       this._actAgainUsed = new Set(); this._actAgainN = {}; this._lastAct = null; this._turnActs = {};   // v0.6.123: per minion phase; v0.6.129: + the per-minion ledger of what was already done this turn
       for(let _ai = 0; ; _ai++){   // v0.6.64: index form over the LIVE queue (a for..of snapshot made the refreshed vampire's extra action an illusion). v0.6.126: the act-again look is ONE visible step at the top of every pass -- including the pass AFTER the last actor, which is why the exit test sits below it (it was hidden in the for-condition as _actAgainTail)
+        if(!this.out && (this.pool | 0) <= 0) this._oust(false);   // v0.6.210: a cost of my own this phase took my last pool (an equipment paid at resolution) -- ousted before the next action
         if(this.out) break;
         if(_ai > 0) this._maybeActAgain(actors[_ai - 1], actors, _ai - 1);   // v0.6.123: Freak Drive-class, after the previous actor's action is fully over (combat included); may push the vampire back on the queue
         if(_ai >= actors.length) break;

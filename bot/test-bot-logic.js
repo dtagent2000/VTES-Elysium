@@ -791,9 +791,9 @@ async function connectWithRetry(client, tries = 30){
       u.hand = ['Blood Doll', 'Vessel']; u.pool = 0;
       const c0 = u._bestMasterFor(new Set());
       ok(c0.length === 1 && c0[0].name === 'Blood Doll', 'with 0 pool only the FREE Blood Doll is affordable -- Vessel (cost 1) is correctly excluded');
-      u.pool = 1;
+      u.pool = 2;   // v0.6.210: was pool 1 -- 'with 1 pool both are affordable' locked in the bug (Vessel's 1 pool was my last: an oust); section 156
       const c1 = u._bestMasterFor(new Set());
-      ok(c1.length === 2, 'with 1 pool both income assets are affordable candidates');
+      ok(c1.length === 2, 'with 2 pool both income assets are affordable candidates (v0.6.210: at 1 pool Vessel would cost my last one -- section 156)');
       const c2 = u._bestMasterFor(new Set([FX_NORM('Blood Doll')]));
       ok(c2.length === 1 && c2[0].name === 'Vessel', 'excludeNorms drops an already-played name (the trifle-bonus loop\u2019s own-turn guard)');
     }
@@ -10846,6 +10846,43 @@ async function connectWithRetry(client, tries = 30){
       const f = mk155(two); f.board = [{ id: 'f1', kind: 'crypt', name: 'Madison', zone: 'ready', blood: 4, locked: false }]; f.table[1] = { pub: { pool: 1, cards: [] } }; f.pool = 1; f.hand = ['Kine Resources Contested'];
       const pf = f._bestPoliticalFor(f.board[0]);
       ok(pf === null, '155f two players, both at pool 1: KRC needs a point on me, so it ousts me too -- not called (got ' + (pf ? pf.name + ' ' + JSON.stringify(pf.deltas) : 'null') + ')');
+    }
+
+    /* 156) v0.6.210 -- THE LAST POOL (found by the sim table, 19 Oct 2026, while v0.6.209's numbers were checked). `_bestMasterFor`
+       let a master through at `cost > pool`: 35 bots in 33 of 240 baseline matches paid their last pool for Vessel (pool 1) or a
+       Hunting Ground (pool 2) in their own master phase and played on at 0 -- 'a Methuselah with no pool is ousted', and nothing ousted
+       them until a bleed took them below 0. A pool cost now leaves >= 1 pool in the master, equip and fetch finders (the ally finder's
+       rule); the turn engine ousts me at 0 pool after my master phase and stops the turn (156g). */
+    {
+      console.log('\n[156] v0.6.210 -- a pool cost never takes my last pool; 0 pool on my own turn ousts me at once');
+      const mk156 = () => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'b156', pass: 'p', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }]; u.table = {};
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; return u; };
+      const names = cs => cs.map(c => c.name).sort().join(',');
+      const a = mk156(); a.hand = ['Blood Doll', 'Vessel']; a.pool = 1;
+      ok(names(a._bestMasterFor(new Set())) === 'Blood Doll', '156a pool 1: Vessel (1 pool) is not a candidate -- it would be my last pool; the free Blood Doll is (got ' + names(a._bestMasterFor(new Set())) + ')');
+      a.pool = 2; ok(names(a._bestMasterFor(new Set())) === 'Blood Doll,Vessel', '156b pool 2: both (Vessel leaves me 1)');
+      const b = mk156(); b.hand = ['Asylum Hunting Ground']; b.pool = 2;
+      ok(b._bestMasterFor(new Set()).length === 0, '156c pool 2: Asylum Hunting Ground (2 pool) is not a candidate (got ' + names(b._bestMasterFor(new Set())) + ')');
+      b.pool = 3; ok(names(b._bestMasterFor(new Set())) === 'Asylum Hunting Ground', '156c ...at pool 3 it is (leaves 1)');
+      const v = { id: 'c1', kind: 'crypt', name: 'Chrysanthemum (G6)', zone: 'ready', blood: 4, locked: false };
+      const c = mk156(); c.board = [v]; c.hand = ['.44 Magnum']; c.pool = 2;
+      const eq2 = c._bestEquipActionFor(v); c.pool = 3; const eq3 = c._bestEquipActionFor(v);
+      ok(eq2 === null && eq3 && eq3.name === '.44 Magnum' && eq3.cost === 2, '156d the equip finder: .44 Magnum (2 pool) not at pool 2, taken at pool 3 (got ' + (eq2 ? eq2.name : 'null') + ' / ' + (eq3 ? eq3.name + ' ' + eq3.cost : 'null') + ')');
+      const d = mk156(); d.board = [Object.assign({}, v)]; d.hand = ['Magic of the Smith']; d.deck = { library: [{ name: '.44 Magnum', qty: 1 }] }; d.pool = 2;
+      const f2 = d._bestFetchFor(d.board[0]); d.pool = 3; const f3 = d._bestFetchFor(d.board[0]);
+      ok(f2 === null && f3 && f3.target && f3.target.name === '.44 Magnum', '156e the fetch finder: Magic of the Smith for .44 Magnum (2 pool on arrival) not at pool 2, at pool 3 (got ' + (f2 ? JSON.stringify(f2.target) : 'null') + ' / ' + (f3 ? JSON.stringify(f3.target) : 'null') + ')');
+      // f-g) the turn: at pool 1 Vessel stays in hand and the bot plays on; a master phase that ends at 0 pool ousts me and stops the turn
+      const strip156 = h => String(h).replace(/<[^>]+>/g, '');
+      { const u = mk156(); u.pool = 1; u.board = [{ id: 'z1', name: 'Zip', kind: 'crypt', zone: 'ready', blood: 2, cap: 3, locked: true }]; u.hand = ['Vessel']; u.unc = []; u.turnSeat = 2; let terr = null;
+        try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const L = u.sent.map(m => m.t === 'log' ? strip156(m.html) : null).filter(Boolean);
+        ok(!terr && !u.out && u.pool === 1 && u.hand.includes('Vessel') && L.some(l => /Turn passed/.test(l)) && !L.some(l => /pays 1 pool/.test(l)), '156f my turn at pool 1 with Vessel in hand: Vessel stays, pool 1, the turn passes as usual (got ' + (terr ? 'error ' + terr : 'out ' + u.out + ', pool ' + u.pool + ', ' + JSON.stringify(L.slice(-3))) + ')'); }
+      { const u = mk156(); u.pool = 2; u.board = [{ id: 'z1', name: 'Zip', kind: 'crypt', zone: 'ready', blood: 2, cap: 3, locked: true }]; u.hand = []; u.unc = []; u.turnSeat = 2; let terr = null;
+        const inc = u._applyPhaseIncome.bind(u); u._applyPhaseIncome = ph => { const r = inc(ph); if(ph === 'master') u.pool = 0; return r; };   // a master-phase cost the finders did not see
+        try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const L = u.sent.map(m => m.t === 'log' ? strip156(m.html) : null).filter(Boolean), io = L.findIndex(l => /is ousted/.test(l));
+        ok(!terr && u.out === true && u.sent.some(m => m.t === 'bounty') && u.sent.some(m => m.t === 'pass') && io >= 0 && !L.slice(io + 1).some(l => /^Phase:|Turn passed/.test(l)), '156g my master phase ends at 0 pool: ousted at once (the bounty goes to my predator), no minion phase, no "Turn passed." -- the pass hands the turn on (got ' + (terr ? 'error ' + terr : JSON.stringify(L.slice(io >= 0 ? io : -3))) + ')'); }
     }
 
 
