@@ -10836,6 +10836,16 @@ async function connectWithRetry(client, tries = 30){
       c.table[1] = { pub: { pool: 20, cards: [] } }; c.table[3] = { pub: { pool: 1, cards: [] } };
       const dC = (c._refDeltas(krc) || {}).deltas || {};
       ok(dC[3] === -1 && dC[1] === -3 && !dC[2], '155c three players, my prey at pool 1: 1 on my prey (lethal), the other 3 on the other opponent, none on me -- v0.6.126 stands (got ' + JSON.stringify(dC) + ')');
+      // d-f) the same class one step further (base-209 #175): never CALL a referendum whose passing ousts me
+      const four = s => ['Madison', 'Brock Sterling', 'Alice Chen', 'Naomi Stewart'].map((n, i) => ({ id: s + i, kind: 'crypt', name: n, zone: 'ready', blood: 3, locked: false }));
+      const d = mk155(two); d.board = four('m'); d.table[1] = { pub: { pool: 8, cards: four('p') } }; d.pool = 4; d.hand = ['Ancilla Empowerment'];
+      const pd = d._bestPoliticalFor(d.board[0]);
+      ok(pd === null, '155d two players, my pool 4, four minions each: Ancilla Empowerment (me -4, prey -4) is NOT called -- it ousts me (got ' + (pd ? pd.name + ' value ' + pd.value.toFixed(2) : 'null') + ')');
+      d.pool = 6; const pd6 = d._bestPoliticalFor(d.board[0]);
+      ok(pd6 && pd6.name === 'Ancilla Empowerment' && pd6.value > 0, '155e ...at my pool 6 it is callable again (value ' + (pd6 ? pd6.value.toFixed(2) : '-') + ') -- the guard is about my oust, not the card');
+      const f = mk155(two); f.board = [{ id: 'f1', kind: 'crypt', name: 'Madison', zone: 'ready', blood: 4, locked: false }]; f.table[1] = { pub: { pool: 1, cards: [] } }; f.pool = 1; f.hand = ['Kine Resources Contested'];
+      const pf = f._bestPoliticalFor(f.board[0]);
+      ok(pf === null, '155f two players, both at pool 1: KRC needs a point on me, so it ousts me too -- not called (got ' + (pf ? pf.name + ' ' + JSON.stringify(pf.deltas) : 'null') + ')');
     }
 
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# ana-sim-diff.py A B [--full] -- two runs of the same design, match by match (19 Oct 2026, with elysium-bot-sim.js v1.0.0).
+# ana-sim-diff.py A B -- two runs of the same design, match by match (19 Oct 2026, with elysium-bot-sim.js v1.0.0).
 #   A and B are trace directories (match-NNNN.jsonl) or two single match files. Same spec + same bytes = the same match: the sim's
 #   virtual clock and fixed epoch make a trace repeat byte for byte, so ANY difference is a change in the code or the settings.
 #   Per match it prints: IDENTICAL (every row, minus wall/cpu timing), SAME-PLAY (every decision and every card play the same,
-#   some payload differs -- a statistic, a time), or DIVERGED with the first decision that differs (round, bot, question, A vs B),
+#   some payload differs -- a statistic, a time), SAME-PLAY* (every bot made the same decisions, two bots' rows interleaved in another
+#   order), or DIVERGED with the first decision that differs for some bot (its n-th decision: round, bot, question, A vs B),
 #   and the outcome on both sides (winner, VP, rounds).
 #   Use: golden-run regression (the reference table before/after a change), sim vs real clock (--real), version vs version.
 #   Generated card ids are blinded (bot<seat>_xxxx -> ID). Decisions = `decide` rows (q + the deciding fields of out) and `play` rows.
@@ -50,9 +51,22 @@ def compare(fa, fb):
     da, db = decisions(A), decisions(B)
     if da == db:
         return 'SAME-PLAY', None, outcome(A), outcome(B)
-    i = next((k for k, (x, y) in enumerate(zip(da, db)) if x != y), min(len(da), len(db)))
-    x = da[i] if i < len(da) else None
-    y = db[i] if i < len(db) else None
+    # the same decisions per bot, interleaved differently (two bots acting at the same instant) is still the same play
+    per = lambda d: {b: [x for x in d if x[1] == b] for b in sorted(set(x[1] for x in d))}
+    pa, pb = per(da), per(db)
+    if pa == pb:
+        return 'SAME-PLAY*', None, outcome(A), outcome(B)
+    first = None
+    for b in sorted(set(pa) | set(pb)):
+        xa, xb = pa.get(b, []), pb.get(b, [])
+        i = next((k for k, (x, y) in enumerate(zip(xa, xb)) if x != y), min(len(xa), len(xb)))
+        if i < max(len(xa), len(xb)):
+            x = xa[i] if i < len(xa) else None
+            y = xb[i] if i < len(xb) else None
+            rnd = min((v[0] if v[0] is not None else 10 ** 9) for v in (x, y) if v is not None)   # an arena trace has no round field
+            if first is None or rnd < first[0]:
+                first = (rnd, b, i, x, y)
+    rnd, b, i, x, y = first
     return 'DIVERGED', (i, x, y), outcome(A), outcome(B)
 
 def main():
@@ -76,8 +90,8 @@ def main():
         if div:
             i, x, y = div
             fmt = lambda d: '—' if d is None else 'r%s %s %s %s %s' % d
-            print('    first different decision #%d:  A %s' % (i, fmt(x)))
-            print('    %s  B %s' % (' ' * len('first different decision #%d:' % i), fmt(y)))
+            print('    first different decision (that bot\'s #%d):  A %s' % (i, fmt(x)))
+            print('    %s  B %s' % (' ' * len('first different decision (that bot\'s #%d):' % i), fmt(y)))
     print('\n%d matches: %s' % (len(pairs), ', '.join('%s %d' % kv for kv in sorted(tally.items()))))
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 # bot/ — Elysium Bots (automated V:TES opponents for the Elysium client)
 
-Bot **v0.6.207** (17 Oct 2026) · arena v1.4.8 · cardfx compiler v1.9.2, curated 105 · built against client v2.6.162 / srv-2.6.46.
-Start with `CLAUDE.md` (session bootstrap, version handshake, every gate), then the newest `docs/readme/READ-ME-FIRST-*.md` (at v0.6.207: `READ-ME-FIRST-2026-10-17b.md`).
+Bot **v0.6.209** (19 Oct 2026) · arena v1.4.8 · sim table v1.0.0 · cardfx compiler v1.9.2, curated 105 · built against client v2.6.162 / srv-2.6.46 (the read-only copies here) and v2.6.167 / srv-2.6.49 (the root).
+Start with `CLAUDE.md` (session bootstrap, version handshake, every gate), then the newest `docs/readme/READ-ME-FIRST-*.md` (at v0.6.209: `READ-ME-FIRST-2026-10-19b.md`).
 The folder is deliberately FLAT: the suites, the arena and every tool expect their inputs beside them. Run everything from here.
 
 ## The bundle (what the client project consumes — copied to the repository root at a release)
@@ -14,6 +14,7 @@ The folder is deliberately FLAT: the suites, the arena and every tool expect the
 | `elysium-bot-arena.js` | bot-vs-bot arena on a real spawned server (`node elysium-bot-arena.js --matches N --bots K --decks … --trace ./serie-x`) |
 | `elysium-bot-table.js` | seat bots at a live table |
 | `elysium-bot-hotseat.js` | the client's real `hotBridge` driven headless (needs `elysium-vtes-bord.html` beside it) |
+| `elysium-bot-sim.js` | THE SIM TABLE: the hotseat table under a virtual clock — about a second per match, the same spec gives the same trace byte for byte, every seating by default (`node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10 --trace ./sim-x`; `--help`). Not a timing gate. |
 | `cardfx-compile.js`, `cardfx-curated.json` → `elysium-cardfx.json` / `.js` | the card-effect library pipeline (`node cardfx-compile.js --report`; needs `vtes.json`) |
 | `twd-profile.py`, `twd-archetypes.py` → `elysium-twd-profile.json`, `elysium-twd-archetypes.json` | the TWDA prior (need `vtes.json`, `twda.json` and optionally `twda-vdb.json` beside them — none in git; root `CLAUDE.md`, 'Data that is not in git') |
 | `deck-*.json`, `rig-a1.json` | the arena decks (the four V5 starters + hacking + sewer) and a rig |
@@ -27,7 +28,7 @@ One suite section against any bot file (the destructive check of a new section, 
 Legacy ad-hoc tests from the v0.6.10x era (`test-soft.js`, `test-planner*.js`, `test-persona.js`, `test-handoff.js`, `test-eligible.js`, `test-fixes.js`, `test-grammar.js`, `test-bot-suffix.js`) are kept for history; they are not gates. Known stale reds: `test-fixes.js` Fix C, `test-eligible.js` (3), `test-grammar.js` Test 4, `test-soft.js` Test 3 — all pre-existing, the suite covers those behaviours.
 
 ## Series tools
-`gen-match-dossier.js` (one match → one reviewable file) · `gen-trace-harvest.js` (metrics + the price referee) · `gen-batch-review.js` (a series) · `gen-null-review.js` · `gen-plan-review.js` · `gen-forecast-calibration.js` · `gen-deck-coverage.js <deck.json>` (can the bot play this deck?) · `gen-sweep-audit.js`.
+`gen-match-dossier.js` (one match → one reviewable file) · `gen-trace-harvest.js` (metrics + the price referee) · `gen-batch-review.js` (a series) · `gen-null-review.js` · `gen-plan-review.js` · `gen-forecast-calibration.js` · `gen-deck-coverage.js <deck.json>` (can the bot play this deck?) · `gen-sweep-audit.js`. · `ana-sim-diff.py` (two runs of the same sim design, match by match: identical / same play / the first decision that differs)
 Analysis after a series: `ana-ledger.py` (the ledger gate), `ana-block.py` (the block gate, 0 violations), `ana-inv.py` (invariants), `ana-windows.py` (the actor's reactions-only windows: lost their answer = 0, block contests at the clock split blocked / failed; the `stale-answer` rows), `ana-wait.py` (tempo), `ana-probe.py` (the probe order in arena traces), `ana-bench.py` + `bench.sh` (the mirror bench, 48 matches), `ana-cards.py`, `ana-home.py`, `ana-open.js`, `ana-combat*.py`, `ana-rush.py`, the `sweep-*.py` cardfx sweeps. The probe lab: `node lab-probe.js N SEED ARMS > lab.jsonl` then `python3 ana-lab.py lab*.jsonl` — one minion phase per table and arm, the same table in every arm (count in the arena, weigh in the lab). Run scripts: `run-bal.sh` / `poll-bal.sh` (+ `design-balanced-serie-bal1.txt`), `run-m.sh`, `run-t.sh`, `run-cmb.sh`, `run-ser.sh`, `make-bench-report.sh` — they carry sandbox paths from the chat era; set the paths for your machine.
 Probes: `diag-give-probe.js`, `diag-a1-stash-probe.js`.
 
