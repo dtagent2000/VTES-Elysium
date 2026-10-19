@@ -1978,7 +1978,7 @@ async function connectWithRetry(client, tries = 30){
         { id: 'c2', name: 'Zip (G3)', kind: 'crypt', zone: 'ready', blood: 2, locked: false, x: 200, y: 100 }
       ];
       bot13.hand = ['The Parthenon'];
-      bot13.pool = 2;
+      bot13.pool = 3;   // v0.6.210: was 2 -- The Parthenon's 2 pool were the bot's last (an oust, section 156); 3 leaves 1 and the test is about the lock, not the price
       bot13.unc = [];
 
       h13.send({ t: 'pass' });

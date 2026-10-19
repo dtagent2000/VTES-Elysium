@@ -16,8 +16,8 @@ v0.6.209's READ-ME-FIRST (`READ-ME-FIRST-2026-10-19b.md`) stands for everything 
   win. v0.6.208 has the same fault.
 - **The same comparison in two more finders:** the equip finder (.44 Magnum costs 2 pool) and the fetch finder's target. The
   ally finder ("leave >= 1 pool") and the political finder (`cost >= pool`) were already right.
-- **A test locked the bug in.** Section 19c had asserted "with 1 pool both income assets are affordable candidates" since
-  July.
+- **Two fixtures locked the bug in.** Section 19c had asserted "with 1 pool both income assets are affordable candidates"
+  since July, and section 24 played The Parthenon (2 pool) at pool 2 — its five assertions were the first run's five reds.
 
 ## 2. The fix (v0.6.210)
 - **The finders:** a pool cost must leave me at least 1 pool — in `_bestMasterFor` and the master loop's re-check after the
@@ -32,7 +32,8 @@ v0.6.209's READ-ME-FIRST (`READ-ME-FIRST-2026-10-19b.md`) stands for everything 
   - a master phase that ends at 0 pool: ousted at once, bounty, pass, no minion phase.
 - **Destructive check:** 2/6 on v0.6.209's `elysium-bot.js` (156a, the first 156c, and 156d–g red; 156b and the second 156c
   are green by design).
-- **19c:** now pool 2.
+- **19c:** now pool 2. **Section 24** (the live Parthenon integration) set pool 2 for a card that costs 2 — the same
+  pattern — and now sets 3: it tests the lock, not the price.
 
 ## 3. Footprint and the new baseline
 - **The footprint** (`ana-sim-diff.py`, the same 240-match all-seatings design, v0.6.209 → v0.6.210): 200 SAME-PLAY and 40
@@ -66,7 +67,16 @@ Also corrected in #35's docs: v0.6.209's 16 diverged matches are 10 KRC splits t
 calls the self-oust guard dropped (2 KRC, 4 Ancilla). They are not "12 KRC splits, 4 Ancilla calls".
 
 ## 5. Gates (on the release bytes)
-GATES_PLACEHOLDER
+- `node --check` on every changed JS file (`elysium-bot.js`, `elysium-bot-sim.js`, `test-bot-logic.js`).
+- **Suite 2225/0 ×3** (alone, frozen snapshot with the root client v2.6.167 one level up, so 154f ran each time; v0.6.209: 2217, +8 = section 156;
+  release bytes `elysium-bot.js` 3c3c2b71…, `test-bot-logic.js` dbadba5d…, `elysium-cardfx.json` bea73088… unchanged).
+- **Canary 69/0** with `bot/`'s read-only copies and **69/0** with main's v2.6.167 client + protocol and srv-2.6.49.
+- **Hotseat gate 11/0**, **HB1 11/11**.
+- **Section 156 destructively:** 2/6 on v0.6.209's `elysium-bot.js` (156a, the first 156c, 156d–g red; two green by design).
+- **check-versions** (run on `client/`, which checks the root too): everything agrees; the root's 21 files are byte copies of client/ or bot/.
+- `test-cardfx.js` not run (cardfx unchanged).
+- **The sim:** the 240-match client baseline on the final bytes with sim v1.0.1: 240 last-standing, played at 0 pool 0; against the sim v1.0.0 run of the same bytes SAME-PLAY 240, every row identical (timestamps included) once the new zeroPool field is set aside; the arena profile on the same bot bytes:
+  240 last-standing, 0 crashes, 0 stuck.
 
 ## 6. Release
 - `BOT_VERSION` 0.6.210. The CHANGELOG carries v0.6.210 on top (Bot) and sim v1.0.1 (Tools).
