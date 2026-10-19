@@ -10885,6 +10885,94 @@ async function connectWithRetry(client, tries = 30){
         ok(!terr && u.out === true && u.sent.some(m => m.t === 'bounty') && u.sent.some(m => m.t === 'pass') && io >= 0 && !L.slice(io + 1).some(l => /^Phase:|Turn passed/.test(l)), '156g my master phase ends at 0 pool: ousted at once (the bounty goes to my predator), no minion phase, no "Turn passed." -- the pass hands the turn on (got ' + (terr ? 'error ' + terr : JSON.stringify(L.slice(io >= 0 ? io : -3))) + ')'); }
     }
 
+    /* 157) v0.6.211 -- THE STABLE'S REMAINING CARDS (Johan's choices, 19 Oct 2026 22:36; docs/specs/spec-cards-2026-10-19.md).
+       a) Pentex™ Subversion: the printed name now carries the curated entry (cardfx-compile v1.9.3) and is played as one.
+       b-f) equipment: a weapon or an armour beats a BARE plain bleed of 1 ('they should weigh more than 1-bleeds without modifiers'), never a
+            bleed card ('Govern is very often better'), not a pool-cost item at 6 pool or less ('the Magnum ... except late when low on pool'),
+            not with the prey within reach; knob equipOverPlain 0 = the flat price.
+       g-l) Spying Mission [OBF], option B: a bounced bleed of 2 or more about to land on somebody other than my prey is made unsuccessful and
+            the card goes on the vampire with +2 banked against that Methuselah; at equal stealth the card goes last. */
+    {
+      console.log('\n[157] v0.6.211 -- Pentex™ by its printed name, equipment over a bare 1-bleed, Spying Mission [OBF] on a bounced bleed');
+      const strip157 = h => String(h).replace(/<[^>]+>/g, ''), L12 = require('./elysium-bot.js').L12;
+      const mk157 = (players, seat) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'b157', pass: 'p', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = seat || 2; u.started = true; u.players = players || [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }]; u.table = {};
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u._pace = async () => {}; return u; };
+      // a) Pentex by its printed name
+      { const u = mk157(); const h = u.fxLookup('Pentex™ Subversion');
+        ok(h && h.name === 'Pentex™ Subversion' && h.e.src === 'hand' && (h.e.modes || []).some(mo => mo.fx && mo.fx.noBlockMinion), '157a fxLookup(Pentex™ Subversion) resolves to itself and is curated (noBlockMinion) -- it was the empty auto entry');
+        u.pool = 5; u.hand = ['Pentex™ Subversion']; const c = u._bestMasterFor(new Set())[0];
+        ok(c && c.name === 'Pentex™ Subversion' && c.curated === true && c.cost === 2, '157a the master finder offers it under the hand’s own name, curated, 2 pool (the loop re-anchors by name)');
+        u.board = [{ id: 'z1', name: 'Zip', kind: 'crypt', zone: 'ready', blood: 2, cap: 3, locked: true }]; u.unc = []; u.turnSeat = 2;
+        u.table[1] = { pub: { pool: 20, cards: [{ id: 'a1', kind: 'crypt', name: 'Aisling Sturbridge', zone: 'ready', blood: 3, locked: false }] } };
+        let terr = null; try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const L = u.sent.map(m => m.t === 'log' ? strip157(m.html) : null).filter(Boolean);
+        ok(!terr && !u.hand.includes('Pentex™ Subversion') && u.pool === 3 && L.some(l => L12.pentexM.test(l) && /Aisling Sturbridge/.test(l)), '157a a whole turn: Pentex™ is played on the prey’s vampire (the frozen pentexM line), 2 pool paid (got ' + (terr ? 'error ' + terr : 'pool ' + u.pool + ', ' + JSON.stringify(L.filter(l => /Pentex/.test(l)))) + ')'); }
+      // b-f) equipment over a bare 1-bleed
+      const eqCtx = (over) => Object.assign({ plain: { n: 1 }, card: null, pd: null, pol: null, stock: null, peek: null, fetch: null, rush: null, creep: null, strength: null, recruit: null, enemyRescue: null, ownRescue: null,
+        readyCrypt: 4, edge: false, plainBare: true, lowPool: false, equip: { idx: 0, name: '.44 Magnum', kind: 'equip', cost: 2, costBlood: 0, isRetainer: false, tier: 2, st: 0, n: 1 } }, over || {});
+      { const u = mk157();
+        const d1 = u.decide('action', eqCtx());
+        ok(d1.pick && d1.pick.kind === 'equip' && d1.scores.equipOverPlain === true, '157b a bare plain bleed of 1 against .44 Magnum: the equipment (got ' + (d1.pick && (d1.pick.name || 'plain')) + ', ' + d1.why + ')');
+        const d2 = u.decide('action', eqCtx({ plainBare: false }));
+        ok(d2.pick && !d2.pick.kind && !d2.scores.equipOverPlain, '157c ...with a bleed modifier in hand to pump it: the plain bleed, as before (got ' + d2.why + ')');
+        const d3 = u.decide('action', eqCtx({ card: { idx: 1, name: 'Govern the Unaligned', n: 2, st: 0, cost: { blood: 1 }, bloodAfter: 3 } }));
+        ok(d3.pick && d3.pick.name === 'Govern the Unaligned', '157d ...Govern in hand: Govern ("very often better") (got ' + d3.why + ')');
+        const d4 = u.decide('action', eqCtx({ lowPool: true })), d4k = u.decide('action', eqCtx({ lowPool: true, equip: Object.assign({}, eqCtx().equip, { name: 'Kevlar Vest', cost: 1, tier: 3 }) }));
+        ok(d4.pick && !d4.pick.kind && d4k.pick && !d4k.pick.kind, '157e ...at 6 pool or less a pool-cost item keeps its flat price: the plain bleed, for the Magnum and for Kevlar (got ' + d4.why + ' / ' + d4k.why + ')');
+        const d5 = u.decide('action', eqCtx({ equip: Object.assign({}, eqCtx().equip, { name: 'Kevlar Vest', cost: 1, tier: 3 }) }));
+        ok(d5.pick && d5.pick.name === 'Kevlar Vest', '157e ...Kevlar Vest (an armour) at a healthy pool: equipped (got ' + d5.why + ')');
+        u.plan = { posture: 'lunge', phase: 'end', reads: { preyTto: 1.2, myTto: 9 } };
+        const d6 = u.decide('action', eqCtx());
+        ok(d6.pick && !d6.pick.kind, '157f ...the prey within reach (a lunge): the bleed (got ' + d6.why + ')');
+        u.plan = null; u.o.equipOverPlain = 0; const d7 = u.decide('action', eqCtx());
+        ok(d7.pick && !d7.pick.kind && !d7.scores.equipOverPlain, '157f knob equipOverPlain 0: the flat price -- the plain bleed (got ' + d7.why + ')'); }
+      { const u = mk157(); u.pool = 10; const v = { id: 'v1', kind: 'crypt', name: 'Madison (G6)', zone: 'ready', blood: 4, locked: false }; u.board = [v]; u.hand = ['.44 Magnum'];
+        const c1 = u._actionCtxFor(v); u.hand = ['.44 Magnum', 'Conditioning']; const c2 = u._actionCtxFor(v); u.pool = 6; const c3 = u._actionCtxFor(v);
+        ok(c1.plainBare === true && c2.plainBare === false && c1.lowPool === false && c3.lowPool === true, '157f the ctx reads: plainBare (no modifier in hand) and lowPool (6 or less) -- ' + [c1.plainBare, c2.plainBare, c1.lowPool, c3.lowPool].join(',')); }
+      // g) Spying Mission goes last at equal stealth
+      { const u = mk157(); const v = { id: 'c1', kind: 'crypt', name: 'Colette (G6)', zone: 'ready', blood: 3, locked: false }; u.board = [v];
+        u.hand = ['Spying Mission', 'Cloak the Gathering']; const s1 = u._bestStealthFor(v, new Set(), null);
+        u.hand = ['Cloak the Gathering', 'Spying Mission']; const s2 = u._bestStealthFor(v, new Set(), null);
+        u.hand = ['Spying Mission']; const s3 = u._bestStealthFor(v, new Set(), null);
+        ok(s1 && s1.name === 'Cloak the Gathering' && s2 && s2.name === 'Cloak the Gathering' && s3 && s3.name === 'Spying Mission', '157g at equal stealth Cloak the Gathering goes first, in either hand order; alone, Spying Mission is the stealth (got ' + [s1 && s1.name, s2 && s2.name, s3 && s3.name].join(' / ') + ')'); }
+      // h) the decision
+      { const u = mk157();
+        const yes = u.decide('spy-cancel', { n: 3, rel: 'cross', min: 2, bank: 2 }), yesP = u.decide('spy-cancel', { n: 2, rel: 'predator', min: 2, bank: 2 });
+        const no1 = u.decide('spy-cancel', { n: 1, rel: 'cross', min: 2 }), noP = u.decide('spy-cancel', { n: 4, rel: 'prey', min: 2 }), off = u.decide('spy-cancel', { n: 5, rel: 'cross', min: 0 });
+        ok(yes.play && yesP.play && !no1.play && !noP.play && !off.play, '157h cancel: 3 bounced onto a cross seat yes, 2 onto my predator yes; 1 no, onto my prey no, spyCancelMin 0 no'); }
+      // i-j) the cancel on the wire: the actor's side and the target's
+      { const three = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Rolf', online: true, bot: true }];
+        const u = mk157(three); const v = { id: 'c1', kind: 'crypt', name: 'Colette (G6)', zone: 'ready', blood: 3, locked: true }; u.board = [v]; u.hand = ['Spying Mission', 'Bonding'];
+        u._actingVamp = { v, target: 1, n: 3, bounced: true, played: new Set(), kind: 'bleed' };   // my prey is seat 3; the bounce sent it to seat 1 (my predator)
+        const did = await u._maybeSpyNullify(v);
+        const card = u.board.find(c => c.name === 'Spying Mission'), L = u.sent.map(m => m.t === 'log' ? strip157(m.html) : null).filter(Boolean);
+        ok(did === true && u._actingVamp.n === 0 && u._actingVamp.nullified === true && !u.hand.includes('Spying Mission') && card && card.host === 'c1' && card.spyTarget === 1 && card.spyBank === 2 && (v.attached || []).includes(card.id),
+           '157i my bleed of 3 bounced onto my predator: Spying Mission [OBF] makes it unsuccessful (0), the card goes on Colette with +2 banked against seat 1');
+        ok(L.some(l => L12.spyNull.test(l)), '157i ...and the frozen line is on the wire: ' + JSON.stringify(L.filter(l => /Spying/.test(l))));
+        const w = mk157(three, 1); w.pending = { who: 'U', actingVampName: 'Colette (G6)', amount: 3, kind: 'bleed' };
+        w._onLog('U', '<b>Colette (G6)</b> plays <b>Spying Mission</b> [OBF] — the bleed is unsuccessful and burns no pool.');
+        ok(w.pending && w.pending.amount === 0 && w.pending.nullified === true, '157j the bounce’s new target hears it: its pending bleed goes to 0 (no pool, no Edge) (got ' + (w.pending && w.pending.amount) + ')');
+        const v2 = { id: 'c2', kind: 'crypt', name: 'Alexander Silverson (G6)', zone: 'ready', blood: 3, locked: true }; const u2 = mk157(three); u2.board = [v2]; u2.hand = ['Spying Mission'];
+        u2._actingVamp = { v: v2, target: 3, n: 4, bounced: false, played: new Set(), kind: 'bleed' };
+        const n2 = await u2._maybeSpyNullify(v2);
+        u2._actingVamp = { v: v2, target: 1, n: 1, bounced: true, played: new Set(), kind: 'bleed' }; const n3 = await u2._maybeSpyNullify(v2);
+        const v4 = { id: 'm4', kind: 'crypt', name: 'Madison (G6)', zone: 'ready', blood: 3, locked: true }; u2.board.push(v4); u2._actingVamp = { v: v4, target: 1, n: 3, bounced: true, played: new Set(), kind: 'bleed' }; const n4 = await u2._maybeSpyNullify(v4);
+        ok(!n2 && !n3 && !n4 && u2.hand.includes('Spying Mission'), '157j not played: an unbounced bleed on my prey, a bounced bleed of 1, a vampire without superior Obfuscate (Madison)'); }
+      // k-l) the bank
+      { const three = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Rolf', online: true, bot: true }];
+        const u = mk157(three); const v = { id: 'c1', kind: 'crypt', name: 'Colette (G6)', zone: 'ready', blood: 3, locked: true, attached: ['m9'] };
+        u.board = [v, { id: 'm9', name: 'Spying Mission', kind: 'lib', zone: 'ready', host: 'c1', spyTarget: 1, spyBank: 2 }];
+        u._actingVamp = { v, target: 3, n: 1, bounced: false, played: new Set(), kind: 'bleed' };
+        const other = u._playSpyBank(v);
+        u._actingVamp = { v, target: 1, n: 1, bounced: false, played: new Set(), kind: 'bleed' };
+        const did = u._playSpyBank(v), L = u.sent.map(m => m.t === 'log' ? strip157(m.html) : null).filter(Boolean);
+        ok(!other && did && u._actingVamp.n === 3 && !u.board.some(c => c.id === 'm9') && !(v.attached || []).includes('m9') && L.some(l => /^Colette \(G6\) adds \+2 bleed \(= 3\)\.$/.test(l) && L12.add.test(l)),
+           '157k the bank: not against another Methuselah; against seat 1 the card burns for +2 (1 -> 3) with the frozen add line (got ' + JSON.stringify(L) + ')');
+        u.board.push({ id: 'm8', name: 'Spying Mission', kind: 'lib', zone: 'ready', host: 'c1', spyTarget: 1, spyBank: 2 }); u._actingVamp = { v, target: 1, n: 2, bounced: true, played: new Set(), kind: 'bleed' };
+        ok(!u._playSpyBank(v), '157l ...and not on a bleed that was bounced (it is no longer the same bleed of mine on them)'); }
+    }
+
 
 
     }

@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.210'; // v0.6.210 (19 Oct 2026, found by the sim table while v0.6.209's numbers were checked): THE LAST POOL -- `_bestMasterFor` let a master through at `cost > pool`, so a bot at pool 1 paid its last pool for Vessel (or Wider View, Ventrue Headquarters, The Labyrinth) and one at pool 2 for a Hunting Ground (or Arcane Library, Pentex Subversion, Guardian Angel): 35 bots in 33 of the 240 baseline matches, every one in its own master phase. A Methuselah with no pool is ousted -- but nothing ousted the bot: it played on at 0 (in those matches 101 actions through, 65 card plays, 46 blocks and 5 referendums called after the payment) until a bleed took it below 0, while the other bots had already read it as out. Now a pool cost leaves me >= 1 pool in the master finder and its re-check, the equip finder (.44 Magnum costs 2) and the fetch finder's target -- the ally finder's 'leave >= 1 pool' and the political finder's `>=` were already right -- and the turn engine is the net behind them (the v0.6.140 / v0.6.202 audit one phase further): 0 pool after my master phase or before a minion's action ousts me at once, and a master-phase oust stops the turn like an unlock-phase one. Section 156; 19c's 'with 1 pool both are affordable' was the bug, now pool 2.
+const BOT_VERSION = '0.6.211'; // v0.6.211 (19 Oct 2026, the stable's remaining cards -- Johan's choices of 22:36, analysis in docs/specs/spec-cards-2026-10-19.md): (1) PENTEX: the curated entry was keyed Pentex(TM) Subversion, so a list typed with the printed name Pentex™ Subversion (KRCG's precons, the V5 generator) paid 2 pool for an empty auto entry; cardfx-compile v1.9.3 writes a variant-keyed curated entry under the printed name too (each spelling resolves exactly to itself). (2) EQUIPMENT (Johan: 'they should weigh more than 1-bleeds without modifiers -- Govern is very often better; the Magnum is stable except late when the pool is low'): a weapon or an armour beats a bare plain bleed of 1 (no crypt bonus, no bleed modifier in hand), not a bleed card, not with the prey within reach, not a pool-cost item at 6 pool or less (knob equipOverPlain, 0 = the flat price). (3) SPYING MISSION [OBF] (Johan, option B): a bounced bleed of 2 or more about to land on somebody other than my prey is made unsuccessful -- no pool, no Edge, the frozen line L12.spyNull -- and the card goes on the vampire with +2 banked against that Methuselah, burned the next time it is about to successfully bleed them (knob spyCancelMin, 0 = never); at equal stealth the card goes last (Johan: 'you play it as stealth last of the stealth cards in hand'). Section 157.
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -443,6 +443,7 @@ const L12 = {
   add:    /^(.+?) adds \+(\d+) bleed \(= (\d+)\)\.(?: Target: (.+?)\.)?$/,
   reduce: /^(.+?) plays (.+?) \u2014 reduces the bleed by (\d+) \(now (\d+)\)\.$/,   // v0.6.200 (play-test 14 Oct, point 15): the TARGET's own frozen line since N4c (_commitReduce) -- the acting bot never read it, so its +0 total (= the old n) undid the reduction. The event log keeps typing it card-played (the knowledge layer's feed)
   reduceBy: /^([^\u2014]+?) reduces the bleed by (\d+)(?: \((?!now \d)([^()]+)\))?\.$/,   // v0.6.201 (Johan, 16 Oct -- the interim for every reduction the bot does not know yet): a HUMAN target's line from the client's Bleed menu (asked of main), 'NAME reduces the bleed by N.' -- the client's effect-line style, the card optional. The em dash and '(now N)' keep the bot's own shape (L12.reduce) out: one reduction must never be counted twice
+  spyNull: /^(.+?) plays Spying Mission \[OBF\] \u2014 the bleed is unsuccessful and burns no pool\.$/,   // v0.6.211 (Johan, 19 Oct, option B): the ACTOR's own cancel of its bounced bleed -- m[1] = the acting vampire; the target's pending goes to 0 (no pool, no Edge)
   debugOn:  /^(.+?) \(bot\) is in DEBUG mode\b/,   // v0.6.201: a bot's frozen debug announcement (v0.6.112+) -- the other bots look away from its open hand
   debugOff: /^(.+?) \(bot\) leaves DEBUG mode\b/,   // v0.6.201: ...and when the table turns Tournament it leaves debug
   block:  /^Block: Stealth (-?\d+) vs Intercept (-?\d+) \u2014 block (succeeds|fails)\.$/,   // VA review (2 Aug, rulebook-verified): stealth/intercept 'can decrease even below 0' (vekn.net Detailed Turn Sequence) and the verdict is the RAW comparison -- the grammar accepts negatives so a bare Christine's -1 or a Royce-taxed announce parses
@@ -568,6 +569,8 @@ class Bot {
     combatEndStats: 1,       // v0.6.196 (Johan, 10 Oct 2026: 'build combat ends on expected / statistical damage'): 1 = a combat-ends strike (Majesty) is played only when the opposing strike is worth the card -- KNOWN when they declared first, else EXPECTED from the TWDA-informed table model; torpor and aggravated always end it; a weak striker is not worth it while a more dangerous seat exists or the copies are few. 0 = v0.6.123: always. Default 1 after the bench (Ventrue pinned, 24 + 24 on the same seeds): -0.11 +/- 0.49 against the control's -0.12 +/- 0.50 -- no loss; the rule held 68 times and played 30 where the control played 49.
     probeHold: 2,            // v0.6.206 (Johan 16 Oct: measure the probe reservation before and after); v0.6.207 (17 Oct: 2 as the default, his bait read): 0 = as since v0.6.143 -- the probe ORDER (small bleeders first, the puncher last) without the reservation, which was reset right after it was set (the rollback); 1 = the reservation as designed (the probers keep their hands off the heavy card); 2 = the reservation only when my actors out-number my prey's unlocked bodies. The probe lab (lab-probe.js, 360 tables): +0.80 pool per probe turn when I out-number, nothing otherwise -- 2 holds the card only where it pays
     dodgeOut: 1,             // v0.6.205 (R4, Johan 16 Oct 2026: 'play the dodge against everything with 2 or more damage -- when my own strike no longer gives equal or better output -- and when holding several'): 1 = a dodge answers what the opposing strike does to me against what my own strike would deal this round (_strikePick): a known strike of 2+ that is more than mine, or equal with two dodges in hand; an unknown one on the expected strike (combatEndStats); aggravated and the survival rule as before; 0 = v0.6.204's rule (survival only), byte for byte
+    equipOverPlain: 1,       // v0.6.211 (Johan, 19 Oct 2026: 'they should weigh more than 1-bleeds without modifiers at least -- Govern is very often better; the Magnum is stable except at the end of the game when you are low on pool'): 1 = a weapon or an armour (equip tier 2-3) beats a plain bleed of 1 that no bleed modifier in hand could pump -- never a bleed card (it is scored on its own), not with the prey within reach (the lunge rule), not a pool-cost item at 6 pool or less; 0 = the flat price (1.15 x the economy weight), as before
+    spyCancelMin: 2,         // v0.6.211 (Johan, 19 Oct 2026, option B: 'that is why you have the card in the deck -- and so you usually play it as stealth last of the stealth cards in hand'): Spying Mission [OBF] cancels a BOUNCED bleed of this many or more that is about to land on somebody other than my prey (the bounce turned my bleed into my prey's pressure); the card goes on the vampire with +2 banked against that Methuselah. 0 = never (the stealth mode only, as before)
     combatMind: 1,           // v0.6.156 (Johan's combat rulings, 22 Sep 2026): 1 = the combat mind (Grapple gating, bundled presses, press worth, press-to-end, range posture, long-range fists deal 0); 0 = v0.6.155's thresholds
     rushBackWeight: 1, rushFwdWeight: 1, crossRushWeight: 0,   // v0.6.53 (rush-theory v1.1): direction knobs -- cross soft-ZERO per Johan (sweepable in the arena; the counterfactual log answers R-Q5)
     permFirst: 1,            // v0.6.132 (Johan's GO, 19 Sep; serie-null4 reading 28h): for a deck whose manifest says permFirst (the Black Chantry helpsheet's 'take actions to get permanent intercept and permanent damage enhancers'), a permanent in hand (equip / retainer / strength / ally) is put in play BEFORE a bleed -- structurally, like the stock rule; never on a lunge turn or with the prey within a turn and a half; 0 = the old score contest, kept so the same seeds run both ways
@@ -1610,8 +1613,9 @@ class Bot {
       (h.e.modes || []).forEach(mo => {
         const st = mo.fx && mo.fx.stealth;
         const hasCombat = (h.e.t || []).includes('combat');   // v0.6.156 (Johan): Swallowed by the Night is stealth AND the deck's only defensive maneuver -- at equal stealth spend the pure stealth card first and keep the dual card for combat
-        if(typeof st === 'number' && this._modeUsableBy(mo, vamp) && (!best || st > best.s || (st === best.s && this._combatMind() && best.combat && !hasCombat)))
-          best = { idx, name: h.name, s: st, cost: cB ? { blood: cB } : null, combat: hasCombat };
+        const keepLast = (h.e.modes || []).some(m2 => m2.fx && m2.fx.bleedNullify);   // v0.6.211 (Johan, 19 Oct: 'you usually play it as stealth last of the stealth cards you already have in hand'): Spying Mission's superior cancels a bounced bleed -- at equal stealth the other card goes first
+        if(typeof st === 'number' && this._modeUsableBy(mo, vamp) && (!best || st > best.s || (st === best.s && this._combatMind() && best.combat && !hasCombat) || (st === best.s && best.keepLast && !keepLast && !(this._combatMind() && hasCombat && !best.combat))))
+          best = { idx, name: h.name, s: st, cost: cB ? { blood: cB } : null, combat: hasCombat, keepLast };
       });
     });
     { const lb = this._lockStealthFor(vamp, played);   // v0.6.205 (R4, F23): The Labyrinth -- a lock, not a card: spent first on a tie (it unlocks at my unlock phase, the hand card is kept)
@@ -2658,7 +2662,7 @@ class Bot {
   }
   _emitManifest(){                   // A2 (v0.6.73): deck intent + effective knobs
     const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {};
-    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold']) if(this.o[k] !== undefined) kn[k] = this.o[k];
+    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','equipOverPlain','spyCancelMin']) if(this.o[k] !== undefined) kn[k] = this.o[k];
     this._emit('manifest', { seat: this.o.seat || null, deck: this.o.deckName || null, persona: this.o.persona, strategy: ds.strategy || null, axes: ds.axes || [], knobs: kn });   // v0.6.88: seat carried when the arena provides it -- the manifest is now self-describing for seat order
   }
   _deckAxes(){ const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {}; return ds.axes || []; }   // v0.6.107 (B1): the manifest's axes, finally read
@@ -3127,7 +3131,8 @@ class Bot {
   }
   _actionCtxFor(v, over){            // v0.6.205: the minion phase's action ctx for v -- ONE builder for the minion loop and the Haven Uncovered play's look ahead (over.rush: a rush that does not exist yet). Every finder here is side-effect free; the rush finders are asked quietly by a look ahead (no counterfactual row)
     const rush = (over && Object.prototype.hasOwnProperty.call(over, 'rush')) ? over.rush : this._bestRushFor(v);
-    return { plain: { n: 1 + this._cryptBleedBonus(v) }, card: this._bestBleedCardFor(v), pd: this._bestPoolDmgActionFor(v), pol: this._bestPoliticalFor(v), stock: this._bestBloodStockFor(v), peek: this._bestPeekFor(v), equip: this._bestEquipActionFor(v), fetch: this._bestFetchFor(v), rush, creep: this._bestCreepFor(), strength: this._bestStrengthFor(v), recruit: this._bestRecruitFor(v), enemyRescue: this._bestEnemyRescueFor(v), ownRescue: this._bestOwnRescueFor(v), readyCrypt: this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready').length, edge: this.edge };   // fas B: edge in the ctx -- the arena traces need it to distinguish 'Dirt unfound' from 'Edge not held' (in 2-player the opponent's intervening bleed usually reclaims it, so Dirt windows are rare and PRECIOUS)   // VA: plain bleed carries the Lenny-class crypt bonus from birth
+    return { plain: { n: 1 + this._cryptBleedBonus(v) }, card: this._bestBleedCardFor(v), pd: this._bestPoolDmgActionFor(v), pol: this._bestPoliticalFor(v), stock: this._bestBloodStockFor(v), peek: this._bestPeekFor(v), equip: this._bestEquipActionFor(v), fetch: this._bestFetchFor(v), rush, creep: this._bestCreepFor(), strength: this._bestStrengthFor(v), recruit: this._bestRecruitFor(v), enemyRescue: this._bestEnemyRescueFor(v), ownRescue: this._bestOwnRescueFor(v), readyCrypt: this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready').length, edge: this.edge,
+             plainBare: (1 + this._cryptBleedBonus(v)) === 1 && !this._bestBleedModifierFor(v, new Set(), false), lowPool: (this.pool | 0) <= 6 };   // v0.6.211 (Johan, 19 Oct): plainBare = the plain bleed is a bare 1 (no crypt bonus, no bleed modifier in hand to pump it); lowPool = 6 or less (Johan's floor) -- the equipment rule's two reads   // fas B: edge in the ctx -- the arena traces need it to distinguish 'Dirt unfound' from 'Edge not held' (in 2-player the opponent's intervening bleed usually reclaims it, so Dirt windows are rare and PRECIOUS)   // VA: plain bleed carries the Lenny-class crypt bonus from birth
   }
   _decideAction(v, ctx){
     this._actionCtxAdjust(v, ctx, false);
@@ -5609,7 +5614,16 @@ class Bot {
           if(sR > sPick){ pick = ctx.rush; sPick = sR; why = 'rush ' + ctx.rush.target.name + ' (blood ' + ctx.rush.target.blood + ', expDmg ' + ex.expDmg + (mind && reachD !== ex.expDmg ? ' (reach ' + reachD + ' with Grapple)' : '') + ' vs ' + tb + ', combat cards ' + ex.nCombat + (mind ? ', kit x' + kitW : '') + '): ' + sR.toFixed(2); }   // v0.6.74: the calculation visible in every dossier
         }
         if(ctx.equip){
-          const sEq = (ctx.equip.tier === 1 ? 1.5 : 1.15) * econW; scores.equip = +(sEq).toFixed(2);   // E1: intercept-equipment (the wall investment) outranks weapons/armor; deliberately NOT aggression-scaled
+          let sEq = (ctx.equip.tier === 1 ? 1.5 : 1.15) * econW;   // E1: intercept-equipment (the wall investment) outranks weapons/armor; deliberately NOT aggression-scaled
+          if(this.o.equipOverPlain !== 0 && (ctx.equip.tier === 2 || ctx.equip.tier === 3) && ctx.plainBare && !((ctx.equip.cost | 0) > 0 && ctx.lowPool) && !(this.plan && (this.plan.posture === 'lunge' || this.plan.reads.preyTto <= 1.5))){
+            /* v0.6.211 (Johan, 19 Oct 22:36): 'with Govern or Kevlar to choose from you usually choose Govern, but with only a bleed of 1 you probably
+               choose the equipment' -- a weapon or an armour beats a BARE plain bleed of 1 (no crypt bonus, no modifier in hand to pump it). A bleed
+               card keeps its own score (Govern's is far above), the prey within reach keeps the bleed (the lunge rule), and a pool-cost item at 6
+               pool or less stays at its flat price (the Magnum late in the game). The sim (240 matches, v0.6.210 -> v0.6.211): Kevlar 0 -> 29 equips, the Magnum 11 -> 44 (39 equipped, 5 fetched), its strikes 7 -> 39; Tremere 0.76 -> 0.73 VP/match (SE 0.08). */
+            const sPlain = 1 * P.aggression * offW;
+            if(sEq <= sPlain){ sEq = sPlain + 0.05; scores.equipOverPlain = true; }
+          }
+          scores.equip = +(sEq).toFixed(2);
           if(sEq > sPick){ pick = ctx.equip; sPick = sEq; why = 'equip ' + ctx.equip.name + ' (tier ' + ctx.equip.tier + '): ' + sEq.toFixed(2); }
         }
         if(ctx.fetch){
@@ -5650,6 +5664,13 @@ class Bot {
         const edgePenalty = ctx.mod.costEdge ? 0.5 : 0;
         const score = ctx.mod.n * P.aggression - edgePenalty;
         return { play: score > 0, why: '+' + ctx.mod.n + ' bleed \u00d7 aggr ' + P.aggression + (edgePenalty ? ' \u2212 forfeited Edge-pool (\u2248' + edgePenalty + ')' : ' (blood-only cost, no Edge forfeiture)') + ' = ' + score.toFixed(2) };
+      }
+      case 'spy-cancel': {          // v0.6.211 (Johan, 19 Oct 22:36, option B): Spying Mission [OBF] on a BOUNCED bleed -- cancel it when it is about to land on somebody other than my prey (with four players the bounce sends it to my prey's prey, with three to my predator: either way my bleed becomes my prey's pressure) and it is worth the card (ctx.min, the knob spyCancelMin; 0 = never)
+        const min = ctx.min == null ? 2 : ctx.min;
+        if(!(min > 0)) return { play: false, why: 'spyCancelMin 0: the stealth mode only' };
+        if(ctx.rel === 'prey') return { play: false, why: 'the bleed lands on my prey -- that is the point of bleeding' };
+        if((ctx.n | 0) < min) return { play: false, why: 'a bounced bleed of ' + ctx.n + ' is under ' + min + ' -- not worth the card' };
+        return { play: true, why: 'my bleed of ' + ctx.n + ' was bounced onto my ' + ctx.rel + ' -- cancel it (no pool) and bank +' + (ctx.bank | 0) + ' against them' };
       }
       case 'master-play': {         // v0.5+ (Johan, 14 July): the RULE is "always play A master if we hold one" -- not persona-weighted itself (more economy is good for every persona alike), but there's a real preference ORDER: a trifle+known-asset combo first (the bonus action affords a second play the SAME phase), else any other KNOWN income asset, else -- Johan's rule -- whatever master we DO have, even if its effect isn't curated yet (a human corrects/completes it via ctrl).
         if(!ctx.cands.length) return { pick: null, why: 'no master in hand (or none affordable)' };
@@ -7138,6 +7159,10 @@ class Bot {
       if(by > 0){ this._actingVamp.n = Math.max(0, was - by); this._actingVamp.reducedTo = this._actingVamp.n; this.o.log('bleed reduced by ' + who + (m[3] ? ' (' + m[3] + ')' : '') + ': ' + was + ' -> ' + this._actingVamp.n); }
       return;
     }
+    if((m = t.match(L12.spyNull))){   // v0.6.211: the actor made its bleed unsuccessful (Spying Mission [OBF]) -- nothing lands on me: no pool, no Edge
+      if(this.pending && (this.pending.actingVampName === m[1] || this.pending.who === who)){ this.o.log('bleed nullified by ' + m[1] + ' (Spying Mission [OBF]): ' + this.pending.amount + ' -> 0'); this.pending.amount = 0; this.pending.nullified = true; }
+      return;
+    }
     if((m = t.match(L12.add))){
       /* v1.4.3: same fix as above — `who` (message sender) may be a bouncer, not the
          original owner; match on pending.who (the real owner) OR on the acting vampire
@@ -7832,6 +7857,57 @@ class Bot {
     this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> puts <b>' + esc(best.name) + '</b> in play (on itself).' });
     this.note('Trainbot: ' + best.name + ' goes on ' + v.name + ' \u2014 burnable later for +' + best.s + ' stealth against the same target.');
     this.push();
+  }
+  /* v0.6.211 (Johan, 19 Oct 2026, option B) -- SPYING MISSION [OBF]: 'Only usable if a bleed would be successful. Instead, the bleed burns no pool,
+     is unsuccessful, and this card is put on this vampire. The next time this vampire is about to successfully bleed the same Methuselah, burn
+     this card and this vampire gets +2 bleed.' Measured before (240 sim matches): 111 Malkavian bleeds were bounced -- all 87 with four players
+     onto my prey's prey, the 24 with three onto my predator -- and in 10 of them the actor held the card with superior Obfuscate. */
+  _spyMissionFor(v, played){         // the hand's Spying Mission-class card whose superior this vampire can use (fx.bleedNullify)
+    let best = null;
+    this.hand.forEach((n, idx) => {
+      const h = this.fxLookup(n); if(best || !h || h.kind !== 'lib' || !this._mayPlay(h.name, h.e, played || null)) return;
+      (h.e.modes || []).forEach(mo => { if(!best && mo.fx && mo.fx.bleedNullify && this._modeUsableBy(mo, v)) best = { idx, name: h.name, bank: mo.fx.bleedBank | 0 }; });
+    });
+    return best;
+  }
+  async _maybeSpyNullify(v){         // at the resolution of a bleed that is about to succeed: my bounced bleed lands on somebody other than my prey -> cancel it
+    const av = this._actingVamp; if(!av || !av.bounced || !av.target || (av.n | 0) < 1) return false;
+    const sm = this._spyMissionFor(v, av.played); if(!sm) return false;
+    const t = av.target, rel = t === this.preySeat() ? 'prey' : t === this.predSeat() ? 'predator' : 'cross';
+    const d = this.decide('spy-cancel', { n: av.n | 0, rel, min: this.o.spyCancelMin, bank: sm.bank });
+    this.o.log('spy-cancel (' + v.name + '): ' + d.why);
+    if(!d.play) return false;
+    await this._pace();
+    const j = this.hand.indexOf(sm.name); if(j < 0 || this._actingVamp !== av) return false;   // shifted under the pace -- the bleed resolves as it stands
+    av.played.add(FX_NORM(sm.name));
+    this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1;
+    const was = av.n | 0; av.n = 0; av.nullified = true;
+    const card = { id: 'm' + (this._mSeq = (this._mSeq || 0) + 1), name: sm.name, kind: 'lib', zone: 'ready', host: v.id, faceDown: false, locked: false, blood: 0, x: v.x, y: v.y,
+                   spyTarget: t, spyBank: sm.bank };   // bot-local memory (push's explicit field map forwards neither)
+    this.board.push(card); v.attached = v.attached || []; v.attached.push(card.id);
+    this._emitPlay(sm.name, 'spy-cancel', v.name);
+    this._emit('spy-cancel', { vamp: v.name, n: was, target: t, rel, bank: sm.bank });
+    this.fxClone({ name: sm.name, kind: 'lib' }, '[OBF] \u2014 the bleed is unsuccessful', { actor: v });
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(sm.name) + '</b> [OBF] \u2014 the bleed is unsuccessful and burns no pool.' });   // FROZEN (L12.spyNull): the target's pending goes to 0
+    this.note('Trainbot: ' + sm.name + ' goes on ' + v.name + ' \u2014 +' + sm.bank + ' bleed the next time it successfully bleeds ' + this.seatName(t) + '.');
+    this.push();
+    return true;
+  }
+  _spyBankFor(v, targetSeat){ return (this.board || []).find(c => c && c.kind === 'lib' && c.host === v.id && c.spyTarget === targetSeat && (c.spyBank | 0) > 0 && !this._outOfPlay(c)) || null; }
+  _playSpyBank(v){                   // the banked +2: this vampire is about to successfully bleed the same Methuselah -- burn the card, +2 bleed, the frozen L12.add re-announce
+    const av = this._actingVamp; if(!av || av.bounced || !av.target || (av.n | 0) < 1) return false;
+    const c = this._spyBankFor(v, av.target); if(!c) return false;
+    const bi = this.board.indexOf(c); if(bi >= 0) this.board.splice(bi, 1);
+    if(v.attached) v.attached = v.attached.filter(id => id !== c.id);
+    this._toAsh(c.name);
+    av.n += c.spyBank | 0;
+    this._emitPlay(c.name, 'spy-bank', v.name);
+    this._emit('spy-bank', { vamp: v.name, target: av.target, n: c.spyBank | 0 });
+    this.fxClone({ name: c.name, kind: 'lib' }, 'burned: +' + c.spyBank + ' bleed', { actor: v });
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> burns <b>' + esc(c.name) + '</b>: +' + c.spyBank + ' bleed.' });
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> adds +' + c.spyBank + ' bleed (= ' + av.n + ').' });   // PROTOCOL \u00a712, frozen -- the target's L12.add parser
+    this.push();
+    return true;
   }
   _maybePerfectionist(v){
     /* fas C (16 July): the Perfectionist post-action hook -- "once each turn, this
@@ -9369,9 +9445,15 @@ class Bot {
              require an intervening reaction" nuance Johan's rule summary didn't
              resolve -- deliberately not invented here, flagged for whenever a real
              card makes it matter. */
-          let curAns = ans, pumped = 0;
+          let curAns = ans, pumped = 0, spyBankTried = false;
           while(true){
             if(this._actingVamp.bounced && this.o.lateBounce !== 0){ this.o.log('bleed-modifier: the bleed was bounced \u2014 no pump on somebody else\'s prey'); break; }   // v0.6.144
+            if(!spyBankTried){ spyBankTried = true;   // v0.6.211: a Spying Mission banked against this Methuselah -- 'the next time this vampire is about to successfully bleed the same Methuselah': the +2 first, then a reactions-only window (a modifier's own shape)
+              if(this._playSpyBank(v)){ pumped++;
+                curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +2 bleed (Spying Mission) \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
+                await sleep(150);
+                if(curAns.what === 'block') break;
+                continue; } }
             const mod = this._bestBleedModifierFor(v, this._actingVamp.played, this._actingVamp.limitedUsed);
             if(!mod) break;
             const d = this.decide('bleed-modifier', { mod, amount: this._actingVamp.n });
@@ -9404,14 +9486,16 @@ class Bot {
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: this._actingVamp.n, by: this._lastBlockerName || curAns.who || null });
             await this._resolveCombat(v);   // v0.6.22: multi-round wrapper (was the single-round primitive directly)
           } else {
-            this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name || null, final: this._actingVamp.n | 0, bounced: this._actingVamp.bounced ? true : undefined });   // v0.6.203: emitted at the resolution -- n stays the announced amount (the tools read it so), `final` is what lands
+            await this._maybeSpyNullify(v);   // v0.6.211 (Johan, option B): my bounced bleed is about to land on somebody other than my prey -- Spying Mission [OBF] makes it unsuccessful (n 0) and goes on the vampire
+            this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name || null, final: this._actingVamp.n | 0, bounced: this._actingVamp.bounced ? true : undefined, nullified: this._actingVamp.nullified ? true : undefined });   // v0.6.203: emitted at the resolution -- n stays the announced amount (the tools read it so), `final` is what lands
             if(!this._actingVamp.edgeLocked && this._actingVamp.n >= 1) this._takeEdge();   // rulebook: a successful bleed gives the acting Methuselah the Edge. v0.6.200 (points 15 + 20): only a bleed of 1 or more is successful, and taking the Edge is SAID on the wire (edgeTake) -- the humans' clients kept their own Edge lit, two holders at once
             if(this._actingVamp.n >= 1) this._maybeLubomiraMark(v);   // VC: 'successfully bleeds' = bleed amount >= 1 (the rulebook's own definition) -- UNLESS a card played this action locks that out (Leverage, steg 4/16 July: "You cannot gain the Edge this action. If you would get the Edge, it is burned instead." -- steg 2 wrongly assumed burn-then-regrant was fine, corrected once the real card_text was available)
             this.say('It resolves');
             this.note(this._actingVamp.n >= 1 ? 'The bleed goes through: ' + this.seatName(this._actingVamp.target) + ', -' + this._actingVamp.n + ' pool (adjust yours).' : 'The bleed goes through at 0: ' + this.seatName(this._actingVamp.target) + ' loses no pool.');   // v0.6.200: a reduced bleed says so
             this.push();
-            await this._maybeAttachMarkedPath(v, this._actingVamp.target, this._actingVamp.played);   // fas C: "after a successful directed action" -- the attach window
-            this._maybePerfectionist(v);                                     // fas C: the clean-action blood hook
+            if(!this._actingVamp.nullified){   // v0.6.211: a bleed Spying Mission made unsuccessful is no successful action
+              await this._maybeAttachMarkedPath(v, this._actingVamp.target, this._actingVamp.played);   // fas C: "after a successful directed action" -- the attach window
+              this._maybePerfectionist(v); }                                   // fas C: the clean-action blood hook
             await this._settleOust(this._actingVamp.target, this._actingVamp.n);   // v0.6.103 (#2): if this could have ousted, wait for the roster before the next minion picks its prey
           }
         }
