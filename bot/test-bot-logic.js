@@ -10770,6 +10770,51 @@ async function connectWithRetry(client, tries = 30){
       [E, B, S, P, H, C].forEach(b => { if(b._sqT){ clearTimeout(b._sqT); b._sqT = null; } b._sq = []; });
     }
 
+    /* 154) v0.6.208 -- FX_NORM TRANSLITERATES THE LETTERS NFD CANNOT SPLIT (main's REPLY 2026-10-19, client v2.6.167). l-stroke, o-slash,
+       oe, ae, sharp s, d-stroke, eth, thorn and dotless i are letters of their own: NFD leaves them, and the [^a-z0-9] strip deleted them.
+       Inside the bot that was consistent (normIdx and the lookup lost the same letter), but a deck typing the plain-letter spelling
+       ('Przemyslaw', 'Hjortshoj', 'Sacre-Coeur') missed all three tiers of fxLookup: capacity 3 (the fallback), no clan, no fx, never
+       played. The client finds those cards since v2.6.167, so the two halves disagreed. Now FX_NORM transliterates first, as KRCG and the
+       client's NORM_LETTERS do. */
+    {
+      console.log('\n[154] v0.6.208 -- FX_NORM transliterates the letters NFD cannot split (client-identical again)');
+      const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'b154', pass: 'p', name: 'Anna', log: () => {} });
+      // a) the KRCG keys of the four affected cards (api.krcg.org's url fields, main's table)
+      const keys = [['Przemysław, War Beast (G6)', 'przemyslawwarbeastg6'], ['Bolesław Gutowski (G6)', 'boleslawgutowskig6'],
+                    ['Clara Hjortshøj (G6)', 'clarahjortshojg6'], ['Sacré-Cœur Cathedral, France', 'sacrecoeurcathedralfrance']];
+      const badKeys = keys.filter(([n, k]) => FX_NORM(n) !== k).map(([n]) => n + ' -> ' + FX_NORM(n));
+      ok(badKeys.length === 0, '154a FX_NORM gives the four KRCG keys (przemyslawwarbeastg6, boleslawgutowskig6, clarahjortshojg6, sacrecoeurcathedralfrance)' + (badKeys.length ? ' -- got ' + JSON.stringify(badKeys) : ''));
+      // b) every letter of the client's table, one by one
+      const table = { 'ł': 'l', 'Ł': 'l', 'ø': 'o', 'Ø': 'o', 'œ': 'oe', 'Œ': 'oe', 'æ': 'ae', 'Æ': 'ae',
+                      'ß': 'ss', 'đ': 'd', 'Đ': 'd', 'ð': 'd', 'Ð': 'd', 'þ': 'th', 'Þ': 'th', 'ı': 'i' };
+      const badLetters = Object.keys(table).filter(ch => FX_NORM('x' + ch + 'y') !== 'x' + table[ch] + 'y');
+      ok(badLetters.length === 0, '154b each of the 16 letters of the client\'s NORM_LETTERS transliterates (none is deleted)' + (badLetters.length ? ' -- deleted ' + JSON.stringify(badLetters) : ''));
+      // c) main's three missing rows, plus Boleslaw: the plain-letter spelling a hand-typed list carries hits fxLookup
+      const plain = [['Przemyslaw, War Beast', 'crypt', 'Przemysław, War Beast (G6)'], ['Boleslaw Gutowski (G6)', 'crypt', 'Bolesław Gutowski (G6)'],
+                     ['Clara Hjortshoj', 'crypt', 'Clara Hjortshøj (G6)'], ['Sacre-Coeur Cathedral, France', 'lib', 'Sacré-Cœur Cathedral, France']];
+      const missPlain = plain.filter(([n, kind, canon]) => { const h = u.fxLookup(n); return !h || h.kind !== kind || h.name !== canon; })
+                             .map(([n]) => { const h = u.fxLookup(n); return n + ' -> ' + (h ? h.name : 'miss'); });
+      ok(missPlain.length === 0, '154c the plain-letter spellings hit fxLookup: Przemyslaw, War Beast; Boleslaw Gutowski; Clara Hjortshoj; Sacre-Coeur Cathedral, France' + (missPlain.length ? ' -- ' + JSON.stringify(missPlain) : ''));
+      // d) the printed spellings still hit (exact or alias, as before)
+      const missPrinted = plain.filter(([, kind, canon]) => { const h = u.fxLookup(canon); return !h || h.kind !== kind || h.name !== canon; }).map(p2 => p2[2]);
+      ok(missPrinted.length === 0, '154d the printed spellings still hit their own card' + (missPrinted.length ? ' -- missed ' + JSON.stringify(missPrinted) : ''));
+      // e) in play: an uncontrolled Przemyslaw typed plain gets his capacity 6, not the fallback of 3
+      u.unc = []; u.board = []; u._addUnc('Przemyslaw, War Beast');
+      const pz = u.board[u.board.length - 1];
+      ok(pz && pz.cap === 6 && u.fxCryptCap('Clara Hjortshoj') === 5, '154e a crypt typed plain gets its capacity from cardfx: Przemyslaw 6 (got ' + (pz && pz.cap) + '), Clara Hjortshoj 5 (got ' + u.fxCryptCap('Clara Hjortshoj') + ') -- not the fallback 3');
+      // f) client-identical over every card name the bot knows, against the released client's own norm() when it is beside us
+      const cand = [__dirname + '/../elysium-vtes-bord.html', __dirname + '/elysium-vtes-bord.html'];
+      let cnorm = null, cfrom = null;
+      for(const f of cand){ try { const src = fs.readFileSync(f, 'utf8'); const mL = src.match(/const NORM_LETTERS = \{[\s\S]*?\};/), mF = src.match(/function norm\(name\)\{[\s\S]*?\n\}/);
+        if(mL && mF){ cnorm = new Function(mL[0] + '\n' + mF[0] + '\nreturn norm;')(); cfrom = f; break; } } catch(e){} }
+      if(cnorm){
+        const fx = JSON.parse(fs.readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
+        const names = Object.keys(fx.crypt).concat(Object.keys(fx.lib), Object.keys(fx.alias), plain.map(p2 => p2[0]));
+        const diff = names.filter(n => FX_NORM(n) !== cnorm(n));
+        ok(diff.length === 0, '154f FX_NORM equals the client\'s norm() on all ' + names.length + ' names in cardfx (' + path.relative(__dirname, cfrom) + ')' + (diff.length ? ' -- ' + diff.length + ' differ, first ' + JSON.stringify(diff.slice(0, 3)) : ''));
+      } else console.log('  (154f skipped: no client v2.6.167+ beside the suite -- its norm() with NORM_LETTERS is not here)');
+    }
+
 
 
     }

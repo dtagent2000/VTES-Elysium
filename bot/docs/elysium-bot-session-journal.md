@@ -1,3 +1,17 @@
+## [FX_NORM KLIENTIDENTISK IGEN: BOKSTÄVER SOM NFD INTE DELAR — bot v0.6.207 → v0.6.208] (19 oktober 2026, förmiddag)
+
+Main hittade att *Przemysław, War Beast* visades som ett tomt kort: klientens `norm()` vek accenter med NFD och strippade sedan `[^a-z0-9]`, men ł ø œ æ ß đ ð þ ı är egna bokstäver som NFD lämnar, så strippen raderade dem. Klient v2.6.167 translittererar dem först (KRCG:s sätt), och mains svar `client/docs/handoffs/REPLY-to-bot-2026-10-19-norm-letters.md` bad om samma tabell i `FX_NORM`. Johan bad mig titta 11:00; jag bekräftade felet mot koden och föreslog fixen utan profilpunkten; "kör" 11:01.
+
+Felet hos oss: konsekvent inuti botten (`normIdx` och uppslaget tappade samma bokstav, så den tryckta stavningen träffade), men en lek som skriver den enkla stavningen — *Przemyslaw*, *Boleslaw*, *Hjortshoj*, *Sacre-Coeur* — missade alla tre stegen i `fxLookup`: kapacitet 3, ingen klan, ingen fx, kortet spelas aldrig. Klienten hittar dem sedan v2.6.167, så halvorna var oense om samma lek.
+
+Fixen: `FX_NORM_LETTERS` (klientens `NORM_LETTERS`, 16 tecken) och en `replace` före `.normalize('NFD')`. cardfx.json är oförändrad (`prepCardfx` bygger om `normIdx` vid laddning). Profilens och arketypernas exakta nycklar (`P.cards[c]`, `s0.cards[c]`) är parkerade — mains valfria punkt, inte specifik för bokstäverna, inte mätt.
+
+Sektion 154 (6): KRCG-nycklarna, de 16 bokstäverna, enkla stavningar träffar, tryckta träffar fortfarande, en enkelt skriven Przemyslaw får kapacitet 6, och 154f jämför `FX_NORM` med den släppta klientens egen `norm()` (lyft ur `../elysium-vtes-bord.html`) på alla 6 576 namn i cardfx — kommentaren "client-identical" är nu ett test. Destruktivt på v0.6.207:s `elysium-bot.js`: 1/5 (154d grön med avsikt).
+
+Grindar: @@GATES@@
+
+Osäkert: (1) Hur ofta en riktig importerad lek har den enkla stavningen vet ingen — main tror att VDB och KRCG skriver de tryckta bokstäverna (inte verifierat), så det gäller nog mest handskrivna listor. (2) 154f hoppas över (räknas inte) om ingen v2.6.167+-klient ligger en nivå upp; i monorepot gör den alltid det, men en svit som körs i en fryst kopia utan roten får en assertion färre. (3) `bot/`:s egna read-only-kopior av klient/server/protokoll är fortfarande äldre (v2.6.160-tiden); jag rörde dem inte i den här rundan. (4) Profilpunkten är parkerad, inte bedömd.
+
 ## [JOHANS TVÅ SVAR: PROBE-DEFAULT 2 OCH CHATTSLAGET BYGGT — bot v0.6.206 → v0.6.207] (17 oktober 2026, natt)
 
 Johan mergade PR #26 (v0.6.206) 00:28 och svarade på dess två förslag 00:54: "Vi kan gå på dina rekommendationer för 1 och 2". Jag skrev först att båda skulle in i #26 som dodgen i #25 — men #26 var redan mergad när han skrev, så de går som en egen release, v0.6.207, och jag rättade mig i chatten. v0.6.206 på main är som han mergade den (`probeHold` 0, chattslaget bara analyserat); dess READ-ME-FIRST, handoff och journalpost står kvar, med en räknerättelse (nedan).
