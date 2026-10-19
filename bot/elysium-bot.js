@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.208'; // v0.6.208 (19 Oct 2026, main's REPLY 2026-10-19 on client v2.6.167 -- the card names with letters NFD cannot split): FX_NORM transliterates l-stroke, o-slash, oe, ae, sharp s, d-stroke, eth, thorn and dotless i (FX_NORM_LETTERS, the client's NORM_LETTERS table) before NFD, so it is client-identical again. Before, the [^a-z0-9] strip deleted them: inside the bot that was consistent (normIdx and the lookup lost the same letter), but a deck typing the plain-letter spelling (Przemyslaw, War Beast; Boleslaw Gutowski; Clara Hjortshoj; Sacre-Coeur Cathedral, France) missed all three tiers of fxLookup -- capacity 3, no clan, no fx, never played -- while the client finds those cards since v2.6.167. prepCardfx rebuilds normIdx at load, so cardfx.json is unchanged. The TWD profile's exact-key lookups (P.cards[c], s0.cards[c]) are untouched (main's optional point; parked). Section 154 (6; 1/5 on v0.6.207, 154d green by design).
+const BOT_VERSION = '0.6.209'; // v0.6.209 (19 Oct 2026, found by the new sim table on its first rotated batch -- Johan's 'kör' on the sim table the same day): a KRC-class referendum with more points than my prey has pool (`_refDeltas`, alloc scope) put the overflow on a side seat that could be MYSELF -- with two Methuselahs left the only side seat is the caller, so a 2-player KRC at prey pool 1 burned 3 of my own pool (prey -1, me -3). Two of the first 24 rotated sim matches ended with nobody standing: one this split (Daring the Dawn and Fame then burned the rest of the winner's pool), one the referendum below. Now the overflow goes to a side seat that is not me, and stays on the prey when there is none (prey -3, me -1); three or more Methuselahs: unchanged (v0.6.126's lethal-plus-side split). And the same class one step further (that second match, and match 175 of the first 240-match baseline): `_bestPoliticalFor` never calls a referendum whose passing ousts me (its pool cost plus my share of the terms >= my pool) -- a 2-player Ancilla Empowerment at pool 4 with four minions (me -4, prey -4) scored +3.8 and ousted both. Section 155.
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -3417,7 +3417,10 @@ class Bot {
         if(tm.sign < 0){ const pp = this.nextLive(prey); fill.sort((a, b) => this._seatTitleVotes(a) - this._seatTitleVotes(b) || ((a === pp) - (b === pp)) || a - b); if(!tm.others){ const mi = fill.indexOf(this.seat); if(mi >= 0){ fill.splice(mi, 1); fill.push(this.seat); } } }
         const side = fill.slice(0, min - 1);
         let onPrey = n - side.length;
-        if(tm.sign < 0 && side.length){ const has = Math.max(1, this._seatPool(prey)); if(onPrey > has){ add(side[0], tm.sign * (onPrey - has)); onPrey = has; } }
+        /* v0.6.209 (the sim table, 19 Oct 2026): the points beyond my prey's pool go to a side seat that is NOT ME. With two Methuselahs left the only
+           side seat is the caller, and v0.6.126 moved the overflow onto it: a 2-player KRC at prey pool 1 burned 3 of MY pool (prey -1, me -3), and
+           with Fame and Daring the Dawn on the same action it ousted the winner. Points beyond the prey's pool cost nobody anything on the prey. */
+        if(tm.sign < 0 && side.length){ const has = Math.max(1, this._seatPool(prey)), sink = side.find(st => st !== this.seat); if(onPrey > has && sink != null){ add(sink, tm.sign * (onPrey - has)); onPrey = has; } }
         add(prey, tm.sign * onPrey); side.forEach(st => add(st, tm.sign));
       } else if(tm.scope === 'each'){
         let clan = null;
@@ -3478,6 +3481,10 @@ class Bot {
       if(e.cost && e.cost.blood && e.cost.blood > (vamp.blood | 0)) return;
       if(e.cost && e.cost.pool && e.cost.pool >= (this.pool | 0)) return;
       const rd = this._refDeltas(e); if(!rd) return;
+      /* v0.6.209 (the sim table, 19 Oct 2026): never call a referendum whose PASSING ousts me -- its cost (pay-on-success) plus my own share of
+         the terms. The value weighs my pool at 0.8 and adds 3 for my prey's oust, so a 2-player Ancilla Empowerment at my pool 4 with four
+         minions (me -4, prey -4) scored +3.8 and ousted us both (match 175 of the first 240-match sim baseline); the cost guard above only looked at the cost. */
+      const selfLoss = Math.max(0, -(rd.deltas[this.seat] | 0)) + ((e.cost && e.cost.pool) | 0); if(selfLoss > 0 && selfLoss >= (this.pool | 0)) return;
       const value = this._refValue(rd.deltas); if(!(value > 0)) return;
       const prey = this.preySeat(), taxMine = this._cryptVoteTax(vamp.name);   // v0.6.127: Silverson-class -- the table's against-votes cost blood
       const mine = this._myTitleVotes().n + 1 + this._voteBoosts(vamp).reduce((a, b) => a + b.n, 0);   // titles + the card's own vote + what I can add in polling

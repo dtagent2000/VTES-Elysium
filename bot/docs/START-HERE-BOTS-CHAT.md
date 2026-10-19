@@ -1,8 +1,8 @@
 # START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (19 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.208 (deploy candidate, PR #34, awaiting Johan's merge: `FX_NORM` client-identical again, main's REPLY 2026-10-19; v0.6.207 = PR #28, merged) · arena v1.4.8 ·
-cardfx compiler v1.9.2, curated 105 · built against client v2.6.167 / srv-2.6.49 · gates: see the newest READ-ME-FIRST.
+**State at writing:** bot v0.6.209 (deploy candidate, PR #35 open, awaiting Johan's merge: the sim table + two referendum fixes it found; v0.6.208 = PR #34, merged) · arena v1.4.8 ·
+sim table v1.0.0 · cardfx compiler v1.9.2, curated 105 · built against client v2.6.167 / srv-2.6.49 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
 ```
@@ -33,8 +33,16 @@ branch → change → gates (inside `bot/`) → living docs + READ-ME-FIRST (+ H
 commit + push often → PR against `main` with the gate numbers in the body → Johan merges.
 A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repository root.
 
-## Open at hand-over (19 Oct 2026)
-v0.6.208 (this round): main's client v2.6.167 made `norm()` transliterate ł ø œ æ ß đ ð þ ı (Przemysław rendered blank);
+## Open at hand-over (19 Oct 2026, evening)
+v0.6.209 (this round, Johan's "kör" 19 Oct 19:17): **the sim table** — `bot/elysium-bot-sim.js` plays the headless hotseat table under a virtual
+clock, about a second per match, deterministic, every seating by default (`node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10
+--trace ./sim-x`; `python3 ana-sim-diff.py A B` compares two runs). Evidence: `bot/docs/reports/REPORT-sim-table.md`. Two referendum fixes it found
+(KRC's spare points never on the caller; never call a referendum that ousts me). **Next, in Johan's order:** the stable's remaining cards — Kevlar Vest
+(never equipped in 240 sim matches), .44 Magnum (rare), Spying Mission's [OBF] bank (never; a doctrine question), Pentex™ Subversion (curated under the
+old (TM) name: a list typed with ™, as the V5 precon generator would write, gets an effectless entry) — then the V5 plan (precon generator — the 18 V5 precons are in `vtes.json` — coverage class map,
+Toreador, then waves, each new deck against the reference table in every seating). The 19 Oct (morning) hand-over below still holds for the rest.
+
+v0.6.208 (the morning round, merged as PR #34): main's client v2.6.167 made `norm()` transliterate ł ø œ æ ß đ ð þ ı (Przemysław rendered blank);
 `FX_NORM` now does the same (`FX_NORM_LETTERS`), so a deck typed in plain letters finds its cards, and section 154f compares
 `FX_NORM` with the released client's `norm()` over every cardfx name. Main's optional point (the TWD profile's exact-key
 lookups) is parked. Main's PRs #27, #29, #30, #32 and #33 are merged (client v2.6.163–167, srv-2.6.47–49); their replies to

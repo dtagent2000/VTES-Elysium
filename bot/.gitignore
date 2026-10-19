@@ -5,3 +5,5 @@
 /twda-vdb.json
 # gen-deck-coverage.js writes its report beside itself by default; snapshots worth keeping go to docs/coverage/
 /deck-coverage-*.md
+# the sim table (elysium-bot-sim.js) writes its series here by default; keep a report worth keeping in docs/reports/
+/sim-*/
