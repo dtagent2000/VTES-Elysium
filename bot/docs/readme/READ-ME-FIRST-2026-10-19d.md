@@ -73,7 +73,14 @@ of 22:36. The analysis, the experiments and his answers are in `docs/specs/spec-
 - **Played at 0 pool:** 0.
 
 ## 6. Gates (on the release bytes)
-GATES_PLACEHOLDER
+- `node --check` on every changed JS file (`elysium-bot.js`, `test-bot-logic.js`, `cardfx-compile.js`, `test-cardfx.js`).
+- **Suite 2244/0 ×3** (alone, frozen snapshot with the root client v2.6.167 one level up, so 154f ran each time; v0.6.210: 2225, +19 = section 157;
+  release bytes `elysium-bot.js` 03cc8ee7…, `test-bot-logic.js` 3a69c74c…, `elysium-cardfx.json` 8f78ba98… (compile v1.9.3)).
+- **Canary 69/0** with `bot/`'s read-only copies and **69/0** with main's v2.6.167 client + protocol and srv-2.6.49.
+- **Hotseat gate 11/0**, **HB1 11/11**, **test-cardfx 275/0** (271/4 on the v1.9.2 compiler).
+- **Section 157 destructively:** on v0.6.210's `elysium-bot.js` + cardfx 8 red, 5 green by design, then the run stops at 157i (the functions do not exist).
+- **check-versions** (run on `client/`): everything agrees; the root's 21 files are byte copies of client/ or bot/.
+- **The sim on the final bytes:** 240 last-standing, played at 0 pool 0, IDENTICAL 240 to the measured run (only a comment changed since).
 
 ## 7. Release
 - `BOT_VERSION` 0.6.211. The CHANGELOG carries v0.6.211 (Bot) and compile v1.9.3 (cardfx).
