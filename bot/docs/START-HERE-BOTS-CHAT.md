@@ -39,10 +39,10 @@ clock, about a second per match, deterministic, every seating by default (`node 
 --trace ./sim-x`; `python3 ana-sim-diff.py A B` compares two runs). Evidence: `bot/docs/reports/REPORT-sim-table.md`. Two referendum fixes it found
 (KRC's spare points never on the caller; never call a referendum that ousts me). **Next, in Johan's order:** the stable's remaining cards — Kevlar Vest
 (never equipped in 240 sim matches), .44 Magnum (rare), Spying Mission's [OBF] bank (never; a doctrine question), Pentex™ Subversion (curated under the
-old (TM) name, so the printed name does nothing) — then the V5 plan (precon generator — the 18 V5 precons are in `vtes.json` — coverage class map,
+old (TM) name: a list typed with ™, as the V5 precon generator would write, gets an effectless entry) — then the V5 plan (precon generator — the 18 V5 precons are in `vtes.json` — coverage class map,
 Toreador, then waves, each new deck against the reference table in every seating). The 19 Oct (morning) hand-over below still holds for the rest.
 
-v0.6.208 (this round): main's client v2.6.167 made `norm()` transliterate ł ø œ æ ß đ ð þ ı (Przemysław rendered blank);
+v0.6.208 (the morning round, merged as PR #34): main's client v2.6.167 made `norm()` transliterate ł ø œ æ ß đ ð þ ı (Przemysław rendered blank);
 `FX_NORM` now does the same (`FX_NORM_LETTERS`), so a deck typed in plain letters finds its cards, and section 154f compares
 `FX_NORM` with the released client's `norm()` over every cardfx name. Main's optional point (the TWD profile's exact-key
 lookups) is parked. Main's PRs #27, #29, #30, #32 and #33 are merged (client v2.6.163–167, srv-2.6.47–49); their replies to

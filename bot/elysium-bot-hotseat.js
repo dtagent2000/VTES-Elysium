@@ -14,7 +14,7 @@
    context had neither -- a bot's COMBAT tally threw in the lift and never reached the other bot (v2.6.159+: it relayed its base fields only). The lift now cuts
    the three self-contained definitions beside the literal (AVR_CMB0, AVR_CMB_KEYS, tallyCombatMerge -- the rule the real client and srv-2.6.39+ apply), so a
    combat tally carries rng / rl / nx / pr / sp / ce / sa / sb / xa / xb / pa / pb / ga / gb / ea / eb as at a real table. bridgeIn(L) is the one context.
-   v1.3.0 (19 Oct 2026, the sim table): three OPTIONAL inputs for elysium-bot-sim.js, absent = v1.2.0 byte for byte (the gate passes none of them):
+   v1.3.0 (19 Oct 2026, the sim table): three OPTIONAL inputs for elysium-bot-sim.js; absent, the table plays as v1.2.0 did (the gate passes none of them):
    o.personas (one per seat, else o.persona), o.seatKnobs ({seat: {knob: v}}, merged over o.knobs), o.onEvent(e) (called with every bot event as it is
    pushed). The result also names the seats (res.names) and the persona each bot played (res.personas). */
 const fs = require('fs'), vm = require('vm'), path = require('path');

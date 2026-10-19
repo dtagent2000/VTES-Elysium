@@ -29,17 +29,18 @@ combining rule). The evidence is `docs/reports/REPORT-sim-table.md`. v0.6.208's 
   runs the same table on the real clock.
 
 ## 2. The same game as the real clock
-Eight matches (four 4-seat fixed seatings, seeds 9101–9104; four 5-seat random seatings with sewer, seed 77), real clock
+Eight matches (four 4-seat matches in one fixed seating, seeds 9101–9104; four 5-seat random seatings with sewer, seed 77), real clock
 against virtual, v0.6.208 bytes: SAME-PLAY 7, SAME-PLAY* 1 — every bot made every decision and card play the same, the
 outcomes and the table seconds were identical. No decision differed.
 
 ## 3. Two fixes the sim found (v0.6.209)
-- **The KRC overflow.** The first rotated batch (24 matches) had two that ended with the winner ousting itself after its
-  last opponent was out. `_refDeltas` (alloc scope) put the points beyond the prey's pool on a side seat, and with two
+- **The KRC overflow.** The first rotated batch (24 matches) had two that ended with nobody standing. In the first, the
+  winner ousted itself after its last opponent was out (the KRC split below, then Daring the Dawn and Fame); the second
+  was the self-ousting referendum (next point). `_refDeltas` (alloc scope) put the points beyond the prey's pool on a side seat, and with two
   Methuselahs left the only side seat is the caller (prey −1, me −3 at prey pool 1; 2 + 2 at prey pool 2). Now the
   overflow goes to a side seat that is not me and stays on the prey otherwise (prey −3, me −1). Three or more
   Methuselahs: v0.6.126 unchanged.
-- **The self-ousting referendum.** The first 240-match baseline (match 175): a 2-player Ancilla Empowerment at pool 4 with
+- **The self-ousting referendum.** That second match, and match 175 of the first 240-match baseline: a 2-player Ancilla Empowerment at pool 4 with
   four minions (me −4, prey −4) scored +3.8 and ousted both. Now `_bestPoliticalFor` never calls a referendum whose
   passing ousts me (its pool cost plus my share of the terms ≥ my pool).
 - **Footprint** (`ana-sim-diff.py`, the same 240-match design on v0.6.208 and v0.6.209): 224 SAME-PLAY, 16 DIVERGED —
@@ -63,12 +64,12 @@ per-seat and per-predator tables are in the report. Invariant flags: 10 in 240 m
 
 ## 5. The stable's cards the sim shows (Johan: "the remaining 3–4 cards" — the next round)
 - **Kevlar Vest** (Tremere): in hand in 84 matches, never equipped.
-- **.44 Magnum** (Tremere): in hand in 102 matches, equipped 11 times, struck with 7 times.
+- **.44 Magnum** (Tremere): in hand in 102 matches, 7 equip actions, 7 strikes with it.
 - **Spying Mission** (Malkavian ×4): 273 plays, all the [obf] +1 stealth; the [OBF] bank never (no consumer; a doctrine
   question: when to cancel a successful bleed and keep +2 for the next one against the same Methuselah).
-- **Pentex™ Subversion:** the curated entry is keyed *Pentex(TM) Subversion*; the printed name hits an empty auto entry, so
-  a human's Pentex on a bot's minion, or a list typed with ™, does nothing for the bot (the bots' own Tremere list uses
-  (TM) and plays it).
+- **Pentex™ Subversion:** the curated entry is keyed *Pentex(TM) Subversion*; the printed name hits an empty auto entry.
+  The bots' own Tremere list uses (TM) and plays it, and the readers of a played or given Pentex try both spellings — so it
+  bites only for a list typed with ™: KRCG's precon lists, and every deck the V5 plan's precon generator would write.
 - Bowl of Convergence works; `gen-deck-coverage.js` calls it PARTIAL because its class map predates `interceptPaid`.
 
 ## 6. Gates (on the release bytes)
@@ -89,4 +90,19 @@ updated. `START-HERE-BOTS.html`: version chip and footer only. The bundle is cop
   scenario in `client/playtest/`; the parked profile exact-key lookups.
 
 ## 9. Anything I'm unsure about
-UNSURE_PLACEHOLDER
+- **The equivalence rests on eight matches, all on the arena profile** (pace 0, askSecs 3) and the v0.6.208 bytes. The client
+  profile (pace 3100, askSecs 20) was not run on the real clock — one such match takes about half an hour. The virtual clock
+  replays the same timers, so I expect the same result, but it is not measured.
+- **The offline route only.** The sim lifts `hotBridge` from `bot/`'s read-only client copy (v2.6.162); the root's v2.6.167
+  bridge was not compared, and the online server path is not simulated (`--arm full` approximates it).
+- **Zero latency decides a race the same way every time.** One of the eight matches interleaved two bots' rows differently
+  from the real clock; no decision changed, but that is exactly where a real-clock difference would show first.
+- **One seeded `Math.random` drives both the deal and the bots' own choices**, and a seat's cards depend on the seat order:
+  "the same deal seeds in every seating" does not mean the same cards for a deck. Seatings compare as a design, not as
+  paired deals.
+- **`ana-sim-diff.py` compares a set of deciding fields** (pick, block, play, target, terms …); a change only in a score or a
+  why shows as SAME-PLAY. IDENTICAL is the strict verdict.
+- **The self-oust guard is strict:** the bot never calls such a referendum, even when it would oust the prey at the same
+  moment. I know of no case where that is right, but I did not check the rulebook on simultaneous ousts.
+- **The coverage numbers in this afternoon's answer used the tool's July class map;** the remaining-cards list above comes
+  from the traces instead, and Bowl of Convergence is the proof that the map is stale.
