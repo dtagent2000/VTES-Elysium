@@ -10815,6 +10815,29 @@ async function connectWithRetry(client, tries = 30){
       } else console.log('  (154f skipped: no client v2.6.167+ beside the suite -- its norm() with NORM_LETTERS is not here)');
     }
 
+    /* 155) v0.6.209 -- KRC'S OVERFLOW NEVER LANDS ON ME (found by the sim table, 19 Oct 2026). 'Allocate 4 points among two or more
+       Methuselahs': v0.6.126 puts exactly the lethal amount on my prey and the rest on a side seat. With two Methuselahs left the only
+       side seat is the caller, so a prey at pool 1 got 1 point and I got 3 -- the bot burned 3 of its own pool to oust its last opponent
+       (two of 24 sim matches ended with the winner ousting itself on that action, Fame and Daring the Dawn on top). The overflow now
+       stays on the prey when the only side seat is me; with three or more Methuselahs the v0.6.126 split stands (155c). */
+    {
+      console.log('\n[155] v0.6.209 -- the KRC overflow never lands on the caller');
+      const mk155 = players => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'b155', pass: 'p', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.pool = 6; u.players = players; u.table = {};
+        u.board = [{ id: 'v1', kind: 'crypt', name: 'Madison', zone: 'ready', blood: 4, locked: false }]; return u; };
+      const two = [{ seat: 1, name: 'Alice', online: true }, { seat: 2, name: 'U', online: true, bot: true }];
+      const a = mk155(two); a.table[1] = { pub: { pool: 1, cards: [] } };
+      const krc = a.fxLookup('Kine Resources Contested').e, dA = (a._refDeltas(krc) || {}).deltas || {};
+      ok(dA[1] === -3 && dA[2] === -1, '155a two players, my prey at pool 1: 3 points on my prey and 1 on me -- never 3 on me (got ' + JSON.stringify(dA) + ')');
+      ok(a._refValue(dA) > 0, '155a ...and it is still worth calling (' + a._refValue(dA).toFixed(2) + ' -- the oust bonus counts)');
+      const b = mk155(two); b.table[1] = { pub: { pool: 2, cards: [] } }; const dB = (b._refDeltas(krc) || {}).deltas || {};
+      ok(dB[1] === -3 && dB[2] === -1, '155b two players, my prey at pool 2: still 3 + 1, not 2 + 2 (got ' + JSON.stringify(dB) + ')');
+      const c = mk155([{ seat: 1, name: 'Alice', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Bob', online: true, bot: true }]);
+      c.table[1] = { pub: { pool: 20, cards: [] } }; c.table[3] = { pub: { pool: 1, cards: [] } };
+      const dC = (c._refDeltas(krc) || {}).deltas || {};
+      ok(dC[3] === -1 && dC[1] === -3 && !dC[2], '155c three players, my prey at pool 1: 1 on my prey (lethal), the other 3 on the other opponent, none on me -- v0.6.126 stands (got ' + JSON.stringify(dC) + ')');
+    }
+
 
 
     }
