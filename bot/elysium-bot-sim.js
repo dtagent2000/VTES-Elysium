@@ -32,6 +32,10 @@
    winner = most VP). The game ENDS when one Methuselah is left: an oust after that (the winner burning itself out on its own last action)
    is not counted -- it is reported as a post-game oust, a finding in itself.
 
+   Played at 0 pool (v1.0.1, 19 Oct, bot v0.6.210): a bot that DECIDES at pool <= 0 before its own `ousted` row is playing while
+   ousted ('a Methuselah with no pool is ousted'). The result row lists them (`zeroPool`) and SUMMARY.md counts them -- 35 bots in 33
+   of 240 baseline matches on v0.6.209 (the last pool paid for a master), none since. Listed, not excluded: the match still counts.
+
    Not a timing gate: zero latency and ideal ordering can hide a race a real table shows. The real-clock gates stay (canary, hotseat gate,
    the arena on a real server); --real runs this same table on the real clock for an equivalence check.
 
@@ -41,7 +45,7 @@
           node elysium-bot-sim.js --summarize DIR
 */
 const path = require('path'), fs = require('fs');
-const SIM_VERSION = '1.0.0';
+const SIM_VERSION = '1.0.1';
 const EPOCH = Date.UTC(2026, 0, 1, 12, 0, 0);   // the virtual clock's start: fixed, so generated ids and every timestamp repeat
 
 /* ---------------- the virtual clock (child process only; installed BEFORE the bot is required) ---------------- */
@@ -89,6 +93,10 @@ async function runOne(spec){
   const ousted = []; rows.forEach(x => { if(x.type === 'ousted' && !ousted.includes(x.bot)) ousted.push(x.bot); });
   names.forEach(nm => { if(!r.alive.includes(nm) && !ousted.includes(nm)) ousted.push(nm); });   // out without an `ousted` emit: last, order unknown
   const gameOusts = ousted.slice(0, n - 1), postGame = ousted.slice(n - 1);
+  const zeroPool = []; { const gone = new Set();   // v1.0.1: a decision at pool <= 0 before my own oust = playing while ousted (bot v0.6.210's class)
+    rows.forEach(x => { if(x.type === 'ousted'){ gone.add(x.bot); return; }
+      if(x.type === 'decide' && x.data && typeof x.data.pool === 'number' && x.data.pool <= 0 && !gone.has(x.bot) && !zeroPool.some(z => z.bot === x.bot))
+        zeroPool.push({ bot: x.bot, round: x.round, q: x.data.q || null }); }); }
   const reason = r.stuck ? 'stuck' : (gameOusts.length >= n - 1 ? 'last-standing' : 'turn-cap');
   const vp = computeVp(names, gameOusts, reason), winner = r.stuck ? null : deriveWinner(vp, gameOusts, names);
   const deckOf = {}; names.forEach((nm, i) => deckOf[nm] = spec.order[i]);
@@ -97,7 +105,7 @@ async function runOne(spec){
     match: spec.idx, sim: SIM_VERSION, bot: r.bot, client: r.client, arm: r.arm, clock: clock ? 'virtual' : 'real', seed: spec.seed, seating: spec.tag,
     winner, winnerDeck: winner ? deckOf[winner] : null, reason, vp, oustOrder: gameOusts, postGameOusts: postGame,
     rounds: r.rounds, tableSecs: r.secs, stuck: r.stuck, pools: r.pools, droppedVerbs: r.droppedVerbs, counts: r.counts,
-    invFlags: rows.filter(x => x.type === 'inv-flag').length,
+    invFlags: rows.filter(x => x.type === 'inv-flag').length, zeroPool,
     bots: names.map((nm, i) => ({ name: nm, seat: i + 1, deck: spec.order[i], persona: r.personas[i], knobs: Object.assign({}, spec.knobs || {}, (spec.seatKnobs || {})[i + 1] || {}) })),
     wallMs: (clock ? clock.realNow() : Date.now()) - wall0, cpuMs: Math.round((cpu.user + cpu.system) / 1000), clockStats: clock ? clock.stats() : null
   };
@@ -265,6 +273,8 @@ function summarize(results, meta){
     postGameOustMatches: ok.filter(r => (r.postGameOusts || []).length).map(r => ({ match: r.match, seating: r.seating, seed: r.seed, who: r.postGameOusts })),
     problems: results.filter(r => !r || r.crash || r.reason === 'stuck').map(r => r ? { match: r.match, seating: r.seating, seed: r.seed, crash: !!r.crash, stuck: r.stuck || null, err: r.err ? String(r.err).split('\n')[0] : null } : null),
     invFlags: ok.reduce((x, r) => x + (r.invFlags || 0), 0),
+    zeroPool: ok.every(r => Array.isArray(r.zeroPool)) ? ok.reduce((x, r) => x + r.zeroPool.length, 0) : null,   // v1.0.1; null = traces older than the field
+    zeroPoolMatches: ok.filter(r => (r.zeroPool || []).length).map(r => ({ match: r.match, seating: r.seating, seed: r.seed, who: r.zeroPool.map(z => z.bot + ' r' + z.round) })),
     rounds: +mean(ok.map(r => r.rounds || 0)).toFixed(2), tableSecs: Math.round(ok.reduce((x, r) => x + (r.tableSecs || 0), 0)),
     decks: {} };
   decks.forEach(d => { const x = D[d], f = a => +mean(a).toFixed(2);
@@ -282,7 +292,8 @@ function summaryMd(S){
   L.push('bot v' + (m.bot || '?') + ' · client v' + (m.client || '?') + ' · sim v' + SIM_VERSION + ' · ' + (m.clock || '?') + ' clock · profile ' + (m.profile || '?') + ' (pace ' + m.paceMs + ' ms, askSecs ' + m.askSecs + ')' +
     ' · seatings ' + (m.seatings || '?') + ' × ' + (m.seeds || 1) + ' seed(s) from ' + (m.seed != null ? m.seed : '?') + ' · start pool ' + (m.startPool || '?') + (m.knobs && m.knobs.length ? ' · knobs ' + m.knobs.join(' ') : ''), '');
   L.push(S.matches + ' matches (' + Object.entries(S.reasons).map(([k, v]) => k + ' ' + v).join(', ') + ') · ' + S.rounds + ' rounds/match · ' + S.tableSecs + ' s of table time' +
-    (m.wallSecs != null ? ' in ' + m.wallSecs.toFixed(1) + ' s of wall clock' : '') + ' · invariant flags ' + S.invFlags, '');
+    (m.wallSecs != null ? ' in ' + m.wallSecs.toFixed(1) + ' s of wall clock' : '') + ' · invariant flags ' + S.invFlags +
+    ' · played at 0 pool ' + (S.zeroPool == null ? '? (traces before sim v1.0.1)' : S.zeroPool), '');
   L.push('| deck | seats | wins | win rate | VP/match (± SE) | first out | survived | post-game ousts |', '|---|---:|---:|---:|---:|---:|---:|---:|');
   decks.sort((a, b) => S.decks[b].vpPerMatch - S.decks[a].vpPerMatch).forEach(d => { const x = S.decks[d];
     L.push('| ' + d + ' | ' + x.seats + ' | ' + x.wins + ' | ' + (100 * x.winRate).toFixed(0) + '% | ' + x.vpPerMatch.toFixed(2) + ' ± ' + x.vpSE.toFixed(2) + ' | ' + x.firstOut + ' | ' + x.survived + ' | ' + x.postGameOusts + ' |'); });
@@ -293,6 +304,7 @@ function summaryMd(S){
   L.push('', '**VP/match by predator** (row = the deck, column = the deck that preys on it)', '', '| deck | ' + decks.map(d => d).join(' | ') + ' |', '|---|' + decks.map(() => '---:').join('|') + '|');
   decks.forEach(d => L.push('| ' + d + ' | ' + decks.map(p => (S.decks[d].vpVsPred[p] != null ? S.decks[d].vpVsPred[p].toFixed(2) : '—')).join(' | ') + ' |'));
   if(S.postGameOustMatches.length) L.push('', '**Post-game ousts** (an oust after one Methuselah was left — not counted): ' + S.postGameOustMatches.map(x => '#' + x.match + ' ' + x.who.join('+')).join(', '));
+  if((S.zeroPoolMatches || []).length) L.push('', '**Played at 0 pool** (a decision at pool ≤ 0 before the bot’s own oust — a rules fault; counted): ' + S.zeroPoolMatches.map(x => '#' + x.match + ' ' + x.who.join('+')).join(', '));
   if(S.problems.length) L.push('', '**Problems** (not counted): ' + S.problems.map(x => x ? '#' + x.match + (x.crash ? ' CRASH ' + (x.err || '') : ' STUCK r' + (x.stuck && x.stuck.round) + 's' + (x.stuck && x.stuck.seat)) : 'missing').join('; '));
   L.push('');
   return L.join('\n');

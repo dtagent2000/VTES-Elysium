@@ -1,4 +1,4 @@
-# REPORT — the sim table (19 October 2026, bot v0.6.209, `elysium-bot-sim.js` v1.0.0)
+# REPORT — the sim table (19 October 2026, bot v0.6.209–v0.6.210, `elysium-bot-sim.js` v1.0.0–v1.0.1)
 
 Johan's "kör" on the sim table (19 Oct 19:17) and his seating question ("we should test all possible seatings, not just one,
 since it affects tactical choices"). This report is the evidence behind the tool: why it is fast, that it plays the same game as
@@ -106,3 +106,34 @@ From the 240 v0.6.209 matches (hand snapshots in `decide` rows; plays in `play` 
 - The offline route (the hotseat bridge). The online server's semantics are approximated by the bridge's `--arm full`; the server
   arena remains the online check.
 - Volume is for measurement and regression, not for tuning knobs automatically against the bots' own meta.
+
+## 7. The last pool (bot v0.6.210, sim v1.0.1 — the same evening)
+Found while the numbers above were checked: a scan for bots that DECIDED at pool ≤ 0 before their own oust row.
+
+- **The fault:** `_bestMasterFor` admitted a master at `cost > pool` — Vessel at pool 1, a Hunting Ground at pool 2, always in the
+  bot's own master phase. On the v0.6.209 baseline above, 35 bots in 33 matches (Tremere 12, Nosferatu 10, Ventrue 9, Malkavian 4)
+  paid their last pool and played on at 0: 101 actions through, 65 card plays, 46 blocks and 5 referendums called before a bleed
+  took them below 0; 3 of the 35 went on to win. Counting the cause instead of the symptom: 44 master picks by 42 bots cost the
+  last pool — those 35 bots' payments, and 7 Misdirection picks held for want of a target (nothing paid). In #50 a Blood Doll
+  drain the same phase put the pool back from 0 to 1: by the rules the bot was out at the payment all the same.
+- **The fix:** the master, equip and fetch finders leave ≥ 1 pool; the turn engine ousts the bot at 0 pool after its master phase
+  or before a minion's action.
+- **The footprint** (v0.6.209 → v0.6.210, the same 240-match design): 200 SAME-PLAY, 40 DIVERGED, every one first at a master pick —
+  the 33 zero-pool matches (23 with another outcome) and 7 where a Misdirection picked at pool 1 was held for want of a target
+  (nothing paid; with that row dropped those matches are identical — `ana-sim-diff.py` compares the n-th decision, so one missing
+  row shows as a divergence). Master picks costing the last pool 44 → 0, bots at 0 pool 35 → 0; the net never fired.
+
+| Deck (client profile) | v0.6.209 | v0.6.210 (± SE) | arena profile, v0.6.210 |
+|---|---:|---:|---:|
+| malkavian | 124 / 1.91 | 128 / 1.94 ± 0.11 | 126 / 1.95 |
+| ventrue | 55 / 1.05 | 54 / 1.04 ± 0.09 | 54 / 0.96 |
+| tremere | 40 / 0.77 | 40 / 0.76 ± 0.08 | 45 / 0.85 |
+| nosferatu | 21 / 0.27 | 18 / 0.25 ± 0.05 | 15 / 0.24 |
+
+(wins / VP per match; v0.6.210 client profile: 484,928 s of table time in 147.5 s.) The seating effect stands: Tremere 0.50 with
+Ventrue as its predator, 1.13 with Nosferatu; Malkavian 1.65 behind Ventrue, 2.36 behind Nosferatu.
+
+- **Sim v1.0.1** counts it from now on: the result row's `zeroPool` (bot, round, question), the sum in `summary.json`, the count
+  in `SUMMARY.md`'s header and the matches below the tables (4 on the 24-match design on v0.6.209, 0 on v0.6.210).
+- **A note on §4:** two of the six referendum calls v0.6.209's guard dropped (#50, #182) came from bots that had just paid their
+  last pool for a master (pool 0 → a Blood Doll drain → 1 in #50; still 0 in #182) — this section's fault, seen from the referendum side.

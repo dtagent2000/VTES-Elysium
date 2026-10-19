@@ -1,7 +1,7 @@
 # bot/ — Elysium Bots (automated V:TES opponents for the Elysium client)
 
-Bot **v0.6.209** (19 Oct 2026) · arena v1.4.8 · sim table v1.0.0 · cardfx compiler v1.9.2, curated 105 · built against client v2.6.162 / srv-2.6.46 (the read-only copies here) and v2.6.167 / srv-2.6.49 (the root).
-Start with `CLAUDE.md` (session bootstrap, version handshake, every gate), then the newest `docs/readme/READ-ME-FIRST-*.md` (at v0.6.209: `READ-ME-FIRST-2026-10-19b.md`).
+Bot **v0.6.210** (19 Oct 2026) · arena v1.4.8 · sim table v1.0.1 · cardfx compiler v1.9.2, curated 105 · built against client v2.6.162 / srv-2.6.46 (the read-only copies here) and v2.6.167 / srv-2.6.49 (the root).
+Start with `CLAUDE.md` (session bootstrap, version handshake, every gate), then the newest `docs/readme/READ-ME-FIRST-*.md` (at v0.6.210: `READ-ME-FIRST-2026-10-19c.md`).
 The folder is deliberately FLAT: the suites, the arena and every tool expect their inputs beside them. Run everything from here.
 
 ## The bundle (what the client project consumes — copied to the repository root at a release)
@@ -14,14 +14,14 @@ The folder is deliberately FLAT: the suites, the arena and every tool expect the
 | `elysium-bot-arena.js` | bot-vs-bot arena on a real spawned server (`node elysium-bot-arena.js --matches N --bots K --decks … --trace ./serie-x`) |
 | `elysium-bot-table.js` | seat bots at a live table |
 | `elysium-bot-hotseat.js` | the client's real `hotBridge` driven headless (needs `elysium-vtes-bord.html` beside it) |
-| `elysium-bot-sim.js` | THE SIM TABLE: the hotseat table under a virtual clock — about a second per match, the same spec gives the same trace byte for byte, every seating by default (`node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10 --trace ./sim-x`; `--help`). Not a timing gate. |
+| `elysium-bot-sim.js` | THE SIM TABLE: the hotseat table under a virtual clock — about a second per match, the same spec gives the same trace byte for byte, every seating by default (`node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10 --trace ./sim-x`; `--help`); v1.0.1 counts bots that played at 0 pool. Not a timing gate. |
 | `cardfx-compile.js`, `cardfx-curated.json` → `elysium-cardfx.json` / `.js` | the card-effect library pipeline (`node cardfx-compile.js --report`; needs `vtes.json`) |
 | `twd-profile.py`, `twd-archetypes.py` → `elysium-twd-profile.json`, `elysium-twd-archetypes.json` | the TWDA prior (need `vtes.json`, `twda.json` and optionally `twda-vdb.json` beside them — none in git; root `CLAUDE.md`, 'Data that is not in git') |
 | `deck-*.json`, `rig-a1.json` | the arena decks (the four V5 starters + hacking + sewer) and a rig |
 | `elysium-bot-diag.html` | the browser battery (HB1) |
 
 ## Gates
-`node --check <file>` → `node test-bot-logic.js` (2217 assertions, ≈300 s — run detached: `timeout 600 node test-bot-logic.js > suite.log &` and poll) → `node test-bot-canary.js` (69/0; pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (271/0, when cardfx changed; needs `vtes.json` — fetched, see root `CLAUDE.md`) → `node diag-hb1-smoke.js` (11/0, when the browser surface changed) → `node test-bot-hotseat.js` (11/0, when anything near the hotseat bridge changed).
+`node --check <file>` → `node test-bot-logic.js` (2225 assertions, ≈300 s — run detached: `timeout 600 node test-bot-logic.js > suite.log &` and poll) → `node test-bot-canary.js` (69/0; pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (271/0, when cardfx changed; needs `vtes.json` — fetched, see root `CLAUDE.md`) → `node diag-hb1-smoke.js` (11/0, when the browser surface changed) → `node test-bot-hotseat.js` (11/0, when anything near the hotseat bridge changed).
 Mutant isolation for the hold gate: `python3 tools/mutants/mutate-v0_6_198.py /tmp/mut` (every mutant must fail or hang).
 One suite section against any bot file (the destructive check of a new section, sub-minute): `bash tools/run-section.sh <bot.js> <section.js>`.
 

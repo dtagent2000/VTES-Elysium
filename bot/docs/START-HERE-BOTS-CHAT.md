@@ -1,8 +1,8 @@
 # START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (19 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.209 (deploy candidate, PR #35 open, awaiting Johan's merge: the sim table + two referendum fixes it found; v0.6.208 = PR #34, merged) · arena v1.4.8 ·
-sim table v1.0.0 · cardfx compiler v1.9.2, curated 105 · built against client v2.6.167 / srv-2.6.49 · gates: see the newest READ-ME-FIRST.
+**State at writing:** bot v0.6.210 (deploy candidate, PR #36 open, stacked on PR #35 = v0.6.209 — merge #35 first: a pool cost never takes the last pool; v0.6.208 = PR #34, merged) · arena v1.4.8 ·
+sim table v1.0.1 · cardfx compiler v1.9.2, curated 105 · built against client v2.6.167 / srv-2.6.49 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
 ```
@@ -33,8 +33,12 @@ branch → change → gates (inside `bot/`) → living docs + READ-ME-FIRST (+ H
 commit + push often → PR against `main` with the gate numbers in the body → Johan merges.
 A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repository root.
 
-## Open at hand-over (19 Oct 2026, evening)
-v0.6.209 (this round, Johan's "kör" 19 Oct 19:17): **the sim table** — `bot/elysium-bot-sim.js` plays the headless hotseat table under a virtual
+## Open at hand-over (19 Oct 2026, late evening)
+v0.6.210 (stacked on #35, found while v0.6.209's numbers were checked): **the last pool** — a bot at pool 1–2 paid its last pool for a master
+(Vessel, a Hunting Ground) in its own master phase and played on at 0 (35 bots in 33 of 240 sim matches); the master, equip and fetch finders now
+leave ≥ 1 pool and the turn engine ousts at 0 pool on my own turn. Sim v1.0.1 counts "played at 0 pool" in every SUMMARY.md. `READ-ME-FIRST-2026-10-19c.md`.
+
+v0.6.209 (Johan's "kör" 19 Oct 19:17, Johan's "kör" 19 Oct 19:17): **the sim table** — `bot/elysium-bot-sim.js` plays the headless hotseat table under a virtual
 clock, about a second per match, deterministic, every seating by default (`node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10
 --trace ./sim-x`; `python3 ana-sim-diff.py A B` compares two runs). Evidence: `bot/docs/reports/REPORT-sim-table.md`. Two referendum fixes it found
 (KRC's spare points never on the caller; never call a referendum that ousts me). **Next, in Johan's order:** the stable's remaining cards — Kevlar Vest
