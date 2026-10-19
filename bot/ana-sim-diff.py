@@ -33,6 +33,8 @@ def decisions(rows):
         if r.get('type') == 'decide':
             o = (r.get('data') or {}).get('out') or {}
             key = {k: (o[k].get('name') if isinstance(o.get(k), dict) else o.get(k)) for k in KEYS if k in o and k != 'ms'}
+            if isinstance(o.get('pick'), dict) and o['pick'].get('deltas'):
+                key['terms'] = o['pick']['deltas']   # a referendum's terms are part of the decision (who loses what)
             out.append((r.get('round'), r.get('bot'), 'decide', r['data'].get('q'), json.dumps(key, sort_keys=True)))
         elif r.get('type') == 'play':
             d = r.get('data') or {}
@@ -52,21 +54,22 @@ def compare(fa, fb):
     if da == db:
         return 'SAME-PLAY', None, outcome(A), outcome(B)
     # the same decisions per bot, interleaved differently (two bots acting at the same instant) is still the same play
-    per = lambda d: {b: [x for x in d if x[1] == b] for b in sorted(set(x[1] for x in d))}
+    per = lambda d: {b: [(g, x) for g, x in enumerate(d) if x[1] == b] for b in sorted(set(x[1] for x in d))}
     pa, pb = per(da), per(db)
-    if pa == pb:
+    strip = lambda p: {b: [x for g, x in v] for b, v in p.items()}
+    if strip(pa) == strip(pb):
         return 'SAME-PLAY*', None, outcome(A), outcome(B)
-    first = None
+    first = None   # the bot whose first different decision comes EARLIEST in the trace (its position in A, else in B)
     for b in sorted(set(pa) | set(pb)):
         xa, xb = pa.get(b, []), pb.get(b, [])
-        i = next((k for k, (x, y) in enumerate(zip(xa, xb)) if x != y), min(len(xa), len(xb)))
+        i = next((k for k, (x, y) in enumerate(zip(xa, xb)) if x[1] != y[1]), min(len(xa), len(xb)))
         if i < max(len(xa), len(xb)):
             x = xa[i] if i < len(xa) else None
             y = xb[i] if i < len(xb) else None
-            rnd = min((v[0] if v[0] is not None else 10 ** 9) for v in (x, y) if v is not None)   # an arena trace has no round field
-            if first is None or rnd < first[0]:
-                first = (rnd, b, i, x, y)
-    rnd, b, i, x, y = first
+            g = min(v[0] for v in (x, y) if v is not None)
+            if first is None or g < first[0]:
+                first = (g, i, x and x[1], y and y[1])
+    g, i, x, y = first
     return 'DIVERGED', (i, x, y), outcome(A), outcome(B)
 
 def main():
