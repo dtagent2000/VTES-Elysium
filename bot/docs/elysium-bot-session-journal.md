@@ -8,7 +8,7 @@ Fixen: `FX_NORM_LETTERS` (klientens `NORM_LETTERS`, 16 tecken) och en `replace` 
 
 Sektion 154 (6): KRCG-nycklarna, de 16 bokstäverna, enkla stavningar träffar, tryckta träffar fortfarande, en enkelt skriven Przemyslaw får kapacitet 6, och 154f jämför `FX_NORM` med den släppta klientens egen `norm()` (lyft ur `../elysium-vtes-bord.html`) på alla 6 576 namn i cardfx — kommentaren "client-identical" är nu ett test. Destruktivt på v0.6.207:s `elysium-bot.js`: 1/5 (154d grön med avsikt).
 
-Grindar: @@GATES@@
+Grindar: suite 2210/0 ×3 (alone, frozen snapshot with the root client one level up, so 154f ran each time; v0.6.207: 2204; release bytes `elysium-bot.js` 808d7091…, `test-bot-logic.js` c93902d0…, `elysium-cardfx.json` bea73088… unchanged), canary 69/0 with bot/'s own copies and 69/0 with main's v2.6.167 client + protocol and srv-2.6.49, hotseat 11/0, HB1 11/11, check-versions agrees (the root's 21 files byte copies); test-cardfx not run (cardfx unchanged); no arena smoke (a name-key change; no deck in the arena types these names)
 
 Osäkert: (1) Hur ofta en riktig importerad lek har den enkla stavningen vet ingen — main tror att VDB och KRCG skriver de tryckta bokstäverna (inte verifierat), så det gäller nog mest handskrivna listor. (2) 154f hoppas över (räknas inte) om ingen v2.6.167+-klient ligger en nivå upp; i monorepot gör den alltid det, men en svit som körs i en fryst kopia utan roten får en assertion färre. (3) `bot/`:s egna read-only-kopior av klient/server/protokoll är fortfarande äldre (v2.6.160-tiden); jag rörde dem inte i den här rundan. (4) Profilpunkten är parkerad, inte bedömd.
 

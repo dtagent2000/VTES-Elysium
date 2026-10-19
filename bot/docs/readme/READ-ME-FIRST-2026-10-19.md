@@ -35,7 +35,7 @@ Destructively, on the v0.6.207 `elysium-bot.js` (the same suite file, the root c
 by design (the printed spellings worked before); 154a, b, c, e and f are red.
 
 ## 4. Gates (on the release bytes)
-@@GATES@@
+suite 2210/0 ×3 (alone, frozen snapshot with the root client one level up, so 154f ran each time; v0.6.207: 2204; release bytes `elysium-bot.js` 808d7091…, `test-bot-logic.js` c93902d0…, `elysium-cardfx.json` bea73088… unchanged), canary 69/0 with bot/'s own copies and 69/0 with main's v2.6.167 client + protocol and srv-2.6.49, hotseat 11/0, HB1 11/11, check-versions agrees (the root's 21 files byte copies); test-cardfx not run (cardfx unchanged); no arena smoke (a name-key change; no deck in the arena types these names)
 
 ## 5. Release
 `BOT_VERSION` 0.6.208; the v0.6.207 note stays in the CHANGELOG (it was written there at its release), the v0.6.208
