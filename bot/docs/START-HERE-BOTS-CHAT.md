@@ -1,7 +1,7 @@
 # START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (19 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.211 (deploy candidate, PR #37 open, stacked on #36 = v0.6.210 and #35 = v0.6.209 — merge in order 35, 36, 37: the stable's remaining cards; v0.6.208 = PR #34, merged) · arena v1.4.8 ·
+**State at writing:** bot v0.6.211 (deploy candidate, PR #37 open, awaiting Johan's merge: the stable's remaining cards; v0.6.210 = PR #36 and v0.6.209 = PR #35, both merged 19 Oct) · arena v1.4.8 ·
 sim table v1.0.1 · cardfx compiler v1.9.3, curated 105 · built against client v2.6.167 / srv-2.6.49 · gates: see the newest READ-ME-FIRST.
 
 ## First five minutes
@@ -34,12 +34,12 @@ commit + push often → PR against `main` with the gate numbers in the body → 
 A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repository root.
 
 ## Open at hand-over (19 Oct 2026, night)
-v0.6.211 (stacked on #36, Johan's choices of 22:36): **the stable's remaining cards** — Pentex™ by its printed name (cardfx-compile v1.9.3), a weapon or
+v0.6.211 (PR #37, Johan's choices of 22:36): **the stable's remaining cards** — Pentex™ by its printed name (cardfx-compile v1.9.3), a weapon or
 an armour over a bare 1-bleed (never over a bleed card, not at 6 pool or less for a pool cost), Spying Mission [OBF] cancels a bounced bleed onto a non-prey and banks +2, and
 goes last as stealth. `docs/specs/spec-cards-2026-10-19.md`, `READ-ME-FIRST-2026-10-19d.md`. **Next:** the knowledge layer's Kevlar (Johan: valuable against aggravated-damage decks such
 as Gangrel) and the V5 plan (precon generator, coverage map, Toreador, waves).
 
-v0.6.210 (stacked on #35, found while v0.6.209's numbers were checked): **the last pool** — a bot at pool 1–2 paid its last pool for a master
+v0.6.210 (PR #36, merged; found while v0.6.209's numbers were checked): **the last pool** — a bot at pool 1–2 paid its last pool for a master
 (Vessel, a Hunting Ground) in its own master phase and played on at 0 (35 bots in 33 of 240 sim matches); the master, equip and fetch finders now
 leave ≥ 1 pool and the turn engine ousts at 0 pool on my own turn. Sim v1.0.1 counts "played at 0 pool" in every SUMMARY.md. `READ-ME-FIRST-2026-10-19c.md`.
 

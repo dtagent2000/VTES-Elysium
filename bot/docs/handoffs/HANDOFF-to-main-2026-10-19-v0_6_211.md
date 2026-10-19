@@ -1,8 +1,8 @@
 # Handoff to main — bot v0.6.211: the stable's remaining cards (19 Oct 2026, late evening)
 
 **From:** Elysium Bots. **To:** main (client v2.6.167, srv-2.6.49). **Answers:** nothing of yours — Johan's choices for the
-last weak cards of the four V5 starters (`bot/docs/specs/spec-cards-2026-10-19.md`). Stacked on v0.6.210 (bot PR #36, itself on
-#35): merge those first.
+last weak cards of the four V5 starters (`bot/docs/specs/spec-cards-2026-10-19.md`). It follows v0.6.210
+(bot PR #36) and v0.6.209 (#35), both merged.
 
 ## 0. In short
 - **Nothing for you to build.** No new verb, no client or server change.

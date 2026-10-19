@@ -3,7 +3,7 @@
 **What it is.** The four weak cards the sim found in the V5 starters (`REPORT-sim-table.md` §5), handled with Johan's choices
 of 22:36. The analysis, the experiments and his answers are in `docs/specs/spec-cards-2026-10-19.md`.
 
-**Stacked on PR #36 (v0.6.210), itself on #35 (v0.6.209).** Merge in order: 35, 36, 37.
+**On main after PR #35 (v0.6.209) and PR #36 (v0.6.210), both merged 19 Oct.**
 `READ-ME-FIRST-2026-10-19c.md` and `-19b.md` stand for everything else.
 
 ## 1. Pentex™ Subversion — `cardfx-compile.js` v1.9.3

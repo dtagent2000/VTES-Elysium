@@ -92,7 +92,7 @@ design: the four V5 starters, every seating × 10 deals. Experiments ran on a sc
 1. Pentex (the compiler, then the cardfx regenerated, then the tests).
 2. Johan's choice for Kevlar and Magnum.
 3. Spying Mission per his rule.
-4. Then the gates, the sim baseline and the footprint, and one PR stacked on #36.
+4. Then the gates, the sim baseline and the footprint, and one PR (it became #37, after #35 and #36 were merged).
 
 ## 5. Decided and shipped (v0.6.211, the same night)
 **Johan, 22:36:**
