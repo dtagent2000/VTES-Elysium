@@ -30,7 +30,7 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
 - **The arena** — `node elysium-bot-arena.js --matches N --bots K --personas expert,… --decks hacking,sewer,… --start-pool 30
   --match-timeout 600 --trace ./serie-x [--seed N] [--fixed-seats] [--knob k=v] [--knob SEAT:k=v]`. Seating is random per match by
   default (`--seed` repeats, `--fixed-seats` = deck order). Decks: hacking (the tournament benchmark), sewer, malkavian, tremere,
-  nosferatu, ventrue. `--knob` is whitelisted (`WL`; a typo warns; `aggression` / `blockShy` are not in it). Timer-bound (~2.5 % of a core each), so many run in parallel; 4p30 ≈ 2–4 min, 5p30 ≈ 3–4 min on the real
+  nosferatu, ventrue. `--knob` is whitelisted (`WL`; any other name is ignored with a warning; `aggression` / `blockShy` are not in it). Timer-bound (~2.5 % of a core each), so many run in parallel; 4p30 ≈ 2–4 min, 5p30 ≈ 3–4 min on the real
   clock. Launch detached and poll `progress.txt`; one process per match. Pre-flight: one match before any series on a change that
   reads live protocol state, and read the new emit rows.
 - **The mirror bench** (until C3 ports it to the sim) — `bench.sh ARM W NW N SPEC [DECK] [KNOB]` + `ana-bench.py`: 48 matches, the

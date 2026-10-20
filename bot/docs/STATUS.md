@@ -6,7 +6,7 @@ copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed
 
 **Deploy state:** the root carries the v0.6.211 bundle (byte copies; main's `check-versions.js` agrees).
 
-**Open PRs:** none from `bot/` at writing. Round C1 of the clean-up (`docs/specs/spec-cleanup-2026-10-20.md`) is this branch.
+**Open PRs:** #39, round C1 of the clean-up (`docs/specs/spec-cleanup-2026-10-20.md`): docs only; this STATUS ships with it.
 
 ## Last gates (v0.6.211 release bytes, 19 Oct 2026)
 Suite **2244/0 ×3** (alone, frozen snapshots; root client one level up) · canary **69/0** (bot/'s copies) and 69/0 (root
@@ -20,10 +20,10 @@ bare 1-bleed (knob `equipOverPlain`); Spying Mission [OBF] cancels a bounced ble
 (knob `spyCancelMin`), spent last as stealth. Section 157. Spec: `docs/history/specs/spec-cards-2026-10-19.md`.
 
 ## Next, in Johan's order
-1. The clean-up rounds C2–C6 (`spec-cleanup-2026-10-20.md` §8) interleaved with product rounds.
+1. The clean-up rounds C2–C6 (`spec-cleanup-2026-10-20.md` §7) interleaved with product rounds.
 2. The knowledge layer's second half: Kevlar priced by what the table's decks deal; the prey's wakes as blockers (65f).
-3. The abstract model spec (its own spec follows; `spec-cleanup-2026-10-20.md` §7.1).
-4. The V5 plan: precon generator (the 18 V5 precons are in `vtes.json`), coverage class map, Toreador, then waves on the card ledger.
+3. The abstract model spec (its own spec follows; `spec-cleanup-2026-10-20.md` §6.1).
+4. The V5 plan: a precon generator from `vtes.json`'s precon sets, a coverage class map, Toreador, then waves on the card ledger.
 
 ## Not yet consumed from main
 Main's replies of 17–18 Oct in `client/docs/handoffs/` (`REPLY-to-bot-2026-10-17-robustness.md`,

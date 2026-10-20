@@ -168,6 +168,7 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **D-90** (2026-09-22, Johan) — A text-only change needs `node --check` + the grammar test, not the full sweep.
 - **D-91** (2026-10-12, Johan) — Git monorepo; branch + PR per change; Johan merges and deletes branches; third-party data in the private repo `dtagent2000/VTES-Elysium-data`; KRCG v5 deferred until v3 is dropped.
 - **D-92** (2026-10-16, Johan) — Combining rule: a fix found during a round may ride in it when it fits, said so in the PR; review rounds R1 → R4; we run the play-test rig ourselves.
+- **D-93** (2026-08-04, Johan) — The evaluation doctrine: every shipped tactical change gets its OUTCOME evaluated in the next report against its registered prediction (change · prediction · observed · verdict: keep / tune / revert), so the sum of changes is judged, not just shipped [CL lines 96–100].
 
 ## Open — waiting for Johan (sources consulted in brackets)
 
@@ -202,7 +203,7 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 
 ### Masters & cards
 - **O-21** (2026-09-18) — A FREE block bar (Beast Meld-class) and `chosen` (Seduction-class) have tags but no consumer; crypt text is hand-curated (20 entries), no passive-shape auto-extractor [CL 24c, 24l].
-- **O-22** (2026-09-21) — Villein is the biggest uncurated gap in TWD 2019+ libraries; the V5 wave size (5 decks at a time vs 1) is undecided; the card ledger (spec-cleanup T2) should make it cheaper [CL 65c, spec-cleanup §7.2].
+- **O-22** (2026-09-21) — Villein is the biggest uncurated gap in TWD 2019+ libraries; the V5 wave size (5 decks at a time vs 1) is undecided; the card ledger (spec-cleanup T2) should make it cheaper [CL 65c, spec-cleanup §6.2].
 - **O-23** (2026-10-16) — Wasserschloss Anif's burn-it action and Haven Uncovered's host burning the card are not built; Ventrue HQ is locked only in own referendums [spec-r4 §3].
 - **O-24** (2026-10-19) — Both Pentex spellings in one game are two cards to `_uniqueInPlay` [spec-cards §5].
 
@@ -210,7 +211,8 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **O-25** (2026-09-25) — Whether the bot ASKS in chat or only LOGS number mismatches with a human (the event-log / shadow-model design) [mem 25 Sep].
 - **O-26** (2026-10-16) — A `reduce N` chat line before the client's Reduce row exists — proposed, unanswered [journal 16 Oct].
 - **O-27** (2026-10-17) — The probe default and the chat beat have not been seen by a human at a table; main's second idea (delay the panel) is the reserve [journal 17 Oct].
-- **O-28** (2026-10-20) — The clean-up's decisions §9: the journal's future, READ-ME-FIRSTs, the read-only copies vs the root, CI for `bot/`, history comments, the project instruction [spec-cleanup §9].
+- **O-36** (2026-10-17) — Between bots a contested block's verdict waits for the actor's clock (~3 s at the arena's askSecs; by design in R4, nobody declares it sooner): keep, or shorten? [context 17 Oct, `ana-windows.py`'s "contest at the clock" rows].
+- **O-28** (2026-10-20) — The clean-up's decisions (spec-cleanup §8): Q2 the journal's future (frozen in `history/` by C1, nothing new written), Q4 the read-only copies vs the root (asked of main), Q5 CI for `bot/`, Q6 history comments, Q7 paste the project instruction; Q1 (go on C1) and Q3 (stop READ-ME-FIRSTs) were applied by C1 [spec-cleanup §8].
 
 ### Plan & strategy
 - **O-13** (2026-09-18) — `H = 3` and the grinding quota holding only while `myTto ≤ 2H` in `_strategize` were changed before measurement; never confirmed [CL 10, 17, 68].
@@ -222,4 +224,4 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **O-29** (2026-09-18) — Persona thresholds inside the tactics (more added since, `P.aggression >= 1.2`); `aggression` is temperament, not experience — the persona pass [CL 2, 68, 69i].
 - **O-30** (2026-09-21) — Should the experience levels GATE the knowledge (novice disciplines only, experienced starters, expert TWD odds)? [mem 21 Sep].
 - **O-31** (2026-09-21) — The meta levers: the BOUNCE TARGET toward the table threat, `crossRushWeight` (0), `planFloor` computed but not consumed — layer 3, after the playbooks [CL 16, 9].
-- **O-32** (2026-10-20) — The abstract-model spec to read and "kör" on [mem 19–20 Oct, spec-cleanup §7.1].
+- **O-32** (2026-10-20) — The abstract-model spec to read and "kör" on [mem 19–20 Oct, spec-cleanup §6.1].

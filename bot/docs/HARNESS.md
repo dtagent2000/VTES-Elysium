@@ -57,8 +57,8 @@ Tradition's title were layer-3 misses).
 3. Copy the bundle from `bot/` to the repository root (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.js`,
    `elysium-twd-archetypes.json/.js`, `START-HERE-BOTS.html`); never edit the root in place. `START-HERE-BOTS.html`'s version
    chip and footer.
-4. STATUS rewritten; `bot/README.md`'s version line; a HANDOFF to main only when main must act (re-embed the guide, a new bot
-   line in §12, a client change).
+4. STATUS rewritten (`tools/doc-budget.sh` checks its versions against the code); a HANDOFF to main only when main must act
+   (re-embed the guide, a new bot line in §12, a client change). README and START-HERE-BOTS-CHAT carry no versions.
 5. The PR body = the record. No READ-ME-FIRST, no journal entry, no context block (retired 20 Oct 2026; their history is in
    `docs/history/`).
 
@@ -71,3 +71,12 @@ round (its items built or declined) and the handoff moves to `history/handoffs/`
 The read-only copies in `bot/` (`elysium-vtes-bord.html`, `elysium-server.js`, `ELYSIUM-PROTOCOL.md`, `elysium-hotseat-bots-plan.md`)
 are refreshed by copying the root's release in, as a commit of their own ("copies: client vX / srv-Y"). The canary runs against
 both the copies and the root. STATUS names both versions.
+
+## Upkeep (between rounds, or when a check says so)
+- **Every docs change:** `bash tools/doc-budget.sh` green (budgets, named paths, the versions STATUS names).
+- **When a page nears its budget:** cut what is history (it goes to `docs/history/` or stays in git), never a binding rule.
+  LESSONS takes a new line only for a new class; BOARD lines that are done are deleted, not ticked.
+- **Every few rounds:** read RULINGS' Open lines with Johan (an answer moves the line up as an R or D line with its date); read
+  BOARD top to bottom and drop what no longer matters; refresh the read-only copies when the root has moved.
+- **Three egress findings of one class** become a rule in CLAUDE.md or a LESSONS line (the ratchet).
+- **History comments** in `elysium-bot.js`: trim to a "why" + a rule id in the functions a round touches (spec-cleanup §8 Q6).

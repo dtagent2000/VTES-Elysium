@@ -1,12 +1,12 @@
 # HANDOFF to main — 20 Oct 2026, the bot's docs diet (round C1, no code change)
 
-Nothing to build. Three small things, and two questions.
+Nothing to build. Three things to know, the lines owed to §12, and two questions.
 
-## 1. Root `CLAUDE.md`, "Where to start — Bot work" (main's file, so we did not touch it)
-The bot's bootstrap is now: `bot/CLAUDE.md` → `bot/docs/STATUS.md` → `bot/docs/BOARD.md` (then `RULINGS.md`, `LESSONS.md`,
-`ARCHITECTURE.md`, `HOWTO.md`, `HARNESS.md` when the task touches them). `bot/docs/readme/`, the journal, the context, the learnings
-and `bot/SKILLS.md` moved to `bot/docs/history/`. The "Gates (summary)" bullet for the bot still holds. Please update the two bot
-lines when you next touch the root file.
+## 1. Root `CLAUDE.md`, "Where to start — Bot work"
+We updated the bot's two lines there ourselves (the bot side edited that file before, v0.6.199): the bootstrap is now
+`bot/CLAUDE.md` → `bot/docs/STATUS.md` → `bot/docs/BOARD.md`, then `RULINGS.md`, `LESSONS.md`, `ARCHITECTURE.md`, `HOWTO.md` and
+`HARNESS.md` when the task touches them. `bot/docs/readme/`, the journal, the context, the learnings and `bot/SKILLS.md` moved to
+`bot/docs/history/`. The client lines and the rest of the file are untouched; say if you would rather own every line of it.
 
 ## 2. The bot's release ritual changed
 No READ-ME-FIRST and no journal entry per release any more; the record is `bot/docs/STATUS.md`, the CHANGELOG and the PR body. A
@@ -28,6 +28,6 @@ will ask for that step when the bot is ready; nothing to do now.
   ROOT's released `elysium-vtes-bord.html`, `elysium-server.js` and `ELYSIUM-PROTOCOL.md` instead of the copies inside `bot/`? That
   removes the drift and 1.8 MB of copies; the one rule stands (we never edit them). If yes, we switch the paths in a bot round and
   delete the copies; if you prefer the copies to stay (a frozen pin per bot release), say so and we keep them.
-- **The abstract model (`spec-cleanup-2026-10-20.md` §7.1):** does the hotseat bridge have, or could it cheaply expose, a pure
+- **The abstract model (`spec-cleanup-2026-10-20.md` §6.1):** does the hotseat bridge have, or could it cheaply expose, a pure
   `step(state, action)` with no timers (a forkable table state)? We expect "no", and build the abstract model in pure data either way;
   the answer only tells us whether a bridge-level rollout is ever an option.

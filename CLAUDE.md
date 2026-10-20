@@ -26,9 +26,9 @@ client, server and start scripts from `client/` to `/`. Nothing at the root is e
 (main's gate) is the place to assert the root matches the two halves.
 
 ## Where to start
-- Bot work: `bot/CLAUDE.md` (the session bootstrap, the version handshake, every gate), then
-  `bot/docs/readme/READ-ME-FIRST-<latest>.md`, `bot/docs/elysium-bot-session-journal.md` (newest first),
-  `bot/docs/elysium-bot-project-context.md`, `bot/docs/elysium-bot-learnings.md`, `bot/SKILLS.md`.
+- Bot work: `bot/CLAUDE.md` (the rules: bootstrap order, gates, the round), then `bot/docs/STATUS.md` (now) and
+  `bot/docs/BOARD.md` (the asks); `bot/docs/RULINGS.md`, `LESSONS.md`, `ARCHITECTURE.md`, `HOWTO.md` and `HARNESS.md` when the
+  task touches them. The journal, the READ-ME-FIRSTs and the old bootstrap are in `bot/docs/history/` (20 Oct 2026).
 - Client work: `client/CLAUDE.md` and `client/docs/` (main's own bootstrap, journal, learnings, backlog).
 
 ## Gates (summary — the full lists live in each half's CLAUDE.md)

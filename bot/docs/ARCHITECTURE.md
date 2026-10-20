@@ -23,7 +23,7 @@ speech      note() (log tier, events) · chat() (questions and instructions to a
 pacing      _pace(kind) / _afterBeat ; the tempo (_waitPlan) ; the hold (_holdFreeze / _holdThaw) ; status() / step() for the
             Bot button
 trace       emit(kind, data) → the arena's / sim's match-NNNN.jsonl (manifest, snapshot, decide, play, plan, through, blocked,
-            block-made, combat-round, wait, …; ~80 kinds)
+            block-made, combat-round, wait, …; 84 kinds)
 ```
 The three rules that keep the layers apart: tactics READ the plan and never recompute it; every read about an opponent goes
 through `this.opp[seat]` (public evidence only); a decision knob gates decisions only (CLAUDE.md, binding rules).
@@ -59,7 +59,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | `elysium-bot-arena.js` | bots on a real spawned server (real clocks; the timing truth) |
 | `elysium-bot-table.js` | seat bots at a live table |
 | `elysium-bot-diag.html`, `diag-hb1-smoke.js` | the browser battery (HB1) |
-| `test-bot-logic.js` | the suite (~2,244 assertions in ~160 numbered sections; live sections spawn the server) |
+| `test-bot-logic.js` | the suite (2,244 assertions at v0.6.211, sections numbered up to 157; live sections spawn the server) |
 | `test-bot-canary.js` | the §12 grammar contract against the client html + protocol |
 | `test-cardfx.js` | the compiler's contract (needs `vtes.json`) |
 | `test-bot-hotseat.js` | the hotseat gate (H1–H11) |
@@ -76,7 +76,9 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
   (a belt timer of 60 % of askSecs, min 1.2 s). A bot spawned without `deckName` infers its deck from the object / printed name /
   exact list (explicit wins; the built-in default gets none). The browser load: `o.transport` injects the dial, `o.cardfxData` the
   parsed fx; suite section 75 is the browser gate (a vm sandbox with zero Node globals) and 75d pins the IIFE against a client-page
-  top-level collision. The sim and the hotseat gate drive this bridge headless.
+  top-level collision. The sim and the hotseat gate drive this bridge headless. A known asymmetry, left in deliberately (70g):
+  the no-server net keys on `joined.srv`, not on what the bridge relays, so with *Pool to predator* OFF a bot predator marks the
+  human out and takes the 6 pool by itself offline, while online it does neither; revisit if main or a tester objects.
 - **Human tables**: the tempo (Standard / Adaptive / Turn-based), the hold, the chat beat, one spokesbot, the debug hand.
   Nothing here reaches the arena or the sim (paceMs 0 zeroes every beat; bots never operate the hold).
 
@@ -95,6 +97,8 @@ node elysium-bot.js --server ws://HOST:8123 --room R --pass P [--persona expert]
 (parity) · `elysium-cardfx-design.md` + `cardfx-persistent-lock-design-decisions.md` + `cardfx-sweep-audit.md` (cardfx) ·
 `spec-knowledge-layer.md` (K0–K2, the TWD prior) · `elysium-bot-helper-gate-decision.md` · `elysium-bot-feedback-loop-spec.md` ·
 `elysium-arena-observability-plan.md` · `elysium-bot-influence-planner-spec.md` · `elysium-bot-phase-income-v2-plan.md` ·
-`spec-cleanup-2026-10-20.md` (the four projects' review, the clean-up, the abstract model's place). Two design documents still live
-outside git (Claude Docs, 25 Sep: the event log / shadow model / knowledge sources / bench design, and the cardfx sweep's source
-mapping) — BOARD.
+`spec-cleanup-2026-10-20.md` (the four projects' review, the clean-up, the abstract model's place) · `spec-block-bar-2026-09-18.md`
+(the block-bar line, still owed to main's §12) · `spec-event-log-design-2026-09-25.md` (the event log, episodes in shadow mode,
+real-time invariants, the bench; a status table on top) and `spec-cardfx-sweep-sources-2026-09-25.md` (KRCG, vtes-rulings and
+vtes-skill mapped onto the cardfx fields; the method for graded readings) — both copied from Johan's Claude Docs of 25 Sep
+([event log design](https://claude.ai/artifact/S5PiF7x5PhpU4JSSQgp9Dx), [sweep mapping](https://claude.ai/artifact/AGzYhap2bMyc4vwhRFzUUj)).

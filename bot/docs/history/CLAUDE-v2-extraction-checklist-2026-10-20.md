@@ -5,7 +5,7 @@
 | 1–5 header, the 12 Oct git note, the "read these FIRST" line | CLAUDE.md "Bootstrap"; the git-era facts in root CLAUDE.md |
 | 7–12 the split and THE RULE | CLAUDE.md "The one rule"; RULINGS D-85 |
 | 14 the version handshake: the current release (v0.6.211) | STATUS "Last gates", "What v0.6.211 did" |
-| 14 the handshake: v0.6.112–210 | history (this folder; every release is also in the CHANGELOG) |
+| 14 the handshake: v0.6.112–210 | `handshake-v0.6.112-v0.6.211.md` here (one release per line); every release is also in the CHANGELOG |
 | 14 the plan rule (v0.6.119c) | CLAUDE.md binding rules, "the plan rule" |
 | 14 the arena rule (a detached series dies at a turn boundary) | retired with the chat sandbox; CLAUDE.md "Gates" says detached + `run_in_background`; HOWTO "Running" |
 | 14 the table-model rule (v0.6.118) | CLAUDE.md "the table-model rule" |
