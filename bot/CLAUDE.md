@@ -101,7 +101,7 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   the merits; the structured narration (`Phase:` lines, own stealth / intercept on the shared tally, the §12 verdict at the clock)
   is the bot's own protocol and unconditional. `caps.tally` is diagnostic only. Before re-adding any gate read
   `docs/specs/elysium-bot-helper-gate-decision.md`.
-- **Lines are the contract, fields the accelerator (main, 23 Sep).** [D-27, L-57] Every combat decision taken from a tally field has a line
+- **Lines are the contract, fields the accelerator (main, 23 Sep).** [D-27, D-94, L-57] Every combat decision taken from a tally field has a line
   fallback (range from `maneuvers to` / `sets range to`, press from `presses to`, strikes from the strike lines, damage from
   `takes N (…)`); prefer a HUMAN's field when it disagrees with the last line; never require the field. `combatPhases` is not
   built on `ph`.
@@ -128,11 +128,11 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
 - **The ledger gate (v0.6.163).** [R-23; L-33, L-39] An effect that moves something between two bots and shows on only one side is a bug until
   explained. Resolve an effect at its RULES moment, not when its line arrives; pair the rows before accepting an explanation for a
   total; a bleed `through` that no seat took is `VANISHED` (gate 0).
-- **The block gate (v0.6.170, Johan: base rules).** [R-12, R-14] Stealth and intercept are spent only when needed: the actor plays stealth only
+- **The block gate (v0.6.170, Johan: base rules).** [R-12, R-14, R-38] Stealth and intercept are spent only when needed: the actor plays stealth only
   after a block attempt and only while intercept ≥ stealth; the blocker plays intercept only while stealth > intercept. Directed
   actions carry 0 stealth; the undirected +1 applies to BASIC actions only (hunt, equip, employ, recruit, political, rescue own
   vampire, leave torpor); an action card is at 0 unless it prints stealth, and its printed "+N stealth action" is the total
-  (cardfx `actStealth`). `ana-block.py` 0 violations.
+  (cardfx `actStealth`). Stealth and intercept can go below 0 (R-38). `ana-block.py` 0 violations.
 - **The ahead rule (v0.6.152).** [D-14, D-15, R-16] While the block counter reads a > b the actor plays NO stealth card; against a human it says
   `<vamp> currently has N stealth — …` once per (blocker, a, b) and waits for the counter. The first look against a human runs
   AFTER the reaction beat; second-look stealth, the blocker's intercept card and cancel-block land after the beat and are re-checked

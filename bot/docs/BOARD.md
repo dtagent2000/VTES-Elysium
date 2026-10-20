@@ -6,7 +6,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks (Gangrel) and the TWD profile can
   price it by what the table's decks deal. *Done when* the equipment scorer reads an expected-damage share for the table's decks
-  and a pinned bench shows no loss. Docs: RULINGS D-52, O-11; `specs/spec-knowledge-layer.md`.
+  and a pinned bench shows no loss. Docs: RULINGS D-52; `specs/spec-knowledge-layer.md`.
 - **The prey's wakes as blockers** (65f): the probe lab lost on five tables of 91 where a prey with one body and a wake blocked
   the prober and woke for the punch. *Done when* `probeHold`'s out-number reads unlocked bodies + expected wakes (deck read +
   hypergeometric), measured in `lab-probe.js`. Docs: RULINGS O-7; `specs/spec-knowledge-layer.md`.
@@ -33,7 +33,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   a card name only another seat's hand or library held, with a planted leak as the positive control; `_twdExpect` agrees across
   observers), flip counts on `decide` rows for a knob under test, the knob and weight registry (`KNOBS`, one table, every decision
   knob with a 0-path, persona thresholds as overlays), and the off-by-default knobs (`planFloor` computed not consumed,
-  `askHumansTotal` blocked by the human harness, `crossRushWeight` 0): wire each or delete its dead branch. *Done when*
+  `askHumansTotal` blocked by the human harness; `crossRushWeight` 0 is Johan's "cross soft-zero", wired only with the meta layer, O-31):
+  wire each or delete its dead branch. *Done when*
   `test-bot-sim-boundary.js` is green on 24 matches and red on the planted leak; the manifest emits the registry. Docs: spec T5,
   T7, T9; RULINGS O-2, O-29, O-31.
 - **C6 — the faster suite**: ~87 % of the suite's time is its own sleeps (151 s of literal `sleep`s in the 400 no-server sections);
@@ -49,7 +50,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   (no drift, 1.8 MB fewer); (b) has the hotseat bridge, or could it expose, a pure `step(state, action)`; (c) the bot-emitted frozen
   lines owed to §12 + the canary (STATUS lists them) — all three in `handoffs/HANDOFF-to-main-2026-10-20-docs-diet.md`; (d) the
   client locks all helpers on while a bot is seated until the bot proves a whole combat on lines alone — ask for that step when
-  ready. *Done when* main has answered (a)–(c). Docs: spec §8 Q4, §6.1; RULINGS D-62.
+  ready. *Done when* main has answered (a)–(c). Docs: spec §8 Q4, §6.1; RULINGS D-62, D-94.
 - **History comments in `elysium-bot.js`** (222 KB citing versions and dates): trim to trap comments ("why" + a rule id) in
   functions a round touches (spec §8 Q6, recommended (b)); a mechanical pass only if the bundle size matters to players, verified
   by identical minified output. *Done when* Johan has chosen; then per round. Docs: spec §8 Q6.
@@ -75,8 +76,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* each is fixed or measured. Docs: `history/specs/spec-home-pricing-2026-09-19.md`.
 - **`_wakeCard()` is vampire-blind** at the bounce, vote and reduce routes and in `interceptPotential` (`_wakeCardFor(v)` exists).
   *Done when* every site reads the vampire.
-- **Hidden Strength's aggravated-first** needs an aggravated flag in the strike reading; Second Tradition's second mode has unit
-  coverage only. *Done when* the strike reading carries aggravated and a whole-turn section covers both. Docs: RULINGS O-6.
 - **Free block bars** (Beast Meld-class) and `chosen` (Seduction-class) have tags, no consumer; crypt text auto-extraction for
   passive shapes not built. *Done when* a V5 wave needs them and the ledger lists them playable. Docs: RULINGS O-21.
 - **Bot diablerie** (the fixed-vote-majority rule). *Done when* Johan schedules it. Docs: RULINGS O-15.
@@ -108,5 +107,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   per bleed total). *Done when* both reports exist with the sim as the first read.
 - **Forecast calibration** (`gen-forecast-calibration.js`) not re-run since 18 Sep; the seed of the abstract model's calibration
   gate. *Done when* it runs on a sim series and the ratio is reported.
-- **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) not consumed in a bot round. *Done when* each reply's
-  bot-side items are built or declined in a handoff.
+- **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) not consumed in a bot round; v0.6.207's reply carries
+  Johan's negative stealth / intercept (R-38): check every reader of `tally.a` / `tally.b` that assumed ≥ 0. *Done when* each
+  reply's bot-side items are built or declined in a handoff.

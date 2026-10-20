@@ -30,7 +30,7 @@ fresh; pad "$T/CLAUDE.md" 12000;                                                
 fresh; python3 -c "
 import os, sys
 T = sys.argv[1]
-for f, lim in [('CLAUDE.md', 25000), ('docs/STATUS.md', 5000), ('docs/BOARD.md', 15000), ('docs/RULINGS.md', 36000),
+for f, lim in [('CLAUDE.md', 25000), ('docs/STATUS.md', 5000), ('docs/BOARD.md', 15000), ('docs/RULINGS.md', 42000),
                ('docs/LESSONS.md', 20000), ('docs/ARCHITECTURE.md', 15000), ('docs/HARNESS.md', 8000), ('docs/HOWTO.md', 20000)]:
     p = os.path.join(T, 'bot', f); n = os.path.getsize(p); open(p, 'a').write('x' * max(0, lim - 50 - n))
 " "$T";                                                                                     run "the total over 140 KB, each page within its own"

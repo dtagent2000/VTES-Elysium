@@ -48,7 +48,7 @@
 | 250–264 debts 56–59 (the defence doctrine, the late bounce, bal6/bal7) | RULINGS D-2, D-3, D-4, O-1, O-2; history |
 | 265–289 debts 51–55 (the stealth-bleed doctrine, the second look, the probe rule, bal5) | RULINGS D-11, D-12, D-13, R-13; history |
 | 290–302 debts 47–50 (bal3/bal4, Freak Drive, act-again survival) | RULINGS D-48; LESSONS "find the binding term"; history |
-| 303–316 debts 44–46 (the freeze, Second Tradition, Hidden Strength, Ventrue's gaps) | RULINGS R-11, D-22, O-6; CLAUDE.md "The pool rule" (every pool loss has the oust check); BOARD; history |
+| 303–316 debts 44–46 (the freeze, Second Tradition, Hidden Strength, Ventrue's gaps) | RULINGS R-11, D-22 (O-6 retired 20 Oct); CLAUDE.md "The pool rule" (every pool loss has the oust check); BOARD; history |
 | 317–324 debt 43 (the goal, deck feel, the observability gap) | CLAUDE.md "The goal"; RULINGS D-76; history |
 | 325–350 debts 36–42 (home pricing, the critical pool, the racing rule, home2) | RULINGS D-46, D-47, D-49, D-50; BOARD (the 42c soft spots); LESSONS "Reading traces"; `history/specs/spec-home-pricing-2026-09-19.md` |
 | 351–366 debts 33–35 (the balanced baseline, the Blood Doll loop, deck fit) | RULINGS D-44, D-45, D-75, D-89; LESSONS "find the general measure"; history |
