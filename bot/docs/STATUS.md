@@ -2,7 +2,8 @@
 
 **Bot v0.6.211** (19 Oct 2026, PR #37 merged 20 Oct) · arena v1.4.8 · sim table v1.0.1 · cardfx compiler v1.9.3, curated 105 ·
 hotseat tool v1.3.0 · coverage tool v1.1.38 · built against client **v2.6.167** / srv-2.6.49 (the root's release); the read-only
-copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; refresh by copying the root's files in).
+copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS, "the handshake with the
+client's versions").
 
 **Deploy state:** the root carries the v0.6.211 bundle (byte copies; main's `check-versions.js` agrees).
 

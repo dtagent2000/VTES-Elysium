@@ -16,9 +16,20 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   the other `elysium-bot.js`). Traces are arena-shaped (`match-NNNN.jsonl`, a `result` row), ~0.5 MB each — keep series in scratch.
   SUMMARY.md lists post-game ousts and the `zeroPool` count (a bot deciding at pool ≤ 0 before its own oust = a rules fault). When a
   footprint shows DIVERGED, check whether the two decision sequences realign once one missing row is dropped.
-- **The suite, frozen** — `snap-suite.sh <label>` (scratch): `tar --exclude='./serie-*' --exclude='./bench-*'` `bot/` to
-  `snap-<label>/`, write the sha256 of the bot, the suite and the cardfx beside the log, run `timeout 600 node test-bot-logic.js`
-  THERE, detached, and poll; three in a row = the ×3 gate, and the PR quotes the sha that ran. ~300–420 s a run; one at a time.
+- **The suite, frozen** (the ×3 gate; three snapshots in a row, one run at a time, ~300–420 s each), from the repo root:
+  ```
+  S=<a scratch dir>; L=r1; D=$S/snap-$L; rm -rf $D; mkdir -p $D/bot; cp elysium-vtes-bord.html $D/     # root client one level up: 154f
+  (cd bot && tar --exclude='./serie-*' --exclude='./bench-*' -cf - .) | tar -xf - -C $D/bot
+  cd $D/bot && sha256sum elysium-bot.js test-bot-logic.js elysium-cardfx.json > ../sha.txt
+  timeout 600 node test-bot-logic.js > ../suite.log 2>&1; echo "EXIT $?" >> ../suite.log      # run_in_background, then poll
+  ```
+  The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran.
+- **The canary against main's release** (the second canary run): a scratch dir with `bot/test-bot-canary.js`, `bot/elysium-bot.js`,
+  the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; `node test-bot-canary.js` there.
+- **Main's client suite beside the release bytes** (when the wire or the timing changed): a scratch copy of `client/` (never the
+  real one — THE RULE), the bot bundle from `bot/` copied into it (`elysium-bot.js`, `elysium-cardfx.json/.js`,
+  `elysium-twd-profile.json/.js`, `elysium-twd-archetypes.json/.js`, `START-HERE-BOTS.html`), then `node test-client-logic.js`
+  there (main's CI does the same with the root's bundle, `.github/workflows/client-gates.yml`). Its LIVE tests drive the real bot.
 - **One section, any bot** — `bash tools/run-section.sh <bot.js> <section.js> [cardfx.json]`: the suite's own preamble (`ok`,
   `sleep`, `SI`, `mkClient` / `connectWithRetry`) + a fresh server on a random port + the section, in a temp dir. Cut a section from
   its `/* NNN)` line to its OWN closing brace (not to the next `console.log`). Run on the new bytes (green) and on
@@ -38,7 +49,8 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   control (read the pinned deck's seat); an arm below its control is compared with an INERT arm on the same seeds and paired by
   match (`bcN2 − bcN` −0.03 vs `bcN2 − negN2` −0.39); `design-balanced-serie-bal1.txt` is the
   balanced design (6 cyclic orders × 2). The scripts carry chat-era paths (`/home/claude/w`) and read a gitignored
-  `serie-cmb1/design.txt`: fix both before running. A 12-match series supports mechanism counts only.
+  `serie-cmb1/design.txt`: fix both before running (point the `cd` at your `bot/`; `mkdir -p serie-cmb1 && cp
+  design-balanced-serie-bal1.txt serie-cmb1/design.txt`). A 12-match series supports mechanism counts only.
 - **The probe lab** — `node lab-probe.js N SEED ARMS > lab-SEED.jsonl` then `python3 ana-lab.py lab-*.jsonl`: N random tables, one
   minion phase per arm, the same table in every arm (~2 s per table and arm); measures decisions, never the wire's timing.
   Pattern for any once-a-match decision.

@@ -18,7 +18,7 @@ tactics     the finders (_best*For: master, action, political, equip, fetch, ste
 decide      decide(q, ctx) → _decide(q, ctx): one row per real decision (q = action, block-as-target, spend-stealth,
             bleed-modifier, bleed-target, combat-strike, combat-end, act-again, income-drain, income-direction, master-play,
             block-bar, bank-in, spy-cancel, cancel-block, lock-*, give-lock, hunt-or-bleed, wave, react-delay, ashur-retrieve)
-speech      note() (log tier, events) · chat() (questions and instructions to a human) · say() (the frozen phrases) → the send
+speech      note() (log tier, events) · chat() (questions and instructions to a human) · say() (the quick phrases) → the send
             queue (_drain: the 200 ms cascade, the chat beat, the hold) → wire
 pacing      _pace(kind) / _afterBeat ; the tempo (_waitPlan) ; the hold (_holdFreeze / _holdThaw) ; status() / step() for the
             Bot button
@@ -67,6 +67,17 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | `tools/run-section.sh`, `tools/mutants/`, `tools/doc-budget.sh` | one suite section against any bot; mutant isolation; the docs budget |
 | `elysium-vtes-bord.html`, `elysium-server.js`, `ELYSIUM-PROTOCOL.md`, `elysium-hotseat-bots-plan.md` | READ-ONLY copies of the client project's releases |
 
+## Shared with main (who owns what, and where the release lives)
+| Artefact | Owner | Release lives at | In `bot/` |
+|---|---|---|---|
+| `elysium-vtes-bord.html` (the client, `hotBridge`) | main | the root (= `client/`'s release) | read-only copy |
+| `elysium-server.js` | main | the root | read-only copy |
+| `ELYSIUM-PROTOCOL.md` (§12: the frozen bot lines) | main | `client/` | read-only copy |
+| `elysium-hotseat-bots-plan.md` | main | `client/docs/` | read-only copy |
+| `test-bot-canary.js` (pins §12 against the client) | main | `client/` | an identical copy, refreshed with the others |
+| The bot bundle (`elysium-bot.js`, cardfx, the TWD files, `START-HERE-BOTS.html`) | bot | `bot/` → copied to the root | the source |
+| Root `CLAUDE.md` | shared: each side edits its own lines | the root | — |
+
 ## The three environments
 - **Online** (the server): the ledger narrates every resource change; `tally` and `bounty` are relayed; the bot is a remote
   player. The arena spawns this server.
@@ -88,6 +99,14 @@ node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 1 --
 node elysium-bot-arena.js --matches 1 --bots 4 --decks malkavian,tremere,nosferatu,ventrue --start-pool 30 --seed 4003 --trace /tmp/serie-x
 node elysium-bot.js --server ws://HOST:8123 --room R --pass P [--persona expert] [--debug]              # seat one bot at a live table
 ```
+
+## Words a new session meets
+**kör** — Johan's go-ahead. **§12** — the protocol's section of frozen bot lines (main's). **L12** — the bot's table of parsers
+for those lines. **HB1** — the browser battery (`elysium-bot-diag.html`). **R1–R4** — the rounds of the 14 Oct play-test review.
+**CL n / 64a / 65f** — a debt number of the old bootstrap (`history/CLAUDE-v2-2026-10-20.md`). **The stable** — the four V5
+starters. **240 last-standing** — the sim's 240-match client design (every seating × 10 deals) all played to one survivor.
+**Pinned** — a bench arm whose variant sits on one deck only. **Negative control** — A vs A, the bench's noise floor.
+**Egress review** — a fresh-context agent's review of a round's diff (HARNESS). **Footprint** — the matches a change DIVERGED.
 
 ## Design canon (the standing specs in `docs/specs/`)
 `elysium-bot-spec.md` (the original) · `elysium-bot-strategy.md` (the plan) · `elysium-bot-table-model-spec.md` ·

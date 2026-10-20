@@ -2,7 +2,7 @@
 # doc-budget.sh -- the standing pages' check (spec-cleanup-2026-10-20.md §5.3). Run from anywhere; exit 1 on any failure.
 #   1. each standing page within its byte budget; the bootstrap (root CLAUDE.md + bot/CLAUDE.md + STATUS + BOARD) <= 50 KB;
 #      every standing page together <= 140 KB;
-#   2. every repo path named (in backticks) in a standing page exists;
+#   2. every repo path named (in backticks) in a standing page, and every bot/ path in the root CLAUDE.md, exists;
 #   3. every version STATUS.md names agrees with the code: BOT_VERSION, the arena, the sim, the cardfx compiler, the hotseat
 #      tool, the coverage tool, the read-only client / protocol / server copies in bot/ and the root's client / server.
 # Portable to bash 3.2 (macOS): no associative arrays.
@@ -39,7 +39,7 @@ for pb in $PAGES; do
       client-old.html|old-bot.js|elysium-soak-hotseat.js|elysium-test-harness.js|check-versions.js|bot-gates.yml) continue ;;
       timing-windows.md|card-text-parsing.md|elysium-history-2026-09-09.md) continue ;;
     esac
-    p="${p#bot/}"; p="${p%/.js}"                       # a leading bot/; the "x.json/.js" shorthand
+    p="${p#bot/}"; p="${p%/.js}"; p="${p%/.json}"     # a leading bot/; the "x.json/.js" and "x.js/.json" shorthands
     case "$p" in deck-*/*.json) continue ;; esac       # the "deck-a/b/c.json" shorthand
     case "$p" in REPLY-to-bot-*) [ -e "$R/client/docs/handoffs/$p" ] && continue ;; esac   # main's replies live in client/
     found=0
@@ -49,7 +49,12 @@ for pb in $PAGES; do
     [ "$found" = 1 ] || { bad "$(basename "$f") names $p, which does not exist"; missing=1; }
   done < <(grep -o '`[A-Za-z0-9_./-]*`' "$f" | tr -d '`' | sort -u)
 done
-[ "$missing" = 0 ] && ok "every path named in a standing page exists"
+# ... and the bot paths the root CLAUDE.md names (the first file of every bootstrap)
+while read -r p; do
+  q="${p#bot/}"
+  [ -e "$B/$q" ] || { bad "root CLAUDE.md names $p, which does not exist"; missing=1; }
+done < <(grep -o '`bot/[A-Za-z0-9_./-]*`' "$R/CLAUDE.md" | tr -d '`' | grep -v '[<>*]' | sort -u)
+[ "$missing" = 0 ] && ok "every path named in a standing page (and every bot/ path in the root CLAUDE.md) exists"
 
 # 3. the versions STATUS names (STATUS read with * and ` stripped)
 st=$(tr -d '*`' < "$D/STATUS.md")

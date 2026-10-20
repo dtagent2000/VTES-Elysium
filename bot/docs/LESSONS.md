@@ -29,7 +29,7 @@
 - L-24 **Source-shape assertions are tripwires for insertion order** (18 Sep, 80e) and the suite guards the docs too (15 Sep).
 
 ## Timing
-- L-25 **No await between a line and the window it opens** (17 Oct): a 150 ms sleep lost answers at pace 0 for four weeks (v0.6.144 → v0.6.206); two windows in three ran out their clock.
+- L-25 **No await between a line and the window it opens** (17 Oct): a 150 ms sleep before the window lost answers at pace 0 for four weeks (v0.6.144 → v0.6.206; the pacing sleeps after a window stay); two windows in three ran out their clock.
 - L-26 **A guard about what the table has seen keys on the line the answer answers, not on my queue** (17 Oct).
 - L-27 **A wait's clock starts when its question reaches the wire; a send queue is not a timeline** (15–16 Oct).
 - L-28 **Time the whole flow, not the wait you changed** (9 Oct); a shortened wait that was somebody's only window becomes an asked step.

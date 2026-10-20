@@ -32,7 +32,7 @@ client, server and start scripts from `client/` to `/`. Nothing at the root is e
 - Client work: `client/CLAUDE.md` and `client/docs/` (main's own bootstrap, journal, learnings, backlog).
 
 ## Gates (summary — the full lists live in each half's CLAUDE.md)
-- Bot: `node --check` on every changed file → `test-bot-logic.js` ×3 (≈300 s; run detached with `timeout 600` and
+- Bot (the complete list: `bot/CLAUDE.md` "Gates"): `node --check` on every changed file → `test-bot-logic.js` ×3 (≈300–420 s; run detached with `timeout 600` and
   poll) → `test-bot-canary.js` (needs the released client + protocol beside it — the copies in `bot/`) →
   `test-cardfx.js` when cardfx changed (needs `vtes.json` beside it — download it into `bot/` first, see below) → `diag-hb1-smoke.js` when the
   bot's browser surface changed → `test-bot-hotseat.js` when anything near the hotseat bridge changed.

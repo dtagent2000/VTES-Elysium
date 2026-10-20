@@ -6,14 +6,12 @@
    the way may ride in the round when they fit (the combining rule, RULINGS D-92); say so in the PR.
 2. **Branch** from `main` (`git checkout -b <topic>`). Never on `main`.
 3. **Change.** Rules corrections never behind a knob; decision changes behind a knob with a 0-path (CLAUDE.md, knob hygiene).
-   A new frozen line: its parser, its `_evClassify` kind and its canary case in the same release. A new wait on a human: the
-   tempo kind, the hold freeze / thaw, the `status()` / `step()` rung. A new combat event: its phrase, its parser in
-   `_parseCombatNarration`, its section through `_onLog`.
+   A new frozen line: its parser and its `_evClassify` kind in the same release; its §12 entry and canary case are main's (a
+   handoff; ARCHITECTURE "Shared with main"). A new wait on a human: the tempo kind, the hold freeze / thaw, the `status()` /
+   `step()` rung. A new combat event: its frozen line, its parser in `_parseCombatNarration`, its section through `_onLog`.
 4. **Tests first for the destructive proof:** a new section is run against the pre-change bot with `tools/run-section.sh` (red),
-   then the new bytes (green). Then the gates (CLAUDE.md "Gates"): `node --check` → the suite ×3 in frozen snapshots, detached →
-   canary (both client copies) → cardfx / HB1 / hotseat when touched → a sim footprint (`ana-sim-diff.py` against the previous
-   bytes on the 240-match client design; the audits on the diverged matches) → an arena smoke when the change touches the wire
-   or the real clock. Never claim a gate passed without having run it; a gate that could not run is said so in the PR.
+   then the new bytes (green). Then every gate CLAUDE.md "Gates" lists for the change (that list is the complete one). Never
+   claim a gate passed without having run it; a gate that could not run is said so in the PR.
 5. **Commit and push as soon as a step is green** — context can run out. Small commits, English messages, the version in the
    message when it is a release.
 6. **Egress review** (fresh context, see below). Its findings are fixed or listed in the PR body.
@@ -59,8 +57,9 @@ Tradition's title were layer-3 misses).
    chip and footer.
 4. STATUS rewritten (`tools/doc-budget.sh` checks its versions against the code); a HANDOFF to main only when main must act
    (re-embed the guide, a new bot line in §12, a client change). README and START-HERE-BOTS-CHAT carry no versions.
-5. The PR body = the record. No READ-ME-FIRST, no journal entry, no context block (retired 20 Oct 2026; their history is in
-   `docs/history/`).
+5. The PR body = the record. No READ-ME-FIRST and no journal or context entry, as spec-cleanup §5.5 lays out; their history is
+   in `docs/history/`. Johan's answers to §8 Q2 / Q3 are open (RULINGS O-28): Q2 (b) would add a short Swedish decision log,
+   ≤ 10 lines a round, outside the bootstrap.
 
 ## When main must act
 Write `docs/handoffs/HANDOFF-to-main-<date>-<version>.md`: the need, the frozen line or verb, the backward-compatibility
@@ -68,12 +67,14 @@ reading, what the bot already does. Main replies in `client/docs/handoffs/REPLY-
 round (its items built or declined) and the handoff moves to `history/handoffs/`. Never both halves in one PR.
 
 ## The handshake with the client's versions
-The read-only copies in `bot/` (`elysium-vtes-bord.html`, `elysium-server.js`, `ELYSIUM-PROTOCOL.md`, `elysium-hotseat-bots-plan.md`)
-are refreshed by copying the root's release in, as a commit of their own ("copies: client vX / srv-Y"). The canary runs against
-both the copies and the root. STATUS names both versions.
+The read-only copies in `bot/` are refreshed from main's release, as a commit of their own ("copies: client vX / srv-Y"):
+`elysium-vtes-bord.html` and `elysium-server.js` from the root, `ELYSIUM-PROTOCOL.md` and `test-bot-canary.js` from `client/`,
+`elysium-hotseat-bots-plan.md` from `client/docs/` (ARCHITECTURE "Shared with main"). The canary runs against both the copies and
+main's release (HOWTO). STATUS names both versions; `tools/doc-budget.sh` checks them.
 
 ## Upkeep (between rounds, or when a check says so)
-- **Every docs change:** `bash tools/doc-budget.sh` green (budgets, named paths, the versions STATUS names).
+- **Every docs change:** `bash tools/doc-budget.sh` green (budgets, named paths, the versions STATUS names); after changing
+  the check itself, `bash tools/test-doc-budget.sh` (every failure class red, the baseline green).
 - **When a page nears its budget:** cut what is history (it goes to `docs/history/` or stays in git), never a binding rule.
   LESSONS takes a new line only for a new class; BOARD lines that are done are deleted, not ticked.
 - **Every few rounds:** read RULINGS' Open lines with Johan (an answer moves the line up as an R or D line with its date); read

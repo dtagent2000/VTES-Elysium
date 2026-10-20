@@ -16,7 +16,8 @@ git, `docs/elysium-bot-CHANGELOG.md` and `docs/history/`.
 6. `git checkout -b <topic>` — never work on `main`.
 
 Run every suite and tool from inside `bot/`: the folder is flat on purpose, everything expects its inputs beside it.
-`bot/README.md` maps the files. `tools/doc-budget.sh` checks the standing pages (run it before any docs PR).
+`bot/README.md` maps the files. `tools/doc-budget.sh` checks the standing pages (run it before any docs PR);
+`tools/test-doc-budget.sh` proves it still catches each failure (run it after changing the check).
 
 ## The one rule (ownership)
 `bot/` never edits `client/` or the client/server files at the root. The copies of `elysium-server.js`, `ELYSIUM-PROTOCOL.md`,
@@ -28,21 +29,24 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 `START-HERE-BOTS.html`) to the repository root. Never edit the root in place. (The shipped v0.6.211 line still carries its note;
 the version-only line applies from the next release.)
 
-## Gates (the bot's own battery; the numbers in STATUS are the last known green)
+## Gates (the one complete list; HARNESS and the root CLAUDE.md point here; STATUS has the last known green numbers)
 - `node --check` on every changed file.
 - `node test-bot-logic.js` ×3, ALONE, each run in a frozen snapshot (HOWTO: "a frozen snapshot"). ~300–420 s a run: launch it
   detached with `timeout 600` and poll (`run_in_background`); never a foreground `timeout` that can cut a green run. Section 78c
-  (pace scaling) was a timing flake (F-Q2; not seen in ~45 runs by 21 Sep): if it fails, rerun once and say so in the PR. The suite needs every owned file beside it — a missing
-  `elysium-bot-arena.js` aborts and looks like a failure.
+  (pace scaling) was a timing flake (F-Q2; not seen in ~45 runs by 21 Sep): if it fails, rerun once and say so in the PR.
+  The suite needs every owned file beside it — a missing `elysium-bot-arena.js` aborts and looks like a failure.
 - `node test-bot-canary.js` — the §12 grammar contract against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it (the
-  read-only copies); without them it skips loudly, never fakes a pass. Run it a second time against the root's release.
+  read-only copies); without them it skips loudly, never fakes a pass. Run it a second time against main's current release
+  (HOWTO: "the canary against main's release").
 - `node test-cardfx.js` when cardfx changed (needs `vtes.json` beside it — root `CLAUDE.md`, "Data that is not in git").
 - `node diag-hb1-smoke.js` when the bot's browser surface changed (needs `elysium-bot-diag.html` beside it).
 - `node test-bot-hotseat.js` when anything near the hotseat bridge changed.
 - When the wire or the timing changed: main's client suite beside the release bytes (`client/`'s LIVE tests drive the real bot:
-  hotBridge, Hold on, the seat-1 range, the verdict timing); report its count in the PR.
+  hotBridge, Hold on, the seat-1 range, the verdict timing; HOWTO says how); report its count in the PR.
 - A new test is verified DESTRUCTIVELY against the pre-change file (`tools/run-section.sh`, HOWTO). A section that throws on the
   old bytes proves only that a method is new — say so.
+- Every behaviour change: a sim footprint against the previous bytes on the 240-match client design (`ana-sim-diff.py`); a
+  clean-up round must be IDENTICAL. When the wire or the real clock is touched: an arena smoke (one match, the audits below).
 - A series or a bench runs on the sim table first (`elysium-bot-sim.js`, HOWTO); `python3 ana-sim-diff.py A B` before any win
   rate; after a series the audits: `ana-ledger.py`, `ana-block.py` (0 violations), `ana-inv.py`, `ana-windows.py` (lost
   answers 0), and the `zeroPool` count in SUMMARY.md (0). The sim is not a timing gate: the canary, the hotseat gate and the
@@ -83,7 +87,7 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   any knob. A new profile share is APPENDED (readers index `f[0..3]`); a rebuilt profile is first reproduced byte for byte by the
   old script. Bots look away from a seat that announced DEBUG mode.
 - **The tier rule (v0.6.114).** [D-64, L-55] `note()` for events (log tier, no bubble), `chat()` ONLY for questions and instructions to a human,
-  `say()` for the frozen phrases. Before adding a `chat(...)`, ask whether an fx clone or a frozen log line already carries the
+  `say()` for the quick phrases (the `SAY` table: Hold on, No block, Block! …). Before adding a `chat(...)`, ask whether an fx clone or a frozen log line already carries the
   event; if so it is a note or nothing. `fxClone` takes `{ actor: vamp }` for every minion play. A new `note()` text is a LOG line
   other bots' L12 parsers read: check it against `L12.actObs` (`^(.+?) (hunts|plays (.+?))[.!]`) and the frozen §12 shapes; never end
   a note with `plays X.` or `hunts.`.
@@ -91,7 +95,8 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   pool / blood / zone / lock / face change — the bot
   writes no note for an event the play line, the fx clone or the ledger already shows; a note survives only where it explains a
   WHY the table cannot see (Jack ticks, does-not-unlock, Misdirection, an uncurated warning). What a human says aloud is one chat
-  bubble in table words (`_influenceSentence`, `I vote N against.`, `No votes from me.`, `I take N. Pool: X.`).
+  bubble in table words (`_influenceSentence`, `I vote N against.`, `No votes from me.`, `I take N. Pool: X.`). A line another
+  bot must parse is never a duplicate (the combat handshake rule below: v0.6.114 deleted such lines and broke six days of series).
 - **The helper-gate rule (v0.6.113).** [D-63, L-11] Nothing in the bot decides on `caps.tally` or any helper state: game logic is weighed on
   the merits; the structured narration (`Phase:` lines, own stealth / intercept on the shared tally, the §12 verdict at the clock)
   is the bot's own protocol and unconditional. `caps.tally` is diagnostic only. Before re-adding any gate read
@@ -101,10 +106,10 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   `takes N (…)`); prefer a HUMAN's field when it disagrees with the last line; never require the field. `combatPhases` is not
   built on `ph`.
 - **The combat handshake rule (v0.6.156).** [R-28, R-29; L-34, L-35, L-55] Every combat EVENT the opposing bot must know (a maneuver, a press, Immortal Grapple,
-  Carrion Crows, my strike, my taken line) is a frozen phrase on the LOG tier, and `_parseCombatNarration` reads it from BOTH tiers.
-  A new combat announcement gets its phrase, a parser in that one method and a section-125-style test through `_onLog`, or the
+  Carrion Crows, my strike, my taken line) is a frozen LINE on the log tier (`note()`), and `_parseCombatNarration` reads it from
+  BOTH tiers. A new combat announcement gets its line, a parser in that one method and a section-125-style test through `_onLog`, or the
   other bot never hears it. `ana-combat2.py`'s handshake-integrity line is the gate: under 100 % on a bot-only table = a broken
-  phrase. "Do I want to" lives in `_wantGrapple` / `_wantPress` / `_wantPressToEnd` / `_wantLong` reading `DECK_STRATEGY.combat`
+  line. "Do I want to" lives in `_wantGrapple` / `_wantPress` / `_wantPressToEnd` / `_wantLong` reading `DECK_STRATEGY.combat`
   (chase / snipe / wave), never as a threshold at the play site. Per-round state resets at the round's start, per-combat state in
   `_resolveCombat`'s `finally`; a flag about a LATER step dies where its scope ends. Between bots the acting bot strikes first and
   the answering bot PEEKS (`_awaitOppStrikePeek`) before it chooses; the acting minion is one rule, `_combatIActing()`.
@@ -169,6 +174,8 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   (`lab-probe.js` + `ana-lab.py`); the arena proves the knob fires and carries the audits. Before reading a bench arm, prove the
   knob fires (a trace row, a counter, a test on the real line shape). A strength claim needs the mirror bench (48 matches, the
   variant in every seat, read against the negative control, ±0.5 VP at 48); a 12-match series supports mechanism counts only.
+  Until round C3 ports the bench to the sim, `bench.sh` runs only after its chat-era paths are fixed by hand (HOWTO). A
+  once-a-match decision is weighed in a lab; a knowledge knob is still flipped only after the no-loss bench.
 - **Determinism and footprints (v0.6.209).** [D-71; L-46] The same sim spec gives the same trace byte for byte; the matches that DIVERGED are the
   change's footprint — read them before any VP. Seating shapes the tactical choices, so a deck-level claim covers every seating.
 - **Traces.** [L-79] Bot names rotate between matches: deck and seat come from the trace MANIFESTS (`manifest.seat`; older traces map
@@ -200,5 +207,6 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
 `docs/HARNESS.md` · `docs/elysium-bot-CHANGELOG.md` · `docs/specs/` (design canon) · `docs/handoffs/` (to main, and main's
 replies in `client/docs/handoffs/REPLY-to-bot-*.md`) · `docs/reports/` · `docs/reviews/` · `docs/coverage/` ·
 `docs/history/` (the journal, every READ-ME-FIRST, the old CLAUDE.md's handshake and debts, the dated learnings, the old context).
-Code comments that cite "CLAUDE.md debt N" (or 64a, 65f …), a READ-ME-FIRST or SKILLS.md mean the files now in `docs/history/`:
+Code comments that cite "CLAUDE.md debt N" (or 64a, 65f …), a READ-ME-FIRST, SKILLS.md or a delivered round spec
+(`docs/specs/spec-cards-…`, `spec-next-…`, `spec-r4-…`, `spec-home-pricing-…`) mean the files now in `docs/history/`:
 the debts are in `docs/history/CLAUDE-v2-2026-10-20.md`, and its extraction checklist says where each one went.
