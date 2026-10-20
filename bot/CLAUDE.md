@@ -25,7 +25,8 @@ release in, never patch. A need on main's side is a handoff (`docs/handoffs/HAND
 contract first and the bot consumes it next round, or the bot ships first when the change is backward compatible. Never both
 halves in one PR. A bot release = bump `BOT_VERSION` (the line carries the version only; the note goes to the CHANGELOG), copy the
 bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.js`, `elysium-twd-archetypes.json/.js`,
-`START-HERE-BOTS.html`) to the repository root. Never edit the root in place.
+`START-HERE-BOTS.html`) to the repository root. Never edit the root in place. (The shipped v0.6.211 line still carries its note;
+the version-only line applies from the next release.)
 
 ## Gates (the bot's own battery; the numbers in STATUS are the last known green)
 - `node --check` on every changed file.
@@ -38,6 +39,8 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 - `node test-cardfx.js` when cardfx changed (needs `vtes.json` beside it — root `CLAUDE.md`, "Data that is not in git").
 - `node diag-hb1-smoke.js` when the bot's browser surface changed (needs `elysium-bot-diag.html` beside it).
 - `node test-bot-hotseat.js` when anything near the hotseat bridge changed.
+- When the wire or the timing changed: main's client suite beside the release bytes (`client/`'s LIVE tests drive the real bot:
+  hotBridge, Hold on, the seat-1 range, the verdict timing); report its count in the PR.
 - A new test is verified DESTRUCTIVELY against the pre-change file (`tools/run-section.sh`, HOWTO). A section that throws on the
   old bytes proves only that a method is new — say so.
 - A series or a bench runs on the sim table first (`elysium-bot-sim.js`, HOWTO); `python3 ana-sim-diff.py A B` before any win
@@ -84,7 +87,8 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   event; if so it is a note or nothing. `fxClone` takes `{ actor: vamp }` for every minion play. A new `note()` text is a LOG line
   other bots' L12 parsers read: check it against `L12.actObs` (`^(.+?) (hunts|plays (.+?))[.!]`) and the frozen §12 shapes; never end
   a note with `plays X.` or `hunts.`.
-- **The duplicate rule (v0.6.117).** Online the server's ledger narrates every pool / blood / zone / lock / face change — the bot
+- **The duplicate rule (v0.6.117).** Online the server's ledger (`ledgerLive`; not a helper, and never offline) narrates every
+  pool / blood / zone / lock / face change — the bot
   writes no note for an event the play line, the fx clone or the ledger already shows; a note survives only where it explains a
   WHY the table cannot see (Jack ticks, does-not-unlock, Misdirection, an uncurated warning). What a human says aloud is one chat
   bubble in table words (`_influenceSentence`, `I vote N against.`, `No votes from me.`, `I take N. Pool: X.`).
@@ -140,16 +144,25 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   `t0`, its Turn-based reminder text and a `status()` / `step()` rung. Bot-vs-bot windows never read the tempo (`mode: 'bots'`).
   Adaptive's skip is RULES-strict (skipped only when the human has no legal answer; strike and press always asked). No botcfg = the
   clocks of old, byte for byte. A wait's clock starts when its question is ON THE WIRE (`_afterWire`); time the whole flow, not the
-  wait you changed.
+  wait you changed: a handshake wait after a tempo wait is `_lineGraceMs` against a human, and a shortened wait that was somebody's
+  only window becomes an asked step (`_phaseStep(5, 'reply')`). Measure with `ana-wait.py` before claiming a tempo is faster.
 - **The hold gate (v0.6.198, Johan's principle agreed with main).** A Hold on stops EVERY clock that waits on a human and each
   starts again from the beginning on the release. A new wait on a human: its arm checks `_held()` and freezes (`_freezeWait`),
   `_holdFreeze` freezes it on a hold, `_holdThaw` re-arms it FRESH when `_holdBy` empties, `_holdAnnounce()` when nobody else can
   announce; one-shot timers through `_heldTimeout`. An ANSWER still ends a wait at once. A vote, a Yes or a No is an answer, never a
-  release; only the flow phrases release (`_releasePauses` ends every holder's pause). Bots never operate the hold.
+  release; only the flow phrases release (`_releasePauses` ends every holder's pause); completion (everyone has spoken) is
+  not a clock; a question asked under a hold must not promise a clock (`_waitTail`). The stopwatch invariants (v0.6.115): the ring
+  never re-stamps a PAUSED window (`pausedBy.size`), `_restartAskTimer` re-arms it, and a window ends ≤ reactClockMs + reactSecs +
+  grace after the last activity. Bots never operate the hold.
 - **The look-ahead rule (v0.6.205).** A card that sets up a later decision is played only when that decision's OWN scorer would
   take the set-up option now: build the real ctx (`_actionCtxFor`), apply only the corrections that hold before the phase starts
   (`_actionCtxAdjust(…, ahead)`), ask `_decide` (the bare scorer, no trace row). Test a phase effect THROUGH the phase: a hook a
   unit test calls directly proves the hook, not that the turn calls it.
+- **The self-price rule (v0.6.127).** A self-price mode (`selfDmg` / `selfAggr` / `selfTorpor`) is closed to every generic finder
+  (`_modeUsableBy(mo, vamp, { selfPrice: true })` opens it); a new consumer pays through `_actingVamp.selfPrice` +
+  `_settleSelfPrice`, which today runs at the end of the BLEED branch only.
+- **A new bot line.** The machine-readable line goes out BEFORE the line that opens a window (the terms line, the block-bar line
+  precedents), and a bot-emitted frozen line belongs in main's §12 with a canary case (a handoff when it is new).
 - **The pool rule (v0.6.210).** Every pool cost leaves ≥ 1 pool (the last pool paid is an oust); the turn engine ousts me at 0 pool
   on my own turn. Every own-turn pool loss has the oust check beside it.
 - **Count in the arena, weigh in a lab (v0.6.206).** A decision the arena meets once a match is measured on the same table per arm
@@ -175,7 +188,8 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   client-spawned bots). `shark` = expert and `grinder` = experienced are aliases in old scripts and old traces. `new Bot({})` with
   no persona keeps the bare base knobs (hundreds of fixtures stand on it). Persona thresholds still live inside some tactics
   (BOARD); do not add more.
-- Decks: the four V5 starters (`deck-malkavian/tremere/nosferatu/ventrue.json`) + `hacking` (the tournament benchmark) + `sewer`;
+- Decks: the four V5 starters (`deck-malkavian/tremere/nosferatu/ventrue.json`) + `hacking` (the tournament benchmark: its prey
+  fell first 16/16 in the 4 Aug tests, so a deck-strength claim controls for prey-of-hacking) + `sewer`;
   `wall` is an archetype fixture only. `DECK_STRATEGY` carries each manifest (the reviewer's yardstick) and `combat` posture. Seven
   decks are also embedded in `elysium-bot.js` (duplicated; BOARD).
 - The hidden-hand design (K0 discipline priors → K1 deck templates → K2 odds; the TWD profile and archetype labels) is

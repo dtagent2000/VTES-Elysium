@@ -30,11 +30,13 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
 - **The arena** — `node elysium-bot-arena.js --matches N --bots K --personas expert,… --decks hacking,sewer,… --start-pool 30
   --match-timeout 600 --trace ./serie-x [--seed N] [--fixed-seats] [--knob k=v] [--knob SEAT:k=v]`. Seating is random per match by
   default (`--seed` repeats, `--fixed-seats` = deck order). Decks: hacking (the tournament benchmark), sewer, malkavian, tremere,
-  nosferatu, ventrue. Timer-bound (~2.5 % of a core each), so many run in parallel; 4p30 ≈ 2–4 min, 5p30 ≈ 3–4 min on the real
+  nosferatu, ventrue. `--knob` is whitelisted (`WL`; a typo warns; `aggression` / `blockShy` are not in it). Timer-bound (~2.5 % of a core each), so many run in parallel; 4p30 ≈ 2–4 min, 5p30 ≈ 3–4 min on the real
   clock. Launch detached and poll `progress.txt`; one process per match. Pre-flight: one match before any series on a change that
   reads live protocol state, and read the new emit rows.
 - **The mirror bench** (until C3 ports it to the sim) — `bench.sh ARM W NW N SPEC [DECK] [KNOB]` + `ana-bench.py`: 48 matches, the
-  variant in every seat, read against the negative control (A vs A, ±0.5 VP at 48); `design-balanced-serie-bal1.txt` is the
+  variant in every seat, read against the negative control (A vs A, ±0.5 VP at 48); a no-knob control arm doubles as a deck-pinned
+  control (read the pinned deck's seat); an arm below its control is compared with an INERT arm on the same seeds and paired by
+  match (`bcN2 − bcN` −0.03 vs `bcN2 − negN2` −0.39); `design-balanced-serie-bal1.txt` is the
   balanced design (6 cyclic orders × 2). The scripts carry chat-era paths (`/home/claude/w`) and read a gitignored
   `serie-cmb1/design.txt`: fix both before running. A 12-match series supports mechanism counts only.
 - **The probe lab** — `node lab-probe.js N SEED ARMS > lab-SEED.jsonl` then `python3 ana-lab.py lab-*.jsonl`: N random tables, one
@@ -42,7 +44,8 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   Pattern for any once-a-match decision.
 - **The hotseat tool** — `node elysium-bot-hotseat.js --seed 11 --start-pool 12 --ask-secs 2 --out ev.jsonl` (the client html
   beside it; `--arm tally|full|nohold`); v1.3.0's `runTable` takes `personas`, `seatKnobs`, `onEvent` (the sim uses them).
-  `test-bot-hotseat.js` is the gate; `BOT=./old-bot.js node test-bot-hotseat.js` is its destructive check.
+  `test-bot-hotseat.js` is the gate; `BOT=./old-bot.js node test-bot-hotseat.js` is its destructive check. The sweep is the ONE part
+  of the client the tool imitates instead of runs (it follows `hotBridge._out`): if main changes the sweep, the tool must follow.
 - **A debug bot at a live table** — `node elysium-bot.js --server ws://HOST:8123 --room R --pass P --debug [--no-debug-weights]`;
   refused at a Tournament table; its hand goes to the whole table and the other bots look away.
 - **Coverage** — `node gen-deck-coverage.js deck-<clan>.json --out docs/coverage/deck-coverage-v5-starter-<clan>-black-chantry-2020.md`
@@ -56,9 +59,10 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   a rebuilt profile is first reproduced byte for byte by the old script; a new share is APPENDED.
 
 ## Analysing a series (sim or arena)
-- `ana-sim-diff.py A B` (footprint) · `ana-ledger.py` (bleed pairing both ways — `VANISHED` = 0; steal pairs; dealt vs taken;
-  `LESS, UNEXPLAINED`) · `ana-block.py` (0 violations) · `ana-inv.py` (invariants; ~1 flag in 3 matches is the baseline;
-  `ELY_POOL_TRACE=1` names the code line behind a pool change) · `ana-windows.py` (the actor's reactions-only windows: ran out
+- `ana-sim-diff.py A B` (footprint) · `ana-ledger.py` (bleed pairing both ways — `VANISHED` = 0; steal pairs equal, a `STOLE >
+  VICTIM LOST` row is a lead; dealt vs taken; `LESS, UNEXPLAINED`) · `ana-block.py` (0 violations) · `ana-inv.py` (invariants;
+  ~1 flag in 3 matches is the baseline; a new flag kind or a jump = a line the log cannot type (add its kind) or a real bookkeeping
+  difference; `ELY_POOL_TRACE=1` names the code line behind a pool change) · `ana-windows.py` (the actor's reactions-only windows: ran out
   and went through = 0; contests at the clock split blocked / failed; every `stale-answer` row read) · `ana-wait.py` (tempo) ·
   `ana-probe.py` (`probe-order` / `probe-hold` rows) · `ana-cards.py` (uses per card, never-played, untitled plays) ·
   `ana-combat.py` + `ana-combat2.py` (handshake integrity 100 % on a bot-only table, agreement, `hsMiss`) · `ana-rush.py` ·
@@ -73,7 +77,9 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   `stealth-stack` / `stealth-ahead` / `intercept-chat` · `bleed-total` / `stale-answer` · `haven` / `bank` / `spy-cancel` ·
   `inv-flag` · `server-err` · `result` (winner, vp map, oustOrder). The FACIT (the union of hands per turn) is assembled by the
   dossier; no single bot ever sees it.
-- **Reading rules**: cite trace refs for every claim; grade against the manifest, not perfection; restraint is a finding too;
+- **Reading rules**: cite trace refs for every claim; grade against the manifest, not perfection (persona-consistent deviations
+  are not misplays); a recommendation carries an explicit NOT recommended section; the Goudie bar is ~2 VP/match; the FIRST unlock
+  snapshot may be pre-init (read `dealt.startPool`); restraint is a finding too;
   one match is an anecdote, a series before a verdict; read recorded state (the last snapshot before the event), not inferred
   state; explain a handshake miss by printing both rows and every row of all bots ~9 s before it.
 

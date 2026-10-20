@@ -29,7 +29,7 @@
 - **Source-shape assertions are tripwires for insertion order** (18 Sep, 80e) and the suite guards the docs too (15 Sep).
 
 ## Timing
-- **No await between a line and the window it opens** (17 Oct): a 150 ms sleep lost answers at pace 0 for five months; two windows in three ran out their clock.
+- **No await between a line and the window it opens** (17 Oct): a 150 ms sleep lost answers at pace 0 for four weeks (v0.6.144 → v0.6.206); two windows in three ran out their clock.
 - **A guard about what the table has seen keys on the line the answer answers, not on my queue** (17 Oct).
 - **A wait's clock starts when its question reaches the wire; a send queue is not a timeline** (15–16 Oct).
 - **Time the whole flow, not the wait you changed** (9 Oct); a shortened wait that was somebody's only window becomes an asked step.

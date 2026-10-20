@@ -34,7 +34,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | What a minion does this phase | `decide('action')` ← `_decideAction`, the finders, the turn ledger (`_turnActs`), the probe (`_probe`) | plan, `_twdExpect`, `oppForecast`, the hand | `decide` q `action` (scores per candidate) |
 | Who to bleed / bounce to | `bleed-target` | prey, the bounce rule (always my prey today) | `decide` |
 | Pump a bleed | `bleed-modifier` | the total, the blocker's intercept history, `_pPump` | `play` window `bleed-mod`, `bleed-total` |
-| Block or not (as target) | `block-as-target` ← `_blockRisk`, `_keepBlocker`, the threat classes T1–T6 | plan.home, `oppCombatCost`, the deck axes | `block-eval`, `block-made`, `defence-plan` |
+| Block or not (as target) | `block-as-target` ← `_blockRisk`, `_keepBlocker`, the threat classes T1–T6 | plan.home, `oppCombatCost`, the deck axes; `_actionClass` (offensive / economy / utility; the hit rate divides blocked by offensive only) | `block-eval`, `block-made`, `defence-plan` |
 | Bounce timing | `_reactWindow`, `_bounceReserve` | the TOTAL after modifiers, the reserve | `play` window `react-bounce`; `bounce-total` / `bounce-kept` tags |
 | Stealth on a contested action | `spend-stealth`, `_stealthStack`, `_stealthSecondLook`, the ahead rule | the counter, my stack, `_pCat` | `stealth-stack`, `stealth-ahead`, `play` |
 | Intercept as blocker | `_commitBlock`, `_interceptSecondLook` | the counter, my hand | `intercept-stack`, `play` |
@@ -72,7 +72,11 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
   player. The arena spawns this server.
 - **Hotseat** (the client's `hotBridge`, no server): the bot seat is a remote player inside one HTML file; the bridge fans
   `log` / `say` / `chat` / `board` / `fx` / `tally` / `bounty` (parity since client v2.6.124); the no-server net (`joined.srv`
-  starts `hotseat-bridge`) handles ousts and bounties. The sim and the hotseat gate drive this bridge headless.
+  starts `hotseat-bridge`) handles ousts and bounties, and the tally net rebuilds a missing foreign tally from the frozen lines
+  (a belt timer of 60 % of askSecs, min 1.2 s). A bot spawned without `deckName` infers its deck from the object / printed name /
+  exact list (explicit wins; the built-in default gets none). The browser load: `o.transport` injects the dial, `o.cardfxData` the
+  parsed fx; suite section 75 is the browser gate (a vm sandbox with zero Node globals) and 75d pins the IIFE against a client-page
+  top-level collision. The sim and the hotseat gate drive this bridge headless.
 - **Human tables**: the tempo (Standard / Adaptive / Turn-based), the hold, the chat beat, one spokesbot, the debug hand.
   Nothing here reaches the arena or the sim (paceMs 0 zeroes every beat; bots never operate the hold).
 

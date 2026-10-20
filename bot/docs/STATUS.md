@@ -2,7 +2,7 @@
 
 **Bot v0.6.211** (19 Oct 2026, PR #37 merged 20 Oct) · arena v1.4.8 · sim table v1.0.1 · cardfx compiler v1.9.3, curated 105 ·
 hotseat tool v1.3.0 · coverage tool v1.1.38 · built against client **v2.6.167** / srv-2.6.49 (the root's release); the read-only
-copies in `bot/` are client v2.6.162 / srv-2.6.46 / protocol v2.6.158 (refresh them by copying the root's files in).
+copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; refresh by copying the root's files in).
 
 **Deploy state:** the root carries the v0.6.211 bundle (byte copies; main's `check-versions.js` agrees).
 
@@ -28,8 +28,9 @@ bare 1-bleed (knob `equipOverPlain`); Spying Mission [OBF] cancels a bounced ble
 ## Not yet consumed from main
 Main's replies of 17–18 Oct in `client/docs/handoffs/` (`REPLY-to-bot-2026-10-17-robustness.md`,
 `REPLY-to-bot-2026-10-17-v0.6.206.md`, `REPLY-to-bot-2026-10-17-v0.6.207.md`, `REPLY-to-bot-2026-10-18-open-hand.md`) are read but
-not acted on in a bot round. Parked by main's own word: the TWD
-profile's exact-key lookups.
+not acted on in a bot round. Parked by main's own word: the TWD profile's exact-key lookups. Bot-emitted frozen lines not yet in
+main's §12 / the canary: `CARD — vampires cannot block this action.`, `Referendum terms: …`, `VAMP attempts to leave torpor.`,
+the Haven Uncovered and Spying Mission lines (BOARD "Ask main once").
 
 ## Known, not built
 A human's bounce of a bot's bleed is not read by the acting bot · a human's Haven Uncovered is not read by the bots · between bots

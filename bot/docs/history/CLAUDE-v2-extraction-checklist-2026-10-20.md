@@ -11,7 +11,7 @@
 | 14 the table-model rule (v0.6.118) | CLAUDE.md "the table-model rule" |
 | 14 the duplicate rule (v0.6.117) | CLAUDE.md "the duplicate rule"; RULINGS D-64 |
 | 14 the cardfx cost rule (v1.6.14) | CLAUDE.md "the cardfx cost rule" |
-| 14 the tier rule (v0.6.114) + timing invariants (v0.6.115) | CLAUDE.md "the tier rule"; the stopwatch invariants are inside the tempo gate's `_waitPlan` contract (CLAUDE.md "the tempo gate"); LESSONS "Timing" |
+| 14 the tier rule (v0.6.114) + timing invariants (v0.6.115) | CLAUDE.md "the tier rule"; the stopwatch invariants are in CLAUDE.md "the hold gate"; LESSONS "Timing" |
 | 14 the helper-gate rule (v0.6.113) | CLAUDE.md "the helper-gate rule"; RULINGS D-63 |
 | 14 debug density (v0.6.112) | CLAUDE.md "Debug density" |
 | 14 the srv-2.6.35 / 2.6.37 copy note, "owed to main: blocks./attempts to block." | stale (both long done); history |
@@ -29,7 +29,7 @@
 | 38 the knowledge layer (v0.6.187+, 197) | CLAUDE.md "the knowledge-layer rule"; RULINGS D-82 |
 | 40 the hold gate (v0.6.198) | CLAUDE.md "the hold gate"; RULINGS D-67 |
 | 42 the tempo gate (v0.6.194, 195) | CLAUDE.md "the tempo gate"; RULINGS D-66 |
-| 44 lines are the contract (main, 23 Sep) | CLAUDE.md "Lines are the contract" |
+| 44 lines are the contract (main, 23 Sep) | CLAUDE.md "Lines are the contract"; the helper-lock ask → BOARD "Ask main once" (d) |
 | 46 gates (the battery; "an abort on the pre-change bot is not the environment") | CLAUDE.md "Gates"; HARNESS; LESSONS "a baseline is only a baseline"; the stale numbers (701/0, 37/0, timeout 210, upload …) retired |
 | 48 versioning | CLAUDE.md "The one rule" (the BOT_VERSION line); HARNESS "The release ritual" |
 | 52–60 (formerly) CLAUDE-arena: purpose, the HB track history | history; ARCHITECTURE "The three environments" (the bot seat is a remote player; HB1 is the browser gate) |
@@ -37,11 +37,11 @@
 | 76–120 the eight-step loop, the evaluation doctrine, the VP facts, the recommend structure, the docs ritual, the standing question | HARNESS "The round"; CLAUDE.md "Evaluation doctrine" and "Traces" (VP facts); HOWTO "Reading rules"; LESSONS "the standing question" |
 | 122–137 the arena CLI, decks, personas, knob whitelist, timing | HOWTO "The arena"; CLAUDE.md "Personas and decks" |
 | 139–150 the emit vocabulary | HOWTO "Emit vocabulary" |
-| 152–153 the deep review of 11 Sep, the two tracks, B1/B2 status | history; the standing parts are the specs (`elysium-bot-block-doctrine.md`, `elysium-bot-review-2026-09-11.md` in reviews/); ARCHITECTURE "Design canon"; RULINGS D-8, D-99-class items folded into D-85/D-86 |
-| 155–165 the open items ledger (F-Q2, hacking as the predator, wall retired, B-55e-b, B-55f-b) | F-Q2 closed (CL 68); hacking-as-predator → CLAUDE.md "Personas and decks" (hacking = the benchmark) and RULINGS D-89 (balanced design); B-55e-b / B-55f-b → BOARD "Still open from the 11 Oct review" (intercept banking) and history |
+| 152–153 the deep review of 11 Sep, the two tracks, B1/B2 status | history; the standing parts are the specs (`elysium-bot-block-doctrine.md`, `elysium-bot-review-2026-09-11.md` in reviews/); ARCHITECTURE "Design canon"; RULINGS D-8, D-85, D-86 |
+| 155–165 the open items ledger (F-Q2, hacking as the predator, wall retired, B-55e-b, B-55f-b) | F-Q2 closed (CL 68); hacking-as-predator → CLAUDE.md "Personas and decks" (hacking = the benchmark) and RULINGS D-89 (balanced design); B-55e-b / B-55f-b → BOARD "Known, not built" (intercept banking, `by: null`) |
 | 167–169 the arena v1.2.5 / v1.2.6 notes (VEKN winner, manifests carry seat) | CLAUDE.md "Traces" |
-| 173–191 debts 1–19 | RULINGS (R-17, D-43, D-47 …; O-13, O-18, O-19, O-21, O-29, O-31); BOARD (`_wakeCard`, forecast calibration); the rest history |
-| 192–218 debts 66–70 (hotseat parity, the hotseat net, personas renamed) | RULINGS D-79, D-80, D-90, D-92; ARCHITECTURE "The three environments"; HOWTO "The hotseat tool"; history |
+| 173–191 debts 1–19 | RULINGS (R-17, D-43, D-47 …; O-13, O-18, O-19, O-21, O-29, O-31, O-33, O-34); BOARD (`_wakeCard`, forecast calibration, the turn ledger's gaps 26d); the rest history |
+| 192–218 debts 66–70 (hotseat parity, the hotseat net, personas renamed) | RULINGS D-79, D-80; BOARD (70g); HOWTO (70f); ARCHITECTURE "The three environments"; HOWTO "The hotseat tool"; history |
 | 219–234 debts 64–65 (the knowledge layer) | `specs/spec-knowledge-layer.md` (verbatim); RULINGS D-77, D-78, O-7; BOARD (Kevlar, wakes) |
 | 235–243 debts 62–63 (the bounce reserve, bal8) | RULINGS D-5, O-1; history |
 | 244–249 debts 60–61 (Nosferatu, Taste of Vitae) | RULINGS D-23, O-10; BOARD "Nosferatu's Fame chain", "Taste of Vitae" |
@@ -50,11 +50,11 @@
 | 290–302 debts 47–50 (bal3/bal4, Freak Drive, act-again survival) | RULINGS D-48; LESSONS "find the binding term"; history |
 | 303–316 debts 44–46 (the freeze, Second Tradition, Hidden Strength, Ventrue's gaps) | RULINGS R-11, D-22, O-6; CLAUDE.md "The pool rule" (every pool loss has the oust check); BOARD; history |
 | 317–324 debt 43 (the goal, deck feel, the observability gap) | CLAUDE.md "The goal"; RULINGS D-76; history |
-| 325–350 debts 36–42 (home pricing, the critical pool, the racing rule, home2) | RULINGS D-46, D-47, D-49, D-50, D-53-class; LESSONS "Reading traces"; `history/specs/spec-home-pricing-2026-09-19.md` |
+| 325–350 debts 36–42 (home pricing, the critical pool, the racing rule, home2) | RULINGS D-46, D-47, D-49, D-50; BOARD (the 42c soft spots); LESSONS "Reading traces"; `history/specs/spec-home-pricing-2026-09-19.md` |
 | 351–366 debts 33–35 (the balanced baseline, the Blood Doll loop, deck fit) | RULINGS D-44, D-45, D-75, D-89; LESSONS "find the general measure"; history |
 | 367–392 debts 28–32 (the null, permFirst, rushes, the three layers) | RULINGS D-19, D-20, D-21, D-39, D-48, R-18, R-33; history |
-| 394–412 debts 24–27 (the live probe, cost on success, the rulings round, Daring the Dawn) | RULINGS R-9, R-10, R-17, R-19, D-37, D-38, O-15, O-21; history |
-| 413–431 debts 20–23, 25 (politics self-review, Troublemaker, the hand-over review) | RULINGS D-36, D-40-class, O-14, O-16; BOARD "Vote-count residue", "`_wakeCard`"; history |
+| 394–412 debts 24–27 (the live probe, cost on success, the rulings round, Daring the Dawn) | RULINGS R-9, R-10, R-17, R-19, D-37, D-38, O-15, O-21; CLAUDE.md "the self-price rule", "a new bot line"; STATUS (the lines owed to §12); history |
+| 413–431 debts 20–23, 25 (politics self-review, Troublemaker, the hand-over review) | RULINGS D-36, O-14, O-16; BOARD "Vote-count residue", "`_wakeCard`"; history |
 | 432–452 debts 16, 21–24 (meta lever, crypt sweep) | RULINGS O-31, O-21; history |
 | 455–460 section 71 (the breath: the beat rule, the ahead rule, intercept by chat, v0.6.153) | CLAUDE.md "the beat rule", "the ahead rule"; RULINGS D-14, D-65, R-16 |
 

@@ -46,8 +46,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Egress review as a rule** (T4): every round's PR carries an `Egress:` line from a fresh-context agent. *Done when* HARNESS
   describes it and three rounds have one. Docs: HARNESS.
 - **Ask main once**: (a) may the bot's gates read the root's released client / server / protocol instead of the copies in `bot/`
-  (no drift, 1.8 MB fewer); (b) has the hotseat bridge, or could it expose, a pure `step(state, action)`. *Done when* a handoff is
-  written and answered. Docs: spec §9 Q4, §7.1.
+  (no drift, 1.8 MB fewer); (b) has the hotseat bridge, or could it expose, a pure `step(state, action)` — both asked in
+  `handoffs/HANDOFF-to-main-2026-10-20-docs-diet.md`, awaiting the answer; (c) the bot-emitted frozen lines owed to §12 + the canary
+  (STATUS lists them); (d) the client locks all helpers on while a bot is seated until the bot proves a whole combat on lines alone —
+  ask for that step when ready. Docs: spec §9 Q4, §7.1; RULINGS D-62.
 - **The two design documents outside git** (Claude Docs, 25 Sep: "event log, shadow model, knowledge sources, bench" and
   "cardfx sweep — source mapping"): copy their standing parts into `specs/`. *Done when* ARCHITECTURE links files in git.
 - **History comments in `elysium-bot.js`** (222 KB citing versions and dates): trim to trap comments ("why" + a rule id) in
@@ -64,8 +66,21 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* `ana-ledger.py` prints equal pairs on a smoke with that case. Docs: RULINGS O-12.
 - **Nosferatu's Fame chain** (Fame → rush → torpor → rescue) has never run; the rush is not priced in pool. *Done when* a sim series
   shows famed rushes, famed torpors and rescues. Docs: RULINGS O-10.
-- **Taste of Vitae pairing** with a damage round is partly built (after a card round); Johan's "gain of 2+" reading not. Docs:
-  RULINGS D-23.
+- **Taste of Vitae**: the 2+ gate is built (v0.6.156); not built: play at 1 when the vampire sits at 0–1 blood or two copies clog,
+  and "with a Taste in hand, prefer the damage card this round". Docs: RULINGS D-23.
+- **Intercept banking** (B-55f-b: deck-axis, measure first) and **2 of 187 blocked rows still `by: null`** (B-55e-b). Docs:
+  `history/CLAUDE-v2-2026-10-20.md` 155–165, debt 68.
+- **The hotseat net's known asymmetry** (70g): the no-server net is keyed on `joined.srv` = hotseat-bridge; with *Pool to predator*
+  OFF a bot predator marks the human out and takes the 6 pool by itself offline, online it does neither; left deliberately, revisit
+  if main or a tester objects.
+- **The turn ledger's gaps** (26d): a barred bleed becomes an illegal marker that can still win the score contest (the vampire stays
+  home); hunt / rescue / leave torpor are not limited; card-in-play actions (Warsaw, Chantry) are not in the ledger.
+- **Home pricing's six soft spots** (42c, told to Johan, unfixed): `_keepBlocker` holds the last actors, not the bodies `_priceHome`
+  chose; `predHits` reads the announced bleed while `hitMax` the realised hit; a bounce is valued as pool saved only; the exchange
+  rate leans on `myFc`; wakes counted whoever could play them; 0.9 / pStop / "a card + a blood = 1 pool" / fwd 0.5 unmeasured.
+  Docs: `history/specs/spec-home-pricing-2026-09-19.md`.
+- **Per-deck playbooks / the opening book** (B2 steps 2–3, Johan 17 Sep; debt 13c): never built; is it superseded by the abstract
+  model and the V5 plan? Johan — see RULINGS O-33.
 - **`_wakeCard()` is vampire-blind** at the bounce, vote and reduce routes and in `interceptPotential` (`_wakeCardFor(v)` exists).
   *Done when* every site reads the vampire.
 - **Second Tradition** as a wake for a titled body is counted; Hidden Strength's aggravated-first needs an aggravated flag in the
@@ -86,5 +101,5 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   gate. *Done when* it runs on a sim series and the ratio is reported.
 - **Still open from the 11 Oct VTES-Player review**: blood-hunt voting (item 8), the §8 law for the meta layer (3), decision-level
   meta metrics on padded decks (4), personas as tested overlays (9). Docs: `REVIEW-vtes-player-2026-10-11.md`.
-- **Main's replies of 17–19 Oct** (robustness, v0.6.206, v0.6.207, open hand) not consumed in a bot round. *Done when* each reply's
+- **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) not consumed in a bot round. *Done when* each reply's
   bot-side items are built or declined in a handoff.

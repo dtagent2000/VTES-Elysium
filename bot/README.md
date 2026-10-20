@@ -21,7 +21,7 @@ The folder is deliberately FLAT: the suites, the arena and every tool expect the
 | `elysium-bot-diag.html` | the browser battery (HB1) |
 
 ## Gates
-`node --check <file>` → `node test-bot-logic.js` (2244 assertions, ≈300 s — run detached: `timeout 600 node test-bot-logic.js > suite.log &` and poll) → `node test-bot-canary.js` (69/0; pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (271/0, when cardfx changed; needs `vtes.json` — fetched, see root `CLAUDE.md`) → `node diag-hb1-smoke.js` (11/0, when the browser surface changed) → `node test-bot-hotseat.js` (11/0, when anything near the hotseat bridge changed).
+`node --check <file>` → `node test-bot-logic.js` (2244 assertions, ≈300 s — run detached: `timeout 600 node test-bot-logic.js > suite.log &` and poll) → `node test-bot-canary.js` (69/0; pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (275/0, when cardfx changed; needs `vtes.json` — fetched, see root `CLAUDE.md`) → `node diag-hb1-smoke.js` (11/11, when the browser surface changed) → `node test-bot-hotseat.js` (11/0, when anything near the hotseat bridge changed).
 Mutant isolation for the hold gate: `python3 tools/mutants/mutate-v0_6_198.py /tmp/mut` (every mutant must fail or hang).
 One suite section against any bot file (the destructive check of a new section, sub-minute): `bash tools/run-section.sh <bot.js> <section.js>`.
 
@@ -33,7 +33,7 @@ Analysis after a series: `ana-ledger.py` (the ledger gate), `ana-block.py` (the 
 Probes: `diag-give-probe.js`, `diag-a1-stash-probe.js`. Docs: `bash tools/doc-budget.sh` checks the standing pages' budgets and paths.
 
 ## Read-only copies of the client project's releases (never edit here)
-`elysium-server.js` (srv-2.6.46 — the arena and the suite spawn it), `ELYSIUM-PROTOCOL.md` (v2.6.158), `elysium-vtes-bord.html` (v2.6.158), `elysium-hotseat-bots-plan.md` — refreshed 15 Oct 2026 by copying `client/`'s release in.
+`elysium-server.js` (srv-2.6.46 — the arena and the suite spawn it), `ELYSIUM-PROTOCOL.md` (v2.6.162), `elysium-vtes-bord.html` (v2.6.162), `elysium-hotseat-bots-plan.md` — refreshed 16 Oct 2026 by copying `client/`'s release in; the root is at v2.6.167 / srv-2.6.49.
 
 ## docs/
 - standing pages (the bootstrap): `STATUS.md` (now), `BOARD.md` (the asks), `RULINGS.md` (Johan's rulings and the design decisions, numbered), `LESSONS.md`, `ARCHITECTURE.md`, `HARNESS.md` (the round, the reviews, the release ritual), `HOWTO.md`

@@ -10,7 +10,7 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 
 ### Bleed & bounce
 - **R-1** (2026-09-16, mem) — Block step: once blocks are declined only reactions remain (reduce, bounce); a Methuselah may try other minions until "No block", then the block step is over.
-- **R-2** (2026-09-18, rulebook §4 + Johan, CL 26b) — One bleed and one political action per minion per turn; never the same named action card or card-in-play action twice; Freak Drive unlocks are otherwise unlimited.
+- **R-2** (2026-09-18, rulebook §4 + Johan, CL 26b) — One bleed and one political action per minion per turn; never the same named action card or card-in-play action twice; act-again unlocks are not an action.
 - **R-3** (2026-09-20, Johan, CL 57a) — A NEW reaction window opens whenever a bleed modifier is played, so the bounce may always come after the modifiers; experienced players pump after blocks are declined and bounce on the total.
 - **R-4** (2026-09-20, rulebook, CL 56b) — A failed block attempt does not lock the vampire; it may bounce in the reopened window.
 - **R-5** (2026-10-16, Deflection / Redirection / Misdirection text, v0.6.203) — A bounce's new target may attempt to block; the actor opens its block step in whatever window the bounce lands.
@@ -63,7 +63,7 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **D-1** (2026-09-15, Johan, journal R2) — "Will this action cause me to lose pool?" is answered per current action (cleared at It resolves or the next action); unanswered = the askSecs clock, default NOT blocking.
 - **D-2** (2026-09-20, Johan's defence doctrine, CL 56a) — Against a stealth bleeder the defender CLOGS: no attempt on its 1-bleeds (the stealth stays stuck in its hand) while the pool can afford the pump seen; a front-heavy bleed (a Govern) gets an attempt so it must spend stealth, better still with a bounce after; clogging is a gamble one eventually cannot afford.
 - **D-3** (2026-09-20, Johan, CL 57a, v0.6.144) — Wake + block / bounce only on bleeds that END at 2+ after the modifiers; the bounce is played on the TOTAL, never at the announce (bouncing a 1 at once is a beginner's mistake); a bounced bleed is very rarely pumped.
-- **D-4** (2026-09-20, Johan, CL 57a) — The bot asks for bleed modifiers before the bleed resolves, from HUMANS too (quick phrases: No = no reaction, Yes = wait); "Any bleed modifiers?" + 4 s grace, then the bounce.
+- **D-4** (2026-09-20, Johan, CL 57a) — The bot asks for bleed modifiers before the bleed resolves, from HUMANS too (quick phrases: No = no reaction, Yes = wait); "Any bleed modifiers?" + 4 s grace, then the bounce (built, OFF behind `askHumansTotal` — O-2).
 - **D-5** (2026-09-21, Johan, CL 62) — The bounce track first, with a DYNAMIC spare-bounce reserve (`_bounceReserve`, v0.6.146); Nosferatu waits.
 - **D-6** (2026-09-21, Johan, CL 64b) — Splitting the pump over two actions is a comparison of ODDS about my deck and the opponent's: the knowledge layer's first consumer (not built).
 - **D-7** (2026-10-16, Johan, review) — A human's reduction is read from the client's `NAME reduces the bleed by N.` row (asked of main); setting the target is player education: bots never force a target on the prey.
@@ -83,7 +83,7 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 ### Combat
 - **D-18** (2026-09-18, Johan, CL 22c) — "Freak Drive always" (act again with ≥ 1 blood left) and "Majesty always" are provisionally right but belong to the deck persona; Majesty later reads the opponents' damage statistics.
 - **D-19** (2026-09-19, Johan, CL 31) — Three layers: statistics (every bot) → general handling (every deck of the kind) → deck persona; a change goes in the lowest layer it belongs to.
-- **D-20** (2026-09-19, Johan, CL 30c/28h) — An enemy rescue needs a Fame on the vampire (not necessarily mine) and is done only on my PREY's vampires; anything else is table-talk meta.
+- **D-20** (2026-09-19, Johan, CL 30c; 28h's "MY Fame" wording was corrected by it) — An enemy rescue needs a Fame on the vampire (not necessarily mine) and is done only on my PREY's vampires; anything else is table-talk meta.
 - **D-21** (2026-09-19, Johan, CL 29d) — A "rush deck" is a combat deck that starts fights (Bum's Rush); sewer is NOT one.
 - **D-22** (2026-09-20, Johan, CL 45c) — Hidden Strength pays X to prevent ALL incoming damage (keep 1 blood): aggravated first, but denying Pulled Fangs-class effects too; the bot cannot tell aggravated yet, so "prevent all you can afford".
 - **D-23** (2026-09-21, Johan, CL 61) — Taste of Vitae is blood economy: pair it with a big damage round (Crows and / or Roundhouse), never after a bare-hands round.
@@ -102,8 +102,8 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **D-34** (2026-09-18, Johan, CL 18) — Politics is built SIMPLE first: curation + gate → a caller with a machine-readable terms line (`Referendum terms: A −3, B −1`) → a simple voter → act-again → a 4-starter null at decision level.
 - **D-35** (2026-09-18, Johan) — Bot-called referendums: humans signal votes on the tally or the Votes menu and may push Resolve; the bot then announces the outcome.
 - **D-36** (2026-09-18, Johan "fix 1–3, document the rest", CL 20) — Votes build on the live tally in ring order; terms live as long as the action; the voter is SYMMETRIC: against a referendum that benefits my prey more than me (supersedes abstain).
-- **D-37** (2026-09-18, Johan, CL 25a/26f) — Daring the Dawn only when MITIGABLE or clearly worth it (a way out of torpor, a rescuer, dominant votes, or the action ousts); for Ventrue also on a referendum dealing 3 to the prey when the prey's intercept is ~1 with a body up. No dead cards in the bots.
-- **D-38** (2026-09-18, Johan, CL 24h/26g) — Alexa discards a [dom] card only as a last resort to get a referendum THROUGH; a bot may diablerise only with a majority of the FIXED votes, Edge included (not built); Troublemaker locks the biggest capacities first.
+- **D-37** (2026-09-18, Johan, CL 25a/26f) — Daring the Dawn only when MITIGABLE or clearly worth it (a way out of torpor, a rescuer, dominant votes, or the action ousts); for Ventrue also on a referendum dealing 3 to the prey when the prey's intercept is ~1 with a body up. No dead cards in the bots. (Claude's addition, unruled: a mitigable play also needs bleed potential ≥ 3 and a prey body up.)
+- **D-38** (2026-09-18, Johan, CL 24h/26g) — Alexa discards a [dom] card only as a last resort to get a referendum THROUGH; a bot may diablerise only with a majority of the FIXED votes, Edge included (not built). (Troublemaker locking the biggest capacities first is Claude's stand-in for "best blocker".)
 - **D-39** (2026-09-18, Johan, CL 23b, v0.6.131) — Build-first yields to a referendum at pass ≥ 0.8 when it is economy (Parity Shift) or reach (KRC into oust range) — with the upper hand in votes (`polOverBuild`).
 - **D-40** (2026-10-11, Johan, v0.6.197) — The bot SPEAKS its own referendum's pool swing in the voters' words; the line is the ledger record.
 - **D-41** (2026-10-16, Johan decision 4, review) — EVERY bot keeps asking its own pool question at a political action (its answer is its stake and decides its vote); at a DIRECTED action only the target asks.
@@ -190,7 +190,6 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **O-12** (2026-10-17) — A steal pair between bots disagrees when the victim's Majesty ends the combat (the stealer books 2, the victim nothing) — older, unfixed [journal 17 Oct].
 
 ### Politics & referendums
-- **O-13** (2026-09-18) — `H = 3` and the grinding quota holding only while `myTto ≤ 2H` in `_strategize` were changed before measurement; never confirmed [CL 10, 17, 68].
 - **O-14** (2026-09-18) — `_refCount`'s ALLY vote counting is untested; Alexa discards once per referendum though the card has no such limit; `_refValue` weights and the pass estimate are judgment; a KRC at pass 0.85 loses to a plain bleed [CL 20h, 24h, 18, 28d].
 - **O-15** (2026-09-18) — Bot diablerie under the fixed-vote-majority rule is not built (the directed action, the block-a-leave-torpor branch, a compliance grammar, the blood hunt) [CL 26g, 27d].
 - **O-16** (2026-10-16) — One pool question with per-seat answers at a political action is "for later" [review decision 4].
@@ -212,6 +211,12 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **O-26** (2026-10-16) — A `reduce N` chat line before the client's Reduce row exists — proposed, unanswered [journal 16 Oct].
 - **O-27** (2026-10-17) — The probe default and the chat beat have not been seen by a human at a table; main's second idea (delay the panel) is the reserve [journal 17 Oct].
 - **O-28** (2026-10-20) — The clean-up's decisions §9: the journal's future, READ-ME-FIRSTs, the read-only copies vs the root, CI for `bot/`, history comments, the project instruction [spec-cleanup §9].
+
+### Plan & strategy
+- **O-13** (2026-09-18) — `H = 3` and the grinding quota holding only while `myTto ≤ 2H` in `_strategize` were changed before measurement; never confirmed [CL 10, 17, 68].
+- **O-33** (2026-09-17) — Per-deck playbooks as plan tables and the opening book (B2 steps 2–3, 13c) were Johan's next lever after the strategy layer; never built — superseded by the abstract model and the V5 plan, or still wanted? [CL 8, 13c, 68, line 153].
+- **O-34** (2026-09-18) — At a human table, untested: keep-a-blocker looks like passivity (`posture:` goes to `o.log` only; a chat line "I'll hold X back" proposed) and the bare block is spoken as `Block!` without a card — Johan to evaluate in play [CL 7].
+- **O-35** (2026-09-20) — Judgment calls in the stealth stack never ruled: ×0.6 expected intercept per attempt drawn, "a bleed of 1 is not worth two intercept cards", the gamble thresholds (3+, or 2+ with a 25 % top-deck) [CL 54d].
 
 ### Personas & table
 - **O-29** (2026-09-18) — Persona thresholds inside the tactics (more added since, `P.aggression >= 1.2`); `aggression` is temperament, not experience — the persona pass [CL 2, 68, 69i].

@@ -13,8 +13,15 @@ No READ-ME-FIRST and no journal entry per release any more; the record is `bot/d
 handoff is written only when main must act (as before). `check-versions.js` is unaffected (it reads `BOT_VERSION` and the root copies).
 
 ## 3. The read-only copies
-`bot/`'s copies are client v2.6.162 / srv-2.6.46 / protocol v2.6.158 while the root is v2.6.167 / srv-2.6.49; we will refresh them
+`bot/`'s copies are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (16 Oct) while the root is v2.6.167 / srv-2.6.49; we will refresh them
 as a commit of their own in the next code round.
+
+## Owed to §12 and the canary (unconsumed asks from earlier rounds)
+Bot-emitted frozen lines that the bot sends and main's protocol / canary do not yet list: `CARD — vampires cannot block this
+action.` (spec-block-bar, 18 Sep), `Referendum terms: A −3, B −1` (spec-referendum-terms), `VAMP attempts to leave torpor.`
+(v0.6.128), and the Haven Uncovered / Spying Mission lines of v0.6.205 / v0.6.211 (`L12.havenM`, `L12.havenRush`, `L12.spyNull`).
+Also still standing: the client locks all helpers on while a bot is seated until the bot proves a whole combat on lines alone — we
+will ask for that step when the bot is ready; nothing to do now.
 
 ## Questions
 - **Q4 of the clean-up spec:** may the bot's gates (the canary, the suite's 154f, the arena's spawn, the hotseat gate) read the
