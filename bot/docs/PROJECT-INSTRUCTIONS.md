@@ -1,84 +1,35 @@
-# PROJECT-INSTRUCTIONS.md — texter att klistra in som projektinstruktioner (9 september 2026)
+# Elysium Bots — project instruction (20 Oct 2026, after round C1)
 
-*Två block, ett per projekt. De ersätter den nuvarande enradaren ("läs alltid senaste
-*-session-journal.md …"). Håll dem korta: detaljerna bor i respektive CLAUDE.md, som
-instruktionen pekar på. Uppdatera blocken bara när en regel ändras, inte per release.*
-
----
-
-## Elysium (huvudprojektet)
+Paste the block below into the Claude project's instruction field. It replaces the 12 Oct 2026 instruction (in git history).
 
 ```
-Läs ALLTID först, nyaste poster först: CLAUDE.md, elysium-session-journal.md,
-elysium-project-context.md, elysium-learnings.md. Uppdatera alla fyra + SKILLS.md
-+ elysium-CHANGELOG.md efter varje implementation (write-then-rename, räkna
-poster efteråt). Svenska i chatten, engelska i kod och docs.
+# Elysium Bots — project instruction (20 Oct 2026)
 
-ÄGANDE: detta projekt äger klienten (elysium-vtes-bord.html, inkl. hotBridge och
-hotseat-bot-UI:t), servern, harnessen, klient-/serversviterna, ELYSIUM-PROTOCOL.md,
-ops och docsen. Boten, arenan, cardfx och bot-docsen ägs av systerprojektet
-"Elysium Bots" — deras filer redigeras ALDRIG här. Vi konsumerar deras releaser
-(bot vN, cardfx) och antecknar versionen i PROJECT-MANIFEST.md §E2. Behöver en
-ändring båda sidor: gör kontraktet (protokoll/server/klient) här först, releasa,
-och låt botprojektet konsumera i nästa session — aldrig båda i samma vända.
+SOURCE OF TRUTH: https://github.com/dtagent2000/VTES-Elysium — a monorepo. bot/ is this project; client/ is the
+client/server project; the root is the download players get. This chat project carries only this instruction and
+START-HERE-BOTS-CHAT.md; everything else is read from git. Chat in Swedish; code, commits and docs in English.
 
-GATES före varje leverans, i ordning: node --check → test-client-logic.js →
-test-server-dispatch.js → test-protocol-doc.js → test-error-endpoint.js →
-test-bot-canary.js (kontraktstestet mot bottens parsers; hoppar utan den
-releasade boten — ladda upp den när en frusen loggrad ändras) →
-B1 (split_client.py → elysium-build.js → byte-identisk) → check-versions.js
-("everything agrees"). De fyra HB-testerna i klientsviten hoppar över sig själva
-om elysium-bot.js saknas — i sessioner som rör hotBridge: be om den releasade
-boten och kör dem. Nya tester verifieras destruktivt mot filen före ändringen.
+BOOTSTRAP (every new chat): clone the repo → read root CLAUDE.md → bot/CLAUDE.md → bot/docs/STATUS.md → bot/docs/BOARD.md.
+Read bot/docs/RULINGS.md, LESSONS.md, ARCHITECTURE.md, HOWTO.md and HARNESS.md when the task touches them (bot/CLAUDE.md says
+when). Work on a branch from main, never on main. Run everything from inside bot/.
 
-LEVERANS: fulla filer via outputs + present_files (klienten först). Inga
-patchskript — det finns bara en linje. VERSION-raden bär bara aktuell
-releasenot; föregående flyttas till elysium-CHANGELOG.md vid varje bump.
-Version = bytes: samma nummer får aldrig betyda två olika filer.
+THE RULE: bot/ never edits client/ or the client/server files at the root. The copies of elysium-server.js,
+ELYSIUM-PROTOCOL.md, elysium-vtes-bord.html and elysium-hotseat-bots-plan.md inside bot/ are READ-ONLY release copies —
+replace them by copying a release in, never patch. A need on main's side is a handoff (bot/docs/handoffs/HANDOFF-to-main-
+<date>-<version>.md); main ships the contract first, or the bot first when the change is backward compatible. Never both
+halves in one PR.
 
-Ingen deploy utan webbläsarkoll (ops-runboken). Avsluta varje implementations-
-runda med ett ärligt "är det något du är osäker på?"-svar utan att bli tillfrågad.
-Vid hur-ska-vi-göra-frågor: analysera först, föreslå, vänta på "kör".
-```
+THE ROUND (bot/docs/HARNESS.md): take a BOARD line → on a "how should we do X" question analyse, propose, wait for "kör" →
+change → the gates in bot/CLAUDE.md (never claim a gate passed without having run it; a new test is verified destructively
+against the pre-change file) → a fresh-context egress review → STATUS rewritten, a CHANGELOG entry, the BOARD line deleted
+(RULINGS / LESSONS when they changed) → PR against main with the gate numbers, the sim footprint and the review's line.
+Commit and push the branch as soon as a step is green (context can run out). Johan merges. Bot names rotate between
+matches — read deck and seat from the trace manifests, never from the name.
 
----
+RELEASE: bump BOT_VERSION (the line carries the version; the note goes to bot/docs/elysium-bot-CHANGELOG.md), copy the
+bundle from bot/ to the root (elysium-bot.js, elysium-cardfx.json/.js, elysium-twd-profile.json/.js,
+elysium-twd-archetypes.json/.js, START-HERE-BOTS.html). Never edit the root in place.
 
-## Elysium Bots (systerprojektet)
-
-```
-Läs ALLTID först, nyaste poster först: CLAUDE.md, elysium-bot-session-journal.md,
-elysium-bot-project-context.md, elysium-bot-learnings.md. Uppdatera alla fyra
-+ SKILLS.md + elysium-bot-CHANGELOG.md efter varje implementation. Svenska i
-chatten, engelska i kod och docs.
-
-ÄGANDE: detta projekt äger elysium-bot.js, elysium-bot-arena.js,
-elysium-bot-table.js, gen-*-verktygen, cardfx-pipelinen (cardfx-compile.js,
-cardfx-curated.json → elysium-cardfx.json/.js), arena-lekarna, botsviterna,
-bot-designkanon och START-HERE-BOTS.html. Klient, server, harness och protokoll
-ägs av huvudprojektet "Elysium". Kopiorna här av elysium-server.js,
-ELYSIUM-PROTOCOL.md och elysium-hotseat-bots-plan.md är READ-ONLY (arenan
-spawnar servern; protokollet är kontraktet) — redigera dem ALDRIG. Behöver
-boten ett nytt trådverb eller en klient-/serverändring: skriv behovet i
-journalen och context, låt huvudprojektet skeppa kontraktet först, konsumera
-sedan — eller skeppa boten först om ändringen är bakåtkompatibel. Aldrig
-båda i samma vända.
-
-GATES före varje leverans: node --check på varje ändrad fil → test-bot-logic.js
-×3 ensam (timeout 210) → test-bot-canary.js (kräver den releasade klienten +
-protokollet bredvid; hoppar högljutt annars) → test-cardfx.js när cardfx ändrats
-(kräver vtes.json bredvid) → diag-hb1-smoke.js när bottens webbläsaryta ändrats.
-Nya tester verifieras destruktivt. Arena-ändringar utvärderas i nästa
-stridsrapport per doktrinen (change · prediction · observed · verdict).
-Bot-namn roterar mellan matcher — lek och säte läses ur trace-manifesten, aldrig
-ur namn eller emissionsordning.
-
-RELEASE: bumpa BOT_VERSION (raden bär bara aktuell releasenot; föregående går
-till elysium-bot-CHANGELOG.md), uppdatera versionshandslaget i CLAUDE.md, och
-leverera det huvudprojektet bundlar: elysium-bot.js, elysium-cardfx.json,
-elysium-cardfx.js, START-HERE-BOTS.html. Fulla filer via outputs +
-present_files; inga patchskript.
-
-Avsluta varje implementationsrunda med ett ärligt "är det något du är osäker
-på?"-svar utan att bli tillfrågad. Vid hur-ska-vi-göra-frågor: analysera
-först, föreslå, vänta på "kör".
+WAYS OF WORKING: end every implementation round with an honest "anything I'm unsure about" paragraph, unasked. A fix found
+during a round may ride in it when it fits (say so in the PR); a design question still gets a proposal and a "kör".
 ```
