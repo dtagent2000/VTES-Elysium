@@ -91,7 +91,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.9.2';   // 16 Oct 2026 (bot v0.6.202, the 14 Oct play-test's point 18): `handBonus` -- 'hand strike at +N damage' / 'this strike is at +N damage' are a bonus on the hand strike, no longer the absolute `strike` (35 cards; Roundhouse). v1.9.1 (25 Sep, the sweep's pass 2: curated entries inherit requirements and costs) never bumped this constant.
+const FXC_VERSION = '1.9.3';   // 19 Oct 2026 (bot v0.6.211, the stable's cards): a curated entry keyed by a printed name VARIANT (Pentex(TM) Subversion) is written under the printed name too -- a list typed with the printed name (KRCG's precons, the V5 generator) got the empty auto entry; each spelling now resolves exactly to itself, so fxLookup(name).name keeps equalling the hand's own name (the master loop re-anchors by name)
+// const FXC_VERSION_192 = '1.9.2';   // 16 Oct 2026 (bot v0.6.202, the 14 Oct play-test's point 18): `handBonus` -- 'hand strike at +N damage' / 'this strike is at +N damage' are a bonus on the hand strike, no longer the absolute `strike` (35 cards; Roundhouse). v1.9.1 (25 Sep, the sweep's pass 2: curated entries inherit requirements and costs) never bumped this constant.
 // const FXC_VERSION_190 = '1.9.0';   // 18 Sep 2026 (late): THE BLOCK BAR + SELF DAMAGE sweep -- `blockBar` ('vampires'|'allies'|'all'|'chosen'|'titled'|'cond') on the 'cannot block THIS ACTION' / 'unblockable' family, `selfDmg` (+ `selfAggr`) on 'this vampire takes N unpreventable ... damage', `selfTorpor` on 'the acting vampire goes to torpor after'; the self-inflicted sentence no longer leaks `aggr` / `torpor` (Daring the Dawn read as an aggravated STRIKER, Day Operation as a torpor SENDER). Before it: 1.8.0 // 18 Sep 2026: the act-again rider (`when: actSuccess|actBlocked|actFailed`) on unlocking action modifiers + `oncePerTurn`. Before it:
 // const FXC_VERSION_170 = '1.7.0';   // 18 Sep 2026 (Johan, the politics leg's first brick): REFERENDUM TERMS -- `ref` on political entries; outcome fx keys leave modes[].fx (the structural gate for bot debt 14). Previous: 1.6.14 (16 Sep, inherited costs).
 // 1.6.14:   // 16 Sep 2026 (Johan's Academic Hunting Ground report): curated entries INHERIT the data's numeric cost when they do not restate it (see overlay); the report lists inherited / mismatched / X costs.
@@ -890,7 +891,7 @@ function compile(cards, curated){
   /* curated overlay — whole-entry replacement, keys should be canonical
      vtes.json names (new names are accepted for house content but flagged
      in the report as possible typos); src is forced to 'hand'.             */
-  const curApplied = [], curNew = [], costInherited = [], costMismatch = [], costX = [], reqInherited = [];
+  const curApplied = [], curNew = [], curVariant = [], costInherited = [], costMismatch = [], costX = [], reqInherited = [];
   /* v1.6.14 (16 Sep 2026, Johan's Academic Hunting Ground report -- THE INHERITED COST):
      whole-entry replacement DROPPED the auto tier's `cost` on every curated entry that did
      not restate it. 23 hunting grounds (pool 2), Papillon (3), Meditative Grove (2),
@@ -932,6 +933,11 @@ function compile(cards, curated){
       }
       dst[name] = e;
       curApplied.push(name);
+      /* v1.9.3: a curated key that is not a printed name but a known VARIANT of one (the alias table) is ALSO written under the
+         printed name. Pentex(TM) Subversion was the one case: a list typed Pentex\u2122 Subversion got the empty auto entry. Not a
+         rename -- the variant key stays, so a list typed the old way still resolves exactly to itself. */
+      const canon = !auto && alias[name.toLowerCase()];
+      if(canon && canon !== name && dst[canon]){ dst[canon] = Object.assign({}, e); curVariant.push(name + ' -> ' + canon); curNew.splice(curNew.indexOf(name), 1); }
     });
   };
   if(curated){
@@ -958,7 +964,7 @@ function compile(cards, curated){
     },
     crypt, lib, alias
   };
-  return { out, collisions, curApplied, curNew, costUnknown, v5Titles, costInherited, costMismatch, costX, reqInherited };
+  return { out, collisions, curApplied, curNew, curVariant, costUnknown, v5Titles, costInherited, costMismatch, costX, reqInherited };
 }
 
 /* ---------------- diff-friendly serializer ----------------
@@ -999,6 +1005,7 @@ function report(res, verbose){
              ' · aliases ' + c.alias + (collisions.length ? ' (' + collisions.length + ' ambiguous, ladder-resolved)' : ''));
   lines.push('  persistent ' + c.libPersistent + ' · lock ' + c.libLock + ' (rulebook tags, v1.4.0)');
   if(curNew.length) lines.push('  ⚠ curated names NOT in vtes.json (house content or typo): ' + curNew.join(', '));
+  if((res.curVariant || []).length) lines.push('  curated entries keyed by a printed variant, also written under the printed name (v1.9.3): ' + res.curVariant.join(', '));
   if((res.reqInherited || []).length) lines.push('  requirements inherited from the data by ' + res.reqInherited.length + ' curated entries (v1.9.1): ' + res.reqInherited.join(', '));
   if((res.costInherited || []).length) lines.push('  cost inherited from the data by ' + res.costInherited.length + ' curated entries (v1.6.14): ' + res.costInherited.join(', '));
   if((res.costMismatch || []).length) lines.push('  ⚠ curated cost DISAGREES with the data (curated wins -- verify against the card): ' + res.costMismatch.join('; '));

@@ -693,5 +693,19 @@ ok(fx.counts.libLock >= 140,
      'Elder Library and Ventrue Headquarters keep the auto tier\u2019s right shapes (+1 hand size; a lock for +3 votes)');
 }
 
+{
+  /* v1.9.3 (19 Oct 2026, bot v0.6.211, the stable's cards): the curated Pentex was keyed by its old spelling Pentex(TM) Subversion;
+     the printed name kept the EMPTY auto entry, so a list typed Pentex\u2122 Subversion (KRCG's precons, the V5 generator) paid 2 pool for
+     nothing. A curated key that is a known variant of a printed name is now written under the printed name too. */
+  console.log('\na curated entry keyed by a printed variant reaches the printed name (v1.9.3, Pentex\u2122 Subversion)');
+  const L = res.out.lib, pt = L['Pentex\u2122 Subversion'], pv = L['Pentex(TM) Subversion'];
+  ok(pt && pt.src === 'hand' && pt.modes.length === 1 && pt.modes[0].fx.noBlockMinion === true && pt.cost && pt.cost.pool === 2 && pt.unique === true,
+     'Pentex\u2122 Subversion (the printed name) carries the curated entry: noBlockMinion, 2 pool, unique (was the auto tier\u2019s empty fx)');
+  ok(pv && JSON.stringify(pv) === JSON.stringify(pt), 'Pentex(TM) Subversion (the variant key) is still there and identical -- a list typed the old way resolves exactly to itself');
+  ok(!(res.curNew || []).includes('Pentex(TM) Subversion') && (res.curVariant || []).some(x => /^Pentex\(TM\) Subversion -> Pentex\u2122 Subversion$/.test(x)),
+     'the report: no longer "NOT in vtes.json", listed as a variant written under the printed name (' + JSON.stringify(res.curVariant) + ')');
+  ok((res.curVariant || []).length === 1, 'one curated key is a variant today (' + (res.curVariant || []).length + ')');
+}
+
 console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green'));
 process.exit(failN ? 1 : 0);

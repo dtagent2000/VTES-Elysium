@@ -1,7 +1,7 @@
 # bot/ — Elysium Bots (automated V:TES opponents for the Elysium client)
 
-Bot **v0.6.210** (19 Oct 2026) · arena v1.4.8 · sim table v1.0.1 · cardfx compiler v1.9.2, curated 105 · built against client v2.6.162 / srv-2.6.46 (the read-only copies here) and v2.6.167 / srv-2.6.49 (the root).
-Start with `CLAUDE.md` (session bootstrap, version handshake, every gate), then the newest `docs/readme/READ-ME-FIRST-*.md` (at v0.6.210: `READ-ME-FIRST-2026-10-19c.md`).
+Bot **v0.6.211** (19 Oct 2026) · arena v1.4.8 · sim table v1.0.1 · cardfx compiler v1.9.3, curated 105 · built against client v2.6.162 / srv-2.6.46 (the read-only copies here) and v2.6.167 / srv-2.6.49 (the root).
+Start with `CLAUDE.md` (session bootstrap, version handshake, every gate), then the newest `docs/readme/READ-ME-FIRST-*.md` (at v0.6.211: `READ-ME-FIRST-2026-10-19d.md`).
 The folder is deliberately FLAT: the suites, the arena and every tool expect their inputs beside them. Run everything from here.
 
 ## The bundle (what the client project consumes — copied to the repository root at a release)
@@ -21,7 +21,7 @@ The folder is deliberately FLAT: the suites, the arena and every tool expect the
 | `elysium-bot-diag.html` | the browser battery (HB1) |
 
 ## Gates
-`node --check <file>` → `node test-bot-logic.js` (2225 assertions, ≈300 s — run detached: `timeout 600 node test-bot-logic.js > suite.log &` and poll) → `node test-bot-canary.js` (69/0; pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (271/0, when cardfx changed; needs `vtes.json` — fetched, see root `CLAUDE.md`) → `node diag-hb1-smoke.js` (11/0, when the browser surface changed) → `node test-bot-hotseat.js` (11/0, when anything near the hotseat bridge changed).
+`node --check <file>` → `node test-bot-logic.js` (2244 assertions, ≈300 s — run detached: `timeout 600 node test-bot-logic.js > suite.log &` and poll) → `node test-bot-canary.js` (69/0; pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (271/0, when cardfx changed; needs `vtes.json` — fetched, see root `CLAUDE.md`) → `node diag-hb1-smoke.js` (11/0, when the browser surface changed) → `node test-bot-hotseat.js` (11/0, when anything near the hotseat bridge changed).
 Mutant isolation for the hold gate: `python3 tools/mutants/mutate-v0_6_198.py /tmp/mut` (every mutant must fail or hang).
 One suite section against any bot file (the destructive check of a new section, sub-minute): `bash tools/run-section.sh <bot.js> <section.js>`.
 
