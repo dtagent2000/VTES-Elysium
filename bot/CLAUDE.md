@@ -2,8 +2,9 @@
 
 Automated V:TES opponents for the Elysium client — a free table that does not enforce the rules, so the bot carries its own
 model of them (cardfx + the table model) and reads the table's lines. Claude writes and maintains the code; Johan rules and
-merges. Ids in brackets point to `docs/RULINGS.md` (R-, D-, O-) and `docs/LESSONS.md` (L-). Chat in Swedish; code, commits and docs in English. This file carries the rules that bind a change. History lives in
-git, `docs/elysium-bot-CHANGELOG.md` and `docs/history/`.
+merges. Chat in Swedish; code, commits and docs in English. This file carries the rules that bind a change; ids in brackets
+point to `docs/RULINGS.md` (R-, D-, O-) and `docs/LESSONS.md` (L-). History lives in git, `docs/elysium-bot-CHANGELOG.md` and
+`docs/history/`.
 
 ## Bootstrap (every session, in this order)
 1. Root `CLAUDE.md` — the one rule for both halves, deploy = copy to the root, third-party data.
@@ -65,7 +66,7 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
 ## The goal and the layers (Johan)
 - **The goal (20 Sep 2026):** [D-76] not a chess engine — a COMPETENT THREAT at the table that fills a seat when players are short; bots
   that play their cards correctly with good priorities, judged by a well-founded feel from observation. Prefer decision-level reads
-  with large effects over VP differences. No deck is held back: Malkavian plays as well as it can (RULINGS, personas & table).
+  with large effects over VP differences. No deck is held back: Malkavian plays as well as it can [D-77].
 - **Three layers (19 Sep 2026):** [D-19, L-2] (1) STATISTICS, serving every bot's thinking; (2) GENERAL handling, serving every deck of that
   kind; (3) the DECK PERSONA, informing one list. Put a change in the lowest layer it belongs to.
 - **Four checks (19–20 Oct 2026):** [D-83] the abstract model (not built) → the sim table and the server arena → a bots-only browser
