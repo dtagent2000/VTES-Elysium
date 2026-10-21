@@ -1,78 +1,33 @@
-# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (19 October 2026)
+# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (20 October 2026)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
-**State at writing:** bot v0.6.211 (deploy candidate, PR #37 open, awaiting Johan's merge: the stable's remaining cards; v0.6.210 = PR #36 and v0.6.209 = PR #35, both merged 19 Oct) · arena v1.4.8 ·
-sim table v1.0.1 · cardfx compiler v1.9.3, curated 105 · built against client v2.6.167 / srv-2.6.49 · gates: see the newest READ-ME-FIRST.
+**Now:** versions, the deploy state, open PRs and the last gate numbers are in `bot/docs/STATUS.md`, and only there.
 
 ## First five minutes
 ```
 git clone https://github.com/dtagent2000/VTES-Elysium && cd VTES-Elysium
-cat CLAUDE.md                                  # the one rule, the layout, deploy = copy to the root
-cat bot/CLAUDE.md                              # the bootstrap: version handshake, every gate, every doctrine
-ls bot/docs/readme/ | tail -1                  # the latest READ-ME-FIRST — read it
-head -200 bot/docs/elysium-bot-session-journal.md   # newest entry first
-git checkout -b <topic>                        # never work on main
+cat CLAUDE.md                 # the one rule, the layout, deploy = copy to the root, third-party data
+cat bot/CLAUDE.md             # the rules that bind a change: gates, the round, the binding rules
+cat bot/docs/STATUS.md        # now: version, deploy state, the last gate numbers, what is next
+cat bot/docs/BOARD.md         # the open asks — take one
+git checkout -b <topic>       # never work on main
 ```
-Then `bot/docs/elysium-bot-project-context.md`, `bot/docs/elysium-bot-learnings.md`, `bot/SKILLS.md`.
-`bot/README.md` maps the folder (code · gates · series tools · docs/ layout).
+Then, when the task touches them: `bot/docs/RULINGS.md` (Johan's rulings, numbered), `LESSONS.md`, `ARCHITECTURE.md`, `HOWTO.md`,
+`HARNESS.md` (the round, the egress review, the release ritual). `bot/README.md` maps the folder.
 
 ## What is where
-- `bot/` is flat on purpose: suites, arena and tools expect `vtes.json`, the decks, the cardfx files and the
-  read-only client/server copies beside them. Run everything from inside `bot/`.
-- `bot/docs/` — living docs at the top; `readme/` (every delivery), `handoffs/` (to main + main's replies),
-  `reports/`, `specs/`, `reviews/`, `coverage/`, `archive/` (old manifests/TODOs; the 21 Sep TODO still maps the
-  older debts).
-- `bot/tools/mutants/` — the hold-gate mutant isolation (`python3 tools/mutants/mutate-v0_6_198.py /tmp/mut`).
-- NOT in git: third-party data — `vtes.json` (KRCG, v3 shape; `test-cardfx.js`, the cardfx compiler, the coverage
-  and profile tools) and the TWDA (`twda.json` + optional `twda-vdb.json`, only to rebuild the profile). Fetch from
-  the source; when the sandbox cannot reach it, attach the private repo `dtagent2000/VTES-Elysium-data` and copy
-  from there (root `CLAUDE.md`, 'Data that is not in git'). Arena traces (`serie-*/`, `bench-*/`) are generated.
+- `bot/` is flat on purpose: suites, arena, sim and tools expect `vtes.json`, the decks, the cardfx files and the read-only
+  client/server copies beside them. Run everything from inside `bot/`.
+- `bot/docs/`: the standing pages at the top; `specs/` (design canon), `handoffs/` (open handoffs to main; main's replies in
+  `client/docs/handoffs/`), `reports/`, `reviews/`, `coverage/`, `archive/`, and `history/` (the journal, every READ-ME-FIRST, the
+  old CLAUDE.md with its handshake and debts, the dated learnings, consumed handoffs, delivered round specs).
+- `bot/tools/`: `run-section.sh` (one suite section against any bot), `mutants/`, `doc-budget.sh` (the standing pages' budgets).
+- NOT in git: `vtes.json` (KRCG, v3 shape) and the TWDA (`twda.json` + optional `twda-vdb.json`). Fetch from the source; when the
+  sandbox cannot reach it, attach the private repo `dtagent2000/VTES-Elysium-data` and copy from there (root `CLAUDE.md`).
+  Series traces (`serie-*/`, `bench-*/`, sim dirs) are generated and live in scratch.
 
 ## The loop
-branch → change → gates (inside `bot/`) → living docs + READ-ME-FIRST (+ HANDOFF when main must act) →
-commit + push often → PR against `main` with the gate numbers in the body → Johan merges.
-A bot release additionally bumps `BOT_VERSION` and copies the bundle to the repository root.
-
-## Open at hand-over (19 Oct 2026, night)
-v0.6.211 (PR #37, Johan's choices of 22:36): **the stable's remaining cards** — Pentex™ by its printed name (cardfx-compile v1.9.3), a weapon or
-an armour over a bare 1-bleed (never over a bleed card, not at 6 pool or less for a pool cost), Spying Mission [OBF] cancels a bounced bleed onto a non-prey and banks +2, and
-goes last as stealth. `docs/specs/spec-cards-2026-10-19.md`, `READ-ME-FIRST-2026-10-19d.md`. **Next:** the knowledge layer's Kevlar (Johan: valuable against aggravated-damage decks such
-as Gangrel) and the V5 plan (precon generator, coverage map, Toreador, waves).
-
-v0.6.210 (PR #36, merged; found while v0.6.209's numbers were checked): **the last pool** — a bot at pool 1–2 paid its last pool for a master
-(Vessel, a Hunting Ground) in its own master phase and played on at 0 (35 bots in 33 of 240 sim matches); the master, equip and fetch finders now
-leave ≥ 1 pool and the turn engine ousts at 0 pool on my own turn. Sim v1.0.1 counts "played at 0 pool" in every SUMMARY.md. `READ-ME-FIRST-2026-10-19c.md`.
-
-v0.6.209 (Johan's "kör" 19 Oct 19:17, Johan's "kör" 19 Oct 19:17): **the sim table** — `bot/elysium-bot-sim.js` plays the headless hotseat table under a virtual
-clock, about a second per match, deterministic, every seating by default (`node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10
---trace ./sim-x`; `python3 ana-sim-diff.py A B` compares two runs). Evidence: `bot/docs/reports/REPORT-sim-table.md`. Two referendum fixes it found
-(KRC's spare points never on the caller; never call a referendum that ousts me). **Next, in Johan's order:** the stable's remaining cards — Kevlar Vest
-(never equipped in 240 sim matches), .44 Magnum (rare), Spying Mission's [OBF] bank (never; a doctrine question), Pentex™ Subversion (curated under the
-old (TM) name: a list typed with ™, as the V5 precon generator would write, gets an effectless entry) — then the V5 plan (precon generator — the 18 V5 precons are in `vtes.json` — coverage class map,
-Toreador, then waves, each new deck against the reference table in every seating). The 19 Oct (morning) hand-over below still holds for the rest.
-
-v0.6.208 (the morning round, merged as PR #34): main's client v2.6.167 made `norm()` transliterate ł ø œ æ ß đ ð þ ı (Przemysław rendered blank);
-`FX_NORM` now does the same (`FX_NORM_LETTERS`), so a deck typed in plain letters finds its cards, and section 154f compares
-`FX_NORM` with the released client's `norm()` over every cardfx name. Main's optional point (the TWD profile's exact-key
-lookups) is parked. Main's PRs #27, #29, #30, #32 and #33 are merged (client v2.6.163–167, srv-2.6.47–49); their replies to
-v0.6.206, v0.6.207, the robustness review and the open hand (`client/docs/handoffs/REPLY-to-bot-2026-10-1[7-8]-*.md`) are
-not yet consumed in a bot round. The text below is the 17 Oct hand-over, still valid for what comes next.
-
-The 14 Oct play-test (main's rig, PR #13) was reviewed finding by finding in `bot/docs/reviews/REVIEW-playtest-2026-10-14.md`;
-R0–R4 shipped as v0.6.199–205 (all merged). v0.6.206 (PR #26, merged) is the round agreed with Johan on 16 Oct 21:27
-(`bot/docs/specs/spec-next-2026-10-17.md`): the late bounce of R4's final smoke fixed (a Magic of the Smith's note read as an
-equip announce; three layers); two faults in the actor's block windows found by the release's own smoke and fixed (the stale
-guard anchors on the line that opens the window; a window opens in the same tick as its line — a 150 ms sleep since v0.6.144
-lost bot answers at pace 0, so every arena number since then carried ~3 s of dead clock per bleed total); the probe
-reservation behind knob `probeHold`, measured in the new probe lab (`lab-probe.js`): +0.80 pool per probe turn when the actor
-out-numbers its prey's unlocked bodies, nothing otherwise. Johan took both of its proposals after the merge (17 Oct), so they
-are v0.6.207: `probeHold` 2 is the default (his bait read), and main's finding 1 is built (the chat beat separates two chat
-bubbles and nothing else; a hold or resume line skips it). His note on the probe's lost tables (a prey holding a wake) is a
-knowledge-layer item (`bot/CLAUDE.md` 65f). Main's PR #27 (client v2.6.163 + srv-2.6.47, a security release) was open at
-writing, with their reply to v0.6.206 (`client/docs/handoffs/REPLY-to-bot-2026-10-17-v0.6.206.md`); consume it once merged.
-Next, in Johan's order: the 14 Oct scenario in `client/playtest/` with `--dir` on a scratch copy of the root with
-the bot branch, compared with the report's numbers; then the larger re-measure, against a baseline run on v0.6.207 (not on
-older numbers — the dead clock); the parked items in READ-ME-FIRST-2026-10-16f, 'Next'. Known, not built: a human's bounce of a
-bot's bleed is not read by the acting bot; a human's Haven Uncovered is not read by the bots; between bots a contested block's
-verdict waits for the actor's clock (~3 s at the arena's askSecs). Johan's rule since 16 Oct: fixes that belong together may be
-combined in one round; design questions still go through a proposal and "kör".
+BOARD line → analyse / propose / "kör" when it is a design question → branch → change → gates (inside `bot/`) → egress review →
+STATUS + CHANGELOG + BOARD (RULINGS / LESSONS when they changed; a HANDOFF when main must act) → commit + push often → PR against
+`main` with the gate numbers and the sim footprint → Johan merges. A release additionally bumps `BOT_VERSION` and copies the bundle
+to the repository root. No READ-ME-FIRST and no journal entry any more (20 Oct 2026): the PR body and STATUS are the record.

@@ -2,6 +2,22 @@
 
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
+## Rounds without a release
+- **C1 — the docs diet (20 Oct 2026, no code change; PR #39)** — `spec-cleanup-2026-10-20.md` §5: the prescribed bootstrap of ~700 KB became
+  root CLAUDE.md + `bot/CLAUDE.md` (rules only) + `docs/STATUS.md` + `docs/BOARD.md` (~35 KB), with `RULINGS.md` (the register of
+  Johan's rulings and the design decisions, R / D / O numbered), `LESSONS.md` (the learnings distilled), `ARCHITECTURE.md`,
+  `HARNESS.md` (the round, the egress review, the release ritual) and `HOWTO.md` (from SKILLS.md) read when a task touches them.
+  The old CLAUDE.md (handshake and debts 1–71), the journal, the context, the learnings, SKILLS.md, every READ-ME-FIRST, the
+  consumed handoffs and the delivered round specs moved verbatim to `docs/history/` (the extraction checklist beside them).
+  Debts 64–65 became `specs/spec-knowledge-layer.md`. `tools/doc-budget.sh` checks the budgets, the named paths and the version.
+  The release ritual is now STATUS + CHANGELOG + the PR body (no READ-ME-FIRST, no journal entry); the project instruction is
+  `docs/PROJECT-INSTRUCTIONS.md` (the spec's Appendix A). After review: the root CLAUDE.md's bot pointers; the two Claude Docs of
+  25 Sep copied into `specs/` with a status table (`spec-event-log-design-2026-09-25.md`, `spec-cardfx-sweep-sources-2026-09-25.md`);
+  the old handshake one release per line (`history/handshake-v0.6.112-v0.6.211.md`); the VTES-Player review moved to Johan's
+  private project notes, its four open items credited on the BOARD; LESSONS numbered L-1..81 and cited from CLAUDE.md;
+  `doc-budget.sh` portable to bash 3.2 and checking every version STATUS names. Gates on the branch: suite 2244/0, canary 69/0
+  (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
+
 ## Bot
 - **v0.6.211 (19 Oct 2026)** — the stable's remaining cards, Johan's choices of 19 Oct 22:36 (analysis and measurements: `docs/specs/spec-cards-2026-10-19.md`). PR #37, after #35 and #36 were merged.
   - *(1) PENTEX:* the curated entry was keyed *Pentex(TM) Subversion*, so a list typed with the printed *Pentex™ Subversion* (KRCG's precons, the V5 generator) paid 2 pool for the empty auto entry. Compile v1.9.3 writes it under the printed name too (cardfx below). On a scratch Tremere list typed with ™ (72 matches): 18 uncurated picks on v0.6.210, 31 curated on v0.6.211.
