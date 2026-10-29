@@ -1,13 +1,13 @@
 # STATUS — Elysium Bots (rewritten at every release; 29 October 2026)
 
-**Bot v0.6.213** (29 Oct 2026, PR #41 open) · arena v1.4.8 · sim table v1.0.2 · cardfx compiler v1.9.4, curated 115 ·
+**Bot v0.6.213** (29 Oct 2026, PR #41 merged) · arena v1.4.8 · sim table v1.0.2 · cardfx compiler v1.9.4, curated 115 ·
 hotseat tool v1.4.0 · coverage tool v1.1.40 · built against client **v2.6.167** / srv-2.6.49 (the root's release); the read-only
 copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS, "the handshake with the
 client's versions").
 
-**Deploy state:** the PR's root carries the v0.6.213 bundle (byte copies of `bot/`); `main` carries v0.6.212 until it merges.
+**Deploy state:** `main` carries v0.6.213 and its root the v0.6.213 bundle (byte copies of `bot/`; PR #41 merged 29 Oct).
 
-**Open PRs:** #41, V5 wave 1 + v0.6.213.
+**Open PRs:** #42, docs only (STATUS after #41's merge; Johan's deck-guide idea on the BOARD).
 
 ## Last gates (v0.6.213 release bytes, 29 Oct 2026)
 Suite **2291/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/’s copies) and 69/0 (root
@@ -30,6 +30,8 @@ the canon `specs/spec-v5-wave1-2026-10-29.md` (RULINGS R-39, R-40, D-99); `docs/
 2. The clean-up rounds C2–C6 (`spec-cleanup-2026-10-20.md` §7), interleaved with product rounds.
 3. The knowledge layer's Kevlar (the bots now deal aggravated damage) and the prey's wakes as blockers (65f).
 4. The abstract model spec, on the class map's classes.
+5. Johan's idea for later (29 Oct): Black Chantry's official deck guides as each deck's strategy baseline, refined by the
+   archetypes (BOARD, O-33).
 
 ## Not yet consumed from main
 Main's replies of 17–18 Oct in `client/docs/handoffs/` (`REPLY-to-bot-2026-10-17-robustness.md`,
