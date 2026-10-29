@@ -49,7 +49,8 @@
     card play when used (no second Guard Dogs in the ash heap, no second play row or clone: the table model counted two shown); a
     gun's maneuver no longer leaves a phantom gun in the ash heap (since E1); a Grapple that would cost Hunger of Marduk's granted
     steal is held, and the press decision's next round carries no granted steal; Taste of Vitae no longer waits for a taken line
-    after the opponent's clean dodge (the V5 smoke's two press waits into the safety net, ministry's Form of Mist: 2 → 0); the
+    after the opponent's clean dodge (the V5 smoke's two press waits into the safety net, ministry's Form of Mist: 2 → 0) — a
+    taken line already in is still read and my additional strike reopens the wait (160x); the
     tally's strike label of a round without a strike is 'No strike' (the gun-under-Grapple round wrote 'Hand').
   - cardfx: 9 curated readings (115 → 124; modelled library effects 1,671 → 1,672) — Flash and Resist Earth's Grasp (a maneuver OR a
     press: two modes), Slam (`maneuverTo` close), Hunger of Marduk (`stealGrant`), Rage of Apedemak, Torn Signpost, Form of the Wolf,
@@ -69,15 +70,22 @@
     (now the old lines, line for line); the spec's count and grade pointers and the handoff's wire summary. Its notes, not counted
     (spec §4): a counter war can spend every maneuver in round 1; a gun binds its strike only under Immortal Grapple; mixed bot
     versions at one table disagree on a counter.
-  - Section 160 (42 checks, through `_onLog`, duels on a relay): on the v0.6.213 bytes 5 green (the controls); on the round's bytes
-    before the reviews (b45ae32) the ten checks the reviews added red.
+  - Section 160 (44 checks, through `_onLog`, duels on a relay): on the v0.6.213 bytes 6 green (the controls, and 160x's first:
+    v0.6.213 always waited); on the round's bytes before the reviews (b45ae32) the ten checks the reviews added red; 160x red on the
+    reviews' fixes (53a3973).
   - *The sim* (registered before measuring, D-93; re-registered once — the first bytes were SAME-PLAY 240 with no counter at all,
     because Guard Dogs' grant never reached a fight): the 240-match client design v0.6.213 → v0.6.214 is DIVERGED 4, SAME-PLAY
     236, each at a Nosferatu blocker's counter with Guard Dogs' maneuver (matches 0075, 0117, 0182, 0217; in 0182 the Tremere
     answered back to long and stole at long) — 5 counters in 240 matches; ana-block no violations, invariant flags 5 (v0.6.213's
     five), handshake integrity 100 % and no safety-net wait, played at 0 pool 0, ana-ledger STOLE > VICTIM 7 (the same) and VANISHED
     0, 'through, no seat took it' 228 and ana-windows RAN OUT 1227 + 790 (223 and 1228 + 785: the differences all in the four
-    DIVERGED matches). The V5 smoke (14 × 12): FILL
+    DIVERGED matches). The V5 smoke (14 × 12): 50 DIVERGED, 118 SAME-PLAY, each at a wave decision (a before-range play 32, a
+    posture's dropped wave decision 7, toreador's wave decision with Resist Earth's Grasp now a maneuver 7, Soul Burn's 2R 2, Guard
+    Dogs' maneuver 2); counters 2, by chase decks only; hsMiss 0 (v0.6.213: 2); handshake integrity 100 % in all 14; played at 0
+    pool 0; no Slam maneuver (the committed strike is the suite's, 160h / i / r); Form of the Wolf never drawn into a recorded hand
+    and Walk of Flame never in a round 2 — not reached, played by 160m and 160b. Verdict: keep (spec §5). *The suite on the
+    release bytes* then found 37g red — the clean-dodge shortcut skipped Taste of Vitae after ANY dodge; now a taken line already in
+    is read and my additional strike reopens the wait (160x; LESSONS L-83) — and the fix is IDENTICAL on both designs. FILL-REAL
   - `docs/CARDS.md` regenerated on the release runs: FILL.
   - Gates on the release bytes: FILL.
 - **v0.6.213 (29 Oct 2026)** — V5 wave 1, Johan's "kör" of 29 Oct on D-98 (the waves go by effect class; wave 1 = Villein, the
