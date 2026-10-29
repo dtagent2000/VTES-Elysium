@@ -31,6 +31,8 @@ defines, plus one new bot-to-bot line. Two asks for §12 / the canary, and one q
   +1 strength this action — Invigorate [ani].` (deliberately not a `plays` line) · Rutor's Hand rides `L12.uTabling` (`VAMP plays
   Rutor's Hand — puts it in play.`) and its unlock `VAMP unlocks — Rutor's Hand (it locks the card).` (Freak Drive's shape).
 - Still owed from earlier rounds: the lines in `HANDOFF-to-main-2026-10-20-docs-diet.md` ("Owed to §12").
+- **Re-embed `START-HERE-BOTS.html`** (`node embed-help.js bot`) at your next release: its two combat paragraphs changed — your
+  embedded copy (client v2.6.167) still says "Additional strikes are shown in the log but not yet resolved by the bot".
 
 ## 3. Question
 Between two bots the protocol makes no new line or wait in a round where nobody holds an additional-strike card (RULINGS D-99): the
