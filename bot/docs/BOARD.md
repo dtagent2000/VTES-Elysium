@@ -18,11 +18,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The V5 waves**: round 0 (v0.6.212) built the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim
   plays them; the client's menu does not offer them), the coverage class map and the ledger (`docs/CARDS.md`). Waves by effect class
   as `CARDS.md`'s class map ranks them (Johan, 29 Oct: RULINGS D-98). Wave 1 (v0.6.213, D-99): Villein, the additional and the
-  aggravated strikes, Wall of Filth, Rutor's Hand, Invigorate. Next, in the class map's order: the masters still tabled blind, the
-  bundled maneuver / press combat cards, the free block bars, the 22 cards with no effect data, the unmodelled action cards. A deck
+  aggravated strikes, Wall of Filth, Rutor's Hand, Invigorate. Wave 2 (D-102, in progress): the combat's
+  first steps — before range, range and press. Then: the masters still played blind (wave 3), the maneuver / press grants from cards
+  played outside combat with the rush cards, the free block bars, the 22 cards with no effect data, the unmodelled action cards. A deck
   joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its rows are playable and it holds up in the sim; before the deck
   count doubles, decks and `DECK_STRATEGY` become a data file (seven decks embedded in `elysium-bot.js`, six duplicated in
-  `deck-*.json`; `gen-precon.js --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98;
+  `deck-*.json`; `gen-precon.js --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102;
   `CARDS.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
   round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect

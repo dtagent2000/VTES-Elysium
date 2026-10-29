@@ -25,8 +25,8 @@ Rutor's Hand, clan and sect requirements in the combat and equipment finders; 10
 the canon `specs/spec-v5-wave1-2026-10-29.md` (RULINGS R-39, R-40, D-99); `docs/CARDS.md`: 162 of 308 cards playable (154 before).
 
 ## Next (proposed; Johan orders the board)
-1. V5 wave 2, in `docs/CARDS.md`'s class map order: the cards with no effect data, the stealth riders, the maneuver / press combat
-   cards, the free block bars, the masters still tabled blind.
+1. V5 wave 2 (RULINGS D-102): the combat's first steps — before range, range and press; in progress (branch `bot-v5-wave2`).
+   Then wave 3, the masters still played blind.
 2. The clean-up rounds C2–C6 (`spec-cleanup-2026-10-20.md` §7), interleaved with product rounds.
 3. The knowledge layer's Kevlar (the bots now deal aggravated damage) and the prey's wakes as blockers (65f).
 4. The abstract model spec, on the class map's classes.
