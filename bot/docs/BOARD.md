@@ -5,9 +5,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks (Gangrel) and the TWD profile can
-  price it by what the table's decks deal. Waits for the wave that plays aggravated strikes (`CARDS.md` class `aggr`: Claws of the
-  Dead, Sculpt the Flesh, Wall of Filth …): no deck at the reference table deals aggravated damage to others today, so there is
-  nothing to price yet (29 Oct). *Done when* the equipment scorer reads an expected-damage share for the table's decks and a
+  price it by what the table's decks deal. Since v0.6.213 (V5 wave 1) the bots deal aggravated damage (Claws of the Dead, Sculpt the
+  Flesh, Ivory Bow, Sword of the Archangel: the gangrel, tzimisce, salubri and ministry precons) and the vest prevents it (R-39); the
+  four starters still deal none, so a pricing bench needs a table with those decks. *Done when* the equipment scorer reads an expected-damage share for the table's decks and a
   pinned bench shows no loss. Docs: RULINGS D-52; `specs/spec-knowledge-layer.md`.
 - **The prey's wakes as blockers** (65f): the probe lab lost on five tables of 91 where a prey with one body and a wake blocked
   the prober and woke for the punch. *Done when* `probeHold`'s out-number reads unlocked bodies + expected wakes (deck read +
@@ -16,13 +16,18 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 waves**: round 0 (v0.6.212) built the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim
-  plays them; the client's menu does not offer them), the coverage class map and the ledger (`docs/CARDS.md`). Next: the waves, by
-  effect class as `CARDS.md`'s class map ranks them (masters with no effect modelled, Villein first: 22 copies in 6 decks; the
-  bundled maneuver / press combat cards; aggravated strikes; free block bars; extra strikes; the 22 cards with no effect data;
-  action cards whose effect is unmodelled) — Johan chooses the wave shape (RULINGS O-22). A deck joins the menu (`ARCHETYPES` + a
-  `DECK_STRATEGY` line) when its rows are playable and it holds up in the sim; before the deck count doubles, decks and
-  `DECK_STRATEGY` become a data file (seven decks embedded in `elysium-bot.js`, six duplicated in `deck-*.json`; `gen-precon.js
-  --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, O-22; `CARDS.md`; HOWTO.
+  plays them; the client's menu does not offer them), the coverage class map and the ledger (`docs/CARDS.md`). Waves by effect class
+  as `CARDS.md`'s class map ranks them (Johan, 29 Oct: RULINGS D-98). Wave 1 (v0.6.213, D-99): Villein, the additional and the
+  aggravated strikes, Wall of Filth, Rutor's Hand, Invigorate. Next, in the class map's order: the masters still tabled blind, the
+  bundled maneuver / press combat cards, the free block bars, the 22 cards with no effect data, the unmodelled action cards. A deck
+  joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its rows are playable and it holds up in the sim; before the deck
+  count doubles, decks and `DECK_STRATEGY` become a data file (seven decks embedded in `elysium-bot.js`, six duplicated in
+  `deck-*.json`; `gen-precon.js --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98;
+  `CARDS.md`; HOWTO.
+- **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
+  round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
+  and Path requirements in every finder; the amber cards; the first-round strikes (Walk of Flame); Soul Burn [THA] read 1R (prints 2R); the latent items. *Done when* each is built and section-tested, or ruled
+  out. Docs: RULINGS R-39, R-40, D-99.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C2 — dead code and tools**: delete the ten legacy tests, `_bumpTallyB`, the lint's eight unused assignments, one `handStrike`
@@ -120,6 +125,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   table §2), so this may be what an offline table does: every bot-vs-bot window waits out its clock. *Done when* a `--real` hotseat
   match and a browser hotseat table say whether bot answers are lost there, and either the cause is fixed or the gate is restated per
   table. Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
+- **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
+  vampire, a target) show their END state (found 29 Oct; `ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.

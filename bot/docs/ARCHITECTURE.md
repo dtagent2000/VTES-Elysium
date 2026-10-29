@@ -118,7 +118,8 @@ starters. **240 last-standing** — the sim's 240-match client design (every sea
 (parity) · `elysium-cardfx-design.md` + `cardfx-persistent-lock-design-decisions.md` + `cardfx-sweep-audit.md` (cardfx) ·
 `spec-knowledge-layer.md` (K0–K2, the TWD prior) · `elysium-bot-helper-gate-decision.md` · `elysium-bot-feedback-loop-spec.md` ·
 `elysium-arena-observability-plan.md` · `elysium-bot-influence-planner-spec.md` · `elysium-bot-phase-income-v2-plan.md` ·
-`spec-cleanup-2026-10-20.md` (the four projects' review, the clean-up, the abstract model's place) · `spec-block-bar-2026-09-18.md`
+`spec-cleanup-2026-10-20.md` (the four projects' review, the clean-up, the abstract model's place) · `spec-v5-wave1-2026-10-29.md`
+(V5 wave 1: the additional-strike protocol, aggravated strikes, Villein) · `spec-block-bar-2026-09-18.md`
 (the block-bar line, still owed to main's §12) · `spec-event-log-design-2026-09-25.md` (the event log, episodes in shadow mode,
 real-time invariants, the bench; a status table on top) and `spec-cardfx-sweep-sources-2026-09-25.md` (KRCG, vtes-rulings and
 vtes-skill mapped onto the cardfx fields; the method for graded readings) — both copied from Johan's Claude Docs of 25 Sep

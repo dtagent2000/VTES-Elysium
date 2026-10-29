@@ -13,7 +13,8 @@
   "(2) TWDA-frequent staples, (3) anything the auto tier provably mistags.",
   "18 Sep 2026 (late): +2 crypt (Sybren van Oosten, Alexa Draper), Alexander Silverson no longer docOnly -- 74 lib + 20 crypt = 94.",
   "18 Sep 2026 (night): + Anarch Troublemaker -- 75 lib + 20 crypt = 95.",
-  "16 Oct 2026 (R4): + the six V5 masters the auto tier mis-certified (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Austria, Haven Uncovered) -- 85 lib + 20 crypt = 105."
+  "16 Oct 2026 (R4): + the six V5 masters the auto tier mis-certified (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Austria, Haven Uncovered) -- 85 lib + 20 crypt = 105.",
+  "29 Oct 2026 (V5 wave 1, RULINGS D-98): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor's Hand, Sword of the Archangel, Invigorate -- 95 lib + 20 crypt = 115."
  ],
  "lib": {
   "Blood Doll": {
@@ -1816,6 +1817,257 @@
     }
    ],
    "note": "R4 (16 Oct 2026, the play-test review's F23: the six masters of the V5 decks the auto tier had certified FULL while four did nothing). 'Put this card on a ready vampire. Minions can enter combat with this vampire as a +1 stealth (D) action. This vampire can burn this card as a +1 stealth (D) action.' The auto tier wrote fx.stealth and the bot tabled it on its OWN board (the play-test's F23). Johan, 16 Oct (decision 5): not played until the bot can rush through it, then on an opponent's vampire. rushGrant = the +1 stealth of the granted rush: the master loop plays it only on the vampire my rush chooser would rush this turn (tabled on my board, the frozen line names owner and host -- Fame's placement), every observer records it, and _bestRushFor offers 'enter combat with the host' for each Haven on the table (no card from hand, the Haven stays, the host is not locked, the rusher is the acting minion). Not built: the host burning it as its own action."
+  },
+  "Villein": {
+   "t": [
+    "master"
+   ],
+   "trifle": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "poolFromHost": 5,
+      "poolFromHostMin": 2,
+      "hostCopyCost": 1
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): 'Trifle. Put this card on a vampire you control who has any amount of blood and move 2 to 5 blood from that vampire to your pool. Cards named Minion Tap cost you +1 pool to play. Villein costs +1 pool to play on this vampire.' Rulings: the cost is paid at the same time the pool is gained, no oust in between [LSJ 20020620]; the cost must be payable [ANK 20210714]; with less blood at resolution you take what is there [LSJ 20100216] [ANK 20180512-2]. The auto tier had no mode, so the bot tabled it blind (TABLED-ONLY: 22 copies in 6 V5 precons). poolFromHost = the most blood moved, poolFromHostMin = the least that may be announced, hostCopyCost = +1 pool for each Villein already on that vampire. Not modelled: the Minion Tap clause (no deck of ours plays Minion Tap)."
+  },
+  "Quickness": {
+   "t": [
+    "combat"
+   ],
+   "oncePerRound": true,
+   "modes": [
+    {
+     "at": "cel",
+     "fx": {
+      "addStrike": 1,
+      "addStrikeLimited": true
+     }
+    },
+    {
+     "at": "CEL",
+     "fx": {
+      "addStrike": 1
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): 'A vampire can play only one Quickness each round. [cel] Additional strike (limited). [CEL] Additional strike that does not count against the limit.' Ruling: [CEL] can be played before or after a limited additional strike [LSJ 20001206] [ANK 20211124]. The auto tier wrote an entry-level `limited` that also covered [CEL]. addStrikeLimited marks the mode that counts against the one-limited-source-per-round limit; oncePerRound is the card's own one-Quickness-each-round rule. Not modelled (amber, spec-v5-wave1 §4): the bot takes one additional strike a round per side, so [CEL] never stacks with a limited source yet."
+  },
+  "Pursuit": {
+   "t": [
+    "combat"
+   ],
+   "modes": [
+    {
+     "at": "cel",
+     "fx": {
+      "maneuver": true
+     }
+    },
+    {
+     "at": "CEL",
+     "fx": {
+      "addStrike": 1,
+      "addStrikeLimited": true
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): '[cel] Maneuver. [CEL] Additional strike (limited).' The auto tier's entry-level `limited` also covered the maneuver."
+  },
+  "Arms of Ahriman": {
+   "t": [
+    "combat"
+   ],
+   "modes": [
+    {
+     "at": "obl",
+     "fx": {
+      "addStrike": 1,
+      "addStrikeLimited": true
+     }
+    },
+    {
+     "at": "OBL",
+     "fx": {
+      "dodge": true,
+      "addStrike": 1,
+      "addStrikeLimited": true
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): '[obl] Additional strike (limited). [OBL] Strike: dodge, with 1 additional strike (limited).' [OBL] is played as the strike (a dodge) and brings its additional strike with it; [obl] is played after the first strikes resolve."
+  },
+  "Claws of the Dead": {
+   "t": [
+    "combat"
+   ],
+   "modes": [
+    {
+     "at": "pro",
+     "fx": {
+      "aggrHands": "round"
+     }
+    },
+    {
+     "at": "PRO",
+     "fx": {
+      "maneuver": true
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): '[pro] Damage from this vampire's hand strikes is aggravated this round. [PRO] Maneuver.' Cost 1 blood (inherited). Ruling: [pro] must be used before strike resolution and damage prevention to affect the current strike; it can be played after both strikes have been chosen [RTR 19960112]. The auto tier wrote aggr + handStrike, the shape of a hand strike card, which it is not. aggrHands = every hand strike of this vampire is aggravated for the rest of the round (additional strikes included)."
+  },
+  "Sculpt the Flesh": {
+   "t": [
+    "combat"
+   ],
+   "modes": [
+    {
+     "at": "pro",
+     "fx": {
+      "handBonus": 0,
+      "handStrike": true,
+      "aggr": true
+     }
+    },
+    {
+     "at": "PRO",
+     "fx": {
+      "handBonus": 1,
+      "handStrike": true
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): '[pro] Strike: hand strike, aggravated. [PRO] Strike: hand strike at +1 damage and put this card on the opposing minion. During their unlock phase, the attached minion burns 1 blood or life. Minions can burn this card as a +1 stealth action.' Requires Tzimisce (inherited). The auto tier read [PRO]'s '+1 stealth action' (the burn action) as a stealth effect and gave [pro] no damage. Not modelled (amber): [PRO]'s card on the opposing minion and its unlock-phase burn; the bot strikes with [PRO] for strength + 1 and the card goes to the ash heap."
+  },
+  "Wall of Filth": {
+   "t": [
+    "combat"
+   ],
+   "persistent": true,
+   "oncePerVampire": true,
+   "req": {
+    "disc": [
+     "pro",
+     "tha"
+    ],
+    "beforeRangeDetermined": true
+   },
+   "modes": [
+    {
+     "at": "pro",
+     "fx": {
+      "burnPrevent": 2,
+      "burnPreventNonAggr": true
+     }
+    },
+    {
+     "at": "tha",
+     "fx": {
+      "burnPrevent": 2,
+      "burnPreventNonAggr": true
+     }
+    },
+    {
+     "at": "PRO",
+     "fx": {
+      "burnPrevent": 2
+     }
+    },
+    {
+     "at": "THA",
+     "fx": {
+      "burnPrevent": 2
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): 'Only usable before range is determined. [pro] or [tha] Put this card on this vampire. This vampire can burn this card to prevent 2 non-aggravated damage in combat. A vampire can have only one Wall of Filth. [PRO] or [THA] As above, but to prevent 2 damage in combat.' A prevention card, not an aggravated strike: the auto tier read 'non-aggravated' as `aggr` (the ghost tag test-cardfx names for Soak) and the class map listed it with the aggravated strikes. Rulings: with fewer points coming the burn prevents them all [RTR 20041202]; unused prevention is lost [ANK 20200318]. burnPrevent = the points the burned card prevents, burnPreventNonAggr = not against aggravated damage."
+  },
+  "Rutor's Hand": {
+   "t": [
+    "action"
+   ],
+   "persistent": true,
+   "oncePerVampire": true,
+   "modes": [
+    {
+     "at": "tha",
+     "dominated": "the vampire takes 1 unpreventable aggravated damage: a ready vampire goes to torpor, and the unlock pays only after it leaves torpor (an action)",
+     "fx": {
+      "actStealth": 1,
+      "selfDmg": 1,
+      "selfAggr": true,
+      "lockToUnlock": true
+     }
+    },
+    {
+     "at": "THA",
+     "fx": {
+      "actStealth": 1,
+      "selfDmg": 1,
+      "selfAggr": true,
+      "selfAggrImmuneBlood": 3,
+      "lockToUnlock": true
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): '+1 stealth action. [tha] Put this card on this vampire, locked; this vampire takes 1 unpreventable environmental aggravated damage. During your minion phase, this vampire can lock this card to unlock. A vampire can have only one Rutor's Hand. [THA] As above, and this vampire can burn 3 blood to be immune to this aggravated damage.' Cost 1 blood (inherited). The class map listed it with the aggravated strikes; the aggravated damage is its own price. [tha] is dominated (a self-torpor: the unlock pays only after a leave-torpor action) and never played; [THA] burns the 3 blood for immunity. actStealth (the printed '+1 stealth action') rides each mode: there is no mode without a discipline. lockToUnlock = once each minion phase the bearer locks the card to unlock (it unlocks with my cards at my unlock phase)."
+  },
+  "Sword of the Archangel": {
+   "t": [
+    "equip"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "strBonus": 1,
+      "aggr": true
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): 'Unique melee weapon. Strike: strength+1 aggravated damage. Once each combat, this Salubri can burn 1 blood to cancel a grapple or aim card as it is played by the opposing minion, and its cost is not paid. Once each turn, if the opposing vampire is burned during this weapon's strike resolution and the bearer remains ready, the bearer can unlock at the end of combat.' Requires Salubri, 2 pool (inherited). The auto tier had only `aggr` (no damage). strBonus = a strike at strength + N, not a hand strike (melee: not at long range). Not modelled (amber): the cancel of a grapple or aim card, and the unlock after burning the opposing vampire."
+  },
+  "Invigorate": {
+   "t": [
+    "mod"
+   ],
+   "req": {
+    "disc": [
+     "ani",
+     "dom",
+     "pro"
+    ],
+    "sect": "Anarch"
+   },
+   "modes": [
+    {
+     "at": "ani",
+     "fx": {
+      "strengthAction": 1
+     }
+    },
+    {
+     "at": "dom",
+     "fx": {
+      "blockBar": "allies"
+     }
+    },
+    {
+     "at": "pro",
+     "fx": {
+      "aggrHands": "action"
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): 'Requires an Anarch. [ani] This Anarch gets +1 strength this action. [dom] This Anarch cannot be blocked by allies this action. [pro] This Anarch's hand strikes are aggravated this action.' The auto tier missed [ani] and the Anarch requirement (req.sect, checked against the crypt entry's printed sect). An action modifier: played before the action resolves; once blocked, combat is the action's resolution (VEKN rules forum, Rules Director 2022). The bot plays [pro] / [ani] on a rush, where combat is certain; [dom] is a free block bar with no consumer yet (the blockBar class)."
   }
  },
  "crypt": {

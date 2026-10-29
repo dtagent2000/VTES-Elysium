@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.39 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.40 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -145,6 +145,15 @@ const CLASS = {
   // crypt card text (Bot._cryptFxOf): a VAMPIRE's own printed ability -- never a library play path, so it cannot make a library card playable
   bleedBonus: 'crypt', bleedBoostDiscard: 'crypt', blockNotOlder: 'crypt', burnAtDamage: 'crypt', burnOnTorpor: 'crypt', enterPlay: 'crypt', interceptMod: 'crypt',
   noHuntStealth: 'crypt', noUnlockAfterTitledBleed: 'crypt', selfUnlock: 'crypt', stealthMod: 'crypt', strengthMod: 'crypt', voteBoostDiscard: 'crypt', voteTaxAgainst: 'crypt',
+  /* v1.1.40 (29 Oct 2026, bot v0.6.213, V5 wave 1, RULINGS D-98): the wave's keys. */
+  addStrike: 'contextual', addStrikeLimited: 'paired',   // the additional-strike step (_bestAddStrikeFor: a combat card's PURE addStrike mode) and Arms of Ahriman [OBL]'s dodge (_bestDodgeFor) -- the addStrike@ special case below mirrors both
+  aggr: 'meta',   // a strike's flag (Sculpt the Flesh [pro], Ivory Bow, Sword of the Archangel): read beside strike / handBonus / strBonus, never a play path of its own
+  aggrHands: 'play',   // Claws of the Dead [pro] (combat: the strike step, _clawsPlan) and Invigorate [pro] (an action modifier on a rush, _maybeInvigorate)
+  strengthAction: 'play',   // Invigorate [ani] on a rush (_maybeInvigorate)
+  strBonus: 'contextual',   // 'Strike: strength+N' -- through the strike@ special case (combat) and the equip grant (Sword of the Archangel)
+  burnPrevent: 'play', burnPreventNonAggr: 'paired',   // Wall of Filth: put in play in the before-range step (_playWallOfFilth), burned in the damage step (_wallBurn)
+  poolFromHost: 'play', poolFromHostMin: 'paired', hostCopyCost: 'paired',   // Villein: the master loop's villein branch (_villeinPlan / _villeinResolve) -- MASTER_KEYS below
+  lockToUnlock: 'play', selfAggrImmuneBlood: 'paired',   // Rutor's Hand: the action (_bestRutorFor, the rutor template) and the unlock (_maybeActAgain's board source); its dominated [tha] mode is set aside (judgeLib)
   press: 'contextual',   // v1.1.5: consumed via the press@ special-case below (Apportation's clean standalone shape only) -- 'contextual' here only silences the unknown-key warning for the excluded instances (co-located maneuver/strike/stealBlood, or an unverifiable req flag)
 };
 const cls = k => String(CLASS[k] || '');
@@ -160,7 +169,8 @@ const threatKeys = [...scanned].filter(k => cls(k).includes('threat')).sort();
 const MASTER_KEYS = new Set(['poolGain', 'bloodToPool', 'poolToBlood', 'handSize', 'handSizePermanent', 'handSizePerCounter', 'replaceBurnsCounter',
   'transferSwap', 'transferBurnPool', 'transferCost', 'rescueTorpor', 'handCycle', 'lockMinion', 'noBlockMinion', 'fameOnTarget', 'jackEngine',
   'warsawRefresh', 'warsawRescue', 'rebelBlood', 'votes', 'bloodAdd', 'bloodAddTo', 'bloodAddYounger', 'preyLock', 'giveToPrey', 'bloodAfterCleanAction',
-  'lockStealth', 'lockStealthClan', 'hostIntercept', 'hostInterceptOn', 'hostPrevent', 'bankIn', 'bankOut', 'bankClan', 'rushGrant']);
+  'lockStealth', 'lockStealthClan', 'hostIntercept', 'hostInterceptOn', 'hostPrevent', 'bankIn', 'bankOut', 'bankClan', 'rushGrant',
+  'poolFromHost', 'poolFromHostMin', 'hostCopyCost']);   // v1.1.40: + Villein
 function modeConsumed(mo, e){
   if(((e && e.t) || []).includes('master') && !Object.keys(mo.fx || {}).some(k => MASTER_KEYS.has(k)))
     return { ok: false, via: 'master: no board consumer for ' + (Object.keys(mo.fx || {}).join(',') || '\u2014') };
@@ -255,11 +265,17 @@ function modeConsumed(mo, e){
      co-located-maneuver/press guards. A blanket 'play' classification would have
      misreported Blood Fury/Cauldron of Blood/Loving Agony/Slam's superior as consumed
      the instant any of them entered a deck's coverage run.                          */
-  if ((typeof f.strike === 'number' || typeof f.handBonus === 'number') && !f.maneuver && !f.press   // v1.1.37: + handBonus (Roundhouse class)
+  if ((typeof f.strike === 'number' || typeof f.handBonus === 'number' || typeof f.strBonus === 'number') && !f.maneuver && !f.press   // v1.1.37: + handBonus (Roundhouse class); v1.1.40: + strBonus (strength+N)
       && (e && (e.t || []).includes('combat'))
       && !(e && e.req && (e.req.beforeRangeDetermined || e.req.notFirstRound)))
     return { ok: true, via: 'strike' };
   if (f.gainOppLoss && (e && (e.t || []).includes('combat'))) return { ok: true, via: 'gainOppLoss@endOfRound' };
+  /* v1.1.40 (bot v0.6.213): an additional strike, mirroring its two readers -- _bestAddStrikeFor takes a combat card's PURE addStrike mode
+     (no dodge, strike, hand strike, strength strike, steal or combat ends beside it: those are strikes that bring one, a later block), and
+     _bestDodgeFor takes a dodge that brings one (Arms of Ahriman [OBL]). */
+  if (f.addStrike > 0 && (e && (e.t || []).includes('combat'))
+      && (f.dodge || !(typeof f.strike === 'number' || typeof f.handBonus === 'number' || typeof f.strBonus === 'number' || f.stealBlood || f.strikeCE)))
+    return { ok: true, via: f.dodge ? 'addStrike@dodge' : 'addStrike@after-the-first-pair' };
   if (typeof f.envDmgPerRound === 'number' && (e && (e.t || []).includes('combat'))) return { ok: true, via: 'envDmgPerRound@beforeRange' };
   if (f.restrictHandStrike && (e && (e.t || []).includes('combat'))) return { ok: true, via: 'restrictHandStrike@preStrike' };
   /* v1.1.5 (Johan's combat GO, the multi-round loop -- Press): press is contextual
@@ -320,7 +336,7 @@ function modeConsumed(mo, e){
 /* v1.1.39: the keys an equipment card grants its bearer through the bearer readers -- + ranged (the gun's strike flag: the .44 Magnum and every gun
    were 'key outside the grant set' though the bot equips them and strikes with them, v0.6.211) and interceptPaid + its price interceptPaidBlood (Bowl of
    Convergence's [AUS] mode; _equipPaidIntercept reads the price as f.interceptPaidBlood, which the fx.-scan cannot see). */
-const EQUIP_GRANT = ['intercept', 'prevent', 'maneuver', 'strike', 'handStrike', 'ranged', 'interceptPaid', 'interceptPaidBlood'];
+const EQUIP_GRANT = ['intercept', 'prevent', 'maneuver', 'strike', 'handStrike', 'ranged', 'interceptPaid', 'interceptPaidBlood', 'strBonus', 'aggr'];   // v1.1.40: + strBonus (Sword of the Archangel's strength+1, _modeStrikeDmg) and aggr (Ivory Bow, the Sword: _equipCombatOption's aggr)
 
 /* ---------- discipline reach — mirrors Bot._modeUsableBy's gate (deck-static part) ---------- */
 function modeReachableBy(mo, cryptE){
@@ -380,6 +396,7 @@ function judgeLib(h, cryptEs){
   const e = h.e, modes = e.modes || [];
   const per = modes.map(mo => {
     const c = modeConsumed(mo, e);
+    if(mo.dominated) return { at: mo.at || '—', dir: mo.dir ? 'D' : '', consumed: false, dominated: true, via: 'dominated: ' + String(mo.dominated).slice(0, 60), reach: cryptEs.some(ce => modeReachableBy(mo, ce)), fxKeys: Object.keys(mo.fx || {}).join(',') || '—' };   // v1.1.40: never played by design (cardfx marks it): set aside
     return { at: mo.at || '—', dir: mo.dir ? 'D' : '', consumed: c.ok, via: c.via || '',
              reach: cryptEs.some(ce => modeReachableBy(mo, ce)),
              fxKeys: Object.keys(mo.fx || {}).join(',') || '—' };
@@ -391,7 +408,7 @@ function judgeLib(h, cryptEs){
   if (e.handler) verdict = (e.handler in BOT.CARD_HANDLERS) ? 'HANDLER' : 'HANDLER-UNREG';
   else if (e.actGrant) verdict = 'FULL';                                   // entry-level, read by _recomputePhaseActs
   else if (consumed.length){
-    verdict = reachConsumed.length ? (consumed.length === per.length ? 'FULL' : 'PARTIAL') : 'UNREACHABLE';
+    verdict = reachConsumed.length ? (consumed.length === per.filter(p => !p.dominated).length ? 'FULL' : 'PARTIAL') : 'UNREACHABLE';   // v1.1.40: a dominated mode is set aside
   }
   else if (e.ref && e.ref.pool) verdict = REF_CALLER ? 'FULL' : 'REF-TERMS';   // v1.1.31 (18 Sep 2026, cardfx v1.7.0): a political card with referendum terms (e.ref.pool) is playable the day the bot has a referendum caller that reads them -- detected by source scan, like everything else here
   else if (isMaster) verdict = 'TABLED-ONLY';
@@ -458,7 +475,7 @@ const badge = e => [e.src === 'hand' ? 'curated' : 'auto',
 
 P('# deck-coverage — ' + (deck.name || '(namnlös lek)') + ' (' + today + ')');
 P('');
-P('Genererad av `gen-deck-coverage.js` v1.1.39 mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: this string is the SECOND version site (the header comment is the first) -- bump BOTH when a version note is added, or every generated report inherits a stale self-identification
+P('Genererad av `gen-deck-coverage.js` v1.1.40 mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: this string is the SECOND version site (the header comment is the first) -- bump BOTH when a version note is added, or every generated report inherits a stale self-identification
   ', ' + (fx.counts.lib || '?') + ' lib / ' + (fx.counts.crypt || '?') + ' crypt / ' +
   (fx.counts.alias || '?') + ' alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden ' +
   '(skannad vid körning, inte handunderhållen). Leken: ' + loaded.source + '.');
@@ -575,4 +592,4 @@ console.log('rapport: ' + outPath);
 }
 
 if (require.main === module) main();
-module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.39' };
+module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.40' };
