@@ -22,7 +22,7 @@ pool 0 · the V5 smoke (14 × 12): 105 SAME-PLAY, 63 DIVERGED, each at a wave de
 V5 wave 1 (D-98): additional strikes (Quickness, Pursuit, Arms of Ahriman) between bots and against humans, aggravated strikes
 (Claws of the Dead, Sculpt the Flesh, the Ivory Bow, the Sword of the Archangel, Invigorate [pro]), Wall of Filth, Villein,
 Rutor's Hand, clan and sect requirements in the combat and equipment finders; 10 curated readings, graded; section 159 (44 checks);
-the canon `specs/spec-v5-wave1-2026-10-29.md` (RULINGS R-39, D-99); `docs/CARDS.md`: 162 of 308 cards playable (154 before).
+the canon `specs/spec-v5-wave1-2026-10-29.md` (RULINGS R-39, R-40, D-99); `docs/CARDS.md`: 162 of 308 cards playable (154 before).
 
 ## Next (proposed; Johan orders the board)
 1. V5 wave 2, in `docs/CARDS.md`'s class map order: the cards with no effect data, the stealth riders, the maneuver / press combat

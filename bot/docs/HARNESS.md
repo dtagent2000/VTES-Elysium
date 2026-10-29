@@ -75,7 +75,8 @@ main's release (HOWTO). STATUS names both versions; `tools/doc-budget.sh` checks
 ## Upkeep (between rounds, or when a check says so)
 - **Every docs change:** `bash tools/doc-budget.sh` green (budgets, named paths, the versions STATUS names); after changing
   the check itself, `bash tools/test-doc-budget.sh` (every failure class red, the baseline green).
-- **When a page nears its budget:** cut what is history (it goes to `docs/history/` or stays in git), never a binding rule.
+- **When a page nears its budget:** cut what is history (it goes to `docs/history/` or stays in git), never a binding rule; when
+  what remains still needs room, raise the budget in `tools/doc-budget.sh` (Johan, RULINGS D-101).
   LESSONS takes a new line only for a new class; BOARD lines that are done are deleted, not ticked.
 - **Every few rounds:** read RULINGS' Open lines with Johan (an answer moves the line up as an R or D line with its date); read
   BOARD top to bottom and drop what no longer matters; refresh the read-only copies when the root has moved.

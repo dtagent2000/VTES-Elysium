@@ -44,7 +44,7 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **R-28** (2026-10-16, rulebook 6.4.3 + Johan, v0.6.203) — The acting minion declares its strike first; between bots the answering bot peeks at it before choosing.
 - **R-29** (2026-10-16, Deep Song text) — The rushed vampire is the acting minion in that combat: it speaks first in the handshake and the human phase walk.
 - **R-30** (2026-10-16, card rulings, v0.6.203) — A borne Murder of Crows and a played Carrion Crows both land every round.
-- **R-39** (2026-10-29, rulebook, card texts, rulings, v0.6.213) — V5 wave 1's readings, sources in `specs/spec-v5-wave1-2026-10-29.md` §1: additional strikes after the first pair, the acting minion first, one limited source per minion a round (Quickness [CEL] outside it); Kevlar Vest and Guardian Angel prevent aggravated damage; Wall of Filth is prevention; Villein +1 pool per Villein there, payable at play; Rutor's Hand's damage is its own price.
+- **R-39** (2026-10-29, rulebook, card texts, rulings, v0.6.213) — V5 wave 1's combat readings, sources in `specs/spec-v5-wave1-2026-10-29.md` §1: additional strikes follow the completed first pair, the acting minion deciding first and the impulse returning; one limited source per minion a round (Quickness [CEL] outside it, one Quickness a round); a combatant no longer ready ends the combat. Kevlar Vest and Guardian Angel prevent aggravated damage too; Claws of the Dead covers the round's additional hand strikes; Invigorate's combat effects last the blocked action; Wall of Filth is prevention, not a strike.
 
 ### Politics & referendums
 - **R-31** (2026-09-15, rulebook + the client's menu, journal R3) — Locked titled minions still vote; minions in torpor do not; title votes come from the crypt data (`title` / `votes`), never a title table.
@@ -58,6 +58,7 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **R-35** (2026-10-14, KRCG, review F23) — Haven Uncovered: put on a ready vampire, minions may rush it as a +1 stealth directed action; The Labyrinth locks for +1 stealth to a Nosferatu; Guardian Angel: +1 intercept vs bleeds directed at you, prevents 1 each combat; Wasserschloss Anif is a blood bank.
 - **R-36** (2026-10-19, vtes.json, spec-cards §1) — The printed name is *Pentex™ Subversion*; "(TM)" is a variant; a curated entry resolves under both.
 - **R-37** (2026-10-16, Revelations text, review F21) — Revelations arms whenever the actor's prey is the bot, whatever the Target suffix; a bare `plays Revelations.` is [aus].
+- **R-40** (2026-10-29, KRCG text + rulings, v0.6.213) — Villein: 2–5 blood to my pool, +1 pool for each Villein already on the vampire, payable from the pool when played [ANK 20210714] and paid as the pool comes [LSJ 20020620]; less blood at resolution = what is there. Rutor's Hand's aggravated damage is its own price ([THA]: 3 blood buys immunity); its unlock is locking the card. The Sword of the Archangel is Salubri only, Sculpt the Flesh needs a Tzimisce, Invigorate an Anarch [spec-v5-wave1 §1].
 
 ## D — design decisions
 
@@ -180,6 +181,7 @@ approved, the line says which part is whose ("Johan: … · built (Claude): …"
 - **D-91** (2026-10-12, Johan) — Git monorepo; branch + PR per change; Johan merges and deletes branches; third-party data in the private repo `dtagent2000/VTES-Elysium-data`; KRCG v5 deferred until v3 is dropped.
 - **D-92** (2026-10-16, Johan) — Combining rule: a fix found during a round may ride in it when it fits, said so in the PR; review rounds R1 → R4; we run the play-test rig ourselves.
 - **D-93** (2026-08-04, Johan) — The evaluation doctrine: every shipped tactical change gets its OUTCOME evaluated in the next report against its registered prediction (change · prediction · observed · verdict: keep / tune / revert), so the sum of changes is judged, not just shipped [CL lines 96–100].
+- **D-101** (2026-10-29, Johan) — A page budget serves the docs: when a standing page needs room, the ceiling is raised ("we should not lock ourselves to something that does not work optimally"). Built (Claude): RULINGS 42 → 60 KB, BOARD 15 → 18 KB, the standing pages 140 → 160 KB (`tools/doc-budget.sh`; the bootstrap's 50 KB stays); cutting history first (HARNESS) stands.
 
 ## Open — waiting for Johan, or a known gap tagged as such (sources consulted in brackets)
 

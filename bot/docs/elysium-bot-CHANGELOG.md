@@ -20,8 +20,8 @@
 
 ## Bot
 - **v0.6.213 (29 Oct 2026)** — V5 wave 1, Johan's "kör" of 29 Oct on D-98 (the waves go by effect class; wave 1 = Villein, the
-  extra strikes and the aggravated strikes). The canon: `specs/spec-v5-wave1-2026-10-29.md`; RULINGS R-39 (the readings with their
-  sources), D-99 (Claude's design and thresholds).
+  extra strikes and the aggravated strikes). The canon: `specs/spec-v5-wave1-2026-10-29.md`; RULINGS R-39 / R-40 (the readings with
+  their sources), D-99 (Claude's design and thresholds).
   - *Additional strikes* (Quickness, Pursuit [CEL], Arms of Ahriman [OBL]): the bot declares with main's `NAME gets an additional
     strike.` + the tally's `xa` / `xb`. Between bots the acting bot decides first and declares before its round line; the answering
     bot answers with its own declaration or the new bot line `NAME combat — VAMPIRE does not take an additional strike.`
@@ -244,6 +244,8 @@
   modes set aside); the report's second version site was left at v1.1.39 (fixed). The five V5 starter reports in `docs/coverage/`
   regenerated (Toreador 50 → 56 FULL: Villein). `docs/CARDS.md` regenerated on the release runs: 162 of 308 cards playable (154),
   13 unseen (12), 61 partial (66), 72 inert (76; Walk of Flame now fails closed).
+  `tools/doc-budget.sh`: RULINGS 42 → 60 KB, BOARD 15 → 18 KB and the standing pages 140 → 160 KB, the bootstrap's 50 KB unchanged
+  (Johan, 29 Oct: RULINGS D-101 — when a page needs room the ceiling is raised); `tools/test-doc-budget.sh` follows.
 - **V5 round 0 (29 Oct 2026, with bot v0.6.212)** —
   - **`gen-precon.js` v1.0.0** (new): every V5 precon (Fifth Edition, Anarch, Companion, Sabbat V5: 18) from `vtes.json`'s sets data,
     written as `deck-<key>.json` beside it when the file is missing, compared by KRCG id and quantity when it exists; it also compares the
