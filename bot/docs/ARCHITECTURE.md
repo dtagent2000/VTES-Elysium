@@ -53,13 +53,15 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | `elysium-bot.js` | the bot; `BOT_VERSION`; decks (`*_DECK`, `ARCHETYPES`), `DECK_STRATEGY`, `PERSONAS`, `L12` (the frozen-line grammar), `FX_NORM`, `prepCardfx`, `class Bot`, `BOT_EXPORTS` |
 | `elysium-cardfx.json` / `.js` | the card-effect library (auto tier for the whole pool + 105 curated), built by `cardfx-compile.js` from `cardfx-curated.json` + `vtes.json` |
 | `elysium-twd-profile.json` / `.js`, `elysium-twd-archetypes.json` / `.js` | the TWDA prior (per clan × group window × discipline signature: shares and labels), built by `twd-profile.py` / `twd-archetypes.py` |
-| `deck-*.json`, `rig-a1.json`, `design-balanced-serie-bal1.txt` | the decks, a rig, the balanced seat design |
-| `elysium-bot-sim.js` | THE SIM TABLE: the hotseat table under a virtual clock, deterministic, every seating |
+| `deck-*.json`, `rig-a1.json`, `design-balanced-serie-bal1.txt` | the decks (the embedded ones' files, and the 14 other V5 precons: test inputs the client does not offer), a rig, the balanced seat design |
+| `gen-precon.js` | the V5 precons from `vtes.json`'s sets; `--check` compares the starters and the embedded decks by KRCG id |
+| `gen-card-ledger.js` → `docs/CARDS.md` | the card ledger: per card the coverage verdict, tier, decks, rulings, suite sections, uses in the sim; the class map |
+| `elysium-bot-sim.js` | THE SIM TABLE: the hotseat table under a virtual clock, deterministic, every seating; a key the bot does not embed plays `deck-<key>.json` |
 | `elysium-bot-hotseat.js` | the client's real `hotBridge` lifted and driven headless (the hotseat gate; the sim's engine) |
 | `elysium-bot-arena.js` | bots on a real spawned server (real clocks; the timing truth) |
 | `elysium-bot-table.js` | seat bots at a live table |
 | `elysium-bot-diag.html`, `diag-hb1-smoke.js` | the browser battery (HB1) |
-| `test-bot-logic.js` | the suite (2,244 assertions at v0.6.211, sections numbered up to 157; live sections spawn the server) |
+| `test-bot-logic.js` | the suite (2,247 assertions at v0.6.212, sections numbered up to 158; live sections spawn the server; it needs a heap over 2 GB, HOWTO) |
 | `test-bot-canary.js` | the §12 grammar contract against the client html + protocol |
 | `test-cardfx.js` | the compiler's contract (needs `vtes.json`) |
 | `test-bot-hotseat.js` | the hotseat gate (H1–H11) |

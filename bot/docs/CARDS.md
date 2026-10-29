@@ -8,10 +8,10 @@ Sim: `sim-212` — 240 matches, bot v0.6.212, malkavian,tremere,nosferatu,ventru
 
 ## Summary (308 cards, 1386 library copies)
 
-| status | cards | copies |
+| status | cards (any deck) | copies (in their deck) |
 |---|---:|---:|
-| playable | 154 | 970 |
-| unseen | 12 | 30 |
+| playable | 154 | 955 |
+| unseen | 12 | 45 |
 | partial | 66 | 171 |
 | inert | 76 | 215 |
 | unresolved | 0 | 0 |

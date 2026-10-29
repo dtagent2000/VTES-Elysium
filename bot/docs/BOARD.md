@@ -45,7 +45,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   T7, T9; RULINGS O-2, O-29, O-31.
 - **C6 — the faster suite**: ~87 % of the suite's time is its own sleeps (151 s of literal `sleep`s in the 400 no-server sections);
   pilot a second runner that plays those sections under the sim's virtual clock, live sections on the real clock; sharding is the
-  fallback. *Done when* one runner gives the same assertion count, green ×3. Docs: spec §5.7, §7.
+  fallback. The suite also grows past a 2 GB heap by section 136 (29 Oct): find what it keeps. *Done when* one runner gives the same
+  assertion count, green ×3, on node's default heap. Docs: spec §5.7, §7.
 - **Graded rules readings and the card ledger** (T2, T3): one generated row per card (tier, modes, rulings, the suite section,
   plays in the latest sim, status); each curated reading graded green / amber / red by a fresh agent against KRCG text and
   vtes-rulings, only reds to Johan. *Done when* `gen-card-ledger.js` writes `docs/CARDS.md` from cardfx + the suite + a sim dir.
@@ -114,6 +115,15 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* the persona pass (RULINGS O-29) ships with those tests.
 
 ## Measurement debts
+- **The hotseat table runs out most bot-vs-bot reaction windows** (found 29 Oct, the same on v0.6.211): `ana-windows.py` on a pace-0
+  sim series (24 matches) reads 403 of 467 bleed totals and 101 of 125 modifier windows as RAN OUT, with 369 `stale-answer` rows (bot
+  Passes); the server arena read 0 of 82 (v0.6.207). The sim matches the real-clock hotseat table decision for decision (REPORT-sim-
+  table §2), so this may be what an offline table does: every bot-vs-bot window waits out its clock. *Done when* a `--real` hotseat
+  match and a browser hotseat table say whether bot answers are lost there, and either the cause is fixed or the gate is restated per
+  table. Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
+- **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
+  once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
+  pool change was my own payment.
 - **The 14 Oct playtest scenario** (`client/playtest/`, `--dir` on a scratch copy of the root with the bot branch) not re-run since
   v0.6.207; **the larger re-measure** against a v0.6.207 baseline (every arena number before v0.6.206 carries ~3 s of dead clock
   per bleed total). *Done when* both reports exist with the sim as the first read.
