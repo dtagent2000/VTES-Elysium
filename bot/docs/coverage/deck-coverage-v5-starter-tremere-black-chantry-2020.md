@@ -1,6 +1,6 @@
-# deck-coverage — V5 Starter — Tremere (Black Chantry 2020) (2026-10-16)
+# deck-coverage — V5 Starter — Tremere (Black Chantry 2020) (2026-10-29)
 
-Genererad av `gen-deck-coverage.js` v1.1.38 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-tremere.json.
+Genererad av `gen-deck-coverage.js` v1.1.39 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-tremere.json.
 
 Syfte: göra "kan botten spela den här leken?" till en mekanisk kontroll — curated-djup och
 handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPPORT, inte en gate.
@@ -9,18 +9,17 @@ handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPP
 
 | Hink | Kopior | Andel |
 |---|---:|---:|
-| Automatiserade (HANDLER/FULL) | 75 | 97% |
-| Delvis (PARTIAL/TABLED-ONLY) | 1 | 1% |
-| Ej spelbara av botten idag | 1 | 1% |
+| Automatiserade (HANDLER/FULL) | 77 | 100% |
+| Delvis (PARTIAL/TABLED-ONLY) | 0 | 0% |
+| Ej spelbara av botten idag | 0 | 0% |
 
-Per verdict: FULL 75 · INERT 1 · PARTIAL 1
+Per verdict: FULL 77
 
 ## Konsumtionsläget (skannat ur bottens källa vid körning)
 
-- Spel-nycklar botten läser: `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bloodPerMargin`, `bounce`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockMinion`, `lockStealth`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `rushGrant`, `stealth`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
+- Spel-nycklar botten läser: `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bleedNullify`, `bloodPerMargin`, `bounce`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockMinion`, `lockStealth`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `rushGrant`, `stealth`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
 - Fas-inkomst (kräver `phase` på moden): `bankIn`, `bankOut`, `bloodToPool`, `handCycle`, `handSize`, `handSizePerCounter`, `poolGain`, `poolToBlood`, `rescueTorpor`, `transferBurnPool`, `transferSwap`
 - Hotläsning (motståndarkort, gör ALDRIG egna kort spelbara): `bloodBurn`, `poolDmg`, `stealBlood`
-- ⚠ OKLASSADE nycklar hittade i botkällan (uppdatera CLASS-kartan i verktyget): `bleedBonus`, `bleedBoostDiscard`, `bleedNullify`, `blockNotOlder`, `burnAtDamage`, `burnCap`, `burnOnTorpor`, `enterPlay`, `equip`, `interceptMod`, `interceptPaid`, `noHuntStealth`, `noUnlockAfterTitledBleed`, `payBlood`, `preventX`, `ranged`, `referendum`, `selfUnlock`, `stealthMod`, `strengthMod`, `voteBoostDiscard`, `voteTaxAgainst`
 
 ## Bibliotek (24 unika, 77 kopior)
 
@@ -36,8 +35,8 @@ Per verdict: FULL 75 · INERT 1 · PARTIAL 1
 | Wider View | 1 | FULL | [—] transferSwap,transferCost → ✓(transferSwap@influence-loop)/✓<br>[—] transferBurnPool,transferCost → ✓(transferBurnPool@influence-loop)/✓ | curated · persist · trifle |
 | Govern the Unaligned | 12 | FULL | [dom D] bleedAct,bleed → ✓(bleedAct)/✓<br>[DOM] bloodAdd,bloodAddTo,bloodAddYounger,actStealth → ✓(bloodAdd@unc-stock)/✓ | auto |
 | Magic of the Smith | 2 | FULL | [tha] actStealth,fetchEquip → ✓(fetchEquip)/✓<br>[THA] actStealth,fetchEquip → ✓(fetchEquip)/✓ | curated |
-| .44 Magnum | 1 | INERT | [—] maneuver,strike,ranged → —/✓ | auto · persist |
-| Bowl of Convergence | 1 | PARTIAL | [aus] intercept → ✓(equip-grant (bearer readers))/✓<br>[AUS] intercept,interceptPaid,interceptPaidBlood → —/✓ | curated · persist |
+| .44 Magnum | 1 | FULL | [—] maneuver,strike,ranged → ✓(equip-grant (bearer readers))/✓ | auto · persist |
+| Bowl of Convergence | 1 | FULL | [aus] intercept → ✓(equip-grant (bearer readers))/✓<br>[AUS] intercept,interceptPaid,interceptPaidBlood → ✓(equip-grant (bearer readers))/✓ | curated · persist |
 | Kevlar Vest | 1 | FULL | [—] prevent → ✓(equip-grant (bearer readers))/✓ | auto · persist |
 | Sport Bike | 1 | FULL | [—] intercept → ✓(equip-grant (bearer readers))/✓ | auto · persist |
 | Bonding | 6 | FULL | [dom] bleed → ✓(bleed@mod-window)/✓<br>[DOM] bleed,stealth → ✓(stealth)/✓ | auto |
@@ -68,10 +67,7 @@ Per verdict: FULL 75 · INERT 1 · PARTIAL 1
 
 ## Kurationskö (allt som inte är FULL/HANDLER, qty-fallande)
 
-| Kort | Qty | Verdict | Föreslaget nästa steg |
-|---|---:|---|---|
-| .44 Magnum | 1 | INERT | nycklar som är AVSIKTLIGT icke-spelbara i denna form (maneuver, strike, ranged: gated/paired — felspelsvakten, inte ett konsumentgap) |
-| Bowl of Convergence | 1 | PARTIAL | okonsumerade modes: [AUS] intercept,interceptPaid,interceptPaidBlood |
+Tom — hela biblioteket är automatiserat. 🎉
 
 ## Antaganden (uttalade, inte tysta)
 

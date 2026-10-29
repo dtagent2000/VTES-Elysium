@@ -61,6 +61,7 @@
 - L-52 **Count in the arena, weigh in a lab** (17 Oct); prove a knob fires before reading its arm (27 Sep, the inert `dyn` arm read as "no loss").
 - L-53 **Sanity-check a classifier against one known case before reporting its list** (21 Sep: the "no fx" list named cards the bots play).
 - L-54 **A smoke is not a pattern; 100 % is a finding too; restraint is a finding too** (Sep).
+- L-82 **A design that never changes the table cannot see a rule that only bites at another table** (29 Oct): Chantry's last-pool rescue never fired in 240 four-seat matches and showed in the first 168 five-seat ones. Vary the table size and the decks, not only the seats and the deals.
 
 ## Contracts, parsers and state
 - L-55 **A parser and its phrase are one contract; move the phrase's tier and the parser goes deaf** (22 Sep: six days of series with no combat handshake).

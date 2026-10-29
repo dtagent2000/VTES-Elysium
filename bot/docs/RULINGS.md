@@ -125,7 +125,7 @@ approved, the line says which part is whose ("Johan: … · built (Claude): …"
 - **D-50** (2026-09-20, Johan's racing rule, CL 41a) — A racing deck seldom leaves a body up other than with a BOUNCE in hand, no wake, against a predator averaging 2+ pool damage, when the vampire itself managed only a bleed of 1–2; after a 1-bleed the weight to block can be larger, by the predator's statistics (built as `_raceHome`, one body at most).
 - **D-51** (2026-09-27, Johan's "don't oust yourself" item; Claude's design, v0.6.189–193) — Recurring losses over the last turn cycle (Creeping Sabotage, Smiling Jack, Fame) are added to the critical pool (`dynFloor` 1).
 - **D-52** (2026-10-19, Johan 22:36 + Claude's build, spec-cards §5, v0.6.211) — Johan: equipment weighs more than a 1-bleed without modifiers; Govern is usually better than Kevlar; the Magnum is fine except late when the pool is low; Kevlar belongs to the knowledge layer. Built (Claude's thresholds): a weapon or armour beats a BARE plain 1-bleed (no crypt bonus, no pump in hand), never a bleed card, not with the prey within reach (the lunge rule), and a pool-cost item at ≤ 6 pool keeps the flat price (`equipOverPlain` 1).
-- **D-97** (2026-10-19, Claude's fix found by the sim, v0.6.210 — not a Johan ruling) — The master, equip and fetch finders never spend the last pool (R-34).
+- **D-97** (2026-10-19, Claude's fix found by the sim, v0.6.210 — not a Johan ruling) — The master, equip and fetch finders never spend the last pool (R-34); nor Chantry's rescue (v0.6.212). The 29 Oct inventory: influence (the `poolFloor` knob, 6 for every persona), ally, political and Vessel's pool-to-blood already left 1; Jack's tick, Fame and pool damage are losses, not choices.
 
 ### Masters & cards (cardfx)
 - **D-53** (2026-09-16, Johan) — Claude compiles cardfx; `vtes.json` comes from KRCG or `dtagent2000/VTES-Elysium-data` (D-91).
@@ -190,14 +190,14 @@ A retired line keeps its number as a one-line stub so references stay valid.
 
 ### Stealth, intercept & block
 - **O-5** (2026-09-18) — Referendums are blocked whenever the prey / predator HOLDS intercept (~50 % on a stake-3 undirected action): right? Should the caller weigh the defenders' intercept history into `pass`? [CL 18, 44c].
-- **O-6** — retired 20 Oct: no question left (Johan's D-22 prevents all it can afford, so no aggravated preference is needed; strike lines carry `strikeAgg`; Second Tradition's locked mode was seen live, CL 45a).
+- **O-6** — retired 20 Oct (answered by D-22; `strikeAgg` on the strike lines).
 - **O-7** (2026-10-17) — The probe's "out-number" counting the prey's expected WAKES as blockers (deck read + hypergeometric) is Johan's description and on his product line (BOARD); the design is to be proposed and needs his "kör" [CL 65f, spec-next §2].
 - **O-8** (2026-10-19) — Two keep-rules on one tie: Spying Mission (last) vs Swallowed by the Night (kept for combat); Claude lets the combat card be kept [spec-cards §5].
 
 ### Combat
 - **O-9** — retired 20 Oct: answered 10 Oct (D-29; D-18's Majesty half is superseded by it).
 - **O-10** (2026-09-21) — Nosferatu's Fame → rush → torpor → rescue chain has never run; the rush is not priced in pool [CL 60d, 61, 31c]. (gap, not a question — BOARD)
-- **O-11** — retired 20 Oct: the dodge's knowledge step is in D-30; Kevlar is on the BOARD's product line (D-52).
+- **O-11** — retired 20 Oct (D-30; Kevlar: D-52, BOARD).
 - **O-12** (2026-10-17) — A steal pair between bots disagrees when the victim's Majesty ends the combat (the stealer books 2, the victim nothing) — older, unfixed [journal 17 Oct]. (gap, not a question — BOARD)
 
 ### Politics & referendums
@@ -209,17 +209,17 @@ A retired line keeps its number as a one-line stub so references stay valid.
 ### Influence, pool & economy
 - **O-18** (2026-09-18) — The recruit's POOL cost is still paid at resolve rather than parked (minor under R-17) [CL 1, 27b]. (gap, not a question: under R-17 paying the recruit's pool at resolve IS the rule; only the reserve at announce is missing, which barely matters for pool)
 - **O-19** (2026-09-19) — Income direction v0 is narrow (a 0-blood host, pool ≥ max(10, floor + 4)); a working-reserve rule is the next step [CL 20i]. (gap, not a question — BOARD)
-- **O-20** (2026-10-19) — "Low pool" for the equipment rule is the fixed 6, not the dynamic level; own pool payments outside the master / equip / fetch finders are not inventoried [spec-cards §5, journal 19 Oct].
+- **O-20** (2026-10-19) — "Low pool" for the equipment rule is the fixed 6, not the dynamic level [spec-cards §5]. (The pool-payment inventory: done, D-97.)
 
 ### Masters & cards
 - **O-21** (2026-09-18) — A FREE block bar (Beast Meld-class) and `chosen` (Seduction-class) have tags but no consumer; crypt text is hand-curated (20 entries), no passive-shape auto-extractor [CL 24c, 24l]. (gap, not a question — BOARD)
-- **O-22** (2026-09-21) — Villein is the biggest uncurated gap in TWD 2019+ libraries; the V5 wave size (5 decks at a time vs 1) is undecided; the card ledger (spec-cleanup T2) should make it cheaper [CL 65c, spec-cleanup §6.2].
+- **O-22** (2026-09-21) — Villein is the biggest uncurated gap (also 22 copies in 6 V5 precons); the V5 wave size (5 decks at a time vs 1) is undecided. Round 0 (29 Oct): `CARDS.md`'s class map; Claude proposes waves by effect class, a deck entering the menu when its rows are playable [CL 65c, spec-cleanup §6.2].
 - **O-23** (2026-10-16) — Wasserschloss Anif's burn-it action and Haven Uncovered's host burning the card are not built; Ventrue HQ is locked only in own referendums [spec-r4 §3]. (gap, not a question — BOARD)
-- **O-24** (2026-10-19) — Both Pentex spellings in one game are two cards to `_uniqueInPlay` [spec-cards §5].
+- **O-24** (2026-10-19) — Both Pentex spellings in one game are two cards to `_uniqueInPlay` (one row in `CARDS.md`, by KRCG id) [spec-cards §5].
 
 ### Timing, holds, tempo & chat
 - **O-25** (2026-09-25) — Whether the bot ASKS in chat or only LOGS number mismatches with a human (the event-log / shadow-model design) [mem 25 Sep].
-- **O-26** — retired 20 Oct: obsolete; the client's Reduce row shipped in v2.6.159 and the bot reads it since v0.6.201 (D-7).
+- **O-26** — retired 20 Oct (obsolete: the Reduce row, client v2.6.159, D-7).
 - **O-27** (2026-10-17) — The probe default and the chat beat have not been seen by a human at a table; main's second idea (delay the panel) is the reserve [journal 17 Oct].
 - **O-36** (2026-10-17) — Between bots a contested block's verdict waits for the actor's clock (~3 s at the arena's askSecs; by design in R4, nobody declares it sooner): keep, or shorten? [context 17 Oct, `ana-windows.py`'s "contest at the clock" rows].
 - **O-28** (2026-10-20) — The clean-up's decisions (spec-cleanup §8): Q1 answered ("Börja med C1 enligt specen", 20 Oct). Open: Q2 the journal and Q3 the READ-ME-FIRSTs (C1 froze both in `history/` and the ritual writes neither, as §5.5 lays out; Q2 (b) would add a short Swedish decision log), Q5 CI for `bot/`, Q6 history comments (recommended (b)), Q7 paste the project instruction after the merge. Q4 is asked of main (the docs-diet handoff) [spec-cleanup §8].

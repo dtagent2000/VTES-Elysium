@@ -1,22 +1,28 @@
-# BOARD — the open asks (20 Oct 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (29 Oct 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks (Gangrel) and the TWD profile can
-  price it by what the table's decks deal. *Done when* the equipment scorer reads an expected-damage share for the table's decks
-  and a pinned bench shows no loss. Docs: RULINGS D-52; `specs/spec-knowledge-layer.md`.
+  price it by what the table's decks deal. Waits for the wave that plays aggravated strikes (`CARDS.md` class `aggr`: Claws of the
+  Dead, Sculpt the Flesh, Wall of Filth …): no deck at the reference table deals aggravated damage to others today, so there is
+  nothing to price yet (29 Oct). *Done when* the equipment scorer reads an expected-damage share for the table's decks and a
+  pinned bench shows no loss. Docs: RULINGS D-52; `specs/spec-knowledge-layer.md`.
 - **The prey's wakes as blockers** (65f): the probe lab lost on five tables of 91 where a prey with one body and a wake blocked
   the prober and woke for the punch. *Done when* `probeHold`'s out-number reads unlocked bodies + expected wakes (deck read +
   hypergeometric), measured in `lab-probe.js`. Docs: RULINGS O-7; `specs/spec-knowledge-layer.md`.
 - **The abstract model spec**: the first of the four checks (fast rollouts over card-class distributions, probabilities not
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
-- **The V5 plan**: a precon generator from `vtes.json`'s precon sets, a coverage class map, Toreador, then waves on the card
-  ledger. Before the deck count doubles, move the embedded decks and `DECK_STRATEGY` into a data file (seven decks are embedded
-  in `elysium-bot.js`, six duplicated in `deck-*.json`, `WALL_DECK` has no file). *Done when* a wave is a list of ledger rows
-  that turned "playable". Docs: RULINGS D-84, O-22; spec-cleanup §6.2; `coverage/`.
+- **The V5 waves**: round 0 (v0.6.212) built the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim
+  plays them; the client's menu does not offer them), the coverage class map and the ledger (`docs/CARDS.md`). Next: the waves, by
+  effect class as `CARDS.md`'s class map ranks them (masters with no effect modelled, Villein first: 22 copies in 6 decks; the
+  bundled maneuver / press combat cards; aggravated strikes; free block bars; extra strikes; the 22 cards with no effect data;
+  action cards whose effect is unmodelled) — Johan chooses the wave shape (RULINGS O-22). A deck joins the menu (`ARCHETYPES` + a
+  `DECK_STRATEGY` line) when its rows are playable and it holds up in the sim; before the deck count doubles, decks and
+  `DECK_STRATEGY` become a data file (seven decks embedded in `elysium-bot.js`, six duplicated in `deck-*.json`; `gen-precon.js
+  --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, O-22; `CARDS.md`; HOWTO.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C2 — dead code and tools**: delete the ten legacy tests, `_bumpTallyB`, the lint's eight unused assignments, one `handStrike`
@@ -86,6 +92,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   played in a sim series. Docs: RULINGS O-23.
 - **Two Pentex spellings** are two cards to `_uniqueInPlay`. *Done when* `_uniqueInPlay` compares the normalised name. Docs:
   RULINGS O-24.
+- **The act-again context reads `mo.fx.referendum`** (`_actAgainCtx`'s "clogged" test), which no cardfx entry carries — political
+  cards carry `e.ref` — so a political action in hand never counts as another use for the vampire (found by the coverage scan, 29
+  Oct). *Done when* the test reads the political type and a section covers it.
+- **The influence floor at `poolFloor` 0**: the influence phase leaves `poolFloor` (6 for every persona; 1 with no ready minion);
+  a knob of 0, which only test fixtures set, lets it spend the last pool (D-97's inventory, 29 Oct). *Done when* the floor is at
+  least 1 and the fixtures that relied on 0 are read (L-16).
 
 ## From the 11 Oct review of VTES-Player (DuelRevolvers; ideas only, no code — the repo has no licence)
 - **Blood-hunt voting** (their item 8): `_refVoteDir` reads only pool terms, so a blood hunt reads "nothing in it for me" and the
