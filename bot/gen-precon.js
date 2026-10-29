@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-precon.js v1.0.0 (29 Oct 2026, bot v0.6.212) -- the V5 preconstructed decks, built from KRCG's card data.
+/* gen-precon.js v1.1.0 (29 Oct 2026, bot v0.6.214; v1.0.0 bot v0.6.212) -- the V5 preconstructed decks, built from KRCG's card data.
 
    Why: the V5 plan (BOARD) makes the V5 precons playable in waves. Their lists are in vtes.json's `sets` data (each card says
    which precon carries it and how many copies), so they are generated, not typed. The four starters the bot already plays
@@ -16,16 +16,25 @@
      overwritten: it is compared with the generated list instead.
    - Compares by KRCG card id and quantity (so "Pentex(TM) Subversion" and "Pentex™ Subversion" are one card), and also
      compares the decks embedded in elysium-bot.js (ARCHETYPES) with their files.
+   - v1.1.0 (V5 wave 2, RULINGS D-102): every precon the bot does not embed carries its combat posture, `combat` (chase / snipe / wave:
+     the range doctrine the bot's combat mind reads, DECK_STRATEGY's field for the embedded decks), from the POSTURE table below; a file
+     whose posture differs from the table is a DIFF. --posture writes the table's posture into the existing files (that field only).
 
    Usage (from inside bot/, with vtes.json beside it -- root CLAUDE.md, "Data that is not in git"):
      node gen-precon.js            write the missing deck files, compare the existing ones; exit 1 on any DIFF / unresolved card
      node gen-precon.js --check    write nothing; the same comparisons (a gate-style check after a vtes.json refresh)
      node gen-precon.js --list     print the precon keys with their set, release date and card counts
+     node gen-precon.js --posture  write the POSTURE table's `combat` into the existing precon files (their cards are never touched)
    Options: --vtes FILE (default ./vtes.json) · --dir DIR (where deck files live, default this folder)                      */
 
 const fs = require('fs'), path = require('path');
 
-const GEN_PRECON_VERSION = '1.0.0';
+const GEN_PRECON_VERSION = '1.1.0';
+/* The combat posture of each precon the bot does not embed (D-102, Johan 29 Oct 2026): chase = the fight is at close range (the strength
+   decks: Brujah, Gangrel, Tzimisce, Path of Caine); snipe = long range with a ranged strike or steal in hand (Banu Haqim: Hunger of
+   Marduk); every other precon waves (long range defensively). The embedded decks keep theirs in the bot's DECK_STRATEGY. */
+const POSTURE = { brujah: 'chase', gangrel: 'chase', tzimisce: 'chase', pathcaine: 'chase', banuhaqim: 'snipe' };
+const postureOf = key => POSTURE[key] || 'wave';
 const V5_SETS = ['Fifth Edition', 'Fifth Edition (Anarch)', 'Fifth Edition (Companion)', 'Sabbat V5'];
 const SET_LABEL = { 'Fifth Edition': 'Starter', 'Fifth Edition (Anarch)': 'Anarch', 'Fifth Edition (Companion)': 'Companion', 'Sabbat V5': 'Sabbat' };
 const isCrypt = c => (c.types || []).some(t => t === 'Vampire' || t === 'Imbued');
@@ -43,6 +52,7 @@ function parseArgs(argv){
     const a = argv[i];
     if (a === '--check') o.check = true;
     else if (a === '--list') o.list = true;
+    else if (a === '--posture') o.posture = true;
     else if (a === '--vtes') o.vtes = argv[++i];
     else if (a === '--dir') o.dir = argv[++i];
     else if (a === '--help' || a === '-h') o.help = true;
@@ -122,14 +132,22 @@ function main(){
   }
 
   let bad = 0, wrote = 0;
+  const embedded = k => Object.prototype.hasOwnProperty.call(B.ARCHETYPES, k);
   for (const d of order){
     const file = path.join(o.dir, 'deck-' + d.key + '.json');
     const unresolved = d.crypt.concat(d.library).filter(x => !lookup(x.name)).map(x => x.name);
-    const gen = { name: deckName(d), crypt: d.crypt.map(({ name, qty }) => ({ name, qty })), library: d.library.map(({ name, qty }) => ({ name, qty })) };
+    const gen = Object.assign({ name: deckName(d) }, embedded(d.key) ? null : { combat: postureOf(d.key) }, { crypt: d.crypt.map(({ name, qty }) => ({ name, qty })), library: d.library.map(({ name, qty }) => ({ name, qty })) });
     let state;
     if (fs.existsSync(file)){
-      const dd = diff(JSON.parse(fs.readFileSync(file, 'utf8')), d, 'file', 'generated');
-      state = dd.length ? 'DIFF  ' + dd.join('; ') : 'IDENTICAL (by KRCG id and quantity)';
+      let book = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (o.posture && !o.check && !embedded(d.key) && book.combat !== postureOf(d.key)){   // v1.1.0: the posture field only -- name, crypt and library stay as they are
+        book = Object.assign({ name: book.name, combat: postureOf(d.key) }, book, { combat: postureOf(d.key) });
+        fs.writeFileSync(file, JSON.stringify(book) + '\n'); wrote++;
+      }
+      const dd = diff(book, d, 'file', 'generated');
+      if (!embedded(d.key) && book.combat !== postureOf(d.key)) dd.push('combat posture: file ' + (book.combat || '(none)') + ', table ' + postureOf(d.key));
+      if (embedded(d.key) && book.combat !== undefined) dd.push('combat posture in the file of an embedded deck (the bot\'s DECK_STRATEGY carries it)');
+      state = dd.length ? 'DIFF  ' + dd.join('; ') : 'IDENTICAL (by KRCG id and quantity' + (embedded(d.key) ? '' : '; posture ' + book.combat) + ')';
       if (dd.length) bad++;
     } else if (o.check){
       state = 'NO FILE (run without --check to write it)'; bad++;   // a precon KRCG added since the last run is a finding, not a pass
@@ -149,8 +167,9 @@ function main(){
     console.log(('ARCHETYPES.' + k).padEnd(24) + ' ' + (dd.length ? 'DIFF  ' + dd.join('; ') : 'equals deck-' + k + '.json'));
   }
   console.log('gen-precon v' + GEN_PRECON_VERSION + ': ' + order.length + ' precons' + (o.check ? '' : ', ' + wrote + ' written') + ', ' + (bad ? bad + ' problem(s)' : 'no problems'));
+  if (o.check && o.posture) console.log('gen-precon: --posture with --check writes nothing');
   return bad ? 1 : 0;
 }
 
 if (require.main === module) process.exit(main());
-module.exports = { preconKey, V5_SETS, GEN_PRECON_VERSION };
+module.exports = { preconKey, V5_SETS, GEN_PRECON_VERSION, POSTURE, postureOf };
