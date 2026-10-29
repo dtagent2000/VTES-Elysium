@@ -231,7 +231,7 @@ A retired line keeps its number as a one-line stub so references stay valid.
 
 ### Plan & strategy
 - **O-13** (2026-09-18) — `H = 3` and the grinding quota holding only while `myTto ≤ 2H` in `_strategize` were changed before measurement; never confirmed [CL 10, 17, 68].
-- **O-33** (2026-09-17) — Per-deck playbooks as plan tables and the opening book (B2 steps 2–3, 13c) were Johan's next lever after the strategy layer; never built — superseded by the abstract model and the V5 plan, or still wanted? [CL 8, 13c, 68, line 153].
+- **O-33** (2026-09-17) — Per-deck playbooks as plan tables and the opening book (B2 steps 2–3, 13c) were Johan's next lever after the strategy layer; never built — superseded by the abstract model and the V5 plan, or still wanted? [CL 8, 13c, 68, line 153]. Johan, 29 Oct: later, with Black Chantry's official deck guides as each deck's baseline, refined by the archetypes (BOARD).
 - **O-34** (2026-09-18) — Keep-a-blocker's passivity at a human table (the posture goes to `o.log` only; a chat line "I'll hold X back" was proposed) — Johan to evaluate in play [CL 7].
 - **O-35** (2026-09-20) — Judgment calls in the stealth stack never ruled: ×0.6 expected intercept per attempt drawn, "a bleed of 1 is not worth two intercept cards", the gamble thresholds (3+, or 2+ with a 25 % top-deck) [CL 54d].
 

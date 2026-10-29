@@ -28,6 +28,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
   and Path requirements in every finder; the amber cards; the first-round strikes (Walk of Flame); Soul Burn [THA] read 1R (prints 2R); the latent items. *Done when* each is built and section-tested, or ruled
   out. Docs: RULINGS R-39, R-40, D-99.
+- **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's strategy helpsheets and
+  deck guides (blackchantry.com, its tutorials: the Fifth Edition precons — Banu Haqim, Brujah, Gangrel, the Ministry, Ravnos,
+  Salubri, Tzimisce, Lasombra, Hecata — and the First Blood / starter guides) as the baseline for a deck's strategy and tactics,
+  refined by our archetype reading (the knowledge layer) and general strategy / tactics. Ties: D-43 (the help sheets' opening,
+  measured), O-33 (per-deck playbooks). *Done when* a proposal — what each guide says, where it enters (`DECK_STRATEGY`, the plan,
+  the persona) and how it is measured — has Johan's "kör". Docs: RULINGS D-43, O-33; `specs/spec-knowledge-layer.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C2 — dead code and tools**: delete the ten legacy tests, `_bumpTallyB`, the lint's eight unused assignments, one `handStrike`
