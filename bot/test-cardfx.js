@@ -582,7 +582,7 @@ ok(fx.counts.libLock >= 140,
   ok(c['Skidmark (G4)'].archFull === true && c['Skidmark (G4)'].fx.noReplaceActing === true, 'Skidmark: archFull — FULL-BY-ARCHITECTURE, the _flushDraws proof lives in the note');
   ok(['Wauneka (G6)', 'Rosalina Cortez (G6)', 'Mustafa Rahman (G2)', 'Ayelech (G6)'].every(n => c[n] && !c[n].fx),
      'vanilla/title-only vampires stay fx-free (Wauneka, Rosalina, Mustafa, Ayelech)');
-  ok(fx.counts.curated === 105, 'curated count = 85 lib + 20 crypt = 105 (got ' + fx.counts.curated + ') -- 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered)');
+  ok(fx.counts.curated === 115, 'curated count = 95 lib + 20 crypt = 115 (got ' + fx.counts.curated + ') -- 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered); 29 Oct (V5 wave 1): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor\u2019s Hand, Sword of the Archangel, Invigorate');
   { const bw = fx.lib['Bowl of Convergence']; const am = bw && (bw.modes || []).find(m => m.at === 'AUS');
     ok(!!am && am.fx.intercept === 1 && am.fx.interceptPaid === 1 && am.fx.interceptPaidBlood === 1, 'Bowl of Convergence [AUS]: +1 intercept, and +1 more for 1 blood (sweep pilot, text verified in vtes.json)'); }
   { const R = (n, at) => { const e = fx.lib[n]; const m = e && (e.modes || []).find(mo => (mo.at || null) === at); return !!(m && m.fx && m.fx.ranged); };
@@ -705,6 +705,37 @@ ok(fx.counts.libLock >= 140,
   ok(!(res.curNew || []).includes('Pentex(TM) Subversion') && (res.curVariant || []).some(x => /^Pentex\(TM\) Subversion -> Pentex\u2122 Subversion$/.test(x)),
      'the report: no longer "NOT in vtes.json", listed as a variant written under the printed name (' + JSON.stringify(res.curVariant) + ')');
   ok((res.curVariant || []).length === 1, 'one curated key is a variant today (' + (res.curVariant || []).length + ')');
+}
+
+{
+  /* V5 wave 1 (29 Oct 2026, RULINGS D-98): Villein, the extra strikes and the aggravated strikes, each reading checked against the
+     printed text in vtes.json (the curated notes quote it). What the auto tier had wrong is pinned here so a recompile cannot bring it back. */
+  console.log('\nV5 wave 1 -- Villein, the extra strikes, the aggravated strikes (curated, 29 Oct 2026)');
+  const L = res.out.lib, M = (n, at) => ((L[n] && L[n].modes) || []).find(mo => (mo.at || null) === at) || null;
+  const vi = L['Villein'], vm = vi && vi.modes && vi.modes[0];
+  ok(vi && vi.src === 'hand' && vi.trifle === true && vi.persistent === true && vm && vm.fx.poolFromHost === 5 && vm.fx.poolFromHostMin === 2 && vm.fx.hostCopyCost === 1 && !vi.cost,
+     'Villein: a trifle on a vampire of mine, 2 to 5 blood to my pool, +1 pool for each Villein already on that vampire, free otherwise (the auto tier had no mode)');
+  ok(L['Quickness'].oncePerRound === true && M('Quickness', 'cel').fx.addStrike === 1 && M('Quickness', 'cel').fx.addStrikeLimited === true && M('Quickness', 'CEL').fx.addStrike === 1 && !M('Quickness', 'CEL').fx.addStrikeLimited && !L['Quickness'].limited,
+     'Quickness: [cel] limited, [CEL] not counted against the limit, one Quickness each round (the auto tier wrote `limited` over both)');
+  ok(M('Pursuit', 'cel').fx.maneuver === true && !M('Pursuit', 'cel').fx.addStrike && M('Pursuit', 'CEL').fx.addStrike === 1 && M('Pursuit', 'CEL').fx.addStrikeLimited === true,
+     'Pursuit: [cel] maneuver, [CEL] a limited additional strike');
+  ok(M('Arms of Ahriman', 'obl').fx.addStrike === 1 && !M('Arms of Ahriman', 'obl').fx.dodge && M('Arms of Ahriman', 'OBL').fx.dodge === true && M('Arms of Ahriman', 'OBL').fx.addStrike === 1 && M('Arms of Ahriman', 'OBL').fx.addStrikeLimited === true,
+     'Arms of Ahriman: [obl] a limited additional strike, [OBL] a dodge with one');
+  ok(M('Claws of the Dead', 'pro').fx.aggrHands === 'round' && M('Claws of the Dead', 'pro').fx.handStrike === undefined && M('Claws of the Dead', 'PRO').fx.maneuver === true && L['Claws of the Dead'].cost.blood === 1,
+     'Claws of the Dead: [pro] makes the hand strikes aggravated this round (not a hand strike card), [PRO] maneuver, 1 blood');
+  ok(M('Sculpt the Flesh', 'pro').fx.aggr === true && M('Sculpt the Flesh', 'pro').fx.handBonus === 0 && M('Sculpt the Flesh', 'PRO').fx.handBonus === 1 && M('Sculpt the Flesh', 'PRO').fx.stealth === undefined && JSON.stringify(L['Sculpt the Flesh'].req.clan) === '["Tzimisce"]',
+     'Sculpt the Flesh: [pro] an aggravated hand strike, [PRO] a hand strike at +1 -- its "+1 stealth action" is the burn action, not stealth; requires Tzimisce');
+  ok(L['Wall of Filth'].req.beforeRangeDetermined === true && L['Wall of Filth'].oncePerVampire === true && ['pro', 'tha'].every(a => M('Wall of Filth', a).fx.burnPrevent === 2 && M('Wall of Filth', a).fx.burnPreventNonAggr === true && !M('Wall of Filth', a).fx.aggr)
+     && ['PRO', 'THA'].every(a => M('Wall of Filth', a).fx.burnPrevent === 2 && !M('Wall of Filth', a).fx.burnPreventNonAggr && !M('Wall of Filth', a).fx.aggr && M('Wall of Filth', a).fx.prevent === undefined),
+     'Wall of Filth: a stored prevention (2 non-aggravated; superior 2 of any kind), before range, one per vampire -- no `aggr` (the "non-aggravated" ghost tag) and no hand `prevent`');
+  ok(M("Rutor's Hand", 'tha').dominated && M("Rutor's Hand", 'tha').fx.lockToUnlock === true && M("Rutor's Hand", 'THA').fx.selfAggrImmuneBlood === 3 && M("Rutor's Hand", 'THA').fx.selfDmg === 1 && !M("Rutor's Hand", 'THA').fx.aggr && M("Rutor's Hand", null).fx.actStealth === 1,
+     "Rutor's Hand: [tha] dominated (a self-torpor), [THA] 3 blood buys immunity, both lock the card to unlock; its aggravated damage is its own price");
+  ok(M('Sword of the Archangel', null).fx.strBonus === 1 && M('Sword of the Archangel', null).fx.aggr === true && L['Sword of the Archangel'].cost.pool === 2 && JSON.stringify(L['Sword of the Archangel'].req.clan) === '["Salubri"]',
+     'Sword of the Archangel: a strike at strength+1, aggravated, 2 pool, requires Salubri (the auto tier had no damage)');
+  ok(M('Invigorate', 'ani').fx.strengthAction === 1 && M('Invigorate', 'dom').fx.blockBar === 'allies' && M('Invigorate', 'pro').fx.aggrHands === 'action' && L['Invigorate'].req.sect === 'Anarch',
+     'Invigorate: [ani] +1 strength this action (the auto tier missed it), [dom] no ally blocks, [pro] aggravated hand strikes this action; requires an Anarch');
+  const ib = M('Ivory Bow', null);
+  ok(L['Ivory Bow'].src === 'auto' && ib.fx.strike === 1 && ib.fx.ranged === true && ib.fx.aggr === true, 'Ivory Bow: the auto tier is right (1R aggravated), not curated');
 }
 
 console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green'));
