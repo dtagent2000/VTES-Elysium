@@ -14,9 +14,11 @@ defines, plus one new bot-to-bot line. Two asks for §12 / the canary, and one q
 - **`sp`** when a bot drives an additional pair against a human (the bot writes `sp: 2` before the pair; it does not clear `sa` / `sb`),
   and its own side's **round totals** in `a` / `b` and `ga` / `gb` (pair 1 + pair 2, absolute values). **`pa` / `pb`** become the round's
   prevention total (a card, a burned Wall of Filth, an additional pair's card), not the last card's number.
-- Against a human the bot asks **"Any additional strikes?"** only after its own declaration, and **"What is your additional strike?"**
-  when the human declared — both inside the Strike step (no `ph` write). A human who clicks `+ Additional` during the **Damage** step
-  keeps the bot from stepping past Damage: the additional pair is struck first, then the bot opens Damage again and steps to 5, so your
+- Against a human the bot asks **"Any additional strikes?"** only when it takes one — after its declaration, and before it too when the
+  human is the acting minion (R-39: the acting minion decides first) — and **"What is your additional strike?"** when the human
+  declared; both inside the Strike step (no `ph` write). A human who
+  declares during the **Damage** step (the Combat menu's *Additional strike* row: the panel's `+ Additional` shows in the Strike step
+  only) keeps the bot from stepping past Damage: the additional pair is struck first, then the bot opens Damage again and steps to 5, so your
   client's automatic taken line counts every pair (`cmbSideDamage` reads the accumulated counters). Please confirm that reading of
   `sp > 1` (section 159m pins the bot's half).
 

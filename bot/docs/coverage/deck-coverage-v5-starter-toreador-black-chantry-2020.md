@@ -1,6 +1,6 @@
 # deck-coverage — V5 Starter — Toreador (Black Chantry 2020) (2026-10-29)
 
-Genererad av `gen-deck-coverage.js` v1.1.39 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-toreador.json.
+Genererad av `gen-deck-coverage.js` v1.1.40 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-toreador.json.
 
 Syfte: göra "kan botten spela den här leken?" till en mekanisk kontroll — curated-djup och
 handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPPORT, inte en gate.
@@ -9,15 +9,15 @@ handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPP
 
 | Hink | Kopior | Andel |
 |---|---:|---:|
-| Automatiserade (HANDLER/FULL) | 50 | 65% |
-| Delvis (PARTIAL/TABLED-ONLY) | 20 | 26% |
+| Automatiserade (HANDLER/FULL) | 56 | 73% |
+| Delvis (PARTIAL/TABLED-ONLY) | 14 | 18% |
 | Ej spelbara av botten idag | 7 | 9% |
 
-Per verdict: FULL 50 · TABLED-ONLY 12 · PARTIAL 8 · NAME-ONLY 5 · INERT 2
+Per verdict: FULL 56 · PARTIAL 8 · TABLED-ONLY 6 · NAME-ONLY 5 · INERT 2
 
 ## Konsumtionsläget (skannat ur bottens källa vid körning)
 
-- Spel-nycklar botten läser: `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bleedNullify`, `bloodPerMargin`, `bounce`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockMinion`, `lockStealth`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `rushGrant`, `stealth`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
+- Spel-nycklar botten läser: `aggrHands`, `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bleedNullify`, `bloodPerMargin`, `bounce`, `burnPrevent`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockMinion`, `lockStealth`, `lockToUnlock`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `poolFromHost`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `rushGrant`, `stealth`, `strengthAction`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
 - Fas-inkomst (kräver `phase` på moden): `bankIn`, `bankOut`, `bloodToPool`, `handCycle`, `handSize`, `handSizePerCounter`, `poolGain`, `poolToBlood`, `rescueTorpor`, `transferBurnPool`, `transferSwap`
 - Hotläsning (motståndarkort, gör ALDRIG egna kort spelbara): `bloodBurn`, `poolDmg`, `stealBlood`
 
@@ -43,7 +43,7 @@ Per verdict: FULL 50 · TABLED-ONLY 12 · PARTIAL 8 · NAME-ONLY 5 · INERT 2
 | Society Hunting Ground | 1 | FULL | [—] bloodAdd,bloodAddTo → ✓(bloodAdd@hunting-ground)/✓ | curated · persist |
 | Toreador Grand Ball | 4 | TABLED-ONLY | [— D] — → —/✓ | auto · persist |
 | Toreador Justicar | 1 | NAME-ONLY | — | auto |
-| Villein | 6 | TABLED-ONLY | — | auto · persist · trifle |
+| Villein | 6 | FULL | [—] poolFromHost,poolFromHostMin,hostCopyCost → ✓(poolFromHost)/✓ | curated · persist · trifle |
 | Voter Captivation | 6 | FULL | [pre] bloodPerMargin → ✓(bloodPerMargin)/✓<br>[PRE] bloodPerMargin,marginToPool → ✓(bloodPerMargin)/✓ | curated |
 
 ## Crypt (9 unika, 12 kopior)
@@ -66,7 +66,6 @@ Per verdict: FULL 50 · TABLED-ONLY 12 · PARTIAL 8 · NAME-ONLY 5 · INERT 2
 | Kort | Qty | Verdict | Föreslaget nästa steg |
 |---|---:|---|---|
 | Resist Earth's Grasp | 8 | PARTIAL | okonsumerade modes: [cel] maneuver,press |
-| Villein | 6 | TABLED-ONLY | spelas blint som master; phase-inkomst/handler om effekten ska automatiseras |
 | Scalpel Tongue | 4 | NAME-ONLY | curate:a modes (auto-tiern extraherade inget) |
 | Toreador Grand Ball | 4 | TABLED-ONLY | spelas blint som master; phase-inkomst/handler om effekten ska automatiseras |
 | Change of Target | 2 | INERT | inga konsumerade moder |

@@ -26,7 +26,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   `CARDS.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
   round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
-  and Path requirements in every finder; the amber cards; the latent items. *Done when* each is built and section-tested, or ruled
+  and Path requirements in every finder; the amber cards; the first-round strikes (Walk of Flame); the latent items. *Done when* each is built and section-tested, or ruled
   out. Docs: RULINGS R-39, D-99.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
@@ -125,6 +125,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   table §2), so this may be what an offline table does: every bot-vs-bot window waits out its clock. *Done when* a `--real` hotseat
   match and a browser hotseat table say whether bot answers are lost there, and either the cause is fixed or the gate is restated per
   table. Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
+- **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
+  vampire, a target) show their END state (found 29 Oct; `ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.
