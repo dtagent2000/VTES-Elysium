@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.213';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.214';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -4540,8 +4540,9 @@ class Bot {
   }
   _myRoundDmg(vamp, opts){           // the damage (or blood swing) my NEXT strike lands: best strike card > bare fist + strength; steal counts as its blood swing; active Carrion Crows add each round. opts.close = evaluate as if at close range (a bundled Grapple press forces close next round)
     const saveR = this._range; if(opts && opts.close) this._range = 'close';
+    const g0 = (opts && opts.next && this._xr) ? this._xr.stealGrant : null; if(g0) this._xr.stealGrant = null;   // v0.6.214: NEXT round's damage has no granted steal (Hunger of Marduk lasts its round; the pumps last the combat)
     const strike = this._bestStrikeFor(vamp), steal = this._bestStealStrikeFor(vamp);
-    this._range = saveR;
+    this._range = saveR; if(g0) this._xr.stealGrant = g0;
     const fist = (this._range === 'long' && !(opts && opts.close)) ? 0 : 1 + this._strengthBonus(vamp) + this._pumpStr(vamp) + this._pumpHand(vamp);   /* v0.6.214: + this combat's pumps */
     let dmg = fist, card = null;
     if(strike && strike.n > dmg){ dmg = strike.n; card = strike.name; }
@@ -4808,12 +4809,12 @@ class Bot {
     if(lt && lt.now != null) oppBlood = lt.now;                                          // certain: their own line
     else if(oppBlood != null && this._rnd && (this._rnd.dealt | 0) > 0) oppBlood = oppBlood - (this._rnd.dealt | 0);   // the board may not have caught up with MY strike yet (cmb2 pre-read): assume it has not
     if(oppBlood != null && oppBlood < 0) return { press: false, tag: 'opp-down', why: 'no press: my ' + this._rnd.dealt + ' already exceeded their blood' };
-    const mine = this._myRoundDmg(vamp, { close: this._forceCloseNextRound });
+    const mine = this._myRoundDmg(vamp, { close: this._forceCloseNextRound, next: true });   /* v0.6.214: the next round's (no granted steal) */
     const ret = this._oppExpectedDmg(); const blood = vamp.blood | 0;
     const survive = blood > ret;                                   // damage EXCEEDING blood torpors; paying exactly all of it does not
     const oppEnds = this._oppShown('dodge') > 0;                   // dodge or combat ends seen from this seat
     if(this._combatPosture() === 'chase' && this._rnd && this._rnd.range === 'long' && survive && this._combatMind()){   // v0.6.161 (Johan + Black Chantry's Nosferatu guide: "if an opposing minion maneuvers to long range, burn 1 life from an Underbridge Stray during the press step to get a press and continue combat"): a chase deck never goes long itself, so long = THEY waved; the press drags the fight back to a range where the opponent must spend another maneuver or eat the fists
-      const fistClose = this._myRoundDmg(vamp, { close: true });
+      const fistClose = this._myRoundDmg(vamp, { close: true, next: true });
       return { press: true, tag: 'chase-wave', why: 'press: they waved to long -- back to close (' + (fistClose.card ? fistClose.card + ' ' : 'fists ') + fistClose.dmg + '), they must spend another maneuver' };
     }
     if(oppBlood != null && mine.dmg > oppBlood && survive) return { press: true, tag: 'torpor-shot', why: 'press: ' + mine.dmg + ' damage next round beats ' + oppBlood + ' blood (they torpor), I keep ' + (blood - Math.ceil(ret)) };
@@ -6279,8 +6280,10 @@ class Bot {
     const blockerVamp = this.pending.blockerVamp;                 // read before _clearPending wipes this.pending
     const oppName = this.pending.actingVampName || (this._obs && this._obs.vamp && Date.now() - this._obs.at < 60000 ? this._obs.vamp : null) || null;          // VB: the combat opponent's name, hoisted the same way (this.pending is null by the _resolveCombat call)   // v0.6.163 (bug sweep, serie-cmb8): the pending carried no actor name in 14 of ~330 blocks (windows armed from a tally ask / re-blocks) -- the last announced action's vampire (short-term action memory, v0.6.110) is the actor
     if(success){
+      const grant = this._reactManeuverGrant;   // v0.6.214 (V5 wave 2): _clearPending's N1 belt is for a FAILED block -- a successful one carries Guard Dogs [ANI]'s maneuver into the resulting combat (since N1 it was wiped here, before the combat: the grant never reached a fight)
       this._clearPending('block succeeded');
       if(blockerVamp){
+        this._reactManeuverGrant = grant;
         blockerVamp.locked = true;                                // v0.4.3 (rulebook): "If a block attempt is successful, then the blocking minion LOCKS and enters combat" -- the wake path arrives here already locked, idempotent either way
         this._resolveCombat(blockerVamp, oppName).then(() => { this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
       }
@@ -7205,13 +7208,13 @@ class Bot {
     }
     const grapple = this._bestImmortalGrappleFor(myVamp);
     if(grapple && !(this._handStrikeOnly && !grapple.superior)){       // v0.6.202: their Grapple already holds this round -- an inferior one on top adds nothing (a superior still buys its press and the close range next round)
-      const wouldCostMe = !this._handStrikeOnly && this.hand.some(n => {   // v0.6.202: already restricted -- there is no option left to lose
+      const wouldCostMe = !this._handStrikeOnly && (!!(this._xr && this._xr.stealGrant && this._xr.stealGrant.vamp === myVamp.name) || this.hand.some(n => {   // v0.6.202: already restricted -- there is no option left to lose. v0.6.214: Hunger of Marduk's steal this round is a non-hand strike too
         const h = this.fxLookup(n); if(!h || h.kind !== 'lib') return false;
         if(h.e.req && h.e.req.rangeClose && this._range !== 'close') return false;   // v0.6.28 fix (found live while testing): a rangeLong-gated card at close range (no maneuver played) was NEVER available this round regardless of Grapple -- the original check only asked "discipline usable", not "range-compatible right now", so it thought it had something worth preserving when it didn't
         if(h.e.req && h.e.req.rangeLong && this._range !== 'long') return false;
         return (h.e.modes || []).some(mo => this._modeUsableBy(mo, myVamp) &&
           ((typeof mo.fx.strike === 'number' || typeof mo.fx.stealBlood === 'number') && !mo.fx.handStrike || mo.fx.dodge));   // v0.6.29 (standing-question fix, found live): the original check only asked about strike/steal cards, never dodge -- but Immortal Grapple bans dodge ENTIRELY too ("You can not use any Dodges"), so a vampire holding a plain "Dodge" card would play Grapple anyway and then find its OWN dodge unusable this round. Verified live: "Mother" Anja Giovanni with Immortal Grapple + Dodge played Grapple, losing the Dodge option for nothing.
-      });
+      }));
       const wg = this._combatMind() ? this._wantGrapple(myVamp) : { play: true, why: 'v0.6.155: play unless it costs me a non-hand option' };   // v0.6.156 (Johan): Grapple only with Roundhouse-class damage, active Crows or a strength bonus -- cmb1 wasted 8 of 17 on fists
       this.o.log('grapple (' + myVamp.name + '): ' + wg.why + (wouldCostMe ? ' -- but it would cost me a non-hand option' : ''));
       if(!wouldCostMe && wg.play){

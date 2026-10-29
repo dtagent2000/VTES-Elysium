@@ -11483,6 +11483,34 @@ async function connectWithRetry(client, tries = 30){
         const got = [['banuhaqim', 'Flash'], ['banuhaqim', 'Hunger of Marduk'], ['banuhaqim', 'Walk of Flame'], ['brujah', 'Slam'], ['brujah', 'Torn Signpost'], ['gangrel', 'Form of the Wolf'], ['pathcaine', 'Rage of Apedemak'], ['toreador', "Resist Earth's Grasp"], ['tzimisce', 'Monstrous Form']].map(([k, c]) => c + ':' + verdict(k, c));
         ok(got.join('|') === "Flash:FULL|Hunger of Marduk:FULL|Walk of Flame:FULL|Slam:FULL|Torn Signpost:FULL|Form of the Wolf:FULL|Rage of Apedemak:FULL|Resist Earth's Grasp:FULL|Monstrous Form:PARTIAL",
            '160o the coverage report (v1.1.41): the wave plays in its decks (Monstrous Form’s superior -- the card put on the vampire -- is a later wave) (' + got.join(' | ') + ')'); }
+
+      // p) found by the round's first sim (the starters SAME-PLAY 240 -- no counter at all): Guard Dogs [ANI]'s maneuver never reached the
+      //    resulting combat, because _clearPending's N1 belt (a failed block has no combat) also ran on a SUCCESSFUL block, before the combat
+      { const u = mkU160('P0'); const H = { id: 'h1', name: 'Horace Radcliffe (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 5, attached: [] };
+        u.board = [H]; u._reactManeuverGrant = true;
+        u.pending = { kind: 'bleed', who: 'Hanna', amount: 1, contested: true, blockerVamp: H, actingVampName: 'Anxo Vilela (G6)' };
+        let seen = null; u._resolveCombat = async v => { seen = { v: v && v.name, grant: u._reactManeuverGrant, m: u._bestManeuverFor(v, 'close') }; };
+        u._maybePostBlockUnlock = async () => {};
+        u._verdictAsTarget(true); await sleep(20);
+        ok(!!seen && seen.v === 'Horace Radcliffe (G6)' && seen.grant === true && !!seen.m && seen.m.name === 'Guard Dogs' && seen.m.fromGrant === true && u._reactManeuverGrant === false && !u.pending,
+           '160p a successful block carries Guard Dogs [ANI]’s maneuver into the resulting combat, and the grant dies after it (since N1 it was wiped before the combat -- the counter could never use it; got ' + JSON.stringify({ seen: seen && { v: seen.v, grant: seen.grant, m: seen.m && seen.m.name }, after: u._reactManeuverGrant }) + ')');
+        const w = mkU160('P1'); w.board = [Object.assign({}, H)]; w._reactManeuverGrant = true;
+        w.pending = { kind: 'bleed', who: 'Hanna', amount: 1, contested: true, blockerVamp: null, actingVampName: 'Anxo Vilela (G6)' };
+        let ran = false; w._resolveCombat = async () => { ran = true; };
+        w._verdictAsTarget(true); await sleep(5);
+        ok(!ran && w._reactManeuverGrant === false, '160p ...and a success with no blocker of mine (no combat for me) leaves no grant behind'); }
+
+      // q) Hunger of Marduk's grant beside the other decisions (the round's own reading): a Grapple that would cost the granted steal is held, and the press decision's next round has no granted steal
+      { const g = duel160({ delay: 20, aDeck: 'banuhaqim', aDeckObj: deckOf('snipe'), aV: { name: 'Kasim Bayar (G6)', cap: 9, blood: 3 }, aHand: ['Hunger of Marduk', 'Immortal Grapple'], dDeck: 'tremere', dV: ANXO, dHand: [] });
+        await g.run();
+        const a = r1(g.A);
+        ok(JSON.stringify(a.br) === JSON.stringify(['Hunger of Marduk']) && !a.grapple && a.strike === 'Hunger of Marduk' && a.stole === 2 && g.A.hand.includes('Immortal Grapple'),
+           '160q Kasim Bayar plays Hunger of Marduk and keeps Immortal Grapple: its hand-strikes-only round would cost the granted steal (got ' + JSON.stringify({ br: a.br, grapple: a.grapple, strike: a.strike, stole: a.stole, hand: g.A.hand }) + ')');
+        const u = mkU160('Q0'); const K = { id: 'k9', name: 'Kasim Bayar (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 9, attached: [] };
+        u.board = [K]; u.hand = []; u._range = 'close'; u._xr = u._xrFresh(); u._xr.stealGrant = { vamp: K.name, name: 'Hunger of Marduk', n: 2, ranged: true };
+        const now = u._myRoundDmg(K, { close: true }), next = u._myRoundDmg(K, { close: true, next: true });
+        ok(now.card === 'Hunger of Marduk' && now.dmg === 2 && next.card === null && next.dmg === 1 && u._xr.stealGrant && u._xr.stealGrant.n === 2,
+           '160q ...this round’s damage counts the granted steal (2), the next round’s does not (the fist, 1) -- and the grant is still there after the look (got ' + JSON.stringify([now.card, now.dmg, next.card, next.dmg]) + ')'); }
     }
 
 
