@@ -11591,6 +11591,25 @@ async function connectWithRetry(client, tries = 30){
         const a = r1(g.A), d = r1(g.D), mv = mvLines(g);
         ok(!a.counter && d.counter === 1 && a.range === 'close' && d.range === 'close' && JSON.stringify(mv) === JSON.stringify(['Anxo Vilela (G6) maneuvers to long (Apportation).', 'Wauneka (G6) maneuvers to close (Guard Dogs).']),
            '160w a Tremere with combatMind 0 goes long once (for Flames of the Netherworld, a long-range card: v0.6.213\u2019s reason), the Nosferatu counters to close, and the Tremere does not answer it (got ' + JSON.stringify({ a: a.counter, d: d.counter, range: [a.range, d.range], mv }) + ')'); }
+
+      // x) the suite on the release bytes (37g red): 160t's shortcut skipped Taste of Vitae after ANY dodge -- the card counts the blood they lost to damage this round,
+      //    so a taken line already in is still read (37g) and my additional strike (their dodge covered the first pair only) reopens the wait
+      { const nwx = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
+        let abox = null; for(const nm in nwx.crypt){ const dx = nwx.crypt[nm].disc; if(dx && dx.sup && dx.sup.includes('abo')){ abox = nm; break; } }
+        const tasteRound = async mine => {
+          const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', log: () => {} });
+          u._awaitOppManeuver = () => { if(mine && u._xr) u._xr.mine = 1; return Promise.resolve(null); };   // mid-round, after the round's reset: as if I had declared an additional strike
+          let asked = 0; u._awaitOppTaken = () => { asked++; return Promise.resolve({ vamp: 'Ghoul', n: 2 }); };
+          u._oppStrike = { vamp: 'Ghoul', dodge: true, dealt: 0 };
+          const z = { id: 'cx1', name: abox, kind: 'crypt', zone: 'ready', locked: true, blood: 2, cap: 8 };
+          u.hand = ['Taste of Vitae'];
+          await u._resolveCombatRound(z);
+          return { asked, blood: z.blood, kept: u.hand.includes('Taste of Vitae') };
+        };
+        const x1 = await tasteRound(true), x0 = await tasteRound(false);
+        ok(x1.asked === 1 && x1.blood === 4 && !x1.kept,
+           '160x their dodge, then my additional strike: Taste of Vitae waits for their taken line and gains its 2 (got ' + JSON.stringify(x1) + ')');
+        ok(x0.asked === 0 && x0.blood === 2 && x0.kept, '160x ...the control: a clean dodge and no additional pair asks nothing (160t\u2019s shortcut; got ' + JSON.stringify(x0) + ')'); }
     }
 
 

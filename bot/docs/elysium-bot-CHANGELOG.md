@@ -19,6 +19,67 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.214 (30 Oct 2026)** — V5 wave 2, Johan's "kör" of 29 Oct on D-102 (Claude's recommendation: the class map's top two rows
+  are curation queues, so wave 2 = the combat's first steps — before range, range and press). The canon:
+  `specs/spec-v5-wave2-2026-10-29.md`; RULINGS R-41 (the readings with their sources), D-103 (Claude's design).
+  - *Before range*: Torn Signpost (the base strength this combat), Form of the Wolf and Monstrous Form (+1 strength), Rage of
+    Apedemak (+N on hand strikes) and Hunger of Marduk (this round's ranged steal; no card leaves the hand at the strike) are played
+    by the look-ahead rule — when `_strikePick` deals more with the card at close, or at long for a snipe holding the maneuver
+    (`decide('before-range')`; a range already set for the round is weighed alone, `fixed`), one card at a time. Form of the Wolf
+    [PRO]'s optional press is this round's (`_bundledPress`). A log line per card, never a `plays` line; the round row's `br`.
+  - *The maneuvers go back and forth between bots*: the answering bot can answer a maneuver to long with one to close (the chase
+    posture); the acting bot answers that while it wants long and holds another maneuver; the acting bot says nothing more when it
+    lets the range stand, so the answering bot meets a late counter in its before-strikes wait and answers it (`does not maneuver.`
+    or a counter). Every counter is under the combat mind (combatMind 0 = v0.6.213). No new line shape; a round without a counter
+    sends the old lines. Against a human the range step is unchanged (BOARD). Rows: `counter`, `commit`.
+  - *Slam [POT]*'s maneuver to close (no plain maneuver left) commits the round's strike: played and paid in the range step, no dodge
+    or combat ends that round, one play row; when a later maneuver takes the range to long, no strike at all (`gets no strike this
+    round (committed to Slam by its maneuver; long range).`). No strike card's or weapon's maneuver once the round's strike is
+    chosen (the rulebook, combat step 2: two Slams, `_strikeBound`). The no-strike line (v0.6.174's, for a gun under Immortal
+    Grapple) is now READ by the other bot as the strike step's answer — it waited out its safety net and took the rulebook's 1.
+  - *The round number* (`_curRound`, `_roundReqOk`): Walk of Flame-class cards from round 2 in the strike, steal, press and maneuver
+    finders; the combat-ends finder reads Riposte's 'not usable on the first round' (not the entry-level 'before range' flag, which
+    the auto tier lifted from superior-only sentences: BOARD); a long-range card not usable this round is no reason to go long.
+  - *Soul Burn* [THA]: the struck bot reads the card on the strike line and plays no Fortitude prevention against it
+    (`noPreventDisc`, [LSJ 20050628]); a human's bare `strikes for N.` names no card.
+  - *Postures*: a deck file without a `DECK_STRATEGY` line carries its own `combat` (D-102: chase = Brujah, Gangrel, Tzimisce, Path
+    of Caine; snipe = Banu Haqim; the rest wave); `gen-precon.js` v1.1.0 writes and checks it (`--posture`).
+  - *Rides the round (D-92)*: Guard Dogs [ANI]'s maneuver reaches the resulting combat (since N1 `_clearPending`'s belt wiped it on
+    a successful block, before the fight) — for the vampire that played the card only, ended in `_resolveCombat`'s `finally`, and no
+    card play when used (no second Guard Dogs in the ash heap, no second play row or clone: the table model counted two shown); a
+    gun's maneuver no longer leaves a phantom gun in the ash heap (since E1); a Grapple that would cost Hunger of Marduk's granted
+    steal is held, and the press decision's next round carries no granted steal; Taste of Vitae no longer waits for a taken line
+    after the opponent's clean dodge (the V5 smoke's two press waits into the safety net, ministry's Form of Mist: 2 → 0); the
+    tally's strike label of a round without a strike is 'No strike' (the gun-under-Grapple round wrote 'Hand').
+  - cardfx: 9 curated readings (115 → 124; modelled library effects 1,671 → 1,672) — Flash and Resist Earth's Grasp (a maneuver OR a
+    press: two modes), Slam (`maneuverTo` close), Hunger of Marduk (`stealGrant`), Rage of Apedemak, Torn Signpost, Form of the Wolf,
+    Monstrous Form [dom][pro] (its superior action stays partial), Soul Burn [THA] 2R (`noPreventDisc`). The compiler **v1.9.5**
+    tags 'Not usable the first round' phrasings (Eruption of Vitae, Growing Fury, Well-Aimed Car: 9 → 12 entries). test-cardfx
+    287 → 298. Coverage tool **v1.1.41** (the wave's keys; 'not usable during the first round' read).
+  - *Graded readings* (a fresh read-only agent, the HARNESS charter, 9 readings and the compiler's 3 new tags): 2 reds, both in the
+    play, fixed in the round — Slam (a second Slam's maneuver into a committed strike, 160r) and Soul Burn (a struck bot played
+    Fortitude prevention against it, 160s). Final: green — Flash, Resist Earth's Grasp, Slam, Torn Signpost, Form of the Wolf, Walk
+    of Flame, the three tags; amber — Hunger of Marduk (an additional pair), Rage of Apedemak (hand size, 'Frenzy.', the Path
+    icon), Monstrous Form (the superior action), Soul Burn (the opposing weapons' no damage). Every cited ruling is on its card in
+    KRCG's data; the rulebook's second-maneuver sentence was read from two forum quotes, not the rulebook itself.
+  - *The egress review* (a fresh-context agent: 9 findings — rule-missed 3, half-done 3, stale-doc 2, test-weakened 1 — all fixed):
+    the second Slam (160r); Guard Dogs' second ash entry, play row and clone (160f) and its grant as one flag for the whole bot,
+    reset outside `finally` (160u); the look-ahead ignoring a range already set for the round (160v); the back-to-long counter
+    outside the combat mind (160w); the tally's strike label overwritten with a trace string (160i); 160n checking less than it said
+    (now the old lines, line for line); the spec's count and grade pointers and the handoff's wire summary. Its notes, not counted
+    (spec §4): a counter war can spend every maneuver in round 1; a gun binds its strike only under Immortal Grapple; mixed bot
+    versions at one table disagree on a counter.
+  - Section 160 (42 checks, through `_onLog`, duels on a relay): on the v0.6.213 bytes 5 green (the controls); on the round's bytes
+    before the reviews (b45ae32) the ten checks the reviews added red.
+  - *The sim* (registered before measuring, D-93; re-registered once — the first bytes were SAME-PLAY 240 with no counter at all,
+    because Guard Dogs' grant never reached a fight): the 240-match client design v0.6.213 → v0.6.214 is DIVERGED 4, SAME-PLAY
+    236, each at a Nosferatu blocker's counter with Guard Dogs' maneuver (matches 0075, 0117, 0182, 0217; in 0182 the Tremere
+    answered back to long and stole at long) — 5 counters in 240 matches; ana-block no violations, invariant flags 5 (v0.6.213's
+    five), handshake integrity 100 % and no safety-net wait, played at 0 pool 0, ana-ledger STOLE > VICTIM 7 (the same) and VANISHED
+    0, 'through, no seat took it' 228 and ana-windows RAN OUT 1227 + 790 (223 and 1228 + 785: the differences all in the four
+    DIVERGED matches). The V5 smoke (14 × 12): FILL
+  - `docs/CARDS.md` regenerated on the release runs: FILL.
+  - Gates on the release bytes: FILL.
 - **v0.6.213 (29 Oct 2026)** — V5 wave 1, Johan's "kör" of 29 Oct on D-98 (the waves go by effect class; wave 1 = Villein, the
   extra strikes and the aggravated strikes). The canon: `specs/spec-v5-wave1-2026-10-29.md`; RULINGS R-39 / R-40 (the readings with
   their sources), D-99 (Claude's design and thresholds).
