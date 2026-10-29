@@ -166,6 +166,7 @@ approved, the line says which part is whose ("Johan: … · built (Claude): …"
 - **D-82** (2026-09-28, Johan "don't jump to conclusions", v0.6.192) — Archetype labels only after an offline accuracy test; a CONFIDENT label (margin ≥ 2, coverage ≥ 0.85) may be said once and inform a decision only where the shares cannot; a CLOSEST read never drives a decision.
 - **D-83** (2026-10-19/20, Johan) — The four checks: an ABSTRACT TABLE MODEL first, the sim / arena as the control, a bots-only browser table, then humans; zero-vtes only as a development-time check on card readings; keep our niche (bots that also work OFFLINE in the client) and refactor dead weight out.
 - **D-84** (2026-10-19, Johan) — The immediate goal: make the V5 preconstructed decks playable, evaluated against the rules, as was done for the starters.
+- **D-98** (2026-10-29, Johan; answers O-22) — The V5 waves go by EFFECT CLASS, as `CARDS.md`'s class map ranks them, not one deck at a time (Claude's recommendation, taken by Johan). Wave 1 = Villein, the extra strikes (Quickness, Pursuit, Arms of Ahriman) and the aggravated strikes (Claws of the Dead, Sculpt the Flesh, Wall of Filth and the rest of the class map's `aggr` row). A deck joins the client's menu when its rows are playable and it holds up in the sim.
 
 ### Process & ways of working
 - **D-85** (2026-09-09, Johan) — Sister projects: the bot owns the bot, arena, cardfx and its docs; main consumes bot RELEASES; the bot never edits client / server files.
@@ -213,7 +214,7 @@ A retired line keeps its number as a one-line stub so references stay valid.
 
 ### Masters & cards
 - **O-21** (2026-09-18) — A FREE block bar (Beast Meld-class) and `chosen` (Seduction-class) have tags but no consumer; crypt text is hand-curated (20 entries), no passive-shape auto-extractor [CL 24c, 24l]. (gap, not a question — BOARD)
-- **O-22** (2026-09-21) — Villein is the biggest uncurated gap (also 22 copies in 6 V5 precons); the V5 wave size (5 decks at a time vs 1) is undecided. Round 0 (29 Oct): `CARDS.md`'s class map; Claude proposes waves by effect class, a deck entering the menu when its rows are playable [CL 65c, spec-cleanup §6.2].
+- **O-22** — retired 29 Oct (answered by D-98: waves by effect class; wave 1 = Villein, the extra strikes and the aggravated strikes).
 - **O-23** (2026-10-16) — Wasserschloss Anif's burn-it action and Haven Uncovered's host burning the card are not built; Ventrue HQ is locked only in own referendums [spec-r4 §3]. (gap, not a question — BOARD)
 - **O-24** (2026-10-19) — Both Pentex spellings in one game are two cards to `_uniqueInPlay` (one row in `CARDS.md`, by KRCG id) [spec-cards §5].
 

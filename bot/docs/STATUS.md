@@ -22,7 +22,7 @@ client's menu); the coverage tool's class map caught up; the card ledger `docs/C
 playable, 12 unseen, 66 partial, 76 inert); Chantry's rescue never takes the last pool (section 158).
 
 ## Next (proposed; Johan orders the board)
-1. The V5 waves by effect class, in `docs/CARDS.md`'s class map order; Johan chooses the wave shape (RULINGS O-22).
+1. The V5 waves by effect class, in `docs/CARDS.md`'s class map order (RULINGS D-98); wave 1 is in progress (branch `bot-v5-wave1`).
 2. The clean-up rounds C2–C6 (`spec-cleanup-2026-10-20.md` §7), interleaved with product rounds.
 3. The knowledge layer's second half: Kevlar after the aggravated-strike wave; the prey's wakes as blockers (65f).
 4. The abstract model spec, on the class map's classes.

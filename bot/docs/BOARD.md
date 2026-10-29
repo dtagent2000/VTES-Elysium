@@ -19,10 +19,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   plays them; the client's menu does not offer them), the coverage class map and the ledger (`docs/CARDS.md`). Next: the waves, by
   effect class as `CARDS.md`'s class map ranks them (masters with no effect modelled, Villein first: 22 copies in 6 decks; the
   bundled maneuver / press combat cards; aggravated strikes; free block bars; extra strikes; the 22 cards with no effect data;
-  action cards whose effect is unmodelled) — Johan chooses the wave shape (RULINGS O-22). A deck joins the menu (`ARCHETYPES` + a
+  action cards whose effect is unmodelled) — waves by effect class (Johan, 29 Oct: RULINGS D-98); wave 1 = Villein, the extra strikes
+  and the aggravated strikes. A deck joins the menu (`ARCHETYPES` + a
   `DECK_STRATEGY` line) when its rows are playable and it holds up in the sim; before the deck count doubles, decks and
   `DECK_STRATEGY` become a data file (seven decks embedded in `elysium-bot.js`, six duplicated in `deck-*.json`; `gen-precon.js
-  --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, O-22; `CARDS.md`; HOWTO.
+  --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98; `CARDS.md`; HOWTO.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C2 — dead code and tools**: delete the ten legacy tests, `_bumpTallyB`, the lint's eight unused assignments, one `handStrike`
