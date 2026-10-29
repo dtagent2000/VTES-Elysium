@@ -44,12 +44,13 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **R-28** (2026-10-16, rulebook 6.4.3 + Johan, v0.6.203) — The acting minion declares its strike first; between bots the answering bot peeks at it before choosing.
 - **R-29** (2026-10-16, Deep Song text) — The rushed vampire is the acting minion in that combat: it speaks first in the handshake and the human phase walk.
 - **R-30** (2026-10-16, card rulings, v0.6.203) — A borne Murder of Crows and a played Carrion Crows both land every round.
+- **R-39** (2026-10-29, rulebook, card texts, rulings, v0.6.213) — V5 wave 1's readings, sources in `specs/spec-v5-wave1-2026-10-29.md` §1: additional strikes after the first pair, the acting minion first, one limited source a round (Quickness [CEL] outside it); aggravated damage is prevented first, by Kevlar Vest and Guardian Angel too; Wall of Filth is prevention; Villein +1 pool per Villein there; Rutor's Hand's damage is its own price.
 
 ### Politics & referendums
 - **R-31** (2026-09-15, rulebook + the client's menu, journal R3) — Locked titled minions still vote; minions in torpor do not; title votes come from the crypt data (`title` / `votes`), never a title table.
 
 ### Influence, pool & economy
-- **R-32** (2026-09-18, Johan) — Underbridge Stray costs 1 BLOOD (the curated entry had 1 pool).
+- **R-32** (2026-09-18, Johan) — Underbridge Stray costs 1 BLOOD.
 - **R-33** (2026-09-19, card text, CL 33d) — Blood Doll's drain is a MAY.
 - **R-34** (2026-10-19, rulebook, v0.6.210) — A Methuselah at 0 pool is ousted at once; 0 pool on my own turn ousts me immediately and stops my turn. (That a pool cost never takes the last pool is the bot's policy: D-97, Claude's.)
 
@@ -86,9 +87,9 @@ approved, the line says which part is whose ("Johan: … · built (Claude): …"
 - **D-95** (2026-09-18, Johan) — Opponents' actions are classed offensive / economy / utility in the per-minion statistics (`_actionClass`); the hit rate divides blocked by offensive only.
 
 ### Combat
-- **D-18** (2026-09-18, Johan, CL 22c) — "Freak Drive always" and "Majesty always" were provisionally approved, tied to the persona. SUPERSEDED: Freak Drive by the weighted act-again decision (D-48, 19 Sep), Majesty by combat ends on the known / expected strike (D-29, 10 Oct).
+- **D-18** (2026-09-18, Johan, CL 22c) — "Freak Drive always" and "Majesty always" (provisional, by persona): SUPERSEDED by D-48 (19 Sep) and D-29 (10 Oct).
 - **D-19** (2026-09-19, Johan, CL 31) — Three layers: statistics (every bot) → general handling (every deck of the kind) → deck persona; a change goes in the lowest layer it belongs to.
-- **D-20** (2026-09-19, Johan, CL 30c; 28h's "MY Fame" wording was corrected by it) — An enemy rescue needs a Fame on the vampire (not necessarily mine) and is done only on my PREY's vampires; anything else is table-talk meta.
+- **D-20** (2026-09-19, Johan, CL 30c) — An enemy rescue needs a Fame on the vampire (not necessarily mine) and is done only on my PREY's vampires; anything else is table-talk meta.
 - **D-21** (2026-09-19, Johan, CL 29d) — A "rush deck" is a combat deck that starts fights (Bum's Rush); sewer is NOT one.
 - **D-22** (2026-09-20, Johan, CL 45c) — Hidden Strength pays X to prevent ALL incoming damage (keep 1 blood): aggravated first, but denying Pulled Fangs-class effects too; the bot cannot tell aggravated yet, so "prevent all you can afford".
 - **D-23** (2026-09-21, Johan, CL 61) — Taste of Vitae is blood economy: pair it with a big damage round (Crows and / or Roundhouse), never after a bare-hands round.
@@ -96,14 +97,15 @@ approved, the line says which part is whose ("Johan: … · built (Claude): …"
 - **D-25** (2026-09-22, Johan, v0.6.158) — A torpor-certain rush trumps permanents-first when it is likely to go through ("combat is about seizing the moment").
 - **D-26** (2026-09-22, Johan's design, v0.6.165) — Against a human the bot DRIVES the seven combat steps on lines, waiting on the clock; the maneuver chain starts at close and follows the deck posture (chase / snipe / wave).
 - **D-27** (2026-09-23, Johan via main, v0.6.167) — The human Combat menu logs EFFECTS only; the bot parses effect lines (combat ends, dodge, aggravated, wounded).
-- **D-28** (2026-09-23, Johan) — The block doctrine and a dynamic Tremere Apportation choice were to wait for the knowledge layer (both built since: D-16; the sniper's pacifist press under `twdKnow`, v0.6.187+, kept 28 Sep); the Stray press when the opponent waves to long is built (v0.6.161).
+- **D-28** (2026-09-23, Johan) — The block doctrine and a dynamic Tremere Apportation choice waited for the knowledge layer: both built (D-16; `twdKnow`, v0.6.187+), as is the Stray press against a wave to long (v0.6.161).
 - **D-29** (2026-10-10, Johan, v0.6.196) — Combat ends is decided on the KNOWN strike when the opponent declared first, else the TWDA-informed expected strike (`combatEndStats` 1).
 - **D-30** (2026-10-16, Johan 21:20 / 21:27, spec-r4 §1, v0.6.205) — The dodge: with one dodge, a known strike of 2+ that does more than mine; with two, also one of 1+ that does at least as much (Johan: "Roundhouse first"); aggravated and survival dodges as before; EXCEPT when my strike finishes their vampire without finishing mine: with two dodges at 0 blood or torpor (Johan), with one at torpor only (Claude's recommendation, taken by Johan "for now", a meta-layer note). A dodge their crows make useless is kept (Claude, `known-wasted`). When I strike first, dodge an expected 2+; a deck that never hits for 2+ may be dodged at 1 later (knowledge layer).
 - **D-31** (2026-10-16, Johan decisions 2 and 7, review) — Bot-vs-bot combat is paced step by step when a human is seated; a Hold on stops the bots' own combat moves too, not only the clocks.
 - **D-32** (2026-10-16, Johan, journal R3) — Smiling Jack is paid from pool and blood across vampires, never the last pool while blood can pay.
+- **D-99** (2026-10-29, Claude's design and thresholds under D-98, v0.6.213 — not Johan's) — V5 wave 1 (`specs/spec-v5-wave1-2026-10-29.md` §2–§4): additional strikes on main's `gets an additional strike.` + one new bot line, a round with no source byte for byte the old one; an aggravated strike outranks a plain one against a vampire, never an ally.
 
 ### Politics & referendums
-- **D-33** (2026-09-15, Johan, journal R3) — Bots voted AGAINST only, and only when it cost them pool. SUPERSEDED 18 Sep by the politics leg's voter (D-34, D-36: votes for and against). Still standing (18 Sep): the pool-question ask ladder is the political-threat source until a real politics system exists.
+- **D-33** (2026-09-15, Johan, journal R3) — Against-only voting: SUPERSEDED 18 Sep by D-34 / D-36. Still standing: the pool-question ask ladder is the political-threat source until a real politics system exists.
 - **D-34** (2026-09-18, Johan, CL 18) — Politics is built SIMPLE first: curation + gate → a caller with a machine-readable terms line (`Referendum terms: A −3, B −1`) → a simple voter → act-again → a 4-starter null at decision level.
 - **D-35** (2026-09-18, Johan) — Bot-called referendums: humans signal votes on the tally or the Votes menu and may push Resolve; the bot then announces the outcome.
 - **D-36** (2026-09-18, Johan "fix 1–3, document the rest", CL 20) — Votes build on the live tally in ring order; terms live as long as the action; the voter is SYMMETRIC: against a referendum that benefits my prey more than me (supersedes abstain).
@@ -125,14 +127,14 @@ approved, the line says which part is whose ("Johan: … · built (Claude): …"
 - **D-50** (2026-09-20, Johan's racing rule, CL 41a) — A racing deck seldom leaves a body up other than with a BOUNCE in hand, no wake, against a predator averaging 2+ pool damage, when the vampire itself managed only a bleed of 1–2; after a 1-bleed the weight to block can be larger, by the predator's statistics (built as `_raceHome`, one body at most).
 - **D-51** (2026-09-27, Johan's "don't oust yourself" item; Claude's design, v0.6.189–193) — Recurring losses over the last turn cycle (Creeping Sabotage, Smiling Jack, Fame) are added to the critical pool (`dynFloor` 1).
 - **D-52** (2026-10-19, Johan 22:36 + Claude's build, spec-cards §5, v0.6.211) — Johan: equipment weighs more than a 1-bleed without modifiers; Govern is usually better than Kevlar; the Magnum is fine except late when the pool is low; Kevlar belongs to the knowledge layer. Built (Claude's thresholds): a weapon or armour beats a BARE plain 1-bleed (no crypt bonus, no pump in hand), never a bleed card, not with the prey within reach (the lunge rule), and a pool-cost item at ≤ 6 pool keeps the flat price (`equipOverPlain` 1).
-- **D-97** (2026-10-19, Claude's fix found by the sim, v0.6.210 — not a Johan ruling) — The master, equip and fetch finders never spend the last pool (R-34); nor Chantry's rescue (v0.6.212). The 29 Oct inventory: influence (the `poolFloor` knob, 6 for every persona), ally, political and Vessel's pool-to-blood already left 1; Jack's tick, Fame and pool damage are losses, not choices.
+- **D-97** (2026-10-19, Claude's fix found by the sim, v0.6.210 — not a Johan ruling) — The master, equip and fetch finders never spend the last pool (R-34); nor Chantry's rescue (v0.6.212). The 29 Oct inventory (CHANGELOG v0.6.212): every other own pool payment already left 1; Jack's tick, Fame and pool damage are losses, not choices.
 
 ### Masters & cards (cardfx)
 - **D-53** (2026-09-16, Johan) — Claude compiles cardfx; `vtes.json` comes from KRCG or `dtagent2000/VTES-Elysium-data` (D-91).
 - **D-54** (2026-09-18, Johan's cardfx rule, CL 18) — Tag the least common denominator and build in SWEEPS, not card by card (pool-damage, pool-gain / economy as tags with amounts as fields); the first curation goal is the V5 releases.
 - **D-55** (2026-09-22, Johan) — Rush recognition is a cardfx rush TAG the bot reads when an opponent plays it; interim: Target on a bot's vampire + `rush` in chat (v0.6.155).
 - **D-56** (2026-09-25, Johan) — vtes-skill and vtes-rulings (MIT) are sources for the sweep and the knowledge layer; card text from KRCG; VTES-Player is ideas only, no code reuse.
-- **D-57** (2026-09-25, Johan's build order) — vtes-skill read → the cardfx sweep with inferior / superior → the event log → the mirror bench with controls → the knowledge layer in small measured questions → the meta layer. (Executed through the knowledge layer; what follows is D-83 / D-84 and the BOARD's product line.)
+- **D-57** (2026-09-25, Johan's build order) — vtes-skill read → the cardfx sweep with inferior / superior → the event log → the mirror bench with controls → the knowledge layer in small measured questions → the meta layer. (Executed; then D-83 / D-84.)
 - **D-58** (2026-10-16, Johan decision 5, review F23) — Haven Uncovered only when a rusher of mine would rush through it THIS turn, on an OPPONENT's vampire (the look-ahead rule).
 - **D-59** (2026-10-16, Johan's Theft of Vitae case; Claude's R1 fix, review F22) — A card is dead only when no vampire of mine — ready, torpor, uncontrolled, else the deck's crypt — can use it; a turn-1 discard of a key card is a bug.
 - **D-60** (2026-10-19, Johan, spec-cards §5) — Spying Mission option B: cancel a bounced bleed of 2+ about to land on a non-prey and bank the +2 ("that is why you have the card"; `spyCancelMin` 2); as stealth it goes last at equal stealth (a combat dual card is kept over it — O-8).
@@ -173,8 +175,8 @@ approved, the line says which part is whose ("Johan: … · built (Claude): …"
 - **D-86** (2026-09-17, Johan) — The table model uses public information only; no per-player files between matches.
 - **D-87** (2026-09-18, Johan) — "How should we do X" → analyse, propose, wait for "kör"; end every round with "anything I'm unsure about".
 - **D-88** (2026-09-18, Johan) — Opt-in feedback from human-vs-bot games (a match log, a survey) — `specs/elysium-bot-feedback-loop-spec.md`.
-- **D-89** (2026-09-19, Johan, CL 33a) — Deck-level claims used the BALANCED design (`design-balanced-serie-bal1.txt`); seeds 4001–4012 only version-vs-version. SUPERSEDED 19 Oct by D-71 (every seating on the sim); the design file stays for the bench port (BOARD C3).
-- **D-90** (2026-09-22, Johan, v0.6.154) — A text-only change needs no full sweep: `node --check` + the grammar test (then `test-grammar.js`, a legacy test round C2 deletes; its successor is the canary — Claude's reading).
+- **D-89** (2026-09-19, Johan, CL 33a) — The BALANCED design for deck-level claims: SUPERSEDED 19 Oct by D-71; `design-balanced-serie-bal1.txt` stays for the bench port (BOARD C3).
+- **D-90** (2026-09-22, Johan, v0.6.154) — A text-only change needs no full sweep: `node --check` + the grammar test (today the canary — Claude's reading).
 - **D-91** (2026-10-12, Johan) — Git monorepo; branch + PR per change; Johan merges and deletes branches; third-party data in the private repo `dtagent2000/VTES-Elysium-data`; KRCG v5 deferred until v3 is dropped.
 - **D-92** (2026-10-16, Johan) — Combining rule: a fix found during a round may ride in it when it fits, said so in the PR; review rounds R1 → R4; we run the play-test rig ourselves.
 - **D-93** (2026-08-04, Johan) — The evaluation doctrine: every shipped tactical change gets its OUTCOME evaluated in the next report against its registered prediction (change · prediction · observed · verdict: keep / tune / revert), so the sum of changes is judged, not just shipped [CL lines 96–100].
@@ -208,13 +210,13 @@ A retired line keeps its number as a one-line stub so references stay valid.
 - **O-17** (2026-10-19) — The self-oust gate on referendums is strict; the rulebook on SIMULTANEOUS ousts was not checked [journal 19 Oct].
 
 ### Influence, pool & economy
-- **O-18** (2026-09-18) — The recruit's POOL cost is still paid at resolve rather than parked (minor under R-17) [CL 1, 27b]. (gap, not a question: under R-17 paying the recruit's pool at resolve IS the rule; only the reserve at announce is missing, which barely matters for pool)
+- **O-18** (2026-09-18) — The recruit's POOL cost is still paid at resolve rather than parked (minor under R-17) [CL 1, 27b]. (gap, not a question: under R-17 only the reserve at announce is missing)
 - **O-19** (2026-09-19) — Income direction v0 is narrow (a 0-blood host, pool ≥ max(10, floor + 4)); a working-reserve rule is the next step [CL 20i]. (gap, not a question — BOARD)
-- **O-20** (2026-10-19) — "Low pool" for the equipment rule is the fixed 6, not the dynamic level [spec-cards §5]. (The pool-payment inventory: done, D-97.)
+- **O-20** (2026-10-19) — "Low pool" for the equipment rule is the fixed 6, not the dynamic level [spec-cards §5].
 
 ### Masters & cards
 - **O-21** (2026-09-18) — A FREE block bar (Beast Meld-class) and `chosen` (Seduction-class) have tags but no consumer; crypt text is hand-curated (20 entries), no passive-shape auto-extractor [CL 24c, 24l]. (gap, not a question — BOARD)
-- **O-22** — retired 29 Oct (answered by D-98: waves by effect class; wave 1 = Villein, the extra strikes and the aggravated strikes).
+- **O-22** — retired 29 Oct (answered by D-98).
 - **O-23** (2026-10-16) — Wasserschloss Anif's burn-it action and Haven Uncovered's host burning the card are not built; Ventrue HQ is locked only in own referendums [spec-r4 §3]. (gap, not a question — BOARD)
 - **O-24** (2026-10-19) — Both Pentex spellings in one game are two cards to `_uniqueInPlay` (one row in `CARDS.md`, by KRCG id) [spec-cards §5].
 
@@ -223,12 +225,12 @@ A retired line keeps its number as a one-line stub so references stay valid.
 - **O-26** — retired 20 Oct (obsolete: the Reduce row, client v2.6.159, D-7).
 - **O-27** (2026-10-17) — The probe default and the chat beat have not been seen by a human at a table; main's second idea (delay the panel) is the reserve [journal 17 Oct].
 - **O-36** (2026-10-17) — Between bots a contested block's verdict waits for the actor's clock (~3 s at the arena's askSecs; by design in R4, nobody declares it sooner): keep, or shorten? [context 17 Oct, `ana-windows.py`'s "contest at the clock" rows].
-- **O-28** (2026-10-20) — The clean-up's decisions (spec-cleanup §8): Q1 answered ("Börja med C1 enligt specen", 20 Oct). Open: Q2 the journal and Q3 the READ-ME-FIRSTs (C1 froze both in `history/` and the ritual writes neither, as §5.5 lays out; Q2 (b) would add a short Swedish decision log), Q5 CI for `bot/`, Q6 history comments (recommended (b)), Q7 paste the project instruction after the merge. Q4 is asked of main (the docs-diet handoff) [spec-cleanup §8].
+- **O-28** (2026-10-20) — The clean-up's open decisions (spec-cleanup §8): Q2 the journal and Q3 the READ-ME-FIRSTs (C1 froze both in `history/` and the ritual writes neither, as §5.5 lays out; Q2 (b) would add a short Swedish decision log), Q5 CI for `bot/`, Q6 history comments (recommended (b)), Q7 paste the project instruction after the merge. Q4 is asked of main (the docs-diet handoff) [spec-cleanup §8].
 
 ### Plan & strategy
 - **O-13** (2026-09-18) — `H = 3` and the grinding quota holding only while `myTto ≤ 2H` in `_strategize` were changed before measurement; never confirmed [CL 10, 17, 68].
 - **O-33** (2026-09-17) — Per-deck playbooks as plan tables and the opening book (B2 steps 2–3, 13c) were Johan's next lever after the strategy layer; never built — superseded by the abstract model and the V5 plan, or still wanted? [CL 8, 13c, 68, line 153].
-- **O-34** (2026-09-18) — Keep-a-blocker's passivity at a human table (the posture goes to `o.log` only; a chat line "I'll hold X back" was proposed) — Johan to evaluate in play. The bare block now carries the verdict-wait line (v0.6.204) [CL 7].
+- **O-34** (2026-09-18) — Keep-a-blocker's passivity at a human table (the posture goes to `o.log` only; a chat line "I'll hold X back" was proposed) — Johan to evaluate in play [CL 7].
 - **O-35** (2026-09-20) — Judgment calls in the stealth stack never ruled: ×0.6 expected intercept per attempt drawn, "a bleed of 1 is not worth two intercept cards", the gamble thresholds (3+, or 2+ with a 25 % top-deck) [CL 54d].
 
 ### Personas & table
