@@ -85,8 +85,12 @@
     pool 0; no Slam maneuver (the committed strike is the suite's, 160h / i / r); Form of the Wolf never drawn into a recorded hand
     and Walk of Flame never in a round 2 — not reached, played by 160m and 160b. Verdict: keep (spec §5). *The suite on the
     release bytes* then found 37g red — the clean-dodge shortcut skipped Taste of Vitae after ANY dodge; now a taken line already in
-    is read and my additional strike reopens the wait (160x; LESSONS L-83) — and the fix is IDENTICAL on both designs. FILL-REAL
-  - `docs/CARDS.md` regenerated on the release runs: FILL.
+    is read and my additional strike reopens the wait (160x; LESSONS L-83) — and the fix is IDENTICAL on both designs. The counter war
+    (arena profile, pace 0, match 0182: the Nosferatu's counter, the Tremere's answer back to long) replayed on the real clock:
+    SAME-PLAY with its virtual twin, handshake integrity 100 %, no wait into its safety net.
+  - `docs/CARDS.md` regenerated on the release runs: playable 162 → 168 cards (1,014 → 1,055 copies: Flash, Hunger of Marduk, Rage
+    of Apedemak, Resist Earth's Grasp, Slam, Torn Signpost), unseen 13 → 15 (Form of the Wolf, Walk of Flame: not reached in the
+    smoke), partial 61 → 60 (Monstrous Form in, for its superior action; Resist Earth's Grasp and Slam out), inert 72 → 65.
   - Gates on the release bytes: FILL.
 - **v0.6.213 (29 Oct 2026)** — V5 wave 1, Johan's "kör" of 29 Oct on D-98 (the waves go by effect class; wave 1 = Villein, the
   extra strikes and the aggravated strikes). The canon: `specs/spec-v5-wave1-2026-10-29.md`; RULINGS R-39 / R-40 (the readings with
