@@ -10973,6 +10973,33 @@ async function connectWithRetry(client, tries = 30){
         ok(!u._playSpyBank(v), '157l ...and not on a bleed that was bounced (it is no longer the same bleed of mine on them)'); }
     }
 
+    /* 158) v0.6.212 -- CHANTRY NEVER TAKES MY LAST POOL (found by V5 round 0's smoke, 29 Oct 2026: on a five-seat sim table a Tremere bot at
+       pool 1 rescued Trevon Parker with its last pool, decided at 0 in the same master phase and was ousted after it). Chantry: 'burn 1 pool or
+       1 blood from a ready Tremere you control'. The pool pays only when 1 is left (D-97, R-34); otherwise the blood of a ready Tremere who keeps
+       1, or nothing. Through the turn (L-13), not through _considerLockRescue. 158c is the control: at pool 2 nothing changes. */
+    {
+      console.log('\n[158] v0.6.212 -- Chantry pays pool only when 1 is left');
+      const strip158 = h => String(h).replace(/<[^>]+>/g, '');
+      const mk158 = (pool, board) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'b158', pass: 'p', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }]; u.table = {};
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {};
+        u.pool = pool; u.board = board; u.hand = []; u.unc = []; u.turnSeat = 2; return u; };
+      const run158 = async u => { let terr = null; try { await u._playTurn(); } catch(e){ terr = e.message; }
+        return { terr, L: u.sent.map(m => m.t === 'log' ? strip158(m.html) : null).filter(Boolean) }; };
+      const chantry = () => ({ id: 'ch', name: 'Chantry', kind: 'lib', zone: 'ready', locked: false });
+      const torpored = () => ({ id: 'tp', name: 'Abraham DuSable (G6)', kind: 'crypt', zone: 'torpor', blood: 1, cap: 8 });
+      { const ch = chantry(), tp = torpored(), u = mk158(1, [ch, tp]), r = await run158(u);
+        ok(!r.terr && !u.out && u.pool === 1 && tp.zone === 'torpor' && !ch.locked && r.L.some(l => /Turn passed/.test(l)) && !r.L.some(l => /to rescue/.test(l)),
+          '158a pool 1 and no Tremere to burn blood: no rescue -- pool 1, Abraham DuSable stays in torpor, the turn passes (got pool ' + u.pool + ', out ' + u.out + ', ' + tp.zone + (r.terr ? ', threw ' + r.terr : '') + ')'); }
+      { const ch = chantry(), tp = torpored(), py = { id: 'py', name: 'Aidan Lyle (G5)', kind: 'crypt', zone: 'ready', blood: 3, cap: 7, locked: false };
+        const u = mk158(1, [ch, tp, py]), r = await run158(u);
+        ok(!r.terr && !u.out && u.pool === 1 && tp.zone === 'ready' && ch.locked === true && r.L.some(l => /burns 1 blood from Aidan Lyle/.test(l)),
+          '158b pool 1 and a ready Tremere with 3 blood: the blood pays, pool stays 1, Abraham DuSable rises (got pool ' + u.pool + ', ' + tp.zone + ', ' + JSON.stringify(r.L.filter(l => /Chantry/.test(l))) + ')'); }
+      { const ch = chantry(), tp = torpored(), u = mk158(2, [ch, tp]), r = await run158(u);
+        ok(!r.terr && !u.out && u.pool === 1 && tp.zone === 'ready' && ch.locked === true && r.L.some(l => /burns 1 pool to rescue/.test(l)),
+          '158c pool 2: the pool pays and 1 is left, as before (got pool ' + u.pool + ', ' + tp.zone + ')'); }
+    }
+
 
 
     }
