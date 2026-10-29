@@ -2161,7 +2161,7 @@
      }
     }
    ],
-   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): '[pot] Strike: hand strike at +2 damage. [POT] As above, with 1 optional maneuver, only usable to get to close range.' Cost 1 blood (inherited). Rulings: the optional maneuver cannot be used if the strike cannot be used [LSJ 20021028] -- the card is played in the range step (its maneuver), and its strike is that round's strike; additional damage inherits the base damage's properties [TOM 19960225]. maneuverTo 'close': the maneuver's only direction."
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): '[pot] Strike: hand strike at +2 damage. [POT] As above, with 1 optional maneuver, only usable to get to close range.' Cost 1 blood (inherited). Rulings: the optional maneuver cannot be used if the strike cannot be used [LSJ 20021028] -- the card is played in the range step (its maneuver), and its strike is that round's strike; additional damage inherits the base damage's properties [TOM 19960225]. maneuverTo 'close': the maneuver's only direction. The rulebook (combat step 2): a minion that uses the maneuver from a strike card or a weapon has chosen its strike and cannot use a second strike card or weapon to maneuver again that round."
   },
   "Hunger of Marduk": {
    "t": [
@@ -2232,7 +2232,7 @@
      }
     }
    ],
-   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): 'Frenzy. Only usable before range is determined. A vampire can play only one Rage of Apedemak each combat. [ani] or [pot] This combat, you get +1 hand size and this vampire's hand strikes inflict +1 damage. [ANI] or [POT] As above, but this vampire's hand strikes inflict +2 damage.' The auto tier wrote only handStrike, the shape of a hand-strike card, which it is not. Ruling: a multi-Discipline card counts as requiring the Discipline used [LSJ 20011204-3]. Not modelled (amber): the +1 hand size this combat; its Path of Caine icon is not read as a requirement (the pathcaine crypt all follows Caine)."
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): 'Frenzy. Only usable before range is determined. A vampire can play only one Rage of Apedemak each combat. [ani] or [pot] This combat, you get +1 hand size and this vampire's hand strikes inflict +1 damage. [ANI] or [POT] As above, but this vampire's hand strikes inflict +2 damage.' The auto tier wrote only handStrike, the shape of a hand-strike card, which it is not. Ruling: a multi-Discipline card counts as requiring the Discipline used [LSJ 20011204-3]. Not modelled (amber): the +1 hand size this combat; 'Frenzy.' (no deck in the repo cancels or forbids a Frenzy card); its Path of Caine icon is not read as a requirement (the pathcaine crypt all follows Caine)."
   },
   "Torn Signpost": {
    "t": [
@@ -2332,18 +2332,20 @@
      "at": "tha",
      "fx": {
       "strike": 1,
-      "ranged": true
+      "ranged": true,
+      "noPreventDisc": "for"
      }
     },
     {
      "at": "THA",
      "fx": {
       "strike": 2,
-      "ranged": true
+      "ranged": true,
+      "noPreventDisc": "for"
      }
     }
    ],
-   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): (a BOARD rider of wave 1) '[tha] Strike: 1R damage. This damage cannot be prevented by cards requiring Fortitude [for]. The opposing vampire's strikes with weapons inflict no damage this round. [THA] As above, but for 2R damage.' Cost 1 blood (inherited). The auto tier read [THA] as 1R. Not modelled (amber): the damage Fortitude cannot prevent, and the opposing weapons dealing no damage this round [LSJ 20040928]."
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): (a BOARD rider of wave 1) '[tha] Strike: 1R damage. This damage cannot be prevented by cards requiring Fortitude [for]. The opposing vampire's strikes with weapons inflict no damage this round. [THA] As above, but for 2R damage.' Cost 1 blood (inherited). The auto tier read [THA] as 1R. The damage cannot be prevented by cards requiring Fortitude [LSJ 20050628]: noPreventDisc 'for' -- the struck bot reads the card on the strike line (`strikes with Soul Burn for N.`) and plays no Fortitude prevention (a human's bare `strikes for N.` names no card). Not modelled (amber): the opposing vampire's weapon strikes inflicting no damage this round, except after a dodge or with a first-strike weapon [LSJ 20040928]."
   }
  },
  "crypt": {

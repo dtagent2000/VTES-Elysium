@@ -156,6 +156,7 @@ const CLASS = {
   lockToUnlock: 'play', selfAggrImmuneBlood: 'paired',   // Rutor's Hand: the action (_bestRutorFor, the rutor template) and the unlock (_maybeActAgain's board source); its dominated [tha] mode is set aside (judgeLib)
   /* v1.1.41 (29 Oct 2026, bot v0.6.214, V5 wave 2, RULINGS D-102): the wave's keys. */
   stealGrant: 'contextual', handBonusCombat: 'contextual', strengthSet: 'contextual', strengthCombat: 'contextual',   // the before-range step (_brCands / _beforeRangePlay): Hunger of Marduk's steal this round, Rage of Apedemak's hand bonus, Torn Signpost's strength, Form of the Wolf / Monstrous Form's +1 -- the pump@beforeRange special case below mirrors it
+  noPreventDisc: 'meta',   // Soul Burn's rider ('cannot be prevented by cards requiring Fortitude'): read by the STRUCK bot's prevention finder from the strike line's card (_noPreventDiscIn), never a play path of its own
   maneuverTo: 'paired', pressOpt: 'paired',   // riders: a maneuver's only direction (Slam [POT]: to close -- _bestManeuverFor skips the other way, _bestCommitManeuverFor takes it), the optional press a maneuver or a pump brings (Flash [CEL], Resist Earth's Grasp, Form of the Wolf [PRO]: _bundledPress)
   press: 'contextual',   // v1.1.5: consumed via the press@ special-case below (Apportation's clean standalone shape only) -- 'contextual' here only silences the unknown-key warning for the excluded instances (co-located maneuver/strike/stealBlood, or an unverifiable req flag)
 };

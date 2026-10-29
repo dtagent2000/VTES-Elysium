@@ -11316,11 +11316,11 @@ async function connectWithRetry(client, tries = 30){
       const deckOf = combat => ({ name: 'D160', combat, crypt: [], library: [] });
       const duel160 = o => {   // section 159's relay: two bots, every log / chat / say line reaches the other `delay` ms later; A = the acting bot (Hanna), D = the bot that blocked it (Viktor)
         const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
-        const mk = (name, seat, deckName, deck) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: o.askSecs || 3, twdKnow: 0, log: () => {} }, deck ? { deck } : {}));
+        const mk = (name, seat, deckName, deck, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: o.askSecs || 3, twdKnow: 0, log: () => {} }, deck ? { deck } : {}, extra || {}));
           u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.o.deckName = deckName; u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = []; u.decs = []; u.plays = [];
           u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); if(t === 'bot:decide' && m) u.decs.push(m); if(t === 'bot:play' && m) u.plays.push(m); };
           return u; };
-        const A = mk('Hanna', 1, o.aDeck || 'tremere', o.aDeckObj), D = mk('Viktor', 2, o.dDeck || 'nosferatu', o.dDeckObj);
+        const A = mk('Hanna', 1, o.aDeck || 'tremere', o.aDeckObj, o.aOpts), D = mk('Viktor', 2, o.dDeck || 'nosferatu', o.dDeckObj, o.dOpts);
         const wire = (from, to) => { from.send = m => {
           const relay = d => setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0);
           if(m && m.t === 'say'){ relay({ t: 'say', i: m.i, who: from.o.name }); return; }
@@ -11404,7 +11404,10 @@ async function connectWithRetry(client, tries = 30){
         ok(JSON.stringify(mv) === JSON.stringify(['Anxo Vilela (G6) maneuvers to long (Apportation).', 'Wauneka (G6) maneuvers to close (Guard Dogs).']) && a.range === 'close' && d.range === 'close' && d.counter === 1 && !a.counter,
            '160f a counter: the Tremere maneuvers to long, the Nosferatu answers with a maneuver to close (Guard Dogs [ANI]) -- both rows close, the acting bot lets it stand and says nothing more (got ' + JSON.stringify({ mv, range: [a.range, d.range], counter: [a.counter, d.counter] }) + ')');
         ok(d.strike === 'Roundhouse' && d.dealt === 4 && !(a.hsMiss || d.hsMiss) && ms < 3000,
-           '160f ...the counter puts Roundhouse back in reach (4), and no wait ran into its safety net (' + ms + ' ms)'); }
+           '160f ...the counter puts Roundhouse back in reach (4), and no wait ran into its safety net (' + ms + ' ms)');
+        const ashGD = g.D.board.filter(c => c.zone === 'ash' && c.name === 'Guard Dogs').length, rowGD = g.D.plays.filter(p => p.card === 'Guard Dogs').length;
+        ok(ashGD === 0 && rowGD === 0 && linesOf(g.D, /maneuvers to close \(Guard Dogs\)\.$/).length === 1,
+           '160f ...and the grant\u2019s maneuver is no card play: no Guard Dogs in the ash heap, no play row -- the card went there (and was rowed) at its unlock; the line is the event (the egress review: a phantom second Guard Dogs; got ' + JSON.stringify({ ash: ashGD, rows: rowGD }) + ')'); }
 
       // g) a counter to the counter: the acting Tremere goes long again; the Nosferatu, out of maneuvers, answers in its before-strikes wait
       { const g = duel160({ delay: 30, aHand: ['Apportation', 'Apportation', 'Theft of Vitae'], dHand: ['Roundhouse'], dGrant: true });
@@ -11426,8 +11429,12 @@ async function connectWithRetry(client, tries = 30){
 
       // i) ...and when the range goes long again after Slam's maneuver: no strike at all (the gun's ruling's shape), read by the other bot
       { const g = duel160({ delay: 30, aDeck: 'brujah', aDeckObj: deckOf('chase'), aV: ALINE, aHand: ['Slam'], dDeck: 'tremere', dV: ANXO, dHand: ['Apportation', 'Apportation', 'Theft of Vitae'] });
+        const tw = []; const cw0 = g.A._cWrite.bind(g.A); g.A._cWrite = f => { tw.push(Object.assign({}, f)); return cw0(f); };
         await g.run();
         const a = r1(g.A), d = r1(g.D);
+        const labels = tw.filter(f => f.sa !== undefined).map(f => f.sa);
+        ok(labels.length > 0 && labels.every(x => x === 'No strike'),
+           '160i the tally\u2019s strike label of that round stays \u2018No strike\u2019 -- a human\u2019s panel showed the trace string (\u2018none (long)\u2019; the gun\u2019s round said \u2018Hand\u2019 since v0.6.174; got ' + JSON.stringify(labels) + ')');
         ok(a.range === 'long' && d.range === 'long' && a.strike === 'none (long)' && a.dealt === 0 && linesOf(g.A, /gets no strike this round \(committed to Slam by its maneuver; long range\)\.$/).length === 1 && linesOf(g.A, /strikes with/).filter(l => !/^\S+ combat/.test(l.txt)).length === 0,
            '160i a counter to Slam’s maneuver takes the range back to long: a hand strike cannot be used there and the maneuver bound Aline to it -- ‘gets no strike this round’, no strike line (got ' + JSON.stringify({ range: [a.range, d.range], strike: a.strike, dealt: a.dealt }) + ')');
         ok(a.strike === 'none (long)' && d.taken === 0 && !(d.hsMiss || []).includes('strike') && !(a.hsMiss || d.hsMiss),
@@ -11473,9 +11480,21 @@ async function connectWithRetry(client, tries = 30){
       // n) a round with no wave card: the rows carry none of the new fields (a round without a counter sends the old lines -- 141c counts them)
       { const g = duel160({ delay: 10, aHand: ['Apportation', 'Theft of Vitae'], dHand: [] });
         await g.run();
-        const a = r1(g.A), d = r1(g.D);
-        ok(a.range === 'long' && d.range === 'long' && [a, d].every(r => r.counter === undefined && r.br === undefined && r.commit === undefined) && linesOf(g.D, /does not maneuver/).length === 1,
-           '160n a maneuver nobody can answer: long on both sides, the old lines, no counter / br / commit on the rows (got ' + JSON.stringify([a.range, d.range, a.counter, d.counter]) + ')'); }
+        const a = r1(g.A), d = r1(g.D), seq = g => g.A.lines.concat(g.D.lines).sort((x, y) => x.at - y.at).map(l => l.txt);
+        const want1 = ['Hanna combat \u2014 Anxo Vilela (G6) maneuvers to long (Apportation).', 'Viktor combat \u2014 Wauneka (G6) does not maneuver.', 'Hanna combat \u2014 Anxo Vilela (G6) has nothing before strikes.', 'Viktor combat \u2014 Wauneka (G6) has nothing before strikes.',
+          'Anxo Vilela (G6) strikes: steals 2 blood.', 'Wauneka (G6) strikes with hands for 0.', 'Viktor combat \u2014 Wauneka (G6) strikes with hands for 0 (long range) dealt; Wauneka (G6) takes 0 (loses 0 blood, now 3). One round \u2014 tell me if your side\u2019s damage differs.',
+          'Hanna combat \u2014 Anxo Vilela (G6) strikes with Theft of Vitae for 0 (steals 2 blood; 1 drains off at capacity 6) dealt; Anxo Vilela (G6) takes 0 (loses 0 blood, now 6). One round \u2014 tell me if your side\u2019s damage differs.', 'Hanna combat \u2014 Anxo Vilela (G6) does not press.', 'Viktor combat \u2014 Wauneka (G6) does not press.'];
+        const got1 = seq(g);
+        ok(a.range === 'long' && d.range === 'long' && [a, d].every(r => r.counter === undefined && r.br === undefined && r.commit === undefined) && JSON.stringify(got1) === JSON.stringify(want1),
+           '160n a maneuver nobody can answer (the acting bot\u2019s): exactly the old lines in the old order (v0.6.213\u2019s, line for line), no counter / br / commit on the rows (got ' + JSON.stringify(got1) + ')');
+        const g2 = duel160({ delay: 10, aDeck: 'ventrue', aV: { name: 'Alexa Draper (G6)', cap: 8, blood: 6 }, aHand: [], dDeck: 'tremere', dV: Object.assign({}, ANXO), dHand: ['Apportation', 'Theft of Vitae'] });
+        await g2.run();
+        const want2 = ['Hanna combat \u2014 Alexa Draper (G6) does not maneuver.', 'Viktor combat \u2014 Anxo Vilela (G6) maneuvers to long (Apportation).', 'Hanna combat \u2014 Alexa Draper (G6) has nothing before strikes.', 'Viktor combat \u2014 Anxo Vilela (G6) has nothing before strikes.',
+          'Alexa Draper (G6) strikes with hands for 0.', 'Anxo Vilela (G6) strikes: steals 2 blood.', 'Viktor combat \u2014 Anxo Vilela (G6) strikes with Theft of Vitae for 0 (steals 2 blood; 1 drains off at capacity 6) dealt; Anxo Vilela (G6) takes 0 (loses 0 blood, now 6). One round \u2014 tell me if your side\u2019s damage differs.',
+          'Hanna combat \u2014 Alexa Draper (G6) strikes with hands for 0 (long range) dealt; Alexa Draper (G6) takes 0 (loses 0 blood, now 4). One round \u2014 tell me if your side\u2019s damage differs.', 'Hanna combat \u2014 Alexa Draper (G6) does not press.', 'Viktor combat \u2014 Anxo Vilela (G6) does not press.'];
+        const got2 = seq(g2);
+        ok(JSON.stringify(got2) === JSON.stringify(want2),
+           '160n ...and the answering bot\u2019s maneuver nobody answers (its new before-strikes wait): the old lines, line for line (got ' + JSON.stringify(got2) + ')'); }
 
       // o) the coverage verdicts of the wave's cards in their decks
       { let cov = null; try { cov = require('./gen-deck-coverage.js'); } catch(e){}
@@ -11511,6 +11530,67 @@ async function connectWithRetry(client, tries = 30){
         const now = u._myRoundDmg(K, { close: true }), next = u._myRoundDmg(K, { close: true, next: true });
         ok(now.card === 'Hunger of Marduk' && now.dmg === 2 && next.card === null && next.dmg === 1 && u._xr.stealGrant && u._xr.stealGrant.n === 2,
            '160q ...this round’s damage counts the granted steal (2), the next round’s does not (the fist, 1) -- and the grant is still there after the look (got ' + JSON.stringify([now.card, now.dmg, next.card, next.dmg]) + ')'); }
+
+      // r) the graded readings' red, and the egress review's first finding: a strike card's maneuver chose the round's strike -- no second strike card (or weapon) maneuvers that round (the rulebook, combat step 2)
+      { const g = duel160({ delay: 30, aDeck: 'brujah', aDeckObj: deckOf('chase'), aV: ALINE, aHand: ['Slam', 'Slam'], dDeck: 'tremere', dV: ANXO, dHand: ['Apportation', 'Apportation', 'Apportation', 'Theft of Vitae'] });
+        await g.run();
+        const a = r1(g.A), sp = g.A.plays.filter(p => p.card === 'Slam');
+        ok(sp.length === 1 && g.A.hand.filter(n => n === 'Slam').length === 1 && a.counter === 1 && a.range === 'long' && a.strike === 'none (long)' && g.aV.blood === 2,
+           '160r two Slams against three maneuvers to long: the first Slam’s maneuver commits the strike, the second is not played after the range goes long again -- one Slam paid, one in hand, no strike at long (v0.6.214’s first bytes paid both; got ' + JSON.stringify({ plays: sp.length, hand: g.A.hand, counter: a.counter, range: a.range, strike: a.strike, blood: g.aV.blood }) + ')');
+        const u = mkU160('R0'); u._xr = u._xrFresh(); const v = { id: 'e2', name: 'Elen Kamjian (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] };
+        const CM = () => IF0(u, '_bestCommitManeuverFor') ? u._bestCommitManeuverFor(v, 'close') : 'x';   // the pre-change bytes lack the finder: fail clean
+        u.hand = ['Slam']; const c0 = CM(); u._xr.commit = { vamp: v.name, name: 'Slam', mo: {}, hand: true }; const c1 = CM();
+        u._xr.commit = null; u._rnd = { gunCommitted: '.44 Magnum' }; const c2 = CM();
+        ok(!!c0 && c1 === null && c2 === null, '160r ...the finder itself: no Slam maneuver once the round’s strike is chosen by Slam or by a gun’s maneuver (got ' + JSON.stringify([!!c0, c1, c2]) + ')'); }
+
+      // s) the graded readings' red: Soul Burn's damage 'cannot be prevented by cards requiring Fortitude' -- the struck bot reads the card on the strike line
+      { const g = duel160({ delay: 20, aDeck: 'banuhaqim', aDeckObj: deckOf('snipe'), aV: { name: 'Kasim Bayar (G6)', cap: 9, blood: 5 }, aHand: ['Soul Burn'], dDeck: 'ventrue', dV: { name: 'Madison (G6)', cap: 6, blood: 6 }, dHand: ['Hidden Strength'] });
+        await g.run();
+        const d = r1(g.D);
+        ok(r1(g.A).strike === 'Soul Burn' && d.taken === 2 && g.D.hand.includes('Hidden Strength') && !g.D.plays.some(p => p.card === 'Hidden Strength'),
+           '160s Soul Burn [THA] for 2: Madison keeps Hidden Strength [FOR] and takes 2 -- a Fortitude card cannot prevent it [LSJ 20050628] (the struck bot played it; got ' + JSON.stringify({ taken: d.taken, hand: g.D.hand }) + ')');
+        const g2 = duel160({ delay: 20, aDeck: 'banuhaqim', aDeckObj: deckOf('snipe'), aV: { name: 'Kasim Bayar (G6)', cap: 9, blood: 5 }, aHand: ['Roundhouse'], dDeck: 'ventrue', dV: { name: 'Madison (G6)', cap: 6, blood: 6 }, dHand: ['Hidden Strength'] });
+        await g2.run();
+        ok(g2.D.plays.some(p => p.card === 'Hidden Strength') && r1(g2.D).taken === 0, '160s ...the control: against Roundhouse for 3 the same Madison plays Hidden Strength and takes nothing'); }
+
+      // t) found by the V5 smoke (an hsMiss on a Form of Mist round, ministry's since v0.6.212): after the opponent's clean dodge, Taste of Vitae waited askSecs for a taken line that never comes
+      { const g = duel160({ delay: 30, aDeck: 'nosferatu', aV: { name: 'Wauneka (G6)', cap: 5, blood: 5 }, aHand: ['Taste of Vitae'], dDeck: 'tzimisce', dDeckObj: deckOf('chase'), dV: { name: 'Clara Hjortshøj (G6)', cap: 5, blood: 1 }, dHand: ['Form of Mist'] });
+        const ms = await g.run();
+        const d = r1(g.D);
+        ok(d.strike === 'Form of Mist' && g.A.hand.includes('Taste of Vitae') && !(d.hsMiss || r1(g.A).hsMiss) && ms < 2000,
+           '160t Clara dodges with Form of Mist [pro]; the acting Nosferatu, holding Taste of Vitae, does not wait for a taken line (their dodge line reports no loss): the combat ends in ' + ms + ' ms and the other bot’s press wait meets its answer (v0.6.214’s first bytes: 3.2 s here, 20 s at the client, and an hsMiss)'); }
+
+      // u) the egress review: Guard Dogs' maneuver belongs to the vampire that played it, and dies in _resolveCombat's finally (a rejected combat leaked it)
+      { const u = mkU160('U0'); const X = { id: 'x1', name: 'Horace Radcliffe (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 5, attached: [] }, Y = { id: 'y1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 5, attached: [] };
+        u.board = [X, Y]; u.hand = []; u._reactManeuverGrant = true; u._reactManeuverGrantVamp = X.name;
+        const mx = u._bestManeuverFor(X, 'close'), my = u._bestManeuverFor(Y, 'close');
+        u.pending = { kind: 'bleed', who: 'Hanna', amount: 1, contested: true, blockerVamp: Y, actingVampName: 'Anxo Vilela (G6)' };
+        let seen = null; u._resolveCombat = async v => { seen = { grant: u._reactManeuverGrant, m: u._bestManeuverFor(v, 'close') }; }; u._maybePostBlockUnlock = async () => {};
+        u._verdictAsTarget(true); await sleep(10);
+        ok(!!mx && mx.name === 'Guard Dogs' && my === null && !!seen && seen.grant === false && seen.m === null,
+           '160u Guard Dogs [ANI]’s maneuver is Horace’s: Wauneka, blocking after Horace’s block failed, gets none in her combat (got ' + JSON.stringify({ x: mx && mx.name, y: my, seen }) + ')');
+        const w = mkU160('U1'); const Z = Object.assign({}, X); w.board = [Z]; w._reactManeuverGrant = true; w._reactManeuverGrantVamp = Z.name;
+        w._resolveCombatRound = async () => { throw new Error('a rejected round'); };
+        let err = null; try { await w._resolveCombat(Z, 'Anxo Vilela (G6)'); } catch(e){ err = e.message; }
+        ok(err === 'a rejected round' && w._reactManeuverGrant === false && w._reactManeuverGrantVamp === null && w._inCombat === false,
+           '160u ...and a combat that throws still ends the grant in _resolveCombat’s finally (the caller’s .then never ran; got ' + JSON.stringify({ err, grant: w._reactManeuverGrant }) + ')'); }
+
+      // v) the egress review (the look-ahead rule): a round whose range is already set is weighed at that range alone
+      { const mkV = () => { const u = mkU160('V0', { deck: deckOf('snipe') }); u.o.deckName = 'banuhaqim'; u._inCombat = true; u._curRound = 2; u._xr = u._xrFresh(); u._myPump = null; u._range = 'close';
+          const v = { id: 'w3', name: 'Warmaksan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 5, attached: [] }; u.board = [v]; u.hand = ['Hunger of Marduk', 'Flash']; u.decs = []; u.onEvent = (t, m) => { if(t === 'bot:decide' && m.q === 'before-range') u.decs.push(m); }; return { u, v }; };
+        const BRP = async m => IF0(m.u, '_beforeRangePlay') ? m.u._beforeRangePlay(m.v) : null;   // the pre-change bytes lack the step: fail clean
+        const free = mkV(); const p0 = await BRP(free);
+        const set = mkV(); set.u._forceCloseNextRound = true; const p1 = await BRP(set);
+        const d0 = free.u.decs[0], d1 = set.u.decs[0];
+        ok(p0 === true && p1 === false && set.u.hand.includes('Hunger of Marduk') && !!d1 && d1.ctx.fixed === 'close' && d1.ctx.longOk === false && /range is set/.test(d1.out.why),
+           '160v Warmaksan at full blood with Hunger of Marduk and Flash: played when the snipe can go long (' + (d0 && d0.out.why) + '), kept when a superior Grapple set this round to close (' + (d1 && d1.out.why) + ')'); }
+
+      // w) the egress review (knob hygiene): no counter back to long without the combat mind -- its 0-path is v0.6.213
+      { const g = duel160({ delay: 30, aOpts: { combatMind: 0 }, aHand: ['Apportation', 'Apportation', 'Flames of the Netherworld'], dHand: ['Roundhouse'], dGrant: true });
+        await g.run();
+        const a = r1(g.A), d = r1(g.D), mv = mvLines(g);
+        ok(!a.counter && d.counter === 1 && a.range === 'close' && d.range === 'close' && JSON.stringify(mv) === JSON.stringify(['Anxo Vilela (G6) maneuvers to long (Apportation).', 'Wauneka (G6) maneuvers to close (Guard Dogs).']),
+           '160w a Tremere with combatMind 0 goes long once (for Flames of the Netherworld, a long-range card: v0.6.213\u2019s reason), the Nosferatu counters to close, and the Tremere does not answer it (got ' + JSON.stringify({ a: a.counter, d: d.counter, range: [a.range, d.range], mv }) + ')'); }
     }
 
 

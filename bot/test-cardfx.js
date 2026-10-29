@@ -763,6 +763,8 @@ ok(fx.counts.libLock >= 140,
      'Monstrous Form: [dom][pro] before range, +1 strength this combat, one each round; [DOM][PRO] its +1 stealth action (the card on the vampire: not modelled, amber)');
   ok(M('Soul Burn', 'tha').fx.strike === 1 && M('Soul Burn', 'THA').fx.strike === 2 && M('Soul Burn', 'THA').fx.ranged === true && L['Soul Burn'].cost.blood === 1,
      'Soul Burn: [tha] 1R, [THA] 2R (the auto tier read 1R at both); 1 blood');
+  ok(M('Soul Burn', 'tha').fx.noPreventDisc === 'for' && M('Soul Burn', 'THA').fx.noPreventDisc === 'for',
+     'Soul Burn: its damage cannot be prevented by cards requiring Fortitude [LSJ 20050628] -- noPreventDisc \'for\' on both modes (the graded readings, 29 Oct: a struck bot played Hidden Strength against it)');
   ok(['Walk of Flame', 'Eruption of Vitae', 'Growing Fury', 'Well-Aimed Car'].every(n => L[n] && L[n].req && L[n].req.notFirstRound === true),
      'v1.9.5: "Not usable the first round" / "Not usable first round" are the first-round restriction too (Eruption of Vitae, Growing Fury, Well-Aimed Car; Walk of Flame since v1.9.4)');
 }
