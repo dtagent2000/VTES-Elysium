@@ -26,7 +26,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   `CARDS.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
   round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
-  and Path requirements in every finder; the amber cards; the first-round strikes (Walk of Flame); the latent items. *Done when* each is built and section-tested, or ruled
+  and Path requirements in every finder; the amber cards; the first-round strikes (Walk of Flame); Soul Burn [THA] read 1R (prints 2R); the latent items. *Done when* each is built and section-tested, or ruled
   out. Docs: RULINGS R-39, D-99.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
