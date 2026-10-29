@@ -34,7 +34,9 @@ defines, plus one new bot-to-bot line. Two asks for §12 / the canary, and one q
   Rutor's Hand — puts it in play.`) and its unlock `VAMP unlocks — Rutor's Hand (it locks the card).` (Freak Drive's shape).
 - Still owed from earlier rounds: the lines in `HANDOFF-to-main-2026-10-20-docs-diet.md` ("Owed to §12").
 - **Re-embed `START-HERE-BOTS.html`** (`node embed-help.js bot`) at your next release: its two combat paragraphs changed — your
-  embedded copy (client v2.6.167) still says "Additional strikes are shown in the log but not yet resolved by the bot".
+  embedded copy (client v2.6.167) still says "Additional strikes are shown in the log but not yet resolved by the bot". Your client
+  suite's embed-drift check (v2.6.127) is red beside this bundle until then — 336/1 in our run, and red beside v0.6.212's guide too
+  (the embedded copy is v0.6.207's).
 
 ## 3. Question
 Between two bots the protocol makes no new line or wait in a round where nobody holds an additional-strike card (RULINGS D-99): the

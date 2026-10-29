@@ -19,6 +19,74 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.213 (29 Oct 2026)** — V5 wave 1, Johan's "kör" of 29 Oct on D-98 (the waves go by effect class; wave 1 = Villein, the
+  extra strikes and the aggravated strikes). The canon: `specs/spec-v5-wave1-2026-10-29.md`; RULINGS R-39 (the readings with their
+  sources), D-99 (Claude's design and thresholds).
+  - *Additional strikes* (Quickness, Pursuit [CEL], Arms of Ahriman [OBL]): the bot declares with main's `NAME gets an additional
+    strike.` + the tally's `xa` / `xb`. Between bots the acting bot decides first and declares before its round line; the answering
+    bot answers with its own declaration or the new bot line `NAME combat — VAMPIRE does not take an additional strike.`
+    (`_evClassify` `extra-strike`, `none`); the pair is struck acting first, each side's round line follows. A round where nobody
+    holds a source sends no new line and makes no new wait (every new `await` sits behind a synchronous check). Against a human the
+    bot RESOLVES a human's additional strike (v0.6.169 only kept it out of the next round): it asks "What is your additional
+    strike?" for it and "Any additional strikes?" when it takes one — first, too, when the human is the acting minion (R-39) —
+    inside the Strike step; one declared in the Damage step reopens the strikes (`_phaseDamage` returns `extra`). v1's limits (one
+    source a round per side, no impulse back to an acting bot that passed, no dodge / steal / ends in an additional pair): the
+    BOARD's riders.
+  - *Aggravated strikes*: the strike finders read `aggr` (Sculpt the Flesh [pro], the Ivory Bow, the Sword of the Archangel's
+    strength+1, Claws of the Dead's and Invigorate [pro]'s hands) and write `NAME strikes for N aggravated damage.` + `ga` / `gb`;
+    against a vampire an aggravated strike outranks a plain one and is a finisher in the dodge rule (D-30), against an ally neither.
+    The bot prevents aggravated damage first; Kevlar Vest and Guardian Angel now prevent it too (they sat out an aggravated-only
+    strike) and Hidden Strength's X covers it (D-22); the opponent model counts aggravated damage; Taste of Vitae counts every pair.
+  - *Wall of Filth* (put on before range, burned at its full 2 or when the strike would wound), *Claws of the Dead* [pro] (when the
+    round's hand strike lands as an aggravated hit), *Villein* (the Blood Doll drain's rule for N, D-45; +1 pool per Villein already
+    on the vampire, payable from the pool when played [ANK 20210714], paid as the pool comes), *Rutor's Hand* ([THA] with 1 + 3 + 1
+    blood, parked at the announce; an undirected action; a free act-again source), *Invigorate* on a rush ([pro] before [ani]).
+  - *Requirements*: `_entryReqOk` reads `req.clan` / `req.sect` in the strike, dodge, additional-strike, aggravated-hands and
+    equipment finders and for Invigorate (the other finders: the BOARD's riders).
+  - cardfx: 10 curated readings (105 → 115; modelled library effects 1,670 → 1,671; Sculpt the Flesh is no longer `persistent`: the
+    bot's [PRO] goes to the ash heap, its card-on-the-minion is amber; Rutor's Hand's unlock is `lockToUnlock`, not a lock mode). The
+    compiler **v1.9.4**: `req.notFirstRound` also reads "Not usable during the first round" (Walk of Flame, which banuhaqim played in
+    round 1 — now first choice for its aggravated strike — and four more: 4 → 9 entries, fail closed as before). test-cardfx 275 → 287.
+  - *Graded readings* (a fresh read-only agent, the HARNESS charter, 11 cards): 4 reds, fixed in the round — Villein let the
+    incoming blood pay a third copy at 1 pool; against a HUMAN acting minion the bot declared its additional strike before asking
+    (Quickness, Pursuit, Arms of Ahriman); Quickness's [CEL] rider never stacks yet and its note did not say so (now amber). Final:
+    green — Villein, Pursuit, Arms of Ahriman, Claws of the Dead, Wall of Filth, the Ivory Bow; amber — Quickness, Sculpt the Flesh
+    ([PRO]'s card on the minion), Rutor's Hand ([tha] never played; the note's reason corrected), the Sword of the Archangel (the
+    cancel and the unlock), Invigorate ([dom]). Unverified: Wall of Filth's Path of Caine icon as a requirement.
+  - *The egress review* (10 findings + 1 observation, all fixed but one test's depth — 159k still calls Invigorate directly): the acting bot missed an answering bot's late declaration under a
+    synchronous relay or a watched duel's beat (reproduced; its press wait now sees it, 159q); Rutor's Hand asked the prey only and
+    parked nothing (159v); Hidden Strength's X ignored aggravated damage (159r); the aggravated finisher held against an ally (159s);
+    a Damage-step declaration with my vampire in torpor looped the step (159t); a declared strike after a silent first pair leaked
+    into the next round (159u); the Wall's play line was typed a prevention (159w); 159b's ally check could not fail (strengthened);
+    stale docs (the guide's Combat menu, the handoff's Damage step, the spec's sources); Walk of Flame in round 1 (the compiler).
+    A second fresh review of the fixes found them sound; of its 7 items D-22's stale clause and the spec's Riposte claim are fixed,
+    five latent or test-depth items are listed (spec §4: three untagged first-round phrasings, Riposte's combat-ends finder, the
+    mirror-image race tested on the 30 ms relay only, 159p's hook-level test, `prevent-x`'s plain `incoming`).
+  - Section 159 (44 checks, through `_onLog`, duels on a 30 ms and a synchronous relay, the phase walk and the turn): on the v0.6.212
+    bytes 3 green (the controls), on the round's bytes before the reviews' fixes 34 (159o–w red).
+  - *The sim* (registered before measuring, D-93: the starters' design SAME-PLAY and the V5 smoke diverging only where a wave
+    card sits — both held; the audits clean — held against v0.6.212 only: byte-identical, its RAN-OUT windows (BOARD) and 223
+    `ana-ledger` rows "through, no seat took it" are the baseline's too): the 240-match client design v0.6.212 → v0.6.213 is
+    SAME-PLAY 240, every trace row identical but the version string and the run's CPU / wall times; the five audits
+    byte-identical; played at 0 pool 0. The V5 smoke (the 14 new precons with the four starters, 12 random seatings from seed 1,
+    five seats) on both bytes: 105 SAME-PLAY, 63 DIVERGED — ravnos, pathcathari and salubri SAME-PLAY 12 (salubri never equips
+    its Sword: a pricing question, L-9); each divergence starts at a wave decision (an additional strike 17, Villein 25 — 16 in
+    the master phase, 9 at its N —, Wall of Filth 7, Claws of the Dead 4, an aggravated strike 4: Sculpt the Flesh 3, the Ivory
+    Bow 1; Rutor's Hand 2), at Walk of Flame no longer played in round 1 (1: Soul Burn instead) or, in 3, at a decision on a
+    state an aggravated hit or an additional strike changed (two Chantry rescues, a Hidden Strength). On the new bytes:
+    handshake integrity 100 % in all 14 (`ana-combat2.py`), played at 0 pool 0, `hsMiss` 2 (both v0.6.212's too: ministry's Form
+    of Mist), invariant flags 4 of the known kind (Wider View's burn-for-pool; 3 on v0.6.212); all 35 rounds with an additional
+    strike pair up on both sides (32 equal, 3 prevented by a second Hidden Strength). One brujah match with 4 additional strikes
+    (arena profile, pace 0) replayed on the real clock: SAME-PLAY with its virtual-clock twin (its 4 lost maneuver lines are
+    v0.6.212's too: 8 in the 12 arena-profile matches on both bytes).
+  - `docs/CARDS.md` regenerated on the release runs: playable 154 → 162 cards (955 → 1,014 copies), partial 66 → 61, inert 76 → 72,
+    unseen 12 → 13 (the Sword of the Archangel); Invigorate stays partial ([dom]'s block bar has no consumer); Walk of Flame is inert
+    (fails closed).
+  - Gates on the release bytes (`elysium-bot.js` 6ae2c791…, `test-bot-logic.js` 09356216…, `elysium-cardfx.json` 8d38459a…): suite
+    2291/0 ×3 (alone, frozen snapshots, `node --max-old-space-size=4096`) · canary 69/0 (bot/'s copies) and 69/0 (the root's client
+    v2.6.167 + `client/ELYSIUM-PROTOCOL.md`) · hotseat 11/0 · HB1 11/11 · test-cardfx 287/0 · `gen-precon.js --check` no problems ·
+    main's `check-versions.js` (as its CI runs it, in scratch) agrees · main's client suite beside the release bundle 336/1: the one is
+    the embedded-guide drift check, red on v0.6.212's guide too (main's embedded copy is v0.6.207's; the handoff asks to re-embed).
 - **v0.6.212 (29 Oct 2026)** — V5 round 0, Johan's "kör" of 29 Oct (12:54) on the five-point proposal: the tools for the V5 waves
   (the Tools section) and one fix their first smoke found.
   - *CHANTRY'S LAST POOL* (D-97, R-34): on a five-seat sim table a Tremere bot at pool 1 rescued a torpored Tremere through Chantry
@@ -170,6 +238,12 @@
 - **v0.6.101 (9 Aug 2026)** — the late-bubble re-check in `_pace`, the drain-gap guard at the drain top, the Hold on tail guard.
 
 ## Tools
+- **V5 wave 1 (29 Oct 2026, with bot v0.6.213)** — `gen-deck-coverage.js` **v1.1.40**: the wave's keys (`addStrike` contextual,
+  `addStrikeLimited` paired, `aggr` meta, `aggrHands` / `strengthAction` / `burnPrevent` / `poolFromHost` / `lockToUnlock` play,
+  `strBonus` contextual, their riders paired; Villein in `MASTER_KEYS`; `strBonus` and `aggr` in the equip grant set; dominated
+  modes set aside); the report's second version site was left at v1.1.39 (fixed). The five V5 starter reports in `docs/coverage/`
+  regenerated (Toreador 50 → 56 FULL: Villein). `docs/CARDS.md` regenerated on the release runs: 162 of 308 cards playable (154),
+  13 unseen (12), 61 partial (66), 72 inert (76; Walk of Flame now fails closed).
 - **V5 round 0 (29 Oct 2026, with bot v0.6.212)** —
   - **`gen-precon.js` v1.0.0** (new): every V5 precon (Fifth Edition, Anarch, Companion, Sabbat V5: 18) from `vtes.json`'s sets data,
     written as `deck-<key>.json` beside it when the file is missing, compared by KRCG id and quantity when it exists; it also compares the
@@ -212,6 +286,12 @@
 - **v1.2.6 (4 Aug 2026)** — manifests carry `seat`; VEKN-true `deriveWinner` (v1.2.5).
 
 ## cardfx
+- **compile v1.9.4 + curated 105 → 115 (29 Oct 2026, bot v0.6.213)** — the wave's 10 readings (Villein, Quickness, Pursuit, Arms of
+  Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor's Hand, the Sword of the Archangel, Invigorate; the Ivory Bow's
+  auto reading is right). `req.notFirstRound` also reads a sentence "Not usable during the first round" (Walk of Flame, Ahriman's
+  Demesne, Blood Agony, Blood to Water, Torment the Soul; 4 → 9), not the texts that lift it (Shotgun Ritual, Al-Ashrad, Hector
+  Trelane); three cards that print it without 'on / during' (Eruption of Vitae, Growing Fury, Well-Aimed Car) are not tagged yet
+  (no deck holds them; spec §4). `test-cardfx.js` 287/0 (+12).
 - **compile v1.9.3 (19 Oct 2026, bot v0.6.211)** — A curated entry keyed by a printed name VARIANT is also written under the printed name.
   - The one case was *Pentex(TM) Subversion*: the printed *Pentex™ Subversion* kept the auto tier's empty entry, so a list typed with the printed name (KRCG's precons, the V5 precon generator) paid 2 pool for a card with no effect.
   - The variant key stays, so a list typed the old way still resolves exactly to itself. `fxLookup(name).name` equals the hand's own name either way; the master loop re-anchors by name.
