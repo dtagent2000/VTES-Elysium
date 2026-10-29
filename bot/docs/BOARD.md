@@ -47,10 +47,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   pilot a second runner that plays those sections under the sim's virtual clock, live sections on the real clock; sharding is the
   fallback. The suite also grows past a 2 GB heap by section 136 (29 Oct): find what it keeps. *Done when* one runner gives the same
   assertion count, green ×3, on node's default heap. Docs: spec §5.7, §7.
-- **Graded rules readings and the card ledger** (T2, T3): one generated row per card (tier, modes, rulings, the suite section,
-  plays in the latest sim, status); each curated reading graded green / amber / red by a fresh agent against KRCG text and
-  vtes-rulings, only reds to Johan. *Done when* `gen-card-ledger.js` writes `docs/CARDS.md` from cardfx + the suite + a sim dir.
-  Docs: spec T2, T3; HARNESS; `specs/spec-cardfx-sweep-sources-2026-09-25.md`.
+- **Graded rules readings** (T3; the ledger, T2, is `docs/CARDS.md` since v0.6.212): each curated reading graded green / amber /
+  red by a fresh agent against KRCG text and vtes-rulings, only reds to Johan; the grade becomes a ledger column. *Done when* a wave's
+  PR lists the grades of the cards it curated (HARNESS, the charter). Docs: spec T3; HARNESS; `specs/spec-cardfx-sweep-sources-2026-09-25.md`.
 - **Egress review as a rule** (T4): every round's PR carries an `Egress:` line from a fresh-context agent. *Done when* HARNESS
   describes it and three rounds have one. Docs: HARNESS.
 - **Ask main once**: (a) may the bot's gates read the root's released client / server / protocol instead of the copies in `bot/`

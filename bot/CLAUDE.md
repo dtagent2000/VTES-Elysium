@@ -27,8 +27,7 @@ release in, never patch. A need on main's side is a handoff (`docs/handoffs/HAND
 contract first and the bot consumes it next round, or the bot ships first when the change is backward compatible. Never both
 halves in one PR. A bot release = bump `BOT_VERSION` (the line carries the version only; the note goes to the CHANGELOG), copy the
 bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.js`, `elysium-twd-archetypes.json/.js`,
-`START-HERE-BOTS.html`) to the repository root. Never edit the root in place. (The shipped v0.6.211 line still carries its note;
-the version-only line applies from the next release.)
+`START-HERE-BOTS.html`) to the repository root. Never edit the root in place.
 
 ## Gates (the one complete list; HARNESS and the root CLAUDE.md point here; STATUS has the last known green numbers)
 - `node --check` on every changed file.

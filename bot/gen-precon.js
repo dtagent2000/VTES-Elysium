@@ -132,7 +132,7 @@ function main(){
       state = dd.length ? 'DIFF  ' + dd.join('; ') : 'IDENTICAL (by KRCG id and quantity)';
       if (dd.length) bad++;
     } else if (o.check){
-      state = 'no file (run without --check to write it)';
+      state = 'NO FILE (run without --check to write it)'; bad++;   // a precon KRCG added since the last run is a finding, not a pass
     } else {
       fs.writeFileSync(file, JSON.stringify(gen) + '\n');
       state = 'written'; wrote++;

@@ -31,7 +31,8 @@ playable, 12 unseen, 66 partial, 76 inert); Chantry's rescue never takes the las
 Main's replies of 17–18 Oct in `client/docs/handoffs/` (`REPLY-to-bot-2026-10-17-robustness.md`,
 `REPLY-to-bot-2026-10-17-v0.6.206.md`, `REPLY-to-bot-2026-10-17-v0.6.207.md`, `REPLY-to-bot-2026-10-18-open-hand.md`) are read but
 not acted on in a bot round; the docs-diet handoff (20 Oct) has no reply yet. Parked by main's own word: the TWD profile's exact-key
-lookups. Bot-emitted frozen lines not yet in main's §12 / the canary: BOARD "Ask main once".
+lookups. Bot-emitted frozen lines not yet in main's §12 / the canary: `CARD — vampires cannot block this action.`,
+`Referendum terms: …`, `VAMP attempts to leave torpor.`, the Haven Uncovered and Spying Mission lines (BOARD "Ask main once").
 
 ## Known, not built
 A human's bounce of a bot's bleed is not read by the acting bot · a human's Haven Uncovered is not read by the bots · between bots

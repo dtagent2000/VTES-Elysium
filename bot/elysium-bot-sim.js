@@ -200,7 +200,7 @@ function checkDecks(decks){   // v1.0.2: an embedded key, or deck-<key>.json bes
   const { ARCHETYPES } = require(path.join(__dirname, 'elysium-bot.js'));
   const files = {};
   for(const d of decks){
-    if(ARCHETYPES[d]) continue;
+    if(Object.prototype.hasOwnProperty.call(ARCHETYPES, d)) continue;
     const f = 'deck-' + d + '.json';
     if(/^[a-z0-9]+$/.test(d) && fs.existsSync(path.join(__dirname, f))){ files[d] = f; continue; }
     console.error('sim: unknown deck ' + d + ' -- not embedded in the bot, and no ' + f + ' beside the sim'); process.exit(2);

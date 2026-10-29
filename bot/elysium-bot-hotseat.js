@@ -96,7 +96,7 @@ async function runTable(opts){
 /* The deck for a key: the embedded deck (a copy) when the bot has it, else deck-<key>.json from deckDir (v1.4.0). A key is a lowercase word, so a file
    name can never climb out of deckDir. */
 function deckFor(ARCHETYPES, key, deckDir){
-  if(ARCHETYPES[key]) return JSON.parse(JSON.stringify(ARCHETYPES[key]));
+  if(Object.prototype.hasOwnProperty.call(ARCHETYPES, key)) return JSON.parse(JSON.stringify(ARCHETYPES[key]));   // own keys only: 'constructor' is not a deck
   const f = path.join(deckDir || __dirname, 'deck-' + key + '.json');
   if(/^[a-z0-9]+$/.test(String(key)) && fs.existsSync(f)){
     const d = JSON.parse(fs.readFileSync(f, 'utf8'));

@@ -30,7 +30,7 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   S=<a scratch dir>; L=r1; D=$S/snap-$L; rm -rf $D; mkdir -p $D/bot; cp elysium-vtes-bord.html $D/     # root client one level up: 154f
   (cd bot && tar --exclude='./serie-*' --exclude='./bench-*' -cf - .) | tar -xf - -C $D/bot
   cd $D/bot && sha256sum elysium-bot.js test-bot-logic.js elysium-cardfx.json > ../sha.txt
-  timeout 600 node test-bot-logic.js > ../suite.log 2>&1; echo "EXIT $?" >> ../suite.log      # run_in_background, then poll
+  timeout 600 node --max-old-space-size=4096 test-bot-logic.js > ../suite.log 2>&1; echo "EXIT $?" >> ../suite.log   # run_in_background, then poll
   ```
   The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran. The suite needs more than 2 GB of heap by
   section 136: where node's default heap is ~2 GB (an 8 GB sandbox: 2,096 MB) it dies out of memory after 136e, v0.6.211's own bytes
