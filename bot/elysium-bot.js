@@ -2494,8 +2494,8 @@ class Bot {
     if(key === 'maneuver' && this._equipManeuverUsed) return null;
     let best = null;
     this._attachedEquips(vamp).forEach(c => { const h = this.fxLookup(c.name);
-      (h.e.modes || []).forEach(mo => { const v = mo.fx && mo.fx[key];
-        if(typeof v === 'number' && this._modeUsableBy(mo, vamp) && !(key === 'strike' && this._range === 'long' && !mo.fx.ranged) && (!best || v > best.n)) best = { name: c.name, n: v, fromEquip: true }; }); });   // v0.6.175: a melee weapon's strike is not usable at long range
+      (h.e.modes || []).forEach(mo => { const v = key === 'strike' ? this._modeStrikeDmg(mo, vamp) : (mo.fx && mo.fx[key]);   // v0.6.213 (V5 wave 1): a weapon's strike through the strike-damage rule -- strength+N (Sword of the Archangel) as well as an absolute N
+        if(typeof v === 'number' && this._modeUsableBy(mo, vamp) && !(key === 'strike' && this._range === 'long' && !mo.fx.ranged) && (!best || v > best.n)) best = { name: c.name, n: v, fromEquip: true, aggr: key === 'strike' && !!mo.fx.aggr }; }); });   // v0.6.175: a melee weapon's strike is not usable at long range. v0.6.213: aggr = its damage is aggravated (Ivory Bow, Sword of the Archangel)
     return best;
   }
   _remainingLibrary(){               // E1 (the Ashur precedent): the server's piles are hidden count-only -- estimate remaining as deck minus hand minus every board name (any zone)
@@ -4206,13 +4206,16 @@ class Bot {
   _bestDodgeFor(vamp){               // steg 6 (16 July): a usable Strike:-dodge card (fx.dodge) -- the deck's ENTIRE combat suite (Dodge x10) had zero consumers until now. Rules: a dodge is a STRIKE choice; a successful dodge means no damage in EITHER direction this round (v1 one-round model: dealt 0, taken 0).
     if(this._handStrikeOnly) return null;   // v0.6.28 fix (found while verifying the half-finished Immortal Grapple work, source-verified independently): "You can not... use any Dodges... or any other strike that is not a hand strike" -- dodge is explicitly banned while Immortal Grapple is active, not merely one option among others
     let best = null;
+    const limUsed = !!(this._xr && this._xr.used.limited);
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('combat')) return;   // v0.6.12: combat window plays combat cards -- 9 non-combat carriers (Creep Show the MASTER, allies with built-in dodge, equipment) were offerable from hand
+      if(!this._entryReqOk(h.e, vamp)) return;   // v0.6.213: a clan requirement
       (h.e.modes || []).forEach(mo => {
-        if(best || !(mo.fx && mo.fx.dodge)) return;
+        const xs = !!(mo.fx && mo.fx.addStrike > 0 && !(mo.fx.addStrikeLimited && limUsed));   // v0.6.213 (V5 wave 1): Arms of Ahriman [OBL] -- 'Strike: dodge, with 1 additional strike (limited)'
+        if((best && !(xs && !best.addStrike)) || !(mo.fx && mo.fx.dodge)) return;
         if(!this._modeUsableBy(mo, vamp)) return;
         if((vamp.blood | 0) < ((h.e.cost && h.e.cost.blood) || 0)) return;
-        best = { idx, name: h.name, cost: h.e.cost || null };
+        best = { idx, name: h.name, cost: h.e.cost || null, addStrike: xs ? (mo.fx.addStrike | 0 || 1) : 0, limited: xs && !!mo.fx.addStrikeLimited };
       });
     });
     return best;
@@ -4225,44 +4228,100 @@ class Bot {
       if((h.e.modes || []).some(mo => mo.fx && mo.fx.dodge && this._modeUsableBy(mo, vamp))) n++; });
     return n;
   }
-  _strikePick(vamp, theirDodge){     // v0.6.205 (R4): the strike this round would really play -- cut out of _resolveCombatRound's strike choice so the dodge decision weighs exactly what a strike would have dealt, and the strike site plays the same pick. No side effects: nothing leaves the hand, nothing is paid. out = what it deals (a steal: the blood it takes, Johan's 'damage + steal'); my own crows are not in it (they land whether I dodge or not).
+  _entryReqOk(e, vamp){              // v0.6.213 (V5 wave 1): a card's clan and sect requirements against the vampire that would play it -- req.clan (a clan icon, 'Requires Tzimisce') against the printed clan, req.sect ('Requires an Anarch': Invigorate) against the printed sect (cardfx crypt entries). Unknown vampire = fail closed. Masters never carry req.clan (cardfx v1.9.1).
+    const r = e && e.req; if(!r || (!(r.clan && r.clan.length) && !r.sect)) return true;
+    const h = vamp && this.fxLookup(vamp.name), ce = h && h.kind === 'crypt' ? h.e : null; if(!ce) return false;
+    if(r.clan && r.clan.length && !r.clan.some(c => String(ce.clan || '').split('/').includes(c))) return false;
+    if(r.sect && ce.sect !== r.sect) return false;
+    return true;
+  }
+  _aggrHandsOn(vamp){                // v0.6.213 (V5 wave 1): are this vampire's hand strikes aggravated now -- Claws of the Dead [pro] played this round (this._xr, the round's own record: it dies with the round), or Invigorate [pro] on the action this combat resolves (fx.aggrHands 'action', on the action's record)
+    if(!vamp) return false;
+    if(this._xr && this._xr.aggrHands === vamp.name) return true;
+    const av = this._actingVamp; return !!(av && av.aggrHands && av.v && av.v.name === vamp.name);
+  }
+  _tempStrength(vamp){               // v0.6.213: strength for this action only (Invigorate [ani]: '+1 strength this action') -- the acting vampire's, while its action lasts
+    const av = this._actingVamp; return (vamp && av && av.strength && av.v && av.v.name === vamp.name) ? (av.strength | 0) : 0;
+  }
+  _aggrWorth(){                      // v0.6.213: aggravated damage matters against a VAMPIRE (it cannot be mended); an ally or a retainer just loses life, as from any damage. Unknown opponent = a vampire
+    const n = this._combatOppName || this._duelOppName(); if(!n) return true;
+    const h = this.fxLookup(n); return !(h && h.kind === 'lib');
+  }
+  _bestAggrHandsFor(vamp, scope){    // v0.6.213 (V5 wave 1): a card in hand that makes this vampire's hand strikes aggravated -- Claws of the Dead [pro] (scope 'round': a combat card, played in the strike step), Invigorate [pro] (scope 'action': an action modifier, played as a rush is announced)
+    let best = null;
+    (this.hand || []).forEach((n, idx) => {
+      const h = this.fxLookup(n); if(best || !h || h.kind !== 'lib') return;
+      if(!(h.e.t || []).includes(scope === 'round' ? 'combat' : 'mod') || !this._entryReqOk(h.e, vamp)) return;
+      const cB = (h.e.cost && h.e.cost.blood) | 0; if(cB > (vamp.blood | 0)) return;
+      (h.e.modes || []).forEach(mo => { if(!best && mo.fx && mo.fx.aggrHands === scope && this._modeUsableBy(mo, vamp)) best = { idx, name: h.name, at: mo.at || '', cost: cB }; });
+    });
+    return best;
+  }
+  _bestAddStrikeFor(vamp){           // v0.6.213 (V5 wave 1): a card that gains this vampire an additional strike after the first strikes -- Quickness, Pursuit [CEL], Arms of Ahriman [obl]: a combat card whose mode carries fx.addStrike and no strike of its own (Arms [OBL] IS a strike: a dodge that brings one). The limit: one limited source each round (fx.addStrikeLimited); Quickness [CEL] is outside it, and a vampire plays only one Quickness each round (oncePerRound). A mode outside the limit goes first.
+    if(!vamp) return null;
+    const used = (this._xr && this._xr.used) || { limited: false, names: [] };
+    let best = null;
+    (this.hand || []).forEach((n, idx) => {
+      const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('combat')) return;
+      if(!this._entryReqOk(h.e, vamp)) return;
+      if(h.e.oncePerRound && used.names.includes(FX_NORM(h.name))) return;
+      const cB = (h.e.cost && h.e.cost.blood) | 0; if(cB > (vamp.blood | 0)) return;
+      (h.e.modes || []).forEach(mo => {
+        const f = mo.fx || {};
+        if(!(f.addStrike > 0) || f.dodge || f.strikeCE || typeof f.strike === 'number' || typeof f.handBonus === 'number' || typeof f.strBonus === 'number' || f.stealBlood) return;
+        if(f.addStrikeLimited && used.limited) return;
+        if(!this._modeUsableBy(mo, vamp)) return;
+        const free = !f.addStrikeLimited;
+        if(!best || (free && !best.free)) best = { idx, name: h.name, at: mo.at || '', n: (f.addStrike | 0) || 1, limited: !!f.addStrikeLimited, free, cost: cB };
+      });
+    });
+    return best;
+  }
+  _strikePick(vamp, theirDodge, o){  // v0.6.205 (R4): the strike this round would really play -- cut out of _resolveCombatRound's strike choice so the dodge decision weighs exactly what a strike would have dealt, and the strike site plays the same pick. No side effects: nothing leaves the hand, nothing is paid. out = what it deals (a steal: the blood it takes, Johan's 'damage + steal'); my own crows are not in it (they land whether I dodge or not).
     const strike = theirDodge ? null : this._bestStrikeFor(vamp);
-    const steal = theirDodge ? null : this._bestStealStrikeFor(vamp);
+    const steal = (theirDodge || (o && o.noSteal)) ? null : this._bestStealStrikeFor(vamp);   // v0.6.213: no steal in an additional pair (v1)
     const longFist = this._range === 'long';   // v0.6.156: hand strikes cannot be used at long range (rulebook 6.4.3) -- a fist at long deals 0
-    const sbN4 = this._strengthBonus(vamp) + this._cryptStrengthMod(vamp, this._combatOppName || this._duelOppName());   // N4b: strength IS base hand damage; VB: + the crypt vsClan mod (a hand strike floors at 0)
+    const sbN4 = this._strengthBonus(vamp) + this._tempStrength(vamp) + this._cryptStrengthMod(vamp, this._combatOppName || this._duelOppName());   // N4b: strength IS base hand damage; VB: + the crypt vsClan mod (a hand strike floors at 0). v0.6.213: + this action's own strength (Invigorate [ani])
     const fistDmg = longFist ? 0 : Math.max(0, 1 + sbN4);
+    const aggW = this._aggrWorth(), fistAggr = !longFist && fistDmg > 0 && this._aggrHandsOn(vamp);   // v0.6.213 (V5 wave 1): Claws of the Dead / Invigorate [pro] make the fist aggravated
+    const aggrHit = aggW && ((strike && strike.aggr && (strike.n | 0) > 0) || fistAggr);   // an aggravated hit is on offer -- a steal (not damage) never beats it
     const stealTake = steal ? Math.min(steal.n, this._stealAvail()) : 0;   // v0.6.196: a steal is worth what the target holds
-    const stealOk = !!(steal && stealTake > 0 && (this._combatMind()
+    const stealOk = !aggrHit && !!(steal && stealTake > 0 && (this._combatMind()
       ? (stealTake >= Math.max(fistDmg, strike ? (strike.n | 0) : 0) && ((vamp.blood | 0) < (vamp.cap | 0) || fistDmg === 0))   // v0.6.156: at long range (fist 0) a steal is always better than nothing; at close the v1 tie-break (below capacity) stands
       : ((vamp.blood | 0) < (vamp.cap | 0) && (!strike || stealTake >= (strike.n | 0)))));
-    let kind, out, card = null;
+    let kind, out, card = null, aggr = false;
     if(this._noStrikeRound){ kind = 'none'; out = 0; }   // v0.6.174: committed to a gun's strike under Immortal Grapple
     else if(stealOk){ kind = 'steal'; out = stealTake; card = steal.name; }
-    else if(strike){ kind = 'strike'; out = strike.n | 0; card = strike.name; }
-    else { kind = 'fist'; out = fistDmg; }
-    return { strike, steal, longFist, sbN4, fistDmg, stealTake, stealOk, kind, out, card, what: kind === 'steal' ? card + ' (steal)' : kind === 'strike' ? card : kind === 'none' ? 'no strike' : 'hands' };
+    else if(strike && !(fistAggr && aggW && !strike.aggr)){ kind = 'strike'; out = strike.n | 0; card = strike.name; aggr = !!strike.aggr; }   // v0.6.213: an aggravated fist beats a plain strike card (the card stays in hand)
+    else { kind = 'fist'; out = fistDmg; aggr = fistAggr; }
+    return { strike: (kind === 'fist' && fistAggr) ? null : strike, steal, longFist, sbN4, fistDmg, stealTake, stealOk, kind, out, card, aggr, fistAggr,
+             what: (kind === 'steal' ? card + ' (steal)' : kind === 'strike' ? card : kind === 'none' ? 'no strike' : 'hands') + (aggr ? ' (aggravated)' : '') };
   }
   _modeStrikeDmg(mo, vamp){          // v0.6.202 (play-test 14 Oct, point 18): the damage a strike MODE deals -- fx.strike is absolute ('Strike: 2 damage'); fx.handBonus (cardfx v1.9.2) is a bonus on the vampire's own hand strike ('hand strike at +2 damage'): strength (1 + attached strength + the crypt's own modifier) + N. Roundhouse with a plain vampire deals 3, with Preternatural Strength [pot] 4 -- it was compiled as an absolute 2 and landed one short. A variable 'X' is never a number, so neither shape passes.
     if(!mo || !mo.fx) return null;
-    if(typeof mo.fx.handBonus === 'number') return Math.max(0, 1 + this._strengthBonus(vamp) + this._cryptStrengthMod(vamp, this._combatOppName || this._duelOppName()) + mo.fx.handBonus);
+    if(typeof mo.fx.handBonus === 'number') return Math.max(0, 1 + this._strengthBonus(vamp) + this._tempStrength(vamp) + this._cryptStrengthMod(vamp, this._combatOppName || this._duelOppName()) + mo.fx.handBonus);
+    if(typeof mo.fx.strBonus === 'number') return Math.max(0, 1 + this._strengthBonus(vamp) + this._tempStrength(vamp) + this._cryptStrengthMod(vamp, this._combatOppName || this._duelOppName()) + mo.fx.strBonus);   // v0.6.213 (V5 wave 1): 'Strike: strength+N damage' -- a strength weapon (Sword of the Archangel): the vampire's strength + N, not a hand strike
     return typeof mo.fx.strike === 'number' ? mo.fx.strike : null;
   }
   _bestStrikeFor(vamp){              // a usable strike card, else the rulebook default (hands, handled by the caller)
     let best = null;
+    const aggW = this._aggrWorth(), val = (n, ag) => n + (ag && n > 0 && aggW ? 10 : 0);   // v0.6.213 (V5 wave 1): an aggravated strike outranks any plain one against a vampire -- it cannot be mended, its first point sends a ready vampire to torpor (R-19); against an ally it is plain damage
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('combat')) return;   // v0.6.12: 24 non-combat strike carriers (.44 Magnum-class weapons -- attached-equipment consumption is a FUTURE board-scan, not a hand play)
+      if(!this._entryReqOk(h.e, vamp)) return;   // v0.6.213: a clan requirement (Sculpt the Flesh: Tzimisce)
       if(h.e.req && (h.e.req.beforeRangeDetermined || h.e.req.notFirstRound)) return;   // still genuinely unverifiable in v1 -- no "before Determine Range" window distinct from the maneuver step, no round counter
       if(h.e.req && h.e.req.rangeClose && this._range !== 'close') return;   // v0.6.24: CASHES IN the earlier exclusion now that this._range is tracked -- Blood Fury/Loving Agony become playable exactly when the round is actually at close range, not blanket-excluded forever
       if(h.e.req && h.e.req.rangeLong && this._range !== 'long') return;
       (h.e.modes || []).forEach(mo => {
         const st = this._modeStrikeDmg(mo, vamp);   // v0.6.202 (point 18): absolute strike or hand strike + bonus
+        const ag = !!(mo.fx.aggr || (mo.fx.handStrike && this._aggrHandsOn(vamp)));   // v0.6.213: aggravated by its own text (Sculpt the Flesh [pro]), or a hand strike while Claws of the Dead / Invigorate [pro] holds
         if(typeof st === 'number' && !mo.fx.maneuver && !mo.fx.press && (!this._handStrikeOnly || mo.fx.handStrike) && !(this._range === 'long' && mo.fx.handStrike) && !(this._range === 'long' && !mo.fx.ranged) && this._modeUsableBy(mo, vamp) &&   /* v0.6.175 (the cardfx sweep): at long range only a RANGED strike (cardfx fx.ranged, the R suffix) -- a melee card strike (Talbot's Chainsaw, Burning Touch, 14 cards) cannot be used */   // v0.6.156: a hand strike (Roundhouse) cannot be used at long range -- rulebook 6.4.3   // v0.6.20: co-located maneuver/press = a bundled ability, not a clean strike bonus (Slam's superior, Lam Into) -- same guard as steal's, conservatively also excludes 2 false positives (Pounce, Taming the Beast) where "press" describes an unrelated consequence, not a granted option; a missed tag over a wrong one. v0.6.28 (Immortal Grapple): while _handStrikeOnly is active, only handStrike-tagged modes qualify -- source-verified "strikes that are not hand strikes cannot be used this round (by either combatant)"
-           (vamp.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0) && (!best || st > best.n))
-          best = { idx, name: h.name, n: st, cost: h.e.cost || null };
+           (vamp.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0) && (!best || val(st, ag) > val(best.n, best.aggr)))
+          best = { idx, name: h.name, n: st, cost: h.e.cost || null, aggr: ag, at: mo.at || '' };
       });
     });
     const eqSt = this._equipCombatOption(vamp, 'strike');   // E1: the FUTURE arrived -- the .44's board-granted strike (fx.strike), never under Immortal Grapple, ranged works at any range
-    if(eqSt && (!best || eqSt.n > best.n)) best = { idx: -1, name: eqSt.name, n: eqSt.n, cost: null, fromEquip: true };
+    if(eqSt && (!best || val(eqSt.n, eqSt.aggr) > val(best.n, best.aggr))) best = { idx: -1, name: eqSt.name, n: eqSt.n, cost: null, fromEquip: true, aggr: !!eqSt.aggr };   // v0.6.213: Ivory Bow / Sword of the Archangel strike aggravated
     return best;
   }
   _bestStealStrikeFor(vamp){         // v0.6.19 (Johan's combat GO, steal-blood family, source-verified vekn.net 19 July): a usable "steal N blood/life" strike -- REPLACES damage entirely (rulebook: "does not count as damage"), so this is NOT fx.strike's damage-bonus shape at all; the caller sets dealt=0 for the frozen strike line, not this card's N. Two exclusion layers, both measured against the full 410-card Combat pool before writing this, not guessed: (a) entry-level req.beforeRangeDetermined/rangeClose/rangeLong/notFirstRound -- timing preconditions the bot's v1 single-round, no-range architecture cannot verify, fail closed exactly like req.title (83/19/17/4 cards respectively; excludes Hunger of Marduk, Donnybrook, Drain Essence); (b) mode-level: stealBlood co-located with maneuver or press in the SAME mode means a bundled multi-part ability (Diversion's "with 1 optional maneuver", Kraken's Kiss's "once each round... can strike" granted-ability-on-a-press-strike), not a clean isolated steal -- the bleed-rider guard's shape, reapplied. Call the Lamprey's ally-only inferior mode is curated empty (cardfx-curated.json), not guarded here -- a target-TYPE restriction, not a timing one.
