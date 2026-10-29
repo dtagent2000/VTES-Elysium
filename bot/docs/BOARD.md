@@ -32,8 +32,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   out. Docs: RULINGS R-39, R-40, D-99.
 - **V5 wave 2's riders** (`specs/spec-v5-wave2-2026-10-29.md` §4): counters against a human (the phase walk reads a human's
   maneuver after the bot decided) and for the wave / snipe postures; the strike choice (`_strikePick` takes a strike card over a
-  stronger pumped fist, so the look-ahead keeps the pump); the amber riders (Rage of Apedemak's hand size, Hunger of Marduk in an
-  additional pair, Soul Burn's Fortitude-proof damage); the opponent's pumps unread before the strike; the auto tier's entry-level
+  stronger pumped fist, so the look-ahead keeps the pump); the amber riders (Rage of Apedemak's hand size, Frenzy and Path icon,
+  Hunger of Marduk in an additional pair, Soul Burn's opposing weapons at 0, Monstrous Form's superior action); the opponent's pumps
+  unread before the strike; a gun's maneuver binding its strike outside Immortal Grapple; the Brujah crypt's printed '+1 strength'
+  (Theo Bell, Valeriya Zinovieva) unread; the auto tier's entry-level
   'before range' flag on superior-only sentences (Alpha Glint, Bloodform, Gemini's Mirror, Eyes of Blades, Outside the Hourglass:
   their inferior strike modes fail closed in the strike / press / maneuver finders) and two misreadings (Sanguine Entrapment and
   Skin Trap stop the OPPONENT's dodge / combat ends, compiled as their own) — curation, no deck holds them. *Done when* each is built

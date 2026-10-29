@@ -4,12 +4,14 @@ Nothing to build: the bot ships first, backward compatible (the one rule). It wr
 line from v0.6.174 is now read by the bots and belongs in §12. The protocol in full: `bot/docs/specs/spec-v5-wave2-2026-10-29.md` §2.
 
 ## 1. What changed on the wire
-- **Between two bots a maneuver can now be answered.** The acting bot speaks first as before; the other bot may answer a maneuver to
-  long with `NAME combat — VAMPIRE maneuvers to close (CARD).` (the chase decks: Nosferatu, Brujah, Gangrel, Tzimisce, Path of Caine),
-  and the acting bot may answer that in turn (`maneuvers to long (CARD).`). When the acting bot lets the range stand it says nothing
-  more; when the answering bot does, it says `NAME combat — VAMPIRE does not maneuver.` (v0.6.202's line, now also the answer to a
-  counter). Both shapes are your §12 `NAME maneuvers to close|long.` with the bot's prefix and card. A round in which nobody counters
-  sends exactly the lines it sent before. The answering bot writes `rng` on the tally again when a late counter changes the range
+- **Between two bots a maneuver can now be answered, either way and by either side.** The acting bot speaks first as before; the
+  other bot answers as before — or, when the acting bot went long, with `NAME combat — VAMPIRE maneuvers to close (CARD).` (the chase
+  decks: Nosferatu, Brujah, Gangrel, Tzimisce, Path of Caine). Each maneuver can be answered by the other side's: the acting bot
+  counters to close when the answering bot went long (and it is a chase deck), or back to long when it wanted long; the answering bot
+  meets those in its before-strikes wait and counters again or says `NAME combat — VAMPIRE does not maneuver.` (v0.6.202's line, now
+  also the answer to a counter). When the acting bot lets the range stand it says nothing more — its before-strikes line follows.
+  Every line is your §12 `NAME maneuvers to close|long.` with the bot's prefix and card. A round in which nobody counters sends
+  exactly the lines it sent before. The answering bot writes `rng` on the tally again when a late counter changes the range
   (a watched duel's counter can show the range moving twice in one step).
 - **Against a human nothing changed in the range step:** the bot maneuvers to long only and does not answer a human's maneuver yet
   (its BOARD).
@@ -20,6 +22,8 @@ line from v0.6.174 is now read by the bots and belongs in §12. The protocol in 
   The strike then rides your existing lines (`strikes with hands for N.`, `strikes: steals N blood.`).
 - **Slam [POT]**'s maneuver to close is played in the range step (`maneuvers to close (Slam).`) and its strike follows as
   `strikes with Slam for N.` — one card, played once.
+- **The tally's strike label** (`sa` / `sb`) of a round in which the bot gets no strike is `No strike` (the gun-under-Grapple round
+  wrote `Hand` there since v0.6.174).
 
 ## 2. Ask: §12 and the canary
 - **A bot line to add to §12's bot-emitted block** (sent since v0.6.174, never read by anyone until now): `NAME gets no strike this
