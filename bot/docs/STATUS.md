@@ -1,13 +1,13 @@
 # STATUS — Elysium Bots (rewritten at every release; 29 October 2026)
 
-**Bot v0.6.212** (29 Oct 2026, PR {PR} open) · arena v1.4.8 · sim table v1.0.2 · cardfx compiler v1.9.3, curated 105 ·
+**Bot v0.6.212** (29 Oct 2026, PR #40 open) · arena v1.4.8 · sim table v1.0.2 · cardfx compiler v1.9.3, curated 105 ·
 hotseat tool v1.4.0 · coverage tool v1.1.39 · built against client **v2.6.167** / srv-2.6.49 (the root's release); the read-only
 copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS, "the handshake with the
 client's versions").
 
 **Deploy state:** the PR's root carries the v0.6.212 bundle (byte copies of `bot/`); `main` carries v0.6.211 until it merges.
 
-**Open PRs:** {PR}, V5 round 0 + v0.6.212.
+**Open PRs:** #40, V5 round 0 + v0.6.212.
 
 ## Last gates (v0.6.212 release bytes, 29 Oct 2026)
 Suite **2247/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`: this sandbox's 2 GB default heap ends the suite after 136e,
