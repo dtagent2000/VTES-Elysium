@@ -11000,6 +11000,225 @@ async function connectWithRetry(client, tries = 30){
           '158c pool 2: the pool pays and 1 is left, as before (got pool ' + u.pool + ', ' + tp.zone + ')'); }
     }
 
+    /* 159) v0.6.213 -- V5 WAVE 1 (RULINGS D-98, the design D-99): Villein, the additional strikes (Quickness, Pursuit, Arms of Ahriman) and
+       the aggravated strikes (Claws of the Dead, Sculpt the Flesh, Sword of the Archangel, Ivory Bow; Wall of Filth, Rutor's Hand and
+       Invigorate from the same class map row). The decisions, the finders, the parser (a strike after a declaration is an additional one,
+       resolved now -- v0.6.169 only kept it out of the next round), four bot-vs-bot duels through the real step handshake (the acting bot
+       declares, the answering bot declares late, both, and an aggravated hit with and without a Kevlar Vest), Wall of Filth burned in a
+       duel, Villein through the turn, Rutor's Hand's unlock, Invigorate, Taste of Vitae's sum, the human's Damage step and the coverage
+       verdicts. The pre-change bytes lack the new methods: every call is guarded so they fail clean, never abort. */
+    {
+      console.log('\n[159] v0.6.213 -- V5 wave 1: additional strikes, aggravated strikes, Wall of Filth, Villein, Rutor\u2019s Hand, Invigorate');
+      const IF9 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const strip159 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const mkU159 = (name, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: u.o.name, online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.notes = []; u.note = t => u.notes.push(t); u.table = {}; return u; };
+      const V = (name, blood, extra) => Object.assign({ id: 'v-' + name.replace(/\W/g, ''), name, kind: 'crypt', zone: 'ready', locked: false, blood, cap: 6, attached: [] }, extra || {});
+      const duel159 = o => {   // the section 141 / 146 relay: two bots, every log / chat / say line reaches the other `delay` ms later; A = the acting bot (Hanna), D = the bot that blocked it (Viktor)
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        const mk = (name, seat, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: o.askSecs || 3, twdKnow: 0, log: () => {} }, extra || {}));
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = []; u.decs = [];
+          u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); if(t === 'bot:decide' && m) u.decs.push(m); };
+          return u; };
+        const A = mk('Hanna', 1, o.aOpts), D = mk('Viktor', 2, o.dOpts);
+        const wire = (from, to) => { from.send = m => {
+          if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0); return; }
+          if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
+          const txt = m.t === 'log' ? strip159(m.html) : String(m.msg || '');
+          from._evRecord(from.o.name, txt, m.t, true);
+          from.lines.push({ at: Date.now(), tier: m.t, txt });
+          const d = Object.assign({}, m, { who: from.o.name });
+          setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0);
+        }; };
+        wire(A, D); wire(D, A);
+        const aV = Object.assign({ id: 'a1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4, attached: [] }, o.aV || {});
+        const dV = Object.assign({ id: 'd1', name: 'Anxo Vilela (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 5, cap: 6, attached: [] }, o.dV || {});
+        A.board = [aV].concat(o.aBoard || []); D.board = [dV].concat(o.dBoard || []); A.hand = (o.aHand || []).slice(); D.hand = (o.dHand || []).slice();
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: dV.name, zone: 'ready', blood: dV.blood }] } } };
+        D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: aV.name, zone: 'ready', blood: aV.blood }] } } };
+        A._actingVamp = { v: aV, n: 1, played: new Set() }; A._lastBlockerName = dV.name;
+        D._clearCombatStashes(); D._combatArmed = true;
+        const run = async () => { const t0 = Date.now();
+          await Promise.race([Promise.all([A._resolveCombat(aV), D._resolveCombat(dV, aV.name)]), sleep(o.cap || 20000)]);
+          return Date.now() - t0; };
+        return { A, D, aV, dV, run };
+      };
+      const row1 = u => (u.rows || []).find(r => r.round === 1) || {};
+      const said = (u, re) => (u.lines || []).findIndex(l => re.test(l.txt));
+
+      // a) the decisions
+      { const u = mkU159('A9');
+        const AS = c => u.decide('add-strike', Object.assign({ src: { name: 'Quickness', at: 'cel' }, out: 1, what: 'hands', oppDown: false, theirs: 0 }, c));
+        ok(AS({}).play === true && AS({ src: null }).play === false && AS({ oppDown: true }).play === false && AS({ out: 0, range: 'long' }).play === false,
+           '159a add-strike: a strike that lands is taken; not without a source, not into a minion out of the combat, not a strike for nothing (fists at long range)');
+        const AH = c => u.decide('aggr-hands', Object.assign({ card: 'Claws of the Dead', at: 'pro', cost: 1, blood: 3, out: 1, what: 'hands', inc: 1 }, c));
+        ok(AH({}).play === true && AH({ blood: 0 }).play === false && AH({ blood: 1 }).play === false && AH({ blood: 1, inc: 0 }).play === true,
+           '159a aggr-hands: Claws of the Dead when the blood leaves 1; not unaffordable; at 1 blood only when nothing comes at me');
+        const BP = c => u.decide('burn-prevent', Object.assign({ card: 'Wall of Filth', n: 2, nonAggr: false, taken: 2, aggr: 0, blood: 4, stops: 2, wounds: false }, c));
+        ok(BP({}).play === true && BP({ taken: 1, stops: 1 }).play === false && BP({ taken: 1, stops: 1, blood: 0, wounds: true }).play === true,
+           '159a burn-prevent: Wall of Filth at its full 2; kept for 1 that does not wound; burned for 1 that would');
+        const VL = c => u.decide('villein', Object.assign({ card: 'Villein', max: 5, min: 2, pool: 12, danger: false, cands: [{ name: 'A', blood: 6, cap: 7, reserve: 0, hasAction: null, extra: 0 }] }, c));
+        const v1 = VL({}), v2 = VL({ cands: [{ name: 'A', blood: 2, cap: 7, reserve: 0, hasAction: null, extra: 0 }] }), v3 = VL({ danger: true, cands: [{ name: 'A', blood: 2, cap: 7, reserve: 0, hasAction: null, extra: 0 }] });
+        const v4 = VL({ cands: [{ name: 'A', blood: 6, cap: 7, reserve: 0, hasAction: null, extra: 0 }, { name: 'B', blood: 6, cap: 7, reserve: 0, hasAction: null, extra: 1 }] });
+        ok(v1.play === true && v1.host === 'A' && v1.n === 5 && v2.play === false && v3.play === true && v3.n === 2 && v4.host === 'A',
+           '159a villein: 5 of 6 blood (it keeps 1); a vampire at 2 cannot spare the 2 the card moves -- held; on the edge of an oust every blood goes; the +1 pool of an earlier Villein counts (' + JSON.stringify([v1.n, v2.play, v3.n, v4.host]) + ')');
+        const CS = (mineAggr, ob) => u.decide('combat-strike', Object.assign({ dodge: { name: 'Dodge' }, vamp: { name: 'X', blood: 5 }, inc: { known: true, dodge: false, ends: false, dealt: 2, steal: 0, aggr: 0, crows: 0 }, mine: 1, copies: 1, oppBlood: ob }, mineAggr ? { mineAggr: true } : {}));
+        const c1 = CS(false, 4), c2 = CS(true, 4);
+        ok(c1.dodge === true && c2.dodge === false && c2.tag === 'known-finisher', '159a combat-strike: their 2 against my hands for 1 is dodged -- unless my hands are aggravated: a finisher whatever their blood (' + JSON.stringify([c1.tag, c2.tag]) + ')'); }
+
+      // b) the finders
+      { const u = mkU159('B9');
+        const sia = V('Siarhei Levchenko (G6)', 4), ari = V('Ariane (G5)', 3);
+        u.board = [sia, ari]; u.hand = ['Quickness', 'Pursuit']; u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : null;
+        const qs = IF9(u, '_bestAddStrikeFor') ? u._bestAddStrikeFor(sia) : null, qa = IF9(u, '_bestAddStrikeFor') ? u._bestAddStrikeFor(ari) : null;
+        ok(!!(qs && qs.name === 'Quickness' && qs.at === 'CEL' && qs.free === true && qa && qa.name === 'Quickness' && qa.at === 'cel' && qa.limited === true),
+           '159b _bestAddStrikeFor: superior Celerity takes Quickness [CEL] (outside the limit) first; inferior Quickness [cel] (limited) (' + JSON.stringify([qs && qs.at, qa && qa.at]) + ')');
+        if(u._xr){ u._xr.used.limited = true; }
+        const qa2 = IF9(u, '_bestAddStrikeFor') ? u._bestAddStrikeFor(ari) : 'x', qs2 = IF9(u, '_bestAddStrikeFor') ? u._bestAddStrikeFor(sia) : null;
+        if(u._xr){ u._xr.used.names.push('quickness'); }
+        const qs3 = IF9(u, '_bestAddStrikeFor') ? u._bestAddStrikeFor(sia) : 'x';
+        ok(qa2 === null && !!(qs2 && qs2.at === 'CEL') && qs3 === null,
+           '159b ...with the limit used: no limited source (Ariane), Quickness [CEL] still; a vampire plays one Quickness a round (and Pursuit [CEL] is limited) (' + JSON.stringify([qa2, qs2 && qs2.at, qs3]) + ')');
+        const az = V('Azucena (G6)', 4); u.board = [az]; u.hand = ['Arms of Ahriman']; u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : null;
+        const dg = u._bestDodgeFor(az);
+        ok(!!(dg && dg.name === 'Arms of Ahriman' && dg.addStrike === 1 && dg.limited === true), '159b _bestDodgeFor: Arms of Ahriman [OBL] is a dodge that brings an additional strike (limited) (' + JSON.stringify(dg) + ')');
+        const wh = V('Whisper (G6)', 4), nt = V('Nathan Turner (G6)', 4); u.board = [wh, nt]; u.hand = ['Sculpt the Flesh']; u._combatOppName = 'Anxo Vilela (G6)';
+        const sw = u._bestStrikeFor(wh), sn = u._bestStrikeFor(nt);
+        ok(!!(sw && sw.name === 'Sculpt the Flesh' && sw.aggr === true && sw.n === 1) && sn === null,
+           '159b _bestStrikeFor: Sculpt the Flesh [pro] is an aggravated hand strike for a Tzimisce; the Gangrel with Protean cannot play it (Requires Tzimisce) (' + JSON.stringify([sw, sn]) + ')');
+        u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : {}; u._xr.aggrHands = 'Nathan Turner (G6)'; u.hand = [];
+        const pk = u._strikePick(nt, false);
+        ok(pk.kind === 'fist' && pk.aggr === true && pk.out === 1 && / \(aggravated\)$/.test(pk.what || ''), '159b _strikePick: under Claws of the Dead the fist is aggravated (' + JSON.stringify([pk.kind, pk.aggr, pk.what]) + ')');
+        u._xr.aggrHands = null; u._combatOppName = 'Gargoyle Slave'; u.hand = ['Sculpt the Flesh'];
+        const sa = u._bestStrikeFor(wh); u._combatOppName = null;
+        ok(!!(sa && sa.name === 'Sculpt the Flesh'), '159b ...against an ally the aggravated card is still a strike for 1, no longer outranking a bigger plain one (_aggrWorth)');
+        const mal = V('Malachi (G7)', 4), sword = { at: null, fx: { strBonus: 1, aggr: true } };
+        ok(u._modeStrikeDmg(sword, mal) === 2 && u._modeStrikeDmg(sword, Object.assign({}, mal, { name: 'X' })) === 2, '159b _modeStrikeDmg: Sword of the Archangel strikes for strength+1 = 2 (the auto tier had no damage)');
+        const ex = n => IF9(u, '_entryReqOk') ? u._entryReqOk(u.fxLookup(n).e, n === 'Sword of the Archangel' ? mal : V('Marialena (G6)', 4)) : 'x';
+        ok(ex('Invigorate') === true && (IF9(u, '_entryReqOk') ? u._entryReqOk(u.fxLookup('Invigorate').e, az) : 'x') === false && ex('Sword of the Archangel') === true && (IF9(u, '_entryReqOk') ? u._entryReqOk(u.fxLookup('Sword of the Archangel').e, az) : 'x') === false,
+           '159b _entryReqOk: Invigorate for an Anarch, not a Camarilla Lasombra; the Sword for a Salubri, not a Lasombra'); }
+
+      // c) the parser: a strike line after their declaration is an ADDITIONAL strike -- the next round's strike is the next round's
+      { const u = mkU159('C9'); const me = V('Ryan (G6)', 4); u.board = [me]; u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = me;
+        u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : null; if(u._xr){ u._xr.p1seen = true; u._xr.p1 = true; }
+        u._onLog('Johan', 'Lisa gets an additional strike.'); u._onLog('Johan', 'Lisa strikes for 2 aggravated damage.');
+        const xs = IF9(u, '_awaitOppXStrike') ? await u._awaitOppXStrike(50) : null;
+        ok(!u._oppStrike && !!(u._xr && u._xr.oppX === 1) && !!(xs && xs.aggr === 2), '159c their declaration counts (oppX 1) and their next strike is the additional one: not this round\u2019s first, not the next round\u2019s; resolved as 2 aggravated (' + JSON.stringify(xs) + ')');
+        u._onLog('Johan', 'Lisa strikes (hands) for 1.');
+        ok(!!(u._oppStrike && u._oppStrike.dealt === 1), '159c ...a strike line past the declared count is a first strike again');
+        const k1 = u._evClassify('Hanna', 'Hanna combat \u2014 Lisa does not take an additional strike.'), k2 = u._evClassify('Hanna', 'Lisa burns Wall of Filth: prevents 2 damage.');
+        ok(k1 && k1.kind === 'extra-strike' && k1.none === true && k1.n === 0 && k2 && k2.kind === 'prevent' && k2.card === 'Wall of Filth' && k2.n === 2 && k2.vamp === 'Lisa',
+           '159c _evClassify: the answer line is an extra-strike event with none; a burned Wall of Filth is a prevention by its bearer (' + JSON.stringify([k1, k2]) + ')');
+        u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : { ends: [] }; u._parseCombatNarration('Hanna combat \u2014 Lisa dodges: no damage dealt or taken this round.');
+        u._parseCombatNarration('Hanna combat \u2014 Lisa strikes (hands) for 1 dealt; Lisa takes 1 (loses 1 blood, now 0). Lisa goes to torpor (1 unmended).');
+        ok(u._xr.ends && u._xr.ends.length === 2 && u._xr.ends[0].down === false && u._xr.ends[1].down === true, '159c their round lines (a dodge line, a taken line) mark the end of their pair; torpor is down (' + JSON.stringify(u._xr.ends) + ')'); }
+
+      // d) bot vs bot: the ACTING bot declares (Quickness [CEL]) before its round line; the answering bot holds none -- its press-step wait meets the declaration and answers
+      { const g = duel159({ delay: 30, aV: { id: 'a1', name: 'Siarhei Levchenko (G6)', blood: 4, cap: 5 }, aHand: ['Quickness'] });
+        await g.run();
+        const ar = row1(g.A), dr = row1(g.D), iX = said(g.A, /gets an additional strike\.$/), iL = said(g.A, /^\S+ combat \u2014 .* takes \d+ \(loses/), iN = said(g.D, /does not take an additional strike\.$/);
+        ok(iX >= 0 && iL > iX && iN >= 0 && ar.xMine === 1 && ar.xStrikes === 1 && dr.takenX === 1 && g.dV.blood === 3 && g.aV.blood === 3 && !g.A.hand.includes('Quickness') && !ar.hsMiss && !dr.hsMiss,
+           '159d the acting Siarhei declares Quickness before its round line, Anxo Vilela answers that it takes none, the additional strike lands: Anxo 5 -> 3, Siarhei 4 -> 3, no lost line (v0.6.212: the line was table talk -- got ' + JSON.stringify({ iX, iL, iN, xMine: ar.xMine, xs: ar.xStrikes, takenX: dr.takenX, d: g.dV.blood, a: g.aV.blood, miss: [ar.hsMiss, dr.hsMiss] }) + ')'); }
+
+      // e) ...the ANSWERING bot declares after the acting bot passed (it waits for the acting bot's round line only because it holds a source); the acting bot, already in the press step, resolves the strike first
+      { const g = duel159({ delay: 30, dV: { id: 'd1', name: 'Siarhei Levchenko (G6)', blood: 5, cap: 5 }, dHand: ['Quickness'] });
+        await g.run();
+        const ar = row1(g.A), dr = row1(g.D);
+        ok(dr.xMine === 1 && dr.xStrikes === 1 && ar.takenX === 1 && g.aV.blood === 2 && g.dV.blood === 4 && !ar.hsMiss && !dr.hsMiss && said(g.A, /does not take an additional strike/) < 0,
+           '159e the answering Siarhei declares after Ryan passed and strikes alone: Ryan 4 -> 2, Siarhei 5 -> 4; the acting bot says nothing new (got ' + JSON.stringify({ xMine: dr.xMine, takenX: ar.takenX, a: g.aV.blood, d: g.dV.blood, miss: [ar.hsMiss, dr.hsMiss] }) + ')'); }
+
+      // f) ...both declare: an additional PAIR, struck acting first
+      { const g = duel159({ delay: 30, aV: { id: 'a1', name: 'Siarhei Levchenko (G6)', blood: 4, cap: 5 }, aHand: ['Quickness'], dV: { id: 'd1', name: 'Octane (G6)', blood: 5, cap: 6 }, dHand: ['Quickness'] });
+        await g.run();
+        const ar = row1(g.A), dr = row1(g.D), ia = said(g.A, /^Siarhei Levchenko \(G6\) strikes .* for 1\.$/), id = said(g.D, /^Octane \(G6\) strikes .* for 1\.$/);
+        ok(ar.xMine === 1 && dr.xMine === 1 && ar.takenX === 1 && dr.takenX === 1 && g.aV.blood === 2 && g.dV.blood === 3 && !ar.hsMiss && !dr.hsMiss && said(g.D, /does not take an additional strike/) < 0,
+           '159f both take Quickness: a second pair, each takes the other\u2019s strike -- Siarhei 4 -> 2, Octane 5 -> 3 (got ' + JSON.stringify({ x: [ar.xMine, dr.xMine], t: [ar.takenX, dr.takenX], a: g.aV.blood, d: g.dV.blood, miss: [ar.hsMiss, dr.hsMiss], ia, id }) + ')'); }
+
+      // g) aggravated: Claws of the Dead [pro] -- the hands go aggravated; the first unprevented point wounds Anxo Vilela whatever its blood. With a Kevlar Vest it prevents that point (v0.6.212: the vest sat out an aggravated-only strike)
+      { const g = duel159({ delay: 30, aV: { id: 'a1', name: 'Nathan Turner (G6)', blood: 4, cap: 4 }, aHand: ['Claws of the Dead'] });
+        await g.run();
+        const ar = row1(g.A), iA = said(g.A, /^Nathan Turner \(G6\) strikes for 1 aggravated damage\.$/);
+        ok(iA >= 0 && ar.aggr === 1 && g.dV.zone === 'torpor' && g.dV.blood === 5 && g.aV.blood === 2 && !g.A.hand.includes('Claws of the Dead'),
+           '159g Claws of the Dead: Nathan Turner strikes for 1 aggravated damage (main\u2019s frozen line); Anxo Vilela goes to torpor with its 5 blood (got ' + JSON.stringify({ iA, aggr: ar.aggr, zone: g.dV.zone, blood: g.dV.blood, a: g.aV.blood }) + ')');
+        const kv = { id: 'kv1', name: 'Kevlar Vest', kind: 'lib', zone: 'ready', locked: false };
+        const g2 = duel159({ delay: 30, aV: { id: 'a1', name: 'Nathan Turner (G6)', blood: 4, cap: 4 }, aHand: ['Claws of the Dead'], dV: { attached: ['kv1'] }, dBoard: [kv] });
+        await g2.run();
+        ok(g2.dV.zone === 'ready' && g2.dV.blood === 5 && said(g2.A, /^Nathan Turner \(G6\) strikes for 1 aggravated damage\.$/) >= 0 && (g2.D.lines || []).some(l => /equipment prevents 1/.test(l.txt)),
+           '159g ...Anxo Vilela with a Kevlar Vest: the vest prevents the aggravated point -- ready, 5 blood (got ' + JSON.stringify({ zone: g2.dV.zone, blood: g2.dV.blood }) + ')');
+        /* the Kevlar fix alone, on the damage step: an aggravated-only strike from a human's client line (v0.6.212's `if(taken > 0)` skipped the vest) */
+        const u = mkU159('G9'); u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'G9', online: true, bot: true }];
+        const me = V('Anxo Vilela (G6)', 4, { attached: ['kv2'] }), kv2 = { id: 'kv2', name: 'Kevlar Vest', kind: 'lib', zone: 'ready', locked: false };
+        u.board = [me, kv2]; u.hand = []; u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = me; u._oppStrike = { vamp: 'Lisa', aggr: 1 };
+        let terr = null; try { await Promise.race([u._resolveCombatRound(me), sleep(6000)]); } catch(e){ terr = e.message; }
+        ok(!terr && me.zone === 'ready' && me.blood === 4 && u.notes.some(t => /equipment prevents 1/.test(t)),
+           '159g the damage step alone: a human\u2019s strike for 1 aggravated damage against Anxo Vilela with a Kevlar Vest -- prevented, ready, 4 blood (v0.6.212: the vest sat out, torpor; got ' + JSON.stringify({ terr, zone: me.zone, blood: me.blood, notes: u.notes }) + ')'); }
+
+      // h) Wall of Filth: played before range (superior: any damage), burned against Roundhouse for 3 -- 2 prevented
+      { const g = duel159({ delay: 30, aHand: ['Roundhouse'], dV: { id: 'd1', name: 'Nathan Turner (G6)', blood: 4, cap: 4 }, dHand: ['Wall of Filth'] });
+        await g.run();
+        const iP = said(g.D, /puts Wall of Filth \[PRO\] in play/), iB = said(g.D, /burns Wall of Filth: prevents 2 damage\.$/);
+        ok(iP >= 0 && iB > iP && g.dV.blood === 3 && !g.D.hand.includes('Wall of Filth') && !g.D.board.some(c => c && c.name === 'Wall of Filth' && c.zone === 'ready') && g.D.board.some(c => c && c.name === 'Wall of Filth' && c.zone === 'ash'),
+           '159h Wall of Filth [PRO] goes on Nathan Turner before range and burns against Roundhouse for 3: 2 prevented, 4 -> 3, the card in the ash heap (got ' + JSON.stringify({ iP, iB, blood: g.dV.blood }) + ')'); }
+
+      // i) Villein through the turn (L-13): a trifle on a vampire with spare blood, 5 blood to my pool; held when nobody can spare 2
+      { const mkT = (blood) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'b159', pass: 'p', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+          u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }]; u.table = {};
+          u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {};
+          u.pool = 10; u.board = [V('Khadija Al-Kindi (G6)', blood, { cap: 6, locked: false })]; u.hand = ['Villein']; u.unc = []; u.turnSeat = 2; return u; };
+        const runT = async u => { let terr = null; try { await Promise.race([u._playTurn(), sleep(8000)]); } catch(e){ terr = e.message; } return { terr, L: u.sent.map(m => m.t === 'log' ? strip159(m.html) : null).filter(Boolean) }; };
+        { const u = mkT(6), r = await runT(u), vv = u.board[0];
+          const vl = u.board.find(c => c && c.name === 'Villein');
+          ok(!r.terr && !u.hand.includes('Villein') && !!vl && (vv.attached || []).includes(vl.id) && r.L.some(l => /^Villein: 5 blood \u2192 pool \(pool 15\)\.$/.test(l)),
+             '159i Villein through the master phase: on Khadija Al-Kindi (6 blood), 5 blood to my pool -- 10 -> 15 (v0.6.212: tabled blind, nothing moved; got ' + JSON.stringify({ terr: r.terr, hand: u.hand, on: !!vl, lines: r.L.filter(l => /Villein/.test(l)) }) + ')'); }
+        { const u = mkT(1), r = await runT(u);
+          ok(!r.terr && u.hand.includes('Villein') && !r.L.some(l => /Villein/.test(l)), '159i ...at 1 blood nobody can spare the 2 the card moves: held (got ' + JSON.stringify({ terr: r.terr, hand: u.hand }) + ')'); } }
+
+      // j) Rutor's Hand: the action only for superior Thaumaturgy with 1 + 3 + 1 blood ([tha] is dominated); on the board it unlocks its bearer once a turn
+      { const u = mkU159('J9'); const wa = V('Warmaksan (G6)', 5), bj = V('Bijou (G6)', 9); u.board = [wa, bj]; u.hand = ["Rutor's Hand"];
+        const r5 = IF9(u, '_bestRutorFor') ? u._bestRutorFor(wa) : null; wa.blood = 4; const r4 = IF9(u, '_bestRutorFor') ? u._bestRutorFor(wa) : 'x'; const rb = IF9(u, '_bestRutorFor') ? u._bestRutorFor(bj) : 'x';
+        ok(!!(r5 && r5.kind === 'rutor' && r5.at === 'THA' && r5.st === 1 && r5.costBlood === 1 && r5.immune === 3) && r4 === null && rb === null,
+           '159j _bestRutorFor: Warmaksan ([THA], 5 blood) -- 1 for the card, 3 for the immunity, 1 left; not at 4; never [tha] (Bijou: a self-torpor) (' + JSON.stringify([r5, r4, rb]) + ')');
+        wa.blood = 3; wa.locked = true; const rh = { id: 'rh1', name: "Rutor's Hand", kind: 'lib', zone: 'ready', locked: false, host: wa.id, rutor: true }; wa.attached = ['rh1']; u.board = [wa, rh]; u.hand = [];
+        u._lastAct = { vamp: wa.name, outcome: 'through', kind: 'bleed' }; const actors = [wa];
+        const ag = u._maybeActAgain(wa, actors, 0);
+        ok(ag === true && wa.locked === false && rh.locked === true && actors.length === 2, '159j ...Warmaksan locks Rutor\u2019s Hand to unlock and goes back on the minion queue -- no card, no blood (got ' + JSON.stringify({ ag, v: wa.locked, card: rh.locked, n: actors.length }) + ')');
+        u._lastAct = { vamp: wa.name, outcome: 'through', kind: 'bleed' }; wa.locked = true; const ag2 = u._maybeActAgain(wa, actors, 1);
+        ok(ag2 === false && wa.locked === true, '159j ...once a turn: the locked card unlocks nobody'); }
+
+      // k) Invigorate on a rush: [pro] -- this Anarch's hand strikes are aggravated this action; [ani] +1 strength; nothing for a Camarilla vampire
+      { const u = mkU159('K9'); const ma = V('Marialena (G6)', 4), az = V('Azucena (G6)', 4); u.board = [ma, az]; u.hand = ['Invigorate'];
+        u._actingVamp = { v: ma, n: 1, played: new Set() };
+        const p1 = IF9(u, '_maybeInvigorate') ? u._maybeInvigorate(ma) : false;
+        const pk = u._strikePick(ma, false);
+        ok(p1 === true && u._actingVamp.aggrHands === true && !u.hand.length && pk.aggr === true && u.sent.some(m => m.t === 'log' && /hand strikes are aggravated this action \u2014 Invigorate \[pro\]\.$/.test(strip159(m.html))),
+           '159k Invigorate [pro] on Marialena\u2019s rush: her hand strikes are aggravated this action -- and her fist is (got ' + JSON.stringify({ p1, aggr: u._actingVamp.aggrHands, pk: pk.aggr }) + ')');
+        u.hand = ['Invigorate']; u._actingVamp = { v: az, n: 1, played: new Set() };
+        const p2 = IF9(u, '_maybeInvigorate') ? u._maybeInvigorate(az) : 'x';
+        ok(p2 === false && u.hand.length === 1, '159k ...Requires an Anarch: Azucena (Camarilla) keeps it'); }
+
+      // l) Taste of Vitae: the blood lost to the additional pair adds to the first
+      { const u = mkU159('L9'); u._rndAt = Date.now() - 5; u._inCombat = true; u._combatOppName = 'Lisa';
+        u._parseCombatNarration('Hanna combat \u2014 Lisa takes 2 (loses 2 blood, now 1).');
+        const t = IF9(u, '_xLossSum') ? u._xLossSum({ vamp: 'Lisa', n: 1, down: false, now: 3 }) : null;
+        ok(!!(t && t.n === 3), '159l _xLossSum: 1 lost in the first pair + 2 in the additional one = 3 for Taste of Vitae (got ' + JSON.stringify(t) + ')'); }
+
+      // m) the human's Damage step: a declaration there reopens the strikes -- no step past Damage yet (their client counts the round's damage there)
+      { const u = mkU159('M9'); u._inCombat = true; u.o.phaseSecs = 1; u._phasesOn = () => true; u._phaseOppPlayer = () => 'Johan'; u._combatIActing = () => true;
+        u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : { p1: true }; u._xr.p1 = true; u._rnd = { dealt: 1 }; u._combatOppName = 'Lisa';
+        const tw = []; u._cWrite = f => tw.push(f);
+        setTimeout(() => { u._onLog('Johan', 'Lisa gets an additional strike.'); }, 50);
+        const pd = await u._phaseDamage();
+        ok(pd === 'extra' && tw.some(f => f.ph === 4) && !tw.some(f => f.ph === 5), '159m the human declares in the Damage step: \u2019extra\u2019 -- the additional strike first, no ph 5 yet (got ' + JSON.stringify({ pd, writes: tw }) + ')'); }
+
+      // n) the coverage verdicts of the wave's cards in their decks
+      { let cov = null; try { cov = require('./gen-deck-coverage.js'); } catch(e){}
+        const verdict = (deckKey, card) => { if(!cov || !cov.coverDeck) return null; const d = JSON.parse(require('fs').readFileSync('deck-' + deckKey + '.json', 'utf8')); const r = cov.coverDeck(d); const row = (r.libRows || r.lib || []).find(x => x && (x.name === card || x.canon === card)); return row ? (row.verdict || (row.j && row.j.verdict)) : null; };
+        const got = [['banuhaqim', 'Villein'], ['banuhaqim', 'Quickness'], ['lasombra', 'Arms of Ahriman'], ['gangrel', 'Claws of the Dead'], ['banuhaqim', "Rutor's Hand"], ['tzimisce', 'Invigorate'], ['salubri', 'Sword of the Archangel']].map(([k, c]) => c + ':' + verdict(k, c));
+        ok(got.join('|') === "Villein:FULL|Quickness:FULL|Arms of Ahriman:FULL|Claws of the Dead:FULL|Rutor's Hand:FULL|Invigorate:PARTIAL|Sword of the Archangel:FULL",
+           '159n the coverage report: the wave plays in its decks (Invigorate\u2019s [dom] block bar has no consumer yet) (' + got.join(' | ') + ')'); }
+    }
+
 
 
     }
