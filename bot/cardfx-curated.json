@@ -2068,6 +2068,282 @@
     }
    ],
    "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): 'Requires an Anarch. [ani] This Anarch gets +1 strength this action. [dom] This Anarch cannot be blocked by allies this action. [pro] This Anarch's hand strikes are aggravated this action.' The auto tier missed [ani] and the Anarch requirement (req.sect, checked against the crypt entry's printed sect). An action modifier: played before the action resolves; once blocked, combat is the action's resolution (VEKN rules forum, Rules Director 2022). The bot plays [pro] / [ani] on a rush, where combat is certain; [dom] is a free block bar with no consumer yet (the blockBar class)."
+  },
+  "Flash": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "cel"
+    ]
+   },
+   "modes": [
+    {
+     "at": "cel",
+     "fx": {
+      "maneuver": true
+     }
+    },
+    {
+     "at": "cel",
+     "fx": {
+      "press": true
+     }
+    },
+    {
+     "at": "CEL",
+     "fx": {
+      "maneuver": true,
+      "pressOpt": "round"
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): '[cel] Maneuver or press. [CEL] Maneuver with 1 optional press.' The auto tier wrote both keys into each mode -- the bundled shape no finder plays -- but [cel] is a CHOICE: two modes, a maneuver or a press. Ruling: [CEL] the optional press can only be used during the current round [TOM 19960521] (pressOpt 'round': the press step of the round the maneuver was played in)."
+  },
+  "Resist Earth's Grasp": {
+   "t": [
+    "mod",
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "cel"
+    ]
+   },
+   "modes": [
+    {
+     "at": "cel",
+     "fx": {
+      "press": true
+     }
+    },
+    {
+     "at": "cel",
+     "fx": {
+      "maneuver": true,
+      "pressOpt": "round"
+     }
+    },
+    {
+     "at": "CEL",
+     "fx": {
+      "stealth": 1
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): '[cel] [COMBAT] Press, or maneuver with 1 optional press. [CEL] [ACTION MODIFIER] +1 stealth.' Cost 1 blood (inherited). The auto tier wrote [cel] as one bundled mode (a maneuver AND a press); it is a choice between a press and a maneuver that brings an optional press. Ruling: [cel] the optional press can only be used during the current round [TOM 19960521]."
+  },
+  "Slam": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "pot"
+    ]
+   },
+   "modes": [
+    {
+     "at": "pot",
+     "fx": {
+      "handBonus": 2,
+      "handStrike": true
+     }
+    },
+    {
+     "at": "POT",
+     "fx": {
+      "handBonus": 2,
+      "handStrike": true,
+      "maneuver": true,
+      "maneuverTo": "close"
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): '[pot] Strike: hand strike at +2 damage. [POT] As above, with 1 optional maneuver, only usable to get to close range.' Cost 1 blood (inherited). Rulings: the optional maneuver cannot be used if the strike cannot be used [LSJ 20021028] -- the card is played in the range step (its maneuver), and its strike is that round's strike; additional damage inherits the base damage's properties [TOM 19960225]. maneuverTo 'close': the maneuver's only direction."
+  },
+  "Hunger of Marduk": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "tha"
+    ],
+    "clan": [
+     "Banu Haqim"
+    ],
+    "beforeRangeDetermined": true
+   },
+   "modes": [
+    {
+     "at": "tha",
+     "fx": {
+      "stealGrant": 1,
+      "ranged": true
+     }
+    },
+    {
+     "at": "THA",
+     "fx": {
+      "stealGrant": 2,
+      "ranged": true
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): 'Only usable before range is determined. [tha] This round, this vampire can strike, ranged: steal 1 blood or life (becoming blood). [THA] As above, but for 2 blood or life (becoming blood).' Requires a Banu Haqim (inherited clan). The auto tier read both modes as a steal strike of 1 played in the strike step; it is played BEFORE range and gives this round's strike option ([THA]: 2). Ruling: the provided strike can be chosen and used more than once during the round [ANK 20220207] -- an additional pair takes no steal yet (wave 1's v1 limit, amber)."
+  },
+  "Rage of Apedemak": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "ani",
+     "pot"
+    ],
+    "beforeRangeDetermined": true
+   },
+   "oncePerCombat": true,
+   "modes": [
+    {
+     "at": "ani",
+     "fx": {
+      "handBonusCombat": 1
+     }
+    },
+    {
+     "at": "pot",
+     "fx": {
+      "handBonusCombat": 1
+     }
+    },
+    {
+     "at": "ANI",
+     "fx": {
+      "handBonusCombat": 2
+     }
+    },
+    {
+     "at": "POT",
+     "fx": {
+      "handBonusCombat": 2
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): 'Frenzy. Only usable before range is determined. A vampire can play only one Rage of Apedemak each combat. [ani] or [pot] This combat, you get +1 hand size and this vampire's hand strikes inflict +1 damage. [ANI] or [POT] As above, but this vampire's hand strikes inflict +2 damage.' The auto tier wrote only handStrike, the shape of a hand-strike card, which it is not. Ruling: a multi-Discipline card counts as requiring the Discipline used [LSJ 20011204-3]. Not modelled (amber): the +1 hand size this combat; its Path of Caine icon is not read as a requirement (the pathcaine crypt all follows Caine)."
+  },
+  "Torn Signpost": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "pot"
+    ],
+    "beforeRangeDetermined": true
+   },
+   "modes": [
+    {
+     "at": "pot",
+     "fx": {
+      "strengthSet": 2
+     }
+    },
+    {
+     "at": "POT",
+     "fx": {
+      "strengthSet": 3
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): 'Only usable before range is determined. [pot] This vampire gets a strength of 2 this combat. [POT] This vampire gets a strength of 3 this combat.' The auto tier had no mode. Rulings: it sets the base strength and can lower a higher one [PIB 20130303]; any +X strength adds to it [LSJ 20100813]. strengthSet = the base strength for the rest of this combat."
+  },
+  "Form of the Wolf": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "pro"
+    ],
+    "beforeRangeDetermined": true
+   },
+   "oncePerCombat": true,
+   "modes": [
+    {
+     "at": "pro",
+     "fx": {
+      "strengthCombat": 1
+     }
+    },
+    {
+     "at": "PRO",
+     "fx": {
+      "strengthCombat": 1,
+      "pressOpt": "round"
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): 'Only usable before range is determined. A vampire can play only one Form of the Wolf each combat. [pro] This vampire gets +1 strength this combat. [PRO] As above, and this vampire gains 1 optional press this combat.' The auto tier had only the press. Ruling: [PRO] the optional press can only be used during the current round [TOM 19960521] -- the narrower reading of the V5 text's 'this combat' (pressOpt 'round'; graded)."
+  },
+  "Monstrous Form": {
+   "t": [
+    "action",
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "dom",
+     "pro"
+    ],
+    "beforeRangeDetermined": true
+   },
+   "oncePerRound": true,
+   "modes": [
+    {
+     "at": "dom+pro",
+     "fx": {
+      "strengthCombat": 1
+     }
+    },
+    {
+     "at": "DOM+PRO",
+     "lock": true,
+     "fx": {
+      "actStealth": 1
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): '[dom][pro] Only usable before range is determined. This vampire gets +1 strength this combat. A vampire can play only one Monstrous Form each round. [DOM][PRO] +1 stealth action. Put this card on this vampire. During combat, you can lock this card to give this vampire +1 strength this round, or 1 maneuver or press.' The combat mode is wave 2's (the auto tier missed it). Not modelled (amber): the superior ACTION -- the card on the vampire, locked in combat for strength, a maneuver or a press; a grant from a card played outside combat, a later wave -- so the row stays partial."
+  },
+  "Soul Burn": {
+   "t": [
+    "combat"
+   ],
+   "req": {
+    "disc": [
+     "tha"
+    ]
+   },
+   "modes": [
+    {
+     "at": "tha",
+     "fx": {
+      "strike": 1,
+      "ranged": true
+     }
+    },
+    {
+     "at": "THA",
+     "fx": {
+      "strike": 2,
+      "ranged": true
+     }
+    }
+   ],
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): (a BOARD rider of wave 1) '[tha] Strike: 1R damage. This damage cannot be prevented by cards requiring Fortitude [for]. The opposing vampire's strikes with weapons inflict no damage this round. [THA] As above, but for 2R damage.' Cost 1 blood (inherited). The auto tier read [THA] as 1R. Not modelled (amber): the damage Fortitude cannot prevent, and the opposing weapons dealing no damage this round [LSJ 20040928]."
   }
  },
  "crypt": {
