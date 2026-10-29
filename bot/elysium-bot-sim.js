@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* elysium-bot-sim.js v1.0.0 (19 Oct 2026) -- THE SIM TABLE: the headless hotseat table under a VIRTUAL CLOCK.
+/* elysium-bot-sim.js v1.0.2 (29 Oct 2026) -- THE SIM TABLE: the headless hotseat table under a VIRTUAL CLOCK.
 
    Why: the arena waits, it does not compute. A 4-bot arena match took 212 s of wall clock and ~3 s of CPU (19 Oct, srv-2.6.46); the rest
    is clocks running out (askSecs, grace windows, pacing). The hotseat table (elysium-bot-hotseat.js: the client's real hotBridge lifted
@@ -36,6 +36,10 @@
    ousted ('a Methuselah with no pool is ousted'). The result row lists them (`zeroPool`) and SUMMARY.md counts them -- 35 bots in 33
    of 240 baseline matches on v0.6.209 (the last pool paid for a master), none since. Listed, not excluded: the match still counts.
 
+   Decks (v1.0.2, 29 Oct, bot v0.6.212, V5 round 0): a --decks key the bot embeds (ARCHETYPES) plays the embedded deck, as the client does; any other key
+   plays deck-<key>.json beside the sim (the hotseat table v1.4.0's rule) -- a TEST input, e.g. the V5 precons `gen-precon.js` writes. The parent checks
+   every key before spawning, and design.json / SUMMARY.md name the decks read from files.
+
    Not a timing gate: zero latency and ideal ordering can hide a race a real table shows. The real-clock gates stay (canary, hotseat gate,
    the arena on a real server); --real runs this same table on the real clock for an equivalence check.
 
@@ -45,7 +49,7 @@
           node elysium-bot-sim.js --summarize DIR
 */
 const path = require('path'), fs = require('fs');
-const SIM_VERSION = '1.0.1';
+const SIM_VERSION = '1.0.2';
 const EPOCH = Date.UTC(2026, 0, 1, 12, 0, 0);   // the virtual clock's start: fixed, so generated ids and every timestamp repeat
 
 /* ---------------- the virtual clock (child process only; installed BEFORE the bot is required) ---------------- */
@@ -192,6 +196,18 @@ function warnUnknownKnobs(K){   // the bot ignores a knob it does not read -- sa
   } catch(e){ /* the check is advice only */ }
 }
 
+function checkDecks(decks){   // v1.0.2: an embedded key, or deck-<key>.json beside the sim (the hotseat table's v1.4.0 rule); anything else stops here, not in every child
+  const { ARCHETYPES } = require(path.join(__dirname, 'elysium-bot.js'));
+  const files = {};
+  for(const d of decks){
+    if(ARCHETYPES[d]) continue;
+    const f = 'deck-' + d + '.json';
+    if(/^[a-z0-9]+$/.test(d) && fs.existsSync(path.join(__dirname, f))){ files[d] = f; continue; }
+    console.error('sim: unknown deck ' + d + ' -- not embedded in the bot, and no ' + f + ' beside the sim'); process.exit(2);
+  }
+  return files;
+}
+
 function buildDesign(o){
   let orders;
   if(o.seatings === 'all') orders = permutations(o.decks);
@@ -290,7 +306,8 @@ function summaryMd(S){
   const m = S.meta || {};
   L.push('# Sim series — ' + (m.label || ''), '');
   L.push('bot v' + (m.bot || '?') + ' · client v' + (m.client || '?') + ' · sim v' + SIM_VERSION + ' · ' + (m.clock || '?') + ' clock · profile ' + (m.profile || '?') + ' (pace ' + m.paceMs + ' ms, askSecs ' + m.askSecs + ')' +
-    ' · seatings ' + (m.seatings || '?') + ' × ' + (m.seeds || 1) + ' seed(s) from ' + (m.seed != null ? m.seed : '?') + ' · start pool ' + (m.startPool || '?') + (m.knobs && m.knobs.length ? ' · knobs ' + m.knobs.join(' ') : ''), '');
+    ' · seatings ' + (m.seatings || '?') + ' × ' + (m.seeds || 1) + ' seed(s) from ' + (m.seed != null ? m.seed : '?') + ' · start pool ' + (m.startPool || '?') + (m.knobs && m.knobs.length ? ' · knobs ' + m.knobs.join(' ') : '') +
+    (m.deckFiles && Object.keys(m.deckFiles).length ? ' · decks from files: ' + Object.entries(m.deckFiles).map(([k, f]) => k + ' (' + f + ')').join(', ') : ''), '');
   L.push(S.matches + ' matches (' + Object.entries(S.reasons).map(([k, v]) => k + ' ' + v).join(', ') + ') · ' + S.rounds + ' rounds/match · ' + S.tableSecs + ' s of table time' +
     (m.wallSecs != null ? ' in ' + m.wallSecs.toFixed(1) + ' s of wall clock' : '') + ' · invariant flags ' + S.invFlags +
     ' · played at 0 pool ' + (S.zeroPool == null ? '? (traces before sim v1.0.1)' : S.zeroPool), '');
@@ -328,13 +345,14 @@ if(require.main === module){
     const { specs, K } = buildDesign(o);
     if(o.list){ specs.forEach(s => console.log('#' + s.idx + ' seed ' + s.seed + ' ' + s.tag + (Object.keys(s.seatKnobs).length ? ' knobs ' + JSON.stringify(s.seatKnobs) : ''))); console.log(specs.length + ' matches'); process.exit(0); }
     if(!fs.existsSync(o.client)){ console.error('sim: the client file is missing: ' + o.client + ' (the hotseat table lifts its hotBridge)'); process.exit(2); }
+    const deckFiles = checkDecks(o.decks);
     warnUnknownKnobs(K);
     if(!o.trace) o.trace = path.resolve('sim-' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15));
     fs.mkdirSync(o.trace, { recursive: true }); specs.forEach(s => s.dir = o.trace);
     const { BOT_VERSION } = require(path.join(__dirname, 'elysium-bot.js'));
     const cv = (fs.readFileSync(o.client, 'utf8').match(/VERSION='([^']+)'/) || [])[1] || '?';
     const meta = { label: path.basename(o.trace), bot: BOT_VERSION, client: cv, clock: o.real ? 'real' : 'virtual', profile: o.profile, paceMs: o.paceMs, askSecs: o.askSecsEff, deckname: o.deckname,
-      seatings: o.seatings, seeds: o.seeds, seed: o.seed, decks: o.decks, personas: o.personas, knobs: o.knobs, startPool: o.startPool, rounds: o.rounds, arm: o.arm, workers: o.workers, sim: SIM_VERSION };
+      seatings: o.seatings, seeds: o.seeds, seed: o.seed, decks: o.decks, deckFiles, personas: o.personas, knobs: o.knobs, startPool: o.startPool, rounds: o.rounds, arm: o.arm, workers: o.workers, sim: SIM_VERSION };
     fs.writeFileSync(path.join(o.trace, 'design.json'), JSON.stringify({ meta, specs: specs.map(s => ({ idx: s.idx, seating: s.tag, seed: s.seed, personas: s.personas, knobs: s.knobs, seatKnobs: s.seatKnobs })) }, null, 1));
     process.stderr.write('sim v' + SIM_VERSION + ' · bot v' + BOT_VERSION + ' · client v' + cv + ' · ' + specs.length + ' matches (' + o.seatings + ' seatings × ' + o.seeds + ' seed(s)) · ' + o.workers + ' workers · ' + (o.real ? 'REAL' : 'virtual') + ' clock · profile ' + o.profile + ' → ' + o.trace + '\n');
     runPool(specs, o).then(({ results, wallSecs }) => {

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* elysium-bot-hotseat.js v1.3.0 (19 Oct 2026) -- THE HOTSEAT TABLE, headless.
+/* elysium-bot-hotseat.js v1.4.0 (29 Oct 2026) -- THE HOTSEAT TABLE, headless.
    Lifts `const hotBridge = {...}` and `function hotFanOut` VERBATIM out of the client source beside it (elysium-vtes-bord.html, READ-ONLY here) and drives real
    Bot instances through them the way the client's hotRunBotTurns does: one `turn` per bot seat round the ring from the CONFIG (not the roster), waiting for
    that seat's `pass`. Whatever the bridge drops is dropped here too -- this is the client's relay, not a model of it.
@@ -16,7 +16,10 @@
    combat tally carries rng / rl / nx / pr / sp / ce / sa / sb / xa / xb / pa / pb / ga / gb / ea / eb as at a real table. bridgeIn(L) is the one context.
    v1.3.0 (19 Oct 2026, the sim table): three OPTIONAL inputs for elysium-bot-sim.js; absent, the table plays as v1.2.0 did (the gate passes none of them):
    o.personas (one per seat, else o.persona), o.seatKnobs ({seat: {knob: v}}, merged over o.knobs), o.onEvent(e) (called with every bot event as it is
-   pushed). The result also names the seats (res.names) and the persona each bot played (res.personas). */
+   pushed). The result also names the seats (res.names) and the persona each bot played (res.personas).
+   v1.4.0 (29 Oct 2026, bot v0.6.212, V5 round 0): a deck key the bot does not embed (ARCHETYPES) is read from deck-<key>.json in o.deckDir (default: beside
+   this file) -- a TEST input, such as the V5 precons gen-precon.js writes; the client only offers ARCHETYPES. An embedded key always wins, so every table
+   of the embedded decks plays exactly as v1.3.0 did. */
 const fs = require('fs'), vm = require('vm'), path = require('path');
 function liftBridge(clientPath){
   const html = fs.readFileSync(clientPath, 'utf8');
@@ -34,7 +37,7 @@ function bridgeIn(L, extra){   // v1.2.0: the ONE context the lift runs in -- ma
 
 async function runTable(opts){
   const o = Object.assign({ decks: ['malkavian', 'tremere', 'nosferatu', 'ventrue'], seed: 1, rounds: 25, startPool: 30, askSecs: 3, paceMs: 0, persona: 'expert', deckname: false, arm: 'asis', out: null,
-    client: path.join(__dirname, 'elysium-vtes-bord.html'), bot: path.join(__dirname, 'elysium-bot.js'), cardfx: path.join(__dirname, 'elysium-cardfx.json'), stuckMs: 90000, progress: null }, opts || {});
+    client: path.join(__dirname, 'elysium-vtes-bord.html'), bot: path.join(__dirname, 'elysium-bot.js'), cardfx: path.join(__dirname, 'elysium-cardfx.json'), stuckMs: 90000, progress: null, deckDir: __dirname }, opts || {});
   const { Bot, ARCHETYPES, BOT_VERSION } = require(path.resolve(o.bot));
   const realRandom = Math.random; let s = (o.seed >>> 0) || 1; Math.random = () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };   // the bridge shuffles with Math.random: a seed repeats the deal
   try {
@@ -62,8 +65,8 @@ async function runTable(opts){
     const cardfxData = JSON.parse(fs.readFileSync(o.cardfx, 'utf8'));
     const names = o.decks.map((d, i) => 'B' + (i + 1) + '-' + d), ev = [], bots = []; let round = 0;
     HB.reset(names.map(n => ({ name: n, bot: true }))); names.forEach((n, i) => roster.push({ seat: i + 1, name: n, bot: true, out: false }));
-    for(let i = 0; i < o.decks.length; i++){ const seat = i + 1; if(!ARCHETYPES[o.decks[i]]) throw new Error('unknown deck ' + o.decks[i]);
-      const deck = JSON.parse(JSON.stringify(ARCHETYPES[o.decks[i]]));   // a COPY, as the client embeds them -- never the registry object itself
+    for(let i = 0; i < o.decks.length; i++){ const seat = i + 1;
+      const deck = deckFor(ARCHETYPES, o.decks[i], o.deckDir);   // a COPY, as the client embeds them -- never the registry object itself
       const b = new Bot(Object.assign({ name: names[i], room: 'hotseat', pass: '', transport: HB.dialFor(seat, names[i]), cardfxData, deck, persona: (o.personas && o.personas[i]) || o.persona, paceMs: o.paceMs, askSecs: o.askSecs, startPool: o.startPool,
         log: () => {}, onEvent: (t, d) => { if(t.indexOf('bot:') === 0){ const e = { round, who: names[i], deck: o.decks[i], type: t.slice(4), d }; ev.push(e); if(o.onEvent) o.onEvent(e); } } }, o.deckname ? { deckName: o.decks[i] } : {}, o.knobs || {}, (o.seatKnobs || {})[seat] || {}));
       bots.push(b); await b.connect(); const t0 = Date.now(); while(!(HB.seats[seat] && HB.seats[seat].deck) && Date.now() - t0 < 5000) await new Promise(r => setTimeout(r, 30));
@@ -79,7 +82,7 @@ async function runTable(opts){
         if(!okPass){ stuck = { round, seat, seatOut: !!bots[seat - 1].out }; break outer; }
         if(bots.filter(b => !b.out).length <= 1) break outer; } }
     const c = t => ev.filter(e => e.type === t), plays = c('play'), w = x => plays.filter(e => e.d.window === x).length;
-    const res = { tool: 'elysium-bot-hotseat 1.3.0', bot: BOT_VERSION, client: L.version, names, personas: names.map((n, i) => (o.personas && o.personas[i]) || o.persona), combatMerge: !!L.cmbSrc, arm: o.arm, deckNamePassed: !!o.deckname, seed: o.seed, decks: o.decks, rounds: Math.min(round, o.rounds), secs: Math.round((Date.now() - t0) / 1000),
+    const res = { tool: 'elysium-bot-hotseat 1.4.0', bot: BOT_VERSION, client: L.version, names, personas: names.map((n, i) => (o.personas && o.personas[i]) || o.persona), combatMerge: !!L.cmbSrc, arm: o.arm, deckNamePassed: !!o.deckname, seed: o.seed, decks: o.decks, rounds: Math.min(round, o.rounds), secs: Math.round((Date.now() - t0) / 1000),
       finished: !stuck && bots.filter(b => !b.out).length <= 1, stuck, alive: bots.filter(b => !b.out).map(b => b.o.name), pools: bots.map(b => b.pool), turnsHandedToOustedBots: turnsToOusted, droppedVerbs: dropped, botHoldsRelayedToBots: holdsRelayed,
       manifest: c('manifest').map(e => ({ deck: e.deck, key: e.d.deck, axes: e.d.axes })),
       counts: { through: c('through').length, blocked: c('blocked').length, blockMade: c('block-made').length, stealthCards: w('stealth'), interceptCards: w('react-intercept'), stealthLooks: c('stealth-stack').length,
@@ -90,7 +93,20 @@ async function runTable(opts){
   } finally { Math.random = realRandom; }
 }
 
-module.exports = { runTable, liftBridge, bridgeIn };
+/* The deck for a key: the embedded deck (a copy) when the bot has it, else deck-<key>.json from deckDir (v1.4.0). A key is a lowercase word, so a file
+   name can never climb out of deckDir. */
+function deckFor(ARCHETYPES, key, deckDir){
+  if(ARCHETYPES[key]) return JSON.parse(JSON.stringify(ARCHETYPES[key]));
+  const f = path.join(deckDir || __dirname, 'deck-' + key + '.json');
+  if(/^[a-z0-9]+$/.test(String(key)) && fs.existsSync(f)){
+    const d = JSON.parse(fs.readFileSync(f, 'utf8'));
+    if(!d || !Array.isArray(d.crypt) || !Array.isArray(d.library)) throw new Error(f + ' is not a playbook {name, crypt, library}');
+    return d;
+  }
+  throw new Error('unknown deck ' + key + ' (not embedded in the bot, and no deck-' + key + '.json in ' + (deckDir || __dirname) + ')');
+}
+
+module.exports = { runTable, liftBridge, bridgeIn, deckFor };
 if(require.main === module){
   const A = process.argv.slice(2), opt = k => { const i = A.indexOf('--' + k); return i < 0 ? null : A[i + 1]; }, o = { progress: l => process.stderr.write(l + '\n') };
   if(opt('decks')) o.decks = opt('decks').split(','); ['seed', 'rounds'].forEach(k => { if(opt(k)) o[k] = +opt(k); });

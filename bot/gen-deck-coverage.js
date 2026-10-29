@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.38 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.39 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -136,6 +136,15 @@ const CLASS = {
   hostIntercept: 'play', hostInterceptOn: 'paired', hostPrevent: 'play',   // v1.1.38: Guardian Angel on its host -- _hostedIntercept (the block sites and forecasts), _hostedPrevent (the combat damage step)
   bankIn: 'income', bankOut: 'income', bankClan: 'paired',   // v1.1.38: Wasserschloss Anif -- _considerBankIn (master phase, no lock) and _considerLockIncome('influence') (the lock-gated payout)
   rushGrant: 'play',   // v1.1.38: Haven Uncovered -- the master loop's rushGrant branch (placed on the rush target) and _bestHavenRushFor (the rush through it)
+  /* v1.1.39 (29 Oct 2026, bot v0.6.212, V5 round 0): the 23 keys the scan had flagged as unclassified since v0.6.205 (every report since printed
+     the warning). Library riders first, then the crypt text. */
+  bleedNullify: 'play', bleedBank: 'paired',   // Spying Mission [OBF] -- _spyMissionFor (v0.6.211): cancels a bounced bleed, banks +2 bleed
+  interceptPaid: 'contextual',   // Bowl of Convergence [AUS] -- _equipPaidIntercept, through the equip grant rule (EQUIP_GRANT below)
+  payBlood: 'paired', preventX: 'paired', burnCap: 'paired',   // a mode's own price (Second Tradition's locked route), X prevention on prevent (Hidden Strength), the cap on preyBurnPerCopy
+  ranged: 'meta', equip: 'meta', referendum: 'meta',   // ranged: a strike's range flag (70 entries: the guns, Aid from Bats ...), read beside strike / stealBlood; equip / referendum: read in a category test, no entry carries them
+  // crypt card text (Bot._cryptFxOf): a VAMPIRE's own printed ability -- never a library play path, so it cannot make a library card playable
+  bleedBonus: 'crypt', bleedBoostDiscard: 'crypt', blockNotOlder: 'crypt', burnAtDamage: 'crypt', burnOnTorpor: 'crypt', enterPlay: 'crypt', interceptMod: 'crypt',
+  noHuntStealth: 'crypt', noUnlockAfterTitledBleed: 'crypt', selfUnlock: 'crypt', stealthMod: 'crypt', strengthMod: 'crypt', voteBoostDiscard: 'crypt', voteTaxAgainst: 'crypt',
   press: 'contextual',   // v1.1.5: consumed via the press@ special-case below (Apportation's clean standalone shape only) -- 'contextual' here only silences the unknown-key warning for the excluded instances (co-located maneuver/strike/stealBlood, or an unverifiable req flag)
 };
 const cls = k => String(CLASS[k] || '');
@@ -182,7 +191,7 @@ function modeConsumed(mo, e){
        keys count only via the generalized bearer readers (_attachedEquips now reads
        equip|retainer; envDmgPerRound via the borne-crows hook). */
     const _rk = Object.keys(mo.fx || {});
-    if(_rk.length && _rk.every(k => ['intercept','prevent','maneuver','strike','handStrike','envDmgPerRound'].includes(k)))
+    if(_rk.length && _rk.every(k => ['intercept','prevent','maneuver','strike','handStrike','envDmgPerRound','ranged'].includes(k)))   // v1.1.39: + ranged (a flag on the strike)
       return { ok: true, via: 'attach-grant (bearer readers)' };
     return { ok: false, via: 'retainer: key outside the grant set' };
   }
@@ -192,7 +201,7 @@ function modeConsumed(mo, e){
        combat equip-branches, and Kevlar's prevent via _kevlarPrevent. Grant keys
        on equip entries are consumed through the bearer, everything else waits. */
     const _ek = Object.keys(mo.fx || {});
-    if(_ek.length && _ek.every(k => ['intercept','prevent','maneuver','strike','handStrike'].includes(k)))
+    if(_ek.length && _ek.every(k => EQUIP_GRANT.includes(k)))
       return { ok: true, via: 'equip-grant (bearer readers)' };
     return { ok: false, via: 'equip: key outside the grant set' };
   }
@@ -308,6 +317,11 @@ function modeConsumed(mo, e){
   return { ok: false };
 }
 
+/* v1.1.39: the keys an equipment card grants its bearer through the bearer readers -- + ranged (the gun's strike flag: the .44 Magnum and every gun
+   were 'key outside the grant set' though the bot equips them and strikes with them, v0.6.211) and interceptPaid + its price interceptPaidBlood (Bowl of
+   Convergence's [AUS] mode; _equipPaidIntercept reads the price as f.interceptPaidBlood, which the fx.-scan cannot see). */
+const EQUIP_GRANT = ['intercept', 'prevent', 'maneuver', 'strike', 'handStrike', 'ranged', 'interceptPaid', 'interceptPaidBlood'];
+
 /* ---------- discipline reach — mirrors Bot._modeUsableBy's gate (deck-static part) ---------- */
 function modeReachableBy(mo, cryptE){
   if (!mo.at) return true;
@@ -391,13 +405,10 @@ const BUCKET = v =>
   (v === 'PARTIAL' || v === 'TABLED-ONLY') ? 'semi' : 'dead';
 
 /* ---------- run ---------- */
-const args = parseArgs(process.argv);
-let loaded;
-try { loaded = loadDeck(args.deck); }
-catch (e){ console.error('gen-deck-coverage: ' + e.message); process.exit(1); }
-const deck = loaded.deck;
-
-const cryptRows = (deck.crypt || []).map(c => {
+/* v1.1.39 (bot v0.6.212): the per-card verdicts of one playbook -- the report below and gen-card-ledger.js read the SAME function, so the ledger
+   cannot drift from this report. */
+function coverDeck(deck){
+  const cryptRows = (deck.crypt || []).map(c => {
   const h = lookup(c.name);
   const e = h && h.kind === 'crypt' ? h.e : null;
   return { name: c.name, qty: c.qty || 1, annCap: (typeof c.cap === 'number' ? c.cap : null),
@@ -412,6 +423,16 @@ const libRows = (deck.library || []).map(c => {
   const j = judgeLib(h, cryptEs);
   return { name: c.name, qty: c.qty || 1, verdict: j.verdict, per: j.per, e: h.e, canon: h.name };
 });
+  return { cryptRows, cryptEs, libRows };
+}
+
+function main(){
+const args = parseArgs(process.argv);
+let loaded;
+try { loaded = loadDeck(args.deck); }
+catch (e){ console.error('gen-deck-coverage: ' + e.message); process.exit(1); }
+const deck = loaded.deck;
+const { cryptRows, libRows } = coverDeck(deck);
 
 const totCopies = libRows.reduce((s, r) => s + r.qty, 0);
 const byBucket = { auto: 0, semi: 0, dead: 0 };
@@ -437,7 +458,7 @@ const badge = e => [e.src === 'hand' ? 'curated' : 'auto',
 
 P('# deck-coverage — ' + (deck.name || '(namnlös lek)') + ' (' + today + ')');
 P('');
-P('Genererad av `gen-deck-coverage.js` v1.1.38 mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: this string is the SECOND version site (the header comment is the first) -- bump BOTH when a version note is added, or every generated report inherits a stale self-identification
+P('Genererad av `gen-deck-coverage.js` v1.1.39 mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: this string is the SECOND version site (the header comment is the first) -- bump BOTH when a version note is added, or every generated report inherits a stale self-identification
   ', ' + (fx.counts.lib || '?') + ' lib / ' + (fx.counts.crypt || '?') + ' crypt / ' +
   (fx.counts.alias || '?') + ' alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden ' +
   '(skannad vid körning, inte handunderhållen). Leken: ' + loaded.source + '.');
@@ -551,3 +572,7 @@ console.log('deck-coverage: ' + (deck.name || '(namnlös)') + ' — ' + totCopie
   byBucket.auto + ' auto / ' + byBucket.semi + ' delvis / ' + byBucket.dead + ' ej spelbara' +
   (unknownScanned.length ? '  ⚠ oklassade fx-nycklar: ' + unknownScanned.join(',') : ''));
 console.log('rapport: ' + outPath);
+}
+
+if (require.main === module) main();
+module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.39' };
