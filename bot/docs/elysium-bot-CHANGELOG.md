@@ -19,6 +19,28 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.212 (29 Oct 2026)** — V5 round 0, Johan's "kör" of 29 Oct (12:54) on the five-point proposal: the tools for the V5 waves
+  (the Tools section) and one fix their first smoke found.
+  - *CHANTRY'S LAST POOL* (D-97, R-34): on a five-seat sim table a Tremere bot at pool 1 rescued a torpored Tremere through Chantry
+    with its last pool and was ousted after its master phase (4 of the 168 smoke matches; never in the 240-match four-seat design). The
+    pool now pays only when 1 is left; otherwise a ready Tremere's blood (it keeps 1), or nothing. Section 158, through the turn:
+    3/0 on the new bytes, 1/2 on v0.6.211 (158c, the pool-2 control, green on both).
+  - *The inventory of every own pool payment* (O-20's second half, done): influence (the `poolFloor` knob: 6 for every persona, 1 with
+    no ready minion), the ally, political, master, equip and fetch finders, and Vessel's pool-to-blood already leave 1 pool; Jack's tick,
+    Fame and pool damage are losses, not choices. Not changed: at `poolFloor` 0 (test fixtures only) influence can spend the last pool
+    (BOARD).
+  - `BOT_VERSION` carries the version only, from this release on (the note lives here).
+  - *The sim* (bot only; tools below): the 240-match client design v0.6.211 → v0.6.212 is SAME-PLAY 240 (the version string only), the
+    four audits byte-identical; the V5 smoke (each of the 14 new precons with the four starters, 12 random seatings from seed 1, five
+    seats): 164 SAME-PLAY and 4 DIVERGED, each at a Tremere's lock-rescue at pool 1 (gangrel, pathcaine, pathdeath #11, ravnos #8);
+    played at 0 pool 1 → 0. The v0.6.211 side ran on a scratch copy of v0.6.211 with the 14 decks put into `ARCHETYPES` (sim v1.0.1
+    cannot read deck files), as embedded decks; a deck from a file plays exactly as the same deck embedded (the Tools entry).
+  - Gates on the release bytes (`elysium-bot.js` 9f58c982…, `test-bot-logic.js` 5c7f8b31…, `elysium-cardfx.json` 8f78ba98…, unchanged):
+    suite 2247/0 ×3 (alone, frozen snapshots, `node --max-old-space-size=4096`: this sandbox's 2,096 MB default heap ends the suite out
+    of memory after 136e, v0.6.211's bytes too, which give their 2244/0 with the flag) · canary 69/0 (bot/'s copies) and 69/0 (the
+    root's client v2.6.167 + `client/ELYSIUM-PROTOCOL.md`) · hotseat 11/0 · HB1 11/11 · test-cardfx 275/0 · `gen-precon.js --check`
+    no problems · main's `check-versions.js` agrees (run as its CI does).
+
 - **v0.6.211 (19 Oct 2026)** — the stable's remaining cards, Johan's choices of 19 Oct 22:36 (analysis and measurements: `docs/specs/spec-cards-2026-10-19.md`). PR #37, after #35 and #36 were merged.
   - *(1) PENTEX:* the curated entry was keyed *Pentex(TM) Subversion*, so a list typed with the printed *Pentex™ Subversion* (KRCG's precons, the V5 generator) paid 2 pool for the empty auto entry. Compile v1.9.3 writes it under the printed name too (cardfx below). On a scratch Tremere list typed with ™ (72 matches): 18 uncurated picks on v0.6.210, 31 curated on v0.6.211.
   - *(2) EQUIPMENT* (Johan: "they should weigh more than 1-bleeds without modifiers at least — Govern is very often better; the Magnum is stable except at the end of the game when you are low on pool"): a weapon or an armour (equip tier 2–3) beats a bare plain bleed of 1 — no crypt bonus, no bleed modifier in hand (`ctx.plainBare`). It never beats a bleed card, never with the prey within reach (the lunge rule), and a pool-cost item at 6 pool or less keeps its flat price (`ctx.lowPool`). Knob `equipOverPlain`, 0 = the flat 1.15 × economy weight.
@@ -148,6 +170,26 @@
 - **v0.6.101 (9 Aug 2026)** — the late-bubble re-check in `_pace`, the drain-gap guard at the drain top, the Hold on tail guard.
 
 ## Tools
+- **V5 round 0 (29 Oct 2026, with bot v0.6.212)** —
+  - **`gen-precon.js` v1.0.0** (new): every V5 precon (Fifth Edition, Anarch, Companion, Sabbat V5: 18) from `vtes.json`'s sets data,
+    written as `deck-<key>.json` beside it when the file is missing, compared by KRCG id and quantity when it exists; it also compares the
+    decks embedded in the bot with their files. It reproduces the four starters card for card (Tremere's *Pentex(TM)* is the printed
+    *Pentex™*, one KRCG card). The 14 new decks (`banuhaqim`, `brujah`, `gangrel`, `hecata`, `lasombra`, `ministry`, `ravnos`,
+    `salubri`, `toreador`, `tzimisce`, `pathcaine`, `pathcathari`, `pathdeath`, `pathpower`) are test inputs: not in `ARCHETYPES`,
+    so not in the client's menu.
+  - **`elysium-bot-hotseat.js` v1.4.0 / `elysium-bot-sim.js` v1.0.2**: a deck key the bot does not embed plays `deck-<key>.json`;
+    an embedded key always wins (the 240-match design is IDENTICAL 240 against v1.3.0 / v1.0.1; hotseat gate 11/0). The sim checks
+    every key before it spawns and names file decks in design.json / SUMMARY.md. A deck from a file plays exactly as the same deck
+    embedded (2 of 2 matches IDENTICAL against a scratch bot with Gangrel in `ARCHETYPES`).
+  - **`gen-deck-coverage.js` v1.1.39**: the 23 `fx.` keys the scan had flagged since v0.6.205 are classified (14 crypt-text keys,
+    Spying Mission's bank, the paid intercept, the price and range riders); `ranged` and the paid intercept join the equip grant set.
+    The four starters now read 77/77 each (Malkavian 73 → 77: Spying Mission's [OBF]; Tremere 75 → 77: the .44 Magnum, Bowl of
+    Convergence). `coverDeck()` is exported. The V5 starter reports in `docs/coverage/` are regenerated.
+  - **`gen-card-ledger.js` v1.0.0** (new) → **`docs/CARDS.md`**: one row per card of the 18 V5 precons (the coverage verdict, tier,
+    decks, KRCG rulings, the suite sections that name it, uses per deck in the sims) and the class map (unconsumed effect keys by
+    copies). From v0.6.212's runs: 308 cards, 1,386 copies — 154 playable, 12 unseen, 66 partial, 76 inert, 0 unresolved. The 14 new
+    decks: 25–62 of 77 copies playable. The smoke is a mechanism count, not a strength reading: 12 matches a deck, the new decks played
+    without a `DECK_STRATEGY` line (no axes, no combat posture); they took 3 wins in 168 matches.
 - **`elysium-bot-sim.js` v1.0.1 (19 Oct 2026, with bot v0.6.210)** — PLAYED AT 0 POOL: a bot that decides at pool ≤ 0 before its own `ousted` row is playing while ousted. The result row lists them (`zeroPool`: bot, round, question), `summary.json` sums them and `SUMMARY.md` prints the count in its header and the matches below the tables; listed, not excluded. On the 24-match design: 4 on v0.6.209, 0 on v0.6.210. `--summarize` on older traces prints "?" (the field did not exist). Found by a scan while v0.6.209's numbers were checked — the class v0.6.210 fixes.
 - **The sim table (19 Oct 2026, with bot v0.6.209)** — **`elysium-bot-sim.js` v1.0.0** (new): the headless hotseat table under a VIRTUAL CLOCK. The arena waits, it does not compute (a 4-bot arena match: 212 s of wall clock, ~3 s of CPU), and the hotseat table has no network, so every wait in it is a timer: each match runs in its own process with setTimeout / clearTimeout / setInterval / Date replaced, and the clock jumps to the next timer when nothing else is left to run — about a second per match per worker. Same spec = the same trace byte for byte (fixed epoch, seeded deal). Seating: `--seatings all` (default, Johan 19 Oct: every possible seating, since it shapes the tactical choices — 24 for four decks, 120 for five), `random --matches N`, `fixed`; `--seeds K` deals per seating. `--profile client` (default: the client's hotseat spawn, paceMs 3100 / askSecs 20 / deckName) or `arena` (0 / 3). Knobs per seat, per deck or global; personas per deck. Arena-shaped traces + a `result` row (the arena's `computeVp` / `deriveWinner`; an oust after one Methuselah is left is a post-game oust, not counted), `summary.json` + `SUMMARY.md` per deck / per seat position / per prey / per predator. `--real` runs the same table on the real clock (the equivalence check: `docs/reports/REPORT-sim-table.md`). **`ana-sim-diff.py`** (new): two runs of the same design, match by match — IDENTICAL / SAME-PLAY / SAME-PLAY* (the same decisions per bot, rows interleaved differently) / DIVERGED with the first decision that differs. **`elysium-bot-hotseat.js` v1.3.0:** optional `personas`, `seatKnobs`, `onEvent` for the sim; `res.names`, `res.personas`; absent = v1.2.0 (the gate passes none — 11/0 on the new bytes).
 - **`ana-windows.py` (17 Oct 2026, with bot v0.6.207)** — a slow reactions-only window (> 2.5 s from its line to the resolution) that saw a block attempt (another bot's `block-made` row inside it) is a CONTEST decided at the clock — split by outcome (blocked, or failed against the actor's stealth and went through) — and only a slow window with no attempt that went through counts as RAN OUT (an answer lost; the gate is 0). The first cut counted a failed contest as ran out: R4's smokes are 245 of 379 bleed-total windows and 14 of 97 modifier windows that lost their answer (first counted as 253 and 22); v0.6.206's final smoke 0 of 80 (5 contests, all blocked), v0.6.207's code 0 of 82 (5 contests blocked, 3 failed).

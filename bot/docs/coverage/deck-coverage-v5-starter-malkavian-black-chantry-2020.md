@@ -1,6 +1,6 @@
-# deck-coverage — V5 Starter — Malkavian (Black Chantry 2020) (2026-10-16)
+# deck-coverage — V5 Starter — Malkavian (Black Chantry 2020) (2026-10-29)
 
-Genererad av `gen-deck-coverage.js` v1.1.38 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-malkavian.json.
+Genererad av `gen-deck-coverage.js` v1.1.39 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-malkavian.json.
 
 Syfte: göra "kan botten spela den här leken?" till en mekanisk kontroll — curated-djup och
 handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPPORT, inte en gate.
@@ -9,18 +9,17 @@ handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPP
 
 | Hink | Kopior | Andel |
 |---|---:|---:|
-| Automatiserade (HANDLER/FULL) | 73 | 95% |
-| Delvis (PARTIAL/TABLED-ONLY) | 4 | 5% |
+| Automatiserade (HANDLER/FULL) | 77 | 100% |
+| Delvis (PARTIAL/TABLED-ONLY) | 0 | 0% |
 | Ej spelbara av botten idag | 0 | 0% |
 
-Per verdict: FULL 71 · PARTIAL 4 · HANDLER 2
+Per verdict: FULL 75 · HANDLER 2
 
 ## Konsumtionsläget (skannat ur bottens källa vid körning)
 
-- Spel-nycklar botten läser: `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bloodPerMargin`, `bounce`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockMinion`, `lockStealth`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `rushGrant`, `stealth`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
+- Spel-nycklar botten läser: `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bleedNullify`, `bloodPerMargin`, `bounce`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockMinion`, `lockStealth`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `rushGrant`, `stealth`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
 - Fas-inkomst (kräver `phase` på moden): `bankIn`, `bankOut`, `bloodToPool`, `handCycle`, `handSize`, `handSizePerCounter`, `poolGain`, `poolToBlood`, `rescueTorpor`, `transferBurnPool`, `transferSwap`
 - Hotläsning (motståndarkort, gör ALDRIG egna kort spelbara): `bloodBurn`, `poolDmg`, `stealBlood`
-- ⚠ OKLASSADE nycklar hittade i botkällan (uppdatera CLASS-kartan i verktyget): `bleedBonus`, `bleedBoostDiscard`, `bleedNullify`, `blockNotOlder`, `burnAtDamage`, `burnCap`, `burnOnTorpor`, `enterPlay`, `equip`, `interceptMod`, `interceptPaid`, `noHuntStealth`, `noUnlockAfterTitledBleed`, `payBlood`, `preventX`, `ranged`, `referendum`, `selfUnlock`, `stealthMod`, `strengthMod`, `voteBoostDiscard`, `voteTaxAgainst`
 
 ## Bibliotek (21 unika, 77 kopior)
 
@@ -41,7 +40,7 @@ Per verdict: FULL 71 · PARTIAL 4 · HANDLER 2
 | Faceless Night | 4 | FULL | [obf] stealth → ✓(stealth)/✓<br>[OBF] stealth → ✓(stealth)/✓ | auto |
 | Foreshadowing Destruction | 2 | FULL | [dom] bleed → ✓(bleed@mod-window)/✓<br>[DOM] bleed → ✓(bleed@mod-window)/✓ | curated |
 | Lost in Crowds | 4 | FULL | [obf] stealth → ✓(stealth)/✓<br>[OBF] stealth → ✓(stealth)/✓ | auto |
-| Spying Mission | 4 | PARTIAL | [obf] stealth → ✓(stealth)/✓<br>[OBF] bleedNullify,bleedBank → —/✓ | curated |
+| Spying Mission | 4 | FULL | [obf] stealth → ✓(stealth)/✓<br>[OBF] bleedNullify,bleedBank → ✓(bleedNullify)/✓ | curated |
 | Swallowed by the Night | 4 | FULL | [obf] stealth → ✓(stealth)/✓<br>[OBF] maneuver → ✓(maneuver@resolveCombat)/✓ | auto |
 | Deflection | 5 | FULL | [dom] bounce → ✓(bounce)/✓<br>[DOM] bounce → ✓(bounce)/✓ | auto |
 | Eyes of Argus | 5 | FULL | [aus] intercept → ✓(intercept)/✓<br>[AUS] wake → ✓(wake)/✓ | auto |
@@ -65,9 +64,7 @@ Per verdict: FULL 71 · PARTIAL 4 · HANDLER 2
 
 ## Kurationskö (allt som inte är FULL/HANDLER, qty-fallande)
 
-| Kort | Qty | Verdict | Föreslaget nästa steg |
-|---|---:|---|---|
-| Spying Mission | 4 | PARTIAL | okonsumerade modes: [OBF] bleedNullify,bleedBank |
+Tom — hela biblioteket är automatiserat. 🎉
 
 ## Antaganden (uttalade, inte tysta)
 

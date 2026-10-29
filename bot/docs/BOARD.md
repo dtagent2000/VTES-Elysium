@@ -1,22 +1,28 @@
-# BOARD — the open asks (20 Oct 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (29 Oct 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks (Gangrel) and the TWD profile can
-  price it by what the table's decks deal. *Done when* the equipment scorer reads an expected-damage share for the table's decks
-  and a pinned bench shows no loss. Docs: RULINGS D-52; `specs/spec-knowledge-layer.md`.
+  price it by what the table's decks deal. Waits for the wave that plays aggravated strikes (`CARDS.md` class `aggr`: Claws of the
+  Dead, Sculpt the Flesh, Wall of Filth …): no deck at the reference table deals aggravated damage to others today, so there is
+  nothing to price yet (29 Oct). *Done when* the equipment scorer reads an expected-damage share for the table's decks and a
+  pinned bench shows no loss. Docs: RULINGS D-52; `specs/spec-knowledge-layer.md`.
 - **The prey's wakes as blockers** (65f): the probe lab lost on five tables of 91 where a prey with one body and a wake blocked
   the prober and woke for the punch. *Done when* `probeHold`'s out-number reads unlocked bodies + expected wakes (deck read +
   hypergeometric), measured in `lab-probe.js`. Docs: RULINGS O-7; `specs/spec-knowledge-layer.md`.
 - **The abstract model spec**: the first of the four checks (fast rollouts over card-class distributions, probabilities not
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
-- **The V5 plan**: a precon generator from `vtes.json`'s precon sets, a coverage class map, Toreador, then waves on the card
-  ledger. Before the deck count doubles, move the embedded decks and `DECK_STRATEGY` into a data file (seven decks are embedded
-  in `elysium-bot.js`, six duplicated in `deck-*.json`, `WALL_DECK` has no file). *Done when* a wave is a list of ledger rows
-  that turned "playable". Docs: RULINGS D-84, O-22; spec-cleanup §6.2; `coverage/`.
+- **The V5 waves**: round 0 (v0.6.212) built the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim
+  plays them; the client's menu does not offer them), the coverage class map and the ledger (`docs/CARDS.md`). Next: the waves, by
+  effect class as `CARDS.md`'s class map ranks them (masters with no effect modelled, Villein first: 22 copies in 6 decks; the
+  bundled maneuver / press combat cards; aggravated strikes; free block bars; extra strikes; the 22 cards with no effect data;
+  action cards whose effect is unmodelled) — Johan chooses the wave shape (RULINGS O-22). A deck joins the menu (`ARCHETYPES` + a
+  `DECK_STRATEGY` line) when its rows are playable and it holds up in the sim; before the deck count doubles, decks and
+  `DECK_STRATEGY` become a data file (seven decks embedded in `elysium-bot.js`, six duplicated in `deck-*.json`; `gen-precon.js
+  --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, O-22; `CARDS.md`; HOWTO.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C2 — dead code and tools**: delete the ten legacy tests, `_bumpTallyB`, the lint's eight unused assignments, one `handStrike`
@@ -39,11 +45,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   T7, T9; RULINGS O-2, O-29, O-31.
 - **C6 — the faster suite**: ~87 % of the suite's time is its own sleeps (151 s of literal `sleep`s in the 400 no-server sections);
   pilot a second runner that plays those sections under the sim's virtual clock, live sections on the real clock; sharding is the
-  fallback. *Done when* one runner gives the same assertion count, green ×3. Docs: spec §5.7, §7.
-- **Graded rules readings and the card ledger** (T2, T3): one generated row per card (tier, modes, rulings, the suite section,
-  plays in the latest sim, status); each curated reading graded green / amber / red by a fresh agent against KRCG text and
-  vtes-rulings, only reds to Johan. *Done when* `gen-card-ledger.js` writes `docs/CARDS.md` from cardfx + the suite + a sim dir.
-  Docs: spec T2, T3; HARNESS; `specs/spec-cardfx-sweep-sources-2026-09-25.md`.
+  fallback. The suite also grows past a 2 GB heap by section 136 (29 Oct): find what it keeps. *Done when* one runner gives the same
+  assertion count, green ×3, on node's default heap. Docs: spec §5.7, §7.
+- **Graded rules readings** (T3; the ledger, T2, is `docs/CARDS.md` since v0.6.212): each curated reading graded green / amber /
+  red by a fresh agent against KRCG text and vtes-rulings, only reds to Johan; the grade becomes a ledger column. *Done when* a wave's
+  PR lists the grades of the cards it curated (HARNESS, the charter). Docs: spec T3; HARNESS; `specs/spec-cardfx-sweep-sources-2026-09-25.md`.
 - **Egress review as a rule** (T4): every round's PR carries an `Egress:` line from a fresh-context agent. *Done when* HARNESS
   describes it and three rounds have one. Docs: HARNESS.
 - **Ask main once**: (a) may the bot's gates read the root's released client / server / protocol instead of the copies in `bot/`
@@ -86,6 +92,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   played in a sim series. Docs: RULINGS O-23.
 - **Two Pentex spellings** are two cards to `_uniqueInPlay`. *Done when* `_uniqueInPlay` compares the normalised name. Docs:
   RULINGS O-24.
+- **The act-again context reads `mo.fx.referendum`** (`_actAgainCtx`'s "clogged" test), which no cardfx entry carries — political
+  cards carry `e.ref` — so a political action in hand never counts as another use for the vampire (found by the coverage scan, 29
+  Oct). *Done when* the test reads the political type and a section covers it.
+- **The influence floor at `poolFloor` 0**: the influence phase leaves `poolFloor` (6 for every persona; 1 with no ready minion);
+  a knob of 0, which only test fixtures set, lets it spend the last pool (D-97's inventory, 29 Oct). *Done when* the floor is at
+  least 1 and the fixtures that relied on 0 are read (L-16).
 
 ## From the 11 Oct review of VTES-Player (DuelRevolvers; ideas only, no code — the repo has no licence)
 - **Blood-hunt voting** (their item 8): `_refVoteDir` reads only pool terms, so a blood hunt reads "nothing in it for me" and the
@@ -102,6 +114,15 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* the persona pass (RULINGS O-29) ships with those tests.
 
 ## Measurement debts
+- **The hotseat table runs out most bot-vs-bot reaction windows** (found 29 Oct, the same on v0.6.211): `ana-windows.py` on a pace-0
+  sim series (24 matches) reads 403 of 467 bleed totals and 101 of 125 modifier windows as RAN OUT, with 369 `stale-answer` rows (bot
+  Passes); the server arena read 0 of 82 (v0.6.207). The sim matches the real-clock hotseat table decision for decision (REPORT-sim-
+  table §2), so this may be what an offline table does: every bot-vs-bot window waits out its clock. *Done when* a `--real` hotseat
+  match and a browser hotseat table say whether bot answers are lost there, and either the cause is fixed or the gate is restated per
+  table. Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
+- **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
+  once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
+  pool change was my own payment.
 - **The 14 Oct playtest scenario** (`client/playtest/`, `--dir` on a scratch copy of the root with the bot branch) not re-run since
   v0.6.207; **the larger re-measure** against a v0.6.207 baseline (every arena number before v0.6.206 carries ~3 s of dead clock
   per bleed total). *Done when* both reports exist with the sim as the first read.

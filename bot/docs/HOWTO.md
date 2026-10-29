@@ -14,16 +14,27 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   the same trace byte for byte, so `python3 ana-sim-diff.py A B` compares two runs match by match (IDENTICAL / SAME-PLAY /
   DIVERGED with the first differing decision): before / after a change, or version against version (copy `bot/` to scratch with
   the other `elysium-bot.js`). Traces are arena-shaped (`match-NNNN.jsonl`, a `result` row), ~0.5 MB each — keep series in scratch.
-  SUMMARY.md lists post-game ousts and the `zeroPool` count (a bot deciding at pool ≤ 0 before its own oust = a rules fault). When a
-  footprint shows DIVERGED, check whether the two decision sequences realign once one missing row is dropped.
+  SUMMARY.md lists post-game ousts and the `zeroPool` count (a bot deciding at pool ≤ 0 before its own oust = a rules fault; a payment
+  of the last pool that ousts at once leaves no decision at 0 and is not counted — BOARD). When a footprint shows DIVERGED, check whether
+  the two decision sequences realign once one missing row is dropped. A `--decks` key the bot does not embed plays `deck-<key>.json`
+  beside the sim (a test input: the client's menu offers `ARCHETYPES` only).
+- **The V5 precons** — `node gen-precon.js` (`vtes.json` beside it): writes the missing `deck-<key>.json` for every V5 precon and
+  compares the existing ones, and the decks embedded in the bot, by KRCG id and quantity; `--check` writes nothing (exit 1 on a DIFF or
+  a name the bot cannot resolve: the check after a `vtes.json` refresh), `--list` prints the keys (`banuhaqim` … `pathpower`).
+- **The card ledger** — `node gen-card-ledger.js --sim DIR [--sim DIR …]` → `docs/CARDS.md`: per card the coverage verdict, tier,
+  decks, rulings, the suite sections that name it and its uses per deck in the sims; the class map ranks what a wave would build.
+  Regenerate it from the release bytes' runs: the 240-match design and the V5 smoke (each of the 14 new keys:
+  `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`).
 - **The suite, frozen** (the ×3 gate; three snapshots in a row, one run at a time, ~300–420 s each), from the repo root:
   ```
   S=<a scratch dir>; L=r1; D=$S/snap-$L; rm -rf $D; mkdir -p $D/bot; cp elysium-vtes-bord.html $D/     # root client one level up: 154f
   (cd bot && tar --exclude='./serie-*' --exclude='./bench-*' -cf - .) | tar -xf - -C $D/bot
   cd $D/bot && sha256sum elysium-bot.js test-bot-logic.js elysium-cardfx.json > ../sha.txt
-  timeout 600 node test-bot-logic.js > ../suite.log 2>&1; echo "EXIT $?" >> ../suite.log      # run_in_background, then poll
+  timeout 600 node --max-old-space-size=4096 test-bot-logic.js > ../suite.log 2>&1; echo "EXIT $?" >> ../suite.log   # run_in_background, then poll
   ```
-  The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran.
+  The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran. The suite needs more than 2 GB of heap by
+  section 136: where node's default heap is ~2 GB (an 8 GB sandbox: 2,096 MB) it dies out of memory after 136e, v0.6.211's own bytes
+  too — run `node --max-old-space-size=4096 test-bot-logic.js` there (29 Oct).
 - **The canary against main's release** (the second canary run): a scratch dir with `bot/test-bot-canary.js`, `bot/elysium-bot.js`,
   the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; `node test-bot-canary.js` there.
 - **Main's client suite beside the release bytes** (when the wire or the timing changed): a scratch copy of `client/` (never the
@@ -61,7 +72,9 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
 - **A debug bot at a live table** — `node elysium-bot.js --server ws://HOST:8123 --room R --pass P --debug [--no-debug-weights]`;
   refused at a Tournament table; its hand goes to the whole table and the other bots look away.
 - **Coverage** — `node gen-deck-coverage.js deck-<clan>.json --out docs/coverage/deck-coverage-v5-starter-<clan>-black-chantry-2020.md`
-  ("can the bot play this deck?"; a master counts only through `MASTER_KEYS`; the tool has two version sites, bump both).
+  ("can the bot play this deck?"; a master counts only through `MASTER_KEYS`; the tool has two version sites, bump both). Every `fx.`
+  key the bot reads is in its `CLASS` map (v1.1.39); a new one prints the ⚠ line — classify it in the same round. `coverDeck()` is
+  exported: the ledger reads the same verdicts.
 - **cardfx** — `node cardfx-compile.js --report` (needs `vtes.json`); read the inherited / mismatch / X lists; run `test-cardfx.js`
   BEFORE the suite after adding an fx key. Audit curated vs auto before touching a curated field: compile once without the
   overlay and once with, diff the field per curated name. Political cards: `e.ref.pool` (terms), `e.ref.tags`, `e.ref.fx`;
@@ -78,6 +91,8 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   and went through = 0; contests at the clock split blocked / failed; every `stale-answer` row read) · `ana-wait.py` (tempo) ·
   `ana-probe.py` (`probe-order` / `probe-hold` rows) · `ana-cards.py` (uses per card, never-played, untitled plays) ·
   `ana-combat.py` + `ana-combat2.py` (handshake integrity 100 % on a bot-only table, agreement, `hsMiss`) · `ana-rush.py` ·
+  (`ana-windows.py`'s gate of 0 is a server-arena reading: on the hotseat / sim table most bot windows run out, the same at v0.6.211 —
+  BOARD) ·
   `ana-home.py A B` (paired home / blocks / damage / VP) · `ana-open.js` (the opening) · `gen-match-dossier.js <trace>` (one
   reviewable file per match; read Manifests → Endgame / VP → pool trajectories → then hunt) · `gen-trace-harvest.js <dir>`
   (metrics + the price referee: printed vs paid cost; a MISMATCH voids the series) · `gen-batch-review.js` · `gen-null-review.js`.

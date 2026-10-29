@@ -27,15 +27,15 @@ release in, never patch. A need on main's side is a handoff (`docs/handoffs/HAND
 contract first and the bot consumes it next round, or the bot ships first when the change is backward compatible. Never both
 halves in one PR. A bot release = bump `BOT_VERSION` (the line carries the version only; the note goes to the CHANGELOG), copy the
 bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.js`, `elysium-twd-archetypes.json/.js`,
-`START-HERE-BOTS.html`) to the repository root. Never edit the root in place. (The shipped v0.6.211 line still carries its note;
-the version-only line applies from the next release.)
+`START-HERE-BOTS.html`) to the repository root. Never edit the root in place.
 
 ## Gates (the one complete list; HARNESS and the root CLAUDE.md point here; STATUS has the last known green numbers)
 - `node --check` on every changed file.
 - `node test-bot-logic.js` ×3, ALONE, each run in a frozen snapshot (HOWTO: "a frozen snapshot"). ~300–420 s a run: launch it
   detached with `timeout 600` and poll (`run_in_background`); never a foreground `timeout` that can cut a green run. Section 78c
   (pace scaling) was a timing flake (F-Q2; not seen in ~45 runs by 21 Sep): if it fails, rerun once and say so in the PR.
-  The suite needs every owned file beside it — a missing `elysium-bot-arena.js` aborts and looks like a failure.
+  The suite needs every owned file beside it — a missing `elysium-bot-arena.js` aborts and looks like a failure. It also needs a
+  heap over 2 GB: on a ~2 GB default it dies out of memory after section 136 (`--max-old-space-size=4096`, HOWTO).
 - `node test-bot-canary.js` — the §12 grammar contract against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it (the
   read-only copies); without them it skips loudly, never fakes a pass. Run it a second time against main's current release
   (HOWTO: "the canary against main's release").
@@ -199,7 +199,8 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
 - Decks: the four V5 starters (`deck-malkavian/tremere/nosferatu/ventrue.json`) + `hacking` (the tournament benchmark: its prey
   fell first 16/16 in the 4 Aug tests, so a deck-strength claim controls for prey-of-hacking) + `sewer`;
   `wall` is an archetype fixture only. `DECK_STRATEGY` carries each manifest (the reviewer's yardstick) and `combat` posture. Seven
-  decks are also embedded in `elysium-bot.js` (duplicated; BOARD).
+  decks are also embedded in `elysium-bot.js` (duplicated; BOARD). The 14 other V5 precons are `deck-<key>.json` (`gen-precon.js`):
+  test inputs the sim plays, not in the client's menu until their rows in `docs/CARDS.md` are playable (BOARD, the V5 waves).
 - The hidden-hand design (K0 discipline priors → K1 deck templates → K2 odds; the TWD profile and archetype labels) is
   `docs/specs/spec-knowledge-layer.md`.
 
