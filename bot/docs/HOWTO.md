@@ -20,7 +20,9 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   beside the sim (a test input: the client's menu offers `ARCHETYPES` only).
 - **The V5 precons** — `node gen-precon.js` (`vtes.json` beside it): writes the missing `deck-<key>.json` for every V5 precon and
   compares the existing ones, and the decks embedded in the bot, by KRCG id and quantity; `--check` writes nothing (exit 1 on a DIFF or
-  a name the bot cannot resolve: the check after a `vtes.json` refresh), `--list` prints the keys (`banuhaqim` … `pathpower`).
+  a name the bot cannot resolve: the check after a `vtes.json` refresh), `--list` prints the keys (`banuhaqim` … `pathpower`). Each
+  precon the bot does not embed carries its combat posture (`combat`: chase / snipe / wave, D-102) from the generator's `POSTURE`
+  table, checked like the cards; `--posture` writes the table's posture into the existing files (v1.1.0).
 - **The card ledger** — `node gen-card-ledger.js --sim DIR [--sim DIR …]` → `docs/CARDS.md`: per card the coverage verdict, tier,
   decks, rulings, the suite sections that name it and its uses per deck in the sims; the class map ranks what a wave would build.
   Regenerate it from the release bytes' runs: the 240-match design and the V5 smoke (each of the 14 new keys:
