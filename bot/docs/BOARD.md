@@ -24,11 +24,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   count doubles, decks and `DECK_STRATEGY` become a data file (seven decks embedded in `elysium-bot.js`, six duplicated in
   `deck-*.json`; `gen-precon.js --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98;
   `CARDS.md`; HOWTO.
-- **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back to an acting
-  bot that passed, two sources a round, a dodge / steal / combat ends in an additional pair, strike cards that bring one, a human's
-  declaration after Damage); clan and sect requirements in the finders that still read the discipline only (bleed cards, modifiers,
-  reactions, allies, politics: the Path precons); the amber cards (Sculpt the Flesh [PRO], the Sword's cancel and unlock, Kevlar's
-  2 against guns, Invigorate [dom] and off a rush, the strength+N weapons). *Done when* each is built and section-tested, or ruled
+- **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
+  round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
+  and Path requirements in every finder; the amber cards; the latent items. *Done when* each is built and section-tested, or ruled
   out. Docs: RULINGS R-39, D-99.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)

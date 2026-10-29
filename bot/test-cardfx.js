@@ -322,7 +322,8 @@ ok(fx.counts.libLock >= 140,
   let rL = 0; for(const n in fx.lib) if(fx.lib[n].req && fx.lib[n].req.rangeLong) rL++;
   let bR = 0; for(const n in fx.lib) if(fx.lib[n].req && fx.lib[n].req.beforeRangeDetermined) bR++;
   let nF = 0; for(const n in fx.lib) if(fx.lib[n].req && fx.lib[n].req.notFirstRound) nF++;
-  ok(rC === 20 && rL === 21 && bR === 84 && nF === 4, 'req flag volumes (' + rC + '/' + rL + '/' + bR + '/' + nF + '): the raw 410-Combat-type scan found 19/17/83/4, but the compiler correctly also tags EQUIPMENT carrying the same range-restricted text (Sniper Rifle, RPG Launcher, Smoke Grenade, Spike-Thrower, Starshell Grenade Launcher, Garrote) and one Reaction (Foresee) -- req doesn\'t filter by type, and shouldn\'t: a sniper rifle IS long-range-restricted regardless of its own card type');
+  ok(fx.lib['Walk of Flame'].req.notFirstRound === true && !(fx.lib['Shotgun Ritual'].req && fx.lib['Shotgun Ritual'].req.notFirstRound), 'req.notFirstRound (compiler v1.9.4): Walk of Flame ("Not usable during the first round.") tagged; Shotgun Ritual, which lifts the restriction, not');
+  ok(rC === 20 && rL === 21 && bR === 84 && nF === 9, 'req flag volumes (' + rC + '/' + rL + '/' + bR + '/' + nF + '): the raw 410-Combat-type scan found 19/17/83/4 (v1.9.4: + 5 "during the first round": 9), but the compiler correctly also tags EQUIPMENT carrying the same range-restricted text (Sniper Rifle, RPG Launcher, Smoke Grenade, Spike-Thrower, Starshell Grenade Launcher, Garrote) and one Reaction (Foresee) -- req doesn\'t filter by type, and shouldn\'t: a sniper rifle IS long-range-restricted regardless of its own card type');
   const ctl = fx.lib['Call the Lamprey'].modes || [];
   ok(ctl.find(m => m.at === 'obt').fx.stealBlood === undefined && ctl.find(m => m.at === 'OBT').fx.stealBlood === 1,
      'Call the Lamprey curated: [obt] (ally-only, unverifiable) emptied, [OBT] (unrestricted "opposing minion") kept clean');

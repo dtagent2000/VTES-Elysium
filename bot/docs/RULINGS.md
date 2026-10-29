@@ -44,7 +44,7 @@ grinder = experienced. Where a line was superseded, the current one stands and s
 - **R-28** (2026-10-16, rulebook 6.4.3 + Johan, v0.6.203) — The acting minion declares its strike first; between bots the answering bot peeks at it before choosing.
 - **R-29** (2026-10-16, Deep Song text) — The rushed vampire is the acting minion in that combat: it speaks first in the handshake and the human phase walk.
 - **R-30** (2026-10-16, card rulings, v0.6.203) — A borne Murder of Crows and a played Carrion Crows both land every round.
-- **R-39** (2026-10-29, rulebook, card texts, rulings, v0.6.213) — V5 wave 1's readings, sources in `specs/spec-v5-wave1-2026-10-29.md` §1: additional strikes after the first pair, the acting minion first, one limited source a round (Quickness [CEL] outside it); aggravated damage is prevented first, by Kevlar Vest and Guardian Angel too; Wall of Filth is prevention; Villein +1 pool per Villein there; Rutor's Hand's damage is its own price.
+- **R-39** (2026-10-29, rulebook, card texts, rulings, v0.6.213) — V5 wave 1's readings, sources in `specs/spec-v5-wave1-2026-10-29.md` §1: additional strikes after the first pair, the acting minion first, one limited source per minion a round (Quickness [CEL] outside it); Kevlar Vest and Guardian Angel prevent aggravated damage; Wall of Filth is prevention; Villein +1 pool per Villein there, payable at play; Rutor's Hand's damage is its own price.
 
 ### Politics & referendums
 - **R-31** (2026-09-15, rulebook + the client's menu, journal R3) — Locked titled minions still vote; minions in torpor do not; title votes come from the crypt data (`title` / `votes`), never a title table.

@@ -1856,7 +1856,7 @@
      }
     }
    ],
-   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): 'A vampire can play only one Quickness each round. [cel] Additional strike (limited). [CEL] Additional strike that does not count against the limit.' Ruling: [CEL] can be played before or after a limited additional strike [LSJ 20001206] [ANK 20211124]. The auto tier wrote an entry-level `limited` that also covered [CEL]. addStrikeLimited marks the mode that counts against the one-limited-source-per-round limit; oncePerRound is the card's own one-Quickness-each-round rule."
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): 'A vampire can play only one Quickness each round. [cel] Additional strike (limited). [CEL] Additional strike that does not count against the limit.' Ruling: [CEL] can be played before or after a limited additional strike [LSJ 20001206] [ANK 20211124]. The auto tier wrote an entry-level `limited` that also covered [CEL]. addStrikeLimited marks the mode that counts against the one-limited-source-per-round limit; oncePerRound is the card's own one-Quickness-each-round rule. Not modelled (amber, spec-v5-wave1 §4): the bot takes one additional strike a round per side, so [CEL] never stacks with a limited source yet."
   },
   "Pursuit": {
    "t": [
@@ -1997,7 +1997,7 @@
    "modes": [
     {
      "at": "tha",
-     "dominated": "the vampire takes 1 unpreventable aggravated damage: a ready vampire goes to torpor, where the unlock is worth nothing",
+     "dominated": "the vampire takes 1 unpreventable aggravated damage: a ready vampire goes to torpor, and the unlock pays only after it leaves torpor (an action)",
      "fx": {
       "actStealth": 1,
       "selfDmg": 1,
@@ -2016,7 +2016,7 @@
      }
     }
    ],
-   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): '+1 stealth action. [tha] Put this card on this vampire, locked; this vampire takes 1 unpreventable environmental aggravated damage. During your minion phase, this vampire can lock this card to unlock. A vampire can have only one Rutor's Hand. [THA] As above, and this vampire can burn 3 blood to be immune to this aggravated damage.' Cost 1 blood (inherited). The class map listed it with the aggravated strikes; the aggravated damage is its own price. [tha] is dominated (a self-torpor for an unlock the vampire cannot use) and never played; [THA] burns the 3 blood for immunity. actStealth (the printed '+1 stealth action') rides each mode: there is no mode without a discipline. lockToUnlock = once each minion phase the bearer locks the card to unlock (it unlocks with my cards at my unlock phase)."
+   "note": "29 Oct 2026, V5 wave 1 (RULINGS D-98): '+1 stealth action. [tha] Put this card on this vampire, locked; this vampire takes 1 unpreventable environmental aggravated damage. During your minion phase, this vampire can lock this card to unlock. A vampire can have only one Rutor's Hand. [THA] As above, and this vampire can burn 3 blood to be immune to this aggravated damage.' Cost 1 blood (inherited). The class map listed it with the aggravated strikes; the aggravated damage is its own price. [tha] is dominated (a self-torpor: the unlock pays only after a leave-torpor action) and never played; [THA] burns the 3 blood for immunity. actStealth (the printed '+1 stealth action') rides each mode: there is no mode without a discipline. lockToUnlock = once each minion phase the bearer locks the card to unlock (it unlocks with my cards at my unlock phase)."
   },
   "Sword of the Archangel": {
    "t": [

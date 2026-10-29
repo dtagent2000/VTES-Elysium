@@ -11016,20 +11016,20 @@ async function connectWithRetry(client, tries = 30){
         u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.notes = []; u.note = t => u.notes.push(t); u.table = {}; return u; };
       const V = (name, blood, extra) => Object.assign({ id: 'v-' + name.replace(/\W/g, ''), name, kind: 'crypt', zone: 'ready', locked: false, blood, cap: 6, attached: [] }, extra || {});
       const duel159 = o => {   // the section 141 / 146 relay: two bots, every log / chat / say line reaches the other `delay` ms later; A = the acting bot (Hanna), D = the bot that blocked it (Viktor)
-        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }].concat(o.human ? [{ seat: 3, name: 'Johan', online: true }] : []);   // o.human: a watched duel (a seated human who is not fighting)
         const mk = (name, seat, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: o.askSecs || 3, twdKnow: 0, log: () => {} }, extra || {}));
           u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = []; u.decs = [];
           u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); if(t === 'bot:decide' && m) u.decs.push(m); };
           return u; };
         const A = mk('Hanna', 1, o.aOpts), D = mk('Viktor', 2, o.dOpts);
         const wire = (from, to) => { from.send = m => {
-          if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0); return; }
+          const relay = d => { if(o.sync){ if(!to.out) to._dispatch(d); } else setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0); };   // o.sync: delivered inside the sender's send, as the sim and the hotseat table do
+          if(m && m.t === 'say'){ relay({ t: 'say', i: m.i, who: from.o.name }); return; }
           if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
           const txt = m.t === 'log' ? strip159(m.html) : String(m.msg || '');
           from._evRecord(from.o.name, txt, m.t, true);
           from.lines.push({ at: Date.now(), tier: m.t, txt });
-          const d = Object.assign({}, m, { who: from.o.name });
-          setTimeout(() => { if(!to.out) to._dispatch(d); }, o.delay || 0);
+          relay(Object.assign({}, m, { who: from.o.name }));
         }; };
         wire(A, D); wire(D, A);
         const aV = Object.assign({ id: 'a1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4, attached: [] }, o.aV || {});
@@ -11090,9 +11090,9 @@ async function connectWithRetry(client, tries = 30){
         u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : {}; u._xr.aggrHands = 'Nathan Turner (G6)'; u.hand = [];
         const pk = u._strikePick(nt, false);
         ok(pk.kind === 'fist' && pk.aggr === true && pk.out === 1 && / \(aggravated\)$/.test(pk.what || ''), '159b _strikePick: under Claws of the Dead the fist is aggravated (' + JSON.stringify([pk.kind, pk.aggr, pk.what]) + ')');
-        u._xr.aggrHands = null; u._combatOppName = 'Gargoyle Slave'; u.hand = ['Sculpt the Flesh'];
-        const sa = u._bestStrikeFor(wh); u._combatOppName = null;
-        ok(!!(sa && sa.name === 'Sculpt the Flesh'), '159b ...against an ally the aggravated card is still a strike for 1, no longer outranking a bigger plain one (_aggrWorth)');
+        u._xr.aggrHands = null; const pd = V('Prentis Derby', 4); u.board = [pd]; u.hand = ['Sculpt the Flesh', 'Song in the Dark'];
+        u._combatOppName = 'Anxo Vilela (G6)'; const sv = u._bestStrikeFor(pd); u._combatOppName = 'Gargoyle Slave'; const sa = u._bestStrikeFor(pd); u._combatOppName = null;
+        ok(!!(sv && sv.name === 'Sculpt the Flesh' && sa && sa.name === 'Song in the Dark'), '159b _aggrWorth: Prentis Derby ([ani] [pro]) strikes a vampire with Sculpt the Flesh (aggravated 1 outranks plain 2), an ally with Song in the Dark [ani] for 2 (' + JSON.stringify([sv && sv.name, sa && sa.name]) + ')');
         const mal = V('Malachi (G7)', 4), sword = { at: null, fx: { strBonus: 1, aggr: true } };
         ok(u._modeStrikeDmg(sword, mal) === 2 && u._modeStrikeDmg(sword, Object.assign({}, mal, { name: 'X' })) === 2, '159b _modeStrikeDmg: Sword of the Archangel strikes for strength+1 = 2 (the auto tier had no damage)');
         const ex = n => IF9(u, '_entryReqOk') ? u._entryReqOk(u.fxLookup(n).e, n === 'Sword of the Archangel' ? mal : V('Marialena (G6)', 4)) : 'x';
@@ -11210,6 +11210,86 @@ async function connectWithRetry(client, tries = 30){
         setTimeout(() => { u._onLog('Johan', 'Lisa gets an additional strike.'); }, 50);
         const pd = await u._phaseDamage();
         ok(pd === 'extra' && tw.some(f => f.ph === 4) && !tw.some(f => f.ph === 5), '159m the human declares in the Damage step: \u2019extra\u2019 -- the additional strike first, no ph 5 yet (got ' + JSON.stringify({ pd, writes: tw }) + ')'); }
+
+      // o) Villein's cost must be payable when it is played [ANK 20210714]: at 1 pool no third Villein on a vampire that bears two -- another host, or the card is held
+      { const mkV = (pool, extraHost) => { const u = mkU159('O9'); u.pool = pool;
+          const kh = V('Khadija Al-Kindi (G6)', 6, { cap: 6, attached: ['vl1', 'vl2'] }), vl1 = { id: 'vl1', name: 'Villein', kind: 'lib', zone: 'ready', locked: false }, vl2 = { id: 'vl2', name: 'Villein', kind: 'lib', zone: 'ready', locked: false };
+          u.board = [kh, vl1, vl2].concat(extraHost ? [V('Warmaksan (G6)', 5, { cap: 6 })] : []); u.hand = ['Villein']; return u; };
+        const p1 = mkV(1, false), r1 = IF9(p1, '_villeinPlan') ? p1._villeinPlan('Villein') : 'x';
+        const p2 = mkV(1, true), r2 = IF9(p2, '_villeinPlan') ? p2._villeinPlan('Villein') : 'x';
+        const p3 = mkV(2, false), r3 = IF9(p3, '_villeinPlan') ? p3._villeinPlan('Villein') : 'x';
+        ok(r1 === null && !!(r2 && r2.host && r2.host.name === 'Warmaksan (G6)' && r2.extra === 0) && !!(r3 && r3.host && r3.host.name === 'Khadija Al-Kindi (G6)' && r3.extra === 2),
+           '159o Villein at 1 pool: no third copy on Khadija (it costs 2) -- held, or Warmaksan (no copy, no cost); at 2 pool the third is payable (' + JSON.stringify([r1 && r1.host ? r1.host.name : r1, r2 && r2.host ? r2.host.name : r2, r3 && r3.host ? [r3.host.name, r3.extra] : r3]) + ')'); }
+
+      // p) a HUMAN acting minion decides first (R-39): the bot that would take an additional strike asks before its declaration, and once more after it (the impulse returns)
+      { const u = mkU159('P9'); const me = V('Siarhei Levchenko (G6)', 4, { cap: 5 }); u.board = [me]; u.hand = ['Quickness'];
+        u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'P9', online: true, bot: true }];
+        u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = me; u._range = 'close'; u.o.phaseSecs = 1;
+        u._phasesOn = () => true; u._phaseOppPlayer = () => 'Johan'; u._combatIActing = () => false; u._hsOn = () => false; u._cWrite = () => {};
+        const asked = []; u.chat = t => asked.push({ t: String(t), at: u.sent.length });
+        u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : null; if(u._xr){ u._xr.p1seen = true; }
+        let terr = null; try { if(IF9(u, '_xBeforeLine')) await Promise.race([u._xBeforeLine(me), sleep(6000)]); } catch(e){ terr = e.message; }
+        const iDecl = u.sent.findIndex(m => m && m.t === 'log' && /gets an additional strike\.$/.test(strip159(m.html)));
+        const q1 = asked.find(a => /^Any additional strikes\?/.test(a.t));
+        ok(!terr && iDecl >= 0 && !!q1 && q1.at <= iDecl,
+           '159p against Johan, the acting minion: \u201cAny additional strikes?\u201d comes before Siarhei\u2019s declaration (v0.6.213 before the grading: the bot declared first; got ' + JSON.stringify({ terr, iDecl, asked: asked.map(a => a.t + '@' + a.at) }) + ')'); }
+
+      // q) the egress review's race: a SYNCHRONOUS relay (the sim / hotseat delivery) and a watched duel (a seated human, the beat) -- the answering bot declares while the acting bot is between its round line and its press wait; the acting bot still takes the strike, no lost line
+      { const g = duel159({ sync: true, dV: { id: 'd1', name: 'Siarhei Levchenko (G6)', blood: 5, cap: 5 }, dHand: ['Quickness'] });
+        await g.run();
+        const ar = row1(g.A), dr = row1(g.D);
+        ok(dr.xMine === 1 && ar.takenX === 1 && g.aV.blood === 2 && g.dV.blood === 4 && !ar.hsMiss && !dr.hsMiss,
+           '159q a synchronous relay: Siarhei declares late, Ryan still takes the additional strike -- 4 -> 2, no lost line (the review\u2019s race: takenX 0, both safety nets; got ' + JSON.stringify({ x: dr.xMine, t: ar.takenX, a: g.aV.blood, d: g.dV.blood, miss: [ar.hsMiss, dr.hsMiss] }) + ')');
+        const w = duel159({ delay: 5, human: true, aOpts: { paceMs: 400, chatPaceMs: 0 }, dOpts: { paceMs: 400, chatPaceMs: 0 }, dV: { id: 'd1', name: 'Siarhei Levchenko (G6)', blood: 5, cap: 5 }, dHand: ['Quickness'] });
+        await w.run();
+        const war = row1(w.A), wdr = row1(w.D);
+        ok(wdr.xMine === 1 && war.takenX === 1 && w.aV.blood === 2 && !war.hsMiss && !wdr.hsMiss,
+           '159q ...a watched duel (Johan seated, a 400 ms beat): the same (got ' + JSON.stringify({ x: wdr.xMine, t: war.takenX, a: w.aV.blood, miss: [war.hsMiss, wdr.hsMiss] }) + ')'); }
+
+      // r) Hidden Strength's X against aggravated damage (D-22: pay to prevent the whole hit, aggravated first) -- X was sized on plain damage only
+      { const u = mkU159('R9'); const me = V('Madison (G6)', 3); u.board = [me]; u.hand = ['Hidden Strength'];
+        const pv = { idx: 0, name: 'Hidden Strength', n: 1, _val: 1, cost: null, x: true, press: false };
+        const t = IF9(u, '_playPrevent') ? u._playPrevent(me, pv, 0, 2) : null;
+        ok(!!t && t.taken === 0 && t.aggr === 0 && me.blood === 2 && pv.n === 2, '159r Hidden Strength against 2 aggravated damage: X = 1, it prevents both -- Madison 3 -> 2 (got ' + JSON.stringify({ t, blood: me.blood, n: pv.n }) + ')'); }
+
+      // s) my aggravated strike is a finisher in the dodge rule against a VAMPIRE only: against an ally the known 2 is dodged (D-30)
+      { const u = mkU159('S9'); u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'S9', online: true, bot: true }];
+        const me = V('Prentis Derby', 4); u.board = [me]; u.hand = ['Sculpt the Flesh', 'Form of Mist'];
+        u._inCombat = true; u._combatOppName = 'Gargoyle Slave'; u._combatMyVamp = me; u._oppStrike = { vamp: 'Gargoyle Slave', dealt: 2 };
+        const decs = []; u.onEvent = (t, m) => { if(t === 'bot:decide' && m && m.q === 'combat-strike') decs.push(m); };
+        let terr = null; try { await Promise.race([u._resolveCombatRound(me), sleep(6000)]); } catch(e){ terr = e.message; }
+        const d = decs[0] || {};
+        ok(!terr && !!d.ctx && !d.ctx.mineAggr && !!d.out && d.out.dodge === true, '159s against an ally (Gargoyle Slave) Sculpt the Flesh is no finisher: the known 2 is dodged with Form of Mist (got ' + JSON.stringify({ terr, mineAggr: d.ctx && d.ctx.mineAggr, out: d.out }) + ')'); }
+
+      // t) a declaration in the Damage step does not reopen the strikes when my vampire is out of the combat (four more Damage waits, no ph 5)
+      { const u = mkU159('T9'); u._inCombat = true; u.o.phaseSecs = 1; u._phasesOn = () => true; u._phaseOppPlayer = () => 'Johan'; u._combatIActing = () => true;
+        u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : { p1: true }; u._xr.p1 = true; u._rnd = { dealt: 1 }; u._combatOppName = 'Lisa'; u._combatMyVamp = V('Ryan (G6)', 0, { zone: 'torpor' });
+        const tw = []; u._cWrite = f => tw.push(f);
+        setTimeout(() => { u._onLog('Johan', 'Lisa gets an additional strike.'); }, 50);
+        const pd = IF9(u, '_phaseDamage') ? await u._phaseDamage() : 'x';
+        ok(pd !== 'extra' && tw.some(f => f.ph === 5), '159t ...Ryan in torpor: the declaration does not reopen the strikes -- ph 5 (got ' + JSON.stringify({ pd, writes: tw }) + ')'); }
+
+      // u) a human whose first strike was the silent default declares: after the first pair (p1) the declared strike is the additional one -- not this round's first, not the next round's
+      { const u = mkU159('U9'); const me = V('Ryan (G6)', 4); u.board = [me]; u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = me;
+        u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : null; if(u._xr) u._xr.p1 = true;
+        u._onLog('Johan', 'Lisa gets an additional strike.'); u._onLog('Johan', 'Lisa strikes for 2 aggravated damage.');
+        const xs = IF9(u, '_awaitOppXStrike') ? await u._awaitOppXStrike(50) : null;
+        ok(!u._oppStrike && !!(xs && xs.aggr === 2), '159u ...after a silent first pair: the declared strike is the additional one (got ' + JSON.stringify({ first: u._oppStrike || null, xs }) + ')'); }
+
+      // v) Rutor's Hand through the turn: an UNDIRECTED Block? (prey and predator), the card's 1 and the immunity's 3 set aside at the announce
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'v159', pass: 'p', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Petra', online: true, bot: true }]; u.table = {};
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {};
+        u.pool = 20; const wa = V('Warmaksan (G6)', 5, { cap: 6, locked: false }); u.board = [wa]; u.hand = ["Rutor's Hand"]; u.unc = []; u.turnSeat = 2;
+        const asks = []; const ob = u._askBlock.bind(u); u._askBlock = (q, o) => { const pr = ob(q, o); asks.push({ und: !!(u._ask && u._ask.undirected), n: u._ask && u._ask.eligible ? u._ask.eligible.size : 0, parked: u._actingVamp && u._actingVamp.parked ? u._actingVamp.parked.blood : 0, blood: wa.blood }); return pr; };
+        let terr = null; try { await Promise.race([u._playTurn(), sleep(8000)]); } catch(e){ terr = e.message; }
+        const rh = u.board.find(c => c && c.rutor), a0 = asks[0] || {};
+        ok(!terr && a0.und === true && a0.n === 2 && a0.parked === 4 && a0.blood === 1 && !!rh && rh.locked === true && wa.blood === 1,
+           '159v Rutor\u2019s Hand through the turn: an undirected Block? (prey and predator), 4 blood set aside at the announce, the card on Warmaksan, locked: 5 -> 1 (got ' + JSON.stringify({ terr, asks, card: !!rh, blood: wa.blood }) + ')'); }
+
+      // w) the Wall of Filth play line is a card in play, not a prevention (the event log)
+      { const u = mkU159('W9'); const k3 = u._evClassify('Hanna', 'Nathan Turner (G6) puts Wall of Filth [PRO] in play (on itself): it can burn it to prevent 2 damage in combat.');
+        ok(!!k3 && k3.kind === 'card-played' && k3.card === 'Wall of Filth' && k3.vamp === 'Nathan Turner (G6)', '159w _evClassify: the Wall of Filth line is a card in play by its bearer (got ' + JSON.stringify(k3) + ')'); }
 
       // n) the coverage verdicts of the wave's cards in their decks
       { let cov = null; try { cov = require('./gen-deck-coverage.js'); } catch(e){}
