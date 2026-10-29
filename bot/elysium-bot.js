@@ -3792,7 +3792,7 @@ class Bot {
     let best = null;
     (this.hand || []).forEach((nm, idx) => {
       const h = this.fxLookup(nm); if(!h || h.kind !== 'lib' || (h.e.t || []).indexOf('combat') < 0) return;
-      if(!this._roundReqOk(h.e)) return;   // v0.6.214: Riposte-class 'not usable on the first round' (wave 1's re-review: the finder read no requirement)
+      if(h.e.req && h.e.req.notFirstRound && !this._pastFirstRound()) return;   // v0.6.214: Riposte's 'not usable on the first round of combat' (wave 1's re-review: the finder read no requirement). Not the entry-level 'before range' flag: on Alpha Glint the auto tier lifted a superior-only sentence to the card -- its [ani][for] is a plain Strike: combat ends
       const cost = (h.e.cost && h.e.cost.blood) | 0; if(cost > (vamp.blood | 0)) return;
       (h.e.modes || []).forEach(mo => { if(!mo.fx || !mo.fx.strikeCE || !this._modeUsableBy(mo, vamp)) return;
         const cand = { idx, name: h.name, cost, unlock: !!mo.fx.unlock };
@@ -6831,7 +6831,7 @@ class Bot {
       const rank = f => (f.stealGrant | 0) + (f.handBonusCombat | 0) + (f.strengthSet | 0) + (f.strengthCombat | 0) + (f.pressOpt ? 0.5 : 0);
       let best = null;
       (h.e.modes || []).forEach(mo => { const f = mo.fx; if(!f || !this._modeUsableBy(mo, vamp)) return;
-        if(!(f.stealGrant > 0 || f.handBonusCombat > 0 || f.strengthSet > 0 || f.strengthCombat > 0)) return;
+        if(!(mo.fx.stealGrant > 0 || mo.fx.handBonusCombat > 0 || mo.fx.strengthSet > 0 || mo.fx.strengthCombat > 0)) return;   // the four keys spelled out (gen-deck-coverage scans fx.<key> reads)
         if(!best || rank(f) > rank(best.fx)) best = { idx, name: h.name, at: mo.at || '', cost, fx: f, key, oncePerCombat: !!h.e.oncePerCombat, oncePerRound: !!h.e.oncePerRound }; });
       if(best && !out.some(c => c.key === key)) out.push(best);
     });
