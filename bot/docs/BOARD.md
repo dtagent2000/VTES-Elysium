@@ -1,4 +1,4 @@
-# BOARD — the open asks (29 Oct 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (30 Oct 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -17,17 +17,33 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 waves**: round 0 (v0.6.212) built the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim
   plays them; the client's menu does not offer them), the coverage class map and the ledger (`docs/CARDS.md`). Waves by effect class
-  as `CARDS.md`'s class map ranks them (Johan, 29 Oct: RULINGS D-98). Wave 1 (v0.6.213, D-99): Villein, the additional and the
-  aggravated strikes, Wall of Filth, Rutor's Hand, Invigorate. Next, in the class map's order: the masters still tabled blind, the
-  bundled maneuver / press combat cards, the free block bars, the 22 cards with no effect data, the unmodelled action cards. A deck
+  as `CARDS.md`'s class map ranks them (Johan, 29 Oct: RULINGS D-98). Wave 1 (v0.6.213, D-99): the additional and aggravated
+  strikes. Wave 2 (v0.6.214, D-102 / D-103): the combat's first steps. Then: the masters still played blind (wave 3, where Johan's rule of 14 July — always
+  play a master, even uncurated — is revisited), the maneuver / press grants from cards played outside combat with the rush cards, the free block bars, the 22 cards with no effect data, the unmodelled action cards. A deck
   joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its rows are playable and it holds up in the sim; before the deck
   count doubles, decks and `DECK_STRATEGY` become a data file (seven decks embedded in `elysium-bot.js`, six duplicated in
-  `deck-*.json`; `gen-precon.js --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98;
+  `deck-*.json`; `gen-precon.js --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102;
   `CARDS.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
   round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
-  and Path requirements in every finder; the amber cards; the first-round strikes (Walk of Flame); Soul Burn [THA] read 1R (prints 2R); the latent items. *Done when* each is built and section-tested, or ruled
+  and Path requirements in every finder; the amber cards; the latent items. *Done when* each is built and section-tested, or ruled
   out. Docs: RULINGS R-39, R-40, D-99.
+- **V5 wave 2's riders** (`specs/spec-v5-wave2-2026-10-29.md` §4): counters against a human (the phase walk reads a human's
+  maneuver after the bot decided) and for the wave / snipe postures; the strike choice (`_strikePick` takes a strike card over a
+  stronger pumped fist, so the look-ahead keeps the pump); the amber riders (Rage of Apedemak's hand size, Frenzy and Path icon,
+  Hunger of Marduk in an additional pair, Soul Burn's opposing weapons at 0, Monstrous Form's superior action); the opponent's pumps
+  unread before the strike; a gun's maneuver binding its strike outside Immortal Grapple; the Brujah crypt's printed '+1 strength'
+  (Theo Bell, Valeriya Zinovieva) unread; the auto tier's entry-level
+  'before range' flag on superior-only sentences (Alpha Glint, Bloodform, Gemini's Mirror, Eyes of Blades, Outside the Hourglass:
+  their inferior strike modes fail closed in the strike / press / maneuver finders) and two misreadings (Sanguine Entrapment and
+  Skin Trap stop the OPPONENT's dodge / combat ends, compiled as their own) — curation, no deck holds them. *Done when* each is built
+  and section-tested, or ruled out. Docs: RULINGS R-41, D-103.
+- **The weapon's maneuver** (wave 2's second review; older than the round): the compiler writes `maneuver: true` for a weapon,
+  `_equipCombatOption` reads a number — the Tremere's .44 Magnum has never maneuvered, so the gun halves of the strike-binding rules
+  never run (45c has no positive case). Neighbours: a weapon's strike sends a clone and a play row every time (the table model
+  counts the gun again); the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait returns an earlier
+  round's pending taken line, and `_xLossSum` sums nothing (a later line replaces the pending one). *Done when* each is fixed with a
+  positive test and its footprint read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's strategy helpsheets and
   deck guides (blackchantry.com, its tutorials: the Fifth Edition precons — Banu Haqim, Brujah, Gangrel, the Ministry, Ravnos,
   Salubri, Tzimisce, Lasombra, Hecata — and the First Blood / starter guides) as the baseline for a deck's strategy and tactics,
@@ -65,7 +81,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   describes it and three rounds have one. Docs: HARNESS.
 - **Ask main once**: (a) may the bot's gates read the root's released client / server / protocol instead of the copies in `bot/`
   (no drift, 1.8 MB fewer); (b) has the hotseat bridge, or could it expose, a pure `step(state, action)`; (c) the bot-emitted frozen
-  lines owed to §12 + the canary (STATUS lists them) — all three in `handoffs/HANDOFF-to-main-2026-10-20-docs-diet.md`; (d) the
+  lines owed to §12 + the canary (STATUS lists them; v0.6.214 adds `gets no strike this round`) — all three in `handoffs/HANDOFF-to-main-2026-10-20-docs-diet.md`; (d) the
   client locks all helpers on while a bot is seated until the bot proves a whole combat on lines alone — ask for that step when
   ready. *Done when* main has answered (a)–(c). Docs: spec §8 Q4, §6.1; RULINGS D-62, D-94.
 - **History comments in `elysium-bot.js`** (222 KB citing versions and dates): trim to trap comments ("why" + a rule id) in

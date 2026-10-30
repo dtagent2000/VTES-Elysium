@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.40 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.41 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -154,6 +154,10 @@ const CLASS = {
   burnPrevent: 'play', burnPreventNonAggr: 'paired',   // Wall of Filth: put in play in the before-range step (_playWallOfFilth), burned in the damage step (_wallBurn)
   poolFromHost: 'play', poolFromHostMin: 'paired', hostCopyCost: 'paired',   // Villein: the master loop's villein branch (_villeinPlan / _villeinResolve) -- MASTER_KEYS below
   lockToUnlock: 'play', selfAggrImmuneBlood: 'paired',   // Rutor's Hand: the action (_bestRutorFor, the rutor template) and the unlock (_maybeActAgain's board source); its dominated [tha] mode is set aside (judgeLib)
+  /* v1.1.41 (29 Oct 2026, bot v0.6.214, V5 wave 2, RULINGS D-102): the wave's keys. */
+  stealGrant: 'contextual', handBonusCombat: 'contextual', strengthSet: 'contextual', strengthCombat: 'contextual',   // the before-range step (_brCands / _beforeRangePlay): Hunger of Marduk's steal this round, Rage of Apedemak's hand bonus, Torn Signpost's strength, Form of the Wolf / Monstrous Form's +1 -- the pump@beforeRange special case below mirrors it
+  noPreventDisc: 'meta',   // Soul Burn's rider ('cannot be prevented by cards requiring Fortitude'): read by the STRUCK bot's prevention finder from the strike line's card (_noPreventDiscIn), never a play path of its own
+  maneuverTo: 'paired', pressOpt: 'paired',   // riders: a maneuver's only direction (Slam [POT]: to close -- _bestManeuverFor skips the other way, _bestCommitManeuverFor takes it), the optional press a maneuver or a pump brings (Flash [CEL], Resist Earth's Grasp, Form of the Wolf [PRO]: _bundledPress)
   press: 'contextual',   // v1.1.5: consumed via the press@ special-case below (Apportation's clean standalone shape only) -- 'contextual' here only silences the unknown-key warning for the excluded instances (co-located maneuver/strike/stealBlood, or an unverifiable req flag)
 };
 const cls = k => String(CLASS[k] || '');
@@ -258,7 +262,7 @@ function modeConsumed(mo, e){
      from its own consumer is worse than no map (the v1.1.0 bleed:'paired' lesson).   */
   if (typeof f.stealBlood === 'number' && !f.maneuver && !f.press
       && (e && (e.t || []).includes('combat'))
-      && !(e && e.req && (e.req.beforeRangeDetermined || e.req.notFirstRound)))
+      && !(e && e.req && e.req.beforeRangeDetermined))   // v1.1.41 (bot v0.6.214): 'not usable during the first round' is read (the round number) -- such a card plays from round 2
     return { ok: true, via: 'stealBlood@strike' };
   /* v1.1.3 (Johan's combat GO, strike-bonus family): strike is contextual too, same
      shape as stealBlood exactly -- _bestStrikeFor gained the identical req-flag +
@@ -267,8 +271,20 @@ function modeConsumed(mo, e){
      the instant any of them entered a deck's coverage run.                          */
   if ((typeof f.strike === 'number' || typeof f.handBonus === 'number' || typeof f.strBonus === 'number') && !f.maneuver && !f.press   // v1.1.37: + handBonus (Roundhouse class); v1.1.40: + strBonus (strength+N)
       && (e && (e.t || []).includes('combat'))
-      && !(e && e.req && (e.req.beforeRangeDetermined || e.req.notFirstRound)))
+      && !(e && e.req && e.req.beforeRangeDetermined))   // v1.1.41: notFirstRound is read (Walk of Flame from round 2)
     return { ok: true, via: 'strike' };
+  /* v1.1.41 (bot v0.6.214, V5 wave 2): a strike card whose optional maneuver goes to close range only (Slam [POT]), mirroring
+     _bestCommitManeuverFor -- a counter to their maneuver to long that commits the round's strike to the card. Its only caller asks for
+     'close'; a range-restricted strike and a before-range card are no maneuver cards. */
+  if (f.maneuver && f.maneuverTo === 'close' && (typeof f.strike === 'number' || typeof f.handBonus === 'number' || typeof f.strBonus === 'number')
+      && !f.press && !f.restrictHandStrike && (e && (e.t || []).includes('combat'))
+      && !(e && e.req && (e.req.beforeRangeDetermined || e.req.rangeClose || e.req.rangeLong)))
+    return { ok: true, via: 'maneuver@commit-strike' };
+  /* v1.1.41: the before-range step, mirroring _brCands -- a COMBAT card 'only usable before range is determined', not one put in play
+     (Wall of Filth: persistent, its own finder), whose mode pumps this combat's strike or grants this round's steal. */
+  if ((f.stealGrant > 0 || f.handBonusCombat > 0 || f.strengthSet > 0 || f.strengthCombat > 0)
+      && (e && (e.t || []).includes('combat')) && e.req && e.req.beforeRangeDetermined && !e.persistent)
+    return { ok: true, via: 'pump@beforeRange' };
   if (f.gainOppLoss && (e && (e.t || []).includes('combat'))) return { ok: true, via: 'gainOppLoss@endOfRound' };
   /* v1.1.40 (bot v0.6.213): an additional strike, mirroring its two readers -- _bestAddStrikeFor takes a combat card's PURE addStrike mode
      (no dodge, strike, hand strike, strength strike, steal or combat ends beside it: those are strikes that bring one, a later block), and
@@ -285,7 +301,7 @@ function modeConsumed(mo, e){
      combat plan §5.6 as a future extension, not built. */
   if (f.press && !f.maneuver && typeof f.strike !== 'number' && typeof f.handBonus !== 'number' && !f.stealBlood
       && (e && (e.t || []).includes('combat'))
-      && !(e && e.req && (e.req.beforeRangeDetermined || e.req.notFirstRound)))
+      && !(e && e.req && e.req.beforeRangeDetermined))   // v1.1.41: notFirstRound is read
     return { ok: true, via: 'press@resolveCombat' };
   /* v1.1.6 (Johan's combat GO, the range concept): maneuver is contextual too, clean-
      shape-only (Apportation/Swallowed by the Night), mirroring _bestManeuverFor. NOTE
@@ -294,7 +310,7 @@ function modeConsumed(mo, e){
      those 17 previously-excluded cards, so they are genuinely consumed, not a guess. */
   if (f.maneuver && !f.press && typeof f.strike !== 'number' && typeof f.handBonus !== 'number' && !f.stealBlood
       && (e && (e.t || []).includes('combat'))
-      && !(e && e.req && (e.req.beforeRangeDetermined || e.req.notFirstRound)))
+      && !(e && e.req && e.req.beforeRangeDetermined))   // v1.1.41: notFirstRound is read; a maneuver with an optional press (pressOpt, not press) is a clean maneuver -- both ways now (counters)
     return { ok: true, via: 'maneuver@resolveCombat' };
   /* v1.1.36 (bot v0.6.127, cardfx v1.9.0): the block bar is contextual, mirroring _bestBlockBarFor exactly -- an action MODIFIER
      whose mode bars vampires (or everyone) AND bills its own vampire (selfDmg / selfTorpor). A free bar (Beast Meld's
@@ -475,7 +491,7 @@ const badge = e => [e.src === 'hand' ? 'curated' : 'auto',
 
 P('# deck-coverage — ' + (deck.name || '(namnlös lek)') + ' (' + today + ')');
 P('');
-P('Genererad av `gen-deck-coverage.js` v1.1.40 mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: this string is the SECOND version site (the header comment is the first) -- bump BOTH when a version note is added, or every generated report inherits a stale self-identification
+P('Genererad av `gen-deck-coverage.js` v1.1.41 mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: this string is the SECOND version site (the header comment is the first) -- bump BOTH when a version note is added, or every generated report inherits a stale self-identification
   ', ' + (fx.counts.lib || '?') + ' lib / ' + (fx.counts.crypt || '?') + ' crypt / ' +
   (fx.counts.alias || '?') + ' alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden ' +
   '(skannad vid körning, inte handunderhållen). Leken: ' + loaded.source + '.');
@@ -592,4 +608,4 @@ console.log('rapport: ' + outPath);
 }
 
 if (require.main === module) main();
-module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.40' };
+module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.41' };

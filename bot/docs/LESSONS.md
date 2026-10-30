@@ -42,6 +42,7 @@
 - L-35 **A flag about a FUTURE step dies where its scope ends** (16 Oct, a final-round Grapple leaked into the next combat).
 - L-36 **A pause measured from your own last act is invisible after a long wait** (22 Sep): anchor the beat on the table's last event.
 - L-37 **`null` means two things in the same field; count the arm sites against the restart sites** before shipping a timing change (16 Sep).
+- L-83 **A fix that removes a wait must keep the decision the wait served** (30 Oct, v0.6.214): skipping Taste of Vitae's wait after a clean dodge skipped the card itself; section 37g (v0.6.21's) caught it only when the whole suite ran on the release bytes — the review's fixes had been checked section by section (L-18).
 
 ## Reading traces and measurements
 - L-38 **"Never seen" means "never emitted" until the emit is proven** (20 Sep): eleven play sites wrote no row; every per-card reading of that week was redone. Guessed emit fields lie; the trace is the judge.

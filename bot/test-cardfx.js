@@ -323,7 +323,7 @@ ok(fx.counts.libLock >= 140,
   let bR = 0; for(const n in fx.lib) if(fx.lib[n].req && fx.lib[n].req.beforeRangeDetermined) bR++;
   let nF = 0; for(const n in fx.lib) if(fx.lib[n].req && fx.lib[n].req.notFirstRound) nF++;
   ok(fx.lib['Walk of Flame'].req.notFirstRound === true && !(fx.lib['Shotgun Ritual'].req && fx.lib['Shotgun Ritual'].req.notFirstRound), 'req.notFirstRound (compiler v1.9.4): Walk of Flame ("Not usable during the first round.") tagged; Shotgun Ritual, which lifts the restriction, not');
-  ok(rC === 20 && rL === 21 && bR === 84 && nF === 9, 'req flag volumes (' + rC + '/' + rL + '/' + bR + '/' + nF + '): the raw 410-Combat-type scan found 19/17/83/4 (v1.9.4: + 5 "during the first round": 9), but the compiler correctly also tags EQUIPMENT carrying the same range-restricted text (Sniper Rifle, RPG Launcher, Smoke Grenade, Spike-Thrower, Starshell Grenade Launcher, Garrote) and one Reaction (Foresee) -- req doesn\'t filter by type, and shouldn\'t: a sniper rifle IS long-range-restricted regardless of its own card type');
+  ok(rC === 20 && rL === 21 && bR === 84 && nF === 12, 'req flag volumes (' + rC + '/' + rL + '/' + bR + '/' + nF + '): the raw 410-Combat-type scan found 19/17/83/4 (v1.9.4: + 5 "during the first round": 9; v1.9.5: + 3 "Not usable (the) first round": 12), but the compiler correctly also tags EQUIPMENT carrying the same range-restricted text (Sniper Rifle, RPG Launcher, Smoke Grenade, Spike-Thrower, Starshell Grenade Launcher, Garrote) and one Reaction (Foresee) -- req doesn\'t filter by type, and shouldn\'t: a sniper rifle IS long-range-restricted regardless of its own card type');
   const ctl = fx.lib['Call the Lamprey'].modes || [];
   ok(ctl.find(m => m.at === 'obt').fx.stealBlood === undefined && ctl.find(m => m.at === 'OBT').fx.stealBlood === 1,
      'Call the Lamprey curated: [obt] (ally-only, unverifiable) emptied, [OBT] (unrestricted "opposing minion") kept clean');
@@ -583,13 +583,13 @@ ok(fx.counts.libLock >= 140,
   ok(c['Skidmark (G4)'].archFull === true && c['Skidmark (G4)'].fx.noReplaceActing === true, 'Skidmark: archFull — FULL-BY-ARCHITECTURE, the _flushDraws proof lives in the note');
   ok(['Wauneka (G6)', 'Rosalina Cortez (G6)', 'Mustafa Rahman (G2)', 'Ayelech (G6)'].every(n => c[n] && !c[n].fx),
      'vanilla/title-only vampires stay fx-free (Wauneka, Rosalina, Mustafa, Ayelech)');
-  ok(fx.counts.curated === 115, 'curated count = 95 lib + 20 crypt = 115 (got ' + fx.counts.curated + ') -- 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered); 29 Oct (V5 wave 1): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor\u2019s Hand, Sword of the Archangel, Invigorate');
+  ok(fx.counts.curated === 124, 'curated count = 104 lib + 20 crypt = 124 (got ' + fx.counts.curated + ') -- 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered); 29 Oct (V5 wave 1): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor\u2019s Hand, Sword of the Archangel, Invigorate; 29 Oct (V5 wave 2): + Flash, Resist Earth\u2019s Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn');
   { const bw = fx.lib['Bowl of Convergence']; const am = bw && (bw.modes || []).find(m => m.at === 'AUS');
     ok(!!am && am.fx.intercept === 1 && am.fx.interceptPaid === 1 && am.fx.interceptPaidBlood === 1, 'Bowl of Convergence [AUS]: +1 intercept, and +1 more for 1 blood (sweep pilot, text verified in vtes.json)'); }
   { const R = (n, at) => { const e = fx.lib[n]; const m = e && (e.modes || []).find(mo => (mo.at || null) === at); return !!(m && m.fx && m.fx.ranged); };
     ok(R('Theft of Vitae', 'tha') && R('Theft of Vitae', 'THA') && R('.44 Magnum', null) && R('Stunt Cycle', 'pot'), 'ranged (v1.9.0): Theft of Vitae both levels, .44 Magnum, Stunt Cycle (curated) carry fx.ranged');
     ok(!R("Talbot's Chainsaw", null) && !R('Song in the Dark', 'ani') && !R('Body Flare', 'pro') && R('Body Flare', 'PRO'), "ranged: melee strikes do not (Talbot's Chainsaw, Song in the Dark); Body Flare [pro] melee, [PRO] 2R ranged");
-    const lone = Object.entries(fx.lib).filter(([n, e]) => (e.modes || []).some(m => m.fx && m.fx.ranged && m.fx.strike === undefined && m.fx.stealBlood === undefined && !m.fx.strikeCE && m.fx.envDmgPerRound === undefined));
+    const lone = Object.entries(fx.lib).filter(([n, e]) => (e.modes || []).some(m => m.fx && m.fx.ranged && m.fx.strike === undefined && m.fx.stealBlood === undefined && m.fx.stealGrant === undefined && !m.fx.strikeCE && m.fx.envDmgPerRound === undefined));   // v0.6.214: + stealGrant (Hunger of Marduk: a ranged steal this round)
     ok(lone.length === 0, 'ranged never stands alone on a mode (it qualifies a strike / steal / env damage) -- ' + lone.map(x => x[0]).slice(0, 5).join(', ')); }
   { const rq = n => (fx.lib[n] && fx.lib[n].req) || {};
     ok(JSON.stringify(rq('Creeping Sabotage').clan) === '["Nosferatu"]' && JSON.stringify(rq('Deep Song').disc) === '["ani"]' && JSON.stringify(rq('Guard Dogs').disc) === '["ani"]',
@@ -737,6 +737,36 @@ ok(fx.counts.libLock >= 140,
      'Invigorate: [ani] +1 strength this action (the auto tier missed it), [dom] no ally blocks, [pro] aggravated hand strikes this action; requires an Anarch');
   const ib = M('Ivory Bow', null);
   ok(L['Ivory Bow'].src === 'auto' && ib.fx.strike === 1 && ib.fx.ranged === true && ib.fx.aggr === true, 'Ivory Bow: the auto tier is right (1R aggravated), not curated');
+}
+{
+  /* V5 wave 2 (29 Oct 2026, RULINGS D-102): the combat's first steps -- before range, range and press. Each reading checked against the printed
+     text in vtes.json (the curated notes quote it); what the auto tier had wrong is pinned so a recompile cannot bring it back. */
+  console.log('\nV5 wave 2 -- the combat\u2019s first steps: before range, range and press (curated, 29 Oct 2026)');
+  const L = res.out.lib, Ms = (n, at) => ((L[n] && L[n].modes) || []).filter(mo => (mo.at || null) === at), M = (n, at) => Ms(n, at)[0] || null;
+  const fl = Ms('Flash', 'cel');
+  ok(fl.length === 2 && fl.some(m => m.fx.maneuver === true && !m.fx.press) && fl.some(m => m.fx.press === true && !m.fx.maneuver) && M('Flash', 'CEL').fx.maneuver === true && M('Flash', 'CEL').fx.pressOpt === 'round' && !M('Flash', 'CEL').fx.press && !L['Flash'].cost,
+     'Flash: [cel] a maneuver OR a press (two modes; the auto tier bundled both into each), [CEL] a maneuver with an optional press this round, free');
+  const rg = Ms("Resist Earth's Grasp", 'cel');
+  ok(rg.length === 2 && rg.some(m => m.fx.press === true && !m.fx.maneuver) && rg.some(m => m.fx.maneuver === true && m.fx.pressOpt === 'round' && !m.fx.press) && M("Resist Earth's Grasp", 'CEL').fx.stealth === 1 && L["Resist Earth's Grasp"].cost.blood === 1 && L["Resist Earth's Grasp"].t.join() === 'mod,combat',
+     "Resist Earth's Grasp: [cel] a press, or a maneuver with an optional press this round; [CEL] +1 stealth (the action modifier); 1 blood");
+  ok(M('Slam', 'pot').fx.handBonus === 2 && M('Slam', 'pot').fx.handStrike === true && !M('Slam', 'pot').fx.maneuver && M('Slam', 'POT').fx.maneuver === true && M('Slam', 'POT').fx.maneuverTo === 'close' && M('Slam', 'POT').fx.handBonus === 2 && L['Slam'].cost.blood === 1,
+     'Slam: [pot] a hand strike at +2; [POT] the same with an optional maneuver, only to close range (the card commits its strike [LSJ 20021028]); 1 blood');
+  ok(L['Hunger of Marduk'].req.beforeRangeDetermined === true && JSON.stringify(L['Hunger of Marduk'].req.clan) === '["Banu Haqim"]' && M('Hunger of Marduk', 'tha').fx.stealGrant === 1 && M('Hunger of Marduk', 'THA').fx.stealGrant === 2 && M('Hunger of Marduk', 'THA').fx.ranged === true && M('Hunger of Marduk', 'tha').fx.stealBlood === undefined,
+     'Hunger of Marduk: before range, a RANGED steal this round -- 1, superior 2 (the auto tier read 1 at both and a strike card played in the strike step); requires a Banu Haqim');
+  ok(L['Rage of Apedemak'].oncePerCombat === true && L['Rage of Apedemak'].req.beforeRangeDetermined === true && ['ani', 'pot'].every(a => M('Rage of Apedemak', a).fx.handBonusCombat === 1 && !M('Rage of Apedemak', a).fx.handStrike) && ['ANI', 'POT'].every(a => M('Rage of Apedemak', a).fx.handBonusCombat === 2),
+     'Rage of Apedemak: before range, the hand strikes deal +1 ([ANI]/[POT] +2) this combat, one each combat -- not a hand-strike card (the auto tier read handStrike)');
+  ok(L['Torn Signpost'].req.beforeRangeDetermined === true && M('Torn Signpost', 'pot').fx.strengthSet === 2 && M('Torn Signpost', 'POT').fx.strengthSet === 3,
+     'Torn Signpost: before range, the base strength is 2 ([POT] 3) this combat (the auto tier had no mode; +X strength adds to it [LSJ 20100813])');
+  ok(L['Form of the Wolf'].oncePerCombat === true && M('Form of the Wolf', 'pro').fx.strengthCombat === 1 && !M('Form of the Wolf', 'pro').fx.pressOpt && M('Form of the Wolf', 'PRO').fx.strengthCombat === 1 && M('Form of the Wolf', 'PRO').fx.pressOpt === 'round',
+     'Form of the Wolf: before range, +1 strength this combat (the auto tier had only the press); [PRO] an optional press this round [TOM 19960521]; one each combat');
+  ok(L['Monstrous Form'].oncePerRound === true && M('Monstrous Form', 'dom+pro').fx.strengthCombat === 1 && M('Monstrous Form', 'DOM+PRO').fx.actStealth === 1 && !M('Monstrous Form', 'DOM+PRO').fx.maneuver,
+     'Monstrous Form: [dom][pro] before range, +1 strength this combat, one each round; [DOM][PRO] its +1 stealth action (the card on the vampire: not modelled, amber)');
+  ok(M('Soul Burn', 'tha').fx.strike === 1 && M('Soul Burn', 'THA').fx.strike === 2 && M('Soul Burn', 'THA').fx.ranged === true && L['Soul Burn'].cost.blood === 1,
+     'Soul Burn: [tha] 1R, [THA] 2R (the auto tier read 1R at both); 1 blood');
+  ok(M('Soul Burn', 'tha').fx.noPreventDisc === 'for' && M('Soul Burn', 'THA').fx.noPreventDisc === 'for',
+     'Soul Burn: its damage cannot be prevented by cards requiring Fortitude [LSJ 20050628] -- noPreventDisc \'for\' on both modes (the graded readings, 29 Oct: a struck bot played Hidden Strength against it)');
+  ok(['Walk of Flame', 'Eruption of Vitae', 'Growing Fury', 'Well-Aimed Car'].every(n => L[n] && L[n].req && L[n].req.notFirstRound === true),
+     'v1.9.5: "Not usable the first round" / "Not usable first round" are the first-round restriction too (Eruption of Vitae, Growing Fury, Well-Aimed Car; Walk of Flame since v1.9.4)');
 }
 
 console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green'));
