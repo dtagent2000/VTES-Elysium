@@ -7499,7 +7499,8 @@ class Bot {
     if(unmended === 0 && myVamp.zone === 'ready'){   // v0.6.213: + an additional pair can take me out of the combat too
       const taste = this._bestTasteFor(myVamp);
       const dodgedClean = !!(opp && opp.dodge) && !((this._carrionCrows && this._carrionCrows.n) || this._borneEnvDmg) && !(this._xr && (this._xr.mine | 0));   // v0.6.214 (found by the V5 smoke): their dodge stopped my strike, my crows did nothing and I took no additional strike -- their round line ('dodges: no damage dealt or taken this round.') is no taken line: the wait below sat out its whole askSecs (20 s at the client) and the other bot's press wait ran into its safety net (Form of Mist, since v0.6.212)
-      if(taste && (!dodgedClean || this._pendingOf('opp-taken'))){   // v0.6.214: after a clean dodge nothing is WAITED for, but a taken line already in is still read (37g: the card's count is the blood they lost to damage this round, whatever dealt it)
+      const tasteLine = this._pendingOf('opp-taken');
+      if(taste && (!dodgedClean || (tasteLine && (tasteLine.t || 0) >= (this._rndAt || 0)))){   // v0.6.214: after a clean dodge nothing is WAITED for, but THIS round's taken line already in is still read -- the card counts the blood they lost to damage this round, whatever dealt it; an older round's stray line is no loss of this one (the second review)
         const oppT = this._xLossSum(await this._awaitOppTaken(this._lineGraceMs((this.o.askSecs || 2) * 1000, 'taken')));   // v0.6.213: + their additional pairs' losses   // v0.6.195: vs a human under the tempo, their client writes the taken line as ph steps past Damage -- a round trip, not an askSecs
         if(oppT && oppT.n >= (this._combatMind() ? 2 : 1)){   // v0.6.156 (Johan): Taste of Vitae after a Roundhouse / Crows round -- cmb1: 8 of 12 were spent on a fist of 1
           this.hand.splice(taste.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;

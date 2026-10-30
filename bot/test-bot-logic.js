@@ -2867,8 +2867,10 @@ async function connectWithRetry(client, tries = 30){
       const nw37g = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
       let aboSup = null; for(const nm in nw37g.crypt){ const d = nw37g.crypt[nm].disc; if(d && d.sup && d.sup.includes('abo')){ aboSup = nm; break; } }
 
-      // basic play: opponent lost 3, I take 0 (dodge-equivalent stash) — clean gain
-      u._oppStrike = { vamp: 'Ghoul', dodge: true, dealt: 0 };
+      // basic play: opponent lost 3, I take 0 (their strike deals 0) — clean gain. v0.6.214: this fixture said 'dodge: true' as the device for
+      // 'I take 0'; a dodge with a loss of 3 is a state the table cannot reach (their dodge stops my strike), and after a clean dodge the bot now
+      // reads only THIS round's taken line -- the line set here is pushed before the round starts (160x)
+      u._oppStrike = { vamp: 'Ghoul', dodge: false, dealt: 0 };
       u._oppTaken = { vamp: 'Ghoul', n: 3 };
       const zTaste1 = { id: 'ct1', name: aboSup, kind: 'crypt', zone: 'ready', locked: true, blood: 2, cap: 8 };
       u.hand = ['Taste of Vitae'];
@@ -2877,7 +2879,7 @@ async function connectWithRetry(client, tries = 30){
          '37g: Taste of Vitae played -- gains exactly what the opponent announced losing (2 start + 3 = 5), not what I dealt or took');
 
       // capacity overflow: opponent lost 10, but only 3 room left -> caps, excess drains
-      u._oppStrike = { vamp: 'Ghoul', dodge: true, dealt: 0 };
+      u._oppStrike = { vamp: 'Ghoul', dodge: false, dealt: 0 };
       u._oppTaken = { vamp: 'Ghoul', n: 10 };
       const zTaste2 = { id: 'ct2', name: aboSup, kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 8 };
       u.hand = ['Taste of Vitae'];
@@ -11399,6 +11401,7 @@ async function connectWithRetry(client, tries = 30){
 
       // f) the counter: the acting Tremere goes long, the Nosferatu (chase) answers with Guard Dogs' maneuver to close
       { const g = duel160({ delay: 30, aHand: ['Apportation', 'Theft of Vitae'], dHand: ['Roundhouse'], dGrant: true });
+        const clonesD = []; g.D.fxClone = (c, verb) => { clonesD.push((c && c.name) + ': ' + verb); };   // the harness's no-op, recording (the second review: 160f saw no clone)
         const ms = await g.run();
         const a = r1(g.A), d = r1(g.D), mv = mvLines(g);
         ok(JSON.stringify(mv) === JSON.stringify(['Anxo Vilela (G6) maneuvers to long (Apportation).', 'Wauneka (G6) maneuvers to close (Guard Dogs).']) && a.range === 'close' && d.range === 'close' && d.counter === 1 && !a.counter,
@@ -11407,7 +11410,9 @@ async function connectWithRetry(client, tries = 30){
            '160f ...the counter puts Roundhouse back in reach (4), and no wait ran into its safety net (' + ms + ' ms)');
         const ashGD = g.D.board.filter(c => c.zone === 'ash' && c.name === 'Guard Dogs').length, rowGD = g.D.plays.filter(p => p.card === 'Guard Dogs').length;
         ok(ashGD === 0 && rowGD === 0 && linesOf(g.D, /maneuvers to close \(Guard Dogs\)\.$/).length === 1,
-           '160f ...and the grant\u2019s maneuver is no card play: no Guard Dogs in the ash heap, no play row -- the card went there (and was rowed) at its unlock; the line is the event (the egress review: a phantom second Guard Dogs; got ' + JSON.stringify({ ash: ashGD, rows: rowGD }) + ')'); }
+           '160f ...and the grant\u2019s maneuver is no card play: no Guard Dogs in the ash heap, no play row -- the card went there (and was rowed) at its unlock; the line is the event (the egress review: a phantom second Guard Dogs; got ' + JSON.stringify({ ash: ashGD, rows: rowGD }) + ')');
+        ok(!clonesD.some(c => /^Guard Dogs: /.test(c)) && clonesD.some(c => /^Roundhouse: /.test(c)),
+           '160f ...and no second Guard Dogs clone (the table model counts every clone as a card shown), while the strike still sends its own (got ' + JSON.stringify(clonesD) + ')'); }
 
       // g) a counter to the counter: the acting Tremere goes long again; the Nosferatu, out of maneuvers, answers in its before-strikes wait
       { const g = duel160({ delay: 30, aHand: ['Apportation', 'Apportation', 'Theft of Vitae'], dHand: ['Roundhouse'], dGrant: true });
@@ -11583,7 +11588,11 @@ async function connectWithRetry(client, tries = 30){
         const set = mkV(); set.u._forceCloseNextRound = true; const p1 = await BRP(set);
         const d0 = free.u.decs[0], d1 = set.u.decs[0];
         ok(p0 === true && p1 === false && set.u.hand.includes('Hunger of Marduk') && !!d1 && d1.ctx.fixed === 'close' && d1.ctx.longOk === false && /range is set/.test(d1.out.why),
-           '160v Warmaksan at full blood with Hunger of Marduk and Flash: played when the snipe can go long (' + (d0 && d0.out.why) + '), kept when a superior Grapple set this round to close (' + (d1 && d1.out.why) + ')'); }
+           '160v Warmaksan at full blood with Hunger of Marduk and Flash: played when the snipe can go long (' + (d0 && d0.out.why) + '), kept when a superior Grapple set this round to close (' + (d1 && d1.out.why) + ')');
+        const peek = f => { const w = mkU160('V2'); f(w); return IF0(w, '_rangeFixedPeek') ? w._rangeFixedPeek() : 'n/a'; };
+        const pk = [peek(w => { w._nextRange = 'long'; }), peek(w => { w._setRangeNow = 'close'; }), peek(w => { w._cTally = () => ({ rng: 'long' }); w._phaseOppPlayer = () => ({ seat: 1 }); w._cField = k => (k === 'rl' ? 1 : null); }), peek(() => {})];
+        ok(JSON.stringify(pk) === JSON.stringify(['long', 'close', 'long', null]),
+           '160v ...and the peek reads every source the range step obeys: a range set for the next round, one set now, a human\u2019s locked range on the tally; none set, none read (the second review; got ' + JSON.stringify(pk) + ')'); }
 
       // w) the egress review (knob hygiene): no counter back to long without the combat mind -- its 0-path is v0.6.213
       { const g = duel160({ delay: 30, aOpts: { combatMind: 0 }, aHand: ['Apportation', 'Apportation', 'Flames of the Netherworld'], dHand: ['Roundhouse'], dGrant: true });
@@ -11596,10 +11605,11 @@ async function connectWithRetry(client, tries = 30){
       //    so a taken line already in is still read (37g) and my additional strike (their dodge covered the first pair only) reopens the wait
       { const nwx = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
         let abox = null; for(const nm in nwx.crypt){ const dx = nwx.crypt[nm].disc; if(dx && dx.sup && dx.sup.includes('abo')){ abox = nm; break; } }
-        const tasteRound = async mine => {
+        const tasteRound = async (mine, line) => {   // line: none (the wait stubbed: it answers 2), 'now' (their taken line of 3 arrives during this round), 'old' (an earlier round's line is still pending)
           const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', log: () => {} });
-          u._awaitOppManeuver = () => { if(mine && u._xr) u._xr.mine = 1; return Promise.resolve(null); };   // mid-round, after the round's reset: as if I had declared an additional strike
-          let asked = 0; u._awaitOppTaken = () => { asked++; return Promise.resolve({ vamp: 'Ghoul', n: 2 }); };
+          u._awaitOppManeuver = () => { if(mine && u._xr) u._xr.mine = 1; if(line === 'now') u._oppTaken = { vamp: 'Ghoul', n: 3 }; return Promise.resolve(null); };   // mid-round, after the round's reset: as if I had declared an additional strike / their line came
+          let asked = 0; if(!line) u._awaitOppTaken = () => { asked++; return Promise.resolve({ vamp: 'Ghoul', n: 2 }); };
+          if(line === 'old'){ u._oppTaken = { vamp: 'Ghoul', n: 3 }; const e = u._pendingOf('opp-taken'); if(e) e.t -= 60000; }   // a minute old: a line nobody consumed in its own round
           u._oppStrike = { vamp: 'Ghoul', dodge: true, dealt: 0 };
           const z = { id: 'cx1', name: abox, kind: 'crypt', zone: 'ready', locked: true, blood: 2, cap: 8 };
           u.hand = ['Taste of Vitae'];
@@ -11609,7 +11619,34 @@ async function connectWithRetry(client, tries = 30){
         const x1 = await tasteRound(true), x0 = await tasteRound(false);
         ok(x1.asked === 1 && x1.blood === 4 && !x1.kept,
            '160x their dodge, then my additional strike: Taste of Vitae waits for their taken line and gains its 2 (got ' + JSON.stringify(x1) + ')');
-        ok(x0.asked === 0 && x0.blood === 2 && x0.kept, '160x ...the control: a clean dodge and no additional pair asks nothing (160t\u2019s shortcut; got ' + JSON.stringify(x0) + ')'); }
+        ok(x0.asked === 0 && x0.blood === 2 && x0.kept, '160x ...the control: a clean dodge and no additional pair asks nothing (160t\u2019s shortcut; got ' + JSON.stringify(x0) + ')');
+        const xNow = await tasteRound(false, 'now'), xOld = await tasteRound(false, 'old');
+        ok(xNow.blood === 5 && !xNow.kept, '160x ...a taken line of THIS round already in after a clean dodge is read: Taste of Vitae gains its 3 (got ' + JSON.stringify(xNow) + ')');
+        ok(xOld.blood === 2 && xOld.kept, '160x ...but an earlier round\u2019s line still pending is no loss of this round: Taste of Vitae stays in hand (the second review; got ' + JSON.stringify(xOld) + ')'); }
+
+      // y) the second review: Soul Burn's rider in an ADDITIONAL pair -- the struck bot's prevention there reads the additional strike's card too
+      { const xp = async card => {
+          const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Viktor', persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} });
+          u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }]; u.push = () => {}; u.fxClone = () => {};
+          const v = { id: 'dy1', name: 'Madison (G6)', kind: 'crypt', zone: 'ready', blood: 6, cap: 6, locked: true, attached: [] }; u.board = [v]; u.hand = ['Hidden Strength'];
+          u._inCombat = true; u._combatOppName = 'Kasim Bayar (G6)'; u._combatMyVamp = v; u._xr = u._xrFresh(); u._xr.p1 = true; u._xr.p1seen = true; u._rnd = {};
+          u._actingVamp = { v: { id: 'ky1', name: 'Kasim Bayar (G6)' }, n: 1, played: new Set() };
+          u._onLog('Hanna', '<b>Kasim Bayar (G6)</b> strikes with <b>Roundhouse</b> for 3.'); await u._awaitOppStrike(30);   // the first pair's strike, consumed as the round does
+          u._onLog('Hanna', '<b>Kasim Bayar (G6)</b> gets an additional strike.');
+          u._onLog('Hanna', '<b>Kasim Bayar (G6)</b> strikes with <b>' + card + '</b> for 2.');
+          await Promise.race([u._xPairs(v), sleep(5000)]);
+          return { kept: u.hand.includes('Hidden Strength'), blood: v.blood };
+        };
+        const ySB = await xp('Soul Burn'), yRH = await xp('Roundhouse');
+        ok(ySB.kept && ySB.blood === 4 && !yRH.kept,
+           '160y Soul Burn as their ADDITIONAL strike: Madison keeps Hidden Strength [FOR] and takes 2; against an additional Roundhouse she plays it (got ' + JSON.stringify({ ySB, yRH }) + ')'); }
+
+      // z) the graded readings' side find: a long-range card not usable this round is no reason to go long (Well-Aimed Car in round 1)
+      { const g = duel160({ delay: 20, aOpts: { combatMind: 0 }, aDeck: 'brujah', aDeckObj: deckOf('chase'), aV: ALINE, aHand: ['Flash', 'Well-Aimed Car'], dHand: [] });
+        await g.run();
+        const a = r1(g.A), mv = mvLines(g);
+        ok(a.range === 'close' && !mv.some(l => /maneuvers to long/.test(l)),
+           '160z with combatMind 0 (the hand card the only reason): Aline holds Flash and Well-Aimed Car [pot] (\u2018not usable the first round\u2019) and does not go long in round 1 (got ' + JSON.stringify({ range: a.range, mv }) + ')'); }
     }
 
 
