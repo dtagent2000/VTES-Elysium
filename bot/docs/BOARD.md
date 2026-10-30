@@ -17,10 +17,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 waves**: round 0 (v0.6.212) built the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim
   plays them; the client's menu does not offer them), the coverage class map and the ledger (`docs/CARDS.md`). Waves by effect class
-  as `CARDS.md`'s class map ranks them (Johan, 29 Oct: RULINGS D-98). Wave 1 (v0.6.213, D-99): Villein, the additional and the
-  aggravated strikes, Wall of Filth, Rutor's Hand, Invigorate. Wave 2 (v0.6.214, D-102 / D-103): the combat's
-  first steps — before range (the strength pumps, Hunger of Marduk), the maneuvers back and forth between bots, Slam's committed
-  strike, the round number, the precon postures. Then: the masters still played blind (wave 3, where Johan's rule of 14 July — always
+  as `CARDS.md`'s class map ranks them (Johan, 29 Oct: RULINGS D-98). Wave 1 (v0.6.213, D-99): the additional and aggravated
+  strikes. Wave 2 (v0.6.214, D-102 / D-103): the combat's first steps. Then: the masters still played blind (wave 3, where Johan's rule of 14 July — always
   play a master, even uncurated — is revisited), the maneuver / press grants from cards played outside combat with the rush cards, the free block bars, the 22 cards with no effect data, the unmodelled action cards. A deck
   joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its rows are playable and it holds up in the sim; before the deck
   count doubles, decks and `DECK_STRATEGY` become a data file (seven decks embedded in `elysium-bot.js`, six duplicated in
@@ -40,6 +38,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   their inferior strike modes fail closed in the strike / press / maneuver finders) and two misreadings (Sanguine Entrapment and
   Skin Trap stop the OPPONENT's dodge / combat ends, compiled as their own) — curation, no deck holds them. *Done when* each is built
   and section-tested, or ruled out. Docs: RULINGS R-41, D-103.
+- **The weapon's maneuver** (wave 2's second review; older than the round): the compiler writes `maneuver: true` for a weapon,
+  `_equipCombatOption` reads a number — the Tremere's .44 Magnum has never maneuvered, so the gun halves of the strike-binding rules
+  never run (45c has no positive case). Neighbours: a weapon's strike sends a clone and a play row every time (the table model
+  counts the gun again); the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait returns an earlier
+  round's pending taken line, and `_xLossSum` sums nothing (a later line replaces the pending one). *Done when* each is fixed with a
+  positive test and its footprint read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's strategy helpsheets and
   deck guides (blackchantry.com, its tutorials: the Fifth Edition precons — Banu Haqim, Brujah, Gangrel, the Ministry, Ravnos,
   Salubri, Tzimisce, Lasombra, Hecata — and the First Blood / starter guides) as the baseline for a deck's strategy and tactics,
