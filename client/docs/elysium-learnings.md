@@ -1,8 +1,24 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.167 / server v2.6.49 / bot v0.6.207 tested beside the suite, last updated 19 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.168 / server v2.6.49 / bot v0.6.214 tested beside the suite, last updated 1 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**1 Nov 2026, evening (THE NEW SETS ARRIVE — v2.6.168):**
+- **A third-party file can freeze without saying so.** KRCG regenerated the v3 file the same minute as the v5 dump, with
+  today's date, and simply left the new sets out. A fresh `Last-Modified` proves nothing about the content; look for a card
+  you know is new.
+- **Before switching a data source, run the real parser over both sources and compare card by card, by a stable id.** A
+  URL swap with the obvious fixes would have shipped starters named by code. The comparison found three bugs the v5 branch
+  had never met real data for, and one the OLD source had (v3 starters naming the G2 card for a G6 reprint).
+- **A name list that mixes kinds needs ranks, not last-wins.** KRCG's v5 `name_variants` hold the card's own spellings,
+  other cards' short names, old names and translations. Flat last-wins let a short name ("Amelia") and an old name
+  ("Distraction") steal another card's printed name. Rank by kind: own spelling > alias > weak.
+- **Keep what users already typed working.** Checking that every key of the old index resolves in the new one, to the
+  same card id, is cheap and caught five spellings deck lists write that the new list drops.
+- **A red gate on `main` that you did not cause still fails your PR.** Fix the mechanical part in the same round (the guide
+  re-embed) and list the rest of that release's asks as open.
+- **`loadClient` keeps Node alive** (the client's timers). A probe built on the harness must end with `process.exit`.
 
 **19 Oct 2026, morning (THE LETTERS OF THEIR OWN — v2.6.167):**
 - **NFD folds accents, not letters.** `normalize('NFD')` splits é into e + a combining mark, but ł, ø, œ, æ, ß, đ, ð,

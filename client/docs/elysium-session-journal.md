@@ -1,3 +1,65 @@
+## [DE NYA SETEN KOMMER IN] (1 november 2026, kväll, klient v2.6.168 / srv-2.6.49 oförändrad)
+
+Johan: "Det har släppts ett par nya sets till V:TES … Julia Sowinski, kan du se om vår koppling fångar upp henne från
+KRCG?" Nej. Filen klienten läste, `static.krcg.org/data/vtes.json` (v3-formen), får inga nya kort längre. KRCG genererade
+om den 1 nov kl 13:07, men den slutar vid Sabbat V5 (4149 kort). De 63 korten i **Secrets of New York** och **Noites
+Brasileiras** (båda 31 okt 2026, buntarna `SoNY` och `NBr` i setet `V5`, 54 kort var) finns bara i v5-dumpen
+`data/v5/vtes.json` (4212 kort). Set- och buntnamnen finns i `data/v5/expansions.json` (16 KB). Sandlådan nådde KRCG först
+när Johan lade till `static.krcg.org` och `api.krcg.org` under Inställningar → Funktioner.
+
+**Att bara byta URL hade gjort det sämre.** Innan något byggdes körde jag klientens riktiga parser över båda filerna, kort
+för kort. v5-vägen hade aldrig mött riktig data, och auditen hittade tre fel och en lucka:
+1. Startdeckens namn blev koder ("V5 :: PTo" i stället för "Fifth Edition :: Toreador"), utan datum.
+2. `preconEra` läste namnet, inte koden, så alla 67 starters hamnade under Legacy.
+3. Kostnaden: v5-formen är `{type:'Pool'|'Blood', value}`, parsern letade efter `'pool'` och `amount`. Varje bibliotekskort
+   fick tom kostnad.
+4. Namnägarskap: alla `name_variants` var starka och den sista vann. "Amelia" gick då till Amelia, The Blood Red Tears
+   (G3) och "Distraction" till mastern Misdirection (KRCG listar det gamla namnet). Dessutom saknar v5-listan fem stavningar
+   som v3 hade: "Theo Bell (ADV)", "Tegyrius", "Tegyrius (ADV)", "Tegyrius, Vizier (ADV)" och "Lucinde".
+
+**Byggt (ren klient, purge; ingen ändring på tråden):**
+1. `fetchVtesJson` läser v5-dumpen först och v3-filen bara om den misslyckas. `expansions.json` hämtas bredvid och fäller
+   aldrig laddningen. Cacheposten får `fmt` ('v5'/'v3') och `exp` (texten). En post utan `fmt` (skriven före v2.6.168) räknas
+   som gammal när veckouppdateringen är på, så en spelare med v3-filen i cachen får de nya korten vid nästa start.
+2. Namnen: `krcgSetLabel` tar först det hämtade `expansions.json`, sedan den inbyggda tabellen `KRCG_SET_NAMES` (25 set
+   med namngivna buntar, 1 nov 2026), sist koderna. `preconEra` läser också koden.
+3. Kostnaden läses i den riktiga formen. Conviction läses inte, precis som i v3.
+4. Tre styrkor på ett v5-namn: en stavning av kortets eget tryckta namn är ett anspråk och vinner alltid; ett annat
+   `name_variant` (kortnamn, gammalt namn, översättning) är ett alias som tar ett namn ingen gör anspråk på, och första
+   alias behåller det; svaga är det tryckta namnet på ett kort med suffix och de stavningar v3 hade som v5 utelämnar. En
+   tom nyckel ("!", sju kort) tillhör ingen.
+5. Startdeckens namn använder KRCG:s unicity-suffix: "Theo Bell (G6)" där en annan tryckning delar namnet, "Julia
+   Sowinski" när kortet är ensamt.
+6. Inställningar → Från fil tar `vtes.json` och `expansions.json` samtidigt och skiljer dem åt (`vtesFileKind`).
+7. B-63-dumpen skriver formen i källan ("KRCG v5"). Serverns `errScrub` kapar på 20 tecken, och det räcker.
+8. Play-test-riggen v1.2.0: `--vtes` svarar även på v5-sökvägen, och `--exp` eller ett `expansions.json` bredvid ger namnen.
+9. Hjälp ▸ Bottar bäddar in bot v0.6.214:s guide. Inbäddningskontrollen var röd på `main` sedan v0.6.208, både i sviten
+   och i CI, och vår PR hade annars ärvt det.
+
+**Auditen efter bygget (riktig data, båda filerna, kort-id jämförda):** alla 6551 namn i v3-filen pekar på samma kort i v5.
+Båda ger 67 starters med samma era (18 V5 / 49 Legacy) och samma namn, utom "Path of Death", som KRCG nu kallar "Path of
+Death and the Soul". 63 starters har identiska kort. De tre som skiljer har v5 rätt: Fifth Edition (Anarch) Brujah,
+Ministry och Banu Haqim innehåller G6-tryckningarna av Theo Bell, Hesha Ruhadze och Kalinda, men v3-vägen listade de
+nakna namnen, som gav G2-korten (fel text och kapacitet). Bildnycklarna: 66 nya (de 63 nya korten och tre som nu matchar
+KRCG:s url: Anarch Convert, New Blood, An Anarch Manifesto). Den som har bildcachen hämtar alltså bara dem. Fältskillnader på
+samma kort: 295 texter (KRCG:s errata, `/Namn/` → `<Namn>`), 19 bibliotekskort utan kapacitet i v5 (v3 hade ett cap-fält,
+t.ex. Abomination 4) och 9 med FLIGHT → fli. De två sista påverkar bara förhandsvisningens metarad och söktaggarna.
+
+**Bottarna (`docs/handoffs/REPLY-to-bot-2026-11-01-krcg-v5.md`):** deras verktyg läser v3-filen och känner inte till de 63
+korten. Startdeckar från Deck Lab skriver nu tryckta namn ("An Anarch Manifesto"), som deras cardfx-nyckel
+(`anarchmanifestoan`) missar för 112 bibliotekskort. Deras §12-rader och frågor från v0.6.211–214 är fortfarande öppna hos oss.
+
+**Mina misstag på vägen:**
+- En Node-sond över `loadClient` hängde i två minuter: harnessens timers håller processen vid liv. Avsluta med `process.exit`.
+- Jag föreslog först "byt URL:en, fixa två buggar". Auditen visade att det hade gett kodnamn på alla starters. Kör alltid den
+  riktiga parsern över båda källorna innan en datakälla byts.
+
+**Grindar:** se `client/CLAUDE.md` överst.
+
+**Osäkert:** elysium.cards. Om boxen har `/opt/elysium/images/vtes.json` läses den före KRCG, och då syns inga nya kort förrän
+filen byts (runbook §6 har kommandona). Dokumenten säger emot varandra om filen finns. Inget är kört i en riktig webbläsare
+mot static.krcg.org; sviten och auditen körde den riktiga koden i Node med KRCG:s riktiga filer.
+
 ## [BOKSTÄVERNA SOM ÄR SINA EGNA] (19 oktober 2026, förmiddag, klient v2.6.167 / srv-2.6.49 oförändrad)
 
 Johan: "Kortet Przemysław, War Beast blir blankt i klienten, jag misstänker att det är en misstämning i namnet för

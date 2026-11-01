@@ -285,7 +285,7 @@ ls -t "$d"/elysium-*.tar.gz | tail -n +8 | xargs -r rm --
 
 ```bash
 # from the names the client already knows; simplest: copy Johan's local archive, or:
-cd /opt/elysium/images && curl -sO https://static.krcg.org/vtes.json  # + rsync of the card set as documented in the Host Guide round (H4)
+cd /opt/elysium/images && curl -fsS -o vtes.json https://static.krcg.org/data/v5/vtes.json  # v5 since client v2.6.168 (the old path also lacked /data/); + rsync of the card set as documented in the Host Guide round (H4); runbook §6
 ```
 
 *Bottom line for the executor: run H1 as one ordinary gated server session; then H2/H3 are a checklist evening with Johan at the keyboard and this document open. The architecture's whole point is that after H3, the operational security posture is "there is nothing listening" — the strongest posture available to a hobby operator, and the cheapest to maintain.*

@@ -18,7 +18,9 @@ frame, and turns the recording into numbers, so the same game can be played agai
   repository root (the release). For an unreleased client use `--dir client` with the bundle copied beside the
   suite (`client/docs/START-HERE-CLIENT-CHAT.md` has the one-liner).
 - The card database. With internet the client fetches it from KRCG as usual. Without (a sandbox), keep a copy of
-  KRCG's `vtes.json` **outside the repository** and pass `--vtes <path> --offline`; a sandbox that cannot reach KRCG
+  KRCG's `vtes.json` **outside the repository** and pass `--vtes <path> --offline` (since client v2.6.168 the v5 dump,
+  `static.krcg.org/data/v5/vtes.json`; an `expansions.json` from the same folder beside it, or `--exp <path>`, names the
+  starters -- without it the client's built-in names do); a sandbox that cannot reach KRCG
   copies it from the private data repo `dtagent2000/VTES-Elysium-data` (root `CLAUDE.md`, 'Data that is not in git').
   It is third-party data: never commit it, never host it.
 

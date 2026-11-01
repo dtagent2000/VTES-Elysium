@@ -1,7 +1,7 @@
 # PROJECT-MANIFEST.md — what belongs in the Elysium (MAIN) project upload (9 September 2026, after the split)
 
 *The canonical file set for the claude.ai project knowledge, assembled after THE MERGE
-(client v2.6.102 · server srv-2.6.35 · bot v0.6.107 · digest v1.4; versions below refreshed 19 Oct 2026 -- client v2.6.167 · srv-2.6.49 · bot v0.6.207, run beside the suite). One lineage. When a file
+(client v2.6.102 · server srv-2.6.35 · bot v0.6.107 · digest v1.4; versions below refreshed 1 Nov 2026 -- client v2.6.168 · srv-2.6.49 · bot v0.6.214, run beside the suite). One lineage. When a file
 here disagrees with a chat's latest delivery, the newer version wins — update this manifest
 when files are added or retired. Read order for a new chat: CLAUDE.md → the session journal →
 project context → learnings → (for bots) CLAUDE-arena.md → (for the next chapter)
@@ -18,7 +18,7 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 ## A. Shipped code (deployed to the box / the download bundle)
 | File | Role | Version |
 |---|---|---|
-| elysium-vtes-bord.html | The client — ONE file, built from 12 fragments by elysium-build.js; carries the Help pages (Bots = the bot project's START-HERE-BOTS.html embedded verbatim, Local server = help-local-server.html) | v2.6.167 |
+| elysium-vtes-bord.html | The client — ONE file, built from 12 fragments by elysium-build.js; carries the Help pages (Bots = the bot project's START-HERE-BOTS.html embedded verbatim, Local server = help-local-server.html) | v2.6.168 |
 | elysium-server.js | The reference server (rooms, deals, relays, HTTP intake, statics -- four bot files since srv-2.6.43; the room option `tableSetup` since srv-2.6.44; the pub's turn count `tn`/`rn` since srv-2.6.45; the room option `tableLayout` since srv-2.6.46; the review's three locks since srv-2.6.47 -- names, clans and ids cleaned for attributes, RFC 6455 frame limits with pings in the rate bucket, the admin key's lockout; group B since srv-2.6.48 -- a mid-game leave vacates the seat, `bounty.award`, VP once per oust and back on an un-oust, a negative block tally, saves keep open seats and the board style; group C since srv-2.6.49 -- the rightmost X-Forwarded-For entry and `--trust-proxy xff`, one growable frame buffer per connection) | srv-2.6.49 |
 | elysium-error-digest.js | Daily Discord digest of elysium-errors.log (systemd timer) | v1.4 |
 | elysium-digest.service / .timer | The digest's systemd unit + timer | — |
@@ -42,7 +42,7 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 | .github/workflows/client-gates.yml | (repo root, v2.6.165) CI: every gate above on each PR and push to main touching `client/` or the root release files; every step runs even if an earlier one failed; read-only permissions |
 | check-versions.js | Version lockstep across code + doc headers ("everything agrees"); reads headers from `docs/` too; in the monorepo its last row asserts every root file is a byte copy of `client/<name>` or (the bundle) `bot/<name>` (12 Oct 2026) |
 
-| playtest/playtest-rig.js, playtest.js, playtest-page.js, playtest-report.js, scenarios/three-seat.json, PLAYTEST.md | v1.0.0 (v2.6.158): the play-test rig -- a real game against the bots in headless Chromium (Playwright; a dev tool, never shipped), recorded frame by frame and measured; PLAYTEST.md is the process, SKILLS.md 'Play-test a change for real' the short recipe; runs go to `playtest/runs/` (gitignored) or `--out` |
+| playtest/playtest-rig.js, playtest.js, playtest-page.js, playtest-report.js, scenarios/three-seat.json, PLAYTEST.md | v1.2.0 (v2.6.168: `--vtes` answers KRCG's v5 path, `--exp` serves expansions.json; v1.0.0 v2.6.158): the play-test rig -- a real game against the bots in headless Chromium (Playwright; a dev tool, never shipped), recorded frame by frame and measured; PLAYTEST.md is the process, SKILLS.md 'Play-test a change for real' the short recipe; runs go to `playtest/runs/` (gitignored) or `--out` |
 
 ## C. Living documents (update after EVERY implementation)
 | File | Role |
