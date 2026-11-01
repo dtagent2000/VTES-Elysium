@@ -56,6 +56,12 @@ korten. Startdeckar från Deck Lab skriver nu tryckta namn ("An Anarch Manifesto
 
 **Grindar:** se `client/CLAUDE.md` överst.
 
+**Efter PR:en (#44, CI grön):** värdläget kört i headless Chrome, 11 av 11. En server med `images/vtes.json` (v5) levererar
+databasen, och KRCG tillfrågas bara om `expansions.json`. En server som fortfarande har v3-filen ger ingen Julia, och därför
+måste boxens fil bytas. Från fil med enbart `expansions.json` lägger namnen på den cachade datan. Samma skript körde först av
+misstag mot v2.6.167 (den push-bara klonen stod på `main`) och blev då ett destruktivt test: starterna förblev namnlösa.
+Auditen finns nu som verktyget `client/krcg-audit.js`, så nästa session kan granska en ny KRCG-fil med ett kommando.
+
 **Osäkert:** elysium.cards. Om boxen har `/opt/elysium/images/vtes.json` läses den före KRCG, och då syns inga nya kort förrän
 filen byts (runbook §6 har kommandona). Dokumenten säger emot varandra om filen finns. Inget är kört i en riktig webbläsare
 mot static.krcg.org; sviten och auditen körde den riktiga koden i Node med KRCG:s riktiga filer.
