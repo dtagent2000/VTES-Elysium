@@ -870,6 +870,7 @@ function compile(cards, curated){
     else lib[rec.name] = libEntry(rec);
     noteAlias(rec._name, rec.name);
     (rec.name_variants || []).forEach(v => noteAlias(v, rec.name));
+    { const am = String(rec.name).match(/^(.*), (The|An|A)$/); if(am) noteAlias(am[2] + ' ' + am[1], rec.name); }   // v1.9.6 (main's KRCG v5 reply, 1 Nov 2026, item 5.2): the client now names library cards article-first from KRCG's v5 dump ('An Anarch Manifesto'); the v3 key is 'Anarch Manifesto, An' and its variants lacked that spelling (the one miss of 4,149, measured)
   });
 
   const alias = {}, collisions = [];

@@ -1,8 +1,8 @@
 {
  "fxv": 1,
- "generated": "2026-11-02T11:17:02.087Z",
+ "generated": "2026-11-02T12:07:50.719Z",
  "source": "vtes.json — 4149 cards (KRCG, Dark Pack)",
- "counts": {"crypt":1785,"lib":2365,"libWithFx":1675,"libPersistent":1195,"libLock":153,"curated":144,"alias":2422,"formats":{"v3":4149,"v5":0}},
+ "counts": {"crypt":1785,"lib":2365,"libWithFx":1675,"libPersistent":1195,"libLock":153,"curated":144,"alias":2423,"formats":{"v3":4149,"v5":0}},
  "crypt": {
   "\"Coach\" Tyrone Soros (G6)": {"cap":3,"clan":"Ministry","sect":"Anarch","group":"6","disc":{"all":["obf","pre"],"sup":[]}},
   "\"Mother\" Anja Giovanni (G6)": {"cap":8,"clan":"Hecata","sect":"Independent","group":"6","disc":{"all":["aus","dom","for","obl","pot"],"sup":["aus","for","obl"]}},
@@ -4290,6 +4290,7 @@
   "amenophobis": "Amenophobis (G4)",
   "america johnson": "America Johnson (G5)",
   "amisa": "Amisa (G2)",
+  "an anarch manifesto": "Anarch Manifesto, An",
   "ana rita montaña": "Ana Rita Montaña (G3)",
   "anarch convert": "Anarch Convert (ANY)",
   "anarch free press": "The Anarch Free Press",

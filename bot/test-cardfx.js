@@ -601,6 +601,8 @@ ok(fx.counts.libLock >= 140,
   { const oot = Object.entries(fx.lib).filter(([n, e]) => e.oot).map(([n]) => n);
     ok(oot.length === 36 && oot.includes('Archon Investigation') && oot.includes('Sudden Reversal') && oot.includes('Contingency Planning') && !oot.includes('Bleeding the Vine') && !oot.includes('Vox Senis'),
        'v1.9.6: `oot` on the 36 out-of-turn masters (a keyword segment: \u2018Out-of-turn.\u2019 / \u2018Master: out-of-turn.\u2019) -- not on a master that only mentions out-of-turn cards (Bleeding the Vine, Vox Senis); curated masters keep it (got ' + oot.length + ')');
+    ok(fx.alias['an anarch manifesto'] === 'Anarch Manifesto, An' && !!fx.lib['The Barrens'] && fx.alias['coven, the'] === 'The Coven',
+       'v1.9.6 (main\u2019s KRCG v5 reply, 5.2): the article-first spelling the client now uses resolves to the v3 key (An Anarch Manifesto -> Anarch Manifesto, An; most v3 keys are already article-first: The Barrens, The Coven)');
     const cr = fx.crypt["Abderrahim, Death's Hand (G6)"] || fx.crypt["Abderrahim, Death's Hand"];
     ok(!!cr && cr.path === 'Death and the Soul' && Object.values(fx.crypt).filter(e => e.path).length === 48,
        'v1.9.6: the crypt carries the Sabbat V5 Path (48 vampires; Burial Site Hunting Ground feeds a follower of Death and the Soul)'); }
