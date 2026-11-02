@@ -19,6 +19,35 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.216 (2 Nov 2026)** — KRCG's v5 dump is the card data (main's KRCG v5 reply of 1 Nov, item 5.1; Johan's order: after wave
+  3; RULINGS D-105). KRCG's v3 file stopped at Sabbat V5, so the 63 cards of Secrets of New York and Noites Brasileiras and the
+  dump's errata were unknown to cardfx.
+  - *`krcg-v5.js` v1.0.0* (new) writes `vtes-v5.json` + `expansions.json` as the v3-shaped `vtes.json` the compiler, `gen-precon.js`,
+    the ledger, `test-cardfx.js` and the TWD tools read (the field map in its header; `--compare OLD.json` diffs against a v3 file by
+    card id). Against KRCG's last v3 file: 4,149 shared cards; the differences are the errata (174 texts, 118 beyond markup and whitespace — e.g.
+    Assamite → Banu Haqim, Followers of Set → Ministry), the Fifth Edition "Path of Death and the Soul" bundle name (gen-precon's key
+    handles it), 9 `FLIGHT` cases, 2 `_name` forms of the Pentex™ cards and `An Anarch Manifesto`'s new name.
+  - *cardfx compiler v1.9.7*: a v5 record goes through `krcg-v5.js`'s `toV3` (compiling the dump directly gives the same cardfx as
+    compiling the converted file: 0 differences, measured); `this card is put in play` / `put on` is persistent; a `Requires …`
+    sentence inside a line is a requirement; an alias that is some card's own printed name goes to that card before the
+    newest-group ladder, even when only other cards list it (the dump's variants "Amelia", "Lucian", "Distraction" pointed at other
+    cards); a key with no letter or digit is no alias (`!`, Behind You!'s nickname); five v3 spellings the dump dropped (Tegyrius,
+    Lucinde, Theo Bell (ADV) …) kept as a table. 4,212 cards (crypt 1,822, library 2,390; cardfx's 2,391 library keys include the
+    curated `Pentex(TM) Subversion`), 1,702 library entries with effects (1,675 before), aliases 3,347 (2,423 before: the dump
+    carries more name variants, translations and nicknames among them). `krcg-v5.js` keeps the v3 key of the one card the dump
+    renamed (`Anarch Manifesto, An`: the TWD profile keys by it). Deck cards whose entry changed: Cardinal Benediction and War of
+    Ages (now persistent, `req.unmodelled`), Toreador Justicar (persistent) — none is played in the sims. No starter card changed.
+  - *gen-precon v1.1.1*: a "precon" bundle under 12 crypt / 60 library cards is not a deck (the Secrets of New York and Noites
+    Brasileiras bundles); the 18 V5 precons are unchanged.
+  - *Names*: through the client's v5 naming all 4,212 dump cards resolve to their own entry (now a `test-cardfx.js` check, with one
+    that no word of the table's vocabulary is an alias). Bare "Aisling Sturbridge" now goes to the new G6 printing (the ladder).
+  - *Gates*: suite SUITE_NUMBERS · canary 69/0 (bot/'s copies) and 69/0 (root v2.6.170 + `client/ELYSIUM-PROTOCOL.md`) · hotseat 11/0 ·
+    HB1 11/11 · test-cardfx 310/0 · `gen-precon.js --check` clean · MAIN_GATES.
+  - *Sim footprint* (registered prediction: the starters identical; pathpower and toreador may diverge): the 240-match client design vs
+    v0.6.215 SAME-PLAY 240 — no decision moved; 64 games differ only in the event summary, where `X plays Second Tradition: Domain.`
+    now reads as a card play (the parser's `Second Tradition` resolves through a v5 variant). The V5 smoke (14 × 12): SAME-PLAY 168;
+    pathpower and toreador did not diverge (their changed cards are political actions the bots never call there). ana-block clean;
+    invariant flags 5 (the same kinds as v0.6.215).
 - **v0.6.215 (2 Nov 2026)** — V5 wave 3, Johan's "kör" of 2 Nov on D-104 (no rule for uncurated masters: a deck is released only
   when 100 % playable; curate the masters by class). The canon: `specs/spec-v5-wave3-2026-11-02.md`; RULINGS R-42, D-104.
   - *The master finder* never offers an out-of-turn master (cardfx v1.9.6 `oot`, 36 entries) and checks a master's requirements

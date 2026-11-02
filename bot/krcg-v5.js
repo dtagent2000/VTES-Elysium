@@ -10,13 +10,13 @@
 
    The map (v5 -> v3), checked against KRCG's last v3 file on 2 Nov 2026 (4,149 shared cards; `--compare` reprints the check):
      name        printed_name + ' (' + suffix + ')' when the dump gives a suffix (crypt groups, ADV), ' (ANY)' for a crypt card of
-                 group Any -- the v3 key for every shared card but one (v3 kept 'Anarch Manifesto, An'; the v5 name 'An Anarch
-                 Manifesto' carries the old one as a variant, and the compiler aliases it)
+                 group Any -- the v3 key for every shared card; the one the dump renamed ('An Anarch Manifesto') keeps its v3 key
+                 ('Anarch Manifesto, An', V3_NAME) and the compiler aliases the new name
      _name       the article-last variant ('Ankou, The') when there is one, else printed_name, as v3 did
      card_text   text ('<Name>' card references, v3 wrote '/Name/'; 174 shared texts carry errata)
      types       types                                clans       [clan] (crypt) | clan_requirement (library)
      disciplines disciplines (crypt) | discipline_requirement.disciplines (library); 'fli' written 'flight' as v3 did
-     capacity (crypt; v3's library 'requires capacity N' is not mapped -- nothing reads it), path (a library card's: path_requirement), banned, rulings, id; empty clans / disciplines left out, as v3 did
+     capacity (crypt; v3's library `capacity` -- the capacity of the vampire a card such as The Embrace creates -- is not mapped: nothing reads it), path (a library card's: path_requirement), banned, rulings, id; empty clans / disciplines left out, as v3 did
      group       'G6' -> '6', 'Any' -> 'ANY'
      title       title ('1 Vote' / '2 Votes' written lower case, as v3 did: the compiler's vote table reads them)
      pool_cost / blood_cost / conviction_cost   from cost {type: 'Pool' | 'Blood' | 'Conviction', value}
@@ -46,11 +46,16 @@ function parseArgs(argv){
   return o;
 }
 
+/* The v3 key of the one shared card whose v5 printed name differs from it: 'An Anarch Manifesto' was 'Anarch Manifesto, An' in v3
+   (the TWD profile and cardfx key it so; the client's article-first name resolves through the compiler's alias). */
+const V3_NAME = { 100053: 'Anarch Manifesto, An' };
+
 function toV3(c, sets){
   const crypt = c.kind === 'Crypt';
   const r = { id: c.id };
   const anyGroup = crypt && /^any$/i.test(String(c.group || ''));   // Anarch Convert, New Blood: v3 named them '(ANY)'
   r.name = (c.printed_name || '') + (c.suffix ? ' (' + c.suffix + ')' : anyGroup ? ' (ANY)' : '');
+  if (V3_NAME[c.id]) r.name = V3_NAME[c.id];   // the one card the dump renamed: its v3 key stays (cardfx, the TWD profile and the decks key by it)
   { const am = /^(The|An|A) (.+)$/.exec(c.printed_name || ''), lex = am && am[2] + ', ' + am[1];   // v3's _name put a LEADING article last ('Ankou, The') when KRCG lists that variant
     r._name = (lex && (c.name_variants || []).some(v => (typeof v === 'string' ? v : (v && v.name)) === lex)) ? lex : (c.printed_name || ''); }
   r.printed_name = c.printed_name || '';

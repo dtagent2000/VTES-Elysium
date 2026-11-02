@@ -625,8 +625,27 @@ ok(fx.counts.libLock >= 140,
     ok(oot.length === 36 && oot.includes('Archon Investigation') && oot.includes('Sudden Reversal') && oot.includes('Contingency Planning') && !oot.includes('Bleeding the Vine') && !oot.includes('Vox Senis'),
        'v1.9.6: `oot` on the 36 out-of-turn masters (a keyword segment: \u2018Out-of-turn.\u2019 / \u2018Master: out-of-turn.\u2019) -- not on a master that only mentions out-of-turn cards (Bleeding the Vine, Vox Senis); curated masters keep it (got ' + oot.length + ')');
     { const R = n => fx.lib[n] ? n : fx.alias[n.toLowerCase()];
-      ok(R('An Anarch Manifesto') && R('An Anarch Manifesto') === R('Anarch Manifesto, An') && !!fx.lib['The Barrens'] && fx.alias['coven, the'] === 'The Coven',
-         'v1.9.6 / v1.9.7 (main\u2019s KRCG v5 reply, 5.2): both spellings of the Manifesto resolve to one entry (the v5 key is article-first, the v3 one an alias); The Barrens and The Coven were article-first already (got ' + JSON.stringify([R('An Anarch Manifesto'), R('Anarch Manifesto, An')]) + ')'); }
+      ok(R('An Anarch Manifesto') === 'Anarch Manifesto, An' && !!fx.lib['Anarch Manifesto, An'] && !!fx.lib['The Barrens'] && fx.alias['coven, the'] === 'The Coven',
+         'v1.9.6 / v1.9.7 (main\u2019s KRCG v5 reply, 5.2): both spellings of the Manifesto resolve to one entry, keyed as in v3 (krcg-v5.js keeps the v3 key of the one card the dump renamed: the TWD profile keys by it); The Barrens and The Coven were article-first already (got ' + JSON.stringify([R('An Anarch Manifesto'), R('Anarch Manifesto, An')]) + ')'); }
+    ok(fx.alias['distraction'] === 'Distraction' && !!fx.lib['Distraction'] && !!fx.lib['Misdirection'],
+       'v1.9.7 (the egress review): a card\u2019s own name stays its own even when only ANOTHER card lists it as a variant (\u2018Distraction\u2019 is a card; Misdirection\u2019s v5 variant is \u2018Distraction\u2019) -- got ' + fx.alias['distraction']);
+    /* the client's v5 naming (main's reply 5.2): the printed name, the unicity suffix when another printing shares the name. Every card
+       in the data must resolve, through the bot's own three-step lookup (exact, lower-case alias, FX_NORM), to ITS entry. */
+    { const { FX_NORM } = require(here('elysium-bot.js'));
+      const norm = new Map(); for(const k of [...Object.keys(fx.lib), ...Object.keys(fx.crypt)]) if(!norm.has(FX_NORM(k))) norm.set(FX_NORM(k), k);
+      const has = k => !!(k && (fx.lib[k] || fx.crypt[k]));
+      const look = n => has(n) ? n : has(fx.alias[n.trim().toLowerCase()]) ? fx.alias[n.trim().toLowerCase()] : has(norm.get(FX_NORM(n))) ? norm.get(FX_NORM(n)) : null;
+      const cnt = {}; cards.forEach(c => { cnt[c.printed_name] = (cnt[c.printed_name] || 0) + 1; });
+      let good = 0; const bad = [];
+      for(const c of cards){
+        const pn = c.printed_name || c.name, suf = (c.name.slice(pn.length).match(/^ \((.+)\)$/) || [])[1];
+        const client = cnt[pn] > 1 && suf ? pn + ' (' + suf + ')' : pn, k = look(client);
+        if(k && (k === c.name || FX_NORM(k) === FX_NORM(c.name))) good++; else if(bad.length < 5) bad.push(client + ' -> ' + k + ' (want ' + c.name + ')');
+      }
+      ok(good === cards.length, 'the client\u2019s v5 names: ' + good + ' of ' + cards.length + ' cards resolve to their own entry ' + (bad.length ? JSON.stringify(bad) : ''));
+      const LOGWORDS = ['edge', 'the edge', 'pool', 'blood', 'bleed', 'vote', 'votes', 'ballot', 'hunt', 'block', 'intercept', 'stealth', 'strike', 'dodge', 'press', 'maneuver', 'combat', 'damage', 'torpor', 'rescue', 'diablerie', 'equip', 'recruit', 'employ', 'action', 'referendum', 'prey', 'predator', 'transfer', 'influence', 'discard', 'draw', 'a', 'an', 'the', 'it', 'him', 'her', 'them', 'pass', 'done', 'yes', 'no', 'ready', 'unlock', 'lock', '1 blood', '1 pool', '!'];
+      const hit = LOGWORDS.filter(w => fx.alias[w]);
+      ok(!hit.length, 'no word of the table\u2019s own vocabulary is a card alias (the v5 dump\u2019s nicknames: the log parser resolves \u2018X plays|burns Y\u2019 through the aliases) -- ' + (hit.length ? JSON.stringify(hit.map(w => w + '\u2192' + fx.alias[w])) : 'none')); }
     const cr = fx.crypt["Abderrahim, Death's Hand (G6)"] || fx.crypt["Abderrahim, Death's Hand"];
     ok(!!cr && cr.path === 'Death and the Soul' && Object.values(fx.crypt).filter(e => e.path).length === 54,
        'v1.9.6: the crypt carries the Path (54 vampires: Sabbat V5\u2019s 48 + 6 of Noites Brasileiras, the v5 dump; Burial Site Hunting Ground feeds a follower of Death and the Soul)'); }

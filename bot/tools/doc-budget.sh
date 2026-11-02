@@ -56,7 +56,7 @@ done
 while read -r p; do
   q="${p#bot/}"
   [ -e "$B/$q" ] || { bad "root CLAUDE.md names $p, which does not exist"; missing=1; }
-done < <(grep -o '`bot/[A-Za-z0-9_./-]*`' "$R/CLAUDE.md" | tr -d '`' | grep -v '[<>*]' | sort -u)
+done < <(grep -o '`bot/[A-Za-z0-9_./-]*`' "$R/CLAUDE.md" | tr -d '`' | grep -v '[<>*]' | grep -vE '^bot/(vtes|vtes-v5|expansions|twda|twda-vdb)\.json$' | sort -u)   # third-party data: fetched, never committed
 [ "$missing" = 0 ] && ok "every path named in a standing page (and every bot/ path in the root CLAUDE.md) exists"
 
 # 3. the versions STATUS names (STATUS read with * and ` stripped)

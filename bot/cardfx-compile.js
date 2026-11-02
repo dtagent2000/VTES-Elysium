@@ -151,40 +151,13 @@ function normalizeCard(card){
   if(typeof card.kind !== 'string'){
     return { fmt: 'v3', rec: Object.assign({ _crypt: isCryptCard(card) }, card) };
   }
-  const crypt = card.kind === 'Crypt';
-  const rec = { _crypt: crypt, types: card.types || [] };
-  rec._name = card.printed_name || '';
-  rec.name = rec._name + (card.suffix ? ' (' + card.suffix + ')' : '');
-  rec.name_variants = (card.name_variants || [])
-    .map(v => typeof v === 'string' ? v : (v && v.name))
-    .filter(v => typeof v === 'string' && v);
-  rec.card_text = typeof card.text === 'string' ? card.text : '';
-  if(card.capacity !== undefined) rec.capacity = card.capacity;
-  rec.disciplines = crypt
-    ? (Array.isArray(card.disciplines) ? card.disciplines : [])
-    : (card.discipline_requirement && Array.isArray(card.discipline_requirement.disciplines)
-        ? card.discipline_requirement.disciplines : []);
-  rec.clans = crypt ? (card.clan ? [card.clan] : [])
-                    : (Array.isArray(card.clan_requirement) ? card.clan_requirement : []);
-  if(card.cost !== undefined && card.cost !== null){
-    /* v1.9.7 (2 Nov 2026, the v5 dump as the source -- main's reply of 1 Nov, 5.1): the real dump writes `cost: {type: 'Pool' | 'Blood'
-       | 'Conviction', value: N | 'X'}` (capitalised, `value`), and `cost: {}` for a free card (1,394 cards). The v4-API guess this
-       mapped (`type: 'pool'`, `amount`) matched none, so every cost read 'unknown' (996). Conviction is not modelled (the v3 path
-       never read conviction_cost either). */
-    const ct = card.cost && typeof card.cost === 'object' ? String(card.cost.type || '').toLowerCase() : '';
-    const cv = card.cost && typeof card.cost === 'object' ? (card.cost.value !== undefined ? card.cost.value : card.cost.amount) : undefined;
-    if(typeof card.cost === 'object' && !ct && !Object.keys(card.cost).length){ /* free */ }
-    else if(ct && cv !== undefined){
-      if(ct === 'pool') rec.pool_cost = String(cv);
-      else if(ct === 'blood') rec.blood_cost = String(cv);
-      else if(ct !== 'conviction') rec._costUnknown = true;
-    } else rec._costUnknown = true;      // unconfirmed shape — degrade + count, never mislabel
-  }
-  if(typeof card.path === 'string' && card.path) rec.path = card.path;   // v1.9.7: the Sabbat V5 vampires' Path (the v3 field of the same name)
-  if(card.group !== undefined) rec.group = String(card.group).replace(/^G/, '');
-  if(typeof card.title === 'string' && card.title) rec.title = card.title;
-  if(card.banned) rec.banned = card.banned;
-  return { fmt: 'v5', rec };
+  /* v1.9.7 (bot v0.6.216, RULINGS D-105; the egress review): a v5 record goes through krcg-v5.js's toV3, the ONE v5 -> v3 map, so
+     compiling the dump directly gives the same cardfx as compiling the vtes.json built from it (this reader had its own map, and
+     it disagreed: no '(ANY)', 'fli' not 'flight', the vote title's case). The sets are not needed here (an empty map). */
+  const rec = require('./krcg-v5.js').toV3(card, new Map());
+  { const c = card.cost, known = c === undefined || c === null || (typeof c === 'object' && (!Object.keys(c).length || (/^(?:pool|blood|conviction)$/i.test(String(c.type || '')) && (c.value !== undefined || c.amount !== undefined))));
+    if(!known) rec._costUnknown = true; }   // an unknown cost shape ({type: 'Pool', value} known, {} free): degrade + count, never mislabel
+  return { fmt: 'v5', rec: Object.assign({ _crypt: isCryptCard(rec) }, rec) };
 }
 
 const num = v => /^x$/i.test(v) ? 'X' : parseInt(v, 10);
@@ -896,7 +869,7 @@ function compile(cards, curated){
   normd.forEach(({ rec }) => { const k = String(rec._name || '').trim().toLowerCase(); if(k){ if(!ownsName.has(k)) ownsName.set(k, new Set()); ownsName.get(k).add(rec.name); } });
   [...variants.keys()].sort().forEach(k => {
     let cands = [...variants.get(k)];
-    { const own = ownsName.get(k); if(own){ const mine = cands.filter(c => own.has(c)); if(mine.length) cands = mine; } }
+    { const own = ownsName.get(k); if(own){ const mine = cands.filter(c => own.has(c)); cands = mine.length ? mine : [...own]; } }   // the owner even when only OTHER cards list the name ('Distraction' is a card; Misdirection's variant is 'Distraction'): noteAlias never notes a card's own name, so the owner is no candidate (the egress review)
     if(cands.length > 1){
       collisions.push(k);
       cands.sort((a, b) => {
@@ -906,7 +879,7 @@ function compile(cards, curated){
         return a.localeCompare(b);
       });
     }
-    alias[k] = cands[0];
+    if(/[\p{L}\p{N}]/u.test(k)) alias[k] = cands[0];   // v1.9.7: a key with no letter or digit is no name ('!', the v5 nickname of Behind You!): never an alias the log parser could meet
   });
 
   /* v1.9.7: five v3 spellings the v5 dump's name variants leave out -- main's reply of 1 Nov: the client adds them itself, so an old

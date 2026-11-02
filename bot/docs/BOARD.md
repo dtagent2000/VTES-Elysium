@@ -84,6 +84,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   by identical minified output. *Done when* Johan has chosen; then per round. Docs: spec §8 Q6.
 
 ## Known, not built (bot side)
+- **The TWD profile's article-last keys** (v0.6.216's egress): 14 profile keys (`Barrens, The`, `Labyrinth, The` …) are not cardfx
+  keys, so `_twdExpect` never counts those cards (profile keys by `_name`, cardfx by the name). *Done when* the profile is keyed
+  (or read) through the alias table and a rebuild shows 0 missing. Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
 - **A human's bounce of a bot's bleed** is not read by the acting bot; a bot that is a bounce's new target cannot bounce onward.
   *Done when* the client's bounce play line (a pool target) is parsed and section-tested. Docs: RULINGS O-3.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.

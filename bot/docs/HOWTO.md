@@ -6,7 +6,7 @@ Everything runs from inside `bot/`. Third-party data (`vtes.json`, the TWDA) is 
 && node krcg-v5.js` (`--compare OLD.json` prints the field diff against a v3 file by card id). When the network policy blocks it (a 403
 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and copy the two dump files in. KRCG's v3 file
 (static.krcg.org/data/vtes.json) stopped at Sabbat V5: it lacks the 63 cards of Secrets of New York and Noites Brasileiras and the
-errata (142 texts beyond markup, e.g. Assamite → Banu Haqim), so it is only a `--compare` input now. The TWDA: `twda.json` (the list export,
+errata (118 texts beyond markup and whitespace, e.g. Assamite → Banu Haqim), so it is only a `--compare` input now. The TWDA: `twda.json` (the list export,
 the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s before naming a data file.
 
 ## Running
