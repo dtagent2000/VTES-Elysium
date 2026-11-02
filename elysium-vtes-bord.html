@@ -3252,7 +3252,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.168';   // v2.6.168 (1 Nov 2026, THE NEW SETS ARRIVE, pure client -- purge; srv-2.6.49 unchanged, no wire change; bot v0.6.214 beside): Johan: Julia Sowinski (Secrets of New York, 31 Oct 2026) is not in the client. KRCG no longer adds cards to the file the client read (static.krcg.org/data/vtes.json, the v3 shape: 4149 cards, newest set Sabbat V5); the 63 cards of Secrets of New York and Noites Brasileiras are only in its v5 dump. The client now reads static.krcg.org/data/v5/vtes.json (the old file only if that fails) and v5/expansions.json for the set and starter names: the new cards are in the card database, the Deck Lab catalog and the import check, with their pictures. A copy of the old file in the browser is refreshed once (when the weekly refresh is on). Found against KRCG's real v5 data and fixed with it: the starter decks keep their names ('Fifth Edition :: Toreador', not 'V5 :: PTo') and the V5 Starters group (every starter read as Legacy); a library card's pool or blood cost is read again (search 'pool:2'); a name two cards share goes to the card printed with it ('Amelia' is Amelia, not Amelia, The Blood Red Tears; 'Distraction' is the action, not Misdirection's old name), and 'Theo Bell (ADV)', 'Tegyrius' and 'Lucinde' still resolve. Settings > From file takes expansions.json beside vtes.json. Help > Bots embeds bot v0.6.214's guide.
+const VERSION='2.6.169';   // v2.6.169 (2 Nov 2026, THE COPY YOU HAVE, pure client -- purge; supersedes the never-deployed v2.6.168, same PR; srv-2.6.49 unchanged, no wire change; bot v0.6.214 beside): the independent review of v2.6.168 found two faults in the card loader, both reproduced and fixed. (1) One failed download of KRCG's v5 dump at the weekly refresh (a 503, a reset mid-download) replaced a good v5 copy with KRCG's frozen v3 file, stamped fresh for a week: the 63 new cards were gone until a manual Refresh, and 'Legal cards only' refused a deck with Julia Sowinski. The v3 file now loads only when the browser has no copy of its own; a copy is kept (still stale, so the next start tries the dump again), and a v3 file read as that stopgap is cached as one (stale at once; Settings says so). (2) The hosted table's own images/vtes.json waited for KRCG's expansions.json, with no time limit, before the database could be used: a slow or hanging static.krcg.org held the table. The card data is now used the moment it arrives, with the names at hand (cached or built in); KRCG's names re-label the starters when they come, the request gives up after 8 s, and the copy is cached once. Also: the nine Flight cards read FLIGHT again (the v5 dump writes fli), and a deck's Legacy badge is decided by its cards ('Admonitions, The' is The Admonitions), not by the spelling.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -6885,10 +6885,19 @@ function storeDeck(name,text,era,okMsg){   // cli-2.6.165 (C-16): okMsg = the ca
   else if(_dropTxt) toast('Saved. '+_dropTxt, 6000);
   return true;
 }
+let _eraSets=null;                   // v2.6.169: the catalog's Legacy names and cards, built once per catalog
 function eraFromCardNames(names){     // 'legacy' if ANY card is legacy-only, 'v5' if every known card is V5-printed, null if undetermined
   if(!catalog || !catalog.legacy || !catalog.legacy.length || !names || !names.length) return null;
-  const leg=new Set(catalog.legacy.map(c=>norm(c.name)));
-  return names.some(n=>leg.has(norm(n))) ? 'legacy' : 'v5';
+  /* v2.6.169 (the independent review): by CARD, not by spelling. The catalog lists KRCG's printed names ('The Admonitions');
+     a list written in another spelling ('Admonitions, The' -- KRCG's v3 file, older deck tools) resolves to the same card
+     through cardInfo, so it counts as that Legacy card. v2.6.168 compared spellings only: 104 Legacy cards read as V5. */
+  if(!_eraSets || _eraSets.cat!==catalog || _eraSets.info!==cardInfo){
+    const leg=new Set(), legCard=new Set();
+    for(const c of catalog.legacy){ const k=norm(c.name); leg.add(k); const m=cardInfo && cardInfo.get(k); if(m) legCard.add(m); }
+    _eraSets={ cat:catalog, info:cardInfo, leg, legCard };
+  }
+  const { leg, legCard }=_eraSets;
+  return names.some(n=>{ const k=norm(n); if(leg.has(k)) return true; const m=cardInfo && cardInfo.get(k); return !!m && legCard.has(m); }) ? 'legacy' : 'v5';
 }
 function eraOfDeck(d){                 // stored era, or computed from the saved text when the catalog is available
   if(d && d.era) return d.era;
@@ -17515,7 +17524,7 @@ function applyPco(){                                         // re-paint cards u
   else if(net.view==='l4') updateL4Opponents();   // Classic: opponent cards live in #l4oppWrap (built by renderL4OppCards via updateL4Opponents) -> repaint them with the new player-colour outline; was missing, so toggling colours in L4 left opponent cards stale
   renderAltIfOpen();
 }
-let cardDBLoading=false, cardInfo=null, cardImageNames=null;
+let cardDBLoading=false, cardInfo=null, cardImageNames=null, cardDBGen=0;   // v2.6.169: cardDBGen counts the loads, so a late answer (KRCG's names) can tell whether the copy it belongs to is still the one in use
 // v2.5.87: KRCG API v3→v5 dual-format card parsing (KRCG announced krcg-api v4 / "krcg v5" JSON;
 // static.krcg.org/data/vtes.json — the file fetchVtesJson() below actually reads — is expected to
 // switch to it on its own schedule, same as static.krcg.org's earlier v2→v3 precedent). Each card
@@ -17557,7 +17566,7 @@ function parseV5Card(card){
   const clansArr = isCrypt ? (card.clan?[card.clan]:[]) : (Array.isArray(card.clan_requirement)?card.clan_requirement.slice():[]);
   // disciplines: flat trigram array, crypt-only. discipline_requirement:{type,disciplines}, library-only.
   const discArr = isCrypt ? (Array.isArray(card.disciplines)?card.disciplines:[])
-                           : (card.discipline_requirement && Array.isArray(card.discipline_requirement.disciplines) ? card.discipline_requirement.disciplines : []);
+                           : (card.discipline_requirement && Array.isArray(card.discipline_requirement.disciplines) ? card.discipline_requirement.disciplines : []).map(d=>d==='fli'?'FLIGHT':d);   // v2.6.169: the v3 file spelled the special discipline Flight 'FLIGHT' (9 cards), the v5 dump the trigram 'fli' -- the v3 spelling is the one the preview and the catalog search show
   // path: bare string on crypt cards ('' when none — falsy, same as v3's null case). path_requirement:
   // array on library cards; take the first (Elysium's meta.path has never modelled multi-path requirements).
   const pathVal = isCrypt ? (card.path||null) : ((Array.isArray(card.path_requirement) && card.path_requirement.length) ? card.path_requirement[0] : null);
@@ -17630,14 +17639,13 @@ function buildCardIndex(list){                                     // v2.6.143 p
   return { map, info, imgNames };
 }
 function processCardData(data, src, exp){   // v2.6.168: `exp` = KRCG's expansions.json (its text, or parsed) for the set and starter names; returns whether the data held cards
-  const list = Array.isArray(data) ? data
-             : Array.isArray(data.cards) ? data.cards
-             : Object.values(data);
+  const list = vtesList(data);
   const sets=krcgSetIndex(typeof exp==='string' ? vtesExpParse(exp) : exp);
   if(sets){ krcgSets=sets; if(typeof exp==='string') krcgExpRaw=exp; }   // a load without the file keeps the names an earlier one brought
   const built=buildCardIndex(list);
   const map=built.map, info=built.info, imgNames=built.imgNames;
   if(map.size){
+    cardDBGen++;   // v2.6.169: a new copy is in use -- late names for an older one leave it alone
     cardTypes=map; cardInfo=info; cardImageNames=imgNames; cardDBSrc=src ? src+' '+vtesFmt(list) : null;   // B-63: remember the tier (v2.6.168: and KRCG's shape, 'KRCG v5') for dump.env.db.source
     buildPrecons(list);
     $('#rulesWrap').hidden=false;
@@ -17647,19 +17655,21 @@ function processCardData(data, src, exp){   // v2.6.168: `exp` = KRCG's expansio
   }
   return !!map.size;
 }
-function cacheVtesJson(raw, fmt){   // v2.6.168: the record carries KRCG's shape ('v5' | 'v3') and the expansions.json text read with it
+function cacheVtesJson(raw, fmt, fallback){   // v2.6.168: the record carries KRCG's shape ('v5' | 'v3') and the expansions.json text read with it; v2.6.169: `fallback` = KRCG's v3 file, read because the dump failed
   openImgDB().then(db=>{
     const tx=db.transaction(IMG_STORE,'readwrite');
-    tx.objectStore(IMG_STORE).put({json:raw, exp:krcgExpRaw||null, fmt:fmt||null, size:(raw.length+(krcgExpRaw?krcgExpRaw.length:0))*2, ts:Date.now()}, '_vtesJson');
+    tx.objectStore(IMG_STORE).put({json:raw, exp:krcgExpRaw||null, fmt:fmt||null, fallback:!!fallback, size:(raw.length+(krcgExpRaw?krcgExpRaw.length:0))*2, ts:Date.now()}, '_vtesJson');
     tx.oncomplete=()=>updateJsonCacheUI();
   }).catch(()=>{});
 }
 const VTES_MAX_AGE_MS=7*24*60*60*1000;   // v2.6.76: a cached catalog younger than this is used WITHOUT touching the network
-function vtesStale(ts, now, rec){ return !(typeof ts==='number' && ts>0) || ((now||Date.now())-ts) > VTES_MAX_AGE_MS || (!!rec && !rec.fmt); }   // v2.6.76 pure: no timestamp = stale; v2.6.168: so is a record with no shape stamp (written before v2.6.168: KRCG's v3 file, which gets no new sets)
+function vtesStale(ts, now, rec){ return !(typeof ts==='number' && ts>0) || ((now||Date.now())-ts) > VTES_MAX_AGE_MS || (!!rec && (!rec.fmt || rec.fallback===true)); }   // v2.6.76 pure: no timestamp = stale; v2.6.168: so is a record with no shape stamp (written before v2.6.168: KRCG's v3 file, which gets no new sets); v2.6.169: and the v3 file kept as a stopgap -- the next start tries the dump again
 const KRCG_DATA_URL='https://static.krcg.org/data/v5/vtes.json', KRCG_DATA_V3_URL='https://static.krcg.org/data/vtes.json', KRCG_EXP_URL='https://static.krcg.org/data/v5/expansions.json';   // v2.6.168
+function vtesList(data){             // v2.6.169 pure: the card list in a KRCG file (an array, {cards:[...]}, or an object of cards)
+  return Array.isArray(data) ? data : (data && Array.isArray(data.cards)) ? data.cards : (data && typeof data==='object') ? Object.values(data) : [];
+}
 function vtesFmt(data){              // v2.6.168 pure: which KRCG shape a card list is in ('v5' when any card has the v5-only `kind`)
-  const l=Array.isArray(data) ? data : (data && Array.isArray(data.cards)) ? data.cards : (data && typeof data==='object') ? Object.values(data) : [];
-  return l.some(c=>c && typeof c.kind==='string') ? 'v5' : 'v3';
+  return vtesList(data).some(c=>c && typeof c.kind==='string') ? 'v5' : 'v3';
 }
 function vtesExpParse(raw){ if(typeof raw!=='string' || !raw) return null; try{ return JSON.parse(raw); }catch(e){ return null; } }   // v2.6.168 pure
 function vtesFileKind(d){            // v2.6.168 pure: 'exp' for KRCG's expansions.json, 'cards' for a card list in either shape, null for anything else
@@ -17667,8 +17677,28 @@ function vtesFileKind(d){            // v2.6.168 pure: 'exp' for KRCG's expansio
   const l=Array.isArray(d) ? d : (d && Array.isArray(d.cards)) ? d.cards : (d && typeof d==='object') ? Object.values(d) : null;
   return (l && l.some(c=>c && typeof c==='object' && Array.isArray(c.types))) ? 'cards' : null;
 }
-function krcgExpFetch(){             // v2.6.168: KRCG's expansions.json as text, or null -- never rejects, never fails a load
-  return fetch(KRCG_EXP_URL).then(r=>{ if(!r || !r.ok) throw 0; return r.text(); }).then(t=>krcgSetIndex(vtesExpParse(t)) ? t : null).catch(()=>null);
+const KRCG_EXP_WAIT_MS=8000;          // v2.6.169: how long KRCG's expansions.json may take before the client stops asking (nothing waits on it; the copy is cached when it has answered)
+function krcgExpFetch(ms){           // v2.6.168: KRCG's expansions.json as text, or null -- never rejects, never fails a load
+  /* v2.6.169 (the independent review): bounded -- a request that never answers is given up after `ms` (KRCG_EXP_WAIT_MS), so the
+     copy it rides with is still cached. The promise says whether it has settled (`done`) and with what (`val`): a card load that
+     finds the names already in uses them at once, one that does not uses the names at hand and takes KRCG's when they come. */
+  const ac=(typeof AbortController==='function') ? new AbortController() : null;
+  let tm=null;
+  const p=Promise.race([
+    fetch(KRCG_EXP_URL, ac ? { signal:ac.signal } : undefined).then(r=>{ if(!r || !r.ok) throw 0; return r.text(); }).then(t=>krcgSetIndex(vtesExpParse(t)) ? t : null).catch(()=>null),
+    new Promise(res=>{ tm=setTimeout(()=>{ try{ if(ac) ac.abort(); }catch(e){} res(null); }, (ms>0) ? ms : KRCG_EXP_WAIT_MS); })
+  ]).then(t=>{ clearTimeout(tm); p.done=true; p.val=t; return t; });
+  p.done=false; p.val=null;
+  return p;
+}
+function vtesNamesThenCache(raw, data, fmt, expP, fallback){   // v2.6.169: after a copy is in use -- KRCG's names, if they come late, re-label its starters; then it is cached, once
+  const gen=cardDBGen;
+  return Promise.resolve(expP || null).then(t=>{
+    if(gen!==cardDBGen) return;   // a newer load took over (Refresh, From file, the box's file): it caches its own copy
+    if(t && t!==krcgExpRaw){ const sets=krcgSetIndex(vtesExpParse(t)); if(sets){ krcgSets=sets; krcgExpRaw=t;
+      if(fmt==='v5' && cardTypes){ buildPrecons(vtesList(data)); if(typeof onCardDBReady==='function') onCardDBReady(); } } }   // only a v5 file names its starters by code (and not after the database was switched off or Refresh cleared it)
+    cacheVtesJson(raw, fmt, fallback);
+  });
 }
 function vtesCached(){                 // v2.6.76: the IndexedDB copy ({json, ts}) or null -- never rejects (no indexedDB, a broken store, an empty record all read as 'no cache')
   return openImgDB().then(db=>new Promise(res=>{
@@ -17707,11 +17737,9 @@ function _loadCardDBFetch(){         // v2.6.76: the fetch chain, unchanged from
       .then(r=>{ if(!r.ok) throw 0; return r.text(); })
       .then(raw=>{
         const data=JSON.parse(raw), fmt=vtesFmt(data);
-        return (fmt==='v5' ? krcgExpFetch() : Promise.resolve(null)).then(expRaw=>{   // v2.6.168: a v5 file names its starters by code; the names come from KRCG (16 KB), else the cached or built-in ones
-          if(!processCardData(data, 'local folder', expRaw)) throw 0;
-          cacheVtesJson(raw, fmt);   // cache the local copy too -- it then also serves the offline/file:// fallback path
-          cardDBLoading=false;
-        });
+        if(!processCardData(data, 'local folder')) throw 0;   // v2.6.169 (the independent review): used AT ONCE, with the names at hand (the cached or the built-in ones) -- v2.6.168 waited for KRCG's expansions.json first, so a slow or hanging static.krcg.org held the hosted table's database
+        cardDBLoading=false;
+        vtesNamesThenCache(raw, data, fmt, fmt==='v5' ? krcgExpFetch() : null, false);   // a v5 file names its starters by code: KRCG's names (16 KB) re-label them if they differ; then the local copy is cached too -- it also serves the offline/file:// fallback path
       })
       .catch(()=>{ fetchVtesJson(); });
     return;
@@ -17722,31 +17750,22 @@ function fetchVtesJson(){
   /* v2.6.168: KRCG's v5 dump first -- since Secrets of New York and Noites Brasileiras (31 Oct 2026) the only file with the new
      sets; the v3 file the client read until v2.6.167 stops at Sabbat V5 -- then the v3 file if the dump fails. expansions.json
      (the set and starter names) is fetched alongside and never fails the load. */
+  /* v2.6.169 (the independent review): (1) the v3 file only when this browser has no copy of its own -- a copy cached earlier
+     is newer than KRCG's frozen v3 file, so a failed dump (a 503, a reset mid-download) keeps it, untouched and still stale,
+     and the next start tries the dump again; v2.6.168 cached the v3 file over a good v5 copy, stamped fresh for a week. A v3
+     file read as that stopgap is cached as one (`fallback`, stale at once). (2) The card data is used the moment it arrives:
+     with KRCG's names when they are already in, else with the names at hand, and KRCG's re-label the starters when they come. */
   const get=u=>fetch(u).then(r=>{ if(!r || !r.ok) throw new Error('HTTP '+(r && r.status)); return r.text(); });
   const expP=krcgExpFetch();
-  get(KRCG_DATA_URL).catch(()=>get(KRCG_DATA_V3_URL))
-    .then(raw=>{
-      const data=JSON.parse(raw);
-      return expP.then(expRaw=>{
-        if(!processCardData(data, 'KRCG', expRaw)) throw new Error('no cards');
-        cacheVtesJson(raw, vtesFmt(data));
-      });
-    })
-    .catch(()=>{
-      /* Network failed — try cache as fallback even when sync is on */
-      openImgDB().then(db=>{
-        const tx=db.transaction(IMG_STORE,'readonly');
-        const req=tx.objectStore(IMG_STORE).get('_vtesJson');
-        req.onsuccess=()=>{
-          const cached=req.result;
-          if(cached && cached.json){
-            try{ processCardData(JSON.parse(cached.json), 'cached/offline', cached.exp); return; }catch(e){}
-          }
-          log('Could not load the card database — minion detection unavailable. Offline with a vtes.json file? Settings → Card data → 📁 From file… loads it once and caches it.');
-        };
-        req.onerror=()=>log('Could not load the card database — minion detection unavailable. Offline with a vtes.json file? Settings → Card data → 📁 From file… loads it once and caches it.');
-      }).catch(()=>log('Could not load the card database — minion detection unavailable. Offline with a vtes.json file? Settings → Card data → 📁 From file… loads it once and caches it.'));
-    })
+  const take=(raw, fallback)=>{
+    const data=JSON.parse(raw);
+    if(!processCardData(data, 'KRCG', expP.done ? expP.val : null)) throw new Error('no cards');
+    vtesNamesThenCache(raw, data, vtesFmt(data), expP, fallback);
+  };
+  const fromCache=()=>vtesCached().then(c=>{ try{ return !!c && processCardData(JSON.parse(c.json), 'cached/offline', c.exp); }catch(e){ return false; } });   // the copy this browser has, even when sync is on
+  get(KRCG_DATA_URL).then(raw=>take(raw, false))
+    .catch(()=>fromCache().then(kept=>{ if(!kept) return get(KRCG_DATA_V3_URL).then(raw=>take(raw, true)); }))
+    .catch(()=>log('Could not load the card database — minion detection unavailable. Offline with a vtes.json file? Settings → Card data → 📁 From file… loads it once and caches it.'))
     .finally(()=>{ cardDBLoading=false; });
 }
 /* Image sync: download new card images that exist in cardInfo but not in imgBlobCache */
@@ -17841,7 +17860,7 @@ function updateJsonCacheUI(){
     const req=tx.objectStore(IMG_STORE).get('_vtesJson');
     req.onsuccess=()=>{
       const c=req.result;
-      if(c && c.ts){ const d=new Date(c.ts); el.textContent='Cached '+d.toLocaleDateString()+'.'; if(btn) btn.textContent='Refresh'; }
+      if(c && c.ts){ const d=new Date(c.ts); el.textContent='Cached '+d.toLocaleDateString()+'.'+(c.fallback ? ' KRCG’s older v3 file — the newest sets are missing; the next start (or Refresh) tries the current file again.' : ''); if(btn) btn.textContent='Refresh'; }   // v2.6.169: say so when the copy is the v3 stopgap
       else { el.textContent='Not cached.'; if(btn) btn.textContent='Download'; }
     };
     req.onerror=()=>{ el.textContent=''; };
@@ -18046,7 +18065,7 @@ $('#jsonFile').addEventListener('change',()=>{
       vtesCached().then(c=>{
         let ok=false, data=null; try{ data=c && JSON.parse(c.json); ok=!!data && processCardData(data, 'cached', expRaw); }catch(e){}
         if(!ok){ uiAlert('Load vtes.json too (you can pick both files at once).'); return; }
-        cacheVtesJson(c.json, c.fmt||vtesFmt(data)); toast('Starter names loaded from '+got[0].f.name+'.'); updateJsonCacheUI();
+        cacheVtesJson(c.json, c.fmt||vtesFmt(data), c.fallback===true); toast('Starter names loaded from '+got[0].f.name+'.'); updateJsonCacheUI();   // v2.6.169: a v3 stopgap stays one
       });
       return;
     }

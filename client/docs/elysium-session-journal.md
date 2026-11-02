@@ -1,3 +1,64 @@
+## [KOPIAN DU HAR] (2 november 2026, klient v2.6.169 / srv-2.6.49 oförändrad)
+
+Den oberoende granskningen av v2.6.168, som jag startade innan Johan mergade PR #44, hittade två fel i kortladdaren. Båda
+reproducerades först (de nya testerna är röda på v2.6.168) och rättas i samma PR som v2.6.169. v2.6.168 levererades men
+deployades aldrig.
+
+**1. En misslyckad v5-hämtning bytte en bra kopia mot v3-filen i en vecka.** Vid veckouppdateringen räckte det att
+`data/v5/vtes.json` fallerade en gång (en 503, ett avbrott mitt i nedladdningen) medan v3-filen svarade: `fetchVtesJson`
+laddade och cachade v3-filen med färsk tidsstämpel, och `fmt:'v3'` klarade veckoregeln. De 63 nya korten försvann ur
+databasen och Deck Lab i sju dagar, och med *Legal cards only* nekades en lek med Julia Sowinski. Granskaren körde exakt
+laddarkoden med låtsas-fetch och låtsas-IndexedDB; testet "a stamped copy keeps the weekly rule" låste felet i stället för
+att fånga det. **Nu:** v3-filen laddas bara när webbläsaren saknar en användbar egen kopia. Finns en kopia används den
+(`cached/offline`), posten lämnas orörd och är fortfarande inaktuell, så nästa start försöker med dumpen igen. En v3-fil
+som läses som nödlösning cachas med `fallback:true`, som `vtesStale` räknar som inaktuell: nästa start försöker med dumpen
+och behåller kopian om den fortfarande fallerar, i stället för att ladda ner 7 MB igen. Inställningar säger att kopian är
+den äldre v3-filen.
+
+**2. Boxens egen `images/vtes.json` väntade på KRCG:s `expansions.json`.** Lokala nivån körde `processCardData` först när
+namnen kommit, och `fetch` har ingen tidsgräns: ett segt eller hängande static.krcg.org höll kortdatabasen på elysium.cards
+(`cardDBLoading` stod kvar). Lokala nivån finns just för att den hostade bordet inte ska bero på KRCG. **Nu:** kortdatan
+används så fort den kommer, med namnen som finns till hands (de cachade eller de inbyggda, som i dag är identiska med
+KRCG:s). `vtesNamesThenCache` tar KRCG:s namn när de kommer, märker om startdeckarna bara om namnen skiljer, och bara om
+ingen nyare laddning har körts sedan (`cardDBGen`, som varje lyckad `processCardData` räknar upp). Sedan cachas kopian, en
+gång. `krcgExpFetch(ms)` ger upp efter 8 s (`KRCG_EXP_WAIT_MS`, med `AbortController`) och berättar om den är klar
+(`done`/`val`), så KRCG-vägen använder namn som redan har kommit.
+
+**De mindre sakerna från granskningen:**
+- De nio Flight-korten heter `FLIGHT` igen. v5-dumpen skriver `fli`, som förhandsvisningen och katalogsökningen inte
+  kände igen. krcg-audit: fältskillnaderna gick från `{text 295, cap 19, disc 9}` till `{text 295, cap 19}`.
+- En leks Legacy-märke avgörs av korten, inte av stavningen. `eraFromCardNames` slår upp namnen i `cardInfo`, så
+  `Admonitions, The` räknas som The Admonitions. 104 Legacy-kort lästes som V5 när en omärkt sparad eller importerad lek
+  stavade dem på det äldre sättet. Ett naket `Theo Bell` är nu G2-kortet, alltså Legacy.
+- Theo Bell-testet jämför text (G2 och dess avancerade kort har båda kapacitet 7). Boottestet serverar ett namn som den
+  inbyggda tabellen saknar, så det syns vem som namngav bunten.
+
+**Kvar som kända luckor:** 15 bibliotekskort (Abomination, Bamba, …) saknar kapacitetsfält i v5-dumpen; den står i
+korttexten. `DISC_NAMES` saknar `mal`, `str` och `viz` i båda filerna, sedan tidigare. Granskarens övriga punkter är
+lagda åt sidan med motivering: etiketten `cached v5` för "bara namnen från fil" beskriver korrekt varifrån kortdatan
+kommer, och att v3-reservposten bär expansions-texten är ofarligt.
+
+**Harnessen:** `loadClient(path, { indexedDB })` skuggar klientens `indexedDB`. En låtsas-IndexedDB som delas av två
+`loadClient`-anrop motsvarar två starter av samma webbläsare (`fakeIDB` i sviten, med open, get/put/delete/clear och
+openCursor).
+
+**Grindarna:** klient 350/0 (bot v0.6.214 bredvid, inga överhopp; 5 nya tester, veckoregeltestet utökat, två
+skärpta; mot v2.6.168: 344/6, alltså de fem nya och det utökade), kanariefågeln 69/0, dispatch 88/0, protokoll 6/0,
+endpoint 24/0, soak `--control` (snubbeltråden löste ut), embed `--check` båda sidorna, B1 byteidentisk, check-versions
+grön inklusive rotgrinden. `krcg-audit.js` v3 → v5: inga namn borta eller flyttade, fältskillnader `{text 295, cap 19}`
+(v2.6.168 hade även `disc 9`).
+
+**I headless Chrome** (riktig server och klient, KRCG:s riktiga filer via route): 30 av 30. Det är v2.6.168:s körning
+plus fyra fall: ingen kopia och dumpen nere (nödlösningen cachas som en sådan, Inställningar säger det), nästa start
+(dumpen försöks, kopian behålls, v3-filen laddas inte ner igen), dumpen tillbaka (nödlösningen ersätts) och
+granskarens fall (en åtta dagar gammal v5-kopia, 503 på dumpen, v3-filen svarar: kopian med Julia står kvar, posten
+orörd). **Den hostade vägen, 18 av 18:** `expansions.json` hålls obesvarad: boxens fil används efter 441 ms med de
+inbyggda namnen. När svaret släpps märker KRCG:s namn om startdeckarna, och kopian cachas en gång med dem. Aldrig
+besvarad: kopian cachas utan dem efter 8 s. Samma två skript på v2.6.168: 20 av 30 och 14 av 18
+(boxens fil väntade 6 s och laddade fortfarande).
+
+**Inte kört:** klienten mot static.krcg.org över nätet, och elysium.cards.
+
 ## [DE NYA SETEN KOMMER IN] (1 november 2026, kväll, klient v2.6.168 / srv-2.6.49 oförändrad)
 
 Johan: "Det har släppts ett par nya sets till V:TES … Julia Sowinski, kan du se om vår koppling fångar upp henne från

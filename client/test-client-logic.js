@@ -5697,7 +5697,8 @@ test('v2.6.168: spellings the v3 list had and the v5 list leaves out still resol
   for (const l of [list, list.slice().reverse()]) {
     const ix = API.buildCardIndex(l);
     eq(ix.info.get(N('Theo Bell (ADV)')).text, 'T:ADV', 'the export spelling of the advanced vampire');
-    eq(ix.info.get(N('Theo Bell')).cap, 7, 'the bare name stays the G2'); eq(ix.info.get(N('Theo Bell (G6)')).cap, 8);
+    eq(ix.info.get(N('Theo Bell')).text, 'T:Theo Bell G2', 'the bare name stays the G2 (v2.6.169: by text -- the G2 and its advanced card share capacity 7, so a capacity check could not tell them apart)');
+    eq(ix.info.get(N('Theo Bell (G6)')).cap, 8);
     eq(ix.info.get(N('Tegyrius')).cap, 9, 'the short name goes to the card KRCG gives the bare name (G2), never the G6');
     eq(ix.info.get(N('Lucinde')).text, 'T:G3'); eq(ix.info.get(N('Lucinde (G7)')).text, 'T:G7');
   }
@@ -5733,7 +5734,8 @@ test('v2.6.168: a cached copy written before v2.6.168 (no shape stamp: KRCG\'s v
   eq(API.vtesStale(fresh, now), false, 'two arguments: the v2.6.76 rule unchanged');
   eq(API.vtesStale(fresh, now, { json: '[]', ts: fresh }), true, 'a fresh copy with no fmt is stale');
   eq(API.vtesStale(fresh, now, { json: '[]', ts: fresh, fmt: 'v5' }), false);
-  eq(API.vtesStale(fresh, now, { json: '[]', ts: fresh, fmt: 'v3' }), false, 'the v3 fallback, stamped, waits its week');
+  eq(API.vtesStale(fresh, now, { json: '[]', ts: fresh, fmt: 'v3' }), false, 'a v3 copy from the box or a file, stamped, waits its week');
+  eq(API.vtesStale(fresh, now, { json: '[]', ts: fresh, fmt: 'v3', fallback: true }), true, 'v2.6.169: the v3 file read because the dump failed does not -- the next start tries the dump again');
   const html = require('fs').readFileSync(CLIENT, 'utf8');
   const body = html.slice(html.indexOf('function loadCardDB(){'), html.indexOf('function _loadCardDBFetch(){'));
   assert(/vtesStale\(c\.ts, Date\.now\(\), c\)/.test(body), 'loadCardDB hands the record in');
@@ -5761,13 +5763,13 @@ testA('v2.6.168: the boot reads KRCG\'s v5 dump first and the v3 file only when 
     return { A, krcg: () => asked.filter(u => /krcg\.org\/data\//.test(u)) };
   };
   const V3_LIST = JSON.stringify([{ id: 999001, name: 'Test Elder', _name: 'Test Elder', types: ['Vampire'], card_text: 'Sabbat elder.', capacity: 9, clans: ['Lasombra'] }]);
-  { // the dump and its names
-    const { A, krcg } = boot({ [V5URL]: JSON.stringify([V5_JULIA]), [EXPURL]: JSON.stringify(V5_EXP) });
+  { // the dump and its names (v2.6.169: the served file names the bundle differently from the built-in table, so the test can tell who named it)
+    const { A, krcg } = boot({ [V5URL]: JSON.stringify([V5_JULIA]), [EXPURL]: JSON.stringify(V5_EXP_MARKED) });
     assert(await until(() => A.cardInfo), 'the boot loaded the card data (asked: ' + krcg().join(', ') + ')');
     assert(A.cardInfo.get('juliasowinski'), 'Julia is in the database');
     eq(A.cardDBSrc, 'KRCG v5'); assert(krcg().includes(V5URL) && krcg().includes(EXPURL), 'the dump and expansions.json were asked for');
     eq(krcg().includes(V3URL), false, 'the old file is not asked for when the dump arrives');
-    assert(A.precons.get('Fifth Edition :: Secrets of New York'), 'named from the served file');
+    assert(await until(() => A.precons && A.precons.get('Fifth Edition :: Secrets of New York (served)')), 'named from the served file (keys: ' + (A.precons ? [...A.precons.keys()].join(', ') : 'none') + ')');
   }
   { // the dump fails: the old file
     const { A, krcg } = boot({ [V3URL]: V3_LIST });
@@ -5779,7 +5781,140 @@ testA('v2.6.168: the boot reads KRCG\'s v5 dump first and the v3 file only when 
     const { A } = boot({ [V5URL]: JSON.stringify([V5_JULIA]) });
     assert(await until(() => A.cardInfo), 'a missing expansions.json does not fail the load');
     assert(A.precons.get('Fifth Edition :: Secrets of New York'), 'the built-in names fill in');
+    eq(A.precons.has('Fifth Edition :: Secrets of New York (served)'), false, 'and they are the built-in ones, not a file nobody served');
   }
+});
+
+/* ---------- v2.6.169: the independent review of v2.6.168 -- two loader defects, reproduced first ----------
+   (1) one failed download of the v5 dump replaced a good v5 copy with KRCG's frozen v3 file, stamped fresh for a week;
+   (2) the box's own images/vtes.json waited on static.krcg.org's expansions.json before the table could use it.
+   fakeIDB: an IndexedDB the loader can use (open, transaction, objectStore get/put/delete/clear/openCursor), async like the
+   real one; the Map it wraps survives a reload, so two loadClient calls are two starts of the same browser. */
+const fakeIDB = store => {
+  const later = f => setTimeout(f, 0), copy = v => JSON.parse(JSON.stringify(v));
+  const db = { objectStoreNames: { contains: () => true }, createObjectStore() {},
+    transaction() {
+      const tx = { oncomplete: null, onerror: null, error: null, objectStore() { return {
+        put(v, k) { store.set(k, copy(v)); later(() => tx.oncomplete && tx.oncomplete()); },
+        get(k) { const r = { result: undefined, onsuccess: null, onerror: null }; later(() => { r.result = store.has(k) ? copy(store.get(k)) : undefined; if (r.onsuccess) r.onsuccess(); }); return r; },
+        delete(k) { store.delete(k); later(() => tx.oncomplete && tx.oncomplete()); },
+        clear() { store.clear(); later(() => tx.oncomplete && tx.oncomplete()); },
+        openCursor() { const r = { result: null, onsuccess: null, onerror: null }, keys = [...store.keys()]; let i = 0;
+          const step = () => later(() => { r.result = i < keys.length ? { key: keys[i], value: copy(store.get(keys[i])), continue() { i++; step(); } } : null; if (r.onsuccess) r.onsuccess(); });
+          step(); return r; } }; } };
+      return tx; } };
+  return { open() { const r = { result: db, onsuccess: null, onerror: null, onupgradeneeded: null }; later(() => r.onsuccess && r.onsuccess()); return r; } };
+};
+const V5_EXP_MARKED = JSON.parse(JSON.stringify(V5_EXP)); V5_EXP_MARKED[0].bundles.SoNY.name = 'Secrets of New York (served)';   // a name the built-in table does not have
+const KRCG_URL = { v5: 'https://static.krcg.org/data/v5/vtes.json', v3: 'https://static.krcg.org/data/vtes.json', exp: 'https://static.krcg.org/data/v5/expansions.json' };
+const untilT = async (f, ms) => { const t0 = Date.now(); while (!f()) { if (Date.now() - t0 > (ms || 3000)) return false; await new Promise(r => setTimeout(r, 10)); } return true; };
+const settle = ms => new Promise(r => setTimeout(r, ms || 60));
+const served = (files, asked) => url => { url = String(url); asked.push(url); const b = files[url];
+  if (b && typeof b.then === 'function') return b;   // a hanging or held answer
+  return Promise.resolve(b === undefined ? { ok: false, status: url === KRCG_URL.v5 ? 503 : 404, text: () => Promise.resolve('no') } : { ok: true, status: 200, text: () => Promise.resolve(b) }); };
+const V3_ELDER = JSON.stringify([{ id: 999001, name: 'Test Elder', _name: 'Test Elder', types: ['Vampire'], card_text: 'Sabbat elder.', capacity: 9, clans: ['Lasombra'] }]);
+
+testA('v2.6.169: a failed v5 download keeps the copy this browser has -- the v3 file only when there is none, and then the next start tries the dump again', async () => {
+  const WEEK = 7 * 24 * 3600e3, old = Date.now() - WEEK - 24 * 3600e3;
+  { // a v5 copy eight days old, the weekly refresh meets a 503 on the dump while the v3 file answers
+    const store = new Map([['_vtesJson', { json: JSON.stringify([V5_JULIA]), exp: JSON.stringify(V5_EXP), fmt: 'v5', size: 1, ts: old }]]), asked = [];
+    const A = loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served({ [KRCG_URL.v3]: V3_ELDER, [KRCG_URL.exp]: JSON.stringify(V5_EXP) }, asked) });
+    assert(await untilT(() => asked.includes(KRCG_URL.v5) && !A.cardDBLoading), 'the stale copy was refreshed (asked: ' + asked.join(', ') + ')');
+    await settle();
+    assert(A.cardInfo && A.cardInfo.get('juliasowinski'), 'Julia is still in the database (src: ' + A.cardDBSrc + ')');
+    eq(A.cardInfo.get('testelder'), undefined, 'the v3 file did not replace it');
+    eq(asked.includes(KRCG_URL.v3), false, 'nor was it downloaded: the copy we have is newer than KRCG\'s frozen v3 file');
+    const rec = store.get('_vtesJson');
+    eq(rec.fmt, 'v5', 'the cached copy is still the v5 one'); eq(rec.ts, old, 'untouched, so it is still stale: the next start tries the dump again');
+  }
+  { // no copy at all: the v3 file is the stopgap, cached as one
+    const store = new Map(), asked = [];
+    const A = loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served({ [KRCG_URL.v3]: V3_ELDER }, asked) });
+    assert(await untilT(() => store.has('_vtesJson')), 'the stopgap is cached (asked: ' + asked.join(', ') + ')');
+    eq(A.cardDBSrc, 'KRCG v3'); assert(A.cardInfo.get('testelder'));
+    const rec = store.get('_vtesJson');
+    eq(rec.fmt, 'v3'); eq(rec.fallback, true, 'marked: KRCG\'s v3 file, read because the dump failed');
+    eq(A.vtesStale(rec.ts, Date.now(), rec), true, 'so it is stale at once');
+    // the next start, the dump still down: the copy is used, the 7 MB v3 file is not fetched again
+    const asked2 = [];
+    const B = loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served({ [KRCG_URL.v3]: V3_ELDER }, asked2) });
+    assert(await untilT(() => asked2.includes(KRCG_URL.v5) && !B.cardDBLoading), 'the next start tried the dump (asked: ' + asked2.join(', ') + ')');
+    await settle();
+    assert(B.cardInfo && B.cardInfo.get('testelder'), 'and kept the copy it has'); eq(asked2.includes(KRCG_URL.v3), false, 'without downloading the v3 file again');
+    // the start after, the dump is back
+    const asked3 = [];
+    const C = loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served({ [KRCG_URL.v5]: JSON.stringify([V5_JULIA]), [KRCG_URL.exp]: JSON.stringify(V5_EXP), [KRCG_URL.v3]: V3_ELDER }, asked3) });
+    assert(await untilT(() => store.get('_vtesJson').fmt === 'v5'), 'the dump replaced the stopgap (asked: ' + asked3.join(', ') + ')');
+    assert(C.cardInfo.get('juliasowinski')); eq(store.get('_vtesJson').fallback, false, 'a dump read normally is no stopgap');
+  }
+  { // a corrupt copy is no copy: the v3 file still loads
+    const store = new Map([['_vtesJson', { json: '{not json', fmt: 'v5', size: 1, ts: old }]]), asked = [];
+    const A = loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served({ [KRCG_URL.v3]: V3_ELDER }, asked) });
+    assert(await untilT(() => A.cardInfo && A.cardInfo.get('testelder')), 'a broken cache falls through to the v3 file (asked: ' + asked.join(', ') + ')');
+  }
+});
+
+testA('v2.6.169: the box\'s own vtes.json is used the moment it arrives -- KRCG\'s names follow when they come, and the copy is cached once', async () => {
+  let release; const held = new Promise(r => { release = () => r({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify(V5_EXP_MARKED)) }); });
+  const store = new Map(), asked = [];
+  const A = loadClient(CLIENT, { indexedDB: fakeIDB(store), storage: { 'elysium.convenience': JSON.stringify({ cardDB: true, dbDefault: true, localImg: true }) },
+    fetch: served({ 'images/vtes.json': JSON.stringify([V5_JULIA]), [KRCG_URL.exp]: held }, asked) });
+  assert(await untilT(() => A.cardInfo && A.cardInfo.get('juliasowinski'), 1500), 'the table has the database while static.krcg.org has not answered (asked: ' + asked.join(', ') + ')');
+  eq(A.cardDBLoading, false, 'and the load is over'); eq(A.cardDBSrc, 'local folder v5');
+  assert(A.precons.get('Fifth Edition :: Secrets of New York'), 'the starters carry the names at hand (the built-in ones)');
+  eq(asked.filter(u => /krcg\.org\/data\//.test(u)).join(), KRCG_URL.exp, 'KRCG is asked only for the names');
+  release();
+  assert(await untilT(() => A.precons.get('Fifth Edition :: Secrets of New York (served)')), 'KRCG\'s names re-label the starters when they arrive (keys: ' + [...A.precons.keys()].join(', ') + ')');
+  assert(await untilT(() => store.has('_vtesJson')), 'the copy is cached');
+  eq(store.get('_vtesJson').exp, JSON.stringify(V5_EXP_MARKED), 'with the names it is used with'); eq(store.get('_vtesJson').fmt, 'v5');
+  // a newer load while the names are on the way: the late names leave it alone
+  let release2; const held2 = new Promise(r => { release2 = () => r({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify(V5_EXP)) }); });
+  const store2 = new Map(), asked2 = [];
+  const B = loadClient(CLIENT, { indexedDB: fakeIDB(store2), storage: { 'elysium.convenience': JSON.stringify({ cardDB: true, dbDefault: true, localImg: true }) },
+    fetch: served({ 'images/vtes.json': JSON.stringify([V5_JULIA]), [KRCG_URL.exp]: held2 }, asked2) });
+  assert(await untilT(() => B.cardInfo && B.cardInfo.get('juliasowinski'), 1500), 'loaded');
+  const gen = B.cardDBGen;
+  eq(B.processCardData([{ id: 999002, name: 'Picked By Hand', _name: 'Picked By Hand', types: ['Master'], card_text: 'x' }], 'file'), true, 'a file picked by hand (Settings > From file) takes over');
+  assert(B.cardDBGen > gen, 'every load counts');
+  const keys = [...B.precons.keys()].join();
+  release2(); await settle(120);
+  eq([...B.precons.keys()].join(), keys, 'the box load\'s late names did not rebuild the starters of the newer load');
+  eq(store2.has('_vtesJson'), false, 'nor did it cache the box\'s file over it');
+});
+
+testA('v2.6.169: KRCG\'s expansions.json is asked for at most a few seconds -- a request that never answers is given up', async () => {
+  const A = loadClient(CLIENT, { fetch: () => new Promise(() => {}) });
+  const t0 = Date.now(), p = A.krcgExpFetch(40);
+  eq(p.done, false, 'not settled yet');
+  eq(await Promise.race([p, settle(1500).then(() => 'still waiting')]), null, 'a hanging request gives up and gives no names'); assert(Date.now() - t0 < 1000, 'within the bound');
+  eq(p.done, true, 'and says so (the loader reads it to know whether the names are in)');
+  const B = loadClient(CLIENT, { fetch: () => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify(V5_EXP)) }) });
+  const q = B.krcgExpFetch(); eq(await q, JSON.stringify(V5_EXP)); eq(q.done, true); eq(q.val, JSON.stringify(V5_EXP));
+  const C = loadClient(CLIENT, { fetch: () => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('[{"code":"X"}]') }) });
+  eq(await C.krcgExpFetch(), null, 'a file that is not expansions.json gives no names');
+});
+
+test('v2.6.169: Flight is spelled as the v3 file spelled it (FLIGHT) -- the v5 dump writes the trigram fli, which the preview and the catalog search did not know', () => {
+  const crow = { id: 100102, printed_name: 'As the Crow', suffix: '', unicity_suffix: '', kind: 'Library', name_variants: [{ type: 'Lexicographical', name: 'As the Crow' }],
+    types: ['Action Modifier'], text: 'Only usable after resolution of a successful action.\n[FLIGHT] Unlock this minion.', discipline_requirement: { type: 'Mono', disciplines: ['fli'] }, prints: [] };
+  const m = API.parseV5Card(crow).meta;
+  eq(m.disc, 'FLIGHT', 'the v3 file\'s spelling, which the search tags read'); eq(JSON.stringify(m.disciplines), '["FLIGHT"]');
+  const pot = API.parseV5Card(Object.assign({}, crow, { discipline_requirement: { type: 'Mono', disciplines: ['pot'] } })).meta;
+  eq(pot.disc, 'pot', 'every other discipline keeps its trigram (the v3 file wrote them the same way)');
+});
+
+test('v2.6.169: a deck\'s era is decided by its cards, not by how a list spells them -- "Admonitions, The" is The Admonitions, a Legacy card', () => {
+  const A = loadClient(CLIENT);
+  const adm = { id: 100023, printed_name: 'The Admonitions', suffix: '', unicity_suffix: '', kind: 'Library', types: ['Master'], text: 'Unique master.',
+    name_variants: [{ type: 'Lexicographical', name: 'The Admonitions' }, { type: 'Lexicographical', name: 'Admonitions, The' }, { type: 'Vernacular', name: 'Admonitions' }],
+    prints: [{ set: { code: 'BH' }, occurrences: [{ type: 'Rarity' }] }, { set: { code: 'Third' }, occurrences: [{ type: 'Rarity' }] }] };
+  const bond = Object.assign(v5l(100236, 'Bonding', ['Bonding'], ['Action Modifier']), { prints: [{ set: { code: 'V5' }, occurrences: [{ type: 'Precon', bundle: 'PTo', copies: 4, date: '2020-11-30' }] }] });
+  A.processCardData([adm, bond], 'test-fixture');
+  assert(A.catalog.legacy.some(c => c.name === 'The Admonitions') && A.catalog.v5.some(c => c.name === 'Bonding'), 'the catalog holds one of each');
+  eq(A.eraFromCardNames(['Bonding', 'The Admonitions']), 'legacy');
+  eq(A.eraFromCardNames(['Bonding', 'Admonitions, The']), 'legacy', 'the spelling older lists write (and KRCG\'s v3 file used) is the same Legacy card');
+  eq(A.eraFromCardNames(['Bonding', 'Admonitions']), 'legacy', 'so is the short name');
+  eq(A.eraFromCardNames(['Bonding']), 'v5'); eq(A.eraFromCardNames(['Bonding', 'Not A Card']), 'v5', 'an unknown name decides nothing');
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */

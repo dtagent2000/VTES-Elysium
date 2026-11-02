@@ -152,7 +152,10 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   get KRCG_SET_NAMES(){ return (typeof KRCG_SET_NAMES!=='undefined')?KRCG_SET_NAMES:undefined; }, get KRCG_DATA_URL(){ return (typeof KRCG_DATA_URL!=='undefined')?KRCG_DATA_URL:undefined; },
   get KRCG_DATA_V3_URL(){ return (typeof KRCG_DATA_V3_URL!=='undefined')?KRCG_DATA_V3_URL:undefined; }, get KRCG_EXP_URL(){ return (typeof KRCG_EXP_URL!=='undefined')?KRCG_EXP_URL:undefined; },
   get krcgSets(){ return (typeof krcgSets!=='undefined')?krcgSets:undefined; }, set krcgSets(v){ krcgSets=v; }, get krcgExpRaw(){ return (typeof krcgExpRaw!=='undefined')?krcgExpRaw:undefined; },
-  get cardDBSrc(){ return (typeof cardDBSrc!=='undefined')?cardDBSrc:undefined; },
+  // v2.6.169: the loader after the review -- the load counter, the late names, the card list, the era by card
+  get cardDBGen(){ return (typeof cardDBGen!=='undefined')?cardDBGen:undefined; },
+  vtesNamesThenCache: (typeof vtesNamesThenCache!=='undefined'?vtesNamesThenCache:undefined), vtesList: (typeof vtesList!=='undefined'?vtesList:undefined),
+  eraFromCardNames: (typeof eraFromCardNames!=='undefined'?eraFromCardNames:undefined), updateJsonCacheUI: (typeof updateJsonCacheUI!=='undefined'?updateJsonCacheUI:undefined),
   mpSetFlavor: (typeof mpSetFlavor!=='undefined'?mpSetFlavor:undefined),
   mpFold: (typeof mpFold!=='undefined'?mpFold:undefined),                                       // v2.6.80: the folds + the referee row
   mpRefSync: (typeof mpRefSync!=='undefined'?mpRefSync:undefined),
@@ -431,13 +434,14 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',
-    'AudioContext','webkitAudioContext','getComputedStyle','matchMedia','location','fetch',
+    'AudioContext','webkitAudioContext','getComputedStyle','matchMedia','location','fetch','indexedDB',
     src + expose);   // v2.6.74: `fetch` is SHADOWED with a rejecting stub -- the card database is on by default now, so every boot would otherwise reach for static.krcg.org (a real 3 MB download mid-suite on a networked machine; a hang or a live-data race)
   const api = factory(
     env.documentStub, env.windowStub, env.localStorageStub, env.windowStub.navigator,
     () => 0, () => {}, env.windowStub.AudioContext, env.windowStub.webkitAudioContext,
     () => makeStub(), env.windowStub.matchMedia, env.windowStub.location,
-    (opts && typeof opts.fetch === 'function') ? opts.fetch : (() => Promise.reject(new Error('harness: network disabled'))));   // v2.6.54: the address logic reads `location.protocol`; v2.6.74: the fetch stub; v2.6.139: opts.fetch serves chosen files (the bot loader's three JSONs)
+    (opts && typeof opts.fetch === 'function') ? opts.fetch : (() => Promise.reject(new Error('harness: network disabled'))),   // v2.6.54: the address logic reads `location.protocol`; v2.6.74: the fetch stub; v2.6.139: opts.fetch serves chosen files (the bot loader's three JSONs)
+    (opts && opts.indexedDB) || undefined);   // v2.6.169: opts.indexedDB -- a fake IndexedDB, shared between two boots to test the cached copy; without it openImgDB rejects, as it always did here (no cache)
   // v2.6.51: the SHARED element stub every $() lookup resolves to — including #board. Tests seed
   // api.__stubEl.classList._t to turn a view mode on (e.g. 'l4mode' for the Classic free board).
   try { Object.defineProperty(api, '__stubEl', { value: env.documentStub.getElementById(), enumerable:false }); } catch (e) {}

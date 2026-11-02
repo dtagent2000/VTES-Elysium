@@ -1,8 +1,29 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.168 / server v2.6.49 / bot v0.6.214 tested beside the suite, last updated 1 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.169 / server v2.6.49 / bot v0.6.214 tested beside the suite, last updated 2 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**2 Nov 2026 (THE COPY YOU HAVE — v2.6.169):**
+- **A fallback must never replace something better.** v2.6.168's chain was "the new file, else the old file", written as
+  if there were nothing in between. There was: the copy already in the browser, newer than the old file. Order the
+  sources by what they hold, and let a failure keep what you have instead of trading down.
+- **A test can pin a bug instead of catching it.** "A stamped copy keeps the weekly rule" asserted exactly the behaviour
+  that made the downgrade last a week. When a test asserts a rule, ask which record the rule will meet in practice (here:
+  the v3 file read only because the dump failed).
+- **Nothing that is merely nice to have may hold the table.** The starter names are cosmetic, and the built-in table
+  already has them, but the local tier waited for them without a time limit. Use the data the moment it arrives, let the
+  extra arrive later, bound every optional request, and guard the late answer with a load counter, so it never rebuilds
+  or caches over a newer load.
+- **A fixture that cannot tell the cases apart proves nothing.** The G2 and the advanced Theo Bell share capacity 7, so a
+  capacity check could not see the wrong owner. A boot test whose served names match the built-in ones could not see who
+  named the bundle. Assert on a field that differs.
+- **Compare cards, not spellings.** The era badge looked names up in a set of printed names. Any second spelling (older
+  tools, KRCG's v3 file) fell out, while the card index already knew both. When an index maps every spelling to one
+  record, compare those records.
+- **For loader tests, fake the storage, not the loader.** The harness never had an IndexedDB, so no suite test could
+  see a cached copy. With `loadClient(path, { indexedDB })` and one Map shared by two clients, "the next start" is a
+  second loadClient.
 
 **1 Nov 2026, evening (THE NEW SETS ARRIVE — v2.6.168):**
 - **A third-party file can freeze without saying so.** KRCG regenerated the v3 file the same minute as the v5 dump, with
