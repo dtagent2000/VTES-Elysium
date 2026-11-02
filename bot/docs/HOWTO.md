@@ -1,9 +1,12 @@
 # HOWTO — running, debugging, analysing (20 Oct 2026; distilled from SKILLS.md, whose full text is `history/SKILLS-2026-10-20.md`)
 
 Everything runs from inside `bot/`. Third-party data (`vtes.json`, the TWDA) is fetched or copied from the private data repo first
-(root `CLAUDE.md`): `curl -o vtes.json https://static.krcg.org/data/vtes.json`; when the network policy blocks it (a 403 on
-CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and `cp vtes.json ../VTES-Elysium/bot/`. The compiler reads
-KRCG's v3 shape (`name`, `card_text`, `blood_cost`); the v5 file is a different format. The TWDA: `twda.json` (the list export,
+(root `CLAUDE.md`). The card data is KRCG's v5 dump, written as the v3-shaped `vtes.json` every tool reads by `krcg-v5.js`:
+`curl -o vtes-v5.json https://static.krcg.org/data/v5/vtes.json && curl -o expansions.json https://static.krcg.org/data/v5/expansions.json
+&& node krcg-v5.js` (`--compare OLD.json` prints the field diff against a v3 file by card id). When the network policy blocks it (a 403
+on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and copy the two dump files in. KRCG's v3 file
+(static.krcg.org/data/vtes.json) stopped at Sabbat V5: it lacks the 63 cards of Secrets of New York and Noites Brasileiras and the
+errata (142 texts beyond markup, e.g. Assamite → Banu Haqim), so it is only a `--compare` input now. The TWDA: `twda.json` (the list export,
 the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s before naming a data file.
 
 ## Running
