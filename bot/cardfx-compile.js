@@ -91,7 +91,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.9.5';   // 29 Oct 2026 (bot v0.6.214, V5 wave 2): req.notFirstRound also reads 'Not usable the first round' / 'Not usable first round' (Eruption of Vitae, Growing Fury, Well-Aimed Car: 9 -> 12 entries; wave 1's re-review found them untagged). The curated tier's wave-2 readings (Flash, Resist Earth's Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn) need no compiler change.
+const FXC_VERSION = '1.9.6';   // 2 Nov 2026 (bot v0.6.215, V5 wave 3): `oot` -- an out-of-turn master (keyword segment, 36 entries) the master-phase finder never offers; curated masters inherit the data's clan requirement (R-42: a clan icon on a master IS a requirement) and its out-of-turn keyword.
+// const FXC_VERSION_195 = '1.9.5';   // 29 Oct 2026 (bot v0.6.214, V5 wave 2): req.notFirstRound also reads 'Not usable the first round' / 'Not usable first round' (Eruption of Vitae, Growing Fury, Well-Aimed Car: 9 -> 12 entries; wave 1's re-review found them untagged). The curated tier's wave-2 readings (Flash, Resist Earth's Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn) need no compiler change.
 // const FXC_VERSION_194 = '1.9.4';   // 29 Oct 2026 (bot v0.6.213, V5 wave 1, the egress review): req.notFirstRound also reads a sentence 'Not usable during the first round' -- Walk of Flame (banuhaqim's, played in round 1 since its aggravated strike was preferred), Ahriman's Demesne, Blood Agony, Blood to Water, Torment the Soul: 4 -> 9 entries; a text that LIFTS the restriction (Shotgun Ritual, Al-Ashrad, Hector Trelane) is not tagged.
 // const FXC_VERSION_193 = '1.9.3';   // 19 Oct 2026 (bot v0.6.211, the stable's cards): a curated entry keyed by a printed name VARIANT (Pentex(TM) Subversion) is written under the printed name too -- a list typed with the printed name (KRCG's precons, the V5 generator) got the empty auto entry; each spelling now resolves exactly to itself, so fxLookup(name).name keeps equalling the hand's own name (the master loop re-anchors by name)
 // const FXC_VERSION_192 = '1.9.2';   // 16 Oct 2026 (bot v0.6.202, the 14 Oct play-test's point 18): `handBonus` -- 'hand strike at +N damage' / 'this strike is at +N damage' are a bonus on the hand strike, no longer the absolute `strike` (35 cards; Roundhouse). v1.9.1 (25 Sep, the sweep's pass 2: curated entries inherit requirements and costs) never bumped this constant.
@@ -726,6 +727,7 @@ function libEntry(c){
   const kwHit = w => txt.split('\n').some(l => l.split(/[.:]/).some(sg => new RegExp('^\\s*' + w + '\\s*$', 'i').test(sg)));
   if(kwHit('trifle')) e.trifle = true;
   if(kwHit('archetype')) e.archetype = true;
+  if(kwHit('out-of-turn') && (e.t || []).includes('master')) e.oot = true;   // v1.9.6 (bot v0.6.215, V5 wave 3): an OUT-OF-TURN master ('Out-of-turn.' / 'Master: out-of-turn.' as a keyword segment) -- played only on another Methuselah's turn, at its own trigger (the rulebook: it uses the next master phase action). The master-phase finder never offers one; a dedicated consumer (Archon Investigation) plays it at its trigger.
   if(/\(limited\)/i.test(txt)) e.limited = true;       // rulebook reminder text: bleed-increase modifiers / additional-strike sources capped at one
   /* v1.5.0 (17 July, fas B/C sweep): the Inside Dirt / Leverage class made derivable.
      IMPERATIVE "Burn the Edge to …" at a sentence boundary (bracket tokens and the \u24b9
@@ -823,6 +825,7 @@ function cryptEntry(c){
   const sm = (c.card_text || '').match(/^(Camarilla|Sabbat|Independent|Laibon|Anarch)\b/i);
   if(sm) e.sect = sm[1];
   if(c.group !== undefined) e.group = String(c.group);
+  if(typeof c.path === 'string' && c.path) e.path = c.path;   // v1.9.6 (V5 wave 3): the Sabbat V5 vampires' Path ('Death and the Soul', 'Power and the Inner Voice', 'Caine', 'Cathari') -- Burial Site Hunting Ground feeds only a follower of its Path
   const all = [], sup = [];
   (c.disciplines || []).forEach(d => {
     const t = discTri(d);
@@ -930,9 +933,10 @@ function compile(cards, curated){
       if(auto && auto.req && dst === lib){
         const isMaster = (auto.t || []).includes('master'), r = Object.assign({}, e.req || {}), got = [];
         if(r.disc === undefined && auto.req.disc){ r.disc = auto.req.disc; got.push('disc'); }
-        if(r.clan === undefined && auto.req.clan && !isMaster){ r.clan = auto.req.clan; got.push('clan'); }
+        if(r.clan === undefined && auto.req.clan){ r.clan = auto.req.clan; got.push('clan'); }   // v1.9.6 (V5 wave 3): masters inherit the clan too -- v1.9.1's 'a clan icon on a master is not a requirement' was wrong: 'only a Methuselah who controls a ready minion who meets the requirements of a master card can play it' (the rulebook, card types), and the clan icon is a requirement (RULINGS R-42)
         if(got.length){ e.req = r; reqInherited.push(name + ' ' + got.join('+')); }
       }
+      if(auto && auto.oot && e.oot === undefined) e.oot = true;   // v1.9.6: a curated master keeps the data's out-of-turn keyword unless it restates it
       dst[name] = e;
       curApplied.push(name);
       /* v1.9.3: a curated key that is not a printed name but a known VARIANT of one (the alias table) is ALSO written under the

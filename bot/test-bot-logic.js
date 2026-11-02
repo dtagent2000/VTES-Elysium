@@ -11649,6 +11649,157 @@ async function connectWithRetry(client, tries = 30){
            '160z with combatMind 0 (the hand card the only reason): Aline holds Flash and Well-Aimed Car [pot] (\u2018not usable the first round\u2019) and does not go long in round 1 (got ' + JSON.stringify({ range: a.range, mv }) + ')'); }
     }
 
+    /* 161) v0.6.215 -- V5 WAVE 3 (RULINGS D-104): the masters still played blind. The master finder never offers an OUT-OF-TURN master (cardfx
+       v1.9.6 `oot`) and checks a master's requirements against a READY vampire of mine (R-42: the clan icon, a sect, a title); the locations
+       that LOCK for stealth (Backways, Anarch Railroad's sect gate; Creepshow Casino only at the announce) and for intercept (Market Square,
+       Channel 10 after the first action, Wall Street Night on an undirected action); the hunting grounds' targets on the mode (Zoo's icon is
+       the play requirement, any ready vampire gains; Carfax Abbey's Anarch and the baron's second; Burial Site's Path); influence-phase blood
+       (Art Museum's lock, Powerbase: Montreal once without a lock); Unholy Sacrament and Family Gathering held without their target;
+       Haqim's Law: Retribution and Club Illusion on the bleed; Archon Investigation at a bleed of 4+ after the block is declined, the line
+       the acting bot reads and burns its minion on. The pre-change bytes lack the new methods: every call is guarded so they fail clean. */
+    {
+      console.log('\n[161] v0.6.215 -- V5 wave 3: the masters (out-of-turn, requirements, locks for stealth and intercept, blood, bleed riders, Archon Investigation)');
+      const IF1 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const strip161 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const mkU161 = (name, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'Viktor', persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: u.o.name, online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.notes = []; u.note = t => u.notes.push(t); u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
+      const V = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 5, attached: [] }, o || {});
+      const L = (id, name, o) => Object.assign({ id, name, kind: 'lib', zone: 'ready', locked: false, faceDown: false }, o || {});
+      const logs = u => u.sent.filter(m => m && m.t === 'log').map(m => strip161(m.html));
+      const names = cs => (cs || []).map(c => c.name);
+
+      // a) the master finder: out-of-turn never; the clan icon needs a READY vampire of that clan (R-42)
+      { const u = mkU161(); u.hand = ['Sudden Reversal', 'Archon Investigation', 'Backways', 'Ventrue Headquarters'];
+        u.board = [V('a1', 'Crow (G5)', { zone: 'torpor' })];
+        const c0 = names(u._bestMasterFor(new Set()));
+        u.board = [V('a1', 'Crow (G5)'), V('a2', 'Bret Stryker (G6)')];
+        const c1 = names(u._bestMasterFor(new Set()));
+        ok(!c0.includes('Sudden Reversal') && !c0.includes('Archon Investigation') && !c1.includes('Sudden Reversal') && !c1.includes('Archon Investigation'),
+           '161a the out-of-turn masters (Sudden Reversal, Archon Investigation) are never master-phase plays (got ' + JSON.stringify({ c0, c1 }) + ')');
+        ok(!c0.includes('Backways') && c1.includes('Backways') && !c1.includes('Ventrue Headquarters'),
+           '161a ...Backways [Gangrel] waits for a READY Gangrel (a torpid one does not count) and Ventrue Headquarters for a Ventrue (got ' + JSON.stringify({ c0, c1 }) + ')'); }
+
+      // b) the locations that lock for stealth: Backways for a Gangrel; Anarch Railroad's sect; Creepshow only at the announce, never on a hunt
+      { const u = mkU161(); const crow = V('b1', 'Crow (G5)'), bret = V('b2', 'Bret Stryker (G6)');
+        u.board = [crow, bret, L('bl1', 'Backways'), L('bl2', 'Anarch Railroad'), L('bl3', 'Creepshow Casino')];
+        const sG = u._bestStealthFor(crow, new Set(), null), sT = u._bestStealthFor(bret, new Set(), null);
+        const stG = u._stealthStack(crow, new Set()), stT = u._stealthStack(bret, new Set());
+        ok(!!sG && sG.lock && /Backways|Anarch Railroad/.test(sG.name) && stG.S === 2 && !sT && stT.S === 0,
+           '161b an acting Gangrel Anarch can lock Backways and Anarch Railroad (two sources); a Camarilla Toreador neither; Creepshow is no answer to a block (got ' + JSON.stringify({ sG, sT, stG, stT }) + ')');
+        const a = { contested: false }; u._actingVamp = { v: crow, played: new Set() }; u._restartAskTimer = () => {};
+        if(sG) u._spendStealthCard(sG, u._actingVamp, a);
+        const bc = sG && u.board.find(c => c.name === sG.name);
+        ok(!!(bc && bc.locked) && !!sG && logs(u).some(l => l === 'Crow (G5) locks ' + sG.name + ': +1 stealth.') && u.hand.length === 0,
+           '161b ...spent: the location is LOCKED and stays, the Labyrinth’s line goes out (got ' + JSON.stringify(logs(u)) + ')');
+        const h = IF1(u, '_lockStealthAtAnnounce') ? u._lockStealthAtAnnounce(crow, 'hunt') : 'x';
+        const e = IF1(u, '_lockStealthAtAnnounce') ? u._lockStealthAtAnnounce(crow, 'equip') : null;
+        const e2 = IF1(u, '_lockStealthAtAnnounce') ? u._lockStealthAtAnnounce(bret, 'political') : 'x';
+        ok(h === null && !!e && e.name === 'Creepshow Casino' && e.s === 1 && u.board.find(c => c.name === 'Creepshow Casino').locked && e2 === null,
+           '161b ...Creepshow Casino: not on a hunt; +1 at an equip announce (locked); once a turn -- the next announce finds it locked (got ' + JSON.stringify({ h, e, e2 }) + ')'); }
+
+      // c) the locations that lock for intercept: Market Square for a Banu Haqim; Wall Street Night on an undirected action; Channel 10 after the first action
+      { const u = mkU161(); const kasim = V('c1', 'Kasim Bayar (G6)', { blood: 6, cap: 9 }), anxo = V('c2', 'Anxo Vilela (G6)', { blood: 4, cap: 6 });
+        u.board = [kasim, anxo, L('cl1', 'Market Square'), L('cl2', 'Wall Street Night, Financial Newspaper'), L('cl3', 'Channel 10')];
+        const pD = { kind: 'bleed', reacted: new Set() }, pU = { kind: 'undirected', reacted: new Set() };
+        u._turnActN = 1;
+        const k1 = u._bestInterceptFor(kasim, new Set(), pD), a1 = u._bestInterceptFor(anxo, new Set(), pD), a2 = u._bestInterceptFor(anxo, new Set(), pU);
+        u._turnActN = 2;
+        const a3 = u._bestInterceptFor(anxo, new Set(), pD), a0 = u._bestInterceptFor(anxo, new Set(), null);
+        ok(!!k1 && k1.name === 'Market Square' && k1.lock && !a1 && !!a2 && a2.name === 'Wall Street Night, Financial Newspaper' && !!a3 && a3.name === 'Channel 10' && a3.s === 2 && !a0,
+           '161c Market Square for the Banu Haqim; for the Path vampire Wall Street Night only on an undirected action, Channel 10 (+2) only from the second action; without the action neither (got ' + JSON.stringify({ k1, a1, a2, a3, a0 }) + ')');
+        if(IF1(u, '_spendIntercept') && k1) u._spendIntercept(k1, kasim);
+        ok(!!u.board.find(c => c.name === 'Market Square' && c.locked) && logs(u).includes('Kasim Bayar (G6) locks Market Square: +1 intercept.'),
+           '161c ...spent: Market Square is locked and the line says so (got ' + JSON.stringify(logs(u)) + ')');
+        const iS = u._interceptStack(anxo, new Set(), pD);
+        ok(iS.S === 1 && iS.sum === 2, '161c ...the stack counts the lock like a card (Channel 10 for the second action: 1 source, +2; got ' + JSON.stringify(iS) + ')'); }
+
+      // d) the hunting grounds: Zoo's icon is the play requirement, any ready vampire gains; Carfax Abbey's Anarchs + the baron; Burial Site's Path; Meditative Grove's Salubri
+      { const hg = async (board) => { const u = mkU161(); u.board = board; u._huntingGroundUsedThisTurn = false; await u._considerHuntingGround('unlock'); return u; };
+        const bret = V('d1', 'Bret Stryker (G6)', { blood: 1, cap: 4 });
+        await hg([bret, L('dl1', 'Zoo Hunting Ground')]);
+        const aline = V('d2', 'Aline Gädeke (G6)', { blood: 2, cap: 7 }), brandon = V('d3', 'Brandon Grime (G6)', { blood: 1, cap: 5 }), cat = V('d4', 'Catalina Vega (G6)', { blood: 1, cap: 8 });
+        await hg([aline, brandon, cat, L('dl2', 'Carfax Abbey')]);
+        const anxo = V('d5', 'Anxo Vilela (G6)', { blood: 1, cap: 6 }), damian = V('d6', 'Damian (G6)', { blood: 1, cap: 8 });
+        await hg([anxo, damian, L('dl3', 'Burial Site Hunting Ground')]);
+        const ilonka = V('d7', 'Ilonka (G7)', { blood: 1, cap: 7 }), bret2 = V('d8', 'Bret Stryker (G6)', { blood: 1, cap: 4 });
+        await hg([ilonka, bret2, L('dl4', 'Meditative Grove')]);
+        ok(bret.blood === 2 && aline.blood === 3 && brandon.blood === 2 && cat.blood === 1 && anxo.blood === 2 && damian.blood === 1 && ilonka.blood === 2 && bret2.blood === 1,
+           '161d Zoo feeds a Toreador (the icon is the play requirement); Carfax feeds Aline and, with a ready baron, Brandon -- never the Camarilla Catalina; Burial Site the Path of Death’s Anxo, not Damian; Meditative Grove the Salubri (got ' + JSON.stringify([bret, aline, brandon, cat, anxo, damian, ilonka, bret2].map(v => v.name.split(' ')[0] + ' ' + v.blood)) + ')'); }
+
+      // e) influence-phase blood to my uncontrolled region: Art Museum locks for a Toreador; Powerbase: Montreal once, no lock
+      { const u = mkU161(); u.ownTurns = 3;
+        const tor = V('e1', 'Kathy Glens (G6)', { zone: 'uncontrolled', blood: 1, cap: 5, faceDown: true }), gan = V('e2', 'Crow (G5)', { zone: 'uncontrolled', blood: 0, cap: 5, faceDown: true });
+        u.unc = [tor, gan]; u.board = [tor, gan, L('el1', 'Art Museum'), L('el2', 'Powerbase: Montreal')];
+        await u._considerLockIncome('influence');
+        const after1 = [tor.blood, gan.blood], am = u.board.find(c => c.name === 'Art Museum'), pm = u.board.find(c => c.name === 'Powerbase: Montreal');
+        await u._considerLockIncome('influence');
+        ok(after1[0] + after1[1] === 3 && tor.blood >= 2 && !!am.locked && !pm.locked && tor.blood + gan.blood === 3,
+           '161e Art Museum locks to add 1 to the Toreador; Powerbase: Montreal adds 1 without locking, and only once this turn (got ' + JSON.stringify({ after1, now: [tor.blood, gan.blood], am: am.locked, pm: pm.locked }) + ')'); }
+
+      // f) one-shot masters held without their target: Unholy Sacrament (a titled Sabbat in uncontrolled with room for 3, above the influence floor); Family Gathering (an all-Hecata crypt)
+      { const u = mkU161(); const ready = V('f0', 'Lika, The Purger (G6)'); u.board = [ready]; u.hand = ['Unholy Sacrament', 'Family Gathering']; u.pool = 20; u.cryptN = 5;
+        const unt = V('f1', 'Lyyli Yösydän (G6)', { zone: 'uncontrolled', blood: 0, cap: 5 }); u.unc = [unt]; u.board.push(unt);
+        u.deck = { crypt: [{ name: 'Alek König (G6)' }, { name: 'Crow (G5)' }], library: [] };
+        const c0 = names(u._bestMasterFor(new Set()));
+        const dam = V('f2', 'Damian (G6)', { zone: 'uncontrolled', blood: 2, cap: 8 }); u.unc.push(dam); u.board.push(dam);
+        const c1 = names(u._bestMasterFor(new Set())); u.pool = 8; const c2 = names(u._bestMasterFor(new Set())); u.pool = 20;
+        ok(!c0.includes('Unholy Sacrament') && c1.includes('Unholy Sacrament') && !c2.includes('Unholy Sacrament') && !c1.includes('Family Gathering'),
+           '161f Unholy Sacrament: held for an untitled Sabbat vampire, offered for the Archbishop Damian (room 6), held again at pool 8 (3 would cross the floor of 6); Family Gathering held without a ready Hecata (got ' + JSON.stringify({ c0, c1, c2 }) + ')');
+        u.board.push(V('f3', 'Alek König (G6)'));
+        const c3 = names(u._bestMasterFor(new Set()));
+        u.deck = { crypt: [{ name: 'Alek König (G6)' }, { name: 'Gebeyehu Abdu (G6)' }], library: [] };
+        const c4 = names(u._bestMasterFor(new Set()));
+        ok(!c3.includes('Family Gathering') && c4.includes('Family Gathering'),
+           '161f ...Family Gathering waits for a crypt that is ALL Hecata (the bot cannot see the top card: a Gangrel in the list holds it) (got ' + JSON.stringify({ c3, c4 }) + ')');
+        u._fgOwed = 1; u._addUnc('Gebeyehu Abdu (G6)'); const g = u.unc.find(v => v.name === 'Gebeyehu Abdu (G6)');
+        ok(!!g && g.blood === 1 && (u._fgOwed | 0) === 0, '161f ...the vampire Family Gathering draws arrives with 1 blood (got ' + JSON.stringify(g && g.blood) + ')'); }
+
+      // g) Haqim's Law: Retribution in my own modifier window: a spare combat card for +1 bleed and the frozen add line; two kept; once per copy per action
+      { const mk = (hand, copies) => { const u = mkU161(); const k = V('g1', 'Kasim Bayar (G6)', { blood: 6, cap: 9 }); u.board = [k]; for(let i = 0; i < copies; i++) u.board.push(L('gl' + i, "Haqim's Law: Retribution")); u.hand = hand.slice();
+          u.table = { 1: { pub: { pool: 20 } } }; u._actingVamp = { v: k, n: 2, played: new Set(), target: 1 }; return { u, k }; };
+        const A = mk(['Hunger of Marduk', 'Hunger of Marduk', 'Flash'], 2), r1 = IF1(A.u, '_playHaqimLaw') ? A.u._playHaqimLaw(A.k) : false, r2 = IF1(A.u, '_playHaqimLaw') ? A.u._playHaqimLaw(A.k) : false, r3 = IF1(A.u, '_playHaqimLaw') ? A.u._playHaqimLaw(A.k) : false;
+        ok(r1 && !r2 && !r3 && A.u._actingVamp.n === 3 && A.u.hand.length === 2 && A.u.hand.filter(x => x === 'Hunger of Marduk').length === 1 && logs(A.u).includes('Kasim Bayar (G6) adds +1 bleed (= 3).'),
+           '161g Haqim’s Law: three combat cards -> a Hunger of Marduk (the card held twice) for +1, the frozen add line; then two are kept, the second copy waits (got ' + JSON.stringify({ r1, r2, r3, n: A.u._actingVamp.n, hand: A.u.hand, logs: logs(A.u) }) + ')');
+        const B = mk(['Flash', 'Pursuit'], 1); B.u.table = { 1: { pub: { pool: 3 } } };
+        const b1 = IF1(B.u, '_playHaqimLaw') ? B.u._playHaqimLaw(B.k) : false, b2 = IF1(B.u, '_playHaqimLaw') ? B.u._playHaqimLaw(B.k) : false;
+        ok(b1 && !b2 && B.u._actingVamp.n === 3, '161g ...with two combat cards it still pays when the point ousts the prey (pool 3, bleed 2 -> 3), each copy once per action (got ' + JSON.stringify({ b1, b2, n: B.u._actingVamp.n }) + ')');
+        const C = mk(['Flash', 'Pursuit', 'Quickness'], 1); C.u.board[0] = Object.assign(C.u.board[0], { name: 'Crow (G5)' }); C.u._actingVamp.v = C.u.board[0];
+        const c1 = IF1(C.u, '_playHaqimLaw') ? C.u._playHaqimLaw(C.u.board[0]) : false;
+        ok(!c1, '161g ...and only an Assamite (Banu Haqim) uses it'); }
+
+      // h) Club Illusion at the bleed announce: an Anarch with blood to spare; not at 2 blood unless the point ousts; never a non-Anarch
+      { const ci = (vName, blood, preyPool) => { const u = mkU161(); const v = V('h1', vName, { blood, cap: 6 }); u.board = [v, L('hl1', 'Club Illusion')]; u.table = { 1: { pub: { pool: preyPool } } };
+          const act = { n: 2 }; u._actingVamp = { v, n: 2, played: new Set() }; const r = IF1(u, '_maybeClubIllusion') ? u._maybeClubIllusion(v, act, 1) : false; return { r, n: act.n, blood: v.blood, logs: logs(u) }; };
+        const a = ci('Doc Martina (G7)', 4, 20), b = ci('Doc Martina (G7)', 2, 20), c = ci('Doc Martina (G7)', 2, 3), d = ci('Bret Stryker (G6)', 5, 20);
+        ok(a.r && a.n === 3 && a.blood === 3 && a.logs.includes('Doc Martina (G7) burns 1 blood (Club Illusion): +1 bleed.') && !b.r && c.r && c.n === 3 && !d.r,
+           '161h Club Illusion: 4 blood -> 1 for +1 bleed before the announce; at 2 blood held, unless the point ousts (prey at 3); a Camarilla vampire never (got ' + JSON.stringify({ a, b, c, d }) + ')'); }
+
+      // i) Archon Investigation: the target plays it at its decline of a bleed of 4+ (3 pool, the next master action), the actor reads the line and burns its minion
+      { const T = mkU161('Viktor'); T.pool = 10; T.hand = ['Archon Investigation']; T.board = [V('i1', 'Bret Stryker (G6)', { blood: 4, cap: 4 })];
+        T.decide = (q, ctx) => q === 'react-delay' ? { ms: 0 } : q === 'block-as-target' ? { block: false, bounce: false, why: 'test: no block' } : Bot.prototype.decide.call(T, q, ctx);
+        T._armPending('Hanna', 4, 'Anxo Vilela (G6)');
+        await sleep(80);
+        const line = logs(T).find(l => /plays Archon Investigation/.test(l)) || null;
+        ok(!!line && line === 'Viktor plays Archon Investigation — Anxo Vilela (G6) is burned (the bleed of 4 is not successful).' && T.pool === 7 && (T._ootDebt | 0) === 1 && !T.pending && !T.hand.length,
+           '161i Archon Investigation at a bleed of 4 after the block is declined: 3 pool (10 -> 7), the next master phase action spent, the frozen line, no bleed pending (got ' + JSON.stringify({ line, pool: T.pool, debt: T._ootDebt, pending: !!T.pending }) + ')');
+        const T3 = mkU161('Viktor'); T3.pool = 10; T3.hand = ['Archon Investigation']; T3.board = [V('i2', 'Bret Stryker (G6)')];
+        T3.decide = (q, ctx) => q === 'react-delay' ? { ms: 0 } : q === 'block-as-target' ? { block: false, bounce: false, why: 'test: no block' } : Bot.prototype.decide.call(T3, q, ctx);
+        T3._armPending('Hanna', 3, 'Anxo Vilela (G6)'); await sleep(80);
+        const T4 = mkU161('Viktor'); T4.pool = 3; T4.hand = ['Archon Investigation']; T4.board = [V('i3', 'Bret Stryker (G6)')];
+        T4.decide = T3.decide.bind(T4); T4.decide = (q, ctx) => q === 'react-delay' ? { ms: 0 } : q === 'block-as-target' ? { block: false, bounce: false, why: 'test: no block' } : Bot.prototype.decide.call(T4, q, ctx);
+        T4._armPending('Hanna', 5, 'Anxo Vilela (G6)'); await sleep(80);
+        ok(T3.hand.length === 1 && T3.pool === 10 && T4.hand.length === 1 && T4.pool === 3,
+           '161i ...not at a bleed of 3, and not when the 3 pool would leave me at 0 (R-34)');
+        const A = mkU161('Hanna'); A.seat = 1; const anxo = V('i9', 'Anxo Vilela (G6)', { locked: true, attached: [] }); const gun = L('i9g', '.44 Magnum', { host: 'i9' }); anxo.attached = ['i9g'];
+        A.board = [anxo, gun]; A._actingVamp = { v: anxo, n: 4, played: new Set(), target: 2 };
+        A._onLog('Viktor', '<b>Viktor</b> plays <b>Archon Investigation</b> — <b>Anxo Vilela (G6)</b> is burned (the bleed of 4 is not successful).');
+        const flagged = !!(A._actingVamp && A._actingVamp.archoned);
+        if(IF1(A, '_archonBurned') && flagged) A._archonBurned(anxo);
+        ok(flagged && anxo.zone === 'burned' && !A.board.includes(anxo) && !A.board.includes(gun),
+           '161i ...the acting bot reads the line (ARCHON_BURN), and its minion is burned with its equipment (got ' + JSON.stringify({ flagged, zone: anxo.zone, board: names(A.board) }) + ')'); }
+    }
+
 
 
     }

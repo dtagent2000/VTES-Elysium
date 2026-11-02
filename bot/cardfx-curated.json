@@ -1105,7 +1105,10 @@
      "phase": "unlock",
      "fx": {
       "bloodAdd": 1,
-      "bloodAddTo": "own-ready"
+      "bloodAddTo": "own-ready",
+      "bloodAddClan": [
+       "Salubri"
+      ]
      }
     },
     {
@@ -1115,7 +1118,7 @@
      "note": "the SEPARATE \"cancel a frenzy card\" lock ability -- a different, undocumented mechanic (frenzy isn't modelled at all), left deliberately untagged"
     }
    ],
-   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md. Meditative Grove: req.clan Salubri for the blood-gain mode specifically; its second mode (frenzy-cancel) is untouched, a genuinely separate mechanic."
+   "note": "Hunting-ground core pattern (19 July, Johan's \"process the family, gives many free to other decks\" GO) -- 40 cards mention \"hunting ground\" total, measured before curating anything. 23 share this EXACT effect across two surface phrasings (\"a ready vampire you control can gain 1 blood\" / \"you may move 1 blood from the blood bank to a ready vampire you control\"), unlock-phase, NOT lock-gated (a genuinely new third shape -- freestanding, phase-triggered, optional-but-obviously-always-taken, distinct from both _applyPhaseIncome's host-attached automatic triggers and _considerLockIncome's lock-gated choices). bloodAddTo:'own-ready' already existed from Life in the City. New _considerHuntingGround consumer + a turn-scoped _huntingGroundUsedThisTurn flag (\"only one hunting ground each turn\" -- across ALL copies simultaneously, reset at turn start). The other 17 measured cards are genuinely distinct shapes (accumulate-then-spend counters, multiplayer-count-dependent targets, host-attached trophies, attack/burn effects, vampire-card abilities) -- documented, not guessed at, in elysium-bot-phase-income-v2-plan.md. Meditative Grove: req.clan Salubri for the blood-gain mode specifically; its second mode (frenzy-cancel) is untouched, a genuinely separate mechanic. v0.6.215 (V5 wave 3): the target clan moved to the mode (fx.bloodAddClan); req.clan is the requirement to play it (R-42)."
   },
   "The Barrens": {
    "t": [
@@ -2346,6 +2349,408 @@
     }
    ],
    "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): (a BOARD rider of wave 1) '[tha] Strike: 1R damage. This damage cannot be prevented by cards requiring Fortitude [for]. The opposing vampire's strikes with weapons inflict no damage this round. [THA] As above, but for 2R damage.' Cost 1 blood (inherited). The auto tier read [THA] as 1R. The damage cannot be prevented by cards requiring Fortitude [LSJ 20050628]: noPreventDisc 'for' -- the struck bot reads the card on the strike line (`strikes with Soul Burn for N.`) and plays no Fortitude prevention (a human's bare `strikes for N.` names no card). Not modelled (amber): the opposing vampire's weapon strikes inflicting no damage this round, except after a dodge or with a first-strike weapon [LSJ 20040928]."
+  },
+  "Anarch Railroad": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockStealth": 1,
+      "lockStealthSect": "Anarch"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. You can lock this card to give an Anarch +1 stealth.' The Labyrinth's shape (_lockStealthFor) with a sect gate: an acting Anarch of mine, once per action, only when a block needs answering (R-12). Giving the stealth to another Methuselah's Anarch is not modelled (amber)."
+  },
+  "Backways": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockStealth": 1,
+      "lockStealthClan": "Gangrel"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. Lock to give a Gangrel you control +1 stealth.' The Labyrinth's shape; the clan icon is the requirement to play it (R-42).",
+   "req": {
+    "clan": [
+     "Gangrel"
+    ]
+   }
+  },
+  "Elysian Fields": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockStealth": 1,
+      "lockStealthClan": "Lasombra"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. You can lock this location to give a Lasombra you control +1 stealth.' The Labyrinth's shape.",
+   "req": {
+    "clan": [
+     "Lasombra"
+    ]
+   }
+  },
+  "Fortune Teller Shop": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockStealth": 1,
+      "lockStealthClan": "Ravnos"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. You can lock this card to give a Ravnos +1 stealth.' The Labyrinth's shape (any Ravnos by the text; the bot gives it to its own acting Ravnos).",
+   "req": {
+    "clan": [
+     "Ravnos"
+    ]
+   }
+  },
+  "Opium Den": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockStealth": 1,
+      "lockStealthClan": "Ministry"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. Lock to give a Follower of Set you control +1 stealth.' The Followers of Set are the Ministry clan in the data. The Labyrinth's shape.",
+   "req": {
+    "clan": [
+     "Ministry"
+    ]
+   }
+  },
+  "Creepshow Casino": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockStealth": 1,
+      "lockStealthAt": "announceUndirected"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. You can lock this card as a vampire you control announces an undirected action to give that vampire +1 stealth, even if stealth is not yet needed.' Its window is the announce (_lockStealthAtAnnounce): a recruit, an employ, an equip or a political action of mine, never a hunt; never offered as an answer to a block. Rescue, leave-torpor and undirected action cards are not wired (amber)."
+  },
+  "Market Square": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockIntercept": 1,
+      "lockInterceptClan": "Banu Haqim"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. Lock to give an Assamite you control +1 intercept.' The Assamites are Banu Haqim in the data. The intercept mirror of The Labyrinth (_lockInterceptFor): spent by a blocker of that clan only when the stealth needs answering (R-12), first on a tie with a card.",
+   "req": {
+    "clan": [
+     "Banu Haqim"
+    ]
+   }
+  },
+  "Channel 10": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockIntercept": 2,
+      "lockInterceptNotFirst": true
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. You can lock this card to give a minion you control +2 intercept. Not usable during the first action in a minion phase.' The action being blocked must be at least the second action row of that turn (_turnActN, read from the table's action rows); unknown = fail closed. Cancelled-as-played first actions [LSJ 20100505, ANK 20210124] are not told apart (amber)."
+  },
+  "KRCG News Radio": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockIntercept": 1
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. You can lock this card to give a minion you control +1 intercept. You can lock this card and burn 1 pool to give a minion controlled by another Methuselah +1 intercept.' The first half (_lockInterceptFor). The second (helping another Methuselah's blocker for 1 pool) is not modelled (amber)."
+  },
+  "Wall Street Night, Financial Newspaper": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "lockIntercept": 1,
+      "lockInterceptOn": "undirected"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. During an undirected action, you can lock this location to give a minion you control +1 intercept. A minion you control can lock this location to attempt to move 1 counter from an investment card to your pool as a +1 stealth (D) action.' The intercept half, only when the action being blocked is undirected. The investment action is not modelled: the Path of Death precon holds no investment card (amber)."
+  },
+  "Unholy Sacrament": {
+   "t": [
+    "master"
+   ],
+   "handler": "unholy-sacrament",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bloodAdd": 3,
+      "bloodAddTo": "unc",
+      "bloodAddReq": {
+       "sect": "Sabbat",
+       "titled": true
+      }
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Add 3 blood to a titled Sabbat vampire in your uncontrolled region.' One-shot (CARD_HANDLERS['unholy-sacrament']); held unless a titled Sabbat vampire in uncontrolled has room for all 3 (_uncBloodTarget) and the 3 pool leaves my influence floor (_poolFloorEff: the same pool the transfers would not spend)."
+  },
+  "Family Gathering": {
+   "t": [
+    "master"
+   ],
+   "trifle": true,
+   "req": {
+    "clan": [
+     "Hecata"
+    ]
+   },
+   "handler": "family-gathering",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "drawCrypt": 1,
+      "drawCryptClan": "Hecata",
+      "bloodAdd": 1
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Trifle. Reveal the top card of your crypt. If it is a Hecata, draw it and add 1 blood to it; otherwise, move it to the bottom of your crypt.' The bot cannot see its crypt's order, so it plays the card only when every vampire in its crypt list is a Hecata (_cryptAllClan; the Hecata precon is) -- the reveal is then a Hecata whatever it is: drawCrypt, and the vampire arrives with 1 blood (_addUnc). Not with an empty crypt [RTR 20000501, LSJ 20070411-2]. A mixed crypt holds the card (amber)."
+  },
+  "Carfax Abbey": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "req": {
+    "sect": "Anarch"
+   },
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready",
+      "bloodAddSect": "Anarch",
+      "bloodAddBaron": 1
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Requires a ready Anarch. Unique location. Hunting ground. During your unlock phase, a ready Anarch you control can gain 1 blood, and, if you control a ready baron, another ready Anarch you control can gain 1 blood as well. A vampire can gain blood from only one hunting ground each turn.' The hunting-ground pattern (_considerHuntingGround) with the sect gate on both the play (req.sect) and the target, and the baron's second Anarch."
+  },
+  "Burial Site Hunting Ground": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "phase": "unlock",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "own-ready",
+      "bloodAddPath": "Death and the Soul"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. Hunting ground. During your unlock phase, a ready vampire you control who follows the Path of Death and the Soul can gain 1 blood, or a wraith or zombie ally you control can gain 1 life, not to exceed its starting life.' The vampire half; the Path from the crypt data (cardfx v1.9.6 crypt `path`). The ally's life is not modelled (amber)."
+  },
+  "Art Museum": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "phase": "influence",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "unc",
+      "bloodAddClan": [
+       "Toreador"
+      ]
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. You can lock this location during your influence phase to add 1 blood to a Toreador in your uncontrolled region.' Arcane Library's shape (_considerLockIncome('influence')), the target clan on the mode (bloodAddClan); the clan icon is the requirement to play it (R-42, inherited)."
+  },
+  "Ecoterrorists": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "phase": "influence",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "unc",
+      "bloodAddClan": [
+       "Gangrel"
+      ]
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. Lock during your influence phase to add 1 blood to a Gangrel in your uncontrolled region.' Arcane Library's shape."
+  },
+  "Powerbase: Montreal": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "once": true,
+     "phase": "influence",
+     "fx": {
+      "bloodAdd": 1,
+      "bloodAddTo": "unc"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. During your influence phase, you can add 1 blood to a vampire in your uncontrolled region. Vampires can steal this location as a (D) action.' No lock: once in the phase (`once`, _considerLockIncome). Another Methuselah's vampire stealing it is not read (amber)."
+  },
+  "Haqim's Law: Retribution": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleedDiscardCombat": 1,
+      "bleedDiscardClan": "Banu Haqim"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Put this card in play. During a bleed action, an Assamite you control can discard a combat card to get +1 bleed.' Each copy once per action [ANK 20221102-2], by the acting bleeding minion [ANK 20220502], before resolution [ANK 20231124]: the bot uses it in its own modifier window after blocks are declined (_playHaqimLaw, the frozen L12.add line), discarding a dead combat card always, else only while two combat cards stay in hand or when the point ousts the prey."
+  },
+  "Club Illusion": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleedAtAnnounce": 1,
+      "bleedAtAnnounceBlood": 1,
+      "bleedAtAnnounceSect": "Anarch"
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. An Anarch can burn 1 blood once as they announce a bleed action to get +1 bleed during that action.' At the announce (_maybeClubIllusion), before the bleed line: when the Anarch keeps 2 blood after paying, or the point ousts the prey. It does not make the action one requiring an Anarch [ANK 20220317]."
+  },
+  "Archon Investigation": {
+   "t": [
+    "master"
+   ],
+   "oot": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "burnActor": true,
+      "burnActorMinBleed": 4
+     }
+    }
+   ],
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Out-of-turn. Only usable if a minion is bleeding you and the bleed amount is 4 or more, after blocks are declined. Burn the acting minion. (The action is not successful.)' Never a master-phase play (oot). The target bot plays it at its own decline of the block, or when a modifier reopens the window at 4+, before anything 'as the action would be successful' [LSJ 19980105] (_archonFor / _playArchon): 3 pool leaving 1 (R-34), the next master phase's action spent (_ootDebt), the frozen ARCHON_BURN line; the acting bot burns its minion (_archonBurned), a human is asked to. Costs one more against Secure Haven [LSJ 20010817] (not modelled; no deck holds it)."
   }
  },
  "crypt": {

@@ -490,7 +490,9 @@ ok(fx.counts.libLock >= 140,
   ok(gv && gv.fx.bloodAdd === 3 && gv.fx.bloodAddTo === 'unc' && gv.fx.bloodAddYounger === true && gv.fx.actStealth === 1, 'Govern [DOM] (v1.5.6 blood-placement family): the clean target phrase yields bloodAddTo:unc + bloodAddYounger + the actStealth booking -- the superior-Govern pin');
   const ma = (fx.lib['Magnetic Authority'].modes || []).some(m => m.fx && m.fx.bloodAddTo);
   const pbm = (fx.lib['Powerbase: Montreal'].modes || []).some(m => m.fx && m.fx.bloodAddTo);
-  ok(!ma && !pbm, 'blood-placement guards: filtered targets (Magnetic Authority, Sabbat-only) and phase-income (Powerbase: Montreal, INFLUENCE phase) get NO bloodAddTo -- honestly unconsumable, not wrongly automated');
+  const pbmC = fx.lib['Powerbase: Montreal'], pbmM = pbmC && (pbmC.modes || [])[0];
+  ok(!ma && pbm && pbmC.src === 'hand' && pbmM && pbmM.once === true && pbmM.phase === 'influence' && pbmM.fx.bloodAddTo === 'unc' && !pbmM.lock,
+     'blood-placement guards: Magnetic Authority (Sabbat-only) still gets NO bloodAddTo; Powerbase: Montreal is curated since V5 wave 3 (v0.6.215): once in the influence phase, no lock, bloodAddTo unc (_considerLockIncome reads `once`)');
 
   /* attach-burn template → stealthLater, exact 5-card set */
   const sL = Object.keys(fx.lib).filter(n => (fx.lib[n].modes || []).some(m => m.fx && m.fx.stealthLater)).sort();
@@ -583,7 +585,7 @@ ok(fx.counts.libLock >= 140,
   ok(c['Skidmark (G4)'].archFull === true && c['Skidmark (G4)'].fx.noReplaceActing === true, 'Skidmark: archFull — FULL-BY-ARCHITECTURE, the _flushDraws proof lives in the note');
   ok(['Wauneka (G6)', 'Rosalina Cortez (G6)', 'Mustafa Rahman (G2)', 'Ayelech (G6)'].every(n => c[n] && !c[n].fx),
      'vanilla/title-only vampires stay fx-free (Wauneka, Rosalina, Mustafa, Ayelech)');
-  ok(fx.counts.curated === 124, 'curated count = 104 lib + 20 crypt = 124 (got ' + fx.counts.curated + ') -- 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered); 29 Oct (V5 wave 1): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor\u2019s Hand, Sword of the Archangel, Invigorate; 29 Oct (V5 wave 2): + Flash, Resist Earth\u2019s Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn');
+  ok(fx.counts.curated === 144, 'curated count = 124 lib + 20 crypt = 144 (got ' + fx.counts.curated + ') -- 2 Nov (V5 wave 3): + 20 masters (Anarch Railroad, Backways, Elysian Fields, Fortune Teller Shop, Opium Den, Creepshow Casino, Market Square, Channel 10, KRCG News Radio, Wall Street Night, Unholy Sacrament, Family Gathering, Carfax Abbey, Burial Site Hunting Ground, Art Museum, Ecoterrorists, Powerbase: Montreal, Haqim\u2019s Law: Retribution, Club Illusion, Archon Investigation); 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered); 29 Oct (V5 wave 1): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor\u2019s Hand, Sword of the Archangel, Invigorate; 29 Oct (V5 wave 2): + Flash, Resist Earth\u2019s Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn');
   { const bw = fx.lib['Bowl of Convergence']; const am = bw && (bw.modes || []).find(m => m.at === 'AUS');
     ok(!!am && am.fx.intercept === 1 && am.fx.interceptPaid === 1 && am.fx.interceptPaidBlood === 1, 'Bowl of Convergence [AUS]: +1 intercept, and +1 more for 1 blood (sweep pilot, text verified in vtes.json)'); }
   { const R = (n, at) => { const e = fx.lib[n]; const m = e && (e.modes || []).find(mo => (mo.at || null) === at); return !!(m && m.fx && m.fx.ranged); };
@@ -594,7 +596,14 @@ ok(fx.counts.libLock >= 140,
   { const rq = n => (fx.lib[n] && fx.lib[n].req) || {};
     ok(JSON.stringify(rq('Creeping Sabotage').clan) === '["Nosferatu"]' && JSON.stringify(rq('Deep Song').disc) === '["ani"]' && JSON.stringify(rq('Guard Dogs').disc) === '["ani"]',
        'v1.9.1: curated entries inherit the data\u2019s requirements (Creeping Sabotage: Nosferatu; Deep Song, Guard Dogs: ani)');
-    ok(!rq('Slum Hunting Ground').clan && !rq('Warsaw Station').clan, 'v1.9.1: a clan icon on a MASTER is not a requirement (Hunting Grounds, Warsaw Station stay clan-free)'); }
+    ok(JSON.stringify(rq('Slum Hunting Ground').clan) === '["Nosferatu"]' && JSON.stringify(rq('Warsaw Station').clan) === '["Nosferatu"]' && JSON.stringify(rq('Ventrue Headquarters').clan) === '["Ventrue"]',
+       'v1.9.6 (R-42, reversing v1.9.1): a clan icon on a MASTER is a requirement -- curated masters inherit it too (Slum Hunting Ground, Warsaw Station, Ventrue Headquarters); the target of a hunting ground is the mode\u2019s own fact (fx.bloodAddClan)'); }
+  { const oot = Object.entries(fx.lib).filter(([n, e]) => e.oot).map(([n]) => n);
+    ok(oot.length === 36 && oot.includes('Archon Investigation') && oot.includes('Sudden Reversal') && oot.includes('Contingency Planning') && !oot.includes('Bleeding the Vine') && !oot.includes('Vox Senis'),
+       'v1.9.6: `oot` on the 36 out-of-turn masters (a keyword segment: \u2018Out-of-turn.\u2019 / \u2018Master: out-of-turn.\u2019) -- not on a master that only mentions out-of-turn cards (Bleeding the Vine, Vox Senis); curated masters keep it (got ' + oot.length + ')');
+    const cr = fx.crypt["Abderrahim, Death's Hand (G6)"] || fx.crypt["Abderrahim, Death's Hand"];
+    ok(!!cr && cr.path === 'Death and the Soul' && Object.values(fx.crypt).filter(e => e.path).length === 48,
+       'v1.9.6: the crypt carries the Sabbat V5 Path (48 vampires; Burial Site Hunting Ground feeds a follower of Death and the Soul)'); }
   { const st = fx.lib['Second Tradition: Domain']; const m2 = st && (st.modes || []).find(m => m.when === 'lockedBlock');
     ok(st && st.src === 'hand' && st.req && st.req.title && (st.modes || []).length === 2 && st.modes[0].fx.intercept === 2 && !st.modes[0].when, 'Second Tradition: mode 1 = a free +2 intercept, title required (prince / justicar)');
     ok(m2 && m2.fx.unlock === true && m2.fx.intercept === 2 && m2.fx.payBlood === 1, 'Second Tradition: mode 2 (printed: a LOCKED prince or justicar burns 1 blood to unlock and block with +2 intercept) = when:lockedBlock, unlock + intercept 2 + payBlood 1 -- the auto tier had mode 1 only'); }
