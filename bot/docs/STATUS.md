@@ -19,7 +19,7 @@ V5 wave 3 (D-104): the masters. Out-of-turn masters never in my master phase; a 
 the clan icon counts); locations that lock for stealth / intercept; blood (Carfax Abbey, Burial Site, Art Museum, Ecoterrorists,
 Powerbase: Montreal, Unholy Sacrament, Family Gathering); Haqim's Law and Club Illusion; Archon Investigation with the line the
 acting bot burns its minion on. One lock, one effect. The client's v5 card names resolve (main's reply 5.2). 20 curated, graded;
-section 161 (22 checks); the canon `specs/spec-v5-wave3-2026-11-02.md`; `docs/CARDS.md`: 183 of 308 cards playable (168 before).
+section 161 (25 checks); the canon `specs/spec-v5-wave3-2026-11-02.md`; `docs/CARDS.md`: 183 of 308 cards playable (168 before).
 
 ## Next (proposed; Johan orders the board)
 1. KRCG's v5 dump for the compiler and the precon tools (main's reply 5.1; Johan: after wave 3).

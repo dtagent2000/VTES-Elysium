@@ -40,7 +40,9 @@
     fired on one lock); the compiler's article-first alias (main's KRCG v5 reply 5.2: 4,149 of 4,149 v3 cards resolve through the
     client's v5 names); coverage tool v1.1.42 (the wave's keys).
   - *Reviews*: the graded readings (10 green, 10 amber, 2 red fixed: no second out-of-turn master before the next master phase);
-    the V5 smoke found the intercept lock's missing attempt line; the egress review (PR body).
+    the V5 smoke found the intercept lock's missing attempt line; the egress review (9 findings, 7 fixed: the lock
+    line read by the hotseat net and the event log, ARCHON_BURN typed and kept out of the action memory, the new state reset per game,
+    Sudden Reversal cycled, Club Illusion before the block bar, the curated keys read, ana-block's lock windows; 161k).
   - *Gates*: suite 2363/0 ×3 (frozen snapshots, the release sha), canary 69/0 + 69/0 (root v2.6.170), hotseat 11/0, HB1 11/11,
     test-cardfx 301/0, gen-precon --check clean, main's check-versions agrees, main's client suite 353/1 (the embedded guide);
     the sim footprint and the audits: the spec's §5 (starters DIVERGED 143 at the R-42 masters, SAME-PLAY 97; V5 smoke 134 / 34).

@@ -929,10 +929,10 @@ function compile(cards, curated){
       } else if(e.cost !== undefined && Object.keys(e.cost).length) costMismatch.push(name + ' curated ' + JSON.stringify(e.cost) + ' vs data (free)');
       /* v1.9.1 (25 Sep 2026, cardfx sweep pass 2): curated LIBRARY entries also inherit the data's discipline and clan
          REQUIREMENTS when they do not restate them -- 11 curated cards had lost req.disc and Creeping Sabotage /
-         Forced Confessional their clan. A clan icon on a MASTER is not a requirement (Hunting Grounds, Warsaw Station),
-         so masters never inherit req.clan. */
+         Forced Confessional their clan. (v1.9.1 kept masters out -- 'a clan icon on a master is not a requirement'; v1.9.6
+         reversed it, R-42: masters inherit the clan too.) */
       if(auto && auto.req && dst === lib){
-        const isMaster = (auto.t || []).includes('master'), r = Object.assign({}, e.req || {}), got = [];
+        const r = Object.assign({}, e.req || {}), got = [];
         if(r.disc === undefined && auto.req.disc){ r.disc = auto.req.disc; got.push('disc'); }
         if(r.clan === undefined && auto.req.clan){ r.clan = auto.req.clan; got.push('clan'); }   // v1.9.6 (V5 wave 3): masters inherit the clan too -- v1.9.1's 'a clan icon on a master is not a requirement' was wrong: 'only a Methuselah who controls a ready minion who meets the requirements of a master card can play it' (the rulebook, card types), and the clan icon is a requirement (RULINGS R-42)
         if(got.length){ e.req = r; reqInherited.push(name + ' ' + got.join('+')); }

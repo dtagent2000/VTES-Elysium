@@ -11808,6 +11808,24 @@ async function connectWithRetry(client, tries = 30){
         await u._considerLockIncome('master');
         const draws = u.sent.filter(m => m && m.t === 'draw').length;
         ok(d.locked && t.blood === 3 && draws === 0, '161j Dreams of the Sphinx in the master phase: one lock buys ONE effect -- the blood to the uncontrolled vampire, no hand-size draw on the same lock (got ' + JSON.stringify({ locked: d.locked, blood: t.blood, draws }) + ')'); }
+
+      // k) the egress review: the new lines are typed and read where they must be; the counter runs on the table's rows; the state resets
+      { const u = mkU161('Kim'); u.seat = 3; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }, { seat: 3, name: 'Kim', online: true, bot: true }];
+        const arch = 'Viktor plays Archon Investigation — Anxo Vilela (G6) is burned (the bleed of 4 is not successful).';
+        const eA = IF1(u, '_evClassify') ? u._evClassify('Viktor', arch, 'log') : null, eL = IF1(u, '_evClassify') ? u._evClassify('Viktor', 'Kasim Bayar (G6) locks Channel 10: +2 intercept.', 'log') : null;
+        u.turnSeat = 1; u._turnActN = 0; u._obs = { tag: 'before' };
+        u._onLog('Hanna', '<b>Anxo Vilela (G6)</b> bleeds for 2.'); const n1 = u._turnActN | 0;
+        u._onLog('Hanna', '<b>Anxo Vilela (G6)</b> plays <b>Govern the Unaligned</b>.'); const n2 = u._turnActN | 0;
+        u._onLog('Hanna', '<b>Crow (G5)</b> hunts.'); const n3 = u._turnActN | 0;
+        const obsBefore = u._obs; u._onLog('Viktor', '<b>Viktor</b> plays <b>Archon Investigation</b> — <b>Anxo Vilela (G6)</b> is burned (the bleed of 4 is not successful).');
+        const phantom = !!(u.opp && u.opp[2] && u.opp[2].minions && u.opp[2].minions['Viktor']);
+        ok(!!eA && eA.kind === 'archon' && eA.vamp === 'Anxo Vilela (G6)' && !!eL && eL.kind === 'intercept' && eL.n === 2 && eL.lock === true,
+           '161k the event log types ARCHON_BURN (kind archon) and a location’s intercept lock (kind intercept, n 2) (got ' + JSON.stringify({ eA, eL }) + ')');
+        ok(n1 === 1 && n2 === 1 && n3 === 2 && u._obs === obsBefore && !phantom,
+           '161k ...Channel 10’s counter runs on the table’s action rows (a card’s play line is no second action); Archon’s line is no action of its seat: no phantom minion, the bleed’s memory kept (got ' + JSON.stringify({ n1, n2, n3, obsKept: u._obs === obsBefore, phantom }) + ')');
+        const d = mkU161(); d.board = [V('k1', 'Crow (G5)')]; d.hand = ['Sudden Reversal']; const di = d._deadHandIndex(d.board);
+        d._ootDebt = 1; d._fgOwed = 2; d._dispatch({ t: 'started', players: d.players });
+        ok(di === 0 && (d._ootDebt | 0) === 0 && (d._fgOwed | 0) === 0, '161k ...Sudden Reversal (never played) is a dead card the discard phase cycles; a new game owes no out-of-turn action and no Family Gathering blood (got ' + JSON.stringify({ di, debt: d._ootDebt, fg: d._fgOwed }) + ')'); }
     }
 
 
