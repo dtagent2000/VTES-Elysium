@@ -598,14 +598,38 @@ ok(fx.counts.libLock >= 140,
        'v1.9.1: curated entries inherit the data\u2019s requirements (Creeping Sabotage: Nosferatu; Deep Song, Guard Dogs: ani)');
     ok(JSON.stringify(rq('Slum Hunting Ground').clan) === '["Nosferatu"]' && JSON.stringify(rq('Warsaw Station').clan) === '["Nosferatu"]' && JSON.stringify(rq('Ventrue Headquarters').clan) === '["Ventrue"]',
        'v1.9.6 (R-42, reversing v1.9.1): a clan icon on a MASTER is a requirement -- curated masters inherit it too (Slum Hunting Ground, Warsaw Station, Ventrue Headquarters); the target of a hunting ground is the mode\u2019s own fact (fx.bloodAddClan)'); }
+  /* v1.9.7 / krcg-v5.js (bot v0.6.216): KRCG's v5 dump as the source -- vtes.json is built from it (krcg-v5.js); the compiler reads
+     the v5 cost shape directly too. Synthetic records: no dependence on which file sits beside the gate. */
+  { const { toV3 } = require('./krcg-v5.js');
+    const sets = new Map([[300099, { name: 'Fifth Edition', release_date: '2020-01-01', bundles: { PH: { name: 'Hecata', release_date: '2023-01-01' }, '': { name: '' } } }]]);
+    const cr = toV3({ id: 1, kind: 'Crypt', printed_name: 'The Ankou', suffix: 'G5', group: 'G5', clan: 'Nagaraja', disciplines: ['aus', 'NEC', 'fli'], capacity: 7, title: '1 Vote', types: ['Vampire'], text: 'x',
+                      name_variants: [{ type: 'Lexicographical', name: 'Ankou, The' }], cost: {}, prints: [{ set: { id: 300099 }, occurrences: [{ type: 'Precon', bundle: 'PH', copies: 2 }] }] }, sets);
+    const any = toV3({ id: 2, kind: 'Crypt', printed_name: 'Anarch Convert', suffix: '', group: 'Any', types: ['Vampire'], text: '', name_variants: [], cost: {} }, sets);
+    const lib = toV3({ id: 3, kind: 'Library', printed_name: 'Burn', suffix: '', types: ['Master'], text: 'y', cost: { type: 'Pool', value: 2 }, clan_requirement: [], path_requirement: ['Caine'], discipline_requirement: { type: 'Mono', disciplines: [] } }, sets);
+    const x = toV3({ id: 4, kind: 'Library', printed_name: 'Awe', types: ['Action Modifier'], text: 'z', cost: { type: 'Blood', value: 'X' } }, sets);
+    ok(cr.name === 'The Ankou (G5)' && cr._name === 'Ankou, The' && cr.group === '5' && cr.title === '1 vote' && JSON.stringify(cr.disciplines) === '["aus","NEC","flight"]' && cr.clans[0] === 'Nagaraja'
+       && cr.sets['Fifth Edition'][0].precon === 'Hecata' && cr.sets['Fifth Edition'][0].copies === 2 && cr.pool_cost === undefined,
+       'krcg-v5: a crypt card in the v3 shape -- name with its group, the article-last _name v3 used, group without G, the vote title in v3\u2019s case, fli as flight, the precon from the bundle\u2019s name, a free card no cost');
+    ok(any.name === 'Anarch Convert (ANY)' && any.group === 'ANY' && lib.pool_cost === '2' && lib.path === 'Caine' && lib.clans === undefined && lib.disciplines === undefined && x.blood_cost === 'X',
+       'krcg-v5: group Any is (ANY); a library card\u2019s Pool cost, Path requirement, no empty lists; an X blood cost');
+    const v5c = compile([{ id: 5, kind: 'Library', printed_name: 'Vessel Test', suffix: '', types: ['Master'], text: 'Trifle.\nPut this card on a vampire.', cost: { type: 'Pool', value: 1 }, name_variants: [] }], null).out;
+    ok(v5c.lib['Vessel Test'] && JSON.stringify(v5c.lib['Vessel Test'].cost) === '{"pool":1}' && v5c.lib['Vessel Test'].trifle && v5c.lib['Vessel Test'].persistent,
+       'v1.9.7: the compiler reads the v5 cost shape directly ({type: \u2018Pool\u2019, value}; v1.9.6 read 996 costs as unknown)');
+    ok(fx.lib['Dogs of War'] && fx.lib['Dogs of War'].persistent === true && fx.lib['Crusade: Rome'] && fx.lib['Crusade: Rome'].persistent === true && fx.lib['Crusade: Rome'].req && fx.lib['Crusade: Rome'].req.unmodelled === true,
+       'v1.9.7: the v5 wording \u2018this card is put in play / on\u2019 is persistent (Dogs of War, Crusade: Rome), and \u2018Title. Requires a Sabbat vampire.\u2019 is a requirement found mid-line (fails closed)');
+    ok(fx.alias['amelia'] === 'Amelia (G2)' && fx.alias['lucian'] === 'Lucian (G1)' && fx.alias['tegyrius'] === 'Tegyrius, Vizier (G2)' && fx.alias['lucinde'] === 'Lucinde, Alastor (G3)' && fx.alias['theo bell (adv)'] === 'Theo Bell (G2 ADV)',
+       'v1.9.7: a card\u2019s own printed name is its own (the v5 dump\u2019s vernacular variants \u2018Amelia\u2019, \u2018Lucian\u2019 no longer go to another card); the five v3 spellings the dump left out stay (Tegyrius, Lucinde, Theo Bell (ADV) ...)');
+    ok(!!fx.crypt['Julia Sowinski (G6)'] && fx.crypt['Julia Sowinski (G6)'].clan === 'Lasombra' && fx.alias['julia sowinski'] === 'Julia Sowinski (G6)' && !!fx.lib['Information Exchange'] && cards.length >= 4212,
+       'the v5 dump\u2019s new cards are compiled (Julia Sowinski (G6), the client\u2019s bare name an alias; Information Exchange: Secrets of New York) -- ' + cards.length + ' cards beside the gate'); }
   { const oot = Object.entries(fx.lib).filter(([n, e]) => e.oot).map(([n]) => n);
     ok(oot.length === 36 && oot.includes('Archon Investigation') && oot.includes('Sudden Reversal') && oot.includes('Contingency Planning') && !oot.includes('Bleeding the Vine') && !oot.includes('Vox Senis'),
        'v1.9.6: `oot` on the 36 out-of-turn masters (a keyword segment: \u2018Out-of-turn.\u2019 / \u2018Master: out-of-turn.\u2019) -- not on a master that only mentions out-of-turn cards (Bleeding the Vine, Vox Senis); curated masters keep it (got ' + oot.length + ')');
-    ok(fx.alias['an anarch manifesto'] === 'Anarch Manifesto, An' && !!fx.lib['The Barrens'] && fx.alias['coven, the'] === 'The Coven',
-       'v1.9.6 (main\u2019s KRCG v5 reply, 5.2): the article-first spelling the client now uses resolves to the v3 key (An Anarch Manifesto -> Anarch Manifesto, An; most v3 keys are already article-first: The Barrens, The Coven)');
+    { const R = n => fx.lib[n] ? n : fx.alias[n.toLowerCase()];
+      ok(R('An Anarch Manifesto') && R('An Anarch Manifesto') === R('Anarch Manifesto, An') && !!fx.lib['The Barrens'] && fx.alias['coven, the'] === 'The Coven',
+         'v1.9.6 / v1.9.7 (main\u2019s KRCG v5 reply, 5.2): both spellings of the Manifesto resolve to one entry (the v5 key is article-first, the v3 one an alias); The Barrens and The Coven were article-first already (got ' + JSON.stringify([R('An Anarch Manifesto'), R('Anarch Manifesto, An')]) + ')'); }
     const cr = fx.crypt["Abderrahim, Death's Hand (G6)"] || fx.crypt["Abderrahim, Death's Hand"];
-    ok(!!cr && cr.path === 'Death and the Soul' && Object.values(fx.crypt).filter(e => e.path).length === 48,
-       'v1.9.6: the crypt carries the Sabbat V5 Path (48 vampires; Burial Site Hunting Ground feeds a follower of Death and the Soul)'); }
+    ok(!!cr && cr.path === 'Death and the Soul' && Object.values(fx.crypt).filter(e => e.path).length === 54,
+       'v1.9.6: the crypt carries the Path (54 vampires: Sabbat V5\u2019s 48 + 6 of Noites Brasileiras, the v5 dump; Burial Site Hunting Ground feeds a follower of Death and the Soul)'); }
   { const st = fx.lib['Second Tradition: Domain']; const m2 = st && (st.modes || []).find(m => m.when === 'lockedBlock');
     ok(st && st.src === 'hand' && st.req && st.req.title && (st.modes || []).length === 2 && st.modes[0].fx.intercept === 2 && !st.modes[0].when, 'Second Tradition: mode 1 = a free +2 intercept, title required (prince / justicar)');
     ok(m2 && m2.fx.unlock === true && m2.fx.intercept === 2 && m2.fx.payBlood === 1, 'Second Tradition: mode 2 (printed: a LOCKED prince or justicar burns 1 blood to unlock and block with +2 intercept) = when:lockedBlock, unlock + intercept 2 + payBlood 1 -- the auto tier had mode 1 only'); }
@@ -619,7 +643,7 @@ ok(fx.counts.libLock >= 140,
   console.log('\nreferendum terms (ref) -- v1.7.0');
   const L = res.out.lib;
   const pol = Object.keys(L).filter(k => L[k].t.includes('political'));
-  ok(pol.length === 177, 'political cards in the db (' + pol.length + ')');
+  ok(pol.length === 178, 'political cards in the db (' + pol.length + '; 177 + Information Exchange, Secrets of New York, since the v5 dump, compiler v1.9.7)');
   ok(pol.every(k => (L[k].modes || []).every(mo => Object.keys(mo.fx).every(x => x === 'actStealth'))), 'STRUCTURAL GATE: no political card carries an outcome key in modes[].fx (actStealth only) -- no play finder can see a referendum outcome as a play effect (bot debt 14)');
   const krc = L['Kine Resources Contested'], ae = L['Ancilla Empowerment'], ps = L['Parity Shift'], cb = L['Consanguineous Boon'];
   ok(!krc.modes && JSON.stringify(krc.ref.pool) === JSON.stringify([{ sign: -1, scope: 'alloc', n: 4, min: 2 }]), 'Kine Resources Contested: alloc 4 among >= 2, no modes');
@@ -636,7 +660,7 @@ ok(fx.counts.libLock >= 140,
   const NEG = ['Finding the Path', 'Lily Prelude', 'Screw the Masquerade!', 'Sabbat Threat', 'Neonate Breach', 'Reins of Power', 'Ancient Influence', 'Mark of the Damned', 'War of Ages'];
   ok(NEG.every(k => !(L[k].ref && L[k].ref.pool)), 'NEGATIVES get no ref.pool: split text, discipline modes, conditional extras, ongoing drains, X (a wrong term misleads)');
   ok(L['Screw the Masquerade!'].ref.tags.join() === 'poolDmg' && L['Sabbat Threat'].ref.tags.join() === 'poolDmg', 'tag-only cards keep the poolDmg THREAT tag for readers');
-  ok(pol.filter(k => L[k].ref && L[k].ref.pool).length === 14, 'exactly 14 cards carry ref.pool (got ' + pol.filter(k => L[k].ref && L[k].ref.pool).length + ')');
+  ok(pol.filter(k => L[k].ref && L[k].ref.pool).length === 15, 'exactly 15 cards carry ref.pool (14 + Information Exchange, the v5 dump; got ' + pol.filter(k => L[k].ref && L[k].ref.pool).length + ')');
   ok(Object.keys(L).filter(k => !L[k].t.includes('political') && L[k].ref).length === 0, 'ref exists on political cards only');
   ok(L['Fourth Tradition: The Accounting'].req.titles.join() === 'prince,justicar', 'req.titles is additive on non-political cards (Fourth Tradition)');
   const { refTerms } = require('./cardfx-compile.js');

@@ -2,6 +2,9 @@
 # Fetch from the source; when a session cannot reach it, copy from the private data repo
 # dtagent2000/VTES-Elysium-data (see CLAUDE.md, "Data that is not in git").
 /twda.json
+# KRCG's v5 card dump and its set names (krcg-v5.js turns them into vtes.json, the v3 shape the tools read)
+/vtes-v5.json
+/expansions.json
 /twda-vdb.json
 # gen-deck-coverage.js writes its report beside itself by default; snapshots worth keeping go to docs/coverage/
 /deck-coverage-*.md
