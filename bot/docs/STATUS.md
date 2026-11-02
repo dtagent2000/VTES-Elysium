@@ -9,9 +9,9 @@ the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6
 Johan to merge). **Open PRs:** #46.
 
 ## Last gates (v0.6.216 release bytes, 2 Nov 2026)
-Suite **SUITE_NUMBERS** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root
+Suite **2366/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root
 v2.6.170 + `client/ELYSIUM-PROTOCOL.md`) · hotseat **11/0** · HB1 **11/11** · test-cardfx **310/0** · `gen-precon.js --check` 18
-precons, no problems · MAIN_GATES · sim 240-match client design vs v0.6.215: SAME-PLAY 240 (no decision moved; 64 games' event
+precons, no problems · main's `check-versions.js` agrees · main's client suite beside the bundle 353/1 (the embedded guide: main re-embeds) · sim 240-match client design vs v0.6.215: SAME-PLAY 240 (no decision moved; 64 games' event
 summaries count `Second Tradition` as a card play now) · the V5 smoke (14 × 12): SAME-PLAY 168.
 
 ## What v0.6.216 did (the latest release; older ones in the CHANGELOG)

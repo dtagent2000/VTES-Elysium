@@ -41,8 +41,8 @@
     Brasileiras bundles); the 18 V5 precons are unchanged.
   - *Names*: through the client's v5 naming all 4,212 dump cards resolve to their own entry (now a `test-cardfx.js` check, with one
     that no word of the table's vocabulary is an alias). Bare "Aisling Sturbridge" now goes to the new G6 printing (the ladder).
-  - *Gates*: suite SUITE_NUMBERS · canary 69/0 (bot/'s copies) and 69/0 (root v2.6.170 + `client/ELYSIUM-PROTOCOL.md`) · hotseat 11/0 ·
-    HB1 11/11 · test-cardfx 310/0 · `gen-precon.js --check` clean · MAIN_GATES.
+  - *Gates*: suite 2366/0 ×3 (alone, frozen snapshots) · canary 69/0 (bot/'s copies) and 69/0 (root v2.6.170 + `client/ELYSIUM-PROTOCOL.md`) · hotseat 11/0 ·
+    HB1 11/11 · test-cardfx 310/0 · `gen-precon.js --check` clean · `doc-budget.sh` PASS · main's `check-versions.js` agrees · main's client suite beside the bundle 353/1 (the embedded guide: main re-embeds).
   - *Sim footprint* (registered prediction: the starters identical; pathpower and toreador may diverge): the 240-match client design vs
     v0.6.215 SAME-PLAY 240 — no decision moved; 64 games differ only in the event summary, where `X plays Second Tradition: Domain.`
     now reads as a card play (the parser's `Second Tradition` resolves through a v5 variant). The V5 smoke (14 × 12): SAME-PLAY 168;
