@@ -4297,9 +4297,10 @@ class Bot {
     });
     return all ? out : best;
   }
-  _spendIntercept(ic, blocker){        // v0.6.215: the ONE place an intercept card or lock is spent (the first look at the attempt and the second look at the counter) -- a hand card goes to the ash heap and pays its blood, a location of mine is locked and stays
+  _spendIntercept(ic, blocker, attempt){   // v0.6.215: the ONE place an intercept card or lock is spent (the first look at the attempt and the second look at the counter) -- a hand card goes to the ash heap and pays its blood, a location of mine is locked and stays
     if(ic.fromBoard && ic.lock){
       const lc = this.board.find(c => c.id === ic.fromBoard); if(lc) lc.locked = true;
+      if(attempt) this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block.' });   // the ATTEMPT's frozen line (L12.attempt) first: the card's play line (L12.interceptPlay) is the blocker-name carrier, a lock line is not -- found by the V5 smoke (a bounce's new target blocked with Channel 10 and the actor fought the earlier blocker's name: two safety nets)
       this._emitPlay(ic.name, 'intercept-lock', blocker && blocker.name);
       this.fxClone({ name: ic.name, kind: 'lib' }, '+' + ic.s + ' intercept', { actor: blocker });
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> locks <b>' + esc(ic.name) + '</b>: +' + ic.s + ' intercept.' });
@@ -6419,7 +6420,7 @@ class Bot {
     } else if(ic){
       await this._pace();                                // v0.4.5: so a wake+intercept combo doesn't land as one instant double-play
       p.reacted.add(FX_NORM(ic.name));
-      this._spendIntercept(ic, blocker);   // v0.6.215: a hand card or a location's lock
+      this._spendIntercept(ic, blocker, true);   // v0.6.215: a hand card or a location's lock (with the attempt line)
 
       this._setTallyB((ic.s) + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));   // VA review: RAW (rulebook: intercept below 0 is real; the verdict compares raw)   // fas A+ (16 July, rulebook source-verified): intercept belongs to THE MINION -- "all modifications made to a minion's stealth or intercept remain in effect for the duration of the action" (vekn.net Detailed Turn Sequence) -- so a NEW attempt by a DIFFERENT minion (the attempted-set guarantees it IS different) starts from ITS OWN intercept: b is written FRESH, never accumulated across minions. The old _bumpTallyB stacked d1's +2 under d2's +1 into a phantom b=3.   // VA: + crypt intercept (Dowager/Christine), the minion's TOTAL floored at 0 on the wire
     } else if(blocker){

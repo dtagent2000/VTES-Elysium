@@ -11708,9 +11708,9 @@ async function connectWithRetry(client, tries = 30){
         const a3 = u._bestInterceptFor(anxo, new Set(), pD), a0 = u._bestInterceptFor(anxo, new Set(), null);
         ok(!!k1 && k1.name === 'Market Square' && k1.lock && !a1 && !!a2 && a2.name === 'Wall Street Night, Financial Newspaper' && !!a3 && a3.name === 'Channel 10' && a3.s === 2 && !a0,
            '161c Market Square for the Banu Haqim; for the Path vampire Wall Street Night only on an undirected action, Channel 10 (+2) only from the second action; without the action neither (got ' + JSON.stringify({ k1, a1, a2, a3, a0 }) + ')');
-        if(IF1(u, '_spendIntercept') && k1) u._spendIntercept(k1, kasim);
-        ok(!!u.board.find(c => c.name === 'Market Square' && c.locked) && logs(u).includes('Kasim Bayar (G6) locks Market Square: +1 intercept.'),
-           '161c ...spent: Market Square is locked and the line says so (got ' + JSON.stringify(logs(u)) + ')');
+        if(IF1(u, '_spendIntercept') && k1) u._spendIntercept(k1, kasim, true);
+        ok(!!u.board.find(c => c.name === 'Market Square' && c.locked) && JSON.stringify(logs(u)) === JSON.stringify(['Kasim Bayar (G6) attempts to block.', 'Kasim Bayar (G6) locks Market Square: +1 intercept.']),
+           '161c ...spent at the attempt: the frozen attempt line FIRST (the actor learns the blocker from it -- a lock line is no L12.interceptPlay), then the lock line; Market Square stays, locked (got ' + JSON.stringify(logs(u)) + ')');
         const iS = u._interceptStack(anxo, new Set(), pD);
         ok(iS.S === 1 && iS.sum === 2, '161c ...the stack counts the lock like a card (Channel 10 for the second action: 1 source, +2; got ' + JSON.stringify(iS) + ')'); }
 
