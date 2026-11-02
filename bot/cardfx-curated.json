@@ -2734,7 +2734,7 @@
      }
     }
    ],
-   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. An Anarch can burn 1 blood once as they announce a bleed action to get +1 bleed during that action.' At the announce (_maybeClubIllusion), before the bleed line: when the Anarch keeps 2 blood after paying, or the point ousts the prey. It does not make the action one requiring an Anarch [ANK 20220317]."
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Unique location. An Anarch can burn 1 blood once as they announce a bleed action to get +1 bleed during that action.' At the announce (_maybeClubIllusion), before the bleed line: when the Anarch keeps 2 blood after paying, or the point ousts the prey. It does not make the action one requiring an Anarch [ANK 20220317]. Not modelled (amber): my Anarch using another Methuselah's Club Illusion, and another Methuselah's Anarch using mine."
   },
   "Archon Investigation": {
    "t": [
@@ -2750,7 +2750,7 @@
      }
     }
    ],
-   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Out-of-turn. Only usable if a minion is bleeding you and the bleed amount is 4 or more, after blocks are declined. Burn the acting minion. (The action is not successful.)' Never a master-phase play (oot). The target bot plays it at its own decline of the block, or when a modifier reopens the window at 4+, before anything 'as the action would be successful' [LSJ 19980105] (_archonFor / _playArchon): 3 pool leaving 1 (R-34), the next master phase's action spent (_ootDebt), the frozen ARCHON_BURN line; the acting bot burns its minion (_archonBurned), a human is asked to. Costs one more against Secure Haven [LSJ 20010817] (not modelled; no deck holds it)."
+   "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Out-of-turn. Only usable if a minion is bleeding you and the bleed amount is 4 or more, after blocks are declined. Burn the acting minion. (The action is not successful.)' Never a master-phase play (oot). The target bot plays it at its own decline of the block, or when a modifier reopens the window at 4+, before anything 'as the action would be successful' [LSJ 19980105] (_archonFor / _playArchon): 3 pool leaving 1 (R-34), the next master phase's action spent (_ootDebt), and no second out-of-turn master before that master phase (the rulebook), the frozen ARCHON_BURN line; the acting bot burns its minion (_archonBurned), a human is asked to. Costs one more against Secure Haven [LSJ 20010817] (not modelled; no deck holds it)."
   }
  },
  "crypt": {

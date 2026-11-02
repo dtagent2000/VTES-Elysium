@@ -11791,6 +11791,10 @@ async function connectWithRetry(client, tries = 30){
         T4._armPending('Hanna', 5, 'Anxo Vilela (G6)'); await sleep(80);
         ok(T3.hand.length === 1 && T3.pool === 10 && T4.hand.length === 1 && T4.pool === 3,
            '161i ...not at a bleed of 3, and not when the 3 pool would leave me at 0 (R-34)');
+        { T._clearPending && T._clearPending('test'); T.hand = ['Archon Investigation']; T.pool = 10; T.sent = [];   // a second copy, a second bleed of 4+ before my next master phase
+          T._armPending('Hanna', 5, 'Ariane (G5)'); await sleep(80);
+          ok(T.hand.length === 1 && T.pool === 10 && !logs(T).some(l => /plays Archon Investigation/.test(l)),
+             '161i ...no second out-of-turn master before my next master phase (the rulebook; the graded readings\u2019 red): a second copy waits (got ' + JSON.stringify({ hand: T.hand, pool: T.pool }) + ')'); }
         const A = mkU161('Hanna'); A.seat = 1; const anxo = V('i9', 'Anxo Vilela (G6)', { locked: true, attached: [] }); const gun = L('i9g', '.44 Magnum', { host: 'i9' }); anxo.attached = ['i9g'];
         A.board = [anxo, gun]; A._actingVamp = { v: anxo, n: 4, played: new Set(), target: 2 };
         A._onLog('Viktor', '<b>Viktor</b> plays <b>Archon Investigation</b> — <b>Anxo Vilela (G6)</b> is burned (the bleed of 4 is not successful).');
@@ -11798,6 +11802,12 @@ async function connectWithRetry(client, tries = 30){
         if(IF1(A, '_archonBurned') && flagged) A._archonBurned(anxo);
         ok(flagged && anxo.zone === 'burned' && !A.board.includes(anxo) && !A.board.includes(gun),
            '161i ...the acting bot reads the line (ARCHON_BURN), and its minion is burned with its equipment (got ' + JSON.stringify({ flagged, zone: anxo.zone, board: names(A.board) }) + ')'); }
+
+      // j) found by the suite: ONE LOCK, ONE EFFECT -- Dreams of the Sphinx's two master-phase lock modes (hand size, blood to uncontrolled) fired on one lock
+      { const u = mkU161(); u.ownTurns = 2; u.hand = []; const t = V('j1', 'Someone', { zone: 'uncontrolled', blood: 2, cap: 6 }); u.unc = [t]; const d = L('j2', 'Dreams of the Sphinx'); u.board = [d];
+        await u._considerLockIncome('master');
+        const draws = u.sent.filter(m => m && m.t === 'draw').length;
+        ok(d.locked && t.blood === 3 && draws === 0, '161j Dreams of the Sphinx in the master phase: one lock buys ONE effect -- the blood to the uncontrolled vampire, no hand-size draw on the same lock (got ' + JSON.stringify({ locked: d.locked, blood: t.blood, draws }) + ')'); }
     }
 
 

@@ -5261,7 +5261,13 @@ class Bot {
     for(const c of this.board){
       if(c.kind !== 'lib' || c.host || this._outOfPlay(c)) continue;   // freestanding only -- host-attached recurring income already goes through _applyPhaseIncome
       const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') continue;
-      for(const mo of h.e.modes || []){
+      /* v0.6.215 (found by the suite after wave 3 made the lock check per mode): ONE LOCK, ONE EFFECT. The card-level `c.locked` check ran
+         once before the modes, so a card with two lock modes in one phase (Dreams of the Sphinx: +2 hand size and 1 blood to an uncontrolled
+         vampire, both in the master phase) locked for the first and fired the second on the same lock. Now each mode needs the card
+         unlocked; of two in one phase the blood comes first (it stays on the next vampire; the hand size is this turn's), the hand size
+         only when nothing else took the lock. */
+      const modes = (h.e.modes || []).slice().sort((a, b) => ((a.fx && typeof a.fx.handSize === 'number') ? 1 : 0) - ((b.fx && typeof b.fx.handSize === 'number') ? 1 : 0));
+      for(const mo of modes){
         if(!(mo.lock || mo.once) || mo.phase !== phaseKey || this._outOfPlay(c)) continue;   // v0.6.215: `once` -- a free use once in the phase, no lock (Powerbase: Montreal: 'During your influence phase, you can add 1 blood to a vampire in your uncontrolled region')
         if(mo.lock ? c.locked : c._onceTurn === this.ownTurns) continue;   // a lock mode needs the card unlocked; a once mode, not yet used this turn   // v0.6.36 (Johan's standing question, checking the counter/burn mechanic for uncertainty -- found live): re-checked EVERY iteration, not just once before the loop -- a card with multiple modes sharing the SAME phase (Dreams of the Sphinx's bloodAdd and handSize both being phase:'master') could burn from the FIRST mode's counter increment and then still fire the SECOND mode on the same now-out-of-play card, since the outer scan's _outOfPlay check only ran once, before either mode was tried. Verified live: counters reached 4 (past the burnAtCounters:3 threshold) because both modes fired in one call.
         if(typeof mo.fx.poolGain === 'number'){
@@ -6138,6 +6144,7 @@ class Bot {
   }
   _archonFor(p){                     // v0.6.215 (V5 wave 3): Archon Investigation -- 'Out-of-turn. Only usable if a minion is bleeding you and the bleed amount is 4 or more, after blocks are declined. Burn the acting minion. (The action is not successful.)' A card in hand whose mode burns the actor (fx.burnActor), the bleed at me at its minimum, its pool cost payable leaving 1 (R-34), the acting minion named. Played before any 'as the action would be successful' effect [LSJ 19980105]: the bot plays it at its own decline, or when a modifier reopens the window.
     if(!p || this.pending !== p || p.kind !== 'bleed' || !p.actingVampName || this.out) return null;
+    if((this._ootDebt | 0) > 0) return null;   // the rulebook (out-of-turn masters): 'you cannot play a second out-of-turn master card' before your next master phase -- the graded readings' red (2 Nov)
     for(let i = 0; i < this.hand.length; i++){
       const h = this.fxLookup(this.hand[i]); if(!h || h.kind !== 'lib' || !h.e.oot) continue;
       const mo = (h.e.modes || []).find(m => m.fx && m.fx.burnActor); if(!mo) continue;   // fx.burnActor / fx.burnActorMinBleed -- literal reads
