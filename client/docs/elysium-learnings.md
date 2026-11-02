@@ -1,8 +1,55 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.167 / server v2.6.49 / bot v0.6.207 tested beside the suite, last updated 19 October 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.170 / server v2.6.49 / bot v0.6.214 tested beside the suite, last updated 2 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**2 Nov 2026 (THE COPY YOU HAVE, the second pass — v2.6.170):**
+- **A fix that rests on an invariant needs every writer checked against it.** v2.6.169's fix relied on "a kept copy stays
+  stale", but the From-file names path rewrote the record with a fresh `ts`. I had even edited that line (to carry
+  `fallback`) without seeing it. When a fix depends on a field, grep every write of that field.
+- **Re-reading the saved copy is only safe when it IS the copy in use.** With late names and async saves, a fresh
+  download can be in use while the saved record is older. Track which record holds the copy in use (`cardDBRecTs`), and
+  refuse, or keep what you have, when they differ.
+- **Ask the reviewer again after the fix.** The first pass found the two faults, and the second found the path back to
+  the first one, in about a quarter of the time, because the reviewer already had the context.
+
+**2 Nov 2026 (THE COPY YOU HAVE — v2.6.169):**
+- **A fallback must never replace something better.** v2.6.168's chain was "the new file, else the old file", written as
+  if there were nothing in between. There was: the copy already in the browser, newer than the old file. Order the
+  sources by what they hold, and let a failure keep what you have instead of trading down.
+- **A test can pin a bug instead of catching it.** "A stamped copy keeps the weekly rule" asserted exactly the behaviour
+  that made the downgrade last a week. When a test asserts a rule, ask which record the rule will meet in practice (here:
+  the v3 file read only because the dump failed).
+- **Nothing that is merely nice to have may hold the table.** The starter names are cosmetic, and the built-in table
+  already has them, but the local tier waited for them without a time limit. Use the data the moment it arrives, let the
+  extra arrive later, bound every optional request, and guard the late answer with a load counter, so it never rebuilds
+  or caches over a newer load.
+- **A fixture that cannot tell the cases apart proves nothing.** The G2 and the advanced Theo Bell share capacity 7, so a
+  capacity check could not see the wrong owner. A boot test whose served names match the built-in ones could not see who
+  named the bundle. Assert on a field that differs.
+- **Compare cards, not spellings.** The era badge looked names up in a set of printed names. Any second spelling (older
+  tools, KRCG's v3 file) fell out, while the card index already knew both. When an index maps every spelling to one
+  record, compare those records.
+- **For loader tests, fake the storage, not the loader.** The harness never had an IndexedDB, so no suite test could
+  see a cached copy. With `loadClient(path, { indexedDB })` and one Map shared by two clients, "the next start" is a
+  second loadClient.
+
+**1 Nov 2026, evening (THE NEW SETS ARRIVE — v2.6.168):**
+- **A third-party file can freeze without saying so.** KRCG regenerated the v3 file the same minute as the v5 dump, with
+  today's date, and simply left the new sets out. A fresh `Last-Modified` proves nothing about the content; look for a card
+  you know is new.
+- **Before switching a data source, run the real parser over both sources and compare card by card, by a stable id.** A
+  URL swap with the obvious fixes would have shipped starters named by code. The comparison found three bugs the v5 branch
+  had never met real data for, and one the OLD source had (v3 starters naming the G2 card for a G6 reprint).
+- **A name list that mixes kinds needs ranks, not last-wins.** KRCG's v5 `name_variants` hold the card's own spellings,
+  other cards' short names, old names and translations. Flat last-wins let a short name ("Amelia") and an old name
+  ("Distraction") steal another card's printed name. Rank by kind: own spelling > alias > weak.
+- **Keep what users already typed working.** Checking that every key of the old index resolves in the new one, to the
+  same card id, is cheap and caught five spellings deck lists write that the new list drops.
+- **A red gate on `main` that you did not cause still fails your PR.** Fix the mechanical part in the same round (the guide
+  re-embed) and list the rest of that release's asks as open.
+- **`loadClient` keeps Node alive** (the client's timers). A probe built on the harness must end with `process.exit`.
 
 **19 Oct 2026, morning (THE LETTERS OF THEIR OWN — v2.6.167):**
 - **NFD folds accents, not letters.** `normalize('NFD')` splits é into e + a combining mark, but ł, ø, œ, æ, ß, đ, ð,

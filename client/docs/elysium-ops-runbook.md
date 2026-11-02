@@ -117,6 +117,23 @@ sudo journalctl -u elysium --since "-90 days" | grep abuse | tail -20
 
 (The first also picks up cloudflared/tailscale versions; the second is a glance at whether anyone has been hammering the doors — expect it empty.) A `sudo reboot` after big upgrades doesn't hurt.
 
+**The card database on the box (client v2.6.168, 1 Nov 2026).** When `/opt/elysium/images/vtes.json` exists, every client
+reads it before KRCG (the auto tier), so the table sees new cards only when that file is replaced. Since v2.6.168 the
+client reads KRCG's **v5 dump**: KRCG stopped adding cards to the old file (`data/vtes.json` ends at Sabbat V5), and the
+cards of Secrets of New York and Noites Brasileiras (31 Oct 2026) are only in `data/v5/vtes.json`. Check, refresh, purge:
+
+```
+ls -la /opt/elysium/images/vtes.json      # no file: the clients read KRCG directly -- nothing to do
+cd /opt/elysium/images && sudo curl -fsS -o vtes.json.new https://static.krcg.org/data/v5/vtes.json \
+  && sudo mv vtes.json.new vtes.json && sudo chown root:root vtes.json
+```
+
+Then purge the one URL in Cloudflare (Caching -> Configuration -> Purge Cache -> Custom purge -> URL
+`https://elysium.cards/images/vtes.json`): the server sends it with a one-day cache. The set and starter names
+(`expansions.json`) are not served from the box (the server's `/images/` route takes `vtes.json` only); clients fetch
+them from KRCG (16 KB) and carry a built-in copy. A client caches the database for a week; one that cached the old
+file refreshes once on its own. Do this after a client release that says so, and with the quarterly round.
+
 **Only ever via Claude:** changes to Elysium itself. The deploy is always §2/§3 above — no npm, no build step, ever. That's the zero-dependency dividend.
 
 ## 7. Where the keys live (fill in and keep OFFLINE too)
@@ -131,6 +148,8 @@ sudo journalctl -u elysium --since "-90 days" | grep abuse | tail -20
 
 - **Backups**: the nightly cron (plan Appendix C) is NOT set up yet — until then, a lost box means lost saves (rooms are ephemeral anyway).
 - **Card images on the box** (plan D5): `/opt/elysium/images/` is empty; clients currently fetch art from krcg's CDN (works fine, just slower first loads).
+  *(1 Nov 2026: `client/CLAUDE.md`'s 27 July entry says D5 was executed on the box, 4159 files. The two disagree; `ls /opt/elysium/images | wc -l`
+  settles it, and §6 has the card-database refresh.)*
 - **Cache rules** (plan Appendix B §5) and **UptimeRobot** on /healthz.
 - **H3 smoke list**: the formal live test round (phone on mobile data, restart mid-game, throttle proof) — do before inviting the wider community.
 - **Platform hardening round** (plan Appendix E, 4 clicks, all free): Hetzner Cloud Firewall deny-all + delete protection, Tailscale server-key expiry OFF (the day-180 calendar bomb!), Cloudflare DNSSEC ON — pending Johan's confirmation.

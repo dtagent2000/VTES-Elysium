@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================
-   playtest-rig.js v1.1.1 (16 Oct 2026, client v2.6.162; v1.0.0 14 Oct, v2.6.158) -- play a REAL game against the bots
+   playtest-rig.js v1.2.0 (1 Nov 2026, client v2.6.168: --vtes also answers KRCG's v5 path, --exp serves expansions.json;
+   v1.1.1 16 Oct, v2.6.162; v1.0.0 14 Oct, v2.6.158) -- play a REAL game against the bots
    ------------------------------------------------------------
    Starts the Elysium server, ONE headless Chromium tab (the human -- and, as the host, the tab
    the lobby's bots run in, exactly as on elysium.cards), records everything, and opens a small
@@ -34,11 +35,12 @@
 
    Usage
      node playtest-rig.js [--dir <folder>] [--out <run dir>] [--port 8890] [--control 8899]
-                          [--vtes <local vtes.json>] [--offline] [--viewport 1600x900]
+                          [--vtes <local vtes.json>] [--exp <local expansions.json>] [--offline] [--viewport 1600x900]
      --dir      the folder with elysium-server.js, elysium-vtes-bord.html and the bot bundle beside
                 them (default: the repository root, the release; use ../ for client/ with the
                 bundle copied beside the suite to test an unreleased client)
-     --vtes     serve KRCG's vtes.json from this local file (a sandbox without internet). The file is
+     --vtes     serve KRCG's vtes.json from this local file (a sandbox without internet), at both the v5 path the
+                client reads since v2.6.168 (data/v5/vtes.json) and the old one (data/vtes.json). The file is
                 third-party data: never commit it.
      --offline  abort every request that is not to the local server (no card images; the client
                 shows text cards). A generated placeholder answers the two card-back URLs.
@@ -55,6 +57,9 @@ const DIR = path.resolve(arg('--dir', REPO));
 const OUT = path.resolve(arg('--out', path.join(__dirname, 'runs', new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19))));
 const PORT = +arg('--port', 8890), CPORT = +arg('--control', 8899);
 const VTES = arg('--vtes', null), OFFLINE = has('--offline'), NOBACKS = has('--no-backs');
+// v1.2.0: KRCG's expansions.json (the set and starter names of a v5 dump) -- --exp, else an expansions.json beside --vtes;
+// without either the client names the starters from its built-in table
+const EXP = arg('--exp', null) || (VTES && fs.existsSync(path.join(path.dirname(VTES), 'expansions.json')) ? path.join(path.dirname(VTES), 'expansions.json') : null);
 const VP = (arg('--viewport', '1600x900').split('x').map(Number));
 const SAY = ['Hold on…', 'No block', 'Block!', 'No reaction', 'It resolves', 'Yes', 'No', 'Pass', 'Any blocks?', 'Any reaction?'];   // the client's quick phrases, by index (the wire carries the index)
 
@@ -253,7 +258,8 @@ process.on('SIGTERM', shutdown); process.on('SIGINT', shutdown);
   const ctx = await browser.newContext({ viewport: { width: VP[0] || 1600, height: VP[1] || 900 } });
   const BACK = backPng();
   await ctx.route('**/*', route => { const url = route.request().url();
-    if (VTES && /static\.krcg\.org\/data\/vtes\.json/.test(url)) return route.fulfill({ status: 200, contentType: 'application/json', body: fs.readFileSync(VTES) });
+    if (VTES && /static\.krcg\.org\/data\/(v5\/)?vtes\.json/.test(url)) return route.fulfill({ status: 200, contentType: 'application/json', body: fs.readFileSync(VTES) });
+    if (EXP && /static\.krcg\.org\/data\/v5\/expansions\.json/.test(url)) return route.fulfill({ status: 200, contentType: 'application/json', body: fs.readFileSync(EXP) });
     if (/^https?:\/\/(localhost|127\.0\.0\.1)[:/]/.test(url) || /^(data|blob):/.test(url)) return route.continue();
     if (OFFLINE && !NOBACKS && /static\.krcg\.org\/card\/cardback(crypt|library)\.jpg/.test(url)) return route.fulfill({ status: 200, contentType: 'image/png', body: BACK });
     if (OFFLINE) return route.abort();

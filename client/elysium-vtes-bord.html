@@ -2253,8 +2253,8 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
           <div class="set-row">
             <span class="sl">Fetch the card catalog now, or load it from a file. <b id="jsonCacheInfo"></b></span>
             <button class="btn" id="jsonDlBtn">Download</button>
-            <button class="btn" id="jsonFileBtn" title="Load vtes.json from a file on this computer &mdash; works fully offline, even on a double-clicked file:// client">&#128193; From file&hellip;</button>
-            <input type="file" id="jsonFile" accept=".json,application/json" style="display:none">
+            <button class="btn" id="jsonFileBtn" title="Load vtes.json from a file on this computer, with expansions.json for the starter-deck names (both from static.krcg.org/data/v5/; pick both at once) &mdash; works fully offline, even on a double-clicked file:// client">&#128193; From file&hellip;</button>
+            <input type="file" id="jsonFile" accept=".json,application/json" multiple style="display:none">
           </div>
           <label class="set-row">
             <span class="sl" title="Off: the cached copy is used as-is (works offline). The Download button above always fetches.">Refresh the card catalog from KRCG when the cached copy is older than a week.</span>
@@ -2265,7 +2265,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
             <button type="button" class="slq" id="localImgHelpBtn" title="Show the full folder guide" aria-expanded="false">?</button>
             <input type="checkbox" id="localImgToggle">
           </label>
-        <div class="slHelp" id="localImgHelp" hidden>Checked FIRST, before the cache/KRCG above. Put files next to this client file (or, if you're using the Elysium server, next to <code>elysium-server.js</code>) in a folder named <code>images</code>. <b>Cards:</b> <code>name.webp</code> or <code>.jpg</code>, lowercased and stripped of spaces/punctuation &mdash; e.g. <code>gratiano.webp</code> for "Gratiano". Both extensions are checked (whichever exists wins), so KRCG's full card-image <b>zip</b> from static.krcg.org can be unzipped straight into the folder regardless of the Image format setting above. <b>Card backs</b> (downloadable from static.krcg.org too): <code>cardbackcrypt.jpg</code> and <code>cardbacklibrary.jpg</code>, exactly. <b>Icons</b> (clan/discipline/path symbols): same idea but with each <code>/</code> in the KRCG path turned into a <code>-</code> &mdash; e.g. KRCG's <code>svg/path/caine.svg</code> becomes <code>svg-path-caine.svg</code>, <code>svg/disc/sup/dom.svg</code> becomes <code>svg-disc-sup-dom.svg</code>. Missing files fall straight through to the cache/KRCG either way, so a partial folder is fine. <b>Card database too:</b> drop KRCG&rsquo;s <code>vtes.json</code> (from static.krcg.org/data/) into the same folder and the card <i>database</i> (names, types, disciplines) also loads from your file first. Note: unlike images, the database file needs the Elysium server or a tunnel &mdash; a double-clicked <code>file://</code> client can&rsquo;t fetch local files and falls back to its browser-cached copy instead. <b>First time, fully offline, file://?</b> Use <b>📁 From file…</b> (under Card data above) once &mdash; it loads and caches the database, and every later start is automatic. Off by default.</div>
+        <div class="slHelp" id="localImgHelp" hidden>Checked FIRST, before the cache/KRCG above. Put files next to this client file (or, if you're using the Elysium server, next to <code>elysium-server.js</code>) in a folder named <code>images</code>. <b>Cards:</b> <code>name.webp</code> or <code>.jpg</code>, lowercased and stripped of spaces/punctuation &mdash; e.g. <code>gratiano.webp</code> for "Gratiano". Both extensions are checked (whichever exists wins), so KRCG's full card-image <b>zip</b> from static.krcg.org can be unzipped straight into the folder regardless of the Image format setting above. <b>Card backs</b> (downloadable from static.krcg.org too): <code>cardbackcrypt.jpg</code> and <code>cardbacklibrary.jpg</code>, exactly. <b>Icons</b> (clan/discipline/path symbols): same idea but with each <code>/</code> in the KRCG path turned into a <code>-</code> &mdash; e.g. KRCG's <code>svg/path/caine.svg</code> becomes <code>svg-path-caine.svg</code>, <code>svg/disc/sup/dom.svg</code> becomes <code>svg-disc-sup-dom.svg</code>. Missing files fall straight through to the cache/KRCG either way, so a partial folder is fine. <b>Card database too:</b> drop KRCG&rsquo;s <code>vtes.json</code> (from static.krcg.org/data/v5/) into the same folder and the card <i>database</i> (names, types, disciplines) also loads from your file first. Note: unlike images, the database file needs the Elysium server or a tunnel &mdash; a double-clicked <code>file://</code> client can&rsquo;t fetch local files and falls back to its browser-cached copy instead. <b>First time, fully offline, file://?</b> Use <b>📁 From file…</b> (under Card data above) once &mdash; it loads and caches the database, and every later start is automatic. Off by default.</div>
           <label class="set-row" id="imgSyncRow">
             <span class="sl" title="Only relevant after an initial All cards download.">Auto-download images for new cards when the database updates.</span>
             <input type="checkbox" id="imgSyncToggle">
@@ -2556,7 +2556,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hb-setup">Setting up a table</a></li>
   <li><a href="#hb-play">How a bot plays</a></li>
   <li><a href="#hb-controls">Controls</a></li>
-  <li class="ver">bot v0.6.207 · client v2.6.162</li>
+  <li class="ver">bot v0.6.214 · client v2.6.167</li>
 </ul></nav>
 
 <header class="hero">
@@ -2751,11 +2751,11 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <details>
     <summary>Combat <span class="sub">— one round at a time, on the counters</span></summary>
     <div>
-      <p>When a block succeeds either way, the bot fights by its cards: maneuvers, presses, strikes with weapons or hand strikes, Carrion Crows, Immortal Grapple, dodges, Majesty-class combat-ends, prevention (Hidden Strength pays X to prevent the whole hit). A combat-ends card is played when the strike it faces is worth the card: what you announced, when you strike first, or what your deck is expected to hit for (from what it has shown and the TWDA). A hand strike for 1 is not worth a Majesty; a strike that would send its vampire to torpor, or aggravated damage, always is. A dodge follows the same idea with the bot's own strike as the yardstick. With one dodge in hand it dodges a strike of 2 or more that would do more to it than its own strike would do to you (a steal counts); with two it spares one even against a strike for 1, as long as yours does at least as much as its own. It always dodges aggravated damage or a strike that would empty or torpor its vampire. Otherwise it keeps the dodge and strikes when its own strike would put your vampire into torpor (with two dodges in hand, also when it would empty it). When it strikes first it reads your expected strike instead. A wave deck (the Malkavian) maneuvers to long only when your expected strike could put its vampire in torpor, or when one maneuver ends a dangerous fight because you show no way to press; otherwise it keeps Swallowed by the Night for its stealth. Each play is a log line and a clone; at the end of a round, fighting you, it writes the round to the log: <em>“Name combat — Lisa strikes with .44 Magnum for 2; Anarch Convert takes 2 (loses 2 blood, now 1).”</em> (between two bots it is a chat line, as before).</p>
-      <p><b>Fighting a bot yourself — the vampire's <span class="menu">Combat ▸</span> menu.</b> Right-click your fighting vampire and use <span class="menu">Combat ▸ Strike</span> (Hand, Hand for N…, Weapon or card…, Steal blood…, Dodge…, Combat ends…), <span class="menu">Combat ▸ Maneuver</span> (to long / to close, or <em>Set range</em> for Immortal Grapple- or Sniper Rifle-class cards) and <span class="menu">Combat ▸ Press</span> (continue / end). Each writes one log line the bot reads, and with the combat helper on it also moves the shared combat counter. The bot writes its own strike's damage onto its side of that counter, so your Damage step shows what is coming at you.</p>
+      <p>When a block succeeds either way, the bot fights by its cards: maneuvers, presses, strikes with weapons or hand strikes, aggravated strikes (Claws of the Dead, Sculpt the Flesh, the Ivory Bow, the Sword of the Archangel), additional strikes (Quickness, Pursuit, Arms of Ahriman), cards before range (Torn Signpost, Rage of Apedemak, Form of the Wolf and Monstrous Form for strength, Hunger of Marduk for a steal at any range — each only when this round's strike gains from it), Slam (its maneuver to close makes it the round's strike), Carrion Crows, Immortal Grapple, dodges, Majesty-class combat-ends, prevention (Hidden Strength pays X to prevent the whole hit; Wall of Filth). A combat-ends card is played when the strike it faces is worth the card: what you announced, when you strike first, or what your deck is expected to hit for (from what it has shown and the TWDA). A hand strike for 1 is not worth a Majesty; a strike that would send its vampire to torpor, or aggravated damage, always is. A dodge follows the same idea with the bot's own strike as the yardstick. With one dodge in hand it dodges a strike of 2 or more that would do more to it than its own strike would do to you (a steal counts); with two it spares one even against a strike for 1, as long as yours does at least as much as its own. It always dodges aggravated damage or a strike that would empty or torpor its vampire. Otherwise it keeps the dodge and strikes when its own strike would put your vampire into torpor (with two dodges in hand, also when it would empty it). When it strikes first it reads your expected strike instead. A wave deck (the Malkavian) maneuvers to long only when your expected strike could put its vampire in torpor, or when one maneuver ends a dangerous fight because you show no way to press; otherwise it keeps Swallowed by the Night for its stealth. Each play is a log line and a clone; at the end of a round, fighting you, it writes the round to the log: <em>“Name combat — Lisa strikes with .44 Magnum for 2; Anarch Convert takes 2 (loses 2 blood, now 1).”</em> (between two bots it is a chat line, as before).</p>
+      <p><b>Fighting a bot yourself — the vampire's <span class="menu">Combat ▸</span> menu.</b> Right-click your fighting vampire and use its <span class="menu">Combat ▸</span> menu: <span class="menu">Range ▸</span> (maneuver to long / to close, or <em>Set range</em> for Immortal Grapple- or Sniper Rifle-class cards), the strike rows (Hand strike, Weapon, Strike, Aggravated, Steal blood, Dodge, Combat ends, Additional strike) and Press to continue / Press to end. The combat panel has the same strikes under <em>Strike ▾</em> and <em>+ Additional</em> in the Strike step. Each writes one log line the bot reads, and with the combat helper on it also moves the shared combat counter. The bot writes its own strike's damage onto its side of that counter, so your Damage step shows what is coming at you.</p>
       <p><b>Blocks by chat.</b> When a bot blocks <em>your</em> action, type your stealth in chat: a number is your total stealth (<em>2</em>), <em>+1</em> adds to it. When <em>you</em> block a bot's action, type your intercept the same way. The bot books it on the block counter and answers with its own card if it needs one — it never plays stealth or intercept that is not needed.</p>
       <p><b>The bot walks the combat steps with you.</b> Fighting your vampire, a bot talks through the rulebook's steps. When <em>you</em> act it asks — <em>“Anything before range?”, “Any maneuvers?”, “Anything before strikes?”, “What is your strike?”, “Any presses?”, “Anything before ending combat?”</em> — and when it acts it says what it does, or <em>“I have nothing before range.”</em> and so on. Answer with the <span class="menu">Combat ▸</span> menu, or say <span class="phrase">No</span> / <span class="phrase">Pass</span> (or type <em>no</em>, <em>pass</em>, <em>go on</em>) to move on; stepping the combat helper forward works too. If you say nothing, a short clock moves the step along.</p>
-      <p><b>Two bots fighting each other</b> walk the same steps in the rulebook's order. In the maneuver, before-strikes and press steps the acting bot speaks first — its card, or a log line such as <em>“Lisa does not maneuver.”</em>, <em>“Lisa has nothing before strikes.”</em>, <em>“Lisa does not press.”</em> — and the other bot answers knowing it: an Immortal Grapple or a maneuver to long reaches the other bot before it chooses its strike, and a press to continue is answered with a press to end or a “does not press”. The strike step too: the acting bot strikes first, and the other chooses knowing that strike — it does not throw a strike card into a dodge, and it dodges a blow that would empty or torpor its vampire. When a human sits at the table, each of those lines comes after a short beat, so you can follow the fight; <span class="phrase">❗ Hold on…</span> stops it.</p>
+      <p><b>Two bots fighting each other</b> walk the same steps in the rulebook's order. In the maneuver, before-strikes and press steps the acting bot speaks first — its card, or a log line such as <em>“Lisa does not maneuver.”</em>, <em>“Lisa has nothing before strikes.”</em>, <em>“Lisa does not press.”</em> — and the other bot answers knowing it: an Immortal Grapple or a maneuver to long reaches the other bot before it chooses its strike, and a press to continue is answered with a press to end or a “does not press”. A maneuver can be answered by a maneuver: a deck that fights at close range (the Nosferatu, the Brujah, the Gangrel …) takes a maneuver to long back to close, and the other may answer that in turn, until one of them lets the range stand. The strike step too: the acting bot strikes first, and the other chooses knowing that strike — it does not throw a strike card into a dodge, and it dodges a blow that would empty or torpor its vampire. When a human sits at the table, each of those lines comes after a short beat, so you can follow the fight; <span class="phrase">❗ Hold on…</span> stops it.</p>
       <p><b>What you took.</b> With the combat helper on, your client writes <em>“Name takes N (loses P blood, now M).”</em> for you when the table steps past Damage resolution. The line is a report to the table: it does not change your card, so take the blood off your vampire yourself (and add any blood your vampire stole). On a Classic table (helper off) use <span class="menu">Combat ▸ Damage taken…</span> — that is how the bot learns what your vampire took. If you say nothing, the bot falls back to the rulebook: <strong>1 hand damage</strong> at close range, <strong>0 at long range</strong> unless your vampire shows a ranged option.</p>
       <p><b>Steals.</b> When a bot steals blood from your vampire (Theft of Vitae), it takes the blood on its side; lower your vampire's blood yourself — the helper never touches the board.</p>
     </div>
@@ -2784,7 +2784,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <p><b>Haven Uncovered on your vampire.</b> When a bot puts it there, the log says so (<em>“Hanna plays Haven Uncovered — on Lisa's Colette.”</em>); any minion may then enter combat with Colette. A bot's rush through it reads <em>“Ryan enters combat with Lisa's Colette (Haven Uncovered).”</em> and asks <em>Block?</em> as usual; Colette does not lock, and the rushing vampire is the acting minion. The bot does not read a Haven Uncovered that you play, and your own rush through one on a bot's vampire goes by <code>rush</code> in chat like a rush card — the bot then locks its vampire as it would for a rush card, which a Haven rush does not do: unlock it by hand.</p>
     <p><b>Cards outside the curated set.</b> Your uncurated card is a “plays X” line to the bot; it will ask about pool loss and otherwise let it be. Effects on the bot's board that come from your permanents must be applied by hand.</p>
     <p><b>Rush cards.</b> Only Deep Song is tagged as a rush in the database today, so your rush needs the target + <code>rush</code> in chat (above) until the rush cards are swept in.</p>
-    <p><b>Combat against a human.</b> The bot reads your strikes, maneuvers and presses from the <span class="menu">Combat ▸</span> menu lines; anything you do not announce falls back to the rulebook default. Additional strikes are shown in the log but not yet resolved by the bot.</p>
+    <p><b>Combat against a human.</b> The bot reads your strikes, maneuvers and presses from the <span class="menu">Combat ▸</span> menu lines; anything you do not announce falls back to the rulebook default. Against you the bot maneuvers to long only, and it does not answer your maneuver with one of its own yet. Additional strikes come after the first pair: declare yours with <span class="menu">Combat ▸ Additional strike</span> (or the panel's <em>+ Additional</em>) and the bot asks for that strike; when the bot plays Quickness, Pursuit or Arms of Ahriman it says so in the log and asks whether you take one too.</p>
     <p><b>Politics is minimal.</b> Straight for/against by self-interest; no deals.</p>
     <p><b>Deck reading is young.</b> The bot reads your deck from your crypt's clan and the cards you have shown, against the TWDA (see <a href="#hb-about">About the bots</a>). Today that expectation shapes its combat choices (how hard it expects you to hit, whether you can press) and its blocks (whether the fight a block buys is worth the bleed it stops); its own bounce timing and the archetype labels themselves do not lean on it yet. A casual deck that looks like no tournament deck simply gets the clan's average.</p>
     <p><b>Diablerie.</b> A bot never diablerises. If you diablerise a bot's torpored vampire, remove it with <span class="menu">🔥 Burn</span> on its card menu; you run your own blood-hunt referendum as usual — the bot does not call one.</p>
@@ -2912,7 +2912,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.207</b>, client <b>v2.6.162</b> / server srv-2.6.46, cardfx 105 curated / 1,670 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 16 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.214</b>, client <b>v2.6.167</b> / server srv-2.6.49, cardfx 124 curated / 1,672 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 29 October 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 <!-- @@/HELP:bots -->
 </template>
@@ -3252,7 +3252,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.167';   // v2.6.167 (19 Oct 2026, THE LETTERS OF THEIR OWN, pure client -- purge; srv-2.6.49 unchanged, no wire change; bot v0.6.207 beside): Johan: Przemysław, War Beast showed a blank card. The name used for a card's picture and its database key dropped the letters that are letters of their own rather than an accented Latin letter (ł ø œ æ ß đ ð þ ı), so the client asked KRCG for 'przemysawwarbeastg6' instead of 'przemyslawwarbeastg6'. They are now spelled the way KRCG spells them: Przemysław, War Beast, Bolesław Gutowski, Clara Hjortshøj and Sacré-Cœur Cathedral, France show their pictures, and a deck that writes them in plain letters ('Przemyslaw') finds them in the card database too.
+const VERSION='2.6.170';   // v2.6.170 (2 Nov 2026, THE COPY YOU HAVE, the second pass, pure client -- purge; supersedes the never-deployed v2.6.168 and v2.6.169, same PR; srv-2.6.49 unchanged, no wire change; bot v0.6.214 beside): the reviewer re-checked v2.6.169's loader fixes -- both v2.6.168 faults are closed -- and found one path back to the first: Settings > From file with expansions.json alone stamped the cached copy fresh, so a stale copy kept after a failed refresh was not refreshed for a week; and, while a fresh download waited for its names, the same pick swapped the older saved copy in. Now the names-alone pick names the copy in use and keeps the record's age, and waits (with a toast) while the copy in use is not the saved one (cardDBRecTs: which record holds it). Also from that pass: a failed refresh keeps the copy in use as it is (it was read a second time on every start the dump failed); Settings > Refresh no longer clears the database first, so a refresh that fails keeps the copy in use instead of falling back to an older one or KRCG's v3 file; the cache line says 'press Refresh' when automatic refresh is off; a re-label that throws still saves the copy.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -6885,10 +6885,19 @@ function storeDeck(name,text,era,okMsg){   // cli-2.6.165 (C-16): okMsg = the ca
   else if(_dropTxt) toast('Saved. '+_dropTxt, 6000);
   return true;
 }
+let _eraSets=null;                   // v2.6.169: the catalog's Legacy names and cards, built once per catalog
 function eraFromCardNames(names){     // 'legacy' if ANY card is legacy-only, 'v5' if every known card is V5-printed, null if undetermined
   if(!catalog || !catalog.legacy || !catalog.legacy.length || !names || !names.length) return null;
-  const leg=new Set(catalog.legacy.map(c=>norm(c.name)));
-  return names.some(n=>leg.has(norm(n))) ? 'legacy' : 'v5';
+  /* v2.6.169 (the independent review): by CARD, not by spelling. The catalog lists KRCG's printed names ('The Admonitions');
+     a list written in another spelling ('Admonitions, The' -- KRCG's v3 file, older deck tools) resolves to the same card
+     through cardInfo, so it counts as that Legacy card. v2.6.168 compared spellings only: 104 Legacy cards read as V5. */
+  if(!_eraSets || _eraSets.cat!==catalog || _eraSets.info!==cardInfo){
+    const leg=new Set(), legCard=new Set();
+    for(const c of catalog.legacy){ const k=norm(c.name); leg.add(k); const m=cardInfo && cardInfo.get(k); if(m) legCard.add(m); }
+    _eraSets={ cat:catalog, info:cardInfo, leg, legCard };
+  }
+  const { leg, legCard }=_eraSets;
+  return names.some(n=>{ const k=norm(n); if(leg.has(k)) return true; const m=cardInfo && cardInfo.get(k); return !!m && legCard.has(m); }) ? 'legacy' : 'v5';
 }
 function eraOfDeck(d){                 // stored era, or computed from the saved text when the catalog is available
   if(d && d.era) return d.era;
@@ -7246,6 +7255,31 @@ function isV5SetCode(code){
       || /^NB/.test(code)        // NB, NB2, NB3 — New Blood waves
       || /^PP[34]$/.test(code);  // tournament promo packs #3 & #4
 }
+/* v2.6.168: KRCG's set and starter names. The v5 dump names a print by CODES only (set 'V5', bundle 'PTo'); the names are in
+   static.krcg.org/data/v5/expansions.json, fetched beside it (krcgSets, built by krcgSetIndex). KRCG_SET_NAMES holds the same
+   names as of 1 Nov 2026 -- every set with a named bundle -- for a client that has not read that file (offline, a vtes.json picked
+   by hand). The fetched file wins; a code in neither stays a code, as before v2.6.168. */
+const KRCG_SET_NAMES={"SW":["Sabbat War",{"PL":"Lasombra","PB":"Brujah antitribu","PT":"Tzimisce","PV":"Ventrue antitribu"}],"FN":["Final Nights",{"PS":"Followers of Set","PA":"Assamite","PR":"Ravnos","PG":"Giovanni"}],"CE":["Camarilla Edition",{"PTo":"Toreador","PTr":"Tremere","PV":"Ventrue","PB":"Brujah","PM":"Malkavian","PN":"Nosferatu"}],"Anarchs":["Anarchs",{"PAB":"Anarch Barons","PAG":"Anarch Gang","PG":"Gangrel"}],"BH":["Black Hand",{"PN":"Nosferatu antitribu","PTo":"Toreador antitribu","PTr":"Tremere antitribu","PM":"Malkavian antitribu"}],"Tenth":["Tenth Anniversary",{"A":"Tin A","B":"Tin B"}],"KMW":["Kindred Most Wanted",{"PG":"Gangrel antitribu","PB":"Baali","PAn":"Anathema","PAl":"Alastors"}],"LoB":["Legacies of Blood",{"PO":"Osebo","PG":"Guruhi","PI":"Ishtarri","PA":"Akunanse"}],"Third":["Third Edition",{"PTr":"Tremere antitribu","PB":"Brujah antitribu","PM":"Malkavian antitribu","PTz":"Tzimisce","SKB":"Starter Kit Brujah antitribu","SKM":"Starter Kit Malkavian antitribu","SKTr":"Starter Kit Tremere antitribu","SKTz":"Starter Kit Tzimisce"}],"LotN":["Lords of the Night",{"PS":"Followers of Set","PA":"Assamite","PR":"Ravnos","PG":"Giovanni"}],"KoT":["Keepers of Tradition",{"PV":"Ventrue","PB":"Brujah","PM":"Malkavian","PT":"Toreador"}],"HttB":["Heirs to the Blood",{"PSal":"Salubri antitribu","PGar":"Gargoyles","PKia":"Kiasyd","PSam":"Samedi"}],"TU":["The Unaligned",{"A":"Bundle 1","B":"Bundle 2"}],"Anthology":["Anthology",{"LARP":"EC Berlin Edition"}],"SP":["Sabbat Preconstructed",{"PwN":"Pact with Nephandi","PoS":"Parliament of Shadows","DoF":"Den of Fiends","LB":"Libertine Ball"}],"FB":["First Blood",{"PV":"Ventrue","PM":"Malkavian","PTo":"Toreador","PN":"Nosferatu","PTr":"Tremere"}],"V5":["Fifth Edition",{"PV":"Ventrue","PM":"Malkavian","PTo":"Toreador","PN":"Nosferatu","PTr":"Tremere","PL":"Lasombra","PH":"Hecata","SoNY":"Secrets of New York","NBr":"Noites Brasileiras"}],"V5A":["Fifth Edition (Anarch)",{"PB":"Brujah","PMin":"Ministry","PBh":"Banu Haqim","PG":"Gangrel"}],"NB":["New Blood",{"PM":"Malkavian","PN":"Nosferatu","PTo":"Toreador","PTr":"Tremere","PV":"Ventrue"}],"NB2":["New Blood II",{"PB":"Brujah","PMi":"Ministry","PBH":"Banu Haqim","PG":"Gangrel"}],"V5C":["Fifth Edition (Companion)",{"PSal":"Salubri","PTz":"Tzimisce","PR":"Ravnos"}],"NB3":["New Blood III",{"PL":"Lasombra","PH":"Hecata","PR":"Ravnos","PS":"Salubri","PT":"Tzimisce"}],"SV5":["Sabbat V5",{"PPower":"Path of Power and the Inner Voice","PDeath":"Path of Death and the Soul","PCathari":"Path of Cathari","PCaine":"Path of Caine"}],"HttBR":["Heirs to the Blood Reprint",{"A":"Reprint Bundle 1","B":"Reprint Bundle 2"}],"KoTR":["Keepers of Tradition Reprint",{"A":"Reprint Bundle 1","B":"Reprint Bundle 2"}]};
+let krcgSets=null, krcgExpRaw=null;   // the last expansions.json read (Map code -> { name, date, bundles: Map code -> { name, date } }) and its raw text, cached beside the card data
+function krcgSetIndex(exp){          // v2.6.168 pure: expansions.json (an array of sets with `bundles`) -> that Map, or null for anything else
+  if(!Array.isArray(exp)) return null;
+  const m=new Map();
+  for(const st of exp){
+    if(!st || typeof st!=='object' || typeof st.code!=='string' || !st.bundles || typeof st.bundles!=='object') continue;
+    const bundles=new Map();
+    for(const k of Object.keys(st.bundles)){ const b=st.bundles[k]; if(k && b && typeof b.name==='string' && b.name) bundles.set(k, { name:b.name, date:(typeof b.release_date==='string')?b.release_date:'' }); }
+    m.set(st.code, { name:(typeof st.name==='string' && st.name)?st.name:st.code, date:(typeof st.release_date==='string')?st.release_date:'', bundles });
+  }
+  return m.size ? m : null;
+}
+function krcgSetLabel(code, bundle, sets){   // v2.6.168 pure: { set, precon, date } for a v5 print -- the fetched names, then KRCG_SET_NAMES, then the codes
+  const own=(o,k)=>(o && Object.prototype.hasOwnProperty.call(o,k)) ? o[k] : undefined;
+  const st=sets && sets.get(code), b=st && st.bundles.get(bundle), t=own(KRCG_SET_NAMES, code);
+  const tb=t && own(t[1], bundle);
+  return { set: (st && st.name) || (t && t[0]) || code,
+           precon: (b && b.name) || (typeof tb==='string' && tb) || bundle,
+           date: (b && b.date) || (st && st.date) || '' };
+}
 
 /* Build the precon index AND a per-card catalog out of the loaded KRCG data.
    v3 cards carry `sets{setName:[{copies,precon,release_date}]}`; v5 cards carry
@@ -7261,12 +7295,12 @@ function isV5SetCode(code){
 function buildPrecons(list){
   const pc=new Map();
   const seen=new Map();           // display name -> { crypt, v5 }
-  function reg(disp, isCryptCard, code, precon, copies, date, isV5){
-    const key=code+' :: '+precon;
+  function reg(disp, isCryptCard, set, precon, copies, date, isV5, code){   // v2.6.168: `set` is the set's NAME (v3, or a v5 code krcgSetLabel resolved), `code` the v5 set code (null for v3)
+    const key=set+' :: '+precon;
     let e=pc.get(key);
     if(!e){
-      e={ key, precon:String(precon), set:code, date:String(date||''),
-          newBlood:/new\s*blood/i.test(code)||/new\s*blood/i.test(String(precon))||/^NB/.test(code),
+      e={ key, precon:String(precon), set, code:code||null, date:String(date||''),
+          newBlood:/new\s*blood/i.test(set)||/new\s*blood/i.test(String(precon))||/^NB/.test(code||set),
           crypt:new Map(), library:new Map() };
       pc.set(key,e);
     }
@@ -7282,7 +7316,8 @@ function buildPrecons(list){
     if(typeof card.kind==='string'){
       // ---- v5 shape: flat prints[] ----
       if(!Array.isArray(card.prints) || !card.printed_name) continue;
-      const disp=card.printed_name+(card.suffix?(' ('+card.suffix+')'):'');   // matches name_variants' own "Name (Suffix)" form
+      const _u=(typeof card.unicity_suffix==='string') ? card.unicity_suffix : (card.suffix||'');   // v2.6.168: KRCG's unicity suffix -- 'G6' only where another printing shares the name, 'ADV' for an advanced vampire, '' for a card alone (Julia Sowinski)
+      const disp=card.printed_name+(_u?(' ('+_u+')'):'');   // matches one of name_variants' own "Name (Suffix)" forms
       let anyV5=false;
       for(const pr of card.prints){ const code=pr && pr.set && pr.set.code; if(code && isV5SetCode(code)) anyV5=true; }
       let registered=false;
@@ -7291,7 +7326,8 @@ function buildPrecons(list){
         if(!code || !Array.isArray(pr.occurrences)) continue;
         for(const occ of pr.occurrences){
           if(!occ || occ.type!=='Precon' || !occ.bundle) continue;
-          reg(disp, isCryptCard, code, occ.bundle, Math.max(1, occ.copies|0), occ.date, anyV5);
+          const lab=krcgSetLabel(code, occ.bundle, krcgSets);   // v2.6.168: 'V5' + 'PTo' -> Fifth Edition :: Toreador
+          reg(disp, isCryptCard, lab.set, lab.precon, Math.max(1, occ.copies|0), occ.date||lab.date, anyV5, code);
           registered=true;
         }
       }
@@ -7310,7 +7346,7 @@ function buildPrecons(list){
         if(!Array.isArray(entries)) continue;
         for(const s of entries){
           if(!s || !s.precon) continue;
-          reg(disp, isCryptCard, setName, s.precon, Math.max(1, s.copies|0), s.release_date, anyV5);
+          reg(disp, isCryptCard, setName, s.precon, Math.max(1, s.copies|0), s.release_date, anyV5, null);
           registered=true;
         }
       }
@@ -7324,7 +7360,7 @@ function buildPrecons(list){
   legacy.sort((a,b)=>a.name.localeCompare(b.name));
   catalog={ v5, legacy };
 }
-function preconEra(e){ return isV5Set(e.set) ? 'v5' : 'legacy'; }
+function preconEra(e){ return (isV5SetCode(e.code) || isV5Set(e.set)) ? 'v5' : 'legacy'; }   // v2.6.168: a v5 entry carries its set CODE too -- 'V5 :: PTo' read as Legacy
 function nbMatch(nbName, starterName){
   if(!nbName || !starterName) return false;
   const a=nbName.toLowerCase(), b=starterName.toLowerCase();
@@ -17488,13 +17524,15 @@ function applyPco(){                                         // re-paint cards u
   else if(net.view==='l4') updateL4Opponents();   // Classic: opponent cards live in #l4oppWrap (built by renderL4OppCards via updateL4Opponents) -> repaint them with the new player-colour outline; was missing, so toggling colours in L4 left opponent cards stale
   renderAltIfOpen();
 }
-let cardDBLoading=false, cardInfo=null, cardImageNames=null;
+let cardDBLoading=false, cardInfo=null, cardImageNames=null, cardDBGen=0, cardDBRecTs=null;   // v2.6.169: cardDBGen counts the loads, so a late answer (KRCG's names) can tell whether the copy it belongs to is still the one in use; v2.6.170: cardDBRecTs = the `ts` of the IndexedDB record that holds the copy in use (null while it is not saved)
 // v2.5.87: KRCG API v3→v5 dual-format card parsing (KRCG announced krcg-api v4 / "krcg v5" JSON;
 // static.krcg.org/data/vtes.json — the file fetchVtesJson() below actually reads — is expected to
 // switch to it on its own schedule, same as static.krcg.org's earlier v2→v3 precedent). Each card
 // is parsed by parseV3Card() or parseV5Card() depending on which shape it's in (detected via the
 // v5-only `kind` field), producing an IDENTICAL {meta, typesArr, names, imgName} shape either way —
 // see SKILLS.md → "Work with KRCG card data" for the full v3/v5 field map this is built from.
+// v2.6.168: the client now READS the v5 dump (static.krcg.org/data/v5/vtes.json; fetchVtesJson below) -- KRCG stopped adding
+// cards to the v3 file at Sabbat V5. The v3 branch stays for the fallback, a cached copy and a file picked by hand.
 function parseV3Card(card){
   if(!Array.isArray(card.types)) return null;
   const meta={ text: typeof card.card_text==='string'?card.card_text:'',
@@ -17528,18 +17566,17 @@ function parseV5Card(card){
   const clansArr = isCrypt ? (card.clan?[card.clan]:[]) : (Array.isArray(card.clan_requirement)?card.clan_requirement.slice():[]);
   // disciplines: flat trigram array, crypt-only. discipline_requirement:{type,disciplines}, library-only.
   const discArr = isCrypt ? (Array.isArray(card.disciplines)?card.disciplines:[])
-                           : (card.discipline_requirement && Array.isArray(card.discipline_requirement.disciplines) ? card.discipline_requirement.disciplines : []);
+                           : (card.discipline_requirement && Array.isArray(card.discipline_requirement.disciplines) ? card.discipline_requirement.disciplines : []).map(d=>d==='fli'?'FLIGHT':d);   // v2.6.169: the v3 file spelled the special discipline Flight 'FLIGHT' (9 cards), the v5 dump the trigram 'fli' -- the v3 spelling is the one the preview and the catalog search show
   // path: bare string on crypt cards ('' when none — falsy, same as v3's null case). path_requirement:
   // array on library cards; take the first (Elysium's meta.path has never modelled multi-path requirements).
   const pathVal = isCrypt ? (card.path||null) : ((Array.isArray(card.path_requirement) && card.path_requirement.length) ? card.path_requirement[0] : null);
   const text = typeof card.text==='string' ? card.text : '';   // v3's card_text renamed to text (confirmed live, not guessed)
-  // cost unifies v3's pool_cost/blood_cost; shape unconfirmed by either real sample seen so far
-  // (both had cost:null) — read defensively, degrade to blank rather than risk mislabelling one as
-  // the other. See elysium-backlog.md "KRCG v5 follow-ups" for finishing this once a real sample exists.
+  // cost unifies v3's pool_cost/blood_cost. v2.6.168: the real shape is {type:'Pool'|'Blood'|'Conviction', value: N | 'X'}
+  // (1 Nov 2026: 996 costed cards, equal to the v3 file's pool_cost/blood_cost on every one); conviction stays unread, as in v3.
   let pool='', blood='';
   if(card.cost && typeof card.cost==='object'){
-    if(card.cost.type==='pool') pool=String(card.cost.amount||'');
-    else if(card.cost.type==='blood') blood=String(card.cost.amount||'');
+    const _ct=String(card.cost.type||'').toLowerCase(), _cv=(card.cost.value!=null) ? card.cost.value : card.cost.amount;
+    if(_cv!=null && _cv!==''){ if(_ct==='pool') pool=String(_cv); else if(_ct==='blood') blood=String(_cv); }
   }
   const meta={ text, types: card.types.join(' / '), cap: card.capacity||null,
                disc: discArr.join(' '), clans: clansArr.join(' '), clansArr, disciplines: discArr.slice(0,12).map(String),   // v2.6.158: the v3 parser's field, case kept (UPPER = superior) -- the level chooser reads it; without it a v5 database offered inferior with a warning every time
@@ -17549,12 +17586,28 @@ function parseV5Card(card){
                    : /\bAnarch\b/.test(text) ? 'Anarch'
                    : /\bLaibon\b/.test(text) ? 'Laibon'
                    : /\bIndependent\b/.test(text) ? 'Independent' : null) };
-  const names=[card.printed_name];
-  if(Array.isArray(card.name_variants)) for(const v of card.name_variants) if(v && typeof v.name==='string') names.push(v.name);
-  // no more card.name/_name — printed_name(+suffix) reconstructs the real static.krcg.org image
-  // filename exactly (verified: Gratiano's suffix 'G2' -> 'gratianog2', matching its real print url)
-  const imgName = card.printed_name ? norm(card.printed_name+(card.suffix||'')) : null;
-  return { meta, typesArr: card.types, names: names.filter(nm=>typeof nm==='string' && nm), imgName, adv: cardIsAdv(card), claims: names.filter((nm,i)=>typeof nm==='string' && nm && !(i===0 && card.suffix)) };   // a suffixed card ('G6', 'ADV') shares its printed_name with a sibling: weak there, strong for an unsuffixed card
+  /* v2.6.168: three strengths of a v5 name (KRCG's real dump, 1 Nov 2026). A spelling of the card's OWN printed name ('Amelia',
+     'Amelia (G2)') is a claim and always wins. Any other name_variant -- a short name ('Amelia' for Amelia, The Blood Red Tears),
+     an old name ('Distraction' for Misdirection), a translation -- is an ALIAS: it holds a name no claim holds, and the first alias
+     keeps it. Weak: the printed name of a suffixed card, and the spellings deck lists write that the v5 list leaves out but the v3
+     list had ('Theo Bell (ADV)'; 'Tegyrius' for the card that owns 'Tegyrius, Vizier'). Every variant was strong and the last one
+     won: 'Amelia' went to the G3 vampire and 'Distraction' to a master. */
+  const pn=card.printed_name;
+  const variants=[];
+  if(Array.isArray(card.name_variants)) for(const v of card.name_variants) if(v && typeof v.name==='string' && v.name) variants.push(v.name);
+  const ownName=nm=>typeof pn==='string' && (nm===pn || nm.startsWith(pn+' ('));
+  const claims=variants.filter(ownName); if(typeof pn==='string' && pn && !card.suffix) claims.push(pn);
+  const aliases=variants.filter(nm=>!ownName(nm));
+  const extra=[];
+  for(const nm of variants){
+    const a=/^(.+) \((?:G\d+ )?ADV\)$/.exec(nm); if(a) extra.push(a[1]+' (ADV)');                         // 'Theo Bell (G2 ADV)' -> 'Theo Bell (ADV)'
+    const g=/^(.+) \(G\d+\)$/.exec(nm); if(g && g[1]!==pn && variants.includes(pn)) extra.push(g[1]);   // 'Tegyrius (G2)' -> 'Tegyrius', for KRCG's owner of the bare name only
+  }
+  const names=[pn, ...variants, ...extra].filter(nm=>typeof nm==='string' && nm);
+  // no more card.name/_name -- printed_name(+suffix) reconstructs the real static.krcg.org image
+  // filename exactly (verified: Gratiano's suffix 'G2' -> 'gratianog2'; v2.6.168: every card of the v5 dump matches its url)
+  const imgName = pn ? norm(pn+(card.suffix||'')) : null;
+  return { meta, typesArr: card.types, names, imgName, adv: cardIsAdv(card), claims, aliases };
 }
 function buildCardIndex(list){                                     // v2.6.143 pure (extracted from processCardData so the suite can drive it): name -> types / meta, plus the image names
   const map=new Map(), info=new Map(), imgNames=new Set(), weakKey=new Map();   // weakKey: a name held by a WEAK claim only -> was that holder an advanced card
@@ -17569,41 +17622,88 @@ function buildCardIndex(list){                                     // v2.6.143 p
        name and its name_variants are STRONG claims and always win; _name / printed_name are WEAK and only fill a
        name nobody claimed, a base card before an advanced one. Last-wins gave the bare name to the advanced card
        for 63 of 65 pairs and to the reprint for a dozen vampires -- the wrong card text beside the right image. */
-    const strong=new Set((parsed.claims||parsed.names).map(norm));
+    const strong=new Set((parsed.claims||parsed.names).map(norm).filter(Boolean));   // v2.6.168: an empty key is nobody's (KRCG lists '!' as a variant of seven cards)
     for(const k of strong){ map.set(k, parsed.typesArr); info.set(k, parsed.meta); weakKey.delete(k); }
+    for(const nm of (parsed.aliases||[])){   // v2.6.168: a v5 alias holds a name no claim holds; the first alias keeps it
+      const k=norm(nm);
+      if(!k || strong.has(k) || (map.has(k) && !weakKey.has(k))) continue;
+      map.set(k, parsed.typesArr); info.set(k, parsed.meta); weakKey.delete(k);
+    }
     for(const nm of parsed.names){
       const k=norm(nm);
-      if(strong.has(k)) continue;
-      if(map.has(k) && !(weakKey.get(k)===true && !parsed.adv)) continue;   // held by a strong claim, or by an earlier weak one -- only a base card displaces an advanced card's weak hold
+      if(!k || strong.has(k)) continue;
+      if(map.has(k) && !(weakKey.get(k)===true && !parsed.adv)) continue;   // held by a claim or an alias, or by an earlier weak one -- only a base card displaces an advanced card's weak hold
       map.set(k, parsed.typesArr); info.set(k, parsed.meta); weakKey.set(k, !!parsed.adv);
     }
   }
   return { map, info, imgNames };
 }
-function processCardData(data, src){
-  const list = Array.isArray(data) ? data
-             : Array.isArray(data.cards) ? data.cards
-             : Object.values(data);
+function processCardData(data, src, exp){   // v2.6.168: `exp` = KRCG's expansions.json (its text, or parsed) for the set and starter names; returns whether the data held cards
+  const list = vtesList(data);
+  const sets=krcgSetIndex(typeof exp==='string' ? vtesExpParse(exp) : exp);
+  if(sets){ krcgSets=sets; if(typeof exp==='string') krcgExpRaw=exp; }   // a load without the file keeps the names an earlier one brought
   const built=buildCardIndex(list);
   const map=built.map, info=built.info, imgNames=built.imgNames;
   if(map.size){
-    cardTypes=map; cardInfo=info; cardImageNames=imgNames; cardDBSrc=src||null;   // B-63: remember the tier for dump.env.db.source
+    cardDBGen++; cardDBRecTs=null;   // v2.6.169: a new copy is in use -- late names for an older one leave it alone; v2.6.170: and it is not saved until a cache write (or the read that brought it) says so
+    cardTypes=map; cardInfo=info; cardImageNames=imgNames; cardDBSrc=src ? src+' '+vtesFmt(list) : null;   // B-63: remember the tier (v2.6.168: and KRCG's shape, 'KRCG v5') for dump.env.db.source
     buildPrecons(list);
     $('#rulesWrap').hidden=false;
     if(typeof onCardDBReady==='function') onCardDBReady();
     log('Card database loaded'+(src?' ('+src+')':'')+' — minion detection, card text and suggested decks active.');
     imgSyncCheck();
   }
+  return !!map.size;
 }
-function cacheVtesJson(raw){
+function cacheVtesJson(raw, fmt, fallback, ts){   // v2.6.168: the record carries KRCG's shape ('v5' | 'v3') and the expansions.json text read with it; v2.6.169: `fallback` = KRCG's v3 file, read because the dump failed
+  const at=(typeof ts==='number' && ts>0) ? ts : Date.now();   // v2.6.170 (the second review): `ts` keeps a record's age when only the names change -- a stale copy re-stamped fresh is the week v2.6.169 closed
+  cardDBRecTs=at;   // every caller has just put this copy in use
   openImgDB().then(db=>{
     const tx=db.transaction(IMG_STORE,'readwrite');
-    tx.objectStore(IMG_STORE).put({json:raw, size:raw.length*2, ts:Date.now()}, '_vtesJson');
+    tx.objectStore(IMG_STORE).put({json:raw, exp:krcgExpRaw||null, fmt:fmt||null, fallback:!!fallback, size:(raw.length+(krcgExpRaw?krcgExpRaw.length:0))*2, ts:at}, '_vtesJson');
     tx.oncomplete=()=>updateJsonCacheUI();
   }).catch(()=>{});
+  return at;
 }
 const VTES_MAX_AGE_MS=7*24*60*60*1000;   // v2.6.76: a cached catalog younger than this is used WITHOUT touching the network
-function vtesStale(ts, now){ return !(typeof ts==='number' && ts>0) || ((now||Date.now())-ts) > VTES_MAX_AGE_MS; }   // v2.6.76 pure: no timestamp = stale
+function vtesStale(ts, now, rec){ return !(typeof ts==='number' && ts>0) || ((now||Date.now())-ts) > VTES_MAX_AGE_MS || (!!rec && (!rec.fmt || rec.fallback===true)); }   // v2.6.76 pure: no timestamp = stale; v2.6.168: so is a record with no shape stamp (written before v2.6.168: KRCG's v3 file, which gets no new sets); v2.6.169: and the v3 file kept as a stopgap -- the next start tries the dump again
+const KRCG_DATA_URL='https://static.krcg.org/data/v5/vtes.json', KRCG_DATA_V3_URL='https://static.krcg.org/data/vtes.json', KRCG_EXP_URL='https://static.krcg.org/data/v5/expansions.json';   // v2.6.168
+function vtesList(data){             // v2.6.169 pure: the card list in a KRCG file (an array, {cards:[...]}, or an object of cards)
+  return Array.isArray(data) ? data : (data && Array.isArray(data.cards)) ? data.cards : (data && typeof data==='object') ? Object.values(data) : [];
+}
+function vtesFmt(data){              // v2.6.168 pure: which KRCG shape a card list is in ('v5' when any card has the v5-only `kind`)
+  return vtesList(data).some(c=>c && typeof c.kind==='string') ? 'v5' : 'v3';
+}
+function vtesExpParse(raw){ if(typeof raw!=='string' || !raw) return null; try{ return JSON.parse(raw); }catch(e){ return null; } }   // v2.6.168 pure
+function vtesFileKind(d){            // v2.6.168 pure: 'exp' for KRCG's expansions.json, 'cards' for a card list in either shape, null for anything else
+  if(Array.isArray(d) && d.length && d.every(x=>x && typeof x==='object' && typeof x.code==='string' && x.bundles && typeof x.bundles==='object')) return 'exp';
+  const l=Array.isArray(d) ? d : (d && Array.isArray(d.cards)) ? d.cards : (d && typeof d==='object') ? Object.values(d) : null;
+  return (l && l.some(c=>c && typeof c==='object' && Array.isArray(c.types))) ? 'cards' : null;
+}
+const KRCG_EXP_WAIT_MS=8000;          // v2.6.169: how long KRCG's expansions.json may take before the client stops asking (nothing waits on it; the copy is cached when it has answered)
+function krcgExpFetch(ms){           // v2.6.168: KRCG's expansions.json as text, or null -- never rejects, never fails a load
+  /* v2.6.169 (the independent review): bounded -- a request that never answers is given up after `ms` (KRCG_EXP_WAIT_MS), so the
+     copy it rides with is still cached. The promise says whether it has settled (`done`) and with what (`val`): a card load that
+     finds the names already in uses them at once, one that does not uses the names at hand and takes KRCG's when they come. */
+  const ac=(typeof AbortController==='function') ? new AbortController() : null;
+  let tm=null;
+  const p=Promise.race([
+    fetch(KRCG_EXP_URL, ac ? { signal:ac.signal } : undefined).then(r=>{ if(!r || !r.ok) throw 0; return r.text(); }).then(t=>krcgSetIndex(vtesExpParse(t)) ? t : null).catch(()=>null),
+    new Promise(res=>{ tm=setTimeout(()=>{ try{ if(ac) ac.abort(); }catch(e){} res(null); }, (ms>0) ? ms : KRCG_EXP_WAIT_MS); })
+  ]).then(t=>{ clearTimeout(tm); p.done=true; p.val=t; return t; });
+  p.done=false; p.val=null;
+  return p;
+}
+function vtesNamesThenCache(raw, data, fmt, expP, fallback){   // v2.6.169: after a copy is in use -- KRCG's names, if they come late, re-label its starters; then it is cached, once
+  const gen=cardDBGen;
+  return Promise.resolve(expP || null).then(t=>{
+    if(gen!==cardDBGen) return;   // a newer load took over (Refresh, From file, the box's file): it caches its own copy
+    try{
+      if(t && t!==krcgExpRaw){ const sets=krcgSetIndex(vtesExpParse(t)); if(sets){ krcgSets=sets; krcgExpRaw=t;
+        if(fmt==='v5' && cardTypes){ buildPrecons(vtesList(data)); if(typeof onCardDBReady==='function') onCardDBReady(); } } }   // only a v5 file names its starters by code (and not after the database was switched off)
+    }finally{ cacheVtesJson(raw, fmt, fallback); }   // v2.6.170: the copy is cached even if re-labelling threw (the error still reaches the error ring)
+  });
+}
 function vtesCached(){                 // v2.6.76: the IndexedDB copy ({json, ts}) or null -- never rejects (no indexedDB, a broken store, an empty record all read as 'no cache')
   return openImgDB().then(db=>new Promise(res=>{
     try{ const req=db.transaction(IMG_STORE,'readonly').objectStore(IMG_STORE).get('_vtesJson'); req.onsuccess=()=>res(req.result&&req.result.json?req.result:null); req.onerror=()=>res(null); }
@@ -17622,8 +17722,8 @@ function loadCardDB(){
      week instead of one per start. */
   vtesCached().then(c=>{
     let used=false;
-    if(c){ try{ processCardData(JSON.parse(c.json), 'cached'); used=true; }catch(e){ used=false; } }
-    if(used && !(conv.jsonSync && vtesStale(c.ts, Date.now()))){ cardDBLoading=false; return; }   // fresh enough (or sync off): no network at all
+    if(c){ try{ used=processCardData(JSON.parse(c.json), 'cached', c.exp)!==false; }catch(e){ used=false; } if(used) cardDBRecTs=c.ts; }   // v2.6.170: the copy in use is this record
+    if(used && !(conv.jsonSync && vtesStale(c.ts, Date.now(), c))){ cardDBLoading=false; return; }   // fresh enough (or sync off): no network at all; v2.6.168: a copy of the v3 file is refreshed once
     _loadCardDBFetch();                                                                           // no cache / corrupt / a week old with sync on -> fetch and re-cache (a later processCardData simply rebuilds the maps)
   });
 }
@@ -17640,10 +17740,10 @@ function _loadCardDBFetch(){         // v2.6.76: the fetch chain, unchanged from
     fetch(LOCAL_IMG_DIR+'/vtes.json')
       .then(r=>{ if(!r.ok) throw 0; return r.text(); })
       .then(raw=>{
-        const data=JSON.parse(raw);
-        processCardData(data, 'local folder');
-        cacheVtesJson(raw);          // cache the local copy too -- it then also serves the offline/file:// fallback path
+        const data=JSON.parse(raw), fmt=vtesFmt(data);
+        if(!processCardData(data, 'local folder')) throw 0;   // v2.6.169 (the independent review): used AT ONCE, with the names at hand (the cached or the built-in ones) -- v2.6.168 waited for KRCG's expansions.json first, so a slow or hanging static.krcg.org held the hosted table's database
         cardDBLoading=false;
+        vtesNamesThenCache(raw, data, fmt, fmt==='v5' ? krcgExpFetch() : null, false);   // a v5 file names its starters by code: KRCG's names (16 KB) re-label them if they differ; then the local copy is cached too -- it also serves the offline/file:// fallback path
       })
       .catch(()=>{ fetchVtesJson(); });
     return;
@@ -17651,28 +17751,31 @@ function _loadCardDBFetch(){         // v2.6.76: the fetch chain, unchanged from
   fetchVtesJson();
 }
 function fetchVtesJson(){
-  fetch('https://static.krcg.org/data/vtes.json')
-    .then(r=>r.text())
-    .then(raw=>{
-      const data=JSON.parse(raw);
-      processCardData(data, 'KRCG');
-      cacheVtesJson(raw);
-    })
-    .catch(()=>{
-      /* Network failed — try cache as fallback even when sync is on */
-      openImgDB().then(db=>{
-        const tx=db.transaction(IMG_STORE,'readonly');
-        const req=tx.objectStore(IMG_STORE).get('_vtesJson');
-        req.onsuccess=()=>{
-          const cached=req.result;
-          if(cached && cached.json){
-            try{ processCardData(JSON.parse(cached.json), 'cached/offline'); return; }catch(e){}
-          }
-          log('Could not load the card database — minion detection unavailable. Offline with a vtes.json file? Settings → Card data → 📁 From file… loads it once and caches it.');
-        };
-        req.onerror=()=>log('Could not load the card database — minion detection unavailable. Offline with a vtes.json file? Settings → Card data → 📁 From file… loads it once and caches it.');
-      }).catch(()=>log('Could not load the card database — minion detection unavailable. Offline with a vtes.json file? Settings → Card data → 📁 From file… loads it once and caches it.'));
-    })
+  /* v2.6.168: KRCG's v5 dump first -- since Secrets of New York and Noites Brasileiras (31 Oct 2026) the only file with the new
+     sets; the v3 file the client read until v2.6.167 stops at Sabbat V5 -- then the v3 file if the dump fails. expansions.json
+     (the set and starter names) is fetched alongside and never fails the load. */
+  /* v2.6.169 (the independent review): (1) the v3 file only when this browser has no copy of its own -- a copy cached earlier
+     is newer than KRCG's frozen v3 file, so a failed dump (a 503, a reset mid-download) keeps it, untouched and still stale,
+     and the next start tries the dump again; v2.6.168 cached the v3 file over a good v5 copy, stamped fresh for a week. A v3
+     file read as that stopgap is cached as one (`fallback`, stale at once). (2) The card data is used the moment it arrives:
+     with KRCG's names when they are already in, else with the names at hand, and KRCG's re-label the starters when they come. */
+  const get=u=>fetch(u).then(r=>{ if(!r || !r.ok) throw new Error('HTTP '+(r && r.status)); return r.text(); });
+  const expP=krcgExpFetch();
+  const take=(raw, fallback)=>{
+    const data=JSON.parse(raw);
+    if(!processCardData(data, 'KRCG', expP.done ? expP.val : null)) throw new Error('no cards');
+    vtesNamesThenCache(raw, data, vtesFmt(data), expP, fallback);
+  };
+  const fromCache=()=>{   // the copy this browser has, even when sync is on
+    /* v2.6.170 (the second review): a copy already in use is kept as it is -- it is the saved copy or something newer (a
+       download whose save is still on the way). v2.6.169 read the saved copy a second time on every start the dump failed,
+       and a Refresh pressed while a first download was still unsaved fell back to KRCG's v3 file. */
+    if(cardTypes){ if(cardDBSrc && /^cached /.test(cardDBSrc)) cardDBSrc=cardDBSrc.replace(/^cached /, 'cached/offline '); log('Could not refresh the card database — the copy in use stays.'); return Promise.resolve(true); }
+    return vtesCached().then(c=>{ try{ if(c && processCardData(JSON.parse(c.json), 'cached/offline', c.exp)){ cardDBRecTs=c.ts; return true; } }catch(e){} return false; });
+  };
+  get(KRCG_DATA_URL).then(raw=>take(raw, false))
+    .catch(()=>fromCache().then(kept=>{ if(!kept) return get(KRCG_DATA_V3_URL).then(raw=>take(raw, true)); }))
+    .catch(()=>log('Could not load the card database — minion detection unavailable. Offline with a vtes.json file? Settings → Card data → 📁 From file… loads it once and caches it.'))
     .finally(()=>{ cardDBLoading=false; });
 }
 /* Image sync: download new card images that exist in cardInfo but not in imgBlobCache */
@@ -17760,6 +17863,10 @@ function updateImgCacheUI(){
       : s.count+' images, '+fmtBytes(s.size)+(s.fmt?' ('+s.fmt.toUpperCase()+')':'');
   }).catch(()=>{ el.textContent='unavailable'; });
 }
+function vtesCacheNote(c, sync){       // v2.6.169 pure (v2.6.170: extracted, and honest with automatic refresh off): Settings' line for the cached copy
+  if(!c || !c.ts) return 'Not cached.';
+  return 'Cached '+new Date(c.ts).toLocaleDateString()+'.'+(c.fallback ? ' KRCG’s older v3 file — the newest sets are missing; '+(sync ? 'the next start tries the current file again (or press Refresh).' : 'press Refresh to try the current file (automatic refresh is off).') : '');
+}
 function updateJsonCacheUI(){
   const el=$('#jsonCacheInfo'), btn=$('#jsonDlBtn'); if(!el) return;
   openImgDB().then(db=>{
@@ -17767,8 +17874,7 @@ function updateJsonCacheUI(){
     const req=tx.objectStore(IMG_STORE).get('_vtesJson');
     req.onsuccess=()=>{
       const c=req.result;
-      if(c && c.ts){ const d=new Date(c.ts); el.textContent='Cached '+d.toLocaleDateString()+'.'; if(btn) btn.textContent='Refresh'; }
-      else { el.textContent='Not cached.'; if(btn) btn.textContent='Download'; }
+      el.textContent=vtesCacheNote(c, conv.jsonSync); if(btn) btn.textContent=(c && c.ts) ? 'Refresh' : 'Download';
     };
     req.onerror=()=>{ el.textContent=''; };
   }).catch(()=>{ el.textContent=''; });
@@ -17943,9 +18049,24 @@ function setAdvToggle(btn, open){                                  // v2.6.86: S
 }
 document.querySelectorAll('#settingsModal .set-advbtn').forEach(b=>b.addEventListener('click',()=>setAdvToggle(b)));
 
-$('#jsonDlBtn').addEventListener('click',()=>{
-  cardTypes=null; cardInfo=null; cardImageNames=null; cardDBLoading=false;
+function vtesRefresh(){                // v2.6.170 (the second review): Settings > Refresh -- the copy in use stays until a new one is in; it used to be cleared first, so a refresh that failed fell back to an older saved copy, or to KRCG's v3 file
+  cardDBLoading=false;
   fetchVtesJson();
+}
+function vtesNamesFromFile(expRaw, fileName){   // v2.6.170: Settings > From file with expansions.json alone -- the names for the copy in use, which keeps its age
+  return vtesCached().then(c=>{
+    /* The saved copy must be the copy in use: while a fresh download waits for its names (or failed to save) the saved copy
+       is older, and reading it would swap it in and drop the fresh one. v2.6.169 did that, and stamped the record fresh --
+       a stale copy kept after a failed refresh was then not refreshed for a week (the second review). */
+    if(cardTypes && (!c || c.ts!==cardDBRecTs)){ toast('The card database in use is not saved yet — pick '+fileName+' again in a moment, or together with vtes.json.'); return false; }
+    let ok=false, data=null; try{ data=c && JSON.parse(c.json); ok=!!data && processCardData(data, 'cached', expRaw); }catch(e){}
+    if(!ok){ uiAlert('Load vtes.json too (you can pick both files at once).'); return false; }
+    cacheVtesJson(c.json, c.fmt||vtesFmt(data), c.fallback===true, c.ts); toast('Starter names loaded from '+fileName+'.'); updateJsonCacheUI();   // the same copy, the same age, and a v3 stopgap stays one
+    return true;
+  });
+}
+$('#jsonDlBtn').addEventListener('click',()=>{
+  vtesRefresh();
   const btn=$('#jsonDlBtn'); if(btn){ btn.disabled=true; btn.textContent='Downloading…'; setTimeout(()=>{ btn.disabled=false; updateJsonCacheUI(); },3000); }
 });
 $('#jsonFileBtn').addEventListener('click',()=>$('#jsonFile').click());
@@ -17955,21 +18076,26 @@ $('#jsonFile').addEventListener('change',()=>{
      either, so the whole chain dead-ended at "Could not load…". The file PICKER is the one
      transport file:// allows (the user points at the file, FileReader reads it) — one click,
      once: the parsed data is processed AND cached, so every later start loads automatically. */
-  const f=$('#jsonFile').files && $('#jsonFile').files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=()=>{
-    try{
-      const raw=String(r.result||'');
-      const data=JSON.parse(raw);
-      cardTypes=null; cardInfo=null; cardImageNames=null; cardDBLoading=false;   // same reset jsonDlBtn does before a reload
-      processCardData(data, 'file');
-      cacheVtesJson(raw);                                                        // the once-and-done part: next starts hit the cache
-      toast('Card database loaded from '+f.name+' — cached for future sessions.');
-      updateJsonCacheUI();
-    }catch(e){ uiAlert('That file could not be read as a card database (vtes.json). Get it from static.krcg.org/data/.'); }
-  };
-  r.onerror=()=>uiAlert('Could not read that file.');
-  r.readAsText(f);
+  const fl=[...($('#jsonFile').files||[])]; if(!fl.length) return;
+  const rd=f=>new Promise(res=>{ const r=new FileReader(); r.onload=()=>res({ f, raw:String(r.result||'') }); r.onerror=()=>res({ f, raw:null }); r.readAsText(f); });
+  Promise.all(fl.map(rd)).then(got=>{   // v2.6.168: one or two files -- the card data, and KRCG's expansions.json for the starter names (pick both at once)
+    let card=null, expRaw=null;
+    for(const g of got){
+      if(g.raw==null){ uiAlert('Could not read '+g.f.name+'.'); return; }
+      let d=null; try{ d=JSON.parse(g.raw); }catch(e){}
+      const k=vtesFileKind(d);
+      if(k==='exp') expRaw=g.raw;
+      else if(k==='cards') card={ f:g.f, raw:g.raw, data:d };
+      else { uiAlert(g.f.name+' could not be read as a card database (vtes.json) or its set names (expansions.json). Get both from static.krcg.org/data/v5/.'); return; }
+    }
+    cardDBLoading=false;
+    if(!card){ vtesNamesFromFile(expRaw, got[0].f.name); return; }   // the names alone: applied to the copy in use (v2.6.170)
+    let held=false; try{ held=processCardData(card.data, 'file', expRaw); }catch(e){}
+    if(!held){ uiAlert(card.f.name+' could not be read as a card database. Get vtes.json from static.krcg.org/data/v5/.'); return; }
+    cacheVtesJson(card.raw, vtesFmt(card.data));                                 // the once-and-done part: next starts hit the cache
+    toast('Card database loaded from '+card.f.name+(expRaw?' with the set names':'')+' — cached for future sessions.');
+    updateJsonCacheUI();
+  });
   $('#jsonFile').value='';   // picking the same file again later still fires 'change'
 });
 $('#imgSyncToggle').addEventListener('change',e=>{ conv.imgSync=e.target.checked; saveConv(); });

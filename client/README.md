@@ -17,6 +17,7 @@ what is open) → `CLAUDE.md` → `docs/elysium-session-journal.md` (newest firs
 | `ELYSIUM-PROTOCOL.md` | the client↔server contract; `test-protocol-doc.js` lints it against the live handler tables |
 | `elysium-test-harness.js`, `test-*.js`, `elysium-soak-hotseat.js` | the suites and the soak; `test-bot-canary.js` is the bot project's file, identical in both halves |
 | `check-versions.js` | version lockstep across code + doc headers; in the monorepo it also asserts that every root file is a byte copy of `client/<name>` or (the eight bundle files) `bot/<name>` |
+| `krcg-audit.js` | dev tool (v2.6.168): runs two KRCG card files through the client's real parser and compares them card by card by id -- names lost or moved, fields, image keys, starters; run it before the client trusts a new KRCG file (third-party data: keep it outside the repo) |
 | `embed-help.js`, `help-local-server.html` | the Help-page embed tool and our Local-server authoring source (the bot project's `START-HERE-BOTS.html` is embedded verbatim) |
 | `start-elysium*`, `start-cloudflare-tunnel*`, `START-HERE.html`, `Elysium_-_Host_Guide.docx`, `build-host-guide.js` | the download's launchers and guides |
 | `elysium-error-digest.js`, `elysium-digest.service`, `elysium-digest.timer` | the ops digest (Discord) and its systemd units |

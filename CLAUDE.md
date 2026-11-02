@@ -42,7 +42,9 @@ client, server and start scripts from `client/` to `/`. Nothing at the root is e
 ## Data that is not in git
 Third-party data is never committed or hosted here; each session fetches it from its source:
 - `vtes.json` (KRCG's card database, 7 MB): `curl -o bot/vtes.json https://static.krcg.org/data/vtes.json` before
-  `test-cardfx.js` or the profile tools. The client fetches the same file itself at run time.
+  `test-cardfx.js` or the profile tools. That file stopped getting new cards at Sabbat V5 (1 Nov 2026); since client
+  v2.6.168 the client fetches KRCG's v5 dump (`https://static.krcg.org/data/v5/vtes.json`, with `data/v5/expansions.json`
+  for the set names) at run time, and `client/docs/handoffs/REPLY-to-bot-2026-11-01-krcg-v5.md` says what that means for the bot.
 - The TWDA (VEKN's Tournament Winning Deck Archive) is an input to `bot/twd-profile.py` / `bot/twd-archetypes.py` only,
   when the profile is rebuilt: `twda.json` (KRCG's list-shaped export, the base) and optionally `twda-vdb.json` (the
   VDB-style dict, merged in). Both are ignored in `bot/`. Arena traces (`serie-*/`, `bench-*/`) are generated and ignored.
