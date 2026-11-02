@@ -11,13 +11,14 @@ Johan to merge). **Open PRs:** #46.
 ## Last gates (v0.6.216 release bytes, 2 Nov 2026)
 Suite **2366/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root
 v2.6.170 + `client/ELYSIUM-PROTOCOL.md`) · hotseat **11/0** · HB1 **11/11** · test-cardfx **310/0** · `gen-precon.js --check` 18
-precons, no problems · main's `check-versions.js` agrees · main's client suite beside the bundle 353/1 (the embedded guide: main re-embeds) · sim 240-match client design vs v0.6.215: SAME-PLAY 240 (no decision moved; 64 games' event
-summaries count `Second Tradition` as a card play now) · the V5 smoke (14 × 12): SAME-PLAY 168.
+precons, no problems · main's `check-versions.js` agrees · main's client suite beside the bundle 353/1 (the embedded guide: main
+re-embeds) · sim 240-match client design vs v0.6.215: SAME-PLAY 240 (no decision moved; 64 games' event summaries count `Second
+Tradition` as a card play now) · the V5 smoke (14 × 12): SAME-PLAY 168.
 
 ## What v0.6.216 did (the latest release; older ones in the CHANGELOG)
 KRCG's v5 dump is the card data (main's reply 5.1; RULINGS D-105): `krcg-v5.js` writes it as the v3-shaped `vtes.json` every tool
-reads. cardfx knows all 4,212 cards (63 new: Secrets of New York, Noites Brasileiras) and takes the dump's errata (118 texts beyond markup);
-the client's names resolve for 4,212 of 4,212. A card's own printed name beats another card's nickname in the aliases.
+reads. cardfx knows all 4,212 cards (63 new: Secrets of New York, Noites Brasileiras) and takes the dump's errata (118 texts
+beyond markup); the client's names resolve for 4,212 of 4,212. A card's own printed name beats another card's nickname.
 
 ## Next (proposed; Johan orders the board)
 1. V5 wave 4: the masters on a vampire and the rest still played blind; Sudden Reversal's window (Johan's call: a wait per master).

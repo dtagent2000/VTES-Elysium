@@ -39,6 +39,9 @@
     Ages (now persistent, `req.unmodelled`), Toreador Justicar (persistent) — none is played in the sims. No starter card changed.
   - *gen-precon v1.1.1*: a "precon" bundle under 12 crypt / 60 library cards is not a deck (the Secrets of New York and Noites
     Brasileiras bundles); the 18 V5 precons are unchanged.
+  - *Guards*: `test-cardfx.js` and `gen-precon.js` stop with the fix when `vtes.json` is the raw v5 dump (a data-repo copy saved
+    under the old name crashed test-cardfx with a TypeError). `gen-deck-coverage.js` exports 1.1.42, as its header says since
+    v0.6.215 (the ledger printed 1.1.41).
   - *Names*: through the client's v5 naming all 4,212 dump cards resolve to their own entry (now a `test-cardfx.js` check, with one
     that no word of the table's vocabulary is an alias). Bare "Aisling Sturbridge" now goes to the new G6 printing (the ladder).
   - *Gates*: suite 2366/0 ×3 (alone, frozen snapshots) · canary 69/0 (bot/'s copies) and 69/0 (root v2.6.170 + `client/ELYSIUM-PROTOCOL.md`) · hotseat 11/0 ·

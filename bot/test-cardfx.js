@@ -16,6 +16,7 @@ const ok = (cond, msg) => { console.log((cond ? '  \u2713 ' : '  \u2717 ') + msg
 
 const here = f => path.join(__dirname, f);
 const cards = JSON.parse(fs.readFileSync(here('vtes.json'), 'utf8'));
+if(Array.isArray(cards) && cards.length && typeof cards[0].kind === 'string'){ console.error('test-cardfx: KRCG\u2019s v5 dump is saved as vtes.json: the tools read the v3 shape built from it -- save the dump as vtes-v5.json beside expansions.json and run node krcg-v5.js (root CLAUDE.md, \u201cData that is not in git\u201d)'); process.exit(2); }   // v0.6.216
 let curated = null;
 try{ curated = JSON.parse(fs.readFileSync(here('cardfx-curated.json'), 'utf8')); }catch(e){}
 

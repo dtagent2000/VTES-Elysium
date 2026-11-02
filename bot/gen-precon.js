@@ -75,6 +75,7 @@ function main(){
   const fx = B.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
   if (!fx){ console.error('gen-precon: elysium-cardfx.json missing or invalid beside the script'); return 2; }
   const cards = JSON.parse(fs.readFileSync(o.vtes, 'utf8'));
+  if (Array.isArray(cards) && cards.length && typeof cards[0].kind === 'string'){ console.error('gen-precon: KRCG\u2019s v5 dump is saved as vtes.json: the tools read the v3 shape built from it -- save the dump as vtes-v5.json beside expansions.json and run node krcg-v5.js (root CLAUDE.md, \u201cData that is not in git\u201d)'); return 2; }   // v1.1.1
 
   // the bot's own ladder (Bot.fxLookup): exact -> lowercase alias -> client-identical FX_NORM index
   const lookup = n => {

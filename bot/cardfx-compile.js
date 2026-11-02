@@ -76,13 +76,13 @@
    FORMAT COMPATIBILITY (v1.1.0): vtes.json exists in two generations —
    the "v3" shape (card_text/name/_name/clans/pool_cost…) and KRCG's
    krcg-api-v4 "v5" shape (kind/text/printed_name+suffix/clan/cost…).
-   normalizeCard() detects per record (the v5-only `kind` field) and maps
-   v5 into the v3-shaped record the pipeline reads — MIRRORING the client's
-   parseV3Card/parseV5Card field map (SKILLS.md → "Work with KRCG card
-   data"), so client and compiler stay in lockstep on one contract. The two
-   v5 unknowns that map noted (cost shape unconfirmed, title unobserved)
-   are read defensively and COUNTED in the report so a real v5 file run
-   surfaces gaps immediately instead of silently dropping facts.
+   normalizeCard() detects per record (the v5-only `kind` field). Since
+   v1.9.7 (bot v0.6.216, RULINGS D-105) a v5 record goes through
+   krcg-v5.js's toV3 — the ONE v5 -> v3 map, which also writes the
+   v3-shaped vtes.json the other tools read — so compiling the dump directly
+   and compiling the converted file give the same cardfx. A cost shape
+   neither known ({type: 'Pool' | 'Blood' | 'Conviction', value}) nor free
+   ({}) is still COUNTED in the report, never mislabelled.
 
    Zero dependencies. Dark Pack note: the output carries card NAMES and
    derived gameplay tags only — no rules text, no images. Source data is
@@ -143,10 +143,9 @@ const discTri = d => { const l = String(d || '').toLowerCase(); return l.length 
 /* ---------------- v3/v5 record normalization ----------------
    Returns a v3-SHAPED record {name,_name,name_variants,types,card_text,
    capacity,disciplines,clans,pool_cost,blood_cost,group,title,banned,_crypt}
-   plus which format it was. v5 field map per the client's verified parser:
-   printed_name+suffix is the identity ("Gratiano"+"G2" → "Gratiano (G2)"),
-   card_text→text, crypt clan is singular, library disciplines live in
-   discipline_requirement, cost is a defensive {type,amount} read.          */
+   plus which format it was. A v5 record is mapped by krcg-v5.js's toV3 (its
+   header has the field map); this function adds only `_crypt` and the
+   unknown-cost count.                                                      */
 function normalizeCard(card){
   if(typeof card.kind !== 'string'){
     return { fmt: 'v3', rec: Object.assign({ _crypt: isCryptCard(card) }, card) };
