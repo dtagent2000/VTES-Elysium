@@ -15,7 +15,7 @@ for S in sys.argv[1:]:
             end=rows[i]; A=end['bot']; win=rows[prev+1:i+1]; prev=i
             kind=end['data'].get('kind') or ('bleed' if end['data'].get('card') in (None,) else 'card')
             st=[r for r in win if r['bot']==A and r['type']=='play' and r['data'].get('window') in ('stealth','stealth-lock')]   # v0.6.205: + The Labyrinth's lock (window 'stealth-lock'), spent by the same contest as a stealth card
-            ic=[r for r in win if r['bot']!=A and r['type']=='play' and r['data'].get('window')=='react-intercept']
+            ic=[r for r in win if r['bot']!=A and r['type']=='play' and r['data'].get('window') in ('react-intercept','intercept-lock')]   # v0.6.215: + a location's intercept lock (Market Square, Channel 10 ...); Creepshow Casino's announce stealth has its own window 'stealth-announce' and is no answer to a block (not counted in st)
             bm=[r for r in win if r['bot']!=A and r['type']=='block-made']
             R['actions']+=1
             if st and not bm: R['R1 stealth played, NO block attempt']+=1; ex['R1'].append((deck[A], [r['data'].get('card') for r in st], end['type'], kind))

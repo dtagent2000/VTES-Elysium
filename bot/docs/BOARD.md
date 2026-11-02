@@ -1,55 +1,57 @@
-# BOARD — the open asks (30 Oct 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (2 Nov 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
-- **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks (Gangrel) and the TWD profile can
-  price it by what the table's decks deal. Since v0.6.213 (V5 wave 1) the bots deal aggravated damage (Claws of the Dead, Sculpt the
-  Flesh, Ivory Bow, Sword of the Archangel: the gangrel, tzimisce, salubri and ministry precons) and the vest prevents it (R-39); the
-  four starters still deal none, so a pricing bench needs a table with those decks. *Done when* the equipment scorer reads an expected-damage share for the table's decks and a
-  pinned bench shows no loss. Docs: RULINGS D-52; `specs/spec-knowledge-layer.md`.
+- **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
+  deal (the TWD profile). Since v0.6.213 the bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the
+  vest prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
+  expected-damage share for the table's decks and a pinned bench shows no loss. Docs: RULINGS D-52; `specs/spec-knowledge-layer.md`.
 - **The prey's wakes as blockers** (65f): the probe lab lost on five tables of 91 where a prey with one body and a wake blocked
   the prober and woke for the punch. *Done when* `probeHold`'s out-number reads unlocked bodies + expected wakes (deck read +
   hypergeometric), measured in `lab-probe.js`. Docs: RULINGS O-7; `specs/spec-knowledge-layer.md`.
 - **The abstract model spec**: the first of the four checks (fast rollouts over card-class distributions, probabilities not
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
-- **The V5 waves**: round 0 (v0.6.212) built the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim
-  plays them; the client's menu does not offer them), the coverage class map and the ledger (`docs/CARDS.md`). Waves by effect class
-  as `CARDS.md`'s class map ranks them (Johan, 29 Oct: RULINGS D-98). Wave 1 (v0.6.213, D-99): the additional and aggravated
-  strikes. Wave 2 (v0.6.214, D-102 / D-103): the combat's first steps. Then: the masters still played blind (wave 3, where Johan's rule of 14 July — always
-  play a master, even uncurated — is revisited), the maneuver / press grants from cards played outside combat with the rush cards, the free block bars, the 22 cards with no effect data, the unmodelled action cards. A deck
-  joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its rows are playable and it holds up in the sim; before the deck
-  count doubles, decks and `DECK_STRATEGY` become a data file (seven decks embedded in `elysium-bot.js`, six duplicated in
-  `deck-*.json`; `gen-precon.js --check` compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102;
-  `CARDS.md`; HOWTO.
+- **The V5 waves**: the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim plays them; the menu does not)
+  and the ledger (`docs/CARDS.md`) since v0.6.212; waves by effect class as the class map ranks them (D-98). Done: wave 1 (v0.6.213,
+  D-99), wave 2 (v0.6.214, D-103), wave 3 (v0.6.215, D-104: the locations, blood, the bleed riders, Archon Investigation). Next: wave
+  4, the masters still played blind (on a vampire: Oblivion, Charisma, Terrifying Visage, Monster, Saulot's two, Regent, Depravity;
+  the rest: `spec-v5-wave3` §4), and Sudden Reversal's 'as played' window between bots (a wait in every master phase: Johan's call);
+  then the maneuver / press grants played outside combat with the rush cards, the free block bars, the cards with no effect data, the
+  unmodelled action cards. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its rows are playable and it holds up in
+  the sim; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares the seven
+  embedded decks). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104; `CARDS.md`; HOWTO.
+- **KRCG's v5 dump** (main's reply of 1 Nov, 5.1; Johan, 2 Nov: after wave 3): the v3 file stopped at Sabbat V5, so the 63 cards of
+  Secrets of New York and Noites Brasileiras are unknown to cardfx. Move `cardfx-compile.js`, `gen-precon.js` and the profile tools to
+  the v5 dump (its field map: `client/SKILLS.md`), the old cards byte-identical but for the 295 errata texts (diffed). 5.2 (names) is
+  done (v0.6.215: the article-first alias, 4,149 of 4,149). *Done when* the compile reads the dump and the diff is read. Docs: root
+  `CLAUDE.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
   round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
   and Path requirements in every finder; the amber cards; the latent items. *Done when* each is built and section-tested, or ruled
   out. Docs: RULINGS R-39, R-40, D-99.
-- **V5 wave 2's riders** (`specs/spec-v5-wave2-2026-10-29.md` §4): counters against a human (the phase walk reads a human's
-  maneuver after the bot decided) and for the wave / snipe postures; the strike choice (`_strikePick` takes a strike card over a
-  stronger pumped fist, so the look-ahead keeps the pump); the amber riders (Rage of Apedemak's hand size, Frenzy and Path icon,
-  Hunger of Marduk in an additional pair, Soul Burn's opposing weapons at 0, Monstrous Form's superior action); the opponent's pumps
-  unread before the strike; a gun's maneuver binding its strike outside Immortal Grapple; the Brujah crypt's printed '+1 strength'
-  (Theo Bell, Valeriya Zinovieva) unread; the auto tier's entry-level
-  'before range' flag on superior-only sentences (Alpha Glint, Bloodform, Gemini's Mirror, Eyes of Blades, Outside the Hourglass:
-  their inferior strike modes fail closed in the strike / press / maneuver finders) and two misreadings (Sanguine Entrapment and
-  Skin Trap stop the OPPONENT's dodge / combat ends, compiled as their own) — curation, no deck holds them. *Done when* each is built
-  and section-tested, or ruled out. Docs: RULINGS R-41, D-103.
-- **The weapon's maneuver** (wave 2's second review; older than the round): the compiler writes `maneuver: true` for a weapon,
-  `_equipCombatOption` reads a number — the Tremere's .44 Magnum has never maneuvered, so the gun halves of the strike-binding rules
-  never run (45c has no positive case). Neighbours: a weapon's strike sends a clone and a play row every time (the table model
-  counts the gun again); the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait returns an earlier
-  round's pending taken line, and `_xLossSum` sums nothing (a later line replaces the pending one). *Done when* each is fixed with a
-  positive test and its footprint read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
-- **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's strategy helpsheets and
-  deck guides (blackchantry.com, its tutorials: the Fifth Edition precons — Banu Haqim, Brujah, Gangrel, the Ministry, Ravnos,
-  Salubri, Tzimisce, Lasombra, Hecata — and the First Blood / starter guides) as the baseline for a deck's strategy and tactics,
-  refined by our archetype reading (the knowledge layer) and general strategy / tactics. Ties: D-43 (the help sheets' opening,
-  measured), O-33 (per-deck playbooks). *Done when* a proposal — what each guide says, where it enters (`DECK_STRATEGY`, the plan,
-  the persona) and how it is measured — has Johan's "kör". Docs: RULINGS D-43, O-33; `specs/spec-knowledge-layer.md`.
+- **V5 wave 2's riders** (`specs/spec-v5-wave2-2026-10-29.md` §4): counters against a human and for the wave / snipe postures;
+  the strike choice (`_strikePick` takes a strike card over a stronger pumped fist); the amber riders (Rage of Apedemak's hand size,
+  Frenzy and Path icon, Hunger of Marduk in an additional pair, Soul Burn's opposing weapons, Monstrous Form's superior action); the
+  opponent's pumps unread before the strike; a gun's maneuver binding its strike outside Immortal Grapple; the Brujah crypt's printed
+  '+1 strength' unread; the auto tier's 'before range' flag on superior-only sentences (Alpha Glint, Bloodform, Gemini's Mirror,
+  Eyes of Blades, Outside the Hourglass) and Sanguine Entrapment / Skin Trap compiled as their own (curation, no deck holds them).
+  *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-41, D-103.
+- **V5 wave 3's riders** (`specs/spec-v5-wave3-2026-11-02.md` §4): the amber halves (Anarch Railroad and Fortune Teller Shop for
+  another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
+  on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
+  *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-42, D-104.
+- **The weapon's maneuver** (wave 2's second review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
+  a number — the .44 Magnum has never maneuvered, so the strike-binding rules' gun halves never run. Neighbours: a weapon's strike
+  sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait
+  returns an earlier round's pending line; `_xLossSum` sums nothing. *Done when* each is fixed with a positive test and its footprint
+  read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
+- **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's helpsheets and Fifth
+  Edition deck guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy (D-43, O-33). *Done
+  when* a proposal — what each guide says, where it enters (`DECK_STRATEGY`, the plan, the persona), how it is measured — has
+  Johan's "kör". Docs: RULINGS D-43, O-33; `specs/spec-knowledge-layer.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C2 — dead code and tools**: delete the ten legacy tests, `_bumpTallyB`, the lint's eight unused assignments, one `handStrike`
@@ -62,14 +64,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **C4 — CI for `bot/`** (if Johan says yes, spec §8 Q5): `.github/workflows/bot-gates.yml` beside main's, triggered by `bot/**`
   and the bot bundle; `node --check`, the correctness lint, canary, cardfx, HB1, hotseat, the suite. *Done when* a red gate shows
   on a PR. Docs: spec T8; HARNESS.
-- **C5 — guards**: the leak test (static: the bot reads no global except its export; dynamic: after a sim match no bot state holds
-  a card name only another seat's hand or library held, with a planted leak as the positive control; `_twdExpect` agrees across
-  observers), flip counts on `decide` rows for a knob under test, the knob and weight registry (`KNOBS`, one table, every decision
-  knob with a 0-path, persona thresholds as overlays), and the off-by-default knobs (`planFloor` computed not consumed,
-  `askHumansTotal` blocked by the human harness; `crossRushWeight` 0 is Johan's "cross soft-zero", wired only with the meta layer, O-31):
-  wire each or delete its dead branch. *Done when*
-  `test-bot-sim-boundary.js` is green on 24 matches and red on the planted leak; the manifest emits the registry. Docs: spec T5,
-  T7, T9; RULINGS O-2, O-29, O-31.
+- **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
+  card only another seat held, a planted leak the positive control; `_twdExpect` agrees across observers), flip counts on `decide`
+  rows, the knob registry (`KNOBS`: every decision knob with a 0-path, persona thresholds as overlays), and the off-by-default knobs
+  (`planFloor` computed not consumed, `askHumansTotal` blocked by the human harness, `crossRushWeight` 0 until the meta layer, O-31):
+  wire each or delete its dead branch. *Done when* `test-bot-sim-boundary.js` is green on 24 matches and red on the planted leak;
+  the manifest emits the registry. Docs: spec T5, T7, T9; RULINGS O-2, O-29, O-31.
 - **C6 — the faster suite**: ~87 % of the suite's time is its own sleeps (151 s of literal `sleep`s in the 400 no-server sections);
   pilot a second runner that plays those sections under the sim's virtual clock, live sections on the real clock; sharding is the
   fallback. The suite also grows past a 2 GB heap by section 136 (29 Oct): find what it keeps. *Done when* one runner gives the same
@@ -103,10 +103,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The turn ledger's gaps** (26d): a barred bleed becomes an illegal marker that can still win the score contest (the vampire stays
   home); hunt / rescue / leave torpor are not limited; card-in-play actions (Warsaw, Chantry) are not in the ledger. *Done when*
   the marker cannot win and the card-in-play actions are booked.
-- **Home pricing's six soft spots** (42c, told to Johan, unfixed): `_keepBlocker` holds the last actors, not the bodies `_priceHome`
-  chose; `predHits` reads the announced bleed while `hitMax` the realised hit; a bounce is valued as pool saved only; the exchange
-  rate leans on `myFc`; wakes counted whoever could play them; 0.9 / pStop / "a card + a blood = 1 pool" / fwd 0.5 unmeasured.
-  *Done when* each is fixed or measured. Docs: `history/specs/spec-home-pricing-2026-09-19.md`.
+- **Home pricing's six soft spots** (42c, unfixed): `_keepBlocker` holds the last actors, not `_priceHome`'s bodies; `predHits`
+  reads the announced bleed, `hitMax` the realised one; a bounce valued as pool saved only; the rate leans on `myFc`; wakes counted
+  whoever could play them; 0.9 / pStop / 'a card + a blood = 1 pool' / fwd 0.5 unmeasured. *Done when* each is fixed or measured.
+  Docs: `history/specs/spec-home-pricing-2026-09-19.md`.
 - **`_wakeCard()` is vampire-blind** at the bounce, vote and reduce routes and in `interceptPotential` (`_wakeCardFor(v)` exists).
   *Done when* every site reads the vampire.
 - **Free block bars** (Beast Meld-class) and `chosen` (Seduction-class) have tags, no consumer; crypt text auto-extraction for
@@ -141,12 +141,13 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* the persona pass (RULINGS O-29) ships with those tests.
 
 ## Measurement debts
-- **The hotseat table runs out most bot-vs-bot reaction windows** (found 29 Oct, the same on v0.6.211): `ana-windows.py` on a pace-0
-  sim series (24 matches) reads 403 of 467 bleed totals and 101 of 125 modifier windows as RAN OUT, with 369 `stale-answer` rows (bot
-  Passes); the server arena read 0 of 82 (v0.6.207). The sim matches the real-clock hotseat table decision for decision (REPORT-sim-
-  table §2), so this may be what an offline table does: every bot-vs-bot window waits out its clock. *Done when* a `--real` hotseat
-  match and a browser hotseat table say whether bot answers are lost there, and either the cause is fixed or the gate is restated per
-  table. Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
+- **The hotseat table runs out most bot-vs-bot reaction windows** (29 Oct; v0.6.211 too): on a pace-0 sim series 403 of 467 bleed
+  totals and 101 of 125 modifier windows RAN OUT, 369 `stale-answer` rows (bot Passes); the server arena read 0 of 82 (v0.6.207). The
+  sim matches the real-clock hotseat table decision for decision, so this may be what an offline table does. *Done when* a `--real`
+  hotseat match and a browser table say whether bot answers are lost there, and the cause is fixed or the gate restated per table.
+  Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
+- **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215's
+  design, match 74, a DIVERGED game; none on v0.6.214's). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
   vampire, a target) show their END state (found 29 Oct; `ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
@@ -157,6 +158,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   per bleed total). *Done when* both reports exist with the sim as the first read.
 - **Forecast calibration** (`gen-forecast-calibration.js`) not re-run since 18 Sep; the seed of the abstract model's calibration
   gate. *Done when* it runs on a sim series and the ratio is reported.
-- **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) not consumed in a bot round; v0.6.207's reply carries
-  Johan's negative stealth / intercept (R-38): check every reader of `tally.a` / `tally.b` that assumed ≥ 0. *Done when* each
+- **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) not consumed in a bot round; v0.6.207's carries
+  Johan's negative stealth / intercept (R-38): check every reader of `tally.a` / `tally.b` that assumed ≥ 0. *Done when* each reply's
+  bot-side items are built or declined in a handoff.
   reply's bot-side items are built or declined in a handoff.

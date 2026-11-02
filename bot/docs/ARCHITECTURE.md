@@ -37,12 +37,13 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | Block or not (as target) | `block-as-target` ← `_blockRisk`, `_keepBlocker`, the threat classes T1–T6 | plan.home, `oppCombatCost`, the deck axes; `_actionClass` (offensive / economy / utility; the hit rate divides blocked by offensive only) | `block-eval`, `block-made`, `defence-plan` |
 | Bounce timing | `_reactWindow`, `_bounceReserve` | the TOTAL after modifiers, the reserve | `play` window `react-bounce`; `bounce-total` / `bounce-kept` tags |
 | Stealth on a contested action | `spend-stealth`, `_stealthStack`, `_stealthSecondLook`, the ahead rule | the counter, my stack, `_pCat` | `stealth-stack`, `stealth-ahead`, `play` |
-| Intercept as blocker | `_commitBlock`, `_interceptSecondLook` | the counter, my hand | `intercept-stack`, `play` |
+| Intercept as blocker | `_commitBlock`, `_interceptSecondLook`, `_spendIntercept` (a card or a location's lock, `_lockInterceptFor`) | the counter, my hand, my locations | `intercept-stack`, `play` |
 | Combat, each step | `_resolveCombat` (the seven steps), `_wantGrapple` / `_wantPress` / `_wantPressToEnd` / `_wantLong`, `combat-strike` (`_strikePick`, the dodge), `combat-end` | `DECK_STRATEGY.combat`, `_expOppStrike`, the known strike (peek) | `combat-round`, `combat-phase`, `play` windows `combat-*` |
 | Rush | the rush targeter in the action finder, `_rushExpectation` | target blood, my kit, env damage | `rush-counterfactual`, `rushed` |
 | Referendum | `_bestPoliticalFor`, `_callReferendum`, `_refDeltas`, the voter | `_refValue`, pass estimate, title votes | `referendum-called`, `referendum`, `ref-vote` |
 | Influence | `_planInfluence` (`_deckFit`, the planner), `_riseFromUnc` | plan.floor, `_critPool`, the crypt | `influence-plan`, `influence-pick`, `raise` |
-| Masters, income, banks | `master-play`, `income-drain`, `income-direction`, `bank-in`, `lock-income` | pool (≥ 1 left), the hand | `play`, `income-*`, `bank` |
+| Masters, income, banks | `master-play` (`_bestMasterFor`: no `oot`, `_masterReqOk`, `_masterHold`), `income-drain`, `income-direction`, `bank-in`, `lock-income` (one lock, one effect) | pool (≥ 1 left), a ready vampire meeting the requirements, the hand | `play`, `income-*`, `bank`, `unc-blood` |
+| Out-of-turn answers | `_archonFor` / `_playArchon` in the react window; `_ootDebt` at my next turn | the bleed at me, pool | `archon`, `archoned`, `oot-debt` |
 | Act again | `act-again` (`_maybeActAgain`) | the ledger, `_keepBlocker`, `_critPool` | `act-again` |
 | Set-up cards (Haven) | the look-ahead through `_actionCtxFor` + `_actionCtxAdjust(…, ahead)` + `_decide` | the real action ctx | `haven` |
 | Waits on a human | `_waitPlan(kind, who)`; block / react / pq / vote / phase / damage / verdict | the tempo (`botcfg`), the hold | `wait`, `tempo` |

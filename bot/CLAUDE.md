@@ -130,7 +130,7 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   explained. Resolve an effect at its RULES moment, not when its line arrives; pair the rows before accepting an explanation for a
   total; a bleed `through` that no seat took is `VANISHED` (gate 0).
 - **The block gate (v0.6.170, Johan: base rules).** [R-12, R-14, R-38] Stealth and intercept are spent only when needed: the actor plays stealth only
-  after a block attempt and only while intercept ≥ stealth; the blocker plays intercept only while stealth > intercept. Directed
+  after a block attempt and only while intercept ≥ stealth; the blocker plays intercept only while stealth > intercept (a card that says otherwise is its own exception: Creepshow Casino at the announce, D-104). Directed
   actions carry 0 stealth; the undirected +1 applies to BASIC actions only (hunt, equip, employ, recruit, political, rescue own
   vampire, leave torpor); an action card is at 0 unless it prints stealth, and its printed "+N stealth action" is the total
   (cardfx `actStealth`). Stealth and intercept can go below 0 (R-38). `ana-block.py` 0 violations.
