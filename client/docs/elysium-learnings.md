@@ -1,8 +1,18 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.169 / server v2.6.49 / bot v0.6.214 tested beside the suite, last updated 2 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.170 / server v2.6.49 / bot v0.6.214 tested beside the suite, last updated 2 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**2 Nov 2026 (THE COPY YOU HAVE, the second pass — v2.6.170):**
+- **A fix that rests on an invariant needs every writer checked against it.** v2.6.169's fix relied on "a kept copy stays
+  stale", but the From-file names path rewrote the record with a fresh `ts`. I had even edited that line (to carry
+  `fallback`) without seeing it. When a fix depends on a field, grep every write of that field.
+- **Re-reading the saved copy is only safe when it IS the copy in use.** With late names and async saves, a fresh
+  download can be in use while the saved record is older. Track which record holds the copy in use (`cardDBRecTs`), and
+  refuse, or keep what you have, when they differ.
+- **Ask the reviewer again after the fix.** The first pass found the two faults, and the second found the path back to
+  the first one, in about a quarter of the time, because the reviewer already had the context.
 
 **2 Nov 2026 (THE COPY YOU HAVE — v2.6.169):**
 - **A fallback must never replace something better.** v2.6.168's chain was "the new file, else the old file", written as

@@ -156,6 +156,10 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   get cardDBGen(){ return (typeof cardDBGen!=='undefined')?cardDBGen:undefined; },
   vtesNamesThenCache: (typeof vtesNamesThenCache!=='undefined'?vtesNamesThenCache:undefined), vtesList: (typeof vtesList!=='undefined'?vtesList:undefined),
   eraFromCardNames: (typeof eraFromCardNames!=='undefined'?eraFromCardNames:undefined), updateJsonCacheUI: (typeof updateJsonCacheUI!=='undefined'?updateJsonCacheUI:undefined),
+  // v2.6.170: the second review -- which saved record holds the copy in use, Refresh, the names alone from a file, Settings' line
+  get cardDBRecTs(){ return (typeof cardDBRecTs!=='undefined')?cardDBRecTs:undefined; },
+  vtesRefresh: (typeof vtesRefresh!=='undefined'?vtesRefresh:undefined), vtesNamesFromFile: (typeof vtesNamesFromFile!=='undefined'?vtesNamesFromFile:undefined),
+  vtesCacheNote: (typeof vtesCacheNote!=='undefined'?vtesCacheNote:undefined),
   mpSetFlavor: (typeof mpSetFlavor!=='undefined'?mpSetFlavor:undefined),
   mpFold: (typeof mpFold!=='undefined'?mpFold:undefined),                                       // v2.6.80: the folds + the referee row
   mpRefSync: (typeof mpRefSync!=='undefined'?mpRefSync:undefined),

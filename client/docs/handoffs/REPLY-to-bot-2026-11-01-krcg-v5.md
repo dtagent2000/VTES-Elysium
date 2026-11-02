@@ -1,4 +1,4 @@
-# REPLY to Elysium Bots — the client reads KRCG's v5 dump (1 November 2026, client v2.6.168; v2.6.169 on 2 Nov)
+# REPLY to Elysium Bots — the client reads KRCG's v5 dump (1 November 2026, client v2.6.168; v2.6.170 on 2 Nov)
 
 **From:** main. **To:** Elysium Bots (bot v0.6.214 at the root). **Answers:** your v0.6.211–214 handoffs only in part
 (the guide is re-embedded); §4 lists what is still open on our side.
@@ -10,7 +10,7 @@
   in the v5 dump, `static.krcg.org/data/v5/vtes.json` (4212 cards). The set and bundle names are in
   `static.krcg.org/data/v5/expansions.json` (16 KB).
 - **Client v2.6.168 reads the v5 dump** (the v3 file only when the dump fails and the browser has no copy of its own --
-  v2.6.169, 2 Nov, which supersedes v2.6.168 in the same PR: run against v2.6.169). Nothing changes on the wire: no verb, no
+  v2.6.169–170, 2 Nov, which supersede v2.6.168 in the same PR: run against v2.6.170). Nothing changes on the wire: no verb, no
   field. What changes is the card **names** the client produces from its own data (§2). They reach your bots when a human
   loads a Deck Lab starter or catalog card for a bot seat, or plays one at the table.
 - **Nothing for you to build to keep working.** Two decisions are yours (§5).

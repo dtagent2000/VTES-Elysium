@@ -1,3 +1,45 @@
+## [KOPIAN DU HAR, ANDRA VARVET] (2 november 2026, senare, klient v2.6.170 / srv-2.6.49 oförändrad)
+
+Jag bad granskaren kontrollera v2.6.169:s rättningar. Båda felen från v2.6.168 är stängda. Den körde laddaren med fem
+sorters dumpfel (503, avbrott mitt i, avhuggen 200, HTML-200, en tom lista) och kopian stod kvar varje gång. Men den
+hittade **en väg tillbaka till det första felet**: Inställningar → From file med bara `expansions.json` läste den sparade
+kopian och skrev tillbaka den med ny tidsstämpel. En inaktuell kopia som behållits efter en misslyckad uppdatering blev
+då "färsk" och uppdaterades inte på en vecka. Samma val medan en färsk nedladdning väntade på sina namn bytte dessutom in
+den äldre sparade kopian och tappade den färska. Jag hade själv ändrat just den raden (för att ta med `fallback`) utan
+att se tidsstämpeln.
+
+**Byggt:**
+- `vtesNamesFromFile` sätter namnen på kopian som används bara när den sparade posten ÄR den. `cardDBRecTs` är `ts` för
+  posten som håller kopian. Posten skrivs tillbaka med sin egen `ts` (`cacheVtesJson(…, ts)`). Annars kommer en toast om
+  att kopian inte är sparad än.
+- `fromCache` behåller en kopia som redan används i stället för att läsa den sparade en gång till vid varje start där
+  dumpen fallerar.
+- Inställningar › Refresh (`vtesRefresh`) tömmer inte längre databasen först. En uppdatering som fallerar behåller
+  kopian som används; en första nedladdning som inte hunnit sparas föll förut tillbaka på KRCG:s v3-fil.
+- Raden i Inställningar säger "press Refresh" när automatisk uppdatering är av (`vtesCacheNote`).
+- En ommärkning som kastar fel sparar ändå kopian (`finally`).
+
+**Tester:** granskarens fyra luckor (KRCG-vägen med `expansions.json` kvarhållen, "bara namnen från fil" som behåller
+åldern och väntar medan kopian inte är sparad, raden i Inställningar, antalet skrivningar), plus Refresh med dumpen nere.
+v2.6.76:s Refresh-test följer nu `vtesRefresh`, och den tomma `(served)`-kontrollen är borttagen.
+
+**Grindarna:** klient 354/0 (bot v0.6.214 bredvid, inga överhopp; mot v2.6.169 349/5, alltså de fyra nya testerna och
+det utökade testet för den inaktuella kopian; mot v2.6.168 344/10), kanariefågeln 69/0, dispatch 88/0, protokoll 6/0,
+endpoint 24/0, soak `--control` (snubbeltråden löste ut), embed `--check` båda sidorna, B1 byteidentisk, check-versions
+grön inklusive rotgrinden.
+
+**I headless Chrome:** 33 av 33 och den hostade vägen 19 av 19. Det nya jämfört med förra körningen: "bara namnen" håller
+en inaktuell kopia inaktuell, Refresh med dumpen nere behåller kopian, och "bara namnen" väntar med en toast medan
+boxens kopia inte är sparad. Samma skript på v2.6.169: 32 av 33 och 18 av 19, alltså exakt de två nya kontrollerna.
+
+**Granskarens tredje titt** (på just den här ändringen) hittade inget bekräftat fel. Restamp, R2 och R1 är stängda, och
+att behålla kopian bryter varken anropen som kollar `!cardTypes`, av/på-knappen, en korrupt cache eller B-63-etiketten.
+Kvar som ovanliga fall: efter en misslyckad sparning (kvot) kan toastens "om en stund" aldrig slå in, men "tillsammans
+med vtes.json" fungerar fortfarande. En andra flik som sparat en annan kopia får samma toast, och den här fliken behåller
+sin egen kopia. En misslyckad Refresh eller "bara namnen" laddar databasen även när den är avstängd, precis som förut.
+
+**Inte kört:** klienten mot static.krcg.org över nätet, och elysium.cards.
+
 ## [KOPIAN DU HAR] (2 november 2026, klient v2.6.169 / srv-2.6.49 oförändrad)
 
 Den oberoende granskningen av v2.6.168, som jag startade innan Johan mergade PR #44, hittade två fel i kortladdaren. Båda

@@ -1272,7 +1272,7 @@ testA('v2.6.76: loadCardDB is cache-first -- with no IndexedDB it resolves to th
   assert(/conv\.jsonSync && vtesStale\(/.test(body), 'the network is asked only when sync is on AND the copy is stale');
   eq(html.indexOf('_loadCardDBNet'), -1, 'the old sync-off-only cache branch is gone (cache-first is unconditional now)');
   const refresh = html.slice(html.indexOf("$('#jsonDlBtn').addEventListener('click'"), html.indexOf("$('#jsonDlBtn').addEventListener('click'") + 300);
-  assert(/fetchVtesJson\(\)/.test(refresh), 'the Settings Refresh button still forces a fetch');
+  assert(/fetchVtesJson\(\)/.test(refresh) || (/vtesRefresh\(\)/.test(refresh) && /function vtesRefresh\(\)\{[^}]*fetchVtesJson\(\)/.test(html)), 'the Settings Refresh button still forces a fetch (v2.6.170: through vtesRefresh, same intent)');
 });
 test('v2.6.76: Join game in Lite does not auto-list rooms during a reconnect (it would replace the rejoin socket)', () => {
   const html = require('fs').readFileSync(CLIENT, 'utf8');
@@ -5781,7 +5781,6 @@ testA('v2.6.168: the boot reads KRCG\'s v5 dump first and the v3 file only when 
     const { A } = boot({ [V5URL]: JSON.stringify([V5_JULIA]) });
     assert(await until(() => A.cardInfo), 'a missing expansions.json does not fail the load');
     assert(A.precons.get('Fifth Edition :: Secrets of New York'), 'the built-in names fill in');
-    eq(A.precons.has('Fifth Edition :: Secrets of New York (served)'), false, 'and they are the built-in ones, not a file nobody served');
   }
 });
 
@@ -5790,12 +5789,12 @@ testA('v2.6.168: the boot reads KRCG\'s v5 dump first and the v3 file only when 
    (2) the box's own images/vtes.json waited on static.krcg.org's expansions.json before the table could use it.
    fakeIDB: an IndexedDB the loader can use (open, transaction, objectStore get/put/delete/clear/openCursor), async like the
    real one; the Map it wraps survives a reload, so two loadClient calls are two starts of the same browser. */
-const fakeIDB = store => {
+const fakeIDB = (store, puts) => {   // v2.6.170: `puts` (an array) records every key written
   const later = f => setTimeout(f, 0), copy = v => JSON.parse(JSON.stringify(v));
   const db = { objectStoreNames: { contains: () => true }, createObjectStore() {},
     transaction() {
       const tx = { oncomplete: null, onerror: null, error: null, objectStore() { return {
-        put(v, k) { store.set(k, copy(v)); later(() => tx.oncomplete && tx.oncomplete()); },
+        put(v, k) { store.set(k, copy(v)); if (puts) puts.push(k); later(() => tx.oncomplete && tx.oncomplete()); },
         get(k) { const r = { result: undefined, onsuccess: null, onerror: null }; later(() => { r.result = store.has(k) ? copy(store.get(k)) : undefined; if (r.onsuccess) r.onsuccess(); }); return r; },
         delete(k) { store.delete(k); later(() => tx.oncomplete && tx.oncomplete()); },
         clear() { store.clear(); later(() => tx.oncomplete && tx.oncomplete()); },
@@ -5826,6 +5825,7 @@ testA('v2.6.169: a failed v5 download keeps the copy this browser has -- the v3 
     eq(asked.includes(KRCG_URL.v3), false, 'nor was it downloaded: the copy we have is newer than KRCG\'s frozen v3 file');
     const rec = store.get('_vtesJson');
     eq(rec.fmt, 'v5', 'the cached copy is still the v5 one'); eq(rec.ts, old, 'untouched, so it is still stale: the next start tries the dump again');
+    eq(A.cardDBGen, 1, 'v2.6.170: the copy in use is kept as it is, not read a second time'); eq(A.cardDBSrc, 'cached/offline v5', 'and the support dump still says the refresh failed');
   }
   { // no copy at all: the v3 file is the stopgap, cached as one
     const store = new Map(), asked = [];
@@ -5856,8 +5856,8 @@ testA('v2.6.169: a failed v5 download keeps the copy this browser has -- the v3 
 
 testA('v2.6.169: the box\'s own vtes.json is used the moment it arrives -- KRCG\'s names follow when they come, and the copy is cached once', async () => {
   let release; const held = new Promise(r => { release = () => r({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify(V5_EXP_MARKED)) }); });
-  const store = new Map(), asked = [];
-  const A = loadClient(CLIENT, { indexedDB: fakeIDB(store), storage: { 'elysium.convenience': JSON.stringify({ cardDB: true, dbDefault: true, localImg: true }) },
+  const store = new Map(), asked = [], puts = [];
+  const A = loadClient(CLIENT, { indexedDB: fakeIDB(store, puts), storage: { 'elysium.convenience': JSON.stringify({ cardDB: true, dbDefault: true, localImg: true }) },
     fetch: served({ 'images/vtes.json': JSON.stringify([V5_JULIA]), [KRCG_URL.exp]: held }, asked) });
   assert(await untilT(() => A.cardInfo && A.cardInfo.get('juliasowinski'), 1500), 'the table has the database while static.krcg.org has not answered (asked: ' + asked.join(', ') + ')');
   eq(A.cardDBLoading, false, 'and the load is over'); eq(A.cardDBSrc, 'local folder v5');
@@ -5867,6 +5867,7 @@ testA('v2.6.169: the box\'s own vtes.json is used the moment it arrives -- KRCG\
   assert(await untilT(() => A.precons.get('Fifth Edition :: Secrets of New York (served)')), 'KRCG\'s names re-label the starters when they arrive (keys: ' + [...A.precons.keys()].join(', ') + ')');
   assert(await untilT(() => store.has('_vtesJson')), 'the copy is cached');
   eq(store.get('_vtesJson').exp, JSON.stringify(V5_EXP_MARKED), 'with the names it is used with'); eq(store.get('_vtesJson').fmt, 'v5');
+  await settle(); eq(puts.filter(k => k === '_vtesJson').length, 1, 'v2.6.170: written once (the names did not cost a second 9 MB write)');
   // a newer load while the names are on the way: the late names leave it alone
   let release2; const held2 = new Promise(r => { release2 = () => r({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify(V5_EXP)) }); });
   const store2 = new Map(), asked2 = [];
@@ -5915,6 +5916,88 @@ test('v2.6.169: a deck\'s era is decided by its cards, not by how a list spells 
   eq(A.eraFromCardNames(['Bonding', 'Admonitions, The']), 'legacy', 'the spelling older lists write (and KRCG\'s v3 file used) is the same Legacy card');
   eq(A.eraFromCardNames(['Bonding', 'Admonitions']), 'legacy', 'so is the short name');
   eq(A.eraFromCardNames(['Bonding']), 'v5'); eq(A.eraFromCardNames(['Bonding', 'Not A Card']), 'v5', 'an unknown name decides nothing');
+});
+
+/* ---------- v2.6.170: the second review (of v2.6.169's fixes) ---------- */
+testA('v2.6.170: the KRCG path does not wait for expansions.json either -- the dump is used when it arrives, the names re-label when they come, one write', async () => {
+  let release; const held = new Promise(r => { release = () => r({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify(V5_EXP_MARKED)) }); });
+  const store = new Map(), asked = [], puts = [];
+  const A = loadClient(CLIENT, { indexedDB: fakeIDB(store, puts), fetch: served({ [KRCG_URL.v5]: JSON.stringify([V5_JULIA]), [KRCG_URL.exp]: held }, asked) });
+  assert(await untilT(() => A.cardInfo && A.cardInfo.get('juliasowinski'), 1500), 'the dump is in use while the names are on the way (asked: ' + asked.join(', ') + ')');
+  eq(A.cardDBSrc, 'KRCG v5'); eq(A.cardDBLoading, false); assert(A.precons.get('Fifth Edition :: Secrets of New York'), 'with the built-in names');
+  await settle(); eq(store.has('_vtesJson'), false, 'saved only when the names have settled');
+  release();
+  assert(await untilT(() => A.precons.get('Fifth Edition :: Secrets of New York (served)')), 'KRCG\'s names re-label the starters');
+  assert(await untilT(() => store.has('_vtesJson'))); await settle();
+  eq(puts.filter(k => k === '_vtesJson').length, 1, 'one write'); eq(store.get('_vtesJson').exp, JSON.stringify(V5_EXP_MARKED));
+  eq(A.cardDBRecTs, store.get('_vtesJson').ts, 'and the copy in use is known to be that record');
+});
+
+testA('v2.6.170: From file with expansions.json alone names the copy in use and keeps its age -- and waits while the copy in use is not saved yet', async () => {
+  if (!API.vtesNamesFromFile) throw new Error('vtesNamesFromFile not exposed (harness needs updating)');
+  const old = Date.now() - 8 * 24 * 3600e3;
+  { // a stale v5 copy, kept after a failed refresh: the names change, the age does not
+    const store = new Map([['_vtesJson', { json: JSON.stringify([V5_JULIA]), exp: null, fmt: 'v5', size: 1, ts: old }]]), asked = [];
+    const A = loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served({}, asked) });
+    assert(await untilT(() => asked.includes(KRCG_URL.v5) && !A.cardDBLoading), 'the refresh was tried (asked: ' + asked.join(', ') + ')');
+    await settle();
+    const toasts = []; A.toast = m => toasts.push(String(m));
+    eq(await A.vtesNamesFromFile(JSON.stringify(V5_EXP_MARKED), 'expansions.json'), true, 'the names are applied');
+    assert(A.precons.get('Fifth Edition :: Secrets of New York (served)'), 'to the starters'); assert(toasts.some(t => /Starter names loaded from expansions\.json/.test(t)), 'and it says so');
+    await settle();
+    const rec = store.get('_vtesJson');
+    eq(rec.ts, old, 'the copy keeps its age -- still stale, so the next start tries the dump (v2.6.169 stamped it fresh: a week)');
+    eq(rec.exp, JSON.stringify(V5_EXP_MARKED)); eq(rec.fmt, 'v5'); eq(rec.fallback, false);
+    eq(A.vtesStale(rec.ts, Date.now(), rec), true);
+  }
+  { // a fresh download in use, its names on the way, an older copy saved: the file must not swap the older copy in
+    let release; const held = new Promise(r => { release = () => r({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify(V5_EXP)) }); });
+    const store = new Map([['_vtesJson', { json: V3_ELDER, fmt: 'v3', size: 1, ts: old }]]), asked = [];
+    const B = loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served({ [KRCG_URL.v5]: JSON.stringify([V5_JULIA]), [KRCG_URL.exp]: held }, asked) });
+    assert(await untilT(() => B.cardInfo && B.cardInfo.get('juliasowinski'), 1500), 'the fresh dump is in use (asked: ' + asked.join(', ') + ')');
+    const toasts = []; B.toast = m => toasts.push(String(m));
+    eq(await B.vtesNamesFromFile(JSON.stringify(V5_EXP_MARKED), 'expansions.json'), false, 'the file waits');
+    assert(toasts.some(t => /not saved yet/.test(t)), 'and says why (' + toasts.join(' | ') + ')');
+    assert(B.cardInfo.get('juliasowinski') && !B.cardInfo.get('testelder'), 'the fresh dump stays in use (v2.6.169 swapped the older saved copy in)');
+    release();
+    assert(await untilT(() => store.get('_vtesJson').fmt === 'v5'), 'and is saved when its names come');
+    eq(await B.vtesNamesFromFile(JSON.stringify(V5_EXP_MARKED), 'expansions.json'), true, 'then the file is taken');
+  }
+  { // a first download in use, nothing saved yet: the file waits too (it has no copy to name but the unsaved one)
+    const held = new Promise(() => {}), store = new Map(), asked = [];
+    const C = loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served({ [KRCG_URL.v5]: JSON.stringify([V5_JULIA]), [KRCG_URL.exp]: held }, asked) });
+    assert(await untilT(() => C.cardInfo && C.cardInfo.get('juliasowinski'), 1500), 'in use');
+    const toasts = []; C.toast = m => toasts.push(String(m));
+    eq(await C.vtesNamesFromFile(JSON.stringify(V5_EXP), 'expansions.json'), false); assert(toasts.some(t => /not saved yet/.test(t)), 'the same reason');
+  }
+});
+
+testA('v2.6.170: Refresh keeps the copy in use when the dump fails -- even a first download that is not saved yet', async () => {
+  if (!API.vtesRefresh) throw new Error('vtesRefresh not exposed (harness needs updating)');
+  let release; const held = new Promise(r => { release = () => r({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify(V5_EXP)) }); });
+  const files = { [KRCG_URL.v5]: JSON.stringify([V5_JULIA]), [KRCG_URL.exp]: held }, store = new Map(), asked = [];
+  const A = loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served(files, asked) });
+  assert(await untilT(() => A.cardInfo && A.cardInfo.get('juliasowinski'), 1500), 'a first download in use, its names on the way');
+  delete files[KRCG_URL.v5]; files[KRCG_URL.v3] = V3_ELDER; files[KRCG_URL.exp] = JSON.stringify(V5_EXP);   // KRCG's dump goes down, the v3 file answers
+  asked.length = 0; const gen = A.cardDBGen;
+  A.vtesRefresh();
+  assert(A.cardInfo && A.cardInfo.get('juliasowinski'), 'the copy in use is not cleared while the refresh runs');
+  assert(await untilT(() => asked.includes(KRCG_URL.v5) && !A.cardDBLoading), 'the refresh tried the dump (asked: ' + asked.join(', ') + ')');
+  await settle();
+  assert(A.cardInfo.get('juliasowinski') && !A.cardInfo.get('testelder'), 'and kept the copy in use (v2.6.169: KRCG\'s v3 file)');
+  eq(asked.includes(KRCG_URL.v3), false, 'the v3 file was not asked for'); eq(A.cardDBGen, gen, 'nothing was loaded over it');
+  release();
+  assert(await untilT(() => store.has('_vtesJson') && store.get('_vtesJson').fmt === 'v5'), 'the first download is saved when its names come');
+});
+
+test('v2.6.170: Settings\' cache line says what a stopgap copy needs -- with automatic refresh off, only Refresh helps', () => {
+  const N = API.vtesCacheNote; if (!N) throw new Error('vtesCacheNote not exposed (harness needs updating)');
+  const ts = Date.UTC(2026, 10, 2, 12);
+  eq(N(null, true), 'Not cached.'); eq(N({ json: '[]' }, true), 'Not cached.', 'a record without a date');
+  assert(/^Cached .+\.$/.test(N({ ts, fmt: 'v5' }, true)) && !/v3/.test(N({ ts, fmt: 'v5' }, true)), 'a copy: its date only');
+  assert(/older v3 file/.test(N({ ts, fmt: 'v3', fallback: true }, true)) && /next start tries the current file again/.test(N({ ts, fmt: 'v3', fallback: true }, true)), 'a stopgap, refresh on');
+  const off = N({ ts, fmt: 'v3', fallback: true }, false);
+  assert(/press Refresh/.test(off) && !/next start/.test(off), 'with automatic refresh off the next start fetches nothing, so the line does not promise it (' + off + ')');
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */

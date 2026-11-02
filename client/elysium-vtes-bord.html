@@ -3252,7 +3252,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.169';   // v2.6.169 (2 Nov 2026, THE COPY YOU HAVE, pure client -- purge; supersedes the never-deployed v2.6.168, same PR; srv-2.6.49 unchanged, no wire change; bot v0.6.214 beside): the independent review of v2.6.168 found two faults in the card loader, both reproduced and fixed. (1) One failed download of KRCG's v5 dump at the weekly refresh (a 503, a reset mid-download) replaced a good v5 copy with KRCG's frozen v3 file, stamped fresh for a week: the 63 new cards were gone until a manual Refresh, and 'Legal cards only' refused a deck with Julia Sowinski. The v3 file now loads only when the browser has no copy of its own; a copy is kept (still stale, so the next start tries the dump again), and a v3 file read as that stopgap is cached as one (stale at once; Settings says so). (2) The hosted table's own images/vtes.json waited for KRCG's expansions.json, with no time limit, before the database could be used: a slow or hanging static.krcg.org held the table. The card data is now used the moment it arrives, with the names at hand (cached or built in); KRCG's names re-label the starters when they come, the request gives up after 8 s, and the copy is cached once. Also: the nine Flight cards read FLIGHT again (the v5 dump writes fli), and a deck's Legacy badge is decided by its cards ('Admonitions, The' is The Admonitions), not by the spelling.
+const VERSION='2.6.170';   // v2.6.170 (2 Nov 2026, THE COPY YOU HAVE, the second pass, pure client -- purge; supersedes the never-deployed v2.6.168 and v2.6.169, same PR; srv-2.6.49 unchanged, no wire change; bot v0.6.214 beside): the reviewer re-checked v2.6.169's loader fixes -- both v2.6.168 faults are closed -- and found one path back to the first: Settings > From file with expansions.json alone stamped the cached copy fresh, so a stale copy kept after a failed refresh was not refreshed for a week; and, while a fresh download waited for its names, the same pick swapped the older saved copy in. Now the names-alone pick names the copy in use and keeps the record's age, and waits (with a toast) while the copy in use is not the saved one (cardDBRecTs: which record holds it). Also from that pass: a failed refresh keeps the copy in use as it is (it was read a second time on every start the dump failed); Settings > Refresh no longer clears the database first, so a refresh that fails keeps the copy in use instead of falling back to an older one or KRCG's v3 file; the cache line says 'press Refresh' when automatic refresh is off; a re-label that throws still saves the copy.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -17524,7 +17524,7 @@ function applyPco(){                                         // re-paint cards u
   else if(net.view==='l4') updateL4Opponents();   // Classic: opponent cards live in #l4oppWrap (built by renderL4OppCards via updateL4Opponents) -> repaint them with the new player-colour outline; was missing, so toggling colours in L4 left opponent cards stale
   renderAltIfOpen();
 }
-let cardDBLoading=false, cardInfo=null, cardImageNames=null, cardDBGen=0;   // v2.6.169: cardDBGen counts the loads, so a late answer (KRCG's names) can tell whether the copy it belongs to is still the one in use
+let cardDBLoading=false, cardInfo=null, cardImageNames=null, cardDBGen=0, cardDBRecTs=null;   // v2.6.169: cardDBGen counts the loads, so a late answer (KRCG's names) can tell whether the copy it belongs to is still the one in use; v2.6.170: cardDBRecTs = the `ts` of the IndexedDB record that holds the copy in use (null while it is not saved)
 // v2.5.87: KRCG API v3→v5 dual-format card parsing (KRCG announced krcg-api v4 / "krcg v5" JSON;
 // static.krcg.org/data/vtes.json — the file fetchVtesJson() below actually reads — is expected to
 // switch to it on its own schedule, same as static.krcg.org's earlier v2→v3 precedent). Each card
@@ -17645,7 +17645,7 @@ function processCardData(data, src, exp){   // v2.6.168: `exp` = KRCG's expansio
   const built=buildCardIndex(list);
   const map=built.map, info=built.info, imgNames=built.imgNames;
   if(map.size){
-    cardDBGen++;   // v2.6.169: a new copy is in use -- late names for an older one leave it alone
+    cardDBGen++; cardDBRecTs=null;   // v2.6.169: a new copy is in use -- late names for an older one leave it alone; v2.6.170: and it is not saved until a cache write (or the read that brought it) says so
     cardTypes=map; cardInfo=info; cardImageNames=imgNames; cardDBSrc=src ? src+' '+vtesFmt(list) : null;   // B-63: remember the tier (v2.6.168: and KRCG's shape, 'KRCG v5') for dump.env.db.source
     buildPrecons(list);
     $('#rulesWrap').hidden=false;
@@ -17655,12 +17655,15 @@ function processCardData(data, src, exp){   // v2.6.168: `exp` = KRCG's expansio
   }
   return !!map.size;
 }
-function cacheVtesJson(raw, fmt, fallback){   // v2.6.168: the record carries KRCG's shape ('v5' | 'v3') and the expansions.json text read with it; v2.6.169: `fallback` = KRCG's v3 file, read because the dump failed
+function cacheVtesJson(raw, fmt, fallback, ts){   // v2.6.168: the record carries KRCG's shape ('v5' | 'v3') and the expansions.json text read with it; v2.6.169: `fallback` = KRCG's v3 file, read because the dump failed
+  const at=(typeof ts==='number' && ts>0) ? ts : Date.now();   // v2.6.170 (the second review): `ts` keeps a record's age when only the names change -- a stale copy re-stamped fresh is the week v2.6.169 closed
+  cardDBRecTs=at;   // every caller has just put this copy in use
   openImgDB().then(db=>{
     const tx=db.transaction(IMG_STORE,'readwrite');
-    tx.objectStore(IMG_STORE).put({json:raw, exp:krcgExpRaw||null, fmt:fmt||null, fallback:!!fallback, size:(raw.length+(krcgExpRaw?krcgExpRaw.length:0))*2, ts:Date.now()}, '_vtesJson');
+    tx.objectStore(IMG_STORE).put({json:raw, exp:krcgExpRaw||null, fmt:fmt||null, fallback:!!fallback, size:(raw.length+(krcgExpRaw?krcgExpRaw.length:0))*2, ts:at}, '_vtesJson');
     tx.oncomplete=()=>updateJsonCacheUI();
   }).catch(()=>{});
+  return at;
 }
 const VTES_MAX_AGE_MS=7*24*60*60*1000;   // v2.6.76: a cached catalog younger than this is used WITHOUT touching the network
 function vtesStale(ts, now, rec){ return !(typeof ts==='number' && ts>0) || ((now||Date.now())-ts) > VTES_MAX_AGE_MS || (!!rec && (!rec.fmt || rec.fallback===true)); }   // v2.6.76 pure: no timestamp = stale; v2.6.168: so is a record with no shape stamp (written before v2.6.168: KRCG's v3 file, which gets no new sets); v2.6.169: and the v3 file kept as a stopgap -- the next start tries the dump again
@@ -17695,9 +17698,10 @@ function vtesNamesThenCache(raw, data, fmt, expP, fallback){   // v2.6.169: afte
   const gen=cardDBGen;
   return Promise.resolve(expP || null).then(t=>{
     if(gen!==cardDBGen) return;   // a newer load took over (Refresh, From file, the box's file): it caches its own copy
-    if(t && t!==krcgExpRaw){ const sets=krcgSetIndex(vtesExpParse(t)); if(sets){ krcgSets=sets; krcgExpRaw=t;
-      if(fmt==='v5' && cardTypes){ buildPrecons(vtesList(data)); if(typeof onCardDBReady==='function') onCardDBReady(); } } }   // only a v5 file names its starters by code (and not after the database was switched off or Refresh cleared it)
-    cacheVtesJson(raw, fmt, fallback);
+    try{
+      if(t && t!==krcgExpRaw){ const sets=krcgSetIndex(vtesExpParse(t)); if(sets){ krcgSets=sets; krcgExpRaw=t;
+        if(fmt==='v5' && cardTypes){ buildPrecons(vtesList(data)); if(typeof onCardDBReady==='function') onCardDBReady(); } } }   // only a v5 file names its starters by code (and not after the database was switched off)
+    }finally{ cacheVtesJson(raw, fmt, fallback); }   // v2.6.170: the copy is cached even if re-labelling threw (the error still reaches the error ring)
   });
 }
 function vtesCached(){                 // v2.6.76: the IndexedDB copy ({json, ts}) or null -- never rejects (no indexedDB, a broken store, an empty record all read as 'no cache')
@@ -17718,7 +17722,7 @@ function loadCardDB(){
      week instead of one per start. */
   vtesCached().then(c=>{
     let used=false;
-    if(c){ try{ used=processCardData(JSON.parse(c.json), 'cached', c.exp)!==false; }catch(e){ used=false; } }
+    if(c){ try{ used=processCardData(JSON.parse(c.json), 'cached', c.exp)!==false; }catch(e){ used=false; } if(used) cardDBRecTs=c.ts; }   // v2.6.170: the copy in use is this record
     if(used && !(conv.jsonSync && vtesStale(c.ts, Date.now(), c))){ cardDBLoading=false; return; }   // fresh enough (or sync off): no network at all; v2.6.168: a copy of the v3 file is refreshed once
     _loadCardDBFetch();                                                                           // no cache / corrupt / a week old with sync on -> fetch and re-cache (a later processCardData simply rebuilds the maps)
   });
@@ -17762,7 +17766,13 @@ function fetchVtesJson(){
     if(!processCardData(data, 'KRCG', expP.done ? expP.val : null)) throw new Error('no cards');
     vtesNamesThenCache(raw, data, vtesFmt(data), expP, fallback);
   };
-  const fromCache=()=>vtesCached().then(c=>{ try{ return !!c && processCardData(JSON.parse(c.json), 'cached/offline', c.exp); }catch(e){ return false; } });   // the copy this browser has, even when sync is on
+  const fromCache=()=>{   // the copy this browser has, even when sync is on
+    /* v2.6.170 (the second review): a copy already in use is kept as it is -- it is the saved copy or something newer (a
+       download whose save is still on the way). v2.6.169 read the saved copy a second time on every start the dump failed,
+       and a Refresh pressed while a first download was still unsaved fell back to KRCG's v3 file. */
+    if(cardTypes){ if(cardDBSrc && /^cached /.test(cardDBSrc)) cardDBSrc=cardDBSrc.replace(/^cached /, 'cached/offline '); log('Could not refresh the card database — the copy in use stays.'); return Promise.resolve(true); }
+    return vtesCached().then(c=>{ try{ if(c && processCardData(JSON.parse(c.json), 'cached/offline', c.exp)){ cardDBRecTs=c.ts; return true; } }catch(e){} return false; });
+  };
   get(KRCG_DATA_URL).then(raw=>take(raw, false))
     .catch(()=>fromCache().then(kept=>{ if(!kept) return get(KRCG_DATA_V3_URL).then(raw=>take(raw, true)); }))
     .catch(()=>log('Could not load the card database — minion detection unavailable. Offline with a vtes.json file? Settings → Card data → 📁 From file… loads it once and caches it.'))
@@ -17853,6 +17863,10 @@ function updateImgCacheUI(){
       : s.count+' images, '+fmtBytes(s.size)+(s.fmt?' ('+s.fmt.toUpperCase()+')':'');
   }).catch(()=>{ el.textContent='unavailable'; });
 }
+function vtesCacheNote(c, sync){       // v2.6.169 pure (v2.6.170: extracted, and honest with automatic refresh off): Settings' line for the cached copy
+  if(!c || !c.ts) return 'Not cached.';
+  return 'Cached '+new Date(c.ts).toLocaleDateString()+'.'+(c.fallback ? ' KRCG’s older v3 file — the newest sets are missing; '+(sync ? 'the next start tries the current file again (or press Refresh).' : 'press Refresh to try the current file (automatic refresh is off).') : '');
+}
 function updateJsonCacheUI(){
   const el=$('#jsonCacheInfo'), btn=$('#jsonDlBtn'); if(!el) return;
   openImgDB().then(db=>{
@@ -17860,8 +17874,7 @@ function updateJsonCacheUI(){
     const req=tx.objectStore(IMG_STORE).get('_vtesJson');
     req.onsuccess=()=>{
       const c=req.result;
-      if(c && c.ts){ const d=new Date(c.ts); el.textContent='Cached '+d.toLocaleDateString()+'.'+(c.fallback ? ' KRCG’s older v3 file — the newest sets are missing; the next start (or Refresh) tries the current file again.' : ''); if(btn) btn.textContent='Refresh'; }   // v2.6.169: say so when the copy is the v3 stopgap
-      else { el.textContent='Not cached.'; if(btn) btn.textContent='Download'; }
+      el.textContent=vtesCacheNote(c, conv.jsonSync); if(btn) btn.textContent=(c && c.ts) ? 'Refresh' : 'Download';
     };
     req.onerror=()=>{ el.textContent=''; };
   }).catch(()=>{ el.textContent=''; });
@@ -18036,9 +18049,24 @@ function setAdvToggle(btn, open){                                  // v2.6.86: S
 }
 document.querySelectorAll('#settingsModal .set-advbtn').forEach(b=>b.addEventListener('click',()=>setAdvToggle(b)));
 
-$('#jsonDlBtn').addEventListener('click',()=>{
-  cardTypes=null; cardInfo=null; cardImageNames=null; cardDBLoading=false;
+function vtesRefresh(){                // v2.6.170 (the second review): Settings > Refresh -- the copy in use stays until a new one is in; it used to be cleared first, so a refresh that failed fell back to an older saved copy, or to KRCG's v3 file
+  cardDBLoading=false;
   fetchVtesJson();
+}
+function vtesNamesFromFile(expRaw, fileName){   // v2.6.170: Settings > From file with expansions.json alone -- the names for the copy in use, which keeps its age
+  return vtesCached().then(c=>{
+    /* The saved copy must be the copy in use: while a fresh download waits for its names (or failed to save) the saved copy
+       is older, and reading it would swap it in and drop the fresh one. v2.6.169 did that, and stamped the record fresh --
+       a stale copy kept after a failed refresh was then not refreshed for a week (the second review). */
+    if(cardTypes && (!c || c.ts!==cardDBRecTs)){ toast('The card database in use is not saved yet — pick '+fileName+' again in a moment, or together with vtes.json.'); return false; }
+    let ok=false, data=null; try{ data=c && JSON.parse(c.json); ok=!!data && processCardData(data, 'cached', expRaw); }catch(e){}
+    if(!ok){ uiAlert('Load vtes.json too (you can pick both files at once).'); return false; }
+    cacheVtesJson(c.json, c.fmt||vtesFmt(data), c.fallback===true, c.ts); toast('Starter names loaded from '+fileName+'.'); updateJsonCacheUI();   // the same copy, the same age, and a v3 stopgap stays one
+    return true;
+  });
+}
+$('#jsonDlBtn').addEventListener('click',()=>{
+  vtesRefresh();
   const btn=$('#jsonDlBtn'); if(btn){ btn.disabled=true; btn.textContent='Downloading…'; setTimeout(()=>{ btn.disabled=false; updateJsonCacheUI(); },3000); }
 });
 $('#jsonFileBtn').addEventListener('click',()=>$('#jsonFile').click());
@@ -18061,14 +18089,7 @@ $('#jsonFile').addEventListener('change',()=>{
       else { uiAlert(g.f.name+' could not be read as a card database (vtes.json) or its set names (expansions.json). Get both from static.krcg.org/data/v5/.'); return; }
     }
     cardDBLoading=false;
-    if(!card){   // the names alone: apply them to the cached card data
-      vtesCached().then(c=>{
-        let ok=false, data=null; try{ data=c && JSON.parse(c.json); ok=!!data && processCardData(data, 'cached', expRaw); }catch(e){}
-        if(!ok){ uiAlert('Load vtes.json too (you can pick both files at once).'); return; }
-        cacheVtesJson(c.json, c.fmt||vtesFmt(data), c.fallback===true); toast('Starter names loaded from '+got[0].f.name+'.'); updateJsonCacheUI();   // v2.6.169: a v3 stopgap stays one
-      });
-      return;
-    }
+    if(!card){ vtesNamesFromFile(expRaw, got[0].f.name); return; }   // the names alone: applied to the copy in use (v2.6.170)
     let held=false; try{ held=processCardData(card.data, 'file', expRaw); }catch(e){}
     if(!held){ uiAlert(card.f.name+' could not be read as a card database. Get vtes.json from static.krcg.org/data/v5/.'); return; }
     cacheVtesJson(card.raw, vtesFmt(card.data));                                 // the once-and-done part: next starts hit the cache

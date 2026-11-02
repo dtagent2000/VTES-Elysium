@@ -1,7 +1,7 @@
 # PROJECT-MANIFEST.md — what belongs in the Elysium (MAIN) project upload (9 September 2026, after the split)
 
 *The canonical file set for the claude.ai project knowledge, assembled after THE MERGE
-(client v2.6.102 · server srv-2.6.35 · bot v0.6.107 · digest v1.4; versions below refreshed 2 Nov 2026 -- client v2.6.169 · srv-2.6.49 · bot v0.6.214, run beside the suite). One lineage. When a file
+(client v2.6.102 · server srv-2.6.35 · bot v0.6.107 · digest v1.4; versions below refreshed 2 Nov 2026 -- client v2.6.170 · srv-2.6.49 · bot v0.6.214, run beside the suite). One lineage. When a file
 here disagrees with a chat's latest delivery, the newer version wins — update this manifest
 when files are added or retired. Read order for a new chat: CLAUDE.md → the session journal →
 project context → learnings → (for bots) CLAUDE-arena.md → (for the next chapter)
@@ -18,7 +18,7 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 ## A. Shipped code (deployed to the box / the download bundle)
 | File | Role | Version |
 |---|---|---|
-| elysium-vtes-bord.html | The client — ONE file, built from 12 fragments by elysium-build.js; carries the Help pages (Bots = the bot project's START-HERE-BOTS.html embedded verbatim, Local server = help-local-server.html) | v2.6.169 |
+| elysium-vtes-bord.html | The client — ONE file, built from 12 fragments by elysium-build.js; carries the Help pages (Bots = the bot project's START-HERE-BOTS.html embedded verbatim, Local server = help-local-server.html) | v2.6.170 |
 | elysium-server.js | The reference server (rooms, deals, relays, HTTP intake, statics -- four bot files since srv-2.6.43; the room option `tableSetup` since srv-2.6.44; the pub's turn count `tn`/`rn` since srv-2.6.45; the room option `tableLayout` since srv-2.6.46; the review's three locks since srv-2.6.47 -- names, clans and ids cleaned for attributes, RFC 6455 frame limits with pings in the rate bucket, the admin key's lockout; group B since srv-2.6.48 -- a mid-game leave vacates the seat, `bounty.award`, VP once per oust and back on an un-oust, a negative block tally, saves keep open seats and the board style; group C since srv-2.6.49 -- the rightmost X-Forwarded-For entry and `--trust-proxy xff`, one growable frame buffer per connection) | srv-2.6.49 |
 | elysium-error-digest.js | Daily Discord digest of elysium-errors.log (systemd timer) | v1.4 |
 | elysium-digest.service / .timer | The digest's systemd unit + timer | — |
