@@ -43,7 +43,7 @@
     the V5 smoke found the intercept lock's missing attempt line; the egress review (9 findings, 7 fixed: the lock
     line read by the hotseat net and the event log, ARCHON_BURN typed and kept out of the action memory, the new state reset per game,
     Sudden Reversal cycled, Club Illusion before the block bar, the curated keys read, ana-block's lock windows; 161k).
-  - *Gates*: suite 2363/0 ×3 (frozen snapshots, the release sha), canary 69/0 + 69/0 (root v2.6.170), hotseat 11/0, HB1 11/11,
+  - *Gates*: suite 2366/0 ×3 (frozen snapshots, the release sha), canary 69/0 + 69/0 (root v2.6.170), hotseat 11/0, HB1 11/11,
     test-cardfx 301/0, gen-precon --check clean, main's check-versions agrees, main's client suite 353/1 (the embedded guide);
     the sim footprint and the audits: the spec's §5 (starters DIVERGED 143 at the R-42 masters, SAME-PLAY 97; V5 smoke 134 / 34).
 - **v0.6.214 (30 Oct 2026)** — V5 wave 2, Johan's "kör" of 29 Oct on D-102 (Claude's recommendation: the class map's top two rows

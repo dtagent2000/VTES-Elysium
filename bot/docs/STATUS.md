@@ -8,7 +8,7 @@ copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed
 Johan to merge). **Open PRs:** #45.
 
 ## Last gates (v0.6.215 release bytes, 2 Nov 2026)
-Suite **2363/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root v2.6.170
+Suite **2366/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root v2.6.170
 + `client/ELYSIUM-PROTOCOL.md`) · hotseat **11/0** · HB1 **11/11** · test-cardfx **301/0** · `gen-precon.js --check` no problems ·
 main's `check-versions.js` agrees · main's client suite beside the bundle **353/1** (the embedded guide: main re-embeds) · sim
 240-match client design vs v0.6.214: DIVERGED 143 (each at a clan-iconed master held without a ready vampire, R-42), SAME-PLAY 97,
