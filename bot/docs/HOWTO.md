@@ -26,7 +26,9 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
 - **The card ledger** — `node gen-card-ledger.js --sim DIR [--sim DIR …]` → `docs/CARDS.md`: per card the coverage verdict, tier,
   decks, rulings, the suite sections that name it and its uses per deck in the sims; the class map ranks what a wave would build.
   Regenerate it from the release bytes' runs: the 240-match design and the V5 smoke (each of the 14 new keys:
-  `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`).
+  `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`). Every one of those
+  12 matches deals from seed 1: a single copy deep in a library is never drawn ('unseen' is then the deal, not the bot) — add `--seeds 4`
+  to see one played (v0.6.215).
 - **The suite, frozen** (the ×3 gate; three snapshots in a row, one run at a time, ~300–420 s each), from the repo root:
   ```
   S=<a scratch dir>; L=r1; D=$S/snap-$L; rm -rf $D; mkdir -p $D/bot; cp elysium-vtes-bord.html $D/     # root client one level up: 154f

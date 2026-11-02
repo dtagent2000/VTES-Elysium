@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.41 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.42 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -158,6 +158,14 @@ const CLASS = {
   stealGrant: 'contextual', handBonusCombat: 'contextual', strengthSet: 'contextual', strengthCombat: 'contextual',   // the before-range step (_brCands / _beforeRangePlay): Hunger of Marduk's steal this round, Rage of Apedemak's hand bonus, Torn Signpost's strength, Form of the Wolf / Monstrous Form's +1 -- the pump@beforeRange special case below mirrors it
   noPreventDisc: 'meta',   // Soul Burn's rider ('cannot be prevented by cards requiring Fortitude'): read by the STRUCK bot's prevention finder from the strike line's card (_noPreventDiscIn), never a play path of its own
   maneuverTo: 'paired', pressOpt: 'paired',   // riders: a maneuver's only direction (Slam [POT]: to close -- _bestManeuverFor skips the other way, _bestCommitManeuverFor takes it), the optional press a maneuver or a pump brings (Flash [CEL], Resist Earth's Grasp, Form of the Wolf [PRO]: _bundledPress)
+  /* v1.1.42 (2 Nov 2026, bot v0.6.215, V5 wave 3, RULINGS D-104): the wave's keys -- all on masters, read on the board or by the master loop. */
+  lockStealthSect: 'paired', lockStealthAt: 'paired',   // Anarch Railroad's sect gate (_lockStealthFor); Creepshow Casino's announce window (_lockStealthAtAnnounce)
+  lockIntercept: 'play', lockInterceptClan: 'paired', lockInterceptOn: 'paired', lockInterceptNotFirst: 'paired',   // Market Square, Channel 10, KRCG News Radio, Wall Street Night: _lockInterceptFor, spent by _spendIntercept
+  bloodAddClan: 'paired', bloodAddSect: 'paired', bloodAddPath: 'paired', bloodAddBaron: 'paired', bloodAddReq: 'paired',   // who gains a hunting ground's / a lock's blood (_considerHuntingGround, _considerLockIncome); Unholy Sacrament's target (_uncBloodTarget)
+  bleedDiscardCombat: 'play', bleedDiscardClan: 'paired',   // Haqim's Law: Retribution -- _playHaqimLaw in my modifier window
+  bleedAtAnnounce: 'play', bleedAtAnnounceBlood: 'paired', bleedAtAnnounceSect: 'paired',   // Club Illusion -- _maybeClubIllusion at the bleed announce
+  burnActor: 'play', burnActorMinBleed: 'paired',   // Archon Investigation -- _archonFor / _playArchon in the react window (an out-of-turn master)
+  drawCrypt: 'paired', drawCryptClan: 'paired',   // Family Gathering -- its handler (CARD_HANDLERS['family-gathering']) and _masterHold
   press: 'contextual',   // v1.1.5: consumed via the press@ special-case below (Apportation's clean standalone shape only) -- 'contextual' here only silences the unknown-key warning for the excluded instances (co-located maneuver/strike/stealBlood, or an unverifiable req flag)
 };
 const cls = k => String(CLASS[k] || '');
@@ -174,7 +182,10 @@ const MASTER_KEYS = new Set(['poolGain', 'bloodToPool', 'poolToBlood', 'handSize
   'transferSwap', 'transferBurnPool', 'transferCost', 'rescueTorpor', 'handCycle', 'lockMinion', 'noBlockMinion', 'fameOnTarget', 'jackEngine',
   'warsawRefresh', 'warsawRescue', 'rebelBlood', 'votes', 'bloodAdd', 'bloodAddTo', 'bloodAddYounger', 'preyLock', 'giveToPrey', 'bloodAfterCleanAction',
   'lockStealth', 'lockStealthClan', 'hostIntercept', 'hostInterceptOn', 'hostPrevent', 'bankIn', 'bankOut', 'bankClan', 'rushGrant',
-  'poolFromHost', 'poolFromHostMin', 'hostCopyCost']);   // v1.1.40: + Villein
+  'poolFromHost', 'poolFromHostMin', 'hostCopyCost',   // v1.1.40: + Villein
+  'lockStealthSect', 'lockStealthAt', 'lockIntercept', 'lockInterceptClan', 'lockInterceptOn', 'lockInterceptNotFirst', 'bloodAddClan', 'bloodAddSect',
+  'bloodAddPath', 'bloodAddBaron', 'bloodAddReq', 'bleedDiscardCombat', 'bleedDiscardClan', 'bleedAtAnnounce', 'bleedAtAnnounceBlood', 'bleedAtAnnounceSect',
+  'burnActor', 'burnActorMinBleed', 'drawCrypt', 'drawCryptClan']);   // v1.1.42: + V5 wave 3
 function modeConsumed(mo, e){
   if(((e && e.t) || []).includes('master') && !Object.keys(mo.fx || {}).some(k => MASTER_KEYS.has(k)))
     return { ok: false, via: 'master: no board consumer for ' + (Object.keys(mo.fx || {}).join(',') || '\u2014') };
@@ -246,7 +257,7 @@ function modeConsumed(mo, e){
      mode (Dreams of the Sphinx, and Arcane Library/Chantry once those are wired the
      same way). The two consumers read different card shapes (a played action vs. a
      locked in-play permanent), so they stay two rules, not one loosened one. */
-  if (f.bloodAdd > 0 && f.bloodAddTo === 'unc' && mo.lock
+  if (f.bloodAdd > 0 && f.bloodAddTo === 'unc' && (mo.lock || (mo.once && mo.phase))   // v1.1.42: + a `once` mode (Powerbase: Montreal: no lock, once in the influence phase -- the same consumer)
       && (e && (e.t || []).includes('master'))) return { ok: true, via: 'bloodAdd@lock-income' };
   if (f.bloodAdd > 0 && f.bloodAddTo === 'own-ready' && !mo.lock && mo.phase === 'unlock'
       && (e && (e.t || []).includes('master'))) return { ok: true, via: 'bloodAdd@hunting-ground' };   // v1.1.14 (Johan's "process the hunting ground family" GO): the THIRD bloodAdd shape -- freestanding, NOT lock-gated, unlock-phase -- consumed via _considerHuntingGround (elysium-bot.js), distinct from Life in the City's one-shot handler and Dreams of the Sphinx/Arcane Library's lock-gated _considerLockIncome

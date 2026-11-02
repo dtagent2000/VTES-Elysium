@@ -19,6 +19,29 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.215 (2 Nov 2026)** — V5 wave 3, Johan's "kör" of 2 Nov on D-104 (no rule for uncurated masters: a deck is released only
+  when 100 % playable; curate the masters by class). The canon: `specs/spec-v5-wave3-2026-11-02.md`; RULINGS R-42, D-104.
+  - *The master finder* never offers an out-of-turn master (cardfx v1.9.6 `oot`, 36 entries) and checks a master's requirements
+    against a READY vampire of mine (`_masterReqOk`; R-42: the clan icon is a requirement — v1.9.1's reading reversed, curated
+    masters now inherit it). A one-shot without its target is held (`_masterHold`: Unholy Sacrament, Family Gathering).
+  - *Locations that lock* (spent like The Labyrinth, only when a block needs answering): stealth — Backways, Elysian Fields, Fortune
+    Teller Shop, Opium Den (clan), Anarch Railroad (sect), Creepshow Casino at a recruit / equip / political announce; intercept —
+    Market Square, Channel 10 (from the second action, `_turnActN`), KRCG News Radio, Wall Street Night (undirected actions), spent
+    by `_spendIntercept` with the frozen attempt line first. The stacks count every location.
+  - *Blood*: Carfax Abbey (Anarchs, the baron's second), Burial Site Hunting Ground (the Path, crypt `path` in cardfx), Art Museum,
+    Ecoterrorists, Powerbase: Montreal (`once`, no lock); the hunting grounds' target is the mode's own (`bloodAddClan` / `Sect` /
+    `Path`), the icon the play requirement; Unholy Sacrament (3 to a titled Sabbat in uncontrolled, above the influence floor);
+    Family Gathering (an all-Hecata crypt).
+  - *Bleed riders*: Haqim's Law: Retribution in my modifier window (a dead or spare combat card, each copy once per action, the
+    frozen add line); Club Illusion at the announce. *Archon Investigation* at my decline of a bleed of 4+ (3 pool leaving 1, the
+    next master action, no second out-of-turn master before it); the new line ARCHON_BURN, read by the acting bot, which burns its
+    minion. Sudden Reversal is held (no 'as played' window between bots: BOARD).
+  - *Riding the round (D-92)*: one lock buys one effect in `_considerLockIncome` (Dreams of the Sphinx's two master-phase modes
+    fired on one lock); the compiler's article-first alias (main's KRCG v5 reply 5.2: 4,149 of 4,149 v3 cards resolve through the
+    client's v5 names); coverage tool v1.1.42 (the wave's keys).
+  - *Reviews*: the graded readings (10 green, 10 amber, 2 red fixed: no second out-of-turn master before the next master phase);
+    the V5 smoke found the intercept lock's missing attempt line; the egress review (PR body).
+  - *Gates*: GATES_LINE
 - **v0.6.214 (30 Oct 2026)** — V5 wave 2, Johan's "kör" of 29 Oct on D-102 (Claude's recommendation: the class map's top two rows
   are curation queues, so wave 2 = the combat's first steps — before range, range and press). The canon:
   `specs/spec-v5-wave2-2026-10-29.md`; RULINGS R-41 (the readings with their sources), D-103 (Claude's design).
