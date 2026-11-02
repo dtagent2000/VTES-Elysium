@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.214';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.215';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -341,6 +341,7 @@ const VENTRUE_DECK = {   // v0.6.122 (18 Sep 2026): V5 Starter -- Ventrue (Black
   library: [ { name: 'Anarch Troublemaker', qty: 1 }, { name: 'Blood Doll', qty: 3 }, { name: 'Information Highway', qty: 1 }, { name: 'Misdirection', qty: 1 }, { name: 'Uptown Hunting Ground', qty: 1 }, { name: 'Ventrue Headquarters', qty: 1 }, { name: 'Visit from the Capuchin', qty: 1 }, { name: 'Wider View', qty: 2 }, { name: 'Enchant Kindred', qty: 8 }, { name: 'Intimidation', qty: 4 }, { name: 'Ancilla Empowerment', qty: 1 }, { name: 'Kine Resources Contested', qty: 7 }, { name: 'Parity Shift', qty: 5 }, { name: 'Bewitching Oration', qty: 4 }, { name: 'Conditioning', qty: 4 }, { name: 'Daring the Dawn', qty: 1 }, { name: 'Freak Drive', qty: 6 }, { name: 'Voter Captivation', qty: 2 }, { name: 'Hidden Strength', qty: 4 }, { name: 'Majesty', qty: 6 }, { name: 'Deflection', qty: 6 }, { name: 'Second Tradition: Domain', qty: 4 }, { name: 'Wake with Evening\'s Freshness', qty: 4 } ]
 };
 const ARCHETYPES = { hacking: DEFAULT_DECK, wall: WALL_DECK, sewer: SEWER_DECK, malkavian: MALKAVIAN_DECK, tremere: TREMERE_DECK, nosferatu: NOSFERATU_DECK, ventrue: VENTRUE_DECK };
+const ARCHON_BURN = /^(.+?) plays Archon Investigation \u2014 (.+?) is burned \(the bleed of (\d+) is not successful\)\.$/;   // v0.6.215 (V5 wave 3): the target's out-of-turn answer to a bleed of 4+ -- the ACTING bot burns its own minion and the action ends unsuccessful (bot-emitted; owed to main's \u00a712 + the canary, the handoff)
 const NET_STEALTH = /^(.+?) (?:plays|burns|locks) .+?: \+(\d+) stealth\.$/, NET_UNLOCK_IC = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;   // v0.6.147: the tally net's two readers (bot-emitted lines; not part of the frozen L12 contract the canary pins)
 const DECK_STRATEGY = {   // A2 (v0.6.73): the reviewer's yardstick -- curated intent per archetype, emitted in the manifest so play is judged AGAINST strategy, not in a vacuum
   hacking:   { strategy: 'Ashur-cycling swarm: cap-1/2 crypt floods the table fast, Leverage-class bleed pressure every turn, Ashur Tablets recycle the engine; win by tempo before the table organizes.', axes: ['swarm-bleed', 'cycling', 'tempo'], combat: 'wave' },
@@ -382,6 +383,20 @@ const CARD_HANDLERS = {
     if(!(bot.cryptN > 0)){ bot.o.log('effective-management: crypt is empty, nothing to fetch'); return; }
     bot.send({ t: 'drawCrypt' });
     bot.chat('Crypt: Trainbot fetches a new vampire (Effective Management, free).');
+  },
+  'unholy-sacrament': async function(bot){   // v0.6.215 (V5 wave 3, R-42): 'Add 3 blood to a titled Sabbat vampire in your uncontrolled region.' The target was checked when the finder offered the card (_uncBloodTarget); re-read here, after the pace. Blood past capacity is never added (the influence rule: a vampire is brought out at capacity), so the finder offers the card only when one target takes all 3.
+    const t = bot._uncBloodTarget('Unholy Sacrament');
+    if(!t){ bot.o.log('unholy-sacrament: the target is gone -- the blood is lost'); return; }
+    const n = Math.min(t.room, 3); t.v.blood = (t.v.blood | 0) + n;
+    bot._emit('unc-blood', { card: 'Unholy Sacrament', n, cap: t.v.cap | 0, blood: t.v.blood });
+    bot.send({ t: 'log', html: '<b>' + esc(bot.o.name) + '</b> adds ' + n + ' blood to an uncontrolled vampire (<b>Unholy Sacrament</b>).' });   // never name the face-down target (superior Govern's convention)
+    bot.push();
+  },
+  'family-gathering': async function(bot){   // v0.6.215 (V5 wave 3): 'Reveal the top card of your crypt. If it is a Hecata, draw it and add 1 blood to it; otherwise, move it to the bottom of your crypt.' The bot cannot see its crypt's order, so the finder offers the card only when every vampire left in the crypt is a Hecata (_cryptAllClan): the revealed card is then a Hecata whatever it is. The vampire arrives asynchronously in uncontrolled; _addUnc puts the blood on it.
+    if(!(bot.cryptN > 0)){ bot.o.log('family-gathering: crypt is empty'); return; }
+    bot._fgOwed = (bot._fgOwed | 0) + 1;
+    bot.send({ t: 'drawCrypt' });
+    bot.send({ t: 'log', html: '<b>' + esc(bot.o.name) + '</b> reveals a Hecata from the top of the crypt and draws it (<b>Family Gathering</b>).' });
   },
   'ashur-tablets': async function(bot){   // v1.4.2/v1.4.3 (14 July): dispatched after EVERY Ashur Tablets play -- a no-op until MY OWN third copy is in play (mandatory, immediate per rulebook -- Johan confirmed). "Only one Ashur Tablets can be played each turn" needs no new enforcement -- it falls out of the EXISTING played-name exclusion in _bestMasterFor/the master-play loop, already turn-scoped. The removal+benefit logic itself lives in _ashurResolve (v1.4.3), shared with _checkAshurTableWide's watch for someone ELSE crossing the threshold -- see that method for why.
     const mine = bot.board.filter(c => c.name === 'Ashur Tablets' && c.zone === 'ready').length;
@@ -1226,6 +1241,7 @@ class Bot {
           this.chat('Note: an unresolved bleed at me expired with the turn — if it landed, tell me "bleed ' + this.pending.amount + '".');
           this._clearPending('turn change');
         }
+        if(m.seat !== this.turnSeat) this._turnActN = 0;   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
         this.turnSeat = m.seat;
         if(this.started && this.out && m.seat === this.seat){   // v0.6.147 (THE HOTSEAT NET, measured: 4 of 4 bridge tables froze at the first turn handed to an ousted bot): the SERVER never gives an ousted seat the turn (nextLiveSeat), but the client's hotseat sweep walks its config, not the roster, and waits for a `pass` with no timeout. An ousted bot hands the turn straight on. Online this branch is unreachable.
           this._emit('ousted-pass', { turn: m.seat }); this.send({ t: 'pass' }); return; }
@@ -1315,6 +1331,7 @@ class Bot {
     const pos = this._openSlot('uncontrolled');          // v0.4.5: NOT this.unc.length (a raised/removed card can hole the middle -- see _openSlot)
     const c = { id: this.gid(), name, kind: 'crypt', zone: 'uncontrolled',
                 x: pos.x, y: pos.y, faceDown: true, locked: false, blood: 0, cap };
+    if((this._fgOwed | 0) > 0){ this._fgOwed--; c.blood = 1; this._emit('unc-blood', { card: 'Family Gathering', n: 1, cap }); }   // v0.6.215: Family Gathering's 'add 1 blood to it' -- the drawn vampire is the next to arrive
     this.unc.push(c); this.board.push(c);
   }
 
@@ -1441,6 +1458,60 @@ class Bot {
     this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> discards <b>' + esc(pick.nm) + '</b> \u2014 +' + (bb.n | 0) + ' bleed.' });
     this._emitPlay(pick.nm, 'larissa-boost', v.name);
     return true; }
+  _maybeClubIllusion(v, act, prey){    // v0.6.215 (V5 wave 3): Club Illusion -- 'An Anarch can burn 1 blood once as they announce a bleed action to get +1 bleed during that action.' A location of mine in play (no lock: once per bleed action); the vampire keeps 2 blood after paying (a strike's or a card's price, the blood a block's combat eats), or the extra point ousts the prey. Not '(limited)': it does not use the action's one bleed-increase limit [ANK 20220317 only rules on 'requiring an Anarch'].
+    if(!v || this._vampSect(v) !== 'Anarch') return false;
+    const c = (this.board || []).find(x => x && x.kind === 'lib' && !x.host && !this._outOfPlay(x) && (() => { const h = this.fxLookup(x.name); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.fx && (mo.fx.bleedAtAnnounce | 0) > 0)); })());   // fx.bleedAtAnnounce -- literal read
+    if(!c) return false;
+    const h = this.fxLookup(c.name), mo = (h.e.modes || []).find(m => m.fx && (m.fx.bleedAtAnnounce | 0) > 0), price = (mo.fx.bleedAtAnnounceBlood | 0) || 1, n = mo.fx.bleedAtAnnounce | 0;
+    const preyPool = prey ? this._seatPool(prey) : null, ousts = typeof preyPool === 'number' && preyPool > 0 && (act.n | 0) < preyPool && (act.n | 0) + n >= preyPool;
+    const use = (v.blood | 0) - price >= 2 || (ousts && (v.blood | 0) - price >= 0);
+    this._emit('club-illusion', { vamp: v.name, blood: v.blood | 0, n: act.n | 0, use, ousts: !!ousts });
+    if(!use) return false;
+    v.blood = (v.blood | 0) - price;
+    act.n = (act.n | 0) + n;
+    if(this._actingVamp && this._actingVamp.v === v) this._actingVamp.n = act.n;   // the Larissa lesson (v0.6.200): the acting record was made before the boost
+    this._emitPlay(h.name, 'bleed-announce', v.name);
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> burns ' + price + ' blood (<b>' + esc(h.name) + '</b>): +' + n + ' bleed.' });
+    return true; }
+  _haqimLawFor(v){                   // v0.6.215 (V5 wave 3): a Haqim's Law: Retribution of mine not yet used this action -- 'During a bleed action, an Assamite you control can discard a combat card to get +1 bleed'; each copy once per action, by the acting bleeding minion, before resolution [ANK 20221102-2, ANK 20220502, ANK 20231124]
+    const av = this._actingVamp; if(!v || !av) return null;
+    for(const c of (this.board || [])){
+      if(!c || c.kind !== 'lib' || c.host || this._outOfPlay(c) || (av.haqimUsed && av.haqimUsed.has(c.id))) continue;
+      const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') continue;
+      const mo = (h.e.modes || []).find(m => m.fx && (m.fx.bleedDiscardCombat | 0) > 0); if(!mo) continue;   // fx.bleedDiscardCombat -- literal read
+      if(mo.fx.bleedDiscardClan && this._vampClan(v) !== mo.fx.bleedDiscardClan) continue;
+      return { c, name: h.name, n: mo.fx.bleedDiscardCombat | 0 };
+    }
+    return null;
+  }
+  _haqimDiscardPick(v, prey){        // v0.6.215: WHICH combat card goes, or none -- a combat card no vampire of mine can use (D-59's dead card) always; otherwise only while two combat cards stay in hand for the fights to come, or when the point ousts the prey. Of the rest, the one I hold most copies of.
+    const combat = this.hand.map((nm, i) => ({ nm, i, h: this.fxLookup(nm) })).filter(o => o.h && o.h.kind === 'lib' && (o.h.e.t || []).includes('combat'));
+    if(!combat.length) return null;
+    const di = this._deadHandIndex(this._deadJudgeVamps()); const dead = combat.find(o => o.i === di);
+    if(dead) return { idx: dead.i, name: dead.nm, why: 'dead' };
+    const av = this._actingVamp, preyPool = prey ? this._seatPool(prey) : null, n = (av && av.n) | 0;
+    const ousts = typeof preyPool === 'number' && preyPool > 0 && n < preyPool && n + 1 >= preyPool;
+    if(combat.length - 1 < 2 && !ousts) return null;
+    const cnt = {}; combat.forEach(o => { cnt[FX_NORM(o.nm)] = (cnt[FX_NORM(o.nm)] | 0) + 1; });
+    combat.sort((a, b) => (cnt[FX_NORM(b.nm)] - cnt[FX_NORM(a.nm)]) || (a.i - b.i));
+    return { idx: combat[0].i, name: combat[0].nm, why: ousts ? 'ousts' : 'spare' };
+  }
+  _playHaqimLaw(v){                  // v0.6.215: the +1 -- the combat card to the ash heap, the frozen L12.add re-announce (Spying Mission's bank shape)
+    const av = this._actingVamp; if(!av || av.bounced || !av.target || (av.n | 0) < 1) return false;
+    const hl = this._haqimLawFor(v); if(!hl) return false;
+    const pk = this._haqimDiscardPick(v, av.target);
+    this._emit('haqim-law', { vamp: v.name, n: av.n | 0, discard: pk ? pk.name : null, why: pk ? pk.why : 'keep' });
+    if(!pk) return false;
+    (av.haqimUsed = av.haqimUsed || new Set()).add(hl.c.id);
+    this.hand.splice(pk.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(pk.name);
+    av.n += hl.n;
+    this._emitPlay(hl.name, 'bleed-discard', v.name);
+    this.fxClone({ name: hl.name, kind: 'lib' }, '+' + hl.n + ' bleed', { actor: v });
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> discards <b>' + esc(pk.name) + '</b> (<b>' + esc(hl.name) + '</b>): +' + hl.n + ' bleed.' });
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> adds +' + hl.n + ' bleed (= ' + av.n + ').' });   // PROTOCOL \u00a712, frozen -- the target's L12.add parser
+    this.push();
+    return true;
+  }
   _inPlayNorms(){                    // norm'd names IN PLAY table-wide (ready/torpor; uncontrolled is not in play)
     const out = new Set();
     this.board.forEach(c => { if(c.zone !== 'uncontrolled' && c.name) out.add(FX_NORM(c.name)); });
@@ -1569,7 +1640,7 @@ class Bot {
       if(!this._mayPlay(h.name, h.e, played)) return; if(((h.e.cost && h.e.cost.blood) || 0) > (vamp.blood | 0)) return;
       let best = 0; (h.e.modes || []).forEach(mo => { const st = mo.fx && mo.fx.stealth; if(typeof st === 'number' && st > best && this._modeUsableBy(mo, vamp)) best = st; });
       if(best > 0){ seen.add(FX_NORM(h.name)); S++; sum += best; } });
-    { const lb = this._lockStealthFor(vamp, played); if(lb){ S++; sum += lb.s; } }   // v0.6.205 (R4): The Labyrinth's lock counts like a card
+    this._lockStealthFor(vamp, played, true).forEach(lb => { S++; sum += lb.s; });   // v0.6.205 (R4): The Labyrinth's lock counts like a card; v0.6.215: EVERY location that locks for this vampire (Backways and Anarch Railroad for a Gangrel Anarch: two sources)
     return { S, sum };
   }
   _preyUnlockedN(){ const ps = this.preySeat(); if(!ps || ps === this.seat) return 0; const t = this.table[ps]; const cs = (t && t.pub && t.pub.cards) || []; return cs.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked).length; }
@@ -1634,9 +1705,24 @@ class Bot {
     }
     return best;
   }
-  _vampClan(vamp){ const h = vamp && this.fxLookup(vamp.name); return (h && h.kind === 'crypt' && h.e && h.e.clan) || null; }   // v0.6.205: the printed clan of a vampire (cardfx crypt entry), null when unknown -- a clan gate fails closed
-  _lockStealthFor(vamp, played){     // v0.6.205 (R4, F23): The Labyrinth-class -- 'You can lock this card to give a Nosferatu you control +1 stealth.' An UNLOCKED freestanding board card of mine whose lock mode carries fx.lockStealth, for an acting vampire of its lockStealthClan (the clan of the vampire that gets the stealth, not a play requirement). Locked when spent, never burned.
-    let best = null;
+  _vampClan(vamp){ const h = vamp && this.fxLookup(vamp.name); return (h && h.kind === 'crypt' && h.e && h.e.clan) || null; }
+  _vampSect(vamp){ const h = vamp && this.fxLookup(vamp.name); return (h && h.kind === 'crypt' && h.e && h.e.sect) || null; }   // v0.6.215: the printed sect, null when unknown
+  _lockStealthAtAnnounce(v, kind){   // v0.6.215 (V5 wave 3): Creepshow Casino -- 'You can lock this card as a vampire you control announces an undirected action to give that vampire +1 stealth, even if stealth is not yet needed.' Its only window is the announce, so the block gate's 'stealth only when needed' (R-12) does not reach it: the card says so. Spent on the undirected actions worth defending -- a recruit, an employ, an equip, a political action -- never on a hunt (nobody's hunt is worth a lock it could spend on a referendum this turn). Returns the stealth added (the announce books it into tally a); the lock line follows the announce line (the caller sends it).
+    if(!v || kind === 'hunt') return null;
+    for(const c of (this.board || [])){
+      if(!c || c.kind !== 'lib' || c.locked || c.host || this._outOfPlay(c)) continue;
+      const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') continue;
+      const mo = (h.e.modes || []).find(m => m.lock && m.fx && m.fx.lockStealthAt === 'announceUndirected' && (m.fx.lockStealth | 0) > 0);   // fx.lockStealthAt -- literal read
+      if(!mo) continue;
+      c.locked = true;
+      this._emitPlay(h.name, 'stealth-lock', v.name);
+      return { name: h.name, s: mo.fx.lockStealth | 0 };
+    }
+    return null;
+  }
+  _sayAnnounceLock(v, lk){ if(!lk) return; this.fxClone({ name: lk.name, kind: 'lib' }, '+' + lk.s + ' stealth', { actor: v }); this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> locks ' + esc(lk.name) + ': +' + lk.s + ' stealth.' }); this.push(); }   // the Labyrinth's line shape (NET_STEALTH reads it only inside a contest, so at the announce it is the table's line alone)   // v0.6.205: the printed clan of a vampire (cardfx crypt entry), null when unknown -- a clan gate fails closed
+  _lockStealthFor(vamp, played, all){     // v0.6.215: `all` -> every source (one per card), for the stack. v0.6.205 (R4, F23): The Labyrinth-class -- 'You can lock this card to give a Nosferatu you control +1 stealth.' An UNLOCKED freestanding board card of mine whose lock mode carries fx.lockStealth, for an acting vampire of its lockStealthClan (the clan of the vampire that gets the stealth, not a play requirement). Locked when spent, never burned.
+    let best = null; const out = [];
     (this.board || []).forEach(c => {
       if(!c || c.kind !== 'lib' || c.locked || c.host || this._outOfPlay(c)) return;
       const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') return;
@@ -1644,10 +1730,13 @@ class Bot {
       (h.e.modes || []).forEach(mo => { if(!mo.lock || !mo.fx) return;
         const n = mo.fx.lockStealth;   // fx.lockStealth / fx.lockStealthClan -- literal reads, the coverage scanner tracks fx.<key>
         if(typeof n !== 'number' || n <= 0) return;
+        if(mo.fx.lockStealthAt) return;   // v0.6.215 (V5 wave 3): Creepshow Casino's lock is 'as a vampire you control announces an undirected action' -- spent at the announce (_lockStealthAtAnnounce), never as an answer to a block
         if(mo.fx.lockStealthClan && this._vampClan(vamp) !== mo.fx.lockStealthClan) return;
-        if(!best || n > best.s) best = { name: h.name, s: n, fromBoard: c.id, lock: true }; });
+        if(mo.fx.lockStealthSect && this._vampSect(vamp) !== mo.fx.lockStealthSect) return;   // v0.6.215: Anarch Railroad -- 'give an Anarch +1 stealth' (the printed sect; unknown = fail closed)
+        const x = { name: h.name, s: n, fromBoard: c.id, lock: true };
+        if(all){ if(!out.some(o => o.name === x.name)) out.push(x); } else if(!best || n > best.s) best = x; });
     });
-    return best;
+    return all ? out : best;
   }
   _bestBleedCardFor(vamp){          // highest usable bleed-ACTION card in hand for this vampire
     let best = null;
@@ -2618,7 +2707,7 @@ class Bot {
     const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && (!c.locked || wakeAvail) && !this._cryptCannotBlock(c, p && p.actingVampName)
       && !(p && p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp));   // v0.6.103 (#4): decision == pick -- a failed attempter and a Pentexed minion count for neither (the v0.4.1/v0.4.3 drift class, third occurrence)
     let best = -Infinity;
-    vamps.forEach(v => { const b = this._bestInterceptFor(v, reacted || null); const s2 = (b ? b.s : 0) + this._equipIntercept(v) + this._hostedIntercept(v, p) + this._cryptIntercept(v, p); if(s2 > best) best = s2; });   // v0.6.48 (uncertainty review): borne equipment (Bowl/Sport Bike) counts toward the DECISION too -- decision/pick agreement; the execution side (_setTallyB + _pickBlocker) already read it   // VA review: RAW best -- the old `best = 0` seed was an implicit floor (a lone Christine must report -1, not 0); empty candidate set still reports 0
+    vamps.forEach(v => { const b = this._bestInterceptFor(v, reacted || null, p); const s2 = (b ? b.s : 0) + this._equipIntercept(v) + this._hostedIntercept(v, p) + this._cryptIntercept(v, p); if(s2 > best) best = s2; });   // v0.6.48 (uncertainty review): borne equipment (Bowl/Sport Bike) counts toward the DECISION too -- decision/pick agreement; the execution side (_setTallyB + _pickBlocker) already read it   // VA review: RAW best -- the old `best = 0` seed was an implicit floor (a lone Christine must report -1, not 0); empty candidate set still reports 0
     return (best === -Infinity) ? 0 : best;
   }
   _findStray(){                      // N4d: a ready ally with fx.allyPressLife and life left (fx-literal identification -- the scanner lesson pre-applied)
@@ -3583,7 +3672,9 @@ class Bot {
     if(this._actingVamp && this._actingVamp.played) this._maybeBlockBarRef(v, act);   // v0.6.129: the bar line goes out before the terms and the announce
     this.send({ t: 'log', html: 'Referendum terms \u2014 <b>' + esc(act.name) + '</b>: ' + esc(terms) + '.' });   // FIRST: every bot reads its stake from this before the block question opens
     this.fxClone({ name: act.name, kind: 'lib' }, 'calls a referendum', { actor: v });
-    this._announceTallyA(1 + this._cryptStealthMod(v, 'political'));                   // rulebook: a political action is undirected, +1 stealth
+    { const lkP = this._lockStealthAtAnnounce(v, 'political');   // v0.6.215: Creepshow Casino at the announce
+    this._announceTallyA(1 + this._cryptStealthMod(v, 'political') + (lkP ? lkP.s : 0));                   // rulebook: a political action is undirected, +1 stealth
+    this._sayAnnounceLock(v, lkP); }
     this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> calls a political action.' });   // the client's frozen shape (v2.6.106)
     this._emit('referendum-called', { vamp: v.name, card: act.name, deltas: act.deltas, value: +act.value.toFixed(2), pass: act.pass, mine: act.mine, agst: act.agst });
     const ans = await this._askBlock('Trainbot: ' + v.name + ' calls ' + act.name + ' \u2014 ' + terms + '. Block?');
@@ -4189,7 +4280,40 @@ class Bot {
     const cv = vamp && this.fxLookup(vamp.name); const t = String((cv && cv.kind === 'crypt' && cv.e.title) || '').toLowerCase(); if(!t) return false;
     return Array.isArray(rq.titles) && rq.titles.length ? rq.titles.map(x => String(x).toLowerCase()).includes(t) : true;
   }
-  _bestInterceptFor(vamp, played){   // mirrors _bestStealthFor's shape/contract exactly, for the defending side. v0.6.13 (restlist read): TYPE-FILTERED to react/mod -- 72 non-matching cards (Bowl of Convergence-class equipment, action grants, allies) carry mode fx.intercept; the v0.6.12 sweep covered the modifier+combat windows but missed the REACTION family's three finders
+  _lockInterceptFor(vamp, played, p, all){   // v0.6.215 (V5 wave 3): the intercept a location of mine gives by LOCKING -- Market Square ('Lock to give an Assamite you control +1 intercept'), Channel 10 (+2, 'not usable during the first action in a minion phase'), KRCG News Radio (+1 to a minion I control), Wall Street Night ('during an undirected action'). The Labyrinth's mirror: an unlocked freestanding card of mine, locked when spent, once per action. Without the action (p) the conditional ones fail closed -- the estimates (block odds, interceptPotential) count only what any action allows.
+    let best = null; const out = [];
+    (this.board || []).forEach(c => {
+      if(!c || c.kind !== 'lib' || c.locked || c.host || this._outOfPlay(c)) return;
+      const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') return;
+      if(played && played.has(FX_NORM(h.name))) return;
+      (h.e.modes || []).forEach(mo => { if(!mo.lock || !mo.fx) return;
+        const n = mo.fx.lockIntercept;   // fx.lockIntercept / lockInterceptClan / lockInterceptOn / lockInterceptNotFirst -- literal reads for the coverage scanner
+        if(typeof n !== 'number' || n <= 0) return;
+        if(mo.fx.lockInterceptClan && this._vampClan(vamp) !== mo.fx.lockInterceptClan) return;
+        if(mo.fx.lockInterceptOn === 'undirected' && !(p && p.kind === 'undirected')) return;
+        if(mo.fx.lockInterceptNotFirst && !(p && (this._turnActN | 0) >= 2)) return;   // the action being blocked is at least the second announced this turn (its own row counted)
+        const x = { name: h.name, s: n, fromBoard: c.id, lock: true };
+        if(all){ if(!out.some(o => o.name === x.name)) out.push(x); } else if(!best || n > best.s) best = x; });
+    });
+    return all ? out : best;
+  }
+  _spendIntercept(ic, blocker, attempt){   // v0.6.215: the ONE place an intercept card or lock is spent (the first look at the attempt and the second look at the counter) -- a hand card goes to the ash heap and pays its blood, a location of mine is locked and stays
+    if(ic.fromBoard && ic.lock){
+      const lc = this.board.find(c => c.id === ic.fromBoard); if(lc) lc.locked = true;
+      if(attempt) this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block.' });   // the ATTEMPT's frozen line (L12.attempt) first: the card's play line (L12.interceptPlay) is the blocker-name carrier, a lock line is not -- found by the V5 smoke (a bounce's new target blocked with Channel 10 and the actor fought the earlier blocker's name: two safety nets)
+      this._emitPlay(ic.name, 'intercept-lock', blocker && blocker.name);
+      this.fxClone({ name: ic.name, kind: 'lib' }, '+' + ic.s + ' intercept', { actor: blocker });
+      this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> locks <b>' + esc(ic.name) + '</b>: +' + ic.s + ' intercept.' });
+      return;
+    }
+    this.hand.splice(ic.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
+    this._toAsh(ic.name);   // v0.6.12 ash sweep
+    this._emitPlay(ic.name, 'react-intercept', blocker && blocker.name);   // v0.6.139: this spend left no trace row (CLAUDE.md 43c)
+    if(ic.cost && ic.cost.blood) blocker.blood = Math.max(0, (blocker.blood | 0) - ic.cost.blood);
+    this.fxClone({ name: ic.name, kind: 'lib' }, '+' + ic.s + ' intercept', { actor: blocker });
+    this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> plays <b>' + esc(ic.name) + '</b>: +' + ic.s + ' intercept.' });
+  }
+  _bestInterceptFor(vamp, played, p){   // mirrors _bestStealthFor's shape/contract exactly, for the defending side. v0.6.13 (restlist read): TYPE-FILTERED to react/mod -- 72 non-matching cards (Bowl of Convergence-class equipment, action grants, allies) carry mode fx.intercept; the v0.6.12 sweep covered the modifier+combat windows but missed the REACTION family's three finders
     let best = null;
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).some(t => t === 'react' || t === 'mod')) return;
@@ -4203,6 +4327,8 @@ class Bot {
           best = { idx, name: h.name, s: ic, cost: h.e.cost || null };
       });
     });
+    { const lb = this._lockInterceptFor(vamp, played, p);   // v0.6.215: a location's lock -- spent first on a tie (it unlocks at my unlock phase, the hand card is kept), The Labyrinth's rule
+      if(lb && (!best || lb.s >= best.s)) best = lb; }
     return best;
   }
   _bestBounceFor(vamps, played){     // Deflection & co: find a usable bounce card (redirect target is decided by the caller). v1.4.3: also returns `lock` from the mode (true for [dom]-style "Lock this reacting vampire", absent/undefined for [DOM]-style "do not lock") so _commitBounce can decide whether to lock. steg 6 (16 July, rulebook glossary): a WAKE in hand widens the candidate pool to LOCKED vampires too -- "a vampire that wakes during an action can ... play reaction cards as though unlocked for the duration of the action". An UNLOCKED candidate is always preferred (never spend the wake needlessly); `needsWake` tells _commitBounce to play the wake first.
@@ -4246,7 +4372,7 @@ class Bot {
       if((h.e.modes || []).some(mo => mo.fx && mo.fx.dodge && this._modeUsableBy(mo, vamp))) n++; });
     return n;
   }
-  _entryReqOk(e, vamp){              // v0.6.213 (V5 wave 1): a card's clan and sect requirements against the vampire that would play it -- req.clan (a clan icon, 'Requires Tzimisce') against the printed clan, req.sect ('Requires an Anarch': Invigorate) against the printed sect (cardfx crypt entries). Unknown vampire = fail closed. Masters never carry req.clan (cardfx v1.9.1).
+  _entryReqOk(e, vamp){              // v0.6.213 (V5 wave 1): a card's clan and sect requirements against the vampire that would play it -- req.clan (a clan icon, 'Requires Tzimisce') against the printed clan, req.sect ('Requires an Anarch': Invigorate) against the printed sect (cardfx crypt entries). Unknown vampire = fail closed. Masters carry req.clan since cardfx v1.9.6 (R-42), read by _masterReqOk.
     const r = e && e.req; if(!r || (!(r.clan && r.clan.length) && !r.sect)) return true;
     const h = vamp && this.fxLookup(vamp.name), ce = h && h.kind === 'crypt' ? h.e : null; if(!ce) return false;
     if(r.clan && r.clan.length && !r.clan.some(c => String(ce.clan || '').split('/').includes(c))) return false;
@@ -4879,6 +5005,9 @@ class Bot {
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('master')) return;
       if(excludeNorms && excludeNorms.has(FX_NORM(h.name))) return;
+      if(h.e.oot) return;   // v0.6.215 (V5 wave 3): an OUT-OF-TURN master is never a master-phase play (cardfx v1.9.6 `oot`): Sudden Reversal and Archon Investigation were played blind here, Archon paying 3 pool for nothing. Archon Investigation has its own trigger (_maybeArchon); the rest are held
+      if(!this._masterReqOk(h.e)) return;   // v0.6.215 (R-42): 'only a Methuselah who controls a ready minion who meets the requirements of a master card can play it' -- the clan icon (req.clan), a sect ('Requires a ready Anarch', req.sect) or a title (req.title)
+      if(this._masterHold(h)) return;       // v0.6.215: a one-shot master whose effect has no legal or worthwhile target now is held (Unholy Sacrament, Family Gathering)
       if(!this._mayPlay(h.name, h.e, null)) return;             // the general unique-in-play gate (forward-compatible; neither Blood Doll nor Vessel is unique today)
       const cost = (h.e.cost && h.e.cost.pool) || 0;
       if(cost && cost >= (this.pool | 0)) return;   // v0.6.210 (the sim, 19 Oct): a pool cost leaves me >= 1 pool -- paying the last one ousts me ('a Methuselah with no pool is ousted'). `cost > pool` let Vessel through at pool 1 and a Hunting Ground at pool 2: 35 bots in 33 of 240 baseline matches paid their last pool in their own master phase and played on at 0 (the ally finder's 'leave >= 1 pool' and the political finder's `>=` were already right)
@@ -4891,6 +5020,31 @@ class Bot {
       out.push(Object.assign({ idx, name: h.name, cost, trifle: !!h.e.trifle, known, persistent, curated, handler, archetype: !!h.e.archetype, host: h.e.host || null, rushGrant: (h.e.modes || []).some(mo => mo.fx && mo.fx.rushGrant > 0) }, villein ? { villein: true } : null));   /* v0.6.213: the flag only on Villein -- every other candidate row is the old */   // v0.6.205 (R4, F23): host 'ready' (Guardian Angel); rushGrant (Haven Uncovered) goes on an opponent's vampire   // fas C: archetype masters attach to a vampire at play, gated one-per-vampire
     });
     return out;
+  }
+  _masterReqOk(e){                   // v0.6.215 (V5 wave 3, R-42): a master's requirements are met by a READY vampire I control -- the rulebook (card types): 'only a Methuselah who controls a ready minion who meets the requirements of a master card can play it'. Clan and sect through _entryReqOk; a title requirement (Papillon's 'a ready vampire with a city title') by any printed title (the city titles are not told apart: fail open on the kind, closed on none)
+    const r = e && e.req; if(!r || (!(r.clan && r.clan.length) && !r.sect && !r.title)) return true;
+    return this.board.some(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._entryReqOk(e, v) && (!r.title || this._printedTitle(v)));
+  }
+  _printedTitle(v){ const h = v && this.fxLookup(v.name); return (h && h.kind === 'crypt' && h.e.title) || null; }
+  _masterHold(h){                    // v0.6.215: a master whose effect needs something the table does not offer now -- held in hand, never played blind
+    const hd = h.e.handler;
+    if(hd === 'unholy-sacrament'){
+      const cost = (h.e.cost && h.e.cost.pool) || 0;
+      if((this.pool | 0) - cost < Math.max(1, this._poolFloorEff())) return true;   // the influence floor: 3 pool for 3 blood is a transfer by another road, and the transfers stop at the floor too
+      return !this._uncBloodTarget(h.name);
+    }
+    if(hd === 'family-gathering') return !(this.cryptN > 0) || !this._cryptAllClan('Hecata');   // [RTR 20000501]: not with an empty crypt; and only when the revealed card is a Hecata whatever it is
+    return false;
+  }
+  _uncBloodTarget(name){             // v0.6.215: Unholy Sacrament's target -- a titled Sabbat vampire in my uncontrolled region that takes all 3 blood (capacity room >= 3); the most room first
+    let best = null;
+    (this.unc || []).forEach(v => { if(!v || v.zone !== 'uncontrolled') return; const h = this.fxLookup(v.name); if(!h || h.kind !== 'crypt' || h.e.sect !== 'Sabbat' || !h.e.title) return;
+      const cap = (h.e.cap | 0) || (v.cap | 0), room = cap - (v.blood | 0); if(room < 3) return; if(!best || room > best.room) best = { v, room }; });
+    return best;
+  }
+  _cryptAllClan(clan){               // v0.6.215: is every vampire still in my crypt of this clan? Read from my own list -- the deck's crypt (all of it is mine to know); a crypt with any other clan fails
+    const cr = (this.deck && this.deck.crypt) || []; if(!cr.length) return false;
+    return cr.every(e => { const h = this.fxLookup(e.name); return !!(h && h.kind === 'crypt' && String(h.e.clan || '').split('/').includes(clan)); });
   }
   _hostReadyFor(cardName){             // v0.6.205 (R4, F23): 'Put this card on a READY vampire you control' (Guardian Angel) -- the body most likely to block and to live through the fight it buys: the highest capacity, then the most blood; never a second copy on the same vampire
     const has = v => (v.attached || []).some(id => { const c = this.board.find(x => x.id === id); return !!(c && c.name === cardName && !this._outOfPlay(c)); });
@@ -5105,10 +5259,17 @@ class Bot {
   }
   async _considerLockIncome(phaseKey){   // v1.6.4/v0.6.31-32 (Johan's "push Inside Dirt to 100%" GO, Dreams of the Sphinx): the income-flavoured sibling of _considerTurnActGrants -- SAME shape (scan in-play UNLOCKED library permanents, check an eligible lock-gated mode for THIS phase, decide(), lock+apply), generalized so Arcane Library/Chantry (both lock-based income masters, phase-income-v2-plan.md) can reuse this reader later, not just Dreams of the Sphinx. THREE fx shapes handled: poolGain (optionally costEdge-gated at the MODE level -- distinct from Leverage's entry-level costEdge), bloodAdd+bloodAddTo:'unc' (target-selection mirrors _bestBloodStockFor's own spirit), and handSize (source-verified vekn.net: hand size is an ACTIVE target, not a passive ceiling -- "discard down to or draw up to your hand size" whenever it changes; draws immediately up to base(7)+bonus, reverted at end of turn via _revertHandSizeBonus).
     for(const c of this.board){
-      if(c.kind !== 'lib' || c.locked || c.host || this._outOfPlay(c)) continue;   // freestanding only -- host-attached recurring income already goes through _applyPhaseIncome
+      if(c.kind !== 'lib' || c.host || this._outOfPlay(c)) continue;   // freestanding only -- host-attached recurring income already goes through _applyPhaseIncome
       const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') continue;
-      for(const mo of h.e.modes || []){
-        if(!mo.lock || mo.phase !== phaseKey || this._outOfPlay(c)) continue;   // v0.6.36 (Johan's standing question, checking the counter/burn mechanic for uncertainty -- found live): re-checked EVERY iteration, not just once before the loop -- a card with multiple modes sharing the SAME phase (Dreams of the Sphinx's bloodAdd and handSize both being phase:'master') could burn from the FIRST mode's counter increment and then still fire the SECOND mode on the same now-out-of-play card, since the outer scan's _outOfPlay check only ran once, before either mode was tried. Verified live: counters reached 4 (past the burnAtCounters:3 threshold) because both modes fired in one call.
+      /* v0.6.215 (found by the suite after wave 3 made the lock check per mode): ONE LOCK, ONE EFFECT. The card-level `c.locked` check ran
+         once before the modes, so a card with two lock modes in one phase (Dreams of the Sphinx: +2 hand size and 1 blood to an uncontrolled
+         vampire, both in the master phase) locked for the first and fired the second on the same lock. Now each mode needs the card
+         unlocked; of two in one phase the blood comes first (it stays on the next vampire; the hand size is this turn's), the hand size
+         only when nothing else took the lock. */
+      const modes = (h.e.modes || []).slice().sort((a, b) => ((a.fx && typeof a.fx.handSize === 'number') ? 1 : 0) - ((b.fx && typeof b.fx.handSize === 'number') ? 1 : 0));
+      for(const mo of modes){
+        if(!(mo.lock || mo.once) || mo.phase !== phaseKey || this._outOfPlay(c)) continue;   // v0.6.215: `once` -- a free use once in the phase, no lock (Powerbase: Montreal: 'During your influence phase, you can add 1 blood to a vampire in your uncontrolled region')
+        if(mo.lock ? c.locked : c._onceTurn === this.ownTurns) continue;   // a lock mode needs the card unlocked; a once mode, not yet used this turn   // v0.6.36 (Johan's standing question, checking the counter/burn mechanic for uncertainty -- found live): re-checked EVERY iteration, not just once before the loop -- a card with multiple modes sharing the SAME phase (Dreams of the Sphinx's bloodAdd and handSize both being phase:'master') could burn from the FIRST mode's counter increment and then still fire the SECOND mode on the same now-out-of-play card, since the outer scan's _outOfPlay check only ran once, before either mode was tried. Verified live: counters reached 4 (past the burnAtCounters:3 threshold) because both modes fired in one call.
         if(typeof mo.fx.poolGain === 'number'){
           if(mo.costEdge && !this.edge) continue;
           const d = this.decide('lock-income', { name: c.name, kind: 'poolGain', amount: mo.fx.poolGain });
@@ -5123,7 +5284,7 @@ class Bot {
           this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(c.name) + '</b> for +' + mo.fx.poolGain + ' pool' + esc(counterNote) + '.' });
           this.push();
         } else if(typeof mo.fx.bloodAdd === 'number' && mo.fx.bloodAddTo === 'unc'){
-          const targetClan = h.e.req && h.e.req.clan;   // v0.6.40 (Johan's ask, Arcane Library -- the cheapest-win pick): unlike Dreams of the Sphinx's own bloodAdd (any uncontrolled vampire), this card's target must ALSO be the matching clan -- checked here since Dreams of the Sphinx has no req.clan at all (this filter is a no-op for it, verified: undefined req.clan skips the check entirely, same target pool as before)
+          const targetClan = mo.fx.bloodAddClan ? [].concat(mo.fx.bloodAddClan) : (h.e.req && h.e.req.clan);   // v0.6.215: the mode's own target clan first (Art Museum's 'a Toreador', Ecoterrorists' 'a Gangrel'); else the card's clan (Arcane Library, whose icon and target agree).   // v0.6.40 (Johan's ask, Arcane Library -- the cheapest-win pick): unlike Dreams of the Sphinx's own bloodAdd (any uncontrolled vampire), this card's target must ALSO be the matching clan -- checked here since Dreams of the Sphinx has no req.clan at all (this filter is a no-op for it, verified: undefined req.clan skips the check entirely, same target pool as before)
           let target = null;
           this.unc.forEach(v => {
             if((v.blood | 0) >= (v.cap | 0)) return;
@@ -5134,13 +5295,13 @@ class Bot {
           const d = this.decide('lock-income', { name: c.name, kind: 'bloodAdd', amount: mo.fx.bloodAdd, target });
           if(!d.lock) continue;
           await this._pace();
-          c.locked = true;
+          if(mo.lock) c.locked = true; else c._onceTurn = this.ownTurns;
           target.blood = Math.min(target.cap | 0, (target.blood | 0) + mo.fx.bloodAdd);
           let counterNote2 = '';
           if(h.e.burnAtCounters){ this._addCounter(c, 1); if(this._burnIfCounters(c, h.e.burnAtCounters)) counterNote2 = ' (' + h.e.burnAtCounters + ' counters -- burned)'; else counterNote2 = ' (' + c.counters + '/' + h.e.burnAtCounters + ' counters)'; }
           this.o.log('lock-income: ' + d.why);
-          this.fxClone({ name: c.name, kind: 'lib' }, 'is locked');
-          this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(c.name) + '</b> to add ' + mo.fx.bloodAdd + ' blood to an uncontrolled vampire' + esc(counterNote2) + '.' });   // uncontrolled is face-down, same "never name the target" convention as superior-Govern's own announce
+          this.fxClone({ name: c.name, kind: 'lib' }, mo.lock ? 'is locked' : 'is used');
+          this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> ' + (mo.lock ? 'locks' : 'uses') + ' <b>' + esc(c.name) + '</b> to add ' + mo.fx.bloodAdd + ' blood to an uncontrolled vampire' + esc(counterNote2) + '.' });   // uncontrolled is face-down, same "never name the target" convention as superior-Govern's own announce
           this.push();
         } else if(mo.fx.bankOut === 'unc'){
           /* v0.6.205 (R4, F23): Wasserschloss Anif -- 'Lock during your influence phase to move all counters on this card to a
@@ -5217,23 +5378,30 @@ class Bot {
       if(c.kind !== 'lib' || c.host || this._outOfPlay(c)) continue;
       const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') continue;
       if(h.e.req && h.e.req.title) continue;   // fail closed -- untracked, same precedent as _bestBloodStockFor
-      const clan = h.e.req && h.e.req.clan;
       for(const mo of h.e.modes || []){
         if(mo.lock || mo.phase !== phaseKey || typeof mo.fx.bloodAdd !== 'number' || mo.fx.bloodAddTo !== 'own-ready') continue;
-        let target = null;
-        this.board.forEach(v => {
-          if(v.kind !== 'crypt' || v.zone !== 'ready') return;
-          if((v.blood | 0) >= (v.cap | 0)) return;
-          if(clan){ const vh = this.fxLookup(v.name); if(!vh || vh.kind !== 'crypt' || !clan.includes(vh.e.clan)) return; }
-          if(!target || (v.cap | 0) > (target.cap | 0)) target = v;
-        });
+        /* v0.6.215 (V5 wave 3, R-42): WHO may gain the blood is the mode's own fact (fx.bloodAddClan: Meditative Grove's 'a ready Salubri';
+           fx.bloodAddSect: Carfax Abbey's 'a ready Anarch'; fx.bloodAddPath: Burial Site's 'who follows the Path of Death and the Soul').
+           It was req.clan, which no hunting ground carried -- since cardfx v1.9.6 every one carries its clan ICON there, a requirement to
+           PLAY the card ('a ready vampire you control' gains the blood whatever its clan). */
+        const okV = v => { if(v.kind !== 'crypt' || v.zone !== 'ready' || (v.blood | 0) >= (v.cap | 0)) return false;
+          const vh = this.fxLookup(v.name), ce = vh && vh.kind === 'crypt' ? vh.e : null;
+          if(mo.fx.bloodAddClan && !(ce && [].concat(mo.fx.bloodAddClan).includes(ce.clan))) return false;
+          if(mo.fx.bloodAddSect && !(ce && ce.sect === mo.fx.bloodAddSect)) return false;
+          if(mo.fx.bloodAddPath && !(ce && ce.path === mo.fx.bloodAddPath)) return false;
+          return true; };
+        const pick = ex => { let t = null; this.board.forEach(v => { if(v === ex || !okV(v)) return; if(!t || (v.cap | 0) > (t.cap | 0)) t = v; }); return t; };
+        const target = pick(null);
         if(!target) continue;
         target.blood = Math.min(target.cap | 0, (target.blood | 0) + mo.fx.bloodAdd);
+        let second = null;
+        if((mo.fx.bloodAddBaron | 0) > 0 && this.board.some(v => v.kind === 'crypt' && v.zone === 'ready' && /^baron$/i.test(this._printedTitle(v) || ''))){   // Carfax Abbey: 'if you control a ready baron, another ready Anarch you control can gain 1 blood as well'
+          second = pick(target); if(second) second.blood = Math.min(second.cap | 0, (second.blood | 0) + (mo.fx.bloodAddBaron | 0)); }
         this._huntingGroundUsedThisTurn = true;
         this.push();
-        this.o.log('hunting-ground: ' + c.name + ' -> ' + target.name + ' +' + mo.fx.bloodAdd + ' blood');
+        this.o.log('hunting-ground: ' + c.name + ' -> ' + target.name + ' +' + mo.fx.bloodAdd + ' blood' + (second ? ', ' + second.name + ' +' + mo.fx.bloodAddBaron + ' (a ready baron)' : ''));
         this.fxClone({ name: c.name, kind: 'lib' }, 'triggers');
-        this.note(c.name + ': ' + target.name + ' gains ' + mo.fx.bloodAdd + ' blood.');
+        this.note(c.name + ': ' + target.name + ' gains ' + mo.fx.bloodAdd + ' blood' + (second ? '; ' + second.name + ' gains ' + mo.fx.bloodAddBaron : '') + '.');
         return;   // only ONE hunting ground per turn -- stop immediately, don't even scan for other copies
       }
     }
@@ -5974,6 +6142,47 @@ class Bot {
     this.o.log('pending bleed armed: ' + amount + ' from ' + realOwner + (actingVampName ? ' (' + actingVampName + ')' : '') + (owner && owner !== who ? ' (via bounce from ' + who + ')' : ''));
     this._reactWindow();
   }
+  _archonFor(p){                     // v0.6.215 (V5 wave 3): Archon Investigation -- 'Out-of-turn. Only usable if a minion is bleeding you and the bleed amount is 4 or more, after blocks are declined. Burn the acting minion. (The action is not successful.)' A card in hand whose mode burns the actor (fx.burnActor), the bleed at me at its minimum, its pool cost payable leaving 1 (R-34), the acting minion named. Played before any 'as the action would be successful' effect [LSJ 19980105]: the bot plays it at its own decline, or when a modifier reopens the window.
+    if(!p || this.pending !== p || p.kind !== 'bleed' || !p.actingVampName || this.out) return null;
+    if((this._ootDebt | 0) > 0) return null;   // the rulebook (out-of-turn masters): 'you cannot play a second out-of-turn master card' before your next master phase -- the graded readings' red (2 Nov)
+    for(let i = 0; i < this.hand.length; i++){
+      const h = this.fxLookup(this.hand[i]); if(!h || h.kind !== 'lib' || !h.e.oot) continue;
+      const mo = (h.e.modes || []).find(m => m.fx && m.fx.burnActor); if(!mo) continue;   // fx.burnActor / fx.burnActorMinBleed -- literal reads
+      if((p.amount | 0) < ((mo.fx.burnActorMinBleed | 0) || 1)) continue;
+      const cost = (h.e.cost && h.e.cost.pool) || 0; if(cost && (this.pool | 0) - cost < 1) continue;
+      return { idx: i, name: h.name, cost };
+    }
+    return null;
+  }
+  _playArchon(p, ar){                // the play: pay, the card to the ash heap, the next master phase's action spent (the rulebook's out-of-turn price), the frozen line naming the minion, my pending bleed cleared (no damage lands on me), then 'Pass' so the actor's window answers
+    if(this.hand[ar.idx] !== ar.name) return false;
+    const vamp = p.actingVampName, n = p.amount | 0, who = p.who;
+    this.hand.splice(ar.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(ar.name);
+    if(ar.cost){ this.pool -= ar.cost; if(this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: -ar.cost, via: 'cost', card: ar.name })); }
+    this._ootDebt = (this._ootDebt | 0) + 1;
+    this._emitPlay(ar.name, 'archon', vamp);
+    this._emit('archon', { vamp, actor: who, n, pool: this.pool | 0 });
+    this.fxClone({ name: ar.name, kind: 'lib' }, vamp + ' is burned');
+    if(ar.cost) this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> pays <b>' + ar.cost + ' pool</b> for <b>' + esc(ar.name) + '</b> (pool ' + this.pool + ').' });
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> plays <b>' + esc(ar.name) + '</b> \u2014 <b>' + esc(vamp) + '</b> is burned (the bleed of ' + n + ' is not successful).' });   // ARCHON_BURN, the acting bot's parser
+    if(who && this._isHumanName(who)) this.chat(who + ': ' + vamp + ' is burned by ' + ar.name + ' \u2014 move it to your ash heap; the bleed of ' + n + ' does not land.');   // a human actor burns their own minion (the human-backup constant)
+    this.push();
+    this._clearPending('archon');
+    this.say('Pass');
+    return true;
+  }
+  _maybeArchon(p){ const ar = this._archonFor(p); if(!ar) return false; this.o.log('react window: Archon Investigation \u2014 a bleed of ' + (p.amount | 0) + ' after blocks are declined: ' + p.actingVampName + ' is burned'); p.declined = true; return this._playArchon(p, ar); }
+  _archonBurned(v){                  // v0.6.215: the acting bot's side -- my minion burned by the target's Archon Investigation; the action ends unsuccessful (no pool moves, no Edge), its card already resolved to the ash heap
+    const av = this._actingVamp, by = av && av.archoned && av.archoned.by;
+    v.zone = 'burned'; v.locked = false;
+    const gone = this.board.filter(x => x !== v && (x.host === v.id || (v.attached || []).includes(x.id))); v.attached = [];
+    this.board = this.board.filter(x => x !== v && !gone.includes(x));
+    gone.forEach(x => this._toAsh(x.name));   // the minion's cards go with it
+    this._unblockedStreak = 0;
+    this._emit('through', { vamp: v.name, n: 0, card: null, final: 0, archoned: true });
+    this.note(v.name + ' is burned (' + (by || 'the target') + '\u2019s Archon Investigation) \u2014 the bleed is not successful.');
+    this.push();
+  }
   _reactWindow(){
     this._emitSnapshot('react');       // A2 (rich option): the state every reaction decision saw                    // the symmetric window: Hold on… (thinking) → a real decision (M2) → Pass
     if(!this.pending || this.out) return;
@@ -6008,6 +6217,7 @@ class Bot {
        (steg 3 wrongly auto-passed the whole window; that over-generalized
        Johan's block-finality rule to reactions too). Only when declined AND
        nothing to bounce with is the immediate no-theatre Pass right. */
+    if(p.declined && this._maybeArchon(p)) return;   // v0.6.215 (V5 wave 3): a reopened window (a modifier raised the bleed to 4+) after blocks are declined
     if(p.declined && !bounce){ this.say('Pass'); return; }
     /* v0.6.204 (R3, play-test 14 Oct F6, cosmetic): against a BOT actor my 'Hold on...' is theatre (bots never operate the hold), and at
        the client's pace it reached the table between the actor's announce and its question ("Block? (21s -> no)" 0.2 s after it). It
@@ -6032,6 +6242,7 @@ class Bot {
     p.passTimer = setTimeout(() => {
       p._thinkQ = false;   // v0.6.204 (F6): my answer goes out now -- a thinking line after it would be out of order
       if(this.pending !== p || this.out) return;
+      if(this._archonFor(p)){ this._maybeArchon(p); return; }   // v0.6.215 (V5 wave 3): a bleed of 4+ at me and Archon Investigation in hand -- I decline the block (only my minions may block a bleed at me) and burn the bleeder: worth more than a bounce (the 4+ goes nowhere) and than a block (no combat to win)
       if(d.bounce && bounce) this._commitBounce(p, bounce).catch(e => this.o.log('commitBounce error:', e.message));   // steg 6: async now (may pace a wake->bounce combo) -- fire-and-forget like _commitBlock just below
       else if(d.block && !p.declined) this._commitBlock(p, d).catch(e => this.o.log('commitBlock error:', e.message));   // v0.4.5: _commitBlock is now async (paces a wake->intercept combo) -- fire-and-forget like _playTurn(); steg 5: the !declined belt to the decide()-level suspender -- a block after a final decline must never fire from EITHER layer
       else if(rd) this._commitReduce(p, rd).catch(e => this.o.log('reduce commit error:', e.message));   // N4c: the FOURTH outcome; v0.6.68: .catch -- fire-and-forget async must never kill the process (the _resolveCombat precedent)
@@ -6126,7 +6337,7 @@ class Bot {
       if(this._pentexVamp && c.name === this._pentexVamp) return;   // M2: this minion cannot block (Pentex)
       if(this._cryptCannotBlock(c, p && p.actingVampName)) return;  // VA: Navar-class -- cannot block an older (higher-cap) actor
       if(attempted && attempted.has(c.id)) return;   // fas A+: a failed attempter never retries the same action
-      const ic = this._bestInterceptFor(c, reacted || null);
+      const ic = this._bestInterceptFor(c, reacted || null, p);   // v0.6.215: the action's conditions (Wall Street Night, Channel 10)
       const frail = ((c.blood | 0) <= 1) ? -0.4 : 0;   // B-55f BASE (4 Aug, M4's four-straight-Zöe trace): a 1-blood blocker eats the default incoming strike into TORPOR -- at equal intercept, prefer a body that survives the trade (3-blood Casey stood idle while Zöe blocked herself to torpor). The -0.4 is tie-breaker-scale: intercept CAPABILITY still dominates (a dying vampire WITH the card beats a healthy bare one), and a dying SOLE candidate is still picked (blocking beats not blocking -- decide already said yes). GENERAL base behavior per Johan's doctrine: every blocking bot weighs survivability; archetype-level intercept BANKING is the deck-axis sibling (B-55f-b).
       const sc = (ic ? ic.s : 0) + this._equipIntercept(c) + this._hostedIntercept(c, p) + this._cryptIntercept(c, p) + frail;   // E1: borne equipment counts   // VA: + crypt intercept
       if(sc > bestS){ best = c; bestS = sc; }
@@ -6209,19 +6420,14 @@ class Bot {
     const baseIcp = blocker ? this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p) : 0;
     const icNeeded = stealthNow > baseIcp;   // v0.6.170 (Johan: the base rules forbid adding stealth or intercept that is not needed) -- bot-vs-bot too   // intercept is spent only when the stealth standing NOW beats what the blocker has for free; if the actor adds stealth later, _interceptSecondLook answers (v0.6.143d)
     if(blocker && !unIc && !icNeeded) this.o.log('block (' + blocker.name + '): no intercept card -- stealth ' + stealthNow + ' vs ' + baseIcp + ' already blocks; the cards wait for a stealth raise');
-    const ic = blocker && !unIc && icNeeded && this._bestInterceptFor(blocker, p.reacted);
+    const ic = blocker && !unIc && icNeeded && this._bestInterceptFor(blocker, p.reacted, p);
     if(unIc){
       this._setTallyB(unIc + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block with +' + unIc + ' intercept (<b>' + esc(plan.un.name) + '</b>).' });
     } else if(ic){
       await this._pace();                                // v0.4.5: so a wake+intercept combo doesn't land as one instant double-play
       p.reacted.add(FX_NORM(ic.name));
-      this.hand.splice(ic.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
-      this._toAsh(ic.name);   // v0.6.12 ash sweep
-      this._emitPlay(ic.name, 'react-intercept', blocker && blocker.name);   // v0.6.139: this spend left no trace row (CLAUDE.md 43c)
-      if(ic.cost && ic.cost.blood) blocker.blood = Math.max(0, (blocker.blood | 0) - ic.cost.blood);
-      this.fxClone({ name: ic.name, kind: 'lib' }, '+' + ic.s + ' intercept', { actor: blocker });
-      this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> plays <b>' + esc(ic.name) + '</b>: +' + ic.s + ' intercept.' });
+      this._spendIntercept(ic, blocker, true);   // v0.6.215: a hand card or a location's lock (with the attempt line)
 
       this._setTallyB((ic.s) + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));   // VA review: RAW (rulebook: intercept below 0 is real; the verdict compares raw)   // fas A+ (16 July, rulebook source-verified): intercept belongs to THE MINION -- "all modifications made to a minion's stealth or intercept remain in effect for the duration of the action" (vekn.net Detailed Turn Sequence) -- so a NEW attempt by a DIFFERENT minion (the attempted-set guarantees it IS different) starts from ITS OWN intercept: b is written FRESH, never accumulated across minions. The old _bumpTallyB stacked d1's +2 under d2's +1 into a phantom b=3.   // VA: + crypt intercept (Dowager/Christine), the minion's TOTAL floored at 0 on the wire
     } else if(blocker){
@@ -7840,6 +8046,7 @@ class Bot {
         let targetSeat = tgtName ? this._seatOfName(tgtName) : 0;
         if(!targetSeat && /^takes (a card|an undirected) action$/.test(m[2]) && prevObs && prevObs.who === who && prevObs.vamp === m[1] && /^plays /.test(prevObs.verb || '') && Date.now() - prevObs.at < 30000) targetSeat = prevObs.targetSeat || 0;
         this._obs = { who, seat: oseat, vamp: m[1], verb: m[2], card: m[4] || null, line: t, at: Date.now(), poolLoss: null, targetSeat: targetSeat || null, directed: this._actDirected(m[2], m[4] || null, oseat, targetSeat) };
+        if(!m[4] && oseat === this.turnSeat) this._turnActN = (this._turnActN | 0) + 1;   // v0.6.215: an action ROW (bleeds / hunts / calls / takes … action / attempts …), not a card play line -- a card action's row follows its play line, so each action counts once
         if(this._blockBar){ if(this._blockBar.who === who && this._blockBar.fresh) this._blockBar.fresh = false; else if(this._blockBar.who !== who) this._blockBar = null; }   // v0.6.127: the bar belongs to the announce that follows it; another Methuselah's action ends it
         /* v0.6.118: the per-minion ledger the forecast reads -- flush the previous action's stealth first */
         if(this._oppLastAct && this._oppLastAct.a > 0) this._opp(this._oppLastAct.seat).stealthUsed.push(this._oppLastAct.a);
@@ -8133,6 +8340,11 @@ class Bot {
         a._lineBlockFrom = who; a._lineBlockAt = Date.now();
         this._onBlockAttempt(who);
       }
+      return;
+    }
+    if((m = t.match(ARCHON_BURN)) && who !== this.o.name){   // v0.6.215 (V5 wave 3): my bleeding minion is burned by the target's Archon Investigation -- my bleed branch reads the flag when its window answers (the target says Pass right after the line)
+      const av = this._actingVamp;
+      if(av && av.v && av.v.name === m[2] && !av.archoned){ av.archoned = { by: who, n: parseInt(m[3], 10) | 0 }; this._emit('archoned', { vamp: m[2], by: who, n: av.archoned.n }); }
       return;
     }
     if((m = t.match(NET_STEALTH)) && who !== this.o.name){   // v0.6.147 (THE HOTSEAT NET): the ACTOR's stealth line, heard by the blocker -- same rule, mirrored
@@ -8730,19 +8942,20 @@ class Bot {
     this.push();
     this._restartAskTimer();             // the table resolves the contest (§12 Block line / prey pass)
   }
-  _interceptStack(vamp, played){     // v0.6.143d: the defender's mirror of _stealthStack -- DIFFERENT playable intercept cards and what they add
+  _interceptStack(vamp, played, p){     // v0.6.143d: the defender's mirror of _stealthStack -- DIFFERENT playable intercept cards and what they add
     const seen = new Set(); let S = 0, sum = 0;
     (this.hand || []).forEach(n => { const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).some(t => t === 'react' || t === 'mod') || seen.has(FX_NORM(h.name))) return;
       if(played && played.has(FX_NORM(h.name))) return; if(!this._titleOk(h, vamp)) return; if(((h.e.cost && h.e.cost.blood) || 0) > (vamp.blood | 0)) return;
       let best = 0; (h.e.modes || []).forEach(mo => { if(mo.when === 'lockedBlock') return; const ic = mo.fx && mo.fx.intercept; if(typeof ic === 'number' && ic > best && this._modeUsableBy(mo, vamp)) best = ic; });
       if(best > 0){ seen.add(FX_NORM(h.name)); S++; sum += best; } });
+    this._lockInterceptFor(vamp, played, p, true).forEach(lb => { S++; sum += lb.s; });   // v0.6.215: every location that locks for this blocker counts like a card
     return { S, sum };
   }
   _interceptSecondLook(){            // v0.6.143d (Johan, 20 Sep: 'a bot that plays ONE intercept card even when it holds more and more are needed is a clear limitation / bug'): the blocker's side of the exchange. When the tally moves and my block now FAILS, I look again: can the intercept I still hold reach their stealth? Then the next card goes down; if it cannot, the cards are kept.
     const p = this.pending; if(!p || !p.contested || !p.blockerVamp || this.out || this.o.stealthStack === 0) return;
     const t = this.tally; if(!t || t.mode !== 'block') return; const b = t.b | 0, a = t.a | 0; if(b >= a) return;   // the block succeeds as it stands
     if((p.icLooks | 0) >= 4) return; p.icLooks = (p.icLooks | 0) + 1;
-    const blocker = p.blockerVamp, need = a - b, stack = this._interceptStack(blocker, p.reacted), ic = this._bestInterceptFor(blocker, p.reacted);
+    const blocker = p.blockerVamp, need = a - b, stack = this._interceptStack(blocker, p.reacted, p), ic = this._bestInterceptFor(blocker, p.reacted, p);
     { const pi = this._equipPaidIntercept(blocker, p);   // v0.6.174: a paid equipment intercept (Bowl [AUS], 1 blood) comes before a card -- only when needed (the b < a guard above)
       if(pi && (pi.n >= need || (ic && stack.sum + pi.n >= need))){
         p.reacted.add(pi.key); blocker.blood = (blocker.blood | 0) - pi.cost;
@@ -8761,14 +8974,10 @@ class Bot {
     if(!go) return;
     if(p._icQ) return; p._icQ = true;
     this._afterBeat('react', () => { p._icQ = false; if(this.pending !== p || !p.contested || !p.blockerVamp || this.out) return false;   // v0.6.152: the card lands after the reaction beat, if the block still fails as the counter then stands
-                                     const t2 = this.tally; return !!(t2 && t2.mode === 'block' && (t2.b | 0) < (t2.a | 0) && this.hand[ic.idx] === ic.name); }, () => {
+                                     const t2 = this.tally; return !!(t2 && t2.mode === 'block' && (t2.b | 0) < (t2.a | 0) && (ic.fromBoard ? !!(this.board.find(c => c.id === ic.fromBoard && !c.locked)) : this.hand[ic.idx] === ic.name)); }, () => {
       const t2 = this.tally, b2 = t2.b | 0;
       p.reacted.add(FX_NORM(ic.name));
-      this.hand.splice(ic.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(ic.name);
-      this._emitPlay(ic.name, 'react-intercept', blocker.name);
-      if(ic.cost && ic.cost.blood) blocker.blood = Math.max(0, (blocker.blood | 0) - ic.cost.blood);
-      this.fxClone({ name: ic.name, kind: 'lib' }, '+' + ic.s + ' intercept', { actor: blocker });
-      this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> plays <b>' + esc(ic.name) + '</b>: +' + ic.s + ' intercept.' });
+      this._spendIntercept(ic, blocker);   // v0.6.215: a hand card or a location's lock
       this._setTallyB(b2 + ic.s); this.push(); if(this._vWait) this._vWait.arm();   // v0.6.204 (F10): my answer restarts the actor's clock
     });
   }
@@ -9505,6 +9714,7 @@ class Bot {
       await pace();
       /* v0.6.117: the '— Trainbot, turn N —' banner is gone -- the client prints its own TURN N header, and the bot's private count beside it (turn 1 under TURN 2) read as a contradiction. `ownTurns` still counts (emits, tempo). */
       this.phaseUsed = { master: 0, influence: 0, discard: 0 };     // v0.5+ (Johan, 14 July): fresh every one of MY OWN turns, mirroring the client's own per-turn phaseUsed reset
+      if((this._ootDebt | 0) > 0){ this.phaseUsed.master += this._ootDebt | 0; this._emit('oot-debt', { n: this._ootDebt | 0 }); this._ootDebt = 0; }   // v0.6.215 (V5 wave 3): an out-of-turn master played since my last turn used this master phase's action (the rulebook: it counts against the next master phase)
       this.phaseBonus = { master: 0, influence: 0, discard: 0 };    // TEMPORARY bonuses (Trifle, a future Parthenon-class card) never carry over
       this._trifleBonusUsed = false;                                // Trifle's OWN cap (max +1/turn, independent of any other bonus source)
       this._recomputePhaseActs();                                   // refresh the PERMANENT baseline from whatever's in play right now
@@ -9869,7 +10079,9 @@ class Bot {
           if(act.costBlood){ v.blood = Math.max(0, (v.blood | 0) - act.costBlood); this._park(act.costBlood, 0); }   // v0.6.118c: the blood price is paid as the card is played (announce), blocked or not
           this.push();
           this.fxClone({ name: act.name, kind: 'lib' }, '[' + (act.at || '') + '] recruits (life ' + act.life + ')', { actor: v });
-          this._announceTallyA(this._undirectedBaseStealth(v, 'recruit'));   // VC: recruit is an undirected BASE action at default +1 stealth (comprehensive rules) -- announced at 0 since birth
+          { const lkR = this._lockStealthAtAnnounce(v, 'recruit');   // v0.6.215: Creepshow Casino at the announce
+          this._announceTallyA(this._undirectedBaseStealth(v, 'recruit') + (lkR ? lkR.s : 0));   // VC: recruit is an undirected BASE action at default +1 stealth (comprehensive rules) -- announced at 0 since birth
+          this._sayAnnounceLock(v, lkR); }
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> recruits <b>' + esc(act.name) + '</b> [' + esc(act.at || '') + '].' });
           const ansRc = await this._askBlock('Trainbot: ' + v.name + ' recruits ' + act.name + '. Block?');
           await sleep(150);
@@ -10052,7 +10264,9 @@ class Bot {
           this.push();
           const eqVerb = act.isRetainer ? 'employs' : 'equips';   // N0: retainers say it right
           this.fxClone({ name: act.name, kind: 'lib' }, eqVerb, { actor: v });
-          this._announceTallyA(this._undirectedBaseStealth(v, 'equip'));   // VC: equip is an undirected BASE action at default +1 stealth (comprehensive rules) -- announced at 0 since birth
+          { const lkE = this._lockStealthAtAnnounce(v, 'equip');   // v0.6.215: Creepshow Casino at the announce
+          this._announceTallyA(this._undirectedBaseStealth(v, 'equip') + (lkE ? lkE.s : 0));   // VC: equip is an undirected BASE action at default +1 stealth (comprehensive rules) -- announced at 0 since birth
+          this._sayAnnounceLock(v, lkE); }
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> ' + eqVerb + ' <b>' + esc(act.name) + '</b>.' });
           const ansE = await this._askBlock('Trainbot: ' + v.name + ' ' + eqVerb + ' ' + act.name + '. Block?');
           await sleep(150);
@@ -10215,6 +10429,7 @@ class Bot {
         this.push();
         this.fxClone(act.name ? { name: act.name, kind: 'lib' } : v, 'bleeds for ' + act.n, act.name ? { actor: v } : undefined);   // the table SEES the play (clone animation)
         this._maybeBlockBar(v, act, prey);   // v0.6.127: Daring the Dawn-class -- the lethal bleed nobody's vampires may block
+        this._maybeClubIllusion(v, act, prey);   // v0.6.215 (V5 wave 3): Club Illusion -- 1 blood at the announce for +1 bleed, before the announce line so every reader sees the boosted amount
         this._maybeLarissaBoost(v, act);   // VB: Larissa-class +1-bleed discard, extracted for direct testability (the _revertHandSizeBonus precedent)
         this._announceTallyA((act.st | 0) + this._cryptStealthMod(v, 'bleed'));   // fas A (16 July): EVERY announce starts the block referendum FRESH -- a = the action card's built-in stealth (Night Moves-class; the contested verdict reads THIS), b = 0 (the previous action's intercept is stale by definition -- the same explicit-reset principle as combat's a:0/b:0, and it closes the cross-action tally-accumulation gap from the uncertainty review)   // VA: + the Royce-class crypt stealth mod, RAW here -- _announceTallyA floors for the wire and keeps the raw for _bumpTallyA
         this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> bleeds for ' + act.n + '.' });
@@ -10249,6 +10464,7 @@ class Bot {
              card makes it matter. */
           let curAns = ans, pumped = 0, spyBankTried = false;
           while(true){
+            if(this._actingVamp.archoned) break;   // v0.6.215: burned by Archon Investigation -- no more modifiers
             if(this._actingVamp.bounced && this.o.lateBounce !== 0){ this.o.log('bleed-modifier: the bleed was bounced \u2014 no pump on somebody else\'s prey'); break; }   // v0.6.144
             if(!spyBankTried){ spyBankTried = true;   // v0.6.211: a Spying Mission banked against this Methuselah -- 'the next time this vampire is about to successfully bleed the same Methuselah': the +2 first, then a reactions-only window (a modifier's own shape)
               if(this._playSpyBank(v)){ pumped++;
@@ -10256,6 +10472,11 @@ class Bot {
                 await sleep(150);
                 if(curAns.what === 'block') break;
                 continue; } }
+            if(this._playHaqimLaw(v)){ pumped++;   // v0.6.215 (V5 wave 3): Haqim's Law: Retribution -- each copy once per action, before the cards (a card in hand stays a card)
+              curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +1 bleed (Haqim\u2019s Law) \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
+              await sleep(150);
+              if(curAns.what === 'block') break;
+              continue; }
             const mod = this._bestBleedModifierFor(v, this._actingVamp.played, this._actingVamp.limitedUsed);
             if(!mod) break;
             const d = this.decide('bleed-modifier', { mod, amount: this._actingVamp.n });
@@ -10273,7 +10494,7 @@ class Bot {
              frozen L12.add grammar with +0 (no protocol change: every client and bot already reopens its window on that line). */
           const tgtBot = !!((this.players || []).find(q => q.seat === this._actingVamp.target) || {}).bot;   // a BOT target holds its bounce for this window; a human target was already asked 'Any reaction?' at the announce and answers in its own time -- a second full ask on every bleed would cost a human table askSecs per bleed (the suite's live table showed it)
           const tgtName = this.seatName(this._actingVamp.target), ld = this._lastDecline; const humanWantsTotal = !!this.o.askHumansTotal && !tgtBot && ld && ld.who === tgtName && ld.phrase === 'No block' && Date.now() - ld.at < 60000;   /* knob askHumansTotal, OFF until the suite's human harness learns to answer the second question: it declines with 'No block' everywhere and then stays silent, so every bleed waited a full askSecs (suite abort at 'turn back after bot turn 4') */   // v0.6.144 (Johan: 'it should ask human players too -- it decides a lot and it is how humans play each other'): a human who said 'No block' declined the block ONLY and hears the total; one who said 'No reaction' / 'Pass' declined everything; one who said nothing is not there. Answer with No / No reaction (closes at once) or Yes (wait for me).
-          if(this.o.lateBounce !== 0 && (tgtBot || humanWantsTotal) && !pumped && curAns.what !== 'block' && !this._actingVamp.bounced && (this._actingVamp.n | 0) >= 1 && this._actingVamp.target){
+          if(this.o.lateBounce !== 0 && (tgtBot || humanWantsTotal) && !pumped && curAns.what !== 'block' && !this._actingVamp.bounced && !this._actingVamp.archoned && (this._actingVamp.n | 0) >= 1 && this._actingVamp.target){
             this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> adds +0 bleed (= ' + this._actingVamp.n + ').' });
             this._emit('bleed-total', { vamp: v.name, n: this._actingVamp.n, pumped: 0 });
             /* v0.6.206 (found by the release's own smoke): no beat between the line and its window. A 150 ms sleep sat here and after a
@@ -10283,7 +10504,9 @@ class Bot {
             curAns = await this._askBlock('Trainbot: ' + v.name + ' \u2014 bleed total ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + ', no more modifiers. Any reaction before it resolves?', { reactionsOnly: true });
             await sleep(150);
           }
-          if(curAns.what === 'block'){
+          if(this._actingVamp.archoned){
+            this._archonBurned(v);   // v0.6.215 (V5 wave 3): the target's Archon Investigation -- the minion is burned, the bleed is not successful (no pool, no Edge)
+          } else if(curAns.what === 'block'){
             this.note('Blocked' + (curAns.who ? ' by ' + curAns.who : '') + '. Combat begins.');
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: this._actingVamp.n, by: this._lastBlockerName || curAns.who || null });
             await this._resolveCombat(v);   // v0.6.22: multi-round wrapper (was the single-round primitive directly)

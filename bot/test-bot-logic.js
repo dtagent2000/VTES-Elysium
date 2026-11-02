@@ -10864,7 +10864,7 @@ async function connectWithRetry(client, tries = 30){
       const a = mk156(); a.hand = ['Blood Doll', 'Vessel']; a.pool = 1;
       ok(names(a._bestMasterFor(new Set())) === 'Blood Doll', '156a pool 1: Vessel (1 pool) is not a candidate -- it would be my last pool; the free Blood Doll is (got ' + names(a._bestMasterFor(new Set())) + ')');
       a.pool = 2; ok(names(a._bestMasterFor(new Set())) === 'Blood Doll,Vessel', '156b pool 2: both (Vessel leaves me 1)');
-      const b = mk156(); b.hand = ['Asylum Hunting Ground']; b.pool = 2;
+      const b = mk156(); b.hand = ['Asylum Hunting Ground']; b.pool = 2; b.board = [{ id: 'm156', kind: 'crypt', name: 'Sully (G6)', zone: 'ready', blood: 3, locked: false }];   // v0.6.215 (R-42): the hunting ground's Malkavian icon needs a ready Malkavian -- the fixture had none (the pool rule is what 156c tests)
       ok(b._bestMasterFor(new Set()).length === 0, '156c pool 2: Asylum Hunting Ground (2 pool) is not a candidate (got ' + names(b._bestMasterFor(new Set())) + ')');
       b.pool = 3; ok(names(b._bestMasterFor(new Set())) === 'Asylum Hunting Ground', '156c ...at pool 3 it is (leaves 1)');
       const v = { id: 'c1', kind: 'crypt', name: 'Chrysanthemum (G6)', zone: 'ready', blood: 4, locked: false };
