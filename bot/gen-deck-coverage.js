@@ -619,4 +619,4 @@ console.log('rapport: ' + outPath);
 }
 
 if (require.main === module) main();
-module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.41' };
+module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.42' };

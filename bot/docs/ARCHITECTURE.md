@@ -55,6 +55,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | `elysium-cardfx.json` / `.js` | the card-effect library (auto tier for the whole pool + 105 curated), built by `cardfx-compile.js` from `cardfx-curated.json` + `vtes.json` |
 | `elysium-twd-profile.json` / `.js`, `elysium-twd-archetypes.json` / `.js` | the TWDA prior (per clan × group window × discipline signature: shares and labels), built by `twd-profile.py` / `twd-archetypes.py` |
 | `deck-*.json`, `rig-a1.json`, `design-balanced-serie-bal1.txt` | the decks (the embedded ones' files, and the 14 other V5 precons: test inputs the client does not offer), a rig, the balanced seat design |
+| `krcg-v5.js` | KRCG's v5 dump (`vtes-v5.json` + `expansions.json`) → the v3-shaped `vtes.json` the compiler, `gen-precon.js`, the ledger, `test-cardfx.js` and the TWD tools read |
 | `gen-precon.js` | the V5 precons from `vtes.json`'s sets; `--check` compares the starters and the embedded decks by KRCG id |
 | `gen-card-ledger.js` → `docs/CARDS.md` | the card ledger: per card the coverage verdict, tier, decks, rulings, suite sections, uses in the sim; the class map |
 | `elysium-bot-sim.js` | THE SIM TABLE: the hotseat table under a virtual clock, deterministic, every seating; a key the bot does not embed plays `deck-<key>.json` |

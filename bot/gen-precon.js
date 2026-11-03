@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-precon.js v1.1.0 (29 Oct 2026, bot v0.6.214; v1.0.0 bot v0.6.212) -- the V5 preconstructed decks, built from KRCG's card data.
+/* gen-precon.js v1.1.1 (2 Nov 2026, bot v0.6.216: card bundles left out; v1.1.0 bot v0.6.214; v1.0.0 bot v0.6.212) -- the V5 preconstructed decks, built from KRCG's card data.
 
    Why: the V5 plan (BOARD) makes the V5 precons playable in waves. Their lists are in vtes.json's `sets` data (each card says
    which precon carries it and how many copies), so they are generated, not typed. The four starters the bot already plays
@@ -29,7 +29,7 @@
 
 const fs = require('fs'), path = require('path');
 
-const GEN_PRECON_VERSION = '1.1.0';
+const GEN_PRECON_VERSION = '1.1.1';
 /* The combat posture of each precon the bot does not embed (D-102, Johan 29 Oct 2026): chase = the fight is at close range (the strength
    decks: Brujah, Gangrel, Tzimisce, Path of Caine); snipe = long range with a ranged strike or steal in hand (Banu Haqim: Hunger of
    Marduk); every other precon waves (long range defensively). The embedded decks keep theirs in the bot's DECK_STRATEGY. */
@@ -75,6 +75,7 @@ function main(){
   const fx = B.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
   if (!fx){ console.error('gen-precon: elysium-cardfx.json missing or invalid beside the script'); return 2; }
   const cards = JSON.parse(fs.readFileSync(o.vtes, 'utf8'));
+  if (Array.isArray(cards) && cards.length && typeof cards[0].kind === 'string'){ console.error('gen-precon: KRCG\u2019s v5 dump is saved as vtes.json: the tools read the v3 shape built from it -- save the dump as vtes-v5.json beside expansions.json and run node krcg-v5.js (root CLAUDE.md, \u201cData that is not in git\u201d)'); return 2; }   // v1.1.1
 
   // the bot's own ladder (Bot.fxLookup): exact -> lowercase alias -> client-identical FX_NORM index
   const lookup = n => {
@@ -105,6 +106,11 @@ function main(){
     const name = idOf(printed) === c.id ? printed : c.name;
     (isCrypt(c) ? d.crypt : d.library).push({ name, qty: +e.copies || 1, id: c.id });
   }
+  /* v1.1.1 (2 Nov 2026, KRCG's v5 dump through krcg-v5.js): a 'Precon' occurrence is a fixed print run, not always a deck --
+     Secrets of New York (54 cards) and Noites Brasileiras (54) are bundles of the Fifth Edition set. A deck has a legal size
+     (12+ crypt, 60+ library); the rest is left out, named once. */
+  for (const d of [...decks.values()]){ const cc = d.crypt.reduce((s, x) => s + x.qty, 0), ll = d.library.reduce((s, x) => s + x.qty, 0);
+    if (cc < 12 || ll < 60){ decks.delete(d.key); if (!o.list) console.log('not a deck: ' + d.set + ' / ' + d.precon + ' (' + cc + ' crypt / ' + ll + ' library) -- a card bundle, left out'); } }
   const order = [...decks.values()].sort((a, b) => V5_SETS.indexOf(a.set) - V5_SETS.indexOf(b.set) || a.precon.localeCompare(b.precon));
   const count = list => list.reduce((s, x) => s + x.qty, 0);
   const deckName = d => 'V5 ' + SET_LABEL[d.set] + ' — ' + d.precon + ' (Black Chantry ' + String(d.release).slice(0, 4) + ')';

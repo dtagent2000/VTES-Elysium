@@ -39,7 +39,7 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 - `node test-bot-canary.js` — the §12 grammar contract against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it (the
   read-only copies); without them it skips loudly, never fakes a pass. Run it a second time against main's current release
   (HOWTO: "the canary against main's release").
-- `node test-cardfx.js` when cardfx changed (needs `vtes.json` beside it — root `CLAUDE.md`, "Data that is not in git").
+- `node test-cardfx.js` when cardfx changed (needs `vtes.json` beside it, built by `krcg-v5.js` from KRCG's v5 dump — root `CLAUDE.md`, "Data that is not in git").
 - `node diag-hb1-smoke.js` when the bot's browser surface changed (needs `elysium-bot-diag.html` beside it).
 - `node test-bot-hotseat.js` when anything near the hotseat bridge changed.
 - When the wire or the timing changed: main's client suite beside the release bytes (`client/`'s LIVE tests drive the real bot:

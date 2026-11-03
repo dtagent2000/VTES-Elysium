@@ -76,13 +76,13 @@
    FORMAT COMPATIBILITY (v1.1.0): vtes.json exists in two generations —
    the "v3" shape (card_text/name/_name/clans/pool_cost…) and KRCG's
    krcg-api-v4 "v5" shape (kind/text/printed_name+suffix/clan/cost…).
-   normalizeCard() detects per record (the v5-only `kind` field) and maps
-   v5 into the v3-shaped record the pipeline reads — MIRRORING the client's
-   parseV3Card/parseV5Card field map (SKILLS.md → "Work with KRCG card
-   data"), so client and compiler stay in lockstep on one contract. The two
-   v5 unknowns that map noted (cost shape unconfirmed, title unobserved)
-   are read defensively and COUNTED in the report so a real v5 file run
-   surfaces gaps immediately instead of silently dropping facts.
+   normalizeCard() detects per record (the v5-only `kind` field). Since
+   v1.9.7 (bot v0.6.216, RULINGS D-105) a v5 record goes through
+   krcg-v5.js's toV3 — the ONE v5 -> v3 map, which also writes the
+   v3-shaped vtes.json the other tools read — so compiling the dump directly
+   and compiling the converted file give the same cardfx. A cost shape
+   neither known ({type: 'Pool' | 'Blood' | 'Conviction', value}) nor free
+   ({}) is still COUNTED in the report, never mislabelled.
 
    Zero dependencies. Dark Pack note: the output carries card NAMES and
    derived gameplay tags only — no rules text, no images. Source data is
@@ -91,7 +91,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.9.6';   // 2 Nov 2026 (bot v0.6.215, V5 wave 3): `oot` -- an out-of-turn master (keyword segment, 36 entries) the master-phase finder never offers; curated masters inherit the data's clan requirement (R-42: a clan icon on a master IS a requirement) and its out-of-turn keyword.
+const FXC_VERSION = '1.9.7';   // 2 Nov 2026 (bot v0.6.216, KRCG's v5 dump as the source, krcg-v5.js): the v5 cost shape ({type: 'Pool', value}) read; the v5 wording 'this card is put in play / on' is persistent; a 'Requires …' sentence is found mid-line ('Title. Requires a Sabbat vampire.').
+// const FXC_VERSION_196 = '1.9.6';   // 2 Nov 2026 (bot v0.6.215, V5 wave 3): `oot` -- an out-of-turn master (keyword segment, 36 entries) the master-phase finder never offers; curated masters inherit the data's clan requirement (R-42: a clan icon on a master IS a requirement) and its out-of-turn keyword.
 // const FXC_VERSION_195 = '1.9.5';   // 29 Oct 2026 (bot v0.6.214, V5 wave 2): req.notFirstRound also reads 'Not usable the first round' / 'Not usable first round' (Eruption of Vitae, Growing Fury, Well-Aimed Car: 9 -> 12 entries; wave 1's re-review found them untagged). The curated tier's wave-2 readings (Flash, Resist Earth's Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn) need no compiler change.
 // const FXC_VERSION_194 = '1.9.4';   // 29 Oct 2026 (bot v0.6.213, V5 wave 1, the egress review): req.notFirstRound also reads a sentence 'Not usable during the first round' -- Walk of Flame (banuhaqim's, played in round 1 since its aggravated strike was preferred), Ahriman's Demesne, Blood Agony, Blood to Water, Torment the Soul: 4 -> 9 entries; a text that LIFTS the restriction (Shotgun Ritual, Al-Ashrad, Hector Trelane) is not tagged.
 // const FXC_VERSION_193 = '1.9.3';   // 19 Oct 2026 (bot v0.6.211, the stable's cards): a curated entry keyed by a printed name VARIANT (Pentex(TM) Subversion) is written under the printed name too -- a list typed with the printed name (KRCG's precons, the V5 generator) got the empty auto entry; each spelling now resolves exactly to itself, so fxLookup(name).name keeps equalling the hand's own name (the master loop re-anchors by name)
@@ -142,40 +143,20 @@ const discTri = d => { const l = String(d || '').toLowerCase(); return l.length 
 /* ---------------- v3/v5 record normalization ----------------
    Returns a v3-SHAPED record {name,_name,name_variants,types,card_text,
    capacity,disciplines,clans,pool_cost,blood_cost,group,title,banned,_crypt}
-   plus which format it was. v5 field map per the client's verified parser:
-   printed_name+suffix is the identity ("Gratiano"+"G2" → "Gratiano (G2)"),
-   card_text→text, crypt clan is singular, library disciplines live in
-   discipline_requirement, cost is a defensive {type,amount} read.          */
+   plus which format it was. A v5 record is mapped by krcg-v5.js's toV3 (its
+   header has the field map); this function adds only `_crypt` and the
+   unknown-cost count.                                                      */
 function normalizeCard(card){
   if(typeof card.kind !== 'string'){
     return { fmt: 'v3', rec: Object.assign({ _crypt: isCryptCard(card) }, card) };
   }
-  const crypt = card.kind === 'Crypt';
-  const rec = { _crypt: crypt, types: card.types || [] };
-  rec._name = card.printed_name || '';
-  rec.name = rec._name + (card.suffix ? ' (' + card.suffix + ')' : '');
-  rec.name_variants = (card.name_variants || [])
-    .map(v => typeof v === 'string' ? v : (v && v.name))
-    .filter(v => typeof v === 'string' && v);
-  rec.card_text = typeof card.text === 'string' ? card.text : '';
-  if(card.capacity !== undefined) rec.capacity = card.capacity;
-  rec.disciplines = crypt
-    ? (Array.isArray(card.disciplines) ? card.disciplines : [])
-    : (card.discipline_requirement && Array.isArray(card.discipline_requirement.disciplines)
-        ? card.discipline_requirement.disciplines : []);
-  rec.clans = crypt ? (card.clan ? [card.clan] : [])
-                    : (Array.isArray(card.clan_requirement) ? card.clan_requirement : []);
-  if(card.cost !== undefined && card.cost !== null){
-    if(typeof card.cost === 'object' && card.cost.type && card.cost.amount !== undefined){
-      if(card.cost.type === 'pool') rec.pool_cost = String(card.cost.amount);
-      else if(card.cost.type === 'blood') rec.blood_cost = String(card.cost.amount);
-      else rec._costUnknown = true;
-    } else rec._costUnknown = true;      // unconfirmed shape — degrade + count, never mislabel
-  }
-  if(card.group !== undefined) rec.group = String(card.group).replace(/^G/, '');
-  if(typeof card.title === 'string' && card.title) rec.title = card.title;
-  if(card.banned) rec.banned = card.banned;
-  return { fmt: 'v5', rec };
+  /* v1.9.7 (bot v0.6.216, RULINGS D-105; the egress review): a v5 record goes through krcg-v5.js's toV3, the ONE v5 -> v3 map, so
+     compiling the dump directly gives the same cardfx as compiling the vtes.json built from it (this reader had its own map, and
+     it disagreed: no '(ANY)', 'fli' not 'flight', the vote title's case). The sets are not needed here (an empty map). */
+  const rec = require('./krcg-v5.js').toV3(card, new Map());
+  { const c = card.cost, known = c === undefined || c === null || (typeof c === 'object' && (!Object.keys(c).length || (/^(?:pool|blood|conviction)$/i.test(String(c.type || '')) && (c.value !== undefined || c.amount !== undefined))));
+    if(!known) rec._costUnknown = true; }   // an unknown cost shape ({type: 'Pool', value} known, {} free): degrade + count, never mislabel
+  return { fmt: 'v5', rec: Object.assign({ _crypt: isCryptCard(rec) }, rec) };
 }
 
 const num = v => /^x$/i.test(v) ? 'X' : parseInt(v, 10);
@@ -772,7 +753,7 @@ function libEntry(c){
   else {
     const firstLine = txt.split('\n')[0];
     if(/\blocation\b/i.test(firstLine)) e.persistent = true;
-    else if(/put this card (?:in|into) play|put this card on|stays? in play|remains? in play/i.test(txt)) e.persistent = true;
+    else if(/put this card (?:in|into) play|put this card on|this card is put (?:in|into) play|this card is put on|stays? in play|remains? in play/i.test(txt)) e.persistent = true;   // v1.9.7: + the v5 wording 'Successful referendum means this card is put in play / on this vampire' (Dogs of War, Crusade: Rome)
   }
   const modes = libModes(c.card_text);
   if(modes.length) e.modes = modes;
@@ -808,7 +789,7 @@ function libEntry(c){
     if(tags.size) ref.tags = [...tags].sort();
     if(Object.keys(moved).length) ref.fx = moved;
     /* fail closed: a "Requires ..." line the req object does not fully express (a titled Camarilla vampire, an Anarch, capacity 5+ ...) marks the entry, so a caller that cannot verify the precondition never calls the card. req.titles alone IS verifiable (crypt entries carry `title`). */
-    const rq = (txt.match(/^Requires? [^.\n]+\./im) || [''])[0];
+    const rq = (txt.match(/(?:^|[.:] +)(Requires? [^.\n]+\.)/im) || ['', ''])[1];   // v1.9.7: also mid-line -- the v5 text puts the keywords first ('Title. Requires a Sabbat vampire.': Crusade: Rome)
     if(rq && !(e.req && e.req.titles && /^Requires? an? (?:[a-z ]+?)(?:(?:, | or )[a-z ]+)*\.$/i.test(rq) && !/titled|vampire|anarch|sabbat|camarilla|laibon|independent|capacity/i.test(rq))){ e.req = e.req || {}; e.req.unmodelled = true; }
     if(Object.keys(ref).length) e.ref = ref;
   }
@@ -880,8 +861,14 @@ function compile(cards, curated){
     const grp = gm ? parseInt(gm[1], 10) : 0;
     return { adv, grp };
   };
+  /* v1.9.7 (the v5 dump): KRCG's v5 name_variants carry VERNACULAR short names ('Amelia' for 'Amelia, The Blood Red Tears (G3)',
+     'Lucian' for 'Lucian, the Perfect (G4)'); the newest-group ladder then gave a card's own printed name to ANOTHER card. A name
+     that is some card's own printed name (`_name`) belongs to that card: those candidates win before the ladder. */
+  const ownsName = new Map();
+  normd.forEach(({ rec }) => { const k = String(rec._name || '').trim().toLowerCase(); if(k){ if(!ownsName.has(k)) ownsName.set(k, new Set()); ownsName.get(k).add(rec.name); } });
   [...variants.keys()].sort().forEach(k => {
-    const cands = [...variants.get(k)];
+    let cands = [...variants.get(k)];
+    { const own = ownsName.get(k); if(own){ const mine = cands.filter(c => own.has(c)); cands = mine.length ? mine : [...own]; } }   // the owner even when only OTHER cards list the name ('Distraction' is a card; Misdirection's variant is 'Distraction'): noteAlias never notes a card's own name, so the owner is no candidate (the egress review)
     if(cands.length > 1){
       collisions.push(k);
       cands.sort((a, b) => {
@@ -891,8 +878,13 @@ function compile(cards, curated){
         return a.localeCompare(b);
       });
     }
-    alias[k] = cands[0];
+    if(/[\p{L}\p{N}]/u.test(k)) alias[k] = cands[0];   // v1.9.7: a key with no letter or digit is no name ('!', the v5 nickname of Behind You!): never an alias the log parser could meet
   });
+
+  /* v1.9.7: five v3 spellings the v5 dump's name variants leave out -- main's reply of 1 Nov: the client adds them itself, so an old
+     deck list still resolves; the bot does the same (the v3 file's targets, by name). */
+  [['theo bell (adv)', 'Theo Bell (G2 ADV)'], ['tegyrius', 'Tegyrius, Vizier (G2)'], ['tegyrius (adv)', 'Tegyrius, Vizier (G2 ADV)'],
+   ['tegyrius, vizier (adv)', 'Tegyrius, Vizier (G2 ADV)'], ['lucinde', 'Lucinde, Alastor (G3)']].forEach(([k, v]) => { if(!alias[k] && crypt[v]) alias[k] = v; });
 
   /* curated overlay — whole-entry replacement, keys should be canonical
      vtes.json names (new names are accepted for house content but flagged

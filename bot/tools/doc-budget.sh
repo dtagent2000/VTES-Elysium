@@ -36,7 +36,7 @@ for pb in $PAGES; do
     case "$p" in *.md|*.js|*.py|*.sh|*.json|*.html|*.txt|*.csv|*.yml|*/) ;; *) continue ;; esac
     case "$p" in   # generated, scratch, planned, a pattern, or main's
       http*|*\**|*'<'*|*'>'*|*NNNN*|serie-*|bench-*|sim-*|snap-*|lab-*|/tmp/*|../*|client/*|.github/*|-*|.*) continue ;;
-      twda.json|twda-vdb.json|vtes.json|vtes-v5.json|twd_decks.json|SUMMARY.md|PREDICTIONS.md|REPORT.md|design.txt|progress.txt) continue ;;
+      twda.json|twda-vdb.json|vtes.json|vtes-v5.json|expansions.json|twd_decks.json|SUMMARY.md|PREDICTIONS.md|REPORT.md|design.txt|progress.txt) continue ;;
       suite.log|ev.jsonl|snap-suite.sh|runsec.sh|launch.sh|chain.sh|poll-home.sh|poll-seed.sh|poll-bal2.sh|run-smoke2.sh) continue ;;
       run-null4.sh|docs/CARDS.md|gen-card-ledger.js|ana-gates.py|test-bot-sim-boundary.js|elysium-knowledge.json) continue ;;
       client-old.html|old-bot.js|elysium-soak-hotseat.js|elysium-test-harness.js|check-versions.js|bot-gates.yml) continue ;;
@@ -56,7 +56,7 @@ done
 while read -r p; do
   q="${p#bot/}"
   [ -e "$B/$q" ] || { bad "root CLAUDE.md names $p, which does not exist"; missing=1; }
-done < <(grep -o '`bot/[A-Za-z0-9_./-]*`' "$R/CLAUDE.md" | tr -d '`' | grep -v '[<>*]' | sort -u)
+done < <(grep -o '`bot/[A-Za-z0-9_./-]*`' "$R/CLAUDE.md" | tr -d '`' | grep -v '[<>*]' | grep -vE '^bot/(vtes|vtes-v5|expansions|twda|twda-vdb)\.json$' | sort -u)   # third-party data: fetched, never committed
 [ "$missing" = 0 ] && ok "every path named in a standing page (and every bot/ path in the root CLAUDE.md) exists"
 
 # 3. the versions STATUS names (STATUS read with * and ` stripped)

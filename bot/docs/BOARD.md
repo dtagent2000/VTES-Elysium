@@ -23,11 +23,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   unmodelled action cards. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its rows are playable and it holds up in
   the sim; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares the seven
   embedded decks). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104; `CARDS.md`; HOWTO.
-- **KRCG's v5 dump** (main's reply of 1 Nov, 5.1; Johan, 2 Nov: after wave 3): the v3 file stopped at Sabbat V5, so the 63 cards of
-  Secrets of New York and Noites Brasileiras are unknown to cardfx. Move `cardfx-compile.js`, `gen-precon.js` and the profile tools to
-  the v5 dump (its field map: `client/SKILLS.md`), the old cards byte-identical but for the 295 errata texts (diffed). 5.2 (names) is
-  done (v0.6.215: the article-first alias, 4,149 of 4,149). *Done when* the compile reads the dump and the diff is read. Docs: root
-  `CLAUDE.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
   round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
   and Path requirements in every finder; the amber cards; the latent items. *Done when* each is built and section-tested, or ruled
@@ -89,6 +84,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   by identical minified output. *Done when* Johan has chosen; then per round. Docs: spec §8 Q6.
 
 ## Known, not built (bot side)
+- **The TWD profile's article-last keys** (v0.6.216's egress): 14 profile keys (`Barrens, The`, `Labyrinth, The` …) are not cardfx
+  keys, so `_twdExpect` never counts those cards (profile keys by `_name`, cardfx by the name). *Done when* the profile is keyed
+  (or read) through the alias table and a rebuild shows 0 missing. Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
 - **A human's bounce of a bot's bleed** is not read by the acting bot; a bot that is a bounce's new target cannot bounce onward.
   *Done when* the client's bounce play line (a pool target) is parsed and section-tested. Docs: RULINGS O-3.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.
