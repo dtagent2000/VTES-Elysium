@@ -91,7 +91,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.9.7';   // 2 Nov 2026 (bot v0.6.216, KRCG's v5 dump as the source, krcg-v5.js): the v5 cost shape ({type: 'Pool', value}) read; the v5 wording 'this card is put in play / on' is persistent; a 'Requires …' sentence is found mid-line ('Title. Requires a Sabbat vampire.').
+const FXC_VERSION = '1.9.8';   // 3 Nov 2026 (bot v0.6.217, V5 wave 4): 'Unique archetype.' is the archetype keyword too (Saulot's three masters were untagged: the one-archetype-per-vampire gate never saw them)
+// const FXC_VERSION_197 = '1.9.7';   // 2 Nov 2026 (bot v0.6.216, KRCG's v5 dump as the source, krcg-v5.js): the v5 cost shape ({type: 'Pool', value}) read; the v5 wording 'this card is put in play / on' is persistent; a 'Requires …' sentence is found mid-line ('Title. Requires a Sabbat vampire.').
 // const FXC_VERSION_196 = '1.9.6';   // 2 Nov 2026 (bot v0.6.215, V5 wave 3): `oot` -- an out-of-turn master (keyword segment, 36 entries) the master-phase finder never offers; curated masters inherit the data's clan requirement (R-42: a clan icon on a master IS a requirement) and its out-of-turn keyword.
 // const FXC_VERSION_195 = '1.9.5';   // 29 Oct 2026 (bot v0.6.214, V5 wave 2): req.notFirstRound also reads 'Not usable the first round' / 'Not usable first round' (Eruption of Vitae, Growing Fury, Well-Aimed Car: 9 -> 12 entries; wave 1's re-review found them untagged). The curated tier's wave-2 readings (Flash, Resist Earth's Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn) need no compiler change.
 // const FXC_VERSION_194 = '1.9.4';   // 29 Oct 2026 (bot v0.6.213, V5 wave 1, the egress review): req.notFirstRound also reads a sentence 'Not usable during the first round' -- Walk of Flame (banuhaqim's, played in round 1 since its aggravated strike was preferred), Ahriman's Demesne, Blood Agony, Blood to Water, Torment the Soul: 4 -> 9 entries; a text that LIFTS the restriction (Shotgun Ritual, Al-Ashrad, Hector Trelane) is not tagged.
@@ -707,7 +708,7 @@ function libEntry(c){
      one-per-vampire attachments; the master-play loop hosts+gates them via e.archetype). */
   const kwHit = w => txt.split('\n').some(l => l.split(/[.:]/).some(sg => new RegExp('^\\s*' + w + '\\s*$', 'i').test(sg)));
   if(kwHit('trifle')) e.trifle = true;
-  if(kwHit('archetype')) e.archetype = true;
+  if(kwHit('archetype') || kwHit('unique archetype')) e.archetype = true;   // v1.9.8 (V5 wave 4): 'Unique archetype.' (Saulot's Healing Touch, Avenging Fist, Guiding Wisdom) -- the bare-word segment missed the three
   if(kwHit('out-of-turn') && (e.t || []).includes('master')) e.oot = true;   // v1.9.6 (bot v0.6.215, V5 wave 3): an OUT-OF-TURN master ('Out-of-turn.' / 'Master: out-of-turn.' as a keyword segment) -- played only on another Methuselah's turn, at its own trigger (the rulebook: it uses the next master phase action). The master-phase finder never offers one; a dedicated consumer (Archon Investigation) plays it at its trigger.
   if(/\(limited\)/i.test(txt)) e.limited = true;       // rulebook reminder text: bleed-increase modifiers / additional-strike sources capped at one
   /* v1.5.0 (17 July, fas B/C sweep): the Inside Dirt / Leverage class made derivable.
