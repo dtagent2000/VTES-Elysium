@@ -3233,7 +3233,22 @@ class Bot {
      every Freak Drive re-bleed since v0.6.123 was an illegal action. */
   _noteTurnAct(v, act){ const s = (this._turnActs = this._turnActs || {})[v.id] = (this._turnActs[v.id] || new Set());
     if(!act.kind || act.kind === 'bleed') s.add('bleed'); if(act.kind === 'political') s.add('political');
-    if(act.name && typeof act.idx === 'number') s.add('card:' + FX_NORM(act.name)); }
+    if(act.name && typeof act.idx === 'number') s.add('card:' + FX_NORM(act.name));
+    const ip = this._actSameKey(act, v); if(ip) s.add(ip); }   // v0.6.217 (the graded readings): an action through a card IN PLAY, once each turn (rulebook 6.1.6)
+  _actSameKey(a, v){                 // v0.6.217 (the graded readings): rulebook 6.1.6 -- 'A minion cannot perform an action via the same card in play more than once each turn, even if he unlocks' (Freak Drive, Change of Target, Majesty's unlock). The card the action came through: a Haven Uncovered or a Regent (the card on the rushed vampire), a Saulot's Avenging Fist (the card on the actor), a Toreador Grand Ball (the card burned); different cards in play are different actions [LSJ 20080725]. null for an action from the hand (booked by name) or the rulebook's own
+    if(!a || typeof a !== 'object' || typeof a.idx === 'number') return null;
+    if(a.kind === 'burnCard' && a.target) return 'inplay:burn|' + (a.target.seat | 0) + '|' + (a.target.cardId || a.target.card || '');
+    if(a.kind !== 'rush' || (a.via !== 'haven' && a.via !== 'grant') || !a.name) return null;
+    const onMe = !!(v && (v.attached || []).some(id => { const c = this.board.find(x => x && x.id === id); return !!(c && FX_NORM(c.name) === FX_NORM(a.name)); }));
+    return 'inplay:' + FX_NORM(a.name) + '|' + (onMe ? 'me' : ((a.target && a.target.seat) | 0) + '|' + ((a.target && a.target.name) || ''));
+  }
+  _cotKey(a){ return (a.kind || '') + '|' + ((a.target && a.target.name) || a.name || ''); }   // v0.6.217: a cardless action is 'the same' only on the same target [RTR 19950509]
+  _noteCotAct(v){                    // v0.6.217 (the graded readings): Change of Target -- 'This minion cannot perform the same action again this turn.' A bleed, a political action and an action from a card (in hand or in play) are booked already (_noteTurnAct); a hunt is booked here, and a vampire whose MANDATORY hunt (0 blood) it ended is stuck: it cannot act this turn [LSJ 19980112]; another cardless action is booked with its target
+    const a = this._actingVamp; if(!v || !a) return;
+    const s = (this._turnActs = this._turnActs || {})[v.id] = (this._turnActs[v.id] || new Set());
+    if(a.hunt){ s.add('cot:hunt'); if(a.mandatory) s.add('stuck'); return; }
+    const x = a.act; if(x && x.kind && typeof x.idx !== 'number' && !this._actSameKey(x, v)) s.add('cot:' + this._cotKey(x));
+  }
   /* v0.6.143 PROBE THEN PUNCH (Johan): with a heavy bleed in hand, under two stealth cards and a prey body up, the SMALL bleeders go first -- the threat of a modifier draws the block (or a wake, or an intercept card),
      and the heavy bleed goes last into what is left. Only for a stealth-bleed deck, and only when the plan keeps nobody home (the order otherwise decides WHO stays: v0.6.118b). The chump bleeder with combat cover goes first of all.
      v0.6.206: cut out of the minion phase, which set `this._probe` here and reset it two lines later -- since v0.6.143 the ORDER worked and the
@@ -3272,6 +3287,7 @@ class Bot {
     const done = !ahead && this._turnActs && this._turnActs[v.id];
     if(done && done.size){
       Object.keys(ctx).forEach(k => { const c = ctx[k]; if(c && typeof c === 'object' && c.name && typeof c.idx === 'number' && done.has('card:' + FX_NORM(c.name))) ctx[k] = null; });
+      Object.keys(ctx).forEach(k => { const c = ctx[k]; if(!c || typeof c !== 'object' || !c.kind || typeof c.idx === 'number') return; const ip = this._actSameKey(c, v); if((ip && done.has(ip)) || done.has('cot:' + this._cotKey(c))) ctx[k] = null; });   // v0.6.217 (the graded readings): an action through a card in play once each turn (6.1.6); what Change of Target ended, not again
       if(done.has('political')) ctx.pol = null;
       if(done.has('bleed')){ ctx.card = null; ctx.plain = { n: 0, illegal: true }; }
     }
@@ -3658,7 +3674,11 @@ class Bot {
     const ag = (rc && rc.agBy) || {}; let tgt = null;
     for(const who in ag){ const n0 = ag[who] | 0; if(n0 <= 0) continue; const st = this._seatOfName(who); if(!st || st === this.seat) continue;
       const cs = this._seatCards(st);
-      cs.forEach(c => { if(!c || c.kind !== 'crypt' || c.zone !== 'ready') return; const n = Math.min(n0, this._titleOf(c, cs).votes); if(n > 0 && (!tgt || n > tgt.n)) tgt = { seat: st, owner: who, vamp: c.name, n }; }); }
+      const tv = cs.filter(c => c && c.kind === 'crypt' && c.zone === 'ready').map(c => ({ c, n: this._titleOf(c, cs).votes | 0 })).filter(x => x.n > 0);
+      const sums = arr => arr.reduce((S, n) => { const T = new Set(S); S.forEach(q => T.add(q + n)); return T; }, new Set([0]));
+      tv.forEach((x, i) => { if(x.n > n0) return; const rest = sums(tv.filter((y, j) => j !== i).map(y => y.n));
+        if(rest.has(n0) || !rest.has(n0 - x.n)) return;   /* v0.6.217 (the graded readings): 'Choose a vampire who has cast votes' -- the bot's model: a vampire's votes go together, so the target is one the seat's count says voted (the rest of its titles could not make the count, and with it they do); a count its titles cannot name (votes from cards) is no target */
+        if(!tgt || x.n > tgt.n) tgt = { seat: st, owner: who, vamp: x.c.name, n: x.n }; }); }
     if(!tgt || tgt.n < need) return null;
     for(let idx = 0; idx < this.hand.length; idx++){ const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib') continue;
       const ms = (h.e.modes || []).filter(mo => mo.fx && mo.fx.abstainVoter && mo.when === 'polling' && this._modeUsableBy(mo, v)); if(!ms.length) continue;   // fx.abstainVoter -- a literal read for the coverage scanner
@@ -3823,7 +3843,7 @@ class Bot {
           t = tot();
         }
       }
-      if(t.f <= t.a && !rc.line){ const ab = this._bestAbstainFor(v, rc, t.a - t.f + 1); if(ab){ this._playAbstain(v, ab, rc); t = tot(); } }   // v0.6.217 (V5 wave 4): Scalpel Tongue / Saulot's Guiding Wisdom -- an opposing voter abstains when that turns the count
+      if(t.f <= t.a && !rc.line){ const ab = this._bestAbstainFor(v, rc, t.a - t.f + 1); if(ab && this._playAbstain(v, ab, rc)){ if(!rc.line){ rc.closed = null; await this._refPoll(rc); } t = tot(); } }   /* v0.6.217 (the graded readings): the table may answer the abstain, as it may a boost -- the poll stays open after a play in it */   // v0.6.217 (V5 wave 4): Scalpel Tongue / Saulot's Guiding Wisdom -- an opposing voter abstains when that turns the count
       const passed = t.f > t.a;
       this._writeTally({ mode: 'vote', a: Math.min(99, t.f), b: Math.min(99, t.a) });   // the AUTHORITATIVE count: bots' absolute tally writes race each other, the frozen `casts` lines do not
       if(!rc.line) this.send({ t: 'log', html: 'Vote: ' + t.f + ' for vs ' + t.a + ' against \u2014 vote ' + (passed ? 'passes' : 'fails') + '.' });   // the client's frozen verdict line (skipped when a human's Resolve already wrote it)
@@ -3944,6 +3964,7 @@ class Bot {
     this._emitPlay(c.name, 'if-blocked', v.name);
     this._emit('change-of-target', { vamp: v.name, blocker: this._lastBlockerName || null, why: w.why });
     if(this._actingVamp) this._actingVamp.cot = true;
+    this._noteCotAct(v);   // v0.6.217 (the graded readings): 'This minion cannot perform the same action again this turn.'
     return true;
   }
   _cotFor(v){                       // v0.6.217: Change of Target-class in hand (mode when:'ifBlocked', fx.endAction) this vampire can play
@@ -5347,6 +5368,14 @@ class Bot {
     if(!(f.discUp || f.recruitDiscount || f.noRecruitEmploy || f.blockedPoolBurn || f.unlockAfterCombat || f.rushSelf || f.titleVotes)) return false;
     return !(vamps || []).some(v => v && this._masterHostOk(h, v));
   }
+  _humanBallFree(p){                 // v0.6.217 (the graded readings): a HUMAN's Toreador Grand Ball -- 'The other Toreador's non-bleed actions cannot be blocked.' The human names no pair, so while a Ball of theirs is in play no bot blocks a non-bleed action of a Toreador of theirs (the locked one does not unlock as normal; a third Toreador of theirs is the price of not knowing). A bot's Ball sends its block-bar line instead (_grandBallBar)
+    if(!p || p.kind === 'bleed' || p.kind === 'asked' || !p.actingVampName) return false;
+    const st = p.actorSeat || ((this.players || []).find(q => q && q.name === p.who) || {}).seat, pl = (this.players || []).find(q => q && q.seat === st);
+    if(!st || !pl || pl.bot) return false;
+    const cs = this._seatCards(st), av = cs.find(c => c && c.kind === 'crypt' && c.name === p.actingVampName);
+    if(!av || this._vampClan(av) !== 'Toreador') return false;
+    return cs.some(c => { if(!c || c.kind !== 'lib' || c.faceDown || this._outOfPlay(c)) return false; const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.fx && mo.fx.grandBall)); });   // fx.grandBall
+  }
   _grandBallPlan(){                  // v0.6.217 (V5 wave 4): Toreador Grand Ball's pair -- the UNBLOCKABLE one calls my political actions (the Toreador that can call the most of those I hold, then the most votes, then blood); the LOCKED one never unlocks while the card stays, so it is the least useful other Toreador (the smallest capacity, then the least blood, an unlocked one); one Ball of mine at a time
     if(this.board.some(c => c && c.kind === 'lib' && c.name === 'Toreador Grand Ball' && !this._outOfPlay(c))) return { hold: true, why: 'my Grand Ball is in play (a second locks another Toreador for nothing new)' };
     const tor = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._vampClan(v) === 'Toreador');
@@ -6488,6 +6517,7 @@ class Bot {
     const p = this.pending;
     if(p.passTimer) clearTimeout(p.passTimer);
     if(this._blockBar && this._blockBar.who === p.who && this._blockBar.bar !== 'allies' && !p.declined){ p.declined = true; p.barred = this._blockBar.card; this.o.log('react window: ' + this._blockBar.card + ' \u2014 my vampires cannot block this action (reactions only)'); this._emit('block-barred', { by: p.who, card: this._blockBar.card }); }   // v0.6.127 (L12.blockBar): every blocker I have is a vampire -- the block is off the table, a bounce or a reducer is not
+    if(!p.declined && this._humanBallFree(p)){ p.declined = true; p.barred = 'Toreador Grand Ball'; this.o.log('react window: a human\u2019s Toreador Grand Ball -- a non-bleed action of a Toreador of theirs is not blocked'); this._emit('block-barred', { by: p.who, card: 'Toreador Grand Ball', human: true }); }   // v0.6.217 (the graded readings)
     const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt');
     const actorSeat = ((this.players || []).find(q => q.name === p.who) || {}).seat;
     /* v0.4.1 (Johan, source-verified): bounce needs "another Methuselah OTHER
@@ -10312,13 +10342,16 @@ class Bot {
         await pace();
         if(_ai > 0) prey = this.decide('bleed-target', {}).seat;   // v0.6.103 (#2): PER ACTOR -- the previous minion may have ousted the prey (v0.6.102 read it once and bled a ghost for the rest of the phase); v0.6.104: read AFTER the pace beat so a human table's pace is also the roster's window
         if(v.zone === 'torpor'){ await this._leaveTorpor(v); continue; }   // v0.6.128
-        const mandatory = (v.blood | 0) === 0;
+        const tdone = this._turnActs && this._turnActs[v.id];   // v0.6.217 (the graded readings): Change of Target -- 'cannot perform the same action again this turn'
+        if(tdone && tdone.has('stuck')){ this._emit('stays-home', { vamp: v.name, why: 'Change of Target ended its mandatory hunt: it cannot act this turn' }); continue; }   // [LSJ 19980112]
+        const huntDone = !!(tdone && tdone.has('cot:hunt'));
+        const mandatory = (v.blood | 0) === 0 && !huntDone;
         const keep = this._keepBlocker(v, actors, _ai);   // v0.6.118 (B2 posture, doctrine 2.4): the last unlocked body stays home against a bleeder within reach
         if(keep){ this.o.log('posture: ' + keep.why); this._emit('keep-blocker', { vamp: v.name, tto: keep.tto, quota: keep.quota || 0 }); continue; }
-        const hd = mandatory ? { hunt: true, why: 'mandatory: 0 blood (rulebook)' } : this.decide('hunt-or-bleed', { vamp: v });
+        const hd = huntDone ? { hunt: false, why: 'Change of Target ended its hunt this turn' } : mandatory ? { hunt: true, why: 'mandatory: 0 blood (rulebook)' } : this.decide('hunt-or-bleed', { vamp: v });
         if(hd.hunt){
           this.o.log('action (' + v.name + '): ' + hd.why);
-          v.locked = true; this._actingVamp = { v, n: 1, played: new Set() };   // v0.5+ (Johan, 14 July): "every action treated fundamentally the same" -- hunt gets the SAME reactive-stealth mechanism as bleed now, just with its own (fixed, low) stakes value for the persona weighting below
+          v.locked = true; this._actingVamp = { v, n: 1, played: new Set(), hunt: true, mandatory };   /* v0.6.217: hunt, mandatory -- Change of Target's ledger (_noteCotAct) */   // v0.5+ (Johan, 14 July): "every action treated fundamentally the same" -- hunt gets the SAME reactive-stealth mechanism as bleed now, just with its own (fixed, low) stakes value for the persona weighting below
           this.push();
           this.fxClone(v, 'hunts');
           this._announceTallyA(this._undirectedBaseStealth(v, 'hunt'));   // VC: hunt NEVER wrote a tally before -- the defender's decide read the PREVIOUS action's stale a. Rulebook default +1 (the Wauneka example), Zoe's exception via the helper.
@@ -10348,7 +10381,7 @@ class Bot {
         if(!act){ this._emit('stays-home', { vamp: v.name, why: 'no legal action left this turn' }); continue; }   // v0.6.129: everything it could do, it has already done this turn
         this._noteTurnAct(v, act);
         if(act.name && typeof act.idx === 'number'){ this.hand.splice(act.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; }   // v0.6.127: a card-less pick that carries a `name` (enemyRescue names the rescued vampire) has no idx -- splice(undefined, 1) silently ate hand[0] and drew a replacement
-        v.locked = true; this._actingVamp = { v, n: act.n, played: new Set(), target: prey, edgeLocked: false, limitedUsed: false };   // per-ACTION modifier ledger (same-name once per action); `target` (steg 2, 15 July): the seat currently being bled, tracked because a bounce can move it mid-action -- see _onLog's L12.bleed handler; `edgeLocked`/`limitedUsed` (steg 4, 16 July): see _playBleedModifier
+        v.locked = true; this._actingVamp = { v, n: act.n, played: new Set(), target: prey, edgeLocked: false, limitedUsed: false, act };   /* v0.6.217: act -- Change of Target's ledger (_noteCotAct) */   // per-ACTION modifier ledger (same-name once per action); `target` (steg 2, 15 July): the seat currently being bled, tracked because a bounce can move it mid-action -- see _onLog's L12.bleed handler; `edgeLocked`/`limitedUsed` (steg 4, 16 July): see _playBleedModifier
         if(act.kind === 'stock'){
           /* v0.6.14: the blood-stock action (superior Govern-class). Mirrors the pool
              branch's announce/handshake shape exactly: undirected, so the sandbox's

@@ -12013,6 +12013,48 @@ async function connectWithRetry(client, tries = 30){
         await u._resolveCombat(me, 'Bret Stryker (G6)');
         ok(em.includes('cot-cancelled') && !em.includes('combat-round') && asked === 0 && me.locked === false,
            '162p ...the blocker\u2019s side: the combat Change of Target cancelled writes no round row and asks no end-of-round step; the blocker unlocks (got ' + JSON.stringify({ em: em.filter(k => /combat|cot/.test(k)), asked, locked: me.locked }) + ')'); }
+
+      // q) the graded readings: an action through a card in play once each turn (rulebook 6.1.6); Change of Target books the hunt it ended, and a 0-blood hunter is stuck [LSJ 19980112]
+      { const u = mkU162(); const ab = V('q1', 'Abaddon (G7)', { blood: 5 }); u.board = [ab, on(ab, L('qf1', "Saulot's Avenging Fist"))];
+        u.table = { 1: { pub: { cards: [V('qt1', 'Anxo Vilela (G6)', { blood: 2 })] } } }; u._turnActs = {};
+        const r1 = IF2(u, '_bestGrantRushFor') ? u._bestGrantRushFor(ab) : null; if(r1) u._noteTurnAct(ab, r1);
+        const ctx = { plain: { n: 1 }, rush: r1 }; u._actionCtxAdjust(ab, ctx, false);
+        const h0 = V('q2', 'Bret Stryker (G6)', { blood: 0 }); u._actingVamp = { v: h0, n: 1, played: new Set(), hunt: true, mandatory: true };
+        if(IF2(u, '_noteCotAct')) u._noteCotAct(h0); const st0 = u._turnActs[h0.id];
+        const h1 = V('q3', 'Catalina Vega (G6)', { blood: 2 }); u._actingVamp = { v: h1, n: 1, played: new Set(), hunt: true, mandatory: false };
+        if(IF2(u, '_noteCotAct')) u._noteCotAct(h1); const st1 = u._turnActs[h1.id];
+        ok(!!r1 && ctx.rush === null && !!ctx.plain && !!st0 && st0.has('cot:hunt') && st0.has('stuck') && !!st1 && st1.has('cot:hunt') && !st1.has('stuck'),
+           '162q the turn ledger (rulebook 6.1.6): Abaddon\u2019s rush through Saulot\u2019s Avenging Fist is not offered again this turn; Change of Target ends a hunt -- not again this turn, and a 0-blood hunter is stuck [LSJ 19980112] (got ' + JSON.stringify({ r1: !!r1, rush: ctx.rush === null ? null : 'kept', st0: st0 && [...st0], st1: st1 && [...st1] }) + ')'); }
+
+      // r) the graded readings: after the abstain the table may answer -- the poll reopens before the verdict, as after a boost
+      { const u = mkU162(); const br = V('r1', 'Bret Stryker (G6)', { blood: 3 }); u.board = [br]; u.hand = ['Scalpel Tongue'];
+        u.table = { 1: { pub: { cards: [V('rh1', 'Catalina Vega (G6)')] } } }; u._writeTally = () => {};
+        u._askBlock = async () => ({ what: 'pass' }); let polls = 0;
+        u._refPoll = async rc => { polls++; if(polls === 1){ rc.against = 2; rc.lastB = 2; rc.by = { Hanna: 2 }; rc.agBy = { Hanna: 2 }; } rc.closed = 'test'; return 'test'; };
+        u._actingVamp = { v: br, n: 1, played: new Set() };
+        const act = { name: 'Kine Resources Contested', kind: 'political', n: 3, deltas: { 1: -3 }, value: 3, pass: 0.8, mine: 1, agst: 0 };
+        let err = null; try { await u._callReferendum(br, act); } catch(e){ err = e.message; }
+        const verdict = logs(u).find(l => /^Vote: /.test(l)) || '';
+        ok(!err && polls === 2 && /vote passes/.test(verdict) && logs(u).some(l => /plays Scalpel Tongue/.test(l)),
+           '162r ...the abstain turns the count (2 against cancelled), then the poll reopens before the verdict -- 2 polls; the referendum passes (got ' + JSON.stringify({ err, polls, verdict }) + ')'); }
+
+      // s) the graded readings: Scalpel Tongue's 'a vampire who has cast votes' -- Hanna (Catalina, a Prince: 2; Addison, a Primogen: 1) casts 1 against: the voter is Addison, never Catalina; 2 cast with a second Primogen beside them could be either: no target
+      { const u = mkU162(); const br = V('s1', 'Bret Stryker (G6)', { blood: 3 }); u.board = [br]; u.hand = ['Scalpel Tongue'];
+        u.table = { 1: { pub: { cards: [V('sh1', 'Catalina Vega (G6)'), V('sh2', 'Addison Payne (G6)')] } } };
+        const a1 = u._bestAbstainFor(br, { agBy: { Hanna: 1 } }, 1);
+        u.table[1].pub.cards.push(V('sh3', 'Aisling Sturbridge (G6)'));
+        const a2 = u._bestAbstainFor(br, { agBy: { Hanna: 2 } }, 1);
+        ok(!!a1 && a1.target.vamp === 'Addison Payne (G6)' && a1.target.n === 1 && !a2,
+           '162s ...the target has cast votes: Hanna casts 1 with a Prince (2) and a Primogen (1) -- the Primogen; 2 with a second Primogen could be either -- none (got ' + JSON.stringify({ a1: a1 && a1.target, a2: a2 && a2.target }) + ')'); }
+
+      // t) the graded readings: a HUMAN's Toreador Grand Ball names no pair -- while it is in play no bot blocks a non-bleed action of that human's Toreador (the real react window); a bleed, a non-Toreador and a bot's Ball (its bar line instead) are not this
+      { const mk = (bot, vamp, kind) => { const u = mkU162(); u.players = [{ seat: 1, name: 'Hanna', online: true, bot }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+          u.board = [V('tm1', 'Crow (G5)')]; u.table = { 1: { pub: { cards: [V('th1', 'Catalina Vega (G6)'), V('th2', 'Crow (G5)'), L('tg1', 'Toreador Grand Ball')] } } };
+          u.pending = { who: 'Hanna', amount: 0, kind, sub: kind === 'bleed' ? null : 'equip', T: 'T6', role: 'prey', actorSeat: 1, actorUnlocked: 1, actingVampName: vamp, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null };
+          const p = u.pending; try { u._reactWindow(); } catch(e){} if(p.passTimer) clearTimeout(p.passTimer); if(u._askTimer) clearTimeout(u._askTimer); return p.barred === 'Toreador Grand Ball'; };
+        const t1 = mk(false, 'Catalina Vega (G6)', 'undirected'), t2 = mk(false, 'Catalina Vega (G6)', 'bleed'), t3 = mk(false, 'Crow (G5)', 'undirected'), t4 = mk(true, 'Catalina Vega (G6)', 'undirected');
+        ok(t1 === true && !t2 && !t3 && !t4,
+           '162t ...a human\u2019s Grand Ball: Catalina\u2019s equip is not blocked; her bleed, Crow\u2019s equip and a bot\u2019s Ball are not this (got ' + JSON.stringify({ t1, t2, t3, t4 }) + ')'); }
     }
 
 
