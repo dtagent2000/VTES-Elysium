@@ -11995,6 +11995,24 @@ async function connectWithRetry(client, tries = 30){
         const p2 = o2.pending; if(p2 && IF2(o2, '_complyBurnCard')) o2._complyBurnCard(p2);
         ok(!!bc && bc.kind === 'burnCard' && bc.st === -1 && bc.target.card === 'Toreador Grand Ball' && o1.board[1].zone === 'ash' && o1.says.includes('Pass') && !!(p2 && p2.sub === 'burnCard') && o2.board[1].zone === 'ash',
            '162n the (D) action at Toreador Grand Ball: Berenguela (Nosferatu, -1 stealth) may take it at my prey’s Ball; the owner with no unlocked minion passes and burns it, with one opens its block window and burns it on the Pass (got ' + JSON.stringify({ bc: bc && [bc.kind, bc.st], o1: o1.board[1].zone, p2: p2 && p2.sub, o2: o2.board[1].zone }) + ')'); }
+
+      // o) the sim footprint: a master no vampire of mine may take is a dead card (the discard phase cycles it) -- Oblivion while every vampire of mine has [OBL]; not while one with [obl] waits uncontrolled; a hold a later draw lifts is not dead
+      { const u = mkU162(); const ak = V('o1', 'Alek K\u00f6nig (G6)'); u.board = [ak]; u.hand = ['Oblivion'];
+        const d1 = u._deadHandIndex(u._deadJudgeVamps());
+        u.board.push(V('o2', 'Hiromitsu Asano (G6)', { zone: 'uncontrolled' })); const d2 = u._deadHandIndex(u._deadJudgeVamps());
+        u.board = [ak]; u.hand = ['Charisma']; const d3 = u._deadHandIndex(u._deadJudgeVamps());
+        ok(d1 === 0 && d2 === -1 && d3 === -1,
+           '162o a master no vampire of mine may take is dead: Oblivion with only Alek ([OBL]) in play; not with Hiromitsu ([obl]) uncontrolled; Charisma with no ally in hand is held, not dead (got ' + JSON.stringify({ d1, d2, d3 }) + ')'); }
+
+      // p) the sim footprint: the blocker's combat that Change of Target cancelled writes no round row and asks no end-of-round step (ana-combat2 counted the stub row as a handshake miss)
+      { const u = mkU162(); const me = V('p1', 'Crow (G5)', { locked: true }); u.board = [me]; u.turnSeat = 1;
+        const em = [], e0 = u._emit.bind(u); u._emit = (k, d) => { em.push(k); return e0(k, d); };
+        let asked = 0; u._phaseStep = async () => { asked++; return null; };
+        u._myBlockOf = { vamp: 'Bret Stryker (G6)', at: Date.now() };
+        u._onLog('Hanna', '<b>Bret Stryker (G6)</b> plays <b>Change of Target</b> \u2014 unlocks; the action ends unsuccessfully.');
+        await u._resolveCombat(me, 'Bret Stryker (G6)');
+        ok(em.includes('cot-cancelled') && !em.includes('combat-round') && asked === 0 && me.locked === false,
+           '162p ...the blocker\u2019s side: the combat Change of Target cancelled writes no round row and asks no end-of-round step; the blocker unlocks (got ' + JSON.stringify({ em: em.filter(k => /combat|cot/.test(k)), asked, locked: me.locked }) + ')'); }
     }
 
 

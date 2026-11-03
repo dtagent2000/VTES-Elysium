@@ -1,4 +1,4 @@
-# BOARD — the open asks (2 Nov 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (3 Nov 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -16,11 +16,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 waves**: the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim plays them; the menu does not)
   and the ledger (`docs/CARDS.md`) since v0.6.212; waves by effect class as the class map ranks them (D-98). Done: wave 1 (v0.6.213,
-  D-99), wave 2 (v0.6.214, D-103), wave 3 (v0.6.215, D-104: the locations, blood, the bleed riders, Archon Investigation). Next: wave
-  4, the masters still played blind (on a vampire: Oblivion, Charisma, Terrifying Visage, Monster, Saulot's two, Regent, Depravity;
-  the rest: `spec-v5-wave3` §4), and Sudden Reversal's 'as played' window between bots (a wait in every master phase: Johan's call);
-  then the maneuver / press grants played outside combat with the rush cards, the free block bars, the cards with no effect data, the
-  unmodelled action cards. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its rows are playable and it holds up in
+  D-99), wave 2 (v0.6.214, D-103), wave 3 (v0.6.215, D-104), wave 4 (v0.6.217, D-106). Next: wave 5, the 18 masters in play
+  (`spec-v5-wave3` §4), Meditative Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape),
+  with the actions at a card in play (steal The Rack / Powerbase: LA, burn Mob Connections) and The Coven's control passing. Then the
+  maneuver / press grants with the rush cards, the free block bars, the cards with no effect data, the unmodelled action cards. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its rows are playable and it holds up in
   the sim; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares the seven
   embedded decks). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104; `CARDS.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
@@ -34,6 +33,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   '+1 strength' unread; the auto tier's 'before range' flag on superior-only sentences (Alpha Glint, Bloodform, Gemini's Mirror,
   Eyes of Blades, Outside the Hourglass) and Sanguine Entrapment / Skin Trap compiled as their own (curation, no deck holds them).
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-41, D-103.
+- **V5 wave 4's riders** (`specs/spec-v5-wave4-2026-11-03.md` §4): the abstain as a reaction on another's referendum; Guiding
+  Wisdom's combat end when mine is not the acting minion (a before-range handshake); a bot blocker's Crows before the actor's Change of
+  Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar).
+  Also Saulot's Healing Touch: FULL by the auto tier, its text unbuilt. *Done when* each is built and tested, or ruled out.
 - **V5 wave 3's riders** (`specs/spec-v5-wave3-2026-11-02.md` §4): the amber halves (Anarch Railroad and Fortune Teller Shop for
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
@@ -76,12 +79,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   describes it and three rounds have one. Docs: HARNESS.
 - **Ask main once**: (a) may the bot's gates read the root's released client / server / protocol instead of the copies in `bot/`
   (no drift, 1.8 MB fewer); (b) has the hotseat bridge, or could it expose, a pure `step(state, action)`; (c) the bot-emitted frozen
-  lines owed to §12 + the canary (STATUS lists them; v0.6.214 adds `gets no strike this round`) — all three in `handoffs/HANDOFF-to-main-2026-10-20-docs-diet.md`; (d) the
+  lines owed to §12 + the canary (STATUS lists them) — all three in `handoffs/HANDOFF-to-main-2026-10-20-docs-diet.md`; (d) the
   client locks all helpers on while a bot is seated until the bot proves a whole combat on lines alone — ask for that step when
   ready. *Done when* main has answered (a)–(c). Docs: spec §8 Q4, §6.1; RULINGS D-62, D-94.
-- **History comments in `elysium-bot.js`** (222 KB citing versions and dates): trim to trap comments ("why" + a rule id) in
-  functions a round touches (spec §8 Q6, recommended (b)); a mechanical pass only if the bundle size matters to players, verified
-  by identical minified output. *Done when* Johan has chosen; then per round. Docs: spec §8 Q6.
+- **History comments in `elysium-bot.js`** (222 KB): trim to trap comments ("why" + a rule id) in the functions a round touches
+  (spec §8 Q6, recommended (b)). *Done when* Johan has chosen; then per round.
 
 ## Known, not built (bot side)
 - **The TWD profile's article-last keys** (v0.6.216's egress): 14 profile keys (`Barrens, The`, `Labyrinth, The` …) are not cardfx
@@ -159,4 +161,3 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) not consumed in a bot round; v0.6.207's carries
   Johan's negative stealth / intercept (R-38): check every reader of `tally.a` / `tally.b` that assumed ≥ 0. *Done when* each reply's
   bot-side items are built or declined in a handoff.
-  reply's bot-side items are built or declined in a handoff.

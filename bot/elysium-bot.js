@@ -1597,6 +1597,7 @@ class Bot {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib') return false;
       if(h.e.oot && !(h.e.modes || []).some(mo => mo.fx && mo.fx.burnActor)) return true;
       if((h.e.modes || []).some(mo => mo.fx && mo.fx.grandBall) && this.board.some(c => c && c.kind === 'lib' && c.gbLock && !this._outOfPlay(c))) return true;   // v0.6.217 (V5 wave 4): a second Toreador Grand Ball while mine stays -- the master loop holds it (one Ball at a time), the discard phase cycles it   // v0.6.215 (egress review): an out-of-turn master the bot never plays (Sudden Reversal: no 'as played' window between bots) is dead weight -- the discard phase cycles it, as the guide says of every card the bot cannot play
+      if((h.e.t || []).includes('master') && this._masterNoHost(h, vamps)) return true;   // v0.6.217 (V5 wave 4, the sim footprint): a master no vampire of mine may take (Oblivion while every one has [OBL], Regent with no Sabbat of capacity 8 or more) -- the master loop holds it, the discard phase cycles it
       return (h.e.modes || []).length > 0 &&
              !(h.e.modes || []).some(mo => this._modeUsable(mo, vamps, { selfPrice: true }));   // v0.6.127: a self-price card is HELD for its moment, not dead
     });
@@ -5307,11 +5308,7 @@ class Bot {
     const e = h.e, f = Object.assign({}, ...(e.modes || []).map(mo => mo.fx || {}));
     if(f.grandBall) return this._grandBallPlan();
     if(!(f.discUp || f.recruitDiscount || f.noRecruitEmploy || f.blockedPoolBurn || f.unlockAfterCombat || f.rushSelf || f.titleVotes)) return null;
-    const hr = e.hostReq || {};
-    const onIt = (v, nm) => (v.attached || []).some(id => { const c = this.board.find(x => x && x.id === id); return !!(c && c.name === nm && !this._outOfPlay(c)); });
-    const reqOk = v => (!hr.clan || this._vampClan(v) === hr.clan) && (!hr.sect || this._vampSect(v) === hr.sect) && (!hr.path || this._vampPath(v) === hr.path) && (!hr.capMin || this._capOf(v) >= hr.capMin)
-      && (!e.archetype || !this._hasArchetype(v)) && (!e.onePerHost || !onIt(v, h.name));
-    const ready = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && reqOk(v));
+    const ready = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._masterHostOk(h, v));
     const big = (a, b) => (this._capOf(b) - this._capOf(a)) || ((b.blood | 0) - (a.blood | 0));   // the body most likely to act, fight and live: the highest capacity, then the most blood (Guardian Angel's pick)
     if(f.titleVotes){   // fx.titleVotes: a title card -- its votes are the entry's own (e.votes), read by _titleOf
       if(e.uniqueTitle && this._uniqueInPlay(h.name)) return { hold: true, why: 'the title is in play already (a contest)' };
@@ -5337,6 +5334,18 @@ class Bot {
     }
     const c = ready.slice().sort(big);   // Terrifying Visage (the most active Cathari), Monster and Saulot's Avenging Fist (the fighter)
     return c.length ? { host: c[0], why: c[0].name } : { hold: true, why: 'no ready vampire it may go on' };
+  }
+  _masterHostOk(h, v){               // v0.6.217 (V5 wave 4): may this vampire take this master -- its hostReq (clan, sect, path, capacity), one archetype each, one copy each (onePerHost), and Oblivion's 'Cannot be put on a vampire with superior Oblivion' (fx.discUp). The master loop asks it of my ready vampires (_masterHostPlan), the dead-card judge of every vampire of mine (_masterNoHost)
+    const e = h.e, hr = e.hostReq || {}, f = Object.assign({}, ...(e.modes || []).map(mo => mo.fx || {}));
+    const onIt = nm => (v.attached || []).some(id => { const c = this.board.find(x => x && x.id === id); return !!(c && c.name === nm && !this._outOfPlay(c)); });
+    return (!hr.clan || this._vampClan(v) === hr.clan) && (!hr.sect || this._vampSect(v) === hr.sect) && (!hr.path || this._vampPath(v) === hr.path) && (!hr.capMin || this._capOf(v) >= hr.capMin)
+      && (!e.archetype || !this._hasArchetype(v)) && (!e.onePerHost || !onIt(h.name))
+      && (!f.discUp || !(((this._discOf(v) || {}).sup) || []).includes(String(f.discUp).toLowerCase()));
+  }
+  _masterNoHost(h, vamps){           // v0.6.217 (V5 wave 4, the sim footprint): a master that goes ON a vampire none of `vamps` may take is a dead card -- the master loop holds it, the discard phase cycles it (the hecata and lasombra smokes kept Oblivion in hand to the end while every vampire of theirs in play had [OBL]). A hold that a later draw can lift (Charisma with no ally in hand) is not this
+    const f = Object.assign({}, ...(h.e.modes || []).map(mo => mo.fx || {}));
+    if(!(f.discUp || f.recruitDiscount || f.noRecruitEmploy || f.blockedPoolBurn || f.unlockAfterCombat || f.rushSelf || f.titleVotes)) return false;
+    return !(vamps || []).some(v => v && this._masterHostOk(h, v));
   }
   _grandBallPlan(){                  // v0.6.217 (V5 wave 4): Toreador Grand Ball's pair -- the UNBLOCKABLE one calls my political actions (the Toreador that can call the most of those I hold, then the most votes, then blood); the LOCKED one never unlocks while the card stays, so it is the least useful other Toreador (the smallest capacity, then the least blood, an unlocked one); one Ball of mine at a time
     if(this.board.some(c => c && c.kind === 'lib' && c.name === 'Toreador Grand Ball' && !this._outOfPlay(c))) return { hold: true, why: 'my Grand Ball is in play (a second locks another Toreador for nothing new)' };
@@ -7510,6 +7519,7 @@ class Bot {
     for(let round = 1; ; round++){
       this._curRound = round; if(round > 1){ this._cWrite({ rd: round }); this._cBaseRound = Object.assign({}, this._cTally() || {}, { ce: undefined, pr: undefined, rl: undefined }); }   // v0.6.168: a new round clears the per-round fields server-side   // v0.6.164: a changed rd starts a fresh round for every absent per-round field (srv-2.6.39)
       const res = await this._resolveCombatRound(myVamp, round > 1);
+      if(res && res.cot) return;   // v0.6.217 (V5 wave 4, the sim footprint): Change of Target -- the action ended before block resolution, so this combat never began: no round row (ana-combat2 counted the stub as a handshake miss: 6 in the toreador smoke, 20 in 48 matches) and no end-of-round step; the 'cot-cancelled' row is the record
       const rowEnd = why => this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: null, continuing: false, end: why, blood: myVamp.zone === 'ready' ? (myVamp.blood | 0) : 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156
       const hsP = !!(this._rnd && this._rnd.hs), hsFirstP = hsP && this._rnd.hs !== 'a';   // v0.6.202 (R2): this round ran the bot-vs-bot step handshake -- the press step does too, with the same acting minion
       if(myVamp.zone === 'torpor' || myVamp.zone === 'burned'){ rowEnd(myVamp.zone); if(hsP) this._hsNothing(myVamp, 'press'); return; }   // combat already over from my own side. v0.6.202: one 'does not press.' (after my round line, which says why) so the other bot's press step ends at once
