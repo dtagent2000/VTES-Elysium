@@ -2857,7 +2857,7 @@ class Bot {
     if(!unlocked) return false;                                        // nobody to block with -- comply as before
     if(this.pending) this._clearPending('superseded by rush');
     const role = (this.nextLive(actorSeat) === this.seat) ? 'prey' : (this.prevLive(actorSeat) === this.seat) ? 'predator' : 'cross';
-    this.pending = { who, amount: 0, kind: 'rush', sub: 'rush', T: 'T5', role, actorSeat, actorUnlocked: 0, actingVampName: rusherVamp, rushTarget: vc.name, targetActs: !(ro && ro.targetActs === false), noLock: !!(ro && ro.noLock), via: (ro && ro.via) || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: !!(this._famedMine && this._famedMine.has(vc.name)) };   // v0.6.202: targetActs -- Deep Song [ANI]: the rushed vampire is the acting minion of the combat
+    this.pending = { who, amount: 0, kind: 'rush', sub: 'rush', T: 'T5', role, actorSeat, actorUnlocked: 0, actingVampName: rusherVamp, rushTarget: vc.name, targetActs: !(ro && ro.targetActs === false), noLock: !!(ro && ro.noLock), via: (ro && ro.via) || null, card: (ro && ro.card) || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: !!(this._famedMine && this._famedMine.has(vc.name)) };   // v0.6.202: targetActs -- Deep Song [ANI]: the rushed vampire is the acting minion of the combat
     this._reactWindow();
     return true;
   }
@@ -2882,7 +2882,7 @@ class Bot {
   _complyRush(p){                     // v0.6.107 (B1): the rushed vampire locks and fights the rusher (the pre-B1 comply, now on MY Pass)
     const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === p.rushTarget);
     if(!vc) return;
-    if(p.noLock){ this.push(); this.note('Trainbot: ' + vc.name + ' defends (rushed by ' + p.actingVampName + ', Haven Uncovered).'); }   // v0.6.205 (R4, F23): a rush through Haven Uncovered locks nobody
+    if(p.noLock){ this.push(); this.note('Trainbot: ' + vc.name + ' defends (rushed by ' + p.actingVampName + ', ' + (p.card || 'Haven Uncovered') + ').'); }   // v0.6.217: the granting card named (Saulot's Avenging Fist, Regent)   // v0.6.205 (R4, F23): a rush through Haven Uncovered locks nobody
     else {
     vc.locked = true; this.push();
     this.note('Trainbot: ' + vc.name + ' locks and defends (rushed by ' + p.actingVampName + ').');   // v0.6.155: the rusher's name -- Deep Song's line and a human's rush by chat share this path
@@ -4412,9 +4412,9 @@ class Bot {
     if(fist){ const t = this._bestRushTargetFor(vamp, { quiet: true, filter: c => this._vampClan(c) !== fist.notClan });
       if(t) best = { idx: null, name: "Saulot's Avenging Fist", kind: 'rush', via: 'grant', target: t, lockTarget: false, st: ((fist.stealthVs || {})[this._vampClan(t)] | 0), n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 }; }
     if(this._vampSect(vamp) === 'Sabbat'){
-      const regents = new Set();   // the hosts of a Regent on another Methuselah's board (public: the card and its host id)
-      for(const k in (this.table || {})){ if(+k === this.seat) continue; const cs = ((this.table[k] || {}).pub || {}).cards || []; cs.forEach(c => { if(c && c.kind === 'lib' && c.name === 'Regent' && c.host && !c.faceDown && !this._outOfPlay(c)) regents.add(c.host); }); }
-      if(regents.size){ const t = this._bestRushTargetFor(vamp, { quiet: true, filter: c => regents.has(c.id) });
+      const regents = new Set();   // the hosts of a Regent on another Methuselah's board (public: the card, its host id -> that seat's vampire); the rush candidates carry seat + name (_rushCandidates), not ids
+      for(const k in (this.table || {})){ if(+k === this.seat) continue; const cs = ((this.table[k] || {}).pub || {}).cards || []; cs.forEach(c => { if(!c || c.kind !== 'lib' || c.name !== 'Regent' || !c.host || c.faceDown || this._outOfPlay(c)) return; const hv = cs.find(x => x && x.id === c.host && x.kind === 'crypt'); if(hv) regents.add(+k + '|' + hv.name); }); }
+      if(regents.size){ const t = this._bestRushTargetFor(vamp, { quiet: true, filter: c => regents.has((c.seat | 0) + '|' + c.name) });
         if(t && (!best || (t.w || 0) > (best.target.w || 0))) best = { idx: null, name: 'Regent', kind: 'rush', via: 'grant', target: t, lockTarget: false, st: 0, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 }; } }
     return best;
   }
@@ -8291,9 +8291,9 @@ class Bot {
     if((m = t.match(/^(\d+) blood banked onto an uncontrolled vampire/))) return { kind: 'blood', delta: +m[1], via: 'stock', uncontrolled: true };   // v0.6.179: superior Govern ADDS blood from the bank ("Add 3 blood to a younger vampire in your uncontrolled region") -- not a pool cost
     if((m = t.match(/^(.+?) unlocks \u2014 (.+?) \(/))) return { kind: 'unlock', vamp: S(m[1]), card: S(m[2]) };
     if((m = t.match(/^(.+?) locks and (defends|is the acting minion)/))) return { kind: 'combat-start', vamp: S(m[1]), role: m[2] === 'defends' ? 'defender' : 'actor' };
-    if((m = t.match(/^(.+?) defends \(rushed by (.+?), Haven Uncovered\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'defender', by: S(m[2]) };   // v0.6.205 (R4): a rush through Haven Uncovered locks nobody
+    if((m = t.match(/^(.+?) defends \(rushed by (.+?), (?:Haven Uncovered|Saulot's Avenging Fist|Regent)\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'defender', by: S(m[2]) };   // v0.6.217: + the granted rushes   // v0.6.205 (R4): a rush through Haven Uncovered locks nobody
     if((m = t.match(/^Combat begins: (.+?) against (.+?) \(Haven Uncovered\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'actor', opp: S(m[2]) };
-    if((m = t.match(L12.havenRush))) return { kind: 'announce', vamp: S(m[1]), action: 'rush', directed: true, card: 'Haven Uncovered', owner: S(m[2]), target: S(m[3]) };   // v0.6.205 (R4, F23): the frozen rush line
+    if((m = t.match(L12.havenRush))) return { kind: 'announce', vamp: S(m[1]), action: 'rush', directed: true, card: m[4], owner: S(m[2]), target: S(m[3]) };   // v0.6.217: the granting card (m[4])   // v0.6.205 (R4, F23): the frozen rush line
     if((m = t.match(/^(.+?) has no counters left \u2014 burned/))) return { kind: 'card-burned', card: S(m[1]) };
     if(/\(uncurated \u2014 adjust if needed\)|is seated\. We answer to|a bare "bleed N" goes to your prey|please play with an open hand|the next rise comes cheaper|pick the card I discard \(Revelations\)/.test(t)) return { kind: 'note' };   // v0.6.205: + the Revelations pick instruction
     return null;
@@ -8583,10 +8583,10 @@ class Bot {
       if(m[2] === this.seatName(this.seat) && !this.out && who !== this.o.name){
         const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === m[3]);
         const via = m[4] === 'Haven Uncovered' ? 'haven' : 'grant';   // v0.6.217: the granted rushes take Haven's terms -- the host does not lock, the rusher is the acting minion
-        if(vc && this._rushWindowOpens(who, m[1], vc, { noLock: true, targetActs: false, via })) return;
+        if(vc && this._rushWindowOpens(who, m[1], vc, { noLock: true, targetActs: false, via, card: m[4] })) return;
         if(vc){
           this.say('Pass');   // nobody to block with: the window path's Pass (v0.6.202's lesson -- silent, the rusher's directed ask ran its whole clock)
-          this._complyRush({ who, actingVampName: m[1], rushTarget: vc.name, noLock: true, targetActs: false, via });
+          this._complyRush({ who, actingVampName: m[1], rushTarget: vc.name, noLock: true, targetActs: false, via, card: m[4] });
         }
       }
       return;
