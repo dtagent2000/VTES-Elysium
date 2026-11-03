@@ -19,6 +19,39 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.217 (3 Nov 2026)** — V5 wave 4, Johan's choice of 3 Nov (D-106: the masters that go on a vampire + Toreador Grand Ball +
+  Toreador's last three cards). The canon: `specs/spec-v5-wave4-2026-11-03.md`; RULINGS R-43 (the readings, rulebook 6.1.6), D-106,
+  D-107 (Sudden Reversal's window, also against humans: wave 5).
+  - *Title cards*: one title per vampire, so a Regent (4 votes), a Toreador Justicar (3) or a Saulot's Guiding Wisdom (2) REPLACES the
+    printed title in every count (`_titleOf`: my votes, another seat's, a title requirement, the referendum estimate, Lubomira,
+    Rebel); a printed holder keeps the title in play (`_titleInPlay`: Madame Guil, Sha-Ennu).
+  - *The masters on a vampire* choose their host in the master loop or are held before anything is paid (`_masterHostPlan`):
+    Oblivion (+1 level and +1 capacity through `_discOf` / `_capOf` at every mode gate and blood cap; never on [OBL]), Charisma, Depravity,
+    Terrifying Visage (the blocker burns the pool at its verdict and weighs it), Monster (1 blood to unlock after this action's combat
+    left the opponent down, once each player's turn), Saulot's Avenging Fist and Regent (their rushes on Haven Uncovered's machinery),
+    Saulot's Guiding Wisdom (2 votes, the polling-step abstain, a blocked action's combat ended before range); Saulot's Healing Touch
+    on a Salubri. A master no vampire of mine may take is a dead card the discard phase cycles.
+  - *Toreador Grand Ball*: the pair, the block bar before each of the free Toreador's non-bleed announces (17 sites), one Ball at a
+    time, the (D) action that burns it (the owner burns on its Pass or the actor's word); a human's Ball (no pair named) bars the bots'
+    blocks of that human's Toreador's non-bleed actions.
+  - *Change of Target* in the 'if blocked' step when the combat is worse than walking away; the blocker's bot ends the combat it
+    began and writes no round row; the action is not repeated (a hunt booked; a 0-blood hunter stuck [LSJ 19980112]). *Scalpel
+    Tongue* in my referendum's polling step when it turns the count, on a voter the seat's count names; the poll then reopens.
+    *Toreador Justicar*: the title referendum (+1 vote per ready Toreador), the card on the term on a pass.
+  - *The turn ledger* (rulebook 6.1.6): an action through a card in play once each turn per minion -- Haven Uncovered's own rush too
+    (since v0.6.205 a Freak Drive or an unlock in combat let the same minion rush through the same Haven twice).
+  - *cardfx compiler v1.9.8* ("Unique archetype." is an archetype); 12 curated entries (156); coverage tool v1.1.43.
+  - *Reviews*: the graded readings (5 green, 1 amber, 6 red: the turn ledger, the closed poll, a human's Ball -- fixed; a fresh
+    re-grade of the six: 1 green, 5 amber on declared omissions, 0 red -- the wave stands at 6 green, 6 amber);
+    the sim footprint (the held Oblivion clogging a hand, the stub row after a Change of Target -- fixed); the egress review (11
+    findings: half-done 5, rule-missed 2, unproven 2, test-weakened 1, stale-doc 1; 10 fixed, 1 listed).
+  - *Gates*: suite 2393/0 ×3 (frozen snapshots, the release sha), section 162 (27; every new check red on the bytes before its fix
+    but 162y, a coverage check), canary 69/0 + 69/0 (root v2.6.170), hotseat 11/0, HB1 11/11, test-cardfx 315/0, gen-precon --check
+    clean, main's check-versions agrees (the root: 21 byte copies), main's client suite 353/1 (the embedded guide: main
+    re-embeds). Footprint vs v0.6.216: the starters SAME-PLAY 238, DIVERGED 2 (both at the Haven rule: a second rush through the
+    same Haven); the V5 smoke DIVERGED only in toreador 10, lasombra 4, pathcathari 3,
+    pathdeath 3, hecata 2, salubri 1 (each at a wave card), the other eight SAME-PLAY; 48 toreador matches DIVERGED 37; played at 0
+    pool 0, handshake integrity 100 %, no block violation, no new invariant kind.
 - **v0.6.216 (2 Nov 2026)** — KRCG's v5 dump is the card data (main's KRCG v5 reply of 1 Nov, item 5.1; Johan's order: after wave
   3; RULINGS D-105). KRCG's v3 file stopped at Sabbat V5, so the 63 cards of Secrets of New York and Noites Brasileiras and the
   dump's errata were unknown to cardfx.

@@ -44,7 +44,11 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | Influence | `_planInfluence` (`_deckFit`, the planner), `_riseFromUnc` | plan.floor, `_critPool`, the crypt | `influence-plan`, `influence-pick`, `raise` |
 | Masters, income, banks | `master-play` (`_bestMasterFor`: no `oot`, `_masterReqOk`, `_masterHold`), `income-drain`, `income-direction`, `bank-in`, `lock-income` (one lock, one effect) | pool (≥ 1 left), a ready vampire meeting the requirements, the hand | `play`, `income-*`, `bank`, `unc-blood` |
 | Out-of-turn answers | `_archonFor` / `_playArchon` in the react window; `_ootDebt` at my next turn | the bleed at me, pool | `archon`, `archoned`, `oot-debt` |
-| Act again | `act-again` (`_maybeActAgain`) | the ledger, `_keepBlocker`, `_critPool` | `act-again` |
+| Act again | `act-again` (`_maybeActAgain`; Monster is a board source) | the ledger, `_keepBlocker`, `_critPool` | `act-again` |
+| Masters on a vampire (v0.6.217) | `_masterHostPlan` (the host or held, `_masterHostOk`; `_grandBallPlan`: the Ball's pair); `_masterNoHost` makes an unhostable one a dead card | the hand, my crypt, `_titleOf`, `_discOf`, `_capOf` | `master-play`, `grand-ball` |
+| If blocked (v0.6.217) | `_ifBlockedStep`: Terrifying Visage, Change of Target (`_cotWorth`; `_noteCotAct` books the action) | the blocker's expected strike, my combat enders | `change-of-target`, `visage` |
+| Polling-step abstain (v0.6.217) | `_bestAbstainFor` / `_playAbstain` in `_callReferendum` (the poll reopens after it) | `rc.agBy`, the seat's title votes | `abstain` |
+| Burn a card in play (v0.6.217) | `burnCard` in the action ctx (`_bestBurnCardFor`); the owner's `_complyBurnCard` | the owner's votes | `burn-card`, `card-burned` |
 | Set-up cards (Haven) | the look-ahead through `_actionCtxFor` + `_actionCtxAdjust(…, ahead)` + `_decide` | the real action ctx | `haven` |
 | Waits on a human | `_waitPlan(kind, who)`; block / react / pq / vote / phase / damage / verdict | the tempo (`botcfg`), the hold | `wait`, `tempo` |
 

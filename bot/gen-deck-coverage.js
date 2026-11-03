@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.42 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.43 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -158,6 +158,12 @@ const CLASS = {
   stealGrant: 'contextual', handBonusCombat: 'contextual', strengthSet: 'contextual', strengthCombat: 'contextual',   // the before-range step (_brCands / _beforeRangePlay): Hunger of Marduk's steal this round, Rage of Apedemak's hand bonus, Torn Signpost's strength, Form of the Wolf / Monstrous Form's +1 -- the pump@beforeRange special case below mirrors it
   noPreventDisc: 'meta',   // Soul Burn's rider ('cannot be prevented by cards requiring Fortitude'): read by the STRUCK bot's prevention finder from the strike line's card (_noPreventDiscIn), never a play path of its own
   maneuverTo: 'paired', pressOpt: 'paired',   // riders: a maneuver's only direction (Slam [POT]: to close -- _bestManeuverFor skips the other way, _bestCommitManeuverFor takes it), the optional press a maneuver or a pump brings (Flash [CEL], Resist Earth's Grasp, Form of the Wolf [PRO]: _bundledPress)
+  /* v1.1.43 (3 Nov 2026, bot v0.6.217, V5 wave 4, RULINGS D-106): the masters on a vampire (read through the vampire's attached cards, _attachedFx) and the
+     master loop's host plans; Toreador Grand Ball's pair and the (D) action that burns it; Change of Target's 'if blocked' step; the polling-step abstain. */
+  discUp: 'play', capBonus: 'paired', recruitDiscount: 'play', noRecruitEmploy: 'paired', blockedPoolBurn: 'play', unlockAfterCombat: 'play', rushSelf: 'play',
+  titleVotes: 'play', abstainLock: 'play', endCombatLock: 'play', rushHostBy: 'play', grandBall: 'play', burnCardAction: 'play', burnStealthClan: 'paired',
+  endAction: 'play', abstainVoter: 'play', voterBloodBurn: 'paired',
+  titleCard: 'paired', votesPerReady: 'paired',   // a title referendum's terms (ref.fx), consumed through the verdict's titleCard rule
   /* v1.1.42 (2 Nov 2026, bot v0.6.215, V5 wave 3, RULINGS D-104): the wave's keys -- all on masters, read on the board or by the master loop. */
   lockStealthSect: 'paired', lockStealthAt: 'paired',   // Anarch Railroad's sect gate (_lockStealthFor); Creepshow Casino's announce window (_lockStealthAtAnnounce)
   lockIntercept: 'play', lockInterceptClan: 'paired', lockInterceptOn: 'paired', lockInterceptNotFirst: 'paired',   // Market Square, Channel 10, KRCG News Radio, Wall Street Night: _lockInterceptFor, spent by _spendIntercept
@@ -185,7 +191,9 @@ const MASTER_KEYS = new Set(['poolGain', 'bloodToPool', 'poolToBlood', 'handSize
   'poolFromHost', 'poolFromHostMin', 'hostCopyCost',   // v1.1.40: + Villein
   'lockStealthSect', 'lockStealthAt', 'lockIntercept', 'lockInterceptClan', 'lockInterceptOn', 'lockInterceptNotFirst', 'bloodAddClan', 'bloodAddSect',
   'bloodAddPath', 'bloodAddBaron', 'bloodAddReq', 'bleedDiscardCombat', 'bleedDiscardClan', 'bleedAtAnnounce', 'bleedAtAnnounceBlood', 'bleedAtAnnounceSect',
-  'burnActor', 'burnActorMinBleed', 'drawCrypt', 'drawCryptClan']);   // v1.1.42: + V5 wave 3
+  'burnActor', 'burnActorMinBleed', 'drawCrypt', 'drawCryptClan',   // v1.1.42: + V5 wave 3
+  'discUp', 'capBonus', 'recruitDiscount', 'noRecruitEmploy', 'strengthBonus', 'blockedPoolBurn', 'unlockAfterCombat', 'rushSelf', 'titleVotes', 'abstainLock',
+  'endCombatLock', 'rushHostBy', 'grandBall', 'burnCardAction', 'burnStealthClan']);   // v1.1.43: + V5 wave 4 (the masters on a vampire read through their bearer; Toreador Grand Ball)
 function modeConsumed(mo, e){
   if(((e && e.t) || []).includes('master') && !Object.keys(mo.fx || {}).some(k => MASTER_KEYS.has(k)))
     return { ok: false, via: 'master: no board consumer for ' + (Object.keys(mo.fx || {}).join(',') || '\u2014') };
@@ -437,6 +445,7 @@ function judgeLib(h, cryptEs){
   else if (consumed.length){
     verdict = reachConsumed.length ? (consumed.length === per.filter(p => !p.dominated).length ? 'FULL' : 'PARTIAL') : 'UNREACHABLE';   // v1.1.40: a dominated mode is set aside
   }
+  else if (e.ref && e.ref.fx && e.ref.fx.titleCard && scanned.has('titleCard')) verdict = 'FULL';   // v1.1.43 (V5 wave 4): a title referendum (Toreador Justicar) -- _titleRefFor / _takeTitle
   else if (e.ref && e.ref.pool) verdict = REF_CALLER ? 'FULL' : 'REF-TERMS';   // v1.1.31 (18 Sep 2026, cardfx v1.7.0): a political card with referendum terms (e.ref.pool) is playable the day the bot has a referendum caller that reads them -- detected by source scan, like everything else here
   else if (isMaster) verdict = 'TABLED-ONLY';
   else if (modes.length) verdict = 'INERT';
@@ -619,4 +628,4 @@ console.log('rapport: ' + outPath);
 }
 
 if (require.main === module) main();
-module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.42' };
+module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.43' };

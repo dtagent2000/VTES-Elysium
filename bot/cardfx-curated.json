@@ -14,7 +14,8 @@
   "18 Sep 2026 (late): +2 crypt (Sybren van Oosten, Alexa Draper), Alexander Silverson no longer docOnly -- 74 lib + 20 crypt = 94.",
   "18 Sep 2026 (night): + Anarch Troublemaker -- 75 lib + 20 crypt = 95.",
   "16 Oct 2026 (R4): + the six V5 masters the auto tier mis-certified (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Austria, Haven Uncovered) -- 85 lib + 20 crypt = 105.",
-  "29 Oct 2026 (V5 wave 1, RULINGS D-98): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor's Hand, Sword of the Archangel, Invigorate -- 95 lib + 20 crypt = 115."
+  "29 Oct 2026 (V5 wave 1, RULINGS D-98): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor's Hand, Sword of the Archangel, Invigorate -- 95 lib + 20 crypt = 115.",
+  "3 Nov 2026 (V5 wave 4, RULINGS D-106): + Oblivion, Charisma, Depravity, Terrifying Visage, Monster, Saulot's Avenging Fist, Saulot's Guiding Wisdom, Regent, Toreador Grand Ball, Change of Target, Scalpel Tongue, Toreador Justicar -- 136 lib + 20 crypt = 156."
  ],
  "lib": {
   "Blood Doll": {
@@ -2751,6 +2752,271 @@
     }
    ],
    "note": "V5 wave 3 (2 Nov 2026, bot v0.6.215, RULINGS R-42 / D-104): 'Out-of-turn. Only usable if a minion is bleeding you and the bleed amount is 4 or more, after blocks are declined. Burn the acting minion. (The action is not successful.)' Never a master-phase play (oot). The target bot plays it at its own decline of the block, or when a modifier reopens the window at 4+, before anything 'as the action would be successful' [LSJ 19980105] (_archonFor / _playArchon): 3 pool leaving 1 (R-34), the next master phase's action spent (_ootDebt), and no second out-of-turn master before that master phase (the rulebook), the frozen ARCHON_BURN line; the acting bot burns its minion (_archonBurned), a human is asked to. Costs one more against Secure Haven [LSJ 20010817] (not modelled; no deck holds it)."
+  },
+  "Oblivion": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "host": "discUp",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "discUp": "obl",
+      "capBonus": 1
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Discipline. Put this card on a vampire. This vampire gets +1 level of Oblivion [obl] and +1 capacity. Cannot be put on a vampire with superior Oblivion [OBL].' fx.discUp: the attached level (none -> [obl], [obl] -> [OBL]) that _discOf adds to the printed disciplines (every mode gate reads _discOf); fx.capBonus: +1 capacity (_capOf). host 'discUp': a ready vampire of mine without [OBL] (_masterHostPlan: the level that opens the most of my library's modes, then the highest capacity); with no vampire of mine that may take it, a dead card the discard phase cycles (_masterNoHost)."
+  },
+  "Charisma": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "host": "ready",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "recruitDiscount": 1
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Unique. Put this card on a ready vampire. Recruit ally actions cost this vampire -1 blood or pool.' fx.recruitDiscount: the recruit finder's price for the bearer, blood or pool, never below 0 (Piper's recruit is no action and gets none [LSJ 20090115-1]). Played only while I hold an ally a ready vampire of mine can recruit, on the vampire that would recruit it (_masterHostPlan); held otherwise."
+  },
+  "Depravity": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "host": "ready",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "strengthBonus": 1,
+      "noRecruitEmploy": true
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Unique. Put this card on a ready vampire you control. This vampire gets +1 strength. This vampire gets +1 stealth during diablerie actions. This vampire cannot recruit allies or employ retainers.' strengthBonus through _strengthBonus (the attached-strength reader every strike reads); noRecruitEmploy bars the bearer in the recruit and employ finders; the diablerie stealth is unreachable (bots never diablerize, O-15). Host: the ready vampire with the best fist that is not the only one able to recruit or employ what I hold (_masterHostPlan)."
+  },
+  "Terrifying Visage": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "host": "ready",
+   "hostReq": {
+    "path": "Cathari"
+   },
+   "onePerHost": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "blockedPoolBurn": 1
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Put this card on a ready vampire who follows the Path of Cathari. If this vampire is blocked, the blocking minion's controller burns 1 pool before block resolution. A vampire can have only one Terrifying Visage.' The BLOCKER applies it (the card on the actor is public): a bot blocker prices 1 pool into the block and never blocks at 1 pool (R-34), and burns it when its block succeeds, before combat (_visageBurn); a human blocker is told in chat by the acting bot. Every 'if blocked' effect comes before any other card [ANK 20220116]; Change of Target does not stop it [RTR 19991206]. Host: a ready Cathari of mine without one, the most active (_masterHostPlan)."
+  },
+  "Monster": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "archetype": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "unlockAfterCombat": 1
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Archetype. Put this card on a ready vampire you control. Once each turn after a combat involving this vampire ends, this vampire can burn 1 blood to unlock if the opposing minion is not ready. A vampire can have only one archetype.' fx.unlockAfterCombat: _monsterUnlock at the end of _resolveCombat -- once in each player's turn [ANK 20180719-4], optional [ANK 20210309-3]: on my own turn when the vampire keeps 1 blood and has an action left worth taking; on another's turn when it keeps 1 blood and can block again. Host: an archetype-free ready vampire, the best fighter (_masterHostPlan)."
+  },
+  "Saulot's Avenging Fist": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "archetype": true,
+   "hostReq": {
+    "clan": "Salubri"
+   },
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "strengthBonus": 1,
+      "rushSelf": {
+       "notClan": "Salubri",
+       "stealthVs": {
+        "Tremere": 1
+       }
+      }
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Unique archetype. Put this card on a Salubri you control. This Salubri gets +1 strength. This Salubri can enter combat with a non-Salubri vampire as a (D) action; if that vampire is Tremere, this is a +1 stealth action. A vampire can have only one archetype.' strengthBonus through _strengthBonus; fx.rushSelf: _bestGrantRushFor offers the bearer 'enter combat with' any other Methuselah's ready non-Salubri vampire (Haven Uncovered's rush machinery, the frozen enters-combat line naming the card), +1 stealth at a Tremere; the action requires a Salubri [LSJ 20080604]; once each turn per minion, as every action through a card in play (rulebook 6.1.6: the turn ledger, _actSameKey)."
+  },
+  "Saulot's Guiding Wisdom": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "archetype": true,
+   "title": "2 votes",
+   "votes": 2,
+   "hostReq": {
+    "clan": "Salubri",
+    "sect": "Independent"
+   },
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "titleVotes": 2,
+      "abstainLock": true,
+      "endCombatLock": "other"
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Unique archetype. Title. Put this card on an Independent Salubri you control to represent a unique Independent title worth 2 votes. This Salubri can lock during any referendum to force a vampire to abstain. Once each turn, this Salubri can lock before range is determined to end a combat involving another minion you control.' title / votes: a title CARD replaces the bearer's printed title (one title per vampire, the rulebook) -- every vote reader takes it through _titleOf. fx.abstainLock: the polling-step abstain (_bestAbstainFor, beside Scalpel Tongue); fx.endCombatLock: before range, a combat of ANOTHER minion of mine (_sgwEndFor)."
+  },
+  "Regent": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "uniqueTitle": true,
+   "title": "Regent",
+   "votes": 4,
+   "hostReq": {
+    "sect": "Sabbat",
+    "capMin": 8
+   },
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "titleVotes": 4,
+      "rushHostBy": {
+       "sect": "Sabbat"
+      }
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Title. Put this card on a Sabbat vampire you control with capacity 8 or more to represent the unique Sabbat title of regent. Sabbat vampires can enter combat with this vampire as a (D) action. If a Sabbat vampire diablerizes this vampire, move this card to the diablerist.' Regent = 4 votes; the card REPLACES the host's printed title (one title per vampire): the host is the one it gains the most votes on (_masterHostPlan). Held when a regent is already in play (unique, a contest). fx.rushHostBy: any Sabbat minion of another Methuselah may enter combat with the regent (_bestGrantRushFor, Haven's machinery, no stealth; once each turn per minion: rulebook 6.1.6); the diablerie half is unreachable (O-15)."
+  },
+  "Toreador Grand Ball": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "grandBall": true
+     }
+    },
+    {
+     "at": null,
+     "dir": true,
+     "fx": {
+      "burnCardAction": true,
+      "burnStealthClan": {
+       "Nosferatu": -1
+      }
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Choose two ready Toreador you control, put this card in play, and lock one of the two. The locked Toreador does not unlock as normal. The other Toreador's non-bleed actions cannot be blocked. Minions can burn this card as a (D) action; Nosferatu get -1 stealth during that action.' fx.grandBall: the master loop picks the pair (_grandBallPlan: the unblockable one is the vampire with political cards to call, the locked one the least useful Toreador) and the frozen line names both; the locked one skips my unlock phase while the card is in play (_grandBallLocked); before each NON-BLEED action of the other the frozen block-bar line 'Toreador Grand Ball -- minions cannot block this action.' (every observer declines, a human reads it). Mode 2: fx.burnCardAction -- another Methuselah's minion may burn the card as a (D) action (_bestBurnCardFor), Nosferatu at -1 stealth, once each turn per minion (rulebook 6.1.6). A human's Ball names no pair: while one is in play no bot blocks a non-bleed action of that human's Toreador (_humanBallFree)."
+  },
+  "Change of Target": {
+   "t": [
+    "mod"
+   ],
+   "modes": [
+    {
+     "at": null,
+     "when": "ifBlocked",
+     "fx": {
+      "unlock": true,
+      "endAction": true
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Only usable if this minion is blocked, before block resolution. Unlock this minion. The action ends (unsuccessfully). This minion cannot perform the same action again this turn.' when:ifBlocked -- the acting bot's own step after a successful block, before combat (_ifBlockedStep): played when the combat ahead is worse than walking away (_cotWorth), the frozen line tells the blocker there is no combat; the 'when blocked' effects still apply [RTR 19991206]; the action reached resolution and is not repeated this turn [LSJ 20070709] (the turn ledger: _noteTurnAct books the bleed, the political action and the card; _noteCotAct the hunt and a cardless action on its target; a 0-blood vampire whose mandatory hunt it ended is stuck [LSJ 19980112])."
+  },
+  "Scalpel Tongue": {
+   "t": [
+    "mod",
+    "react"
+   ],
+   "modes": [
+    {
+     "at": "cel",
+     "when": "polling",
+     "fx": {
+      "abstainVoter": true
+     }
+    },
+    {
+     "at": "pre",
+     "when": "polling",
+     "fx": {
+      "abstainVoter": true
+     }
+    },
+    {
+     "at": "CEL",
+     "when": "polling",
+     "fx": {
+      "abstainVoter": true,
+      "voterBloodBurn": 1
+     }
+    },
+    {
+     "at": "PRE",
+     "when": "polling",
+     "fx": {
+      "abstainVoter": true,
+      "voterBloodBurn": 1
+     }
+    }
+   ],
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Only usable during the polling step of a political action. [cel][pre] Choose a vampire who has cast votes or ballots in this referendum. The chosen vampire is locked and abstains (this cancels the chosen vampire's votes and ballots). [CEL][PRE] As above, and the chosen vampire burns 1 blood.' fx.abstainVoter: the polling-step abstain (_bestAbstainFor): on my own referendum, a vampire the count says has cast votes against my side (its seat cast all its titles' votes, or the rest could not have cast them alone), the largest, when cancelling them turns the result; then the table may answer before the verdict (the poll reopens); a reaction on another's referendum is not built (spec §4); not in a referendum that passes automatically [PIB 20150105]."
+  },
+  "Toreador Justicar": {
+   "t": [
+    "political"
+   ],
+   "persistent": true,
+   "title": "Justicar",
+   "votes": 3,
+   "ref": {
+    "fx": {
+     "titleCard": {
+      "clan": "Toreador",
+      "sect": "Camarilla"
+     },
+     "votesPerReady": {
+      "clan": "Toreador",
+      "n": 1
+     }
+    }
+   },
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Title. Choose a ready Toreador. Successful referendum means this card is put on the chosen Toreador to represent the unique Camarilla title of Toreador Justicar. In this referendum, each ready Toreador gets +1 vote.' ref.fx.titleCard: the term is a ready Camarilla Toreador [LSJ 20041026] (mine: the one it gains the most votes on); on a pass the card goes on it and REPLACES its printed title (Justicar, 3 votes; one title per vampire). Not called when a Toreador Justicar is in play [LSJ 20100129]. ref.fx.votesPerReady: in this referendum each ready Toreador at the table gets +1 vote."
   }
  },
  "crypt": {
