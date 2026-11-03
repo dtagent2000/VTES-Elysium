@@ -12,7 +12,8 @@ rest are table lines. The protocol in full: `bot/docs/specs/spec-v5-wave4-2026-1
   only when it turns the count, a bot sends `VAMP plays Scalpel Tongue [LVL] — OWNER's TARGET is locked[, burns 1 blood] and abstains
   (N votes cancelled).` or `BEARER locks: Saulot's Guiding Wisdom — OWNER's TARGET abstains (N votes cancelled).` The caller has
   already taken the N votes off its count and writes the vote counter's `b` down by N; the voter's bot locks the vampire and burns
-  its blood. A human voter reads it. The verdict line that follows is your frozen `Vote: F for vs A against — vote passes|fails.`
+  its blood. A human voter reads it. Then the poll reopens (the vote clock again, as after a boost: the table may answer), and the
+  verdict line that follows is your frozen `Vote: F for vs A against — vote passes|fails.`
 - **An action that burns a card in play** (Toreador Grand Ball: "Minions can burn this card as a (D) action"): `VAMP takes an action
   to burn OWNER's Toreador Grand Ball.` The owner's bot opens its block window on it (directed: only its minions may block); on its
   Pass it burns the card (`OWNER burns Toreador Grand Ball (VAMP's action).`). A human owner gets a chat line.
@@ -26,6 +27,8 @@ rest are table lines. The protocol in full: `bot/docs/specs/spec-v5-wave4-2026-1
   Saulot's Guiding Wisdom — the combat of VAMP ends before range.`; the title referendum's terms `Referendum terms — Toreador
   Justicar: VAMP takes the title (Justicar, 3 votes).` A chat line to a human blocker: `Terrifying Visage: NAME burns N pool before
   the combat.`
+- **A human's Toreador Grand Ball:** the human names no pair, so while one is in play no bot blocks a non-bleed action of that human's
+  Toreador (nothing on the wire; the bot's own Ball sends the bar line above).
 - **Title cards count:** a Regent, a Toreador Justicar or a Saulot's Guiding Wisdom on a vampire replaces its printed title for every
   vote a bot counts (one title per vampire, the rulebook). The cards are on the pub board with `host` / `attached` as before.
 

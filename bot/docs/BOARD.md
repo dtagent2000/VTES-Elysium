@@ -35,8 +35,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-41, D-103.
 - **V5 wave 4's riders** (`specs/spec-v5-wave4-2026-11-03.md` §4): the abstain as a reaction on another's referendum; Guiding
   Wisdom's combat end when mine is not the acting minion (a before-range handshake); a bot blocker's Crows before the actor's Change of
-  Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar).
-  Also Saulot's Healing Touch: FULL by the auto tier, its text unbuilt. *Done when* each is built and tested, or ruled out.
+  Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar);
+  a human's Ball names no pair (the bots spare all that human's Toreador). Over-strict: `_bestStrengthFor` (any strength bonus),
+  `_inPlayNorms` (my ash heap). Also Saulot's Healing Touch: FULL by the auto tier, its text unbuilt. *Done when* each is built and
+  tested, or ruled out.
 - **V5 wave 3's riders** (`specs/spec-v5-wave3-2026-11-02.md` §4): the amber halves (Anarch Railroad and Fortune Teller Shop for
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
@@ -75,8 +77,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Graded rules readings** (T3; the ledger, T2, is `docs/CARDS.md` since v0.6.212): each curated reading graded green / amber /
   red by a fresh agent against KRCG text and vtes-rulings, only reds to Johan; the grade becomes a ledger column. *Done when* a wave's
   PR lists the grades of the cards it curated (HARNESS, the charter). Docs: spec T3; HARNESS; `specs/spec-cardfx-sweep-sources-2026-09-25.md`.
-- **Egress review as a rule** (T4): every round's PR carries an `Egress:` line from a fresh-context agent. *Done when* HARNESS
-  describes it and three rounds have one. Docs: HARNESS.
 - **Ask main once**: (a) may the bot's gates read the root's released client / server / protocol instead of the copies in `bot/`
   (no drift, 1.8 MB fewer); (b) has the hotseat bridge, or could it expose, a pure `step(state, action)`; (c) the bot-emitted frozen
   lines owed to §12 + the canary (STATUS lists them) — all three in `handoffs/HANDOFF-to-main-2026-10-20-docs-diet.md`; (d) the
@@ -101,8 +101,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Intercept banking** (B-55f-b: deck-axis, measure first) and **2 of 187 blocked rows still `by: null`** (B-55e-b). *Done when*
   banking is measured on a sim series and no blocked row lacks `by`. Docs: `history/CLAUDE-v2-2026-10-20.md` 155–165, debt 68.
 - **The turn ledger's gaps** (26d): a barred bleed becomes an illegal marker that can still win the score contest (the vampire stays
-  home); hunt / rescue / leave torpor are not limited; card-in-play actions (Warsaw, Chantry) are not in the ledger. *Done when*
-  the marker cannot win and the card-in-play actions are booked.
+  home); of the card-in-play actions only the rushes and the Ball's burn are booked (v0.6.217; not Warsaw, Chantry). *Done when* the
+  marker cannot win and every card-in-play action is booked.
 - **Home pricing's six soft spots** (42c, unfixed): `_keepBlocker` holds the last actors, not `_priceHome`'s bodies; `predHits`
   reads the announced bleed, `hitMax` the realised one; a bounce valued as pool saved only; the rate leans on `myFc`; wakes counted
   whoever could play them; 0.9 / pStop / 'a card + a blood = 1 pool' / fwd 0.5 unmeasured. *Done when* each is fixed or measured.
