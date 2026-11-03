@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================================
-   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.0.0
+   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.1.0
    ----------------------------------------------------------------------------
    PROTOCOL.md §12 is the authoritative, "frozen" bot contract. Three things
    must agree at all times: (1) what §12 DOCUMENTS, (2) what the CLIENT
@@ -19,6 +19,8 @@
 
    No server, no network, sub-second. Run it in the gate battery alongside
    the bot regression suite (see CLAUDE.md / SKILLS.md's gate list).
+   v1.1.0 (3 Nov 2026, client v2.6.171): section 6 -- the bot-emitted lines the bot project
+   asked main to record (the docs-diet handoff of 20 Oct, bot v0.6.213-215).
    ========================================================================== */
 
 const fs = require('fs');
@@ -157,6 +159,82 @@ ok(sec12.includes('reduces the bleed by N.'), 'PROTOCOL \u00a712 documents the c
 ['(bot) is in DEBUG mode', '(bot) leaves DEBUG mode'].forEach(tag => ok(sec12.includes(tag), 'PROTOCOL \u00a712 documents the bot-emitted "' + tag + '" line (the bots read it from each other since v0.6.201)'));
 ok(!!(L12.debugOn && 'Ann (bot) is in DEBUG mode: open hand for the humans (the bots look away), crypt face up.'.match(L12.debugOn)), 'bot L12.debugOn parses the documented announcement');
 ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament mode now.'.match(L12.debugOff)), 'bot L12.debugOff parses the documented exit');
+
+/* ---- 6) v2.6.171 (bot v0.6.215-216 consumed): the bot-emitted lines the bot project asked main to record -- the docs-diet
+   handoff (20 Oct: the block bar, the referendum terms, leaving torpor, Haven Uncovered, Spying Mission) and v0.6.213-215
+   (no additional strike, no strike this round, Archon Investigation, a location's intercept lock). For each: PROTOCOL
+   section 12 documents the shape, the bot's own parser reads a line built from it, and where the line changes a live bot's
+   state at once, a live bot's _onLog is fed the line and the effect is asserted (the handoffs' own suggestions). The
+   actor's stealth lines are documented but not pinned: the bot project keeps their reader (NET_STEALTH) outside its
+   frozen grammar. Em-dashes and the minus sign are written as escapes (mojibake discipline, section 3). */
+{
+  [['vampires cannot block this action.', 'the block bar (bot v0.6.127)'],
+   ['Referendum terms — CARD: NAME −3', 'the referendum terms (bot v0.6.122)'],
+   ['Referendum passes — CARD: TERMS.', 'the referendum result'],
+   ['Referendum fails — CARD: blocked.', 'the blocked referendum'],
+   ['VAMP attempts to leave torpor.', 'leaving torpor (bot v0.6.128)'],
+   ['plays Haven Uncovered — on NAME\'s VAMP.', 'Haven Uncovered placed (bot v0.6.205)'],
+   ['enters combat with NAME\'s VAMP (Haven Uncovered).', 'the rush through Haven Uncovered'],
+   ['plays Spying Mission [OBF] — the bleed is unsuccessful and burns no pool.', 'Spying Mission\'s cancel (bot v0.6.211)'],
+   ['does not take an additional strike.', 'the fourth "nothing" line (bot v0.6.213)'],
+   ['gets no strike this round (committed to CARD by its maneuver; REASON).', 'no strike this round (bot v0.6.214)'],
+   ['plays Archon Investigation — VAMP is burned (the bleed of N is not successful).', 'Archon Investigation (bot v0.6.215)'],
+   ['VAMP locks CARD: +N intercept.', 'a location\'s intercept lock (bot v0.6.215)']
+  ].forEach(([tag, what]) => ok(sec12.includes(tag), 'PROTOCOL §12 documents ' + what + ': "' + tag + '"'));
+
+  [['blockBar', 'Day Operation — vampires cannot block this action.'],
+   ['refTerms', 'Referendum terms — Kine Resources Contested: Johan −3, Bot −1.'],
+   ['refResult', 'Referendum fails — Kine Resources Contested: blocked.'],
+   ['uLeave', 'Sully attempts to leave torpor.'],
+   ['havenM', 'Ann plays Haven Uncovered — on Johan\'s Lisa Noble.'],
+   ['havenRush', 'Gilbert enters combat with Johan\'s Lisa Noble (Haven Uncovered).'],
+   ['spyNull', 'Gilbert plays Spying Mission [OBF] — the bleed is unsuccessful and burns no pool.'],
+   ['attempt', 'Gilbert attempts to block.'],
+   ['interceptPlay', 'Gilbert plays Eagle\'s Sight: +1 intercept.'],
+   ['attemptIcp', 'Gilbert attempts to block with +1 intercept (Second Tradition).']
+  ].forEach(([k, line]) => ok(!!(L12[k] && line.match(L12[k])), 'bot L12.' + k + ' parses a line built from the documented shape: "' + line + '"'));
+
+  const { Bot } = require('./elysium-bot.js');
+  const B = s => '<b>' + s + '</b>';
+  const mk6 = extra => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Bot', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} });
+    u.seat = 2; u.started = true; u.send = () => {}; u.push = () => {};
+    u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Bot', bot: true }, { seat: 3, name: 'Ann', bot: true }];
+    return Object.assign(u, extra || {}); };
+  const inCombat = () => { const me = { id: 'm1', name: 'Sully', kind: 'crypt', zone: 'ready', blood: 4, cap: 4 };
+    return { _inCombat: true, _combatOppName: 'Gilbert', _combatMyVamp: me, board: [me], _rnd: {} }; };
+  let u;
+
+  u = mk6(); u._onLog('Ann', B('Day Operation') + ' — vampires cannot block this action.');
+  ok(!!(u._blockBar && u._blockBar.card === 'Day Operation' && u._blockBar.bar === 'vampires' && u._blockBar.who === 'Ann'), 'a live bot hears another seat\'s block bar: Day Operation, vampires');
+
+  u = mk6(); u._onLog('Ann', 'Referendum terms — ' + B('Kine Resources Contested') + ': Johan −3, Bot −1.');
+  ok(!!(u._refT && u._refT.deltas && u._refT.deltas[2] === -1 && u._refT.deltas[1] === -3), 'a live bot reads its own stake from the terms line (Bot −1, Johan −3)');
+
+  u = mk6({ pending: { who: 'Ann', amount: 3, actingVampName: 'Gilbert' } });
+  u._onLog('Ann', B('Gilbert') + ' plays ' + B('Spying Mission') + ' [OBF] — the bleed is unsuccessful and burns no pool.');
+  ok(u.pending.amount === 0 && u.pending.nullified === true, 'a live bot being bled for 3 hears Spying Mission\'s cancel: 3 -> 0, nullified');
+
+  u = mk6(); u._onLog('Ann', B('Ann') + ' plays ' + B('Haven Uncovered') + ' — on ' + B('Johan') + '\'s ' + B('Lisa Noble') + '.');
+  ok(!!(u._havenSeen && u._havenSeen['Lisa Noble'] && u._havenSeen['Lisa Noble'].owner === 'Johan'), 'a live bot records the host of Haven Uncovered (Johan\'s Lisa Noble)');
+
+  u = mk6(inCombat()); u._onLog('Ann', 'Ann combat — Gilbert does not take an additional strike.');
+  { const e = u.ev && u.ev.last('extra-strike'); ok(!!(e && e.none === true && e.vamp === 'Gilbert'), 'a live bot in combat types "does not take an additional strike." as an extra-strike event with none: true'); }
+
+  u = mk6(inCombat()); u._onLog('Ann', B('Gilbert') + ' gets no strike this round (committed to ' + B('Ivory Bow') + ' by its maneuver; Immortal Grapple).');
+  { const s = u._oppStrike; ok(!!(s && s.dealt === 0 && !s.dodge && !s.ends && s.vamp === 'Gilbert'), 'a live bot in combat takes "gets no strike this round" as the opponent\'s strike: dealt 0, no dodge, no combat ends'); }
+
+  u = mk6(); u._onLog('Ann', B('Gilbert') + ' plays ' + B('Dummy Card') + '.');
+  ok(!!(u._obs && u._obs.who === 'Ann'), 'control: an ordinary play line from Ann enters the bot\'s action memory');
+  u = mk6(); u._actingVamp = { v: { name: 'Sully' }, n: 4, played: new Set(), target: 3 };
+  u._onLog('Ann', B('Ann') + ' plays ' + B('Archon Investigation') + ' — ' + B('Sully') + ' is burned (the bleed of 4 is not successful).');
+  ok(!!(u._actingVamp.archoned && u._actingVamp.archoned.by === 'Ann' && u._actingVamp.archoned.n === 4), 'a live bot bleeding with Sully hears Archon Investigation: archoned { by: Ann, n: 4 }');
+  ok(!(u._obs && u._obs.who === 'Ann'), '...and the line is not taken as an action of Ann\'s (the action memory stays empty)');
+
+  u = mk6(); const icp0 = u._opp(3).icpSum | 0;
+  u._onLog('Ann', B('Gilbert') + ' locks ' + B('Channel 10') + ': +1 intercept.');
+  { const e = u.ev && u.ev.last('intercept'); ok(!!(e && e.lock === true && e.n === 1 && e.card === 'Channel 10'), 'a live bot types the location\'s lock as an intercept event (lock: true, +1, Channel 10)'); }
+  ok((u._opp(3).icpSum | 0) === icp0 + 1, 'and adds the +1 to that seat\'s intercept in its model of the opponent');
+}
 
 console.log('\n' + passN + '/' + failN + (failN ? ' \u2014 FAIL' : ' \u2014 all green'));
 process.exit(failN ? 1 : 0);

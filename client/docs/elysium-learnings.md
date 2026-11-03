@@ -1,8 +1,24 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.170 / server v2.6.49 / bot v0.6.214 tested beside the suite, last updated 2 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.171 / server v2.6.49 / bot v0.6.216 tested beside the suite, last updated 3 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**3 Nov 2026 (THE LINES WE OWED — v2.6.171):**
+- **Count a fallback copy before you call it ready.** Our 1 Nov reply said the data repo's `vtes-v5.json` was "now the file
+  with the new cards" -- the file TYPE was, the copy was the 14 Oct dump (4,149 cards) and had no `expansions.json` beside it.
+  Before telling the other project a mirror serves them, count it (cards, the newest card) and run their own gate on it
+  (`krcg-v5.js` + `test-cardfx.js` in a scratch copy of `bot/`: 305/5 on the old copy, 310/0 on the new).
+- **A handoff's "note" can be a parser.** The location's intercept lock was asked as a §12 note; the bots read it
+  (`NET_LOCK_IC`, added by their egress review after the handoff was drafted). Before documenting a bot line, grep
+  `elysium-bot.js` for a regex that matches it: a reader makes it contract, no reader makes it table talk.
+- **A line whose regex is not in `L12` can only be pinned through its effect.** ARCHON_BURN and NET_LOCK_IC are module
+  constants; the canary feeds the line to a live bot's `_onLog` and asserts the state the handoff names, with a control
+  where the check is an absence (an ordinary play line fills the action memory; Archon Investigation's must not).
+- **Answer a panel question by rendering the panel.** In headless Chromium: inject `net.roster`, `net.boards[seat].pub`,
+  `net.you`, `net.turnSeat`, `helper.resCombat`, set `avr` to the tally their code writes, call `avrRender()` and read
+  `#avrDuel` / `#avrPh`. Two minutes, and the answer names what each field drives (the stale pair-1 label, the missing
+  '+1 strike') instead of 'we found nothing'.
 
 **2 Nov 2026 (THE COPY YOU HAVE, the second pass — v2.6.170):**
 - **A fix that rests on an invariant needs every writer checked against it.** v2.6.169's fix relied on "a kept copy stays
