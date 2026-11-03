@@ -143,7 +143,7 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   tail-append to a line ending in a comment; copy raw characters (em-dash, curly quotes) from the file.
 
 ## One-off tools (each reproduces a committed report; not gates)
-`ana-combat-sum.py` (`REPORT-combat-series-table.txt`) · `make-bench-report.sh` (`REPORT-bench-controls.md`; chat-era path) ·
+`ana-combat-sum.py` (`REPORT-combat-series-table.txt`) · `REPORT-bench-controls.md` (the arena bench, 27 Sep; its script retired by C3) ·
 `sweep-pilot.py`, `sweep-pass2.py`, `sweep-full.py` (the cardfx sweeps, `REPORT-cardfx-sweep-*.md`) · `diag-give-probe.js`
 (a live give / given probe through the server, ~70 s; copy it for any feature whose two halves meet only through the server) ·
 `diag-a1-stash-probe.js` · `gen-plan-review.js` · `gen-sweep-audit.js` · `gen-forecast-calibration.js` (to revive, BOARD).
