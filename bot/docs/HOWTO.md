@@ -60,15 +60,20 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   --match-timeout 600 --trace ./serie-x [--seed N] [--fixed-seats] [--knob k=v] [--knob SEAT:k=v]`. Seating is random per match by
   default (`--seed` repeats, `--fixed-seats` = deck order). Decks: hacking (the tournament benchmark), sewer, malkavian, tremere,
   nosferatu, ventrue. `--knob` is whitelisted (`WL`; any other name is ignored with a warning; `aggression` / `blockShy` are not in it). Timer-bound (~2.5 % of a core each), so many run in parallel; 4p30 ≈ 2–4 min, 5p30 ≈ 3–4 min on the real
-  clock. Launch detached and poll `progress.txt`; one process per match. Pre-flight: one match before any series on a change that
+  clock. Launch it detached (one process per match) and poll its trace directory. Pre-flight: one match before any series on a change that
   reads live protocol state, and read the new emit rows.
-- **The mirror bench** (until C3 ports it to the sim) — `bench.sh ARM W NW N SPEC [DECK] [KNOB]` + `ana-bench.py`: 48 matches, the
-  variant in every seat, read against the negative control (A vs A, ±0.5 VP at 48); a no-knob control arm doubles as a deck-pinned
-  control (read the pinned deck's seat); an arm below its control is compared with an INERT arm on the same seeds and paired by
-  match (`bcN2 − bcN` −0.03 vs `bcN2 − negN2` −0.39); `design-balanced-serie-bal1.txt` is the
-  balanced design (6 cyclic orders × 2). The scripts carry chat-era paths (`/home/claude/w`) and read a gitignored
-  `serie-cmb1/design.txt`: fix both before running (point the `cd` at your `bot/`; `mkdir -p serie-cmb1 && cp
-  design-balanced-serie-bal1.txt serie-cmb1/design.txt`). A 12-match series supports mechanism counts only.
+- **The mirror bench** (on the sim since round C3, 3 Nov 2026; `docs/reports/REPORT-bench-controls-sim-2026-11-03.md`) —
+  `node elysium-bot-sim.js --bench SPEC --trace DIR`: SPEC `none` (the negative control), `persona=NAME`, `knob=k=v[+k=v]`; the
+  variant sits in each seat of every seating once (24 × 4 = 96 for the starters; `--design design-balanced-serie-bal1.txt` = the old
+  48; `--seeds K` multiplies), each match with a deal of its own, the same in every arm. `--bench-deck DECK` pins the variant to a
+  deck; `--knob k=v` is every seat's baseline, the variant's knob overrides it in its seat. The CONTROL is run with the arm's design,
+  `--seed` and `--knob` baseline (`--vp` refuses pairs whose seed or non-variant seats differ, and counts them); a `none` control is
+  read at the arm's variant seat, so it doubles as a pinned control. Read: `python3 ana-bench.py DIR...` (each arm's edge: the
+  variant seat's VP minus the table's mean) and `python3 ana-sim-diff.py --vp CONTROL ARM` (the claim: per-match differences, a
+  paired SE, VP and win share; about ±0.27 VP at 96, ±0.15 at ~300). Prove the knob FIRES first (a trace row, a counter, a test —
+  a manifest shows only that it is set): an arm with no DIVERGED match is inert, its +0.00 no no-loss result (`--vp` says so). The
+  arena's inert-arm check is moot here: an inert arm is IDENTICAL to its control. The controls on v0.6.217: none −0.10 ± 0.29;
+  `poolFloor=22` −0.65 paired (wins 20 → 5); novice +0.09 (not weaker). A 12-match series supports mechanism counts only.
 - **The probe lab** — `node lab-probe.js N SEED ARMS > lab-SEED.jsonl` then `python3 ana-lab.py lab-*.jsonl`: N random tables, one
   minion phase per arm, the same table in every arm (~2 s per table and arm); measures decisions, never the wire's timing.
   Pattern for any once-a-match decision.
@@ -141,9 +146,9 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   tail-append to a line ending in a comment; copy raw characters (em-dash, curly quotes) from the file.
 
 ## One-off tools (each reproduces a committed report; not gates)
-`ana-combat-sum.py` (`REPORT-combat-series-table.txt`) · `make-bench-report.sh` (`REPORT-bench-controls.md`; chat-era path) ·
+`ana-combat-sum.py` (`REPORT-combat-series-table.txt`) · `REPORT-bench-controls.md` (the arena bench, 27 Sep; its script retired by C3) ·
 `sweep-pilot.py`, `sweep-pass2.py`, `sweep-full.py` (the cardfx sweeps, `REPORT-cardfx-sweep-*.md`) · `diag-give-probe.js`
 (a live give / given probe through the server, ~70 s; copy it for any feature whose two halves meet only through the server) ·
 `diag-a1-stash-probe.js` · `gen-plan-review.js` · `gen-sweep-audit.js` · `gen-forecast-calibration.js` (to revive, BOARD).
-Chat-era run scripts (`run-bal.sh`, `poll-bal.sh`, `run-m.sh`, `run-t.sh`, `run-cmb.sh`, `run-ser.sh`, `bench.sh`) carry sandbox
-paths; they are retired by round C3.
+The chat-era run scripts (bench.sh, the run-*.sh family, poll-bal.sh, make-bench-report.sh) were retired by round C3: series and
+benches run on the sim (above); an arena series is `elysium-bot-arena.js` itself, one process per match.

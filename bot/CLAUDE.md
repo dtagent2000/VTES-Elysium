@@ -82,7 +82,7 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   in `_scanOpp` / `_noteObserved` / the L12 handlers, never an ad-hoc field.
 - **The knowledge-layer rule (v0.6.187+).** [D-78, D-81, D-82, D-68] Every expectation about a seat comes from PUBLIC evidence only (its crypt, the cards
   it has shown, its lines); the TWD profile is a prior, observations take over. A knowledge knob ships at 0 and flips to 1 only
-  after a bench (48, all seats, vs the negative control) shows no loss. A rule only one deck's cards can trigger is benched PINNED
+  after the sim's mirror bench (all seats, paired against the negative control) shows no loss. A rule only one deck's cards can trigger is benched PINNED
   to that deck against a pinned control on the same seeds; count the rule's own decisions per tag to prove it fired. An archetype
   LABEL is explanation, not a decision: only a confident label (margin ≥ 2, coverage ≥ 0.85) may inform a decision, benched like
   any knob. A new profile share is APPENDED (readers index `f[0..3]`); a rebuilt profile is first reproduced byte for byte by the
@@ -173,9 +173,9 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   on my own turn. Every own-turn pool loss has the oust check beside it.
 - **Count in the arena, weigh in a lab (v0.6.206).** [D-81; L-41, L-52] A decision the arena meets once a match is measured on the same table per arm
   (`lab-probe.js` + `ana-lab.py`); the arena proves the knob fires and carries the audits. Before reading a bench arm, prove the
-  knob fires (a trace row, a counter, a test on the real line shape). A strength claim needs the mirror bench (48 matches, the
-  variant in every seat, read against the negative control, ±0.5 VP at 48); a 12-match series supports mechanism counts only.
-  Until round C3 ports the bench to the sim, `bench.sh` runs only after its chat-era paths are fixed by hand (HOWTO). A
+  knob fires (a trace row, a counter, a test on the real line shape). A strength claim needs the mirror bench on the sim
+  (`elysium-bot-sim.js --bench`: the variant in every seat, both controls; read PAIRED against the negative control with
+  `ana-sim-diff.py --vp`, about ±0.27 VP at 96 matches; HOWTO); a 12-match series supports mechanism counts only. A
   once-a-match decision is weighed in a lab; a knowledge knob is still flipped only after the no-loss bench.
 - **Determinism and footprints (v0.6.209).** [D-71; L-46] The same sim spec gives the same trace byte for byte; the matches that DIVERGED are the
   change's footprint — read them before any VP. Seating shapes the tactical choices, so a deck-level claim covers every seating.
