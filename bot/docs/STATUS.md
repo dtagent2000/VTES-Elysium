@@ -1,13 +1,13 @@
 # STATUS — Elysium Bots (rewritten at every release; 3 November 2026)
 
-**Bot v0.6.217** (3 Nov 2026, PR #47) · arena v1.4.8 · sim table v1.1.0 (round C3, PR #48) · cardfx compiler v1.9.8, curated 156 · hotseat tool v1.4.0 ·
+**Bot v0.6.217** (3 Nov 2026, PR #47) · arena v1.4.8 · sim table v1.1.0 (round C3, PR #49) · cardfx compiler v1.9.8, curated 156 · hotseat tool v1.4.0 ·
 coverage tool v1.1.43 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` v1.0.0 ·
 built against client **v2.6.170 / srv-2.6.49** (the root's release);
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
 **Deploy state:** `main` carries v0.6.216 (PR #46, merged 3 Nov); branch `bot-v5-wave4` carries v0.6.217 and copies its bundle to
-the root (PR #47); `bot-c3-sim-bench` (round C3, the bench on the sim) is stacked on it (PR #48). Johan merges #47 first. **Open PRs:**
-#47, #48.
+the root (PR #47); `bot-c3-sim-bench` (round C3, the bench on the sim) is stacked on it (PR #49). Johan merges #47 first. **Open PRs:**
+#47, #49; main's #48 (client v2.6.171, consuming v0.6.215–216).
 
 ## Last gates (v0.6.217 release bytes, 3 Nov 2026)
 Suite **2393/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root
