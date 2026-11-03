@@ -65,12 +65,15 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
 - **The mirror bench** (on the sim since round C3, 3 Nov 2026; `docs/reports/REPORT-bench-controls-sim-2026-11-03.md`) —
   `node elysium-bot-sim.js --bench SPEC --trace DIR`: SPEC `none` (the negative control), `persona=NAME`, `knob=k=v[+k=v]`; the
   variant sits in each seat of every seating once (24 × 4 = 96 for the starters; `--design design-balanced-serie-bal1.txt` = the old
-  48; `--seeds K` multiplies), each match with a deal of its own, the same in every arm. `--bench-deck DECK` pins the variant to a deck
-  (read against a pinned control, which measures that deck); `--knob k=v` is every seat's baseline, the variant's knob overrides it in
-  its seat. Read: `python3 ana-bench.py DIR...` (each arm's edge: the variant seat's VP minus the table's mean; the negative control
-  holds 0 — A vs A is level) and `python3 ana-sim-diff.py --vp CONTROL ARM` (the claim: per-match differences, a paired SE; about
-  ±0.27 VP at 96, ±0.15 at ~300). The controls on v0.6.217: none −0.10 ± 0.29; `poolFloor=22` −0.65 paired (wins 20 → 5); novice
-  +0.09 (not weaker). Prove the knob fires first (the manifests carry each seat's knobs). A 12-match series supports mechanism counts only.
+  48; `--seeds K` multiplies), each match with a deal of its own, the same in every arm. `--bench-deck DECK` pins the variant to a
+  deck; `--knob k=v` is every seat's baseline, the variant's knob overrides it in its seat. The CONTROL is run with the arm's design,
+  `--seed` and `--knob` baseline (`--vp` refuses pairs whose seed or non-variant seats differ, and counts them); a `none` control is
+  read at the arm's variant seat, so it doubles as a pinned control. Read: `python3 ana-bench.py DIR...` (each arm's edge: the
+  variant seat's VP minus the table's mean) and `python3 ana-sim-diff.py --vp CONTROL ARM` (the claim: per-match differences, a
+  paired SE, VP and win share; about ±0.27 VP at 96, ±0.15 at ~300). Prove the knob FIRES first (a trace row, a counter, a test —
+  a manifest shows only that it is set): an arm with no DIVERGED match is inert, its +0.00 no no-loss result (`--vp` says so). The
+  arena's inert-arm check is moot here: an inert arm is IDENTICAL to its control. The controls on v0.6.217: none −0.10 ± 0.29;
+  `poolFloor=22` −0.65 paired (wins 20 → 5); novice +0.09 (not weaker). A 12-match series supports mechanism counts only.
 - **The probe lab** — `node lab-probe.js N SEED ARMS > lab-SEED.jsonl` then `python3 ana-lab.py lab-*.jsonl`: N random tables, one
   minion phase per arm, the same table in every arm (~2 s per table and arm); measures decisions, never the wire's timing.
   Pattern for any once-a-match decision.

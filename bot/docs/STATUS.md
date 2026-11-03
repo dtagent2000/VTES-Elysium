@@ -24,7 +24,7 @@ Every Toreador row is playable now (`docs/CARDS.md`); whether the deck joins the
 ## Round C3 (no bot release)
 The mirror bench runs on the sim (`elysium-bot-sim.js --bench`, `ana-sim-diff.py --vp`, `ana-bench.py`; HOWTO). Controls on v0.6.217
 (`docs/reports/REPORT-bench-controls-sim-2026-11-03.md`): A vs A level (−0.10 ± 0.29 at 96), a crippled seat −0.65 VP paired (SE
-0.14). The chat-era bench and series scripts are gone. Gates: normal mode IDENTICAL 240 to sim v1.0.2; suite 2393/0 (the bot's bytes are #47's, whose ×3 is 2393/0), canary 69/0, doc-budget PASS.
+0.14). The chat-era bench and series scripts are gone. Egress: 5 findings, all fixed. Gates: normal mode IDENTICAL 240 to sim v1.0.2; suite 2393/0 (the bot's bytes are #47's, whose ×3 is 2393/0), canary 69/0, doc-budget PASS.
 
 ## Next (proposed; Johan orders the board)
 1. Toreador on the bench (does it hold up?), then V5 wave 5: the eighteen masters in play and Sudden Reversal's 'as played' window

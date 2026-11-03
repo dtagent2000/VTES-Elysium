@@ -422,10 +422,13 @@
   (the 7th), `--design FILE` reads the seatings (`design-balanced-serie-bal1.txt` = the old 48); a deal of its own per match, the same
   in every arm; `variantSeat` / `bench` in the result row and design.json, the edge in SUMMARY.md; outside bench mode the same spec
   gives the same trace as v1.0.2 (the 240-match client design IDENTICAL 240). **`ana-sim-diff.py --vp CONTROL ARM`** (T6): the paired
-  read, per deck and for the variant seat. **`ana-bench.py`** reads sim directories. The controls re-validated
+  read of VP and win share, per deck and for the variant seat; a pair needs the same seating, deal seed and baseline (the rest are
+  counted, by reason), a `none` control is read at the arm's variant seat (it doubles as a pinned control), and an arm with no
+  DIVERGED match is called inert. **`ana-bench.py`** reads sim directories. The controls re-validated
   (`docs/reports/REPORT-bench-controls-sim-2026-11-03.md`): the negative control level (−0.10 ± 0.29 at 96, +0.00 ± 0.41 at 48), a
   crippled seat (`poolFloor=22`) −0.65 VP paired (SE 0.14; wins 20 → 5), novice +0.09 (not weaker, as on the arena); the pinned and
-  global arguments checked in the bots' manifests (0 wrong). Retired: bench.sh, run-bal.sh, poll-bal.sh, run-m.sh, run-t.sh,
+  global arguments checked in the bots' manifests (0 wrong) and the global one paired against its own control (`twdKnow=1` over
+  `twdKnow=0`: +0.00, SE 0.03). The egress review: 5 findings (half-done 3, rule-missed 1, stale-doc 1), all fixed. Retired: bench.sh, run-bal.sh, poll-bal.sh, run-m.sh, run-t.sh,
   run-cmb.sh, run-ser.sh, make-bench-report.sh; CLAUDE.md's bench rules, HOWTO, README and ARCHITECTURE rewritten.
 - **V5 wave 1 (29 Oct 2026, with bot v0.6.213)** — `gen-deck-coverage.js` **v1.1.40**: the wave's keys (`addStrike` contextual,
   `addStrikeLimited` paired, `aggr` meta, `aggrHands` / `strengthAction` / `burnPrevent` / `poolFromHost` / `lockToUnlock` play,

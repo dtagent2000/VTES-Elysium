@@ -24,24 +24,32 @@ seating, deal and seat), the mean with its paired SE; and the same per deck.
 | `knob=poolFloor=22`, the 48-match design | 48 | −0.83 ± 0.16 | 1 (12) | −0.83 (0.21; [−1.25, −0.42]), wins 13 → 1 |
 | `none`, pinned to malkavian (`--bench-deck`) | 96 | +1.34 ± 0.33 | 59 (24) | — (the pinned control measures the deck) |
 | `knob=poolFloor=22`, pinned to malkavian | 96 | −0.57 ± 0.21 | 10 (24) | −1.92 (0.18; [−2.27, −1.56]), wins 59 → 10 |
-| `knob=twdKnow=1` over a global `--knob twdKnow=0`, 48 | 48 | +0.10 ± 0.43 | 15 (12) | (the mechanics check below) |
+| `none` with a global `--knob twdKnow=0`, 48 | 48 | +0.10 ± 0.43 | 15 (12) | — (the control of the next arm) |
+| `knob=twdKnow=1` over the global `--knob twdKnow=0`, 48 | 48 | +0.10 ± 0.43 | 15 (12) | +0.00 (SE 0.03; DIVERGED 7 of 48) |
 
 ## Reading
 
-- **A vs A is level.** The negative control's interval holds 0 at 96 (−0.10 ± 0.29) and at 48 (+0.00 ± 0.41). On the sim the same arm
-  twice is IDENTICAL match for match (determinism), so the level check is the labelled seat's edge, not a second run.
+- **A vs A is level.** The negative control's interval holds 0 at 96 (−0.10 ± 0.29) and at 48 (+0.00 ± 0.41), and the label itself
+  changes nothing: a `none` match plays the same decisions as the same seating and deal outside bench mode (SAME-PLAY; the egress
+  review's check). On the sim the same arm twice is IDENTICAL match for match (determinism).
 - **A crippled seat loses.** `poolFloor=22` (the variant never spends pool below 22) loses 0.65 VP a match against its control, paired,
-  the interval well below 0, and wins 5 of 96 instead of 20. The 48-match design agrees (−0.83). **The sim bench sees a real handicap.**
+  the interval well below 0; its win share falls 0.156 (paired SE 0.037: 20 wins → 5). The 48-match design agrees (−0.83). **The sim
+  bench sees a real handicap.**
 - **The novice persona** is not measurably weaker than expert (+0.09 ± 0.27) — the arena bench's finding again: the personas change
   behaviour more than strength.
 - **Pairing narrows the comparison:** the paired 95 % interval of a difference is about ±0.27 VP at 96 matches, against ±0.33–0.41 for
-  the difference of two unpaired edges; a knob that rarely fires gives many IDENTICAL matches and a smaller SE still. A strength
-  claim reads the paired line.
-- **The pinned bench** (`--bench-deck`, bench.sh's 6th argument) works: the pinned control is the deck's own strength (malkavian +1.34,
-  the strongest starter), so a pinned arm is read only against the pinned control (−1.92 for the crippled malkavian).
+  the difference of two unpaired edges. The trap beside it: a knob that never fires leaves every match IDENTICAL and prints a perfect
+  +0.00 (SE 0.00) — an inert arm, not a no-loss result; `--vp` says so when no match DIVERGED, and the knob must be shown to fire
+  first (a trace row, a counter, a test). A strength claim reads the paired line of an arm that fired.
+- **The pinned bench** (`--bench-deck`, bench.sh's 6th argument) works: the pinned control's edge is the deck's own strength (malkavian
+  +1.34, the strongest starter), so a pinned arm is read against a control at the same seat (−1.92 for the crippled malkavian). The
+  unpinned `none` control is that control relabelled (the same seatings and deals: IDENTICAL or SAME-PLAY in every match), and
+  `--vp` reads a `none` control at the arm's variant seat — `--vp neg cripM` gives the same −1.92.
 - **The global knob** (bench.sh's 7th argument) is the baseline for every seat and the variant's own knob overrides it in its seat:
   the bots' manifests show twdKnow 0 in the 144 baseline seats and 1 in the 48 variant seats (0 wrong); the crippled and novice arms'
-  manifests put the knob or the persona in the variant seat only (0 wrong of 768).
+  manifests put the knob or the persona in the variant seat only (0 wrong of 768). Read against a control with the same baseline
+  (`none` + `--knob twdKnow=0`), `twdKnow=1` fired in 7 of 48 matches and moved its seat by +0.00 (SE 0.03). A control WITHOUT the
+  baseline is no control: `--vp` refuses all 48 pairs (the other seats' knobs differ) and says why.
 - **Normal mode is unchanged:** the 240-match client design on sim v1.1.0 is IDENTICAL 240 to v1.0.2 with the same bot.
 - **Scale:** 96 matches ≈ 100 s. A ±0.15 VP paired interval needs about 300 matches (`--seeds 3`): five minutes, not days.
 
@@ -52,6 +60,6 @@ node elysium-bot-sim.js --bench none --trace /tmp/b/neg                       # 
 node elysium-bot-sim.js --bench knob=KEY=VAL --trace /tmp/b/arm               # the variant under test, the same design
 python3 ana-bench.py /tmp/b/neg /tmp/b/arm                                     # each arm's edge (the level check)
 python3 ana-sim-diff.py --vp /tmp/b/neg /tmp/b/arm                             # the paired read: the claim
-# --bench-deck DECK pins the variant (read against a pinned control); --knob k=v sets every seat's baseline;
-# --design design-balanced-serie-bal1.txt is the old 48-match design; --seeds K multiplies the matches
+# the control carries the arm's design, --seed and --knob baseline; --bench-deck DECK pins the variant (a `none` control
+# is read at its seat); --design design-balanced-serie-bal1.txt is the old 48-match design; --seeds K multiplies the matches
 ```
