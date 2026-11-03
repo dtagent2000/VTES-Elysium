@@ -67,7 +67,7 @@ const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.216';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.217';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -2757,8 +2757,8 @@ class Bot {
       (h.e.modes || []).forEach(mo => { if(!mo.fx || !mo.fx.recruitAlly || !this._modeUsableBy(mo, vamp)) return;
         if(!best || (mo.fx.allyLife | 0) > (best.fx.allyLife | 0)) best = mo; });
       if(!best) continue;
-      if(this._attachedFx(vamp, 'noRecruitEmploy').length) return null;   // v0.6.217 (V5 wave 4): Depravity -- 'This vampire cannot recruit allies or employ retainers.'
-      const dsc = this._attachedFx(vamp, 'recruitDiscount').reduce((a, b) => a + (b | 0), 0);   // v0.6.217 (V5 wave 4): Charisma -- 'Recruit ally actions cost this vampire -1 blood or pool.'
+      if(this._attachedFx(vamp, 'noRecruitEmploy').length) return null;   // fx.noRecruitEmploy -- v0.6.217 (V5 wave 4): Depravity -- 'This vampire cannot recruit allies or employ retainers.'
+      const dsc = this._attachedFx(vamp, 'recruitDiscount').reduce((a, b) => a + (b | 0), 0);   // fx.recruitDiscount -- v0.6.217 (V5 wave 4): Charisma -- 'Recruit ally actions cost this vampire -1 blood or pool.'
       const cB = Math.max(0, ((h.e.cost && h.e.cost.blood) | 0) - dsc);   // v0.6.118c (Johan's ruling, 18 Sep): Underbridge Stray costs 1 BLOOD -- an [ani] ally the vampire pays for; the pool default applies only when the card names no blood cost
       const costP = ((h.e.cost && h.e.cost.blood) | 0) ? ((h.e.cost && h.e.cost.pool) | 0) : Math.max(0, (((h.e.cost && h.e.cost.pool) | 0) || 1) - dsc);   // v0.6.217: Charisma's -1 comes off the blood when the ally costs blood, else off the pool
       if(cB > (vamp.blood | 0)) continue;
@@ -3925,7 +3925,7 @@ class Bot {
     });
     return best;
   }
-  async _ifBlockedStep(v){           // v0.6.217 (V5 wave 4, R-43): my acting vampire was BLOCKED -- the 'if blocked' effects come first, ordered by me, before any other card [ANK 20220116]: Terrifying Visage (the blocker's controller burns the pool -- a bot blocker burns it itself at its verdict, a human is told here), then Change of Target (unlock, the action ends unsuccessfully, no combat). true = Change of Target played
+  _ifBlockedStep(v){                 // v0.6.217 (V5 wave 4, R-43): my acting vampire was BLOCKED -- the 'if blocked' effects come first, ordered by me, before any other card [ANK 20220116]: Terrifying Visage (the blocker's controller burns the pool -- a bot blocker burns it itself at its verdict, a human is told here), then Change of Target (unlock, the action ends unsuccessfully, no combat). true = Change of Target played
     const vis = this._attachedFx(v, 'blockedPoolBurn').reduce((a, b) => a + (b | 0), 0);
     const bs = this._lastBlockerSeat | 0, bp = (this.players || []).find(q => q && q.seat === bs);
     if(vis > 0){ if(bp && !bp.bot) this.chat('Terrifying Visage: ' + bp.name + ' burns ' + vis + ' pool before the combat.'); this._emit('visage', { vamp: v.name, by: bp ? bp.name : null, n: vis, human: !!(bp && !bp.bot) }); }
@@ -3987,7 +3987,7 @@ class Bot {
   }
   _monsterOk(v){                    // v0.6.217: may this vampire's Monster unlock it now? The card on it, ready and locked, its last combat ended with the opposing minion not ready (in torpor or gone), not yet used in this turn, 1 blood left after the burn
     const lc = this._lastCombat;
-    if(!v || v.zone !== 'ready' || !v.locked || (v.blood | 0) < 2 || !this._attachedFx(v, 'unlockAfterCombat').length) return false;
+    if(!v || v.zone !== 'ready' || !v.locked || (v.blood | 0) < 2 || !this._attachedFx(v, 'unlockAfterCombat').length) return false;   // fx.unlockAfterCombat (Monster)
     if(!lc || lc.id !== v.id || !lc.oppDown || lc.turn !== (this._turnSerial | 0)) return false;
     return !(this._monsterUsed && this._monsterUsed.has((this._turnSerial | 0) + '|' + v.id));
   }
@@ -4147,7 +4147,7 @@ class Bot {
   }
   _capOf(vamp, board){               // v0.6.217 (V5 wave 4): capacity = the printed one + the attached capBonus (Oblivion +1); 0 = unknown (a name the data lacks: the callers' old 'uncapped' 99 stays)
     const k = vamp ? this.fxCryptCap(vamp.name) : null; if(typeof k !== 'number') return 0;
-    return k + this._attachedFx(vamp, 'capBonus', board).reduce((a, b) => a + (b | 0), 0);
+    return k + this._attachedFx(vamp, 'capBonus', board).reduce((a, b) => a + (b | 0), 0);   // fx.capBonus (Oblivion)
   }
   _bestStrengthFor(vamp){            // N4b: an attachable strength action -- richest usable mode wins; one per vampire per the card's own text
     if(!this.fx || !vamp) return null;
@@ -4408,14 +4408,15 @@ class Bot {
   _bestGrantRushFor(vamp){          // v0.6.217 (V5 wave 4, D-106): a rush a card IN PLAY grants -- Saulot's Avenging Fist on this Salubri ('can enter combat with a non-Salubri vampire as a (D) action; if that vampire is Tremere, this is a +1 stealth action'), or a Regent on another Methuselah's vampire ('Sabbat vampires can enter combat with this vampire as a (D) action'). Haven Uncovered's machinery: no card leaves the hand (idx null), the frozen enters-combat line names the card, the target is chosen by the rush doctrine (_bestRushTargetFor)
     if(!vamp || vamp.zone !== 'ready') return null;
     let best = null;
-    const fist = this._attachedFx(vamp, 'rushSelf')[0];
+    const fist = this._attachedFx(vamp, 'rushSelf')[0];   // fx.rushSelf {notClan, stealthVs} (Saulot's Avenging Fist)
     if(fist){ const t = this._bestRushTargetFor(vamp, { quiet: true, filter: c => this._vampClan(c) !== fist.notClan });
       if(t) best = { idx: null, name: "Saulot's Avenging Fist", kind: 'rush', via: 'grant', target: t, lockTarget: false, st: ((fist.stealthVs || {})[this._vampClan(t)] | 0), n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 }; }
-    if(this._vampSect(vamp) === 'Sabbat'){
-      const regents = new Set();   // the hosts of a Regent on another Methuselah's board (public: the card, its host id -> that seat's vampire); the rush candidates carry seat + name (_rushCandidates), not ids
-      for(const k in (this.table || {})){ if(+k === this.seat) continue; const cs = ((this.table[k] || {}).pub || {}).cards || []; cs.forEach(c => { if(!c || c.kind !== 'lib' || c.name !== 'Regent' || !c.host || c.faceDown || this._outOfPlay(c)) return; const hv = cs.find(x => x && x.id === c.host && x.kind === 'crypt'); if(hv) regents.add(+k + '|' + hv.name); }); }
-      if(regents.size){ const t = this._bestRushTargetFor(vamp, { quiet: true, filter: c => regents.has((c.seat | 0) + '|' + c.name) });
-        if(t && (!best || (t.w || 0) > (best.target.w || 0))) best = { idx: null, name: 'Regent', kind: 'rush', via: 'grant', target: t, lockTarget: false, st: 0, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 }; } }
+    {
+      const regents = new Set();   // fx.rushHostBy {sect}: 'Sabbat vampires can enter combat with this vampire as a (D) action' (Regent)   // the hosts of a Regent on another Methuselah's board (public: the card, its host id -> that seat's vampire); the rush candidates carry seat + name (_rushCandidates), not ids
+      for(const k in (this.table || {})){ if(+k === this.seat) continue; const cs = ((this.table[k] || {}).pub || {}).cards || []; cs.forEach(c => { if(!c || c.kind !== 'lib' || !c.host || c.faceDown || this._outOfPlay(c)) return; const h = this.fxLookup(c.name); const rb = h && h.kind === 'lib' && (h.e.modes || []).map(mo => mo.fx && mo.fx.rushHostBy).find(Boolean); if(!rb || (rb.sect && this._vampSect(vamp) !== rb.sect)) return; const hv = cs.find(x => x && x.id === c.host && x.kind === 'crypt'); if(hv) regents.add(+k + '|' + hv.name + '|' + h.name); }); }
+      if(regents.size){ const keyOf = c => [...regents].find(x => x.startsWith((c.seat | 0) + '|' + c.name + '|'));
+        const t = this._bestRushTargetFor(vamp, { quiet: true, filter: c => !!keyOf(c) });
+        if(t && (!best || (t.w || 0) > (best.target.w || 0))) best = { idx: null, name: keyOf(t).split('|')[2], kind: 'rush', via: 'grant', target: t, lockTarget: false, st: 0, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 }; } }
     return best;
   }
   _bestRushFor(vamp){                // N2: a usable rush card (fx.rush) + a live target. v0.6.205 (R4): or the rush through a Haven Uncovered -- preferred on an equal or better target (+1 stealth, no card spent). v0.6.217: or a rush a card in play grants (Saulot's Avenging Fist, a Regent), on the same terms
@@ -5311,7 +5312,7 @@ class Bot {
       && (!e.archetype || !this._hasArchetype(v)) && (!e.onePerHost || !onIt(v, h.name));
     const ready = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && reqOk(v));
     const big = (a, b) => (this._capOf(b) - this._capOf(a)) || ((b.blood | 0) - (a.blood | 0));   // the body most likely to act, fight and live: the highest capacity, then the most blood (Guardian Angel's pick)
-    if(f.titleVotes){
+    if(f.titleVotes){   // fx.titleVotes: a title card -- its votes are the entry's own (e.votes), read by _titleOf
       if(e.uniqueTitle && this._uniqueInPlay(h.name)) return { hold: true, why: 'the title is in play already (a contest)' };
       const gain = v => (e.votes | 0) - this._titleOf(v).votes;   // one title per vampire: the card replaces the printed one
       const c = ready.filter(v => gain(v) > 0).sort((a, b) => (gain(b) - gain(a)) || ((b.blood | 0) - (a.blood | 0)));
@@ -6775,7 +6776,7 @@ class Bot {
   _visageOn(seat, vampName){        // v0.6.217 (V5 wave 4): the pool a block of this vampire costs its blocker's controller -- Terrifying Visage on it (public: the card on the actor's pub board)
     if(!seat || !vampName) return 0; const cs = this._seatCards(seat);
     const v = cs.find(c => c && c.kind === 'crypt' && c.name === vampName); if(!v) return 0;
-    return this._attachedFx(v, 'blockedPoolBurn', cs).reduce((a, b) => a + (b | 0), 0);
+    return this._attachedFx(v, 'blockedPoolBurn', cs).reduce((a, b) => a + (b | 0), 0);   // fx.blockedPoolBurn (Terrifying Visage)
   }
   _visageBurn(seat, vampName){      // v0.6.217: my block of a Terrifying Visage vampire succeeded -- I burn the pool before block resolution; at 0 pool I am ousted (the pool rule's oust check beside every loss, L-64) and no combat follows
     const n = this._visageOn(seat, vampName); if(!(n > 0) || this.out) return false;
@@ -7496,7 +7497,7 @@ class Bot {
     return null;
   }
   async _resolveCombat(myVamp, oppName){      // v0.6.22 (Johan's combat GO, the multi-round loop): the OUTER wrapper _resolveCombatRound was always meant to grow into (§7.5-C's original design: "plays at most the rounds a press grants"). Deliberately a THIN wrapper, not an internal rewrite -- _resolveCombatRound stays exactly as tested (every existing 37a-37g test calls it directly and is untouched), this just repeats it while there's an uncancelled press. v1 scope (source-verified vekn.net 19 July, combat plan §5.5): "if there is an UNCANCELLED press to continue, a new round begins" -- only ONE side needs to press. My bot NEVER attempts to cancel an incoming press (that decision -- "is it worth spending my own press just to deny theirs" -- is a future addition, not built); it presses when IT wants to (a simple, deliberately-dumb v1 threshold, matching grinderReadyTarget's own precedent: not fragile), and separately just detects whether the opponent pressed at all, treating any detected opponent press as uncancelled. Silent opponent (timeout, human table) is NOT treated as "they definitely didn't press" vs "they definitely did" -- it's simply absent evidence, so it doesn't extend combat on its own; only a DETECTED press (mine or theirs) does.
-    if(!oppName && this._actingVamp && this._actingVamp.v === myVamp && this.turnSeat === this.seat && !this._actingVamp.ifBlocked){ this._actingVamp.ifBlocked = true; if(await this._ifBlockedStep(myVamp)) return; }   // v0.6.217 (V5 wave 4): my action was BLOCKED -- the 'if blocked' effects first (Terrifying Visage, Change of Target); Change of Target means no combat
+    if(!oppName && this._actingVamp && this._actingVamp.v === myVamp && this.turnSeat === this.seat && !this._actingVamp.ifBlocked){ this._actingVamp.ifBlocked = true; if(this._ifBlockedStep(myVamp)) return; }   /* synchronous: no extra tick when nothing applies (the starters' traces stay byte for byte) */   // v0.6.217 (V5 wave 4): my action was BLOCKED -- the 'if blocked' effects first (Terrifying Visage, Change of Target); Change of Target means no combat
     this._carrionCrows = null; this._equipPreventUsed = false; this._equipManeuverUsed = false; this._hostPreventUsed = null;   /* v0.6.205: Guardian Angel's once each combat */   // v0.6.103 (#1): the OPPONENT's crows are no longer reset here (an early crows announce was wiped by the late-entering attacker) -- they live in the stash set cleared at announce/commit   // E1: per-combat equipment options
     this._borneEnvDmg = this._borneEnvFor(myVamp); this._borneAnnounced = false;
     this._cepOpen(oppName || (this._actingVamp ? this._lastBlockerName : null) || this._learnedOpp || null); this._learnedOpp = null;   /* v0.6.182: ONE episode per combat */ this._combatDmgTaken = 0; this._cBase = Object.assign({}, this._cTally() || {}); this._cBaseRound = this._cBase;   /* v0.6.168: the field baseline for this combat (at combat ENTRY -- not per round) */   // v0.6.103 (#1): the actor side learns its opponent from the B-55e-b blocker name (a bot blocker always chats it before the verdict)   // VB: the opposing vampire's NAME when the caller knows it (defender sites: the announced actor; a blocked ACTOR's blocker stays null -- documented v1 under-claim for Blythe-as-actor) + the Franciscus-class per-combat damage accumulator   // N0: the borne crows peck every combat   // v0.6.26: per-COMBAT state (not per-round like _range) -- "only one Carrion Crows each combat", and the opponent's active one persists across every round of THIS combat, reset only when a new one starts

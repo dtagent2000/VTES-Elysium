@@ -11911,7 +11911,7 @@ async function connectWithRetry(client, tries = 30){
           u.turnSeat = u.seat; u._actingVamp = { v, n: 1, played: new Set() }; u._lastBlockerSeat = 1; u._expStrikeDmg = () => 2; return { u, v }; };
         const a = mk(['Change of Target'], 1); let ran = false; const orig = a.u._resolveCombatRound; a.u._resolveCombatRound = async () => { ran = true; return { oppEnded: true }; };
         await a.u._resolveCombat(a.v);
-        const b = mk(['Change of Target', 'Majesty'], 2); const pb = IF2(b.u, '_ifBlockedStep') ? await b.u._ifBlockedStep(b.v) : null;
+        const b = mk(['Change of Target', 'Majesty'], 2); const pb = IF2(b.u, '_ifBlockedStep') ? b.u._ifBlockedStep(b.v) : null;
         ok(!ran && a.u.hand.length === 0 && a.v.locked === false && logs(a.u).some(l => l === 'Bret Stryker (G6) plays Change of Target — unlocks; the action ends unsuccessfully.') && pb === false && b.u.hand.length === 2,
            '162f Change of Target: blocked, the blocker’s strike (2) would put Bret (1 blood) in torpor -- played, he unlocks, NO combat runs; with Majesty in hand he ends the combat himself (got ' + JSON.stringify({ ran, hand: a.u.hand, locked: a.v.locked, logs: logs(a.u), pb }) + ')'); }
 
