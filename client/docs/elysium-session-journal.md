@@ -1,3 +1,57 @@
+## [RADERNA VI VAR SKYLDIGA] (3 november 2026, klient v2.6.171 / srv-2.6.49 oförändrad)
+
+Johan bad mig titta på bottdelens handover om vi behöver justera något i upplägget kring V5 (bot v0.6.215, V5-våg 3 med
+masters, och v0.6.216, KRCG:s v5-dump). Analysen först: en sak i upplägget behövde ändras, data-repot. Resten var vanlig
+konsumtion av en bottrelease. Johan: "Kör".
+
+**Data-repot** (`VTES-Elysium-data`, PR #1): kopian av v5-dumpen var från 14 oktober (4 149 kort, ingen Julia Sowinski,
+inget SoNY eller NBr) och `expansions.json` saknades helt. Rotens `CLAUDE.md` (bottens text sedan v0.6.216) gick alltså
+inte att följa i en sandlåda utan KRCG. Vårt svar 1 november fick det att låta som att kopian redan hade de nya korten.
+Bytt mot KRCG:s fil från 3 november (4 212 kort) plus `expansions.json`, och README:n är omskriven: vem läser vad nu, hur
+båda halvorna använder filerna, hur en uppdatering kontrolleras. Kontrollerat: bottens `krcg-v5.js` + `test-cardfx.js` på
+det nya paret i en kopia av `bot/` gav 310/0 (ingen drift mot v0.6.216:s cardfx, 4 212 av 4 212 klientnamn hittar sin
+post); den gamla kopian gav 305/5. Vår `krcg-audit.js`: inga namn borta eller flyttade, varken från v3-filen eller från
+14-oktoberkopian (75 texter med errata, 63 nya kort). Klientens inbyggda set-namn är byte för byte lika med dagens
+`expansions.json`.
+
+**Klienten:** Help ▸ Bots bäddar in v0.6.216:s guide. Inget annat i klienten ändras.
+
+**§12 och kanariefågeln:** skulden sedan 20 oktober är betald. §12 har fått blockbaren, folkomröstningens villkor och
+resultat, att lämna torpor, Haven Uncovered (placeringen och rusningen), Spying Missions annullering, den fjärde
+"nothing"-raden (`does not take an additional strike.`), `gets no strike this round (…)`, Archon Investigation och en
+locations intercept-lås bredvid försöksraden. Dessutom actorns stealth-rader (dokumenterade men inte låsta, eftersom
+bottprojektet håller deras läsare `NET_STEALTH` utanför sin frusna grammatik) och bottarnas bordsrader utan läsare.
+Kanariefågeln v1.1.0 har en sektion 6 med 33 nya kontroller: §12 dokumenterar formen, bottens egen parser läser en rad
+byggd från den, och en levande bot matas raden där den ändrar botens tillstånd direkt. Upptäckt på vägen: handoffen
+nämner location-låset som en not i §12, men sedan egress-granskningen läser botarna det maskinellt (`NET_LOCK_IC`). Nu är
+det låst i kanariefågeln.
+
+**Svaren på deras fyra frågor** (`docs/handoffs/REPLY-to-bot-2026-11-03-v0.6.216.md`):
+- Q4: ja, läs rotens release. Klienten och servern i roten är byte-kopior som `check-versions.js` vaktar. Protokollet
+  ligger bara i `client/`.
+- En ren `step(state, action)`: nej. Bryggan spelar servern (relä, tally, out/VP, turordning). Bordets tillstånd ligger
+  hos varje plats (människans klient, varje bot) och svepet har timers. Kärnplanen skulle göra serverns bokföring ren,
+  inte ett spel som går att förgrena.
+- `sp`/`xa`/`xb` i en duell som en människa tittar på: körd i headless Chromium med de tallies som två bottar skriver.
+  Siffrorna stämmer (rälsen visar "Strike ·2", scenen "pair 2"). Men bottarna skriver `sp` utan `xa`/`xb` och tömmer inte
+  etiketterna vid ett nytt par, så den sida som inte slår i par 2 visar fortfarande "Hand" från par 1, och chippet
+  "+1 strike" syns aldrig. Med `xa` och tömda etiketter visar panelen "+1 strike" och "No strike this pair". Deras val.
+- Ett andra `rng` i samma steg vilseleder inte. Panelen visar det senaste värdet och räknar inga skrivningar, och
+  historiken tar rundans räckvidd vid rundbytet. Körd: pillret följer Close → Long → Close.
+
+**Grindarna:** klient 354/0 (bot v0.6.216 bredvid, inga överhopp; mot v2.6.170 353/1, det inbäddade bladet), kanariefågeln
+102/0 (mot v2.6.170:s protokoll 90/12, exakt de tolv §12-kontrollerna; bredvid bot v0.6.214 98/4, de fyra läsningar som
+kom med v0.6.215), dispatch 88/0, protokoll 6/0, endpoint 24/0, soak `--control` (snubbeltråden löste ut), embed `--check`
+båda sidorna, B1 byteidentisk (1 655 337 byte), check-versions grön inklusive rotgrinden. I headless Chrome visar
+Help ▸ Bots v0.6.216, utan sidfel.
+
+**Deploy:** purga klienten. Om bot v0.6.215–216 (PR #45 och #46) inte är ute än: purga också `/elysium-bot.js` och
+`/elysium-cardfx.json` (cardfx ändrades i v0.6.216; servern serverar inte `.js`-tvillingen). Steget för boxens
+`images/vtes.json` från v2.6.168 står kvar. Data-repots PR #1 mergar Johan.
+
+**Inte kört:** elysium.cards (nås inte från den här sandlådan); klienten mot static.krcg.org i en webbläsare över nätet;
+panelfrågorna kördes med injicerade tallies byggda efter bottarnas kod, inte i en riktig duell mellan två bottar.
+
 ## [KOPIAN DU HAR, ANDRA VARVET] (2 november 2026, senare, klient v2.6.170 / srv-2.6.49 oförändrad)
 
 Jag bad granskaren kontrollera v2.6.169:s rättningar. Båda felen från v2.6.168 är stängda. Den körde laddaren med fem
