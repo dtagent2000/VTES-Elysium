@@ -1448,8 +1448,9 @@ class Bot {
     const tSeat = this._actingVamp && this._actingVamp.target;
     const tPub = this.table && this.table[tSeat] && this.table[tSeat].pub;
     const titled = !!(tPub && (tPub.cards || []).some(c => {
-      if(c.zone !== 'ready' || c.kind !== 'crypt') return false;
-      return !!this._titleOf(c, tPub.cards).title; }));   // v0.6.217 (the egress review): _titleOf -- a title card makes its vampire titled too
+      if(c.zone !== 'ready' || c.kind === 'lib') return false;   // v0.6.217 (the egress review): a title CARD counts through its vampire, not by itself
+      const hv = this.fxLookup(c.name);
+      return !!((hv && hv.e && hv.e.title) || this._titleOf(c, tPub.cards).title); }));   // the printed title, or a title card on the vampire (_titleOf)
     if(!titled) return false;
     v._skipNextUnlock = true;
     this.note(v.name + ' bled a Methuselah with a ready titled vampire \u2014 she will not unlock as normal next unlock phase (her printed text).');
