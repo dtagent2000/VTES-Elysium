@@ -16,15 +16,15 @@ rest are table lines. The protocol in full: `bot/docs/specs/spec-v5-wave4-2026-1
   verdict line that follows is your frozen `Vote: F for vs A against — vote passes|fails.`
 - **An action that burns a card in play** (Toreador Grand Ball: "Minions can burn this card as a (D) action"): `VAMP takes an action
   to burn OWNER's Toreador Grand Ball.` The owner's bot opens its block window on it (directed: only its minions may block); on its
-  Pass it burns the card (`OWNER burns Toreador Grand Ball (VAMP's action).`). A human owner gets a chat line.
+  Pass it burns the card (`OWNER burns Toreador Grand Ball (VAMP’s action).`). A human owner gets a chat line.
 - **Widened:** the Haven Uncovered rush line now also names the other cards that grant a rush: `RUSHER enters combat with OWNER's
   VAMP (Saulot's Avenging Fist).` and `(… (Regent).` — Haven's terms (the host does not lock, the rusher acts).
 - **Reused, unchanged:** your block-bar shape `Toreador Grand Ball — minions cannot block this action.` before each non-bleed action
-  of the Grand Ball's unblockable Toreador; `Combat ends — Saulot's Guiding Wisdom.` (a combat ended before range).
-- **Table lines, no reader on your side:** `SEAT plays Toreador Grand Ball: LOCKED is locked and does not unlock as normal; FREE's
+  of the Grand Ball's unblockable Toreador; `Combat ends — Saulot’s Guiding Wisdom.` (a combat ended before range).
+- **Table lines, no reader on your side:** `SEAT plays Toreador Grand Ball: LOCKED is locked and does not unlock as normal; FREE’s
   non-bleed actions cannot be blocked.`; `SEAT burns N pool (Terrifying Visage: VAMP was blocked).` (the BLOCKER's own line, before
   combat); `VAMP burns 1 blood to unlock (Monster).`; `VAMP takes the title: Toreador Justicar (Justicar, 3 votes).`; `BEARER locks:
-  Saulot's Guiding Wisdom — the combat of VAMP ends before range.`; the title referendum's terms `Referendum terms — Toreador
+  Saulot’s Guiding Wisdom — the combat of VAMP ends before range.`; the title referendum's terms `Referendum terms — Toreador
   Justicar: VAMP takes the title (Justicar, 3 votes).` A chat line to a human blocker: `Terrifying Visage: NAME burns N pool before
   the combat.`
 - **A human's Toreador Grand Ball:** the human names no pair, so while one is in play no bot blocks a non-bleed action of that human's
@@ -35,7 +35,8 @@ rest are table lines. The protocol in full: `bot/docs/specs/spec-v5-wave4-2026-1
 ## 2. Owed to your §12 and the canary
 The three new lines (COT, ABSTAIN in both shapes, the burn action) and the widened enters-combat line — with the earlier bot-emitted
 lines STATUS lists. Each ends with `.`; none ends with `plays X.` (`L12.actObs` sees the Scalpel Tongue line as a card play by the
-acting vampire, as it does the other modifiers' lines).
+acting vampire, as it does the other modifiers' lines). The apostrophes are load-bearing: the lines quoted above with ’ (U+2019) are
+sent with it; the ABSTAIN line keeps the card names' straight ' (`Saulot's Guiding Wisdom`), as its parser reads them.
 
 ## 3. Nothing else
 No client change is needed. The guide (`START-HERE-BOTS.html`) has the new version chip; re-embed it when you next release.

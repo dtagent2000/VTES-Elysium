@@ -343,7 +343,7 @@ const VENTRUE_DECK = {   // v0.6.122 (18 Sep 2026): V5 Starter -- Ventrue (Black
 const ARCHETYPES = { hacking: DEFAULT_DECK, wall: WALL_DECK, sewer: SEWER_DECK, malkavian: MALKAVIAN_DECK, tremere: TREMERE_DECK, nosferatu: NOSFERATU_DECK, ventrue: VENTRUE_DECK };
 const NET_LOCK_IC = /^(.+?) locks (.+?): \+(\d+) intercept\.$/;   // v0.6.215 (egress review): a location's intercept lock (_spendIntercept) -- read by the hotseat net and the event log like a card's L12.interceptPlay
 const ABSTAIN = /^(.+?) (?:plays (Scalpel Tongue) \[(\w+)\]|locks: (Saulot's Guiding Wisdom)) \u2014 (.+?)'s (.+?) (?:is locked(, burns 1 blood)? and )?abstains \((\d+) votes? cancelled\)\.$/;   // v0.6.217 (V5 wave 4, bot grammar): the caller's polling-step abstain -- m[2] Scalpel Tongue (m[3] its level; m[7] the superior blood) or m[4] Saulot's Guiding Wisdom, m[5] the voter's Methuselah, m[6] the vampire, m[8] the votes cancelled
-const COT = /^(.+?) plays Change of Target(?: \u2014 .+)?\.$/;   // v0.6.217 (V5 wave 4): the actor's 'if blocked' card -- m[1] the acting vampire; the bot's own line ('VAMP plays Change of Target \u2014 unlocks; the action ends unsuccessfully.') and a human's plain play line
+const COT = /^(.+?) plays Change of Target(?: \u2014 .+?)?\.(?: Target: .+)?$/;   /* v0.6.217 (the egress review): + the client's ' Target: X.' (targetSuffix) */   // v0.6.217 (V5 wave 4): the actor's 'if blocked' card -- m[1] the acting vampire; the bot's own line ('VAMP plays Change of Target \u2014 unlocks; the action ends unsuccessfully.') and a human's plain play line
 const ARCHON_BURN = /^(.+?) plays Archon Investigation \u2014 (.+?) is burned \(the bleed of (\d+) is not successful\)\.$/;   // v0.6.215 (V5 wave 3): the target's out-of-turn answer to a bleed of 4+ -- the ACTING bot burns its own minion and the action ends unsuccessful (bot-emitted; owed to main's \u00a712 + the canary, the handoff)
 const NET_STEALTH = /^(.+?) (?:plays|burns|locks) .+?: \+(\d+) stealth\.$/, NET_UNLOCK_IC = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;   // v0.6.147: the tally net's two readers (bot-emitted lines; not part of the frozen L12 contract the canary pins)
 const DECK_STRATEGY = {   // A2 (v0.6.73): the reviewer's yardstick -- curated intent per archetype, emitted in the manifest so play is judged AGAINST strategy, not in a vacuum
@@ -1123,6 +1123,7 @@ class Bot {
         this.seat = (this.players.find(p => p.name === this.o.name) || { seat: this.seat }).seat;
         this.out = false; this.ownTurns = 0; this.inf = 0; this._tableBlockAttempts = 0;
         this._ootDebt = 0; this._fgOwed = 0; this._turnActN = 0;   // v0.6.215 (egress review): a new game owes no out-of-turn master action and no Family Gathering blood
+        this._turnSerial = (this._turnSerial | 0) + 1; this._monsterUsed = null; this._sgwEndUsed = null; this._lastCombat = null; this._cotCancel = null; this._myBlockOf = null;   // v0.6.217 (the egress review): Monster's and Guiding Wisdom's once-each-turn, the last combat, a Change of Target -- none carries into a new game
         this._holdBy = new Set(); if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }   // v0.6.95: a fresh game holds for nobody
         this._holdAnnounced = false; this._pendingTurn = null;   // v0.6.108: and carries no queued turn or stale hold announcement
         this._holdThaw();   // v0.6.198: a wait frozen by the old game's hold runs again, as it would have unheld
@@ -1414,6 +1415,11 @@ class Bot {
     for(const id of (v.attached || [])){ const c = bd.find(x => x && x.id === id); if(!c || c.kind !== 'lib' || this._outOfPlay(c) || c.faceDown) continue; const h = this.fxLookup(c.name); if(h && h.kind === 'lib' && h.e.title) return { title: h.e.title, votes: typeof h.e.votes === 'number' ? h.e.votes : 0, card: h.name }; }
     const h = this.fxLookup(v.name); return (h && h.kind === 'crypt' && h.e.title) ? { title: h.e.title, votes: typeof h.e.votes === 'number' ? h.e.votes : 0 } : { title: null, votes: 0 };
   }
+  _titleInPlay(title, clan){         // v0.6.217 (the egress review): is this unique title held at the table -- by a title card or PRINTED (Madame Guil's Toreador justicar, Sha-Ennu's regent)? A vampire in play (ready or in torpor) on my board or any seat's pub board, of the clan when one is named
+    const seen = (cs, own) => (cs || []).some(c => c && c.kind === 'crypt' && (c.zone === 'ready' || c.zone === 'torpor') && !c.faceDown && this._titleOf(c, own ? this.board : cs).title === title && (!clan || this._vampClan(c) === clan));
+    if(seen(this.board, true)) return true;
+    return Object.keys(this.table || {}).some(k => +k !== this.seat && seen(((this.table[k] || {}).pub || {}).cards, false));
+  }
   _titleVoters(){ const out = []; (this.board || []).forEach(c => { if(!c || c.kind !== 'crypt' || c.zone !== 'ready') return; const v = this._titleOf(c).votes; if(v > 0) out.push({ c, votes: v }); }); return out; }   // v0.6.217: _titleOf (a title card replaces the printed title)
   _votesToCast(dir, stake){          // v0.6.127: my title votes for THIS referendum after the crypt layer. Silverson-class tax on an AGAINST vote: each voting vampire burns the tax; one that would drop to 0 blood pays only when the referendum costs me pool, and a 0-blood vampire's votes stay home. Alexa-class discard: only when it costs me pool (the caller's side holds it like any other boost).
     const tax = dir === 'against' ? this._cryptVoteTax(this._refActor && this._refActor.vamp) : 0;
@@ -1442,9 +1448,8 @@ class Bot {
     const tSeat = this._actingVamp && this._actingVamp.target;
     const tPub = this.table && this.table[tSeat] && this.table[tSeat].pub;
     const titled = !!(tPub && (tPub.cards || []).some(c => {
-      if(c.zone !== 'ready') return false;
-      const hv = this.fxLookup(c.name);
-      return !!(hv && hv.e && hv.e.title); }));
+      if(c.zone !== 'ready' || c.kind !== 'crypt') return false;
+      return !!this._titleOf(c, tPub.cards).title; }));   // v0.6.217 (the egress review): _titleOf -- a title card makes its vampire titled too
     if(!titled) return false;
     v._skipNextUnlock = true;
     this.note(v.name + ' bled a Methuselah with a ready titled vampire \u2014 she will not unlock as normal next unlock phase (her printed text).');
@@ -3649,7 +3654,7 @@ class Bot {
   }
   _titleRefFor(h, vamp){            // v0.6.217 (V5 wave 4, R-43): a title referendum -- 'Choose a ready Toreador. Successful referendum means this card is put on the chosen Toreador to represent the unique Camarilla title of Toreador Justicar.' The term is a ready vampire OF MINE of the card's clan and sect (a Camarilla one [LSJ 20041026]) that gains the most votes (the card replaces its printed title); never while the title is in play (unique, [LSJ 20100129]). The value is the votes gained (a pool-equivalent, D-106); the bots of the table have no pool at stake and hold their votes back, a human may vote against
     const e = h.e, tc = e.ref.fx.titleCard || {};
-    if(!this._mayPlay(h.name, e, null, true) || this._uniqueInPlay(h.name)) return null;
+    if(!this._mayPlay(h.name, e, null, true) || this._uniqueInPlay(h.name) || (e.title && this._titleInPlay(e.title, tc.clan))) return null;   // the egress review: a PRINTED Toreador justicar in play holds the title too [LSJ 20100129]
     if(e.cost && e.cost.blood && e.cost.blood > (vamp.blood | 0)) return null; if(e.cost && e.cost.pool && e.cost.pool >= (this.pool | 0)) return null;
     const gain = v => (e.votes | 0) - this._titleOf(v).votes;
     const term = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && (!tc.clan || this._vampClan(v) === tc.clan) && (!tc.sect || this._vampSect(v) === tc.sect) && gain(v) > 0)
@@ -4193,7 +4198,9 @@ class Bot {
       const hc = this.fxLookup(c.name); return hc && hc.kind === 'lib' && (hc.e.modes || []).some(mo => mo.fx && mo.fx.rebelBlood); });
     if(!hasRebel) return;
     const ha = this.fxLookup(actingName);
-    if(!ha || !ha.e || !ha.e.title) return;
+    let titledA = !!(ha && ha.e && ha.e.title);
+    if(!titledA){ for(const k in (this.table || {})){ const cs = ((this.table[k] || {}).pub || {}).cards || []; const av = cs.find(c => c && c.kind === 'crypt' && c.name === actingName); if(av && this._titleOf(av, cs).title){ titledA = true; break; } } }   // v0.6.217 (the egress review): a title card makes the acting vampire titled too
+    if(!titledA) return;
     const capR = (typeof blocker.cap === 'number') ? blocker.cap : 99;
     blocker.blood = Math.min(capR, (blocker.blood | 0) + 1);
     this._rebelUsedThisTurn = true; this.push();
@@ -5304,13 +5311,14 @@ class Bot {
     cands.sort((a, b) => (capOf(b) - capOf(a)) || ((b.blood | 0) - (a.blood | 0)));
     return cands[0] || null;
   }
-  _hostVampFor(noArchetype){           // any vampire I control can host a permanent (rulebook has no readiness requirement for this); prefer a READY one, fall back to torpor. fas C (16 July): noArchetype excludes vampires already carrying an archetype ("a vampire can have only one archetype") -- the attach gate for Perfectionist-class cards.
+  _hostVampFor(noArchetype, e){           // any vampire I control can host a permanent (rulebook has no readiness requirement for this); prefer a READY one, fall back to torpor. fas C (16 July): noArchetype excludes vampires already carrying an archetype ("a vampire can have only one archetype") -- the attach gate for Perfectionist-class cards.
     const hasArch = v => (v.attached || []).some(id => {
       const c = this.board.find(x => x.id === id); if(!c) return false;
       const h = this.fxLookup(c.name);
       return h && h.kind === 'lib' && !!h.e.archetype;
     });
-    const ok = v => !noArchetype || !hasArch(v);
+    const clans = e && e.req && e.req.clan ? [].concat(e.req.clan) : null;   // v0.6.217 (the egress review): an archetype with a clan ('Put this card on a Salubri you control': Saulot's Healing Touch) goes on that clan only
+    const ok = v => (!noArchetype || !hasArch(v)) && (!clans || clans.includes(this._vampClan(v)));
     return this.board.find(c => c.kind === 'crypt' && c.zone === 'ready' && ok(c)) ||
            this.board.find(c => c.kind === 'crypt' && c.zone === 'torpor' && ok(c)) || null;
   }
@@ -5332,7 +5340,7 @@ class Bot {
     const ready = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._masterHostOk(h, v));
     const big = (a, b) => (this._capOf(b) - this._capOf(a)) || ((b.blood | 0) - (a.blood | 0));   // the body most likely to act, fight and live: the highest capacity, then the most blood (Guardian Angel's pick)
     if(f.titleVotes){   // fx.titleVotes: a title card -- its votes are the entry's own (e.votes), read by _titleOf
-      if(e.uniqueTitle && this._uniqueInPlay(h.name)) return { hold: true, why: 'the title is in play already (a contest)' };
+      if(e.uniqueTitle && (this._uniqueInPlay(h.name) || (e.title && !/votes?$/.test(e.title) && this._titleInPlay(e.title)))) return { hold: true, why: 'the title is in play already (a contest)' };   // the egress review: a PRINTED regent (Sha-Ennu) holds it too
       const gain = v => (e.votes | 0) - this._titleOf(v).votes;   // one title per vampire: the card replaces the printed one
       const c = ready.filter(v => gain(v) > 0).sort((a, b) => (gain(b) - gain(a)) || ((b.blood | 0) - (a.blood | 0)));
       return c.length ? { host: c[0], why: '+' + gain(c[0]) + ' votes on ' + c[0].name } : { hold: true, why: 'no vampire it may go on would gain votes' };
@@ -5369,7 +5377,7 @@ class Bot {
     return !(vamps || []).some(v => v && this._masterHostOk(h, v));
   }
   _humanBallFree(p){                 // v0.6.217 (the graded readings): a HUMAN's Toreador Grand Ball -- 'The other Toreador's non-bleed actions cannot be blocked.' The human names no pair, so while a Ball of theirs is in play no bot blocks a non-bleed action of a Toreador of theirs (the locked one does not unlock as normal; a third Toreador of theirs is the price of not knowing). A bot's Ball sends its block-bar line instead (_grandBallBar)
-    if(!p || p.kind === 'bleed' || p.kind === 'asked' || !p.actingVampName) return false;
+    if(!p || p.kind === 'bleed' || !p.actingVampName || (p.kind === 'asked' && p.directed !== false)) return false;   // the egress review: a human's referendum at my pool opens the ASKED window (undirected: never a bleed)
     const st = p.actorSeat || ((this.players || []).find(q => q && q.name === p.who) || {}).seat, pl = (this.players || []).find(q => q && q.seat === st);
     if(!st || !pl || pl.bot) return false;
     const cs = this._seatCards(st), av = cs.find(c => c && c.kind === 'crypt' && c.name === p.actingVampName);
@@ -6563,7 +6571,7 @@ class Bot {
     const d = this.decide('block-as-target', { reserve: bounce && p.declined ? this._bounceReserve() : null, bounceN: bounceCards, isBleed: p.kind === 'bleed', edge: (this.pool | 0) <= cpD.crit || (p.amount | 0) >= (this.pool | 0), stealthBleeder: sbRead && (this.pool | 0) > cpD.crit + pumpSeen, pumpSeen, actorBot: !!actorP.bot,
       icp: this.interceptPotential(p.reacted, p), amount: p.amount, stealthA, hasBounce: !!bounce, blockAllowed: !p.declined,
       T: p.T || 'T1', role: p.role || 'target', sub: p.sub || p.kind, actorSeat: actorSeat || null, actorUnlocked: p.actorUnlocked | 0, famedTarget: !!p.famedTarget });   // v0.6.107 (B1): the threat class + role ride into the scorer
-    { const vis = this._visageOn(actorSeat || this._seatOfName(p.who), p.actingVampName);   // v0.6.217 (V5 wave 4): Terrifying Visage on the actor -- a successful block costs me that pool before combat
+    { const vis = this._visageOn(actorSeat || this._seatOfName(p.who), p.actingVampName || (this._obs && this._obs.vamp && Date.now() - this._obs.at < 60000 ? this._obs.vamp : null));   /* the egress review: a nameless pending reads the announce, as the combat opponent does */   // v0.6.217 (V5 wave 4): Terrifying Visage on the actor -- a successful block costs me that pool before combat
       if(vis > 0 && d.block){ const noB = (this.pool | 0) <= vis ? 'the Visage pool would oust me' : (p.kind === 'bleed' && (p.amount | 0) <= vis) ? 'the block costs what the bleed would (Terrifying Visage)' : null;
         if(noB){ d.block = false; d.why = 'no block: ' + noB + ' -- ' + (d.why || ''); } } }
     if(d.tag) this._emit('defence-plan', { tag: d.tag, amount: p.amount | 0, hasBounce: !!bounce, bounceN: bounceCards, reserve: d.reserve != null ? d.reserve : null, stealthBleeder: sbRead, pool: this.pool | 0, crit: cpD.crit });
@@ -6841,7 +6849,7 @@ class Bot {
     const blockerVamp = this.pending.blockerVamp;                 // read before _clearPending wipes this.pending
     const oppName = this.pending.actingVampName || (this._obs && this._obs.vamp && Date.now() - this._obs.at < 60000 ? this._obs.vamp : null) || null;          // VB: the combat opponent's name, hoisted the same way (this.pending is null by the _resolveCombat call)   // v0.6.163 (bug sweep, serie-cmb8): the pending carried no actor name in 14 of ~330 blocks (windows armed from a tally ask / re-blocks) -- the last announced action's vampire (short-term action memory, v0.6.110) is the actor
     if(success){
-      if(this._visageBurn(this.pending.actorSeat || this._seatOfName(this.pending.who), this.pending.actingVampName)) return;   // v0.6.217 (V5 wave 4): Terrifying Visage -- 'the blocking minion's controller burns 1 pool before block resolution' (an 'if blocked' effect: first, before anything else [ANK 20220116]); true = that pool ousted me
+      if(this._visageBurn(this.pending.actorSeat || this._seatOfName(this.pending.who), oppName)) return;   /* the egress review: the combat opponent's name (a nameless pending reads the announce) */   // v0.6.217 (V5 wave 4): Terrifying Visage -- 'the blocking minion's controller burns 1 pool before block resolution' (an 'if blocked' effect: first, before anything else [ANK 20220116]); true = that pool ousted me
       const grant = this._reactManeuverGrant, gv = this._reactManeuverGrantVamp;   // v0.6.214 (V5 wave 2): _clearPending's N1 belt is for a FAILED block -- a successful one carries Guard Dogs [ANI]'s maneuver into the resulting combat (since N1 it was wiped here, before the combat: the grant never reached a fight)
       this._clearPending('block succeeded');
       if(blockerVamp){
@@ -7645,7 +7653,7 @@ class Bot {
   }
   async _resolveCombatRound(myVamp, continued){ // v1 CUT LINE (spec §7.5-C): announce-only, one round, applies MY side; the opponent's strike isn't modelled -- assumes the rulebook default (hands, 1) unless I prevent it. Never steps the shared ph/rd counters. v0.6.23 (standing-question fix, the multi-round loop): `continued` is a NEW, backward-compatible optional 2nd arg -- every existing call (all of 37a-37g, all 6 real call sites for round 1) passes nothing, so this defaults falsy and behaves EXACTLY as before. `_resolveCombat` passes true for round 2+ ONLY.
     if(!continued && this._cotHit(myVamp)) return { oppEnded: true, cot: true };   // v0.6.217 (V5 wave 4): the actor played Change of Target -- this combat never begins
-    if(!continued && this.turnSeat === this.seat && this._actingVamp && this._actingVamp.v === myVamp){ const sg = this._sgwEndFor(myVamp); if(sg){   // v0.6.217 (V5 wave 4): Saulot's Guiding Wisdom -- 'Once each turn, this Salubri can lock before range is determined to end a combat involving another minion you control.' My blocked actor's combat, before my first line
+    if(!continued && this.turnSeat === this.seat && this._actingVamp && this._actingVamp.v === myVamp && this._actingVamp.ifBlocked){ const sg = this._sgwEndFor(myVamp); if(sg){   /* the egress review: only a BLOCKED action's combat (spec §3; a rush of mine is a combat I chose) */   // v0.6.217 (V5 wave 4): Saulot's Guiding Wisdom -- 'Once each turn, this Salubri can lock before range is determined to end a combat involving another minion you control.' My blocked actor's combat, before my first line
       await this._combatGate(true);
       sg.bearer.locked = true; (this._sgwEndUsed = this._sgwEndUsed || new Set()).add((this._turnSerial | 0) + '|' + sg.bearer.id); this.push();
       this.fxClone({ name: "Saulot's Guiding Wisdom", kind: 'lib' }, sg.bearer.name + ' locks: combat ends', { actor: sg.bearer });
@@ -7653,6 +7661,7 @@ class Bot {
       this.send({ t: 'log', html: 'Combat ends \u2014 <b>Saulot\u2019s Guiding Wisdom</b>.' });   // L12.combatEnds: the opposing bot's combat ends (its first wait is woken)
       this._emitPlay("Saulot's Guiding Wisdom", 'combat-end', sg.bearer.name);
       this._emit('sgw-combat-end', { bearer: sg.bearer.name, vamp: myVamp.name, why: sg.why });
+      this._rnd = { grapple: false, strike: null, dealt: 0, taken: 0 };   // the egress review: the round row of a combat that ended before range carries no earlier round's strike
       return { ended: true }; } }
     this._rndAt = Date.now();   // v0.6.202: this round's start -- an opponent's taken line older than it belongs to an earlier round (the press decision read round 1's 'now 2' in round 2 and pressed into a vampire its own round-2 line put in torpor)
     this._bundledPress = false; this._stealGain = 0; this._xr = this._xrFresh();   /* v0.6.213 (V5 wave 1): the round's additional strikes, Claws of the Dead, the limit -- _xtra (v0.6.169's swallow count) is gone */ this._noStrikeRound = false; this._rnd = { grapple: false, strike: 'hands', dealt: null, taken: null };   // v0.6.156: per-round -- a bundled optional press (superior Grapple, Hidden Strength [FOR]) is usable only in the round its card was played (EC2010 ruling); _rnd feeds the combat-round trace row
@@ -8090,6 +8099,7 @@ class Bot {
     const p = this.pending; if(!p) return;
     this._clearPending('resolved via ' + via);
     if(this.out) return;
+    if(p.kind === 'rush' && p.sub === 'burnCard') this._complyBurnCard(p);   // v0.6.217 (the egress review): the action at my card went through on the actor's word (It resolves, a failed block) -- the card burns, as on my own Pass
     if(p.kind === 'undirected' || p.kind === 'rush'){ this._emit('let-through', { sub: p.sub || p.kind, role: p.role || null, T: p.T || null }); return; }   // v0.6.107 (B1): nothing lands on me -- the window simply closes
     /* v0.6.111 (R3 self-review): kind 'asked' (the R2 pool question and R3 politics) falls through to
        the generic pool -= p.amount below, exactly like kind 'bleed' -- which is the DESIGN, not an
@@ -8334,7 +8344,7 @@ class Bot {
     if((m = t.match(/^(.+?) unlocks \u2014 (.+?) \(/))) return { kind: 'unlock', vamp: S(m[1]), card: S(m[2]) };
     if((m = t.match(/^(.+?) locks and (defends|is the acting minion)/))) return { kind: 'combat-start', vamp: S(m[1]), role: m[2] === 'defends' ? 'defender' : 'actor' };
     if((m = t.match(/^(.+?) defends \(rushed by (.+?), (?:Haven Uncovered|Saulot's Avenging Fist|Regent)\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'defender', by: S(m[2]) };   // v0.6.217: + the granted rushes   // v0.6.205 (R4): a rush through Haven Uncovered locks nobody
-    if((m = t.match(/^Combat begins: (.+?) against (.+?) \(Haven Uncovered\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'actor', opp: S(m[2]) };
+    if((m = t.match(/^Combat begins: (.+?) against (.+?) \((?:Haven Uncovered|Saulot's Avenging Fist|Regent)\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'actor', opp: S(m[2]) };   // v0.6.217 (the egress review): + the granted rushes
     if((m = t.match(L12.havenRush))) return { kind: 'announce', vamp: S(m[1]), action: 'rush', directed: true, card: m[4], owner: S(m[2]), target: S(m[3]) };   // v0.6.217: the granting card (m[4])   // v0.6.205 (R4, F23): the frozen rush line
     if((m = t.match(/^(.+?) has no counters left \u2014 burned/))) return { kind: 'card-burned', card: S(m[1]) };
     if(/\(uncurated \u2014 adjust if needed\)|is seated\. We answer to|a bare "bleed N" goes to your prey|please play with an open hand|the next rise comes cheaper|pick the card I discard \(Revelations\)/.test(t)) return { kind: 'note' };   // v0.6.205: + the Revelations pick instruction
@@ -10143,7 +10153,7 @@ class Bot {
           if(d.pick.villein && !_vlP){ played.add(FX_NORM(d.pick.name)); continue; }   // held pre-splice: nothing paid
           const _w4 = this._masterHostPlan(d.pick.name);   // v0.6.217 (V5 wave 4, D-106): the masters that go ON a vampire (and Toreador Grand Ball's pair) choose their host here, or are held
           if(_w4 && _w4.hold){ this.o.log('master-play: ' + d.pick.name + ' held -- ' + _w4.why); played.add(FX_NORM(d.pick.name)); continue; }   // held pre-splice: nothing paid
-          const host = _w4 ? _w4.host : _vlP ? _vlP.host : d.pick.host === 'ready' ? this._hostReadyFor(d.pick.name) : (d.pick.known || d.pick.archetype) ? this._hostVampFor(d.pick.archetype) : null;   // fas C: archetype masters (Perfectionist) attach too -- and the archetype-aware picker enforces one-per-vampire. v0.6.205 (R4, F23): Guardian Angel goes on a READY vampire of mine
+          const host = _w4 ? _w4.host : _vlP ? _vlP.host : d.pick.host === 'ready' ? this._hostReadyFor(d.pick.name) : (d.pick.known || d.pick.archetype) ? this._hostVampFor(d.pick.archetype, d.pick.archetype ? (this.fxLookup(d.pick.name) || {}).e : null) : null;   // fas C: archetype masters (Perfectionist) attach too -- and the archetype-aware picker enforces one-per-vampire. v0.6.205 (R4, F23): Guardian Angel goes on a READY vampire of mine
           if(d.pick.host === 'ready' && !host){ played.add(FX_NORM(d.pick.name)); continue; }   // v0.6.205: no ready vampire to put it on -- held, the next candidate is tried (pre-splice: nothing paid)
           if((d.pick.known || d.pick.archetype) && !host) break;     // a known income asset (or an archetype with no eligible vampire) needs a host — hold the card rather than misplay it
           this.o.log('master-play: ' + d.why);
@@ -10351,7 +10361,7 @@ class Bot {
         const hd = huntDone ? { hunt: false, why: 'Change of Target ended its hunt this turn' } : mandatory ? { hunt: true, why: 'mandatory: 0 blood (rulebook)' } : this.decide('hunt-or-bleed', { vamp: v });
         if(hd.hunt){
           this.o.log('action (' + v.name + '): ' + hd.why);
-          v.locked = true; this._actingVamp = { v, n: 1, played: new Set(), hunt: true, mandatory };   /* v0.6.217: hunt, mandatory -- Change of Target's ledger (_noteCotAct) */   // v0.5+ (Johan, 14 July): "every action treated fundamentally the same" -- hunt gets the SAME reactive-stealth mechanism as bleed now, just with its own (fixed, low) stakes value for the persona weighting below
+          v.locked = true; this._lastCombat = null; this._actingVamp = { v, n: 1, played: new Set(), hunt: true, mandatory };   /* v0.6.217: hunt, mandatory -- Change of Target's ledger (_noteCotAct) */   // v0.5+ (Johan, 14 July): "every action treated fundamentally the same" -- hunt gets the SAME reactive-stealth mechanism as bleed now, just with its own (fixed, low) stakes value for the persona weighting below
           this.push();
           this.fxClone(v, 'hunts');
           this._announceTallyA(this._undirectedBaseStealth(v, 'hunt'));   // VC: hunt NEVER wrote a tally before -- the defender's decide read the PREVIOUS action's stale a. Rulebook default +1 (the Wauneka example), Zoe's exception via the helper.
@@ -10381,7 +10391,7 @@ class Bot {
         if(!act){ this._emit('stays-home', { vamp: v.name, why: 'no legal action left this turn' }); continue; }   // v0.6.129: everything it could do, it has already done this turn
         this._noteTurnAct(v, act);
         if(act.name && typeof act.idx === 'number'){ this.hand.splice(act.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; }   // v0.6.127: a card-less pick that carries a `name` (enemyRescue names the rescued vampire) has no idx -- splice(undefined, 1) silently ate hand[0] and drew a replacement
-        v.locked = true; this._actingVamp = { v, n: act.n, played: new Set(), target: prey, edgeLocked: false, limitedUsed: false, act };   /* v0.6.217: act -- Change of Target's ledger (_noteCotAct) */   // per-ACTION modifier ledger (same-name once per action); `target` (steg 2, 15 July): the seat currently being bled, tracked because a bounce can move it mid-action -- see _onLog's L12.bleed handler; `edgeLocked`/`limitedUsed` (steg 4, 16 July): see _playBleedModifier
+        v.locked = true; this._lastCombat = null; this._actingVamp = { v, n: act.n, played: new Set(), target: prey, edgeLocked: false, limitedUsed: false, act };   /* v0.6.217: act -- Change of Target's ledger (_noteCotAct); _lastCombat -- Monster unlocks after THIS action's combat (the egress review) */   // per-ACTION modifier ledger (same-name once per action); `target` (steg 2, 15 July): the seat currently being bled, tracked because a bounce can move it mid-action -- see _onLog's L12.bleed handler; `edgeLocked`/`limitedUsed` (steg 4, 16 July): see _playBleedModifier
         if(act.kind === 'stock'){
           /* v0.6.14: the blood-stock action (superior Govern-class). Mirrors the pool
              branch's announce/handshake shape exactly: undirected, so the sandbox's

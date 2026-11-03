@@ -12055,6 +12055,67 @@ async function connectWithRetry(client, tries = 30){
         const t1 = mk(false, 'Catalina Vega (G6)', 'undirected'), t2 = mk(false, 'Catalina Vega (G6)', 'bleed'), t3 = mk(false, 'Crow (G5)', 'undirected'), t4 = mk(true, 'Catalina Vega (G6)', 'undirected');
         ok(t1 === true && !t2 && !t3 && !t4,
            '162t ...a human\u2019s Grand Ball: Catalina\u2019s equip is not blocked; her bleed, Crow\u2019s equip and a bot\u2019s Ball are not this (got ' + JSON.stringify({ t1, t2, t3, t4 }) + ')'); }
+
+      // u) the egress review: the action at my Ball went through on the actor's word (It resolves, a failed block) -- the card burns, as on my own Pass; a human's referendum at my pool (the ASKED window, undirected) is barred by that human's Ball too
+      { const o = mkU162(); o.board = [V('ua1', 'Catalina Vega (G6)', { locked: true }), L('ug1', 'Toreador Grand Ball')];
+        o.pending = { who: 'Hanna', amount: 0, kind: 'rush', sub: 'burnCard', burnCardId: 'ug1', burnCard: 'Toreador Grand Ball', actingVampName: 'Berenguela, The Vicious (G6)', reacted: new Set(), attempted: new Set() };
+        o._applyPending('It resolves');
+        const u = mkU162(); u.players = [{ seat: 1, name: 'Hanna', online: true, bot: false }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        u.table = { 1: { pub: { cards: [V('uh1', 'Catalina Vega (G6)'), L('uhg', 'Toreador Grand Ball')] } } };
+        const hb = q => IF2(u, '_humanBallFree') ? u._humanBallFree(Object.assign({ who: 'Hanna', actorSeat: 1, kind: 'asked', sub: 'asked', actingVampName: 'Catalina Vega (G6)' }, q)) : null;
+        const askU = hb({ directed: false }), askD = hb({ directed: true });
+        ok(o.board[1].zone === 'ash' && askU === true && askD === false,
+           '162u ...the burn action through on the actor\u2019s word burns my Ball; a human\u2019s undirected asked window (her referendum at my pool) is barred by her Ball, a directed one (a bleed) is not (got ' + JSON.stringify({ ball: o.board[1].zone, askU, askD }) + ')'); }
+
+      // v) the egress review: Saulot's Guiding Wisdom through the real combat -- my BLOCKED actor's combat ends before range (the round row carries no earlier round's strike); the 'Combat ends' line wakes the other bot's first wait (through _onLog); the lock-abstain line leaves the voter unlocked
+      { const u = mkU162(); const me = V('v1', 'Bret Stryker (G6)', { blood: 1, locked: true }), be = V('v2', 'Abaddon (G7)', { blood: 4 });
+        u.board = [me, be, on(be, L('vs1', "Saulot's Guiding Wisdom"))]; u.turnSeat = u.seat; u._turnSerial = 3;
+        u._actingVamp = { v: me, n: 1, played: new Set() }; u._lastBlockerSeat = 1; u._expStrikeDmg = () => 2; u._phaseStep = async () => null;
+        u._rnd = { grapple: false, strike: 'Theft of Vitae', dealt: 3, taken: 2, hs: 'a', range: 'long' };
+        const rows = [], e0 = u._emit.bind(u); u._emit = (k, d) => { if(k === 'combat-round') rows.push(d); return e0(k, d); };
+        await u._resolveCombat(me);
+        const row = rows[0] || {}, endLine = logs(u).find(l => /^Combat ends /.test(l)) || '';
+        const o = mkU162('Hanna'); o._inCombat = true; let woke = null; o._maneuverWaiter = x => { woke = x; };
+        o._onLog('Viktor', u.sent.filter(m => m && m.t === 'log' && /^Combat ends /.test(strip162(m.html)))[0] ? u.sent.filter(m => m && m.t === 'log' && /^Combat ends /.test(strip162(m.html)))[0].html : 'x');
+        const h = mkU162('Hanna'); h.seat = 1; h.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }]; const cv = V('vc1', 'Catalina Vega (G6)'); h.board = [cv];
+        const ab = [], h0 = h._emit.bind(h); h._emit = (k, d) => { if(k === 'abstained') ab.push(d); return h0(k, d); };
+        h._onLog('Viktor', "<b>Abaddon (G7)</b> locks: <b>Saulot's Guiding Wisdom</b> \u2014 Hanna's <b>Catalina Vega (G6)</b> abstains (2 votes cancelled).");
+        ok(be.locked === true && row.end === 'i-ended' && !row.dealt && row.strike !== 'Theft of Vitae' && endLine === 'Combat ends \u2014 Saulot\u2019s Guiding Wisdom.' && !!woke && woke.ended === true && cv.locked === false && ab.length === 1,
+           '162v ...Saulot\u2019s Guiding Wisdom: Abaddon locks, Bret\u2019s blocked combat ends before range (a clean round row); the line wakes the other bot\u2019s wait; its abstain line takes Catalina\u2019s votes and leaves her unlocked (got ' + JSON.stringify({ be: be.locked, row: { end: row.end, strike: row.strike, dealt: row.dealt }, endLine, woke, cv: cv.locked, ab: ab.length }) + ')'); }
+
+      // w) the egress review: the Visage on a nameless pending (the announce names the actor, as for the combat opponent); a PRINTED Toreador justicar in play holds the title (no Toreador Justicar referendum) [LSJ 20100129]
+      { const u = mkU162(); u.pool = 20; const gl = V('wg1', 'Glissando (G6)'); u.table = { 1: { pub: { cards: [gl, on(gl, L('wv1', 'Terrifying Visage'))] } } };
+        u.board = [V('wb1', 'Crow (G5)')]; u._obs = { vamp: 'Glissando (G6)', at: Date.now(), seat: 1, who: 'Hanna' };
+        u.pending = { who: 'Hanna', amount: 1, kind: 'bleed', actingVampName: null, actorSeat: 1, blockerVamp: u.board[0], reacted: new Set(), attempted: new Set() };
+        u._resolveCombat = async () => {}; u._verdictAsTarget(true);
+        const t = mkU162(); const br = V('wt1', 'Bret Stryker (G6)'); t.board = [br]; t.hand = ['Toreador Justicar'];
+        const pk0 = t._bestPoliticalFor(br); t.table = { 1: { pub: { cards: [V('wm1', 'Madame Guil (G3)')] } } }; const pk1 = t._bestPoliticalFor(br);
+        ok(u.pool === 19 && !!pk0 && !pk1,
+           '162w ...a nameless pending: the announce\u2019s Glissando carries Terrifying Visage -- my blocker\u2019s controller burns 1; Madame Guil (a printed Toreador justicar) in play: no Toreador Justicar referendum (got ' + JSON.stringify({ pool: u.pool, pk0: !!pk0, pk1: !!pk1 }) + ')'); }
+
+      // x) the egress review: the event log types the actor's 'Combat begins' line of a granted rush; a human's Change of Target line with the client's ' Target: X.' suffix is read; Saulot's Healing Touch goes on a Salubri only
+      { const u = mkU162(); const ev = IF2(u, '_evClassify') ? u._evClassify('Viktor', "Trainbot: Combat begins: Abaddon (G7) against Crow (G5) (Saulot's Avenging Fist).", 'log') : null;
+        const me = V('x1', 'Crow (G5)', { locked: true }); u.board = [me]; u._myBlockOf = { vamp: 'Bret Stryker (G6)', at: Date.now() };
+        u._onLog('Hanna', '<b>Bret Stryker (G6)</b> plays <b>Change of Target</b>. Target: <b>Crow (G5)</b>.');
+        const hit = IF2(u, '_cotHit') ? u._cotHit(me) : false;
+        const s2 = mkU162(); s2.board = [V('x2', 'Bret Stryker (G6)'), V('x3', 'Abaddon (G7)')];
+        const ho = s2._hostVampFor(true, (s2.fxLookup("Saulot's Healing Touch") || {}).e);
+        ok(!!ev && ev.kind === 'combat-start' && ev.role === 'actor' && hit === true && !!ho && ho.name === 'Abaddon (G7)',
+           '162x ...the granted rush\u2019s Combat begins line is a combat start; a human\u2019s \u2018plays Change of Target. Target: Crow (G5).\u2019 ends my block\u2019s combat; Saulot\u2019s Healing Touch goes on Abaddon, not Bret (got ' + JSON.stringify({ ev, hit, ho: ho && ho.name }) + ')'); }
+
+      // y) the egress review, through the real paths: Toreador Justicar's referendum (the terms line, the card on the term on a pass) through _callReferendum; Monster through _maybeActAgain -- weighed after a combat that left the opponent down, not after a combat-free action
+      { const u = mkU162(); const br = V('y1', 'Bret Stryker (G6)'); u.board = [br]; u.hand = ['Toreador Justicar']; u._writeTally = () => {};
+        u._askBlock = async () => ({ what: 'pass' }); u._refPoll = async rc => { rc.closed = 'test'; return 'test'; }; u._actingVamp = { v: br, n: 1, played: new Set() };
+        const pk = u._bestPoliticalFor(br); let err = null;
+        if(pk){ const j = u.hand.indexOf(pk.name); if(j >= 0) u.hand.splice(j, 1); try { await u._callReferendum(br, pk); } catch(e){ err = e.message; } }
+        const terms = logs(u).find(l => /^Referendum terms/.test(l)) || '', tt = IF2(u, '_titleOf') ? u._titleOf(br) : {};
+        const m = mkU162(); const mv = V('y2', 'Berenguela, The Vicious (G6)', { blood: 3, locked: true }); m.board = [mv, on(mv, L('ym1', 'Monster'))]; m.turnSeat = m.seat; m._turnSerial = 4;
+        const qs = [], d0 = m.decide.bind(m); m.decide = (q, ctx) => { if(q === 'act-again') qs.push(ctx && ctx.card && ctx.card.name); return d0(q, ctx); };
+        m._lastCombat = { vamp: mv.name, id: mv.id, opp: 'Crow (G5)', oppDown: true, turn: 4, at: Date.now() }; m._lastAct = { vamp: mv.name, outcome: 'through', kind: 'rush' };
+        m._maybeActAgain(mv, [mv], 0); const q1 = qs.slice();
+        qs.length = 0; mv.locked = true; m._lastCombat = null; m._lastAct = { vamp: mv.name, outcome: 'through', kind: 'bleed' }; m._maybeActAgain(mv, [mv], 0);
+        ok(!err && terms === 'Referendum terms \u2014 Toreador Justicar: Bret Stryker (G6) takes the title (Justicar, 3 votes).' && tt.title === 'Justicar' && tt.votes === 3 && !u.board.some(c => c && c.zone === 'ash' && c.name === 'Toreador Justicar') && q1.includes('Monster') && !qs.includes('Monster'),
+           '162y ...Toreador Justicar through the referendum: the terms line names Bret, the pass puts the card on him (Justicar, 3); Monster is weighed after the combat that left Crow down, not after a combat-free bleed (got ' + JSON.stringify({ err, terms, tt, q1, q2: qs }) + ')'); }
     }
 
 
