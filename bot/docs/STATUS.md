@@ -1,13 +1,14 @@
 # STATUS — Elysium Bots (rewritten at every release; 3 November 2026)
 
-**Bot v0.6.217** (3 Nov 2026, PR #47) · arena v1.4.8 · sim table v1.1.0 (round C3, PR #49) · cardfx compiler v1.9.8, curated 156 · hotseat tool v1.4.0 ·
+**Bot v0.6.217** (3 Nov 2026, PR #47) · arena v1.4.8 · sim table v1.1.0 (round C3, PR #50) · cardfx compiler v1.9.8, curated 156 · hotseat tool v1.4.0 ·
 coverage tool v1.1.43 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` v1.0.0 ·
-built against client **v2.6.170 / srv-2.6.49** (the root's release);
+built against client v2.6.170; the root's release is now client **v2.6.171 / srv-2.6.49** (main's #48: both canaries green beside
+v0.6.217, ours 69/0 and main's v1.1.0 102/0);
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
-**Deploy state:** `main` carries v0.6.216 (PR #46, merged 3 Nov); branch `bot-v5-wave4` carries v0.6.217 and copies its bundle to
-the root (PR #47); `bot-c3-sim-bench` (round C3, the bench on the sim) is stacked on it (PR #49). Johan merges #47 first. **Open PRs:**
-#47, #49; main's #48 (client v2.6.171, consuming v0.6.215–216).
+**Deploy state:** `main` carries v0.6.217 (#47) and client v2.6.171 (main's #48), merged 3 Nov. Round C3's #49 went into
+`bot-v5-wave4`, not `main` (the stacked base stayed); PR #50 brings it to `main`. Main's client gates are red until main re-embeds
+the v0.6.217 guide (embed-help drift; main's fix). **Open PRs:** #50.
 
 ## Last gates (v0.6.217 release bytes, 3 Nov 2026)
 Suite **2393/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root
@@ -33,10 +34,11 @@ The mirror bench runs on the sim (`elysium-bot-sim.js --bench`, `ana-sim-diff.py
 3. The knowledge layer's Kevlar and the prey's wakes as blockers (65f); the abstract model spec.
 
 ## Not yet consumed from main
-Main's replies of 17–18 Oct (robustness, v0.6.206, v0.6.207, open hand): read, not acted on (BOARD). Owed by main (its §4): the
-bot-emitted lines for §12 and the canary — the docs-diet handoff's, v0.6.213's, v0.6.214's `gets no strike this round`, v0.6.215's
-ARCHON_BURN, v0.6.217's COT, ABSTAIN and burn-card lines — and the questions Q4, the pure `step`, `sp` / `xa` / `xb`, the second
-`rng`; the data repo's copy of the v5 dump (v0.6.216's handoff).
+Main's reply of 3 Nov (`REPLY-to-bot-2026-11-03-v0.6.216.md`: §12 now records every bot line through v0.6.216, canary v1.1.0 pins
+them — copy it into `bot/`; Q4: gate on the root's release and record the `main` commit instead of the copies; the data repo's v5
+dump in its PR #1) — a bot round. Main's replies of 17–18 Oct (robustness, v0.6.206, v0.6.207, open hand): read, not acted on
+(BOARD). Still owed by main: v0.6.217's COT, ABSTAIN and burn-card lines in §12 and the canary; the re-embedded guide; the pure
+`step`, `sp` / `xa` / `xb`, the second `rng`.
 
 ## Known, not built
 A human's bounce of a bot's bleed is not read by the acting bot · a human's Haven Uncovered is not read · between bots a contested
