@@ -1,12 +1,13 @@
 # STATUS — Elysium Bots (rewritten at every release; 3 November 2026)
 
-**Bot v0.6.217** (3 Nov 2026, PR #47) · arena v1.4.8 · sim table v1.0.2 · cardfx compiler v1.9.8, curated 156 · hotseat tool v1.4.0 ·
+**Bot v0.6.217** (3 Nov 2026, PR #47) · arena v1.4.8 · sim table v1.1.0 (round C3, PR #48) · cardfx compiler v1.9.8, curated 156 · hotseat tool v1.4.0 ·
 coverage tool v1.1.43 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` v1.0.0 ·
 built against client **v2.6.170 / srv-2.6.49** (the root's release);
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
 **Deploy state:** `main` carries v0.6.216 (PR #46, merged 3 Nov); branch `bot-v5-wave4` carries v0.6.217 and copies its bundle to
-the root (PR #47, for Johan to merge). **Open PRs:** #47.
+the root (PR #47); `bot-c3-sim-bench` (round C3, the bench on the sim) is stacked on it (PR #48). Johan merges #47 first. **Open PRs:**
+#47, #48.
 
 ## Last gates (v0.6.217 release bytes, 3 Nov 2026)
 Suite **2393/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root
@@ -20,9 +21,14 @@ V5 wave 4 (D-106): the eight masters that go on a vampire, Toreador Grand Ball a
 Toreador Justicar; a title card replaces the printed title in every count; an action through a card in play once each turn (R-43).
 Every Toreador row is playable now (`docs/CARDS.md`); whether the deck joins the menu is Johan's call.
 
+## Round C3 (no bot release)
+The mirror bench runs on the sim (`elysium-bot-sim.js --bench`, `ana-sim-diff.py --vp`, `ana-bench.py`; HOWTO). Controls on v0.6.217
+(`docs/reports/REPORT-bench-controls-sim-2026-11-03.md`): A vs A level (−0.10 ± 0.29 at 96), a crippled seat −0.65 VP paired (SE
+0.14). The chat-era bench and series scripts are gone. Gates: normal mode IDENTICAL 240 to sim v1.0.2; @C3GATES@.
+
 ## Next (proposed; Johan orders the board)
-1. V5 wave 5: the eighteen masters in play and Sudden Reversal's 'as played' window (D-107: also against humans; Johan picks the
-   shape). Toreador into the menu, if Johan says so.
+1. Toreador on the bench (does it hold up?), then V5 wave 5: the eighteen masters in play and Sudden Reversal's 'as played' window
+   (D-107: also against humans; Johan picks the shape).
 2. The clean-up rounds C2–C6, interleaved with product rounds.
 3. The knowledge layer's Kevlar and the prey's wakes as blockers (65f); the abstract model spec.
 

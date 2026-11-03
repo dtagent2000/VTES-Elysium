@@ -8,6 +8,10 @@
 #   and the outcome on both sides (winner, VP, rounds).
 #   Use: golden-run regression (the reference table before/after a change), sim vs real clock (--real), version vs version.
 #   Generated card ids are blinded (bot<seat>_xxxx -> ID). Decisions = `decide` rows (q + the deciding fields of out) and `play` rows.
+#   --vp (3 Nov 2026, round C3, with sim v1.1.0): the PAIRED read of two arms of one design (T6) -- per deck the VP per match in A and B,
+#   B - A as the mean of per-match differences with its paired SE and 95 % interval, wins A -> B; for a --bench design also the variant
+#   seat (VP, B - A, wins, and each arm's edge = the seat's VP minus the table's mean). The per-match lines are left out; the verdict
+#   tally stays (how many matches the variant changed at all). Usage: ana-sim-diff.py --vp CONTROL ARM.
 import json, os, re, sys
 
 ID = re.compile(r'bot\d+_[a-z0-9]{4,}')
@@ -72,7 +76,70 @@ def compare(fa, fb):
     g, i, x, y = first
     return 'DIVERGED', (i, x, y), outcome(A), outcome(B)
 
+def result_of(path):
+    res = None
+    for line in open(path):
+        line = line.strip()
+        if line:
+            r = json.loads(line)
+            if r.get('type') == 'result':
+                res = r['data']
+    return res
+
+def stat(d):
+    n = len(d)
+    if not n:
+        return 0.0, 0.0
+    m = sum(d) / n
+    if n < 2:
+        return m, 0.0
+    sd = (sum((x - m) ** 2 for x in d) / (n - 1)) ** 0.5
+    return m, sd / n ** 0.5
+
+def paired_vp(pairs):
+    per, var, skipped, specs = {}, [], 0, set()
+    for name, fa, fb in pairs:
+        A, B = result_of(fa), result_of(fb)
+        bad = lambda R: (not R) or R.get('crash') or R.get('reason') == 'stuck'
+        if bad(A) or bad(B) or [x['deck'] for x in A['bots']] != [x['deck'] for x in B['bots']]:
+            skipped += 1
+            continue
+        decks = [x['deck'] for x in A['bots']]
+        uniq = len(set(decks)) == len(decks)
+        for i, (ba, bb) in enumerate(zip(A['bots'], B['bots'])):
+            k = ba['deck'] if uniq else '%s (seat %d)' % (ba['deck'], i + 1)
+            per.setdefault(k, []).append((A['vp'].get(ba['name'], 0), B['vp'].get(bb['name'], 0), A.get('winner') == ba['name'], B.get('winner') == bb['name']))
+        P = A.get('variantSeat')
+        if P and P == B.get('variantSeat'):
+            na, nb, n = A['bots'][P - 1]['name'], B['bots'][P - 1]['name'], len(A['bots'])
+            va, vb = A['vp'].get(na, 0), B['vp'].get(nb, 0)
+            var.append((va, vb, A.get('winner') == na, B.get('winner') == nb, va - sum(A['vp'].values()) / n, vb - sum(B['vp'].values()) / n))
+            specs.add((A.get('bench'), B.get('bench')))
+    return per, var, skipped, specs
+
+def print_vp(pairs, tally):
+    per, var, skipped, specs = paired_vp(pairs)
+    n = len(next(iter(per.values()))) if per else 0
+    print('## Paired VP, B - A (per-match differences on the same design): %d matches (%s)%s' % (n, ', '.join('%s %d' % kv for kv in sorted(tally.items())), ', %d skipped (crash, stuck or another design)' % skipped if skipped else ''))
+    print()
+    print('| deck | A VP/match | B VP/match | B - A | paired SE | 95 % | wins A -> B |')
+    print('|---|---:|---:|---:|---:|---|---:|')
+    for k in sorted(per):
+        rows = per[k]
+        m, se = stat([b - a for a, b, _, _ in rows])
+        print('| %s | %.2f | %.2f | %+.2f | %.2f | [%+.2f, %+.2f] | %d -> %d |' % (k, sum(a for a, _, _, _ in rows) / len(rows), sum(b for _, b, _, _ in rows) / len(rows), m, se, m - 1.96 * se, m + 1.96 * se,
+              sum(1 for r in rows if r[2]), sum(1 for r in rows if r[3])))
+    if var:
+        m, se = stat([b - a for a, b, _, _, _, _ in var])
+        ea, sa = stat([x[4] for x in var]); eb, sb = stat([x[5] for x in var])
+        sp = ' / '.join(sorted({'A: %s, B: %s' % (x or '?', y or '?') for x, y in specs}))
+        print()
+        print('**Variant seat** (%s, %d matches): VP %.2f -> %.2f, B - A %+.2f (paired SE %.2f; 95 %% [%+.2f, %+.2f]) · wins %d -> %d · edge (VP - the table mean) A %+.2f (95 %% +-%.2f), B %+.2f (95 %% +-%.2f)' % (
+            sp, len(var), sum(x[0] for x in var) / len(var), sum(x[1] for x in var) / len(var), m, se, m - 1.96 * se, m + 1.96 * se,
+            sum(1 for x in var if x[2]), sum(1 for x in var if x[3]), ea, 1.96 * sa, eb, 1.96 * sb))
+
 def main():
+    vp = '--vp' in sys.argv[1:]
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     if len(args) != 2:
         print(__doc__ if __doc__ else 'usage: ana-sim-diff.py A B'); sys.exit(2)
@@ -86,6 +153,8 @@ def main():
     for name, fa, fb in pairs:
         verdict, div, oa, ob = compare(fa, fb)
         tally[verdict] = tally.get(verdict, 0) + 1
+        if vp:
+            continue
         line = '%-16s %-10s A: %s' % (name, verdict, oa)
         if oa != ob:
             line += '  |  B: %s' % ob
@@ -95,6 +164,9 @@ def main():
             fmt = lambda d: '—' if d is None else 'r%s %s %s %s %s' % d
             print('    first different decision (that bot\'s #%d):  A %s' % (i, fmt(x)))
             print('    %s  B %s' % (' ' * len('first different decision (that bot\'s #%d):' % i), fmt(y)))
+    if vp:
+        print_vp(pairs, tally)
+        return
     print('\n%d matches: %s' % (len(pairs), ', '.join('%s %d' % kv for kv in sorted(tally.items()))))
 
 if __name__ == '__main__':

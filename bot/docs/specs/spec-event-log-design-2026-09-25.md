@@ -11,7 +11,7 @@ original; this copy is the one sessions read.
 | 2. Episode models in shadow mode | Partly: one combat episode holds the opponent's name (v0.6.182). The action / combat state machines with `shadow-flag` were not built; the abstract model's state skeleton (spec-cleanup §6.1) may supersede them. |
 | 3. Real-time invariants | Observe only: `inv-flag` rows read from the log as it grows (v0.6.179–180), `ana-inv.py` after a series. Reconciliation ("the table wins", the bot asking a human) not built; the question is RULINGS O-25. |
 | 4. vtes-skill as a source | Used: the cardfx sweep (`REPORT-cardfx-sweep-pilot.md`, `REPORT-cardfx-sweep-full.md`, `spec-cardfx-sweep-sources-2026-09-25.md`) and the archetype labels (v0.6.192). |
-| 5. The mirror bench | Built 27 Sep (`bench.sh`, `ana-bench.py`, `REPORT-bench-controls.md`); its port to the sim is round C3 (BOARD). |
+| 5. The mirror bench | Built 27 Sep on the arena (`REPORT-bench-controls.md`); ported to the sim in round C3, 3 Nov 2026 (`elysium-bot-sim.js --bench`, `ana-sim-diff.py --vp`, `ana-bench.py`; `REPORT-bench-controls-sim-2026-11-03.md`), the arena scripts retired. |
 | Lessons from VTES-Player | Conservation per transfer = `ana-ledger.py` (offline; the per-match failing row is T10's `ana-gates.py`). Mechanic design notes: not built; RULINGS and ARCHITECTURE carry part of their job. Opponent modelling: the knowledge layer's bricks (v0.6.187–197); the guard rail is CLAUDE.md's knowledge-layer rule. |
 | Build order | Steps 1–4 done, 6 in part (`spec-knowledge-layer.md`), 5 and 7 open. |
 
