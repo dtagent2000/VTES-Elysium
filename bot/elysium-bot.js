@@ -3155,6 +3155,7 @@ class Bot {
     v.locked = true; this._actingVamp = { v, n: 0, played: new Set(), kind: 'leaveTorpor', target: null }; this.push();
     this.fxClone(v, 'leaves torpor');
     this._announceTallyA(1);
+    this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
     this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> attempts to leave torpor.' });
     const ans = await this._askBlock('Trainbot: ' + v.name + ' attempts to leave torpor (+1 stealth). Block?');
     await sleep(150);
@@ -10353,6 +10354,7 @@ class Bot {
           this.push();
           this.fxClone({ name: act.name, kind: 'lib' }, 'stocks ' + act.n + ' blood', { actor: v });
           this._announceTallyA((act.st | 0));
+          this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(act.name) + '</b> \u2014 ' + act.n + ' blood onto an uncontrolled vampire.' });
           const qs = 'Trainbot: ' + v.name + ' plays ' + act.name + (act.st ? ' (+' + act.st + ' stealth)' : '') + ' \u2014 ' + act.n + ' blood onto an uncontrolled vampire. Block?';
           const ansS = await this._askBlock(qs);
@@ -10418,6 +10420,7 @@ class Bot {
           this.push();
           const ownerN = this.seatName(act.seat);
           this._announceTallyA(0);
+          this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> rescues <b>' + esc(ownerN) + '</b>\u2019s <b>' + esc(act.name) + '</b> from torpor (' + esc(act.name) + ' pays ' + act.tPays + ', ' + esc(v.name) + ' pays ' + act.mine + ').' });
           const ansR = await this._askBlock('Trainbot: ' + v.name + ' rescues ' + act.name + ' from torpor. Block?');
           await sleep(150);
@@ -10476,6 +10479,7 @@ class Bot {
           this.push();
           this.fxClone({ name: act.name, kind: 'lib' }, '[' + (act.at || '') + '] on self', { actor: v });
           this._announceTallyA((act.st | 0));
+          this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(act.name) + '</b> [' + esc(act.at || '') + '] \u2014 on themselves (+' + act.bonus + ' strength).' });
           const ansS = await this._askBlock('Trainbot: ' + v.name + ' plays ' + act.name + ' (+' + act.st + ' stealth). Block?');
           await sleep(150);
@@ -10503,6 +10507,7 @@ class Bot {
           this.push();
           this.fxClone(v, 'burns ' + act.target.owner + '\u2019s ' + act.target.card);
           this._announceTallyA(act.st | 0);
+          this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> takes an action to burn <b>' + esc(act.target.owner) + "</b>'s <b>" + esc(act.target.card) + '</b>.' });   // L12.burnAct (bot grammar, v0.6.217)
           const ansB = await this._askBlock('Trainbot: ' + v.name + ' takes an action to burn ' + act.target.owner + '\u2019s ' + act.target.card + ' (' + (act.st | 0) + ' stealth). Block?');
           await sleep(150);
@@ -10529,6 +10534,7 @@ class Bot {
           this.push();
           this.fxClone({ name: act.name, kind: 'lib' }, '[' + act.at + '] on self', { actor: v });
           this._announceTallyA(act.st | 0);
+          this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(act.name) + '</b> \u2014 puts it in play.' });
           const ansT = await this._askBlock('Trainbot: ' + v.name + ' plays ' + act.name + ' [' + act.at + '] (+' + (act.st | 0) + ' stealth). Block?');
           await sleep(150);
@@ -10560,6 +10566,7 @@ class Bot {
           this.push();
           this.fxClone({ name: act.name, kind: 'lib' }, 'puts in play', { actor: v });
           this._announceTallyA((act.st | 0));
+          this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(act.name) + '</b> \u2014 puts it in play.' });
           const ansC = await this._askBlock('Trainbot: ' + v.name + ' plays ' + act.name + (act.st ? ' (+' + act.st + ' stealth)' : '') + '. Block?');
           await sleep(150);
@@ -10600,6 +10607,7 @@ class Bot {
             this.fxClone({ name: act.name || 'Haven Uncovered', kind: 'lib' }, 'enters combat with ' + act.target.name, { actor: v });
             this._announceTallyA(act.st | 0);
             this._combatArmed = true;
+            this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
             this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> enters combat with <b>' + esc(act.target.owner) + "</b>'s <b>" + esc(act.target.name) + '</b> (' + esc(act.name || 'Haven Uncovered') + ').' });   // L12.havenRush (v0.6.217: the granting card named -- Haven Uncovered, Saulot's Avenging Fist, Regent)
             this._maybeInvigorate(v);   // v0.6.213 (V5 wave 1): Invigorate -- combat is certain on a rush; same tick, no await before the block window
             const ansH = await this._askBlock('Trainbot: ' + v.name + ' enters combat with ' + act.target.name + ' (' + (act.name || 'Haven Uncovered') + ', +' + (act.st | 0) + ' stealth). Block?');
@@ -10623,6 +10631,7 @@ class Bot {
           this.fxClone({ name: act.name, kind: 'lib' }, '[ANI] rushes ' + act.target.name, { actor: v });
           this._announceTallyA(0);
           this._combatArmed = true;   // v0.6.202: the rushed bot fights the moment it complies -- its first combat lines (Deep Song makes it the acting minion: it speaks first) may arrive before my own combat starts
+          this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(act.name) + '</b> [ANI] \u2014 rushes <b>' + esc(act.target.owner) + "</b>'s <b>" + esc(act.target.name) + '</b>.' });
           this._maybeInvigorate(v);   // v0.6.213 (V5 wave 1): Invigorate -- combat is certain on a rush; same tick, no await before the block window
           const ansR = await this._askBlock('Trainbot: ' + v.name + ' rushes ' + act.target.name + ' (Deep Song [ANI]). Block?');
@@ -10688,6 +10697,7 @@ class Bot {
           const supF = act.st >= 3;
           this.fxClone({ name: act.name, kind: 'lib' }, supF ? '[THA]' : '[tha]', { actor: v });
           this._announceTallyA((act.st | 0));
+          this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(act.name) + '</b> ' + (supF ? '[THA]' : '[tha]') + ' \u2014 fetches <b>' + esc(act.target.name) + '</b>.' });
           const ansF = await this._askBlock('Trainbot: ' + v.name + ' plays ' + act.name + (act.st ? ' (+' + act.st + ' stealth)' : '') + ' \u2014 fetching equipment. Block?');
           await sleep(150);
@@ -10724,6 +10734,7 @@ class Bot {
           this.push();
           this.fxClone({ name: act.name, kind: 'lib' }, act.supMode ? '[AUS]' : '[aus]', { actor: v });
           this._announceTallyA((act.st|0));
+          this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           const preyName = this.seatName(prey);
           if(act.supMode){
             this.send({ t:'log', html: '<b>' + esc(v.name) + '</b> plays Revelations [AUS] \u2014 <b>' + esc(preyName) + '</b> plays with an open hand.' });
@@ -10792,6 +10803,7 @@ class Bot {
           this.push();
           this.fxClone({ name: act.name, kind: 'lib' }, act.n + ' pool damage', { actor: v });
           this._announceTallyA(0);   // fresh referendum, no built-in stealth on this card
+          this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(act.name) + '</b>' + (act.costEdge ? ': burns the Edge' : '') + ' \u2014 ' + act.n + ' pool damage to <b>' + esc(this.seatName(prey)) + '</b>.' });
           const qp = 'Trainbot: ' + v.name + ' plays ' + act.name + ' \u2014 ' + act.n + ' pool damage to ' + this.seatName(prey) + ' (not a bleed \u2014 no bounce). Block?';
           const ansP = await this._askBlock(qp);
