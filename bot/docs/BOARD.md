@@ -57,10 +57,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **C2 — dead code and tools**: delete the ten legacy tests, `_bumpTallyB`, the lint's eight unused assignments, one `handStrike`
   key; add `ana-gates.py` (one PASS/FAIL line per audit over a sim dir). *Done when* the sim's 240-match design is IDENTICAL and the
   gates are green. Docs: spec §5.6, T10.
-- **C3 — the mirror bench on the sim**: port the arms, seats, both controls, `bench.sh`'s deck-pinned 6th and global-knob 7th
-  argument, with paired reads (`ana-sim-diff.py --vp`); re-validate the controls; then retire `bench.sh`, `run-*.sh`, `poll-bal.sh`
-  and rewrite every rule that names them (HOWTO). `design-balanced-serie-bal1.txt` stays: the sim must be able to read it.
-  *Done when* A vs A is level, a crippled seat loses, and the old scripts are gone. Docs: spec §5.6, T6.
 - **C4 — CI for `bot/`** (if Johan says yes, spec §8 Q5): `.github/workflows/bot-gates.yml` beside main's, triggered by `bot/**`
   and the bot bundle; `node --check`, the correctness lint, canary, cardfx, HB1, hotseat, the suite. *Done when* a red gate shows
   on a PR. Docs: spec T8; HARNESS.

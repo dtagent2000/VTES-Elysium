@@ -62,7 +62,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | `krcg-v5.js` | KRCG's v5 dump (`vtes-v5.json` + `expansions.json`) → the v3-shaped `vtes.json` the compiler, `gen-precon.js`, the ledger, `test-cardfx.js` and the TWD tools read |
 | `gen-precon.js` | the V5 precons from `vtes.json`'s sets; `--check` compares the starters and the embedded decks by KRCG id |
 | `gen-card-ledger.js` → `docs/CARDS.md` | the card ledger: per card the coverage verdict, tier, decks, rulings, suite sections, uses in the sim; the class map |
-| `elysium-bot-sim.js` | THE SIM TABLE: the hotseat table under a virtual clock, deterministic, every seating; a key the bot does not embed plays `deck-<key>.json` |
+| `elysium-bot-sim.js` | THE SIM TABLE: the hotseat table under a virtual clock, deterministic, every seating; a key the bot does not embed plays `deck-<key>.json`; the mirror bench (`--bench`, `--bench-deck`, `--design`; read by `ana-bench.py` and `ana-sim-diff.py --vp`) |
 | `elysium-bot-hotseat.js` | the client's real `hotBridge` lifted and driven headless (the hotseat gate; the sim's engine) |
 | `elysium-bot-arena.js` | bots on a real spawned server (real clocks; the timing truth) |
 | `elysium-bot-table.js` | seat bots at a live table |

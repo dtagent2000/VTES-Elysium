@@ -8,6 +8,12 @@
 #   and the outcome on both sides (winner, VP, rounds).
 #   Use: golden-run regression (the reference table before/after a change), sim vs real clock (--real), version vs version.
 #   Generated card ids are blinded (bot<seat>_xxxx -> ID). Decisions = `decide` rows (q + the deciding fields of out) and `play` rows.
+#   --vp (3 Nov 2026, round C3, with sim v1.1.0): the PAIRED read of two arms of one design (T6) -- per deck the VP per match in A and B,
+#   B - A as the mean of per-match differences with its paired SE and 95 % interval, wins A -> B; for a --bench design also the variant
+#   seat (VP, B - A, wins, and each arm's edge = the seat's VP minus the table's mean). The per-match lines are left out; the verdict
+#   tally stays (how many matches the variant changed at all: no DIVERGED = an inert arm, said so). A pair needs the same seating, deal
+#   seed and baseline (every seat's knobs and persona but the variant seat's); the rest are counted as not paired, by reason. A `none`
+#   control is read at the arm's variant seat (it doubles as a pinned control). Usage: ana-sim-diff.py --vp CONTROL ARM.
 import json, os, re, sys
 
 ID = re.compile(r'bot\d+_[a-z0-9]{4,}')
@@ -72,7 +78,89 @@ def compare(fa, fb):
     g, i, x, y = first
     return 'DIVERGED', (i, x, y), outcome(A), outcome(B)
 
+def result_of(path):
+    res = None
+    for line in open(path):
+        line = line.strip()
+        if line:
+            r = json.loads(line)
+            if r.get('type') == 'result':
+                res = r['data']
+    return res
+
+def stat(d):
+    n = len(d)
+    if not n:
+        return 0.0, 0.0
+    m = sum(d) / n
+    if n < 2:
+        return m, 0.0
+    sd = (sum((x - m) ** 2 for x in d) / (n - 1)) ** 0.5
+    return m, sd / n ** 0.5
+
+def paired_vp(pairs):
+    """Pairs two arms match by match. A pair counts only when the two matches share the design: the deck order, the deal seed and
+    every seat's knobs and persona except the variant seat's (the control must carry the arm's --knob baseline and --seed). The
+    variant seat is the arm's (B's); a `none` control (A) has no variant of its own, so the same seat is read in it -- the negative
+    control doubles as a pinned control. Every pair left out is counted by its reason."""
+    per, var, specs = {}, [], set()
+    skipped = {}
+    skip = lambda why: skipped.__setitem__(why, skipped.get(why, 0) + 1)
+    for name, fa, fb in pairs:
+        A, B = result_of(fa), result_of(fb)
+        if any((not R) or R.get('crash') or R.get('reason') == 'stuck' for R in (A, B)):
+            skip('crash or stuck'); continue
+        if [x['deck'] for x in A['bots']] != [x['deck'] for x in B['bots']] or A.get('seed') != B.get('seed'):
+            skip('another design (seating or deal seed)'); continue
+        PA, PB = A.get('variantSeat'), B.get('variantSeat')
+        P = PB if (PB and (PA == PB or A.get('bench') == 'none')) else (PA if PA and not PB else None)
+        if PA and PB and PA != PB and A.get('bench') != 'none':
+            skip('variant seats differ'); continue
+        base = lambda R, i: (json.dumps(R['bots'][i].get('knobs') or {}, sort_keys=True), R['bots'][i].get('persona'))
+        if any(base(A, i) != base(B, i) for i in range(len(A['bots'])) if i + 1 != P):
+            skip('a baseline knob or persona differs outside the variant seat'); continue
+        decks = [x['deck'] for x in A['bots']]
+        uniq = len(set(decks)) == len(decks)
+        for i, (ba, bb) in enumerate(zip(A['bots'], B['bots'])):
+            k = ba['deck'] if uniq else '%s (seat %d)' % (ba['deck'], i + 1)
+            per.setdefault(k, []).append((A['vp'].get(ba['name'], 0), B['vp'].get(bb['name'], 0), A.get('winner') == ba['name'], B.get('winner') == bb['name']))
+        if P:
+            na, nb, n = A['bots'][P - 1]['name'], B['bots'][P - 1]['name'], len(A['bots'])
+            va, vb = A['vp'].get(na, 0), B['vp'].get(nb, 0)
+            var.append((va, vb, A.get('winner') == na, B.get('winner') == nb, va - sum(A['vp'].values()) / n, vb - sum(B['vp'].values()) / n))
+            specs.add((A.get('bench'), B.get('bench')))
+    return per, var, skipped, specs
+
+def print_vp(pairs, tally):
+    per, var, skipped, specs = paired_vp(pairs)
+    n = len(next(iter(per.values()))) if per else 0
+    print('## Paired VP, B - A (per-match differences on the same design): %d matches paired (%s)' % (n, ', '.join('%s %d' % kv for kv in sorted(tally.items()))))
+    if skipped:
+        print('**%d match(es) NOT paired:** %s -- a pair needs the same seating, deal seed and baseline (run the control with the arm\'s --knob and --seed)' % (
+            sum(skipped.values()), ', '.join('%s %d' % kv for kv in sorted(skipped.items()))))
+    if not tally.get('DIVERGED'):
+        print('**No match DIVERGED: the variant never changed a decision (an inert arm). Its +0.00 is not a no-loss result -- prove the knob fires first (CLAUDE.md).**')
+    print()
+    print('| deck | A VP/match | B VP/match | B - A | paired SE | 95 % | wins A -> B | win share B - A (paired SE) |')
+    print('|---|---:|---:|---:|---:|---|---:|---:|')
+    for k in sorted(per):
+        rows = per[k]
+        m, se = stat([b - a for a, b, _, _ in rows])
+        wm, wse = stat([float(wb) - float(wa) for _, _, wa, wb in rows])
+        print('| %s | %.2f | %.2f | %+.2f | %.2f | [%+.2f, %+.2f] | %d -> %d | %+.3f (%.3f) |' % (k, sum(a for a, _, _, _ in rows) / len(rows), sum(b for _, b, _, _ in rows) / len(rows), m, se, m - 1.96 * se, m + 1.96 * se,
+              sum(1 for r in rows if r[2]), sum(1 for r in rows if r[3]), wm, wse))
+    if var:
+        m, se = stat([b - a for a, b, _, _, _, _ in var])
+        wm, wse = stat([float(x[3]) - float(x[2]) for x in var])
+        ea, sa = stat([x[4] for x in var]); eb, sb = stat([x[5] for x in var])
+        sp = ' / '.join(sorted({'A: %s, B: %s' % (x or '?', y or '?') for x, y in specs}))
+        print()
+        print('**Variant seat** (%s, %d matches): VP %.2f -> %.2f, B - A %+.2f (paired SE %.2f; 95 %% [%+.2f, %+.2f]) · wins %d -> %d, win share B - A %+.3f (paired SE %.3f) · edge (VP - the table mean) A %+.2f (95 %% +-%.2f), B %+.2f (95 %% +-%.2f)' % (
+            sp, len(var), sum(x[0] for x in var) / len(var), sum(x[1] for x in var) / len(var), m, se, m - 1.96 * se, m + 1.96 * se,
+            sum(1 for x in var if x[2]), sum(1 for x in var if x[3]), wm, wse, ea, 1.96 * sa, eb, 1.96 * sb))
+
 def main():
+    vp = '--vp' in sys.argv[1:]
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     if len(args) != 2:
         print(__doc__ if __doc__ else 'usage: ana-sim-diff.py A B'); sys.exit(2)
@@ -86,6 +174,8 @@ def main():
     for name, fa, fb in pairs:
         verdict, div, oa, ob = compare(fa, fb)
         tally[verdict] = tally.get(verdict, 0) + 1
+        if vp:
+            continue
         line = '%-16s %-10s A: %s' % (name, verdict, oa)
         if oa != ob:
             line += '  |  B: %s' % ob
@@ -95,6 +185,9 @@ def main():
             fmt = lambda d: '—' if d is None else 'r%s %s %s %s %s' % d
             print('    first different decision (that bot\'s #%d):  A %s' % (i, fmt(x)))
             print('    %s  B %s' % (' ' * len('first different decision (that bot\'s #%d):' % i), fmt(y)))
+    if vp:
+        print_vp(pairs, tally)
+        return
     print('\n%d matches: %s' % (len(pairs), ', '.join('%s %d' % kv for kv in sorted(tally.items()))))
 
 if __name__ == '__main__':

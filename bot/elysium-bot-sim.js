@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* elysium-bot-sim.js v1.0.2 (29 Oct 2026) -- THE SIM TABLE: the headless hotseat table under a VIRTUAL CLOCK.
+/* elysium-bot-sim.js v1.1.0 (3 Nov 2026) -- THE SIM TABLE: the headless hotseat table under a VIRTUAL CLOCK.
 
    Why: the arena waits, it does not compute. A 4-bot arena match took 212 s of wall clock and ~3 s of CPU (19 Oct, srv-2.6.46); the rest
    is clocks running out (askSecs, grace windows, pacing). The hotseat table (elysium-bot-hotseat.js: the client's real hotBridge lifted
@@ -40,16 +40,29 @@
    plays deck-<key>.json beside the sim (the hotseat table v1.4.0's rule) -- a TEST input, e.g. the V5 precons `gen-precon.js` writes. The parent checks
    every key before spawning, and design.json / SUMMARY.md name the decks read from files.
 
+   The mirror bench (v1.1.0, 3 Nov 2026, round C3; it replaces bench.sh on the arena): --bench SPEC puts a VARIANT in one seat of every
+   match -- 'none' (the negative control: the seat is only labelled), 'persona=NAME', or 'knob=k=v' ('+' joins several: knob=a=1+b=2) --
+   and rotates that seat through every seat position: each seating is played once per seat (R = the seat count), the variant in seat
+   1, then 2, ... ; --bench-deck DECK pins the variant to wherever DECK sits instead (a deck-specific rule; each seating still R times).
+   --knob k=v is the baseline for every seat (bench.sh's 7th argument); the variant's own knobs override it in its seat. In bench mode
+   every match deals a seed of its own (--seed + match - 1), the same in every arm of the same design, so two arms pair match by match.
+   --design FILE reads the seatings from a file (one comma-separated order per line, '#' comments): design-balanced-serie-bal1.txt is the
+   old bench's 12 balanced orders (12 × 4 = 48 matches); without it --seatings decides (all: 24 × 4 = 96 for the four starters).
+   The result row carries variantSeat and bench; SUMMARY.md the variant seat's VP minus a quarter of the table's (the A-vs-A level
+   check); ana-sim-diff.py --vp CONTROL ARM reads two arms paired (per-match differences, a paired SE); ana-bench.py DIR... the edge.
+   Outside bench mode nothing changes: the same spec gives the same trace as v1.0.2.
+
    Not a timing gate: zero latency and ideal ordering can hide a race a real table shows. The real-clock gates stay (canary, hotseat gate,
    the arena on a real server); --real runs this same table on the real clock for an equivalence check.
 
    Usage: node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue [--seatings all|random|fixed] [--seeds K] [--seed S0]
             [--matches N] [--profile client|arena] [--pace MS] [--ask-secs S] [--start-pool 30] [--rounds 50] [--personas ...]
             [--knob ...] [--arm asis|tally|full] [--client FILE] [--workers W] [--trace DIR] [--resume] [--real] [--timeout SECS] [--list]
+            [--design FILE] [--bench none|persona=NAME|knob=k=v[+k=v]] [--bench-deck DECK]
           node elysium-bot-sim.js --summarize DIR
 */
 const path = require('path'), fs = require('fs');
-const SIM_VERSION = '1.0.2';
+const SIM_VERSION = '1.1.0';
 const EPOCH = Date.UTC(2026, 0, 1, 12, 0, 0);   // the virtual clock's start: fixed, so generated ids and every timestamp repeat
 
 /* ---------------- the virtual clock (child process only; installed BEFORE the bot is required) ---------------- */
@@ -113,6 +126,7 @@ async function runOne(spec){
     bots: names.map((nm, i) => ({ name: nm, seat: i + 1, deck: spec.order[i], persona: r.personas[i], knobs: Object.assign({}, spec.knobs || {}, (spec.seatKnobs || {})[i + 1] || {}) })),
     wallMs: (clock ? clock.realNow() : Date.now()) - wall0, cpuMs: Math.round((cpu.user + cpu.system) / 1000), clockStats: clock ? clock.stats() : null
   };
+  if(spec.variantSeat){ result.variantSeat = spec.variantSeat; result.bench = spec.bench; }   // v1.1.0: the mirror bench's variant (absent outside bench mode: the rows stay v1.0.2's)
   const err = clock && clock.error();
   if(err){ result.crash = true; result.err = String(err).slice(0, 1500); }
   if(spec.dir){
@@ -136,7 +150,7 @@ function shuffled(a, r){ const b = a.slice(); for(let i = b.length - 1; i > 0; i
 function parseArgs(argv){
   const o = { decks: ['malkavian', 'tremere', 'nosferatu', 'ventrue'], seatings: 'all', seeds: 1, seed: 1, matches: 24, profile: 'client', pace: null, askSecs: null,
     startPool: 30, rounds: 50, personas: ['expert'], knobs: [], arm: 'asis', client: path.join(__dirname, 'elysium-vtes-bord.html'), workers: null, trace: null,
-    resume: false, real: false, timeout: null, list: false, summarize: null, stuckSecs: 1800 };
+    resume: false, real: false, timeout: null, list: false, summarize: null, stuckSecs: 1800, design: null, bench: null, benchDeck: null };
   for(let i = 0; i < argv.length; i++){
     const a = argv[i], next = () => argv[++i];
     if(a === '--decks') o.decks = next().split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
@@ -161,11 +175,23 @@ function parseArgs(argv){
     else if(a === '--stuck-secs') o.stuckSecs = Math.max(30, parseInt(next(), 10) || 1800);
     else if(a === '--list') o.list = true;
     else if(a === '--summarize') o.summarize = path.resolve(next());
+    else if(a === '--design') o.design = path.resolve(next());
+    else if(a === '--bench') o.bench = String(next() || '').trim();
+    else if(a === '--bench-deck') o.benchDeck = String(next() || '').trim().toLowerCase();
     else if(a === '--help' || a === '-h'){ console.log(fs.readFileSync(__filename, 'utf8').split('*/')[0]); process.exit(0); }
     else { console.error('sim: unknown argument ' + a); process.exit(2); }
   }
   if(!['client', 'arena'].includes(o.profile)){ console.error('sim: --profile is client or arena'); process.exit(2); }
   if(!['all', 'random', 'fixed'].includes(o.seatings)){ console.error('sim: --seatings is all, random or fixed'); process.exit(2); }
+  if(o.design){   // v1.1.0: the seatings from a file -- one comma-separated deck order per line
+    if(!fs.existsSync(o.design)){ console.error('sim: no design file ' + o.design); process.exit(2); }
+    o.designOrders = fs.readFileSync(o.design, 'utf8').split('\n').map(l => l.replace(/#.*/, '').trim()).filter(Boolean).map(l => l.split(',').map(x => x.trim().toLowerCase()).filter(Boolean));
+    if(!o.designOrders.length || o.designOrders.some(x => x.length !== o.designOrders[0].length)){ console.error('sim: the design file needs orders of one length'); process.exit(2); }
+    o.decks = [...new Set(o.designOrders.flat())]; o.seatings = 'design';
+  }
+  if(o.bench != null){ o.benchArm = parseBench(o.bench); if(!o.benchArm){ console.error('sim: --bench is none, persona=NAME or knob=k=v[+k=v] (got ' + o.bench + ')'); process.exit(2); } }
+  if(o.benchDeck && o.bench == null){ console.error('sim: --bench-deck needs --bench'); process.exit(2); }
+  if(o.benchDeck && !o.decks.includes(o.benchDeck)){ console.error('sim: --bench-deck ' + o.benchDeck + ' is not in the design'); process.exit(2); }
   const P = o.profile === 'client' ? { paceMs: 3100, askSecs: 20, deckname: true } : { paceMs: 0, askSecs: 3, deckname: false };   // client: the hotseat spawn in elysium-vtes-bord.html (v2.6.71 / Johan's live calibration); arena: elysium-bot-arena.js defaults
   o.paceMs = o.pace != null ? o.pace : P.paceMs; o.askSecsEff = o.askSecs != null ? o.askSecs : P.askSecs; o.deckname = P.deckname;
   if(o.workers == null) o.workers = o.real ? 4 : Math.max(1, require('os').cpus().length);
@@ -173,6 +199,15 @@ function parseArgs(argv){
   return o;
 }
 
+const BENCH_PERSONAS = ['novice', 'experienced', 'expert', 'shark', 'grinder'];   // shark = expert, grinder = experienced (the old aliases)
+function parseBench(spec){   // v1.1.0: 'none' | 'persona=NAME' | 'knob=k=v[+k=v]' -> { kind, persona?, knobs? } (null = malformed)
+  if(spec === 'none') return { kind: 'none' };
+  let m = spec.match(/^persona=([a-z]+)$/i); if(m) return BENCH_PERSONAS.includes(m[1].toLowerCase()) ? { kind: 'persona', persona: m[1].toLowerCase() } : null;
+  m = spec.match(/^knob=(.+)$/); if(!m) return null;
+  const knobs = {};
+  for(const kv of m[1].split('+')){ const x = kv.match(/^([A-Za-z]+)=(-?[\d.]+)$/); if(!x) return null; knobs[x[1]] = parseFloat(x[2]); }
+  return { kind: 'knob', knobs };
+}
 function parseKnobs(list, decks){   // -> { global: {k: v}, byDeck: {deck: {k: v}}, bySeat: {N: {k: v}} }
   const K = { global: {}, byDeck: {}, bySeat: {} };
   for(const ent of list){
@@ -191,7 +226,7 @@ function warnUnknownKnobs(K){   // the bot ignores a knob it does not read -- sa
     const { Bot } = require(path.join(__dirname, 'elysium-bot.js'));
     const probe = new Bot({ log: () => {}, cardfxData: { v: 1, lib: {}, crypt: {} } });
     const src = fs.readFileSync(path.join(__dirname, 'elysium-bot.js'), 'utf8');
-    const names = new Set([...Object.keys(K.global), ...Object.values(K.byDeck).flatMap(Object.keys), ...Object.values(K.bySeat).flatMap(Object.keys)]);
+    const names = new Set([...Object.keys(K.global), ...Object.values(K.byDeck).flatMap(Object.keys), ...Object.values(K.bySeat).flatMap(Object.keys), ...Object.keys(K.bench || {})]);
     for(const k of names) if(!(k in probe.o) && !new RegExp('\\bo\\.' + k + '\\b').test(src)) console.error('sim: WARNING knob ' + k + ' is neither a bot default nor read as this.o.' + k + ' -- a typo measures nothing');
   } catch(e){ /* the check is advice only */ }
 }
@@ -210,12 +245,29 @@ function checkDecks(decks){   // v1.0.2: an embedded key, or deck-<key>.json bes
 
 function buildDesign(o){
   let orders;
-  if(o.seatings === 'all') orders = permutations(o.decks);
+  if(o.designOrders) orders = o.designOrders.map(x => x.slice());   // v1.1.0: --design FILE
+  else if(o.seatings === 'all') orders = permutations(o.decks);
   else if(o.seatings === 'fixed') orders = [o.decks.slice()];
   else { const r = rng(Math.imul(o.seed || 1, 2654435761) >>> 0); orders = Array.from({ length: o.matches }, () => shuffled(o.decks, r)); }
   const personaOf = {}; o.decks.forEach((d, i) => personaOf[d] = o.personas.length === 1 ? o.personas[0] : (o.personas[i] || 'expert'));
   const K = parseKnobs(o.knobs, o.decks);
   const specs = []; let idx = 0;
+  if(o.benchArm){   // v1.1.0: the mirror bench -- every seating once per seat position (the variant in seat 1, 2, ...) or pinned to --bench-deck; a deal of its own per match
+    const A = o.benchArm; if(A.kind === 'knob') K.bench = A.knobs;
+    const R = orders[0].length;
+    for(let r = 0; r < R; r++) for(const order of orders) for(let k = 0; k < o.seeds; k++){
+      idx++;
+      const P = o.benchDeck ? order.indexOf(o.benchDeck) + 1 : r + 1;
+      const seatKnobs = {};
+      order.forEach((d, i) => { const s = i + 1, m = Object.assign({}, K.byDeck[d] || {}, K.bySeat[s] || {}); if(Object.keys(m).length) seatKnobs[s] = m; });
+      if(A.kind === 'knob') seatKnobs[P] = Object.assign({}, seatKnobs[P] || {}, A.knobs);   // the variant's knobs override the baseline in its seat
+      const personas = order.map(d => personaOf[d]); if(A.kind === 'persona') personas[P - 1] = A.persona;
+      specs.push({ idx, order, tag: order.join('>'), seed: o.seed + idx - 1, personas, knobs: K.global, seatKnobs, variantSeat: P, bench: o.bench,
+        rounds: o.rounds, startPool: o.startPool, askSecs: o.askSecsEff, paceMs: o.paceMs, deckname: o.deckname, arm: o.arm, client: o.client,
+        stuckMs: o.stuckSecs * 1000, real: o.real, dir: o.trace });
+    }
+    return { specs, K };
+  }
   for(const order of orders){
     for(let k = 0; k < o.seeds; k++){
       idx++;
@@ -293,6 +345,11 @@ function summarize(results, meta){
     zeroPoolMatches: ok.filter(r => (r.zeroPool || []).length).map(r => ({ match: r.match, seating: r.seating, seed: r.seed, who: r.zeroPool.map(z => z.bot + ' r' + z.round) })),
     rounds: +mean(ok.map(r => r.rounds || 0)).toFixed(2), tableSecs: Math.round(ok.reduce((x, r) => x + (r.tableSecs || 0), 0)),
     decks: {} };
+  { const bm = ok.filter(r => r.variantSeat && r.bots[r.variantSeat - 1]);   // v1.1.0: the mirror bench -- the variant seat's VP minus the table's mean (the A-vs-A level check: 0 within its interval)
+    if(bm.length){ const e = bm.map(r => { const nm = r.bots[r.variantSeat - 1].name, tot = Object.values(r.vp || {}).reduce((x, y) => x + y, 0); return ((r.vp || {})[nm] || 0) - tot / r.bots.length; });
+      const m = mean(e), ci = 1.96 * se(e);
+      out.bench = { spec: bm[0].bench, n: bm.length, edge: +m.toFixed(3), ci95: +ci.toFixed(3), wins: bm.filter(r => r.winner === r.bots[r.variantSeat - 1].name).length, expectedWins: +(bm.reduce((x, r) => x + 1 / r.bots.length, 0)).toFixed(1),
+        bySeat: Object.fromEntries([...new Set(bm.map(r => r.variantSeat))].sort((a, b) => a - b).map(s => [s, +mean(bm.filter(r => r.variantSeat === s).map(r => { const nm = r.bots[s - 1].name, tot = Object.values(r.vp || {}).reduce((x, y) => x + y, 0); return ((r.vp || {})[nm] || 0) - tot / r.bots.length; })).toFixed(2)])) }; } }
   decks.forEach(d => { const x = D[d], f = a => +mean(a).toFixed(2);
     out.decks[d] = { seats: x.seats, wins: x.wins, vp: +x.vp.reduce((a, b) => a + b, 0).toFixed(1), vpPerMatch: f(x.vp), vpSE: +se(x.vp).toFixed(2), winRate: +(x.wins / Math.max(1, x.seats)).toFixed(3),
       firstOut: x.firstOut, survived: x.survived, postGameOusts: x.postGame,
@@ -320,6 +377,9 @@ function summaryMd(S){
   decks.forEach(d => L.push('| ' + d + ' | ' + decks.map(p => (S.decks[d].vpVsPrey[p] != null ? S.decks[d].vpVsPrey[p].toFixed(2) : '—')).join(' | ') + ' |'));
   L.push('', '**VP/match by predator** (row = the deck, column = the deck that preys on it)', '', '| deck | ' + decks.map(d => d).join(' | ') + ' |', '|---|' + decks.map(() => '---:').join('|') + '|');
   decks.forEach(d => L.push('| ' + d + ' | ' + decks.map(p => (S.decks[d].vpVsPred[p] != null ? S.decks[d].vpVsPred[p].toFixed(2) : '—')).join(' | ') + ' |'));
+  if(S.bench) L.push('', '**Bench** (`--bench ' + S.bench.spec + '`' + (m.benchDeck ? ', pinned to ' + m.benchDeck : '') + '): the variant seat\u2019s VP minus a quarter of the table\u2019s ' + (S.bench.edge >= 0 ? '+' : '') + S.bench.edge.toFixed(2) +
+    ' (95 % \u00b1' + S.bench.ci95.toFixed(2) + ', ' + S.bench.n + ' matches) · variant wins ' + S.bench.wins + ' (expected ' + S.bench.expectedWins + ') · by variant seat ' + Object.entries(S.bench.bySeat).map(([k, v]) => k + ': ' + (v >= 0 ? '+' : '') + v.toFixed(2)).join(', ') +
+    ' · paired against a control: `python3 ana-sim-diff.py --vp CONTROL THIS`');
   if(S.postGameOustMatches.length) L.push('', '**Post-game ousts** (an oust after one Methuselah was left — not counted): ' + S.postGameOustMatches.map(x => '#' + x.match + ' ' + x.who.join('+')).join(', '));
   if((S.zeroPoolMatches || []).length) L.push('', '**Played at 0 pool** (a decision at pool ≤ 0 before the bot’s own oust — a rules fault; counted): ' + S.zeroPoolMatches.map(x => '#' + x.match + ' ' + x.who.join('+')).join(', '));
   if(S.problems.length) L.push('', '**Problems** (not counted): ' + S.problems.map(x => x ? '#' + x.match + (x.crash ? ' CRASH ' + (x.err || '') : ' STUCK r' + (x.stuck && x.stuck.round) + 's' + (x.stuck && x.stuck.seat)) : 'missing').join('; '));
@@ -343,7 +403,7 @@ if(require.main === module){
       process.exit(0);
     }
     const { specs, K } = buildDesign(o);
-    if(o.list){ specs.forEach(s => console.log('#' + s.idx + ' seed ' + s.seed + ' ' + s.tag + (Object.keys(s.seatKnobs).length ? ' knobs ' + JSON.stringify(s.seatKnobs) : ''))); console.log(specs.length + ' matches'); process.exit(0); }
+    if(o.list){ specs.forEach(s => console.log('#' + s.idx + ' seed ' + s.seed + ' ' + s.tag + (s.variantSeat ? ' variant seat ' + s.variantSeat + (s.bench !== 'none' ? ' (' + s.bench + ')' : '') + ' personas ' + s.personas.join(',') : '') + (Object.keys(s.seatKnobs).length ? ' knobs ' + JSON.stringify(s.seatKnobs) : '') + (Object.keys(s.knobs || {}).length ? ' global ' + JSON.stringify(s.knobs) : ''))); console.log(specs.length + ' matches'); process.exit(0); }
     if(!fs.existsSync(o.client)){ console.error('sim: the client file is missing: ' + o.client + ' (the hotseat table lifts its hotBridge)'); process.exit(2); }
     const deckFiles = checkDecks(o.decks);
     warnUnknownKnobs(K);
@@ -353,8 +413,10 @@ if(require.main === module){
     const cv = (fs.readFileSync(o.client, 'utf8').match(/VERSION='([^']+)'/) || [])[1] || '?';
     const meta = { label: path.basename(o.trace), bot: BOT_VERSION, client: cv, clock: o.real ? 'real' : 'virtual', profile: o.profile, paceMs: o.paceMs, askSecs: o.askSecsEff, deckname: o.deckname,
       seatings: o.seatings, seeds: o.seeds, seed: o.seed, decks: o.decks, deckFiles, personas: o.personas, knobs: o.knobs, startPool: o.startPool, rounds: o.rounds, arm: o.arm, workers: o.workers, sim: SIM_VERSION };
-    fs.writeFileSync(path.join(o.trace, 'design.json'), JSON.stringify({ meta, specs: specs.map(s => ({ idx: s.idx, seating: s.tag, seed: s.seed, personas: s.personas, knobs: s.knobs, seatKnobs: s.seatKnobs })) }, null, 1));
-    process.stderr.write('sim v' + SIM_VERSION + ' · bot v' + BOT_VERSION + ' · client v' + cv + ' · ' + specs.length + ' matches (' + o.seatings + ' seatings × ' + o.seeds + ' seed(s)) · ' + o.workers + ' workers · ' + (o.real ? 'REAL' : 'virtual') + ' clock · profile ' + o.profile + ' → ' + o.trace + '\n');
+    if(o.design) meta.design = path.basename(o.design);
+    if(o.bench != null){ meta.bench = o.bench; if(o.benchDeck) meta.benchDeck = o.benchDeck; }   // v1.1.0
+    fs.writeFileSync(path.join(o.trace, 'design.json'), JSON.stringify({ meta, specs: specs.map(s => Object.assign({ idx: s.idx, seating: s.tag, seed: s.seed, personas: s.personas, knobs: s.knobs, seatKnobs: s.seatKnobs }, s.variantSeat ? { variantSeat: s.variantSeat, bench: s.bench } : {})) }, null, 1));
+    process.stderr.write('sim v' + SIM_VERSION + ' · bot v' + BOT_VERSION + ' · client v' + cv + ' · ' + specs.length + ' matches (' + o.seatings + ' seatings × ' + o.seeds + ' seed(s)' + (o.bench != null ? ' × ' + specs[0].order.length + ' variant seats, bench ' + o.bench + (o.benchDeck ? ' pinned to ' + o.benchDeck : '') : '') + ') · ' + o.workers + ' workers · ' + (o.real ? 'REAL' : 'virtual') + ' clock · profile ' + o.profile + ' → ' + o.trace + '\n');
     runPool(specs, o).then(({ results, wallSecs }) => {
       meta.wallSecs = wallSecs;
       const S = summarize(results, meta); fs.writeFileSync(path.join(o.trace, 'summary.json'), JSON.stringify(S, null, 1));
