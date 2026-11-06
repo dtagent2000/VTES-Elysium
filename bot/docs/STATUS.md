@@ -25,8 +25,8 @@ Toreador Justicar; a title card replaces the printed title in every count; an ac
   deals (0.65 ± 0.05 VP/match; level with tremere, above nosferatu). Menu: after its crypt rows (D-108).
 - Crypt round 0 (#53, D-108): `gen-card-ledger.js` v1.1.0 reads the crypt into `docs/CARDS.md` (186 vampires: 110 no ability,
   6 modelled, 70 unmodelled, ranked by the crypt class map); the library half is unchanged.
-- Round C4 (#54, D-109): CI for `bot/` — `.github/workflows/bot-gates.yml` runs the gates on every PR that touches `bot/` or the
-  bundle; the lint's first-run findings are suppressed until C2.
+- Round C4 (#54, D-109): CI for `bot/` — `.github/workflows/bot-gates.yml` runs the gates on every bot PR and daily on `main`
+  (a required check); the lint's first-run findings wait for C2.
 
 ## Next (proposed; Johan orders the board)
 1. C2: the lint's first-run findings, the legacy tests, `ana-gates.py` (before crypt wave A).

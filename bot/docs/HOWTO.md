@@ -49,9 +49,12 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran. The suite needs more than 2 GB of heap by
   section 136: where node's default heap is ~2 GB (an 8 GB sandbox: 2,096 MB) it dies out of memory after 136e, v0.6.211's own bytes
   too — run `node --max-old-space-size=4096 test-bot-logic.js` there (29 Oct).
-- **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR or push to `main` that touches `bot/` or the bundle runs the gates
-  that need no person and no previous bytes (the step list is the file): a gate that skips fails its step, and the root's bundle
-  must equal `bot/`'s (a bundle change ships as a release). Still the round's: the suite ×3, the sim footprint, the arena smoke and
+- **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR that touches `bot/` or the bundle, every such push to `main` and a
+  daily run on `main` (03:17 UTC) run the gates that need no person and no previous bytes (the step list is the file); any other
+  PR skips the job `bot-gates`, which GitHub counts as a success, so the check can be required on `main`. A gate that skips fails
+  its step, and the root's bundle must equal `bot/`'s (a bundle change ships as a release). A red daily run is the bot's to answer
+  (GitHub mails it to whoever last edited the cron line, and our commits carry no GitHub user: look at the Actions tab, or
+  `gh api repos/dtagent2000/vtes-elysium/actions/workflows/bot-gates.yml/runs?branch=main&per_page=1`). Still the round's: the suite ×3, the sim footprint, the arena smoke and
   the audits, a new section's destructive check, main's client suite when the wire changes (red by design until main re-embeds a
   new guide). A red the PR did not cause: the suite's 78c flake -- re-run the failed job once (`gh run rerun <id> --failed`) and
   say so in the PR; `test-cardfx` / `gen-precon --check` red with no card change -- KRCG's data moved, a round of its own; a

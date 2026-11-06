@@ -439,15 +439,19 @@
   check, and the suite once. A gate that skips (exit 0 by design: the canaries, the hotseat gate, suite section 154f) fails its step.
   Still the round's: the suite ×3 (the release gate until C6), the sim footprint, the arena smoke and audits, a new section's
   destructive check, main's client suite when the wire changes (354/0 beside the bundle today, 1 m 44 s, but red by design until main
-  re-embeds a new guide). Main's files do not trigger it. **The correctness lint** (`tools/eslint.config.mjs`, ESLint 10.13.0 pinned,
-  the spec's §5.2 26 rules, no style) covers every script in `bot/` but main's files (the server copy, main's canary), the generated
-  wrappers and the ten legacy tests: the 25 files we own, and a new file by itself. Its first run finds 4 errors (a duplicate key in
-  `gen-deck-coverage.js`; a duplicate key and two self-comparisons in the suite) and 22 unused assignments, suppressed in
-  `tools/eslint-suppressions.json` until C2 fixes them; the file only shrinks. Proven: on a scratch copy a new undefined name, a new
-  file, one more unused assignment and a grown suppression count fail, a fixed but unpruned finding fails (exit 2); the first commit's
-  eleven steps ran green on a local fresh clone (the suite 2393/0); on GitHub PR #54's run 42221088419 was green on every step (the
-  suite 2393/0 in 9 min) and the throwaway draft PR #55's run 42221112888 red on the lint alone (a planted undefined name; #55 closed,
-  Johan deleted its branch). Egress: 12 findings, all fixed (the PR body lists them). No bot change.
+  re-embeds a new guide). Every PR reports the check `bot-gates`: a `changes` job reads the PR's merge commit against its base, and a
+  PR that touches no bot path skips the gates job, which GitHub counts as a success, so the check can be required on `main` (Johan's
+  "best practice", D-109); a daily run on `main` (03:17 UTC) catches drift from main's releases, KRCG's data and the runner image;
+  main's files trigger no bot run on their own PRs (main's CI already runs the bot contract). **The correctness lint**
+  (`tools/eslint.config.mjs`, ESLint 10.13.0 pinned, the spec's §5.2 26 rules, no style) covers every script in `bot/` but main's files
+  (the server copy, main's canary), the generated wrappers and the ten legacy tests: the 25 files we own, and a new file by itself. Its
+  first run finds 4 errors (a duplicate key in `gen-deck-coverage.js`; a duplicate key and two self-comparisons in the suite) and 22
+  unused assignments, suppressed in `tools/eslint-suppressions.json` until C2 fixes them; the file only shrinks. Proven: on a scratch
+  copy a new undefined name, a new file, one more unused assignment and a grown suppression count fail, a fixed but unpruned finding
+  fails (exit 2); the first commit's eleven steps ran green on a local fresh clone (the suite 2393/0); on GitHub PR #54's run
+  42221088419 was green on every step (the suite 2393/0 in 9 min) and the throwaway draft PR #55's run 42221112888 red on the lint
+  alone (a planted undefined name; #55 closed, Johan deleted its branch). Egress: 12 findings, all fixed (the PR body lists them). No
+  bot change.
 - **Crypt round 0 — the ledger reads the crypt (6 Nov 2026, with bot v0.6.217; no bot release; PR #53)** — Johan's go of 6 Nov on
   Claude's recommendation (D-108: the crypt gets waves of its own, and D-98's "rows are playable" covers it). **`gen-card-ledger.js`
   v1.1.0**: every vampire of the same decks, read from KRCG's text (`vtes.json` beside the script; without it the page says the crypt
