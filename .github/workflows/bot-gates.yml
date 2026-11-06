@@ -1,26 +1,19 @@
-# The bot project's gates that run unattended (bot/CLAUDE.md, "Gates"), on every pull request and every push to main that touches
-# bot/ or the bot bundle at the root. It sits beside main's client-gates.yml (which invites it) and keeps its conventions: read-only,
-# every step runs even after a failure, one run per ref. The suite runs ONCE here; left to the round (bot/CLAUDE.md, HOWTO "CI"):
-# the suite x3 in frozen snapshots (the release gate until round C6), the sim footprint, the arena smoke and the series audits, the
-# destructive check of a new section, and main's client suite beside the bundle when the wire changes (its embedded-guide check is
-# red by design until main re-embeds a new guide). Main's files (the root's client and server, client/, the root CLAUDE.md) do not
-# trigger it, so a main release shows on the next bot PR (D-109). A gate that cannot find its inputs SKIPS with exit 0 by design (the
-# canary's rule), so the steps below fail on a skip line. Added in round C4 (6 Nov 2026, Johan's yes to the clean-up spec's Q5).
+# The bot project's gates that run unattended (bot/CLAUDE.md, "Gates"). It sits beside main's client-gates.yml (which invites it) and
+# keeps its conventions: read-only, every step runs even after a failure, one run per ref. Every pull request reports the check
+# `bot-gates`, so it can be a required check: the job's first step looks at what the PR changes, and on a PR that touches no bot
+# path (bot/, the bot bundle at the root, this file) every gate step is skipped and the job succeeds. The decision sits inside the
+# job, so a run cancelled or failed while deciding reports cancelled / failed, never a pass. A push to main that touches a bot path
+# runs it, and so does a daily run on main, which catches drift from outside the bot's PRs: main's releases (the root's client and
+# server, client/, the root CLAUDE.md), KRCG's data, the runner image (D-109). The suite runs ONCE here; left to the round
+# (bot/CLAUDE.md, HOWTO "CI"): the suite x3 in frozen snapshots (the release gate until round C6), the sim footprint, the arena smoke
+# and the series audits, the destructive check of a new section, and main's client suite beside the bundle when the wire changes
+# (its embedded-guide check is red by design until main re-embeds a new guide). A gate that cannot find its inputs SKIPS with exit
+# 0 by design (the canary's rule), so the steps below fail on a skip line. Added in round C4 (6 Nov 2026, Johan's yes to the
+# clean-up spec's Q5; his "best practice" for the triggers and the required check).
 name: bot gates
 
 on:
   pull_request:
-    paths:
-      - 'bot/**'
-      - 'elysium-bot.js'
-      - 'elysium-cardfx.js'
-      - 'elysium-cardfx.json'
-      - 'elysium-twd-profile.js'
-      - 'elysium-twd-profile.json'
-      - 'elysium-twd-archetypes.js'
-      - 'elysium-twd-archetypes.json'
-      - 'START-HERE-BOTS.html'
-      - '.github/workflows/bot-gates.yml'
   push:
     branches: [main]
     paths:
@@ -34,6 +27,8 @@ on:
       - 'elysium-twd-archetypes.json'
       - 'START-HERE-BOTS.html'
       - '.github/workflows/bot-gates.yml'
+  schedule:
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -45,6 +40,7 @@ concurrency:
 
 jobs:
   gates:
+    name: bot-gates
     runs-on: ubuntu-latest
     timeout-minutes: 30
     defaults:
@@ -53,19 +49,34 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Does the change touch a bot path? (a pull request's merge commit against its base; every other event runs the gates)
+        id: diff
+        run: |
+          if [ "$GITHUB_EVENT_NAME" != "pull_request" ]; then echo "bot=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          files=$(git -c core.quotePath=false diff --name-only --no-renames HEAD^1 HEAD)
+          printf '%s\n' "$files"
+          if grep -qE '^(bot/|elysium-bot\.js$|elysium-cardfx\.(js|json)$|elysium-twd-(profile|archetypes)\.(js|json)$|START-HERE-BOTS\.html$|\.github/workflows/bot-gates\.yml$)' <<< "$files"; then
+            echo "bot=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "bot=false" >> "$GITHUB_OUTPUT"; echo "::notice::no bot path changed: every gate step is skipped and the job succeeds"
+          fi
       - uses: actions/setup-node@v4
+        if: ${{ steps.diff.outputs.bot == 'true' }}
         with:
           node-version: '22'
       - name: node --check, every script in bot/
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
           fail=0
           for f in *.js; do node --check "$f" || { echo "::error file=bot/$f::node --check failed"; fail=1; }; done
           exit $fail
       - name: The correctness lint (26 rules, no style; the first run's findings suppressed until round C2)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .
       - name: The lint's suppressions only shrink (a pull request may not add or grow one)
-        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' && github.event_name == 'pull_request' }}
         env:
           BASE: ${{ github.base_ref }}
         run: |
@@ -82,7 +93,7 @@ jobs:
             }
             process.exit(bad);' "$RUNNER_TEMP/base-suppressions.json"
       - name: "The root's bundle is bot/'s (deploy = copy: a bundle change ships as a release)"
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
           fail=0
           for f in elysium-bot.js elysium-cardfx.js elysium-cardfx.json elysium-twd-profile.js elysium-twd-profile.json elysium-twd-archetypes.js elysium-twd-archetypes.json START-HERE-BOTS.html; do
@@ -90,47 +101,47 @@ jobs:
           done
           exit $fail
       - name: "KRCG's card data: vtes.json built from the v5 dump (third-party data, fetched, never committed)"
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
           curl -fsSL --retry 3 -o vtes-v5.json https://static.krcg.org/data/v5/vtes.json
           curl -fsSL --retry 3 -o expansions.json https://static.krcg.org/data/v5/expansions.json
           node krcg-v5.js
       - name: cardfx against KRCG (test-cardfx)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: node test-cardfx.js
       - name: The precons against KRCG (gen-precon --check)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: node gen-precon.js --check
       - name: The card ledger's self-test (gen-card-ledger --self-test)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: node gen-card-ledger.js --self-test
       - name: Section 12 canary (bot/'s read-only copies)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
           node test-bot-canary.js | tee "$RUNNER_TEMP/canary1.txt"
           if grep -q 'SKIPPED' "$RUNNER_TEMP/canary1.txt"; then echo "::error::the canary skipped: a release copy is missing in bot/"; exit 1; fi
       - name: Section 12 canary (the root's release + client/ELYSIUM-PROTOCOL.md)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
           D="$RUNNER_TEMP/canary-root"; mkdir -p "$D"
           cp test-bot-canary.js elysium-bot.js "$D/"; cp ../elysium-vtes-bord.html ../client/ELYSIUM-PROTOCOL.md "$D/"
           (cd "$D" && node test-bot-canary.js) | tee "$RUNNER_TEMP/canary2.txt"
           if grep -q 'SKIPPED' "$RUNNER_TEMP/canary2.txt"; then echo "::error::the canary skipped against the root's release"; exit 1; fi
       - name: HB1 smoke (the browser surface)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: node diag-hb1-smoke.js
       - name: Hotseat gate (the real hotBridge)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
           node test-bot-hotseat.js | tee "$RUNNER_TEMP/hotseat.txt"
           if grep -q 'SKIPPED' "$RUNNER_TEMP/hotseat.txt"; then echo "::error::the hotseat gate skipped"; exit 1; fi
       - name: The standing pages (doc-budget) and its destructive check
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
           bash tools/doc-budget.sh
           bash tools/test-doc-budget.sh
       - name: The suite, once (the local x3 stays the release gate)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
           node --max-old-space-size=4096 test-bot-logic.js | tee "$RUNNER_TEMP/suite.txt"
           if grep -qE '\([0-9]+[a-z]* skipped:' "$RUNNER_TEMP/suite.txt"; then echo "::error::a suite section skipped (its input is missing): $(grep -oE '\([0-9]+[a-z]* skipped:[^)]*' "$RUNNER_TEMP/suite.txt" | head -1)"; exit 1; fi

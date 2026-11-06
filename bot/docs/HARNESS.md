@@ -1,7 +1,7 @@
 # HARNESS — the round, the reviews, the release ritual (20 Oct 2026)
 
 ## The round
-1. **Take a board line** (`BOARD.md`), or Johan's instruction. Read the RULINGS lines it cites. If the line is a design question
+1. **Take a board line** (`BOARD.md`), or Johan's instruction; a red daily `bot gates` run on `main` comes first (HOWTO "CI"). Read the RULINGS lines it cites. If the line is a design question
    ("how should we do X"): analyse, propose (what · why · where · size · how it will be measured), wait for "kör". Fixes found on
    the way may ride in the round when they fit (the combining rule, RULINGS D-92); say so in the PR.
 2. **Branch** from `main` (`git checkout -b <topic>`). Never on `main`.
