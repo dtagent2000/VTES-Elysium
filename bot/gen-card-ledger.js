@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-card-ledger.js v1.0.0 (29 Oct 2026, bot v0.6.212) -- THE CARD LEDGER, v0: one generated row per library card of a deck set (default:
-   the V5 precons), so a V5 wave has a definition of done ("these rows turn playable") instead of a feeling.
+/* gen-card-ledger.js v1.1.0 (6 Nov 2026, bot v0.6.217, RULINGS D-108) -- THE CARD LEDGER: one generated row per library card of a deck set
+   (default: the V5 precons) and every vampire of their crypts, so a V5 wave has a definition of done ("these rows turn playable")
+   instead of a feeling.
 
-   A row joins four sources, each read by the code that owns it:
+   THE LIBRARY (v1.0.0, 29 Oct 2026, bot v0.6.212). A row joins four sources, each read by the code that owns it:
    - the VERDICT: gen-deck-coverage.js's own coverDeck() (the three-tier name ladder, the bot's consumed fx keys, the discipline reach) --
      the same function the per-deck reports use, so the ledger cannot drift from them;
    - the TIER: curated (cardfx `src: 'hand'`), auto, or handler; the RULINGS count from vtes.json (when it is beside the script);
@@ -19,11 +20,176 @@
    has no key in its manifest.
    The class map: every non-playable row's unconsumed fx keys, weighted by copies -- what a wave would build, one effect class at a time.
 
-   Usage (from inside bot/): node gen-card-ledger.js [--decks k1,k2,...] [--sim DIR]... [--out docs/CARDS.md]
+   THE CRYPT (v1.1.0). Every vampire of the same decks, read from KRCG's text (vtes.json beside the script; without it the crypt is not
+   read and the page says so): a row for each vampire with an ability, the sect-and-title-only ones listed per deck. The ability is the
+   text after the sect and title ("Camarilla Prince of Buenos Aires: +1 bleed." -> "+1 bleed."); a title alone is data the bot already
+   reads (cardfx `title` / `votes`, R-31). Each sentence gets an effect class (bleed, strength, intercept, stealth, votes, hand size,
+   action, combat, block, unlock, blood/pool, cards, other) and a kind (passive = a bare "+1 bleed." · activated = "... can ..." ·
+   conditional = the rest: a condition, a toll, a grant). The CRYPT READERS are scanned from elysium-bot.js: every `this._cryptFxOf(`
+   call and the `fx.<key>` its statement reads, with the method it sits in -- the mechanism that reads the key.
+   Status: no ability · modelled = a curated crypt `fx` whose every key a crypt reader reads and whose keys' classes (FX_CLASS) cover
+   every sentence's class · partial = a key no crypt reader reads, or a sentence no key covers (the row says which) · unmodelled = an
+   ability and no `fx` · unresolved = no KRCG text for the name. The crypt class map weighs the sentences no key covers by copies -- what
+   a crypt wave would build. FX_CLASS gives every curated crypt key the class a curator reads in its sentence; the page checks the
+   classifier against every curated crypt entry, and a miss or a curated key with no class fails the run (exit 1, the page still
+   written) -- so a wave declares the class of each new key. The self-test (fixed texts: the extraction, the classifier, the readers'
+   scan, the status) runs before every page; a failure writes no page.
+
+   Usage (from inside bot/): node gen-card-ledger.js [--decks k1,k2,...] [--sim DIR]... [--out docs/CARDS.md] | --self-test
      default decks: every deck-*.json whose name starts with "V5 " (gen-precon.js writes them).                                         */
 
 const fs = require('fs'), path = require('path');
-const LEDGER_VERSION = '1.0.0';
+const LEDGER_VERSION = '1.1.0';
+
+/* ---- the crypt (v1.1.0): the ability text, its effect classes, the readers that model it ---- */
+const SECT = '(?:Anarch|Camarilla|Independent|Sabbat|Laibon)';
+function cryptAbility(text){   // the printed ability after the sect / title prefix; '' when the card is sect (and title) only
+  const t = String(text || '').replace(/\s+/g, ' ').trim();
+  if (new RegExp('^' + SECT + '\\b[^:.]*\\.$').test(t)) return '';                 // "Camarilla." / "Camarilla Prince of Cape Town."
+  const m = new RegExp('^' + SECT + '\\b[^:]*?:\\s*(.+)$').exec(t);                // "Camarilla Prince of Buenos Aires: +1 bleed." (the FIRST colon)
+  return (m ? m[1] : t).trim();
+}
+const NUM = /([+-]\d+) (bleed|strength|intercept|stealth|votes?|hand size)\b/gi;
+function cryptSentences(ability){ return String(ability || '').split(/(?<=\.)\s+(?=[A-Z0-9+\-"Ü])/).map(s => s.trim()).filter(Boolean); }
+const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function cryptClassOf(s, name){   // one sentence -> { classes: [...], kind } (the first rule that matches; numeric effects may name two classes)
+  const t = s.toLowerCase();
+  const kind = /^[+-]\d+ (bleed|strength|intercept|stealth|votes?|hand size)\.?$/.test(t) ? 'passive' : /\bcan\b/.test(t) ? 'activated' : 'conditional';
+  const norm = n => n.toLowerCase().replace(/^votes?$/, 'votes');
+  if (/\bcan\b.*\bas an? (\+\d+ stealth )?(Ⓓ |\(d\) )?action\b/i.test(s)) return { classes: ['action'], kind };   // "X can ... as a +1 stealth action"; "must bleed ... as a Ⓓ action" is a bleed
+  const nums = [...s.matchAll(NUM)].map(m => norm(m[2]));
+  if (nums.length) return { classes: [...new Set(nums)], kind };
+  /* what the sentence DOES: without a card's name (<Giant's Blood>) and the vampire's own name (New Blood); a phase is its timing ("your
+     unlock phase", "your discard phase,"), which the rules below never read as the effect */
+  const own = String(name || '').split(/[^\p{L}'’]+/u).filter(w => w.length >= 3 && /^\p{Lu}/u.test(w));
+  let e = s.replace(/<[^>]*>/g, ' ');
+  if (own.length) e = e.replace(new RegExp('(^|[^\\p{L}])(?:' + own.map(reEsc).join('|') + ')(?=[^\\p{L}]|$)', 'gu'), '$1');
+  e = e.toLowerCase();
+  if (/\bunlock\b(?! phase)/.test(e)) return { classes: ['unlock'], kind };                                       // "unlocked" (a state) is not an unlock
+  if (/\bcosts?\b[^.]*?(\badditional blood\b|[+-]?\d+ blood\b)/.test(e)) return { classes: ['blood/pool'], kind };   // a price ("cost Antoinette an additional blood")
+  if (/strike|combat|\bpress\b|maneuver|\brange\b/.test(e)) return { classes: ['combat'], kind };
+  if (/\bblock/.test(e)) return { classes: ['block'], kind };
+  if (/\bvotes?\b|ballot|referendum/.test(e)) return { classes: ['votes'], kind };
+  if (/\bblood\b|\bpool\b|\bhunt/.test(e)) return { classes: ['blood/pool'], kind };
+  if (/discard phase action|\blibrary\b|ash heap|\bhand\b|\bdraws?\b|\breplace\b/.test(e)) return { classes: ['cards'], kind };
+  return { classes: ['other'], kind };
+}
+/* FX_CLASS: the class a curator reads in the sentence a curated crypt key models (an array when one key models two). Every curated crypt
+   key needs one: the page checks the classifier against it, and a key with none fails the run -- a wave adds its new keys here. */
+const FX_CLASS = { bleedBonus: 'bleed', bleedBoostDiscard: 'bleed', interceptMod: 'intercept', stealthMod: 'stealth', noHuntStealth: 'stealth', strengthMod: 'strength',
+  strengthOnDiablerie: 'strength', voteBoostDiscard: 'votes', voteTaxAgainst: 'votes', selfUnlock: 'unlock', noUnlockAfterTitledBleed: 'unlock', blockNotOlder: 'block',
+  burnAtDamage: 'combat', burnOnTorpor: 'other', costPlusDisc: 'blood/pool', selfRemoveOption: 'blood/pool', fetchNamed: 'cards', enterPlay: 'cards', noReplaceActing: 'cards' };
+const classesOf = k => [].concat(FX_CLASS[k] || []);
+/* the crypt readers: fx key -> the bot's methods that read it from a crypt entry -- every `fx.<key>` in the statement of a
+   `this._cryptFxOf(` call (its line and the next three, up to the next method; the local is named `fx` by the bot's own rule) */
+function cryptReaders(src){
+  const lines = String(src || '').split('\n'), out = new Map();
+  const DEF = /^ {2}(?!(?:if|for|while|switch|catch|function|return)\b)(?:async )?([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{/;
+  let method = '?';
+  lines.forEach((line, i) => {
+    const d = DEF.exec(line); if (d) method = d[1];
+    if (line.indexOf('this._cryptFxOf(') < 0) return;
+    for (let j = i; j < Math.min(lines.length, i + 4); j++){
+      if (j > i && DEF.test(lines[j])) break;
+      for (const m of lines[j].matchAll(/(?<![\w$.])fx\.([A-Za-z_$][\w$]*)/g)){ if (!out.has(m[1])) out.set(m[1], new Set()); out.get(m[1]).add(method); }
+    }
+  });
+  return out;
+}
+/* a crypt row's status: modelled = every curated key read by a crypt reader AND every sentence covered -- each read key covers ONE sentence
+   (Marchesa Liliana's two bleed sentences need two keys), the best fit first (the key whose classes match the sentence's most closely), the
+   passive sentences first (a simple key models the simple form: with one bleed key Marchesa's missing sentence is her activated one) */
+function cryptStatusOf(x, readers){
+  if (!x.kc) return { status: 'unresolved', unread: [], uncovered: [] };
+  if (!x.ability) return { status: 'no ability', unread: [], uncovered: [] };
+  if (!x.fxk.length) return { status: 'unmodelled', unread: [], uncovered: x.parts };
+  const unread = x.fxk.filter(k => !readers.has(k)), free = x.fxk.filter(k => readers.has(k)), uncovered = [];
+  const KIND = ['passive', 'conditional', 'activated'];
+  for (const p of x.parts.slice().sort((a, b) => KIND.indexOf(a.kind) - KIND.indexOf(b.kind))){
+    const need = new Set(p.classes);
+    while (need.size){
+      const fit = k => { const cs = classesOf(k); return [cs.filter(c => need.has(c)).length, -cs.filter(c => !need.has(c)).length]; };
+      const best = free.filter(k => fit(k)[0] > 0).sort((a, b) => fit(b)[0] - fit(a)[0] || fit(b)[1] - fit(a)[1])[0];
+      if (!best) break;
+      classesOf(best).forEach(c => need.delete(c)); free.splice(free.indexOf(best), 1);
+    }
+    if (need.size) uncovered.push(p);
+  }
+  uncovered.sort((a, b) => x.parts.indexOf(a) - x.parts.indexOf(b));
+  return { status: unread.length || uncovered.length ? 'partial' : 'modelled', unread, uncovered };
+}
+function cryptSelfTest(quiet){   // returns the number of failed checks; quiet = print the failures only
+  let of = 0, bad = 0;
+  const eq = (a, b, what) => { of++; if (JSON.stringify(a) === JSON.stringify(b)) return; bad++; console.error('gen-card-ledger self-test FAIL ' + what + ': ' + JSON.stringify(a) + ' != ' + JSON.stringify(b)); };
+  const C = (s, name) => cryptClassOf(s, name);
+  // the extraction: the sect and title go, the FIRST colon ends them, every sect
+  eq(cryptAbility('Camarilla.'), '', 'sect only');
+  eq(cryptAbility('Camarilla Prince of Cape Town.'), '', 'sect and title only');
+  eq(cryptAbility('Camarilla Prince of Buenos Aires: +1 bleed.'), '+1 bleed.', 'a title and an ability');
+  eq(cryptAbility('Camarilla Banu Haqim Justicar: Once each combat, Kasim can discard a card.'), 'Once each combat, Kasim can discard a card.', 'a justicar');
+  eq(cryptAbility('Anarch Baron of Manaus: Adrino gets 1 press (mandatory) each combat, only usable to continue combat.'), 'Adrino gets 1 press (mandatory) each combat, only usable to continue combat.', 'a baron');
+  eq(cryptAbility('Camarilla Prince of São Paulo: Once each combat, Flávio can strike: dodge.'), 'Once each combat, Flávio can strike: dodge.', 'a colon inside the ability');
+  eq(cryptAbility('Sabbat bishop: Kalyani gets -1 stealth when hunting. +1 strength.'), 'Kalyani gets -1 stealth when hunting. +1 strength.', 'a Sabbat title');
+  eq(cryptAbility('Sabbat Archbishop of Gdansk: Agnieszka can burn 1 blood to strike: combat ends. +1 bleed.'), 'Agnieszka can burn 1 blood to strike: combat ends. +1 bleed.', 'a Sabbat archbishop, a colon inside');
+  eq(cryptAbility('Independent: Abaddon gets 1 optional maneuver and 1 optional press each combat.'), 'Abaddon gets 1 optional maneuver and 1 optional press each combat.', 'Independent');
+  eq(cryptAbility('Sabbat.'), '', 'Sabbat only');
+  eq(cryptAbility('Laibon magaji: +1 strength.'), '+1 strength.', 'Laibon');
+  eq(cryptSentences('If Nonu Dis is ready during your master phase, you can add 1 blood. +1 bleed.'), ['If Nonu Dis is ready during your master phase, you can add 1 blood.', '+1 bleed.'], 'two sentences');
+  // the classifier: every rule, the kinds, the dedup
+  eq(C('+1 bleed.'), { classes: ['bleed'], kind: 'passive' }, 'a passive bleed');
+  eq(C('+1 strength.'), { classes: ['strength'], kind: 'passive' }, 'a passive strength');
+  eq(C('+1 intercept.'), { classes: ['intercept'], kind: 'passive' }, 'a passive intercept');
+  eq(C('+1 hand size.'), { classes: ['hand size'], kind: 'passive' }, 'a passive hand size');
+  eq(C('Kalyani gets -1 stealth when hunting.'), { classes: ['stealth'], kind: 'conditional' }, 'a minus stealth');
+  eq(C('While your predator controls more ready minions than you, you get +1 hand size.'), { classes: ['hand size'], kind: 'conditional' }, 'a conditional hand size');
+  eq(C('Bret gets -1 intercept against titled vampires.'), { classes: ['intercept'], kind: 'conditional' }, 'a conditional intercept');
+  eq(C('Azucena gets +1 intercept against younger Lasombra and -1 intercept against older Lasombra.'), { classes: ['intercept'], kind: 'conditional' }, 'one class twice is one class');
+  eq(C('While your prey has 10 or fewer pool, Üresség gets +1 vote and +1 bleed.'), { classes: ['votes', 'bleed'], kind: 'conditional' }, 'two numeric effects');
+  eq(C('Once each combat, Flávio can strike: dodge.'), { classes: ['combat'], kind: 'activated' }, 'a dodge strike');
+  eq(C('Sakhar can search your library for an equipment card, reveal it and move it to your hand as a +1 stealth action.'), { classes: ['action'], kind: 'activated' }, 'an action, not a stealth');
+  eq(C('Theo can enter combat with a minion as a Ⓓ action.'), { classes: ['action'], kind: 'activated' }, 'a combat action');
+  eq(C('If you control a locked minion, Elen must bleed with +1 bleed as a Ⓓ action unless she must hunt.'), { classes: ['bleed'], kind: 'conditional' }, 'a forced bleed is not an action');
+  eq(C('Minions must burn 1 blood or life to attempt to block Jürgen.'), { classes: ['block'], kind: 'conditional' }, 'a block toll');
+  eq(C('You can unlock Sybren after a referendum called by him passes.'), { classes: ['unlock'], kind: 'activated' }, 'an unlock before votes');
+  eq(C('Vampires must burn 1 blood to cast votes and ballots against referendums called by Alexander.'), { classes: ['votes'], kind: 'conditional' }, 'votes before blood');
+  eq(C('Rescuing a vampire from torpor costs Doc Martina -1 blood.'), { classes: ['blood/pool'], kind: 'conditional' }, 'a price');
+  eq(C('Action cards and strike cards that require Celerity [cel] cost Antoinette an additional blood.'), { classes: ['blood/pool'], kind: 'conditional' }, 'a price before a strike');
+  eq(C('After Gostoso successfully bleeds your prey (for 1 or more), he can gain 1 blood.'), { classes: ['blood/pool'], kind: 'activated' }, 'a blood gain');
+  eq(C('Strike cards cost opposing younger vampires +1 blood.'), { classes: ['blood/pool'], kind: 'conditional' }, 'a price on strike cards (Algirdas)');
+  eq(C('Once each turn, after resolution of an action performed by Věnceslava during which your prey burned 1 or more pool, you can gain 1 pool.'), { classes: ['blood/pool'], kind: 'activated' }, 'a pool gain');
+  eq(C('During an action Gathii performs, you can reveal the top card of your library.'), { classes: ['cards'], kind: 'activated' }, 'a library');
+  eq(C("Once each turn, if Ilonka is ready after a successful bleed against you, she can look at the acting minion's controller's hand, then she can discard 1 card at random from it."), { classes: ['cards'], kind: 'activated' }, 'a hand');
+  eq(C('When Skidmark is acting, you do not replace any cards you play until the end of the action.'), { classes: ['cards'], kind: 'conditional' }, 'a card replacement');
+  eq(C('If Aemilius is ready during your unlock phase, your prey chooses a ready minion they control; the chosen minion takes 1 unpreventable damage.'), { classes: ['other'], kind: 'conditional' }, 'an unlock-phase timing is not an unlock');
+  eq(C('If Roy is unlocked during your discard phase, lock him.'), { classes: ['other'], kind: 'conditional' }, 'a self-lock is not an unlock or a card');
+  eq(C('If Sreelekha is ready at the start of your discard phase, you get +1 discard phase action.'), { classes: ['cards'], kind: 'conditional' }, 'a discard phase action is a card');
+  eq(C("Dan may take an action to allow you to go though your library, find <Giant's Blood>, and take it into your hand."), { classes: ['cards'], kind: 'conditional' }, "a card's name says nothing");
+  eq(C('As New Blood enters play during your influence phase, choose any circle and draw 1 card from your crypt.', 'New Blood'), { classes: ['cards'], kind: 'conditional' }, "the vampire's own name says nothing");
+  eq(C('As New Blood enters play during your influence phase, choose any circle and draw 1 card from your crypt.'), { classes: ['blood/pool'], kind: 'conditional' }, 'the name strip is what reads it (negative control)');
+  // the readers' scan: a `fx.<key>` in a _cryptFxOf statement, its method; a library mode's `mo.fx.<key>` and the next method are not
+  const src = ['class X {', '  _cryptA(v){ const fx = v && this._cryptFxOf(v.name); return (fx && fx.bleedBonus) | 0; }', '  _other(){ const fx = {}; return fx.strengthMod; }',
+    '  _torpor(v){', '    const fx = this._cryptFxOf(v.name);', '    if(fx && fx.burnOnTorpor) v.zone = 0;', '    if(mo.fx.press) return 1;', '  }', '  _lib(mo){ return mo.fx.dodge; }', '}'].join('\n');
+  const rd = cryptReaders(src);
+  eq([...rd.keys()].sort(), ['bleedBonus', 'burnOnTorpor'], 'the readers: two crypt keys, no library key, not the next method\'s fx');
+  eq([...(rd.get('burnOnTorpor') || [])], ['_torpor'], 'the reader of a multi-line statement');
+  // the status: every key read AND every sentence covered (a two-sentence vampire with one key is partial; a library key is no crypt reader)
+  const R = new Map([['bleedBonus', new Set(['_cryptBleedBonus'])]]), P = s => Object.assign({ s }, cryptClassOf(s));
+  const row = (ability, fxk) => ({ kc: {}, ability, parts: cryptSentences(ability).map(P), fxk });
+  eq(cryptStatusOf(row('+1 bleed.', ['bleedBonus']), R).status, 'modelled', 'one sentence, its key read');
+  const sree = cryptStatusOf(row('If Sreelekha is ready at the start of your discard phase, you get +1 discard phase action. +1 bleed.', ['bleedBonus']), R);
+  eq([sree.status, sree.uncovered.map(p => p.classes[0])], ['partial', ['cards']], 'two sentences, one key: partial, the card sentence missing');
+  eq(cryptStatusOf(row('Once each combat, Flávio can strike: dodge.', ['dodge']), R).unread, ['dodge'], 'a key no crypt reader reads');
+  eq(cryptStatusOf(row('+1 bleed.', ['bleedBonus', 'dodge']), R).status, 'partial', 'one key unread is partial, the sentence covered or not');
+  eq(cryptStatusOf(row('While your prey has 10 or fewer pool, Üresség gets +1 vote and +1 bleed.', ['bleedBonus']), R).status, 'partial', 'a sentence of two classes needs both');
+  eq(cryptStatusOf(row('During a bleed action, Liliana can remove seven cards in your ash heap from the game to get an additional +1 bleed. +1 bleed.', ['bleedBonus']), R).uncovered.map(p => p.kind), ['activated'], 'one key covers one sentence, the passive one first: the activated bleed is missing');
+  const R2 = new Map([['bleedBonus', new Set(['r'])], ['bleedBoostDiscard', new Set(['r'])]]);
+  eq(cryptStatusOf(row('During a bleed action, Liliana can remove seven cards in your ash heap from the game to get an additional +1 bleed. +1 bleed.', ['bleedBonus', 'bleedBoostDiscard']), R2).status, 'modelled', 'two bleed sentences, two bleed keys');
+  eq(cryptStatusOf(row('+1 bleed.', []), R).status, 'unmodelled', 'no fx');
+  eq(cryptStatusOf({ kc: {}, ability: '', parts: [], fxk: [] }, R).status, 'no ability', 'sect and title only');
+  eq(cryptStatusOf({ kc: null, ability: null, parts: [], fxk: [] }, R).status, 'unresolved', 'no KRCG text');
+  if (!quiet || bad) console.log('gen-card-ledger --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed'));
+  return bad;
+}
 const COV = require('./gen-deck-coverage.js');
 const B = require('./elysium-bot.js');
 
@@ -34,6 +200,7 @@ function parseArgs(argv){
     if (a === '--decks') o.decks = argv[++i].split(',').map(s => s.trim()).filter(Boolean);
     else if (a === '--sim') o.sims.push(path.resolve(argv[++i]));
     else if (a === '--out') o.out = path.resolve(argv[++i]);
+    else if (a === '--self-test') o.selfTest = true;
     else if (a === '--help' || a === '-h'){ console.log(fs.readFileSync(__filename, 'utf8').split('*/')[0]); process.exit(0); }
     else { console.error('gen-card-ledger: unknown argument ' + a); process.exit(2); }
   }
@@ -53,6 +220,8 @@ function statusOf(verdict, uses, seated, haveSim){
 
 function main(){
   const o = parseArgs(process.argv);
+  if (o.selfTest) return cryptSelfTest(false) ? 1 : 0;
+  if (cryptSelfTest(true)){ console.error('gen-card-ledger: the self-test failed -- no page written'); return 1; }
   const deckFiles = fs.readdirSync(__dirname).filter(f => /^deck-[a-z0-9]+\.json$/.test(f)).sort();
   const decks = [];
   for (const f of deckFiles){
@@ -150,6 +319,39 @@ function main(){
     ks.forEach(k => addClass(k, x));
   }
 
+  /* the crypt (v1.1.0, RULINGS D-108): every vampire, read from KRCG's text -- a card is its KRCG id, like a library row; its curated keys
+     against the bot's crypt readers (the mechanism that reads each key) and its sentences against the keys' classes */
+  const readers = cryptReaders(fs.readFileSync(path.join(__dirname, 'elysium-bot.js'), 'utf8'));
+  const crypt = new Map();
+  if (krcg){
+    for (const d of decks){
+      for (const c of (d.deck.crypt || [])){
+        const h = COV.lookup(c.name), isC = !!(h && h.kind === 'crypt'), canon = isC ? h.name : c.name, kc = krcgOf(canon, c.name);
+        const key = kc ? 'id' + kc.id : 'n:' + canon;
+        if (!crypt.has(key)){
+          const e = isC ? h.e : null, fxk = e && e.fx ? Object.keys(e.fx) : [];
+          const card = kc ? (kc.printed_name || kc._name || canon) : canon, ability = kc ? cryptAbility(kc.card_text) : null;
+          const parts = ability ? cryptSentences(ability).map(s => Object.assign({ s }, cryptClassOf(s, card))) : [];
+          const x = { card, kc, fxk, ability, parts, decks: {}, copies: 0 };
+          crypt.set(key, Object.assign(x, cryptStatusOf(x, readers)));
+        }
+        const x = crypt.get(key); x.decks[d.key] = (x.decks[d.key] || 0) + (c.qty | 0); x.copies += (c.qty | 0);
+      }
+    }
+  }
+  /* the classifier's known cases (L-53): every curated crypt entry with an fx must get its keys' classes (FX_CLASS) from its own text --
+     a miss, or a key with no class, fails the run (the converse -- a sentence no key covers -- is the row's 'partial') */
+  const check = { agree: 0, of: 0, miss: [], noClass: [] };
+  if (krcg) for (const [name, e] of Object.entries(COV.fx.crypt || {})){
+    const keys = e && e.fx ? Object.keys(e.fx) : []; if (!keys.length) continue;
+    const bare = keys.filter(k => !classesOf(k).length); if (bare.length){ check.noClass.push(name + ' (' + bare.join(', ') + ')'); continue; }
+    check.of++;
+    const kc = krcgOf(name, name); if (!kc){ check.miss.push(name + ': no KRCG text'); continue; }
+    const want = [...new Set(keys.flatMap(classesOf))], pn = kc.printed_name || kc._name || name;
+    const got = new Set(cryptSentences(cryptAbility(kc.card_text)).flatMap(s => cryptClassOf(s, pn).classes));
+    if (want.every(w => got.has(w))) check.agree++; else check.miss.push(name + ': ' + want.join('+') + ' read as ' + ([...got].join('+') || 'nothing'));
+  }
+
   // the page
   const all = [...rows.values()].sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || b.copies - a.copies || a.card.localeCompare(b.card));
   const L = [], P = s => L.push(s);
@@ -203,11 +405,63 @@ function main(){
       ' | ' + (x.rulings == null ? '—' : x.rulings) + ' | ' + (x.suite.length ? x.suite.slice(0, 8).join(', ') + (x.suite.length > 8 ? ' +' + (x.suite.length - 8) : '') : '—') + ' | ' + (PLAYS(x.status) || x.status === 'unseen' || x.status === 'not seated' ? '' : x.missing.join('; ')) + ' |');
   }
   P('');
+  /* the crypt (v1.1.0): after the library, so the library half of the page reads as before */
+  const CST = ['unmodelled', 'partial', 'modelled', 'no ability', 'unresolved'];
+  const cr = [...crypt.values()];
+  const readerOf = k => readers.has(k) ? [...readers.get(k)].map(m => '`' + m + '`').join(' / ') : 'no crypt reader';
+  P('## The crypt (every vampire; RULINGS D-108)');
+  P('');
+  if (!krcg) P('No `vtes.json` beside the script: the crypt is not read.');
+  else {
+    P('Read from KRCG\'s text (`vtes.json`): ' + cr.length + ' vampires, ' + cr.reduce((s, x) => s + x.copies, 0) + ' crypt copies -- a row in the crypt ledger below for each vampire with an ability, the sect-and-title-only ones listed per deck after it. **Status:** no ability = sect and title only (a title is data the bot reads, R-31) · modelled = a curated crypt `fx` whose every key a crypt reader of the bot reads and whose keys\' classes cover every sentence · partial = a key no crypt reader reads, or a sentence no key covers (the row says which) · unmodelled = an ability and no `fx` · unresolved = no KRCG text for the name. A deck joins the menu when its library rows play, its crypt rows are no ability or modelled, and it holds up in the sim (D-98, D-108). **Class (kind)** per sentence of the ability: passive = a bare "+1 bleed." · activated = "... can ..." · conditional = the rest (a condition, a toll, a grant). The classifier gives ' + check.agree + ' of ' + check.of + ' curated crypt entries (every one with an `fx`) the classes of their keys' + (check.miss.length ? ' (not: ' + check.miss.join('; ') + ')' : '') + (check.noClass.length ? '; keys with no class: ' + check.noClass.join('; ') : '') + '.');
+    P('');
+    P('**The crypt readers** (scanned from `elysium-bot.js`: each `this._cryptFxOf(` call, the `fx.<key>` it reads and the method it sits in -- the mechanism that models a key; that it applies an entry\'s form, a `when` or a condition, is the wave\'s section test): ' +
+      [...readers.keys()].sort().map(k => '`' + k + '` → ' + readerOf(k)).join(' · ') + '.');
+    P('');
+    P('| status | vampires | copies (in their deck) |'); P('|---|---:|---:|');
+    CST.forEach(st => P('| ' + st + ' | ' + cr.filter(x => x.status === st).length + ' | ' + cr.filter(x => x.status === st).reduce((s, x) => s + x.copies, 0) + ' |'));
+    P('');
+    P('**Per deck** (crypt copies by status)');
+    P('');
+    P('| deck | ' + CST.join(' | ') + ' |'); P('|---|' + CST.map(() => '---:').join('|') + '|');
+    for (const d of decks) P('| ' + d.key + ' | ' + CST.map(st => cr.filter(x => x.status === st && x.decks[d.key]).reduce((s, x) => s + x.decks[d.key], 0)).join(' | ') + ' |');
+    P('');
+    const cmap = new Map();   // the crypt class map: each class (kind) of a sentence no key covers, once per vampire, weighted by its copies
+    for (const x of cr){
+      const once = new Set();
+      x.uncovered.forEach(p => p.classes.forEach(c => { const k = c + ' (' + p.kind + ')'; if (once.has(k)) return; once.add(k);
+        if (!cmap.has(k)) cmap.set(k, { copies: 0, cards: [] }); const m = cmap.get(k); m.copies += x.copies; m.cards.push(x.card + ' ' + x.copies); }));
+    }
+    P('**The crypt class map** (what a crypt wave would build: the class and kind of each sentence no curated key covers, by copies; a vampire with two such sentences is in two rows)');
+    P('');
+    P('| class (kind) | copies | vampires |'); P('|---|---:|---|');
+    [...cmap.entries()].sort((a, b) => b[1].copies - a[1].copies || a[0].localeCompare(b[0])).forEach(([k, m]) => P('| ' + k + ' | ' + m.copies + ' | ' + m.cards.join(', ') + ' |'));
+    P('');
+    P('**The crypt ledger** (every vampire with an ability, or with no KRCG text; fx = each curated key and the crypt reader that reads it; missing = what keeps a partial row from modelled)');
+    P('');
+    P('| vampire | status | ability | class (kind) | fx → reader | missing | decks: copies |'); P('|---|---|---|---|---|---|---|');
+    const kindOf = p => p.classes.join('+') + ' (' + p.kind + ')';
+    cr.filter(x => x.status !== 'no ability').sort((a, b) => CST.indexOf(a.status) - CST.indexOf(b.status) || b.copies - a.copies || a.card.localeCompare(b.card))
+      .forEach(x => P('| ' + x.card + ' | ' + x.status + ' | ' + String(x.ability || '—').replace(/\|/g, '/') + ' | ' + (x.parts.map(kindOf).join('; ') || '—') + ' | ' +
+        (x.fxk.map(k => '`' + k + '` → ' + readerOf(k)).join(', ') || '—') + ' | ' +
+        (x.status === 'partial' ? x.unread.map(k => '`' + k + '` unread').concat(x.uncovered.map(p => kindOf(p) + ' uncovered')).join('; ') : '') + ' | ' +
+        Object.entries(x.decks).sort().map(([k, n]) => k + ' ' + n).join(', ') + ' |'));
+    P('');
+    P('**Sect and title only** (no ability; a title is data the bot reads, R-31)');
+    P('');
+    P('| deck | vampires (copies) |'); P('|---|---|');
+    for (const d of decks){ const vs = cr.filter(x => x.status === 'no ability' && x.decks[d.key]).sort((a, b) => a.card.localeCompare(b.card));
+      P('| ' + d.key + ' | ' + (vs.map(x => x.card + ' ' + x.decks[d.key]).join(', ') || '—') + ' |'); }
+  }
+  P('');
   fs.mkdirSync(path.dirname(o.out), { recursive: true });
   fs.writeFileSync(o.out, L.join('\n'));
-  console.log('gen-card-ledger v' + LEDGER_VERSION + ': ' + all.length + ' cards over ' + decks.length + ' decks -- ' + STATUS_ORDER.slice().reverse().map(st => st + ' ' + all.filter(x => x.status === st).length).join(', ') + ' -> ' + path.relative(process.cwd(), o.out));
-  return 0;
+  console.log('gen-card-ledger v' + LEDGER_VERSION + ': ' + all.length + ' cards over ' + decks.length + ' decks -- ' + STATUS_ORDER.slice().reverse().map(st => st + ' ' + all.filter(x => x.status === st).length).join(', ') +
+    (krcg ? ' | crypt ' + cr.length + ' -- ' + CST.map(st => st + ' ' + cr.filter(x => x.status === st).length).join(', ') + ' | readers ' + readers.size + ' keys | classifier ' + check.agree + '/' + check.of : ' | crypt not read (no vtes.json)') + ' -> ' + path.relative(process.cwd(), o.out));
+  check.miss.forEach(m => console.error('  classifier miss: ' + m));
+  check.noClass.forEach(m => console.error('  a curated crypt key with no class (add it to FX_CLASS): ' + m));
+  return check.miss.length || check.noClass.length ? 1 : 0;
 }
 
 if (require.main === module) process.exit(main());
-module.exports = { statusOf, LEDGER_VERSION };
+module.exports = { statusOf, cryptAbility, cryptSentences, cryptClassOf, cryptReaders, cryptStatusOf, FX_CLASS, LEDGER_VERSION };

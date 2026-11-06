@@ -19,9 +19,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   D-99), wave 2 (v0.6.214, D-103), wave 3 (v0.6.215, D-104), wave 4 (v0.6.217, D-106). Next: wave 5, the 18 masters in play
   (`spec-v5-wave3` §4), Meditative Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape),
   with the actions at a card in play (steal The Rack / Powerbase: LA, burn Mob Connections) and The Coven's control passing. Then the
-  maneuver / press grants with the rush cards, the free block bars, the cards with no effect data, the unmodelled action cards. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its rows are playable and it holds up in
-  the sim; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares the seven
-  embedded decks). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104; `CARDS.md`; HOWTO.
+  maneuver / press grants with the rush cards, the free block bars, the cards with no effect data, the unmodelled action cards.
+  Crypt waves (D-108): A = the simple forms with an existing consumer (+bleed, +strength, ±intercept, ±stealth), B = the rest
+  by class. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its library and crypt rows are playable and it
+  holds up in the sim; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check`
+  compares the seven embedded decks). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108;
+  `CARDS.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
   round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
   and Path requirements in every finder; the amber cards; the latent items. *Done when* each is built and section-tested, or ruled
@@ -29,8 +32,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **V5 wave 2's riders** (`specs/spec-v5-wave2-2026-10-29.md` §4): counters against a human and for the wave / snipe postures;
   the strike choice (`_strikePick` takes a strike card over a stronger pumped fist); the amber riders (Rage of Apedemak's hand size,
   Frenzy and Path icon, Hunger of Marduk in an additional pair, Soul Burn's opposing weapons, Monstrous Form's superior action); the
-  opponent's pumps unread before the strike; a gun's maneuver binding its strike outside Immortal Grapple; the Brujah crypt's printed
-  '+1 strength' unread; the auto tier's 'before range' flag on superior-only sentences (Alpha Glint, Bloodform, Gemini's Mirror,
+  opponent's pumps unread before the strike; a gun's maneuver binding its strike outside Immortal Grapple; the auto tier's 'before
+  range' flag on superior-only sentences (Alpha Glint, Bloodform, Gemini's Mirror,
   Eyes of Blades, Outside the Hourglass) and Sanguine Entrapment / Skin Trap compiled as their own (curation, no deck holds them).
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-41, D-103.
 - **V5 wave 4's riders** (`specs/spec-v5-wave4-2026-11-03.md` §4): the abstain as a reaction on another's referendum; Guiding
@@ -105,8 +108,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Docs: `history/specs/spec-home-pricing-2026-09-19.md`.
 - **`_wakeCard()` is vampire-blind** at the bounce, vote and reduce routes and in `interceptPotential` (`_wakeCardFor(v)` exists).
   *Done when* every site reads the vampire.
-- **Free block bars** (Beast Meld-class) and `chosen` (Seduction-class) have tags, no consumer; crypt text auto-extraction for
-  passive shapes not built. *Done when* a V5 wave needs them and the ledger lists them playable. Docs: RULINGS O-21.
+- **Free block bars** (Beast Meld-class) and `chosen` (Seduction-class) have tags, no consumer. *Done when* a V5 wave needs them
+  and the ledger lists them playable. Docs: RULINGS O-21.
 - **Bot diablerie** (the fixed-vote-majority rule). *Done when* Johan schedules it. Docs: RULINGS O-15.
 - **Vote-count residue**: three channels at once (menu line, counter, both) under-count; Protected District's votes come from the
   counter only. *Done when* main ships the additive counter verb or the client writes both. Docs:

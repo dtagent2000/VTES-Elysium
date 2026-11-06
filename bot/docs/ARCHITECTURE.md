@@ -61,7 +61,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | `deck-*.json`, `rig-a1.json`, `design-balanced-serie-bal1.txt` | the decks (the embedded ones' files, and the 14 other V5 precons: test inputs the client does not offer), a rig, the balanced seat design |
 | `krcg-v5.js` | KRCG's v5 dump (`vtes-v5.json` + `expansions.json`) → the v3-shaped `vtes.json` the compiler, `gen-precon.js`, the ledger, `test-cardfx.js` and the TWD tools read |
 | `gen-precon.js` | the V5 precons from `vtes.json`'s sets; `--check` compares the starters and the embedded decks by KRCG id |
-| `gen-card-ledger.js` → `docs/CARDS.md` | the card ledger: per card the coverage verdict, tier, decks, rulings, suite sections, uses in the sim; the class map |
+| `gen-card-ledger.js` → `docs/CARDS.md` | the card ledger: per card the coverage verdict, tier, decks, rulings, suite sections, uses in the sim; the class map; the crypt (every vampire and the crypt readers, D-108) |
 | `elysium-bot-sim.js` | THE SIM TABLE: the hotseat table under a virtual clock, deterministic, every seating; a key the bot does not embed plays `deck-<key>.json`; the mirror bench (`--bench`, `--bench-deck`, `--design`; read by `ana-bench.py` and `ana-sim-diff.py --vp`) |
 | `elysium-bot-hotseat.js` | the client's real `hotBridge` lifted and driven headless (the hotseat gate; the sim's engine) |
 | `elysium-bot-arena.js` | bots on a real spawned server (real clocks; the timing truth) |

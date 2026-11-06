@@ -429,6 +429,21 @@
 - **v0.6.101 (9 Aug 2026)** — the late-bubble re-check in `_pace`, the drain-gap guard at the drain top, the Hold on tail guard.
 
 ## Tools
+- **Crypt round 0 — the ledger reads the crypt (6 Nov 2026, with bot v0.6.217; no bot release; PR #53)** — Johan's go of 6 Nov on
+  Claude's recommendation (D-108: the crypt gets waves of its own, and D-98's "rows are playable" covers it). **`gen-card-ledger.js`
+  v1.1.0**: every vampire of the same decks, read from KRCG's text (`vtes.json` beside the script; without it the page says the crypt
+  is not read) — a row for each with an ability (the text after the sect and title, an effect class and kind per sentence, its curated
+  keys and the crypt readers that read them, what is missing, its decks), the sect-and-title-only ones listed per deck, the crypt
+  readers scanned from `elysium-bot.js` (each `_cryptFxOf` call's `fx.<key>` and its method: 14 keys) and the crypt class map (the
+  sentences no key covers, by copies). Modelled = every curated key read by a crypt reader and every sentence covered by a key of its
+  class (`FX_CLASS`; one key covers one sentence, the passive ones first); a partial row names the unread key or the uncovered
+  sentence. The classifier is checked against all 20 curated crypt entries (20 of 20); a miss or a curated key with no class fails the
+  run. The self-test (54 fixed checks: the extraction for every sect, every classifier rule a deck's row depends on, the readers' scan,
+  the status; each one killed by a single-point mutation) runs before every page. The page regenerated from v0.6.217's runs (the
+  240-match design and the V5 smoke, 14 × 12): the library half is the old page byte for byte but its version line; the crypt half
+  (from `vtes.json`, cardfx and the bot's source, no sim): 186 vampires, 216 copies — 110 no ability, 6 modelled (the starters' curated
+  ones), 70 unmodelled (81 copies), 0 unresolved; the biggest classes bleed passive 13 copies, combat activated 8, strength passive 8,
+  action activated and intercept conditional 7 each. No bot change.
 - **Round C3 — the mirror bench on the sim (3 Nov 2026, with bot v0.6.217; no bot release)** — `elysium-bot-sim.js` **v1.1.0**:
   `--bench none|persona=NAME|knob=k=v[+k=v]` puts the variant in one seat of every match and rotates it through every seat (24
   seatings × 4 = 96 for the starters), `--bench-deck DECK` pins it (bench.sh's 6th argument), `--knob k=v` is every seat's baseline
