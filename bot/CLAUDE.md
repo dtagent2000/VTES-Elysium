@@ -54,6 +54,7 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
   server arena stay; `--real` replays a spec on the real clock.
 - An abort on the pre-change bot is NOT automatically the environment: find the last release the suite was green on and run THAT
   (LESSONS, "tests that lie"). Never claim a gate passed without having run it.
+- CI (D-109; HOWTO "CI"): `.github/workflows/bot-gates.yml` runs the unattended gates and the correctness lint on every PR.
 
 ## The round
 `docs/HARNESS.md` has it in full: take a BOARD line → analyse, propose, wait for "kör" on any "how should we do X" [D-87] → change →

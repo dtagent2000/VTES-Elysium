@@ -1,0 +1,43 @@
+{
+  "elysium-bot-arena.js": {
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "elysium-bot.js": {
+    "no-unused-vars": {
+      "count": 7
+    }
+  },
+  "gen-batch-review.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "gen-deck-coverage.js": {
+    "no-dupe-keys": {
+      "count": 1
+    }
+  },
+  "gen-plan-review.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "lab-probe.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "test-bot-logic.js": {
+    "no-dupe-keys": {
+      "count": 1
+    },
+    "no-self-compare": {
+      "count": 2
+    },
+    "no-unused-vars": {
+      "count": 10
+    }
+  }
+}

@@ -5,8 +5,8 @@ coverage tool v1.1.43 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` 
 built against client v2.6.170; the root's release is now client **v2.6.172 / srv-2.6.49** (main's #51: our canary 69/0, main's v1.1.0 102/0);
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
-**Deploy state:** `main` carries v0.6.217 (#47), client v2.6.172 (main's #51, 6 Nov; its gates green again), round C3 (#50, 4 Nov)
-and the Toreador read (#52, 6 Nov). **Open PRs:** #53.
+**Deploy state:** `main` carries v0.6.217 (#47), client v2.6.172 (main's #51, 6 Nov; its gates green again), round C3 (#50, 4 Nov),
+the Toreador read (#52) and crypt round 0 (#53, 6 Nov). **Open PRs:** #54.
 
 ## Last gates (v0.6.217 release bytes, 3 Nov 2026)
 Suite **2393/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root v2.6.170
@@ -20,18 +20,19 @@ V5 wave 4 (D-106): the eight masters that go on a vampire, Toreador Grand Ball a
 Toreador Justicar; a title card replaces the printed title in every count; an action through a card in play once each turn (R-43).
 
 ## Since the release (no bot change)
-- Round C3 (#50): the mirror bench on the sim (`--bench`, `ana-bench.py`; HOWTO;
-  `docs/reports/REPORT-bench-controls-sim-2026-11-03.md`).
-- Toreador at the sim table (#52, `docs/reports/REPORT-toreador-sim-2026-11-06.md`): on 600 fresh deals 0.65 ± 0.05 VP/match,
-  13 % wins, inside the starters' span (level with tremere, above nosferatu). Menu: after its crypt rows (D-108).
+- Round C3 (#50): the mirror bench on the sim (`--bench`, `ana-bench.py`; HOWTO).
+- Toreador at the sim table (#52, `docs/reports/REPORT-toreador-sim-2026-11-06.md`): inside the starters' span on 600 fresh
+  deals (0.65 ± 0.05 VP/match; level with tremere, above nosferatu). Menu: after its crypt rows (D-108).
 - Crypt round 0 (#53, D-108): `gen-card-ledger.js` v1.1.0 reads the crypt into `docs/CARDS.md` (186 vampires: 110 no ability,
   6 modelled, 70 unmodelled, ranked by the crypt class map); the library half is unchanged.
+- Round C4 (#54, D-109): CI for `bot/` — `.github/workflows/bot-gates.yml` runs the gates on every PR that touches `bot/` or the
+  bundle; the lint's first-run findings are suppressed until C2.
 
 ## Next (proposed; Johan orders the board)
-1. Crypt wave A (D-108): the simple forms an existing consumer reads; Claude proposes the list, Johan says "kör".
-2. V5 wave 5 — Johan picks its shape: the eighteen masters in play, Meditative Grove's cancel, Sudden Reversal's window (D-107).
-3. Toreador in the menu once its three crypt rows are modelled: `ARCHETYPES` + a `DECK_STRATEGY` line, a bot release.
-4. The clean-up rounds C2–C6; the knowledge layer's Kevlar and the prey's wakes (65f); the abstract model spec.
+1. C2: the lint's first-run findings, the legacy tests, `ana-gates.py` (before crypt wave A).
+2. Crypt wave A (D-108): Claude's proposal of 6 Nov (in chat) waits for Johan's "kör"; then Toreador in the menu.
+3. V5 wave 5 — Johan picks its shape: the eighteen masters in play, Meditative Grove's cancel, Sudden Reversal's window (D-107).
+4. C5 (the leak test) before crypt wave B; C6; the knowledge layer's Kevlar and the prey's wakes (65f); the abstract model spec.
 
 ## Not yet consumed from main
 Main's replies of 3 Nov (`REPLY-to-bot-2026-11-03-v0.6.216.md`: canary v1.1.0 pins every bot line through v0.6.216 — copy it into
@@ -40,8 +41,7 @@ Main's replies of 3 Nov (`REPLY-to-bot-2026-11-03-v0.6.216.md`: canary v1.1.0 pi
 Oct's: BOARD. Still owed by main: v0.6.217's COT, ABSTAIN and burn-card lines in §12 and the canary; the pure `step`, `sp` / `xa` / `xb`, the second `rng`.
 
 ## Known, not built
-A human's bounce of a bot's bleed is not read by the acting bot · a human's Haven Uncovered is not read · between bots a contested
-block's verdict waits for the actor's clock · on the sim table most bot-vs-bot reaction windows run out their clock (BOARD) ·
-`askHumansTotal` off until the human harness learns the second question · the waves' riders (BOARD) · a Deep Song (once a Haven
-Uncovered) rush's wait runs into its safety net about once in 200 · a failed blocker fights the later blocker's combat and can spend a
-strike card (3 in 840 five-seat matches; the Toreador report).
+A human's bounce of a bot's bleed and a human's Haven Uncovered are not read · between bots a contested block's verdict waits for the
+actor's clock · on the sim table most bot-vs-bot reaction windows run out their clock (BOARD) · `askHumansTotal` off until the human
+harness learns the second question · the waves' riders (BOARD) · a rushed actor's maneuver wait hits its safety net about once in 200
+· a failed blocker fights the later blocker's combat and can spend a strike card (3 in 840 five-seat matches; the Toreador report).

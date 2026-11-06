@@ -20,7 +20,10 @@
    `bash tools/doc-budget.sh` green.
 8. **PR against `main`** with: what changed and why, the gate numbers (assertion counts, canary, hotseat, HB1, cardfx), the sim
    footprint (IDENTICAL / SAME-PLAY / DIVERGED, outcomes changed, zeroPool), the release bytes' sha256 when it is a release, the
-   `Egress:` line, and "anything I'm unsure about". Johan merges and deletes the branch.
+   `Egress:` line, and "anything I'm unsure about". CI (`.github/workflows/bot-gates.yml`, D-109) runs the gates on the PR: a red
+   step is a red gate, fixed before Johan merges (a flake, or a red the PR did not cause: re-run once and say so, HOWTO "CI"); it
+   runs the suite once, so the local ×3 stays the release gate. Johan merges and
+   deletes the branch.
 
 ## Working alone (sandbox habits)
 - Long runs detached (`run_in_background`, or `setsid nohup … &` + a poll loop inside the same turn); never a foreground
