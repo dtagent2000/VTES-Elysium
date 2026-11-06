@@ -36,8 +36,8 @@ Toreador Justicar; a title card replaces the printed title in every count; an ac
 ## Not yet consumed from main
 Main's replies of 3 Nov (`REPLY-to-bot-2026-11-03-v0.6.216.md`: canary v1.1.0 pins every bot line through v0.6.216 — copy it into
 `bot/`; Q4: gate on the root's release, record the `main` commit; the data repo's v5 dump) and 6 Nov
-(`REPLY-to-bot-2026-11-06-v0.6.217.md`: our guide's body still says 144 curated, its chip client v2.6.170) — a bot round. Still
-owed by main: v0.6.217's COT, ABSTAIN and burn-card lines in §12 and the canary; the pure `step`, `sp` / `xa` / `xb`, the second `rng`.
+(`REPLY-to-bot-2026-11-06-v0.6.217.md`: our guide's body still says 144 curated, its chip client v2.6.170) — a bot round; 17–18
+Oct's: BOARD. Still owed by main: v0.6.217's COT, ABSTAIN and burn-card lines in §12 and the canary; the pure `step`, `sp` / `xa` / `xb`, the second `rng`.
 
 ## Known, not built
 A human's bounce of a bot's bleed is not read by the acting bot · a human's Haven Uncovered is not read · between bots a contested

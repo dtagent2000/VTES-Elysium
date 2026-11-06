@@ -20,8 +20,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   (`spec-v5-wave3` §4), Meditative Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape),
   with the actions at a card in play (steal The Rack / Powerbase: LA, burn Mob Connections) and The Coven's control passing. Then the
   maneuver / press grants with the rush cards, the free block bars, the cards with no effect data, the unmodelled action cards.
-  Crypt waves (D-108): A = simple forms a consumer already reads (bleed, strength, intercept, stealth, the vote discard), B = the
-  rest by class. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its library and crypt rows are playable and it
+  Crypt waves (D-108): A = the simple forms with an existing consumer (+bleed, +strength, ±intercept, ±stealth), B = the rest
+  by class. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its library and crypt rows are playable and it
   holds up in the sim; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check`
   compares the seven embedded decks). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108;
   `CARDS.md`; HOWTO.

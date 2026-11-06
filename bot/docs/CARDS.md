@@ -387,9 +387,11 @@ Sim: `d240` — 240 matches, bot v0.6.217, malkavian,tremere,nosferatu,ventrue, 
 | Warsaw Station | Master | curated | FULL | playable | nosferatu 1 (82/408) | 4 | 53, 53a, 53b, 57 |  |
 | Wasserschloss Anif, Austria | Master | curated | FULL | playable | tremere 1 (182/408) | 1 | 148 |  |
 
-## The crypt (one row per vampire; RULINGS D-108)
+## The crypt (every vampire; RULINGS D-108)
 
-Read from KRCG's text (`vtes.json`): 186 vampires, 216 crypt copies. **Status:** no ability = sect and title only (a title is data the bot reads, R-31) · modelled = a curated crypt `fx` whose every key the bot reads · partial = a curated `fx` with a key nothing reads · unmodelled = an ability and no `fx` · unresolved = no KRCG text for the name. A deck joins the menu when its library rows play, its crypt rows are no ability or modelled, and it holds up in the sim (D-98, D-108). **Class (kind)** per sentence of the ability: passive = "+1 bleed." alone · conditional = an effect with a condition · activated = "... can ...". The classifier gives 14 of 14 curated crypt entries the class of their fx key.
+Read from KRCG's text (`vtes.json`): 186 vampires, 216 crypt copies -- a row in the crypt ledger below for each vampire with an ability, the sect-and-title-only ones listed per deck after it. **Status:** no ability = sect and title only (a title is data the bot reads, R-31) · modelled = a curated crypt `fx` whose every key a crypt reader of the bot reads and whose keys' classes cover every sentence · partial = a key no crypt reader reads, or a sentence no key covers (the row says which) · unmodelled = an ability and no `fx` · unresolved = no KRCG text for the name. A deck joins the menu when its library rows play, its crypt rows are no ability or modelled, and it holds up in the sim (D-98, D-108). **Class (kind)** per sentence of the ability: passive = a bare "+1 bleed." · activated = "... can ..." · conditional = the rest (a condition, a toll, a grant). The classifier gives 20 of 20 curated crypt entries (every one with an `fx`) the classes of their keys.
+
+**The crypt readers** (scanned from `elysium-bot.js`: each `this._cryptFxOf(` call, the `fx.<key>` it reads and the method it sits in -- the mechanism that models a key; that it applies an entry's form, a `when` or a condition, is the wave's section test): `bleedBonus` → `_cryptBleedBonus` · `bleedBoostDiscard` → `_cryptBleedBoostFx` · `blockNotOlder` → `_cryptCannotBlock` · `burnAtDamage` → `_takenLine` / `_resolveCombatRound` · `burnOnTorpor` → `_fameTorporHook` · `enterPlay` → `_maybeEnterPlayDraw` · `interceptMod` → `_cryptIntercept` · `noHuntStealth` → `_undirectedBaseStealth` · `noUnlockAfterTitledBleed` → `_maybeLubomiraMark` · `selfUnlock` → `_cryptSelfUnlockFx` · `stealthMod` → `_cryptStealthMod` · `strengthMod` → `_cryptStrengthMod` · `voteBoostDiscard` → `_cryptVoteBoostFx` · `voteTaxAgainst` → `_cryptVoteTax`.
 
 | status | vampires | copies (in their deck) |
 |---|---:|---:|
@@ -422,7 +424,7 @@ Read from KRCG's text (`vtes.json`): 186 vampires, 216 crypt copies. **Status:**
 | tzimisce | 6 | 0 | 0 | 6 | 0 |
 | ventrue | 0 | 0 | 3 | 9 | 0 |
 
-**The crypt class map** (what a crypt wave would build: the class and kind of each unmodelled sentence, by copies; a vampire with two effects is in two rows)
+**The crypt class map** (what a crypt wave would build: the class and kind of each sentence no curated key covers, by copies; a vampire with two such sentences is in two rows)
 
 | class (kind) | copies | vampires |
 |---|---:|---|
@@ -430,104 +432,127 @@ Read from KRCG's text (`vtes.json`): 186 vampires, 216 crypt copies. **Status:**
 | combat (activated) | 8 | Tommaso Sforza 1, Crossbreaker 1, Agnieszka, Tempter of Legions 1, Huldu, The Desecrator 1, Phaibun 1, Opikun 1, Flávio Gonçalves 2 |
 | strength (passive) | 8 | Theo Bell 1, Valeriya Zinovieva 1, Massimiliano 2, Faruq Abd al-Qadir 1, Anousha, The Maniac 1, Kalyani, Agent of Doom 1, Abderrahim, Death's Hand 1 |
 | action (activated) | 7 | Theo Bell 1, Lenelle, Mambo of Birmingham 1, Eulogio Sánchez de los Reyes 1, Aniel 1, Dominica 1, Sakhar 1, Seraphina 1 |
-| combat (conditional) | 7 | Faruq Abd al-Qadir 1, Algirdas, The Solar Prophet 1, Serhat Gunde, Combat Junkie 1, Abaddon 2, Adrino Manauara 2 |
 | intercept (conditional) | 7 | Martina Srnankova 2, Azucena 1, Castellan 1, Bret Stryker 1, Branimira 2 |
 | bleed (conditional) | 6 | Elen Kamjian 1, Hesha Ruhadze 1, Osvaldo Kühnemann 1, Damian 1, Üresség 1, Neserian 1 |
+| combat (conditional) | 6 | Faruq Abd al-Qadir 1, Serhat Gunde, Combat Junkie 1, Abaddon 2, Adrino Manauara 2 |
 | stealth (conditional) | 6 | Ariane 1, Kalyani, Agent of Doom 1, Devorah 1, Verrix, Naughty Boy 1, Frau Schädel 1, Gathii 1 |
 | unlock (activated) | 6 | Kalinda 1, Aline Gädeke 2, "Mother" Anja Giovanni 1, Sakura, The Merciless 1, Aaradhya, The Callous Tyrant 1 |
 | block (conditional) | 5 | Parijat, the Dark Oracle 1, Aelswith, The Irresistible 1, Jürgen, The Libertine 1, Rexton "Savage" Abernathy 1, Marialena 1 |
 | other (conditional) | 4 | Gnaeus Aemilius Augustinus 2, Ashur-uballit, Son of the Abyss 1, Roy 1 |
 | blood/pool (activated) | 3 | Nonu Dis 1, Gostoso 1, Věnceslava, The Implacable 1 |
 | cards (activated) | 3 | Mora, the Death Seer 1, Gathii 1, Ilonka 1 |
+| blood/pool (conditional) | 2 | Algirdas, The Solar Prophet 1, Doc Martina 1 |
 | cards (conditional) | 2 | Sreelekha 2 |
 | hand size (conditional) | 2 | Fotini Katsikaris 1, Khin Aye 1 |
 | strength (conditional) | 2 | Anxo Vilela 1, Roy 1 |
 | votes (activated) | 2 | Yewon Ong 2 |
 | votes (conditional) | 2 | Üresség 1, Neserian 1 |
 | bleed (activated) | 1 | Marchesa Liliana 1 |
-| blood/pool (conditional) | 1 | Doc Martina 1 |
 | intercept (passive) | 1 | Rinaldo Albizzi 1 |
 | other (activated) | 1 | Luciano Carvalho 1 |
 | stealth (activated) | 1 | Abderrahim, Death's Hand 1 |
 | strength (activated) | 1 | Kasim Bayar 1 |
 
-**The crypt ledger** (every vampire with an ability, or with no KRCG text)
+**The crypt ledger** (every vampire with an ability, or with no KRCG text; fx = each curated key and the crypt reader that reads it; missing = what keeps a partial row from modelled)
 
-| vampire | status | ability | class (kind) | fx | decks: copies |
-|---|---|---|---|---|---|
-| Abaddon | unmodelled | Abaddon gets 1 optional maneuver and 1 optional press each combat. | combat (conditional) | — | salubri 2 |
-| Adrino Manauara | unmodelled | Adrino gets 1 press (mandatory) each combat, only usable to continue combat. | combat (conditional) | — | tzimisce 2 |
-| Aline Gädeke | unmodelled | Once each turn, Aline can burn 1 blood to unlock after another Anarch you control performs a successful action. | unlock (activated) | — | brujah 2 |
-| Branimira | unmodelled | While you have 9 or fewer pool, Branimira gets +1 intercept. | intercept (conditional) | — | tzimisce 2 |
-| Catalina Vega | unmodelled | +1 bleed. | bleed (passive) | — | toreador 2 |
-| Flávio Gonçalves | unmodelled | Once each combat, Flávio can strike: dodge. | combat (activated) | — | toreador 2 |
-| Gnaeus Aemilius Augustinus | unmodelled | If Aemilius is ready during your unlock phase, your prey chooses a ready minion they control; the chosen minion takes 1 unpreventable damage. | other (conditional) | — | lasombra 2 |
-| Martina Srnankova | unmodelled | Martina gets +1 intercept during bleed actions. | intercept (conditional) | — | gangrel 2 |
-| Massimiliano | unmodelled | +1 strength. | strength (passive) | — | gangrel 2 |
-| Sreelekha | unmodelled | If Sreelekha is ready at the start of your discard phase, you get +1 discard phase action. +1 bleed. | cards (conditional); bleed (passive) | — | ravnos 2 |
-| Yewon Ong | unmodelled | During the polling step of any referendum, Yewon can discard a card requiring Oblivion [obl] to get +1 vote. | votes (activated) | — | lasombra 2 |
-| "Mother" Anja Giovanni | unmodelled | Once each turn, if she is ready, Anja can burn 1 blood after another Hecata you control performs a successful action requiring Hecata or Oblivion [obl] to unlock that Hecata. | unlock (activated) | — | hecata 1 |
-| Aaradhya, The Callous Tyrant | unmodelled | Aaradhya can unlock after performing a successful political action (even if the referendum failed). +1 bleed. | unlock (activated); bleed (passive) | — | pathpower 1 |
-| Abderrahim, Death's Hand | unmodelled | During an action, Abderrahim can burn 1 blood to give an ally or younger vampire you control +1 stealth. +1 strength. | stealth (activated); strength (passive) | — | pathdeath 1 |
-| Aelswith, The Irresistible | unmodelled | If Aelswith is blocked, the blocking minion's controller burns 1 pool before block resolution. | block (conditional) | — | pathcathari 1 |
-| Agnieszka, Tempter of Legions | unmodelled | Agnieszka can burn 1 blood to strike: combat ends. +1 bleed. | combat (activated); bleed (passive) | — | pathcathari 1 |
-| Algirdas, The Solar Prophet | unmodelled | Strike cards cost opposing younger vampires +1 blood. | combat (conditional) | — | pathcaine 1 |
-| Aniel | unmodelled | Aniel can burn 1 corruption counter or a card requiring a Discipline from another ready minion as a +1 stealth Ⓓ action that costs 1 blood. | action (activated) | — | salubri 1 |
-| Anousha, The Maniac | unmodelled | +1 strength. | strength (passive) | — | pathcaine 1 |
-| Anxo Vilela | unmodelled | While you have the Edge, Anxo gets +1 strength. | strength (conditional) | — | pathdeath 1 |
-| Ariane | unmodelled | Ariane gets -1 stealth during undirected actions. | stealth (conditional) | — | brujah 1 |
-| Ashur-uballit, Son of the Abyss | unmodelled | While Ashur-uballit is ready, zombies (allies and retainers) you recruit or employ get +1 starting life. +1 bleed. | other (conditional); bleed (passive) | — | pathdeath 1 |
-| Azucena | unmodelled | Azucena gets +1 intercept against younger Lasombra and -1 intercept against older Lasombra. | intercept (conditional) | — | lasombra 1 |
-| Bret Stryker | unmodelled | Bret gets -1 intercept against titled vampires. | intercept (conditional) | — | toreador 1 |
-| Castellan | unmodelled | Castellan gets +1 intercept during directed actions and -1 intercept during non-directed actions. | intercept (conditional) | — | salubri 1 |
-| Crossbreaker | unmodelled | Once each round of combat, Crossbreaker can burn 1 blood to make the damage from his hand strikes aggravated that round. | combat (activated) | — | pathcaine 1 |
-| Damian | unmodelled | While you control a ready cardinal, Damian gets +1 bleed. | bleed (conditional) | — | pathpower 1 |
-| Devorah | unmodelled | While you have 5 or fewer pool, Devorah gets +1 stealth. | stealth (conditional) | — | pathcathari 1 |
-| Doc Martina | unmodelled | Rescuing a vampire from torpor costs Doc Martina -1 blood. | blood/pool (conditional) | — | ravnos 1 |
-| Dominica | unmodelled | Dominica can search your library for a master archetype card, reveal it and move it to your hand as a +1 stealth action. | action (activated) | — | salubri 1 |
-| Elen Kamjian | unmodelled | If you control a locked minion, Elen must bleed with +1 bleed as a Ⓓ action unless she must hunt. | bleed (conditional) | — | brujah 1 |
-| Eulogio Sánchez de los Reyes | unmodelled | Eulogio can look at and reorder the top 5 cards of your library, and unlock as a +1 stealth action that costs 1 blood. | action (activated) | — | pathdeath 1 |
-| Faruq Abd al-Qadir | unmodelled | Minions with any of your corruption counters in combat with Faruq cannot strike: combat ends. +1 strength. | combat (conditional); strength (passive) | — | ministry 1 |
-| Fotini Katsikaris | unmodelled | After Fotini successfully bleeds (for 1 or more), you get +1 hand size until your next discard phase. | hand size (conditional) | — | pathcathari 1 |
-| Frau Schädel | unmodelled | Frau Schädel gets +1 stealth during recruit and employ actions. | stealth (conditional) | — | pathdeath 1 |
-| Gathii | unmodelled | During an action Gathii performs, you can reveal the top card of your library. If it is a master card, he burns 1 blood; otherwise, he gets +1 stealth. | cards (activated); stealth (conditional) | — | ravnos 1 |
-| Gostoso | unmodelled | After Gostoso successfully bleeds your prey (for 1 or more), he can gain 1 blood. | blood/pool (activated) | — | pathcathari 1 |
-| Hesha Ruhadze | unmodelled | Hesha gets +1 bleed for each unique equipment attached to him. | bleed (conditional) | — | ministry 1 |
-| Huldu, The Desecrator | unmodelled | Once each combat involving another minion you control, if Huldu is ready, she can burn 1 blood to prevent 1 damage to that minion. +1 bleed. | combat (activated); bleed (passive) | — | pathdeath 1 |
-| Ilonka | unmodelled | Once each turn, if Ilonka is ready after a successful bleed against you, she can look at the acting minion's controller's hand, then she can discard 1 card at random from it. | cards (activated) | — | salubri 1 |
-| Jürgen, The Libertine | unmodelled | Minions must burn 1 blood or life to attempt to block Jürgen. | block (conditional) | — | pathcathari 1 |
-| Kalinda | unmodelled | During your turn, you can burn the Edge to unlock Kalinda. | unlock (activated) | — | banuhaqim 1 |
-| Kalyani, Agent of Doom | unmodelled | Kalyani gets -1 stealth when hunting. +1 strength. | stealth (conditional); strength (passive) | — | pathcaine 1 |
-| Kamile Paukstys | unmodelled | +1 bleed. | bleed (passive) | — | gangrel 1 |
-| Kasim Bayar | unmodelled | Once each combat, Kasim can discard a political action card [POLITICAL ACTION] before range is determined to get +2 strength that combat. +1 bleed. | strength (activated); bleed (passive) | — | banuhaqim 1 |
-| Khin Aye | unmodelled | While your predator controls more ready minions than you, you get +1 hand size. | hand size (conditional) | — | pathpower 1 |
-| Lenelle, Mambo of Birmingham | unmodelled | Lenelle can exchange a card from your hand for a library card in your ash heap as a +1 stealth action that costs 1 blood. | action (activated) | — | hecata 1 |
-| Luciano Carvalho | unmodelled | During your discard phase, you can move an animal retainer from a vampire you control to another vampire you control. | other (activated) | — | ravnos 1 |
-| Marchesa Liliana | unmodelled | During a bleed action, Liliana can remove seven cards in your ash heap from the game to get an additional +1 bleed. +1 bleed. | bleed (activated); bleed (passive) | — | hecata 1 |
-| Marialena | unmodelled | If Marialena is blocked, she burns 1 blood before block resolution. | block (conditional) | — | tzimisce 1 |
-| Mora, the Death Seer | unmodelled | If Mora is ready during your discard phase, you can move a library card from your ash heap to the bottom of your library. +1 bleed. | cards (activated); bleed (passive) | — | hecata 1 |
-| Neserian | unmodelled | While you control no locations, Neserian gets -1 bleed. While you control 1 or more locations, Neserian gets +1 vote. | bleed (conditional); votes (conditional) | — | tzimisce 1 |
-| Nonu Dis | unmodelled | If Nonu Dis is ready during your master phase, you can add 1 blood to a ready Ministry you control after playing a master card. +1 bleed. | blood/pool (activated); bleed (passive) | — | ministry 1 |
-| Opikun | unmodelled | Once each combat involving a vampire you control, Opikun can burn 1 blood to prevent up to 2 non-aggravated damage to that vampire from the opposing minion's strike. | combat (activated) | — | salubri 1 |
-| Osvaldo Kühnemann | unmodelled | Osvaldo gets +1 bleed against a Methuselah controlling a Toreador or Ventrue. | bleed (conditional) | — | pathcathari 1 |
-| Parijat, the Dark Oracle | unmodelled | While Parijat is ready, minions must burn the top card of their library to attempt to block wraith or zombie allies. | block (conditional) | — | hecata 1 |
-| Phaibun | unmodelled | Once each combat, Phaibun can discard a card at random to strike: dodge. | combat (activated) | — | ravnos 1 |
-| Rexton "Savage" Abernathy | unmodelled | Allies and vampires with capacity 3 or less cannot block Rexton. | block (conditional) | — | pathpower 1 |
-| Rinaldo Albizzi | unmodelled | +1 intercept. | intercept (passive) | — | lasombra 1 |
-| Roy | unmodelled | If Roy is unlocked during your discard phase, lock him. He gets +1 strength in combat with titled vampires. | other (conditional); strength (conditional) | — | ravnos 1 |
-| Sakhar | unmodelled | Sakhar can search your library for an equipment card, reveal it and move it to your hand as a +1 stealth action. | action (activated) | — | salubri 1 |
-| Sakura, The Merciless | unmodelled | During your turn, Sakura can burn 1 blood to unlock after performing a successful action requiring the Path of Death and the Soul. | unlock (activated) | — | pathdeath 1 |
-| Seraphina | unmodelled | Seraphina can add 2 blood or life to a minion you control as a +1 stealth action, not to exceed starting life. | action (activated) | — | salubri 1 |
-| Serhat Gunde, Combat Junkie | unmodelled | Serhat gets 1 optional press each combat. | combat (conditional) | — | pathcaine 1 |
-| Theo Bell | unmodelled | Theo can enter combat with a minion as a Ⓓ action. +1 strength. | action (activated); strength (passive) | — | brujah 1 |
-| Tommaso Sforza | unmodelled | Once each turn, if he is ready, Tommaso can burn 1 blood before range is determined in a combat involving a wraith or zombie ally you control to end that combat. | combat (activated) | — | hecata 1 |
-| Üresség | unmodelled | While your prey has 10 or fewer pool, Üresség gets +1 vote and +1 bleed. | votes+bleed (conditional) | — | pathpower 1 |
-| Valeriya Zinovieva | unmodelled | +1 strength. | strength (passive) | — | brujah 1 |
-| Věnceslava, The Implacable | unmodelled | Once each turn, after resolution of an action performed by Věnceslava during which your prey burned 1 or more pool, you can gain 1 pool. | blood/pool (activated) | — | pathpower 1 |
-| Verrix, Naughty Boy | unmodelled | Verrix gets +1 stealth during bleed actions. | stealth (conditional) | — | pathcathari 1 |
-| Alexander Silverson | modelled | Vampires must burn 1 blood to cast votes and ballots against referendums called by Alexander. | votes (conditional) | voteTaxAgainst | malkavian 2 |
-| Larissa Moreira | modelled | During a bleed action, Larissa can discard a card requiring Animalism [ani] to get +1 bleed. | bleed (activated) | bleedBoostDiscard | nosferatu 2 |
-| Lenny Burkhead | modelled | +1 bleed. | bleed (passive) | bleedBonus | nosferatu 2 |
-| Sybren van Oosten | modelled | You can unlock Sybren after a referendum called by him passes. | unlock (activated) | selfUnlock | ventrue 2 |
-| Alexa Draper | modelled | During the polling step of any referendum, Alexa can discard a card requiring Dominate [dom] to get +1 vote. | votes (activated) | voteBoostDiscard | ventrue 1 |
-| The Dowager | modelled | The Dowager gets +1 intercept during directed actions. | intercept (conditional) | interceptMod | nosferatu 1 |
+| vampire | status | ability | class (kind) | fx → reader | missing | decks: copies |
+|---|---|---|---|---|---|---|
+| Abaddon | unmodelled | Abaddon gets 1 optional maneuver and 1 optional press each combat. | combat (conditional) | — |  | salubri 2 |
+| Adrino Manauara | unmodelled | Adrino gets 1 press (mandatory) each combat, only usable to continue combat. | combat (conditional) | — |  | tzimisce 2 |
+| Aline Gädeke | unmodelled | Once each turn, Aline can burn 1 blood to unlock after another Anarch you control performs a successful action. | unlock (activated) | — |  | brujah 2 |
+| Branimira | unmodelled | While you have 9 or fewer pool, Branimira gets +1 intercept. | intercept (conditional) | — |  | tzimisce 2 |
+| Catalina Vega | unmodelled | +1 bleed. | bleed (passive) | — |  | toreador 2 |
+| Flávio Gonçalves | unmodelled | Once each combat, Flávio can strike: dodge. | combat (activated) | — |  | toreador 2 |
+| Gnaeus Aemilius Augustinus | unmodelled | If Aemilius is ready during your unlock phase, your prey chooses a ready minion they control; the chosen minion takes 1 unpreventable damage. | other (conditional) | — |  | lasombra 2 |
+| Martina Srnankova | unmodelled | Martina gets +1 intercept during bleed actions. | intercept (conditional) | — |  | gangrel 2 |
+| Massimiliano | unmodelled | +1 strength. | strength (passive) | — |  | gangrel 2 |
+| Sreelekha | unmodelled | If Sreelekha is ready at the start of your discard phase, you get +1 discard phase action. +1 bleed. | cards (conditional); bleed (passive) | — |  | ravnos 2 |
+| Yewon Ong | unmodelled | During the polling step of any referendum, Yewon can discard a card requiring Oblivion [obl] to get +1 vote. | votes (activated) | — |  | lasombra 2 |
+| "Mother" Anja Giovanni | unmodelled | Once each turn, if she is ready, Anja can burn 1 blood after another Hecata you control performs a successful action requiring Hecata or Oblivion [obl] to unlock that Hecata. | unlock (activated) | — |  | hecata 1 |
+| Aaradhya, The Callous Tyrant | unmodelled | Aaradhya can unlock after performing a successful political action (even if the referendum failed). +1 bleed. | unlock (activated); bleed (passive) | — |  | pathpower 1 |
+| Abderrahim, Death's Hand | unmodelled | During an action, Abderrahim can burn 1 blood to give an ally or younger vampire you control +1 stealth. +1 strength. | stealth (activated); strength (passive) | — |  | pathdeath 1 |
+| Aelswith, The Irresistible | unmodelled | If Aelswith is blocked, the blocking minion's controller burns 1 pool before block resolution. | block (conditional) | — |  | pathcathari 1 |
+| Agnieszka, Tempter of Legions | unmodelled | Agnieszka can burn 1 blood to strike: combat ends. +1 bleed. | combat (activated); bleed (passive) | — |  | pathcathari 1 |
+| Algirdas, The Solar Prophet | unmodelled | Strike cards cost opposing younger vampires +1 blood. | blood/pool (conditional) | — |  | pathcaine 1 |
+| Aniel | unmodelled | Aniel can burn 1 corruption counter or a card requiring a Discipline from another ready minion as a +1 stealth Ⓓ action that costs 1 blood. | action (activated) | — |  | salubri 1 |
+| Anousha, The Maniac | unmodelled | +1 strength. | strength (passive) | — |  | pathcaine 1 |
+| Anxo Vilela | unmodelled | While you have the Edge, Anxo gets +1 strength. | strength (conditional) | — |  | pathdeath 1 |
+| Ariane | unmodelled | Ariane gets -1 stealth during undirected actions. | stealth (conditional) | — |  | brujah 1 |
+| Ashur-uballit, Son of the Abyss | unmodelled | While Ashur-uballit is ready, zombies (allies and retainers) you recruit or employ get +1 starting life. +1 bleed. | other (conditional); bleed (passive) | — |  | pathdeath 1 |
+| Azucena | unmodelled | Azucena gets +1 intercept against younger Lasombra and -1 intercept against older Lasombra. | intercept (conditional) | — |  | lasombra 1 |
+| Bret Stryker | unmodelled | Bret gets -1 intercept against titled vampires. | intercept (conditional) | — |  | toreador 1 |
+| Castellan | unmodelled | Castellan gets +1 intercept during directed actions and -1 intercept during non-directed actions. | intercept (conditional) | — |  | salubri 1 |
+| Crossbreaker | unmodelled | Once each round of combat, Crossbreaker can burn 1 blood to make the damage from his hand strikes aggravated that round. | combat (activated) | — |  | pathcaine 1 |
+| Damian | unmodelled | While you control a ready cardinal, Damian gets +1 bleed. | bleed (conditional) | — |  | pathpower 1 |
+| Devorah | unmodelled | While you have 5 or fewer pool, Devorah gets +1 stealth. | stealth (conditional) | — |  | pathcathari 1 |
+| Doc Martina | unmodelled | Rescuing a vampire from torpor costs Doc Martina -1 blood. | blood/pool (conditional) | — |  | ravnos 1 |
+| Dominica | unmodelled | Dominica can search your library for a master archetype card, reveal it and move it to your hand as a +1 stealth action. | action (activated) | — |  | salubri 1 |
+| Elen Kamjian | unmodelled | If you control a locked minion, Elen must bleed with +1 bleed as a Ⓓ action unless she must hunt. | bleed (conditional) | — |  | brujah 1 |
+| Eulogio Sánchez de los Reyes | unmodelled | Eulogio can look at and reorder the top 5 cards of your library, and unlock as a +1 stealth action that costs 1 blood. | action (activated) | — |  | pathdeath 1 |
+| Faruq Abd al-Qadir | unmodelled | Minions with any of your corruption counters in combat with Faruq cannot strike: combat ends. +1 strength. | combat (conditional); strength (passive) | — |  | ministry 1 |
+| Fotini Katsikaris | unmodelled | After Fotini successfully bleeds (for 1 or more), you get +1 hand size until your next discard phase. | hand size (conditional) | — |  | pathcathari 1 |
+| Frau Schädel | unmodelled | Frau Schädel gets +1 stealth during recruit and employ actions. | stealth (conditional) | — |  | pathdeath 1 |
+| Gathii | unmodelled | During an action Gathii performs, you can reveal the top card of your library. If it is a master card, he burns 1 blood; otherwise, he gets +1 stealth. | cards (activated); stealth (conditional) | — |  | ravnos 1 |
+| Gostoso | unmodelled | After Gostoso successfully bleeds your prey (for 1 or more), he can gain 1 blood. | blood/pool (activated) | — |  | pathcathari 1 |
+| Hesha Ruhadze | unmodelled | Hesha gets +1 bleed for each unique equipment attached to him. | bleed (conditional) | — |  | ministry 1 |
+| Huldu, The Desecrator | unmodelled | Once each combat involving another minion you control, if Huldu is ready, she can burn 1 blood to prevent 1 damage to that minion. +1 bleed. | combat (activated); bleed (passive) | — |  | pathdeath 1 |
+| Ilonka | unmodelled | Once each turn, if Ilonka is ready after a successful bleed against you, she can look at the acting minion's controller's hand, then she can discard 1 card at random from it. | cards (activated) | — |  | salubri 1 |
+| Jürgen, The Libertine | unmodelled | Minions must burn 1 blood or life to attempt to block Jürgen. | block (conditional) | — |  | pathcathari 1 |
+| Kalinda | unmodelled | During your turn, you can burn the Edge to unlock Kalinda. | unlock (activated) | — |  | banuhaqim 1 |
+| Kalyani, Agent of Doom | unmodelled | Kalyani gets -1 stealth when hunting. +1 strength. | stealth (conditional); strength (passive) | — |  | pathcaine 1 |
+| Kamile Paukstys | unmodelled | +1 bleed. | bleed (passive) | — |  | gangrel 1 |
+| Kasim Bayar | unmodelled | Once each combat, Kasim can discard a political action card [POLITICAL ACTION] before range is determined to get +2 strength that combat. +1 bleed. | strength (activated); bleed (passive) | — |  | banuhaqim 1 |
+| Khin Aye | unmodelled | While your predator controls more ready minions than you, you get +1 hand size. | hand size (conditional) | — |  | pathpower 1 |
+| Lenelle, Mambo of Birmingham | unmodelled | Lenelle can exchange a card from your hand for a library card in your ash heap as a +1 stealth action that costs 1 blood. | action (activated) | — |  | hecata 1 |
+| Luciano Carvalho | unmodelled | During your discard phase, you can move an animal retainer from a vampire you control to another vampire you control. | other (activated) | — |  | ravnos 1 |
+| Marchesa Liliana | unmodelled | During a bleed action, Liliana can remove seven cards in your ash heap from the game to get an additional +1 bleed. +1 bleed. | bleed (activated); bleed (passive) | — |  | hecata 1 |
+| Marialena | unmodelled | If Marialena is blocked, she burns 1 blood before block resolution. | block (conditional) | — |  | tzimisce 1 |
+| Mora, the Death Seer | unmodelled | If Mora is ready during your discard phase, you can move a library card from your ash heap to the bottom of your library. +1 bleed. | cards (activated); bleed (passive) | — |  | hecata 1 |
+| Neserian | unmodelled | While you control no locations, Neserian gets -1 bleed. While you control 1 or more locations, Neserian gets +1 vote. | bleed (conditional); votes (conditional) | — |  | tzimisce 1 |
+| Nonu Dis | unmodelled | If Nonu Dis is ready during your master phase, you can add 1 blood to a ready Ministry you control after playing a master card. +1 bleed. | blood/pool (activated); bleed (passive) | — |  | ministry 1 |
+| Opikun | unmodelled | Once each combat involving a vampire you control, Opikun can burn 1 blood to prevent up to 2 non-aggravated damage to that vampire from the opposing minion's strike. | combat (activated) | — |  | salubri 1 |
+| Osvaldo Kühnemann | unmodelled | Osvaldo gets +1 bleed against a Methuselah controlling a Toreador or Ventrue. | bleed (conditional) | — |  | pathcathari 1 |
+| Parijat, the Dark Oracle | unmodelled | While Parijat is ready, minions must burn the top card of their library to attempt to block wraith or zombie allies. | block (conditional) | — |  | hecata 1 |
+| Phaibun | unmodelled | Once each combat, Phaibun can discard a card at random to strike: dodge. | combat (activated) | — |  | ravnos 1 |
+| Rexton "Savage" Abernathy | unmodelled | Allies and vampires with capacity 3 or less cannot block Rexton. | block (conditional) | — |  | pathpower 1 |
+| Rinaldo Albizzi | unmodelled | +1 intercept. | intercept (passive) | — |  | lasombra 1 |
+| Roy | unmodelled | If Roy is unlocked during your discard phase, lock him. He gets +1 strength in combat with titled vampires. | other (conditional); strength (conditional) | — |  | ravnos 1 |
+| Sakhar | unmodelled | Sakhar can search your library for an equipment card, reveal it and move it to your hand as a +1 stealth action. | action (activated) | — |  | salubri 1 |
+| Sakura, The Merciless | unmodelled | During your turn, Sakura can burn 1 blood to unlock after performing a successful action requiring the Path of Death and the Soul. | unlock (activated) | — |  | pathdeath 1 |
+| Seraphina | unmodelled | Seraphina can add 2 blood or life to a minion you control as a +1 stealth action, not to exceed starting life. | action (activated) | — |  | salubri 1 |
+| Serhat Gunde, Combat Junkie | unmodelled | Serhat gets 1 optional press each combat. | combat (conditional) | — |  | pathcaine 1 |
+| Theo Bell | unmodelled | Theo can enter combat with a minion as a Ⓓ action. +1 strength. | action (activated); strength (passive) | — |  | brujah 1 |
+| Tommaso Sforza | unmodelled | Once each turn, if he is ready, Tommaso can burn 1 blood before range is determined in a combat involving a wraith or zombie ally you control to end that combat. | combat (activated) | — |  | hecata 1 |
+| Üresség | unmodelled | While your prey has 10 or fewer pool, Üresség gets +1 vote and +1 bleed. | votes+bleed (conditional) | — |  | pathpower 1 |
+| Valeriya Zinovieva | unmodelled | +1 strength. | strength (passive) | — |  | brujah 1 |
+| Věnceslava, The Implacable | unmodelled | Once each turn, after resolution of an action performed by Věnceslava during which your prey burned 1 or more pool, you can gain 1 pool. | blood/pool (activated) | — |  | pathpower 1 |
+| Verrix, Naughty Boy | unmodelled | Verrix gets +1 stealth during bleed actions. | stealth (conditional) | — |  | pathcathari 1 |
+| Alexander Silverson | modelled | Vampires must burn 1 blood to cast votes and ballots against referendums called by Alexander. | votes (conditional) | `voteTaxAgainst` → `_cryptVoteTax` |  | malkavian 2 |
+| Larissa Moreira | modelled | During a bleed action, Larissa can discard a card requiring Animalism [ani] to get +1 bleed. | bleed (activated) | `bleedBoostDiscard` → `_cryptBleedBoostFx` |  | nosferatu 2 |
+| Lenny Burkhead | modelled | +1 bleed. | bleed (passive) | `bleedBonus` → `_cryptBleedBonus` |  | nosferatu 2 |
+| Sybren van Oosten | modelled | You can unlock Sybren after a referendum called by him passes. | unlock (activated) | `selfUnlock` → `_cryptSelfUnlockFx` |  | ventrue 2 |
+| Alexa Draper | modelled | During the polling step of any referendum, Alexa can discard a card requiring Dominate [dom] to get +1 vote. | votes (activated) | `voteBoostDiscard` → `_cryptVoteBoostFx` |  | ventrue 1 |
+| The Dowager | modelled | The Dowager gets +1 intercept during directed actions. | intercept (conditional) | `interceptMod` → `_cryptIntercept` |  | nosferatu 1 |
+
+**Sect and title only** (no ability; a title is data the bot reads, R-31)
+
+| deck | vampires (copies) |
+|---|---|
+| banuhaqim | Asmin Kobane 1, Bijou 1, Farah Sarroub 1, Greg Mazouni 1, Kassandra Tassaki 2, Khadija Al-Kindi 1, Nayarana 1, Warmaksan 2 |
+| brujah | Atiena 2, Brandon Grime 1, Octane 1, Rayne 1, Siarhei Levchenko 1 |
+| gangrel | Crow 1, Dario Ziggler 1, Hanna Nokelainen 1, Indira 1, Joaquín de Cádiz 1, Nathan Turner 1, Ruslan Fedorenko 1 |
+| hecata | Alek König 1, Gebeyehu Abdu 1, Hiromitsu Asano 1, Holliday "Burgundy" Hall 1, Monica Giovanni 1, Peter St. John 1 |
+| lasombra | Aintzane Arriaga 1, Araceli "Celia" Rivera 1, Braden White 1, Kamaluddin 1, María del Toro 2 |
+| malkavian | Andi Liu 2, Ashley 1, Colette 1, Donny Kowalczyk 2, Dr. Stephen Norton 1, Gelasia Fotiou 1, Meaghan 1, Sully 1 |
+| ministry | Aluc Romas de Leon 1, Crystal Lynn 1, Doctor Morocco 1, Elisha Tucker 1, Jenny Silver 1, Marcel 1, Melech 1, Milton Fox 1, Vivian VI 1 |
+| nosferatu | Aunt Linda 1, Baixinho 1, Belinde 2, Horace Radcliffe 1, Ryan 1, Wauneka 1 |
+| pathcaine | Berenguela, The Vicious 1, Grażyna "Butcher" Olesińska 1, Hekla "Bonecrusher" Jónasdóttir 1, Lawbringer 1, Loyiso, The Ruthless 1, Przemysław, War Beast 1, Surapong 1 |
+| pathcathari | Coco Thorn 1, Cyan Sin 1, Glissando 1, Ximena 1 |
+| pathdeath | Aitana, The Unholy 1, El Monseñor 1, Nadezhda 1, Yurena, The Boor 1, Zbigniew, Hunter of Mekhet 1 |
+| pathpower | Concordia 1, Lika, The Purger 1, Lyyli Yösydän 1, Onkabetse, Arriviste 1, Rasha Tarabzouni 1, Suwira 1 |
+| ravnos | Jean-François 1, Oleg Kaprizov 1, Roberto Rivamonte 1, Trung Chau Pham 1, Zafira 1 |
+| salubri | Malachi 2, Yael 1 |
+| toreador | Kathy Glens 1, Massimo Falconi 1, Min-seo 1, Mkhokheli 2, Nik Sikko 1, Tamoszius 1 |
+| tremere | Ayelech 2, Chrysanthemum 1, Inês Tristão 2, Lauren 1, Lloyd Brooks 1, Nassir 1, Patrik Söderberg 1, Rosalina Cortez 1, Trevon Parker 2 |
+| tzimisce | Ángel Guerrero 2, Clara Hjortshøj 1, Prentis Derby 1, Susie Kano 1, Whisper 1 |
+| ventrue | Alice Chen 2, Brock Sterling 1, Chelsea Blake 1, Horst von Brühl 2, Madison 1, Naomi Stewart 1, Oshri Dahan 1 |
