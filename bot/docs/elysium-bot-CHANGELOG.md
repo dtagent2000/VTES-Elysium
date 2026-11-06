@@ -7,8 +7,8 @@
   Toreador precon hold up beside the starters (D-98)? `docs/reports/REPORT-toreador-sim-2026-11-06.md`: the four starters + toreador,
   every seating × 2 deals = 240 matches at five seats, the client profile; the prediction registered and pushed before the run
   (`e2bc196`). Toreador 0.60 ± 0.08 VP/match and 11.2 % wins, fourth of five: inside the starters' span at its low end (paired per
-  match: −0.29 ± 0.13 VP against tremere, +0.16 ± 0.10 against nosferatu); the starters keep their order; every Toreador card played;
-  the Grand Ball burned before it pays (68 played, 65 burned, 0.82 bars each). Audits as on the four-seat design run beside it (one
+  match: −0.29 ± 0.13 VP against tremere, +0.16 ± 0.10 against nosferatu); the starters keep their order; every Toreador card played
+  (Society Hunting Ground's use leaves no trace row); the Grand Ball burned before it pays (68 played, 65 burned, 0.82 bars each). Audits as on the four-seat design run beside it (one
   `strike-taken` flag: the known stray combat row). **`ana-cards.py`**: its untitled list read 135 false plays (bare precon crypt names
   missed the `(G6)` keys; a title card taken earlier, R-43) — it now resolves through the alias and honours a `title` row (a planted
   pair is listed, the real list is empty). Found: a held master counts as played in the ledger (BOARD). LESSONS L-84 (a stacked PR
