@@ -2,7 +2,10 @@
 # ana-cards.py <serie> -- per deck: every library card's uses (play / through / blocked / referendum-called / master-play), per match; the never-played list; untitled plays of titled cards.
 # 6 Nov 2026 (the Toreador read): the untitled check resolves a vampire as the bot's fxLookup does (exact, then the lowercase alias) -- a precon from
 # gen-precon.js names its crypt bare ('Mkhokheli'), cardfx keys it 'Mkhokheli (G6)', and every play by a printed Prince was listed -- and a vampire
-# that took a title card earlier in the match (a `title` row, R-43) is titled.
+# that took a title card earlier in the match (a `title` row, R-43) is titled. Limits: only Toreador Justicar's referendum writes a `title` row, so
+# a Regent or a Saulot's Guiding Wisdom the master loop put on a vampire leaves none (a play by that holder is still listed); the (bot, name) key
+# outlives a burned holder (its twin would pass); it checks 'has a title', not which title (`req.titles`); the 'per match' uses count a master's
+# PICKS, held ones too (BOARD).
 import json,glob,sys,collections
 S=sys.argv[1]; fx=json.load(open('elysium-cardfx.json'))
 def crypt(name): return fx['crypt'].get(name) or fx['crypt'].get(fx.get('alias',{}).get(str(name).strip().lower(),''),None) or {}

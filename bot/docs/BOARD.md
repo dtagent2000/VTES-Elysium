@@ -138,8 +138,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 
 ## Measurement debts
 - **A held master counts as played** (6 Nov): `gen-card-ledger.js` and `ana-cards.py` count every `master-play` pick, held ones
-  too (Grand Ball 407 picks, 68 plays; Villein 601, 353), so a master always held reads playable. *Done when* a master's play leaves a
-  row of its own and both tools count it.
+  too (Grand Ball 407 picks, 68 plays; Villein 601, 353), so a master always held reads playable. *Done when* both count a master only
+  when played: its own row, or gone from the hand the next decide row carries (no bot change; Villein's own decide comes first).
 - **The hotseat table runs out most bot-vs-bot reaction windows** (29 Oct; v0.6.211 too): on a pace-0 sim series 403 of 467 bleed
   totals and 101 of 125 modifier windows RAN OUT, 369 `stale-answer` rows (bot Passes); the server arena read 0 of 82 (v0.6.207). The
   sim matches the real-clock hotseat table decision for decision, so this may be what an offline table does. *Done when* a `--real`

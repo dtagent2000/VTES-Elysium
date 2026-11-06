@@ -58,21 +58,22 @@ fixed before measuring it is *inside*.
 
 - **The starters keep their order** here and on the four-seat client design run on the same bytes beside it (240 matches, every
   seating × deals 1–10): malkavian 2.01, ventrue 1.04, tremere 0.65, nosferatu 0.30 VP/match (53 / 24 / 14 / 9 % wins).
-- **Seating moves Toreador as much as any deck.** VP/match by seat (48 matches each, seat 1 takes the first turn): 0.69 · 0.44 · 0.96 ·
+- **Seating moves Toreador about as much as the others.** VP/match by seat (48 matches each, seat 1 takes the first turn): 0.69 · 0.44 · 0.96 ·
   0.79 · **0.15** (SE 0.08; first out 15 times of 48, survived twice). Every deck swings 0.46–1.23 VP across the seats on this table
   (malkavian 1.38–2.40, ventrue 0.81–2.04, nosferatu 0.25–0.71); why seat 5 is Toreador's worst is not read here (one cell of 25, a
   lead). By prey it does worst on malkavian (0.33 VP) and best on ventrue (0.85) and tremere (0.80); by predator worst under ventrue
   (0.45).
 - **It plays its deck.** `ana-cards.py`'s never-played list is empty. Every card but the masters has play rows; of the masters, the Ball
-  (68 plays), Villein (353), Art Museum (locked for blood in 75 matches), Elysium: The Palace of Versailles (its votes twice) and
-  Creepshow Casino (unseen in the 12-match smoke: its announce stealth 155 times in 46 matches) were in play; Society Hunting Ground
-  leaves no row of its own (below). Toreador Justicar's title was taken in 94 matches (five Second Traditions later came from a
+  (68 plays) and Villein (353) have rows of their own, and each location left the hand at its pick (the hand every decide row carries):
+  Art Museum in 78 matches, Creepshow Casino in 57 (unseen in the 12-match smoke: its announce stealth 155 times in 46 matches), Society
+  Hunting Ground in 50, Elysium: The Palace of Versailles in 37. Toreador Justicar's title was taken in 94 matches (five Second Traditions later came from a
   vampire that had taken it); Change of Target 89 times in 88 matches, each in the if-blocked window; Scalpel Tongue's abstain 5
   times; Majesty ended 366 combats; Resist Earth's Grasp 288 plays.
 - **Politics land.** 894 political actions, 21 % blocked (ventrue 759, 38 %); 722 referendums, 98 % passed (ventrue 485, 97 %).
 - **The Grand Ball is burned before it pays.** 68 Balls in 56 matches, each with its pair; 65 burned by a starter's (D) action
-  (malkavian 17, nosferatu 16, tremere 19, ventrue 13; no burn was blocked), 34 in the round it was played and 22 in the next. Its
-  56 bars went before a political action 35 times, a card action 19, stock 2 — never before a bleed. Bars per Ball: none for 29,
+  (malkavian 17, nosferatu 16, tremere 19, ventrue 13; no burn was blocked), 34 in the round it was played, 22 in the next and 9 later. Its
+  56 bars went before a political action 35 times (Kine Resources Contested 28, Parity Shift 6, Consanguineous Boon 1), a hunt 19 and a
+  stock action 2 — never before a bleed. Bars per Ball: none for 29,
   one for 24, two for 13, three for 2 (0.82 on average) for 1 pool, the card and a locked Toreador. A pricing question for a later
   wave (L-9), not a fault: the table spends an action on each burn.
 
@@ -111,9 +112,8 @@ measure set for this round (inside the starters' span); the menu is Johan's call
   match 240 with two planted untitled plays (an untitled vampire; the title-taker before its `title` row) lists exactly those two.
 - **A held master counts as played.** `gen-card-ledger.js` and `ana-cards.py` count every `master-play` pick, and the master phase
   holds many (no pair, no host): Toreador Grand Ball 407 picks against 68 plays, Villein 601 against 353 (their own rows). A master
-  that is always held would read `playable` in `CARDS.md`. Toreador's masters show their plays through other rows (above) except
-  Society Hunting Ground, whose use is a log line only: the trace cannot tell its plays from its holds. The ledger is the V5 waves'
-  done-condition — a BOARD line.
+  that is always held would read `playable` in `CARDS.md`. Toreador's masters were all played (above). The fix fits inside the two
+  tools — count a pick only when the card leaves the hand (the egress review) — and the ledger is the V5 waves' done-condition: a BOARD line.
 
 ## If Johan says yes
 
