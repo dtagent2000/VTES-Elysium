@@ -30,7 +30,7 @@ Toreador Justicar; a title card replaces the printed title in every count; an ac
 
 ## Next (proposed; Johan orders the board)
 1. C2: the lint's first-run findings, the legacy tests, `ana-gates.py` (before crypt wave A).
-2. Crypt wave A (D-108), Claude's list waiting for Johan's "kör"; then Toreador in the menu once its crypt rows are modelled.
+2. Crypt wave A (D-108): Claude's proposal of 6 Nov (in chat) waits for Johan's "kör"; then Toreador in the menu.
 3. V5 wave 5 — Johan picks its shape: the eighteen masters in play, Meditative Grove's cancel, Sudden Reversal's window (D-107).
 4. C5 (the leak test) before crypt wave B; C6; the knowledge layer's Kevlar and the prey's wakes (65f); the abstract model spec.
 
@@ -41,8 +41,7 @@ Main's replies of 3 Nov (`REPLY-to-bot-2026-11-03-v0.6.216.md`: canary v1.1.0 pi
 Oct's: BOARD. Still owed by main: v0.6.217's COT, ABSTAIN and burn-card lines in §12 and the canary; the pure `step`, `sp` / `xa` / `xb`, the second `rng`.
 
 ## Known, not built
-A human's bounce of a bot's bleed is not read by the acting bot · a human's Haven Uncovered is not read · between bots a contested
-block's verdict waits for the actor's clock · on the sim table most bot-vs-bot reaction windows run out their clock (BOARD) ·
-`askHumansTotal` off until the human harness learns the second question · the waves' riders (BOARD) · a Deep Song (once a Haven
-Uncovered) rush's wait runs into its safety net about once in 200 · a failed blocker fights the later blocker's combat and can spend a
-strike card (3 in 840 five-seat matches; the Toreador report).
+A human's bounce of a bot's bleed and a human's Haven Uncovered are not read · between bots a contested block's verdict waits for the
+actor's clock · on the sim table most bot-vs-bot reaction windows run out their clock (BOARD) · `askHumansTotal` off until the human
+harness learns the second question · the waves' riders (BOARD) · a rushed actor's maneuver wait hits its safety net about once in 200
+· a failed blocker fights the later blocker's combat and can spend a strike card (3 in 840 five-seat matches; the Toreador report).

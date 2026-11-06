@@ -50,9 +50,16 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   section 136: where node's default heap is ~2 GB (an 8 GB sandbox: 2,096 MB) it dies out of memory after 136e, v0.6.211's own bytes
   too — run `node --max-old-space-size=4096 test-bot-logic.js` there (29 Oct).
 - **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR or push to `main` that touches `bot/` or the bundle runs the gates
-  (the step list is the file); a gate that skips fails its step. The correctness lint by hand, from `bot/`: `npx --yes
-  eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .` -- a new violation fails, and
-  so does a suppressed one that is gone, until `--prune-suppressions` rewrites the file (round C2 fixes the first run's findings).
+  that need no person and no previous bytes (the step list is the file): a gate that skips fails its step, and the root's bundle
+  must equal `bot/`'s (a bundle change ships as a release). Still the round's: the suite ×3, the sim footprint, the arena smoke and
+  the audits, a new section's destructive check, main's client suite when the wire changes (red by design until main re-embeds a
+  new guide). A red the PR did not cause: the suite's 78c flake -- re-run the failed job once (`gh run rerun <id> --failed`) and
+  say so in the PR; `test-cardfx` / `gen-precon --check` red with no card change -- KRCG's data moved, a round of its own; a
+  doc-budget version line -- main released (main's files do not trigger CI), refresh STATUS in the PR. The correctness lint by
+  hand, from `bot/`: `npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .`
+  -- a new violation fails, and so does a suppressed one that is gone until `--prune-suppressions` rewrites the file (round C2).
+  The file only shrinks: never `--suppress-all` / `--suppress-rule` (CI fails a PR whose counts grow); a suppression is a count per
+  file and rule, so an old finding fixed beside a new one of the same rule in the same file passes until C2 empties the file.
 - **The canary against main's release** (the second canary run): a scratch dir with `bot/test-bot-canary.js`, `bot/elysium-bot.js`,
   the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; `node test-bot-canary.js` there.
 - **Main's client suite beside the release bytes** (when the wire or the timing changed): a scratch copy of `client/` (never the

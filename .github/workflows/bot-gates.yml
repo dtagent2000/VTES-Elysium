@@ -1,8 +1,11 @@
-# The bot project's gates (bot/CLAUDE.md, "Gates"), on every pull request and every push to main that touches bot/ or the bot
-# bundle at the root. It sits beside main's client-gates.yml (which invites it) and keeps its conventions: read-only, every step
-# runs even after a failure, one run per ref. The suite runs ONCE here: the local x3 in frozen snapshots stays the release gate
-# (bot/CLAUDE.md) until round C6 makes the suite fast. A gate that cannot find its inputs SKIPS with exit 0 by design (the canary's
-# rule), so the steps below fail on a skip line. Added in round C4 (6 Nov 2026, Johan's yes to the clean-up spec's Q5).
+# The bot project's gates that run unattended (bot/CLAUDE.md, "Gates"), on every pull request and every push to main that touches
+# bot/ or the bot bundle at the root. It sits beside main's client-gates.yml (which invites it) and keeps its conventions: read-only,
+# every step runs even after a failure, one run per ref. The suite runs ONCE here; left to the round (bot/CLAUDE.md, HOWTO "CI"):
+# the suite x3 in frozen snapshots (the release gate until round C6), the sim footprint, the arena smoke and the series audits, the
+# destructive check of a new section, and main's client suite beside the bundle when the wire changes (its embedded-guide check is
+# red by design until main re-embeds a new guide). Main's files (the root's client and server, client/, the root CLAUDE.md) do not
+# trigger it, so a main release shows on the next bot PR (D-109). A gate that cannot find its inputs SKIPS with exit 0 by design (the
+# canary's rule), so the steps below fail on a skip line. Added in round C4 (6 Nov 2026, Johan's yes to the clean-up spec's Q5).
 name: bot gates
 
 on:
@@ -61,6 +64,31 @@ jobs:
       - name: The correctness lint (26 rules, no style; the first run's findings suppressed until round C2)
         if: ${{ !cancelled() }}
         run: npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .
+      - name: The lint's suppressions only shrink (a pull request may not add or grow one)
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          git fetch --quiet --depth=1 origin "$BASE"
+          if ! git show "FETCH_HEAD:bot/tools/eslint-suppressions.json" > "$RUNNER_TEMP/base-suppressions.json" 2>/dev/null; then
+            echo "::notice::the base has no suppressions file: this pull request introduces it (round C4)"; exit 0
+          fi
+          node -e '
+            const fs = require("fs"), base = JSON.parse(fs.readFileSync(process.argv[1], "utf8")), head = JSON.parse(fs.readFileSync("tools/eslint-suppressions.json", "utf8"));
+            let bad = 0;
+            for (const [f, rules] of Object.entries(head)) for (const [r, v] of Object.entries(rules)){
+              const b = ((base[f] || {})[r] || {}).count || 0;
+              if (v.count > b){ console.log("::error file=bot/tools/eslint-suppressions.json::" + f + " " + r + ": " + b + " -> " + v.count + " suppressed; the file only shrinks"); bad = 1; }
+            }
+            process.exit(bad);' "$RUNNER_TEMP/base-suppressions.json"
+      - name: "The root's bundle is bot/'s (deploy = copy: a bundle change ships as a release)"
+        if: ${{ !cancelled() }}
+        run: |
+          fail=0
+          for f in elysium-bot.js elysium-cardfx.js elysium-cardfx.json elysium-twd-profile.js elysium-twd-profile.json elysium-twd-archetypes.js elysium-twd-archetypes.json START-HERE-BOTS.html; do
+            cmp -s "$f" "../$f" || { echo "::error file=$f::the root's $f differs from bot/$f: release it (copy bot/'s bundle to the root, bot/CLAUDE.md)"; fail=1; }
+          done
+          exit $fail
       - name: "KRCG's card data: vtes.json built from the v5 dump (third-party data, fetched, never committed)"
         if: ${{ !cancelled() }}
         run: |
@@ -103,4 +131,6 @@ jobs:
           bash tools/test-doc-budget.sh
       - name: The suite, once (the local x3 stays the release gate)
         if: ${{ !cancelled() }}
-        run: node --max-old-space-size=4096 test-bot-logic.js
+        run: |
+          node --max-old-space-size=4096 test-bot-logic.js | tee "$RUNNER_TEMP/suite.txt"
+          if grep -qE '\([0-9]+[a-z]* skipped:' "$RUNNER_TEMP/suite.txt"; then echo "::error::a suite section skipped (its input is missing): $(grep -oE '\([0-9]+[a-z]* skipped:[^)]*' "$RUNNER_TEMP/suite.txt" | head -1)"; exit 1; fi

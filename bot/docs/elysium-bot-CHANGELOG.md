@@ -429,19 +429,25 @@
 - **v0.6.101 (9 Aug 2026)** — the late-bubble re-check in `_pace`, the drain-gap guard at the drain top, the Hold on tail guard.
 
 ## Tools
-- **Round C4 — CI for `bot/` (6 Nov 2026, with bot v0.6.217; no bot release; PR #54)** — Johan's yes of 6 Nov to the clean-up spec's Q5
-  (D-109). **`.github/workflows/bot-gates.yml`**, beside main's `client-gates.yml` (which invites it) and with its conventions
-  (read-only, every step even after a failure, one run per ref): on every PR and push to `main` that touches `bot/` or the bot bundle
-  at the root it runs `node --check` on every script, the correctness lint, KRCG's v5 dump fetched and built into `vtes.json` (never
-  committed), test-cardfx, `gen-precon.js --check`, the ledger's self-test, the canary against `bot/`'s copies and against the root's
-  release, HB1, the hotseat gate, doc-budget and its destructive check, and the suite once (the local ×3 stays the release gate until
-  C6). A gate that skips (exit 0 by design) fails its step. **The correctness lint** (`tools/eslint.config.mjs`, ESLint 10.13.0 pinned,
-  the spec's 26 rules, no style, the 26 files we own): its first run finds 4 errors (a duplicate key in `gen-deck-coverage.js`; a
-  duplicate key and two self-comparisons in the suite) and 22 unused assignments, suppressed in `tools/eslint-suppressions.json`, so
-  only a new violation fails; a suppression that no longer occurs fails too, until C2 fixes the findings and prunes the file. Proven
-  destructively on a scratch copy: a new undefined name and one more unused assignment fail (exit 1), a fixed but unpruned finding
-  fails (exit 2). Every step was run locally on a fresh clone before the push; the PR's own run is the proof on GitHub, and a planted
-  failure on a throwaway branch went red. No bot change.
+- **Round C4 — CI for `bot/` (6 Nov 2026, with bot v0.6.217; no bot release; PR #54, stacked on #53)** — Johan's yes of 6 Nov to the
+  clean-up spec's Q5 (D-109). **`.github/workflows/bot-gates.yml`**, beside main's `client-gates.yml` (which invites it) and with its
+  conventions (read-only, every step even after a failure, one run per ref): on every PR and push to `main` that touches `bot/` or the
+  bot bundle at the root it runs the gates that need no person and no previous bytes — `node --check` on every script, the correctness
+  lint and (on a PR) a check that its suppressions only shrink, the root's bundle equal to `bot/`'s (a bundle change ships as a
+  release), KRCG's v5 dump fetched and built into `vtes.json` (never committed), test-cardfx, `gen-precon.js --check`, the ledger's
+  self-test, the canary against `bot/`'s copies and against the root's release, HB1, the hotseat gate, doc-budget and its destructive
+  check, and the suite once. A gate that skips (exit 0 by design: the canaries, the hotseat gate, suite section 154f) fails its step.
+  Still the round's: the suite ×3 (the release gate until C6), the sim footprint, the arena smoke and audits, a new section's
+  destructive check, main's client suite when the wire changes (354/0 beside the bundle today, 1 m 44 s, but red by design until main
+  re-embeds a new guide). Main's files do not trigger it. **The correctness lint** (`tools/eslint.config.mjs`, ESLint 10.13.0 pinned,
+  the spec's §5.2 26 rules, no style) covers every script in `bot/` but main's files (the server copy, main's canary), the generated
+  wrappers and the ten legacy tests: the 25 files we own, and a new file by itself. Its first run finds 4 errors (a duplicate key in
+  `gen-deck-coverage.js`; a duplicate key and two self-comparisons in the suite) and 22 unused assignments, suppressed in
+  `tools/eslint-suppressions.json` until C2 fixes them; the file only shrinks. Proven: on a scratch copy a new undefined name, a new
+  file, one more unused assignment and a grown suppression count fail, a fixed but unpruned finding fails (exit 2); the first commit's
+  eleven steps ran green on a local fresh clone (the suite 2393/0); on GitHub PR #54's run 42221088419 was green on every step (the
+  suite 2393/0 in 9 min) and the throwaway draft PR #55's run 42221112888 red on the lint alone (a planted undefined name; #55 closed,
+  Johan deleted its branch). Egress: 12 findings, all fixed (the PR body lists them). No bot change.
 - **Crypt round 0 — the ledger reads the crypt (6 Nov 2026, with bot v0.6.217; no bot release; PR #53)** — Johan's go of 6 Nov on
   Claude's recommendation (D-108: the crypt gets waves of its own, and D-98's "rows are playable" covers it). **`gen-card-ledger.js`
   v1.1.0**: every vampire of the same decks, read from KRCG's text (`vtes.json` beside the script; without it the page says the crypt
