@@ -57,12 +57,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Johan's "kör". Docs: RULINGS D-43, O-33; `specs/spec-knowledge-layer.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
-- **C2 — dead code and tools**: delete the ten legacy tests, `_bumpTallyB`, the lint's eight unused assignments, one `handStrike`
-  key; add `ana-gates.py` (one PASS/FAIL line per audit over a sim dir). *Done when* the sim's 240-match design is IDENTICAL and the
-  gates are green. Docs: spec §5.6, T10.
-- **C4 — CI for `bot/`** (if Johan says yes, spec §8 Q5): `.github/workflows/bot-gates.yml` beside main's, triggered by `bot/**`
-  and the bot bundle; `node --check`, the correctness lint, canary, cardfx, HB1, hotseat, the suite. *Done when* a red gate shows
-  on a PR. Docs: spec T8; HARNESS.
+- **C2 — dead code and tools**: fix what the lint's first run found (`tools/eslint-suppressions.json`: 4 errors, 22 unused
+  assignments) and prune the file; delete the ten legacy tests and `_bumpTallyB`; add `ana-gates.py` (one PASS/FAIL line per audit
+  over a sim dir). *Done when* the sim's 240-match design is IDENTICAL and the gates are green. Docs: spec §5.6, T10.
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
   card only another seat held, a planted leak the positive control; `_twdExpect` agrees across observers), flip counts on `decide`
   rows, the knob registry (`KNOBS`: every decision knob with a 0-path, persona thresholds as overlays), and the off-by-default knobs

@@ -192,6 +192,7 @@ approved, the line says which part is whose ("Johan: … · built (Claude): …"
 - **D-92** (2026-10-16, Johan) — Combining rule: a fix found during a round may ride in it when it fits, said so in the PR; review rounds R1 → R4; we run the play-test rig ourselves.
 - **D-93** (2026-08-04, Johan) — The evaluation doctrine: every shipped tactical change gets its OUTCOME evaluated in the next report against its registered prediction (change · prediction · observed · verdict: keep / tune / revert), so the sum of changes is judged, not just shipped [CL lines 96–100].
 - **D-101** (2026-10-29, Johan) — A page budget serves the docs: when a standing page needs room, the ceiling is raised ("we should not lock ourselves to something that does not work optimally"). Built (Claude): RULINGS 42 → 60 KB, BOARD 15 → 18 KB, the standing pages 140 → 160 KB (`tools/doc-budget.sh`; the bootstrap's 50 KB stays); cutting history first (HARNESS) stands.
+- **D-109** (2026-11-06, Johan: Claude's recommendation taken, answers spec-cleanup Q5 · built (Claude): round C4) — CI for `bot/`: `.github/workflows/bot-gates.yml` beside main's runs the gates on every PR and push to `main` that touches `bot/` or the bot bundle (the suite once; the local ×3 stays the release gate until C6); a red step is a red gate. The correctness lint's first-run findings are suppressed in `tools/eslint-suppressions.json` until C2 fixes them.
 
 ## Open — waiting for Johan, or a known gap tagged as such (sources consulted in brackets)
 
@@ -237,7 +238,7 @@ A retired line keeps its number as a one-line stub so references stay valid.
 - **O-26** — retired 20 Oct (obsolete: the Reduce row, client v2.6.159, D-7).
 - **O-27** (2026-10-17) — The probe default and the chat beat have not been seen by a human at a table; main's second idea (delay the panel) is the reserve [journal 17 Oct].
 - **O-36** (2026-10-17) — Between bots a contested block's verdict waits for the actor's clock (~3 s at the arena's askSecs; by design in R4, nobody declares it sooner): keep, or shorten? [context 17 Oct, `ana-windows.py`'s "contest at the clock" rows].
-- **O-28** (2026-10-20) — The clean-up's open decisions (spec-cleanup §8): Q2 the journal and Q3 the READ-ME-FIRSTs (C1 froze both in `history/` and the ritual writes neither, as §5.5 lays out; Q2 (b) would add a short Swedish decision log), Q5 CI for `bot/`, Q6 history comments (recommended (b)), Q7 paste the project instruction after the merge. Q4 is asked of main (the docs-diet handoff) [spec-cleanup §8].
+- **O-28** (2026-10-20) — The clean-up's open decisions (spec-cleanup §8): Q2 the journal and Q3 the READ-ME-FIRSTs (C1 froze both in `history/` and the ritual writes neither, as §5.5 lays out; Q2 (b) would add a short Swedish decision log), Q6 history comments (recommended (b)), Q7 paste the project instruction after the merge; Q5 (CI) is D-109. Q4 is asked of main (the docs-diet handoff) [spec-cleanup §8].
 
 ### Plan & strategy
 - **O-13** (2026-09-18) — `H = 3` and the grinding quota holding only while `myTto ≤ 2H` in `_strategize` were changed before measurement; never confirmed [CL 10, 17, 68].

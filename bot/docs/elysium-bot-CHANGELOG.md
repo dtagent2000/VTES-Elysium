@@ -429,6 +429,19 @@
 - **v0.6.101 (9 Aug 2026)** — the late-bubble re-check in `_pace`, the drain-gap guard at the drain top, the Hold on tail guard.
 
 ## Tools
+- **Round C4 — CI for `bot/` (6 Nov 2026, with bot v0.6.217; no bot release; PR #54)** — Johan's yes of 6 Nov to the clean-up spec's Q5
+  (D-109). **`.github/workflows/bot-gates.yml`**, beside main's `client-gates.yml` (which invites it) and with its conventions
+  (read-only, every step even after a failure, one run per ref): on every PR and push to `main` that touches `bot/` or the bot bundle
+  at the root it runs `node --check` on every script, the correctness lint, KRCG's v5 dump fetched and built into `vtes.json` (never
+  committed), test-cardfx, `gen-precon.js --check`, the ledger's self-test, the canary against `bot/`'s copies and against the root's
+  release, HB1, the hotseat gate, doc-budget and its destructive check, and the suite once (the local ×3 stays the release gate until
+  C6). A gate that skips (exit 0 by design) fails its step. **The correctness lint** (`tools/eslint.config.mjs`, ESLint 10.13.0 pinned,
+  the spec's 26 rules, no style, the 26 files we own): its first run finds 4 errors (a duplicate key in `gen-deck-coverage.js`; a
+  duplicate key and two self-comparisons in the suite) and 22 unused assignments, suppressed in `tools/eslint-suppressions.json`, so
+  only a new violation fails; a suppression that no longer occurs fails too, until C2 fixes the findings and prunes the file. Proven
+  destructively on a scratch copy: a new undefined name and one more unused assignment fail (exit 1), a fixed but unpruned finding
+  fails (exit 2). Every step was run locally on a fresh clone before the push; the PR's own run is the proof on GitHub, and a planted
+  failure on a throwaway branch went red. No bot change.
 - **Crypt round 0 — the ledger reads the crypt (6 Nov 2026, with bot v0.6.217; no bot release; PR #53)** — Johan's go of 6 Nov on
   Claude's recommendation (D-108: the crypt gets waves of its own, and D-98's "rows are playable" covers it). **`gen-card-ledger.js`
   v1.1.0**: every vampire of the same decks, read from KRCG's text (`vtes.json` beside the script; without it the page says the crypt

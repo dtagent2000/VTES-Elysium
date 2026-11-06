@@ -49,6 +49,10 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran. The suite needs more than 2 GB of heap by
   section 136: where node's default heap is ~2 GB (an 8 GB sandbox: 2,096 MB) it dies out of memory after 136e, v0.6.211's own bytes
   too — run `node --max-old-space-size=4096 test-bot-logic.js` there (29 Oct).
+- **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR or push to `main` that touches `bot/` or the bundle runs the gates
+  (the step list is the file); a gate that skips fails its step. The correctness lint by hand, from `bot/`: `npx --yes
+  eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .` -- a new violation fails, and
+  so does a suppressed one that is gone, until `--prune-suppressions` rewrites the file (round C2 fixes the first run's findings).
 - **The canary against main's release** (the second canary run): a scratch dir with `bot/test-bot-canary.js`, `bot/elysium-bot.js`,
   the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; `node test-bot-canary.js` there.
 - **Main's client suite beside the release bytes** (when the wire or the timing changed): a scratch copy of `client/` (never the

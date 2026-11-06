@@ -73,6 +73,9 @@ jobs:
       - name: The precons against KRCG (gen-precon --check)
         if: ${{ !cancelled() }}
         run: node gen-precon.js --check
+      - name: The card ledger's self-test (gen-card-ledger --self-test)
+        if: ${{ !cancelled() }}
+        run: node gen-card-ledger.js --self-test
       - name: Section 12 canary (bot/'s read-only copies)
         if: ${{ !cancelled() }}
         run: |
