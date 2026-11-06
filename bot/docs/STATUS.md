@@ -5,8 +5,8 @@ coverage tool v1.1.43 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` 
 built against client v2.6.170; the root's release is now client **v2.6.172 / srv-2.6.49** (main's #51: our canary 69/0, main's v1.1.0 102/0);
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
-**Deploy state:** `main` carries v0.6.217 (#47), client v2.6.172 (main's #51, 6 Nov; its gates green again), round C3 (#50, 4 Nov),
-the Toreador read (#52) and crypt round 0 (#53, 6 Nov). **Open PRs:** #54.
+**Deploy state:** `main` carries v0.6.217 (#47), client v2.6.172 (main's #51, 6 Nov), round C3 (#50, 4 Nov), the Toreador read (#52),
+crypt round 0 (#53) and C4's CI (#54, 6 Nov). **Open PRs:** #57 (C4's triggers).
 
 ## Last gates (v0.6.217 release bytes, 3 Nov 2026)
 Suite **2393/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root v2.6.170
@@ -25,7 +25,7 @@ Toreador Justicar; a title card replaces the printed title in every count; an ac
   deals (0.65 ± 0.05 VP/match; level with tremere, above nosferatu). Menu: after its crypt rows (D-108).
 - Crypt round 0 (#53, D-108): `gen-card-ledger.js` v1.1.0 reads the crypt into `docs/CARDS.md` (186 vampires: 110 no ability,
   6 modelled, 70 unmodelled, ranked by the crypt class map); the library half is unchanged.
-- Round C4 (#54, D-109): CI for `bot/` — `.github/workflows/bot-gates.yml` runs the gates on every bot PR and daily on `main`
+- Round C4 (#54, #57; D-109): CI for `bot/` — `.github/workflows/bot-gates.yml` runs the gates on every bot PR and daily on `main`
   (a required check); the lint's first-run findings wait for C2.
 
 ## Next (proposed; Johan orders the board)
@@ -38,7 +38,8 @@ Toreador Justicar; a title card replaces the printed title in every count; an ac
 Main's replies of 3 Nov (`REPLY-to-bot-2026-11-03-v0.6.216.md`: canary v1.1.0 pins every bot line through v0.6.216 — copy it into
 `bot/`; Q4: gate on the root's release, record the `main` commit; the data repo's v5 dump) and 6 Nov
 (`REPLY-to-bot-2026-11-06-v0.6.217.md`: our guide's body still says 144 curated, its chip client v2.6.170) — a bot round; 17–18
-Oct's: BOARD. Still owed by main: v0.6.217's COT, ABSTAIN and burn-card lines in §12 and the canary; the pure `step`, `sp` / `xa` / `xb`, the second `rng`.
+Oct's: BOARD. Still owed by main: v0.6.217's COT, ABSTAIN and burn-card lines in §12 and the canary; the pure `step`, `sp` / `xa` /
+`xb`, the second `rng`.
 
 ## Known, not built
 A human's bounce of a bot's bleed and a human's Haven Uncovered are not read · between bots a contested block's verdict waits for the
