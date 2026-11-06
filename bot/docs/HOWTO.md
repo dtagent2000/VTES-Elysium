@@ -20,7 +20,10 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   SUMMARY.md lists post-game ousts and the `zeroPool` count (a bot deciding at pool ≤ 0 before its own oust = a rules fault; a payment
   of the last pool that ousts at once leaves no decision at 0 and is not counted — BOARD). When a footprint shows DIVERGED, check whether
   the two decision sequences realign once one missing row is dropped. A `--decks` key the bot does not embed plays `deck-<key>.json`
-  beside the sim (a test input: the client's menu offers `ARCHETYPES` only).
+  beside the sim (a test input: the client's menu offers `ARCHETYPES` only). A deck's deal is fixed by its seat and the deal seed, so
+  `--seatings all --seeds K` gives each deck K × seats deals, the same one in every seating of a seat: enough for version against
+  version, too few to rank decks (L-45). A deck-strength read takes a fresh deal per match: `--bench none` (every seating once per seat,
+  each match a seed of its own; `docs/reports/REPORT-toreador-sim-2026-11-06.md`).
 - **The V5 precons** — `node gen-precon.js` (`vtes.json` beside it): writes the missing `deck-<key>.json` for every V5 precon and
   compares the existing ones, and the decks embedded in the bot, by KRCG id and quantity; `--check` writes nothing (exit 1 on a DIFF or
   a name the bot cannot resolve: the check after a `vtes.json` refresh), `--list` prints the keys (`banuhaqim` … `pathpower`). Each

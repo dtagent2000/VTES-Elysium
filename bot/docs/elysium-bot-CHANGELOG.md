@@ -3,6 +3,19 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **Toreador at the sim table (6 Nov 2026, bot v0.6.217, no bot change; PR #52)** — STATUS Next 1, Johan's go of 6 Nov: does the
+  Toreador precon hold up beside the starters (D-98)? `docs/reports/REPORT-toreador-sim-2026-11-06.md`. The specified design (the four
+  starters + toreador, every seating × 2 deals = 240 at five seats, the client profile; the prediction registered and pushed before the
+  run, `e2bc196`): Toreador 0.60 VP/match, 11.2 % wins, inside the span. The egress review found that its deals repeat — a deck's deal
+  is fixed by its seat and the deal seed, so each deck met 10 deals — which doubles the SEs; a 600-match series with a fresh deal per
+  match (`--bench none`) carries the read: Toreador 0.65 ± 0.05 VP/match, 13.0 % wins, level with tremere (−0.01 ± 0.07 VP paired),
+  above nosferatu (+0.26 ± 0.06); the starters keep their order. Every Toreador card played; politics land (99 % of its referendums
+  pass); the Grand Ball burned before it pays (325 played, 304 burned, 0.75 bars each, never before a bleed). Audits as on the
+  four-seat design; the three `strike-taken` flags show the stray combat row's cause (a failed blocker fights the later blocker's
+  combat, and can spend a strike card). **`ana-cards.py`**: its untitled list read 135 false plays (bare precon crypt names missed the
+  `(G6)` keys; a title card taken earlier, R-43) — it now resolves through the alias and honours a `title` row (a planted pair is
+  listed, the real list is empty). HOWTO: a deck read takes fresh deals. BOARD: a held master counts as played. LESSONS L-84 (a
+  stacked PR targets `main`, after #49). Egress: 4 findings (unproven 3, half-done 1), all fixed.
 - **C1 — the docs diet (20 Oct 2026, no code change; PR #39)** — `spec-cleanup-2026-10-20.md` §5: the prescribed bootstrap of ~700 KB became
   root CLAUDE.md + `bot/CLAUDE.md` (rules only) + `docs/STATUS.md` + `docs/BOARD.md` (~35 KB), with `RULINGS.md` (the register of
   Johan's rulings and the design decisions, R / D / O numbered), `LESSONS.md` (the learnings distilled), `ARCHITECTURE.md`,
