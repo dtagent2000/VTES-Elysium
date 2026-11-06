@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # ana-cards.py <serie> -- per deck: every library card's uses (play / through / blocked / referendum-called / master-play), per match; the never-played list; untitled plays of titled cards.
+# 6 Nov 2026 (the Toreador read): the untitled check resolves a vampire as the bot's fxLookup does (exact, then the lowercase alias) -- a precon from
+# gen-precon.js names its crypt bare ('Mkhokheli'), cardfx keys it 'Mkhokheli (G6)', and every play by a printed Prince was listed -- and a vampire
+# that took a title card earlier in the match (a `title` row, R-43) is titled.
 import json,glob,sys,collections
 S=sys.argv[1]; fx=json.load(open('elysium-cardfx.json'))
+def crypt(name): return fx['crypt'].get(name) or fx['crypt'].get(fx.get('alias',{}).get(str(name).strip().lower(),''),None) or {}
 used=collections.defaultdict(collections.Counter); wins=collections.defaultdict(collections.Counter); bad=[]; n=0; res=collections.Counter(); vp=collections.Counter(); reasons=collections.Counter(); errs=0; aa=collections.Counter(); stealthQ=collections.defaultdict(lambda:[0,0]); blocked=collections.defaultdict(lambda:[0,0])
 for f in sorted(glob.glob(S+'/match-*.jsonl')):
     rows=[json.loads(l) for l in open(f)]; n+=1
@@ -9,17 +13,19 @@ for f in sorted(glob.glob(S+'/match-*.jsonl')):
     R=[r for r in rows if r['type']=='result'][0]['data']; reasons[R.get('reason')]+=1
     if R.get('winner') in deck: res[deck[R['winner']]]+=1
     for b in deck: vp[deck[b]]+=R['vp'].get(b,0)
+    titled=set()
     for r in rows:
         if r['type']=='server-err': errs+=1
         b=r.get('bot'); d=r.get('data') or {}
         if b not in deck: continue
         dk=deck[b]
+        if r['type']=='title': titled.add((b,d.get('vamp')))
         if r['type']=='play': used[dk][d['card']]+=1; wins[dk][d.get('window')]+=1
         if r['type']=='play' and d.get('vamp'):
             e=fx['lib'].get(d['card']) or {}
             if (e.get('req') or {}).get('title'):
-                t=(fx['crypt'].get(d['vamp']) or {}).get('title')
-                if not t: bad.append((dk,d['card'],d['vamp']))
+                t=crypt(d['vamp']).get('title')
+                if not t and (b,d['vamp']) not in titled: bad.append((dk,d['card'],d['vamp']))
         if r['type'] in('through','blocked') and d.get('card') and d['card']!='hunt': used[dk][d['card']]+=1
         if r['type'] in('through','blocked'): blocked[dk][1]+=1; blocked[dk][0]+=1 if r['type']=='blocked' else 0
         if r['type']=='decide' and d.get('q')=='master-play' and (d['out'].get('pick') or {}).get('name'): used[dk][d['out']['pick']['name']]+=1

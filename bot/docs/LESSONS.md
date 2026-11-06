@@ -94,3 +94,4 @@
 - L-79 **Seat and deck attribution comes from manifests, never from names or emission order** (4 Aug, bitten twice).
 - L-80 **Split by OWNERSHIP, then consume releases** (9 Sep); never share files between two projects again.
 - L-81 **Three brains is the disease, not the bots** (carried in from main): one source of truth per fact.
+- L-84 **A stacked PR still targets `main`; the order goes in its body ("merge #N first")** (3 Nov, round C3): #49 was opened on #47's branch `bot-v5-wave4`; the base stayed when #47 merged, so #49 merged 39 s later into that branch, not `main`, and #50 had to carry it over. Check the base before handing a PR over.
