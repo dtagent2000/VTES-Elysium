@@ -1,1 +1,2 @@
 Throwaway (round C4): a root-only change, to prove that a PR touching no bot path skips bot-gates as a success. Never merged.
+Second push: re-run the probe against the base with the single-job workflow (61f2247).
