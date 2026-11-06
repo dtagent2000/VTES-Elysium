@@ -1,0 +1,103 @@
+# The bot project's gates (bot/CLAUDE.md, "Gates"), on every pull request and every push to main that touches bot/ or the bot
+# bundle at the root. It sits beside main's client-gates.yml (which invites it) and keeps its conventions: read-only, every step
+# runs even after a failure, one run per ref. The suite runs ONCE here: the local x3 in frozen snapshots stays the release gate
+# (bot/CLAUDE.md) until round C6 makes the suite fast. A gate that cannot find its inputs SKIPS with exit 0 by design (the canary's
+# rule), so the steps below fail on a skip line. Added in round C4 (6 Nov 2026, Johan's yes to the clean-up spec's Q5).
+name: bot gates
+
+on:
+  pull_request:
+    paths:
+      - 'bot/**'
+      - 'elysium-bot.js'
+      - 'elysium-cardfx.js'
+      - 'elysium-cardfx.json'
+      - 'elysium-twd-profile.js'
+      - 'elysium-twd-profile.json'
+      - 'elysium-twd-archetypes.js'
+      - 'elysium-twd-archetypes.json'
+      - 'START-HERE-BOTS.html'
+      - '.github/workflows/bot-gates.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'bot/**'
+      - 'elysium-bot.js'
+      - 'elysium-cardfx.js'
+      - 'elysium-cardfx.json'
+      - 'elysium-twd-profile.js'
+      - 'elysium-twd-profile.json'
+      - 'elysium-twd-archetypes.js'
+      - 'elysium-twd-archetypes.json'
+      - 'START-HERE-BOTS.html'
+      - '.github/workflows/bot-gates.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bot-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: bot
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: node --check, every script in bot/
+        run: |
+          fail=0
+          for f in *.js; do node --check "$f" || { echo "::error file=bot/$f::node --check failed"; fail=1; }; done
+          exit $fail
+      - name: The correctness lint (26 rules, no style; the first run's findings suppressed until round C2)
+        if: ${{ !cancelled() }}
+        run: npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .
+      - name: "KRCG's card data: vtes.json built from the v5 dump (third-party data, fetched, never committed)"
+        if: ${{ !cancelled() }}
+        run: |
+          curl -fsSL --retry 3 -o vtes-v5.json https://static.krcg.org/data/v5/vtes.json
+          curl -fsSL --retry 3 -o expansions.json https://static.krcg.org/data/v5/expansions.json
+          node krcg-v5.js
+      - name: cardfx against KRCG (test-cardfx)
+        if: ${{ !cancelled() }}
+        run: node test-cardfx.js
+      - name: The precons against KRCG (gen-precon --check)
+        if: ${{ !cancelled() }}
+        run: node gen-precon.js --check
+      - name: Section 12 canary (bot/'s read-only copies)
+        if: ${{ !cancelled() }}
+        run: |
+          node test-bot-canary.js | tee "$RUNNER_TEMP/canary1.txt"
+          if grep -q 'SKIPPED' "$RUNNER_TEMP/canary1.txt"; then echo "::error::the canary skipped: a release copy is missing in bot/"; exit 1; fi
+      - name: Section 12 canary (the root's release + client/ELYSIUM-PROTOCOL.md)
+        if: ${{ !cancelled() }}
+        run: |
+          D="$RUNNER_TEMP/canary-root"; mkdir -p "$D"
+          cp test-bot-canary.js elysium-bot.js "$D/"; cp ../elysium-vtes-bord.html ../client/ELYSIUM-PROTOCOL.md "$D/"
+          (cd "$D" && node test-bot-canary.js) | tee "$RUNNER_TEMP/canary2.txt"
+          if grep -q 'SKIPPED' "$RUNNER_TEMP/canary2.txt"; then echo "::error::the canary skipped against the root's release"; exit 1; fi
+      - name: HB1 smoke (the browser surface)
+        if: ${{ !cancelled() }}
+        run: node diag-hb1-smoke.js
+      - name: Hotseat gate (the real hotBridge)
+        if: ${{ !cancelled() }}
+        run: |
+          node test-bot-hotseat.js | tee "$RUNNER_TEMP/hotseat.txt"
+          if grep -q 'SKIPPED' "$RUNNER_TEMP/hotseat.txt"; then echo "::error::the hotseat gate skipped"; exit 1; fi
+      - name: The standing pages (doc-budget) and its destructive check
+        if: ${{ !cancelled() }}
+        run: |
+          bash tools/doc-budget.sh
+          bash tools/test-doc-budget.sh
+      - name: The suite, once (the local x3 stays the release gate)
+        if: ${{ !cancelled() }}
+        run: node --max-old-space-size=4096 test-bot-logic.js
