@@ -1,4 +1,4 @@
-# BOARD — the open asks (3 Nov 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (6 Nov 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -137,6 +137,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* the persona pass (RULINGS O-29) ships with those tests.
 
 ## Measurement debts
+- **A held master counts as played** (6 Nov): `gen-card-ledger.js` and `ana-cards.py` count every `master-play` pick, held ones
+  too (Grand Ball 407 picks, 68 plays; Villein 601, 353), so a master always held reads playable. *Done when* a master's play leaves a
+  row of its own and both tools count it.
 - **The hotseat table runs out most bot-vs-bot reaction windows** (29 Oct; v0.6.211 too): on a pace-0 sim series 403 of 467 bleed
   totals and 101 of 125 modifier windows RAN OUT, 369 `stale-answer` rows (bot Passes); the server arena read 0 of 82 (v0.6.207). The
   sim matches the real-clock hotseat table decision for decision, so this may be what an offline table does. *Done when* a `--real`
