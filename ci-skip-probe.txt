@@ -1,0 +1,1 @@
+Throwaway (round C4): a root-only change, to prove that a PR touching no bot path skips bot-gates as a success. Never merged.
