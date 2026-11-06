@@ -11106,3 +11106,6 @@ const BOT_EXPORTS = { PERSONA_ALIAS, personaKey, Bot, wsConnect, wsFrame, parseA
 if(IS_NODE && typeof module !== 'undefined' && module.exports) module.exports = BOT_EXPORTS;   // Node: the require() surface is unchanged (+ prepCardfx)
 else if(typeof globalThis !== 'undefined') globalThis.ElysiumBot = BOT_EXPORTS;                // v0.6.96: browser -- ALSO when the page carries a module shim: IS_NODE, not module, discriminates (Johan's first client-page spawn-fail round)
 })();                                           // v0.6.97: the lexical-armor IIFE closes
+
+/* THROWAWAY (CI positive control for #54; never merged): an undefined name in a function nobody calls -- the lint must fail */
+function __ciPositiveControl(){ return ciPlantedUndefinedName; }
