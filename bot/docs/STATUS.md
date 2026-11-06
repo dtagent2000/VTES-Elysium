@@ -5,8 +5,8 @@ coverage tool v1.1.43 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` 
 built against client v2.6.170; the root's release is now client **v2.6.172 / srv-2.6.49** (main's #51: our canary 69/0, main's v1.1.0 102/0);
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
-**Deploy state:** `main` carries v0.6.217 (#47), client v2.6.172 (main's #51, 6 Nov; its gates green again), round C3 (#50, 4 Nov)
-and the Toreador read (#52, 6 Nov). **Open PRs:** #53, #54 (on #53: merge #53 first).
+**Deploy state:** `main` carries v0.6.217 (#47), client v2.6.172 (main's #51, 6 Nov; its gates green again), round C3 (#50, 4 Nov),
+the Toreador read (#52) and crypt round 0 (#53, 6 Nov). **Open PRs:** #54.
 
 ## Last gates (v0.6.217 release bytes, 3 Nov 2026)
 Suite **2393/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root v2.6.170
