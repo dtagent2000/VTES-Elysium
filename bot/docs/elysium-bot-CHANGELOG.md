@@ -429,6 +429,17 @@
 - **v0.6.101 (9 Aug 2026)** — the late-bubble re-check in `_pace`, the drain-gap guard at the drain top, the Hold on tail guard.
 
 ## Tools
+- **Crypt round 0 — the ledger reads the crypt (6 Nov 2026, with bot v0.6.217; no bot release; PR #53)** — Johan's go of 6 Nov on
+  Claude's recommendation (D-108: the crypt gets waves of its own, and D-98's "rows are playable" covers it). **`gen-card-ledger.js`
+  v1.1.0**: one row per vampire of the same decks, read from KRCG's text (`vtes.json` beside the script; without it the page says the
+  crypt is not read) — the ability after the sect and title, its status (no ability · modelled = a curated crypt `fx` whose every key
+  the bot reads · partial · unmodelled · unresolved), an effect class and kind per sentence (passive / conditional / activated), its
+  decks and copies; the crypt class map weighs the unmodelled sentences by copies. The classifier is checked against every curated
+  crypt entry with a known key (14 of 14, printed on the page) and by `--self-test` (18 fixed texts, among them the first run's three
+  misreads: an unlock-phase timing, "unlocked" as a state, a forced bleed read as an action). From v0.6.217's runs (the 240-match
+  design and the V5 smoke, 14 × 12): 186 vampires, 216 copies — 110 no ability, 6 modelled (the starters' curated ones), 70
+  unmodelled (81 copies), 0 unresolved; the biggest classes bleed passive 13 copies, strength passive 8, combat activated 8, intercept
+  conditional 7. The library half is the old page byte for byte but its version line. No bot change.
 - **Round C3 — the mirror bench on the sim (3 Nov 2026, with bot v0.6.217; no bot release)** — `elysium-bot-sim.js` **v1.1.0**:
   `--bench none|persona=NAME|knob=k=v[+k=v]` puts the variant in one seat of every match and rotates it through every seat (24
   seatings × 4 = 96 for the starters), `--bench-deck DECK` pins it (bench.sh's 6th argument), `--knob k=v` is every seat's baseline

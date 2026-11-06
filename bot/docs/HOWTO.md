@@ -31,6 +31,8 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   table, checked like the cards; `--posture` writes the table's posture into the existing files (v1.1.0).
 - **The card ledger** — `node gen-card-ledger.js --sim DIR [--sim DIR …]` → `docs/CARDS.md`: per card the coverage verdict, tier,
   decks, rulings, the suite sections that name it and its uses per deck in the sims; the class map ranks what a wave would build.
+  With `vtes.json` beside it the crypt too (v1.1.0, D-108): a row per vampire (its ability, modelled or not, a class per sentence)
+  and the crypt class map; `--self-test` checks the extraction and the classifier.
   Regenerate it from the release bytes' runs: the 240-match design and the V5 smoke (each of the 14 new keys:
   `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`). Every one of those
   12 matches deals from seed 1: a single copy deep in a library is never drawn ('unseen' is then the deal, not the bot) — add `--seeds 4`
