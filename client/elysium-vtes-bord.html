@@ -2556,7 +2556,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hb-setup">Setting up a table</a></li>
   <li><a href="#hb-play">How a bot plays</a></li>
   <li><a href="#hb-controls">Controls</a></li>
-  <li class="ver">bot v0.6.216 · client v2.6.170</li>
+  <li class="ver">bot v0.6.217 · client v2.6.170</li>
 </ul></nav>
 
 <header class="hero">
@@ -2912,7 +2912,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.216</b>, client <b>v2.6.170</b> / server srv-2.6.49, cardfx 144 curated / 1,702 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 2 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.217</b>, client <b>v2.6.170</b> / server srv-2.6.49, cardfx 156 curated / 1,708 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 3 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 <!-- @@/HELP:bots -->
 </template>
@@ -3252,7 +3252,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.171';   // v2.6.171 (3 Nov 2026, THE LINES WE OWED, pure client -- purge; srv-2.6.49 unchanged, no wire change; bot v0.6.216 beside): consumes bot v0.6.215-216 (the bot project's two handoffs of 2 Nov: V5 wave 3, the masters; KRCG's v5 dump). Help > Bots embeds their v0.6.216 guide (the masters, 1,702 modelled library effects). Nothing else in the client changes. PROTOCOL section 12 records the bot-emitted lines owed since 20 Oct and from v0.6.213-215 (the block bar, the referendum terms and result, leaving torpor, Haven Uncovered, Spying Mission's cancel, no additional strike, no strike this round, Archon Investigation, a location's intercept lock, the actor's stealth lines, the table lines with no reader), and the canary's new section 6 pins them against the live bot. Beside it, VTES-Elysium-data PR #1 brings KRCG's v5 dump of 3 Nov and its expansions.json to the data repo (their v0.6.216 ask).
+const VERSION='2.6.172';   // v2.6.172 (6 Nov 2026, TWENTY-ONE SECONDS, pure client -- purge; srv-2.6.49 unchanged, no wire change; bot v0.6.217 beside): consumes bot v0.6.217 (the bot project's handoff of 3 Nov: V5 wave 4, the masters on a vampire, Toreador's last cards). Help > Bots embeds their v0.6.217 guide (the version chip and the footer); nothing else in the client changes. main's client gates had been red since PR #48: bot v0.6.217 (PR #47) reached the root 21 s before client v2.6.171 was merged with v0.6.216's guide embedded, and the suite's embed-drift test and embed-help --check compare the embedded page with the root's START-HERE-BOTS.html. The handoff's other ask (PROTOCOL section 12 and the canary for Change of Target, the two abstain lines, the burn action and the widened rush line) is not in this release.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
