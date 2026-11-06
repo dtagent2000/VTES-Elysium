@@ -1,3 +1,42 @@
+## [TJUGOETT SEKUNDER] (6 november 2026, klient v2.6.172 / srv-2.6.49 oförändrad)
+
+Johan: mains CI har varit röd sedan #48. Driftkontrollen för den inbäddade bottguiden fallerar, eftersom roten har
+v0.6.217:s START-HERE-BOTS.html medan klienten bäddar in v0.6.216:s. Bädda in guiden på nytt och gör en patch-release.
+
+**Varför det blev rött just vid #48:** bottens v0.6.217 (PR #47) och vår v2.6.171 (PR #48) mergades med 21 sekunders
+mellanrum den 3 november (19:17:18 och 19:17:39). Vår PR:s kontroll hade körts kl. 11:26, mot en rot som fortfarande
+hade v0.6.216, och var grön. Klientens workflow körs inte på bottens filer, så ingenting kördes mellan de två mergarna,
+och #48:s merge blev den första klientpushen på den nya bunten. Två steg blev röda: klientsviten (353/1,
+embed-drift-testet) och `embed-help --check bots`. Allt annat var grönt, kanariefågeln också. #50 (bottens C3) rörde
+bara bottens filer, så main stod röd tills nu.
+
+**Byggt:** `node embed-help.js bots START-HERE-BOTS.html`. Guiderna skiljer sig på tre ställen: versionschippet
+(v0.6.216 → v0.6.217), versionen i sidfoten och sidfotens siffror (cardfx 144 → 156 handkurerade, 1 702 → 1 708
+modellerade bibliotekseffekter, 3 november). VERSION 2.6.172. Inget annat i klienten ändras.
+
+**Handoffen ber om mer än guiden.** Dess §3 ber om ominbäddningen. Dess §2 vill också ha §12 och kanariefågeln för
+bottens tre nya rader som en annan bot läser (Change of Target, abstain-raden i båda formerna och handlingen som
+bränner ett kort i spel) och för den breddade rusningsraden. Det är inte med i den här patchen. Det står som öppet i
+START-HERE och i svaret (`docs/handoffs/REPLY-to-bot-2026-11-06-v0.6.217.md`), och radernas former finns i
+kontextdokumentet.
+
+**Grindarna:** klient 354/0 (bot v0.6.217 bredvid, inga överhopp; v2.6.171 med samma bunt: 353/1, exakt
+embed-drift-testet), kanariefågeln 102/0, dispatch 88/0, protokoll 6/0, endpoint 24/0, soak `--control`
+(snubbeltråden löste ut), embed `--check` båda sidorna, B1 byteidentisk (1 655 242 byte), check-versions grön
+inklusive rotgrinden. I headless Chrome, genom den riktiga menyn: Help ▸ Bots visar v0.6.217, ↗-sidan likaså, utan
+sidfel. Samma skript på v2.6.171 visar v0.6.216.
+
+**Två småsaker i deras guide** (deras text, nämnda i svaret): brödtexten säger fortfarande "144 are hand-curated (124
+library, 20 crypt)" medan sidfoten och `counts.curated` i cardfx säger 156, och chippet säger "client v2.6.170".
+
+**Lärdomen:** en grön PR-kontroll gäller basen den kördes mot. När bottens release mergas medan en klient-PR är öppen
+ska vår gren uppdateras från `main` före mergen (SKILLS, "The gates in CI" §5).
+
+**Deploy:** purga klienten. Om bot v0.6.217 (PR #47) inte är ute än: purga också `/elysium-bot.js` och
+`/elysium-cardfx.json` (cardfx ändrades; servern serverar inte `.js`-tvillingen). TWD-filerna är oförändrade.
+
+**Inte kört:** elysium.cards (nås inte från den här sandlådan).
+
 ## [RADERNA VI VAR SKYLDIGA] (3 november 2026, klient v2.6.171 / srv-2.6.49 oförändrad)
 
 Johan bad mig titta på bottdelens handover om vi behöver justera något i upplägget kring V5 (bot v0.6.215, V5-våg 3 med

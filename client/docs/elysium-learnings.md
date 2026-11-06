@@ -1,8 +1,22 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.171 / server v2.6.49 / bot v0.6.216 tested beside the suite, last updated 3 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.172 / server v2.6.49 / bot v0.6.217 tested beside the suite, last updated 6 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**6 Nov 2026 (TWENTY-ONE SECONDS — v2.6.172):**
+- **A green PR check is a snapshot of the base it ran on.** #48's check ran at 10:26 UTC on a root with bot v0.6.216;
+  #47 (bot v0.6.217) was merged 21 s before #48, nine hours later. Our workflow skips the bot's files, so nothing ran
+  between the two merges, and main's first client push after them went red and stayed red until 6 Nov. When the other
+  half merges while a PR of ours is open, update ours from `main` and merge on the new run: re-running the old run checks
+  out its old merge commit.
+- **When a re-issued page drifts, diff it before you embed it.** `--check` said 66,025 vs 66,025 chars: the same length,
+  so most likely a version swap. Splitting both bodies a tag per line and diffing them showed the three spots (the chip,
+  the footer's version, its counts) in a second, and the footer's 156 curated beside the body's stale 144: a note for
+  their guide, which we embed verbatim and never edit.
+- **Read the whole handoff, not its summary.** Its §3 asked for the re-embed, its §2 for §12 and the canary. A patch
+  scoped to the ask ships; the rest goes on the open list and into the reply, with the line shapes copied into the
+  context doc so the next round does not have to start from the handoff alone.
 
 **3 Nov 2026 (THE LINES WE OWED — v2.6.171):**
 - **Count a fallback copy before you call it ready.** Our 1 Nov reply said the data repo's `vtes-v5.json` was "now the file
