@@ -7,7 +7,7 @@ v0.6.217, ours 69/0 and main's v1.1.0 102/0);
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
 **Deploy state:** `main` carries v0.6.217 (#47), client v2.6.171 (main's #48) and round C3 (#50, merged 4 Nov; #49 had landed in
-`bot-v5-wave4`, L-84). Main's client gates are red until main re-embeds the v0.6.217 guide (main's fix). **Open PRs:** #51.
+`bot-v5-wave4`, L-84). Main's client gates are red until the v0.6.217 guide is re-embedded (main's #51). **Open PRs:** #52; main's #51.
 
 ## Last gates (v0.6.217 release bytes, 3 Nov 2026)
 Suite **2393/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root v2.6.170
@@ -23,7 +23,7 @@ Toreador Justicar; a title card replaces the printed title in every count; an ac
 ## Since the release (no bot change)
 - Round C3 (#50): the mirror bench runs on the sim (`--bench`, `ana-sim-diff.py --vp`, `ana-bench.py`; HOWTO); its controls are in
   `docs/reports/REPORT-bench-controls-sim-2026-11-03.md`.
-- Toreador at the sim table (#51, `docs/reports/REPORT-toreador-sim-2026-11-06.md`): the starters + toreador; the specified 240
+- Toreador at the sim table (#52, `docs/reports/REPORT-toreador-sim-2026-11-06.md`): the starters + toreador; the specified 240
   reuse each deck's 10 deals, so 600 with a fresh deal each (`--bench none`) carry the read. Toreador 0.65 ± 0.05 VP/match, 13 % wins:
   inside the span, level with tremere (−0.01 ± 0.07), above nosferatu (+0.26 ± 0.06). `ana-cards.py` fixed. Menu: Johan's call.
 

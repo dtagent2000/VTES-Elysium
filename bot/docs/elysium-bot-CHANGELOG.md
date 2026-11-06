@@ -3,7 +3,7 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
-- **Toreador at the sim table (6 Nov 2026, bot v0.6.217, no bot change; PR #51)** — STATUS Next 1, Johan's go of 6 Nov: does the
+- **Toreador at the sim table (6 Nov 2026, bot v0.6.217, no bot change; PR #52)** — STATUS Next 1, Johan's go of 6 Nov: does the
   Toreador precon hold up beside the starters (D-98)? `docs/reports/REPORT-toreador-sim-2026-11-06.md`. The specified design (the four
   starters + toreador, every seating × 2 deals = 240 at five seats, the client profile; the prediction registered and pushed before the
   run, `e2bc196`): Toreador 0.60 VP/match, 11.2 % wins, inside the span. The egress review found that its deals repeat — a deck's deal
