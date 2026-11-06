@@ -96,14 +96,26 @@ function cryptReaders(src){
   });
   return out;
 }
-/* a crypt row's status: modelled = every curated key read by a crypt reader AND every sentence's classes covered by the read keys' classes */
+/* a crypt row's status: modelled = every curated key read by a crypt reader AND every sentence covered -- each read key covers ONE sentence
+   (Marchesa Liliana's two bleed sentences need two keys), the best fit first (the key whose classes match the sentence's most closely), the
+   passive sentences first (a simple key models the simple form: with one bleed key Marchesa's missing sentence is her activated one) */
 function cryptStatusOf(x, readers){
   if (!x.kc) return { status: 'unresolved', unread: [], uncovered: [] };
   if (!x.ability) return { status: 'no ability', unread: [], uncovered: [] };
   if (!x.fxk.length) return { status: 'unmodelled', unread: [], uncovered: x.parts };
-  const unread = x.fxk.filter(k => !readers.has(k));
-  const covered = new Set(x.fxk.filter(k => readers.has(k)).flatMap(classesOf));
-  const uncovered = x.parts.filter(p => !p.classes.every(c => covered.has(c)));
+  const unread = x.fxk.filter(k => !readers.has(k)), free = x.fxk.filter(k => readers.has(k)), uncovered = [];
+  const KIND = ['passive', 'conditional', 'activated'];
+  for (const p of x.parts.slice().sort((a, b) => KIND.indexOf(a.kind) - KIND.indexOf(b.kind))){
+    const need = new Set(p.classes);
+    while (need.size){
+      const fit = k => { const cs = classesOf(k); return [cs.filter(c => need.has(c)).length, -cs.filter(c => !need.has(c)).length]; };
+      const best = free.filter(k => fit(k)[0] > 0).sort((a, b) => fit(b)[0] - fit(a)[0] || fit(b)[1] - fit(a)[1])[0];
+      if (!best) break;
+      classesOf(best).forEach(c => need.delete(c)); free.splice(free.indexOf(best), 1);
+    }
+    if (need.size) uncovered.push(p);
+  }
+  uncovered.sort((a, b) => x.parts.indexOf(a) - x.parts.indexOf(b));
   return { status: unread.length || uncovered.length ? 'partial' : 'modelled', unread, uncovered };
 }
 function cryptSelfTest(quiet){   // returns the number of failed checks; quiet = print the failures only
@@ -121,6 +133,7 @@ function cryptSelfTest(quiet){   // returns the number of failed checks; quiet =
   eq(cryptAbility('Sabbat Archbishop of Gdansk: Agnieszka can burn 1 blood to strike: combat ends. +1 bleed.'), 'Agnieszka can burn 1 blood to strike: combat ends. +1 bleed.', 'a Sabbat archbishop, a colon inside');
   eq(cryptAbility('Independent: Abaddon gets 1 optional maneuver and 1 optional press each combat.'), 'Abaddon gets 1 optional maneuver and 1 optional press each combat.', 'Independent');
   eq(cryptAbility('Sabbat.'), '', 'Sabbat only');
+  eq(cryptAbility('Laibon magaji: +1 strength.'), '+1 strength.', 'Laibon');
   eq(cryptSentences('If Nonu Dis is ready during your master phase, you can add 1 blood. +1 bleed.'), ['If Nonu Dis is ready during your master phase, you can add 1 blood.', '+1 bleed.'], 'two sentences');
   // the classifier: every rule, the kinds, the dedup
   eq(C('+1 bleed.'), { classes: ['bleed'], kind: 'passive' }, 'a passive bleed');
@@ -142,6 +155,11 @@ function cryptSelfTest(quiet){   // returns the number of failed checks; quiet =
   eq(C('Rescuing a vampire from torpor costs Doc Martina -1 blood.'), { classes: ['blood/pool'], kind: 'conditional' }, 'a price');
   eq(C('Action cards and strike cards that require Celerity [cel] cost Antoinette an additional blood.'), { classes: ['blood/pool'], kind: 'conditional' }, 'a price before a strike');
   eq(C('After Gostoso successfully bleeds your prey (for 1 or more), he can gain 1 blood.'), { classes: ['blood/pool'], kind: 'activated' }, 'a blood gain');
+  eq(C('Strike cards cost opposing younger vampires +1 blood.'), { classes: ['blood/pool'], kind: 'conditional' }, 'a price on strike cards (Algirdas)');
+  eq(C('Once each turn, after resolution of an action performed by Věnceslava during which your prey burned 1 or more pool, you can gain 1 pool.'), { classes: ['blood/pool'], kind: 'activated' }, 'a pool gain');
+  eq(C('During an action Gathii performs, you can reveal the top card of your library.'), { classes: ['cards'], kind: 'activated' }, 'a library');
+  eq(C("Once each turn, if Ilonka is ready after a successful bleed against you, she can look at the acting minion's controller's hand, then she can discard 1 card at random from it."), { classes: ['cards'], kind: 'activated' }, 'a hand');
+  eq(C('When Skidmark is acting, you do not replace any cards you play until the end of the action.'), { classes: ['cards'], kind: 'conditional' }, 'a card replacement');
   eq(C('If Aemilius is ready during your unlock phase, your prey chooses a ready minion they control; the chosen minion takes 1 unpreventable damage.'), { classes: ['other'], kind: 'conditional' }, 'an unlock-phase timing is not an unlock');
   eq(C('If Roy is unlocked during your discard phase, lock him.'), { classes: ['other'], kind: 'conditional' }, 'a self-lock is not an unlock or a card');
   eq(C('If Sreelekha is ready at the start of your discard phase, you get +1 discard phase action.'), { classes: ['cards'], kind: 'conditional' }, 'a discard phase action is a card');
@@ -161,6 +179,11 @@ function cryptSelfTest(quiet){   // returns the number of failed checks; quiet =
   const sree = cryptStatusOf(row('If Sreelekha is ready at the start of your discard phase, you get +1 discard phase action. +1 bleed.', ['bleedBonus']), R);
   eq([sree.status, sree.uncovered.map(p => p.classes[0])], ['partial', ['cards']], 'two sentences, one key: partial, the card sentence missing');
   eq(cryptStatusOf(row('Once each combat, Flávio can strike: dodge.', ['dodge']), R).unread, ['dodge'], 'a key no crypt reader reads');
+  eq(cryptStatusOf(row('+1 bleed.', ['bleedBonus', 'dodge']), R).status, 'partial', 'one key unread is partial, the sentence covered or not');
+  eq(cryptStatusOf(row('While your prey has 10 or fewer pool, Üresség gets +1 vote and +1 bleed.', ['bleedBonus']), R).status, 'partial', 'a sentence of two classes needs both');
+  eq(cryptStatusOf(row('During a bleed action, Liliana can remove seven cards in your ash heap from the game to get an additional +1 bleed. +1 bleed.', ['bleedBonus']), R).uncovered.map(p => p.kind), ['activated'], 'one key covers one sentence, the passive one first: the activated bleed is missing');
+  const R2 = new Map([['bleedBonus', new Set(['r'])], ['bleedBoostDiscard', new Set(['r'])]]);
+  eq(cryptStatusOf(row('During a bleed action, Liliana can remove seven cards in your ash heap from the game to get an additional +1 bleed. +1 bleed.', ['bleedBonus', 'bleedBoostDiscard']), R2).status, 'modelled', 'two bleed sentences, two bleed keys');
   eq(cryptStatusOf(row('+1 bleed.', []), R).status, 'unmodelled', 'no fx');
   eq(cryptStatusOf({ kc: {}, ability: '', parts: [], fxk: [] }, R).status, 'no ability', 'sect and title only');
   eq(cryptStatusOf({ kc: null, ability: null, parts: [], fxk: [] }, R).status, 'unresolved', 'no KRCG text');
