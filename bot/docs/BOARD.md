@@ -81,7 +81,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 
 ## Known, not built (bot side)
 - **The TWD profile's rebuild** (v0.6.216's egress; D-110): the shipped profile's 14 article-last keys (`Barrens, The` …) hold
-  only the merged decks' share of a card; 5 decks count twice. A scratch rebuild from the v5 TWDA: 4,709 decks, 0 dead keys,
+  only the merged decks' share of a card; a few decks count twice. A scratch rebuild from the v5 TWDA: 4,709 decks, 0 dead keys,
   Magnum under 10 decks. Open: a 6/6 crypt goes to the clan listed first (59 decks). *Done when* the rebuilt files ship in a
   release with a sim footprint. Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
 - **A human's bounce of a bot's bleed** is not read by the acting bot; a bot that is a bounce's new target cannot bounce onward.
