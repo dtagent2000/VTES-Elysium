@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 # twd-archetypes.py -- the archetype labels, offline: a naive-Bayes signature per vtes-skill archetype (its TWDA decks), then a
-# 5-fold test: from k random "shown" library cards + the crypt's clan, how often is the label right?
-import json,random,math,collections
+# 5-fold test: from k random "shown" library cards + the crypt's clan, how often is the label right? The TWDA is KRCG's v5 TWDA
+# (twda.py: one deck per id, card names from vtes.json by id); vtes-skill's classification names the same deck ids.
+import json,random,math,collections,sys,os
+sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))   # twda.py beside it, also under python3 -I
+sys.dont_write_bytecode=True   # no __pycache__ in bot/
+import twda
 random.seed(7)
 kr={c['id']:c for c in json.load(open('vtes.json'))}
-decks={x['id']:x for x in json.load(open('twda.json'))}
+decks=twda.load(kr)
 cls=json.load(open('src/vtes-skill-main/references/strategy/classification.json'))
 groups=[(g['name'],[d['id'] for d in g['decks'] if d['id'] in decks]) for g in cls['groups']]
 groups=[(n,ids) for n,ids in groups if len(ids)>=10]
-def lib(d): return [(c['name'],c['count']) for t in d['library']['cards'] for c in t['cards']]
+def lib(d): return list(d['lib'])
 def clan(d):
     cc=collections.Counter()
-    for c in d['crypt']['cards']:
-        k=kr.get(c['id']); cl=(k or {}).get('clans') or []
-        if cl: cc[cl[0]]+=c['count']
+    for cid,cnt in d['crypt']:
+        k=kr.get(cid); cl=(k or {}).get('clans') or []
+        if cl: cc[cl[0]]+=cnt
     return cc.most_common(1)[0][0] if cc else None
 def train(items):   # items: [(group, deck)]
     cardf=collections.defaultdict(collections.Counter); clanf=collections.defaultdict(collections.Counter); n=collections.Counter(); vocab=set()
@@ -61,9 +65,9 @@ for k in (3,5,8,12):
         top=predict(model, set(random.sample(pool,k)), clan(d)); n+=1
         if len(top)>1 and top[0][0]-top[1][0]>=2.0: conf+=1
     print(f"noise decks, shown {k:2d}: confident (margin>=2) {100*conf/n:5.1f} % -- these would be FALSE labels")
-# --- our four starters
+# --- our decks (the bot's deck-*.json beside it; the path was the claude.ai Project's /mnt/project until 10 Nov 2026)
 import glob
-for f in sorted(glob.glob('/mnt/project/deck-*.json')):
+for f in sorted(glob.glob('deck-*.json')):
     j=json.load(open(f)); nm=f.split('deck-')[1][:-5]
     pool=[x['name'] for x in j.get('library',[]) for _ in range(x.get('qty',1))]
     cc=collections.Counter()
@@ -137,9 +141,10 @@ sig={}
 cardf,clanf,ncount,vocab=model
 for g in ncount:
     sig[g]={'n':ncount[g],'cards':{c:k for c,k in cardf[g].items() if k>=2},'clans':dict(clanf[g])}
-out={'generated':'2026-09-28','source':'vtes-skill classification (reviewed, 2021+) x KRCG TWDA','archetypes':sig,'vocab':len(vocab),
+newest=max((d['date'] for d in decks.values()),default='')   # 'generated' is the archive's newest deck: the same inputs give the same bytes
+out={'generated':newest,'source':'vtes-skill classification (reviewed, 2021+) x KRCG v5 TWDA','archetypes':sig,'vocab':len(vocab),
      'gate':{'margin':2.0,'coverage':0.85,'typical':0.2,'minShown':5}}
-ser=json.dumps(out,separators=(',',':'))   # 9 Oct 2026 (main's ask): ONE serialize, two writes -- the .js sibling is the file:// vehicle
+ser=json.dumps(out,separators=(',',':'),sort_keys=True)   # 9 Oct 2026 (main's ask): ONE serialize, two writes -- the .js sibling is the file:// vehicle; sorted keys since 10 Nov
 open('elysium-twd-archetypes.json','w').write(ser)
 open('elysium-twd-archetypes.js','w').write('globalThis.ELYSIUM_TWD_ARCHETYPES = '+ser+';\n')   # a classic <script> is CORS-exempt on file:// where fetch() is not (the cardfx compiler's elysium-cardfx.js, v1.6.13)
 import os; print('archetypes file', len(sig), 'archetypes,', os.path.getsize('elysium-twd-archetypes.json'), 'bytes')

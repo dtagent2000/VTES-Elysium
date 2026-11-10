@@ -16,7 +16,8 @@ The folder is deliberately FLAT: the suites, the arena and every tool expect the
 | `elysium-bot-hotseat.js` | the client's real `hotBridge` driven headless (needs `elysium-vtes-bord.html` beside it) |
 | `elysium-bot-sim.js` | THE SIM TABLE: the hotseat table under a virtual clock — about a second per match, the same spec gives the same trace byte for byte, every seating by default (`node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10 --trace ./sim-x`; `--help`); it counts bots that played at 0 pool. Not a timing gate. |
 | `cardfx-compile.js`, `cardfx-curated.json` → `elysium-cardfx.json` / `.js` | the card-effect library pipeline (`node cardfx-compile.js --report`; needs `vtes.json`) |
-| `twd-profile.py`, `twd-archetypes.py` → `elysium-twd-profile.json`, `elysium-twd-archetypes.json` | the TWDA prior (need `vtes.json`, `twda.json` and optionally `twda-vdb.json` beside them — none in git; root `CLAUDE.md`, 'Data that is not in git') |
+| `twd-profile.py`, `twd-archetypes.py` → `elysium-twd-profile.json`, `elysium-twd-archetypes.json` | the TWDA prior (need `vtes.json` and `twda.json`, KRCG's v5 TWDA, beside them — neither in git; root `CLAUDE.md`, 'Data that is not in git') |
+| `twda.py` | the TWDA reader both import: one deck per id, card names from `vtes.json` by KRCG id, the old list refused; `--self-test` (CI) |
 | `deck-*.json`, `rig-a1.json` | the decks the bot embeds (the four V5 starters + hacking + sewer), the 14 other V5 precons (test inputs the sim plays; not in the client's menu) and a rig |
 | `gen-precon.js` | the V5 precons from `vtes.json`'s sets (`node gen-precon.js`; `--check` compares the starters and the embedded decks by KRCG id; `--list`) |
 | `elysium-bot-diag.html` | the browser battery (HB1) |

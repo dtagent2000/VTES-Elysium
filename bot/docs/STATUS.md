@@ -1,4 +1,4 @@
-# STATUS — Elysium Bots (rewritten at every release; 6 November 2026)
+# STATUS — Elysium Bots (rewritten at every release; 10 November 2026)
 
 **Bot v0.6.217** (3 Nov 2026, PR #47) · arena v1.4.8 · sim table v1.1.0 (round C3) · cardfx compiler v1.9.8, curated 156 · hotseat tool v1.4.0 ·
 coverage tool v1.1.43 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` v1.0.0 ·
@@ -6,7 +6,7 @@ built against client v2.6.170; the root's release is now client **v2.6.172 / srv
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
 **Deploy state:** `main` carries v0.6.217 (#47), client v2.6.172 (main's #51, 6 Nov), round C3 (#50, 4 Nov), the Toreador read (#52),
-crypt round 0 (#53) and C4's CI (#54, 6 Nov). **Open PRs:** #57 (C4's triggers).
+crypt round 0 (#53) and C4's CI (#54, #57). **Open PRs:** #58 (the v5 TWDA).
 
 ## Last gates (v0.6.217 release bytes, 3 Nov 2026)
 Suite **2393/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · canary **69/0** (bot/'s copies) and 69/0 (root v2.6.170
@@ -27,6 +27,8 @@ Toreador Justicar; a title card replaces the printed title in every count; an ac
   6 modelled, 70 unmodelled, ranked by the crypt class map); the library half is unchanged.
 - Round C4 (#54, #57; D-109): CI for `bot/` — `.github/workflows/bot-gates.yml` runs the gates on every bot PR and daily on `main`
   (it can be required); the lint's first-run findings wait for C2.
+- The v5 TWDA (#58, D-110): KRCG's default became v5 on 8 Nov; the TWD tools read its v5 TWDA through `twda.py` (one deck per id,
+  names by KRCG id, the v4 list refused). The shipped profile waits for its rebuild (BOARD).
 
 ## Next (proposed; Johan orders the board)
 1. C2: the lint's first-run findings, the legacy tests, `ana-gates.py` (before crypt wave A).

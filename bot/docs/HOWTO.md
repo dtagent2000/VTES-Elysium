@@ -5,9 +5,9 @@ Everything runs from inside `bot/`. Third-party data (`vtes.json`, the TWDA) is 
 `curl -o vtes-v5.json https://static.krcg.org/data/v5/vtes.json && curl -o expansions.json https://static.krcg.org/data/v5/expansions.json
 && node krcg-v5.js` (`--compare OLD.json` prints the field diff against a v3 file by card id). When the network policy blocks it (a 403
 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and copy the two dump files in. KRCG's v3 file
-(static.krcg.org/data/vtes.json) stopped at Sabbat V5: it lacks the 63 cards of Secrets of New York and Noites Brasileiras and the
-errata (118 texts beyond markup and whitespace, e.g. Assamite → Banu Haqim), so it is only a `--compare` input now. The TWDA: `twda.json` (the list export,
-the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s before naming a data file.
+(static.krcg.org/data/v4/vtes.json since 8 Nov) stopped at Sabbat V5: it lacks the 63 cards of Secrets of New York and Noites Brasileiras and the
+errata (118 texts beyond markup and whitespace, e.g. Assamite → Banu Haqim), so it is only a `--compare` input now. The TWDA: `twda.json`, KRCG's
+v5 TWDA (`curl -o twda.json https://static.krcg.org/data/v5/twda.json`; `twda.py` refuses the old list). Check what a reader `open()`s before naming a data file.
 
 ## Running
 - **The sim table** — `node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10 --trace /tmp/sim-x`: every
@@ -114,7 +114,7 @@ the base) + optional `twda-vdb.json` (the dict). Check what a reader `open()`s b
   overlay and once with, diff the field per curated name. Political cards: `e.ref.pool` (terms), `e.ref.tags`, `e.ref.fx`;
   never a referendum outcome in `modes[].fx`. Adding a family: `refTerms()` / `REF_PER` / `actWhen()` in the compiler + the NEG
   list in `test-cardfx.js`. `req.titles`, `req.unmodelled` (callers fail closed).
-- **The TWD profile** — `python3 twd-profile.py` / `twd-archetypes.py` (need `vtes.json`, `twda.json`, optional `twda-vdb.json`);
+- **The TWD profile** — `python3 twd-profile.py` / `twd-archetypes.py` (need `vtes.json` and `twda.json`; `python3 twda.py --self-test`);
   a rebuilt profile is first reproduced byte for byte by the old script; a new share is APPENDED.
 
 ## Analysing a series (sim or arena)

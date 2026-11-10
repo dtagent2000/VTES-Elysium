@@ -115,6 +115,9 @@ jobs:
       - name: The card ledger's self-test (gen-card-ledger --self-test)
         if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: node gen-card-ledger.js --self-test
+      - name: The TWDA reader's self-test (twda.py --self-test)
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
+        run: python3 twda.py --self-test
       - name: Section 12 canary (bot/'s read-only copies)
         if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |

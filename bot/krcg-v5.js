@@ -2,7 +2,8 @@
 'use strict';
 /* krcg-v5.js v1.0.0 (2 Nov 2026, bot v0.6.216) -- KRCG's v5 card dump, written as the v3-shaped vtes.json every tool here reads.
 
-   Why: KRCG stopped adding cards to static.krcg.org/data/vtes.json (the v3 shape) at Sabbat V5; the 63 cards of Secrets of New York
+   Why: KRCG stopped adding cards to its v3-shaped file at Sabbat V5 (static.krcg.org/data/vtes.json until 8 Nov 2026, when KRCG's
+   default became the v5 dump and the old file moved to data/v4/vtes.json, no longer refreshed); the 63 cards of Secrets of New York
    and Noites Brasileiras (31 Oct 2026) exist only in the v5 dump (main's reply of 1 Nov 2026, item 5.1). The compiler, the precon
    generator, the ledger, test-cardfx and the TWD profile tools all read the v3 fields (`name`, `card_text`, `sets`, `pool_cost`,
    `clans`, `disciplines` ...). Rather than teach each of them a second shape, this one file maps v5 to v3, once, and writes the

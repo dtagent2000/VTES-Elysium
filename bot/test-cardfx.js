@@ -166,8 +166,8 @@ if(curated){
 
 /* 13) v3/v5 dual format — the normalizer mirrors the client's parseV5Card
        field map (SKILLS.md). Fixtures are REAL v3 cards transformed per that
-       verified map (synthetic shape, real content) — a run against a real v5
-       FILE remains on Johan when static.krcg.org flips.                      */
+       verified map (synthetic shape, real content). The real v5 file is read
+       through krcg-v5.js since v0.6.216; KRCG's default became v5 on 8 Nov.  */
 {
   const isC = c => (c.types || []).some(t => t === 'Vampire' || t === 'Imbued');
   const toV5 = c => {
