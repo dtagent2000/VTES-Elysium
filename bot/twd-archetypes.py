@@ -3,7 +3,7 @@
 # 5-fold test: from k random "shown" library cards + the crypt's clan, how often is the label right? The TWDA is KRCG's v5 TWDA
 # (twda.py: one deck per id, card names from vtes.json by id); vtes-skill's classification names the same deck ids.
 import json,random,math,collections,sys,os
-sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))   # twda.py beside it, also under python3 -I
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))   # twda.py beside it, also under python3 -I (appended: the standard library stays first)
 sys.dont_write_bytecode=True   # no __pycache__ in bot/
 import twda
 random.seed(7)
@@ -24,7 +24,8 @@ def train(items):   # items: [(group, deck)]
     for g,d in items:
         n[g]+=1
         for name,cnt in lib(d): cardf[g][name]+=1; vocab.add(name)
-        clanf[g][clan(d)]+=1
+        cl=clan(d)
+        if cl: clanf[g][cl]+=1   # a crypt with no clan has no key (None would break the sorted serialize)
     return cardf,clanf,n,vocab
 def predict(model, shown, cl, topn=3):
     cardf,clanf,n,vocab=model; V=len(vocab)+1; tot=sum(n.values()); out=[]

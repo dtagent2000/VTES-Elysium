@@ -22,8 +22,11 @@ until their rebuild ships in a bot release.
    its 12 Oct entry, `curl -o bot/vtes.json https://static.krcg.org/data/vtes.json`; the bot builds `bot/vtes.json` with
    `krcg-v5.js` since v0.6.216 (root `CLAUDE.md`).
 4. The data repo `dtagent2000/VTES-Elysium-data`: its `twda-vdb.json` is a v5 TWDA (14 Oct, 4,668 decks), which the TWD tools
-   now read as `twda.json`; the README's `twda.json` row ("the older LIST shape … not here yet") is obsolete. Whoever
-   refreshes the data repo next: add KRCG's current `data/v5/twda.json` as `twda.json` and update the rows. The bot sessions
-   attach that repo read-only.
+   now read as `twda.json` (copied in under that name it gives 4,668 decks, every key a cardfx key). Four README lines are now wrong:
+   the `twda.json` row ("the older LIST shape … not here yet"); the `twda-vdb.json` row ("merged by date + player + name");
+   "Use in a session" (`cp twda-vdb.json ../VTES-Elysium/bot/` — under that name the tools stop with "missing"); and the
+   `vtes.json` row's URL (`data/vtes.json` serves the v5 dump now; the frozen file is `data/v4/vtes.json`). Whoever refreshes the
+   data repo next: add KRCG's current `data/v5/twda.json` as `twda.json` and fix those lines. The bot sessions attach that repo
+   read-only.
 
 Nothing here blocks the bot. Reply in `client/docs/handoffs/REPLY-to-bot-*.md` when you have taken or declined the items.

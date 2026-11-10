@@ -7,7 +7,7 @@ Everything runs from inside `bot/`. Third-party data (`vtes.json`, the TWDA) is 
 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and copy the two dump files in. KRCG's v3 file
 (static.krcg.org/data/v4/vtes.json since 8 Nov) stopped at Sabbat V5: it lacks the 63 cards of Secrets of New York and Noites Brasileiras and the
 errata (118 texts beyond markup and whitespace, e.g. Assamite → Banu Haqim), so it is only a `--compare` input now. The TWDA: `twda.json`, KRCG's
-v5 TWDA (`curl -o twda.json https://static.krcg.org/data/v5/twda.json`; `twda.py` refuses the old list). Check what a reader `open()`s before naming a data file.
+v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twda.py` refuses the old list). Check what a reader `open()`s before naming a data file.
 
 ## Running
 - **The sim table** — `node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10 --trace /tmp/sim-x`: every
@@ -114,8 +114,9 @@ v5 TWDA (`curl -o twda.json https://static.krcg.org/data/v5/twda.json`; `twda.py
   overlay and once with, diff the field per curated name. Political cards: `e.ref.pool` (terms), `e.ref.tags`, `e.ref.fx`;
   never a referendum outcome in `modes[].fx`. Adding a family: `refTerms()` / `REF_PER` / `actWhen()` in the compiler + the NEG
   list in `test-cardfx.js`. `req.titles`, `req.unmodelled` (callers fail closed).
-- **The TWD profile** — `python3 twd-profile.py` / `twd-archetypes.py` (need `vtes.json` and `twda.json`; `python3 twda.py --self-test`);
-  a rebuilt profile is first reproduced byte for byte by the old script; a new share is APPENDED.
+- **The TWD profile** — `python3 twd-profile.py` / `twd-archetypes.py` (need `vtes.json`, `twda.json`; the archetypes also vtes-skill:
+  README). Both overwrite the shipped files: run them in a scratch copy until a release; a rebuilt profile is first reproduced
+  byte for byte by the old script (O-37); a new share is APPENDED.
 
 ## Analysing a series (sim or arena)
 - `ana-sim-diff.py A B` (footprint) · `ana-ledger.py` (bleed pairing both ways — `VANISHED` = 0; steal pairs equal, a `STOLE >
@@ -168,9 +169,9 @@ v5 TWDA (`curl -o twda.json https://static.krcg.org/data/v5/twda.json`; `twda.py
   tail-append to a line ending in a comment; copy raw characters (em-dash, curly quotes) from the file.
 
 ## One-off tools (each reproduces a committed report; not gates)
-`ana-combat-sum.py` (`REPORT-combat-series-table.txt`) · `REPORT-bench-controls.md` (the arena bench, 27 Sep; its script retired by C3) ·
+`ana-combat-sum.py` (`REPORT-combat-series-table.txt`) · `REPORT-bench-controls.md` (the arena bench, 27 Sep) ·
 `sweep-pilot.py`, `sweep-pass2.py`, `sweep-full.py` (the cardfx sweeps, `REPORT-cardfx-sweep-*.md`) · `diag-give-probe.js`
 (a live give / given probe through the server, ~70 s; copy it for any feature whose two halves meet only through the server) ·
 `diag-a1-stash-probe.js` · `gen-plan-review.js` · `gen-sweep-audit.js` · `gen-forecast-calibration.js` (to revive, BOARD).
-The chat-era run scripts (bench.sh, the run-*.sh family, poll-bal.sh, make-bench-report.sh) were retired by round C3: series and
-benches run on the sim (above); an arena series is `elysium-bot-arena.js` itself, one process per match.
+Series and benches run on the sim (above; C3 retired the chat-era run scripts); an arena series is `elysium-bot-arena.js` itself,
+one process per match.

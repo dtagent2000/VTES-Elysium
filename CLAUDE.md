@@ -42,13 +42,13 @@ client, server and start scripts from `client/` to `/`. Nothing at the root is e
 ## Data that is not in git
 Third-party data is never committed or hosted here; each session fetches it from its source:
 - `bot/vtes.json` (KRCG's cards in the v3 shape every bot tool reads) is BUILT from KRCG's v5 dump since bot v0.6.216 — the
-  v3 file (now `data/v4/`: KRCG's default is v5 since 8 Nov) stopped at Sabbat V5. Before `test-cardfx.js`, the compiler or the TWD tools:
+  v3 file (now `data/v4/`) stopped at Sabbat V5. Before `test-cardfx.js`, the compiler or the TWD tools:
   `cd bot && curl -o vtes-v5.json https://static.krcg.org/data/v5/vtes.json && curl -o expansions.json
   https://static.krcg.org/data/v5/expansions.json && node krcg-v5.js` (all three ignored). The client reads the same dump at
   run time (since v2.6.168).
 - The TWDA (VEKN's Tournament Winning Deck Archive) is an input to `bot/twd-profile.py` / `bot/twd-archetypes.py` only,
-  when the profile is rebuilt: KRCG's v5 TWDA, `cd bot && curl -o twda.json https://static.krcg.org/data/v5/twda.json`
-  (ignored; `bot/twda.py` reads it). Arena traces (`serie-*/`, `bench-*/`) are generated and ignored.
+  when the profile is rebuilt: KRCG's v5 TWDA, `cd bot && curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`
+  (ignored; `bot/twda.py` reads it; the archetypes also need vtes-skill, HOWTO). Arena traces (`serie-*/`, `bench-*/`) are generated and ignored.
 - **When a session cannot reach the source** (a sandbox whose network policy blocks static.krcg.org), copy the files
   from the private data repo `dtagent2000/VTES-Elysium-data` (attach it read-only): `vtes-v5.json` (the v5 dump: copy it into
   `bot/` with the dump's `expansions.json` and run `node krcg-v5.js`), the old `vtes.json` (KRCG's last v3 file, kept for

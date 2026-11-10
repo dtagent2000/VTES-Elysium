@@ -27,8 +27,8 @@ Toreador Justicar; a title card replaces the printed title in every count; an ac
   6 modelled, 70 unmodelled, ranked by the crypt class map); the library half is unchanged.
 - Round C4 (#54, #57; D-109): CI for `bot/` — `.github/workflows/bot-gates.yml` runs the gates on every bot PR and daily on `main`
   (it can be required); the lint's first-run findings wait for C2.
-- The v5 TWDA (#58, D-110): KRCG's default became v5 on 8 Nov; the TWD tools read its v5 TWDA through `twda.py` (one deck per id,
-  names by KRCG id, the v4 list refused). The shipped profile waits for its rebuild (BOARD).
+- The v5 TWDA (#58, D-110): KRCG's default is v5 since 8 Nov; the TWD tools read its v5 TWDA via `twda.py`; the profile's
+  rebuild waits (BOARD, O-37, O-38).
 
 ## Next (proposed; Johan orders the board)
 1. C2: the lint's first-run findings, the legacy tests, `ana-gates.py` (before crypt wave A).

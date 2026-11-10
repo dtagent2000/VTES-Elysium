@@ -118,6 +118,11 @@ jobs:
       - name: The TWDA reader's self-test (twda.py --self-test)
         if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: python3 twda.py --self-test
+      - name: "KRCG's TWDA: today's v5 file still reads (fetched to a temp dir; nothing written in bot/)"
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
+        run: |
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/twda.json" https://static.krcg.org/data/v5/twda.json
+          python3 twda.py --check "$RUNNER_TEMP/twda.json"
       - name: Section 12 canary (bot/'s read-only copies)
         if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |

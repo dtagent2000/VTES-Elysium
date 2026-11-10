@@ -22,8 +22,8 @@ Then, when the task touches them: `bot/docs/RULINGS.md` (Johan's rulings, number
   `client/docs/handoffs/`), `reports/`, `reviews/`, `coverage/`, `archive/`, and `history/` (the journal, every READ-ME-FIRST, the
   old CLAUDE.md with its handshake and debts, the dated learnings, consumed handoffs, delivered round specs).
 - `bot/tools/`: `run-section.sh` (one suite section against any bot), `mutants/`, `doc-budget.sh` (the standing pages' budgets).
-- NOT in git: `vtes.json` (built from KRCG's v5 dump) and the TWDA (`twda.json`, KRCG's v5 TWDA). Fetch from the source; when the
-  sandbox cannot reach it, attach the private repo `dtagent2000/VTES-Elysium-data` and copy from there (root `CLAUDE.md`).
+- NOT in git: `vtes.json` and the TWDA (`twda.json`); the root `CLAUDE.md` names their sources and fetch commands. Fetch from the
+  source; when the sandbox cannot reach it, attach the private repo `dtagent2000/VTES-Elysium-data` and copy from there.
   Series traces (`serie-*/`, `bench-*/`, sim dirs) are generated and live in scratch.
 
 ## The loop

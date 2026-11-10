@@ -6,7 +6,7 @@
 # decks that hold it (recency-weighted, 2015+ counts double), with the number of decks as its confidence. Per clan: the same
 # over decks whose crypt is mostly that clan -- the prior before a seat has shown a library card.
 import json,collections,sys,os
-sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))   # twda.py beside it, also under python3 -I
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))   # twda.py beside it, also under python3 -I (appended: the standard library stays first)
 sys.dont_write_bytecode=True   # no __pycache__ in bot/
 import twda
 fx=json.load(open('elysium-cardfx.json'))['lib']
@@ -33,7 +33,7 @@ cardStat=collections.defaultdict(lambda:[0.0]*(NF+1))   # w, then the NF weighte
 clanStat=collections.defaultdict(lambda:[0.0]*(NF+1))
 fcache={}
 n_used=0
-for key in sorted(decks):   # by id: the profile is a function of the decks, not of the file's order
+for key in sorted(decks):   # by id: the decks' order in the file does not matter (a 6/6 crypt's clan still follows its card order: RULINGS O-38)
     d=decks[key]
     y=int((d['date'] or '2000')[:4]); w=2.0 if y>=2015 else 1.0
     lib=d['lib']
