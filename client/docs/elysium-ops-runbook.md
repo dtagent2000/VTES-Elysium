@@ -129,7 +129,7 @@ sudo journalctl -u elysium --since "-90 days" | grep abuse | tail -20
 
 **The card database on the box (client v2.6.168, 1 Nov 2026).** When `/opt/elysium/images/vtes.json` exists, every client
 reads it before KRCG (the auto tier), so the table sees new cards only when that file is replaced. Since v2.6.168 the
-client reads KRCG's **v5 dump**: KRCG stopped adding cards to the old file (`data/vtes.json` ends at Sabbat V5), and the
+client reads KRCG's **v5 dump**: KRCG stopped adding cards to the old v3 file (it ends at Sabbat V5; since 8 Nov 2026 it lives at `data/v4/vtes.json`, and `data/vtes.json` is the v5 dump), and the
 cards of Secrets of New York and Noites Brasileiras (31 Oct 2026) are only in `data/v5/vtes.json`. Check, refresh, purge:
 
 ```

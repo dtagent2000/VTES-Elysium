@@ -11,8 +11,10 @@
      - the full starters (12 crypt, 60+ library): names, era (V5 / Legacy) and the cards they hold, by id.
    Third-party data: keep KRCG's files OUTSIDE the repository.
      node krcg-audit.js <old vtes.json> <new vtes.json> [new expansions.json] [client.html]
-   Example (1 Nov 2026: the v3 file the client read until v2.6.167 against the v5 dump it reads since):
-     curl -o /tmp/k/v3.json https://static.krcg.org/data/vtes.json
+   Example (1 Nov 2026: the v3 file the client read until v2.6.167 against the v5 dump it reads since). Since 8 Nov 2026
+   KRCG's default data/vtes.json IS the v5 dump; the frozen v3 file is data/v4/vtes.json (v2.6.174 -- the old recipe
+   compared v5 with v5 and passed):
+     curl -o /tmp/k/v3.json https://static.krcg.org/data/v4/vtes.json
      curl -o /tmp/k/v5.json https://static.krcg.org/data/v5/vtes.json
      curl -o /tmp/k/exp.json https://static.krcg.org/data/v5/expansions.json
      node krcg-audit.js /tmp/k/v3.json /tmp/k/v5.json /tmp/k/exp.json

@@ -1,3 +1,71 @@
+## [STANDARDEN FLYTTADE] (11 november 2026, senare, klient v2.6.174 / srv-2.6.50 oförändrad)
+
+Johan, efter att #60 och bottens #61 mergats: "Du har en ny handoverinfo nu också om du vill kika". Tre handoffs låg och
+väntade: v0.6.218 (bottens runda C2, ingen beteendeändring; deras guide rättar min anmärkning från 6 november), 10
+november om att KRCG gjort v5 till standard, och §2 i v0.6.217:s handoff, som vi varit skyldiga sedan 6 november (§12 och
+kanariefågeln). Jag föreslog tre delar -- v2.6.174 med guiden och en rättning av KRCG-reservvägen, §12 och kanariefågeln i
+samma PR, och en egen PR i det privata datarepot -- och Johan: "Okej då kör vi på det. Du kan köra på".
+
+**Vad KRCG ändrade.** Sedan 8 november är `static.krcg.org/data/vtes.json` byte för byte `data/v5/vtes.json` (4 212 kort,
+sha256 `9ae8884c…` i dag); den gamla v3-filen ligger fryst på `data/v4/vtes.json` (4 149 kort, samma bytes som datarepots
+`vtes.json`). Kontrollerat härifrån med curl. Klienten läser v5-dumpen först och tar `data/vtes.json` som andra försök när
+det första fallerar och ingen kopia finns. v2.6.173 behandlade allt som kom den vägen som KRCG:s gamla v3-fil: posten fick
+`fallback: true`, Inställningar sa "KRCG's older v3 file — the newest sets are missing" -- bredvid Julia Sowinski -- och
+kopian räknades som inaktuell direkt, så nästa start hämtade dumpen igen. Klienten mäter redan formen på det den läser
+(`vtesFmt`); nu bestämmer formen: `take` flaggar en nödlösning bara för en fil som ÄR v3-formad (`fallback &&
+fmt!=='v5'`). Konstanten heter `KRCG_DATA_DEFAULT_URL` (förut `KRCG_DATA_V3_URL`, samma adress). Bottprojektets två
+förslag tog jag inte: att peka på `data/v4/` gör nödlösningen till en fil KRCG slutat uppdatera, och att ta bort
+reservvägen tar det enda andra försöket från en webbläsare som inte har någon kopia (samma värd, så det hjälper mot en
+flyttad eller trasig fil, inte mot ett avbrott). Ett nytt test serverar v5-dumpen och sedan en v3-fil via den andra
+adressen; mot v2.6.173 är det rött på beteendet ("the current dump by another path is no stopgap (v2.6.173: true)"), inte
+på namnbytet. `krcg-audit.js`-receptets gamla sida är nu `data/v4/vtes.json` (det gamla jämförde v5 med v5 och gick
+grönt); receptet kört: 0 namn förlorade eller flyttade. CLAUDE.md:s tjänstetabell, 12 oktober-posten (markerad som
+ersatt), SKILLS.md:s två rader och runbooken säger samma sak.
+
+**§12 och kanariefågeln.** Först en sond: varje ny rad in i en levande bot (v0.6.218), effekten utskriven. Den visade bland
+annat att ett rusningsfönster öppnas bara om det finns en olåst minion UTÖVER målet -- kontrollen jag annars hade skrivit
+utifrån handoffen (målet blockerar själv) hade varit fel. Sedan §12:s text: Change of Target (bottens rad och en människas
+spelrad), omröstningsstegets avstående i båda formerna (det raka `'` är bärande), handlingen som bränner ett kort i spel
+och ägarens bränn-rad, rusningsradens två nya kort (Saulot's Avenging Fist, Regent) på Havens villkor, de återanvända
+formerna (Grand Balls blockeringsspärr, en strid som slutar före avstånd, en titelomröstnings villkor där varje botts
+insats är 0) och vågens bordsrader och chattrader. Kanariefågeln v1.2.0, avsnitt 7, 41 kontroller: §12 dokumenterar
+varje form (11), `L12.burnAct`/`havenRush`/`blockBar`/`combatEnds` läser rader byggda av formerna (6), klientens
+spelrads-fragment (1), och en levande botts `_onLog` (23). Bottens `COT` och `ABSTAIN` är modulkonstanter, inte i `L12`,
+så de låses via läsaren: händelsen klassificeraren registrerar (`cot`, `abstain`, `burn-card`) och tillståndsändringen
+(`_cotCancel`/`_cotHit`, väljarens lås och blod, balen till askhögen med ägarens rad byte för byte, blockfönstret,
+rusningsfönstrets `via`/`noLock`/`targetActs`). Kontroller bredvid varje positivt fall, och båda apostroferna åt båda
+hållen: `Saulot’s Guiding Wisdom` med U+2019 i avståenderaden läses INTE. Destruktivt: bredvid bot v0.6.216 121/22 (varje
+bottsidig kontroll i avsnittet röd); mot v2.6.173:s protokolldokument 132/11 (exakt de elva dokumentationskontrollerna).
+Första körningen mot v0.6.216 kraschade på `_cotHit` (fanns inte då) -- nu skyddad, så en äldre bot ger röda rader, inte
+ett undantag som döljer hur många som föll.
+
+**Hittat på vägen:** klientens spelrad namnger den MARKERADE vampyren (`activeAnchor()`: kortet man senast klickade på i
+spel, så länge det är markerat). Högerklicksmenyerna markerar ingenting. En människa som deklarerade handlingen från
+vampyrens högerklicksmeny och sedan spelar Change of Target skriver alltså `Change of Target was played.` eller ett annat
+korts namn, och bottens `_onCot` läser ingen av dem -- botten skulle börja den strid som människan tror är slut. Bara den
+blockerade agerande vampyren kan spela kortet, så varje Change of Target-rad från den stolen inom 30 s är dess. I svaret
+som en iakttagelse, deras beslut; läst i koden, inte provat vid ett bord.
+
+**Datarepot** (`dtagent2000/VTES-Elysium-data`, PR #2 till Johan): `twda.json` = KRCG:s `data/v5/twda.json` från i dag
+(4 709 lekar, den nyaste från 25 oktober). Kontrollerad med bottens egen läsare -- kopior av `krcg-v5.js` och `twda.py` i en
+skrapmapp, `bot/` orört: 4 709 lekar, 0 kort-id som saknas i `vtes.json`. De fyra README-raderna handoffen pekade ut, ett
+stycke om KRCG:s v5-standard och `twda.py --check` under *Updating*. `vtes-v5.json` uppdaterades inte: KRCG:s dump i dag
+skiljer sig från kopian av 3 november bara i ett korts `rulings` (Memory's Fading Glimpse). `gh pr create` vägras i de här
+sessionerna (GraphQL); `gh api repos/…/pulls -X POST` fungerar.
+
+**Grindarna:** klient 363/0 (bot v0.6.218 bredvid, inga överhopp; mot v2.6.173 361/2 -- det nya testet och embed-driften),
+kanariefågeln 143/0, dispatch 94/0, endpoint 36/0, protokoll 6/0, soak `--control` (snubbeltråden löste ut),
+vakthundstestet 7/0 (efter commit), embed `--check` båda sidorna, B1 byteidentisk, check-versions grön inklusive
+rotgrinden och SHA256SUMS. **I headless Chrome** (den riktiga servern och klienten, KRCG:s riktiga filer via route):
+v2.6.174 10 av 10 -- v5-vägen nere och standardadressen med v5-dumpen: en v5-kopia (ingen nödlösning), Julia finns,
+Inställningars rad är ren, nästa start hämtar ingenting; en v3-fil via samma adress är fortfarande nödlösningen och nästa
+start ersätter den. v2.6.173: 6 av 10, exakt de fyra i det första fallet.
+
+**Deploy:** purga klienten och `/elysium-bot.js`; inget annat.
+
+**Inte kört:** elysium.cards; klienten mot static.krcg.org över nätet i en webbläsare (sandlådan hämtade KRCG:s filer med
+curl); en människas Change of Target, avstående eller bränn-handling vid ett bord med bottar i en webbläsare.
+
 ## [DEN BEVAKADE DÖRREN] (11 november 2026, klient v2.6.173 / srv-2.6.50)
 
 Johan: bottprojektet har lämnat en handoff i PR #59 (säkerhet). Jag kontrollerade PR:en först (en enda fil,

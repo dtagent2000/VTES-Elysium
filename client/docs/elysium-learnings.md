@@ -1,8 +1,29 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.173 / server v2.6.50 / bot v0.6.217 tested beside the suite, last updated 11 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.174 / server v2.6.50 / bot v0.6.218 tested beside the suite, last updated 11 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**11 Nov 2026, later (THE DEFAULT MOVED — v2.6.174, KRCG's v5 default and bot v0.6.217's lines):**
+- **A data file's address is not its format.** v2.6.168 reached KRCG's v3 file by a second address and, from then on,
+  treated "came by the second address" as "is the v3 file". When KRCG made v5 its default (8 Nov), that address served
+  the v5 dump and the client called it 'the older v3 file' and stale. The client already measures the shape of what it
+  reads (`vtesFmt`); let the shape decide what a file is, and let the address only say where to look. (The bot project
+  has the same lesson as L-75: a data file's name is a contract with its reader.)
+- **A grammar the other half keeps private can still be pinned -- through its reader.** The bot's Change of Target and
+  abstain regexes are module constants, not in the exported `L12`. The canary feeds the documented lines to a live bot
+  and reads what its parser does with them: the event its classifier records and the state it changes. That pins more
+  than the regex would (the regex can match and the handler still ignore the line).
+- **Probe the live counterpart before writing an assertion about it.** A ten-minute probe (each new line into a live
+  bot, print the effect) showed that a rush opens a block window only when an unlocked minion OTHER than the target is
+  there; the check I would have written from the handoff alone (the target blocks for itself) was wrong.
+- **A destructive run must end in red lines, not a crash.** Against bot v0.6.216 the new section threw on a method
+  v0.6.217 added (`_cotHit`), and the count of failing checks was lost with it. Guard every call into the counterpart
+  (`typeof x === 'function' && …`, `L12[k] || /$^/`), so the older side reports what it lacks.
+- **A human's card-play line names the selected card, not the acting one.** The client writes `VAMP plays CARD.` from
+  the anchor (`activeAnchor()`: the card last clicked in play, while it stays selected) and `CARD was played.` without
+  one; a right-click menu selects nothing, so declaring an action from it leaves the anchor where it was. Whatever a bot
+  reads from a human's card-play line (the aim, the actor, now Change of Target) rests on that selection.
 
 **11 Nov 2026 (THE WATCHED DOOR — v2.6.173 / srv-2.6.50, the bot project's security handoff):**
 - **Name the threat each defence answers before choosing one.** A Content-Security-Policy sent by the server cannot
