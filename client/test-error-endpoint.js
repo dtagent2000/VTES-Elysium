@@ -147,6 +147,79 @@ function lines(){ try { return fs.readFileSync(LOG, 'utf8').trim().split('\n').f
 
   c2.kill('SIGTERM'); await sleep(300);
   try { c2.kill('SIGKILL'); } catch (e) {}
+
+  /* 7) srv-2.6.50 THE WATCHED DOOR, live: a boot WRAPS srv-2.6.49's SHA-256 hashes and writes both files at once; the restored
+     room opens with its old password over a real socket and nothing else; the page carries a report-only policy holding the
+     hash of every script in the very bytes sent; /images/ answers with a sandbox; and a restart ADOPTS the salt: nothing is
+     wrapped twice, and a new room with the same password lands in the old save's group (D4). */
+  const crypto7 = require('crypto');
+  const sha7 = t => crypto7.createHash('sha256').update(t, 'utf8').digest('hex');
+  const S1 = /^s1\$[0-9a-f]{32}\$[0-9a-f]{64}$/;
+  const DATA3 = fs.mkdtempSync(path.join(os.tmpdir(), 'ely-errtest3-'));
+  const SITE = path.join(DATA3, 'site'); fs.mkdirSync(path.join(SITE, 'images'), { recursive: true });
+  fs.copyFileSync(path.join(path.dirname(SRV), 'elysium-vtes-bord.html'), path.join(SITE, 'elysium-vtes-bord.html'));
+  fs.writeFileSync(path.join(SITE, 'images', 'probe.svg'), '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
+  fs.writeFileSync(path.join(DATA3, 'elysium-rooms.json'), JSON.stringify([{ name: 'Old50', passHash: sha7('fredag'), refHash: sha7('domare'), hostToken: 'ht',
+    created: Date.now(), started: true, everPop: true, players: [{ name: 'Ann', token: 'tk-ann' }] }]));
+  fs.writeFileSync(path.join(DATA3, 'elysium-saves.json'), JSON.stringify([{ name: 'friday50', passHash: sha7('fredag'), roomName: 'Old50', savedAt: Date.now(), touchedAt: Date.now(), players: [] }]));
+  const boot7 = async port => {
+    const c = spawn(process.execPath, [SRV, String(port), path.join(SITE, 'elysium-vtes-bord.html'), '--data-dir', DATA3], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let out = '', upx = false; c.stdout.on('data', d => { out += d; if (/Data:/.test(out)) upx = true; }); c.stderr.on('data', () => {});
+    const t = Date.now(); while (!upx && Date.now() - t < 8000) await sleep(100);
+    return { c, up: upx, out: () => out };
+  };
+  const files7 = () => { try { return { rooms: JSON.parse(fs.readFileSync(path.join(DATA3, 'elysium-rooms.json'), 'utf8')),
+                                       saves: JSON.parse(fs.readFileSync(path.join(DATA3, 'elysium-saves.json'), 'utf8')) }; } catch (e) { return { rooms: [], saves: [] }; } };
+  const ws7 = (port, msg) => new Promise(res => {                                   // Node 22's own WebSocket; the first joined/err answers
+    let done = false; const ws = new WebSocket('ws://127.0.0.1:' + port);
+    const fin = v => { if (!done){ done = true; try { ws.close(); } catch (e) {} res(v); } };
+    ws.onopen = () => ws.send(JSON.stringify(msg));
+    ws.onmessage = ev => { let m = null; try { m = JSON.parse(String(ev.data)); } catch (e) {} if (m && (m.t === 'joined' || m.t === 'err')) fin(m); };
+    ws.onerror = () => fin(null); setTimeout(() => fin(null), 4000);
+  });
+  const PORT3 = 20000 + Math.floor(Math.random() * 20000);
+  const b1 = await boot7(PORT3);
+  ok(b1.up && /\b3 stored password hash\(es\) moved from SHA-256 to scrypt/.test(b1.out()), 'srv-2.6.50: the boot wraps the room\'s two old hashes and the save\'s one, and says so');
+  await sleep(400);
+  let F = files7();
+  const old = F.rooms.find(r => r.name === 'Old50') || {}, fri = F.saves.find(x => x.name === 'friday50') || {};
+  const raw7 = fs.readFileSync(path.join(DATA3, 'elysium-rooms.json'), 'utf8') + fs.readFileSync(path.join(DATA3, 'elysium-saves.json'), 'utf8');
+  ok(S1.test(old.passHash || '') && S1.test(old.refHash || '') && S1.test(fri.passHash || '') && !/"[0-9a-f]{64}"/.test(raw7),
+     'both files are written at once: s1 everywhere, no SHA-256 hash left on disk');
+  ok(fri.passHash === old.passHash, 'the save and its room land on the same hash (the group rule)');
+  if (typeof WebSocket === 'function'){
+    const bad = await ws7(PORT3, { t: 'join', room: 'Old50', name: 'Bob', pass: 'fel' });
+    ok(bad && bad.t === 'err' && /Wrong password/.test(bad.msg || ''), 'over a real socket: the restored room refuses a wrong password');
+    const good = await ws7(PORT3, { t: 'join', room: 'Old50', name: 'Bob', pass: 'fredag' });
+    ok(good && good.t === 'joined', 'and seats its old one');
+  } else console.log('  (the socket checks need Node 22\'s WebSocket -- skipped here)');
+  const pg = await fetch('http://127.0.0.1:' + PORT3 + '/');
+  const body7 = await pg.text(), pol7 = pg.headers.get('content-security-policy-report-only') || '';
+  const want7 = []; body7.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/g, (a, t) => { const h = "'sha256-" + crypto7.createHash('sha256').update(t, 'utf8').digest('base64') + "'"; if (want7.indexOf(h) < 0) want7.push(h); return a; });
+  ok(pg.status === 200 && want7.length >= 2 && want7.every(h => pol7.includes(h)) && !pg.headers.get('content-security-policy'),
+     'GET /: a REPORT-ONLY policy holding the hash of every script in the bytes sent (' + want7.length + '), and no enforcing one');
+  ok(pol7.includes("connect-src 'self' ws://127.0.0.1:" + PORT3 + ' wss://127.0.0.1:' + PORT3) && pg.headers.get('x-frame-options') === 'DENY',
+     'its own host spelled out for the sockets; the old hardening headers stay');
+  const im7 = await fetch('http://127.0.0.1:' + PORT3 + '/images/probe.svg');
+  ok(im7.status === 200 && /sandbox/.test(im7.headers.get('content-security-policy') || '') && /default-src 'none'/.test(im7.headers.get('content-security-policy') || ''),
+     'GET /images/probe.svg: a sandbox policy -- opened on its own, the SVG\'s script never runs');
+  b1.c.kill('SIGTERM'); await sleep(500); try { b1.c.kill('SIGKILL'); } catch (e) {}
+  const before = JSON.stringify(files7().saves.map(x => x.passHash));
+  const PORT4 = 20000 + Math.floor(Math.random() * 20000);
+  const b2 = await boot7(PORT4);
+  ok(b2.up && !/moved from SHA-256/.test(b2.out()), 'a restart wraps nothing twice');
+  if (typeof WebSocket === 'function'){
+    const mk = await ws7(PORT4, { t: 'create', room: 'New50', name: 'Cid', pass: 'fredag', lobby: true });
+    ok(mk && mk.t === 'joined', 'a new room with the same password is created after the restart');
+    const again = await ws7(PORT4, { t: 'join', room: 'Old50', name: 'Dan', pass: 'fredag' });
+    ok(again && again.t === 'joined', 'the restored room still opens with its password after a second start');
+  }
+  b2.c.kill('SIGTERM'); await sleep(500); try { b2.c.kill('SIGKILL'); } catch (e) {}
+  F = files7();
+  const nw = F.rooms.find(r => r.name === 'New50');
+  ok(JSON.stringify(F.saves.map(x => x.passHash)) === before && (typeof WebSocket !== 'function' || (nw && nw.passHash === fri.passHash)),
+     'the salt is adopted from the files: the new room\'s hash equals the old save\'s, so its save list still shows it');
+  try { fs.rmSync(DATA3, { recursive: true, force: true }); } catch (e) {}
   try { fs.rmSync(DATA, { recursive: true, force: true }); } catch (e) {}
   try { fs.rmSync(DATA2, { recursive: true, force: true }); } catch (e) {}
   console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));

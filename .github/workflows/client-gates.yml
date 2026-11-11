@@ -68,6 +68,9 @@ jobs:
       - name: Hotseat soak, control run (the trip-wire must fire)
         if: ${{ !cancelled() }}
         run: node elysium-soak-hotseat.js --control
+      - name: Served-bytes watchdog against the real server (it must be able to fail)
+        if: ${{ !cancelled() }}
+        run: node test-served-check.js
       - name: Embedded help pages
         if: ${{ !cancelled() }}
         run: |

@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.49';   // srv-2.6.49 (17 Oct 2026, THE QUIET TABLE -- restart; ships with client v2.6.165): the two server findings the independent review of round A left open, and what the review of this round found in them. (1) deriveIp (only with --trust-proxy, only from a loopback peer) takes the RIGHTMOST X-Forwarded-For entry, the one the local proxy appended -- the leftmost is whatever the client sent, so behind an appending proxy (nginx) every connection could claim a fresh address and walk past the per-address limits; an entry written with a port counts as its address. CF-Connecting-IP still comes first, which is right only behind Cloudflare: `--trust-proxy xff` (new) ignores it, for nginx or Caddy straight to the internet, where a client can write that header too. (2) wsAttach keeps ONE growable buffer per connection: a TCP chunk is copied in once (the buffer doubles), frames are read at an offset, the rest moves to the front -- srv-2.6.48 ran Buffer.concat on every chunk (one frame dripped in byte by byte: quadratic CPU), and the first srv-2.6.49 build, which queued the chunks, kept every tiny chunk alive until the frame was whole (~85 MB for 256 KB dripped byte by byte); the buffer never grows past one largest frame plus its header (unless the bytes already there need more), and one grown past 64 KB shrinks back once it is nearly empty.
+const VERSION = '2.6.50';   // srv-2.6.50 (11 Nov 2026, THE WATCHED DOOR -- restart, and back up the data directory first; ships with client v2.6.173): the server half of the bot project's security handoff (bot/docs/handoffs/HANDOFF-to-main-2026-11-11-security.md; the plan: client/docs/elysium-security-plan.md). (1) A stored password is a slow hash: a room's, a referee's and a save's password was one unsalted SHA-256, so a leaked snapshot, save file or backup gave every weak or reused password at dictionary speed; now 's1$' + salt + '$' + scrypt(sha256hex(pass)) (N 2^14, r 8, p 1, ~40 ms). One salt per server, carried inside every hash (saves are grouped by EQUAL hashes across rooms, decision D4); the old hashes are wrapped as the files load and both files are written at once, so no SHA-256 hash outlives the first start; a verified password is remembered in memory, keyed by the stored hash. A rollback to srv-2.6.49 cannot read the new hashes. (2) The client page carries a Content-Security-Policy-Report-Only header whose script hashes are made from the file being sent (nothing to keep in step; enforcement is the next round). (3) /images/ answers with a sandbox policy: an SVG opened on its own runs nothing. (4) /client-error keeps the kind 'csp' (a policy report) instead of filing it as a crash. No wire change.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -49,6 +49,7 @@ for(let i = 0; i < _argv.length; i++){
   else _pos.push(a);
 }
 function passHashLater(v){ return { _raw: String(v || '') }; }   // crypto's passHash is declared below; resolve after definitions
+const DATA_DIR = CFG.dataDir ? path.resolve(CFG.dataDir) : __dirname;   // v2.6.20: __dirname-relative was silently unwritable under ProtectSystem=strict (root-owned code dir) -- best-effort catch ate the EACCES and persistence just... didn't. Default unchanged.   (srv-2.6.50: moved up from the persistence section)
 const PORT        = parseInt(_pos[0], 10) || 8123;
 const CLIENT_FILE = path.resolve(__dirname, _pos[1] || 'elysium-vtes-bord.html');
 const MAX_ROOMS   = 50;
@@ -271,16 +272,88 @@ function strike(map, ip){
   a.push(Date.now());
   map.set(ip, a);
 }
-function passHash(s){ return crypto.createHash('sha256').update(String(s || '')).digest('hex'); }
+/* srv-2.6.50 (THE WATCHED DOOR; the bot project's security handoff of 11 Nov 2026, item 2): a stored password is a SLOW
+   hash. Until srv-2.6.49 a room's, a referee's and a save's password was kept as one unsalted SHA-256, so a leaked
+   elysium-rooms.json, elysium-saves.json or backup gave every weak -- and every reused -- password at dictionary speed.
+   A stored hash is now
+       's1$' + <the salt, 32 hex> + '$' + <scrypt(sha256hex(pass), salt), N 2^14, r 8, p 1: 64 hex>      (~40 ms each)
+   - ONE salt per server, not one per room: saves are grouped by EQUAL hashes across rooms (SAVES_PER_GROUP, decision D4:
+     the same password is the same friend group), and only a deterministic hash keeps that. The salt rides inside every
+     hash, so nothing has to be kept beside the two data files: the first hash adopts the salt of the first s1 hash in
+     elysium-saves.json or elysium-rooms.json (passSalt), and only a server that has stored none makes a new one.
+   - the SHA-256 first bounds what scrypt is fed (a 256 KB password costs one SHA-256 and a scrypt of 64 bytes), and it
+     makes the migration a WRAP: an old hash IS sha256hex(pass), so passUpgrade turns it into s1 as the files load and
+     passBootDone writes both files at once -- no SHA-256 hash outlives the first start of this server.
+   - a SUCCESS is remembered in memory, keyed by the stored hash and the fast hash (PASS_OK, at most PASS_OK_MAX): a
+     reconnect, a door check or the next player into the same room costs no hash. A wrong guess always pays the full
+     hash, and a quick answer can never tell a guesser that some OTHER room uses that password. The empty password (an
+     open room) is no secret and is made once per salt. The process holds every plain password at its join anyway, so
+     the memory holds nothing it did not have.
+   - the lockouts are read BEFORE the compare, as before (join, the door, the admin doors), so a locked-out guess hashes
+     nothing. A flood of fresh guesses from many addresses still costs ~40 ms of the event loop each: the plan names it.
+   A rollback to srv-2.6.49 cannot read an s1 hash: back the data directory up before deploying (runbook §2). */
+const PASS_V = 's1$';
+const PASS_RE = /^s1\$([0-9a-f]{32})\$([0-9a-f]{64})$/;
+const PASS_OLD_RE = /^[0-9a-f]{64}$/;                        // srv-2.6.49's form: sha256hex(pass)
+const PASS_SCRYPT = { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+const PASS_OK_MAX = 512;
+const PASS_OK = new Map();                                    // stored + '|' + sha256hex(given) -> true, oldest first (a Map keeps insertion order)
+const PASS_UP = new Map();                                    // the boot's memo: an old hash -> its scrypt key (most rooms share one password: the empty one)
+const SHA256_EMPTY = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+let passSaltHex = null, passEmpty = null, passUpgraded = 0;
+function sha256hex(s){ return crypto.createHash('sha256').update(String(s || '')).digest('hex'); }   // String(s || ''): the coercion passHash always had (undefined, null, 0 -> '')
+function passSaltIn(text){ const m = /"s1\$([0-9a-f]{32})\$[0-9a-f]{64}"/.exec(String(text || '')); return m ? m[1] : null; }
+function passSalt(){
+  if(passSaltHex) return passSaltHex;
+  for(const f of ['elysium-saves.json', 'elysium-rooms.json']){   // saves first: they outlive any table
+    let t = ''; try{ t = fs.readFileSync(path.resolve(DATA_DIR, f), 'utf8'); }catch(e){}
+    const salt = passSaltIn(t); if(salt){ passSaltHex = salt; return salt; }
+  }
+  passSaltHex = crypto.randomBytes(16).toString('hex');
+  return passSaltHex;
+}
+function passKey(fastHex, saltHex){
+  const k = () => crypto.scryptSync(fastHex, Buffer.from(saltHex, 'hex'), 32, PASS_SCRYPT).toString('hex');
+  if(fastHex !== SHA256_EMPTY) return k();
+  if(!passEmpty || passEmpty[0] !== saltHex) passEmpty = [saltHex, k()];
+  return passEmpty[1];
+}
+function passHash(s){ const salt = passSalt(); return PASS_V + salt + '$' + passKey(sha256hex(s), salt); }
+function passUpgrade(stored){                                 // an old hash -> s1; anything else comes back as it was
+  if(typeof stored !== 'string' || !PASS_OLD_RE.test(stored)) return stored;
+  const salt = passSalt();
+  let k = PASS_UP.get(stored);
+  if(!k){ k = passKey(stored, salt); PASS_UP.set(stored, k); }
+  passUpgraded++;
+  return PASS_V + salt + '$' + k;
+}
+function passBootDone(){                                      // after both files have loaded: write them at once if a hash was wrapped
+  if(passUpgraded){
+    console.log('[boot] ' + passUpgraded + ' stored password hash(es) moved from SHA-256 to scrypt (s1) -- a rollback to srv-2.6.49 needs the data directory as it was before this start');
+    snapshot(); persistSaves();
+  }
+  PASS_UP.clear(); passUpgraded = 0;
+}
 /* srv-2.6.47: one lockout for every admin door -- hello{admin} on the socket, the log pull and the maintenance window
    over HTTP -- read BEFORE the compare. ERR_MAX wrong keys per address per ERR_WIN; an all-loopback server (a tunnel
    without --trust-proxy: everyone is 127.0.0.1) gets the server door's 4x tolerance, so a fat-fingered guest does not
    lock the host out at once. A deliberate guest still can: --trust-proxy gives every player their own bucket. */
 function adminLocked(ip){ return strikes(ipLogAuth, ip, ERR_WIN) >= (isLoopback(ip) ? ERR_MAX * 4 : ERR_MAX); }
-function passMatch(hashHex, given){
-  const a = Buffer.from(passHash(given), 'utf8');
-  const b = Buffer.from(String(hashHex || ''), 'utf8');
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+function passMatch(stored, given){                           // srv-2.6.50: an s1 hash (above); srv-2.6.49's bare SHA-256 still compares, as only a value set in memory can be one (the suites) -- every stored one is wrapped as it loads
+  const st = String(stored || ''), fast = sha256hex(given);
+  let want, got, okKey = null;
+  if(PASS_OLD_RE.test(st)){ want = st; got = fast; }
+  else {
+    const m = PASS_RE.exec(st);
+    if(!m) return false;
+    okKey = st + '|' + fast;
+    if(PASS_OK.has(okKey)){ PASS_OK.delete(okKey); PASS_OK.set(okKey, true); return true; }   // a remembered success moves to the young end
+    want = m[2]; got = passKey(fast, m[1]);
+  }
+  const a = Buffer.from(got, 'utf8'), b = Buffer.from(want, 'utf8');
+  const ok = a.length === b.length && crypto.timingSafeEqual(a, b);
+  if(ok && okKey){ PASS_OK.set(okKey, true); if(PASS_OK.size > PASS_OK_MAX) PASS_OK.delete(PASS_OK.keys().next().value); }
+  return ok;
 }
 if(CFG.srvPassHash   && CFG.srvPassHash._raw   !== undefined) CFG.srvPassHash   = passHash(CFG.srvPassHash._raw);     // v2.5.68: argv parsed before passHash existed
 if(CFG.adminPassHash && CFG.adminPassHash._raw !== undefined) CFG.adminPassHash = passHash(CFG.adminPassHash._raw);
@@ -1785,7 +1858,7 @@ function errScrub(v, cap){ return String(v==null?'':v).replace(/[\u0000-\u001f\u
 function errRecord(m){                       // pure: parsed body -> whitelisted record (null = drop). Unit-tested in test-server-dispatch.js.
   if(!m || typeof m!=='object') return null;
   const rec={ ts:new Date().toISOString(),
-    kind: m.kind==='report' ? 'report' : 'crash',
+    kind: m.kind==='report' ? 'report' : (m.kind==='csp' ? 'csp' : 'crash'),   // srv-2.6.50: 'csp' = a report from the page's report-only policy (client v2.6.173 cspReport), counted apart by the digest
     ver: errScrub(m.ver || (m.summary && m.summary.ver), 16),   // v2.6.27: reports carry ver only inside summary -- mirror the ua fallback below, or the digest histogram shows '?' (found by Johan's first real report)
     ua:  errScrub(m.ua || (m.summary && m.summary.ua), 120) };
   if(m.msg!==undefined)   rec.msg   = errScrub(m.msg, 300);
@@ -1923,6 +1996,47 @@ function handleClientError(req, res){
   });
   req.on('error', ()=>{ try{ res.end(); }catch(e){} });
 }
+/* srv-2.6.50 (THE WATCHED DOOR; the security handoff's item 1): the client page's Content-Security-Policy, REPORT-ONLY for
+   this release -- a browser reports what the policy would block and blocks nothing. Script hashes, not a nonce: a nonce
+   changes the page on every request, and the bytes the server hands out must stay comparable with the release
+   (client/served-check.js). The hashes are made from the very file being sent (cspScriptHashes), so the header cannot go
+   stale when a new client is copied in without a restart. Every <script> element is hashed: the help tab's nav script
+   lives in one that never runs on the page (#helpNavJs, type text/plain) and runs in the tab the client opens, a blob:
+   document that inherits this policy. ws:// and wss:// to the page's own host are spelled out beside 'self' (older
+   Safari did not let 'self' cover a socket). The client (v2.6.173+) passes each report to /client-error, so the Discord
+   digest shows them; client/docs/elysium-security-plan.md says when this becomes the enforcing header and <meta>. */
+const CSP_HOST_RE = /^(?:[A-Za-z0-9.-]{1,253}|\[[0-9A-Fa-f:.]{2,45}\])(?::\d{1,5})?$/;
+const IMG_CSP = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox";   // srv-2.6.50: an image (an SVG above all) opened on its own runs nothing
+function cspScriptHashes(html){
+  const s = String(html), out = [];
+  const tagRe = /<!--|<script\b[^>]*>/ig;
+  let m;
+  while((m = tagRe.exec(s))){
+    if(m[0] === '<!--'){ const e = s.indexOf('-->', m.index + 4); if(e < 0) break; tagRe.lastIndex = e + 3; continue; }   // a comment holds no script, whatever it says
+    const start = m.index + m[0].length;
+    const endRe = /<\/script/ig; endRe.lastIndex = start;
+    const e = endRe.exec(s); if(!e) break;
+    const text = s.slice(start, e.index).replace(/\r\n?/g, '\n');   // the HTML parser turns CR LF and a lone CR into LF before the hash is taken
+    const h = "'sha256-" + crypto.createHash('sha256').update(text, 'utf8').digest('base64') + "'";
+    if(out.indexOf(h) < 0) out.push(h);
+    tagRe.lastIndex = e.index + 8;
+  }
+  return out;
+}
+function cspPolicy(hashes, host){
+  const own = (typeof host === 'string' && CSP_HOST_RE.test(host)) ? (' ws://' + host + ' wss://' + host) : '';
+  return "default-src 'self'; script-src 'self' " + hashes.join(' ')
+       + "; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
+       + "; img-src 'self' data: blob: https://static.krcg.org https://images.ctfassets.net"
+       + "; connect-src 'self'" + own + " https://static.krcg.org"
+       + "; object-src 'none'; base-uri 'none'; form-action 'none'";
+}
+function pageHeaders(html, host){
+  const h = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store',   // v2.6.21: standard hardening headers -- DENY framing (no legit embed case),
+              'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer' };   // nosniff, and no referrer leakage from the app
+  try{ h['Content-Security-Policy-Report-Only'] = cspPolicy(cspScriptHashes(html), host); }catch(e){}
+  return h;
+}
 const srv = http.createServer((req, res) => {
   if(req.method === 'POST' && req.url === '/client-error'){ handleClientError(req, res); return; }   // B-54: the ONLY body-reading route
   if(req.method === 'GET' && req.url.startsWith('/client-errors.txt')){ handleLogFetch(req, res); return; }   // v2.6.25 amend: admin-gated log pull (?key=<admin-pass>, ?dl=1 for attachment)
@@ -1935,7 +2049,7 @@ const srv = http.createServer((req, res) => {
     if(file === 'vtes.json'){
       fs.readFile(path.join(IMAGES_DIR, 'vtes.json'), (err, data) => {
         if(err){ res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
-        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff' });
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': IMG_CSP });
         res.end(data);
       });
       return;
@@ -1946,7 +2060,7 @@ const srv = http.createServer((req, res) => {
     fs.readFile(full, (err, data) => {
       if(err){ res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
       const ct = /\.svg$/i.test(file) ? 'image/svg+xml' : (/\.webp$/i.test(file) ? 'image/webp' : 'image/jpeg');
-      res.writeHead(200, { 'Content-Type': ct, 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff' });
+      res.writeHead(200, { 'Content-Type': ct, 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': IMG_CSP });
       res.end(data);
     });
     return;
@@ -1980,8 +2094,7 @@ const srv = http.createServer((req, res) => {
                 '\nPlace elysium-vtes-bord.html next to elysium-server.js (or pass its path as the 2nd argument).');
         return;
       }
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store',   // v2.6.21: standard hardening headers -- DENY framing (no legit embed case),
-        'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer' });   // nosniff, and no referrer leakage from the app
+      res.writeHead(200, pageHeaders(data, req.headers.host));   // v2.6.21's hardening headers + srv-2.6.50's report-only policy, its hashes made from these bytes
       res.end(data);
     });
     return;
@@ -2109,7 +2222,7 @@ setInterval(() => {
 }, 10 * 60000);
 
 /* ---------- Persistence: the table survives a server restart ---------- */
-const DATA_DIR = CFG.dataDir ? path.resolve(CFG.dataDir) : __dirname;   // v2.6.20: __dirname-relative was silently unwritable under ProtectSystem=strict (root-owned code dir) -- best-effort catch ate the EACCES and persistence just... didn't. Default unchanged.
+// DATA_DIR is defined beside the argv parse since srv-2.6.50 (the password salt is read from it at the first hash, see passSalt).
 const STORE = path.resolve(DATA_DIR, 'elysium-rooms.json');
 function makeAsyncFileWriter(finalPath){                  // H1-d: non-blocking persistence with in-flight coalescing -- at most one
   let busy = false, next = null;                          // write chain runs; the newest queued JSON wins. .tmp-then-rename keeps
@@ -2158,13 +2271,13 @@ function roomUnsnap(r){
   const bc = (r.botcfg && typeof r.botcfg === 'object') ? botcfgMerge(r.botcfg.tempo, r.botcfg.waitSecs, null) : null;
   const mm = r.matchMins | 0;
   return {
-    name: cleanName(r.name), passHash: r.passHash || (r.pass != null ? passHash(r.pass) : passHash('')), hostToken: r.hostToken || null,
+    name: cleanName(r.name), passHash: passUpgrade(r.passHash) || (r.pass != null ? passHash(r.pass) : passHash('')), hostToken: r.hostToken || null,   // srv-2.6.50: an old hash is wrapped (passUpgrade)
     created: r.created || Date.now(), turnSeat: r.turnSeat || null,
     matchEnd: r.matchEnd || null, reactSecs: r.reactSecs || 5, escrowSalt: r.escrowSalt || token(),
     helperPolicy: cleanHelperPolicy(r.helperPolicy),
     chat: r.chat !== false, specChat: r.specChat !== false, started: r.started !== false, tournLock: !!r.tournLock, hasPass: !!r.hasPass, ledger: Array.isArray(r.ledger) ? r.ledger.slice(-800) : [],
     timeCalled: !!r.timeCalled, watchers: [],
-    boardMode: r.boardMode === 'classic' ? 'classic' : 'structured', refHash: (typeof r.refHash === 'string' && r.refHash) ? r.refHash : null,
+    boardMode: r.boardMode === 'classic' ? 'classic' : 'structured', refHash: (typeof r.refHash === 'string' && r.refHash) ? passUpgrade(r.refHash) : null,
     tableSetup: r.boardMode === 'classic' && r.tableSetup === true,   // srv-2.6.44: re-validated as the create path stores it
     tableLayout: (r.boardMode === 'classic' && r.tableLayout === 'large') ? 'large' : null,   // srv-2.6.46: re-validated the same way
     matchMins: (mm >= 5 && mm <= 600) ? mm : 0,
@@ -2233,10 +2346,12 @@ function loadSaves(){
   }catch(err){ console.log('[boot] could not load saved matches: ' + err.message); }
 }
 loadSaves();
+passBootDone();   // srv-2.6.50: both files are in -- write them now if an old hash was wrapped
 /* srv-2.6.47 (the independent review): a save written under older rules is cleaned as it loads -- player names as
    cleanName (loadMatch matches them against the cleaned name of whoever loads, so 'Ann "A"' could no longer reclaim
    her seat), and each board through sanitizePub again (the clans and ids of a srv-2.6.46 save kept their quotes). */
 function saveUnsnap(s){
+  s.passHash = passUpgrade(s.passHash);                   // srv-2.6.50: an old hash is wrapped, the same as the room's (the group rule needs the two equal)
   if(Array.isArray(s.players)) s.players.forEach(sp => {
     if(!sp) return;
     sp.name = cleanName(sp.name);

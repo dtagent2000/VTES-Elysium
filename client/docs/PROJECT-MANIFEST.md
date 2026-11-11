@@ -1,7 +1,7 @@
 # PROJECT-MANIFEST.md — what belongs in the Elysium (MAIN) project upload (9 September 2026, after the split)
 
 *The canonical file set for the claude.ai project knowledge, assembled after THE MERGE
-(client v2.6.102 · server srv-2.6.35 · bot v0.6.107 · digest v1.4; versions below refreshed 6 Nov 2026 -- client v2.6.172 · srv-2.6.49 · bot v0.6.217, run beside the suite). One lineage. When a file
+(client v2.6.102 · server srv-2.6.35 · bot v0.6.107 · digest v1.4; versions below refreshed 11 Nov 2026 -- client v2.6.173 · srv-2.6.50 · bot v0.6.217, run beside the suite). One lineage. When a file
 here disagrees with a chat's latest delivery, the newer version wins — update this manifest
 when files are added or retired. Read order for a new chat: CLAUDE.md → the session journal →
 project context → learnings → (for bots) CLAUDE-arena.md → (for the next chapter)
@@ -18,9 +18,9 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 ## A. Shipped code (deployed to the box / the download bundle)
 | File | Role | Version |
 |---|---|---|
-| elysium-vtes-bord.html | The client — ONE file, built from 12 fragments by elysium-build.js; carries the Help pages (Bots = the bot project's START-HERE-BOTS.html embedded verbatim, Local server = help-local-server.html) | v2.6.172 |
-| elysium-server.js | The reference server (rooms, deals, relays, HTTP intake, statics -- four bot files since srv-2.6.43; the room option `tableSetup` since srv-2.6.44; the pub's turn count `tn`/`rn` since srv-2.6.45; the room option `tableLayout` since srv-2.6.46; the review's three locks since srv-2.6.47 -- names, clans and ids cleaned for attributes, RFC 6455 frame limits with pings in the rate bucket, the admin key's lockout; group B since srv-2.6.48 -- a mid-game leave vacates the seat, `bounty.award`, VP once per oust and back on an un-oust, a negative block tally, saves keep open seats and the board style; group C since srv-2.6.49 -- the rightmost X-Forwarded-For entry and `--trust-proxy xff`, one growable frame buffer per connection) | srv-2.6.49 |
-| elysium-error-digest.js | Daily Discord digest of elysium-errors.log (systemd timer) | v1.4 |
+| elysium-vtes-bord.html | The client — ONE file, built from 12 fragments by elysium-build.js; carries the Help pages (Bots = the bot project's START-HERE-BOTS.html embedded verbatim, Local server = help-local-server.html) | v2.6.173 |
+| elysium-server.js | The reference server (passwords at rest as scrypt `s1` hashes, the page's report-only CSP and the `/images/` sandbox since srv-2.6.50; rooms, deals, relays, HTTP intake, statics -- four bot files since srv-2.6.43; the room option `tableSetup` since srv-2.6.44; the pub's turn count `tn`/`rn` since srv-2.6.45; the room option `tableLayout` since srv-2.6.46; the review's three locks since srv-2.6.47 -- names, clans and ids cleaned for attributes, RFC 6455 frame limits with pings in the rate bucket, the admin key's lockout; group B since srv-2.6.48 -- a mid-game leave vacates the seat, `bounty.award`, VP once per oust and back on an un-oust, a negative block tally, saves keep open seats and the board style; group C since srv-2.6.49 -- the rightmost X-Forwarded-For entry and `--trust-proxy xff`, one growable frame buffer per connection) | srv-2.6.50 |
+| elysium-error-digest.js | Daily Discord digest of elysium-errors.log (systemd timer); v1.5 counts the page policy's reports (kind `csp`) on a line of their own | v1.5 |
 | elysium-digest.service / .timer | The digest's systemd unit + timer | — |
 | START-HERE.html | The GitHub front door for people who do not have the client yet (the client's Help → Local server is the converged in-app guide since v2.6.127) | 1.8 |
 | start-elysium(.bat/.sh/.command), start-elysium-guided(...), start-cloudflare-tunnel(...) | Launchers for self-hosters | — |
@@ -41,7 +41,10 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 | test-protocol-doc.js | Lints ELYSIUM-PROTOCOL.md §8 against the live handler tables (6/0) |
 | test-bot-canary.js | The §12 log-grammar CONTRACT test between the client and the bot's parsers — our copy in `client/`, the bot project's in `bot/` (identical until v2.6.159, which added §5: the Reduce line and both DEBUG lines against their real `L12` and a live `_onLog`; asked of them to copy it); skips loudly without the released elysium-bot.js beside it, 69/0 with v0.6.201 (v2.6.159; 57/0 with v0.6.198 at v2.6.142) |
 | .github/workflows/client-gates.yml | (repo root, v2.6.165) CI: every gate above on each PR and push to main touching `client/` or the root release files; every step runs even if an earlier one failed; read-only permissions |
-| check-versions.js | Version lockstep across code + doc headers ("everything agrees"); reads headers from `docs/` too; in the monorepo its last row asserts every root file is a byte copy of `client/<name>` or (the bundle) `bot/<name>` (12 Oct 2026) |
+| sha256sums.js / SHA256SUMS | v1.0.0 (v2.6.173): writes `client/SHA256SUMS`, the SHA-256 of our 13 release files (not the bot bundle -- theirs changes with their merges); `--check`; check-versions loads it and fails when the file is stale |
+| served-check.js + test-served-check.js | v1.0.0 (v2.6.173): the served-bytes watchdog -- fetches the page and the four bot files a server hands out and checks each against every version of that root file committed to a ref (git blob ids; CR LF tolerated with a note); exit 0 / 1 mismatch / 2 could not check. The test runs the root's real server: the release passes, one flipped bit fails, CR LF passes, nothing listening is 'could not check' (7/0) |
+| .github/workflows/served-check.yml | (repo root, v2.6.173) the watchdog, daily at 05:17 UTC against elysium.cards and `origin/main`; posts to Discord when the `SERVED_CHECK_WEBHOOK` secret is set |
+| check-versions.js | Version lockstep across code + doc headers ("everything agrees"); since v2.6.173 also `SHA256SUMS` current; reads headers from `docs/` too; in the monorepo its last row asserts every root file is a byte copy of `client/<name>` or (the bundle) `bot/<name>` (12 Oct 2026) |
 
 | playtest/playtest-rig.js, playtest.js, playtest-page.js, playtest-report.js, scenarios/three-seat.json, PLAYTEST.md | v1.2.0 (v2.6.168: `--vtes` answers KRCG's v5 path, `--exp` serves expansions.json; v1.0.0 v2.6.158): the play-test rig -- a real game against the bots in headless Chromium (Playwright; a dev tool, never shipped), recorded frame by frame and measured; PLAYTEST.md is the process, SKILLS.md 'Play-test a change for real' the short recipe; runs go to `playtest/runs/` (gitignored) or `--out` |
 
@@ -55,7 +58,8 @@ inventory. The eight bundle files are copied into `client/` for the gates and gi
 | SKILLS.md | Recipes for recurring tasks; Reflects-clause = the current round only (history in the archive) |
 | **elysium-CHANGELOG.md** | Release notes, newest first, one entry per bump — the VERSION lines carry only the current note from v2.6.73 / srv-2.6.32 / bot v0.6.102 on |
 | ELYSIUM-PROTOCOL.md | The client↔server contract (header gated by check-versions; v2.6.151 / srv-2.6.45 — the pub's `tn`/`rn` came with v2.6.149, the optional `tableSetup` field with v2.6.146) |
-| elysium-security-manifest.md / elysium-ops-runbook.md / elysium-hosting-plan.md | Ops: threat model, runbook (jq recipes, purge ritual), hosting |
+| elysium-security-manifest.md / elysium-ops-runbook.md / elysium-hosting-plan.md | Ops: threat model, runbook (jq recipes, purge ritual, the backup before srv-2.6.50, the watchdog §10), hosting |
+| **elysium-security-plan.md** | (11 Nov 2026) the security handoff's plan: what shipped in v2.6.173 / srv-2.6.50, then an order and a 'done when' per item (enforce the CSP, the verb fuzz, the security map, …) |
 | kodarkivering.md | Parked client code (retired features) — reference, not policy |
 
 ## D. Design documents and plans (read when working the area)

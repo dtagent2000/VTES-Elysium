@@ -1,8 +1,48 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.172 / server v2.6.49 / bot v0.6.217 tested beside the suite, last updated 6 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.173 / server v2.6.50 / bot v0.6.217 tested beside the suite, last updated 11 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**11 Nov 2026 (THE WATCHED DOOR — v2.6.173 / srv-2.6.50, the bot project's security handoff):**
+- **Name the threat each defence answers before choosing one.** A Content-Security-Policy sent by the server cannot
+  protect against that server: whoever takes the box writes the header too. Against 'a taken-over server serves
+  malicious JavaScript' the defences are not getting taken (the box), noticing (a check from OUTSIDE the box -- the
+  served-bytes watchdog) and a way around (the client file from GitHub, which never runs code the server sends). The
+  policy answers a different risk: script smuggled in through what other players write.
+- **Hashes, not a nonce, when the served bytes must stay comparable.** A nonce changes the page on every request; the
+  watchdog compares the served bytes with git. Let the server hash the file it is about to send, every script element,
+  as a browser reads it (CR LF and CR become LF before the hash; comments are not scripts) -- then the header can never
+  go stale when a new client is copied in without a restart.
+- **Report-only is not seen everywhere an enforced policy is.** Measured in Chrome: an ENFORCED policy (header or
+  `<meta>`) reaches the `blob:` tab the page opens (and the `about:blank` fallback) -- an unhashed script there does
+  not run; the report-only one fires no report there. So a report-only week says nothing about documents the page
+  opens: make their scripts hashable before enforcing (`#helpNavJs`: a `type="text/plain"` script element the page
+  never runs, whose text the tab gets). Preview enforcement locally by swapping the header's name in a scratch copy of
+  the server -- that run is what proved the help tab needed it.
+- **A hash that groups by equality must be deterministic per server.** Saves are found by EQUAL password hashes across
+  rooms (D4), so a per-room salt -- the textbook answer -- would have broken the save list. One salt per server, and
+  carried INSIDE every hash (`s1$salt$key`): adopted from the data files at the first hash, no key file beside them to
+  lose. And a hash of a hash migrates by WRAPPING: the old SHA-256 is what scrypt is fed, so every stored hash moves at
+  boot instead of 'at the next correct join', and no fast hash is left on disk.
+- **Remember only successes, keyed by the stored hash.** A cache keyed by the password alone answers faster for a
+  password someone else uses -- a timing oracle across rooms. Keyed by the stored hash and filled only on success, a
+  fast answer says only what the reply says anyway.
+- **A file the other half releases does not belong in our checked list.** `SHA256SUMS` lists our 13 release files and
+  not the bot bundle: their merges change those files and our gates never run on them, so listing them would turn our
+  CI red the day after each bot release (the 21-seconds class again). The watchdog checks their files against git
+  directly instead.
+- **A watchdog has to be proven to fail, and to say 'could not check' apart from 'mismatch'.** `test-served-check.js`
+  flips one bit of the served page (exit 1), serves CR LF (exit 0, said), and points at nothing (exit 2). A Cloudflare
+  challenge to GitHub's runner must read as 'could not check', never as tampering.
+- **The sandbox's agent proxy answers a mapped host's socket with a 403.** `--host-resolver-rules=MAP play.example.com
+  127.0.0.1` loads the page directly, but Chrome sends the WebSocket through the proxy; add `--no-proxy-server` to test a
+  non-local host name against a local server.
+- **Inserting text after a line that ends in a `//` comment puts your comma inside the comment.** The harness's expose
+  list broke that way (`... // the review's three,` + newline + the next key): append at the line's END only when the
+  line has no comment, or put the comma before the comment.
+- **A test that a memory is bounded must start from a known size.** The cache-bound test filled `PASS_OK` to its cap on
+  top of entries an earlier step had left; the cap evicts one per insert, so it stayed one over. Clear first.
 
 **6 Nov 2026 (TWENTY-ONE SECONDS — v2.6.172):**
 - **A green PR check is a snapshot of the base it ran on.** #48's check ran at 10:26 UTC on a root with bot v0.6.216;

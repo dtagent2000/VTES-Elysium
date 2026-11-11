@@ -1034,6 +1034,8 @@ option{ background:#14100b; color:var(--bone); }   /* dark dropdown popups (deck
 .lobpl.watcher .lobname{color:var(--bone2)}
 #roomBar{font-size:12.5px; color:var(--bone2); border:1px solid #2c2414; border-radius:6px; padding:5px 8px; margin-bottom:7px; line-height:1.5}
 #roomBar .dot{color:#7da06a} #roomBar.re .dot{color:#c43b3b}
+#roomBar .plainNet{color:#e0a07a; cursor:help; border-bottom:1px dotted #6a4a2a}   /* v2.6.173: a connection in clear text */
+#mpPlain{margin-top:4px} #mpPlain.warn{color:#e8a58a}
 #roomBar b{color:var(--bone)}
 #chatRow{margin-top:7px}
 #chatIn{width:100%; box-sizing:border-box; background:#0d0a06; color:var(--bone); border:1px solid #322715; border-radius:5px; padding:6px 9px; font:13px "Spectral", Georgia, serif}
@@ -1652,6 +1654,13 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     (document.body||document.documentElement).appendChild(n);
   }
   setTimeout(show, 6000);
+})();
+/* v2.6.173 (THE WATCHED DOOR): the server sends a report-only Content-Security-Policy (srv-2.6.50). A report is an event on
+   this document, and a stylesheet or font in the head is checked before the main script runs -- so listen from here, keep
+   what comes (at most 50) and hand each one over once the main script is up (window.__cspOn = cspReport). */
+(function(){
+  var q=window.__cspSeen=[];
+  try{ document.addEventListener('securitypolicyviolation', function(e){ if(typeof window.__cspOn==='function'){ try{ window.__cspOn(e); }catch(err){} } else if(q.length<50) q.push(e); }); }catch(err){}
 })();
 </script>
 </head>
@@ -2410,6 +2419,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
       <div class="mpJoinOnly" style="margin:8px 0 4px"><button class="btn" id="mpBrowse" type="button">&#128269; Refresh the room list</button></div>
       <div id="mpRooms" class="mpJoinOnly" style="display:none;max-height:190px;overflow:auto;border:1px solid rgba(255,255,255,.15);border-radius:6px;margin-bottom:6px"></div>
       <div class="note" id="mpStatus">Not connected.</div>
+      <div class="note" id="mpPlain" hidden></div>   <!-- v2.6.173: a connection in plain text says so (mpPlainNote) -->
     </div>
     <div class="mfoot">
       <button class="btn" id="mpLeave" style="margin-right:auto" hidden>Leave room</button>
@@ -2523,7 +2533,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
       license from Paradox Interactive AB.</p>
       <h4 style="margin:16px 0 6px">Security &amp; your data, in short</h4>
       <p class="note">Elysium runs on a single small server in the EU (Helsinki) with <b>zero open network ports</b> — all traffic flows through an encrypted tunnel over HTTPS/WSS. The software has <b>zero third-party dependencies</b>, sets no trackers or analytics, and requires no account.</p>
-      <p class="note">While you play, the server handles your display name, room name, chat, and the public board — plus your decklist in server memory, so it can hold your hidden cards honestly. <b>Your hand is encrypted on your device with the room password before it leaves; the server relays it but cannot read it.</b> Your IP is used for rate-limiting and is logged only on abuse events. Room data expires within an hour of everyone leaving; named saves are opt-in and expire after 90 days untouched. Your deck library, settings, and card images live <b>only in your browser</b> — never uploaded.</p>
+      <p class="note">While you play, the server handles your display name, room name, chat, and the public board — plus your decklist in server memory, so it can hold your hidden cards honestly. <b>Your hand is encrypted on your device with the room password before it leaves, so saved matches, snapshots and the other players only ever see a sealed blob.</b> The server itself deals your cards and checks the room password when you join, so it is trusted the way a dealer is; it keeps passwords only as slow, salted hashes. Your IP is used for rate-limiting and is logged only on abuse events. Room data expires within an hour of everyone leaving; named saves are opt-in and expire after 90 days untouched. Your deck library, settings, and card images live <b>only in your browser</b> — never uploaded.</p>
       <p class="note">Honest limits: this is a hobby service run best-effort by one person, without a formal security audit. Room passwords are shared phrases between friends — <b>pick a fun phrase, never a real password.</b> Questions, bug reports, or feedback is happily received through the &lsquo;Tools feedback&rsquo; channel on the V:TES Discord.</p>
       <p class="note" style="margin-top:14px">If you enjoy Elysium, you can <a href="https://buymeacoffee.com/Theradon" target="_blank" rel="noopener" style="color:var(--brass);text-decoration:underline">buy me a coffee</a> — it&rsquo;s always appreciated!</p>
     </div>
@@ -2923,8 +2933,9 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hs-setup">Setting up</a></li>
   <li><a href="#hs-internet">Beyond the LAN</a></li>
   <li><a href="#hs-table">Running a table</a></li>
+  <li><a href="#hs-checklist">Hosting checklist</a></li>
   <li><a href="#hs-reference">Reference</a></li>
-  <li class="ver">server srv-2.6.49 · client v2.6.165</li>
+  <li class="ver">server srv-2.6.50 · client v2.6.173</li>
 </ul></nav>
 
 <header class="hero">
@@ -3158,6 +3169,20 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     </div>
   </details>
 </section>
+<!-- ============================================================ CHECKLIST (v2.6.173 / srv-2.6.50: the security handoff's item 4) -->
+<section id="hs-checklist">
+  <h2>Hosting checklist</h2>
+  <p class="lead">Five minutes once, and a minute after every update. A game server that many people open is worth taking over: whoever controls it decides what every visitor's browser runs.</p>
+  <ul>
+    <li><strong>Keep Node.js and the system up to date</strong> &mdash; the current LTS, and the operating system's security updates switched on. The server has no dependencies, so Node itself is its whole supply chain.</li>
+    <li><strong>Never open the port to the internet.</strong> Players outside your network come in through Tailscale or a tunnel (https). A plain <code>http://address:8123</code> sends the room password and every move in clear text &mdash; the client says so in the Join dialog and at the table.</li>
+    <li><strong>A public server gets <code>--server-pass</code></strong>, and <code>--trust-proxy</code> behind a tunnel, so each player has their own lockout.</li>
+    <li><strong>Know who holds the keys:</strong> the machine's login, the tunnel or Tailscale account, the referee key &mdash; with two-factor sign-in wherever it exists. Anyone who can log in to the machine can read the command line the server was started with, keys included: host on a machine only you use.</li>
+    <li><strong>Back up the data directory before a server update</strong> and keep its files together. Since srv-2.6.50 the stored password hashes are slow, salted hashes an older server cannot read: going back to an older server needs the backup.</li>
+    <li><strong>After an update, check what you serve.</strong> Compare your files with <code>client/SHA256SUMS</code> on GitHub: <code>sha256sum elysium-vtes-bord.html</code> (Linux), <code>shasum -a 256 elysium-vtes-bord.html</code> (macOS), <code>certutil -hashfile elysium-vtes-bord.html SHA256</code> (Windows). If a CDN or tunnel caches the page, purge it.</li>
+    <li><strong>A player who doubts a server</strong> can open the client file from GitHub on their own machine and join the server from there (paste its https:// link as the server address): that copy never runs code the server sends.</li>
+  </ul>
+</section>
 <!-- ============================================================ REFERENCE -->
 <section id="hs-reference">
   <h2>Reference</h2>
@@ -3183,14 +3208,14 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <p>Room passwords are shared phrases between friends — pick a fun phrase, never a real password. The server keeps the rest honest:</p>
   <div class="wrap"><table>
     <tr><th>Protection</th><th>Behaviour</th></tr>
-    <tr><td>Room password</td><td>Compared in constant time and stored only as a hash — in memory and in the persistence file, never in clear text. A wrong password counts as a strike.</td></tr>
+    <tr><td>Room password</td><td>Compared in constant time and stored only as a slow, salted hash (scrypt, since srv-2.6.50) — in memory, in the persistence file and in saves, never in clear text; a leaked file does not give the passwords away cheaply. The server still reads each password when someone joins. A wrong password counts as a strike.</td></tr>
     <tr><td>Lockout</td><td>5 wrong passwords within 10 minutes locks that address out for 10 minutes. Behind a tunnel the strikes are counted per room instead, so one player's typo cannot lock out the whole table. Token reconnection is immune.</td></tr>
     <tr><td>Rate limiting</td><td>Max 80 messages per 10 seconds per connection, pings included — then disconnect. A malformed or oversized WebSocket frame ends the connection at once. Max 16 concurrent connections per address, 400 in total.</td></tr>
     <tr><td>Referee key</td><td>10 wrong keys within 10 minutes from one address lock the key out for that address for 10 minutes — the in-game key, the log pull and the maintenance window count together. Behind a tunnel without <code>--trust-proxy</code> every player counts as the same address, which gets 40 tries instead of 10; turn the option on so each player has their own count.</td></tr>
     <tr><td>Room creation</td><td>Max 4 new rooms per address per hour (the host's own machine is exempt, as is the referee key). Of the 50 room slots, 10 are always held for rooms that have ever seated a player, so squatters cannot fill the server.</td></tr>
     <tr><td>Identity</td><td>A token per browser tab (survives a refresh, dies with the tab). Name + password reclaims an offline seat; a name that is online can never be taken over.</td></tr>
-    <tr><td>Hidden information</td><td>Library, crypt and hand exist only in server memory. Face-down card names are stripped before anything is relayed; the hand is never relayed at all.</td></tr>
-    <tr><td>Hand escrow</td><td>Your hand is encrypted in your browser with a key derived from the room password. Reconnecting, taking over a seat and loading a saved match restore your exact hand — while the server, the save file and the other players only ever see an opaque blob. Obfuscation-grade, not an audited cipher.</td></tr>
+    <tr><td>Hidden information</td><td>Library and crypt exist only in server memory, and the server deals your draws. Face-down card names are stripped before anything is relayed; your hand is never relayed to another player.</td></tr>
+    <tr><td>Hand escrow</td><td>Your hand is encrypted in your browser with a key derived from the room password. Reconnecting, taking over a seat and loading a saved match restore your exact hand — while the save file, the snapshot and the other players only ever see an opaque blob. The server is not kept out: it deals your draws and reads the room password at every join, so it is trusted like a dealer. Obfuscation-grade, not an audited cipher.</td></tr>
     <tr><td>Sanitisation</td><td>Every field passing through the server is cleaned and clamped (lengths, ranges, control characters); angle brackets and double quotes are stripped from names on the server, and card fields lose any <code>=</code>, on top of the client escaping everything it renders, quotes included.</td></tr>
     <tr><td>Crash isolation</td><td>Every message is handled in a guarded context; one malformed message cannot take the server down or drop the rooms.</td></tr>
     <tr><td>Version check</td><td>Client and server compare their version on join and warn when the major.minor differ — the moment to fetch the matching files from GitHub.</td></tr>
@@ -3229,7 +3254,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium — running your own server · matches server <b>srv-2.6.49</b> and client <b>v2.6.165</b> · 17 October 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
+  Elysium — running your own server · matches server <b>srv-2.6.50</b> and client <b>v2.6.173</b> · 11 November 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
 </footer>
 <!-- @@/HELP:server -->
 </template>
@@ -3237,6 +3262,11 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 <input type="file" id="gameFile" accept=".json,application/json" hidden>
 <div id="libDragGhost"></div>
 <div id="cryptDragGhost"></div>
+
+<!-- v2.6.173 (THE WATCHED DOOR): the help tab's nav script. It never runs on this page (type text/plain); helpStandalone
+     puts it in the tab it opens -- a blob: page that inherits this page's Content-Security-Policy -- and the server hashes
+     every script element of this file, so the tab's one script is always one the policy allows. -->
+<script type="text/plain" id="helpNavJs">(function(){var links=[].slice.call(document.querySelectorAll('.nav a')),secs=links.map(function(a){return document.querySelector(a.getAttribute('href'))}).filter(Boolean);function on(){var cur=secs[0];secs.forEach(function(s){if(s.getBoundingClientRect().top<=110)cur=s});links.forEach(function(a){a.classList.toggle('on',!!cur&&a.getAttribute('href')==='#'+cur.id)})}addEventListener('scroll',on,{passive:true});on();function reveal(){var h=location.hash&&document.querySelector(location.hash);if(h){var d=h.closest('details');while(d){d.open=true;d=d.parentElement.closest('details')}}}addEventListener('hashchange',reveal);reveal();[].forEach.call(document.querySelectorAll('a[href^="http"]'),function(a){a.target='_blank';a.rel='noopener'});})();</script>
 
 <script>
 'use strict';
@@ -3252,7 +3282,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.172';   // v2.6.172 (6 Nov 2026, TWENTY-ONE SECONDS, pure client -- purge; srv-2.6.49 unchanged, no wire change; bot v0.6.217 beside): consumes bot v0.6.217 (the bot project's handoff of 3 Nov: V5 wave 4, the masters on a vampire, Toreador's last cards). Help > Bots embeds their v0.6.217 guide (the version chip and the footer); nothing else in the client changes. main's client gates had been red since PR #48: bot v0.6.217 (PR #47) reached the root 21 s before client v2.6.171 was merged with v0.6.216's guide embedded, and the suite's embed-drift test and embed-help --check compare the embedded page with the root's START-HERE-BOTS.html. The handoff's other ask (PROTOCOL section 12 and the canary for Change of Target, the two abstain lines, the burn action and the widened rush line) is not in this release.
+const VERSION='2.6.173';   // v2.6.173 (11 Nov 2026, THE WATCHED DOOR -- purge; ships with srv-2.6.50, restart; bot v0.6.217 beside): the client half of the bot project's security handoff (bot/docs/handoffs/HANDOFF-to-main-2026-11-11-security.md; the plan: docs/elysium-security-plan.md). (1) The page's Content-Security-Policy is report-only for now (srv-2.6.50 sends it): the head's guard script catches each report from the start and cspReport passes it on through the error telemetry (kind 'csp', once per directive and blocked thing, conv.errPing still decides), so the Discord digest shows what the policy would block. (2) Eight HTML strings carried an inline onerror on a clan symbol; one capture listener (clanImgError) hides any clan symbol that fails, as the element-built ones always did. (3) The help tab's nav script lives in a script element that never runs here (#helpNavJs, text/plain), so the server's hashes cover the tab it opens. (4) A connection that is not encrypted says so: a line in the Create/Join dialog (netPlainKind: nothing for TLS or this machine, a quiet line for a private network or a tailnet, a warning for anything else) and a marker in the room bar for the last kind. (5) The About text no longer says the server cannot read your hand: it deals your draws and checks the room password. Help > Local server: the hosting checklist.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -6758,7 +6788,7 @@ function helpHtml(key){ const d=HELP_DOCS[key]; const t=d && document.getElement
 function helpStandalone(key){                                       // the page as ONE self-contained document: the same markup, the same stylesheet (the #helpCss block), its own nav/hash script -- what ↗ opens, so the tab and the modal cannot drift apart
   const d=HELP_DOCS[key]; if(!d) return '';
   const css=(document.getElementById('helpCss')||{}).textContent||'';
-  const nav="(function(){var links=[].slice.call(document.querySelectorAll('.nav a')),secs=links.map(function(a){return document.querySelector(a.getAttribute('href'))}).filter(Boolean);function on(){var cur=secs[0];secs.forEach(function(s){if(s.getBoundingClientRect().top<=110)cur=s});links.forEach(function(a){a.classList.toggle('on',!!cur&&a.getAttribute('href')==='#'+cur.id)})}addEventListener('scroll',on,{passive:true});on();function reveal(){var h=location.hash&&document.querySelector(location.hash);if(h){var d=h.closest('details');while(d){d.open=true;d=d.parentElement.closest('details')}}}addEventListener('hashchange',reveal);reveal();[].forEach.call(document.querySelectorAll('a[href^=\"http\"]'),function(a){a.target='_blank';a.rel='noopener'});})();";
+  const nav=(document.getElementById('helpNavJs')||{}).textContent||'';   // v2.6.173: the script lives in #helpNavJs (text/plain, never run here) -- the server's report-only policy hashes it with the page's own
   return '<!DOCTYPE html><html lang="en" class="helpPage"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Elysium \u2014 '+escapeHtml(d.title)+'</title><style>'+css+'</style></head><body class="helpDoc">'+helpHtml(key)+'<scr'+'ipt>'+nav+'</scr'+'ipt></body></html>';   // the tag is split so this string can never end the client's own script (and never trips the harness/splitter, which key on the one bare tag)
 }
 function helpWire(body){ body.querySelectorAll('a[href^="http"]').forEach(a=>{ a.target='_blank'; a.rel='noopener'; }); }   // external links leave the page in a tab; #anchors are handled by the click listener below and never touch location.hash (the client's own URL carries ?server=/?mode= state)
@@ -7060,6 +7090,41 @@ function crashNotice(msg, src, sent){                             // v2.6.64 (Jo
 }
 window.addEventListener('error', e=>{ try{ onClientError(e.message, e.filename, e.lineno, e.colno, e.error&&e.error.stack); }catch(err){} });
 window.addEventListener('unhandledrejection', e=>{ try{ const r=e.reason||{}; onClientError(r.message||String(e.reason||''), '', 0, 0, r.stack); }catch(err){} });
+/* v2.6.173 (THE WATCHED DOOR): a clan symbol that fails to load hides itself -- ONE listener for every such image. Eight HTML
+   strings used to carry onerror="this.style.display='none'": an inline handler, which a Content-Security-Policy without
+   'unsafe-inline' refuses (and the report-only one reports). The element-built symbols always hid themselves with a
+   listener of their own; this does the same for all of them. A load error does not bubble: capture phase. */
+function clanImgError(e){
+  const t=e&&e.target;
+  if(!t || t.tagName!=='IMG' || !t.classList) return false;
+  if(!(t.classList.contains('clansym') || t.classList.contains('clansym-pool') || t.classList.contains('sayclan'))) return false;
+  t.style.display='none'; return true;
+}
+document.addEventListener('error', clanImgError, true);
+/* v2.6.173 (THE WATCHED DOOR): the page's report-only Content-Security-Policy speaks here. srv-2.6.50 sends it with the hash of
+   every script in the page; a browser reports what it WOULD block and blocks nothing. The guard script in the head keeps the
+   reports that come before this point (window.__cspSeen). Each one goes into the debug ring and, once per directive and
+   blocked thing (at most 10 a page), out through the error telemetry -- errPost, so conv.errPing still decides and file://
+   sends nothing -- as kind 'csp', which the Discord digest counts on a line of its own. A report names the directive, the
+   blocked address or 'inline', the first 40 characters the browser quotes of an inline script, and where it sat: nothing of
+   the player's. docs/elysium-security-plan.md says when the policy starts to block. */
+const CSP_SENT=new Set();
+function cspReport(e){
+  try{
+    if(!e) return null;
+    const dir=String(e.effectiveDirective||e.violatedDirective||'?').slice(0,40);
+    const what=String(e.blockedURI||'inline').slice(0,160);
+    const msg='CSP '+(e.disposition==='enforce'?'blocked':'would block')+' '+dir+': '+what+(e.sample?(' “'+String(e.sample).slice(0,40)+'”'):'');
+    dbg('csp', msg);
+    const key=dir+'|'+what;
+    if(CSP_SENT.has(key) || CSP_SENT.size>=10) return msg;
+    CSP_SENT.add(key);
+    errPost({ kind:'csp', ver:VERSION, msg:msg.slice(0,300), src:String(e.sourceFile||'').slice(0,200), line:e.lineNumber|0, col:e.columnNumber|0,
+              ua:(navigator.userAgent||'').slice(0,120), mode:(typeof inRoom==='function'&&inRoom())?'online':'local' });
+    return msg;
+  }catch(err){ return null; }
+}
+try{ const q=(typeof window!=='undefined' && window.__cspSeen) || []; q.splice(0).forEach(cspReport); if(typeof window!=='undefined') window.__cspOn=cspReport; }catch(err){}
 /* ---------- B-63 diagnostic dump ("support bundle", design: elysium-dump-design.md) ----------
    Everything below captures ONLY what the reporting player can already see on their own screen.
    The hidden-card filter lives capture-side in _dumpCard/buildDumpBoard (T4): the server cannot
@@ -8182,7 +8247,7 @@ function updateL4GlobeHTML(glob, name, pool){
   if(!glob.el.firstChild){
     // First build only (called once from createL4Globe, on a brand-new empty el) — full innerHTML
     // is safe here since bindHold/wheel/contextmenu are attached by the CALLER right after this returns.
-    const _clanImg=_clan?'<img class="clansym-pool" src="'+clanSymUrl(_clan)+'" alt="'+esc(_clan)+'" onerror="this.style.display=\'none\'">':'';
+    const _clanImg=_clan?'<img class="clansym-pool" src="'+clanSymUrl(_clan)+'" alt="'+esc(_clan)+'">':'';
     glob.el.innerHTML=
       '<div class="l4glabel">'+(col?'<span class="l4gdot" style="background:'+colHex+'"></span>':'')+esc(name||'?')+'</div>'+
       '<div class="l4gpool" style="border-color:'+colHex+';'+((conv.poolPlayerColor&&col)?'background:'+poolGradient(colHex):'')+'"><span class="l4gpoolnum">'+pool+'</span>'+_clanImg+'<span class="l4gedge" title="Holds the Edge">EDGE</span>'+(glob.mine?'<button class="l4pbtn l4pminus" title="-1 pool">−</button><button class="l4pbtn l4pplus" title="+1 pool">+</button>':'')+'</div>'+
@@ -9335,7 +9400,7 @@ function updateTurnText(){
     if(s===mySeat()) el.innerHTML='Your turn';
     else { const nm=(net.roster.find(q=>q.seat===s)||{}).name||('Seat '+s);
       const _tpub=net.boards[s]&&net.boards[s].pub, _tclan=_tpub&&_tpub.clan;
-      const _timg=_tclan?'<img class="clansym" src="'+esc(clanSymUrl(_tclan))+'" alt="'+esc(_tclan)+'" style="width:13px;height:13px;vertical-align:middle;opacity:.8;margin-right:1px" onerror="this.style.display=\'none\'">':'';
+      const _timg=_tclan?'<img class="clansym" src="'+esc(clanSymUrl(_tclan))+'" alt="'+esc(_tclan)+'" style="width:13px;height:13px;vertical-align:middle;opacity:.8;margin-right:1px">':'';
       el.innerHTML='<b'+(col?' style="color:'+col.hex+'"':'')+'>'+s+'</b> '+_timg+esc(nm)+'’s turn'; }
   } else {
     el.textContent = state.deckName ? '· '+state.deckName : '';
@@ -9887,6 +9952,43 @@ function mpRetryNow(){                                        // the network or 
 }
 try{ window.addEventListener('online', mpRetryNow); document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) mpRetryNow(); }); }catch(_e){}   // cli-2.6.165 (C-15): a laptop that wakes up or a Wi-Fi that returns reconnects at once
 function mpStatus(msg){ const el=$('#mpStatus'); if(el) el.textContent=msg; }
+/* v2.6.173 (THE WATCHED DOOR; the security handoff's item 3): say when a connection is not encrypted. The guided launchers
+   and elysium.cards use TLS (https/wss), but a direct IP:8123 is plain ws://: the room password, chat and the hand escrow's
+   blob travel in clear text. netPlainKind (pure) reads the address the socket goes to (mpConnect's cleanAddr shape, or a
+   pasted link) and whether it is TLS: '' = encrypted, or this machine; 'lan' = a private network, a link-local or a
+   tailnet address, a .local / .lan / .home.arpa / .ts.net name or a bare host name -- plain text there too, but on a
+   network the players share; 'open' = anything else, in clear text across the internet. The Create/Join dialog shows a
+   line for both kinds (#mpPlain, from the address as typed), the room bar a marker for 'open' (netPlainChip). */
+const NET_PLAIN_TEXT={
+  lan:'Not encrypted: the room password and the game travel in plain text on your network. Fine at home or on a tailnet; not across the internet.',
+  open:'⚠ Not encrypted: the room password, chat and every move travel in plain text across the internet. If the host has an https:// link (a tunnel), use that.'
+};
+function netPlainKind(addr, sec){
+  if(sec) return '';
+  let h=String(addr||'').trim().toLowerCase().replace(/^[a-z][a-z0-9+.-]*:\/\//,'').replace(/[\/?#].*$/,'');
+  if(!h) return '';
+  const v6=/^\[([0-9a-f:.]+)\](?::\d+)?$/.exec(h);
+  if(v6) h=v6[1];
+  else if((h.match(/:/g)||[]).length===1) h=h.replace(/:\d*$/,'');   // host:port -- a bare IPv6 address keeps its colons
+  if(h==='localhost' || /\.localhost$/.test(h) || /^127\./.test(h) || h==='::1' || h==='0.0.0.0' || h==='::') return '';
+  if(/^10\./.test(h) || /^192\.168\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h) || /^169\.254\./.test(h)
+     || /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(h)            // 100.64.0.0/10: a tailnet (Tailscale) or a carrier's NAT
+     || /^f[cd][0-9a-f]{0,2}:/.test(h) || /^fe[89ab][0-9a-f]?:/.test(h)  // IPv6 unique-local and link-local
+     || /\.(local|lan|home\.arpa|ts\.net)$/.test(h) || (h.indexOf('.')<0 && h.indexOf(':')<0)) return 'lan';   // ...or a bare host name
+  return 'open';
+}
+function mpPlainNote(){                                           // the dialog's line, from the address as typed (what mpConnect will use)
+  const el=$('#mpPlain'); if(!el) return '';
+  const raw=String(($('#mpAddr')||{}).value||'').trim();
+  const sec=location.protocol==='https:' || /^(https|wss):\/\//i.test(raw);
+  const kind=raw ? netPlainKind(cleanAddr(raw, sec), sec) : '';
+  el.hidden=!kind; el.textContent=kind ? NET_PLAIN_TEXT[kind] : '';
+  el.classList.toggle('warn', kind==='open');
+  return kind;
+}
+function netPlainChip(){                                          // the room bar's marker: only a connection in clear text across the internet
+  return netPlainKind(net.addr, net.sec)==='open' ? ' <span class="plainNet" title="'+esc(NET_PLAIN_TEXT.open)+'">🔓 not encrypted</span>' : '';
+}
 
 function mpConnect(addr, then, secHint){
   // v2.5.74 "prepared guest": the SECURITY of the socket follows the TARGET, not only the
@@ -10698,7 +10800,7 @@ function updateRoomBar(){
   const me=rosterMe();
   if(me) net.isHost=!!me.host;          // in a started game the roster is authoritative (the lobby sets it via renderLobby)
   const hostBtn = ((net.isHost && !net.spect) || net.isRef) ? ' <span id="savesBtn" title="Save or load this match">💾 matches</span>' : '';
-  bar.innerHTML='<span class="dot">⬤</span> '+esc(net.room||'')+' <span id="invBtn" title="Copy an invite to paste in Discord">📋 invite</span>'+(net.lobby?' <span id="lobbyBtn" title="Open the lobby">⬢ lobby</span>':'')+hostBtn+(net.watchers>0?' · 👁'+net.watchers:'')+(net.status==='re'?' <span class="sysline">— reconnecting…</span>':'');
+  bar.innerHTML='<span class="dot">⬤</span> '+esc(net.room||'')+netPlainChip()+' <span id="invBtn" title="Copy an invite to paste in Discord">📋 invite</span>'+(net.lobby?' <span id="lobbyBtn" title="Open the lobby">⬢ lobby</span>':'')+hostBtn+(net.watchers>0?' · 👁'+net.watchers:'')+(net.status==='re'?' <span class="sysline">— reconnecting…</span>':'');
   renderStats();
 }
 function openSaves(){ if(!inRoom()) return; openOverlay('savesModal'); mpSend({t:'listSaves'}); renderSaves(); }
@@ -10861,11 +10963,13 @@ function openMP(flavor){                           // v2.6.74: flavor 'create' |
   $('#mpRef').checked=false; $('#mpRefPass').value=''; mpRefSync();   // v2.6.80: referee state never carries between opens
   mpStatus(net.status==='in' ? 'In room "'+net.room+'" as '+net.you+'.' :
            net.status==='re' ? 'Reconnecting to "'+net.room+'"…' : 'Not connected.');
+  mpPlainNote();                                    // v2.6.173: before the password is typed, say whether this address is encrypted
   openOverlay('mpModal');
   if(_fl==='join' && net.status!=='re') mpBrowse();   // v2.6.74: Join game lists the server's rooms straight away (the List rooms button stays for a refresh). v2.6.76: not during a reconnect -- mpBrowse would replace the half-open rejoin socket and its onopen (mpRejoin) would never fire
 }
 $('#mpCreate').addEventListener('click',mpCreate);
 $('#mpJoin').addEventListener('click',mpJoin);
+$('#mpAddr').addEventListener('input', mpPlainNote);   // v2.6.173
 $('#mpLeave').addEventListener('click',mpLeave);
 $('#mpClose').addEventListener('click',closeOverlay);
 $('#lobImport').addEventListener('click',openImport);
@@ -14590,7 +14694,7 @@ function renderRemote(seat){   // VIEW alias: "besök" / visit, a single opponen
   const who=(info&&info.who)||(p&&p.name)||('Seat '+seat);
   const _sc=seatColor(seat), _hex=_sc?_sc.hex:'#d9cfb6';
   { const _pub=net.boards[seat]&&net.boards[seat].pub, _clan=_pub&&_pub.clan;
-    const _csym=_clan?('<img class="clansym" src="'+esc(clanSymUrl(_clan))+'" alt="'+esc(_clan)+'" title="'+esc(_clan)+'" style="width:16px;height:16px;vertical-align:middle;opacity:.82;margin-right:0" onerror="this.style.display=\'none\'">'):'';
+    const _csym=_clan?('<img class="clansym" src="'+esc(clanSymUrl(_clan))+'" alt="'+esc(_clan)+'" title="'+esc(_clan)+'" style="width:16px;height:16px;vertical-align:middle;opacity:.82;margin-right:0">'):'';
     $('#rvTitle').innerHTML=_csym+'👁 <span style="color:'+_hex+';font-weight:700">'+escapeHtml(who)+'</span>'
     +' — <span style="color:'+_hex+'">🪑</span><span style="color:'+_hex+';font-weight:600;font-size:16.5px">'+ordinal(seat)+'</span>'   // v2.6.151: the ordinal, like the globes
     +(p&&!p.online?' <span style="opacity:.6">(offline)</span>':''); }
@@ -14776,7 +14880,7 @@ function buildMat(pp, matW, matH, rot, noLabel, flip, host){
       g.style.boxShadow='0 '+(6*k).toFixed(2)+'px '+(16*k).toFixed(2)+'px rgba(0,0,0,.7), inset 0 '+(3*k).toFixed(2)+'px '+(8*k).toFixed(2)+'px rgba(255,255,255,.12), inset 0 '+(-6*k).toFixed(2)+'px '+(12*k).toFixed(2)+'px rgba(0,0,0,.55)';   // same lifted drop-shadow + insets as the live globe
       g.style.width=gd+'px'; g.style.height=gd+'px'; g.style.borderWidth=Math.max(1,Math.round(s*2))+'px'; g.style.borderStyle='solid'; g.style.borderColor='var(--brass2)';
       g.style.left=(X(cz.pl.x)+(s*cz.pl.w-gd)/2)+'px'; g.style.top=(Y(cz.pl.y)+s*cz.pl.h*0.27)+'px';
-      g.style.fontSize=Math.max(8,Math.round(gd*0.333))+'px'; g.innerHTML='<span class="poolnum">'+pub.pool+'</span>'+(pub.clan?'<img class="clansym-pool" src="'+esc(clanSymUrl(pub.clan))+'" alt="'+esc(pub.clan)+'" title="'+esc(pub.clan)+'" onerror="this.style.display=\'none\'">':''); if(!me && seat!=null){ g.dataset.seat=seat; g.classList.add('matpool'); g.style.cursor='context-menu'; g.title='Right-click: ash heap / burned cards'; } mat.appendChild(g); }   // all views: red pool globe matching your own live board exactly (Cinzel numeral, 0.333 ratio, .poolnum optical-centre); L3 mats now use the same globe instead of a plain text number
+      g.style.fontSize=Math.max(8,Math.round(gd*0.333))+'px'; g.innerHTML='<span class="poolnum">'+pub.pool+'</span>'+(pub.clan?'<img class="clansym-pool" src="'+esc(clanSymUrl(pub.clan))+'" alt="'+esc(pub.clan)+'" title="'+esc(pub.clan)+'">':''); if(!me && seat!=null){ g.dataset.seat=seat; g.classList.add('matpool'); g.style.cursor='context-menu'; g.title='Right-click: ash heap / burned cards'; } mat.appendChild(g); }   // all views: red pool globe matching your own live board exactly (Cinzel numeral, 0.333 ratio, .poolnum optical-centre); L3 mats now use the same globe instead of a plain text number
     if(!me && seat!=null){                                    // v2.6.160 (Johan): the eye, in the pool zone's corner where your own Edge sits on your board (L2 stage: left 0.94 x top 0.668 -- the zone's top right, 8 px in from its right edge, 14 px down) -- the same X/Y/s mapping as the globe, so a flipped mat keeps it in the zone's top right on screen
       const ey=document.createElement('div'); ey.dataset.seat=seat; ey.setAttribute('role','button'); ey.setAttribute('aria-label','Look at their open hand, ash heap and burned cards');
       mateyePaint(ey, seat); ey.innerHTML=mateyeSvg();
@@ -14955,7 +15059,7 @@ function renderL3(){
     if(lab){ const lc=seatColor(pp.seat), lpub=net.boards[pp.seat]&&net.boards[pp.seat].pub;
       lab.classList.add('l3lab');
       { const _lclan=lpub&&lpub.clan;
-        const _limg=_lclan?'<img class="clansym" src="'+esc(clanSymUrl(_lclan))+'" alt="'+esc(_lclan)+'" style="width:12px;height:12px;vertical-align:middle;opacity:.75;margin-right:1px" onerror="this.style.display=\'none\'">':'';
+        const _limg=_lclan?'<img class="clansym" src="'+esc(clanSymUrl(_lclan))+'" alt="'+esc(_lclan)+'" style="width:12px;height:12px;vertical-align:middle;opacity:.75;margin-right:1px">':'';
         const _lcnt=lpub?(' · ✋'+lpub.counts.hand+' · 📚'+lpub.counts.library+' · 🧛'+(lpub.cards||[]).filter(c=>c.zone==='ready'&&c.kind==='crypt'&&!c.faceDown).length):'';   // L2 Visit-style at-a-glance counts: cards in hand / library / minions
         lab.innerHTML='<div class="mname">'+(lc?'<span class="mcol" style="background:'+lc.hex+'">'+pp.seat+'</span>':'')+(pp.seat===net.turnSeat?'▶ ':'')+(pp.out?'💀 ':'')+_limg+esc(pp.name)+(lpub?(' · '+lpub.pool+'🩸'):'')+((pp.vp||0)>0?' · 🏆'+fmtVp(pp.vp):'')+_lcnt+'</div>'; } }
     mat.style.left=r.x+'px'; mat.style.top=r.y+'px';
@@ -15451,7 +15555,7 @@ function buildL2mat(id, pp, role, side, fx, fy, w, h, foldKey){
   pane.style.left=fx+'px'; pane.style.top=fy+'px'; pane.style.height=h+'px'; pane.style.width=w+'px';
   if(collapsed){
     { const _cpub=net.boards[pp.seat]&&net.boards[pp.seat].pub, _cclan=_cpub&&_cpub.clan;
-      const _cimg=_cclan?'<img class="clansym" src="'+esc(clanSymUrl(_cclan))+'" alt="'+esc(_cclan)+'" style="width:13px;height:13px;vertical-align:middle;opacity:.75;margin-right:0" onerror="this.style.display=\'none\'">':'';
+      const _cimg=_cclan?'<img class="clansym" src="'+esc(clanSymUrl(_cclan))+'" alt="'+esc(_cclan)+'" style="width:13px;height:13px;vertical-align:middle;opacity:.75;margin-right:0">':'';
       pane.innerHTML=dot+_cimg+'<span class="l2cap">'+esc(role)+' · '+esc(pp.name)+'</span><span class="l2arrow">'+(side==='left'?'▸':'◂')+'</span>'; }
     pane.title='Click to unfold '+role+' — '+pp.name;
     if(fresh){ pane.addEventListener('click',()=>{ net.l2fold[foldKey]=false; renderL2(); }); board.appendChild(pane); }   // v2.5.58: listener + DOM insert bind on fresh only (the collapsed strip has no cards - reuse here is just cheap innerHTML)
@@ -15465,7 +15569,7 @@ function buildL2mat(id, pp, role, side, fx, fy, w, h, foldKey){
   let hd=fresh?null:pane.querySelector(':scope > .l2hd');
   if(!hd){ hd=document.createElement('div'); hd.className='l2hd'; hd.addEventListener('click',()=>{ net.l2fold[foldKey]=true; renderL2(); }); pane.appendChild(hd); }   // v2.5.58: fold listener binds on fresh only; the header TEXT updates in place every pass
   { const _hpub=net.boards[pp.seat]&&net.boards[pp.seat].pub, _hclan=_hpub&&_hpub.clan;
-    const _himg=_hclan?'<img class="clansym" src="'+esc(clanSymUrl(_hclan))+'" alt="'+esc(_hclan)+'" style="width:13px;height:13px;vertical-align:middle;opacity:.75;margin-right:2px" onerror="this.style.display=\'none\'">':'';
+    const _himg=_hclan?'<img class="clansym" src="'+esc(clanSymUrl(_hclan))+'" alt="'+esc(_hclan)+'" style="width:13px;height:13px;vertical-align:middle;opacity:.75;margin-right:2px">':'';
     hd.innerHTML=dot+'<span class="l2role">'+esc(role)+'</span> '+_himg+esc(pp.name)+stat+(pp.online?'':' (offline)')+'<span class="l2arrow">'+(side==='left'?'◂':'▸')+'</span>'; }
   hd.title='Click to fold '+role+' in';
   let body=fresh?null:pane.querySelector(':scope > .l2body');
@@ -16481,7 +16585,7 @@ function sayBubble(role, who, seat, text, variant){      // v2.6.30: the say-bub
   d.style.top=(40+Math.random()*12)+'%';
   const {col, clan}=sayIdentity(who, seat);   // v2.5.81: col still drives the circle's player-colour gradient + which clan icon shows, but no longer tints the name text (see the saywho line below) -- a coloured name on top of an already-coloured ring of the SAME colour recedes into it rather than standing out
   const _circle=col?'<div class="saycircle" style="background:'+poolGradient(col.hex)+'"></div>':'';
-  const _clanImg=clan?'<img class="sayclan" src="'+esc(clanSymUrl(clan))+'" alt="'+esc(clan)+'" onerror="this.style.display=\'none\'">':'';
+  const _clanImg=clan?'<img class="sayclan" src="'+esc(clanSymUrl(clan))+'" alt="'+esc(clan)+'">':'';
   d.innerHTML=_circle+_clanImg+'<span class="saywho">'+esc(role)+'</span><span class="saytxt">'+esc(text)+'</span>';   // saywho uncoloured again -- plain --brass, exactly the pre-feature original
   d.addEventListener('animationend',()=>{ d.remove(); const idx=_sayFxActive.indexOf(rec); if(idx>=0) _sayFxActive.splice(idx,1); sayFxRelayout(); });   // v2.6.38: a survivor's departure re-centres whoever is left
   _sayFxActive.push(rec);
