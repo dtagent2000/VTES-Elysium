@@ -2,12 +2,10 @@
 // Run from inside bot/ (CI does, .github/workflows/bot-gates.yml):
 //   npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .
 // Every script in bot/ is linted (a new file is covered by itself) except main's files (the release copy elysium-server.js and
-// main's canary test-bot-canary.js: we cannot fix them in bot/, THE RULE), the generated data wrappers and the ten legacy tests
-// (README: "not gates, known stale reds"; round C2 deletes them) -- the 25 files we own today.
-// Every rule is an error. The violations the lint found on its first run (C4: 4 errors, 22 unused assignments) are suppressed in
-// tools/eslint-suppressions.json, which only shrinks: never run --suppress-all / --suppress-rule again (CI fails a PR whose counts
-// grow). A suppression is a COUNT per file and rule, so a fixed old finding beside a new one of the same rule in the same file passes
-// until round C2 fixes them all and prunes the file (ESLint fails on a suppression that no longer occurs, so it cannot go stale).
+// main's canary test-bot-canary.js: we cannot fix them in bot/, THE RULE) and the generated data wrappers -- the 25 files we own today.
+// Every rule is an error, and nothing is suppressed: the lint's first run (C4) found 4 errors and 22 unused assignments, round C2
+// (bot v0.6.218) fixed them and pruned tools/eslint-suppressions.json to {}. The file stays because the command above names it and
+// CI checks that it only shrinks -- so a pull request that adds a suppression fails; never run --suppress-all / --suppress-rule.
 const node = ['require', 'module', 'exports', 'process', '__dirname', '__filename', 'console', 'Buffer', 'global', 'globalThis',
   'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'setImmediate', 'clearImmediate', 'queueMicrotask', 'structuredClone',
   'URL', 'URLSearchParams', 'TextEncoder', 'TextDecoder', 'AbortController', 'performance', 'fetch'];
@@ -17,9 +15,7 @@ const browser = ['window', 'document', 'navigator', 'location', 'localStorage', 
 const globals = Object.fromEntries([...node, ...browser].map(n => [n, 'readonly']));
 
 export default [
-  { ignores: ['elysium-server.js', 'test-bot-canary.js', 'elysium-cardfx.js', 'elysium-twd-*.js', 'test-bot-suffix.js', 'test-eligible.js', 'test-fixes.js',
-    'test-grammar.js', 'test-handoff.js', 'test-persona.js', 'test-planner.js', 'test-planner2.js', 'test-planner3.js', 'test-soft.js',
-    'tools/**', 'serie-*/**', 'bench-*/**'] },
+  { ignores: ['elysium-server.js', 'test-bot-canary.js', 'elysium-cardfx.js', 'elysium-twd-*.js', 'tools/**', 'serie-*/**', 'bench-*/**'] },
   {
     files: ['*.js'],
     languageOptions: { ecmaVersion: 'latest', sourceType: 'commonjs', globals },

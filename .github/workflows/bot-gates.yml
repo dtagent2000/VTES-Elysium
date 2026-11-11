@@ -72,7 +72,7 @@ jobs:
           fail=0
           for f in *.js; do node --check "$f" || { echo "::error file=bot/$f::node --check failed"; fail=1; }; done
           exit $fail
-      - name: The correctness lint (26 rules, no style; the first run's findings suppressed until round C2)
+      - name: The correctness lint (26 rules, no style; nothing suppressed since round C2)
         if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .
       - name: The lint's suppressions only shrink (a pull request may not add or grow one)

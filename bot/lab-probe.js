@@ -13,7 +13,7 @@
    a file carries arms 0 and 1 only, and checks the derivation where arm 2 was run.
    Each line: { i, seed, arm, fired, reserved, outnumber, holds, acts: [{vamp, card, n, final, end}], preyLoss, thirdLoss, heavy }   */
 const path = require('path');
-const { Bot, SAY } = require(path.join(__dirname, 'elysium-bot.js'));
+const { Bot } = require(path.join(__dirname, 'elysium-bot.js'));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const strip = h => String(h || '').replace(/<[^>]*>/g, '');
 const N = +(process.argv[2] || 120), SEED = +(process.argv[3] || 1), ARMS = String(process.argv[4] || '0,1,2').split(',').map(Number);

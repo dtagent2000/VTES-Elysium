@@ -56,12 +56,11 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
-const { Bot, PERSONAS, ARCHETYPES, BOT_VERSION } = require('./elysium-bot.js');
+const { Bot, ARCHETYPES, BOT_VERSION } = require('./elysium-bot.js');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const rotate = (arr, k) => arr.map((_, i) => arr[(i + k) % arr.length]);
-const PERMUTE_DECKS = process.argv.includes('--permute-decks');   // v1.2.7 (harvest seed 2) -- v1.3.0: now the DEFAULT; kept as a no-op alias
 /* v1.3.0 (17 Sep 2026, Johan): RANDOM SEATING BY DEFAULT. The per-match rotation kept
    every persona/deck pair's NEIGHBOURS fixed -- hacking preyed on sewer, malkavian bled
    into the tremere wall, in every match of every series -- so per-deck rows measured
@@ -408,7 +407,7 @@ if(require.main === module){
     }
     else if(a === '--cardfx') o.cardfx = next();
     else if(a === '--seed'){ next(); }   // v1.3.0: consumed at module load (RUN_SEED)
-    else if(a === '--fixed-seats' || a === '--permute-decks'){ }   // v1.3.0: module-load flags
+    else if(a === '--fixed-seats' || a === '--permute-decks'){ }   // v1.3.0: --fixed-seats is read at module load; --permute-decks (v1.2.7; random seating is the default since v1.3.0) is accepted and ignored
     else if(a === '--help' || a === '-h'){
       console.log('usage: node elysium-bot-arena.js [--matches 3] [--bots 3 (2-5)] [--personas expert,experienced,novice]\n' +
                   '       [--start-pool 12] [--turn-cap 200] [--match-timeout 120] [--trace DIR]\n' +

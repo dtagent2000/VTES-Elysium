@@ -533,7 +533,7 @@ async function connectWithRetry(client, tries = 30){
                 crypt: [{ name: 'Lucinde, Alastor', qty: 12 }] });
       await h7.waitFor(m => m.t === 'deckok', 'h7 deckok');
       const bot7 = new Bot({ server: URL, room: R7, pass: 'x', name: 'Trainbot', paceMs: 0, askSecs: 3, log: () => {},
-                             persona: 'grinder', startPool: 6, poolFloor: 0, log: () => {},
+                             persona: 'grinder', startPool: 6, poolFloor: 0,
                              deck: { name: 'M2', crypt: [{ name: 'Zip', qty: 12 }],
                                      library: [{ name: 'Govern the Unaligned', qty: 60 }] } });
       await bot7.connect();
@@ -2703,7 +2703,7 @@ async function connectWithRetry(client, tries = 30){
 
       h20.send({ t: 'pass' });
       await h20.waitFor(m => m.t === 'turn' && m.seat === 2, 'turn to BotDodge', 9000);
-      const q = await h20.waitFor(m => m.t === 'chat' && m.who === 'BotDodge' && /Block\?/.test(m.msg), 'the bleed asks Block?', 9000);
+      await h20.waitFor(m => m.t === 'chat' && m.who === 'BotDodge' && /Block\?/.test(m.msg), 'the bleed asks Block?', 9000);
       h20.send({ t: 'chat', msg: 'block' });   // Alice blocks — combat begins
       const combatLine = await h20.waitFor(m => m.t === 'chat' && m.who === 'BotDodge' && /BotDodge combat/.test(m.msg), 'combat resolution line', 9000);   // v0.6.109: v0.6.108 put the PERSONA NAME in the combat prefix (chat() rewrites 'Trainbot combat' -> '<name> combat'); this bot is not named Trainbot, so the old literal never matched -- caught by the first full suite run since that release
       ok(/dodges: no damage dealt or taken/.test(combatLine.msg),
@@ -4551,7 +4551,7 @@ async function connectWithRetry(client, tries = 30){
       ok(outArmed.scores.rush > outPoor.scores.rush && outPoor.scores.rush < outPoor.scores.bleed, '66b vs blood-3: the empty hand DAMPENS below the bleed bar (0.55x), Roundhouse restores the hunt -- the mode war has its right fix');
       u.hand = [];
       const outWeenie = u._decide('action', baseCtx(1));
-      ok(outWeenie.scores.rush > outPoor.scores.rush && /expDmg 1 vs 1/.test(outWeenie.pick === outWeenie.pick ? (outWeenie.why || '') : ''), '66b vs blood-1 the bare hand is ENOUGH (1.35x) and the why shows the calculation');
+      ok(outWeenie.scores.rush > outPoor.scores.rush && /expDmg 1 vs 1/.test(outWeenie.why || ''), '66b vs blood-1 the bare hand is ENOUGH (1.35x) and the why shows the calculation');
     }
 
 
@@ -4624,7 +4624,7 @@ async function connectWithRetry(client, tries = 30){
       u._emit = ()=>{};
       const ctxC = { plain: { n: 1, seat: 3 }, card: { idx: 0, name: 'Kindred Spirits', n: 2, st: 0 }, pd: null, stock: null, peek: null, equip: null, fetch: null, rush: null, creep: null, strength: null, recruit: null, enemyRescue: null, readyCrypt: 1, edge: false };
       u.board = [ { id:'v', name:'X', kind:'crypt', zone:'ready', blood:3 } ];
-      const o1 = u.decide('action', ctxC); const s1 = o1.scores.bleed;   // baseline exists
+      u.decide('action', ctxC);   // the streak's first pick
       u.decide('action', ctxC); u.decide('action', ctxC);
       ok(u._lastPickName === 'Kindred Spirits' && u._pickStreak === 2, '69b the wrapper tracks the streak (same named pick three times -> streak 2)');
       const o4 = u._decide('action', ctxC);
@@ -5552,8 +5552,8 @@ async function connectWithRetry(client, tries = 30){
 
       /* 84g) #13 \u2014 the stopwatch waits longer before it rings */
       ok(mk84().o.reactClockMs === 7000, '84g #13: the reaction stopwatch now waits 7 s of table silence (was a hardcoded 5000 \u2014 it clocked players mid-sentence)');
-      const k84 = mk84({ reactClockMs: 1234 }); let fired84 = 0;
-      k84.send = () => { fired84++; }; k84._ask = { resolve: () => {}, timer: null, pausedBy: new Set() };
+      const k84 = mk84({ reactClockMs: 1234 });
+      k84.send = () => {}; k84._ask = { resolve: () => {}, timer: null, pausedBy: new Set() };
       k84._armReactTimer();
       ok(k84._rcT && k84._rcT._idleTimeout === 1234, '84g ...and it is a real knob on the wire, so the client can tune it without another bot release');
       clearTimeout(k84._rcT); k84._rcT = null; k84._ask = null;
@@ -6306,7 +6306,7 @@ async function connectWithRetry(client, tries = 30){
   ok(b._opp(1).cards['Carrion Crows'] === 1, '92b the SAME play arriving in the ash heap moments later is not counted twice');
   b._onBoard({ seat: 1, pub: pub92([{ id: 'x1', kind: 'lib', name: 'Carrion Crows', zone: 'ash' }, { id: 'x2', kind: 'lib', name: 'Torn Signpost', zone: 'ash' }]) });
   ok(b._opp(1).cards['Torn Signpost'] === 1 && b._opp(1).seen.combatCard === 1, '92b a card that went hand -> ash with no clone (Torn Signpost, an unmodelled auto combat card) is caught by the ash diff as combatCard');
-  ok(b.readP(1, 'stealth') === b.readP(1, 'stealth') && b.reads[1].seen === b._opp(1).seen, '92b reads[seat].seen IS the model\u2019s seen -- readP untouched');
+  { const p92 = b.readP(1, 'stealth'); ok(typeof p92 === 'number' && p92 >= 0 && p92 <= 1 && b.reads[1].seen === b._opp(1).seen, '92b reads[seat].seen IS the model\u2019s seen -- readP untouched (a probability: ' + p92 + ')'); }
   ok(b._opp(1).ash === 2, '92b ash-heap size tracked');
 
   /* 92c) the per-minion ledger from L12 lines: forecast + hit rate + stealth */
@@ -6739,7 +6739,7 @@ async function connectWithRetry(client, tries = 30){
   ok(r.pool === 9 && !r.pending && r._refT === null, '96d the result line lands my -3 (pool 12 -> 9) and closes the window');
   r._onLog('U', 'Referendum passes \u2014 <b>Kine Resources Contested</b>: Bob \u22123, Cy \u22121.'); r._onSay({ who: 'U', i: 4 });
   ok(r.pool === 6 - 0 + 0 || r.pool === 6, '96d (a SECOND referendum\'s line is a second referendum -- each line lands once)');
-  const x = mk96(); x.seat = 1; x.o.name = 'Alice'; x.pool = 25; x.board = [vm('a1', 'Ayelech')]; let xo = 0; x._reactWindow = () => { xo++; };
+  const x = mk96(); x.seat = 1; x.o.name = 'Alice'; x.pool = 25; x.board = [vm('a1', 'Ayelech')]; x._reactWindow = () => {};
   x._onLog('U', 'Referendum terms \u2014 <b>Parity Shift</b>: Alice \u22123, U +3.'); x._onLog('U', '<b>Alexa Draper</b> calls a political action.');
   ok(x.pending && x.pending.role === 'predator' && x.pending.amount === 3, '96d the caller\'s predator gets a window too (waits for the prey first: ' + x.pending.waitingFor + ')');
   const c4 = mk96(); c4.players = c4.players.concat([{ seat: 5, name: 'Di', online: true }]); c4.seat = 5; c4.o.name = 'Di'; let co = 0; c4._reactWindow = () => { co++; };
@@ -6782,7 +6782,7 @@ async function connectWithRetry(client, tries = 30){
     u._onLog('Alice', 'Vote: 3 for vs 5 against \u2014 vote fails.');
     await pr; const L = logs(u);
     ok(L.filter(l => /^Vote: /.test(l)).length === 0 && L[L.length - 1] === 'Referendum fails \u2014 Kine Resources Contested: no effect.', '96e a human pressed Resolve on the counter (their Vote line, 3-5): I adopt the count, do not repeat the verdict line, and announce the outcome'); }
-  { const { u, act } = mkCall(); const t0 = Date.now(); const pr = u._callReferendum(u.board[0], act);
+  { const { u, act } = mkCall(); const pr = u._callReferendum(u.board[0], act);
     await sleep(250); u._onSay({ who: 'Alice', i: SAY_IDX('Hold on\u2026') }); await sleep(1300);
     ok(u._refCall && !u._refCall.closed, '96e Hold on from a human stops the vote clock (askSecs 1 has passed, still polling)');
     u._onLog('Alice', '<b>Ayelech</b> casts <b>2</b> votes <b>against</b>.'); await sleep(1300);
@@ -7255,7 +7255,7 @@ async function connectWithRetry(client, tries = 30){
   ok(ch.pick && ch.pick.n === 1, '103a the ledger is per MINION: another vampire bleeds freely');
 
   /* 103b) rescue stealth */
-  const r = mk103(); const src = require('fs').readFileSync(require.resolve('./elysium-bot.js'), 'utf8');
+  const src = require('fs').readFileSync(require.resolve('./elysium-bot.js'), 'utf8');
   const blk = src.slice(src.indexOf("if(act.kind === 'ownRescue'){"), src.indexOf("if(act.kind === 'enemyRescue'){"));
   ok(/this\._announceTallyA\(1\)/.test(blk) && !/this\._announceTallyA\(0\)/.test(blk), '103b the own rescue announces +1 stealth (rulebook: same controller); the enemy rescue keeps 0');
 
@@ -8227,7 +8227,7 @@ async function connectWithRetry(client, tries = 30){
   { const { u, v } = mkP('P2', 'malkavian', false); await u._resolveCombat(v, 'Lisa');
     ok(['Anything before range?', 'Any maneuvers?', 'Anything before strikes?', 'What is your strike?', 'Any presses?', 'Anything before ending combat?'].every(q => u.chats.includes(q)),
        '127l human ACTING: the bot asks Johan\u2019s seven questions (damage has none): ' + JSON.stringify(u.chats.filter(c => /\?$/.test(c)))); }
-  { const { u, v } = mkP('P3', 'malkavian', false);
+  { const { u } = mkP('P3', 'malkavian', false);
     const w = await u._phaseStep(0, 'ask', false).catch(() => null);
     ok(w === null, '127l (outside a combat _phasesOn is false -- no question)');
     u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b';
@@ -8396,7 +8396,7 @@ async function connectWithRetry(client, tries = 30){
     ok(u.ev.cardsShown(1)['Deep Song'] === 1, '127u cards SHOWN per seat (the knowledge layer\u2019s feed): Deep Song for seat 1');
     u.send({ t: 'log', html: '<b>Wauneka (G6)</b> strikes (hands) for 1.' });
     const mine = u.ev.last('strike', e => e.own); ok(mine && mine.seat === 2 && mine.strike === 'hand', '127u my own lines enter the log at send (both sides of an exchange)');
-    const before = u.ev.seq; u.tally = null; u.handlers && 0;
+    u.tally = null; u.handlers && 0;
     u.ev.cap = 5; for(let i = 0; i < 12; i++) u._onLog('Johan', 'Lisa hunts.'); ok(u.ev.ev.length === 5 && u.ev.cardsShown(1)['Deep Song'] === 1, '127u the ring keeps the last N events; cards shown survive the trim'); }
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'E4', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'E4', bot: true }];
@@ -9468,7 +9468,7 @@ async function connectWithRetry(client, tries = 30){
         const v = DV(); u.board = [v]; u.hand = []; u.table = { 1: { pub: { cards: [{ kind: 'crypt', name: 'Lisa', zone: 'ready', blood: 3 }] } } };
         u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = v;
         const strikes = () => u.sent.filter(m => m.t === 'log' && /strikes/.test(strip141(m.html)) && /Wauneka/.test(strip141(m.html)) && !/ combat — /.test(strip141(m.html))).length;   // v0.6.204 (lever c): the round summary is a log line too -- not a strike
-        let fin = false; const pr = u._resolveCombatRound(v).then(() => { fin = true; });
+        let fin = false; u._resolveCombatRound(v).then(() => { fin = true; });
         for(let i = 0; i < 100 && !(u._phaseWait && u._phaseWait.step === 3); i++){ if(u._phaseWait) u._onChat('Claude', 'No'); await sleep(20); }
         const atStrike = !!(u._phaseWait && u._phaseWait.step === 3);
         u._holdBy = new Set(['Claude']); u._holdFreeze('Claude');
@@ -11909,7 +11909,7 @@ async function connectWithRetry(client, tries = 30){
       // f) Change of Target, the actor's side: played through _resolveCombat when the blocker's strike would put my vampire in torpor; not with Majesty in hand
       { const mk = (hand, blood) => { const u = mkU162(); const v = V('f1', 'Bret Stryker (G6)', { blood, locked: true }); u.board = [v]; u.hand = hand.slice();
           u.turnSeat = u.seat; u._actingVamp = { v, n: 1, played: new Set() }; u._lastBlockerSeat = 1; u._expStrikeDmg = () => 2; return { u, v }; };
-        const a = mk(['Change of Target'], 1); let ran = false; const orig = a.u._resolveCombatRound; a.u._resolveCombatRound = async () => { ran = true; return { oppEnded: true }; };
+        const a = mk(['Change of Target'], 1); let ran = false; a.u._resolveCombatRound = async () => { ran = true; return { oppEnded: true }; };
         await a.u._resolveCombat(a.v);
         const b = mk(['Change of Target', 'Majesty'], 2); const pb = IF2(b.u, '_ifBlockedStep') ? b.u._ifBlockedStep(b.v) : null;
         ok(!ran && a.u.hand.length === 0 && a.v.locked === false && logs(a.u).some(l => l === 'Bret Stryker (G6) plays Change of Target — unlocks; the action ends unsuccessfully.') && pb === false && b.u.hand.length === 2,
