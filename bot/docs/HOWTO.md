@@ -119,7 +119,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
 
 ## Analysing a series (sim or arena)
 - `ana-gates.py DIR` (the gate after a series: one PASS / FAIL line per audit below and for the matches and `zeroPool`, exit 1 on a
-  FAIL; its header is the policy -- the leads and, on the sim table, the windows are information; `--self-test` plants each fault) ·
+  FAIL; its header is the policy -- the leads and, on the sim table, the windows are information; `--self-test` plants a fault per gate) ·
   `ana-sim-diff.py A B` (footprint) · `ana-ledger.py` (bleed pairing both ways — `VANISHED` = 0; steal pairs equal, a `STOLE >
   VICTIM LOST` row is a lead; dealt vs taken; `LESS, UNEXPLAINED`) · `ana-block.py` (0 violations) · `ana-inv.py` (invariants;
   ~1 flag in 3 matches is the baseline; a new flag kind or a jump = a line the log cannot type (add its kind) or a real bookkeeping

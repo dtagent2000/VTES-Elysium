@@ -51,7 +51,7 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
   smoke (one match, the audits below).
 - A series or a bench runs on the sim table first (`elysium-bot-sim.js`, HOWTO); `python3 ana-sim-diff.py A B` before any win
   rate; after a series `python3 ana-gates.py DIR`: one PASS / FAIL line per audit (`ana-ledger.py`, `ana-block.py`, `ana-inv.py`,
-  `ana-windows.py`, `zeroPool`, the matches). The sim is not a timing gate: the canary, the hotseat gate and the server arena
+  `ana-windows.py`, `ana-combat2.py`'s handshake, `zeroPool`, the matches). The sim is not a timing gate: the canary, the hotseat gate and the server arena
   stay; `--real` replays a spec on the real clock.
 - An abort on the pre-change bot is NOT automatically the environment: find the last release the suite was green on and run THAT
   (LESSONS, "tests that lie"). Never claim a gate passed without having run it.

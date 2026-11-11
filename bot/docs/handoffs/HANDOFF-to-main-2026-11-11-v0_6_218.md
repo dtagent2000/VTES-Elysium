@@ -4,7 +4,8 @@ Nothing to build, and nothing changed on the wire: no new line, no changed line,
 
 ## 1. The bundle
 - `elysium-bot.js`: seven unused assignments and one method nothing called (`_bumpTallyB`) removed; `BOT_VERSION` 0.6.218. The sim's
-  240-match client design plays as v0.6.217 did, decision for decision (SAME-PLAY 240: the traces differ in the version string only).
+  240-match client design plays as v0.6.217 did, decision for decision (SAME-PLAY 240; IDENTICAL 240 with the version string
+  normalized).
 - `START-HERE-BOTS.html`: your 6 Nov reply's §4 — the body says "156 are hand-curated (136 library, 20 crypt)", the nav chip and the
   footer name client v2.6.172 — and the version chip v0.6.218. Re-embed it when you next release: until then your embed-drift test
   and `embed-help --check bots` are red on the new guide, by design, as on 3 Nov.
