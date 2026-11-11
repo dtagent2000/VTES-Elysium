@@ -73,18 +73,17 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Graded rules readings** (T3; the ledger, T2, is `docs/CARDS.md` since v0.6.212): each curated reading graded green / amber /
   red by a fresh agent against KRCG text and vtes-rulings, only reds to Johan; the grade becomes a ledger column. *Done when* a wave's
   PR lists the grades of the cards it curated (HARNESS, the charter). Docs: spec T3; HARNESS; `specs/spec-cardfx-sweep-sources-2026-09-25.md`.
-- **Ask main once**: (a) may the bot's gates read the root's released client / server / protocol instead of the copies in `bot/`
-  (no drift, 1.8 MB fewer); (b) has the hotseat bridge, or could it expose, a pure `step(state, action)`; (c) the bot-emitted frozen
-  lines owed to §12 + the canary (STATUS lists them) — all three in `handoffs/HANDOFF-to-main-2026-10-20-docs-diet.md`; (d) the
-  client locks all helpers on while a bot is seated until the bot proves a whole combat on lines alone — ask for that step when
-  ready. *Done when* main has answered (a)–(c). Docs: spec §8 Q4, §6.1; RULINGS D-62, D-94.
+- **The helper lock's release** (main answered "ask main once" (a)–(c) on 3 Nov): the client locks all helpers on while a bot
+  is seated until the bot proves a whole combat on lines alone. *Done when* asked, when ready. Docs: RULINGS D-62, D-94.
 - **History comments in `elysium-bot.js`** (222 KB): trim to trap comments ("why" + a rule id) in the functions a round touches
   (spec §8 Q6, recommended (b)). *Done when* Johan has chosen; then per round.
 
 ## Known, not built (bot side)
-- **The TWD profile's article-last keys** (v0.6.216's egress): 14 profile keys (`Barrens, The`, `Labyrinth, The` …) are not cardfx
-  keys, so `_twdExpect` never counts those cards (profile keys by `_name`, cardfx by the name). *Done when* the profile is keyed
-  (or read) through the alias table and a rebuild shows 0 missing. Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
+- **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
+  the merged decks' share; a few decks count twice. A v5 rebuild (scratch: 4,709 decks, Magnum under 10) drops a name the bot
+  records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
+  (or they carry every cardfx name), every deck's library names hit a key, and the rebuild ships with a sim footprint.
+  Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
 - **A human's bounce of a bot's bleed** is not read by the acting bot; a bot that is a bounce's new target cannot bounce onward.
   *Done when* the client's bounce play line (a pool target) is parsed and section-tested. Docs: RULINGS O-3.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.

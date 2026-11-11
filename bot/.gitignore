@@ -6,6 +6,10 @@
 /vtes-v5.json
 /expansions.json
 /twda-vdb.json
+# python's byte cache, should a tool import twda.py without twd-profile.py's dont_write_bytecode
+/__pycache__/
+# vtes-skill (MIT, github.com/vtes-biased/vtes-skill), which twd-archetypes.py reads from src/vtes-skill-main/ (HOWTO)
+/src/
 # gen-deck-coverage.js writes its report beside itself by default; snapshots worth keeping go to docs/coverage/
 /deck-coverage-*.md
 # the sim table (elysium-bot-sim.js) writes its series here by default; keep a report worth keeping in docs/reports/

@@ -429,6 +429,23 @@
 - **v0.6.101 (9 Aug 2026)** — the late-bubble re-check in `_pace`, the drain-gap guard at the drain top, the Hold on tail guard.
 
 ## Tools
+- **The v5 TWDA (10 Nov 2026, with bot v0.6.217; no bot release; PR #58, D-110)** — KRCG made v5 its default on 8 Nov:
+  `data/vtes.json` and `data/twda.json` are the `data/v5/` files, the old ones frozen at `data/v4/`. The card pipeline was already on
+  `data/v5/`. The TWD tools read the old list export and merged the v5-shaped dict by date + player + name, which counted a deck
+  twice whenever the archive had corrected a name (69 decks on the 8 Nov files) and keyed the merged decks' cards by the article-last
+  `_name` (the shipped profile's 14 dead keys). **`twda.py` v1.0.0** is now the one reader: the v5 TWDA keyed by deck id, names from
+  `vtes.json` by KRCG id; a missing, non-JSON or list-shaped file stops with the fetch command (exit 2). Its `--self-test` (14 checks;
+  10 mutants red) and `--check FILE` run in CI, the second on KRCG's current file, so the daily run now catches a TWDA drift too.
+  **Output changes for the next rebuild:** `generated` is the archive's newest deck date (2026-10-25 on the 8 Nov file), no longer a
+  hand-set build date; keys are sorted; decks are read in id order. `twd-archetypes.py` skips a crypt with no clan (a `None` key broke
+  the sorted serialize) and reads the `deck-*.json` beside it (it read `/mnt/project`). **Verified in scratch:** the old archetypes
+  tool reproduces the shipped file byte for byte; with 73 decks set aside (13 archive corrections, 1 deck the archive dropped, 59 crypts
+  tied 6/6), the old and new profile tools agree on every card and clan; a rebuild from the full v5 TWDA gives 4,709 decks, 0 keys
+  outside cardfx, shares moving by a median of 0.001, and 41 archetypes (Magnum falls to 9 decks). The rebuild itself waits (BOARD;
+  O-37 the byte-for-byte rule, O-38 the 6/6 tie). Gates: test-cardfx 315/0, canary 69/0 ×2, doc-budget PASS; CI on the PR (the suite
+  once 2393/0). Handoff to main: `krcg-audit.js`'s old side, the client's v3 fallback URL, `client/CLAUDE.md`'s fetch lines, the data
+  repo's README. Egress: 12 findings (half-done 2, test-weakened 1, bug 2, unproven 2, stale-doc 3, rule-missed 2), 10 fixed, 2 listed
+  (the bot reads the profile by the name it saw → BOARD; the 6/6 tie → O-38).
 - **Round C4 — CI for `bot/` (6 Nov 2026, with bot v0.6.217; no bot release; PRs #54, stacked on #53, and #57)** — Johan's yes of 6 Nov
   to the clean-up spec's Q5 (D-109). **`.github/workflows/bot-gates.yml`**, beside main's `client-gates.yml` (which invites it) and
   with its conventions (read-only, every step even after a failure, one run per ref): on every PR and push to `main` that touches
