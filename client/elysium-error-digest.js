@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================
-   Elysium - elysium-error-digest.js (ops companion, v1.4, 9 Sep 2026)
+   Elysium - elysium-error-digest.js (ops companion, v1.5, 11 Nov 2026)
+   v1.5 (THE WATCHED DOOR, client v2.6.173 / srv-2.6.50): the page's
+   Content-Security-Policy is report-only for a week or more, and each
+   report reaches the log as kind 'csp'. They get ONE line of their
+   own -- the count and the two commonest -- and never take a crash
+   line, so a policy that still needs a host or a hash cannot hide a
+   real crash. Silence on that line for the week is the plan's signal
+   to enforce (client/docs/elysium-security-plan.md).
    v1.4 (Johan: 'so I stop wondering whether it is players or Cloudflare'):
    crash rows thrown by FOREIGN scripts are folded into one line -- a
    src under /cdn-cgi/ is Cloudflare's own injected beacon/challenge/
@@ -94,7 +101,7 @@ if (recs.length < MIN && !BEAT) { if (DRY) console.log('(dry-run) ' + recs.lengt
 /* ---- aggregate ---- */
 function tally(map, key){ if (!key) return; map.set(key, (map.get(key) || 0) + 1); }
 function top(map, n){ return [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n); }
-const kinds = new Map(), vers = new Map(), crashes = new Map();
+const kinds = new Map(), vers = new Map(), crashes = new Map(), csps = new Map();   /* v1.5: csps */
 let foreign = 0;   /* v1.4 */
 function isForeign(r) {   /* v1.4: same two tests as the client's crashNotice() -- Cloudflare-injected source, or the detail-less cross-origin message */
   if (r.kind !== 'crash') return false;
@@ -106,7 +113,8 @@ for (const r of recs) {
   const fr = isForeign(r); if (fr) foreign++;   /* v1.4 */
   tally(kinds, fr ? 'foreign' : (r.kind || '?'));
   if (r.kind !== 'server') tally(vers, r.ver || '?');   /* server rows carry srv-x.y.z -- not cache-relevant, keep the histogram about CLIENTS */
-  if (r.kind !== 'report' && !fr) tally(crashes, String(r.msg || '(no message)').slice(0, 80));   /* v1.1: reports render as detail blocks below instead of a histogram line; v1.4: foreign rows never take a crash line */
+  if (r.kind === 'csp') tally(csps, String(r.msg || '(no message)').slice(0, 90));   /* v1.5 */
+  if (r.kind !== 'report' && r.kind !== 'csp' && !fr) tally(crashes, String(r.msg || '(no message)').slice(0, 80));   /* v1.1: reports render as detail blocks below instead of a histogram line; v1.4: foreign rows never take a crash line */
   if (r.ts > newest) newest = r.ts;
 }
 
@@ -121,6 +129,8 @@ if (recs.length) {
   L.push('versions: ' + top(vers, 4).map(([k, n]) => k + ' ×' + n).join(' · ')
     + (vers.size > 1 ? '  ← mixed = stale cached clients?' : ''));
   for (const [m, n] of top(crashes, 3)) L.push('· `' + m.replace(/`/g, "'") + '` ×' + n);
+  if (csps.size) L.push('· CSP report-only ×' + [...csps.values()].reduce((a, b) => a + b, 0) + ': '   /* v1.5: what the policy WOULD block -- read for the quiet week */
+    + top(csps, 2).map(([m, n]) => '`' + m.replace(/`/g, "'") + '` ×' + n).join(' · '));
   if (foreign) L.push('· foreign-script noise ×' + foreign + ' — Cloudflare /cdn-cgi/ or cross-origin "Script error.", not Elysium (jq: .src)');   /* v1.4 */
   const reports = recs.filter(r => r.kind === 'report');
   for (const r of reports.slice(-3).reverse()) {                 /* v1.1: newest first, at most 3 detailed */

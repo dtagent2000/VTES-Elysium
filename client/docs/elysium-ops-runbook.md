@@ -47,6 +47,16 @@ curl -s http://127.0.0.1:8123/healthz
 
 The `curl` must answer with the **new** version number — that's the receipt. The restart is graceful: rooms and saves are flushed to disk, downtime is ~2 seconds, and connected players auto-reconnect with their tables restored. Mid-game updates are survivable by design. *(srv-2.6.43, 9 Oct 2026: before this version a restored table forgot its board style and referee password, and a table nobody had rejoined within ten minutes of the restart was swept as an empty shell — fixed; a restored table now lives by the ordinary one-hour offline rule.)*
 
+**srv-2.6.50 and later (11 Nov 2026, THE WATCHED DOOR): back up the data directory BEFORE the restart.** At its first start srv-2.6.50 turns every stored password hash (rooms, referee keys, saves) from SHA-256 into a slow, salted scrypt hash and writes both files at once. An older server cannot read the new hashes: going back to srv-2.6.49 needs the copy you take now.
+
+```
+sudo cp -a /opt/elysium/data /root/elysium-data-before-2.6.50
+sudo systemctl restart elysium
+sudo journalctl -u elysium -n 40 --no-pager | grep -E "moved from SHA-256|restored|loaded"
+```
+
+The journal line says how many hashes moved (none, if no room or save had one). **Rollback, if ever:** stop the service, put srv-2.6.49 back AND copy the saved directory back over `/opt/elysium/data`, start. The salt lives inside each hash -- there is no extra key file to keep.
+
 ## 3. Updating the CLIENT (new `elysium-vtes-bord.html`)
 
 Same shape, no restart needed — the server reads the client file fresh on every page load:
@@ -143,6 +153,8 @@ file refreshes once on its own. Do this after a client release that says so, and
 - **SSH key**: `C:\Users\johan\.ssh\id_ed25519` (the `.pub` twin is public; the other never leaves your computer)
 - **Accounts** (all with app-based 2FA + recovery codes printed): Cloudflare (domain + tunnel), Hetzner (the machine), Tailscale/Google (the SSH path)
 - The trusted second admin (H5) gets: the admin-pass + this file's §1/§4/§5.
+- **GitHub** (the repository is where every file the box serves comes from): 2FA with a passkey or an app, recovery codes offline. If deploys are ever automated from GitHub (the `live` branch idea, 14 Oct), GitHub becomes part of the path to the box: protect `main` and `live` first.
+- **SERVED_CHECK_WEBHOOK** (GitHub → the repository → Settings → Secrets and variables → Actions): a Discord webhook URL for the watchdog's red runs (§10). Optional; without it a red run is only GitHub's own notice.
 
 ## 8. Not yet installed (honesty box — next session's list)
 
@@ -218,6 +230,18 @@ file refreshes once on its own. Do this after a client release that says so, and
   elysium-digest.timer`. Optional storm alarm: a second service/timer pair every 15 min with
   `--min 10 --state <data>/elysium-alert-state.json` — its own state file so it never eats the
   daily digest's watermark. Optional weekly heartbeat: a third timer with `--heartbeat`.
+
+## 10. The served-bytes watchdog (client v2.6.173, 11 Nov 2026)
+
+`.github/workflows/served-check.yml` runs once a day at 05:17 UTC on GitHub's machines -- outside the box. It fetches what elysium.cards hands out (the page and the four bot files) and checks each one against every version of that root file committed to `main` (`client/served-check.js`). Green = every byte served is a release. The point is the case nothing on the box would admit to: a server that has been taken over and serves something else.
+
+- **Red, `MISMATCH`:** a file matches no committed version. First question: was something deployed from a branch before its merge (or edited on the box)? If not, treat it as a compromise: take the service down (`sudo systemctl stop elysium`), keep the files for a look, rebuild from GitHub.
+- **Red, `COULD NOT CHECK`:** the site did not answer GitHub's runner (down, or Cloudflare challenged the runner). Not a sign of tampering; check `/healthz` from your own browser.
+- **Run it now:** GitHub → Actions → *served check* → *Run workflow*; or from a clone, `node client/served-check.js` (exit 0 / 1 / 2 as above).
+- **Hear of it:** set the `SERVED_CHECK_WEBHOOK` secret (§7) and a red run posts one line to that Discord channel.
+- **Deploy what is merged.** A file copied to the box from a branch before Johan's merge reads as a mismatch until the merge.
+
+**The page's report-only policy (srv-2.6.50).** For a week or more after this deploy the browsers report what the page's Content-Security-Policy *would* block; the client sends each report to `/client-error` as kind `csp`, and the digest (v1.5 -- copy the new `elysium-error-digest.js` next to the server with this deploy) shows them on a line of their own: `· CSP report-only ×N: …`. A quiet line for the week is the signal for the next round (enforcing). A line that is not quiet is the list of what the policy still lacks.
 
 ---
 

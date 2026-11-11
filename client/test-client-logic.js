@@ -6000,6 +6000,132 @@ test('v2.6.170: Settings\' cache line says what a stopgap copy needs -- with aut
   assert(/press Refresh/.test(off) && !/next start/.test(off), 'with automatic refresh off the next start fetches nothing, so the line does not promise it (' + off + ')');
 });
 
+/* ---------- v2.6.173 THE WATCHED DOOR: the client half of the bot project's security handoff (11 Nov 2026) ---------- */
+const _c173 = require('crypto'), _fs173 = require('fs'), _vm173 = require('vm');
+const HTML173 = _fs173.readFileSync(CLIENT, 'utf8');
+test('v2.6.173: the hand escrow\'s own SHA-256, HMAC and PBKDF2 give the published answers (FIPS 180-4, RFC 4231, RFC 7914) -- client/CLAUDE.md named a test-crypto.js that never reached the repo', () => {
+  const E = API.ESC; if (!E) throw new Error('ESC not exposed (harness needs updating)');
+  eq(E.sha256hex(''), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'SHA-256 of nothing');
+  eq(E.sha256hex('abc'), 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad', 'FIPS 180-4: abc');
+  eq(E.sha256hex('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq'), '248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1', 'FIPS 180-4: two blocks');
+  eq(E.sha256hex('a'.repeat(1000000)), 'cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0', 'FIPS 180-4: a million a');
+  eq(E.hmachex('\x0b'.repeat(20), 'Hi There'), 'b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7', 'RFC 4231 case 1');
+  eq(E.hmachex('Jefe', 'what do ya want for nothing?'), '5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843', 'RFC 4231 case 2');
+  eq(E.pbkdf2hex('passwd', 'salt', 1, 64), '55ac046e56e3089fec1691c22544b605f94185216dde0465e68b9d57c20dacbc49ca9cccf179b645991664b39d77ef317c71b845b1e30bd509112041d3a19783', 'RFC 7914 §11, c=1');
+  eq(E.pbkdf2hex('Password', 'NaCl', 80000, 64), '4ddcd8f60b98be21830cee5ef22701f9641a4418d04c0414aeff08876b34ab56a1d425a1225833549adb841b51c9b3176a272bdebba1d078478f62b397f33c8d', 'RFC 7914 §11, c=80000');
+  // and against Node's own primitives where the RFC inputs cannot be strings: a key longer than a block, text past ASCII, a message across blocks
+  for (const [k, m] of [['k'.repeat(131), 'Test Using Larger Than Block-Size Key - Hash Key First'], ['nyckel \u00e5\u00e4\u00f6 \u2014 \ud83e\udd87', 'Bl\u00e5tt blod '.repeat(40)], ['', '']]) {
+    eq(E.hmachex(k, m), _c173.createHmac('sha256', Buffer.from(k, 'utf8')).update(Buffer.from(m, 'utf8')).digest('hex'), 'HMAC beside Node for a ' + k.length + '-char key');
+    eq(E.sha256hex(m), _c173.createHash('sha256').update(m, 'utf8').digest('hex'), 'SHA-256 beside Node');
+  }
+  eq(E.pbkdf2hex('a fun phrase', 'room-salt', E.ITER, 64), _c173.pbkdf2Sync('a fun phrase', 'room-salt', E.ITER, 64, 'sha256').toString('hex'), 'PBKDF2 at the escrow\'s own ' + E.ITER + ' iterations, beside Node');
+});
+test('v2.6.173: the escrow\'s sealed blob is the construction it says it is -- Node\'s own primitives open the client\'s blob and seal one the client opens; a flipped byte, another password or another room salt open nothing', () => {
+  const E = API.ESC; if (!E) throw new Error('ESC not exposed (harness needs updating)');
+  const pw = 'a fun phrase', salt = 'RoomSalt-173';
+  const keys = E.deriveKeys(pw, new TextEncoder().encode(salt));
+  const dk = _c173.pbkdf2Sync(Buffer.from(pw, 'utf8'), Buffer.from(salt, 'utf8'), E.ITER, 64, 'sha256'), enc = dk.subarray(0, 32), mac = dk.subarray(32, 64);
+  const ctr = (nonce, data) => { const out = Buffer.alloc(data.length);
+    for (let off = 0, c = 0; off < data.length; off += 32, c++){ const cb = Buffer.alloc(4); cb.writeUInt32BE(c); const ks = _c173.createHash('sha256').update(Buffer.concat([enc, nonce, cb])).digest();
+      for (let j = 0; j < 32 && off + j < data.length; j++) out[off + j] = data[off + j] ^ ks[j]; } return out; };
+  const tagOf = (nonce, ct) => _c173.createHmac('sha256', mac).update(Buffer.concat([Buffer.from([1]), nonce, ct])).digest();
+  const open = blob => { const raw = Buffer.from(blob.slice(3), 'base64'), nonce = raw.subarray(0, 16), tag = raw.subarray(raw.length - 32), ct = raw.subarray(16, raw.length - 32);
+    return tagOf(nonce, ct).equals(tag) ? ctr(nonce, ct).toString('utf8') : null; };
+  const hand = JSON.stringify(['Govern the Unaligned', 'Deflection', 'Bl\u00e5 \u00f6ga', 'x'.repeat(100)]);
+  const blob = E.encrypt(keys, hand);
+  assert(/^E1:/.test(blob), 'the E1 shape'); eq(open(blob), hand, 'Node opens the client\'s blob: PBKDF2 -> SHA-256 counter stream -> HMAC over version, nonce and text');
+  const nonce = _c173.randomBytes(16), ct = ctr(nonce, Buffer.from(hand, 'utf8'));
+  const nodeBlob = 'E1:' + Buffer.concat([nonce, ct, tagOf(nonce, ct)]).toString('base64');
+  eq(E.decrypt(keys, nodeBlob), hand, 'and the client opens Node\'s');
+  const raw = Buffer.from(blob.slice(3), 'base64'); raw[20] ^= 1;
+  eq(E.decrypt(keys, 'E1:' + raw.toString('base64')), null, 'a flipped byte opens nothing');
+  eq(E.decrypt(E.deriveKeys('another phrase', new TextEncoder().encode(salt)), blob), null, 'another password opens nothing');
+  eq(E.decrypt(E.deriveKeys(pw, new TextEncoder().encode('OtherRoom')), blob), null, 'another room\'s salt opens nothing');
+  assert(E.encrypt(keys, hand) !== blob, 'a fresh nonce each time');
+});
+test('v2.6.173: netPlainKind -- an encrypted socket or this machine says nothing; a private network, a tailnet or a bare host name is lan; anything else in clear text is open', () => {
+  const K = API.netPlainKind; if (!K) throw new Error('netPlainKind not exposed (harness needs updating)');
+  for (const a of ['localhost:8123', '127.0.0.1:8123', '[::1]:8123', 'foo.localhost', '0.0.0.0:8123', '']) eq(K(a, false), '', a + ' is this machine');
+  for (const a of ['192.168.1.42:8123', '10.0.0.5:8123', '172.16.0.9:8123', '172.31.255.1', '100.101.1.2:8123', '100.64.0.1', '169.254.3.4',
+                   'fd12::1', '[fd00::5]:8123', 'fe80::1', 'pi.local:8123', 'box.lan', 'host.home.arpa', 'machine.tail1234.ts.net', 'gaming-pc:8123'])
+    eq(K(a, false), 'lan', a + ' is a network the players share');
+  for (const a of ['1.2.3.4:8123', 'elysium.cards', 'play.example.com:8123', '172.32.0.1', '100.128.0.1', '192.169.0.1', '[2001:db8::7]:8123', 'ws://203.0.113.9:8123/x'])
+    eq(K(a, false), 'open', a + ' is clear text across the internet');
+  for (const a of ['1.2.3.4:8123', '192.168.1.42:8123', 'elysium.cards']) eq(K(a, true), '', a + ' over TLS says nothing');
+  assert(/Not encrypted/.test(API.NET_PLAIN_TEXT.open) && /tunnel/.test(API.NET_PLAIN_TEXT.open) && /tailnet/.test(API.NET_PLAIN_TEXT.lan), 'the two lines');
+});
+test('v2.6.173: the Create/Join dialog says it before the password is typed, from the address as typed; the room bar marks only clear text across the internet', () => {
+  const A = loadClient(CLIENT); if (!A.mpPlainNote) throw new Error('mpPlainNote not exposed (harness needs updating)');
+  const line = { hidden: true, textContent: '', _warn: false, classList: { toggle(c, on){ if (c === 'warn') line._warn = !!on; }, add(){}, remove(){}, contains(){ return false; } } };
+  const addr = { value: '' };
+  A.__doc._ids.mpPlain = line; A.__doc._ids.mpAddr = addr;
+  addr.value = '203.0.113.9'; eq(A.mpPlainNote(), 'open'); eq(line.hidden, false); assert(/across the internet/.test(line.textContent) && line._warn, 'the warning, marked');
+  addr.value = '192.168.1.42'; eq(A.mpPlainNote(), 'lan'); assert(/tailnet/.test(line.textContent) && !line._warn, 'the quiet line');
+  addr.value = 'https://abc.trycloudflare.com'; eq(A.mpPlainNote(), ''); eq(line.hidden, true, 'a pasted https link is wss: nothing to say');
+  addr.value = 'localhost'; eq(A.mpPlainNote(), '', 'this machine');
+  addr.value = ''; eq(A.mpPlainNote(), '', 'no address yet');
+  A.net.addr = '203.0.113.9:8123'; A.net.sec = false; assert(/plainNet/.test(A.netPlainChip()) && /not encrypted/.test(A.netPlainChip()), 'the room bar marks a public address in clear text');
+  A.net.addr = '192.168.1.42:8123'; eq(A.netPlainChip(), '', 'not a LAN table: the dialog said it once');
+  A.net.addr = 'elysium.cards'; A.net.sec = true; eq(A.netPlainChip(), '', 'nor a TLS one');
+  assert(/<div class="note" id="mpPlain" hidden><\/div>/.test(HTML173) && /mpPlainNote\(\);\s+\/\/ v2\.6\.173[^\n]*\n\s+openOverlay\('mpModal'\)/.test(HTML173), 'the line exists and is filled before the dialog opens');
+});
+test('v2.6.173: no inline event handler is left in the page -- the eight clan-symbol onerrors are gone and one capture listener hides any clan symbol that fails, nothing else', () => {
+  const F = API.clanImgError; if (!F) throw new Error('clanImgError not exposed (harness needs updating)');
+  eq((HTML173.match(/'[^'\n]*\son[a-z]+=\\?["']/g) || []).length, 0, 'no on*= attribute in an HTML string');
+  const markup = HTML173.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '');
+  eq((markup.match(/<[a-z][^>]*\son[a-z]+\s*=/gi) || []).length, 0, 'no on*= attribute in the markup');
+  const img = cls => ({ tagName: 'IMG', style: {}, classList: { contains: c => c === cls } });
+  for (const c of ['clansym', 'clansym-pool', 'sayclan']){ const t = img(c); eq(F({ target: t }), true, c); eq(t.style.display, 'none', c + ' hides'); }
+  const card = img('cimg'); eq(F({ target: card }), false); eq(card.style.display, undefined, 'a card image is left to its own fallback');
+  eq(F({ target: { tagName: 'DIV', classList: { contains: () => true }, style: {} } }), false, 'only images'); eq(F(null), false); eq(F({}), false);
+  assert(/document\.addEventListener\('error', clanImgError, true\);/.test(HTML173), 'in the capture phase: a load error does not bubble');
+});
+test('v2.6.173: a CSP report goes out through the error telemetry as kind csp, once per directive and blocked thing, at most 10 a page, with nothing of the player\'s -- and not at all when error reports are off', () => {
+  const posts = [];
+  const A = loadClient(CLIENT, { fetch: (url, o) => { posts.push([String(url), o && o.body]); return Promise.resolve({ ok: true, status: 204, text: () => Promise.resolve('') }); } });
+  if (!A.cspReport) throw new Error('cspReport not exposed (harness needs updating)');
+  const ev = (d, u, smp) => ({ effectiveDirective: d, blockedURI: u, disposition: 'report', sample: smp, sourceFile: 'https://elysium.cards/', lineNumber: 7, columnNumber: 3 });
+  const msg = A.cspReport(ev('script-src-elem', 'inline', 'alert(document.cookie)'));
+  assert(/^CSP would block script-src-elem: inline \u201calert\(document\.cookie\)\u201d$/.test(msg), msg);
+  A.cspReport(ev('script-src-elem', 'inline', 'again'));
+  eq(posts.length, 1, 'the same directive and blocked thing goes out once');
+  eq(posts[0][0], '/client-error');
+  const body = JSON.parse(posts[0][1]);
+  eq(body.kind, 'csp'); assert(/^\d+\.\d+\.\d+$/.test(body.ver), 'the client version: ' + body.ver); eq(body.line, 7); eq(body.col, 3);
+  eq(body.ring, undefined, 'no ring'); eq(body.dump, undefined, 'no dump');
+  for (let i = 0; i < 15; i++) A.cspReport(ev('img-src', 'https://img' + i + '.example/x.png'));
+  eq(posts.length, 10, 'at most 10 a page');
+  assert(/^CSP blocked /.test(A.cspReport(Object.assign(ev('connect-src', 'wss://x'), { disposition: 'enforce' }))), 'an enforcing policy says blocked');
+  const B = loadClient(CLIENT, { fetch: () => { posts.push('B'); return Promise.resolve({ ok: true }); } });
+  B.conv.errPing = false; const n = posts.length;
+  B.cspReport(ev('script-src-elem', 'inline')); eq(posts.length, n, 'error reports switched off: nothing leaves');
+});
+test('v2.6.173: the head\'s guard script listens for reports from the start, keeps 50 and hands them over once the main script is up -- in plain ES5', () => {
+  const m = /<script id="legacyGuard">([\s\S]*?)<\/script>/.exec(HTML173); assert(m, 'the guard script');
+  assert(!/=>|\blet\b|\bconst\b|`/.test(m[1]), 'ES5: it must parse where the main script cannot');
+  let listener = null; const doc = { addEventListener: (t, f) => { if (t === 'securitypolicyviolation') listener = f; }, getElementById: () => null, createElement: () => ({ setAttribute(){} }), body: { appendChild(){} } };
+  const win = {}; const ctx = { window: win, document: doc, setTimeout: () => 0 }; win.document = doc;
+  _vm173.runInNewContext(m[1], ctx);
+  assert(typeof listener === 'function' && Array.isArray(win.__cspSeen), 'listening, with a buffer');
+  for (let i = 0; i < 60; i++) listener({ n: i });
+  eq(win.__cspSeen.length, 50, 'keeps at most 50 before the main script is up');
+  const got = []; win.__cspOn = e => got.push(e);
+  listener({ n: 'late' }); eq(got.length, 1, 'then hands each new one over'); eq(win.__cspSeen.length, 50, 'and keeps no more');
+});
+test('v2.6.173: the help tab\'s nav script lives in #helpNavJs (text/plain: it never runs on the page) before the main script, and the tab carries exactly that text -- so the server\'s hash of it covers the tab', () => {
+  const m = /<script type="text\/plain" id="helpNavJs">([\s\S]*?)<\/script>/.exec(HTML173); assert(m, 'the #helpNavJs element');
+  assert(HTML173.indexOf(m[0]) < HTML173.indexOf('<script>\n'), 'before the one attribute-less script tag (B1 and the harness key on it)');
+  eq((HTML173.match(/<script>\n/g) || []).length, 1, 'still exactly one attribute-less script tag');
+  assert(/querySelectorAll\('\.nav a'\)/.test(m[1]) && /hashchange/.test(m[1]) && !/<\/script/i.test(m[1]), 'the nav and the hash reveal, nothing that could end it');
+  const A = loadClient(CLIENT); if (!A.helpStandalone) throw new Error('helpStandalone not exposed');
+  A.__doc._ids.helpNavJs = { textContent: m[1] };
+  const page = A.helpStandalone('bots');
+  assert(page.indexOf('<scr' + 'ipt>' + m[1] + '</scr' + 'ipt>') > 0, 'the tab\'s one script is that text, byte for byte');
+  const h = t => _c173.createHash('sha256').update(t, 'utf8').digest('base64');
+  const tabScripts = []; page.replace(/<script>([\s\S]*?)<\/script>/g, (a, t) => { tabScripts.push(h(t)); return a; });
+  eq(JSON.stringify(tabScripts), JSON.stringify([h(m[1])]), 'one script in the tab, with the hash of #helpNavJs');
+});
+
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

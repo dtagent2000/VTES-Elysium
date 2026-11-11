@@ -1,3 +1,76 @@
+## [DEN BEVAKADE DÖRREN] (11 november 2026, klient v2.6.173 / srv-2.6.50)
+
+Johan: bottprojektet har lämnat en handoff i PR #59 (säkerhet). Jag kontrollerade PR:en först (en enda fil,
+`bot/docs/handoffs/HANDOFF-to-main-2026-11-11-security.md`, mergar rent ovanpå #58, check-versions grön på det
+sammanslagna trädet) och svarade ja, merga först. Sedan analys mot koden, förslag, och Johan: "kör på din
+rekommendation".
+
+**Ramen.** Handoffens hot är en server som tas över och serverar elak JavaScript till alla som öppnar den. Mot det hjälper
+inte en CSP som samma server skickar -- den som äger servern skriver också headern. Mot ett övertagande hjälper att boxen
+är svår att ta (det är den redan: inga öppna portar, sandlådad tjänst som inte kan skriva över kodfilerna, inga
+beroenden, manuella deployer), att någon märker det, och att den som tvivlar kan köra klienten från GitHub (`file://`),
+som aldrig kör kod från servern. CSP:n skyddar mot den andra risken: skript som smugglas in via det andra spelare skriver.
+
+**Byggt, server (srv-2.6.50):**
+- **Lösenord som långsamma hashar:** `'s1$' + salt + '$' + scrypt(sha256hex(pass))`, N 2^14, r 8, p 1, ~40 ms. Två
+  ändringar mot handoffens förslag. (a) Ett salt per server, inte per rum: sparade matcher grupperas på LIKA hash över
+  rum (D4), och ett salt per rum hade brutit sparlistan. Saltet ligger i varje hash och tas från datafilerna vid första
+  hashen, så det finns ingen nyckelfil att tappa. (b) Migreringen sker direkt: den gamla hashen ÄR sha256hex(pass), så den
+  lindas in när filerna laddas (`passUpgrade`) och båda filerna skrivs genast (`passBootDone`) -- ingen SHA-256-hash
+  överlever första starten. En lyckad kontroll minns i minnet, nycklad på den lagrade hashen (`PASS_OK`); ett misslyckande
+  aldrig, så en felgissning betalar alltid hela hashen och ett snabbt svar avslöjar inget om andra rum.
+- **CSP, report-only:** `Content-Security-Policy-Report-Only` med hashen av varje `<script>`-element i filen som skickas,
+  beräknad per förfrågan ur just de byten (`cspScriptHashes`, `cspPolicy`, `pageHeaders`). Hashar, inte nonce: en nonce
+  ändrar sidan vid varje förfrågan, och vakthunden jämför de serverade byten med git.
+- `/images/` får en sandbox-policy; `/client-error` behåller kind `csp`.
+
+**Byggt, klient (v2.6.173):** guard-skriptet i head lyssnar på `securitypolicyviolation` från början och lämnar över till
+`cspReport`, som skickar varje rapport via felrapporteringen (kind `csp`, en gång per direktiv och blockerad sak, högst
+tio per sida). De åtta inline-`onerror` på klansymboler är borta, en capture-lyssnare tar över (`clanImgError`).
+Hjälpflikens nav-skript ligger i `#helpNavJs` (text/plain, körs aldrig på sidan) så att serverns hashar täcker det.
+Create/Join-dialogen säger till när anslutningen inte är krypterad (`netPlainKind`: inget för TLS eller den egna datorn,
+en stilla rad för ett privat nät, en tailnet eller .local, en varning över internet), rumsraden märker det sista.
+About-texten och hjälpsidan sa att servern inte kan läsa din hand -- den delar ut korten och läser lösenordet vid varje
+join, så den är betrodd som en giv. Hjälpsidan fick *Hosting checklist*.
+
+**Byggt, drift:** `client/SHA256SUMS` (våra 13 release-filer, inte bottens bunt -- deras mergar hade gjort vår CI röd dagen
+efter varje bottrelease) och `sha256sums.js`, kontrollerad av check-versions. **Vakthunden:** `served-check.js` hämtar det
+servern delar ut och kontrollerar varje fil mot de versioner som committats till main; `.github/workflows/served-check.yml`
+kör den dagligen mot elysium.cards, utanför boxen, och postar till Discord om hemligheten `SERVED_CHECK_WEBHOOK` finns.
+`test-served-check.js` i CI visar att den kan falla. Digest v1.5 räknar CSP-rapporterna på en egen rad. Runbooken: backup
+före srv-2.6.50, nycklarna (GitHub), vakthunden (§10).
+
+**Hittat på vägen:** escrow-kryptots egna SHA-256/HMAC/PBKDF2 hade inget test i repot -- `client/CLAUDE.md` nämnde en
+`test-crypto.js` som aldrig kom fram. Nu FIPS 180-4-, RFC 4231- och RFC 7914-vektorer och AEAD-konstruktionen mot Nodes
+egna primitiver åt båda håll (två mutanter fångade: en ändrad K-konstant, en ändrad versionsbyte). Mina egna snubbel:
+ett kommatecken som hamnade inne i en `//`-kommentar i harnessens exponeringslista, och ett cache-test som fyllde till
+taket ovanpå gamla poster.
+
+**Grindarna:** klient 362/0 (bot v0.6.217 bredvid, inga överhopp; mot v2.6.172 355/7 -- de sex nya beteendetesterna och
+den inbäddade hjälpsidan; kryptotesterna går gröna på båda, de låser oförändrad kod), dispatch 94/0 (mot srv-2.6.49 88/6),
+endpoint 36/0 (en riktig boot: en gammal snapshot och en sparning lindas in, rummet öppnas över en riktig socket med sitt
+gamla lösenord och bara med det, en omstart lindar inget två gånger och tar saltet ur filerna; mot srv-2.6.49 31/5),
+protokoll 6/0, kanariefågeln 102/0, soak `--control` (snubbeltråden löste ut), vakthundstestet 7/0 (efter commit: det
+läser roten mot HEAD), embed `--check` båda sidorna, B1 byteidentisk, check-versions grön inklusive rotgrinden och
+SHA256SUMS.
+
+**I headless Chrome** (den riktiga servern och klienten): v2.6.173 15 av 15 -- sidan, bottladdningen och hjälpfliken
+rapporterar inget, en trasig klansymbol döljs utan inline-hanterare, en avsiktlig inline-hanterare rapporteras (blockeras
+inte) och hamnar i serverns logg som kind `csp`, `play.example.com` (mappad till den här datorn) varnar och märker
+rumsraden, `pi.local` får den stilla raden, `127.0.0.1` inget. v2.6.172 mot samma server: 7 av 12. **Viktigast:** en
+TVINGANDE policy (header eller `<meta>`) når hjälpfliken (`blob:` och `about:blank`) -- ett ohashat skript där körs inte;
+report-only-policyn rapporterar ingenting där. Report-only-veckan kan alltså inte tala för hjälpfliken, och därför ligger
+dess skript i `#helpNavJs` redan nu. Med policyn omställd till tvingande i en skrapkopia fungerar v2.6.173 hela vägen;
+v2.6.172 tappar hjälpflikens skript och den trasiga klansymbolen syns kvar. Sandlådans proxy svarar 403 på en mappad
+värds websocket: `--no-proxy-server`.
+
+**Deploy:** säkerhetskopiera `/opt/elysium/data`, kopiera servern och starta om (journalen säger hur många hashar som
+flyttade), purga klienten, kopiera `elysium-error-digest.js` (v1.5). Valfritt: hemligheten `SERVED_CHECK_WEBHOOK`.
+
+**Inte kört:** elysium.cards; Firefox och Safari (skälet till report-only i en vecka); vakthunden mot den riktiga sajten
+från GitHubs maskiner (Cloudflare kan utmana dem -- då säger körningen "could not check", inte "mismatch"); scrypts
+kostnad på själva boxen.
+
 ## [TJUGOETT SEKUNDER] (6 november 2026, klient v2.6.172 / srv-2.6.49 oförändrad)
 
 Johan: mains CI har varit röd sedan #48. Driftkontrollen för den inbäddade bottguiden fallerar, eftersom roten har

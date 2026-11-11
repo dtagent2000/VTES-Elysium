@@ -218,6 +218,11 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   ctrlOptimistic: (typeof ctrlOptimistic!=='undefined'?ctrlOptimistic:undefined),
   openHelp: (typeof openHelp!=='undefined'?openHelp:undefined),                                     // v2.6.127: Help inside the client
   helpStandalone: (typeof helpStandalone!=='undefined'?helpStandalone:undefined),
+  ESC: (typeof ESC!=='undefined'?ESC:undefined),                                                 // v2.6.173: the hand-escrow crypto, for its known-answer tests
+  netPlainKind: (typeof netPlainKind!=='undefined'?netPlainKind:undefined), NET_PLAIN_TEXT: (typeof NET_PLAIN_TEXT!=='undefined'?NET_PLAIN_TEXT:undefined),   // v2.6.173: is this connection encrypted?
+  mpPlainNote: (typeof mpPlainNote!=='undefined'?mpPlainNote:undefined), netPlainChip: (typeof netPlainChip!=='undefined'?netPlainChip:undefined),
+  cspReport: (typeof cspReport!=='undefined'?cspReport:undefined), CSP_SENT: (typeof CSP_SENT!=='undefined'?CSP_SENT:undefined),   // v2.6.173: the report-only policy's reports
+  clanImgError: (typeof clanImgError!=='undefined'?clanImgError:undefined),
   helpCurrent: ()=>(typeof _helpCur!=='undefined'?_helpCur:undefined),
   get HELP_DOCS(){ return (typeof HELP_DOCS!=='undefined')?HELP_DOCS:undefined; },
   hotForcePass: (typeof hotForcePass!=='undefined'?hotForcePass:undefined),                           // v2.6.122: THE PARITY ROUND (bot-project spec, 21 Sep)
@@ -525,7 +530,13 @@ function loadServer(serverPath) {
   MAX_FRAGS: (typeof MAX_FRAGS!=='undefined'?MAX_FRAGS:undefined), MAX_CTRL: (typeof MAX_CTRL!=='undefined'?MAX_CTRL:undefined), RATE_N: (typeof RATE_N!=='undefined'?RATE_N:undefined),
   cleanName: (typeof cleanName!=='undefined'?cleanName:undefined), cleanCard: (typeof cleanCard!=='undefined'?cleanCard:undefined), cleanSym: (typeof cleanSym!=='undefined'?cleanSym:undefined),
   sanitizePub: (typeof sanitizePub!=='undefined'?sanitizePub:undefined), ERR_WIN: (typeof ERR_WIN!=='undefined'?ERR_WIN:undefined),
-  saveUnsnap: (typeof saveUnsnap!=='undefined'?saveUnsnap:undefined), fxCard: (typeof fxCard!=='undefined'?fxCard:undefined), adminLocked: (typeof adminLocked!=='undefined'?adminLocked:undefined)   // srv-2.6.47: the independent review's three
+  saveUnsnap: (typeof saveUnsnap!=='undefined'?saveUnsnap:undefined), fxCard: (typeof fxCard!=='undefined'?fxCard:undefined), adminLocked: (typeof adminLocked!=='undefined'?adminLocked:undefined),   // srv-2.6.47: the independent review's three
+  passUpgrade: (typeof passUpgrade!=='undefined'?passUpgrade:undefined), passSaltIn: (typeof passSaltIn!=='undefined'?passSaltIn:undefined),   // srv-2.6.50: THE WATCHED DOOR -- the slow password hash
+  passMatch: (typeof passMatch!=='undefined'?passMatch:undefined), passKey: (typeof passKey!=='undefined'?passKey:undefined), sha256hex: (typeof sha256hex!=='undefined'?sha256hex:undefined),
+  PASS_RE: (typeof PASS_RE!=='undefined'?PASS_RE:undefined), PASS_OK: (typeof PASS_OK!=='undefined'?PASS_OK:undefined), PASS_OK_MAX: (typeof PASS_OK_MAX!=='undefined'?PASS_OK_MAX:undefined),
+  passBootDone: (typeof passBootDone!=='undefined'?passBootDone:undefined), get _passSalt(){ return (typeof passSaltHex!=='undefined')?passSaltHex:undefined; },
+  cspScriptHashes: (typeof cspScriptHashes!=='undefined'?cspScriptHashes:undefined), cspPolicy: (typeof cspPolicy!=='undefined'?cspPolicy:undefined),   // srv-2.6.50: the page's report-only policy
+  pageHeaders: (typeof pageHeaders!=='undefined'?pageHeaders:undefined), IMG_CSP: (typeof IMG_CSP!=='undefined'?IMG_CSP:undefined)
 };`;
   const factory = new Function('require', 'module', 'exports', '__dirname', '__filename', src + expose);
   const mod = { exports: {} };

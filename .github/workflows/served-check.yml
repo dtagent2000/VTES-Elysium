@@ -1,0 +1,48 @@
+# The served-bytes watchdog (client v2.6.173, 11 Nov 2026, THE WATCHED DOOR -- the bot project's security handoff,
+# item 4). Once a day, from outside the box, it fetches what elysium.cards hands out -- the client page and the four
+# bot files -- and checks that each one is, byte for byte, a version of that root file committed to main
+# (client/served-check.js; client/test-served-check.js proves it can fail). A server that is taken over and serves
+# something else turns this run red, whoever wrote what it serves.
+#
+# Who hears of it: GitHub's own notice of a failed scheduled run, and -- when the repository secret
+# SERVED_CHECK_WEBHOOK holds a Discord webhook URL -- one line in that channel. A red run that says COULD NOT CHECK
+# means the site did not answer this runner (Cloudflare may challenge it), not that it served something wrong.
+# Deploy what is merged: a file deployed from a branch before its merge reads as a mismatch until the merge.
+name: served check
+
+on:
+  schedule:
+    - cron: '17 5 * * *'      # daily, 05:17 UTC (06:17 in Stockholm in winter)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: served-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HOOK: ${{ secrets.SERVED_CHECK_WEBHOOK }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0       # every committed version of the root files, not only the tip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: What elysium.cards serves is a version committed to main
+        shell: bash            # bash -eo pipefail: the check's own exit code, not tee's
+        run: node client/served-check.js --base https://elysium.cards --repo . --ref origin/main | tee served-check.txt
+      - name: Tell Discord (only when SERVED_CHECK_WEBHOOK is set)
+        if: ${{ failure() && env.HOOK != '' }}
+        shell: bash
+        run: |
+          head="$(head -1 served-check.txt 2>/dev/null || true)"
+          url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          node -e 'const [h,u]=process.argv.slice(1); process.stdout.write(JSON.stringify({content:"⚠️ Elysium served check: "+(h||"the check failed to run")+"\n"+u}))' "$head" "$url" > payload.json
+          curl -sS -H 'Content-Type: application/json' --data @payload.json "$HOOK"

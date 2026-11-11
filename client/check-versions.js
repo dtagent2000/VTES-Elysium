@@ -8,6 +8,8 @@
      - START-HERE.html "Version 1.x" (English onboarding presence)
      - the test suites' handler expectations (49 s2c / 54 c2s as of v2.6.139 / srv-2.6.43)
      - presence of the build/test tool trio the gates cannot run without
+     - (v2.6.173) client/SHA256SUMS holds the current SHA-256 of every release file of ours
+       (sha256sums.js writes it; the bot bundle is not ours and is not listed)
      - (monorepo, 12 Oct 2026) the repository ROOT is the download: every root file must be a
        byte copy of client/<name> (ours) or of bot/<name> (the eight bundle files) -- the rule
        in the root CLAUDE.md, asserted instead of promised
@@ -85,13 +87,20 @@ for (const f of ['CLAUDE.md', 'elysium-project-context.md', 'elysium-learnings.m
 }
 
 // --- the tool trio the gates cannot run without ---
-for (const f of ['split_client.py', 'elysium-build.js', 'elysium-test-harness.js', 'elysium-soak-hotseat.js', 'embed-help.js', 'help-local-server.html']){   // v2.6.127: the Help-page embed tool + our Local-server authoring source (the drift test needs both)
+for (const f of ['split_client.py', 'elysium-build.js', 'elysium-test-harness.js', 'elysium-soak-hotseat.js', 'embed-help.js', 'help-local-server.html', 'sha256sums.js']){   // v2.6.127: the Help-page embed tool + our Local-server authoring source (the drift test needs both)
   const ok = fs.existsSync(path.join(dir, f));
   row(f, ok ? 'present' : 'MISSING');
   if (!ok) warn(f + ' missing - the round-trip gate / suites cannot run');
 }
 
 // --- the monorepo root is the download (12 Oct 2026) ---
+// (v2.6.173) The two lists live at the top level now: the SHA256SUMS check below compares them with sha256sums.js's.
+const ROOT_ONLY = new Set(['CLAUDE.md', 'README.md']);
+// The bot bundle is the ONLY thing the root takes from bot/. Everything else must equal client/ --
+// bot/ also carries read-only copies of OUR server, client and protocol, and a stale root server
+// matching bot/'s old copy must not pass as current.
+const BOT_BUNDLE = new Set(['elysium-bot.js', 'elysium-cardfx.json', 'elysium-cardfx.js', 'elysium-twd-profile.json', 'elysium-twd-profile.js',
+                            'elysium-twd-archetypes.json', 'elysium-twd-archetypes.js', 'START-HERE-BOTS.html']);
 // When this directory is the monorepo's client/ (a parent with CLAUDE.md, bot/ and client/), every
 // regular file at the root must equal client/<name> or bot/<name> byte for byte. Root-only files
 // (the root CLAUDE.md, README.md, dotfiles) are skipped; a root file with no twin on either side
@@ -100,12 +109,6 @@ for (const f of ['split_client.py', 'elysium-build.js', 'elysium-test-harness.js
   const root = path.dirname(dir);
   const isMono = path.basename(dir) === 'client' && fs.existsSync(path.join(root, 'CLAUDE.md')) && fs.existsSync(path.join(root, 'bot')) && fs.existsSync(path.join(root, 'client'));
   if (isMono) {
-    const ROOT_ONLY = new Set(['CLAUDE.md', 'README.md']);
-    // The bot bundle is the ONLY thing the root takes from bot/. Everything else must equal client/ --
-    // bot/ also carries read-only copies of OUR server, client and protocol, and a stale root server
-    // matching bot/'s old copy must not pass as current.
-    const BOT_BUNDLE = new Set(['elysium-bot.js', 'elysium-cardfx.json', 'elysium-cardfx.js', 'elysium-twd-profile.json', 'elysium-twd-profile.js',
-                                'elysium-twd-archetypes.json', 'elysium-twd-archetypes.js', 'START-HERE-BOTS.html']);
     let n = 0, bad = 0;
     for (const f of fs.readdirSync(root).sort()) {
       if (f[0] === '.' || ROOT_ONLY.has(f)) continue;
@@ -117,6 +120,26 @@ for (const f of ['split_client.py', 'elysium-build.js', 'elysium-test-harness.js
       if (!fs.readFileSync(rp).equals(fs.readFileSync(twin))) { bad++; warn('root/' + f + ' differs from ' + path.relative(root, twin) + ' -- copy the release to the root, or the root is stale'); }
     }
     row('repo root (the download)', bad ? (bad + ' of ' + n + ' files drift') : (n + ' files, each a byte copy of client/ or bot/'));
+  }
+}
+
+// --- the release hashes (v2.6.173, THE WATCHED DOOR) ---
+// client/SHA256SUMS must hold the SHA-256 of every release file of ours, as sha256sums.js computes it from client/
+// (the root is a byte copy, asserted above). Stale or missing = drift: run `node sha256sums.js` after the release copy.
+{
+  let SUMS = null; try { SUMS = require(path.join(dir, 'sha256sums.js')); } catch (e) {}
+  if (SUMS) {
+    const want = SUMS.sumsText(dir);
+    if (want !== null) {
+      let have = null; try { have = fs.readFileSync(path.join(dir, 'SHA256SUMS'), 'utf8'); } catch (e) {}
+      const n = want.trim().split('\n').length;
+      row('SHA256SUMS', have === null ? 'MISSING' : (have === want ? n + ' release files, current' : 'STALE'));
+      if (have === null) warn('SHA256SUMS missing -- run node sha256sums.js');
+      else if (have !== want) warn('SHA256SUMS is stale -- run node sha256sums.js after the last change to a release file');
+    }
+    const a = [...BOT_BUNDLE].sort().join(','), b = [...SUMS.BOT_BUNDLE].sort().join(',');
+    if (a !== b || [...ROOT_ONLY].sort().join(',') !== [...SUMS.ROOT_ONLY].sort().join(','))
+      warn('check-versions.js and sha256sums.js list the bot bundle or the root-only files differently -- one list, two copies: make them equal');
   }
 }
 

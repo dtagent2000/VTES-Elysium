@@ -15,8 +15,9 @@
   <li><a href="#setup">Setting up</a></li>
   <li><a href="#internet">Beyond the LAN</a></li>
   <li><a href="#table">Running a table</a></li>
+  <li><a href="#checklist">Hosting checklist</a></li>
   <li><a href="#reference">Reference</a></li>
-  <li class="ver">server srv-2.6.49 · client v2.6.165</li>
+  <li class="ver">server srv-2.6.50 · client v2.6.173</li>
 </ul></nav>
 
 <header class="hero">
@@ -250,6 +251,20 @@
     </div>
   </details>
 </section>
+<!-- ============================================================ CHECKLIST (v2.6.173 / srv-2.6.50: the security handoff's item 4) -->
+<section id="checklist">
+  <h2>Hosting checklist</h2>
+  <p class="lead">Five minutes once, and a minute after every update. A game server that many people open is worth taking over: whoever controls it decides what every visitor's browser runs.</p>
+  <ul>
+    <li><strong>Keep Node.js and the system up to date</strong> &mdash; the current LTS, and the operating system's security updates switched on. The server has no dependencies, so Node itself is its whole supply chain.</li>
+    <li><strong>Never open the port to the internet.</strong> Players outside your network come in through Tailscale or a tunnel (https). A plain <code>http://address:8123</code> sends the room password and every move in clear text &mdash; the client says so in the Join dialog and at the table.</li>
+    <li><strong>A public server gets <code>--server-pass</code></strong>, and <code>--trust-proxy</code> behind a tunnel, so each player has their own lockout.</li>
+    <li><strong>Know who holds the keys:</strong> the machine's login, the tunnel or Tailscale account, the referee key &mdash; with two-factor sign-in wherever it exists. Anyone who can log in to the machine can read the command line the server was started with, keys included: host on a machine only you use.</li>
+    <li><strong>Back up the data directory before a server update</strong> and keep its files together. Since srv-2.6.50 the stored password hashes are slow, salted hashes an older server cannot read: going back to an older server needs the backup.</li>
+    <li><strong>After an update, check what you serve.</strong> Compare your files with <code>client/SHA256SUMS</code> on GitHub: <code>sha256sum elysium-vtes-bord.html</code> (Linux), <code>shasum -a 256 elysium-vtes-bord.html</code> (macOS), <code>certutil -hashfile elysium-vtes-bord.html SHA256</code> (Windows). If a CDN or tunnel caches the page, purge it.</li>
+    <li><strong>A player who doubts a server</strong> can open the client file from GitHub on their own machine and join the server from there (paste its https:// link as the server address): that copy never runs code the server sends.</li>
+  </ul>
+</section>
 <!-- ============================================================ REFERENCE -->
 <section id="reference">
   <h2>Reference</h2>
@@ -275,14 +290,14 @@
   <p>Room passwords are shared phrases between friends — pick a fun phrase, never a real password. The server keeps the rest honest:</p>
   <div class="wrap"><table>
     <tr><th>Protection</th><th>Behaviour</th></tr>
-    <tr><td>Room password</td><td>Compared in constant time and stored only as a hash — in memory and in the persistence file, never in clear text. A wrong password counts as a strike.</td></tr>
+    <tr><td>Room password</td><td>Compared in constant time and stored only as a slow, salted hash (scrypt, since srv-2.6.50) — in memory, in the persistence file and in saves, never in clear text; a leaked file does not give the passwords away cheaply. The server still reads each password when someone joins. A wrong password counts as a strike.</td></tr>
     <tr><td>Lockout</td><td>5 wrong passwords within 10 minutes locks that address out for 10 minutes. Behind a tunnel the strikes are counted per room instead, so one player's typo cannot lock out the whole table. Token reconnection is immune.</td></tr>
     <tr><td>Rate limiting</td><td>Max 80 messages per 10 seconds per connection, pings included — then disconnect. A malformed or oversized WebSocket frame ends the connection at once. Max 16 concurrent connections per address, 400 in total.</td></tr>
     <tr><td>Referee key</td><td>10 wrong keys within 10 minutes from one address lock the key out for that address for 10 minutes — the in-game key, the log pull and the maintenance window count together. Behind a tunnel without <code>--trust-proxy</code> every player counts as the same address, which gets 40 tries instead of 10; turn the option on so each player has their own count.</td></tr>
     <tr><td>Room creation</td><td>Max 4 new rooms per address per hour (the host's own machine is exempt, as is the referee key). Of the 50 room slots, 10 are always held for rooms that have ever seated a player, so squatters cannot fill the server.</td></tr>
     <tr><td>Identity</td><td>A token per browser tab (survives a refresh, dies with the tab). Name + password reclaims an offline seat; a name that is online can never be taken over.</td></tr>
-    <tr><td>Hidden information</td><td>Library, crypt and hand exist only in server memory. Face-down card names are stripped before anything is relayed; the hand is never relayed at all.</td></tr>
-    <tr><td>Hand escrow</td><td>Your hand is encrypted in your browser with a key derived from the room password. Reconnecting, taking over a seat and loading a saved match restore your exact hand — while the server, the save file and the other players only ever see an opaque blob. Obfuscation-grade, not an audited cipher.</td></tr>
+    <tr><td>Hidden information</td><td>Library and crypt exist only in server memory, and the server deals your draws. Face-down card names are stripped before anything is relayed; your hand is never relayed to another player.</td></tr>
+    <tr><td>Hand escrow</td><td>Your hand is encrypted in your browser with a key derived from the room password. Reconnecting, taking over a seat and loading a saved match restore your exact hand — while the save file, the snapshot and the other players only ever see an opaque blob. The server is not kept out: it deals your draws and reads the room password at every join, so it is trusted like a dealer. Obfuscation-grade, not an audited cipher.</td></tr>
     <tr><td>Sanitisation</td><td>Every field passing through the server is cleaned and clamped (lengths, ranges, control characters); angle brackets and double quotes are stripped from names on the server, and card fields lose any <code>=</code>, on top of the client escaping everything it renders, quotes included.</td></tr>
     <tr><td>Crash isolation</td><td>Every message is handled in a guarded context; one malformed message cannot take the server down or drop the rooms.</td></tr>
     <tr><td>Version check</td><td>Client and server compare their version on join and warn when the major.minor differ — the moment to fetch the matching files from GitHub.</td></tr>
@@ -321,7 +336,7 @@
 </main>
 
 <footer>
-  Elysium — running your own server · matches server <b>srv-2.6.49</b> and client <b>v2.6.165</b> · 17 October 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
+  Elysium — running your own server · matches server <b>srv-2.6.50</b> and client <b>v2.6.173</b> · 11 November 2026. Files, launchers and the protocol: <a href="https://github.com/dtagent2000/VTES-Elysium">github.com/dtagent2000/VTES-Elysium</a>. Elysium is an unofficial fan project under the Dark Pack agreement; Vampire: The Eternal Struggle™ and World of Darkness © Paradox Interactive AB.
 </footer>
 
 </body>

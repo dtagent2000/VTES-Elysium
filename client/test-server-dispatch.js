@@ -1651,5 +1651,115 @@ test('srv-2.6.49 frames: a large frame dripped in one byte at a time arrives who
   eq(w3.got.msgs.length, 1, 'and the frame still arrives whole'); eq(w3.got.msgs[0].length, L);
 });
 
+/* === srv-2.6.50 THE WATCHED DOOR: the bot project's security handoff (11 Nov 2026), its server half === */
+const _c50 = require('crypto');
+const sha50 = t => _c50.createHash('sha256').update(String(t), 'utf8').digest('hex');
+test('srv-2.6.50 passwords: a stored hash is s1 -- scrypt over the SHA-256, one salt per server -- never the bare SHA-256 srv-2.6.49 kept; the same password makes the same hash (the save groups); right, wrong and empty compare as before', () => {
+  assert(S.PASS_RE && S.passUpgrade && S.passMatch, 'no s1 password hash (srv-2.6.49 stores sha256hex(pass))');
+  const h = S.passHash('hemligt');
+  const m = S.PASS_RE.exec(h);
+  assert(m, 'the s1 shape: ' + h);
+  assert(h.indexOf(sha50('hemligt')) < 0, 'the fast hash of the password appears nowhere in what is stored');
+  eq(m[2], _c50.scryptSync(sha50('hemligt'), Buffer.from(m[1], 'hex'), 32, { N: 16384, r: 8, p: 1, maxmem: 64 * 1048576 }).toString('hex'),
+     'the key is scrypt(sha256hex(pass), salt, N 2^14, r 8, p 1) -- pinned, or every stored hash stops opening');
+  eq(S.passHash('hemligt'), h, 'deterministic: a save made in one room is found from another room with the same password (D4)');
+  assert(S.passHash('annat') !== h, 'another password, another hash');
+  eq(m[1], S._passSalt, 'the salt inside is the server salt');
+  assert(S.passMatch(h, 'hemligt') && !S.passMatch(h, 'fel') && !S.passMatch(h, ''), 'right opens, wrong and empty do not');
+  const e = S.passHash('');
+  assert(S.passMatch(e, '') && S.passMatch(e, undefined) && S.passMatch(e, null) && !S.passMatch(e, 'x'), 'an open room: the empty password, with the old coercion (undefined, null -> empty)');
+  assert(!S.passMatch('X', 'X') && !S.passMatch(null, '') && !S.passMatch('s1$zz$zz', ''), 'a malformed stored value never opens');
+  assert(S.passMatch(sha50('nyckel'), 'nyckel') && !S.passMatch(sha50('nyckel'), 'fel'), 'srv-2.6.49\'s bare SHA-256 still compares (only a value set in memory can be one: every stored one is wrapped as it loads)');
+  // end to end through the verbs: create with a password, a wrong and a right join
+  S.rooms.clear(); S.ipFails.clear();
+  const host = { ip:'10.50.0.1', sock: recSock() };
+  S.handle(host, JSON.stringify({ t:'create', room:'PW50', name:'Ann', pass:'hemligt', lobby:true }));
+  const room = S.rooms.get('PW50');
+  assert(room && S.PASS_RE.test(room.passHash) && room.passHash === h, 'the room stores the s1 hash');
+  const g = { ip:'10.50.0.2', sock: recSock() };
+  S.handle(g, JSON.stringify({ t:'join', room:'PW50', name:'Bob', pass:'fel' }));
+  assert(g.sock.msgs.some(x => x.t === 'err' && /Wrong password/.test(x.msg)), 'a wrong password is refused');
+  S.handle(g, JSON.stringify({ t:'join', room:'PW50', name:'Bob', pass:'hemligt' }));
+  assert(g.sock.msgs.some(x => x.t === 'joined'), 'the right one seats');
+  S.rooms.clear(); S.ipFails.clear();
+});
+test('srv-2.6.50 passwords: an old SHA-256 hash is WRAPPED as the files load -- the room, its referee key and a save of the same group open with the same passwords, and the save stays in the room\'s group', () => {
+  assert(S.passUpgrade, 'no passUpgrade (srv-2.6.49)');
+  const rec = S.roomSnap({ name:'Old50', passHash: sha50('fredag'), refHash: sha50('domare'), hostToken:'t', created: Date.now(), started: true, players: [{ name:'Ann', token:'a' }] });
+  const back = S.roomUnsnap(rec);
+  assert(S.PASS_RE.test(back.passHash) && S.PASS_RE.test(back.refHash), 'both stored hashes come back as s1');
+  assert(S.passMatch(back.passHash, 'fredag') && !S.passMatch(back.passHash, 'fel'), 'the room opens with its old password, only with it');
+  assert(S.passMatch(back.refHash, 'domare') && !S.passMatch(back.refHash, 'fredag'), 'the referee key too');
+  eq(back.passHash, S.passHash('fredag'), 'the wrap IS the new hash of the same password (the SHA-256 the old server kept is what scrypt is fed)');
+  const sv = S.saveUnsnap({ name:'fri50', passHash: sha50('fredag'), players: [] });
+  eq(sv.passHash, back.passHash, 'a save of the same group lands on the same hash: the save list still finds it');
+  eq(S.passUpgrade(back.passHash), back.passHash, 'an s1 hash is left alone (no double wrap on the next start)');
+  eq(S.passUpgrade('X'), 'X'); eq(S.passUpgrade(null), null); eq(S.passUpgrade(''), '');
+  const wasLog = console.log; let said = ''; console.log = t => { said += t + '\n'; };
+  try { S.passBootDone(); } finally { console.log = wasLog; }
+  assert(/moved from SHA-256 to scrypt/.test(said), 'the boot says how many it moved, and that a rollback needs the old data directory');
+  said = ''; console.log = t => { said += t + '\n'; };
+  try { S.passBootDone(); } finally { console.log = wasLog; }
+  eq(said, '', 'and counts from zero again');
+});
+test('srv-2.6.50 passwords: the salt is ADOPTED from what is stored (saves first), so a restart keeps every hash comparable and nothing beside the two data files has to be kept', () => {
+  assert(S.passSaltIn, 'no passSaltIn (srv-2.6.49)');
+  const salt = 'a'.repeat(32), key = 'b'.repeat(64);
+  eq(S.passSaltIn('[{"name":"x","passHash":"s1$' + salt + '$' + key + '"}]'), salt, 'found inside a file');
+  eq(S.passSaltIn('{}'), null); eq(S.passSaltIn('[{"passHash":"' + sha50('x') + '"}]'), null, 'an old hash carries no salt');
+  eq(S.passSaltIn('"s1$' + salt + '$' + key.slice(1) + '"'), null, 'only a whole s1 hash counts');
+});
+test('srv-2.6.50 passwords: only a SUCCESS is remembered -- a wrong guess pays the full hash every time, the right password once, and the memory stays bounded', () => {
+  assert(S.PASS_OK, 'no PASS_OK (srv-2.6.49)');
+  const h = S.passHash('kod50'), e = S.passHash('');
+  S.passMatch(e, '');
+  const real = _c50.scryptSync; let n = 0;
+  _c50.scryptSync = function(){ n++; return real.apply(_c50, arguments); };
+  try {
+    S.PASS_OK.clear();
+    S.passMatch(h, 'fel'); S.passMatch(h, 'fel'); S.passMatch(h, 'fel');
+    eq(n, 3, 'three wrong guesses, three hashes');
+    S.passMatch(h, 'kod50'); eq(n, 4, 'the first right one hashes');
+    S.passMatch(h, 'kod50'); S.passMatch(h, 'kod50'); eq(n, 4, 'then it is remembered');
+    S.passMatch(h, 'fel'); eq(n, 5, 'and a wrong guess still pays');
+    S.passMatch(e, ''); S.passMatch(e, 'nope'.slice(4)); eq(n, 5, 'the empty password (an open room) is made once per salt');
+    S.PASS_OK.clear();
+    for (let i = 0; i < S.PASS_OK_MAX; i++) S.PASS_OK.set('filler' + i, true);   // full
+    S.passMatch(h, 'kod50');
+    eq(S.PASS_OK.size, S.PASS_OK_MAX, 'bounded: the oldest goes'); assert(!S.PASS_OK.has('filler0') && S.PASS_OK.has('filler1'), 'oldest first');
+  } finally { _c50.scryptSync = real; S.PASS_OK.clear(); }
+});
+test('srv-2.6.50 the page: a report-only Content-Security-Policy whose script hashes are made from the bytes being sent -- every script element, CR LF read as the browser reads it, comments skipped', () => {
+  assert(S.cspScriptHashes && S.pageHeaders, 'no page policy (srv-2.6.49)');
+  const b64 = t => "'sha256-" + _c50.createHash('sha256').update(t, 'utf8').digest('base64') + "'";
+  const html = '<head><!-- <script>not()</script> --><script id="a">A();\r\nB();\rC();</script></head><body><p>x</p>'
+             + '<script type="text/plain" id="t">nav()</script><SCRIPT>low()</SCRIPT><script>A();\nB();\nC();</script></body>';
+  eq(JSON.stringify(S.cspScriptHashes(html)), JSON.stringify([b64('A();\nB();\nC();'), b64('nav()'), b64('low()')]),
+     'three distinct scripts: the comment skipped, CR LF and CR as LF, the upper-case tag, the duplicate once');
+  const fs50 = require('fs'), cli = fs50.readFileSync(require('path').join(__dirname, 'elysium-vtes-bord.html'), 'utf8');
+  const mine = [];
+  cli.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/g, (all, t) => { const h = b64(t); if (mine.indexOf(h) < 0) mine.push(h); return all; });
+  eq(JSON.stringify(S.cspScriptHashes(cli)), JSON.stringify(mine), 'the real client: the same hashes as a plain split of its script elements (' + mine.length + ')');
+  assert(mine.length >= 2, 'the guard and the main script at least');
+  const hd = S.pageHeaders(cli, 'elysium.cards'), pol = hd['Content-Security-Policy-Report-Only'] || '';
+  assert(mine.every(x => pol.indexOf(x) >= 0), 'every hash is in the header');
+  assert(/script-src 'self' 'sha256-/.test(pol) && !/'unsafe-inline'[^;]*;?\s*$/.test(pol.split('script-src')[1].split(';')[0]), 'scripts: the page itself and its own hashes, no unsafe-inline');
+  assert(/connect-src 'self' ws:\/\/elysium\.cards wss:\/\/elysium\.cards https:\/\/static\.krcg\.org/.test(pol), 'sockets to its own host spelled out, and KRCG');
+  assert(/object-src 'none'/.test(pol) && /base-uri 'none'/.test(pol) && /form-action 'none'/.test(pol), 'no plugins, no base, no forms');
+  assert(/img-src 'self' data: blob: https:\/\/static\.krcg\.org/.test(pol) && /fonts\.googleapis\.com/.test(pol) && /fonts\.gstatic\.com/.test(pol), 'images, KRCG and the two font hosts');
+  assert(hd['Content-Security-Policy'] === undefined, 'REPORT-ONLY in this release: nothing is blocked');
+  eq(hd['X-Frame-Options'], 'DENY'); eq(hd['X-Content-Type-Options'], 'nosniff'); eq(hd['Referrer-Policy'], 'no-referrer'); eq(hd['Cache-Control'], 'no-store');
+  const evil = S.pageHeaders(cli, "evil.example; script-src *")['Content-Security-Policy-Report-Only'];
+  assert(!/script-src \*/.test(evil) && !/evil/.test(evil), 'a Host header is spelled into the policy only when it is a host');
+  assert(/ws:\/\/\[::1\]:8123/.test(S.cspPolicy([], '[::1]:8123')) && /ws:\/\/192\.168\.1\.42:8123/.test(S.cspPolicy([], '192.168.1.42:8123')), 'a LAN address and an IPv6 one are hosts');
+  assert(/sandbox/.test(S.IMG_CSP) && /default-src 'none'/.test(S.IMG_CSP), '/images/: a sandbox, nothing runs');
+});
+
+test('srv-2.6.50 /client-error keeps a policy report as kind csp (the digest counts it apart), and anything else unknown is still a crash', () => {
+  const r = S.errRecord({ kind: 'csp', ver: '2.6.173', msg: 'CSP would block script-src-elem: inline', src: 'https://elysium.cards/', line: 7, col: 3, evil: 'x' });
+  eq(r.kind, 'csp', 'kept'); eq(r.msg, 'CSP would block script-src-elem: inline'); eq(r.evil, undefined, 'the whitelist holds');
+  eq(S.errRecord({ kind: 'whatever' }).kind, 'crash'); eq(S.errRecord({ kind: 'report' }).kind, 'report'); eq(S.errRecord({}).kind, 'crash');
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));
 process.exit(fail ? 1 : 0);
