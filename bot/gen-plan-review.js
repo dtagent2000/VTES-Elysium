@@ -12,7 +12,7 @@ function read(dir){
     const rows = fs.readFileSync(path.join(dir, f), 'utf8').split('\n').filter(Boolean).map(l => { try{ return JSON.parse(l); }catch(e){ return null; } }).filter(Boolean);
     const deck = {}; for(const r of rows) if(r.type === 'manifest') deck[r.bot] = r.data.deck;
     for(const b in deck) g(deck[b]).m++;
-    const cur = {}, plan = {}, turn = {};
+    const plan = {}, turn = {};
     for(const r of rows){ const x = r.data || {};
       if(r.type === 'result'){ for(const b in (x.vp || {})) if(deck[b]){ g(deck[b]).vp += x.vp[b]; } if(deck[x.winner]) g(deck[x.winner]).wins++; if(x.oustOrder && deck[x.oustOrder[0]]) g(deck[x.oustOrder[0]]).firstOut++; continue; }
       const d = deck[r.bot]; if(!d) continue; const a = g(d);

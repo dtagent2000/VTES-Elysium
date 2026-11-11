@@ -32,6 +32,40 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.218 (11 Nov 2026)** — Round C2, the clean-up's dead code and tools (spec-cleanup §5.6 and T10; STATUS Next 1). No behaviour
+  change: the 240-match client design is SAME-PLAY 240 against v0.6.217 — the one difference `ana-sim-diff.py` reports is the result
+  row's version string (it ignores each run's own wall and CPU times) — and IDENTICAL 240 with that string normalized. A release because the bot's bytes changed (CI: the root's bundle is `bot/`'s).
+  - *The lint's first run* (round C4: 4 errors, 22 unused assignments) fixed, and `tools/eslint-suppressions.json` pruned to `{}` by
+    ESLint itself; the file stays (CI's command names it, and its shrink check now fails a PR that adds any suppression). The bot:
+    `net`, `brought`, `V`, `lastBlood` / `poolSafe` with the v0.6.104 comment over them (the rule v0.6.134 replaced), `wkCost`,
+    `fistDmg`, and `_bumpTallyB` (no caller in the bot, the suite, a tool, `client/` or the root since fas A+). The tools: the
+    arena's `PERSONAS` and `PERMUTE_DECKS` (`--permute-decks` is still accepted and ignored), `gen-batch-review.js`'s `botV`,
+    `gen-plan-review.js`'s `cur`, `lab-probe.js`'s `SAY`; **coverage tool v1.1.44**: the second `handStrike` key ('paired', which
+    silently overrode the documented 'meta') removed — neither class is a play path, so eight decks' reports are the same but their
+    third line, the generator's version: that second version site stood at v1.1.41 and a third (the exports, which
+    `gen-card-ledger.js` prints into `docs/CARDS.md`) at v1.1.43 — both now read one constant beside the header. The suite: a duplicate
+    key, ten unused assignments (the awaited and side-effecting calls kept), and two self-comparisons — 66b's `pick === pick`
+    dropped (the same truth table), 92b's `readP === readP` (false only for NaN) now asks for a probability in [0, 1] (L-85).
+  - *The ten legacy tests* of the v0.6.10x era (not gates, four stale reds) deleted; the lint covers the 25 scripts we own.
+  - **`ana-gates.py` v1.0.0** (T10): one PASS / FAIL line per audit over a series — the matches (a result row each, none stuck or
+    crashed; on the sim every design.json spec has its file and summary.json lists no problem), `zeroPool` (recounted from the rows
+    by the sim's rule, so the arena is gated too; on the sim it must agree with the result rows), block (0 violations), ledger (0
+    faults; default deny: a row not classed as balanced, explained or a known lead is a gate — VICTIM LOST > STOLE included), the
+    combat handshake (ana-combat2's integrity at 100 %, rounded as it prints it), invariants (a known kind only, and at most 1 in 20
+    matches on the sim, 1 in 3 on the arena), windows (a gate of 0 on the arena; information on the sim table, the BOARD's
+    measurement debt) — plus information lines for the leads, the explained differences, the step handshake's safety net and the
+    post-game ousts; exit 1 on a FAIL. `--self-test` plants one fault at a time in a synthetic series of 20 matches (27 checks; the
+    egress review's mutants — the game's end at the first oust, or at the last whatever the count, a dropped gate — each fail at
+    least one, the ledger before the split 17). The five audits it reads are importable (`audit(S)`), each one's printed output the
+    same byte for byte on both 240-match runs (`ana-combat2.py` no longer stops at a match without a result row); **`ana-ledger.py`**
+    gives a bleed through after the game's end its own row (the oust that left one Methuselah; L-86): all 225 of the design's
+    'THROUGH, NO SEAT TOOK IT' were that, so the row before the end is a gate of 0 now.
+  - *The guide*: the version chip and footer; main's 6 Nov note — 156 hand-curated (136 library, 20 crypt), client v2.6.172.
+  - *Gates*: the lint 0 findings on 25 files; suite 2393/0 ×3 (frozen snapshots, the release sha); canary 69/0 + 69/0 (root
+    v2.6.172); hotseat 11/0; HB1 11/11; test-cardfx 315/0; gen-precon --check clean; gen-card-ledger's self-test 54/54; twda.py's 14/0;
+    main's check-versions agrees (21 byte copies); `ana-gates.py --self-test` 27/0, and on the 240-match design PASS 6 of 6 (0 block
+    violations in 15,041 actions, 0 ledger faults, handshake 8,532 of 8,536, 5 invariant flags of the known kinds, zeroPool 0; leads:
+    STOLE > VICTIM LOST 9, no reciprocal row 4).
 - **v0.6.217 (3 Nov 2026)** — V5 wave 4, Johan's choice of 3 Nov (D-106: the masters that go on a vampire + Toreador Grand Ball +
   Toreador's last three cards). The canon: `specs/spec-v5-wave4-2026-11-03.md`; RULINGS R-43 (the readings, rulebook 6.1.6), D-106,
   D-107 (Sudden Reversal's window, also against humans: wave 5).

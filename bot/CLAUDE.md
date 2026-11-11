@@ -47,11 +47,12 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 - A new test is verified DESTRUCTIVELY against the pre-change file (`tools/run-section.sh`, HOWTO). A section that throws on the
   old bytes proves only that a method is new — say so.
 - Every behaviour change: a sim footprint against the previous bytes on the 240-match client design (`ana-sim-diff.py`); a
-  clean-up round must be IDENTICAL. When the wire or the real clock is touched: an arena smoke (one match, the audits below).
+  clean-up round must be IDENTICAL (a release's version string normalized). When the wire or the real clock is touched: an arena
+  smoke (one match, the audits below).
 - A series or a bench runs on the sim table first (`elysium-bot-sim.js`, HOWTO); `python3 ana-sim-diff.py A B` before any win
-  rate; after a series the audits: `ana-ledger.py`, `ana-block.py` (0 violations), `ana-inv.py`, `ana-windows.py` (lost
-  answers 0), and the `zeroPool` count in SUMMARY.md (0). The sim is not a timing gate: the canary, the hotseat gate and the
-  server arena stay; `--real` replays a spec on the real clock.
+  rate; after a series `python3 ana-gates.py DIR`: one PASS / FAIL line per audit (`ana-ledger.py`, `ana-block.py`, `ana-inv.py`,
+  `ana-windows.py`, `ana-combat2.py`'s handshake, `zeroPool`, the matches). The sim is not a timing gate: the canary, the hotseat gate and the server arena
+  stay; `--real` replays a spec on the real clock.
 - An abort on the pre-change bot is NOT automatically the environment: find the last release the suite was green on and run THAT
   (LESSONS, "tests that lie"). Never claim a gate passed without having run it.
 - CI (D-109; HOWTO "CI"): `.github/workflows/bot-gates.yml` runs the unattended gates and the correctness lint on every PR.

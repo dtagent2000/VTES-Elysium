@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.43 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.44 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,6 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const COV_VERSION = '1.1.44';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -101,7 +102,7 @@ const CLASS = {
   gainOppLoss: 'contextual',   // v1.1.4 (Johan's combat GO, Taste of Vitae): consumed via the gainOppLoss@ special-case below (combat-typed only -- no req-flag/co-located guard needed, since Taste of Vitae's own restrictions -- end-of-round timing, not-if-torporing -- are STATE the combat-loop hook checks directly, not unverifiable preconditions like range/round-count)
   envDmgPerRound: 'contextual',   // v1.1.7 (Johan's combat GO, Carrion Crows): consumed via the envDmgPerRound@ special-case below (combat-typed only -- "only usable before range is determined" is verifiable now that _resolveCombatRound has that exact play window, so no req-flag exclusion needed here either)
   restrictHandStrike: 'contextual',   // v1.1.8 (Johan's combat GO, Immortal Grapple): consumed via the restrictHandStrike@ special-case below (combat-typed + rangeClose, both verifiable now that _resolveCombatRound has the Pre-Strike window and this._range tracked)
-  handStrike: 'meta',   // v1.1.8: not an independent ability -- metadata ATTACHED to strike/stealBlood modes (does this mode count as a hand strike for Immortal Grapple's restriction). Silences the unknown-key warning without claiming its own consumption path.
+  handStrike: 'meta',   // v1.1.44 (11 Nov 2026, round C2): the one handStrike key -- a second one ('paired', beside fetchEquip) silently overrode this line; neither class is a play path, so no verdict changed. v1.1.8: not an independent ability -- metadata ATTACHED to strike/stealBlood modes (does this mode count as a hand strike for Immortal Grapple's restriction). Silences the unknown-key warning without claiming its own consumption path.
   poolGain: 'income', bloodToPool: 'income',
   poolToBlood: 'income',   // v1.1.34 (bot v0.6.125): the reverse direction of Blood Doll / Vessel -- decide('income-direction') in _applyPhaseIncome, same phase rule as bloodToPool
   handSizePerCounter: 'income', replaceBurnsCounter: 'paired',   // v1.1.34: Visit from the Capuchin
@@ -114,7 +115,7 @@ const CLASS = {
   peekPreyDiscard: 'play', openHandPrey: 'play',
   lockMinion: 'play',
   noBlockMinion: 'play',
-  fetchEquip: 'play', handStrike: 'paired',
+  fetchEquip: 'play',
   unlock: 'play',
   rush: 'play', lockTarget: 'paired',
   fameOnTarget: 'play', preyBurnPerCopy: 'play', jackEngine: 'play',
@@ -511,7 +512,7 @@ const badge = e => [e.src === 'hand' ? 'curated' : 'auto',
 
 P('# deck-coverage — ' + (deck.name || '(namnlös lek)') + ' (' + today + ')');
 P('');
-P('Genererad av `gen-deck-coverage.js` v1.1.41 mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: this string is the SECOND version site (the header comment is the first) -- bump BOTH when a version note is added, or every generated report inherits a stale self-identification
+P('Genererad av `gen-deck-coverage.js` v' + COV_VERSION + ' mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: the SECOND version site (the header comment is the first); since v1.1.44 it and the exports read COV_VERSION -- bump it with the header, or every report and docs/CARDS.md inherit a stale self-identification
   ', ' + (fx.counts.lib || '?') + ' lib / ' + (fx.counts.crypt || '?') + ' crypt / ' +
   (fx.counts.alias || '?') + ' alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden ' +
   '(skannad vid körning, inte handunderhållen). Leken: ' + loaded.source + '.');
@@ -628,4 +629,4 @@ console.log('rapport: ' + outPath);
 }
 
 if (require.main === module) main();
-module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.43' };
+module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: COV_VERSION };

@@ -3,7 +3,7 @@
 #  directed actions 0 stealth, undirected +1; a block succeeds when intercept >= stealth (raw, may go below 0);
 #  after a block attempt the acting minion plays stealth, the blocker answers with intercept, alternating.
 import json,glob,sys,collections
-for S in sys.argv[1:]:
+def audit(S):   # one series directory -> its counts (C2: importable, ana-gates.py reads it)
     R=collections.Counter(); ex=collections.defaultdict(list)
     for f in sorted(glob.glob(S+'/match-*.jsonl')):
         rows=[json.loads(l) for l in open(f)]; rows=[r for r in rows if 'bot' in r]; rows.sort(key=lambda r:r['t'])
@@ -36,6 +36,11 @@ for S in sys.argv[1:]:
                 R['blocked with no intercept card']+=1
             if end['type']=='blocked': R['blocked']+=1
             if bm and end['type']=='through': R['attempted but through']+=1
+    return R, ex
+
+if __name__ == '__main__':
+  for S in sys.argv[1:]:
+    R, ex = audit(S)
     print('##',S)
     for k in sorted(R): print('  %-58s %s'%(k,R[k]))
     for k in ex: print('  ex',k, ex[k][:5])

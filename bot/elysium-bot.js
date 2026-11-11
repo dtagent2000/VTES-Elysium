@@ -56,18 +56,17 @@
               now that Master can play the known income assets) → pass
    ========================================================================= */
 
-/* v0.6.94 (HB0): the environment gate. The four Node builtins power ONLY the
+/* v0.6.94 (HB0): the environment gate. The Node builtins (http, crypto, fs) power ONLY the
    edges -- wsConnect/wsFrame (transport), loadCardfx/parseArgs (file reads),
    and the CLI main. Every edge is injectable (o.transport, o.cardfxData) or
    CLI-only, so the CORE never touches them; guarded requires let this SAME
    file load in a browser -- the single-source rule: no browser fork, ever.  */
 const IS_NODE = typeof process !== 'undefined' && !!(process.versions && process.versions.node);
-const net    = IS_NODE ? require('net')    : null;
 const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.217';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.218';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -1869,7 +1868,6 @@ class Bot {
     return line + '.';
   }
   async _influenceLoopInner(){   // v0.6.37 (Johan's ask, Wider View -- the last Inside Dirt card): extracted verbatim from _playTurn's own influence-phase while-loop, specifically so it's directly testable on its own (matching the same reasoning that pulled _revertHandSizeBonus out of the discard-phase block) -- no behavioral change to the pre-existing raise/draw logic, just a name and a call site. Wider View's own two abilities (a 1-transfer duplicate-swap, a 4-transfer burn-for-2-pool) are new branches inside this same loop, since transfers (this.inf) were already tracked here and both abilities are plain transfer-spending options, NOT lock-gated like Dreams of the Sphinx.
-    let brought = 0;
     while(!this.out){
       /* v0.3.2 crypt uniqueness: never raise a second copy of a name that
          is already in play (ready OR torpor) — visible-rules courtesy; the
@@ -1916,7 +1914,7 @@ class Bot {
          'need 0' (and the planner may pick another vampire first and run out of transfers), so a full one stayed in the uncontrolled
          region for good (Arcane Library, live from this release, can fill one exactly; superior Govern could). */
       { const fullV = raiseables.find(c => (c.cap | 0) > 0 && (c.blood | 0) >= (c.cap | 0));
-        if(fullV){ await this._pace(); this._riseFromUnc(fullV, 0); brought++; continue; } }
+        if(fullV){ await this._pace(); this._riseFromUnc(fullV, 0); continue; } }
       const cheapest = this._planInfluence(raiseables);   // v2 (influence planner, 12 Sep 2026): multi-vampire transfer allocation replaces the greedy single-pick; _pickRaise kept for test compat
       const zeroReady = !this.board.some(c => c.kind === 'crypt' && c.zone === 'ready');   // v0.6.69 (#1): the survival exception -- a bot with zero ready minions is dead anyway; the floor drops to 1 (never 0 = self-oust)
       const floorEff = zeroReady ? 1 : this._poolFloorEff();   // v0.6.119: the plan raises the knob to one expected predator turn of pool
@@ -1967,7 +1965,6 @@ class Bot {
       if(cheapest.blood >= cheapest.cap){
         /* RISE — blood reached capacity, move to ready (v0.6.205: the body is _riseFromUnc, shared with the free rise above) */
         this._riseFromUnc(cheapest, canSpend);
-        brought++;
       } else {
         /* PARTIAL — blood placed but vampire stays in uncontrolled */
         this.push();
@@ -2160,7 +2157,7 @@ class Bot {
     const cards = Object.keys(shown).filter(c => { const h = this.fxLookup(c); return h && h.kind === 'lib'; });
     const clans = Object.keys(o.clans || {}).sort((a, b) => (o.clans[b] || 0) - (o.clans[a] || 0)); const cl = clans[0] || null;
     if(cards.length < ((A.gate && A.gate.minShown) || 5) && !cl) return null;
-    const V = (A.vocab | 0) + 1, names = Object.keys(A.archetypes); let tot = 0; names.forEach(g => { tot += A.archetypes[g].n; });
+    const names = Object.keys(A.archetypes); let tot = 0; names.forEach(g => { tot += A.archetypes[g].n; });
     const scored = names.map(g => { const s0 = A.archetypes[g]; let sc = Math.log(s0.n / tot);
       cards.forEach(c => { sc += Math.log(((s0.cards[c] || 0) + 0.5) / (s0.n + 1.0)); });
       if(cl) sc += Math.log(((s0.clans[cl] || 0) + 0.5) / (s0.n + 2.0));
@@ -5770,7 +5767,6 @@ class Bot {
       const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') return;
       (h.e.modes || []).forEach(mo => {
         if(mo.phase !== phaseKey || !mo.fx || this._outOfPlay(c)) return;   // v0.6.36: same defensive re-check as _considerLockIncome -- no current _applyPhaseIncome-consumed card burns mid-iteration, but a future one combining host-attached income with a counter/burn mechanic would hit the identical class of bug without this
-        const lastBlood = (host.blood | 0) <= 1, poolSafe = this.pool > (this.o.poolFloor | 0);   // v0.6.104 (#13): 'may move' -- never drain a vampire's LAST blood while my pool is comfortable (a 0-blood minion cannot pay Deflection/Conditioning); at or under poolFloor survival wins and the drain proceeds
         if(typeof mo.fx.poolToBlood === 'number'){   // v0.6.125 (Johan's remaining-cards round): THE REVERSE DIRECTION -- Blood Doll / Vessel 'may move' either way. v0, deliberately narrow so it cannot oscillate with the drain below: only a host at 0 BLOOD is fed (1 pool buys back the action a forced hunt would cost), only from a comfortable pool, once per card per phase.
           const d = this.decide('income-direction', { host, pool: this.pool, cap: this.fxCryptCap(host.name) });
           if(d.toBlood){
@@ -5813,10 +5809,6 @@ class Bot {
        have told it anyway. */
     const prev = (this.tally && this.tally.mode === mode) ? this.tally : { a: 0, b: 0, ph: 0, rd: 1 };
     this.tally = mode ? Object.assign({}, prev, extra || {}, { mode }) : null;
-  }
-  _bumpTallyB(n){                    // my own committed intercept -- the only field the DEFENDING side writes (fas A: 'a' now has a bot writer too, see _bumpTallyA -- the old "a human's to set" held only while every attacker was human)   // VA review (2 Aug): ORPHAN since fas A+ replaced accumulation with _setTallyB's write-fresh -- zero callers (grep-proven). Kept for reference; do NOT revive without the raw-accumulator treatment _bumpTallyA now has, or a Christine-class floored base re-opens the phantom-value class on the b side.
-    const cur = (this.tally && this.tally.mode === 'block') ? this.tally : { a: 0, b: 0, ph: 0, rd: 1 };
-    this._writeTally({ mode: 'block', b: Math.min(99, (cur.b | 0) + n) });
   }
   _setTallyB(n){                     // fas A+ (16 July): a NEW block attempt's intercept, written fresh -- per-minion per the rulebook; _writeTally's own merge preserves the attacker's a   // VA review: negatives pass through (rulebook below-0); -9 sanity cap
     this._writeTally({ mode: 'block', b: Math.min(99, Math.max(-9, n | 0)) });
@@ -6693,7 +6685,6 @@ class Bot {
     let plan = null;                 // v0.6.103 (#4): FIND a route to a blocker first (finders only, no side effects), say Block! only when one exists, THEN play the route -- v0.6.102 shouted Block! before looking and could follow with Pass; the visible order Block! -> wake reveal -> intercept (v0.4.5's beat) is preserved
     if(!blocker){
       const wk = this._wakeCard();
-      const wkCost = (wk && wk.cost && wk.cost.blood) || 0;
       const eligible = c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p.actingVampName);   // fas A+: a failed attempter never retries; M2: Pentex; VA: Navar -- the same three filters the three rungs always applied
       /* N1: a TRUE unlock beats act-as-unlocked -- Guard Dogs-class tried FIRST
          (bleeds only, per the card's own text), wake as the fallback, the Stray third. */
@@ -7958,7 +7949,6 @@ class Bot {
        capacity (an overflow-doomed steal wastes value a real damage strike wouldn't) --
        untested by Malkavian/Tremere today (neither deck ever offers both on one
        vampire), kept simple on purpose. */
-    const fistDmg = pick.fistDmg;   // v0.6.156: what the fist would land this round
     const stealTake = pick.stealTake;   // v0.6.196: a steal is worth what the target holds -- against an empty vampire it takes nothing, while a fist for 1 sends them to torpor
     const stealOk = pick.stealOk;   // v0.6.156: a steal DRAINS the opponent whatever my overflow -- at long range (fist 0) it is always better than nothing; at close the v1 tie-break (below capacity) stands (the rule itself: _strikePick)
     if(claws) this._playClaws(myVamp, claws.card);   // v0.6.213: I strike (the dodge was not taken) -- the card goes now

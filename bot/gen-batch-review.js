@@ -38,7 +38,6 @@ const matches = files.map(f => {
     }
     if(r.type === 'took-bleed') p.taken += d.n | 0;
   }
-  const botV = ((rows.find(r => r.type === 'manifest') || {}).data || {}).knobs ? null : null;
   return { file: f, res, per, own };
 });
 
