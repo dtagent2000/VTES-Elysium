@@ -6778,7 +6778,7 @@ async function connectWithRetry(client, tries = 30){
     await sleep(250); u._onChat('Bob', 'No votes from me.'); u._onChat('Cy', 'No votes from me.'); u._onSay({ who: 'Alice', i: SAY_IDX('Pass') });
     await pr; ok(u.hand.indexOf('Bewitching Oration') >= 0, '96e winning 3-0: the Oration stays in hand'); }
   { const { u, act } = mkCall(); const pr = u._callReferendum(u.board[0], act);
-    await sleep(250); u.tally = { mode: 'vote', a: 3, b: 0 }; u.handlers ? 0 : 0;
+    await sleep(250); u.tally = { mode: 'vote', a: 3, b: 0 };
     u._onLog('Alice', 'Vote: 3 for vs 5 against \u2014 vote fails.');
     await pr; const L = logs(u);
     ok(L.filter(l => /^Vote: /.test(l)).length === 0 && L[L.length - 1] === 'Referendum fails \u2014 Kine Resources Contested: no effect.', '96e a human pressed Resolve on the counter (their Vote line, 3-5): I adopt the count, do not repeat the verdict line, and announce the outcome'); }
@@ -8396,7 +8396,7 @@ async function connectWithRetry(client, tries = 30){
     ok(u.ev.cardsShown(1)['Deep Song'] === 1, '127u cards SHOWN per seat (the knowledge layer\u2019s feed): Deep Song for seat 1');
     u.send({ t: 'log', html: '<b>Wauneka (G6)</b> strikes (hands) for 1.' });
     const mine = u.ev.last('strike', e => e.own); ok(mine && mine.seat === 2 && mine.strike === 'hand', '127u my own lines enter the log at send (both sides of an exchange)');
-    u.tally = null; u.handlers && 0;
+    u.tally = null;
     u.ev.cap = 5; for(let i = 0; i < 12; i++) u._onLog('Johan', 'Lisa hunts.'); ok(u.ev.ev.length === 5 && u.ev.cardsShown(1)['Deep Song'] === 1, '127u the ring keeps the last N events; cards shown survive the trim'); }
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'E4', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'E4', bot: true }];

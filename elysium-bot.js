@@ -56,7 +56,7 @@
               now that Master can play the known income assets) → pass
    ========================================================================= */
 
-/* v0.6.94 (HB0): the environment gate. The four Node builtins power ONLY the
+/* v0.6.94 (HB0): the environment gate. The Node builtins (http, crypto, fs) power ONLY the
    edges -- wsConnect/wsFrame (transport), loadCardfx/parseArgs (file reads),
    and the CLI main. Every edge is injectable (o.transport, o.cardfxData) or
    CLI-only, so the CORE never touches them; guarded requires let this SAME

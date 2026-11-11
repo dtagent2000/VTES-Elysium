@@ -52,6 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const COV_VERSION = '1.1.44';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -511,7 +512,7 @@ const badge = e => [e.src === 'hand' ? 'curated' : 'auto',
 
 P('# deck-coverage — ' + (deck.name || '(namnlös lek)') + ' (' + today + ')');
 P('');
-P('Genererad av `gen-deck-coverage.js` v1.1.44 mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: this string is the SECOND version site (the header comment is the first) -- bump BOTH when a version note is added, or every generated report inherits a stale self-identification
+P('Genererad av `gen-deck-coverage.js` v' + COV_VERSION + ' mot `elysium-cardfx.json` (fxv ' + 1 +   // 27 July: the SECOND version site (the header comment is the first); since v1.1.44 it and the exports read COV_VERSION -- bump it with the header, or every report and docs/CARDS.md inherit a stale self-identification
   ', ' + (fx.counts.lib || '?') + ' lib / ' + (fx.counts.crypt || '?') + ' crypt / ' +
   (fx.counts.alias || '?') + ' alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden ' +
   '(skannad vid körning, inte handunderhållen). Leken: ' + loaded.source + '.');
@@ -628,4 +629,4 @@ console.log('rapport: ' + outPath);
 }
 
 if (require.main === module) main();
-module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: '1.1.43' };
+module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: COV_VERSION };

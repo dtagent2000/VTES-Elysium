@@ -118,6 +118,9 @@ jobs:
       - name: The TWDA reader's self-test (twda.py --self-test)
         if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: python3 twda.py --self-test
+      - name: The series gates' self-test (ana-gates.py --self-test; a planted fault per gate)
+        if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
+        run: python3 ana-gates.py --self-test
       - name: "KRCG's TWDA: today's v5 file still reads (fetched to a temp dir; nothing written in bot/)"
         if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
