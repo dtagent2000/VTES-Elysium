@@ -11,7 +11,7 @@
 # Run per match directory or on a directory of match-*.jsonl files.
 import json, glob, sys, collections
 
-for S in sys.argv[1:]:
+def audit(S):   # one series directory -> its counts (C2: importable, ana-gates.py reads it)
     C = collections.Counter(); stale = collections.Counter(); slow = []
     files = sorted(glob.glob(S + '/match-*.jsonl')) or sorted(glob.glob(S + '/**/match-*.jsonl', recursive=True))
     for f in files:
@@ -27,6 +27,11 @@ for S in sys.argv[1:]:
                 contest = any(x['type'] == 'block-made' and x['bot'] != r['bot'] and r['t'] <= x['t'] <= nx[0]['t'] for x in rows[i + 1:])
                 tag = ('contest at the clock, ' + ('blocked' if nx[0]['type'] == 'blocked' else 'failed')) if contest else ('RAN OUT, THROUGH' if nx[0]['type'] == 'through' else 'blocked at the clock')
                 C[kind + ' ' + tag] += 1; slow.append((f.split('/')[-1], kind, tag, gap))
+    return C, stale, slow, files
+
+if __name__ == '__main__':
+  for S in sys.argv[1:]:
+    C, stale, slow, files = audit(S)
     print('## %s -- %d matches' % (S, len(files)))
     for k in ('modifier', 'total'):
         print('  %-9s windows %3d | RAN OUT, THROUGH %3d | contest at the clock: blocked %3d, failed %3d%s' % (k, C[k], C[k + ' RAN OUT, THROUGH'], C[k + ' contest at the clock, blocked'], C[k + ' contest at the clock, failed'],

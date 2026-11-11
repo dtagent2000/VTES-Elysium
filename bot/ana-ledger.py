@@ -4,12 +4,15 @@
 #           and (v0.6.202) each bleed 'through' of 1+ pairs with a victim row within 8 s -- 'VANISHED' = a block attempt in the actor's reactions-only window was refused and the
 #           target dropped the bleed as 'contested, unresolved' (found by R2's smokes: after a late bounce the new target may block by the card text; after a modifier it may not).
 #           v0.6.203 fixed it (the new target's block step; a bot actor's It resolves lands an attempt it never took up; 'through' moved to the resolution, with `final`): the gate is 0.
+#           C2 (11 Nov 2026): a bleed through after the game ended (the oust that left one Methuselah; the sim lets the survivor finish its turn at an empty
+#           table) is its own row, 'through after game ended' -- every 'THROUGH, NO SEAT TOOK IT' of the sims since v0.6.213 was one (225 on the 240-match
+#           design; the Toreador report checked them). Before the end the row stays a fault.
 #  2 combat names: round-1 rows whose opponent is null / not the vampire that names me back
 #  3 combat numbers: my dealt vs the opponent's taken on reciprocal rows (prevent / Crows / combat ends explain the differences)
 #  4 steal: stole (stealer) vs stolenFromMe (victim) totals; v0.6.196: and PER ROUND -- each stealer row paired with its victim's row (a total can hide two errors behind one excuse: 'capping' hid the stealer gaining from an empty vampire)
 #  5 creep: Creeping Sabotage placements vs victim took-pooldmg via creep
 import json,glob,sys,collections
-for S in sys.argv[1:]:
+def audit(S):   # one series directory -> its counts (C2: importable, ana-gates.py reads it)
     R=collections.Counter()
     for f in sorted(glob.glob(S+'/match-*.jsonl')):
         rows=[json.loads(l) for l in open(f)]; rows=[r for r in rows if 'bot' in r]; rows.sort(key=lambda r:r['t'])
@@ -22,6 +25,10 @@ for S in sys.argv[1:]:
                 mods=[p for p in plays if p['bot']==a['bot'] and a['t']-3000<=p['t']<=r['t']]
                 red=[p for p in plays if p['bot']==r['bot'] and p['data'].get('window')=='react-reduce' and a['t']-8000<=p['t']<=r['t']]   # v0.6.200: the target's own reduction (Protected District / Telepathic Misdirection class) -- honoured since R1, so a smaller hit is the rule working
                 R['1 bleed: equal' if diff==0 else ('1 bleed: more, actor modifiers' if diff>0 and mods else ('1 bleed: MORE, UNEXPLAINED' if diff>0 else ('1 bleed: less, target reduced' if red else '1 bleed: LESS, UNEXPLAINED')))]+=1
+        seats=len({r['bot'] for r in rows if r['type']=='manifest'}); oust_t={}   # C2 (11 Nov 2026): the game ends at the oust that leaves one Methuselah
+        for r in rows:
+            if r['type']=='ousted' and r['bot'] not in oust_t: oust_t[r['bot']]=r['t']
+        end=sorted(oust_t.values())[seats-2] if seats>=2 and len(oust_t)>=seats-1 else None
         for i,r in enumerate(rows):   # v0.6.202: the other direction -- a bleed that went THROUGH and that no seat took. The pairing above starts from the victim's row, so a bleed nobody took was invisible: R2's smokes found 17 in 10 matches (and 3 in 2 on v0.6.201), every one bounced late and then BLOCKED by the new target
             d=r['data'] if isinstance(r.get('data'),dict) else {}
             if r['type']!='through' or d.get('kind') not in (None,'bleed') or d.get('card')=='hunt' or (d.get('n') or 0)<1: continue
@@ -30,7 +37,7 @@ for S in sys.argv[1:]:
             bounced=any(x['type']=='play' and x['data'].get('window')=='react-bounce' and abs(x['t']-r['t'])<=6000 for x in rows[max(0,i-40):i+200])
             blk=any(x['type']=='block-made' and x['bot']!=r['bot'] and x['t']-r['t']<=6000 for x in after)
             red=any(x['type']=='play' and x['data'].get('window')=='react-reduce' and abs(x['t']-r['t'])<=8000 for x in rows[max(0,i-40):i+200])
-            R['1 bleed: VANISHED -- bounced late, the new target blocked (refused)' if bounced and blk else ('1 bleed: VANISHED -- a block attempt after blocks were declined (refused)' if blk else ('1 bleed: through, reduced to nothing' if red else '1 bleed: THROUGH, NO SEAT TOOK IT'))]+=1
+            R['1 bleed: VANISHED -- bounced late, the new target blocked (refused)' if bounced and blk else ('1 bleed: VANISHED -- a block attempt after blocks were declined (refused)' if blk else ('1 bleed: through, reduced to nothing' if red else ('1 bleed: through after game ended' if end is not None and r['t']>=end else '1 bleed: THROUGH, NO SEAT TOOK IT')))]+=1
         cr=[r for r in rows if r['type']=='combat-round']
         for r in cr:
             d=r['data']
@@ -57,5 +64,10 @@ for S in sys.argv[1:]:
                     R['3 combat: dealt==taken' if df==0 else ('3 combat: taken<dealt' if df<0 else '3 combat: taken>dealt')]+=1
         R['5 creep: placed']+=sum(1 for r in rows if r['type']=='through' and r['data'].get('card')=='Creeping Sabotage')
         R['5 creep: victim burns']+=sum(1 for r in rows if r['type']=='took-pooldmg' and r['data'].get('via')=='creep')
+    return R
+
+if __name__ == '__main__':
+  for S in sys.argv[1:]:
+    R = audit(S)
     print('##',S)
     for k in sorted(R): print('  %-36s %s'%(k,R[k]))
