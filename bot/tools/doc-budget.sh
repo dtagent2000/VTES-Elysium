@@ -38,7 +38,7 @@ for pb in $PAGES; do
       http*|*\**|*'<'*|*'>'*|*NNNN*|serie-*|bench-*|sim-*|snap-*|lab-*|/tmp/*|../*|client/*|.github/*|-*|.*) continue ;;
       twda.json|twda-vdb.json|vtes.json|vtes-v5.json|expansions.json|twd_decks.json|SUMMARY.md|PREDICTIONS.md|REPORT.md|design.txt|progress.txt) continue ;;
       suite.log|ev.jsonl|snap-suite.sh|runsec.sh|launch.sh|chain.sh|poll-home.sh|poll-seed.sh|poll-bal2.sh|run-smoke2.sh) continue ;;
-      run-null4.sh|docs/CARDS.md|gen-card-ledger.js|ana-gates.py|test-bot-sim-boundary.js|elysium-knowledge.json) continue ;;
+      run-null4.sh|test-bot-sim-boundary.js|elysium-knowledge.json) continue ;;
       client-old.html|old-bot.js|elysium-soak-hotseat.js|elysium-test-harness.js|check-versions.js|bot-gates.yml) continue ;;
       timing-windows.md|card-text-parsing.md|elysium-history-2026-09-09.md) continue ;;
     esac

@@ -1,4 +1,4 @@
-# BOARD — the open asks (6 Nov 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (11 Nov 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -57,9 +57,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Johan's "kör". Docs: RULINGS D-43, O-33; `specs/spec-knowledge-layer.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
-- **C2 — dead code and tools**: fix what the lint's first run found (`tools/eslint-suppressions.json`: 4 errors, 22 unused
-  assignments) and prune the file; delete the ten legacy tests and `_bumpTallyB`; add `ana-gates.py` (one PASS/FAIL line per audit
-  over a sim dir). *Done when* the sim's 240-match design is IDENTICAL and the gates are green. Docs: spec §5.6, T10.
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
   card only another seat held, a planted leak the positive control; `_twdExpect` agrees across observers), flip counts on `decide`
   rows, the knob registry (`KNOBS`: every decision knob with a 0-path, persona thresholds as overlays), and the off-by-default knobs
@@ -77,6 +74,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   is seated until the bot proves a whole combat on lines alone. *Done when* asked, when ready. Docs: RULINGS D-62, D-94.
 - **History comments in `elysium-bot.js`** (222 KB): trim to trap comments ("why" + a rule id) in the functions a round touches
   (spec §8 Q6, recommended (b)). *Done when* Johan has chosen; then per round.
+- **Section 69b's decay check** (found in C2; the lint sees only self-comparisons): `o4.pick === ctxC.card ? true : o4.pick ===
+  ctxC.plain` passes for either pick and reads no score, so the streak's −0.30 on the card line is untested. *Done when* 69b
+  compares the card score with and without the streak.
 
 ## Known, not built (bot side)
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only

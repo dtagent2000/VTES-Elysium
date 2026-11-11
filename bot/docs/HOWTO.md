@@ -5,8 +5,8 @@ Everything runs from inside `bot/`. Third-party data (`vtes.json`, the TWDA) is 
 `curl -o vtes-v5.json https://static.krcg.org/data/v5/vtes.json && curl -o expansions.json https://static.krcg.org/data/v5/expansions.json
 && node krcg-v5.js` (`--compare OLD.json` prints the field diff against a v3 file by card id). When the network policy blocks it (a 403
 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and copy the two dump files in. KRCG's v3 file
-(static.krcg.org/data/v4/vtes.json since 8 Nov) stopped at Sabbat V5: it lacks the 63 cards of Secrets of New York and Noites Brasileiras and the
-errata (118 texts beyond markup and whitespace, e.g. Assamite → Banu Haqim), so it is only a `--compare` input now. The TWDA: `twda.json`, KRCG's
+(static.krcg.org/data/v4/vtes.json since 8 Nov) stopped at Sabbat V5, without the last 63 cards and the errata: only a `--compare`
+input now. The TWDA: `twda.json`, KRCG's
 v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twda.py` refuses the old list). Check what a reader `open()`s before naming a data file.
 
 ## Running
@@ -16,7 +16,8 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   `arena` (0 / 3). `--resume`, `--summarize DIR`, `--real` (the same table on the real clock, 4–6 min a match). The same spec gives
   the same trace byte for byte, so `python3 ana-sim-diff.py A B` compares two runs match by match (IDENTICAL / SAME-PLAY /
   DIVERGED with the first differing decision): before / after a change, or version against version (copy `bot/` to scratch with
-  the other `elysium-bot.js`). Traces are arena-shaped (`match-NNNN.jsonl`, a `result` row), ~0.5 MB each — keep series in scratch.
+  the other `elysium-bot.js`). Two versions' traces differ in the result row's `bot` at least: for a clean-up release, `sed` the
+  new version to the old in a copy of its traces and expect IDENTICAL (C2). Traces are arena-shaped (`match-NNNN.jsonl`, a `result` row), ~0.5 MB each — keep series in scratch.
   SUMMARY.md lists post-game ousts and the `zeroPool` count (a bot deciding at pool ≤ 0 before its own oust = a rules fault; a payment
   of the last pool that ousts at once leaves no decision at 0 and is not counted — BOARD). When a footprint shows DIVERGED, check whether
   the two decision sequences realign once one missing row is dropped. A `--decks` key the bot does not embed plays `deck-<key>.json`
@@ -46,9 +47,8 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   cd $D/bot && sha256sum elysium-bot.js test-bot-logic.js elysium-cardfx.json > ../sha.txt
   timeout 600 node --max-old-space-size=4096 test-bot-logic.js > ../suite.log 2>&1; echo "EXIT $?" >> ../suite.log   # run_in_background, then poll
   ```
-  The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran. The suite needs more than 2 GB of heap by
-  section 136: where node's default heap is ~2 GB (an 8 GB sandbox: 2,096 MB) it dies out of memory after 136e, v0.6.211's own bytes
-  too — run `node --max-old-space-size=4096 test-bot-logic.js` there (29 Oct).
+  The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran. The heap flag is not optional: on a ~2 GB
+  default heap the suite dies out of memory after section 136e (29 Oct; CLAUDE.md "Gates").
 - **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR that touches `bot/` or the bundle, every such push to `main` and a
   daily run on `main` (03:17 UTC) run the gates that need no person and no previous bytes (the step list is the file); on any
   other PR the job `bot-gates` skips its gate steps and succeeds, so the check can be required on `main`. A gate that skips fails
@@ -61,9 +61,8 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   say so in the PR; `test-cardfx` / `gen-precon --check` red with no card change -- KRCG's data moved, a round of its own; a
   doc-budget version line -- main released (main's files do not trigger CI), refresh STATUS in the PR. The correctness lint by
   hand, from `bot/`: `npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .`
-  -- a new violation fails, and so does a suppressed one that is gone until `--prune-suppressions` rewrites the file (round C2).
-  The file only shrinks: never `--suppress-all` / `--suppress-rule` (CI fails a PR whose counts grow); a suppression is a count per
-  file and rule, so an old finding fixed beside a new one of the same rule in the same file passes until C2 empties the file.
+  -- every finding fails; the suppressions file is `{}` since C2 and only shrinks (never `--suppress-all` / `--suppress-rule`:
+  CI fails a PR that adds one).
 - **The canary against main's release** (the second canary run): a scratch dir with `bot/test-bot-canary.js`, `bot/elysium-bot.js`,
   the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; `node test-bot-canary.js` there.
 - **Main's client suite beside the release bytes** (when the wire or the timing changed): a scratch copy of `client/` (never the
@@ -119,7 +118,9 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   byte for byte by the old script (O-37); a new share is APPENDED.
 
 ## Analysing a series (sim or arena)
-- `ana-sim-diff.py A B` (footprint) · `ana-ledger.py` (bleed pairing both ways — `VANISHED` = 0; steal pairs equal, a `STOLE >
+- `ana-gates.py DIR` (the gate after a series: one PASS / FAIL line per audit below and for the matches and `zeroPool`, exit 1 on a
+  FAIL; its header is the policy -- the leads and, on the sim table, the windows are information; `--self-test` plants each fault) ·
+  `ana-sim-diff.py A B` (footprint) · `ana-ledger.py` (bleed pairing both ways — `VANISHED` = 0; steal pairs equal, a `STOLE >
   VICTIM LOST` row is a lead; dealt vs taken; `LESS, UNEXPLAINED`) · `ana-block.py` (0 violations) · `ana-inv.py` (invariants;
   ~1 flag in 3 matches is the baseline; a new flag kind or a jump = a line the log cannot type (add its kind) or a real bookkeeping
   difference; `ELY_POOL_TRACE=1` names the code line behind a pool change) · `ana-windows.py` (the actor's reactions-only windows: ran out
