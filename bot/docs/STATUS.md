@@ -6,7 +6,7 @@ built against the root's release, client v2.6.172 / srv-2.6.49 (our canary 69/0 
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
 **Deploy state:** `main` carries v0.6.217 (#47), client v2.6.172 (main's #51), C3 (#50), the Toreador read (#52), crypt round 0
-(#53), C4's CI (#54, #57), the v5 TWDA (#58, D-110) and the security handoff to main (#59). **Open PR:** round C2, v0.6.218.
+(#53), C4's CI (#54, #57), the v5 TWDA (#58, D-110) and the security handoff to main (#59). **Open PR:** #61 (round C2, v0.6.218).
 
 ## Last gates (v0.6.218 release bytes, 11 Nov 2026)
 Suite **2393/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · lint 0 findings on 25 files, nothing suppressed ·
