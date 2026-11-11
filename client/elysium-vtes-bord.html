@@ -2566,7 +2566,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hb-setup">Setting up a table</a></li>
   <li><a href="#hb-play">How a bot plays</a></li>
   <li><a href="#hb-controls">Controls</a></li>
-  <li class="ver">bot v0.6.217 · client v2.6.170</li>
+  <li class="ver">bot v0.6.218 · client v2.6.172</li>
 </ul></nav>
 
 <header class="hero">
@@ -2596,7 +2596,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <p class="lead">The short version: a bot is a fifth player who knows the rules of the actions it takes, plays a fixed deck it has been taught, and asks you when it cannot see what your card does.</p>
 
   <h3>What a bot knows about cards</h3>
-  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>144 are hand-curated</strong> (124 library, 20 crypt) — checked card by card so the bot plays them exactly right. Every master in the four V5 starters is among them: The Labyrinth locks for +1 stealth for a Nosferatu, Guardian Angel sits on the bot's sturdiest ready vampire (+1 intercept against your bleeds, 1 damage prevented each combat, gone when that vampire goes to torpor), Wasserschloss Anif banks blood from a ready Tremere for the next Tremere to come out, and Haven Uncovered goes on an opponent's vampire the bot means to rush — after that any minion, yours included, may enter combat with that vampire as a +1 stealth directed action. The other cards of the six decks in the menu all have a modelled effect, most of them compiled rather than curated.</p>
+  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>156 are hand-curated</strong> (136 library, 20 crypt) — checked card by card so the bot plays them exactly right. Every master in the four V5 starters is among them: The Labyrinth locks for +1 stealth for a Nosferatu, Guardian Angel sits on the bot's sturdiest ready vampire (+1 intercept against your bleeds, 1 damage prevented each combat, gone when that vampire goes to torpor), Wasserschloss Anif banks blood from a ready Tremere for the next Tremere to come out, and Haven Uncovered goes on an opponent's vampire the bot means to rush — after that any minion, yours included, may enter combat with that vampire as a +1 stealth directed action. The other cards of the six decks in the menu all have a modelled effect, most of them compiled rather than curated.</p>
   <p>This shapes three things you will notice:</p>
   <ul>
     <li><strong>Its own deck it plays well.</strong> Every card in a bot deck has a modelled effect, so the bot never holds a card it cannot use. A card it genuinely cannot play with its current vampires is treated as dead and cycled in the discard phase.</li>
@@ -2922,7 +2922,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.217</b>, client <b>v2.6.170</b> / server srv-2.6.49, cardfx 156 curated / 1,708 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 3 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.218</b>, client <b>v2.6.172</b> / server srv-2.6.49, cardfx 156 curated / 1,708 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 11 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 <!-- @@/HELP:bots -->
 </template>
@@ -3282,7 +3282,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.173';   // v2.6.173 (11 Nov 2026, THE WATCHED DOOR -- purge; ships with srv-2.6.50, restart; bot v0.6.217 beside): the client half of the bot project's security handoff (bot/docs/handoffs/HANDOFF-to-main-2026-11-11-security.md; the plan: docs/elysium-security-plan.md). (1) The page's Content-Security-Policy is report-only for now (srv-2.6.50 sends it): the head's guard script catches each report from the start and cspReport passes it on through the error telemetry (kind 'csp', once per directive and blocked thing, conv.errPing still decides), so the Discord digest shows what the policy would block. (2) Eight HTML strings carried an inline onerror on a clan symbol; one capture listener (clanImgError) hides any clan symbol that fails, as the element-built ones always did. (3) The help tab's nav script lives in a script element that never runs here (#helpNavJs, text/plain), so the server's hashes cover the tab it opens. (4) A connection that is not encrypted says so: a line in the Create/Join dialog (netPlainKind: nothing for TLS or this machine, a quiet line for a private network or a tailnet, a warning for anything else) and a marker in the room bar for the last kind. (5) The About text no longer says the server cannot read your hand: it deals your draws and checks the room password. Help > Local server: the hosting checklist.
+const VERSION='2.6.174';   // v2.6.174 (11 Nov 2026, THE DEFAULT MOVED -- purge; srv-2.6.50 unchanged, no wire change; bot v0.6.218 beside, purge /elysium-bot.js): (1) Help > Bots embeds bot v0.6.218's guide (their fix of our 6 Nov note: 156 hand-curated, 136 library + 20 crypt). (2) KRCG made the v5 dump its DEFAULT file on 8 Nov (data/vtes.json is byte for byte data/v5/vtes.json; the old v3 file is frozen at data/v4/vtes.json): a copy that arrives by the second URL (KRCG_DATA_DEFAULT_URL, until now KRCG_DATA_V3_URL) is a stopgap only when it IS v3-shaped -- v2.6.173 marked the v5 dump fetched that way as 'KRCG's older v3 file, the newest sets are missing' and stale at once, so the next start downloaded 8.9 MB again. PROTOCOL section 12 and the canary record bot v0.6.217's lines (no client byte for that).
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -17637,6 +17637,9 @@ let cardDBLoading=false, cardInfo=null, cardImageNames=null, cardDBGen=0, cardDB
 // see SKILLS.md → "Work with KRCG card data" for the full v3/v5 field map this is built from.
 // v2.6.168: the client now READS the v5 dump (static.krcg.org/data/v5/vtes.json; fetchVtesJson below) -- KRCG stopped adding
 // cards to the v3 file at Sabbat V5. The v3 branch stays for the fallback, a cached copy and a file picked by hand.
+// v2.6.174: the switch above came on 8 Nov 2026 -- KRCG's default static.krcg.org/data/vtes.json IS the v5 dump now (byte for byte
+// data/v5/vtes.json), and the v3 file is frozen at data/v4/vtes.json. The second address (KRCG_DATA_DEFAULT_URL) is a second path
+// to the current dump, and what arrives is judged by its shape (vtesFmt), not by where it came from.
 function parseV3Card(card){
   if(!Array.isArray(card.types)) return null;
   const meta={ text: typeof card.card_text==='string'?card.card_text:'',
@@ -17771,7 +17774,7 @@ function cacheVtesJson(raw, fmt, fallback, ts){   // v2.6.168: the record carrie
 }
 const VTES_MAX_AGE_MS=7*24*60*60*1000;   // v2.6.76: a cached catalog younger than this is used WITHOUT touching the network
 function vtesStale(ts, now, rec){ return !(typeof ts==='number' && ts>0) || ((now||Date.now())-ts) > VTES_MAX_AGE_MS || (!!rec && (!rec.fmt || rec.fallback===true)); }   // v2.6.76 pure: no timestamp = stale; v2.6.168: so is a record with no shape stamp (written before v2.6.168: KRCG's v3 file, which gets no new sets); v2.6.169: and the v3 file kept as a stopgap -- the next start tries the dump again
-const KRCG_DATA_URL='https://static.krcg.org/data/v5/vtes.json', KRCG_DATA_V3_URL='https://static.krcg.org/data/vtes.json', KRCG_EXP_URL='https://static.krcg.org/data/v5/expansions.json';   // v2.6.168
+const KRCG_DATA_URL='https://static.krcg.org/data/v5/vtes.json', KRCG_DATA_DEFAULT_URL='https://static.krcg.org/data/vtes.json', KRCG_EXP_URL='https://static.krcg.org/data/v5/expansions.json';   // v2.6.168
 function vtesList(data){             // v2.6.169 pure: the card list in a KRCG file (an array, {cards:[...]}, or an object of cards)
   return Array.isArray(data) ? data : (data && Array.isArray(data.cards)) ? data.cards : (data && typeof data==='object') ? Object.values(data) : [];
 }
@@ -17868,7 +17871,8 @@ function fetchVtesJson(){
   const take=(raw, fallback)=>{
     const data=JSON.parse(raw);
     if(!processCardData(data, 'KRCG', expP.done ? expP.val : null)) throw new Error('no cards');
-    vtesNamesThenCache(raw, data, vtesFmt(data), expP, fallback);
+    const fmt=vtesFmt(data);
+    vtesNamesThenCache(raw, data, fmt, expP, fallback && fmt!=='v5');   // v2.6.174: a stopgap is a v3-SHAPED file, whatever address it came from (KRCG's default file is the v5 dump since 8 Nov)
   };
   const fromCache=()=>{   // the copy this browser has, even when sync is on
     /* v2.6.170 (the second review): a copy already in use is kept as it is -- it is the saved copy or something newer (a
@@ -17878,7 +17882,7 @@ function fetchVtesJson(){
     return vtesCached().then(c=>{ try{ if(c && processCardData(JSON.parse(c.json), 'cached/offline', c.exp)){ cardDBRecTs=c.ts; return true; } }catch(e){} return false; });
   };
   get(KRCG_DATA_URL).then(raw=>take(raw, false))
-    .catch(()=>fromCache().then(kept=>{ if(!kept) return get(KRCG_DATA_V3_URL).then(raw=>take(raw, true)); }))
+    .catch(()=>fromCache().then(kept=>{ if(!kept) return get(KRCG_DATA_DEFAULT_URL).then(raw=>take(raw, true)); }))
     .catch(()=>log('Could not load the card database — minion detection unavailable. Offline with a vtes.json file? Settings → Card data → 📁 From file… loads it once and caches it.'))
     .finally(()=>{ cardDBLoading=false; });
 }

@@ -5813,6 +5813,27 @@ const served = (files, asked) => url => { url = String(url); asked.push(url); co
   return Promise.resolve(b === undefined ? { ok: false, status: url === KRCG_URL.v5 ? 503 : 404, text: () => Promise.resolve('no') } : { ok: true, status: 200, text: () => Promise.resolve(b) }); };
 const V3_ELDER = JSON.stringify([{ id: 999001, name: 'Test Elder', _name: 'Test Elder', types: ['Vampire'], card_text: 'Sabbat elder.', capacity: 9, clans: ['Lasombra'] }]);
 
+testA('v2.6.174: KRCG\'s default file is the v5 dump since 8 Nov -- what arrives by the second address is judged by its shape: v5 is a normal copy (fresh, not "the older v3 file", not downloaded again), v3 is still the stopgap', async () => {
+  { // no copy, the dump's own path down, KRCG's default path answering with the v5 dump (what static.krcg.org does today)
+    const store = new Map(), asked = [];
+    const A = loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served({ [KRCG_URL.v3]: JSON.stringify([V5_JULIA]), [KRCG_URL.exp]: JSON.stringify(V5_EXP) }, asked) });
+    assert(await untilT(() => store.has('_vtesJson')), 'cached (asked: ' + asked.join(', ') + ')');
+    assert(asked.includes(KRCG_URL.v5) && asked.includes(KRCG_URL.v3), 'the dump first, then the default address');
+    const rec = store.get('_vtesJson');
+    eq(rec.fmt, 'v5'); eq(rec.fallback, false, 'the current dump by another path is no stopgap (v2.6.173: true)');
+    assert(A.cardInfo && A.cardInfo.get('juliasowinski'), 'and it has the new sets');
+    eq(A.vtesStale(rec.ts, Date.now(), rec), false, 'fresh: the next start does not download 8.9 MB again');
+    assert(!/older v3 file/.test(A.vtesCacheNote(rec, true)), 'Settings does not call it the older file: ' + A.vtesCacheNote(rec, true));
+    eq(A.KRCG_DATA_DEFAULT_URL, KRCG_URL.v3, 'the second address is KRCG\'s default file');
+  }
+  { // the same path answering with a v3-shaped file (KRCG before 8 Nov, or a mirror that still has it): the stopgap, as in v2.6.169
+    const store = new Map(), asked = [];
+    loadClient(CLIENT, { indexedDB: fakeIDB(store), fetch: served({ [KRCG_URL.v3]: V3_ELDER }, asked) });
+    assert(await untilT(() => store.has('_vtesJson')), 'cached (asked: ' + asked.join(', ') + ')');
+    const rec = store.get('_vtesJson');
+    eq(rec.fmt, 'v3'); eq(rec.fallback, true, 'a v3-shaped file is still marked: the newest sets are missing, and the next start tries the dump');
+  }
+});
 testA('v2.6.169: a failed v5 download keeps the copy this browser has -- the v3 file only when there is none, and then the next start tries the dump again', async () => {
   const WEEK = 7 * 24 * 3600e3, old = Date.now() - WEEK - 24 * 3600e3;
   { // a v5 copy eight days old, the weekly refresh meets a 503 on the dump while the v3 file answers

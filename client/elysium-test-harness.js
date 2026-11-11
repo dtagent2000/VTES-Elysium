@@ -150,7 +150,7 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   preconEra: (typeof preconEra!=='undefined'?preconEra:undefined), isV5Set: (typeof isV5Set!=='undefined'?isV5Set:undefined), isV5SetCode: (typeof isV5SetCode!=='undefined'?isV5SetCode:undefined),
   parseV5Card: (typeof parseV5Card!=='undefined'?parseV5Card:undefined), buildPrecons: (typeof buildPrecons!=='undefined'?buildPrecons:undefined),
   get KRCG_SET_NAMES(){ return (typeof KRCG_SET_NAMES!=='undefined')?KRCG_SET_NAMES:undefined; }, get KRCG_DATA_URL(){ return (typeof KRCG_DATA_URL!=='undefined')?KRCG_DATA_URL:undefined; },
-  get KRCG_DATA_V3_URL(){ return (typeof KRCG_DATA_V3_URL!=='undefined')?KRCG_DATA_V3_URL:undefined; }, get KRCG_EXP_URL(){ return (typeof KRCG_EXP_URL!=='undefined')?KRCG_EXP_URL:undefined; },
+  get KRCG_DATA_DEFAULT_URL(){ return (typeof KRCG_DATA_DEFAULT_URL!=='undefined')?KRCG_DATA_DEFAULT_URL:undefined; }, get KRCG_EXP_URL(){ return (typeof KRCG_EXP_URL!=='undefined')?KRCG_EXP_URL:undefined; },
   get krcgSets(){ return (typeof krcgSets!=='undefined')?krcgSets:undefined; }, set krcgSets(v){ krcgSets=v; }, get krcgExpRaw(){ return (typeof krcgExpRaw!=='undefined')?krcgExpRaw:undefined; },
   // v2.6.169: the loader after the review -- the load counter, the late names, the card list, the era by card
   get cardDBGen(){ return (typeof cardDBGen!=='undefined')?cardDBGen:undefined; },
