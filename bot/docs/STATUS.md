@@ -9,7 +9,7 @@ the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6
 **Open PR:** @@PR@@ (crypt wave A, v0.6.219).
 
 ## Last gates (v0.6.219 release bytes, 12 Nov 2026)
-Suite **2409/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · lint 0 findings on 25 files, nothing suppressed ·
+Suite **2410/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · lint 0 findings on 25 files, nothing suppressed ·
 canary **69/0** ×2 (bot/'s copies; the root's release) · hotseat **11/0** · HB1 **11/11** · test-cardfx **321/0** ·
 `gen-precon.js --check` no problems · main's `check-versions.js` agrees · main's client suite beside the bundle 361/2 (the new
 guide's embed drift and the registry test: the handoff) · sim vs v0.6.218: the 240-match client design IDENTICAL 240 (version

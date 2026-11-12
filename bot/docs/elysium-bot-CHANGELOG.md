@@ -122,8 +122,8 @@
     strike decision weighing his own dodge, Valeriya's Grapple. Verdict: keep, and Toreador joins the menu — D-108's "holds up
     in the sim" is the Toreador reads; the one miss is the series tool's. The library ledger: playable 190 (192), unseen 25 (23) —
     Bear's Skin and Form of the Wolf, once in Gangrel's 12 matches before (1/12 each), not in the new 12.
-  - *Gates* (release bytes: bot `6cf6d07b`, cardfx `67a85631`, suite `cd3cfecd`): suite 2409/0 ×3 (431, 431, 427 s; alone, frozen
-    snapshots), lint 0 findings on 25 files (nothing suppressed), canary 69/0 on bot/'s copies and 69/0 on the root's v2.6.174 with
+  - *Gates* (release bytes: bot `6cf6d07b`, cardfx `67a85631`, suite `27afb574`): suite 2410/0 ×3 (412, 432, 422 s; alone, frozen
+    snapshots; 2409/0 ×3 before 163h), lint 0 findings on 25 files (nothing suppressed), canary 69/0 on bot/'s copies and 69/0 on the root's v2.6.174 with
     `client/ELYSIUM-PROTOCOL.md`, main's canary v1.2.0 143/0 beside this bot, hotseat 11/0, HB1 11/11, test-cardfx 321/0,
     `gen-precon.js --check` 18 precons no problems, the ledger's self-test 55/55, `twda.py` 14/0, `ana-gates.py --self-test` 27/0,
     doc-budget PASS and its self-test every case red, main's `check-versions.js` agrees, main's client suite beside the bundle 361
