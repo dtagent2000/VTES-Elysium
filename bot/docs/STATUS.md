@@ -13,8 +13,8 @@ Suite **2409/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · l
 canary **69/0** ×2 (bot/'s copies; the root's release) · hotseat **11/0** · HB1 **11/11** · test-cardfx **321/0** ·
 `gen-precon.js --check` no problems · main's `check-versions.js` agrees · main's client suite beside the bundle 361/2 (the new
 guide's embed drift and the registry test: the handoff) · sim vs v0.6.218: the 240-match client design IDENTICAL 240 (version
-normalized), `ana-gates.py` PASS 6 of 6; the V5 smoke diverged in 50 of 168 matches; Toreador on 600 fresh deals 0.83 VP (the
-CHANGELOG has the reads).
+normalized), `ana-gates.py` PASS 6 of 6; the V5 smoke diverged in 50 of 168 matches; Toreador on 600 fresh deals 0.83 VP, +0.18
+paired against v0.6.218 (the CHANGELOG has the reads).
 
 ## What v0.6.219 did (the latest release; older ones in the CHANGELOG)
 Crypt wave A (D-108): 31 vampires' printed abilities — the bleed, strength, intercept, stealth, vote and dodge forms (25 copies

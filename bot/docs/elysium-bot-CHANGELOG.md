@@ -100,8 +100,12 @@
     (17.7 %); minus nosferatu +0.51 [+0.38, +0.65], minus malkavian -1.32 [-1.54, -1.11]: inside the span; its own dodge 129 times,
     Catalina Vega's plain bleed of 2 through 381 times; 600 last-standing, no decision at 0 pool; `ana-gates.py` FAIL on the invariants
     gate alone — 8 flags in 600, under its 30, one of them the unclassed +2 drift (Ventrue's Wider View again): **falsified by that
-    part**, every read of Toreador held. @@PAIRED@@ Verdict: keep, and Toreador joins the menu — D-108's "holds up in the sim" is
-    the Toreador reads; the one miss is the series tool's, on v0.6.218 too. The library ledger: playable 190 (192), unseen 25 (23) —
+    part**, every read of Toreador held. Paired against v0.6.218 on the same
+    600 deals (`ana-sim-diff.py --vp`: 381 diverged, 219 SAME-PLAY; v0.6.218 reproduces 6 Nov's table to the match): Toreador
+    +0.18 VP [+0.12, +0.24] (wins 78 -> 106), malkavian -0.10 [-0.17, -0.04], nosferatu -0.07 [-0.11, -0.02], tremere -0.02 and
+    ventrue +0.01 (both across 0); v0.6.218's 600 carries 4 flags of the known kinds (PASS 6 of 6) — the +2 drift came with a
+    match the change diverged (432), and its kind is v0.6.218's too (the V5 smoke above). Verdict: keep, and Toreador joins the
+    menu — D-108's "holds up in the sim" is the Toreador reads; the one miss is the series tool's. The library ledger: playable 190 (192), unseen 25 (23) —
     Bear's Skin and Form of the Wolf, once in Gangrel's 12 matches before (1/12 each), not in the new 12.
   - *Gates* (release bytes: bot `6cf6d07b`, cardfx `67a85631`, suite `cd3cfecd`): suite 2409/0 ×3 (431, 431, 427 s; alone, frozen
     snapshots), lint 0 findings on 25 files (nothing suppressed), canary 69/0 on bot/'s copies and 69/0 on the root's v2.6.174 with
