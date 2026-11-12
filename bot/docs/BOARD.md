@@ -1,4 +1,4 @@
-# BOARD — the open asks (11 Nov 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (12 Nov 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -14,16 +14,15 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The abstract model spec**: the first of the four checks (fast rollouts over card-class distributions, probabilities not
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
-- **The V5 waves**: the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim plays them; the menu does not)
-  and the ledger (`docs/CARDS.md`) since v0.6.212; waves by effect class as the class map ranks them (D-98). Done: wave 1 (v0.6.213,
-  D-99), wave 2 (v0.6.214, D-103), wave 3 (v0.6.215, D-104), wave 4 (v0.6.217, D-106). Next: wave 5, the 18 masters in play
-  (`spec-v5-wave3` §4), Meditative Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape),
-  with the actions at a card in play (steal The Rack / Powerbase: LA, burn Mob Connections) and The Coven's control passing. Then the
-  maneuver / press grants with the rush cards, the free block bars, the cards with no effect data, the unmodelled action cards.
-  Crypt waves (D-108): A = the simple forms with an existing consumer (+bleed, +strength, ±intercept, ±stealth), B = the rest
-  by class. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its library and crypt rows are playable and it
+- **The V5 waves**: the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim plays them; the menu only
+  Toreador) and the ledger (`docs/CARDS.md`) since v0.6.212; waves by effect class as the class map ranks them (D-98). Done:
+  waves 1–4 (v0.6.213–217; D-99, D-103, D-104, D-106). Next: wave 5, the 18 masters in play (`spec-v5-wave3` §4), Meditative
+  Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape), with the actions at a card in
+  play (steal The Rack / Powerbase: LA, burn Mob Connections) and The Coven's control passing. Then the maneuver / press grants
+  with the rush cards, the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
+  done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its library and crypt rows are playable and it
   holds up in the sim; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check`
-  compares the seven embedded decks). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108;
+  compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108;
   `CARDS.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
   round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
@@ -46,6 +45,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-42, D-104.
+- **Crypt wave A's riders** (CHANGELOG v0.6.219): Yewon's and Alexa's torpor vote discard, `peekSup` set after the block
+  decision, `_myBleedEach`'s +1 bleed, the home planners' crypt intercept. *Done when* each is fixed with its footprint or ruled out.
 - **The weapon's maneuver** (wave 2's second review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
   a number — the .44 Magnum has never maneuvered, so the strike-binding rules' gun halves never run. Neighbours: a weapon's strike
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait
@@ -74,7 +75,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   is seated until the bot proves a whole combat on lines alone. *Done when* asked, when ready. Docs: RULINGS D-62, D-94.
 - **History comments in `elysium-bot.js`** (222 KB): trim to trap comments ("why" + a rule id) in the functions a round touches
   (spec §8 Q6, recommended (b)). *Done when* Johan has chosen; then per round.
-- **Section 69b's decay check** (found in C2; the lint sees only self-comparisons): `o4.pick === ctxC.card ? true : o4.pick ===
+- **Section 69b's decay check** (found in C2): `o4.pick === ctxC.card ? true : o4.pick ===
   ctxC.plain` passes for either pick and reads no score, so the streak's −0.30 on the card line is untested. *Done when* 69b
   compares the card score with and without the streak.
 
@@ -86,6 +87,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
 - **A human's bounce of a bot's bleed** is not read by the acting bot; a bot that is a bounce's new target cannot bounce onward.
   *Done when* the client's bounce play line (a pool target) is parsed and section-tested. Docs: RULINGS O-3.
+- **A human's Change of Target after a right-click action** (main, 11 Nov §1) names no vampire or another: `_onCot` misses it.
+  Main: such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. *Done when* a section shows it read.
+- **The copies and main's canary v1.2.0** (main, 3, 11 Nov; `bot/` holds v1.0.0, v2.6.162, srv-2.6.46). *Done when* a copies
+  commit brings the root's release and v1.2.0 in, both canaries green, Q4 (gate on the root's release) answered.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.
 - **Steal pair under a combat ends**: the stealer's side does not apply v0.6.196's rule when the victim's Majesty ends the combat.
   *Done when* `ana-ledger.py` prints equal pairs on a smoke with that case. Docs: RULINGS O-12.
@@ -156,6 +161,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   per bleed total). *Done when* both reports exist with the sim as the first read.
 - **Forecast calibration** (`gen-forecast-calibration.js`) not re-run since 18 Sep; the seed of the abstract model's calibration
   gate. *Done when* it runs on a sim series and the ratio is reported.
-- **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) not consumed in a bot round; v0.6.207's carries
-  Johan's negative stealth / intercept (R-38): check every reader of `tally.a` / `tally.b` that assumed ≥ 0. *Done when* each reply's
-  bot-side items are built or declined in a handoff.
+- **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) unconsumed; v0.6.207's R-38 (negative stealth /
+  intercept): check every reader of `tally.a` / `tally.b` that assumed ≥ 0. *Done when* each reply's bot-side items are built or
+  declined in a handoff.
