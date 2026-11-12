@@ -2,8 +2,10 @@
 # test-doc-budget.sh -- the destructive check of tools/doc-budget.sh (20 Oct 2026). Each case breaks ONE thing in a fresh copy of
 # the repo's docs + bot/ and expects doc-budget to print FAIL and exit 1; the baseline copy must PASS. ~1 min (13 copies of bot/).
 # Two cases run outside a pull request (DOC_BUDGET_ROOT_DRIFT=warn): main's newer release only warns, an impossible one still fails.
+# The baseline runs in the caller's mode (CI's warn outside pull requests, so main's next release cannot turn it red there).
 # Run from anywhere: bash bot/tools/test-doc-budget.sh   -- exit 0 = every case red and the baseline green.
 set -u
+MODE=${DOC_BUDGET_ROOT_DRIFT:-fail}   # the caller's mode: the baseline runs in it (CI warns outside pull requests -- a root newer than STATUS must not turn the baseline red there)
 unset DOC_BUDGET_ROOT_DRIFT   # the strict default (a pull request's) for every case below; the warn cases set it themselves (12 Nov 2026)
 SRC=$(cd "$(dirname "$0")/../.." && pwd); W=$(mktemp -d "${TMPDIR:-/tmp}/dbtest-XXXX"); T="$W/repo"; bad=0
 fresh(){
@@ -18,7 +20,7 @@ run(){   # $1 the case, $2 the text its own FAIL line carries: any FAIL is no pr
   fl=$(printf '%s\n' "$out" | grep '^FAIL' | grep -F -- "$2" | head -1)
   if [ "$ec" = 1 ] && [ -n "$fl" ]; then echo "red   $1 :: ${fl#FAIL  }"; else echo "GREEN $1 :: exit $ec, no FAIL line with '$2'  <-- the check missed it"; bad=1; fi
 }
-fresh; if bash "$T/bot/tools/doc-budget.sh" > /dev/null; then echo "green baseline"; else echo "RED baseline <-- fix the docs first"; bad=1; fi
+fresh; if DOC_BUDGET_ROOT_DRIFT=$MODE bash "$T/bot/tools/doc-budget.sh" > /dev/null; then echo "green baseline ($MODE)"; else echo "RED baseline ($MODE) <-- fix the docs first"; bad=1; fi
 fresh; n=$(wc -c < "$T/bot/docs/STATUS.md"); pad "$T/bot/docs/STATUS.md" $(( n < 5001 ? 5001 - n : 1 ))   # to 1 byte over (a fixed 2000 missed a short STATUS, 12 Nov)
 run "STATUS over its budget" "STATUS.md is"
 fresh; printf '%s\n' 'See `docs/NOPE.md`.' >> "$T/bot/docs/BOARD.md";                    run "BOARD names a missing file" "names docs/NOPE.md"

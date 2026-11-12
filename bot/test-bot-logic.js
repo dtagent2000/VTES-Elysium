@@ -12246,6 +12246,21 @@ async function connectWithRetry(client, tries = 30){
         const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'T', persona: 'expert', log: () => {} }, t ? { deck: JSON.parse(JSON.stringify(t)) } : {}));
         ok(!!t && !!file && JSON.stringify(t.crypt) === JSON.stringify(file.crypt) && JSON.stringify(t.library) === JSON.stringify(file.library) && u.o.deckName === 'toreador' && u._combatPosture() === 'wave' && u._deckAxes().join() === 'vote,bleed' && u._posture() === 'resisting' && u._deckAxis() === 1,
            '163g ARCHETYPES.toreador = deck-toreador.json; a bot given its deck object knows it (toreador), posture wave, axes vote + bleed -- resisting, multiplier 1: the file deck’s play (got ' + JSON.stringify({ has: !!t, deckName: u.o.deckName, posture: u._combatPosture(), axes: u._deckAxes() }) + ')'); }
+
+      // h) every announce passes its kind and form to the crypt's stealth (the egress review, 12 Nov): the 18 `this._announceTallyA(`
+      //    sites in source order, each argument with its own `this._cryptStealthMod(v, KIND, FORM)`. What a kind and a form give
+      //    (Ariane, Kalyani, Frau Schädel, Devorah, Verrix) is 163a; the turn drives the hunt and the bleed (163c), the own rescue 103b.
+      { const src = require('fs').readFileSync(require.resolve('./elysium-bot.js'), 'utf8'), got = [];
+        for (let i = src.indexOf('this._announceTallyA('); i >= 0; i = src.indexOf('this._announceTallyA(', i + 1)){
+          let d = 0, j = i + 'this._announceTallyA'.length;
+          for (; j < src.length; j++){ if (src[j] === '(') d++; else if (src[j] === ')' && --d === 0) break; }
+          const m = /this\._cryptStealthMod\(v, ([^()]+?)\)/.exec(src.slice(i, j + 1));
+          got.push(m ? m[1] : 'none @ line ' + src.slice(0, i).split('\n').length); }
+        const want = ["'leaveTorpor', false", "'political', false", "'hunt', false", "'stock', false", "'ownRescue', false", "'enemyRescue', true",
+          "'recruit', false", "'strength', false", "'burnCard', true", "'rutor', false", "'creep', false", "'rush', true", "'rush', true",
+          "act.isRetainer ? 'employ' : 'equip', false", "'fetch', false", "'peek', !act.supMode", "'pool', true", "'bleed'"];
+        ok(JSON.stringify(got) === JSON.stringify(want),
+           '163h every one of the 18 announces passes its kind and form to _cryptStealthMod: leave torpor, political, hunt, stock, own rescue undirected; enemy rescue, card burn, both rushes, pool directed; recruit, strength, Rutor’s Hand, tabling, equip / employ, fetch undirected; Revelations by its mode; the bleed (got ' + JSON.stringify(got) + ')'); }
     }
 
 

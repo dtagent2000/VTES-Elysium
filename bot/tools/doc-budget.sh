@@ -15,8 +15,9 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 # 1. budgets (bytes). RULINGS: the spec said 25 KB; 42 KB from C1 (PR #39) -- the register came to 171 lines, and the 20 Oct audit's
 #    split of Johan's words from Claude's thresholds costs words; 60 KB and the total 160 KB since 29 Oct (Johan, RULINGS D-101: when a
 #    page needs room the ceiling is raised -- the register grows with every round's rulings); BOARD 15 -> 18 KB the same day (it stood
-#    15 bytes under its ceiling; the bootstrap's 50 KB stays the real guard).
-PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:18000 $D/RULINGS.md:60000 $D/LESSONS.md:20000
+#    15 bytes under its ceiling; the bootstrap's 50 KB stays the real guard); BOARD 18 -> 18.5 KB on 12 Nov (crypt wave A's egress
+#    review found three asks no line held, with no history left to cut -- HARNESS; STATUS gave the bootstrap its bytes back).
+PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:18500 $D/RULINGS.md:60000 $D/LESSONS.md:20000
        $D/ARCHITECTURE.md:15000 $D/HARNESS.md:8000 $D/HOWTO.md:20000"
 total=0
 for pb in $PAGES; do

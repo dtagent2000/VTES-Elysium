@@ -25,9 +25,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108;
   `CARDS.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
-  round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage); clan, sect
-  and Path requirements in every finder; the amber cards; the latent items. *Done when* each is built and section-tested, or ruled
-  out. Docs: RULINGS R-39, R-40, D-99.
+  round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage, the combat
+  panel's `xa` / `xb` and the labels cleared at a new pair: main, 3 Nov §4); clan, sect and Path requirements in every finder; the
+  amber cards; the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39, R-40, D-99.
 - **V5 wave 2's riders** (`specs/spec-v5-wave2-2026-10-29.md` §4): counters against a human and for the wave / snipe postures;
   the strike choice (`_strikePick` takes a strike card over a stronger pumped fist); the amber riders (Rage of Apedemak's hand size,
   Frenzy and Path icon, Hunger of Marduk in an additional pair, Soul Burn's opposing weapons, Monstrous Form's superior action); the
@@ -46,7 +46,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-42, D-104.
 - **Crypt wave A's riders** (CHANGELOG v0.6.219): Yewon's and Alexa's torpor vote discard, `peekSup` set after the block
-  decision, `_myBleedEach`'s +1 bleed, the home planners' crypt intercept. *Done when* each is fixed with its footprint or ruled out.
+  decision, `_myBleedEach`'s +1 bleed, the home planners' crypt intercept, the event log's discard name (it carries the line's
+  tail). *Done when* each is fixed with its footprint or ruled out.
 - **The weapon's maneuver** (wave 2's second review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
   a number — the .44 Magnum has never maneuvered, so the strike-binding rules' gun halves never run. Neighbours: a weapon's strike
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait
@@ -89,6 +90,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* the client's bounce play line (a pool target) is parsed and section-tested. Docs: RULINGS O-3.
 - **A human's Change of Target after a right-click action** (main, 11 Nov §1) names no vampire or another: `_onCot` misses it.
   Main: such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. *Done when* a section shows it read.
+- **Hand names out of the console outside debug** (main, 11 Nov: the security plan's item 6): an online host can read a bot's
+  console, which names hand cards. *Done when* only debug names them, section-tested.
 - **The copies and main's canary v1.2.0** (main, 3, 11 Nov; `bot/` holds v1.0.0, v2.6.162, srv-2.6.46). *Done when* a copies
   commit brings the root's release and v1.2.0 in, both canaries green, Q4 (gate on the root's release) answered.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.

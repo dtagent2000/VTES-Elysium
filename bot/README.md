@@ -18,7 +18,7 @@ The folder is deliberately FLAT: the suites, the arena and every tool expect the
 | `cardfx-compile.js`, `cardfx-curated.json` → `elysium-cardfx.json` / `.js` | the card-effect library pipeline (`node cardfx-compile.js --report`; needs `vtes.json`) |
 | `twd-profile.py`, `twd-archetypes.py` → `elysium-twd-profile.json`, `elysium-twd-archetypes.json` | the TWDA prior. Inputs beside them, none in git (root `CLAUDE.md`, 'Data that is not in git'): `vtes.json`, `twda.json` (KRCG's v5 TWDA) and, for the archetypes, vtes-skill's classification (MIT, https://github.com/vtes-biased/vtes-skill; GitHub's zip of main unpacked as src/vtes-skill-main/, ignored; commit 65b5c3e reproduces the shipped archetypes byte for byte). Both write the shipped files in place: run them in a scratch copy of `bot/` until a release ships the rebuild |
 | `twda.py` | the TWDA reader both import: one deck per id, card names from `vtes.json` by KRCG id; a missing, wrong or cut-off file stops with the fetch command; `--self-test` and `--check FILE` (both in CI) |
-| `deck-*.json`, `rig-a1.json` | the decks the bot embeds (the four V5 starters + hacking + sewer), the 14 other V5 precons (test inputs the sim plays; not in the client's menu) and a rig |
+| `deck-*.json`, `rig-a1.json` | the decks the bot embeds (the four V5 starters + Toreador + hacking + sewer), the 13 other V5 precons (test inputs the sim plays; not in the client's menu) and a rig |
 | `gen-precon.js` | the V5 precons from `vtes.json`'s sets (`node gen-precon.js`; `--check` compares the starters and the embedded decks by KRCG id; `--list`) |
 | `elysium-bot-diag.html` | the browser battery (HB1) |
 

@@ -150,7 +150,8 @@ jobs:
         if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         env:
           # a pull request must name the root's release in STATUS (its gates ran against it); a scheduled run or a push to main
-          # warns when main has released since the last bot round (main's note of 12 Nov 2026) -- test-doc-budget.sh unsets it
+          # warns when main has released since the last bot round (main's note of 12 Nov 2026) -- test-doc-budget.sh runs its
+          # baseline in this mode and each case in its own
           DOC_BUDGET_ROOT_DRIFT: ${{ github.event_name == 'pull_request' && 'fail' || 'warn' }}
         run: |
           bash tools/doc-budget.sh

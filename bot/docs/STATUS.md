@@ -14,7 +14,7 @@ canary **69/0** ×2 (bot/'s copies; the root's release) · hotseat **11/0** · H
 `gen-precon.js --check` no problems · main's `check-versions.js` agrees · main's client suite beside the bundle 361/2 (the new
 guide's embed drift and the registry test: the handoff) · sim vs v0.6.218: the 240-match client design IDENTICAL 240 (version
 normalized), `ana-gates.py` PASS 6 of 6; the V5 smoke diverged in 50 of 168 matches; Toreador on 600 fresh deals 0.83 VP, +0.18
-paired against v0.6.218 (the CHANGELOG has the reads).
+paired against v0.6.218 (CHANGELOG).
 
 ## What v0.6.219 did (the latest release; older ones in the CHANGELOG)
 Crypt wave A (D-108): 31 vampires' printed abilities — the bleed, strength, intercept, stealth, vote and dodge forms (25 copies
@@ -25,17 +25,16 @@ requests when main has released (main's note of 12 Nov).
 1. V5 wave 5 — Johan picks its shape: the eighteen masters in play, Meditative Grove's cancel, Sudden Reversal's window (D-107).
 2. The copies round (main's canary v1.2.0, Q4) with crypt wave A's riders; then crypt wave B, the 13 partial copies first.
 3. C5 (the leak test) before crypt wave B; C6; the knowledge layer's Kevlar and the prey's wakes (65f); the abstract model spec.
-4. Johan picks: `ana-gates.py` on a 12-match series allows no invariant flag and keys Wider View's drift by its size (+2 unclassed),
-   so v0.6.218's V5 smoke fails 4 of 14 too (CHANGELOG v0.6.219).
+4. Johan picks: `ana-gates.py`'s invariants allow no flag in a 12-match series and leave Wider View's +2 drift unclassed, so
+   v0.6.218's V5 smoke fails 4 of 14 too (CHANGELOG v0.6.219).
 
 ## Not yet consumed from main
 Main's replies of 11 Nov (security, v0.6.218 with canary v1.2.0) are read: their bot-side items are BOARD lines (the copies, a
-human's Change of Target) and two from the security plan — item 6 (hand names out of the console outside debug) and item 5 (our
-client masks every frame: confirmed in the handoff). Still owed by main: the pure `step`, `sp` / `xa` / `xb`, the second `rng`;
-v0.6.219's guide re-embed and the registry test (`HANDOFF-to-main-2026-11-12-v0_6_219.md`).
+human's Change of Target, the security plan's item 6); item 5 is answered in the handoff (our client masks every frame). Owed by
+main: v0.6.219's guide re-embed and the registry test (`HANDOFF-to-main-2026-11-12-v0_6_219.md`).
 
 ## Known, not built
-A human's bounce of a bot's bleed and a human's Haven Uncovered are not read · between bots a contested block's verdict waits for the
-actor's clock · on the sim table most bot-vs-bot reaction windows run out their clock (BOARD) · `askHumansTotal` off until the human
-harness learns the second question · the waves' riders (BOARD) · a rushed actor's maneuver wait hits its safety net about once in 200
-· a failed blocker fights the later blocker's combat and can spend a strike card (3 in 840 five-seat matches; the Toreador report).
+Between bots a contested block's verdict waits for the actor's clock · `askHumansTotal` off until the human harness learns the
+second question · a failed blocker fights the later blocker's combat and can spend a strike card (3 in 840 five-seat matches; the
+Toreador report) · the rest is on the BOARD (a human's bounce and Haven Uncovered, the sim table's run-out windows, the waves'
+riders, a rushed actor's maneuver wait).
