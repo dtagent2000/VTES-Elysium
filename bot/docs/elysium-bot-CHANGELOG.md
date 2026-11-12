@@ -32,6 +32,14 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.219 (12 Nov 2026)** — Crypt wave A (in progress; this entry is completed at the release). *Predictions, registered before
+  the runs (D-93):* (1) the 240-match client design IDENTICAL to v0.6.218 with the version string normalized (no starter's vampire
+  gains an entry; the reader changes keep every old form's value) — measured before this line: IDENTICAL 240; (2) the V5 smoke: every
+  one of the 14 decks carries a new entry, so any may diverge, and every series passes `ana-gates.py`; (3) Toreador on 600 fresh deals
+  at five seats (`--bench none`, the 6 Nov design) stays inside the starters' span — its paired VP difference to the lowest starter not
+  wholly below 0 and to the highest not wholly above 0 (95 %) — at 0.60–0.85 VP a match (6 Nov: 0.65), with Flávio Gonçalves's own
+  dodge and Catalina Vega's bleed of 2 seen, 600 last-standing, nothing played at 0 pool, `ana-gates.py` PASS. Falsified if any part
+  fails.
 - **v0.6.218 (11 Nov 2026)** — Round C2, the clean-up's dead code and tools (spec-cleanup §5.6 and T10; STATUS Next 1). No behaviour
   change: the 240-match client design is SAME-PLAY 240 against v0.6.217 — the one difference `ana-sim-diff.py` reports is the result
   row's version string (it ignores each run's own wall and CPU times) — and IDENTICAL 240 with that string normalized. A release because the bot's bytes changed (CI: the root's bundle is `bot/`'s).
