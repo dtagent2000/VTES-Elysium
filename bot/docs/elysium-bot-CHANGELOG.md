@@ -78,7 +78,8 @@
     reads ministry's file for a file deck's posture and pins the embedded Toreador; 103b's source pin follows the own rescue's
     announce; test-cardfx +6.
   - *The graded readings* (a fresh read-only agent, the HARNESS charter, the 31 readings): 18 green, 12 amber (the partial rows,
-    each one's other sentence declared; Azucena's age read from printed capacity, Oblivion's +1 not read: no ruling found), 1 red —
+    each one's other sentence declared; Azucena's age read from printed capacity, Oblivion's +1 not read: no ruling found — Johan ruled the same evening that age
+    follows the capacity in play, D-111: a rider, her note changes with it), 1 red —
     Yewon Ong's ability in torpor [LSJ 20011022], declared in her note (the shared reader takes ready vampires, Alexa Draper's too,
     and the voter stays home without a title vote) and listed. Fixed in the round from its findings (D-92): Devorah's pool counts an
     action's parked cost back (`_poolNow`, R-17; latent in her deck); a bot blocker reads a BOT actor's counter raw (`_commitBlock`:
@@ -92,7 +93,10 @@
     hunt, the bleed and the own rescue); bot/CLAUDE.md, README and ARCHITECTURE named seven embedded decks and 14 precons outside
     the menu, the riders' line lacked the discard name, STATUS listed main's 3 Nov answers as owed, the PR's unsure list missed The
     Dowager's asked window (stale-doc); the security plan's item 6 had no BOARD line (rule-missed). The handoff answers main's
-    rulings question (only `gen-card-ledger.js` reads them).
+    rulings question (only `gen-card-ledger.js` reads them). A second fresh review, on those fixes and D-111's build: 5 findings
+    (unproven 2, stale-doc 2, rule-missed 1), 4 fixed — the gate's self-test plants Wider View's own two kinds (its +2 plant failed on
+    v1.0.0 too), this entry names the bytes its reads ran on, LESSONS L-87 (the ratchet: stale-doc three rounds running), the PR's
+    account of the checker's one blind spot — and 1 listed: Azucena's note, which changes with her rider.
   - *Predictions, registered before the runs (D-93; committed in 21fb3b7, word for word):* (1) the 240-match client design IDENTICAL
     to v0.6.218 with the version string normalized (no starter's vampire gains an entry; the reader changes keep every old form's
     value) — measured before this line: IDENTICAL 240; (2) the V5 smoke: every one of the 14 decks carries a new entry, so any may
@@ -100,8 +104,8 @@
     stays inside the starters' span — its paired VP difference to the lowest starter not wholly below 0 and to the highest not wholly
     above 0 (95 %) — at 0.60–0.85 VP a match (6 Nov: 0.65), with Flávio Gonçalves's own dodge and Catalina Vega's bleed of 2 seen,
     600 last-standing, nothing played at 0 pool, `ana-gates.py` PASS. Falsified if any part fails.
-  - *What came out:* (1) IDENTICAL 240 on the release bytes (raw SAME-PLAY 240: the version string), `ana-gates.py` PASS 6 of 6:
-    **held**. (2) 50 of 168 matches diverged, in 11 of 14 series (pathcathari
+  - *What came out* (the runs on `6cf6d07b`, the bytes the predictions were registered for; the shipped `7820e7c2` adds only the
+    checker fix below): (1) IDENTICAL 240 (raw SAME-PLAY 240: the version string), `ana-gates.py` PASS 6 of 6: **held**. (2) 50 of 168 matches diverged, in 11 of 14 series (pathcathari
     11 IDENTICAL + 1 SAME-PLAY, pathpower and tzimisce IDENTICAL), and 4 series FAIL the invariants gate, nothing else (brujah,
     pathcaine, pathdeath, toreador: 2 to 4 flags of Ventrue's Wider View burn-for-pool where a 12-match series may carry none, the
     Toreador series' with a +2 drift that is not a known kind): **falsified**. v0.6.218's smoke fails the same gate in 4 of 14 the same
@@ -128,8 +132,8 @@
     bot's pool was right). The gap is booked at the burn and the sentence subtracts only the rest; a printed pool above the ledger
     still flags at once, a gap no sentence explains flags at the turn (suite 127v +1: red on the previous bytes with the field's own
     pool-print 8/10 and pool-drift +2). `ana-gates.py` v1.1.0: the invariants cap is never below one flag (a 12-match series may
-    carry one known flag), and Wider View's two kinds are no longer known (self-test 30: a planted Wider View drift fails, a
-    12-match series passes one known flag and fails two; the old gate fails the one). On the same specs as the bytes before it: the
+    carry one known flag), and Wider View's two kinds are no longer known (self-test 31: a planted pool-drift +1 and a pool-print
+    via burn-for-pool fail, which v1.0.0 passes; a 12-match series passes one known flag and fails two; the old gate fails the one). On the same specs as the bytes before it: the
     240-match design IDENTICAL 237, SAME-PLAY 3 — the three matches with a burn, their flag rows gone (0 flags, was 5); the V5
     smoke IDENTICAL but its five flagged matches (SAME-PLAY); the Toreador 600 IDENTICAL 597, SAME-PLAY 3 (2 flags left, both
     strike-taken). `ana-gates.py` v1.1.0 PASS on all 16 series. The predictions stay as registered and as falsified: the runs
@@ -138,7 +142,7 @@
     snapshots; 2410/0 ×3 before the checker's case, 2409/0 ×3 before 163h), lint 0 findings on 25 files (nothing suppressed), canary
     69/0 on bot/'s copies and 69/0 on the root's v2.6.174 with `client/ELYSIUM-PROTOCOL.md`, main's canary v1.2.0 143/0 beside this
     bot, hotseat 11/0, HB1 11/11, test-cardfx 321/0, `gen-precon.js --check` 18 precons no problems, the ledger's self-test 55/55,
-    `twda.py` 14/0, `ana-gates.py --self-test` 30/0, doc-budget PASS and its self-test every case red, main's `check-versions.js`
+    `twda.py` 14/0, `ana-gates.py --self-test` 31/0, doc-budget PASS and its self-test every case red, main's `check-versions.js`
     agrees, main's client suite beside the bundle 361 passed / 2 failed (the new guide's embed drift; the registry test's extras
     `[brandnew, toreador]` — both by design, the handoff).
 - **v0.6.218 (11 Nov 2026)** — Round C2, the clean-up's dead code and tools (spec-cleanup §5.6 and T10; STATUS Next 1). No behaviour

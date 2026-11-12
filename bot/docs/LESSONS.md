@@ -97,3 +97,4 @@
 - L-80 **Split by OWNERSHIP, then consume releases** (9 Sep); never share files between two projects again.
 - L-81 **Three brains is the disease, not the bots** (carried in from main): one source of truth per fact.
 - L-84 **A stacked PR still targets `main`; the order goes in its body ("merge #N first")** (3 Nov, round C3): #49 was opened on #47's branch `bot-v5-wave4`; the base stayed when #47 merged, so #49 merged 39 s later into that branch, not `main`, and #50 had to carry it over. Check the base before handing a PR over.
+- L-87 **A figure a page repeats moves with the change** (12 Nov, crypt wave A: 6 of its 12 egress findings were stale-doc, the class three rounds running -- the ratchet): before the review, grep the standing pages, the PR draft, the handoff and the curated notes for every figure the change moved -- a count, a version, a sha, an owed list, a ruling. L-73 is the rename case.

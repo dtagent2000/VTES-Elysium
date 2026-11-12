@@ -164,7 +164,8 @@ def _match(k, plant=None, sim=True):
     if plant == 'vanished': row(2500, 'B2', 'block-made', {'vamp': 'Y'})
     if plant == 'window': row(3000, 'B1', 'bleed-total', {'n': 1}); bleed(6000, 1); row(6500, 'B3', 'took-bleed', {'n': 1})
     if plant in ('flag', 'flags'): row(2600, 'B1', 'inv-flag', {'inv': 'strike-taken', 'taken': 2, 'myStrike': 1})
-    if plant == 'wv': row(2600, 'B1', 'inv-flag', {'inv': 'pool-drift', 'diff': 2})   # v1.1.0: Wider View's drift is no known kind now
+    if plant == 'wv': row(2600, 'B1', 'inv-flag', {'inv': 'pool-drift', 'diff': 1})   # v1.1.0: Wider View's two kinds are no known kinds now --
+    if plant == 'wvp': row(2600, 'B1', 'inv-flag', {'inv': 'pool-print', 'via': 'burn-for-pool'})   # both were in v1.0.0's INV_KNOWN (it passes them)
     if plant == 'kind': row(2600, 'B1', 'inv-flag', {'inv': 'blood-vanished'})
     x1 = {'round': 1, 'vamp': 'X', 'opp': None if plant == 'names' else 'Y', 'range': 'close', 'dealt': 1, 'taken': 1, 'stole': 1 if plant == 'victimlost' else 0}
     x2 = {'round': 1, 'vamp': 'Y', 'opp': 'X', 'range': 'long' if plant == 'range' else 'close', 'dealt': 1, 'taken': 1, 'stolenFromMe': 2 if plant == 'victimlost' else 0}
@@ -201,7 +202,7 @@ def self_test():
              ('names', S, {'ledger'}), ('range', S, {'ledger'}), ('victimlost', S, {'ledger'}), ('stray', S, {'handshake'}),
              ('zeroPool', S, {'zeroPool'}), ('zpdisagree', S, {'zeroPool'}), ('stuck', S, {'matches'}), ('noresult', S, {'matches'}),
              ('missing', S, {'matches'}), ('problem', S, {'matches'}), ('flag', S, set()), ('flags', S, {'invariants'}),
-             ('kind', S, {'invariants'}), ('wv', S, {'invariants'}), ('window', S, set()),
+             ('kind', S, {'invariants'}), ('wv', S, {'invariants'}), ('wvp', S, {'invariants'}), ('window', S, set()),
              ('flag', S, set(), 12), ('flags', S, {'invariants'}, 12),   # v1.1.0: a 12-match series carries one known flag, not two
              (None, A, set()), ('window', A, {'windows'}), ('timeout', A, {'matches'}), ('zeroPool', A, {'zeroPool'})]
     fails = 0; tmp = tempfile.mkdtemp(prefix='ana-gates-')
