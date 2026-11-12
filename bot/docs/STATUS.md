@@ -2,14 +2,19 @@
 
 **Bot v0.6.219** (12 Nov 2026, crypt wave A) · arena v1.4.8 · sim table v1.1.0 (round C3) · cardfx compiler v1.9.8, curated 187 · hotseat tool v1.4.0 ·
 coverage tool v1.1.45 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` v1.0.0 · `ana-gates.py` v1.0.0 ·
-built against the root's release, client v2.6.174 / srv-2.6.50 (our canary @@CANROOT@@ against it; main's v1.2.0 @@CANMAIN@@ beside this bot);
+built against the root's release, client v2.6.174 / srv-2.6.50 (our canary 69/0 against it; main's v1.2.0 143/0 beside this bot);
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
 **Deploy state:** `main` carries v0.6.218 (#61), client v2.6.173 and v2.6.174 (main's #60, #62) and main's doc-budget note (#63).
 **Open PR:** @@PR@@ (crypt wave A, v0.6.219).
 
 ## Last gates (v0.6.219 release bytes, 12 Nov 2026)
-@@GATES@@
+Suite **2409/0 ×3** (alone, frozen snapshots, `--max-old-space-size=4096`) · lint 0 findings on 25 files, nothing suppressed ·
+canary **69/0** ×2 (bot/'s copies; the root's release) · hotseat **11/0** · HB1 **11/11** · test-cardfx **321/0** ·
+`gen-precon.js --check` no problems · main's `check-versions.js` agrees · main's client suite beside the bundle 361/2 (the new
+guide's embed drift and the registry test: the handoff) · sim vs v0.6.218: the 240-match client design IDENTICAL 240 (version
+normalized), `ana-gates.py` PASS 6 of 6; the V5 smoke diverged in 50 of 168 matches; Toreador on 600 fresh deals 0.83 VP (the
+CHANGELOG has the reads).
 
 ## What v0.6.219 did (the latest release; older ones in the CHANGELOG)
 Crypt wave A (D-108): 31 vampires' printed abilities — the bleed, strength, intercept, stealth, vote and dodge forms (25 copies
@@ -20,6 +25,8 @@ requests when main has released (main's note of 12 Nov).
 1. V5 wave 5 — Johan picks its shape: the eighteen masters in play, Meditative Grove's cancel, Sudden Reversal's window (D-107).
 2. The copies round (main's canary v1.2.0, Q4) with crypt wave A's riders; then crypt wave B, the 13 partial copies first.
 3. C5 (the leak test) before crypt wave B; C6; the knowledge layer's Kevlar and the prey's wakes (65f); the abstract model spec.
+4. Johan picks: `ana-gates.py` on a 12-match series allows no invariant flag and keys Wider View's drift by its size (+2 unclassed),
+   so v0.6.218's V5 smoke fails 4 of 14 too (CHANGELOG v0.6.219).
 
 ## Not yet consumed from main
 Main's replies of 11 Nov (security, v0.6.218 with canary v1.2.0) are read: their bot-side items are BOARD lines (the copies, a

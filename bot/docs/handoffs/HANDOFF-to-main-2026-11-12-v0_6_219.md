@@ -34,7 +34,11 @@ a warning (and an Actions annotation), not red; a line the root cannot have had 
 `tools/test-doc-budget.sh` proves both cases. STATUS names client v2.6.174 / srv-2.6.50 again.
 
 ## 5. Run here
-@@RUN@@
+On the release bytes (`elysium-bot.js` sha256 `6cf6d07b…`): your `check-versions.js` agrees (in the repository's `client/`,
+read-only); your canary v1.2.0 beside this bot 143/0, ours (v1.0.0) 69/0 against your v2.6.174 + `client/ELYSIUM-PROTOCOL.md`;
+your client suite in a scratch copy of `client/` with this bundle beside it **361 passed, 2 failed** — `v2.6.127 embed-help drift`
+(the Bots page: the new guide, §1) and `v2.6.122 registry, with the released bot` (got `[brandnew, toreador]` with the label
+"V5 Starter — Toreador (Black Chantry 2020)", §2). Nothing else failed.
 
 ## 6. Consumed, and what stays ours
 Your replies of 11 Nov (security, v0.6.218, canary v1.2.0) are recorded in our STATUS. Copying canary v1.2.0 and the v2.6.174

@@ -32,14 +32,83 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.219 (12 Nov 2026)** — Crypt wave A (in progress; this entry is completed at the release). *Predictions, registered before
-  the runs (D-93):* (1) the 240-match client design IDENTICAL to v0.6.218 with the version string normalized (no starter's vampire
-  gains an entry; the reader changes keep every old form's value) — measured before this line: IDENTICAL 240; (2) the V5 smoke: every
-  one of the 14 decks carries a new entry, so any may diverge, and every series passes `ana-gates.py`; (3) Toreador on 600 fresh deals
-  at five seats (`--bench none`, the 6 Nov design) stays inside the starters' span — its paired VP difference to the lowest starter not
-  wholly below 0 and to the highest not wholly above 0 (95 %) — at 0.60–0.85 VP a match (6 Nov: 0.65), with Flávio Gonçalves's own
-  dodge and Catalina Vega's bleed of 2 seen, 600 last-standing, nothing played at 0 pool, `ana-gates.py` PASS. Falsified if any part
-  fails.
+- **v0.6.219 (12 Nov 2026)** — Crypt wave A (RULINGS D-108; Claude's proposal of 6 Nov with both its additions, Johan's "kör" of
+  12 Nov), Toreador in the menu, and main's doc-budget note. 31 vampires curated in `cardfx-curated.json` (187 curated: 136 library,
+  51 crypt; the compile changed those 31 entries and nothing else), at least one in each of the 14 other precons: 25 copies modelled,
+  13 partial (a bleed or strength sentence; the other waits for wave B) — `docs/CARDS.md`'s crypt ledger: 39 vampires unmodelled
+  (43 copies), 12 partial (13), 25 modelled (35), 110 with no ability (125).
+  - *+1 bleed* (Catalina Vega ×2, Kamile Paukstys; the bleed halves of Kasim Bayar, Marchesa Liliana, Mora, Nonu Dis, Agnieszka,
+    Ashur-uballit, Huldu, Aaradhya, Sreelekha ×2): the Lenny reader, no code.
+  - *+1 strength* (Massimiliano ×2, Valeriya Zinovieva, Anousha, Kalyani; the strength halves of Theo Bell, Faruq, Abderrahim):
+    `_cryptStrengthMod` needs no opponent unless a clan condition does (Blythe's), so the planners read it: the rush's expectation
+    and its target's torpor reach, Change of Target's fist, the Grapple's bonus, the next round's damage (`_myRoundDmg`, which had
+    carried neither the crypt's nor Blythe's).
+  - *Intercept* (`_cryptIntercept`): Martina on bleeds, Rinaldo always (the existing forms); Castellan's directed form with its
+    undirected half (`_pendDirected`: a bleed, a pool action and a rush are directed, an undirected window is not, the [aus] / [AUS]
+    Revelations by its form, the asked window by the human action's own read, anything else unknown — no modifier); Branimira at 9
+    pool or fewer; Bret Stryker -1 against a titled actor (`_actorTitled`: the title card first, R-43; an ally is no titled vampire);
+    Azucena +1 / -1 against a younger / older Lasombra actor (`_actorAgeVs`: printed capacity, Navar's rule). The Dowager's +1 now
+    also reaches the asked window of a directed action (a human's; it read 0 there).
+  - *Stealth* (`_cryptStealthMod(vamp, kind, dir)`): every announce passes its kind and form — hunt, leave torpor, the own and the
+    enemy rescue, recruit, equip / employ, stock, strength, Rutor's Hand, tabling, fetch, the two rushes, the card burn, Revelations,
+    pool damage, the political call and the bleed — so Verrix (+1 bleeding), Kalyani (-1 hunting), Frau Schädel (+1 recruiting and
+    employing), Ariane (-1 on every undirected action) and Devorah (+1 at 5 pool or fewer) reach the counter.
+  - *Yewon Ong ×2*: Alexa Draper's vote discard with [obl] (no code).
+  - *The crypt dodge* (Flávio Gonçalves ×2, Phaibun; `fx.strikeDodge`, `_cryptDodgeFx` / `_cryptDodgeFor`): `_bestDodgeFor` offers
+    the vampire's own once-each-combat strike: dodge — a free one before a dodge card (unless the card brings an additional strike),
+    Phaibun's (a card discarded at random, `_randomHandIndex`: a hash, so the sim stays byte for byte) after one; it counts as a copy in
+    the strike decision, a free one costs no card in the block's price, Immortal Grapple bars it; the line is the client's own
+    `NAME strikes: dodge — no damage either way this round.` (Phaibun's discard line before it has no reader); `_cryptDodgeUsed` dies
+    at the combat's start and in its finally.
+  - *Toreador in the menu* (D-108's three conditions; the reads below): `ARCHETYPES.toreador` (= `deck-toreador.json`, which loses
+    its posture: an embedded deck's is `DECK_STRATEGY`'s) and a `DECK_STRATEGY` line (vote + bleed, wave: the posture and multipliers
+    the file deck played with). The client lists it by itself under the deck's name; main's registry test pins the menu's extra keys
+    (the handoff).
+  - *Tools*: `gen-card-ledger.js` v1.1.1 (FX_CLASS `strikeDodge`: combat; a self-test case, 55), coverage tool v1.1.45 (CLASS
+    `strikeDodge`: crypt). **doc-budget** (main's note of 12 Nov, shape 2 narrow): on a pull request STATUS must name the root's
+    release; with `DOC_BUDGET_ROOT_DRIFT=warn` (CI outside pull requests) a newer root warns, an impossible line still fails;
+    `test-doc-budget.sh` +2 cases, and its STATUS case pads the page to one byte over its budget (a fixed 2000 bytes left this
+    release's shorter STATUS under it; found in the round, D-92).
+  - *Tests*: suite section 163 (12 checks: the readers, the block path, the turn's announces through `_playTurn`, the planners, Yewon,
+    the dodge through `_resolveCombatRound`, the menu; destructive: v0.6.218 0/12 with the new cardfx and 0/12 with its own); 160k
+    reads ministry's file for a file deck's posture and pins the embedded Toreador; 103b's source pin follows the own rescue's
+    announce; test-cardfx +6.
+  - *The graded readings* (a fresh read-only agent, the HARNESS charter, the 31 readings): 18 green, 12 amber (the partial rows,
+    each one's other sentence declared; Azucena's age read from printed capacity, Oblivion's +1 not read: no ruling found), 1 red —
+    Yewon Ong's ability in torpor [LSJ 20011022], declared in her note (the shared reader takes ready vampires, Alexa Draper's too,
+    and the voter stays home without a title vote) and listed. Fixed in the round from its findings (D-92): Devorah's pool counts an
+    action's parked cost back (`_poolNow`, R-17; latent in her deck); a bot blocker reads a BOT actor's counter raw (`_commitBlock`:
+    Ariane's and Kalyani's undirected 0 was floored at the default 1 and spent an intercept card for nothing; a human's unbooked
+    counter keeps the floor); `_discardPickFor` takes a card with no effect data that requires the discipline (Stygian Shroud pays
+    Yewon). Listed (BOARD, crypt wave A's riders): Revelations' form is set after the block decision (`peekSup`: Castellan, The
+    Dowager); `_myBleedEach` forecasts a +1-bleed vampire at 1 (Lenny since v0.6.80); the who-stays-home planners read no crypt
+    intercept; the event log's discard name carries the line's tail.
+  - *Predictions, registered before the runs (D-93; committed in 21fb3b7, word for word):* (1) the 240-match client design IDENTICAL
+    to v0.6.218 with the version string normalized (no starter's vampire gains an entry; the reader changes keep every old form's
+    value) — measured before this line: IDENTICAL 240; (2) the V5 smoke: every one of the 14 decks carries a new entry, so any may
+    diverge, and every series passes `ana-gates.py`; (3) Toreador on 600 fresh deals at five seats (`--bench none`, the 6 Nov design)
+    stays inside the starters' span — its paired VP difference to the lowest starter not wholly below 0 and to the highest not wholly
+    above 0 (95 %) — at 0.60–0.85 VP a match (6 Nov: 0.65), with Flávio Gonçalves's own dodge and Catalina Vega's bleed of 2 seen,
+    600 last-standing, nothing played at 0 pool, `ana-gates.py` PASS. Falsified if any part fails.
+  - *What came out:* (1) IDENTICAL 240 on the release bytes (raw SAME-PLAY 240: the version string), `ana-gates.py` PASS 6 of 6:
+    **held**. (2) 50 of 168 matches diverged, in 11 of 14 series (pathcathari
+    11 IDENTICAL + 1 SAME-PLAY, pathpower and tzimisce IDENTICAL), and 4 series FAIL the invariants gate, nothing else (brujah,
+    pathcaine, pathdeath, toreador: 2 to 4 flags of Ventrue's Wider View burn-for-pool where a 12-match series may carry none, the
+    Toreador series' with a +2 drift that is not a known kind): **falsified**. v0.6.218's smoke fails the same gate in 4 of 14 the same
+    way (hecata, pathcaine, pathdeath, toreador; the +2 drift in the same Toreador match), so the miss is the gate's policy on a short
+    series, not the change — a map (STATUS Next). (3) 0.83 ± 0.06 VP (6 Nov: 0.65 ± 0.05), 106 wins
+    (17.7 %); minus nosferatu +0.51 [+0.38, +0.65], minus malkavian -1.32 [-1.54, -1.11]: inside the span; its own dodge 129 times,
+    Catalina Vega's plain bleed of 2 through 381 times; 600 last-standing, no decision at 0 pool; `ana-gates.py` FAIL on the invariants
+    gate alone — 8 flags in 600, under its 30, one of them the unclassed +2 drift (Ventrue's Wider View again): **falsified by that
+    part**, every read of Toreador held. @@PAIRED@@ Verdict: keep, and Toreador joins the menu — D-108's "holds up in the sim" is
+    the Toreador reads; the one miss is the series tool's, on v0.6.218 too. The library ledger: playable 190 (192), unseen 25 (23) —
+    Bear's Skin and Form of the Wolf, once in Gangrel's 12 matches before (1/12 each), not in the new 12.
+  - *Gates* (release bytes: bot `6cf6d07b`, cardfx `67a85631`, suite `cd3cfecd`): suite 2409/0 ×3 (431, 431, 427 s; alone, frozen
+    snapshots), lint 0 findings on 25 files (nothing suppressed), canary 69/0 on bot/'s copies and 69/0 on the root's v2.6.174 with
+    `client/ELYSIUM-PROTOCOL.md`, main's canary v1.2.0 143/0 beside this bot, hotseat 11/0, HB1 11/11, test-cardfx 321/0,
+    `gen-precon.js --check` 18 precons no problems, the ledger's self-test 55/55, `twda.py` 14/0, `ana-gates.py --self-test` 27/0,
+    doc-budget PASS and its self-test every case red, main's `check-versions.js` agrees, main's client suite beside the bundle 361
+    passed / 2 failed (the new guide's embed drift; the registry test's extras `[brandnew, toreador]` — both by design, the handoff).
 - **v0.6.218 (11 Nov 2026)** — Round C2, the clean-up's dead code and tools (spec-cleanup §5.6 and T10; STATUS Next 1). No behaviour
   change: the 240-match client design is SAME-PLAY 240 against v0.6.217 — the one difference `ana-sim-diff.py` reports is the result
   row's version string (it ignores each run's own wall and CPU times) — and IDENTICAL 240 with that string normalized. A release because the bot's bytes changed (CI: the root's bundle is `bot/`'s).
