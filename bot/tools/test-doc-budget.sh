@@ -19,7 +19,8 @@ run(){   # $1 the case, $2 the text its own FAIL line carries: any FAIL is no pr
   if [ "$ec" = 1 ] && [ -n "$fl" ]; then echo "red   $1 :: ${fl#FAIL  }"; else echo "GREEN $1 :: exit $ec, no FAIL line with '$2'  <-- the check missed it"; bad=1; fi
 }
 fresh; if bash "$T/bot/tools/doc-budget.sh" > /dev/null; then echo "green baseline"; else echo "RED baseline <-- fix the docs first"; bad=1; fi
-fresh; pad "$T/bot/docs/STATUS.md" 2000;                                                  run "STATUS over its budget" "STATUS.md is"
+fresh; n=$(wc -c < "$T/bot/docs/STATUS.md"); pad "$T/bot/docs/STATUS.md" $(( n < 5001 ? 5001 - n : 1 ))   # to 1 byte over (a fixed 2000 missed a short STATUS, 12 Nov)
+run "STATUS over its budget" "STATUS.md is"
 fresh; printf '%s\n' 'See `docs/NOPE.md`.' >> "$T/bot/docs/BOARD.md";                    run "BOARD names a missing file" "names docs/NOPE.md"
 fresh; rm "$T/bot/ana-ledger.py";                                                          run "a named tool deleted" "names ana-ledger.py"
 fresh; rm "$T/bot/docs/HARNESS.md";                                                        run "a standing page deleted" "docs/HARNESS.md"
