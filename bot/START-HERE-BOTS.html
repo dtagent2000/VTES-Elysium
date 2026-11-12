@@ -103,7 +103,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <li><a href="#setup">Setting up a table</a></li>
   <li><a href="#play">How a bot plays</a></li>
   <li><a href="#controls">Controls</a></li>
-  <li class="ver">bot v0.6.218 · client v2.6.172</li>
+  <li class="ver">bot v0.6.219 · client v2.6.174</li>
 </ul></nav>
 
 <header class="hero">
@@ -133,7 +133,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <p class="lead">The short version: a bot is a fifth player who knows the rules of the actions it takes, plays a fixed deck it has been taught, and asks you when it cannot see what your card does.</p>
 
   <h3>What a bot knows about cards</h3>
-  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>156 are hand-curated</strong> (136 library, 20 crypt) — checked card by card so the bot plays them exactly right. Every master in the four V5 starters is among them: The Labyrinth locks for +1 stealth for a Nosferatu, Guardian Angel sits on the bot's sturdiest ready vampire (+1 intercept against your bleeds, 1 damage prevented each combat, gone when that vampire goes to torpor), Wasserschloss Anif banks blood from a ready Tremere for the next Tremere to come out, and Haven Uncovered goes on an opponent's vampire the bot means to rush — after that any minion, yours included, may enter combat with that vampire as a +1 stealth directed action. The other cards of the six decks in the menu all have a modelled effect, most of them compiled rather than curated.</p>
+  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>187 are hand-curated</strong> (136 library, 51 crypt) — checked card by card so the bot plays them exactly right. Every master in the four V5 starters is among them: The Labyrinth locks for +1 stealth for a Nosferatu, Guardian Angel sits on the bot's sturdiest ready vampire (+1 intercept against your bleeds, 1 damage prevented each combat, gone when that vampire goes to torpor), Wasserschloss Anif banks blood from a ready Tremere for the next Tremere to come out, and Haven Uncovered goes on an opponent's vampire the bot means to rush — after that any minion, yours included, may enter combat with that vampire as a +1 stealth directed action. The other cards of the seven decks in the menu all have a modelled effect, most of them compiled rather than curated. So do their vampires' own abilities: Catalina Vega bleeds for one more, The Dowager intercepts better against directed actions, Flávio Gonçalves dodges once in each combat.</p>
   <p>This shapes three things you will notice:</p>
   <ul>
     <li><strong>Its own deck it plays well.</strong> Every card in a bot deck has a modelled effect, so the bot never holds a card it cannot use. A card it genuinely cannot play with its current vampires is treated as dead and cycled in the discard phase.</li>
@@ -146,17 +146,18 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <p>Its play is <em>statistical, not scripted</em>: it tracks what each opponent has shown (bleed sizes, stealth, intercept, damage, blocks) and weighs its own hand against that picture. It knows its own deck's composition exactly, so its odds about its own next draws are real. Its picture of <em>your</em> deck starts from the tournament-winning decks archive (TWDA, about 4,700 decks): from your crypt's clan and every library card you have shown, it expects how much combat, stealth, intercept and bounce your deck runs, and sharpens that as you play. Public evidence only — never your hand. Once it is confident, one bot writes once in the log what it reads your deck as (“Viktor (bot) reads Johan's deck as Lawfirm (7 of 8 cards typical).”) — one bot speaks for the table, and it waits until no block, vote or combat is open; that line is explanation, it does not steer the bot's play.</p>
 
   <h3>Decks and archetypes</h3>
-  <p>Each bot plays one of six fixed decks. The deck decides not only the cards but the <em>posture</em> — how eagerly it goes forward, how many bodies it keeps home, and what it builds first.</p>
+  <p>Each bot plays one of seven fixed decks. The deck decides not only the cards but the <em>posture</em> — how eagerly it goes forward, how many bodies it keeps home, and what it builds first.</p>
   <div class="wrap"><table>
     <tr><th>Menu name</th><th>Archetype</th><th>How it plays</th></tr>
     <tr><td>V5 Starter — Malkavian</td><td>Stealth-bleed with intel</td><td>Dementation/Obfuscate bleed engine, Kindred Spirits chip damage, Revelations hand reads. Goes forward hard on a stealth stack and gambles on card churn. The strongest of the starters — it has won tournaments out of the box.</td></tr>
     <tr><td>V5 Starter — Ventrue</td><td>Vote-and-bleed toolbox</td><td>Princes call Kine Resources Contested and Parity Shift on their own titles, Dominate bleeds between referendums, Deflection and Second Tradition at home, Freak Drive to act twice.</td></tr>
     <tr><td>V5 Starter — Tremere</td><td>Bounce-wall with Thaumaturgy reach</td><td>Auspex intercept plus Deflection redirect pressure; Theft of Vitae swings blood. A bleed/combat hybrid that nips at both pool and blood.</td></tr>
+    <tr><td>V5 Starter — Toreador (Black Chantry 2020)</td><td>Vote-and-bleed with the Grand Ball</td><td>Princes and Toreador Justicar call Kine Resources Contested, Parity Shift and Voter Captivation; Toreador Grand Ball frees a Toreador for the politics; Presence bleeds (Enchant Kindred, Aire of Elation) between referendums; Majesty ends a fight, and Flávio Gonçalves dodges once each combat.</td></tr>
     <tr><td>V5 Starter — Nosferatu</td><td>Menace attrition</td><td>Builds permanents first (intercept, damage enhancers), then Fame and Creeping Sabotage pressure with Animalism rushes to keep threats in torpor. A dangerous combat deck once a fight starts.</td></tr>
     <tr><td>Weenie Bleed (Trainbot)</td><td>Ashur-cycling swarm</td><td>Cheap crypt floods the table, small bleeds every turn, Ashur Tablets recycle the engine. Based on a tournament-winning list — noticeably stronger than the starters.</td></tr>
     <tr><td>Inside Dirt (Nosferatu)</td><td>Weenie stealth-bleed</td><td>Obfuscate swarm slips small bleeds and Inside Dirt pool damage through every turn; minimal combat. Also tournament-derived and strong.</td></tr>
   </table></div>
-  <p>For an even table among bots, pair the four V5 starters. Mix in Weenie Bleed or Inside Dirt when you want a harder opponent.</p>
+  <p>For an even table among bots, pair the V5 starters. Mix in Weenie Bleed or Inside Dirt when you want a harder opponent.</p>
 
   <h3>Experience level</h3>
   <p>Every bot seat has a <em>simulated experience</em> setting. It does not change what the bot knows about cards — it changes how it weighs the same facts.</p>
@@ -459,7 +460,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.218</b>, client <b>v2.6.172</b> / server srv-2.6.49, cardfx 156 curated / 1,708 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 11 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.219</b>, client <b>v2.6.174</b> / server srv-2.6.50, cardfx 187 curated / 1,708 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 12 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 
 <script>
