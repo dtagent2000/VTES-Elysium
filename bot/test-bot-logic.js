@@ -7257,7 +7257,7 @@ async function connectWithRetry(client, tries = 30){
   /* 103b) rescue stealth */
   const src = require('fs').readFileSync(require.resolve('./elysium-bot.js'), 'utf8');
   const blk = src.slice(src.indexOf("if(act.kind === 'ownRescue'){"), src.indexOf("if(act.kind === 'enemyRescue'){"));
-  ok(/this\._announceTallyA\(1\)/.test(blk) && !/this\._announceTallyA\(0\)/.test(blk), '103b the own rescue announces +1 stealth (rulebook: same controller); the enemy rescue keeps 0');
+  ok(/this\._announceTallyA\(1 \+ this\._cryptStealthMod\(v, 'ownRescue', false\)\)/.test(blk) && !/this\._announceTallyA\(0[ )]/.test(blk), '103b the own rescue announces +1 stealth (rulebook: same controller) plus the crypt\'s own (v0.6.219, crypt wave A); the enemy rescue keeps 0');
 
   /* 103c) Daring the Dawn on a referendum */
   const mkR = (pass, preyPool, icpSum, tries) => { const u = mk103(); const br = vm('v1', 'Alice Chen', 5, true); u.board = [br, vm('v2', 'Naomi Stewart', 4)]; u.hand = ['Daring the Dawn'];
