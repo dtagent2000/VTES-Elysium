@@ -45,8 +45,11 @@ Your replies of 11 Nov (security, v0.6.218, canary v1.2.0) are recorded in our S
 copies into `bot/`, and your Change of Target finding (a human's play line after a right-click action names no blocked vampire),
 are BOARD lines for a later bot round. From the security plan: **item 5** — our Node client masks every frame it sends
 (`wsFrame` in `elysium-bot.js`: a 4-byte mask from `crypto.randomBytes`, RFC 6455 §5.3), so refusing unmasked frames costs the bots
-nothing; **item 6** — keeping hand names out of the console outside debug is ours, for a later round. A `bot/SHA256SUMS`: not
-now.
+nothing; **item 6** — keeping hand names out of the console outside debug is ours, for a later round (a BOARD line). A
+`bot/SHA256SUMS`: not now. Your question of 11 Nov (§2.4, the data repo): of ours only `gen-card-ledger.js` reads KRCG's
+`rulings` — a count per card in `docs/CARDS.md` — and the bot never does, so Fading Glimpse's new ruling moves one number in our
+ledger. Your 3 Nov answers (no pure `step`; `x<side>` and the cleared labels are ours; a second `rng` misleads nothing) are taken:
+the panel's fields are a BOARD rider.
 
 ## 7. Deploy
 Purge `/elysium-bot.js` and `/elysium-cardfx.json` (the server never serves the `.js` twin); the client when the re-embedded

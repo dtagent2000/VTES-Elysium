@@ -67,10 +67,14 @@
   - *Tools*: `gen-card-ledger.js` v1.1.1 (FX_CLASS `strikeDodge`: combat; a self-test case, 55), coverage tool v1.1.45 (CLASS
     `strikeDodge`: crypt). **doc-budget** (main's note of 12 Nov, shape 2 narrow): on a pull request STATUS must name the root's
     release; with `DOC_BUDGET_ROOT_DRIFT=warn` (CI outside pull requests) a newer root warns, an impossible line still fails;
-    `test-doc-budget.sh` +2 cases, and its STATUS case pads the page to one byte over its budget (a fixed 2000 bytes left this
-    release's shorter STATUS under it; found in the round, D-92).
-  - *Tests*: suite section 163 (12 checks: the readers, the block path, the turn's announces through `_playTurn`, the planners, Yewon,
-    the dodge through `_resolveCombatRound`, the menu; destructive: v0.6.218 0/12 with the new cardfx and 0/12 with its own); 160k
+    `test-doc-budget.sh` +2 cases, its baseline in the caller's mode (it unset the mode, so main's next release would have turned
+    CI's scheduled run red again — the egress review; proved on a copy with the root at v2.6.175: the old self-test RED, the new
+    green, strict still red as a pull request must be), and its STATUS case pads the page to one byte over its budget (a fixed 2000
+    bytes left this release's shorter STATUS under it; found in the round, D-92). BOARD's ceiling 18 -> 18.5 KB (D-101: three found
+    asks, no history to cut); STATUS gave the bootstrap its bytes back.
+  - *Tests*: suite section 163 (13 checks: the readers, the block path, the turn's announces through `_playTurn`, the planners, Yewon,
+    the dodge through `_resolveCombatRound`, the menu, and 163h — every one of the 18 announces passes its kind and form, a source
+    pin the egress review asked for; destructive: v0.6.218 0/13 with the new cardfx and 0/13 with its own); 160k
     reads ministry's file for a file deck's posture and pins the embedded Toreador; 103b's source pin follows the own rescue's
     announce; test-cardfx +6.
   - *The graded readings* (a fresh read-only agent, the HARNESS charter, the 31 readings): 18 green, 12 amber (the partial rows,
@@ -83,6 +87,12 @@
     Yewon). Listed (BOARD, crypt wave A's riders): Revelations' form is set after the block decision (`peekSup`: Castellan, The
     Dowager); `_myBleedEach` forecasts a +1-bleed vampire at 1 (Lenny since v0.6.80); the who-stays-home planners read no crypt
     intercept; the event log's discard name carries the line's tail.
+  - *The egress review* (a fresh read-only agent, HARNESS): 7 findings (stale-doc 4, half-done 1, unproven 1, rule-missed 1), all
+    fixed in the round — the self-test's baseline (half-done, above); 163h (unproven: no test drove the announces' kinds beyond the
+    hunt, the bleed and the own rescue); bot/CLAUDE.md, README and ARCHITECTURE named seven embedded decks and 14 precons outside
+    the menu, the riders' line lacked the discard name, STATUS listed main's 3 Nov answers as owed, the PR's unsure list missed The
+    Dowager's asked window (stale-doc); the security plan's item 6 had no BOARD line (rule-missed). The handoff answers main's
+    rulings question (only `gen-card-ledger.js` reads them).
   - *Predictions, registered before the runs (D-93; committed in 21fb3b7, word for word):* (1) the 240-match client design IDENTICAL
     to v0.6.218 with the version string normalized (no starter's vampire gains an entry; the reader changes keep every old form's
     value) — measured before this line: IDENTICAL 240; (2) the V5 smoke: every one of the 14 decks carries a new entry, so any may
