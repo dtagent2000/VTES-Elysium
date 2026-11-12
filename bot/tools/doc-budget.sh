@@ -4,7 +4,8 @@
 #      every standing page together <= 160 KB;
 #   2. every repo path named (in backticks) in a standing page, and every bot/ path in the root CLAUDE.md, exists;
 #   3. every version STATUS.md names agrees with the code: BOT_VERSION, the arena, the sim, the cardfx compiler, the hotseat
-#      tool, the coverage tool, the read-only client / protocol / server copies in bot/ and the root's client / server.
+#      tool, the coverage tool, the read-only client / protocol / server copies in bot/ and the root's client / server (with
+#      DOC_BUDGET_ROOT_DRIFT=warn, as CI sets it outside pull requests, a root newer than STATUS's line is a warning, not a failure).
 # Portable to bash 3.2 (macOS): no associative arrays.
 set -u
 B=$(cd "$(dirname "$0")/.." && pwd); D="$B/docs"; R="$B/.."; fail=0
@@ -71,7 +72,24 @@ want SIM_VERSION              "sim table v$(v "$B/elysium-bot-sim.js" "SIM_VERSI
 want FXC_VERSION              "cardfx compiler v$(v "$B/cardfx-compile.js" "FXC_VERSION = '[0-9.]+'")"
 want "the hotseat tool"       "hotseat tool v$(v "$B/elysium-bot-hotseat.js" "elysium-bot-hotseat.js v[0-9.]+")"
 want "the coverage tool"      "coverage tool v$(v "$B/gen-deck-coverage.js" "gen-deck-coverage.js v[0-9.]+")"
-want "the root's release"     "client v$(v "$R/elysium-vtes-bord.html" "const VERSION='[0-9.]+'") / srv-$(v "$R/elysium-server.js" "const VERSION = '[0-9.]+'")"
+# the root's release (main's note of 12 Nov 2026: each client or server release turned this check red on main until a bot round).
+# On a pull request -- the default -- STATUS must name it: the PR's gates ran against it. Where CI sets DOC_BUDGET_ROOT_DRIFT=warn
+# (a scheduled run, a push to main) a root NEWER than STATUS's line is a warning; a line the root cannot have had (newer than the
+# root, or older in one part and newer in the other) fails either way.
+vcmp(){ local IFS=.; local a=($1) b=($2) i; for i in 0 1 2; do [ "${a[$i]:-0}" -lt "${b[$i]:-0}" ] && { echo -1; return; }; [ "${a[$i]:-0}" -gt "${b[$i]:-0}" ] && { echo 1; return; }; done; echo 0; }
+rc=$(v "$R/elysium-vtes-bord.html" "const VERSION='[0-9.]+'"); rs=$(v "$R/elysium-server.js" "const VERSION = '[0-9.]+'"); rw="client v$rc / srv-$rs"
+case "$st" in
+  *"$rw"*) ok "STATUS: $rw (the root's release)" ;;
+  *) sl=$(printf '%s\n' "$st" | grep -oE 'client v[0-9]+\.[0-9]+\.[0-9]+ / srv-[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+     sc=$(printf '%s' "$sl" | sed -E 's#^client v([0-9.]+) / srv-([0-9.]+)$#\1#'); ss=$(printf '%s' "$sl" | sed -E 's#^client v([0-9.]+) / srv-([0-9.]+)$#\2#')
+     if [ -z "$rc" ] || [ -z "$rs" ] || [ -z "$sl" ]; then bad "STATUS lacks '$rw' (the root's release in the code)"
+     elif [ "$(vcmp "$rc" "$sc")" -ge 0 ] && [ "$(vcmp "$rs" "$ss")" -ge 0 ]; then
+       if [ "${DOC_BUDGET_ROOT_DRIFT:-fail}" = warn ]; then
+         printf 'WARN  STATUS names %s; the root has moved on to %s (main released since the last bot round, which updates the line)\n' "$sl" "$rw"
+         [ -n "${GITHUB_ACTIONS:-}" ] && printf '::warning::STATUS names %s; the root is %s -- the next bot round updates the line\n' "$sl" "$rw"
+       else bad "STATUS lacks '$rw' (the root's release in the code; STATUS names $sl)"; fi
+     else bad "STATUS names $sl, a release the root cannot have had (the root is $rw)"; fi ;;
+esac
 want "bot/'s read-only copies" "copies in bot/ are client v$(v "$B/elysium-vtes-bord.html" "const VERSION='[0-9.]+'") / protocol v$(v "$B/ELYSIUM-PROTOCOL.md" "reflects client \*\*v[0-9.]+") / srv-$(v "$B/elysium-server.js" "const VERSION = '[0-9.]+'")"
 
 [ "$fail" = 0 ] && echo "doc-budget: PASS" || echo "doc-budget: FAIL"

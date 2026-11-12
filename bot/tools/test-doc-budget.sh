@@ -1,8 +1,10 @@
 #!/bin/bash
 # test-doc-budget.sh -- the destructive check of tools/doc-budget.sh (20 Oct 2026). Each case breaks ONE thing in a fresh copy of
-# the repo's docs + bot/ and expects doc-budget to print FAIL and exit 1; the baseline copy must PASS. ~1 min (11 copies of bot/).
+# the repo's docs + bot/ and expects doc-budget to print FAIL and exit 1; the baseline copy must PASS. ~1 min (13 copies of bot/).
+# Two cases run outside a pull request (DOC_BUDGET_ROOT_DRIFT=warn): main's newer release only warns, an impossible one still fails.
 # Run from anywhere: bash bot/tools/test-doc-budget.sh   -- exit 0 = every case red and the baseline green.
 set -u
+unset DOC_BUDGET_ROOT_DRIFT   # the strict default (a pull request's) for every case below; the warn cases set it themselves (12 Nov 2026)
 SRC=$(cd "$(dirname "$0")/../.." && pwd); W=$(mktemp -d "${TMPDIR:-/tmp}/dbtest-XXXX"); T="$W/repo"; bad=0
 fresh(){
   rm -rf "$T"; mkdir -p "$T/client/docs"
@@ -26,6 +28,13 @@ fresh; sed -i.bak "s/BOT_VERSION = '\([0-9.]*\)'/BOT_VERSION = '9.9.9'/" "$T/bot
 fresh; sed -i.bak "s/const VERSION = '\([0-9.]*\)'/const VERSION = '9.9.9'/" "$T/bot/elysium-server.js"; run "the read-only server copy refreshed, STATUS not" "srv-9.9.9"
 fresh; sed -i.bak "s/const VERSION='\([0-9.]*\)'/const VERSION='9.9.9'/" "$T/elysium-vtes-bord.html";     run "the root client released, STATUS not" "client v9.9.9"
 fresh; sed -i.bak "s/FXC_VERSION = '\([0-9.]*\)'/FXC_VERSION = '9.9.9'/" "$T/bot/cardfx-compile.js";      run "the compiler bumped, STATUS not" "cardfx compiler v9.9.9"
+# outside a pull request (CI's DOC_BUDGET_ROOT_DRIFT=warn): main's newer release is a warning, a release the root cannot have had still fails
+fresh; sed -i.bak "s/const VERSION='\([0-9.]*\)'/const VERSION='9.9.9'/" "$T/elysium-vtes-bord.html"
+out=$(DOC_BUDGET_ROOT_DRIFT=warn bash "$T/bot/tools/doc-budget.sh" 2>&1); ec=$?
+if [ "$ec" = 0 ] && printf '%s\n' "$out" | grep -q '^WARN.*client v9.9.9'; then echo "ok    the root client released, STATUS not, outside a pull request :: a warning, exit 0"; else echo "RED   the root client released, outside a pull request :: exit $ec, no WARN line  <-- the warn mode missed it"; bad=1; fi
+fresh; sed -i.bak "s/const VERSION='\([0-9.]*\)'/const VERSION='0.0.1'/" "$T/elysium-vtes-bord.html"
+out=$(DOC_BUDGET_ROOT_DRIFT=warn bash "$T/bot/tools/doc-budget.sh" 2>&1); ec=$?; fl=$(printf '%s\n' "$out" | grep '^FAIL' | grep -F 'a release the root cannot have had' | head -1)
+if [ "$ec" = 1 ] && [ -n "$fl" ]; then echo "red   STATUS names a release newer than the root, outside a pull request :: ${fl#FAIL  }"; else echo "GREEN STATUS newer than the root, outside a pull request :: exit $ec  <-- the check missed it"; bad=1; fi
 fresh; pad "$T/CLAUDE.md" 12000;                                                           run "the bootstrap over 50 KB" "bootstrap is"
 fresh; python3 -c "
 import os, sys
