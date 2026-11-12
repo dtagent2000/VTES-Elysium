@@ -106,7 +106,7 @@
     pathcaine, pathdeath, toreador: 2 to 4 flags of Ventrue's Wider View burn-for-pool where a 12-match series may carry none, the
     Toreador series' with a +2 drift that is not a known kind): **falsified**. v0.6.218's smoke fails the same gate in 4 of 14 the same
     way (hecata, pathcaine, pathdeath, toreador; the +2 drift in the same Toreador match), so the miss is the gate's policy on a short
-    series, not the change — a map (STATUS Next). (3) 0.83 ± 0.06 VP (6 Nov: 0.65 ± 0.05), 106 wins
+    series, not the change — a map, answered the same day (D-111, below). (3) 0.83 ± 0.06 VP (6 Nov: 0.65 ± 0.05), 106 wins
     (17.7 %); minus nosferatu +0.51 [+0.38, +0.65], minus malkavian -1.32 [-1.54, -1.11]: inside the span; its own dodge 129 times,
     Catalina Vega's plain bleed of 2 through 381 times; 600 last-standing, no decision at 0 pool; `ana-gates.py` FAIL on the invariants
     gate alone — 8 flags in 600, under its 30, one of them the unclassed +2 drift (Ventrue's Wider View again): **falsified by that
@@ -120,14 +120,27 @@
     first different decision, V5 smoke): blocks against a body with the new strength or intercept, bleed-action picks behind a
     +1 bleed (Break the Bonds, The Platinum Protocol, Fleetness), the stealth a crypt intercept puts out of reach, Flávio's
     strike decision weighing his own dodge, Valeriya's Grapple. Verdict: keep, and Toreador joins the menu — D-108's "holds up
-    in the sim" is the Toreador reads; the one miss is the series tool's. The library ledger: playable 190 (192), unseen 25 (23) —
+    in the sim" is the Toreador reads; the one miss is the series tool's (Johan agreed, D-111). The library ledger: playable 190 (192), unseen 25 (23) —
     Bear's Skin and Form of the Wolf, once in Gangrel's 12 matches before (1/12 each), not in the new 12.
-  - *Gates* (release bytes: bot `6cf6d07b`, cardfx `67a85631`, suite `27afb574`): suite 2410/0 ×3 (412, 432, 422 s; alone, frozen
-    snapshots; 2409/0 ×3 before 163h), lint 0 findings on 25 files (nothing suppressed), canary 69/0 on bot/'s copies and 69/0 on the root's v2.6.174 with
-    `client/ELYSIUM-PROTOCOL.md`, main's canary v1.2.0 143/0 beside this bot, hotseat 11/0, HB1 11/11, test-cardfx 321/0,
-    `gen-precon.js --check` 18 precons no problems, the ledger's self-test 55/55, `twda.py` 14/0, `ana-gates.py --self-test` 27/0,
-    doc-budget PASS and its self-test every case red, main's `check-versions.js` agrees, main's client suite beside the bundle 361
-    passed / 2 failed (the new guide's embed drift; the registry test's extras `[brandnew, toreador]` — both by design, the handoff).
+  - *The gate's misses fixed at their cause* (Johan, 12 Nov, RULINGS D-111): the bot's pool checker (`_invOnEvent`, observe only)
+    counted the blood moved before a Wider View burn twice — the burn's note prints the pool after that blood left, the phase's one
+    "I influence ..." sentence books it at the phase's end — so every burn after a move wrote a pool-print and a pool-drift +N (the
+    bot's pool was right). The gap is booked at the burn and the sentence subtracts only the rest; a printed pool above the ledger
+    still flags at once, a gap no sentence explains flags at the turn (suite 127v +1: red on the previous bytes with the field's own
+    pool-print 8/10 and pool-drift +2). `ana-gates.py` v1.1.0: the invariants cap is never below one flag (a 12-match series may
+    carry one known flag), and Wider View's two kinds are no longer known (self-test 30: a planted Wider View drift fails, a
+    12-match series passes one known flag and fails two; the old gate fails the one). On the same specs as the bytes before it: the
+    240-match design IDENTICAL 237, SAME-PLAY 3 — the three matches with a burn, their flag rows gone (0 flags, was 5); the V5
+    smoke IDENTICAL but its five flagged matches (SAME-PLAY); the Toreador 600 IDENTICAL 597, SAME-PLAY 3 (2 flags left, both
+    strike-taken). `ana-gates.py` v1.1.0 PASS on all 16 series. The predictions stay as registered and as falsified: the runs
+    above them are the bytes they were made for; the miss was the checker's, now gone.
+  - *Gates* (release bytes: bot `7820e7c2`, cardfx `67a85631`, suite `e323acfc`): suite 2411/0 ×3 (434, 420, 420 s; alone, frozen
+    snapshots; 2410/0 ×3 before the checker's case, 2409/0 ×3 before 163h), lint 0 findings on 25 files (nothing suppressed), canary
+    69/0 on bot/'s copies and 69/0 on the root's v2.6.174 with `client/ELYSIUM-PROTOCOL.md`, main's canary v1.2.0 143/0 beside this
+    bot, hotseat 11/0, HB1 11/11, test-cardfx 321/0, `gen-precon.js --check` 18 precons no problems, the ledger's self-test 55/55,
+    `twda.py` 14/0, `ana-gates.py --self-test` 30/0, doc-budget PASS and its self-test every case red, main's `check-versions.js`
+    agrees, main's client suite beside the bundle 361 passed / 2 failed (the new guide's embed drift; the registry test's extras
+    `[brandnew, toreador]` — both by design, the handoff).
 - **v0.6.218 (11 Nov 2026)** — Round C2, the clean-up's dead code and tools (spec-cleanup §5.6 and T10; STATUS Next 1). No behaviour
   change: the 240-match client design is SAME-PLAY 240 against v0.6.217 — the one difference `ana-sim-diff.py` reports is the result
   row's version string (it ignores each run's own wall and CPU times) — and IDENTICAL 240 with that string normalized. A release because the bot's bytes changed (CI: the root's bundle is `bot/`'s).
