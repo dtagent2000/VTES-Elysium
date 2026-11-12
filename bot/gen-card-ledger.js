@@ -39,7 +39,7 @@
      default decks: every deck-*.json whose name starts with "V5 " (gen-precon.js writes them).                                         */
 
 const fs = require('fs'), path = require('path');
-const LEDGER_VERSION = '1.1.0';
+const LEDGER_VERSION = '1.1.1';   // v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
 
 /* ---- the crypt (v1.1.0): the ability text, its effect classes, the readers that model it ---- */
 const SECT = '(?:Anarch|Camarilla|Independent|Sabbat|Laibon)';
@@ -78,7 +78,8 @@ function cryptClassOf(s, name){   // one sentence -> { classes: [...], kind } (t
    key needs one: the page checks the classifier against it, and a key with none fails the run -- a wave adds its new keys here. */
 const FX_CLASS = { bleedBonus: 'bleed', bleedBoostDiscard: 'bleed', interceptMod: 'intercept', stealthMod: 'stealth', noHuntStealth: 'stealth', strengthMod: 'strength',
   strengthOnDiablerie: 'strength', voteBoostDiscard: 'votes', voteTaxAgainst: 'votes', selfUnlock: 'unlock', noUnlockAfterTitledBleed: 'unlock', blockNotOlder: 'block',
-  burnAtDamage: 'combat', burnOnTorpor: 'other', costPlusDisc: 'blood/pool', selfRemoveOption: 'blood/pool', fetchNamed: 'cards', enterPlay: 'cards', noReplaceActing: 'cards' };
+  burnAtDamage: 'combat', burnOnTorpor: 'other', costPlusDisc: 'blood/pool', selfRemoveOption: 'blood/pool', fetchNamed: 'cards', enterPlay: 'cards', noReplaceActing: 'cards',
+  strikeDodge: 'combat' };   // v1.1.1 (bot v0.6.219, crypt wave A): Flávio Gonçalves's and Phaibun's once-each-combat strike: dodge
 const classesOf = k => [].concat(FX_CLASS[k] || []);
 /* the crypt readers: fx key -> the bot's methods that read it from a crypt entry -- every `fx.<key>` in the statement of a
    `this._cryptFxOf(` call (its line and the next three, up to the next method; the local is named `fx` by the bot's own rule) */
@@ -180,6 +181,7 @@ function cryptSelfTest(quiet){   // returns the number of failed checks; quiet =
   eq([sree.status, sree.uncovered.map(p => p.classes[0])], ['partial', ['cards']], 'two sentences, one key: partial, the card sentence missing');
   eq(cryptStatusOf(row('Once each combat, Flávio can strike: dodge.', ['dodge']), R).unread, ['dodge'], 'a key no crypt reader reads');
   eq(cryptStatusOf(row('+1 bleed.', ['bleedBonus', 'dodge']), R).status, 'partial', 'one key unread is partial, the sentence covered or not');
+  eq(cryptStatusOf(row('Once each combat, Flávio can strike: dodge.', ['strikeDodge']), new Map([['strikeDodge', new Set(['_cryptDodgeFx'])]])).status, 'modelled', 'v1.1.1: the crypt dodge key (FX_CLASS combat) models a strike: dodge');
   eq(cryptStatusOf(row('While your prey has 10 or fewer pool, Üresség gets +1 vote and +1 bleed.', ['bleedBonus']), R).status, 'partial', 'a sentence of two classes needs both');
   eq(cryptStatusOf(row('During a bleed action, Liliana can remove seven cards in your ash heap from the game to get an additional +1 bleed. +1 bleed.', ['bleedBonus']), R).uncovered.map(p => p.kind), ['activated'], 'one key covers one sentence, the passive one first: the activated bleed is missing');
   const R2 = new Map([['bleedBonus', new Set(['r'])], ['bleedBoostDiscard', new Set(['r'])]]);

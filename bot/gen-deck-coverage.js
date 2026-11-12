@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.44 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.45 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.44';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.45';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -146,6 +146,7 @@ const CLASS = {
   // crypt card text (Bot._cryptFxOf): a VAMPIRE's own printed ability -- never a library play path, so it cannot make a library card playable
   bleedBonus: 'crypt', bleedBoostDiscard: 'crypt', blockNotOlder: 'crypt', burnAtDamage: 'crypt', burnOnTorpor: 'crypt', enterPlay: 'crypt', interceptMod: 'crypt',
   noHuntStealth: 'crypt', noUnlockAfterTitledBleed: 'crypt', selfUnlock: 'crypt', stealthMod: 'crypt', strengthMod: 'crypt', voteBoostDiscard: 'crypt', voteTaxAgainst: 'crypt',
+  strikeDodge: 'crypt',   // v1.1.45 (12 Nov 2026, bot v0.6.219, crypt wave A): Flávio Gonçalves's and Phaibun's strike: dodge (_cryptDodgeFx, through _bestDodgeFor)
   /* v1.1.40 (29 Oct 2026, bot v0.6.213, V5 wave 1, RULINGS D-98): the wave's keys. */
   addStrike: 'contextual', addStrikeLimited: 'paired',   // the additional-strike step (_bestAddStrikeFor: a combat card's PURE addStrike mode) and Arms of Ahriman [OBL]'s dodge (_bestDodgeFor) -- the addStrike@ special case below mirrors both
   aggr: 'meta',   // a strike's flag (Sculpt the Flesh [pro], Ivory Bow, Sword of the Archangel): read beside strike / handBonus / strBonus, never a play path of its own
