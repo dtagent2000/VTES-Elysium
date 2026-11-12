@@ -20,10 +20,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape), with the actions at a card in
   play (steal The Rack / Powerbase: LA, burn Mob Connections) and The Coven's control passing. Then the maneuver / press grants
   with the rush cards, the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
-  done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) when its library and crypt rows are playable and it
-  holds up in the sim; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check`
-  compares them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108;
-  `CARDS.md`; HOWTO.
+  done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY`
+  line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares
+  them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108; `CARDS.md`; HOWTO.
 - **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
   round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage, the combat
   panel's `xa` / `xb` and the labels cleared at a new pair: main, 3 Nov §4); clan, sect and Path requirements in every finder; the
@@ -45,9 +44,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-42, D-104.
-- **Crypt wave A's riders** (CHANGELOG v0.6.219): Yewon's and Alexa's torpor vote discard, `peekSup` set after the block
-  decision, `_myBleedEach`'s +1 bleed, the home planners' crypt intercept, the event log's discard name (it carries the line's
-  tail). *Done when* each is fixed with its footprint or ruled out.
+- **Crypt wave A's riders** (CHANGELOG v0.6.219; RULINGS D-111): Yewon's and Alexa's vote discard in a referendum that passes
+  automatically (PIB 20150105; from torpor it only cycles a card: parked for the meta layer); `peekSup` set after the block
+  decision; `_myBleedEach`'s +1 bleed; the home planners' crypt intercept; Azucena's age from the capacity in play (the
+  Oblivion card); Phaibun's discard drawn at random; the event log's discard name (it carries the line's tail); The Dowager's
+  asked window at the next human table. *Done when* each is fixed with its footprint, verified, or ruled out.
 - **The weapon's maneuver** (wave 2's second review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
   a number — the .44 Magnum has never maneuvered, so the strike-binding rules' gun halves never run. Neighbours: a weapon's strike
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait
@@ -69,9 +70,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   pilot a second runner that plays those sections under the sim's virtual clock, live sections on the real clock; sharding is the
   fallback. The suite also grows past a 2 GB heap by section 136 (29 Oct): find what it keeps. *Done when* one runner gives the same
   assertion count, green ×3, on node's default heap. Docs: spec §5.7, §7.
-- **Graded rules readings** (T3; the ledger, T2, is `docs/CARDS.md` since v0.6.212): each curated reading graded green / amber /
-  red by a fresh agent against KRCG text and vtes-rulings, only reds to Johan; the grade becomes a ledger column. *Done when* a wave's
-  PR lists the grades of the cards it curated (HARNESS, the charter). Docs: spec T3; HARNESS; `specs/spec-cardfx-sweep-sources-2026-09-25.md`.
+- **Graded rules readings as a ledger column** (T3): every wave's PR has listed its grades since wave 1 (HARNESS, the charter);
+  `docs/CARDS.md` does not carry them. *Done when* the ledger shows each curated card's latest grade. Docs: spec T3; HARNESS;
+  `specs/spec-cardfx-sweep-sources-2026-09-25.md`.
 - **The helper lock's release** (main answered "ask main once" (a)–(c) on 3 Nov): the client locks all helpers on while a bot
   is seated until the bot proves a whole combat on lines alone. *Done when* asked, when ready. Docs: RULINGS D-62, D-94.
 - **History comments in `elysium-bot.js`** (222 KB): trim to trap comments ("why" + a rule id) in the functions a round touches

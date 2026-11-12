@@ -1,7 +1,7 @@
 # STATUS — Elysium Bots (rewritten at every release; 12 November 2026)
 
 **Bot v0.6.219** (12 Nov 2026, crypt wave A) · arena v1.4.8 · sim table v1.1.0 (round C3) · cardfx compiler v1.9.8, curated 187 · hotseat tool v1.4.0 ·
-coverage tool v1.1.45 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` v1.0.0 · `ana-gates.py` v1.0.0 ·
+coverage tool v1.1.45 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` v1.0.0 · `ana-gates.py` v1.1.0 ·
 built against the root's release, client v2.6.174 / srv-2.6.50 (our canary 69/0 against it; main's v1.2.0 143/0 beside this bot);
 the read-only copies in `bot/` are client v2.6.162 / protocol v2.6.162 / srv-2.6.46 (refreshed 16 Oct; how: HARNESS).
 
@@ -25,8 +25,6 @@ requests when main has released (main's note of 12 Nov).
 1. V5 wave 5 — Johan picks its shape: the eighteen masters in play, Meditative Grove's cancel, Sudden Reversal's window (D-107).
 2. The copies round (main's canary v1.2.0, Q4) with crypt wave A's riders; then crypt wave B, the 13 partial copies first.
 3. C5 (the leak test) before crypt wave B; C6; the knowledge layer's Kevlar and the prey's wakes (65f); the abstract model spec.
-4. Johan picks: `ana-gates.py`'s invariants allow no flag in a 12-match series and leave Wider View's +2 drift unclassed, so
-   v0.6.218's V5 smoke fails 4 of 14 too (CHANGELOG v0.6.219).
 
 ## Not yet consumed from main
 Main's replies of 11 Nov (security, v0.6.218 with canary v1.2.0) are read: their bot-side items are BOARD lines (the copies, a
