@@ -8478,6 +8478,19 @@ async function connectWithRetry(client, tries = 30){
     u.pool = 19; u.send({ t: 'chat', msg: 'I use 4 transfers to draw a new vampire.' });
     u._invOnEvent(u.ev.push({ kind: 'turn', seat: 1 }));
     ok(u.flags.length === 0, '127v v0.6.180: a crypt draw costs 4 TRANSFERS + 1 pool -- the ledger no longer reads the 4 as pool (the +3 drifts): ' + JSON.stringify(u.flags)); }
+  { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'I3', persona: 'expert', deckName: 'ventrue', paceMs: 0, askSecs: 1, log: () => {} });
+    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 2, name: 'I3', bot: true }]; u.flags = []; u._emit = (ty, d) => { if(ty === 'inv-flag') u.flags.push(d); };
+    // v0.6.219 (Johan, 12 Nov): Wider View burned after 2 blood moved -- the influence loop's own order: the burn's note prints the pool
+    // after the move, the phase's one sentence books the move at its end. Every Wider View flag of the V5 smoke was this double count.
+    const burn = p => u.note('Wider View: Trainbot uses 4 transfers to burn it for +2 pool (pool ' + p + ') -- nothing better to spend the transfers on this turn.');
+    u.pool = 8; u._invPool = 8;
+    u.pool = 6; u.pool = 8; burn(8); u.send({ t: 'chat', msg: 'I influence 2 blood to an uncontrolled vampire.' });
+    u._invOnEvent(u.ev.push({ kind: 'turn', seat: 1 })); const clean = u.flags.length;
+    u.pool = 11; burn(11); const above = u.flags.length;                     // a printed pool ABOVE the ledger is no influence: it flags at once
+    u._invOnEvent(u.ev.push({ kind: 'turn', seat: 2 }));
+    u.pool = 10; burn(10); u._invOnEvent(u.ev.push({ kind: 'turn', seat: 1 }));   // a gap no influence sentence explains: it flags at the turn
+    ok(clean === 0 && above === 1 && u.flags[0].inv === 'pool-print' && u.flags[0].printed === 11 && u.flags.length === 2 && u.flags[1].inv === 'pool-print' && u.flags[1].unbooked === 3,
+       '127v v0.6.219: a Wider View burn after the phase moved blood raises no flag (no pool-print, no pool-drift +2: the influence sentence books only the rest); a printed pool above the ledger still flags at once, a gap no sentence explains flags at the turn: ' + JSON.stringify(u.flags)); }
   // w) v0.6.185: phase B review -- a pending mark never borrows another speaker's event
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'W', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'W', bot: true }, { seat: 3, name: 'Anna' }];

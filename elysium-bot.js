@@ -8426,10 +8426,22 @@ class Bot {
       if(e.kind === 'pool' && mine && typeof e.delta === 'number'){
         const aboutMe = e.target ? (e.target === this.o.name || e.target === 'me') : true;   // my OWN line about another seat's pool (my bleed going through on them) is not my pool
         if(aboutMe){ e.model = this.pool; this._invPool += e.delta;
-          if(typeof e.pool === 'number' && e.pool !== this._invPool){ this._invFlag('pool-print', { printed: e.pool, ledger: this._invPool, via: e.via || e.card || null }); this._invPool = e.pool; } }
+          if(typeof e.pool === 'number' && e.pool !== this._invPool){
+            /* v0.6.219 (Johan, 12 Nov: the gate's Wider View flags fixed at their cause): a burn-for-pool note prints my pool AFTER the
+               blood this influence phase has already moved, while the phase's one "I influence ..." sentence books that blood at the
+               phase's end -- the gap is booked here and the sentence subtracts only the rest (the pool-print + pool-drift +N pair of
+               every Wider View burn was this double count; my pool was right). A printed pool ABOVE the ledger still flags at once, a
+               gap the sentence never books flags at the turn. */
+            const gap = this._invPool - e.pool;
+            if(e.via === 'burn-for-pool' && gap > 0) this._invInfBooked = (this._invInfBooked | 0) + gap;
+            else this._invFlag('pool-print', { printed: e.pool, ledger: this._invPool, via: e.via || e.card || null });
+            this._invPool = e.pool; } }
       }
-      if(e.kind === 'influence' && e.own && typeof e.n === 'number') this._invPool -= e.n + (e.drawn ? 1 : 0);   // transfers from pool to an uncontrolled vampire; a crypt draw costs 4 transfers AND 1 pool (rulebook)
+      if(e.kind === 'influence' && e.own && typeof e.n === 'number'){   // transfers from pool to an uncontrolled vampire; a crypt draw costs 4 transfers AND 1 pool (rulebook)
+        const cost = e.n + (e.drawn ? 1 : 0), booked = Math.min(this._invInfBooked | 0, cost);
+        this._invInfBooked = (this._invInfBooked | 0) - booked; this._invPool -= cost - booked; }
       if(e.kind === 'turn'){
+        if(this._invInfBooked > 0){ this._invFlag('pool-print', { printed: null, ledger: null, via: 'burn-for-pool', unbooked: this._invInfBooked }); this._invInfBooked = 0; }   // v0.6.219: a burn's gap no influence sentence explained
         if(this.pool !== this._invPool){ const pc = this._poolChanges ? this._poolChanges.splice(0).map(c => (c.d > 0 ? '+' : '') + c.d + '@' + c.fn + ':' + c.ln) : undefined; const since = this.ev ? this.ev.since(this._invTurnSeq | 0).filter(x => (x.kind === 'pool' || x.kind === 'influence') && ((x.seat && x.seat === this.seat) || x.own)).map(x => x.kind + ':' + (x.delta != null ? x.delta : -x.n) + (x.via ? '/' + x.via : '') + (x.card ? '/' + x.card : '') + (x.target ? '>' + x.target : '') + (x.model != null ? '@' + x.model : '') + (x.pool != null ? '=' + x.pool : '')) : []; this._invFlag('pool-drift', { model: this.pool, ledger: this._invPool, diff: this.pool - this._invPool, since: since.slice(-8), poolAtTurnStart: this._invTurnPool, changes: pc }); } else if(this._poolChanges) this._poolChanges.length = 0;
         this._invTurnSeq = e.seq; this._invTurnPool = this.pool;
         this._invPool = this.pool;

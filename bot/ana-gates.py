@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# ana-gates.py v1.0.0 <dir>... -- the series audits as gates: one PASS / FAIL line each, exit 1 when any fails (round C2, 11 Nov 2026;
+# ana-gates.py v1.1.0 <dir>... -- the series audits as gates: one PASS / FAIL line each, exit 1 when any fails (round C2, 11 Nov 2026;
 #   spec-cleanup-2026-10-20.md T10). The release gate on the 240-match client design (CLAUDE.md "Gates"): run it on the new bytes'
 #   sim directory beside `ana-sim-diff.py OLD NEW`. It imports the audits -- ana-block.py, ana-ledger.py, ana-inv.py, ana-windows.py,
 #   ana-combat2.py, each one's audit(S) -- so every count has one source. What fails:
@@ -14,14 +14,17 @@
 #     handshake   ana-combat2's integrity under 100 % as it prints it (rounded): a broken combat line (CLAUDE.md, the combat handshake
 #                 rule; the stray third bot's row, STATUS, is the known few that rounding absorbs)
 #     invariants  a flag kind outside INV_KNOWN, or more flags than 1 in 20 matches on the sim (its series since v0.6.213 measured 1 in
-#                 27 to 1 in 150) / 1 in 3 on the arena (v0.6.180's arena baseline, HOWTO)
+#                 27 to 1 in 150) / 1 in 3 on the arena (v0.6.180's arena baseline, HOWTO) -- and never fewer than one: a series under
+#                 20 matches (the V5 smoke's 12) may carry one known flag (v1.1.0, Johan 12 Nov; v1.0.0 allowed none there, so a single
+#                 stray row failed a series). Wider View's burn-for-pool left INV_KNOWN with v1.1.0: bot v0.6.219's checker books the
+#                 blood a burn's note already shows (the pool-print + pool-drift +N pair was that double count), so such a flag is new.
 #     windows     the arena: an actor's window that ran out and went through (v0.6.206's gate of 0); the sim table: information only --
 #                 most bot windows run out there (BOARD, a measurement debt)
 #   Information lines: the ledger's leads and its explained differences, the step handshake's safety net, the post-game ousts.
 #   --self-test: a clean synthetic series PASSes every gate; each planted fault turns its own line FAIL (the game's end included).
 import collections, glob, importlib.util, json, os, re, shutil, sys, tempfile
 
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 def _load(name):
@@ -39,9 +42,8 @@ LEDGER_COUNTS = {'1 bleed: equal', '1 bleed: more, actor modifiers', '1 bleed: l
 LEDGER_LEADS = {'4 steal pairs: STOLE > VICTIM LOST': 'BOARD: steal pair under a combat ends, O-12',
                 '4 steal pairs: no victim row': 'the stray combat row, STATUS',
                 '2 names: no reciprocal row': 'the stray combat row, STATUS'}
-INV_KNOWN = {'pool-print via burn-for-pool': "Wider View's burn-for-pool", 'pool-drift +1': "Wider View's burn-for-pool",
-             'strike-taken': 'the stray combat row, STATUS'}
-INV_CAP = {'sim': 20, 'arena': 3}   # at most one flag in N matches
+INV_KNOWN = {'strike-taken': 'the stray combat row, STATUS'}   # v1.1.0: Wider View's two kinds fixed at their cause (bot v0.6.219)
+INV_CAP = {'sim': 20, 'arena': 3}   # at most one flag in N matches, and at least one (v1.1.0)
 FAILED_END = ('stuck', 'timeout')
 
 def _rows(f):
@@ -123,7 +125,7 @@ def gates(S):
              ', '.join('%s %d' % kv for kv in sorted(A['hsmiss'].items())) or 'none')))
     # invariants
     c, _ex, m = INV.audit(S)
-    flags = sum(c.values()); every = INV_CAP['sim' if sim else 'arena']; cap = m // every
+    flags = sum(c.values()); every = INV_CAP['sim' if sim else 'arena']; cap = max(1, m // every)
     unknown = sorted(k for k in c if k not in INV_KNOWN)
     L.append(('PASS' if flags <= cap and not unknown else 'FAIL', 'invariants', '%d flags in %d matches (at most %d, 1 in %d on the %s)%s%s' % (
         flags, m, cap, every, 'sim' if sim else 'arena', (': ' + ', '.join('%s %d' % (k, v) for k, v in c.most_common())) if flags else '',
@@ -148,7 +150,7 @@ def report(S):
     return f == 0
 
 # ---------- the self-test: a synthetic series, then one planted fault at a time ----------
-N_SELF = 20   # matches per synthetic series: the sim's invariant cap allows exactly one flag
+N_SELF = 20   # matches per synthetic series: the sim's invariant cap allows exactly one flag (and a 12-match one, its floor of one)
 
 def _match(k, plant=None, sim=True):
     rows = []
@@ -161,7 +163,8 @@ def _match(k, plant=None, sim=True):
     if plant in ('unpaired', 'vanished'): bleed(2000, 1)
     if plant == 'vanished': row(2500, 'B2', 'block-made', {'vamp': 'Y'})
     if plant == 'window': row(3000, 'B1', 'bleed-total', {'n': 1}); bleed(6000, 1); row(6500, 'B3', 'took-bleed', {'n': 1})
-    if plant in ('flag', 'flags'): row(2600, 'B1', 'inv-flag', {'inv': 'pool-drift', 'diff': 1})
+    if plant in ('flag', 'flags'): row(2600, 'B1', 'inv-flag', {'inv': 'strike-taken', 'taken': 2, 'myStrike': 1})
+    if plant == 'wv': row(2600, 'B1', 'inv-flag', {'inv': 'pool-drift', 'diff': 2})   # v1.1.0: Wider View's drift is no known kind now
     if plant == 'kind': row(2600, 'B1', 'inv-flag', {'inv': 'blood-vanished'})
     x1 = {'round': 1, 'vamp': 'X', 'opp': None if plant == 'names' else 'Y', 'range': 'close', 'dealt': 1, 'taken': 1, 'stole': 1 if plant == 'victimlost' else 0}
     x2 = {'round': 1, 'vamp': 'Y', 'opp': 'X', 'range': 'long' if plant == 'range' else 'close', 'dealt': 1, 'taken': 1, 'stolenFromMe': 2 if plant == 'victimlost' else 0}
@@ -181,13 +184,13 @@ def _match(k, plant=None, sim=True):
     if plant != 'noresult': lines.append(json.dumps({'t': 50000, 'match': k, 'type': 'result', 'data': res}))
     return '\n'.join(lines) + '\n'
 
-def _series(d, plant, sim):
+def _series(d, plant, sim, n=N_SELF):
     os.makedirs(d)
-    for k in range(1, N_SELF + 1):
+    for k in range(1, n + 1):
         p = plant if (k == 1 or (plant == 'flags' and k == 2)) else None
         with open(os.path.join(d, 'match-%04d.jsonl' % k), 'w') as fh: fh.write(_match(k, p, sim))
     if sim:
-        with open(os.path.join(d, 'design.json'), 'w') as fh: json.dump({'meta': {}, 'specs': [{'idx': k} for k in range(1, N_SELF + 1)]}, fh)
+        with open(os.path.join(d, 'design.json'), 'w') as fh: json.dump({'meta': {}, 'specs': [{'idx': k} for k in range(1, n + 1)]}, fh)
         with open(os.path.join(d, 'summary.json'), 'w') as fh: json.dump({'problems': [{'match': 2, 'crash': True}] if plant == 'problem' else []}, fh)
     if plant == 'missing': os.remove(os.path.join(d, 'match-0003.jsonl'))
 
@@ -198,18 +201,19 @@ def self_test():
              ('names', S, {'ledger'}), ('range', S, {'ledger'}), ('victimlost', S, {'ledger'}), ('stray', S, {'handshake'}),
              ('zeroPool', S, {'zeroPool'}), ('zpdisagree', S, {'zeroPool'}), ('stuck', S, {'matches'}), ('noresult', S, {'matches'}),
              ('missing', S, {'matches'}), ('problem', S, {'matches'}), ('flag', S, set()), ('flags', S, {'invariants'}),
-             ('kind', S, {'invariants'}), ('window', S, set()),
+             ('kind', S, {'invariants'}), ('wv', S, {'invariants'}), ('window', S, set()),
+             ('flag', S, set(), 12), ('flags', S, {'invariants'}, 12),   # v1.1.0: a 12-match series carries one known flag, not two
              (None, A, set()), ('window', A, {'windows'}), ('timeout', A, {'matches'}), ('zeroPool', A, {'zeroPool'})]
     fails = 0; tmp = tempfile.mkdtemp(prefix='ana-gates-')
     try:
-        for idx, (plant, sim, want) in enumerate(cases):
-            d = os.path.join(tmp, 'c%02d' % idx); _series(d, plant, sim)
+        for idx, (plant, sim, want, *n) in enumerate(cases):
+            d = os.path.join(tmp, 'c%02d' % idx); _series(d, plant, sim, *n)
             L, _ = gates(d)
             failed = {name for v, name, _ in L if v == 'FAIL'}
             win = next(v for v, name, _ in L if name == 'windows')
             good = failed == want and (win == 'info') == sim
             fails += not good
-            print('  %s %-10s %-5s -> FAIL %s%s' % ('ok ' if good else 'BAD', plant or 'clean', 'sim' if sim else 'arena',
+            print('  %s %-10s %-5s -> FAIL %s%s' % ('ok ' if good else 'BAD', (plant or 'clean') + (' /%d' % n[0] if n else ''), 'sim' if sim else 'arena',
                   sorted(failed) or '-', '' if good else '   (want %s)' % sorted(want)))
     finally:
         shutil.rmtree(tmp)
