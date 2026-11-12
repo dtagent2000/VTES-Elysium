@@ -1372,10 +1372,11 @@ class Bot {
   _cryptBleedBonus(vamp){ const fx = vamp && this._cryptFxOf(vamp.name); return (fx && (fx.bleedBonus | 0)) || 0; }   // Lenny Burkhead: +1 bleed, passive unconditional   // the local is NAMED fx so the coverage scanner's fx.<key> literal sees the read (the N4a scanner lesson, applied at birth this time -- the first draft's `f` hid all four keys)
   _cryptStealthMod(vamp, kind, dir){ const fx = vamp && this._cryptFxOf(vamp.name); const m = fx && fx.stealthMod;   // Royce: -1 stealth when bleeding. v0.6.219 (crypt wave A, D-108): `when` is an action kind or a list of them (Kalyani 'hunt', Frau Schädel recruit + employ) or 'undirected' / 'directed' (Ariane); dir = the announce's own form (true / false), else a bleed is directed and any other form unknown -- a condition on an unknown form invents nothing; poolMax = 'while you have N or fewer pool' (Devorah), my pool at the announce
     if(!m) return 0;
-    if(m.poolMax != null && !((this.pool | 0) <= (m.poolMax | 0))) return 0;
+    if(m.poolMax != null && !(this._poolNow() <= (m.poolMax | 0))) return 0;
     if(m.when == null) return m.n | 0;
     const d = (dir === true || dir === false) ? dir : (kind === 'bleed' ? true : null);
     return [].concat(m.when).some(w => w === kind || (w === 'undirected' && d === false) || (w === 'directed' && d === true)) ? (m.n | 0) : 0; }
+  _poolNow(){ const pk = this._actingVamp && this._actingVamp.parked; return (this.pool | 0) + ((pk && pk.pool) | 0); }   // v0.6.219 (the graded readings): the pool a 'while you have N or fewer pool' crypt condition reads (Devorah, Branimira) -- an action's parked cost is not paid yet (R-17: only if the action succeeds)
   _pendDirected(pOrKind){            // v0.6.219 (crypt wave A): is the action I would block DIRECTED -- true / false / null (unknown). A bleed, a pool action and a rush (the action that burns my card rides the rush window) are; an undirected window (hunt, political, equip, recruit, a card action) is not; the [aus] Revelations is directed and the [AUS] one undirected (peekSup, set at both arm grammars since R3: VA review, 2 Aug); the asked window carries the human action's own read (_actDirected); a bare kind string other than bleed / pool / rush / undirected (legacy, tests) is unknown
     const kind = (typeof pOrKind === 'string') ? pOrKind : (pOrKind && pOrKind.kind);
     if(kind === 'bleed' || kind === 'pool' || kind === 'rush') return true;
@@ -1408,7 +1409,7 @@ class Bot {
   _cryptIntercept(vamp, pOrKind){ const fx = vamp && this._cryptFxOf(vamp.name); const m = fx && fx.interceptMod;   // The Dowager: +1 directed / Christine Boscacci: -1 on bleeds. v0.6.219 (crypt wave A, D-108): Castellan's directed form carries its undirected half (`undirected`); poolMax (Branimira: my pool); vsTitled (Bret Stryker: the acting vampire's title); vsClan + younger / older (Azucena: the acting vampire's clan and age) -- a condition the bot cannot read invents nothing
     if(!m) return 0;
     const kind = (typeof pOrKind === 'string') ? pOrKind : (pOrKind && pOrKind.kind);
-    if(m.poolMax != null && !((this.pool | 0) <= (m.poolMax | 0))) return 0;
+    if(m.poolMax != null && !(this._poolNow() <= (m.poolMax | 0))) return 0;
     if(m.vsTitled) return this._actorTitled(pOrKind) === true ? (m.n | 0) : 0;
     if(m.vsClan){ const a = this._actorAgeVs(vamp, pOrKind, m.vsClan); return a === 'younger' ? (m.younger | 0) : a === 'older' ? (m.older | 0) : 0; }
     if(m.when === 'directed'){ const d = this._pendDirected(pOrKind); return d === true ? (m.n | 0) : d === false ? (m.undirected | 0) : 0; }
@@ -1441,7 +1442,9 @@ class Bot {
   }
   _discardPickFor(disc, force, skip){   // a hand card that REQUIRES the discipline (every mode gated on it, the Larissa rule). Policy: a dead card first, then a duplicate, then surplus >= 3; `force` takes the first one left (a vote that turns a referendum is worth a card that is replaced anyway)
     const need = ((disc || '') + '').toLowerCase(); if(!need) return null;
-    const isReq = nm => { const h = this.fxLookup(nm); if(!h || h.kind !== 'lib') return false; const ms = h.e.modes || []; return ms.length > 0 && ms.every(mo => ((mo.at || '') + '').toLowerCase() === need); };
+    const isReq = nm => { const h = this.fxLookup(nm); if(!h || h.kind !== 'lib') return false; const ms = h.e.modes || [];
+      if(!ms.length){ const rd = (h.e.req && h.e.req.disc) || []; return rd.length > 0 && rd.every(d => ((d || '') + '').toLowerCase() === need); }   // v0.6.219 (the graded readings): a card with no effect data still requires its discipline -- Stygian Shroud ([obl], 4 in Yewon Ong's own precon) pays her vote
+      return ms.every(mo => ((mo.at || '') + '').toLowerCase() === need); };
     const q = (this.hand || []).map((nm, i) => ({ nm, i })).filter(o => isReq(o.nm) && !(skip && skip.indexOf(o.nm) >= 0));
     if(!q.length) return null;
     const di = this._deadHandIndex(this._deadJudgeVamps());   // v0.6.200 (point 22): every vampire of mine, not only the ready ones
@@ -6804,7 +6807,7 @@ class Bot {
     const humanActor = !!(p.who && this._isHumanName(p.who));
     const aStanding = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : null;
     const aFresh = aStanding === null ? null : (!humanActor ? aStanding : ((this._aAt && this._obs && this._obs.who === p.who && (this._aAt >= this._obs.at || (this._aWho === p.who && this._aAt >= this._obs.at - 3000))) ? aStanding : null));   // v0.6.171 (pre-handover review): a HUMAN actor's 'a' counts only if it changed after their announce -- a bot actor's earlier action that went through leaves its stealth on the counter (the tally is closed only by a mode change), and the next human bleed read it as its own
-    const stealthNow = Math.max(aFresh == null ? 0 : aFresh, baseSt);
+    const stealthNow = (!humanActor && aFresh != null) ? aFresh : Math.max(aFresh == null ? 0 : aFresh, baseSt);   // v0.6.219 (the graded readings): a BOT actor's counter is its raw stealth, written at its own announce -- Ariane's and Kalyani's undirected 0 is not floored at the default 1 (the floor stays for a human's unbooked counter)
     if(humanActor && aFresh == null && blocker) this._writeTally({ mode: 'block', a: baseSt });   // v0.6.171: seed the human's side with the rulebook default (0 directed / 1 undirected) so the counter and the verdict read the true numbers   // v0.6.169 (Johan: the bot played intercept at once against a declared bleed with no stealth): directed actions carry 0 stealth, undirected +1
     const baseIcp = blocker ? this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p) : 0;
     const icNeeded = stealthNow > baseIcp;   // v0.6.170 (Johan: the base rules forbid adding stealth or intercept that is not needed) -- bot-vs-bot too   // intercept is spent only when the stealth standing NOW beats what the blocker has for free; if the actor adds stealth later, _interceptSecondLook answers (v0.6.143d)

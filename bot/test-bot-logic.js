@@ -12160,11 +12160,12 @@ async function connectWithRetry(client, tries = 30){
         const st = { verrix: [S('Verrix, Naughty Boy', 'bleed'), S('Verrix, Naughty Boy', 'hunt', false)], kalyani: [S('Kalyani, Agent of Doom', 'hunt', false), S('Kalyani, Agent of Doom', 'bleed')],
           frau: [S('Frau Schädel', 'recruit', false), S('Frau Schädel', 'employ', false), S('Frau Schädel', 'equip', false)],
           ariane: [S('Ariane', 'hunt', false), S('Ariane', 'political', false), S('Ariane', 'bleed'), S('Ariane', 'peek', true), S('Ariane', 'card', null)], royce: [S('Royce (G2)', 'bleed'), S('Royce (G2)', 'rush', true)] };
-        u.pool = 5; st.devorah = [S('Devorah', 'bleed'), S('Devorah', 'hunt', false)]; u.pool = 6; st.devorah.push(S('Devorah', 'bleed')); u.pool = 20;
+        u.pool = 5; st.devorah = [S('Devorah', 'bleed'), S('Devorah', 'hunt', false)]; u.pool = 6; st.devorah.push(S('Devorah', 'bleed'));
+        u.pool = 5; u._actingVamp = { v: V3('dv', 'Devorah'), parked: { blood: 0, pool: 1 } }; st.devorah.push(S('Devorah', 'political', false)); u._actingVamp = null; u.pool = 20;   // a 1-pool referendum parked at the announce: she still has 6 (R-17)
         const sm = [u._cryptStrengthMod(V3('m', 'Massimiliano'), null), u._cryptStrengthMod(V3('m', 'Massimiliano'), 'Ashley (G6)'), u._cryptStrengthMod(V3('k', 'Kalyani, Agent of Doom'), null), u._cryptStrengthMod(V3('t', 'Theo Bell'), null),
           u._cryptStrengthMod(V3('bl', 'Blythe Candeleria (G2)'), null), u._cryptStrengthMod(V3('bl', 'Blythe Candeleria (G2)'), 'Ashley (G6)')];
-        ok(JSON.stringify(st) === JSON.stringify({ verrix: [1, 0], kalyani: [-1, 0], frau: [1, 1, 0], ariane: [-1, -1, 0, 0, 0], royce: [-1, 0], devorah: [1, 1, 0] }) && sm.join() === '1,1,1,1,0,-1',
-           '163a ...the stealth reader: Verrix +1 on a bleed; Kalyani -1 hunting; Frau Schädel +1 recruiting and employing, not equipping; Ariane -1 on an undirected action, not a directed one or an unknown form; Royce as before; Devorah +1 at 5 pool, 0 at 6 -- and the strength reader: +1 for Massimiliano, Kalyani and Theo Bell with or without an opponent, Blythe’s clan condition still waits for one (got ' + JSON.stringify(st) + ' / ' + sm.join() + ')'); }
+        ok(JSON.stringify(st) === JSON.stringify({ verrix: [1, 0], kalyani: [-1, 0], frau: [1, 1, 0], ariane: [-1, -1, 0, 0, 0], royce: [-1, 0], devorah: [1, 1, 0, 0] }) && sm.join() === '1,1,1,1,0,-1',
+           '163a ...the stealth reader: Verrix +1 on a bleed; Kalyani -1 hunting; Frau Schädel +1 recruiting and employing, not equipping; Ariane -1 on an undirected action, not a directed one or an unknown form; Royce as before; Devorah +1 at 5 pool, 0 at 6, and 0 at 5 with a 1-pool cost parked (not paid until the action succeeds) -- and the strength reader: +1 for Massimiliano, Kalyani and Theo Bell with or without an opponent, Blythe’s clan condition still waits for one (got ' + JSON.stringify(st) + ' / ' + sm.join() + ')'); }
 
       // b) the block path: the decision (interceptPotential) and _commitBlock's counter read the crypt's intercept; a lone body at -1 is never picked (a 0-stealth action beats it, the pick's own floor)
       { const run = async (name, p, pool) => { const u = hanna(mkU163()); if(pool != null) u.pool = pool; const v = V3('blk', name); u.board = [v]; u.pending = p; const w = []; u._writeTally = m => w.push(m); u._pace = async () => {}; u._vwArm = () => {};
@@ -12174,8 +12175,13 @@ async function connectWithRetry(client, tries = 30){
         const got = [await run('Martina Srnankova', bleedBy('Ashley (G6)')), await run('Bret Stryker', bleedBy('Ashley (G6)')), await run('Branimira', bleedBy('Ashley (G6)'), 8), await run('Azucena', bleedBy('Braden White (G6)')), await run('Rinaldo Albizzi', undirBy('Ashley (G6)', 'hunt'))];
         const decs = [dec('Bret Stryker', bleedBy('Alexa Draper (G6)')), dec('Castellan', undirBy('Ashley (G6)')), dec('Castellan', bleedBy('Ashley (G6)')), dec('Martina Srnankova', bleedBy('Ashley (G6)')), dec('Branimira', bleedBy('Ashley (G6)'), 12)];
         const pick = (() => { const u = hanna(mkU163()); u.board = [V3('blk', 'Bret Stryker')]; return u._pickBlocker(null, null, bleedBy('Alexa Draper (G6)')); })();
-        ok(got.join() === '1,0,1,1,1' && decs.join() === '-1,-1,1,1,0' && pick === null,
-           '163b the block: _commitBlock’s counter carries Martina’s 1 on a bleed, Bret’s 0 against the untitled Ashley, Branimira’s 1 at 8 pool, Azucena’s 1 against the younger Braden White, Rinaldo’s 1 on a hunt; the decision reads Bret -1 against Alexa Draper (a Prince), Castellan -1 on an undirected action and +1 on a bleed, Martina +1, Branimira 0 at 12 pool; a lone Bret is not picked against the Prince (got ' + got.join() + ' / ' + decs.join() + ' / ' + (pick && pick.name) + ')'); }
+        const raw = async human => { const u = hanna(mkU163()); if(human) u.players[0].bot = false; const v = V3('dw', 'The Dowager (G6)', { cap: 6 }); u.board = [v]; u.hand = ['Enhanced Senses']; u.tally = { mode: 'block', a: 0, b: 0 };
+          const w = []; u._writeTally = m => { w.push(m); u.tally = Object.assign({}, u.tally, m); }; u._pace = async () => {}; u._vwArm = () => {}; const p = undirBy('Ariane', 'hunt'); u.pending = p;
+          try { await u._commitBlock(p, { why: 'the test' }); } catch(e){ return 'err ' + e.message; }
+          return u.hand.join() + '/' + w.filter(m => m && m.b != null).map(m => m.b).join(); };
+        const rawBot = await raw(false), rawHuman = await raw(true);   // v0.6.219 (the graded readings): a BOT actor's counter is its raw stealth; a human's unbooked one keeps the default
+        ok(got.join() === '1,0,1,1,1' && decs.join() === '-1,-1,1,1,0' && pick === null && rawBot === 'Enhanced Senses/0' && rawHuman === '/1',
+           '163b the block: _commitBlock’s counter carries Martina’s 1 on a bleed, Bret’s 0 against the untitled Ashley, Branimira’s 1 at 8 pool, Azucena’s 1 against the younger Braden White, Rinaldo’s 1 on a hunt; the decision reads Bret -1 against Alexa Draper (a Prince), Castellan -1 on an undirected action and +1 on a bleed, Martina +1, Branimira 0 at 12 pool; a lone Bret is not picked against the Prince; against a BOT Ariane’s hunt at stealth 0 (her -1) the Dowager blocks without Enhanced Senses, against a human’s unbooked counter the default 1 still asks for it (got ' + got.join() + ' / ' + decs.join() + ' / ' + (pick && pick.name) + ' / ' + rawBot + ' / ' + rawHuman + ')'); }
 
       // c) the turn (_playTurn): every announce carries the crypt's stealth -- Ariane, Kalyani and Devorah hunt (0 blood: the hunt is mandatory), Verrix and Catalina bleed; Kathy Glens is the control
       { const turn = async (name, blood, pool, cap) => { const u = hanna(mkU163()); u.pool = pool || 20; const v = V3('t1', name, { blood, cap: cap || 8, locked: true }); u.board = [v]; u.turnSeat = 2;
@@ -12200,8 +12206,9 @@ async function connectWithRetry(client, tries = 30){
         const b1 = u._voteDiscardBoosts(true, null); const b1s = b1.map(b => b.vamp.name + ':' + b.name + ':' + b.n).join();
         const spent = b1[0] ? u._spendVoteDiscard(b1[0], 'for') : false;
         u.hand = ['Enchant Kindred']; const b2 = u._voteDiscardBoosts(true, null).length;
-        ok(b1s === 'Yewon Ong:Shadow Cloak:1' && spent === true && logs3(u).includes('Yewon Ong discards Shadow Cloak — +1 vote for the referendum.') && b2 === 0,
-           '163e Yewon Ong discards Shadow Cloak ([obl]) for +1 vote; Enchant Kindred ([pre]) is no payment (got ' + JSON.stringify({ b1s, spent, b2, L: logs3(u) }) + ')'); }
+        u.hand = ['Stygian Shroud', 'Enchant Kindred']; const b3 = u._voteDiscardBoosts(true, null).map(b => b.name).join();   // a card with no effect data that requires [obl]
+        ok(b1s === 'Yewon Ong:Shadow Cloak:1' && spent === true && logs3(u).includes('Yewon Ong discards Shadow Cloak — +1 vote for the referendum.') && b2 === 0 && b3 === 'Stygian Shroud',
+           '163e Yewon Ong discards Shadow Cloak ([obl]) for +1 vote, and Stygian Shroud (no effect data, [obl]); Enchant Kindred ([pre]) is no payment (got ' + JSON.stringify({ b1s, spent, b2, b3, L: logs3(u) }) + ')'); }
 
       // f) the crypt's own strike: dodge -- the finder, the copies, the reasons, the round, once each combat
       { const u = mkU163(); const fl = V3('fl', 'Flávio Gonçalves', { blood: 1, cap: 7 }), ph = V3('ph', 'Phaibun', { blood: 1, cap: 5 });
