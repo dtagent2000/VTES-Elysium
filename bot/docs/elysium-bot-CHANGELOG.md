@@ -104,8 +104,13 @@
     600 deals (`ana-sim-diff.py --vp`: 381 diverged, 219 SAME-PLAY; v0.6.218 reproduces 6 Nov's table to the match): Toreador
     +0.18 VP [+0.12, +0.24] (wins 78 -> 106), malkavian -0.10 [-0.17, -0.04], nosferatu -0.07 [-0.11, -0.02], tremere -0.02 and
     ventrue +0.01 (both across 0); v0.6.218's 600 carries 4 flags of the known kinds (PASS 6 of 6) — the +2 drift came with a
-    match the change diverged (432), and its kind is v0.6.218's too (the V5 smoke above). Verdict: keep, and Toreador joins the
-    menu — D-108's "holds up in the sim" is the Toreador reads; the one miss is the series tool's. The library ledger: playable 190 (192), unseen 25 (23) —
+    match the change diverged (432), and its kind is v0.6.218's too (the V5 smoke above). The new code with v0.6.218's cardfx on
+    the same 600: SAME-PLAY 600 against v0.6.218 (the manifest's strategy and axes alone: the embedded deck's `DECK_STRATEGY`
+    line), so the gain is Toreador's five new copies, not the readers or the embedding. The footprint read (each diverged match's
+    first different decision, V5 smoke): blocks against a body with the new strength or intercept, bleed-action picks behind a
+    +1 bleed (Break the Bonds, The Platinum Protocol, Fleetness), the stealth a crypt intercept puts out of reach, Flávio's
+    strike decision weighing his own dodge, Valeriya's Grapple. Verdict: keep, and Toreador joins the menu — D-108's "holds up
+    in the sim" is the Toreador reads; the one miss is the series tool's. The library ledger: playable 190 (192), unseen 25 (23) —
     Bear's Skin and Form of the Wolf, once in Gangrel's 12 matches before (1/12 each), not in the new 12.
   - *Gates* (release bytes: bot `6cf6d07b`, cardfx `67a85631`, suite `cd3cfecd`): suite 2409/0 ×3 (431, 431, 427 s; alone, frozen
     snapshots), lint 0 findings on 25 files (nothing suppressed), canary 69/0 on bot/'s copies and 69/0 on the root's v2.6.174 with
