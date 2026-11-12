@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-card-ledger.js v1.1.0 (6 Nov 2026, bot v0.6.217, RULINGS D-108) -- THE CARD LEDGER: one generated row per library card of a deck set
+/* gen-card-ledger.js v1.1.1 (12 Nov 2026, bot v0.6.219; v1.1.0 6 Nov, bot v0.6.217, RULINGS D-108) -- THE CARD LEDGER: one generated row per library card of a deck set
    (default: the V5 precons) and every vampire of their crypts, so a V5 wave has a definition of done ("these rows turn playable")
    instead of a feeling.
 
