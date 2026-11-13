@@ -12320,6 +12320,16 @@ async function connectWithRetry(client, tries = 30){
           navar: [N(setup(false, false, 'Navar McClaren'), 'Andy (G4)'), N(setup(true, false, 'Navar McClaren'), 'Andy (G4)'), N(setup(true, true, 'Navar McClaren'), 'Andy (G4)')] };
         ok(JSON.stringify(got) === JSON.stringify({ printed: [1, 0], actorObl: [0, -1], herObl: [1, 0], navar: [false, true, false] }),
            '164c age from the capacity in play: Azucena (5) +1 against Braden White (4), 0 against Julia Sowinski (5); an Oblivion on the actor makes Braden 5 (0) and Julia 6 (older, -1); one on Azucena makes her 6 (Julia 5 younger +1, Julia 6 the same 0); Navar McClaren (1) blocks Andy (1), not Andy with an Oblivion (2), and blocks him again with one of his own (got ' + JSON.stringify(got) + ')'); }
+
+      // d) Revelations' form before the window's first decision (the grader's finding, 12 Nov): the [aus] announce at me arms the peek with
+      //    The Dowager ready; every intercept read the window makes sees the form -- directed, her +1 (the form came a line late: 0)
+      { const u = mk164(); u.board = [V4('d1', 'The Dowager (G6)')]; const seen = [];
+        const orig = u._cryptIntercept.bind(u); u._cryptIntercept = (v, p) => { const r = orig(v, p); seen.push({ v: v && v.name, sup: p && typeof p === 'object' ? p.peekSup : 'kind', r }); return r; };
+        u._onLog('Hanna', '<b>Zoe</b> plays Revelations [aus] — looks at <b>Viktor</b>\'s hand. Target: <b>Viktor</b>.');
+        await new Promise(r => setTimeout(r, 30));
+        const dow = seen.filter(x => x.v === 'The Dowager (G6)');
+        ok(!!u.pending && u.pending.kind === 'peek' && dow.length > 0 && dow.every(x => x.sup === false && x.r === 1),
+           '164d the [aus] Revelations announce at me: every intercept read of the window sees peekSup false (directed) and gives The Dowager her +1 -- none reads the form a line late (got ' + JSON.stringify({ kind: u.pending && u.pending.kind, dow }) + ')'); }
     }
 
 

@@ -6545,9 +6545,10 @@ class Bot {
      failed-block-then-'It resolves' bleed. Unresolved contests never
      auto-apply; the chat grammar stays the table's safety valve.            */
   predName(){ return this.seatName(this.prevLive(this.seat)); }
-  _armPending(who, amount, actingVampName, owner, kind){   // v1.4.3 (14 July): added `actingVampName` + `owner`. `owner` is the Methuselah who CONTROLS the acting minion — equals `who` (the message sender) for a DIRECT bleed, but differs for a BOUNCED re-announce: BotB sends the re-announce (who='BotB'), but the acting minion still belongs to Johan (owner='Johan'). If `owner` is null/undefined, falls back to `who` (the common, direct case). Every downstream check that asks "whose action is this" reads `pending.who` (set to `owner`), not the message-level `who` — so +X adds (sent by the original owner, not the bouncer), 'It resolves' (said by the original owner), and Edge assignment all route correctly regardless of HOW the bleed reached this target.
+  _armPending(who, amount, actingVampName, owner, kind, extra){   // v0.6.220: `extra` -- fields the window's first decision must see (Revelations' form). v1.4.3 (14 July): added `actingVampName` + `owner`. `owner` is the Methuselah who CONTROLS the acting minion — equals `who` (the message sender) for a DIRECT bleed, but differs for a BOUNCED re-announce: BotB sends the re-announce (who='BotB'), but the acting minion still belongs to Johan (owner='Johan'). If `owner` is null/undefined, falls back to `who` (the common, direct case). Every downstream check that asks "whose action is this" reads `pending.who` (set to `owner`), not the message-level `who` — so +X adds (sent by the original owner, not the bouncer), 'It resolves' (said by the original owner), and Edge assignment all route correctly regardless of HOW the bleed reached this target.
     const realOwner = owner || who;
-    this.pending = { who: realOwner, amount, kind: kind || 'bleed', actingVampName: actingVampName || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };   // fas B (16 July): kind 'bleed' | 'pool' -- pool damage is NOT a bleed: _reactWindow suppresses bounce, _applyPending skips the Edge transfer   // fas A+ (16 July): vampire IDs that already made a FAILED block attempt this action -- the rulebook (Johan's steg-3 reading, verified steg 5): a failed attempt means retrying with a DIFFERENT minion; the same one never goes again   // steg 3 (15 July): `declined` -- see _reactWindow
+    this.pending = { who: realOwner, amount, kind: kind || 'bleed', actingVampName: actingVampName || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+    if(extra) Object.assign(this.pending, extra);   // v0.6.220 (wave A's riders): set BEFORE _reactWindow -- a block decision taken in this tick reads them (peekSup set after it gave Castellan and The Dowager 0 on every Revelations)   // fas B (16 July): kind 'bleed' | 'pool' -- pool damage is NOT a bleed: _reactWindow suppresses bounce, _applyPending skips the Edge transfer   // fas A+ (16 July): vampire IDs that already made a FAILED block attempt this action -- the rulebook (Johan's steg-3 reading, verified steg 5): a failed attempt means retrying with a DIFFERENT minion; the same one never goes again   // steg 3 (15 July): `declined` -- see _reactWindow
     this.o.log('pending bleed armed: ' + amount + ' from ' + realOwner + (actingVampName ? ' (' + actingVampName + ')' : '') + (owner && owner !== who ? ' (via bounce from ' + who + ')' : ''));
     this._reactWindow();
   }
@@ -8648,8 +8649,7 @@ class Bot {
          that is ME. kind:'peek': NOT a bleed (no bounce window, no Edge, amount 0);
          the shared block machinery handles Block!/verdict/combat as usual. */
       if(m[2] === this.seatName(this.seat) && !this.out){
-        this._armPending(who, 0, m[1], null, 'peek');
-        if(this.pending){ this.pending.peekSup = t.indexOf('[AUS]') >= 0; this.pending.actorName = who; }
+        this._armPending(who, 0, m[1], null, 'peek', { peekSup: t.indexOf('[AUS]') >= 0, actorName: who });   // v0.6.220: the form before the window's decision
       }
       return;
     }
@@ -8664,8 +8664,7 @@ class Bot {
       const supH = m[2] === 'AUS';
       const mine = this._seatOfName(who) === this.predSeat();
       if(mine && !this.out){
-        this._armPending(who, 0, m[1], null, 'peek');
-        if(this.pending){ this.pending.peekSup = supH; this.pending.actorName = who; }
+        this._armPending(who, 0, m[1], null, 'peek', { peekSup: supH, actorName: who });   // v0.6.220: the form before the window's decision
       }
       return;
     }
