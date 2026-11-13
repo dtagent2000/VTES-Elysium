@@ -1,6 +1,6 @@
 globalThis.ELYSIUM_CARDFX = {
  "fxv": 1,
- "generated": "2026-11-12T16:38:16.606Z",
+ "generated": "2026-11-13T06:52:53.954Z",
  "source": "vtes.json — 4212 cards (KRCG, Dark Pack)",
  "counts": {"crypt":1822,"lib":2391,"libWithFx":1708,"libPersistent":1238,"libLock":163,"curated":187,"alias":3347,"formats":{"v3":4212,"v5":0}},
  "crypt": {
@@ -202,7 +202,7 @@ globalThis.ELYSIUM_CARDFX = {
   "Azaneal (G4)": {"cap":7,"clan":"Baali","sect":"Independent","group":"4","disc":{"all":["dai","obf","obt","pre","tha"],"sup":["dai","obf","obt"]}},
   "Aziz, Dammar of Istanbul (G2)": {"cap":10,"clan":"Banu Haqim","sect":"Independent","group":"2","disc":{"all":["cel","obf","pre","qui","ser"],"sup":["cel","obf","pre","qui"]},"title":"2 votes","votes":2},
   "Azrael (G6)": {"cap":5,"clan":"Salubri antitribu","sect":"Sabbat","group":"6","disc":{"all":["aus","for","val"],"sup":["aus","val"]}},
-  "Azucena (G6)": {"cap":5,"clan":"Lasombra","sect":"Camarilla","group":"6","disc":{"all":["dom","obl","pot"],"sup":["dom","obl"]},"fx":{"interceptMod":{"vsClan":"Lasombra","younger":1,"older":-1}},"note":"Crypt wave A (bot v0.6.219, RULINGS D-108): '+1 intercept against younger Lasombra and -1 intercept against older Lasombra.' -- _cryptIntercept: the acting vampire's printed clan and capacity against hers (older = strictly higher capacity, Navar's rule; the same capacity is neither); Oblivion's +1 capacity is not read as age (no ruling found).","src":"hand"},
+  "Azucena (G6)": {"cap":5,"clan":"Lasombra","sect":"Camarilla","group":"6","disc":{"all":["dom","obl","pot"],"sup":["dom","obl"]},"fx":{"interceptMod":{"vsClan":"Lasombra","younger":1,"older":-1}},"note":"Crypt wave A (bot v0.6.219, RULINGS D-108): '+1 intercept against younger Lasombra and -1 intercept against older Lasombra.' -- _cryptIntercept: the acting vampire's printed clan and its capacity against hers (older = strictly higher capacity, Navar's rule; the same capacity is neither). v0.6.220: the capacity IN PLAY -- Johan, RULINGS D-111: a card that raises capacity makes the vampire older (Oblivion's +1; _ageCap reads _capOf).","src":"hand"},
   "Baba Yaga, the Iron Hag (G5)": {"cap":11,"clan":"Nosferatu","sect":"Independent","group":"5","disc":{"all":["ani","aus","for","obf","pot","tha"],"sup":["ani","aus","for","obf","pot","tha"]}},
   "Babalawo Alafin (G4)": {"cap":7,"clan":"Harbinger of Skulls","sect":"Laibon","group":"4","disc":{"all":["ani","aus","for","nec"],"sup":["aus","for","nec"]}},
   "Badger (G1)": {"cap":6,"clan":"Gangrel","sect":"Camarilla","group":"1","disc":{"all":["ani","for","pot","pro"],"sup":["for","pro"]}},
