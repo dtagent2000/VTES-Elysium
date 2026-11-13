@@ -2948,7 +2948,36 @@
      }
     }
    ],
-   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Choose two ready Toreador you control, put this card in play, and lock one of the two. The locked Toreador does not unlock as normal. The other Toreador's non-bleed actions cannot be blocked. Minions can burn this card as a (D) action; Nosferatu get -1 stealth during that action.' fx.grandBall: the master loop picks the pair (_grandBallPlan: the unblockable one is the vampire with political cards to call, the locked one the least useful Toreador) and the frozen line names both; the locked one skips my unlock phase while the card is in play (_grandBallLocked); before each NON-BLEED action of the other the frozen block-bar line 'Toreador Grand Ball -- minions cannot block this action.' (every observer declines, a human reads it). Mode 2: fx.burnCardAction -- another Methuselah's minion may burn the card as a (D) action (_bestBurnCardFor), Nosferatu at -1 stealth, once each turn per minion (rulebook 6.1.6). A human's Ball names no pair: while one is in play no bot blocks a non-bleed action of that human's Toreador (_humanBallFree)."
+   "memo": {
+    "pick": {
+     "clan": "Toreador",
+     "n": 2
+    },
+    "roles": [
+     {
+      "role": "free",
+      "field": "gbFree",
+      "token": "Grand Ball: non-bleed actions unblockable",
+      "ballToken": "Unblockable: {vamp}",
+      "read": [
+       "pair",
+       "token",
+       "only"
+      ]
+     },
+     {
+      "role": "lock",
+      "field": "gbLock",
+      "token": "Grand Ball: does not unlock",
+      "ballToken": "Locked: {vamp}",
+      "read": [
+       "lock"
+      ]
+     }
+    ],
+    "ask": "{owner}, your Toreador Grand Ball: which Toreador acts unblocked — {cands}?"
+   },
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Choose two ready Toreador you control, put this card in play, and lock one of the two. The locked Toreador does not unlock as normal. The other Toreador's non-bleed actions cannot be blocked. Minions can burn this card as a (D) action; Nosferatu get -1 stealth during that action.' fx.grandBall: the master loop picks the pair (_grandBallPlan: the unblockable one is the vampire with political cards to call, the locked one the least useful Toreador) and the frozen line names both; the locked one skips my unlock phase while the card is in play (_grandBallLocked); before each NON-BLEED action of the other the frozen block-bar line 'Toreador Grand Ball -- minions cannot block this action.' (every observer declines, a human reads it). Mode 2: fx.burnCardAction -- another Methuselah's minion may burn the card as a (D) action (_bestBurnCardFor), Nosferatu at -1 stealth, once each turn per minion (rulebook 6.1.6). A human's Ball names no pair: while one is in play no bot blocks a non-bleed action of that human's Toreador (_humanBallFree). memo (D-113 (4), v0.6.225): the lasting choices -- the roles, how a human's choice is read (lock: the Toreador of theirs that turned locked in that master phase; pair: the play line's acting minion and target less the locked one; token: a custom token of theirs naming the card; only: their one other ready, unlocked Toreador), the question when it stays open, and the token texts _memoMap writes on the bot's own cards."
   },
   "Change of Target": {
    "t": [

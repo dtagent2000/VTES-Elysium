@@ -13014,6 +13014,70 @@ async function connectWithRetry(client, tries = 30){
            '169f under a round of runway still pays; an ally cannot burn Jack (burnBy), my vampire can, and without burnBy the ally could (got ' + JSON.stringify({ low: low && { H: +low.H.toFixed(2), price: +low.price.toFixed(2) }, ally: tA && tA.target.card, vamp: tV && tV.target.card, allyNoBurnBy: tA2 && tA2.target.card }) + ')'); }
     }
 
+    /* 170) v0.6.225 -- ROUND C, RULINGS D-113 (3)-(4) (specs/spec-human-ball-memo-2026-11-14.md): a HUMAN's Toreador Grand Ball read
+       first (the play line's pair, the lock, a token, their only other Toreador), asked last by the bot that speaks for the table, the
+       owner's answer every bot's memory; the cardfx `memo` descriptor gives _memoMap its texts. LAST LINE OF 170 is the closing brace below. */
+    {
+      console.log('\n[170] v0.6.225 -- round C: a human’s Grand Ball and the memo descriptor');
+      const mk170 = (name, seat) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} });
+        u.seat = seat; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: false }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'N', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.say = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.board = []; u.hand = []; u.unc = []; u.pool = 20; u.turnSeat = 1; return u; };
+      const T = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 6, attached: [] }, o || {});
+      const hanna = (names) => names.map((n, i) => T('h' + i, n));
+      const table = (u, cards) => { u.table = { 1: { pub: { pool: 20, cards } }, 3: { pub: { pool: 20, cards: [] } } }; };
+      const ballIn = cards => { cards.push({ id: 'gb1', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', faceDown: false }); };
+      const lock = (cards, name) => { cards.find(c => c.name === name).locked = true; };
+      const act = (u, vamp) => u._humanBallFree({ kind: 'undirected', actingVampName: vamp, actorSeat: 1, who: 'Hanna' });
+      const chats = u => u.sent.filter(m => m && m.t === 'chat').map(m => String(m.msg || ''));
+      const memo = u => u.events.filter(e => e.t === 'bot:memo').map(e => e.d);
+
+      // a) the play line names the pair (Catalina acts, Massimo the target), Massimo is locked: Catalina is the free one -- no question
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs);
+        u._onLog('Hanna', '<b>Catalina Vega</b> plays <b>Toreador Grand Ball</b>. Target: <b>Massimo Falconi</b>.');
+        ballIn(cs); lock(cs, 'Massimo Falconi'); u._onLog('Hanna', 'Phase: <b>Minion</b>.');
+        const mm = memo(u);
+        ok(mm.length === 1 && mm[0].free === 'Catalina Vega' && mm[0].via === 'pair' && mm[0].lock === 'Massimo Falconi' && chats(u).length === 0 && act(u, 'Catalina Vega') === true && act(u, 'Kathy Glens') === false,
+           '170a the play line’s pair less the locked one: Catalina acts unblocked, Kathy does not, nobody asks (got ' + JSON.stringify({ mm, chats: chats(u), cat: act(u, 'Catalina Vega'), kathy: act(u, 'Kathy Glens') }) + ')'); }
+
+      // b) no pair on the line ('was played'), two Toreador, one locked: the other is the free one ('only')
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi']); table(u, cs);
+        u._onLog('Hanna', '<b>Toreador Grand Ball</b> was played.'); ballIn(cs); lock(cs, 'Catalina Vega'); u._onLog('Hanna', 'Phase: <b>Minion</b>.');
+        const mm = memo(u);
+        ok(mm.length === 1 && mm[0].free === 'Massimo Falconi' && mm[0].via === 'only' && chats(u).length === 0,
+           '170b the lock and their one other Toreador: Massimo is the free one (got ' + JSON.stringify({ mm, chats: chats(u) }) + ')'); }
+
+      // c-d) three Toreador, no pair, Massimo locked: the speaker (U, the lowest bot) asks once, N does not; unanswered both read the
+      //      generous rule; Hanna answers 'Kathy' -- both bots now free Kathy alone
+      { const u = mk170('U', 2), n = mk170('N', 3), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs); n.table = u.table;
+        for(const b of [u, n]) b._onLog('Hanna', '<b>Toreador Grand Ball</b> was played.');
+        ballIn(cs); lock(cs, 'Massimo Falconi'); for(const b of [u, n]) b._onLog('Hanna', 'Phase: <b>Minion</b>.');
+        const q = chats(u), qn = chats(n), before = [act(u, 'Catalina Vega'), act(n, 'Kathy Glens')];
+        for(const b of [u, n]) b._onChat('Hanna', 'Kathy is the free one');
+        const after = [act(u, 'Kathy Glens'), act(u, 'Catalina Vega'), act(n, 'Kathy Glens'), act(n, 'Catalina Vega')];
+        ok(q.length === 1 && q[0] === 'Hanna, your Toreador Grand Ball: which Toreador acts unblocked — Catalina Vega or Kathy Glens?' && qn.length === 0
+           && JSON.stringify(before) === '[true,true]' && JSON.stringify(after) === '[true,false,true,false]' && memo(n).some(x => x.via === 'answer' && x.free === 'Kathy Glens'),
+           '170c-d open: the speaker asks once naming the two, the other bot does not; unanswered both keep the generous rule; Hanna’s answer frees Kathy alone in both (got ' + JSON.stringify({ q, qn, before, after }) + ')'); }
+
+      // e) a custom token naming the Ball on one of three: the token reads it
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs);
+        u._onLog('Hanna', '<b>Toreador Grand Ball</b> was played.'); ballIn(cs); lock(cs, 'Massimo Falconi'); cs.find(c => c.name === 'Kathy Glens').counters = ['Grand Ball (free)'];
+        u._onLog('Hanna', 'Phase: <b>Minion</b>.'); const mm = memo(u);
+        ok(mm.length === 1 && mm[0].free === 'Kathy Glens' && mm[0].via === 'token' && chats(u).length === 0,
+           '170e a token naming the Ball on Kathy: she is the free one (got ' + JSON.stringify({ mm, chats: chats(u) }) + ')'); }
+
+      // f) the descriptor's texts are _memoMap's (my own Ball: the v0.6.221 tokens, in order)
+      { const u = mk170('U', 2); u.board = [T('v1', 'Catalina Vega'), T('v2', 'Massimo Falconi', { locked: true }), { id: 'gb', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', gbFree: 'v1', gbLock: 'v2' }];
+        const mp = u._memoMap(), got = { v1: mp.get('v1'), v2: mp.get('v2'), gb: mp.get('gb') };
+        ok(JSON.stringify(got) === JSON.stringify({ v1: ['Grand Ball: non-bleed actions unblockable'], v2: ['Grand Ball: does not unlock'], gb: ['Unblockable: Catalina Vega', 'Locked: Massimo Falconi'] }),
+           '170f the memo descriptor gives _memoMap the v0.6.221 tokens (got ' + JSON.stringify(got) + ')'); }
+      // g) and it READS the descriptor: a changed token text (a copy of the entry) is what _memoMap writes
+      { const u = mk170('U', 2); u.board = [T('v1', 'Catalina Vega'), T('v2', 'Massimo Falconi', { locked: true }), { id: 'gb', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', gbFree: 'v1', gbLock: 'v2' }];
+        const f0 = u.fxLookup.bind(u); u.fxLookup = n => { const h = f0(n); if(!h || n !== 'Toreador Grand Ball' || !h.e || !h.e.memo) return h; const e = JSON.parse(JSON.stringify(h.e)); e.memo.roles.find(r => r.role === 'free').token = 'Ball: free'; return Object.assign({}, h, { e }); };
+        const v1 = u._memoMap().get('v1');
+        ok(JSON.stringify(v1) === '["Ball: free"]', '170g _memoMap reads the descriptor: a changed token text is the one it writes (got ' + JSON.stringify(v1) + ')'); }
+    }
+
 
 
     }
