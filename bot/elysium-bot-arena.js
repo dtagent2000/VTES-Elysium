@@ -72,13 +72,24 @@ const RUN_SEED = (() => { const i = process.argv.indexOf('--seed'); return i >= 
 
 /* ---------- one isolated scratch server (a COPY: the store is __dirname- --
    anchored, so spawning the original would pollute the real rooms file).   */
-function spawnServer(){
+/* v1.4.10 (round A's online table, 13 Nov 2026): ten arenas in parallel drew a random port each from 300, and two met (a 1-in-7
+   chance at ten): the tenth's server lost the port (EADDRINUSE: it exits), its bots joined the second arena's server, played in a
+   room of their own there, and were cut off when that match ended and its server was stopped -- the tenth arena waited out its
+   match timeout with no trace. Now the OS picks a free port (a listener on port 0), and the server must still be alive after its
+   boot (it holds the port), else another port is tried. */
+function freePort(){ return new Promise((res, rej) => { const s = require('net').createServer(); s.unref(); s.on('error', rej); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => res(p)); }); }); }
+async function spawnServer(){
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'elysium-arena-'));
   fs.copyFileSync(path.join(__dirname, 'elysium-server.js'), path.join(tmp, 'elysium-server.js'));
-  const port = 8600 + Math.floor(Math.random() * 300);
-  const srv = spawn(process.execPath, [path.join(tmp, 'elysium-server.js'), String(port)],
-                    { cwd: tmp, stdio: 'ignore' });
-  return { srv, url: 'ws://127.0.0.1:' + port, tmp };
+  for(let k = 0; k < 5; k++){
+    const port = await freePort();
+    const srv = spawn(process.execPath, [path.join(tmp, 'elysium-server.js'), String(port)],
+                      { cwd: tmp, stdio: 'ignore' });
+    let exited = false; srv.once('exit', () => { exited = true; });
+    await sleep(800);                                   // the one-time boot (was the caller's)
+    if(!exited) return { srv, url: 'ws://127.0.0.1:' + port, tmp };
+  }
+  throw new Error('arena: no scratch server stayed up on a free port (5 tries)');
 }
 
 /* ---------- one match ---------- */
@@ -282,8 +293,8 @@ async function runArena(opts){
   const log = o.log;
 
   let owned = null;
-  const serverUrl = o.serverUrl || (owned = spawnServer(), await sleep(800), owned.url);
-  log('arena v1.4.9 — Trainbot v' + BOT_VERSION + ' · ' + o.matches + ' match(es) × ' +
+  const serverUrl = o.serverUrl || (owned = await spawnServer(), owned.url);   // v1.4.10: a free port, and the server alive after its boot
+  log('arena v1.4.10 — Trainbot v' + BOT_VERSION + ' · ' + o.matches + ' match(es) × ' +
       o.bots + ' bots · personas ' + o.personas.join('/') + ' · decks ' + o.decks.join('/') + ' · start pool ' + o.startPool);
   log('  seating: ' + (FIXED_SEATS ? 'FIXED (v1.2 rotation, neighbourhoods constant)' : 'RANDOM per match, seed ' + RUN_SEED + ' (repeat with --seed ' + RUN_SEED + ')'));   // v1.3.0
   if(Object.keys(o.knobs).length || Object.keys(o.seatKnobs).length){
