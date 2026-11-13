@@ -3422,6 +3422,16 @@ class Bot {
     const v = a.v; if(pk.blood && v){ const cap = this._capOf(v); v.blood = Math.min(cap > 0 ? cap : 99, (v.blood | 0) + pk.blood); }   // v0.6.217: _capOf (Oblivion's +1 capacity)
     if(pk.pool){ this.pool = (this.pool | 0) + pk.pool; if(this.ev){ this._invOnEvent(this.ev.push({ kind: 'pool', delta: +pk.pool, via: 'cost-returned', own: true, seat: this.seat })); } }   // v0.6.180: a blocked action's parked pool cost comes back WITHOUT a table line -- the ledger hears it from here
     this.push(); this._emit('cost-returned', { blood: pk.blood, pool: pk.pool }); }
+  _fizzleIfOusted(v, seat, n, kind){   // v0.6.222 (v0.6.221's 240, match 60, and three of its 600): the action's target Methuselah was ousted in its window -- my own referendum's pool damage, still in my send queue, landed at that seat after I had announced this action -- so the action has no target: nothing lands and nothing is gained (no pool, no Edge, no bleed-through row), its cost comes back as for a blocked action (an action card's cost is paid only on success), and the minion loop's game-over check ends my turn when that oust was the game's last
+    if(!seat || this.live(seat)) return false;
+    if(this.tally && this.tally.mode === 'block' && this.started){ try { this._writeTally({ mode: null }); } catch(e){} }   // the counter closes, as on 'through'
+    this._returnParked();
+    this.say('It resolves');
+    this.note('The ' + kind + ' has no target: ' + this.seatName(seat) + ' is ousted.');
+    this._emit('fizzled', { vamp: v && v.name, n: n | 0, kind, seat });
+    this.push();
+    return true;
+  }
   _bestBlockBarFor(vamp){            // v0.6.127 (cardfx v1.9.0, fx.blockBar): Daring the Dawn-class -- an action modifier that bars VAMPIRES from blocking this action and bills its own vampire afterwards (selfDmg / selfTorpor). v0 keeps to the self-price members: a free bar (Beast Meld [ANI][PRO]) carries a 'non-bleed only' condition the data does not read yet. The cheapest price wins (the superior mode).
     let best = null;
     (this.hand || []).forEach((nm, idx) => { const h = this.fxLookup(nm); if(!h || h.kind !== 'lib' || (h.e.t || []).indexOf('mod') < 0) return;
@@ -11009,6 +11019,8 @@ class Bot {
             this._toAsh(act.name);                      // a blocked action card still resolves to the ash heap
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, by: this._lastBlockerName || ansP.who || null });
             await this._resolveCombat(v);   // v0.6.22: multi-round wrapper (was the single-round primitive directly)
+          } else if(this._fizzleIfOusted(v, prey, act.n, 'pool damage')){
+            this._toAsh(act.name);   // v0.6.222: the target was ousted in the window -- the card resolves to the ash heap, nothing lands
           } else {
             this._toAsh(act.name);
             this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name, kind: 'pool' });
@@ -11108,6 +11120,8 @@ class Bot {
             this.note('Blocked' + (curAns.who ? ' by ' + curAns.who : '') + '. Combat begins.');
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: this._actingVamp.n, by: this._lastBlockerName || curAns.who || null });
             await this._resolveCombat(v);   // v0.6.22: multi-round wrapper (was the single-round primitive directly)
+          } else if(this._fizzleIfOusted(v, this._actingVamp.target, this._actingVamp.n, 'bleed')){
+            /* v0.6.222: the target was ousted in the window -- nothing lands (above) */
           } else {
             await this._maybeSpyNullify(v);   // v0.6.211 (Johan, option B): my bounced bleed is about to land on somebody other than my prey -- Spying Mission [OBF] makes it unsuccessful (n 0) and goes on the vampire
             this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name || null, final: this._actingVamp.n | 0, bounced: this._actingVamp.bounced ? true : undefined, nullified: this._actingVamp.nullified ? true : undefined });   // v0.6.203: emitted at the resolution -- n stays the announced amount (the tools read it so), `final` is what lands

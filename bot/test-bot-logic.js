@@ -12593,6 +12593,18 @@ async function connectWithRetry(client, tries = 30){
         const late = run(false), passed = run(true);
         ok(late.armed && late.combats === 1 && late.locked === true && late.rushed === 1 && !late.pending && passed.combats === 1 && passed.rushed === 1,
            '166a a rush at my Nassir that resolves on the actor’s word: Nassir locks and fights; after my own Pass, once (got ' + JSON.stringify({ late, passed }) + ')'); }
+
+      // b) an action at a seat ousted in its window (the 240's match 60): my bleed at Cy, who is ousted while its window is open (my own
+      //    referendum's damage landed late at that seat) -- nothing lands: no bleed-through row, no Edge, one fizzled row; through _playTurn
+      { const u = mk166(); u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Cy', online: true, bot: true }];
+        u.turnSeat = 2; u.board = [V6('v1', 'Lenny Burkhead (G6)', { blood: 5, cap: 6 })]; u.hand = []; const notes = []; u.note = t => notes.push(t);
+        u._announcePhase = async () => {};
+        u._askBlock = async () => { if(!u.players[2].out) u.players[2].out = true; return { what: 'no' }; };   // Cy's oust lands in the window
+        let terr = null; try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const thr = u.events.filter(e => e.t === 'bot:through' && e.d.vamp === 'Lenny Burkhead (G6)' && !e.d.kind && e.d.card !== 'hunt').length, fz = u.events.filter(e => e.t === 'bot:fizzled');
+        const got = { terr, thr, edge: !!u.edge, fz: fz.map(e => e.d), note: notes.filter(t => /no target/.test(t)) };
+        ok(!terr && thr === 0 && !u.edge && fz.length === 1 && fz[0].d.kind === 'bleed' && fz[0].d.seat === 3 && got.note.length === 1 && /^The bleed has no target: Cy is ousted\.$/.test(got.note[0]),
+           '166b my bleed at Cy, ousted in its window: nothing lands -- no bleed-through, no Edge, one fizzled row and its line (got ' + JSON.stringify(got) + ')'); }
     }
 
 
