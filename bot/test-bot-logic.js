@@ -12607,11 +12607,13 @@ async function connectWithRetry(client, tries = 30){
            '166b my bleed at Cy, ousted in its window: nothing lands -- no bleed-through, no Edge, one fizzled row and its line (got ' + JSON.stringify(got) + ')'); }
 
       // c) the turn held at game over comes back (the second review): my last bleed ousted Hanna, I passed, the server handed me my own
-      //    turn back and I held it (165j); Hanna is unousted -- one pass, not a second turn. A turn the game ended before I played is
-      //    played when the game comes back (a spectator takes the vacant seat). Through the roster and turn handlers
+      //    turn back and I held it (165j), and held it again when the same turn came twice; Hanna is unousted -- one pass, not a second
+      //    turn. A turn the game ended before I played is played when the game comes back (a spectator takes the vacant seat). Through
+      //    the roster and turn handlers
       { const P = out => [{ seat: 1, name: 'Hanna', online: true, bot: true, out }, { seat: 2, name: 'U', online: true, bot: true }];
         const a = mk166(); a.players = P(true); a.turnSeat = 2; a._endTurnAtGameOver('minion');
         a._dispatch({ t: 'turn', seat: 2, who: 'U' }); await new Promise(r => setTimeout(r, 30));
+        a._dispatch({ t: 'turn', seat: 2, who: 'U' }); await new Promise(r => setTimeout(r, 30));   // the same turn again (a reconnect): still the one that came back
         const passes0 = a.sent.filter(m => m.t === 'pass').length; a._dispatch({ t: 'roster', players: P(false) }); await new Promise(r => setTimeout(r, 30));
         const ga = { passes: [passes0, a.sent.filter(m => m.t === 'pass').length], resumed: a.events.filter(e => e.t === 'bot:game-resumed').map(e => e.d.back) };
         const b = mk166(); b.players = P(true); b.turnSeat = 1; let played = 0; const real = b._playTurn.bind(b); b._playTurn = async () => { played++; return real(); };
