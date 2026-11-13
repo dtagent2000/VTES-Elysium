@@ -12605,6 +12605,21 @@ async function connectWithRetry(client, tries = 30){
         const got = { terr, thr, edge: !!u.edge, fz: fz.map(e => e.d), note: notes.filter(t => /no target/.test(t)) };
         ok(!terr && thr === 0 && !u.edge && fz.length === 1 && fz[0].d.kind === 'bleed' && fz[0].d.seat === 3 && got.note.length === 1 && /^The bleed has no target: Cy is ousted\.$/.test(got.note[0]),
            '166b my bleed at Cy, ousted in its window: nothing lands -- no bleed-through, no Edge, one fizzled row and its line (got ' + JSON.stringify(got) + ')'); }
+
+      // c) the turn held at game over comes back (the second review): my last bleed ousted Hanna, I passed, the server handed me my own
+      //    turn back and I held it (165j); Hanna is unousted -- one pass, not a second turn. A turn the game ended before I played is
+      //    played when the game comes back (a spectator takes the vacant seat). Through the roster and turn handlers
+      { const P = out => [{ seat: 1, name: 'Hanna', online: true, bot: true, out }, { seat: 2, name: 'U', online: true, bot: true }];
+        const a = mk166(); a.players = P(true); a.turnSeat = 2; a._endTurnAtGameOver('minion');
+        a._dispatch({ t: 'turn', seat: 2, who: 'U' }); await new Promise(r => setTimeout(r, 30));
+        const passes0 = a.sent.filter(m => m.t === 'pass').length; a._dispatch({ t: 'roster', players: P(false) }); await new Promise(r => setTimeout(r, 30));
+        const ga = { passes: [passes0, a.sent.filter(m => m.t === 'pass').length], resumed: a.events.filter(e => e.t === 'bot:game-resumed').map(e => e.d.back) };
+        const b = mk166(); b.players = P(true); b.turnSeat = 1; let played = 0; const real = b._playTurn.bind(b); b._playTurn = async () => { played++; return real(); };
+        b._dispatch({ t: 'turn', seat: 2, who: 'U' }); await new Promise(r => setTimeout(r, 30));
+        b._playTurn = async () => { played++; }; b._dispatch({ t: 'roster', players: P(false) }); await new Promise(r => setTimeout(r, 30));
+        const gb = { played, passes: b.sent.filter(m => m.t === 'pass').length, resumed: b.events.filter(e => e.t === 'bot:game-resumed').map(e => e.d.back) };
+        ok(JSON.stringify(ga.passes) === '[1,2]' && JSON.stringify(ga.resumed) === '[true]' && gb.played === 2 && gb.passes === 0 && JSON.stringify(gb.resumed) === '[false]',
+           '166c the held turn comes back: after my own game-over pass, one more pass when Hanna is unousted; a turn I never played is played (got ' + JSON.stringify({ ga, gb }) + ')'); }
     }
 
 

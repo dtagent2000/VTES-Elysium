@@ -1148,6 +1148,7 @@ class Bot {
         this.o.log('game started — I am seat ' + this.seat + ', my prey is ' + this.seatName(this.preySeat()));
       },
       dealt: m => {
+        this._heldTurn = null; this._gameOverPassed = false;   // v0.6.222: a new deal holds no turn
         this.hand = [...(m.hand || [])];
         this.libN = m.lib || 0; this.cryptN = m.crypt || 0;
         this._fgOwed = 0;   // v0.6.215: the opening deal's vampires are no Family Gathering draw
@@ -1255,6 +1256,7 @@ class Bot {
         if(this._ask && this._ask.target && !this.live(this._ask.target))   // v0.6.106 (#3): the ask's OWN target (ousted or vacant) -- the old `preySeat() && p.out` could never hold, preySeat() already skips out seats
           this._answer('no', null);                      // the target left mid-ask — the window dies with them
         this._releaseDeparted(m.players || []);          // v0.6.106 (#5): a departed holder/thinker no longer freezes the bot
+        this._resumeHeldTurn('roster');                 // v0.6.222: an unoust / a seat taken over -- the turn I held at game over
         if(this._debugHand && this.started && !this.out) this._syncOpenHand();   // v0.6.200: the debug audience follows the roster (a human back online gets the grant again)
       },
       turn: m => {
@@ -1268,6 +1270,7 @@ class Bot {
         }
         if(m.seat !== this.turnSeat){ this._turnActN = 0; this._turnSerial = (this._turnSerial | 0) + 1; }   // v0.6.217: + the turn's serial (Monster's 'once each turn' = once in each player's turn [ANK 20180719-4])   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
         this.turnSeat = m.seat;
+        if(m.seat !== this.seat){ this._heldTurn = null; this._gameOverPassed = false; }   // v0.6.222: the turn moved on -- nothing is held
         if(this.started && this.out && m.seat === this.seat){   // v0.6.147 (THE HOTSEAT NET, measured: 4 of 4 bridge tables froze at the first turn handed to an ousted bot): the SERVER never gives an ousted seat the turn (nextLiveSeat), but the client's hotseat sweep walks its config, not the roster, and waits for a `pass` with no timeout. An ousted bot hands the turn straight on. Online this branch is unreachable.
           this._emit('ousted-pass', { turn: m.seat }); this.send({ t: 'pass' }); return; }
         if(this.started && !this.out && m.seat === this.seat){
@@ -5648,7 +5651,13 @@ class Bot {
   _tableBlockRate(){ return (this._tableBlockAttempts | 0) / Math.max(1, this.ownTurns | 0); }   // v0.6.93: block attempts observed per own round -- the climate read future consumers calibrate against (benchmark metas expected < ~0.5/turn)
   _liveCount(){ let n = 0; for(const q of (this.players || [])) if(q && !q.out && !q.vacant) n++; return n; }   // B-55b: remaining players, the same roster read live(seat) already trusts
   _gameOver(){ return !!this.started && !this.out && (this.players || []).length > 1 && this._liveCount() <= 1; }   // v0.6.221 (the Jack round, D-113; found by v0.6.220's V5 smoke): I am the last Methuselah -- the game is over, my turn ends (the survivor used to play on, bleeding itself: preySeat() is my own seat)
-  _endTurnAtGameOver(phase){ this._emit('game-over', { phase }); this.push(); this.send({ t: 'log', html: '<b>Turn passed.</b>' }); this.send({ t: 'pass' }); }   // v0.6.221: the rest of the turn is skipped; the table still gets its pass
+  _endTurnAtGameOver(phase){ this._emit('game-over', { phase }); this.push(); this.send({ t: 'log', html: '<b>Turn passed.</b>' }); this._gameOverPassed = true; this.send({ t: 'pass' }); }
+  _resumeHeldTurn(why){              // v0.6.222 (the second review): the turn I held at game over (_playTurn's first line) is released when the game comes back -- a host's or a player's unoust, a spectator taking a vacant seat, a hotseat oust undone; none of them sends a turn, so without this the table waited on me. The turn that came straight back after my own game-over pass was played: it is passed on; a turn the game ended before I played is played
+    const h = this._heldTurn; if(!h || !this.started || this.out || this.turnSeat !== this.seat || this._acting || this._gameOver()) return false;
+    this._heldTurn = null; this._emit('game-resumed', { back: h.back, why });
+    if(h.back) this.send({ t: 'pass' }); else this._playTurn().catch(e => this.o.log('turn error:', e.message));
+    return true;
+  }   // v0.6.221: the rest of the turn is skipped; the table still gets its pass
   _endgameNow(){ return !!this.started && this._liveCount() > 0 && this._liveCount() <= 3; }   // B-55b BASE: <= 3 alive = the endgame read (the Grinder's naked 2-2 finish sits inside this); contender/VP refinement = documented v1.1
   _isDefenseCard(name){ const lk = this.fxLookup(name); if(!lk) return false; const cats = this._cats(lk.e || lk) || []; return cats.includes('bounce') || cats.includes('intercept'); }   // B-55b: the existing _cats vocabulary -- wake folds into intercept (R2), so bounce+intercept covers the defense class with zero new classification
   _revertHandSizeBonus(){   // v0.6.32 (Johan's ask, continuing Dreams of the Sphinx): extracted from the discard-phase loop specifically so it's directly testable on its own -- "until the end of the turn" expires HERE (discard phase is the turn's last phase), and per the SAME rule that granted it ("discard down to or draw up to your hand size" whenever it changes), reverting to the base 7 means discarding any excess now. Prefers a genuinely dead-hand card if one remains (worthless to hold regardless); falls back to the front of the hand for any remainder -- WHICH excess card to shed is a real strategic question this v1 doesn't weigh, matching Dreams of the Sphinx's own "ignore the 3-counter budget" simplification already noted at the lock-income decide() case.
@@ -10187,7 +10196,7 @@ class Bot {
       if(wasMyPrey){ this._bountyFrom = this._bountyFrom || new Set();
         if(!this._bountyFrom.has(pl.name)){ this._bountyFrom.add(pl.name); this.pool += 6; this.push();
           this.note('Trainbot collects the bounty from ' + pl.name + ': +6 pool (' + this.pool + ') and 1 VP. The Jyhad provides.'); } }
-    } else if(pub.pool > 0 && pl.out && pl._outInferred){ pl.out = false; pl._outInferred = false; this._emit('oust-inferred', { seat, name: pl.name, undone: true }); }
+    } else if(pub.pool > 0 && pl.out && pl._outInferred){ pl.out = false; pl._outInferred = false; this._emit('oust-inferred', { seat, name: pl.name, undone: true }); this._resumeHeldTurn('oust-undone'); }
   }
   _oust(byHost){
     this._emit('ousted', { byHost: !!byHost, pool: this.pool });
@@ -10256,7 +10265,7 @@ class Bot {
     this._watchdogArm();                   // v0.6.108: heartbeat during the bot's own turn — detects hangs, reassures humans
     const pace = () => this._pace();       // v0.4.5: routes through the gate (waits only the REMAINING time since the last action) instead of a blind full-length sleep every call
     try{
-      if(this._gameOver()){ this._emit('game-over', { phase: 'turn' }); return; }   // v0.6.221 (the Jack round's egress review): a turn after the game ended -- the server hands a lone live seat its own turn back after my pass; no beat, no unlock (the Edge, income, my own Jack's tick), and no second pass (it looped every pace beat)
+      if(this._gameOver()){ this._heldTurn = { back: !!this._gameOverPassed }; this._gameOverPassed = false; this._emit('game-over', { phase: 'turn' }); return; }   // v0.6.222 (the second review): the hold is remembered -- an unoust or a seat taken over brings the game back (_resumeHeldTurn)   // v0.6.221 (the Jack round's egress review): a turn after the game ended -- the server hands a lone live seat its own turn back after my pass; no beat, no unlock (the Edge, income, my own Jack's tick), and no second pass (it looped every pace beat)
       this.ownTurns++;
       await pace();
       /* v0.6.117: the '— Trainbot, turn N —' banner is gone -- the client prints its own TURN N header, and the bot's private count beside it (turn 1 under TURN 2) read as a contradiction. `ownTurns` still counts (emits, tempo). */
