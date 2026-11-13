@@ -12344,6 +12344,54 @@ async function connectWithRetry(client, tries = 30){
         const d = pair('The Dowager (G6)'), a = pair('Ashley (G6)');
         ok(Math.abs((d.worth - a.worth) - 1) < 1e-9 && Math.abs((d.stopped - a.stopped) - 0.35) < 1e-9,
            '164f the home planners: The Dowager is worth 1 more at home than Ashley (_blockerWorth: her +1 intercept against a bleed), and _critPool counts her stop at 0.85 against 0.5 (got ' + JSON.stringify({ d, a }) + ')'); }
+
+      /* the egress review's findings (13 Nov), each through the path that reads it */
+      // g) the event log: the bot's five other discard lines name the card alone; a name with its own dash or parenthesis stays whole
+      { const u = mk164(); const C = (who, line) => { const e = u._evClassify(who, line, 'log'); return e && e.kind === 'discard' ? e.card : null; };
+        const got = [C('Yewon Ong', 'Yewon Ong discards Stygian Shroud — +1 vote for the referendum.'), C('Alexa Draper (G6)', 'Alexa Draper (G6) discards Majesty — +2 votes against the referendum.'),
+          C('Larissa Moreira (G6)', 'Larissa Moreira (G6) discards Cats’ Guidance — +1 bleed.'), C('Viktor', 'Viktor discards Majesty (Anarch Revolt): +1 bleed.'),
+          C('Trainbot', 'Trainbot discards Majesty (Revelations) and draws.'), C('Viktor', 'Viktor discards Majesty (hand size bonus expired).'),
+          C('Hanna', 'Hanna discards Khazar’s Diary (Endless Night).'), C('Hanna', 'Hanna discards Bang Nakh — Tiger’s Claws.'), C('Viktor', 'Viktor discards Khazar’s Diary (Endless Night) (Anarch Revolt): +1 bleed.')];
+        ok(JSON.stringify(got) === JSON.stringify(['Stygian Shroud', 'Majesty', 'Cats’ Guidance', 'Majesty', 'Majesty', 'Majesty', 'Khazar’s Diary (Endless Night)', 'Bang Nakh — Tiger’s Claws', 'Khazar’s Diary (Endless Night)']),
+           '164g the event log: the vote discard, the bleed boost, the law discard, the Revelations discard and the hand-size expiry each name the card alone; Khazar’s Diary (Endless Night) and Bang Nakh — Tiger’s Claws stay whole (got ' + JSON.stringify(got) + ')'); }
+
+      // h) the PRNG outside Node: in the browser world (no require, no process) an unseeded bot seeds from Web Crypto; with no Web Crypto either,
+      //    two bots made in the same millisecond still draw different seeds (the clock's fallback mixes a counter)
+      { const vm = require('vm'), src = fs.readFileSync(path.join(__dirname, 'elysium-bot.js'), 'utf8');
+        const run = cryptoStub => { const g = { console: { log(){}, error(){}, warn(){} }, setTimeout, clearTimeout, setInterval, clearInterval }; if(cryptoStub) g.crypto = cryptoStub;
+          const ctx = vm.createContext(g); vm.runInContext(src, ctx, { filename: 'elysium-bot.browser164.js' });
+          return vm.runInContext("(function(){ var fx = { v: 1, lib: {}, crypt: {} }; var a = new ElysiumBot.Bot({ name: 'A', cardfxData: fx, log: function(){} }), b = new ElysiumBot.Bot({ name: 'B', cardfxData: fx, log: function(){} }); return [a._rand(), a._rand(), b._rand()]; })()", ctx); };
+        let calls = 0, web = null, bare = null, err = null;
+        try { web = run({ getRandomValues(arr){ calls++; for(let i = 0; i < arr.length; i++) arr[i] = Math.imul(calls, 2654435761) >>> 0; return arr; } }); bare = run(null); } catch(e){ err = e.message; }
+        const okWeb = !!web && calls === 2 && web[0] !== web[2], okBare = !!bare && bare[0] !== bare[2] && bare.every(x => typeof x === 'number' && x >= 0 && x < 1);
+        ok(!err && okWeb && okBare,
+           '164h outside Node: two unseeded bots seed from Web Crypto (one getRandomValues each) and draw differently; with no Web Crypto the clock fallback still gives two bots made together different seeds (got ' + JSON.stringify({ err, calls, web, bare }) + ')'); }
+
+      // i) age in play for the third age reader: Govern the Unaligned stocks only a YOUNGER uncontrolled vampire -- an Oblivion on the acting
+      //    vampire (capacity 7 + 1) makes a capacity-7 one younger (_bestBloodStockFor; equal capacity stays excluded without it)
+      { const u = mk164(); const bh = V4('bh', 'Blackhorse Tanner', { cap: 7, blood: 7 }); u.hand = ['Govern the Unaligned']; u.unc = [{ id: 'u7', name: 'X', cap: 7, blood: 0 }];
+        u.board = [bh]; const bare = u._bestBloodStockFor(bh);
+        bh.attached = ['ob']; u.board = [bh, { id: 'ob', name: 'Oblivion', kind: 'lib', zone: 'ready', host: 'bh' }]; const obl = u._bestBloodStockFor(bh);
+        ok(bare === null && !!obl && !!obl.target && obl.target.id === 'u7',
+           '164i Govern the Unaligned: a capacity-7 Blackhorse Tanner finds no younger target among capacity-7 vampires; with an Oblivion (8) the capacity-7 one is younger and stocked (got ' + JSON.stringify({ bare: bare && bare.target && bare.target.id, obl: obl && obl.target && obl.target.id }) + ')'); }
+
+      // j) Navar McClaren through the pick (_pickBlocker passes the pending): an Oblivion on the actor's pub card makes Royce (1 + 1) older,
+      //    so the pick skips Navar for the vanilla; without it the equal-capacity Royce is blockable and Navar comes first in board order
+      { const pick = withObl => { const u = mk164(); const NV = V4('N', 'Navar McClaren (G1)', { cap: 1 }), W = V4('W', 'Wauneka (G6)', { cap: 6 }); u.board = [NV, W];
+          u.table[1] = { pub: { pool: 20, cards: [V4('r1', 'Royce (G2)', { cap: 1, attached: withObl ? ['o1'] : [] })].concat(withObl ? [{ id: 'o1', name: 'Oblivion', kind: 'lib', zone: 'ready', host: 'r1' }] : []) } };
+          const b = u._pickBlocker(new Set(), new Set(), { who: 'Hanna', kind: 'bleed', actingVampName: 'Royce (G2)', actorSeat: 1 }); return b && b.id; };
+        const got = [pick(false), pick(true)];
+        ok(JSON.stringify(got) === JSON.stringify(['N', 'W']),
+           '164j the pick: Navar McClaren blocks an equal-capacity Royce (board order), and with an Oblivion on Royce’s pub card (older) the pick skips him for Wauneka (got ' + JSON.stringify(got) + ')'); }
+
+      // k) the who-stays-home price (_priceHome): The Dowager stops a bleed at 0.85 (her +1), Ashley at 0.5 -- she stays home although she
+      //    comes second in the bodies (the planners read no crypt intercept before: the first body won the tie)
+      { const u = mk164(); const D = V4('d1', 'The Dowager (G6)'), A = V4('a1', 'Ashley (G6)');
+        u.board = [A, D]; u.predSeat = () => 1; u.preySeat = () => 1; u.predHits = () => [3]; u.oppStealth = () => 0; u._myForecast = () => 1; u._bestBounceFor = () => null;
+        u._bestInterceptFor = () => null; u._equipIntercept = () => 0; u._hostedIntercept = () => 0; u._actValue = () => ({ n: 1, what: 'bleed' }); u._opp = () => ({ readyN: 1, vamps: {} });
+        const r = u._priceHome([A, D], 1, 1, 0);
+        ok(r.home === 1 && /^The Dowager \(G6\) is worth more at home \(stops 2\.55 of a 3\.00 hit/.test(r.why[0] || ''),
+           '164k _priceHome: of Ashley and The Dowager the one that stays home is The Dowager (stops 2.55 of a 3-pool hit, Ashley 1.50) (got ' + JSON.stringify(r) + ')'); }
     }
 
 

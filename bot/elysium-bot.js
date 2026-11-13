@@ -64,10 +64,16 @@
 const IS_NODE = typeof process !== 'undefined' && !!(process.versions && process.versions.node);
 const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
+let entropyN = 0;
 function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's crypto, the browser's Web Crypto (the module's `crypto` is null there); the clock last
   try { if(crypto) return crypto.randomBytes(4).readUInt32LE(0); } catch(e){}
   try { const w = (typeof globalThis !== 'undefined') ? globalThis.crypto : null; if(w && w.getRandomValues){ const a = new Uint32Array(1); w.getRandomValues(a); return a[0]; } } catch(e){}
-  return (Date.now() * 2654435761) >>> 0;
+  /* the last resort (neither): the clock's two words and a per-load counter, mixed -- the egress review: Date.now() * 2654435761 as a float
+     left the low 19 bits 0, and two bots made in the same millisecond drew the same seed */
+  const t = Date.now(); entropyN = (entropyN + 1) >>> 0;
+  let h = Math.imul(((t % 4294967296) >>> 0) ^ Math.imul(entropyN, 0x9E3779B9), 2654435761) ^ Math.floor(t / 4294967296);
+  h ^= h >>> 16; h = Math.imul(h, 0x85EBCA6B); h ^= h >>> 13;
+  return h >>> 0;
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
@@ -1368,8 +1374,10 @@ class Bot {
   fxCryptUnique(name){ const h = this.fxLookup(name); return (h && h.kind === 'crypt') ? h.e.unique : undefined; }   // undefined = unique (the default); false = the five true non-uniques
   /* ---- VA (2 Aug, elysium-bot-vampire-plan.md): crypt-ability consumers -- the numeric
      quartet + the twin-site filter. Each seat applies its OWN vampires' curated fx (the
-     both-sides two-driver model); the only cross-read is fxCryptCap on the ANNOUNCED
-     actor name (Navar's age rule). Per-minion stealth/intercept TOTALS floor at 0
+     both-sides two-driver model); the only cross-read is the ACTOR's age (Navar's and
+     Azucena's rules: `_ageCap` reads the actor's card on its pub board with its capacity
+     in play -- v0.6.220, D-111 (4) -- and the printed capacity of the announced name
+     when the card is not there). Per-minion stealth/intercept TOTALS floor at 0
      everywhere they are compared or written (rulebook: neither can be reduced below
      zero -- so a bare Christine at raw -1 still legally blocks a 0-stealth action);
      the raw helpers return unfloored deltas, the floor sits at the summing sites.    */
@@ -1876,7 +1884,7 @@ class Bot {
     });
     return best;
   }
-  _bestBloodStockFor(vamp){         // v0.6.14 (Johan's blood-placement family): a playable ACTION whose mode carries bloodAdd + bloodAddTo:'unc' (superior Govern-class) plus a LEGAL uncontrolled target. Target law: bloodAddYounger compares CAPACITY (the rulebook's age rule -- strictly lower than the acting vampire's; vekn.net confirms NO generation tiebreak exists, so equal-capacity is correctly excluded, not a gap), and the target must still want blood (blood < cap; stocking past cap is legal but wasted in this bot's raise economy). Picks the HIGHEST-cap legal target (closest to rising = fastest acceleration). Blood costs are paid by the acting vampire at announce (Govern itself costs 1 blood -- the first draft's cost-free gate killed the very card this pin is for); pool-costed actions stay out of scope.
+  _bestBloodStockFor(vamp){         // v0.6.14 (Johan's blood-placement family): a playable ACTION whose mode carries bloodAdd + bloodAddTo:'unc' (superior Govern-class) plus a LEGAL uncontrolled target. Target law: bloodAddYounger compares CAPACITY (the rulebook's age rule -- strictly lower than the acting vampire's, its capacity in play since v0.6.220, D-111 (4); vekn.net confirms NO generation tiebreak exists, so equal-capacity is correctly excluded, not a gap), and the target must still want blood (blood < cap; stocking past cap is legal but wasted in this bot's raise economy). Picks the HIGHEST-cap legal target (closest to rising = fastest acceleration). Blood costs are paid by the acting vampire at announce (Govern itself costs 1 blood -- the first draft's cost-free gate killed the very card this pin is for); pool-costed actions stay out of scope.
     let best = null;
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('action')) return;
@@ -1902,7 +1910,7 @@ class Bot {
         if(!mo.fx || !(mo.fx.bloodAdd > 0) || mo.fx.bloodAddTo !== 'unc' || !this._modeUsableBy(mo, vamp)) return;
         if(hasBaseBleed || mo.dir || mo.fx.bleedAct) return;
         const tgt = this.unc
-          .filter(u => (!mo.fx.bloodAddYounger || (u.cap | 0) < (vamp.cap | 0)) && (u.blood | 0) < (u.cap | 0))
+          .filter(u => (!mo.fx.bloodAddYounger || (u.cap | 0) < (this._ageCap(vamp) || (vamp.cap | 0))) && (u.blood | 0) < (u.cap | 0))   // v0.6.220 (the egress review, D-111 (4)): the acting vampire's age is its capacity IN PLAY (an Oblivion's +1), printed when the data lacks the name
           .sort((a, b) => (b.cap | 0) - (a.cap | 0))[0];
         if(!tgt) return;
         if(!best || mo.fx.bloodAdd > best.n) best = { idx, name: h.name, n: mo.fx.bloodAdd, st: (mo.fx.actStealth | 0), kind: 'stock', target: tgt, cost: costB ? { blood: costB } : null };
@@ -8418,6 +8426,13 @@ class Bot {
     if((m = t.match(/^Vote: (\d+) for vs (\d+) against \u2014 vote (passes|fails)/))) return { kind: 'ref-result', passes: m[3] === 'passes', for: +m[1], against: +m[2] };
     if(/^No votes from me\./.test(t)) return { kind: 'vote', n: 0 };
     if((m = t.match(/^(.+?) discards (.+?) at random to strike: dodge\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), random: true };   // v0.6.220 (wave A's riders): Phaibun's line -- the specific shape first, so the card name carries no tail
+    /* v0.6.220 (the egress review): the bot's five other discard lines carry a tail too -- each its own shape before the generic one (L-56); a
+       card name with a dash or a parenthesis of its own (Bang Nakh -- Tiger's Claws, Khazar's Diary (Endless Night)) stays whole */
+    if((m = t.match(/^(.+?) discards (.+?) — \+(\d+) votes? (?:for|against) the referendum\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'vote' };
+    if((m = t.match(/^(.+?) discards (.+?) — \+(\d+) bleed\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'bleed' };
+    if((m = t.match(/^(.+?) discards (.+?) \(([^()]+)\): \+(\d+) bleed\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'bleed', holder: S(m[3]) };
+    if((m = t.match(/^(.+?) discards (.+?) \(Revelations\) and draws\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'revelations' };
+    if((m = t.match(/^(.+?) discards (.+?) \(hand size bonus expired\)\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'hand-size' };
     if((m = t.match(/^(.+?) discards (.+?)\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]) };
     if((m = t.match(/^(.+?) pays (\d+) pool for (.+?) \(pool (\d+)\)/))) return { kind: 'pool', by: S(m[1]), delta: -m[2], pool: +m[4], card: S(m[3]), via: 'cost' };
     if((m = t.match(/^Gained (\d+) pool from the Edge/))) return { kind: 'pool', delta: +m[1], via: 'edge' };

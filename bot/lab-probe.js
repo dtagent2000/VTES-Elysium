@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-/* lab-probe.js v1.0.0 (17 Oct 2026, bot v0.6.206) -- THE PROBE LAB: one minion phase, the same table three times.
+/* lab-probe.js v1.0.1 (17 Oct 2026, bot v0.6.206; v1.0.1 13 Nov 2026, bot v0.6.220: every bot's rngSeed from SEED, the table and its
+   seat, so what the rules call random draws the same in every arm) -- THE PROBE LAB: one minion phase, the same table three times.
    Johan (16 Oct): measure the probe reservation before and after. The arena meets the probe about once in three matches, so a
    series counts it but cannot weigh it. This lab builds N random tables where the probe order can fire (a stealth-bleed actor
    with a heavy bleed in hand and at most one stealth card, a prey with bodies up), and plays the actor's whole turn on each
@@ -52,7 +53,8 @@ function buildTable(i){
 
 async function playArm(tb, arm){
   const P = [{ seat: 1, name: 'Mal', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }, { seat: 3, name: 'Nora', online: true, bot: true }];
-  const mk = (name, seat, deck, x) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck, paceMs: 0, askSecs: 0.4, phaseSecs: 0.3, twdKnow: 0, log: () => {} }, x || {}));
+  const mk = (name, seat, deck, x) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck, paceMs: 0, askSecs: 0.4, phaseSecs: 0.3, twdKnow: 0, log: () => {},
+      rngSeed: (Math.imul((((SEED >>> 0) * 1000003 + (tb.i | 0)) >>> 0) || 1, 2654435761) + Math.imul(seat, 40503)) >>> 0 }, x || {}));   // v1.0.1: the bot's own PRNG (bot v0.6.220) pinned per table and seat -- the arms differ by the knob alone
     u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.push = () => {}; u.fxClone = () => {}; u.rows = [];
     u.onEvent = (t, m) => { if(/^bot:(probe-order|probe-hold|through|blocked|took-bleed|play)$/.test(t)) u.rows.push({ t: t.slice(4), m }); };
     return u; };
@@ -83,7 +85,7 @@ async function playArm(tb, arm){
 
 (async () => {
   for(let i = 1; i <= N; i++){
-    const tb = buildTable(i);
+    const tb = buildTable(i); tb.i = i;
     for(const arm of ARMS){ const r = await playArm(tb, arm); r.i = i; r.seed = SEED; process.stdout.write(JSON.stringify(r) + '\n'); }
   }
   process.exit(0);
