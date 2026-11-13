@@ -12327,7 +12327,7 @@ async function connectWithRetry(client, tries = 30){
         const orig = u._cryptIntercept.bind(u); u._cryptIntercept = (v, p) => { const r = orig(v, p); seen.push({ v: v && v.name, sup: p && typeof p === 'object' ? p.peekSup : 'kind', r }); return r; };
         u._onLog('Hanna', '<b>Zoe</b> plays Revelations [aus] — looks at <b>Viktor</b>\'s hand. Target: <b>Viktor</b>.');
         await new Promise(r => setTimeout(r, 30));
-        const dow = seen.filter(x => x.v === 'The Dowager (G6)');
+        const dow = seen.filter(x => x.v === 'The Dowager (G6)' && x.sup !== 'kind');   // the window's reads (a pending), not a home planner's ('bleed', 164f)
         ok(!!u.pending && u.pending.kind === 'peek' && dow.length > 0 && dow.every(x => x.sup === false && x.r === 1),
            '164d the [aus] Revelations announce at me: every intercept read of the window sees peekSup false (directed) and gives The Dowager her +1 -- none reads the form a line late (got ' + JSON.stringify({ kind: u.pending && u.pending.kind, dow }) + ')'); }
 
@@ -12336,6 +12336,14 @@ async function connectWithRetry(client, tries = 30){
         const each = u._myBleedEach().map(e => [e.v.name, e.n]).sort();
         ok(JSON.stringify(each) === JSON.stringify([['Ashley (G6)', 1], ['Catalina Vega', 0], ['Lenny Burkhead (G6)', 2]]),
            '164e the bleed forecast: Lenny bleeds 2 with no bleed card (his +1 on a plain bleed), Ashley 1, an empty Catalina 0 (she hunts) (got ' + JSON.stringify(each) + ')'); }
+
+      // f) the who-stays-home planners count the crypt's intercept against a bleed (The Dowager +1): _blockerWorth and _critPool's stops
+      { const pair = name => { const u = mk164(); const v = V4('x1', name); u.board = [v];
+          u.predSeat = () => 1; u._opp = () => ({ minions: {}, vamps: { Zoe: { zone: 'ready' } } }); u._oppPrior = () => ({ bleed: 1 }); u.oppStealth = () => 0; u._bestBounceFor = () => null;
+          return { worth: +u._blockerWorth(v).toFixed(2), stopped: u._critPool().stopped }; };
+        const d = pair('The Dowager (G6)'), a = pair('Ashley (G6)');
+        ok(Math.abs((d.worth - a.worth) - 1) < 1e-9 && Math.abs((d.stopped - a.stopped) - 0.35) < 1e-9,
+           '164f the home planners: The Dowager is worth 1 more at home than Ashley (_blockerWorth: her +1 intercept against a bleed), and _critPool counts her stop at 0.85 against 0.5 (got ' + JSON.stringify({ d, a }) + ')'); }
     }
 
 

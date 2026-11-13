@@ -2331,7 +2331,7 @@ class Bot {
   }
   _blockerWorth(c){                    // how good a body is at staying home: card intercept it could play + borne intercept + blood to survive the fight
     const ic = this._bestInterceptFor(c, null);
-    return ((ic && ic.s) | 0) + this._equipIntercept(c) + this._hostedIntercept(c, 'bleed') + (c.blood | 0) * 0.1;   // v0.6.205: + Guardian Angel (a bleed defence)
+    return ((ic && ic.s) | 0) + this._equipIntercept(c) + this._hostedIntercept(c, 'bleed') + this._cryptIntercept(c, 'bleed') + (c.blood | 0) * 0.1;   // v0.6.205: + Guardian Angel (a bleed defence)
   }
   _keepBlocker(v, actors, ai){         // B2 posture: bodies stay home -- the grinding deck's quota by design, or the LAST body when the predator is a bleeder and my pool is within reach
     if((v.blood | 0) === 0) return null;                                           // the mandatory hunt wins
@@ -2397,12 +2397,12 @@ class Bot {
     if(perm) take(1.0, perm.name);
     return { n: best, what };
   }
-  _priceHome(bodies, wOff, wDef, wakes){   // v0.6.137 (the general layer): how many bodies are worth MORE at home than acting -- stay = pStop x the k-th expected predator hit (wakes already cover the first ones, a bounce in hand lifts the first stayer to 0.9), act = the body's best action x my through rate; exchange rate = the plan's own wDef / wOff. Never the whole bench, at most one per predator minion.
+  _priceHome(bodies, wOff, wDef, wakes){   // v0.6.137 (the general layer): how many bodies are worth MORE at home than acting -- stay = pStop x the k-th expected predator hit (wakes already cover the first ones, a bounce in hand lifts the first stayer to 0.9), act = the body's best action x my through rate; exchange rate = the plan's own wDef / wOff. Never the whole bench, at most one per predator minion.   // v0.6.220 (wave A's riders): every who-stays-home read (here, _blockerWorth, _critPool, _strategize, _actAgainCtx) counts the crypt's intercept against a bleed (The Dowager, Martina, Rinaldo, Castellan, Branimira)
     const hw = this.o.homeWeight == null ? 1 : +this.o.homeWeight; if(!(hw > 0)) return { home: 0, why: [] };
     const pred = this.predSeat(), hits = this.predHits(pred).slice(wakes | 0); if(!hits.length) return { home: 0, why: [] };
     const st = this.oppStealth(pred), raw = this._myForecast(true), thru = raw > 0 ? Math.max(0.3, Math.min(1, this._myForecast(false) / raw)) : 0.75;
     const free = bodies.filter(v => (v.blood | 0) > 0 && !v.locked); const bounce = this._bestBounceFor(free, new Set());
-    const cand = free.map(v => { const ic = this._bestInterceptFor(v, null); const icp = ((ic && ic.s) | 0) + this._equipIntercept(v) + this._hostedIntercept(v, 'bleed'); const a = this._actValue(v);
+    const cand = free.map(v => { const ic = this._bestInterceptFor(v, null); const icp = ((ic && ic.s) | 0) + this._equipIntercept(v) + this._hostedIntercept(v, 'bleed') + this._cryptIntercept(v, 'bleed'); const a = this._actValue(v);
       return { v, pStop: Math.max(0.05, Math.min(0.9, 0.5 + 0.35 * (icp - st))), act: a ? a.n * thru : 0, what: a ? a.what : 'nothing' }; });
     /* v0.6.138 THE FORWARD GEAR (serie-home1 run 4: five bodies walled for 33 turns against three and could not finish): when I out-body my prey by two or more, staying is worth
        half, and from four bodies up at least TWO always go forward. Bench superiority is a read the turns-to-fall exchange rate cannot see. */
@@ -2458,7 +2458,7 @@ class Bot {
     const bodies = this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && (c.blood | 0) > 0);
     let wakes = 0; (this.hand || []).forEach(nm => { const h = this.fxLookup(nm); if(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.fx && mo.fx.wake)) wakes++; });
     const stops = []; bodies.forEach(v => { if(v.locked){ if(wakes > 0) wakes--; else return; }
-      const ic = this._bestInterceptFor(v, null); const icp = ((ic && ic.s) | 0) + this._equipIntercept(v) + this._hostedIntercept(v, 'bleed'); stops.push(Math.max(0.05, Math.min(0.9, 0.5 + 0.35 * (icp - st)))); });   // the plan's own block odds
+      const ic = this._bestInterceptFor(v, null); const icp = ((ic && ic.s) | 0) + this._equipIntercept(v) + this._hostedIntercept(v, 'bleed') + this._cryptIntercept(v, 'bleed'); stops.push(Math.max(0.05, Math.min(0.9, 0.5 + 0.35 * (icp - st)))); });   // the plan's own block odds
     const bounce = this._bestBounceFor(bodies.filter(v => !v.locked), new Set()); if(bounce) stops.push(0.9);
     stops.sort((a, b) => b - a); let stopped = 0; for(let i = 0; i < Math.min(stops.length, hits.length); i++) stopped += stops[i] * hits[i];   // my best stopper meets its biggest hit
     const crit = Math.max(floor, Math.min(15, Math.ceil(floor + risk * Math.max(0, (burst - stopped) - floor))));
@@ -2490,7 +2490,7 @@ class Bot {
         const range = 1 + Math.max(0, 8 - (this.pool | 0)) * 0.25;                  // turnsToOust's own oust-range factor
         let saved = 0;
         for(let h = 1; h <= Math.min(cap, ranked.length); h++){ const v = ranked[h - 1];
-          const ic = this._bestInterceptFor(v, null); const icp = ((ic && ic.s) | 0) + this._equipIntercept(v) + this._hostedIntercept(v, 'bleed');
+          const ic = this._bestInterceptFor(v, null); const icp = ((ic && ic.s) | 0) + this._equipIntercept(v) + this._hostedIntercept(v, 'bleed') + this._cryptIntercept(v, 'bleed');
           const pBlock = Math.max(0.05, Math.min(0.9, 0.5 + 0.35 * (icp - st)));
           saved += avg * pBlock;
           const ttoH = (this.pool | 0) / (Math.max(0.25, predFc - saved) * range);
@@ -3807,7 +3807,7 @@ class Bot {
       if(has('bleedAct') && (has('referendum') || has('political'))) saveForLunge = 'my prey falls in ' + preyTto + ' of my turns and the hand holds a bleed and a referendum \u2014 it is worth two actions then'; }
     const pred = this.predSeat(), hits = this.predHits(pred), st = this.oppStealth(pred);
     const covered = this.board.filter(x => x && x.kind === 'crypt' && x.zone === 'ready' && !x.locked && x.id !== v.id && (x.blood | 0) > 0).length + this._wakesInHand();   // bodies already up AND wakes: wake + Freak Drive prices the SECOND block
-    const hit = hits[covered] || 0; const ic = this._bestInterceptFor(v, null); const icp = ((ic && ic.s) | 0) + this._equipIntercept(v) + this._hostedIntercept(v, 'bleed');
+    const hit = hits[covered] || 0; const ic = this._bestInterceptFor(v, null); const icp = ((ic && ic.s) | 0) + this._equipIntercept(v) + this._hostedIntercept(v, 'bleed') + this._cryptIntercept(v, 'bleed');
     const bounce = covered === 0 && this._bestBounceFor([v], new Set()); const pStop = bounce ? 0.9 : Math.max(0.05, Math.min(0.9, 0.5 + 0.35 * (icp - st)));
     const unlockValue = +(pStop * hit * hw).toFixed(2);   // v0.6.138: in POOL (v0.6.137 scaled it by 1 / myTto and compared it with a raw score price -- it could never win: 0 plays in serie-home1)
     const clogged = !(this.hand || []).some(n => { if(n === c.name) return false; const h = this.fxLookup(n); return h && h.kind === 'lib' && ((h.e.t || []).includes('react') || (h.e.modes || []).some(mo => mo.fx && (mo.fx.bleedAct || mo.fx.referendum || mo.fx.rush))); });
