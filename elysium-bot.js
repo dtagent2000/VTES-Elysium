@@ -6949,14 +6949,15 @@ class Bot {
     const blockerVamp = this.pending.blockerVamp;                 // read before _clearPending wipes this.pending
     const oppName = this.pending.actingVampName || (this._obs && this._obs.vamp && Date.now() - this._obs.at < 60000 ? this._obs.vamp : null) || null;          // VB: the combat opponent's name, hoisted the same way (this.pending is null by the _resolveCombat call)   // v0.6.163 (bug sweep, serie-cmb8): the pending carried no actor name in 14 of ~330 blocks (windows armed from a tally ask / re-blocks) -- the last announced action's vampire (short-term action memory, v0.6.110) is the actor
     if(success){
-      if(this._visageBurn(this.pending.actorSeat || this._seatOfName(this.pending.who), oppName)) return;   /* the egress review: the combat opponent's name (a nameless pending reads the announce) */   // v0.6.217 (V5 wave 4): Terrifying Visage -- 'the blocking minion's controller burns 1 pool before block resolution' (an 'if blocked' effect: first, before anything else [ANK 20220116]); true = that pool ousted me
+      if(blockerVamp && this._visageBurn(this.pending.actorSeat || this._seatOfName(this.pending.who), oppName)) return;   /* v0.6.221 (the Jack round's egress review): only MY block pays -- another seat's successful block reaches this verdict too (a bot that never blocked, or whose attempt failed, burned 1 pool: the V5 smoke's pathcathari match 12) */   /* the egress review: the combat opponent's name (a nameless pending reads the announce) */   // v0.6.217 (V5 wave 4): Terrifying Visage -- 'the blocking minion's controller burns 1 pool before block resolution' (an 'if blocked' effect: first, before anything else [ANK 20220116]); true = that pool ousted me
       const grant = this._reactManeuverGrant, gv = this._reactManeuverGrantVamp;   // v0.6.214 (V5 wave 2): _clearPending's N1 belt is for a FAILED block -- a successful one carries Guard Dogs [ANI]'s maneuver into the resulting combat (since N1 it was wiped here, before the combat: the grant never reached a fight)
       this._clearPending('block succeeded');
       if(blockerVamp){
         this._reactManeuverGrant = grant && (!gv || gv === blockerVamp.name); this._reactManeuverGrantVamp = this._reactManeuverGrant ? gv : null;   // the egress review: only the vampire that played the card
         this._myBlockOf = { vamp: oppName, at: Date.now() };   // v0.6.217: the vampire my block stopped -- its Change of Target ends the combat I begin here (_onCot)
         blockerVamp.locked = true;                                // v0.4.3 (rulebook): "If a block attempt is successful, then the blocking minion LOCKS and enters combat" -- the wake path arrives here already locked, idempotent either way
-        this._resolveCombat(blockerVamp, oppName).then(() => { this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
+        const _cp = this._resolveCombat(blockerVamp, oppName), _ctok = this._combatTok;   // v0.6.221 (the egress review): the token _resolveCombat set before its first await -- a later combat of mine owns the grant
+        _cp.then(() => { if(this._combatTok === _ctok) this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
       }
     }
     else { this.pending.contested = false; this.pending.blockerVamp = null; if(!(this.pending.role === 'predator' && this.pending.waitingFor)) this._reactWindow(); }   // v0.6.221 (D-113): my failed attempt is over -- a later block's success verdict (another seat's) is not my combat (the Toreador report's stray blocker) // action continues, bleed still live -- M2: try again (another card, or give up -> Pass). v0.6.107: a PREDATOR-role window stays shut until the prey has declined (rulebook order)
@@ -7651,16 +7652,18 @@ class Bot {
     this._cepOpen(oppName || (this._actingVamp ? this._lastBlockerName : null) || this._learnedOpp || null); this._learnedOpp = null;   /* v0.6.182: ONE episode per combat */ this._combatDmgTaken = 0; this._cBase = Object.assign({}, this._cTally() || {}); this._cBaseRound = this._cBase;   /* v0.6.168: the field baseline for this combat (at combat ENTRY -- not per round) */   // v0.6.103 (#1): the actor side learns its opponent from the B-55e-b blocker name (a bot blocker always chats it before the verdict)   // VB: the opposing vampire's NAME when the caller knows it (defender sites: the announced actor; a blocked ACTOR's blocker stays null -- documented v1 under-claim for Blythe-as-actor) + the Franciscus-class per-combat damage accumulator   // N0: the borne crows peck every combat   // v0.6.26: per-COMBAT state (not per-round like _range) -- "only one Carrion Crows each combat", and the opponent's active one persists across every round of THIS combat, reset only when a new one starts
     this._inCombat = true;   // v0.6.103 (#1): the handshake window -- _stashAccept reads it
     const tok = (this._combatTok = (this._combatTok | 0) + 1); if(myVamp) (this._combatOppOf = this._combatOppOf || new Map()).set(myVamp.id, oppName || null);   // v0.6.221 (D-113): this combat's token -- a later combat of mine supersedes it, and a superseded one ends at its next step and leaves the live combat's fields alone (the stray combat: one bot, two blocks, the first combat outlived its action)
+    const sup = r => { if(tok === this._combatTok) return false; this._emit('combat-superseded', { vamp: myVamp ? myVamp.name : null, round: r }); return true; };   // v0.6.221 (the Jack round's egress review): a later combat of mine began while this one waited -- this one is over (its action is): no press, no tally write, no row, no next round
     this._combatAt = Date.now();   // v0.6.198: a taken line from before this combat never stands in for the board (_stealAvail)
     this._combatMyVamp = myVamp;   // v0.6.160: the victim side of a steal needs to know whose blood goes
     this._myPump = null;   // v0.6.214 (V5 wave 2): this combat's before-range strength / hand pumps (_brPlay)
     try{
     for(let round = 1; ; round++){
+      if(round > 1 && sup(round)) return;   // v0.6.221: superseded during the last round's end
       this._curRound = round; if(round > 1){ this._cWrite({ rd: round }); this._cBaseRound = Object.assign({}, this._cTally() || {}, { ce: undefined, pr: undefined, rl: undefined }); }   // v0.6.168: a new round clears the per-round fields server-side   // v0.6.164: a changed rd starts a fresh round for every absent per-round field (srv-2.6.39)
       const res = await this._resolveCombatRound(myVamp, round > 1);
       if(res && res.cot) return;   // v0.6.217 (V5 wave 4, the sim footprint): Change of Target -- the action ended before block resolution, so this combat never began: no round row (ana-combat2 counted the stub as a handshake miss: 6 in the toreador smoke, 20 in 48 matches) and no end-of-round step; the 'cot-cancelled' row is the record
-      if(tok !== this._combatTok){ this._emit('combat-superseded', { vamp: myVamp.name, round }); return; }   // v0.6.221: a later combat of mine began while this one waited -- this one is over (its action is)
-      const rowEnd = why => this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: null, continuing: false, end: why, blood: myVamp.zone === 'ready' ? (myVamp.blood | 0) : 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156
+      if(sup(round)) return;   // v0.6.221: a later combat of mine began while this one waited -- this one is over (its action is)
+      const rowEnd = why => (tok !== this._combatTok) ? undefined : this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: null, continuing: false, end: why, blood: myVamp.zone === 'ready' ? (myVamp.blood | 0) : 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156
       const hsP = !!(this._rnd && this._rnd.hs), hsFirstP = hsP && this._rnd.hs !== 'a';   // v0.6.202 (R2): this round ran the bot-vs-bot step handshake -- the press step does too, with the same acting minion
       if(myVamp.zone === 'torpor' || myVamp.zone === 'burned'){ rowEnd(myVamp.zone); if(hsP) this._hsNothing(myVamp, 'press'); return; }   // combat already over from my own side. v0.6.202: one 'does not press.' (after my round line, which says why) so the other bot's press step ends at once
       if(res && res.oppEnded){ this._oppEndedCombat = false; rowEnd('opp-ended'); await this._phaseAsk(6); await this._phaseAfter(6, false); return; }   // v0.6.167: their combat ends -- straight to End of round (the rulebook keeps the step), no ph below 6
@@ -7674,6 +7677,7 @@ class Bot {
       let oppOpen = null;
       if(hsFirstP){ oppOpen = await this._awaitOppPress(this._hsWaitMs()); if(oppOpen && oppOpen.xtra) oppOpen = await this._awaitOppPressX(myVamp, this._hsWaitMs()); if(oppOpen && oppOpen.down){ rowEnd(myVamp.zone); this._hsNothing(myVamp, 'press'); return; } if(!oppOpen) this._hsMiss('press'); }   /* v0.6.213: their declaration ends the wait first (_awaitOppPressX) */   // v0.6.202 (R2, point 7): the acting bot presses or says it does not -- first; a 'nothing' line ends the wait at once (both bots sat out the whole askSecs when nobody pressed: 19 s at the client)
       if(this._xr && this._xr.p1 && !this._xr.step && this._xr.oppX > this._xr.oppXDone){ await this._xLate(myVamp); if(myVamp.zone !== 'ready'){ rowEnd(myVamp.zone); if(hsP) this._hsNothing(myVamp, 'press'); return; } }   // v0.6.213 (the egress review): a declaration that came during the step's first awaits -- the strikes before my press
+      if(sup(round)) return;   // v0.6.221: superseded while the press step waited (the ask, the opponent's press, a late strike)
       const press = this._bestPressFor(myVamp);
       let continuing = false, pressTag = null;
       const mind = this._combatMind();
@@ -7692,13 +7696,14 @@ class Bot {
         continuing = true;
         const w = (mind && (press || this._bundledPress)) ? this._wantPressToEnd(myVamp) : null;
         if(w) this.o.log('press (' + myVamp.name + '): ' + w.why);
-        if(w && w.end){ await this._combatGate(true); pressTag = spendEnd(); continuing = false; }
-        else { await this._combatGate(false); this._hsNothing(myVamp, 'press'); }
+        if(w && w.end){ await this._combatGate(true); if(sup(round)) return; pressTag = spendEnd(); continuing = false; }
+        else { await this._combatGate(false); if(sup(round)) return; this._hsNothing(myVamp, 'press'); }
       } else {
       if(mind && (press || bundled || strayCan) && !(this._oppLastTaken && Date.now() - this._oppLastTaken.at < 3000 && this._oppLastTaken.at >= (this._rndAt || 0))) await this._awaitOppTaken(Math.min(1500, (this.o.askSecs || 2) * 1000));   // v0.6.202: THIS round's line (a round-1 line within 3 s passed for round 2's)   // v0.6.156: let the opponent's taken line ('now M', torpor) arrive before judging a press -- a bot answers in ms, a human table just costs the short wait
       const want = mind ? this._wantPress(myVamp, !!press || bundled || !!strayCan) : { press: !!press && (myVamp.blood | 0) > 1, tag: 'v155', why: 'blood > 1' };   // v0.6.156: expected value replaces the blood > 1 threshold (cmb1: 6 of 14 Tremere presses were followed by a fist)
       this.o.log('press (' + myVamp.name + '): ' + want.why);
       if(want.press && (bundled || press || (strayCan && (mind || (myVamp.blood | 0) > 1)))) await this._combatGate(true);   // v0.6.202 (points 5, 7): a hold stops my press; a watched bot duel gets its beat
+      if(sup(round)) return;   // v0.6.221: superseded before my press is spent
       if(want.press && bundled){                              // the free press first -- no card spent
         pressTag = 'bundled:' + want.tag; this._bundledPress = false;
         this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to continue (optional press).');
@@ -7718,7 +7723,7 @@ class Bot {
         this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to continue (the Stray).');
         continuing = true;
       }
-      if(hsP && !continuing){ await this._combatGate(false); this._hsNothing(myVamp, 'press'); }   // v0.6.202: the step's answer when I do not press
+      if(hsP && !continuing){ await this._combatGate(false); if(sup(round)) return; this._hsNothing(myVamp, 'press'); }   // v0.6.202: the step's answer when I do not press
       if(continuing) this._cWrite({ pr: 'continue' });   // v0.6.164
       await this._phaseAfter(5, continuing);   // v0.6.165: "I have no press." / my press line, then the human's: the press state on the tally (my press to continue)
       if(continuing && !this._combatIActing(myVamp) && this._tempoMode()) await this._phaseStep(5, 'reply', true);   // v0.6.195: the human acted (and answered 'Any presses?') before my press to continue -- their window to press to end is now asked and runs on the tempo (it was a silent askSecs wait)
@@ -7735,11 +7740,12 @@ class Bot {
         if(!wasMine && mind && (press || this._bundledPress) && this._wantPressToEnd(myVamp).end){   // v0.6.156 (Johan): press to END -- Ventrue's use of the press; a chase/snipe deck cancels a round it would lose
           const w = this._wantPressToEnd(myVamp); this.o.log('press (' + myVamp.name + '): ' + w.why);
           await this._combatGate(true);   // v0.6.202 (point 5): a hold stops it
+          if(sup(round)) return;
           pressTag = spendEnd();
           continuing = false;
         } else {
           continuing = true;
-          if(hsP && !hsFirstP && !wasMine){ await this._combatGate(false); this._hsNothing(myVamp, 'press'); }   // v0.6.202: I let the other bot's press stand -- and say so, it waits for my answer
+          if(hsP && !hsFirstP && !wasMine){ await this._combatGate(false); if(sup(round)) return; this._hsNothing(myVamp, 'press'); }   // v0.6.202: I let the other bot's press stand -- and say so, it waits for my answer
         }
       } else if(oppP && oppP.continue === false && continuing && (mind || hsP)){   // v0.6.156: THEIR press to end cancels MY press to continue (rulebook: presses cancel one another). v0.6.202: between bots always (a rule, not the combat mind's)
         this.o.log('press (' + myVamp.name + '): my press was cancelled by ' + oppP.vamp);
@@ -7748,6 +7754,7 @@ class Bot {
       }
       if(continuing && this._xr && this._xr.oppDownX){ this.o.log('press (' + myVamp.name + '): my additional strike put ' + (this._combatOppName || 'their minion') + ' out of the combat (their own line) -- no next round'); continuing = false; if(this._rnd) this._rnd.oppDown = 1; }   // v0.6.213
       { const lt = this._oppLastTaken; if(continuing && lt && lt.down && lt.at >= (this._rndAt || 0) && (!this._combatOppName || lt.vamp === this._combatOppName)){ this.o.log('press (' + myVamp.name + '): ' + lt.vamp + ' went down this round (its own line) -- no next round'); continuing = false; if(this._rnd) this._rnd.oppDown = 1; } }   // v0.6.202 (found by R2's arena smoke): their round line said torpor after my press decision -- I fought a phantom round 3 against a vampire in torpor (12 s of safety nets)
+      if(sup(round)) return;   // v0.6.221: superseded while the presses were answered -- no row under the live combat's names, no next round
       this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: pressTag, continuing, blood: myVamp.blood | 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156: the row serie-cmb1 had to infer (range, opponent, strike, dealt, taken)
       if(!continuing){ await this._phaseAsk(6); await this._phaseAfter(6, false); return; }   // v0.6.165: "Anything before ending combat?" / "I have nothing before ending combat."
     }
@@ -8666,6 +8673,7 @@ class Bot {
          the fails-branch: contest over, window reopens for a DIFFERENT minion. */
       if(m[3] === this.seatName(this.seat) && this.pending){
         this.pending.contested = false;
+        this.pending.blockerVamp = null;   // v0.6.221 (the egress review): as the fails-branch does -- another seat's later success is not my combat
         this._reactWindow();
       }
       return;
@@ -10235,6 +10243,7 @@ class Bot {
     this._watchdogArm();                   // v0.6.108: heartbeat during the bot's own turn — detects hangs, reassures humans
     const pace = () => this._pace();       // v0.4.5: routes through the gate (waits only the REMAINING time since the last action) instead of a blind full-length sleep every call
     try{
+      if(this._gameOver()){ this._emit('game-over', { phase: 'turn' }); return; }   // v0.6.221 (the Jack round's egress review): a turn after the game ended -- the server hands a lone live seat its own turn back after my pass; no beat, no unlock (the Edge, income, my own Jack's tick), and no second pass (it looped every pace beat)
       this.ownTurns++;
       await pace();
       /* v0.6.117: the '— Trainbot, turn N —' banner is gone -- the client prints its own TURN N header, and the bot's private count beside it (turn 1 under TURN 2) read as a contradiction. `ownTurns` still counts (emits, tempo). */

@@ -114,6 +114,11 @@
     and the survivor closed; the table's memory moved on; three found: no bot burns a Jack, the action in flight at the last oust, the
     rushed bot that meant to block); LESSONS L-88; ARCHITECTURE (the board push; the trace's 106 kinds, which said 84); STATUS;
     CARDS.md; the guide; the handoff `bot/docs/handoffs/HANDOFF-to-main-2026-11-13-v0_6_221.md`.
+  - *The egress review's fix pass — prediction, registered before its runs (D-93):* (F) against the release bytes `20faf902` (the same
+    version string, compared raw): IDENTICAL on the 240 design and on the Toreador 600, and on every V5 series but pathcathari
+    (Terrifying Visage's one deck), where only matches in which a bot that did not block paid a Visage's pool change; `ana-gates.py`
+    PASS on every series. The other fixes reach no sim match: no series wrote a `combat-superseded` row, the sim ends a match at its
+    last oust (no turn comes after it), and Elder Impersonation is only in `sewer`. Falsified if any part fails.
   - *Gates* (release bytes: bot `20faf902`, cardfx `0e9c5f4d`, suite `c746c6c6`): suite **2431/0 ×3** (438, 420, 420 s; the first
     chain's run on suite `da098301` 2430/1, 80e, above); `node --check` / JSON / `bash -n` clean; lint 0 findings, suppressions `{}`
     (the first chain's one, 165f's `calls`, fixed); root bundle = `bot/`; canary v1.2.0 **143/0** on the copies and **143/0** on the
