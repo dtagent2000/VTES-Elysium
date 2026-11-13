@@ -42,6 +42,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar).
   Over-strict: `_bestStrengthFor` (any strength bonus), `_inPlayNorms` (my ash heap). Also Saulot's Healing Touch: FULL by the
   auto tier, its text unbuilt. *Done when* each is built and tested, or ruled out.
+- **Toreador's two auto readings** (round A, 13 Nov): Perfect Paragon lacks its [PRE] mode ("Allies and younger vampires get −1
+  intercept"), and Elysium: The Palace of Versailles gives +1 vote, not +1 for each titled Camarilla vampire (online it played with
+  the "(uncurated" note). Both are FULL in the ledger, whose check asks no mode per discipline line or per-vampire count. *Done when*
+  both are curated and graded, the check widened. Docs: the two 13 Nov reports (`reports/`).
 - **V5 wave 3's riders** (`specs/spec-v5-wave3-2026-11-02.md` §4): the amber halves (Anarch Railroad and Fortune Teller Shop for
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
@@ -53,9 +57,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's helpsheets and Fifth
   Edition deck guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy (D-43, O-33).
-  D-112: each strategy line is checked against its guide. *Done when* a proposal — what each guide says, where it enters
-  (`DECK_STRATEGY`, the plan, the persona), how it is measured — has Johan's "kör". Docs: RULINGS D-43, O-33;
-  `specs/spec-knowledge-layer.md`.
+  D-112: each strategy line is checked against its guide. Toreador's is done (13 Nov, `reports/REPORT-toreador-guide-check-2026-11-13.md`):
+  17 points, 3 findings, 8 proposals waiting for "kör". *Done when* each deck's proposals have Johan's "kör" or "no". Docs: RULINGS D-43, O-33, D-112; `specs/spec-knowledge-layer.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
@@ -156,11 +159,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
   vampire, a target) show their END state (`ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
-- **Only a bleed and a pool damage fizzle at an ousted seat** (v0.6.222, `_fizzleIfOusted`): the other actions aimed at a
-  seat or its minions (a rush, a referendum whose terms name it) are not checked; none was seen to resolve after an oust. *Done when* a
-  series counts them, or each resolve checks its target. Docs: CHANGELOG v0.6.222.
-- **A human's chat stealth inside a locked blocker's route beat is lost** (pre-existing; v0.6.222's third review): the chat path
-  needs `blockerVamp`. *Done when* booked in the beat, section-tested.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.
