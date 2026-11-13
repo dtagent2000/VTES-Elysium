@@ -12748,7 +12748,7 @@ async function connectWithRetry(client, tries = 30){
       //    the second looks until the route has played, so one intercept card answers one need (naming it at Block! let the second
       //    look play Eyes of the Wild inside the wake's beat, and the route then played its own pick from a stale hand index: two cards)
       { const u = mk166('U', { paceMs: 400, askSecs: 3 }); u.players[0].bot = false; let S = { mode: 'block', a: 0, b: 0 }; const plays = [];
-        const relay = (m, who) => { const { t, ...f } = m; S = (f.mode === S.mode) ? Object.assign({}, S, f) : Object.assign({}, f); setTimeout(() => u._dispatch(Object.assign({ t: 'tally' }, S, { who })), 30); };
+        const relay = (m, who) => { const f = Object.assign({}, m); delete f.t; S = (f.mode === S.mode) ? Object.assign({}, S, f) : Object.assign({}, f); setTimeout(() => u._dispatch(Object.assign({ t: 'tally' }, S, { who })), 30); };
         u.send = m => { if(m.t === 'tally') relay(m, 'U'); else if(m.t === 'log' && / plays /.test(m.html || '')) plays.push(String(m.html).replace(/<[^>]+>/g, '')); };
         u._reactWindow = () => {}; u.say = () => { u._lastActAt = Date.now(); };   // Block! is a visible act: the route's beat counts from it
         const me = V6('a1', 'Asmin Kobane', { locked: true, blood: 4, cap: 5 }); u.board = [me]; u.hand = ['Eyes of the Wild', 'Ensnare a Beast', 'On the Qui Vive'];
@@ -12779,7 +12779,7 @@ async function connectWithRetry(client, tries = 30){
       //    its sender as the server and the hotseat bridge do -- one card and the verdict wait armed (the second cut's beat branch took
       //    the echo of the bot's own default-stealth write for a raise, sent the attempt line alone and returned before the wait)
       { const u = mk166('U', { paceMs: 200, askSecs: 3 }); u.players[0].bot = false; let S = { mode: 'block', a: 0, b: 0 }; const plays = [];
-        const relay = (m, who) => { const { t, ...f } = m; S = (f.mode === S.mode) ? Object.assign({}, S, f) : Object.assign({}, f); setTimeout(() => u._dispatch(Object.assign({ t: 'tally' }, S, { who })), 30); };
+        const relay = (m, who) => { const f = Object.assign({}, m); delete f.t; S = (f.mode === S.mode) ? Object.assign({}, S, f) : Object.assign({}, f); setTimeout(() => u._dispatch(Object.assign({ t: 'tally' }, S, { who })), 30); };
         u.send = m => { if(m.t === 'tally') relay(m, 'U'); else if(m.t === 'log' && / plays /.test(m.html || '')) plays.push(String(m.html).replace(/<[^>]+>/g, '')); };
         u._reactWindow = () => {}; u.say = () => { u._lastActAt = Date.now(); };
         u.board = [V6('a1', 'Crow (G5)', { blood: 4, cap: 5 })]; u.hand = ['Eyes of the Wild', 'Ensnare a Beast'];

@@ -7,14 +7,19 @@ the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6
 
 **Deploy state:** `main` carries v0.6.221 (#66, merged 13 Nov). **Open PR:** PRNUM (the Jack round's follow-ups, v0.6.222).
 
-## Last gates (v0.6.222 release bytes `9b9c110f`, 13 Nov 2026)
-GATES
+## Last gates (v0.6.222 release bytes `e595f4a5`, 13 Nov 2026)
+Suite **2445/0 ×3** · lint 0 · canary **143/0** ×2 · hotseat **11/0** · HB1 **11/11** · test-cardfx **321/0** · main's
+`check-versions.js` agrees · main's client suite 361/2 (by design: the handoffs) · arena smoke PASS 7/7 ×2 (real clock) · sim, the
+release candidate against step O: IDENTICAL on the 240 design, the V5 smoke (168) and the Toreador 600; the egress fix pass: 2
+matches changed (a late Block!'s wake card no longer spent), the last fix IDENTICAL 240 · `ana-gates.py` PASS everywhere.
 
 ## What v0.6.222 did
 The two bugs v0.6.221's runs found — a rushed bot that never fought a rush resolved on the actor's word, a bleed that landed at a
 seat ousted in its window — and the second review's four findings: a superseded combat now stops at every await (166e: 238 waits
-in 18 scenes), a turn held at game over is released when the game comes back, the blocker is named at Block!. RULINGS D-114
-(Johan's principle for burning a Smiling Jack; Claude's proposal waits for "kör").
+in 18 scenes), a turn held at game over is released when the game comes back, the blocker is named at Block! for the verdict;
+then the egress review's nine (a new combat ends the old one's waits, the block route ends when its action resolved under a
+beat, a vacant seat is not ousted). RULINGS D-114 (Johan's principle for burning a Smiling Jack; Claude's proposal waits for
+"kör").
 
 ## Next (Johan's order of 13 Nov, D-113)
 1. Table runs with Toreador's guide check (D-112); then a human's Grand Ball and the `memo` descriptor (D-113 (3)–(4)).
