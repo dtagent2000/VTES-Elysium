@@ -21,9 +21,10 @@ read the crypt; age from the capacity in play; a seeded PRNG per bot for "at ran
 copies refreshed and main's canary v1.2.0 in.
 
 ## Next (Johan's order of 13 Nov, D-113)
-1. The table's memory, first round: Smiling Jack's counters on the wire (`buildPub` sends none: a bot's Jack drains its owner and
-   nobody pays) and the bot's own tokens, Grand Ball first (D-113 (1)–(2)).
-2. Table runs with Toreador's guide check (D-112); then the Toreador points: a human's Ball (D-113 (3)–(4)), the failed blocker.
+1. The Jack round (D-113): Smiling Jack's counters on the wire (`buildPub` sends none: a bot's Jack drains its owner and nobody
+   pays), the bot's own tokens (Grand Ball first), the survivor at an empty table, the failed blocker (also after a Change of
+   Target), the ledger's held master, the riders' last unsure items — one footprint per step.
+2. Table runs with Toreador's guide check (D-112); then a human's Grand Ball (D-113 (3)–(4)).
 3. V5 wave 5 (Johan picks its shape, D-107); Q4's switch to the root; C5 before crypt wave B; C6; the abstract model spec.
 
 ## Not yet consumed from main
