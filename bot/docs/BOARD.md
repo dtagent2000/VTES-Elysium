@@ -161,7 +161,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* it answers the rush, section-tested.
 - **An action at a seat ousted in its window still resolves** (13 Nov, v0.6.221's 240, match 60): Ventrue's Kine Resources
   Contested, its result still in Ventrue's send queue, ousted Malkavian after Naomi's bleed at him was decided; the bleed went
-  through 500 ms after the oust ("through after the game ended" 1). *Done when* a resolve checks its target lives.
+  through 500 ms after the oust (the same after Ventrue's referendums 3 times on the 600). *Done when* a resolve checks its
+  target lives.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.
