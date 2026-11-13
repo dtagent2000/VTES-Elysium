@@ -20,10 +20,11 @@ decide      decide(q, ctx) → _decide(q, ctx): one row per real decision (q = a
             block-bar, bank-in, spy-cancel, cancel-block, lock-*, give-lock, hunt-or-bleed, wave, react-delay, ashur-retrieve)
 speech      note() (log tier, events) · chat() (questions and instructions to a human) · say() (the quick phrases) → the send
             queue (_drain: the 200 ms cascade, the chat beat, the hold) → wire
+board       push() → buildPub at drain time (the cards; a card's named counters, else the bot's own tokens, _memoMap, D-113) → wire
 pacing      _pace(kind) / _afterBeat ; the tempo (_waitPlan) ; the hold (_holdFreeze / _holdThaw) ; status() / step() for the
             Bot button
 trace       emit(kind, data) → the arena's / sim's match-NNNN.jsonl (manifest, snapshot, decide, play, plan, through, blocked,
-            block-made, combat-round, wait, …; 84 kinds)
+            block-made, combat-round, wait, game-over, combat-superseded, …; 106 kinds)
 ```
 The three rules that keep the layers apart: tactics READ the plan and never recompute it; every read about an opponent goes
 through `this.opp[seat]` (public evidence only); a decision knob gates decisions only (CLAUDE.md, binding rules).

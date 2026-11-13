@@ -5293,7 +5293,7 @@ async function connectWithRetry(client, tries = 30){
       ok(u80g.board[0].blood === 0 && u80g.pool === 7, '80d blood 1 but pool at poolFloor: survival wins, the last blood is drained');
       /* 80e) the A1 riders, by source: the per-actor re-decide sits AFTER the pace beat; _settleOusts watches the prey only */
       const src80 = require('fs').readFileSync(__dirname + '/elysium-bot.js', 'utf8');
-      ok(/await pace\(\);\n\s*if\(_ai > 0\) prey = this\.decide\('bleed-target', \{\}\)\.seat;/.test(src80), '80e the per-actor prey re-decide follows the pace beat');
+      ok(/await pace\(\);\n\s*(?:if\(this\._gameOver\(\)\) break;[^\n]*\n\s*)?if\(_ai > 0\) prey = this\.decide\('bleed-target', \{\}\)\.seat;/.test(src80), '80e the per-actor prey re-decide follows the pace beat (v0.6.221: only the game-over break may sit between)');
       const iS = src80.indexOf('async _settleOusts(ms){'); const bodyS = src80.slice(iS, iS + 700);
       ok(iS > 0 && /this\.preySeat\(\)/.test(bodyS) && !/\.some\(q => q && !q\.out/.test(bodyS), '80e _settleOusts is prey-only (no all-seat scan)');
     }
@@ -12392,6 +12392,181 @@ async function connectWithRetry(client, tries = 30){
         const r = u._priceHome([A, D], 1, 1, 0);
         ok(r.home === 1 && /^The Dowager \(G6\) is worth more at home \(stops 2\.55 of a 3\.00 hit/.test(r.why[0] || ''),
            '164k _priceHome: of Ashley and The Dowager the one that stays home is The Dowager (stops 2.55 of a 3-pool hit, Ashley 1.50) (got ' + JSON.stringify(r) + ')'); }
+    }
+
+    /* 165) v0.6.221 -- THE JACK ROUND (RULINGS D-113): the riders' last planner sites, the survivor at an empty table, the failed
+       blocker's combat (and a Change of Target's), Smiling Jack's counters on the wire, the bot's own tokens. Every new method is
+       guarded, so the pre-change bytes fail clean. LAST LINE OF 165 is the closing brace below. */
+    {
+      console.log('\n[165] v0.6.221 -- the Jack round: the planners, the survivor, the failed blocker, the counters, the tokens');
+      const mk165 = (name, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: u.o.name, online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d });
+        u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
+      const V5 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4, attached: [] }, o || {});
+
+      // a) the plan (_strategize) reads the crypt's intercept too: against two bleeders of 2, The Dowager (+1) keeps one body home where
+      //    Ashley keeps two (the riders' planners; 164f and 164k cover _blockerWorth, _critPool and _priceHome)
+      { const plan = first => { const u = mk165('U', { persona: 'shark', askSecs: 3 }); u.pool = 8; u.ownTurns = 4;
+          u.players = [{ seat: 1, name: 'Alice', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Bob', online: true }, { seat: 4, name: 'Cy', online: true }, { seat: 5, name: 'Di', online: true }];
+          u.board = [V5('m1', first), V5('m2', 'Lauren'), V5('m3', 'Nassir')];
+          const cs = [0, 1].map(i => ({ id: 'p' + i, kind: 'crypt', name: ['Royce', 'Julius'][i], zone: 'ready', blood: 1, locked: false }));
+          u._onBoard({ seat: 1, pub: { pool: 25, edge: false, counts: { hand: 7 }, cards: cs } }); for(const c of cs) for(let k = 0; k < 2; k++) u._onLog('Alice', '<b>' + c.name + '</b> bleeds for 2.');
+          u._onBoard({ seat: 3, pub: { pool: 22, edge: false, counts: { hand: 7 }, cards: [] } }); const p = u._strategize('unlock'); return p && p.home; };
+        const got = [plan('The Dowager (G6)'), plan('Ashley (G6)')];
+        ok(JSON.stringify(got) === JSON.stringify([1, 2]), '165a the plan: with The Dowager first, one body stays home against two bleeders of 2; with Ashley, two (got ' + JSON.stringify(got) + ')'); }
+
+      // b) the act-again price (_actAgainCtx): unlocking The Dowager is worth 2.55 of a 3-pool hit, Ashley 1.50
+      { const val = name => { const u = mk165(); const v = V5('x1', name); u.board = [v]; u.hand = [];
+          u.predSeat = () => 1; u.predHits = () => [3, 3]; u.oppStealth = () => 0; u._actValue = () => null; u._bestInterceptFor = () => null; u._equipIntercept = () => 0; u._hostedIntercept = () => 0;
+          u._bestBounceFor = () => null; u._wakesInHand = () => 0; u._critPool = () => ({ crit: 6 }); u.predBurst = () => 0;
+          const c = u._actAgainCtx(v, { name: 'Freak Drive', cost: 0 }); return c && c.unlockValue; };
+        const got = [val('The Dowager (G6)'), val('Ashley (G6)')];
+        ok(JSON.stringify(got) === JSON.stringify([2.55, 1.5]), '165b _actAgainCtx: unlocking The Dowager stops 2.55 of a 3-pool hit, Ashley 1.50 (got ' + JSON.stringify(got) + ')'); }
+
+      // c) the survivor (v0.6.220's V5 smoke): the last other Methuselah ousted, my turn ends -- no action (it bled my own seat), no
+      //    influence, one pass, through _playTurn
+      { const u = mk165(); u.turnSeat = 2; u.board = [V5('v1', 'Lenny Burkhead (G6)', { blood: 4, cap: 6 })]; u.hand = ['Govern the Unaligned'];
+        u._announcePhase = async ph => { if(ph === 'Minion') u.players[0].out = true; };   // the game's last oust lands as the minion phase opens
+        let terr = null; try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const acts = u.sent.filter(m => m.t === 'log' && /bleeds|hunts|plays/.test(String(m.html || ''))).length;
+        ok(!terr && acts === 0 && u.sent.filter(m => m.t === 'pass').length === 1 && (u.phaseUsed.influence | 0) === 0 && u.events.some(e => e.t === 'bot:game-over'),
+           '165c the survivor: the game over as my minion phase opens, no action, no influence, one pass and a game-over row (got ' + JSON.stringify({ terr, acts, passes: u.sent.filter(m => m.t === 'pass').length, inf: u.phaseUsed && u.phaseUsed.influence, over: u.events.some(e => e.t === 'bot:game-over') }) + ')'); }
+
+      // d) the failed blocker (the Toreador report's stray combat): my attempt failed, another seat's later block succeeded -- its
+      //    verdict is not my combat (_verdictAsTarget; my blocker was remembered from the failed attempt)
+      { const u = mk165(); const X = V5('x1', 'Ashley (G6)'); u.board = [X]; let combats = 0; u._resolveCombat = () => { combats++; return Promise.resolve(); };
+        u.pending = { who: 'Hanna', kind: 'undirected', actingVampName: 'Zoe', actorSeat: 1, blockerVamp: X, contested: true, reacted: new Set(), attempted: new Set(['x1']), declined: false };
+        u._reactWindow = () => {};
+        u._verdictAsTarget(false); u._verdictAsTarget(true);
+        ok(combats === 0 && !u.pending, '165d my failed attempt, then another seat’s successful block: no combat of mine, the action is over (got ' + JSON.stringify({ combats, pending: !!u.pending }) + ')'); }
+
+      // e) a Change of Target ends the combat it was played against even after a later block rewrote the shared opponent name
+      //    (v0.6.220's 600, match 528: The Dowager's cancelled combat read Catalina from Lenny's and fought on)
+      { const u = mk165(); const D = V5('d1', 'The Dowager (G6)'); u._combatOppOf = new Map([['d1', 'Massimo Falconi']]); u._combatOppName = 'Catalina Vega';
+        u._cotCancel = { vamp: 'Massimo Falconi', who: 'Hanna', at: Date.now() };
+        const hit = u._cotHit(D);
+        ok(hit === true, '165e _cotHit reads the combat’s own opponent (Massimo), not the shared name a later combat wrote (Catalina) (got ' + hit + ')'); }
+
+      // f) one bot, two combats: a later combat supersedes the first, which ends at its next step and leaves the live combat's fields
+      //    alone (its finally used to clear them: Lenny's combat then fought with no opponent)
+      { const u = mk165(); const D = V5('d1', 'The Dowager (G6)'), L = V5('l1', 'Lenny Burkhead (G6)'); u.board = [D, L];
+        let releaseA = null; const gateA = new Promise(r => { releaseA = r; }); let calls = 0;
+        u._resolveCombatRound = async (v) => { calls++; if(v === D) await gateA; else await new Promise(r => setTimeout(r, 400)); return { ended: true }; };
+        u._phaseAsk = async () => {}; u._phaseAfter = async () => {};
+        const pA = u._resolveCombat(D, 'Massimo Falconi'); await new Promise(r => setTimeout(r, 20));
+        const pB = u._resolveCombat(L, 'Catalina Vega'); await new Promise(r => setTimeout(r, 20));
+        u._combatOppName = 'Catalina Vega';
+        releaseA(); await pA;
+        const mid = { inCombat: u._inCombat, opp: u._combatOppName };
+        await pB;
+        ok(mid.inCombat === true && mid.opp === 'Catalina Vega' && calls === 2 && u.events.some(e => e.t === 'bot:combat-superseded' && e.d.vamp === 'The Dowager (G6)'),
+           '165f the first combat, superseded, ends without touching the live one: Lenny’s combat still in combat against Catalina, one round each (got ' + JSON.stringify(Object.assign({ calls }, mid)) + ')'); }
+
+      // g) Smiling Jack's counters on the wire (D-113 (2)): the owner's pub carries them (a NUMBER of counters stays off), and the
+      //    victim, reading that pub at its own unlock, pays them -- the owner's buildPub -> the victim's _onBoard -> _menaceUnlockEngine
+      { const A = mk165('Jacky'); A.seat = 1; A.board = [{ id: 'j1', name: 'Smiling Jack, The Anarch', kind: 'lib', zone: 'ready', x: 1, y: 1, counters: ['pool', 'pool'] },
+          { id: 'c1', name: 'Visit from the Capuchin', kind: 'lib', zone: 'ready', x: 1, y: 1, counters: 3 }];
+        const pub = A.buildPub(); const jc = pub.cards.find(c => c.id === 'j1'), cc = pub.cards.find(c => c.id === 'c1');
+        const Bv = mk165('U'); Bv.players = [{ seat: 1, name: 'Jacky', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }]; Bv.pool = 20;
+        const v = V5('v1', 'Zip', { blood: 2 }); Bv.board = [v]; Bv._onBoard({ seat: 1, who: 'Jacky', pub }); Bv._menaceUnlockEngine();
+        ok(!!jc && JSON.stringify(jc.counters) === JSON.stringify(['pool', 'pool']) && !!cc && cc.counters === undefined && Bv.pool + (v.blood | 0) === 20,
+           '165g Smiling Jack: the owner’s pub carries its 2 counters (the Capuchin’s number stays off), and the victim reading it pays 2 at its unlock (got ' + JSON.stringify({ jack: jc && jc.counters, cap: cc && cc.counters, pool: Bv.pool, blood: v.blood }) + ')'); }
+
+      // h) the bot's own tokens (D-113 (1)): my master phase plays Toreador Grand Ball (through _playTurn), and the pub shows the pair --
+      //    each vampire its half, the Ball both names; nothing is stored on the cards; the Ball gone, the tokens go; a card with named
+      //    counters keeps them alone (they are a count: Jack's victims pay one pool each)
+      { const u = mk165(); u.turnSeat = 2;
+        const ca = V5('v1', 'Catalina Vega (G6)', { cap: 6 }), ms = V5('v2', 'Min-seo (G6)', { cap: 3 }), br = V5('v3', 'Bret Stryker (G6)', { cap: 5 });
+        u.board = [ca, ms, br]; u.hand = ['Toreador Grand Ball', 'Kine Resources Contested'];
+        u._announcePhase = async ph => { if(ph === 'Minion') u.players[0].out = true; };   // the turn ends after the master phase (165c)
+        let terr = null; try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const ball = u.board.find(c => c && c.name === 'Toreador Grand Ball'), tk = pub => Object.fromEntries(pub.cards.map(c => [c.name, c.counters || null]));
+        const t1 = tk(u.buildPub()), stored = [ca, ms, br].concat(ball ? [ball] : []).some(c => c.counters !== undefined);
+        ca.counters = ['pool']; const t2 = tk(u.buildPub()); delete ca.counters;
+        if(ball) ball.zone = 'ash'; const t3 = tk(u.buildPub());
+        ok(!terr && !!ball && JSON.stringify(t1) === JSON.stringify({ 'Catalina Vega (G6)': ['Grand Ball: non-bleed actions unblockable'], 'Min-seo (G6)': ['Grand Ball: does not unlock'], 'Bret Stryker (G6)': null,
+             'Toreador Grand Ball': ['Unblockable: Catalina Vega (G6)', 'Locked: Min-seo (G6)'] }) && !stored && JSON.stringify(t2['Catalina Vega (G6)']) === '["pool"]' && Object.values(t3).every(x => x === null),
+           '165h my Grand Ball’s pair as tokens: Catalina unblockable, Min-seo does not unlock, the Ball names both; none stored; named counters stay alone; the Ball in the ash heap, no tokens (got ' + JSON.stringify({ terr, t1, stored, t2: t2['Catalina Vega (G6)'], t3 }) + ')'); }
+
+      // i) the wire itself, through the real server (bot/'s copy): a human seat gets the tokens and Jack's counters as the bot sent
+      //    them (sanitizePub), and the server's ledger narrates a token as it appears -- the arena match may deal neither a Ball nor a Jack
+      { const h = mkClient('Iris'); await connectWithRetry(h);
+        const RM = 'tk' + Date.now().toString(36).slice(-6);
+        h.send({ t: 'create', room: RM, pass: 'x', name: 'Iris', lobby: true, v: '2.6.0' });
+        await h.waitFor(m => m.t === 'joined', 'h165 joined');
+        h.send({ t: 'seat', seat: 1 });
+        h.send({ t: 'deck', name: 'D165', library: [{ name: 'Govern the Unaligned', qty: 60 }], crypt: [{ name: 'Lucinde, Alastor', qty: 12 }] });
+        await h.waitFor(m => m.t === 'deckok', 'h165 deckok');
+        const b = new Bot({ server: URL, room: RM, pass: 'x', name: 'Tokbot', paceMs: 0, askSecs: 2, log: () => {} });
+        let got = null, row = null, err = null;
+        try {
+          await b.connect();
+          await h.waitFor(m => m.t === 'lobby' && (m.players || []).some(p => p.name === 'Tokbot' && p.seat === 2 && p.deck), 'Tokbot seated');
+          h.send({ t: 'start' });
+          await h.waitFor(m => m.t === 'board' && m.seat === 2, 'Tokbot baseline push');
+          const ca = V5('tv1', 'Catalina Vega (G6)', { x: 300, y: 300 }), ms = V5('tv2', 'Min-seo (G6)', { x: 400, y: 300 });
+          b.board.push(ca, ms, { id: 'tj1', name: 'Smiling Jack, The Anarch', kind: 'lib', zone: 'ready', x: 500, y: 40, counters: ['pool', 'pool', 'pool'] });
+          b.push();
+          await h.waitAny(m => m.t === 'board' && m.seat === 2 && (m.pub.cards || []).some(c => c.id === 'tv2'), 'the two Toreador on the wire');
+          b.board.push({ id: 'tg1', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', faceDown: false, locked: false, blood: 0, x: 600, y: 40, gbLock: 'tv2', gbFree: 'tv1' }); ms.locked = true;
+          b.push();
+          const bd = await h.waitAny(m => m.t === 'board' && m.seat === 2 && (m.pub.cards || []).some(c => c.id === 'tg1'), 'the Ball on the wire');
+          got = Object.fromEntries((bd.pub.cards || []).filter(c => /^t[vjg]\d$/.test(c.id)).map(c => [c.id, c.counters || null]));
+          row = await h.waitAny(m => m.t === 'ledgerLive' && m.seat === 2 && (m.rows || []).some(r => /Min-seo \(G6\): counters \[Grand Ball: does not unlock\]/.test(r)), 'the ledger row', 3000).catch(() => null);
+        } catch(e){ err = e.message; }
+        ok(!err && JSON.stringify(got) === JSON.stringify({ tv1: ['Grand Ball: non-bleed actions unblockable'], tv2: ['Grand Ball: does not unlock'], tj1: ['pool', 'pool', 'pool'],
+             tg1: ['Unblockable: Catalina Vega (G6)', 'Locked: Min-seo (G6)'] }) && !!row,
+           '165i through the real server: a human seat gets the pair’s tokens and Jack’s 3 counters as sent, and the ledger narrates Min-seo’s token (got ' + JSON.stringify({ err, got, row: row && row.rows }) + ')');
+        try { b.close(); } catch(e){} try { h.ws.close(); } catch(e){} }
+
+      // j) a turn after the game ended (the egress review): the server hands a lone live seat its own turn back after its pass, and
+      //    the first cut played the unlock again every pace beat (the Edge's +1, income, its own Jack's tick) and passed again
+      { const u = mk165(); u.turnSeat = 2; u.players[0].out = true; u.edge = true; u.pool = 20; u.board = [V5('v1', 'Lenny Burkhead (G6)', { locked: true })];
+        const t0 = u.ownTurns | 0; let terr = null; try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const got = { terr, pool: u.pool, sent: u.sent.length, turns: (u.ownTurns | 0) - t0, locked: u.board[0].locked, over: u.events.filter(e => e.t === 'bot:game-over').map(e => e.d.phase) };
+        ok(!terr && got.pool === 20 && got.sent === 0 && got.turns === 0 && got.locked === true && JSON.stringify(got.over) === '["turn"]',
+           '165j a turn after the game ended: no unlock, no Edge pool, no line, no pass -- one game-over row (got ' + JSON.stringify(got) + ')'); }
+
+      // k) Terrifying Visage (the egress review): the success verdict reaches every bot holding the pending -- only the controller of
+      //    the blocking minion burns the pool (162e is my own block); another seat's block costs me nothing
+      { const mkV = mine => { const u = mk165(); u.pool = 20; const me = V5('e1', 'Crow (G5)'); u.board = [me];
+          const gl = V5('eg1', 'Glissando (G6)', { attached: ['ev1'] }); u.table = { 1: { pub: { cards: [gl, { id: 'ev1', name: 'Terrifying Visage', kind: 'lib', zone: 'ready', host: 'eg1', faceDown: false }] } } };
+          u.pending = { who: 'Hanna', amount: 2, kind: 'bleed', actingVampName: 'Glissando (G6)', actorSeat: 1, contested: !!mine, reacted: new Set(), blockerVamp: mine ? me : null, declined: !mine, attempted: new Set(mine ? ['e1'] : []) };
+          u._combats = 0; u._resolveCombat = async () => { u._combats++; }; u._oust = () => { u.out = true; }; u._verdictAsTarget(true); return u; };
+        const other = mkV(false), mine = mkV(true);
+        ok(other.pool === 20 && other._combats === 0 && !other.pending && mine.pool === 19 && mine._combats === 1,
+           '165k Terrifying Visage: another seat’s block of Glissando costs me nothing and is not my combat; my own block costs 1 pool (got ' + JSON.stringify({ other: [other.pool, other._combats], mine: [mine.pool, mine._combats] }) + ')'); }
+
+      // l) a CANCELLED attempt (Elder Impersonation's line, through _onLog), then another seat's successful block: the cancelled
+      //    minion is forgotten as the failed one is (165d), so the later success is not my combat
+      { const u = mk165(); const X = V5('x1', 'Ashley (G6)'); u.board = [X]; let combats = 0; u._resolveCombat = () => { combats++; return Promise.resolve(); };
+        u.pending = { who: 'Hanna', kind: 'undirected', actingVampName: 'Zoe', actorSeat: 1, blockerVamp: X, contested: true, reacted: new Set(), attempted: new Set(['x1']), declined: false };
+        u._reactWindow = () => {};
+        u._onLog('Hanna', '<b>Zoe</b> plays <b>Elder Impersonation</b>: cancels the block attempt by <b>U</b> — that minion cannot try again.');
+        const bv = u.pending ? u.pending.blockerVamp : 'no pending'; u._verdictAsTarget(true);
+        ok(bv === null && combats === 0 && !u.pending, '165l a cancelled attempt, then another seat’s successful block: no combat of mine (got ' + JSON.stringify({ blocker: bv && bv.name || bv, combats, pending: !!u.pending }) + ')'); }
+
+      // m) the superseded combat, the rest of it (the egress review): superseded while its press step waited, it writes no round row
+      //    under the live combat's names, and its .then leaves the live combat's Guard Dogs grant alone (the live one clears it)
+      { const u = mk165(); const D = V5('d1', 'The Dowager (G6)'), L = V5('l1', 'Lenny Burkhead (G6)'); u.board = [D, L];
+        let releaseA = null; const gateA = new Promise(r => { releaseA = r; }); let held = false;
+        u._resolveCombatRound = async v => { if(v === D) return {}; await new Promise(r => setTimeout(r, 300)); return { ended: true }; };
+        u._phaseAsk = async n => { if(n === 5 && !held){ held = true; await gateA; } };
+        u._phaseAfter = async () => {}; u._phaseStep = async () => {}; u._combatGate = async () => {}; u._awaitOppPress = async () => null; u._awaitOppTaken = async () => {};
+        u._maybePostBlockUnlock = async () => {};
+        u.pending = { who: 'Hanna', kind: 'bleed', amount: 2, actingVampName: 'Massimo Falconi', actorSeat: 1, blockerVamp: D, contested: true, reacted: new Set(), attempted: new Set(['d1']), declined: false };
+        u._verdictAsTarget(true); await new Promise(r => setTimeout(r, 20));
+        u.pending = { who: 'Hanna', kind: 'bleed', amount: 2, actingVampName: 'Catalina Vega', actorSeat: 1, blockerVamp: L, contested: true, reacted: new Set(), attempted: new Set(['l1']), declined: false };
+        u._reactManeuverGrant = true; u._reactManeuverGrantVamp = L.name;
+        u._verdictAsTarget(true); await new Promise(r => setTimeout(r, 20));
+        releaseA(); await new Promise(r => setTimeout(r, 60));
+        const mid = { grant: u._reactManeuverGrant, dRows: u.events.filter(e => e.t === 'bot:combat-round' && e.d.vamp === D.name).length, sup: u.events.filter(e => e.t === 'bot:combat-superseded' && e.d.vamp === D.name).length };
+        await new Promise(r => setTimeout(r, 600));
+        const end = { grant: u._reactManeuverGrant, lRows: u.events.filter(e => e.t === 'bot:combat-round' && e.d.vamp === L.name).length };
+        ok(mid.grant === true && mid.dRows === 0 && mid.sup === 1 && end.grant === false && end.lRows === 1,
+           '165m The Dowager’s combat, superseded in its press step: no round row, Lenny’s Guard Dogs grant kept until his combat ends (got ' + JSON.stringify({ mid, end }) + ')'); }
     }
 
 

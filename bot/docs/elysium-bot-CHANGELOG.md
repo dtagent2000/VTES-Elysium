@@ -32,6 +32,123 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.221 (13 Nov 2026)** — The Jack round (RULINGS D-113; Johan, 13 Nov 08:38: "alla dina förslag ovan om Jack och Grand Ball
+  låter jättebra"; 09:22: the failed blocker, the ledger and "allt du var osäker på" in the same round), built on #65 (merged the same
+  day). One footprint per step.
+  - *Smiling Jack's counters on the wire* (D-113 (2)): `buildPub` carries a card's named counters (an array of strings; 12 a card, 64
+    characters, as the server keeps them). It never did, so a bot's Jack moved 1 of its owner's pool onto the card every turn and no
+    seat paid (the bots read the pub; a human saw an empty card). A number of counters (`_addCounter`'s: Dreams of the Sphinx, Visit
+    from the Capuchin) stays off the wire, as before.
+  - *The bot's own tokens* (D-113 (1)): `_memoMap` derives, at every push, the lasting choices the bot plays by from the fields its
+    rules read, and `_pubCounters` shows them on its own cards — Toreador Grand Ball's free Toreador 'Grand Ball: non-bleed actions
+    unblockable', the locked one 'Grand Ball: does not unlock', the Ball 'Unblockable: NAME' and 'Locked: NAME' (two tokens: two long
+    names in one would pass 64 characters). Never stored on a card, gone with the Ball, and never beside a card's named counters (a
+    count other seats read: Jack's victims would pay a token as pool). The guide says both (its Unlock and Master paragraphs).
+  - *The survivor at an empty table* (v0.6.220's Gangrel match 4): `_gameOver()` (started, not out, more than one seat, one live)
+    ends the turn after the unlock phase, at each step of the minion loop and before influence (`_endTurnAtGameOver`: a `game-over`
+    row, 'Turn passed.', the pass). The winner had bled itself (`preySeat()` is its own seat) and its pool checker booked it.
+  - *The failed blocker* (STATUS's known item; v0.6.220's 600, match 528): a bot can run two combats at once (a failed blocker's and a
+    later blocker's), and they shared `_resolveCombat`'s fields. Each combat is now bound to its own opponent (`_combatOppOf`, a Map
+    by vampire id, which `_cotHit` reads: a Change of Target ends the combat it was played against) and to a token (`_combatTok`: a
+    superseded combat ends at its next step with a `combat-superseded` row, and its `finally` leaves the live combat's fields alone);
+    a failed attempt forgets its blocker (`_verdictAsTarget`), so another seat's later block is not that bot's combat.
+  - *The ledger's held master* (BOARD, 6 Nov): `gen-card-ledger.js` v1.1.2 and `ana-cards.py` count a `master-play` pick only when
+    the master was played — its own row, or gone from the hand by the bot's next decide row (Villein's own decide comes first);
+    self-test 60/60. No bot change.
+  - *Tests*: section 165, 13 checks, each through its path: 165a–b the riders' two planner sites with no test (`_strategize`,
+    `_actAgainCtx`, The Dowager against Ashley); 165c the survivor through `_playTurn`; 165d a failed attempt, then another seat's
+    successful block (`_verdictAsTarget`); 165e `_cotHit` after a later combat rewrote the shared name; 165f two combats, the first
+    superseded; 165g Jack from the owner's `buildPub` through the victim's `_onBoard` to its unlock; 165h the Ball through the master
+    phase (`_playTurn`) to the pub; 165i the wire through the real server (`bot/`'s srv-2.6.50: a human seat's `board` and the
+    ledger's row); the egress review's 165j a turn after the game ended (`_playTurn`), 165k Terrifying Visage at another seat's block
+    and at mine, 165l a cancelled attempt (the line through `_onLog`), 165m a combat superseded in its press step (through
+    `_verdictAsTarget`'s two verdicts). Destructive, the section on each step's bytes: v0.6.219 0/13, v0.6.220 2/11 (165a–b test
+    v0.6.220's riders), the survivor 3/10, the failed blocker 6/7, Jack's counters 7/6, the tokens 9/4, the release bytes `20faf902`
+    9/4, the fix pass 13/0. Two checks changed after the first chain: 80e, a source-shape tripwire (L-24), admits the game-over break
+    between the pace beat and the per-actor re-decide (the first full suite run on the release bytes failed it, 2430/1; the re-decide
+    before the beat, or any other line between, still fails); 165f asserts its rounds (the lint: `calls` was counted, never read).
+  - *Footprints, step by step on the 240-match design* (each against the one before; v0.6.220's `a8a963b1` first): the survivor
+    DIVERGED 157, SAME-PLAY 39, IDENTICAL 44 — every result kept (winner, VP, oust order), each diverged match first different after
+    its last oust; the failed blocker DIVERGED 4 (each first at the stray combat's strike), IDENTICAL 236; Jack's counters DIVERGED
+    49, SAME-PLAY 6, IDENTICAL 185, every changed match with a Nosferatu Jack in play; the tokens IDENTICAL 240, and IDENTICAL 600 on
+    the Toreador 600 deals (the Ball played in 277 of them), and IDENTICAL 168 on the V5 smoke (the Ball in 2). The failed blocker on
+    the V5 smoke: IDENTICAL 167, SAME-PLAY 1 — its stray combat row gone (Brujah's Siarhei against Naomi Stewart), every decision the
+    same.
+  - *Predictions, registered before the runs (D-93; commit f798ca1, word for word, except (A)'s figures, measured before they were
+    written down):* (A) the ledger's held master: `gen-card-ledger.js` and `ana-cards.py` count Toreador Grand Ball's uses on
+    v0.6.220's 600 deals as its own rows (320), not its picks (1256); no bot change. (C) the survivor: on the 240-match client design
+    against v0.6.220 every match keeps its result (winner, VP, oust order); a match's decisions differ only after its last oust, and
+    `ana-ledger.py`'s "through after the game ended" falls to 0 on every series. (D) the failed blocker: the 240 design and the V5
+    smoke diverge only in matches where a bot's block was ended by a Change of Target or a bot's failed attempt was followed by
+    another seat's successful block, first at a combat decision of that bot; on the 600 deals the ledger gate passes (no combat row
+    without an opponent) and the stray combat rows ('no reciprocal row') fall to the rushes the rushed bot does not answer. (E)
+    Smiling Jack's counters on the wire: the 240 design diverges only in matches where a Nosferatu bot puts Smiling Jack in play,
+    first at another bot's unlock phase after Jack's first tick; Nosferatu's VP paired against the step before rises, its 95 %
+    interval wholly above 0. (G) the bot's own tokens (display only): IDENTICAL decisions on every spec against the step before. All
+    series `ana-gates.py` PASS. Falsified if any part fails.
+  - *What came out* (the release bytes `20faf902` against v0.6.220's runs, the version normalized; the release IDENTICAL 240 to step
+    G's bytes): (A) holds by construction — the figures were measured first; on the release's sims Charisma's 19 picks (`pathdeath`)
+    were never a play and it reads unseen, the Ball's 22 picks in the Toreador series were 2 plays. (C) held for the results and for
+    when (step C: every result kept; each of the 157 diverged matches first different after its last oust); "through after the game
+    ended" fell from 229 to 1 on the 240 design, from 7–21 to 0 on each V5 series and from 635 to 3 on the 600 — **falsified** on "0
+    on every series": the 4 left are bleeds announced before the last oust and resolved after it, each after a Ventrue referendum
+    whose pool damage was still in Ventrue's send queue (found, a BOARD line). (D) held on the 240 (DIVERGED 4, each first at the
+    stray combat's strike) and on the V5 smoke (no match diverged; the one changed lost its stray combat row); on the 600 the ledger
+    gate passes (match 528 fixed) and the stray combats fell from 7 matches to 2, both a rush the rushed bot meant to block and never
+    fought (a BOARD line; the ledger's "no reciprocal row" lead fell from 16 to 12, the other 10 being pairs more than its 4 s apart):
+    **held**. (E) held for where — every changed match had a Nosferatu Jack in play — and for Nosferatu's VP, **+0.17 [+0.08, +0.25]**
+    (wins 21 → 36); not in the letter of "first at another bot's unlock phase": the payment writes no decision row, so the first
+    different decision is the next one that reads the lower pool — a victim's (41 of the 47 with one: 11 at its unlock's income, 2 in
+    its master phase, 28 later) or Nosferatu's own (6). (G) held: IDENTICAL 240, 600 and 168 (the V5 smoke). `ana-gates.py` PASS on
+    every series (the 240 design, the 14 V5 series, the 600; each step's 240). Against v0.6.220: the 240 design DIVERGED 175,
+    SAME-PLAY 34, IDENTICAL 31 (malkavian −0.07 [−0.13, −0.00], ventrue −0.11 [−0.19, −0.03], tremere +0.01 [−0.05, +0.07]: the seats
+    Jack now charges); the V5 smoke 118 of 168 DIVERGED; the Toreador 600 DIVERGED 456, SAME-PLAY 63, IDENTICAL 81, Toreador **0.78 ±
+    0.05 VP** (99 wins, 16.5 %), paired −0.04 [−0.10, +0.02], Nosferatu +0.21 [+0.15, +0.28] (wins 44 → 79), malkavian −0.14 [−0.20,
+    −0.08]. The arena smoke (the wire changed): two real-clock 5-bot matches on `bot/`'s srv-2.6.50, seeds 4001 and 4002, both ended,
+    `ana-gates.py` PASS 7 of 7 (a Grand Ball in one, no Jack). **Verdict: keep** — two rules corrections and two bug fixes, each where
+    its prediction placed it; Nosferatu's gain is Jack charging the table as printed, and nothing answers it yet (O-39).
+  - *Found in the round*: an action at a seat ousted in its window still resolves (the one "through after the game ended" left on the
+    240 design, match 60: Ventrue's Kine Resources Contested, its result still in Ventrue's send queue, ousted Malkavian after Naomi's
+    bleed at him was decided; the 600's 3 the same) — a BOARD line; a rushed bot that meant to block never fights the rush (the 600's
+    two stray combats left) — a BOARD line; no bot burns a Smiling Jack, whose counters now reach every seat — RULINGS O-39 (asked in
+    chat on 13 Nov, unanswered) and a BOARD line.
+  - *Docs*: RULINGS D-113 (built: (1)–(2)), O-39, and D-101's log (BOARD 18.5 → 19 KB, `tools/doc-budget.sh`); BOARD (the held master
+    and the survivor closed; the table's memory moved on; three found: no bot burns a Jack, the action in flight at the last oust, the
+    rushed bot that meant to block); LESSONS L-88; ARCHITECTURE (the board push; the trace's 106 kinds, which said 84); STATUS;
+    CARDS.md; the guide; the handoff `bot/docs/handoffs/HANDOFF-to-main-2026-11-13-v0_6_221.md`.
+  - *The egress review* (a fresh read-only agent, HARNESS): 7 findings (half-done 4, stale-doc 2, unproven 1), all fixed in the round
+    (D-92). Half-done: Terrifying Visage's pool was paid by every bot holding the pending when another seat's block succeeded — a
+    v0.6.217 bug the failed blocker's fix widened to a bot whose own attempt had failed (the V5 smoke's pathcathari match 12: Tremere,
+    which never blocked, burned 1 pool) — now only my own block pays; a cancelled attempt (Elder Impersonation's line) kept its
+    blocker, so the stray combat could still start from it — it forgets it, as the failed one does; a turn after the game ended: the
+    server's `pass` hands a lone live seat its own turn back, and the first cut played the unlock again every pace beat (the Edge's
+    +1, income, its own Jack's tick) and passed again — `_playTurn` now does nothing when the game is over (the handoff asks main
+    whether `pass` should stop there, as `turnOnFromOusted` does); a superseded combat checked its token only after each round, so
+    superseded in its press step it could still spend a press, write the live tally and a round row under the live combat's names, and
+    its `.then` wiped the live combat's Guard Dogs grant — it now stops at every await of the press step, at the top of a next round
+    and before its row (`sup`), writes no row once superseded, and the grant is cleared only by the combat that owns it. Stale-doc:
+    the card ledger's Uses legend still said a held master counts (CARDS.md rebuilt); `ana-gates.py`'s known leads pointed at STATUS's
+    deleted item (now the BOARD line; labels only, no version). Unproven: 165a–b's red run is on v0.6.219, which the first ladder
+    lacked (0/13 now).
+  - *The egress review's fix pass — prediction, registered before its runs (D-93):* (F) against the release bytes `20faf902` (the same
+    version string, compared raw): IDENTICAL on the 240 design and on the Toreador 600, and on every V5 series but pathcathari
+    (Terrifying Visage's one deck), where only matches in which a bot that did not block paid a Visage's pool change; `ana-gates.py`
+    PASS on every series. The other fixes reach no sim match: no series wrote a `combat-superseded` row, the sim ends a match at its
+    last oust (no turn comes after it), and Elder Impersonation is only in `sewer`. Falsified if any part fails.
+  - *What came out of (F)* (the fixed bytes `0c3bd7dc` against `20faf902`, raw): the 240 design IDENTICAL 240, the Toreador 600
+    IDENTICAL 600, the V5 smoke IDENTICAL on 13 series and DIVERGED 1 of pathcathari's 12 — its match 12, where Tremere, which never
+    blocked, no longer pays for Nosferatu's block of Gostoso (Terrifying Visage); the first difference is Tremere's next decision in
+    that round, with the pool it kept, and the winner changes (Ventrue → Nosferatu); `ana-gates.py` PASS on every series: **held**.
+  - *Gates* (release bytes after the egress fixes: bot `0c3bd7dc`, cardfx `0e9c5f4d`, suite `3640c308`): suite **2435/0 ×3** (431,
+    424, 438 s); `node --check` / JSON / `bash -n` 11 files clean; lint 0 findings, suppressions `{}`; root bundle = `bot/`; canary
+    v1.2.0 **143/0** on the copies and **143/0** on the root's release with `client/ELYSIUM-PROTOCOL.md`; hotseat **11/0**; HB1
+    **11/11**; test-cardfx **321/0**; `gen-precon.js --check` 18 precons, no problems; self-tests: ledger 60/60, `twda.py` 14/0,
+    `ana-gates.py` 31/0; doc-budget PASS (BOARD 18.5 → 19 KB under D-101, the Jack round's three found asks; the bootstrap 49271 /
+    50000); `test-doc-budget.sh` every case red, baseline green; section 165 destructive (above); main's `check-versions.js` agrees
+    (repository `client/`, read-only); main's client suite in a scratch copy of `client/` with this bundle 361 passed, 2 failed — the
+    two of v0.6.219's handoff, by design; the arena smoke again on these bytes: two real-clock 5-bot matches, both ended,
+    `ana-gates.py` PASS 7 of 7 (a Smiling Jack in one). The first chain ran on `20faf902` (suite 2431/0 ×3 on `c746c6c6`, after one
+    run of 2430/1 on `da098301`: 80e; the rest as here, the arena with a Grand Ball in one).
 - **v0.6.220 (13 Nov 2026)** — Crypt wave A's riders (Johan's "kör" of 13 Nov on Claude's summary of 12 Nov; RULINGS D-111), built
   on #64 (merged the same day).
   - *Revelations' form before the decision* (the graded readings' finding): `_armPending(..., extra)` sets the given fields before

@@ -4,8 +4,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
-- **The table's memory** (D-113): `buildPub` sends no `counters`, so a bot's Smiling Jack drains its owner and nobody pays;
-  then the bot's own tokens and a human's Grand Ball. *Done when* both rounds ship. Docs: RULINGS D-113.
+- **The table's memory** (D-113): v0.6.221 put Jack's counters on the wire and the bot's own tokens (Grand Ball's pair) on its
+  cards; left: a human's Grand Ball (3) and the cardfx `memo` descriptor (4). *Done when* both ship. Docs: RULINGS D-113.
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). Since v0.6.213 the bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the
   vest prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
@@ -85,6 +85,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
   (or they carry every cardfx name), every deck's library names hit a key, and the rebuild ships with a sim footprint.
   Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
+- **No bot burns a Smiling Jack** (13 Nov, v0.6.221): its counters now reach every seat, and `_bestBurnCardFor` reaches only
+  Toreador Grand Ball, at prey and predator. *Done when* RULINGS O-39 is answered and built.
 - **A human's bounce of a bot's bleed** is not read by the acting bot; a bot that is a bounce's new target cannot bounce onward.
   *Done when* the client's bounce play line (a pool target) is parsed and section-tested. Docs: RULINGS O-3.
 - **A human's Change of Target after a right-click action** (main, 11 Nov §1) names no vampire or another: `_onCot` misses it.
@@ -146,9 +148,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* the persona pass (RULINGS O-29) ships with those tests.
 
 ## Measurement debts
-- **A held master counts as played** (6 Nov): `gen-card-ledger.js` and `ana-cards.py` count every `master-play` pick, held ones
-  too (Grand Ball: 407 picks, 68 plays), so a master always held reads playable. *Done when* both count a master only when played:
-  its own row, or gone from the hand the next decide row carries (no bot change; Villein's own decide comes first).
 - **The hotseat table runs out most bot-vs-bot reaction windows** (29 Oct; v0.6.211 too): 403 of 467 bleed totals and 101 of 125
   modifier windows on a pace-0 sim series (the server arena: 0 of 82); the sim matches the real-clock hotseat table. *Done when* a
   `--real` hotseat match and a browser table say whether bot answers are lost there, and it is fixed or the gate restated per
@@ -157,8 +156,13 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
   vampire, a target) show their END state (`ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
-- **The survivor plays on at an empty table** (13 Nov): after the last oust the winner finishes its turn, bleeding itself
-  (`preySeat()`); its pool checker books it (v0.6.220's invariants flag). *Done when* the turn ends there.
+- **A rushed bot that meant to block never fights the rush** (13 Nov; v0.6.221's 600, matches 197 and 542): its block-eval said
+  block, the rush went through (`let-through`) and it wrote no combat row; the rusher fought alone ("no reciprocal row").
+  *Done when* it answers the rush, section-tested.
+- **An action at a seat ousted in its window still resolves** (13 Nov, v0.6.221's 240, match 60): Ventrue's Kine Resources
+  Contested, its result still in Ventrue's send queue, ousted Malkavian after Naomi's bleed at him was decided; the bleed went
+  through 500 ms after the oust (the same after Ventrue's referendums 3 times on the 600). *Done when* a resolve checks its
+  target lives.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.

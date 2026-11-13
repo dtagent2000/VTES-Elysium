@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-card-ledger.js v1.1.1 (12 Nov 2026, bot v0.6.219; v1.1.0 6 Nov, bot v0.6.217, RULINGS D-108) -- THE CARD LEDGER: one generated row per library card of a deck set
+/* gen-card-ledger.js v1.1.2 (13 Nov 2026, bot v0.6.221: a master pick counts only when it was played; v1.1.1 12 Nov, bot v0.6.219;
+   v1.1.0 6 Nov, bot v0.6.217, RULINGS D-108) -- THE CARD LEDGER: one generated row per library card of a deck set
    (default: the V5 precons) and every vampire of their crypts, so a V5 wave has a definition of done ("these rows turn playable")
    instead of a feeling.
 
@@ -39,7 +40,7 @@
      default decks: every deck-*.json whose name starts with "V5 " (gen-precon.js writes them).                                         */
 
 const fs = require('fs'), path = require('path');
-const LEDGER_VERSION = '1.1.1';   // v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
+const LEDGER_VERSION = '1.1.2';   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
 
 /* ---- the crypt (v1.1.0): the ability text, its effect classes, the readers that model it ---- */
 const SECT = '(?:Anarch|Camarilla|Independent|Sabbat|Laibon)';
@@ -119,6 +120,19 @@ function cryptStatusOf(x, readers){
   uncovered.sort((a, b) => x.parts.indexOf(a) - x.parts.indexOf(b));
   return { status: unread.length || uncovered.length ? 'partial' : 'modelled', unread, uncovered };
 }
+/* v1.1.2 (13 Nov 2026, the BOARD's measurement debt of 6 Nov: Grand Ball read 407 picks, 68 plays): the master loop's decide row comes
+   BEFORE its hold checks (no host, no target, unique in play ...), so a pick is a play only when the card left the hand -- the next
+   decide row of that bot holds fewer copies (Villein's own decide comes first: skipped), or a row of that bot names the card before it
+   (a `play` row, Grand Ball's own row). Limit: a replacement drawn before that row and of the same name hides a play (about 1 in 17 of
+   Grand Ball's on 600 matches). No bot change. */
+function masterPlayed(lines, i, name){
+  const r = lines[i], h0 = ((r && r.data && r.data.hand) || []).filter(x => x === name).length;
+  for (let k = i + 1; k < lines.length; k++){ const x = lines[k]; if (!x || x.bot !== r.bot) continue;
+    if (x.type !== 'decide'){ if ((x.type === 'play' && x.data && x.data.card === name) || (x.type === 'grand-ball' && name === 'Toreador Grand Ball')) return true; continue; }
+    if (x.data && x.data.q === 'villein') continue;
+    return ((x.data && x.data.hand) || []).filter(y => y === name).length < h0; }
+  return false;   // no later decide row of that bot: the match ended before it -- not counted
+}
 function cryptSelfTest(quiet){   // returns the number of failed checks; quiet = print the failures only
   let of = 0, bad = 0;
   const eq = (a, b, what) => { of++; if (JSON.stringify(a) === JSON.stringify(b)) return; bad++; console.error('gen-card-ledger self-test FAIL ' + what + ': ' + JSON.stringify(a) + ' != ' + JSON.stringify(b)); };
@@ -189,6 +203,13 @@ function cryptSelfTest(quiet){   // returns the number of failed checks; quiet =
   eq(cryptStatusOf(row('+1 bleed.', []), R).status, 'unmodelled', 'no fx');
   eq(cryptStatusOf({ kc: {}, ability: '', parts: [], fxk: [] }, R).status, 'no ability', 'sect and title only');
   eq(cryptStatusOf({ kc: null, ability: null, parts: [], fxk: [] }, R).status, 'unresolved', 'no KRCG text');
+  // v1.1.2: a master pick is a play only when the card left the hand (or its own row says so); Villein's decide is skipped
+  const M = (q, hand, extra) => Object.assign({ bot: 'B1', type: 'decide', data: { q, hand, out: {} } }, extra || {});
+  eq(masterPlayed([M('master-play', ['Blood Doll', 'X']), M('bleed-target', ['X'])], 0, 'Blood Doll'), true, 'a master that left the hand');
+  eq(masterPlayed([M('master-play', ['Blood Doll', 'X']), M('bleed-target', ['Blood Doll', 'X'])], 0, 'Blood Doll'), false, 'a held master');
+  eq(masterPlayed([M('master-play', ['Villein']), M('villein', ['Villein']), M('action', [])], 0, 'Villein'), true, 'Villein: its own decide is skipped');
+  eq(masterPlayed([M('master-play', ['Toreador Grand Ball', 'Toreador Grand Ball']), { bot: 'B1', type: 'grand-ball', data: {} }, M('action', ['Toreador Grand Ball', 'Toreador Grand Ball'])], 0, 'Toreador Grand Ball'), true, 'its own row, the replacement of the same name drawn');
+  eq(masterPlayed([M('master-play', ['Blood Doll']), M('action', [], { bot: 'B2' })], 0, 'Blood Doll'), false, 'another bot\'s row says nothing; no row of mine after it');
   if (!quiet || bad) console.log('gen-card-ledger --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed'));
   return bad;
 }
@@ -280,7 +301,7 @@ function main(){
         const dk = deckOf[r.bot]; if (!dk) continue;
         let name = null;
         if (r.type === 'play' && r.data) name = r.data.card;
-        else if (r.type === 'decide' && r.data && (r.data.q === 'action' || r.data.q === 'master-play')){ const p = r.data.out && r.data.out.pick; if (p && typeof p === 'object' && p.name) name = p.name; }
+        else if (r.type === 'decide' && r.data && (r.data.q === 'action' || r.data.q === 'master-play')){ const p = r.data.out && r.data.out.pick; if (p && typeof p === 'object' && p.name && (r.data.q !== 'master-play' || masterPlayed(lines, lines.indexOf(r), p.name))) name = p.name; }   // v1.1.2: a HELD master is no use (BOARD, 6 Nov)
         if (!name) continue;
         const x = rows.get(rowKey(name));
         if (x && x.decks[dk]){ x.uses++; x.usesBy[dk] = (x.usesBy[dk] || 0) + 1; }   // a use counts for the card in the deck that played it
@@ -378,7 +399,7 @@ function main(){
   }
   else P('No sim given: FULL / HANDLER rows read "playable (static)".');
   P('');
-  P('**Status:** playable = the bot plays every mode it can reach and some deck played the card in the sim (per deck below: that deck did) · unseen = it could, its decks sat, it never did (a pricing question first, LESSONS L-9) · not seated = it could, but none of its decks sat in the sims given · playable (static) = it could, and no sim was given · partial = some modes, or a master played blind · inert = nothing the bot reads · unresolved = the name finds no card. **Uses** = decisions to play the card from hand (action and master picks; a master the loop then holds for want of a target still counts) plus every card play the bot emits in a window, counted in the deck that played it, over the matches that deck sat in. A verdict is static (what the code CAN do); uses are what the table DID (L-47).');
+  P('**Status:** playable = the bot plays every mode it can reach and some deck played the card in the sim (per deck below: that deck did) · unseen = it could, its decks sat, it never did (a pricing question first, LESSONS L-9) · not seated = it could, but none of its decks sat in the sims given · playable (static) = it could, and no sim was given · partial = some modes, or a master played blind · inert = nothing the bot reads · unresolved = the name finds no card. **Uses** = decisions to play the card from hand (action picks, and a master pick once it was played: its own row, or gone from the hand by the next decide row of that bot) plus every card play the bot emits in a window, counted in the deck that played it, over the matches that deck sat in. A verdict is static (what the code CAN do); uses are what the table DID (L-47).');
   P('');
   P('## Summary (' + all.length + ' cards, ' + all.reduce((s, x) => s + x.copies, 0) + ' library copies)');
   P('');

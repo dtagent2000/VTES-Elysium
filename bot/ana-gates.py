@@ -12,7 +12,7 @@
 #                 VANISHED, UNEXPLAINED, no actor row, names NULL / WRONG, RANGE DISAGREES, VICTIM LOST > STOLE, a bleed through that
 #                 no seat took before the game's end. Default deny: a row a later audit adds is a gate until it is classed here.
 #     handshake   ana-combat2's integrity under 100 % as it prints it (rounded): a broken combat line (CLAUDE.md, the combat handshake
-#                 rule; the stray third bot's row, STATUS, is the known few that rounding absorbs)
+#                 rule; the stray combat row -- BOARD, a rushed bot that meant to block -- is the known few that rounding absorbs)
 #     invariants  a flag kind outside INV_KNOWN, or more flags than 1 in 20 matches on the sim (its series since v0.6.213 measured 1 in
 #                 27 to 1 in 150) / 1 in 3 on the arena (v0.6.180's arena baseline, HOWTO) -- and never fewer than one: a series under
 #                 20 matches (the V5 smoke's 12) may carry one known flag (v1.1.0, Johan 12 Nov; v1.0.0 allowed none there, so a single
@@ -40,9 +40,9 @@ LEDGER_COUNTS = {'1 bleed: equal', '1 bleed: more, actor modifiers', '1 bleed: l
                  '3 combat: taken>dealt', '4 steal: stole', '4 steal: stolenFromMe', '4 steal pairs: equal', '5 creep: placed',
                  '5 creep: victim burns'}   # the dealt / taken differences: prevent, Crows, a combat that ends (the ledger's header)
 LEDGER_LEADS = {'4 steal pairs: STOLE > VICTIM LOST': 'BOARD: steal pair under a combat ends, O-12',
-                '4 steal pairs: no victim row': 'the stray combat row, STATUS',
-                '2 names: no reciprocal row': 'the stray combat row, STATUS'}
-INV_KNOWN = {'strike-taken': 'the stray combat row, STATUS'}   # v1.1.0: Wider View's two kinds fixed at their cause (bot v0.6.219)
+                '4 steal pairs: no victim row': 'the stray combat row: BOARD, a rushed bot that meant to block',
+                '2 names: no reciprocal row': 'the stray combat row: BOARD, a rushed bot that meant to block'}
+INV_KNOWN = {'strike-taken': 'the stray combat row: BOARD, a rushed bot that meant to block'}   # v1.1.0: Wider View's two kinds fixed at their cause (bot v0.6.219)
 INV_CAP = {'sim': 20, 'arena': 3}   # at most one flag in N matches, and at least one (v1.1.0)
 FAILED_END = ('stuck', 'timeout')
 

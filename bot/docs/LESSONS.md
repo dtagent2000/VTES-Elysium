@@ -81,6 +81,7 @@
 - L-66 **A comment that explains a bug is still a bug; a clever loop condition is a comment that did not get written** (16–18 Sep).
 - L-67 **A name variant in the curated layer is a silent miss for the other spelling** (19 Oct, Pentex); a comment that says "client-identical" is a claim — pin it with a test against the client's own code (19 Oct).
 - L-68 **A trailing `//` comment is a statement killer** (26 Sep); never tail-append to a line ending in a comment.
+- L-88 **What one mechanism keeps about a card belongs in the bot's own map, keyed by the card's id, not on the card** (13 Nov, the Jack round): the failed blocker's fix first stored the combat's opponent on the vampire (`myVamp._combatOpp`), and 236 of 240 matches came back SAME-PLAY with no decision changed — the card rides in every decide row that names it, and the pub is built from it; `_combatOppOf`, a Map by id, gave IDENTICAL 236. The tokens keep the rule from the other side: derived from the fields the rules read at every push (`_memoMap`), never written onto the card.
 
 ## Tools and ways of working
 - L-69 **The smoke of the release is part of the release** (16 Oct): every R2–R4 release's own smoke found a bug its suite did not.
