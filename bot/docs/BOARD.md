@@ -151,10 +151,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* the persona pass (RULINGS O-29) ships with those tests.
 
 ## Measurement debts
-- **The hotseat table runs out most bot-vs-bot reaction windows** (29 Oct; v0.6.211 too): 403 of 467 bleed totals and 101 of 125
-  modifier windows on a pace-0 sim series (the server arena: 0 of 82); the sim matches the real-clock hotseat table. *Done when* a
-  `--real` hotseat match and a browser table say whether bot answers are lost there, and it is fixed or the gate restated per
-  table. Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
+- **The hotseat table drops a bot's Pass in the bleed-modifier window** (29 Oct; v0.6.211; on the real clock 13 Nov): the actor's
+  stale guard reads the target's Pass as an answer to an earlier line, and the window runs out its ~15 s — 50 of 53 modifier windows
+  on round A's offline table (60 stale Passes), 0 of 44 online at the same pace: a human offline waits at each bot modifier. *Done when* the guard keys on what the hotseat bridge delivers and an offline real-clock table shows 0. Docs: LESSONS
+  L-25, L-26; `reports/REPORT-table-runs-2026-11-13.md`; HOWTO (ana-windows).
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a

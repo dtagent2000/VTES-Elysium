@@ -32,12 +32,38 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.223 (in progress, 13 Nov 2026)** — Round A (Johan's "Yes kör", 13 Nov 21:45): the table runs with Toreador's guide check (D-112)
-  and v0.6.222's two riders. *Predictions registered before the footprint*: (R1) the riders' footprint on the 240 design, the V5 smoke
-  and the Toreador 600 is IDENTICAL to v0.6.222 (version strings normalized): `ana-rare.py` finds no rush, card burn, peek or
-  referendum part at an ousted seat in v0.6.222's 1,008 sim matches, and the chat path needs a human; (R2) `ana-gates.py` PASS on
-  every series; (R3) section 167 green ×3 and red on v0.6.222 (measured on the branch: 3/0 against 0/3). The table runs' own
-  predictions are in `docs/reports/REPORT-table-runs-2026-11-13.md`.
+- **v0.6.223 (14 Nov 2026)** — Round A (Johan's "Yes kör", 13 Nov 21:45): the table runs with Toreador's guide check (D-112),
+  v0.6.222's two riders, and the tool fixes the runs called for. `docs/reports/REPORT-table-runs-2026-11-13.md`,
+  `docs/reports/REPORT-toreador-guide-check-2026-11-13.md`.
+  - *The riders* (`3a8731a`, section 167; destructive: v0.6.222 0/3, these bytes 3/0): a human's chat stealth (`+1`, a bare total)
+    typed inside a locked blocker's route beat is booked — the guard read `blockerVamp` alone, which the route sets only after its
+    beat; it now books on `routeVamp` too and stamps the human's move (`_aAt`), the second look shut until the route has its blocker.
+    A rush (Deep Song, Haven Uncovered, a granted rush), a card burn, an enemy rescue and Revelations [aus] whose target seat was
+    ousted in their window fizzle (`_fizzleIfOusted`, as the bleed and the pool damage since v0.6.222; [AUS] is undirected and still
+    goes into play); a passed referendum voids the part of a seat ousted in its window (`_voidOustedRefParts`: Kine Resources
+    Contested's points on it burn nothing, Parity Shift's move from it moves nothing; the note "The referendum’s part for NAME does
+    nothing: ousted in its window.").
+  - *Toreador's guide check* (D-112; Black Chantry's Fifth Edition helpsheet): 17 points against the bot's play on the sim's 600;
+    findings: Perfect Paragon's [PRE] mode missing (the ledger's check does not ask that every discipline line has a mode), no bot
+    defending its own card from a burn (round B), the Ball's play not asking the action scorer (the look-ahead rule; proposal 1);
+    eight proposals wait for "kör".
+  - *The table runs* (bot v0.6.222 as released): online, the server arena at the client pace (nine matches; the tenth lost to the
+    arena, below), and offline, the sim's hotseat table on the real clock (ten). No superseded combat, held turn, actor's-word rush,
+    fizzle or resolution at an ousted seat occurred in the 19 (`ana-rare.py`); the held turn and its release ran in a two-bot probe
+    at pace 0 and 3100. The offline table drops a bot's Pass in 50 of 53 bleed-modifier windows (60 stale answers, ~15 s each);
+    online none (BOARD). Toreador played 19 of its 20 library cards; Versailles with the "(uncurated" note (an auto reading that
+    under-reads the card; BOARD). Predictions: 2, 4, 5, 6 held on both tables; 3 (a held turn a match online) and 8 (no uncurated
+    Toreador line) falsified; 1 and 7 falsified as registered online — `ana-windows.py` v1.0's limit was a pace-0 limit — and held
+    on v1.1; 7 half held offline (the modifier windows, not the totals).
+  - *Tools*: `ana-rare.py` v1.0.0 (new, read-only: superseded combats, held and released turns, rush complies by path, fizzles,
+    resolutions at an ousted seat); `ana-windows.py` v1.1 (the limit is 2.5 s plus the bots' pace, and RAN OUT needs the table quiet
+    that long inside the window: at the client pace v1.0 called 20 answered windows "ran out"; at pace 0 v1.0's verdicts); arena
+    v1.4.9 (the lobby waits for every seat PICK before the host's start: at the client pace the picks are paced and the start came
+    first) and v1.4.10 (the OS picks the scratch server's port and the server must be alive after its boot: two of ten parallel
+    arenas met on one port and the tenth match was lost).
+  - *Predictions* (registered before the footprint): (R1) IDENTICAL on the 240, the V5 smoke and the 600 to v0.6.222, the version
+    set back — FOOTPRINTS; (R2) `ana-gates.py` PASS — GATESLINE; (R3) section 167 green ×3, red on v0.6.222 — SUITE.
+  - Gates on the release bytes: GATES.
 - **v0.6.222 (13 Nov 2026)** — The Jack round's follow-ups (Johan, 13 Nov 14:50: "Vad gäller buggarna och granskning kan vi gärna ta
   dem nu"; #66 merged): the two bugs v0.6.221's runs found, the second fresh review of #66's fix pass (4 findings, all fixed here),
   a browser check of D-113's tokens, and RULINGS D-114 (Johan's principle for burning a Smiling Jack; Claude's proposal waits for

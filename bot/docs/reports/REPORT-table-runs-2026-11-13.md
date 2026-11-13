@@ -44,5 +44,31 @@ the lead is the measurement debt below — the sim table loses most modifier-win
 | 7 | online: RAN OUT 0 | 0 with v1.1 (see 1) | held, on the corrected gate |
 | 8 | no '(uncurated' line of Toreador's | 1: Elysium: The Palace of Versailles (match 5) — an AUTO reading (`docs/CARDS.md`: FULL), not curated, and it under-reads the card (+1 vote on the lock; the card: +1 vote for EACH titled Camarilla vampire you control) | falsified — my premise ("its library is curated") was wrong for one card; a BOARD line |
 
-### The offline table
-(filled in after the run)
+### The offline table (13–14 Nov, 23:24–00:16; the sim's hotseat table on the real clock, ten matches side by side)
+Ten matches to the end (11.9 rounds a match; 25,180 s of table time in 3,121 s). Wins: Malkavian 3, Nosferatu 3, Toreador 2,
+Ventrue 1, Tremere 1; VP a match Malkavian 1.60, Nosferatu 1.30, Ventrue 1.10, Toreador 0.70, Tremere 0.30. Toreador was out
+first five times (its mean oust position 1.75), yet its 0.70 VP is the sim 600's 0.65. It played the Grand Ball 24 times (burned
+once, by Nosferatu), Kine Resources Contested 18 and Majesty 18; across the two tables it played 19 of its 20 library cards (never
+Scalpel Tongue). Elysium: The Palace of Versailles came four times, each with the "(uncurated" note.
+
+| # | Prediction | Observed (offline) | Verdict |
+|---|---|---|---|
+| 1 | every audit PASS | `ana-gates.py` PASS 6 of 6 (the windows are information on the sim table) | held |
+| 2 | superseded combats 0–2 | 0 | held |
+| 3 | no held turn (the sim ends at the last oust) | 0; seven turns ended at the game's end in the minion phase | held |
+| 4 | rush complies on the actor's word 0–2 | 0 (on my Pass 10; no rush decision 2) | held |
+| 5 | fizzles 0–2 | 0 | held |
+| 6 | resolutions at an ousted seat 0 | 0 | held |
+| 7 | most bot windows run out (above half) | the MODIFIER windows: 50 of 53 ran out (each ~15 s) with 60 stale `Pass` answers — the actor's stale guard discards the target's Pass on the hotseat bridge, as on the sim at pace 0; the bleed TOTALS: 6 of 227 (v1.1; 28 with v1.0's pace-0 limit) | half held: the real clock reproduces the sim's lost answers in the modifier window, not on the totals |
+| 8 | no '(uncurated' line of Toreador's | 4 (Versailles) | falsified, as online |
+
+### What the two tables say
+- **Bot answers are lost on the hotseat table, not online** (the BOARD's measurement debt): at the real clock the offline table
+  ran out 50 of 53 bleed-modifier windows, ~15 s each, every one with the target's Pass dropped as stale; the online table at the
+  same pace lost none (0 stale answers). A human at an offline table with bots waits ~15 s at each bot's bleed modifier. A BOARD
+  line, for a round of its own (the stale guard on the hotseat bridge, L-25 / L-26).
+- **The riders' paths** (superseded combats, held turns, the actor's-word rush, fizzles, resolutions at an ousted seat) did not
+  occur in 19 real-clock matches; their sections stay the proof. The held turn ran in the probe (both paces).
+- **Toreador at the real clock** plays 19 of its 20 library cards (not Scalpel Tongue), one of them auto-read (Versailles). Out early on both tables (online 0 VP in 9; offline 0.70 a match, first out 5 of 10): a lead, not a deck read.
+- **The tools**: arena v1.4.9 / v1.4.10 (the paced seat picks; the shared port) and `ana-windows.py` v1.1 (the pace) came out of
+  these runs.
