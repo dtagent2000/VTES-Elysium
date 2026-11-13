@@ -102,6 +102,8 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   beside it; `--arm tally|full|nohold`); v1.3.0's `runTable` takes `personas`, `seatKnobs`, `onEvent` (the sim uses them).
   `test-bot-hotseat.js` is the gate; `BOT=./old-bot.js node test-bot-hotseat.js` is its destructive check. The sweep is the ONE part
   of the client the tool imitates instead of runs (it follows `hotBridge._out`): if main changes the sweep, the tool must follow.
+- **The tokens in a browser** — `bash bot/tools/tokens-in-browser.sh <vtes.json> <expansions.json>` from the root: main's play-test
+  rig as it is; an in-page bot's Grand Ball pair and Jack, every chip and hover text checked, the seat screenshot. A diagnostic.
 - **A debug bot at a live table** — `node elysium-bot.js --server ws://HOST:8123 --room R --pass P --debug [--no-debug-weights]`;
   refused at a Tournament table; its hand goes to the whole table and the other bots look away.
 - **Coverage** — `node gen-deck-coverage.js deck-<clan>.json --out docs/coverage/deck-coverage-v5-starter-<clan>-black-chantry-2020.md`

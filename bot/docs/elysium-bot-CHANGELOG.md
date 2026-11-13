@@ -32,6 +32,115 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.222 (13 Nov 2026)** — The Jack round's follow-ups (Johan, 13 Nov 14:50: "Vad gäller buggarna och granskning kan vi gärna ta
+  dem nu"; #66 merged): the two bugs v0.6.221's runs found, the second fresh review of #66's fix pass (4 findings, all fixed here),
+  a browser check of D-113's tokens, and RULINGS D-114 (Johan's principle for burning a Smiling Jack; Claude's proposal waits for
+  "kör"). One footprint per step.
+  - *The unanswered rush* (v0.6.221's 600, matches 197 and 542): a rush at a bot's vampire that resolved on the actor's word — the
+    bot's react delay outlasted the window, or its block attempt failed on the counter — went through `_applyPending`, which only
+    wrote `let-through`; the rusher fought alone ("no reciprocal row"). Such a rush now complies (`_complyRush`, once:
+    `p.complied`) and its combat starts.
+  - *The action at an ousted seat* (the 240's match 60; 3 on the 600): Ventrue's referendum damage was still in its own send queue
+    when its next vampire's bleed at that seat was decided, and the bleed went through 500 ms after the oust. A bleed or a pool
+    damage whose target seat is ousted when it resolves now fizzles (`_fizzleIfOusted`: the block tally closed, the parked cost
+    returned, 'It resolves', the note 'The bleed has no target: NAME is ousted.', a `fizzled` row; a pool damage's card to the ash
+    heap). The other actions aimed at a seat are not checked (BOARD).
+  - *The second review* (fresh context, of #66's fix pass `52d2d9b`; 4 findings): (1) `half-done` — the superseded combat stopped
+    in its press step only: the round it waited on (`_resolveCombatRound`, 40 awaits) and its helpers still said its lines, wrote
+    the tally under the live combat's duel, took damage, put `hsMiss` entries in the live combat's row and registered waits that
+    took the live combat's lines (a replaced waiter wakes with null). Now every await of `_resolveCombat`, the round and their
+    combat helpers (the phase steps, Wall of Filth, the before-range plays, the counters, the additional strikes) checks the combat
+    token before its next line, tally write, card, blood or wait; the strike step's `.then` chain starts no wait once superseded; a
+    superseded combat's step wait on a human ends when the live combat's step begins, and a wait's end clears only its own
+    `_phaseWait` (the superseded clock cleared the live one, so the human's answer reached nobody); one `combat-superseded` row,
+    also for a combat superseded at its last wait; a superseded combat that a Change of Target ended resolves the card first (its
+    blocker unlocks, the `cot-cancelled` row: the first cut returned at the token first, below); the `finally` leaves a
+    same-vampire live combat's opponent entry. v0.6.221's note that a superseded combat "ends at its next step" held for the press
+    step only. (2) `bug` — the turn held at game over (v0.6.221's fix 3) was never released when the game came back (an unoust, a
+    spectator taking a vacant seat, a hotseat oust undone): the turn sat on the bot. `_resumeHeldTurn` passes a turn that came
+    straight back after the bot's own game-over pass (kept when the same turn message comes again) and plays one it never played
+    (the roster handler, `_noServerOust`'s undo). (3) `unproven` — 165m held the combat at one of the press step's seven checks.
+    (4) `bug` (narrow) — a success verdict inside the locked-blocker route's beat found no blocker (named only after the wake
+    card), so Terrifying Visage's pool and the combat hand-off were skipped: the blocker is named when Block! is said, and
+    forgotten when the route fails.
+  - *The egress review* (fresh context, of the release candidate `d7c7d53c`; 9 findings, all fixed): (1) `bug` — naming the
+    blocker at Block! opened the second looks inside the locked-blocker route's beat: a stealth raise there drew two intercept
+    cards for one need. The route's vampire is now a field only the verdict reads (`routeVamp`), and an intercept beat that the
+    second look answered ends with the attempt line alone. (2) `half-done` — `_commitBlock` never asked whether its action
+    resolved under its route's beats (a verdict, a rush resolved, a cancel): the route went on to its wake card, a block counter
+    over the combat that had begun and a late attempt line. It now ends there (the unlock reaction too, its card kept). (3)
+    `half-done` — a server that keeps the turn at a lone live seat (v0.6.221's ask to main) sends no turn back after the game-over
+    pass: the release now covers that pass too. (4) `half-done` — a superseded combat's waiter registered before the later combat
+    began still took the later combat's line (a rushed Dowager's strike wait took Catalina's strike from Lenny's peek: Lenny took
+    1, not 3); a new combat now ends the line waiters and the step wait of one still in flight. (5) `bug` — a vacant seat
+    (awaiting its taker) counted as ousted, and the note's 'NAME is ousted.' read as an oust (`_evClassify`): only an out seat
+    fizzles, and the note says 'was ousted in its window'. (6) `test-weakened` — 166e's two maneuver scenes played no counter:
+    renamed, and the comment no longer claims counters. (7) `unproven` — the pool-damage fizzle and the hotseat release had no
+    test: 166b and 166c cover them. (8–9) `stale-doc` — STATUS's bytes and placeholders; O-39 deleted without its stub.
+  - *The third review* (fresh context, of that fix pass `35b34a5`; 2 findings): (1) `bug` — the intercept beat's branch took the
+    echo of the bot's own default-stealth write for a stealth raise: in an ordinary paced block of a human's undirected action it
+    sent the attempt line alone and returned before the verdict wait, so the human's Pass reached nothing. The branch is gone: the second look waits while the first card is on its way (`_icFirst` over the
+    beat), and the echo of the first card's write runs it against the real counter (the reviewer's patch, taken). (2)
+    `unproven` — the unlock reaction's and the intercept beat's early returns had no test: 166d covers them, 166j the normal path.
+    One old test changed: 127p called `_commitBlock` with a pending it never registered, which the beats' new guard (is my action
+    still the pending one?) read as resolved — it now registers the pending, as the react window does (its two checks failed on
+    the fix pass's bytes, the suite 2442/2; the window's own call is made with `this.pending`).
+  - *A browser check* (`tools/tokens-in-browser.sh`, new): main's play-test rig, run as it is, with one in-page bot given a Toreador
+    Grand Ball pair and a Jack with 3 counters; the human visits the bot's seat and reads every chip and its hover text (client
+    v2.6.174: GBN, GBD, 2 and 3, the texts as sent). A diagnostic, not a gate.
+  - *Tests*: section 166, 10 checks, each through its path: 166a the rush through `_onLog` and the actor's It resolves (once, also
+    after my own Pass); 166b the bleed and Inside Dirt through `_playTurn` at a seat ousted in its window, and Inside Dirt at a
+    vacant seat; 166c the held turn through the turn and roster handlers (the same turn twice; no turn back) and a hotseat oust
+    undone through `_onBoard`; 166d a verdict inside `_commitBlock`'s wake beat, the unlock reaction's beat and an intercept beat (the route ends there); 166e the real `_resolveCombat` and
+    `_resolveCombatRound` against a scripted opponent, superseded at each of their waits — 238 waits in 18 scenes (answering and
+    acting; a bot that answers, loses its lines or presses to continue; a human's phase steps both ways and their combat ends; hands
+    that play the Crows, Wall of Filth, a strength pump, a Grapple, a prevent, Taste of Vitae, a press and a press to end, a dodge
+    with its additional strike, a combat-ends strike) — nothing more said, written, spent or waited; 166f the superseded step wait
+    through `_phaseStep` and `_phaseNudge` (a step and the Damage step, both ways); 166g a superseded combat a Change of Target
+    ended; 166h a stealth raise inside the locked-blocker route's beat (one intercept card); 166i a superseded combat's strike
+    wait that was waiting when the later combat began; 166j a human's undirected action blocked with an intercept card, the counter
+    echoed (one card, the verdict wait armed). Destructive, the section on each step's bytes: v0.6.221 3/7 (166g, h and j pass there: they pin regressions
+    of this round's own cuts), the rush, the fizzle and the held turn 4/6 each (166b asserts the final note and Inside Dirt), the
+    Block! naming 3/7, the supersede fix's first cut `033be3de` 3/7, the release candidate `d7c7d53c` 5/5 (166b, c, d, h, i: the
+    egress review's findings), its fix pass `ee412791` 9/1 (166j: the third review's), the release 10/0. 166j on the bytes before
+    `35b34a5` is a race (the reviewer saw two cards in 2 of 5 runs; it failed once in this matrix, on `033be3de`); on `ee412791` it
+    fails every time. 166e on the bytes before the supersede fix fails at 205 of its 238 waits. A mutation run (a diagnostic, not a gate; on `d7c7d53c`): of the 92 token checks 166e kills 44; of the 48 it leaves, 32 sit
+    on paths no scene takes (the counter-maneuvers, the opponent's additional strikes, Saulot's Guiding Wisdom's combat end, the
+    press step against an unknown opponent), 9 an earlier check always takes first, and 7 leave the next check to take the same
+    wake with nothing said between. Of the 7 other guards it kills 2 (the strike step's `.then`) and 166f 2 more (a superseded wait
+    ends at the live one's start); 3 stand unproven — `_phaseWait === pw` in both waits (redundant once the old wait ends first)
+    and the dodge branch's `.then`.
+  - *Footprints and outcomes* (D-93): (R) observed: the 240 and the V5 smoke IDENTICAL; the 600 DIVERGED 2 (197, 542), each first
+    at the rushed bot's combat-strike decision where it used to make its next block decision; stray combat rows 2 → 0 (0 on the
+    other series); `ana-gates.py` PASS. Verdict: keep. (O) observed: through after the game ended 1 + 3 → 0; exactly the 240's match
+    60 and the 600's 271, 369 and 376 changed, each SAME-PLAY; the V5 smoke IDENTICAL; gates PASS. Verdict: keep. (H, B, S)
+    observed on the first cut (`033be3de`): the 240 and the V5 smoke IDENTICAL, the 600 IDENTICAL 599 and SAME-PLAY 1 — match
+    528, where The Dowager's combat, ended by a Change of Target while it waited, was superseded by Lenny's block: the round's new
+    token check ran before the card's check, so the combat wrote `combat-superseded` instead of `cot-cancelled` and The Dowager
+    stayed locked. Falsified; the fix above (166g), then the release candidate `d7c7d53c` against step O (the version string set back, raw): IDENTICAL 240,
+    IDENTICAL 168 on the V5 smoke, IDENTICAL 600 (match 528 writes `cot-cancelled` again), `ana-gates.py` PASS, 0
+    `combat-superseded` rows. Verdict: keep. The egress fix pass (no prediction was registered before its footprint: a slip against
+    D-93), the release against step O: the V5 smoke IDENTICAL; the 240 DIVERGED 1 (match 103) and the 600 DIVERGED 1 (match 435),
+    both a bot whose Block! came after its window (its 3.1 s react delay; the actor read it as stale and the action resolved): the
+    route no longer spends its wake card after that (in 103 its intercept card too), each first at that bot's next decision;
+    `ana-gates.py` PASS; 0 `combat-superseded` rows. Verdict: keep (finding 2's own case). The third review's fix (the release bytes
+    against that step, the 240 design): IDENTICAL 240 — its beat is one a pace-0 table never opens.
+  - *Gates* (the release bytes `e595f4a5`): suite 2445/0 ×3 (447, 476, 464 s; after them two test lines changed for the lint —
+    a destructured `t` never read, now copied and deleted — and section 166 ran again, 10/0) · lint 0 · canary 143/0 ×2 (bot/'s
+    copies and the root's release) · hotseat 11/0 · HB1 11/11 · test-cardfx 321/0 · main's `check-versions.js` agrees · main's client
+    suite 361/2 (the handoffs' two) · arena smoke, two real-clock matches on srv-2.6.50: `ana-gates.py` PASS 7 of 7 each (the release
+    candidate's two had six rushes in one) · the browser check OK. Egress reviews (fresh context): the second review of #66's fix
+    pass 4 findings, the release candidate 9, its fix pass 2 — all fixed here.
+  - *Predictions, registered before the runs (D-93; commits 93d4107 and 8eab60c, word for word), each step against the one before on the 240-match
+    design, the V5 smoke and the Toreador 600 (v0.6.221's `0c3bd7dc` first, the same version string, compared raw):* (R) the unanswered
+    rush: a rush at a bot's vampire that resolves on the actor's word, without that bot's Pass, now starts that vampire's combat — only
+    matches with such a rush change (the 600's 197 and 542 among them), each first at that bot's combat decision in it; the stray combat
+    rows (`stray.py`) fall to 0 on every series. (O) the action at an ousted seat: "through after the game ended" falls to 0 on every
+    series (the 240's 1, the 600's 3); only those 4 matches change, each SAME-PLAY (the game ended at that oust: no decision follows).
+    All series `ana-gates.py` PASS. Falsified if any part fails. (H, B, S) the second review's fixes — the held turn, the blocker
+    named at Block!, the superseded combat stopped at every await — one footprint against step O (`624ab86e`), raw: IDENTICAL on all
+    three series (no trace has a turn that comes back after the game ended, a verdict inside the locked-blocker beat, or a
+    `combat-superseded` row); `ana-gates.py` PASS. Falsified by any match that changes.
 - **v0.6.221 (13 Nov 2026)** — The Jack round (RULINGS D-113; Johan, 13 Nov 08:38: "alla dina förslag ovan om Jack och Grand Ball
   låter jättebra"; 09:22: the failed blocker, the ledger and "allt du var osäker på" in the same round), built on #65 (merged the same
   day). One footprint per step.

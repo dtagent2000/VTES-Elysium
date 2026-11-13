@@ -115,7 +115,9 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   line. "Do I want to" lives in `_wantGrapple` / `_wantPress` / `_wantPressToEnd` / `_wantLong` reading `DECK_STRATEGY.combat`
   (chase / snipe / wave), never as a threshold at the play site. Per-round state resets at the round's start, per-combat state in
   `_resolveCombat`'s `finally`; a flag about a LATER step dies where its scope ends. Between bots the acting bot strikes first and
-  the answering bot PEEKS (`_awaitOppStrikePeek`) before it chooses; the acting minion is one rule, `_combatIActing()`.
+  the answering bot PEEKS (`_awaitOppStrikePeek`) before it chooses; the acting minion is one rule, `_combatIActing()`. Every
+  await of a combat is followed by its token check (`stale()`, `sup(round)`, `ct !== this._combatTok`), and a new combat ends the
+  waits of one still in flight: a combat a later one superseded says, writes, spends and waits nothing more [L-89].
 - **The cardfx cost rule (compile v1.6.14).** [R-17, D-54; L-67] A curated entry without `cost` inherits the data's numeric cost; explicit curated
   cost wins; X is never inherited; the compile report's inherited / mismatch / X lists are read at every recompile. Every restored
   price is an unpaid cost until a finder reads `cost.blood` / `cost.pool` and its branch pays it. Costs are parked at announce and

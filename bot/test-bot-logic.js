@@ -8298,20 +8298,21 @@ async function connectWithRetry(client, tries = 30){
       u.logs = []; u.send = m => { if(m.t === 'log') u.logs.push(m.html); };
       const B = { id: 'b1', name: 'Trevon Parker (G6)', kind: 'crypt', zone: 'ready', blood: 4, cap: 6, locked: false }; u.board = [B]; u.hand = ['Eyes of Argus'];
       u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'I', bot: true }]; u._pickBlocker = () => B; return { u, B }; };
+    const commitI = async (u, p) => { u.pending = p; await u._commitBlock(p, { why: 'test' }); if(u._vWait) u._vwEnd(null); u.pending = null; };   // v0.6.222: the pending registered, as the window has it (_commitBlock's beats ask whether their action is still the pending one)
     let { u } = mkI(); u.tally = { mode: 'block', a: 0, b: 0 };
-    await u._commitBlock({ who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' }, { why: 'test' });
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
     ok(u.hand.includes('Eyes of Argus') && u.logs.some(h => /attempts to block\.$/.test(h)), '127p a declared bleed with 0 stealth: the bot attempts the block WITHOUT spending intercept (Johan\u2019s report)');
     ({ u } = mkI()); u.tally = { mode: 'block', a: 1, b: 0 }; u._obs = { who: 'Johan', at: Date.now() - 20 }; u._aAt = Date.now();   // Johan's stealth raised AFTER his announce
-    await u._commitBlock({ who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' }, { why: 'test' });
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
     ok(!u.hand.includes('Eyes of Argus') && u.logs.some(h => /\+\d+ intercept\./.test(h)), '127p ...with 1 stealth standing it plays the intercept');
     ({ u } = mkI()); u.tally = { mode: 'block', a: 2, b: 0 }; u._aAt = Date.now() - 5000; u._obs = { who: 'Johan', at: Date.now() - 20 }; u.sent = []; const s0 = u.send; u.send = m => { u.sent.push(m); s0(m); };
-    await u._commitBlock({ who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'bleed', actingVampName: 'Lisa' }, { why: 'test' });
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'bleed', actingVampName: 'Lisa' });
     ok(u.hand.includes('Eyes of Argus') && u.sent.some(m => m.t === 'tally' && m.mode === 'block' && m.a === 0), '127p v0.6.171: a STALE stealth 2 left by an earlier action is not Johan\u2019s -- no intercept card, and the counter is seeded with his true 0');
     ({ u } = mkI()); u.tally = null;
-    await u._commitBlock({ who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'undirected', actingVampName: 'Lisa' }, { why: 'test' });
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'undirected', actingVampName: 'Lisa' });
     ok(!u.hand.includes('Eyes of Argus'), '127p ...an undirected action carries +1 stealth: intercept is needed and played');
     ({ u } = mkI()); u.players[0].bot = true; u.tally = { mode: 'block', a: 0, b: 0 };
-    await u._commitBlock({ who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' }, { why: 'test' });
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
     ok(u.hand.includes('Eyes of Argus'), '127p ...and against a BOT actor too (v0.6.170, Johan: the base rules forbid stealth / intercept that is not needed)'); }
   { const u = mkP('X1', 'malkavian', false).u; u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = u.board[0]; u._rnd = { strikeSeen: true };
     u._onLog('Johan', 'Lisa gets an additional strike.'); u._onLog('Johan', 'Lisa strikes for 2.');
@@ -12567,6 +12568,228 @@ async function connectWithRetry(client, tries = 30){
         const end = { grant: u._reactManeuverGrant, lRows: u.events.filter(e => e.t === 'bot:combat-round' && e.d.vamp === L.name).length };
         ok(mid.grant === true && mid.dRows === 0 && mid.sup === 1 && end.grant === false && end.lRows === 1,
            '165m The Dowager’s combat, superseded in its press step: no round row, Lenny’s Guard Dogs grant kept until his combat ends (got ' + JSON.stringify({ mid, end }) + ')'); }
+    }
+
+    /* 166) v0.6.222 -- THE JACK ROUND'S FOLLOW-UPS: the rushed bot that never fought the rush (v0.6.221's 600, matches 197 and 542),
+       the action at a seat ousted in its window (the 240's match 60), the second review's findings. LAST LINE OF 166 is the closing
+       brace below. */
+    {
+      console.log('\n[166] v0.6.222 -- the follow-ups: the unanswered rush, the action at an ousted seat');
+      const mk166 = (name, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: u.o.name, online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d });
+        u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
+      const V6 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4, attached: [] }, o || {});
+
+      // a) a rush at my vampire that resolves on the actor's word -- my reaction delay outlasted the window, or my attempt failed on the
+      //    counter -- is a rush that succeeded: my vampire fights (it let the rusher fight alone); after my own Pass it fights once
+      { const run = passFirst => { const u = mk166(); u.board = [V6('v1', 'Lauren'), V6('v2', 'Nassir', { blood: 4 })];
+          let combats = 0; u._resolveCombat = async () => { combats++; }; u._reactWindow = () => {};   // the window is open; my answer has not gone out yet
+          u._onLog('Hanna', "<b>Lisa Noble</b> plays Deep Song [ANI] — rushes <b>U</b>'s <b>Nassir</b>.");
+          const armed = !!(u.pending && u.pending.kind === 'rush' && u.pending.rushTarget === 'Nassir');
+          if(passFirst && u.pending){ u.pending.declined = true; u._complyRush(u.pending); }
+          u._onSay({ i: SI('It resolves'), who: 'Hanna', seat: 1 });
+          return { armed, combats, locked: u.board[1].locked, rushed: u.events.filter(e => e.t === 'bot:rushed').length, pending: !!u.pending }; };
+        const late = run(false), passed = run(true);
+        ok(late.armed && late.combats === 1 && late.locked === true && late.rushed === 1 && !late.pending && passed.combats === 1 && passed.rushed === 1,
+           '166a a rush at my Nassir that resolves on the actor’s word: Nassir locks and fights; after my own Pass, once (got ' + JSON.stringify({ late, passed }) + ')'); }
+
+      // b) an action at a seat ousted in its window (the 240's match 60): my bleed at Cy, who is ousted while its window is open (my own
+      //    referendum's damage landed late at that seat) -- nothing lands: no bleed-through row, no Edge, one fizzled row; through _playTurn
+      { const u = mk166(); u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Cy', online: true, bot: true }];
+        u.turnSeat = 2; u.board = [V6('v1', 'Lenny Burkhead (G6)', { blood: 5, cap: 6 })]; u.hand = []; const notes = []; u.note = t => notes.push(t);
+        u._announcePhase = async () => {};
+        u._askBlock = async () => { if(!u.players[2].out) u.players[2].out = true; return { what: 'no' }; };   // Cy's oust lands in the window
+        let terr = null; try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const thr = u.events.filter(e => e.t === 'bot:through' && e.d.vamp === 'Lenny Burkhead (G6)' && !e.d.kind && e.d.card !== 'hunt').length, fz = u.events.filter(e => e.t === 'bot:fizzled');
+        const got = { terr, thr, edge: !!u.edge, fz: fz.map(e => e.d), note: notes.filter(t => /no target/.test(t)) };
+        const pd = async vac => { const w = mk166(); w.players = u.players.map(q => Object.assign({}, q, { out: false })); w.turnSeat = 2; w.edge = true; const wn = []; w.note = t => wn.push(t); w._announcePhase = async () => {};
+          w.board = [V6('f1', 'Frank Litzpar (G4)')]; w.hand = ['Inside Dirt'];   // Inside Dirt: 3 pool damage, the Edge its price
+          w._askBlock = async () => { if(vac) w.players[2].vacant = true; else w.players[2].out = true; return { what: 'no' }; };
+          await w._playTurn(); return { fz: w.events.filter(e => e.t === 'bot:fizzled').map(e => e.d.kind + '@' + e.d.seat), thr: w.events.filter(e => e.t === 'bot:through' && e.d.kind === 'pool').length, note: wn.filter(t => /no target/.test(t)), dirt: w.hand.includes('Inside Dirt') }; };
+        got.pool = await pd(false); got.vacant = await pd(true);   // the egress review: the pool-damage path, and a seat that is vacant (awaiting its taker) is still in the game
+        ok(!terr && thr === 0 && !u.edge && fz.length === 1 && fz[0].d.kind === 'bleed' && fz[0].d.seat === 3 && got.note.length === 1 && /^The bleed has no target: Cy was ousted in its window\.$/.test(got.note[0])
+          && JSON.stringify(got.pool.fz) === '["pool damage@3"]' && got.pool.thr === 0 && got.pool.note.length === 1 && !got.pool.dirt && got.vacant.fz.length === 0 && got.vacant.thr === 1,
+           '166b my bleed at Cy, ousted in its window: nothing lands -- no bleed-through, no Edge, one fizzled row and its line; Inside Dirt at Cy fizzles the same way, and lands at a vacant seat (got ' + JSON.stringify(got) + ')'); }
+
+      // c) the turn held at game over comes back (the second review): my last bleed ousted Hanna, I passed, the server handed me my own
+      //    turn back and I held it (165j), and held it again when the same turn came twice; Hanna is unousted -- one pass, not a second
+      //    turn. A turn the game ended before I played is played when the game comes back (a spectator takes the vacant seat). Through
+      //    the roster and turn handlers
+      { const P = out => [{ seat: 1, name: 'Hanna', online: true, bot: true, out }, { seat: 2, name: 'U', online: true, bot: true }];
+        const a = mk166(); a.players = P(true); a.turnSeat = 2; a._endTurnAtGameOver('minion');
+        a._dispatch({ t: 'turn', seat: 2, who: 'U' }); await new Promise(r => setTimeout(r, 30));
+        a._dispatch({ t: 'turn', seat: 2, who: 'U' }); await new Promise(r => setTimeout(r, 30));   // the same turn again (a reconnect): still the one that came back
+        const passes0 = a.sent.filter(m => m.t === 'pass').length; a._dispatch({ t: 'roster', players: P(false) }); await new Promise(r => setTimeout(r, 30));
+        const ga = { passes: [passes0, a.sent.filter(m => m.t === 'pass').length], resumed: a.events.filter(e => e.t === 'bot:game-resumed').map(e => e.d.back) };
+        const b = mk166(); b.players = P(true); b.turnSeat = 1; let played = 0; const real = b._playTurn.bind(b); b._playTurn = async () => { played++; return real(); };
+        b._dispatch({ t: 'turn', seat: 2, who: 'U' }); await new Promise(r => setTimeout(r, 30));
+        b._playTurn = async () => { played++; }; b._dispatch({ t: 'roster', players: P(false) }); await new Promise(r => setTimeout(r, 30));
+        const gb = { played, passes: b.sent.filter(m => m.t === 'pass').length, resumed: b.events.filter(e => e.t === 'bot:game-resumed').map(e => e.d.back) };
+        const c = mk166(); c.players = P(true); c.turnSeat = 2; c._endTurnAtGameOver('minion');   // the egress review: no turn comes back (a server that keeps it at a lone live seat)
+        c._dispatch({ t: 'roster', players: P(false) }); await new Promise(r => setTimeout(r, 30));
+        const gc = { passes: c.sent.filter(m => m.t === 'pass').length, resumed: c.events.filter(e => e.t === 'bot:game-resumed').map(e => e.d.back) };
+        const d = mk166(); d._noServer = true; d.players = P(false); d.turnSeat = 1; d._onBoard({ t: 'board', seat: 1, pub: { pool: 0, cards: [] } });   // hotseat: Hanna's 0 pool is an inferred oust
+        d._dispatch({ t: 'turn', seat: 2, who: 'U' }); await new Promise(r => setTimeout(r, 30));
+        let dp = 0; d._playTurn = async () => { dp++; }; d._onBoard({ t: 'board', seat: 1, pub: { pool: 3, cards: [] } }); await new Promise(r => setTimeout(r, 30));   // the oust undone
+        const gd = { played: dp, resumed: d.events.filter(e => e.t === 'bot:game-resumed').map(e => e.d.why) };
+        ok(JSON.stringify(ga.passes) === '[1,2]' && JSON.stringify(ga.resumed) === '[true]' && gb.played === 2 && gb.passes === 0 && JSON.stringify(gb.resumed) === '[false]'
+          && gc.passes === 2 && JSON.stringify(gc.resumed) === '[true]' && gd.played === 1 && JSON.stringify(gd.resumed) === '["oust-undone"]',
+           '166c the held turn comes back: after my own game-over pass, one more pass when Hanna is unousted (also when no turn came back); a turn I never played is played (also a hotseat oust undone) (got ' + JSON.stringify({ ga, gb, gc, gd }) + ')'); }
+
+      // d) a success verdict that lands inside the wake's beat (the second review): my only body is locked, On the Qui Vive wakes it,
+      //    and the actor's verdict arrives before the wake card is down -- the blocker named at Block! pays Terrifying Visage and fights
+      { const run = () => { const u = mk166(); u.pool = 20; const crow = V6('e1', 'Crow (G5)', { locked: true }); u.board = [crow]; u.hand = ['On the Qui Vive'];
+          const gl = V6('eg1', 'Glissando (G6)', { attached: ['ev1'] }); u.table = { 1: { pub: { cards: [gl, { id: 'ev1', name: 'Terrifying Visage', kind: 'lib', zone: 'ready', host: 'eg1', faceDown: false }] } } };
+          u.pending = { who: 'Hanna', amount: 2, kind: 'bleed', actingVampName: 'Glissando (G6)', actorSeat: 1, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+          let combats = 0, fired = false; u._resolveCombat = async v => { combats++; u._cv = v && v.name; }; u._oust = () => { u.out = true; };
+          u._pace = async () => { if(!fired){ fired = true; u._verdictAsTarget(true); } };   // the verdict, inside the wake's beat
+          return { u, get combats(){ return combats; } }; };
+        const r = run(); await r.u._commitBlock(r.u.pending, { why: 'test', parts: {} });
+        const late = { qv: r.u.hand.includes('On the Qui Vive'), blockTally: r.u.sent.filter(m => m.t === 'tally' && m.mode === 'block').length, attempt: r.u.sent.filter(m => m.t === 'log' && /attempts to block/.test(m.html || '')).length };
+        const other = async (locked, hand, kind) => { const v = mk166(); const c = V6('e1', 'Crow (G5)', { locked }); v.board = [c]; v.hand = hand.slice(); v.table = r.u.table;   // the third review: the unlock route's beat, an unlocked blocker's intercept beat
+          v.pending = { who: 'Hanna', amount: 2, kind, actingVampName: 'Glissando (G6)', actorSeat: 1, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+          let n = 0, fired = false; v._resolveCombat = async x => { n++; v._cv = x && x.name; }; v._oust = () => { v.out = true; }; v._pace = async () => { if(!fired){ fired = true; v._verdictAsTarget(true); } };
+          await v._commitBlock(v.pending, { why: 'test', parts: {} });
+          return { combats: n, vamp: v._cv || null, kept: hand.every(h => v.hand.includes(h)), quiet: !v.sent.some(m => (m.t === 'tally' && m.mode === 'block') || (m.t === 'log' && /attempts to block|plays/.test(m.html || ''))) }; };
+        late.unlock = await other(true, ['Guard Dogs'], 'bleed'); late.icBeat = await other(false, ['Eyes of the Wild'], 'undirected');
+        ok(r.u.pool === 19 && r.combats === 1 && r.u._cv === 'Crow (G5)' && late.qv && !late.blockTally && !late.attempt
+          && late.unlock.combats === 1 && late.unlock.vamp === 'Crow (G5)' && late.unlock.kept && late.unlock.quiet && late.icBeat.combats === 1 && late.icBeat.kept && late.icBeat.quiet, '166d a success verdict inside the wake’s beat: Crow, named at Block!, pays Terrifying Visage and fights; the route ends there -- the wake card stays, no block counter or attempt line over the combat; the same at the unlock reaction’s beat and at an unlocked blocker’s intercept beat (got ' + JSON.stringify({ pool: r.u.pool, combats: r.combats, vamp: r.u._cv || null, late }) + ')'); }
+
+      // e) the superseded combat stops at the await it wakes from (the second review, findings 1 and 3): the REAL _resolveCombat and
+      //    _resolveCombatRound against a scripted opponent whose every wait is answered at once; at the k-th wait a later combat of mine
+      //    begins (the token moves, as a second _resolveCombat's first line does). From there the superseded combat says nothing, writes
+      //    no tally, spends no card or blood, starts no wait, leaves the shared round fields alone and writes no round row, and its
+      //    _resolveCombat ends with one combat-superseded row -- at EVERY wait of eighteen scenes: answering and acting, against a bot that
+      //    answers, one whose lines are lost, one that presses to continue, one that maneuvers to long or to close (my maneuver cards
+      //    held: no counter is played, the counters stay unproven), a human's phase steps both ways and their combat ends, and hands
+      //    that play the Crows, Wall of Filth, a strength pump, a Grapple, a prevent, Taste of Vitae, a press and a press to end, a
+      //    dodge with its additional strike and a combat-ends strike
+      { const MF = 'Massimo Falconi', BY = ['Baba Yaga, the Iron Hag (G5)', 6, 8], AX = ['Alexandra (G2)', 6, 11];
+        const SC = { answer: { turn: 1 }, lost: { turn: 1, lost: true }, acting: { turn: 2, lost: true }, actingNone: { turn: 2 },
+          press: { turn: 1, press: true }, pressActing: { turn: 2, press: true }, human: { turn: 1, human: true }, humanActing: { turn: 2, human: true },
+          rich: { turn: 1, vamp: BY, hand: ['Carrion Crows', 'Immortal Grapple', 'Apportation', 'Taste of Vitae', 'Armor of Vitality'], dealt: 2, taken: 2 },
+          richActing: { turn: 2, vamp: BY, hand: ['Aid from Bats', 'Hidden Strength', 'Apportation', 'Carrion Crows'], dealt: 2 },
+          dodge: { turn: 1, vamp: AX, hand: ['Acrobatics', 'Acrobatics'] }, majesty: { turn: 1, vamp: ['Alexandra (G2)', 1, 11], hand: ['Majesty'] },
+          wall: { turn: 1, vamp: BY, hand: ['Wall of Filth', 'Torn Signpost'] }, oppLong: { turn: 1, deck: 'nosferatu', vamp: BY, hand: ['Aid from Bats', 'Aid from Bats'], ans: { _maneuverWaiter: [{ vamp: MF, range: 'long' }, { none: true }] } },
+          oppClose: { turn: 2, deck: 'tremere', vamp: BY, hand: ['Aid from Bats', 'Aid from Bats', 'Aid from Bats'], ans: { _maneuverWaiter: [{ vamp: MF, range: 'close' }, { none: true }] } },
+          pressEnd: { turn: 1, deck: 'ventrue', vamp: BY, hand: ['Apportation', 'Hidden Strength'], press: true }, humanEnded: { turn: 1, human: true, ans: { _strikeWaiter: [{ vamp: MF, ends: true }] } },
+          humanMajesty: { turn: 1, human: true, vamp: ['Alexandra (G2)', 1, 11], hand: ['Majesty'] } };
+        const scene = async (name, k) => { const c = SC[name];
+          const u = mk166('U', Object.assign(c.human ? { phaseSecs: 0.02 } : {}, c.deck ? { deckName: c.deck } : {})); const D = c.vamp ? V6('d1', c.vamp[0], { blood: c.vamp[1], cap: c.vamp[2] }) : V6('d1', 'The Dowager (G6)');
+          u.board = [D]; u.hand = (c.hand || []).slice(); u.table = { 1: { pub: { cards: [V6('m1', MF)] } } }; u._combatOppName = MF;
+          if(c.human) u.players[0].bot = false;
+          u.turnSeat = c.turn; if(c.turn === 2) u._actingVamp = { v: D, name: D.name, n: 1, target: 1 };
+          const fx = { lines: 0, sent: 0, push: 0, fx: 0, waits: 0 }; u.note = () => fx.lines++; u.chat = () => fx.lines++; u.say = () => fx.lines++;
+          u.push = () => fx.push++; u.fxClone = () => fx.fx++; u.send = m => { fx.sent++; u.sent.push(m); };
+          const snap = () => JSON.stringify({ fx, rows: u.events.filter(e => e.t === 'bot:combat-round').length, blood: D.blood, hand: u.hand.length, rnd: u._rnd || null, xr: u._xr || null, range: u._range, hso: !!u._handStrikeOnly, bp: !!u._bundledPress, ph: u._phaseLast || null });
+          let n = 0, at = null, presses = 0;
+          const tick = v => { n++; fx.waits++; if(n !== k) return Promise.resolve(v); return new Promise(r => setTimeout(() => { u._combatTok = (u._combatTok | 0) + 1;   // the later combat: its token, then its round's own fields (the shared names)
+            u._rnd = { grapple: false, strike: null, dealt: 0, taken: 0 }; u._xr = u._xrFresh(); u._range = 'close'; u._handStrikeOnly = false; u._bundledPress = false; at = snap(); r(v); }, 0)); };
+          const said = {}, ans = key => (c.ans && c.ans[key]) ? c.ans[key][Math.min((said[key] = (said[key] | 0) + 1) - 1, c.ans[key].length - 1)] : c.lost ? null : key === '_maneuverWaiter' || key === '_preWaiter' ? { none: true }
+            : key === '_strikePeekWaiter' || key === '_strikeWaiter' ? { vamp: MF, dealt: c.dealt || 1 }
+            : key === '_pressWaiter' ? ((c.press && presses++ === 0) ? { vamp: MF, continue: true } : { none: true })
+            : key === '_takenWaiter' && c.taken ? { vamp: MF, n: c.taken } : null;
+          u._waitOn = key => tick(ans(key)); u._holdGate = () => tick(); u._pace = () => tick(); u._awaitPreOrManeuver = () => tick(null);
+          u._remindArm = () => { tick(); };   // a human's step: the wait is on its clock -- the k-th one is where the later combat begins
+          let done = false, err = null; u._resolveCombat(D, MF).then(() => { done = true; }, e => { err = e.message; done = true; });
+          for(let t = 0; t < 200 && !done; t++) await new Promise(r => setTimeout(r, 5));
+          const sup = u.events.filter(e => e.t === 'bot:combat-superseded').length, plays = u.events.filter(e => e.t === 'bot:play').length;
+          return { n, at, end: snap(), done, err, sup, rows: u.events.filter(e => e.t === 'bot:combat-round').length, plays, hand: u.hand.length }; };
+        const bad = [], seen = {};
+        for(const name of Object.keys(SC)){
+          const full = await scene(name, 0); seen[name] = [full.n, full.rows, (SC[name].hand || []).length - full.hand];   // the whole combat, nothing superseded: its waits, rows, cards played
+          if(!full.done || full.err || full.rows < 1 || full.sup) bad.push({ name, k: 0, full });
+          for(let k = 1; k <= full.n; k++){ const r = await scene(name, k);
+            if(!r.done || r.err || r.sup !== 1 || r.n !== k || r.end !== r.at) bad.push({ name, k, of: full.n, done: r.done, err: r.err, sup: r.sup, waits: r.n, at: r.at, end: r.end }); }
+        }
+        const W = Object.keys(seen).reduce((a, x) => a + seen[x][0], 0);
+        ok(!bad.length && W >= 150 && seen.press[1] === 2 && seen.rich[2] >= 4 && seen.richActing[2] >= 2 && seen.dodge[2] >= 1 && seen.majesty[2] === 1 && seen.wall[2] === 2 && seen.humanMajesty[2] === 1 && seen.humanEnded[0] >= 10,
+           '166e a combat superseded at any of its ' + W + ' waits ' + JSON.stringify(seen) + ' does nothing more: no line, no tally write, no card, no blood, no wait, no round row' + (bad.length ? ' (got ' + JSON.stringify(bad.slice(0, 2)) + ', ' + bad.length + ' bad)' : '')); }
+
+      // f) a superseded combat's step wait on a human ends when the later combat's step begins: its clock stays silent and its end
+      //    leaves the live step's wait alone, so the human's No answers the live step (it cleared the live wait at its clock: the
+      //    human's answer reached nobody and the live step ran out its own clock). Through _phaseStep and _phaseNudge
+      { const u = mk166(); u.players[0].bot = false; u.table = { 1: { pub: { cards: [V6('m1', 'Massimo Falconi')] } } };
+        u._combatOppName = 'Massimo Falconi'; u._inCombat = true; u.turnSeat = 1;
+        u._combatTok = 1; u.o.phaseSecs = 0.1; let ra = 'pending', rb = 'pending'; u._phaseStep(1, 'ask', false).then(v => { ra = v; });
+        await new Promise(r => setTimeout(r, 20));
+        u._combatTok = 2; u.o.phaseSecs = 3; u._phaseStep(2, 'ask', false).then(v => { rb = v; });
+        await new Promise(r => setTimeout(r, 30)); const early = ra;   // before the superseded step's own clock: it ended when the live step began
+        await new Promise(r => setTimeout(r, 120));   // past the superseded step's own clock
+        const mid = { early, ra, rb, live: !!(u._phaseWait && u._phaseWait.step === 2 && !u._phaseWait.done), last: u._phaseLast || null };
+        u._phaseNudge('Hanna', 'No', 'chat'); await new Promise(r => setTimeout(r, 20));
+        if(u._phaseWait && !u._phaseWait.done) u._phaseWait.resolve('test');
+        // ... and the same between a step and the Damage step, both ways (_phaseDamage's wait)
+        const two = async (first, second) => { const v = mk166(); v.players[0].bot = false; v.table = u.table; v._combatOppName = 'Massimo Falconi'; v._inCombat = true; v.turnSeat = 1;
+          v._rnd = { dealt: 1 }; v._combatTok = 1; v.o.phaseSecs = 0.1; let x = 'pending', y = 'pending'; first(v).then(r => { x = r; });
+          await new Promise(r => setTimeout(r, 20)); v._combatTok = 2; v.o.phaseSecs = 3; second(v).then(r => { y = r; });
+          await new Promise(r => setTimeout(r, 30)); const early = x; await new Promise(r => setTimeout(r, 120)); const live = !!(v._phaseWait && !v._phaseWait.done);
+          v._phaseNudge('Hanna', 'No', 'chat'); await new Promise(r => setTimeout(r, 20)); if(v._phaseWait && !v._phaseWait.done) v._phaseWait.resolve('test');
+          return { early, x, live, y }; };
+        const sd = await two(v => v._phaseStep(1, 'ask', false), v => v._phaseDamage()), ds = await two(v => v._phaseDamage(), v => v._phaseStep(2, 'ask', false));
+        ok(mid.early === null && mid.ra === null && mid.rb === 'pending' && mid.live && !mid.last && rb === 'pass' && sd.early === null && sd.live && sd.y === 'pass' && ds.early === null && ds.live && ds.y === 'pass',
+           '166f a superseded combat’s step wait ends at the live step’s start: the human’s No answers the live step (got ' + JSON.stringify({ mid, rb, sd, ds }) + ')'); }
+
+      // g) a combat a Change of Target ended, superseded while it waited (v0.6.221's 600, match 528, on this round's first cut): the
+      //    blocker still unlocks (the card came before it locked) and the row says why -- cot-cancelled, not combat-superseded (the cut
+      //    returned at the token first: The Dowager stayed locked). Through the real _resolveCombat and _resolveCombatRound
+      { const u = mk166(); const D = V6('d1', 'The Dowager (G6)', { locked: true }); u.board = [D]; u.turnSeat = 1;
+        u.table = { 1: { pub: { cards: [V6('m1', 'Massimo Falconi')] } } }; u._holdGate = async () => {}; u._pace = async () => {};
+        u._waitOn = key => key !== '_maneuverWaiter' ? Promise.resolve(null)
+          : new Promise(r => setTimeout(() => { u._cotCancel = { vamp: 'Massimo Falconi', at: Date.now() }; u._combatTok++; r(null); }, 10));   // the card's line, then my other vampire's block
+        await u._resolveCombat(D, 'Massimo Falconi');
+        const rows = u.events.map(e => e.t.replace('bot:', '')).filter(t => /^(cot-cancelled|combat-superseded|combat-round)$/.test(t));
+        ok(D.locked === false && JSON.stringify(rows) === '["cot-cancelled"]' && !u._cotCancel,
+           '166g a combat a Change of Target ended, superseded while it waited: the blocker unlocks, one cot-cancelled row (got ' + JSON.stringify({ locked: D.locked, rows }) + ')'); }
+
+      // h) the egress review: a stealth raise inside the locked-blocker route's beat (a human's counter) -- the blocker is not named for
+      //    the second looks until the route has played, so one intercept card answers one need (naming it at Block! let the second
+      //    look play Eyes of the Wild inside the wake's beat, and the route then played its own pick from a stale hand index: two cards)
+      { const u = mk166('U', { paceMs: 400, askSecs: 3 }); u.players[0].bot = false; let S = { mode: 'block', a: 0, b: 0 }; const plays = [];
+        const relay = (m, who) => { const f = Object.assign({}, m); delete f.t; S = (f.mode === S.mode) ? Object.assign({}, S, f) : Object.assign({}, f); setTimeout(() => u._dispatch(Object.assign({ t: 'tally' }, S, { who })), 30); };
+        u.send = m => { if(m.t === 'tally') relay(m, 'U'); else if(m.t === 'log' && / plays /.test(m.html || '')) plays.push(String(m.html).replace(/<[^>]+>/g, '')); };
+        u._reactWindow = () => {}; u.say = () => { u._lastActAt = Date.now(); };   // Block! is a visible act: the route's beat counts from it
+        const me = V6('a1', 'Asmin Kobane', { locked: true, blood: 4, cap: 5 }); u.board = [me]; u.hand = ['Eyes of the Wild', 'Ensnare a Beast', 'On the Qui Vive'];
+        u.table = { 1: { pub: { cards: [V6('g1', 'Glissando (G6)')] } } }; u.turnSeat = 1; u._obs = { who: 'Hanna', vamp: 'Glissando (G6)', at: Date.now() - 2000 }; u.tally = Object.assign({}, S);
+        const p = u.pending = { who: 'Hanna', amount: 2, kind: 'bleed', actingVampName: 'Glissando (G6)', actorSeat: 1, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        const pc = u._commitBlock(p, { why: 'test', parts: {} }); setTimeout(() => relay({ t: 'tally', mode: 'block', a: 1 }, 'Hanna'), 40);   // Hanna's stealth 1, inside the wake's beat
+        await pc; await new Promise(r => setTimeout(r, 2000)); if(u._vWait && u._vWait.timer) clearTimeout(u._vWait.timer);
+        const ic = plays.filter(t => /intercept/.test(t));
+        ok(ic.length === 1 && u.hand.includes('Ensnare a Beast') && S.b === 1 && p.reacted.size === 1,
+           '166h a stealth raise inside the locked-blocker route’s beat: one intercept card for one need (got ' + JSON.stringify({ plays, hand: u.hand, counter: S, reacted: [...p.reacted] }) + ')'); }
+
+      // i) the egress review: a superseded combat's waiter that was already registered when the later combat began ends with it -- the
+      //    Deep Song-rushed Dowager's strike wait took Catalina's strike from Lenny's peek (Lenny took the default 1, not 3)
+      { const u = mk166(); u.table = { 1: { pub: { cards: [V6('m1', 'Massimo Falconi'), V6('c1', 'Catalina Vega')] } } };
+        const A = V6('a1', 'The Dowager (G6)', { locked: true }), B = V6('b1', 'Lenny Burkhead (G6)', { locked: true, blood: 4, cap: 6 }); u.board = [A, B]; u.turnSeat = 1;
+        u._combatActing = A.name; const L = t => u._onLog('Hanna', t), w = ms => new Promise(r => setTimeout(r, ms));
+        const p1 = u._resolveCombat(A, 'Massimo Falconi'); await w(20);
+        L('Trainbot combat — Massimo Falconi does not maneuver.'); await w(20); L('Trainbot combat — Massimo Falconi has nothing before strikes.'); await w(40);
+        const p2 = u._resolveCombat(B, 'Catalina Vega'); await w(20);
+        L('Trainbot combat — Catalina Vega does not maneuver.'); await w(20); L('Trainbot combat — Catalina Vega has nothing before strikes.'); await w(40);
+        L('<b>Catalina Vega</b> strikes with <b>Torn Signpost</b> for 3.');
+        await Promise.race([Promise.all([p1, p2]), w(8000)]);
+        const row = u.events.filter(e => e.t === 'bot:combat-round' && e.d.vamp === B.name).map(e => ({ seen: e.d.strikeSeen, taken: e.d.taken }))[0] || null;
+        ok(row && row.seen === true && row.taken === 3 && B.blood === 1 && u.events.filter(e => e.t === 'bot:combat-superseded' && e.d.vamp === A.name).length === 1,
+           '166i a superseded combat’s waiting strike wait ends when the later combat begins: Catalina’s strike for 3 reaches Lenny (got ' + JSON.stringify({ row, blood: B.blood }) + ')'); }
+
+      // j) the third review: a human's undirected action, blocked with an intercept card (stealth 1 > intercept 0), the counter echoed to
+      //    its sender as the server and the hotseat bridge do -- one card and the verdict wait armed (the second cut's beat branch took
+      //    the echo of the bot's own default-stealth write for a raise, sent the attempt line alone and returned before the wait)
+      { const u = mk166('U', { paceMs: 200, askSecs: 3 }); u.players[0].bot = false; let S = { mode: 'block', a: 0, b: 0 }; const plays = [];
+        const relay = (m, who) => { const f = Object.assign({}, m); delete f.t; S = (f.mode === S.mode) ? Object.assign({}, S, f) : Object.assign({}, f); setTimeout(() => u._dispatch(Object.assign({ t: 'tally' }, S, { who })), 30); };
+        u.send = m => { if(m.t === 'tally') relay(m, 'U'); else if(m.t === 'log' && / plays /.test(m.html || '')) plays.push(String(m.html).replace(/<[^>]+>/g, '')); };
+        u._reactWindow = () => {}; u.say = () => { u._lastActAt = Date.now(); };
+        u.board = [V6('a1', 'Crow (G5)', { blood: 4, cap: 5 })]; u.hand = ['Eyes of the Wild', 'Ensnare a Beast'];
+        u.table = { 1: { pub: { cards: [V6('g1', 'Glissando (G6)')] } } }; u.turnSeat = 1; u._obs = { who: 'Hanna', vamp: 'Glissando (G6)', at: Date.now() - 2000 }; u.tally = Object.assign({}, S);
+        const p = u.pending = { who: 'Hanna', amount: 0, kind: 'undirected', actingVampName: 'Glissando (G6)', actorSeat: 1, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        await u._commitBlock(p, { why: 'test', parts: {} }); const armed = !!(u._vWait && u._vWait.p === p); await new Promise(r => setTimeout(r, 1000));
+        if(u._vWait) u._vwEnd(null); u.pending = null;
+        const ic = plays.filter(t => /intercept/.test(t));
+        ok(ic.length === 1 && armed && S.b === 1 && u.hand.includes('Ensnare a Beast'),
+           '166j a human’s undirected action blocked with an intercept card, the counter echoed: one card and the verdict wait (got ' + JSON.stringify({ plays, armed, counter: S, hand: u.hand }) + ')'); }
     }
 
 

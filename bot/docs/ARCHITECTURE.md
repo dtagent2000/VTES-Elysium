@@ -24,7 +24,7 @@ board       push() → buildPub at drain time (the cards; a card's named counter
 pacing      _pace(kind) / _afterBeat ; the tempo (_waitPlan) ; the hold (_holdFreeze / _holdThaw) ; status() / step() for the
             Bot button
 trace       emit(kind, data) → the arena's / sim's match-NNNN.jsonl (manifest, snapshot, decide, play, plan, through, blocked,
-            block-made, combat-round, wait, game-over, combat-superseded, …; 106 kinds)
+            block-made, combat-round, wait, game-over, combat-superseded, fizzled, game-resumed, …; 108 kinds)
 ```
 The three rules that keep the layers apart: tactics READ the plan and never recompute it; every read about an opponent goes
 through `this.opp[seat]` (public evidence only); a decision knob gates decisions only (CLAUDE.md, binding rules).
