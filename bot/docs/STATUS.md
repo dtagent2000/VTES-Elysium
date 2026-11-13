@@ -5,8 +5,8 @@ coverage tool v1.1.45 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` 
 built against the root's release, client v2.6.174 / srv-2.6.50 (canary v1.2.0 @@CAN@@);
 the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6.50 and main's canary v1.2.0 (refreshed 13 Nov).
 
-**Deploy state:** `main` carries v0.6.218 (#61), client v2.6.173 and v2.6.174 (main's #60, #62) and main's doc-budget note (#63).
-**Open PRs:** #64 (crypt wave A, v0.6.219), then @@PR@@ (its riders, v0.6.220; stacked: merge #64 first).
+**Deploy state:** `main` carries v0.6.219 (#64, merged 13 Nov), client v2.6.173 and v2.6.174 (main's #60, #62) and main's doc-budget note (#63).
+**Open PR:** @@PR@@ (crypt wave A's riders, v0.6.220).
 
 ## Last gates (v0.6.220 release bytes, 13 Nov 2026)
 @@GATES@@

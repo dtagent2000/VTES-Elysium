@@ -1,6 +1,6 @@
 # Handoff to main — bot v0.6.220 (13 Nov 2026): crypt wave A's riders
 
-Stacked on bot v0.6.219 (#64): **merge #64 first**. Everything in v0.6.219's handoff (`HANDOFF-to-main-2026-11-12-v0_6_219.md`)
+Built on bot v0.6.219 (#64, merged 13 Nov). Everything in v0.6.219's handoff (`HANDOFF-to-main-2026-11-12-v0_6_219.md`)
 still stands — the menu's Toreador and its registry test, the guide re-embed.
 
 ## 1. The bundle
