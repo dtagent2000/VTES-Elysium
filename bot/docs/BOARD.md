@@ -18,7 +18,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Toreador) and the ledger (`docs/CARDS.md`) since v0.6.212; waves by effect class as the class map ranks them (D-98). Done:
   waves 1–4 (v0.6.213–217; D-99, D-103, D-104, D-106). Next: wave 5, the 18 masters in play (`spec-v5-wave3` §4), Meditative
   Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape), with the actions at a card in
-  play (steal The Rack / Powerbase: LA, burn Mob Connections) and The Coven's control passing. Then the maneuver / press grants
+  play (steal The Rack / Powerbase: LA, burn Mob Connections), The Coven's control passing, and Día de los Muertos (its referendum
+  skips polling, the [obl] / [dom] vote discard with it: PIB 20150105, D-111). Then the maneuver / press grants
   with the rush cards, the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
   done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY`
   line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares
@@ -44,18 +45,14 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-42, D-104.
-- **Crypt wave A's riders** (CHANGELOG v0.6.219; RULINGS D-111): Yewon's and Alexa's vote discard in a referendum that passes
-  automatically (PIB 20150105; from torpor it only cycles a card: parked for the meta layer); `peekSup` set after the block
-  decision; `_myBleedEach`'s +1 bleed; the home planners' crypt intercept; Azucena's age from the capacity in play (the
-  Oblivion card); Phaibun's discard drawn at random; the event log's discard name (it carries the line's tail); The Dowager's
-  asked window at the next human table. *Done when* each is fixed with its footprint, verified, or ruled out.
 - **The weapon's maneuver** (wave 2's second review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
   a number — the .44 Magnum has never maneuvered, so the strike-binding rules' gun halves never run. Neighbours: a weapon's strike
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait
   returns an earlier round's pending line; `_xLossSum` sums nothing. *Done when* each is fixed with a positive test and its footprint
   read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's helpsheets and Fifth
-  Edition deck guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy (D-43, O-33). *Done
+  Edition deck guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy (D-43, O-33).
+  Already decided (D-112): every strategy line written is checked against its deck's guide, Toreador's first. *Done
   when* a proposal — what each guide says, where it enters (`DECK_STRATEGY`, the plan, the persona), how it is measured — has
   Johan's "kör". Docs: RULINGS D-43, O-33; `specs/spec-knowledge-layer.md`.
 
@@ -93,8 +90,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Main: such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. *Done when* a section shows it read.
 - **Hand names out of the console outside debug** (main, 11 Nov: the security plan's item 6): an online host can read a bot's
   console, which names hand cards. *Done when* only debug names them, section-tested.
-- **The copies and main's canary v1.2.0** (main, 3, 11 Nov; `bot/` holds v1.0.0, v2.6.162, srv-2.6.46). *Done when* a copies
-  commit brings the root's release and v1.2.0 in, both canaries green, Q4 (gate on the root's release) answered.
+- **The gates on the root's release** (Q4: main's yes of 3 Nov; the copies were refreshed in v0.6.220): the canary, the suite's
+  server and 154f, the arena, the sim and the hotseat gate read the root's client and server and `client/`'s protocol, the copies
+  go, STATUS pins the main commit. *Done when* every gate reads the root and CI is green on it.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.
 - **Steal pair under a combat ends**: the stealer's side does not apply v0.6.196's rule when the victim's Majesty ends the combat.
   *Done when* `ana-ledger.py` prints equal pairs on a smoke with that case. Docs: RULINGS O-12.
@@ -137,6 +135,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The §8 law for the meta layer** (their item 3): a term equal for every option cannot change the choice; `_tableThreat()` is only
   traced today and must enter where options name different seats (the bounce target, the rush target, the voter and the terms,
   keep-a-blocker / block-or-pass), from ONE shared seat valuation. *Done when* the meta layer's first consumer reads it there.
+- **Yewon's and Alexa's torpor use** (D-111): no vote from torpor, but a card cycled. *Done when* the meta layer prices a card
+  against a random draw.
 - **Meta metrics at decision level, on padded decks** (their item 4): flip rate, a fork audit (does the option list hold opposite
   choices?), the vote-direction split, wrong-target audits, did-it-run counters, on a table padded with the cards a rule needs;
   an audit needs a known case before an alarming number is believed. *Done when* the meta layer's first bench reports them.
@@ -162,7 +162,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   pool change was my own payment.
 - **The 14 Oct playtest scenario** (`client/playtest/`, `--dir` on a scratch copy of the root with the bot branch) not re-run since
   v0.6.207; **the larger re-measure** against a v0.6.207 baseline (every arena number before v0.6.206 carries ~3 s of dead clock
-  per bleed total). *Done when* both reports exist with the sim as the first read.
+  per bleed total); at that table also The Dowager's +1 in a human's directed action (D-111). *Done when* both reports exist with
+  the sim as the first read.
 - **Forecast calibration** (`gen-forecast-calibration.js`) not re-run since 18 Sep; the seed of the abstract model's calibration
   gate. *Done when* it runs on a sim series and the ratio is reported.
 - **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) unconsumed; v0.6.207's R-38 (negative stealth /
