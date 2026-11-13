@@ -12886,6 +12886,33 @@ async function connectWithRetry(client, tries = 30){
            '167e a fizzled rush counts as a successful action for the act-again hook; a referendum\u2019s voided part does not (got ' + JSON.stringify({ f, la, after: w._lastAct }) + ')'); }
     }
 
+    /* 168) v0.6.224 -- ROUND B step 1, D-114 spec §6 (a rules correction, no knob): the undirected classes’ block path read every
+       window as +1 stealth, so a bare body never blocked a RUSH or a CARD BURN -- both are directed (0 stealth, R-12). LAST LINE OF 168 is
+       the closing brace below. */
+    {
+      console.log('\n[168] v0.6.224 -- round B step 1: the directed windows reach a bare body');
+      const mk168 = (name, extra, seat) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', deckName: 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+        u.seat = seat || 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: seat === 3 ? 'U2' : u.o.name, online: true, bot: true }, { seat: 3, name: seat === 3 ? u.o.name : 'Nils', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
+      // the guard: a rush and a card burn are DIRECTED (0 stealth, R-12) -- a bare body is in reach (an unlocked vampire of mine); with
+      //    no body, at stealth 1, for the novice, for an undirected class, and for 'chump' (experienced) with no chump body against a
+      //    combat threat, the guard stays
+      { const body = () => [{ id: 'b1', name: 'Catalina Vega', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 8, attached: [] }];
+        const u = mk168(), n = mk168('N', { persona: 'novice' }), e = mk168('E', { persona: 'experienced' }), z = mk168('Z');
+        u.board = body(); n.board = body(); e.board = body(); z.board = [];
+        const base = { reserve: null, bounceN: 0, isBleed: false, edge: false, amount: 0, hasBounce: false, blockAllowed: true, role: 'predator', actorSeat: 3, actorUnlocked: 0, famedTarget: false, icp: 0 };
+        const d = (b, o) => b.decide('block-as-target', Object.assign({}, base, o));
+        const rush = d(u, { T: 'T5', sub: 'rush', stealthA: 0 }), burn = d(u, { T: 'T6', sub: 'burnCard', stealthA: 0 }), st1 = d(u, { T: 'T5', sub: 'rush', stealthA: 1 });
+        const nov = d(n, { T: 'T6', sub: 'burnCard', stealthA: 0 }), und = d(u, { T: 'T2', sub: 'equip', stealthA: 1 }), none = d(z, { T: 'T5', sub: 'rush', stealthA: 0 });
+        e.oppCombat = () => 0.6;   // the actor is a combat threat (the table model's read, pinned for the test)
+        const exp = d(e, { T: 'T5', sub: 'rush', stealthA: 0 }); e.board.push({ id: 'b2', name: 'Adri, The Seeker (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 1, cap: 2, attached: [] });   // capacity 2: a chump
+        const expC = d(e, { T: 'T5', sub: 'rush', stealthA: 0 });
+        ok(rush.score > 0 && burn.score > 0 && !/no usable intercept|declines/.test(rush.why + burn.why) && /against stealth 1/.test(st1.why) && /no usable intercept/.test(nov.why + und.why)
+           && /no unlocked body for a bare block/.test(none.why) && /bareBlock=chump declines \(no chump body, oppCombat 0.6\)/.test(exp.why) && expC.score > 0,
+           '168 the directed rush and card-burn windows reach a bare body at 0 stealth; no body, stealth 1, the novice, an undirected class and chump without a chump body keep the guard (got ' + JSON.stringify({ rush: rush.why, burn: burn.why, st1: st1.why, nov: nov.why, und: und.why, none: none.why, exp: exp.why, expC: expC.why }) + ')'); }
+    }
+
 
 
     }

@@ -6028,7 +6028,16 @@ class Bot {
           if(ctx.blockAllowed === false) return { block: false, bounce: false, score: 0, why: 'blocks finally declined this action \u2014 pass' };
           /* v0.6.113 (THE HELPER GATE): the `if(!this.caps.tally) ... 'classic table (no resolver) -- sandbox default: let it through'` return that sat here is GONE. Whether the bot blocks is game logic; it never depends on which helpers the humans have switched on. The gate silently disarmed the whole defence module until a human happened to open a counter (the arena hit it 16 July and seeded a tally instead of fixing it; every helpers-on online table hit it from client v2.6.111 on, and every hotseat table always had). */
           if(P.insight <= 0.2 && ctx.T !== 'T2') return { block: false, bounce: false, score: 0, why: 'novice depth: only pool damage and permanent intercept are weighed \u2014 ' + ctx.T + ' let through' };
-          if(ctx.icp <= 0) return { block: false, bounce: false, score: 0, why: 'no usable intercept (undirected actions carry +1 stealth; a bare body cannot reach it)' };
+          const directedT = ctx.sub === 'rush' || ctx.sub === 'burnCard';   // v0.6.224 (round B, D-114 spec §6): the two DIRECTED windows of this path (_rushWindowOpens, _burnWindowOpens) -- 0 stealth (R-12), so a bare body reaches it (0 >= 0); read from sub, so a decision's ctx row is unchanged
+          if(ctx.icp <= 0){
+            if(!(directedT && (ctx.stealthA | 0) <= 0)) return { block: false, bounce: false, score: 0, why: directedT ? 'no usable intercept against stealth ' + (ctx.stealthA | 0) : 'no usable intercept (undirected actions carry +1 stealth; a bare body cannot reach it)' };
+            /* a directed window at stealth 0: the bleed path's bare-block tests (a body, unlocked or behind a wake; the persona's bareBlock -- off declines, chump
+               only with a chump body unless the actor is no combat threat), then the class weighs it as any block (no pool at stake: no desperation) */
+            let bodies = this._bareBlockers(this.pending); if(!bodies.length) bodies = this._wakeBlockers(this.pending);
+            if(!bodies.length) return { block: false, bounce: false, score: 0, why: 'no usable intercept and no unlocked body for a bare block (a directed action at stealth 0)' };
+            const knob = P.bareBlock || 'chump', oc = ctx.actorSeat ? this.oppCombat(ctx.actorSeat | 0) : 0.5, chump = c => (this.fxCryptCap(c.name) | 0) <= 2 && (c.blood | 0) >= 1;
+            if(knob === 'off' || (knob === 'chump' && oc >= 0.3 && !bodies.some(chump))) return { block: false, bounce: false, score: 0, why: 'bare block possible (a directed action at stealth 0) but bareBlock=' + knob + ' declines' + (knob === 'chump' ? ' (no chump body, oppCombat ' + oc + ')' : '') };
+          }
           const odds = ctx.stealthA > 0 ? Math.min(1.3, ctx.icp / ctx.stealthA) : 1.3;
           const posture = this._posture(), axis = this._deckAxis();
           const W = { T2: (axis >= 1.15 ? 1.4 : 1.2), T3: (posture === 'disabling' ? 1.3 : posture === 'resisting' ? 0.6 : 1.0), T4: (ctx.role === 'predator' ? 0.9 : 0.4), T4b: Math.min(1.1, 0.4 + 0.15 * Math.max(0, (ctx.actorUnlocked | 0) + 1 - 2)), T5: ((posture === 'resisting') ? 0.2 : 0.7) + (ctx.famedTarget ? 0.3 : 0), T6: (axis >= 1.3 ? 0.6 : 0.3) };
