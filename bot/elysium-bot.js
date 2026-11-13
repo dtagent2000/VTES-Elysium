@@ -6847,6 +6847,7 @@ class Bot {
       return;
     }
     this.say('Block!');              // v0.6.103 (#4): a blocker exists, or a route to one does -- never a phantom Block!
+    p.blockerVamp = blocker || (plan && plan.vamp) || null;   // v0.6.222 (the second review): named as Block! is said -- a success verdict that lands inside the route's beat (the wake, the unlock card) finds its blocker: the Terrifying Visage burn and the combat hand-off
     if(!blocker){
       if(plan.kind === 'unlockReact'){ await this._playUnlockReact(plan.vamp, plan.un); blocker = plan.vamp; }
       else if(plan.kind === 'wake'){
@@ -6863,7 +6864,7 @@ class Bot {
       else if(plan.kind === 'stray'){ if(this._strayUnlockBurn(plan.vamp)) blocker = plan.vamp; }
       if(!blocker){                  // belt: the route failed at play time (a shift under the await) -- withdraw honestly rather than attempt with nobody
         this.o.log('block: the locked-blocker route failed at play time \u2014 declining');
-        p.contested = false; p.declined = true; this.say('Pass');
+        p.contested = false; p.declined = true; p.blockerVamp = null; this.say('Pass');
         return;
       }
     }

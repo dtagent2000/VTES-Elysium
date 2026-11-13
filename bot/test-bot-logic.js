@@ -12620,6 +12620,17 @@ async function connectWithRetry(client, tries = 30){
         const gb = { played, passes: b.sent.filter(m => m.t === 'pass').length, resumed: b.events.filter(e => e.t === 'bot:game-resumed').map(e => e.d.back) };
         ok(JSON.stringify(ga.passes) === '[1,2]' && JSON.stringify(ga.resumed) === '[true]' && gb.played === 2 && gb.passes === 0 && JSON.stringify(gb.resumed) === '[false]',
            '166c the held turn comes back: after my own game-over pass, one more pass when Hanna is unousted; a turn I never played is played (got ' + JSON.stringify({ ga, gb }) + ')'); }
+
+      // d) a success verdict that lands inside the wake's beat (the second review): my only body is locked, On the Qui Vive wakes it,
+      //    and the actor's verdict arrives before the wake card is down -- the blocker named at Block! pays Terrifying Visage and fights
+      { const run = () => { const u = mk166(); u.pool = 20; const crow = V6('e1', 'Crow (G5)', { locked: true }); u.board = [crow]; u.hand = ['On the Qui Vive'];
+          const gl = V6('eg1', 'Glissando (G6)', { attached: ['ev1'] }); u.table = { 1: { pub: { cards: [gl, { id: 'ev1', name: 'Terrifying Visage', kind: 'lib', zone: 'ready', host: 'eg1', faceDown: false }] } } };
+          u.pending = { who: 'Hanna', amount: 2, kind: 'bleed', actingVampName: 'Glissando (G6)', actorSeat: 1, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+          let combats = 0, fired = false; u._resolveCombat = async v => { combats++; u._cv = v && v.name; }; u._oust = () => { u.out = true; };
+          u._pace = async () => { if(!fired){ fired = true; u._verdictAsTarget(true); } };   // the verdict, inside the wake's beat
+          return { u, get combats(){ return combats; } }; };
+        const r = run(); await r.u._commitBlock(r.u.pending, { why: 'test', parts: {} });
+        ok(r.u.pool === 19 && r.combats === 1 && r.u._cv === 'Crow (G5)', '166d a success verdict inside the wake’s beat: Crow, named at Block!, pays Terrifying Visage and fights (got ' + JSON.stringify({ pool: r.u.pool, combats: r.combats, vamp: r.u._cv || null }) + ')'); }
     }
 
 
