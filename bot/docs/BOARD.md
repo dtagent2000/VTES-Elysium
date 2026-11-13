@@ -159,8 +159,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Only a bleed and a pool damage fizzle at an ousted seat** (v0.6.222, `_fizzleIfOusted`): the other actions aimed at a
   seat or its minions (a rush, a referendum whose terms name it) are not checked; none was seen to resolve after an oust. *Done when* a
   series counts them, or each resolve checks its target. Docs: CHANGELOG v0.6.222.
-- **A human's stealth typed in chat inside a locked blocker's route beat is lost** (pre-existing; the third review of v0.6.222): the
-  chat path needs `blockerVamp`, named only after the route. *Done when* it is booked in the beat, section-tested.
+- **A human's chat stealth inside a locked blocker's route beat is lost** (pre-existing; v0.6.222's third review): the chat path
+  needs `blockerVamp`. *Done when* booked in the beat, section-tested.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.

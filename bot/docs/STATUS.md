@@ -9,9 +9,8 @@ the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6
 
 ## Last gates (v0.6.222 release bytes `e595f4a5`, 13 Nov 2026)
 Suite **2445/0 ×3** · lint 0 · canary **143/0** ×2 · hotseat **11/0** · HB1 **11/11** · test-cardfx **321/0** · main's
-`check-versions.js` agrees · main's client suite 361/2 (by design: the handoffs) · arena smoke PASS 7/7 ×2 (real clock) · sim, the
-release candidate against step O: IDENTICAL on the 240 design, the V5 smoke (168) and the Toreador 600; the egress fix pass: 2
-matches changed (a late Block!'s wake card no longer spent), the last fix IDENTICAL 240 · `ana-gates.py` PASS everywhere.
+`check-versions.js` agrees · main's client suite 361/2 (by design: the handoffs) · arena smoke PASS 7/7 ×2 · sim against step O:
+the 240, the V5 smoke and the 600 IDENTICAL but 2 matches (a late Block!'s wake card no longer spent) · `ana-gates.py` PASS.
 
 ## What v0.6.222 did
 The two bugs v0.6.221's runs found — a rushed bot that never fought a rush resolved on the actor's word, a bleed that landed at a
