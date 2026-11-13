@@ -32,6 +32,12 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.223 (in progress, 13 Nov 2026)** — Round A (Johan's "Yes kör", 13 Nov 21:45): the table runs with Toreador's guide check (D-112)
+  and v0.6.222's two riders. *Predictions registered before the footprint*: (R1) the riders' footprint on the 240 design, the V5 smoke
+  and the Toreador 600 is IDENTICAL to v0.6.222 (version strings normalized): `ana-rare.py` finds no rush, card burn, peek or
+  referendum part at an ousted seat in v0.6.222's 1,008 sim matches, and the chat path needs a human; (R2) `ana-gates.py` PASS on
+  every series; (R3) section 167 green ×3 and red on v0.6.222 (measured on the branch: 3/0 against 0/3). The table runs' own
+  predictions are in `docs/reports/REPORT-table-runs-2026-11-13.md`.
 - **v0.6.222 (13 Nov 2026)** — The Jack round's follow-ups (Johan, 13 Nov 14:50: "Vad gäller buggarna och granskning kan vi gärna ta
   dem nu"; #66 merged): the two bugs v0.6.221's runs found, the second fresh review of #66's fix pass (4 findings, all fixed here),
   a browser check of D-113's tokens, and RULINGS D-114 (Johan's principle for burning a Smiling Jack; Claude's proposal waits for
