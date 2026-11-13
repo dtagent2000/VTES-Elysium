@@ -32,6 +32,14 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.222 (in progress, 13 Nov 2026)** — The Jack round's follow-ups (Johan, 13 Nov 14:50: "Vad gäller buggarna och granskning kan
+  vi gärna ta dem nu"; #66 merged). *Predictions, registered before the runs (D-93), each step against the one before on the 240-match
+  design, the V5 smoke and the Toreador 600 (v0.6.221's `0c3bd7dc` first, the same version string, compared raw):* (R) the unanswered
+  rush: a rush at a bot's vampire that resolves on the actor's word, without that bot's Pass, now starts that vampire's combat — only
+  matches with such a rush change (the 600's 197 and 542 among them), each first at that bot's combat decision in it; the stray combat
+  rows (`stray.py`) fall to 0 on every series. (O) the action at an ousted seat: "through after the game ended" falls to 0 on every
+  series (the 240's 1, the 600's 3); only those 4 matches change, each SAME-PLAY (the game ended at that oust: no decision follows).
+  All series `ana-gates.py` PASS. Falsified if any part fails.
 - **v0.6.221 (13 Nov 2026)** — The Jack round (RULINGS D-113; Johan, 13 Nov 08:38: "alla dina förslag ovan om Jack och Grand Ball
   låter jättebra"; 09:22: the failed blocker, the ledger and "allt du var osäker på" in the same round), built on #65 (merged the same
   day). One footprint per step.
