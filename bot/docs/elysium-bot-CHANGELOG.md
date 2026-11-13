@@ -55,16 +55,18 @@
   - *The ledger's held master* (BOARD, 6 Nov): `gen-card-ledger.js` v1.1.2 and `ana-cards.py` count a `master-play` pick only when
     the master was played — its own row, or gone from the hand by the bot's next decide row (Villein's own decide comes first);
     self-test 60/60. No bot change.
-  - *Tests*: section 165, 9 checks, each through its path: 165a–b the riders' two planner sites with no test (`_strategize`,
+  - *Tests*: section 165, 13 checks, each through its path: 165a–b the riders' two planner sites with no test (`_strategize`,
     `_actAgainCtx`, The Dowager against Ashley); 165c the survivor through `_playTurn`; 165d a failed attempt, then another seat's
     successful block (`_verdictAsTarget`); 165e `_cotHit` after a later combat rewrote the shared name; 165f two combats, the first
     superseded; 165g Jack from the owner's `buildPub` through the victim's `_onBoard` to its unlock; 165h the Ball through the master
     phase (`_playTurn`) to the pub; 165i the wire through the real server (`bot/`'s srv-2.6.50: a human seat's `board` and the
-    ledger's row). Destructive, the section on each step's bytes: v0.6.220 2/7 (165a–b test v0.6.220's riders), the survivor 3/6, the
-    failed blocker 6/3, Jack's counters 7/2, the tokens 9/0. Two checks changed after the first chain: 80e, a source-shape tripwire
-    (L-24), admits the game-over break between the pace beat and the per-actor re-decide (the first full suite run on the release
-    bytes failed it, 2430/1; the re-decide before the beat, or any other line between, still fails); 165f asserts its rounds (the
-    lint: `calls` was counted, never read).
+    ledger's row); the egress review's 165j a turn after the game ended (`_playTurn`), 165k Terrifying Visage at another seat's block
+    and at mine, 165l a cancelled attempt (the line through `_onLog`), 165m a combat superseded in its press step (through
+    `_verdictAsTarget`'s two verdicts). Destructive, the section on each step's bytes: v0.6.219 0/13, v0.6.220 2/11 (165a–b test
+    v0.6.220's riders), the survivor 3/10, the failed blocker 6/7, Jack's counters 7/6, the tokens 9/4, the release bytes `20faf902`
+    9/4, the fix pass 13/0. Two checks changed after the first chain: 80e, a source-shape tripwire (L-24), admits the game-over break
+    between the pace beat and the per-actor re-decide (the first full suite run on the release bytes failed it, 2430/1; the re-decide
+    before the beat, or any other line between, still fails); 165f asserts its rounds (the lint: `calls` was counted, never read).
   - *Footprints, step by step on the 240-match design* (each against the one before; v0.6.220's `a8a963b1` first): the survivor
     DIVERGED 157, SAME-PLAY 39, IDENTICAL 44 — every result kept (winner, VP, oust order), each diverged match first different after
     its last oust; the failed blocker DIVERGED 4 (each first at the stray combat's strike), IDENTICAL 236; Jack's counters DIVERGED
@@ -114,6 +116,20 @@
     and the survivor closed; the table's memory moved on; three found: no bot burns a Jack, the action in flight at the last oust, the
     rushed bot that meant to block); LESSONS L-88; ARCHITECTURE (the board push; the trace's 106 kinds, which said 84); STATUS;
     CARDS.md; the guide; the handoff `bot/docs/handoffs/HANDOFF-to-main-2026-11-13-v0_6_221.md`.
+  - *The egress review* (a fresh read-only agent, HARNESS): 7 findings (half-done 4, stale-doc 2, unproven 1), all fixed in the round
+    (D-92). Half-done: Terrifying Visage's pool was paid by every bot holding the pending when another seat's block succeeded — a
+    v0.6.217 bug the failed blocker's fix widened to a bot whose own attempt had failed (the V5 smoke's pathcathari match 12: Tremere,
+    which never blocked, burned 1 pool) — now only my own block pays; a cancelled attempt (Elder Impersonation's line) kept its
+    blocker, so the stray combat could still start from it — it forgets it, as the failed one does; a turn after the game ended: the
+    server's `pass` hands a lone live seat its own turn back, and the first cut played the unlock again every pace beat (the Edge's
+    +1, income, its own Jack's tick) and passed again — `_playTurn` now does nothing when the game is over (the handoff asks main
+    whether `pass` should stop there, as `turnOnFromOusted` does); a superseded combat checked its token only after each round, so
+    superseded in its press step it could still spend a press, write the live tally and a round row under the live combat's names, and
+    its `.then` wiped the live combat's Guard Dogs grant — it now stops at every await of the press step, at the top of a next round
+    and before its row (`sup`), writes no row once superseded, and the grant is cleared only by the combat that owns it. Stale-doc:
+    the card ledger's Uses legend still said a held master counts (CARDS.md rebuilt); `ana-gates.py`'s known leads pointed at STATUS's
+    deleted item (now the BOARD line; labels only, no version). Unproven: 165a–b's red run is on v0.6.219, which the first ladder
+    lacked (0/13 now).
   - *The egress review's fix pass — prediction, registered before its runs (D-93):* (F) against the release bytes `20faf902` (the same
     version string, compared raw): IDENTICAL on the 240 design and on the Toreador 600, and on every V5 series but pathcathari
     (Terrifying Visage's one deck), where only matches in which a bot that did not block paid a Visage's pool change; `ana-gates.py`

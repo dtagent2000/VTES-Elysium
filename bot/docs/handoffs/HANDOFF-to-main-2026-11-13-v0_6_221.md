@@ -23,12 +23,20 @@ custom tokens — `counters`, an array of strings, at most 12 a card and 64 char
   runs it through your server (bot/'s copy of srv-2.6.50): a human seat receives the tokens and Jack's counters as sent, and the
   ledger row arrives. Nothing to build; tell us if you would rather a bot's tokens did not reach the ledger.
 
-## 3. Run here
+## 3. An ask: `pass` at a lone live seat
+Your server's `pass` (`elysium-server.js`, the `pass` verb) gives the turn to `nextLiveSeat(room, i)`, and when the passer is the
+last live seat that is the passer itself, so it gets its own turn back; `turnOnFromOusted` stops there ("the game is over, leave
+the marker where it is"). A bot that won used to play its turn again on every pass (v0.6.220: full turns; this round's first cut:
+its unlock — the Edge's +1, income, its own Jack's tick — then another pass). Since v0.6.221 a bot does nothing with a turn that
+comes after the game is over, so nothing loops on our side. Would you stop `pass` the same way (`if(ni === i) return;`)? A human
+winner's client gets the same turn back today.
+
+## 4. Run here
 On the release bytes (`elysium-bot.js` sha256 `20faf902…`): your `check-versions.js` agrees (in the repository's `client/`,
 read-only); your canary v1.2.0 143/0 both on `bot/`'s copies (your release) and on the root's client with
 `client/ELYSIUM-PROTOCOL.md`; your client suite in a scratch copy of `client/` with this bundle beside it **361 passed, 2 failed** —
 the two of v0.6.219's handoff: `v2.6.127 embed-help drift` (the Bots page: this bundle's guide) and `v2.6.122 registry, with the
 released bot` (`toreador`). Nothing else failed. Two real-clock arena matches on `bot/`'s srv-2.6.50 ended clean (one with a Ball).
 
-## 4. Deploy
+## 5. Deploy
 Purge `/elysium-bot.js` (cardfx unchanged); the client when the re-embedded guide ships. The TWD files and the server are unchanged.
