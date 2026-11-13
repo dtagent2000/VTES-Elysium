@@ -5293,7 +5293,7 @@ async function connectWithRetry(client, tries = 30){
       ok(u80g.board[0].blood === 0 && u80g.pool === 7, '80d blood 1 but pool at poolFloor: survival wins, the last blood is drained');
       /* 80e) the A1 riders, by source: the per-actor re-decide sits AFTER the pace beat; _settleOusts watches the prey only */
       const src80 = require('fs').readFileSync(__dirname + '/elysium-bot.js', 'utf8');
-      ok(/await pace\(\);\n\s*if\(_ai > 0\) prey = this\.decide\('bleed-target', \{\}\)\.seat;/.test(src80), '80e the per-actor prey re-decide follows the pace beat');
+      ok(/await pace\(\);\n\s*(?:if\(this\._gameOver\(\)\) break;[^\n]*\n\s*)?if\(_ai > 0\) prey = this\.decide\('bleed-target', \{\}\)\.seat;/.test(src80), '80e the per-actor prey re-decide follows the pace beat (v0.6.221: only the game-over break may sit between)');
       const iS = src80.indexOf('async _settleOusts(ms){'); const bodyS = src80.slice(iS, iS + 700);
       ok(iS > 0 && /this\.preySeat\(\)/.test(bodyS) && !/\.some\(q => q && !q\.out/.test(bodyS), '80e _settleOusts is prey-only (no all-seat scan)');
     }
