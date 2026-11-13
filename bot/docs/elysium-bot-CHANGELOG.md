@@ -135,15 +135,20 @@
     (Terrifying Visage's one deck), where only matches in which a bot that did not block paid a Visage's pool change; `ana-gates.py`
     PASS on every series. The other fixes reach no sim match: no series wrote a `combat-superseded` row, the sim ends a match at its
     last oust (no turn comes after it), and Elder Impersonation is only in `sewer`. Falsified if any part fails.
-  - *Gates* (release bytes: bot `20faf902`, cardfx `0e9c5f4d`, suite `c746c6c6`): suite **2431/0 ×3** (438, 420, 420 s; the first
-    chain's run on suite `da098301` 2430/1, 80e, above); `node --check` / JSON / `bash -n` clean; lint 0 findings, suppressions `{}`
-    (the first chain's one, 165f's `calls`, fixed); root bundle = `bot/`; canary v1.2.0 **143/0** on the copies and **143/0** on the
-    root's release with `client/ELYSIUM-PROTOCOL.md`; hotseat **11/0**; HB1 **11/11**; test-cardfx **321/0**; `gen-precon.js --check`
-    18 precons, no problems; self-tests: ledger 60/60, `twda.py` 14/0, `ana-gates.py` 31/0; doc-budget PASS (BOARD 18.5 → 19 KB under
-    D-101, the Jack round's three found asks; the bootstrap 49250 / 50000); `test-doc-budget.sh` every case red, baseline green;
-    section 165 destructive (above); main's `check-versions.js` agrees (repository `client/`, read-only); main's client suite in a
-    scratch copy of `client/` with this bundle 361 passed, 2 failed — the two of v0.6.219's handoff, by design; the arena smoke
-    (above).
+  - *What came out of (F)* (the fixed bytes `0c3bd7dc` against `20faf902`, raw): the 240 design IDENTICAL 240, the Toreador 600
+    IDENTICAL 600, the V5 smoke IDENTICAL on 13 series and DIVERGED 1 of pathcathari's 12 — its match 12, where Tremere, which never
+    blocked, no longer pays for Nosferatu's block of Gostoso (Terrifying Visage); the first difference is Tremere's next decision in
+    that round, with the pool it kept, and the winner changes (Ventrue → Nosferatu); `ana-gates.py` PASS on every series: **held**.
+  - *Gates* (release bytes after the egress fixes: bot `0c3bd7dc`, cardfx `0e9c5f4d`, suite `3640c308`): suite **2435/0 ×3** (431,
+    424, 438 s); `node --check` / JSON / `bash -n` 11 files clean; lint 0 findings, suppressions `{}`; root bundle = `bot/`; canary
+    v1.2.0 **143/0** on the copies and **143/0** on the root's release with `client/ELYSIUM-PROTOCOL.md`; hotseat **11/0**; HB1
+    **11/11**; test-cardfx **321/0**; `gen-precon.js --check` 18 precons, no problems; self-tests: ledger 60/60, `twda.py` 14/0,
+    `ana-gates.py` 31/0; doc-budget PASS (BOARD 18.5 → 19 KB under D-101, the Jack round's three found asks; the bootstrap 49271 /
+    50000); `test-doc-budget.sh` every case red, baseline green; section 165 destructive (above); main's `check-versions.js` agrees
+    (repository `client/`, read-only); main's client suite in a scratch copy of `client/` with this bundle 361 passed, 2 failed — the
+    two of v0.6.219's handoff, by design; the arena smoke again on these bytes: two real-clock 5-bot matches, both ended,
+    `ana-gates.py` PASS 7 of 7 (a Smiling Jack in one). The first chain ran on `20faf902` (suite 2431/0 ×3 on `c746c6c6`, after one
+    run of 2430/1 on `da098301`: 80e; the rest as here, the arena with a Grand Ball in one).
 - **v0.6.220 (13 Nov 2026)** — Crypt wave A's riders (Johan's "kör" of 13 Nov on Claude's summary of 12 Nov; RULINGS D-111), built
   on #64 (merged the same day).
   - *Revelations' form before the decision* (the graded readings' finding): `_armPending(..., extra)` sets the given fields before

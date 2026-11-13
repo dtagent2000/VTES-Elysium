@@ -32,11 +32,12 @@ comes after the game is over, so nothing loops on our side. Would you stop `pass
 winner's client gets the same turn back today.
 
 ## 4. Run here
-On the release bytes (`elysium-bot.js` sha256 `20faf902…`): your `check-versions.js` agrees (in the repository's `client/`,
+On the release bytes (`elysium-bot.js` sha256 `0c3bd7dc…`, after our egress review's fixes): your `check-versions.js` agrees (in the repository's `client/`,
 read-only); your canary v1.2.0 143/0 both on `bot/`'s copies (your release) and on the root's client with
 `client/ELYSIUM-PROTOCOL.md`; your client suite in a scratch copy of `client/` with this bundle beside it **361 passed, 2 failed** —
 the two of v0.6.219's handoff: `v2.6.127 embed-help drift` (the Bots page: this bundle's guide) and `v2.6.122 registry, with the
-released bot` (`toreador`). Nothing else failed. Two real-clock arena matches on `bot/`'s srv-2.6.50 ended clean (one with a Ball).
+released bot` (`toreador`). Nothing else failed. Two real-clock arena matches on `bot/`'s srv-2.6.50 ended clean on these bytes (a Smiling Jack in one; the first
+chain's two, on the bytes before the fixes, had a Ball in one).
 
 ## 5. Deploy
 Purge `/elysium-bot.js` (cardfx unchanged); the client when the re-embedded guide ships. The TWD files and the server are unchanged.
