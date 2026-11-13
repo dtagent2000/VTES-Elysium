@@ -64,6 +64,11 @@
 const IS_NODE = typeof process !== 'undefined' && !!(process.versions && process.versions.node);
 const http   = IS_NODE ? require('http')   : null;
 const crypto = IS_NODE ? require('crypto') : null;
+function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's crypto, the browser's Web Crypto (the module's `crypto` is null there); the clock last
+  try { if(crypto) return crypto.randomBytes(4).readUInt32LE(0); } catch(e){}
+  try { const w = (typeof globalThis !== 'undefined') ? globalThis.crypto : null; if(w && w.getRandomValues){ const a = new Uint32Array(1); w.getRandomValues(a); return a[0]; } } catch(e){}
+  return (Date.now() * 2654435761) >>> 0;
+}
 const fs     = IS_NODE ? require('fs')     : null;
 
 const BOT_VERSION = '0.6.219';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
@@ -1399,10 +1404,18 @@ class Bot {
     if(a.h.kind !== 'crypt') return false;
     return !!(a.card ? this._titleOf(a.card, a.cards).title : a.h.e.title);
   }
-  _actorAgeVs(vamp, p, clan){        // v0.6.219 (Azucena): the acting vampire against mine when it is of `clan` (printed, cardfx) -- 'younger' / 'older' / 'same' by printed capacity (older = strictly higher, Navar's rule); null when the actor is unknown, not a vampire, of another clan, or a capacity is unknown
+  _ageCap(vamp, p, actorName){       // v0.6.220 (RULINGS D-111, Johan: age follows the capacity in play -- a card that raises capacity makes the vampire
+    // older): my vampire's _capOf (printed + attached capBonus), or the acting minion's on its pub board (_actorOf; the name alone falls back
+    // to the printed capacity); null when the data has no capacity (no age rule is invented)
+    if(vamp){ const k = this._capOf(vamp); return k > 0 ? k : null; }
+    const a = p ? this._actorOf(p) : null;
+    if(a && a.card && (!actorName || a.name === actorName)){ const k = this._capOf(a.card, a.cards); if(k > 0) return k; }
+    const k = actorName ? this.fxCryptCap(actorName) : null; return (typeof k === 'number') ? k : null;
+  }
+  _actorAgeVs(vamp, p, clan){        // v0.6.219 (Azucena): the acting vampire against mine when it is of `clan` (printed, cardfx) -- 'younger' / 'older' / 'same' by the capacity in play (v0.6.220, D-111: _ageCap; printed until then) (older = strictly higher, Navar's rule); null when the actor is unknown, not a vampire, of another clan, or a capacity is unknown
     const a = this._actorOf(p); if(!a || !a.h || a.h.kind !== 'crypt') return null;
     const cl = a.h.e.clan, arr = Array.isArray(cl) ? cl : String(cl || '').split('/'); if(!arr.includes(clan)) return null;
-    const mine = this.fxCryptCap(vamp && vamp.name), theirs = this.fxCryptCap(a.name);
+    const mine = this._ageCap(vamp), theirs = this._ageCap(null, p, a.name);   // v0.6.220 (D-111): the capacity in play (Oblivion's +1), not the printed one
     if(mine == null || theirs == null) return null;
     return theirs < mine ? 'younger' : theirs > mine ? 'older' : 'same';
   }
@@ -1415,8 +1428,8 @@ class Bot {
     if(m.when === 'directed'){ const d = this._pendDirected(pOrKind); return d === true ? (m.n | 0) : d === false ? (m.undirected | 0) : 0; }
     if(m.when === 'bleed') return kind === 'bleed' ? (m.n | 0) : 0;
     return m.when ? 0 : (m.n | 0); }
-  _cryptCannotBlock(vamp, actorName){ const fx = vamp && this._cryptFxOf(vamp.name); if(!(fx && fx.blockNotOlder)) return false;
-    const myCap = this.fxCryptCap(vamp.name), aCap = actorName ? this.fxCryptCap(actorName) : null;
+  _cryptCannotBlock(vamp, actorName, p){ const fx = vamp && this._cryptFxOf(vamp.name); if(!(fx && fx.blockNotOlder)) return false;
+    const myCap = this._ageCap(vamp), aCap = actorName ? this._ageCap(null, p, actorName) : null;   // v0.6.220 (D-111): age follows the capacity in play
     return (myCap != null && aCap != null && aCap > myCap); }                                                      // Navar McClaren: older = strictly higher CAPACITY (the age rule, v0.6.15 source-verify); unknown caps invent no restriction
   _cryptStrengthMod(vamp, oppName){ const fx = vamp && this._cryptFxOf(vamp.name); const m = fx && fx.strengthMod;   // VB: Blythe-class conditional strength (printed: "-1 strength when in combat with a Malkavian"). v0.6.219 (crypt wave A, D-108): an unconditional '+1 strength.' (Massimiliano) needs no opponent -- the planners read it outside combat too; only a vsClan condition waits for the opponent's name
     if(!m) return 0;
@@ -1434,11 +1447,18 @@ class Bot {
     const disc = cd.discardRandom | 0; if(disc > 0 && (this.hand || []).length < disc) return null;
     return { idx: -1, name: 'dodge', cost: null, addStrike: 0, limited: false, crypt: true, discard: disc, free: disc === 0 };
   }
-  _randomHandIndex(salt){            // v0.6.219 (Phaibun): 'discard a card at random' -- a card the bot does not choose. A hash (FNV-1a) of the seat, the turn, the round, the salt and the hand picks the index: no card is preferred for its value, and the same table plays the same way (the sim's determinism, D-71)
-    const hand = this.hand || []; if(!hand.length) return -1;
-    const s = [this.seat | 0, this._turnSerial | 0, this._curRound | 0, salt || '', hand.join('|')].join('#');
-    let h = 2166136261; for(let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
-    return h % hand.length;
+  _rand(){                           // v0.6.220 (RULINGS D-111: what the rules call random is random in play): one PRNG per bot (mulberry32), seeded once -- by
+    // o.rngSeed where a table pins it (the sim's hotseat table: its spec's seed and the seat, so a trace still repeats byte for byte),
+    // by the platform's entropy everywhere else (Node's crypto, the browser's Web Crypto). Never Math.random: the sim table seeds that
+    // stream for its deal, and a draw from it would move the deal (T2's zero Math.random stands).
+    if(this._rngS == null){ const k = this.o && this.o.rngSeed; this._rngS = ((typeof k === 'number' && isFinite(k)) ? k : entropy32()) >>> 0; }
+    let t = (this._rngS = (this._rngS + 0x6D2B79F5) >>> 0);
+    t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+  _randomHandIndex(){                // v0.6.219 (Phaibun): 'discard a card at random' -- a card the bot does not choose; v0.6.220: drawn from _rand (it was a
+    const hand = this.hand || []; if(!hand.length) return -1;   // hash of the seat, the turn and the hand, so the same state gave the same card -- D-111)
+    return Math.min(hand.length - 1, Math.floor(this._rand() * hand.length));
   }
   _discardPickFor(disc, force, skip){   // a hand card that REQUIRES the discipline (every mode gated on it, the Larissa rule). Policy: a dead card first, then a duplicate, then surplus >= 3; `force` takes the first one left (a vote that turns a referendum is worth a card that is replaced anyway)
     const need = ((disc || '') + '').toLowerCase(); if(!need) return null;
@@ -2301,7 +2321,7 @@ class Bot {
   oppPosture(seat){ const ax = this.oppAxes(seat).axes; if(ax.includes('combat') || ax.includes('rush-control')) return 'disabling'; if(ax.includes('wall') || ax.includes('bounce')) return 'grinding'; return 'resisting'; }
   predatorIsBleeder(){ const s = this.predSeat(); if(!s) return false; const o = this._opp(s); const bleeds = Object.values(o.minions || {}).reduce((a, m) => a + m.bleeds, 0); return bleeds >= 2 || this.oppAxes(s).axes.includes('bleed'); }
   _bareBlockers(p){                    // unlocked bodies that may block right now (no card needed at stealth 0)
-    return this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && !c.locked && !(p && p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p && p.actingVampName));
+    return this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && !c.locked && !(p && p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p && p.actingVampName, p));
   }
   _homeQuota(){                        // v0.6.118b (B2 step 2a, doctrine 2.4 -- the serie-b2s1 reading: "no unlocked body" in 27 of tremere's 46 windows): a GRINDING deck keeps bodies home BY DESIGN, not only in distress
     if(this._posture() !== 'grinding') return 0;
@@ -2780,7 +2800,7 @@ class Bot {
   interceptPotential(reacted, p){      // best single usable +intercept in hand right now (M2: the real thing plays only one per attempt, so "potential" means best immediately available, not an optimistic sum). Must agree with the once-per-action ledger the EXECUTION side enforces, or the decision commits to a block it can no longer back with a card.   // VA: p (the pending) brings kind + actingVampName so the crypt mods and the Navar filter shape the DECISION exactly like the pick/wire -- decision/pick agreement, the E1/45f principle
     if(!this.fx) return 0;
     const wakeAvail = !!this._wakeCard();
-    const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && (!c.locked || wakeAvail) && !this._cryptCannotBlock(c, p && p.actingVampName)
+    const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && (!c.locked || wakeAvail) && !this._cryptCannotBlock(c, p && p.actingVampName, p)
       && !(p && p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp));   // v0.6.103 (#4): decision == pick -- a failed attempter and a Pentexed minion count for neither (the v0.4.1/v0.4.3 drift class, third occurrence)
     let best = -Infinity;
     vamps.forEach(v => { const b = this._bestInterceptFor(v, reacted || null, p); const s2 = (b ? b.s : 0) + this._equipIntercept(v) + this._hostedIntercept(v, p) + this._cryptIntercept(v, p); if(s2 > best) best = s2; });   // v0.6.48 (uncertainty review): borne equipment (Bowl/Sport Bike) counts toward the DECISION too -- decision/pick agreement; the execution side (_setTallyB + _pickBlocker) already read it   // VA review: RAW best -- the old `best = 0` seed was an implicit floor (a lone Christine must report -1, not 0); empty candidate set still reports 0
@@ -4577,7 +4597,7 @@ class Bot {
     return null;
   }
   _wakeBlockers(p){                  // v0.6.120 (THE WAKE BLOCK): LOCKED bodies that could block right now behind a wake they can play -- the bare block's second bench
-    return this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p && p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p && p.actingVampName) && !!this._wakeCardFor(c));
+    return this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p && p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p && p.actingVampName, p) && !!this._wakeCardFor(c));
   }
   _wakeBlockersAfter(v){ return !!this._wakeCardFor(v); }                         // would this body still be a blocker after it locks? (it holds a wake it can play)
   _wakesInHand(){ let n = 0; for(const c of this.hand){ const h = this.fxLookup(c); if(!h || h.kind !== 'lib' || !(h.e.t || []).some(t => t === 'react' || t === 'mod')) continue;
@@ -5230,7 +5250,7 @@ class Bot {
     return { blocker: b.name, via, oc: +oc.toFixed(2), lam: +lam.toFixed(2), blood, eLoss: +eLoss.toFixed(2), pTorpor: +pTorpor.toFixed(2), cost: +cost.toFixed(2), out };
   }
   _wakeRouteBlocker(p){              // v0.6.197 (blockCost): the LOCKED vampire _commitBlock's route would raise when no unlocked body can block -- the same three filters and the same order (an unlock reaction on a bleed, a Second Tradition-class unlock, a wake, the Stray); finders only, no side effects
-    const eligible = c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p.actingVampName);
+    const eligible = c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p.actingVampName, p);
     const L = (this.board || []).filter(eligible); if(!L.length) return null;
     if(p.kind === 'bleed'){ const u = L.find(c => this._bestUnlockReactFor(c, 'bleedAtMe')); if(u) return u; }
     { const u = L.find(c => this._bestUnlockReactFor(c, 'lockedBlock')); if(u) return u; }
@@ -6728,7 +6748,7 @@ class Bot {
     this.board.forEach(c => {
       if(c.zone !== 'ready' || c.kind !== 'crypt' || c.locked) return;
       if(this._pentexVamp && c.name === this._pentexVamp) return;   // M2: this minion cannot block (Pentex)
-      if(this._cryptCannotBlock(c, p && p.actingVampName)) return;  // VA: Navar-class -- cannot block an older (higher-cap) actor
+      if(this._cryptCannotBlock(c, p && p.actingVampName, p)) return;  // VA: Navar-class -- cannot block an older (higher-cap) actor
       if(attempted && attempted.has(c.id)) return;   // fas A+: a failed attempter never retries the same action
       const ic = this._bestInterceptFor(c, reacted || null, p);   // v0.6.215: the action's conditions (Wall Street Night, Channel 10)
       const frail = ((c.blood | 0) <= 1) ? -0.4 : 0;   // B-55f BASE (4 Aug, M4's four-straight-Zöe trace): a 1-blood blocker eats the default incoming strike into TORPOR -- at equal intercept, prefer a body that survives the trade (3-blood Casey stood idle while Zöe blocked herself to torpor). The -0.4 is tie-breaker-scale: intercept CAPABILITY still dominates (a dying vampire WITH the card beats a healthy bare one), and a dying SOLE candidate is still picked (blocking beats not blocking -- decide already said yes). GENERAL base behavior per Johan's doctrine: every blocking bot weighs survivability; archetype-level intercept BANKING is the deck-axis sibling (B-55f-b).
@@ -6745,7 +6765,7 @@ class Bot {
     let plan = null;                 // v0.6.103 (#4): FIND a route to a blocker first (finders only, no side effects), say Block! only when one exists, THEN play the route -- v0.6.102 shouted Block! before looking and could follow with Pass; the visible order Block! -> wake reveal -> intercept (v0.4.5's beat) is preserved
     if(!blocker){
       const wk = this._wakeCard();
-      const eligible = c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p.actingVampName);   // fas A+: a failed attempter never retries; M2: Pentex; VA: Navar -- the same three filters the three rungs always applied
+      const eligible = c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p.actingVampName, p);   // fas A+: a failed attempter never retries; M2: Pentex; VA: Navar -- the same three filters the three rungs always applied
       /* N1: a TRUE unlock beats act-as-unlocked -- Guard Dogs-class tried FIRST
          (bleeds only, per the card's own text), wake as the fallback, the Stray third. */
       if(p.kind === 'bleed'){
@@ -7935,7 +7955,7 @@ class Bot {
       if(dodge.crypt){   // v0.6.219 (crypt wave A, D-108): the vampire's own strike: dodge -- no card leaves the hand, once each combat; Phaibun first discards a card at random (drawn back like any discard). The line is the client's own dodge line (L12.strikeD), so every reader of a dodge reads it
         (this._cryptDodgeUsed = this._cryptDodgeUsed || new Set()).add(myVamp.id || myVamp.name);
         let gone = null;
-        if(dodge.discard > 0){ const j = this._randomHandIndex(myVamp.name); if(j >= 0){ gone = this.hand.splice(j, 1)[0]; this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(gone);
+        if(dodge.discard > 0){ const j = this._randomHandIndex(); if(j >= 0){ gone = this.hand.splice(j, 1)[0]; this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(gone);
           this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> discards <b>' + esc(gone) + '</b> at random to strike: dodge.' }); } }
         this._emit('crypt-dodge', { vamp: myVamp.name, discard: gone });
         this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> strikes: dodge \u2014 no damage either way this round.' });
@@ -8396,6 +8416,7 @@ class Bot {
     if((m = t.match(/^Referendum (passes|fails) \u2014 (.+?):/))) return { kind: 'ref-result', passes: m[1] === 'passes', card: S(m[2]) };
     if((m = t.match(/^Vote: (\d+) for vs (\d+) against \u2014 vote (passes|fails)/))) return { kind: 'ref-result', passes: m[3] === 'passes', for: +m[1], against: +m[2] };
     if(/^No votes from me\./.test(t)) return { kind: 'vote', n: 0 };
+    if((m = t.match(/^(.+?) discards (.+?) at random to strike: dodge\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), random: true };   // v0.6.220 (wave A's riders): Phaibun's line -- the specific shape first, so the card name carries no tail
     if((m = t.match(/^(.+?) discards (.+?)\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]) };
     if((m = t.match(/^(.+?) pays (\d+) pool for (.+?) \(pool (\d+)\)/))) return { kind: 'pool', by: S(m[1]), delta: -m[2], pool: +m[4], card: S(m[3]), via: 'cost' };
     if((m = t.match(/^Gained (\d+) pool from the Edge/))) return { kind: 'pool', delta: +m[1], via: 'edge' };

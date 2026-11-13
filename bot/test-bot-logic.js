@@ -12276,6 +12276,52 @@ async function connectWithRetry(client, tries = 30){
            '163h every one of the 18 announces passes its kind and form to _cryptStealthMod: leave torpor, political, hunt, stock, own rescue undirected; enemy rescue, card burn, both rushes, pool directed; recruit, strength, Rutor’s Hand, tabling, equip / employ, fetch undirected; Revelations by its mode; the bleed (got ' + JSON.stringify(got) + ')'); }
     }
 
+    /* 164) v0.6.220 -- CRYPT WAVE A'S RIDERS (RULINGS D-111): the event log's random-discard line, the bot's own PRNG for what the rules
+       call random (Phaibun), the age rule from the capacity in play (Azucena, Navar McClaren), Revelations' form before the block
+       decision, the bleed forecast with the crypt's +1 bleed, the home planners with the crypt's intercept. Every new method is guarded,
+       so the pre-change bytes fail clean. LAST LINE OF 164 is the closing brace below. */
+    {
+      console.log('\n[164] v0.6.220 -- crypt wave A\'s riders: the discard line, the PRNG, age in play, the peek form, the forecast, the guard');
+      const mk164 = (name, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'Viktor', persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: u.o.name, online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
+        u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
+      const V4 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 5, attached: [] }, o || {});
+      const bleedBy4 = actor => ({ who: 'Hanna', kind: 'bleed', amount: 1, actingVampName: actor, actorSeat: 1, contested: false, reacted: new Set(), attempted: new Set(), blockerVamp: null, declined: false });
+
+      // a) the event log: Phaibun's random discard names the card alone; a plain discard line is unchanged
+      { const u = mk164(); const e1 = u._evClassify('Phaibun', 'Phaibun discards Enchant Kindred at random to strike: dodge.', 'log'), e2 = u._evClassify('Hanna', 'Hanna discards Majesty.', 'log');
+        ok(!!e1 && e1.kind === 'discard' && e1.card === 'Enchant Kindred' && e1.random === true && !!e2 && e2.kind === 'discard' && e2.card === 'Majesty' && !e2.random,
+           '164a the event log: "NAME discards CARD at random to strike: dodge." is a discard of CARD (random), not of "CARD at random to strike: dodge"; a plain discard line is unchanged (got ' + JSON.stringify([e1, e2]) + ')'); }
+
+      // b) the PRNG (D-111: random is random in play): a pinned seed repeats, another seed or none does not; the index stays in the hand and
+      //    spreads over it; Math.random is never drawn (the sim table seeds it for its deal)
+      { const draws = (u, n) => Array.from({ length: n }, () => (typeof u._rand === 'function' ? u._rand() : null));
+        const a1 = draws(mk164('A', { rngSeed: 7 }), 8), a2 = draws(mk164('B', { rngSeed: 7 }), 8), b1 = draws(mk164('C', { rngSeed: 8 }), 8), f1 = draws(mk164('D'), 8), f2 = draws(mk164('E'), 8);
+        const u = mk164('F', { rngSeed: 11 }); u.hand = ['A', 'B', 'C', 'D', 'E']; const cnt = [0, 0, 0, 0, 0]; let oob = 0;
+        const mr = Math.random; let usedMR = false; Math.random = () => { usedMR = true; return mr(); };
+        try { for(let i = 0; i < 2000; i++){ const j = u._randomHandIndex(); if(j < 0 || j > 4) oob++; else cnt[j]++; } } finally { Math.random = mr; }
+        const same = JSON.stringify(a1) === JSON.stringify(a2), diffSeed = JSON.stringify(a1) !== JSON.stringify(b1), diffFree = JSON.stringify(f1) !== JSON.stringify(f2);
+        ok(a1.every(x => typeof x === 'number' && x >= 0 && x < 1) && same && diffSeed && diffFree && !oob && cnt.every(c => c > 300 && c < 500) && !usedMR && mk164('G')._randomHandIndex() === -1,
+           '164b _rand: rngSeed 7 repeats its draws, 8 does not, two unseeded bots differ (entropy); _randomHandIndex spreads 2000 picks over a 5-card hand (each 300-500), never out of it, -1 on an empty hand, and never draws Math.random (got ' + JSON.stringify({ same, diffSeed, diffFree, cnt, oob, usedMR }) + ')'); }
+
+      // c) age from the capacity in play (D-111, Johan: a card that raises capacity makes the vampire older): an Oblivion (+1 capacity) on
+      //    the Lasombra actor or on Azucena moves her intercept; one on the actor makes Navar McClaren's block an older actor's
+      { const ob = (id, host) => ({ id, name: 'Oblivion', kind: 'lib', zone: 'ready', host });
+        const board = withObl => [V4('h4', 'Braden White (G6)', withObl ? { attached: ['o4'] } : {}), V4('h6', 'Julia Sowinski (G6)', withObl ? { attached: ['o6'] } : {}), V4('h8', 'Andy (G4)', withObl ? { attached: ['o8'] } : {})]
+          .concat(withObl ? [ob('o4', 'h4'), ob('o6', 'h6'), ob('o8', 'h8')] : []);
+        const setup = (actorObl, mine, who) => { const u = mk164(); u.table[1] = { pub: { pool: 20, cards: board(actorObl) } }; const me = V4('m1', who, mine ? { attached: ['mo'] } : {}); u.board = [me].concat(mine ? [ob('mo', 'm1')] : []); return { u, me }; };
+        const I = (st, actor) => st.u._cryptIntercept(st.me, bleedBy4(actor));
+        const N = (st, actor) => st.u._cryptCannotBlock(st.me, actor, bleedBy4(actor));
+        const got = {
+          printed: [I(setup(false, false, 'Azucena (G6)'), 'Braden White (G6)'), I(setup(false, false, 'Azucena (G6)'), 'Julia Sowinski (G6)')],
+          actorObl: [I(setup(true, false, 'Azucena (G6)'), 'Braden White (G6)'), I(setup(true, false, 'Azucena (G6)'), 'Julia Sowinski (G6)')],
+          herObl: [I(setup(false, true, 'Azucena (G6)'), 'Julia Sowinski (G6)'), I(setup(true, true, 'Azucena (G6)'), 'Julia Sowinski (G6)')],
+          navar: [N(setup(false, false, 'Navar McClaren'), 'Andy (G4)'), N(setup(true, false, 'Navar McClaren'), 'Andy (G4)'), N(setup(true, true, 'Navar McClaren'), 'Andy (G4)')] };
+        ok(JSON.stringify(got) === JSON.stringify({ printed: [1, 0], actorObl: [0, -1], herObl: [1, 0], navar: [false, true, false] }),
+           '164c age from the capacity in play: Azucena (5) +1 against Braden White (4), 0 against Julia Sowinski (5); an Oblivion on the actor makes Braden 5 (0) and Julia 6 (older, -1); one on Azucena makes her 6 (Julia 5 younger +1, Julia 6 the same 0); Navar McClaren (1) blocks Andy (1), not Andy with an Oblivion (2), and blocks him again with one of his own (got ' + JSON.stringify(got) + ')'); }
+    }
+
 
 
     }
