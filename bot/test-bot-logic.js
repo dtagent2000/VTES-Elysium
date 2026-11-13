@@ -12473,6 +12473,22 @@ async function connectWithRetry(client, tries = 30){
         const v = V5('v1', 'Zip', { blood: 2 }); Bv.board = [v]; Bv._onBoard({ seat: 1, who: 'Jacky', pub }); Bv._menaceUnlockEngine();
         ok(!!jc && JSON.stringify(jc.counters) === JSON.stringify(['pool', 'pool']) && !!cc && cc.counters === undefined && Bv.pool + (v.blood | 0) === 20,
            '165g Smiling Jack: the owner’s pub carries its 2 counters (the Capuchin’s number stays off), and the victim reading it pays 2 at its unlock (got ' + JSON.stringify({ jack: jc && jc.counters, cap: cc && cc.counters, pool: Bv.pool, blood: v.blood }) + ')'); }
+
+      // h) the bot's own tokens (D-113 (1)): my master phase plays Toreador Grand Ball (through _playTurn), and the pub shows the pair --
+      //    each vampire its half, the Ball both names; nothing is stored on the cards; the Ball gone, the tokens go; a card with named
+      //    counters keeps them alone (they are a count: Jack's victims pay one pool each)
+      { const u = mk165(); u.turnSeat = 2;
+        const ca = V5('v1', 'Catalina Vega (G6)', { cap: 6 }), ms = V5('v2', 'Min-seo (G6)', { cap: 3 }), br = V5('v3', 'Bret Stryker (G6)', { cap: 5 });
+        u.board = [ca, ms, br]; u.hand = ['Toreador Grand Ball', 'Kine Resources Contested'];
+        u._announcePhase = async ph => { if(ph === 'Minion') u.players[0].out = true; };   // the turn ends after the master phase (165c)
+        let terr = null; try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const ball = u.board.find(c => c && c.name === 'Toreador Grand Ball'), tk = pub => Object.fromEntries(pub.cards.map(c => [c.name, c.counters || null]));
+        const t1 = tk(u.buildPub()), stored = [ca, ms, br].concat(ball ? [ball] : []).some(c => c.counters !== undefined);
+        ca.counters = ['pool']; const t2 = tk(u.buildPub()); delete ca.counters;
+        if(ball) ball.zone = 'ash'; const t3 = tk(u.buildPub());
+        ok(!terr && !!ball && JSON.stringify(t1) === JSON.stringify({ 'Catalina Vega (G6)': ['Grand Ball: non-bleed actions unblockable'], 'Min-seo (G6)': ['Grand Ball: does not unlock'], 'Bret Stryker (G6)': null,
+             'Toreador Grand Ball': ['Unblockable: Catalina Vega (G6)', 'Locked: Min-seo (G6)'] }) && !stored && JSON.stringify(t2['Catalina Vega (G6)']) === '["pool"]' && Object.values(t3).every(x => x === null),
+           '165h my Grand Ball’s pair as tokens: Catalina unblockable, Min-seo does not unlock, the Ball names both; none stored; named counters stay alone; the Ball in the ash heap, no tokens (got ' + JSON.stringify({ terr, t1, stored, t2: t2['Catalina Vega (G6)'], t3 }) + ')'); }
     }
 
 

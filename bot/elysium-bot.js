@@ -1033,6 +1033,7 @@ class Bot {
   gid(){ return 'bot' + (++this._gid) + '_' + Date.now().toString(36).slice(-4); }
 
   buildPub(){
+    const memo = this._memoMap();      // v0.6.221 (D-113 (1)): the table's memory, derived once a push
     return {
       deckName: this.deck.name || '', pool: this.pool, edge: this.edge, phase: -1,
       bw: GEO.bw, bh: GEO.bh,
@@ -1043,7 +1044,7 @@ class Bot {
         x: Math.round(c.x), y: Math.round(c.y),
         locked: c.locked || undefined, faceDown: (this._debugHand && c.kind === 'crypt') ? undefined : (c.faceDown || undefined),   // v0.6.112 (R4): debug turns my uncontrolled crypt face UP for everyone -- Johan grading what the bot is building toward, not guessing at it
         blood: c.blood || undefined,
-        counters: (Array.isArray(c.counters) && c.counters.length) ? c.counters.slice(0, 12).map(x => String(x).slice(0, 64)) : undefined,   // v0.6.221 (D-113 (2)): a card's named counters, as the server keeps them (12 a card, 64 characters) -- the pub never carried them, so a bot's Smiling Jack took its owner's pool while no seat ever paid (the victims read the pub); a NUMBER (_addCounter's) stays off
+        counters: this._pubCounters(c, memo.get(c.id)),   // v0.6.221 (D-113): a card's named counters (Smiling Jack's), else this bot's own tokens
         host: c.host || undefined, attached: (c.attached && c.attached.length) ? c.attached : undefined   // v0.5: master-phase permanents (Blood Doll/Vessel) attach to a vampire -- without these two fields the client's sanitizePub shape has nothing to render the link with, and the card would show as a stray unattached card on other players' boards
       }))
     };
@@ -5417,6 +5418,21 @@ class Bot {
   }
   _grandBallLocked(v){ return !!v && this.board.some(c => c && c.kind === 'lib' && c.gbLock === v.id && !this._outOfPlay(c)); }   // v0.6.217: the Toreador my Grand Ball keeps locked (while the card stays in play)
   _grandBallFree(v){ return !!v && this.board.some(c => c && c.kind === 'lib' && c.gbFree === v.id && !this._outOfPlay(c)); }     // v0.6.217: the Toreador whose non-bleed actions cannot be blocked
+  _memoMap(){                        // v0.6.221 (D-113 (1), Johan's idea of 13 Nov): THE TABLE'S MEMORY -- the lasting choices this bot plays by, shown as custom tokens on its own cards (the pub's counters: every seat hovers them, and nobody can ask a bot afterwards). Derived at every push from the fields the rules read, never stored: a token cannot outlive or contradict its effect. Grand Ball's pair first -- each vampire carries its half (the same test as _grandBallFree / _grandBallLocked), the Ball names both. id -> [text]
+    const m = new Map(), add = (id, t) => { if(!id) return; const a = m.get(id) || []; if(!a.includes(t)) a.push(t); m.set(id, a); };
+    const nm = id => { const v = this.board.find(x => x && x.id === id); return v ? v.name : '?'; };
+    for(const c of this.board){
+      if(!c || c.kind !== 'lib' || !(c.gbFree || c.gbLock) || this._outOfPlay(c)) continue;
+      add(c.gbFree, 'Grand Ball: non-bleed actions unblockable'); add(c.gbLock, 'Grand Ball: does not unlock');
+      add(c.id, 'Unblockable: ' + nm(c.gbFree)); add(c.id, 'Locked: ' + nm(c.gbLock));   // two tokens, not one line: two long names would pass the server's 64 characters
+    }
+    return m;
+  }
+  _pubCounters(c, memo){             // v0.6.221 (D-113): the pub's counters -- a card's named counters (D-113 (2): the pub never carried them, so a bot's Smiling Jack took its owner's pool while no seat paid -- the victims read the pub; a NUMBER, _addCounter's, stays off), else this bot's own tokens (_memoMap); 12 a card, 64 characters, as the server keeps them. Never both: named counters are a COUNT other seats read (Jack's victims pay one pool each), so a token beside them would be paid as pool
+    const own = Array.isArray(c.counters) ? c.counters : [];
+    const list = own.length ? own : ((memo && memo.length && !this._outOfPlay(c)) ? memo : []);
+    return list.length ? list.slice(0, 12).map(x => String(x).slice(0, 64)) : undefined;
+  }
   _vampPath(v){ const h = v && this.fxLookup(v.name); return (h && h.kind === 'crypt' && h.e && h.e.path) || null; }   // v0.6.217: the printed Path ('Cathari', 'Death and the Soul' ...), null when none
   _hasArchetype(v){ return (v && v.attached || []).some(id => { const c = this.board.find(x => x && x.id === id); if(!c || this._outOfPlay(c)) return false; const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && h.e.archetype); }); }   // v0.6.217: 'a vampire can have only one archetype'
   _masterHostPlan(name){             // v0.6.217 (V5 wave 4, D-106): where a master that goes ON a vampire goes -- null = not one of the wave's (the older paths decide), { hold, why } = no legal or worthwhile host now (held pre-splice: nothing paid), { host } = the pick; Toreador Grand Ball: { grandBall, freeT, lockT }
