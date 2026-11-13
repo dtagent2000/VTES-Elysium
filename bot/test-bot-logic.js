@@ -12330,6 +12330,12 @@ async function connectWithRetry(client, tries = 30){
         const dow = seen.filter(x => x.v === 'The Dowager (G6)');
         ok(!!u.pending && u.pending.kind === 'peek' && dow.length > 0 && dow.every(x => x.sup === false && x.r === 1),
            '164d the [aus] Revelations announce at me: every intercept read of the window sees peekSup false (directed) and gives The Dowager her +1 -- none reads the form a line late (got ' + JSON.stringify({ kind: u.pending && u.pending.kind, dow }) + ')'); }
+
+      // e) the bleed forecast (_myBleedEach) carries the crypt's +1 bleed on a plain bleed (Lenny since v0.6.80, Catalina since v0.6.219)
+      { const u = mk164(); u.board = [V4('l1', 'Lenny Burkhead (G6)'), V4('a1', 'Ashley (G6)'), V4('l2', 'Catalina Vega', { blood: 0 })];
+        const each = u._myBleedEach().map(e => [e.v.name, e.n]).sort();
+        ok(JSON.stringify(each) === JSON.stringify([['Ashley (G6)', 1], ['Catalina Vega', 0], ['Lenny Burkhead (G6)', 2]]),
+           '164e the bleed forecast: Lenny bleeds 2 with no bleed card (his +1 on a plain bleed), Ashley 1, an empty Catalina 0 (she hunts) (got ' + JSON.stringify(each) + ')'); }
     }
 
 

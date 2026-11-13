@@ -2371,7 +2371,7 @@ class Bot {
   _myBleedEach(){                      // each ready body's best bleed next turn; a hand card is counted ONCE (best body first)
     const used = {}; const out = []; const copies = nm => this.hand.filter(h => { const x = this.fxLookup(h); return h === nm || (x && x.name === nm); }).length;   // the finder returns the SAME best index for every body -- count by name against the copies held
     const cand = this._myBodies().map(v => ({ v, c: (v.blood | 0) > 0 ? this._bestBleedCardFor(v) : null })).sort((a, b) => ((b.c && b.c.n) | 0) - ((a.c && a.c.n) | 0));
-    for(const e of cand){ let n = 1; if((e.v.blood | 0) === 0) n = 0;   // a 0-blood body hunts (rulebook) -- no bleed from it
+    for(const e of cand){ let n = 1 + this._cryptBleedBonus(e.v); if((e.v.blood | 0) === 0) n = 0;   // a 0-blood body hunts (rulebook) -- no bleed from it. v0.6.220 (wave A's riders): a plain bleed carries the crypt's +1 too (Lenny, Catalina; a card's n has it from _bestBleedCardFor)
       else if(e.c && (used[e.c.name] | 0) < copies(e.c.name)){ used[e.c.name] = (used[e.c.name] | 0) + 1; n = Math.max(1, e.c.n | 0); }
       out.push({ v: e.v, n }); }
     return out;
