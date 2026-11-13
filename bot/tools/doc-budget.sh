@@ -1,7 +1,7 @@
 #!/bin/bash
 # doc-budget.sh -- the standing pages' check (spec-cleanup-2026-10-20.md §5.3). Run from anywhere; exit 1 on any failure.
 #   1. each standing page within its byte budget; the bootstrap (root CLAUDE.md + bot/CLAUDE.md + STATUS + BOARD) <= 50 KB;
-#      every standing page together <= 160 KB;
+#      every standing page together <= 165 KB;
 #   2. every repo path named (in backticks) in a standing page, and every bot/ path in the root CLAUDE.md, exists;
 #   3. every version STATUS.md names agrees with the code: BOT_VERSION, the arena, the sim, the cardfx compiler, the hotseat
 #      tool, the coverage tool, the read-only client / protocol / server copies in bot/ and the root's client / server (with
@@ -16,7 +16,8 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    split of Johan's words from Claude's thresholds costs words; 60 KB and the total 160 KB since 29 Oct (Johan, RULINGS D-101: when a
 #    page needs room the ceiling is raised -- the register grows with every round's rulings); BOARD 15 -> 18 KB the same day (it stood
 #    15 bytes under its ceiling; the bootstrap's 50 KB stays the real guard); BOARD 18 -> 18.5 KB on 12 Nov (crypt wave A's egress
-#    review found three asks no line held, with no history left to cut -- HARNESS; STATUS gave the bootstrap its bytes back).
+#    review found three asks no line held, with no history left to cut -- HARNESS; STATUS gave the bootstrap its bytes back); the
+#    total 160 -> 165 KB on 13 Nov (bot v0.6.220: Johan's D-112 and D-113 and the riders' two found lines -- the register grows).
 PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:18500 $D/RULINGS.md:60000 $D/LESSONS.md:20000
        $D/ARCHITECTURE.md:15000 $D/HARNESS.md:8000 $D/HOWTO.md:20000"
 total=0
@@ -28,7 +29,7 @@ for pb in $PAGES; do
 done
 boot=0; for f in "$R/CLAUDE.md" "$B/CLAUDE.md" "$D/STATUS.md" "$D/BOARD.md"; do boot=$((boot + $(wc -c < "$f" | tr -d ' '))); done
 if [ "$boot" -gt 50000 ]; then bad "bootstrap is $boot bytes, budget 50000"; else ok "bootstrap $boot / 50000"; fi
-if [ "$total" -gt 160000 ]; then bad "standing pages total $total bytes, budget 160000"; else ok "standing pages $total / 160000"; fi
+if [ "$total" -gt 165000 ]; then bad "standing pages total $total bytes, budget 165000"; else ok "standing pages $total / 165000"; fi
 
 # 2. paths named in the standing pages: a backticked token that looks like a file or a folder
 missing=0

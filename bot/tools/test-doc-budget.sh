@@ -45,7 +45,7 @@ T = sys.argv[1]
 for f, lim in [('docs/RULINGS.md', 60000), ('docs/LESSONS.md', 20000), ('docs/ARCHITECTURE.md', 15000), ('docs/HARNESS.md', 8000),
                ('docs/HOWTO.md', 20000)]:   # the pages outside the bootstrap: padding the bootstrap's own would trip its 50 KB first (29 Oct)
     p = os.path.join(T, 'bot', f); n = os.path.getsize(p); open(p, 'a').write('x' * max(0, lim - 50 - n))
-" "$T";                                                                                     run "the total over 160 KB, each page within its own" "standing pages total"
+" "$T";                                                                                     run "the total over 165 KB, each page within its own" "standing pages total"
 rm -rf "$W"
 [ "$bad" = 0 ] && echo "test-doc-budget: every case red, baseline green" || echo "test-doc-budget: FAIL"
 exit $bad
