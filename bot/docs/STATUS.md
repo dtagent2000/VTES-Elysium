@@ -1,6 +1,6 @@
 # STATUS — Elysium Bots (rewritten at every release; 13 November 2026)
 
-**Bot v0.6.222** (13 Nov 2026, the Jack round's follow-ups) · arena v1.4.8 · sim table v1.1.0 · cardfx compiler v1.9.8, curated
+**Bot v0.6.222** (13 Nov 2026, the Jack round's follow-ups) · arena v1.4.9 · sim table v1.1.0 · cardfx compiler v1.9.8, curated
 187 · hotseat tool v1.4.1 · coverage tool v1.1.45 · card ledger v1.1.2 · precon generator v1.1.1 · `krcg-v5.js` v1.0.0 ·
 `ana-gates.py` v1.1.0 · built against the root's release, client v2.6.174 / srv-2.6.50 (main's canary v1.2.0 143/0 against it);
 the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6.50 and main's canary v1.2.0 (refreshed 13 Nov).

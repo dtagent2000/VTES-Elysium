@@ -126,7 +126,8 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   VICTIM LOST` row is a lead; dealt vs taken; `LESS, UNEXPLAINED`) · `ana-block.py` (0 violations) · `ana-inv.py` (invariants;
   ~1 flag in 3 matches is the baseline; a new flag kind or a jump = a line the log cannot type (add its kind) or a real bookkeeping
   difference; `ELY_POOL_TRACE=1` names the code line behind a pool change) · `ana-windows.py` (the actor's reactions-only windows: ran out
-  and went through = 0; contests at the clock split blocked / failed; every `stale-answer` row read) · `ana-wait.py` (tempo) ·
+  and went through = 0; contests at the clock split blocked / failed; every `stale-answer` row read) · `ana-rare.py` (the rare paths a section proves:
+  superseded combats, held / released turns, rush complies by path, fizzles, resolutions at an ousted seat) · `ana-wait.py` (tempo) ·
   `ana-probe.py` (`probe-order` / `probe-hold` rows) · `ana-cards.py` (uses per card, never-played, untitled plays) ·
   `ana-combat.py` + `ana-combat2.py` (handshake integrity 100 % on a bot-only table, agreement, `hsMiss`) · `ana-rush.py` ·
   (`ana-windows.py`'s gate of 0 is a server-arena reading: on the hotseat / sim table most bot windows run out, the same at v0.6.211 —
