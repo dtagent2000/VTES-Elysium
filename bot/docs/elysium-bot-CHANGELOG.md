@@ -63,18 +63,34 @@
     (4) `bug` (narrow) — a success verdict inside the locked-blocker route's beat found no blocker (named only after the wake
     card), so Terrifying Visage's pool and the combat hand-off were skipped: the blocker is named when Block! is said, and
     forgotten when the route fails.
+  - *The egress review* (fresh context, of the release candidate `d7c7d53c`; 9 findings, all fixed): (1) `bug` — naming the
+    blocker at Block! opened the second looks inside the locked-blocker route's beat: a stealth raise there drew two intercept
+    cards for one need. The route's vampire is now a field only the verdict reads (`routeVamp`), and an intercept beat that the
+    second look answered ends with the attempt line alone. (2) `half-done` — `_commitBlock` never asked whether its action
+    resolved under its route's beats (a verdict, a rush resolved, a cancel): the route went on to its wake card, a block counter
+    over the combat that had begun and a late attempt line. It now ends there (the unlock reaction too, its card kept). (3)
+    `half-done` — a server that keeps the turn at a lone live seat (v0.6.221's ask to main) sends no turn back after the game-over
+    pass: the release now covers that pass too. (4) `half-done` — a superseded combat's waiter registered before the later combat
+    began still took the later combat's line (a rushed Dowager's strike wait took Catalina's strike from Lenny's peek: Lenny took
+    1, not 3); a new combat now ends the line waiters and the step wait of one still in flight. (5) `bug` — a vacant seat
+    (awaiting its taker) counted as ousted, and the note's 'NAME is ousted.' read as an oust (`_evClassify`): only an out seat
+    fizzles, and the note says 'was ousted in its window'. (6) `test-weakened` — 166e's two maneuver scenes played no counter:
+    renamed, and the comment no longer claims counters. (7) `unproven` — the pool-damage fizzle and the hotseat release had no
+    test: 166b and 166c cover them. (8–9) `stale-doc` — STATUS's bytes and placeholders; O-39 deleted without its stub.
   - *A browser check* (`tools/tokens-in-browser.sh`, new): main's play-test rig, run as it is, with one in-page bot given a Toreador
     Grand Ball pair and a Jack with 3 counters; the human visits the bot's seat and reads every chip and its hover text (client
     v2.6.174: GBN, GBD, 2 and 3, the texts as sent). A diagnostic, not a gate.
-  - *Tests*: section 166, 7 checks, each through its path: 166a the rush through `_onLog` and the actor's It resolves (once, also
-    after my own Pass); 166b the bleed through `_playTurn` at a seat ousted in its window; 166c the held turn through the turn and
-    roster handlers (the same turn twice); 166d a verdict inside `_commitBlock`'s wake beat; 166e the real `_resolveCombat` and
+  - *Tests*: section 166, 9 checks, each through its path: 166a the rush through `_onLog` and the actor's It resolves (once, also
+    after my own Pass); 166b the bleed and Inside Dirt through `_playTurn` at a seat ousted in its window, and Inside Dirt at a
+    vacant seat; 166c the held turn through the turn and roster handlers (the same turn twice; no turn back) and a hotseat oust
+    undone through `_onBoard`; 166d a verdict inside `_commitBlock`'s wake beat (the route ends there); 166e the real `_resolveCombat` and
     `_resolveCombatRound` against a scripted opponent, superseded at each of their waits — 238 waits in 18 scenes (answering and
     acting; a bot that answers, loses its lines or presses to continue; a human's phase steps both ways and their combat ends; hands
     that play the Crows, Wall of Filth, a strength pump, a Grapple, a prevent, Taste of Vitae, a press and a press to end, a dodge
     with its additional strike, a combat-ends strike) — nothing more said, written, spent or waited; 166f the superseded step wait
     through `_phaseStep` and `_phaseNudge` (a step and the Damage step, both ways); 166g a superseded combat a Change of Target
-    ended. Destructive, the section on each step's bytes: v0.6.221 1/6 (166g passes there: it pins a regression of this round's
+    ended; 166h a stealth raise inside the locked-blocker route's beat (one intercept card); 166i a superseded combat's strike
+    wait that was waiting when the later combat began. Destructive, the section on each step's bytes: v0.6.221 1/6 (166g passes there: it pins a regression of this round's
     first cut), the rush 2/5, the fizzle 3/4, the held turn 3/4 (166c's repeated turn came later), the Block! naming 4/3, the
     supersede fix's first cut `033be3de` 5/2 (166c, 166g), the release 7/0; 166e on the bytes before the supersede fix fails at 205
     of its 238 waits. A mutation run (a diagnostic, not a gate): of the 92 token checks 166e kills 44; of the 48 it leaves, 32 sit

@@ -85,8 +85,9 @@
 - L-89 **A flow that can be superseded stops at every await, not at one step** (13 Nov, the Jack round's second review): v0.6.221
   checked a combat's token in its press step; the round it waited on (40 awaits) and its helpers still spoke, wrote the tally, took
   damage and registered waits that took the live combat's lines (a replaced waiter wakes with null). Read the token at entry and
-  check it after EVERY await, before the next line, write, card or wait; prove it by superseding the real flow at each wait it
-  passes (166e), since a check proven at one hold point is one check proven.
+  check it after EVERY await, before the next line, write, card or wait; end the old flow's pending waits when the new one starts
+  (a waiter registered before still takes the new flow's line: 166i); prove it by superseding the real flow at each wait it passes
+  (166e), since a check proven at one hold point is one check proven.
 
 ## Tools and ways of working
 - L-69 **The smoke of the release is part of the release** (16 Oct): every R2–R4 release's own smoke found a bug its suite did not.

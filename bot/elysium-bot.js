@@ -3426,11 +3426,11 @@ class Bot {
     if(pk.pool){ this.pool = (this.pool | 0) + pk.pool; if(this.ev){ this._invOnEvent(this.ev.push({ kind: 'pool', delta: +pk.pool, via: 'cost-returned', own: true, seat: this.seat })); } }   // v0.6.180: a blocked action's parked pool cost comes back WITHOUT a table line -- the ledger hears it from here
     this.push(); this._emit('cost-returned', { blood: pk.blood, pool: pk.pool }); }
   _fizzleIfOusted(v, seat, n, kind){   // v0.6.222 (v0.6.221's 240, match 60, and three of its 600): the action's target Methuselah was ousted in its window -- my own referendum's pool damage, still in my send queue, landed at that seat after I had announced this action -- so the action has no target: nothing lands and nothing is gained (no pool, no Edge, no bleed-through row), its cost comes back as for a blocked action (an action card's cost is paid only on success), and the minion loop's game-over check ends my turn when that oust was the game's last
-    if(!seat || this.live(seat)) return false;
+    const tp = seat && (this.players || []).find(q => q && q.seat === seat); if(!tp || !tp.out) return false;   // v0.6.222 (the egress review): out, not merely not live -- a vacant seat awaits its taker and stays in the game
     if(this.tally && this.tally.mode === 'block' && this.started){ try { this._writeTally({ mode: null }); } catch(e){} }   // the counter closes, as on 'through'
     this._returnParked();
     this.say('It resolves');
-    this.note('The ' + kind + ' has no target: ' + this.seatName(seat) + ' is ousted.');
+    this.note('The ' + kind + ' has no target: ' + this.seatName(seat) + ' was ousted in its window.');   // v0.6.222 (the egress review): never 'X is ousted' -- _evClassify reads that shape as an oust
     this._emit('fizzled', { vamp: v && v.name, n: n | 0, kind, seat });
     this.push();
     return true;
@@ -4584,8 +4584,9 @@ class Bot {
     }
     return null;
   }
-  async _playUnlockReact(vamp, un){  // N1: splice/ash/pay + TRULY unlock (wake's stronger sibling) + the [ANI] maneuver-grant rider
+  async _playUnlockReact(vamp, un, live){  // N1: splice/ash/pay + TRULY unlock (wake's stronger sibling) + the [ANI] maneuver-grant rider
     await this._pace();
+    if(live && !live()) return false;   // v0.6.222 (the egress review): the block route's action resolved under the beat -- the card stays in hand
     this.hand.splice(un.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
     this._toAsh(un.name);
     this._emitPlay(un.name, 'react-unlock', vamp && vamp.name);   // v0.6.139: this spend left no trace row (CLAUDE.md 43c)
@@ -4595,6 +4596,7 @@ class Bot {
     this.fxClone({ name: un.name, kind: 'lib' }, 'unlocks ' + vamp.name, { actor: vamp });
     this.send({ t: 'log', html: '<b>' + esc(vamp.name) + '</b> plays <b>' + esc(un.name) + '</b>: unlocks.' });
     this.push();
+    return true;
   }
   async _maybePostBlockUnlock(blocker){   // N1: Cats' Guidance -- after block resolution, a LOCKED blocker with a postBlock unlock refreshes the wall
     if(!blocker || !blocker.locked || blocker.zone !== 'ready' || this.out) return;
@@ -5659,8 +5661,8 @@ class Bot {
   _gameOver(){ return !!this.started && !this.out && (this.players || []).length > 1 && this._liveCount() <= 1; }   // v0.6.221 (the Jack round, D-113; found by v0.6.220's V5 smoke): I am the last Methuselah -- the game is over, my turn ends (the survivor used to play on, bleeding itself: preySeat() is my own seat)
   _endTurnAtGameOver(phase){ this._emit('game-over', { phase }); this.push(); this.send({ t: 'log', html: '<b>Turn passed.</b>' }); this._gameOverPassed = true; this.send({ t: 'pass' }); }
   _resumeHeldTurn(why){              // v0.6.222 (the second review): the turn I held at game over (_playTurn's first line) is released when the game comes back -- a host's or a player's unoust, a spectator taking a vacant seat, a hotseat oust undone; none of them sends a turn, so without this the table waited on me. The turn that came straight back after my own game-over pass was played: it is passed on; a turn the game ended before I played is played
-    const h = this._heldTurn; if(!h || !this.started || this.out || this.turnSeat !== this.seat || this._acting || this._gameOver()) return false;
-    this._heldTurn = null; this._emit('game-resumed', { back: h.back, why });
+    const h = this._heldTurn || (this._gameOverPassed ? { back: true } : null); if(!h || !this.started || this.out || this.turnSeat !== this.seat || this._acting || this._gameOver()) return false;   // v0.6.222 (the egress review): or my game-over pass that no turn answered (a server that keeps the turn at a lone live seat) -- the turn is still mine and played: pass it on
+    this._heldTurn = null; this._gameOverPassed = false; this._emit('game-resumed', { back: h.back, why });
     if(h.back) this.send({ t: 'pass' }); else this._playTurn().catch(e => this.o.log('turn error:', e.message));
     return true;
   }   // v0.6.221: the rest of the turn is skipped; the table still gets its pass
@@ -6853,12 +6855,13 @@ class Bot {
       return;
     }
     this.say('Block!');              // v0.6.103 (#4): a blocker exists, or a route to one does -- never a phantom Block!
-    p.blockerVamp = blocker || (plan && plan.vamp) || null;   // v0.6.222 (the second review): named as Block! is said -- a success verdict that lands inside the route's beat (the wake, the unlock card) finds its blocker: the Terrifying Visage burn and the combat hand-off
+    p.routeVamp = blocker ? null : ((plan && plan.vamp) || null); p.attempted.add((blocker || plan.vamp).id);   // v0.6.222 (the egress review): the route's vampire, for the verdict alone (_verdictAsTarget), and attempted from Block! on; blockerVamp waits for the route (line below) -- naming it here opened the second looks inside the beat: two intercept cards for one need. The second review: a success verdict that lands inside the route's beat (the wake, the unlock card) finds its blocker: the Terrifying Visage burn and the combat hand-off
     if(!blocker){
-      if(plan.kind === 'unlockReact'){ await this._playUnlockReact(plan.vamp, plan.un); blocker = plan.vamp; }
+      if(plan.kind === 'unlockReact'){ if(!(await this._playUnlockReact(plan.vamp, plan.un, () => this.pending === p && p.contested))) return; blocker = plan.vamp; }   // v0.6.222 (the egress review): the verdict came under the beat -- the route ends, the card stays in hand
       else if(plan.kind === 'wake'){
         const wk = plan.wk, wkCost = plan.wkCost, sleeper = plan.vamp;
         await this._pace();                              // v0.4.5: a beat between "Block!" and the wake reveal, instead of both firing in the same instant
+        if(this.pending !== p || !p.contested) return;   // v0.6.222 (the egress review): resolved under the beat (a verdict, a cancel) -- no wake card, no attempt line, no block tally over the combat that began
         this.hand.splice(wk.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
         this._toAsh(wk.name);   // v0.6.12 ash sweep
         if(wkCost) sleeper.blood = Math.max(0, (sleeper.blood | 0) - wkCost);
@@ -6870,7 +6873,7 @@ class Bot {
       else if(plan.kind === 'stray'){ if(this._strayUnlockBurn(plan.vamp)) blocker = plan.vamp; }
       if(!blocker){                  // belt: the route failed at play time (a shift under the await) -- withdraw honestly rather than attempt with nobody
         this.o.log('block: the locked-blocker route failed at play time \u2014 declining');
-        p.contested = false; p.declined = true; p.blockerVamp = null; this.say('Pass');
+        p.contested = false; p.declined = true; p.blockerVamp = null; p.routeVamp = null; this.say('Pass');
         return;
       }
     }
@@ -6893,7 +6896,10 @@ class Bot {
       this._setTallyB(unIc + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block with +' + unIc + ' intercept (<b>' + esc(plan.un.name) + '</b>).' });
     } else if(ic){
+      const looks0 = p.icLooks | 0;
       await this._pace();                                // v0.4.5: so a wake+intercept combo doesn't land as one instant double-play
+      if(this.pending !== p || !p.contested) return;   // v0.6.222 (the egress review): resolved under the beat
+      if((p.icLooks | 0) !== looks0){ this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block.' }); this._noteBlockAttempt(blocker.name, true); this._emit('block-made', { vamp: blocker.name }); this.push(); return; }   // v0.6.222 (the egress review): the second look answered a stealth raise under the beat (its card, its tally) -- my picked card's index is stale and its intercept no longer the need: the attempt line alone
       p.reacted.add(FX_NORM(ic.name));
       this._spendIntercept(ic, blocker, true);   // v0.6.215: a hand card or a location's lock (with the attempt line)
 
@@ -6974,7 +6980,7 @@ class Bot {
   }
   _verdictAsTarget(success){          // v0.6.204 (F10): the target's side of a block verdict -- a §12 line from the table, or my own (the verdict wait declares it; my log lines are not echoed back)
     if(!this.pending) return;
-    const blockerVamp = this.pending.blockerVamp;                 // read before _clearPending wipes this.pending
+    const blockerVamp = this.pending.blockerVamp || this.pending.routeVamp;   // read before _clearPending wipes this.pending (v0.6.222: routeVamp -- a verdict inside the locked-blocker route's beat)
     const oppName = this.pending.actingVampName || (this._obs && this._obs.vamp && Date.now() - this._obs.at < 60000 ? this._obs.vamp : null) || null;          // VB: the combat opponent's name, hoisted the same way (this.pending is null by the _resolveCombat call)   // v0.6.163 (bug sweep, serie-cmb8): the pending carried no actor name in 14 of ~330 blocks (windows armed from a tally ask / re-blocks) -- the last announced action's vampire (short-term action memory, v0.6.110) is the actor
     if(success){
       if(blockerVamp && this._visageBurn(this.pending.actorSeat || this._seatOfName(this.pending.who), oppName)) return;   /* v0.6.221 (the Jack round's egress review): only MY block pays -- another seat's successful block reaches this verdict too (a bot that never blocked, or whose attempt failed, burned 1 pool: the V5 smoke's pathcathari match 12) */   /* the egress review: the combat opponent's name (a nameless pending reads the announce) */   // v0.6.217 (V5 wave 4): Terrifying Visage -- 'the blocking minion's controller burns 1 pool before block resolution' (an 'if blocked' effect: first, before anything else [ANK 20220116]); true = that pool ousted me
@@ -6988,7 +6994,7 @@ class Bot {
         _cp.then(() => { if(this._combatTok === _ctok) this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
       }
     }
-    else { this.pending.contested = false; this.pending.blockerVamp = null; if(!(this.pending.role === 'predator' && this.pending.waitingFor)) this._reactWindow(); }   // v0.6.221 (D-113): my failed attempt is over -- a later block's success verdict (another seat's) is not my combat (the Toreador report's stray blocker) // action continues, bleed still live -- M2: try again (another card, or give up -> Pass). v0.6.107: a PREDATOR-role window stays shut until the prey has declined (rulebook order)
+    else { this.pending.contested = false; this.pending.blockerVamp = null; this.pending.routeVamp = null; if(!(this.pending.role === 'predator' && this.pending.waitingFor)) this._reactWindow(); }   // v0.6.221 (D-113): my failed attempt is over -- a later block's success verdict (another seat's) is not my combat (the Toreador report's stray blocker) // action continues, bleed still live -- M2: try again (another card, or give up -> Pass). v0.6.107: a PREDATOR-role window stays shut until the prey has declined (rulebook order)
   }
   _clearCombatStashes(){             // v0.6.103 (#1): the five one-shot stashes + the persistent opponent Carrion Crows + the armed flag -- called at every own announce (actor), at every block commit (defender), at a rush comply, at dealt and at oust. NEVER at _resolveCombat entry: the defender's verdict hand-off runs ahead of the attacker's Blocked branch, so a legitimate opponent line may already sit here (the dodge-branch comment's case)
     this._oppEndedCombat = false; this._oppStrike = null; this._oppTaken = null; this._oppPress = undefined; this._oppManeuver = undefined; this._oppGrapple = undefined; this._oppCarrionCrows = null;
@@ -7685,6 +7691,7 @@ class Bot {
     this._carrionCrows = null; this._equipPreventUsed = false; this._equipManeuverUsed = false; this._hostPreventUsed = null; this._cryptDodgeUsed = null;   /* v0.6.205: Guardian Angel's once each combat; v0.6.219: the crypt's own strike: dodge (Flávio, Phaibun) */   // v0.6.103 (#1): the OPPONENT's crows are no longer reset here (an early crows announce was wiped by the late-entering attacker) -- they live in the stash set cleared at announce/commit   // E1: per-combat equipment options
     this._borneEnvDmg = this._borneEnvFor(myVamp); this._borneAnnounced = false;
     this._cepOpen(oppName || (this._actingVamp ? this._lastBlockerName : null) || this._learnedOpp || null); this._learnedOpp = null;   /* v0.6.182: ONE episode per combat */ this._combatDmgTaken = 0; this._cBase = Object.assign({}, this._cTally() || {}); this._cBaseRound = this._cBase;   /* v0.6.168: the field baseline for this combat (at combat ENTRY -- not per round) */   // v0.6.103 (#1): the actor side learns its opponent from the B-55e-b blocker name (a bot blocker always chats it before the verdict)   // VB: the opposing vampire's NAME when the caller knows it (defender sites: the announced actor; a blocked ACTOR's blocker stays null -- documented v1 under-claim for Blythe-as-actor) + the Franciscus-class per-combat damage accumulator   // N0: the borne crows peck every combat   // v0.6.26: per-COMBAT state (not per-round like _range) -- "only one Carrion Crows each combat", and the opponent's active one persists across every round of THIS combat, reset only when a new one starts
+    if(this._inCombat){ ['_maneuverWaiter', '_preWaiter', '_strikeWaiter', '_strikePeekWaiter', '_pressWaiter', '_takenWaiter', '_xEndWaiter', '_xAnsWaiter', '_xStrikeWaiter'].forEach(k => { if(typeof this[k] === 'function'){ const old = this[k]; this[k] = null; try { old(null); } catch(e){} } }); { const ow = this._phaseWait; if(ow && !ow.done) ow.resolve('superseded'); } }   // v0.6.222 (the egress review): a combat still in flight is superseded by this one -- its line waiters and its step wait end now (null), so a line meant for this combat never feeds the old one's wait (a Deep Song-rushed Dowager's strike wait took Catalina's strike from Lenny's peek: Lenny took 1, not 3)
     this._inCombat = true;   // v0.6.103 (#1): the handshake window -- _stashAccept reads it
     const tok = (this._combatTok = (this._combatTok | 0) + 1); if(myVamp) (this._combatOppOf = this._combatOppOf || new Map()).set(myVamp.id, oppName || null);   // v0.6.221 (D-113): this combat's token -- a later combat of mine supersedes it, and a superseded one ends at its next step and leaves the live combat's fields alone (the stray combat: one bot, two blocks, the first combat outlived its action)
     let supd = false, rr = 1; const sup = r => { if(tok === this._combatTok) return false; if(!supd){ supd = true; this._emit('combat-superseded', { vamp: myVamp ? myVamp.name : null, round: r }); } return true; };   // v0.6.221 (the Jack round's egress review): a later combat of mine began while this one waited -- this one is over (its action is). v0.6.222 (the second review): checked after every await of the combat (here, in _resolveCombatRound and in their combat helpers), so it stops at the await it wakes from: no line, no tally write, no card, no blood, no row, no new wait, no next round
@@ -8718,7 +8725,7 @@ class Bot {
          the fails-branch: contest over, window reopens for a DIFFERENT minion. */
       if(m[3] === this.seatName(this.seat) && this.pending){
         this.pending.contested = false;
-        this.pending.blockerVamp = null;   // v0.6.221 (the egress review): as the fails-branch does -- another seat's later success is not my combat
+        this.pending.blockerVamp = null; this.pending.routeVamp = null;   // v0.6.221 (the egress review): as the fails-branch does -- another seat's later success is not my combat
         this._reactWindow();
       }
       return;

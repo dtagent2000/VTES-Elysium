@@ -13,15 +13,18 @@ No new verb, field or frozen line. What a table sees differently:
   failed on the counter — is now fought: the rushed vampire locks and its combat starts, as after the bot's own Pass. The rusher no
   longer fights alone.
 - **A bleed or a pool damage whose target Methuselah is ousted before it resolves** fizzles: the bot says `It resolves`, writes a
-  LOG line for the table — `The bleed has no target: NAME is ousted.` (or `The pool damage has no target: …`) — and moves no pool.
-  Display only: no bot parses it, so it is not §12 grammar (tell us if you want it there anyway). It came from a bot's own
-  referendum damage still in its send queue when its next vampire's bleed at that seat was decided.
+  LOG line for the table — `The bleed has no target: NAME was ousted in its window.` (or `The pool damage has no target: …`) —
+  and moves no pool. The line is display only: no bot parses it (never `NAME is ousted`, which the bots read as an oust), so it is
+  not §12 grammar (tell us if you want it there anyway). It came from a bot's own referendum damage still in its send queue when
+  its next vampire's bleed at that seat was decided. A vacant seat (a player left, the seat awaits its taker) is still in the
+  game: an action at it lands.
 - **A turn held after the game ended** (v0.6.221) is released when the game comes back — an unoust, a spectator taking a vacant
-  seat, a hotseat oust undone: one `pass` when the turn came straight back after the bot's own game-over pass, else the bot plays
-  that turn. With this the bot no longer depends on your answer to v0.6.221's §3 ask (stop `pass` at a lone live seat): either way
-  a held turn is released.
+  seat, a hotseat oust undone: one `pass` when the turn came straight back after the bot's own game-over pass — or when no turn
+  came back at all — else the bot plays that turn. With this the bot no longer depends on your answer to v0.6.221's §3 ask (stop
+  `pass` at a lone live seat): either way the turn moves on when the game comes back.
 - **A combat a later combat of the same bot superseded** (a failed blocker's, say) now stops at its next wait: no more lines, tally
-  writes, damage or step questions from it under the live combat's duel. A human sees one combat's steps at a time.
+  writes, damage or step questions from it under the live combat's duel, and its waits end, so the live combat gets its own lines.
+  A human sees one combat's steps at a time.
 
 ## 3. Run here
 RUNHERE
