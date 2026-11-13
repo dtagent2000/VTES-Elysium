@@ -200,9 +200,10 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   (BOARD); do not add more.
 - Decks: the four V5 starters (`deck-malkavian/tremere/nosferatu/ventrue.json`) + `hacking` (the tournament benchmark: its prey
   fell first 16/16 in the 4 Aug tests, so a deck-strength claim controls for prey-of-hacking) + `sewer`;
-  `wall` is an archetype fixture only. `DECK_STRATEGY` carries each manifest (the reviewer's yardstick) and `combat` posture. Seven
-  decks are also embedded in `elysium-bot.js` (duplicated; BOARD). The 14 other V5 precons are `deck-<key>.json` (`gen-precon.js`):
-  test inputs the sim plays, not in the client's menu until their rows in `docs/CARDS.md` are playable (BOARD, the V5 waves).
+  `wall` is an archetype fixture only. `DECK_STRATEGY` carries each manifest (the reviewer's yardstick) and `combat` posture. Eight
+  decks are also embedded in `elysium-bot.js` (duplicated; BOARD; Toreador since v0.6.219). The 13 other V5 precons are
+  `deck-<key>.json` (`gen-precon.js`): test inputs the sim plays, not in the client's menu until their rows in `docs/CARDS.md` are
+  playable (BOARD, the V5 waves).
 - The hidden-hand design (K0 discipline priors → K1 deck templates → K2 odds; the TWD profile and archetype labels) is
   `docs/specs/spec-knowledge-layer.md`.
 

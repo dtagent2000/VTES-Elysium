@@ -7257,7 +7257,7 @@ async function connectWithRetry(client, tries = 30){
   /* 103b) rescue stealth */
   const src = require('fs').readFileSync(require.resolve('./elysium-bot.js'), 'utf8');
   const blk = src.slice(src.indexOf("if(act.kind === 'ownRescue'){"), src.indexOf("if(act.kind === 'enemyRescue'){"));
-  ok(/this\._announceTallyA\(1\)/.test(blk) && !/this\._announceTallyA\(0\)/.test(blk), '103b the own rescue announces +1 stealth (rulebook: same controller); the enemy rescue keeps 0');
+  ok(/this\._announceTallyA\(1 \+ this\._cryptStealthMod\(v, 'ownRescue', false\)\)/.test(blk) && !/this\._announceTallyA\(0[ )]/.test(blk), '103b the own rescue announces +1 stealth (rulebook: same controller) plus the crypt\'s own (v0.6.219, crypt wave A); the enemy rescue keeps 0');
 
   /* 103c) Daring the Dawn on a referendum */
   const mkR = (pass, preyPool, icpSum, tries) => { const u = mk103(); const br = vm('v1', 'Alice Chen', 5, true); u.board = [br, vm('v2', 'Naomi Stewart', 4)]; u.hand = ['Daring the Dawn'];
@@ -8478,6 +8478,19 @@ async function connectWithRetry(client, tries = 30){
     u.pool = 19; u.send({ t: 'chat', msg: 'I use 4 transfers to draw a new vampire.' });
     u._invOnEvent(u.ev.push({ kind: 'turn', seat: 1 }));
     ok(u.flags.length === 0, '127v v0.6.180: a crypt draw costs 4 TRANSFERS + 1 pool -- the ledger no longer reads the 4 as pool (the +3 drifts): ' + JSON.stringify(u.flags)); }
+  { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'I3', persona: 'expert', deckName: 'ventrue', paceMs: 0, askSecs: 1, log: () => {} });
+    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 2, name: 'I3', bot: true }]; u.flags = []; u._emit = (ty, d) => { if(ty === 'inv-flag') u.flags.push(d); };
+    // v0.6.219 (Johan, 12 Nov): Wider View burned after 2 blood moved -- the influence loop's own order: the burn's note prints the pool
+    // after the move, the phase's one sentence books the move at its end. Every Wider View flag of the V5 smoke was this double count.
+    const burn = p => u.note('Wider View: Trainbot uses 4 transfers to burn it for +2 pool (pool ' + p + ') -- nothing better to spend the transfers on this turn.');
+    u.pool = 8; u._invPool = 8;
+    u.pool = 6; u.pool = 8; burn(8); u.send({ t: 'chat', msg: 'I influence 2 blood to an uncontrolled vampire.' });
+    u._invOnEvent(u.ev.push({ kind: 'turn', seat: 1 })); const clean = u.flags.length;
+    u.pool = 11; burn(11); const above = u.flags.length;                     // a printed pool ABOVE the ledger is no influence: it flags at once
+    u._invOnEvent(u.ev.push({ kind: 'turn', seat: 2 }));
+    u.pool = 10; burn(10); u._invOnEvent(u.ev.push({ kind: 'turn', seat: 1 }));   // a gap no influence sentence explains: it flags at the turn
+    ok(clean === 0 && above === 1 && u.flags[0].inv === 'pool-print' && u.flags[0].printed === 11 && u.flags.length === 2 && u.flags[1].inv === 'pool-print' && u.flags[1].unbooked === 3,
+       '127v v0.6.219: a Wider View burn after the phase moved blood raises no flag (no pool-print, no pool-drift +2: the influence sentence books only the rest); a printed pool above the ledger still flags at once, a gap no sentence explains flags at the turn: ' + JSON.stringify(u.flags)); }
   // w) v0.6.185: phase B review -- a pending mark never borrows another speaker's event
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'W', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'W', bot: true }, { seat: 3, name: 'Anna' }];
@@ -11457,13 +11470,15 @@ async function connectWithRetry(client, tries = 30){
 
       // k) the posture: the bot's manifest first, then the deck file's own (the V5 precons), else wave
       { const P = (deckName, deck) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'K0', log: () => {} }, deck ? { deck } : {})); u.o.deckName = deckName; return u._combatPosture(); };
-        const got = [P('brujah', deckOf('chase')), P('banuhaqim', deckOf('snipe')), P('toreador', deckOf('wave')), P('tremere', deckOf('chase')), P('nosferatu', null), P('gangrel', deckOf('rush')), P('hecata', { name: 'x', crypt: [], library: [] })];
+        const got = [P('brujah', deckOf('chase')), P('banuhaqim', deckOf('snipe')), P('ministry', deckOf('wave')), P('tremere', deckOf('chase')), P('nosferatu', null), P('gangrel', deckOf('rush')), P('hecata', { name: 'x', crypt: [], library: [] })];   /* v0.6.219: ministry's file in toreador's place -- toreador is embedded since crypt wave A (its posture is DECK_STRATEGY's, the line below) */
         ok(got.join() === 'chase,snipe,wave,snipe,chase,wave,wave',
            '160k the posture: a deck file’s own (chase / snipe / wave) when the bot has no manifest for it; DECK_STRATEGY wins where it has one; an unknown word or none = wave (got ' + got.join() + ')');
         let gp = null; try { gp = require('./gen-precon.js'); } catch(e){}
-        const files = ['brujah', 'gangrel', 'tzimisce', 'pathcaine', 'banuhaqim', 'toreador'].map(k => { try { return JSON.parse(require('fs').readFileSync('deck-' + k + '.json', 'utf8')).combat || '-'; } catch(e){ return '?'; } });
+        const files = ['brujah', 'gangrel', 'tzimisce', 'pathcaine', 'banuhaqim', 'ministry'].map(k => { try { return JSON.parse(require('fs').readFileSync('deck-' + k + '.json', 'utf8')).combat || '-'; } catch(e){ return '?'; } });
         ok(!!gp && gp.postureOf && gp.postureOf('brujah') === 'chase' && gp.postureOf('banuhaqim') === 'snipe' && gp.postureOf('hecata') === 'wave' && files.join() === 'chase,chase,chase,chase,snipe,wave',
-           '160k ...the precon files carry D-102’s postures, written and checked by gen-precon.js v1.1.0 (got ' + files.join() + ')'); }
+           '160k ...the precon files carry D-102’s postures, written and checked by gen-precon.js v1.1.0 (got ' + files.join() + ')');
+        { let tf = '?'; try { tf = JSON.parse(require('fs').readFileSync('deck-toreador.json', 'utf8')).combat || '-'; } catch(e){} const tp = P('toreador', null);   // v0.6.219 (crypt wave A): Toreador is embedded -- the bot's manifest carries its posture, and gen-precon.js --check refuses one in an embedded deck's file
+          ok(tf === '-' && tp === 'wave', '160k ...the embedded Toreador: no posture in its file, DECK_STRATEGY’s wave (got file ' + tf + ', posture ' + tp + ')'); } }
 
       // l) the finders: Flash [CEL] picks the maneuver that brings its press; Slam [POT]'s maneuver only to close and only superior
       { const u = mkU160('L0'); u._range = 'close';
@@ -12116,6 +12131,149 @@ async function connectWithRetry(client, tries = 30){
         qs.length = 0; mv.locked = true; m._lastCombat = null; m._lastAct = { vamp: mv.name, outcome: 'through', kind: 'bleed' }; m._maybeActAgain(mv, [mv], 0);
         ok(!err && terms === 'Referendum terms \u2014 Toreador Justicar: Bret Stryker (G6) takes the title (Justicar, 3 votes).' && tt.title === 'Justicar' && tt.votes === 3 && !u.board.some(c => c && c.zone === 'ash' && c.name === 'Toreador Justicar') && q1.includes('Monster') && !qs.includes('Monster'),
            '162y ...Toreador Justicar through the referendum: the terms line names Bret, the pass puts the card on him (Justicar, 3); Monster is weighed after the combat that left Crow down, not after a combat-free bleed (got ' + JSON.stringify({ err, terms, tt, q1, q2: qs }) + ')'); }
+    }
+
+    /* 163) v0.6.219 -- CRYPT WAVE A (RULINGS D-108): the simple crypt forms with a consumer, and the two choices of 6 Nov. +1 bleed
+       (Catalina Vega, Kamile Paukstys and nine bleed halves); +1 strength (Massimiliano, Valeriya, Anousha, Kalyani and three strength
+       halves), read by the planners outside combat too; the intercept forms (Martina on bleeds, Rinaldo, Castellan's directed /
+       undirected, Bret against titled vampires, Branimira's pool, Azucena by the Lasombra actor's age) at the block decision, the pick
+       and the counter; the stealth forms (Verrix on bleeds, Kalyani hunting, Frau Schädel recruiting and employing, Ariane undirected,
+       Devorah's pool) at every announce; Yewon Ong's Oblivion vote discard; Flávio Gonçalves's and Phaibun's once-each-combat strike:
+       dodge; Toreador in the menu. The pre-change bytes lack the new methods: every new call is guarded so they fail clean.
+       LAST LINE OF 163 is the closing brace below. */
+    {
+      console.log('\n[163] v0.6.219 -- crypt wave A: the bleed, strength, intercept and stealth forms, Yewon Ong, the crypt dodge, Toreador in the menu');
+      const IF3 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const strip163 = h => String(h || '').replace(/<[^>]*>/g, '');
+      const mkU163 = (name, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'Viktor', persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: u.o.name, online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.notes = []; u.note = t => u.notes.push(t); u.chats = []; u.chat = t => u.chats.push(t); u.says = []; u.say = t => u.says.push(t);
+        u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
+      const V3 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 5, attached: [] }, o || {});
+      const logs3 = u => u.sent.filter(m => m && m.t === 'log').map(m => strip163(m.html));
+      const hanna = u => { u.table[1] = { pub: { pool: 20, cards: [V3('h1', 'Alexa Draper (G6)'), V3('h2', 'Ashley (G6)'), V3('h3', 'Kathy Glens', { attached: ['tj'] }), { id: 'tj', name: 'Toreador Justicar', kind: 'lib', zone: 'ready', host: 'h3' },
+        V3('h4', 'Braden White (G6)'), V3('h5', 'Rinaldo Albizzi'), V3('h6', 'Julia Sowinski (G6)')] } }; return u; };   // Alexa a Prince; Kathy Glens untitled but for the title card on her; Braden 4, Rinaldo 7, Julia 5: Lasombra of three ages
+      const bleedBy = actor => ({ who: 'Hanna', kind: 'bleed', amount: 1, actingVampName: actor, contested: false, reacted: new Set(), attempted: new Set(), blockerVamp: null, declined: false });
+      const undirBy = (actor, sub) => ({ who: 'Hanna', kind: 'undirected', sub: sub || 'political', T: 'T6', role: 'prey', actorSeat: 1, actorUnlocked: 0, actingVampName: actor, amount: 0, contested: false, reacted: new Set(), attempted: new Set(), blockerVamp: null, declined: false });
+
+      // a) the readers: each new form's value, the old entries' unchanged ones
+      { const u = hanna(mkU163()); const I = (n, p) => u._cryptIntercept(V3('i', n), p), S = (n, k, d) => u._cryptStealthMod(V3('s', n), k, d);
+        const got = {
+          bleed: [u._cryptBleedBonus(V3('a', 'Catalina Vega')), u._cryptBleedBonus(V3('b', 'Kamile Paukstys')), u._cryptBleedBonus(V3('c', 'Sreelekha')), u._cryptBleedBonus(V3('d', 'Ashley (G6)'))],
+          martina: [I('Martina Srnankova', bleedBy('Ashley (G6)')), I('Martina Srnankova', undirBy('Ashley (G6)', 'hunt'))],
+          rinaldo: [I('Rinaldo Albizzi', undirBy('Ashley (G6)', 'hunt')), I('Rinaldo Albizzi', 'bleed')],
+          castellan: [I('Castellan', bleedBy('Ashley (G6)')), I('Castellan', undirBy('Ashley (G6)')), I('Castellan', { kind: 'peek', peekSup: true }), I('Castellan', { kind: 'peek', peekSup: false }), I('Castellan', { kind: 'asked', directed: null }), I('Castellan', 'peek')],
+          bret: [I('Bret Stryker', bleedBy('Alexa Draper (G6)')), I('Bret Stryker', bleedBy('Ashley (G6)')), I('Bret Stryker', bleedBy('Kathy Glens')), I('Bret Stryker', bleedBy('Underbridge Stray')), I('Bret Stryker', 'bleed')],
+          azucena: [I('Azucena', bleedBy('Braden White (G6)')), I('Azucena', bleedBy('Rinaldo Albizzi')), I('Azucena', bleedBy('Julia Sowinski (G6)')), I('Azucena', bleedBy('Ashley (G6)'))],
+          dowager: [I('The Dowager (G6)', 'bleed'), I('The Dowager (G6)', 'rush'), I('The Dowager (G6)', 'hunt'), I('The Dowager (G6)', undirBy('Ashley (G6)')), I('The Dowager (G6)', { kind: 'asked', directed: true })],
+          christine: [I('Christine Boscacci (G2)', 'bleed'), I('Christine Boscacci (G2)', 'rush')] };
+        u.pool = 9; got.branimira = [I('Branimira', bleedBy('Ashley (G6)'))]; u.pool = 10; got.branimira.push(I('Branimira', bleedBy('Ashley (G6)'))); u.pool = 20;
+        ok(JSON.stringify(got) === JSON.stringify({ bleed: [1, 1, 1, 0], martina: [1, 0], rinaldo: [1, 1], castellan: [1, -1, -1, 1, 0, 0], bret: [-1, 0, -1, 0, 0], azucena: [1, -1, 0, 0], dowager: [1, 1, 0, 0, 1], christine: [-1, 0], branimira: [1, 0] }),
+           '163a the bleed and intercept readers: Catalina, Kamile and a bleed half +1; Martina +1 on a bleed only; Rinaldo +1 always; Castellan +1 directed, -1 undirected (the [AUS] Revelations too), 0 when the form is unknown; Bret -1 against a printed title and a title card, 0 against an untitled vampire, an ally or no actor; Azucena +1 / -1 by the Lasombra actor’s age, 0 for the same capacity or another clan; Branimira +1 at 9 pool, 0 at 10; The Dowager and Christine as before -- the Dowager’s +1 also on the asked window of a directed action (got ' + JSON.stringify(got) + ')');
+        const st = { verrix: [S('Verrix, Naughty Boy', 'bleed'), S('Verrix, Naughty Boy', 'hunt', false)], kalyani: [S('Kalyani, Agent of Doom', 'hunt', false), S('Kalyani, Agent of Doom', 'bleed')],
+          frau: [S('Frau Schädel', 'recruit', false), S('Frau Schädel', 'employ', false), S('Frau Schädel', 'equip', false)],
+          ariane: [S('Ariane', 'hunt', false), S('Ariane', 'political', false), S('Ariane', 'bleed'), S('Ariane', 'peek', true), S('Ariane', 'card', null)], royce: [S('Royce (G2)', 'bleed'), S('Royce (G2)', 'rush', true)] };
+        u.pool = 5; st.devorah = [S('Devorah', 'bleed'), S('Devorah', 'hunt', false)]; u.pool = 6; st.devorah.push(S('Devorah', 'bleed'));
+        u.pool = 5; u._actingVamp = { v: V3('dv', 'Devorah'), parked: { blood: 0, pool: 1 } }; st.devorah.push(S('Devorah', 'political', false)); u._actingVamp = null; u.pool = 20;   // a 1-pool referendum parked at the announce: she still has 6 (R-17)
+        const sm = [u._cryptStrengthMod(V3('m', 'Massimiliano'), null), u._cryptStrengthMod(V3('m', 'Massimiliano'), 'Ashley (G6)'), u._cryptStrengthMod(V3('k', 'Kalyani, Agent of Doom'), null), u._cryptStrengthMod(V3('t', 'Theo Bell'), null),
+          u._cryptStrengthMod(V3('bl', 'Blythe Candeleria (G2)'), null), u._cryptStrengthMod(V3('bl', 'Blythe Candeleria (G2)'), 'Ashley (G6)')];
+        ok(JSON.stringify(st) === JSON.stringify({ verrix: [1, 0], kalyani: [-1, 0], frau: [1, 1, 0], ariane: [-1, -1, 0, 0, 0], royce: [-1, 0], devorah: [1, 1, 0, 0] }) && sm.join() === '1,1,1,1,0,-1',
+           '163a ...the stealth reader: Verrix +1 on a bleed; Kalyani -1 hunting; Frau Schädel +1 recruiting and employing, not equipping; Ariane -1 on an undirected action, not a directed one or an unknown form; Royce as before; Devorah +1 at 5 pool, 0 at 6, and 0 at 5 with a 1-pool cost parked (not paid until the action succeeds) -- and the strength reader: +1 for Massimiliano, Kalyani and Theo Bell with or without an opponent, Blythe’s clan condition still waits for one (got ' + JSON.stringify(st) + ' / ' + sm.join() + ')'); }
+
+      // b) the block path: the decision (interceptPotential) and _commitBlock's counter read the crypt's intercept; a lone body at -1 is never picked (a 0-stealth action beats it, the pick's own floor)
+      { const run = async (name, p, pool) => { const u = hanna(mkU163()); if(pool != null) u.pool = pool; const v = V3('blk', name); u.board = [v]; u.pending = p; const w = []; u._writeTally = m => w.push(m); u._pace = async () => {}; u._vwArm = () => {};
+          try { await u._commitBlock(p, { why: 'the test' }); } catch(e){ return 'err ' + e.message; }
+          const b = w.filter(m => m && m.mode === 'block' && m.b != null).map(m => m.b); return b.length ? b[b.length - 1] : null; };
+        const dec = (name, p, pool) => { const u = hanna(mkU163()); if(pool != null) u.pool = pool; u.board = [V3('blk', name)]; return u.interceptPotential(null, p); };
+        const got = [await run('Martina Srnankova', bleedBy('Ashley (G6)')), await run('Bret Stryker', bleedBy('Ashley (G6)')), await run('Branimira', bleedBy('Ashley (G6)'), 8), await run('Azucena', bleedBy('Braden White (G6)')), await run('Rinaldo Albizzi', undirBy('Ashley (G6)', 'hunt'))];
+        const decs = [dec('Bret Stryker', bleedBy('Alexa Draper (G6)')), dec('Castellan', undirBy('Ashley (G6)')), dec('Castellan', bleedBy('Ashley (G6)')), dec('Martina Srnankova', bleedBy('Ashley (G6)')), dec('Branimira', bleedBy('Ashley (G6)'), 12)];
+        const pick = (() => { const u = hanna(mkU163()); u.board = [V3('blk', 'Bret Stryker')]; return u._pickBlocker(null, null, bleedBy('Alexa Draper (G6)')); })();
+        const raw = async human => { const u = hanna(mkU163()); if(human) u.players[0].bot = false; const v = V3('dw', 'The Dowager (G6)', { cap: 6 }); u.board = [v]; u.hand = ['Enhanced Senses']; u.tally = { mode: 'block', a: 0, b: 0 };
+          const w = []; u._writeTally = m => { w.push(m); u.tally = Object.assign({}, u.tally, m); }; u._pace = async () => {}; u._vwArm = () => {}; const p = undirBy('Ariane', 'hunt'); u.pending = p;
+          try { await u._commitBlock(p, { why: 'the test' }); } catch(e){ return 'err ' + e.message; }
+          return u.hand.join() + '/' + w.filter(m => m && m.b != null).map(m => m.b).join(); };
+        const rawBot = await raw(false), rawHuman = await raw(true);   // v0.6.219 (the graded readings): a BOT actor's counter is its raw stealth; a human's unbooked one keeps the default
+        ok(got.join() === '1,0,1,1,1' && decs.join() === '-1,-1,1,1,0' && pick === null && rawBot === 'Enhanced Senses/0' && rawHuman === '/1',
+           '163b the block: _commitBlock’s counter carries Martina’s 1 on a bleed, Bret’s 0 against the untitled Ashley, Branimira’s 1 at 8 pool, Azucena’s 1 against the younger Braden White, Rinaldo’s 1 on a hunt; the decision reads Bret -1 against Alexa Draper (a Prince), Castellan -1 on an undirected action and +1 on a bleed, Martina +1, Branimira 0 at 12 pool; a lone Bret is not picked against the Prince; against a BOT Ariane’s hunt at stealth 0 (her -1) the Dowager blocks without Enhanced Senses, against a human’s unbooked counter the default 1 still asks for it (got ' + got.join() + ' / ' + decs.join() + ' / ' + (pick && pick.name) + ' / ' + rawBot + ' / ' + rawHuman + ')'); }
+
+      // c) the turn (_playTurn): every announce carries the crypt's stealth -- Ariane, Kalyani and Devorah hunt (0 blood: the hunt is mandatory), Verrix and Catalina bleed; Kathy Glens is the control
+      { const turn = async (name, blood, pool, cap) => { const u = hanna(mkU163()); u.pool = pool || 20; const v = V3('t1', name, { blood, cap: cap || 8, locked: true }); u.board = [v]; u.turnSeat = 2;
+          const w = []; u._writeTally = m => w.push(m); u._askBlock = async () => ({ what: 'pass' }); let err = null;
+          try { await u._playTurn(); } catch(e){ err = e.message; }
+          const a = w.filter(m => m && m.mode === 'block' && m.a != null).map(m => m.a); return { err, a: a.length ? a[0] : null, act: logs3(u).filter(l => / (hunts|bleeds for \d+)\.$/.test(l)) }; };
+        const R = [await turn('Ariane', 0), await turn('Kalyani, Agent of Doom', 0), await turn('Devorah', 0, 5), await turn('Devorah', 0, 6), await turn('Verrix, Naughty Boy', 7, 20, 7), await turn('Catalina Vega', 8, 20, 8), await turn('Kathy Glens', 0)];
+        const want = [[0, 'Ariane hunts.'], [0, 'Kalyani, Agent of Doom hunts.'], [2, 'Devorah hunts.'], [1, 'Devorah hunts.'], [1, 'Verrix, Naughty Boy bleeds for 1.'], [0, 'Catalina Vega bleeds for 2.'], [1, 'Kathy Glens hunts.']];
+        ok(R.every((r, i) => !r.err && r.a === want[i][0] && r.act.join('|') === want[i][1]),
+           '163c the turn: Ariane hunts at stealth 0 (the hunt’s 1, her -1), Kalyani at 0, Devorah at 2 with 5 pool and at 1 with 6; Verrix bleeds for 1 at stealth 1, Catalina for 2 at 0; Kathy Glens hunts at 1 (got ' + JSON.stringify(R) + ')'); }
+
+      // d) the planners read the crypt's strength outside combat: the rush's expectation, the next round's damage, the Grapple, Change of Target's fist; the strike in combat
+      { const u = hanna(mkU163()); const ms = V3('ms', 'Massimiliano', { blood: 7, cap: 7 }), pl = V3('pl', 'Kathy Glens', { blood: 4, cap: 4 }); u.board = [ms, pl];
+        const ex = [u._rushExpectation(ms), u._rushExpectation(pl)], fist = [u._myRoundDmg(ms, { close: true }).fist, u._myRoundDmg(pl, { close: true }).fist], gr = [u._wantGrapple(ms), u._wantGrapple(pl)];
+        const cot = IF3(u, '_cotWorth') ? u._cotWorth(ms, 1).why : '';
+        u._inCombat = true; u._range = 'close'; const sp = u._strikePick(ms, false); u._inCombat = false;
+        ok(ex[0].expDmg === 2 && ex[1].expDmg === 1 && ex[0].dmgSource === true && ex[1].dmgSource === false && fist.join() === '2,1' && gr[0].play === true && /strength \+1/.test(gr[0].why) && gr[1].play === false && /fist 2\)/.test(cot) && sp.fistDmg === 2,
+           '163d Massimiliano’s +1 strength: the rush expects 2 and counts it a damage source, his next round’s fist is 2, the Grapple is worth it (Johan’s permanent strength), Change of Target reads fist 2, the strike deals 2; a vanilla vampire stays at 1 (got ' + JSON.stringify({ ex: ex.map(e => [e.expDmg, e.dmgSource]), fist, gr: gr.map(g => g.play), cot, sp: sp.fistDmg }) + ')'); }
+
+      // e) Yewon Ong: Alexa Draper's vote discard with Oblivion -- a card every mode of which requires [obl]
+      { const u = mkU163(); const yw = V3('yw', 'Yewon Ong', { cap: 8 }); u.board = [yw]; u.hand = ['Shadow Cloak', 'Enchant Kindred'];
+        const b1 = u._voteDiscardBoosts(true, null); const b1s = b1.map(b => b.vamp.name + ':' + b.name + ':' + b.n).join();
+        const spent = b1[0] ? u._spendVoteDiscard(b1[0], 'for') : false;
+        u.hand = ['Enchant Kindred']; const b2 = u._voteDiscardBoosts(true, null).length;
+        u.hand = ['Stygian Shroud', 'Enchant Kindred']; const b3 = u._voteDiscardBoosts(true, null).map(b => b.name).join();   // a card with no effect data that requires [obl]
+        ok(b1s === 'Yewon Ong:Shadow Cloak:1' && spent === true && logs3(u).includes('Yewon Ong discards Shadow Cloak — +1 vote for the referendum.') && b2 === 0 && b3 === 'Stygian Shroud',
+           '163e Yewon Ong discards Shadow Cloak ([obl]) for +1 vote, and Stygian Shroud (no effect data, [obl]); Enchant Kindred ([pre]) is no payment (got ' + JSON.stringify({ b1s, spent, b2, b3, L: logs3(u) }) + ')'); }
+
+      // f) the crypt's own strike: dodge -- the finder, the copies, the reasons, the round, once each combat
+      { const u = mkU163(); const fl = V3('fl', 'Flávio Gonçalves', { blood: 1, cap: 7 }), ph = V3('ph', 'Phaibun', { blood: 1, cap: 5 });
+        u.hand = []; const d0 = u._bestDodgeFor(fl), c0 = u._dodgeCopies(fl);
+        u.hand = ['Dodge']; const d1 = u._bestDodgeFor(fl), c1 = u._dodgeCopies(fl);
+        u.hand = []; const p0 = u._bestDodgeFor(ph); u.hand = ['Dodge']; const p1 = u._bestDodgeFor(ph), pc = u._dodgeCopies(ph); u.hand = ['Enchant Kindred']; const p2 = u._bestDodgeFor(ph);
+        u._handStrikeOnly = true; const g = u._bestDodgeFor(fl); u._handStrikeOnly = false;
+        u._cryptDodgeUsed = new Set(['fl']); u.hand = []; const used = u._bestDodgeFor(fl); u._cryptDodgeUsed = null;
+        ok(!!d0 && d0.crypt === true && d0.free === true && d0.idx === -1 && c0 === 1 && !!d1 && d1.crypt === true && c1 === 2 && p0 === null && !!p1 && p1.name === 'Dodge' && pc === 2 && !!p2 && p2.crypt === true && p2.discard === 1 && g === null && used === null,
+           '163f _bestDodgeFor: Flávio’s own free dodge, before a Dodge card (two copies with it), not once used; Phaibun’s needs a card to discard and goes after a Dodge card; Immortal Grapple bars both (got ' + JSON.stringify({ d0, c0, d1: d1 && d1.name, c1, p0, p1: p1 && p1.name, pc, p2, g, used }) + ')');
+        const r = u.decide('combat-strike', { dodge: d0, vamp: V3('fx', 'Flávio Gonçalves', { blood: 5, cap: 7 }), inc: { known: true, dealt: 1 }, mine: 1, mineWhat: 'hands', copies: 1 });
+        ok(r.dodge === false && /my own dodge \(once each combat\)/.test(r.why || ''), '163f ...the strike decision weighs it as a dodge and names it (got ' + JSON.stringify(r) + ')');
+        // the round: Flávio at blood 1 dodges with his own (no card leaves the hand), the client's dodge line; the next round of the same combat has none
+        const L12 = require('./elysium-bot.js').L12;
+        const v = mkU163(); v.caps.tally = true; v._awaitOppManeuver = () => Promise.resolve(null); const w = V3('fw', 'Flávio Gonçalves', { blood: 1, cap: 7 }); v.board = [w]; v.hand = [];
+        let err = null; try { await v._resolveCombatRound(w); } catch(e){ err = e.message; }
+        const L1 = logs3(v), line = 'Flávio Gonçalves strikes: dodge — no damage either way this round.';
+        const usedAfter = !!(v._cryptDodgeUsed && v._cryptDodgeUsed.has('fw')), again = v._bestDodgeFor(w);
+        ok(!err && L1.includes(line) && L12.strikeD.test(line) && w.blood === 1 && w.zone === 'ready' && usedAfter && again === null,
+           '163f ...the round: Flávio (blood 1) strikes: dodge with no card -- the client’s own dodge line (L12.strikeD), no damage, and no second dodge this combat (got ' + JSON.stringify({ err, L1, usedAfter, again }) + ')');
+        // Phaibun: the card goes at random, drawn back like any discard
+        const q = mkU163(); q.caps.tally = true; q._awaitOppManeuver = () => Promise.resolve(null); const pw = V3('pw', 'Phaibun', { blood: 1, cap: 5 }); q.board = [pw]; q.hand = ['Enchant Kindred'];
+        let err2 = null; try { await q._resolveCombatRound(pw); } catch(e){ err2 = e.message; }
+        const L2 = logs3(q);
+        ok(!err2 && L2.includes('Phaibun discards Enchant Kindred at random to strike: dodge.') && L2.includes('Phaibun strikes: dodge — no damage either way this round.') && L2.indexOf('Phaibun discards Enchant Kindred at random to strike: dodge.') < L2.indexOf('Phaibun strikes: dodge — no damage either way this round.') && !q.hand.includes('Enchant Kindred') && ((q._drawOwed | 0) === 1 || q.sent.some(m => m && m.t === 'draw')),
+           '163f ...Phaibun discards his one card at random, then the dodge line; the card is drawn back (got ' + JSON.stringify({ err2, L2, hand: q.hand, owed: q._drawOwed }) + ')');
+        // a combat starts and ends with the dodge unused (_resolveCombat's start and its finally)
+        const z = mkU163(); const zw = V3('zw', 'Flávio Gonçalves'); z.board = [zw]; z._cryptDodgeUsed = new Set(['zw']); let seen = 'unset';
+        z._resolveCombatRound = async () => { seen = z._cryptDodgeUsed; z._cryptDodgeUsed = new Set(['zw']); return { ended: true }; }; z._phaseAsk = async () => {}; z._phaseAfter = async () => {};
+        let err3 = null; try { await z._resolveCombat(zw); } catch(e){ err3 = e.message; }
+        ok(!err3 && seen === null && z._cryptDodgeUsed === null, '163f ...a combat begins with the dodge unused and leaves it unused for the next (got ' + JSON.stringify({ err3, seen: seen && [...seen], after: z._cryptDodgeUsed && [...z._cryptDodgeUsed] }) + ')'); }
+
+      // g) Toreador in the menu: the eighth embedded deck, its manifest, and a client-spawned bot (a deck object, no name) knows it
+      { const A = require('./elysium-bot.js').ARCHETYPES || {}; const t = A.toreador; let file = null; try { file = JSON.parse(require('fs').readFileSync('deck-toreador.json', 'utf8')); } catch(e){}
+        const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'T', persona: 'expert', log: () => {} }, t ? { deck: JSON.parse(JSON.stringify(t)) } : {}));
+        ok(!!t && !!file && JSON.stringify(t.crypt) === JSON.stringify(file.crypt) && JSON.stringify(t.library) === JSON.stringify(file.library) && u.o.deckName === 'toreador' && u._combatPosture() === 'wave' && u._deckAxes().join() === 'vote,bleed' && u._posture() === 'resisting' && u._deckAxis() === 1,
+           '163g ARCHETYPES.toreador = deck-toreador.json; a bot given its deck object knows it (toreador), posture wave, axes vote + bleed -- resisting, multiplier 1: the file deck’s play (got ' + JSON.stringify({ has: !!t, deckName: u.o.deckName, posture: u._combatPosture(), axes: u._deckAxes() }) + ')'); }
+
+      // h) every announce passes its kind and form to the crypt's stealth (the egress review, 12 Nov): the 18 `this._announceTallyA(`
+      //    sites in source order, each argument with its own `this._cryptStealthMod(v, KIND, FORM)`. What a kind and a form give
+      //    (Ariane, Kalyani, Frau Schädel, Devorah, Verrix) is 163a; the turn drives the hunt and the bleed (163c), the own rescue 103b.
+      { const src = require('fs').readFileSync(require.resolve('./elysium-bot.js'), 'utf8'), got = [];
+        for (let i = src.indexOf('this._announceTallyA('); i >= 0; i = src.indexOf('this._announceTallyA(', i + 1)){
+          let d = 0, j = i + 'this._announceTallyA'.length;
+          for (; j < src.length; j++){ if (src[j] === '(') d++; else if (src[j] === ')' && --d === 0) break; }
+          const m = /this\._cryptStealthMod\(v, ([^()]+?)\)/.exec(src.slice(i, j + 1));
+          got.push(m ? m[1] : 'none @ line ' + src.slice(0, i).split('\n').length); }
+        const want = ["'leaveTorpor', false", "'political', false", "'hunt', false", "'stock', false", "'ownRescue', false", "'enemyRescue', true",
+          "'recruit', false", "'strength', false", "'burnCard', true", "'rutor', false", "'creep', false", "'rush', true", "'rush', true",
+          "act.isRetainer ? 'employ' : 'equip', false", "'fetch', false", "'peek', !act.supMode", "'pool', true", "'bleed'"];
+        ok(JSON.stringify(got) === JSON.stringify(want),
+           '163h every one of the 18 announces passes its kind and form to _cryptStealthMod: leave torpor, political, hunt, stock, own rescue undirected; enemy rescue, card burn, both rushes, pool directed; recruit, strength, Rutor’s Hand, tabling, equip / employ, fetch undirected; Revelations by its mode; the bleed (got ' + JSON.stringify(got) + ')'); }
     }
 
 

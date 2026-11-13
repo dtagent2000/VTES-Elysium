@@ -59,7 +59,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   the audits, a new section's destructive check, main's client suite when the wire changes (red by design until main re-embeds a
   new guide). A red the PR did not cause: the suite's 78c flake -- re-run the failed job once (`gh run rerun <id> --failed`) and
   say so in the PR; `test-cardfx` / `gen-precon --check` red with no card change -- KRCG's data moved, a round of its own; a
-  doc-budget version line -- main released (main's files do not trigger CI), refresh STATUS in the PR. The correctness lint by
+  doc-budget version line on a PR -- main released (a scheduled run or a push only warns), refresh STATUS in the PR. The correctness lint by
   hand, from `bot/`: `npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .`
   -- every finding fails; the suppressions file is `{}` since C2 and only shrinks (never `--suppress-all` / `--suppress-rule`:
   CI fails a PR that adds one).
