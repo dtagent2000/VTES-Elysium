@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.220';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.221';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -1033,6 +1033,7 @@ class Bot {
   gid(){ return 'bot' + (++this._gid) + '_' + Date.now().toString(36).slice(-4); }
 
   buildPub(){
+    const memo = this._memoMap();      // v0.6.221 (D-113 (1)): the table's memory, derived once a push
     return {
       deckName: this.deck.name || '', pool: this.pool, edge: this.edge, phase: -1,
       bw: GEO.bw, bh: GEO.bh,
@@ -1043,6 +1044,7 @@ class Bot {
         x: Math.round(c.x), y: Math.round(c.y),
         locked: c.locked || undefined, faceDown: (this._debugHand && c.kind === 'crypt') ? undefined : (c.faceDown || undefined),   // v0.6.112 (R4): debug turns my uncontrolled crypt face UP for everyone -- Johan grading what the bot is building toward, not guessing at it
         blood: c.blood || undefined,
+        counters: this._pubCounters(c, memo.get(c.id)),   // v0.6.221 (D-113): a card's named counters (Smiling Jack's), else this bot's own tokens
         host: c.host || undefined, attached: (c.attached && c.attached.length) ? c.attached : undefined   // v0.5: master-phase permanents (Blood Doll/Vessel) attach to a vampire -- without these two fields the client's sanitizePub shape has nothing to render the link with, and the card would show as a stray unattached card on other players' boards
       }))
     };
@@ -4082,7 +4084,7 @@ class Bot {
   }
   _cotHit(myVamp){                  // v0.6.217: is the combat I am in the one a Change of Target ended? The blocker never locked (the card comes before it does [LSJ 19980224]): it unlocks
     const c = this._cotCancel; if(!c || Date.now() - c.at > 30000) return false;
-    const opp = this._combatOppName || null; if(opp && opp !== c.vamp) return false;
+    const opp = (myVamp && this._combatOppOf && this._combatOppOf.get(myVamp.id)) || this._combatOppName || null; if(opp && opp !== c.vamp) return false;   // v0.6.221 (the Jack round, D-113): the combat's OWN opponent first -- v0.6.220's 600, match 528: a later block's combat had rewritten the shared name, so The Dowager's cancelled combat read Catalina and fought on
     this._cotCancel = null;
     if(myVamp && myVamp.zone === 'ready' && myVamp.locked){ myVamp.locked = false; this.push(); }
     this._emit('cot-cancelled', { vamp: myVamp ? myVamp.name : null, actor: c.vamp });
@@ -5416,6 +5418,21 @@ class Bot {
   }
   _grandBallLocked(v){ return !!v && this.board.some(c => c && c.kind === 'lib' && c.gbLock === v.id && !this._outOfPlay(c)); }   // v0.6.217: the Toreador my Grand Ball keeps locked (while the card stays in play)
   _grandBallFree(v){ return !!v && this.board.some(c => c && c.kind === 'lib' && c.gbFree === v.id && !this._outOfPlay(c)); }     // v0.6.217: the Toreador whose non-bleed actions cannot be blocked
+  _memoMap(){                        // v0.6.221 (D-113 (1), Johan's idea of 13 Nov): THE TABLE'S MEMORY -- the lasting choices this bot plays by, shown as custom tokens on its own cards (the pub's counters: every seat hovers them, and nobody can ask a bot afterwards). Derived at every push from the fields the rules read, never stored: a token cannot outlive or contradict its effect. Grand Ball's pair first -- each vampire carries its half (the same test as _grandBallFree / _grandBallLocked), the Ball names both. id -> [text]
+    const m = new Map(), add = (id, t) => { if(!id) return; const a = m.get(id) || []; if(!a.includes(t)) a.push(t); m.set(id, a); };
+    const nm = id => { const v = this.board.find(x => x && x.id === id); return v ? v.name : '?'; };
+    for(const c of this.board){
+      if(!c || c.kind !== 'lib' || !(c.gbFree || c.gbLock) || this._outOfPlay(c)) continue;
+      add(c.gbFree, 'Grand Ball: non-bleed actions unblockable'); add(c.gbLock, 'Grand Ball: does not unlock');
+      add(c.id, 'Unblockable: ' + nm(c.gbFree)); add(c.id, 'Locked: ' + nm(c.gbLock));   // two tokens, not one line: two long names would pass the server's 64 characters
+    }
+    return m;
+  }
+  _pubCounters(c, memo){             // v0.6.221 (D-113): the pub's counters -- a card's named counters (D-113 (2): the pub never carried them, so a bot's Smiling Jack took its owner's pool while no seat paid -- the victims read the pub; a NUMBER, _addCounter's, stays off), else this bot's own tokens (_memoMap); 12 a card, 64 characters, as the server keeps them. Never both: named counters are a COUNT other seats read (Jack's victims pay one pool each), so a token beside them would be paid as pool
+    const own = Array.isArray(c.counters) ? c.counters : [];
+    const list = own.length ? own : ((memo && memo.length && !this._outOfPlay(c)) ? memo : []);
+    return list.length ? list.slice(0, 12).map(x => String(x).slice(0, 64)) : undefined;
+  }
   _vampPath(v){ const h = v && this.fxLookup(v.name); return (h && h.kind === 'crypt' && h.e && h.e.path) || null; }   // v0.6.217: the printed Path ('Cathari', 'Death and the Soul' ...), null when none
   _hasArchetype(v){ return (v && v.attached || []).some(id => { const c = this.board.find(x => x && x.id === id); if(!c || this._outOfPlay(c)) return false; const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && h.e.archetype); }); }   // v0.6.217: 'a vampire can have only one archetype'
   _masterHostPlan(name){             // v0.6.217 (V5 wave 4, D-106): where a master that goes ON a vampire goes -- null = not one of the wave's (the older paths decide), { hold, why } = no legal or worthwhile host now (held pre-splice: nothing paid), { host } = the pick; Toreador Grand Ball: { grandBall, freeT, lockT }
@@ -5618,6 +5635,8 @@ class Bot {
   }
   _tableBlockRate(){ return (this._tableBlockAttempts | 0) / Math.max(1, this.ownTurns | 0); }   // v0.6.93: block attempts observed per own round -- the climate read future consumers calibrate against (benchmark metas expected < ~0.5/turn)
   _liveCount(){ let n = 0; for(const q of (this.players || [])) if(q && !q.out && !q.vacant) n++; return n; }   // B-55b: remaining players, the same roster read live(seat) already trusts
+  _gameOver(){ return !!this.started && !this.out && (this.players || []).length > 1 && this._liveCount() <= 1; }   // v0.6.221 (the Jack round, D-113; found by v0.6.220's V5 smoke): I am the last Methuselah -- the game is over, my turn ends (the survivor used to play on, bleeding itself: preySeat() is my own seat)
+  _endTurnAtGameOver(phase){ this._emit('game-over', { phase }); this.push(); this.send({ t: 'log', html: '<b>Turn passed.</b>' }); this.send({ t: 'pass' }); }   // v0.6.221: the rest of the turn is skipped; the table still gets its pass
   _endgameNow(){ return !!this.started && this._liveCount() > 0 && this._liveCount() <= 3; }   // B-55b BASE: <= 3 alive = the endgame read (the Grinder's naked 2-2 finish sits inside this); contender/VP refinement = documented v1.1
   _isDefenseCard(name){ const lk = this.fxLookup(name); if(!lk) return false; const cats = this._cats(lk.e || lk) || []; return cats.includes('bounce') || cats.includes('intercept'); }   // B-55b: the existing _cats vocabulary -- wake folds into intercept (R2), so bounce+intercept covers the defense class with zero new classification
   _revertHandSizeBonus(){   // v0.6.32 (Johan's ask, continuing Dreams of the Sphinx): extracted from the discard-phase loop specifically so it's directly testable on its own -- "until the end of the turn" expires HERE (discard phase is the turn's last phase), and per the SAME rule that granted it ("discard down to or draw up to your hand size" whenever it changes), reverting to the base 7 means discarding any excess now. Prefers a genuinely dead-hand card if one remains (worthless to hold regardless); falls back to the front of the hand for any remainder -- WHICH excess card to shed is a real strategic question this v1 doesn't weigh, matching Dreams of the Sphinx's own "ignore the 3-counter budget" simplification already noted at the lock-income decide() case.
@@ -6940,7 +6959,7 @@ class Bot {
         this._resolveCombat(blockerVamp, oppName).then(() => { this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
       }
     }
-    else { this.pending.contested = false; if(!(this.pending.role === 'predator' && this.pending.waitingFor)) this._reactWindow(); } // action continues, bleed still live -- M2: try again (another card, or give up -> Pass). v0.6.107: a PREDATOR-role window stays shut until the prey has declined (rulebook order)
+    else { this.pending.contested = false; this.pending.blockerVamp = null; if(!(this.pending.role === 'predator' && this.pending.waitingFor)) this._reactWindow(); }   // v0.6.221 (D-113): my failed attempt is over -- a later block's success verdict (another seat's) is not my combat (the Toreador report's stray blocker) // action continues, bleed still live -- M2: try again (another card, or give up -> Pass). v0.6.107: a PREDATOR-role window stays shut until the prey has declined (rulebook order)
   }
   _clearCombatStashes(){             // v0.6.103 (#1): the five one-shot stashes + the persistent opponent Carrion Crows + the armed flag -- called at every own announce (actor), at every block commit (defender), at a rush comply, at dealt and at oust. NEVER at _resolveCombat entry: the defender's verdict hand-off runs ahead of the attacker's Blocked branch, so a legitimate opponent line may already sit here (the dodge-branch comment's case)
     this._oppEndedCombat = false; this._oppStrike = null; this._oppTaken = null; this._oppPress = undefined; this._oppManeuver = undefined; this._oppGrapple = undefined; this._oppCarrionCrows = null;
@@ -7631,6 +7650,7 @@ class Bot {
     this._borneEnvDmg = this._borneEnvFor(myVamp); this._borneAnnounced = false;
     this._cepOpen(oppName || (this._actingVamp ? this._lastBlockerName : null) || this._learnedOpp || null); this._learnedOpp = null;   /* v0.6.182: ONE episode per combat */ this._combatDmgTaken = 0; this._cBase = Object.assign({}, this._cTally() || {}); this._cBaseRound = this._cBase;   /* v0.6.168: the field baseline for this combat (at combat ENTRY -- not per round) */   // v0.6.103 (#1): the actor side learns its opponent from the B-55e-b blocker name (a bot blocker always chats it before the verdict)   // VB: the opposing vampire's NAME when the caller knows it (defender sites: the announced actor; a blocked ACTOR's blocker stays null -- documented v1 under-claim for Blythe-as-actor) + the Franciscus-class per-combat damage accumulator   // N0: the borne crows peck every combat   // v0.6.26: per-COMBAT state (not per-round like _range) -- "only one Carrion Crows each combat", and the opponent's active one persists across every round of THIS combat, reset only when a new one starts
     this._inCombat = true;   // v0.6.103 (#1): the handshake window -- _stashAccept reads it
+    const tok = (this._combatTok = (this._combatTok | 0) + 1); if(myVamp) (this._combatOppOf = this._combatOppOf || new Map()).set(myVamp.id, oppName || null);   // v0.6.221 (D-113): this combat's token -- a later combat of mine supersedes it, and a superseded one ends at its next step and leaves the live combat's fields alone (the stray combat: one bot, two blocks, the first combat outlived its action)
     this._combatAt = Date.now();   // v0.6.198: a taken line from before this combat never stands in for the board (_stealAvail)
     this._combatMyVamp = myVamp;   // v0.6.160: the victim side of a steal needs to know whose blood goes
     this._myPump = null;   // v0.6.214 (V5 wave 2): this combat's before-range strength / hand pumps (_brPlay)
@@ -7639,6 +7659,7 @@ class Bot {
       this._curRound = round; if(round > 1){ this._cWrite({ rd: round }); this._cBaseRound = Object.assign({}, this._cTally() || {}, { ce: undefined, pr: undefined, rl: undefined }); }   // v0.6.168: a new round clears the per-round fields server-side   // v0.6.164: a changed rd starts a fresh round for every absent per-round field (srv-2.6.39)
       const res = await this._resolveCombatRound(myVamp, round > 1);
       if(res && res.cot) return;   // v0.6.217 (V5 wave 4, the sim footprint): Change of Target -- the action ended before block resolution, so this combat never began: no round row (ana-combat2 counted the stub as a handshake miss: 6 in the toreador smoke, 20 in 48 matches) and no end-of-round step; the 'cot-cancelled' row is the record
+      if(tok !== this._combatTok){ this._emit('combat-superseded', { vamp: myVamp.name, round }); return; }   // v0.6.221: a later combat of mine began while this one waited -- this one is over (its action is)
       const rowEnd = why => this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: null, continuing: false, end: why, blood: myVamp.zone === 'ready' ? (myVamp.blood | 0) : 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156
       const hsP = !!(this._rnd && this._rnd.hs), hsFirstP = hsP && this._rnd.hs !== 'a';   // v0.6.202 (R2): this round ran the bot-vs-bot step handshake -- the press step does too, with the same acting minion
       if(myVamp.zone === 'torpor' || myVamp.zone === 'burned'){ rowEnd(myVamp.zone); if(hsP) this._hsNothing(myVamp, 'press'); return; }   // combat already over from my own side. v0.6.202: one 'does not press.' (after my round line, which says why) so the other bot's press step ends at once
@@ -7730,7 +7751,7 @@ class Bot {
       this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: pressTag, continuing, blood: myVamp.blood | 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156: the row serie-cmb1 had to infer (range, opponent, strike, dealt, taken)
       if(!continuing){ await this._phaseAsk(6); await this._phaseAfter(6, false); return; }   // v0.6.165: "Anything before ending combat?" / "I have nothing before ending combat."
     }
-    } finally { try { this._noteCombatEnd(myVamp); } catch(e){ this.o.log('combat end note error: ' + e.message); }   /* v0.6.217 (V5 wave 4): Monster -- the combat's outcome is read BEFORE its fields die below */ this._xr = null; this._myPump = null; this._curRound = 0; this._cryptDodgeUsed = null; /* v0.6.219: the crypt dodge's once each combat dies with the combat (the planners between combats see it again) */ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; /* v0.6.214: the pumps, the round number and Guard Dogs' maneuver die with the combat (a rejected combat used to leak the grant into the next one) */ this._inCombat = false; this._combatArmed = false; this._combatActing = null; this._forceCloseNextRound = false; this._nextRange = null; this._setRangeNow = null; this._handStrikeOnly = false; this._range = 'close'; /* v0.6.202 (R2's second arena smoke): a range set for the NEXT round dies with this combat -- Horace's superior Grapple in the last round skipped the maneuver step of his next combat AND of his opponent's next one (one side said nothing, the other waited out the safety net and maneuvered to long alone: Roundhouse at close against Theft of Vitae at long). The same sweep: the round's range and its Grapple restriction die too -- the finders that plan between combats (a block's price, a chump bleed's cover, a rush's reach) read them, and saw "hand strikes only" (no Majesty, no dodge) or "long" (no fists) from the last round of the previous fight (16 combats in the R2 smokes began after a final-round Grapple); a new combat starts at close */ if(this.ev && this._cep) this.ev.push({ kind: 'combat-opp', opp: null, how: 'end', was: this._cep.row || null }); this._cep = null; this._invStrike = null; if(this.tally && this.tally.mode === 'combat' && this.started){ try { this._writeTally({ mode: null, res: 1 }); } catch(e){} } }   // v0.6.103 (#1); v0.6.172 (main v2.6.137): my combat is over -- close the combat tally so the mirror is clean at once; v0.6.195 (main's reply, 9 Oct): + res 1, the client's own Combat-Resolve convention -- every human closes their Played batch and applies their own clear setting (a bare null left it open until their next action); v0.6.105: the name dies with the combat
+    } finally { if(myVamp && this._combatOppOf) this._combatOppOf.delete(myVamp.id); if(tok === this._combatTok){ /* v0.6.221: a superseded combat leaves the live combat's fields alone */ try { this._noteCombatEnd(myVamp); } catch(e){ this.o.log('combat end note error: ' + e.message); }   /* v0.6.217 (V5 wave 4): Monster -- the combat's outcome is read BEFORE its fields die below */ this._xr = null; this._myPump = null; this._curRound = 0; this._cryptDodgeUsed = null; /* v0.6.219: the crypt dodge's once each combat dies with the combat (the planners between combats see it again) */ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; /* v0.6.214: the pumps, the round number and Guard Dogs' maneuver die with the combat (a rejected combat used to leak the grant into the next one) */ this._inCombat = false; this._combatArmed = false; this._combatActing = null; this._forceCloseNextRound = false; this._nextRange = null; this._setRangeNow = null; this._handStrikeOnly = false; this._range = 'close'; /* v0.6.202 (R2's second arena smoke): a range set for the NEXT round dies with this combat -- Horace's superior Grapple in the last round skipped the maneuver step of his next combat AND of his opponent's next one (one side said nothing, the other waited out the safety net and maneuvered to long alone: Roundhouse at close against Theft of Vitae at long). The same sweep: the round's range and its Grapple restriction die too -- the finders that plan between combats (a block's price, a chump bleed's cover, a rush's reach) read them, and saw "hand strikes only" (no Majesty, no dodge) or "long" (no fists) from the last round of the previous fight (16 combats in the R2 smokes began after a final-round Grapple); a new combat starts at close */ if(this.ev && this._cep) this.ev.push({ kind: 'combat-opp', opp: null, how: 'end', was: this._cep.row || null }); this._cep = null; this._invStrike = null; if(this.tally && this.tally.mode === 'combat' && this.started){ try { this._writeTally({ mode: null, res: 1 }); } catch(e){} } } }   // v0.6.103 (#1); v0.6.172 (main v2.6.137): my combat is over -- close the combat tally so the mirror is clean at once; v0.6.195 (main's reply, 9 Oct): + res 1, the client's own Combat-Resolve convention -- every human closes their Played batch and applies their own clear setting (a bare null left it open until their next action); v0.6.105: the name dies with the combat
   }
   async _resolveCombatRound(myVamp, continued){ // v1 CUT LINE (spec §7.5-C): announce-only, one round, applies MY side; the opponent's strike isn't modelled -- assumes the rulebook default (hands, 1) unless I prevent it. Never steps the shared ph/rd counters. v0.6.23 (standing-question fix, the multi-round loop): `continued` is a NEW, backward-compatible optional 2nd arg -- every existing call (all of 37a-37g, all 6 real call sites for round 1) passes nothing, so this defaults falsy and behaves EXACTLY as before. `_resolveCombat` passes true for round 2+ ONLY.
     if(!continued && this._cotHit(myVamp)) return { oppEnded: true, cot: true };   // v0.6.217 (V5 wave 4): the actor played Change of Target -- this combat never begins
@@ -10227,6 +10248,7 @@ class Bot {
 
       /* UNLOCK */
       await this._unlockPhase();
+      if(this._gameOver()){ this._endTurnAtGameOver('unlock'); return; }   // v0.6.221: my unlock ousted the last of them (a Smiling Jack, a Fame) -- nothing to play for
       if(this.out){ this.send({ t: 'pass' }); return; }   // v0.6.202 (the v0.6.140 audit): ousted in my own unlock phase (Smiling Jack, Fame's drain) -- no master phase, no actions, no 'Turn passed.'; the pass hands the turn on (v0.6.140's freeze)
 
       /* MASTER — v0.5+ (Johan, 14 July): the rule is now "always play A
@@ -10452,11 +10474,13 @@ class Bot {
       for(let _ai = 0; ; _ai++){   // v0.6.64: index form over the LIVE queue (a for..of snapshot made the refreshed vampire's extra action an illusion). v0.6.126: the act-again look is ONE visible step at the top of every pass -- including the pass AFTER the last actor, which is why the exit test sits below it (it was hidden in the for-condition as _actAgainTail)
         if(!this.out && (this.pool | 0) <= 0) this._oust(false);   // v0.6.210: a cost of my own this phase took my last pool (an equipment paid at resolution) -- ousted before the next action
         if(this.out) break;
+        if(this._gameOver()) break;   // v0.6.221 (D-113): no act-again after the game's last oust either
         if(_ai > 0) this._maybeActAgain(actors[_ai - 1], actors, _ai - 1);   // v0.6.123: Freak Drive-class, after the previous actor's action is fully over (combat included); may push the vampire back on the queue
         if(_ai >= actors.length) break;
         const v = actors[_ai];
         this._lastAct = null;
         await pace();
+        if(this._gameOver()) break;   // v0.6.221 (D-113): the last oust of the game came with my previous action -- no further action (it bled my own seat)
         if(_ai > 0) prey = this.decide('bleed-target', {}).seat;   // v0.6.103 (#2): PER ACTOR -- the previous minion may have ousted the prey (v0.6.102 read it once and bled a ghost for the rest of the phase); v0.6.104: read AFTER the pace beat so a human table's pace is also the roster's window
         if(v.zone === 'torpor'){ await this._leaveTorpor(v); continue; }   // v0.6.128
         const tdone = this._turnActs && this._turnActs[v.id];   // v0.6.217 (the graded readings): Change of Target -- 'cannot perform the same action again this turn'
@@ -11090,6 +11114,8 @@ class Bot {
         this._actingVamp = null;
         this._flushDraws();
       }
+
+      if(this._gameOver() && !this.out){ this._actingVamp = null; this._flushDraws(); this._endTurnAtGameOver('minion'); return; }   // v0.6.221 (D-113): the game ended in my minion phase -- no influence, no discard
 
       /* INFLUENCE — rulebook transfer stagger: during the first four GAME
          turns (table-wide, not per-player), each Methuselah receives
