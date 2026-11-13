@@ -2971,8 +2971,10 @@ class Bot {
     this._emit('card-burned', { card: c.name, by: p.actingVampName || null });
   }
   _complyRush(p){                     // v0.6.107 (B1): the rushed vampire locks and fights the rusher (the pre-B1 comply, now on MY Pass)
+    if(p.complied) return;               // v0.6.222: once -- my Pass complied, and the actor's It resolves then closes the same rush
     const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === p.rushTarget);
     if(!vc) return;
+    p.complied = true;
     if(p.noLock){ this.push(); this.note('Trainbot: ' + vc.name + ' defends (rushed by ' + p.actingVampName + ', ' + (p.card || 'Haven Uncovered') + ').'); }   // v0.6.217: the granting card named (Saulot's Avenging Fist, Regent)   // v0.6.205 (R4, F23): a rush through Haven Uncovered locks nobody
     else {
     vc.locked = true; this.push();
@@ -8217,7 +8219,8 @@ class Bot {
     this._clearPending('resolved via ' + via);
     if(this.out) return;
     if(p.kind === 'rush' && p.sub === 'burnCard') this._complyBurnCard(p);   // v0.6.217 (the egress review): the action at my card went through on the actor's word (It resolves, a failed block) -- the card burns, as on my own Pass
-    if(p.kind === 'undirected' || p.kind === 'rush'){ this._emit('let-through', { sub: p.sub || p.kind, role: p.role || null, T: p.T || null }); return; }   // v0.6.107 (B1): nothing lands on me -- the window simply closes
+    if(p.kind === 'rush' && p.sub === 'rush' && p.rushTarget) this._complyRush(p);   /* v0.6.222 (v0.6.221's 600, matches 197 and 542: the rusher fought alone): a rush at MY vampire resolved on the actor's word -- my block was never taken up (my reaction delay outlasted the window) or it failed on the counter -- so the rush succeeded and my vampire fights, as on my own Pass */
+    if(p.kind === 'undirected' || p.kind === 'rush'){ this._emit('let-through', { sub: p.sub || p.kind, role: p.role || null, T: p.T || null }); return; }   // v0.6.107 (B1): no pool lands on me -- the window closes (a rush at my vampire has just begun its combat, above)
     /* v0.6.111 (R3 self-review): kind 'asked' (the R2 pool question and R3 politics) falls through to
        the generic pool -= p.amount below, exactly like kind 'bleed' -- which is the DESIGN, not an
        accident. Bounce and peek are kind-gated; an asked pending carries the table's own number and

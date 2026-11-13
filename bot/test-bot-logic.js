@@ -12569,6 +12569,32 @@ async function connectWithRetry(client, tries = 30){
            '165m The Dowager’s combat, superseded in its press step: no round row, Lenny’s Guard Dogs grant kept until his combat ends (got ' + JSON.stringify({ mid, end }) + ')'); }
     }
 
+    /* 166) v0.6.222 -- THE JACK ROUND'S FOLLOW-UPS: the rushed bot that never fought the rush (v0.6.221's 600, matches 197 and 542),
+       the action at a seat ousted in its window (the 240's match 60), the second review's findings. LAST LINE OF 166 is the closing
+       brace below. */
+    {
+      console.log('\n[166] v0.6.222 -- the follow-ups: the unanswered rush, the action at an ousted seat');
+      const mk166 = (name, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: u.o.name, online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d });
+        u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
+      const V6 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4, attached: [] }, o || {});
+
+      // a) a rush at my vampire that resolves on the actor's word -- my reaction delay outlasted the window, or my attempt failed on the
+      //    counter -- is a rush that succeeded: my vampire fights (it let the rusher fight alone); after my own Pass it fights once
+      { const run = passFirst => { const u = mk166(); u.board = [V6('v1', 'Lauren'), V6('v2', 'Nassir', { blood: 4 })];
+          let combats = 0; u._resolveCombat = async () => { combats++; }; u._reactWindow = () => {};   // the window is open; my answer has not gone out yet
+          u._onLog('Hanna', "<b>Lisa Noble</b> plays Deep Song [ANI] — rushes <b>U</b>'s <b>Nassir</b>.");
+          const armed = !!(u.pending && u.pending.kind === 'rush' && u.pending.rushTarget === 'Nassir');
+          if(passFirst && u.pending){ u.pending.declined = true; u._complyRush(u.pending); }
+          u._onSay({ i: SI('It resolves'), who: 'Hanna', seat: 1 });
+          return { armed, combats, locked: u.board[1].locked, rushed: u.events.filter(e => e.t === 'bot:rushed').length, pending: !!u.pending }; };
+        const late = run(false), passed = run(true);
+        ok(late.armed && late.combats === 1 && late.locked === true && late.rushed === 1 && !late.pending && passed.combats === 1 && passed.rushed === 1,
+           '166a a rush at my Nassir that resolves on the actor’s word: Nassir locks and fights; after my own Pass, once (got ' + JSON.stringify({ late, passed }) + ')'); }
+    }
+
 
 
     }
