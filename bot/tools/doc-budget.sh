@@ -17,8 +17,9 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    page needs room the ceiling is raised -- the register grows with every round's rulings); BOARD 15 -> 18 KB the same day (it stood
 #    15 bytes under its ceiling; the bootstrap's 50 KB stays the real guard); BOARD 18 -> 18.5 KB on 12 Nov (crypt wave A's egress
 #    review found three asks no line held, with no history left to cut -- HARNESS; STATUS gave the bootstrap its bytes back); the
-#    total 160 -> 165 KB on 13 Nov (bot v0.6.220: Johan's D-112 and D-113 and the riders' two found lines -- the register grows).
-PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:18500 $D/RULINGS.md:60000 $D/LESSONS.md:20000
+#    total 160 -> 165 KB on 13 Nov (bot v0.6.220: Johan's D-112 and D-113 and the riders' two found lines -- the register grows);
+#    BOARD 18.5 -> 19 KB the same day (bot v0.6.221: the Jack round's three found asks, the bootstrap's 50 KB still the guard).
+PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:60000 $D/LESSONS.md:20000
        $D/ARCHITECTURE.md:15000 $D/HARNESS.md:8000 $D/HOWTO.md:20000"
 total=0
 for pb in $PAGES; do
