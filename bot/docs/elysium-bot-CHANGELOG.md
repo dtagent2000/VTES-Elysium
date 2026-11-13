@@ -32,6 +32,18 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.221 (in progress, 13 Nov 2026)** — The Jack round (RULINGS D-113, Johan's order of 13 Nov 08:38 and 09:22). *Predictions,
+  registered before the runs (D-93):* (A) the ledger's held master: `gen-card-ledger.js` and `ana-cards.py` count Toreador Grand Ball's
+  uses on v0.6.220's 600 deals as its own rows (320), not its picks (1256); no bot change. (C) the survivor: on the 240-match client
+  design against v0.6.220 every match keeps its result (winner, VP, oust order); a match's decisions differ only after its last oust,
+  and `ana-ledger.py`'s "through after the game ended" falls to 0 on every series. (D) the failed blocker: the 240 design and the V5
+  smoke diverge only in matches where a bot's block was ended by a Change of Target or a bot's failed attempt was followed by another
+  seat's successful block, first at a combat decision of that bot; on the 600 deals the ledger gate passes (no combat row without an
+  opponent) and the stray combat rows ('no reciprocal row') fall to the rushes the rushed bot does not answer. (E) Smiling Jack's
+  counters on the wire: the 240 design diverges only in matches where a Nosferatu bot puts Smiling Jack in play, first at another
+  bot's unlock phase after Jack's first tick; Nosferatu's VP paired against the step before rises, its 95 % interval wholly above 0.
+  (G) the bot's own tokens (display only): IDENTICAL decisions on every spec against the step before. All series `ana-gates.py` PASS.
+  Falsified if any part fails.
 - **v0.6.220 (13 Nov 2026)** — Crypt wave A's riders (Johan's "kör" of 13 Nov on Claude's summary of 12 Nov; RULINGS D-111), built
   on #64 (merged the same day).
   - *Revelations' form before the decision* (the graded readings' finding): `_armPending(..., extra)` sets the given fields before
