@@ -281,3 +281,7 @@ Promoted to **T9a/T9b** in `elysium-bot-training-backlog.md`.
   ≈105 games/h baseline, §7's first risk resolved. Evaluation finds queued: hunting-ground
   per-VAMPIRE ledger (Johan-confirmed rule; today's global flag is conservative-only), spec §1
   staleness at v0.6.10, the grinder deck file absent from the project.
+- **13 November 2026** — a new plan read, `plan.reads.jack` (bot v0.6.224, RULINGS D-114, `spec-jack-burn-2026-11-13.md`; written
+  only with the knob `jackBurn`): another seat's Smiling Jack and what letting it stand costs me — `{ seat, n, runway, H, price }`,
+  my runway against its counter and the table model's pool damage, H = min(my runway, Jack's life), price = H·c₁ + H(H−1)/2. The
+  burn candidate (`_jackBurnValue`) reads it and never recomputes it (the plan rule).

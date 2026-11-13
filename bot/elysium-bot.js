@@ -596,6 +596,7 @@ class Bot {
       tempoAdaptK: 1.5,        // v0.6.194: Adaptive waits this times the human's median response time (capped by the slider)
       tempoHist: 7,            // v0.6.194: Adaptive's running median is over the human's last N answers
     combatPhases: 1,       // v0.6.165 (Johan): 1 = against a HUMAN combat opponent the bot drives the seven combat steps with his phrases and waits for the human on a clock; 0 = v0.6.164's silent handshake. Bot-vs-bot is never affected.
+    jackBurn: 0,             // v0.6.224 (round B, RULINGS D-114, specs/spec-jack-burn-2026-11-13.md): 1 = a vampire of mine may burn another seat's Smiling Jack as a (D) action when its price (what Jack takes from me against what it takes from my prey, over my runway) beats the best other action, the most exposed bot first; and a burn at MY Jack is blocked by its worth to me. 0 = no Jack burn and T6's weight for a burn at my Jack (v0.6.223)
     dynFloor: 1,             // v0.6.189 (THE KNOWLEDGE LAYER, brick 2 -- 'do not oust yourself'): 1 = the critical pool also counts the RECURRING losses I paid over my last full turn cycle (Creeping Sabotage ticks, Smiling Jack, Fame), read from the event log; 0 = the predator burst alone. v0.6.193: default 1 -- the re-bench (arm dyn2, 48, every seat, the floor PROVEN to fire in 23 of 48 matches) came out -0.12 +/- 0.39 against the control's +0.14 +/- 0.45: inside the noise, no loss shown
     arkChat: 1,              // v0.6.192 (archetype labels, explanation only): 1 = the bot says once per seat what it reads the deck as (a CONFIDENT label: margin >= 2 and >= 85 % of the shown cards typical), and names the closest archetype in its trace; 0 = trace only. Labels never drive a decision on their own.
     twdKnow: 1,              // v0.6.187 (THE KNOWLEDGE LAYER, brick 1): 1 = the TWDA profile (elysium-twd-profile.json) shapes the combat prior for each seat from the cards it has shown and its crypt's clan; 0 = the board-only prior. v0.6.188: default 1 -- the bench (48, every seat) showed no loss against the negative control (+0.21 ± 0.46 vs +0.14 ± 0.45)
@@ -2531,6 +2532,7 @@ class Bot {
       const prev = this.plan;
       this.plan = { turn: this.ownTurns | 0, tag, phase, posture, home, floor, target, wOff: +wOff.toFixed(2), wDef: +wDef.toFixed(2),
                     reads: { myTto, preyTto, myFc, myFcRaw, predFc, pool: this.pool | 0, preyPool, ready: bodies.length, alive, crit: critNow, pricedHome: priced ? priced.home : null }, why };
+      if(this.o.jackBurn){ const jk = this._jackAt(); if(jk){ const jp = this._jackPriceAt(this.seat, jk, predFc, myFcRaw); this.plan.reads.jack = { seat: jk.seat, n: jk.n, runway: +jp.runway.toFixed(2), H: jp.H, price: jp.price }; } }   // v0.6.224 (D-114 spec §2): only with the knob -- the 0-path's plan rows stay as they were
       if(tag === 'unlock' || !prev || prev.posture !== posture || prev.home !== home || prev.floor !== floor){
         this._emit('plan', this.plan); this.o.log('plan (' + tag + '): ' + phase + ' / ' + posture + ' -- ' + why + '; influence floor ' + floor); }
     }catch(e){ this.o.log('strategize error:', e.message); }
@@ -2863,7 +2865,7 @@ class Bot {
   }
   _emitManifest(){                   // A2 (v0.6.73): deck intent + effective knobs
     const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {};
-    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','equipOverPlain','spyCancelMin']) if(this.o[k] !== undefined) kn[k] = this.o[k];
+    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','equipOverPlain','spyCancelMin','jackBurn']) if(this.o[k] !== undefined) kn[k] = this.o[k];
     this._emit('manifest', { seat: this.o.seat || null, deck: this.o.deckName || null, persona: this.o.persona, strategy: ds.strategy || null, axes: ds.axes || [], knobs: kn });   // v0.6.88: seat carried when the arena provides it -- the manifest is now self-describing for seat order
   }
   _deckAxes(){ const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {}; return ds.axes || []; }   // v0.6.107 (B1): the manifest's axes, finally read
@@ -2962,6 +2964,7 @@ class Bot {
     if(this.pending) this._clearPending('superseded by an action at my card');
     const role = (this.nextLive(actorSeat) === this.seat) ? 'prey' : (this.prevLive(actorSeat) === this.seat) ? 'predator' : 'cross';
     this.pending = { who, amount: 0, kind: 'rush', sub: 'burnCard', T: 'T6', role, actorSeat, actorUnlocked: 0, actingVampName: actorVamp, rushTarget: null, burnCardId: card.id, burnCard: card.name, targetActs: false, noLock: true, via: 'burnCard', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: false };
+    if(this.o.jackBurn && this._isJackName(card.name)) this.pending.cardWorth = +this._myJackWorth(card).toFixed(2);   // v0.6.224 (D-114 spec §5): what my Jack still takes from my prey
     this._reactWindow();
     return true;
   }
@@ -4538,14 +4541,65 @@ class Bot {
     const t = this._bestRushTargetFor(vamp, { quiet: true, filter: c => names.has(c.name) }); if(!t) return null;
     return { idx: null, name: 'Haven Uncovered', kind: 'rush', via: 'haven', target: t, lockTarget: false, st: 1, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 };
   }
+  _isJackName(name){ const h = this.fxLookup(name); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(m => m.fx && m.fx.jackEngine)); }   // v0.6.224: fx.jackEngine -- a literal read
+  _jackAt(){                         // v0.6.224 (D-114): another live seat's Smiling Jack in play -- { seat, card, n } with its counters from the pub (public), or null
+    for(const k in (this.table || {})){ const st = +k; if(st === this.seat || !this.live(st)) continue;
+      const c = ((((this.table[k] || {}).pub) || {}).cards || []).find(x => x && x.kind === 'lib' && x.zone === 'ready' && !x.faceDown && !this._outOfPlay(x) && this._isJackName(x.name));
+      if(c) return { seat: st, card: c, n: Array.isArray(c.counters) ? c.counters.length : (c.counters | 0) }; }
+    return null;
+  }
+  _jackFc(st, myFc){                 // the table model's expected pool damage a round at seat st: its predator's forecast (mine, the plan's, when I am that predator)
+    const pred = this.prevLive(st); if(!pred || pred === st) return 0;
+    if(pred === this.seat) return Math.max(0, (myFc != null ? myFc : ((this.plan && this.plan.reads) ? (this.plan.reads.myFcRaw || 0) : 0)) || 0);
+    return Math.max(0, this.oppForecast(pred) || 0);
+  }
+  _jackPriceAt(st, j, predFc, myFc){ // D-114 spec §2: what letting Jack stand costs seat st over H = min(its runway, Jack's own life) rounds -- c1 + (c1+1) + ... = H*c1 + H(H-1)/2; the owner pays its own counter, 1 a round
+    const life = Math.max(0, this._seatPool(j.seat)) / Math.max(0.25, 1 + this._jackFc(j.seat, myFc));   // Jack leaves play with its owner
+    if(st === j.seat){ const H = Math.max(0, Math.floor(life)); return { runway: life, H, price: H }; }
+    const c1 = (j.n | 0) + 1, fc = (st === this.seat && predFc != null) ? Math.max(0, predFc) : this._jackFc(st, myFc);
+    const runway = Math.max(0, this._seatPool(st)) / Math.max(0.25, c1 + fc);
+    const H = Math.max(0, Math.floor(Math.min(runway, life)));
+    return { runway, H, price: H * c1 + H * (H - 1) / 2 };
+  }
+  _jackBurnValue(vamp, jk){          // D-114 spec §3-4: a burn's worth in the scorer's currency -- P(success) x [wDef x my saving - offW x my prey's saving] x aggression; null without the plan's read
+    const rd = this.plan && this.plan.reads && this.plan.reads.jack; if(!rd || rd.seat !== jk.seat) return null;
+    const prey = this.preySeat(), pp = (prey && prey !== this.seat) ? this._jackPriceAt(prey, jk) : { price: 0 };
+    const offW = this._planOffW(), wDef = rd.runway < ((this.plan.reads.preyTto != null) ? this.plan.reads.preyTto : 99) ? 2 : 1;   // the tempo is against me: defence weighs double
+    const ocs = ((((this.table[jk.seat] || {}).pub) || {}).cards || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked);
+    const pSucc = ocs.length ? 1 - Math.max(0.05, Math.min(0.9, 0.5 + 0.35 * (this.oppIntercept(jk.seat) || 0))) : 1;   // the plan's block odds, the owner's shown intercept against my 0 stealth
+    const val = pSucc * (wDef * rd.price - offW * pp.price) * ((this.persona && this.persona.aggression) || 1);
+    /* coordination (§4): a BOT that is not the owner, has a ready vampire and a shorter runway acts before my next unlock -- I wait one
+       round for it, once per Jack; a later own turn of mine no longer waits (nobody burned it) */
+    const shorter = (this.players || []).filter(q => q && q.bot && q.seat !== this.seat && q.seat !== jk.seat && this.live(q.seat)
+      && ((((this.table[q.seat] || {}).pub) || {}).cards || []).some(c => c && c.kind === 'crypt' && c.zone === 'ready')
+      && +this._jackPriceAt(q.seat, jk).runway.toFixed(2) < rd.runway).map(q => q.seat);   // strictly shorter at the plan's rounding: a tie is mine (I act first from now)
+    const d = this._jackDefer, waitedBefore = !!(d && d.cardId === jk.card.id && d.turn < (this.ownTurns | 0));
+    const wait = shorter.length > 0 && !waitedBefore;
+    if(wait && !(d && d.cardId === jk.card.id)) this._jackDefer = { cardId: jk.card.id, turn: this.ownTurns | 0 };
+    return { val, pSucc: +pSucc.toFixed(2), wDef, mine: rd.price, prey: pp.price, offW: +offW.toFixed(2), shorter, wait };
+  }
+  _myJackWorth(card){                // D-114 spec §5: my Jack's worth to me when another seat acts to burn it -- what it takes from my prey over its life (offW-weighed) less my own counter payments
+    const j = { seat: this.seat, card, n: Array.isArray(card.counters) ? card.counters.length : (card.counters | 0) };
+    const prey = this.preySeat(); if(!prey || prey === this.seat) return 0;
+    return Math.max(0, this._planOffW() * this._jackPriceAt(prey, j).price - this._jackPriceAt(this.seat, j).price);
+  }
   _bestBurnCardFor(vamp){           // v0.6.217 (V5 wave 4): 'Minions can burn this card as a (D) action' (fx.burnCardAction, Toreador Grand Ball) -- another Methuselah's card in play, aimed only when its owner is my prey or predator (its unblockable political actions reach me); +stealth by my clan (Nosferatu -1); w = the owner's title votes / 4, at most 1
     if(!vamp || vamp.zone !== 'ready' || vamp.locked) return null;
     let best = null; const adj = new Set([this.preySeat(), this.predSeat()]);
     for(const k in (this.table || {})){ const st = +k; if(st === this.seat || !adj.has(st) || !this.live(st)) continue;
       (((this.table[k] || {}).pub || {}).cards || []).forEach(c => { if(!c || c.kind !== 'lib' || c.zone !== 'ready' || c.faceDown || this._outOfPlay(c)) return;
         const h = this.fxLookup(c.name); const mo = h && h.kind === 'lib' && (h.e.modes || []).find(m => m.fx && m.fx.burnCardAction); if(!mo) return;   // fx.burnCardAction -- a literal read for the coverage scanner
+        if(this._isJackName(c.name)) return;   // v0.6.224: Smiling Jack has its own branch below (any seat, its price)
         const w = Math.min(1, this._seatTitleVotes(st) / 4);
         if(!best || w > best.target.w) best = { idx: null, name: h.name, kind: 'burnCard', target: { seat: st, owner: this.seatName(st), cardId: c.id, card: c.name, w }, st: ((mo.fx.burnStealthClan || {})[this._vampClan(vamp)] | 0), n: 0 }; }); }
+    if(this.o.jackBurn && vamp.kind === 'crypt'){   // v0.6.224 (round B, D-114): another seat's Smiling Jack, at ANY seat -- 'Vampires can burn this card as a (D) action', weighed by its price (_jackBurnValue)
+      const jk = this._jackAt(), h = jk && this.fxLookup(jk.card.name), mo = h && h.kind === 'lib' && (h.e.modes || []).find(m => m.fx && m.fx.burnCardAction);
+      const jv = mo ? this._jackBurnValue(vamp, jk) : null;
+      if(jv && !jv.wait && jv.val > 0){
+        const ballS = best ? (0.9 + 0.4 * (best.target.w || 0)) * ((this.persona && this.persona.aggression) || 1) * this._planOffW() : -Infinity;   // the scorer's own value of the Ball's burn
+        if(jv.val > ballS) best = { idx: null, name: h.name, kind: 'burnCard', target: { seat: jk.seat, owner: this.seatName(jk.seat), cardId: jk.card.id, card: jk.card.name, w: 0 }, st: 0, n: 0, val: +jv.val.toFixed(2), jack: jv };
+      }
+    }
     return best;
   }
   _bestGrantRushFor(vamp){          // v0.6.217 (V5 wave 4, D-106): a rush a card IN PLAY grants -- Saulot's Avenging Fist on this Salubri ('can enter combat with a non-Salubri vampire as a (D) action; if that vampire is Tremere, this is a +1 stealth action'), or a Regent on another Methuselah's vampire ('Sabbat vampires can enter combat with this vampire as a (D) action'). Haven Uncovered's machinery: no card leaves the hand (idx null), the frozen enters-combat line names the card, the target is chosen by the rush doctrine (_bestRushTargetFor)
@@ -6041,7 +6095,7 @@ class Bot {
           const odds = ctx.stealthA > 0 ? Math.min(1.3, ctx.icp / ctx.stealthA) : 1.3;
           const posture = this._posture(), axis = this._deckAxis();
           const W = { T2: (axis >= 1.15 ? 1.4 : 1.2), T3: (posture === 'disabling' ? 1.3 : posture === 'resisting' ? 0.6 : 1.0), T4: (ctx.role === 'predator' ? 0.9 : 0.4), T4b: Math.min(1.1, 0.4 + 0.15 * Math.max(0, (ctx.actorUnlocked | 0) + 1 - 2)), T5: ((posture === 'resisting') ? 0.2 : 0.7) + (ctx.famedTarget ? 0.3 : 0), T6: (axis >= 1.3 ? 0.6 : 0.3) };
-          const w = W[ctx.T] !== undefined ? W[ctx.T] : 0.3;
+          const w = (ctx.sub === 'burnCard' && typeof ctx.cardWorth === 'number') ? Math.min(2, Math.max(W.T6, ctx.cardWorth / 2)) : (W[ctx.T] !== undefined ? W[ctx.T] : 0.3);   // v0.6.224 (D-114 spec §5): a burn at my Jack weighs its worth (2 pool of worth = a T2-class key action)
           const dirW = ctx.role === 'predator' ? 1.0 + 0.1 * Math.min(3, this._predPressureLast | 0) : (ctx.T === 'T2' ? 1.0 : 0.8);
           const combatFit = posture === 'disabling' ? 1.0 : posture === 'grinding' ? 0.9 : 0.7;
           const lockCost = this._wakeCard() ? 0 : Math.min(0.3, 0.15 * (ctx.actorUnlocked | 0));
@@ -6050,7 +6104,7 @@ class Bot {
           const uWhy = ctx.T + '/' + (ctx.sub || '?') + ' as ' + ctx.role + ': odds ' + odds.toFixed(2) + ' \u00d7 w ' + w.toFixed(2) + ' \u00d7 dir ' + dirW.toFixed(2) + ' \u00d7 fit ' + combatFit + ' \u2212 lock ' + lockCost.toFixed(2) + ', \u00d7 axis ' + axis + ' \u00f7 blockShy ' + P.blockShy + ' = ' + score.toFixed(2);
           if(score >= 1 && this.o.blockCost && ctx.actorSeat){   // v0.6.197 (blockCost): the same price as the directed block -- an undirected action denied is worth its stake (pool damage) or about 1, + 0.5; 72 matches: 24 hunt blocks from vampires at 0-1 blood
             const rk = this._blockRisk(ctx.actorSeat | 0);
-            if(rk){ const gain = ((ctx.amount | 0) || 1) + 0.5, tto = this.turnsToOust(ctx.actorSeat | 0), desperate = ctx.T === 'T2' && (tto <= 1 || (ctx.amount | 0) >= (this.pool | 0));   // only a pool-damage action makes a block desperate -- blocking a hunt saves no pool (bcN: a 0-blood vampire blocked a hunt 'desperately')
+            if(rk){ const gain = (typeof ctx.cardWorth === 'number' ? Math.max(1, ctx.cardWorth) : ((ctx.amount | 0) || 1)) + 0.5, tto = this.turnsToOust(ctx.actorSeat | 0), desperate = ctx.T === 'T2' && (tto <= 1 || (ctx.amount | 0) >= (this.pool | 0));   // only a pool-damage action makes a block desperate -- blocking a hunt saves no pool (bcN: a 0-blood vampire blocked a hunt 'desperately')
               parts.risk = { gain, cost: rk.cost, oc: rk.oc, blood: rk.blood, pTorpor: rk.pTorpor, out: rk.out, blocker: rk.blocker, via: rk.via, desperate };
               if(!desperate && rk.cost > gain) return { block: false, bounce: false, score, parts, tag: 'combat-cost', why: uWhy + ', but the combat costs ' + rk.blocker + ' ' + rk.cost + ' (' + rk.blood + ' blood, torpor ' + rk.pTorpor + ') > ' + gain + ' \u2014 let through' };
               return { block: true, bounce: false, score, parts, tag: rk.cost > gain ? 'combat-desperate' : 'combat-ok', why: uWhy + '; the combat costs ' + rk.blocker + ' ' + rk.cost + (rk.cost > gain ? ' > ' + gain + ' -- desperate, block anyway' : ' <= ' + gain) }; }
@@ -6417,7 +6471,7 @@ class Bot {
           if(sSt > sPick){ pick = ctx.strength; sPick = sSt; why = ctx.strength.name + ' [' + (ctx.strength.at || '') + '] +' + ctx.strength.bonus + ' strength: ' + sSt.toFixed(2); }
         }
         if(ctx.burnCard){   // v0.6.217 (V5 wave 4, D-106): burn a card in play that works against me (Toreador Grand Ball: my prey's or predator's unblockable politics) -- about a 1-pool bleed, more the more votes its owner holds
-          const sBc = (0.9 + 0.4 * (ctx.burnCard.target.w || 0)) * P.aggression * offW; scores.burnCard = +(sBc).toFixed(2);
+          const sBc = (ctx.burnCard.val != null) ? ctx.burnCard.val : (0.9 + 0.4 * (ctx.burnCard.target.w || 0)) * P.aggression * offW; scores.burnCard = +(sBc).toFixed(2);   // v0.6.224 (D-114): Smiling Jack's candidate carries its price in pool (_jackBurnValue)
           if(sBc > sPick){ pick = ctx.burnCard; sPick = sBc; why = 'burn ' + ctx.burnCard.target.owner + '\u2019s ' + ctx.burnCard.target.card + ' (' + (ctx.burnCard.st | 0) + ' stealth): ' + sBc.toFixed(2); }
         }
         if(ctx.rutor){
@@ -6722,7 +6776,7 @@ class Bot {
     const bounceCards = this.hand.filter(n2 => { const h2 = this.fxLookup(n2); return h2 && h2.kind === 'lib' && this._cats(h2.e).includes('bounce'); }).length;
     const d = this.decide('block-as-target', { reserve: bounce && p.declined ? this._bounceReserve() : null, bounceN: bounceCards, isBleed: p.kind === 'bleed', edge: (this.pool | 0) <= cpD.crit || (p.amount | 0) >= (this.pool | 0), stealthBleeder: sbRead && (this.pool | 0) > cpD.crit + pumpSeen, pumpSeen, actorBot: !!actorP.bot,
       icp: this.interceptPotential(p.reacted, p), amount: p.amount, stealthA, hasBounce: !!bounce, blockAllowed: !p.declined,
-      T: p.T || 'T1', role: p.role || 'target', sub: p.sub || p.kind, actorSeat: actorSeat || null, actorUnlocked: p.actorUnlocked | 0, famedTarget: !!p.famedTarget });   // v0.6.107 (B1): the threat class + role ride into the scorer
+      T: p.T || 'T1', role: p.role || 'target', sub: p.sub || p.kind, actorSeat: actorSeat || null, actorUnlocked: p.actorUnlocked | 0, famedTarget: !!p.famedTarget, ...(typeof p.cardWorth === 'number' ? { cardWorth: p.cardWorth } : {}) });   // v0.6.224: cardWorth only on a burn at my Jack with the knob on   // v0.6.107 (B1): the threat class + role ride into the scorer
     { const vis = this._visageOn(actorSeat || this._seatOfName(p.who), p.actingVampName || (this._obs && this._obs.vamp && Date.now() - this._obs.at < 60000 ? this._obs.vamp : null));   /* the egress review: a nameless pending reads the announce, as the combat opponent does */   // v0.6.217 (V5 wave 4): Terrifying Visage on the actor -- a successful block costs me that pool before combat
       if(vis > 0 && d.block){ const noB = (this.pool | 0) <= vis ? 'the Visage pool would oust me' : (p.kind === 'bleed' && (p.amount | 0) <= vis) ? 'the block costs what the bleed would (Terrifying Visage)' : null;
         if(noB){ d.block = false; d.why = 'no block: ' + noB + ' -- ' + (d.why || ''); } } }

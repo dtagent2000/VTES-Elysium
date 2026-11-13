@@ -12913,6 +12913,65 @@ async function connectWithRetry(client, tries = 30){
            '168 the directed rush and card-burn windows reach a bare body at 0 stealth; no body, stealth 1, the novice, an undirected class and chump without a chump body keep the guard (got ' + JSON.stringify({ rush: rush.why, burn: burn.why, st1: st1.why, nov: nov.why, und: und.why, none: none.why, exp: exp.why, expC: expC.why }) + ')'); }
     }
 
+    /* 169) v0.6.224 -- ROUND B step 2, D-114 (specs/spec-jack-burn-2026-11-13.md, the knob jackBurn): Smiling Jack’s burn weighed by its
+       price, the most exposed bot first, and a burn at my Jack weighed by its worth; the knob at 0 is the previous behaviour.
+       LAST LINE OF 169 is the closing brace below. */
+    {
+      console.log('\n[169] v0.6.224 -- round B step 2: the Jack burn (jackBurn)');
+      const mk169 = (name, extra, seat) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', deckName: 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+        u.seat = seat || 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: seat === 3 ? 'U2' : u.o.name, online: true, bot: true }, { seat: 3, name: seat === 3 ? u.o.name : 'Nils', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
+      const V8 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4, attached: [] }, o || {});
+      const J8 = n => ({ id: 'sj1', name: 'Smiling Jack, The Anarch', kind: 'lib', zone: 'ready', faceDown: false, counters: Array(n).fill('pool') });
+      const jackTable = (u, o) => { o = o || {}; u.board = [V8('v1', 'Catalina Vega', { blood: 5, cap: 8 })]; u.hand = ['Enchant Kindred'];
+        u.table = { 1: { pub: { pool: o.hanna != null ? o.hanna : 20, cards: [V8('h1', 'Lenny Burkhead (G6)')] } }, 3: { pub: { pool: o.owner != null ? o.owner : 20, cards: [V8('n1', 'Andi Liu', { locked: true }), J8(o.n != null ? o.n : 2)] } } };
+        if(o.pool != null) u.pool = o.pool; u._strategize('unlock'); };
+
+      // a) Jack's price: Nils (my prey) holds a Jack with 2 counters; my 20 pool runs out in 6.67 rounds -- the burn (its price in pool)
+      //    beats Enchant Kindred; with the knob at 0 there is no Jack candidate (the 0-path)
+      { const on = mk169('U', { jackBurn: 1 }), off = mk169('U', { jackBurn: 0 }); on.players[0].bot = false; off.players[0].bot = false; jackTable(on); jackTable(off);
+        const dOn = on._decideAction(on.board[0], on._actionCtxFor(on.board[0])), bOff = off._bestBurnCardFor(off.board[0]), dOff = off._decideAction(off.board[0], off._actionCtxFor(off.board[0]));
+        ok(dOn.pick && dOn.pick.kind === 'burnCard' && dOn.pick.target.card === 'Smiling Jack, The Anarch' && dOn.pick.val > 3 && on.plan.reads.jack && on.plan.reads.jack.price === 25
+           && !bOff && !(dOff.pick && dOff.pick.kind === 'burnCard') && !off.plan.reads.jack,
+           '169a Jack takes 25 of my pool over its life: the burn beats the bleed; the knob at 0 sees no Jack (got ' + JSON.stringify({ on: dOn.pick && { kind: dOn.pick.kind, val: dOn.pick.val }, why: dOn.why.slice(0, 90), jack: on.plan.reads.jack, off: dOff.pick && dOff.pick.kind }) + ')'); }
+
+      // b) the prey's price counts against the burn: Hanna owns Jack, my prey Nils (30 pool) pays more of it than I do (10 pool) -- no burn
+      { const u = mk169('U', { jackBurn: 1 }); u.players[0].bot = false; u.board = [V8('v1', 'Catalina Vega', { blood: 5, cap: 8 })]; u.hand = ['Enchant Kindred']; u.pool = 10;
+        u.table = { 1: { pub: { pool: 20, cards: [V8('h1', 'Lenny Burkhead (G6)', { locked: true }), J8(2)] } }, 3: { pub: { pool: 30, cards: [V8('n1', 'Andi Liu')] } } }; u._strategize('unlock');
+        const jv = typeof u._jackAt === 'function' ? u._jackBurnValue(u.board[0], u._jackAt()) : null, d = u._decideAction(u.board[0], u._actionCtxFor(u.board[0]));
+        ok(jv && jv.prey > jv.mine && jv.val <= 0 && !(d.pick && d.pick.kind === 'burnCard'),
+           '169b Jack works on my prey more than on me: no burn (got ' + JSON.stringify({ jv, pick: d.pick && d.pick.kind }) + ')'); }
+
+      // c) coordination: Hanna (a bot, not the owner, a ready vampire) runs out sooner -- I wait one round for her; on my next own turn
+      //    I no longer wait
+      { const u = mk169('U', { jackBurn: 1 }); jackTable(u, { hanna: 6 }); u.ownTurns = 4;
+        const t1 = u._bestBurnCardFor(u.board[0]), j1 = typeof u._jackAt === 'function' ? u._jackBurnValue(u.board[0], u._jackAt()) : null;
+        u.ownTurns = 5; u._strategize('unlock'); const t2 = u._bestBurnCardFor(u.board[0]);
+        ok(!t1 && j1 && j1.wait && JSON.stringify(j1.shorter) === '[1]' && t2 && t2.target.card === 'Smiling Jack, The Anarch',
+           '169c the most exposed bot first: Hanna runs out sooner, I wait one round, then I burn (got ' + JSON.stringify({ t1: !!t1, j1, t2: t2 && t2.val }) + ')'); }
+
+      // d) the owner's defence: Hanna's vampire acts to burn MY Jack (2 counters; my prey Hanna pays it) -- with the knob its worth
+      //    rides the window and a bare body blocks; at 0 T6's weight keeps the score under the bar
+      { const run = async knob => { const u = mk169('N', { jackBurn: knob, deckName: 'nosferatu' }, 3); u.players[1].name = 'U2'; const jk = J8(2);
+          u.board = [V8('n1', 'Andi Liu', { blood: 4, cap: 5 }), jk]; u.table = { 1: { pub: { pool: 20, cards: [V8('h1', 'Lenny Burkhead (G6)')] } }, 2: { pub: { pool: 20, cards: [V8('c1', 'Catalina Vega', { cap: 8 })] } } };
+          u._strategize('unlock'); let dec = null; const od = u.decide.bind(u); u.decide = (q, ctx) => { const r = od(q, ctx); if(q === 'block-as-target') dec = r; return r; };
+          const committed = []; u._commitBlock = async p => { committed.push(p.sub); };
+          u._burnWindowOpens('Hanna', 'Lenny Burkhead (G6)', jk); await new Promise(r => setTimeout(r, 600));
+          return { worth: u.pending && u.pending.cardWorth, block: dec && dec.block, score: dec && +dec.score.toFixed(2), committed }; };
+        const on = await run(1), off = await run(0);
+        ok(on.worth >= 2 && on.block === true && JSON.stringify(on.committed) === '["burnCard"]' && off.worth === undefined && off.block === false && off.committed.length === 0,
+           '169d a burn at my Jack: with the knob its worth rides the window and a bare body blocks; at 0 the score stays under the bar (got ' + JSON.stringify({ on, off }) + ')'); }
+
+      // e) through the turn: with the knob my minion phase burns Nils's Jack -- the frozen burn line, a burnCard through row
+      { const u = mk169('U', { jackBurn: 1 }); u.players[0].bot = false; jackTable(u); u.turnSeat = 2; u._announcePhase = async () => {};
+        u._askBlock = async () => ({ what: 'no' }); const lines = []; u.send = m => { if(m.t === 'log') lines.push(String(m.html || '').replace(/<[^>]+>/g, '')); };
+        let terr = null; try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const thr = u.events.filter(e => e.t === 'bot:through' && e.d.kind === 'burnCard' && e.d.card === 'Smiling Jack, The Anarch').length;
+        ok(!terr && thr === 1 && lines.some(t => t === 'Catalina Vega takes an action to burn Nils’s Smiling Jack, The Anarch.' || t === "Catalina Vega takes an action to burn Nils's Smiling Jack, The Anarch."),
+           '169e through _playTurn the knob burns Nils’s Jack: the burn line and its through row (got ' + JSON.stringify({ terr, thr, lines: lines.filter(t => /burn|Jack/.test(t)).slice(0, 4) }) + ')'); }
+    }
+
 
 
     }
