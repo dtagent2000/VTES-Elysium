@@ -12792,6 +12792,75 @@ async function connectWithRetry(client, tries = 30){
            '166j a human’s undirected action blocked with an intercept card, the counter echoed: one card and the verdict wait (got ' + JSON.stringify({ plays, armed, counter: S, hand: u.hand }) + ')'); }
     }
 
+    /* 167) v0.6.223 -- ROUND A's RIDERS (v0.6.222's BOARD lines): a human's chat stealth inside the locked-blocker route's beat, and
+       the other actions at a seat ousted in their window. LAST LINE OF 167 is the closing brace below. */
+    {
+      console.log('\n[167] v0.6.223 -- round A: chat stealth in the route beat, the actions at an ousted seat');
+      const mk167 = (name, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+        u.seat = 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: u.o.name, online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d });
+        u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
+      const V7 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4, attached: [] }, o || {});
+
+      // a) BOARD (v0.6.222's third review): Hanna types "+1" while my locked blocker's wake card is still in its beat -- booked on the
+      //    counter (the stealth-chat row), and the route then answers it with one intercept card (the second look stays shut in the beat)
+      { const u = mk167('U', { paceMs: 400, askSecs: 3 }); u.players[0].bot = false; let S = { mode: 'block', a: 0, b: 0 }; const plays = [];
+        const relay = (m, who) => { const f = Object.assign({}, m); delete f.t; S = (f.mode === S.mode) ? Object.assign({}, S, f) : Object.assign({}, f); setTimeout(() => u._dispatch(Object.assign({ t: 'tally' }, S, { who })), 30); };
+        u.send = m => { if(m.t === 'tally') relay(m, 'U'); else if(m.t === 'log' && / plays /.test(m.html || '')) plays.push(String(m.html).replace(/<[^>]+>/g, '')); };
+        u._reactWindow = () => {}; u.say = () => { u._lastActAt = Date.now(); };
+        const me = V7('a1', 'Asmin Kobane', { locked: true, blood: 4, cap: 5 }); u.board = [me]; u.hand = ['Eyes of the Wild', 'Ensnare a Beast', 'On the Qui Vive'];
+        u.table = { 1: { pub: { cards: [V7('g1', 'Glissando (G6)')] } } }; u.turnSeat = 1; u._obs = { who: 'Hanna', vamp: 'Glissando (G6)', at: Date.now() - 2000 }; u.tally = Object.assign({}, S);
+        const p = u.pending = { who: 'Hanna', amount: 2, kind: 'bleed', actingVampName: 'Glissando (G6)', actorSeat: 1, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        const pc = u._commitBlock(p, { why: 'test', parts: {} }); setTimeout(() => u._onChat('Hanna', '+1'), 40);   // inside the wake's beat (400 ms)
+        await pc; await new Promise(r => setTimeout(r, 2000)); if(u._vWait && u._vWait.timer) clearTimeout(u._vWait.timer);
+        const ic = plays.filter(t => /intercept/.test(t)), sc = u.events.filter(e => e.t === 'bot:stealth-chat').map(e => e.d.a);
+        ok(JSON.stringify(sc) === '[1]' && ic.length === 1 && S.a === 1 && S.b === 1 && u.hand.includes('Ensnare a Beast') && p.reacted.size === 1,
+           '167a Hanna’s "+1" inside the locked-blocker route’s beat: booked on the counter, and the route answers it with one intercept card (got ' + JSON.stringify({ sc, plays, counter: S, hand: u.hand }) + ')'); }
+
+      // b) the directed actions at a seat ousted in their window (Cy, seat 3, is ousted while the block question is open) -- through
+      //    _playTurn: nothing lands, one fizzled row each, the cost comes back; Revelations [AUS] is undirected and still goes into play
+      { const run = async (act, hand, extra) => {
+          const w = mk167(); w.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Cy', online: true, bot: true }];
+          w.turnSeat = 2; w.board = [V7('v1', 'Larissa Moreira (G6)', { blood: 5, cap: 6 })]; w.hand = (hand || []).slice(); w._announcePhase = async () => {};
+          const wn = []; w.note = t => wn.push(t); const fought = []; w._resolveCombat = async (v, o) => { fought.push(o || null); };
+          w.table = { 3: { pub: { cards: (extra && extra.cards) || [] } } };
+          let once = false; w._decideAction = () => { if(once) return { pick: null, why: 'done' }; once = true; return { pick: act, why: 'test' }; };
+          w._askBlock = async () => { w.players[2].out = true; return { what: 'no' }; };
+          let terr = null; try { await w._playTurn(); } catch(e){ terr = e.message; }
+          return { terr, fz: w.events.filter(e => e.t === 'bot:fizzled').map(e => e.d.kind + '@' + e.d.seat), thr: w.events.filter(e => e.t === 'bot:through' && e.d.kind === act.kind).length,
+                   fought: fought.length, note: wn.filter(t => /has no target: Cy was ousted in its window\./.test(t)).length, blood: w.board[0].blood, armed: !!w._combatArmed,
+                   inPlay: w.board.filter(c => c.kind === 'lib' && c.zone === 'ready').map(c => c.name) }; };
+        const tgt = { seat: 3, owner: 'Cy', name: 'Rafael de Corazon', dir: 'fwd', blood: 3 };
+        const got = {
+          song: await run({ kind: 'rush', name: 'Deep Song', idx: 0, n: 0, cost: { blood: 1 }, target: tgt }, ['Deep Song']),
+          haven: await run({ kind: 'rush', via: 'haven', name: 'Haven Uncovered', n: 0, st: 1, target: tgt }, []),
+          burn: await run({ kind: 'burnCard', name: null, n: 0, st: 0, target: { seat: 3, owner: 'Cy', cardId: 'gb1', card: 'Toreador Grand Ball', w: 1 } }, []),
+          rescue: await run({ kind: 'enemyRescue', seat: 3, name: 'Rafael de Corazon', n: 0, tPays: 1, mine: 1 }, []),
+          look: await run({ kind: 'peek', name: 'Revelations', idx: 0, n: 0, st: 1, supMode: false, cost: { blood: 1 } }, ['Revelations']),
+          open: await run({ kind: 'peek', name: 'Revelations', idx: 0, n: 0, st: 1, supMode: true, cost: { blood: 1 } }, ['Revelations']) };
+        const one = (g, kind) => !g.terr && JSON.stringify(g.fz) === '["' + kind + '@3"]' && g.thr === 0 && g.fought === 0 && g.note === 1;
+        ok(one(got.song, 'rush') && got.song.blood === 5 && !got.song.armed && one(got.haven, 'rush') && !got.haven.armed && one(got.burn, 'card burn')
+           && one(got.rescue, 'rescue') && got.rescue.blood === 5 && one(got.look, 'hand look') && got.look.blood === 5
+           && !got.look.inPlay.includes('Revelations') && got.open.fz.length === 0 && got.open.thr === 1 && got.open.inPlay.includes('Revelations'),
+           '167b a rush (Deep Song, Haven Uncovered), a card burn, a rescue and Revelations [aus] at a seat ousted in the window fizzle -- no combat, the blood back; [AUS] still goes into play (got ' + JSON.stringify(got) + ')'); }
+
+      // c) the referendum's part for a seat ousted in its window: Parity Shift's move from Cy -- nothing to move, my +3 void; Kine
+      //    Resources Contested -- Cy's points burn nothing, Hanna's still burn (her oust settled), mine unchanged
+      { const ref = async act => {
+          const w = mk167(); w.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Cy', online: true, bot: true }];
+          const v = V7('v1', 'Catalina Vega', { blood: 5, cap: 8 }); w.board = [v]; w._actingVamp = { v, n: act.n, played: new Set(), target: null, act };
+          const wn = []; w.note = t => wn.push(t); const settled = []; w._settleOust = async (st, n) => { settled.push(st + ':' + n); };
+          w._refPoll = async rc => { rc.closed = 'everyone has spoken'; }; w._askBlock = async () => { w.players[2].out = true; return { what: 'no' }; };
+          let terr = null; try { await w._callReferendum(v, Object.assign({ value: 1, pass: 0.9, mine: 1, agst: 0 }, act)); } catch(e){ terr = e.message; }
+          return { terr, pool: w.pool, settled, fz: w.events.filter(e => e.t === 'bot:fizzled').map(e => e.d.kind + '@' + e.d.seat),
+                   row: (w.events.filter(e => e.t === 'bot:referendum').map(e => e.d.deltas)[0]) || null, note: wn.filter(t => /part for Cy does nothing/.test(t)).length }; };
+        const ps = await ref({ name: 'Parity Shift', n: 3, deltas: { 2: 3, 3: -3 } }), krc = await ref({ name: 'Kine Resources Contested', n: 4, deltas: { 1: -2, 3: -2 } });
+        ok(!ps.terr && ps.pool === 20 && ps.settled.length === 0 && JSON.stringify(ps.fz) === '["referendum part@3"]' && ps.note === 1 && JSON.stringify(ps.row) === '{}'
+           && !krc.terr && krc.pool === 20 && JSON.stringify(krc.settled) === '["1:2"]' && JSON.stringify(krc.fz) === '["referendum part@3"]' && JSON.stringify(krc.row) === '{"1":-2}',
+           '167c a referendum whose terms name a seat ousted in its window: Parity Shift moves nothing (no +3 for me), Kine Resources Contested burns only the live seat (got ' + JSON.stringify({ ps, krc }) + ')'); }
+    }
+
 
 
     }

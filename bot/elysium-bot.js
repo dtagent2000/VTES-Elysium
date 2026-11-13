@@ -3435,6 +3435,17 @@ class Bot {
     this.push();
     return true;
   }
+  _voidOustedRefParts(v, act){       // v0.6.223 (round A; BOARD: a referendum whose terms name a seat ousted in its window): the ousted Methuselah's pool left the game with it -- Kine Resources Contested's points on that seat burn nothing (the other seats still burn theirs), and a MOVE of that seat's pool (Parity Shift: 'allocate 3 of their pool') has nothing to move, so its gains are void too. The referendum still passed; the terms line stays as announced.
+    const ds = act.deltas || {}, gone = st => { const q = (this.players || []).find(x => x && x.seat === st); return !!(q && q.out); };   // out, not vacant (_fizzleIfOusted's rule)
+    const out = Object.keys(ds).map(k => k | 0).filter(st => st !== this.seat && gone(st)); if(!out.length) return false;
+    const h = this.fxLookup(act.name), move = !!(h && h.e && h.e.ref && (h.e.ref.pool || []).some(x => x && x.scope === 'move'));
+    const voidGains = move && out.some(st => (ds[st] | 0) < 0);
+    const nd = {}; for(const k of Object.keys(ds)){ const st = k | 0; if(out.includes(st)) continue; if(voidGains && (ds[k] | 0) > 0) continue; nd[k] = ds[k]; }
+    act.deltas = nd;
+    this.note('The referendum\u2019s part for ' + out.map(st => this.seatName(st)).join(', ') + ' does nothing: ousted in its window' + (voidGains ? ', so there is no pool to move' : '') + '.');
+    for(const st of out) this._emit('fizzled', { vamp: v && v.name, n: Math.abs(ds[st] | 0), kind: 'referendum part', seat: st });
+    return true;
+  }
   _bestBlockBarFor(vamp){            // v0.6.127 (cardfx v1.9.0, fx.blockBar): Daring the Dawn-class -- an action modifier that bars VAMPIRES from blocking this action and bills its own vampire afterwards (selfDmg / selfTorpor). v0 keeps to the self-price members: a free bar (Beast Meld [ANI][PRO]) carries a 'non-bleed only' condition the data does not read yet. The cheapest price wins (the superior mode).
     let best = null;
     (this.hand || []).forEach((nm, idx) => { const h = this.fxLookup(nm); if(!h || h.kind !== 'lib' || (h.e.t || []).indexOf('mod') < 0) return;
@@ -3950,6 +3961,7 @@ class Bot {
       }
       if(t.f <= t.a && !rc.line){ const ab = this._bestAbstainFor(v, rc, t.a - t.f + 1); if(ab && this._playAbstain(v, ab, rc)){ if(!rc.line){ rc.closed = null; await this._refPoll(rc); } t = tot(); } }   /* v0.6.217 (the graded readings): the table may answer the abstain, as it may a boost -- the poll stays open after a play in it */   // v0.6.217 (V5 wave 4): Scalpel Tongue / Saulot's Guiding Wisdom -- an opposing voter abstains when that turns the count
       const passed = t.f > t.a;
+      if(passed) this._voidOustedRefParts(v, act);   // v0.6.223 (round A): a seat ousted in the referendum's window -- its part does nothing (Parity Shift: nothing left to move)
       this._writeTally({ mode: 'vote', a: Math.min(99, t.f), b: Math.min(99, t.a) });   // the AUTHORITATIVE count: bots' absolute tally writes race each other, the frozen `casts` lines do not
       if(!rc.line) this.send({ t: 'log', html: 'Vote: ' + t.f + ' for vs ' + t.a + ' against \u2014 vote ' + (passed ? 'passes' : 'fails') + '.' });   // the client's frozen verdict line (skipped when a human's Resolve already wrote it)
       this.send({ t: 'log', html: 'Referendum ' + (passed ? 'passes' : 'fails') + ' \u2014 <b>' + esc(act.name) + '</b>: ' + (passed ? esc(terms) : 'no effect') + '.' });
@@ -9913,7 +9925,7 @@ class Bot {
        chat, for a HUMAN's action that I am blocking. A bare number N = their total stealth now, +N = stealth added since. Only from the
        acting human while my block is contested; I book it on the counter (their side -- main agreed the bot may write an untouched a) and
        answer with my intercept second look. A card's own line ("plays X.") carries no amount, so the number is the way without a helper. */
-    if(this.pending && this.pending.contested && this.pending.blockerVamp && !this.out && who === this.pending.who){
+    if(this.pending && this.pending.contested && (this.pending.blockerVamp || this.pending.routeVamp) && !this.out && who === this.pending.who){   // v0.6.223 (round A; v0.6.222's third review): inside the locked-blocker route's beat the blocker is the route's (routeVamp) -- booked there too; the second look stays shut until the route has its blocker (_interceptSecondLook reads blockerVamp)
       const sm = txt.replace(/^\s*@?trainbot[:,]?\s*/i, '').match(/^\s*(\+)?(\d{1,2})\s*(stealth)?\s*$/i) || (namedMe0(this, txt) ? txt.replace(nameRe0(this), '').match(/^\s*(\+)?(\d{1,2})\s*(stealth)?\s*$/i) : null);
       if(sm){
         const cur = (this.tally && this.tally.mode === 'block') ? this.tally : { a: this.pending.kind === 'undirected' ? 1 : 0, b: 0 }, n = parseInt(sm[2], 10) | 0;
@@ -9922,6 +9934,7 @@ class Bot {
         this.o.log('stealth by chat from ' + who + ': "' + txt + '" \u2192 stealth ' + na + ' (was ' + (cur.a | 0) + ')');
         this._writeTally({ mode: 'block', a: na });
         if(this.tally && this.tally.mode === 'block') this.tally = Object.assign({}, this.tally, { a: na }); else this.tally = { mode: 'block', a: na, b: cur.b | 0 };   // local mirror (offline has no echo)
+        this._aAt = Date.now(); this._aWho = who;   // v0.6.223: the human's own move -- a route still in its beat reads it as their fresh stealth (_commitBlock's aFresh), as it reads their counter
         this.note(who + ' has ' + na + ' stealth (booked on the counter).');
         if(this._vWait) this._vWait.arm();   // v0.6.204 (F10): the actor's move restarts the verdict clock, typed as on the counter (my own counter write is not heard as theirs)
         try { this._interceptSecondLook(); } catch(e){ this.o.log('stealth-chat second look error:', e.message); }
@@ -10671,6 +10684,8 @@ class Bot {
             this.note('Blocked' + (ansR.who ? ' by ' + ansR.who : '') + '. Combat begins.');
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, kind: 'enemyRescue', by: this._lastBlockerName || null });
             await this._resolveCombat(v);
+          } else if(this._fizzleIfOusted(v, act.seat, act.n, 'rescue')){
+            // v0.6.223 (round A, BOARD: only a bleed and a pool damage fizzled): the vampire left the game with its Methuselah -- nothing rises, my share is not paid
           } else {
             this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, kind: 'enemyRescue', target: act.name, tPays: act.tPays });
             this.say('It resolves');
@@ -10758,6 +10773,8 @@ class Bot {
             this.note('Blocked' + (ansB.who ? ' by ' + ansB.who : '') + '. Combat begins.');
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: 0, kind: 'burnCard', card: act.target.card, by: this._lastBlockerName || null });
             await this._resolveCombat(v);
+          } else if(this._fizzleIfOusted(v, act.target.seat, 0, 'card burn')){
+            // v0.6.223: the card left the game with its Methuselah -- nothing to burn
           } else {
             this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: 0, kind: 'burnCard', card: act.target.card, owner: act.target.owner });
             this.say('It resolves');
@@ -10859,6 +10876,8 @@ class Bot {
               this.note('Blocked' + (ansH.who ? ' by ' + ansH.who : '') + '. Combat begins.');
               this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, kind: 'rush', via: act.via, card: act.name, dir: act.target.dir, by: this._lastBlockerName || null });
               await this._resolveCombat(v);
+            } else if(this._fizzleIfOusted(v, act.target.seat, act.n, 'rush')){
+              this._combatArmed = false;   // v0.6.223: the host left the game with its Methuselah -- no combat
             } else {
               this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name || 'Haven Uncovered', kind: 'rush', via: act.via, target: act.target.name, dir: act.target.dir, owner: act.target.owner, tBlood: act.target.blood, famed: !!(this._famedSeen && this._famedSeen[act.target.name]) });
               this.say('It resolves');
@@ -10884,6 +10903,8 @@ class Bot {
             this._toAsh(act.name);
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, kind: 'rush', dir: act.target.dir, by: this._lastBlockerName || null });   // v0.6.54 (A1)
             await this._resolveCombat(v);
+          } else if(this._fizzleIfOusted(v, act.target.seat, act.n, 'rush')){
+            this._toAsh(act.name); this._combatArmed = false;   // v0.6.223: the target left the game with its Methuselah -- the card to the ash heap, its parked blood back (_fizzleIfOusted), no combat
           } else {
             this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name, kind: 'rush', target: act.target.name, dir: act.target.dir, owner: act.target.owner, tBlood: act.target.blood, famed: !!(this._famedSeen && this._famedSeen[act.target.name]) });   // v0.6.54 (A1): the doctrine payload
             this.say('It resolves');
@@ -10992,6 +11013,8 @@ class Bot {
             this._toAsh(act.name);
             this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, by: this._lastBlockerName || ansK.who || null });
             await this._resolveCombat(v);
+          } else if(!act.supMode && this._fizzleIfOusted(v, prey, act.n, 'hand look')){
+            this._toAsh(act.name);   // v0.6.223: [aus] is directed at the prey announced -- ousted, there is no hand to look at ([AUS] is undirected: the card goes into play for my prey)
           } else {
             this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name, kind: 'peek', sup: !!act.supMode });
             this.say('It resolves');
