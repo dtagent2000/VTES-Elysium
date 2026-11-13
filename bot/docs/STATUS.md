@@ -2,7 +2,7 @@
 
 **Bot v0.6.223** (14 Nov 2026, round A: the table runs) · arena v1.4.10 · sim table v1.1.0 · cardfx compiler v1.9.8, curated
 187 · hotseat tool v1.4.1 · coverage tool v1.1.45 · card ledger v1.1.2 · precon generator v1.1.1 · `krcg-v5.js` v1.0.0 ·
-`ana-gates.py` v1.1.0 · built against the root's release, client v2.6.174 / srv-2.6.50 (main's canary v1.2.0 143/0 against it);
+`ana-gates.py` v1.1.1 · built against the root's release, client v2.6.174 / srv-2.6.50 (main's canary v1.2.0 143/0 against it);
 the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6.50 and main's canary v1.2.0 (refreshed 13 Nov).
 
 **Deploy state:** `main` carries v0.6.222 (#67). **Open PRs:** round A (this release); B (the Jack burn) and C (a human's Grand

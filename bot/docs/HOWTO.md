@@ -131,8 +131,8 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   superseded combats, held / released turns, rush complies by path, fizzles, resolutions at an ousted seat) · `ana-wait.py` (tempo) ·
   `ana-probe.py` (`probe-order` / `probe-hold` rows) · `ana-cards.py` (uses per card, never-played, untitled plays) ·
   `ana-combat.py` + `ana-combat2.py` (handshake integrity 100 % on a bot-only table, agreement, `hsMiss`) · `ana-rush.py` ·
-  (`ana-windows.py`'s gate of 0 is a server-arena reading: on the hotseat / sim table most bot windows run out, the same at v0.6.211 —
-  BOARD) ·
+  (`ana-windows.py`'s gate of 0 is a server-arena reading: on the hotseat / sim table most bleed-modifier windows run out — the real
+  clock too, round A — BOARD) ·
   `ana-home.py A B` (paired home / blocks / damage / VP) · `ana-open.js` (the opening) · `gen-match-dossier.js <trace>` (one
   reviewable file per match; read Manifests → Endgame / VP → pool trajectories → then hunt) · `gen-trace-harvest.js <dir>`
   (metrics + the price referee: printed vs paid cost; a MISMATCH voids the series) · `gen-batch-review.js` · `gen-null-review.js`.

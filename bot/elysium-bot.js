@@ -3442,7 +3442,7 @@ class Bot {
     const voidGains = move && out.some(st => (ds[st] | 0) < 0);
     const nd = {}; for(const k of Object.keys(ds)){ const st = k | 0; if(out.includes(st)) continue; if(voidGains && (ds[k] | 0) > 0) continue; nd[k] = ds[k]; }
     act.deltas = nd;
-    this.note('The referendum\u2019s part for ' + out.map(st => this.seatName(st)).join(', ') + ' does nothing: ousted in its window' + (voidGains ? ', so there is no pool to move' : '') + '.');
+    act._voidNote = 'The referendum\u2019s part for ' + out.map(st => this.seatName(st)).join(', ') + ' does nothing: ousted in its window' + (voidGains ? ', so there is no pool to move' : '') + '.';   // said after the verdict lines (the egress review): the terms line still reads as announced
     for(const st of out) this._emit('fizzled', { vamp: v && v.name, n: Math.abs(ds[st] | 0), kind: 'referendum part', seat: st });
     return true;
   }
@@ -3965,6 +3965,7 @@ class Bot {
       this._writeTally({ mode: 'vote', a: Math.min(99, t.f), b: Math.min(99, t.a) });   // the AUTHORITATIVE count: bots' absolute tally writes race each other, the frozen `casts` lines do not
       if(!rc.line) this.send({ t: 'log', html: 'Vote: ' + t.f + ' for vs ' + t.a + ' against \u2014 vote ' + (passed ? 'passes' : 'fails') + '.' });   // the client's frozen verdict line (skipped when a human's Resolve already wrote it)
       this.send({ t: 'log', html: 'Referendum ' + (passed ? 'passes' : 'fails') + ' \u2014 <b>' + esc(act.name) + '</b>: ' + (passed ? esc(terms) : 'no effect') + '.' });
+      if(passed && act._voidNote){ this.note(act._voidNote); act._voidNote = null; }   // v0.6.223: the part of a seat ousted in the window, after the terms as announced
       this.chat(passed ? 'The referendum passes, ' + t.f + ' to ' + t.a + '.' : 'The referendum fails, ' + t.f + ' to ' + t.a + '.');
       this._emit('referendum', { vamp: v.name, card: act.name, passed, for: t.f, against: t.a, mine, deltas: act.deltas, closed: rc.closed });
       if(!(passed && act.titleTerm && this._takeTitle(act))) this._toAsh(act.name);   // v0.6.217: a passed title referendum puts the card on its vampire instead
@@ -6907,6 +6908,7 @@ class Bot {
     if(unIc){
       this._setTallyB(unIc + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block with +' + unIc + ' intercept (<b>' + esc(plan.un.name) + '</b>).' });
+      if(humanActor){ try { this._interceptSecondLook(); } catch(e){ this.o.log('second look error:', e.message); } }   // v0.6.223 (the egress review): a stealth raise booked inside the route's beat -- online the counter's echo looks again, offline nothing echoes
     } else if(ic){
       p._icFirst = true; await this._pace(); p._icFirst = false;   // v0.4.5: so a wake+intercept combo doesn't land as one instant double-play. v0.6.222 (the third review): the second look waits for this first card -- the echo of my own default-stealth write (or a raise) inside the beat drew a second card from a stale pick; after my write its echo re-runs the second look against the real counter
       if(this.pending !== p || !p.contested) return;   // v0.6.222 (the egress review): resolved under the beat
@@ -9014,7 +9016,8 @@ class Bot {
   _emit(type, data){ if(type === 'through' && this.tally && this.tally.mode === 'block' && this.started){ try { this._writeTally({ mode: null }); } catch(e){} }   // v0.6.172 (main v2.6.137: the ACTOR closes its block counter when its action resolves) -- every one of my 'through' sites is followed by 'It resolves'
   if((type === 'through' || type === 'blocked') && data && data.card !== 'hunt' && (data.kind == null || data.kind === 'bleed') && (data.n | 0) > 0) this._noteMyBleed(type === 'blocked');   // v0.6.143b: my bleed-through ledger against this prey
     if(type === 'blocked') this._returnParked(); else if(type === 'through' && this._actingVamp) this._actingVamp.parked = null;   // v0.6.130 (rulebook + Johan, debt 26c): an action's cost is paid only if it SUCCEEDS
-    if(type === 'through' || type === 'blocked'){ this._lastAct = { vamp: data && data.vamp, outcome: type, kind: (data && data.kind) || null }; try{ this._offNote(type, data); }catch(e){} }   // v0.6.123: the act-again hook reads the SAME two emits the strategy layer's ledger rides   // v0.6.119: the strategy layer's own offensive ledger rides the two emits that already mark every resolved action
+    if(type === 'through' || type === 'blocked'){ this._lastAct = { vamp: data && data.vamp, outcome: type, kind: (data && data.kind) || null }; try{ this._offNote(type, data); }catch(e){} }
+    else if(type === 'fizzled' && data && data.vamp && data.kind !== 'referendum part') this._lastAct = { vamp: data.vamp, outcome: 'through', kind: data.kind || null, fizzled: true };   // v0.6.223 (the egress review, RULINGS R-44): a fizzled action is a SUCCESSFUL one whose effects cannot apply -- an act-again that needs success follows it (a referendum part: the referendum's own through row says it)   // v0.6.123: the act-again hook reads the SAME two emits the strategy layer's ledger rides   // v0.6.119: the strategy layer's own offensive ledger rides the two emits that already mark every resolved action
     if(this.onEvent) try{ this.onEvent('bot:' + type, data || {}); }catch(e){} }
   _flushDraws(){                     // v0.5: extracted so master-play and hunt (which `continue`s past the old inline drain) can never silently DEFER a draw-owed -- every code path that increments _drawOwed now has a nearby place to flush it instead of relying on some LATER vampire's bleed branch happening to reach it
     while((this._drawOwed || 0) > 0){ this._drawOwed--;
@@ -11023,9 +11026,10 @@ class Bot {
               const revId = this.gid();
               this.board.push({ id: revId, name: act.name, kind: 'lib', zone: 'ready',
                                 faceDown: false, x: 60, y: 60, locked: false });   // burnable by any minion as a (D) action -- the table handles that; a bot-initiated burn is the v1.5 candidate
-              this._myRevAus = { seat: prey, id: revId };   // v0.6.201: the card earns me the prey's open hand even when the prey is a debug bot (_lookAway)
+              const pOut = ((this.players || []).find(q => q && q.seat === prey) || {}).out, rp = pOut ? this.preySeat() : prey, rpName = pOut ? this.seatName(rp) : preyName;   // v0.6.223 (the egress review): 'Your prey plays with an open hand' -- my prey NOW when the announced one was ousted in the window
+              this._myRevAus = { seat: rp, id: revId };   // v0.6.201: the card earns me the prey's open hand even when the prey is a debug bot (_lookAway)
               this.push();
-              this.chat('Trainbot: Revelations is in play \u2014 ' + preyName + ', please play with an open hand (hand menu \u2192 Open hand \u2192 everyone). I read the grants.');
+              if(rp && rp !== this.seat) this.chat('Trainbot: Revelations is in play \u2014 ' + rpName + ', please play with an open hand (hand menu \u2192 Open hand \u2192 everyone). I read the grants.');
             } else {
               this._toAsh(act.name);
               this.push();

@@ -12757,7 +12757,7 @@ async function connectWithRetry(client, tries = 30){
         const pc = u._commitBlock(p, { why: 'test', parts: {} }); setTimeout(() => relay({ t: 'tally', mode: 'block', a: 1 }, 'Hanna'), 40);   // Hanna's stealth 1, inside the wake's beat
         await pc; await new Promise(r => setTimeout(r, 2000)); if(u._vWait && u._vWait.timer) clearTimeout(u._vWait.timer);
         const ic = plays.filter(t => /intercept/.test(t));
-        ok(ic.length === 1 && u.hand.includes('Ensnare a Beast') && S.b === 1 && p.reacted.size === 1,
+        ok(ic.length === 1 && [u.hand.includes('Eyes of the Wild'), u.hand.includes('Ensnare a Beast')].filter(Boolean).length === 1 && S.b === 1 && p.reacted.size === 1,   // v0.6.223 (the egress review): one of the two intercept cards spent, whichever -- the fixture's Eyes of the Wild is a locked Gangrel's (BOARD)
            '166h a stealth raise inside the locked-blocker route’s beat: one intercept card for one need (got ' + JSON.stringify({ plays, hand: u.hand, counter: S, reacted: [...p.reacted] }) + ')'); }
 
       // i) the egress review: a superseded combat's waiter that was already registered when the later combat began ends with it -- the
@@ -12788,7 +12788,7 @@ async function connectWithRetry(client, tries = 30){
         await u._commitBlock(p, { why: 'test', parts: {} }); const armed = !!(u._vWait && u._vWait.p === p); await new Promise(r => setTimeout(r, 1000));
         if(u._vWait) u._vwEnd(null); u.pending = null;
         const ic = plays.filter(t => /intercept/.test(t));
-        ok(ic.length === 1 && armed && S.b === 1 && u.hand.includes('Ensnare a Beast'),
+        ok(ic.length === 1 && armed && S.b === 1 && [u.hand.includes('Eyes of the Wild'), u.hand.includes('Ensnare a Beast')].filter(Boolean).length === 1,   // v0.6.223 (the egress review): the count, not the card
            '166j a human’s undirected action blocked with an intercept card, the counter echoed: one card and the verdict wait (got ' + JSON.stringify({ plays, armed, counter: S, hand: u.hand }) + ')'); }
     }
 
@@ -12815,7 +12815,7 @@ async function connectWithRetry(client, tries = 30){
         const pc = u._commitBlock(p, { why: 'test', parts: {} }); setTimeout(() => u._onChat('Hanna', '+1'), 40);   // inside the wake's beat (400 ms)
         await pc; await new Promise(r => setTimeout(r, 2000)); if(u._vWait && u._vWait.timer) clearTimeout(u._vWait.timer);
         const ic = plays.filter(t => /intercept/.test(t)), sc = u.events.filter(e => e.t === 'bot:stealth-chat').map(e => e.d.a);
-        ok(JSON.stringify(sc) === '[1]' && ic.length === 1 && S.a === 1 && S.b === 1 && u.hand.includes('Ensnare a Beast') && p.reacted.size === 1,
+        ok(JSON.stringify(sc) === '[1]' && ic.length === 1 && S.a === 1 && S.b === 1 && [u.hand.includes('Eyes of the Wild'), u.hand.includes('Ensnare a Beast')].filter(Boolean).length === 1 && p.reacted.size === 1,   // the count, not the card (the egress review)
            '167a Hanna’s "+1" inside the locked-blocker route’s beat: booked on the counter, and the route answers it with one intercept card (got ' + JSON.stringify({ sc, plays, counter: S, hand: u.hand }) + ')'); }
 
       // b) the directed actions at a seat ousted in their window (Cy, seat 3, is ousted while the block question is open) -- through
@@ -12823,14 +12823,14 @@ async function connectWithRetry(client, tries = 30){
       { const run = async (act, hand, extra) => {
           const w = mk167(); w.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Cy', online: true, bot: true }];
           w.turnSeat = 2; w.board = [V7('v1', 'Larissa Moreira (G6)', { blood: 5, cap: 6 })]; w.hand = (hand || []).slice(); w._announcePhase = async () => {};
-          const wn = []; w.note = t => wn.push(t); const fought = []; w._resolveCombat = async (v, o) => { fought.push(o || null); };
+          const wn = []; w.note = t => wn.push(t); const wc = []; w.chat = t => wc.push(t); const fought = []; w._resolveCombat = async (v, o) => { fought.push(o || null); };
           w.table = { 3: { pub: { cards: (extra && extra.cards) || [] } } };
           let once = false; w._decideAction = () => { if(once) return { pick: null, why: 'done' }; once = true; return { pick: act, why: 'test' }; };
           w._askBlock = async () => { w.players[2].out = true; return { what: 'no' }; };
           let terr = null; try { await w._playTurn(); } catch(e){ terr = e.message; }
           return { terr, fz: w.events.filter(e => e.t === 'bot:fizzled').map(e => e.d.kind + '@' + e.d.seat), thr: w.events.filter(e => e.t === 'bot:through' && e.d.kind === act.kind).length,
                    fought: fought.length, note: wn.filter(t => /has no target: Cy was ousted in its window\./.test(t)).length, blood: w.board[0].blood, armed: !!w._combatArmed,
-                   inPlay: w.board.filter(c => c.kind === 'lib' && c.zone === 'ready').map(c => c.name) }; };
+                   inPlay: w.board.filter(c => c.kind === 'lib' && c.zone === 'ready').map(c => c.name), revAus: w._myRevAus ? w._myRevAus.seat : null, openAsk: wc.filter(t => /open hand/.test(t)).map(t => t.split(' \u2014 ')[1] || t) }; };
         const tgt = { seat: 3, owner: 'Cy', name: 'Rafael de Corazon', dir: 'fwd', blood: 3 };
         const got = {
           song: await run({ kind: 'rush', name: 'Deep Song', idx: 0, n: 0, cost: { blood: 1 }, target: tgt }, ['Deep Song']),
@@ -12842,7 +12842,8 @@ async function connectWithRetry(client, tries = 30){
         const one = (g, kind) => !g.terr && JSON.stringify(g.fz) === '["' + kind + '@3"]' && g.thr === 0 && g.fought === 0 && g.note === 1;
         ok(one(got.song, 'rush') && got.song.blood === 5 && !got.song.armed && one(got.haven, 'rush') && !got.haven.armed && one(got.burn, 'card burn')
            && one(got.rescue, 'rescue') && got.rescue.blood === 5 && one(got.look, 'hand look') && got.look.blood === 5
-           && !got.look.inPlay.includes('Revelations') && got.open.fz.length === 0 && got.open.thr === 1 && got.open.inPlay.includes('Revelations'),
+           && !got.look.inPlay.includes('Revelations') && got.open.fz.length === 0 && got.open.thr === 1 && got.open.inPlay.includes('Revelations')
+           && got.open.revAus === 1 && got.open.openAsk.length === 1 && /^Hanna, please play with an open hand/.test(got.open.openAsk[0]),   // the egress review: 'your prey' is my prey now
            '167b a rush (Deep Song, Haven Uncovered), a card burn, a rescue and Revelations [aus] at a seat ousted in the window fizzle -- no combat, the blood back; [AUS] still goes into play (got ' + JSON.stringify(got) + ')'); }
 
       // c) the referendum's part for a seat ousted in its window: Parity Shift's move from Cy -- nothing to move, my +3 void; Kine
@@ -12850,15 +12851,39 @@ async function connectWithRetry(client, tries = 30){
       { const ref = async act => {
           const w = mk167(); w.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Cy', online: true, bot: true }];
           const v = V7('v1', 'Catalina Vega', { blood: 5, cap: 8 }); w.board = [v]; w._actingVamp = { v, n: act.n, played: new Set(), target: null, act };
-          const wn = []; w.note = t => wn.push(t); const settled = []; w._settleOust = async (st, n) => { settled.push(st + ':' + n); };
+          const wn = [], seq = []; w.note = t => { wn.push(t); seq.push('note:' + t); }; const s0 = w.send; w.send = m => { if(m && m.t === 'log') seq.push('log:' + String(m.html || '').replace(/<[^>]+>/g, '')); s0(m); };
+          const settled = []; w._settleOust = async (st, n) => { settled.push(st + ':' + n); };
           w._refPoll = async rc => { rc.closed = 'everyone has spoken'; }; w._askBlock = async () => { w.players[2].out = true; return { what: 'no' }; };
           let terr = null; try { await w._callReferendum(v, Object.assign({ value: 1, pass: 0.9, mine: 1, agst: 0 }, act)); } catch(e){ terr = e.message; }
           return { terr, pool: w.pool, settled, fz: w.events.filter(e => e.t === 'bot:fizzled').map(e => e.d.kind + '@' + e.d.seat),
-                   row: (w.events.filter(e => e.t === 'bot:referendum').map(e => e.d.deltas)[0]) || null, note: wn.filter(t => /part for Cy does nothing/.test(t)).length }; };
+                   row: (w.events.filter(e => e.t === 'bot:referendum').map(e => e.d.deltas)[0]) || null, note: wn.filter(t => /part for Cy does nothing/.test(t)).length,
+                   after: seq.findIndex(x => /^log:Referendum passes/.test(x)) >= 0 && seq.findIndex(x => /^log:Referendum passes/.test(x)) < seq.findIndex(x => /part for Cy does nothing/.test(x)) }; };
         const ps = await ref({ name: 'Parity Shift', n: 3, deltas: { 2: 3, 3: -3 } }), krc = await ref({ name: 'Kine Resources Contested', n: 4, deltas: { 1: -2, 3: -2 } });
         ok(!ps.terr && ps.pool === 20 && ps.settled.length === 0 && JSON.stringify(ps.fz) === '["referendum part@3"]' && ps.note === 1 && JSON.stringify(ps.row) === '{}'
-           && !krc.terr && krc.pool === 20 && JSON.stringify(krc.settled) === '["1:2"]' && JSON.stringify(krc.fz) === '["referendum part@3"]' && JSON.stringify(krc.row) === '{"1":-2}',
+           && !krc.terr && krc.pool === 20 && JSON.stringify(krc.settled) === '["1:2"]' && JSON.stringify(krc.fz) === '["referendum part@3"]' && JSON.stringify(krc.row) === '{"1":-2}'
+           && ps.after && krc.after,   // the egress review: the note follows the verdict's terms line
            '167c a referendum whose terms name a seat ousted in its window: Parity Shift moves nothing (no +3 for me), Kine Resources Contested burns only the live seat (got ' + JSON.stringify({ ps, krc }) + ')'); }
+
+      // d) the egress review: the unlock-card route (Second Tradition: Domain, +2 intercept) with NO counter echo (the hotseat): Hanna's
+      //    "+3" typed inside its beat is booked, and the commit's own second look answers it with one more intercept card
+      { const u = mk167('U', { paceMs: 400, askSecs: 3 }); u.players[0].bot = false; const plays = [];
+        u.send = m => { if(m.t === 'log' && /intercept/.test(m.html || '')) plays.push(String(m.html).replace(/<[^>]+>/g, '')); };   // no echo: _writeTally's local mirror alone
+        u._reactWindow = () => {}; u.say = () => { u._lastActAt = Date.now(); };
+        const me = V7('c1', 'Catalina Vega', { locked: true, blood: 5, cap: 8 }); u.board = [me]; u.hand = ['Second Tradition: Domain', "Eagle's Sight"];
+        u.table = { 1: { pub: { cards: [V7('g1', 'Glissando (G6)')] } } }; u.turnSeat = 1; u._obs = { who: 'Hanna', vamp: 'Glissando (G6)', at: Date.now() - 2000 }; u.tally = { mode: 'block', a: 0, b: 0 };
+        const p = u.pending = { who: 'Hanna', amount: 2, kind: 'bleed', actingVampName: 'Glissando (G6)', actorSeat: 1, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        const pc = u._commitBlock(p, { why: 'test', parts: {} }); setTimeout(() => u._onChat('Hanna', '+3'), 40);
+        await pc; await new Promise(r => setTimeout(r, 2000)); if(u._vWait && u._vWait.timer) clearTimeout(u._vWait.timer);
+        const T = u.tally || {}, st = u.events.filter(e => e.t === 'bot:intercept-stack').map(e => e.d.tag);
+        ok(T.a === 3 && T.b === 3 && plays.length === 2 && /Second Tradition/.test(plays[0]) && /Eagle/.test(plays[1]) && JSON.stringify(st) === '["answer"]' && !u.hand.includes("Eagle's Sight"),
+           '167d the unlock-card route with no echo: Hanna\u2019s "+3" booked in its beat, and one more intercept card answers it (got ' + JSON.stringify({ tally: T, plays, st, hand: u.hand }) + ')'); }
+
+      // e) the egress review (RULINGS R-44): a fizzled action is a SUCCESSFUL one -- the act-again hook reads it so; a referendum's part does not
+      { const w = mk167(); w.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Cy', online: true, bot: true, out: true }];
+        const v = V7('v1', 'Larissa Moreira (G6)'); const f = w._fizzleIfOusted(v, 3, 0, 'rush'), la = w._lastAct; w._lastAct = null;
+        w._emit('fizzled', { vamp: v.name, n: 3, kind: 'referendum part', seat: 3 });
+        ok(f === true && la && la.vamp === v.name && la.outcome === 'through' && la.fizzled === true && w._lastAct === null,
+           '167e a fizzled rush counts as a successful action for the act-again hook; a referendum\u2019s voided part does not (got ' + JSON.stringify({ f, la, after: w._lastAct }) + ')'); }
     }
 
 

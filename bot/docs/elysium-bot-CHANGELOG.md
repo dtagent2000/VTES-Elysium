@@ -35,7 +35,7 @@
 - **v0.6.223 (14 Nov 2026)** — Round A (Johan's "Yes kör", 13 Nov 21:45): the table runs with Toreador's guide check (D-112),
   v0.6.222's two riders, and the tool fixes the runs called for. `docs/reports/REPORT-table-runs-2026-11-13.md`,
   `docs/reports/REPORT-toreador-guide-check-2026-11-13.md`.
-  - *The riders* (`3a8731a`, section 167; destructive: v0.6.222 0/3, these bytes 3/0): a human's chat stealth (`+1`, a bare total)
+  - *The riders* (`3a8731a`, section 167; destructive: v0.6.222 0/5, the pre-review candidate 1/4, these bytes 5/0): a human's chat stealth (`+1`, a bare total)
     typed inside a locked blocker's route beat is booked — the guard read `blockerVamp` alone, which the route sets only after its
     beat; it now books on `routeVamp` too and stamps the human's move (`_aAt`), the second look shut until the route has its blocker.
     A rush (Deep Song, Haven Uncovered, a granted rush), a card burn, an enemy rescue and Revelations [aus] whose target seat was
@@ -56,11 +56,21 @@
     Toreador line) falsified; 1 and 7 falsified as registered online — `ana-windows.py` v1.0's limit was a pace-0 limit — and held
     on v1.1; 7 half held offline (the modifier windows, not the totals).
   - *Tools*: `ana-rare.py` v1.0.0 (new, read-only: superseded combats, held and released turns, rush complies by path, fizzles,
-    resolutions at an ousted seat); `ana-windows.py` v1.1 (the limit is 2.5 s plus the bots' pace, and RAN OUT needs the table quiet
-    that long inside the window: at the client pace v1.0 called 20 answered windows "ran out"; at pace 0 v1.0's verdicts); arena
-    v1.4.9 (the lobby waits for every seat PICK before the host's start: at the client pace the picks are paced and the start came
-    first) and v1.4.10 (the OS picks the scratch server's port and the server must be alive after its boot: two of ten parallel
-    arenas met on one port and the tenth match was lost).
+    resolutions at an ousted seat); `ana-windows.py` v1.1.1 (at a pace above 0 the limit is 2.5 s plus the pace, and RAN OUT needs
+    the window's answer chain quiet that long: at the client pace v1.0 called 20 answered windows "ran out"; at pace 0 v1.0's
+    verdicts) with two new `ana-gates.py` v1.1.1 self-test plants (a pace-0 run-out with a bystander's row inside must fail; a
+    client-pace bounce chain must pass); arena v1.4.9 (the lobby waits for every seat PICK before the host's start: at the client
+    pace the picks are paced and the start came first) and v1.4.10 (the OS picks the scratch server's port, and the arena connects
+    only once its server has printed that it listens, else another port: two of ten parallel arenas met on one port and the
+    tenth match was lost; the retry checked on a held port, 2 tries).
+  - *The egress review* (fresh context, 11 findings, all fixed): `ana-windows.py` v1.1 let a bystander's passive row hide a pace-0
+    run-out (v1.1.1 above); sections 166h, 166j and 167a required Eyes of the Wild from a Banu Haqim (a locked Gangrel's card; the
+    intercept finder asks no clan requirement) — they now count one intercept card spent, whichever (BOARD); RULINGS R-44 (the
+    Rules Director on a fizzle: successful, not paid) and the act-again reads a fizzled action as successful (167e); the unlock-card
+    route (Second Tradition: Domain) answers a human's stealth booked in its beat with its own second look, offline too (167d);
+    Revelations [AUS] at a prey ousted in the window opens my prey's hand now (167b); the void's note follows the verdict's terms
+    line (167c); the reports' 0.65 VP (v0.6.222's 600: 0.78 ± 0.05), the politics count and the probe's reading; HOWTO, the gates'
+    header, the README map, the guide's date.
   - *Predictions* (registered before the footprint): (R1) IDENTICAL on the 240, the V5 smoke and the 600 to v0.6.222, the version
     set back — FOOTPRINTS; (R2) `ana-gates.py` PASS — GATESLINE; (R3) section 167 green ×3, red on v0.6.222 — SUITE.
   - Gates on the release bytes: GATES.

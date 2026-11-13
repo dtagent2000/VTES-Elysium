@@ -19,12 +19,12 @@
 #                 stray row failed a series). Wider View's burn-for-pool left INV_KNOWN with v1.1.0: bot v0.6.219's checker books the
 #                 blood a burn's note already shows (the pool-print + pool-drift +N pair was that double count), so such a flag is new.
 #     windows     the arena: an actor's window that ran out and went through (v0.6.206's gate of 0); the sim table: information only --
-#                 most bot windows run out there (BOARD, a measurement debt)
+#                 most bleed-modifier windows run out there (BOARD, a measurement debt; the real clock too, 13 Nov)
 #   Information lines: the ledger's leads and its explained differences, the step handshake's safety net, the post-game ousts.
 #   --self-test: a clean synthetic series PASSes every gate; each planted fault turns its own line FAIL (the game's end included).
 import collections, glob, importlib.util, json, os, re, shutil, sys, tempfile
 
-VERSION = '1.1.0'
+VERSION = '1.1.1'
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 def _load(name):
@@ -156,13 +156,17 @@ def _match(k, plant=None, sim=True):
     rows = []
     def row(t, bot, ty, data): rows.append({'t': t, 'match': k, 'bot': bot, 'type': ty, 'data': data})
     def bleed(t, n): row(t, 'B1', 'through', {'vamp': 'X', 'n': n, 'final': n, 'card': None})
-    for i, b in enumerate(('B1', 'B2', 'B3')): row(0, b, 'manifest', {'deck': 'malkavian', 'seat': i + 1})
+    for i, b in enumerate(('B1', 'B2', 'B3')): row(0, b, 'manifest', {'deck': 'malkavian', 'seat': i + 1, **({'knobs': {'paceMs': 3100}} if plant == 'chain' else {})})
     bleed(1000, 2)
     row(1500, 'B2', 'took-bleed', {'n': {'more': 3, 'less': 1}.get(plant, 2)})
     if plant == 'stealth': row(900, 'B1', 'play', {'window': 'stealth', 'card': 'Lost in Crowds', 'vamp': 'X'})
     if plant in ('unpaired', 'vanished'): bleed(2000, 1)
     if plant == 'vanished': row(2500, 'B2', 'block-made', {'vamp': 'Y'})
     if plant == 'window': row(3000, 'B1', 'bleed-total', {'n': 1}); bleed(6000, 1); row(6500, 'B3', 'took-bleed', {'n': 1})
+    if plant == 'windowp': row(3000, 'B1', 'bleed-total', {'n': 1}); row(4500, 'B3', 'snapshot', {'tag': 'react'}); bleed(6000, 1); row(6500, 'B3', 'took-bleed', {'n': 1})   # v1.1.1: a bystander's passive row inside a pace-0 run-out hides nothing
+    if plant == 'chain':   # v1.1.1: at the client pace a bounce chain (the target's Deflection at its react delay, the new target's answer) is answered, not run out
+        row(3000, 'B1', 'bleed-total', {'n': 1}); row(3001, 'B2', 'decide', {'q': 'react-delay', 'out': {'ms': 3100}}); row(6100, 'B2', 'play', {'window': 'react-bounce', 'card': 'Deflection', 'vamp': 'Y'})
+        row(6500, 'B3', 'decide', {'q': 'react-delay', 'out': {'ms': 3100}}); bleed(9750, 1); row(9800, 'B3', 'took-bleed', {'n': 1})
     if plant in ('flag', 'flags'): row(2600, 'B1', 'inv-flag', {'inv': 'strike-taken', 'taken': 2, 'myStrike': 1})
     if plant == 'wv': row(2600, 'B1', 'inv-flag', {'inv': 'pool-drift', 'diff': 1})   # v1.1.0: Wider View's two kinds are no known kinds now --
     if plant == 'wvp': row(2600, 'B1', 'inv-flag', {'inv': 'pool-print', 'via': 'burn-for-pool'})   # both were in v1.0.0's INV_KNOWN (it passes them)
@@ -204,7 +208,7 @@ def self_test():
              ('missing', S, {'matches'}), ('problem', S, {'matches'}), ('flag', S, set()), ('flags', S, {'invariants'}),
              ('kind', S, {'invariants'}), ('wv', S, {'invariants'}), ('wvp', S, {'invariants'}), ('window', S, set()),
              ('flag', S, set(), 12), ('flags', S, {'invariants'}, 12),   # v1.1.0: a 12-match series carries one known flag, not two
-             (None, A, set()), ('window', A, {'windows'}), ('timeout', A, {'matches'}), ('zeroPool', A, {'zeroPool'})]
+             (None, A, set()), ('window', A, {'windows'}), ('windowp', A, {'windows'}), ('chain', A, set()), ('timeout', A, {'matches'}), ('zeroPool', A, {'zeroPool'})]
     fails = 0; tmp = tempfile.mkdtemp(prefix='ana-gates-')
     try:
         for idx, (plant, sim, want, *n) in enumerate(cases):

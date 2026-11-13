@@ -74,20 +74,27 @@ const RUN_SEED = (() => { const i = process.argv.indexOf('--seed'); return i >= 
    anchored, so spawning the original would pollute the real rooms file).   */
 /* v1.4.10 (round A's online table, 13 Nov 2026): ten arenas in parallel drew a random port each from 300, and two met (a 1-in-7
    chance at ten): the tenth's server lost the port (EADDRINUSE: it exits), its bots joined the second arena's server, played in a
-   room of their own there, and were cut off when that match ended and its server was stopped -- the tenth arena waited out its
-   match timeout with no trace. Now the OS picks a free port (a listener on port 0), and the server must still be alive after its
-   boot (it holds the port), else another port is tried. */
+   room of their own there, and were cut off when that match ended and its server was stopped -- the tenth arena would have waited
+   out its match timeout with no trace (it was stopped at 4,168 s). Now the OS picks a free port (a listener on port 0), and the
+   arena connects only once ITS server has said it listens ('the table is open', printed after a successful bind; the egress
+   review: a single 800 ms sample could pass a slow boot that loses the port later); a server that exits or stays silent for 10 s is
+   replaced on another port (5 tries). firstPort: a test's way to start on a held port and see the retry. */
 function freePort(){ return new Promise((res, rej) => { const s = require('net').createServer(); s.unref(); s.on('error', rej); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => res(p)); }); }); }
-async function spawnServer(){
+async function spawnServer(firstPort){
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'elysium-arena-'));
   fs.copyFileSync(path.join(__dirname, 'elysium-server.js'), path.join(tmp, 'elysium-server.js'));
   for(let k = 0; k < 5; k++){
-    const port = await freePort();
+    const port = (k === 0 && firstPort) ? firstPort : await freePort();
     const srv = spawn(process.execPath, [path.join(tmp, 'elysium-server.js'), String(port)],
-                      { cwd: tmp, stdio: 'ignore' });
-    let exited = false; srv.once('exit', () => { exited = true; });
-    await sleep(800);                                   // the one-time boot (was the caller's)
-    if(!exited) return { srv, url: 'ws://127.0.0.1:' + port, tmp };
+                      { cwd: tmp, stdio: ['ignore', 'pipe', 'ignore'] });
+    const up = await new Promise(res => {
+      let buf = '', done = false, tm = null;
+      const onData = d => { buf += d; if(/the table is open/.test(buf)) fin(true); };
+      const fin = v => { if(done) return; done = true; clearTimeout(tm); srv.stdout.off('data', onData); srv.stdout.resume(); res(v); };   // keep draining: a full pipe would stall the server
+      tm = setTimeout(() => fin(false), 10000); srv.stdout.on('data', onData); srv.once('exit', () => fin(false));
+    });
+    if(up && srv.exitCode === null) return { srv, url: 'ws://127.0.0.1:' + port, tmp, tries: k + 1 };
+    try { srv.kill(); } catch(e){}
   }
   throw new Error('arena: no scratch server stayed up on a free port (5 tries)');
 }
@@ -386,7 +393,7 @@ async function runArena(opts){
   return results;
 }
 
-module.exports = { runArena, computeVp, deriveWinner };   // v1.2.5: pure winner logic exported for the suite
+module.exports = { runArena, computeVp, deriveWinner, spawnServer };   // v1.4.10: spawnServer for its retry check   // v1.2.5: pure winner logic exported for the suite
 
 /* ---------- CLI ---------- */
 if(require.main === module){

@@ -10,11 +10,14 @@
 # Also: stale-answer rows (v0.6.206's guard: a bot's answer that arrived while the line opening my window was still in my queue).
 # v1.1 (13 Nov 2026, round A's online table): the limit is 2.5 s PLUS the bots' pace (the manifests' paceMs): at the client pace a
 #   bot answers after its react delay (= paceMs), so a window answered by a chain of bots (a bounce, then the new target's answer)
-#   resolves 3.2-10.5 s after it opened with no answer lost. A slow window is RAN OUT only when the table went QUIET longer than the
-#   limit inside it (the largest gap between two consecutive rows, any bot); a slow window with no such gap is 'answered at the pace'
-#   (counted for the record). At pace 0 the limit and the verdicts are those of v1.0.
+#   resolves 3.2-10.5 s after it opened with no answer lost. At a pace above 0 a slow window is RAN OUT only when its ANSWER CHAIN
+#   went quiet longer than the limit -- the largest gap between the window's opening, the answering bots' rows (decide, play,
+#   block-eval, defence-plan, block-made, stale-answer; never a passive row: a snapshot, an archetype, a plan) and its resolution;
+#   a slow window with no such gap is 'answered at the pace' (counted for the record). At pace 0 the limit and the verdicts are
+#   those of v1.0, byte for byte (v1.1.1, the egress review: v1.1 let a bystander's passive row hide a run-out at pace 0).
 # Run per match directory or on a directory of match-*.jsonl files.
 import json, glob, sys, collections
+ANSWER = ('decide', 'play', 'block-eval', 'defence-plan', 'block-made', 'stale-answer')   # v1.1.1: the rows an answering bot writes
 
 def audit(S):   # one series directory -> its counts (C2: importable, ana-gates.py reads it)
     C = collections.Counter(); stale = collections.Counter(); slow = []
@@ -22,7 +25,7 @@ def audit(S):   # one series directory -> its counts (C2: importable, ana-gates.
     for f in files:
         rows = [json.loads(l) for l in open(f)]; rows = [r for r in rows if 'bot' in r]; rows.sort(key=lambda r: r['t'])
         paces = [((r.get('data') or {}).get('knobs') or {}).get('paceMs') for r in rows if r['type'] == 'manifest']
-        lim = 2500 + max([p for p in paces if isinstance(p, (int, float))] or [0])   # v1.1: the pace is part of an answered window
+        pace = max([p for p in paces if isinstance(p, (int, float))] or [0]); lim = 2500 + pace   # v1.1: the pace is part of an answered window
         for i, r in enumerate(rows):
             if r['type'] == 'stale-answer': stale[(r['data'].get('phrase'), r['data'].get('via'))] += 1
             kind = 'modifier' if (r['type'] == 'play' and r['data'].get('window') == 'bleed-mod') else ('total' if r['type'] == 'bleed-total' else None)
@@ -32,9 +35,9 @@ def audit(S):   # one series directory -> its counts (C2: importable, ana-gates.
             gap = nx[0]['t'] - r['t']; C[kind] += 1
             if gap > lim:
                 contest = any(x['type'] == 'block-made' and x['bot'] != r['bot'] and r['t'] <= x['t'] <= nx[0]['t'] for x in rows[i + 1:])
-                inside = [r['t']] + [x['t'] for x in rows[i + 1:] if x['t'] <= nx[0]['t']]
-                quiet = max(b - a for a, b in zip(inside, inside[1:])) if len(inside) > 1 else gap
-                if not contest and quiet <= lim: C[kind + ' answered at the pace'] += 1; continue   # v1.1: a chain of paced answers, none lost
+                if pace > 0 and not contest:   # v1.1: a chain of paced answers, none lost -- read from the answering bots' rows only (v1.1.1)
+                    chain = [r['t']] + [x['t'] for x in rows[i + 1:] if x['t'] <= nx[0]['t'] and x['bot'] != r['bot'] and x['type'] in ANSWER] + [nx[0]['t']]
+                    if max(b - a for a, b in zip(chain, chain[1:])) <= lim: C[kind + ' answered at the pace'] += 1; continue
                 tag = ('contest at the clock, ' + ('blocked' if nx[0]['type'] == 'blocked' else 'failed')) if contest else ('RAN OUT, THROUGH' if nx[0]['type'] == 'through' else 'blocked at the clock')
                 C[kind + ' ' + tag] += 1; slow.append((f.split('/')[-1], kind, tag, gap))
     return C, stale, slow, files

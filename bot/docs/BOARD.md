@@ -42,10 +42,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar).
   Over-strict: `_bestStrengthFor` (any strength bonus), `_inPlayNorms` (my ash heap). Also Saulot's Healing Touch: FULL by the
   auto tier, its text unbuilt. *Done when* each is built and tested, or ruled out.
-- **Toreador's two auto readings** (round A, 13 Nov): Perfect Paragon lacks its [PRE] mode ("Allies and younger vampires get −1
-  intercept"), and Elysium: The Palace of Versailles gives +1 vote, not +1 for each titled Camarilla vampire (online it played with
-  the "(uncurated" note). Both are FULL in the ledger, whose check asks no mode per discipline line or per-vampire count. *Done when*
-  both are curated and graded, the check widened. Docs: the two 13 Nov reports (`reports/`).
+- **Three auto readings and a requirement** (round A): Perfect Paragon lacks [PRE] ("Allies and younger vampires get −1
+  intercept"); Versailles gives +1 vote, not +1 per titled Camarilla vampire ("(uncurated" online); Eyes of the Wild reads +1
+  intercept on a lock, not a locked Gangrel's blood burn — and `_bestInterceptFor` asks no clan requirement, so a Banu Haqim
+  played it (166h, 166j, 167a now count the card). The ledger certifies all three FULL. *Done when* curated, graded, the
+  requirement read and the ledger's check asks a mode per discipline line. Docs: the two 13 Nov reports.
 - **V5 wave 3's riders** (`specs/spec-v5-wave3-2026-11-02.md` §4): the amber halves (Anarch Railroad and Fortune Teller Shop for
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
@@ -151,10 +152,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* the persona pass (RULINGS O-29) ships with those tests.
 
 ## Measurement debts
-- **The hotseat table drops a bot's Pass in the bleed-modifier window** (29 Oct; v0.6.211; on the real clock 13 Nov): the actor's
-  stale guard reads the target's Pass as an answer to an earlier line, and the window runs out its ~15 s — 50 of 53 modifier windows
-  on round A's offline table (60 stale Passes), 0 of 44 online at the same pace: a human offline waits at each bot modifier. *Done when* the guard keys on what the hotseat bridge delivers and an offline real-clock table shows 0. Docs: LESSONS
-  L-25, L-26; `reports/REPORT-table-runs-2026-11-13.md`; HOWTO (ana-windows).
+- **The hotseat table drops a bot's Pass in the bleed-modifier window** (29 Oct; v0.6.211; the real clock, 13 Nov): the actor's
+  stale guard reads the target's Pass as an answer to an earlier line, and the window runs out (~15 s): 50 of 53 on round A's
+  offline table, 0 of 44 online at the same pace. *Done when* an offline real-clock table and a browser table show 0. Docs:
+  LESSONS L-25, L-26; `reports/REPORT-table-runs-2026-11-13.md`.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
