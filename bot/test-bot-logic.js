@@ -12461,8 +12461,8 @@ async function connectWithRetry(client, tries = 30){
         releaseA(); await pA;
         const mid = { inCombat: u._inCombat, opp: u._combatOppName };
         await pB;
-        ok(mid.inCombat === true && mid.opp === 'Catalina Vega' && u.events.some(e => e.t === 'bot:combat-superseded' && e.d.vamp === 'The Dowager (G6)'),
-           '165f the first combat, superseded, ends without touching the live one: Lenny’s combat still in combat against Catalina (got ' + JSON.stringify(mid) + ')'); }
+        ok(mid.inCombat === true && mid.opp === 'Catalina Vega' && calls === 2 && u.events.some(e => e.t === 'bot:combat-superseded' && e.d.vamp === 'The Dowager (G6)'),
+           '165f the first combat, superseded, ends without touching the live one: Lenny’s combat still in combat against Catalina, one round each (got ' + JSON.stringify(Object.assign({ calls }, mid)) + ')'); }
 
       // g) Smiling Jack's counters on the wire (D-113 (2)): the owner's pub carries them (a NUMBER of counters stays off), and the
       //    victim, reading that pub at its own unlock, pays them -- the owner's buildPub -> the victim's _onBoard -> _menaceUnlockEngine
