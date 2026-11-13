@@ -12520,6 +12520,53 @@ async function connectWithRetry(client, tries = 30){
              tg1: ['Unblockable: Catalina Vega (G6)', 'Locked: Min-seo (G6)'] }) && !!row,
            '165i through the real server: a human seat gets the pair’s tokens and Jack’s 3 counters as sent, and the ledger narrates Min-seo’s token (got ' + JSON.stringify({ err, got, row: row && row.rows }) + ')');
         try { b.close(); } catch(e){} try { h.ws.close(); } catch(e){} }
+
+      // j) a turn after the game ended (the egress review): the server hands a lone live seat its own turn back after its pass, and
+      //    the first cut played the unlock again every pace beat (the Edge's +1, income, its own Jack's tick) and passed again
+      { const u = mk165(); u.turnSeat = 2; u.players[0].out = true; u.edge = true; u.pool = 20; u.board = [V5('v1', 'Lenny Burkhead (G6)', { locked: true })];
+        const t0 = u.ownTurns | 0; let terr = null; try { await u._playTurn(); } catch(e){ terr = e.message; }
+        const got = { terr, pool: u.pool, sent: u.sent.length, turns: (u.ownTurns | 0) - t0, locked: u.board[0].locked, over: u.events.filter(e => e.t === 'bot:game-over').map(e => e.d.phase) };
+        ok(!terr && got.pool === 20 && got.sent === 0 && got.turns === 0 && got.locked === true && JSON.stringify(got.over) === '["turn"]',
+           '165j a turn after the game ended: no unlock, no Edge pool, no line, no pass -- one game-over row (got ' + JSON.stringify(got) + ')'); }
+
+      // k) Terrifying Visage (the egress review): the success verdict reaches every bot holding the pending -- only the controller of
+      //    the blocking minion burns the pool (162e is my own block); another seat's block costs me nothing
+      { const mkV = mine => { const u = mk165(); u.pool = 20; const me = V5('e1', 'Crow (G5)'); u.board = [me];
+          const gl = V5('eg1', 'Glissando (G6)', { attached: ['ev1'] }); u.table = { 1: { pub: { cards: [gl, { id: 'ev1', name: 'Terrifying Visage', kind: 'lib', zone: 'ready', host: 'eg1', faceDown: false }] } } };
+          u.pending = { who: 'Hanna', amount: 2, kind: 'bleed', actingVampName: 'Glissando (G6)', actorSeat: 1, contested: !!mine, reacted: new Set(), blockerVamp: mine ? me : null, declined: !mine, attempted: new Set(mine ? ['e1'] : []) };
+          u._combats = 0; u._resolveCombat = async () => { u._combats++; }; u._oust = () => { u.out = true; }; u._verdictAsTarget(true); return u; };
+        const other = mkV(false), mine = mkV(true);
+        ok(other.pool === 20 && other._combats === 0 && !other.pending && mine.pool === 19 && mine._combats === 1,
+           '165k Terrifying Visage: another seat’s block of Glissando costs me nothing and is not my combat; my own block costs 1 pool (got ' + JSON.stringify({ other: [other.pool, other._combats], mine: [mine.pool, mine._combats] }) + ')'); }
+
+      // l) a CANCELLED attempt (Elder Impersonation's line, through _onLog), then another seat's successful block: the cancelled
+      //    minion is forgotten as the failed one is (165d), so the later success is not my combat
+      { const u = mk165(); const X = V5('x1', 'Ashley (G6)'); u.board = [X]; let combats = 0; u._resolveCombat = () => { combats++; return Promise.resolve(); };
+        u.pending = { who: 'Hanna', kind: 'undirected', actingVampName: 'Zoe', actorSeat: 1, blockerVamp: X, contested: true, reacted: new Set(), attempted: new Set(['x1']), declined: false };
+        u._reactWindow = () => {};
+        u._onLog('Hanna', '<b>Zoe</b> plays <b>Elder Impersonation</b>: cancels the block attempt by <b>U</b> — that minion cannot try again.');
+        const bv = u.pending ? u.pending.blockerVamp : 'no pending'; u._verdictAsTarget(true);
+        ok(bv === null && combats === 0 && !u.pending, '165l a cancelled attempt, then another seat’s successful block: no combat of mine (got ' + JSON.stringify({ blocker: bv && bv.name || bv, combats, pending: !!u.pending }) + ')'); }
+
+      // m) the superseded combat, the rest of it (the egress review): superseded while its press step waited, it writes no round row
+      //    under the live combat's names, and its .then leaves the live combat's Guard Dogs grant alone (the live one clears it)
+      { const u = mk165(); const D = V5('d1', 'The Dowager (G6)'), L = V5('l1', 'Lenny Burkhead (G6)'); u.board = [D, L];
+        let releaseA = null; const gateA = new Promise(r => { releaseA = r; }); let held = false;
+        u._resolveCombatRound = async v => { if(v === D) return {}; await new Promise(r => setTimeout(r, 300)); return { ended: true }; };
+        u._phaseAsk = async n => { if(n === 5 && !held){ held = true; await gateA; } };
+        u._phaseAfter = async () => {}; u._phaseStep = async () => {}; u._combatGate = async () => {}; u._awaitOppPress = async () => null; u._awaitOppTaken = async () => {};
+        u._maybePostBlockUnlock = async () => {};
+        u.pending = { who: 'Hanna', kind: 'bleed', amount: 2, actingVampName: 'Massimo Falconi', actorSeat: 1, blockerVamp: D, contested: true, reacted: new Set(), attempted: new Set(['d1']), declined: false };
+        u._verdictAsTarget(true); await new Promise(r => setTimeout(r, 20));
+        u.pending = { who: 'Hanna', kind: 'bleed', amount: 2, actingVampName: 'Catalina Vega', actorSeat: 1, blockerVamp: L, contested: true, reacted: new Set(), attempted: new Set(['l1']), declined: false };
+        u._reactManeuverGrant = true; u._reactManeuverGrantVamp = L.name;
+        u._verdictAsTarget(true); await new Promise(r => setTimeout(r, 20));
+        releaseA(); await new Promise(r => setTimeout(r, 60));
+        const mid = { grant: u._reactManeuverGrant, dRows: u.events.filter(e => e.t === 'bot:combat-round' && e.d.vamp === D.name).length, sup: u.events.filter(e => e.t === 'bot:combat-superseded' && e.d.vamp === D.name).length };
+        await new Promise(r => setTimeout(r, 600));
+        const end = { grant: u._reactManeuverGrant, lRows: u.events.filter(e => e.t === 'bot:combat-round' && e.d.vamp === L.name).length };
+        ok(mid.grant === true && mid.dRows === 0 && mid.sup === 1 && end.grant === false && end.lRows === 1,
+           '165m The Dowager’s combat, superseded in its press step: no round row, Lenny’s Guard Dogs grant kept until his combat ends (got ' + JSON.stringify({ mid, end }) + ')'); }
     }
 
 
