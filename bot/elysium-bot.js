@@ -1043,6 +1043,7 @@ class Bot {
         x: Math.round(c.x), y: Math.round(c.y),
         locked: c.locked || undefined, faceDown: (this._debugHand && c.kind === 'crypt') ? undefined : (c.faceDown || undefined),   // v0.6.112 (R4): debug turns my uncontrolled crypt face UP for everyone -- Johan grading what the bot is building toward, not guessing at it
         blood: c.blood || undefined,
+        counters: (Array.isArray(c.counters) && c.counters.length) ? c.counters.slice(0, 12).map(x => String(x).slice(0, 64)) : undefined,   // v0.6.221 (D-113 (2)): a card's named counters, as the server keeps them (12 a card, 64 characters) -- the pub never carried them, so a bot's Smiling Jack took its owner's pool while no seat ever paid (the victims read the pub); a NUMBER (_addCounter's) stays off
         host: c.host || undefined, attached: (c.attached && c.attached.length) ? c.attached : undefined   // v0.5: master-phase permanents (Blood Doll/Vessel) attach to a vampire -- without these two fields the client's sanitizePub shape has nothing to render the link with, and the card would show as a stray unattached card on other players' boards
       }))
     };

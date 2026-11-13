@@ -12463,6 +12463,16 @@ async function connectWithRetry(client, tries = 30){
         await pB;
         ok(mid.inCombat === true && mid.opp === 'Catalina Vega' && u.events.some(e => e.t === 'bot:combat-superseded' && e.d.vamp === 'The Dowager (G6)'),
            '165f the first combat, superseded, ends without touching the live one: Lenny’s combat still in combat against Catalina (got ' + JSON.stringify(mid) + ')'); }
+
+      // g) Smiling Jack's counters on the wire (D-113 (2)): the owner's pub carries them (a NUMBER of counters stays off), and the
+      //    victim, reading that pub at its own unlock, pays them -- the owner's buildPub -> the victim's _onBoard -> _menaceUnlockEngine
+      { const A = mk165('Jacky'); A.seat = 1; A.board = [{ id: 'j1', name: 'Smiling Jack, The Anarch', kind: 'lib', zone: 'ready', x: 1, y: 1, counters: ['pool', 'pool'] },
+          { id: 'c1', name: 'Visit from the Capuchin', kind: 'lib', zone: 'ready', x: 1, y: 1, counters: 3 }];
+        const pub = A.buildPub(); const jc = pub.cards.find(c => c.id === 'j1'), cc = pub.cards.find(c => c.id === 'c1');
+        const Bv = mk165('U'); Bv.players = [{ seat: 1, name: 'Jacky', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }]; Bv.pool = 20;
+        const v = V5('v1', 'Zip', { blood: 2 }); Bv.board = [v]; Bv._onBoard({ seat: 1, who: 'Jacky', pub }); Bv._menaceUnlockEngine();
+        ok(!!jc && JSON.stringify(jc.counters) === JSON.stringify(['pool', 'pool']) && !!cc && cc.counters === undefined && Bv.pool + (v.blood | 0) === 20,
+           '165g Smiling Jack: the owner’s pub carries its 2 counters (the Capuchin’s number stays off), and the victim reading it pays 2 at its unlock (got ' + JSON.stringify({ jack: jc && jc.counters, cap: cc && cc.counters, pool: Bv.pool, blood: v.blood }) + ')'); }
     }
 
 
