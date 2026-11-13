@@ -12631,6 +12631,66 @@ async function connectWithRetry(client, tries = 30){
           return { u, get combats(){ return combats; } }; };
         const r = run(); await r.u._commitBlock(r.u.pending, { why: 'test', parts: {} });
         ok(r.u.pool === 19 && r.combats === 1 && r.u._cv === 'Crow (G5)', '166d a success verdict inside the wake’s beat: Crow, named at Block!, pays Terrifying Visage and fights (got ' + JSON.stringify({ pool: r.u.pool, combats: r.combats, vamp: r.u._cv || null }) + ')'); }
+
+      // e) the superseded combat stops at the await it wakes from (the second review, findings 1 and 3): the REAL _resolveCombat and
+      //    _resolveCombatRound against a scripted opponent whose every wait is answered at once; at the k-th wait a later combat of mine
+      //    begins (the token moves, as a second _resolveCombat's first line does). From there the superseded combat says nothing, writes
+      //    no tally, spends no card or blood, starts no wait, leaves the shared round fields alone and writes no round row, and its
+      //    _resolveCombat ends with one combat-superseded row -- at EVERY wait of twelve scenes: answering and acting, against a bot that
+      //    answers, one whose lines are lost, one that presses to continue, a human's phase steps both ways, and hands that play the
+      //    Crows, a Grapple, a maneuver, a prevent, Taste of Vitae, a press, a dodge with its additional strike and a combat-ends strike
+      { const MF = 'Massimo Falconi', BY = ['Baba Yaga, the Iron Hag (G5)', 6, 8], AX = ['Alexandra (G2)', 6, 11];
+        const SC = { answer: { turn: 1 }, lost: { turn: 1, lost: true }, acting: { turn: 2, lost: true }, actingNone: { turn: 2 },
+          press: { turn: 1, press: true }, pressActing: { turn: 2, press: true }, human: { turn: 1, human: true }, humanActing: { turn: 2, human: true },
+          rich: { turn: 1, vamp: BY, hand: ['Carrion Crows', 'Immortal Grapple', 'Apportation', 'Taste of Vitae', 'Armor of Vitality'], dealt: 2, taken: 2 },
+          richActing: { turn: 2, vamp: BY, hand: ['Aid from Bats', 'Hidden Strength', 'Apportation', 'Carrion Crows'], dealt: 2 },
+          dodge: { turn: 1, vamp: AX, hand: ['Acrobatics', 'Acrobatics'] }, majesty: { turn: 1, vamp: ['Alexandra (G2)', 1, 11], hand: ['Majesty'] } };
+        const scene = async (name, k) => { const c = SC[name];
+          const u = mk166('U', c.human ? { phaseSecs: 0.02 } : {}); const D = c.vamp ? V6('d1', c.vamp[0], { blood: c.vamp[1], cap: c.vamp[2] }) : V6('d1', 'The Dowager (G6)');
+          u.board = [D]; u.hand = (c.hand || []).slice(); u.table = { 1: { pub: { cards: [V6('m1', MF)] } } }; u._combatOppName = MF;
+          if(c.human) u.players[0].bot = false;
+          u.turnSeat = c.turn; if(c.turn === 2) u._actingVamp = { v: D, name: D.name, n: 1, target: 1 };
+          const fx = { lines: 0, sent: 0, push: 0, fx: 0, waits: 0 }; u.note = () => fx.lines++; u.chat = () => fx.lines++; u.say = () => fx.lines++;
+          u.push = () => fx.push++; u.fxClone = () => fx.fx++; u.send = m => { fx.sent++; u.sent.push(m); };
+          const snap = () => JSON.stringify({ fx, rows: u.events.filter(e => e.t === 'bot:combat-round').length, blood: D.blood, hand: u.hand.length, rnd: u._rnd || null, xr: u._xr || null, range: u._range, hso: !!u._handStrikeOnly, bp: !!u._bundledPress, ph: u._phaseLast || null });
+          let n = 0, at = null, presses = 0;
+          const tick = v => { n++; fx.waits++; if(n !== k) return Promise.resolve(v); return new Promise(r => setTimeout(() => { u._combatTok = (u._combatTok | 0) + 1;   // the later combat: its token, then its round's own fields (the shared names)
+            u._rnd = { grapple: false, strike: null, dealt: 0, taken: 0 }; u._xr = u._xrFresh(); u._range = 'close'; u._handStrikeOnly = false; u._bundledPress = false; at = snap(); r(v); }, 0)); };
+          const ans = key => c.lost ? null : key === '_maneuverWaiter' || key === '_preWaiter' ? { none: true }
+            : key === '_strikePeekWaiter' || key === '_strikeWaiter' ? { vamp: MF, dealt: c.dealt || 1 }
+            : key === '_pressWaiter' ? ((c.press && presses++ === 0) ? { vamp: MF, continue: true } : { none: true })
+            : key === '_takenWaiter' && c.taken ? { vamp: MF, n: c.taken } : null;
+          u._waitOn = key => tick(ans(key)); u._holdGate = () => tick(); u._pace = () => tick(); u._awaitPreOrManeuver = () => tick(null);
+          u._remindArm = () => { tick(); };   // a human's step: the wait is on its clock -- the k-th one is where the later combat begins
+          let done = false, err = null; u._resolveCombat(D, MF).then(() => { done = true; }, e => { err = e.message; done = true; });
+          for(let t = 0; t < 200 && !done; t++) await new Promise(r => setTimeout(r, 5));
+          const sup = u.events.filter(e => e.t === 'bot:combat-superseded').length, plays = u.events.filter(e => e.t === 'bot:play').length;
+          return { n, at, end: snap(), done, err, sup, rows: u.events.filter(e => e.t === 'bot:combat-round').length, plays, hand: u.hand.length }; };
+        const bad = [], seen = {};
+        for(const name of Object.keys(SC)){
+          const full = await scene(name, 0); seen[name] = [full.n, full.rows, (SC[name].hand || []).length - full.hand];   // the whole combat, nothing superseded: its waits, rows, cards played
+          if(!full.done || full.err || full.rows < 1 || full.sup) bad.push({ name, k: 0, full });
+          for(let k = 1; k <= full.n; k++){ const r = await scene(name, k);
+            if(!r.done || r.err || r.sup !== 1 || r.n !== k || r.end !== r.at) bad.push({ name, k, of: full.n, done: r.done, err: r.err, sup: r.sup, waits: r.n, at: r.at, end: r.end }); }
+        }
+        const W = Object.keys(seen).reduce((a, x) => a + seen[x][0], 0);
+        ok(!bad.length && W >= 150 && seen.press[1] === 2 && seen.rich[2] >= 4 && seen.richActing[2] >= 2 && seen.dodge[2] >= 1 && seen.majesty[2] === 1,
+           '166e a combat superseded at any of its ' + W + ' waits ' + JSON.stringify(seen) + ' does nothing more: no line, no tally write, no card, no blood, no wait, no round row' + (bad.length ? ' (got ' + JSON.stringify(bad.slice(0, 2)) + ', ' + bad.length + ' bad)' : '')); }
+
+      // f) a superseded combat's step wait on a human ends when the later combat's step begins: its clock stays silent and its end
+      //    leaves the live step's wait alone, so the human's No answers the live step (it cleared the live wait at its clock: the
+      //    human's answer reached nobody and the live step ran out its own clock). Through _phaseStep and _phaseNudge
+      { const u = mk166(); u.players[0].bot = false; u.table = { 1: { pub: { cards: [V6('m1', 'Massimo Falconi')] } } };
+        u._combatOppName = 'Massimo Falconi'; u._inCombat = true; u.turnSeat = 1;
+        u._combatTok = 1; u.o.phaseSecs = 0.1; let ra = 'pending', rb = 'pending'; u._phaseStep(1, 'ask', false).then(v => { ra = v; });
+        await new Promise(r => setTimeout(r, 20));
+        u._combatTok = 2; u.o.phaseSecs = 3; u._phaseStep(2, 'ask', false).then(v => { rb = v; });
+        await new Promise(r => setTimeout(r, 150));   // past the superseded step's own clock
+        const mid = { ra, rb, live: !!(u._phaseWait && u._phaseWait.step === 2 && !u._phaseWait.done), last: u._phaseLast || null };
+        u._phaseNudge('Hanna', 'No', 'chat'); await new Promise(r => setTimeout(r, 20));
+        if(u._phaseWait && !u._phaseWait.done) u._phaseWait.resolve('test');
+        ok(mid.ra === null && mid.rb === 'pending' && mid.live && !mid.last && rb === 'pass',
+           '166f a superseded combat’s step wait ends at the live step’s start: the human’s No answers the live step (got ' + JSON.stringify({ mid, rb }) + ')'); }
     }
 
 
