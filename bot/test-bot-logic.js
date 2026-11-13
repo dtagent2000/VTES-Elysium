@@ -8298,20 +8298,21 @@ async function connectWithRetry(client, tries = 30){
       u.logs = []; u.send = m => { if(m.t === 'log') u.logs.push(m.html); };
       const B = { id: 'b1', name: 'Trevon Parker (G6)', kind: 'crypt', zone: 'ready', blood: 4, cap: 6, locked: false }; u.board = [B]; u.hand = ['Eyes of Argus'];
       u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'I', bot: true }]; u._pickBlocker = () => B; return { u, B }; };
+    const commitI = async (u, p) => { u.pending = p; await u._commitBlock(p, { why: 'test' }); if(u._vWait) u._vwEnd(null); u.pending = null; };   // v0.6.222: the pending registered, as the window has it (_commitBlock's beats ask whether their action is still the pending one)
     let { u } = mkI(); u.tally = { mode: 'block', a: 0, b: 0 };
-    await u._commitBlock({ who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' }, { why: 'test' });
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
     ok(u.hand.includes('Eyes of Argus') && u.logs.some(h => /attempts to block\.$/.test(h)), '127p a declared bleed with 0 stealth: the bot attempts the block WITHOUT spending intercept (Johan\u2019s report)');
     ({ u } = mkI()); u.tally = { mode: 'block', a: 1, b: 0 }; u._obs = { who: 'Johan', at: Date.now() - 20 }; u._aAt = Date.now();   // Johan's stealth raised AFTER his announce
-    await u._commitBlock({ who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' }, { why: 'test' });
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
     ok(!u.hand.includes('Eyes of Argus') && u.logs.some(h => /\+\d+ intercept\./.test(h)), '127p ...with 1 stealth standing it plays the intercept');
     ({ u } = mkI()); u.tally = { mode: 'block', a: 2, b: 0 }; u._aAt = Date.now() - 5000; u._obs = { who: 'Johan', at: Date.now() - 20 }; u.sent = []; const s0 = u.send; u.send = m => { u.sent.push(m); s0(m); };
-    await u._commitBlock({ who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'bleed', actingVampName: 'Lisa' }, { why: 'test' });
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'bleed', actingVampName: 'Lisa' });
     ok(u.hand.includes('Eyes of Argus') && u.sent.some(m => m.t === 'tally' && m.mode === 'block' && m.a === 0), '127p v0.6.171: a STALE stealth 2 left by an earlier action is not Johan\u2019s -- no intercept card, and the counter is seeded with his true 0');
     ({ u } = mkI()); u.tally = null;
-    await u._commitBlock({ who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'undirected', actingVampName: 'Lisa' }, { why: 'test' });
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'undirected', actingVampName: 'Lisa' });
     ok(!u.hand.includes('Eyes of Argus'), '127p ...an undirected action carries +1 stealth: intercept is needed and played');
     ({ u } = mkI()); u.players[0].bot = true; u.tally = { mode: 'block', a: 0, b: 0 };
-    await u._commitBlock({ who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' }, { why: 'test' });
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
     ok(u.hand.includes('Eyes of Argus'), '127p ...and against a BOT actor too (v0.6.170, Johan: the base rules forbid stealth / intercept that is not needed)'); }
   { const u = mkP('X1', 'malkavian', false).u; u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = u.board[0]; u._rnd = { strikeSeen: true };
     u._onLog('Johan', 'Lisa gets an additional strike.'); u._onLog('Johan', 'Lisa strikes for 2.');
