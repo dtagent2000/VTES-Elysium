@@ -32,6 +32,17 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.224 (in progress, 13 Nov 2026)** — Round B, RULINGS D-114 (Johan's "kör", 13 Nov 20:13 and 21:45): Smiling Jack's burn
+  weighed by its price, `specs/spec-jack-burn-2026-11-13.md`. Two steps, each with its own footprint, stacked on round A (v0.6.223).
+  *Predictions registered before any footprint* (the spec's §8 holds Johan's three for step 2's bench):
+  (G1) step 1, the block guard (a rules correction, no knob): against v0.6.223 the only matches that change are those where
+  v0.6.222's guard refused a DIRECTED window at stealth 0 — `block-as-target` on sub rush or burnCard whose why read "no usable
+  intercept (undirected …" (on v0.6.222's own traces: 21 of the 240, 20 of the V5 smoke's 168, 190 of the Toreador 600; 22 / 21 /
+  227 rows, the 600's 107 rushes and 120 burns) — SAME-PLAY where the class score stays under the bar, DIVERGED where a bare body
+  now blocks; every DIVERGED match's first difference is such a decision. (G2) Most of the 600's burn windows stay SAME-PLAY: T6's
+  weight (0.3, 0.6 on a deck axis ≥ 1.3) keeps the score under 1 unless the posture and the predator pressure lift it.
+  (K0) step 2 at `jackBurn=0` is IDENTICAL to step 1 on all three designs, the manifest's new `jackBurn: 0` normalized (Jack's
+  new cardfx mode is read only behind the knob, and the Ball's loop skips Jack).
 - **v0.6.223 (14 Nov 2026)** — Round A (Johan's "Yes kör", 13 Nov 21:45): the table runs with Toreador's guide check (D-112),
   v0.6.222's two riders, and the tool fixes the runs called for. `docs/reports/REPORT-table-runs-2026-11-13.md`,
   `docs/reports/REPORT-toreador-guide-check-2026-11-13.md`.
