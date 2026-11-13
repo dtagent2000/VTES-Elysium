@@ -67,9 +67,11 @@
     lint: `calls` was counted, never read).
   - *Footprints, step by step on the 240-match design* (each against the one before; v0.6.220's `a8a963b1` first): the survivor
     DIVERGED 157, SAME-PLAY 39, IDENTICAL 44 — every result kept (winner, VP, oust order), each diverged match first different after
-    its last oust; the failed blocker DIVERGED 4 (each first at the stray combat's strike), IDENTICAL 236; Jack's counters DIVERGED 49,
-    SAME-PLAY 6, IDENTICAL 185, every changed match with a Nosferatu Jack in play; the tokens IDENTICAL 240, and IDENTICAL 600 on the
-    Toreador 600 deals (the Ball played in 277 of them) ⟨G-V5⟩.
+    its last oust; the failed blocker DIVERGED 4 (each first at the stray combat's strike), IDENTICAL 236; Jack's counters DIVERGED
+    49, SAME-PLAY 6, IDENTICAL 185, every changed match with a Nosferatu Jack in play; the tokens IDENTICAL 240, and IDENTICAL 600 on
+    the Toreador 600 deals (the Ball played in 277 of them), and IDENTICAL 168 on the V5 smoke (the Ball in 2). The failed blocker on
+    the V5 smoke: IDENTICAL 167, SAME-PLAY 1 — its stray combat row gone (Brujah's Siarhei against Naomi Stewart), every decision the
+    same.
   - *Predictions, registered before the runs (D-93; commit f798ca1, word for word, except (A)'s figures, measured before they were
     written down):* (A) the ledger's held master: `gen-card-ledger.js` and `ana-cards.py` count Toreador Grand Ball's uses on
     v0.6.220's 600 deals as its own rows (320), not its picks (1256); no bot change. (C) the survivor: on the 240-match client design
@@ -89,27 +91,38 @@
     ended" fell from 229 to 1 on the 240 design, from 7–21 to 0 on each V5 series and from 635 to 3 on the 600 — **falsified** on "0
     on every series": the 4 left are bleeds announced before the last oust and resolved after it, each after a Ventrue referendum
     whose pool damage was still in Ventrue's send queue (found, a BOARD line). (D) held on the 240 (DIVERGED 4, each first at the
-    stray combat's strike) ⟨D-V5⟩; on the 600 the ledger gate passes (match 528 fixed) and the stray combats fell from 7 matches to 2,
-    both a rush the rushed bot meant to block and never fought (a BOARD line; the ledger's "no reciprocal row" lead fell from 16 to
-    12, the other 10 being pairs more than its 4 s apart): **held**. (E) held for where — every changed match had a Nosferatu Jack in
-    play — and for Nosferatu's VP, **+0.17 [+0.08, +0.25]** (wins 21 → 36); not in the letter of "first at another bot's unlock
-    phase": the payment writes no decision row, so the first different decision is the next one that reads the lower pool — a victim's
-    (41 of the 47 with one: 11 at its unlock's income, 2 in its master phase, 28 later) or Nosferatu's own (6). (G) held: IDENTICAL
-    240 and IDENTICAL 600 ⟨G-V5⟩. `ana-gates.py` PASS on every series (the 240 design, the 14 V5 series, the 600; each step's 240).
-    Against v0.6.220: the 240 design DIVERGED 175, SAME-PLAY 34, IDENTICAL 31 (malkavian −0.07 [−0.13, −0.00], ventrue −0.11 [−0.19,
-    −0.03], tremere +0.01 [−0.05, +0.07]: the seats Jack now charges); the V5 smoke 118 of 168 DIVERGED; the Toreador 600 DIVERGED
-    456, SAME-PLAY 63, IDENTICAL 81, Toreador **0.78 ± 0.05 VP** (99 wins, 16.5 %), paired −0.04 [−0.10, +0.02], Nosferatu +0.21
-    [+0.15, +0.28] (wins 44 → 79), malkavian −0.14 [−0.20, −0.08]. The arena smoke (the wire changed): two real-clock 5-bot matches on
-    `bot/`'s srv-2.6.50, seeds 4001 and 4002, both ended, `ana-gates.py` PASS 7 of 7 (a Grand Ball in one, no Jack). **Verdict: keep**
-    — two rules corrections and two bug fixes, each where its prediction placed it; Nosferatu's gain is Jack charging the table as
-    printed, and nothing answers it yet (O-39).
+    stray combat's strike) and on the V5 smoke (no match diverged; the one changed lost its stray combat row); on the 600 the ledger
+    gate passes (match 528 fixed) and the stray combats fell from 7 matches to 2, both a rush the rushed bot meant to block and never
+    fought (a BOARD line; the ledger's "no reciprocal row" lead fell from 16 to 12, the other 10 being pairs more than its 4 s apart):
+    **held**. (E) held for where — every changed match had a Nosferatu Jack in play — and for Nosferatu's VP, **+0.17 [+0.08, +0.25]**
+    (wins 21 → 36); not in the letter of "first at another bot's unlock phase": the payment writes no decision row, so the first
+    different decision is the next one that reads the lower pool — a victim's (41 of the 47 with one: 11 at its unlock's income, 2 in
+    its master phase, 28 later) or Nosferatu's own (6). (G) held: IDENTICAL 240, 600 and 168 (the V5 smoke). `ana-gates.py` PASS on
+    every series (the 240 design, the 14 V5 series, the 600; each step's 240). Against v0.6.220: the 240 design DIVERGED 175,
+    SAME-PLAY 34, IDENTICAL 31 (malkavian −0.07 [−0.13, −0.00], ventrue −0.11 [−0.19, −0.03], tremere +0.01 [−0.05, +0.07]: the seats
+    Jack now charges); the V5 smoke 118 of 168 DIVERGED; the Toreador 600 DIVERGED 456, SAME-PLAY 63, IDENTICAL 81, Toreador **0.78 ±
+    0.05 VP** (99 wins, 16.5 %), paired −0.04 [−0.10, +0.02], Nosferatu +0.21 [+0.15, +0.28] (wins 44 → 79), malkavian −0.14 [−0.20,
+    −0.08]. The arena smoke (the wire changed): two real-clock 5-bot matches on `bot/`'s srv-2.6.50, seeds 4001 and 4002, both ended,
+    `ana-gates.py` PASS 7 of 7 (a Grand Ball in one, no Jack). **Verdict: keep** — two rules corrections and two bug fixes, each where
+    its prediction placed it; Nosferatu's gain is Jack charging the table as printed, and nothing answers it yet (O-39).
   - *Found in the round*: an action at a seat ousted in its window still resolves (the one "through after the game ended" left on the
     240 design, match 60: Ventrue's Kine Resources Contested, its result still in Ventrue's send queue, ousted Malkavian after Naomi's
-    bleed at him was decided) — a BOARD line; no bot burns a Smiling Jack, whose counters now reach every seat — RULINGS O-39 (asked
-    in chat on 13 Nov, unanswered) and a BOARD line.
-  - *Docs*: RULINGS D-113 (built: (1)–(2)) and O-39; BOARD (the held master and the survivor closed; the table's memory moved on;
-    the Jack line and the in-flight line found); LESSONS L-88; ARCHITECTURE (the board push; the trace's 106 kinds, which said 84);
-    STATUS; CARDS.md; the guide; the handoff `bot/docs/handoffs/HANDOFF-to-main-2026-11-13-v0_6_221.md`.
+    bleed at him was decided; the 600's 3 the same) — a BOARD line; a rushed bot that meant to block never fights the rush (the 600's
+    two stray combats left) — a BOARD line; no bot burns a Smiling Jack, whose counters now reach every seat — RULINGS O-39 (asked in
+    chat on 13 Nov, unanswered) and a BOARD line.
+  - *Docs*: RULINGS D-113 (built: (1)–(2)), O-39, and D-101's log (BOARD 18.5 → 19 KB, `tools/doc-budget.sh`); BOARD (the held master
+    and the survivor closed; the table's memory moved on; three found: no bot burns a Jack, the action in flight at the last oust, the
+    rushed bot that meant to block); LESSONS L-88; ARCHITECTURE (the board push; the trace's 106 kinds, which said 84); STATUS;
+    CARDS.md; the guide; the handoff `bot/docs/handoffs/HANDOFF-to-main-2026-11-13-v0_6_221.md`.
+  - *Gates* (release bytes: bot `20faf902`, cardfx `0e9c5f4d`, suite `c746c6c6`): suite **2431/0 ×3** (438, 420, 420 s; the first
+    chain's run on suite `da098301` 2430/1, 80e, above); `node --check` / JSON / `bash -n` clean; lint 0 findings, suppressions `{}`
+    (the first chain's one, 165f's `calls`, fixed); root bundle = `bot/`; canary v1.2.0 **143/0** on the copies and **143/0** on the
+    root's release with `client/ELYSIUM-PROTOCOL.md`; hotseat **11/0**; HB1 **11/11**; test-cardfx **321/0**; `gen-precon.js --check`
+    18 precons, no problems; self-tests: ledger 60/60, `twda.py` 14/0, `ana-gates.py` 31/0; doc-budget PASS (BOARD 18.5 → 19 KB under
+    D-101, the Jack round's three found asks; the bootstrap 49250 / 50000); `test-doc-budget.sh` every case red, baseline green;
+    section 165 destructive (above); main's `check-versions.js` agrees (repository `client/`, read-only); main's client suite in a
+    scratch copy of `client/` with this bundle 361 passed, 2 failed — the two of v0.6.219's handoff, by design; the arena smoke
+    (above).
 - **v0.6.220 (13 Nov 2026)** — Crypt wave A's riders (Johan's "kör" of 13 Nov on Claude's summary of 12 Nov; RULINGS D-111), built
   on #64 (merged the same day).
   - *Revelations' form before the decision* (the graded readings' finding): `_armPending(..., extra)` sets the given fields before
