@@ -6896,10 +6896,8 @@ class Bot {
       this._setTallyB(unIc + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block with +' + unIc + ' intercept (<b>' + esc(plan.un.name) + '</b>).' });
     } else if(ic){
-      const looks0 = p.icLooks | 0;
-      await this._pace();                                // v0.4.5: so a wake+intercept combo doesn't land as one instant double-play
+      p._icFirst = true; await this._pace(); p._icFirst = false;   // v0.4.5: so a wake+intercept combo doesn't land as one instant double-play. v0.6.222 (the third review): the second look waits for this first card -- the echo of my own default-stealth write (or a raise) inside the beat drew a second card from a stale pick; after my write its echo re-runs the second look against the real counter
       if(this.pending !== p || !p.contested) return;   // v0.6.222 (the egress review): resolved under the beat
-      if((p.icLooks | 0) !== looks0){ this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block.' }); this._noteBlockAttempt(blocker.name, true); this._emit('block-made', { vamp: blocker.name }); this.push(); return; }   // v0.6.222 (the egress review): the second look answered a stealth raise under the beat (its card, its tally) -- my picked card's index is stale and its intercept no longer the need: the attempt line alone
       p.reacted.add(FX_NORM(ic.name));
       this._spendIntercept(ic, blocker, true);   // v0.6.215: a hand card or a location's lock (with the attempt line)
 
@@ -9536,7 +9534,7 @@ class Bot {
     return { S, sum };
   }
   _interceptSecondLook(){            // v0.6.143d (Johan, 20 Sep: 'a bot that plays ONE intercept card even when it holds more and more are needed is a clear limitation / bug'): the blocker's side of the exchange. When the tally moves and my block now FAILS, I look again: can the intercept I still hold reach their stealth? Then the next card goes down; if it cannot, the cards are kept.
-    const p = this.pending; if(!p || !p.contested || !p.blockerVamp || this.out || this.o.stealthStack === 0) return;
+    const p = this.pending; if(!p || !p.contested || !p.blockerVamp || this.out || this.o.stealthStack === 0 || p._icFirst) return;   // v0.6.222: not while my first card is on its way (_commitBlock's beat)
     const t = this.tally; if(!t || t.mode !== 'block') return; const b = t.b | 0, a = t.a | 0; if(b >= a) return;   // the block succeeds as it stands
     if((p.icLooks | 0) >= 4) return; p.icLooks = (p.icLooks | 0) + 1;
     const blocker = p.blockerVamp, need = a - b, stack = this._interceptStack(blocker, p.reacted, p), ic = this._bestInterceptFor(blocker, p.reacted, p);

@@ -12647,7 +12647,14 @@ async function connectWithRetry(client, tries = 30){
           return { u, get combats(){ return combats; } }; };
         const r = run(); await r.u._commitBlock(r.u.pending, { why: 'test', parts: {} });
         const late = { qv: r.u.hand.includes('On the Qui Vive'), blockTally: r.u.sent.filter(m => m.t === 'tally' && m.mode === 'block').length, attempt: r.u.sent.filter(m => m.t === 'log' && /attempts to block/.test(m.html || '')).length };
-        ok(r.u.pool === 19 && r.combats === 1 && r.u._cv === 'Crow (G5)' && late.qv && !late.blockTally && !late.attempt, '166d a success verdict inside the wake’s beat: Crow, named at Block!, pays Terrifying Visage and fights; the route ends there -- the wake card stays, no block counter or attempt line over the combat (got ' + JSON.stringify({ pool: r.u.pool, combats: r.combats, vamp: r.u._cv || null, late }) + ')'); }
+        const other = async (locked, hand, kind) => { const v = mk166(); const c = V6('e1', 'Crow (G5)', { locked }); v.board = [c]; v.hand = hand.slice(); v.table = r.u.table;   // the third review: the unlock route's beat, an unlocked blocker's intercept beat
+          v.pending = { who: 'Hanna', amount: 2, kind, actingVampName: 'Glissando (G6)', actorSeat: 1, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+          let n = 0, fired = false; v._resolveCombat = async x => { n++; v._cv = x && x.name; }; v._oust = () => { v.out = true; }; v._pace = async () => { if(!fired){ fired = true; v._verdictAsTarget(true); } };
+          await v._commitBlock(v.pending, { why: 'test', parts: {} });
+          return { combats: n, vamp: v._cv || null, kept: hand.every(h => v.hand.includes(h)), quiet: !v.sent.some(m => (m.t === 'tally' && m.mode === 'block') || (m.t === 'log' && /attempts to block|plays/.test(m.html || ''))) }; };
+        late.unlock = await other(true, ['Guard Dogs'], 'bleed'); late.icBeat = await other(false, ['Eyes of the Wild'], 'undirected');
+        ok(r.u.pool === 19 && r.combats === 1 && r.u._cv === 'Crow (G5)' && late.qv && !late.blockTally && !late.attempt
+          && late.unlock.combats === 1 && late.unlock.vamp === 'Crow (G5)' && late.unlock.kept && late.unlock.quiet && late.icBeat.combats === 1 && late.icBeat.kept && late.icBeat.quiet, '166d a success verdict inside the wake’s beat: Crow, named at Block!, pays Terrifying Visage and fights; the route ends there -- the wake card stays, no block counter or attempt line over the combat; the same at the unlock reaction’s beat and at an unlocked blocker’s intercept beat (got ' + JSON.stringify({ pool: r.u.pool, combats: r.combats, vamp: r.u._cv || null, late }) + ')'); }
 
       // e) the superseded combat stops at the await it wakes from (the second review, findings 1 and 3): the REAL _resolveCombat and
       //    _resolveCombatRound against a scripted opponent whose every wait is answered at once; at the k-th wait a later combat of mine
@@ -12766,6 +12773,22 @@ async function connectWithRetry(client, tries = 30){
         const row = u.events.filter(e => e.t === 'bot:combat-round' && e.d.vamp === B.name).map(e => ({ seen: e.d.strikeSeen, taken: e.d.taken }))[0] || null;
         ok(row && row.seen === true && row.taken === 3 && B.blood === 1 && u.events.filter(e => e.t === 'bot:combat-superseded' && e.d.vamp === A.name).length === 1,
            '166i a superseded combat’s waiting strike wait ends when the later combat begins: Catalina’s strike for 3 reaches Lenny (got ' + JSON.stringify({ row, blood: B.blood }) + ')'); }
+
+      // j) the third review: a human's undirected action, blocked with an intercept card (stealth 1 > intercept 0), the counter echoed to
+      //    its sender as the server and the hotseat bridge do -- one card and the verdict wait armed (the second cut's beat branch took
+      //    the echo of the bot's own default-stealth write for a raise, sent the attempt line alone and returned before the wait)
+      { const u = mk166('U', { paceMs: 200, askSecs: 3 }); u.players[0].bot = false; let S = { mode: 'block', a: 0, b: 0 }; const plays = [];
+        const relay = (m, who) => { const { t, ...f } = m; S = (f.mode === S.mode) ? Object.assign({}, S, f) : Object.assign({}, f); setTimeout(() => u._dispatch(Object.assign({ t: 'tally' }, S, { who })), 30); };
+        u.send = m => { if(m.t === 'tally') relay(m, 'U'); else if(m.t === 'log' && / plays /.test(m.html || '')) plays.push(String(m.html).replace(/<[^>]+>/g, '')); };
+        u._reactWindow = () => {}; u.say = () => { u._lastActAt = Date.now(); };
+        u.board = [V6('a1', 'Crow (G5)', { blood: 4, cap: 5 })]; u.hand = ['Eyes of the Wild', 'Ensnare a Beast'];
+        u.table = { 1: { pub: { cards: [V6('g1', 'Glissando (G6)')] } } }; u.turnSeat = 1; u._obs = { who: 'Hanna', vamp: 'Glissando (G6)', at: Date.now() - 2000 }; u.tally = Object.assign({}, S);
+        const p = u.pending = { who: 'Hanna', amount: 0, kind: 'undirected', actingVampName: 'Glissando (G6)', actorSeat: 1, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        await u._commitBlock(p, { why: 'test', parts: {} }); const armed = !!(u._vWait && u._vWait.p === p); await new Promise(r => setTimeout(r, 1000));
+        if(u._vWait) u._vwEnd(null); u.pending = null;
+        const ic = plays.filter(t => /intercept/.test(t));
+        ok(ic.length === 1 && armed && S.b === 1 && u.hand.includes('Ensnare a Beast'),
+           '166j a human’s undirected action blocked with an intercept card, the counter echoed: one card and the verdict wait (got ' + JSON.stringify({ plays, armed, counter: S, hand: u.hand }) + ')'); }
     }
 
 
