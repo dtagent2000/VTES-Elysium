@@ -12489,6 +12489,37 @@ async function connectWithRetry(client, tries = 30){
         ok(!terr && !!ball && JSON.stringify(t1) === JSON.stringify({ 'Catalina Vega (G6)': ['Grand Ball: non-bleed actions unblockable'], 'Min-seo (G6)': ['Grand Ball: does not unlock'], 'Bret Stryker (G6)': null,
              'Toreador Grand Ball': ['Unblockable: Catalina Vega (G6)', 'Locked: Min-seo (G6)'] }) && !stored && JSON.stringify(t2['Catalina Vega (G6)']) === '["pool"]' && Object.values(t3).every(x => x === null),
            '165h my Grand Ball’s pair as tokens: Catalina unblockable, Min-seo does not unlock, the Ball names both; none stored; named counters stay alone; the Ball in the ash heap, no tokens (got ' + JSON.stringify({ terr, t1, stored, t2: t2['Catalina Vega (G6)'], t3 }) + ')'); }
+
+      // i) the wire itself, through the real server (bot/'s copy): a human seat gets the tokens and Jack's counters as the bot sent
+      //    them (sanitizePub), and the server's ledger narrates a token as it appears -- the arena match may deal neither a Ball nor a Jack
+      { const h = mkClient('Iris'); await connectWithRetry(h);
+        const RM = 'tk' + Date.now().toString(36).slice(-6);
+        h.send({ t: 'create', room: RM, pass: 'x', name: 'Iris', lobby: true, v: '2.6.0' });
+        await h.waitFor(m => m.t === 'joined', 'h165 joined');
+        h.send({ t: 'seat', seat: 1 });
+        h.send({ t: 'deck', name: 'D165', library: [{ name: 'Govern the Unaligned', qty: 60 }], crypt: [{ name: 'Lucinde, Alastor', qty: 12 }] });
+        await h.waitFor(m => m.t === 'deckok', 'h165 deckok');
+        const b = new Bot({ server: URL, room: RM, pass: 'x', name: 'Tokbot', paceMs: 0, askSecs: 2, log: () => {} });
+        let got = null, row = null, err = null;
+        try {
+          await b.connect();
+          await h.waitFor(m => m.t === 'lobby' && (m.players || []).some(p => p.name === 'Tokbot' && p.seat === 2 && p.deck), 'Tokbot seated');
+          h.send({ t: 'start' });
+          await h.waitFor(m => m.t === 'board' && m.seat === 2, 'Tokbot baseline push');
+          const ca = V5('tv1', 'Catalina Vega (G6)', { x: 300, y: 300 }), ms = V5('tv2', 'Min-seo (G6)', { x: 400, y: 300 });
+          b.board.push(ca, ms, { id: 'tj1', name: 'Smiling Jack, The Anarch', kind: 'lib', zone: 'ready', x: 500, y: 40, counters: ['pool', 'pool', 'pool'] });
+          b.push();
+          await h.waitAny(m => m.t === 'board' && m.seat === 2 && (m.pub.cards || []).some(c => c.id === 'tv2'), 'the two Toreador on the wire');
+          b.board.push({ id: 'tg1', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', faceDown: false, locked: false, blood: 0, x: 600, y: 40, gbLock: 'tv2', gbFree: 'tv1' }); ms.locked = true;
+          b.push();
+          const bd = await h.waitAny(m => m.t === 'board' && m.seat === 2 && (m.pub.cards || []).some(c => c.id === 'tg1'), 'the Ball on the wire');
+          got = Object.fromEntries((bd.pub.cards || []).filter(c => /^t[vjg]\d$/.test(c.id)).map(c => [c.id, c.counters || null]));
+          row = await h.waitAny(m => m.t === 'ledgerLive' && m.seat === 2 && (m.rows || []).some(r => /Min-seo \(G6\): counters \[Grand Ball: does not unlock\]/.test(r)), 'the ledger row', 3000).catch(() => null);
+        } catch(e){ err = e.message; }
+        ok(!err && JSON.stringify(got) === JSON.stringify({ tv1: ['Grand Ball: non-bleed actions unblockable'], tv2: ['Grand Ball: does not unlock'], tj1: ['pool', 'pool', 'pool'],
+             tg1: ['Unblockable: Catalina Vega (G6)', 'Locked: Min-seo (G6)'] }) && !!row,
+           '165i through the real server: a human seat gets the pair’s tokens and Jack’s 3 counters as sent, and the ledger narrates Min-seo’s token (got ' + JSON.stringify({ err, got, row: row && row.rows }) + ')');
+        try { b.close(); } catch(e){} try { h.ws.close(); } catch(e){} }
     }
 
 
