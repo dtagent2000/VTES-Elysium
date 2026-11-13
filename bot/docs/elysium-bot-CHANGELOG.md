@@ -32,6 +32,16 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.220 (in progress, 13 Nov 2026)** — Crypt wave A's riders (Johan's "kör" of 13 Nov on Claude's summary of 12 Nov; RULINGS
+  D-111; stacked on #64). *Predictions, registered before the runs (D-93):* (1) the event log's random-discard line, a seeded PRNG
+  per bot for "at random" (Phaibun), and the age rule read from the capacity in play (Azucena, Navar McClaren) leave the 240-match
+  client design IDENTICAL to v0.6.219 (no starter carries Phaibun, Azucena or Navar); the V5 smoke moves only where those three
+  vampires act. (2) Revelations' form known at the announce: the 240 design diverges only where The Dowager may block a
+  Malkavian's Revelations, each such match first at a block decision on a peek. (3) The bleed forecast with the crypt's +1 bleed
+  (Lenny) and (4) the home planners with the crypt's intercept (The Dowager) move Nosferatu's plan: the 240 design diverges where
+  Nosferatu plans, first at decisions that read the forecast or the guard. (5) Together: Nosferatu's VP on the 240 design paired
+  against v0.6.219 not wholly below 0 (95 %); Toreador on the 600 fresh deals within 0.68-0.98 VP and paired against v0.6.219 not
+  wholly below 0; `ana-gates.py` PASS on every series. Falsified if any part fails.
 - **v0.6.219 (12 Nov 2026)** — Crypt wave A (RULINGS D-108; Claude's proposal of 6 Nov with both its additions, Johan's "kör" of
   12 Nov), Toreador in the menu, and main's doc-budget note. 31 vampires curated in `cardfx-curated.json` (187 curated: 136 library,
   51 crypt; the compile changed those 31 entries and nothing else), at least one in each of the 14 other precons: 25 copies modelled,
