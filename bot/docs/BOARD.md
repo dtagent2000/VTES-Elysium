@@ -156,13 +156,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
   vampire, a target) show their END state (`ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
-- **A rushed bot that meant to block never fights the rush** (13 Nov; v0.6.221's 600, matches 197 and 542): its block-eval said
-  block, the rush went through (`let-through`) and it wrote no combat row; the rusher fought alone ("no reciprocal row").
-  *Done when* it answers the rush, section-tested.
-- **An action at a seat ousted in its window still resolves** (13 Nov, v0.6.221's 240, match 60): Ventrue's Kine Resources
-  Contested, its result still in Ventrue's send queue, ousted Malkavian after Naomi's bleed at him was decided; the bleed went
-  through 500 ms after the oust (the same after Ventrue's referendums 3 times on the 600). *Done when* a resolve checks its
-  target lives.
+- **Only a bleed and a pool damage fizzle at an ousted seat** (v0.6.222, `_fizzleIfOusted`): the other actions aimed at a
+  seat or its minions (a rush, a referendum whose terms name it) are not checked; none was seen to resolve after an oust. *Done when* a
+  series counts them, or each resolve checks its target. Docs: CHANGELOG v0.6.222.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.

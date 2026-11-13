@@ -82,6 +82,11 @@
 - L-67 **A name variant in the curated layer is a silent miss for the other spelling** (19 Oct, Pentex); a comment that says "client-identical" is a claim — pin it with a test against the client's own code (19 Oct).
 - L-68 **A trailing `//` comment is a statement killer** (26 Sep); never tail-append to a line ending in a comment.
 - L-88 **What one mechanism keeps about a card belongs in the bot's own map, keyed by the card's id, not on the card** (13 Nov, the Jack round): the failed blocker's fix first stored the combat's opponent on the vampire (`myVamp._combatOpp`), and 236 of 240 matches came back SAME-PLAY with no decision changed — the card rides in every decide row that names it, and the pub is built from it; `_combatOppOf`, a Map by id, gave IDENTICAL 236. The tokens keep the rule from the other side: derived from the fields the rules read at every push (`_memoMap`), never written onto the card.
+- L-89 **A flow that can be superseded stops at every await, not at one step** (13 Nov, the Jack round's second review): v0.6.221
+  checked a combat's token in its press step; the round it waited on (40 awaits) and its helpers still spoke, wrote the tally, took
+  damage and registered waits that took the live combat's lines (a replaced waiter wakes with null). Read the token at entry and
+  check it after EVERY await, before the next line, write, card or wait; prove it by superseding the real flow at each wait it
+  passes (166e), since a check proven at one hold point is one check proven.
 
 ## Tools and ways of working
 - L-69 **The smoke of the release is part of the release** (16 Oct): every R2–R4 release's own smoke found a bug its suite did not.
