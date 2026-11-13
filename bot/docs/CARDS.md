@@ -79,7 +79,7 @@ Sim: `d240` — 240 matches, bot v0.6.220, malkavian,tremere,nosferatu,ventrue, 
 | card | type | tier | verdict | status | decks: copies (uses / matches seated) | rulings | suite § | missing modes |
 |---|---|---|---|---|---|---:|---|---|
 | Gravebound Drone | Ally | auto | INERT | inert | pathdeath 8 (0/12) | 0 | — | [obl] prevent; [OBL] prevent,bleed |
-| Stygian Shroud | Action Modifier | auto | NAME-ONLY | inert | hecata 3 (0/12), lasombra 4 (0/12) | 2 | 163 |  |
+| Stygian Shroud | Action Modifier | auto | NAME-ONLY | inert | hecata 3 (0/12), lasombra 4 (0/12) | 2 | 163, 164 |  |
 | Aggressive Corpse | Ally | auto | INERT | inert | hecata 6 (0/12) | 1 | — | [— D] — |
 | Seeds of Terror | Action Modifier | auto | INERT | inert | pathcathari 6 (0/12) | 4 | — | [OBF] blockBar; [PRE] blockBar |
 | Hedonism | Action Modifier | auto | INERT | inert | pathcathari 5 (0/12) | 4 | — | [for] —; [pre] —; [FOR] —; [PRE] — |
@@ -155,7 +155,7 @@ Sim: `d240` — 240 matches, bot v0.6.220, malkavian,tremere,nosferatu,ventrue, 
 | Puppet Master | Action | auto | PARTIAL | partial | lasombra 2 (2/12) | 10 | — | [DOM D] — |
 | Sudden Reversal | Master | auto | TABLED-ONLY | partial | lasombra 2 (0/12) | 7 | 161 |  |
 | Tension in the Ranks | Master | auto | TABLED-ONLY | partial | banuhaqim 1 (4/12), pathcaine 1 (1/12) | 2 | — |  |
-| Anarch Revolt | Master | auto | TABLED-ONLY | partial | tzimisce 1 (8/12) | 2 | — | [—] stealth |
+| Anarch Revolt | Master | auto | TABLED-ONLY | partial | tzimisce 1 (8/12) | 2 | 164 | [—] stealth |
 | Carver's Meat Packing and Storage | Master | auto | TABLED-ONLY | partial | brujah 1 (2/12) | 1 | — | [—] torpor,bloodAdd,bloodAddTo |
 | Cursed Abattoir | Master | auto | TABLED-ONLY | partial | pathdeath 1 (7/12) | 0 | — | [—] bleed |
 | Día de los Muertos | Master | auto | TABLED-ONLY | partial | pathpower 1 (3/12) | 1 | — |  |
@@ -196,7 +196,7 @@ Sim: `d240` — 240 matches, bot v0.6.220, malkavian,tremere,nosferatu,ventrue, 
 | Warzone Hunting Ground | Master | curated | FULL | unseen | brujah 1 (0/12) | 0 | — |  |
 | Zoo Hunting Ground | Master | curated | FULL | unseen | gangrel 1 (0/12) | 0 | 161 |  |
 | On the Qui Vive | Reaction | auto | FULL | playable | banuhaqim 4 (15/12), brujah 2 (6/12), gangrel 5 (5/12), malkavian 5 (576/408), ministry 4 (8/12), nosferatu 5 (619/408), pathcathari 3 (4/12), pathpower 5 (5/12), ravnos 4 (7/12), salubri 2 (1/12), tremere 4 (592/408), tzimisce 4 (9/12) | 3 | 14d, 41, 42g, 42j, 94a, 94b, 94c, 110 +3 |  |
-| Govern the Unaligned | Action | auto | FULL | playable | lasombra 7 (18/12), malkavian 12 (1697/408), pathdeath 4 (10/12), salubri 4 (14/12), tremere 12 (1582/408), tzimisce 6 (22/12) | 1 | 1, 8, 9, 11, 13, 14, 15, 19l +37 |  |
+| Govern the Unaligned | Action | auto | FULL | playable | lasombra 7 (18/12), malkavian 12 (1697/408), pathdeath 4 (10/12), salubri 4 (14/12), tremere 12 (1582/408), tzimisce 6 (22/12) | 1 | 1, 8, 9, 11, 13, 14, 15, 19l +38 |  |
 | Blood Doll | Master | curated | FULL | playable | brujah 4 (36/12), gangrel 4 (35/12), malkavian 4 (974/408), ministry 4 (19/12), pathcathari 3 (16/12), pathdeath 3 (19/12), ravnos 3 (21/12), salubri 2 (24/12), tzimisce 3 (24/12), ventrue 3 (662/408) | 2 | 2, 19b, 19c, 19e, 19h, 19i, 19j, 19l +12 |  |
 | Enchant Kindred | Action | auto | FULL | playable | brujah 6 (18/12), ministry 7 (19/12), pathpower 6 (17/12), toreador 6 (15/12), ventrue 8 (917/408) | 0 | 32e, 97c, 103a, 105, 108, 163, 164 |  |
 | Deflection | Reaction | auto | FULL | playable | lasombra 6 (4/12), malkavian 5 (174/408), pathpower 5 (4/12), salubri 3 (3/12), tremere 4 (197/408), tzimisce 3 (3/12), ventrue 6 (378/408) | 5 | 28, 29, 29c, 32, 32a, 33, 39c, 41 +18 |  |

@@ -9,7 +9,7 @@ the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6
 **Open PR:** #65 (crypt wave A's riders, v0.6.220).
 
 ## Last gates (v0.6.220 release bytes, 13 Nov 2026)
-Suite **2417/0 ×3** (frozen snapshots) · lint 0 findings on 25 files, nothing suppressed ·
+Suite **2422/0 ×3** (frozen snapshots; `a8a963b1`, after the egress fixes) · lint 0 findings on 25 files, nothing suppressed ·
 canary v1.2.0 **143/0** ×2 (bot/'s copies; the root's release) · hotseat **11/0** · HB1 **11/11** · test-cardfx **321/0** ·
 `gen-precon.js --check` no problems · main's `check-versions.js` agrees · main's client suite 361/2 (by design: the handoff) ·
 sim vs v0.6.219: the 240-match design DIVERGED 68 (Nosferatu's plan; paired −0.01); the V5 smoke 67 of 168; Toreador on 600

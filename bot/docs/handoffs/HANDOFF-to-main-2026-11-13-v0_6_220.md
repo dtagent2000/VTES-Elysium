@@ -21,7 +21,7 @@ BOARD line for a later round (the gates' paths, CI, the docs, STATUS pinning the
 release in, never patches it.
 
 ## 4. Run here
-On the release bytes (`elysium-bot.js` sha256 `9ab3942c…`): your `check-versions.js` agrees (in the repository's `client/`,
+On the release bytes (`elysium-bot.js` sha256 `a8a963b1…`): your `check-versions.js` agrees (in the repository's `client/`,
 read-only); your canary v1.2.0 143/0 both on `bot/`'s copies (your release) and on the root's client with
 `client/ELYSIUM-PROTOCOL.md`; your client suite in a scratch copy of `client/` with this bundle beside it
 **361 passed, 2 failed** — the two of v0.6.219's handoff: `v2.6.127 embed-help drift` (the Bots page: this bundle's guide) and
