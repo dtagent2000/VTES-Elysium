@@ -8,7 +8,7 @@ the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6
 **Deploy state:** `main` carries v0.6.220 (#65, merged 13 Nov). **Open PR:** #66 (the Jack round, v0.6.221).
 
 ## Last gates (v0.6.221 release bytes `20faf902`, 13 Nov 2026)
-Suite **⟨N⟩/0 ×3** · lint 0 · canary **143/0** ×2 · hotseat **11/0** · HB1 **11/11** · test-cardfx **321/0** · main's
+Suite **2431/0 ×3** · lint 0 · canary **143/0** ×2 · hotseat **11/0** · HB1 **11/11** · test-cardfx **321/0** · main's
 `check-versions.js` agrees · main's client suite 361/2 (by design: the handoffs) · arena smoke PASS 7/7 · sim vs v0.6.220: the
 240 design DIVERGED 175 (Nosferatu +0.17), the V5 smoke 118 of 168, Toreador 0.78 VP on 600 deals · `ana-gates.py` PASS everywhere.
 
