@@ -36,8 +36,10 @@
   and the cardfx `memo` descriptor, `specs/spec-human-ball-memo-2026-11-14.md`. *Predictions registered before any footprint*:
   (C1) against v0.6.224's release bytes the 240, the V5 smoke and the Toreador 600 are IDENTICAL (version set back): no seat is
   human there, and the descriptor gives `_memoMap` v0.6.221's texts in their order (section 170f, 170g); (C2) `ana-gates.py` PASS;
-  (C3) at a human table in main's playtest rig, a human's Ball with two ready Toreador and one locked is read with no question, and
-  a bot then weighs a block of the locked one's later action normally while it never blocks the free one's non-bleed action.
+  (C3) at a human table in main's playtest rig (the human holds three ready Toreador and plays the Ball locking one): the bots read
+  the free one from the play line's pair with no question, or the speaker asks once and the answer is read; then a bot weighs a
+  block of the third Toreador's non-bleed action as any block while it never blocks the free one's (restated before any
+  measurement: the first wording named the locked one, which does not act).
 - **v0.6.224 (14 Nov 2026)** — Round B, RULINGS D-114 (Johan's "kör", 13 Nov 20:13 and 21:45): Smiling Jack's burn weighed by its
   price, `specs/spec-jack-burn-2026-11-13.md`. Two steps, each with its own footprint, on round A (v0.6.223).
   - *Step 1, the block guard* (a rules correction, no knob; section 168: 3/0, 0/3 on v0.6.223): the threat classes' block path
