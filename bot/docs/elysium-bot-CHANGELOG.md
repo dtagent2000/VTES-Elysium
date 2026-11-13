@@ -39,7 +39,10 @@
   matches with such a rush change (the 600's 197 and 542 among them), each first at that bot's combat decision in it; the stray combat
   rows (`stray.py`) fall to 0 on every series. (O) the action at an ousted seat: "through after the game ended" falls to 0 on every
   series (the 240's 1, the 600's 3); only those 4 matches change, each SAME-PLAY (the game ended at that oust: no decision follows).
-  All series `ana-gates.py` PASS. Falsified if any part fails.
+  All series `ana-gates.py` PASS. Falsified if any part fails. (H, B, S) the second review's fixes — the held turn, the blocker
+  named at Block!, the superseded combat stopped at every await — one footprint against step O (`624ab86e`), raw: IDENTICAL on all
+  three series (no trace has a turn that comes back after the game ended, a verdict inside the locked-blocker beat, or a
+  `combat-superseded` row); `ana-gates.py` PASS. Falsified by any match that changes.
 - **v0.6.221 (13 Nov 2026)** — The Jack round (RULINGS D-113; Johan, 13 Nov 08:38: "alla dina förslag ovan om Jack och Grand Ball
   låter jättebra"; 09:22: the failed blocker, the ledger and "allt du var osäker på" in the same round), built on #65 (merged the same
   day). One footprint per step.
