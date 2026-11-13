@@ -12692,12 +12692,21 @@ async function connectWithRetry(client, tries = 30){
         u._combatTok = 1; u.o.phaseSecs = 0.1; let ra = 'pending', rb = 'pending'; u._phaseStep(1, 'ask', false).then(v => { ra = v; });
         await new Promise(r => setTimeout(r, 20));
         u._combatTok = 2; u.o.phaseSecs = 3; u._phaseStep(2, 'ask', false).then(v => { rb = v; });
-        await new Promise(r => setTimeout(r, 150));   // past the superseded step's own clock
-        const mid = { ra, rb, live: !!(u._phaseWait && u._phaseWait.step === 2 && !u._phaseWait.done), last: u._phaseLast || null };
+        await new Promise(r => setTimeout(r, 30)); const early = ra;   // before the superseded step's own clock: it ended when the live step began
+        await new Promise(r => setTimeout(r, 120));   // past the superseded step's own clock
+        const mid = { early, ra, rb, live: !!(u._phaseWait && u._phaseWait.step === 2 && !u._phaseWait.done), last: u._phaseLast || null };
         u._phaseNudge('Hanna', 'No', 'chat'); await new Promise(r => setTimeout(r, 20));
         if(u._phaseWait && !u._phaseWait.done) u._phaseWait.resolve('test');
-        ok(mid.ra === null && mid.rb === 'pending' && mid.live && !mid.last && rb === 'pass',
-           '166f a superseded combat’s step wait ends at the live step’s start: the human’s No answers the live step (got ' + JSON.stringify({ mid, rb }) + ')'); }
+        // ... and the same between a step and the Damage step, both ways (_phaseDamage's wait)
+        const two = async (first, second) => { const v = mk166(); v.players[0].bot = false; v.table = u.table; v._combatOppName = 'Massimo Falconi'; v._inCombat = true; v.turnSeat = 1;
+          v._rnd = { dealt: 1 }; v._combatTok = 1; v.o.phaseSecs = 0.1; let x = 'pending', y = 'pending'; first(v).then(r => { x = r; });
+          await new Promise(r => setTimeout(r, 20)); v._combatTok = 2; v.o.phaseSecs = 3; second(v).then(r => { y = r; });
+          await new Promise(r => setTimeout(r, 30)); const early = x; await new Promise(r => setTimeout(r, 120)); const live = !!(v._phaseWait && !v._phaseWait.done);
+          v._phaseNudge('Hanna', 'No', 'chat'); await new Promise(r => setTimeout(r, 20)); if(v._phaseWait && !v._phaseWait.done) v._phaseWait.resolve('test');
+          return { early, x, live, y }; };
+        const sd = await two(v => v._phaseStep(1, 'ask', false), v => v._phaseDamage()), ds = await two(v => v._phaseDamage(), v => v._phaseStep(2, 'ask', false));
+        ok(mid.early === null && mid.ra === null && mid.rb === 'pending' && mid.live && !mid.last && rb === 'pass' && sd.early === null && sd.live && sd.y === 'pass' && ds.early === null && ds.live && ds.y === 'pass',
+           '166f a superseded combat’s step wait ends at the live step’s start: the human’s No answers the live step (got ' + JSON.stringify({ mid, rb, sd, ds }) + ')'); }
 
       // g) a combat a Change of Target ended, superseded while it waited (v0.6.221's 600, match 528, on this round's first cut): the
       //    blocker still unlocks (the card came before it locked) and the row says why -- cot-cancelled, not combat-superseded (the cut
