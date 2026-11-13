@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.46';   // srv-2.6.46 (14 Oct 2026, THE TABLE LAYOUT -- restart; ships with client v2.6.157): a Classic room carries one more option, `tableLayout` ('large' or nothing), stored at create, re-validated from a snapshot, and told to every client wherever tableSetup is told (joined for players and spectators, started, both took). 'large' = the free board's cards a fifth larger and the lower seat row at the bottom edge, the same on every screen; the client draws it. Nothing else changed.
+const VERSION = '2.6.50';   // srv-2.6.50 (11 Nov 2026, THE WATCHED DOOR -- restart, and back up the data directory first; ships with client v2.6.173): the server half of the bot project's security handoff (bot/docs/handoffs/HANDOFF-to-main-2026-11-11-security.md; the plan: client/docs/elysium-security-plan.md). (1) A stored password is a slow hash: a room's, a referee's and a save's password was one unsalted SHA-256, so a leaked snapshot, save file or backup gave every weak or reused password at dictionary speed; now 's1$' + salt + '$' + scrypt(sha256hex(pass)) (N 2^14, r 8, p 1, ~40 ms). One salt per server, carried inside every hash (saves are grouped by EQUAL hashes across rooms, decision D4); the old hashes are wrapped as the files load and both files are written at once, so no SHA-256 hash outlives the first start; a verified password is remembered in memory, keyed by the stored hash. A rollback to srv-2.6.49 cannot read the new hashes. (2) The client page carries a Content-Security-Policy-Report-Only header whose script hashes are made from the file being sent (nothing to keep in step; enforcement is the next round). (3) /images/ answers with a sandbox policy: an SVG opened on its own runs nothing. (4) /client-error keeps the kind 'csp' (a policy report) instead of filing it as a crash. No wire change.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -20,6 +20,9 @@ const VERSION = '2.6.46';   // srv-2.6.46 (14 Oct 2026, THE TABLE LAYOUT -- rest
    --create-policy anyone|admin   who may create rooms (default anyone)
    --trust-proxy       behind cloudflared/Caddy on LOOPBACK only: read CF-Connecting-IP /
                        X-Forwarded-For as the connection IP, restoring per-IP limits
+   --trust-proxy xff   (srv-2.6.49) the same for a proxy that is NOT Cloudflare (nginx, Caddy straight to the
+                       internet): CF-Connecting-IP is ignored (a client could write it and such a proxy passes it
+                       on), only the rightmost X-Forwarded-For entry counts
    --bind <host>       listen address (default: all interfaces). A tunnel deployment binds
                        127.0.0.1 so the raw port is unreachable even from the LAN (plan H1-a)
    --data-dir <path>   where elysium-rooms.json / elysium-saves.json live (default: beside this
@@ -39,13 +42,14 @@ for(let i = 0; i < _argv.length; i++){
   if(a === '--server-pass'){ CFG.srvPassHash = passHashLater(_argv[++i]); }
   else if(a === '--admin-pass' || a === '--referee-pass'){ CFG.adminPassHash = passHashLater(_argv[++i]); }   // srv-2.6.34: --referee-pass is the clearer name (a referee = spectator with host powers); the wire field stays `admin`
   else if(a === '--create-policy'){ CFG.createPolicy = _argv[++i] === 'admin' ? 'admin' : 'anyone'; }
-  else if(a === '--trust-proxy'){ CFG.trustProxy = true; }
+  else if(a === '--trust-proxy'){ if(String(_argv[i + 1] || '').toLowerCase() === 'xff'){ CFG.trustProxy = 'xff'; i++; } else CFG.trustProxy = true; }   // srv-2.6.49: 'xff' = believe only X-Forwarded-For
   else if(a === '--bind'){ CFG.bind = String(_argv[++i] || '') || null; }
   else if(a === '--data-dir'){ CFG.dataDir = String(_argv[++i] || '') || null; }
   else if(a === '--origin'){ const v = String(_argv[++i] || '').trim(); CFG.origin = v ? new Set(v.split(',').map(x => x.trim()).filter(Boolean)) : null; }
   else _pos.push(a);
 }
 function passHashLater(v){ return { _raw: String(v || '') }; }   // crypto's passHash is declared below; resolve after definitions
+const DATA_DIR = CFG.dataDir ? path.resolve(CFG.dataDir) : __dirname;   // v2.6.20: __dirname-relative was silently unwritable under ProtectSystem=strict (root-owned code dir) -- best-effort catch ate the EACCES and persistence just... didn't. Default unchanged.   (srv-2.6.50: moved up from the persistence section)
 const PORT        = parseInt(_pos[0], 10) || 8123;
 const CLIENT_FILE = path.resolve(__dirname, _pos[1] || 'elysium-vtes-bord.html');
 const MAX_ROOMS   = 50;
@@ -110,53 +114,103 @@ function wsClose(sock){
   setTimeout(()=>{ try{ sock.destroy(); }catch(err){} }, 400);
 }
 /* Incremental frame parser: handles chunked TCP, masking, fragmentation,
-   ping/pong and close. Calls cb.msg(text) / cb.close(). */
+   ping/pong and close. Calls cb.msg(text) / cb.ctrl() / cb.alive() / cb.close().
+   srv-2.6.47 (the 16 Oct code review; a denial of service reproduced by probe first): RFC 6455's limits hold, and a
+   violation ends the connection (a close frame, then the socket) -- after which nothing more is read:
+   - a message has at most MAX_FRAGS frames and MAX_MSG bytes, counted as they arrive. srv-2.6.46 stored every
+     fragment and re-summed them all on each frame, so a stream of EMPTY continuation frames grew without limit at
+     quadratic cost: /healthz stopped answering after ~40,000 of them from one socket;
+   - a control frame carries at most 125 bytes and is never fragmented (§5.5); a continuation needs an open message and
+     a new message a closed one (§5.4); no RSV bit (no extension is negotiated, §5.2); no reserved opcode; and no
+     binary frame -- this protocol is JSON text, and a binary message was never counted by the rate limit;
+   - cb.msg and cb.ctrl may return false (the rate limit, connRateOk -- pings and pongs count there now): the
+     connection is over.
+   Unmasked client frames (§5.1 says to fail them) are still accepted and logged once per connection: browsers and the
+   bot always mask, and this stays lenient until we know that no proxy in front of a server forwards them unmasked. */
+const MAX_FRAGS = 64;    // frames per message (a browser sends one; the bot's client one)
+let wsUnmaskedN = 0, wsUnmaskedAt = 0;
+function wsUnmaskedNote(){                                         // counted per connection, logged at most once a minute (a busy server would otherwise log one line per connection)
+  wsUnmaskedN++;
+  if(Date.now() - wsUnmaskedAt < 60000) return;
+  wsUnmaskedAt = Date.now();
+  console.log('[ws] unmasked client frames (RFC 6455 \u00a75.1) on ' + wsUnmaskedN + ' connection(s) since start -- accepted');
+}
+const MAX_CTRL  = 125;   // RFC 6455 §5.5
+const WS_BUF0 = 4096, WS_BUF_KEEP = 65536, WS_EMPTY = Buffer.alloc(0);
 function wsAttach(sock, cb){
-  let buf = Buffer.alloc(0);
-  let frags = [], fragOp = 0;
+  // srv-2.6.49: ONE growable buffer per connection. A TCP chunk is copied in once (the buffer doubles when it is full,
+  // so a frame costs O(n) however it is chunked), nothing is parsed until `need` bytes are there (the next header or the
+  // whole frame), frames are read at an offset, and what was consumed is dropped by moving the rest to the front.
+  // srv-2.6.48 ran Buffer.concat([buf, d]) on every chunk: one frame dripped in byte by byte cost quadratic CPU. The first
+  // srv-2.6.49 build queued the chunks instead, and every tiny chunk stayed alive as its own object until the frame was
+  // whole (the independent review: ~85 MB for 256 KB dripped byte by byte). A buffer that grew past WS_BUF_KEEP shrinks
+  // back once it is nearly empty, so a big message does not keep its memory for the life of the connection.
+  let buf = WS_EMPTY, len = 0, need = 2;
+  let frags = [], fragOp = 0, fragLen = 0, dead = false, unmaskedSeen = false;
+  const fail = () => { dead = true; buf = WS_EMPTY; len = 0; frags = []; wsClose(sock); };
   sock.on('data', d => {
-    buf = Buffer.concat([buf, d]);
-    while(true){
-      if(buf.length < 2) break;
-      const b0 = buf[0], b1 = buf[1];
+    if(dead) return;
+    if(len + d.length > buf.length){
+      let cap = buf.length || WS_BUF0; while(cap < len + d.length) cap *= 2;
+      cap = Math.min(cap, Math.max(len + d.length, MAX_MSG + 14));   // never past one largest frame plus its header, unless the bytes already there need more
+      const nb = Buffer.allocUnsafe(cap); buf.copy(nb, 0, 0, len); buf = nb;
+    }
+    d.copy(buf, len); len += d.length;
+    if(len < need) return;
+    let pos = 0;
+    while(!dead){
+      need = 2;                                                     // `need` counts from the start of the frame being read (pos)
+      const avail = len - pos;
+      if(avail < 2) break;
+      const b0 = buf[pos], b1 = buf[pos + 1];
       const fin    = (b0 & 0x80) !== 0;
       const op     =  b0 & 0x0f;
       const masked = (b1 & 0x80) !== 0;
-      let len = b1 & 0x7f, off = 2;
-      if(len === 126){
-        if(buf.length < 4) break;
-        len = buf.readUInt16BE(2); off = 4;
-      } else if(len === 127){
-        if(buf.length < 10) break;
-        const hi = buf.readUInt32BE(2);
-        len = buf.readUInt32BE(6); off = 10;
-        if(hi !== 0 || len > MAX_MSG){ wsClose(sock); return; }
+      const ctrl   = (op & 0x08) !== 0;
+      if((b0 & 0x70) || (ctrl ? (op > 0xA || !fin || (b1 & 0x7f) > MAX_CTRL) : op > 0x1)){ fail(); return; }
+      let plen = b1 & 0x7f, off = 2;
+      if(plen === 126){
+        if(avail < 4){ need = 4; break; }
+        plen = buf.readUInt16BE(pos + 2); off = 4;
+      } else if(plen === 127){
+        if(avail < 10){ need = 10; break; }
+        const hi = buf.readUInt32BE(pos + 2);
+        plen = buf.readUInt32BE(pos + 6); off = 10;
+        if(hi !== 0 || plen > MAX_MSG){ fail(); return; }
       }
-      if(len > MAX_MSG){ wsClose(sock); return; }
+      if(plen > MAX_MSG){ fail(); return; }                         // refused at the header, before any of the payload is buffered
       let mask = null;
       if(masked){
-        if(buf.length < off + 4) break;
-        mask = buf.subarray(off, off + 4); off += 4;
+        if(avail < off + 4){ need = off + 4; break; }
+        mask = buf.subarray(pos + off, pos + off + 4); off += 4;
       }
-      if(buf.length < off + len) break;
-      let payload = Buffer.from(buf.subarray(off, off + len));
-      buf = buf.subarray(off + len);
+      if(avail < off + plen){ need = off + plen; break; }
+      if(!masked && !unmaskedSeen){ unmaskedSeen = true; wsUnmaskedNote(); }
+      const payload = Buffer.from(buf.subarray(pos + off, pos + off + plen));   // a copy: the buffer is reused
+      pos += off + plen;
       if(mask) for(let i = 0; i < payload.length; i++) payload[i] ^= mask[i & 3];
 
-      if(op === 0x8){ cb.close(); wsClose(sock); return; }
-      else if(op === 0x9){ wsSendFrame(sock, 0xA, payload); cb.alive(); }
-      else if(op === 0xA){ cb.alive(); }
-      else if(op === 0x1 || op === 0x2 || op === 0x0){
+      if(op === 0x8){ dead = true; cb.close(); wsClose(sock); return; }
+      if(ctrl){                                                     // 0x9 ping, 0xA pong
+        if(cb.ctrl && cb.ctrl() === false){ dead = true; return; }
+        if(op === 0x9) wsSendFrame(sock, 0xA, payload);
         cb.alive();
-        if(op !== 0x0){ fragOp = op; frags = [payload]; }
-        else frags.push(payload);
-        if(frags.reduce((s,f)=>s+f.length,0) > MAX_MSG){ wsClose(sock); return; }
-        if(fin){
-          const whole = Buffer.concat(frags); frags = [];
-          if(fragOp === 0x1) cb.msg(whole.toString('utf8'));
-        }
+        continue;
+      }
+      if(op === 0x0 ? !fragOp : fragOp){ fail(); return; }          // a continuation needs an open message; a new message a closed one
+      if(op !== 0x0){ fragOp = op; frags = []; fragLen = 0; }
+      frags.push(payload); fragLen += payload.length;
+      if(frags.length > MAX_FRAGS || fragLen > MAX_MSG){ fail(); return; }
+      cb.alive();
+      if(fin){
+        const whole = frags.length === 1 ? frags[0] : Buffer.concat(frags, fragLen);
+        frags = []; fragLen = 0; fragOp = 0;
+        if(cb.msg(whole.toString('utf8')) === false){ dead = true; return; }
       }
     }
+    if(dead) return;
+    if(pos){ if(pos < len) buf.copy(buf, 0, pos, len); len -= pos; }   // drop what was read; the frame in progress moves to the front
+    if(buf.length > WS_BUF_KEEP && len <= WS_BUF0){ const nb = Buffer.allocUnsafe(WS_BUF0); buf.copy(nb, 0, 0, len); buf = nb; }
   });
   sock.on('error', ()=>cb.close());
   sock.on('close', ()=>cb.close());
@@ -169,6 +223,19 @@ const FAIL_MAX    = 5;             // wrong passwords per IP…
 const FAIL_WIN    = 10 * 60000;    // …per 10 minutes → lockout
 const CREATE_MAX  = 4;             // rooms created per IP…
 const CREATE_WIN  = 60 * 60000;    // …per hour
+/* srv-2.6.47: one bucket per connection for EVERYTHING the peer sends -- finished messages and control frames alike.
+   srv-2.6.46 counted messages only, so a ping flood was answered pong for pong. Browsers send no pings of their own;
+   they answer the server's, one every 30 s. False = over the limit: the peer is told, the connection is closed. */
+function connRateOk(conn){
+  conn.last = Date.now();
+  conn.rate = conn.rate.filter(t => conn.last - t < RATE_WIN);
+  conn.rate.push(conn.last);
+  if(conn.rate.length <= RATE_N) return true;
+  wsSend(conn.sock, { t:'err', msg:'Slow down — too many messages.' });
+  console.log('[abuse] rate limit hit by ' + conn.ip);
+  wsClose(conn.sock);
+  return false;
+}
 const ipFails   = new Map();       // ip -> [timestamps]
 const ipCreates = new Map();
 const ERR_MAX      = 10;                 // B-54: client-error posts per IP...
@@ -205,15 +272,98 @@ function strike(map, ip){
   a.push(Date.now());
   map.set(ip, a);
 }
-function passHash(s){ return crypto.createHash('sha256').update(String(s || '')).digest('hex'); }
-function passMatch(hashHex, given){
-  const a = Buffer.from(passHash(given), 'utf8');
-  const b = Buffer.from(String(hashHex || ''), 'utf8');
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+/* srv-2.6.50 (THE WATCHED DOOR; the bot project's security handoff of 11 Nov 2026, item 2): a stored password is a SLOW
+   hash. Until srv-2.6.49 a room's, a referee's and a save's password was kept as one unsalted SHA-256, so a leaked
+   elysium-rooms.json, elysium-saves.json or backup gave every weak -- and every reused -- password at dictionary speed.
+   A stored hash is now
+       's1$' + <the salt, 32 hex> + '$' + <scrypt(sha256hex(pass), salt), N 2^14, r 8, p 1: 64 hex>      (~40 ms each)
+   - ONE salt per server, not one per room: saves are grouped by EQUAL hashes across rooms (SAVES_PER_GROUP, decision D4:
+     the same password is the same friend group), and only a deterministic hash keeps that. The salt rides inside every
+     hash, so nothing has to be kept beside the two data files: the first hash adopts the salt of the first s1 hash in
+     elysium-saves.json or elysium-rooms.json (passSalt), and only a server that has stored none makes a new one.
+   - the SHA-256 first bounds what scrypt is fed (a 256 KB password costs one SHA-256 and a scrypt of 64 bytes), and it
+     makes the migration a WRAP: an old hash IS sha256hex(pass), so passUpgrade turns it into s1 as the files load and
+     passBootDone writes both files at once -- no SHA-256 hash outlives the first start of this server.
+   - a SUCCESS is remembered in memory, keyed by the stored hash and the fast hash (PASS_OK, at most PASS_OK_MAX): a
+     reconnect, a door check or the next player into the same room costs no hash. A wrong guess always pays the full
+     hash, and a quick answer can never tell a guesser that some OTHER room uses that password. The empty password (an
+     open room) is no secret and is made once per salt. The process holds every plain password at its join anyway, so
+     the memory holds nothing it did not have.
+   - the lockouts are read BEFORE the compare, as before (join, the door, the admin doors), so a locked-out guess hashes
+     nothing. A flood of fresh guesses from many addresses still costs ~40 ms of the event loop each: the plan names it.
+   A rollback to srv-2.6.49 cannot read an s1 hash: back the data directory up before deploying (runbook §2). */
+const PASS_V = 's1$';
+const PASS_RE = /^s1\$([0-9a-f]{32})\$([0-9a-f]{64})$/;
+const PASS_OLD_RE = /^[0-9a-f]{64}$/;                        // srv-2.6.49's form: sha256hex(pass)
+const PASS_SCRYPT = { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+const PASS_OK_MAX = 512;
+const PASS_OK = new Map();                                    // stored + '|' + sha256hex(given) -> true, oldest first (a Map keeps insertion order)
+const PASS_UP = new Map();                                    // the boot's memo: an old hash -> its scrypt key (most rooms share one password: the empty one)
+const SHA256_EMPTY = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+let passSaltHex = null, passEmpty = null, passUpgraded = 0;
+function sha256hex(s){ return crypto.createHash('sha256').update(String(s || '')).digest('hex'); }   // String(s || ''): the coercion passHash always had (undefined, null, 0 -> '')
+function passSaltIn(text){ const m = /"s1\$([0-9a-f]{32})\$[0-9a-f]{64}"/.exec(String(text || '')); return m ? m[1] : null; }
+function passSalt(){
+  if(passSaltHex) return passSaltHex;
+  for(const f of ['elysium-saves.json', 'elysium-rooms.json']){   // saves first: they outlive any table
+    let t = ''; try{ t = fs.readFileSync(path.resolve(DATA_DIR, f), 'utf8'); }catch(e){}
+    const salt = passSaltIn(t); if(salt){ passSaltHex = salt; return salt; }
+  }
+  passSaltHex = crypto.randomBytes(16).toString('hex');
+  return passSaltHex;
+}
+function passKey(fastHex, saltHex){
+  const k = () => crypto.scryptSync(fastHex, Buffer.from(saltHex, 'hex'), 32, PASS_SCRYPT).toString('hex');
+  if(fastHex !== SHA256_EMPTY) return k();
+  if(!passEmpty || passEmpty[0] !== saltHex) passEmpty = [saltHex, k()];
+  return passEmpty[1];
+}
+function passHash(s){ const salt = passSalt(); return PASS_V + salt + '$' + passKey(sha256hex(s), salt); }
+function passUpgrade(stored){                                 // an old hash -> s1; anything else comes back as it was
+  if(typeof stored !== 'string' || !PASS_OLD_RE.test(stored)) return stored;
+  const salt = passSalt();
+  let k = PASS_UP.get(stored);
+  if(!k){ k = passKey(stored, salt); PASS_UP.set(stored, k); }
+  passUpgraded++;
+  return PASS_V + salt + '$' + k;
+}
+function passBootDone(){                                      // after both files have loaded: write them at once if a hash was wrapped
+  if(passUpgraded){
+    console.log('[boot] ' + passUpgraded + ' stored password hash(es) moved from SHA-256 to scrypt (s1) -- a rollback to srv-2.6.49 needs the data directory as it was before this start');
+    snapshot(); persistSaves();
+  }
+  PASS_UP.clear(); passUpgraded = 0;
+}
+/* srv-2.6.47: one lockout for every admin door -- hello{admin} on the socket, the log pull and the maintenance window
+   over HTTP -- read BEFORE the compare. ERR_MAX wrong keys per address per ERR_WIN; an all-loopback server (a tunnel
+   without --trust-proxy: everyone is 127.0.0.1) gets the server door's 4x tolerance, so a fat-fingered guest does not
+   lock the host out at once. A deliberate guest still can: --trust-proxy gives every player their own bucket. */
+function adminLocked(ip){ return strikes(ipLogAuth, ip, ERR_WIN) >= (isLoopback(ip) ? ERR_MAX * 4 : ERR_MAX); }
+function passMatch(stored, given){                           // srv-2.6.50: an s1 hash (above); srv-2.6.49's bare SHA-256 still compares, as only a value set in memory can be one (the suites) -- every stored one is wrapped as it loads
+  const st = String(stored || ''), fast = sha256hex(given);
+  let want, got, okKey = null;
+  if(PASS_OLD_RE.test(st)){ want = st; got = fast; }
+  else {
+    const m = PASS_RE.exec(st);
+    if(!m) return false;
+    okKey = st + '|' + fast;
+    if(PASS_OK.has(okKey)){ PASS_OK.delete(okKey); PASS_OK.set(okKey, true); return true; }   // a remembered success moves to the young end
+    want = m[2]; got = passKey(fast, m[1]);
+  }
+  const a = Buffer.from(got, 'utf8'), b = Buffer.from(want, 'utf8');
+  const ok = a.length === b.length && crypto.timingSafeEqual(a, b);
+  if(ok && okKey){ PASS_OK.set(okKey, true); if(PASS_OK.size > PASS_OK_MAX) PASS_OK.delete(PASS_OK.keys().next().value); }
+  return ok;
 }
 if(CFG.srvPassHash   && CFG.srvPassHash._raw   !== undefined) CFG.srvPassHash   = passHash(CFG.srvPassHash._raw);     // v2.5.68: argv parsed before passHash existed
 if(CFG.adminPassHash && CFG.adminPassHash._raw !== undefined) CFG.adminPassHash = passHash(CFG.adminPassHash._raw);
 function isLoopback(ip){ return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1'; }
+function ipBare(v){                   // srv-2.6.49: '1.2.3.4:443' -> '1.2.3.4', '[2001:db8::7]:51234' -> '2001:db8::7' (some proxies write the port); anything else as written
+  const s = String(v || '').trim();
+  let m = /^\[([0-9a-fA-F:.]+)\](?::\d+)?$/.exec(s); if(m) return m[1];
+  m = /^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/.exec(s); if(m) return m[1];
+  return s;
+}
 function deriveIp(remoteAddr, headers){
   // v2.5.68 (L1 --trust-proxy): ONLY when the flag is on AND the transport peer is loopback
   // (i.e. the proxy itself) do we believe forwarding headers -- a remote client sending a
@@ -221,9 +371,9 @@ function deriveIp(remoteAddr, headers){
   const ra = remoteAddr || '?';
   if(!CFG.trustProxy || !isLoopback(ra)) return ra;
   const h = headers || {};
-  const cf = String(h['cf-connecting-ip'] || '').trim();
+  const cf = CFG.trustProxy === 'xff' ? '' : ipBare(h['cf-connecting-ip']);   // srv-2.6.49: Cloudflare writes this one and a client cannot forge it through Cloudflare -- behind any other proxy it can, so `--trust-proxy xff` ignores it
   if(cf) return cf.slice(0, 45);
-  const xff = String(h['x-forwarded-for'] || '').split(',')[0].trim();
+  const xff = ipBare(String(h['x-forwarded-for'] || '').split(',').map(x => x.trim()).filter(Boolean).pop());   // srv-2.6.49: the RIGHTMOST entry -- the one the trusted local proxy appended. The leftmost is whatever the client sent: behind an appending proxy (nginx's $proxy_add_x_forwarded_for) every connection could claim a fresh address and walk past the per-address limits
   return xff ? xff.slice(0, 45) : ra;
 }
 /* ---------- The lobby door + room list (v2.5.68, L1+L2) ---------- */
@@ -319,7 +469,7 @@ function sys(room, msg){ bcast(room, { t:'sys', msg }); }
    human who drops their connection is still a player and keeps their room
    (that is what the reconnect window is for), while a human who really LEAVES
    is gone and a table of bots alone has nobody to play for. */
-function humansLeft(room){ return (room.players || []).filter(q => !q.bot).length; }
+function humansLeft(room){ return (room.players || []).filter(q => !q.bot && !q.vacant).length; }   // srv-2.6.48: a vacant seat holds nobody (a mid-game leave vacates now)
 function closeRoomNow(room, msg){
   if(!room || !rooms.has(room.name)) return false;                 // idempotent: two paths may race to close the same room
   const socks = [];
@@ -367,6 +517,30 @@ function prevLiveSeat(room, fromIdx){
   for(let k = 1; k < n; k++){ const c = ((fromIdx - k) % n + n) % n; const q = room.players[c]; if(q && !q.out) return c; }
   return -1;
 }
+/* srv-2.6.48 (the 16 Oct review, B-8 + B-9): one body for both oust paths (a player's own `bounty`, the host's
+   `hostOust`). The VP goes to the LIVE predator and the paying seat is remembered on the ousted one (`vpSeat`, a seat
+   number -- stable now that a leave vacates), so an unoust takes back exactly what the oust gave. With the ousted
+   player's automatic award off (`award` false) nothing moves and the table settles pool and VP by hand -- except under
+   the tournament lock (every room the reference client creates since v2.6.116), where VP comes only from ousts: the
+   VP is paid, the 6 pool stays manual. The predator's client adds the pool when it hears `bounty`. */
+function ousterPays(room, i, q, award, how){
+  const pi = prevLiveSeat(room, i), pred = pi > -1 ? room.players[pi] : null;   // srv-2.6.38: the LIVE predator (q.out is already set, so q is never its own)
+  if(!pred){ q.vpSeat = 0; sys(room, q.name + ' was ousted' + how + '.'); return; }
+  const payVp = award || !!room.tournLock;
+  q.vpSeat = payVp ? pi + 1 : 0;                                    // what THIS oust paid (the review: a stale seat from an earlier oust was taken back after one that paid nothing)
+  if(payVp) pred.vp = Math.min(10, (pred.vp || 0) + 1);             // rulebook: 1 VP + 6 pool to the predator
+  if(award && pred.sock) wsSend(pred.sock, { t:'bounty', from: q.name });
+  sys(room, q.name + ' was ousted' + how + (award ? ' — the 6 pool bounty and 1 VP go to ' + pred.name + '.'
+    : payVp ? ' — 1 VP goes to ' + pred.name + ' (tournament lock); the 6 pool is settled by hand.'
+    : ' — the bounty is settled by hand.'));
+}
+function vpBack(room, q){                     // srv-2.6.48 (B-9): an unoust returns the VP its oust paid (once); the pool, client-authored, is settled by hand
+  const s = q.vpSeat | 0; q.vpSeat = 0;
+  const pr = s ? room.players[s - 1] : null;
+  if(!pr || !(pr.vp > 0)) return '';
+  pr.vp = Math.max(0, pr.vp - 1);
+  return ' The 1 VP goes back from ' + pr.name + '.';
+}
 function turnOnFromOusted(room, idx){
   if(!room.started || room.turnSeat !== idx + 1) return;
   const ni = nextLiveSeat(room, idx);
@@ -397,7 +571,7 @@ function vacateSeat(room, q, toSpectator){
     turnTallyClear(room); bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
   }
 }
-function cleanName(s){ return String(s || '').replace(/[\u0000-\u001f\u007f<>]/g,'').trim().slice(0, 24); }
+function cleanName(s){ return String(s || '').replace(/[\u0000-\u001f\u007f<>"]/g,'').trim().slice(0, 24); }   // srv-2.6.47: + the double quote -- every client draws a name inside "..." attributes (title, data-name), and one older than v2.6.163 escaped only & < > there
 function sanHtml(s){                       // server-side twin of the client's sanRemote() (v2.5.38, defence-in-depth):
   s = String(s || '');                     // the logTo html field legitimately carries a tiny tag whitelist -- <b>, <i>
   const links = [];                        // and the log card-link form <b class="clog" data-cid="..."> -- so a plain
@@ -454,7 +628,8 @@ function joinReply(sock, room, p){
 const MAX_PILE = 250, MAX_NAME = 64, MAX_PUB_CARDS = 400;
 
 function cleanId(s){ return String(s || '').replace(/[^a-zA-Z0-9_-]/g,'').slice(0, 32); }   // sanitize a card id (gid/cid) for the give/recall verbs
-function cleanCard(s){ return String(s || '').replace(/[\u0000-\u001f\u007f<>]/g,'').trim().slice(0, MAX_NAME); }
+function cleanCard(s){ return String(s || '').replace(/[\u0000-\u001f\u007f<>=]/g,'').trim().slice(0, MAX_NAME); }   // srv-2.6.47: + '=' -- no card name has one, and the quotes stay (the Imbued and some vampires carry them: Felix "Fix" Hessian). Without '=' a quote can never become an attribute VALUE on a client older than v2.6.163
+function cleanSym(s){ return cleanCard(s).replace(/["']/g,''); }   // srv-2.6.47: a clan or path name never holds a quote
 function expandDeck(list){
   const out = [];
   if(Array.isArray(list)) for(const e of list){
@@ -488,7 +663,7 @@ function sanitizePub(pub, keepHidden){
     deckName: keepHidden ? cleanCard(pub.deckName) : '',    // owner's own pubOwn keeps the name; never relay it to opponents
     pool:  Math.max(-99, Math.min(999, parseInt(pub.pool, 10) || 0)),
     edge:  !!pub.edge,
-    clan:  (typeof pub.clan === 'string' && pub.clan) ? (cleanCard(pub.clan).slice(0, 40) || undefined) : undefined,   // v2.5.62: majority-clan / path symbol for the opponent pool globes — sent by the client for ages, silently dropped by this whitelist (hotseat always worked; online never did)
+    clan:  (typeof pub.clan === 'string' && pub.clan) ? (cleanSym(pub.clan).slice(0, 40) || undefined) : undefined,   // v2.5.62: majority-clan / path symbol for the opponent pool globes — sent by the client for ages, silently dropped by this whitelist (hotseat always worked; online never did). srv-2.6.47: cleanSym -- the review's probe ran script through this field on v2.6.162 (the pool globe's alt="..." title="...")
     phase: Math.max(-1, Math.min(9, parseInt(pub.phase, 10) ?? -1)),
     tn: (parseInt(pub.tn, 10) > 0) ? Math.min(9999, parseInt(pub.tn, 10)) : undefined,   // srv-2.6.45 (cli-2.6.149): the table's Turn / Round count as this client holds it -- a client that reloads or
     rn: (parseInt(pub.rn, 10) > 0) ? Math.min(9999, parseInt(pub.rn, 10)) : undefined,   // reconnects mid-game takes it from the boards (and from its own stored copy); this whitelist dropped it
@@ -502,7 +677,7 @@ function sanitizePub(pub, keepHidden){
     cards: []
   };
   if(pub.target && typeof pub.target === 'object'){
-    const ts = parseInt(pub.target.seat, 10), tc = cleanCard(String(pub.target.cid || '')).slice(0, 16);
+    const ts = parseInt(pub.target.seat, 10), tc = cleanId(String(pub.target.cid || '')).slice(0, 16);   // srv-2.6.47: ids are id-shaped (cleanId)
     if(ts >= 1 && ts <= MAX_PLAYERS && tc) out.target = { seat: ts, cid: tc };   // v2.5.61 (review Finding 2): keyed to the constant so a raised seat cap can't silently stop relaying target markers for seat 7+
   }
   if(Array.isArray(pub.tokens)){                       // v2.5.62: felt tokens (the Edge) + the pool-globe position — exported by the client since the token family landed, but this whitelist predates them and dropped the field, so online opponents saw neither the Edge token nor globe moves (the default L4 globe circle is client-local). Hotseat pubs bypass the server, which is why everything "worked offline".
@@ -521,7 +696,7 @@ function sanitizePub(pub, keepHidden){
   for(const c of cards){
     if(!c || !PUB_ZONES.includes(c.zone)) continue;     // hand/library/crypt never relay
     out.cards.push({
-      id: cleanCard(c.id).slice(0, 16),
+      id: cleanId(c.id).slice(0, 16),                                                            // srv-2.6.47: cleanId -- the client's 'c12', mintGid's 'g...', the bots' 'bot3_x1y2' all fit
       name: (c.faceDown && !keepHidden) ? undefined : cleanCard(c.name) || undefined,
       kind: c.kind === 'crypt' ? 'crypt' : 'lib',
       zone: c.zone,
@@ -532,13 +707,13 @@ function sanitizePub(pub, keepHidden){
       blue:  Math.max(0, Math.min(99, parseInt(c.blue, 10)  || 0)) || undefined,
       green: Math.max(0, Math.min(99, parseInt(c.green, 10) || 0)) || undefined,
       counters: Array.isArray(c.counters) ? c.counters.slice(0, 12).map(cleanCard).filter(Boolean) : undefined,
-      owner: c.owner ? cleanCard(c.owner) : undefined,
-      controller: c.controller ? cleanCard(c.controller) : undefined,
-      host: c.host ? cleanCard(String(c.host)).slice(0, 16) : undefined,
-      attached: Array.isArray(c.attached) ? c.attached.slice(0, 30).map(a => cleanCard(String(a)).slice(0, 16)) : undefined,
+      owner: c.owner ? cleanName(c.owner) : undefined,                                           // srv-2.6.47: a player name, cleaned like one
+      controller: c.controller ? cleanName(c.controller) : undefined,
+      host: c.host ? cleanId(String(c.host)).slice(0, 16) : undefined,
+      attached: Array.isArray(c.attached) ? c.attached.slice(0, 30).map(a => cleanId(String(a)).slice(0, 16)) : undefined,
       actSt: (c.actSt === 'played' || c.actSt === 'resolved') ? c.actSt : undefined,             // v2.5.62: Played-tab action batching for opponents' cards (client sent it; whitelist dropped it)
       _avSeq: (Number.isFinite(+c._avSeq) && +c._avSeq > 0) ? Math.round(+c._avSeq) : undefined, // v2.5.62: wall-clock play order — the cross-seat Played-tab interleave was broken online without it
-      path: c.path ? (cleanCard(String(c.path)).slice(0, 40) || undefined) : undefined,          // v2.5.62: chosen-path badge on remote cards (crypt-only + chosen-only enforced client-side per the v2.5.72 merge decision)
+      path: c.path ? (cleanSym(String(c.path)).slice(0, 40) || undefined) : undefined,          // v2.5.62: chosen-path badge on remote cards (crypt-only + chosen-only enforced client-side per the v2.5.72 merge decision)
       sup: (typeof c.sup === 'string' && /^[a-z]{3}$/i.test(c.sup)) ? c.sup.toLowerCase() : undefined // v2.5.62: superior-discipline trigram badge on remote library cards
     });
   }
@@ -595,7 +770,7 @@ function fxCard(o){                                   // sanitise an FX card pay
   if(!o || typeof o !== 'object') return null;
   const kind = (o.kind === 'crypt') ? 'crypt' : 'lib';
   const faceDown = !!o.faceDown;
-  const name = faceDown ? '' : String(o.name || '').slice(0, 120);
+  const name = faceDown ? '' : cleanCard(o.name);   // srv-2.6.47 (the independent review): cleaned like every card field (it went out raw, < > " = and all; the clients escape it, this is the second lock)
   return { name, kind, faceDown };
 }
 // In-game message dispatch. One handler per verb (signature: conn, room, p, m). Order-independent;
@@ -675,7 +850,7 @@ const GAME_HANDLERS = {
     p.game = { deckName: cleanCard(m.name), deckLib: lib, deckCrypt: crypt, lib: [], crypt: [] };
     if(room.started) dealNow(p, room);
     else { wsSend(conn.sock, { t:'deckok', deckName: p.game.deckName }); bcastLobby(room); }
-    if(p.out){ p.out = false; rosterUpd(room); }   // a fresh deal puts you back in the game
+    if(p.out){ p.out = false; p.vpSeat = 0; rosterUpd(room); }   // a fresh deal puts you back in the game (srv-2.6.48: the predator keeps the VP; nothing is left to take back)
     console.log('[game] ' + p.name + ' loaded a deck (' + crypt.length + ' crypt / ' + lib.length + ' library) in "' + room.name + '"' + (room.started ? '' : ' (lobby)'));
   },
   redeal(conn, room, p, m){
@@ -796,7 +971,7 @@ const GAME_HANDLERS = {
     if(!(picks.every(s => s >= 1 && s <= N) && new Set(picks).size === N))
       return wsSend(conn.sock, { t:'err', msg:'Everyone must pick a seat first.' });
     room.players.sort((a, b) => a.seatPick - b.seatPick);     // claimed seats become the turn order
-    room.players.forEach(q => { q.seatPick = null; q.out = false; q.vp = 0; });
+    room.players.forEach(q => { q.seatPick = null; q.out = false; q.vp = 0; q.vpSeat = 0; });
     room.started = true;
     room.turnSeat = 1;
     room.tally = null;                                                         // v2.6.11: a resolver never rides into a fresh match
@@ -839,8 +1014,9 @@ const GAME_HANDLERS = {
        new one. */
     const prev = (room.tally && room.tally.mode === mode) ? room.tally : null;
     const newRd = !!(mode === 'combat' && prev && ('rd' in m) && Math.max(1, Math.min(99, (m.rd | 0) || 1)) !== ((prev.rd | 0) || 1));   // srv-2.6.40: a/b are THIS ROUND's damage (v2.6.129) -- a new round zeroes them unless the write carries them (a bot writes rd:2 alone; round 1's damage must not become round 2's)
-    const a  = ('a'  in m) ? Math.max(0, Math.min(99, m.a | 0)) : ((prev && !newRd) ? prev.a : 0);
-    const b  = ('b'  in m) ? Math.max(0, Math.min(99, m.b | 0)) : ((prev && !newRd) ? prev.b : 0);
+    const lo = (mode === 'block') ? -99 : 0;   // srv-2.6.48 (B-10, Johan 17 Oct): stealth and intercept can be decreased below 0 (the rulebook) -- a bare Christine Boscacci blocks with -1, and the 0 this clamp echoed back turned the bots' own 'fails' into 'succeeds'. Votes and damage stay >= 0
+    const a  = ('a'  in m) ? Math.max(lo, Math.min(99, m.a | 0)) : ((prev && !newRd) ? prev.a : 0);
+    const b  = ('b'  in m) ? Math.max(lo, Math.min(99, m.b | 0)) : ((prev && !newRd) ? prev.b : 0);
     const ph = ('ph' in m) ? Math.max(0, Math.min(6, m.ph | 0)) : (prev ? prev.ph : 0);   // v2.6.12: combat phase index (the rulebook's 7 steps per round)
     const rd = ('rd' in m) ? Math.max(1, Math.min(99, (m.rd | 0) || 1)) : (prev ? prev.rd : 1);   // v2.6.13: combat round counter (bumped client-side when the phase wraps)
     let duel;
@@ -852,7 +1028,7 @@ const GAME_HANDLERS = {
       duel = Object.assign({}, (room.tally && room.tally.mode === 'combat' && room.tally.duel) || {});
       if(m.duelCid !== undefined){
         const seat = room.players.indexOf(p) + 1;
-        if(m.duelCid){ duel[seat] = { cid: cleanCard(String(m.duelCid)).slice(0, 16), name: cleanCard(String(m.duelName || '')).slice(0, 60), who: p.name }; }
+        if(m.duelCid){ duel[seat] = { cid: cleanId(String(m.duelCid)).slice(0, 16), name: cleanCard(String(m.duelName || '')).slice(0, 60), who: p.name }; }   // srv-2.6.47: the cid is id-shaped
         else delete duel[seat];                                         // duelCid:null = leave
       }
     }
@@ -884,7 +1060,7 @@ const GAME_HANDLERS = {
     const card = fxCard(m.card);
     if(!card) return;
     if(kind === 'flip' && m.reveal === false && m.card && typeof m.card === 'object')
-      card.name = String(m.card.name || '').slice(0, 120);   // conceal-flip: the face it flips AWAY from was public one frame earlier -- the remote clone needs the name to show face->back (fx is cosmetic; no state trusts it)
+      card.name = cleanCard(m.card.name);   // srv-2.6.47: cleaned (see fxCard). conceal-flip: the face it flips AWAY from was public one frame earlier -- the remote clone needs the name to show face->back (fx is cosmetic; no state trusts it)
     const target = (kind === 'play') ? fxCard(m.target) : null;
     const actor  = (kind === 'play') ? fxCard(m.actor)  : null;
     const onto   = (kind === 'play' && m.onto && typeof m.onto === 'object' && (m.onto.seat|0) >= 1 && (m.onto.seat|0) <= 8)
@@ -892,7 +1068,7 @@ const GAME_HANDLERS = {
     const reveal = (m.reveal === true) ? true : (m.reveal === false ? false : undefined);
     bcast(room, { t:'fx', who: p.name, seat: room.players.indexOf(p) + 1, kind, card,
                   target, actor, onto, reveal, toName: cleanName(String(m.toName || '')).slice(0, 40) || undefined,
-                  verb: String(m.verb || '').slice(0, 40) }, conn.sock);
+                  verb: cleanCard(m.verb).slice(0, 40) }, conn.sock);   // srv-2.6.47: cleaned too
   },
   revealHand(conn, room, p, m){
     // Hand reveal. The private card list goes ONLY to the recipient(s). A public line
@@ -971,8 +1147,8 @@ const GAME_HANDLERS = {
       faceDown: !!card.faceDown, locked: !!card.locked,
       blood: ci(card.blood), blue: ci(card.blue), green: ci(card.green),
       counters: Array.isArray(card.counters) ? card.counters.slice(0, 12).map(cleanCard).filter(Boolean) : [],
-      owner: cleanCard(card.owner) || p.name,                       // auto-stamp the giver
-      attachTo: m.attachTo ? cleanCard(String(m.attachTo)) : null,
+      owner: cleanName(card.owner) || p.name,                       // auto-stamp the giver (srv-2.6.47: a name, cleaned like one)
+      attachTo: m.attachTo ? (cleanId(String(m.attachTo)) || null) : null,   // srv-2.6.47: a card id
       rx: typeof m.rx === 'number' ? Math.max(0, Math.min(1, m.rx)) : null,
       ry: typeof m.ry === 'number' ? Math.max(0, Math.min(1, m.ry)) : null
     });
@@ -1003,16 +1179,11 @@ const GAME_HANDLERS = {
     wsSend(q.sock, { t:'ctrl', cid, act: String(m.act || '').slice(0, 16), from: p.name });
   },
   bounty(conn, room, p, m){
+    if(p.out) return;                               // srv-2.6.48 (B-9): a seat already out pays no second bounty -- srv-2.6.47 paid one per message, so a double send was a second VP
     const i = room.players.indexOf(p);
     p.out = true;                                   // ousted Methuselahs leave the rotation
-    if(room.players.length > 1 && i > -1){
-      const pi = prevLiveSeat(room, i), pred = pi > -1 ? room.players[pi] : null;   // srv-2.6.38: the LIVE predator
-      if(pred){
-        pred.vp = Math.min(10, (pred.vp || 0) + 1); // rulebook: 1 VP + 6 pool to the predator
-        if(pred.sock) wsSend(pred.sock, { t:'bounty', from: p.name });
-        sys(room, p.name + ' was ousted — the 6 pool bounty and 1 VP go to ' + pred.name + '.');
-      } else sys(room, p.name + ' was ousted.');
-    }
+    if(room.players.length > 1 && i > -1) ousterPays(room, i, p, m.award !== false, '');   // srv-2.6.48 (B-8): award:false = the ousted player's automatic award is off (cli-2.6.164 sends the oust either way)
+    else sys(room, p.name + ' was ousted.');
     rosterUpd(room);
     if(i > -1) turnOnFromOusted(room, i);           // srv-2.6.38: after the roster, so every client knows WHY the turn moved
   },
@@ -1030,14 +1201,8 @@ const GAME_HANDLERS = {
     if(!q || q.vacant) return wsSend(conn.sock, { t:'err', msg:'No such player.' });
     if(q.out) return wsSend(conn.sock, { t:'err', msg:'That player is already ousted.' });
     q.out = true;                                                      // server-authoritative: works even if the target is disconnected
-    if(room.players.length > 1){
-      const pi = prevLiveSeat(room, i), pred = pi > -1 ? room.players[pi] : null;   // srv-2.6.38: the LIVE predator (q.out is already set, so q is never its own)
-      if(pred){
-        pred.vp = Math.min(10, (pred.vp || 0) + 1);
-        if(pred.sock) wsSend(pred.sock, { t:'bounty', from: q.name });
-        sys(room, q.name + ' was ousted by the host — the 6 pool bounty and 1 VP go to ' + pred.name + '.');
-      } else sys(room, q.name + ' was ousted by the host.');
-    } else sys(room, q.name + ' was ousted by the host.');
+    if(room.players.length > 1) ousterPays(room, i, q, true, ' by the host');   // srv-2.6.48: one body with `bounty` (the VP remembered for an unoust)
+    else sys(room, q.name + ' was ousted by the host.');
     if(q.sock) wsSend(q.sock, { t:'forceOust' });                      // tell the (connected) target to return its cards; cosmetic, skipped if offline
     rosterUpd(room);
     turnOnFromOusted(room, i);                                         // srv-2.6.38
@@ -1046,7 +1211,7 @@ const GAME_HANDLERS = {
     if(!hostOrRef(conn, room, p)) return wsSend(conn.sock, { t:'err', msg:'Only the host can do that.' });
     const q = room.players[(m.seat | 0) - 1];
     if(!q) return wsSend(conn.sock, { t:'err', msg:'No such player.' });
-    if(q.out){ q.out = false; sys(room, q.name + ' was returned to the game by the host.'); rosterUpd(room); }
+    if(q.out){ q.out = false; const back = vpBack(room, q); sys(room, q.name + ' was returned to the game by the host.' + back); rosterUpd(room); }   // srv-2.6.48 (B-9): the oust's VP goes back
   },
   setHelperPolicy(conn, room, p, m){
     if(!hostOrRef(conn, room, p))
@@ -1207,7 +1372,7 @@ const GAME_HANDLERS = {
   mute(conn, room, p, m){
     if(!hostOrRef(conn, room, p)) return wsSend(conn.sock, { t:'err', msg:'Only the host can mute.' });
     const nm = cleanName(m.name), on = m.on !== false;
-    const q = room.players.find(x => x.name.toLowerCase() === nm.toLowerCase()) || (room.watchers || []).find(x => x.name.toLowerCase() === nm.toLowerCase());   // v2.5.61 (Finding 1)
+    const q = room.players.find(x => x.name.toLowerCase() === nm.toLowerCase() && !x.vacant) || (room.watchers || []).find(x => x.name.toLowerCase() === nm.toLowerCase());   // v2.5.61 (Finding 1); srv-2.6.48: an open seat is nobody to mute -- its leaver may be watching under the same name
     if(!q || q === p) return wsSend(conn.sock, { t:'err', msg:'No such player.' });
     q.muted = on;
     if(q.sock) wsSend(q.sock, { t:'muted', on });
@@ -1233,7 +1398,7 @@ const GAME_HANDLERS = {
   unoust(conn, room, p, m){
     if(room.started && room.tournLock)                           // v2.5.64: under the lock only the host may reverse an oust (hostUnoust)
       return wsSend(conn.sock, { t:'err', msg:'Un-oust is host-only for this match (tournament lock).' });
-    if(p.out){ p.out = false; sys(room, p.name + ' returns to the game.'); rosterUpd(room); }
+    if(p.out){ p.out = false; const back = vpBack(room, p); sys(room, p.name + ' returns to the game.' + back); rosterUpd(room); }   // srv-2.6.48 (B-9)
   },
   edgePass(conn, room, p, m){   // relay Edge handoff to the target player; sender already released it locally
     if(!room.started) return;
@@ -1273,7 +1438,7 @@ const GAME_HANDLERS = {
     } else if(m.kind === 'seating'){
       if(room.started) return wsSend(conn.sock, { t:'err', msg:'Seating is drawn in the lobby \u2014 the game has already started.' });   // v2.5.64: unconditional gate; mid-match this zeroed EVERYONE's vp/out and reshuffled the seats
       shuffle(room.players);
-      room.players.forEach(q => { q.out = false; q.vp = 0; });   // new seating = new game
+      room.players.forEach(q => { q.out = false; q.vp = 0; q.vpSeat = 0; });   // new seating = new game
       room.turnSeat = 1;
       bcast(room, { t:'tool', kind:'seating', who: p.name, order: room.players.map(q => q.name) });
       turnTallyClear(room); bcast(room, { t:'turn', seat: 1, who: room.players[0].name });
@@ -1319,8 +1484,8 @@ const GAME_HANDLERS = {
     if(sv.passHash !== room.passHash)
       return wsSend(conn.sock, { t:'err', msg:'That match has a different password. Create the room with the match’s original password, then load.' });
     const myName = p.name.toLowerCase();
-    const mine = (sv.players || []).find(sp => sp.name.toLowerCase() === myName);
-    if(!mine) return wsSend(conn.sock, { t:'err', msg:'Your name “' + p.name + '” wasn’t a player in this match. Rejoin the lobby as one of: ' + (sv.players || []).map(s => s.name).join(', ') + ' — then load.' });
+    const mine = (sv.players || []).find(sp => !sp.vacant && sp.name.toLowerCase() === myName);   // srv-2.6.48: an open seat is nobody's to load as
+    if(!mine) return wsSend(conn.sock, { t:'err', msg:'Your name “' + p.name + '” wasn’t a player in this match. Rejoin the lobby as one of: ' + (sv.players || []).filter(s => !s.vacant).map(s => s.name).join(', ') + ' — then load.' });
     sv.touchedAt = Date.now(); persistSaves();            // H1-e: an active campaign never expires -- the 90-day TTL counts from the last save OR load
 
     /* any other sockets in this lobby lose their seats — they rejoin by name */
@@ -1330,14 +1495,14 @@ const GAME_HANDLERS = {
 
     const hostTok = p.token;
     room.players = (sv.players || []).map(sp => {
-      const isMe = sp.name.toLowerCase() === myName;
+      const isMe = !sp.vacant && sp.name.toLowerCase() === myName;
       return {
-        name: sp.name, seatPick: sp.seatPick || null, vp: sp.vp || 0, out: !!sp.out, muted: !!sp.muted, vacant: false,
+        name: sp.name, seatPick: sp.seatPick || null, vp: sp.vp || 0, out: !!sp.out, muted: !!sp.muted, vacant: !!sp.vacant, vpSeat: (sp.vpSeat | 0) || undefined,   // srv-2.6.48: an open seat stays open (its deck and board wait for the host's takeover)
         game: sp.game || null, pub: sp.pub || null, pubOwn: sp.pubOwn || sp.pub || null,
         handBlob: sp.handBlob || undefined,
         token: isMe ? hostTok : token(),
         sock: isMe ? conn.sock : null,
-        last: Date.now(), off: isMe ? 0 : Date.now()
+        last: Date.now(), off: (isMe || sp.vacant) ? 0 : Date.now()   // srv-2.6.48: an open seat has no clock
       };
     });
     room.watchers = [];
@@ -1345,9 +1510,15 @@ const GAME_HANDLERS = {
     room.started = true;
     room.escrowSalt = sv.escrowSalt || room.escrowSalt || token();   // keep the salt the blobs were sealed under
     room.turnSeat = sv.turnSeat || 1;
+    { const tq = room.players[room.turnSeat - 1]; if(!tq || tq.out || tq.vacant) room.turnSeat = nextLiveSeat(room, Math.max(0, Math.min(room.players.length, room.turnSeat | 0)) - 1) + 1; }   // srv-2.6.48: a save from srv-2.6.47 or older dropped its open seats, so its turnSeat can point past the table or at the wrong seat -- the turn goes to the next live seat
     room.reactSecs = sv.reactSecs || 5;
     room.helperPolicy = cleanHelperPolicy(sv.helperPolicy);
     room.chat = sv.chat !== false; room.specChat = sv.specChat !== false; room.tournLock = !!sv.tournLock;
+    if(sv.boardMode === 'classic' || sv.boardMode === 'structured'){   // srv-2.6.48: the board style the boards were laid out in (a save from srv-2.6.47 or older carries none: the room keeps its own)
+      room.boardMode = sv.boardMode;
+      room.tableSetup = sv.boardMode === 'classic' && sv.tableSetup === true;
+      room.tableLayout = (sv.boardMode === 'classic' && sv.tableLayout === 'large') ? 'large' : null;
+    }
     room.ledger = Array.isArray(sv.ledger) ? sv.ledger.slice(-800) : [];   // v2.5.65: a loaded match keeps its evidence trail
     room.matchMins = sv.matchMins || 0;
     if(sv.timeCalled){ room.timeCalled = true; room.matchEnd = null; }
@@ -1401,10 +1572,15 @@ function handle(conn, raw){
     // connection for live roomList pushes, and answers with the current list.
     if(CFG.srvPassHash && !conn.authed && m.srvPass !== undefined && !doorCheck(conn, m)) return;
     if(CFG.adminPassHash && m.admin !== undefined){
-      const key = isLoopback(conn.ip) ? 'srv:*' : ('srv:' + conn.ip);
+      // srv-2.6.47 (the 16 Oct code review): the admin HTTP routes' lockout -- one bucket per address (ipLogAuth,
+      // ERR_MAX wrong keys per ERR_WIN), read BEFORE the compare, so even the right key waits the window out.
+      // srv-2.6.46 struck the server door's bucket and never read it back: unlimited guesses on the socket (350 in
+      // 2.5 s in the probe), and behind a tunnel without --trust-proxy one person's wrong admin keys could lock the
+      // door for everyone.
+      if(adminLocked(conn.ip)) return wsSend(conn.sock, { t:'err', msg:'Too many wrong admin passwords. Wait a bit.' });
       if(passMatch(CFG.adminPassHash, m.admin)){ conn.admin = true; }
       else {
-        strike(ipFails, key);
+        strike(ipLogAuth, conn.ip);
         return wsSend(conn.sock, { t:'err', msg:'Wrong admin password.' });
       }
     }
@@ -1546,6 +1722,8 @@ function handle(conn, raw){
       return;
     }
     const ex = room.players.find(p => p.name.toLowerCase() === pname.toLowerCase() && !p.vacant);
+    if(!ex && room.started && room.players.some(q => q.vacant && q.name.toLowerCase() === pname.toLowerCase()))   // srv-2.6.48 (the review): an OPEN seat keeps its leaver's name, so this join would add a second seat with the same name -- every client then finds its seat by name and lands on the empty one
+      return wsSend(conn.sock, { t:'err', msg:'That name belongs to an open seat at this table — join as a spectator, and the host can promote you into it.' });
     if(ex){
       if(ex.sock && !ex.off)
         return wsSend(conn.sock, { t:'err', msg:'That name is taken in this room.' });
@@ -1629,17 +1807,29 @@ function dropPlayer(conn, forGood){
   if(!room || !p) return;
   conn.room = null; conn.player = null;
   if(forGood){
-    const i = room.players.indexOf(p);
-    if(i > -1) room.players.splice(i, 1);
-    if(p.token === room.hostToken && room.players[0]) room.hostToken = room.players[0].token;
+    const wasHost = p.token === room.hostToken;
+    if(room.started){
+      /* srv-2.6.48 (the 16 Oct review, B-4): mid-game a LEAVE VACATES the seat, as the host's kick and
+         demote always did. Seat = index + 1 for every verb, the turn, the tally's duel map and every
+         client's boards: splicing the list renumbered everyone after the leaver -- the turn silently
+         passed to the next player (no broadcast) and the real turn holder's pass was refused. The
+         seat's deck and board wait for a replacement (the host's takeover); its credential is
+         orphaned; the leaver's socket stays connected, so no 'removed' message and no close. */
+      p.sock = null;
+      vacateSeat(room, p, false);
+    } else {
+      const i = room.players.indexOf(p);
+      if(i > -1) room.players.splice(i, 1);
+    }
+    if(wasHost){ const nh = room.players.find(q => !q.vacant && !q.bot && q.sock) || room.players.find(q => !q.vacant && !q.bot) || room.players.find(q => !q.vacant); if(nh) room.hostToken = nh.token; }   // srv-2.6.48: the first seat still held -- an online human first, then any human (the review: an offline one was picked over one who was there)
     if(!room.started) room.players.forEach(q => { if(q.seatPick > room.players.length) q.seatPick = null; });
-    sys(room, p.name + ' left the ' + (room.started ? 'table.' : 'lobby.'));
+    sys(room, p.name + (room.started ? ' left the table — the seat is open: the host can promote a spectator to take it over. 🪑' : ' left the lobby.'));   // srv-2.6.48: mid-game the seat stays (vacant)
     console.log('[room] ' + p.name + ' left "' + room.name + '"');
   } else {
     p.sock = null; p.off = Date.now();
     sys(room, p.name + ' disconnected.');
   }
-  if(!room.players.length){ rooms.delete(room.name); scheduleRoomList(); console.log('[room] "' + room.name + '" closed (empty)'); }
+  if(!room.players.some(q => !q.vacant)) closeRoomNow(room, 'The last player left — the table closed.');   // srv-2.6.48: every seat vacant = nobody left (a mid-game leave vacates now); closed out loud -- the silent delete left the spectators in a room that no longer existed
   else if(forGood && !humansLeft(room)){                            // srv-2.6.36 (Johan): the last human LEFT and only bots are seated -- close now instead of letting the hour-long all-offline rule hold an unplayable room in the list. Only on a real leave: a disconnect keeps its reconnect window (see the reaper's bot grace)
     closeRoomNow(room, 'The last player left — the table closed.');
   }
@@ -1668,7 +1858,7 @@ function errScrub(v, cap){ return String(v==null?'':v).replace(/[\u0000-\u001f\u
 function errRecord(m){                       // pure: parsed body -> whitelisted record (null = drop). Unit-tested in test-server-dispatch.js.
   if(!m || typeof m!=='object') return null;
   const rec={ ts:new Date().toISOString(),
-    kind: m.kind==='report' ? 'report' : 'crash',
+    kind: m.kind==='report' ? 'report' : (m.kind==='csp' ? 'csp' : 'crash'),   // srv-2.6.50: 'csp' = a report from the page's report-only policy (client v2.6.173 cspReport), counted apart by the digest
     ver: errScrub(m.ver || (m.summary && m.summary.ver), 16),   // v2.6.27: reports carry ver only inside summary -- mirror the ua fallback below, or the digest histogram shows '?' (found by Johan's first real report)
     ua:  errScrub(m.ua || (m.summary && m.summary.ua), 120) };
   if(m.msg!==undefined)   rec.msg   = errScrub(m.msg, 300);
@@ -1760,7 +1950,7 @@ function handleLogFetch(req, res){             // v2.6.25 amend (Johan): the pul
   const nope=()=>{ try{ res.writeHead(404, { 'Cache-Control':'no-store' }); res.end('Not found\n'); }catch(e){} };
   if(!CFG.adminPassHash) return nope();        // no --admin-pass => the route is OFF
   let ip='?'; try{ ip=deriveIp(req.socket.remoteAddress, req.headers); }catch(e){}
-  if(strikes(ipLogAuth, ip, ERR_WIN) >= ERR_MAX) return nope();   // brute lockout: even a correct key waits out the window
+  if(adminLocked(ip)) return nope();   // brute lockout: even a correct key waits out the window (srv-2.6.47: adminLocked, the loopback tolerance)
   let key=''; try{ key=new URL(req.url, 'http://x').searchParams.get('key') || ''; }catch(e){}
   if(!passMatch(CFG.adminPassHash, key)){ strike(ipLogAuth, ip); return nope(); }
   let body='';                                  // rotated first keeps chronology; total is capped at 4 MB by construction
@@ -1774,7 +1964,7 @@ function handleMaintenance(req, res){          // v2.6.26: GET /admin/maintenanc
   const nope=()=>{ try{ res.writeHead(404, { 'Cache-Control':'no-store' }); res.end('Not found\n'); }catch(e){} };
   if(!CFG.adminPassHash) return nope();
   let ip='?'; try{ ip=deriveIp(req.socket.remoteAddress, req.headers); }catch(e){}
-  if(strikes(ipLogAuth, ip, ERR_WIN) >= ERR_MAX) return nope();
+  if(adminLocked(ip)) return nope();
   let q=null; try{ q=new URL(req.url, 'http://x').searchParams; }catch(e){ return nope(); }
   if(!passMatch(CFG.adminPassHash, q.get('key') || '')){ strike(ipLogAuth, ip); return nope(); }
   if(q.get('on') === '1'){                     // strict: ?on=0 must not arm (truthy-string trap)
@@ -1806,6 +1996,47 @@ function handleClientError(req, res){
   });
   req.on('error', ()=>{ try{ res.end(); }catch(e){} });
 }
+/* srv-2.6.50 (THE WATCHED DOOR; the security handoff's item 1): the client page's Content-Security-Policy, REPORT-ONLY for
+   this release -- a browser reports what the policy would block and blocks nothing. Script hashes, not a nonce: a nonce
+   changes the page on every request, and the bytes the server hands out must stay comparable with the release
+   (client/served-check.js). The hashes are made from the very file being sent (cspScriptHashes), so the header cannot go
+   stale when a new client is copied in without a restart. Every <script> element is hashed: the help tab's nav script
+   lives in one that never runs on the page (#helpNavJs, type text/plain) and runs in the tab the client opens, a blob:
+   document that inherits this policy. ws:// and wss:// to the page's own host are spelled out beside 'self' (older
+   Safari did not let 'self' cover a socket). The client (v2.6.173+) passes each report to /client-error, so the Discord
+   digest shows them; client/docs/elysium-security-plan.md says when this becomes the enforcing header and <meta>. */
+const CSP_HOST_RE = /^(?:[A-Za-z0-9.-]{1,253}|\[[0-9A-Fa-f:.]{2,45}\])(?::\d{1,5})?$/;
+const IMG_CSP = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox";   // srv-2.6.50: an image (an SVG above all) opened on its own runs nothing
+function cspScriptHashes(html){
+  const s = String(html), out = [];
+  const tagRe = /<!--|<script\b[^>]*>/ig;
+  let m;
+  while((m = tagRe.exec(s))){
+    if(m[0] === '<!--'){ const e = s.indexOf('-->', m.index + 4); if(e < 0) break; tagRe.lastIndex = e + 3; continue; }   // a comment holds no script, whatever it says
+    const start = m.index + m[0].length;
+    const endRe = /<\/script/ig; endRe.lastIndex = start;
+    const e = endRe.exec(s); if(!e) break;
+    const text = s.slice(start, e.index).replace(/\r\n?/g, '\n');   // the HTML parser turns CR LF and a lone CR into LF before the hash is taken
+    const h = "'sha256-" + crypto.createHash('sha256').update(text, 'utf8').digest('base64') + "'";
+    if(out.indexOf(h) < 0) out.push(h);
+    tagRe.lastIndex = e.index + 8;
+  }
+  return out;
+}
+function cspPolicy(hashes, host){
+  const own = (typeof host === 'string' && CSP_HOST_RE.test(host)) ? (' ws://' + host + ' wss://' + host) : '';
+  return "default-src 'self'; script-src 'self' " + hashes.join(' ')
+       + "; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
+       + "; img-src 'self' data: blob: https://static.krcg.org https://images.ctfassets.net"
+       + "; connect-src 'self'" + own + " https://static.krcg.org"
+       + "; object-src 'none'; base-uri 'none'; form-action 'none'";
+}
+function pageHeaders(html, host){
+  const h = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store',   // v2.6.21: standard hardening headers -- DENY framing (no legit embed case),
+              'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer' };   // nosniff, and no referrer leakage from the app
+  try{ h['Content-Security-Policy-Report-Only'] = cspPolicy(cspScriptHashes(html), host); }catch(e){}
+  return h;
+}
 const srv = http.createServer((req, res) => {
   if(req.method === 'POST' && req.url === '/client-error'){ handleClientError(req, res); return; }   // B-54: the ONLY body-reading route
   if(req.method === 'GET' && req.url.startsWith('/client-errors.txt')){ handleLogFetch(req, res); return; }   // v2.6.25 amend: admin-gated log pull (?key=<admin-pass>, ?dl=1 for attachment)
@@ -1818,7 +2049,7 @@ const srv = http.createServer((req, res) => {
     if(file === 'vtes.json'){
       fs.readFile(path.join(IMAGES_DIR, 'vtes.json'), (err, data) => {
         if(err){ res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
-        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff' });
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': IMG_CSP });
         res.end(data);
       });
       return;
@@ -1829,7 +2060,7 @@ const srv = http.createServer((req, res) => {
     fs.readFile(full, (err, data) => {
       if(err){ res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
       const ct = /\.svg$/i.test(file) ? 'image/svg+xml' : (/\.webp$/i.test(file) ? 'image/webp' : 'image/jpeg');
-      res.writeHead(200, { 'Content-Type': ct, 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff' });
+      res.writeHead(200, { 'Content-Type': ct, 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': IMG_CSP });
       res.end(data);
     });
     return;
@@ -1863,8 +2094,7 @@ const srv = http.createServer((req, res) => {
                 '\nPlace elysium-vtes-bord.html next to elysium-server.js (or pass its path as the 2nd argument).');
         return;
       }
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store',   // v2.6.21: standard hardening headers -- DENY framing (no legit embed case),
-        'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer' });   // nosniff, and no referrer leakage from the app
+      res.writeHead(200, pageHeaders(data, req.headers.host));   // v2.6.21's hardening headers + srv-2.6.50's report-only policy, its hashes made from these bytes
       res.end(data);
     });
     return;
@@ -1928,17 +2158,10 @@ srv.on('upgrade', (req, sock) => {
                  ip: deriveIp(req.socket.remoteAddress, req.headers), rate: [] };   // v2.5.68: --trust-proxy aware (spoof-safe: headers only believed from loopback)
   wsAttach(sock, {
     msg: raw => {
-      conn.last = Date.now();
-      conn.rate = conn.rate.filter(t => conn.last - t < RATE_WIN);
-      conn.rate.push(conn.last);
-      if(conn.rate.length > RATE_N){
-        wsSend(conn.sock, { t:'err', msg:'Slow down — too many messages.' });
-        console.log('[abuse] rate limit hit by ' + conn.ip);
-        wsClose(conn.sock);
-        return;
-      }
+      if(!connRateOk(conn)) return false;
       handle(conn, raw);
     },
+    ctrl: () => connRateOk(conn),                                   // srv-2.6.47: pings and pongs count too
     alive: ()  => { conn.last = Date.now(); if(conn.player) conn.player.last = conn.last; },
     close: ()  => {
       if(conn.closed) return;
@@ -1988,7 +2211,7 @@ setInterval(() => {
        bounds the one case v2.6.104 could not reach -- a host who closes the TAB sends no
        helper-policy restore, so the locked policy dies with the room instead of outliving
        the session by an hour. */
-    const botGrace = room.players.some(p => p.bot) && humansLeft(room) > 0;
+    const botGrace = room.players.some(p => p.bot) && room.players.some(p => !p.bot);   // srv-2.6.48: a human SEAT, held or open -- humansLeft no longer counts an open seat, and a bot table whose humans were all moved out keeps the short grace it had
     const ttl = botGrace ? BOT_ROOM_GRACE_MS : 60 * 60000;
     if(allOff && room.players.length && now - oldest > ttl){
       rooms.delete(name); scheduleRoomList();
@@ -1999,7 +2222,7 @@ setInterval(() => {
 }, 10 * 60000);
 
 /* ---------- Persistence: the table survives a server restart ---------- */
-const DATA_DIR = CFG.dataDir ? path.resolve(CFG.dataDir) : __dirname;   // v2.6.20: __dirname-relative was silently unwritable under ProtectSystem=strict (root-owned code dir) -- best-effort catch ate the EACCES and persistence just... didn't. Default unchanged.
+// DATA_DIR is defined beside the argv parse since srv-2.6.50 (the password salt is read from it at the first hash, see passSalt).
 const STORE = path.resolve(DATA_DIR, 'elysium-rooms.json');
 function makeAsyncFileWriter(finalPath){                  // H1-d: non-blocking persistence with in-flight coalescing -- at most one
   let busy = false, next = null;                          // write chain runs; the newest queued JSON wins. .tmp-then-rename keeps
@@ -2038,23 +2261,23 @@ function roomSnap(r){
     botcfg: r.botcfg || null,
     players: r.players.map(p => ({ name: p.name, token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon || undefined,
       bot: p.bot ? true : undefined,
-      vp: p.vp || 0, out: !!p.out, game: p.game || null, handBlob: p.handBlob || null }))
+      vp: p.vp || 0, out: !!p.out, vpSeat: p.vpSeat || undefined, game: p.game || null, handBlob: p.handBlob || null }))   // srv-2.6.48: + vpSeat
   };
 }
 function roomUnsnap(r){
-  const players = (r.players || []).map(p => ({ name: p.name, token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon,
+  const players = (r.players || []).map(p => ({ name: cleanName(p.name), token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon,   // srv-2.6.47: cleanName -- a name stored by srv-2.6.46 may carry a quote, and every lookup now cleans what it is given. srv-2.6.48: that comment had been put IN FRONT of seatPick / muted / vacant / anon, so srv-2.6.47 restored none of them (an open seat came back as an offline seat its old name could reclaim; a muted player came back unmuted)
     sock: null, last: Date.now(), off: Date.now(), bot: p.bot === true ? true : undefined,
-    vp: p.vp || 0, out: !!p.out, game: p.game || null, handBlob: p.handBlob || null }));
+    vp: p.vp || 0, out: !!p.out, vpSeat: (p.vpSeat | 0) || undefined, game: p.game || null, handBlob: p.handBlob || null }));   // srv-2.6.48: + vpSeat
   const bc = (r.botcfg && typeof r.botcfg === 'object') ? botcfgMerge(r.botcfg.tempo, r.botcfg.waitSecs, null) : null;
   const mm = r.matchMins | 0;
   return {
-    name: r.name, passHash: r.passHash || (r.pass != null ? passHash(r.pass) : passHash('')), hostToken: r.hostToken || null,
+    name: cleanName(r.name), passHash: passUpgrade(r.passHash) || (r.pass != null ? passHash(r.pass) : passHash('')), hostToken: r.hostToken || null,   // srv-2.6.50: an old hash is wrapped (passUpgrade)
     created: r.created || Date.now(), turnSeat: r.turnSeat || null,
     matchEnd: r.matchEnd || null, reactSecs: r.reactSecs || 5, escrowSalt: r.escrowSalt || token(),
     helperPolicy: cleanHelperPolicy(r.helperPolicy),
     chat: r.chat !== false, specChat: r.specChat !== false, started: r.started !== false, tournLock: !!r.tournLock, hasPass: !!r.hasPass, ledger: Array.isArray(r.ledger) ? r.ledger.slice(-800) : [],
     timeCalled: !!r.timeCalled, watchers: [],
-    boardMode: r.boardMode === 'classic' ? 'classic' : 'structured', refHash: (typeof r.refHash === 'string' && r.refHash) ? r.refHash : null,
+    boardMode: r.boardMode === 'classic' ? 'classic' : 'structured', refHash: (typeof r.refHash === 'string' && r.refHash) ? passUpgrade(r.refHash) : null,
     tableSetup: r.boardMode === 'classic' && r.tableSetup === true,   // srv-2.6.44: re-validated as the create path stores it
     tableLayout: (r.boardMode === 'classic' && r.tableLayout === 'large') ? 'large' : null,   // srv-2.6.46: re-validated the same way
     matchMins: (mm >= 5 && mm <= 600) ? mm : 0,
@@ -2078,8 +2301,9 @@ function restore(){
     const data = JSON.parse(fs.readFileSync(STORE, 'utf8'));
     let n = 0;
     for(const r of data){
-      if(!r || !r.name || rooms.has(r.name)) continue;
-      rooms.set(r.name, roomUnsnap(r));   // srv-2.6.43: see roomSnap / roomUnsnap
+      const room = (r && r.name) ? roomUnsnap(r) : null;   // srv-2.6.47: keyed by the CLEANED name -- join looks up rooms.get(cleanName(m.room)); a room stored as 'The "Club"' answered 'No such room.' after the restart
+      if(!room || !room.name || rooms.has(room.name)) continue;
+      rooms.set(room.name, room);   // srv-2.6.43: see roomSnap / roomUnsnap
       n++;
     }
     if(n) console.log('[boot] restored ' + n + ' room(s) from disk — token rejoin works as usual');
@@ -2117,11 +2341,25 @@ function loadSaves(){
   try{
     if(!fs.existsSync(SAVES)) return;
     const data = JSON.parse(fs.readFileSync(SAVES, 'utf8'));
-    if(Array.isArray(data)) for(const s of data){ if(s && s.name){ if(!s.touchedAt) s.touchedAt = s.savedAt || Date.now(); saves.set(s.name, s); } }   // H1-e: legacy saves (pre-2.6.18) get their TTL clock backfilled from savedAt
+    if(Array.isArray(data)) for(const s of data){ if(s && s.name){ if(!s.touchedAt) s.touchedAt = s.savedAt || Date.now(); saves.set(s.name, saveUnsnap(s)); } }   // H1-e: legacy saves (pre-2.6.18) get their TTL clock backfilled from savedAt
     if(saves.size) console.log('[boot] loaded ' + saves.size + ' saved match(es)');
   }catch(err){ console.log('[boot] could not load saved matches: ' + err.message); }
 }
 loadSaves();
+passBootDone();   // srv-2.6.50: both files are in -- write them now if an old hash was wrapped
+/* srv-2.6.47 (the independent review): a save written under older rules is cleaned as it loads -- player names as
+   cleanName (loadMatch matches them against the cleaned name of whoever loads, so 'Ann "A"' could no longer reclaim
+   her seat), and each board through sanitizePub again (the clans and ids of a srv-2.6.46 save kept their quotes). */
+function saveUnsnap(s){
+  s.passHash = passUpgrade(s.passHash);                   // srv-2.6.50: an old hash is wrapped, the same as the room's (the group rule needs the two equal)
+  if(Array.isArray(s.players)) s.players.forEach(sp => {
+    if(!sp) return;
+    sp.name = cleanName(sp.name);
+    if(sp.pub) sp.pub = sanitizePub(sp.pub, false);
+    if(sp.pubOwn) sp.pubOwn = sanitizePub(sp.pubOwn, true);
+  });
+  return s;
+}
 /* a self-contained snapshot of a started game, including every seat's public board */
 function buildSave(room, name){
   return {
@@ -2135,8 +2373,10 @@ function buildSave(room, name){
     helperPolicy: room.helperPolicy || null,
     chat: room.chat !== false, specChat: room.specChat !== false, tournLock: !!room.tournLock,
     ledger: (room.ledger || []).slice(-800),
-    players: room.players.filter(q => !q.vacant).map(q => ({
+    boardMode: room.boardMode === 'classic' ? 'classic' : 'structured', tableSetup: !!room.tableSetup || undefined, tableLayout: room.tableLayout || undefined,   // srv-2.6.48: the board style the boards were laid out in (a Classic save loaded into a Structured lobby drew on the wrong board)
+    players: room.players.map(q => ({   // srv-2.6.48: vacant seats kept (marked) -- dropping them renumbered the seats and the saved turnSeat could point past the table
       name: q.name, seatPick: q.seatPick || null, vp: q.vp || 0, out: !!q.out, muted: !!q.muted,
+      vacant: !!q.vacant || undefined, vpSeat: q.vpSeat || undefined,   // srv-2.6.48
       game: q.game || null, pub: q.pub || null, pubOwn: q.pubOwn || q.pub || null,
       handBlob: q.handBlob || null
     }))
@@ -2148,7 +2388,7 @@ function saveList(room){
     .filter(s => s.passHash === room.passHash)
     .sort((a, b) => b.savedAt - a.savedAt)
     .map(s => ({ name: s.name, savedAt: s.savedAt, roomName: s.roomName,
-                 turn: s.turnSeat || 1, players: (s.players || []).map(q => q.name) }));
+                 turn: s.turnSeat || 1, players: (s.players || []).filter(q => !q.vacant).map(q => q.name) }));   // srv-2.6.48: an open seat is nobody's
 }
 
 /* Match clocks: call time once when a room's clock runs out */
@@ -2172,7 +2412,7 @@ srv.listen(PORT, CFG.bind || undefined, () => {         // H1-a: --bind 127.0.0.
   console.log('  Images:   ' + IMAGES_DIR + '  (optional -- served at /images/<file> when present; see Settings \u2192 "Check a local images folder")');
   if(CFG.srvPassHash)   console.log('  Door:     --server-pass is ON (hello/create/join require it)');
   if(CFG.adminPassHash) console.log('  Admin:    --admin-pass is ON' + (CFG.createPolicy === 'admin' ? ' (room creation is admin-only)' : ''));
-  if(CFG.trustProxy)    console.log('  Proxy:    --trust-proxy is ON (CF-Connecting-IP/X-Forwarded-For believed from loopback)');
+  if(CFG.trustProxy)    console.log('  Proxy:    --trust-proxy' + (CFG.trustProxy === 'xff' ? ' xff is ON (the rightmost X-Forwarded-For believed from loopback; CF-Connecting-IP ignored)' : ' is ON (CF-Connecting-IP, else the rightmost X-Forwarded-For, believed from loopback)'));
   if(CFG.bind) console.log('  Bind:     --bind ' + CFG.bind + (CFG.bind === '127.0.0.1' || CFG.bind === '::1' ? '  (loopback only -- LAN addresses below are NOT served)' : ''));
   const ifs = os.networkInterfaces();
   if(!CFG.bind || CFG.bind === '0.0.0.0' || CFG.bind === '::') Object.keys(ifs).forEach(k => (ifs[k] || []).forEach(a => {

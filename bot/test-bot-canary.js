@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================================
-   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.0.0
+   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.2.0
    ----------------------------------------------------------------------------
    PROTOCOL.md §12 is the authoritative, "frozen" bot contract. Three things
    must agree at all times: (1) what §12 DOCUMENTS, (2) what the CLIENT
@@ -19,6 +19,11 @@
 
    No server, no network, sub-second. Run it in the gate battery alongside
    the bot regression suite (see CLAUDE.md / SKILLS.md's gate list).
+   v1.1.0 (3 Nov 2026, client v2.6.171): section 6 -- the bot-emitted lines the bot project
+   asked main to record (the docs-diet handoff of 20 Oct, bot v0.6.213-215).
+   v1.2.0 (11 Nov 2026, client v2.6.174): section 7 -- bot v0.6.217's lines (V5 wave 4, the
+   handoff of 3 Nov): Change of Target, the polling-step abstain, an action that burns a card in
+   play, the rush line's new granting cards, and the shapes the wave reuses.
    ========================================================================== */
 
 const fs = require('fs');
@@ -157,6 +162,194 @@ ok(sec12.includes('reduces the bleed by N.'), 'PROTOCOL \u00a712 documents the c
 ['(bot) is in DEBUG mode', '(bot) leaves DEBUG mode'].forEach(tag => ok(sec12.includes(tag), 'PROTOCOL \u00a712 documents the bot-emitted "' + tag + '" line (the bots read it from each other since v0.6.201)'));
 ok(!!(L12.debugOn && 'Ann (bot) is in DEBUG mode: open hand for the humans (the bots look away), crypt face up.'.match(L12.debugOn)), 'bot L12.debugOn parses the documented announcement');
 ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament mode now.'.match(L12.debugOff)), 'bot L12.debugOff parses the documented exit');
+
+/* ---- 6) v2.6.171 (bot v0.6.215-216 consumed): the bot-emitted lines the bot project asked main to record -- the docs-diet
+   handoff (20 Oct: the block bar, the referendum terms, leaving torpor, Haven Uncovered, Spying Mission) and v0.6.213-215
+   (no additional strike, no strike this round, Archon Investigation, a location's intercept lock). For each: PROTOCOL
+   section 12 documents the shape, the bot's own parser reads a line built from it, and where the line changes a live bot's
+   state at once, a live bot's _onLog is fed the line and the effect is asserted (the handoffs' own suggestions). The
+   actor's stealth lines are documented but not pinned: the bot project keeps their reader (NET_STEALTH) outside its
+   frozen grammar. Em-dashes and the minus sign are written as escapes (mojibake discipline, section 3). */
+{
+  [['vampires cannot block this action.', 'the block bar (bot v0.6.127)'],
+   ['Referendum terms — CARD: NAME −3', 'the referendum terms (bot v0.6.122)'],
+   ['Referendum passes — CARD: TERMS.', 'the referendum result'],
+   ['Referendum fails — CARD: blocked.', 'the blocked referendum'],
+   ['VAMP attempts to leave torpor.', 'leaving torpor (bot v0.6.128)'],
+   ['plays Haven Uncovered — on NAME\'s VAMP.', 'Haven Uncovered placed (bot v0.6.205)'],
+   ['enters combat with NAME\'s VAMP (Haven Uncovered).', 'the rush through Haven Uncovered'],
+   ['plays Spying Mission [OBF] — the bleed is unsuccessful and burns no pool.', 'Spying Mission\'s cancel (bot v0.6.211)'],
+   ['does not take an additional strike.', 'the fourth "nothing" line (bot v0.6.213)'],
+   ['gets no strike this round (committed to CARD by its maneuver; REASON).', 'no strike this round (bot v0.6.214)'],
+   ['plays Archon Investigation — VAMP is burned (the bleed of N is not successful).', 'Archon Investigation (bot v0.6.215)'],
+   ['VAMP locks CARD: +N intercept.', 'a location\'s intercept lock (bot v0.6.215)']
+  ].forEach(([tag, what]) => ok(sec12.includes(tag), 'PROTOCOL §12 documents ' + what + ': "' + tag + '"'));
+
+  [['blockBar', 'Day Operation — vampires cannot block this action.'],
+   ['refTerms', 'Referendum terms — Kine Resources Contested: Johan −3, Bot −1.'],
+   ['refResult', 'Referendum fails — Kine Resources Contested: blocked.'],
+   ['uLeave', 'Sully attempts to leave torpor.'],
+   ['havenM', 'Ann plays Haven Uncovered — on Johan\'s Lisa Noble.'],
+   ['havenRush', 'Gilbert enters combat with Johan\'s Lisa Noble (Haven Uncovered).'],
+   ['spyNull', 'Gilbert plays Spying Mission [OBF] — the bleed is unsuccessful and burns no pool.'],
+   ['attempt', 'Gilbert attempts to block.'],
+   ['interceptPlay', 'Gilbert plays Eagle\'s Sight: +1 intercept.'],
+   ['attemptIcp', 'Gilbert attempts to block with +1 intercept (Second Tradition).']
+  ].forEach(([k, line]) => ok(!!(L12[k] && line.match(L12[k])), 'bot L12.' + k + ' parses a line built from the documented shape: "' + line + '"'));
+
+  const { Bot } = require('./elysium-bot.js');
+  const B = s => '<b>' + s + '</b>';
+  const mk6 = extra => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Bot', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} });
+    u.seat = 2; u.started = true; u.send = () => {}; u.push = () => {};
+    u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Bot', bot: true }, { seat: 3, name: 'Ann', bot: true }];
+    return Object.assign(u, extra || {}); };
+  const inCombat = () => { const me = { id: 'm1', name: 'Sully', kind: 'crypt', zone: 'ready', blood: 4, cap: 4 };
+    return { _inCombat: true, _combatOppName: 'Gilbert', _combatMyVamp: me, board: [me], _rnd: {} }; };
+  let u;
+
+  u = mk6(); u._onLog('Ann', B('Day Operation') + ' — vampires cannot block this action.');
+  ok(!!(u._blockBar && u._blockBar.card === 'Day Operation' && u._blockBar.bar === 'vampires' && u._blockBar.who === 'Ann'), 'a live bot hears another seat\'s block bar: Day Operation, vampires');
+
+  u = mk6(); u._onLog('Ann', 'Referendum terms — ' + B('Kine Resources Contested') + ': Johan −3, Bot −1.');
+  ok(!!(u._refT && u._refT.deltas && u._refT.deltas[2] === -1 && u._refT.deltas[1] === -3), 'a live bot reads its own stake from the terms line (Bot −1, Johan −3)');
+
+  u = mk6({ pending: { who: 'Ann', amount: 3, actingVampName: 'Gilbert' } });
+  u._onLog('Ann', B('Gilbert') + ' plays ' + B('Spying Mission') + ' [OBF] — the bleed is unsuccessful and burns no pool.');
+  ok(u.pending.amount === 0 && u.pending.nullified === true, 'a live bot being bled for 3 hears Spying Mission\'s cancel: 3 -> 0, nullified');
+
+  u = mk6(); u._onLog('Ann', B('Ann') + ' plays ' + B('Haven Uncovered') + ' — on ' + B('Johan') + '\'s ' + B('Lisa Noble') + '.');
+  ok(!!(u._havenSeen && u._havenSeen['Lisa Noble'] && u._havenSeen['Lisa Noble'].owner === 'Johan'), 'a live bot records the host of Haven Uncovered (Johan\'s Lisa Noble)');
+
+  u = mk6(inCombat()); u._onLog('Ann', 'Ann combat — Gilbert does not take an additional strike.');
+  { const e = u.ev && u.ev.last('extra-strike'); ok(!!(e && e.none === true && e.vamp === 'Gilbert'), 'a live bot in combat types "does not take an additional strike." as an extra-strike event with none: true'); }
+
+  u = mk6(inCombat()); u._onLog('Ann', B('Gilbert') + ' gets no strike this round (committed to ' + B('Ivory Bow') + ' by its maneuver; Immortal Grapple).');
+  { const s = u._oppStrike; ok(!!(s && s.dealt === 0 && !s.dodge && !s.ends && s.vamp === 'Gilbert'), 'a live bot in combat takes "gets no strike this round" as the opponent\'s strike: dealt 0, no dodge, no combat ends'); }
+
+  u = mk6(); u._onLog('Ann', B('Gilbert') + ' plays ' + B('Dummy Card') + '.');
+  ok(!!(u._obs && u._obs.who === 'Ann'), 'control: an ordinary play line from Ann enters the bot\'s action memory');
+  u = mk6(); u._actingVamp = { v: { name: 'Sully' }, n: 4, played: new Set(), target: 3 };
+  u._onLog('Ann', B('Ann') + ' plays ' + B('Archon Investigation') + ' — ' + B('Sully') + ' is burned (the bleed of 4 is not successful).');
+  ok(!!(u._actingVamp.archoned && u._actingVamp.archoned.by === 'Ann' && u._actingVamp.archoned.n === 4), 'a live bot bleeding with Sully hears Archon Investigation: archoned { by: Ann, n: 4 }');
+  ok(!(u._obs && u._obs.who === 'Ann'), '...and the line is not taken as an action of Ann\'s (the action memory stays empty)');
+
+  u = mk6(); const icp0 = u._opp(3).icpSum | 0;
+  u._onLog('Ann', B('Gilbert') + ' locks ' + B('Channel 10') + ': +1 intercept.');
+  { const e = u.ev && u.ev.last('intercept'); ok(!!(e && e.lock === true && e.n === 1 && e.card === 'Channel 10'), 'a live bot types the location\'s lock as an intercept event (lock: true, +1, Channel 10)'); }
+  ok((u._opp(3).icpSum | 0) === icp0 + 1, 'and adds the +1 to that seat\'s intercept in its model of the opponent');
+}
+
+/* ---- 7) v2.6.174 (bot v0.6.217-218 consumed): bot v0.6.217's lines, V5 wave 4 (bot/docs/handoffs/HANDOFF-to-main-
+   2026-11-03-v0_6_217.md section 2) -- Change of Target (the bot's line and a human's play line), the polling-step abstain
+   in both shapes, an action that burns a card in play, the rush line's two new granting cards, and the shapes the wave
+   reuses (the Grand Ball's block bar, a combat ended before range, a title referendum's terms). Change of Target and the
+   abstain are module constants of the bot's grammar, not in L12: their readers are the bot's own classifier (the event a
+   live bot's _onLog records) and the live state change. The apostrophes are load-bearing and pinned both ways: the
+   abstain line keeps the card names' straight ' (a U+2019 spelling is not read), the owner's burn line and the
+   before-range combat end carry U+2019. Em-dashes and U+2019 are written as escapes (section 3's discipline). */
+{
+  [['plays Change of Target — unlocks; the action ends unsuccessfully.', 'Change of Target, the bot\'s line (bot v0.6.217)'],
+   ['VAMP plays Change of Target.', 'Change of Target, a human\'s play line'],
+   ['plays Scalpel Tongue [LVL] — NAME\'s VAMP is locked[, burns 1 blood] and abstains (N votes cancelled).', 'the abstain, Scalpel Tongue'],
+   ['locks: Saulot\'s Guiding Wisdom — NAME\'s VAMP abstains (N votes cancelled).', 'the abstain, Saulot\'s Guiding Wisdom'],
+   ['takes an action to burn NAME\'s CARD.', 'an action that burns a card in play'],
+   ['burns CARD (VAMP’s action).', 'the owner\'s burn line (U+2019)'],
+   ['enters combat with NAME\'s VAMP (Saulot\'s Avenging Fist).', 'the rush granted by Saulot\'s Avenging Fist'],
+   ['(Regent).', 'the rush granted by a Regent'],
+   ['Toreador Grand Ball — minions cannot block this action.', 'the Grand Ball\'s block bar'],
+   ['Combat ends — Saulot’s Guiding Wisdom.', 'a combat ended before range (U+2019)'],
+   ['Referendum terms — Toreador Justicar: VAMP takes the title (Justicar, 3 votes).', 'a title referendum\'s terms']
+  ].forEach(([tag, what]) => ok(sec12.includes(tag), 'PROTOCOL §12 documents ' + what + ': "' + tag + '"'));
+
+  { const m = 'Gilbert takes an action to burn Bot\'s Toreador Grand Ball.'.match(L12.burnAct || /$^/);
+    ok(!!m && m[1] === 'Gilbert' && m[2] === 'Bot' && m[3] === 'Toreador Grand Ball', 'bot L12.burnAct reads the actor, the owner and the card'); }
+  [['Saulot\'s Avenging Fist', 'Saulot\'s Avenging Fist'], ['Regent', 'Regent'], ['Haven Uncovered', 'Haven Uncovered']].forEach(([card, want]) => {
+    const m = ('Gilbert enters combat with Bot\'s Sully (' + card + ').').match(L12.havenRush || /$^/);
+    ok(!!m && m[4] === want && m[3] === 'Sully' && m[2] === 'Bot', 'bot L12.havenRush reads the granting card: (' + card + ')');
+  });
+  { const m = 'Toreador Grand Ball — minions cannot block this action.'.match(L12.blockBar || /$^/);
+    ok(!!m && m[1] === 'Toreador Grand Ball' && m[2] === 'minions', 'bot L12.blockBar reads the Grand Ball\'s bar (minions)'); }
+  { const m = 'Combat ends — Saulot’s Guiding Wisdom.'.match(L12.combatEnds || /$^/);
+    ok(!!m && m[1] === 'Saulot’s Guiding Wisdom', 'bot L12.combatEnds reads a combat ended before range'); }
+  ok(CLIENT.includes("cardRefCap(a)+' plays '+cardRef(c)+_mt+'.'"), 'client source still names the selected vampire (the anchor) in its card-play line (the fragment a human\'s Change of Target rides on)');
+
+  const { Bot, sayIdx } = require('./elysium-bot.js');
+  const B = s => '<b>' + s + '</b>', CL = (id, s) => '<b class="clog" data-cid="' + id + '">' + s + '</b>';
+  const strip = s => String(s).replace(/<[^>]*>/g, '');
+  const mk7 = () => { const sent = []; const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Bot', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} });
+    u.seat = 2; u.started = true; u.send = m => sent.push(m); u.push = () => {};
+    u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Bot', bot: true }, { seat: 3, name: 'Ann', bot: true }];
+    u._sent = sent; return u; };
+  const vamp = (id, name, locked) => ({ id, name, kind: 'crypt', zone: 'ready', blood: 4, cap: 4, locked: !!locked });
+  const saidPass = u => u._sent.some(m => m && m.t === 'say' && m.i === sayIdx('Pass'));
+  let u, me;
+
+  /* Change of Target */
+  u = mk7(); u._myBlockOf = { vamp: 'Gilbert', at: Date.now() };
+  u._onLog('Ann', B('Gilbert') + ' plays ' + B('Change of Target') + ' — unlocks; the action ends unsuccessfully.');
+  ok(!!(u._cotCancel && u._cotCancel.vamp === 'Gilbert'), 'a live bot that blocked Gilbert hears his Change of Target: the combat it began is cancelled');
+  { const e = u.ev && u.ev.last('cot'); ok(!!(e && e.vamp === 'Gilbert'), 'and its classifier types the line as a cot event (Gilbert)'); }
+  me = vamp('m1', 'Sully', true); u.board = [me]; u._combatOppName = 'Gilbert';
+  ok(typeof u._cotHit === 'function' && u._cotHit(me) === true && me.locked === false, 'at its first combat step the blocker learns the combat never began, and unlocks');
+  u = mk7(); u._myBlockOf = { vamp: 'Lisa Noble', at: Date.now() };
+  u._onLog('Johan', CL('c1', 'Lisa Noble') + ' plays ' + CL('c9', 'Change of Target') + '.');
+  ok(!!(u._cotCancel && u._cotCancel.vamp === 'Lisa Noble'), 'a human\'s plain play line (the client\'s markup) is read the same way');
+  u = mk7(); u._myBlockOf = { vamp: 'Lisa Noble', at: Date.now() };
+  u._onLog('Johan', CL('c1', 'Lisa Noble') + ' plays ' + CL('c9', 'Change of Target') + '. Target: ' + B('Bot') + '\'s ' + B('Sully') + '.');
+  ok(!!(u._cotCancel && u._cotCancel.vamp === 'Lisa Noble'), '...and with the client\'s Target suffix');
+  u = mk7(); u._myBlockOf = { vamp: 'Gilbert', at: Date.now() };
+  u._onLog('Ann', B('Rafael') + ' plays ' + B('Change of Target') + ' — unlocks; the action ends unsuccessfully.');
+  ok(!u._cotCancel, 'control: a Change of Target by a vampire this bot did not block cancels nothing');
+
+  /* the polling-step abstain */
+  u = mk7(); me = vamp('m1', 'Sully'); u.board = [me];
+  u._onLog('Ann', B('Gilbert') + ' plays ' + B('Scalpel Tongue') + ' [CEL] — Bot\'s ' + B('Sully') + ' is locked, burns 1 blood and abstains (2 votes cancelled).');
+  ok(me.locked === true && me.blood === 3, 'a live bot whose Sully is named in Scalpel Tongue [CEL]\'s abstain locks him and burns 1 blood (4 -> 3)');
+  { const e = u.ev && u.ev.last('abstain'); ok(!!(e && e.owner === 'Bot' && e.vamp === 'Sully' && e.card === 'Scalpel Tongue' && e.n === 2 && e.burn === 1), 'and types it as an abstain event (Bot\'s Sully, Scalpel Tongue, 2 votes, burn 1)'); }
+  u = mk7(); me = vamp('m1', 'Sully'); u.board = [me];
+  u._onLog('Ann', B('Gilbert') + ' plays ' + B('Scalpel Tongue') + ' [pre] — Bot\'s ' + B('Sully') + ' is locked and abstains (1 vote cancelled).');
+  ok(me.locked === true && me.blood === 4, 'Scalpel Tongue [pre] (inferior, 1 vote): locked, no blood burned');
+  u = mk7(); me = vamp('m1', 'Sully'); u.board = [me];
+  u._onLog('Ann', B('Rafael') + ' locks: ' + B('Saulot\'s Guiding Wisdom') + ' — Bot\'s ' + B('Sully') + ' abstains (3 votes cancelled).');
+  { const e = u.ev && u.ev.last('abstain'); ok(!!(e && e.card === 'Saulot\'s Guiding Wisdom' && e.n === 3 && e.burn === 0) && me.locked === false && me.blood === 4, 'Saulot\'s Guiding Wisdom\'s abstain is read (3 votes) and neither locks nor burns the voter\'s vampire'); }
+  u = mk7(); me = vamp('m1', 'Sully'); u.board = [me];
+  u._onLog('Ann', B('Rafael') + ' locks: ' + B('Saulot’s Guiding Wisdom') + ' — Bot\'s ' + B('Sully') + ' abstains (3 votes cancelled).');
+  ok(!(u.ev && u.ev.last('abstain')), 'the straight apostrophe is load-bearing: Saulot’s Guiding Wisdom spelled with U+2019 is not read as an abstain');
+  u = mk7(); me = vamp('m1', 'Sully'); u.board = [me];
+  u._onLog('Ann', B('Gilbert') + ' plays ' + B('Scalpel Tongue') + ' [CEL] — Johan\'s ' + B('Sully') + ' is locked, burns 1 blood and abstains (2 votes cancelled).');
+  ok(me.locked === false && me.blood === 4, 'control: the abstain of another Methuselah\'s Sully leaves this bot\'s Sully alone');
+
+  /* an action that burns a card in play */
+  const ball = () => ({ id: 'm7', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', faceDown: false, locked: false, blood: 0 });
+  u = mk7(); let gb = ball(); u.board = [vamp('m1', 'Sully', true), gb];
+  u._onLog('Ann', B('Gilbert') + ' takes an action to burn ' + B('Bot') + '\'s ' + B('Toreador Grand Ball') + '.');
+  ok(gb.zone === 'ash' && saidPass(u), 'a live bot with no minion to block says Pass and burns its Toreador Grand Ball');
+  ok(u._sent.some(m => m && m.t === 'log' && strip(m.html) === 'Bot burns Toreador Grand Ball (Gilbert’s action).'), 'and writes the owner\'s line as documented: "Bot burns Toreador Grand Ball (Gilbert’s action)."');
+  { const e = u.ev && u.ev.last('burn-card'); ok(!!(e && e.vamp === 'Gilbert' && e.owner === 'Bot' && e.card === 'Toreador Grand Ball'), 'its classifier types the action as a burn-card event'); }
+  u = mk7(); gb = ball(); u.board = [vamp('m1', 'Sully'), gb];
+  u._onLog('Ann', B('Gilbert') + ' takes an action to burn ' + B('Bot') + '\'s ' + B('Toreador Grand Ball') + '.');
+  { const p = u.pending; ok(gb.zone === 'ready' && !!(p && p.sub === 'burnCard' && p.burnCard === 'Toreador Grand Ball' && p.actingVampName === 'Gilbert'), 'with an unlocked minion it opens its block window on the action instead (the card stays in play)'); }
+
+  /* the rush line's new granting cards: Haven's terms */
+  [['Saulot\'s Avenging Fist', 'grant'], ['Regent', 'grant'], ['Haven Uncovered', 'haven']].forEach(([card, via]) => {
+    u = mk7(); u.board = [vamp('m1', 'Sully'), vamp('m2', 'Ozmo')];
+    u._onLog('Ann', B('Gilbert') + ' enters combat with ' + B('Bot') + '\'s ' + B('Sully') + ' (' + card + ').');
+    const p = u.pending;
+    ok(!!(p && p.kind === 'rush' && p.via === via && p.card === card && p.noLock === true && p.targetActs === false && p.rushTarget === 'Sully'), 'a live bot rushed through ' + card + ' opens a block window on Haven\'s terms (via ' + via + ', the host does not lock, the rusher acts)');
+  });
+  u = mk7(); me = vamp('m1', 'Sully'); u.board = [me];
+  u._onLog('Ann', B('Gilbert') + ' enters combat with ' + B('Bot') + '\'s ' + B('Sully') + ' (Saulot\'s Avenging Fist).');
+  ok(saidPass(u) && me.locked === false, 'with nobody else to block it says Pass and its Sully fights unlocked');
+
+  /* the reused shapes */
+  u = mk7(); u._onLog('Ann', B('Toreador Grand Ball') + ' — minions cannot block this action.');
+  ok(!!(u._blockBar && u._blockBar.card === 'Toreador Grand Ball' && u._blockBar.bar === 'minions' && u._blockBar.who === 'Ann'), 'a live bot hears the Grand Ball\'s bar: minions cannot block the action that follows');
+  u = mk7(); u._inCombat = true; u._combatOppName = 'Gilbert'; u._rnd = {}; let woke = null; u._maneuverWaiter = r => { woke = r; };
+  u._onLog('Ann', 'Combat ends — ' + B('Saulot’s Guiding Wisdom') + '.');
+  ok(!!(woke && woke.ended === true) && u._oppEndedCombat === true, 'a live bot waiting for the acting minion\'s first line is woken by a combat ended before range');
+  u = mk7(); u._onLog('Ann', 'Referendum terms — ' + B('Toreador Justicar') + ': Gilbert takes the title (Justicar, 3 votes).');
+  ok(!!(u._refT && u._refT.card === 'Toreador Justicar') && (u._refT.deltas[2] | 0) === 0, 'a live bot reads a title referendum\'s terms with a stake of 0');
+}
 
 console.log('\n' + passN + '/' + failN + (failN ? ' \u2014 FAIL' : ' \u2014 all green'));
 process.exit(failN ? 1 : 0);
