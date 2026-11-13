@@ -4039,7 +4039,7 @@
      "older": -1
     }
    },
-   "note": "Crypt wave A (bot v0.6.219, RULINGS D-108): '+1 intercept against younger Lasombra and -1 intercept against older Lasombra.' -- _cryptIntercept: the acting vampire's printed clan and capacity against hers (older = strictly higher capacity, Navar's rule; the same capacity is neither); Oblivion's +1 capacity is not read as age (no ruling found)."
+   "note": "Crypt wave A (bot v0.6.219, RULINGS D-108): '+1 intercept against younger Lasombra and -1 intercept against older Lasombra.' -- _cryptIntercept: the acting vampire's printed clan and its capacity against hers (older = strictly higher capacity, Navar's rule; the same capacity is neither). v0.6.220: the capacity IN PLAY -- Johan, RULINGS D-111: a card that raises capacity makes the vampire older (Oblivion's +1; _ageCap reads _capOf)."
   },
   "Kalyani, Agent of Doom (G6)": {
    "cap": 7,

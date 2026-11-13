@@ -1,9 +1,11 @@
-# BOARD — the open asks (12 Nov 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (13 Nov 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
+- **The table's memory** (D-113): `buildPub` sends no `counters`, so a bot's Smiling Jack drains its owner and nobody pays;
+  then the bot's own tokens and a human's Grand Ball. *Done when* both rounds ship. Docs: RULINGS D-113.
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). Since v0.6.213 the bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the
   vest prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
@@ -18,7 +20,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Toreador) and the ledger (`docs/CARDS.md`) since v0.6.212; waves by effect class as the class map ranks them (D-98). Done:
   waves 1–4 (v0.6.213–217; D-99, D-103, D-104, D-106). Next: wave 5, the 18 masters in play (`spec-v5-wave3` §4), Meditative
   Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape), with the actions at a card in
-  play (steal The Rack / Powerbase: LA, burn Mob Connections) and The Coven's control passing. Then the maneuver / press grants
+  play (steal The Rack / Powerbase: LA, burn Mob Connections), The Coven's control passing, and Día de los Muertos (no polling,
+  no [obl] / [dom] vote discard: PIB 20150105, D-111). Then the maneuver / press grants
   with the rush cards, the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
   done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY`
   line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares
@@ -36,28 +39,23 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-41, D-103.
 - **V5 wave 4's riders** (`specs/spec-v5-wave4-2026-11-03.md` §4): the abstain as a reaction on another's referendum; Guiding
   Wisdom's combat end when mine is not the acting minion (a before-range handshake); a bot blocker's Crows before the actor's Change of
-  Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar);
-  a human's Ball names no pair (the bots spare all that human's Toreador). Over-strict: `_bestStrengthFor` (any strength bonus),
-  `_inPlayNorms` (my ash heap). Also Saulot's Healing Touch: FULL by the auto tier, its text unbuilt. *Done when* each is built and
-  tested, or ruled out.
+  Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar).
+  Over-strict: `_bestStrengthFor` (any strength bonus), `_inPlayNorms` (my ash heap). Also Saulot's Healing Touch: FULL by the
+  auto tier, its text unbuilt. *Done when* each is built and tested, or ruled out.
 - **V5 wave 3's riders** (`specs/spec-v5-wave3-2026-11-02.md` §4): the amber halves (Anarch Railroad and Fortune Teller Shop for
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-42, D-104.
-- **Crypt wave A's riders** (CHANGELOG v0.6.219; RULINGS D-111): Yewon's and Alexa's vote discard in a referendum that passes
-  automatically (PIB 20150105; from torpor it only cycles a card: parked for the meta layer); `peekSup` set after the block
-  decision; `_myBleedEach`'s +1 bleed; the home planners' crypt intercept; Azucena's age from the capacity in play (the
-  Oblivion card); Phaibun's discard drawn at random; the event log's discard name (it carries the line's tail); The Dowager's
-  asked window at the next human table. *Done when* each is fixed with its footprint, verified, or ruled out.
 - **The weapon's maneuver** (wave 2's second review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
   a number — the .44 Magnum has never maneuvered, so the strike-binding rules' gun halves never run. Neighbours: a weapon's strike
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait
   returns an earlier round's pending line; `_xLossSum` sums nothing. *Done when* each is fixed with a positive test and its footprint
   read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's helpsheets and Fifth
-  Edition deck guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy (D-43, O-33). *Done
-  when* a proposal — what each guide says, where it enters (`DECK_STRATEGY`, the plan, the persona), how it is measured — has
-  Johan's "kör". Docs: RULINGS D-43, O-33; `specs/spec-knowledge-layer.md`.
+  Edition deck guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy (D-43, O-33).
+  D-112: each strategy line is checked against its guide. *Done when* a proposal — what each guide says, where it enters
+  (`DECK_STRATEGY`, the plan, the persona), how it is measured — has Johan's "kör". Docs: RULINGS D-43, O-33;
+  `specs/spec-knowledge-layer.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
@@ -93,8 +91,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Main: such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. *Done when* a section shows it read.
 - **Hand names out of the console outside debug** (main, 11 Nov: the security plan's item 6): an online host can read a bot's
   console, which names hand cards. *Done when* only debug names them, section-tested.
-- **The copies and main's canary v1.2.0** (main, 3, 11 Nov; `bot/` holds v1.0.0, v2.6.162, srv-2.6.46). *Done when* a copies
-  commit brings the root's release and v1.2.0 in, both canaries green, Q4 (gate on the root's release) answered.
+- **The gates on the root's release** (Q4, main's yes of 3 Nov): the canary, the suite's
+  server and 154f, the arena, the sim and the hotseat gate read the root's client and server and `client/`'s protocol, the copies
+  go, STATUS pins the main commit. *Done when* every gate reads the root and CI is green on it.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.
 - **Steal pair under a combat ends**: the stealer's side does not apply v0.6.196's rule when the victim's Majesty ends the combat.
   *Done when* `ana-ledger.py` prints equal pairs on a smoke with that case. Docs: RULINGS O-12.
@@ -137,6 +136,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The §8 law for the meta layer** (their item 3): a term equal for every option cannot change the choice; `_tableThreat()` is only
   traced today and must enter where options name different seats (the bounce target, the rush target, the voter and the terms,
   keep-a-blocker / block-or-pass), from ONE shared seat valuation. *Done when* the meta layer's first consumer reads it there.
+- **Yewon's and Alexa's torpor use** (D-111): no vote from torpor, but a card cycled. *Done when* the meta layer prices a card
+  against a random draw.
 - **Meta metrics at decision level, on padded decks** (their item 4): flip rate, a fork audit (does the option list hold opposite
   choices?), the vote-direction split, wrong-target audits, did-it-run counters, on a table padded with the cards a rule needs;
   an audit needs a known case before an alarming number is believed. *Done when* the meta layer's first bench reports them.
@@ -148,21 +149,23 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **A held master counts as played** (6 Nov): `gen-card-ledger.js` and `ana-cards.py` count every `master-play` pick, held ones
   too (Grand Ball: 407 picks, 68 plays), so a master always held reads playable. *Done when* both count a master only when played:
   its own row, or gone from the hand the next decide row carries (no bot change; Villein's own decide comes first).
-- **The hotseat table runs out most bot-vs-bot reaction windows** (29 Oct; v0.6.211 too): on a pace-0 sim series 403 of 467 bleed
-  totals and 101 of 125 modifier windows RAN OUT, 369 `stale-answer` rows (bot Passes); the server arena read 0 of 82 (v0.6.207). The
-  sim matches the real-clock hotseat table decision for decision, so this may be what an offline table does. *Done when* a `--real`
-  hotseat match and a browser table say whether bot answers are lost there, and the cause is fixed or the gate restated per table.
-  Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
-- **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215's
-  design, match 74, a DIVERGED game; none on v0.6.214's). *Done when* the race is found or a series shows it gone.
+- **The hotseat table runs out most bot-vs-bot reaction windows** (29 Oct; v0.6.211 too): 403 of 467 bleed totals and 101 of 125
+  modifier windows on a pace-0 sim series (the server arena: 0 of 82); the sim matches the real-clock hotseat table. *Done when* a
+  `--real` hotseat match and a browser table say whether bot answers are lost there, and it is fixed or the gate restated per
+  table. Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
+- **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
+  match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
-  vampire, a target) show their END state (found 29 Oct; `ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
+  vampire, a target) show their END state (`ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
+- **The survivor plays on at an empty table** (13 Nov): after the last oust the winner finishes its turn, bleeding itself
+  (`preySeat()`); its pool checker books it (v0.6.220's invariants flag). *Done when* the turn ends there.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.
 - **The 14 Oct playtest scenario** (`client/playtest/`, `--dir` on a scratch copy of the root with the bot branch) not re-run since
-  v0.6.207; **the larger re-measure** against a v0.6.207 baseline (every arena number before v0.6.206 carries ~3 s of dead clock
-  per bleed total). *Done when* both reports exist with the sim as the first read.
+  v0.6.207; **the larger re-measure** against a v0.6.207 baseline (older arena numbers carry ~3 s of dead clock per
+  bleed total); at that table also The Dowager's +1 in a human's directed action (D-111). *Done when* both reports exist with
+  the sim as the first read.
 - **Forecast calibration** (`gen-forecast-calibration.js`) not re-run since 18 Sep; the seed of the abstract model's calibration
   gate. *Done when* it runs on a sim series and the ratio is reported.
 - **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) unconsumed; v0.6.207's R-38 (negative stealth /

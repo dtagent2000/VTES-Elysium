@@ -32,6 +32,106 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.220 (13 Nov 2026)** — Crypt wave A's riders (Johan's "kör" of 13 Nov on Claude's summary of 12 Nov; RULINGS D-111), built
+  on #64 (merged the same day).
+  - *Revelations' form before the decision* (the graded readings' finding): `_armPending(..., extra)` sets the given fields before
+    `_reactWindow`, and both peek parsers pass `{ peekSup, actorName }` — the block decision taken in the announce's tick read the
+    form a line late, so Castellan and The Dowager got 0 on every Revelations.
+  - *The bleed forecast* (`_myBleedEach`): a plain bleed carries the crypt's +1 — all twelve `bleedBonus` vampires: Lenny since
+    v0.6.80, wave A's eleven since v0.6.219 (Catalina Vega, Kamile Paukstys, Kasim Bayar, Marchesa Liliana, Mora, Nonu Dis,
+    Sreelekha, Aaradhya, Agnieszka, Ashur-uballit, Huldu); a card's n had it already (`_bestBleedCardFor`).
+  - *The who-stays-home planners* (`_blockerWorth`, `_priceHome`, `_critPool`, `_strategize`, `_actAgainCtx`) count
+    `_cryptIntercept(v, 'bleed')`: The Dowager, Martina, Rinaldo, Castellan, Branimira, and Christine Boscacci's −1 (in `hacking`,
+    which no series measured).
+  - *Age from the capacity in play* (D-111 (4)): `_ageCap` reads `_capOf` (Oblivion's +1) for Azucena's `_actorAgeVs` and Navar
+    McClaren's `_cryptCannotBlock` (which now gets the pending to find the actor's card; all six callers pass it); Azucena's curated
+    note says so (the compile changed that note alone). After the egress review also the third age reader, Govern the Unaligned's
+    younger target (`_bestBloodStockFor`: an Oblivion's +1 opens an equal-capacity uncontrolled vampire).
+  - *"At random" is random* (D-111 (5)): `_rand`, one mulberry32 PRNG per bot, seeded by `o.rngSeed` where a table pins it and by
+    the platform's entropy everywhere else (Node's `crypto`, Web Crypto) — never `Math.random`, which the sim table seeds for its
+    deal; Phaibun's `_randomHandIndex` draws from it (it was a hash of the state). Hotseat tool v1.4.1: every sim bot's `rngSeed`
+    from the table's seed and its seat, so a draw repeats with the spec (no sim match of the round reached a random discard: Phaibun
+    never dodged); `lab-probe.js` v1.0.1 seeds its bots per table and seat the same way. After the egress review the clock's
+    last-resort seed (no Node `crypto`, no Web Crypto) mixes a per-load counter: the float product `Date.now() * 2654435761` left
+    its low 19 bits 0, and two bots made in one millisecond shared a seed.
+  - *The event log*: "NAME discards CARD at random to strike: dodge." types CARD (the specific shape before the generic one); after
+    the egress review the bot's five other discard lines too (the vote discard, the bleed boost, the law discard, the Revelations
+    discard, the hand-size expiry), while a card name with its own dash or parenthesis (Bang Nakh — Tiger's Claws, Khazar's Diary
+    (Endless Night)) stays whole.
+  - *Ruled out:* the [obl] / [dom] vote discard in an automatically passing referendum (PIB 20150105) — the one card in our decks
+    that makes one, Día de los Muertos, is unmodelled; it rides with Día's wave (BOARD). *Parked:* Yewon's and Alexa's torpor use (a
+    card cycled, no vote; D-111) for the meta layer; The Dowager's asked window for the next human table.
+  - *The copies* (BOARD's copies line, main's replies of 3 and 11 Nov): `bot/`'s read-only copies refreshed to the root's release
+    (client v2.6.174, srv-2.6.50, the protocol of v2.6.174) and main's canary v1.2.0 in (143/0); the 240-match design IDENTICAL
+    against the old copies with the client's version string normalized. Q4's switch to the root (main's yes) is a BOARD line.
+  - *Tests*: suite section 164, 11 checks. 164a–f, one per rider, each through its own path (the event classifier, the draws, the
+    intercept and the cannot-block reads, the announce line through `_onLog`, the forecast, the planners): on each step's bytes 0/6,
+    3/3, 4/2, 5/1, 6/0. 164g–k, the egress review's (the five discard tails; the PRNG outside Node, Web Crypto and the clock's
+    fallback, in a browser sandbox; Govern's age through `_bestBloodStockFor`; Navar through `_pickBlocker` with an Oblivion on the
+    actor's pub card; The Dowager through `_priceHome`). The section on v0.6.219: 0/11; on the bytes before the fix pass
+    (`9ab3942c`): 8/3 (164g, the fallback half of 164h, 164i); on the release bytes: 11/0.
+  - *Footprints, step by step on the 240-match design:* the first three riders IDENTICAL 240 (the Ravnos and Lasombra V5 series
+    IDENTICAL 12); Revelations' form SAME-PLAY 7 (Nosferatu's block decisions on a peek read The Dowager's +1 — none crossed its
+    bar); the forecast DIVERGED 22; the planners DIVERGED 52; the copies IDENTICAL; the egress fix pass IDENTICAL on every spec
+    against the bytes before it (the 240 design, the V5 smoke's 14 series, the 600 deals: Govern's age reader met no
+    Oblivion-carrying stocker, and the other fixes reach no decision).
+  - *Predictions, registered before the runs (D-93; committed in 2acb7f5, word for word):* (1) the event log's random-discard line,
+    a seeded PRNG per bot for "at random" (Phaibun), and the age rule read from the capacity in play (Azucena, Navar McClaren) leave
+    the 240-match client design IDENTICAL to v0.6.219 (no starter carries Phaibun, Azucena or Navar); the V5 smoke moves only where
+    those three vampires act. (2) Revelations' form known at the announce: the 240 design diverges only where The Dowager may block
+    a Malkavian's Revelations, each such match first at a block decision on a peek. (3) The bleed forecast with the crypt's +1 bleed
+    (Lenny) and (4) the home planners with the crypt's intercept (The Dowager) move Nosferatu's plan: the 240 design diverges where
+    Nosferatu plans, first at decisions that read the forecast or the guard. (5) Together: Nosferatu's VP on the 240 design paired
+    against v0.6.219 not wholly below 0 (95 %); Toreador on the 600 fresh deals within 0.68-0.98 VP and paired against v0.6.219 not
+    wholly below 0; `ana-gates.py` PASS on every series. Falsified if any part fails.
+  - *What came out* (`9ab3942c` against v0.6.219's runs, `7820e7c2`, version strings normalized; the release bytes `a8a963b1` are
+    IDENTICAL to `9ab3942c` on every spec, above): (1) the first three riders IDENTICAL 240 on the design; the Ravnos and Lasombra
+    series (Phaibun's and Azucena's decks; Navar plays only in `hacking`) IDENTICAL 12: **held**. (2) Revelations' form changed only
+    block decisions on a peek, all Nosferatu's (SAME-PLAY 7), none across its bar, so no match diverged: **held** — the read itself
+    is 164d's, not a match's. (3)–(4) DIVERGED 68 of 240 on the release bytes: 57 first at a Nosferatu decision or play (the action
+    14, hunt or bleed 14, a block 9, the bleed target 7, a card 8, Vessel's drain 4, a master 1), the other 11 at another deck's
+    block, stealth spend or drain after Nosferatu's plan row had changed (its guard read, rounds 4–5; in two the posture race →
+    hold): **held**. (5) Nosferatu paired −0.01 [−0.09, +0.06], wins 21 → 21; Toreador 0.82 ± 0.06 VP on the 600 deals (101 wins,
+    16.8 %), paired −0.01 [−0.06, +0.04] against v0.6.219 (wins 106 → 101; DIVERGED 186, SAME-PLAY 301, IDENTICAL 113): both held;
+    `ana-gates.py` PASS on the 240 design and 13 of the 14 V5 series, FAIL on two series, each an old bug that a diverged match met.
+    (a) The V5 Gangrel series' invariants gate, one flag: in its match 4 the survivor, alone after its last oust, finished its turn
+    and bled itself twice (`preySeat()` is its own seat; "through after the game ended", which `ana-ledger.py` explains since C2),
+    its pool checker booked those as its own loss, and a Wider View burn then printed the true pool above the ledger — the bot's
+    pool was right (a replay of the match on these bytes). (b) The 600's ledger gate, one fault (a combat row with no opponent): in
+    its match 528 The Dowager blocked Massimo Falconi, who played Change of Target, and Lenny then blocked Catalina Vega; the
+    Nosferatu bot ran The Dowager's cancelled combat against Catalina and Lenny's own with no opponent — STATUS's failed blocker
+    that fights the later blocker's combat, here after a Change of Target. **Falsified** on the gate part — a map: (a) is the BOARD
+    line "The survivor plays on at an empty table", (b) a Toreador point (STATUS Next). Riders 1–3 changed no sim decision — Navar
+    plays only in `hacking`, Azucena never met a Lasombra actor, Phaibun never reached a combat — so their reads stand on 164a–c and
+    164g–j alone. **Verdict: keep** — the forecast and the planners move Nosferatu's plan where its crypt says so, at no measured
+    cost (Nosferatu −0.01 [−0.09, +0.06], Toreador −0.01 [−0.06, +0.04]). The V5 smoke diverged in 67 of 168 matches, every series:
+    48 first at a Nosferatu decision, 19 at the precon's or another starter's (gangrel 6, lasombra 4, salubri 3, ventrue 2, one each
+    pathcathari, pathpower, tremere, malkavian).
+  - *Found in the round* (Johan's custom-token question, 13 Nov): `buildPub` has never sent a card's `counters`, so a bot's Smiling
+    Jack moves 1 of its owner's pool every turn and no seat pays (the bots read the pub; a human sees an empty card) — Nosferatu
+    plays Jack in 65 of v0.6.219's 240 design matches. Not fixed here (a rules correction that moves Nosferatu's numbers gets its
+    own prediction and footprint): RULINGS D-113, the first round after this one.
+  - *Docs*: RULINGS D-111 (built), D-112 (Johan, 13 Nov: each strategy line checked against its deck's Black Chantry guide; a check,
+    not law — the most VP decides), D-113 (Johan, 13 Nov: the table's memory — the bot's own tokens, Jack's counters on the wire, a
+    human's Grand Ball read first and asked last); BOARD: the riders and the copies lines closed, Q4's switch, the torpor use, Día's
+    referendum, The Dowager at the next human table, the table's memory, the survivor at an empty table (BOARD at its 18.5 KB: six
+    older lines reworded shorter, no ask removed; a human's Ball moved from wave 4's riders to the table's memory); STATUS;
+    CARDS.md; the handoff (`HANDOFF-to-main-2026-11-13-v0_6_220.md`).
+  - *Gates* (release bytes: bot `a8a963b1`, cardfx `0e9c5f4d`, suite `36d643c7`): suite **2422/0 ×3** (445, 432, 436 s); `node
+    --check` / JSON / `bash -n` 11 files clean; lint 0 findings on 25 files, suppressions `{}`; root bundle = `bot/`; canary v1.2.0
+    **143/0** on the copies and **143/0** on the root's release with `client/ELYSIUM-PROTOCOL.md`; hotseat **11/0**; HB1 **11/11**;
+    test-cardfx **321/0**; `gen-precon.js --check` 18 precons, no problems; self-tests: ledger 55/55, `twda.py` 14/0, `ana-gates.py`
+    31/0; doc-budget PASS (the standing pages 160 → 165 KB under D-101); `test-doc-budget.sh` every case red, baseline green;
+    section 164 destructive (above); main's `check-versions.js` agrees (repository `client/`, read-only); main's client suite in a
+    scratch copy of `client/` with this bundle 361 passed, 2 failed — the two of v0.6.219's handoff (the guide's embed, the
+    registry's Toreador), by design. The first chain ran on `9ab3942c` (suite 2417/0 ×3, the rest as here).
+  - *The egress review* (a fresh read-only agent, HARNESS): 6 findings (half-done 1, rule-missed 2, unproven 1, stale-doc 2), all
+    fixed in the round (D-92): the event log's five other discard tails (half-done); Govern the Unaligned's younger target read the
+    printed capacity against D-111 (4), and this entry had no verdict (rule-missed); 164g–k through the readers' own paths, the PRNG
+    outside Node in a browser sandbox, and the sentences that no sim reached riders 1–3 or a random discard (unproven: only the
+    helpers and code reading stood behind them); the forecast's twelve vampires, Christine Boscacci's −1 and the actor cross-read's
+    comment, and the PR's docs list and budget figures (stale-doc). With them, two items of the round's own unsure list: the PRNG's
+    clock fallback and `lab-probe.js`'s seeds. The whole chain ran again on the fixed bytes (*Gates*).
 - **v0.6.219 (12 Nov 2026)** — Crypt wave A (RULINGS D-108; Claude's proposal of 6 Nov with both its additions, Johan's "kör" of
   12 Nov), Toreador in the menu, and main's doc-budget note. 31 vampires curated in `cardfx-curated.json` (187 curated: 136 library,
   51 crypt; the compile changed those 31 entries and nothing else), at least one in each of the 14 other precons: 25 copies modelled,

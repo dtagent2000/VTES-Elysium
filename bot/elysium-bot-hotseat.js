@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* elysium-bot-hotseat.js v1.4.0 (29 Oct 2026) -- THE HOTSEAT TABLE, headless.
+/* elysium-bot-hotseat.js v1.4.1 (13 Nov 2026) -- THE HOTSEAT TABLE, headless.
    Lifts `const hotBridge = {...}` and `function hotFanOut` VERBATIM out of the client source beside it (elysium-vtes-bord.html, READ-ONLY here) and drives real
    Bot instances through them the way the client's hotRunBotTurns does: one `turn` per bot seat round the ring from the CONFIG (not the roster), waiting for
    that seat's `pass`. Whatever the bridge drops is dropped here too -- this is the client's relay, not a model of it.
@@ -17,6 +17,8 @@
    v1.3.0 (19 Oct 2026, the sim table): three OPTIONAL inputs for elysium-bot-sim.js; absent, the table plays as v1.2.0 did (the gate passes none of them):
    o.personas (one per seat, else o.persona), o.seatKnobs ({seat: {knob: v}}, merged over o.knobs), o.onEvent(e) (called with every bot event as it is
    pushed). The result also names the seats (res.names) and the persona each bot played (res.personas).
+   v1.4.1 (13 Nov 2026, bot v0.6.220, RULINGS D-111): every bot gets rngSeed from the table's seed and its seat -- its own PRNG for
+   what the rules call random (Phaibun's discard), so a trace still repeats byte for byte; the table's own seeded Math.random stays the deal's.
    v1.4.0 (29 Oct 2026, bot v0.6.212, V5 round 0): a deck key the bot does not embed (ARCHETYPES) is read from deck-<key>.json in o.deckDir (default: beside
    this file) -- a TEST input, such as the V5 precons gen-precon.js writes; the client only offers ARCHETYPES. An embedded key always wins, so every table
    of the embedded decks plays exactly as v1.3.0 did. */
@@ -68,6 +70,7 @@ async function runTable(opts){
     for(let i = 0; i < o.decks.length; i++){ const seat = i + 1;
       const deck = deckFor(ARCHETYPES, o.decks[i], o.deckDir);   // a COPY, as the client embeds them -- never the registry object itself
       const b = new Bot(Object.assign({ name: names[i], room: 'hotseat', pass: '', transport: HB.dialFor(seat, names[i]), cardfxData, deck, persona: (o.personas && o.personas[i]) || o.persona, paceMs: o.paceMs, askSecs: o.askSecs, startPool: o.startPool,
+        rngSeed: (Math.imul((o.seed >>> 0) || 1, 2654435761) + Math.imul(seat, 40503)) >>> 0,   // v1.4.1: the bot's own PRNG, pinned by the table's seed and the seat
         log: () => {}, onEvent: (t, d) => { if(t.indexOf('bot:') === 0){ const e = { round, who: names[i], deck: o.decks[i], type: t.slice(4), d }; ev.push(e); if(o.onEvent) o.onEvent(e); } } }, o.deckname ? { deckName: o.decks[i] } : {}, o.knobs || {}, (o.seatKnobs || {})[seat] || {}));
       bots.push(b); await b.connect(); const t0 = Date.now(); while(!(HB.seats[seat] && HB.seats[seat].deck) && Date.now() - t0 < 5000) await new Promise(r => setTimeout(r, 30));
       if(!(HB.seats[seat] && HB.seats[seat].deck)) throw new Error('deck upload never arrived for seat ' + seat); HB.startFor(seat); }
@@ -82,7 +85,7 @@ async function runTable(opts){
         if(!okPass){ stuck = { round, seat, seatOut: !!bots[seat - 1].out }; break outer; }
         if(bots.filter(b => !b.out).length <= 1) break outer; } }
     const c = t => ev.filter(e => e.type === t), plays = c('play'), w = x => plays.filter(e => e.d.window === x).length;
-    const res = { tool: 'elysium-bot-hotseat 1.4.0', bot: BOT_VERSION, client: L.version, names, personas: names.map((n, i) => (o.personas && o.personas[i]) || o.persona), combatMerge: !!L.cmbSrc, arm: o.arm, deckNamePassed: !!o.deckname, seed: o.seed, decks: o.decks, rounds: Math.min(round, o.rounds), secs: Math.round((Date.now() - t0) / 1000),
+    const res = { tool: 'elysium-bot-hotseat 1.4.1', bot: BOT_VERSION, client: L.version, names, personas: names.map((n, i) => (o.personas && o.personas[i]) || o.persona), combatMerge: !!L.cmbSrc, arm: o.arm, deckNamePassed: !!o.deckname, seed: o.seed, decks: o.decks, rounds: Math.min(round, o.rounds), secs: Math.round((Date.now() - t0) / 1000),
       finished: !stuck && bots.filter(b => !b.out).length <= 1, stuck, alive: bots.filter(b => !b.out).map(b => b.o.name), pools: bots.map(b => b.pool), turnsHandedToOustedBots: turnsToOusted, droppedVerbs: dropped, botHoldsRelayedToBots: holdsRelayed,
       manifest: c('manifest').map(e => ({ deck: e.deck, key: e.d.deck, axes: e.d.axes })),
       counts: { through: c('through').length, blocked: c('blocked').length, blockMade: c('block-made').length, stealthCards: w('stealth'), interceptCards: w('react-intercept'), stealthLooks: c('stealth-stack').length,
