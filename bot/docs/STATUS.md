@@ -2,7 +2,7 @@
 
 **Bot v0.6.220** (13 Nov 2026, crypt wave A's riders) · arena v1.4.8 · sim table v1.1.0 (round C3) · cardfx compiler v1.9.8, curated 187 · hotseat tool v1.4.1 ·
 coverage tool v1.1.45 · precon generator v1.1.1 · KRCG converter `krcg-v5.js` v1.0.0 · `ana-gates.py` v1.1.0 ·
-built against the root's release, client v2.6.174 / srv-2.6.50 (canary v1.2.0 @@CAN@@);
+built against the root's release, client v2.6.174 / srv-2.6.50 (main's canary v1.2.0 143/0 against it);
 the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6.50 and main's canary v1.2.0 (refreshed 13 Nov).
 
 **Deploy state:** `main` carries v0.6.219 (#64, merged 13 Nov), client v2.6.173 and v2.6.174 (main's #60, #62) and main's doc-budget note (#63).
@@ -16,10 +16,11 @@ Crypt wave A's riders (D-111): Revelations' form reaches the block decision, the
 read the crypt (Lenny, Catalina; The Dowager, Martina, Rinaldo), age from the capacity in play (Azucena, Navar), a seeded PRNG
 per bot for "at random" (Phaibun), the random-discard line typed; the release copies refreshed and main's canary v1.2.0 in.
 
-## Next (proposed; Johan orders the board)
-1. Table runs (Johan, 13 Nov) with Toreador's guide check (D-112); then the Toreador points (a human's Ball, the failed blocker).
-2. V5 wave 5 — Johan picks its shape: the eighteen masters in play, Meditative Grove's cancel, Sudden Reversal's window (D-107).
-3. The gates on the root's release (Q4, main's yes of 3 Nov); C5 (the leak test) before crypt wave B; C6; the abstract model spec.
+## Next (Johan's order of 13 Nov, D-113)
+1. The table's memory, first round: Smiling Jack's counters on the wire (`buildPub` sends none: a bot's Jack drains its owner and
+   nobody pays) and the bot's own tokens, Grand Ball first (D-113 (1)–(2)).
+2. Table runs with Toreador's guide check (D-112); then the Toreador points: a human's Ball (D-113 (3)–(4)), the failed blocker.
+3. V5 wave 5 (Johan picks its shape, D-107); Q4's switch to the root; C5 before crypt wave B; C6; the abstract model spec.
 
 ## Not yet consumed from main
 Main's replies of 11 Nov are read: their bot-side items are BOARD lines (a human's Change of Target, the security plan's item 6);

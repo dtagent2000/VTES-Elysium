@@ -1,9 +1,11 @@
-# BOARD — the open asks (12 Nov 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (13 Nov 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
+- **The table's memory** (D-113): `buildPub` sends no `counters`, so a bot's Smiling Jack drains its owner and nobody pays (found
+  13 Nov); then the bot's own tokens and a human's Grand Ball. *Done when* both rounds ship. Docs: RULINGS D-113.
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). Since v0.6.213 the bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the
   vest prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
@@ -18,8 +20,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Toreador) and the ledger (`docs/CARDS.md`) since v0.6.212; waves by effect class as the class map ranks them (D-98). Done:
   waves 1–4 (v0.6.213–217; D-99, D-103, D-104, D-106). Next: wave 5, the 18 masters in play (`spec-v5-wave3` §4), Meditative
   Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape), with the actions at a card in
-  play (steal The Rack / Powerbase: LA, burn Mob Connections), The Coven's control passing, and Día de los Muertos (its referendum
-  skips polling, the [obl] / [dom] vote discard with it: PIB 20150105, D-111). Then the maneuver / press grants
+  play (steal The Rack / Powerbase: LA, burn Mob Connections), The Coven's control passing, and Día de los Muertos (no polling,
+  no [obl] / [dom] vote discard: PIB 20150105, D-111). Then the maneuver / press grants
   with the rush cards, the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
   done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY`
   line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares
@@ -37,10 +39,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-41, D-103.
 - **V5 wave 4's riders** (`specs/spec-v5-wave4-2026-11-03.md` §4): the abstain as a reaction on another's referendum; Guiding
   Wisdom's combat end when mine is not the acting minion (a before-range handshake); a bot blocker's Crows before the actor's Change of
-  Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar);
-  a human's Ball names no pair (the bots spare all that human's Toreador). Over-strict: `_bestStrengthFor` (any strength bonus),
-  `_inPlayNorms` (my ash heap). Also Saulot's Healing Touch: FULL by the auto tier, its text unbuilt. *Done when* each is built and
-  tested, or ruled out.
+  Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar).
+  Over-strict: `_bestStrengthFor` (any strength bonus), `_inPlayNorms` (my ash heap). Also Saulot's Healing Touch: FULL by the
+  auto tier, its text unbuilt. *Done when* each is built and tested, or ruled out.
 - **V5 wave 3's riders** (`specs/spec-v5-wave3-2026-11-02.md` §4): the amber halves (Anarch Railroad and Fortune Teller Shop for
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
@@ -52,9 +53,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's helpsheets and Fifth
   Edition deck guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy (D-43, O-33).
-  Already decided (D-112): every strategy line written is checked against its deck's guide, Toreador's first. *Done
-  when* a proposal — what each guide says, where it enters (`DECK_STRATEGY`, the plan, the persona), how it is measured — has
-  Johan's "kör". Docs: RULINGS D-43, O-33; `specs/spec-knowledge-layer.md`.
+  D-112: each strategy line is checked against its guide. *Done when* a proposal — what each guide says, where it enters
+  (`DECK_STRATEGY`, the plan, the persona), how it is measured — has Johan's "kör". Docs: RULINGS D-43, O-33;
+  `specs/spec-knowledge-layer.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
@@ -90,7 +91,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Main: such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. *Done when* a section shows it read.
 - **Hand names out of the console outside debug** (main, 11 Nov: the security plan's item 6): an online host can read a bot's
   console, which names hand cards. *Done when* only debug names them, section-tested.
-- **The gates on the root's release** (Q4: main's yes of 3 Nov; the copies were refreshed in v0.6.220): the canary, the suite's
+- **The gates on the root's release** (Q4, main's yes of 3 Nov): the canary, the suite's
   server and 154f, the arena, the sim and the hotseat gate read the root's client and server and `client/`'s protocol, the copies
   go, STATUS pins the main commit. *Done when* every gate reads the root and CI is green on it.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.
