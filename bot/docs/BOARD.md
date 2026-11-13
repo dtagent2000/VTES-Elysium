@@ -4,8 +4,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
-- **The table's memory** (D-113): `buildPub` sends no `counters`, so a bot's Smiling Jack drains its owner and nobody pays (found
-  13 Nov); then the bot's own tokens and a human's Grand Ball. *Done when* both rounds ship. Docs: RULINGS D-113.
+- **The table's memory** (D-113): `buildPub` sends no `counters`, so a bot's Smiling Jack drains its owner and nobody pays;
+  then the bot's own tokens and a human's Grand Ball. *Done when* both rounds ship. Docs: RULINGS D-113.
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). Since v0.6.213 the bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the
   vest prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
@@ -149,21 +149,22 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **A held master counts as played** (6 Nov): `gen-card-ledger.js` and `ana-cards.py` count every `master-play` pick, held ones
   too (Grand Ball: 407 picks, 68 plays), so a master always held reads playable. *Done when* both count a master only when played:
   its own row, or gone from the hand the next decide row carries (no bot change; Villein's own decide comes first).
-- **The hotseat table runs out most bot-vs-bot reaction windows** (29 Oct; v0.6.211 too): on a pace-0 sim series 403 of 467 bleed
-  totals and 101 of 125 modifier windows RAN OUT, 369 `stale-answer` rows (bot Passes); the server arena read 0 of 82 (v0.6.207). The
-  sim matches the real-clock hotseat table decision for decision, so this may be what an offline table does. *Done when* a `--real`
-  hotseat match and a browser table say whether bot answers are lost there, and the cause is fixed or the gate restated per table.
-  Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
-- **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215's
-  design, match 74, a DIVERGED game; none on v0.6.214's). *Done when* the race is found or a series shows it gone.
+- **The hotseat table runs out most bot-vs-bot reaction windows** (29 Oct; v0.6.211 too): 403 of 467 bleed totals and 101 of 125
+  modifier windows on a pace-0 sim series (the server arena: 0 of 82); the sim matches the real-clock hotseat table. *Done when* a
+  `--real` hotseat match and a browser table say whether bot answers are lost there, and it is fixed or the gate restated per
+  table. Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
+- **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
+  match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
-  vampire, a target) show their END state (found 29 Oct; `ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
+  vampire, a target) show their END state (`ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
+- **The survivor plays on at an empty table** (13 Nov): after the last oust the winner finishes its turn, bleeding itself
+  (`preySeat()`); its pool checker books it (v0.6.220's invariants flag). *Done when* the turn ends there.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.
 - **The 14 Oct playtest scenario** (`client/playtest/`, `--dir` on a scratch copy of the root with the bot branch) not re-run since
-  v0.6.207; **the larger re-measure** against a v0.6.207 baseline (every arena number before v0.6.206 carries ~3 s of dead clock
-  per bleed total); at that table also The Dowager's +1 in a human's directed action (D-111). *Done when* both reports exist with
+  v0.6.207; **the larger re-measure** against a v0.6.207 baseline (older arena numbers carry ~3 s of dead clock per
+  bleed total); at that table also The Dowager's +1 in a human's directed action (D-111). *Done when* both reports exist with
   the sim as the first read.
 - **Forecast calibration** (`gen-forecast-calibration.js`) not re-run since 18 Sep; the seed of the abstract model's calibration
   gate. *Done when* it runs on a sim series and the ratio is reported.

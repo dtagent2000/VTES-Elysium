@@ -21,4 +21,17 @@ BOARD line for a later round (the gates' paths, CI, the docs, STATUS pinning the
 release in, never patches it.
 
 ## 4. Run here
-@@RUN@@
+On the release bytes (`elysium-bot.js` sha256 `9ab3942c…`): your `check-versions.js` agrees (in the repository's `client/`,
+read-only); your canary v1.2.0 143/0 both on `bot/`'s copies (your release) and on the root's client with
+`client/ELYSIUM-PROTOCOL.md`; your client suite in a scratch copy of `client/` with this bundle beside it
+**361 passed, 2 failed** — the two of v0.6.219's handoff: `v2.6.127 embed-help drift` (the Bots page: this bundle's guide) and
+`v2.6.122 registry, with the released bot` (`toreador`). Nothing else failed.
+
+## 5. Coming next, no change on your side (RULINGS D-113)
+The bots will show the lasting choices they track as custom tokens on their own cards (the pub's `counters`, which your server and
+bridge already relay and every seat shows on hover; Toreador Grand Ball's pair first), and their Smiling Jack's counters go on the
+wire: `buildPub` has never sent `counters`, so a bot's Jack took its owner's pool while nobody paid.
+
+## 6. Deploy
+Purge `/elysium-bot.js` and `/elysium-cardfx.json` (the server never serves the `.js` twin); the client when the re-embedded
+guide ships. The TWD files and the server are unchanged.
