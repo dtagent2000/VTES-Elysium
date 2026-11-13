@@ -12698,6 +12698,18 @@ async function connectWithRetry(client, tries = 30){
         if(u._phaseWait && !u._phaseWait.done) u._phaseWait.resolve('test');
         ok(mid.ra === null && mid.rb === 'pending' && mid.live && !mid.last && rb === 'pass',
            '166f a superseded combat’s step wait ends at the live step’s start: the human’s No answers the live step (got ' + JSON.stringify({ mid, rb }) + ')'); }
+
+      // g) a combat a Change of Target ended, superseded while it waited (v0.6.221's 600, match 528, on this round's first cut): the
+      //    blocker still unlocks (the card came before it locked) and the row says why -- cot-cancelled, not combat-superseded (the cut
+      //    returned at the token first: The Dowager stayed locked). Through the real _resolveCombat and _resolveCombatRound
+      { const u = mk166(); const D = V6('d1', 'The Dowager (G6)', { locked: true }); u.board = [D]; u.turnSeat = 1;
+        u.table = { 1: { pub: { cards: [V6('m1', 'Massimo Falconi')] } } }; u._holdGate = async () => {}; u._pace = async () => {};
+        u._waitOn = key => key !== '_maneuverWaiter' ? Promise.resolve(null)
+          : new Promise(r => setTimeout(() => { u._cotCancel = { vamp: 'Massimo Falconi', at: Date.now() }; u._combatTok++; r(null); }, 10));   // the card's line, then my other vampire's block
+        await u._resolveCombat(D, 'Massimo Falconi');
+        const rows = u.events.map(e => e.t.replace('bot:', '')).filter(t => /^(cot-cancelled|combat-superseded|combat-round)$/.test(t));
+        ok(D.locked === false && JSON.stringify(rows) === '["cot-cancelled"]' && !u._cotCancel,
+           '166g a combat a Change of Target ended, superseded while it waited: the blocker unlocks, one cot-cancelled row (got ' + JSON.stringify({ locked: D.locked, rows }) + ')'); }
     }
 
 

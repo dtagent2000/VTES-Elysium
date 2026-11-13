@@ -7696,7 +7696,7 @@ class Bot {
       rr = round; if(round > 1 && sup(round)) return;   // v0.6.221: superseded during the last round's end
       this._curRound = round; if(round > 1){ this._cWrite({ rd: round }); this._cBaseRound = Object.assign({}, this._cTally() || {}, { ce: undefined, pr: undefined, rl: undefined }); }   // v0.6.168: a new round clears the per-round fields server-side   // v0.6.164: a changed rd starts a fresh round for every absent per-round field (srv-2.6.39)
       const res = await this._resolveCombatRound(myVamp, round > 1);
-      if(res && res.cot) return;   // v0.6.217 (V5 wave 4, the sim footprint): Change of Target -- the action ended before block resolution, so this combat never began: no round row (ana-combat2 counted the stub as a handshake miss: 6 in the toreador smoke, 20 in 48 matches) and no end-of-round step; the 'cot-cancelled' row is the record
+      if(res && res.cot){ supd = true; return; }   /* v0.6.222: a cancelled combat, not a superseded one (no row) */   // v0.6.217 (V5 wave 4, the sim footprint): Change of Target -- the action ended before block resolution, so this combat never began: no round row (ana-combat2 counted the stub as a handshake miss: 6 in the toreador smoke, 20 in 48 matches) and no end-of-round step; the 'cot-cancelled' row is the record
       if(sup(round)) return;   // v0.6.221: a later combat of mine began while this one waited -- this one is over (its action is)
       const rowEnd = why => (tok !== this._combatTok) ? undefined : this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: null, continuing: false, end: why, blood: myVamp.zone === 'ready' ? (myVamp.blood | 0) : 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156
       const hsP = !!(this._rnd && this._rnd.hs), hsFirstP = hsP && this._rnd.hs !== 'a';   // v0.6.202 (R2): this round ran the bot-vs-bot step handshake -- the press step does too, with the same acting minion
@@ -7798,10 +7798,10 @@ class Bot {
     } finally { sup(rr);   /* v0.6.222: one combat-superseded row also for a combat superseded at its last wait (nothing was left to stop) */ if(myVamp && this._combatOppOf && (tok === this._combatTok || !this._combatMyVamp || this._combatMyVamp.id !== myVamp.id)) this._combatOppOf.delete(myVamp.id);   /* v0.6.222: a superseded combat of the same vampire leaves the live one's opponent */ if(tok === this._combatTok){ /* v0.6.221: a superseded combat leaves the live combat's fields alone */ try { this._noteCombatEnd(myVamp); } catch(e){ this.o.log('combat end note error: ' + e.message); }   /* v0.6.217 (V5 wave 4): Monster -- the combat's outcome is read BEFORE its fields die below */ this._xr = null; this._myPump = null; this._curRound = 0; this._cryptDodgeUsed = null; /* v0.6.219: the crypt dodge's once each combat dies with the combat (the planners between combats see it again) */ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; /* v0.6.214: the pumps, the round number and Guard Dogs' maneuver die with the combat (a rejected combat used to leak the grant into the next one) */ this._inCombat = false; this._combatArmed = false; this._combatActing = null; this._forceCloseNextRound = false; this._nextRange = null; this._setRangeNow = null; this._handStrikeOnly = false; this._range = 'close'; /* v0.6.202 (R2's second arena smoke): a range set for the NEXT round dies with this combat -- Horace's superior Grapple in the last round skipped the maneuver step of his next combat AND of his opponent's next one (one side said nothing, the other waited out the safety net and maneuvered to long alone: Roundhouse at close against Theft of Vitae at long). The same sweep: the round's range and its Grapple restriction die too -- the finders that plan between combats (a block's price, a chump bleed's cover, a rush's reach) read them, and saw "hand strikes only" (no Majesty, no dodge) or "long" (no fists) from the last round of the previous fight (16 combats in the R2 smokes began after a final-round Grapple); a new combat starts at close */ if(this.ev && this._cep) this.ev.push({ kind: 'combat-opp', opp: null, how: 'end', was: this._cep.row || null }); this._cep = null; this._invStrike = null; if(this.tally && this.tally.mode === 'combat' && this.started){ try { this._writeTally({ mode: null, res: 1 }); } catch(e){} } } }   // v0.6.103 (#1); v0.6.172 (main v2.6.137): my combat is over -- close the combat tally so the mirror is clean at once; v0.6.195 (main's reply, 9 Oct): + res 1, the client's own Combat-Resolve convention -- every human closes their Played batch and applies their own clear setting (a bare null left it open until their next action); v0.6.105: the name dies with the combat
   }
   async _resolveCombatRound(myVamp, continued){ // v1 CUT LINE (spec §7.5-C): announce-only, one round, applies MY side; the opponent's strike isn't modelled -- assumes the rulebook default (hands, 1) unless I prevent it. Never steps the shared ph/rd counters. v0.6.23 (standing-question fix, the multi-round loop): `continued` is a NEW, backward-compatible optional 2nd arg -- every existing call (all of 37a-37g, all 6 real call sites for round 1) passes nothing, so this defaults falsy and behaves EXACTLY as before. `_resolveCombat` passes true for round 2+ ONLY.
-    const rtok = this._combatTok, stale = () => rtok !== this._combatTok, SUP = { superseded: true };   // v0.6.222 (the second review): a later combat of mine began while this round waited -- the round stops at the await it wakes from (no line, no tally write, no card, no blood, no new wait: a wait registered now would take the live combat's lines) and _resolveCombat ends the combat; 37a-37g call the round directly, where the token never moves
+    const rtok = this._combatTok, stale = () => rtok !== this._combatTok, gone = () => this._cotHit(myVamp) ? { oppEnded: true, cot: true } : { superseded: true };   // v0.6.222 (the second review): a later combat of mine began while this round waited -- the round stops at the await it wakes from (no line, no tally write, no card, no blood, no new wait: a wait registered now would take the live combat's lines) and _resolveCombat ends the combat; a Change of Target that ended this combat is still resolved first (its blocker unlocks: the first cut left it locked, v0.6.221's 600 match 528); 37a-37g call the round directly, where the token never moves
     if(!continued && this._cotHit(myVamp)) return { oppEnded: true, cot: true };   // v0.6.217 (V5 wave 4): the actor played Change of Target -- this combat never begins
     if(!continued && this.turnSeat === this.seat && this._actingVamp && this._actingVamp.v === myVamp && this._actingVamp.ifBlocked){ const sg = this._sgwEndFor(myVamp); if(sg){   /* the egress review: only a BLOCKED action's combat (spec §3; a rush of mine is a combat I chose) */   // v0.6.217 (V5 wave 4): Saulot's Guiding Wisdom -- 'Once each turn, this Salubri can lock before range is determined to end a combat involving another minion you control.' My blocked actor's combat, before my first line
-      await this._combatGate(true); if(stale()) return SUP;
+      await this._combatGate(true); if(stale()) return gone();
       sg.bearer.locked = true; (this._sgwEndUsed = this._sgwEndUsed || new Set()).add((this._turnSerial | 0) + '|' + sg.bearer.id); this.push();
       this.fxClone({ name: "Saulot's Guiding Wisdom", kind: 'lib' }, sg.bearer.name + ' locks: combat ends', { actor: sg.bearer });
       this.send({ t: 'log', html: '<b>' + esc(sg.bearer.name) + '</b> locks: <b>Saulot\u2019s Guiding Wisdom</b> \u2014 the combat of <b>' + esc(myVamp.name) + '</b> ends before range.' });
@@ -7827,7 +7827,7 @@ class Bot {
        this runs every round). No real downside to playing it once available (free
        ongoing damage to the opponent, no cost on the card), so the v1 decision is
        simply "play it the first round I can", unlike press/maneuver's threshold. */
-    await this._phaseAsk(0); if(stale()) return SUP;   // v0.6.165: human acting -> "Anything before range?"
+    await this._phaseAsk(0); if(stale()) return gone();   // v0.6.165: human acting -> "Anything before range?"
     let ccPlayed = false;
     if(!this._carrionCrows){
       if(this._borneEnvDmg > 0 && !this._borneAnnounced){
@@ -7835,11 +7835,11 @@ class Bot {
            generalized victim parser applies it via the SAME taken+= line. */
         this._borneAnnounced = true;
         this.note('Trainbot combat \u2014 ' + myVamp.name + "'s Murder of Crows: opposing minion takes " + this._borneEnvDmg + ' environmental damage each round for the rest of this combat (unpreventable by strikes, cannot be dodged).');
-        await this._pace(); if(stale()) return SUP;
+        await this._pace(); if(stale()) return gone();
       }
       const cc = this._bestCarrionCrowsFor(myVamp);
       if(cc){
-        await this._combatGate(true); if(stale()) return SUP;   // v0.6.202: a hold stops it; a watched bot duel gets its beat
+        await this._combatGate(true); if(stale()) return gone();   // v0.6.202: a hold stops it; a watched bot duel gets its beat
         this.hand.splice(cc.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
         this._toAsh(cc.name);
         if(cc.cost && cc.cost.blood) myVamp.blood = Math.max(0, (myVamp.blood | 0) - cc.cost.blood);
@@ -7852,9 +7852,9 @@ class Bot {
       }
     }
     if(this._bestWallFor(myVamp) && await this._playWallOfFilth(myVamp)) ccPlayed = true;   // v0.6.213 (V5 wave 1): Wall of Filth -- 'only usable before range is determined'
-    if(stale()) return SUP;
+    if(stale()) return gone();
     if(this._brCands(myVamp).length && await this._beforeRangePlay(myVamp)) ccPlayed = true;   // v0.6.214 (V5 wave 2): the strength pumps and Hunger of Marduk -- only when one is in hand (a round without one is the old round, byte for byte)
-    if(stale()) return SUP; await this._phaseAfter(0, ccPlayed); if(stale()) return SUP;   // v0.6.165: bot acting -> "I have nothing before range." (or the Crows line), then the human's turn
+    if(stale()) return gone(); await this._phaseAfter(0, ccPlayed); if(stale()) return gone();   // v0.6.165: bot acting -> "I have nothing before range." (or the Crows line), then the human's turn
     this._range = 'close';
     let lockedRange = null;   // v0.6.164: a range SET for this round -- 'sets range to X next round.' from last round, 'sets range to X.' this round, or the tally's rl=1 (the maneuver step is skipped; no maneuver may change it)
     if(this._nextRange){ lockedRange = this._nextRange; this._nextRange = null; }
@@ -7871,10 +7871,10 @@ class Bot {
     if(this._forceCloseNextRound || lockedRange){
       this._forceCloseNextRound = false;
     } else {
-      await this._phaseAsk(1); if(stale()) return SUP;   // v0.6.165: "Any maneuvers?"
+      await this._phaseAsk(1); if(stale()) return gone();   // v0.6.165: "Any maneuvers?"
       let oppM = null;
       if(hsFirst){                                                     // v0.6.202 (R2, point 17a): the acting bot maneuvers or says it does not -- first; I decide knowing the range it left
-        oppM = await this._awaitOppManeuver(this._hsWaitMs()); if(stale()) return SUP;
+        oppM = await this._awaitOppManeuver(this._hsWaitMs()); if(stale()) return gone();
         if(this._cotHit(myVamp)) return { oppEnded: true, cot: true };   // v0.6.217: Change of Target arrived while I waited for the acting minion's first line
         if(!continued && oppM && oppM.ended && this._oppEndedCombat) return { oppEnded: true };   // v0.6.217: the acting side ended the combat before range (its Combat ends line woke this wait)
         if(!oppM) this._hsMiss('maneuver');
@@ -7883,7 +7883,7 @@ class Bot {
       if(!continued && this._cotHit(myVamp)) return { oppEnded: true, cot: true };   // v0.6.217: Change of Target before any line of mine (the step's question to a human, a table with no handshake)
       const wentLong = hs && this._range === 'long';
       const counter = wentLong ? this._counterPick(myVamp, mv) : null;   // v0.6.214 (V5 wave 2): the acting bot went long -- my answer can take it back to close (chase)
-      if(counter){ await this._combatGate(true); if(stale()) return SUP; this._counterPlay(myVamp, counter, 'close', mv); }
+      if(counter){ await this._combatGate(true); if(stale()) return gone(); this._counterPlay(myVamp, counter, 'close', mv); }
       const maneuver = wentLong ? null : this._bestManeuverFor(myVamp);   // v0.6.202: the range is already long (their maneuver) -- my maneuver to long would change nothing (v0.6.214: a counter to close is the line above)
       let myManeuvers = counter ? 1 : 0;
       if(maneuver){
@@ -7896,12 +7896,12 @@ class Bot {
             && this._modeUsableBy(mo, myVamp) && (myVamp.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0));   // v0.6.25 (standing-question fix): the ORIGINAL check only asked "is there a rangeLong strike/steal card in hand" -- not "can THIS vampire actually USE it" (discipline) or "can it still afford the card's own cost after maneuvering". A vampire holding Death of the Drum with no cel/mel at all would maneuver to long for a card it could never play, wasting the maneuver for nothing (found live: Abraham DuSable, THA-only, still maneuvered).
         });
         if(wantLong){
-          await this._combatGate(true); if(stale()) return SUP;   // v0.6.202 (points 5, 7): a hold stops my maneuver; a watched bot duel gets its beat
+          await this._combatGate(true); if(stale()) return gone();   // v0.6.202 (points 5, 7): a hold stops my maneuver; a watched bot duel gets its beat
           this._playManeuver(myVamp, maneuver, 'long');   // v0.6.214: the same statements, in the same order (cut out for the counters)
           myManeuvers = 1; mv.want = 'long';
         }
       }
-      if(hs && !myManeuvers){ await this._combatGate(false); if(stale()) return SUP; this._hsNothing(myVamp, 'maneuver'); }   // v0.6.202: the step's answer when I play nothing -- the other bot waits for it
+      if(hs && !myManeuvers){ await this._combatGate(false); if(stale()) return gone(); this._hsNothing(myVamp, 'maneuver'); }   // v0.6.202: the step's answer when I play nothing -- the other bot waits for it
       /* v0.6.24: a SHORTER timeout than strike/press/taken's askSecs-derived one, on
          purpose. Maneuvers are rare (41 clean cards total, measured, out of the whole
          game) -- in the overwhelmingly common case where NEITHER side has one, BOTH
@@ -7912,17 +7912,17 @@ class Bot {
          realistic miss, an acceptable trade against doubling every round's latency.
          v0.6.202 (R2): between bots that short wait lost the race at the client's pace (point 17a) -- the handshake above replaces it;
          a human or an unknown opponent keeps it. */
-      await this._phaseAfter(1, myManeuvers > 0); if(stale()) return SUP;   // v0.6.165: "I have no maneuver." / my maneuver line, then the human's
+      await this._phaseAfter(1, myManeuvers > 0); if(stale()) return gone();   // v0.6.165: "I have no maneuver." / my maneuver line, then the human's
       if(hs){
         if(myManeuvers) this._range = counter ? 'close' : 'long';
         if(!hsFirst){                                                  // the acting side: the other bot's answer
-          oppM = await this._awaitOppManeuver(this._hsWaitMs()); if(stale()) return SUP;
+          oppM = await this._awaitOppManeuver(this._hsWaitMs()); if(stale()) return gone();
           if(!oppM) this._hsMiss('maneuver');
           else if(!oppM.none && (oppM.range === 'close' || oppM.range === 'long')) this._range = oppM.range;   // a maneuver moves the range to where it says
-          if(oppM && !oppM.none){ await this._counters(myVamp, mv); if(stale()) return SUP; }   // v0.6.214 (V5 wave 2): their maneuver can be answered -- while I want the range elsewhere and hold another maneuver
+          if(oppM && !oppM.none){ await this._counters(myVamp, mv); if(stale()) return gone(); }   // v0.6.214 (V5 wave 2): their maneuver can be answered -- while I want the range elsewhere and hold another maneuver
         }
       } else {
-        oppM = await this._awaitOppManeuver(Math.min(200, (this.o.askSecs || 2) * 1000)); if(stale()) return SUP;
+        oppM = await this._awaitOppManeuver(Math.min(200, (this.o.askSecs || 2) * 1000)); if(stale()) return gone();
         if(oppM && oppM.none) oppM = null;                             // v0.6.202: a newer bot's 'does not maneuver.' is no maneuver
         const oppManeuvers = oppM ? 1 : 0;
         if(oppM && oppM.range === 'close' && !myManeuvers) this._range = 'close';   // v0.6.164: a human's 'maneuvers to close.' at close is no flip (direction, not parity)
@@ -7942,11 +7942,11 @@ class Bot {
        ranged/weapon option I'd rather keep available for myself) -- restricting the
        opponent is free value only when I'm not restricting away something I wanted. */
     this._handStrikeOnly = false;
-    await this._phaseAsk(2); if(stale()) return SUP;   // v0.6.165: "Anything before strikes?"
+    await this._phaseAsk(2); if(stale()) return gone();   // v0.6.165: "Anything before strikes?"
     const isG = g => g === true || !!(g && g.grapple);   // v0.6.202: the before-strikes answer -- { grapple } / { none }, or a test's bare true
     let oppG = null;
     if(hsFirst){                                                       // v0.6.202 (R2, point 16): the acting bot plays its Grapple or says it has nothing -- first; its Grapple restricts my strike choice below
-      oppG = mv.n || mv.want === 'long' ? await this._awaitPreOrCounter(myVamp, mv) : await this._awaitOppGrapple(this._hsWaitMs()); if(stale()) return SUP;   // v0.6.214: after a maneuver of mine the acting bot may answer it first (a round with no maneuver of mine waits as before)
+      oppG = mv.n || mv.want === 'long' ? await this._awaitPreOrCounter(myVamp, mv) : await this._awaitOppGrapple(this._hsWaitMs()); if(stale()) return gone();   // v0.6.214: after a maneuver of mine the acting bot may answer it first (a round with no maneuver of mine waits as before)
       if(!oppG) this._hsMiss('before-strikes'); else if(isG(oppG)) this._handStrikeOnly = true;
     }
     const grapple = this._bestImmortalGrappleFor(myVamp);
@@ -7961,7 +7961,7 @@ class Bot {
       const wg = this._combatMind() ? this._wantGrapple(myVamp) : { play: true, why: 'v0.6.155: play unless it costs me a non-hand option' };   // v0.6.156 (Johan): Grapple only with Roundhouse-class damage, active Crows or a strength bonus -- cmb1 wasted 8 of 17 on fists
       this.o.log('grapple (' + myVamp.name + '): ' + wg.why + (wouldCostMe ? ' -- but it would cost me a non-hand option' : ''));
       if(!wouldCostMe && wg.play){
-        await this._combatGate(true); if(stale()) return SUP;   // v0.6.202 (points 5, 7)
+        await this._combatGate(true); if(stale()) return gone();   // v0.6.202 (points 5, 7)
         this._rnd.grapple = grapple.superior ? 'superior' : 'inferior';
         if(grapple.superior && this._combatMind()) this._bundledPress = true;   // v0.6.156: "[POT] ... with 1 optional press" -- Nosferatu's only press engine, never consumed before
         this.hand.splice(grapple.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
@@ -7975,18 +7975,18 @@ class Bot {
         this.push();
       }
     }
-    if(hs && !this._rnd.grapple){ await this._combatGate(false); if(stale()) return SUP; this._hsNothing(myVamp, 'pre-strike'); }   // v0.6.202: the step's answer when I play nothing
-    await this._phaseAfter(2, !!this._rnd.grapple); if(stale()) return SUP;   // v0.6.165
-    if(!hs){ oppG = await this._awaitOppGrapple(Math.min(200, (this.o.askSecs || 2) * 1000)); if(stale()) return SUP; }   // a human or an unknown opponent: the old short wait
-    else if(!hsFirst){ oppG = await this._awaitOppGrapple(this._hsWaitMs()); if(stale()) return SUP; if(!oppG) this._hsMiss('before-strikes'); }   // v0.6.202: the acting side waits for the other bot's answer before it strikes
-    await this._phaseAsk(3); if(stale()) return SUP;   // v0.6.165: human acting -> "What is your strike?" (the acting side announces first; the bot then chooses)
-    if(hsFirst){ const pk = await this._awaitOppStrikePeek(this._hsWaitMs()); if(stale()) return SUP; if(!pk) this._hsMiss('strike'); }   // v0.6.203 (Johan, 16 Oct: "the bot should answer known strikes"): between bots too, "the minions first choose their respective strikes (the acting minion first, then their opponent)" [6.4.3] -- I look at the acting bot's strike (it stays pending: the consuming wait after my own strike takes it) and choose knowing it
+    if(hs && !this._rnd.grapple){ await this._combatGate(false); if(stale()) return gone(); this._hsNothing(myVamp, 'pre-strike'); }   // v0.6.202: the step's answer when I play nothing
+    await this._phaseAfter(2, !!this._rnd.grapple); if(stale()) return gone();   // v0.6.165
+    if(!hs){ oppG = await this._awaitOppGrapple(Math.min(200, (this.o.askSecs || 2) * 1000)); if(stale()) return gone(); }   // a human or an unknown opponent: the old short wait
+    else if(!hsFirst){ oppG = await this._awaitOppGrapple(this._hsWaitMs()); if(stale()) return gone(); if(!oppG) this._hsMiss('before-strikes'); }   // v0.6.202: the acting side waits for the other bot's answer before it strikes
+    await this._phaseAsk(3); if(stale()) return gone();   // v0.6.165: human acting -> "What is your strike?" (the acting side announces first; the bot then chooses)
+    if(hsFirst){ const pk = await this._awaitOppStrikePeek(this._hsWaitMs()); if(stale()) return gone(); if(!pk) this._hsMiss('strike'); }   // v0.6.203 (Johan, 16 Oct: "the bot should answer known strikes"): between bots too, "the minions first choose their respective strikes (the acting minion first, then their opponent)" [6.4.3] -- I look at the acting bot's strike (it stays pending: the consuming wait after my own strike takes it) and choose knowing it
     { const tc = this._cTally(); if(this._oppEndedCombat || (this._oppStrike && this._oppStrike.ends) || (tc && this._phaseOppPlayer() && (this._cField('ce') | 0) === 1 && tc.who && tc.who !== this.o.name)){   // v0.6.202 (point 17b): the ce field is a HUMAN opponent's   // v0.6.167 (main's scripted run, bug B): the human's combat ends came FIRST -- I do not strike at all
       this._oppEndedCombat = true; this._oppStrike = null; this._rnd.strike = 'none'; this._rnd.dealt = 0; this._rnd.taken = 0;
       this.o.log('combat (' + myVamp.name + '): their combat ends came first -- no strike from me, no damage either way');
       return { oppEnded: true }; } }
     if(isG(oppG)) this._handStrikeOnly = true;
-    await this._combatGate(true); if(stale()) return SUP;   // v0.6.202 (point 5): a hold stops my strike -- the human's own strike line ends a held step, and the bot used to strike, resolve and ask on under the hold
+    await this._combatGate(true); if(stale()) return gone();   // v0.6.202 (point 5): a hold stops my strike -- the human's own strike line ends a held step, and the bot used to strike, resolve and ask on under the hold
     if(this._handStrikeOnly && this._rnd.gunCommitted){   // v0.6.174 (sweep pilot, the Immortal Grapple ruling [TOM 19951217]): committed to a non-hand strike by the gun's maneuver, then Grapple -- NO strike at all this round, not a hand strike
       this._rnd.strike = 'none (Grapple)'; this._rnd.dealt = 0;
       this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> gets no strike this round (committed to ' + esc(this._rnd.gunCommitted) + ' by its maneuver; Immortal Grapple).' });
@@ -8012,7 +8012,7 @@ class Bot {
       this.send({ t: 'log', html: 'Combat ends \u2014 <b>' + esc(ce.name) + '</b>.' });   // the card's name for the table
       if(ce.unlock) myVamp.locked = false;
       this._rnd.strike = ce.name; this._rnd.dealt = 0; this._rnd.taken = 0; this._stealSettle(myVamp, 'combat ends');   // v0.6.196: combat ends first -- a parked steal never lands
-      if(!(hs && !hsFirst)){ const o2 = await this._phaseAfter(3, true).then(() => stale() ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs))); if(stale()) return SUP; if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // consume their strike line (the dodge branch's reason): keeps the one-slot stash clean for the NEXT combat. v0.6.203: not when I am the acting bot -- the answering bot sees my combat ends first and strikes no more (an older bot's late line is dropped at the next announce, _clearCombatStashes)
+      if(!(hs && !hsFirst)){ const o2 = await this._phaseAfter(3, true).then(() => stale() ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs))); if(stale()) return gone(); if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // consume their strike line (the dodge branch's reason): keeps the one-slot stash clean for the NEXT combat. v0.6.203: not when I am the acting bot -- the answering bot sees my combat ends first and strikes no more (an older bot's late line is dropped at the next announce, _clearCombatStashes)
       { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' plays ' + ce.name + ': combat ends, no damage either way' + (ce.unlock ? '; ' + myVamp.name + ' unlocks' : '') + '.'; if(this._phasesOn()) this.note(ln); else this.chat(ln + ' Tell me if your side differs.'); }   // v0.6.204 (lever c)
       this.push();
       return { ended: true };
@@ -8045,7 +8045,7 @@ class Bot {
       }
       this._rnd.strike = dodge.name; this._rnd.dealt = 0; this._rnd.taken = this._oppCarrionCrows ? this._oppCarrionCrows.n : 0; this._stealSettle(myVamp, 'dodge');   // v0.6.196: my dodge -- their steal does not reach me
       if(dodge.addStrike > 0){ this._xr.grant = dodge.addStrike; this._xr.grantBy = dodge.name; if(dodge.limited) this._xr.used.limited = true; }   // v0.6.213 (V5 wave 1): Arms of Ahriman [OBL] -- 'Strike: dodge, with 1 additional strike (limited)'
-      { const o2 = await this._phaseAfter(3, true).then(() => stale() ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs))); if(stale()) return SUP; if(o2 && o2.vamp) this._learnOpp(o2.vamp); if(o2) this._xr.p1seen = true; }   // v0.6.4: a dodge needs nothing from the opponent (0/0 regardless) -- but consuming their strike line here keeps the one-slot stash clean for the NEXT combat, and synchronises the round's end
+      { const o2 = await this._phaseAfter(3, true).then(() => stale() ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs))); if(stale()) return gone(); if(o2 && o2.vamp) this._learnOpp(o2.vamp); if(o2) this._xr.p1seen = true; }   // v0.6.4: a dodge needs nothing from the opponent (0/0 regardless) -- but consuming their strike line here keeps the one-slot stash clean for the NEXT combat, and synchronises the round's end
       /* v0.6.27 (Johan's standing question, checking Carrion Crows for uncertainty --
          the DODGE-BYPASSES-ENVIRONMENTAL-DAMAGE bug): this branch used to `return`
          immediately here, before the code below that applies the opponent's active
@@ -8078,14 +8078,14 @@ class Bot {
           }
         }
         if(this._xBeforeNeed(myVamp)) await this._xBeforeLine(myVamp);   // v0.6.213: the acting bot's additional strike goes before its round line
-        if(stale()) return SUP;
+        if(stale()) return gone();
         if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + line2); else this.chat('Trainbot combat \u2014 ' + line2 + ' Tell me if your side differs.');   // v0.6.204 (lever c)
         this.push();
         if(this._xAfterNeed(myVamp)) await this._xAfterLine(myVamp);   // v0.6.213: the additional strikes
         return;
       }
       if(this._xBeforeNeed(myVamp)) await this._xBeforeLine(myVamp);   // v0.6.213: the acting bot's additional strike goes before its round line
-      if(stale()) return SUP;
+      if(stale()) return gone();
       { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' dodges: no damage dealt or taken this round.'; if(this._phasesOn()) this.note(ln); else this.chat(ln + ' Tell me if your side differs.'); }   // v0.6.204 (lever c)
       this.push();
       if(this._xAfterNeed(myVamp)) await this._xAfterLine(myVamp);   // v0.6.213: the additional strikes (Arms of Ahriman [OBL]'s own among them)
@@ -8174,7 +8174,7 @@ class Bot {
        table -- no human types the strike grammar) falls back to the old
        assume-1 within askSecs, with the "tell me if it differs" chat intact. */
     const opp = await this._phaseAfter(3, true).then(() => stale() ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs)));
-    if(stale()) return SUP;
+    if(stale()) return gone();
     this._rnd.strikeSeen = !!opp; if(opp) this._xr.p1seen = true; if(this._stashRejects && this._stashRejects.length){ this._rnd.rejects = this._stashRejects; this._stashRejects = []; }   // v0.6.164 diag
     if((opp && opp.ends) || this._oppEndedCombat){   // v0.6.167 (main's scripted run, bug A): combat ends resolves FIRST -- my announced strike never lands, and Carrion Crows gets no strike resolution this round (VEKN ruling via main): no damage either way, no 'dealt' narration, no ph writes below 6
       this._oppEndedCombat = true; this._rnd.dealt = 0; this._rnd.taken = 0;
@@ -8209,7 +8209,7 @@ class Bot {
     let _t1 = this._takePre(myVamp, taken, opp && !opp.dodge ? (opp.aggr | 0) : 0);   // v0.6.213 (V5 wave 1): the first pair's damage, cut out so an additional pair resolves the same way -- prevention on aggravated first (equipment, Guardian Angel, Wall of Filth, then a card)
     const prevent = (_t1.taken + _t1.aggr) > 0 ? this._bestPreventFor(myVamp, opp ? this._noPreventDiscIn() : null) : null;   // v0.6.4: never burn a prevent card against zero incoming (a dodge) -- the old code would have wasted it. v0.6.214: not one the strike's card bars (Soul Burn)
     if(prevent){
-      await this._pace(); if(stale()) return SUP;   // v0.4.5: a beat between the strike and the prevent card -- two combat plays no longer land in the same instant
+      await this._pace(); if(stale()) return gone();   // v0.4.5: a beat between the strike and the prevent card -- two combat plays no longer land in the same instant
       _t1 = this._playPrevent(myVamp, prevent, _t1.taken, _t1.aggr);
     }
     const _r1 = this._takePost(myVamp, _t1.taken, _t1.aggr, true);   // the every-round damage lands with this pair
@@ -8220,7 +8220,7 @@ class Bot {
     if(_r1.aggr > 0) this._rnd.aggrTaken = _r1.aggr;   // v0.6.213: the round row's aggravated damage taken (only when there was some)
     const line = this._takenLine(myVamp, _r1, strikeLine);
     if(this._xBeforeNeed(myVamp)) await this._xBeforeLine(myVamp);   // v0.6.213 (V5 wave 1): the acting bot's additional strike goes BEFORE its round line -- the answering bot reads it from that line on
-    if(stale()) return SUP;
+    if(stale()) return gone();
     if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + line); else this.chat('Trainbot combat \u2014 ' + line + ' One round \u2014 tell me if your side\u2019s damage differs.');   // v0.6.204 (play-test 14 Oct F12, lever c): a phased combat against a human walked every step, so its summary is a report on the log tier -- as a chat it cost the next question a 5 s bubble (F3)   // v0.6.167 (main: carried over from the last reply) -- a phased combat against a human already walked every step
     this.push();
     if(this._xAfterNeed(myVamp)) await this._xAfterLine(myVamp);   // v0.6.213: the answering bot's decision, the answers, the additional pairs
@@ -8233,15 +8233,15 @@ class Bot {
        has no visibility into this round's torpor outcome, only hand/discipline/cost).
        "Only one each round" is free: this hook runs once per _resolveCombatRound call,
        and v1 never calls it twice for the same combat (the single-round cut line).  */
-    if(stale()) return SUP;
-    let _pd = await this._phaseDamage(); if(stale()) return SUP;   // v0.6.165b: the human's Damage step (prevention), then past it -- their client writes the taken line
-    for(let g = 0; _pd === 'extra' && g < 4; g++){ await this._xPairs(myVamp); if(stale()) return SUP; _pd = await this._phaseDamage(); if(stale()) return SUP; }   // v0.6.213: a human who declares an additional strike in the Damage step -- the strikes first, then the step again
+    if(stale()) return gone();
+    let _pd = await this._phaseDamage(); if(stale()) return gone();   // v0.6.165b: the human's Damage step (prevention), then past it -- their client writes the taken line
+    for(let g = 0; _pd === 'extra' && g < 4; g++){ await this._xPairs(myVamp); if(stale()) return gone(); _pd = await this._phaseDamage(); if(stale()) return gone(); }   // v0.6.213: a human who declares an additional strike in the Damage step -- the strikes first, then the step again
     if(unmended === 0 && myVamp.zone === 'ready'){   // v0.6.213: + an additional pair can take me out of the combat too
       const taste = this._bestTasteFor(myVamp);
       const dodgedClean = !!(opp && opp.dodge) && !((this._carrionCrows && this._carrionCrows.n) || this._borneEnvDmg) && !(this._xr && (this._xr.mine | 0));   // v0.6.214 (found by the V5 smoke): their dodge stopped my strike, my crows did nothing and I took no additional strike -- their round line ('dodges: no damage dealt or taken this round.') is no taken line: the wait below sat out its whole askSecs (20 s at the client) and the other bot's press wait ran into its safety net (Form of Mist, since v0.6.212)
       const tasteLine = this._pendingOf('opp-taken');
       if(taste && (!dodgedClean || (tasteLine && (tasteLine.t || 0) >= (this._rndAt || 0)))){   // v0.6.214: after a clean dodge nothing is WAITED for, but THIS round's taken line already in is still read -- the card counts the blood they lost to damage this round, whatever dealt it; an older round's stray line is no loss of this one (the second review)
-        const oppT = this._xLossSum(await this._awaitOppTaken(this._lineGraceMs((this.o.askSecs || 2) * 1000, 'taken'))); if(stale()) return SUP;   // v0.6.213: + their additional pairs' losses   // v0.6.195: vs a human under the tempo, their client writes the taken line as ph steps past Damage -- a round trip, not an askSecs
+        const oppT = this._xLossSum(await this._awaitOppTaken(this._lineGraceMs((this.o.askSecs || 2) * 1000, 'taken'))); if(stale()) return gone();   // v0.6.213: + their additional pairs' losses   // v0.6.195: vs a human under the tempo, their client writes the taken line as ph steps past Damage -- a round trip, not an askSecs
         if(oppT && oppT.n >= (this._combatMind() ? 2 : 1)){   // v0.6.156 (Johan): Taste of Vitae after a Roundhouse / Crows round -- cmb1: 8 of 12 were spent on a fist of 1
           this.hand.splice(taste.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
           this._toAsh(taste.name);
