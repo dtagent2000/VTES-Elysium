@@ -180,8 +180,8 @@ async function runMatch(mi, serverUrl, o, log){
 
     /* everyone seated + decked → the HOST BOT starts the game */
     const t0 = Date.now();
-    while(!(state.lobby && state.lobby.filter(q => q.deck).length === o.bots)){
-      if(Date.now() - t0 > 15000) throw new Error('lobby never filled');
+    while(!(state.lobby && state.lobby.filter(q => q.deck && q.seat).length === o.bots)){   // v1.4.9 (round A, 13 Nov 2026): every seat PICKED too -- a bot's seat pick rides its paced send queue, so at the client pace (--pace 3100) the host's start went out first and the server refused it ('Everyone must pick a seat first.'): the match never began
+      if(Date.now() - t0 > Math.max(15000, 12 * (o.pace | 0))) throw new Error('lobby never filled');
       await sleep(80);
     }
     bots[0].send({ t: 'start' });
@@ -283,7 +283,7 @@ async function runArena(opts){
 
   let owned = null;
   const serverUrl = o.serverUrl || (owned = spawnServer(), await sleep(800), owned.url);
-  log('arena v1.4.8 — Trainbot v' + BOT_VERSION + ' · ' + o.matches + ' match(es) × ' +
+  log('arena v1.4.9 — Trainbot v' + BOT_VERSION + ' · ' + o.matches + ' match(es) × ' +
       o.bots + ' bots · personas ' + o.personas.join('/') + ' · decks ' + o.decks.join('/') + ' · start pool ' + o.startPool);
   log('  seating: ' + (FIXED_SEATS ? 'FIXED (v1.2 rotation, neighbourhoods constant)' : 'RANDOM per match, seed ' + RUN_SEED + ' (repeat with --seed ' + RUN_SEED + ')'));   // v1.3.0
   if(Object.keys(o.knobs).length || Object.keys(o.seatKnobs).length){
