@@ -10376,12 +10376,17 @@ class Bot {
   _askSeen(a){
     const m = this._openLine;
     if(!m || !this.ws || this._sq.indexOf(m) < 0){ a.announced = true; return; }
-    a.announced = false;
+    a.announced = false; a.line = m;   // v0.6.227 (round E): the line the window opens on -- _staleAnswer asks the queue about it at the answer's time
     const cbs = this._wireCbs || (this._wireCbs = new WeakMap()), l = cbs.get(m), f = () => { a.announced = true; };
     if(l) l.push(f); else cbs.set(m, [f]);
   }
   _staleAnswer(a, who, phrase, via){
     if(!a || a.announced !== false) return false;
+    if(a.line && this._sq.indexOf(a.line) < 0){ a.announced = true; return false; }   /* v0.6.227 (round E, the hotseat's dropped Pass): my line has left my
+       queue -- _drain shifts it before ws.send, and the hotseat bridge delivers in the same call: the target's instant Pass (a reactions-only
+       window it has nothing for) reached me INSIDE my own send, before the wire hooks in _drain's finally flipped `announced`, and was
+       dropped as stale; the window ran out its clock (50 of 53 modifier windows on round A's offline table, ~15 s each). Online the
+       server's round trip puts every answer after the hooks. An answer while the line is still QUEUED stays stale (v0.6.206). */
     const sp = (this.players || []).find(q => q && q.name === who); if(!(sp && sp.bot)) return false;   // a human may answer what the fx clone showed; only a bot's answer is provably early
     this.o.log('stale ' + phrase + ' from ' + who + ' ignored: my action is not on the wire yet -- it answers an earlier window');
     this._emit('stale-answer', { who, phrase, via: via || 'say' });
