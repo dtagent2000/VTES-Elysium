@@ -5,8 +5,8 @@
 `ana-gates.py` v1.1.1 · built against the root's release, client v2.6.174 / srv-2.6.50 (main's canary v1.2.0 143/0 against it);
 the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6.50 and main's canary v1.2.0 (refreshed 13 Nov).
 
-**Deploy state:** `main` carries v0.6.222 (#67). **Open PRs:** #68 (round A); round B (this release) on it; C on B — merge in
-that order.
+**Deploy state:** `main` carries v0.6.222 (#67). **Open PRs:** #68 (round A); #69 (round B, this release) on it; C on #69 —
+merge in that order.
 
 ## Last gates (v0.6.224 release bytes `8502f8fb`, 14 Nov 2026)
 Suite **2459/0 ×3** (frozen snapshots) · canary **143/0** ×2 · test-cardfx 321/0 · hotseat **11/0** · main's client suite
