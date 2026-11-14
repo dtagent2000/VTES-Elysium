@@ -43,6 +43,15 @@
   weight (0.3, 0.6 on a deck axis ≥ 1.3) keeps the score under 1 unless the posture and the predator pressure lift it.
   (K0) step 2 at `jackBurn=0` is IDENTICAL to step 1 on all three designs, the manifest's new `jackBurn: 0` normalized (Jack's
   new cardfx mode is read only behind the knob, and the Ball's loop skips Jack).
+  *Registered before the egress review's re-measure* (14 Nov; the review: c₁ by turn order, H not floored, the Jack reads in the
+  plan, and a defence half the mirror bench cannot fire — Jack's owner and its burners never both carry the knob there):
+  (K0′) these bytes at `jackBurn=0` are IDENTICAL to step 1 on all three designs. (J′) with the knob in every seat the 240's
+  Jack-burn picks rise from the review bytes' 34 to between 34 and 50 (my prey now pays one counter less a round: the offensive
+  half shrinks), Jack's median life stays at 2 or falls, Nosferatu's paired VP on the 240 against `jackBurn=0` stays below 0, and
+  the mirror bench (baseline 0, the variant seat at 1, 288 matches) shows no loss. (D) a bench pinned to Nosferatu's seat, every
+  seat at 1, the variant Nosferatu at 0 (288 an arm): the control's Nosferatu meets ≥ 15 burn windows carrying its Jack's worth,
+  the variant's none; the control blocks a larger share of the burns at its Jack; removing the defence does not gain — the
+  variant's paired VP interval is not wholly above 0 (I expect a small loss inside the noise).
 - **v0.6.223 (14 Nov 2026)** — Round A (Johan's "Yes kör", 13 Nov 21:45): the table runs with Toreador's guide check (D-112),
   v0.6.222's two riders, and the tool fixes the runs called for. `docs/reports/REPORT-table-runs-2026-11-13.md`,
   `docs/reports/REPORT-toreador-guide-check-2026-11-13.md`.
