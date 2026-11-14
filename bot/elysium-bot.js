@@ -842,7 +842,7 @@ class Bot {
      the limit at any paceMs (burst turns at paceMs 0 hit ~20 msg/s raw).   */
   send(obj){ if(obj && this.started && (obj.t === 'log' || obj.t === 'chat')) this._evRecord(this.o.name, obj.t === 'log' ? stripTags(obj.html || '') : String(obj.msg || ''), obj.t, true); if(obj && obj.t === 'log' && !this._noting) this._openLine = obj; this._sq.push(obj); this._drain(); }   // v0.6.206: _openLine = my last action line (a note is an explanation, never what a window opens on) -- _askSeen anchors on it   // v0.6.176: my own lines enter the event log too -- both sides of every exchange in one place
   _drain(){
-    if(this._sqT || !this._sq.length) return;
+    if(this._sqT || !this._sq.length || this._draining) return;   // v0.6.227 (round E's review): not inside my own send -- a synchronous bridge runs my handlers inside ws.send, and a line one of them queues waits for the drain after this one (the gap, the order at the other seats)
     const later = ms => { this._sqT = setTimeout(() => { this._sqT = null; this._drain(); }, ms); };
     if(!this.ws) return later(100);                    // queued before connect finished
     const now = Date.now();
@@ -888,7 +888,7 @@ class Bot {
            board push that did not touch the hand off the wire. */
         this._syncOpenHand();
       }
-      this.ws.send(obj);
+      this._draining = true; try { this.ws.send(obj); } finally { this._draining = false; }
       this._lastSendAt = Date.now(); this._lastSentT = obj && obj.t;
       if(obj && obj.t === 'chat'){ this._lastChatAt = this._lastSendAt; this._lastChatWireAt = this._lastSendAt; }   // the bubble starts when the wire carries it -- _pace's chat-hold and _chatSettleMs read _lastChatAt; v0.6.207: the drain's beat reads _lastChatWireAt (the last CHAT on the wire, never a say's queue stamp)
       if(ht !== undefined) this._holdShown = ht;   // v0.6.204 (F4): what the table last SAW of my hold

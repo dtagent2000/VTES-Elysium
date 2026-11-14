@@ -135,7 +135,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   plays, how each left play, its rounds in play; the burns the knob `jackBurn` picked, by deck, and how many were blocked) · `ana-wait.py` (tempo) ·
   `ana-probe.py` (`probe-order` / `probe-hold` rows) · `ana-cards.py` (uses per card, never-played, untitled plays) ·
   `ana-combat.py` + `ana-combat2.py` (handshake integrity 100 % on a bot-only table, agreement, `hsMiss`) · `ana-rush.py` ·
-  (`ana-windows.py`'s gate of 0 is the arena's; on the sim it informs: 4 of 5143 windows ran out on the 240) ·
+  (`ana-windows.py`'s gate of 0 is the arena's; on the sim it informs: a few flagged, none lost) ·
   `ana-home.py A B` (paired home / blocks / damage / VP) · `ana-open.js` (the opening) · `gen-match-dossier.js <trace>` (one
   reviewable file per match; read Manifests → Endgame / VP → pool trajectories → then hunt) · `gen-trace-harvest.js <dir>`
   (metrics + the price referee: printed vs paid cost; a MISMATCH voids the series) · `gen-batch-review.js` · `gen-null-review.js`.

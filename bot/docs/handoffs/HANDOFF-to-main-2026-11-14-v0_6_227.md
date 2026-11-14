@@ -12,8 +12,9 @@ At a hotseat table with bots, a bot's bleed modifier opened a window that ran ou
 closing on the target bot's Pass: your `hotBridge` delivers a line in the same call, so the target's instant Pass reached the acting
 bot inside its own send, before the bot counted its line as sent, and the bot's guard (bot v0.6.206) dropped it as an answer to an
 earlier window. Round A measured 50 of 53 such windows at the real clock; online the server's round trip hid it. The bot now counts
-a line as sent once it has left its queue. The bridge is right as it is: a synchronous relay is a fair transport, and the bot must
-handle it. A human at a hotseat no longer waits out each bot's modifier.
+a line as sent once it has left its queue, and never sends inside its own send. **A question:** the bridge plays the server's role,
+and the server delivers after a send returns, while `hotBridge.toBot` delivers inside it. Should it stay synchronous? The bot now
+handles both; one order is still open on our side at pace 0 (a window that opens after its line was delivered, our BOARD).
 
 ## 3. Run here
 On the release bytes (`elysium-bot.js` sha256 `…`): written with the gates.

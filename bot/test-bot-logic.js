@@ -13245,7 +13245,7 @@ async function connectWithRetry(client, tries = 30){
        LAST LINE OF 172 is the closing brace below. */
     {
       console.log('\n[172] v0.6.227 -- round E: an answer inside my own send (the hotseat bridge)');
-      const mk172 = sync => { const a = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Hanna', persona: 'expert', paceMs: 0, askSecs: 2, log: () => {} });
+      const mk172 = (sync, pace) => { const a = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Hanna', persona: 'expert', paceMs: pace || 0, askSecs: 2, log: () => {} });
         a.seat = 1; a.started = true; a.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Nora', bot: true }];
         a.wire = []; a.stale = []; a.onEvent = (t, m) => { if(t === 'bot:stale-answer') a.stale.push(m); };
         a.ws = { send: o => { a.wire.push(o); if(sync && o && o.t === 'log' && sync.re.test(String(o.html || ''))) a._dispatch({ t: 'say', i: SI(sync.phrase), who: 'Viktor' }); } };   // the bridge: Viktor hears my line in the same call and answers at once
@@ -13275,6 +13275,21 @@ async function connectWithRetry(client, tries = 30){
         ok(early === 1 && B.stale.length === 1 && B._combatArmed === true && !!B._ask && B._ask.contested === true,
            '172b a Block! inside my send of the announce contests the window; a Pass while the announce was queued stayed stale (got ' + JSON.stringify({ early, stale: B.stale.length, armed: !!B._combatArmed, contested: !!(B._ask && B._ask.contested) }) + ')');
         end([B]); }
+
+      // c) the egress review: an answer accepted inside my send runs my handlers inside ws.send, and a line they queue must wait for the
+      //    next drain -- never a send inside a send (the 200 ms gap at the client pace, and the order at the other seats of a fan-out:
+      //    the bridge hands my line to the seats one by one, so a nested frame reached the later seats BEFORE the line it answered).
+      //    At the client pace, a full token bucket and the gap met: my line goes out at once; a handler inside its send queues another
+      //    line -- it leaves at the first depth, 200 ms later (the first fix nested it at depth 2, ~0 ms after)
+      { const C = mk172(null, 3100); C._tok = 8; C._tokT = Date.now(); C._lastSendAt = Date.now() - 1000; let depth = 0, maxDepth = 0, t0 = 0; const at = [];
+        C.ws = { send: o => { depth++; maxDepth = Math.max(maxDepth, depth); C.wire.push(o); t0 = t0 || Date.now(); at.push({ html: String(o.html || o.t), ms: Date.now() - t0, depth });
+          try { if(/adds \+1 bleed/.test(String(o.html || ''))) C.send({ t: 'log', html: 'inner: a line my handler queued inside the send' }); } finally { depth--; } } };
+        C.send({ t: 'log', html: '<b>Lloyd Brooks</b> adds +1 bleed (= 2).' });
+        await sleep(500);
+        const inner = at.find(x => /^inner/.test(x.html));
+        ok(maxDepth === 1 && at.length === 2 && /adds/.test(at[0].html) && !!inner && inner.depth === 1 && inner.ms >= 180,
+           '172c a line queued inside my own send waits for the next drain: depth 1, after the gap (got ' + JSON.stringify({ maxDepth, wire: at }) + ')');
+        end([C]); }
     }
 
 
