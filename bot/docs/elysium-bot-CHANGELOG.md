@@ -32,6 +32,28 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.226 (in progress, 14 Nov 2026)** — Round D, RULINGS O-40 → D-115 (Johan, 14 Nov 12:06: "vi gör på ditt förslag i O-40"):
+  Smiling Jack's self-consistent runway, behind the knob `jackRunway` (0 = v0.6.225). A seat's runway against Jack R solves
+  R·(c₁ + fc) + R(R−1)/2 = pool, so the price over it is pool − R·fc, never above the pool (v0.6.225's flat pool / (c₁ + fc) let it
+  pass: 5 of 56 burns on the 240). The owner's life (a flat 1 + fc a round) is unchanged.
+  - *Predictions* (registered before any measurement, D-93; v0.6.225's figures from its own traces, the 240 and the 600):
+    (K0) at 0: IDENTICAL to v0.6.225 on the 240, the V5 smoke and the 600 (the version string set back; the manifest's
+    `"jackRunway":0` dropped, the only expected difference). At 1, every seat, against v0.6.225: (R1) a match without a Smiling Jack
+    in play is IDENTICAL; each DIVERGED match's first difference comes once a Jack is in play; `ana-gates.py` PASS on all three
+    tables. (R2) no plan row prices Jack above its seat's pool (v0.6.225: 70 of 331 rows on the 240, 335 of 1366 on the 600) and
+    none at 100 or more (28, 98); no burn candidate or pick priced above the actor's pool at the decision (candidates 5 and 44,
+    picks 5 and 29), save a pool spent after the minion read (each such case listed with its cause). (R3) the defence's worth
+    (`jackOwn`) at most 60 — offW ≤ 1.5 times a prey's pool — on the 240, the 600 and the bench (377 now); the 240's block-as-target
+    worth likewise (378). (R4) the burn picks within a quarter of v0.6.225's: the 240 42–70 (56), the 600 161–269 (215) — the prices
+    fall where the runway bound H, little at the late short runways where the two runways nearly agree, and wDef 2 comes more often
+    (a shorter runway passes under my turns to oust my prey): its share of candidates at least 80 % on the 240 (80 %), 77 % on the
+    600 (77 %). (R5) the tenfold picks (a burn worth ten times its alternative) do not rise (12, 37), none priced above the actor's
+    pool (5, 17). (R6) Jack's median life 1–2 rounds on the 240 (1.0), 1–3 on the 600 (2.0); Nosferatu's paired VP against no
+    burns (v0.6.224's K0 traces) still below 0 on the 240 and the 600 (−0.13, −0.10), the runway's own move on it (v0.6.225 → this)
+    within ±0.10. (R7) the mirror bench (the four starters, every seat the variant in turn, 288; every seat at 0, the variant at
+    1 — the burn is on at every seat, so the owner's and the burner's reads both fire there, L-91 does not bite): no loss, the
+    variant seat's 95 % interval reaches 0 or above; `ana-gates.py` on its arms fails only the ledger gate every fresh-deal bench
+    fails (BOARD). (F) if (R7) holds, `jackRunway` flips to 1 in this PR (D-114's rule) and (R1)–(R6) are read on the release bytes.
 - **v0.6.225 (14 Nov 2026)** — Round C, RULINGS D-113 (3)–(4) (Johan, 13 Nov, and his order of 21:45): a human's Toreador Grand
   Ball read first and asked last, and the cardfx `memo` descriptor, `specs/spec-human-ball-memo-2026-11-14.md`.
   - *The descriptor* (4): Toreador Grand Ball's curated entry carries `memo` — what the card picks (two Toreador), its lasting roles
