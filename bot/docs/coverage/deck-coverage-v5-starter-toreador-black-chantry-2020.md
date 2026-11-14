@@ -1,6 +1,6 @@
-# deck-coverage — V5 Starter — Toreador (Black Chantry 2020) (2026-10-29)
+# deck-coverage — V5 Starter — Toreador (Black Chantry 2020) (2026-11-14)
 
-Genererad av `gen-deck-coverage.js` v1.1.40 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-toreador.json.
+Genererad av `gen-deck-coverage.js` v1.1.47 mot `elysium-cardfx.json` (fxv 1, 2391 lib / 1822 crypt / 3347 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-toreador.json.
 
 Syfte: göra "kan botten spela den här leken?" till en mekanisk kontroll — curated-djup och
 handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPPORT, inte en gate.
@@ -9,40 +9,41 @@ handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPP
 
 | Hink | Kopior | Andel |
 |---|---:|---:|
-| Automatiserade (HANDLER/FULL) | 56 | 73% |
-| Delvis (PARTIAL/TABLED-ONLY) | 14 | 18% |
-| Ej spelbara av botten idag | 7 | 9% |
+| Automatiserade (HANDLER/FULL) | 77 | 100% |
+| Delvis (PARTIAL/TABLED-ONLY) | 0 | 0% |
+| Ej spelbara av botten idag | 0 | 0% |
 
-Per verdict: FULL 56 · PARTIAL 8 · TABLED-ONLY 6 · NAME-ONLY 5 · INERT 2
+Per verdict: FULL 77
 
 ## Konsumtionsläget (skannat ur bottens källa vid körning)
 
-- Spel-nycklar botten läser: `aggrHands`, `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bleedNullify`, `bloodPerMargin`, `bounce`, `burnPrevent`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockMinion`, `lockStealth`, `lockToUnlock`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `poolFromHost`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `rushGrant`, `stealth`, `strengthAction`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
+- Spel-nycklar botten läser: `abstainLock`, `abstainVoter`, `aggrHands`, `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bleedAtAnnounce`, `bleedDiscardCombat`, `bleedNullify`, `blockedPoolBurn`, `bloodPerMargin`, `bounce`, `burnActor`, `burnCardAction`, `burnPrevent`, `cancelBlock`, `discUp`, `dodge`, `endAction`, `endCombatLock`, `fameOnTarget`, `fetchEquip`, `grandBall`, `hostIntercept`, `hostPrevent`, `icpVs`, `intercept`, `jackEngine`, `lockIntercept`, `lockMinion`, `lockStealth`, `lockToUnlock`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `poolFromHost`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `recruitDiscount`, `reduce`, `rush`, `rushGrant`, `rushHostBy`, `rushSelf`, `stealth`, `strengthAction`, `strengthBonus`, `strikeCE`, `titleVotes`, `unlock`, `unlockAfterCombat`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
 - Fas-inkomst (kräver `phase` på moden): `bankIn`, `bankOut`, `bloodToPool`, `handCycle`, `handSize`, `handSizePerCounter`, `poolGain`, `poolToBlood`, `rescueTorpor`, `transferBurnPool`, `transferSwap`
 - Hotläsning (motståndarkort, gör ALDRIG egna kort spelbara): `bloodBurn`, `poolDmg`, `stealBlood`
+- Disciplinrader (v1.1.47): varje rad i kortets text som börjar med disciplinmarkörer måste ha en mode -- annars PARTIAL (KRCG:s text, `vtes.json`).
 
 ## Bibliotek (20 unika, 77 kopior)
 
 | Kort | Qty | Verdict | Modes (at → fx → konsumerad/nåbar) | Taggar |
 |---|---:|---|---|---|
 | Aire of Elation | 2 | FULL | [pre] bleed → ✓(bleed@mod-window)/✓<br>[PRE] bleed → ✓(bleed@mod-window)/✓ | auto |
-| Art Museum | 1 | TABLED-ONLY | [—] bloodAdd → —/✓ | auto · persist |
+| Art Museum | 1 | FULL | [—] bloodAdd,bloodAddTo,bloodAddClan → ✓(bloodAdd@lock-income)/✓ | curated · persist |
 | Bewitching Oration | 4 | FULL | [pre] votes → ✓(votes)/✓<br>[PRE] votes → ✓(votes)/✓ | auto |
-| Change of Target | 2 | INERT | [—] unlock → —/✓ | auto |
+| Change of Target | 2 | FULL | [—] unlock,endAction → ✓(unlock)/✓ | curated |
 | Consanguineous Boon | 4 | FULL | — | auto |
-| Creepshow Casino | 1 | TABLED-ONLY | [—] stealth → —/✓ | auto · persist |
-| Elysium: The Palace of Versailles | 1 | FULL | [—] votes → ✓(votes)/✓ | auto · persist |
+| Creepshow Casino | 1 | FULL | [—] lockStealth,lockStealthAt → ✓(lockStealth)/✓ | curated · persist |
+| Elysium: The Palace of Versailles | 1 | FULL | [—] votes,votesEach → ✓(votes)/✓ | curated · persist |
 | Enchant Kindred | 6 | FULL | [pre D] bleedAct,bleed → ✓(bleedAct)/✓<br>[PRE] bloodAdd,bloodAddTo,bloodAddYounger,actStealth → ✓(bloodAdd@unc-stock)/✓ | auto |
 | Kine Resources Contested | 8 | FULL | — | auto |
 | Majesty | 6 | FULL | [pre] combatEnds,strikeCE → ✓(strikeCE)/✓<br>[PRE] combatEnds,strikeCE,unlock → ✓(strikeCE)/✓ | auto |
 | Parity Shift | 4 | FULL | — | auto |
-| Perfect Paragon | 4 | FULL | [pre] votes → ✓(votes)/✓ | auto |
-| Resist Earth's Grasp | 8 | PARTIAL | [cel] maneuver,press → —/✓<br>[CEL] stealth → ✓(stealth)/✓ | auto |
-| Scalpel Tongue | 4 | NAME-ONLY | — | auto |
+| Perfect Paragon | 4 | FULL | [pre] votes → ✓(votes)/✓<br>[PRE] icpVs → ✓(icpVs)/✓ | curated |
+| Resist Earth's Grasp | 8 | FULL | [cel] press → ✓(press@resolveCombat)/✓<br>[cel] maneuver,pressOpt → ✓(maneuver@resolveCombat)/✓<br>[CEL] stealth → ✓(stealth)/✓ | curated |
+| Scalpel Tongue | 4 | FULL | [cel+pre] abstainVoter → ✓(abstainVoter)/✓<br>[CEL+PRE] abstainVoter,voterBloodBurn → ✓(abstainVoter)/✓ | curated |
 | Second Tradition: Domain | 4 | FULL | [—] intercept → ✓(intercept)/✓<br>[—] unlock,intercept,payBlood → ✓(unlock)/✓ | curated |
 | Society Hunting Ground | 1 | FULL | [—] bloodAdd,bloodAddTo → ✓(bloodAdd@hunting-ground)/✓ | curated · persist |
-| Toreador Grand Ball | 4 | TABLED-ONLY | [— D] — → —/✓ | auto · persist |
-| Toreador Justicar | 1 | NAME-ONLY | — | auto |
+| Toreador Grand Ball | 4 | FULL | [—] grandBall → ✓(grandBall)/✓<br>[— D] burnCardAction,burnStealthClan → ✓(burnCardAction)/✓ | curated · persist |
+| Toreador Justicar | 1 | FULL | — | curated · persist |
 | Villein | 6 | FULL | [—] poolFromHost,poolFromHostMin,hostCopyCost → ✓(poolFromHost)/✓ | curated · persist · trifle |
 | Voter Captivation | 6 | FULL | [pre] bloodPerMargin → ✓(bloodPerMargin)/✓<br>[PRE] bloodPerMargin,marginToPool → ✓(bloodPerMargin)/✓ | curated |
 
@@ -63,15 +64,7 @@ Per verdict: FULL 56 · PARTIAL 8 · TABLED-ONLY 6 · NAME-ONLY 5 · INERT 2
 
 ## Kurationskö (allt som inte är FULL/HANDLER, qty-fallande)
 
-| Kort | Qty | Verdict | Föreslaget nästa steg |
-|---|---:|---|---|
-| Resist Earth's Grasp | 8 | PARTIAL | okonsumerade modes: [cel] maneuver,press |
-| Scalpel Tongue | 4 | NAME-ONLY | curate:a modes (auto-tiern extraherade inget) |
-| Toreador Grand Ball | 4 | TABLED-ONLY | spelas blint som master; phase-inkomst/handler om effekten ska automatiseras |
-| Change of Target | 2 | INERT | inga konsumerade moder |
-| Art Museum | 1 | TABLED-ONLY | spelas blint som master; phase-inkomst/handler om effekten ska automatiseras |
-| Creepshow Casino | 1 | TABLED-ONLY | spelas blint som master; phase-inkomst/handler om effekten ska automatiseras |
-| Toreador Justicar | 1 | NAME-ONLY | curate:a modes (auto-tiern extraherade inget) |
+Tom — hela biblioteket är automatiserat. 🎉
 
 ## Antaganden (uttalade, inte tysta)
 

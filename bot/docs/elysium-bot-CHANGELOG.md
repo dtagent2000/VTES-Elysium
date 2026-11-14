@@ -32,6 +32,66 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.228 (14 Nov 2026)** — Round F, "Toreador 100 %" (Johan, 14 Nov: "Vi kan väl köra klart toreadorerna helt 100%
+  först"): corrections only (knob hygiene, L-62) — Perfect Paragon's [PRE], Versailles' vote per titled Camarilla vampire, Scalpel
+  Tongue's [cel][pre] as one requirement, Eyes of the Wild (a locked Gangrel's block, its paid intercept, the clan requirement read
+  by the intercept and unlock finders), the ledger's mode per discipline line, and the Grand Ball on the turn it pays (the
+  look-ahead rule; guide-check report proposal 1). Villein's blood (proposal 8) is a knob: it goes to the bench round with 2–7.
+  RULINGS D-116 (the design), O-42 (the Ball's turn); the Toreador coverage report 77 of 77 copies automated.
+  - *The change*: cardfx 190 curated (+ Perfect Paragon, Versailles, Eyes of the Wild; Scalpel Tongue `cel+pre`), new keys `icpVs`,
+    `votesEach`, `relockIfNoBlock`. `_modeStealth` / `_condBlockerKind` / `_condStealthAdjust` / `_condStealthLook` (a stealth
+    against the named blocker, off for one it does not reach, a look when the name arrives after the counter); `_votesEachVoters`;
+    `_bestUnlockReactFor`, `_bestInterceptFor`, `_interceptStack` and `_wakesInHand` read the card's clan (`_entryReqOk`); Eyes'
+    paid +1 at the attempt (`_grantPaidIntercept`, per Gangrel) and its relock (`_flushRelock`: the action's end, or a pending that
+    replaces it); `_lockedRouteBodies` in `interceptPotential` and `_wakeBlockers`, and `_commitBlock`'s route raises the body they
+    counted; `_grandBallPlan` locks the smallest Toreador and asks the free one's scorer (`_bestRushFor` quiet for it); the abstain
+    line keeps §12's one-token level; `NET_STEALTH_ADJ` (the tally net reads the adjustment line). Coverage v1.1.47 (`discLineGaps`),
+    ledger v1.1.3 (its self-test 67). Section 173 (15: a–m, b2, i2; 0/15 on v0.6.227, 6 fail on the review's draft), 166d's fixture
+    and 166h / 166j / 167a name the card; `test-cardfx.js` 324 (the round's readings pinned). `docs/CARDS.md` from the 240, the 600
+    and the V5 smoke (every Toreador card playable).
+  - *Predictions* (registered before any measurement, D-93; the references are v0.6.227's release footprint: the 240, the V5 smoke,
+    the 600): (F1) the 240 (the four starters) IDENTICAL — no starter card's reading changes, and every starter vampire meets its
+    intercept cards' requirements. (F2) the V5 smoke: 12 of 14 dirs IDENTICAL, toreador and gangrel change. (F3) the 600: Perfect
+    Paragon [PRE] is played as stealth (above 0), every time against an ally or a younger blocker (0 against an older or equal one);
+    its vote plays keep at least half of the 135. (F4) every lock of Versailles adds as many votes as I have ready titled Camarilla
+    vampires (at least 1; never locked with none). (F5) Scalpel Tongue never by a vampire that lacks Celerity or Presence (Min-seo:
+    1 play on the 600 → 0). (F6) Eyes of the Wild never as a plain intercept (5 in the gangrel smoke → 0); in a 120-match gangrel
+    series it is played through the locked route at least once, always by a locked Gangrel, and a Gangrel whose block failed ends
+    the action locked. (F7) the Ball: plays fall (319 → at most 250), bars per Ball rise (0.76 → at least 1.0), Balls whose turn
+    bars at least one action rise (66 % → at least 75 %); Toreador's paired VP on the 600 not wholly below 0. (F8) `ana-gates.py`
+    PASS on the 240, the V5 smoke and the 600. (F9) the ledger: 11 FULL rows lose FULL to a discipline line with no mode (13 less
+    Paragon and Scalpel Tongue); Eyes of the Wild stays FULL.
+  - *Amended before any measurement* (the code found it: Eyes of the Wild's route is reached only when the block decision counts a
+    locked body, and it counted only a wake's — on the 600 a locked Toreador prince blocked through Second Tradition 10 times against
+    Ventrue's 244, Toreador carries no wake): the block decision counts the locked routes `_commitBlock` takes first when no unlocked
+    body is there (decision == pick; Second Tradition, Guard Dogs on a bleed, Eyes of the Wild). (F1) and (F2) withdrawn — Ventrue
+    (Second Tradition) and Nosferatu (Guard Dogs) sit in every table. Instead: (F1′) on the 240 every DIVERGED match first differs at
+    a block decision of a seat whose eligible bodies were all locked; Ventrue's Second Tradition (88) and Nosferatu's Guard Dogs (135)
+    through the route rise; no deck's paired VP interval wholly beyond ±0.15. (F2′) on the V5 smoke the same, and `ana-gates.py` PASS.
+    (F10) on the 600 Toreador's Second Tradition through the route rises from 10 to at least 50.
+  - *What came out* (the release bytes, the version set back, against v0.6.227's release footprint; manifests' knob label dropped as
+    in those traces): (F1′) held — the 240 DIVERGED 161 / IDENTICAL 73 / SAME-PLAY 6, every DIVERGED match first differing at a
+    block decision (105) or at the route's body (56: the route now raises the body the decision counted); Second Tradition through
+    the route 88 → 125, Guard Dogs 135 → 237; paired VP nosferatu +0.10 [+0.01, +0.20], tremere −0.11 [−0.21, −0.01], ventrue
+    +0.06, malkavian −0.05 (none wholly beyond ±0.15). (F2′) held — the V5 smoke's first differences are the routes and block
+    decisions (96 of 112), Toreador's own stealth stack and target (5), the Gangrel's (7); `ana-gates.py` PASS on all 14. (F3) held
+    — Paragon [PRE] 229 times as stealth on the 600, each against a younger blocker (no ally or older one); 25 adjustments took it
+    off for a later blocker, 16 put it back; its vote plays 135 → 134. (F4) held — 19 locks of Versailles, votes = titled Camarilla
+    vampires each time (1: 9, 2: 8, 3: 2). (F5) held — Scalpel Tongue 10 plays, none by Min-seo. (F6) held — Eyes never a plain
+    intercept (the gangrel smoke 5 → 0, the route 23); the 120-match gangrel series: 222 through the route, each a locked Gangrel,
+    211 blocked, 11 locked again (the first measure lost a relock when a second Gangrel blocked: fixed, 173j). (F7) failed in its
+    play half — Balls 319 → 308, bars per Ball 0.76 → 0.80, Balls whose turn barred an action 66 % → 71 %: the Ball waited 1,150
+    times (919) for a turn its free Toreador's scorer called the referendum, then the minion phase lost 93 of those turns (an earlier
+    actor called the card 64, the posture kept the free one home 28) — O-42; Toreador's paired VP on the 600 +0.07 [−0.04, +0.17],
+    not below 0. (F8) half held — PASS on the 240, the smoke and the gangrel series; the 600 fails the block gate (R6) and the
+    ledger gate once each, both in match 167: the fizzle misread on the BOARD since v0.6.227 (whose 600 fails the same two there).
+    (F9) held — 11 rows PARTIAL, Paragon and Scalpel FULL, Eyes FULL and playable. (F10) held — Toreador's Second Tradition through
+    the route 10 → 386 (Ventrue 244 → 399, Guard Dogs 381 → 702); paired VP on the 600 nosferatu +0.12 [+0.03, +0.21], tremere
+    −0.10 [−0.19, −0.00], ventrue −0.07, malkavian −0.02.
+  - *Egress*: 10 findings (half-done 6, rule-missed 1, unproven 1, test-weakened 1, stale-doc 1), all fixed — the route's body (2),
+    the Ball's lock (3), Paragon's look after a counter-first blocker and a shout (1, 4), the paid +1 per Gangrel and the relock on a
+    replaced pending (5), the clan in the wake count (6), the Ball through the turn (7), the fixtures that named either card (8),
+    the ledger and HOWTO (9), the adjustment line's reader and the handoff (10).
 - **v0.6.227 (14 Nov 2026)** — Round E, the BOARD's hotseat line (Johan, 14 Nov 12:06: "... och hotseattappet"): the
   hotseat table dropped a bot's Pass in the bleed-modifier window. The cause, in round A's offline traces (the actor's stale-answer
   row in the same millisecond as the target's react snapshot): the hotseat bridge delivers a line in the same call, so the target's

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.46 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.47 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.46';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.47';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -165,6 +165,10 @@ const CLASS = {
   discUp: 'play', capBonus: 'paired', recruitDiscount: 'play', noRecruitEmploy: 'paired', blockedPoolBurn: 'play', unlockAfterCombat: 'play', rushSelf: 'play',
   titleVotes: 'play', abstainLock: 'play', endCombatLock: 'play', rushHostBy: 'play', grandBall: 'play', burnCardAction: 'play', burnStealthClan: 'paired', burnBy: 'paired',   // v1.1.46 (14 Nov 2026, bot v0.6.224, D-114): burnBy -- who may take the burn action (Smiling Jack: 'Vampires can burn this card'), read by _bestBurnCardFor's Jack branch
   endAction: 'play', abstainVoter: 'play', voterBloodBurn: 'paired',
+  /* v1.1.47 (14 Nov 2026, bot v0.6.228, round F): Perfect Paragon [PRE] -- icpVs, the stealth finders' conditional stealth (_modeStealth against the
+     blocker it reaches); Versailles -- votesEach, a rider on votes (_voteBoosts: one vote per matching vampire); Eyes of the Wild -- the locked
+     route's paid intercept (interceptPaidBlood, read beside interceptPaid in _bestUnlockReactFor) and its relock (_clearPending). */
+  icpVs: 'play', votesEach: 'paired', interceptPaidBlood: 'paired', relockIfNoBlock: 'paired',
   titleCard: 'paired', votesPerReady: 'paired',   // a title referendum's terms (ref.fx), consumed through the verdict's titleCard rule
   /* v1.1.42 (2 Nov 2026, bot v0.6.215, V5 wave 3, RULINGS D-104): the wave's keys -- all on masters, read on the board or by the master loop. */
   lockStealthSect: 'paired', lockStealthAt: 'paired',   // Anarch Railroad's sect gate (_lockStealthFor); Creepshow Casino's announce window (_lockStealthAtAnnounce)
@@ -429,7 +433,23 @@ function loadDeck(p){
    NAME-ONLY    — entry exists but has zero modes and no handler/actGrant
    UNRESOLVED   — the three-tier ladder found nothing (typo / alias gap)
    HANDLER-UNREG— entry names a handler CARD_HANDLERS doesn't have (drift alarm)       */
-function judgeLib(h, cryptEs){
+/* v1.1.47 (14 Nov 2026, bot v0.6.228, round F): a card's DISCIPLINE LINES against its modes. KRCG's text gives each level of a card a line that
+   starts with its markers -- '[pre] ...' basic, '[PRE] ...' superior, '[pot][pre]' a combination (both: 'pot+pre', the key _modeUsableBy
+   reads), '[obf] or [tha]' either (each alternative its own key). A FULL verdict needs a mode keyed by every line's requirement (an at-less
+   mode counts for a basic line); a line with none makes the card PARTIAL. Perfect Paragon's [PRE] (no mode, certified FULL) found it.
+   Needs the card text (vtes.json beside the tool; the ledger passes KRCG's); without it the check is not made and the report says so. */
+function discLineGaps(e, text){
+  const ats = ((e && e.modes) || []).map(mo => mo.at || null), have = new Set(ats.filter(Boolean)), atless = ats.some(a => !a);
+  const miss = [];
+  for (const line of String(text || '').split('\n')){
+    const m = /^\s*((?:\[[a-zA-Z]{3,4}\]\s*(?:or\s*)?)+)/.exec(line); if (!m) continue;
+    m[1].trim().split(/\s*\bor\b\s*/).forEach(alt => {
+      const k = (alt.match(/\[([a-zA-Z]{3,4})\]/g) || []).map(x => x.slice(1, -1)).join('+');
+      if (k && !have.has(k) && !(k === k.toLowerCase() && atless) && !miss.includes(k)) miss.push(k); });
+  }
+  return miss;
+}
+function judgeLib(h, cryptEs, text){
   const e = h.e, modes = e.modes || [];
   const per = modes.map(mo => {
     const c = modeConsumed(mo, e);
@@ -452,6 +472,10 @@ function judgeLib(h, cryptEs){
   else if (isMaster) verdict = 'TABLED-ONLY';
   else if (modes.length) verdict = 'INERT';
   else verdict = 'NAME-ONLY';
+  if (verdict === 'FULL' && text){   // v1.1.47: a discipline line with no mode is a mode the bot cannot play
+    const gaps = discLineGaps(e, text);
+    if (gaps.length){ verdict = 'PARTIAL'; gaps.forEach(k => per.push({ at: k, dir: '', consumed: false, via: 'no mode for the card text\'s [' + k + '] line', reach: cryptEs.some(ce => modeReachableBy({ at: k }, ce)), fxKeys: 'no mode', textLine: true })); }
+  }
   return { verdict, per, isMaster };
 }
 
@@ -462,7 +486,7 @@ const BUCKET = v =>
 /* ---------- run ---------- */
 /* v1.1.39 (bot v0.6.212): the per-card verdicts of one playbook -- the report below and gen-card-ledger.js read the SAME function, so the ledger
    cannot drift from this report. */
-function coverDeck(deck){
+function coverDeck(deck, textOf){   // v1.1.47: textOf(canon, name) -> the card's text (KRCG), for the discipline-line check; absent = not checked
   const cryptRows = (deck.crypt || []).map(c => {
   const h = lookup(c.name);
   const e = h && h.kind === 'crypt' ? h.e : null;
@@ -475,10 +499,16 @@ const libRows = (deck.library || []).map(c => {
   const h = lookup(c.name);
   if (!h) return { name: c.name, qty: c.qty || 1, verdict: 'UNRESOLVED', per: [], e: null, canon: null };
   if (h.kind === 'crypt') return { name: c.name, qty: c.qty || 1, verdict: 'IN-CRYPT?', per: [], e: h.e, canon: h.name };
-  const j = judgeLib(h, cryptEs);
+  const j = judgeLib(h, cryptEs, textOf ? textOf(h.name, c.name) : null);
   return { name: c.name, qty: c.qty || 1, verdict: j.verdict, per: j.per, e: h.e, canon: h.name };
 });
   return { cryptRows, cryptEs, libRows };
+}
+
+function krcgTextOf(){   // v1.1.47: vtes.json beside the tool -> a card's text by its canonical or printed name; null when the file is absent
+  const vp = path.join(__dirname, 'vtes.json'); if (!fs.existsSync(vp)) return null;
+  const m = new Map(); for (const c of JSON.parse(fs.readFileSync(vp, 'utf8'))) for (const n of [c.name, c.printed_name, c._name].concat(c.name_variants || [])) if (n && !m.has(n)) m.set(n, c.card_text || '');
+  return (canon, name) => (m.has(canon) ? m.get(canon) : m.has(name) ? m.get(name) : null);
 }
 
 function main(){
@@ -487,7 +517,8 @@ let loaded;
 try { loaded = loadDeck(args.deck); }
 catch (e){ console.error('gen-deck-coverage: ' + e.message); process.exit(1); }
 const deck = loaded.deck;
-const { cryptRows, libRows } = coverDeck(deck);
+const textOf = krcgTextOf();   // v1.1.47: the discipline-line check, when KRCG's text is beside the tool
+const { cryptRows, libRows } = coverDeck(deck, textOf);
 
 const totCopies = libRows.reduce((s, r) => s + r.qty, 0);
 const byBucket = { auto: 0, semi: 0, dead: 0 };
@@ -538,6 +569,7 @@ P('- Fas-inkomst (kräver `phase` på moden): `' + consumedIncomeKeys.join('`, `
 P('- Hotläsning (motståndarkort, gör ALDRIG egna kort spelbara): `' + threatKeys.join('`, `') + '`');
 if (unknownScanned.length)
   P('- ⚠ OKLASSADE nycklar hittade i botkällan (uppdatera CLASS-kartan i verktyget): `' + unknownScanned.join('`, `') + '`');
+P('- Disciplinrader (v1.1.47): ' + (textOf ? 'varje rad i kortets text som börjar med disciplinmarkörer måste ha en mode -- annars PARTIAL (KRCG:s text, `vtes.json`).' : 'EJ kontrollerade -- ingen `vtes.json` bredvid verktyget.'));
 P('');
 
 P('## Bibliotek (' + libRows.length + ' unika, ' + totCopies + ' kopior)');
@@ -630,4 +662,4 @@ console.log('rapport: ' + outPath);
 }
 
 if (require.main === module) main();
-module.exports = { lookup, judgeLib, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: COV_VERSION };
+module.exports = { lookup, judgeLib, discLineGaps, modeConsumed, modeReachableBy, coverDeck, loadDeck, BUCKET, CLASS, EQUIP_GRANT, scanned, unknownScanned, fx, VERSION: COV_VERSION };
