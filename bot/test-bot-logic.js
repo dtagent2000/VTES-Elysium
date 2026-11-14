@@ -13371,6 +13371,19 @@ async function connectWithRetry(client, tries = 30){
            '173g a successful block is no relock (the verdict locks the blocker) (got ' + JSON.stringify({ unlocked, rl, locked: crow.locked }) + ')');
       }
 
+      // j) the gangrel series (measured): Ruslan's Eyes block fails, Martina's Eyes block succeeds in the same action -- Ruslan is locked
+      //    again when the action ends (the first draft kept one relock per action: Martina's attempt overwrote Ruslan's)
+      { const u = mk173('Hanna', 'gangrel'); const rus = V('g1', 'Ruslan Fedorenko', { locked: true, blood: 1 }), mar = V('g2', 'Martina Srnankova', { locked: true, blood: 2 });
+        u.board = [rus, mar]; u.hand = ['Eyes of the Wild', 'Eyes of the Wild']; u.tally = { mode: 'block', a: 0, b: 0 };
+        const p = u.pending = { kind: 'bleed', who: 'Viktor', amount: 3, actingVampName: 'Patrik Söderberg', actorSeat: 2, attempted: new Set(), reacted: new Set(), contested: false };
+        await u._commitBlock(p, { parts: {} }); const first = p.blockerVamp && p.blockerVamp.name;
+        p.contested = false; p.blockerVamp = null;   // the actor's stealth: Ruslan's block fails
+        await u._commitBlock(p, { parts: {} }); const second = p.blockerVamp && p.blockerVamp.name;
+        u._clearPending('block succeeded');   // Martina's block succeeds (the verdict locks her next)
+        const rl = ev(u, 'relock').map(e => e.vamp);
+        ok(first === 'Ruslan Fedorenko' && second === 'Martina Srnankova' && rus.locked === true && JSON.stringify(rl) === '["Ruslan Fedorenko"]',
+           '173j two Eyes blocks in one action: the failed one is locked again, the successful one is the verdict’s (got ' + JSON.stringify({ first, second, rus: rus.locked, rl }) + ')'); }
+
       // h) decision == pick for Second Tradition: a LOCKED prince alone counts its +2 (v0.6.227: 0); beside an unlocked body the route is
       //    not taken (_pickBlocker takes the body), so it does not count
       { const u = mk173('Hanna'); const cat = V('c1', 'Catalina Vega', { locked: true, blood: 4 }); u.board = [cat]; u.hand = ['Second Tradition: Domain'];

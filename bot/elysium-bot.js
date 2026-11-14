@@ -7164,7 +7164,7 @@ class Bot {
        the relock is _clearPending's. */
     const unPl = (plan && plan.kind === 'unlockReact' && plan.un) || null;
     if(unPl && unPl.paid) p.paidGrant = { vampId: blocker.id, card: unPl.name, key: 'paidIc:' + FX_NORM(unPl.name), n: unPl.paid.n, cost: unPl.paid.cost };
-    if(unPl && unPl.relock) p.relock = { id: blocker.id, card: unPl.name };
+    if(unPl && unPl.relock) p.relock = (p.relock || []).concat([{ id: blocker.id, card: unPl.name }]);   // every Gangrel of this action (a failed one, then another's block: both measured on the gangrel series)
     const pg = (!unIc && icNeeded && p.paidGrant) ? this._grantPaidIntercept(blocker, p) : null, unPaid = (pg && stealthNow <= baseIcp + pg.n) ? pg : null;
     const ic = blocker && !unIc && !unPaid && icNeeded && this._bestInterceptFor(blocker, p.reacted, p);
     if(unIc){
@@ -8611,9 +8611,9 @@ class Bot {
     if(this._pq){ if(this._pq.timer) clearTimeout(this._pq.timer); if(this._pq._remT) clearTimeout(this._pq._remT); this._pq = null; }   // v0.6.198: its Turn-based reminder dies with it too (it fired after the question was gone)
     this._obs = null;   // v0.6.111 (R3 self-review, simplified): every pending-clear also clears the observation. A bounce supersedes the pending but not the action -- however, a bounced bleed has already opened its own pending and never used _obs, so clearing it is harmless and simpler than a guard that was wrong on null-card actions anyway.
     if(!this.pending) return;
-    { const rl = this.pending.relock, bv = this.pending.blockerVamp;   // v0.6.228 (round F): Eyes of the Wild -- 'Lock this Gangrel after action resolution if they did not block this action' (a successful block locks it anyway: _verdictAsTarget)
-      const v = rl && !(reason === 'block succeeded' && bv && bv.id === rl.id) && (this.board || []).find(c => c && c.id === rl.id && c.kind === 'crypt' && c.zone === 'ready');
-      if(v && !v.locked){ v.locked = true; this._emit('relock', { vamp: v.name, card: rl.card, why: reason }); this.note(v.name + ' locks again: it did not block this action (' + rl.card + ').'); this.push(); } }
+    (this.pending.relock || []).forEach(rl => { const bv = this.pending.blockerVamp;   // v0.6.228 (round F): Eyes of the Wild -- 'Lock this Gangrel after action resolution if they did not block this action' (a successful block locks it anyway: _verdictAsTarget)
+      const v = !(reason === 'block succeeded' && bv && bv.id === rl.id) && (this.board || []).find(c => c && c.id === rl.id && c.kind === 'crypt' && c.zone === 'ready');
+      if(v && !v.locked){ v.locked = true; this._emit('relock', { vamp: v.name, card: rl.card, why: reason }); this.note(v.name + ' locks again: it did not block this action (' + rl.card + ').'); this.push(); } });
     if(this.pending.passTimer) clearTimeout(this.pending.passTimer);
     this.pending._lateGen = (this.pending._lateGen | 0) + 1;   // v0.6.204: a grace still waiting for the wire dies too
     if(this.pending.lateTimer){ if(this.pending.lateTimer.cancel) this.pending.lateTimer.cancel(); else clearTimeout(this.pending.lateTimer); }   // v0.6.198: the late-bounce grace dies with its pending
