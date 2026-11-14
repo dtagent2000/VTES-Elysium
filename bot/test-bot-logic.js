@@ -12956,23 +12956,31 @@ async function connectWithRetry(client, tries = 30){
 
       // b) the prey's price counts against the burn: Hanna owns Jack; my 10 pool runs out in 3.33 rounds, before I oust my prey Nils, so my
       //    saving weighs double (wDef 2) -- at Nils's 40 pool his saving (44) beats my doubled one (2 x 13.89): no candidate, no burn; at 30
-      //    (27) the doubled defence tips the value positive (0.94) and the bleed (3.25) still outbids it
+      //    (27) the doubled defence tips the value positive (0.94) and the bleed (3.25) still outbids it. c1 by turn order (the egress
+      //    review): from my turn my prey Nils unlocks before the owner and pays 2, I pay 3; on Hanna's turn I pay 2
       { const at = np => { const u = mk169('U', { jackBurn: 1 }); u.players[0].bot = false; u.board = [V8('v1', 'Catalina Vega', { blood: 5, cap: 8 })]; u.hand = ['Enchant Kindred']; u.pool = 10;
           u.table = { 1: { pub: { pool: 20, cards: [V8('h1', 'Lenny Burkhead (G6)', { locked: true }), J8(2)] } }, 3: { pub: { pool: np, cards: [V8('n1', 'Andi Liu')] } } }; u._strategize('unlock');
           const jv = typeof u._jackAt === 'function' ? u._jackBurnValue(u.board[0], u._jackAt()) : null, b = u._bestBurnCardFor(u.board[0]), d = u._decideAction(u.board[0], u._actionCtxFor(u.board[0]));
-          return { jv, cand: b ? +b.val.toFixed(2) : null, burn: !!(d.pick && d.pick.kind === 'burnCard') }; };
+          const jk = typeof u._jackAt === 'function' ? u._jackAt() : null, c1 = jk && typeof u._jackC1 === 'function' ? [u._jackC1(3, jk), u._jackC1(2, jk)] : null;
+          let c1o = null; if(c1){ u.turnSeat = 1; c1o = u._jackC1(2, jk); u.turnSeat = undefined; }
+          return { jv, cand: b ? +b.val.toFixed(2) : null, burn: !!(d.pick && d.pick.kind === 'burnCard'), c1, c1o }; };
         const p40 = at(40), p30 = at(30);
         ok(p40.jv && p40.jv.wDef === 2 && p40.jv.prey > 2 * p40.jv.mine && p40.jv.val <= 0 && p40.cand === null && !p40.burn
-           && p30.jv && p30.jv.wDef === 2 && p30.jv.prey > p30.jv.mine && p30.jv.val > 0 && p30.cand > 0 && !p30.burn,
-           '169b Jack works on my prey more than on me: at 40 no burn; at 30 my doubled saving tips the value, the bleed outbids it (got ' + JSON.stringify({ p40, p30 }) + ')'); }
+           && p30.jv && p30.jv.wDef === 2 && p30.jv.prey > p30.jv.mine && p30.jv.val > 0 && p30.cand > 0 && !p30.burn && JSON.stringify(p40.c1) === '[2,3]' && p40.c1o === 2,
+           '169b Jack works on my prey more than on me: at 40 no burn; at 30 my doubled saving tips the value, the bleed outbids it; c1 by turn order (got ' + JSON.stringify({ p40, p30 }) + ')'); }
 
-      // c) coordination: Hanna (a bot, not the owner, a ready vampire) runs out sooner -- I wait one round for her; on my next own turn
-      //    I no longer wait
-      { const u = mk169('U', { jackBurn: 1 }); jackTable(u, { hanna: 6 }); u.ownTurns = 4;
-        const t1 = u._bestBurnCardFor(u.board[0]), j1 = typeof u._jackAt === 'function' ? u._jackBurnValue(u.board[0], u._jackAt()) : null;
+      // c) coordination: Hanna (a bot, not the owner, a ready vampire) runs out sooner -- I wait one round for her (the defer records my
+      //    own turn, 4) and burn on my next one; the second review: a minion read in the deferring turn after Jack's payments (my pool 4:
+      //    no bot shorter) waits no more and drops the defer; a bot under a round of runway (Hanna at 2) is not shorter -- no wait
+      { const u = mk169('U', { jackBurn: 1 }); u.ownTurns = 4; jackTable(u, { hanna: 6 });
+        const t1 = u._bestBurnCardFor(u.board[0]), j1 = typeof u._jackAt === 'function' ? u._jackBurnValue(u.board[0], u._jackAt()) : null, dt = u._jackDefer ? u._jackDefer.turn : null;
         u.ownTurns = 5; u._strategize('unlock'); const t2 = u._bestBurnCardFor(u.board[0]);
-        ok(!t1 && j1 && j1.wait && JSON.stringify(j1.shorter) === '[1]' && t2 && t2.target.card === 'Smiling Jack, The Anarch',
-           '169c the most exposed bot first: Hanna runs out sooner, I wait one round, then I burn (got ' + JSON.stringify({ t1: !!t1, j1, t2: t2 && t2.val }) + ')'); }
+        const v = mk169('U', { jackBurn: 1 }); v.ownTurns = 4; jackTable(v, { hanna: 6 }); const rj = () => v.plan.reads.jack || {}, w0 = rj().wait;
+        v.pool = 4; v._strategize('minion'); const w1 = { wait: rj().wait, shorter: rj().shorter, defer: v._jackDefer === undefined ? 'none' : v._jackDefer };
+        const z = mk169('U', { jackBurn: 1 }); z.ownTurns = 4; jackTable(z, { hanna: 2 }); const wz = { wait: (z.plan.reads.jack || {}).wait, shorter: (z.plan.reads.jack || {}).shorter };
+        ok(!t1 && j1 && j1.wait && JSON.stringify(j1.shorter) === '[1]' && dt === 4 && t2 && t2.target.card === 'Smiling Jack, The Anarch'
+           && w0 === true && w1.wait === false && JSON.stringify(w1.shorter) === '[]' && w1.defer === null && wz.wait === false && JSON.stringify(wz.shorter) === '[]',
+           '169c the most exposed bot first: I wait my turn 4 for Hanna, then burn; a minion read with no bot shorter drops the wait; a bot under a round is not shorter (got ' + JSON.stringify({ t1: !!t1, j1, dt, t2: t2 && t2.val, w0, w1, wz }) + ')'); }
 
       // d) the owner's defence: Hanna's vampire acts to burn MY Jack (2 counters; my prey Hanna pays it) -- with the knob its worth
       //    rides the window and a bare body blocks; at 0 T6's weight keeps the score under the bar
@@ -12995,13 +13003,15 @@ async function connectWithRetry(client, tries = 30){
            '169e through _playTurn the knob burns Nils’s Jack: the burn line and its through row (got ' + JSON.stringify({ terr, thr, lines: lines.filter(t => /burn|Jack/.test(t)).slice(0, 4) }) + ')'); }
 
       // f) the egress review: a seat with less than a round of runway still pays (H not floored: Hanna at 2 pool, under a round, pays > 0);
-      //    'Vampires can burn this card' -- an ally gets no Jack candidate while my vampire does
+      //    'Vampires can burn this card' -- an ally gets no Jack candidate while my vampire does, and the card's burnBy is what says so
       { const u = mk169('U', { jackBurn: 1 }); u.players[0].bot = false; jackTable(u); const jk = typeof u._jackAt === 'function' ? u._jackAt() : null;
         u.table[1].pub.pool = 2; const low = jk && typeof u._jackPriceAt === 'function' ? u._jackPriceAt(1, Object.assign({}, jk), null) : null; u.table[1].pub.pool = 20;
         const ally = { id: 'a1', name: 'Gargoyle Slave', kind: 'lib', zone: 'ready', locked: false, blood: 0, attached: [] }; u.board.push(ally);
         const tA = u._bestBurnCardFor(ally), tV = u._bestBurnCardFor(u.board[0]);
-        ok(low && low.H > 0 && low.H < 1 && low.price > 0 && !tA && tV && tV.target.card === 'Smiling Jack, The Anarch',
-           '169f under a round of runway still pays; an ally cannot burn Jack, my vampire can (got ' + JSON.stringify({ low: low && { H: +low.H.toFixed(2), price: +low.price.toFixed(2) }, ally: tA && tA.target.card, vamp: tV && tV.target.card }) + ')'); }
+        const h = u.fxLookup('Smiling Jack, The Anarch'), mo = h && (h.e.modes || []).find(m => m.fx && m.fx.burnCardAction); let tA2 = null;   // the second review: the read itself -- without burnBy the ally may
+        if(mo && mo.fx.burnBy){ const bb = mo.fx.burnBy; delete mo.fx.burnBy; try { tA2 = u._bestBurnCardFor(ally); } finally { mo.fx.burnBy = bb; } }
+        ok(low && low.H > 0 && low.H < 1 && low.price > 0 && !tA && tV && tV.target.card === 'Smiling Jack, The Anarch' && tA2 && tA2.target.card === 'Smiling Jack, The Anarch',
+           '169f under a round of runway still pays; an ally cannot burn Jack (burnBy), my vampire can, and without burnBy the ally could (got ' + JSON.stringify({ low: low && { H: +low.H.toFixed(2), price: +low.price.toFixed(2) }, ally: tA && tA.target.card, vamp: tV && tV.target.card, allyNoBurnBy: tA2 && tA2.target.card }) + ')'); }
     }
 
 
