@@ -32,14 +32,32 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.225 (in progress, 14 Nov 2026)** — Round C, RULINGS D-113 (3)–(4): a human's Toreador Grand Ball read first and asked last,
-  and the cardfx `memo` descriptor, `specs/spec-human-ball-memo-2026-11-14.md`. *Predictions registered before any footprint*:
-  (C1) against v0.6.224's release bytes the 240, the V5 smoke and the Toreador 600 are IDENTICAL (version set back): no seat is
-  human there, and the descriptor gives `_memoMap` v0.6.221's texts in their order (section 170f, 170g); (C2) `ana-gates.py` PASS;
-  (C3) at a human table in main's playtest rig (the human holds three ready Toreador and plays the Ball locking one): the bots read
-  the free one from the play line's pair with no question, or the speaker asks once and the answer is read; then a bot weighs a
-  block of the third Toreador's non-bleed action as any block while it never blocks the free one's (restated before any
-  measurement: the first wording named the locked one, which does not act).
+- **v0.6.225 (14 Nov 2026)** — Round C, RULINGS D-113 (3)–(4) (Johan, 13 Nov, and his order of 21:45): a human's Toreador Grand
+  Ball read first and asked last, and the cardfx `memo` descriptor, `specs/spec-human-ball-memo-2026-11-14.md`.
+  - *The descriptor* (4): Toreador Grand Ball's curated entry carries `memo` — what the card picks (two Toreador), its lasting roles
+    (free, lock: the bot's own field, the token on the vampire, the token on the card, how a human's choice is read) and the
+    question. `_memoMap` reads its texts (v0.6.221's, in their order: 170f pins them; 170g, a changed text is the one written).
+  - *A human's Ball* (3; `_hMemoLog`, `_hMemoResolve`, `_hMemoChat`): every bot records the play line's acting minion and target;
+    at the end of the owner's master phase it reads the one of their Toreador that turned locked, then the free one — the pair
+    less the locked one, a custom token naming the card, their only other candidate; still open, the bot that speaks for the
+    table asks once in chat (`NAME, your Toreador Grand Ball: which Toreador acts unblocked — A or B?`), and the owner's answer
+    naming one candidate is every bot's memory. `_humanBallFree`: a Ball whose free Toreador is known frees that one alone; one
+    still unknown keeps the generous rule. The readings go to the bot's own log (`memo: …`), never a table line; a `memo` trace
+    row records each. The player guide's "Where its understanding ends" names the question. Section 170: 6/0; 1/5 on v0.6.224's
+    bytes (170f, the identity pin, green on both by design).
+  - *Predictions* (registered before any measurement): (C1) held — IDENTICAL on the 240, the V5 smoke and the Toreador 600 against
+    v0.6.224's release bytes (the version set back); (C2) held — `ana-gates.py` PASS; (C3, restated before any measurement) held at
+    two human tables in main's play-test rig (client v2.6.174, srv-2.6.50; the human with a Ball-heavy Toreador test deck against
+    Hanna, tremere, the prey, and Viktor, nosferatu, the predator; Standard 3 s). (a) `Catalina Vega plays Toreador Grand Ball.
+    Target: Flávio Gonçalves.` and Flávio locked: both bots read "free Catalina Vega (pair)", nobody asked; Catalina's hunt: both
+    "a human's Toreador Grand Ball … not blocked"; the third Toreador's hunt was weighed as any block — Hanna 0.82, under the bar,
+    Viktor 1.31, blocked with The Warrens (stealth 1 against intercept 2). (b) The Ball played with no target and Nik Sikko locked:
+    both bots read "free open: Kathy Glens / Mkhokheli", the speaker (Hanna) asked once, Viktor did not; the answer "Mkhokheli"
+    became both bots' memory; a round later Mkhokheli's hunt went unblocked and Kathy's was weighed as any (Hanna: no usable
+    intercept; Viktor 0.56).
+  - *Found at the tables* (main's, in the handoff): the client's "Unlock all cards?" unlocks the Toreador a Ball locked (the human
+    re-locks it); the target aimed for the Ball's play line sticks and rides the next action line. Neither misled the bots.
+  - Gates on the release bytes: GATES.
 - **v0.6.224 (14 Nov 2026)** — Round B, RULINGS D-114 (Johan's "kör", 13 Nov 20:13 and 21:45): Smiling Jack's burn weighed by its
   price, `specs/spec-jack-burn-2026-11-13.md`. Two steps, each with its own footprint, on round A (v0.6.223).
   - *Step 1, the block guard* (a rules correction, no knob; section 168: 3/0, 0/3 on v0.6.223): the threat classes' block path

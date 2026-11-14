@@ -1,5 +1,7 @@
 # A human's Toreador Grand Ball and the cardfx `memo` descriptor (RULINGS D-113 (3)–(4); round C, 14 Nov 2026)
 
+*Status: built in bot v0.6.225 (round C, 14 Nov 2026); two human tables in main's play-test rig held — the pair read, and the question with its answer (CHANGELOG v0.6.225).*
+
 Johan, 13 Nov ("alla dina förslag ovan om Jack och Grand Ball låter jättebra", on Claude's proposal of that morning; the order of
 21:45: A → B → C, a human table after C). D-113 (3): "A human's Grand Ball: read the lock, the play line's acting minion and target, a
 token naming the Ball; if still open, the bot that speaks for the table asks once in chat after their master phase, naming the

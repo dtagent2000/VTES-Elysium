@@ -4,8 +4,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
-- **The table's memory** (D-113): v0.6.221 put Jack's counters on the wire and the bot's own tokens (Grand Ball's pair) on its
-  cards; left: a human's Grand Ball (3) and the cardfx `memo` descriptor (4). *Done when* both ship. Docs: RULINGS D-113.
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). Since v0.6.213 the bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the
   vest prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
