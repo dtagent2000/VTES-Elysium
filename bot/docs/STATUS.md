@@ -5,7 +5,7 @@
 v1.1.2 · built against the root's release, client v2.6.174 / srv-2.6.50 (main's canary v1.2.0 143/0 against it); the read-only
 copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6.50 and main's canary v1.2.0 (refreshed 13 Nov).
 
-**Deploy state:** `main` carries v0.6.227. **Open PR:** round F (this release).
+**Deploy state:** `main` carries v0.6.227. **Open PR:** #73 (round F, this release).
 
 ## Last gates (v0.6.228 release bytes `c94c22be`, 14 Nov 2026)
 Suite **2497/0 ×3** · canary **143/0** ×2 · cardfx 324/0 · hotseat 12/0 · main's client suite 361/2 (the handoffs' two) ·
