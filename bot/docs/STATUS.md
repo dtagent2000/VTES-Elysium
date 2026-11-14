@@ -7,10 +7,11 @@ the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6
 
 **Deploy state:** `main` carries v0.6.225 (#68–#70, merged 14 Nov). **Open PR:** round D (this release).
 
-## Last gates (v0.6.226 release bytes, 14 Nov 2026)
-To come with the gates (the PR carries them): suite ×3, canary ×2, hotseat, main's client suite, `check-versions.js`, an arena
-smoke with a rigged Jack. The sim against v0.6.225 (version set back): at 0 the 240, the V5 smoke and the 600 IDENTICAL; at 1 the
-240 DIVERGED 9, the V5 smoke 2, the 600 37, only where a Jack is in play; `ana-gates.py` PASS; the mirror bench: no loss.
+## Last gates (v0.6.226 release bytes `08ed02fb`, 14 Nov 2026)
+Suite **2479/0 ×3** (frozen snapshots) · canary **143/0** ×2 · hotseat **11/0** · main's client suite 361/2 (the handoffs' two) ·
+`check-versions.js` agrees · arena smoke with a rigged Jack PASS 7/7 (a bot burned it) · the sim against v0.6.225 (version set
+back): at 0 the 240, the V5 smoke and the 600 IDENTICAL; at 1 the 240 DIVERGED 9, the V5 smoke 2, the 600 37, only where a Jack is
+in play; `ana-gates.py` PASS · the mirror bench and the bench pinned to Nosferatu: no loss.
 
 ## What v0.6.226 did
 D-115 (O-40): what a Smiling Jack takes from a seat is read over a runway that pays its growing counter, so it never passes the

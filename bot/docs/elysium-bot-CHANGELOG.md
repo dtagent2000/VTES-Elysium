@@ -86,6 +86,29 @@
     own defence reads the new runway, the burners keep the flat one. (P1) the variant's blocks of a burn at its Jack fall (fewer
     block-as-target rows with a worth end in a block than in the control); (P2) its worth reads at most 60; (P3) no loss: the
     variant seat's 95 % interval reaches 0 or above.
+  - *The egress review* (fresh context, read-only; 10 findings — test-weakened 3, unproven 1, stale-doc 2, half-done 1, design-question
+    3; no bug, no ritual fault): fixed — 169's pin hid that at the default its owner's defence no longer fires on 169d's table (my
+    20 against her 20: worth 0, the burn goes through; 12.22 and a block on the flat runway): the pin now holds only 169a and 169b
+    (their figures are prices), 169d plays my 12 against her 20 (the defence fires at either runway: a regression guard) and adds the
+    20-against-20 row as O-41's current state, so a ruling flips it (169: 6/0; 5/1 on v0.6.225, that row); 171d asserted its zero
+    only loosely (now `=== 0`, citing O-41); 171b proved a bound, not the root (now: wherever R bounds H the price is exactly
+    pool − R·fc, over 1800 reads with fractional forecasts; 1260 of 1346 such reads fail it at 0); spec §5 and `_myJackWorth`'s
+    comment still said "over its life" for my prey's loss (amended: over min(her runway, Jack's life)); spec §2 now says a runway under
+    a round grows a little; O-41 sharpened (the driver is my pool against hers at a quiet predator, not Jack's age); the knob's
+    comment reads `max(0.25, c1 + fc)`; the handoff's run section. Measured — the owner's side, pinned to Nosferatu (below).
+    Listed — `wDef` compares my runway (Jack counted) with my turns to oust my prey (Jack not counted), so it doubles more often (80 →
+    82 % of candidates): `_planJack` already has my prey's Jack-counted runway; a question for the next Jack round, not this one;
+    at a mixed table (a bench) a bot at 0 and one at 1 can disagree on who runs out first (3 of 288 bench matches diverged). The fixes
+    change comments only in the bot: the 240 IDENTICAL to the release footprint's bytes.
+  - *The pinned bench* (the prediction above): (P1) held, barely — the variant's blocks of a burn at its Jack 36 of 60 windows
+    against the control's 37 of 61, in the same 36 matches; (P2) held — its worth at most 15.6 (the control's 351); (P3) held — the
+    variant Nosferatu 0.40 → 0.40, +0.00 [+0.00, +0.00] (288 a arm). The owner's lower worth moves almost no decision: a bare body
+    blocks at a worth of a few pool, and the zero of O-41 is rare at these tables. `ana-gates.py` on both arms fails only the ledger
+    gate, the three known faults (BOARD).
+  - Gates on the release bytes (`elysium-bot.js` `08ed02fb`, `test-bot-logic.js` `4e0088cc`, `elysium-cardfx.json` `b91a285f`):
+    suite 2479/0 ×3, canary 143/0 ×2, hotseat 11/0, main's client suite 361/2 (the handoffs' two), `check-versions.js` agrees, an
+    arena smoke with a rigged Jack PASS 7/7 (a bot burned it on the real clock). test-cardfx and HB1 not run (no cardfx or browser
+    surface changed).
   - *Found on the way:* my Jack's worth to me (spec §5) sets my prey's loss over her runway — since D-115 at most her pool —
     against my own payments over Jack's whole life, so a young Jack against a healthy prey is worth 0 to its owner (171d: 0 at my 40
     pool): 62 of 105 owner reads at 0 on the 240 (56 of 107 before), 183 of 400 on the 600 (167 of 386); the owner's blocks of a burn
