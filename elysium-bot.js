@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.226';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.227';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -842,7 +842,7 @@ class Bot {
      the limit at any paceMs (burst turns at paceMs 0 hit ~20 msg/s raw).   */
   send(obj){ if(obj && this.started && (obj.t === 'log' || obj.t === 'chat')) this._evRecord(this.o.name, obj.t === 'log' ? stripTags(obj.html || '') : String(obj.msg || ''), obj.t, true); if(obj && obj.t === 'log' && !this._noting) this._openLine = obj; this._sq.push(obj); this._drain(); }   // v0.6.206: _openLine = my last action line (a note is an explanation, never what a window opens on) -- _askSeen anchors on it   // v0.6.176: my own lines enter the event log too -- both sides of every exchange in one place
   _drain(){
-    if(this._sqT || !this._sq.length) return;
+    if(this._sqT || !this._sq.length || this._draining) return;   // v0.6.227 (round E's review): not inside my own send -- a synchronous bridge runs my handlers inside ws.send, and a line one of them queues waits for the drain after this one (the gap, the order at the other seats)
     const later = ms => { this._sqT = setTimeout(() => { this._sqT = null; this._drain(); }, ms); };
     if(!this.ws) return later(100);                    // queued before connect finished
     const now = Date.now();
@@ -888,7 +888,7 @@ class Bot {
            board push that did not touch the hand off the wire. */
         this._syncOpenHand();
       }
-      this.ws.send(obj);
+      this._draining = true; try { this.ws.send(obj); } finally { this._draining = false; }
       this._lastSendAt = Date.now(); this._lastSentT = obj && obj.t;
       if(obj && obj.t === 'chat'){ this._lastChatAt = this._lastSendAt; this._lastChatWireAt = this._lastSendAt; }   // the bubble starts when the wire carries it -- _pace's chat-hold and _chatSettleMs read _lastChatAt; v0.6.207: the drain's beat reads _lastChatWireAt (the last CHAT on the wire, never a say's queue stamp)
       if(ht !== undefined) this._holdShown = ht;   // v0.6.204 (F4): what the table last SAW of my hold
@@ -10376,12 +10376,17 @@ class Bot {
   _askSeen(a){
     const m = this._openLine;
     if(!m || !this.ws || this._sq.indexOf(m) < 0){ a.announced = true; return; }
-    a.announced = false;
+    a.announced = false; a.line = m;   // v0.6.227 (round E): the line the window opens on -- _staleAnswer asks the queue about it at the answer's time
     const cbs = this._wireCbs || (this._wireCbs = new WeakMap()), l = cbs.get(m), f = () => { a.announced = true; };
     if(l) l.push(f); else cbs.set(m, [f]);
   }
   _staleAnswer(a, who, phrase, via){
     if(!a || a.announced !== false) return false;
+    if(a.line && this._sq.indexOf(a.line) < 0){ a.announced = true; return false; }   /* v0.6.227 (round E, the hotseat's dropped Pass): my line has left my
+       queue -- _drain shifts it before ws.send, and the hotseat bridge delivers in the same call: the target's instant Pass (a reactions-only
+       window it has nothing for) reached me INSIDE my own send, before the wire hooks in _drain's finally flipped `announced`, and was
+       dropped as stale; the window ran out its clock (50 of 53 modifier windows on round A's offline table, ~15 s each). Online the
+       server's round trip puts every answer after the hooks. An answer while the line is still QUEUED stays stale (v0.6.206). */
     const sp = (this.players || []).find(q => q && q.name === who); if(!(sp && sp.bot)) return false;   // a human may answer what the fx clone showed; only a bot's answer is provably early
     this.o.log('stale ' + phrase + ' from ' + who + ' ignored: my action is not on the wire yet -- it answers an earlier window');
     this._emit('stale-answer', { who, phrase, via: via || 'say' });

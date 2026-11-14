@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* test-bot-hotseat.js v1.2.0 (16 Oct 2026; H11 = the lift carries the combat merge, main's REPLY v2.6.159 section 6) -- THE HOTSEAT GATE. Online / hotseat parity as a test, not a hope (CLAUDE.md 66d: every release of 18-21 Sep was
+/* test-bot-hotseat.js v1.3.0 (14 Nov 2026; H12 = no bot answer dropped as stale on the bridge, bot v0.6.227 -- v1.2.0, 16 Oct: H11 = the lift carries the combat merge, main's REPLY v2.6.159 section 6) -- THE HOTSEAT GATE. Online / hotseat parity as a test, not a hope (CLAUDE.md 66d: every release of 18-21 Sep was
    measured on the server only). Plays one short four-starter table through the client's REAL hotBridge (lifted verbatim by elysium-bot-hotseat.js) and asserts
    the things that broke silently: the table finishes, every bot knows its deck, block exchanges are two-sided, an oust is seen and paid.
    Needs the released client (elysium-vtes-bord.html) + elysium-cardfx.json beside it; SKIPS LOUDLY otherwise (the canary's rule). ~1-3 min. Run ALONE.      */
@@ -12,7 +12,8 @@ let passN = 0, failN = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  
   const L = liftBridge(client), relaysTally = /case 'tally'/.test(L.bridgeSrc), relaysBounty = /case 'bounty'/.test(L.bridgeSrc);
   console.log('[H] client v' + L.version + ' -- hotBridge relays tally: ' + (relaysTally ? 'YES' : 'no') + ' · bounty: ' + (relaysBounty ? 'YES' : 'no'));
   const seed = +(process.env.HOTSEAT_SEED || 11);
-  const r = await runTable(Object.assign({ seed, startPool: 12, askSecs: 2, rounds: 60, stuckMs: 60000, out: process.env.HOTSEAT_OUT || null }, process.env.BOT ? { bot: path.resolve(process.env.BOT) } : {}));
+  let staleN = 0; const staleBy = {};   // v1.3.0: the bridge delivers in the same call -- an answer that reaches the actor inside its own send must count (bot v0.6.227)
+  const r = await runTable(Object.assign({ seed, startPool: 12, askSecs: 2, rounds: 60, stuckMs: 60000, out: process.env.HOTSEAT_OUT || null, onEvent: e => { if(e.type === 'stale-answer'){ staleN++; const k = (e.d && e.d.phrase) || '?'; staleBy[k] = (staleBy[k] || 0) + 1; } } }, process.env.BOT ? { bot: path.resolve(process.env.BOT) } : {}));
   const c = r.counts; console.log('    bot v' + r.bot + ' · ' + r.rounds + ' rounds · ' + r.secs + ' s · pools ' + r.pools.join('/') + ' · ' + JSON.stringify(c) + ' · dropped by the bridge: ' + JSON.stringify(r.droppedVerbs));
   ok(!r.stuck, 'H1 no seat ever sat on the turn' + (r.stuck ? ' -- STUCK at round ' + r.stuck.round + ' seat ' + r.stuck.seat + (r.stuck.seatOut ? ' (an OUSTED bot was handed the turn and never passed)' : '') : ''));
   ok(r.finished && r.alive.length === 1, 'H2 the table played to last-standing (' + (r.alive[0] || 'nobody') + ')');
@@ -30,5 +31,6 @@ let passN = 0, failN = 0; const ok = (c, m) => { console.log((c ? '  ✓ ' : '  
     ok(o1.rng === 'long' && o1.sa === 'Hand strike' && o1.a === 2 && o2.rd === 2 && o2.rng === 'close' && o2.rl === 1 && o2.a === 0 && o2.sa === '',
       'H11 the lift carries the combat merge: a combat tally relays its combat fields (rng ' + o1.rng + ', sa "' + o1.sa + '"), and a new round takes "close next round" (rng ' + o2.rng + ', rl ' + o2.rl + ') and zeroes an absent a (' + o2.a + ')');
   } else ok(true, 'H11 the bridge names no combat merge (a client before v2.6.129) -- nothing to lift');
+  ok(staleN === 0, 'H12 no bot answer was dropped as stale on the bridge (' + staleN + ' stale-answer rows' + (staleN ? ' ' + JSON.stringify(staleBy) : '') + '): a target\'s instant answer reaches the actor inside its own send, and counts');
   console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green')); process.exit(failN ? 1 : 0);
 })().catch(e => { console.error('\n  ✗ HOTSEAT GATE ABORT: ' + e.message); console.log('\n' + passN + '/' + (failN + 1) + ' — FAIL'); process.exit(1); });

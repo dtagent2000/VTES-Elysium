@@ -32,6 +32,87 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.227 (14 Nov 2026)** — Round E, the BOARD's hotseat line (Johan, 14 Nov 12:06: "... och hotseattappet"): the
+  hotseat table dropped a bot's Pass in the bleed-modifier window. The cause, in round A's offline traces (the actor's stale-answer
+  row in the same millisecond as the target's react snapshot): the hotseat bridge delivers a line in the same call, so the target's
+  instant Pass reached the actor inside its own `ws.send` — after `_drain` had taken the line off the queue, before the wire hooks
+  in its `finally` marked it sent — and v0.6.206's guard read it as an answer to an earlier window; the window ran out its clock.
+  The fix: `_staleAnswer` asks the queue — a line that has left it is on the wire; an answer while it is still queued stays stale.
+  A timing correction, so no knob. And `_drain` never sends inside its own send (the egress review: an answer accepted there runs
+  my handlers inside `ws.send`, and a line they queued went out nested — before the line it answered, at the fan-out's later seats).
+  Section 172 (3/0; 172a–b 0/2 on v0.6.226, 172c fails on the first fix's bytes at depth 2); the hotseat gate v1.3.0 (H12: no
+  answer dropped as stale on the bridge — a stale row there is read before it is called a regression: a real one, an answer to an
+  earlier window while my line is queued, can still come); `tools/hotseat-in-browser.js` v1.0.0 (new, a diagnostic: the client's
+  hotseat with three bots in headless Chromium, the bots' own rows collected in the page); `ana-gates.py` v1.1.2 (the windows note).
+  - *Predictions* (registered before any measurement, D-93; v0.6.226's figures from the release footprint's traces): (E1) the 240
+    on the sim table (the client pace, the virtual clock): the bleed-modifier windows that ran out and went through fall from 1135 of
+    1309 to at most 5 % of the modifier windows, the stale-answer rows from 1431 to at most 5 % of that, and the totals' run-outs
+    (150 of 3834) at least halve. (E2) the footprint against v0.6.226: most matches change (each dropped answer moved the virtual
+    clock); `ana-gates.py` PASS on the 240, the V5 smoke and the 600; no deck's paired VP interval on the 240 lies wholly beyond
+    ±0.15. (E3) the hotseat gate's H12: 0 stale-answer rows; above 0 on v0.6.226 (its destructive run). (E4) an offline real-clock
+    table (`--real`, the client profile, four matches side by side, the four starters and Toreador): 0 modifier windows run out and
+    0 stale-answer rows (round A: 50 of 53, 60). (E5) the browser table (`hotseat-in-browser.js`, eight sweeps): 0 stale answers on
+    v0.6.227, above 0 on v0.6.226. (E6) the server arena (one match, the client pace): the windows gate 0 and `ana-gates.py` PASS —
+    the online path unchanged.
+  - *What came out* (the fix's bytes, the version set back, against the release footprint of v0.6.226; its manifests' knob label
+    dropped as in those traces): (E1) held — on the 240 the modifier windows that ran out 1135 → 2 of 1309, the totals 150 → 2 of
+    3834, the stale-answer rows 1431 → 3; on the 600 3247 → 8 of 3660, 501 → 13 of 14611, 4785 → 15. None of the windows still
+    flagged lost an answer (the review): on the 240 all four end with the actor's own Spying Mission, played at its pace after a
+    bounce's new target answered (`ana-windows` leaves the actor's rows out of the answer chain); on the 600, 12 of 21 the same and 9
+    bleed totals whose +0 line reached the target 5.5–6.3 s late and closed 150 ms after. The 240's three stale rows are two matches
+    identical on v0.6.226: in match 71 a Block! (with its block line) of the CURRENT bleed whose Block? window had closed ~0.6 s after
+    the announce reached the blocker (what closed it is not in the trace), in match 76 a Pass of the same shape — pre-existing. (E2) half held — every match changed and almost none in play: the 240 SAME-PLAY 239 /
+    DIVERGED 1, the V5 smoke SAME-PLAY 167 / DIVERGED 1, the 600 SAME-PLAY 591 / DIVERGED 9 (the same windows, now closed at the
+    answer); every deck's paired VP on the 240 +0.00 [+0.00, +0.00]; `ana-gates.py` PASS on 15 of 16 tables — the 600 fails the
+    ledger gate (a bleed with no actor row) and the block gate (a vampire's two attempts in one action) in one DIVERGED match (167):
+    Ventrue bleeds Nosferatu as a late referendum's pool loss ousts it, the bleed fizzles, and Tremere, the next prey, reads that
+    bleed as aimed at itself — it books the pool and its late Block! lands in Ventrue's next action (correctly dropped as stale
+    there). The fix does not touch that read; the changed timing reached it — and makes it likelier (the review): windows now close
+    at the answer, so an actor runs further ahead of its paced queue (the 600's fizzles 3 → 6; in match 167 the referendum's pool
+    loss reached the table 8.9 s after it, 4.8 s on v0.6.226). It is a real pool loss (Tremere applied Ventrue's "It resolves" to
+    its own pending), and a bot's bleed line carries no target, so the receiver infers it from its roster: a lead on the BOARD's
+    ledger line (the same class), its fix a §12 question.
+    (E3) held — the hotseat gate 12/0, H12 0 stale-answer rows; on v0.6.226 11/1 (H12: 6 stale Passes).
+  - *The egress review* (fresh context, read-only; 10 findings — half-done 1, bug 1, stale-doc 1, unproven 2, design-question 5):
+    fixed — the drain's re-entry (above, 172c); the browser tool could delete a directory given as `--out` and a malformed request
+    could end it with the stale exit code (now: `--out` must be new or the tool's own, errors answer 404, the temp folder goes), and
+    it could pass without exercising anything (now it counts the bot-vs-bot modifier windows from the bots' own rows, asserts the bot
+    version and exits 3 when no window opened); the "four run-outs" that were none (above); match 71's stale rows (above); match
+    167's two additions (above); the handoff decided main's question for main (now asked: should `toBot` stay synchronous);
+    `ana-gates.py`'s and HOWTO's notes; the BOARD line was deleted before its done-when was measured (the real-clock and browser
+    tables below, on the release bytes). Listed (BOARD) — the other order of the race: a line that leaves inside its own `send()`
+    (a free token, the gap met) is delivered before `_askBlock` opens the window, and the target's instant Pass finds none and is
+    lost without a row; at pace 0 only (the client pace is safe by its 200 ms gaps; the sim showed none), so the fix of the measured
+    order ships and the window-first ordering is a proposal. H12's 0 stays, with the note above.
+  - *The fix pass — prediction, registered before its runs (D-93):* (F) the release bytes (the drain's guard added) against the first
+    fix's: the 240's windows within a handful of E1's (modifier run-outs at most 7, stale rows at most 8), play unchanged in at least
+    three quarters of the 240's matches, `ana-gates.py` PASS on the 240 and the V5 smoke; and (E4)–(E5) as registered, on these bytes.
+    The first fix's own real-clock table, cut at two matches for the release bytes: 11 modifier windows and 50 totals, none ran out,
+    no stale row.
+  - *The release bytes* (F): held — the 240's modifier run-outs 2 of 1306 and stale rows 3 (the same rows as E1's), play unchanged
+    against the first fix in 227 of 240 (DIVERGED 13, IDENTICAL 27, SAME-PLAY 200; the guard moves a nested frame by the 200 ms gap),
+    `ana-gates.py` PASS on the 240 and all 14 V5 tables. Against v0.6.226: the 240 DIVERGED 14 / SAME-PLAY 226, the V5 smoke
+    DIVERGED 14 of 168, the 600 DIVERGED 37; the paired VP on the 240 within ±0.04 for every deck (Malkavian −0.04 [−0.07, −0.00],
+    Nosferatu +0.00, Tremere +0.02, Ventrue +0.02). The 600 again fails the ledger gate (2 faults) and the block gate (1) — the same
+    misread, in match 167 and match 393 (Ventrue's bleed fizzles at a seat just ousted, Tremere books 1 and 2).
+  - (E6) held — the server arena at the client pace (`--pace 3100 --ask-secs 20`, the four starters; the first fix's bytes, the
+    guard does not touch an asynchronous socket): one match to its end, 10 rounds in 37 minutes, 5 modifier windows and 8 totals,
+    none ran out, no stale row, `ana-gates.py` PASS 7 of 7. A first attempt ran into the arena's default 600 s match timeout (the
+    matches gate; its windows: 0 of 8, no stale row); `--match-timeout 4000` for the second.
+  - (E5) the browser table on the release bytes: eight sweeps (24 minutes, the human seat passing, Hanna, Viktor and Nora on the
+    page's bridge), 0 stale answers; three bot-vs-bot modifier windows — two closed at the target's Pass in 0.55 s, one a block
+    contest (36.5 s, a stealth and intercept exchange: by design) — and two that waited on the human (the tempo, set apart). The
+    tool's first reading counted those two and the contest as windows and the contest as a run-out (exit 1); its reading now follows
+    `ana-windows` (a wait row sets a window apart, another bot's block makes it a contest), re-read from the run's own events.
+    On v0.6.226 the same eight sweeps dropped 2 Passes as stale (that game opened no bot-vs-bot modifier window; the drops were on
+    other windows). Held.
+  - (E4) held on the release bytes — the offline real-clock table (`--real`, the client profile, four matches side by side, 48
+    minutes): 21 modifier windows and 97 totals, none ran out (four contests at the clock, by design), no stale row, `ana-gates.py`
+    PASS 6 of 6. Round A's table on v0.6.222: 50 of 53 and 60.
+  - Gates on the release bytes (`elysium-bot.js` `8706fc5a`, `test-bot-logic.js` `e25f6e8d`, `elysium-cardfx.json` `b91a285f`):
+    suite 2482/0 ×3, canary 143/0 ×2, hotseat 12/0 (H12), main's client suite 361/2 (the handoffs' two; its live tests drive the
+    bot on `hotBridge`), `check-versions.js` agrees, an arena smoke with a rigged Jack PASS 7/7. test-cardfx and HB1 not run (no
+    cardfx or browser surface changed).
 - **v0.6.226 (14 Nov 2026)** — Round D, RULINGS O-40 → D-115 (Johan, 14 Nov 12:06: "vi gör på ditt förslag i O-40"): Smiling
   Jack's self-consistent runway, the knob `jackRunway` (default 1 after a no-loss bench; 0 = v0.6.225), spec §2's amendment.
   - *The change* (`_jackPriceAt`): a seat's runway against Jack R solves R·(c₁ + fc) + R(R−1)/2 = pool, the positive root

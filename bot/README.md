@@ -27,6 +27,7 @@ The folder is deliberately FLAT: the suites, the arena and every tool expect the
 Mutant isolation for the hold gate: `python3 tools/mutants/mutate-v0_6_198.py /tmp/mut` (every mutant must fail or hang).
 One suite section against any bot file (the destructive check of a new section, sub-minute): `bash tools/run-section.sh <bot.js> <section.js>`.
 A human's Grand Ball at main's play-test rig: `tools/playtest-ball/` (the scenario, its steps in `about`, and a Ball-heavy Toreador test deck; round C).
+The hotseat with bots in a real browser: `node tools/hotseat-in-browser.js [--bot FILE] [--sweeps N]` (Playwright; counts the answers dropped as stale; round E).
 
 The ten legacy ad-hoc tests of the v0.6.10x era (not gates, four of them stale reds) were deleted by round C2 (11 Nov 2026; git keeps them): the suite covers their behaviours.
 
