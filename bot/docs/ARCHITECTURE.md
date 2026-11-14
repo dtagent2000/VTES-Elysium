@@ -49,7 +49,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | Masters on a vampire (v0.6.217) | `_masterHostPlan` (the host or held, `_masterHostOk`; `_grandBallPlan`: the Ball's pair); `_masterNoHost` makes an unhostable one a dead card | the hand, my crypt, `_titleOf`, `_discOf`, `_capOf` | `master-play`, `grand-ball` |
 | If blocked (v0.6.217) | `_ifBlockedStep`: Terrifying Visage, Change of Target (`_cotWorth`; `_noteCotAct` books the action) | the blocker's expected strike, my combat enders | `change-of-target`, `visage` |
 | Polling-step abstain (v0.6.217) | `_bestAbstainFor` / `_playAbstain` in `_callReferendum` (the poll reopens after it) | `rc.agBy`, the seat's title votes | `abstain` |
-| Burn a card in play (v0.6.217; Jack D-114) | `burnCard` in the action ctx (`_bestBurnCardFor`; Jack: `_jackBurnValue`); the owner's `_complyBurnCard`; my Jack's worth | the owner's votes; `plan.reads.jack` | `burn-card`, `card-burned` |
+| Burn a card in play (v0.6.217; Jack D-114) | `burnCard` (`_bestBurnCardFor`; Jack `_jackBurnValue`); the owner's `_complyBurnCard`; my Jack's worth on `_burnWindowOpens` | the owner's votes; `_planJack`'s reads | `burn-card`, `card-burned` |
 | Set-up cards (Haven) | the look-ahead through `_actionCtxFor` + `_actionCtxAdjust(…, ahead)` + `_decide` | the real action ctx | `haven` |
 | Waits on a human | `_waitPlan(kind, who)`; block / react / pq / vote / phase / damage / verdict | the tempo (`botcfg`), the hold | `wait`, `tempo` |
 
