@@ -7856,7 +7856,7 @@ async function connectWithRetry(client, tries = 30){
   const src121 = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
   const NS = /^(.+?) (?:plays|burns|locks) .+?: \+(\d+) stealth\.$/, NU = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;   // v0.6.205: + 'locks' (The Labyrinth)
   ok(NS.test('Colette plays Lost in Crowds: +1 stealth.') && NS.test('Colette burns The Path of Night: +1 stealth.') && NS.test('Ryan (G6) locks The Labyrinth: +1 stealth.') && NU.test('Oshri attempts to block with +2 intercept (Second Tradition: Domain).'), '121f the net\'s two readers match the bot\'s own stealth line and the unlock-reaction attempt line');
-  ok(/\(st\.fromBoard \? \(st\.lock \? 'locks' : 'burns'\) : 'plays'\) \+ ' ' \+ esc\(st\.name\) \+ ': \+' \+ st\.s \+ ' stealth\.'/.test(src121) && /attempts to block with \+' \+ unIc \+ ' intercept \(<b>'/.test(src121), '121f ...and those strings are still what the source emits');
+  ok(/\(st\.fromBoard \? \(st\.lock \? 'locks' : 'burns'\) : 'plays'\) \+ ' ' \+ esc\(st\.name\) \+ why \+ ': \+' \+ st\.s \+ ' stealth\.'/.test(src121) && /attempts to block with \+' \+ unIc \+ ' intercept \(<b>'/.test(src121), '121f ...and those strings are still what the source emits (v0.6.228: a conditional stealth\'s rider sits before the colon, `why`; the reader still matches -- 173b)');
     }
 
     /* 122) v0.6.152 — THE BREATH: the beat anchored on the table's last event, the stealth first look after the beat, 'I currently have N stealth', intercept by chat */
