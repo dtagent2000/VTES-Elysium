@@ -301,7 +301,7 @@ async function runArena(opts){
 
   let owned = null;
   const serverUrl = o.serverUrl || (owned = await spawnServer(), owned.url);   // v1.4.10: a free port, and the server alive after its boot
-  log('arena v1.4.11 — Trainbot v' + BOT_VERSION + ' · ' + o.matches + ' match(es) × ' +
+  log('arena v1.4.12 — Trainbot v' + BOT_VERSION + ' · ' + o.matches + ' match(es) × ' +
       o.bots + ' bots · personas ' + o.personas.join('/') + ' · decks ' + o.decks.join('/') + ' · start pool ' + o.startPool);
   log('  seating: ' + (FIXED_SEATS ? 'FIXED (v1.2 rotation, neighbourhoods constant)' : 'RANDOM per match, seed ' + RUN_SEED + ' (repeat with --seed ' + RUN_SEED + ')'));   // v1.3.0
   if(Object.keys(o.knobs).length || Object.keys(o.seatKnobs).length){
@@ -412,7 +412,7 @@ if(require.main === module){
     else if(a === '--pace') o.pace = Math.max(0, parseInt(next(), 10) || 0);
     else if(a === '--ask-secs') o.askSecs = Math.max(2, parseInt(next(), 10) || 3);
     else if(a === '--knob'){   // v1.2.4 (#6): --knob key=val[,key=val...] with optional seat prefix N:key=val -- whitelisted so a typo warns, never silently misconfigures
-      const WL = ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','twdKnow','dynFloor','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','jackBurn'];   // v1.4.11: +jackBurn (bot v0.6.224, D-114)   // v1.4.8: +dodgeOut (bot v0.6.205 -- it reached the manifest but not this list), +probeHold (bot v0.6.206)   // v1.4.7: +waveNarrow, +blockCost (bot v0.6.197)   // v1.4.6: +combatEndStats (bot v0.6.196)   // v1.4.5: +dynFloor (bot v0.6.189)   // v1.4.4: +twdKnow (bot v0.6.187)   // v1.4.3: +combatMind (bot v0.6.156)   // v1.3.4: debt 23b's switch
+      const WL = ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','twdKnow','dynFloor','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','jackBurn','jackRunway'];   // v1.4.12: +jackRunway (bot v0.6.226, D-115)   // v1.4.11: +jackBurn (bot v0.6.224, D-114)   // v1.4.8: +dodgeOut (bot v0.6.205 -- it reached the manifest but not this list), +probeHold (bot v0.6.206)   // v1.4.7: +waveNarrow, +blockCost (bot v0.6.197)   // v1.4.6: +combatEndStats (bot v0.6.196)   // v1.4.5: +dynFloor (bot v0.6.189)   // v1.4.4: +twdKnow (bot v0.6.187)   // v1.4.3: +combatMind (bot v0.6.156)   // v1.3.4: debt 23b's switch
       o.knobs = o.knobs || {}; o.seatKnobs = o.seatKnobs || {};   // lazy-init -- the arg loop may run against a pre-defaults o
       for(const ent of String(next()).split(',')){
         const m = ent.trim().match(/^(?:(\d+):)?([A-Za-z]+)=(-?[\d.]+)$/);
