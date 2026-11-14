@@ -50,6 +50,18 @@
     0 stale-answer rows (round A: 50 of 53, 60). (E5) the browser table (`hotseat-in-browser.js`, eight sweeps): 0 stale answers on
     v0.6.227, above 0 on v0.6.226. (E6) the server arena (one match, the client pace): the windows gate 0 and `ana-gates.py` PASS —
     the online path unchanged.
+  - *What came out* (the fix's bytes, the version set back, against the release footprint of v0.6.226; its manifests' knob label
+    dropped as in those traces): (E1) held — on the 240 the modifier windows that ran out 1135 → 2 of 1309, the totals 150 → 2 of
+    3834, the stale-answer rows 1431 → 3 (a Block!, a block line, a Pass — each an answer to an earlier window); on the 600 3247 → 8
+    of 3660, 501 → 13 of 14611, 4785 → 15. The four windows still running out on the 240 do so at ~10 s with no stale row beside
+    them: another path, not this race. (E2) half held — every match changed and almost none in play: the 240 SAME-PLAY 239 /
+    DIVERGED 1, the V5 smoke SAME-PLAY 167 / DIVERGED 1, the 600 SAME-PLAY 591 / DIVERGED 9 (the same windows, now closed at the
+    answer); every deck's paired VP on the 240 +0.00 [+0.00, +0.00]; `ana-gates.py` PASS on 15 of 16 tables — the 600 fails the
+    ledger gate (a bleed with no actor row) and the block gate (a vampire's two attempts in one action) in one DIVERGED match (167):
+    Ventrue bleeds Nosferatu as a late referendum's pool loss ousts it, the bleed fizzles, and Tremere, the next prey, reads that
+    bleed as aimed at itself — it books the pool and its late Block! lands in Ventrue's next action (correctly dropped as stale
+    there). The fix does not touch that read; the changed timing reached it. A lead for the BOARD's ledger faults (the same class).
+    (E3) held — the hotseat gate 12/0, H12 0 stale-answer rows; on v0.6.226 11/1 (H12: 6 stale Passes).
 - **v0.6.226 (14 Nov 2026)** — Round D, RULINGS O-40 → D-115 (Johan, 14 Nov 12:06: "vi gör på ditt förslag i O-40"): Smiling
   Jack's self-consistent runway, the knob `jackRunway` (default 1 after a no-loss bench; 0 = v0.6.225), spec §2's amendment.
   - *The change* (`_jackPriceAt`): a seat's runway against Jack R solves R·(c₁ + fc) + R(R−1)/2 = pool, the positive root

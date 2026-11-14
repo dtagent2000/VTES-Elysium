@@ -151,7 +151,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 
 ## Measurement debts
 - **Three ledger faults on fresh deals** (v0.6.223 too; `--bench none --seeds 3`): a VANISHED bleed, a bleed with no actor row,
-  a steal's victim lost > stole. *Done when* `ana-gates.py` passes there. Docs: CHANGELOG v0.6.224.
+  a steal's victim lost > stole. A lead (v0.6.227, the 600's match 167): a bleed that fizzles at a seat just ousted is read by
+  the next prey as its own. *Done when* `ana-gates.py` passes there. Docs: CHANGELOG v0.6.224, v0.6.227.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
