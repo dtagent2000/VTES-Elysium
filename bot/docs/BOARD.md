@@ -19,7 +19,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   waves 1–4 (v0.6.213–217; D-99, D-103, D-104, D-106). Next: wave 5, the 18 masters in play (`spec-v5-wave3` §4), Meditative
   Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape), with the actions at a card in
   play (steal The Rack / Powerbase: LA, burn Mob Connections), The Coven's control passing, and Día de los Muertos (no polling,
-  no [obl] / [dom] vote discard: PIB 20150105, D-111). Then the maneuver / press grants
+  no [obl] / [dom] vote discard: PIB 20150105, D-111); the 11 cards with a discipline line and no mode (D-116 (3)). Then the maneuver / press grants
   with the rush cards, the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
   done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY`
   line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares
@@ -40,11 +40,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar).
   Over-strict: `_bestStrengthFor` (any strength bonus), `_inPlayNorms` (my ash heap). Also Saulot's Healing Touch: FULL by the
   auto tier, its text unbuilt. *Done when* each is built and tested, or ruled out.
-- **Three auto readings and a requirement** (round A): Perfect Paragon lacks [PRE] ("Allies and younger vampires get −1
-  intercept"); Versailles gives +1 vote, not +1 per titled Camarilla vampire ("(uncurated" online); Eyes of the Wild reads +1
-  intercept on a lock, not a locked Gangrel's blood burn — and `_bestInterceptFor` asks no clan requirement, so a Banu Haqim
-  played it (166h, 166j, 167a now count the card). The ledger certifies all three FULL. *Done when* curated, graded, the
-  requirement read and the ledger's check asks a mode per discipline line. Docs: the two 13 Nov reports.
 - **V5 wave 3's riders** (`specs/spec-v5-wave3-2026-11-02.md` §4): the amber halves (Anarch Railroad and Fortune Teller Shop for
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
@@ -57,7 +52,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct): Black Chantry's helpsheets and Fifth
   Edition guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy.
   D-112: each strategy line is checked against its guide. Toreador's is done (13 Nov, `reports/REPORT-toreador-guide-check-2026-11-13.md`):
-  17 points, 3 findings, 8 proposals waiting for "kör". *Done when* each deck's proposals have Johan's "kör" or "no". Docs: RULINGS D-43, O-33, D-112; `specs/spec-knowledge-layer.md`.
+  17 points, 3 findings (all built: B v0.6.224, A and C v0.6.228), proposals 2–8 for a bench round (8 is a knob; O-42 joins it). *Done when* each deck's proposals have Johan's "kör" or "no". Docs: RULINGS D-43, O-33, D-112; `specs/spec-knowledge-layer.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
@@ -114,6 +109,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Docs: `history/specs/spec-home-pricing-2026-09-19.md`.
 - **`_wakeCard()` is vampire-blind** at the bounce, vote and reduce routes and in `interceptPotential` (`_wakeCardFor(v)` exists).
   *Done when* every site reads the vampire.
+- **The locked routes' last rungs** (round F, D-116 (5)): the block decision counts the unlock reactions, not the Underbridge Stray
+  (the route's last rung, an ally burned); `_wakeBlockersAfter` (the keep-blocker read) counts wakes only; Eyes of the Wild by a
+  vampire already attempting to block [ANK 20181122-2] is not built. *Done when* each reads the route, or is ruled out.
 - **Free block bars** (Beast Meld-class) and `chosen` (Seduction-class) have tags, no consumer. *Done when* a V5 wave needs them
   and the ledger lists them playable. Docs: RULINGS O-21.
 - **The chump gate is not the commit** (round B): `bareBlock` 'chump' passes on any chump body, then `_commitBlock` picks

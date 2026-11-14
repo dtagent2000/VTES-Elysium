@@ -13334,7 +13334,7 @@ async function connectWithRetry(client, tries = 30){
       //     THEN its line naming the minion -- the look on the counter saw no blocker; the name brings a second look and Paragon is played
       //     against the younger Nik Sikko. A later attempt that is only shouted takes the +1 off until its line names a blocker it reaches
       { const u = mk173('Hanna', 'toreador'); const bret = V('b1', 'Bret Stryker', { blood: 3 }); u.board = [bret]; u.hand = ['Perfect Paragon']; u.table = blockers();
-        const av = u._actingVamp = { v: bret, n: 1, target: 2, played: new Set() }; const a = u._ask = { contested: true, target: 2, pausedBy: new Set() };
+        u._actingVamp = { v: bret, n: 1, target: 2, played: new Set() }; u._ask = { contested: true, target: 2, pausedBy: new Set() };
         u.tally = { mode: 'block', a: 0, b: 0 }; u._afterBeat = (k, g, f) => { if(g()) f(); };   // the reaction beat at once
         u._onBlockAttempt('Viktor');   // Viktor's Block!
         u._writeTally({ mode: 'block', b: 0 }); if(typeof u._stealthSecondLook === 'function') u._stealthSecondLook();   // the counter's echo: the look runs and finds no named blocker

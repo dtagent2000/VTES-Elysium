@@ -7,7 +7,7 @@ Everything runs from inside `bot/`. Third-party data (`vtes.json`, the TWDA) is 
 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and copy the two dump files in. KRCG's v3 file
 (static.krcg.org/data/v4/vtes.json since 8 Nov) stopped at Sabbat V5, without the last 63 cards and the errata: only a `--compare`
 input now. The TWDA: `twda.json`, KRCG's
-v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twda.py` refuses the old list). Check what a reader `open()`s before naming a data file.
+v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twda.py` refuses the old list). Check what a reader `open()`s before naming a file.
 
 ## Running
 - **The sim table** — `node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10 --trace /tmp/sim-x`: every
@@ -17,7 +17,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   the same trace byte for byte, so `python3 ana-sim-diff.py A B` compares two runs match by match (IDENTICAL / SAME-PLAY /
   DIVERGED with the first differing decision): before / after a change, or version against version (copy `bot/` to scratch with
   the other `elysium-bot.js`). Two versions' traces differ in the result row's `bot` at least: for a clean-up release, `sed` the
-  new version to the old in a copy of its traces and expect IDENTICAL (C2). Traces are arena-shaped (`match-NNNN.jsonl`, a `result` row), ~0.5 MB each — keep series in scratch.
+  new version to the old in a copy of its traces and expect IDENTICAL (C2). Traces are arena-shaped (`match-NNNN.jsonl`, a `result` row), ~0.5 MB each: keep them in scratch.
   SUMMARY.md lists post-game ousts and the `zeroPool` count (a bot deciding at pool ≤ 0 before its own oust = a rules fault; a payment
   of the last pool that ousts at once leaves no decision at 0 and is not counted — BOARD). When a footprint shows DIVERGED, check whether
   the two decision sequences realign once one missing row is dropped. A `--decks` key the bot does not embed plays `deck-<key>.json`
@@ -36,9 +36,9 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   the crypt readers that read them: modelled only when they cover every sentence) and the crypt class map. Its self-test runs before
   every page (`--self-test` prints it); a classifier miss or a curated crypt key with no class in `FX_CLASS` fails the run, so a wave
   adds its new keys' classes there.
-  Regenerate it from the release bytes' runs: the 240-match design and the V5 smoke (each of the 14 new keys:
-  `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`). Every one of those
-  12 matches deals from seed 1: a single copy deep in a library is never drawn ('unseen' is then the deal, not the bot) — add `--seeds 4`
+  Regenerate it from the release bytes' runs: the 240 and the V5 smoke (each of the 14 new keys:
+  `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`). All 12
+  deal from seed 1: a single copy deep in a library is never drawn ('unseen' is then the deal, not the bot) — add `--seeds 4`
   to see one played (v0.6.215).
 - **The suite, frozen** (the ×3 gate; three snapshots in a row, one run at a time, ~300–420 s each), from the repo root:
   ```
@@ -80,7 +80,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
 - **The arena** — `node elysium-bot-arena.js --matches N --bots K --personas expert,… --decks hacking,sewer,… --start-pool 30
   --match-timeout 600 --trace ./serie-x [--seed N] [--fixed-seats] [--knob k=v] [--knob SEAT:k=v]`. Seating is random per match by
   default (`--seed` repeats, `--fixed-seats` = deck order). Decks: hacking (the tournament benchmark), sewer, malkavian, tremere,
-  nosferatu, ventrue. `--knob` is whitelisted (`WL`; any other name is ignored with a warning; `aggression` / `blockShy` are not in it). Timer-bound (~2.5 % of a core each), so many run in parallel; 4p30 ≈ 2–4 min, 5p30 ≈ 3–4 min on the real
+  nosferatu, ventrue. `--knob` is whitelisted (`WL`; another name is ignored with a warning; not `aggression` / `blockShy`). Timer-bound (~2.5 % of a core each), so many run in parallel; 4p30 ≈ 2–4 min, 5p30 ≈ 3–4 min on the real
   clock. Launch it detached (one process per match) and poll its trace directory. Pre-flight: one match before any series on a change that
   reads live protocol state, and read the new emit rows.
 - **The mirror bench** (on the sim since round C3, 3 Nov 2026; `docs/reports/REPORT-bench-controls-sim-2026-11-03.md`) —
@@ -110,9 +110,9 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
 - **A debug bot at a live table** — `node elysium-bot.js --server ws://HOST:8123 --room R --pass P --debug [--no-debug-weights]`;
   refused at a Tournament table; its hand goes to the whole table and the other bots look away.
 - **Coverage** — `node gen-deck-coverage.js deck-<clan>.json --out docs/coverage/deck-coverage-v5-starter-<clan>-black-chantry-2020.md`
-  ("can the bot play this deck?"; a master counts only through `MASTER_KEYS`; the tool has two version sites, bump both). Every `fx.`
-  key the bot reads is in its `CLASS` map (v1.1.39); a new one prints the ⚠ line — classify it in the same round. `coverDeck()` is
-  exported: the ledger reads the same verdicts.
+  (a master counts only through `MASTER_KEYS`; two version sites, bump both). Every `fx.` key the bot reads is in its `CLASS` map; a
+  new one prints the ⚠ line — classify it in the same round. With `vtes.json` beside it a FULL card needs a mode for every discipline
+  line of its text (v1.1.47); without it that check is skipped. The ledger reads the same verdicts (`coverDeck()`).
 - **cardfx** — `node cardfx-compile.js --report` (needs `vtes.json`); read the inherited / mismatch / X lists; run `test-cardfx.js`
   BEFORE the suite after adding an fx key. Audit curated vs auto before touching a curated field: compile once without the
   overlay and once with, diff the field per curated name. Political cards: `e.ref.pool` (terms), `e.ref.tags`, `e.ref.fx`;

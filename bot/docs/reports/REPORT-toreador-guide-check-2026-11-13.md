@@ -78,3 +78,10 @@ control first, bleeds with Enchant Kindred and Aire of Elation, little defence.
 The line's shape (politics first, bleeds between, Majesty ends fights) matches the guide; Enchant Kindred's stock, Aire of Elation
 after the block step, Majesty's multi-act, Creepshow Casino and Resist Earth's Grasp, the Grand Ball's lock pick and the discard
 phase agree with it. Deals are a human's game.
+
+## Status (14 Nov 2026, bot v0.6.228, round F — RULINGS D-116)
+Finding A built (Perfect Paragon's [PRE]: 229 stealth plays on the 600, each against a younger blocker), with Versailles' vote per
+titled Camarilla vampire, Scalpel Tongue's one requirement and a locked prince's Second Tradition (10 → 386 blocks through it);
+the ledger now asks a mode for every discipline line. Finding C built as proposal 1 — its play half failed its prediction: the Ball
+waits for a turn its free Toreador's scorer calls the referendum, but the minion phase lost 93 of its 308 turns to the order and the
+posture (RULINGS O-42, Johan's pick). Finding B was round B's (v0.6.224). Proposals 2–8 go to the bench round.
