@@ -12653,7 +12653,7 @@ async function connectWithRetry(client, tries = 30){
           let n = 0, fired = false; v._resolveCombat = async x => { n++; v._cv = x && x.name; }; v._oust = () => { v.out = true; }; v._pace = async () => { if(!fired){ fired = true; v._verdictAsTarget(true); } };
           await v._commitBlock(v.pending, { why: 'test', parts: {} });
           return { combats: n, vamp: v._cv || null, kept: hand.every(h => v.hand.includes(h)), quiet: !v.sent.some(m => (m.t === 'tally' && m.mode === 'block') || (m.t === 'log' && /attempts to block|plays/.test(m.html || ''))) }; };
-        late.unlock = await other(true, ['Guard Dogs'], 'bleed'); late.icBeat = await other(false, ['Eyes of the Wild'], 'undirected');
+        late.unlock = await other(true, ['Guard Dogs'], 'bleed'); late.icBeat = await other(false, ['Ensnare a Beast'], 'undirected');   // v0.6.228: Ensnare a Beast -- Eyes of the Wild is a LOCKED Gangrel's route now, no plain intercept for an unlocked blocker
         ok(r.u.pool === 19 && r.combats === 1 && r.u._cv === 'Crow (G5)' && late.qv && !late.blockTally && !late.attempt
           && late.unlock.combats === 1 && late.unlock.vamp === 'Crow (G5)' && late.unlock.kept && late.unlock.quiet && late.icBeat.combats === 1 && late.icBeat.kept && late.icBeat.quiet, '166d a success verdict inside the wake’s beat: Crow, named at Block!, pays Terrifying Visage and fights; the route ends there -- the wake card stays, no block counter or attempt line over the combat; the same at the unlock reaction’s beat and at an unlocked blocker’s intercept beat (got ' + JSON.stringify({ pool: r.u.pool, combats: r.combats, vamp: r.u._cv || null, late }) + ')'); }
 

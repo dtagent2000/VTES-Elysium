@@ -3862,8 +3862,9 @@ class Bot {
     const t = ab.target;
     if(ab.src === 'card'){ const j = this.hand.indexOf(ab.name); if(j < 0) return false; this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(ab.name);
       if(ab.costBlood) v.blood = Math.max(0, (v.blood | 0) - ab.costBlood);
-      this.fxClone({ name: ab.name, kind: 'lib' }, '[' + (ab.at || '') + '] ' + t.vamp + ' abstains', { actor: v }); this._emitPlay(ab.name, 'abstain', v.name);
-      this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(ab.name) + '</b> [' + esc(ab.at || '') + '] — ' + esc(t.owner) + "'s <b>" + esc(t.vamp) + '</b> is locked' + (ab.burn ? ', burns ' + ab.burn + ' blood' : '') + ' and abstains (' + t.n + ' vote' + (t.n === 1 ? '' : 's') + ' cancelled).' });   // L12.abstain (bot grammar, v0.6.217)
+      const lvl = String(ab.at || '').split('+')[0];   // v0.6.228 (round F): the mode is 'cel+pre' / 'CEL+PRE' now (one requirement) -- §12's LVL is one token, its case the level (L12 ABSTAIN reads \w+)
+      this.fxClone({ name: ab.name, kind: 'lib' }, '[' + lvl + '] ' + t.vamp + ' abstains', { actor: v }); this._emitPlay(ab.name, 'abstain', v.name);
+      this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(ab.name) + '</b> [' + esc(lvl) + '] — ' + esc(t.owner) + "'s <b>" + esc(t.vamp) + '</b> is locked' + (ab.burn ? ', burns ' + ab.burn + ' blood' : '') + ' and abstains (' + t.n + ' vote' + (t.n === 1 ? '' : 's') + ' cancelled).' });   // L12.abstain (bot grammar, v0.6.217)
     } else { ab.bearer.locked = true; rc.sgwUsed = true;
       this.fxClone({ name: ab.name, kind: 'lib' }, ab.bearer.name + ' locks: ' + t.vamp + ' abstains', { actor: ab.bearer }); this._emitPlay(ab.name, 'abstain', ab.bearer.name);
       this.send({ t: 'log', html: '<b>' + esc(ab.bearer.name) + '</b> locks: <b>' + esc(ab.name) + '</b> — ' + esc(t.owner) + "'s <b>" + esc(t.vamp) + '</b> abstains (' + t.n + ' vote' + (t.n === 1 ? '' : 's') + ' cancelled).' });   // L12.abstain
