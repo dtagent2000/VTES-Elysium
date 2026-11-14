@@ -89,6 +89,16 @@
     three quarters of the 240's matches, `ana-gates.py` PASS on the 240 and the V5 smoke; and (E4)–(E5) as registered, on these bytes.
     The first fix's own real-clock table, cut at two matches for the release bytes: 11 modifier windows and 50 totals, none ran out,
     no stale row.
+  - *The release bytes* (F): held — the 240's modifier run-outs 2 of 1306 and stale rows 3 (the same rows as E1's), play unchanged
+    against the first fix in 227 of 240 (DIVERGED 13, IDENTICAL 27, SAME-PLAY 200; the guard moves a nested frame by the 200 ms gap),
+    `ana-gates.py` PASS on the 240 and all 14 V5 tables. Against v0.6.226: the 240 DIVERGED 14 / SAME-PLAY 226, the V5 smoke
+    DIVERGED 14 of 168, the 600 DIVERGED 37; the paired VP on the 240 within ±0.04 for every deck (Malkavian −0.04 [−0.07, −0.00],
+    Nosferatu +0.00, Tremere +0.02, Ventrue +0.02). The 600 again fails the ledger gate (2 faults) and the block gate (1) — the same
+    misread, in match 167 and match 393 (Ventrue's bleed fizzles at a seat just ousted, Tremere books 1 and 2).
+  - (E6) held — the server arena at the client pace (`--pace 3100 --ask-secs 20`, the four starters; the first fix's bytes, the
+    guard does not touch an asynchronous socket): one match to its end, 10 rounds in 37 minutes, 5 modifier windows and 8 totals,
+    none ran out, no stale row, `ana-gates.py` PASS 7 of 7. A first attempt ran into the arena's default 600 s match timeout (the
+    matches gate; its windows: 0 of 8, no stale row); `--match-timeout 4000` for the second.
 - **v0.6.226 (14 Nov 2026)** — Round D, RULINGS O-40 → D-115 (Johan, 14 Nov 12:06: "vi gör på ditt förslag i O-40"): Smiling
   Jack's self-consistent runway, the knob `jackRunway` (default 1 after a no-loss bench; 0 = v0.6.225), spec §2's amendment.
   - *The change* (`_jackPriceAt`): a seat's runway against Jack R solves R·(c₁ + fc) + R(R−1)/2 = pool, the positive root
