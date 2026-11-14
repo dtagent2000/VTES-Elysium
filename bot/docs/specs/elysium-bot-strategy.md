@@ -290,4 +290,8 @@ Promoted to **T9a/T9b** in `elysium-bot-training-backlog.md`.
   re-decides at each read, so a minion read after Jack's payments with no bot shorter waits no more); and `plan.reads.jackOwn`
   `{ cardId, worth }`, my own Jack's worth when another seat acts to burn it (§5). The burn candidate (`_jackBurnValue`) and the
   burn window at my Jack read them; only a burn at a Jack the plan has not read yet computes the worth on the spot
-  (`_myJackWorth`'s fallback). The price can pass the seat's pool (the runway takes a flat cost): RULINGS O-40.
+  (`_myJackWorth`'s fallback). The price could pass the seat's pool (the runway took a flat cost): RULINGS O-40, answered by D-115.
+- **14 November 2026** — `plan.reads.jack.runway` pays Jack's growing counter (bot v0.6.226, RULINGS D-115, the knob
+  `jackRunway`): R solves R·(c₁ + fc) + R(R−1)/2 = my pool, so H = min(R, Jack's life) and the price over R is my pool less the
+  table model's damage over it — never above my pool; my prey's price and my own Jack's worth read the same runway, and the owner's
+  life stays flat. A shorter runway passes under my turns to oust my prey sooner: the defence weighs double more often (`wDef`).

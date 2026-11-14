@@ -19,6 +19,12 @@ the card; at each other Methuselah's unlock phase that Methuselah burns 1 pool o
 - `H(X)` — min(`runway(X)`, the rounds left). The rounds left are Jack's own expected life: its owner's runway under its own
   predator (it leaves play with its owner) — Claude's reading of "the rounds the match is expected to have left".
 - `price(X) = H·c1 + H(H−1)/2` — `c1 + (c1+1) + …` over H rounds. For the owner: `H` (the counter it pays itself each round).
+- *Amended 14 Nov (RULINGS D-115, answering O-40; bot v0.6.226, the knob `jackRunway`):* the runway above takes a flat `c1 + fc`
+  a round while Jack's counter grows, so its price could pass X's pool (5 of 56 burns on the 240). It is now the self-consistent
+  runway: R solves `R·(c1 + fc) + R(R−1)/2 = pool(X)`, the positive root `R = √(b² + 2·pool) − b` with `b = c1 + fc − ½`; the price
+  over R is `pool − R·fc`, never above the pool. A runway of a round or more is never longer than the flat one (under a round it is
+  a little longer, its price a little higher: the R(R−1)/2 term is negative there), R = 1 exactly when the pool is `c1 + fc` (§4's
+  "a round" threshold stays), and the owner's life (its own flat 1 + fc a round) is unchanged.
 
 ## 3. The value of a burn, in the scorer's currency
 - `value = P(success) × [wDef · price(me) − offW · price(my prey)] × P.aggression` — the same unit as a bleed (`n · P.aggression ·
@@ -38,7 +44,9 @@ does not spend several actions on one Jack. A bot does not wait for a human. Tie
 ## 5. The owner's defence (21:45, Q5)
 A (D) action to burn MY card is weighed by the card's worth to me, not by T6's generic weight (0.3–0.6; today the score stays
 under the block bar for every starter). For my Jack: the price it takes from my prey over its life (`offW · price(my prey)`), the
-same formula seen from the owner, less my own counter payments. Behind the same knob. The Grand Ball's worth comes from the D-112
+same formula seen from the owner, less my own counter payments. Behind the same knob. *Amended 14 Nov (D-115):* my prey's loss runs
+over min(her runway, Jack's life) — since D-115 her runway pays the growing counter, so it is at most her pool — while my payments
+run over Jack's whole life; where my pool is at least hers at a quiet predator, my Jack is worth 0 to me (RULINGS O-41). The Grand Ball's worth comes from the D-112
 check's proposal (round A's report), not from this spec.
 
 ## 6. The block guard (21:45, Q4) — a rules correction, its own step first

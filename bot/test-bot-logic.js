@@ -12932,8 +12932,9 @@ async function connectWithRetry(client, tries = 30){
     }
 
     /* 169) v0.6.224 -- ROUND B step 2, D-114 (specs/spec-jack-burn-2026-11-13.md, the knob jackBurn): Smiling Jack’s burn weighed by its
-       price, the most exposed bot first, and a burn at my Jack weighed by its worth; the knob at 0 is the previous behaviour.
-       LAST LINE OF 169 is the closing brace below. */
+       price, the most exposed bot first, and a burn at my Jack weighed by its worth; the knob at 0 is the previous behaviour. 169a and
+       169b keep jackRunway at 0 (v0.6.226, D-115): their figures are the flat runway's prices; the rest runs at the default (171 is the
+       self-consistent runway's own). LAST LINE OF 169 is the closing brace below. */
     {
       console.log('\n[169] v0.6.224 -- round B step 2: the Jack burn (jackBurn)');
       const mk169 = (name, extra, seat) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', deckName: 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
@@ -12948,7 +12949,7 @@ async function connectWithRetry(client, tries = 30){
 
       // a) Jack's price: Nils (my prey) holds a Jack with 2 counters; my 20 pool runs out in 6.67 rounds -- the burn (its price in pool)
       //    beats Enchant Kindred; with the knob at 0 there is no Jack candidate (the 0-path)
-      { const on = mk169('U', { jackBurn: 1 }), off = mk169('U', { jackBurn: 0 }); on.players[0].bot = false; off.players[0].bot = false; jackTable(on); jackTable(off);
+      { const on = mk169('U', { jackBurn: 1, jackRunway: 0 }), off = mk169('U', { jackBurn: 0, jackRunway: 0 }); on.players[0].bot = false; off.players[0].bot = false; jackTable(on); jackTable(off);
         const dOn = on._decideAction(on.board[0], on._actionCtxFor(on.board[0])), bOff = off._bestBurnCardFor(off.board[0]), dOff = off._decideAction(off.board[0], off._actionCtxFor(off.board[0]));
         ok(dOn.pick && dOn.pick.kind === 'burnCard' && dOn.pick.target.card === 'Smiling Jack, The Anarch' && dOn.pick.val > 3 && on.plan.reads.jack && on.plan.reads.jack.price === 25
            && !bOff && !(dOff.pick && dOff.pick.kind === 'burnCard') && !off.plan.reads.jack,
@@ -12958,7 +12959,7 @@ async function connectWithRetry(client, tries = 30){
       //    saving weighs double (wDef 2) -- at Nils's 40 pool his saving (44) beats my doubled one (2 x 13.89): no candidate, no burn; at 30
       //    (27) the doubled defence tips the value positive (0.94) and the bleed (3.25) still outbids it. c1 by turn order (the egress
       //    review): from my turn my prey Nils unlocks before the owner and pays 2, I pay 3; on Hanna's turn I pay 2
-      { const at = np => { const u = mk169('U', { jackBurn: 1 }); u.players[0].bot = false; u.board = [V8('v1', 'Catalina Vega', { blood: 5, cap: 8 })]; u.hand = ['Enchant Kindred']; u.pool = 10;
+      { const at = np => { const u = mk169('U', { jackBurn: 1, jackRunway: 0 }); u.players[0].bot = false; u.board = [V8('v1', 'Catalina Vega', { blood: 5, cap: 8 })]; u.hand = ['Enchant Kindred']; u.pool = 10;
           u.table = { 1: { pub: { pool: 20, cards: [V8('h1', 'Lenny Burkhead (G6)', { locked: true }), J8(2)] } }, 3: { pub: { pool: np, cards: [V8('n1', 'Andi Liu')] } } }; u._strategize('unlock');
           const jv = typeof u._jackAt === 'function' ? u._jackBurnValue(u.board[0], u._jackAt()) : null, b = u._bestBurnCardFor(u.board[0]), d = u._decideAction(u.board[0], u._actionCtxFor(u.board[0]));
           const jk = typeof u._jackAt === 'function' ? u._jackAt() : null, c1 = jk && typeof u._jackC1 === 'function' ? [u._jackC1(3, jk), u._jackC1(2, jk)] : null;
@@ -12983,16 +12984,21 @@ async function connectWithRetry(client, tries = 30){
            '169c the most exposed bot first: I wait my turn 4 for Hanna, then burn; a minion read with no bot shorter drops the wait; a bot under a round is not shorter (got ' + JSON.stringify({ t1: !!t1, j1, dt, t2: t2 && t2.val, w0, w1, wz }) + ')'); }
 
       // d) the owner's defence: Hanna's vampire acts to burn MY Jack (2 counters; my prey Hanna pays it) -- with the knob its worth
-      //    rides the window and a bare body blocks; at 0 T6's weight keeps the score under the bar
-      { const run = async knob => { const u = mk169('N', { jackBurn: knob, deckName: 'nosferatu' }, 3); u.players[1].name = 'U2'; const jk = J8(2);
-          u.board = [V8('n1', 'Andi Liu', { blood: 4, cap: 5 }), jk]; u.table = { 1: { pub: { pool: 20, cards: [V8('h1', 'Lenny Burkhead (G6)')] } }, 2: { pub: { pool: 20, cards: [V8('c1', 'Catalina Vega', { cap: 8 })] } } };
+      //    rides the window and a bare body blocks; at 0 T6's weight keeps the score under the bar. My pool 12 against Hanna's 20: the
+      //    defence fires at the default runway (a regression guard, green on v0.6.225 too). v0.6.226 (the egress review): at my 20 the
+      //    default runway leaves my Jack worth 0 -- Hanna's loss over her runway (at most her pool) against my payments over Jack's whole
+      //    life (RULINGS O-41) -- and the bare body lets the burn through; the flat runway (jackRunway 0) read 12.22 and blocked. A
+      //    ruling on O-41 flips this row
+      { const run = async (knob, mine, rw) => { const u = mk169('N', Object.assign({ jackBurn: knob, deckName: 'nosferatu' }, rw === undefined ? {} : { jackRunway: rw }), 3); u.players[1].name = 'U2'; const jk = J8(2);
+          u.pool = mine; u.board = [V8('n1', 'Andi Liu', { blood: 4, cap: 5 }), jk]; u.table = { 1: { pub: { pool: 20, cards: [V8('h1', 'Lenny Burkhead (G6)')] } }, 2: { pub: { pool: 20, cards: [V8('c1', 'Catalina Vega', { cap: 8 })] } } };
           u._strategize('unlock'); let dec = null; const od = u.decide.bind(u); u.decide = (q, ctx) => { const r = od(q, ctx); if(q === 'block-as-target') dec = r; return r; };
           const committed = []; u._commitBlock = async p => { committed.push(p.sub); };
           u._burnWindowOpens('Hanna', 'Lenny Burkhead (G6)', jk); await new Promise(r => setTimeout(r, 600));
           return { worth: u.pending && u.pending.cardWorth, block: dec && dec.block, score: dec && +dec.score.toFixed(2), committed }; };
-        const on = await run(1), off = await run(0);
-        ok(on.worth >= 2 && on.block === true && JSON.stringify(on.committed) === '["burnCard"]' && off.worth === undefined && off.block === false && off.committed.length === 0,
-           '169d a burn at my Jack: with the knob its worth rides the window and a bare body blocks; at 0 the score stays under the bar (got ' + JSON.stringify({ on, off }) + ')'); }
+        const on = await run(1, 12), off = await run(0, 12), o41 = await run(1, 20), o41flat = await run(1, 20, 0);
+        ok(on.worth >= 2 && on.block === true && JSON.stringify(on.committed) === '["burnCard"]' && off.worth === undefined && off.block === false && off.committed.length === 0
+           && o41.worth === 0 && o41.block === false && o41.committed.length === 0 && o41flat.worth > 12 && o41flat.block === true,
+           '169d a burn at my Jack: with the knob its worth rides the window and a bare body blocks; at 0 the score stays under the bar; at my 20 against her 20 the worth is 0 (O-41), 12.22 on the flat runway (got ' + JSON.stringify({ on, off, o41, o41flat }) + ')'); }
 
       // e) through the turn: with the knob my minion phase burns Nils's Jack -- the frozen burn line, a burnCard through row
       { const u = mk169('U', { jackBurn: 1 }); u.players[0].bot = false; jackTable(u); u.turnSeat = 2; u._announcePhase = async () => {};
@@ -13157,6 +13163,80 @@ async function connectWithRetry(client, tries = 30){
       { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi']); table(u, cs);
         const r1 = u._parseUndirected('Hanna', 'Catalina Vega hunts. Target: Massimo Falconi.'); if(u.pending && u.pending.passTimer) clearTimeout(u.pending.passTimer); u._clearPending && u._clearPending('test');
         ok(r1 === true, '170q a hunt line with a leftover target opens the undirected window (got ' + r1 + ')'); }
+    }
+
+    /* 171) v0.6.226 -- ROUND D, RULINGS D-115 (O-40; Johan, 14 Nov 12:06; the knob jackRunway): Smiling Jack's self-consistent runway --
+       R solves R(c1 + fc) + R(R-1)/2 = pool, so the price over it is pool - R*fc, never above the seat's pool; the knob at 0 is
+       v0.6.225's flat pool / (c1 + fc). LAST LINE OF 171 is the closing brace below. */
+    {
+      console.log('\n[171] v0.6.226 -- round D: Jack’s self-consistent runway (jackRunway)');
+      const mk171 = (rw, extra, seat) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName: 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, jackBurn: 1, jackRunway: rw, log: () => {} }, extra || {}));
+        u.seat = seat || 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: false }, { seat: 2, name: seat === 3 ? 'U2' : 'U', online: true, bot: true }, { seat: 3, name: seat === 3 ? 'U' : 'Nils', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
+      const V9 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4, attached: [] }, o || {});
+      const J9 = n => ({ id: 'sj1', name: 'Smiling Jack, The Anarch', kind: 'lib', zone: 'ready', faceDown: false, counters: Array(n).fill('pool') });
+      const priceAt = (u, st, jk, predFc, myFc) => typeof u._jackPriceAt === 'function' ? u._jackPriceAt(st, jk, predFc, myFc) : null;
+
+      // a) my 30 pool against Nils's Jack with no counter yet (Nils unlocks before my next unlock: c1 1), no predator damage, Nils's 100
+      //    pool (Jack outlives my runway): R = 7.26 rounds, and what Jack takes over them is my whole pool; at 0 the flat runway reads
+      //    30 rounds and a price of 465. The manifest names the knob
+      { const at = rw => { const u = mk171(rw); u.pool = 30; u.table = { 1: { pub: { pool: 20, cards: [] } }, 3: { pub: { pool: 100, cards: [J9(0)] } } };
+          const jk = { seat: 3, card: J9(0), n: 0 }, p = priceAt(u, 2, jk, 0, 0); u._emitManifest(); const mf = u.events.find(e => e.t === 'bot:manifest');
+          return p && { c1: u._jackC1(2, jk), runway: +p.runway.toFixed(3), H: +p.H.toFixed(3), price: +p.price.toFixed(3), knob: mf && mf.d && mf.d.knobs ? mf.d.knobs.jackRunway : 'none' }; };
+        const on = at(1), off = at(0);
+        ok(on && on.c1 === 1 && on.runway > 7.25 && on.runway < 7.27 && on.H === on.runway && on.price <= 30 && on.price > 29.99 && on.knob === 1
+           && off && off.runway === 30 && off.H === 30 && off.price === 465 && off.knob === 0,
+           '171a my 30 pool against a Jack at c1 1: a runway of 7.26 rounds and its price my pool; at 0 30 rounds and 465 (got ' + JSON.stringify({ on, off }) + ')'); }
+
+      // b) the invariant over a sweep -- pools 1 to 40, c1 0 to 7 (my own read, the owner first: n + 1; my prey's, before the owner: n),
+      //    a predator's 0 to 5 a round (fractional too: a forecast is a mean), an owner's pool of 2, 10 or 100: at 1 the root itself --
+      //    wherever the runway bounds H the price is exactly pool - R*fc -- so no price passes its seat's pool; a runway of a round or more
+      //    is never longer than the flat one (under a round it is a little longer: the R(R-1)/2 term is negative there); the coordination's
+      //    "a round" threshold stays where it was (R = 1 exactly when the pool is c1 + fc). At 0 the flat runway's price passes the pool
+      { const sweep = rw => { const u = mk171(rw); let n = 0, over = 0, worst = -1e9, longer = 0, r1 = 0, r1bad = 0, idN = 0, idBad = 0;
+          for(const pool of [1, 2, 3, 4, 5, 8, 13, 20, 30, 40]) for(const k of [0, 1, 2, 4, 6]) for(const fc of [0, 0.24, 1, 1.7, 3, 5]) for(const own of [2, 10, 100]) for(const who of [2, 3]){
+            let jk, p; u.pool = 20;
+            if(who === 2){ u.pool = pool; u.table = { 1: { pub: { pool: 20, cards: [] } }, 3: { pub: { pool: own, cards: [J9(k)] } } }; jk = { seat: 3, card: J9(k), n: k }; p = priceAt(u, 2, jk, fc, fc); }
+            else { u.table = { 1: { pub: { pool: own, cards: [J9(k)] } }, 3: { pub: { pool, cards: [] } } }; jk = { seat: 1, card: J9(k), n: k }; p = priceAt(u, 3, jk, null, fc); }
+            if(!p) return null; n++; const c1 = u._jackC1(who, jk), flat = pool / Math.max(0.25, c1 + fc);
+            if(p.price > pool + 1e-9) over++; worst = Math.max(worst, p.price - pool);
+            if(p.runway >= 1 && p.runway > flat + 1e-9) longer++;
+            if(pool === c1 + fc){ r1++; if(Math.abs(p.runway - 1) > 1e-9) r1bad++; }
+            if(p.runway > 0 && Math.abs(p.H - p.runway) < 1e-12){ idN++; if(Math.abs(p.price - Math.max(0, pool - p.runway * fc)) > 1e-9) idBad++; } }
+          return { n, over, worst: +worst.toFixed(2), longer, r1, r1bad, idN, idBad }; };
+        const on = sweep(1), off = sweep(0);
+        ok(on && on.n === 1800 && on.over === 0 && on.worst <= 0 && on.longer === 0 && on.r1 > 20 && on.r1bad === 0 && on.idN > 500 && on.idBad === 0
+           && off && off.over > 100 && off.r1bad === 0 && off.idBad > 100,
+           '171b over 1800 reads the price is pool - R*fc wherever R bounds H, none passes its pool, no runway of a round or more grows, R = 1 at pool = c1 + fc; at 0 the flat price passes it (got ' + JSON.stringify({ on, off }) + ')'); }
+
+      // c) through the plan and the decision -- 169b's table at Nils's 30: Hanna's Jack (2 counters) takes 3 + 4 + 5 from my 10 pool before
+      //    I can oust Nils. The flat runway priced my loss 13.89, above my pool, and Nils's 27 (6 rounds at 2 + 3 a round); the consistent
+      //    one prices mine at my pool and Nils's at 30 - 4.46 x 3 = 16.6: the doubled defence (4.04) now outbids the bleed and my vampire
+      //    burns Jack; at 0 Enchant Kindred (3.25 against the burn's 0.94, 169b)
+      { const at = rw => { const u = mk171(rw); u.board = [V9('v1', 'Catalina Vega', { blood: 5, cap: 8 })]; u.hand = ['Enchant Kindred']; u.pool = 10;
+          u.table = { 1: { pub: { pool: 20, cards: [V9('h1', 'Lenny Burkhead (G6)', { locked: true }), J9(2)] } }, 3: { pub: { pool: 30, cards: [V9('n1', 'Andi Liu')] } } }; u._strategize('unlock');
+          const rd = (u.plan && u.plan.reads && u.plan.reads.jack) || {}, jk = typeof u._jackAt === 'function' ? u._jackAt() : null, jv = jk ? u._jackBurnValue(u.board[0], jk) : null;
+          const d = u._decideAction(u.board[0], u._actionCtxFor(u.board[0]));
+          return { pool: u.plan && u.plan.reads.pool, runway: rd.runway, price: rd.price, preyPrice: rd.preyPrice, wDef: jv && jv.wDef, val: jv && +jv.val.toFixed(2), kind: d.pick && d.pick.kind, name: d.pick && d.pick.name }; };
+        const on = at(1), off = at(0);
+        ok(on.price <= on.pool && on.price > 9.9 && on.preyPrice > 16.5 && on.preyPrice < 16.7 && on.wDef === 2 && on.kind === 'burnCard' && on.name === 'Smiling Jack, The Anarch'
+           && off.price > off.pool && off.preyPrice === 27 && off.kind !== 'burnCard' && off.name === 'Enchant Kindred',
+           '171c 169b’s table at Nils’s 30: my price my pool, Nils’s 16.6 -- the burn outbids the bleed; at 0 13.89 and 27, the bleed (got ' + JSON.stringify({ on, off }) + ')'); }
+
+      // d) the owner's defence: my Jack (no counter) against my prey Hanna's 30 pool, Hanna paying 0, 1, 2, ... while I pay 1 a round over
+      //    Jack's life (my pool, no predator damage): at 1 her loss over her runway (8.26 rounds) is her whole pool, so the worth is at most
+      //    offW x 30 -- at my 12 pool 30 - 12 = 18, at my 40 nothing left (my payments over Jack's 40 rounds outrun her pool: RULINGS
+      //    O-41); at 0 the flat runway (30 / 0.25 rounds) bills her 0 + 1 + ... over Jack's whole life: 54 and 740,
+      //    past her pool. The plan's read keeps the bound
+      { const at = (rw, pool) => { const u = mk171(rw, { deckName: 'nosferatu' }, 3); const jc = J9(0); u.pool = pool; u.board = [V9('n1', 'Andi Liu', { blood: 4, cap: 5 }), jc];
+          u.table = { 1: { pub: { pool: 30, cards: [V9('h1', 'Lenny Burkhead (G6)')] } }, 2: { pub: { pool: 20, cards: [V9('c1', 'Catalina Vega', { cap: 8 })] } } };
+          const w = typeof u._myJackWorth === 'function' ? u._myJackWorth(jc, 0) : null; u._strategize('unlock'); const jo = u.plan && u.plan.reads && u.plan.reads.jackOwn;
+          return { worth: w == null ? null : +w.toFixed(2), plan: jo ? jo.worth : null, offW: +u._planOffW().toFixed(2) }; };
+        const on12 = at(1, 12), off12 = at(0, 12), on40 = at(1, 40), off40 = at(0, 40);
+        ok(on12.worth === 18 && on12.plan > 0 && on12.plan <= 30 * on12.offW && off12.worth === 54 && on40.worth === 0 && on40.plan === 0
+           && off40.worth > 100 && off40.plan > 100,
+           '171d my Jack’s worth is at most offW x my prey’s 30 pool: 18 at my 12 pool, 0 at my 40 (O-41); at 0 54 and hundreds (got ' + JSON.stringify({ on12, off12, on40, off40 }) + ')'); }
     }
 
 
