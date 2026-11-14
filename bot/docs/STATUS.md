@@ -18,7 +18,7 @@ titled vampire, Scalpel Tongue with both disciplines, a locked prince through Se
 Eyes of the Wild is a locked Gangrel's block.
 
 ## Next (Johan's order of 14 Nov)
-1. The bench round: Toreador's proposals 2–8 and O-42 (the Ball's turn), Johan's "kör" each.
+1. The bench round: Toreador's proposals 2–8 and D-117 (the Ball's turn), Johan's "kör" each.
 2. V5 wave 5 with the persistent-card engine (O-41 generalised); D-107's shape is Johan's.
 3. The window opened after its line; the fizzle misread (BOARD); Q4; C5; C6; the abstract model.
 

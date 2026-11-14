@@ -52,7 +52,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct): Black Chantry's helpsheets and Fifth
   Edition guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy.
   D-112: each strategy line is checked against its guide. Toreador's is done (13 Nov, `reports/REPORT-toreador-guide-check-2026-11-13.md`):
-  17 points, 3 findings (all built: B v0.6.224, A and C v0.6.228), proposals 2–8 for a bench round (8 is a knob; O-42 joins it). *Done when* each deck's proposals have Johan's "kör" or "no". Docs: RULINGS D-43, O-33, D-112; `specs/spec-knowledge-layer.md`.
+  17 points, 3 findings (built: B v0.6.224, A and C v0.6.228); proposals 2–8 and D-117 go to a bench round. *Done when* each deck's proposals have Johan's "kör" or "no". Docs: RULINGS D-43, O-33, D-112; `specs/spec-knowledge-layer.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
