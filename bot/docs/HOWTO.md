@@ -103,7 +103,9 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   `test-bot-hotseat.js` is the gate; `BOT=./old-bot.js node test-bot-hotseat.js` is its destructive check. The sweep is the ONE part
   of the client the tool imitates instead of runs (it follows `hotBridge._out`): if main changes the sweep, the tool must follow.
 - **The tokens in a browser** — `bash bot/tools/tokens-in-browser.sh <vtes.json> <expansions.json>` from the root: main's play-test
-  rig as it is; an in-page bot's Grand Ball pair and Jack, every chip and hover text checked, the seat screenshot. A diagnostic.
+  rig as it is; an in-page bot's Grand Ball pair and Jack, each chip and hover text, a screenshot. A diagnostic.
+- **The hotseat in a browser** — `node tools/hotseat-in-browser.js [--bot F] [--sweeps N]`: the client's hotseat with three bots
+  in Chromium (NODE_PATH: playwright); counts stale-dropped answers.
 - **A human's Grand Ball** — `bot/tools/playtest-ball/scenario.json` (its `about` has the steps) and a Toreador test deck, at main's rig.
 - **A debug bot at a live table** — `node elysium-bot.js --server ws://HOST:8123 --room R --pass P --debug [--no-debug-weights]`;
   refused at a Tournament table; its hand goes to the whole table and the other bots look away.
@@ -133,8 +135,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   plays, how each left play, its rounds in play; the burns the knob `jackBurn` picked, by deck, and how many were blocked) · `ana-wait.py` (tempo) ·
   `ana-probe.py` (`probe-order` / `probe-hold` rows) · `ana-cards.py` (uses per card, never-played, untitled plays) ·
   `ana-combat.py` + `ana-combat2.py` (handshake integrity 100 % on a bot-only table, agreement, `hsMiss`) · `ana-rush.py` ·
-  (`ana-windows.py`'s gate of 0 is a server-arena reading: on the hotseat / sim table most bleed-modifier windows run out — the real
-  clock too, round A — BOARD) ·
+  (`ana-windows.py`'s gate of 0 is the arena's; on the sim it informs: 4 of 5143 windows ran out on the 240) ·
   `ana-home.py A B` (paired home / blocks / damage / VP) · `ana-open.js` (the opening) · `gen-match-dossier.js <trace>` (one
   reviewable file per match; read Manifests → Endgame / VP → pool trajectories → then hunt) · `gen-trace-harvest.js <dir>`
   (metrics + the price referee: printed vs paid cost; a MISMATCH voids the series) · `gen-batch-review.js` · `gen-null-review.js`.

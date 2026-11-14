@@ -34,6 +34,7 @@
 ## Timing
 - L-25 **No await between a line and the window it opens** (17 Oct): a 150 ms sleep before the window lost answers at pace 0 for four weeks (v0.6.144 → v0.6.206; the pacing sleeps after a window stay); two windows in three ran out their clock.
 - L-26 **A guard about what the table has seen keys on the line the answer answers, not on my queue** (17 Oct).
+- L-92 **A send can deliver before it returns** (14 Nov, round E): the hotseat bridge hands a line to the other bots inside the actor's `ws.send`, and a target with nothing to play answered at once — before the drain's `finally` marked the line sent; the guard took the Pass for stale and the window ran out (50 of 53 at the real clock). A flag flipped after a send misses what the send itself triggers: ask the state (the line has left the queue) at the answer's time.
 - L-27 **A wait's clock starts when its question reaches the wire; a send queue is not a timeline** (15–16 Oct).
 - L-28 **Time the whole flow, not the wait you changed** (9 Oct); a shortened wait that was somebody's only window becomes an asked step.
 - L-29 **Pace the thing the rule is about** (17 Oct, the chat beat): the beat was separating everything, not two bubbles.

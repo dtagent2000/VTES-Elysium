@@ -19,12 +19,13 @@
 #                 stray row failed a series). Wider View's burn-for-pool left INV_KNOWN with v1.1.0: bot v0.6.219's checker books the
 #                 blood a burn's note already shows (the pool-print + pool-drift +N pair was that double count), so such a flag is new.
 #     windows     the arena: an actor's window that ran out and went through (v0.6.206's gate of 0); the sim table: information only --
-#                 most bleed-modifier windows run out there (BOARD, a measurement debt; the real clock too, 13 Nov)
+#                 most bleed-modifier windows ran out there until bot v0.6.227 (the hotseat bridge delivers inside the send, L-92); a
+#                 few still do on the virtual clock (4 of 5143 on the 240), so it stays information there (v1.1.2)
 #   Information lines: the ledger's leads and its explained differences, the step handshake's safety net, the post-game ousts.
 #   --self-test: a clean synthetic series PASSes every gate; each planted fault turns its own line FAIL (the game's end included).
 import collections, glob, importlib.util, json, os, re, shutil, sys, tempfile
 
-VERSION = '1.1.1'
+VERSION = '1.1.2'
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 def _load(name):
@@ -135,7 +136,7 @@ def gates(S):
     ran = C['modifier RAN OUT, THROUGH'] + C['total RAN OUT, THROUGH']
     text = 'ran out and went through: modifier %d of %d, total %d of %d; stale-answer rows %d' % (
         C['modifier RAN OUT, THROUGH'], C['modifier'], C['total RAN OUT, THROUGH'], C['total'], sum(stale.values()))
-    if sim: L.append(('info', 'windows', 'the sim table, not a gate (BOARD): ' + text))
+    if sim: L.append(('info', 'windows', 'the sim table, not a gate (L-92; a few run out on the virtual clock): ' + text))
     else: L.append(('PASS' if not ran else 'FAIL', 'windows', text))
     post = sum(len(r.get('postGameOusts') or []) for r in have)
     L.append(('info', 'post-game', '%d ousts after the game ended (the winner on its own last action)' % post))

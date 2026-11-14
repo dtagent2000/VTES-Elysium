@@ -2,7 +2,7 @@
 
 **Bot v0.6.226** (14 Nov 2026, round D: Jack's self-consistent runway) · arena v1.4.12 · sim table v1.1.0 · cardfx compiler v1.9.8,
 curated 187 · hotseat tool v1.4.1 · coverage tool v1.1.46 · card ledger v1.1.2 · precon generator v1.1.1 · `krcg-v5.js` v1.0.0 ·
-`ana-gates.py` v1.1.1 · built against the root's release, client v2.6.174 / srv-2.6.50 (main's canary v1.2.0 143/0 against it);
+`ana-gates.py` v1.1.2 · built against the root's release, client v2.6.174 / srv-2.6.50 (main's canary v1.2.0 143/0 against it);
 the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6.50 and main's canary v1.2.0 (refreshed 13 Nov).
 
 **Deploy state:** `main` carries v0.6.225 (#68–#70, merged 14 Nov). **Open PR:** #71 (round D, this release).

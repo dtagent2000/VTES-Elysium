@@ -150,10 +150,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* the persona pass (RULINGS O-29) ships with those tests.
 
 ## Measurement debts
-- **The hotseat table drops a bot's Pass in the bleed-modifier window** (29 Oct; v0.6.211; the real clock, 13 Nov): the actor's
-  stale guard reads the target's Pass as an answer to an earlier line, and the window runs out (~15 s): 50 of 53 on round A's
-  offline table, 0 of 44 online at the same pace. *Done when* an offline real-clock table and a browser table show 0. Docs:
-  LESSONS L-25, L-26; `reports/REPORT-table-runs-2026-11-13.md`.
 - **Three ledger faults on fresh deals** (v0.6.223 too; `--bench none --seeds 3`): a VANISHED bleed, a bleed with no actor row,
   a steal's victim lost > stole. *Done when* `ana-gates.py` passes there. Docs: CHANGELOG v0.6.224.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,

@@ -144,7 +144,8 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   against the counter. Intercept by chat (bare `N` = total, `+N` = added) only while my action is contested.
 - **The window rule (v0.6.206).** [L-25, L-26] A window opens in the SAME tick as the line it opens on — never an `await` between sending that
   line and `_askBlock`. A guard about what the table has SEEN keys on the line the answer answers (`_openLine`), not on my queue.
-  A bot's answer that arrives while `_openLine` is still queued is a `stale-answer` row, never a human's.
+  A bot's answer that arrives while `_openLine` is still queued is a `stale-answer` row, never a human's; once the line has left the
+  queue it is on the wire (the hotseat bridge delivers inside the send, L-92).
 - **The beat rule (v0.6.152, v0.6.207).** [D-65, D-70; L-29, L-36] `_pace` waits paceMs from the LATEST visible event at the table (my own act or anybody
   else's say / log / chat / tally / fx; boards never re-anchor); `_afterBeat(kind, guard, fn)` for a synchronous handler that wants
   a visible act to follow; paceMs 0 runs everything at once (the suite and the arena are byte-identical). The chat beat separates
