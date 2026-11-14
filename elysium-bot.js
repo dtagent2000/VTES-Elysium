@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.224';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.225';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -1270,6 +1270,7 @@ class Bot {
           this.chat('Note: an unresolved bleed at me expired with the turn — if it landed, tell me "bleed ' + this.pending.amount + '".');
           this._clearPending('turn change');
         }
+        if(m.seat !== this.turnSeat && this._hMemo){ const r0 = this._hMemo.find(r => r.seat === this.turnSeat && r.open); if(r0) this._hMemoResolve(r0); }   // v0.6.225: their turn ended with no Phase line and no action line
         if(m.seat !== this.turnSeat){ this._turnActN = 0; this._turnSerial = (this._turnSerial | 0) + 1; }   // v0.6.217: + the turn's serial (Monster's 'once each turn' = once in each player's turn [ANK 20180719-4])   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
         this.turnSeat = m.seat;
         if(m.seat !== this.seat){ this._heldTurn = null; this._gameOverPassed = false; }   // v0.6.222: the turn moved on -- nothing is held
@@ -5527,14 +5528,76 @@ class Bot {
   _grandBallLocked(v){ return !!v && this.board.some(c => c && c.kind === 'lib' && c.gbLock === v.id && !this._outOfPlay(c)); }   // v0.6.217: the Toreador my Grand Ball keeps locked (while the card stays in play)
   _grandBallFree(v){ return !!v && this.board.some(c => c && c.kind === 'lib' && c.gbFree === v.id && !this._outOfPlay(c)); }     // v0.6.217: the Toreador whose non-bleed actions cannot be blocked
   _memoMap(){                        // v0.6.221 (D-113 (1), Johan's idea of 13 Nov): THE TABLE'S MEMORY -- the lasting choices this bot plays by, shown as custom tokens on its own cards (the pub's counters: every seat hovers them, and nobody can ask a bot afterwards). Derived at every push from the fields the rules read, never stored: a token cannot outlive or contradict its effect. Grand Ball's pair first -- each vampire carries its half (the same test as _grandBallFree / _grandBallLocked), the Ball names both. id -> [text]
+    /* v0.6.225 (round C, D-113 (4)): the texts and the fields come from the card's cardfx `memo` descriptor (its roles: field, token,
+       ballToken) -- one reader for every card that carries one; Grand Ball's are the texts of v0.6.221, in the same order. */
     const m = new Map(), add = (id, t) => { if(!id) return; const a = m.get(id) || []; if(!a.includes(t)) a.push(t); m.set(id, a); };
     const nm = id => { const v = this.board.find(x => x && x.id === id); return v ? v.name : '?'; };
     for(const c of this.board){
-      if(!c || c.kind !== 'lib' || !(c.gbFree || c.gbLock) || this._outOfPlay(c)) continue;
-      add(c.gbFree, 'Grand Ball: non-bleed actions unblockable'); add(c.gbLock, 'Grand Ball: does not unlock');
-      add(c.id, 'Unblockable: ' + nm(c.gbFree)); add(c.id, 'Locked: ' + nm(c.gbLock));   // two tokens, not one line: two long names would pass the server's 64 characters
+      if(!c || c.kind !== 'lib' || this._outOfPlay(c)) continue;
+      const d = this._memoDesc(c.name); if(!d || !d.roles.some(r => r && r.field && c[r.field])) continue;
+      for(const r of d.roles) add(c[r.field], r.token);
+      for(const r of d.roles) add(c.id, String(r.ballToken || '').replace('{vamp}', nm(c[r.field])));   // two tokens, not one line: two long names would pass the server's 64 characters
     }
     return m;
+  }
+  _memoDesc(name){ const h = name && this.fxLookup(name); return (h && h.kind === 'lib' && h.e && h.e.memo && Array.isArray(h.e.memo.roles)) ? h.e.memo : null; }   // v0.6.225 (D-113 (4)): a card's lasting-choice descriptor (cardfx `memo`)
+  /* v0.6.225 (round C, RULINGS D-113 (3), specs/spec-human-ball-memo-2026-11-14.md): a HUMAN's lasting choice -- a card in play whose
+     cardfx carries a `memo` descriptor (Toreador Grand Ball first). READ FIRST: the play line's acting minion and target, the one of their
+     candidates that turned locked, a custom token of theirs naming the card, their only other candidate; ASK LAST: still open after
+     their master phase, the bot that speaks for the table asks once in chat, naming the candidates; the owner's public answer is every
+     bot's memory (each reads it); unanswered, the card's generous reading stays (_humanBallFree). Bots name their own pair (no record). */
+  _hMemoLog(who, t){
+    const pl = (this.players || []).find(q => q && q.name === who); if(!pl || pl.bot || !pl.seat || pl.seat === this.seat) return;
+    const st = pl.seat; this._hMemo = this._hMemo || [];
+    const m = t.match(/^(.+?) plays (.+?)\.(?: Target: (.+)\.)?$/) || t.match(/^()(.+?) was played\.(?: Target: (.+)\.)?$/);
+    if(m){ const card = m[2].replace(/\s+\[[A-Za-z]+\]$/, ''), d = this._memoDesc(card);   // the client's mode tag, if any
+      if(d){ const clan = (d.pick || {}).clan || null;
+        const cand = this._seatCards(st).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && !c.faceDown && (!clan || this._vampClan(c) === clan));
+        const byName = n => (n && cand.find(c => c.name === n)) || null, tg = m[3] && !/'s /.test(m[3]) ? m[3] : null;   // an own card (a remote target reads NAME's X)
+        this._hMemo.push({ seat: st, who, card, desc: d, at: Date.now(), cand: cand.map(c => c.id), pair: [byName(m[1]), byName(tg)].filter(Boolean).map(c => c.id),
+                           cardId: null, lock: null, free: null, open: true, asked: false, cands: null, via: null, resolvedAt: 0 });
+        return; } }
+    const rec = this._hMemo.find(r => r.seat === st && r.open); if(!rec) return;
+    const ph = t.match(/^Phase: (\w+)/);   // the end of their master phase: a Phase line past it, or their first action line that is not a card play
+    if(ph ? !/^(unlock|master)$/i.test(ph[1]) : (L12.actObs.test(t) && !/ plays /.test(t))) this._hMemoResolve(rec);
+  }
+  _hMemoResolve(rec){
+    rec.open = false; rec.resolvedAt = Date.now();
+    const st = rec.seat, d = rec.desc, cs = this._seatCards(st), byId = id => cs.find(c => c && c.id === id);
+    const card = cs.find(c => c && c.kind === 'lib' && c.name === rec.card && !c.faceDown && !this._outOfPlay(c) && !(this._hMemo || []).some(r => r !== rec && r.cardId === c.id));
+    if(!card){ rec.dead = true; return; }   // the card did not stay in play
+    rec.cardId = card.id;
+    const locked = rec.cand.filter(id => { const c = byId(id); return c && c.locked; });
+    rec.lock = locked.length === 1 ? locked[0] : null;
+    const live = rec.cand.filter(id => { const c = byId(id); return c && c.zone === 'ready' && !c.locked; });
+    const names = [rec.card.toLowerCase(), rec.card.toLowerCase().replace(/^\S+\s+/, '')];   // 'Toreador Grand Ball' or 'Grand Ball'
+    const fr = d.roles.find(r => r && r.role === 'free') || {}; let free = null, via = null;
+    for(const how of (fr.read || [])){
+      const ids = how === 'pair' ? (rec.lock && rec.pair.length === 2 && rec.pair.includes(rec.lock) ? rec.pair.filter(id => id !== rec.lock) : [])
+        : how === 'token' ? live.filter(id => ((byId(id) || {}).counters || []).some(x => typeof x === 'string' && names.some(n => x.toLowerCase().includes(n))))
+        : how === 'only' ? (rec.lock ? live : []) : [];
+      if(ids.length === 1){ free = ids[0]; via = how; break; }
+    }
+    rec.free = free; rec.via = via; rec.cands = free ? null : live;
+    this._emit('memo', { seat: st, card: rec.card, lock: rec.lock ? (byId(rec.lock) || {}).name : null, free: free ? (byId(free) || {}).name : null, via, cands: free ? null : live.map(id => (byId(id) || {}).name) });
+    this.o.log('memo: ' + rec.who + '\u2019s ' + rec.card + ' -- locked ' + (rec.lock ? (byId(rec.lock) || {}).name : '?') + ', free ' + (free ? (byId(free) || {}).name + ' (' + via + ')' : 'open: ' + live.map(id => (byId(id) || {}).name).join(' / ')));   // the bot's own log (the console), never a table line
+    if(!free && live.length >= 2 && d.ask && this._isSpokesBot()){
+      const nms = live.map(id => (byId(id) || {}).name); rec.asked = true;
+      this.chat(String(d.ask).replace('{owner}', rec.who).replace('{cands}', nms.length === 2 ? nms.join(' or ') : nms.slice(0, -1).join(', ') + ' or ' + nms[nms.length - 1]));   // a question to a human (the tier rule)
+    }
+  }
+  _hMemoChat(who, txt){              // the owner's public answer -- every bot reads it (only one asked); a line that names exactly one candidate
+    const rec = (this._hMemo || []).find(r => r.who === who && !r.open && !r.dead && !r.free && r.cands && r.cands.length >= 2 && Date.now() - r.resolvedAt < 600000); if(!rec) return false;
+    const cs = this._seatCards(rec.seat), nm = id => ((cs.find(c => c && c.id === id) || {}).name) || '', body = String(txt || '').toLowerCase();
+    const base = id => nm(id).toLowerCase().replace(/\s*\(g\d+\)$/, ''), esc = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let hit = rec.cands.filter(id => base(id) && body.includes(base(id)));
+    if(hit.length !== 1){ const fw = id => base(id).split(/[\s,]+/)[0], fs = rec.cands.map(fw);
+      hit = rec.cands.filter(id => { const w = fw(id); return w.length >= 3 && fs.filter(x => x === w).length === 1 && new RegExp('(^|[^a-z])' + esc(w) + '([^a-z]|$)').test(body); }); }
+    if(hit.length !== 1) return false;
+    rec.free = hit[0]; rec.via = 'answer'; rec.cands = null;
+    this._emit('memo', { seat: rec.seat, card: rec.card, free: nm(hit[0]), via: 'answer' });
+    this.o.log('memo: ' + who + '\u2019s ' + rec.card + ' -- free ' + nm(hit[0]) + ' (their answer)');
+    return true;
   }
   _pubCounters(c, memo){             // v0.6.221 (D-113): the pub's counters -- a card's named counters (D-113 (2): the pub never carried them, so a bot's Smiling Jack took its owner's pool while no seat paid -- the victims read the pub; a NUMBER, _addCounter's, stays off), else this bot's own tokens (_memoMap); 12 a card, 64 characters, as the server keeps them. Never both: named counters are a COUNT other seats read (Jack's victims pay one pool each), so a token beside them would be paid as pool
     const own = Array.isArray(c.counters) ? c.counters : [];
@@ -5593,7 +5656,13 @@ class Bot {
     if(!st || !pl || pl.bot) return false;
     const cs = this._seatCards(st), av = cs.find(c => c && c.kind === 'crypt' && c.name === p.actingVampName);
     if(!av || this._vampClan(av) !== 'Toreador') return false;
-    return cs.some(c => { if(!c || c.kind !== 'lib' || c.faceDown || this._outOfPlay(c)) return false; const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.fx && mo.fx.grandBall)); });   // fx.grandBall
+    const balls = cs.filter(c => { if(!c || c.kind !== 'lib' || c.faceDown || this._outOfPlay(c)) return false; const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.fx && mo.fx.grandBall)); });   // fx.grandBall
+    if(!balls.length) return false;
+    /* v0.6.225 (round C, D-113 (3)): each Ball whose free Toreador is known (read, or answered) frees that one alone; one Ball still
+       unknown keeps the generous reading (any Toreador of theirs) */
+    const known = balls.map(b => (this._hMemo || []).find(r => r.seat === st && !r.dead && r.cardId === b.id && r.free));
+    if(known.some(r => !r)) return true;
+    return known.some(r => r.free === av.id);
   }
   _grandBallPlan(){                  // v0.6.217 (V5 wave 4): Toreador Grand Ball's pair -- the UNBLOCKABLE one calls my political actions (the Toreador that can call the most of those I hold, then the most votes, then blood); the LOCKED one never unlocks while the card stays, so it is the least useful other Toreador (the smallest capacity, then the least blood, an unlocked one); one Ball of mine at a time
     if(this.board.some(c => c && c.kind === 'lib' && c.name === 'Toreador Grand Ball' && !this._outOfPlay(c))) return { hold: true, why: 'my Grand Ball is in play (a second locks another Toreador for nothing new)' };
@@ -8686,7 +8755,8 @@ class Bot {
     const t = stripTags(html).trim();
     if(who !== this.o.name) this._evRecord(who, t, 'log');   // v0.6.176: the event log (my own lines are recorded at send)
     let m;
-    if(who !== this.o.name){ if(L12.debugOn.test(t)) this._debugSeatSet(who, true); else if(L12.debugOff.test(t)) this._debugSeatSet(who, false); }   // v0.6.201: a bot at the table announced DEBUG mode -- I look away from its open hand
+    if(who !== this.o.name){ if(L12.debugOn.test(t)) this._debugSeatSet(who, true); else if(L12.debugOff.test(t)) this._debugSeatSet(who, false); }
+    if(who !== this.o.name) this._hMemoLog(who, t);   // v0.6.225 (D-113 (3)): a human's lasting choice (Toreador Grand Ball's pair)   // v0.6.201: a bot at the table announced DEBUG mode -- I look away from its open hand
     /* v0.6.110 (R2, #11, Johan's decision A): the SHORT-TERM ACTION MEMORY.
        Any action-shaped line from another seated player replaces what I
        remember; the memory lives until the actor's "It resolves" or until the
@@ -9965,6 +10035,7 @@ class Bot {
     const txt = String(msg || '').trim();
     if(this._phaseWait) this._phaseNudge(who, txt, 'chat');   // v0.6.165: a human's quick phrase answers the combat step
     this._holdHook(who, -1, txt);                              // v0.6.95: chat-side hold fallback ('hold on' pauses, 'carry on'/'resume'/'it resolves' release)
+    if(this._hMemo) this._hMemoChat(who, txt);                 // v0.6.225 (D-113 (3)): the owner's answer naming their Grand Ball's free Toreador
     if(this._refCall && !this._refCall.closed && /^(no votes from me|i abstain|abstain)\.?$/i.test(txt)){ this._refCall.heard.add(who); this._refCall.paused.delete(who); this._refCall.arm(); }   // v0.6.122: a bot's abstain bubble (and a human typing the same) counts as having spoken
     this._narrWho = who; this._parseCombatNarration(txt); this._narrWho = null;   /* v0.6.183 */   // v0.6.156: the four opp-parsers (taken / press / maneuver / Crows / Grapple) now live in ONE method fed from BOTH tiers -- see _parseCombatNarration
     if(this._vWait && who === this._vWait.who && /^(pass|no|nope|done|it resolves|resolve( it)?|go on)\b[.!]*$/i.test(txt) && this._vwResolve('pass', /^it resolves/i.test(txt))) return;   // v0.6.204 (F10): typed, the same answer
