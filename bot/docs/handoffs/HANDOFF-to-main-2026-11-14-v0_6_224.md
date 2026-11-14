@@ -14,7 +14,8 @@ No new verb, field or frozen line. What a table sees differently:
   take from it over its runway against what Jack takes from its prey. A human's Jack: the human may block (a directed action);
   unblocked, the bot says `It resolves` and tells the human in chat `NAME: your Smiling Jack, The Anarch is burned.` — the human
   burns it (the same path as the Grand Ball's burn since v0.6.217). A bot's Jack is burned by its own bot on its Pass.
-- **A bot defends its own Jack**: an action to burn it is blocked by its worth to the bot (what it still takes from the bot's prey).
+- **A bot defends its own Jack**: its block decision on an action to burn it weighs Jack's worth to it (what Jack still takes from
+  its prey, less its own counter payments) instead of a generic card's weight; it blocks when that score clears its bar.
 - **A bare body blocks a rush or a card burn at 0 stealth** (a rules correction: both are directed actions; the bot's guard read them
   as undirected). A human's rush or card burn at a bot's vampire or card may now meet `Block!` without an intercept card.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.45 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.46 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.45';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.46';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -163,7 +163,7 @@ const CLASS = {
   /* v1.1.43 (3 Nov 2026, bot v0.6.217, V5 wave 4, RULINGS D-106): the masters on a vampire (read through the vampire's attached cards, _attachedFx) and the
      master loop's host plans; Toreador Grand Ball's pair and the (D) action that burns it; Change of Target's 'if blocked' step; the polling-step abstain. */
   discUp: 'play', capBonus: 'paired', recruitDiscount: 'play', noRecruitEmploy: 'paired', blockedPoolBurn: 'play', unlockAfterCombat: 'play', rushSelf: 'play',
-  titleVotes: 'play', abstainLock: 'play', endCombatLock: 'play', rushHostBy: 'play', grandBall: 'play', burnCardAction: 'play', burnStealthClan: 'paired',
+  titleVotes: 'play', abstainLock: 'play', endCombatLock: 'play', rushHostBy: 'play', grandBall: 'play', burnCardAction: 'play', burnStealthClan: 'paired', burnBy: 'paired',   // v1.1.46 (14 Nov 2026, bot v0.6.224, D-114): burnBy -- who may take the burn action (Smiling Jack: 'Vampires can burn this card'), read by _bestBurnCardFor's Jack branch
   endAction: 'play', abstainVoter: 'play', voterBloodBurn: 'paired',
   titleCard: 'paired', votesPerReady: 'paired',   // a title referendum's terms (ref.fx), consumed through the verdict's titleCard rule
   /* v1.1.42 (2 Nov 2026, bot v0.6.215, V5 wave 3, RULINGS D-104): the wave's keys -- all on masters, read on the board or by the master loop. */
@@ -195,7 +195,7 @@ const MASTER_KEYS = new Set(['poolGain', 'bloodToPool', 'poolToBlood', 'handSize
   'bloodAddPath', 'bloodAddBaron', 'bloodAddReq', 'bleedDiscardCombat', 'bleedDiscardClan', 'bleedAtAnnounce', 'bleedAtAnnounceBlood', 'bleedAtAnnounceSect',
   'burnActor', 'burnActorMinBleed', 'drawCrypt', 'drawCryptClan',   // v1.1.42: + V5 wave 3
   'discUp', 'capBonus', 'recruitDiscount', 'noRecruitEmploy', 'strengthBonus', 'blockedPoolBurn', 'unlockAfterCombat', 'rushSelf', 'titleVotes', 'abstainLock',
-  'endCombatLock', 'rushHostBy', 'grandBall', 'burnCardAction', 'burnStealthClan']);   // v1.1.43: + V5 wave 4 (the masters on a vampire read through their bearer; Toreador Grand Ball)
+  'endCombatLock', 'rushHostBy', 'grandBall', 'burnCardAction', 'burnStealthClan', 'burnBy']);   // v1.1.43: + V5 wave 4 (the masters on a vampire read through their bearer; Toreador Grand Ball)
 function modeConsumed(mo, e){
   if(((e && e.t) || []).includes('master') && !Object.keys(mo.fx || {}).some(k => MASTER_KEYS.has(k)))
     return { ok: false, via: 'master: no board consumer for ' + (Object.keys(mo.fx || {}).join(',') || '\u2014') };

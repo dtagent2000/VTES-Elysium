@@ -1,4 +1,4 @@
-# BOARD — the open asks (13 Nov 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (14 Nov 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -56,8 +56,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait
   returns an earlier round's pending line; `_xLossSum` sums nothing. *Done when* each is fixed with a positive test and its footprint
   read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
-- **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's helpsheets and Fifth
-  Edition deck guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy (D-43, O-33).
+- **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct): Black Chantry's helpsheets and Fifth
+  Edition guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy.
   D-112: each strategy line is checked against its guide. Toreador's is done (13 Nov, `reports/REPORT-toreador-guide-check-2026-11-13.md`):
   17 points, 3 findings, 8 proposals waiting for "kör". *Done when* each deck's proposals have Johan's "kör" or "no". Docs: RULINGS D-43, O-33, D-112; `specs/spec-knowledge-layer.md`.
 
@@ -108,7 +108,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Intercept banking** (B-55f-b: deck-axis, measure first) and **2 of 187 blocked rows still `by: null`** (B-55e-b). *Done when*
   banking is measured on a sim series and no blocked row lacks `by`. Docs: `history/CLAUDE-v2-2026-10-20.md` 155–165, debt 68.
 - **The turn ledger's gaps** (26d): a barred bleed becomes an illegal marker that can still win the score contest (the vampire stays
-  home); of the card-in-play actions only the rushes and the Ball's burn are booked (v0.6.217; not Warsaw, Chantry). *Done when* the
+  home); of the card-in-play actions only the rushes and the card burns are booked (v0.6.217; not Warsaw, Chantry). *Done when* the
   marker cannot win and every card-in-play action is booked.
 - **Home pricing's six soft spots** (42c, unfixed): `_keepBlocker` holds the last actors, not `_priceHome`'s bodies; `predHits`
   reads the announced bleed, `hitMax` the realised one; a bounce valued as pool saved only; the rate leans on `myFc`; wakes counted
@@ -118,6 +118,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* every site reads the vampire.
 - **Free block bars** (Beast Meld-class) and `chosen` (Seduction-class) have tags, no consumer. *Done when* a V5 wave needs them
   and the ledger lists them playable. Docs: RULINGS O-21.
+- **The chump gate is not the commit** (round B): `bareBlock` 'chump' passes on any chump body, then `_commitBlock` picks
+  its own (`_pickBlocker`); both paths. *Done when* the commit takes the gate's body, section-tested.
 - **Bot diablerie** (the fixed-vote-majority rule). *Done when* Johan schedules it. Docs: RULINGS O-15.
 - **Vote-count residue**: three channels at once (menu line, counter, both) under-count; Protected District's votes come from the
   counter only. *Done when* main ships the additive counter verb or the client writes both. Docs:
@@ -154,6 +156,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   stale guard reads the target's Pass as an answer to an earlier line, and the window runs out (~15 s): 50 of 53 on round A's
   offline table, 0 of 44 online at the same pace. *Done when* an offline real-clock table and a browser table show 0. Docs:
   LESSONS L-25, L-26; `reports/REPORT-table-runs-2026-11-13.md`.
+- **Three ledger faults on fresh deals** (v0.6.223 too; `--bench none --seeds 3`): a VANISHED bleed, a bleed with no actor row,
+  a steal's victim lost > stole. *Done when* `ana-gates.py` passes there. Docs: CHANGELOG v0.6.224.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
