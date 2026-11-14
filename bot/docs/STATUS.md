@@ -5,7 +5,7 @@ curated 187 · hotseat tool v1.4.1 · coverage tool v1.1.46 · card ledger v1.1.
 `ana-gates.py` v1.1.2 · built against the root's release, client v2.6.174 / srv-2.6.50 (main's canary v1.2.0 143/0 against it);
 the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6.50 and main's canary v1.2.0 (refreshed 13 Nov).
 
-**Deploy state:** `main` carries v0.6.225. **Open PRs:** #71 (round D, v0.6.226); round E (this release) on it — merge in order.
+**Deploy state:** `main` carries v0.6.225. **Open PRs:** #71 (round D, v0.6.226); #72 (round E, this release) on it — merge in order.
 
 ## Last gates (v0.6.227 release bytes `8706fc5a`, 14 Nov 2026)
 Suite **2482/0 ×3** · canary **143/0** ×2 · hotseat **12/0** (11/1 on v0.6.226) · main's client suite 361/2 (the handoffs' two) ·
