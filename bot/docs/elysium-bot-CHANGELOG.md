@@ -32,11 +32,20 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.226 (in progress, 14 Nov 2026)** — Round D, RULINGS O-40 → D-115 (Johan, 14 Nov 12:06: "vi gör på ditt förslag i O-40"):
-  Smiling Jack's self-consistent runway, behind the knob `jackRunway` (0 = v0.6.225). A seat's runway against Jack R solves
-  R·(c₁ + fc) + R(R−1)/2 = pool, so the price over it is pool − R·fc, never above the pool (v0.6.225's flat pool / (c₁ + fc) let it
-  pass: 5 of 56 burns on the 240). The owner's life (a flat 1 + fc a round) is unchanged.
-  - *Predictions* (registered before any measurement, D-93; v0.6.225's figures from its own traces, the 240 and the 600):
+- **v0.6.226 (14 Nov 2026)** — Round D, RULINGS O-40 → D-115 (Johan, 14 Nov 12:06: "vi gör på ditt förslag i O-40"): Smiling
+  Jack's self-consistent runway, the knob `jackRunway` (default 1 after a no-loss bench; 0 = v0.6.225), spec §2's amendment.
+  - *The change* (`_jackPriceAt`): a seat's runway against Jack R solves R·(c₁ + fc) + R(R−1)/2 = pool, the positive root
+    √(b² + 2·pool) − b with b = c₁ + fc − ½; H = min(R, Jack's life), so the price over R is pool − R·fc, never above the pool
+    (v0.6.225's flat pool / (c₁ + fc) let it pass: 5 of 56 burns on the 240). A runway of a round or more is never longer than the
+    flat one, R = 1 exactly at pool = c₁ + fc (the coordination's "a round" stays); the owner's life (a flat 1 + fc a round) is
+    unchanged. Every Jack read takes it: my price, my prey's, the bots shorter than me, `wDef` (my runway against my turns to oust my
+    prey) and my own Jack's worth. Section 171 (4/0; 0/4 on v0.6.225): R = 7.26 and a price of exactly my 30 pool at c₁ 1 (the flat
+    runway: 30 rounds, 465); no price above its pool over 1200 reads (240 above it at 0); 169b's table at Nils's 30 — Hanna's Jack
+    takes 3 + 4 + 5 from my 10 pool before I can oust Nils, the flat runway priced that 13.89 and Nils's 27, the consistent one 10 and
+    16.6, and my vampire now burns Jack instead of bleeding (4.04 against Enchant Kindred's 3.25); my Jack's worth at most offW times
+    my prey's pool. Section 169's fixture keeps the flat runway (its figures are its prices). Arena v1.4.12 whitelists the knob.
+  - *Predictions* (registered before any measurement, D-93, commit d56e349, word for word; v0.6.225's figures from its own traces,
+    the 240 and the 600):
     (K0) at 0: IDENTICAL to v0.6.225 on the 240, the V5 smoke and the 600 (the version string set back; the manifest's
     `"jackRunway":0` dropped, the only expected difference). At 1, every seat, against v0.6.225: (R1) a match without a Smiling Jack
     in play is IDENTICAL; each DIVERGED match's first difference comes once a Jack is in play; `ana-gates.py` PASS on all three
@@ -54,6 +63,28 @@
     1 — the burn is on at every seat, so the owner's and the burner's reads both fire there, L-91 does not bite): no loss, the
     variant seat's 95 % interval reaches 0 or above; `ana-gates.py` on its arms fails only the ledger gate every fresh-deal bench
     fails (BOARD). (F) if (R7) holds, `jackRunway` flips to 1 in this PR (D-114's rule) and (R1)–(R6) are read on the release bytes.
+  - *What came out* (the release bytes at 1, the version set back, against v0.6.225; the knob's label normalized in the manifests):
+    (K0) held — IDENTICAL 240, the V5 smoke 168 and the 600 (4800 manifest rows normalized). (R1) held — the 240 DIVERGED 9,
+    SAME-PLAY 56, IDENTICAL 175 (every match without a Jack read); the V5 smoke DIVERGED 2, SAME-PLAY 16, IDENTICAL 150; the 600
+    DIVERGED 37, SAME-PLAY 153, IDENTICAL 410 (409 of them without a Jack, one with); no match without a Jack changed and every
+    DIVERGED match's first difference comes once one is in play; `ana-gates.py` PASS on all 16 tables. (R2) held — plan rows above
+    their pool 0 (70, 335), none at 100 (28, 98); burn picks above the actor's pool 0 (5, 29); candidates 0 on the 240 (5) and 3 on
+    the 600 (44), all one bot's turn (the 600's match 248, round 8): its pool fell from 4 at the minion read to 1 at those
+    decisions (a combat in the minion phase), Jack's price 1.68 read where its owner's life bound H. (R3) held — the largest worth 13.1
+    on the 240, 17.2 on the 600, 14.9 at the bench's variant seat (377, 377, 350); the 240's block-as-target worth 10.3 (378). (R4)
+    held — the burn picks 57 on the 240 (56), 215 on the 600 (215); wDef 2 among candidates 82 % (80 %) and 79 % (77 %). (R5)
+    held — tenfold picks 7 (12) and 26 (37), none above the pool. (R6) held — Jack's median life 1 round on the 240, 2 on the 600
+    (unchanged); Nosferatu's paired VP against no burns −0.13 [−0.22, −0.04] on the 240 and −0.11 [−0.17, −0.05] on the 600; the
+    runway's own move on it −0.00 [−0.04, +0.03] and −0.01 [−0.03, +0.02]. (R7) held — the variant seat −0.01 [−0.03, +0.01] (288,
+    DIVERGED 3), Jack burned 47 times in each arm, the variant's own worth reads at most 14.9; `ana-gates.py` on both arms fails only
+    the ledger gate, the three known faults (BOARD). A small footprint: the change moves a decision only where a Jack's price was
+    near its alternative.
+  - *The flip* (F): `jackRunway` default 1 in this PR.
+  - *Found on the way:* my Jack's worth to me (spec §5) sets my prey's loss over her runway — since D-115 at most her pool —
+    against my own payments over Jack's whole life, so a young Jack against a healthy prey is worth 0 to its owner (171d: 0 at my 40
+    pool): 62 of 105 owner reads at 0 on the 240 (56 of 107 before), 183 of 400 on the 600 (167 of 386); the owner's blocks of a burn
+    20 of 36 on the 240 (22 of 37) and 97 of 152 on the 600 (107 of 165). A design question for Johan (RULINGS O-41), not this
+    round's to change.
 - **v0.6.225 (14 Nov 2026)** — Round C, RULINGS D-113 (3)–(4) (Johan, 13 Nov, and his order of 21:45): a human's Toreador Grand
   Ball read first and asked last, and the cardfx `memo` descriptor, `specs/spec-human-ball-memo-2026-11-14.md`.
   - *The descriptor* (4): Toreador Grand Ball's curated entry carries `memo` — what the card picks (two Toreador), its lasting roles
