@@ -84,6 +84,11 @@
     (a free token, the gap met) is delivered before `_askBlock` opens the window, and the target's instant Pass finds none and is
     lost without a row; at pace 0 only (the client pace is safe by its 200 ms gaps; the sim showed none), so the fix of the measured
     order ships and the window-first ordering is a proposal. H12's 0 stays, with the note above.
+  - *The fix pass — prediction, registered before its runs (D-93):* (F) the release bytes (the drain's guard added) against the first
+    fix's: the 240's windows within a handful of E1's (modifier run-outs at most 7, stale rows at most 8), play unchanged in at least
+    three quarters of the 240's matches, `ana-gates.py` PASS on the 240 and the V5 smoke; and (E4)–(E5) as registered, on these bytes.
+    The first fix's own real-clock table, cut at two matches for the release bytes: 11 modifier windows and 50 totals, none ran out,
+    no stale row.
 - **v0.6.226 (14 Nov 2026)** — Round D, RULINGS O-40 → D-115 (Johan, 14 Nov 12:06: "vi gör på ditt förslag i O-40"): Smiling
   Jack's self-consistent runway, the knob `jackRunway` (default 1 after a no-loss bench; 0 = v0.6.225), spec §2's amendment.
   - *The change* (`_jackPriceAt`): a seat's runway against Jack R solves R·(c₁ + fc) + R(R−1)/2 = pool, the positive root
