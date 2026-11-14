@@ -13402,17 +13402,31 @@ async function connectWithRetry(client, tries = 30){
 
       // j) the gangrel series (measured): one Gangrel's Eyes block fails, the other's succeeds in the same action -- the first is locked
       //    again when the action ends (the first draft kept one relock per action: the second attempt overwrote the first's)
-      { const u = mk173('Hanna', 'gangrel'); const rus = V('g1', 'Ruslan Fedorenko', { locked: true, blood: 1 }), mar = V('g2', 'Martina Srnankova', { locked: true, blood: 2 });
-        u.board = [rus, mar]; u.hand = ['Eyes of the Wild', 'Eyes of the Wild']; u.tally = { mode: 'block', a: 0, b: 0 };
+      { const u = mk173('Hanna', 'gangrel'); const rus = V('g1', 'Crow', { locked: true, blood: 3 }), mar = V('g2', 'Dario Ziggler', { locked: true, blood: 3 });   // two Gangrels without a crypt intercept
+        u.board = [rus, mar]; u.hand = ['Eyes of the Wild', 'Eyes of the Wild']; u.tally = { mode: 'block', a: 1, b: 0 };   // the actor's stealth 1: each Gangrel pays its own +1 (the egress review, finding 5)
         const p = u.pending = { kind: 'bleed', who: 'Viktor', amount: 3, actingVampName: 'Patrik Söderberg', actorSeat: 2, attempted: new Set(), reacted: new Set(), contested: false };
-        await u._commitBlock(p, { parts: {} }); const first = p.blockerVamp && p.blockerVamp.name;
-        p.contested = false; p.blockerVamp = null;   // the actor's stealth: Ruslan's block fails
-        await u._commitBlock(p, { parts: {} }); const second = p.blockerVamp && p.blockerVamp.name;
+        await u._commitBlock(p, { parts: {} }); const first = p.blockerVamp && p.blockerVamp.name, b1 = u.tally.b;
+        p.contested = false; p.blockerVamp = null; u.tally = { mode: 'block', a: 1, b: 0 };   // the first block failed (the actor's stealth); the next attempt writes b fresh
+        await u._commitBlock(p, { parts: {} }); const second = p.blockerVamp && p.blockerVamp.name, b2 = u.tally.b;
         u._clearPending('block succeeded');   // Martina's block succeeds (the verdict locks her next)
         const rl = ev(u, 'relock').map(e => e.vamp);
         const fv = [rus, mar].find(x => x.name === first);
-        ok(!!first && !!second && first !== second && fv.locked === true && JSON.stringify(rl) === JSON.stringify([first]),
-           '173j two Eyes blocks in one action: the failed one is locked again, the successful one is the verdict’s (got ' + JSON.stringify({ first, second, rl }) + ')'); }
+        ok(!!first && !!second && first !== second && b1 === 1 && b2 === 1 && rus.blood === 2 && mar.blood === 2 && fv.locked === true && JSON.stringify(rl) === JSON.stringify([first]),
+           '173j two Eyes blocks in one action: each Gangrel pays its own +1; the failed one is locked again, the successful one is the verdict’s (got ' + JSON.stringify({ first, second, b1, b2, rus: rus.blood, mar: mar.blood, rl }) + ')'); }
+
+      // m) the egress review (findings 5 and 6): each Gangrel burns its own blood -- Crow's paid +1 spent, Dario's own grant is still
+      //    there; a new action's pending ends the last one and its Eyes Gangrel locks again; Eyes is a wake for a Gangrel only
+      { const u = mk173('Hanna', 'gangrel'); const crow = V('g1', 'Crow', { blood: 3 }), dario = V('g2', 'Dario Ziggler', { blood: 3 });
+        const p = { kind: 'undirected', reacted: new Set(), attempted: new Set(), paidGrant: { vampId: 'g1', card: 'Eyes of the Wild', key: 'paidIc:eyes of the wild:g1', n: 1, cost: 1 } };
+        p.reacted.add('paidIc:eyes of the wild:g1'); const crowAgain = u._grantPaidIntercept(crow, p);
+        p.paidGrant = { vampId: 'g2', card: 'Eyes of the Wild', key: 'paidIc:eyes of the wild:g2', n: 1, cost: 1 }; const darioOwn = u._grantPaidIntercept(dario, p);
+        const v2 = mk173('Hanna', 'gangrel'); const kam = V('g3', 'Kamile Paukstys', { blood: 3 }); v2.board = [kam]; v2._reactWindow = () => {};
+        v2.pending = { kind: 'bleed', who: 'Viktor', relock: [{ id: 'g3', card: 'Eyes of the Wild' }], blockerVamp: null, reacted: new Set(), attempted: new Set() };
+        v2._armPending('Viktor', 2, 'Lloyd Brooks', 'Viktor', 'bleed');   // a human actor's next bleed, no 'It resolves' before it
+        const banu = mk173('Hanna', 'banuhaqim'); banu.board = [V('z1', 'Asmin Kobane')]; banu.hand = ['Eyes of the Wild']; const gang = mk173('Hanna', 'gangrel'); gang.board = [V('g4', 'Crow')]; gang.hand = ['Eyes of the Wild'];
+        const r = { crowAgain, darioOwn: !!darioOwn, kamLocked: kam.locked, relock: ev(v2, 'relock').map(e => e.vamp), wakesBanu: banu._wakesInHand(), wakesGang: gang._wakesInHand() };
+        ok(r.crowAgain === null && r.darioOwn && r.kamLocked === true && JSON.stringify(r.relock) === '["Kamile Paukstys"]' && r.wakesBanu === 0 && r.wakesGang === 1,
+           '173m the paid +1 is each Gangrel’s own; a replaced pending locks its Eyes Gangrel again; Eyes counts as a wake for a Gangrel only (got ' + JSON.stringify(r) + ')'); }
 
       // h) decision == pick for Second Tradition: a LOCKED prince alone counts its +2 (v0.6.227: 0); beside an unlocked body the route is
       //    not taken (_pickBlocker takes the body), so it does not count
