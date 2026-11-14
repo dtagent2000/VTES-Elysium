@@ -32,7 +32,7 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.227 (in progress, 14 Nov 2026)** — Round E, the BOARD's hotseat line (Johan, 14 Nov 12:06: "... och hotseattappet"): the
+- **v0.6.227 (14 Nov 2026)** — Round E, the BOARD's hotseat line (Johan, 14 Nov 12:06: "... och hotseattappet"): the
   hotseat table dropped a bot's Pass in the bleed-modifier window. The cause, in round A's offline traces (the actor's stale-answer
   row in the same millisecond as the target's react snapshot): the hotseat bridge delivers a line in the same call, so the target's
   instant Pass reached the actor inside its own `ws.send` — after `_drain` had taken the line off the queue, before the wire hooks
@@ -99,6 +99,16 @@
     guard does not touch an asynchronous socket): one match to its end, 10 rounds in 37 minutes, 5 modifier windows and 8 totals,
     none ran out, no stale row, `ana-gates.py` PASS 7 of 7. A first attempt ran into the arena's default 600 s match timeout (the
     matches gate; its windows: 0 of 8, no stale row); `--match-timeout 4000` for the second.
+  - (E5) the browser table on the release bytes: eight sweeps (24 minutes, the human seat passing, Hanna, Viktor and Nora on the
+    page's bridge), 0 stale answers; three bot-vs-bot modifier windows — two closed at the target's Pass in 0.55 s, one a block
+    contest (36.5 s, a stealth and intercept exchange: by design) — and two that waited on the human (the tempo, set apart). The
+    tool's first reading counted those two and the contest as windows and the contest as a run-out (exit 1); its reading now follows
+    `ana-windows` (a wait row sets a window apart, another bot's block makes it a contest), re-read from the run's own events.
+    On v0.6.226 the same eight sweeps dropped 2 Passes as stale (that game opened no bot-vs-bot modifier window; the drops were on
+    other windows). Held.
+  - (E4) held on the release bytes — the offline real-clock table (`--real`, the client profile, four matches side by side, 48
+    minutes): 21 modifier windows and 97 totals, none ran out (four contests at the clock, by design), no stale row, `ana-gates.py`
+    PASS 6 of 6. Round A's table on v0.6.222: 50 of 53 and 60.
 - **v0.6.226 (14 Nov 2026)** — Round D, RULINGS O-40 → D-115 (Johan, 14 Nov 12:06: "vi gör på ditt förslag i O-40"): Smiling
   Jack's self-consistent runway, the knob `jackRunway` (default 1 after a no-loss bench; 0 = v0.6.225), spec §2's amendment.
   - *The change* (`_jackPriceAt`): a seat's runway against Jack R solves R·(c₁ + fc) + R(R−1)/2 = pool, the positive root
