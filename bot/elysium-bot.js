@@ -597,6 +597,7 @@ class Bot {
       tempoHist: 7,            // v0.6.194: Adaptive's running median is over the human's last N answers
     combatPhases: 1,       // v0.6.165 (Johan): 1 = against a HUMAN combat opponent the bot drives the seven combat steps with his phrases and waits for the human on a clock; 0 = v0.6.164's silent handshake. Bot-vs-bot is never affected.
     jackBurn: 1,             // v0.6.224 (round B, RULINGS D-114, specs/spec-jack-burn-2026-11-13.md): 1 = a vampire of mine may burn another seat's Smiling Jack as a (D) action when its price (what Jack takes from me against what it takes from my prey, over my runway) beats the best other action, the most exposed bot first; and a burn at MY Jack is weighed by its worth to me (what it still takes from my prey). 0 = no Jack burn and T6's weight for a burn at my Jack (v0.6.223 plus step 1's guard). Default 1 since its release, after a mirror bench with no loss (the four starters, every seat, 288 matches) and a bench pinned to Nosferatu's seat for the owner's defence; with it on in every seat Nosferatu's paired VP on the 240 fell and Jack's median life with it -- the numbers: docs/elysium-bot-CHANGELOG.md v0.6.224
+    jackRunway: 0,           // v0.6.226 (round D, RULINGS D-115, Johan 14 Nov: O-40's self-consistent runway): 1 = a seat's runway against Jack pays its GROWING counter -- R solves R*(c1 + fc) + R(R-1)/2 = pool, so the price over it never passes the seat's pool; 0 = v0.6.225's flat runway, pool / (c1 + fc), whose price could pass the pool (5 of 56 burns on the 240). Read only with jackBurn
     dynFloor: 1,             // v0.6.189 (THE KNOWLEDGE LAYER, brick 2 -- 'do not oust yourself'): 1 = the critical pool also counts the RECURRING losses I paid over my last full turn cycle (Creeping Sabotage ticks, Smiling Jack, Fame), read from the event log; 0 = the predator burst alone. v0.6.193: default 1 -- the re-bench (arm dyn2, 48, every seat, the floor PROVEN to fire in 23 of 48 matches) came out -0.12 +/- 0.39 against the control's +0.14 +/- 0.45: inside the noise, no loss shown
     arkChat: 1,              // v0.6.192 (archetype labels, explanation only): 1 = the bot says once per seat what it reads the deck as (a CONFIDENT label: margin >= 2 and >= 85 % of the shown cards typical), and names the closest archetype in its trace; 0 = trace only. Labels never drive a decision on their own.
     twdKnow: 1,              // v0.6.187 (THE KNOWLEDGE LAYER, brick 1): 1 = the TWDA profile (elysium-twd-profile.json) shapes the combat prior for each seat from the cards it has shown and its crypt's clan; 0 = the board-only prior. v0.6.188: default 1 -- the bench (48, every seat) showed no loss against the negative control (+0.21 ± 0.46 vs +0.14 ± 0.45)
@@ -2867,7 +2868,7 @@ class Bot {
   }
   _emitManifest(){                   // A2 (v0.6.73): deck intent + effective knobs
     const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {};
-    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','equipOverPlain','spyCancelMin','jackBurn']) if(this.o[k] !== undefined) kn[k] = this.o[k];
+    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','equipOverPlain','spyCancelMin','jackBurn','jackRunway']) if(this.o[k] !== undefined) kn[k] = this.o[k];
     this._emit('manifest', { seat: this.o.seat || null, deck: this.o.deckName || null, persona: this.o.persona, strategy: ds.strategy || null, axes: ds.axes || [], knobs: kn });   // v0.6.88: seat carried when the arena provides it -- the manifest is now self-describing for seat order
   }
   _deckAxes(){ const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {}; return ds.axes || []; }   // v0.6.107 (B1): the manifest's axes, finally read
@@ -4564,7 +4565,9 @@ class Bot {
     const life = Math.max(0, this._seatPool(j.seat)) / Math.max(0.25, 1 + this._jackFc(j.seat, myFc));   // Jack leaves play with its owner
     if(st === j.seat){ const H = Math.max(0, life); return { runway: life, H, price: H }; }
     const c1 = this._jackC1(st, j), fc = (st === this.seat && predFc != null) ? Math.max(0, predFc) : this._jackFc(st, myFc);
-    const runway = Math.max(0, this._seatPool(st)) / Math.max(0.25, c1 + fc);
+    const pool = Math.max(0, this._seatPool(st)), b = c1 + fc - 0.5;
+    const runway = this.o.jackRunway ? (pool > 0 ? Math.max(0, Math.sqrt(b * b + 2 * pool) - b) : 0)   // D-115: R*(c1 + fc) + R(R-1)/2 = pool, the positive root -- the counter grows a round at a time, so the price over R is at most the pool
+                                     : pool / Math.max(0.25, c1 + fc);                                  // v0.6.225: a flat c1 + fc a round
     const H = Math.max(0, Math.min(runway, life));
     return { runway, H, price: Math.max(0, H * c1 + H * (H - 1) / 2) };
   }
