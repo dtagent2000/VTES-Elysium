@@ -32,6 +32,24 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.227 (in progress, 14 Nov 2026)** — Round E, the BOARD's hotseat line (Johan, 14 Nov 12:06: "... och hotseattappet"): the
+  hotseat table dropped a bot's Pass in the bleed-modifier window. The cause, in round A's offline traces (the actor's stale-answer
+  row in the same millisecond as the target's react snapshot): the hotseat bridge delivers a line in the same call, so the target's
+  instant Pass reached the actor inside its own `ws.send` — after `_drain` had taken the line off the queue, before the wire hooks
+  in its `finally` marked it sent — and v0.6.206's guard read it as an answer to an earlier window; the window ran out its clock.
+  The fix: `_staleAnswer` asks the queue — a line that has left it is on the wire; an answer while it is still queued stays stale.
+  A timing correction, so no knob. Section 172 (2/0; 0/2 on v0.6.226); the hotseat gate v1.3.0 (H12: no answer dropped as stale on
+  the bridge); `tools/hotseat-in-browser.js` v1.0.0 (new, a diagnostic: the client's hotseat with three bots in headless Chromium).
+  - *Predictions* (registered before any measurement, D-93; v0.6.226's figures from the release footprint's traces): (E1) the 240
+    on the sim table (the client pace, the virtual clock): the bleed-modifier windows that ran out and went through fall from 1135 of
+    1309 to at most 5 % of the modifier windows, the stale-answer rows from 1431 to at most 5 % of that, and the totals' run-outs
+    (150 of 3834) at least halve. (E2) the footprint against v0.6.226: most matches change (each dropped answer moved the virtual
+    clock); `ana-gates.py` PASS on the 240, the V5 smoke and the 600; no deck's paired VP interval on the 240 lies wholly beyond
+    ±0.15. (E3) the hotseat gate's H12: 0 stale-answer rows; above 0 on v0.6.226 (its destructive run). (E4) an offline real-clock
+    table (`--real`, the client profile, four matches side by side, the four starters and Toreador): 0 modifier windows run out and
+    0 stale-answer rows (round A: 50 of 53, 60). (E5) the browser table (`hotseat-in-browser.js`, eight sweeps): 0 stale answers on
+    v0.6.227, above 0 on v0.6.226. (E6) the server arena (one match, the client pace): the windows gate 0 and `ana-gates.py` PASS —
+    the online path unchanged.
 - **v0.6.226 (14 Nov 2026)** — Round D, RULINGS O-40 → D-115 (Johan, 14 Nov 12:06: "vi gör på ditt förslag i O-40"): Smiling
   Jack's self-consistent runway, the knob `jackRunway` (default 1 after a no-loss bench; 0 = v0.6.225), spec §2's amendment.
   - *The change* (`_jackPriceAt`): a seat's runway against Jack R solves R·(c₁ + fc) + R(R−1)/2 = pool, the positive root
