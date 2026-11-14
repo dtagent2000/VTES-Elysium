@@ -80,6 +80,12 @@
     the ledger gate, the three known faults (BOARD). A small footprint: the change moves a decision only where a Jack's price was
     near its alternative.
   - *The flip* (F): `jackRunway` default 1 in this PR.
+  - *The egress review's pinned bench — prediction, registered before its runs (D-93):* the review found the owner's side measured
+    only in the pooled mirror bench (Nosferatu, the only starter with a Jack, is the variant in a quarter of it). A bench pinned to
+    Nosferatu: every seat at 0, the Nosferatu seat at 1 against the same seat at 0 (`--bench-deck nosferatu`, 288 an arm) — only its
+    own defence reads the new runway, the burners keep the flat one. (P1) the variant's blocks of a burn at its Jack fall (fewer
+    block-as-target rows with a worth end in a block than in the control); (P2) its worth reads at most 60; (P3) no loss: the
+    variant seat's 95 % interval reaches 0 or above.
   - *Found on the way:* my Jack's worth to me (spec §5) sets my prey's loss over her runway — since D-115 at most her pool —
     against my own payments over Jack's whole life, so a young Jack against a healthy prey is worth 0 to its owner (171d: 0 at my 40
     pool): 62 of 105 owner reads at 0 on the 240 (56 of 107 before), 183 of 400 on the 600 (167 of 386); the owner's blocks of a burn
