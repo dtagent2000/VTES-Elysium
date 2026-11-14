@@ -19,6 +19,11 @@ the card; at each other Methuselah's unlock phase that Methuselah burns 1 pool o
 - `H(X)` — min(`runway(X)`, the rounds left). The rounds left are Jack's own expected life: its owner's runway under its own
   predator (it leaves play with its owner) — Claude's reading of "the rounds the match is expected to have left".
 - `price(X) = H·c1 + H(H−1)/2` — `c1 + (c1+1) + …` over H rounds. For the owner: `H` (the counter it pays itself each round).
+- *Amended 14 Nov (RULINGS D-115, answering O-40; bot v0.6.226, the knob `jackRunway`):* the runway above takes a flat `c1 + fc`
+  a round while Jack's counter grows, so its price could pass X's pool (5 of 56 burns on the 240). It is now the self-consistent
+  runway: R solves `R·(c1 + fc) + R(R−1)/2 = pool(X)`, the positive root `R = √(b² + 2·pool) − b` with `b = c1 + fc − ½`; the price
+  over R is `pool − R·fc`, never above the pool. A runway of a round or more is never longer than the flat one, R = 1 exactly when
+  the pool is `c1 + fc` (§4's "a round" threshold stays), and the owner's life (its own flat 1 + fc a round) is unchanged.
 
 ## 3. The value of a burn, in the scorer's currency
 - `value = P(success) × [wDef · price(me) − offW · price(my prey)] × P.aggression` — the same unit as a bleed (`n · P.aggression ·
