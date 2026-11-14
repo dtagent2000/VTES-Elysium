@@ -5,8 +5,8 @@
    passes and three bot seats, as a player sets it up (offlineCfg + startOfflineFromCfg). Each pass runs the client's own sweep of the
    bot seats (passNow -> hotRunBotTurns), so the bots act through the page's hotBridge, which delivers a line in the same call. Each
    bot's events are collected in the page (its onEvent): the bot-vs-bot bleed-modifier windows (a play in window bleed-mod, to the
-   actor's next through / blocked), how long each took and how many outlasted 2.5 s plus the pace with no answer row between, and every
-   stale-answer row; the page's console is kept too. A diagnostic, not a gate (Playwright; main's client is read, never edited).
+   actor's next through / blocked; one the actor waited on the human for is set apart, one another bot blocked in is a contest), how
+   long each took and how many outlasted 2.5 s plus the pace with no answer row between (ana-windows' reading), every stale-answer row; the page's console is kept too. A diagnostic, not a gate (Playwright; main's client is read, never edited).
      usage (from bot/): node tools/hotseat-in-browser.js [--bot FILE] [--sweeps N] [--out DIR]   (--out: a new or empty directory)
      NODE_PATH must reach playwright (here /opt/npm-tools/node_modules); PLAYWRIGHT_BROWSERS_PATH the browsers (here /opt/pw-browsers).
    Exit 0 = modifier windows were played and none ran out and no answer was dropped as stale; 1 = stale answers or run-outs;
@@ -63,14 +63,15 @@ const done = code => { try { srv.close(); } catch(e){} try { fs.rmSync(W, { recu
   }
   const ev = await page.evaluate(() => window.__ev || []); fs.writeFileSync(path.join(OUT, 'events.json'), JSON.stringify(ev));
   const ANS = ['decide', 'play', 'block-eval', 'defence-plan', 'block-made', 'stale-answer'], lim = 2500 + 3100;   // ana-windows v1.1's answer rows and limit at the client pace
-  const wins = []; ev.forEach((e, i) => { if(e.type !== 'play' || !e.d || e.d.window !== 'bleed-mod') return;
+  const all = []; ev.forEach((e, i) => { if(e.type !== 'play' || !e.d || e.d.window !== 'bleed-mod') return;   // ana-windows' reading: a window waited on the human (a wait row) is not bot-vs-bot; another bot's block-made makes it a contest at the clock (by design)
     const end = ev.slice(i + 1).find(x => x.seat === e.seat && (x.type === 'through' || x.type === 'blocked')); if(!end) return;
-    const chain = [e.t].concat(ev.slice(i + 1).filter(x => x.t <= end.t && x.seat !== e.seat && ANS.includes(x.type)).map(x => x.t), [end.t]);
-    const gap = Math.max(...chain.slice(1).map((t, k) => t - chain[k])); wins.push({ ms: end.t - e.t, gap, ranOut: gap > lim }); });
-  const stale = ev.filter(e => e.type === 'stale-answer'), by = {}; stale.forEach(e => { const k = (e.d && e.d.phrase) || '?'; by[k] = (by[k] || 0) + 1; });
-  const ranOut = wins.filter(w => w.ranOut).length, res = { setup, botFile: BOTV, sweeps, modifierWindows: wins.length, ranOut, windowMs: wins.map(w => w.ms), staleAnswers: stale.length, staleBy: by, consoleLines: con.length };
+    const inW = ev.slice(i + 1).filter(x => x.t <= end.t), human = inW.some(x => x.seat === e.seat && x.type === 'wait'), contest = inW.some(x => x.seat !== e.seat && x.type === 'block-made');
+    const chain = [e.t].concat(inW.filter(x => x.seat !== e.seat && ANS.includes(x.type)).map(x => x.t), [end.t]);
+    const gap = Math.max(...chain.slice(1).map((t, k) => t - chain[k])); all.push({ ms: end.t - e.t, gap, human, contest, ranOut: !human && !contest && gap > lim }); });
+  const wins = all.filter(w => !w.human), stale = ev.filter(e => e.type === 'stale-answer'), by = {}; stale.forEach(e => { const k = (e.d && e.d.phrase) || '?'; by[k] = (by[k] || 0) + 1; });
+  const ranOut = wins.filter(w => w.ranOut).length, res = { setup, botFile: BOTV, sweeps, modifierWindows: wins.length, contested: wins.filter(w => w.contest).length, humanWindows: all.length - wins.length, ranOut, windowMs: wins.map(w => w.ms), staleAnswers: stale.length, staleBy: by, consoleLines: con.length };
   fs.writeFileSync(path.join(OUT, 'result.json'), JSON.stringify(res, null, 1));
-  console.log('result ' + JSON.stringify({ modifierWindows: wins.length, ranOut, staleAnswers: stale.length, staleBy: by, windowMs: res.windowMs, sweeps: sweeps.map(s => s.secs) }));
+  console.log('result ' + JSON.stringify({ modifierWindows: wins.length, contested: res.contested, humanWindows: res.humanWindows, ranOut, staleAnswers: stale.length, staleBy: by, windowMs: res.windowMs, sweeps: sweeps.map(s => s.secs) }));
   await page.screenshot({ path: path.join(OUT, 'table.png') }).catch(() => {});
   await browser.close(); log.end();
   done(!(sweeps.length && sweeps.every(s => s.ok.ok)) ? 2 : (stale.length || ranOut) ? 1 : wins.length ? 0 : 3);
