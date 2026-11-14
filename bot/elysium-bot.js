@@ -5580,6 +5580,7 @@ class Bot {
     }
     rec.free = free; rec.via = via; rec.cands = free ? null : live;
     this._emit('memo', { seat: st, card: rec.card, lock: rec.lock ? (byId(rec.lock) || {}).name : null, free: free ? (byId(free) || {}).name : null, via, cands: free ? null : live.map(id => (byId(id) || {}).name) });
+    this.o.log('memo: ' + rec.who + '\u2019s ' + rec.card + ' -- locked ' + (rec.lock ? (byId(rec.lock) || {}).name : '?') + ', free ' + (free ? (byId(free) || {}).name + ' (' + via + ')' : 'open: ' + live.map(id => (byId(id) || {}).name).join(' / ')));   // the bot's own log (the console), never a table line
     if(!free && live.length >= 2 && d.ask && this._isSpokesBot()){
       const nms = live.map(id => (byId(id) || {}).name); rec.asked = true;
       this.chat(String(d.ask).replace('{owner}', rec.who).replace('{cands}', nms.length === 2 ? nms.join(' or ') : nms.slice(0, -1).join(', ') + ' or ' + nms[nms.length - 1]));   // a question to a human (the tier rule)
@@ -5595,6 +5596,7 @@ class Bot {
     if(hit.length !== 1) return false;
     rec.free = hit[0]; rec.via = 'answer'; rec.cands = null;
     this._emit('memo', { seat: rec.seat, card: rec.card, free: nm(hit[0]), via: 'answer' });
+    this.o.log('memo: ' + who + '\u2019s ' + rec.card + ' -- free ' + nm(hit[0]) + ' (their answer)');
     return true;
   }
   _pubCounters(c, memo){             // v0.6.221 (D-113): the pub's counters -- a card's named counters (D-113 (2): the pub never carried them, so a bot's Smiling Jack took its owner's pool while no seat paid -- the victims read the pub; a NUMBER, _addCounter's, stays off), else this bot's own tokens (_memoMap); 12 a card, 64 characters, as the server keeps them. Never both: named counters are a COUNT other seats read (Jack's victims pay one pool each), so a token beside them would be paid as pool
