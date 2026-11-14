@@ -33,7 +33,13 @@ Two tables in your play-test rig (client v2.6.174, srv-2.6.50; the human Toreado
   target. Could the client drop the target after a card play, or leave it off the undirected action lines?
 
 ## 4. Run here
-On the release bytes (`elysium-bot.js` sha256 `SHA_BOT…`): CLIENT_LINE
+On the release bytes (`elysium-bot.js` sha256 `091e8cd8…`): your `check-versions.js` agrees (in the repository's `client/`,
+read-only); your canary v1.2.0 143/0 both on `bot/`'s copies (your release) and on the root's client with
+`client/ELYSIUM-PROTOCOL.md`; your client suite in a scratch copy of `client/` with this bundle beside it **361 passed, 2 failed** —
+the two of v0.6.219's handoff (`v2.6.127 embed-help drift`, `v2.6.122 registry, with the released bot`). An arena smoke on
+`bot/`'s srv-2.6.50 with five bots (Toreador seated) ended clean (`ana-gates.py` PASS 7 of 7). Three human tables in your play-test
+rig (`bot/tools/playtest-ball/` holds the scenario and the test deck): the bots read the pair, asked when they could not tell, and
+read the answer.
 
 ## 5. Deploy
 Purge `/elysium-bot.js`, `/elysium-cardfx.json` / `.js` and `/START-HERE-BOTS.html`; the client when the re-embedded guide ships.

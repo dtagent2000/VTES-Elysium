@@ -8,8 +8,10 @@ the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6
 **Deploy state:** `main` carries v0.6.222 (#67). **Open PRs:** #68 (round A); #69 (round B) on it; round C (this release) on
 #69 — merge in that order.
 
-## Last gates (v0.6.225 release bytes `SHA_BOT`, 14 Nov 2026)
-GATES_LINE
+## Last gates (v0.6.225 release bytes `091e8cd8`, 14 Nov 2026)
+Suite **2475/0 ×3** (frozen snapshots) · canary **143/0** ×2 · test-cardfx 321/0 · hotseat **11/0** · HB1 11/0 · main's client
+suite 361/2 (the handoffs' two) · `check-versions.js` agrees · arena smoke PASS 7/7 · sim against v0.6.224 (version set back): the
+240, the V5 smoke and the 600 IDENTICAL, `ana-gates.py` PASS · three human tables in main's rig (CHANGELOG).
 
 ## What v0.6.225 did
 D-113 (3)–(4): every bot reads a human's Toreador Grand Ball — the locked one, then the free one from the play line's pair, a token

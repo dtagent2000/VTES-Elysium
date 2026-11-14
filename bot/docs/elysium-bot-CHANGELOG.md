@@ -75,7 +75,11 @@
     re-locks it; the bots keep the lock they read); the target aimed for the Ball's play line sticks and rides the next action line —
     `Catalina Vega hunts. Target: Flávio Gonçalves.` reached no bot as a hunt (the review read it in the trace; no harm there, Catalina
     being the free one). The bots now read the suffixed undirected lines; the handoff asks main about the target.
-  - Gates on the release bytes: GATES.
+  - `bot/tools/playtest-ball/`: the human table's scenario (its steps in `about`) and the Ball-heavy Toreador test deck (HOWTO).
+  - Gates on the release bytes (`elysium-bot.js` `091e8cd8`, `test-bot-logic.js` `8f87bf8f`, `elysium-cardfx.json` `b91a285f`):
+    suite 2475/0 ×3, canary 143/0 ×2, test-cardfx 321/0, hotseat 11/0, HB1 11/0, main's client suite 361/2 (the handoffs' two),
+    `check-versions.js` agrees, an arena smoke with five bots (Toreador seated) PASS 7/7; the footprint (C1) re-read on these bytes:
+    IDENTICAL 240 / 168 / 600 against v0.6.224, `ana-gates.py` PASS.
 - **v0.6.224 (14 Nov 2026)** — Round B, RULINGS D-114 (Johan's "kör", 13 Nov 20:13 and 21:45): Smiling Jack's burn weighed by its
   price, `specs/spec-jack-burn-2026-11-13.md`. Two steps, each with its own footprint, on round A (v0.6.223).
   - *Step 1, the block guard* (a rules correction, no knob; section 168: 3/0, 0/3 on v0.6.223): the threat classes' block path
