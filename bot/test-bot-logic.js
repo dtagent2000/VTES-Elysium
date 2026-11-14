@@ -13418,8 +13418,9 @@ async function connectWithRetry(client, tries = 30){
       //    there; a new action's pending ends the last one and its Eyes Gangrel locks again; Eyes is a wake for a Gangrel only
       { const u = mk173('Hanna', 'gangrel'); const crow = V('g1', 'Crow', { blood: 3 }), dario = V('g2', 'Dario Ziggler', { blood: 3 });
         const p = { kind: 'undirected', reacted: new Set(), attempted: new Set(), paidGrant: { vampId: 'g1', card: 'Eyes of the Wild', key: 'paidIc:eyes of the wild:g1', n: 1, cost: 1 } };
-        p.reacted.add('paidIc:eyes of the wild:g1'); const crowAgain = u._grantPaidIntercept(crow, p);
-        p.paidGrant = { vampId: 'g2', card: 'Eyes of the Wild', key: 'paidIc:eyes of the wild:g2', n: 1, cost: 1 }; const darioOwn = u._grantPaidIntercept(dario, p);
+        const gpi = (v, q) => typeof u._grantPaidIntercept === 'function' ? u._grantPaidIntercept(v, q) : 'missing';   // the old bytes fail clean, not abort
+        p.reacted.add('paidIc:eyes of the wild:g1'); const crowAgain = gpi(crow, p);
+        p.paidGrant = { vampId: 'g2', card: 'Eyes of the Wild', key: 'paidIc:eyes of the wild:g2', n: 1, cost: 1 }; const darioOwn = gpi(dario, p) && gpi(dario, p) !== 'missing';
         const v2 = mk173('Hanna', 'gangrel'); const kam = V('g3', 'Kamile Paukstys', { blood: 3 }); v2.board = [kam]; v2._reactWindow = () => {};
         v2.pending = { kind: 'bleed', who: 'Viktor', relock: [{ id: 'g3', card: 'Eyes of the Wild' }], blockerVamp: null, reacted: new Set(), attempted: new Set() };
         v2._armPending('Viktor', 2, 'Lloyd Brooks', 'Viktor', 'bleed');   // a human actor's next bleed, no 'It resolves' before it
