@@ -8,8 +8,10 @@ the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6
 **Deploy state:** `main` carries v0.6.222 (#67). **Open PRs:** round A (this release); B (the Jack burn) and C (a human's Grand
 Ball) stacked on it — merge in that order.
 
-## Last gates (v0.6.223 release bytes `SHA_BOT`, 14 Nov 2026)
-GATES_LINE
+## Last gates (v0.6.223 release bytes `206bf3b9`, 14 Nov 2026)
+Suite **2450/0 ×3** (frozen snapshots) · canary **143/0** ×2 · hotseat **11/0** · main's client suite 361/2 (the handoffs' two) ·
+`check-versions.js` agrees · arena smoke PASS 7/7 · sim against v0.6.222 (version set back): the 240, the V5 smoke and the 600
+IDENTICAL · `ana-gates.py` PASS · the table runs: online 9 × PASS 7/7, offline PASS 6/6.
 
 ## What v0.6.223 did
 The table runs (D-112, v0.6.222's unsure list): nine online matches at the client pace and ten offline on the real clock, counted

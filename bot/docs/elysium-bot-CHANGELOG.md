@@ -72,8 +72,11 @@
     line (167c); the reports' 0.65 VP (v0.6.222's 600: 0.78 ± 0.05), the politics count and the probe's reading; HOWTO, the gates'
     header, the README map, the guide's date.
   - *Predictions* (registered before the footprint): (R1) IDENTICAL on the 240, the V5 smoke and the 600 to v0.6.222, the version
-    set back — FOOTPRINTS; (R2) `ana-gates.py` PASS — GATESLINE; (R3) section 167 green ×3, red on v0.6.222 — SUITE.
-  - Gates on the release bytes: GATES.
+    set back — held: IDENTICAL 240, 168 and 600; (R2) `ana-gates.py` PASS — held; (R3) section 167 green ×3, red on v0.6.222 —
+    held (5/0 ×3, 0/5 on v0.6.222).
+  - Gates on the release bytes (`elysium-bot.js` `206bf3b9`, `test-bot-logic.js` `c8428a9b`, `elysium-cardfx.json` `0e9c5f4d`): suite
+    2450/0 ×3, canary 143/0 ×2, hotseat 11/0, main's client suite 361/2 (the handoffs' two), `check-versions.js` agrees, arena
+    smoke PASS 7/7. HB1 not run (no browser surface changed); test-cardfx not run (cardfx unchanged).
 - **v0.6.222 (13 Nov 2026)** — The Jack round's follow-ups (Johan, 13 Nov 14:50: "Vad gäller buggarna och granskning kan vi gärna ta
   dem nu"; #66 merged): the two bugs v0.6.221's runs found, the second fresh review of #66's fix pass (4 findings, all fixed here),
   a browser check of D-113's tokens, and RULINGS D-114 (Johan's principle for burning a Smiling Jack; Claude's proposal waits for

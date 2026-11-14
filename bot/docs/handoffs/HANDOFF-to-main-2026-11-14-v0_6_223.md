@@ -28,7 +28,11 @@ No new verb, field or frozen line. What a table sees differently:
   reading gives +1 vote, the card +1 for each titled Camarilla vampire. A bot-side fix (our BOARD).
 
 ## 4. Run here
-On the release bytes (`elysium-bot.js` sha256 `SHA_BOT…`): CLIENT_LINE
+On the release bytes (`elysium-bot.js` sha256 `206bf3b9…`): your `check-versions.js` agrees (in the repository's `client/`,
+read-only); your canary v1.2.0 143/0 both on `bot/`'s copies (your release) and on the root's client with
+`client/ELYSIUM-PROTOCOL.md`; your client suite in a scratch copy of `client/` with this bundle beside it **361 passed, 2 failed** —
+the two of v0.6.219's handoff (`v2.6.127 embed-help drift`, `v2.6.122 registry, with the released bot`). An arena smoke on
+`bot/`'s srv-2.6.50 ended clean (`ana-gates.py` PASS 7 of 7).
 
 ## 5. Deploy
 Purge `/elysium-bot.js` (cardfx unchanged); the client when the re-embedded guide ships. The TWD files and the server are unchanged.
