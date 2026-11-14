@@ -32,6 +32,23 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.228 (in progress, 14 Nov 2026)** — Round F, "Toreador 100 %" (Johan, 14 Nov: "Vi kan väl köra klart toreadorerna helt 100%
+  först"): corrections only (knob hygiene, L-62) — Perfect Paragon's [PRE], Versailles' vote per titled Camarilla vampire, Scalpel
+  Tongue's [cel][pre] as one requirement, Eyes of the Wild (a locked Gangrel's block, its paid intercept, the clan requirement read
+  by the intercept and unlock finders), the ledger's mode per discipline line, and the Grand Ball on the turn it pays (the
+  look-ahead rule; guide-check report proposal 1). Villein's blood (proposal 8) is a knob: it goes to the bench round with 2–7.
+  - *Predictions* (registered before any measurement, D-93; the references are v0.6.227's release footprint: the 240, the V5 smoke,
+    the 600): (F1) the 240 (the four starters) IDENTICAL — no starter card's reading changes, and every starter vampire meets its
+    intercept cards' requirements. (F2) the V5 smoke: 12 of 14 dirs IDENTICAL, toreador and gangrel change. (F3) the 600: Perfect
+    Paragon [PRE] is played as stealth (above 0), every time against an ally or a younger blocker (0 against an older or equal one);
+    its vote plays keep at least half of the 135. (F4) every lock of Versailles adds as many votes as I have ready titled Camarilla
+    vampires (at least 1; never locked with none). (F5) Scalpel Tongue never by a vampire that lacks Celerity or Presence (Min-seo:
+    1 play on the 600 → 0). (F6) Eyes of the Wild never as a plain intercept (5 in the gangrel smoke → 0); in a 120-match gangrel
+    series it is played through the locked route at least once, always by a locked Gangrel, and a Gangrel whose block failed ends
+    the action locked. (F7) the Ball: plays fall (319 → at most 250), bars per Ball rise (0.76 → at least 1.0), Balls whose turn
+    bars at least one action rise (66 % → at least 75 %); Toreador's paired VP on the 600 not wholly below 0. (F8) `ana-gates.py`
+    PASS on the 240, the V5 smoke and the 600. (F9) the ledger: 11 FULL rows lose FULL to a discipline line with no mode (13 less
+    Paragon and Scalpel Tongue); Eyes of the Wild stays FULL.
 - **v0.6.227 (14 Nov 2026)** — Round E, the BOARD's hotseat line (Johan, 14 Nov 12:06: "... och hotseattappet"): the
   hotseat table dropped a bot's Pass in the bleed-modifier window. The cause, in round A's offline traces (the actor's stale-answer
   row in the same millisecond as the target's react snapshot): the hotseat bridge delivers a line in the same call, so the target's
