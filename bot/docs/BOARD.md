@@ -89,8 +89,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
   (or they carry every cardfx name), every deck's library names hit a key, and the rebuild ships with a sim footprint.
   Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
-- **No bot burns a Smiling Jack** (13 Nov, v0.6.221): its counters now reach every seat, and `_bestBurnCardFor` reaches only
-  Toreador Grand Ball, at prey and predator. *Done when* D-114 is built (kör 13 Nov; round B). Docs: RULINGS D-114, its spec.
 - **A human's bounce of a bot's bleed** is not read by the acting bot; a bot that is a bounce's new target cannot bounce onward.
   *Done when* the client's bounce play line (a pool target) is parsed and section-tested. Docs: RULINGS O-3.
 - **A human's Change of Target after a right-click action** (main, 11 Nov §1) names no vampire or another: `_onCot` misses it.
