@@ -516,11 +516,11 @@ const L12 = {
   refResult: /^Referendum (passes|fails) \u2014 (.+?): (.+)\.$/,   // v0.6.122: the outcome + the same terms (self-contained: a seat applies its own delta from THIS line)
   blockBar: /^(.+?) \u2014 (vampires|allies|minions) cannot block this action\.$/,   // v0.6.127 (bot grammar, cardfx fx.blockBar): m[1] = the card, sent BEFORE the action's announce (the terms-line precedent) so the window opens with the bar known; a human reads it as table talk and complies by hand
   /* v0.6.107 (B1): the UNDIRECTED family -- the bot's own frozen announce lines for actions the rulebook lets the actor's prey AND predator block (prey first). Human clients' wording for these is unverified (main-project ask). */
-  uHunt:     /^(.+?) hunts\.$/,
-  uRescue:   /^(.+?) attempts to rescue their own vampire from torpor\.$/,   // v0.6.172 (main v2.6.138): the OWN-vampire rescue is its own line and UNDIRECTED; `attempts to rescue a vampire from torpor.` is now DIRECTED (at the owner) and no longer opens a predator/prey window
-  uCardAct:  /^(.+?) takes an undirected action\.$/,   // v0.6.172 (main v2.6.137): the client's 'Undirected card action' row (equip, recruit, employ ...)
+  uHunt:     /^(.+?) hunts\.(?: Target: .+\.)?$/,   // v0.6.225 (round C's human table): the client's target, aimed for a card play and left set, rides the next action line -- a hunt stays undirected
+  uRescue:   /^(.+?) attempts to rescue their own vampire from torpor\.(?: Target: .+\.)?$/,   // v0.6.172 (main v2.6.138): the OWN-vampire rescue is its own line and UNDIRECTED; `attempts to rescue a vampire from torpor.` is now DIRECTED (at the owner) and no longer opens a predator/prey window
+  uCardAct:  /^(.+?) takes an undirected action\.(?: Target: .+\.)?$/,   // v0.6.172 (main v2.6.137): the client's 'Undirected card action' row (equip, recruit, employ ...)
   uRescueOld:/^(.+?) attempts to rescue a vampire from torpor\.$/,   // v0.6.127: the CLIENT's frozen action-menu line (no Target suffix = the actor's OWN vampire, undirected) -- it was only short-term memory (actObs); now it opens the prey/predator window like every other undirected action
-  uLeave:    /^(.+?) attempts to leave torpor\.$/,   // v0.6.128 (bot grammar): a torpored vampire's own action (+1 stealth, 2 blood). Blocked by a vampire = NO combat, the blocker may diablerise -- bots never do, so a bot answers Pass at once; a human may block
+  uLeave:    /^(.+?) attempts to leave torpor\.(?: Target: .+\.)?$/,   // v0.6.128 (bot grammar): a torpored vampire's own action (+1 stealth, 2 blood). Blocked by a vampire = NO combat, the blocker may diablerise -- bots never do, so a bot answers Pass at once; a human may block
   uEquip:    /^(.+?) (equips|employs) (.+?)\.$/,
   uRecruit:  /^(.+?) recruits (.+?) \[(.+?)\]\.$/,
   uStock:    /^(.+?) plays (.+?) \u2014 (\d+) blood onto an uncontrolled vampire\.$/,
@@ -1270,7 +1270,7 @@ class Bot {
           this.chat('Note: an unresolved bleed at me expired with the turn — if it landed, tell me "bleed ' + this.pending.amount + '".');
           this._clearPending('turn change');
         }
-        if(m.seat !== this.turnSeat && this._hMemo){ const r0 = this._hMemo.find(r => r.seat === this.turnSeat && r.open); if(r0) this._hMemoResolve(r0); }   // v0.6.225: their turn ended with no Phase line and no action line
+        if(m.seat !== this.turnSeat && this.turnSeat && this.opp && this.opp[this.turnSeat] && this.opp[this.turnSeat].memo) this._hMemoTurnEnd(this.turnSeat);   // v0.6.225: their turn ended -- an open record resolves; the answer window closes (or lasts their next turn)
         if(m.seat !== this.turnSeat){ this._turnActN = 0; this._turnSerial = (this._turnSerial | 0) + 1; }   // v0.6.217: + the turn's serial (Monster's 'once each turn' = once in each player's turn [ANK 20180719-4])   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
         this.turnSeat = m.seat;
         if(m.seat !== this.seat){ this._heldTurn = null; this._gameOverPassed = false; }   // v0.6.222: the turn moved on -- nothing is held
@@ -5546,58 +5546,77 @@ class Bot {
      candidates that turned locked, a custom token of theirs naming the card, their only other candidate; ASK LAST: still open after
      their master phase, the bot that speaks for the table asks once in chat, naming the candidates; the owner's public answer is every
      bot's memory (each reads it); unanswered, the card's generous reading stays (_humanBallFree). Bots name their own pair (no record). */
+  _hMemoOf(st, make){ const o = make ? this._opp(st) : (this.opp && this.opp[st]); if(!o) return []; if(!o.memo && make) o.memo = []; return o.memo || []; }   // v0.6.225 (the egress review): the records are table-model facts about that seat -- this.opp[seat], reset with it at every deal (a rematch's card ids start again at c1)
+  _hMemoSoft(x){ return String(x || '').replace(/[łŁøØœŒæÆßđĐðÐþÞı]/g, ch => FX_NORM_LETTERS[ch]).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }   // FX_NORM's letters and accents, the spaces kept (a typed 'Flavio' names Flávio)
   _hMemoLog(who, t){
     const pl = (this.players || []).find(q => q && q.name === who); if(!pl || pl.bot || !pl.seat || pl.seat === this.seat) return;
-    const st = pl.seat; this._hMemo = this._hMemo || [];
+    const st = pl.seat;
     const m = t.match(/^(.+?) plays (.+?)\.(?: Target: (.+)\.)?$/) || t.match(/^()(.+?) was played\.(?: Target: (.+)\.)?$/);
     if(m){ const card = m[2].replace(/\s+\[[A-Za-z]+\]$/, ''), d = this._memoDesc(card);   // the client's mode tag, if any
       if(d){ const clan = (d.pick || {}).clan || null;
         const cand = this._seatCards(st).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && !c.faceDown && (!clan || this._vampClan(c) === clan));
         const byName = n => (n && cand.find(c => c.name === n)) || null, tg = m[3] && !/'s /.test(m[3]) ? m[3] : null;   // an own card (a remote target reads NAME's X)
-        this._hMemo.push({ seat: st, who, card, desc: d, at: Date.now(), cand: cand.map(c => c.id), pair: [byName(m[1]), byName(tg)].filter(Boolean).map(c => c.id),
-                           cardId: null, lock: null, free: null, open: true, asked: false, cands: null, via: null, resolvedAt: 0 });
+        const toks0 = {}; cand.forEach(c => { toks0[c.id] = (Array.isArray(c.counters) ? c.counters : []).filter(x => typeof x === 'string'); });   // the tokens already there are not this card's (the egress review: a token left by an earlier Ball)
+        this._hMemoOf(st, true).push({ seat: st, who, card, desc: d, at: Date.now(), cand: cand.map(c => c.id), pair: [byName(m[1]), byName(tg)].filter(Boolean).map(c => c.id), toks0,
+                                       cardId: null, lock: null, free: null, open: true, asked: false, cands: null, live: [], via: null, resolvedAt: 0, winLeft: 1, answer: null, settle: null });
         return; } }
-    const rec = this._hMemo.find(r => r.seat === st && r.open); if(!rec) return;
-    const ph = t.match(/^Phase: (\w+)/);   // the end of their master phase: a Phase line past it, or their first action line that is not a card play
-    if(ph ? !/^(unlock|master)$/i.test(ph[1]) : (L12.actObs.test(t) && !/ plays /.test(t))) this._hMemoResolve(rec);
+    const recs = this._hMemoOf(st).filter(r => r.open); if(!recs.length) return;   // two cards played in one master phase: each its own record
+    const ph = t.match(/^Phase: (\w+)/);   // the end of their master phase: a Phase line past it -- read on their next board (the egress review: the client sends a board up to 600 ms after its log line, so a lock clicked just before the Phase line is not yet on the table) -- or their first action line that is not a card play (now: its window reads the memo)
+    if(ph){ if(!/^(unlock|master)$/i.test(ph[1])) recs.filter(r => !r.settle).forEach(rec => { rec.settle = setTimeout(() => { rec.settle = null; if(rec.open && this._hMemoOf(st).includes(rec)) this._hMemoResolve(rec); }, 2000); }); return; }
+    if(L12.actObs.test(t) && !/ plays /.test(t)) recs.forEach(rec => this._hMemoResolve(rec));
+  }
+  _hMemoBoard(st){ this._hMemoOf(st).filter(r => r.open && r.settle).forEach(r => this._hMemoResolve(r)); }   // their board after the Phase line: the lock is on it
+  _hMemoTurnEnd(st){                 // their turn ended: a record still open resolves (no Phase line, no action line) and its answer window lasts through their next turn; else the window closes
+    this._hMemoOf(st).forEach(r => { if(r.dead) return; if(r.open){ this._hMemoResolve(r); r.winLeft = 1; return; } if(r.winLeft > 0) r.winLeft--; });
   }
   _hMemoResolve(rec){
-    rec.open = false; rec.resolvedAt = Date.now();
+    rec.open = false; rec.resolvedAt = Date.now(); if(rec.settle){ clearTimeout(rec.settle); rec.settle = null; }
     const st = rec.seat, d = rec.desc, cs = this._seatCards(st), byId = id => cs.find(c => c && c.id === id);
-    const card = cs.find(c => c && c.kind === 'lib' && c.name === rec.card && !c.faceDown && !this._outOfPlay(c) && !(this._hMemo || []).some(r => r !== rec && r.cardId === c.id));
+    const card = cs.find(c => c && c.kind === 'lib' && c.name === rec.card && !c.faceDown && !this._outOfPlay(c) && !this._hMemoOf(st).some(r => r !== rec && r.cardId === c.id));
     if(!card){ rec.dead = true; return; }   // the card did not stay in play
     rec.cardId = card.id;
-    const locked = rec.cand.filter(id => { const c = byId(id); return c && c.locked; });
-    rec.lock = locked.length === 1 ? locked[0] : null;
+    const lr = d.roles.find(r => r && r.role === 'lock') || {}, locked = rec.cand.filter(id => { const c = byId(id); return c && c.locked; });
+    const lockedInPair = rec.pair.filter(id => locked.includes(id));   // two cards in one phase lock two: the pair's own locked one is this card's
+    rec.lock = (lr.read || ['lock']).includes('lock') ? (locked.length === 1 ? locked[0] : (lockedInPair.length === 1 ? lockedInPair[0] : null)) : null;   // the lock role's read: the one of the candidates that turned locked
     const live = rec.cand.filter(id => { const c = byId(id); return c && c.zone === 'ready' && !c.locked; });
     const names = [rec.card.toLowerCase(), rec.card.toLowerCase().replace(/^\S+\s+/, '')];   // 'Toreador Grand Ball' or 'Grand Ball'
-    const fr = d.roles.find(r => r && r.role === 'free') || {}; let free = null, via = null;
+    const others = d.roles.filter(r => r && r.role !== 'free').map(r => String(r.token || '').toLowerCase()).filter(Boolean);   // another role's token names the card too ('Grand Ball: does not unlock'): never the free one's
+    const newToks = id => { const was = [...((rec.toks0 || {})[id] || [])]; return (((byId(id) || {}).counters) || []).filter(x => typeof x === 'string').filter(x => { const k = was.indexOf(x); if(k >= 0){ was.splice(k, 1); return false; } return true; }); };
+    const nPick = ((d.pick || {}).n | 0) || 2, fr = d.roles.find(r => r && r.role === 'free') || {}; let free = null, via = null;
     for(const how of (fr.read || [])){
-      const ids = how === 'pair' ? (rec.lock && rec.pair.length === 2 && rec.pair.includes(rec.lock) ? rec.pair.filter(id => id !== rec.lock) : [])
-        : how === 'token' ? live.filter(id => ((byId(id) || {}).counters || []).some(x => typeof x === 'string' && names.some(n => x.toLowerCase().includes(n))))
+      const ids = how === 'pair' ? (rec.lock && rec.pair.length === nPick && rec.pair.includes(rec.lock) ? rec.pair.filter(id => id !== rec.lock) : [])
+        : how === 'token' ? live.filter(id => newToks(id).some(x => { const lx = x.toLowerCase(); return !others.includes(lx) && names.some(n => lx.includes(n)); }))
         : how === 'only' ? (rec.lock ? live : []) : [];
       if(ids.length === 1){ free = ids[0]; via = how; break; }
     }
-    rec.free = free; rec.via = via; rec.cands = free ? null : live;
+    if(rec.answer && live.includes(rec.answer)){ free = rec.answer; via = 'answer'; }   // they said it before we asked
+    rec.free = free; rec.via = via; rec.live = live; rec.cands = free ? null : live;
     this._emit('memo', { seat: st, card: rec.card, lock: rec.lock ? (byId(rec.lock) || {}).name : null, free: free ? (byId(free) || {}).name : null, via, cands: free ? null : live.map(id => (byId(id) || {}).name) });
-    this.o.log('memo: ' + rec.who + '\u2019s ' + rec.card + ' -- locked ' + (rec.lock ? (byId(rec.lock) || {}).name : '?') + ', free ' + (free ? (byId(free) || {}).name + ' (' + via + ')' : 'open: ' + live.map(id => (byId(id) || {}).name).join(' / ')));   // the bot's own log (the console), never a table line
+    this.o.log('memo: ' + rec.who + '’s ' + rec.card + ' -- locked ' + (rec.lock ? (byId(rec.lock) || {}).name : '?') + ', free ' + (free ? (byId(free) || {}).name + ' (' + via + ')' : 'open: ' + live.map(id => (byId(id) || {}).name).join(' / ')));   // the bot's own log (the console), never a table line
     if(!free && live.length >= 2 && d.ask && this._isSpokesBot()){
       const nms = live.map(id => (byId(id) || {}).name); rec.asked = true;
       this.chat(String(d.ask).replace('{owner}', rec.who).replace('{cands}', nms.length === 2 ? nms.join(' or ') : nms.slice(0, -1).join(', ') + ' or ' + nms[nms.length - 1]));   // a question to a human (the tier rule)
     }
   }
-  _hMemoChat(who, txt){              // the owner's public answer -- every bot reads it (only one asked); a line that names exactly one candidate
-    const rec = (this._hMemo || []).find(r => r.who === who && !r.open && !r.dead && !r.free && r.cands && r.cands.length >= 2 && Date.now() - r.resolvedAt < 600000); if(!rec) return false;
-    const cs = this._seatCards(rec.seat), nm = id => ((cs.find(c => c && c.id === id) || {}).name) || '', body = String(txt || '').toLowerCase();
-    const base = id => nm(id).toLowerCase().replace(/\s*\(g\d+\)$/, ''), esc = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    let hit = rec.cands.filter(id => base(id) && body.includes(base(id)));
-    if(hit.length !== 1){ const fw = id => base(id).split(/[\s,]+/)[0], fs = rec.cands.map(fw);
-      hit = rec.cands.filter(id => { const w = fw(id); return w.length >= 3 && fs.filter(x => x === w).length === 1 && new RegExp('(^|[^a-z])' + esc(w) + '([^a-z]|$)').test(body); }); }
-    if(hit.length !== 1) return false;
-    rec.free = hit[0]; rec.via = 'answer'; rec.cands = null;
-    this._emit('memo', { seat: rec.seat, card: rec.card, free: nm(hit[0]), via: 'answer' });
-    this.o.log('memo: ' + who + '\u2019s ' + rec.card + ' -- free ' + nm(hit[0]) + ' (their answer)');
-    return true;
+  _hMemoChat(who, txt){              // the owner's public answer -- every bot reads it (only one asked): a line naming exactly one candidate, from the play line until their turn ends (through their next turn when it ended before any phase line); a later answer corrects an earlier one
+    const pl = (this.players || []).find(q => q && q.name === who); if(!pl || pl.bot || !pl.seat || pl.seat === this.seat) return false;
+    const recs = this._hMemoOf(pl.seat).filter(r => !r.dead && r.winLeft > 0); if(!recs.length) return false;
+    const cs = this._seatCards(pl.seat), nm = id => ((cs.find(c => c && c.id === id) || {}).name) || '', body = this._hMemoSoft(txt);
+    const base = id => this._hMemoSoft(nm(id)).replace(/\s*\(g\d+\)$/, ''), esc = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    for(const rec of recs.slice().reverse()){   // the latest card first
+      const pool = rec.open ? rec.cand : rec.live; if(!pool || pool.length < 2) continue;
+      let hit = pool.filter(id => base(id) && body.includes(base(id)));
+      if(hit.length !== 1){ const fw = id => base(id).split(/[\s,]+/)[0], fs = pool.map(fw);
+        hit = pool.filter(id => { const w = fw(id); return w.length >= 3 && fs.filter(x => x === w).length === 1 && new RegExp('(^|[^a-z])' + esc(w) + '([^a-z]|$)').test(body); }); }
+      if(hit.length !== 1) continue;
+      if(rec.open){ rec.answer = hit[0]; return true; }   // before the reading: used when it is made
+      if(rec.free === hit[0] && rec.via === 'answer') return true;
+      rec.free = hit[0]; rec.via = 'answer'; rec.cands = null;
+      this._emit('memo', { seat: rec.seat, card: rec.card, free: nm(hit[0]), via: 'answer' });
+      this.o.log('memo: ' + who + '’s ' + rec.card + ' -- free ' + nm(hit[0]) + ' (their answer)');
+      return true;
+    }
+    return false;
   }
   _pubCounters(c, memo){             // v0.6.221 (D-113): the pub's counters -- a card's named counters (D-113 (2): the pub never carried them, so a bot's Smiling Jack took its owner's pool while no seat paid -- the victims read the pub; a NUMBER, _addCounter's, stays off), else this bot's own tokens (_memoMap); 12 a card, 64 characters, as the server keeps them. Never both: named counters are a COUNT other seats read (Jack's victims pay one pool each), so a token beside them would be paid as pool
     const own = Array.isArray(c.counters) ? c.counters : [];
@@ -5660,7 +5679,7 @@ class Bot {
     if(!balls.length) return false;
     /* v0.6.225 (round C, D-113 (3)): each Ball whose free Toreador is known (read, or answered) frees that one alone; one Ball still
        unknown keeps the generous reading (any Toreador of theirs) */
-    const known = balls.map(b => (this._hMemo || []).find(r => r.seat === st && !r.dead && r.cardId === b.id && r.free));
+    const known = balls.map(b => this._hMemoOf(st).find(r => !r.dead && r.cardId === b.id && r.free));
     if(known.some(r => !r)) return true;
     return known.some(r => r.free === av.id);
   }
@@ -6744,6 +6763,7 @@ class Bot {
       }
     }
     fresh.forEach(c => this._threatNote(m.seat, c));
+    if(m.seat !== this.seat && this.opp && this.opp[m.seat] && this.opp[m.seat].memo) this._hMemoBoard(m.seat);   // v0.6.225 (the egress review): a human's lasting choice read on their board after the Phase line
   }
   _threatNote(seat, c){
     this._noteObserved(seat, c.name);
@@ -8755,8 +8775,8 @@ class Bot {
     const t = stripTags(html).trim();
     if(who !== this.o.name) this._evRecord(who, t, 'log');   // v0.6.176: the event log (my own lines are recorded at send)
     let m;
-    if(who !== this.o.name){ if(L12.debugOn.test(t)) this._debugSeatSet(who, true); else if(L12.debugOff.test(t)) this._debugSeatSet(who, false); }
-    if(who !== this.o.name) this._hMemoLog(who, t);   // v0.6.225 (D-113 (3)): a human's lasting choice (Toreador Grand Ball's pair)   // v0.6.201: a bot at the table announced DEBUG mode -- I look away from its open hand
+    if(who !== this.o.name){ if(L12.debugOn.test(t)) this._debugSeatSet(who, true); else if(L12.debugOff.test(t)) this._debugSeatSet(who, false); }   // v0.6.201: a bot at the table announced DEBUG mode -- I look away from its open hand
+    if(who !== this.o.name) this._hMemoLog(who, t);   // v0.6.225 (D-113 (3)): a human's lasting choice (Toreador Grand Ball's pair)
     /* v0.6.110 (R2, #11, Johan's decision A): the SHORT-TERM ACTION MEMORY.
        Any action-shaped line from another seated player replaces what I
        remember; the memory lives until the actor's "It resolves" or until the
@@ -10035,7 +10055,7 @@ class Bot {
     const txt = String(msg || '').trim();
     if(this._phaseWait) this._phaseNudge(who, txt, 'chat');   // v0.6.165: a human's quick phrase answers the combat step
     this._holdHook(who, -1, txt);                              // v0.6.95: chat-side hold fallback ('hold on' pauses, 'carry on'/'resume'/'it resolves' release)
-    if(this._hMemo) this._hMemoChat(who, txt);                 // v0.6.225 (D-113 (3)): the owner's answer naming their Grand Ball's free Toreador
+    this._hMemoChat(who, txt);                                 // v0.6.225 (D-113 (3)): the owner's answer naming their Grand Ball's free Toreador
     if(this._refCall && !this._refCall.closed && /^(no votes from me|i abstain|abstain)\.?$/i.test(txt)){ this._refCall.heard.add(who); this._refCall.paused.delete(who); this._refCall.arm(); }   // v0.6.122: a bot's abstain bubble (and a human typing the same) counts as having spoken
     this._narrWho = who; this._parseCombatNarration(txt); this._narrWho = null;   /* v0.6.183 */   // v0.6.156: the four opp-parsers (taken / press / maneuver / Crows / Grapple) now live in ONE method fed from BOTH tiers -- see _parseCombatNarration
     if(this._vWait && who === this._vWait.who && /^(pass|no|nope|done|it resolves|resolve( it)?|go on)\b[.!]*$/i.test(txt) && this._vwResolve('pass', /^it resolves/i.test(txt))) return;   // v0.6.204 (F10): typed, the same answer

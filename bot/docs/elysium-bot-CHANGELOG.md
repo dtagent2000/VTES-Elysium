@@ -42,21 +42,39 @@
     less the locked one, a custom token naming the card, their only other candidate; still open, the bot that speaks for the
     table asks once in chat (`NAME, your Toreador Grand Ball: which Toreador acts unblocked — A or B?`), and the owner's answer
     naming one candidate is every bot's memory. `_humanBallFree`: a Ball whose free Toreador is known frees that one alone; one
-    still unknown keeps the generous rule. The readings go to the bot's own log (`memo: …`), never a table line; a `memo` trace
-    row records each. The player guide's "Where its understanding ends" names the question. Section 170: 6/0; 1/5 on v0.6.224's
-    bytes (170f, the identity pin, green on both by design).
+    still unknown keeps the generous rule. The records live in the table model (`this.opp[seat].memo`, reset at every deal). The
+    readings go to the bot's own log (`memo: …`), never a table line; a `memo` trace row records each. The player guide's "Where its
+    understanding ends" names the question. The undirected lines a human's client may suffix with a leftover target (a hunt, an
+    own-vampire rescue, leave torpor, an undirected card action) are read with it. Section 170: 16/0; 10/6 on the candidate the
+    review read (170k, l, n, o, p, q), 1/15 on v0.6.224's bytes (170f, the identity pin, green on both by design).
+  - *The egress review* (fresh context, 12 findings: half-done 3, rule-missed 2, test-weakened 2, unproven 3, stale-doc 2; 12 fixed):
+    the records were never reset between games (a rematch's card ids start again at c1, so game 2's Ball could inherit game 1's free
+    one) — now in the table model; the descriptor's `pick.n` and the lock role's `read` were written, never read — now read; the
+    token read took any token naming the card, the lock's own text and a token left from before the play line included — now only a
+    new one, not another role's; the fixture stubbed the bot's log lines (170j now captures them); 170a's actor was also the free one
+    (170h, 170i); the readings at an action line and at the turn's end, two Balls and the board's 600 ms lag were untested — the
+    lag also read the lock too early, now read on their next board (170m–o); the answer window, corrections and accents (170p);
+    "neither misled the bots" was wrong — the leftover target hid a hunt from every bot (170q, the handoff's ask); the evidence's
+    chat lines; the guide's condition ("and", not "or"; tokens), the spec's reading paths and end, the D-113 quote, D-101's list.
   - *Predictions* (registered before any measurement): (C1) held — IDENTICAL on the 240, the V5 smoke and the Toreador 600 against
-    v0.6.224's release bytes (the version set back); (C2) held — `ana-gates.py` PASS; (C3, restated before any measurement) held at
+    v0.6.224's release bytes (the version set back: the 240's 240, the V5 smoke's 168, the 600's 600); (C2) held — `ana-gates.py`
+    PASS; (C3, restated before any measurement) held at
     two human tables in main's play-test rig (client v2.6.174, srv-2.6.50; the human with a Ball-heavy Toreador test deck against
     Hanna, tremere, the prey, and Viktor, nosferatu, the predator; Standard 3 s). (a) `Catalina Vega plays Toreador Grand Ball.
     Target: Flávio Gonçalves.` and Flávio locked: both bots read "free Catalina Vega (pair)", nobody asked; Catalina's hunt: both
     "a human's Toreador Grand Ball … not blocked"; the third Toreador's hunt was weighed as any block — Hanna 0.82, under the bar,
     Viktor 1.31, blocked with The Warrens (stealth 1 against intercept 2). (b) The Ball played with no target and Nik Sikko locked:
-    both bots read "free open: Kathy Glens / Mkhokheli", the speaker (Hanna) asked once, Viktor did not; the answer "Mkhokheli"
-    became both bots' memory; a round later Mkhokheli's hunt went unblocked and Kathy's was weighed as any (Hanna: no usable
-    intercept; Viktor 0.56).
+    both bots read "free open: Kathy Glens / Mkhokheli", the speaker (Hanna) asked once in chat (`Johan, your Toreador Grand Ball:
+    which Toreador acts unblocked — Kathy Glens or Mkhokheli?`), Viktor did not; the answer "Mkhokheli" became both bots' memory; a
+    round later Mkhokheli's hunt went unblocked and Kathy's was weighed as any (Hanna: no usable intercept; Viktor 0.56). (c) Both
+    ran on the candidate's bytes; a third table on the release bytes locked Flávio and entered the minion phase in one step: the bots
+    read on the board after the Phase line (locked Flávio, open Catalina / Mkhokheli; Hanna asked once, the answer read), and the free
+    one's hunt carrying a leftover target (`Mkhokheli hunts. Target: Flávio Gonçalves.`) was a hunt to both bots, unblocked, while
+    Catalina's was weighed as any (0.35, 0.56).
   - *Found at the tables* (main's, in the handoff): the client's "Unlock all cards?" unlocks the Toreador a Ball locked (the human
-    re-locks it); the target aimed for the Ball's play line sticks and rides the next action line. Neither misled the bots.
+    re-locks it; the bots keep the lock they read); the target aimed for the Ball's play line sticks and rides the next action line —
+    `Catalina Vega hunts. Target: Flávio Gonçalves.` reached no bot as a hunt (the review read it in the trace; no harm there, Catalina
+    being the free one). The bots now read the suffixed undirected lines; the handoff asks main about the target.
   - Gates on the release bytes: GATES.
 - **v0.6.224 (14 Nov 2026)** — Round B, RULINGS D-114 (Johan's "kör", 13 Nov 20:13 and 21:45): Smiling Jack's burn weighed by its
   price, `specs/spec-jack-burn-2026-11-13.md`. Two steps, each with its own footprint, on round A (v0.6.223).

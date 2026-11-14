@@ -14,8 +14,8 @@ GATES_LINE
 ## What v0.6.225 did
 D-113 (3)–(4): every bot reads a human's Toreador Grand Ball — the locked one, then the free one from the play line's pair, a token
 or the only candidate — and, still open, the speaker asks once in chat; the answer is every bot's memory, and only the free one's
-non-bleed actions go unblocked. The cardfx `memo` descriptor carries the card's roles and question. Two human tables in main's
-play-test rig: the pair read and the question with its answer both held.
+non-bleed actions go unblocked. The cardfx `memo` descriptor carries the card's roles and question. Three human tables in main's
+play-test rig: the pair read, the question with its answer, and the reading on the board after the Phase line held.
 
 ## Next (Johan's order of 13 Nov 21:45)
 1. O-40 (Jack's price) when Johan has answered; Toreador's eight proposals (Johan's "kör" each).
