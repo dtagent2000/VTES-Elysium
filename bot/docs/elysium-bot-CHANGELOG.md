@@ -49,6 +49,14 @@
     bars at least one action rise (66 % → at least 75 %); Toreador's paired VP on the 600 not wholly below 0. (F8) `ana-gates.py`
     PASS on the 240, the V5 smoke and the 600. (F9) the ledger: 11 FULL rows lose FULL to a discipline line with no mode (13 less
     Paragon and Scalpel Tongue); Eyes of the Wild stays FULL.
+  - *Amended before any measurement* (the code found it: Eyes of the Wild's route is reached only when the block decision counts a
+    locked body, and it counted only a wake's — on the 600 a locked Toreador prince blocked through Second Tradition 10 times against
+    Ventrue's 244, Toreador carries no wake): the block decision counts the locked routes `_commitBlock` takes first when no unlocked
+    body is there (decision == pick; Second Tradition, Guard Dogs on a bleed, Eyes of the Wild). (F1) and (F2) withdrawn — Ventrue
+    (Second Tradition) and Nosferatu (Guard Dogs) sit in every table. Instead: (F1′) on the 240 every DIVERGED match first differs at
+    a block decision of a seat whose eligible bodies were all locked; Ventrue's Second Tradition (88) and Nosferatu's Guard Dogs (135)
+    through the route rise; no deck's paired VP interval wholly beyond ±0.15. (F2′) on the V5 smoke the same, and `ana-gates.py` PASS.
+    (F10) on the 600 Toreador's Second Tradition through the route rises from 10 to at least 50.
 - **v0.6.227 (14 Nov 2026)** — Round E, the BOARD's hotseat line (Johan, 14 Nov 12:06: "... och hotseattappet"): the
   hotseat table dropped a bot's Pass in the bleed-modifier window. The cause, in round A's offline traces (the actor's stale-answer
   row in the same millisecond as the target's react snapshot): the hotseat bridge delivers a line in the same call, so the target's

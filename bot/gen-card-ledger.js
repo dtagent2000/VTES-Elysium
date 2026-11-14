@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-card-ledger.js v1.1.2 (13 Nov 2026, bot v0.6.221: a master pick counts only when it was played; v1.1.1 12 Nov, bot v0.6.219;
+/* gen-card-ledger.js v1.1.3 (14 Nov 2026, bot v0.6.228: the verdict asks a mode for every discipline line of KRCG's text -- coverage v1.1.47;
+   v1.1.2 13 Nov 2026, bot v0.6.221: a master pick counts only when it was played; v1.1.1 12 Nov, bot v0.6.219;
    v1.1.0 6 Nov, bot v0.6.217, RULINGS D-108) -- THE CARD LEDGER: one generated row per library card of a deck set
    (default: the V5 precons) and every vampire of their crypts, so a V5 wave has a definition of done ("these rows turn playable")
    instead of a feeling.
@@ -40,7 +41,7 @@
      default decks: every deck-*.json whose name starts with "V5 " (gen-precon.js writes them).                                         */
 
 const fs = require('fs'), path = require('path');
-const LEDGER_VERSION = '1.1.2';   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
+const LEDGER_VERSION = '1.1.3';   // v1.1.3 (14 Nov 2026, bot v0.6.228, round F): the discipline-line check (COV.coverDeck's textOf: KRCG's text when vtes.json is here)   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
 
 /* ---- the crypt (v1.1.0): the ability text, its effect classes, the readers that model it ---- */
 const SECT = '(?:Anarch|Camarilla|Independent|Sabbat|Laibon)';
@@ -210,6 +211,16 @@ function cryptSelfTest(quiet){   // returns the number of failed checks; quiet =
   eq(masterPlayed([M('master-play', ['Villein']), M('villein', ['Villein']), M('action', [])], 0, 'Villein'), true, 'Villein: its own decide is skipped');
   eq(masterPlayed([M('master-play', ['Toreador Grand Ball', 'Toreador Grand Ball']), { bot: 'B1', type: 'grand-ball', data: {} }, M('action', ['Toreador Grand Ball', 'Toreador Grand Ball'])], 0, 'Toreador Grand Ball'), true, 'its own row, the replacement of the same name drawn');
   eq(masterPlayed([M('master-play', ['Blood Doll']), M('action', [], { bot: 'B2' })], 0, 'Blood Doll'), false, 'another bot\'s row says nothing; no row of mine after it');
+  // v1.1.3 (round F, coverage v1.1.47): the discipline lines -- a superior line with no mode (Perfect Paragon's auto entry), a combination
+  // read as two single disciplines (Scalpel Tongue before the round), an either-or with one alternative missing, an at-less basic mode
+  const G = COV.discLineGaps, PP = '[pre] Only usable during the polling step of a political action. This vampire gets +3 votes.\n[PRE] Allies and younger vampires get -1 intercept.';
+  eq(G({ modes: [{ at: 'pre' }] }, PP), ['PRE'], 'a superior line with no mode');
+  eq(G({ modes: [{ at: 'pre' }, { at: 'PRE' }] }, PP), [], 'every line modelled');
+  eq(G({ modes: [{ at: 'cel' }, { at: 'pre' }, { at: 'CEL' }, { at: 'PRE' }] }, 'Only usable during the polling step.\n[cel][pre] Choose a vampire.\n[CEL][PRE] As above.'), ['cel+pre', 'CEL+PRE'], 'a combination is one requirement');
+  eq(G({ modes: [{ at: 'obf' }, { at: 'OBF' }, { at: 'THA' }] }, '[obf] or [tha] Do X.\n[OBF] or [THA] Do Y.'), ['tha'], 'an either-or: each alternative');
+  eq(G({ modes: [{ at: null }] }, '[pro] +1 intercept.'), [], 'an at-less mode covers a basic line');
+  eq(G({ modes: [{ at: null }] }, '[PRO] +1 intercept.'), ['PRO'], 'but not a superior one');
+  eq(G({ modes: [] }, 'Requires a ready Toreador. [ACTION MODIFIER] +1 stealth.'), [], 'no discipline line, no gap');
   if (!quiet || bad) console.log('gen-card-ledger --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed'));
   return bad;
 }
@@ -272,7 +283,7 @@ function main(){
   const rowKey = name => { const h = COV.lookup(name), canon = h ? h.name : name, k = krcgOf(canon, name); return k ? 'id' + k.id : canon; };
   const rows = new Map();
   for (const d of decks){
-    const { libRows } = COV.coverDeck(d.deck);
+    const { libRows } = COV.coverDeck(d.deck, krcg ? (canon, name) => { const k = krcgOf(canon, name); return k ? (k.card_text || '') : null; } : null);   // v1.1.3: a discipline line with no mode is PARTIAL
     for (const r of libRows){
       const key = rowKey(r.name), kc = krcgOf(r.canon, r.name);
       if (!rows.has(key)) rows.set(key, { card: kc ? (kc.printed_name || kc.name) : (r.canon || r.name), names: new Set(), verdict: r.verdict, per: r.per, e: r.e, decks: {}, copies: 0, uses: 0, usesBy: {}, seated: 0, verdicts: new Set(), kc });
@@ -334,6 +345,7 @@ function main(){
        bloodAdd ... whose main effect is what is missing), is named as such -- the rider is listed, never counted as the effect */
     const ks = new Set();
     x.per.filter(p => !p.consumed).forEach(p => {
+      if (p.textLine){ ks.add(master + '(a discipline line with no mode)'); return; }   // v1.1.3: the card text's line, not an fx key
       const keys = p.fxKeys === '\u2014' ? [] : p.fxKeys.split(',').filter(Boolean), main = keys.filter(meaningful);
       if (!keys.length) ks.add(master + '(a mode with no effect data)');
       else if (!main.length) ks.add(master + '(riders only: ' + keys.join('+') + ')');

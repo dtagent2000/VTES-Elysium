@@ -15,7 +15,8 @@
   "18 Sep 2026 (night): + Anarch Troublemaker -- 75 lib + 20 crypt = 95.",
   "16 Oct 2026 (R4): + the six V5 masters the auto tier mis-certified (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Austria, Haven Uncovered) -- 85 lib + 20 crypt = 105.",
   "29 Oct 2026 (V5 wave 1, RULINGS D-98): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor's Hand, Sword of the Archangel, Invigorate -- 95 lib + 20 crypt = 115.",
-  "3 Nov 2026 (V5 wave 4, RULINGS D-106): + Oblivion, Charisma, Depravity, Terrifying Visage, Monster, Saulot's Avenging Fist, Saulot's Guiding Wisdom, Regent, Toreador Grand Ball, Change of Target, Scalpel Tongue, Toreador Justicar -- 136 lib + 20 crypt = 156."
+  "3 Nov 2026 (V5 wave 4, RULINGS D-106): + Oblivion, Charisma, Depravity, Terrifying Visage, Monster, Saulot's Avenging Fist, Saulot's Guiding Wisdom, Regent, Toreador Grand Ball, Change of Target, Scalpel Tongue, Toreador Justicar -- 136 lib + 20 crypt = 156.",
+  "14 Nov 2026 (round F, bot v0.6.228): + Perfect Paragon, Elysium: The Palace of Versailles, Eyes of the Wild; Scalpel Tongue's requirement is one ('cel+pre') -- 139 lib + 51 crypt = 190 (the crypt count since crypt wave A, v0.6.219)."
  ],
  "lib": {
   "Blood Doll": {
@@ -3002,29 +3003,14 @@
    ],
    "modes": [
     {
-     "at": "cel",
+     "at": "cel+pre",
      "when": "polling",
      "fx": {
       "abstainVoter": true
      }
     },
     {
-     "at": "pre",
-     "when": "polling",
-     "fx": {
-      "abstainVoter": true
-     }
-    },
-    {
-     "at": "CEL",
-     "when": "polling",
-     "fx": {
-      "abstainVoter": true,
-      "voterBloodBurn": 1
-     }
-    },
-    {
-     "at": "PRE",
+     "at": "CEL+PRE",
      "when": "polling",
      "fx": {
       "abstainVoter": true,
@@ -3032,7 +3018,7 @@
      }
     }
    ],
-   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Only usable during the polling step of a political action. [cel][pre] Choose a vampire who has cast votes or ballots in this referendum. The chosen vampire is locked and abstains (this cancels the chosen vampire's votes and ballots). [CEL][PRE] As above, and the chosen vampire burns 1 blood.' fx.abstainVoter: the polling-step abstain (_bestAbstainFor): on my own referendum, a vampire the count says has cast votes against my side (its seat cast all its titles' votes, or the rest could not have cast them alone), the largest, when cancelling them turns the result; then the table may answer before the verdict (the poll reopens); a reaction on another's referendum is not built (spec §4); not in a referendum that passes automatically [PIB 20150105]."
+   "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Only usable during the polling step of a political action. [cel][pre] Choose a vampire who has cast votes or ballots in this referendum. The chosen vampire is locked and abstains (this cancels the chosen vampire's votes and ballots). [CEL][PRE] As above, and the chosen vampire burns 1 blood.' fx.abstainVoter: the polling-step abstain (_bestAbstainFor): on my own referendum, a vampire the count says has cast votes against my side (its seat cast all its titles' votes, or the rest could not have cast them alone), the largest, when cancelling them turns the result; then the table may answer before the verdict (the poll reopens); a reaction on another's referendum is not built (spec §4); not in a referendum that passes automatically [PIB 20150105]. Round F (14 Nov 2026, bot v0.6.228): '[cel][pre]' is ONE requirement -- KRCG writes an either-or as '[obf] or [tha]' (Dance with the Devil) and a combination as adjacent markers (Absolute Tyranny [pot][pre]); the four single-discipline modes let Min-seo (no Presence) play it on the 600. Now 'cel+pre' / 'CEL+PRE' (_modeUsableBy reads '+' as both)."
   },
   "Toreador Justicar": {
    "t": [
@@ -3054,6 +3040,88 @@
     }
    },
    "note": "V5 wave 4 (3 Nov 2026, bot v0.6.217, RULINGS R-43 / D-106). 'Title. Choose a ready Toreador. Successful referendum means this card is put on the chosen Toreador to represent the unique Camarilla title of Toreador Justicar. In this referendum, each ready Toreador gets +1 vote.' ref.fx.titleCard: the term is a ready Camarilla Toreador [LSJ 20041026] (mine: the one it gains the most votes on); on a pass the card goes on it and REPLACES its printed title (Justicar, 3 votes; one title per vampire). Not called when a Toreador Justicar is in play [LSJ 20100129]. ref.fx.votesPerReady: in this referendum each ready Toreador at the table gets +1 vote."
+  },
+  "Perfect Paragon": {
+   "t": [
+    "mod"
+   ],
+   "cost": {
+    "blood": 1
+   },
+   "req": {
+    "disc": [
+     "pre"
+    ]
+   },
+   "modes": [
+    {
+     "at": "pre",
+     "fx": {
+      "votes": 3
+     }
+    },
+    {
+     "at": "PRE",
+     "fx": {
+      "icpVs": {
+       "n": -1,
+       "who": [
+        "ally",
+        "younger"
+       ]
+      }
+     }
+    }
+   ],
+   "note": "Round F (14 Nov 2026, bot v0.6.228; the Toreador guide check's finding A). '[pre] Only usable during the polling step of a political action. This vampire gets +3 votes. [PRE] Allies and younger vampires get -1 intercept.' The auto tier had the [pre] mode alone (kept byte for byte: _voteBoosts). Mode 2: fx.icpVs {n, who} -- the blockers of these kinds get n intercept this action; the actor reads it as -n stealth against THAT blocker (_bestStealthFor / _stealthStack through _condBlockerKind: an ally, or a vampire younger by the capacity in play, D-111; an unknown blocker fails closed) and books it on the counter as stealth, with the card's own words on the line; a later blocker it does not reach takes it off again (_condStealthAdjust). Played after a block attempt, as every stealth card (R-12), though KRCG rules it needs none [LSJ 20020612]."
+  },
+  "Elysium: The Palace of Versailles": {
+   "t": [
+    "master"
+   ],
+   "cost": {
+    "pool": 2
+   },
+   "unique": true,
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "votes": 1,
+      "votesEach": {
+       "title": true,
+       "sect": "Camarilla"
+      }
+     }
+    }
+   ],
+   "note": "Round F (14 Nov 2026, bot v0.6.228; BOARD 'Three auto readings'). 'Unique location. You can lock this location during the polling step of a political action to give each titled Camarilla vampire you control +1 vote.' The auto tier read a flat +1. fx.votesEach {title, sect}: the votes are fx.votes for EACH ready vampire of mine that matches -- a title (_titleOf: a title card replaces the printed one, R-43) and the printed sect (_vampSect); none, no lock (_voteBoosts)."
+  },
+  "Eyes of the Wild": {
+   "t": [
+    "react"
+   ],
+   "req": {
+    "clan": [
+     "Gangrel"
+    ]
+   },
+   "modes": [
+    {
+     "at": null,
+     "use": "react",
+     "when": "lockedBlock",
+     "fx": {
+      "unlock": true,
+      "interceptPaid": 1,
+      "interceptPaidBlood": 1,
+      "relockIfNoBlock": true
+     }
+    }
+   ],
+   "note": "Round F (14 Nov 2026, bot v0.6.228; BOARD 'Three auto readings'). 'Only usable by a locked Gangrel. This Gangrel unlocks and attempts to block. During this action, this Gangrel can burn 1 blood to get +1 intercept. Lock this Gangrel after action resolution if they did not block this action.' The auto tier read +1 intercept on any blocker, and the intercept finder asked no clan (a Banu Haqim played it in a fixture). when:lockedBlock -- the sleeper route of _commitBlock (Second Tradition's: _bestUnlockReactFor, now with the card's clan, _entryReqOk), fx.unlock; fx.interceptPaid / interceptPaidBlood -- the paid +1 taken at the attempt when the stealth standing beats the intercept and the Gangrel keeps a blood (once each action, the Bowl's rule; KRCG sets no limit), named on the attempt line; fx.relockIfNoBlock -- a Gangrel whose block failed is locked again when the action ends (_clearPending). [ANK 20181122-2]: usable by a vampire already attempting to block -- not built (the route raises a locked body only)."
   }
  },
  "crypt": {

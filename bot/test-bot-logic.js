@@ -13292,6 +13292,104 @@ async function connectWithRetry(client, tries = 30){
         end([C]); }
     }
 
+    /* 173) v0.6.228 -- ROUND F ("Toreador 100 %", Johan 14 Nov): Perfect Paragon [PRE] as a stealth against an ally or a younger blocker
+       (and off again for a later blocker it does not reach), Versailles' vote per titled Camarilla vampire, Scalpel Tongue's one
+       requirement, Eyes of the Wild (a locked Gangrel's block, its paid +1, the relock, the clan), the locked routes in the block
+       decision (decision == pick: Second Tradition's +2 for a locked prince), the Grand Ball on the turn it pays (the look-ahead rule).
+       LAST LINE OF 173 is the closing brace below. */
+    {
+      console.log('\n[173] v0.6.228 -- round F: Toreador 100 %');
+      const mk173 = (name, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck || 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} });
+        u.seat = 1; u.started = true; u.players = [{ seat: 1, name, online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }, { seat: 3, name: 'Nora', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.say = () => {}; u._restartAskTimer = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.board = []; u.hand = []; u.pool = 20; u.turnSeat = 1; u.table = {}; return u; };
+      const V = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 4, attached: [] }, o || {});
+      const logs = u => u.sent.filter(m => m && m.t === 'log').map(m => String(m.html || '').replace(/<[^>]+>/g, ''));
+      const ev = (u, t) => u.events.filter(e => e.t === 'bot:' + t).map(e => e.d);
+      const blockers = () => ({ 2: { pub: { pool: 20, cards: [V('n1', 'Nik Sikko'), V('m1', 'Massimo Falconi'), V('c1', 'Catalina Vega'), { id: 's1', name: 'Underbridge Stray', kind: 'lib', zone: 'ready' }] } } });
+
+      // a) Perfect Paragon [PRE] for Bret Stryker (capacity 4, superior Presence): +1 stealth against a younger blocker (Nik Sikko, 3) and an
+      //    ally (the Stray), none against one of his age (Massimo, 4) or older (Catalina, 8), none while the attempt has not named its minion
+      { const u = mk173('Hanna'); const bret = V('b1', 'Bret Stryker', { blood: 3 }); u.board = [bret]; u.hand = ['Perfect Paragon']; u.table = blockers();
+        const now = Date.now(); u._actingVamp = { v: bret, n: 1, target: 2, played: new Set(), attemptAt: now };
+        const at = (nm, t) => { u._lastBlockerName = nm; u._lastBlockerSeat = 2; u._lastBlockerAt = t == null ? now : t; const st = u._bestStealthFor(bret, new Set(), 2); return st ? st.name + ' +' + st.s + (st.cond ? ' ' + st.condTo : '') : null; };
+        const r = { younger: at('Nik Sikko'), same: at('Massimo Falconi'), older: at('Catalina Vega'), ally: at('Underbridge Stray'), stale: at('Nik Sikko', now - 1000) };
+        ok(r.younger === 'Perfect Paragon +1 younger' && r.ally === 'Perfect Paragon +1 ally' && r.same === null && r.older === null && r.stale === null,
+           '173a Perfect Paragon [PRE] counts +1 stealth against a younger blocker and an ally only, and not on a stale name (got ' + JSON.stringify(r) + ')'); }
+
+      // b) spent against Nik Sikko: the line says the card's words in the NET_STEALTH shape, the counter +1; then Catalina (older) attempts:
+      //    the +1 comes off (a line says so); Nik again: back on
+      { const u = mk173('Hanna'); const bret = V('b1', 'Bret Stryker', { blood: 3 }); u.board = [bret]; u.hand = ['Perfect Paragon']; u.table = blockers();
+        const av = u._actingVamp = { v: bret, n: 1, target: 2, played: new Set(), attemptAt: Date.now() }; u._ask = { contested: true, target: 2 }; u.tally = { mode: 'block', a: 0, b: 0 };
+        u._lastBlockerName = 'Nik Sikko'; u._lastBlockerSeat = 2; u._lastBlockerAt = Date.now();
+        const st = u._bestStealthFor(bret, av.played, 2); if(st) u._spendStealthCard(st, av, u._ask);
+        const a1 = u._actStealthRaw; u._noteBlockAttempt('Catalina Vega', false, 2); const a2 = u._actStealthRaw; u._noteBlockAttempt('Nik Sikko', false, 2); const a3 = u._actStealthRaw;
+        const L = logs(u), line = L.find(x => /Perfect Paragon \(/.test(x)) || '', cls = line ? u._evClassify('Hanna', line) : null;
+        ok(!!st && a1 === 1 && a2 === 0 && a3 === 1 && line === 'Bret Stryker plays Perfect Paragon (allies and younger vampires get −1 intercept): +1 stealth.' && cls && cls.kind === 'stealth' && cls.n === 1
+             && L.some(x => x === 'Bret Stryker: Perfect Paragon does not reach Catalina Vega (−1 stealth).') && bret.blood === 2 && u.hand.length === 0,
+           '173b the spend books +1 with the card’s words; an older blocker takes it off, a younger one puts it back (got ' + JSON.stringify({ a1, a2, a3, L, cls }) + ')'); }
+
+      // c) Versailles: +1 vote for EACH ready titled Camarilla vampire of mine (two princes: +2); none titled, or a titled Anarch: no lock
+      { const u = mk173('Hanna'); const vers = { id: 'm1', name: 'Elysium: The Palace of Versailles', kind: 'lib', zone: 'ready', locked: false };
+        const cat = V('c1', 'Catalina Vega'), fla = V('f1', 'Flávio Gonçalves'), bret = V('b1', 'Bret Stryker');
+        u.board = [cat, fla, bret, vers]; const b1 = u._voteBoosts(cat).find(b => b.kind === 'inplay');
+        u.board = [bret, vers]; const b2 = u._voteBoosts(bret).find(b => b.kind === 'inplay');
+        u.board = [V('x1', 'Massimiliano'), bret, vers]; const b3 = u._voteBoosts(bret).find(b => b.kind === 'inplay');
+        ok(!!b1 && b1.n === 2 && (b1.each || []).join() === 'Catalina Vega,Flávio Gonçalves' && !b2 && !b3,
+           '173c Versailles: +2 with two princes, no lock with none or a titled Anarch (got ' + JSON.stringify({ b1: b1 && { n: b1.n, each: b1.each }, b2: !!b2, b3: !!b3 }) + ')'); }
+
+      // d) Scalpel Tongue's [cel][pre] is one requirement: Min-seo (no Presence) cannot; Kathy Glens (basic Celerity) the basic level only
+      { const u = mk173('Hanna'); const h = u.fxLookup('Scalpel Tongue'), m = (h && h.e.modes) || [];
+        const use = nm => m.filter(mo => u._modeUsableBy(mo, V('x', nm))).map(mo => mo.at).join(',');
+        const r = { minseo: use('Min-seo'), massimo: use('Massimo Falconi'), flavio: use('Flávio Gonçalves'), kathy: use('Kathy Glens') };
+        ok(r.minseo === '' && r.massimo === 'cel+pre' && r.flavio === 'cel+pre,CEL+PRE' && r.kathy === 'cel+pre',
+           '173d Scalpel Tongue needs Celerity AND Presence (got ' + JSON.stringify(r) + ')'); }
+
+      // e) Eyes of the Wild: no plain intercept for an unlocked Gangrel; the locked route for a locked one (its paid +1, the relock); never a
+      //    Banu Haqim's; the block decision counts the locked Gangrel's paid +1 (1 blood kept) and its body
+      { const u = mk173('Hanna', 'gangrel'); const crow = V('g1', 'Crow', { locked: true, blood: 3 }), dario = V('g2', 'Dario Ziggler', { blood: 3 }), asmin = V('z1', 'Asmin Kobane', { locked: true, blood: 3 });
+        u.board = [crow, dario]; u.hand = ['Eyes of the Wild'];
+        const plain = u._bestInterceptFor(dario, new Set(), null), un = u._bestUnlockReactFor(crow, 'lockedBlock'), banu = u._bestUnlockReactFor(asmin, 'lockedBlock'), banuIc = u._bestInterceptFor(V('z2', 'Asmin Kobane'), new Set(), null);
+        const p = { kind: 'undirected', who: 'Viktor', actingVampName: 'Lloyd Brooks', actorSeat: 2, attempted: new Set(), reacted: new Set() };
+        u.board = [crow]; const icp = u.interceptPotential(p.reacted, p), wb = u._wakeBlockers(p).map(c => c.name).join();
+        crow.blood = 1; const icp1 = u.interceptPotential(p.reacted, p);
+        ok(plain === null && !!un && !!un.paid && un.paid.n === 1 && un.paid.cost === 1 && un.relock === true && banu === null && banuIc === null && icp === 1 && wb === 'Crow' && icp1 === 0,
+           '173e Eyes of the Wild: the locked route only, its paid +1 and relock, the clan read, the decision counts it (got ' + JSON.stringify({ plain, un, banu, banuIc, icp, wb, icp1 }) + ')'); }
+
+      // f-g) the route plays it: Crow unlocks, burns 1 blood for +1 intercept against an undirected action's +1 stealth (one line, the
+      //    attempt's shape); the block fails and the action ends: Crow is locked again. A successful block: no relock row (it locks anyway)
+      for(const okBlock of [false, true]){
+        const u = mk173('Hanna', 'gangrel'); const crow = V('g1', 'Crow', { locked: true, blood: 3 }); u.board = [crow]; u.hand = ['Eyes of the Wild']; u.tally = { mode: 'block', a: 1, b: 0 };
+        const p = u.pending = { kind: 'undirected', who: 'Viktor', actingVampName: 'Lloyd Brooks', actorSeat: 2, attempted: new Set(), reacted: new Set(), contested: false };
+        await u._commitBlock(p, { parts: {} });
+        const L = logs(u), unlocked = !crow.locked, blood = crow.blood, b = u.tally && u.tally.b;
+        if(okBlock) u._clearPending('block succeeded'); else { p.contested = false; p.blockerVamp = null; u._clearPending('resolved'); }
+        const rl = ev(u, 'relock');
+        if(!okBlock) ok(unlocked && blood === 2 && b === 1 && L.includes('Crow plays Eyes of the Wild: unlocks.') && L.includes('Crow attempts to block with +1 intercept (Eyes of the Wild).') && u.hand.length === 0 && crow.locked === true && rl.length === 1,
+           '173f Eyes of the Wild’s route: unlock, 1 blood for +1 intercept on the attempt line, locked again after a failed block (got ' + JSON.stringify({ L, unlocked, blood, b, locked: crow.locked, rl }) + ')');
+        else ok(unlocked && rl.length === 0 && crow.locked === false,
+           '173g a successful block is no relock (the verdict locks the blocker) (got ' + JSON.stringify({ unlocked, rl, locked: crow.locked }) + ')');
+      }
+
+      // h) decision == pick for Second Tradition: a LOCKED prince alone counts its +2 (v0.6.227: 0); beside an unlocked body the route is
+      //    not taken (_pickBlocker takes the body), so it does not count
+      { const u = mk173('Hanna'); const cat = V('c1', 'Catalina Vega', { locked: true, blood: 4 }); u.board = [cat]; u.hand = ['Second Tradition: Domain'];
+        const p = { kind: 'undirected', who: 'Viktor', actingVampName: 'Lloyd Brooks', actorSeat: 2, attempted: new Set(), reacted: new Set() };
+        const icp = u.interceptPotential(p.reacted, p); u.board = [cat, V('m1', 'Massimo Falconi')]; const icp2 = u.interceptPotential(p.reacted, p);
+        ok(icp === 2 && icp2 === 0, '173h a locked prince’s Second Tradition counts +2 with no unlocked body, nothing beside one (got ' + JSON.stringify({ icp, icp2 }) + ')'); }
+
+      // i) the Grand Ball on the turn it pays: Catalina's own scorer calls Kine Resources Contested (the table holds no titles against it) --
+      //    the Ball is played with her free; the table's princes would vote it down (pass 0.08): she would not call it, the Ball waits
+      { const ball = (oppTitles) => { const u = mk173('Hanna'); const cat = V('c1', 'Catalina Vega', { blood: 4 }), bret = V('b1', 'Bret Stryker', { blood: 3 }); u.board = [cat, bret];
+          u.hand = ['Toreador Grand Ball', 'Kine Resources Contested'];
+          const opp = oppTitles ? [V('v1', 'Alexa Draper'), V('v2', 'Brock Sterling'), V('v3', 'Horst von Brühl')] : [V('v1', 'Lloyd Brooks')];
+          u.table = { 2: { pub: { pool: 20, cards: opp } }, 3: { pub: { pool: 20, cards: oppTitles ? [V('w1', 'Alice Chen')] : [] } } };
+          return u._grandBallPlan(); };
+        const r1 = ball(false), r2 = ball(true);
+        ok(!!r1 && r1.grandBall === true && r1.freeT && r1.freeT.name === 'Catalina Vega' && r1.lockT && r1.lockT.name === 'Bret Stryker' && !!r2 && r2.hold === true && /would/.test(r2.why || ''),
+           '173i the Ball when the free Toreador’s scorer calls the referendum, held when it would not (got ' + JSON.stringify({ r1: r1 && (r1.why || r1), r2: r2 && r2.why }) + ')'); }
+    }
+
 
 
     }
