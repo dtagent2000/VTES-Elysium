@@ -42,6 +42,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar).
   Over-strict: `_bestStrengthFor` (any strength bonus), `_inPlayNorms` (my ash heap). Also Saulot's Healing Touch: FULL by the
   auto tier, its text unbuilt. *Done when* each is built and tested, or ruled out.
+- **Three auto readings and a requirement** (round A): Perfect Paragon lacks [PRE] ("Allies and younger vampires get −1
+  intercept"); Versailles gives +1 vote, not +1 per titled Camarilla vampire ("(uncurated" online); Eyes of the Wild reads +1
+  intercept on a lock, not a locked Gangrel's blood burn — and `_bestInterceptFor` asks no clan requirement, so a Banu Haqim
+  played it (166h, 166j, 167a now count the card). The ledger certifies all three FULL. *Done when* curated, graded, the
+  requirement read and the ledger's check asks a mode per discipline line. Docs: the two 13 Nov reports.
 - **V5 wave 3's riders** (`specs/spec-v5-wave3-2026-11-02.md` §4): the amber halves (Anarch Railroad and Fortune Teller Shop for
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
@@ -53,9 +58,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct, for later): Black Chantry's helpsheets and Fifth
   Edition deck guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy (D-43, O-33).
-  D-112: each strategy line is checked against its guide. *Done when* a proposal — what each guide says, where it enters
-  (`DECK_STRATEGY`, the plan, the persona), how it is measured — has Johan's "kör". Docs: RULINGS D-43, O-33;
-  `specs/spec-knowledge-layer.md`.
+  D-112: each strategy line is checked against its guide. Toreador's is done (13 Nov, `reports/REPORT-toreador-guide-check-2026-11-13.md`):
+  17 points, 3 findings, 8 proposals waiting for "kör". *Done when* each deck's proposals have Johan's "kör" or "no". Docs: RULINGS D-43, O-33, D-112; `specs/spec-knowledge-layer.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
@@ -86,7 +90,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   (or they carry every cardfx name), every deck's library names hit a key, and the rebuild ships with a sim footprint.
   Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
 - **No bot burns a Smiling Jack** (13 Nov, v0.6.221): its counters now reach every seat, and `_bestBurnCardFor` reaches only
-  Toreador Grand Ball, at prey and predator. *Done when* D-114 is built (Claude's proposal waits for kör). Docs: RULINGS D-114.
+  Toreador Grand Ball, at prey and predator. *Done when* D-114 is built (kör 13 Nov; round B). Docs: RULINGS D-114, its spec.
 - **A human's bounce of a bot's bleed** is not read by the acting bot; a bot that is a bounce's new target cannot bounce onward.
   *Done when* the client's bounce play line (a pool target) is parsed and section-tested. Docs: RULINGS O-3.
 - **A human's Change of Target after a right-click action** (main, 11 Nov §1) names no vampire or another: `_onCot` misses it.
@@ -148,19 +152,14 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   *Done when* the persona pass (RULINGS O-29) ships with those tests.
 
 ## Measurement debts
-- **The hotseat table runs out most bot-vs-bot reaction windows** (29 Oct; v0.6.211 too): 403 of 467 bleed totals and 101 of 125
-  modifier windows on a pace-0 sim series (the server arena: 0 of 82); the sim matches the real-clock hotseat table. *Done when* a
-  `--real` hotseat match and a browser table say whether bot answers are lost there, and it is fixed or the gate restated per
-  table. Docs: LESSONS L-25, L-26; HOWTO (ana-windows).
+- **The hotseat table drops a bot's Pass in the bleed-modifier window** (29 Oct; v0.6.211; the real clock, 13 Nov): the actor's
+  stale guard reads the target's Pass as an answer to an earlier line, and the window runs out (~15 s): 50 of 53 on round A's
+  offline table, 0 of 44 online at the same pace. *Done when* an offline real-clock table and a browser table show 0. Docs:
+  LESSONS L-25, L-26; `reports/REPORT-table-runs-2026-11-13.md`.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
   vampire, a target) show their END state (`ana-sim-diff.py` reads outcomes). *Done when* rows are cloned at push.
-- **Only a bleed and a pool damage fizzle at an ousted seat** (v0.6.222, `_fizzleIfOusted`): the other actions aimed at a
-  seat or its minions (a rush, a referendum whose terms name it) are not checked; none was seen to resolve after an oust. *Done when* a
-  series counts them, or each resolve checks its target. Docs: CHANGELOG v0.6.222.
-- **A human's chat stealth inside a locked blocker's route beat is lost** (pre-existing; v0.6.222's third review): the chat path
-  needs `blockerVamp`. *Done when* booked in the beat, section-tested.
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.

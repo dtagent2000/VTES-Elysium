@@ -126,11 +126,13 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   VICTIM LOST` row is a lead; dealt vs taken; `LESS, UNEXPLAINED`) · `ana-block.py` (0 violations) · `ana-inv.py` (invariants;
   ~1 flag in 3 matches is the baseline; a new flag kind or a jump = a line the log cannot type (add its kind) or a real bookkeeping
   difference; `ELY_POOL_TRACE=1` names the code line behind a pool change) · `ana-windows.py` (the actor's reactions-only windows: ran out
-  and went through = 0; contests at the clock split blocked / failed; every `stale-answer` row read) · `ana-wait.py` (tempo) ·
+  and went through = 0 — since v1.1 past 2.5 s plus the bots' pace, with the table quiet that long inside the window; a slower window
+  of paced answers is 'answered at the pace'; contests at the clock split blocked / failed; every `stale-answer` row read) · `ana-rare.py` (the rare paths a section proves:
+  superseded combats, held / released turns, rush complies by path, fizzles, resolutions at an ousted seat) · `ana-wait.py` (tempo) ·
   `ana-probe.py` (`probe-order` / `probe-hold` rows) · `ana-cards.py` (uses per card, never-played, untitled plays) ·
   `ana-combat.py` + `ana-combat2.py` (handshake integrity 100 % on a bot-only table, agreement, `hsMiss`) · `ana-rush.py` ·
-  (`ana-windows.py`'s gate of 0 is a server-arena reading: on the hotseat / sim table most bot windows run out, the same at v0.6.211 —
-  BOARD) ·
+  (`ana-windows.py`'s gate of 0 is a server-arena reading: on the hotseat / sim table most bleed-modifier windows run out — the real
+  clock too, round A — BOARD) ·
   `ana-home.py A B` (paired home / blocks / damage / VP) · `ana-open.js` (the opening) · `gen-match-dossier.js <trace>` (one
   reviewable file per match; read Manifests → Endgame / VP → pool trajectories → then hunt) · `gen-trace-harvest.js <dir>`
   (metrics + the price referee: printed vs paid cost; a MISMATCH voids the series) · `gen-batch-review.js` · `gen-null-review.js`.
