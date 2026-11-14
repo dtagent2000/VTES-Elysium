@@ -24,7 +24,7 @@ board       push() → buildPub at drain time (the cards; a card's named counter
 pacing      _pace(kind) / _afterBeat ; the tempo (_waitPlan) ; the hold (_holdFreeze / _holdThaw) ; status() / step() for the
             Bot button
 trace       emit(kind, data) → the arena's / sim's match-NNNN.jsonl (manifest, snapshot, decide, play, plan, through, blocked,
-            block-made, combat-round, wait, game-over, combat-superseded, fizzled, game-resumed, …; 108 kinds)
+            block-made, combat-round, wait, game-over, combat-superseded, fizzled, game-resumed, memo, …; 109 kinds)
 ```
 The three rules that keep the layers apart: tactics READ the plan and never recompute it; every read about an opponent goes
 through `this.opp[seat]` (public evidence only); a decision knob gates decisions only (CLAUDE.md, binding rules).
@@ -46,7 +46,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | Masters, income, banks | `master-play` (`_bestMasterFor`: no `oot`, `_masterReqOk`, `_masterHold`), `income-drain`, `income-direction`, `bank-in`, `lock-income` (one lock, one effect) | pool (≥ 1 left), a ready vampire meeting the requirements, the hand | `play`, `income-*`, `bank`, `unc-blood` |
 | Out-of-turn answers | `_archonFor` / `_playArchon` in the react window; `_ootDebt` at my next turn | the bleed at me, pool | `archon`, `archoned`, `oot-debt` |
 | Act again | `act-again` (`_maybeActAgain`; Monster is a board source) | the ledger, `_keepBlocker`, `_critPool` | `act-again` |
-| Masters on a vampire (v0.6.217) | `_masterHostPlan` (the host or held, `_masterHostOk`; `_grandBallPlan`: the Ball's pair); `_masterNoHost` makes an unhostable one a dead card | the hand, my crypt, `_titleOf`, `_discOf`, `_capOf` | `master-play`, `grand-ball` |
+| Masters on a vampire (v0.6.217) | `_masterHostPlan` (the host or held, `_masterHostOk`; `_grandBallPlan`: the Ball's pair; a human's Ball: `_hMemoLog` → `_humanBallFree`, D-113); `_masterNoHost` makes an unhostable one a dead card | the hand, my crypt, `_titleOf`, `_discOf`, `_capOf` | `master-play`, `grand-ball`, `memo` |
 | If blocked (v0.6.217) | `_ifBlockedStep`: Terrifying Visage, Change of Target (`_cotWorth`; `_noteCotAct` books the action) | the blocker's expected strike, my combat enders | `change-of-target`, `visage` |
 | Polling-step abstain (v0.6.217) | `_bestAbstainFor` / `_playAbstain` in `_callReferendum` (the poll reopens after it) | `rc.agBy`, the seat's title votes | `abstain` |
 | Burn a card in play (v0.6.217; Jack D-114) | `burnCard` (`_bestBurnCardFor`; Jack `_jackBurnValue`); the owner's `_complyBurnCard`; my Jack's worth on `_burnWindowOpens` | the owner's votes; `_planJack`'s reads | `burn-card`, `card-burned` |

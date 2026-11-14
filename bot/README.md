@@ -26,6 +26,7 @@ The folder is deliberately FLAT: the suites, the arena and every tool expect the
 `node --check <file>` → `node --max-old-space-size=4096 test-bot-logic.js` ×3 (a ~2 GB default heap ends it after section 136), each in a frozen snapshot, detached (`timeout 600`; ~300–420 s a run) → `node test-bot-canary.js` (pins the client's log grammar against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it) → `node test-cardfx.js` (when cardfx changed; needs `vtes.json` — fetched, see root `CLAUDE.md`) → `node diag-hb1-smoke.js` (when the browser surface changed) → `node test-bot-hotseat.js` (when anything near the hotseat bridge changed). The full list and when each applies: `CLAUDE.md` "Gates"; the last numbers: `docs/STATUS.md`.
 Mutant isolation for the hold gate: `python3 tools/mutants/mutate-v0_6_198.py /tmp/mut` (every mutant must fail or hang).
 One suite section against any bot file (the destructive check of a new section, sub-minute): `bash tools/run-section.sh <bot.js> <section.js>`.
+A human's Grand Ball at main's play-test rig: `tools/playtest-ball/` (the scenario, its steps in `about`, and a Ball-heavy Toreador test deck; round C).
 
 The ten legacy ad-hoc tests of the v0.6.10x era (not gates, four of them stale reds) were deleted by round C2 (11 Nov 2026; git keeps them): the suite covers their behaviours.
 

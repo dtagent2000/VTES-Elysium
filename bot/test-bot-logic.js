@@ -13014,6 +13014,151 @@ async function connectWithRetry(client, tries = 30){
            '169f under a round of runway still pays; an ally cannot burn Jack (burnBy), my vampire can, and without burnBy the ally could (got ' + JSON.stringify({ low: low && { H: +low.H.toFixed(2), price: +low.price.toFixed(2) }, ally: tA && tA.target.card, vamp: tV && tV.target.card, allyNoBurnBy: tA2 && tA2.target.card }) + ')'); }
     }
 
+    /* 170) v0.6.225 -- ROUND C, RULINGS D-113 (3)-(4) (specs/spec-human-ball-memo-2026-11-14.md): a HUMAN's Toreador Grand Ball read
+       first (the play line's pair, the lock, a token, their only other Toreador), asked last by the bot that speaks for the table, the
+       owner's answer every bot's memory; the cardfx `memo` descriptor gives _memoMap its texts. LAST LINE OF 170 is the closing brace below. */
+    {
+      console.log('\n[170] v0.6.225 -- round C: a human’s Grand Ball and the memo descriptor');
+      const mk170 = (name, seat) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} });
+        u.seat = seat; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: false }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'N', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.say = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.board = []; u.hand = []; u.unc = []; u.pool = 20; u.turnSeat = 1; return u; };
+      const T = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 6, attached: [] }, o || {});
+      const hanna = (names) => names.map((n, i) => T('h' + i, n));
+      const table = (u, cards) => { u.table = { 1: { pub: { pool: 20, cards } }, 3: { pub: { pool: 20, cards: [] } } }; };
+      const ballIn = cards => { cards.push({ id: 'gb1', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', faceDown: false }); };
+      const lock = (cards, name) => { cards.find(c => c.name === name).locked = true; };
+      const act = (u, vamp) => u._humanBallFree({ kind: 'undirected', actingVampName: vamp, actorSeat: 1, who: 'Hanna' });
+      const chats = u => u.sent.filter(m => m && m.t === 'chat').map(m => String(m.msg || ''));
+      const memo = u => u.events.filter(e => e.t === 'bot:memo').map(e => e.d);
+      const endMaster = (...bs) => { for(const b of bs) b._onLog('Hanna', 'Phase: <b>Minion</b>.'); for(const b of bs) if(typeof b._hMemoBoard === 'function') b._hMemoBoard(1); };   // the Phase line, then their board push (guarded: older bytes have no board read)
+
+      // a) the play line names the pair (Catalina acts, Massimo the target), Massimo is locked: Catalina is the free one -- no question
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs);
+        u._onLog('Hanna', '<b>Catalina Vega</b> plays <b>Toreador Grand Ball</b>. Target: <b>Massimo Falconi</b>.');
+        ballIn(cs); lock(cs, 'Massimo Falconi'); endMaster(u);
+        const mm = memo(u);
+        ok(mm.length === 1 && mm[0].free === 'Catalina Vega' && mm[0].via === 'pair' && mm[0].lock === 'Massimo Falconi' && chats(u).length === 0 && act(u, 'Catalina Vega') === true && act(u, 'Kathy Glens') === false,
+           '170a the play line’s pair less the locked one: Catalina acts unblocked, Kathy does not, nobody asks (got ' + JSON.stringify({ mm, chats: chats(u), cat: act(u, 'Catalina Vega'), kathy: act(u, 'Kathy Glens') }) + ')'); }
+
+      // b) no pair on the line ('was played'), two Toreador, one locked: the other is the free one ('only')
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi']); table(u, cs);
+        u._onLog('Hanna', '<b>Toreador Grand Ball</b> was played.'); ballIn(cs); lock(cs, 'Catalina Vega'); endMaster(u);
+        const mm = memo(u);
+        ok(mm.length === 1 && mm[0].free === 'Massimo Falconi' && mm[0].via === 'only' && chats(u).length === 0,
+           '170b the lock and their one other Toreador: Massimo is the free one (got ' + JSON.stringify({ mm, chats: chats(u) }) + ')'); }
+
+      // c-d) three Toreador, no pair, Massimo locked: the speaker (U, the lowest bot) asks once, N does not; unanswered both read the
+      //      generous rule; Hanna answers 'Kathy' -- both bots now free Kathy alone
+      { const u = mk170('U', 2), n = mk170('N', 3), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs); n.table = u.table;
+        for(const b of [u, n]) b._onLog('Hanna', '<b>Toreador Grand Ball</b> was played.');
+        ballIn(cs); lock(cs, 'Massimo Falconi'); endMaster(u, n);
+        const q = chats(u), qn = chats(n), before = [act(u, 'Catalina Vega'), act(n, 'Kathy Glens')];
+        for(const b of [u, n]) b._onChat('Hanna', 'Kathy is the free one');
+        const after = [act(u, 'Kathy Glens'), act(u, 'Catalina Vega'), act(n, 'Kathy Glens'), act(n, 'Catalina Vega')];
+        ok(q.length === 1 && q[0] === 'Hanna, your Toreador Grand Ball: which Toreador acts unblocked — Catalina Vega or Kathy Glens?' && qn.length === 0
+           && JSON.stringify(before) === '[true,true]' && JSON.stringify(after) === '[true,false,true,false]' && memo(n).some(x => x.via === 'answer' && x.free === 'Kathy Glens'),
+           '170c-d open: the speaker asks once naming the two, the other bot does not; unanswered both keep the generous rule; Hanna’s answer frees Kathy alone in both (got ' + JSON.stringify({ q, qn, before, after }) + ')'); }
+
+      // e) a custom token naming the Ball on one of three: the token reads it
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs);
+        u._onLog('Hanna', '<b>Toreador Grand Ball</b> was played.'); ballIn(cs); lock(cs, 'Massimo Falconi'); cs.find(c => c.name === 'Kathy Glens').counters = ['Grand Ball (free)'];
+        endMaster(u); const mm = memo(u);
+        ok(mm.length === 1 && mm[0].free === 'Kathy Glens' && mm[0].via === 'token' && chats(u).length === 0,
+           '170e a token naming the Ball on Kathy: she is the free one (got ' + JSON.stringify({ mm, chats: chats(u) }) + ')'); }
+
+      // f) the descriptor's texts are _memoMap's (my own Ball: the v0.6.221 tokens, in order)
+      { const u = mk170('U', 2); u.board = [T('v1', 'Catalina Vega'), T('v2', 'Massimo Falconi', { locked: true }), { id: 'gb', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', gbFree: 'v1', gbLock: 'v2' }];
+        const mp = u._memoMap(), got = { v1: mp.get('v1'), v2: mp.get('v2'), gb: mp.get('gb') };
+        ok(JSON.stringify(got) === JSON.stringify({ v1: ['Grand Ball: non-bleed actions unblockable'], v2: ['Grand Ball: does not unlock'], gb: ['Unblockable: Catalina Vega', 'Locked: Massimo Falconi'] }),
+           '170f the memo descriptor gives _memoMap the v0.6.221 tokens (got ' + JSON.stringify(got) + ')'); }
+      // g) and it READS the descriptor: a changed token text (a copy of the entry) is what _memoMap writes
+      { const u = mk170('U', 2); u.board = [T('v1', 'Catalina Vega'), T('v2', 'Massimo Falconi', { locked: true }), { id: 'gb', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', gbFree: 'v1', gbLock: 'v2' }];
+        const f0 = u.fxLookup.bind(u); u.fxLookup = n => { const h = f0(n); if(!h || n !== 'Toreador Grand Ball' || !h.e || !h.e.memo) return h; const e = JSON.parse(JSON.stringify(h.e)); e.memo.roles.find(r => r.role === 'free').token = 'Ball: free'; return Object.assign({}, h, { e }); };
+        const v1 = u._memoMap().get('v1');
+        ok(JSON.stringify(v1) === '["Ball: free"]', '170g _memoMap reads the descriptor: a changed token text is the one it writes (got ' + JSON.stringify(v1) + ')'); }
+
+      // h) the egress review: the actor locked, the target free -- the pair less the locked one is the TARGET (not "the actor")
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs);
+        u._onLog('Hanna', '<b>Kathy Glens</b> plays <b>Toreador Grand Ball</b>. Target: <b>Catalina Vega</b>.'); ballIn(cs); lock(cs, 'Kathy Glens'); endMaster(u);
+        const mm = memo(u);
+        ok(mm.length === 1 && mm[0].free === 'Catalina Vega' && mm[0].via === 'pair' && chats(u).length === 0, '170h the actor locked: the target is the free one (got ' + JSON.stringify({ mm, chats: chats(u) }) + ')'); }
+      // i) the lock outside the pair: the pair read fails, two remain -- the speaker asks
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs);
+        u._onLog('Hanna', '<b>Catalina Vega</b> plays <b>Toreador Grand Ball</b>. Target: <b>Kathy Glens</b>.'); ballIn(cs); lock(cs, 'Massimo Falconi'); endMaster(u);
+        const mm = memo(u), q = chats(u);
+        ok(mm.length === 1 && mm[0].free === null && JSON.stringify(mm[0].cands) === '["Catalina Vega","Kathy Glens"]' && q.length === 1 && /— Catalina Vega or Kathy Glens\?$/.test(q[0]),
+           '170i the lock outside the pair: no reading, the speaker asks (got ' + JSON.stringify({ mm, q }) + ')'); }
+      // j) the tier rule, sharp: the reading goes to the bot's own log, never a table line (note / send); the question once, also after
+      //    their influence phase, their board and the turn's end
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs); const notes = [], logs = [];
+        u.note = t => notes.push(String(t)); u.o.log = t => logs.push(String(t));
+        u._onLog('Hanna', '<b>Toreador Grand Ball</b> was played.'); ballIn(cs); lock(cs, 'Massimo Falconi'); endMaster(u);
+        u._onLog('Hanna', 'Phase: <b>Influence</b>.'); if(typeof u._hMemoBoard === 'function') u._hMemoBoard(1); u._dispatch({ t: 'turn', seat: 2 });
+        const tableLines = u.sent.filter(m => m && m.t !== 'chat').map(m => JSON.stringify(m)).filter(x => /memo/i.test(x));
+        ok(chats(u).length === 1 && notes.every(x => !/memo/i.test(x)) && tableLines.length === 0 && logs.some(x => /^memo: Hanna/.test(x)),
+           '170j the reading is the bot’s own log, never a table line; asked once through the turn’s end (got ' + JSON.stringify({ chats: chats(u), notes: notes.filter(x => /memo/i.test(x)), tableLines, logs: logs.filter(x => /memo/.test(x)) }) + ')'); }
+      // k) a new deal forgets the last game's readings (a rematch's ids start again at c1): game 2's Ball, same id, is read afresh
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs);
+        u._onLog('Hanna', '<b>Catalina Vega</b> plays <b>Toreador Grand Ball</b>. Target: <b>Massimo Falconi</b>.'); ballIn(cs); lock(cs, 'Massimo Falconi'); endMaster(u);
+        const g1 = act(u, 'Kathy Glens');
+        u._dispatch({ t: 'dealt', hand: [], unc: [], pool: 30, seat: 2 }); u.started = true;
+        const cs2 = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs2); u.events = [];
+        u._onLog('Hanna', '<b>Kathy Glens</b> plays <b>Toreador Grand Ball</b>. Target: <b>Catalina Vega</b>.'); ballIn(cs2); lock(cs2, 'Catalina Vega'); endMaster(u);
+        const mm = memo(u);
+        ok(g1 === false && mm.length === 1 && mm[0].free === 'Kathy Glens' && act(u, 'Kathy Glens') === true && act(u, 'Catalina Vega') === false,
+           '170k a new deal: game 2’s Ball with game 1’s card id is read afresh (got ' + JSON.stringify({ g1, mm, kathy: act(u, 'Kathy Glens') }) + ')'); }
+      // l) the token read takes only a NEW token naming the card that is not another role's: (1) the lock's own text on a candidate,
+      //    (2) a token left from before the play line -- each alone read nobody: open, the speaker asks
+      { const run = which => { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs);
+          if(which === 'old') cs.find(c => c.name === 'Kathy Glens').counters = ['Grand Ball (free)'];
+          u._onLog('Hanna', '<b>Toreador Grand Ball</b> was played.'); ballIn(cs); lock(cs, 'Massimo Falconi');
+          if(which === 'lock') cs.find(c => c.name === 'Catalina Vega').counters = ['Grand Ball: does not unlock'];
+          endMaster(u); const mm = memo(u); return { free: mm[0] && mm[0].free, via: mm[0] && mm[0].via, asked: chats(u).length }; };
+        const a = run('lock'), b = run('old');
+        ok(a.free === null && a.asked === 1 && b.free === null && b.asked === 1, '170l the lock’s own text, or a token from before the play line, reads nobody: the speaker asks (got ' + JSON.stringify({ lockText: a, oldToken: b }) + ')'); }
+      // m) the other ends of the master phase: (1) their first action line that is not a card play reads it at once (that action's window
+      //    reads the memo); (2) a turn that ends with no Phase line and no action reads it then, and its answer window lasts through
+      //    their next turn, then closes
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(u, cs);
+        u._onLog('Hanna', '<b>Catalina Vega</b> plays <b>Toreador Grand Ball</b>. Target: <b>Massimo Falconi</b>.'); ballIn(cs); lock(cs, 'Massimo Falconi');
+        u._onLog('Hanna', '<b>Kathy Glens</b> hunts.'); const m1 = memo(u), k1 = act(u, 'Kathy Glens');
+        const v = mk170('U', 2), cv = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); table(v, cv);
+        v._onLog('Hanna', '<b>Toreador Grand Ball</b> was played.'); ballIn(cv); lock(cv, 'Massimo Falconi'); v._dispatch({ t: 'turn', seat: 2 });
+        const m2 = memo(v), q2 = chats(v).length; v._dispatch({ t: 'turn', seat: 1 }); v._onChat('Hanna', 'Kathy'); const late1 = act(v, 'Kathy Glens') && !act(v, 'Catalina Vega');
+        v._dispatch({ t: 'turn', seat: 2 }); v._onChat('Hanna', 'Catalina'); const after = act(v, 'Kathy Glens') && !act(v, 'Catalina Vega');
+        ok(m1.length === 1 && m1[0].free === 'Catalina Vega' && k1 === false && m2.length === 1 && m2[0].free === null && q2 === 1 && late1 && after,
+           '170m an action line reads it at once; a turn’s end reads and asks, the answer counts through their next turn, then no more (got ' + JSON.stringify({ m1, k1, m2, q2, late1, after }) + ')'); }
+      // n) two Balls in one master phase: each its own reading (the pair's own lock when both are locked); both free ones go
+      //    unblocked, a fifth Toreador does not; with the second still unread, the generous rule
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens', 'Bret Stryker', 'Min-seo']); table(u, cs);
+        u._onLog('Hanna', '<b>Catalina Vega</b> plays <b>Toreador Grand Ball</b>. Target: <b>Massimo Falconi</b>.'); ballIn(cs); lock(cs, 'Massimo Falconi');
+        u._onLog('Hanna', '<b>Kathy Glens</b> plays <b>Toreador Grand Ball</b>. Target: <b>Bret Stryker</b>.'); cs.push({ id: 'gb2', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', faceDown: false });
+        const mid = act(u, 'Min-seo'); lock(cs, 'Bret Stryker'); endMaster(u);
+        const mm = memo(u), fr = mm.map(x => x.free).sort();
+        ok(mid === true && mm.length === 2 && JSON.stringify(fr) === '["Catalina Vega","Kathy Glens"]' && act(u, 'Catalina Vega') && act(u, 'Kathy Glens') && act(u, 'Min-seo') === false && chats(u).length === 0,
+           '170n two Balls: each read by its pair and its own lock; both free, the fifth not (got ' + JSON.stringify({ mid, mm, minseo: act(u, 'Min-seo') }) + ')'); }
+      // o) the lock clicked just before the Phase line reaches the table in their NEXT board (the client sends boards up to 600 ms late):
+      //    the reading waits for that board -- the pair, no question
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Kathy Glens']); ballIn(cs);
+        const pub0 = JSON.parse(JSON.stringify({ pool: 20, cards: cs })); u.table = { 3: { pub: { pool: 20, cards: [] } } }; u._onBoard({ seat: 1, pub: pub0 });
+        u._onLog('Hanna', '<b>Catalina Vega</b> plays <b>Toreador Grand Ball</b>. Target: <b>Massimo Falconi</b>.'); u._onLog('Hanna', 'Phase: <b>Minion</b>.');
+        const before = memo(u).length; const pub1 = JSON.parse(JSON.stringify(pub0)); pub1.cards.find(c => c.name === 'Massimo Falconi').locked = true; u._onBoard({ seat: 1, pub: pub1 });
+        const mm = memo(u);
+        ok(before === 0 && mm.length === 1 && mm[0].free === 'Catalina Vega' && mm[0].lock === 'Massimo Falconi' && chats(u).length === 0,
+           '170o the lock in the board after the Phase line: read there, no question (got ' + JSON.stringify({ before, mm, chats: chats(u) }) + ')'); }
+      // p) the answers: one before the reading is used by it (no question); a later one corrects; 'flavio' names Flávio Gonçalves
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi', 'Flávio Gonçalves']); table(u, cs);
+        u._onLog('Hanna', '<b>Toreador Grand Ball</b> was played.'); ballIn(cs); lock(cs, 'Massimo Falconi'); u._onChat('Hanna', 'Catalina is free'); endMaster(u);
+        const m1 = memo(u), q1 = chats(u).length; u._onChat('Hanna', 'sorry, flavio'); const fl = act(u, 'Flávio Gonçalves') && !act(u, 'Catalina Vega');
+        ok(m1.length === 1 && m1[0].free === 'Catalina Vega' && m1[0].via === 'answer' && q1 === 0 && fl,
+           '170p an answer before the reading counts, a later one corrects it, accents aside (got ' + JSON.stringify({ m1, q1, fl }) + ')'); }
+      // q) the human table's find: a hunt line carrying a target left set from a card play is still a hunt (undirected)
+      { const u = mk170('U', 2), cs = hanna(['Catalina Vega', 'Massimo Falconi']); table(u, cs);
+        const r1 = u._parseUndirected('Hanna', 'Catalina Vega hunts. Target: Massimo Falconi.'); if(u.pending && u.pending.passTimer) clearTimeout(u.pending.passTimer); u._clearPending && u._clearPending('test');
+        ok(r1 === true, '170q a hunt line with a leftover target opens the undirected window (got ' + r1 + ')'); }
+    }
+
 
 
     }

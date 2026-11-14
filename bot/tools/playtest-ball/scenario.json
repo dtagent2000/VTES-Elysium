@@ -1,0 +1,29 @@
+{
+ "about": "Round C's human table (bot v0.6.225, CHANGELOG): a human with a Grand Ball-heavy Toreador test deck against Hanna (tremere, the prey) and Viktor (nosferatu, the predator), Standard 3 s, no reflex. Run from the repository root: node client/playtest/playtest-rig.js --out <run dir> [--vtes <vtes.json> --offline], then node client/playtest/playtest.js setup bot/tools/playtest-ball/scenario.json. Turn 1: three Toreador into play; turn 2: play the Ball (aimed at the other of a pair, or not aimed), lock one, then the minion phase; the bots' 'memo:' console lines and the question; their hunts a round later.",
+ "room": "ballc",
+ "board": "structured",
+ "human": {
+  "name": "Johan",
+  "deck": "bot/tools/playtest-ball/deck-toreador-ball.txt",
+  "seat": 1
+ },
+ "bots": [
+  {
+   "name": "Hanna",
+   "deck": "tremere",
+   "persona": "expert"
+  },
+  {
+   "name": "Viktor",
+   "deck": "nosferatu",
+   "persona": "expert"
+  }
+ ],
+ "tempo": {
+  "tempo": "standard",
+  "waitSecs": 3
+ },
+ "reflex": {
+  "on": false
+ }
+}
