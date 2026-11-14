@@ -109,6 +109,10 @@
   - (E4) held on the release bytes — the offline real-clock table (`--real`, the client profile, four matches side by side, 48
     minutes): 21 modifier windows and 97 totals, none ran out (four contests at the clock, by design), no stale row, `ana-gates.py`
     PASS 6 of 6. Round A's table on v0.6.222: 50 of 53 and 60.
+  - Gates on the release bytes (`elysium-bot.js` `8706fc5a`, `test-bot-logic.js` `e25f6e8d`, `elysium-cardfx.json` `b91a285f`):
+    suite 2482/0 ×3, canary 143/0 ×2, hotseat 12/0 (H12), main's client suite 361/2 (the handoffs' two; its live tests drive the
+    bot on `hotBridge`), `check-versions.js` agrees, an arena smoke with a rigged Jack PASS 7/7. test-cardfx and HB1 not run (no
+    cardfx or browser surface changed).
 - **v0.6.226 (14 Nov 2026)** — Round D, RULINGS O-40 → D-115 (Johan, 14 Nov 12:06: "vi gör på ditt förslag i O-40"): Smiling
   Jack's self-consistent runway, the knob `jackRunway` (default 1 after a no-loss bench; 0 = v0.6.225), spec §2's amendment.
   - *The change* (`_jackPriceAt`): a seat's runway against Jack R solves R·(c₁ + fc) + R(R−1)/2 = pool, the positive root

@@ -7,9 +7,10 @@ the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6
 
 **Deploy state:** `main` carries v0.6.225. **Open PRs:** #71 (round D, v0.6.226); round E (this release) on it — merge in order.
 
-## Last gates (v0.6.227 release bytes, 14 Nov 2026)
-To come with the gates (the PR carries them). The sim against v0.6.226: the 240's modifier windows that ran out 1135 → 2 of 1309,
-stale answers 1431 → 3; play unchanged but in a few matches; the hotseat gate 12/0 (H12), 11/1 on v0.6.226.
+## Last gates (v0.6.227 release bytes `8706fc5a`, 14 Nov 2026)
+Suite **2482/0 ×3** · canary **143/0** ×2 · hotseat **12/0** (11/1 on v0.6.226) · main's client suite 361/2 (the handoffs' two) ·
+`check-versions.js` agrees · arena smoke PASS 7/7 · the sim's 240: modifier run-outs 1135 → 2 of 1306, stale 1431 → 3; a real-clock
+table and a browser table: none ran out, no stale answer.
 
 ## What v0.6.227 did
 At a hotseat table a bot's bleed modifier no longer waits out its clock: the bridge delivers inside the send, and the actor now

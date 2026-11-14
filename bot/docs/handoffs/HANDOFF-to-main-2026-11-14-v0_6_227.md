@@ -17,7 +17,11 @@ and the server delivers after a send returns, while `hotBridge.toBot` delivers i
 handles both; one order is still open on our side at pace 0 (a window that opens after its line was delivered, our BOARD).
 
 ## 3. Run here
-On the release bytes (`elysium-bot.js` sha256 `…`): written with the gates.
+On the release bytes (`elysium-bot.js` sha256 `8706fc5a…`): your `check-versions.js` agrees; your canary v1.2.0 143/0 on `bot/`'s
+copies and on the root's client; your client suite in a scratch copy of `client/` with this bundle beside it **361 passed, 2
+failed** — the two of v0.6.219's handoff. Your client's hotseat with three bots in headless Chromium (`bot/tools/hotseat-in-browser.js`,
+eight sweeps): no answer dropped, the bot-vs-bot modifier windows closed at the target's Pass in 0.55 s (v0.6.226 dropped 2 Passes in
+the same sweeps); the sim's hotseat table on the real clock: 21 modifier windows, none ran out (round A: 50 of 53).
 
 ## 4. Deploy
 Purge `/elysium-bot.js` and `/START-HERE-BOTS.html`; the client when the re-embedded guide ships. The cardfx, the TWD files and the
