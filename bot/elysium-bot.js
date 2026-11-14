@@ -1142,6 +1142,7 @@ class Bot {
         this.seat = (this.players.find(p => p.name === this.o.name) || { seat: this.seat }).seat;
         this.out = false; this.ownTurns = 0; this.inf = 0; this._tableBlockAttempts = 0;
         this._ootDebt = 0; this._fgOwed = 0; this._turnActN = 0;   // v0.6.215 (egress review): a new game owes no out-of-turn master action and no Family Gathering blood
+        this._jackDefer = null;   // v0.6.224 (the egress review): a new game waits for no Jack
         this._turnSerial = (this._turnSerial | 0) + 1; this._monsterUsed = null; this._sgwEndUsed = null; this._lastCombat = null; this._cotCancel = null; this._myBlockOf = null;   // v0.6.217 (the egress review): Monster's and Guiding Wisdom's once-each-turn, the last combat, a Change of Target -- none carries into a new game
         this._holdBy = new Set(); if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }   // v0.6.95: a fresh game holds for nobody
         this._holdAnnounced = false; this._pendingTurn = null;   // v0.6.108: and carries no queued turn or stale hold announcement
@@ -2532,7 +2533,7 @@ class Bot {
       const prev = this.plan;
       this.plan = { turn: this.ownTurns | 0, tag, phase, posture, home, floor, target, wOff: +wOff.toFixed(2), wDef: +wDef.toFixed(2),
                     reads: { myTto, preyTto, myFc, myFcRaw, predFc, pool: this.pool | 0, preyPool, ready: bodies.length, alive, crit: critNow, pricedHome: priced ? priced.home : null }, why };
-      if(this.o.jackBurn){ const jk = this._jackAt(); if(jk){ const jp = this._jackPriceAt(this.seat, jk, predFc, myFcRaw); this.plan.reads.jack = { seat: jk.seat, n: jk.n, runway: +jp.runway.toFixed(2), H: jp.H, price: jp.price }; } }   // v0.6.224 (D-114 spec §2): only with the knob -- the 0-path's plan rows stay as they were
+      if(this.o.jackBurn) this._planJack(predFc, myFcRaw);   // v0.6.224 (D-114 spec §2-§5): only with the knob -- the 0-path's plan rows stay as they were
       if(tag === 'unlock' || !prev || prev.posture !== posture || prev.home !== home || prev.floor !== floor){
         this._emit('plan', this.plan); this.o.log('plan (' + tag + '): ' + phase + ' / ' + posture + ' -- ' + why + '; influence floor ' + floor); }
     }catch(e){ this.o.log('strategize error:', e.message); }
@@ -4553,35 +4554,51 @@ class Bot {
     if(pred === this.seat) return Math.max(0, (myFc != null ? myFc : ((this.plan && this.plan.reads) ? (this.plan.reads.myFcRaw || 0) : 0)) || 0);
     return Math.max(0, this.oppForecast(pred) || 0);
   }
-  _jackPriceAt(st, j, predFc, myFc){ // D-114 spec §2: what letting Jack stand costs seat st over H = min(its runway, Jack's own life) rounds -- c1 + (c1+1) + ... = H*c1 + H(H-1)/2; the owner pays its own counter, 1 a round
-    const life = Math.max(0, this._seatPool(j.seat)) / Math.max(0.25, 1 + this._jackFc(j.seat, myFc));   // Jack leaves play with its owner
-    if(st === j.seat){ const H = Math.max(0, Math.floor(life)); return { runway: life, H, price: H }; }
-    const c1 = (j.n | 0) + 1, fc = (st === this.seat && predFc != null) ? Math.max(0, predFc) : this._jackFc(st, myFc);
-    const runway = Math.max(0, this._seatPool(st)) / Math.max(0.25, c1 + fc);
-    const H = Math.max(0, Math.floor(Math.min(runway, life)));
-    return { runway, H, price: H * c1 + H * (H - 1) / 2 };
+  _jackC1(st, j){                    // spec §2: the counter on Jack at seat st's NEXT unlock -- n now, n + 1 when the owner's unlock comes first in the turn order from the seat acting now (the egress review: my prey pays n)
+    const n = j.n | 0; let s = this.nextLive(this.turnSeat || this.seat);
+    for(let g = 0; g < 8 && s; g++){ if(s === j.seat) return n + 1; if(s === st) return n; s = this.nextLive(s); }
+    return n + 1;
   }
-  _jackBurnValue(vamp, jk){          // D-114 spec §3-4: a burn's worth in the scorer's currency -- P(success) x [wDef x my saving - offW x my prey's saving] x aggression; null without the plan's read
-    const rd = this.plan && this.plan.reads && this.plan.reads.jack; if(!rd || rd.seat !== jk.seat) return null;
-    const prey = this.preySeat(), pp = (prey && prey !== this.seat) ? this._jackPriceAt(prey, jk) : { price: 0 };
+  _jackPriceAt(st, j, predFc, myFc){ // D-114 spec §2: what letting Jack stand costs seat st over H = min(its runway, Jack's own life) rounds -- c1 + (c1+1) + ... = H*c1 + H(H-1)/2, H not floored (the egress review: a seat with less than a round of runway paid 0); the owner pays its own counter, 1 a round
+    const life = Math.max(0, this._seatPool(j.seat)) / Math.max(0.25, 1 + this._jackFc(j.seat, myFc));   // Jack leaves play with its owner
+    if(st === j.seat){ const H = Math.max(0, life); return { runway: life, H, price: H }; }
+    const c1 = this._jackC1(st, j), fc = (st === this.seat && predFc != null) ? Math.max(0, predFc) : this._jackFc(st, myFc);
+    const runway = Math.max(0, this._seatPool(st)) / Math.max(0.25, c1 + fc);
+    const H = Math.max(0, Math.min(runway, life));
+    return { runway, H, price: Math.max(0, H * c1 + H * (H - 1) / 2) };
+  }
+  _planJack(predFc, myFcRaw){        // v0.6.224 (the plan rule; the egress review): every Jack read a burn or a defence uses is a plan field -- my price, my prey's, the bots that run out sooner, this turn's wait, my own Jack's worth
+    const jk = this._jackAt();
+    if(jk){
+      const jp = this._jackPriceAt(this.seat, jk, predFc, myFcRaw), prey = this.preySeat();
+      const pp = (prey && prey !== this.seat && prey !== jk.seat) ? this._jackPriceAt(prey, jk, null, myFcRaw) : (prey === jk.seat ? { price: this._jackPriceAt(prey, jk, null, myFcRaw).price } : { price: 0 });   // my prey the owner: its own counter payments
+      const mine = +jp.runway.toFixed(2);
+      /* §4: a BOT that is not the owner, has a ready vampire, a runway of a round or more and a shorter one than mine acts before my next
+         unlock -- I wait one round for it, once per Jack; decided here, once a turn (a later turn of mine no longer waits) */
+      const shorter = (this.players || []).filter(q => q && q.bot && q.seat !== this.seat && q.seat !== jk.seat && this.live(q.seat)
+        && ((((this.table[q.seat] || {}).pub) || {}).cards || []).some(c => c && c.kind === 'crypt' && c.zone === 'ready')
+        && (r => r >= 1 && r < mine)(+this._jackPriceAt(q.seat, jk, null, myFcRaw).runway.toFixed(2))).map(q => q.seat);   // strictly shorter at the plan's rounding: a tie is mine (I act first from now); under a round it will not live to burn
+      const d = this._jackDefer; let wait = false;
+      if(d && d.cardId === jk.card.id) wait = d.turn === (this.ownTurns | 0);
+      else if(shorter.length){ this._jackDefer = { cardId: jk.card.id, turn: this.ownTurns | 0 }; wait = true; }
+      this.plan.reads.jack = { seat: jk.seat, n: jk.n, cardId: jk.card.id, runway: mine, H: +jp.H.toFixed(2), price: +jp.price.toFixed(2), preyPrice: +pp.price.toFixed(2), shorter, wait };
+    }
+    const mj = this.board.find(c => c && c.kind === 'lib' && c.zone === 'ready' && !c.faceDown && !this._outOfPlay(c) && this._isJackName(c.name));
+    if(mj) this.plan.reads.jackOwn = { cardId: mj.id, worth: +this._myJackWorth(mj, myFcRaw).toFixed(2) };
+  }
+  _jackBurnValue(vamp, jk){          // D-114 spec §3: a burn's worth in the scorer's currency -- P(success) x [wDef x my saving - offW x my prey's saving] x aggression, from the plan's reads (pure: no state written); null without them
+    const rd = this.plan && this.plan.reads && this.plan.reads.jack; if(!rd || rd.seat !== jk.seat || rd.cardId !== jk.card.id) return null;
     const offW = this._planOffW(), wDef = rd.runway < ((this.plan.reads.preyTto != null) ? this.plan.reads.preyTto : 99) ? 2 : 1;   // the tempo is against me: defence weighs double
     const ocs = ((((this.table[jk.seat] || {}).pub) || {}).cards || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked);
-    const pSucc = ocs.length ? 1 - Math.max(0.05, Math.min(0.9, 0.5 + 0.35 * (this.oppIntercept(jk.seat) || 0))) : 1;   // the plan's block odds, the owner's shown intercept against my 0 stealth
-    const val = pSucc * (wDef * rd.price - offW * pp.price) * ((this.persona && this.persona.aggression) || 1);
-    /* coordination (§4): a BOT that is not the owner, has a ready vampire and a shorter runway acts before my next unlock -- I wait one
-       round for it, once per Jack; a later own turn of mine no longer waits (nobody burned it) */
-    const shorter = (this.players || []).filter(q => q && q.bot && q.seat !== this.seat && q.seat !== jk.seat && this.live(q.seat)
-      && ((((this.table[q.seat] || {}).pub) || {}).cards || []).some(c => c && c.kind === 'crypt' && c.zone === 'ready')
-      && +this._jackPriceAt(q.seat, jk).runway.toFixed(2) < rd.runway).map(q => q.seat);   // strictly shorter at the plan's rounding: a tie is mine (I act first from now)
-    const d = this._jackDefer, waitedBefore = !!(d && d.cardId === jk.card.id && d.turn < (this.ownTurns | 0));
-    const wait = shorter.length > 0 && !waitedBefore;
-    if(wait && !(d && d.cardId === jk.card.id)) this._jackDefer = { cardId: jk.card.id, turn: this.ownTurns | 0 };
-    return { val, pSucc: +pSucc.toFixed(2), wDef, mine: rd.price, prey: pp.price, offW: +offW.toFixed(2), shorter, wait };
+    const pSucc = ocs.length ? 1 - Math.max(0.05, Math.min(0.9, 0.5 + 0.35 * (this.oppIntercept(jk.seat) || 0))) : 1;   // the owner's block odds against my 0 stealth (its unlocked bodies, its shown intercept)
+    const val = pSucc * (wDef * rd.price - offW * rd.preyPrice) * ((this.persona && this.persona.aggression) || 1);
+    return { val, pSucc: +pSucc.toFixed(2), wDef, mine: rd.price, prey: rd.preyPrice, offW: +offW.toFixed(2), shorter: rd.shorter, wait: rd.wait };
   }
-  _myJackWorth(card){                // D-114 spec §5: my Jack's worth to me when another seat acts to burn it -- what it takes from my prey over its life (offW-weighed) less my own counter payments
+  _myJackWorth(card, myFc){          // D-114 spec §5: my Jack's worth to me when another seat acts to burn it -- what it takes from my prey over its life (offW-weighed) less my own counter payments; the plan's read when it has one (_planJack)
+    const rd = this.plan && this.plan.reads && this.plan.reads.jackOwn; if(myFc === undefined && rd && rd.cardId === card.id) return rd.worth;
     const j = { seat: this.seat, card, n: Array.isArray(card.counters) ? card.counters.length : (card.counters | 0) };
     const prey = this.preySeat(); if(!prey || prey === this.seat) return 0;
-    return Math.max(0, this._planOffW() * this._jackPriceAt(prey, j).price - this._jackPriceAt(this.seat, j).price);
+    return Math.max(0, this._planOffW() * this._jackPriceAt(prey, j, null, myFc).price - this._jackPriceAt(this.seat, j, null, myFc).price);
   }
   _bestBurnCardFor(vamp){           // v0.6.217 (V5 wave 4): 'Minions can burn this card as a (D) action' (fx.burnCardAction, Toreador Grand Ball) -- another Methuselah's card in play, aimed only when its owner is my prey or predator (its unblockable political actions reach me); +stealth by my clan (Nosferatu -1); w = the owner's title votes / 4, at most 1
     if(!vamp || vamp.zone !== 'ready' || vamp.locked) return null;
@@ -4592,8 +4609,9 @@ class Bot {
         if(this._isJackName(c.name)) return;   // v0.6.224: Smiling Jack has its own branch below (any seat, its price)
         const w = Math.min(1, this._seatTitleVotes(st) / 4);
         if(!best || w > best.target.w) best = { idx: null, name: h.name, kind: 'burnCard', target: { seat: st, owner: this.seatName(st), cardId: c.id, card: c.name, w }, st: ((mo.fx.burnStealthClan || {})[this._vampClan(vamp)] | 0), n: 0 }; }); }
-    if(this.o.jackBurn && vamp.kind === 'crypt'){   // v0.6.224 (round B, D-114): another seat's Smiling Jack, at ANY seat -- 'Vampires can burn this card as a (D) action', weighed by its price (_jackBurnValue)
-      const jk = this._jackAt(), h = jk && this.fxLookup(jk.card.name), mo = h && h.kind === 'lib' && (h.e.modes || []).find(m => m.fx && m.fx.burnCardAction);
+    if(this.o.jackBurn){   // v0.6.224 (round B, D-114): another seat's Smiling Jack, at ANY seat -- 'Vampires can burn this card as a (D) action', weighed by its price (_jackBurnValue)
+      const jk = this._jackAt(), h = jk && this.fxLookup(jk.card.name), mo0 = h && h.kind === 'lib' && (h.e.modes || []).find(m => m.fx && m.fx.burnCardAction);
+      const mo = mo0 && !(mo0.fx.burnBy === 'vampire' && vamp.kind !== 'crypt') ? mo0 : null;   // fx.burnBy -- the card's 'Vampires can burn' (an ally cannot)
       const jv = mo ? this._jackBurnValue(vamp, jk) : null;
       if(jv && !jv.wait && jv.val > 0){
         const ballS = best ? (0.9 + 0.4 * (best.target.w || 0)) * ((this.persona && this.persona.aggression) || 1) * this._planOffW() : -Infinity;   // the scorer's own value of the Ball's burn
