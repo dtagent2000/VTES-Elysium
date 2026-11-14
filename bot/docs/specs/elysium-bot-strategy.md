@@ -281,3 +281,13 @@ Promoted to **T9a/T9b** in `elysium-bot-training-backlog.md`.
   ≈105 games/h baseline, §7's first risk resolved. Evaluation finds queued: hunting-ground
   per-VAMPIRE ledger (Johan-confirmed rule; today's global flag is conservative-only), spec §1
   staleness at v0.6.10, the grinder deck file absent from the project.
+- **13 November 2026** — two new plan reads (bot v0.6.224, RULINGS D-114, `spec-jack-burn-2026-11-13.md`; written by `_planJack`
+  at each strategize — my unlock and the minion head — only with the knob `jackBurn`): `plan.reads.jack`, another seat's Smiling
+  Jack and what letting it stand costs me and my prey — `{ seat, n, cardId, runway, H, price, preyPrice, shorter, wait }`: my
+  runway against the counter at my next unlock (c₁: n, or n + 1 when the owner unlocks first from the seat acting now) and the
+  table model's pool damage, H = min(my runway, Jack's life), price = H·c₁ + H(H−1)/2; the bots (not the owner, a ready vampire)
+  whose runway is a round or more and shorter than mine, and this turn's wait (§4: one round, once per Jack; the deferring turn
+  re-decides at each read, so a minion read after Jack's payments with no bot shorter waits no more); and `plan.reads.jackOwn`
+  `{ cardId, worth }`, my own Jack's worth when another seat acts to burn it (§5). The burn candidate (`_jackBurnValue`) and the
+  burn window at my Jack read them; only a burn at a Jack the plan has not read yet computes the worth on the spot
+  (`_myJackWorth`'s fallback). The price can pass the seat's pool (the runway takes a flat cost): RULINGS O-40.

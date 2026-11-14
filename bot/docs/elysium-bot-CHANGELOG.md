@@ -32,6 +32,64 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.224 (14 Nov 2026)** — Round B, RULINGS D-114 (Johan's "kör", 13 Nov 20:13 and 21:45): Smiling Jack's burn weighed by its
+  price, `specs/spec-jack-burn-2026-11-13.md`. Two steps, each with its own footprint, on round A (v0.6.223).
+  - *Step 1, the block guard* (a rules correction, no knob; section 168: 3/0, 0/3 on v0.6.223): the threat classes' block path
+    read every window as undirected (+1 stealth), so a bare body never blocked a rush or an action to burn my card — both directed
+    (R-12). At stealth 0 it now runs the bleed path's bare-block tests (a body unlocked or behind a wake; `bareBlock` off declines,
+    chump only with a chump body against a combat threat), then weighs the block as any: a disabling deck's rush block scores
+    1.31, a resisting deck's 0.23.
+  - *Step 2, the Jack burn* (the knob `jackBurn`; section 169: 6/0; 0/6 on v0.6.223, 3/3 on the review's bytes, 5/1 on the first fix's):
+    Smiling Jack's cardfx gains "Vampires can burn this card as a (D) action" (`burnCardAction`, `burnBy`). `_planJack` writes
+    `plan.reads.jack` at each strategize (the plan rule; its line in `specs/elysium-bot-strategy.md`): what Jack takes from me over
+    H = min(my runway, Jack's life) rounds, H·c₁ + H(H−1)/2 with c₁ the counter at my next unlock, my prey's price, the bots with
+    a shorter runway and this turn's wait. `_bestBurnCardFor` reaches Jack at any seat with P(success) × [wDef · my saving − offW
+    · my prey's saving] × aggression (wDef 2 when my runway is shorter than my turns to oust my prey); the bot with the shortest
+    runway burns first, the others wait one round, once per Jack; a burn at my own Jack is weighed by its worth
+    (`plan.reads.jackOwn`: what it still takes from my prey, less my own payments). `ana-jack.py` v1.0.0 (new, read-only: Jack's
+    plays, how each left play, its rounds in play, the knob's burn picks); arena v1.4.11 whitelists the knob; the coverage tool
+    v1.1.46 classifies `burnBy`; the ledger and the Nosferatu starter's coverage report regenerated.
+  - *The egress reviews* (fresh context). The first, 11 findings: fixed — H floored (a seat under a round of runway paid 0); c₁
+    one too many for a seat that unlocks before the owner (my prey, in the turn order from the seat acting now); the Jack reads
+    computed in the tactics (now plan reads); the wait written by a read and never reset; `burnBy` written, never read; section 168
+    asserting only a why text (168b, 168c: a block, through the real window); four stale pages (ARCHITECTURE's burn row, the
+    ledger and the coverage report, the defence's wording, the 0-path's label). Measured — the owner's defence, which a mirror
+    bench cannot fire (its owner and its burners never both carry the knob there; LESSONS L-91): a bench pinned to Nosferatu,
+    below. Listed (BOARD) — the chump gate is not the commit (both block paths); three ledger faults on fresh deals. The second,
+    read-only, of the fixes: 10 findings (half-done 1, test-weakened 3, stale-doc 4, unproven 2), all fixed — the coordination
+    wait was fixed at the unlock read, before Jack's payments (a minion read now re-decides it in the deferring turn: against the
+    first fix the 240 DIVERGED 3, the V5 smoke 2, the 600 9); 169b, 169c and 169f proved c₁, the defer's turn and the `burnBy`
+    read only indirectly (now directly: 169 is 5/1 on the first fix's bytes, 3/3 on the review's, 0/6 on v0.6.223; LESSONS L-90);
+    the strategy line, ARCHITECTURE's row, the knob comment and the ledger; J′'s first explanation (prices that never reach a
+    decision) and K0′'s V5 evidence (re-diffed: IDENTICAL).
+  - *Predictions* (registered before each footprint): (G1) half held — the 240 changed 40 matches (DIVERGED 10, SAME-PLAY 30): the
+    21 predicted plus 19 whose refused window had stealth ≥ 1 and changed only its why text; every DIVERGED match (the 240: 10, the
+    V5 smoke: 6, the 600: 46) is a stealth-0 window whose first difference is that block. (G2) held: the 600's 46 DIVERGED all hold
+    a rush window. (K0) held: step 2 at 0 IDENTICAL to step 1. (K0′, the review's fixes at 0) held: IDENTICAL 240, 168 and 600 to
+    step 1, the knob's label normalized in the manifest and — not foreseen — in the sim's result row (`--knob jackBurn=0` labels
+    every seat there; the first read was SAME-PLAY on every match for that row alone). (J′) the 240's burn picks rose to 56, beyond
+    my 34–50: falsified — not from the large early prices (the plan rows priced 100 to 378 are all round 1–2 unlock reads with no
+    ready vampire, never a candidate) but mostly from small ones: picks at a price under 3 went 6 → 21 and picks from round 6 on
+    11 → 21 (the c₁ change and the unfloored H reach the late, short runways); 12 picks beat their alternative tenfold (6 on the
+    review's bytes), all with wDef 2, 5 of them priced above the actor's own pool — the runway takes a flat cost while Jack's
+    counter grows (RULINGS O-40). Jack's median life fell to 1 round, Nosferatu's paired VP on the 240 to −0.13 (95 % [−0.22,
+    −0.04]; the 600: −0.10 [−0.16, −0.05]) and the mirror bench (the four starters, every seat, 288) read the variant seat −0.03
+    [−0.07, +0.01] with 22 Jacks burned — held. (D) held: in the bench pinned to Nosferatu (every seat at 1; the variant Nosferatu
+    at 0; 288 an arm) the control's Nosferatu met 61 burn windows carrying its Jack's worth (37 block decisions in 36 matches), the
+    variant's none; 27 of 74 burns at its Jack blocked against 0 of 50; the variant −0.00 [−0.04, +0.03] (Jack lives 0.3 rounds
+    longer on average, no VP). The worth passes the pool too (up to 378, median 6.9, over the 240, the 600 and the pinned control),
+    so no combat cost refuses that block (the highest of 166 priced rows: 1.12; O-40). Johan's three (the spec's §8): (1) Nosferatu's VP shrinks — held; (2) Jack lives shorter — held, the
+    median 3 → 1 rounds on the 240, 4 → 2 on the 600; (3) no loss in the mirror bench — held. All on the release bytes.
+  - *The flip*: `jackBurn` default 1 (Johan, 21:45: in the same PR after a no-loss bench). Release footprint against v0.6.223 (the
+    version set back): the 240 DIVERGED 51 / SAME-PLAY 189, the V5 smoke DIVERGED 21 / SAME-PLAY 147, the 600
+    DIVERGED 165 / SAME-PLAY 435; `ana-gates.py` PASS on all three.
+  - Gates on the release bytes (`elysium-bot.js` `8502f8fb`, `test-bot-logic.js` `d01ae3a8`, `elysium-cardfx.json` `e2769ff0`):
+    suite 2459/0 ×3, canary 143/0 ×2, test-cardfx 321/0, hotseat 11/0, main's client suite 361/2 (the handoffs' two),
+    `check-versions.js` agrees, an arena smoke with a rigged Jack PASS 7/7 (a bot burned it on the real clock). HB1 not run (no
+    browser surface changed).
+  - Found on the way: the bench design (`--bench none --seeds 3`, fresh deals) shows three ledger faults in every arm, v0.6.223's
+    bytes too — a bleed VANISHED after declined blocks, a bleed of 2 with no actor row, a steal whose victim lost more than the
+    stealer took (BOARD).
 - **v0.6.223 (14 Nov 2026)** — Round A (Johan's "Yes kör", 13 Nov 21:45): the table runs with Toreador's guide check (D-112),
   v0.6.222's two riders, and the tool fixes the runs called for. `docs/reports/REPORT-table-runs-2026-11-13.md`,
   `docs/reports/REPORT-toreador-guide-check-2026-11-13.md`.

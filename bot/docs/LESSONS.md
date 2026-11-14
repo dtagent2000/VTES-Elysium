@@ -28,6 +28,8 @@
 - L-23 **A two-sided effect needs a test from BOTH sides** (22 Sep, the steal); a unit test of each half is not a test of the wire (18 Sep, give / given).
 - L-24 **Source-shape assertions are tripwires for insertion order** (18 Sep, 80e) and the suite guards the docs too (15 Sep).
 - L-85 **A value compared with itself passes for every value but NaN** (11 Nov, round C2): 66b and 92b had asserted `x === x` since before the monorepo (12 Oct) until the lint's `no-self-compare` found them; an assertion that reads nothing the change decides is the same class one level up (69b, BOARD).
+- L-90 **A destructive check proves only the difference it ran against** (14 Nov, round B): 169f was red on v0.6.223 but green
+  on bytes whose hard-coded gate left `burnBy` unread; run a new assertion against bytes that lack exactly the change, or a mutant.
 
 ## Timing
 - L-25 **No await between a line and the window it opens** (17 Oct): a 150 ms sleep before the window lost answers at pace 0 for four weeks (v0.6.144 → v0.6.206; the pacing sleeps after a window stay); two windows in three ran out their clock.
@@ -65,6 +67,8 @@
 - L-54 **A smoke is not a pattern; 100 % is a finding too; restraint is a finding too** (Sep).
 - L-82 **A design that never changes the table cannot see a rule that only bites at another table** (29 Oct): Chantry's last-pool rescue never fired in 240 four-seat matches and showed in the first 168 five-seat ones. Vary the table size and the decks, not only the seats and the deals.
 - L-86 **An explanation that lives only in a report leaves its row a fault in every later gate** (11 Nov, round C2): the 225 bleeds that no seat took were all after the game's end (the Toreador report, 6 Nov), yet the ledger still printed them as faults, so no zero gate could stand on it; write the explanation into the audit as a row of its own.
+- L-91 **A mirror bench cannot fire a knob's half that needs two seats on it** (14 Nov, round B): the owner's defence needs the
+  owner and a burner both at 1; a bench pinned to the owner's deck measured it. Ask which seats each half needs.
 
 ## Contracts, parsers and state
 - L-55 **A parser and its phrase are one contract; move the phrase's tier and the parser goes deaf** (22 Sep: six days of series with no combat handshake).

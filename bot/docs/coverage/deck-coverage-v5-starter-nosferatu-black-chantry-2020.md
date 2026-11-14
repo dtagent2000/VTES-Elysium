@@ -1,6 +1,6 @@
-# deck-coverage — V5 Starter — Nosferatu (Black Chantry 2020) (2026-10-29)
+# deck-coverage — V5 Starter — Nosferatu (Black Chantry 2020) (2026-11-14)
 
-Genererad av `gen-deck-coverage.js` v1.1.40 mot `elysium-cardfx.json` (fxv 1, 2365 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-nosferatu.json.
+Genererad av `gen-deck-coverage.js` v1.1.46 mot `elysium-cardfx.json` (fxv 1, 2391 lib / 1822 crypt / 3347 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-nosferatu.json.
 
 Syfte: göra "kan botten spela den här leken?" till en mekanisk kontroll — curated-djup och
 handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPPORT, inte en gate.
@@ -17,7 +17,7 @@ Per verdict: FULL 77
 
 ## Konsumtionsläget (skannat ur bottens källa vid körning)
 
-- Spel-nycklar botten läser: `aggrHands`, `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bleedNullify`, `bloodPerMargin`, `bounce`, `burnPrevent`, `cancelBlock`, `dodge`, `fameOnTarget`, `fetchEquip`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockMinion`, `lockStealth`, `lockToUnlock`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `poolFromHost`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `reduce`, `rush`, `rushGrant`, `stealth`, `strengthAction`, `strengthBonus`, `strikeCE`, `unlock`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
+- Spel-nycklar botten läser: `abstainLock`, `abstainVoter`, `aggrHands`, `allyBurnUnlock`, `allyPressLife`, `bleedAct`, `bleedAtAnnounce`, `bleedDiscardCombat`, `bleedNullify`, `blockedPoolBurn`, `bloodPerMargin`, `bounce`, `burnActor`, `burnCardAction`, `burnPrevent`, `cancelBlock`, `discUp`, `dodge`, `endAction`, `endCombatLock`, `fameOnTarget`, `fetchEquip`, `grandBall`, `hostIntercept`, `hostPrevent`, `intercept`, `jackEngine`, `lockIntercept`, `lockMinion`, `lockStealth`, `lockToUnlock`, `noBlockMinion`, `openHandPrey`, `peekPreyDiscard`, `poolDmg`, `poolFromHost`, `prevent`, `preyBurnPerCopy`, `preyLock`, `rebelBlood`, `recruitAlly`, `recruitDiscount`, `reduce`, `rush`, `rushGrant`, `rushHostBy`, `rushSelf`, `stealth`, `strengthAction`, `strengthBonus`, `strikeCE`, `titleVotes`, `unlock`, `unlockAfterCombat`, `votes`, `votesBonus`, `wake`, `warsawRefresh`, `warsawRescue`
 - Fas-inkomst (kräver `phase` på moden): `bankIn`, `bankOut`, `bloodToPool`, `handCycle`, `handSize`, `handSizePerCounter`, `poolGain`, `poolToBlood`, `rescueTorpor`, `transferBurnPool`, `transferSwap`
 - Hotläsning (motståndarkort, gör ALDRIG egna kort spelbara): `bloodBurn`, `poolDmg`, `stealBlood`
 
@@ -44,7 +44,7 @@ Per verdict: FULL 77
 | Rebel | 1 | FULL | [—] rebelBlood → ✓(rebelBlood)/✓ | curated · persist · trifle |
 | Roundhouse | 8 | FULL | [pot] handBonus,handStrike → ✓(strike)/✓<br>[POT] handBonus,handStrike → ✓(strike)/✓ | auto |
 | Slum Hunting Ground | 1 | FULL | [—] bloodAdd,bloodAddTo → ✓(bloodAdd@hunting-ground)/✓ | curated · persist |
-| Smiling Jack, The Anarch | 1 | FULL | [—] jackEngine → ✓(jackEngine)/✓ | curated · persist |
+| Smiling Jack, The Anarch | 1 | FULL | [—] jackEngine → ✓(jackEngine)/✓<br>[— D] burnCardAction,burnBy → ✓(burnCardAction)/✓ | curated · persist |
 | Taste of Vitae | 4 | FULL | [—] gainOppLoss → ✓(gainOppLoss@endOfRound)/✓ | curated |
 | The Labyrinth | 1 | FULL | [—] lockStealth,lockStealthClan → ✓(lockStealth)/✓ | curated · persist |
 | The Warrens | 4 | FULL | [—] intercept → ✓(intercept)/✓ | auto |

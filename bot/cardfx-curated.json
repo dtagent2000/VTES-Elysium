@@ -1362,9 +1362,17 @@
      "fx": {
       "jackEngine": true
      }
+    },
+    {
+     "at": null,
+     "dir": true,
+     "fx": {
+      "burnCardAction": true,
+      "burnBy": "vampire"
+     }
     }
    ],
-   "note": "N3 (25 July). 'Unique. Put this card in play. During your unlock phase, move 1 counter from your pool to this card. During each other Methuselah's unlock phase, for each counter on this card, that Methuselah burns 1 pool or burns 1 blood from a vampire they control. Vampires can burn this card as a (D) action.' Actor: the accumulate is MANDATORY wording (pool > 0 guard only) at my unlock, via the general _addCounter pair. Victim side is SELF-SERVE and correctly timed: at MY OWN unlock I scan OTHERS' ready Smiling Jacks and pay counters-worth, CHOOSING pool vs blood (v1: pool if pool >= 4, else blood from the fullest vampire) -- counters are pub-relayed, zero parse needed. Burn-as-(D) = table-handled."
+   "note": "N3 (25 July). 'Unique. Put this card in play. During your unlock phase, move 1 counter from your pool to this card. During each other Methuselah's unlock phase, for each counter on this card, that Methuselah burns 1 pool or burns 1 blood from a vampire they control. Vampires can burn this card as a (D) action.' Actor: the accumulate is MANDATORY wording (pool > 0 guard only) at my unlock, via the general _addCounter pair. Victim side is SELF-SERVE and correctly timed: at MY OWN unlock I scan OTHERS' ready Smiling Jacks and pay counters-worth, CHOOSING pool vs blood (v1: pool if pool >= 4, else blood from the fullest vampire) -- counters are pub-relayed, zero parse needed. Burn-as-(D) = table-handled. v0.6.224 (13 Nov 2026, round B, RULINGS D-114, specs/spec-jack-burn-2026-11-13.md): mode 2 -- 'Vampires can burn this card as a (D) action' (fx.burnCardAction, burnBy vampire: no ally); a bot aims it only with the knob jackBurn (its price against the best other action, _jackBurnValue)."
   },
   "Warsaw Station": {
    "t": [
