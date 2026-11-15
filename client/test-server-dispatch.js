@@ -1761,5 +1761,27 @@ test('srv-2.6.50 /client-error keeps a policy report as kind csp (the digest cou
   eq(S.errRecord({ kind: 'whatever' }).kind, 'crash'); eq(S.errRecord({ kind: 'report' }).kind, 'report'); eq(S.errRecord({}).kind, 'crash');
 });
 
+test('srv-2.6.51 (bot v0.6.221\'s ask) the game is over when every OTHER seat is ousted: the last live seat\'s pass is ignored -- no turn comes back, the marker stays, nothing is said; an unoust brings the game back; a vacant seat beside it or a table of one still gets the turn back', () => {
+  const mk = names => names.map(nm => ({ name: nm, sock: recSock() }));
+  const turns = p => p.sock.msgs.filter(m => m.t === 'turn');
+  let ps = mk(['A', 'B', 'C']); ps[1].out = true; ps[2].out = true;
+  let room = { started: true, players: ps, watchers: [], turnSeat: 1 };
+  S.GAME_HANDLERS.pass({ sock: ps[0].sock }, room, ps[0], { t: 'pass' });
+  eq(room.turnSeat, 1, 'the marker stays'); eq(turns(ps[0]).length, 0, 'no turn comes back (srv-2.6.50: the winner\'s own turn again, and a bot played it)');
+  eq(ps[0].sock.msgs.filter(m => m.t === 'err').length, 0, 'silent, like the ousted seat\'s late pass');
+  ps[1].out = false; S.GAME_HANDLERS.pass({ sock: ps[0].sock }, room, ps[0], { t: 'pass' });
+  eq(room.turnSeat, 2, 'after an unoust the held turn moves on to the seat that came back'); eq(turns(ps[1]).length, 1);
+  ps = mk(['A', 'B', 'C']); ps[1].out = true; ps[2].vacant = true;
+  room = { started: true, players: ps, watchers: [], turnSeat: 1 };
+  S.GAME_HANDLERS.pass({ sock: ps[0].sock }, room, ps[0], { t: 'pass' });
+  eq(turns(ps[0]).length, 1, 'a vacant seat is still in the game: the turn comes back, as before'); eq(room.turnSeat, 1);
+  ps = mk(['A']); room = { started: true, players: ps, watchers: [], turnSeat: 1 };
+  S.GAME_HANDLERS.pass({ sock: ps[0].sock }, room, ps[0], { t: 'pass' });
+  eq(turns(ps[0]).length, 1, 'a table of one passes to itself (a solo game is not over)');
+  ps = mk(['A', 'B', 'C']); ps[2].out = true; room = { started: true, players: ps, watchers: [], turnSeat: 1 };
+  S.GAME_HANDLERS.pass({ sock: ps[0].sock }, room, ps[0], { t: 'pass' });
+  eq(room.turnSeat, 2, 'one opponent left: the prey takes the turn');
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));
 process.exit(fail ? 1 : 0);

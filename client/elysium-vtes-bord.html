@@ -1672,7 +1672,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <span class="spacer"></span>
   <div id="phases"></div>
   <span class="spacer"></span>
-  <button class="btn" id="btnTarget" title="Target: aim your next actions at a card">⌖</button>
+  <button class="btn" id="btnTarget" title="Target: aim your next action at a card">⌖</button>
   <!-- PARKED: #btnReact (Reaction window header button) -> kodarkivering.md; replaced by Played + Ready tabs. -->
   <button class="btn" id="btnHoldOn" title="Quick &quot;Hold on…&quot; — ask the table for a beat before things resolve (more reaction tools will live here)">❗&#xFE0E;</button>   <!-- U+FE0E (text variation selector): U+2757 defaults to a colour EMOJI glyph in most font stacks (unlike its sibling symbols here, which default to text glyphs) — forces the plain monochrome glyph so the button matches its siblings' size -->
 
@@ -2566,7 +2566,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hb-setup">Setting up a table</a></li>
   <li><a href="#hb-play">How a bot plays</a></li>
   <li><a href="#hb-controls">Controls</a></li>
-  <li class="ver">bot v0.6.218 · client v2.6.172</li>
+  <li class="ver">bot v0.6.229 · client v2.6.174</li>
 </ul></nav>
 
 <header class="hero">
@@ -2596,7 +2596,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <p class="lead">The short version: a bot is a fifth player who knows the rules of the actions it takes, plays a fixed deck it has been taught, and asks you when it cannot see what your card does.</p>
 
   <h3>What a bot knows about cards</h3>
-  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>156 are hand-curated</strong> (136 library, 20 crypt) — checked card by card so the bot plays them exactly right. Every master in the four V5 starters is among them: The Labyrinth locks for +1 stealth for a Nosferatu, Guardian Angel sits on the bot's sturdiest ready vampire (+1 intercept against your bleeds, 1 damage prevented each combat, gone when that vampire goes to torpor), Wasserschloss Anif banks blood from a ready Tremere for the next Tremere to come out, and Haven Uncovered goes on an opponent's vampire the bot means to rush — after that any minion, yours included, may enter combat with that vampire as a +1 stealth directed action. The other cards of the six decks in the menu all have a modelled effect, most of them compiled rather than curated.</p>
+  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>187 are hand-curated</strong> (136 library, 51 crypt) — checked card by card so the bot plays them exactly right. Every master in the four V5 starters is among them: The Labyrinth locks for +1 stealth for a Nosferatu, Guardian Angel sits on the bot's sturdiest ready vampire (+1 intercept against your bleeds, 1 damage prevented each combat, gone when that vampire goes to torpor), Wasserschloss Anif banks blood from a ready Tremere for the next Tremere to come out, and Haven Uncovered goes on an opponent's vampire the bot means to rush — after that any minion, yours included, may enter combat with that vampire as a +1 stealth directed action. The other cards of the seven decks in the menu all have a modelled effect, most of them compiled rather than curated. So do their vampires' own abilities: Catalina Vega bleeds for one more, The Dowager intercepts better against directed actions, Flávio Gonçalves dodges once in each combat.</p>
   <p>This shapes three things you will notice:</p>
   <ul>
     <li><strong>Its own deck it plays well.</strong> Every card in a bot deck has a modelled effect, so the bot never holds a card it cannot use. A card it genuinely cannot play with its current vampires is treated as dead and cycled in the discard phase.</li>
@@ -2609,17 +2609,18 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <p>Its play is <em>statistical, not scripted</em>: it tracks what each opponent has shown (bleed sizes, stealth, intercept, damage, blocks) and weighs its own hand against that picture. It knows its own deck's composition exactly, so its odds about its own next draws are real. Its picture of <em>your</em> deck starts from the tournament-winning decks archive (TWDA, about 4,700 decks): from your crypt's clan and every library card you have shown, it expects how much combat, stealth, intercept and bounce your deck runs, and sharpens that as you play. Public evidence only — never your hand. Once it is confident, one bot writes once in the log what it reads your deck as (“Viktor (bot) reads Johan's deck as Lawfirm (7 of 8 cards typical).”) — one bot speaks for the table, and it waits until no block, vote or combat is open; that line is explanation, it does not steer the bot's play.</p>
 
   <h3>Decks and archetypes</h3>
-  <p>Each bot plays one of six fixed decks. The deck decides not only the cards but the <em>posture</em> — how eagerly it goes forward, how many bodies it keeps home, and what it builds first.</p>
+  <p>Each bot plays one of seven fixed decks. The deck decides not only the cards but the <em>posture</em> — how eagerly it goes forward, how many bodies it keeps home, and what it builds first.</p>
   <div class="wrap"><table>
     <tr><th>Menu name</th><th>Archetype</th><th>How it plays</th></tr>
     <tr><td>V5 Starter — Malkavian</td><td>Stealth-bleed with intel</td><td>Dementation/Obfuscate bleed engine, Kindred Spirits chip damage, Revelations hand reads. Goes forward hard on a stealth stack and gambles on card churn. The strongest of the starters — it has won tournaments out of the box.</td></tr>
     <tr><td>V5 Starter — Ventrue</td><td>Vote-and-bleed toolbox</td><td>Princes call Kine Resources Contested and Parity Shift on their own titles, Dominate bleeds between referendums, Deflection and Second Tradition at home, Freak Drive to act twice.</td></tr>
     <tr><td>V5 Starter — Tremere</td><td>Bounce-wall with Thaumaturgy reach</td><td>Auspex intercept plus Deflection redirect pressure; Theft of Vitae swings blood. A bleed/combat hybrid that nips at both pool and blood.</td></tr>
+    <tr><td>V5 Starter — Toreador (Black Chantry 2020)</td><td>Vote-and-bleed with the Grand Ball</td><td>Princes and Toreador Justicar call Kine Resources Contested, Parity Shift and Voter Captivation; Toreador Grand Ball frees a Toreador for the politics; Presence bleeds (Enchant Kindred, Aire of Elation) between referendums; Majesty ends a fight, and Flávio Gonçalves dodges once each combat.</td></tr>
     <tr><td>V5 Starter — Nosferatu</td><td>Menace attrition</td><td>Builds permanents first (intercept, damage enhancers), then Fame and Creeping Sabotage pressure with Animalism rushes to keep threats in torpor. A dangerous combat deck once a fight starts.</td></tr>
     <tr><td>Weenie Bleed (Trainbot)</td><td>Ashur-cycling swarm</td><td>Cheap crypt floods the table, small bleeds every turn, Ashur Tablets recycle the engine. Based on a tournament-winning list — noticeably stronger than the starters.</td></tr>
     <tr><td>Inside Dirt (Nosferatu)</td><td>Weenie stealth-bleed</td><td>Obfuscate swarm slips small bleeds and Inside Dirt pool damage through every turn; minimal combat. Also tournament-derived and strong.</td></tr>
   </table></div>
-  <p>For an even table among bots, pair the four V5 starters. Mix in Weenie Bleed or Inside Dirt when you want a harder opponent.</p>
+  <p>For an even table among bots, pair the V5 starters. Mix in Weenie Bleed or Inside Dirt when you want a harder opponent.</p>
 
   <h3>Experience level</h3>
   <p>Every bot seat has a <em>simulated experience</em> setting. It does not change what the bot knows about cards — it changes how it weighs the same facts.</p>
@@ -2703,11 +2704,11 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <h3>Its own turn, phase by phase</h3>
   <details open>
     <summary>Unlock <span class="sub">— and the triggers that ride on it</span></summary>
-    <div><p>The bot unlocks its cards, announces the phase, and resolves its own unlock-phase permanents (a Smiling Jack it owns ticks here, its Blood Doll / Vessel income moves blood, a Fame it holds is checked). It pays a Smiling Jack's counters (yours too) with pool and its vampires' blood, never its last pool while blood can pay; when its unlock costs its last pool (its own Jack, a Fame) it is ousted there and its turn ends. Any other permanent of <em>yours</em> that affects the bot at its unlock it cannot see — apply the effect from the right-click menu on its board.</p></div>
+    <div><p>The bot unlocks its cards, announces the phase, and resolves its own unlock-phase permanents (a Smiling Jack it owns ticks here, its counters on the card for every seat to see, its Blood Doll / Vessel income moves blood, a Fame it holds is checked). It pays a Smiling Jack's counters (yours too) with pool and its vampires' blood, never its last pool while blood can pay; when its unlock costs its last pool (its own Jack, a Fame) it is ousted there and its turn ends. Any other permanent of <em>yours</em> that affects the bot at its unlock it cannot see — apply the effect from the right-click menu on its board.</p></div>
   </details>
   <details>
     <summary>Master <span class="sub">— one master a turn, trifles counted</span></summary>
-    <div><p>It plays at most one master card per master phase (plus a trifle's extra action, plus anything a Parthenon-class card grants), paying pool up front and writing the payment to the log so it can be audited. Persistent masters attach to a vampire or go on the table; one-shots resolve straight to the ash heap. Fame is placed on the vampire it intends to rush, and so is Haven Uncovered — only when one of its ready vampires has a rush target that turn, otherwise it keeps the card; Guardian Angel goes on its sturdiest ready vampire; Pentex Subversion and Misdirection pick the most useful unlocked target on its prey's board. It plays a master only while it controls a <strong>ready</strong> vampire that meets the card's requirements — the clan symbol counts, so Ventrue Headquarters waits for a ready Ventrue — and never plays an out-of-turn master in its own master phase: Archon Investigation is held for a bleed of 4 or more at it, played after it declines to block (3 pool; the bleeding minion is burned and the bleed does not land). Locations that lock for stealth or intercept (Backways, Market Square, Channel 10 …) are locked only when a block needs answering; Creepshow Casino at the announce of a recruit, equip or political action. A master that is not hand-curated is played with a note: <em>“(uncurated — adjust if needed)”</em> — the bot may not know what that card does.</p></div>
+    <div><p>It plays at most one master card per master phase (plus a trifle's extra action, plus anything a Parthenon-class card grants), paying pool up front and writing the payment to the log so it can be audited. Persistent masters attach to a vampire or go on the table; one-shots resolve straight to the ash heap. A choice that lasts shows as a custom token on its own cards (hover the chip): its Toreador Grand Ball names the pair, and the two Toreador carry <em>Grand Ball: non-bleed actions unblockable</em> and <em>Grand Ball: does not unlock</em>. Fame is placed on the vampire it intends to rush, and so is Haven Uncovered — only when one of its ready vampires has a rush target that turn, otherwise it keeps the card; Guardian Angel goes on its sturdiest ready vampire; Pentex Subversion and Misdirection pick the most useful unlocked target on its prey's board. It plays a master only while it controls a <strong>ready</strong> vampire that meets the card's requirements — the clan symbol counts, so Ventrue Headquarters waits for a ready Ventrue — and never plays an out-of-turn master in its own master phase: Archon Investigation is held for a bleed of 4 or more at it, played after it declines to block (3 pool; the bleeding minion is burned and the bleed does not land). Locations that lock for stealth or intercept (Backways, Market Square, Channel 10 …) are locked only when a block needs answering; Creepshow Casino at the announce of a recruit, equip or political action. A master that is not hand-curated is played with a note: <em>“(uncurated — adjust if needed)”</em> — the bot may not know what that card does.</p></div>
   </details>
   <details>
     <summary>Minion <span class="sub">— actions, one bleed and one political action per vampire</span></summary>
@@ -2792,6 +2793,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <div class="gap">
     <p><b>Revelations against a bot.</b> Play it with the bot as your prey (whatever your target says, the card goes to your prey). At inferior the bot reveals its hand to you privately and asks you to pick: <span class="menu">⌖ target</span> the card in what it revealed, or type <code>discard CARD</code>; it discards that card and draws. At superior it plays with an open hand until the card leaves play.</p>
     <p><b>Haven Uncovered on your vampire.</b> When a bot puts it there, the log says so (<em>“Hanna plays Haven Uncovered — on Lisa's Colette.”</em>); any minion may then enter combat with Colette. A bot's rush through it reads <em>“Ryan enters combat with Lisa's Colette (Haven Uncovered).”</em> and asks <em>Block?</em> as usual; Colette does not lock, and the rushing vampire is the acting minion. The bot does not read a Haven Uncovered that you play, and your own rush through one on a bot's vampire goes by <code>rush</code> in chat like a rush card — the bot then locks its vampire as it would for a rush card, which a Haven rush does not do: unlock it by hand.</p>
+    <p><b>Your Toreador Grand Ball.</b> Play it with one of your two Toreador as the acting vampire and <span class="menu">⌖ target</span> the other, then lock one: the bots read the free one from that line and the lock (a token naming the card on the free one works too). When they cannot tell — no pair on the line, no such token, and two or more of your Toreador left unlocked — the bot that speaks for the table asks once after your master phase: <em>“Lisa, your Toreador Grand Ball: which Toreador acts unblocked — Colette or Massimo?”</em> Answer with the name in chat before your turn ends; a later answer corrects an earlier one. Until the bots know, none of them blocks a non-bleed action of any of your Toreador while the Ball is in play; once they know, only the free one's.</p>
     <p><b>Cards outside the curated set.</b> Your uncurated card is a “plays X” line to the bot; it will ask about pool loss and otherwise let it be. Effects on the bot's board that come from your permanents must be applied by hand.</p>
     <p><b>Rush cards.</b> Only Deep Song is tagged as a rush in the database today, so your rush needs the target + <code>rush</code> in chat (above) until the rush cards are swept in.</p>
     <p><b>Combat against a human.</b> The bot reads your strikes, maneuvers and presses from the <span class="menu">Combat ▸</span> menu lines; anything you do not announce falls back to the rulebook default. Against you the bot maneuvers to long only, and it does not answer your maneuver with one of its own yet. Additional strikes come after the first pair: declare yours with <span class="menu">Combat ▸ Additional strike</span> (or the panel's <em>+ Additional</em>) and the bot asks for that strike; when the bot plays Quickness, Pursuit or Arms of Ahriman it says so in the log and asks whether you take one too.</p>
@@ -2922,7 +2924,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.218</b>, client <b>v2.6.172</b> / server srv-2.6.49, cardfx 156 curated / 1,708 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 11 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.229</b>, client <b>v2.6.174</b> / server srv-2.6.50, cardfx 190 curated / 1,708 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 15 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 <!-- @@/HELP:bots -->
 </template>
@@ -3282,7 +3284,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.174';   // v2.6.174 (11 Nov 2026, THE DEFAULT MOVED -- purge; srv-2.6.50 unchanged, no wire change; bot v0.6.218 beside, purge /elysium-bot.js): (1) Help > Bots embeds bot v0.6.218's guide (their fix of our 6 Nov note: 156 hand-curated, 136 library + 20 crypt). (2) KRCG made the v5 dump its DEFAULT file on 8 Nov (data/vtes.json is byte for byte data/v5/vtes.json; the old v3 file is frozen at data/v4/vtes.json): a copy that arrives by the second URL (KRCG_DATA_DEFAULT_URL, until now KRCG_DATA_V3_URL) is a stopgap only when it IS v3-shaped -- v2.6.173 marked the v5 dump fetched that way as 'KRCG's older v3 file, the newest sets are missing' and stale at once, so the next start downloaded 8.9 MB again. PROTOCOL section 12 and the canary record bot v0.6.217's lines (no client byte for that).
+const VERSION='2.6.175';   // v2.6.175 (15 Nov 2026, THE AIM LETS GO -- purge the client AND restart the server: srv-2.6.51 ships with it, no new verb or field; bot v0.6.229 beside, purge /elysium-bot.js and /elysium-cardfx.json): consumes bot v0.6.219-229 (the bot project's ten handoffs of 12-14 Nov; v0.6.229 sent none). (1) Help > Bots embeds bot v0.6.229's guide; Toreador, the fifth V5 starter, carries the label the other four have, and a known deck the LOADED bot lacks is not offered (an older bot file beside the client); the registry test reads the bot's registry instead of a pinned list, and the embedded-deck-list test skips the embedded Help pages (their deck table names the deck with its set and year). (2) Every aim is per-action (bot v0.6.225's ask; Johan, 15 Nov): a target that has ridden one of the player's lines clears when that action resolves, as a pool aim has since v2.6.23 -- the Toreador Grand Ball's pair rode the next hunt and bleed; an aim no line has carried stays, and the Target button's tooltip says 'your next action'. One used-flag for every aim, state.targetUsed, per seat (serializeGame / restoreGame, snapshot / restoreSnap); v2.6.23's _poolTargetUsed is gone. (3) A bleed line carries a pool aim only (bleedTargetSuffix): with a card in the suffix every bot read the bleed as aimed at nobody -- the prey opened no block window and lost no pool. (4) The game is over when every other seat is ousted (bot v0.6.221's ask): passBlockedWhy refuses the winner's pass with a reason, online and at a hotseat, where the sweep handed the winner a new turn (gameOverFor; a vacant seat or a table of one plays on). PROTOCOL sections 7, 12 and 12.2 and the canary v1.3.0 (section 8) record it all.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3353,7 +3355,7 @@ const CMB_STEP_SHORT=['Before range','Range','Before strikes','Strike','Damage',
 const CMB_STEP_HINT=['Cards and effects played before range is determined.','Maneuvers change the range. Close is the default.','Cards and effects played before strikes are chosen.','Choose strikes, acting minion first. They resolve together.','Prevent damage, then mend it with blood.','An uncancelled press to continue starts a new round.','End-of-round effects. This step happens even if the combat ended early.'];
 let _cmbSerial=0, _cmbSnap=null, _cmbDone='', _cmbLastAct=null, _cmbLastBlock=null, _cmbHist=[], _actUndir=false;   // v2.6.137: + my current action is undirected (Hunt, Political action, Undirected card action) -- +1 stealth when I open its block counter   // v2.6.135: + this combat's finished rounds (local, rebuilt by every screen from the same tally)   // v2.6.134: + the minion that last took an action / blocked (the default combatant)   // v2.6.129: combat identity, the blood snapshot taken on entering Damage, and the once-per-round taken-line key (declared early: avrRender runs at load)
 let playedPinned=false, playedShowT=null, playedHideT=null, playedAutoPin=false;   // v2.6.149 (K5): the Played tray's state, declared HERE beside avr (TDZ discipline -- avrRender runs during start-up and now reads both). playedAutoPin = pinned because a RESOLVER opened it (anyone's tally, or a combat started from the card menu), not by the player
-let avr=avrFresh(null), _avrSendT=null, _avrLastBleed=0, _poolTargetUsed=false;   // v2.6.20: the Played-tab resolver state, declared EARLY (TDZ discipline, same class as conv) -- schedulePush / hidePlayedSoon / renderAltIfOpen read avr.mode and are reachable from load-time restore paths; full docs at the resolver block (search "Played-tab resolvers")
+let avr=avrFresh(null), _avrSendT=null, _avrLastBleed=0;   // v2.6.175: v2.6.23's _poolTargetUsed is state.targetUsed now -- one used-flag for every aim, per seat. v2.6.20: the Played-tab resolver state, declared EARLY (TDZ discipline, same class as conv) -- schedulePush / hidePlayedSoon / renderAltIfOpen read avr.mode and are reachable from load-time restore paths; full docs at the resolver block (search "Played-tab resolvers")
 const AVR_DEFS={
   block:  { icoA:'disc/sup/obl', icoB:'disc/sup/aus', fbA:'\ud83d\udd76', fbB:'\ud83d\udc41', lblA:'Stealth', lblB:'Intercept',
             line:(a,b)=>'Block: Stealth '+a+' vs Intercept '+b+' \u2014 block '+(b>=a?'succeeds':'fails')+'.' },
@@ -3484,7 +3486,7 @@ const state = {
   phaseActs: { master:1, influence:4, discard:1 },     // permanent actions per phase (Minion is derived from unlocked minions)
   phaseUsed: { master:0, influence:0, discard:0 },      // actions used this turn (reset at turn start)
   selected: new Set(), anchor: null, drawHistory: [], cryptDrawHistory: [], discardHistory: [], wlast: 0,
-  target: null, picking: false,
+  target: null, targetUsed: false, picking: false,   // v2.6.175: targetUsed -- the current aim (a card, a remote card, a pool or a name) has ridden one of MY lines; resolvePlayedActions clears the aim then
   myClan: null, chosenClan: null,
   myPath: null
 };
@@ -4733,21 +4735,28 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ---------- Targeting: aim actions & card plays at a card ----------
-   One target at a time, shown with a crimson reticle. It sticks until you
-   clear it or the card leaves play, and every action/play logs it. */
+   One target at a time, shown with a crimson reticle. An aim lasts for ONE
+   action (v2.6.175): once a play/action line has carried it, it clears when
+   that action resolves; an aim no line has carried stays until you clear it
+   or the card leaves play. A bleed line carries a pool aim only. */
 function targetCard(){ return state.target ? state.cards.get(state.target) : null; }
 function rtRef(){
   const r=net.rtarget; if(!r) return '';
   return '<b>'+esc(r.who)+"</b>'s "+((r.faceDown||!r.name)?'face-down card':'<b>'+esc(r.name)+'</b>');
 }
-function targetSuffix(){
+function targetSuffix(){                                           // v2.6.175: ANY aim a line carries is USED now (v2.6.23 did this for a pool aim only) and clears when THAT action resolves; an aim no line has carried stays, so it can still mark the minion you are going after
   const t=targetCard();
-  if(t) return ' Target: '+cardRef(t)+'.';
-  if(net.rtarget){ if(net.rtarget.cid==='pool') _poolTargetUsed=true;   // v2.6.23: the aim was USED by an action -- it will auto-clear when THAT action resolves (see resolvePlayedActions)
+  if(t){ state.targetUsed=true; return ' Target: '+cardRef(t)+'.'; }
+  if(net.rtarget){ state.targetUsed=true;   // v2.6.23: the aim was USED by an action -- it will auto-clear when THAT action resolves (see resolvePlayedActions)
     return ' Target: '+rtRef()+'.'; }
   return '';
 }
-function targetShortRef(){                                         // v2.6.55: plain-text short target for lock/fx verbs (free-text channel, server caps at 40 chars -- keep tight). Reads WITHOUT consuming: only targetSuffix sets the pool used-flag
+function bleedTargetSuffix(){                                      // v2.6.175 (bot v0.6.225's ask): a bleed is aimed at a METHUSELAH, so only a pool aim rides its line. A card aim -- stale from an earlier play (the Grand Ball's pair) or fresh -- made the bots read the bleed as aimed at nobody (their prey test wants no target or a pool target): no block window, no pool lost. A card aim is left off here and stays unused
+  if(!(net.rtarget && net.rtarget.cid==='pool') || targetCard()) return '';
+  state.targetUsed=true; return ' Target: '+rtRef()+'.';
+}
+function bleedTargetShortRef(){ return (net.rtarget && net.rtarget.cid==='pool' && !targetCard()) ? targetShortRef() : ''; }   // v2.6.175: the bleed's lock-clone verb names the aim its line names
+function targetShortRef(){                                         // v2.6.55: plain-text short target for lock/fx verbs (free-text channel, server caps at 40 chars -- keep tight). Reads WITHOUT consuming: only targetSuffix sets the used-flag
   const t=targetCard(); if(t) return (t.faceDown?'a face-down card':String(t.name||'').slice(0,24));
   const r=net.rtarget;
   if(r){ if(r.cid==='pool') return String(r.who||'').slice(0,18)+"'s pool";
@@ -4813,6 +4822,7 @@ function setTarget(id, silent){
   const hadL=!!state.target;
   clearLocalTargetEl();
   if(id && net.rtarget){ net.rtarget=null; refreshRTargetView(); }   // local replaces remote
+  if(!net.rtarget) state.targetUsed=false;                          // v2.6.175: a fresh local aim (or none) is UNUSED; re-picking the same card returned above and keeps its flag
   const t=id ? state.cards.get(id) : null;
   if(t){
     state.target=t.id;
@@ -4824,6 +4834,7 @@ function setTarget(id, silent){
 }
 function setRTarget(r, silent){
   clearLocalTargetEl();
+  state.targetUsed=false;                                          // v2.6.175: a fresh remote or pool aim (or none) is UNUSED
   net.rtarget=r||null;
   if(r && !silent) log('⌖ Target: '+rtRef()+'.');
   refreshRTargetView();
@@ -4832,7 +4843,7 @@ function setRTarget(r, silent){
 }
 function setPoolTarget(seat){                                 // v2.6.21: player-level target -- aim at a Methuselah's POOL the same way minions are aimed at. Rides the EXISTING pub.target channel with the sentinel cid 'pool' (survives sanitizePub's cleanCard + truthy check; real card ids are 'c'+seq, so the sentinel can never collide -- the v2.6.20 seat-scoping learning). rtRef() renders it as "WHO's pool" for free, so the log line and the frozen bleed suffix read naturally. Default bleed target without any aim is still your prey, at the table as on the wire.
   const who=((net.roster||[]).find(q=>q.seat===seat)||{}).name || (net.boards[seat]&&net.boards[seat].who) || ('Seat '+seat);
-  _poolTargetUsed=false;                                      // v2.6.23: a fresh aim is UNUSED -- it survives other players' resolves until one of MY log lines carries it
+  // v2.6.23: a fresh aim is UNUSED -- it survives other players' resolves until one of MY log lines carries it (v2.6.175: setRTarget resets state.targetUsed, for every aim)
   setRTarget({ seat, cid:'pool', name:'pool', who, faceDown:false });
 }
 function refreshPoolTargetMarks(){                            // v2.6.21: two-sided pool-target cues, mirroring the card reticle's language -- the AIMER's crimson ring on the aimed globe, and an amber cue on the OWNER's own globe + dock pool (fed by targetersOf via pubs, so it works online AND hotseat). Idempotent toggles; called from refreshRTargetView (aim changes) and refreshOwnTargeted (pub/layout changes), which together cover every view rebuild.
@@ -4855,6 +4866,7 @@ function refreshPoolTargetMarks(){                            // v2.6.21: two-si
              | 'public'  (offentligt känd) */
 function setNameTarget(r){
   clearLocalTargetEl();
+  state.targetUsed=false;                                          // v2.6.175: a fresh name aim (or none) is UNUSED
   net.rtarget = r ? { name:r.name, seat:r.seat, who:r.who, faceDown:false, cid:null } : null;
   if(r){
     const me = net.you || state.playerName || 'Player';
@@ -4929,7 +4941,7 @@ function updateTargetBtn(){
   const b=$('#btnTarget');
   b.classList.toggle('lit', !!state.target || !!net.rtarget);
   b.classList.toggle('picking', state.picking);
-  let info='Target: aim your next actions at a card';
+  let info='Target: aim your next action at a card';
   if(state.picking) info='Picking… click a card in play (Esc cancels)';
   else { const t=targetCard();
     if(t) info='Target: '+(t.faceDown?'face-down card':t.name)+' — click to clear';
@@ -5174,10 +5186,10 @@ function cardMenu(c,x,y){
              const _tn=targetShortRef();                          // v2.6.55 (Johan): the lock-clone verb was the ONE surface hiding the target ("X rescues" with no victim) -- ride the short ref on the same free-text channel Bleed X uses
              if(conv.autoLock && !c.locked){ setLocked(c, true, fxv+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' '+verb+targetSuffix()); tutNotify('minion-action', fxv); if(fxv==='blocks') _cmbLastBlock=c.id; else if(resolve) _cmbLastAct=c.id; };   // v2.6.134: remembered as the default combatant
       const actBleed=n=>()=>{ dfxCancel(); actStart(c); resolvePlayedActions();   // v2.6.16 Bleed X: act()'s batch-close + autoLock semantics, but the amount rides BOTH the log line and the lock-clone's verb string -- fx `verb` is free text (<=40 chars server-side), so remote clones show the number with zero fx-protocol changes
-             const _tn=targetShortRef(); if(conv.autoLock && !c.locked){ setLocked(c, true, 'bleeds for '+n+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' bleeds for '+n+'.'+targetSuffix()); tutNotify('minion-action', 'bleeds'); _avrLastBleed=n; _cmbLastAct=c.id; };
+             const _tn=bleedTargetShortRef(); if(conv.autoLock && !c.locked){ setLocked(c, true, 'bleeds for '+n+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' bleeds for '+n+'.'+bleedTargetSuffix()); tutNotify('minion-action', 'bleeds'); _avrLastBleed=n; _cmbLastAct=c.id; };
       const actBleedAdd=x=>()=>{ const t=Math.min(99,(_avrLastBleed|0)+x); _avrLastBleed=t;   // v2.6.18: announce a bleed INCREMENT (Conditioning & co land after the base announce) -- running total is batch-scoped
              const vb='adds +'+x+' bleed (= '+t+')'; cardFx(c, 'lock', { verb: vb });   // presentational clone only (cardFx is state-free and broadcasts itself); the minion is already locked from the base bleed, no batch close, no autoLock
-             log(cardRefCap(c)+' adds +'+x+' bleed (= '+t+').'+targetSuffix()); tutNotify('bleed-add'); };   // v2.6.26: tutorial breadcrumb (Structured II's +X step advances on the real thing)
+             log(cardRefCap(c)+' adds +'+x+' bleed (= '+t+').'+bleedTargetSuffix()); tutNotify('bleed-add'); };   // v2.6.26: tutorial breadcrumb (Structured II's +X step advances on the real thing)
       const actReduce=x=>()=>{ dfxCancel();   // v2.6.159 (bot v0.6.201's ask, Johan 16 Oct): the BLED player's reaction -- a reduction card the bots may not know; the line says by how much, and a bot bleeding you lowers its bleed (a bleed of 0 moves no Edge). A reaction, not an action: no lock, no batch close (the bleed is still live), no target suffix (the bot's L12.reduceBy ends at the period); it ends the Reaction window like Block does
              cardFx(c, 'lock', { verb:'reduces the bleed by '+x });                       // presentational clone only, like +X bleed
              log(BLEED_LINE.reduce(cardRefCap(c), x)); };
@@ -5471,7 +5483,7 @@ function snapshot(){
     masterBonus:state.masterBonus||0, turn:state.turn||1,                                     // v2.5.46 undo audit: Trifle's +1 and the turn counter rewind with the rest of the phase economy (trifleUsed was captured, its bonus was not)
     drawHistory:[...state.drawHistory],
     cryptDrawHistory:[...state.cryptDrawHistory], discardHistory:[...state.discardHistory],   // v2.5.46: symmetric with drawHistory - keeps "Undo last influence/discard" exact after snapshot-undos (JSON.stringify deep-copies, so entries never alias live state)
-    target:state.target||null,
+    target:state.target||null, targetUsed:state.targetUsed||undefined,   // v2.6.175: undo puts back the flag the aim had before the undone line
     edgeTok:(()=>{ const et=tokens.get('edge'); return (et && Number.isFinite(et.x)) ? {x:et.x, y:et.y} : null; })(),   // v2.5.46: the FREE Edge token's felt position - mirrors serializeGame's edgeTok (the state.target dual-transport lesson, now applied to tokens)
     zones:Object.fromEntries(Object.entries(state.zones).map(([k,v])=>[k,[...v]])),
     cards:[...state.cards.values()].map(c=>({
@@ -5519,6 +5531,7 @@ function restoreSnap(s){
     c.el.title=cardTitle(c);
   });
   state.target = (d.target && state.cards.has(d.target)) ? d.target : null;
+  state.targetUsed = !!d.targetUsed && !!(state.target || net.rtarget);   // v2.6.175: an undone line un-uses the aim it carried
   if(state.edge && conv.edgeToken){ ensureEdgeToken(); const et=tokens.get('edge'); if(et && d.edgeTok && Number.isFinite(d.edgeTok.x)){ et.x=d.edgeTok.x; et.y=d.edgeTok.y; placeToken(et); } } else removeEdgeToken();   // v2.5.46: sync the FREE token with the restored holder (mirrors restoreGame line-for-line) - undoing a claim no longer leaves a ghost on the felt, and the token returns to its snapshotted spot
   renderPhaseCounts();                                                 // v2.5.46: repaint the restored phase-action economy (phaseUsed/phaseActs/trifleUsed/masterBonus were restored but never redrawn)
   updateMyClan();                                                      // v2.5.82: myClan/myPath are a derived cache, not part of the snapshot payload -- recompute fresh from the just-restored zones/faceDown state, same reasoning as renderPhaseCounts() above (an undo reversing a flip or a ready-zone move left the clan icon showing whatever it was AFTER the undone action)
@@ -9299,7 +9312,7 @@ function resolvePlayedActions(){                           // the current action
   _actUndir=false;   // v2.6.138: the action is over -- its undirected +1 must not reach the next one (an action declared by playing a card never passes the Actions menu)
   if(avr.mode==='block'){ avrSendCancel(); avr=avrFresh(null); avrRender(); if(mySeat() && mySeat()===(net.turnSeat|0)) tallySendNull(); }   // v2.6.137: ...and the ACTOR's client now says so on the wire (the server / hotseat table kept the old stealth, and a bot read it as the next action's). v2.6.28 (Johan): the Block referendum dies with its ACTION — every client runs this on the same triggers (It resolves / res / basic resolve), so the clear is symmetric without a broadcast. v2.6.29: the pending tally DEBOUNCE dies with it too — an adjust ≤120 ms before the resolve used to fire after the clear and resurrect the counters table-wide
   _avrLastBleed=0;                                         // v2.6.18: the announced bleed total dies with the batch (see the resolver block)
-  if(_poolTargetUsed){ _poolTargetUsed=false; if(net.rtarget && net.rtarget.cid==='pool') setRTarget(null); }   // v2.6.23 (Johan's call): a pool aim is PER-ACTION -- it clears when the action that USED it resolves. The used-flag (set by targetSuffix, reset by setPoolTarget) is what makes this safe: actBleed closes the PREVIOUS batch before logging, so an unconditional clear here would eat a fresh aim before its own bleed line; and someone ELSE's resolve never touches your fresh, unused aim. Card targets stay sticky by design (ongoing hostility markers).
+  if(state.targetUsed){ state.targetUsed=false; if(state.target || net.rtarget) clearAnyTarget(true); }   // v2.6.175 (bot v0.6.225's ask; Johan, 15 Nov: every aim is per-action): v2.6.23's pool rule now covers card and name aims too. A card target used to stick until cleared and rode every later line -- the Grand Ball's pair rode the next hunt and bleed, and a bot reads a bleed with a card target as aimed at nobody. Same two guarantees: a fresh aim survives the batch-close ahead of its own line, and another player's resolve never touches your unused aim. The v2.6.23 note follows. v2.6.23 (Johan's call): a pool aim is PER-ACTION -- it clears when the action that USED it resolves. The used-flag (set by targetSuffix, reset by setPoolTarget) is what makes this safe: actBleed closes the PREVIOUS batch before logging, so an unconditional clear here would eat a fresh aim before its own bleed line; and someone ELSE's resolve never touches your fresh, unused aim. Card targets stay sticky by design (ongoing hostility markers).
   let any=false;
   state.zones.ready.forEach(id=>{ const c=state.cards.get(id); if(c && c.actSt==='played'){ c.actSt='resolved'; any=true; } });
   if(any){ schedulePush(); renderAltIfOpen(); }
@@ -9501,6 +9514,11 @@ function turnLabel(){
 }
 let _passBusy=0, _passSeq=0;   // cli-2.6.164 (B-5): the pass in progress (0 = none) -- a held P repeats, and a hotseat pass awaits the bots' sweep
 function passBusyReset(){ _passBusy=0; }   // a table that goes away takes its pass with it: hotAwaitPass never resolves on a torn-down table (on purpose), so a pass that waited on the sweep never reaches its finally (the review: every later pass said 'The bell is already ringing.' until a reload)
+const GAME_OVER_MSG='The game is over \u2014 you are the last Methuselah standing.';
+function gameOverFor(me){                                         // v2.6.175 (bot v0.6.221's ask): every OTHER seat is ousted, so nobody is left to take the turn -- passing used to hand the winner a new turn (online: srv-2.6.50 sent the turn straight back; hotseat: the sweep found no live seat). A vacant seat (a player left, the seat awaits its taker) is still in the game, and a table of one is a solo game: neither is over
+  const r=net.roster||[]; if(!me || r.length<2) return false;
+  return r.every(q=>q.seat===me || !!q.out);
+}
 function passBlockedWhy(){   // cli-2.6.164 (B-5): null = this screen may pass now; else the reason, for the toast
   if(_passBusy) return 'The bell is already ringing.';
   if(mpReconnecting()) return 'Reconnecting \u2014 pass once the connection is back.';   // cli-2.6.165 (C-15): it passed locally and the server never heard it
@@ -9508,11 +9526,13 @@ function passBlockedWhy(){   // cli-2.6.164 (B-5): null = this screen may pass n
     if(net.spect) return 'Spectators do not pass.';
     if(net._passPending && Date.now()-net._passPending<8000) return 'Your pass is on its way.';   // until the server's `turn` arrives (a held key sent several)
     const me=mySeat(), ts=net.turnSeat|0;
+    if(gameOverFor(me)) return GAME_OVER_MSG;                     // v2.6.175: before the turn check -- the marker may rest on the last seat ousted
     if(me && ts && ts!==me) return 'It is not your turn \u2014 '+(((net.roster||[]).find(q=>q.seat===ts)||{}).name||('seat '+ts))+' holds it.';
     return null;
   }
   if(localTable && net.roster && net.roster.length>1){
     const me=mySeat(), ts=net.turnSeat|0;
+    if(gameOverFor(me)) return GAME_OVER_MSG;                     // v2.6.175: the hotseat sweep found no live seat and handed the winner a new turn
     if(ts && ts!==me) return (typeof hotBotSeat==='function' && hotBotSeat(ts)) ? ((((net.roster||[]).find(q=>q.seat===ts)||{}).name||('Seat '+ts))+' is playing.') : 'It is not your turn.';
   }
   return null;
@@ -11619,13 +11639,15 @@ const HOT_BOT_DECKS=[
   { key:'nosferatu', label:'V5 Starter \u2014 Nosferatu' },
   { key:'malkavian', label:'V5 Starter \u2014 Malkavian' },
   { key:'ventrue',   label:'V5 Starter \u2014 Ventrue' },
+  { key:'toreador',  label:'V5 Starter \u2014 Toreador' },      // v2.6.175: the fifth V5 starter (bot v0.6.219+) under the label the other four carry -- the deck's own name adds its set and year
 ];
 const HOT_BOT_DECK_HIDE={ wall:1 };
 const HOT_BOT_PERSONA='expert';                                    // v2.6.122 (Johan's ruling, 21 Sep): the default experience level -- every arena series since 18 Sep ran on it; the other two are graded against it
 const HOT_BOT_PERSONAS=[['expert','Expert'],['experienced','Experienced'],['novice','Novice']];   // bot v0.6.149+ keys (it still accepts grinder/shark as aliases and plays an unknown string as expert)
 function hotBotDeckMenu(){                                         // [{key,label}] -- the known keys, then whatever else the LOADED bot registers
-  const out=HOT_BOT_DECKS.slice();
-  try{ const A=(typeof ElysiumBot!=='undefined' && ElysiumBot.ARCHETYPES)||null;
+  let A=null; try{ A=(typeof ElysiumBot!=='undefined' && ElysiumBot.ARCHETYPES)||null; }catch(_e){}
+  const out=HOT_BOT_DECKS.filter(r=>!A || A[r.key]);               // v2.6.175: a known key the LOADED bot lacks is not offered (toreador needs bot v0.6.219+, a self-hoster may run an older file); before the bot loads every known key shows, as before
+  try{
     if(A) Object.keys(A).forEach(k=>{ if(HOT_BOT_DECK_HIDE[k] || out.some(r=>r.key===k)) return; out.push({ key:k, label:String((A[k]&&A[k].name)||k).slice(0,60) }); });
   }catch(_e){}
   return out;
@@ -13579,7 +13601,7 @@ function serializeGame(maxTurnLogs){   // cli-2.6.165 (C-16): maxTurnLogs (optio
     turn:state.turn, turnLogs:_tl, curLines:curLines,
     drawHistory:[...state.drawHistory], cryptDrawHistory:[...state.cryptDrawHistory], discardHistory:[...state.discardHistory], masterBonus:state.masterBonus||0,
     seq:state.seq, topZ:state.topZ,
-    target:state.target||null,
+    target:state.target||null, targetUsed:state.targetUsed||undefined,   // v2.6.175: the aim's used-flag travels with the aim (per seat)
     rtarget:net.rtarget||null,   // cross-board target (targeting another seat's card). Like state.target above, this is per-seat: saved here so a hotseat priority hand-off carries each seat's OWN target instead of leaking the previous active player's net.rtarget (a global) onto the next one. Online needs nothing here — each client holds its own net.rtarget.
     zones:Object.fromEntries(Object.keys(state.zones).map(z=>[z,[...state.zones[z]]])),
     cards:[...state.cards.values()].map(c=>({
@@ -13621,6 +13643,7 @@ function restoreGame(json, opts){
     state.zones[z]=Array.isArray(d.zones[z]) ? d.zones[z].filter(id=>state.cards.has(id)) : [];
   state.target = (d.target && state.cards.has(d.target)) ? d.target : null;   // restore the seat's local target so it survives hotseat hand-off
   net.rtarget = (d.rtarget && typeof d.rtarget==='object' && d.rtarget.seat!=null) ? d.rtarget : null;   // restore the seat's cross-board target too (parallel to state.target). Not validated against state.cards — it points at ANOTHER seat's board (net.boards[seat].pub), and the existing snapshot/roster pruning (7118-7121 / 7141-7144) nulls it if that card is gone. Clearing it here is what stops the previous active player's target leaking onto the new one on a hotseat hand-off.
+  state.targetUsed = !!d.targetUsed && !!(state.target || net.rtarget);   // v2.6.175: the seat's used-flag comes back with its aim -- a hotseat hand-off must not hand one seat's flag to the next
   updateSelVisual(); updateTargetBtn();
   state.pool=Number.isFinite(d.pool)?d.pool:30;
   state.edge=!!d.edge;

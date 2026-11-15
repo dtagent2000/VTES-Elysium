@@ -1,3 +1,66 @@
+## [SIKTET SLÄPPER] (15 november 2026, klient v2.6.175 / srv-2.6.51)
+
+Johan, strax efter midnatt: "Bottsidan har lämnat lite info i handover om du vill kika". Tio handoffs låg och väntade,
+v0.6.219 till v0.6.228 (12–14 november), alla mergade; roten hade v0.6.228. Jag körde våra grindar mot deras bunt först:
+klientsviten 361/2, exakt deras två (inbäddningsdriften och registertestet), kanariefågeln 143/0, dispatch 94/0. Sedan
+läste jag varje fråga mot koden och föreslog en runda. På morgonen: "Vi kör på dina rekommendationer :)" -- och att det
+kommit en PR till. Det var #74, v0.6.229 (deras bänkrunda), utan handoff; den är bunten vi konsumerade.
+
+**Det tredje testet.** Efter ominbäddningen blev ett test till rött, som bottsidan inte kunde se (de bäddar inte in):
+deras guides kortlek-tabell skriver "V5 Starter — Toreador (Black Chantry 2020)", och v2.6.122-testet vägrade den
+frasen var som helst i klienten -- det menade en inbäddad kortlekslista av VÅR, inte deras prosa. Det hoppar nu över
+`helpDoc`-mallarna, som grannen redan gjorde för "grinder". Registertestet läser bottens register i stället för en
+spikad lista, så nästa kortlek från dem kräver inget av oss. Toreador fick vår etikett, och menyn erbjuder en känd nyckel
+bara när den INLÄSTA botten har den -- en äldre bottfil hade annars erbjudit Toreador och kastat "needs v0.6.147 or
+newer", vilket är fel för en kortlek som kom med v0.6.219.
+
+**Siktet som hängde kvar var värre än frågan.** Bottsidan bad oss släppa målet efter ett kortspel: Toreador Grand
+Balls par (`Target: Flávio Gonçalves.`) red med på nästa `hunts.` och nästa bleed. Innan jag byggde något körde jag en
+levande v0.6.228-bot mot raderna: en mänsklig bleed med ETT KORT i suffixet tas inte som en bleed alls. Bottens bytes-test
+(`poolT ? … : (!target && who === predName())`) blir falskt för varje kortmål, så bytet öppnade inget blockfönster och
+förlorade ingen pool -- både för Ballens kvarhängande par och för en människa som medvetet siktar på bytets vampyr. Johan
+valde regeln jag föreslog: ett sikte gäller EN handling. Ett mål som har ridit på en av spelarens rader rensas när den
+handlingen är avgjord, precis som poolsiktet sedan v2.6.23; ett sikte ingen rad burit står kvar och kan fortfarande märka
+en minion. Det vänder v2.6.23:s "kortmål är klibbiga". Och en bleed-rad bär bara ett poolsikte (`bleedTargetSuffix`).
+Flaggan heter `state.targetUsed` (ersätter `_poolTargetUsed`) och följer varje plats via `serializeGame`/`restoreGame`
+och `snapshot`/`restoreSnap`. Testet för det avslöjade en sak jag inte tänkt på: en återupptagning från en sparning kör
+`setPhase` utan `restore`, alltså en batch-stängning, så ett ANVÄNT sikte försvinner då -- samma sak som när de spelade
+korten baslinjeras om; en överlämning vid hotseat (`handoff:true`) behåller det. Det är rätt beteende, och testet säger det.
+
+**Spelet är slut.** v0.6.221 bad servern att inte ge turen tillbaka när den som passar är ensam kvar. Jag byggde det ett
+steg smalare än deras rad: `if(ni === i) return;` hade också stoppat en ledig plats bredvid (den är fortfarande med i
+spelet) och ett bord med en spelare. srv-2.6.51 ignorerar passet tyst när varje ANNAN plats är utslagen; klienten säger
+"The game is over — you are the last Methuselah standing." i stället för att ge vinnaren en ny tur, online och vid
+hotseat (där svepet inte hittade någon levande plats och gav människan tur N+1).
+
+**§12 och kanariefågeln v1.3.0.** §12 beskriver nu hur botarna läser en människas Grand Ball (spelraden och dess Target,
+låset på brädet efter `Phase:`-raden, en egen token, den enda andra redo Toreadorn) och frågan de kan ställa till ägaren
+(formen, inte orden) och det fritt skrivna svaret de läser; Smiling Jack på `burnAct` med kommat i namnet; Perfect Paragon;
+Eyes of the Wild; kryptans dodge på vår egen rad; och raderna utan läsare. Avsnitt 8 har 28 kontroller. Den första
+körningen bredvid v0.6.218 kraschade (`_hMemoBoard` fanns inte), så den är skyddad nu, som avsnitt 7 lärde oss. Det
+starkaste testet är ett LIVE-test i klientsviten: klientens EGEN Ball-rad, skickad genom bryggan, ger den riktiga botten
+paret (`bot:memo`, via `pair`).
+
+**Frågan om bryggan.** v0.6.227 frågade om `hotBridge.toBot` ska leverera synkront. Mitt svar: nej, den ska leverera som
+servern, efter att send har returnerat -- den synkrona ordningen låg bakom deras 50 av 53 fönster som fick löpa ut, och vi
+har egna vägar dit (en botts omedelbara svar kör den mänskliga klientens hanterare inne i människans eget `log()`-anrop).
+Men det ändrar literalen de lyfter och ett 45-tal av våra tester, så det blir en egen runda efter Johans "kör".
+
+**I webbläsaren** (headless Chrome, file://, två människor vid hotseat, riktiga menyer, fasraden och P): v2.6.175 skriver
+paret på Ballens rad, tar bort siktesringen vid Minion, skriver `Catalina Vega hunts.` och `Catalina Vega bleeds for 1.`
+utan suffix, låter ett kortsikte överleva bleeden, och P med den andra platsen utslagen ger beskedet om spelets slut;
+v2.6.174 behåller ringen och skriver `Target: Flávio Gonçalves.` på båda raderna.
+
+**Grindar:** klient 372/0 (v0.6.229 bredvid, inga hopp; v2.6.174 mot den nya sviten 361/11, varje nytt test rött på
+beteende), kanariefågeln 171/0 (mot v2.6.174:s klient och protokoll 154/17, bredvid v0.6.218 167/4), dispatch 95/0
+(srv-2.6.50 94/1), endpoint 36/0, protokoll 6/0, soak `--control`, båda inbäddningskontrollerna, B1 byte-identisk,
+check-versions grön.
+
+**Öppet:** bryggans leveransordning (nästa runda); en idé till Johan om "Unlock all cards?" (den låser upp Toreadorn en
+människas Ball håller låst -- ett kort kunde märkas "förblir låst vid nästa upplåsning"); punkt 5 i säkerhetsplanen väntar
+på Johans blick i boxens logg (bottsidan har bekräftat att deras klient maskerar varje ram). Inte kört: elysium.cards, och
+en människa mot riktiga botar i en webbläsare med Ballen, Jack eller Eyes of the Wild i spel.
+
 ## [STANDARDEN FLYTTADE] (11 november 2026, senare, klient v2.6.174 / srv-2.6.50 oförändrad)
 
 Johan, efter att #60 och bottens #61 mergats: "Du har en ny handoverinfo nu också om du vill kika". Tre handoffs låg och

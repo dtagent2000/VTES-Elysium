@@ -1,8 +1,27 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.174 / server v2.6.50 / bot v0.6.218 tested beside the suite, last updated 11 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.175 / server v2.6.51 / bot v0.6.229 tested beside the suite, last updated 15 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**15 Nov 2026 (THE AIM LETS GO — v2.6.175 / srv-2.6.51, bot v0.6.219–229 consumed):**
+- **Probe the reader before you shape the line.** The ask was 'drop a stale target after a card play'. Feeding the
+  released bot the client's own lines showed the real cost: a bleed with ANY card in its suffix was not taken as a bleed
+  (the prey test wants no target or a pool target) -- so a fresh aim at the prey's vampire was as broken as the stale one.
+  The fix became two rules (one aim per action; a bleed names a Methuselah), each pinned by a LIVE test with the reader.
+- **A test that pins the other half's list turns red on a change their design allows.** v2.6.122's registry test pinned
+  the extras to `[brandnew]`; their first new deck turned it red. Read the list from their release; pin only what is ours
+  (the order, the label, the hidden key). The same round: a 'no X in the client' test met X in their embedded prose --
+  strip the `helpDoc` templates in any such scan.
+- **A used-flag lives with what it flags.** v2.6.23 kept the pool aim's flag in a module `let`; a per-seat aim needs it in
+  `state` and in all four copies (`serializeGame`/`restoreGame`, `snapshot`/`restoreSnap`). And every restore path decides
+  whether the open action survives: `restoreGame` without `handoff` runs `setPhase` WITH the batch-close, so a resume
+  drops a used aim -- the test found it, and it is right (the played cards are re-baselined the same way).
+- **A guard for an old bot belongs in the canary's helper, not in a later fix.** Section 8 called `_hMemoBoard` bare and
+  crashed beside v0.6.218 -- the same lesson as section 7's `_cotHit`. Test optional methods with `typeof` where they are
+  called.
+- **The headless menu trap, again:** cards placed high on the felt sit under the Played tab, which opens when the pointer
+  crosses the top centre; place test cards low and park the pointer between steps.
 
 **11 Nov 2026, later (THE DEFAULT MOVED — v2.6.174, KRCG's v5 default and bot v0.6.217's lines):**
 - **A data file's address is not its format.** v2.6.168 reached KRCG's v3 file by a second address and, from then on,

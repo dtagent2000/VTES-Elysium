@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.50';   // srv-2.6.50 (11 Nov 2026, THE WATCHED DOOR -- restart, and back up the data directory first; ships with client v2.6.173): the server half of the bot project's security handoff (bot/docs/handoffs/HANDOFF-to-main-2026-11-11-security.md; the plan: client/docs/elysium-security-plan.md). (1) A stored password is a slow hash: a room's, a referee's and a save's password was one unsalted SHA-256, so a leaked snapshot, save file or backup gave every weak or reused password at dictionary speed; now 's1$' + salt + '$' + scrypt(sha256hex(pass)) (N 2^14, r 8, p 1, ~40 ms). One salt per server, carried inside every hash (saves are grouped by EQUAL hashes across rooms, decision D4); the old hashes are wrapped as the files load and both files are written at once, so no SHA-256 hash outlives the first start; a verified password is remembered in memory, keyed by the stored hash. A rollback to srv-2.6.49 cannot read the new hashes. (2) The client page carries a Content-Security-Policy-Report-Only header whose script hashes are made from the file being sent (nothing to keep in step; enforcement is the next round). (3) /images/ answers with a sandbox policy: an SVG opened on its own runs nothing. (4) /client-error keeps the kind 'csp' (a policy report) instead of filing it as a crash. No wire change.
+const VERSION = '2.6.51';   // srv-2.6.51 (15 Nov 2026, THE AIM LETS GO -- restart; ships with client v2.6.175; no new verb or field): bot v0.6.221's ask. When every OTHER seat is ousted the game is over and `pass` is ignored silently -- the turn stays where it is. It came straight back to the passer, whose bot (or client) then played a turn after the game had ended; turnOnFromOusted has left the marker alone in this case since srv-2.6.38. A vacant seat beside the passer (still in the game) or a table of one keeps the turn coming back; after an unoust the next pass moves it on.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -941,6 +941,7 @@ const GAME_HANDLERS = {
       return wsSend(conn.sock, { t:'err', msg:'It is not your turn.' });
     if(i > -1 && n){
       const ni = nextLiveSeat(room, i);               // your prey is next, skipping ousted & vacant seats
+      if(ni === i && n > 1 && room.players.every(q => q === p || q.out)) return;   // srv-2.6.51 (bot v0.6.221's ask): every OTHER seat is ousted -- the game is over and the turn stays where it is. It came straight back to the passer, whose bot (or client) then played a turn after the game had ended; turnOnFromOusted has left the marker alone in this case since srv-2.6.38. Silent, like the ousted seat's late pass above. A vacant seat beside the passer (still in the game) or a table of one keeps the turn coming back, as before
       room.turnSeat = ni + 1;
       turnTallyClear(room); bcast(room, { t:'turn', seat: room.turnSeat, who: room.players[ni].name });
     }

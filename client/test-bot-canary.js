@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================================
-   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.2.0
+   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.3.0
    ----------------------------------------------------------------------------
    PROTOCOL.md §12 is the authoritative, "frozen" bot contract. Three things
    must agree at all times: (1) what §12 DOCUMENTS, (2) what the CLIENT
@@ -24,6 +24,10 @@
    v1.2.0 (11 Nov 2026, client v2.6.174): section 7 -- bot v0.6.217's lines (V5 wave 4, the
    handoff of 3 Nov): Change of Target, the polling-step abstain, an action that burns a card in
    play, the rush line's new granting cards, and the shapes the wave reuses.
+   v1.3.0 (15 Nov 2026, client v2.6.175): section 8 -- bot v0.6.219-228's lines (the handoffs of 12-14
+   Nov): a HUMAN's Toreador Grand Ball read from the client's play line, the question to its owner and
+   the answer, Smiling Jack's burn, Eyes of the Wild, the crypt dodge, the table lines with no reader,
+   and the client's aim rule (one aim per action; a bleed names a Methuselah).
    ========================================================================== */
 
 const fs = require('fs');
@@ -349,6 +353,71 @@ ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament m
   ok(!!(woke && woke.ended === true) && u._oppEndedCombat === true, 'a live bot waiting for the acting minion\'s first line is woken by a combat ended before range');
   u = mk7(); u._onLog('Ann', 'Referendum terms — ' + B('Toreador Justicar') + ': Gilbert takes the title (Justicar, 3 votes).');
   ok(!!(u._refT && u._refT.card === 'Toreador Justicar') && (u._refT.deltas[2] | 0) === 0, 'a live bot reads a title referendum\'s terms with a stake of 0');
+}
+
+/* ---- 8) v2.6.175 (bot v0.6.219-229 consumed): bot v0.6.219-228's lines (bot/docs/handoffs/HANDOFF-to-main-2026-11-12 ..
+   -11-14-*.md). A HUMAN's Toreador Grand Ball is read from the client's own card-play line and its Target suffix (the pair),
+   from which of the two turns locked once the master phase ends, and -- when the bots still cannot tell -- from the owner's
+   free-text answer to one bot's question in chat; the reader is the bot's memo (its `bot:memo` event), not L12. Smiling Jack
+   rides the frozen burnAct line with a comma in the card's name; Eyes of the Wild rides attemptIcp; the crypt dodge is the
+   client's own strikeD line. And the client's aim rule of v2.6.175, pinned with its reason: the bots' prey test takes a
+   bleed with no target or a pool target, never a card (the control). Em-dashes and U+2019 are escapes (section 3). */
+{
+  [['VAMP plays Toreador Grand Ball. Target: X.', 'a human\'s Toreador Grand Ball, the client\'s play line the bots read'],
+   ['NAME, your Toreador Grand Ball: which Toreador acts unblocked — A or B?', 'the Grand Ball question to its owner (its shape)'],
+   ['takes an action to burn NAME\'s Smiling Jack, The Anarch.', 'Smiling Jack\'s burn (the comma in its name)'],
+   ['NAME: your Smiling Jack, The Anarch is burned.', 'the chat line to a human owner'],
+   ['VAMP plays Perfect Paragon (allies and younger vampires get −1 intercept): +1 stealth.', 'Perfect Paragon\'s stealth line'],
+   ['VAMP: Perfect Paragon does not reach BLOCKER (−1 stealth).', 'Perfect Paragon\'s adjustment (no reach)'],
+   ['VAMP: Perfect Paragon reaches BLOCKER (+1 stealth).', 'Perfect Paragon\'s adjustment (reach)'],
+   ['VAMP plays Eyes of the Wild: unlocks.', 'Eyes of the Wild\'s unlock'],
+   ['VAMP attempts to block with +1 intercept (Eyes of the Wild).', 'Eyes of the Wild\'s attempt'],
+   ['VAMP locks again: it did not block this action (Eyes of the Wild).', 'Eyes of the Wild\'s relock note'],
+   ['NAME strikes: dodge — no damage either way this round.', 'the crypt dodge (the client\'s own line)'],
+   ['NAME discards CARD at random to strike: dodge.', 'Phaibun\'s discard (no reader)'],
+   ['The bleed has no target: NAME was ousted in its window.', 'an action at an ousted seat fizzles (no reader)'],
+   ['The referendum’s part for NAME does nothing: ousted in its window.', 'a referendum part for an ousted seat (no reader)'],
+   ['an aim rides only the action it was used in', 'the client\'s aim rule (v2.6.175)'],
+   ['the pool aim is the only suffix a bleed carries', 'a bleed\'s one suffix (v2.6.175)']
+  ].forEach(([tag, what]) => ok(sec12.includes(tag), 'PROTOCOL §12 documents ' + what + ': "' + tag + '"'));
+
+  { const m = 'Gilbert takes an action to burn Bot\'s Smiling Jack, The Anarch.'.match(L12.burnAct || /$^/);
+    ok(!!m && m[1] === 'Gilbert' && m[2] === 'Bot' && m[3] === 'Smiling Jack, The Anarch', 'bot L12.burnAct reads a card whose name carries a comma'); }
+  { const m = 'Rudi attempts to block with +1 intercept (Eyes of the Wild).'.match(L12.attemptIcp || /$^/);
+    ok(!!m && m[1] === 'Rudi' && m[2] === '1' && m[3] === 'Eyes of the Wild', 'bot L12.attemptIcp reads Eyes of the Wild\'s attempt'); }
+  ok(!!L12.strikeD && L12.strikeD.test('Flávio Gonçalves strikes: dodge — no damage either way this round.'), 'bot L12.strikeD reads the crypt dodge');
+  ok(CLIENT.includes("log(cardRefCap(c)+' bleeds for '+n+'.'+bleedTargetSuffix());") && CLIENT.includes("log(cardRefCap(c)+' adds +'+x+' bleed (= '+t+').'+bleedTargetSuffix());"), 'client source: the bleed and +X bleed lines carry the pool-only suffix (bleedTargetSuffix)');
+  ok(CLIENT.includes("if(state.targetUsed){ state.targetUsed=false; if(state.target || net.rtarget) clearAnyTarget(true); }"), 'client source: a used aim clears when its action resolves (resolvePlayedActions)');
+
+  const { Bot } = require('./elysium-bot.js');
+  const B = s => '<b>' + s + '</b>', CL = (id, s) => '<b class="clog" data-cid="' + id + '">' + s + '</b>';
+  const mk8 = () => { const sent = []; const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Bot', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} });
+    u.seat = 2; u.started = true; u.send = m => sent.push(m); u.push = () => {}; u.chat = t => sent.push({ t: 'chat', text: t });
+    u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Bot', bot: true }, { seat: 3, name: 'Ann', bot: true }];
+    u._sent = sent; u._evs = []; u.onEvent = (t, d) => u._evs.push([t, d]); return u; };
+  const tor = (id, name, locked) => ({ id, name, kind: 'crypt', zone: 'ready', blood: 4, faceDown: false, locked: !!locked, counters: [] });
+  const gbCard = { id: 'c3', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', faceDown: false };
+  const memoOf = u => u._evs.filter(x => x[0] === 'bot:memo').map(x => x[1]);
+  const ballTable = (suffix, lockFirst) => { const u = mk8(); u.table = { 1: { pub: { cards: [tor('c1', 'Catalina Vega'), tor('c2', 'Flávio Gonçalves')] } } };
+    u._onLog('Johan', CL('c1', 'Catalina Vega') + ' plays ' + CL('c3', 'Toreador Grand Ball') + '.' + (suffix ? ' Target: ' + CL('c2', 'Flávio Gonçalves') + '.' : ''));
+    u.table[1].pub.cards = [tor('c1', 'Catalina Vega', lockFirst), tor('c2', 'Flávio Gonçalves'), gbCard];
+    u._onLog('Johan', 'Phase: ' + B('Minion') + '.'); if (typeof u._hMemoBoard === 'function') u._hMemoBoard(1); return u; };   // guarded: an older bot (no human memo before v0.6.225) gives red lines, not a crash
+  let u = ballTable(true, true), mm = memoOf(u)[0];
+  ok(!!mm && mm.card === 'Toreador Grand Ball' && mm.lock === 'Catalina Vega' && mm.free === 'Flávio Gonçalves' && mm.via === 'pair', 'a live bot reads a human\'s Ball from the client\'s play line and its Target (the pair) and the lock on their board: Flávio acts unblocked (' + JSON.stringify(mm) + ')');
+  u = ballTable(false, true); mm = memoOf(u)[0];
+  ok(!!mm && mm.free === 'Flávio Gonçalves' && mm.via === 'only', 'without the Target it reads the human\'s only other ready Toreador');
+  u = ballTable(true, false); mm = memoOf(u)[0];
+  const asked = u._sent.find(m => m && m.t === 'chat');
+  ok(!!mm && mm.free === null && !!asked && asked.text === 'Johan, your Toreador Grand Ball: which Toreador acts unblocked — Catalina Vega or Flávio Gonçalves?', 'with no lock to read, the bot that speaks for the table asks in the documented shape: ' + JSON.stringify(asked && asked.text));
+  u._onChat('Johan', 'Flavio'); mm = memoOf(u).slice(-1)[0];
+  ok(!!mm && mm.free === 'Flávio Gonçalves' && mm.via === 'answer', 'and the owner\'s free-text answer (one name, accents aside) becomes its memory');
+
+  u = mk8(); u._onLog('Johan', CL('c1', 'Lisa') + ' bleeds for 1.');
+  ok(!!(u.pending && u.pending.amount === 1 && u.pending.who === 'Johan'), 'the prey test: a human\'s bleed with no target reaches its prey bot');
+  u = mk8(); u._onLog('Johan', CL('c1', 'Lisa') + ' bleeds for 1. Target: ' + B('Bot') + '\'s ' + B('pool') + '.');
+  ok(!!(u.pending && u.pending.amount === 1), '...and with a pool aim at it');
+  u = mk8(); u._onLog('Johan', CL('c1', 'Lisa') + ' bleeds for 1. Target: ' + B('Bot') + '\'s ' + B('Sully') + '.');
+  ok(!u.pending, 'control: with a CARD in the suffix the prey bot does not take the bleed -- why the client never writes one there (v2.6.175)');
 }
 
 console.log('\n' + passN + '/' + failN + (failN ? ' \u2014 FAIL' : ' \u2014 all green'));
