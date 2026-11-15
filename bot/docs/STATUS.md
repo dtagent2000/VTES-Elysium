@@ -5,7 +5,7 @@
 v1.1.3 · built against the root's release, client v2.6.174 / srv-2.6.50 (main's canary v1.2.0 143/0 against it); the read-only
 copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6.50 and main's canary v1.2.0.
 
-**Deploy state:** `main` carries v0.6.228. **Open PR:** PR_TBD (this release).
+**Deploy state:** `main` carries v0.6.228. **Open PR:** #74 (this release).
 
 ## Last gates (v0.6.229 release bytes `e306ac04`, 15 Nov 2026)
 Suite **2517/0 ×3** · canary **143/0** ×2 · cardfx 324/0 · hotseat 12/0 · the lint clean · `ana-gates.py --self-test` 35/0 ·
