@@ -43,7 +43,7 @@ fresh; python3 -c "
 import os, sys
 T = sys.argv[1]
 for f, lim in [('docs/RULINGS.md', 64000), ('docs/LESSONS.md', 20000), ('docs/ARCHITECTURE.md', 15500), ('docs/HARNESS.md', 8000),
-               ('docs/HOWTO.md', 21000)]:   # the pages outside the bootstrap: padding the bootstrap's own would trip its 50 KB first (29 Oct)
+               ('docs/HOWTO.md', 21500)]:   # the pages outside the bootstrap: padding the bootstrap's own would trip its 50 KB first (29 Oct)
     p = os.path.join(T, 'bot', f); n = os.path.getsize(p); open(p, 'a').write('x' * max(0, lim - 50 - n))
 " "$T";                                                                                     run "the total over 170 KB, each page within its own" "standing pages total"
 rm -rf "$W"

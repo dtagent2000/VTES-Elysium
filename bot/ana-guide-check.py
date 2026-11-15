@@ -174,6 +174,23 @@ def scan(D, DECK):
                     C['passed referendum, Scalpel in hand, prey against, a later bleed'] += 1
                     C['  its later bleeds'] += len(later)
                     C['  its later bleeds blocked'] += sum(1 for y in later if y['res'] == 'blocked')
+        locks = [r for r in mine if r['type'] == 'abstain' and (r.get('data') or {}).get('use') == 'lock']
+        for lk in locks:
+            a = acts.get(lk['round'], [])
+            i = next((j for j, x in enumerate(a) if x['k'] == 'pol' and x['v'] == lk['data'].get('by')), None)
+            if i is None:
+                continue
+            later = [y for y in a[i + 1:] if y['k'] == 'bleed']
+            C['lock turns'] += 1
+            C['  lock turns: later bleeds'] += len(later)
+            C['  lock turns: later bleeds blocked'] += sum(1 for y in later if y['res'] == 'blocked')
+        # the pool my predator's bleeds took (a bleed at me is my predator's unless bounced), by the predator's deck
+        pred = deck_of_seat.get((seat - 2) % N + 1)
+        L['pool lost to bleeds, predator ' + str(pred)].append(sum((r.get('data') or {}).get('n', 0) for r in mine if r['type'] == 'took-bleed'))
+        # the blood-cost cards played (Toreador's: Majesty, Aire of Elation, Perfect Paragon, Resist Earth's Grasp, Scalpel Tongue)
+        for r in mine:
+            if r['type'] == 'play' and (r.get('data') or {}).get('card') in ('Majesty', 'Aire of Elation', 'Perfect Paragon', "Resist Earth's Grasp", 'Scalpel Tongue'):
+                C['play ' + r['data']['card']] += 1
         # my first block window at another deck's bleed (T1)
         for r in mine:
             if r['type'] != 'decide' or (r.get('data') or {}).get('q') != 'block-as-target':
