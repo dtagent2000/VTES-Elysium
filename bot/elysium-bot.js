@@ -11004,6 +11004,7 @@ class Bot {
         if(_ai > 0) this._maybeActAgain(actors[_ai - 1], actors, _ai - 1);   // v0.6.123: Freak Drive-class, after the previous actor's action is fully over (combat included); may push the vampire back on the queue
         if(_ai >= actors.length) break;
         const v = actors[_ai];
+        if(this._polHold && v.id === this._polHold.keyId) this._polHold.done = true;   // v0.6.229: the key actor's turn (whatever it does: a torpor walk, a stuck hunt, home) -- the others' hold on the political cards ends here
         this._lastAct = null;
         await pace();
         if(this._gameOver()) break;   // v0.6.221 (D-113): the last oust of the game came with my previous action -- no further action (it bled my own seat)
@@ -11013,7 +11014,6 @@ class Bot {
         if(tdone && tdone.has('stuck')){ this._emit('stays-home', { vamp: v.name, why: 'Change of Target ended its mandatory hunt: it cannot act this turn' }); continue; }   // [LSJ 19980112]
         const huntDone = !!(tdone && tdone.has('cot:hunt'));
         const mandatory = (v.blood | 0) === 0 && !huntDone;
-        if(this._polHold && v.id === this._polHold.keyId) this._polHold.done = true;   // v0.6.229: the key actor's turn -- the others' hold on the political cards ends here
         const keep = (this._ballFreeId && v.id === this._ballFreeId) ? null : this._keepBlocker(v, actors, _ai);   // v0.6.118 (B2 posture, doctrine 2.4): the last unlocked body stays home against a bleeder within reach. v0.6.229 (D-117): the Grand Ball's free Toreador acts; another body stays home
         if(keep){ this.o.log('posture: ' + keep.why); this._emit('keep-blocker', { vamp: v.name, tto: keep.tto, quota: keep.quota || 0 }); continue; }
         const hd = huntDone ? { hunt: false, why: 'Change of Target ended its hunt this turn' } : mandatory ? { hunt: true, why: 'mandatory: 0 blood (rulebook)' } : this.decide('hunt-or-bleed', { vamp: v });
