@@ -118,3 +118,18 @@ moved per calm Villein falls by at most 0.5 (3.64), Villeins played within ±10 
 ## 11. For Johan
 "kör" or "nej" on each: D-117 (ruled: build), 2 (recommended no), 3, 4, 5 (recommended no), 6, 7 (amends D-2 for a deck without
 bounce), 8. Recommended: kör D-117, 3, 4, 6, 7, 8; no 2 and 5 (the lines say why).
+
+## 12. Amended before any arm (15 Nov, the build's mechanism smokes; the predictions above stand as registered)
+- §4, keyLast's place: K goes after every other actor but the bodies the posture would keep home — asked at the minion head as if
+  the best blocker were the last body (`_keepBlocker` with the unlocked count it will have then; the plan's quota keeps that many,
+  `_homeBodies`) — and when K would be one of them another stays. The first draft's "just before the best blocker" left the
+  referendum first in every two-actor turn. D-117's free Toreador takes the same guard (never among the home bodies), and the minion
+  loop skips its keep test.
+- §5, the arm is `engineW=6`, not 4: the planner probe (Catalina 8 / Bret 4 / Kathy 5 and Catalina / Kathy / Nik 3 in the uncontrolled
+  region, pool 30) picks Kathy at 4 and Catalina from 6. Catalina's plan scores 2.8–3.4 under the faster picks (about a turn of first
+  rise); the stated intent — the biggest wins against one about a turn faster, never against one two turns faster — needs 6
+  (6 × ΔY ≤ 5.5, under two turns).
+- §7, the 24-match smoke with `scalpelLock` alone: 0 locks in 92 Toreador referendums. The refusals: no actor of mine left 13, the votes
+  against from another seat than my prey 7, the voter locked 3 (it acted on its own turn — a prey vampire that voted is usually
+  locked during my turn), no payable Scalpel Tongue 3. The mechanism is right (174g–h); S1's 50 plays were counted without the
+  unlocked condition and stand as registered.
