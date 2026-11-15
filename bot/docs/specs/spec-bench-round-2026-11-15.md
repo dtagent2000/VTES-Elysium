@@ -4,7 +4,7 @@ Johan (14 Nov, STATUS "Next" 1): the bench round takes the Toreador guide check'
 (`reports/REPORT-toreador-guide-check-2026-11-13.md`) and D-117 (the Ball's turn), his "kör" on each. D-112: the guide is a check,
 not law — where the line and the guide disagree, the line keeps what the bot's judgment and the sim say gives the deck the most VP,
 and says why. This spec is the proposal (analysis, design, registered predictions); nothing is built before his "kör".
-Status: **proposed, waiting for "kör" per item** (§11).
+Status: **kör** — Johan, 15 Nov 01:16 ("Ja, kör :)"), on the recommendation of §11; recorded as RULINGS D-118.
 
 ## 1. The baseline (v0.6.228, main `c5852bc`)
 The 600: `node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue,toreador --bench none` (every seating, a fresh deal
@@ -80,7 +80,7 @@ than three are ready, a stock excepted), one arm pinned to Toreador; my expectat
 ## 7. Proposal 6 — Scalpel Tongue's lock before my offence
 Knob `scalpelLock` (0 = v0.6.228). In my referendum's polling step, after the count passes: when my prey has a ready, UNLOCKED
 vampire that voted against, an actor of mine is still to act this turn, and my calling vampire can pay Scalpel Tongue (one
-requirement [cel][pre], 1 blood, not its last when it has an action card in hand), it plays the card on that vampire —
+requirement [cel][pre], 1 blood, not its last), it plays the card on that vampire —
 `_bestAbstainFor`'s target model (a vampire whose votes the seat's count names) with "unlocked" and "against" as conditions,
 `_playAbstain` (votes against come off: the count only rises) and the frozen ABSTAIN line (no new line). Pinned to Toreador.
 Predictions: (S0) at 0 IDENTICAL; (S1) Scalpel Tongue ≥ 50 plays (10), each lock on such a vampire with an action of mine to come;
