@@ -49,10 +49,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait
   returns an earlier round's pending line; `_xLossSum` sums nothing. *Done when* each is fixed with a positive test and its footprint
   read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
-- **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct): Black Chantry's helpsheets and Fifth
-  Edition guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy.
-  D-112: each strategy line is checked against its guide. Toreador's is done (13 Nov, `reports/REPORT-toreador-guide-check-2026-11-13.md`):
-  17 points, 3 findings (built: B v0.6.224, A and C v0.6.228); proposals 2–8 and D-117 go to a bench round. *Done when* each deck's proposals have Johan's "kör" or "no". Docs: RULINGS D-43, O-33, D-112; `specs/spec-knowledge-layer.md`.
+- **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct; refined by the archetypes and general strategy).
+  D-112: each strategy line is checked against its guide; Toreador's is done (its proposals benched, v0.6.229, D-118). *Done when*
+  each deck's proposals have Johan's "kör" or "no". Docs: RULINGS D-43, O-33, D-112, D-118.
+- **Reads the bench round left** (D-118): my referendums' block rate from the table (proposal 2, at tables that block
+  politics); a stealth bleeder read from the deck, not one shown card (proposal 7 let Tremere's bleeds through); `keyLast`'s hold
+  with two political cards in hand. *Done when* each is built and benched, or ruled out.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a

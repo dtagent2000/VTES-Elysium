@@ -133,3 +133,14 @@ bounce), 8. Recommended: kör D-117, 3, 4, 6, 7, 8; no 2 and 5 (the lines say wh
   against from another seat than my prey 7, the voter locked 3 (it acted on its own turn — a prey vampire that voted is usually
   locked during my turn), no payable Scalpel Tongue 3. The mechanism is right (174g–h); S1's 50 plays were counted without the
   unlocked condition and stand as registered.
+
+## 13. What came out (bot v0.6.229; each arm 600 matches, paired against the knobs-at-0 control; the full reads: CHANGELOG v0.6.229)
+| item | the mechanism | the registered predictions | Toreador's paired VP | verdict |
+|---|---|---|---|---|
+| D-117 `ballTurn` | the free one calls on 95 % of its Ball turns (66 %), an earlier caller 1 (51), kept home 1 (41), the guard waited 17 times | B1, B3, B4, B5 held; B2 half (1 earlier caller, not 0) | +0.01 [−0.02, +0.05] | on |
+| 3 `keyLast` | the referendum first in 3 % of the turns (46 %), last in 67 % (20 %); Ventrue first 12 % (36 %) | O1 half (last < 70 %), O2 failed (17.4 % blocked, not ≤ 17 %; fewer referendums called: 2329 against 2483), O3, O4 held | +0.04 [−0.05, +0.14]; Ventrue +0.05 [−0.04, +0.15] | on |
+| 4 `engineW` 6 | the guide's pick first in 67 % (19 %) | I1 half (stocks 0.50 a match, not 0.6; the third vampire 0.3 turn later), I2 held (Nosferatu SAME-PLAY), I3 level, not the loss expected | +0.04 [−0.07, +0.15]; every seat in turn +0.00 [−0.09, +0.10] | on |
+| 6 `scalpelLock` | 71 locks (Scalpel Tongue 81 plays, 10) | S1, S3 held; S2 failed (the lock turns' later bleeds blocked 42 %, 39 % before) | +0.03 [+0.01, +0.05] | on |
+| 7 `clogWide` | calm attempts at a read Malkavian 206 → 45, but every read stealth bleeder's bleeds let through (Tremere 161, Nosferatu 128, Ventrue 120) | C1, C2 failed | −0.04 [−0.10, +0.03] | removed; D-2 stands |
+| 8 `villeinKeep` | a calm Villein leaves its host at 1 blood 104 times (324) | V1, V2 held; V3 failed (the blood-cost plays 2568, 2575) | +0.00 [−0.06, +0.06] | on |
+| the five together | — | no loss | +0.09 [−0.03, +0.21] | the release |

@@ -32,6 +32,71 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.229 (15 Nov 2026)** — The bench round (RULINGS D-117, D-118; Johan, 15 Nov 01:16: "Ja, kör :)" on the recommendation,
+  `specs/spec-bench-round-2026-11-15.md`): the Toreador guide check's proposals behind knobs, each benched on the 600 (the five-seat
+  table, a fresh deal per match; the variant pinned to its deck, or in every seat for a rule every deck has) and read paired against
+  the knobs-at-0 control; five on, one removed, no to 2 and 5 (the spec's §3 and §6 say why). Rides along (D-92): R-45's notes (Eyes
+  of the Wild's comment and cardfx note: once each action and Gangrel), `ana-block.py` ends an action at a failed referendum (it
+  writes no through / blocked row, so its window ran into the next action's: both R6 rows of the combined arm), `ana-guide-check.py`
+  (new, read-only: the guide check's situations on a sim trace dir), arena v1.4.13 (the knobs whitelisted).
+  - *The change*: `ballTurn` (D-117) -- `_minionKeyOrder` puts my Grand Ball's free Toreador, when its own look ahead (`_aheadPick`)
+    calls a referendum, before the first other actor that could call one and never among the bodies the posture keeps home
+    (`_homeBodies`: the keep test asked at the head as if the best blocker were the last body); `_polHold` keeps the others off the
+    political cards until its turn (`_actionCtxAdjust`, a `pol-hold` row); the loop skips its keep test; `_ballGuard` holds the Ball
+    when after the lock the free one would be the last body the posture keeps home (`ball-wait`), through `_keepBlocker`'s new
+    `unlockedN`. `keyLast` (proposal 3) -- the actor whose look ahead calls the best referendum goes after the cheap actions, before the
+    home bodies (another stays when it would be one), the others held off the cards; with `scalpelLock` a referendum that would carry
+    the lock opens the turn; a probed queue is left alone (`_probeFired`); `key-order` rows. `engineW` 6 (proposal 4, D-43) --
+    `_engineY` in `_planInfluence`: the share of my other crypt cards younger than the first vampire when it can play a superior stock
+    action my library holds 4+ of. `scalpelLock` (proposal 6) -- `_scalpelLockPlan` after my referendum passes: my prey's ready,
+    unlocked vampire that voted against, an actor of mine still to act, Scalpel Tongue from the caller (never its last blood),
+    `decide('scalpel-lock')`, `_playAbstain` (`abstain` row `use: 'lock'`); `_votedBy` and `_scalpelTongueFor` shared with
+    `_bestAbstainFor`. `villeinKeep` (proposal 8) -- `_reserveTwo`: a calm Villein leaves the blood for two blood-cost cards.
+    `clogWide` (proposal 7) built, benched and removed. `DECK_STRATEGY.toreador`'s comment says where the line differs from the guide
+    and why (points 3, 13, 17). Section 174 (15: 0/15 on v0.6.228; 174b3 red on a mutant without the loop's keep skip; 174f and 174l
+    partly prove only that the methods are new, L-22).
+  - *Predictions* (registered before any arm, commit 2c5772a; amended before any arm, 6ec926f, the predictions unchanged: keyLast's
+    place before the home bodies, the engine arm at 6 not 4, the Scalpel smoke's locked voters): the spec's B0-B5, O0-O4, I0-I3,
+    S0-S3, C0-C3, V0-V3.
+  - *What came out* (the arms on 3154895's bytes, the combined arm on the removal's; 600 each against the knobs-at-0 control):
+    (K0) held -- at 0 the 240, the V5 smoke (168) and the 600 IDENTICAL to v0.6.228 (the manifests' six new labels normalized).
+    D-117, pinned to Toreador (DIVERGED 144): (B1) held -- the free one calls on 290 of its 305 Ball turns (95 %; 66 %); (B2) half
+    held -- an earlier caller 1 (51; predicted 0), kept home 1 (41); (B3) held -- 305 Balls (308), 17 waits; (B4) held -- bars per Ball
+    1.13 (0.80), a turn with a bar 302 of 305 (71 %); (B5) held -- +0.01 [-0.02, +0.05].
+    Proposal 3, pinned to Toreador (DIVERGED 439): (O1) half held -- the referendum first in 53 of 1665 turns with another act (3 %;
+    46 %), last in 67 % (20 %; predicted 70 %); (O2) failed -- 405 of 2329 blocked (17.4 %; 20.5 %; predicted 17 %), 1891 passed (1943):
+    fewer called (2483), the hold keeps the earlier actors off the cards; (O4) held -- +0.04 [-0.05, +0.14]. Pinned to Ventrue
+    (DIVERGED 390): (O3) held -- 641 of 1833 blocked (35.0 %; 37.2 %), first 12 % (36 %), 1153 passed (1151); +0.05 [-0.04, +0.15].
+    Alone, keyLast moves another caller after the Ball's free one (it "does else" 89 times, 12 before); with ballTurn it does not.
+    Proposal 4 at 6, pinned to Toreador (DIVERGED 470): (I1) half held -- the guide's vampire first in 403 of 600 (19 %), the first
+    rise 0.35 turn later; stocks 0.50 a match (0.35; predicted 0.6) and the third vampire 0.3 turn later (4.71) failed; (I3) +0.04
+    [-0.07, +0.15], level, not the loss I expected. Every seat in turn (DIVERGED 316): (I2) held in substance -- Nosferatu's 120 as the
+    variant SAME-PLAY (the planner's zero term rides in its row); the variant seat +0.00 [-0.09, +0.10] (by deck, 120 each: Ventrue
+    +0.21, Malkavian -0.02, Tremere -0.03, Toreador -0.13 [-0.39, +0.12]).
+    Proposal 6, pinned (DIVERGED 65): (S1) held -- 71 locks (Scalpel Tongue 81 plays, 10); (S2) failed -- the lock turns' later bleeds
+    blocked 28 of 67 (42 %; 39 %): one locked voter does not unblock the bleeds after it; (S3) held -- +0.03 [+0.01, +0.05].
+    Proposal 7, pinned (DIVERGED 409): (C1) failed -- calm attempts at a read Malkavian 206 -> 45, but the rule let every read
+    stealth bleeder through (clog-wide rows: Tremere 161, Nosferatu 128, Ventrue 120; the table model reads a seat that has shown
+    stealth as one); (C2) failed -- the pool Malkavian's bleeds took +0.02 a match, Tremere's +0.69; (C3) -0.04 [-0.10, +0.03]: removed.
+    Proposal 8, pinned (DIVERGED 187): (V1) held -- a calm Villein leaves its host at 1 blood 104 times (324); (V2) held -- 3.48
+    blood moved (3.64), 973 Villeins (971); (V3) failed -- the blood-cost plays 2568 (2575); +0.00 [-0.06, +0.06].
+    The five together, pinned to Toreador (DIVERGED 571): +0.09 [-0.03, +0.21] (0.84 -> 0.93, wins 96 -> 112); the free one calls on
+    295 of 316 Ball turns, no earlier caller, 4 kept home; 1988 referendums passed (1943), 416 blocked (509); 133 locks;
+    `ana-gates.py` PASS but the block gate's two R6 rows (a failed referendum's window: the audit fix above), the ledger 0 faults.
+  - *The flips*: `ballTurn` 1, `keyLast` 1, `engineW` 6, `scalpelLock` 1, `villeinKeep` 1 (D-118: no loss and the mechanism moved;
+    the failed halves above are the map). `clogWide` lost and is gone with its case; D-2 stands.
+  - *The release footprint* (the five on, against v0.6.228, the version set back): the 240 DIVERGED 233 / SAME-PLAY 7 (the engine
+    opens the starters' Govern decks; keyLast moves Ventrue's referendums) -- paired VP Malkavian -0.18 [-0.41, +0.04], Tremere +0.14
+    [-0.02, +0.30], Ventrue +0.07, Nosferatu -0.03 (the 240's repeated deals, L-45); the V5 smoke DIVERGED 168; the 600 DIVERGED 600 --
+    Malkavian +0.08 [-0.09, +0.25], Ventrue +0.04, Toreador +0.03 [-0.11, +0.16], Tremere -0.03, Nosferatu -0.12 [-0.23, -0.01] (no
+    knob of its own: the table around it plays better). `ana-gates.py` PASS on the 240 and the V5 smoke; the 600 fails the ledger gate
+    once (match 512: the fizzle misread below; v0.6.228's 600 failed it in 167, the block gate too).
+  - Gates on the release bytes: GATES_TBD
+  - *Egress*: EGRESS_TBD
+  - *Found on the way*: the fizzle misread (BOARD) shows wherever a referendum's or a creep's pool loss ousts a seat just before a
+    bleed at it -- the ballTurn arm's 378 and 491 (Toreador's referendum first, then its bleed at the seat it ousted), the release's
+    512; the next prey books the bleed. Malkavian's first bleeds are unread as a stealth bleeder's (171 calm attempts) and any seat
+    that showed stealth once is read as one (BOARD: the reads the bench round left).
 - **v0.6.228 (14 Nov 2026)** — Round F, "Toreador 100 %" (Johan, 14 Nov: "Vi kan väl köra klart toreadorerna helt 100%
   först"): corrections only (knob hygiene, L-62) — Perfect Paragon's [PRE], Versailles' vote per titled Camarilla vampire, Scalpel
   Tongue's [cel][pre] as one requirement, Eyes of the Wild (a locked Gangrel's block, its paid intercept, the clan requirement read
