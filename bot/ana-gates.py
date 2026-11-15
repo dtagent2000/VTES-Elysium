@@ -26,7 +26,7 @@
 #   --self-test: a clean synthetic series PASSes every gate; each planted fault turns its own line FAIL (the game's end included).
 import collections, glob, importlib.util, json, os, re, shutil, sys, tempfile
 
-VERSION = '1.1.2'
+VERSION = '1.1.3'
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 def _load(name):
@@ -169,6 +169,9 @@ def _match(k, plant=None, sim=True):
     if plant == 'chain':   # v1.1.1: at the client pace a bounce chain (the target's Deflection at its react delay, the new target's answer) is answered, not run out
         row(3000, 'B1', 'bleed-total', {'n': 1}); row(3001, 'B2', 'decide', {'q': 'react-delay', 'out': {'ms': 3100}}); row(6100, 'B2', 'play', {'window': 'react-bounce', 'card': 'Deflection', 'vamp': 'Y'})
         row(6500, 'B3', 'decide', {'q': 'react-delay', 'out': {'ms': 3100}}); bleed(9750, 1); row(9800, 'B3', 'took-bleed', {'n': 1})
+    if plant in ('failref', 'failref0'):   # v1.1.3 (bot v0.6.229): a FAILED referendum ends its action (ana-block) -- Y's attempt at it and Y's at the next bleed are two actions, no R6
+        row(4000, 'B2', 'block-made', {'vamp': 'Y'}); row(4500, 'B1', 'referendum', {'vamp': 'X', 'passed': plant == 'failref0'})
+        row(5000, 'B2', 'block-made', {'vamp': 'Y'}); row(5500, 'B1', 'blocked', {'vamp': 'X', 'n': 1, 'by': 'Y'})
     if plant in ('flag', 'flags'): row(2600, 'B1', 'inv-flag', {'inv': 'strike-taken', 'taken': 2, 'myStrike': 1})
     if plant == 'wv': row(2600, 'B1', 'inv-flag', {'inv': 'pool-drift', 'diff': 1})   # v1.1.0: Wider View's two kinds are no known kinds now --
     if plant == 'wvp': row(2600, 'B1', 'inv-flag', {'inv': 'pool-print', 'via': 'burn-for-pool'})   # both were in v1.0.0's INV_KNOWN (it passes them)
@@ -210,6 +213,7 @@ def self_test():
              ('missing', S, {'matches'}), ('problem', S, {'matches'}), ('flag', S, set()), ('flags', S, {'invariants'}),
              ('kind', S, {'invariants'}), ('wv', S, {'invariants'}), ('wvp', S, {'invariants'}), ('window', S, set()),
              ('flag', S, set(), 12), ('flags', S, {'invariants'}, 12),   # v1.1.0: a 12-match series carries one known flag, not two
+             ('failref', S, set()), ('failref0', S, {'block'}),   # v1.1.3: a failed referendum's window ends at its verdict; a PASSED one writes its through row (none here), so the two attempts share a window: R6
              (None, A, set()), ('window', A, {'windows'}), ('windowp', A, {'windows'}), ('chain', A, set()), ('timeout', A, {'matches'}), ('zeroPool', A, {'zeroPool'})]
     fails = 0; tmp = tempfile.mkdtemp(prefix='ana-gates-')
     try:

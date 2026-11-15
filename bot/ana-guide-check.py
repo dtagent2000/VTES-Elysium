@@ -6,7 +6,9 @@
 #   Sections: the Grand Ball (its turn, its bars, its burns), the referendums (their place in the turn, blocked by place), the first
 #   influence (the biggest uncontrolled superior-stock vampire first), the first offensive action, Scalpel Tongue (the count-turning
 #   abstain and the lock), the first block window at another deck's bleed (calm / the edge, read as a stealth bleeder, attempts), Villein
-#   (the host's blood left), and the bench round's own rows (key-order, pol-hold, ball-wait, clog-wide, the planner's engine term).
+#   (the host's blood left), and the bench round's own rows (key-order, pol-hold, ball-wait, the planner's engine term). The first
+#   influence reads the deck's superior-stock table (stock_sup: malkavian, tremere, ventrue, toreador; nosferatu has none, so it prints
+#   no first-influence rows). The lock turns count the turns where no act of mine followed the lock (its cost bought nothing).
 #   --json prints the counts as one JSON object (for a paired read of two arms).
 import json, glob, os, sys, collections
 
@@ -14,8 +16,12 @@ def base(n):
     return (n or '').split(' (G')[0]
 
 def stock_sup(deck):
-    # the deck's biggest-capacity superior stock vampires by name -> capacity (Enchant Kindred [PRE], Govern the Unaligned [DOM])
+    # the deck's superior-stock vampires by name -> capacity: the crypt cards bot v0.6.229's _engineY reads above 0 (a superior blood-stock
+    # action the library holds 4+ of: Enchant Kindred [PRE], Govern the Unaligned [DOM] ...; the youngest of them reads 0 and is not listed)
     return {
+        'malkavian': {'Alexander Silverson': 8, 'Andi Liu': 6, 'Gelasia Fotiou': 6},
+        'tremere': {'Ayelech': 7, 'Lloyd Brooks': 6, 'Trevon Parker': 6},
+        'ventrue': {'Alexa Draper': 8, 'Alice Chen': 7, 'Madison': 6, 'Naomi Stewart': 5, 'Sybren van Oosten': 7},
         'toreador': {'Bret Stryker': 4, 'Catalina Vega': 8, 'Flávio Gonçalves': 7, 'Kathy Glens': 5, 'Mkhokheli': 6, 'Tamoszius': 5},
     }.get(deck, {})
 
@@ -182,6 +188,8 @@ def scan(D, DECK):
                 continue
             later = [y for y in a[i + 1:] if y['k'] == 'bleed']
             C['lock turns'] += 1
+            if not any(y['k'] != 'home' for y in a[i + 1:]):
+                C['  lock turns: no later act'] += 1
             C['  lock turns: later bleeds'] += len(later)
             C['  lock turns: later bleeds blocked'] += sum(1 for y in later if y['res'] == 'blocked')
         # the pool my predator's bleeds took (a bleed at me is my predator's unless bounced), by the predator's deck
@@ -204,8 +212,8 @@ def scan(D, DECK):
             C['bleed window %s %s %s' % (dk, zone, sb)] += 1
             if out.get('block'):
                 C['bleed attempt %s %s %s' % (dk, zone, sb)] += 1
-            if out.get('tag') in ('clog', 'clog-wide'):
-                C['%s %s' % (out.get('tag'), dk)] += 1
+            if out.get('tag') == 'clog':
+                C['clog %s' % dk] += 1
         # Villein
         dng = None
         for r in mine:

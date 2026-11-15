@@ -600,8 +600,8 @@ class Bot {
     jackBurn: 1,             // v0.6.224 (round B, RULINGS D-114, specs/spec-jack-burn-2026-11-13.md): 1 = a vampire of mine may burn another seat's Smiling Jack as a (D) action when its price (what Jack takes from me against what it takes from my prey, over my runway) beats the best other action, the most exposed bot first; and a burn at MY Jack is weighed by its worth to me (what it still takes from my prey). 0 = no Jack burn and T6's weight for a burn at my Jack (v0.6.223 plus step 1's guard). Default 1 since its release, after a mirror bench with no loss (the four starters, every seat, 288 matches) and a bench pinned to Nosferatu's seat for the owner's defence; with it on in every seat Nosferatu's paired VP on the 240 fell and Jack's median life with it -- the numbers: docs/elysium-bot-CHANGELOG.md v0.6.224
     jackRunway: 1,           // v0.6.226 (round D, RULINGS D-115, Johan 14 Nov: O-40's self-consistent runway): 1 = a seat's runway against Jack pays its GROWING counter -- R solves R*(c1 + fc) + R(R-1)/2 = pool, so the price over it never passes the seat's pool; 0 = v0.6.225's flat runway, pool / max(0.25, c1 + fc), whose price could pass the pool (5 of 56 burns on the 240). Read only with jackBurn. Default 1 since its release, after a mirror bench with no loss (D-114's rule) -- the numbers: docs/elysium-bot-CHANGELOG.md v0.6.226
     ballTurn: 1,             // v0.6.229 (default 1 after its bench, pinned to Toreador on the 600: Toreador +0.01 [-0.02, +0.05]; the free one calls on 95 % of its Ball turns, 66 % before) (the bench round, RULINGS D-117 / D-118, specs/spec-bench-round-2026-11-15.md §2): 1 = on a turn my Toreador Grand Ball is in play, its free Toreador -- when its own scorer calls a referendum -- acts before any other vampire of mine that could call one, the others leave the political cards to it, another body stays home; and the Ball waits when after its lock the free one would be the last body the posture keeps home (_minionKeyOrder, _ballGuard); 0 = v0.6.228
-    keyLast: 1,              // v0.6.229 (default 1 after its benches, pinned to Toreador and to Ventrue on the 600: +0.04 [-0.05, +0.14] and +0.05 [-0.04, +0.15]; the referendum first in 3 % / 12 % of the turns, 46 % / 36 % before) (D-118, proposal 3; the Toreador guide: 'the least important action first, the most important last'): 1 = the actor whose look ahead calls the turn's best referendum acts after the cheap actions that draw blocks -- before the body today's order keeps last, last when it is that body -- and the others leave the political cards to it (_minionKeyOrder); 0 = v0.6.228
-    engineW: 6,              // v0.6.229 (default 6 after its benches on the 600: every seat in turn +0.00 [-0.09, +0.10], pinned to Toreador +0.04 [-0.07, +0.15]; Toreador's guide pick first in 67 %, 19 % before) (D-118, proposal 4; D-43: the help sheets' opening, measured): the influence planner adds engineW x the share of my other crypt cards younger than the first vampire, when it can play a superior blood-stock action my library holds 4+ of (Enchant Kindred [PRE], Govern the Unaligned [DOM]; _engineY); 0 = v0.6.228
+    keyLast: 1,              // v0.6.229 (default 1 after its benches, pinned to Toreador and to Ventrue on the 600: +0.04 [-0.05, +0.14] and +0.05 [-0.04, +0.15]; the referendum first in 3 % / 12 % of the turns, 46 % / 36 % before) (D-118, proposal 3; the Toreador guide: 'the least important action first, the most important last'): 1 = the actor whose look ahead calls the turn's best referendum acts after the cheap actions that draw blocks -- last, or just before the bodies the posture would keep home (when it would be one of them, another stays) -- and the others leave the political cards to it until its turn; with scalpelLock a referendum that would carry Scalpel Tongue's lock opens the turn instead (keyFirst-scalpel: the release's combined arm puts the referendum first more often than keyLast alone -- the numbers: CHANGELOG v0.6.229); a queue the probe order reordered is left alone (_minionKeyOrder); 0 = v0.6.228
+    engineW: 6,              // v0.6.229 (default 6 after its benches on the 600: every seat in turn +0.00 [-0.09, +0.10], pinned to Toreador +0.04 [-0.07, +0.15]; Toreador's guide pick first in 67 %, 19 % before) (D-118, proposal 4; D-43: the help sheets' opening, measured): the influence planner adds engineW x the share of my other crypt cards younger than the plan's first vampire, when it can play a superior blood-stock action my library holds 4+ of (Enchant Kindred [PRE], Govern the Unaligned [DOM]; _engineY) -- on every influence plan of the game, not only the opening's (benched so); 0 = v0.6.228
     scalpelLock: 1,          // v0.6.229 (default 1 after its bench, pinned to Toreador on the 600: +0.03 [+0.01, +0.05]; 71 locks) (D-118, proposal 6; the Toreador guide: 'Scalpel Tongue on the prey's vampire that voted, before offensive actions'): 1 = my passed referendum locks my prey's ready, unlocked vampire that voted against, when an actor of mine is still to act this turn (_scalpelLockPlan); 0 = v0.6.228 (Scalpel Tongue only turns a lost count)
     villeinKeep: 1,          // v0.6.229 (default 1 after its bench, pinned to Toreador on the 600: +0.00 [-0.06, +0.06]; a calm Villein leaves its host at 1 blood 104 times, 324 before) (D-118, proposal 8; the Toreador guide: Villein 'without draining the vampire'): 1 = a calm Villein leaves its host the blood for its two dearest blood-cost cards in hand it could play (cap 3, _reserveTwo) instead of the dearest one; 0 = v0.6.228
     dynFloor: 1,             // v0.6.189 (THE KNOWLEDGE LAYER, brick 2 -- 'do not oust yourself'): 1 = the critical pool also counts the RECURRING losses I paid over my last full turn cycle (Creeping Sabotage ticks, Smiling Jack, Fame), read from the event log; 0 = the predator burst alone. v0.6.193: default 1 -- the re-bench (arm dyn2, 48, every seat, the floor PROVEN to fire in 23 of 48 matches) came out -0.12 +/- 0.39 against the control's +0.14 +/- 0.45: inside the noise, no loss shown
@@ -3231,7 +3231,7 @@ class Bot {
       const synScore = this._influenceSynergy(ord[0]);
       const fitW = this.o.fitWeight == null ? 8 : +this.o.fitWeight;   // v0.6.135: 0.4 of fit outweighs ONE turn of tempo (3.0), not two -- my judgment, knob fitWeight (0 = the old planner)
       const fitScore = fitW ? fitW * (this._deckFit(ord[0]) + 0.5 * (ord[1] ? this._deckFit(ord[1]) : 0)) : 0;
-      const engW = +this.o.engineW || 0, engScore = engW ? engW * this._engineY(ord[0]) : 0;   // v0.6.229 (D-118, proposal 4; D-43): the stock engine the first vampire opens
+      const engW = +this.o.engineW || 0, engScore = engW ? engW * this._engineY(ord[0]) : 0;   // v0.6.229 (D-118, proposal 4; D-43): the stock engine the plan's first vampire opens -- every plan of the game (the egress review: as benched; BOARD has the refinement 'only while no stock engine of mine is ready')
       const score = this._scorePlan(plan, schedule, synScore) + fitScore + engScore;
       if(!best || score > best.score){
         best = { ordering: ord, plan, score, synScore,
@@ -3869,6 +3869,7 @@ class Bot {
   _playAbstain(v, ab, rc){            // v0.6.217: the abstain resolved on MY count (the caller's) -- the votes come off every carrier the count reads (rc.against, the voter's row, the counter); the frozen ABSTAIN line tells the voter's bot to lock (Scalpel Tongue) and burn its blood ([CEL] / [PRE]); a human voter reads it
     const t = ab.target;
     if(ab.src === 'card'){ const j = this.hand.indexOf(ab.name); if(j < 0) return false; this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(ab.name);
+      if(this._actingVamp && this._actingVamp.v === v && this._actingVamp.played) this._actingVamp.played.add(FX_NORM(ab.name));   // v0.6.229 (the egress review): an action modifier -- this name is spent for THIS action (the lock after an abstain that turned the count is never a second Scalpel Tongue)
       if(ab.costBlood) v.blood = Math.max(0, (v.blood | 0) - ab.costBlood);
       const lvl = String(ab.at || '').split('+')[0];   // v0.6.228 (round F): the mode is 'cel+pre' / 'CEL+PRE' now (one requirement) -- §12's LVL is one token, its case the level (L12 ABSTAIN reads \w+)
       this.fxClone({ name: ab.name, kind: 'lib' }, '[' + lvl + '] ' + t.vamp + ' abstains', { actor: v }); this._emitPlay(ab.name, 'abstain', v.name);
@@ -5797,7 +5798,7 @@ class Bot {
   /* ==================== v0.6.229 (the bench round, RULINGS D-117 / D-118, specs/spec-bench-round-2026-11-15.md) ====================
      The Toreador guide check's proposals (reports/REPORT-toreador-guide-check-2026-11-13.md), each behind its own knob (0 = v0.6.228). */
   _ballGuard(F, lk){                 // D-117's guard: after the lock the free Toreador would be my only unlocked body, and the posture keeps the last body home (a bleeding predator within reach, or the plan's quota) -- the Ball waits. A reason string, or null
-    const up = this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && c !== lk);
+    const up = this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && c !== lk && (c.blood | 0) > 0);   // the egress review: a body at 0 blood hunts (it locks) -- it is no body home
     if(up.length !== 1 || up[0] !== F) return null;
     const k = this._keepBlocker(F, [F], 0, { unlockedN: 1 });
     return k ? 'the free ' + F.name + ' would be my last body home (' + k.why + ') — the Ball waits (D-117)' : null;
@@ -5834,7 +5835,7 @@ class Bot {
         let at = Math.min(actors.indexOf(F), rest.length - home);   // never among the bodies the posture keeps home: another stays
         if(j >= 0) at = Math.min(at, j);                              // before the first other actor that could call a referendum
         rest.splice(Math.max(front, at), 0, F); actors.splice(0, actors.length, ...rest);
-        this._polHold = { keyId: F.id, why: 'ballTurn' }; this._ballFreeId = F.id;
+        this._polHold = { keyId: F.id, why: 'ballTurn' }; if(home > 0) this._ballFreeId = F.id;   // the egress review: the keep skip only when another body is planned home
         this._emit('key-order', { rule: 'ballTurn', key: F.name, card: r.pick.name, home, order: actors.map(a => a.name) });
         return this._polHold;
       }
@@ -5864,15 +5865,17 @@ class Bot {
     return kb ? Math.min(rest.length, Math.max(1, kb.quota | 0)) : 0;
   }
   _scalpelTongueFor(v, spare){       // a polling-step abstain card in hand (fx.abstainVoter, Scalpel Tongue) v can play and pay, leaving it `spare` blood: { name, at, burn, cB } or null (the superior mode when v can play it)
-    for(let idx = 0; idx < this.hand.length; idx++){ const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib') continue;
+    const played = (this._actingVamp && this._actingVamp.v === v) ? this._actingVamp.played : null;   // the rules gate: a name v already played in this action is spent (same-name modifiers once per action)
+    for(let idx = 0; idx < this.hand.length; idx++){ const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !this._mayPlay(h.name, h.e, played)) continue;
       const ms = (h.e.modes || []).filter(mo => mo.fx && mo.fx.abstainVoter && mo.when === 'polling' && this._modeUsableBy(mo, v)); if(!ms.length) continue;
       const cB = (h.e.cost && h.e.cost.blood) | 0; if(cB + (spare | 0) > (v.blood | 0)) continue;
       const mo = ms.find(m => (m.fx.voterBloodBurn | 0) > 0) || ms[0];
       return { name: h.name, at: mo.at, burn: mo.fx.voterBloodBurn | 0, cB }; }
     return null;
   }
-  _scalpelLockLikely(K, actors){     // keyLast with scalpelLock: K's referendum would carry the lock -- Scalpel Tongue it can pay and keep a blood, my prey has a ready, unlocked titled vampire (a voter), and another actor of mine is in the queue
-    if(!this._scalpelTongueFor(K, 1) || !(actors || []).some(a => a && a !== K && (a.blood | 0) > 0)) return false;
+  _scalpelLockLikely(K, actors){     // keyLast with scalpelLock: K's referendum would carry the lock -- Scalpel Tongue it can pay and keep a blood, my prey has a ready, unlocked titled vampire (a voter), and another actor of mine with blood would act after it (not one of the bodies the posture would keep home: _homeBodies, as _scalpelLockPlan counts them)
+    const ahead = (actors || []).filter(a => a && a !== K && (a.blood | 0) > 0);   // the egress review: the lock's later acts as _scalpelLockPlan counts them -- the bodies the posture would keep home (_homeBodies) never act
+    if(!this._scalpelTongueFor(K, 1) || ahead.length - this._homeBodies(ahead) <= 0) return false;
     const prey = this.preySeat(); if(!prey || !this.live(prey)) return false;
     const cs = this._seatCards(prey);
     return cs.some(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && (this._titleOf(c, cs).votes | 0) > 0);
@@ -5883,10 +5886,11 @@ class Bot {
     const sums = arr => arr.reduce((S, n) => { const T = new Set(S); S.forEach(q => T.add(q + n)); return T; }, new Set([0]));
     return tv.filter((x, i) => { if(x.n > n0) return false; const rest = sums(tv.filter((y, j) => j !== i).map(y => y.n)); return !(rest.has(n0) || !rest.has(n0 - x.n)); });
   }
-  _scalpelLockPlan(v, rc, t){        // scalpelLock (proposal 6): my referendum passes -- lock my prey's ready, UNLOCKED vampire that voted against (its votes come off: the count only rises), when an actor of mine is still to act this turn; Scalpel Tongue from the calling vampire, never its last blood. An abstain plan for _playAbstain, or null
+  _scalpelLockPlan(v, rc, t){        // scalpelLock (proposal 6): my referendum passes -- lock my prey's ready, UNLOCKED vampire that voted against (its votes come off: the count only rises), when an actor of mine is still to act this turn (after v's last place on the queue, with blood, not one of the bodies the posture would keep home: _homeBodies); Scalpel Tongue from the calling vampire, never its last blood, never a second copy in the action. An abstain plan for _playAbstain, or null
     const prey = this.preySeat(); if(!prey || !this.live(prey) || prey === this.seat) return null;
-    const q = this._actorQueue || [], at = q.indexOf(v);
-    const later = at < 0 ? [] : q.slice(at + 1).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked);
+    const q = this._actorQueue || [], at = q.lastIndexOf(v);   // the egress review: lastIndexOf -- a revisit (Warsaw's refresh, the act-again) puts v on the queue again after it acted
+    const ahead = at < 0 ? [] : q.slice(at + 1).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && (c.blood | 0) > 0);
+    const later = ahead.slice(0, ahead.length - this._homeBodies(ahead));   // the egress review: the bodies the posture would keep home never act -- the lock buys them nothing
     if(!later.length) return null;
     const who = this.seatName(prey), n0 = (((rc && rc.agBy) || {})[who]) | 0; if(n0 <= 0) return null;
     const tv = this._votedBy(prey, n0).filter(x => !x.c.locked).sort((a, b) => b.n - a.n);
@@ -5904,7 +5908,7 @@ class Bot {
     cs.sort((a, b) => b - a);
     return Math.min(3, (cs[0] | 0) + (cs[1] | 0));
   }
-  _engineY(c){                       // engineW (proposal 4; D-43): the stock engine a first vampire opens -- when it can play a superior blood-stock action (bloodAdd to my uncontrolled region, no bleed in the mode or the card) my library holds 4+ of, the share of my other crypt cards younger than it (capacity: the stock's own law, bloodAddYounger); else 0
+  _engineY(c){                       // engineW (proposal 4; D-43): the stock engine a vampire opens -- when it can play the SUPERIOR mode of a blood-stock action (bloodAdd to my uncontrolled region, no bleed in the mode or the card) my library holds 4+ of, the share of my other crypt cards with a smaller capacity than it (the younger it can stock: capacity stands in for the card's own law -- bloodAddYounger is not read); else 0. Cached per name (a deck's fact)
     if(!c || !this.fx) return 0;
     this._engCache = this._engCache || {}; if(this._engCache[c.name] != null) return this._engCache[c.name];
     const lib = (this.deck && this.deck.library) || [], crypt = (this.deck && this.deck.crypt) || [];
@@ -10996,6 +11000,7 @@ class Bot {
         if(_ai >= actors.length) break;
         const v = actors[_ai];
         if(this._polHold && v.id === this._polHold.keyId) this._polHold.done = true;   // v0.6.229: the key actor's turn (whatever it does: a torpor walk, a stuck hunt, home) -- the others' hold on the political cards ends here
+        const ballFree = !!this._ballFreeId && v.id === this._ballFreeId; if(ballFree) this._ballFreeId = null;   // the egress review: the Ball's keep skip holds for the free one's first visit only (a revisit asks the posture)
         this._lastAct = null;
         await pace();
         if(this._gameOver()) break;   // v0.6.221 (D-113): the last oust of the game came with my previous action -- no further action (it bled my own seat)
@@ -11005,7 +11010,7 @@ class Bot {
         if(tdone && tdone.has('stuck')){ this._emit('stays-home', { vamp: v.name, why: 'Change of Target ended its mandatory hunt: it cannot act this turn' }); continue; }   // [LSJ 19980112]
         const huntDone = !!(tdone && tdone.has('cot:hunt'));
         const mandatory = (v.blood | 0) === 0 && !huntDone;
-        const keep = (this._ballFreeId && v.id === this._ballFreeId) ? null : this._keepBlocker(v, actors, _ai);   // v0.6.118 (B2 posture, doctrine 2.4): the last unlocked body stays home against a bleeder within reach. v0.6.229 (D-117): the Grand Ball's free Toreador acts; another body stays home
+        const keep = ballFree ? null : this._keepBlocker(v, actors, _ai);   // v0.6.118 (B2 posture, doctrine 2.4): the last unlocked body stays home against a bleeder within reach. v0.6.229 (D-117): the Grand Ball's free Toreador acts; another body stays home
         if(keep){ this.o.log('posture: ' + keep.why); this._emit('keep-blocker', { vamp: v.name, tto: keep.tto, quota: keep.quota || 0 }); continue; }
         const hd = huntDone ? { hunt: false, why: 'Change of Target ended its hunt this turn' } : mandatory ? { hunt: true, why: 'mandatory: 0 blood (rulebook)' } : this.decide('hunt-or-bleed', { vamp: v });
         if(hd.hunt){
