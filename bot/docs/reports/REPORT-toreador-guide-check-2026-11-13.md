@@ -85,3 +85,12 @@ titled Camarilla vampire, Scalpel Tongue's one requirement and a locked prince's
 the ledger now asks a mode for every discipline line. Finding C built as proposal 1 — its play half failed its prediction: the Ball
 waits for a turn its free Toreador's scorer calls the referendum, but the minion phase lost 93 of its 308 turns to the order and the
 posture (RULINGS O-42, Johan's pick). Finding B was round B's (v0.6.224). Proposals 2–8 go to the bench round.
+
+## Status (15 Nov 2026, bot v0.6.229, the bench round — RULINGS D-117, D-118)
+Johan's "kör" on the recommendation (`specs/spec-bench-round-2026-11-15.md`): proposals 3, 4, 6 and 8 and D-117 built behind knobs
+and benched on the 600, each paired against the knobs-at-0 control; proposal 7 too, and it lost; no to 2 and 5. On since v0.6.229:
+the Ball's turn (the free Toreador calls its referendum on 94 % of its Ball turns, 66 % before), the referendum after the cheap
+actions (with the five: first in 24 % of the turns with another act, last in 48 %; 46 % and 20 % before), the stock engine in the
+first influence (the guide's vampire first in 67 %, 19 % before), Scalpel Tongue's lock on the prey's unlocked voter (115 locks; a
+lock's referendum opens the turn), Villein's two-card reserve. Toreador +0.08 [−0.04, +0.19] VP with the five (the release bytes).
+Where the line still differs from the guide, `DECK_STRATEGY.toreador`'s comment says why (points 3, 13 and 17).

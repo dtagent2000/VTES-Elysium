@@ -132,7 +132,9 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   and went through = 0 — since v1.1 past 2.5 s plus the bots' pace, with the table quiet that long inside the window; a slower window
   of paced answers is 'answered at the pace'; contests at the clock split blocked / failed; every `stale-answer` row read) · `ana-rare.py` (the rare paths a section proves:
   superseded combats, held / released turns, rush complies by path, fizzles, resolutions at an ousted seat) · `ana-jack.py` (Smiling Jack's
-  plays, how each left play, its rounds in play; the burns the knob `jackBurn` picked, by deck, and how many were blocked) · `ana-wait.py` (tempo) ·
+  plays, how each left play, its rounds in play; the burns the knob `jackBurn` picked, by deck, and how many were blocked) · `ana-guide-check.py DIR [DECK]`
+  (a deck's guide-check situations: the Ball's turn, the referendum's place, the first influence, Scalpel Tongue, the bleed windows, Villein;
+  `--json` to compare two arms) · `ana-wait.py` (tempo) ·
   `ana-probe.py` (`probe-order` / `probe-hold` rows) · `ana-cards.py` (uses per card, never-played, untitled plays) ·
   `ana-combat.py` + `ana-combat2.py` (handshake integrity 100 % on a bot-only table, agreement, `hsMiss`) · `ana-rush.py` ·
   (`ana-windows.py`'s gate of 0 is the arena's; on the sim it informs: a few flagged, none lost) ·

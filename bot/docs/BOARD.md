@@ -1,4 +1,4 @@
-# BOARD — the open asks (14 Nov 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (15 Nov 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -15,8 +15,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 waves**: the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim plays them; the menu only
-  Toreador) and the ledger (`docs/CARDS.md`) since v0.6.212; waves by effect class as the class map ranks them (D-98). Done:
-  waves 1–4 (v0.6.213–217; D-99, D-103, D-104, D-106). Next: wave 5, the 18 masters in play (`spec-v5-wave3` §4), Meditative
+  Toreador) and the ledger (`docs/CARDS.md`); waves by effect class as the class map ranks them (D-98). Waves 1–4 done (D-99,
+  D-103, D-104, D-106); next: wave 5, the 18 masters in play (`spec-v5-wave3` §4), Meditative
   Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape), with the actions at a card in
   play (steal The Rack / Powerbase: LA, burn Mob Connections), The Coven's control passing, and Día de los Muertos (no polling,
   no [obl] / [dom] vote discard: PIB 20150105, D-111); the 11 cards with a discipline line and no mode (D-116 (3)). Then the maneuver / press grants
@@ -44,15 +44,18 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
   on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
   *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-42, D-104.
-- **The weapon's maneuver** (wave 2's second review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
+- **The weapon's maneuver** (wave 2's review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
   a number — the .44 Magnum has never maneuvered, so the strike-binding rules' gun halves never run. Neighbours: a weapon's strike
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait
   returns an earlier round's pending line; `_xLossSum` sums nothing. *Done when* each is fixed with a positive test and its footprint
   read. Docs: `specs/spec-v5-wave2-2026-10-29.md` §4.
-- **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct): Black Chantry's helpsheets and Fifth
-  Edition guides as a deck's strategy and tactics baseline, refined by the archetypes and general strategy.
-  D-112: each strategy line is checked against its guide. Toreador's is done (13 Nov, `reports/REPORT-toreador-guide-check-2026-11-13.md`):
-  17 points, 3 findings (built: B v0.6.224, A and C v0.6.228); proposals 2–8 and D-117 go to a bench round. *Done when* each deck's proposals have Johan's "kör" or "no". Docs: RULINGS D-43, O-33, D-112; `specs/spec-knowledge-layer.md`.
+- **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct; refined by the archetypes): D-112 checks each
+  strategy line against its guide; Toreador's is done (D-118). *Done when* each deck's proposals have Johan's "kör" or "no".
+  Docs: RULINGS D-43, O-33, D-112, D-118.
+- **Reads the bench round left** (D-118): my referendums' block rate from the table (proposal 2); a stealth bleeder read from
+  its deck, not one card (proposal 7's loss); `keyLast`'s hold with two political cards; `engineW` only while no stock engine of
+  mine is ready (it weighs every plan). *Done when* each is built and benched, or ruled out. Docs: RULINGS D-118, O-43;
+  `specs/spec-bench-round-2026-11-15.md`.
 
 ## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
@@ -68,11 +71,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Graded rules readings as a ledger column** (T3): every wave's PR has listed its grades since wave 1 (HARNESS, the charter);
   `docs/CARDS.md` does not carry them. *Done when* the ledger shows each curated card's latest grade. Docs: spec T3; HARNESS;
   `specs/spec-cardfx-sweep-sources-2026-09-25.md`.
-- **The helper lock's release** (main answered "ask main once" (a)–(c) on 3 Nov): the client locks all helpers on while a bot
-  is seated until the bot proves a whole combat on lines alone. *Done when* asked, when ready. Docs: RULINGS D-62, D-94.
+- **The helper lock's release** (main's answers of 3 Nov): the client locks all helpers on while a bot is seated until the bot
+  proves a whole combat on lines alone. *Done when* asked, when ready. Docs: RULINGS D-62, D-94.
 - **History comments in `elysium-bot.js`** (222 KB): trim to trap comments ("why" + a rule id) in the functions a round touches
   (spec §8 Q6, recommended (b)). *Done when* Johan has chosen; then per round.
-- **Section 69b's decay check** (found in C2): `o4.pick === ctxC.card ? true : o4.pick ===
+- **Section 69b's decay check**: `o4.pick === ctxC.card ? true : o4.pick ===
   ctxC.plain` passes for either pick and reads no score, so the streak's −0.30 on the card line is untested. *Done when* 69b
   compares the card score with and without the streak.
 
@@ -107,6 +110,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   reads the announced bleed, `hitMax` the realised one; a bounce valued as pool saved only; the rate leans on `myFc`; wakes counted
   whoever could play them; 0.9 / pStop / 'a card + a blood = 1 pool' / fwd 0.5 unmeasured. *Done when* each is fixed or measured.
   Docs: `history/specs/spec-home-pricing-2026-09-19.md`.
+- **The minion head reads last turn's `_turnActs`** (Change of Target's ledger): it is reset after `_strategize`, `_probeOrder` and
+  `_minionKeyOrder` ask. *Done when* the reset comes first, footprint read.
 - **`_wakeCard()` is vampire-blind** at the bounce, vote and reduce routes and in `interceptPotential` (`_wakeCardFor(v)` exists).
   *Done when* every site reads the vampire.
 - **The locked routes' last rungs** (round F, D-116 (5)): the block decision counts the unlock reactions, not the Underbridge Stray
@@ -125,10 +130,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Two Pentex spellings** are two cards to `_uniqueInPlay`. *Done when* `_uniqueInPlay` compares the normalised name. Docs:
   RULINGS O-24.
 - **The act-again context reads `mo.fx.referendum`** (`_actAgainCtx`'s "clogged" test), which no cardfx entry carries — political
-  cards carry `e.ref` — so a political action in hand never counts as another use for the vampire (found by the coverage scan, 29
-  Oct). *Done when* the test reads the political type and a section covers it.
+  cards carry `e.ref` — so a political action in hand never counts as another use for the vampire (the coverage scan).
+  *Done when* the test reads the political type and a section covers it.
 - **The influence floor at `poolFloor` 0**: the influence phase leaves `poolFloor` (6 for every persona; 1 with no ready minion);
-  a knob of 0, which only test fixtures set, lets it spend the last pool (D-97's inventory, 29 Oct). *Done when* the floor is at
+  a knob of 0, which only test fixtures set, lets it spend the last pool (D-97's inventory). *Done when* the floor is at
   least 1 and the fixtures that relied on 0 are read (L-16).
 
 ## From the 11 Oct review of VTES-Player (DuelRevolvers; ideas only, no code — the repo has no licence)
@@ -163,10 +168,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The sim's `zeroPool` misses a self-oust by payment**: it counts decisions at pool ≤ 0; a payment of the last pool that ousts at
   once leaves none (3 of the 4 Chantry cases in v0.6.212's smoke). *Done when* the sim also flags an oust on my own turn whose last
   pool change was my own payment.
-- **The 14 Oct playtest scenario** (`client/playtest/`, `--dir` on a scratch copy of the root with the bot branch) not re-run since
-  v0.6.207; **the larger re-measure** against a v0.6.207 baseline (older arena numbers carry ~3 s of dead clock per
-  bleed total); at that table also The Dowager's +1 in a human's directed action (D-111). *Done when* both reports exist with
-  the sim as the first read.
+- **The 14 Oct playtest scenario** (`client/playtest/`, `--dir` on a scratch copy of the root) not re-run since v0.6.207; **the
+  larger re-measure** against a v0.6.207 baseline; at that table also The Dowager's +1 in a human's directed action (D-111). *Done
+  when* both reports exist with the sim as the first read.
 - **Forecast calibration** (`gen-forecast-calibration.js`) not re-run since 18 Sep; the seed of the abstract model's calibration
   gate. *Done when* it runs on a sim series and the ratio is reported.
 - **Main's replies of 17–18 Oct** (robustness, v0.6.206, v0.6.207, open hand) unconsumed; v0.6.207's R-38 (negative stealth /

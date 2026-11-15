@@ -13461,6 +13461,257 @@ async function connectWithRetry(client, tries = 30){
            '173i2 through the turn: the Ball, Catalina free, her referendum behind the bar line (got ' + JSON.stringify({ terr, gb, bars, refs, bret: bret.locked }) + ')'); }
     }
 
+    /* 174) v0.6.229 -- THE BENCH ROUND (RULINGS D-117 / D-118, specs/spec-bench-round-2026-11-15.md): Toreador's guide proposals behind
+       five knobs, each 0 = v0.6.228 -- ballTurn (the Grand Ball's free Toreador before the other callers, the others hold the political
+       cards, another body home; the Ball waits when the free one would be the last body), keyLast (the turn's key referendum after the
+       cheap actions, before the bodies the posture keeps home), scalpelLock (Scalpel Tongue locks my prey's unlocked voter against when
+       an actor of mine is still to act), villeinKeep (Villein leaves its host the blood for two cards), engineW (the stock engine in the
+       first influence). The bench's loser, clogWide (proposal 7), was removed with its case (CHANGELOG v0.6.229). The egress review's
+       cases: n (Scalpel Tongue once per action), o (the lock's later actors), p (the Ball's guard and the keep skip's scope), q (the
+       lock-first order and the bodies kept home), c2 (the hold through the loop), f's unprobed arm.
+       LAST LINE OF 174 is the closing brace below. */
+    {
+      console.log('\n[174] v0.6.229 -- the bench round: Toreador’s guide proposals 2-8 and D-117');
+      const { ARCHETYPES } = require('./elysium-bot.js');
+      const IF4 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const mk174 = (name, deck, knobs) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck || 'toreador', deck: ARCHETYPES[deck || 'toreador'], paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {},
+          ballTurn: 0, keyLast: 0, engineW: 0, scalpelLock: 0, villeinKeep: 0 }, knobs || {}));   // each case sets its own knob; the others at 0 (their defaults are on since v0.6.229)
+        u.seat = 1; u.started = true; u.players = [{ seat: 1, name, online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }, { seat: 3, name: 'Nora', online: true, bot: true }];
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.say = () => {}; u.note = () => {}; u.chat = () => {}; u._restartAskTimer = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.board = []; u.hand = []; u.unc = []; u.pool = 20; u.turnSeat = 1; u.table = {}; return u; };
+      const V = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 4, attached: [] }, o || {});
+      const ev = (u, t) => u.events.filter(e => e.t === 'bot:' + t).map(e => e.d);
+      const logs = u => u.sent.filter(m => m && m.t === 'log').map(m => String(m.html || '').replace(/<[^>]+>/g, ''));
+      const ballBoard = () => { const cat = V('c1', 'Catalina Vega', { blood: 4 }), bret = V('b1', 'Bret Stryker', { blood: 3, locked: true }), kat = V('k1', 'Kathy Glens', { blood: 2 });
+        return { cat, bret, kat, board: [kat, cat, bret, { id: 'g1', name: 'Toreador Grand Ball', kind: 'lib', zone: 'ready', locked: false, faceDown: false, gbFree: 'c1', gbLock: 'b1' }] }; };
+      const preyT = (extra) => ({ 2: { pub: { pool: 20, cards: [V('v1', 'Lloyd Brooks')].concat(extra || []) } }, 3: { pub: { pool: 20, cards: [] } } });
+
+      // a) ballTurn at the minion head: my Ball's free Catalina (her look ahead calls Kine Resources Contested) moves before Kathy, the
+      //    first other actor whose finder holds the card; the hold names her; 0 = the queue as v0.6.228 left it
+      { const run = k => { const u = mk174('Hanna', 'toreador', { ballTurn: k }); const b = ballBoard(); u.board = b.board; u.hand = ['Kine Resources Contested']; u.table = preyT();
+          const q = [b.kat, b.cat]; if(IF4(u, '_minionKeyOrder')) u._minionKeyOrder(q); return { q: q.map(v => v.name), hold: u._polHold ? u._polHold.keyId : null, rows: ev(u, 'key-order').length }; };
+        const on = run(1), off = run(0);
+        ok(on.q.join() === 'Catalina Vega,Kathy Glens' && on.hold === 'c1' && on.rows === 1 && off.q.join() === 'Kathy Glens,Catalina Vega' && off.hold === null && off.rows === 0,
+           '174a ballTurn: the Ball’s free Toreador acts before the other caller, the political cards held for her; 0 = the old queue (got ' + JSON.stringify({ on, off }) + ')'); }
+
+      // b) through the turn: with ballTurn Catalina calls the referendum and Kathy leaves the card to her; at 0 Kathy (the worse blocker,
+      //    first in the queue) calls it, blockable
+      { const run = async k => { const u = mk174('Hanna', 'toreador', { ballTurn: k }); const b = ballBoard(); u.board = b.board; u.hand = ['Kine Resources Contested']; u.pool = 20;
+          u.table = preyT(); let terr = null; try { await Promise.race([u._playTurn(), sleep(8000)]); } catch(e){ terr = e.message; }
+          return { terr, refs: ev(u, 'referendum-called').map(e => e.vamp), bars: ev(u, 'grand-ball-bar').map(e => e.vamp), bret: b.bret.locked }; };
+        const on = await run(1), off = await run(0);
+        ok(!on.terr && !off.terr && on.refs.join() === 'Catalina Vega' && on.bars.includes('Catalina Vega') && off.refs.join() === 'Kathy Glens' && on.bret === true,
+           '174b ballTurn through the turn: the free Toreador calls the referendum behind the bar; 0 = the smaller vampire took the card first (got ' + JSON.stringify({ on, off }) + ')'); }
+
+      // b2) D-117's 'a body kept home is another': the posture keeps the last body home (a bleeding predator within reach) and Kathy holds no political option (Parity
+      //     Shift needs a prince) -- with ballTurn Catalina acts first and calls it, Kathy stays home; at 0 Kathy acts first and Catalina,
+      //     the last body, is kept home: no referendum
+      { const run = async k => { const u = mk174('Hanna', 'toreador', { ballTurn: k }); const b = ballBoard(); u.board = b.board; u.hand = ['Parity Shift']; u.pool = 20;
+          u.table = { 2: { pub: { pool: 26, cards: [V('v1', 'Lloyd Brooks')] } }, 3: { pub: { pool: 26, cards: [] } } }; u.predatorIsBleeder = () => true; u.turnsToOust = () => 1; u._askBlock = async () => ({ what: 'pass' });
+          let terr = null; try { await Promise.race([u._playTurn(), sleep(8000)]); } catch(e){ terr = e.message; }
+          return { terr, refs: ev(u, 'referendum-called').map(e => e.vamp), home: ev(u, 'keep-blocker').map(e => e.vamp) }; };
+        const on = await run(1), off = await run(0);
+        ok(!on.terr && !off.terr && on.refs.join() === 'Catalina Vega' && on.home.join() === 'Kathy Glens' && off.refs.length === 0 && off.home.join() === 'Catalina Vega',
+           '174b2 ballTurn: the free Toreador calls her referendum and another body stays home; 0 = she was the body kept home (got ' + JSON.stringify({ on, off }) + ')'); }
+
+      // b3) the minion loop's keep test skips the free Toreador: the plan keeps two bodies home and only Catalina and Kathy can act --
+      //     with ballTurn Catalina still calls her referendum (Kathy stays home); at 0 both stay home
+      { const run = async k => { const u = mk174('Hanna', 'toreador', { ballTurn: k }); const b = ballBoard(); u.board = b.board; u.hand = ['Parity Shift']; u.pool = 20;
+          u.table = { 2: { pub: { pool: 26, cards: [V('v1', 'Lloyd Brooks')] } }, 3: { pub: { pool: 26, cards: [] } } }; u._askBlock = async () => ({ what: 'pass' });
+          const real = u._strategize.bind(u); u._strategize = t => { const r = real(t); if(u.plan) u.plan.home = 2; return r; };
+          let terr = null; try { await Promise.race([u._playTurn(), sleep(8000)]); } catch(e){ terr = e.message; }
+          return { terr, refs: ev(u, 'referendum-called').map(e => e.vamp), home: ev(u, 'keep-blocker').map(e => e.vamp) }; };
+        const on = await run(1), off = await run(0);
+        ok(!on.terr && !off.terr && on.refs.join() === 'Catalina Vega' && on.home.join() === 'Kathy Glens' && off.refs.length === 0 && off.home.length === 2,
+           '174b3 the keep test skips the free Toreador under a quota of two; 0 = both kept home (got ' + JSON.stringify({ on, off }) + ')'); }
+
+      // c) the hold (_actionCtxAdjust): another actor's political option is held until the key actor's turn, with a row; never in a look
+      //    ahead, never for the key actor, and not after its turn
+      { const u = mk174('Hanna', 'toreador', { ballTurn: 1 }); const b = ballBoard(); u.board = b.board; u.hand = ['Kine Resources Contested']; u.table = preyT();
+        u._polHold = { keyId: 'c1', why: 'ballTurn' };
+        const pol = () => ({ pol: { idx: 0, name: 'Kine Resources Contested', kind: 'political', n: 3 } });
+        const other = u._actionCtxAdjust(b.kat, pol(), false), ahead = u._actionCtxAdjust(b.kat, pol(), true), key = u._actionCtxAdjust(b.cat, pol(), false);
+        u._polHold.done = true; const after = u._actionCtxAdjust(b.kat, pol(), false);
+        const rows = ev(u, 'pol-hold');
+        ok(other.pol === null && other.polReserved === 'Kine Resources Contested' && !!ahead.pol && !!key.pol && !!after.pol && rows.length === 1 && rows[0].vamp === 'Kathy Glens',
+           '174c the hold: the other actor leaves the card, the look ahead, the key actor and the turn after it do not (got ' + JSON.stringify({ other: other.pol, ahead: !!ahead.pol, key: !!key.pol, after: !!after.pol, rows }) + ')'); }
+
+      // d) D-117's guard: Catalina free, Bret the one to lock, no other body -- against a bleeding predator within reach the Ball waits
+      //    (ballTurn 1); with Kathy as a second body, or at 0, the Ball is played
+      { const run = (k, withKathy) => { const u = mk174('Hanna', 'toreador', { ballTurn: k }); const cat = V('c1', 'Catalina Vega', { blood: 4 }), bret = V('b1', 'Bret Stryker', { blood: 3 });
+          u.board = withKathy ? [cat, bret, V('k1', 'Kathy Glens', { blood: 3 })] : [cat, bret]; u.hand = ['Toreador Grand Ball', 'Kine Resources Contested']; u.table = preyT();
+          u.predatorIsBleeder = () => true; u.turnsToOust = () => 1;
+          const r = u._grandBallPlan(); return r.grandBall ? 'play' : ('hold: ' + r.why); };
+        const g = run(1, false), two = run(1, true), off = run(0, false);
+        ok(/D-117/.test(g) && /last body home/.test(g) && two === 'play' && off === 'play',
+           '174d the Ball waits when its free Toreador would be my last body home (D-117); a second body or 0 plays it (got ' + JSON.stringify({ g, two, off }) + ')'); }
+
+      // e) keyLast at the minion head: Catalina (the only prince: Parity Shift) first in the queue moves last -- no body would be kept
+      //    home; with the plan's quota of one she goes before the best blocker; 0 = the old queue
+      { const run = (k, home) => { const u = mk174('Hanna', 'toreador', { keyLast: k }); const cat = V('c1', 'Catalina Vega', { blood: 3 }), kat = V('k1', 'Kathy Glens', { blood: 4 }), bret = V('b1', 'Bret Stryker', { blood: 4 });
+          u.board = [cat, kat, bret]; u.hand = ['Parity Shift']; u.pool = 20; u.table = { 2: { pub: { pool: 26, cards: [V('v1', 'Lloyd Brooks')] } }, 3: { pub: { pool: 26, cards: [] } } };
+          u._homeQuota = () => home;   // the posture's quota (no plan: _keepBlocker reads _homeQuota)
+          const q = [cat, kat, bret]; if(IF4(u, '_minionKeyOrder')) u._minionKeyOrder(q); const row = ev(u, 'key-order')[0] || null;
+          return { q: q.map(v => v.name.split(' ')[0]).join(), rule: row && row.rule, home: row && row.home }; };
+        const last = run(1, 0), quota = run(1, 1), off = run(0, 0);
+        ok(last.q === 'Kathy,Bret,Catalina' && last.rule === 'keyLast' && last.home === 0 && quota.q === 'Kathy,Catalina,Bret' && quota.home === 1 && off.q === 'Catalina,Kathy,Bret' && !off.rule,
+           '174e keyLast: the referendum after the cheap actions, before the body the posture keeps home; 0 = the old queue (got ' + JSON.stringify({ last, quota, off }) + ')'); }
+
+      // e2) keyLast through the turn: Catalina's Parity Shift comes after Kathy's and Bret's bleeds; at 0 it opens the turn
+      { const run = async k => { const u = mk174('Hanna', 'toreador', { keyLast: k }); const cat = V('c1', 'Catalina Vega', { blood: 3 }), kat = V('k1', 'Kathy Glens', { blood: 4 }), bret = V('b1', 'Bret Stryker', { blood: 4 });
+          u.board = [cat, kat, bret]; u.hand = ['Parity Shift']; u.pool = 20; u.table = { 2: { pub: { pool: 26, cards: [V('v1', 'Lloyd Brooks')] } }, 3: { pub: { pool: 26, cards: [] } } };
+          u._askBlock = async () => ({ what: 'pass' }); let terr = null; try { await Promise.race([u._playTurn(), sleep(8000)]); } catch(e){ terr = e.message; }
+          const seq = u.events.filter(e => /^bot:(referendum-called|through)$/.test(e.t) && !(e.t === 'bot:through' && e.d.kind === 'political')).map(e => (e.t === 'bot:through' ? 'act:' : 'ref:') + e.d.vamp.split(' ')[0]);
+          return { terr, seq: seq.join() }; };
+        const on = await run(1), off = await run(0);
+        ok(!on.terr && !off.terr && /^act:\w+,act:\w+,ref:Catalina$/.test(on.seq) && /^ref:Catalina/.test(off.seq),
+           '174e2 keyLast through the turn: the referendum after the two bleeds; 0 = it opened the turn (got ' + JSON.stringify({ on, off }) + ')'); }
+
+      // f) keyLast leaves a probed queue alone (a stealth-bleed deck's puncher goes last); the same queue unprobed moves Catalina last
+      { const run = probed => { const u = mk174('Hanna', 'toreador', { keyLast: 1 }); const cat = V('c1', 'Catalina Vega', { blood: 3 }), kat = V('k1', 'Kathy Glens', { blood: 4 });
+          u.board = [cat, kat]; u.hand = ['Parity Shift']; u.table = { 2: { pub: { pool: 26, cards: [V('v1', 'Lloyd Brooks')] } }, 3: { pub: { pool: 26, cards: [] } } };
+          u._probeFired = probed; const q = [cat, kat]; if(IF4(u, '_minionKeyOrder')) u._minionKeyOrder(q); return { q: q.map(v => v.name.split(' ')[0]).join(), rows: ev(u, 'key-order').length }; };
+        const probed = run(true), free = run(false);
+        ok(probed.q === 'Catalina,Kathy' && probed.rows === 0 && free.q === 'Kathy,Catalina' && free.rows === 1, '174f keyLast leaves a probed queue alone; unprobed it moves the caller last (got ' + JSON.stringify({ probed, free }) + ')'); }
+
+      // g) scalpelLock's plan: my referendum passes 6-2, Viktor (my prey) cast 2 against with his unlocked prince Mkhokheli, Kathy still to act --
+      //    Catalina locks him with Scalpel Tongue [CEL+PRE] (the votes come off); not when he is locked, nobody is left to act, the caller
+      //    would spend her last blood, or the votes against came from another seat; 0 = no lock
+      { const plan = (k, o) => { const u = mk174('Hanna', 'toreador', { scalpelLock: k }); const cat = V('c1', 'Catalina Vega', { blood: o.blood || 3 }), kat = V('k1', 'Kathy Glens', { blood: 3 });
+          u.board = [cat, kat]; u.hand = ['Scalpel Tongue']; u._actorQueue = o.last ? [kat, cat] : [cat, kat];
+          u.table = { 2: { pub: { pool: 20, cards: [V('m1', 'Mkhokheli', { locked: !!o.locked })] } }, 3: { pub: { pool: 20, cards: [] } } };
+          const rc = { agBy: o.agBy || { Viktor: 2 } };
+          return (k && IF4(u, '_scalpelLockPlan')) ? u._scalpelLockPlan(cat, rc, { f: 6, a: 2 }) : null; };
+        const p = plan(1, {}), locked = plan(1, { locked: true }), lastA = plan(1, { last: true }), poor = plan(1, { blood: 1 }), other = plan(1, { agBy: { Nora: 2 } }), off = plan(0, {});
+        ok(!!p && p.use === 'lock' && p.name === 'Scalpel Tongue' && p.burn === 1 && p.target.vamp === 'Mkhokheli' && p.target.n === 2 && !locked && !lastA && !poor && !other && !off,
+           '174g scalpelLock: the prey’s unlocked voter against, locked before my later actor; none for a locked voter, no later actor, the last blood, another seat’s votes, or 0 (got ' + JSON.stringify({ p: p && p.target, locked, lastA, poor, other, off }) + ')'); }
+
+      // h) through the referendum (_callReferendum): the count passes, the lock is played on Mkhokheli -- the ABSTAIN line, the row with use
+      //    'lock', 1 blood paid, the poll reopens before the verdict; at 0 the referendum closes with no Scalpel Tongue
+      { const run = async k => { const u = mk174('Hanna', 'toreador', { scalpelLock: k }); const cat = V('c1', 'Catalina Vega', { blood: 3 }), kat = V('k1', 'Kathy Glens', { blood: 3 });
+          u.board = [cat, kat]; u.hand = ['Scalpel Tongue']; u._actorQueue = [cat, kat]; u._writeTally = () => {};
+          u.table = { 2: { pub: { pool: 20, cards: [V('m1', 'Mkhokheli')] } }, 3: { pub: { pool: 20, cards: [] } } };
+          u._askBlock = async () => ({ what: 'pass' }); let polls = 0;
+          u._refPoll = async rc => { polls++; if(polls === 1){ rc.for = (rc.for | 0) + 4; rc.against = 2; rc.lastB = 2; rc.by = { Nora: 4, Viktor: 2 }; rc.agBy = { Viktor: 2 }; } rc.closed = 'test'; return 'test'; };
+          u._actingVamp = { v: cat, n: 1, played: new Set() };
+          const act = { name: 'Kine Resources Contested', kind: 'political', n: 3, deltas: { 2: -3 }, value: 3, pass: 0.9, mine: 2, agst: 2 };
+          let err = null; try { await u._callReferendum(cat, act); } catch(e){ err = e.message; }
+          const ab = ev(u, 'abstain'); return { err, polls, lock: ab.filter(a => a.use === 'lock').map(a => a.vamp), blood: cat.blood, line: logs(u).find(l => /plays Scalpel Tongue/.test(l)) || null, verdict: logs(u).find(l => /^Vote: /.test(l)) || '' }; };
+        const on = await run(1), off = await run(0);
+        ok(!on.err && on.polls === 2 && on.lock.join() === 'Mkhokheli' && on.blood === 2 && /Mkhokheli is locked, burns 1 blood and abstains/.test(on.line || '') && /passes/.test(on.verdict)
+           && !off.err && off.polls === 1 && off.lock.length === 0 && off.line === null && /passes/.test(off.verdict),
+           '174h scalpelLock through the referendum: the lock on the prey’s voter, the poll reopens, the referendum passes; 0 = no Scalpel Tongue (got ' + JSON.stringify({ on, off }) + ')'); }
+
+      // j) villeinKeep, read from decide('villein'): Mkhokheli (4 blood) with a one-blood reserve moves 3 at 0; with the two-card reserve
+      //    (reserve2 2) he keeps 2 and moves 2; at the edge (danger) every blood moves; _reserveTwo sums the two dearest blood-cost cards in
+      //    hand (Majesty and Aire of Elation: 2; Majesty alone: 1)
+      { const dv = (k, cands) => { const u = mk174('Hanna', 'toreador', { villeinKeep: k }); return u._decide('villein', { card: 'Villein', cands, max: 5, min: 2, pool: 10, danger: false }); };
+        const c0 = { name: 'Mkhokheli', blood: 4, cap: 6, reserve: 1, hasAction: null, extra: 0 };
+        const off = dv(0, [c0]), on = dv(1, [Object.assign({}, c0, { reserve2: 2 })]), danger = (() => { const u = mk174('Hanna', 'toreador', { villeinKeep: 1 }); return u._decide('villein', { card: 'Villein', cands: [Object.assign({}, c0, { reserve2: 2 })], max: 5, min: 2, pool: 3, danger: true }); })();
+        const u2 = mk174('Hanna', 'toreador', { villeinKeep: 1 }); u2.hand = ['Majesty', 'Aire of Elation', 'Kine Resources Contested']; const r2 = IF4(u2, '_reserveTwo') ? u2._reserveTwo(V('c1', 'Catalina Vega')) : null;
+        u2.hand = ['Majesty']; const r1 = IF4(u2, '_reserveTwo') ? u2._reserveTwo(V('c1', 'Catalina Vega')) : null;
+        ok(off.play && off.n === 3 && on.play && on.n === 2 && danger.play && danger.n === 4 && r2 === 2 && r1 === 1,
+           '174j villeinKeep: the host keeps the blood for two cards (4 -> 2 moved, not 3); the edge takes every blood; _reserveTwo sums the two dearest (got ' + JSON.stringify({ off: off.n, on: on.n, danger: danger.n, r2, r1 }) + ')'); }
+
+      // k) villeinKeep through the plan: reserve2 rides into the decision only with the knob (the 0-path's row is unchanged)
+      { const run = k => { const u = mk174('Hanna', 'toreador', { villeinKeep: k }); u.board = [V('m1', 'Mkhokheli', { blood: 4 })]; u.hand = ['Villein', 'Majesty', 'Aire of Elation']; u.pool = 12;
+          u.plan = { posture: 'hold', home: 0, reads: { myTto: 9 } }; const p = IF4(u, '_villeinPlan') ? u._villeinPlan('Villein') : null; return p ? p.n : null; };
+        const off = run(0), on = run(1);
+        ok(off === 3 && on === 2, '174k villeinKeep through _villeinPlan: Mkhokheli keeps 2 of 4 with two blood-cost cards in hand, 1 at 0 (got ' + JSON.stringify({ off, on }) + ')'); }
+
+      // l) engineW: the stock engine's share -- Catalina (8) sees 10 of my 11 other crypt cards younger, Bret (4) 2, a Nosferatu none (no
+      //    superior stock card); the planner picks Catalina over the faster Bret and Kathy at 6, Bret at 0
+      { const U = (id, name, cap) => ({ id, name, kind: 'crypt', zone: 'unc', locked: false, blood: 0, cap, attached: [] });
+        const pick = W => { const u = mk174('Hanna', 'toreador', { engineW: W }); u.pool = 30; u.ownTurns = 1; const cs = [U('u1', 'Catalina Vega', 8), U('u2', 'Bret Stryker', 4), U('u3', 'Kathy Glens', 5)]; u.unc = cs; const p = u._planInfluence(cs); return p && p.name; };
+        const t = mk174('Hanna', 'toreador'), n = mk174('Nils', 'nosferatu');
+        const y = IF4(t, '_engineY') ? [t._engineY(U('u1', 'Catalina Vega', 8)), t._engineY(U('u2', 'Bret Stryker', 4)), n._engineY(U('n1', 'Horace Radcliffe', 7))] : null;
+        ok(!!y && y[0] === 0.909 && y[1] === 0.182 && y[2] === 0 && pick(0) === 'Bret Stryker' && pick(6) === 'Catalina Vega',
+           '174l engineW: the share of my crypt younger than the first vampire when it opens a superior stock engine; at 6 the planner takes Catalina over a turn faster (got ' + JSON.stringify({ y, p0: pick(0), p6: pick(6) }) + ')'); }
+
+      // n) the egress review (a rules correction, no knob): Scalpel Tongue is an action modifier -- once per action. Two copies in hand,
+      //    Catalina's referendum fails 3-4 (Nora's prince Anson and Viktor's Mkhokheli against): the abstain on Anson turns it and books the
+      //    name, so the lock that would follow on Mkhokheli (my prey's, Kathy still to act) plays no second copy; the finder skips the name
+      //    only for the vampire that played it in this action
+      { const run = async () => { const u = mk174('Hanna', 'toreador', { scalpelLock: 1 }); const cat = V('c1', 'Catalina Vega', { blood: 4 }), kat = V('k1', 'Kathy Glens', { blood: 3 });
+          u.board = [cat, kat]; u.hand = ['Scalpel Tongue', 'Scalpel Tongue']; u._actorQueue = [cat, kat]; u._writeTally = () => {};
+          u.table = { 2: { pub: { pool: 20, cards: [V('m1', 'Mkhokheli')] } }, 3: { pub: { pool: 20, cards: [V('a1', 'Anson')] } } };
+          u._askBlock = async () => ({ what: 'pass' }); let polls = 0;
+          u._refPoll = async rc => { polls++; if(polls === 1){ rc.against = 4; rc.lastB = 4; rc.by = { Nora: 2, Viktor: 2 }; rc.agBy = { Nora: 2, Viktor: 2 }; } rc.closed = 'test'; return 'test'; };
+          u._actingVamp = { v: cat, n: 1, played: new Set() };
+          const act = { name: 'Kine Resources Contested', kind: 'political', n: 3, deltas: { 2: -3 }, value: 3, pass: 0.9, mine: 3, agst: 4 };
+          let err = null; try { await u._callReferendum(cat, act); } catch(e){ err = e.message; }
+          const booked = u._actingVamp && u._actingVamp.played, ab = ev(u, 'abstain').map(a => a.vamp + (a.use ? ':' + a.use : ''));
+          const same = u._scalpelTongueFor(cat, 0); u._actingVamp = { v: kat, n: 1, played: booked }; const other = u._scalpelTongueFor(cat, 0); u._actingVamp = null; const none = u._scalpelTongueFor(cat, 0);
+          return { err, polls, ab: ab.join(), hand: u.hand.length, blood: cat.blood, verdict: logs(u).find(l => /^Vote: /.test(l)) || '', same: !!same, other: !!other, none: !!none }; };
+        const r = await run();
+        ok(!r.err && r.ab === 'Anson' && r.hand === 1 && r.blood === 3 && /3 for vs 2 against .* passes/.test(r.verdict) && !r.same && r.other && r.none,
+           '174n Scalpel Tongue once per action: the count-turning abstain books the name, no second copy for the lock; another vampire’s action does not gate it (got ' + JSON.stringify(r) + ')'); }
+
+      // o) the egress review: the lock's later actors are those after the caller's LAST visit (a revisit: Catalina back on the queue after
+      //    Kathy stayed home -- nobody is left) and never the bodies the posture would keep home (Kathy, the last body, against a bleeding
+      //    predator within reach); with the plan's quota of one, Kathy acts before Bret (kept home) and the lock is played
+      { const plan = o => { const u = mk174('Hanna', 'toreador', { scalpelLock: 1 }); const cat = V('c1', 'Catalina Vega', { blood: 3 }), kat = V('k1', 'Kathy Glens', { blood: 3 }), bret = V('b1', 'Bret Stryker', { blood: 3 });
+          u.board = o.bret ? [cat, kat, bret] : [cat, kat]; u.hand = ['Scalpel Tongue']; u._homeQuota = () => o.quota || 0;
+          u._actorQueue = o.revisit ? [cat, kat, cat] : o.bret ? [cat, kat, bret] : [cat, kat];
+          if(o.bleeder){ u.predatorIsBleeder = () => true; u.turnsToOust = () => 1; }
+          u.table = { 2: { pub: { pool: 20, cards: [V('m1', 'Mkhokheli')] } }, 3: { pub: { pool: 20, cards: [] } } };
+          const p = u._scalpelLockPlan(cat, { agBy: { Viktor: 2 } }, { f: 6, a: 2 }); return p ? p.target.vamp : null; };
+        const base = plan({}), revisit = plan({ revisit: true }), home = plan({ bleeder: true }), quota = plan({ bret: true, quota: 1 });
+        ok(base === 'Mkhokheli' && revisit === null && home === null && quota === 'Mkhokheli',
+           '174o the lock’s later actors: after the caller’s last visit, never a body kept home; the quota’s other actor still counts (got ' + JSON.stringify({ base, revisit, home, quota }) + ')'); }
+
+      // p) the egress review: D-117's guard counts the bodies with blood -- Kathy at 0 blood hunts (she locks), so the free Catalina is my
+      //    last body home and the Ball waits; at the minion head the keep skip is set only when another body is planned home (home > 0);
+      //    through the turn it holds for the free one's first visit only -- on a revisit (pushed back after Kathy stayed home) the posture
+      //    keeps her home under the plan's quota of one
+      { const guard = () => { const u = mk174('Hanna', 'toreador', { ballTurn: 1 }); const cat = V('c1', 'Catalina Vega', { blood: 4 }), bret = V('b1', 'Bret Stryker', { blood: 3 });
+          u.board = [cat, bret, V('k1', 'Kathy Glens', { blood: 0 })]; u.hand = ['Toreador Grand Ball', 'Kine Resources Contested']; u.table = preyT();
+          u.predatorIsBleeder = () => true; u.turnsToOust = () => 1; const r = u._grandBallPlan(); return r.grandBall ? 'play' : ('hold: ' + r.why); };
+        const head = bleeder => { const u = mk174('Hanna', 'toreador', { ballTurn: 1 }); const b = ballBoard(); u.board = b.board; u.hand = ['Kine Resources Contested']; u.table = preyT(); u._homeQuota = () => 0;
+          if(bleeder){ u.predatorIsBleeder = () => true; u.turnsToOust = () => 1; }
+          u._minionKeyOrder([b.kat, b.cat]); return { hold: u._polHold && u._polHold.keyId, free: u._ballFreeId }; };
+        const loop = async () => { const u = mk174('Hanna', 'toreador', { ballTurn: 1 }); const b = ballBoard(); u.board = b.board; u.hand = ['Parity Shift']; u.pool = 20;
+          u.table = { 2: { pub: { pool: 26, cards: [V('v1', 'Lloyd Brooks')] } }, 3: { pub: { pool: 26, cards: [] } } }; u._askBlock = async () => ({ what: 'pass' });
+          const real = u._strategize.bind(u); u._strategize = t => { const r = real(t); if(u.plan) u.plan.home = 1; return r; };
+          let pushed = false; u._maybeActAgain = (p, a) => { if(p && p.id === 'k1' && !pushed){ pushed = true; b.cat.locked = false; a.push(b.cat); } };
+          let terr = null; try { await Promise.race([u._playTurn(), sleep(8000)]); } catch(e){ terr = e.message; }
+          return { terr, pushed, refs: ev(u, 'referendum-called').map(e => e.vamp), home: ev(u, 'keep-blocker').map(e => e.vamp), free: u._ballFreeId }; };
+        const g = guard(), calm = head(false), hot = head(true), l = await loop();
+        ok(/D-117/.test(g) && calm.hold === 'c1' && calm.free === null && hot.hold === 'c1' && hot.free === 'c1'
+           && !l.terr && l.pushed && l.refs.join() === 'Catalina Vega' && l.home.join() === 'Kathy Glens,Catalina Vega' && l.free === null,
+           '174p the Ball’s guard counts the bodies with blood; the keep skip only with a body planned home, for the free one’s first visit (got ' + JSON.stringify({ g, calm, hot, l }) + ')'); }
+
+      // q) the egress review: keyLast with scalpelLock -- Catalina's Parity Shift would carry the lock (Scalpel Tongue in hand, my prey's
+      //    unlocked prince Mkhokheli a voter), so she opens the turn (keyFirst-scalpel); when the only other actor is the body the posture
+      //    would keep home (a bleeding predator within reach) the lock buys nothing: keyLast's place, before that body
+      { const run = o => { const u = mk174('Hanna', 'toreador', { keyLast: 1, scalpelLock: 1 }); const cat = V('c1', 'Catalina Vega', { blood: 3 }), kat = V('k1', 'Kathy Glens', { blood: 4 }), bret = V('b1', 'Bret Stryker', { blood: 4 });
+          const bodies = o.two ? [kat, cat] : [cat, kat, bret]; u.board = bodies.slice(); u.hand = ['Parity Shift', 'Scalpel Tongue']; u.pool = 20; u._homeQuota = () => 0;
+          u.table = { 2: { pub: { pool: 26, cards: [V('m1', 'Mkhokheli')] } }, 3: { pub: { pool: 26, cards: [] } } };
+          if(o.bleeder){ u.predatorIsBleeder = () => true; u.turnsToOust = () => 1; }
+          const q = bodies.slice(); u._minionKeyOrder(q); const row = ev(u, 'key-order')[0] || null;
+          return { q: q.map(v => v.name.split(' ')[0]).join(), rule: row && row.rule }; };
+        const first = run({}), home = run({ two: true, bleeder: true });
+        ok(first.rule === 'keyFirst-scalpel' && first.q === 'Catalina,Kathy,Bret' && home.rule === 'keyLast' && home.q === 'Catalina,Kathy',
+           '174q keyLast with scalpelLock: the lock’s referendum opens the turn; not when the only other actor would stay home (got ' + JSON.stringify({ first, home }) + ')'); }
+
+      // c2) the hold through the minion loop (the egress review: 174c sets done by hand): two political cards -- with ballTurn Catalina
+      //     (the Ball's free Toreador) calls the first and Kathy, after her, the second; and when Catalina's visit leaves her unlocked
+      //     (no legal action: a stub), the loop's own visit of the key actor still ends the hold -- Kathy calls
+      { const run = async idle => { const u = mk174('Hanna', 'toreador', { ballTurn: 1 }); const b = ballBoard(); u.board = b.board; u.hand = ['Kine Resources Contested', 'Kine Resources Contested']; u.pool = 20;
+          u.table = preyT(); u._askBlock = async () => ({ what: 'pass' });
+          if(idle){ const real = u._decideAction.bind(u); u._decideAction = (v, ctx) => v.id === 'c1' ? { pick: null, why: 'the test: no legal action' } : real(v, ctx); }
+          let terr = null; try { await Promise.race([u._playTurn(), sleep(8000)]); } catch(e){ terr = e.message; }
+          return { terr, refs: ev(u, 'referendum-called').map(e => e.vamp).join(), holds: ev(u, 'pol-hold').length, cat: b.cat.locked }; };
+        const two = await run(false), idle = await run(true);
+        ok(!two.terr && two.refs === 'Catalina Vega,Kathy Glens' && two.holds === 0 && !idle.terr && idle.cat === false && idle.refs === 'Kathy Glens' && idle.holds === 0,
+           '174c2 the hold through the loop: the key actor calls first, the other the second card; an idle key actor’s visit ends the hold too (got ' + JSON.stringify({ two, idle }) + ')'); }
+
+      // m) the release's defaults (v0.6.229, after the benches): the five knobs on, the bench's loser gone
+      { const d = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'D', log: () => {} }).o;
+        ok(d.ballTurn === 1 && d.keyLast === 1 && d.engineW === 6 && d.scalpelLock === 1 && d.villeinKeep === 1 && d.clogWide === undefined,
+           '174m the defaults after the benches: ballTurn 1, keyLast 1, engineW 6, scalpelLock 1, villeinKeep 1; clogWide removed (got ' + JSON.stringify({ ballTurn: d.ballTurn, keyLast: d.keyLast, engineW: d.engineW, scalpelLock: d.scalpelLock, villeinKeep: d.villeinKeep, clogWide: d.clogWide }) + ')'); }
+    }
+
 
 
     }

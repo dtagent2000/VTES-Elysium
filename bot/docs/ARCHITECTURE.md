@@ -32,7 +32,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 ## Where each decision lives
 | Decision | Scorer / site | Reads | Row |
 |---|---|---|---|
-| What a minion does this phase | `decide('action')` ← `_decideAction`, the finders, the turn ledger (`_turnActs`), the probe (`_probe`) | plan, `_twdExpect`, `oppForecast`, the hand | `decide` q `action` (scores per candidate) |
+| What a minion does this phase | `decide('action')` ← `_decideAction`, the finders, the turn ledger (`_turnActs`), the probe (`_probe`); the queue's key referendum (`_minionKeyOrder`, `_polHold`, the Ball's keep skip `_ballFreeId`; v0.6.229) | plan, `_twdExpect`, `oppForecast`, the hand | `decide` q `action` (scores per candidate), `key-order`, `pol-hold` |
 | Who to bleed / bounce to | `bleed-target` | prey, the bounce rule (always my prey today) | `decide` |
 | Pump a bleed | `bleed-modifier` | the total, the blocker's intercept history, `_pPump` | `play` window `bleed-mod`, `bleed-total` |
 | Block or not (as target) | `block-as-target` ← `_blockRisk`, `_keepBlocker`, the threat classes T1–T6 | plan.home, `oppCombatCost`, the deck axes; `_actionClass` (offensive / economy / utility; the hit rate divides blocked by offensive only) | `block-eval`, `block-made`, `defence-plan` |
@@ -42,13 +42,13 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | Combat, each step | `_resolveCombat` (the seven steps), `_wantGrapple` / `_wantPress` / `_wantPressToEnd` / `_wantLong`, `combat-strike` (`_strikePick`, the dodge), `combat-end` | `DECK_STRATEGY.combat`, `_expOppStrike`, the known strike (peek) | `combat-round`, `combat-phase`, `play` windows `combat-*` |
 | Rush | the rush targeter in the action finder, `_rushExpectation` | target blood, my kit, env damage | `rush-counterfactual`, `rushed` |
 | Referendum | `_bestPoliticalFor`, `_callReferendum`, `_refDeltas`, the voter | `_refValue`, pass estimate, title votes | `referendum-called`, `referendum`, `ref-vote` |
-| Influence | `_planInfluence` (`_deckFit`, the planner), `_riseFromUnc` | plan.floor, `_critPool`, the crypt | `influence-plan`, `influence-pick`, `raise` |
+| Influence | `_planInfluence` (`_deckFit`, `_engineY`, the planner), `_riseFromUnc` | plan.floor, `_critPool`, the crypt | `influence-plan`, `influence-pick`, `raise` |
 | Masters, income, banks | `master-play` (`_bestMasterFor`: no `oot`, `_masterReqOk`, `_masterHold`), `income-drain`, `income-direction`, `bank-in`, `lock-income` (one lock, one effect) | pool (≥ 1 left), a ready vampire meeting the requirements, the hand | `play`, `income-*`, `bank`, `unc-blood` |
 | Out-of-turn answers | `_archonFor` / `_playArchon` in the react window; `_ootDebt` at my next turn | the bleed at me, pool | `archon`, `archoned`, `oot-debt` |
 | Act again | `act-again` (`_maybeActAgain`; Monster is a board source) | the ledger, `_keepBlocker`, `_critPool` | `act-again` |
-| Masters on a vampire (v0.6.217) | `_masterHostPlan` (the host or held, `_masterHostOk`; `_grandBallPlan`: the Ball's pair; a human's Ball: `_hMemoLog` → `_humanBallFree`, D-113); `_masterNoHost` makes an unhostable one a dead card | the hand, my crypt, `_titleOf`, `_discOf`, `_capOf` | `master-play`, `grand-ball`, `memo` |
+| Masters on a vampire (v0.6.217) | `_masterHostPlan` (the host or held, `_masterHostOk`; `_grandBallPlan`: the Ball's pair, its wait `_ballGuard` (D-117); a human's Ball: `_hMemoLog` → `_humanBallFree`, D-113); `_masterNoHost` makes an unhostable one a dead card | the hand, my crypt, `_titleOf`, `_discOf`, `_capOf` | `master-play`, `grand-ball`, `ball-wait`, `memo` |
 | If blocked (v0.6.217) | `_ifBlockedStep`: Terrifying Visage, Change of Target (`_cotWorth`; `_noteCotAct` books the action) | the blocker's expected strike, my combat enders | `change-of-target`, `visage` |
-| Polling-step abstain (v0.6.217) | `_bestAbstainFor` / `_playAbstain` in `_callReferendum` (the poll reopens after it) | `rc.agBy`, the seat's title votes | `abstain` |
+| Polling-step abstain (v0.6.217) | `_bestAbstainFor` / `_playAbstain` in `_callReferendum` (the poll reopens after it); the lock on my prey's voter (`_scalpelLockPlan`, v0.6.229) | `rc.agBy`, the seat's title votes, my queue | `abstain` (`use: 'lock'`) |
 | Burn a card in play (v0.6.217; Jack D-114) | `burnCard` (`_bestBurnCardFor`; Jack `_jackBurnValue`); the owner's `_complyBurnCard`; my Jack's worth on `_burnWindowOpens` | the owner's votes; `_planJack`'s reads | `burn-card`, `card-burned` |
 | Set-up cards (Haven) | the look-ahead through `_actionCtxFor` + `_actionCtxAdjust(…, ahead)` + `_decide` | the real action ctx | `haven` |
 | Waits on a human | `_waitPlan(kind, who)`; block / react / pq / vote / phase / damage / verdict | the tempo (`botcfg`), the hold | `wait`, `tempo` |
