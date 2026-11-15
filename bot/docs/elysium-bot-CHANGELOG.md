@@ -105,8 +105,20 @@
     (4959db6) the egress fixes moved none of the 240, 2 of the V5 smoke's 168 (Toreador's) and 55 of the 600 (DIVERGED 23, SAME-PLAY
     32). `ana-gates.py` PASS on the 240 and on every V5 smoke series; the 600 fails the ledger gate once (match 512, unchanged by the
     fixes: the fizzle misread, BOARD; v0.6.228's 600 failed it in 167, the block gate too).
-  - Gates on the release bytes: GATES_TBD
-  - *Egress*: EGRESS_TBD
+  - Gates on the release bytes (`elysium-bot.js` sha256 `e306ac04…`): `node --check`; `test-bot-logic.js` 2517/0 ×3, frozen snapshots
+    (the first release bytes' 2512 and the egress review's five cases; on those first bytes one of three runs failed six asserts of
+    live section 36 while the review shared the CPU, green alone ×3); section 174 20/0 (16/4 on the pre-fix bytes);
+    `test-bot-canary.js` 143/0 ×2 (`bot/`'s copies; main's release); `test-cardfx.js` 324/0; `test-bot-hotseat.js` 12/0; the lint
+    clean; `ana-gates.py --self-test` 35/0; `tools/doc-budget.sh` PASS, `tools/test-doc-budget.sh` red on every case. Not run: main's
+    client suite and the arena smoke -- the wire and the real clock are untouched (the arena's change is its knob whitelist).
+  - *Egress* (a fresh-context review of the first release bytes): 14 findings (half-done 4, stale-doc 5, rule-missed 1, unproven 1,
+    test-weakened 1, a design reading 1, pre-existing 1), 12 fixed, 2 listed. Fixed: a second Scalpel Tongue in one action (the lock
+    after a count-turning abstain); the lock's later actors (a revisit, the bodies kept home); the Ball's guard on bodies at 0 blood and
+    its keep skip's scope; keyLast with scalpelLock untested, and its forecast; engineW's reach and `_engineY`'s comment; keyLast's knob
+    line; D-106's pointer, D-117's built note, D-101's raises, doc-budget's header; the root copy and START-HERE's date; README's map,
+    ARCHITECTURE's rows, the BOARD line's Docs; the reader (clog-wide, the stock tables, lock turns with no act), the audit fix's
+    self-test, the R6 note above; 174c's hand-set flag, 174f's arm, 174j's comment. Listed: the guard's quota reading (RULINGS O-43,
+    Johan's) and the minion head's stale `_turnActs` (BOARD, pre-existing).
   - *Found on the way*: the fizzle misread (BOARD) shows wherever a referendum's or a creep's pool loss ousts a seat just before a
     bleed at it -- the ballTurn arm's 378 and 491 (Toreador's referendum first, then its bleed at the seat it ousted), the release's
     512; the next prey books the bleed. Malkavian's first bleeds are unread as a stealth bleeder's (171 calm attempts) and any seat
