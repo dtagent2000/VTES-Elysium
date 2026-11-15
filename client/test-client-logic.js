@@ -2813,8 +2813,8 @@ test('v2.6.122 relays: a bot\'s openHand reaches the human\'s open-hand receiver
 });
 test('v2.6.122 decks + levels: the menu is the bot\'s registry by KEY (Ventrue included, the embedded copies gone, wall hidden), both spawn paths pass deckName, and the experience levels are Novice / Experienced / Expert with Expert the default everywhere', () => {
   const A = loadClient(CLIENT); const html = require('fs').readFileSync(CLIENT, 'utf8');
-  eq(JSON.stringify(A.HOT_BOT_DECKS.map(r => r.key)), JSON.stringify(['hacking', 'sewer', 'tremere', 'nosferatu', 'malkavian', 'ventrue']));
-  assert(!/Black Chantry 2020/.test(html), 'no embedded V5 deck list left to drift');
+  eq(JSON.stringify(A.HOT_BOT_DECKS.map(r => r.key)), JSON.stringify(['hacking', 'sewer', 'tremere', 'nosferatu', 'malkavian', 'ventrue', 'toreador']));   // v2.6.175: toreador's label
+  assert(!/Black Chantry 2020/.test(html.replace(/<template id="helpDoc[\s\S]*?<\/template>/g, '')), 'no embedded V5 deck list left to drift (v2.6.175: outside the embedded Help pages -- the bot guide\'s deck table names the deck "(Black Chantry 2020)" since v0.6.219, and that prose is theirs)');
   eq((html.match(/deck:hotBotDeckFor\(deckKey\), deckName:deckKey,/g) || []).length, 2, 'netBotAdd AND hotSpawnBots tell the bot which deck it plays');
   eq(A.hotBotDeckKey('nope'), 'hacking', 'an unknown key falls back to the first deck'); eq(A.hotBotDeckKey('ventrue'), 'ventrue');
   let err = null; try { A.hotBotDeckFor('ventrue'); } catch (e){ err = e; } assert(err && /v0\.6\.147 or newer/.test(err.message), 'without the bot file loaded the reason is readable');
@@ -2828,10 +2828,31 @@ testB('v2.6.122 registry, with the released bot: every menu key resolves in Elys
   for (const r of A.HOT_BOT_DECKS) assert(BOT.ARCHETYPES[r.key] && BOT.ARCHETYPES[r.key].crypt, r.key + ' is in the registry');
   for (const q of A.HOT_BOT_PERSONAS) eq(BOT.personaKey(q[0]), q[0], q[0] + ' is a canonical level key');
   global.ElysiumBot = Object.assign({}, BOT, { ARCHETYPES: Object.assign({ brandnew: { name: 'A Deck From The Future', crypt: [], library: [] } }, BOT.ARCHETYPES) });
-  try { const menu = A.hotBotDeckMenu(); const extra = menu.filter(r => !A.HOT_BOT_DECKS.some(k => k.key === r.key));
-    eq(JSON.stringify(extra), JSON.stringify([{ key: 'brandnew', label: 'A Deck From The Future' }]), 'new decks arrive with a bot release; wall stays hidden');
+  try { const menu = A.hotBotDeckMenu(); const keys = menu.map(r => r.key);
+    /* v2.6.175: read from the registry, not a pinned list -- bot v0.6.219 added toreador and this test,
+       which pinned the extras to exactly [brandnew], went red on a deck the design says needs nothing here */
+    eq(JSON.stringify(menu.find(r => r.key === 'brandnew')), JSON.stringify({ key: 'brandnew', label: 'A Deck From The Future' }), 'a key the client has never heard of shows under the deck\'s own name');
+    assert(!keys.includes('wall'), 'wall stays hidden');
+    for (const k of Object.keys(BOT.ARCHETYPES)) if (k !== 'wall') eq(keys.filter(x => x === k).length, 1, k + ' is offered exactly once');
+    eq(JSON.stringify(keys.slice(0, A.HOT_BOT_DECKS.length)), JSON.stringify(A.HOT_BOT_DECKS.map(r => r.key)), 'the known keys first, in the client\'s order');
     assert(A.hotBotDeckFor('ventrue') === BOT.ARCHETYPES.ventrue, 'the SAME object -- the bot recognises it by identity'); }
   finally { delete global.ElysiumBot; }
+});
+testB('v2.6.175 Toreador in the menu: the fifth V5 starter carries the label the other four have, and a known key the LOADED bot lacks is not offered (an older bot file beside a newer client)', async () => {
+  const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT);
+  const r = A.HOT_BOT_DECKS.find(x => x.key === 'toreador');
+  assert(r && r.label === 'V5 Starter \u2014 Toreador', 'toreador is a known key with the client\'s label (v2.6.174: unknown, shown as the deck\'s own name)');
+  assert(BOT.ARCHETYPES.toreador && BOT.ARCHETYPES.toreador.crypt, 'the released bot plays it');
+  global.ElysiumBot = BOT;
+  try { const m = A.hotBotDeckMenu(); eq(m.filter(x => x.key === 'toreador').length, 1, 'offered once'); eq(m.find(x => x.key === 'toreador').label, 'V5 Starter \u2014 Toreador', 'under the client\'s label, not "(Black Chantry 2020)"'); }
+  finally { delete global.ElysiumBot; }
+  const older = Object.assign({}, BOT.ARCHETYPES); delete older.toreador;
+  global.ElysiumBot = Object.assign({}, BOT, { ARCHETYPES: older });
+  try { eq(A.hotBotDeckMenu().some(x => x.key === 'toreador'), false, 'a bot file without the deck is never offered it (the spawn would throw)');
+    eq(A.hotBotDeckKey('toreador'), 'hacking', 'a remembered toreador choice falls back to the first deck');
+    eq(A.hotBotDeckMenu().length, A.HOT_BOT_DECKS.length - 1, 'every other known key stays'); }
+  finally { delete global.ElysiumBot; }
+  eq(A.hotBotDeckMenu().some(x => x.key === 'toreador'), true, 'before the bot file loads, every known key shows, as before');
 });
 testB('v2.6.122 LIVE: two real bots over the bridge -- a forced oust of one completes the round, its bot predator collects exactly once, and a real bot\'s block tally reaches the other bot and avr', async () => {
   const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
@@ -6145,6 +6166,133 @@ test('v2.6.173: the help tab\'s nav script lives in #helpNavJs (text/plain: it n
   const h = t => _c173.createHash('sha256').update(t, 'utf8').digest('base64');
   const tabScripts = []; page.replace(/<script>([\s\S]*?)<\/script>/g, (a, t) => { tabScripts.push(h(t)); return a; });
   eq(JSON.stringify(tabScripts), JSON.stringify([h(m[1])]), 'one script in the tab, with the hash of #helpNavJs');
+});
+
+/* ---------- v2.6.175: every aim is per-action; a bleed names a Methuselah (bot v0.6.225's ask) ---------- */
+function aimTable(){   // the human's turn at a hotseat with one FAKE bot seat; two Toreador and the Grand Ball in hand
+  const A = loadClient(CLIENT); const T = parityTable(A, [['You'], ['B2', true]]);
+  A.conv.tournament = false; A.net.helperPolicy = null; A.net.turnSeat = 1; A.clearTable({});
+  const cat = A.makeCard('Catalina Vega', 'crypt'); A.move(cat, 'ready', { x: 100, y: 60, faceDown: false }); cat.blood = 3;
+  const fla = A.makeCard('Flávio Gonçalves', 'crypt'); A.move(fla, 'ready', { x: 300, y: 60, faceDown: false }); fla.blood = 3;
+  const lines = () => A.errRing.map(e => e.m), last = () => lines()[lines().length - 1];
+  A.uiDialog = () => Promise.resolve(null);                          // any prompt answers Cancel (the hand-size confirm: Cancel plays)
+  let shown = null; A.showMenu = items => { shown = items; };
+  const row = (c, ...path) => { A.cardMenu(c, 0, 0); let r = { sub: shown }; for (const l of path) r = r && r.sub && r.sub.find(x => x && x.label === l); if (!r) throw new Error('no row ' + path.join(' > ')); return r; };
+  const relayed = () => { const g = T.got[2].filter(m => m.t === 'log'); return g.length ? g[g.length - 1].html : null; };
+  return { A, T, cat, fla, lines, last, row, relayed };
+}
+testA('v2.6.175 every aim is per-action (bot v0.6.225\'s ask): the Grand Ball\'s pair rides its play line and is gone once the master phase ends -- the next hunt, bleed and card action carry no stale target (v2.6.174: "Catalina Vega hunts. Target: Flávio Gonçalves.")', async () => {
+  const { A, cat, fla, last, row } = aimTable();
+  const ball = A.makeCard('Toreador Grand Ball', 'lib'); A.move(ball, 'hand');
+  A.state.phase = 1; A.state.phaseUsed.master = 0; A.selectOnly(cat); A.setTarget(fla.id, true);
+  eq(A.state.targetUsed, false, 'a fresh aim is unused');
+  await A.playFromHand(ball, false);
+  eq(last(), 'Catalina Vega plays Toreador Grand Ball. Target: Flávio Gonçalves.', 'the play line carries the pair -- what the bots read (v0.6.225)');
+  eq(A.state.targetUsed, true, 'the line used the aim'); eq(A.state.target, fla.id, 'which stays on while its action lasts');
+  A.setPhase(2);
+  eq(A.state.target, null, 'master -> minion closes the batch: the used aim is gone'); eq(A.state.targetUsed, false);
+  row(cat, 'Actions', 'Hunt').fn(); eq(last(), 'Catalina Vega hunts.', 'the frozen hunt line, as §12 has it');
+  row(fla, 'Actions', 'Bleed', 'Bleed 1').fn(); eq(last(), 'Flávio Gonçalves bleeds for 1.', 'no target on the bleed');
+  row(fla, 'Actions', 'Card action').fn(); eq(last(), 'Flávio Gonçalves takes a card action.', 'nor on the next directed action');
+});
+testA('v2.6.175 the used-flag keeps v2.6.23\'s guarantees for every aim: a fresh aim survives the batch-close ahead of its own line and another player\'s resolve; a used remote-card aim clears at the next action; a used pool aim as before', async () => {
+  const { A, cat, fla, last, row } = aimTable(); A.setPhase(2);
+  A.setRTarget({ seat: 2, cid: 'c9', who: 'B2', name: 'Sully', faceDown: false }, true);
+  A.resolvePlayedActions(); eq(A.net.rtarget && A.net.rtarget.cid, 'c9', 'someone else\'s resolve leaves an aim no line has carried');
+  row(cat, 'Actions', 'Card action').fn(); eq(last(), 'Catalina Vega takes a card action. Target: B2\'s Sully.', 'the fresh aim survived the batch-close ahead of its own line');
+  row(fla, 'Actions', 'Hunt').fn(); eq(last(), 'Flávio Gonçalves hunts.', 'the next action starts without it'); eq(A.net.rtarget, null, 'the used remote aim is gone (v2.6.174: it stuck)');
+  A.setTarget(fla.id, true); row(cat, 'Actions', 'Block').fn(); eq(last(), 'Catalina Vega blocks. Target: Flávio Gonçalves.', 'a block carries the aim (no batch-close: a reaction)');
+  eq(A.state.target, fla.id, 'and the aim lasts until the action it reacted to resolves'); A.resolvePlayedActions(); eq(A.state.target, null, 'then it goes');
+  A.setPoolTarget(2); row(cat, 'Actions', 'Bleed', 'Bleed 2').fn(); eq(last(), 'Catalina Vega bleeds for 2. Target: B2\'s pool.', 'a pool aim rides the bleed (the bounce shape)');
+  row(fla, 'Actions', 'Hunt').fn(); eq(last(), 'Flávio Gonçalves hunts.'); eq(A.net.rtarget, null, 'and clears at the next action, as since v2.6.23');
+});
+testA('v2.6.175 a bleed names a Methuselah: with a card aimed at -- your own or another seat\'s -- the bleed and +X bleed lines carry no target and the aim stays unused; with a pool aim they carry it', async () => {
+  const { A, cat, fla, last, row } = aimTable(); A.setPhase(2);
+  A.setTarget(fla.id, true); row(cat, 'Actions', 'Bleed', 'Bleed 1').fn();
+  eq(last(), 'Catalina Vega bleeds for 1.', 'an own card aimed at is not a bleed target (v2.6.174: "Target: Flávio Gonçalves.")');
+  eq(A.state.targetUsed, false, 'the bleed did not use it'); eq(A.state.target, fla.id, 'so it survives to a line that does');
+  A.setRTarget({ seat: 2, cid: 'c9', who: 'B2', name: 'Sully', faceDown: false }, true);
+  row(cat, 'Actions', 'Bleed', 'Bleed 1').fn(); eq(last(), 'Catalina Vega bleeds for 1.', 'nor another seat\'s vampire');
+  A.uiDialog = () => Promise.resolve('2'); await row(cat, 'Actions', 'Bleed', '+X bleed…').fn();
+  eq(last(), 'Catalina Vega adds +2 bleed (= 3).', 'nor the +X line');
+  eq(A.bleedTargetSuffix(), '', 'the helper says the same'); eq(A.state.targetUsed, false);
+  A.setPoolTarget(2); eq(A.bleedTargetSuffix(), ' Target: <b>B2</b>\'s <b>pool</b>.', 'a pool aim is the one a bleed carries'); eq(A.state.targetUsed, true, 'and using it marks it');
+});
+testA('v2.6.175 the used-flag is per seat and undoable: it rides serializeGame / restoreGame with its aim (a hotseat hand-off cannot hand it to the next seat) and an undone line un-uses the aim it carried', async () => {
+  const { A, cat, fla, row } = aimTable(); A.setPhase(2);
+  A.setTarget(fla.id, true); A.targetSuffix(); eq(A.state.targetUsed, true);
+  const used = A.serializeGame(); assert(JSON.parse(used).targetUsed === true, 'saved with the aim');
+  const HO = { keepLog: true, silent: true, handoff: true };          // what setActivePlayer passes at a hotseat hand-off
+  A.restoreGame(used, HO); eq(A.state.target, fla.id); eq(A.state.targetUsed, true, 'a hand-off restores the aim with its flag');
+  A.setTarget(null, true); A.setTarget(fla.id, true); const fresh = A.serializeGame(); eq(JSON.parse(fresh).targetUsed, undefined, 'an unused aim adds nothing to the save');
+  A.restoreGame(used, HO); A.restoreGame(fresh, HO); eq(A.state.targetUsed, false, 'the next seat\'s blob does not inherit the flag'); eq(A.state.target, fla.id, 'and keeps its own aim');
+  A.restoreGame(used, { silent: true }); eq(A.state.target, null, 'a resume from a save re-baselines the played cards (the open action is over), so a USED aim goes with it');
+  A.restoreGame(fresh, { silent: true }); eq(A.state.target, fla.id, '...and an unused one stays');
+  const pre = A.snapshot(); A.targetSuffix(); eq(A.state.targetUsed, true); A.restoreSnap(pre); eq(A.state.targetUsed, false, 'undo puts back the unused aim');
+  const noAim = JSON.parse(used); noAim.target = null; A.restoreGame(JSON.stringify(noAim), HO); eq(A.state.targetUsed, false, 'a flag without an aim is dropped');
+});
+testB('v2.6.175 LIVE: the client\'s bleed with a card aimed at reaches the REAL prey bot -- it arms its block window and books the bleed; the v2.6.174 line (the card in the suffix) is what it read as aimed at nobody', async () => {
+  const BOT = require('./elysium-bot.js');
+  const { A, cat, fla, row, relayed } = aimTable(); A.setPhase(2);
+  const mk = () => { const sent = []; const u = new BOT.Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'B2', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} });
+    u.seat = 2; u.started = true; u.send = m => sent.push(m); u.push = () => {}; u.players = [{ seat: 1, name: 'You' }, { seat: 2, name: 'B2', bot: true }]; return u; };
+  A.setTarget(fla.id, true); row(cat, 'Actions', 'Bleed', 'Bleed 1').fn();
+  const html = relayed(); assert(html && /bleeds for 1\.$/.test(html.replace(/<[^>]*>/g, '')), 'the bridge relayed the bleed line: ' + html);
+  let u = mk(); u._onLog('You', html); assert(u.pending && u.pending.amount === 1 && u.pending.who === 'You', 'the prey bot takes the bleed (pending ' + JSON.stringify(u.pending && { a: u.pending.amount, w: u.pending.who }) + ')');
+  u = mk(); u._onLog('You', html.replace(/\.$/, ' Target: ' + '<b class="clog" data-cid="' + fla.id + '">Flávio Gonçalves</b>.'));
+  assert(!u.pending, 'control: the same bleed with the card in its suffix (v2.6.174) is not taken -- why the bleed carries a pool aim only');
+  A.setPoolTarget(2); row(cat, 'Actions', 'Bleed', 'Bleed 1').fn();
+  u = mk(); u._onLog('You', relayed()); assert(u.pending && u.pending.amount === 1, 'a pool aim at the bot still reaches it');
+});
+
+testB('v2.6.175 LIVE: the client\'s own Grand Ball play line, relayed over the bridge, gives a REAL bot the human\'s pair -- the board the client pushes shows which one locked, and the bot names the other as the free Toreador (bot v0.6.225\'s reader, end to end)', async () => {
+  const BOT = require('./elysium-bot.js');
+  const { A, cat, fla, last, relayed } = aimTable();
+  const ball = A.makeCard('Toreador Grand Ball', 'lib'); A.move(ball, 'hand');
+  const u = new BOT.Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'B2', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} });
+  u.seat = 2; u.started = true; u.send = () => {}; u.push = () => {}; u.chat = () => {}; const evs = []; u.onEvent = (t, d) => evs.push([t, d]);
+  u.players = [{ seat: 1, name: 'You' }, { seat: 2, name: 'B2', bot: true }];
+  const board = () => { u.table = { 1: { pub: JSON.parse(JSON.stringify(A.buildPub())) } }; };
+  A.state.phase = 1; A.state.phaseUsed.master = 0; A.selectOnly(cat); A.setTarget(fla.id, true);
+  board(); await A.playFromHand(ball, false); u._onLog('You', relayed());
+  A.setLocked(cat, true); board();                                   // the Ball's cost: the human locks Catalina by hand
+  A.uiDialog = () => Promise.resolve(true); await A.activatePhase(2);   // the phase bar's own path: it writes the Phase line
+  const ph = relayed(); assert(/^Phase: Minion\.$/.test(ph.replace(/<[^>]*>/g, '')), 'the Phase line went to the bot: ' + ph);
+  u._onLog('You', ph); u._hMemoBoard(1);
+  const mm = evs.filter(x => x[0] === 'bot:memo').map(x => x[1])[0];
+  assert(mm && mm.lock === 'Catalina Vega' && mm.free === 'Flávio Gonçalves' && mm.via === 'pair', 'the bot read the pair from the client\'s line: ' + JSON.stringify(mm));
+  eq(A.state.target, null, 'and the client\'s aim is gone with the master phase');
+});
+
+/* ---------- v2.6.175: the game is over when every OTHER seat is ousted (bot v0.6.221's ask) ---------- */
+const GAME_OVER_175 = 'The game is over — you are the last Methuselah standing.';
+test('v2.6.175 (bot v0.6.221\'s ask) the game is over when every OTHER seat is ousted: the winner\'s pass is refused with a reason, online and at a hotseat; a vacant seat, one opponent left or a table of one plays on', () => {
+  const A = loadClient(CLIENT); A.toast = () => {};
+  A.net.status = 'in'; A.net.you = 'P1'; A.net.turnSeat = 1;
+  A.net.roster = [{ seat: 1, name: 'P1' }, { seat: 2, name: 'P2', out: true }, { seat: 3, name: 'P3', out: true }];
+  eq(A.passBlockedWhy(), GAME_OVER_175, 'online: the winner holds the turn (srv-2.6.50 handed it straight back)');
+  A.net.turnSeat = 3; eq(A.passBlockedWhy(), GAME_OVER_175, 'also with the marker on the last seat ousted (the server leaves it there)');
+  A.net.turnSeat = 1; A.net.roster[2] = { seat: 3, name: 'P3', vacant: true };
+  eq(A.passBlockedWhy(), null, 'a vacant seat is still in the game');
+  A.net.roster = [{ seat: 1, name: 'P1' }, { seat: 2, name: 'P2' }, { seat: 3, name: 'P3', out: true }]; eq(A.passBlockedWhy(), null, 'one opponent left');
+  A.net.roster = [{ seat: 1, name: 'P1' }]; eq(A.passBlockedWhy(), null, 'a table of one is a solo game');
+  A.net.status = 'off';
+  const T = parityTable(A, [['You'], ['B2', true], ['B3', true]]); A.net.turnSeat = 1;
+  A.net.roster[1].out = true; A.net.roster[2].out = true; eq(A.passBlockedWhy(), GAME_OVER_175, 'at a hotseat: both bots ousted');
+  A.net.roster[2].out = false; eq(A.passBlockedWhy(), null, 'one bot left');
+  A.localTable = false; T.HB.reset([]);
+});
+testA('v2.6.175 the refused pass changes nothing at a hotseat: no new turn, the phase stays, no line, no bot handed a turn (v2.6.174: the sweep found no live bot and gave the winner turn N+1)', async () => {
+  const A = loadClient(CLIENT); let toasted = null; A.toast = m => { toasted = m; };
+  const T = parityTable(A, [['You'], ['B2', true]]); A.offlineCfg = [{ name: 'You' }, { name: 'B2', botP: true }];
+  A.state.phase = 4; A.net.turnSeat = 1; A.net.roster[1].out = true;
+  const t0 = A.state.turn, n0 = A.errRing.length;
+  await A.pass();
+  eq(toasted, GAME_OVER_175); eq(A.state.turn, t0, 'no new turn'); eq(A.state.phase, 4, 'the phase stays'); eq(A.errRing.length, n0, 'no line');
+  eq(T.got[2].filter(m => m.t === 'turn').length, 0, 'the ousted bot is not handed a turn');
+  A.net.roster[1].out = false; toasted = null;                       // the host unousts the bot: the game is on again
+  eq(A.passBlockedWhy(), null, 'after an unoust the pass goes through');
+  A.localTable = false; T.HB.reset([]);
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */
