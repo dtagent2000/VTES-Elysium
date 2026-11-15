@@ -37,29 +37,35 @@
   table, a fresh deal per match; the variant pinned to its deck, or in every seat for a rule every deck has) and read paired against
   the knobs-at-0 control; five on, one removed, no to 2 and 5 (the spec's §3 and §6 say why). Rides along (D-92): R-45's notes (Eyes
   of the Wild's comment and cardfx note: once each action and Gangrel), `ana-block.py` ends an action at a failed referendum (it
-  writes no through / blocked row, so its window ran into the next action's: both R6 rows of the combined arm), `ana-guide-check.py`
-  (new, read-only: the guide check's situations on a sim trace dir), arena v1.4.13 (the knobs whitelisted).
+  writes no through / blocked row, so its window ran into the next action's: both R6 rows of the combined arm; `ana-gates.py`
+  v1.1.3's self-test plants it, red on the old audit), `ana-guide-check.py` (new, read-only: the guide check's situations on a sim
+  trace dir), arena v1.4.13 (the knobs whitelisted); a rules correction from the egress review (Scalpel Tongue once per action).
   - *The change*: `ballTurn` (D-117) -- `_minionKeyOrder` puts my Grand Ball's free Toreador, when its own look ahead (`_aheadPick`)
     calls a referendum, before the first other actor that could call one and never among the bodies the posture keeps home
     (`_homeBodies`: the keep test asked at the head as if the best blocker were the last body); `_polHold` keeps the others off the
-    political cards until its turn (`_actionCtxAdjust`, a `pol-hold` row); the loop skips its keep test; `_ballGuard` holds the Ball
-    when after the lock the free one would be the last body the posture keeps home (`ball-wait`), through `_keepBlocker`'s new
-    `unlockedN`. `keyLast` (proposal 3) -- the actor whose look ahead calls the best referendum goes after the cheap actions, before the
+    political cards until its turn (`_actionCtxAdjust`, a `pol-hold` row); the loop skips its keep test on the free one's first visit
+    when another body is planned home (`_ballFreeId`); `_ballGuard` holds the Ball when after the lock the free one would be the last
+    body with blood the posture keeps home (`ball-wait`), through `_keepBlocker`'s new `unlockedN` -- the whole posture, the plan's
+    quota too (RULINGS O-43). `keyLast` (proposal 3) -- the actor whose look ahead calls the best referendum goes after the cheap actions, before the
     home bodies (another stays when it would be one), the others held off the cards; with `scalpelLock` a referendum that would carry
     the lock opens the turn; a probed queue is left alone (`_probeFired`); `key-order` rows. `engineW` 6 (proposal 4, D-43) --
-    `_engineY` in `_planInfluence`: the share of my other crypt cards younger than the first vampire when it can play a superior stock
-    action my library holds 4+ of. `scalpelLock` (proposal 6) -- `_scalpelLockPlan` after my referendum passes: my prey's ready,
-    unlocked vampire that voted against, an actor of mine still to act, Scalpel Tongue from the caller (never its last blood),
+    `_engineY` in `_planInfluence`: the share of my other crypt cards younger than the plan's first vampire when it can play the
+    superior mode of a stock action my library holds 4+ of (capacity stands in for the card's younger-only law) -- on every influence
+    plan of the game, as benched (BOARD: 'only while no stock engine of mine is ready'). `scalpelLock` (proposal 6) -- `_scalpelLockPlan` after my referendum passes: my prey's ready,
+    unlocked vampire that voted against, an actor of mine still to act (after the caller's last place on the queue, with blood, not
+    one the posture keeps home), Scalpel Tongue from the caller (never its last blood, never a second copy in the action),
     `decide('scalpel-lock')`, `_playAbstain` (`abstain` row `use: 'lock'`); `_votedBy` and `_scalpelTongueFor` shared with
     `_bestAbstainFor`. `villeinKeep` (proposal 8) -- `_reserveTwo`: a calm Villein leaves the blood for two blood-cost cards.
     `clogWide` (proposal 7) built, benched and removed. `DECK_STRATEGY.toreador`'s comment says where the line differs from the guide
-    and why (points 3, 13, 17). Section 174 (15: 0/15 on v0.6.228; 174b3 red on a mutant without the loop's keep skip; 174f and 174l
-    partly prove only that the methods are new, L-22).
+    and why (points 3, 13, 17). Section 174 (20: the first 15 0/15 on v0.6.228; 174b3 red on a mutant without the loop's keep skip; 174l
+    partly proves only that the method is new, L-22; the egress review's n, o, p, q red on the pre-fix bytes, c2 and f's new arm on
+    mutants without the hold's end and the probe gate).
   - *Predictions* (registered before any arm, commit 2c5772a; amended before any arm, 6ec926f, the predictions unchanged: keyLast's
     place before the home bodies, the engine arm at 6 not 4, the Scalpel smoke's locked voters): the spec's B0-B5, O0-O4, I0-I3,
     S0-S3, C0-C3, V0-V3.
   - *What came out* (the arms on 3154895's bytes, the combined arm on the removal's; 600 each against the knobs-at-0 control):
-    (K0) held -- at 0 the 240, the V5 smoke (168) and the 600 IDENTICAL to v0.6.228 (the manifests' six new labels normalized).
+    (K0) held -- at 0 the 240, the V5 smoke (168) and the 600 IDENTICAL to v0.6.228 (the manifests' six new labels normalized);
+    rerun on the release bytes with the five at 0: the 240, the V5 smoke and the 600 IDENTICAL again.
     D-117, pinned to Toreador (DIVERGED 144): (B1) held -- the free one calls on 290 of its 305 Ball turns (95 %; 66 %); (B2) half
     held -- an earlier caller 1 (51; predicted 0), kept home 1 (41); (B3) held -- 305 Balls (308), 17 waits; (B4) held -- bars per Ball
     1.13 (0.80), a turn with a bar 302 of 305 (71 %); (B5) held -- +0.01 [-0.02, +0.05].
@@ -80,17 +86,25 @@
     stealth as one); (C2) failed -- the pool Malkavian's bleeds took +0.02 a match, Tremere's +0.69; (C3) -0.04 [-0.10, +0.03]: removed.
     Proposal 8, pinned (DIVERGED 187): (V1) held -- a calm Villein leaves its host at 1 blood 104 times (324); (V2) held -- 3.48
     blood moved (3.64), 973 Villeins (971); (V3) failed -- the blood-cost plays 2568 (2575); +0.00 [-0.06, +0.06].
-    The five together, pinned to Toreador (DIVERGED 571): +0.09 [-0.03, +0.21] (0.84 -> 0.93, wins 96 -> 112); the free one calls on
-    295 of 316 Ball turns, no earlier caller, 4 kept home; 1988 referendums passed (1943), 416 blocked (509); 133 locks;
-    `ana-gates.py` PASS but the block gate's two R6 rows (a failed referendum's window: the audit fix above), the ledger 0 faults.
+    The five together, pinned to Toreador (on the removal's bytes, DIVERGED 571): +0.09 [-0.03, +0.21] (0.84 -> 0.93, wins 96 ->
+    112); its block gate's two R6 rows were a failed referendum's window -- 0 after the audit fix above. Rerun on the release bytes
+    (after the egress fixes; 19 matches moved from the earlier arm, the variant -0.01): +0.08 [-0.04, +0.19] (0.84 -> 0.91, wins 96 ->
+    111); the free one calls on 292 of 312 Ball turns, no earlier caller, 4 kept home, 19 waits; in 1543 turns with a referendum and
+    another act the referendum comes first 363 (24 %; 46 % before), middle 442, last 738 (48 %; 20 %) -- keyFirst-scalpel opens 205
+    turns, so the release puts it first far more often than keyLast alone (3 %); 419 of 2440 blocked (17.2 %; 20.5 %), by place first
+    22 %, middle 19 %, last 14 %; 115 locks (Scalpel Tongue 126 plays), 7 with no act of mine after them, their turns' later bleeds
+    blocked 56 of 105; the guide's influence pick first in 403 of 600; a calm Villein's host at 1 blood 50 times (324); `ana-gates.py`
+    PASS 6 of 6 (the ledger 0 faults, the block gate 0).
   - *The flips*: `ballTurn` 1, `keyLast` 1, `engineW` 6, `scalpelLock` 1, `villeinKeep` 1 (D-118: no loss and the mechanism moved;
     the failed halves above are the map). `clogWide` lost and is gone with its case; D-2 stands.
-  - *The release footprint* (the five on, against v0.6.228, the version set back): the 240 DIVERGED 233 / SAME-PLAY 7 (the engine
-    opens the starters' Govern decks; keyLast moves Ventrue's referendums) -- paired VP Malkavian -0.18 [-0.41, +0.04], Tremere +0.14
-    [-0.02, +0.30], Ventrue +0.07, Nosferatu -0.03 (the 240's repeated deals, L-45); the V5 smoke DIVERGED 168; the 600 DIVERGED 600 --
-    Malkavian +0.08 [-0.09, +0.25], Ventrue +0.04, Toreador +0.03 [-0.11, +0.16], Tremere -0.03, Nosferatu -0.12 [-0.23, -0.01] (no
-    knob of its own: the table around it plays better). `ana-gates.py` PASS on the 240 and the V5 smoke; the 600 fails the ledger gate
-    once (match 512: the fizzle misread below; v0.6.228's 600 failed it in 167, the block gate too).
+  - *The release footprint* (the five on, against v0.6.228; the release bytes, after the egress fixes): the 240 DIVERGED 233 /
+    SAME-PLAY 7 (the engine opens the starters' Govern decks; keyLast moves Ventrue's referendums) -- paired VP Malkavian -0.18
+    [-0.41, +0.04], Tremere +0.14 [-0.02, +0.30], Ventrue +0.07, Nosferatu -0.03 (the 240's repeated deals, L-45); the V5 smoke
+    DIVERGED 168; the 600 DIVERGED 600 -- Malkavian +0.10 [-0.08, +0.27], Ventrue +0.02, Toreador +0.02 [-0.11, +0.15], Tremere
+    -0.01, Nosferatu -0.12 [-0.23, -0.01] (no knob of its own: the table around it plays better). Against the first release bytes
+    (4959db6) the egress fixes moved none of the 240, 2 of the V5 smoke's 168 (Toreador's) and 55 of the 600 (DIVERGED 23, SAME-PLAY
+    32). `ana-gates.py` PASS on the 240 and on every V5 smoke series; the 600 fails the ledger gate once (match 512, unchanged by the
+    fixes: the fizzle misread, BOARD; v0.6.228's 600 failed it in 167, the block gate too).
   - Gates on the release bytes: GATES_TBD
   - *Egress*: EGRESS_TBD
   - *Found on the way*: the fizzle misread (BOARD) shows wherever a referendum's or a creep's pool loss ousts a seat just before a

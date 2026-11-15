@@ -24,6 +24,11 @@ The counts below are Toreador's own rows (a scratch reader; the round commits it
 | Toreador's first window at a Malkavian bleed | 3079: calm and read as a stealth bleeder 964 (206 attempts, all bleeds of 2+), calm and not read 412 (171), at the edge 1703 (620); the attempts block 26–34 % |
 | Villein | 971: calm 674 (the host left at 1 blood 324, at 2 284; 3.64 blood moved), on the edge 297 (every blood goes: 177 at 0) |
 
+The committed reader (`ana-guide-check.py`, §10) gives every row above on this 600 but two, which the scratch reader counted
+otherwise: the first offensive action (with 1 ready vampire 453, 2: 116, 3+: 30; a referendum 402, a bleed 197 -- the reader takes
+the turn's first referendum or bleed row) and the Scalpel row's turns (144, with 204 later bleeds, 81 blocked = 40 %). The scratch
+figures stand as the registered baseline; §13 reads both arms with the committed reader.
+
 ## 2. D-117 — the Ball's turn (ruled 14 Nov; to build)
 Knob `ballTurn` (0 = v0.6.228). On a turn my Ball is in play and its free Toreador is ready and unlocked (the turn it is played
 and any later one it survives — Claude's reading of "the Ball's turn"): (a) the minion queue moves the free one before the first
@@ -143,4 +148,15 @@ bounce), 8. Recommended: kör D-117, 3, 4, 6, 7, 8; no 2 and 5 (the lines say wh
 | 6 `scalpelLock` | 71 locks (Scalpel Tongue 81 plays, 10) | S1, S3 held; S2 failed (the lock turns' later bleeds blocked 42 %, 39 % before) | +0.03 [+0.01, +0.05] | on |
 | 7 `clogWide` | calm attempts at a read Malkavian 206 → 45, but every read stealth bleeder's bleeds let through (Tremere 161, Nosferatu 128, Ventrue 120) | C1, C2 failed | −0.04 [−0.10, +0.03] | removed; D-2 stands |
 | 8 `villeinKeep` | a calm Villein leaves its host at 1 blood 104 times (324) | V1, V2 held; V3 failed (the blood-cost plays 2568, 2575) | +0.00 [−0.06, +0.06] | on |
-| the five together | — | no loss | +0.09 [−0.03, +0.21] | the release |
+| the five together | the free one calls on 94 % of its Ball turns, no earlier caller; the referendum first in 24 % of the turns with another act (46 %; keyFirst-scalpel opens 205 turns), last in 48 % (20 %), 17.2 % blocked (20.5 %); 115 locks; the guide's pick first in 67 % | no loss | +0.09 [−0.03, +0.21] on the removal's bytes; +0.08 [−0.04, +0.19] on the release bytes (§14) | the release |
+
+## 14. After the egress review (the release bytes; the arms above ran before it)
+The fresh-context review found 14 points; the code ones were fixed before the release, each with a case red on the pre-fix bytes
+(section 174 n–q) or on a mutant (c2, f): a lock after a count-turning abstain played a second Scalpel Tongue in the action (the
+rulebook's once-per-action rule now gates the abstain's finder too); the lock counted later actors from the caller's first place on
+the queue and counted the bodies the posture keeps home (now after its last place, with blood, never a home body; keyLast's
+lock-first forecast counts them the same way); the Ball's guard counted bodies at 0 blood, which hunt; the Ball's keep skip held with
+no body planned home and on a revisit. Inert at 0: with the five at 0 the release bytes play v0.6.228 (K0, rerun). The combined arm,
+rerun on the release bytes against the same control, moved 19 matches: Toreador +0.08 [−0.04, +0.19] (it was +0.09); the place
+figures in §13's last row are this run's. The guard and the keep skip read the whole posture, the plan's quota with the bleeding
+predator (RULINGS O-43, Johan's call); `engineW` weighs every influence plan of the game, as benched (BOARD has the narrower read).
