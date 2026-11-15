@@ -13462,17 +13462,18 @@ async function connectWithRetry(client, tries = 30){
     }
 
     /* 174) v0.6.229 -- THE BENCH ROUND (RULINGS D-117 / D-118, specs/spec-bench-round-2026-11-15.md): Toreador's guide proposals behind
-       six knobs, each 0 = v0.6.228 -- ballTurn (the Grand Ball's free Toreador before the other callers, the others hold the political
+       five knobs, each 0 = v0.6.228 -- ballTurn (the Grand Ball's free Toreador before the other callers, the others hold the political
        cards, another body home; the Ball waits when the free one would be the last body), keyLast (the turn's key referendum after the
        cheap actions, before the bodies the posture keeps home), scalpelLock (Scalpel Tongue locks my prey's unlocked voter against when
-       an actor of mine is still to act), clogWide (no attempt at a stealth bleeder's heavier bleed for a deck without bounce, off the
-       edge), villeinKeep (Villein leaves its host the blood for two cards), engineW (the stock engine in the first influence).
+       an actor of mine is still to act), villeinKeep (Villein leaves its host the blood for two cards), engineW (the stock engine in the
+       first influence). The bench's loser, clogWide (proposal 7), was removed with its case (CHANGELOG v0.6.229).
        LAST LINE OF 174 is the closing brace below. */
     {
       console.log('\n[174] v0.6.229 -- the bench round: Toreador’s guide proposals 2-8 and D-117');
       const { ARCHETYPES } = require('./elysium-bot.js');
       const IF4 = (o, fn) => !!(o && typeof o[fn] === 'function');
-      const mk174 = (name, deck, knobs) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck || 'toreador', deck: ARCHETYPES[deck || 'toreador'], paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, knobs || {}));
+      const mk174 = (name, deck, knobs) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck || 'toreador', deck: ARCHETYPES[deck || 'toreador'], paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {},
+          ballTurn: 0, keyLast: 0, engineW: 0, scalpelLock: 0, villeinKeep: 0 }, knobs || {}));   // each case sets its own knob; the others at 0 (their defaults are on since v0.6.229)
         u.seat = 1; u.started = true; u.players = [{ seat: 1, name, online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }, { seat: 3, name: 'Nora', online: true, bot: true }];
         u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.say = () => {}; u.note = () => {}; u.chat = () => {}; u._restartAskTimer = () => {};
         u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.board = []; u.hand = []; u.unc = []; u.pool = 20; u.turnSeat = 1; u.table = {}; return u; };
@@ -13598,17 +13599,6 @@ async function connectWithRetry(client, tries = 30){
            && !off.err && off.polls === 1 && off.lock.length === 0 && off.line === null && /passes/.test(off.verdict),
            '174h scalpelLock through the referendum: the lock on the prey’s voter, the poll reopens, the referendum passes; 0 = no Scalpel Tongue (got ' + JSON.stringify({ on, off }) + ')'); }
 
-      // i) clogWide: a read stealth bleeder bleeds 3 at my 20 pool (critical 6, pump seen 2) -- no attempt for a deck without bounce;
-      //    an attempt at 0, with a bounce in hand, at 10 pool (10 - 3 is not above 6 + 2), for a deck with bounce; _noBounceDeck reads the library
-      { const dec = (k, o) => { const u = mk174('Hanna', o.deck || 'toreador', { clogWide: k }); u.pool = o.pool || 20; u.board = [V('c1', 'Catalina Vega', { blood: 4 })];
-          const ctx = Object.assign({ reserve: null, bounceN: 0, isBleed: true, edge: false, stealthBleeder: true, pumpSeen: 2, actorBot: true, icp: 0, amount: 3, stealthA: 0, hasBounce: !!o.bounce, blockAllowed: true, T: 'T1', role: 'target', sub: 'bleed', actorSeat: 2, actorUnlocked: 0, famedTarget: false },
-            k ? { noBounceDeck: IF4(u, '_noBounceDeck') ? u._noBounceDeck() : false, crit: 6 } : {});
-          const d = u._decide('block-as-target', ctx); return d.tag || (d.block ? 'block' : 'pass'); };
-        const wide = dec(1, {}), off = dec(0, {}), bounce = dec(1, { bounce: true }), edge = dec(1, { pool: 10 }), malk = dec(1, { deck: 'malkavian' });
-        const nb = (d) => { const u = mk174('Hanna', d, { clogWide: 1 }); return IF4(u, '_noBounceDeck') ? u._noBounceDeck() : null; };
-        ok(wide === 'clog-wide' && off !== 'clog-wide' && bounce !== 'clog-wide' && edge !== 'clog-wide' && malk !== 'clog-wide' && nb('toreador') === true && nb('malkavian') === false,
-           '174i clogWide: a deck without bounce lets a stealth bleeder’s bleed of 3 through off the edge; not at 0, with a bounce, near the edge, or for a bounce deck (got ' + JSON.stringify({ wide, off, bounce, edge, malk }) + ')'); }
-
       // j) villeinKeep: Catalina (7 blood, capacity 8) with Majesty and Aire of Elation in hand (1 blood each): the two-card reserve keeps 2
       //    (a Villein of 5); at 0 the reserve is the dearest card (1) and her hunt bar keeps 2 -- with Mkhokheli's 6 of 6 (no hunt bar)
       //    the two-card reserve shows: 4 moved at 0, 4 at 1? -- the cases below are read from decide('villein') directly
@@ -13634,6 +13624,11 @@ async function connectWithRetry(client, tries = 30){
         const y = IF4(t, '_engineY') ? [t._engineY(U('u1', 'Catalina Vega', 8)), t._engineY(U('u2', 'Bret Stryker', 4)), n._engineY(U('n1', 'Horace Radcliffe', 7))] : null;
         ok(!!y && y[0] === 0.909 && y[1] === 0.182 && y[2] === 0 && pick(0) === 'Bret Stryker' && pick(6) === 'Catalina Vega',
            '174l engineW: the share of my crypt younger than the first vampire when it opens a superior stock engine; at 6 the planner takes Catalina over a turn faster (got ' + JSON.stringify({ y, p0: pick(0), p6: pick(6) }) + ')'); }
+
+      // m) the release's defaults (v0.6.229, after the benches): the five knobs on, the bench's loser gone
+      { const d = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'D', log: () => {} }).o;
+        ok(d.ballTurn === 1 && d.keyLast === 1 && d.engineW === 6 && d.scalpelLock === 1 && d.villeinKeep === 1 && d.clogWide === undefined,
+           '174m the defaults after the benches: ballTurn 1, keyLast 1, engineW 6, scalpelLock 1, villeinKeep 1; clogWide removed (got ' + JSON.stringify({ ballTurn: d.ballTurn, keyLast: d.keyLast, engineW: d.engineW, scalpelLock: d.scalpelLock, villeinKeep: d.villeinKeep, clogWide: d.clogWide }) + ')'); }
     }
 
 

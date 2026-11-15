@@ -9,7 +9,7 @@ def audit(S):   # one series directory -> its counts (C2: importable, ana-gates.
         rows=[json.loads(l) for l in open(f)]; rows=[r for r in rows if 'bot' in r]; rows.sort(key=lambda r:r['t'])
         deck={r['bot']:r['data']['deck'] for r in rows if r['type']=='manifest'}
         seat={r['bot']:r['data'].get('seat') for r in rows if r['type']=='manifest'}
-        ends=[i for i,r in enumerate(rows) if r['type'] in ('through','blocked')]
+        ends=[i for i,r in enumerate(rows) if r['type'] in ('through','blocked') or (r['type']=='referendum' and not r['data'].get('passed'))]   # 15 Nov 2026 (bot v0.6.229, the bench round): a FAILED referendum is an action's end too -- it writes no through / blocked row, so its window ran into the next action's and a vampire's block attempt in each read as R6 (two in one action: 2 on the bench round's combined arm, both a failed referendum)
         prev=-1
         for i in ends:
             end=rows[i]; A=end['bot']; win=rows[prev+1:i+1]; prev=i
