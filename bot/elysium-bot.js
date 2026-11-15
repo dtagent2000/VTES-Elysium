@@ -5788,7 +5788,7 @@ class Bot {
       const ctx = this._actionCtxAdjust(v, this._actionCtxFor(v, { rush: this._bestRushFor(v, { quiet: true }) }), true);
       const out = this._decide('action', ctx), pk = out && out.pick;
       if(pk && pk.kind === 'political'){
-        if(this.o.ballTurn){ const g = this._ballGuard(v, lk); if(g) return { hold: true, why: g }; }   // v0.6.229 (D-117's guard): the free one would be my last body home -- the Ball waits
+        if(this.o.ballTurn){ const g = this._ballGuard(v, lk); if(g){ this._emit('ball-wait', { free: v.name, lock: lk.name, why: g }); return { hold: true, why: g }; } }   // v0.6.229 (D-117's guard): the free one would be my last body home -- the Ball waits (a row: the bench proves the guard fires)
         return { grandBall: true, host: null, freeT: v, lockT: lk, why: v.name + ' calls ' + pk.name + ' unblocked (its own scorer: ' + ((out && out.why) || '') + '), ' + lk.name + ' stays locked' };
       }
       no.push(v.name + ' would ' + (pk ? (pk.name || pk.kind || (typeof pk.n === 'number' ? 'bleed for ' + pk.n : 'act')) : 'stay home') + ((out && out.why) ? ' (' + out.why + ')' : ''));
