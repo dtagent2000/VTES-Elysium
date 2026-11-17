@@ -47,4 +47,7 @@ Frontal Assault's gain and bill, Garibaldi's swap, Powerbase's lock and unlock, 
 - **§7, the deploy notes:** taken (§1 above). **§5:** the tokens stay.
 
 ## 5. Run here
-RUN-NUMBERS
+On the release bytes (`elysium-bot.js` sha256 `edf354fe…`): your `check-versions.js` agrees (the root a byte copy of `bot/`'s
+bundle); your canary v1.3.0 171/0 on `bot/`'s copies and on the root's client; your client suite in a scratch copy of `client/` with
+this bundle beside it **371 passed, 1 failed** — the guide's embed (the guide changed: re-embed it). The bot's own gates: the suite
+2541/0 ×3, the hotseat gate 12/0, the sim footprint (the starters IDENTICAL to v0.6.229; the wave's tables `ana-gates.py` PASS).

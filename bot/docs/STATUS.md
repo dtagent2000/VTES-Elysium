@@ -8,7 +8,10 @@ the read-only copies in bot/ are client v2.6.175 / protocol v2.6.175 / srv-2.6.5
 **Deploy state:** `main` carries v0.6.229 (#74; main consumed v0.6.219–229 in #75). **Open PR:** V5 wave 5a (this release).
 
 ## Last gates (v0.6.230 release bytes, 17 Nov 2026)
-GATES-LINE
+Suite **2541/0 ×3** (`elysium-bot.js` `edf354fe`, `test-bot-logic.js` `fcc9ef37`, `elysium-cardfx.json` `5fb8c69c`) · canary
+**171/0** ×2 · cardfx 341/0 · hotseat 12/0 · main's client suite 371/1 (the guide's embed: main re-embeds) · section 175 24/0, red on
+v0.6.229 · the sim: the 240 IDENTICAL to v0.6.229 at `cardWorth` 0 (version, copies, timing and the new knob normalized); the V5
+smoke DIVERGED 34 of 168, all at the ten tables with a wave card; `ana-gates.py` PASS on all 15 tables and one real-clock match.
 
 ## What v0.6.230 did
 V5 wave 5a (D-119, D-120; `specs/spec-v5-wave5-2026-11-17.md`): the card-worth engine — a card in play is worth its flows to each
@@ -18,7 +21,7 @@ Angeles, Carver's, The Rack, The Hungry Coyote, The Coven, Piper, Día de los Mu
 engine only behind `cardWorth` (0). `bot/`'s copies refreshed to v2.6.175; main's 15 Nov reply answered in the handoff.
 
 ## Next
-1. 5b: Sudden Reversal in D-107's shape A, Meditative Grove's cancel, Yawp Court, Week of Nightmares (BOARD).
+1. 5b: Sudden Reversal in D-107's shape A, Meditative Grove's cancel, Yawp Court, Week of Nightmares (BOARD). Johan: O-44 (flip `cardWorth`?).
 2. The window opened after its line; the fizzle misread (BOARD); Q4; C5; C6; the abstract model.
 
 ## Not yet consumed from main
