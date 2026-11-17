@@ -13979,6 +13979,40 @@ async function connectWithRetry(client, tries = 30){
 
     }
 
+    /* 176) v0.6.231 -- O-44 answered (RULINGS D-121, Johan 17 Nov: the split): `cardWorth` prices only Smiling Jack's DEFENCE and the BURNS of
+       Jack; Jack's play and discard stay with the 14 July rule at both values (the benches at 1 played Jack in 25 of 288 matches, 89 at 0).
+       LAST LINE OF 176 is the closing brace below. */
+    {
+      console.log('\n[176] v0.6.231 -- O-44: cardWorth prices Jack\'s defence and burns, never its play');
+      const ARCH6 = require('./elysium-bot.js').ARCHETYPES, IF6 = (o, fn) => !!(o && typeof o[fn] === 'function'), N6 = ['Hanna', 'Viktor', 'Nora'];
+      const mk176 = k => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Hanna', persona: 'expert', deckName: 'malkavian', deck: ARCH6.malkavian, paceMs: 0, askSecs: 1, twdKnow: 0, cardWorth: k, log: () => {} });
+        u.seat = 1; u.started = true; u.players = N6.map((n, i) => ({ seat: i + 1, name: n, online: true, bot: true })); u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.say = () => {}; u.note = () => {}; u.chat = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.hand = ['Smiling Jack, The Anarch']; u.unc = []; u.pool = 20; u.turnSeat = 1; u._jackFc = () => 1;
+        u.board = [{ id: 'c1', name: 'Abraham DuSable', kind: 'crypt', zone: 'ready', locked: false, blood: 4, attached: [] }];
+        u.table = { 2: { pub: { pool: 20, cards: [] } }, 3: { pub: { pool: 20, cards: [] } } }; return u; };
+      const JN = 'Smiling Jack, The Anarch';
+
+      // a) the play and discard reads: at 1 the engine is never asked for Jack (even when it would say -5), Jack stays a 14 July candidate and is
+      //    no dead card; the defence (_myJackWorth) and the burn (_jackBurnValue) ask it at 1 and not at 0
+      const run = k => { const u = mk176(k); let asked = 0; u._cardWorth = () => { asked++; return { worth: -5, life: 3, now: 0, parts: {} }; };
+        const e = u._w5E ? u._w5E(JN) : null, r = { k };
+        r.play = IF6(u, '_w5MasterWorth') && e ? u._w5MasterWorth({ name: JN, e }) : 'x';
+        r.dead = IF6(u, '_w5DeadMaster') && e ? u._w5DeadMaster({ name: JN, e }) : 'x';
+        r.cand = u._bestMasterFor(new Set()).filter(c => c.name === JN).map(c => typeof c.worth === 'number' ? 'w' : '-').join();
+        r.playAsked = asked; asked = 0;
+        const jack = { id: 'j1', name: JN, kind: 'lib', zone: 'ready', counters: [] }; try { u._myJackWorth(jack, 1); } catch(err){ r.err1 = err.message; } r.defAsked = asked; asked = 0;
+        const other = { id: 'j2', name: JN, kind: 'lib', zone: 'ready', counters: [] }; u.table[2].pub.cards = [other]; u.plan = { reads: { jack: { seat: 2, cardId: 'j2', price: 1, preyPrice: 0, runway: 10 } } };   // the plan's Jack read (D-114), as _strategize writes it
+        try { u._jackBurnValue(u.board[0], { card: other, seat: 2 }); } catch(err){ r.err2 = err.message; } r.burnAsked = asked; return r; };
+      const r1 = run(1), r0 = run(0);
+      ok(r1.play === null && r1.dead === false && r1.cand === '-' && r1.playAsked === 0 && r1.defAsked > 0 && r1.burnAsked > 0 && !r1.err1 && !r1.err2
+         && r0.play === null && r0.dead === false && r0.cand === '-' && r0.playAsked === 0 && r0.defAsked === 0 && r0.burnAsked === 0,
+         '176a cardWorth 1 prices Jack\'s defence and burns, never its play or discard; 0 asks the engine nothing (got ' + JSON.stringify({ r1, r0 }) + ')');
+
+      // b) the wave's own cards are unchanged: Anarch Revolt's play read asks the engine at both values
+      const wave = k => { const u = mk176(k); u.hand = ['Anarch Revolt']; const e = u._w5E ? u._w5E('Anarch Revolt') : null; const w = IF6(u, '_w5MasterWorth') && e ? u._w5MasterWorth({ name: 'Anarch Revolt', e }) : null; return !!(w && typeof w.worth === 'number'); };
+      ok(wave(1) && wave(0), '176b the wave\'s cards keep their play read at both values');
+    }
+
 
 
     }
