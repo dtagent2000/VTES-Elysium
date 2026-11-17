@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.47 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.48 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.47';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.48';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -178,6 +178,14 @@ const CLASS = {
   bleedAtAnnounce: 'play', bleedAtAnnounceBlood: 'paired', bleedAtAnnounceSect: 'paired',   // Club Illusion -- _maybeClubIllusion at the bleed announce
   burnActor: 'play', burnActorMinBleed: 'paired',   // Archon Investigation -- _archonFor / _playArchon in the react window (an out-of-turn master)
   drawCrypt: 'paired', drawCryptClan: 'paired',   // Family Gathering -- its handler (CARD_HANDLERS['family-gathering']) and _masterHold
+  /* v1.1.48 (17 Nov 2026, bot v0.6.230, V5 wave 5a, RULINGS D-119 / D-120): the masters that stay in play -- each read on the board, by the master
+     loop (Piper and Día de los Muertos through their handlers) or by the turn's phases; Cursed Abattoir's zombieBleed is left unread on purpose
+     (allies never act in the bot): the card is PARTIAL. */
+  lostMinionTax: 'play', noAnarchTax: 'play', burnByRef: 'play',   // Tension in the Ranks (_w5MinionLost, _w5TensionBurn); Anarch Revolt (_w5AnarchRevoltBill, the burn referendum _w5BurnRefFor)
+  frontalRush: 'play', bleedCounter: 'play', counterUnlock: 'play', refPassPreyBurn: 'play', pressContinue: 'play',   // Frontal Assault (_w5FrontalRushFor / _w5FrontalBill); Forward Momentum (_w5AfterBleed, _w5FmFor); Privileged Position (_w5PrivilegedPosition); Mob Connections (the press step's mobCan)
+  ashSwapAnarch: 'play', endCombatAnarch: 'play', discardBonus: 'play', stealCardAction: 'play', stealBy: 'paired',   // Garibaldi-Meucci Museum (_w5Garibaldi, _w5GaribaldiEndFor); Powerbase: Los Angeles (_w5PowerbaseLock); the (D) steal (_w5AttackCands, _w5GiveStolen)
+  hostageCap: 'play', hostageBlood: 'play', rackBlood: 'play', huntBonusSabbat: 'play', covenPass: 'play', covenBlood: 'paired',   // Carver's (_w5Hostage, _w5CarversLock); The Rack (_w5Rack); The Hungry Coyote (_w5HuntBonus); The Coven (_w5CovenLock, _w5CovenPass)
+  piperRecruit: 'play', autoPassRef: 'play', zombieCounter: 'play',   // Piper (CARD_HANDLERS.piper); Día de los Muertos (CARD_HANDLERS.dia, _callReferendum's auto-pass); Cursed Abattoir (_w5ZombieBurned)
   press: 'contextual',   // v1.1.5: consumed via the press@ special-case below (Apportation's clean standalone shape only) -- 'contextual' here only silences the unknown-key warning for the excluded instances (co-located maneuver/strike/stealBlood, or an unverifiable req flag)
 };
 const cls = k => String(CLASS[k] || '');
@@ -199,7 +207,10 @@ const MASTER_KEYS = new Set(['poolGain', 'bloodToPool', 'poolToBlood', 'handSize
   'bloodAddPath', 'bloodAddBaron', 'bloodAddReq', 'bleedDiscardCombat', 'bleedDiscardClan', 'bleedAtAnnounce', 'bleedAtAnnounceBlood', 'bleedAtAnnounceSect',
   'burnActor', 'burnActorMinBleed', 'drawCrypt', 'drawCryptClan',   // v1.1.42: + V5 wave 3
   'discUp', 'capBonus', 'recruitDiscount', 'noRecruitEmploy', 'strengthBonus', 'blockedPoolBurn', 'unlockAfterCombat', 'rushSelf', 'titleVotes', 'abstainLock',
-  'endCombatLock', 'rushHostBy', 'grandBall', 'burnCardAction', 'burnStealthClan', 'burnBy']);   // v1.1.43: + V5 wave 4 (the masters on a vampire read through their bearer; Toreador Grand Ball)
+  'endCombatLock', 'rushHostBy', 'grandBall', 'burnCardAction', 'burnStealthClan', 'burnBy',   // v1.1.43: + V5 wave 4 (the masters on a vampire read through their bearer; Toreador Grand Ball)
+  'lostMinionTax', 'noAnarchTax', 'burnByRef', 'frontalRush', 'bleedCounter', 'counterUnlock', 'refPassPreyBurn', 'pressContinue', 'ashSwapAnarch',
+  'endCombatAnarch', 'discardBonus', 'stealCardAction', 'stealBy', 'hostageCap', 'hostageBlood', 'rackBlood', 'huntBonusSabbat', 'covenPass', 'covenBlood',
+  'piperRecruit', 'autoPassRef', 'zombieCounter']);   // v1.1.48: + V5 wave 5a (zombieBleed stays out: Cursed Abattoir's bleed rider waits for allies that act)
 function modeConsumed(mo, e){
   if(((e && e.t) || []).includes('master') && !Object.keys(mo.fx || {}).some(k => MASTER_KEYS.has(k)))
     return { ok: false, via: 'master: no board consumer for ' + (Object.keys(mo.fx || {}).join(',') || '\u2014') };

@@ -92,7 +92,7 @@ ok(mode('Forced Awakening', null) && mode('Forced Awakening', null).fx.wake === 
   ok(hrm && hrm.dir, 'Harmony: "Ⓓ Your prey burns 3 pool" — a GENUINE immediate directed burn IS tagged (v1.5.2 exemplar; v1.5.0 had picked Creeping Sabotage off the aggregate list without reading it — an ongoing drain, the very class the guard strips: test exemplars inherit their source list\'s blindness)');
   ok(noPd(fx.lib['Contagion']) && noPd(fx.lib['Creeping Sabotage']) && noPd(fx.lib['Fame']), 'v1.5.2 ongoing-drain guard: "During … unlock phase … burns N pool" (Contagion, Creeping Sabotage, Fame — 10 cards + inert-curated Enticement) is NOT immediate poolDmg — the bot\'s play path would mis-resolve it as an instant burn, and coverage v1.1 classes the key playable');
   let nPd = 0; for(const n in fx.lib) for(const mo of fx.lib[n].modes || []) if(mo.fx && mo.fx.poolDmg !== undefined) nPd++;
-  ok(nPd === 14, 'poolDmg volume post-guard (' + nPd + ' modes; 41 -> 29 by the unlock-phase drain guard, 29 -> 14 in v1.7.0: the 15 modes on 14 POLITICAL cards moved to ref.fx -- a referendum outcome is not a play effect)');
+  ok(nPd === 13, 'poolDmg volume post-guard (' + nPd + ' modes; 41 -> 29 by the unlock-phase drain guard, 29 -> 14 in v1.7.0: the 15 modes on 14 POLITICAL cards moved to ref.fx -- a referendum outcome is not a play effect; 14 -> 13 in bot v0.6.230: Privileged Position\u2019s lock after a passed referendum is curated, fx.refPassPreyBurn)');
 }
 
 /* 9) crypt entries — structured fields, titles, votes, discipline levels */
@@ -587,7 +587,7 @@ ok(fx.counts.libLock >= 140,
   ok(c['Skidmark (G4)'].archFull === true && c['Skidmark (G4)'].fx.noReplaceActing === true, 'Skidmark: archFull — FULL-BY-ARCHITECTURE, the _flushDraws proof lives in the note');
   ok(['Wauneka (G6)', 'Rosalina Cortez (G6)', 'Mustafa Rahman (G2)', 'Ayelech (G6)'].every(n => c[n] && !c[n].fx),
      'vanilla/title-only vampires stay fx-free (Wauneka, Rosalina, Mustafa, Ayelech)');
-  ok(fx.counts.curated === 190, 'curated count = 139 lib + 51 crypt = 190 (got ' + fx.counts.curated + ') -- 14 Nov (round F, bot v0.6.228): + Perfect Paragon, Elysium: The Palace of Versailles, Eyes of the Wild; 12 Nov (crypt wave A, bot v0.6.219): + 31 vampires (the bleed, strength, intercept, stealth, vote and dodge forms, D-108); 3 Nov (V5 wave 4): + Oblivion, Charisma, Depravity, Terrifying Visage, Monster, Saulot\u2019s Avenging Fist, Saulot\u2019s Guiding Wisdom, Regent, Toreador Grand Ball, Change of Target, Scalpel Tongue, Toreador Justicar; 2 Nov (V5 wave 3): + 20 masters (Anarch Railroad, Backways, Elysian Fields, Fortune Teller Shop, Opium Den, Creepshow Casino, Market Square, Channel 10, KRCG News Radio, Wall Street Night, Unholy Sacrament, Family Gathering, Carfax Abbey, Burial Site Hunting Ground, Art Museum, Ecoterrorists, Powerbase: Montreal, Haqim\u2019s Law: Retribution, Club Illusion, Archon Investigation); 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered); 29 Oct (V5 wave 1): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor\u2019s Hand, Sword of the Archangel, Invigorate; 29 Oct (V5 wave 2): + Flash, Resist Earth\u2019s Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn');
+  ok(fx.counts.curated === 205, 'curated count = 154 lib + 51 crypt = 205 (got ' + fx.counts.curated + ') -- 17 Nov (V5 wave 5a, bot v0.6.230): + Tension in the Ranks, Anarch Revolt, Frontal Assault, Forward Momentum, Privileged Position, Mob Connections, Garibaldi-Meucci Museum, Powerbase: Los Angeles, Carver\u2019s Meat Packing and Storage, The Rack, The Hungry Coyote, The Coven, Piper, D\u00eda de los Muertos, Cursed Abattoir; 14 Nov (round F, bot v0.6.228): + Perfect Paragon, Elysium: The Palace of Versailles, Eyes of the Wild; 12 Nov (crypt wave A, bot v0.6.219): + 31 vampires (the bleed, strength, intercept, stealth, vote and dodge forms, D-108); 3 Nov (V5 wave 4): + Oblivion, Charisma, Depravity, Terrifying Visage, Monster, Saulot\u2019s Avenging Fist, Saulot\u2019s Guiding Wisdom, Regent, Toreador Grand Ball, Change of Target, Scalpel Tongue, Toreador Justicar; 2 Nov (V5 wave 3): + 20 masters (Anarch Railroad, Backways, Elysian Fields, Fortune Teller Shop, Opium Den, Creepshow Casino, Market Square, Channel 10, KRCG News Radio, Wall Street Night, Unholy Sacrament, Family Gathering, Carfax Abbey, Burial Site Hunting Ground, Art Museum, Ecoterrorists, Powerbase: Montreal, Haqim\u2019s Law: Retribution, Club Illusion, Archon Investigation); 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered); 29 Oct (V5 wave 1): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor\u2019s Hand, Sword of the Archangel, Invigorate; 29 Oct (V5 wave 2): + Flash, Resist Earth\u2019s Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn');
   { const C = fx.crypt, F = n => (C[n] && C[n].fx) || {};   // v0.6.219 (crypt wave A, RULINGS D-108): 31 vampires -- the whole-entry overlay keeps the base facts (cap, disc, the title and votes, the V5 Path), each form as its reader reads it
     const WA = ['Catalina Vega (G6)', 'Kamile Paukstys (G6)', 'Kasim Bayar (G6)', 'Marchesa Liliana (G6)', 'Mora, the Death Seer (G6)', 'Nonu Dis (G6)',
       'Agnieszka, Tempter of Legions (G6)', 'Ashur-uballit, Son of the Abyss (G6)', 'Huldu, The Desecrator (G6)', 'Aaradhya, The Callous Tyrant (G6)', 'Sreelekha (G7)',
@@ -861,5 +861,51 @@ ok(fx.counts.libLock >= 140,
      'v1.9.5: "Not usable the first round" / "Not usable first round" are the first-round restriction too (Eruption of Vitae, Growing Fury, Well-Aimed Car; Walk of Flame since v1.9.4)');
 }
 
+{
+  /* V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120): the masters that stay in play. Each reading checked against the printed
+     text in vtes.json (the curated notes quote it); each entry names its card-worth handler (`worth`) or its look-ahead handler, and what
+     the auto tier read wrong is pinned so a recompile cannot bring it back. */
+  console.log('\nV5 wave 5a -- the masters that stay in play and the card-worth handlers (curated, 17 Nov 2026)');
+  const L = res.out.lib, F = n => Object.assign({}, ...((L[n] && L[n].modes) || []).map(mo => mo.fx || {})), cur = n => L[n] && L[n].src === 'hand';
+  const W = { 'Tension in the Ranks': 'tension', 'Anarch Revolt': 'anarch-revolt', 'Forward Momentum': 'forward-momentum', 'Privileged Position': 'privileged-position',
+              'Mob Connections': 'mob', 'Garibaldi-Meucci Museum': 'garibaldi', 'Powerbase: Los Angeles': 'powerbase-la', "Carver's Meat Packing and Storage": 'carvers',
+              'The Rack': 'rack', 'The Hungry Coyote': 'coyote', 'The Coven': 'coven', 'Cursed Abattoir': 'abattoir', 'Smiling Jack, The Anarch': 'jack' };
+  const bad = Object.keys(W).filter(n => !cur(n) || L[n].worth !== W[n] || !L[n].persistent);
+  ok(!bad.length, 'the thirteen cards that price themselves name their worth handler (twelve of the wave and Smiling Jack), curated and persistent' + (bad.length ? ' -- wrong: ' + bad.join(', ') : ''));
+  ok(cur('Frontal Assault') && !L['Frontal Assault'].worth && F('Frontal Assault').frontalRush === true && F('Frontal Assault').poolGain === undefined && !(L['Frontal Assault'].modes || []).some(m => m.dir),
+     'Frontal Assault: the granted rush (fx.frontalRush, priced by its look ahead, D-58) -- not the auto tier’s directed +1 pool');
+  ok(L['Piper'].handler === 'piper' && L['Piper'].req.sect === 'Anarch' && F('Piper').piperRecruit === true && L['Piper'].anarchReq === true,
+     'Piper: the look-ahead handler, requires a ready Anarch (req.sect; the auto tier had no requirement) and is itself a card requiring an Anarch (anarchReq)');
+  ok(L['Día de los Muertos'].handler === 'dia' && L['Día de los Muertos'].oncePerGame === true && F('Día de los Muertos').autoPassRef === true && L['Día de los Muertos'].cost.pool === 1,
+     'Día de los Muertos: one per game, the referendum passes automatically (fx.autoPassRef), 1 pool inherited from the data');
+  ok(F('Tension in the Ranks').lostMinionTax === 1 && L['Tension in the Ranks'].unique === true && F('Anarch Revolt').noAnarchTax === 1 && F('Anarch Revolt').burnByRef === true && F('Anarch Revolt').stealth === undefined && !L['Anarch Revolt'].unique,
+     'Tension in the Ranks (unique): 1 pool a lost ready minion; Anarch Revolt (not unique): 1 pool without a ready Anarch, the burn referendum -- not the auto tier’s +1 stealth');
+  ok(F('Forward Momentum').bleedCounter === 1 && F('Forward Momentum').counterUnlock === 2 && F('Forward Momentum').unlock === undefined,
+     'Forward Momentum: a counter a landed bleed, 2 counters unlock a Cathari (the auto tier read a bare unlock)');
+  ok(L['Privileged Position'].req.path === 'Power and the Inner Voice' && L['Privileged Position'].req.pathN === 2 && F('Privileged Position').refPassPreyBurn === 1 && F('Privileged Position').poolDmg === undefined && (L['Privileged Position'].modes || []).some(m => m.lock),
+     'Privileged Position: requires 2 ready vampires on the Path of Power and the Inner Voice; lock after a passed referendum, the prey burns 1 -- not an immediate poolDmg');
+  const mob = (L['Mob Connections'].modes || []);
+  ok(mob.some(m => m.lock && m.fx.pressContinue === 1 && !m.dir) && mob.some(m => m.dir && m.fx.burnCardAction === true) && F('Mob Connections').press === undefined,
+     'Mob Connections: lock for a press only to continue (not the auto tier’s directed press); minions burn it as a (D) action');
+  ok(F('Garibaldi-Meucci Museum').ashSwapAnarch === 1 && F('Garibaldi-Meucci Museum').endCombatAnarch === true && (L['Garibaldi-Meucci Museum'].modes || []).every(m => m.lock),
+     'Garibaldi-Meucci Museum: both effects lock it -- the ash swap for an Anarch card and the end of a combat between Anarchs (the auto tier had an empty lock mode)');
+  ok(F('Powerbase: Los Angeles').discardBonus === 1 && (L['Powerbase: Los Angeles'].modes || []).some(m => m.dir && m.fx.stealCardAction === true && m.fx.stealBy === 'Anarch') && F('Powerbase: Los Angeles').unlock === undefined,
+     'Powerbase: Los Angeles: +1 discard phase action; Anarchs of other Methuselahs steal it as a (D) action');
+  ok(F("Carver's Meat Packing and Storage").hostageCap === 3 && F("Carver's Meat Packing and Storage").hostageBlood === true && F("Carver's Meat Packing and Storage").bloodAdd === undefined && L["Carver's Meat Packing and Storage"].cost.pool === 1,
+     'Carver’s Meat Packing and Storage: the hostages (capacity 3 or less) and the X-blood lock -- not the auto tier’s torpor and bloodAdd X; 1 pool inherited');
+  const rk = L['The Rack'];
+  ok(F('The Rack').rackBlood === 2 && (rk.modes || []).some(m => m.dir && m.fx.stealCardAction === true && m.fx.stealBy === 'vampire') && rk.memo && rk.memo.human === false && rk.memo.roles[0].field === 'rackVamp',
+     'The Rack: 2 blood a turn to the chosen vampire, the choice as memo tokens (mine only: human:false), stolen as a (D) action by another Methuselah’s vampire');
+  ok(F('The Hungry Coyote').huntBonusSabbat === 1 && L['The Hungry Coyote'].cost.pool === 2, 'The Hungry Coyote: +1 hunt for my Sabbat (the auto tier had no mode); 2 pool inherited');
+  ok(F('The Coven').covenPass === true && F('The Coven').covenBlood === 2 && F('The Coven').bloodAdd === undefined && L['The Coven'].trifle === true,
+     'The Coven: its 2 blood is fx.covenBlood (not bloodAdd: the older lock-income finder stays off it), it passes to my predator, a trifle');
+  ok(F('Cursed Abattoir').zombieCounter === 1 && F('Cursed Abattoir').zombieBleed === 1 && F('Cursed Abattoir').bleed === undefined,
+     'Cursed Abattoir: a counter a burned zombie, +1 bleed for a zombie ally (unread: the bot’s allies do not act) -- not the auto tier’s +1 bleed');
+  ok(L['Firebrand'].anarchReq === true && L['Patsy'].anarchReq === true && L['Fee Stake: Seattle'].anarchReq === true && !L['Anarch Railroad'].anarchReq && !L['Anarch Troublemaker'].anarchReq,
+     'the anarchReq marker (v1.9.9): ‘Requires an Anarch’, ‘a ready Anarch’ and ‘a baron’ (Firebrand, Patsy, Fee Stake: Seattle) -- not a card that only names Anarchs (Anarch Railroad, Anarch Troublemaker)');
+  const anN = Object.keys(L).filter(n => L[n].anarchReq).length, zN = Object.keys(L).filter(n => L[n].zombie).length;
+  ok(anN === 86 && zN === 8 && L['Zombie'].zombie === true && L['Rotting Behemoth'].zombie === true && !L['Underbridge Stray'].zombie,
+     'the markers’ volume: 86 cards requiring an Anarch or a baron, 8 zombie allies or retainers (got ' + anN + ' and ' + zN + ')');
+}
 console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green'));
 process.exit(failN ? 1 : 0);
