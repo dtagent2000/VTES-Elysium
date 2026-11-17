@@ -12937,7 +12937,7 @@ async function connectWithRetry(client, tries = 30){
        self-consistent runway's own). LAST LINE OF 169 is the closing brace below. */
     {
       console.log('\n[169] v0.6.224 -- round B step 2: the Jack burn (jackBurn)');
-      const mk169 = (name, extra, seat) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', deckName: 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
+      const mk169 = (name, extra, seat) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', deckName: 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, cardWorth: 0, log: () => {} }, extra || {}));   // cardWorth 0 (v0.6.231): 169 tests D-114's price, the knob's 0-path
         u.seat = seat || 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: seat === 3 ? 'U2' : u.o.name, online: true, bot: true }, { seat: 3, name: seat === 3 ? u.o.name : 'Nils', online: true, bot: true }];
         u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
         u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
@@ -13170,7 +13170,7 @@ async function connectWithRetry(client, tries = 30){
        v0.6.225's flat pool / (c1 + fc). LAST LINE OF 171 is the closing brace below. */
     {
       console.log('\n[171] v0.6.226 -- round D: Jack’s self-consistent runway (jackRunway)');
-      const mk171 = (rw, extra, seat) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName: 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, jackBurn: 1, jackRunway: rw, log: () => {} }, extra || {}));
+      const mk171 = (rw, extra, seat) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName: 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, jackBurn: 1, jackRunway: rw, cardWorth: 0, log: () => {} }, extra || {}));   // cardWorth 0 (v0.6.231): 171 tests D-115's price, the knob's 0-path
         u.seat = seat || 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: false }, { seat: 2, name: seat === 3 ? 'U2' : 'U', online: true, bot: true }, { seat: 3, name: seat === 3 ? 'U' : 'Nils', online: true, bot: true }];
         u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
         u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
@@ -13229,14 +13229,14 @@ async function connectWithRetry(client, tries = 30){
       //    offW x 30 -- at my 12 pool 30 - 12 = 18, at my 40 nothing left (my payments over Jack's 40 rounds outrun her pool: RULINGS
       //    O-41); at 0 the flat runway (30 / 0.25 rounds) bills her 0 + 1 + ... over Jack's whole life: 54 and 740,
       //    past her pool. The plan's read keeps the bound
-      { const at = (rw, pool) => { const u = mk171(rw, { deckName: 'nosferatu' }, 3); const jc = J9(0); u.pool = pool; u.board = [V9('n1', 'Andi Liu', { blood: 4, cap: 5 }), jc];
+      { const at = (rw, pool, cw) => { const u = mk171(rw, { deckName: 'nosferatu', cardWorth: cw | 0 }, 3); const jc = J9(0); u.pool = pool; u.board = [V9('n1', 'Andi Liu', { blood: 4, cap: 5 }), jc];
           u.table = { 1: { pub: { pool: 30, cards: [V9('h1', 'Lenny Burkhead (G6)')] } }, 2: { pub: { pool: 20, cards: [V9('c1', 'Catalina Vega', { cap: 8 })] } } };
           const w = typeof u._myJackWorth === 'function' ? u._myJackWorth(jc, 0) : null; u._strategize('unlock'); const jo = u.plan && u.plan.reads && u.plan.reads.jackOwn;
           return { worth: w == null ? null : +w.toFixed(2), plan: jo ? jo.worth : null, offW: +u._planOffW().toFixed(2) }; };
-        const on12 = at(1, 12), off12 = at(0, 12), on40 = at(1, 40), off40 = at(0, 40);
+        const on12 = at(1, 12), off12 = at(0, 12), on40 = at(1, 40), off40 = at(0, 40), eng12 = at(1, 12, 1), eng40 = at(1, 40, 1);   // eng: cardWorth 1 (D-119 / D-121, the default since v0.6.231)
         ok(on12.worth === 18 && on12.plan > 0 && on12.plan <= 30 * on12.offW && off12.worth === 54 && on40.worth === 0 && on40.plan === 0
-           && off40.worth > 100 && off40.plan > 100,
-           '171d my Jack’s worth is at most offW x my prey’s 30 pool: 18 at my 12 pool, 0 at my 40 (O-41); at 0 54 and hundreds (got ' + JSON.stringify({ on12, off12, on40, off40 }) + ')'); }
+           && off40.worth > 100 && off40.plan > 100 && eng12.worth === 24.74 && eng40.worth === 24.74,
+           '171d my Jack’s worth is at most offW x my prey’s 30 pool: 18 at my 12 pool, 0 at my 40 (O-41); at 0 54 and hundreds; with cardWorth 1 the engine reads 24.74 at both, the spec\u2019s O-41 table (got ' + JSON.stringify({ on12, off12, on40, off40, eng12, eng40 }) + ')'); }
     }
 
     /* 172) v0.6.227 -- ROUND E (the BOARD's hotseat line; LESSONS L-25, L-26): on the hotseat bridge the wire delivers in the same call,
@@ -13753,8 +13753,8 @@ async function connectWithRetry(client, tries = 30){
         let spied = 0, jerr = null; if(IF5(b.u, '_cardWorth')){ b.u._cardWorth = () => { spied++; return null; }; try { b.u._myJackWorth(b.jack, 1); } catch(e){ jerr = e.message; } }
         const d = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'D', log: () => {} }).o.cardWorth;
         const r = { life: w && +w.life.toFixed(2), mine: w && w.parts[1], on: IF5(a.u, '_w5UseWorth') && [a.u._w5UseWorth(jE), b.u._w5UseWorth(jE), a.u._w5UseWorth(rE), b.u._w5UseWorth(rE)].join(), spied, jerr, d };
-        ok(w && w.life > 0 && w.life <= 12 && Math.abs(w.parts[1] + w.life) < 0.02 && r.on === 'true,false,true,true' && spied === 0 && !jerr && d === 0,
-           '175b Jack through the engine: my payments over the game’s end (the longest other runway), not my 20 rounds; cardWorth 0 keeps v0.6.229; the default 0 (got ' + JSON.stringify(r) + ')'); }
+        ok(w && w.life > 0 && w.life <= 12 && Math.abs(w.parts[1] + w.life) < 0.02 && r.on === 'true,false,true,true' && spied === 0 && !jerr && d === 1,
+           '175b Jack through the engine: my payments over the game’s end (the longest other runway), not my 20 rounds; cardWorth 0 keeps v0.6.229; the default 1 since v0.6.231, D-121 (got ' + JSON.stringify(r) + ')'); }
 
       // c) the play read (D-119 (1)): Anarch Revolt is worth playing when it bills the others (my Anarch ready, my prey none) and held when it
       //    bills me (no Anarch of mine) -- the master finder carries the worth, a held card is no candidate and its hold is noted once
