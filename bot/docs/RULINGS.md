@@ -270,6 +270,7 @@ A retired line keeps its number as a one-line stub so references stay valid.
 - **O-40** — retired 14 Nov (answered by D-115).
 - **O-41** — retired 17 Nov (answered by D-119).
 - **O-42** — retired 14 Nov (answered by D-117).
+- **O-44** (2026-11-17) — `cardWorth` (D-119's Jack): the mirror bench and the Nosferatu-pinned 288 both read −0.02 VP (paired SE 0.02), no gain and no loss beyond the noise; it ships at 0. Flip it to 1 (Johan's O-41 answer for Jack), or keep 0?
 - **O-43** — retired 17 Nov (Johan: "Ja men då kan vi väl köra på det": the guard reads the whole posture, the plan's quota
   too, as built in v0.6.229). His note for later: the Ball's call, and the turn's choices like it, should weigh the action's
   expected payoff against its expected punishment and risk (BOARD).

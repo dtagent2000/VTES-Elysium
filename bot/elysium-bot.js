@@ -1182,6 +1182,7 @@ class Bot {
         this.out = false; this.ownTurns = 0; this.inf = 0; this._tableBlockAttempts = 0;
         this._ootDebt = 0; this._fgOwed = 0; this._turnActN = 0;   // v0.6.215 (egress review): a new game owes no out-of-turn master action and no Family Gathering blood
         this._jackDefer = null;   // v0.6.224 (the egress review): a new game waits for no Jack
+        this._w5Loss = null; this._w5Hostages = null; this._w5Dia = null; this._w5Hunts = 0; this._w5RefPass = 0; this._w5Held = null; this._w5PbAnarch = false; this._w5BleedOk = null;   // v0.6.230 (the egress review): the wave's counts start again
         this._turnSerial = (this._turnSerial | 0) + 1; this._monsterUsed = null; this._sgwEndUsed = null; this._lastCombat = null; this._cotCancel = null; this._myBlockOf = null;   // v0.6.217 (the egress review): Monster's and Guiding Wisdom's once-each-turn, the last combat, a Change of Target -- none carries into a new game
         this._holdBy = new Set(); if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }   // v0.6.95: a fresh game holds for nobody
         this._holdAnnounced = false; this._pendingTurn = null;   // v0.6.108: and carries no queued turn or stale hold announcement
@@ -3605,6 +3606,7 @@ class Bot {
       for(const c of (tb.pub.cards || [])){
         if(!c || c.kind !== 'crypt' || c.zone !== 'torpor') continue;
         if(!this._famedSeen[c.name]) continue;
+        if(this._w5Hostages && this._w5Carvers().length && this._w5Hostages.has(seat + '|' + c.id)) continue;   // v0.6.230 (the egress review): a hostage cannot be rescued
         const t = Math.min(2, (c.blood | 0));
         const mine = 2 - t;
         if((vamp.blood | 0) < mine + 1) continue;   // leave >= 1 on my actor
@@ -4014,7 +4016,7 @@ class Bot {
     if(this._actingVamp && this._actingVamp.played) this._maybeBlockBarRef(v, act);   // v0.6.129: the bar line goes out before the terms and the announce
     this._grandBallBar(v);   // v0.6.217 (V5 wave 4): Toreador Grand Ball's unblockable Toreador -- the bar before the terms and the announce
     this.send({ t: 'log', html: 'Referendum terms \u2014 <b>' + esc(act.name) + '</b>: ' + esc(terms) + '.' });   // FIRST: every bot reads its stake from this before the block question opens
-    this.fxClone({ name: act.name, kind: 'lib' }, 'calls a referendum', { actor: v });
+    if(act.inPlayBurn) this.fxClone(v, 'calls a referendum to burn ' + act.inPlayBurn.owner + '\u2019s ' + act.inPlayBurn.card); else this.fxClone({ name: act.name, kind: 'lib' }, 'calls a referendum', { actor: v });   // v0.6.230 (the egress review): a burn referendum plays no card -- the vampire, not another seat's card
     { const lkP = this._lockStealthAtAnnounce(v, 'political');   // v0.6.215: Creepshow Casino at the announce
     this._announceTallyA(1 + this._cryptStealthMod(v, 'political', false) + (lkP ? lkP.s : 0));                   // rulebook: a political action is undirected, +1 stealth
     this._sayAnnounceLock(v, lkP); }
@@ -4041,7 +4043,7 @@ class Bot {
       else {
       this._writeTally({ mode: 'vote', a: mine, b: 0 });
       this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> casts <b>' + mine + '</b> vote' + (mine === 1 ? '' : 's') + ' <b>for</b>.' });
-      this.chat('I vote ' + mine + ' for.');
+      this.chat(mine > 0 ? 'I vote ' + mine + ' for.' : 'No votes from me.');   // v0.6.230: a burn referendum's caller with no title has no card's vote
       await this._refPoll(rc);
       const tot = () => ({ f: Math.max(mine + rc.for, rc.lastA | 0, rc.line ? rc.line.a : 0), a: Math.max(rc.against, rc.lastB | 0, rc.line ? rc.line.b : 0) });
       /* the boosts are held until the count says they are needed -- and spent only when they turn it */
@@ -4075,7 +4077,7 @@ class Bot {
       if(!rc.line && !w5auto) this.send({ t: 'log', html: 'Vote: ' + t.f + ' for vs ' + t.a + ' against \u2014 vote ' + (passed ? 'passes' : 'fails') + '.' });   // the client's frozen verdict line (skipped when a human's Resolve already wrote it)
       this.send({ t: 'log', html: 'Referendum ' + (passed ? 'passes' : 'fails') + ' \u2014 <b>' + esc(act.name) + '</b>: ' + (passed ? esc(terms) : 'no effect') + '.' });
       if(passed && act._voidNote){ this.note(act._voidNote); act._voidNote = null; }   // v0.6.223: the part of a seat ousted in the window, after the terms as announced
-      this.chat(passed ? 'The referendum passes, ' + t.f + ' to ' + t.a + '.' : 'The referendum fails, ' + t.f + ' to ' + t.a + '.');
+      this.chat(w5auto ? 'The referendum passes (Día de los Muertos).' : passed ? 'The referendum passes, ' + t.f + ' to ' + t.a + '.' : 'The referendum fails, ' + t.f + ' to ' + t.a + '.');
       this._emit('referendum', { vamp: v.name, card: act.name, passed, for: t.f, against: t.a, mine, deltas: act.deltas, closed: rc.closed });
       if(!act.inPlayBurn && !(passed && act.titleTerm && this._takeTitle(act))) this._toAsh(act.name);   // v0.6.217: a passed title referendum puts the card on its vampire instead
       this._writeTally({ mode: null, a: 0, b: 0 });
@@ -4772,7 +4774,7 @@ class Bot {
   _w5Mine(pred){ return this.out ? [] : (this.board || []).filter(c => { if(!this._w5Ok(c)) return false; const e = this._w5E(c.name); return !!(e && pred(e, c)); }); }
   _w5IsAlly(name){ const e = this._w5E(name); return !!(e && (e.t || []).includes('ally')); }
   _w5HasReadyAnarch(st){ return this._seatCards(st).some(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.faceDown && this._vampSect(c) === 'Anarch'); }
-  _w5LossRate(st){ const n = ((this._w5Loss || {})[st]) | 0; return (n + 0.3 * 3) / (this._w5Rounds() + 3); }   // ready minions a seat loses a round: the ones seen (pub diffs, my own torpor and burn sites), a prior of 0.3 worth three rounds
+  _w5LossRate(st){ const n = st === this.seat ? (((this._w5Loss || {})[st]) | 0) : ((((this.opp || {})[st] || {}).w5Loss) | 0); return (n + 0.3 * 3) / (this._w5Rounds() + 3); }   // ready minions a seat loses a round: the ones seen (pub diffs, my own torpor and burn sites), a prior of 0.3 worth three rounds
   _w5HuntRate(st){ const me = st === this.seat; return ((me ? (this._w5Hunts | 0) : 0) + 0.5 * 3) / ((me ? this._w5Rounds() : 0) + 3); }
   _w5RefRate(st){ const me = st === this.seat; return ((me ? (this._w5RefPass | 0) : 0) + 0.4 * 3) / ((me ? this._w5Rounds() : 0) + 3); }
   _w5Readies(st){ return this._seatCards(st).filter(c => c && c.zone === 'ready' && !c.faceDown && (c.kind === 'crypt' || this._w5IsAlly(c.name))).length; }   // a seat's READY minions (vampires and allies), public
@@ -4822,8 +4824,8 @@ class Bot {
   _w5DeadMaster(h){                  // the discard phase's view: a wave master held for good -- one per game and played, unique and mine in play, or worth 1 pool or more below nothing
     const e = h.e; if(!(e.t || []).includes('master')) return false;
     if((e.handler === 'dia' || e.oncePerGame) && this._w5Once(h.name)) return true;
+    if(!this._w5UseWorth(e)) return false;   // the egress review: the older unique masters keep v0.6.229's discard (hacking's Information Highway, sewer's Dreams of the Sphinx)
     if(e.unique && this._w5Mine((x, c) => FX_NORM(c.name) === FX_NORM(h.name)).length) return true;
-    if(!this._w5UseWorth(e)) return false;
     const w = this._cardWorth({ id: null, name: h.name, counters: [] }, this.seat); return !!(w && w.worth + (w.now || 0) - ((e.cost && e.cost.pool) || 0) <= -1);
   }
   _w5HoldNote(name, why){ const k = (this.ownTurns | 0) + '|' + name; if((this._w5Held = this._w5Held || new Set()).has(k)) return; this._w5Held.add(k); this.o.log('master-play: ' + name + ' held -- ' + why); this._emit('w5-hold', { card: name, why }); }   // once a turn a card
@@ -4923,7 +4925,7 @@ class Bot {
     (prev.cards || []).forEach(c => { if(!c || c.zone !== 'ready' || c.faceDown || !(c.kind === 'crypt' || this._w5IsAlly(c.name))) return;
       const n = nowById.get(c.id); if(n && n.zone === 'ready') return;
       const how = n && n.zone === 'torpor' ? 'torpor' : (!n || n.zone === 'ash' || n.zone === 'burned') ? 'burned' : null; if(!how) return;   // Banishment's uncontrolled region is no loss of this kind (the grading)
-      (this._w5Loss = this._w5Loss || {})[st] = (this._w5Loss[st] | 0) + 1;
+      { const o = this._opp(st); o.w5Loss = (o.w5Loss | 0) + 1; }   // the table model (the egress review): another seat's losses live in this.opp[st]
       if(how === 'torpor' && c.kind === 'crypt') this._w5Hostage(c, st);
       if(st === this.preySeat()) this._w5FrontalGain(c, how);
       if(this._isHumanName(this.seatName(st)) && this._w5Mine(e => (e.modes || []).some(mo => mo.fx && mo.fx.lostMinionTax)).length) this.chat(this.seatName(st) + ': Tension in the Ranks — burn 1 pool (' + c.name + (how === 'torpor' ? ' went to torpor' : ' is burned') + ').');
@@ -4965,6 +4967,7 @@ class Bot {
       const mine = this._myTitleVotes().n + this._voteBoosts(vamp).reduce((a, b) => a + b.n, 0);
       let agst = 0, forO = 0;
       (this.players || []).forEach(pl => { const st = pl.seat; if(st === this.seat || !this.live(st)) return; const theirs = rd[st] | 0; if(theirs < 0) agst += this._seatTitleVotes(st); else if(theirs > 0) forO += this._seatTitleVotes(st); });
+      if(mine + forO <= 0) continue;   // the egress review: a referendum nobody votes for fails
       const pass = (mine + forO > agst) ? 0.85 : (mine + forO === agst ? 0.2 : 0.08);
       const cand = { idx: null, name: x.card.name, kind: 'political', n: 0, st: 1, cost: null, deltas: rd, note: 'burn', value, pass, mine, agst, forO, inPlayBurn: { seat: x.seat, owner: this.seatName(x.seat), cardId: x.card.id, card: x.card.name } };
       if(!best || cand.value * cand.pass > best.value * best.pass) best = cand;
@@ -5049,7 +5052,7 @@ class Bot {
       const out = this._decide('action', ctx); if(out && out.pick === fr){ k++; who.push(v.name); } });
     if(!k) return null;
     const bill = Math.max(0, preyReady - 0.5 * k), worth = k - bill;
-    if((this.pool | 0) - Math.ceil(bill) < 1) return { worth: -1, why: 'Frontal Assault: its bill (' + bill + ') would take my last pool' };
+    if((this.pool | 0) - preyReady < 1) return { worth: -1, why: 'Frontal Assault: its bill (up to ' + preyReady + ') could take my last pool' };   // the egress review: the worst case, every rush failing (R-34)
     return { worth, why: 'Frontal Assault: ' + k + ' rush(es) (' + who.join(', ') + ') against ' + preyReady + ' ready minion(s) of my prey -- worth ' + worth.toFixed(2) };
   }
   _w5FrontalGain(c, how){            // 'You gain 1 pool after a ready minion controlled by your prey is burned or sent to torpor' -- while my Frontal Assault is in play (this turn)
@@ -9766,7 +9769,7 @@ class Bot {
     }
     if((m = t.match(L12.rescueE))){   // v2 (#7): the OWNER side -- move my named vampire torpor->ready and pay my forced share (the acting controller chose the split; rulebook 6.5.3)
       if(m[2] === (this.o && this.o.name) || m[2] === this.name || m[2] === this.seatName(this.seat)){   // v0.6.72-fix: this.name lands at welcome -- o.name is constructor-truth (the creep comply uses seatName for the same reason)
-        const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'torpor' && c.name === m[3]);
+        const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'torpor' && c.name === m[3] && !this._w5IsHostage(c));   // v0.6.230 (the egress review): a hostage (Carver's) cannot be moved to ready
         if(vc){
           vc.blood = Math.max(0, (vc.blood | 0) - (+m[5] || 0));
           vc.zone = 'ready';
@@ -11519,7 +11522,7 @@ class Bot {
             this._maybeWarsawRefresh(v);   // N4a: hunt is undirected
             this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: 0, card: 'hunt' });
             this.say('It resolves');
-            this.note(v.name + ' hunts successfully \u2014 +1 blood (' + v.blood + ').');
+            this.note(v.name + ' hunts successfully \u2014 +' + (1 + this._w5HuntBonus(v)) + ' blood (' + v.blood + ').');   // v0.6.230: The Hungry Coyote's +1 printed (the egress review)
             this.push();
           }
           this._actingVamp = null;

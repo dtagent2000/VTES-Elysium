@@ -13773,10 +13773,10 @@ async function connectWithRetry(client, tries = 30){
       //    another seat's) when I control no ready Anarch -- last, 'by the end of the unlock phase' [LSJ 20080106]; the last pool is an oust
       { const run = async pool => { const u = mk175(1); u.pool = pool; const a = V5('c1', 'Abraham DuSable', { blood: 7 }), t = V5('c2', 'Almiro Suarez', { zone: 'torpor', blood: 0 });
           u.board = [a, t, M5('r1', 'The Rack', { rackVamp: 'c2' }), M5('ar1', 'Anarch Revolt')]; u.table = { 2: pub5(20, [V5('p1', 'Ariane'), M5('ar2', 'Anarch Revolt')]), 3: pub5(20, []) };
-          let terr = null; try { await Promise.race([u._unlockPhase(), sleep(4000)]); } catch(e){ terr = e.message; }
-          const L = logs5(u); return { terr, blood: t.blood, pool: u.pool, ousted: u.ousted, rack: L.some(l => /^Almiro Suarez gains 2 blood \(The Rack\)\.$/.test(l)), bill: L.some(l => /^Hanna burns 2 pool \(Anarch Revolt ×2: no ready Anarch\)\.$/.test(l)) }; };
+          u._invPool = u.pool; let terr = null; try { await Promise.race([u._unlockPhase(), sleep(4000)]); } catch(e){ terr = e.message; }
+          const L = logs5(u); return { terr, blood: t.blood, pool: u.pool, inv: u._invPool === u.pool, ousted: u.ousted, rack: L.some(l => /^Almiro Suarez gains 2 blood \(The Rack\)\.$/.test(l)), bill: L.some(l => /^Hanna burns 2 pool \(Anarch Revolt ×2: no ready Anarch\)\.$/.test(l)) }; };
         const r3 = await run(3), r2 = await run(2);
-        ok(!r3.terr && r3.blood === 2 && r3.pool === 1 && r3.rack && r3.bill && r3.ousted === 0 && !r2.terr && r2.pool === 0 && r2.ousted === 1,
+        ok(!r3.terr && r3.blood === 2 && r3.pool === 1 && r3.inv && r3.rack && r3.bill && r3.ousted === 0 && !r2.terr && r2.pool === 0 && r2.ousted === 1,
            '175d through the unlock phase: The Rack’s 2 blood in torpor, Anarch Revolt ×2 billed last, the last pool an oust (got ' + JSON.stringify({ r3, r2 }) + ')'); }
 
       // e) Tension in the Ranks at its rules moment (every flip to torpor passes _fameTorporHook): 1 pool with its line; Carver's takes a
@@ -13890,8 +13890,8 @@ async function connectWithRetry(client, tries = 30){
           w.table = { 2: pub5(20, Array.from({ length: preyN }, (_, i) => V5('q' + i, 'Adisa'))), 3: pub5(20, []) };
           w._bestRushTargetFor = () => ({ seat: 2, id: 'q0', name: 'Adisa', w: 1 }); w._rushExpectation = () => 0; w._actionCtxFor = (v, o) => ({ rush: o.rush }); w._actionCtxAdjust = (v, ctx) => ctx; w._decide = (k, ctx) => ({ pick: ctx.rush });
           const p = IF5(w, '_w5FrontalPlan') ? w._w5FrontalPlan() : null; return p ? +p.worth.toFixed(2) : null; };
-        const r = { gained, pool: u.pool, zone: fa.zone, ousted2: u2.ousted, good: plan(10, 2, 2), weak: plan(10, 1, 3), last: plan(2, 2, 3) };
-        ok(r.gained === 11 && r.pool === 9 && r.zone === 'ash' && r.ousted2 === 1 && r.good === 1 && r.weak === -1.5 && r.last === -1,
+        const r = { gained, pool: u.pool, zone: fa.zone, ousted2: u2.ousted, good: plan(10, 2, 2), weak: plan(10, 1, 3), last: plan(2, 2, 3), worst: plan(3, 3, 3) };
+        ok(r.gained === 11 && r.pool === 9 && r.zone === 'ash' && r.ousted2 === 1 && r.good === 1 && r.weak === -1.5 && r.last === -1 && r.worst === -1,
            '175m Frontal Assault: +1 for a torpor, the bill per ready minion, the look ahead’s worth and the last-pool refusal (got ' + JSON.stringify(r) + ')'); }
 
       // n) Forward Momentum: +1 after my Cathari's bleed landed, -1 after one that did not, nothing for another path; 2 counters offer the
@@ -13956,6 +13956,20 @@ async function connectWithRetry(client, tries = 30){
         const L = logs5(u), r = { terr, dia: ev5(u, 'w5-dia').length, pass: ev5(u, 'w5-dia-pass').length, line: L.some(l => l === 'Referendum passes automatically — Kine Resources Contested (Día de los Muertos).'), vote: L.some(l => /^Vote: /.test(l)), refs: ev5(u, 'referendum-called').length };
         ok(!terr && r.dia === 1 && r.pass === 1 && r.line && !r.vote,
            '175s2 through the turn: Día played, the referendum passes automatically -- the line, no Vote line (got ' + JSON.stringify(r) + ')'); }
+
+      // v) the burn referendum, the owner's side: the terms 'burn OWNER's CARD' and the pass line -- the owner's bot burns its Anarch Revolt
+      { const o = mk175(3); const ar = M5('ar3', 'Anarch Revolt'); o.board = [V5('n1', 'Abraham DuSable'), ar]; o.table = { 1: pub5(20, [V5('a1', 'Aline Gädeke')]), 2: pub5(20, []) };
+        const T = "burn Nora's Anarch Revolt"; let err = null; try { o._onRefTerms('Hanna', 'Anarch Revolt', T); o._onRefResult('Hanna', true, 'Anarch Revolt', T); } catch(e){ err = e.message; }
+        ok(!err && ar.zone === 'ash' && o.pool === 20, '175v the burn referendum: the owner\u2019s bot burns its card on the pass, no pool moves (got ' + JSON.stringify({ err, zone: ar.zone, pool: o.pool }) + ')'); }
+
+      // w) the egress review: an older unique master in play keeps v0.6.229's discard (sewer's Dreams of the Sphinx); another seat's rescue
+      //    line does not move my hostage to ready
+      { const u = mk175(1); u.board = [V5('c1', 'Abraham DuSable'), M5('ds', 'Dreams of the Sphinx')]; const e = IF5(u, '_w5E') ? u._w5E('Dreams of the Sphinx') : null;
+        const dead = IF5(u, '_w5DeadMaster') && e ? u._w5DeadMaster({ name: 'Dreams of the Sphinx', e }) : null;
+        const h = mk175(1); const al = V5('c2', 'Almiro Suarez', { zone: 'torpor', blood: 1 }); h.board = [V5('c1', 'Abraham DuSable'), al, M5('cv', "Carver's Meat Packing and Storage")]; h.table = { 2: pub5(20, [V5('p1', 'Ariane')]), 3: pub5(20, []) };
+        if(IF5(h, '_w5Hostage')) h._w5Hostage(al, 1);
+        h._onLog('Viktor', '<b>Ariane</b> rescues <b>Hanna</b>’s <b>Almiro Suarez</b> from torpor (<b>Ariane</b> pays 1, <b>Almiro Suarez</b> pays 1).');
+        ok(dead === false && al.zone === 'torpor' && !!al.w5Hostage, '175w an older unique master is not dead to the wave; a hostage stays in torpor at another seat\u2019s rescue line (got ' + JSON.stringify({ dead, zone: al.zone }) + ')'); }
 
       // t) the frozen lines' kinds (L-56) and the rush line's card: Frontal Assault grants a (D) rush at my prey's minions (L12.havenRush)
       { const u = mk175(1), C = t => { const r = IF5(u, '_evClassify') ? u._evClassify('Hanna', t, 'log') : null; return r && r.kind; };

@@ -26,12 +26,15 @@ New bot lines another bot parses (machine-read, `L12` in the bot; a canary case 
 - `Referendum passes automatically — CARD (Día de los Muertos).` — in place of the poll: no `Vote:` line, no tally write.
 - `NAME discards two masters to burn OWNER's Tension in the Ranks.` — the owner's bot burns its card.
 - `VAMP enters combat with OWNER's MINION (Frontal Assault).` — the rush-grant line (`havenRush`) with one more card.
+- `PAYER burns 2 blood: VAMP’s hostage counter is burned (Carver’s Meat Packing and Storage).` — curly apostrophes; every
+  bot drops that hostage from its count.
 - A referendum to burn a card in play (Anarch Revolt) has the terms `burn OWNER's CARD` (no pool term); the owner's bot burns the
   card on the pass line.
 Existing shapes reused: Mob Connections' press `Trainbot combat — VAMP presses to continue (Mob Connections).` (the optional
 press's shape); Garibaldi-Meucci's `Combat ends — Garibaldi-Meucci Museum.` (Guiding Wisdom's). The rest are notes for a human,
 no reader: The Rack's choice and blood, Anarch Revolt's and Tension's bills, Carver's hostage and blood, The Coven's lock and pass,
-Frontal Assault's gain and bill, Garibaldi's swap, Powerbase's lock and unlock, Piper's recruit.
+Frontal Assault's gain and bill, Garibaldi's swap, Powerbase's lock and unlock, Piper's recruit (Carver's hostage-taking line
+  is a note; its freeing line above is parsed).
 
 ## 4. Your reply of 15 Nov
 - **§2, the card suffix on a bleed (your call):** we would take it — a card target on a bleed line read as no target (the prey) —
