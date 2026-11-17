@@ -35,10 +35,14 @@
 - **v0.6.231 (17 Nov 2026)** — O-44 answered (RULINGS D-121; Johan 17 Nov: "Yes det låter bra" on the split; spec-v5-wave5 §11).
   `cardWorth` prices only Smiling Jack's defence (`_myJackWorth`) and the burns of Jack (`_jackBurnValue`); Jack's play and discard
   stay with the 14 July rule at both values (`_w5PlayWorth`). At 1 in v0.6.230 the Nosferatu-pinned bench played Jack in 25 of 288
-  matches against 89 at 0 — a play change O-41 never asked for. The split arm, its predictions registered first: mirror 96
-  SAME-PLAY (+0.00 VP); pinned 288 DIVERGED 5, +0.00 VP (paired SE 0.01); Jack played in 89 at both; 16 burns at Jack blocked
-  against 13. No loss: the default is 1 (0 = D-114 / D-115's price). Sections 169 and 171 pin `cardWorth` 0 (they test the
-  0-path); 171d adds the engine's 24.74 at my 12 and my 40 pool (the spec's O-41 table); section 176 (2 cases).
+  matches against 89 at 0 — a play change O-41 never asked for. The benches, their predictions registered first: the defence
+  (Nosferatu-pinned 288) DIVERGED 5, +0.00 VP (paired SE 0.01), Jack played in 89 at both, 16 burns at Jack blocked against 13; the
+  burns (the egress review: the first benches never fired them — the mirror arm was SAME-PLAY 96), the variant pinned to
+  malkavian / tremere / ventrue at 0 against the default 1, 288 each: DIVERGED 8 / 5 / 5, +0.00 / −0.01 / −0.03 VP (SE 0.02 /
+  0.01 / 0.02). None past the registered −0.15: the default is 1 (0 = D-114 / D-115's price). Rides along (the egress review):
+  `jackBurn` 0's path no longer reaches the wave's defence branch (T6's weight again). Section 169 runs at the default (169b and
+  169d's figure rows pin `cardWorth` 0; 169d adds the engine's 13.7 and its block at my 20); section 171 pins 0 and 171d adds the
+  engine's 24.74 (the spec's O-41 table); section 176 (2 cases).
   - *Gates*: GATES-LINE
 - **v0.6.230 (17 Nov 2026)** — V5 wave 5a, the masters that stay in play (RULINGS D-119, D-120; Johan, 17 Nov: kör on "5a, sedan 5b",
   D-107's shape A, O-41 "Livet slutar med spelet"; `specs/spec-v5-wave5-2026-11-17.md`). The card-worth engine and fifteen V5 masters

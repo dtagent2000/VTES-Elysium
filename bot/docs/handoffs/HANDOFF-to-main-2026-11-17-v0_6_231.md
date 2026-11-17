@@ -11,7 +11,7 @@ unchanged. Deploy: purge `/elysium-bot.js`.
 RULINGS D-121 (Johan's answer to O-44): the knob `cardWorth` now prices only Smiling Jack's defence (how hard its owner's bot blocks
 a burn at it) and the burns of Jack by other bots; Jack's play and discard stay with the 14 July rule. The knob is on by default:
 the benches showed no loss. At a table a bot owning Jack blocks a burn at it a little more often (16 blocks against 13 in 288
-matches); nothing else moves.
+matches), and the other bots burn a Jack a little less often (60 burns against 55 in the 240-match footprint); nothing else moves.
 
 ## 3. Run here
 RUN-NUMBERS
