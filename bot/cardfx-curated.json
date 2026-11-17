@@ -3312,7 +3312,7 @@
      }
     }
    ],
-   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. After a vampire with capacity 3 or less goes to torpor, put 1 hostage counter on them. Vampires with any hostage counters cannot be moved to the ready region or be diablerized. Lock during your master phase to add X blood to a ready vampire you control, where X is the number of vampires with any hostage counters. During any unlock phase, any ready vampire can burn 2 blood to burn any vampire's hostage counters. After this card leaves play, burn all the hostage counters.' fx.hostageCap: a vampire of capacity 3 or less that goes to torpor is a hostage (any seat, while the card is in play: _w5Hostage; the counters burn with the card, _w5HostagePrune) -- no rescue, no leave-torpor, no diablerie (_w5IsHostage at four sites); my own freed only under 2 ready bodies by a payer with 4 blood (_w5FreeHostage, once a turn [ANK 20200729]). fx.hostageBlood: my master phase, lock: X blood to a ready vampire of mine (_w5CarversLock). The hostages show as the memo token."
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. After a vampire with capacity 3 or less goes to torpor, put 1 hostage counter on them. Vampires with any hostage counters cannot be moved to the ready region or be diablerized. Lock during your master phase to add X blood to a ready vampire you control, where X is the number of vampires with any hostage counters. During any unlock phase, any ready vampire can burn 2 blood to burn any vampire's hostage counters. After this card leaves play, burn all the hostage counters.' fx.hostageCap: a vampire of capacity 3 or less that goes to torpor is a hostage (any seat, while the card is in play: _w5Hostage; the counters burn with the card, _w5HostagePrune) -- no rescue, no leave-torpor, no diablerie (_w5IsHostage at four sites); my own freed only under 2 ready bodies by a payer with 4 blood (_w5FreeHostage, once a turn [ANK 20200729]; its line L12.hostageFree drops it from every bot's count). fx.hostageBlood: my master phase, lock: X blood to a ready vampire of mine (_w5CarversLock). The hostages show as the memo token."
   },
   "The Rack": {
    "t": [
@@ -3348,7 +3348,7 @@
      }
     }
    ],
-   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. As this location is played or its controller changes, its controller chooses a ready vampire they control. During this location's controller's unlock phase, the chosen vampire can gain 2 blood. Vampires controlled by another Methuselah can steal this location as a (D) action.' fx.rackBlood: the controller chooses as it is played or changes controller (_w5RackPick: the most room; the new controller chooses [ANK 20200130-2]); at my unlock the chosen vampire gains 2 blood, in torpor too [PIB 20150522]; the choice follows the vampire out and back [LSJ 20010809-2] and is not made again [RTR 19960112] (_w5Rack). memo (D-113): the choice as tokens on my cards; human:false -- a human's Rack is not read. Mode 2: the (D) steal by another Methuselah's vampire, as Powerbase: Los Angeles."
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. As this location is played or its controller changes, its controller chooses a ready vampire they control. During this location's controller's unlock phase, the chosen vampire can gain 2 blood. Vampires controlled by another Methuselah can steal this location as a (D) action.' fx.rackBlood: the controller chooses as it is played or changes controller (_w5RackPick: the most room; the new controller chooses, 'as ... its controller changes'; a Rack with no ready vampire to choose is worth nothing and held); at my unlock the chosen vampire gains 2 blood, in torpor too [PIB 20150522]; the choice follows the vampire out and back [LSJ 20010809-2] and is not made again [RTR 19960112] (_w5Rack). memo (D-113): the choice as tokens on my cards; human:false -- a human's Rack is not read. Mode 2: the (D) steal by another Methuselah's vampire, as Powerbase: Los Angeles."
   },
   "The Hungry Coyote": {
    "t": [
@@ -3365,7 +3365,7 @@
      }
     }
    ],
-   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. Sabbat vampires you control get +1 hunt.' fx.huntBonusSabbat: +1 blood on each hunt of my Sabbat vampires, special hunts included [RTR 20030519] (_w5HuntBonus, read by the hunt branch and its scorer)."
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. Sabbat vampires you control get +1 hunt.' fx.huntBonusSabbat: +1 blood on each hunt of my Sabbat vampires, special hunts included [RTR 20030519] (_w5HuntBonus, read by the hunt branch; the hunt-or-bleed scorer does not read it yet)."
   },
   "The Coven": {
    "t": [
@@ -3385,7 +3385,7 @@
      }
     }
    ],
-   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique. Trifle. Put this card in play. You can lock this card to add 2 blood to a ready vampire you control. During your discard phase, your predator takes control of The Coven.' fx.covenBlood (not fx.bloodAdd: the older lock-income finder stays off it): my master phase, lock: 2 blood to a ready vampire of mine with room (the master phase is never mid-healing [PIB 20121031]; _w5CovenLock). fx.covenPass: at my discard phase my predator takes control, mandatory [LSJ 20100723, PIB 20111002] -- a give, its lock kept (_w5CovenPass); a bot receiving it uses it in its own master phase. The trifle's extra master phase action comes even when it contests."
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique. Trifle. Put this card in play. You can lock this card to add 2 blood to a ready vampire you control. During your discard phase, your predator takes control of The Coven.' fx.covenBlood (not fx.bloodAdd: the older lock-income finder stays off it): my master phase, lock: 2 blood to a ready vampire of mine with room (the master phase is never mid-healing [PIB 20121031]; _w5CovenLock, again before the pass for a Coven played this turn). fx.covenPass: at my discard phase my predator takes control, mandatory [LSJ 20100723, PIB 20111002] -- a give, its lock kept (_w5CovenPass); a bot receiving it uses it in its own master phase. The trifle's extra master phase action comes even when it contests."
   },
   "Piper": {
    "t": [
