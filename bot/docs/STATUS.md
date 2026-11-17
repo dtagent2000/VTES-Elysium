@@ -1,30 +1,29 @@
-# STATUS — Elysium Bots (rewritten at every release; 15 November 2026)
+# STATUS — Elysium Bots (rewritten at every release; 17 November 2026)
 
-**Bot v0.6.229** (15 Nov 2026, the bench round) · arena v1.4.13 · sim table v1.1.0 · cardfx compiler v1.9.8, curated 190
-· hotseat tool v1.4.1 · coverage tool v1.1.47 · card ledger v1.1.3 · precon generator v1.1.1 · `krcg-v5.js` v1.0.0 · `ana-gates.py`
-v1.1.3 · built against client v2.6.174 / srv-2.6.50; the root now carries client v2.6.175 / srv-2.6.51 (main's canary v1.2.0 143/0
-against it, 17 Nov); the read-only copies in `bot/` are client v2.6.174 / protocol v2.6.174 / srv-2.6.50 and main's canary v1.2.0.
+**Bot v0.6.230** (17 Nov 2026, V5 wave 5a) · arena v1.4.14 · sim table v1.1.0 · cardfx compiler v1.9.9, curated 205
+· hotseat tool v1.4.1 · coverage tool v1.1.48 · card ledger v1.1.3 · precon generator v1.1.1 · `krcg-v5.js` v1.0.0 · `ana-gates.py`
+v1.1.3 · built against client v2.6.175 / srv-2.6.51 (the root's release);
+the read-only copies in bot/ are client v2.6.175 / protocol v2.6.175 / srv-2.6.51 and main's canary v1.3.0.
 
-**Deploy state:** `main` carries v0.6.229 (#74; main consumed it in #75). **Open PR:** the O-43 ruling (docs).
+**Deploy state:** `main` carries v0.6.229 (#74; main consumed v0.6.219–229 in #75). **Open PR:** V5 wave 5a (this release).
 
-## Last gates (v0.6.229 release bytes `e306ac04`, 15 Nov 2026)
-Suite **2517/0 ×3** · canary **143/0** ×2 · cardfx 324/0 · hotseat 12/0 · the lint clean · `ana-gates.py --self-test` 35/0 ·
-section 174 20/0 · the sim: at 0 the release bytes play v0.6.228 (the 240, the V5 smoke, the 600 IDENTICAL); the release footprint's
-audits PASS but the 600's match 512 (the fizzle lead, BOARD).
+## Last gates (v0.6.230 release bytes, 17 Nov 2026)
+GATES-LINE
 
-## What v0.6.229 did
-Toreador's guide proposals, benched (D-118): the Grand Ball's free Toreador calls its referendum on its turn (D-117), the referendum
-comes after the cheap actions (or opens the turn when it carries Scalpel Tongue's lock), the first influence opens the stock engine,
-Villein leaves blood for two cards. Toreador +0.08 VP with the five (pinned); the wide clog lost and is gone. Scalpel Tongue is
-played once per action (the egress review).
+## What v0.6.230 did
+V5 wave 5a (D-119, D-120; `specs/spec-v5-wave5-2026-11-17.md`): the card-worth engine — a card in play is worth its flows to each
+seat until the game's end (O-41 answered) — and fifteen masters that stay in play, played by their text: Tension in the Ranks,
+Anarch Revolt, Frontal Assault, Forward Momentum, Privileged Position, Mob Connections, Garibaldi-Meucci Museum, Powerbase: Los
+Angeles, Carver's, The Rack, The Hungry Coyote, The Coven, Piper, Día de los Muertos, Cursed Abattoir. Smiling Jack reads the
+engine only behind `cardWorth` (0). `bot/`'s copies refreshed to v2.6.175; main's 15 Nov reply answered in the handoff.
 
-## Next (Johan's order of 14 Nov)
-1. V5 wave 5 with the persistent-card engine (O-41 generalised); D-107's shape is Johan's.
+## Next
+1. 5b: Sudden Reversal in D-107's shape A, Meditative Grove's cancel, Yawp Court, Week of Nightmares (BOARD).
 2. The window opened after its line; the fizzle misread (BOARD); Q4; C5; C6; the abstract model.
 
 ## Not yet consumed from main
-Client v2.6.175 / srv-2.6.51 (#75): read it, refresh `bot/`'s copies. Owed by main: the guide re-embed and the registry test (v0.6.219's on); the Ball question's line in §12 and the
-sticky target (v0.6.225's); `hotBridge.toBot` synchronous? (v0.6.227's); the new bot lines (v0.6.228's).
+Owed by main: the guide re-embed and the registry test (v0.6.219's); the Ball question's line in §12 (v0.6.225's); the new bot lines
+(v0.6.228's, v0.6.230's §3); the canary's card-suffix control (v0.6.230's §4); the queued `hotBridge.toBot` (main's next round).
 
 ## Known, not built
 A contested block's verdict between bots waits for the actor's clock · `askHumansTotal` off (the human harness) · the BOARD.
