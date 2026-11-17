@@ -43,7 +43,11 @@
   `jackBurn` 0's path no longer reaches the wave's defence branch (T6's weight again). Section 169 runs at the default (169b and
   169d's figure rows pin `cardWorth` 0; 169d adds the engine's 13.7 and its block at my 20); section 171 pins 0 and 171d adds the
   engine's 24.74 (the spec's O-41 table); section 176 (2 cases).
-  - *Gates*: GATES-LINE
+  - *Gates*: suite 2543/0 ×3 (sha `6c4add87` / `09d23a0e` / `5fb8c69c`), canary 171/0 ×2, sections 169 6/0, 171 4/0, 176 2/0 (169d red on
+    4cf68da, 176a on v0.6.230), `doc-budget.sh` PASS; cardfx and the hotseat bridge untouched. The sim: the 240 at the new default
+    DIVERGED 13 against v0.6.230, every diverged match with a Jack in play (V5 smoke: gangrel 1, pathcaine 1, the rest SAME-PLAY);
+    the final bytes' 240 IDENTICAL to the bench bytes'; `ana-gates.py` PASS 6/6 on the 240 and the 14 smoke tables. Egress: 4
+    findings (unproven 1, rule-missed 1, test-weakened 1, stale-doc 1), all fixed.
 - **v0.6.230 (17 Nov 2026)** — V5 wave 5a, the masters that stay in play (RULINGS D-119, D-120; Johan, 17 Nov: kör on "5a, sedan 5b",
   D-107's shape A, O-41 "Livet slutar med spelet"; `specs/spec-v5-wave5-2026-11-17.md`). The card-worth engine and fifteen V5 masters
   played by their text; `bot/`'s read-only copies refreshed to main's v2.6.175 / srv-2.6.51 and its canary v1.3.0 (#75 read; the

@@ -14,4 +14,6 @@ the benches showed no loss. At a table a bot owning Jack blocks a burn at it a l
 matches), and the other bots burn a Jack a little less often (60 burns against 55 in the 240-match footprint); nothing else moves.
 
 ## 3. Run here
-RUN-NUMBERS
+On the release bytes (`elysium-bot.js` sha256 `6c4add87…`): your `check-versions.js` agrees (the root a byte copy of `bot/`'s
+bundle); your canary v1.3.0 171/0 on `bot/`'s copies and on the root's client. The bot's suite 2543/0 ×3. Your client suite was not
+run: no line, no wire and no timing changed.

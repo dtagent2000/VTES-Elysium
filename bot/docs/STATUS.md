@@ -8,7 +8,9 @@ the read-only copies in bot/ are client v2.6.175 / protocol v2.6.175 / srv-2.6.5
 **Deploy state:** `main` carries v0.6.230 (#77, V5 wave 5a; main consumed v0.6.219–229 in #75). **Open PR:** O-44's split (this release).
 
 ## Last gates (v0.6.231 release bytes, 17 Nov 2026)
-GATES-LINE
+Suite **2543/0 ×3** (`elysium-bot.js` `6c4add87`, `test-bot-logic.js` `09d23a0e`, `elysium-cardfx.json` `5fb8c69c`) · canary
+**171/0** ×2 · sections 169 6/0, 171 4/0, 176 2/0 (169d and 176a red before) · the sim: the 240 at the new default DIVERGED 13 against
+v0.6.230, every one with a Jack in play (V5 smoke: gangrel 1, pathcaine 1); `ana-gates.py` PASS on the 240 and the 14 smoke tables.
 
 ## What v0.6.231 did
 O-44 answered (D-121): `cardWorth` prices only Smiling Jack's defence and the burns of Jack; its play and discard stay with the
