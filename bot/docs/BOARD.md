@@ -1,4 +1,4 @@
-# BOARD — the open asks (15 Nov 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (17 Nov 2026). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -52,12 +52,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct; refined by the archetypes): D-112 checks each
   strategy line against its guide; Toreador's is done (D-118). *Done when* each deck's proposals have Johan's "kör" or "no".
   Docs: RULINGS D-43, O-33, D-112, D-118.
-- **Reads the bench round left** (D-118): my referendums' block rate from the table (proposal 2); a stealth bleeder read from
-  its deck, not one card (proposal 7's loss); `keyLast`'s hold with two political cards; `engineW` only while no stock engine of
-  mine is ready (it weighs every plan). *Done when* each is built and benched, or ruled out. Docs: RULINGS D-118, O-43;
-  `specs/spec-bench-round-2026-11-15.md`.
-
-## The clean-up (spec-cleanup-2026-10-20.md §7; C1 = PR #39)
+- **Reads the bench round left** (D-118): my referendums' block rate at the table (proposal 2); a stealth bleeder read from
+  its deck (proposal 7's loss); `keyLast`'s hold with two political cards; `engineW` only while no stock engine of mine is
+  ready; the Ball's wait by expected payoff against punishment and risk (Johan, 17 Nov). *Done when* built and benched, or
+  ruled out. Docs: RULINGS D-118, O-43; `specs/spec-bench-round-2026-11-15.md`.
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
   card only another seat held, a planted leak the positive control; `_twdExpect` agrees across observers), flip counts on `decide`
   rows, the knob registry (`KNOBS`: every decision knob with a 0-path, persona thresholds as overlays), and the off-by-default knobs
