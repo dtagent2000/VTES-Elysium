@@ -1,4 +1,4 @@
-# BOARD — the open asks (17 Nov 2026, v0.6.230). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (17 Nov 2026, v0.6.231). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
