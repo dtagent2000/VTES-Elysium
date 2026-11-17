@@ -12933,11 +12933,12 @@ async function connectWithRetry(client, tries = 30){
 
     /* 169) v0.6.224 -- ROUND B step 2, D-114 (specs/spec-jack-burn-2026-11-13.md, the knob jackBurn): Smiling Jack’s burn weighed by its
        price, the most exposed bot first, and a burn at my Jack weighed by its worth; the knob at 0 is the previous behaviour. 169a and
-       169b keep jackRunway at 0 (v0.6.226, D-115): their figures are the flat runway's prices; the rest runs at the default (171 is the
+       169b keep jackRunway at 0 (v0.6.226, D-115): their figures are the flat runway's prices; 169b and 169d's figure rows pin cardWorth 0
+       (v0.6.231, D-121: D-114's price is the knob's 0-path) and 169d reads the engine's row at 1; the rest runs at the default (171 is the
        self-consistent runway's own). LAST LINE OF 169 is the closing brace below. */
     {
       console.log('\n[169] v0.6.224 -- round B step 2: the Jack burn (jackBurn)');
-      const mk169 = (name, extra, seat) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', deckName: 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, cardWorth: 0, log: () => {} }, extra || {}));   // cardWorth 0 (v0.6.231): 169 tests D-114's price, the knob's 0-path
+      const mk169 = (name, extra, seat) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', deckName: 'toreador', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, extra || {}));
         u.seat = seat || 2; u.started = true; u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: seat === 3 ? 'U2' : u.o.name, online: true, bot: true }, { seat: 3, name: seat === 3 ? u.o.name : 'Nils', online: true, bot: true }];
         u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {}; u.chat = () => {}; u.say = () => {};
         u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.table = {}; u.board = []; u.hand = []; u.unc = []; u.pool = 20; return u; };
@@ -12959,7 +12960,7 @@ async function connectWithRetry(client, tries = 30){
       //    saving weighs double (wDef 2) -- at Nils's 40 pool his saving (44) beats my doubled one (2 x 13.89): no candidate, no burn; at 30
       //    (27) the doubled defence tips the value positive (0.94) and the bleed (3.25) still outbids it. c1 by turn order (the egress
       //    review): from my turn my prey Nils unlocks before the owner and pays 2, I pay 3; on Hanna's turn I pay 2
-      { const at = np => { const u = mk169('U', { jackBurn: 1, jackRunway: 0 }); u.players[0].bot = false; u.board = [V8('v1', 'Catalina Vega', { blood: 5, cap: 8 })]; u.hand = ['Enchant Kindred']; u.pool = 10;
+      { const at = np => { const u = mk169('U', { jackBurn: 1, jackRunway: 0, cardWorth: 0 }); u.players[0].bot = false; u.board = [V8('v1', 'Catalina Vega', { blood: 5, cap: 8 })]; u.hand = ['Enchant Kindred']; u.pool = 10;
           u.table = { 1: { pub: { pool: 20, cards: [V8('h1', 'Lenny Burkhead (G6)', { locked: true }), J8(2)] } }, 3: { pub: { pool: np, cards: [V8('n1', 'Andi Liu')] } } }; u._strategize('unlock');
           const jv = typeof u._jackAt === 'function' ? u._jackBurnValue(u.board[0], u._jackAt()) : null, b = u._bestBurnCardFor(u.board[0]), d = u._decideAction(u.board[0], u._actionCtxFor(u.board[0]));
           const jk = typeof u._jackAt === 'function' ? u._jackAt() : null, c1 = jk && typeof u._jackC1 === 'function' ? [u._jackC1(3, jk), u._jackC1(2, jk)] : null;
@@ -12987,18 +12988,19 @@ async function connectWithRetry(client, tries = 30){
       //    rides the window and a bare body blocks; at 0 T6's weight keeps the score under the bar. My pool 12 against Hanna's 20: the
       //    defence fires at the default runway (a regression guard, green on v0.6.225 too). v0.6.226 (the egress review): at my 20 the
       //    default runway leaves my Jack worth 0 -- Hanna's loss over her runway (at most her pool) against my payments over Jack's whole
-      //    life (RULINGS O-41) -- and the bare body lets the burn through; the flat runway (jackRunway 0) read 12.22 and blocked. A
-      //    ruling on O-41 flips this row
-      { const run = async (knob, mine, rw) => { const u = mk169('N', Object.assign({ jackBurn: knob, deckName: 'nosferatu' }, rw === undefined ? {} : { jackRunway: rw }), 3); u.players[1].name = 'U2'; const jk = J8(2);
+      //    life (RULINGS O-41) -- and the bare body lets the burn through; the flat runway (jackRunway 0) read 12.22 and blocked. These
+      //    rows are cardWorth 0's (D-114's price); with cardWorth 1 (D-121, the default) the engine reads 13.7 at my 20 and the body blocks
+      { const run = async (knob, mine, rw, cw) => { const u = mk169('N', Object.assign({ jackBurn: knob, deckName: 'nosferatu', cardWorth: cw | 0 }, rw === undefined ? {} : { jackRunway: rw }), 3); u.players[1].name = 'U2'; const jk = J8(2);
           u.pool = mine; u.board = [V8('n1', 'Andi Liu', { blood: 4, cap: 5 }), jk]; u.table = { 1: { pub: { pool: 20, cards: [V8('h1', 'Lenny Burkhead (G6)')] } }, 2: { pub: { pool: 20, cards: [V8('c1', 'Catalina Vega', { cap: 8 })] } } };
           u._strategize('unlock'); let dec = null; const od = u.decide.bind(u); u.decide = (q, ctx) => { const r = od(q, ctx); if(q === 'block-as-target') dec = r; return r; };
           const committed = []; u._commitBlock = async p => { committed.push(p.sub); };
           u._burnWindowOpens('Hanna', 'Lenny Burkhead (G6)', jk); await new Promise(r => setTimeout(r, 600));
           return { worth: u.pending && u.pending.cardWorth, block: dec && dec.block, score: dec && +dec.score.toFixed(2), committed }; };
-        const on = await run(1, 12), off = await run(0, 12), o41 = await run(1, 20), o41flat = await run(1, 20, 0);
+        const on = await run(1, 12), off = await run(0, 12), o41 = await run(1, 20), o41flat = await run(1, 20, 0), eng = await run(1, 20, undefined, 1), engOff = await run(0, 20, undefined, 1);
         ok(on.worth >= 2 && on.block === true && JSON.stringify(on.committed) === '["burnCard"]' && off.worth === undefined && off.block === false && off.committed.length === 0
-           && o41.worth === 0 && o41.block === false && o41.committed.length === 0 && o41flat.worth > 12 && o41flat.block === true,
-           '169d a burn at my Jack: with the knob its worth rides the window and a bare body blocks; at 0 the score stays under the bar; at my 20 against her 20 the worth is 0 (O-41), 12.22 on the flat runway (got ' + JSON.stringify({ on, off, o41, o41flat }) + ')'); }
+           && o41.worth === 0 && o41.block === false && o41.committed.length === 0 && o41flat.worth > 12 && o41flat.block === true
+           && eng.worth === 13.7 && eng.block === true && engOff.worth === undefined && engOff.block === false,
+           '169d a burn at my Jack: with the knob its worth rides the window and a bare body blocks; at 0 the score stays under the bar; at my 20 against her 20 the worth is 0 (O-41), 12.22 on the flat runway; cardWorth 1 reads 13.7 and blocks, and jackBurn 0 still prices nothing (got ' + JSON.stringify({ on, off, o41, o41flat, eng, engOff }) + ')'); }
 
       // e) through the turn: with the knob my minion phase burns Nils's Jack -- the frozen burn line, a burnCard through row
       { const u = mk169('U', { jackBurn: 1 }); u.players[0].bot = false; jackTable(u); u.turnSeat = 2; u._announcePhase = async () => {};
@@ -13746,7 +13748,7 @@ async function connectWithRetry(client, tries = 30){
            '175a the engine: runways 10 and 5 (the growing drain), the life ends with the game (11 rounds left at the start, the longest other runway 10, 3 after nine rounds, never under 2), the seats weighed 1, -offW, -0.15, me 2 behind (got ' + JSON.stringify(r) + ')'); }
 
       // b) O-41's answer for Smiling Jack (cardWorth 1): my payments stop where the game would stop -- the life is the longest other runway,
-      //    not my own 20 rounds; cardWorth 0 never asks the engine for Jack (v0.6.229); the wave's cards use it at both; the default is 0
+      //    not my own 20 rounds; cardWorth 0 never asks the engine for Jack (v0.6.229); the wave's cards use it at both; the default is 1 (v0.6.231, D-121)
       { const mkJ = k => { const u = mk175(1, { cardWorth: k }); u.pool = 40; u.table = { 2: pub5(10, []), 3: pub5(12, []) }; u._jackFc = () => 1; const jack = M5('j1', 'Smiling Jack, The Anarch', { counters: [] }); u.board = [jack]; return { u, jack }; };
         const a = mkJ(1), b = mkJ(0), jE = IF5(a.u, '_w5E') ? a.u._w5E('Smiling Jack, The Anarch') : null, rE = IF5(a.u, '_w5E') ? a.u._w5E('The Rack') : null;
         const w = IF5(a.u, '_cardWorth') ? a.u._cardWorth(a.jack, 1) : null;
