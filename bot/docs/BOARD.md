@@ -1,4 +1,4 @@
-# BOARD — the open asks (17 Nov 2026). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (17 Nov 2026, v0.6.230). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -15,35 +15,15 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 waves**: the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim plays them; the menu only
-  Toreador) and the ledger (`docs/CARDS.md`); waves by effect class as the class map ranks them (D-98). Waves 1–4 done (D-99,
-  D-103, D-104, D-106); next: wave 5, the 18 masters in play (`spec-v5-wave3` §4), Meditative
-  Grove's cancel and Sudden Reversal's window, also against humans (D-107; Johan picks its shape), with the actions at a card in
-  play (steal The Rack / Powerbase: LA, burn Mob Connections), The Coven's control passing, and Día de los Muertos (no polling,
-  no [obl] / [dom] vote discard: PIB 20150105, D-111); the 11 cards with a discipline line and no mode (D-116 (3)). Then the maneuver / press grants
+  Toreador) and the ledger (`docs/CARDS.md`); waves by effect class as the class map ranks them (D-98). Waves 1–4 and 5a done
+  (D-99, D-103, D-104, D-106, D-120); next: 5b (`specs/spec-v5-wave5-2026-11-17.md` §0, §4): Sudden Reversal in D-107's shape A,
+  Meditative Grove's cancel, Yawp Court, Week of Nightmares; the 11 cards with a discipline line and no mode (D-116 (3)). Then the maneuver / press grants
   with the rush cards, the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
   done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY`
   line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares
   them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108; `CARDS.md`; HOWTO.
-- **V5 wave 1's riders** (`specs/spec-v5-wave1-2026-10-29.md` §4): the additional strikes' v2 (the impulse back, two sources a
-  round, dodge / steal / ends in an additional pair, strike cards that bring one, a human's declaration after Damage, the combat
-  panel's `xa` / `xb` and the labels cleared at a new pair: main, 3 Nov §4); clan, sect and Path requirements in every finder; the
-  amber cards; the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39, R-40, D-99.
-- **V5 wave 2's riders** (`specs/spec-v5-wave2-2026-10-29.md` §4): counters against a human and for the wave / snipe postures;
-  the strike choice (`_strikePick` takes a strike card over a stronger pumped fist); the amber riders (Rage of Apedemak's hand size,
-  Frenzy and Path icon, Hunger of Marduk in an additional pair, Soul Burn's opposing weapons, Monstrous Form's superior action); the
-  opponent's pumps unread before the strike; a gun's maneuver binding its strike outside Immortal Grapple; the auto tier's 'before
-  range' flag on superior-only sentences (Alpha Glint, Bloodform, Gemini's Mirror,
-  Eyes of Blades, Outside the Hourglass) and Sanguine Entrapment / Skin Trap compiled as their own (curation, no deck holds them).
-  *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-41, D-103.
-- **V5 wave 4's riders** (`specs/spec-v5-wave4-2026-11-03.md` §4): the abstain as a reaction on another's referendum; Guiding
-  Wisdom's combat end when mine is not the acting minion (a before-range handshake); a bot blocker's Crows before the actor's Change of
-  Target; an opponent's Oblivion / Depravity in the table model; the acting bot accepts a human's block of a barred action (every bar).
-  Over-strict: `_bestStrengthFor` (any strength bonus), `_inPlayNorms` (my ash heap). Also Saulot's Healing Touch: FULL by the
-  auto tier, its text unbuilt. *Done when* each is built and tested, or ruled out.
-- **V5 wave 3's riders** (`specs/spec-v5-wave3-2026-11-02.md` §4): the amber halves (Anarch Railroad and Fortune Teller Shop for
-  another Methuselah's vampire, KRCG News Radio's paid half, Wall Street Night's investment action, Burial Site's ally life, Creepshow
-  on the other undirected actions, Family Gathering with a mixed crypt); 'one hunting ground each turn' is per vampire in the text.
-  *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-42, D-104.
+- **The V5 waves' riders** (each wave spec's §4; wave 5's §10): what v1 of each wave left out, the
+  amber halves and the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-120.
 - **The weapon's maneuver** (wave 2's review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
   a number — the .44 Magnum has never maneuvered, so the strike-binding rules' gun halves never run. Neighbours: a weapon's strike
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait

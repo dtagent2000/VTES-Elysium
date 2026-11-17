@@ -64,7 +64,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   -- every finding fails; the suppressions file is `{}` since C2 and only shrinks (never `--suppress-all` / `--suppress-rule`:
   CI fails a PR that adds one).
 - **The canary against main's release** (the second canary run): a scratch dir with `bot/test-bot-canary.js`, `bot/elysium-bot.js`,
-  the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; `node test-bot-canary.js` there.
+  `bot/elysium-cardfx.json` (the human-Ball memo checks), the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; `node test-bot-canary.js` there.
 - **Main's client suite beside the release bytes** (when the wire or the timing changed): a scratch copy of `client/` (never the
   real one — THE RULE), the bot bundle from `bot/` copied into it (`elysium-bot.js`, `elysium-cardfx.json/.js`,
   `elysium-twd-profile.json/.js`, `elysium-twd-archetypes.json/.js`, `START-HERE-BOTS.html`), then `node test-client-logic.js`

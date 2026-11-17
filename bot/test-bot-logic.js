@@ -13712,6 +13712,273 @@ async function connectWithRetry(client, tries = 30){
            '174m the defaults after the benches: ballTurn 1, keyLast 1, engineW 6, scalpelLock 1, villeinKeep 1; clogWide removed (got ' + JSON.stringify({ ballTurn: d.ballTurn, keyLast: d.keyLast, engineW: d.engineW, scalpelLock: d.scalpelLock, villeinKeep: d.villeinKeep, clogWide: d.clogWide }) + ')'); }
     }
 
+    /* 175) v0.6.230 -- V5 WAVE 5a (RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md): the card-worth engine (O-41 generalised:
+       a card's flows to every seat over min(that seat's runway, the card's life), the life ending with the game) and the fifteen masters
+       that stay in play -- each case at its rules moment or its decision; the new frozen lines through _onLog and _evClassify.
+       LAST LINE OF 175 is the closing brace below. */
+    {
+      console.log('\n[175] v0.6.230 -- V5 wave 5a: the card-worth engine and the masters that stay in play');
+      const BOTM = require('./elysium-bot.js'), ARCH5 = BOTM.ARCHETYPES, CH5 = BOTM.CARD_HANDLERS || {};
+      const IF5 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const NAMES5 = ['Hanna', 'Viktor', 'Nora'];
+      const mk175 = (seat, knobs) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: NAMES5[seat - 1], persona: 'expert', deckName: 'malkavian', deck: ARCH5.malkavian, paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, knobs || {}));
+        u.seat = seat; u.started = true; u.players = NAMES5.map((n, i) => ({ seat: i + 1, name: n, online: true, bot: true }));
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.say = () => {}; u.note = () => {}; u.chats = []; u.chat = t => u.chats.push(t); u._restartAskTimer = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.board = []; u.hand = []; u.unc = []; u.pool = 20; u.turnSeat = seat; u.table = {};
+        u.phaseActs = { master: 1, discard: 1 }; u.phaseUsed = { master: 0, discard: 0 }; u.phaseBonus = {}; u.ousted = 0; u._oust = () => { u.ousted++; u.out = true; }; return u; };
+      const V5 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 4, attached: [] }, o || {});
+      const M5 = (id, name, o) => Object.assign({ id, name, kind: 'lib', zone: 'ready', locked: false, faceDown: false }, o || {});
+      const pub5 = (pool, cards) => ({ pub: { pool, cards } });
+      const ev5 = (u, t) => u.events.filter(e => e.t === 'bot:' + t).map(e => e.d);
+      const logs5 = u => u.sent.filter(m => m && m.t === 'log').map(m => String(m.html || '').replace(/<[^>]+>/g, ''));
+      const html5 = (u, re) => (u.sent.filter(m => m && m.t === 'log').map(m => String(m.html || '')).find(h => re.test(h))) || '';
+
+      // a) the engine's arithmetic: a seat's runway (a constant drain: pool / (fc + d); a growing one: D-115's root), a card's life = min(its
+      //    owner's runway, the longest other runway, the table's game length left: 12 rounds less those played, at least 2), each seat's flow
+      //    over min(its runway, the life), weighed me 1 (2 while my turns to be ousted are fewer than my turns to oust my prey), my prey
+      //    -offW, the other seat -0.15
+      { const u = mk175(1); u.pool = 20; u.table = { 2: pub5(10, []), 3: pub5(15, []) }; u._jackFc = () => 1; u.plan = null;
+        const f = x => x ? [+x.worth.toFixed(3), +x.life.toFixed(2)].join('/') : null;
+        const r = IF5(u, '_flowWorth') ? { c: +u._runwayD(1, 1, 0).toFixed(2), g: +u._runwayD(1, 1, 1).toFixed(2), mine: f(u._flowWorth({ 1: { d: 2 } }, 1)), prey: f(u._flowWorth({ 2: { d: -1 } }, 1)),
+                                           other: f(u._flowWorth({ 3: { d: -1 } }, 1)), w: [u._seatW(1), u._seatW(2), u._seatW(3)].join() } : null;
+        if(r){ u.plan = { reads: { myTto: 3, preyTto: 5 } }; r.w2 = u._seatW(1); u.plan = null; u.ownTurns = 9; r.late = f(u._flowWorth({ 1: { d: 2 } }, 1)); u.ownTurns = 11; r.end = f(u._flowWorth({ 1: { d: 2 } }, 1)); }
+        ok(r && r.c === 10 && r.g === 5 && r.mine === '22/11' && r.prey === '5/11' && r.other === '1.125/10' && r.w === '1,-1,-0.15' && r.w2 === 2 && r.late === '6/3' && r.end === '4/2',
+           '175a the engine: runways 10 and 5 (the growing drain), the life ends with the game (11 rounds left at the start, the longest other runway 10, 3 after nine rounds, never under 2), the seats weighed 1, -offW, -0.15, me 2 behind (got ' + JSON.stringify(r) + ')'); }
+
+      // b) O-41's answer for Smiling Jack (cardWorth 1): my payments stop where the game would stop -- the life is the longest other runway,
+      //    not my own 20 rounds; cardWorth 0 never asks the engine for Jack (v0.6.229); the wave's cards use it at both; the default is 0
+      { const mkJ = k => { const u = mk175(1, { cardWorth: k }); u.pool = 40; u.table = { 2: pub5(10, []), 3: pub5(12, []) }; u._jackFc = () => 1; const jack = M5('j1', 'Smiling Jack, The Anarch', { counters: [] }); u.board = [jack]; return { u, jack }; };
+        const a = mkJ(1), b = mkJ(0), jE = IF5(a.u, '_w5E') ? a.u._w5E('Smiling Jack, The Anarch') : null, rE = IF5(a.u, '_w5E') ? a.u._w5E('The Rack') : null;
+        const w = IF5(a.u, '_cardWorth') ? a.u._cardWorth(a.jack, 1) : null;
+        let spied = 0, jerr = null; if(IF5(b.u, '_cardWorth')){ b.u._cardWorth = () => { spied++; return null; }; try { b.u._myJackWorth(b.jack, 1); } catch(e){ jerr = e.message; } }
+        const d = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'D', log: () => {} }).o.cardWorth;
+        const r = { life: w && +w.life.toFixed(2), mine: w && w.parts[1], on: IF5(a.u, '_w5UseWorth') && [a.u._w5UseWorth(jE), b.u._w5UseWorth(jE), a.u._w5UseWorth(rE), b.u._w5UseWorth(rE)].join(), spied, jerr, d };
+        ok(w && w.life > 0 && w.life <= 12 && Math.abs(w.parts[1] + w.life) < 0.02 && r.on === 'true,false,true,true' && spied === 0 && !jerr && d === 0,
+           '175b Jack through the engine: my payments over the game’s end (the longest other runway), not my 20 rounds; cardWorth 0 keeps v0.6.229; the default 0 (got ' + JSON.stringify(r) + ')'); }
+
+      // c) the play read (D-119 (1)): Anarch Revolt is worth playing when it bills the others (my Anarch ready, my prey none) and held when it
+      //    bills me (no Anarch of mine) -- the master finder carries the worth, a held card is no candidate and its hold is noted once
+      { const run = mineAnarch => { const u = mk175(1); u.pool = 20; u._jackFc = () => 1;
+          u.board = [mineAnarch ? V5('a1', 'Aline Gädeke') : V5('c1', 'Abraham DuSable')];
+          u.table = { 2: pub5(20, [V5('p1', mineAnarch ? 'Abraham DuSable' : 'Ariane')]), 3: pub5(20, [V5('o1', 'Ariane')]) }; u.hand = ['Anarch Revolt'];
+          const h = { name: 'Anarch Revolt', e: IF5(u, '_w5E') ? u._w5E('Anarch Revolt') : null };
+          const w = IF5(u, '_w5MasterWorth') && h.e ? u._w5MasterWorth(h) : null;
+          const cands = u._bestMasterFor(new Set()).map(c => c.name + ':' + (typeof c.worth === 'number' ? 'w' : '-'));
+          return { w, cands: cands.join(), held: ev5(u, 'w5-hold').length }; };
+        const yes = run(true), no = run(false);
+        ok(yes.w && !yes.w.hold && yes.w.worth > 0 && yes.cands === 'Anarch Revolt:w' && no.w && no.w.hold && no.w.worth < 0 && no.cands === '' && no.held === 1,
+           '175c the play read: Anarch Revolt played when it bills the others, held when it bills me (got ' + JSON.stringify({ yes, no }) + ')'); }
+
+      // d) through my unlock phase: The Rack's chosen vampire gains 2 in torpor (its room), Anarch Revolt bills 1 a copy in play (mine and
+      //    another seat's) when I control no ready Anarch -- last, 'by the end of the unlock phase' [LSJ 20080106]; the last pool is an oust
+      { const run = async pool => { const u = mk175(1); u.pool = pool; const a = V5('c1', 'Abraham DuSable', { blood: 7 }), t = V5('c2', 'Almiro Suarez', { zone: 'torpor', blood: 0 });
+          u.board = [a, t, M5('r1', 'The Rack', { rackVamp: 'c2' }), M5('ar1', 'Anarch Revolt')]; u.table = { 2: pub5(20, [V5('p1', 'Ariane'), M5('ar2', 'Anarch Revolt')]), 3: pub5(20, []) };
+          u._invPool = u.pool; let terr = null; try { await Promise.race([u._unlockPhase(), sleep(4000)]); } catch(e){ terr = e.message; }
+          const L = logs5(u); return { terr, blood: t.blood, pool: u.pool, inv: u._invPool === u.pool, ousted: u.ousted, rack: L.some(l => /^Almiro Suarez gains 2 blood \(The Rack\)\.$/.test(l)), bill: L.some(l => /^Hanna burns 2 pool \(Anarch Revolt ×2: no ready Anarch\)\.$/.test(l)) }; };
+        const r3 = await run(3), r2 = await run(2);
+        ok(!r3.terr && r3.blood === 2 && r3.pool === 1 && r3.inv && r3.rack && r3.bill && r3.ousted === 0 && !r2.terr && r2.pool === 0 && r2.ousted === 1,
+           '175d through the unlock phase: The Rack’s 2 blood in torpor, Anarch Revolt ×2 billed last, the last pool an oust (got ' + JSON.stringify({ r3, r2 }) + ')'); }
+
+      // e) Tension in the Ranks at its rules moment (every flip to torpor passes _fameTorporHook): 1 pool with its line; Carver's takes a
+      //    vampire of capacity 3 or less hostage (its token on the pub), not one of 8; the last pool is an oust (R-34)
+      { const u = mk175(1); u.pool = 5; const v = V5('c2', 'Almiro Suarez', { blood: 1 }), big = V5('c1', 'Abraham DuSable');
+        u.board = [big, v, M5('t1', 'Tension in the Ranks'), M5('cv1', "Carver's Meat Packing and Storage")]; u.table = { 2: pub5(20, []), 3: pub5(20, []) };
+        v.zone = 'torpor'; u._fameTorporHook(v);
+        const L = logs5(u), r = { pool: u.pool, host: !!v.w5Hostage, isH: IF5(u, '_w5IsHostage') && u._w5IsHostage(v), memo: IF5(u, '_memoMap') ? (u._memoMap().get('c2') || []).join() : '', loss: ((u._w5Loss || {})[1]) | 0 };
+        { const w = mk175(1); w.pool = 5; const ag = V5('ag', 'Agrippina', { zone: 'torpor', blood: 2 }); w.board = [V5('c1', 'Abraham DuSable'), ag, M5('ws', 'Warsaw Station'), M5('t2', 'Tension in the Ranks')]; w.table = { 2: pub5(20, []), 3: pub5(20, []) };
+          w._maybeWarsawRescue(); if(IF5(w, '_w5MinionLost')) w._w5MinionLost({ id: 'x', name: 'Warsaw Station', kind: 'lib' }, 'burned'); r.warsaw = [w.pool, ag.zone].join(); }
+        u.pool = 1; big.zone = 'torpor'; u._fameTorporHook(big);
+        ok(r.warsaw === '5,ready' && r.pool === 4 && r.host && r.isH && /Hostage/.test(r.memo) && r.loss === 1 && L.some(l => l === 'Hanna burns 1 pool (Tension in the Ranks: Almiro Suarez went to torpor).') && L.some(l => /^Almiro Suarez is a hostage/.test(l)) && u.ousted === 1 && !big.w5Hostage,
+           '175e Tension in the Ranks bills a torpor 1 pool with its line, Carver’s takes the small vampire hostage, the last pool an oust (got ' + JSON.stringify(Object.assign(r, { ousted: u.ousted, big: !!big.w5Hostage, L })) + ')'); }
+
+      // f) Tension's burn: a master phase action and two masters (the dead and the cheap first) when it costs me 1.5 pool or more; the frozen
+      //    line (a straight apostrophe) burns the owner's card through its own _onLog; _evClassify types it
+      { const u = mk175(1), o = mk175(3); u._jackFc = () => 1; const tc = M5('t3', 'Tension in the Ranks'); o.board = [V5('n1', 'Abraham DuSable'), tc];
+        u.board = [V5('c1', 'Abraham DuSable')]; u.table = { 2: pub5(20, [V5('p1', 'Ariane')]), 3: pub5(20, o.board) };
+        u._w5Loss = { 1: 6 }; u.hand = ['Anarch Revolt', 'The Rack', 'Govern the Unaligned'];
+        if(IF5(u, '_w5TensionBurn')) u._w5TensionBurn();
+        const line = html5(u, /Tension in the Ranks/); o.table = { 1: pub5(20, u.board), 2: pub5(20, []) }; o._onLog('Hanna', line);
+        const t = line.replace(/<[^>]+>/g, ''), cls = IF5(u, '_evClassify') ? u._evClassify('Hanna', t, 'log') : null;
+        ok(u.hand.join() === 'Govern the Unaligned' && u.phaseUsed.master === 1 && u.sent.filter(m => m.t === 'draw').length === 2 && t === "Hanna discards two masters to burn Nora's Tension in the Ranks." && tc.zone === 'ash' && cls && cls.kind === 'tension-burn',
+           '175f Tension’s burn: a master action and two masters, the frozen line, the owner’s bot burns it (got ' + JSON.stringify({ hand: u.hand, used: u.phaseUsed.master, t, zone: tc.zone, cls: cls && cls.kind }) + ')'); }
+
+      // g) Privileged Position: to play it, 2 ready vampires on the Path of Power and the Inner Voice (R-42); after my referendum passes, the
+      //    lock and the frozen line -- my prey's bot pays 1 pool through its _onLog, an oust at its last pool; locked, no second burn
+      { const u = mk175(1), p = mk175(2); const e = IF5(u, '_w5E') ? u._w5E('Privileged Position') : null;
+        u.board = [V5('d1', 'Damian')]; const one = e ? u._masterReqOk(e) : true; u.board.push(V5('d2', 'Concordia')); const two = e ? u._masterReqOk(e) : false;
+        const pp = M5('pp1', 'Privileged Position'); u.board.push(pp); u.table = { 2: pub5(20, []), 3: pub5(20, []) };
+        const prey = IF5(u, '_w5PrivilegedPosition') ? u._w5PrivilegedPosition() : null, again = IF5(u, '_w5PrivilegedPosition') ? u._w5PrivilegedPosition() : 'x';
+        const line = html5(u, /Privileged Position/); p.pool = 3; p._onLog('Hanna', line); const after = p.pool; p.pool = 1; p._onLog('Hanna', line);
+        const cls = IF5(u, '_evClassify') ? u._evClassify('Hanna', line.replace(/<[^>]+>/g, ''), 'log') : null;
+        ok(one === false && two === true && prey === 2 && pp.locked === true && again === null && after === 2 && p.ousted === 1 && cls && cls.kind === 'pp-burn',
+           '175g Privileged Position: the Path requirement, the lock after a passed referendum, the prey’s bot pays (got ' + JSON.stringify({ one, two, prey, locked: pp.locked, again, after, ousted: p.ousted, line, cls: cls && cls.kind }) + ')'); }
+
+      // h) The Coven: my master phase lock, 2 blood to the vampire with the most room; at my discard phase my predator takes control -- a
+      //    give with the lock kept
+      { const u = mk175(1); const a = V5('c1', 'Abraham DuSable', { blood: 7 }), b = V5('c2', 'Ariane', { blood: 1 }), cv = M5('cv', 'The Coven');
+        u.board = [a, b, cv]; u.table = { 2: pub5(20, []), 3: pub5(20, []) };
+        if(IF5(u, '_w5CovenLock')) u._w5CovenLock(); const blood = b.blood, locked = cv.locked;
+        if(IF5(u, '_w5CovenPass')) u._w5CovenPass(); const g = u.sent.find(m => m.t === 'give');
+        ok(blood === 3 && locked === true && g && g.seat === 3 && g.card.name === 'The Coven' && g.card.locked === true && !u.board.includes(cv) && logs5(u).some(l => /^Nora takes control of The Coven/.test(l)),
+           '175h The Coven: 2 blood to the roomiest, then to my predator with its lock (got ' + JSON.stringify({ blood, locked, g: g && { seat: g.seat, card: g.card } }) + ')'); }
+
+      // h2) through the turn: a Coven played this turn is locked for its 2 blood in my discard phase, then given to my predator with its lock
+      { const u = mk175(1); u.pool = 20; const b = V5('c2', 'Ariane', { blood: 1 }); u.board = [b]; u.hand = ['The Coven'];
+        u.table = { 2: pub5(20, [V5('p1', 'Abraham DuSable')]), 3: pub5(20, []) }; u._askBlock = async () => ({ what: 'pass' });
+        let terr = null; try { await Promise.race([u._playTurn(), sleep(8000)]); } catch(e){ terr = e.message; }
+        const g = u.sent.find(m => m.t === 'give'), r = { terr, played: !u.hand.includes('The Coven'), blood: b.blood, g: g && { seat: g.seat, locked: g.card.locked }, lock: logs5(u).some(l => l === 'Hanna locks The Coven: Ariane gains 2 blood.') };
+        ok(!terr && r.played && r.blood === 3 && r.g && r.g.seat === 3 && r.g.locked === true && r.lock,
+           '175h2 through the turn: The Coven played, locked for 2 blood before it passes, given locked to my predator (got ' + JSON.stringify(r) + ')'); }
+
+      // i) Carver's: another seat's small vampire seen going to torpor on its pub is a hostage too; my master phase lock adds X blood (X = the
+      //    hostages); short of bodies, a payer with 4 blood frees mine in my unlock phase; the card gone, every hostage counter goes
+      { const u = mk175(1); const a = V5('c1', 'Abraham DuSable', { blood: 6 }), h = V5('c2', 'Almiro Suarez', { zone: 'torpor', blood: 0 }), cv = M5('cv1', "Carver's Meat Packing and Storage");
+        u.board = [a, h, cv]; const prev = { pool: 20, cards: [V5('p1', 'Adisa')] }, now = { pool: 20, cards: [V5('p1', 'Adisa', { zone: 'torpor', blood: 0 })] };
+        u.table = { 2: { pub: now }, 3: pub5(20, []) };
+        const r = {}; if(IF5(u, '_w5Hostage')){ u._w5Hostage(h, 1); u._w5PubDiff(2, prev, now); r.n = u._w5HostageN(); u._w5CarversLock(); r.blood = a.blood; r.locked = cv.locked;
+          u._w5FreeHostage(); r.freed = !h.w5Hostage; r.payer = a.blood; r.n2 = u._w5HostageN();
+          u._onLog('Viktor', '<b>Ariane</b> burns 2 blood: <b>Adisa</b>’s hostage counter is burned (<b>Carver’s Meat Packing and Storage</b>).'); r.n4 = u._w5HostageN();
+          cv.zone = 'ash'; r.n3 = u._w5HostageN();
+          const b0 = ((u._w5Loss || {})[3]) | 0; u._w5PubDiff(3, { pool: 20, cards: [V5('o1', 'Abraham DuSable')] }, { pool: 20, cards: [V5('o1', 'Abraham DuSable', { zone: 'uncontrolled' })] }); r.banish = (((u._w5Loss || {})[3]) | 0) - b0; }
+        ok(r.n === 2 && r.blood === 8 && r.locked === true && r.freed && r.payer === 6 && r.n2 === 1 && r.n4 === 0 && r.n3 === 0 && r.banish === 0,
+           '175i Carver’s: two hostages (mine and the pub’s), +2 blood, mine freed for 2 blood, another bot’s freed by its line, every counter gone with the card; Banishment is no loss (got ' + JSON.stringify(r) + ')'); }
+
+      // j) The Rack as it is played: the controller chooses the ready vampire with the most room (its line, the memo tokens D-113), a second
+      //    unique copy in hand is dead; a HUMAN's Rack is not read (human:false -- no record)
+      { const u = mk175(1); const a = V5('c1', 'Abraham DuSable', { blood: 7 }), b = V5('c2', 'Aline Gädeke', { blood: 2 }), rk = M5('r1', 'The Rack');
+        u.board = [a, b, rk]; u.table = { 2: pub5(20, []), 3: pub5(20, []) };
+        if(IF5(u, '_w5OnTabled')) u._w5OnTabled(rk);
+        const memo = IF5(u, '_memoMap') ? u._memoMap() : new Map(), e = IF5(u, '_w5E') ? u._w5E('The Rack') : null, dead = IF5(u, '_w5DeadMaster') && e ? u._w5DeadMaster({ name: 'The Rack', e }) : null;
+        const nr = mk175(1); nr.board = [V5('t1', 'Almiro Suarez', { zone: 'torpor' })]; nr.table = { 2: pub5(20, []), 3: pub5(20, []) }; const nrw = IF5(nr, '_w5MasterWorth') && e ? nr._w5MasterWorth({ name: 'The Rack', e }) : null;
+        const hm = mk175(1); hm.players[1].bot = false; hm.table = { 2: pub5(20, [V5('p1', 'Ariane')]), 3: pub5(20, []) };
+        hm._onLog('Viktor', '<b>Ariane</b> plays <b>The Rack</b>.'); const rec = ((hm.opp && hm.opp[2] && hm.opp[2].memo) || []).length;
+        ok(rk.rackVamp === 'c2' && logs5(u).some(l => l === 'Hanna chooses Aline Gädeke for The Rack.') && (memo.get('c2') || []).includes('The Rack: 2 blood at my unlock') && (memo.get('r1') || []).includes('Chosen: Aline Gädeke') && dead === true && rec === 0 && nrw && nrw.hold === true,
+           '175j The Rack: the roomiest vampire chosen, its tokens, a second copy dead, held with no ready vampire to choose, a human’s Rack unread (got ' + JSON.stringify({ v: rk.rackVamp, memo: [...memo], dead, rec, nrw }) + ')'); }
+
+      // k) the (D) steal (D-120): the owner's bot reads the frozen line, has no body to block and passes -- the card goes to the actor's seat
+      //    (a give); the thief's bot, given it, chooses its vampire for The Rack [ANK 20200130-2]
+      { const o = mk175(3), u = mk175(1); const rk = M5('r9', 'The Rack'); o.board = [V5('n1', 'Abraham DuSable', { locked: true }), rk];
+        o.table = { 1: pub5(20, [V5('a1', 'Aline Gädeke')]), 2: pub5(20, []) };
+        o._onLog('Hanna', '<b>Aline Gädeke</b> takes an action to steal <b>Nora</b>\'s <b>The Rack</b>.');
+        const g = o.sent.find(m => m.t === 'give'); u.board = [V5('a1', 'Aline Gädeke', { blood: 2 })]; u.table = { 2: pub5(20, []), 3: pub5(20, o.board) };
+        if(g) u._onGiven({ name: g.card.name, gid: g.gid, kind: 'lib', from: 'Nora', locked: g.card.locked, owner: g.card.owner });
+        const got = u.board.find(c => c.name === 'The Rack'), cls = IF5(u, '_evClassify') ? u._evClassify('Hanna', "Aline Gädeke takes an action to steal Nora's The Rack.", 'log') : null;
+        ok(g && g.seat === 1 && g.card.name === 'The Rack' && !o.board.includes(rk) && got && got.rackVamp === 'a1' && cls && cls.kind === 'steal-card',
+           '175k the steal: the owner’s bot gives the card to the thief, whose bot chooses its vampire (got ' + JSON.stringify({ g: g && { seat: g.seat, name: g.card.name }, got: got && got.rackVamp, cls: cls && cls.kind }) + ')'); }
+
+      // l) the attack read (D-119 (3)): Mob Connections burned by any minion; The Rack stolen by a vampire (not an ally); Powerbase: Los
+      //    Angeles stolen by an Anarch only -- each worth more than nothing (its owner's loss, plus my gain for a steal)
+      { const u = mk175(1); u._jackFc = () => 1; const an = V5('a1', 'Aline Gädeke'), cam = V5('c1', 'Abraham DuSable'); u.board = [an, cam];
+        u.table = { 2: pub5(20, [M5('mb', 'Mob Connections'), M5('pl', 'Powerbase: Los Angeles')]), 3: pub5(20, [M5('rk', 'The Rack')]) };
+        const ally = { id: 'al', name: 'Underbridge Stray', kind: 'lib', zone: 'ready', locked: false };
+        const f = v => IF5(u, '_w5AttackCands') ? u._w5AttackCands(v).map(c => c.name + (c.target.steal ? '+s' : '') + ':' + (c.val > 0)).sort().join() : '';
+        const r = { an: f(an), cam: f(cam), ally: f(ally) };
+        ok(r.an === 'Mob Connections:true,Powerbase: Los Angeles+s:true,The Rack+s:true' && r.cam === 'Mob Connections:true,The Rack+s:true' && r.ally === 'Mob Connections:true',
+           '175l the attack read: Mob burned by any minion, The Rack stolen by a vampire, Powerbase by an Anarch (got ' + JSON.stringify(r) + ')'); }
+
+      // m) Frontal Assault: +1 pool when my prey's ready minion goes to torpor (its pub), at my influence phase the card burns with 1 pool per
+      //    ready minion of my prey (the last pool an oust); the look ahead plays it for two rushes against two, holds it for one against
+      //    three, and refuses a bill that would take my last pool
+      { const u = mk175(1); u.pool = 10; const fa = M5('fa', 'Frontal Assault'); u.board = [V5('c1', 'Abraham DuSable'), fa];
+        const prevP = { pool: 20, cards: [V5('p1', 'Ariane'), V5('p2', 'Adisa'), V5('p3', 'Almiro Suarez')] }, nowP = { pool: 20, cards: [V5('p1', 'Ariane', { zone: 'torpor' }), V5('p2', 'Adisa'), V5('p3', 'Almiro Suarez')] };
+        u.table = { 2: { pub: nowP }, 3: pub5(20, []) };
+        if(IF5(u, '_w5PubDiff')) u._w5PubDiff(2, prevP, nowP); const gained = u.pool;
+        if(IF5(u, '_w5FrontalBill')) u._w5FrontalBill();
+        const u2 = mk175(1); u2.pool = 2; u2.board = [V5('c1', 'Abraham DuSable'), M5('fa2', 'Frontal Assault')]; u2.table = { 2: pub5(20, [V5('p2', 'Adisa'), V5('p3', 'Almiro Suarez')]), 3: pub5(20, []) };
+        if(IF5(u2, '_w5FrontalBill')) u2._w5FrontalBill();
+        const plan = (pool, mine, preyN) => { const w = mk175(1); w.pool = pool; w.board = Array.from({ length: mine }, (_, i) => V5('m' + i, 'Abraham DuSable'));
+          w.table = { 2: pub5(20, Array.from({ length: preyN }, (_, i) => V5('q' + i, 'Adisa'))), 3: pub5(20, []) };
+          w._bestRushTargetFor = () => ({ seat: 2, id: 'q0', name: 'Adisa', w: 1 }); w._rushExpectation = () => 0; w._actionCtxFor = (v, o) => ({ rush: o.rush }); w._actionCtxAdjust = (v, ctx) => ctx; w._decide = (k, ctx) => ({ pick: ctx.rush });
+          const p = IF5(w, '_w5FrontalPlan') ? w._w5FrontalPlan() : null; return p ? +p.worth.toFixed(2) : null; };
+        const r = { gained, pool: u.pool, zone: fa.zone, ousted2: u2.ousted, good: plan(10, 2, 2), weak: plan(10, 1, 3), last: plan(2, 2, 3), worst: plan(3, 3, 3) };
+        ok(r.gained === 11 && r.pool === 9 && r.zone === 'ash' && r.ousted2 === 1 && r.good === 1 && r.weak === -1.5 && r.last === -1 && r.worst === -1,
+           '175m Frontal Assault: +1 for a torpor, the bill per ready minion, the look ahead’s worth and the last-pool refusal (got ' + JSON.stringify(r) + ')'); }
+
+      // n) Forward Momentum: +1 after my Cathari's bleed landed, -1 after one that did not, nothing for another path; 2 counters offer the
+      //    unlock to a Cathari only
+      { const u = mk175(1); const coco = V5('k1', 'Coco Thorn'), cam = V5('c1', 'Abraham DuSable'), fm = M5('fm', 'Forward Momentum'); u.board = [coco, cam, fm];
+        if(IF5(u, '_w5OnTabled')) u._w5OnTabled(fm); const s = [];
+        if(IF5(u, '_w5AfterBleed')){ u._w5AfterBleed(coco, true); u._w5AfterBleed(cam, true); s.push(fm.counters.length, !!u._w5FmFor(coco)); u._w5AfterBleed(coco, true); s.push(fm.counters.length, !!u._w5FmFor(coco), !!u._w5FmFor(cam)); u._w5AfterBleed(coco, false); s.push(fm.counters.length, !!u._w5FmFor(coco)); }
+        ok(s.join() === '1,false,2,true,false,1,false', '175n Forward Momentum: the counters follow my Cathari’s bleeds, 2 unlock a Cathari (got ' + s.join() + ')'); }
+
+      // o) The Hungry Coyote: +1 hunt for my Sabbat vampires only, while it is mine in play
+      { const u = mk175(1); const sab = V5('s1', 'Algirdas, The Solar Prophet'), cam = V5('c1', 'Abraham DuSable'); u.board = [sab, cam];
+        const r = []; if(IF5(u, '_w5HuntBonus')){ r.push(u._w5HuntBonus(sab)); u.board.push(M5('hc', 'The Hungry Coyote')); r.push(u._w5HuntBonus(sab), u._w5HuntBonus(cam)); }
+        ok(r.join() === '0,1,0', '175o The Hungry Coyote: +1 hunt for my Sabbat only (got ' + r.join() + ')'); }
+
+      // p) Garibaldi-Meucci Museum: my unlock phase, lock + 1 pool -- a dead hand card for a card in my ash heap requiring an Anarch (cardfx
+      //    anarchReq); before range, the lock ends a combat between my Anarch and another Anarch only
+      { const u = mk175(1); u.pool = 10; const al = V5('a1', 'Aline Gädeke'), g = M5('gm', 'Garibaldi-Meucci Museum');
+        u.board = [al, g, M5('bb', 'Bear-Baiting', { zone: 'ash' })]; u.hand = ['Govern the Unaligned']; u.table = { 2: pub5(20, []), 3: pub5(20, []) };
+        if(IF5(u, '_w5Garibaldi')) u._w5Garibaldi();
+        const r = { hand: u.hand.join(), pool: u.pool, locked: g.locked, ash: u.board.filter(c => c.zone === 'ash').map(c => c.name).join(), line: logs5(u).some(l => l === 'Hanna locks Garibaldi-Meucci Museum and burns 1 pool: Govern the Unaligned for Bear-Baiting.') };
+        u.board = [al, M5('gm2', 'Garibaldi-Meucci Museum')]; u._cotWorth = () => ({ play: true, why: 'the test' }); u._lastBlockerSeat = 2; u.table = { 2: pub5(20, [V5('p1', 'Ariane'), V5('p2', 'Adisa')]), 3: pub5(20, []) };
+        u._lastBlockerName = 'Ariane'; r.e1 = IF5(u, '_w5GaribaldiEndFor') ? !!u._w5GaribaldiEndFor(al) : null; u._lastBlockerName = 'Adisa'; r.e2 = IF5(u, '_w5GaribaldiEndFor') ? !!u._w5GaribaldiEndFor(al) : null;
+        ok(r.hand === 'Bear-Baiting' && r.pool === 9 && r.locked === true && r.ash === 'Govern the Unaligned' && r.line && r.e1 === true && r.e2 === false,
+           '175p Garibaldi-Meucci: the ash swap for an Anarch card at 1 pool, the combat end between Anarchs only (got ' + JSON.stringify(r) + ')'); }
+
+      // q) Powerbase: Los Angeles: with a dead card in hand, the lock buys a discard phase action; a discarded card requiring an Anarch then
+      //    unlocks my locked Anarch, another card does not
+      { const u = mk175(1); const al = V5('a1', 'Aline Gädeke', { locked: true }), pb = M5('pb', 'Powerbase: Los Angeles'); u.board = [al, pb]; u.hand = ['Govern the Unaligned'];
+        const r = {}; if(IF5(u, '_w5PowerbaseLock')){ u._w5PowerbaseLock(); r.bonus = u.phaseBonus.discard | 0; r.locked = pb.locked; u._w5AfterDiscard('Govern the Unaligned'); r.a1 = al.locked; u._w5AfterDiscard('Bear-Baiting'); r.a2 = al.locked; }
+        ok(r.bonus === 1 && r.locked === true && r.a1 === true && r.a2 === false, '175q Powerbase: Los Angeles: +1 discard phase action, an Anarch card discarded unlocks my Anarch (got ' + JSON.stringify(r) + ')'); }
+
+      // r) Piper: played only when an unlocked Anarch's own scorer would recruit (the look ahead, D-58); the Anarch locks and recruits from my
+      //    hand, its cost paid, no action: no Charisma discount [LSJ 20090115-1]
+      { const u = mk175(1); u.pool = 10; const cl = V5('t1', 'Clara Hjortshøj', { blood: 4 }); u.board = [cl]; u.hand = ['Underbridge Stray']; u.table = { 2: pub5(20, []), 3: pub5(20, []) };
+        const real = u._attachedFx.bind(u); u._attachedFx = (v, k) => (k === 'recruitDiscount' ? [1] : real(v, k));
+        const dsc = u._bestRecruitFor(cl), nod = u._bestRecruitFor(cl, { noDiscount: true }); u._attachedFx = real;
+        u._aheadPick = v => (v === cl ? { pick: { kind: 'recruit' } } : null);
+        const e = IF5(u, '_w5E') ? u._w5E('Piper') : null, w = IF5(u, '_w5MasterWorth') && e ? u._w5MasterWorth({ name: 'Piper', e }) : null;
+        if(CH5.piper) await CH5.piper(u);
+        const ally = u.board.find(c => c.name === 'Underbridge Stray');
+        const r = { w: w && w.hold, dsc: dsc && dsc.costBlood, nod: nod && nod.costBlood, locked: cl.locked, blood: cl.blood, ally: !!ally, hand: u.hand.length, line: logs5(u).some(l => l === 'Clara Hjortshøj recruits Underbridge Stray [ani] (Piper: not an action, cannot be blocked).') };
+        ok(r.w === false && r.dsc === 0 && r.nod === 1 && r.locked === true && r.blood === 3 && r.ally && r.hand === 0 && r.line,
+           '175r Piper: the look ahead, the Anarch locks and recruits, 1 blood paid, no Charisma (got ' + JSON.stringify(r) + ')'); }
+
+      // s) Día de los Muertos: one per game (a copy in any ash heap holds it, the discard phase cycles mine); its turn's first referendum of a
+      //    SABBAT vampire of mine only, once
+      { const u = mk175(1); const sab = V5('s1', 'Algirdas, The Solar Prophet'), cam = V5('c1', 'Abraham DuSable'); u.board = [sab, cam]; u.table = { 2: pub5(20, []), 3: pub5(20, []) };
+        const r = { once0: IF5(u, '_w5Once') ? u._w5Once('Día de los Muertos') : null };
+        if(CH5.dia) await CH5.dia(u);
+        r.s = IF5(u, '_w5DiaFor') && u._w5DiaFor(sab); r.c = IF5(u, '_w5DiaFor') && u._w5DiaFor(cam); if(u._w5Dia) u._w5Dia.used = true; r.used = IF5(u, '_w5DiaFor') && u._w5DiaFor(sab);
+        u.table[2].pub.cards.push(M5('dd', 'Día de los Muertos', { zone: 'ash' })); r.once1 = IF5(u, '_w5Once') && u._w5Once('Día de los Muertos');
+        const e = IF5(u, '_w5E') ? u._w5E('Día de los Muertos') : null; r.dead = IF5(u, '_w5DeadMaster') && e ? u._w5DeadMaster({ name: 'Día de los Muertos', e }) : null;
+        ok(r.once0 === false && r.s === true && r.c === false && r.used === false && r.once1 === true && r.dead === true,
+           '175s Día de los Muertos: one per game, a Sabbat’s first referendum this turn, once (got ' + JSON.stringify(r) + ')'); }
+
+      // s2) through the turn: Día played in my master phase (its look ahead stubbed: my Sabbat's referendum), the referendum my Sabbat calls
+      //     passes automatically -- the frozen line, no polling and no Vote line [LSJ 19980107]
+      { const u = mk175(1); u.pool = 20; const sab = V5('s1', 'Algirdas, The Solar Prophet', { blood: 5 }); u.board = [sab]; u.hand = ['Día de los Muertos', 'Kine Resources Contested'];
+        u.table = { 2: pub5(20, [V5('p1', 'Abraham DuSable')]), 3: pub5(20, []) }; u._askBlock = async () => ({ what: 'pass' });
+        u._w5DiaPlan = () => ({ vamp: sab, gain: 3, why: 'the test: her referendum' });
+        let terr = null; try { await Promise.race([u._playTurn(), sleep(8000)]); } catch(e){ terr = e.message; }
+        const L = logs5(u), r = { terr, dia: ev5(u, 'w5-dia').length, pass: ev5(u, 'w5-dia-pass').length, line: L.some(l => l === 'Referendum passes automatically — Kine Resources Contested (Día de los Muertos).'), vote: L.some(l => /^Vote: /.test(l)), refs: ev5(u, 'referendum-called').length };
+        ok(!terr && r.dia === 1 && r.pass === 1 && r.line && !r.vote,
+           '175s2 through the turn: Día played, the referendum passes automatically -- the line, no Vote line (got ' + JSON.stringify(r) + ')'); }
+
+      // v) the burn referendum, the owner's side: the terms 'burn OWNER's CARD' and the pass line -- the owner's bot burns its Anarch Revolt
+      { const o = mk175(3); const ar = M5('ar3', 'Anarch Revolt'); o.board = [V5('n1', 'Abraham DuSable'), ar]; o.table = { 1: pub5(20, [V5('a1', 'Aline Gädeke')]), 2: pub5(20, []) };
+        const T = "burn Nora's Anarch Revolt"; let err = null; try { o._onRefTerms('Hanna', 'Anarch Revolt', T); o._onRefResult('Hanna', true, 'Anarch Revolt', T); } catch(e){ err = e.message; }
+        ok(!err && ar.zone === 'ash' && o.pool === 20, '175v the burn referendum: the owner\u2019s bot burns its card on the pass, no pool moves (got ' + JSON.stringify({ err, zone: ar.zone, pool: o.pool }) + ')'); }
+
+      // w) the egress review: an older unique master in play keeps v0.6.229's discard (sewer's Dreams of the Sphinx); another seat's rescue
+      //    line does not move my hostage to ready
+      { const u = mk175(1); u.board = [V5('c1', 'Abraham DuSable'), M5('ds', 'Dreams of the Sphinx')]; const e = IF5(u, '_w5E') ? u._w5E('Dreams of the Sphinx') : null;
+        const dead = IF5(u, '_w5DeadMaster') && e ? u._w5DeadMaster({ name: 'Dreams of the Sphinx', e }) : null;
+        const h = mk175(1); const al = V5('c2', 'Almiro Suarez', { zone: 'torpor', blood: 1 }); h.board = [V5('c1', 'Abraham DuSable'), al, M5('cv', "Carver's Meat Packing and Storage")]; h.table = { 2: pub5(20, [V5('p1', 'Ariane')]), 3: pub5(20, []) };
+        if(IF5(h, '_w5Hostage')) h._w5Hostage(al, 1);
+        h._onLog('Viktor', '<b>Ariane</b> rescues <b>Hanna</b>’s <b>Almiro Suarez</b> from torpor (<b>Ariane</b> pays 1, <b>Almiro Suarez</b> pays 1).');
+        ok(dead === false && al.zone === 'torpor' && !!al.w5Hostage, '175w an older unique master is not dead to the wave; a hostage stays in torpor at another seat\u2019s rescue line (got ' + JSON.stringify({ dead, zone: al.zone }) + ')'); }
+
+      // t) the frozen lines' kinds (L-56) and the rush line's card: Frontal Assault grants a (D) rush at my prey's minions (L12.havenRush)
+      { const u = mk175(1), C = t => { const r = IF5(u, '_evClassify') ? u._evClassify('Hanna', t, 'log') : null; return r && r.kind; };
+        const r = [C("Aline Gädeke takes an action to steal Nora's The Rack."), C('Hanna locks Privileged Position — Viktor burns 1 pool.'), C('Referendum passes automatically — Kine Resources Contested (Día de los Muertos).'), C("Hanna discards two masters to burn Nora's Tension in the Ranks."), C('Ariane burns 2 blood: Adisa’s hostage counter is burned (Carver’s Meat Packing and Storage).')].join();
+        const hr = "Aline Gädeke enters combat with Viktor's Ariane (Frontal Assault).".match(BOTM.L12.havenRush);
+        ok(r === 'steal-card,pp-burn,auto-pass,tension-burn,hostage-free' && hr && hr[4] === 'Frontal Assault', '175t the new lines’ event kinds, Frontal Assault’s rush line (got ' + JSON.stringify({ r, hr: hr && hr[4] }) + ')'); }
+
+    }
+
 
 
     }

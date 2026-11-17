@@ -32,6 +32,51 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.230 (17 Nov 2026)** — V5 wave 5a, the masters that stay in play (RULINGS D-119, D-120; Johan, 17 Nov: kör on "5a, sedan 5b",
+  D-107's shape A, O-41 "Livet slutar med spelet"; `specs/spec-v5-wave5-2026-11-17.md`). The card-worth engine and fifteen V5 masters
+  played by their text; `bot/`'s read-only copies refreshed to main's v2.6.175 / srv-2.6.51 and its canary v1.3.0 (#75 read; the
+  handoffs of v0.6.219–228 moved to `history/handoffs/`). Rides along (D-92): HOWTO's second canary needs `elysium-cardfx.json`
+  beside it (the human-Ball memo checks: 167/4 without it), and so does CI's (`bot-gates.yml`'s second canary step: red on #77 first); the BOARD's four wave-rider lines moved into their specs' §4 (one
+  pointer line).
+  - *The engine* (D-119, O-41 answered): `CARD_WORTH` (a handler per card: its flows to each seat a round, from public rates blended
+    with a prior) summed by `_flowWorth` over each seat's min(its runway, the card's life); the life = min(the owner's runway, the
+    longest other runway, 12 rounds less those played — the sims' median game; a forecast near 0 read 120 rounds in the first smoke),
+    each seat at `_seatW` (me 1, 2 behind; my prey −offW; the others −0.15). Consumers: the master finder (a card worth ≤ 0 held, its
+    hold noted once a turn; `_w5DeadMaster` cycles a dead one), the defence of my card (`pending.cardWorth`, a steal priced as my
+    loss plus the thief's gain), the attack (`_w5AttackCands`: Mob Connections' burn, The Rack's and Powerbase's steal; Anarch
+    Revolt's burn referendum `_w5BurnRefFor`; Tension's master-phase burn). Smiling Jack through it only with `cardWorth` (0 =
+    v0.6.229; 1 = O-41's answer: my payments over the game's end); the Ball keeps its formula.
+  - *The cards* (D-120): Tension in the Ranks (every bot bills its own ready minion lost, `_w5MinionLost` at every burn and torpor
+    site; the burn with a master action and two masters), Anarch Revolt (billed per copy at the end of my unlock phase; the burn
+    referendum), Frontal Assault (the look ahead D-58; the granted rush; +1 pool on my prey's loss; the influence-phase bill),
+    Forward Momentum (counters, the act-again unlock), Privileged Position (the Path requirement R-42; the lock after my passed
+    referendum, my prey's bot pays), Mob Connections (the press to continue before a press card), Garibaldi-Meucci Museum (the ash
+    swap for an Anarch card, cardfx `anarchReq`; the combat end between Anarchs on Change of Target's test), Powerbase: Los Angeles
+    (+1 discard phase action, an Anarch unlocked), Carver's (hostages, the X-blood lock, the freeing), The Rack (the choice and its
+    memo tokens; 2 blood at my unlock), The Hungry Coyote (+1 hunt for my Sabbat), The Coven (the lock; the pass to my predator by
+    `give`), Piper (the look ahead; the recruit, no Charisma), Día de los Muertos (one per game; the auto-pass, no polling), Cursed
+    Abattoir (the zombie counter; its bleed rider waits for allies that act). The steal: `L12.stealAct`, the owner's bot gives the
+    card. New bot lines (`L12` + `_evClassify`): `stealAct`, `ppBurn`, `autoPass`, `tensionBurn`; `havenRush` takes Frontal Assault.
+  - *Not shipped*: the bleed parser's card-suffix reading (main's 15 Nov §2 offer) failed main's canary v1.3.0 control (170/1) and
+    was reverted; the handoff asks main to flip the control first. `cardWorth` stays 0: the mirror bench (96) and the
+    Nosferatu-pinned bench (288) both read −0.02 VP (paired SE 0.02; 7 and 69 matches diverged) — no gain, no loss beyond the noise
+    (RULINGS O-44).
+  - *The reviews*: the graded readings (a fresh read-only agent) 8 green, 5 amber (declared in spec §10, but The Coven's lock before
+    its pass, fixed), 2 red, fixed: Tension billed Warsaw Station and a vampire burned in torpor (the hook takes a ready minion
+    only); another bot's freed hostage stayed counted (`L12.hostageFree`). The V5 smoke's `invariants` FAIL (the wave's pool moves
+    unbooked) fixed by `_w5Pool`; the first smoke's 'The Coven worth −19.6 over 120 rounds' gave the life cap. Egress: 12 findings
+    (rule-missed 5, half-done 4, stale-doc 2, unproven 1), all fixed: the burn referendum's clone, Frontal Assault's worst-case bill,
+    the unique clause on older masters, the new game's reset and `opp[st].w5Loss`, the hostage at another seat's rescue, the pass
+    estimate at 0 votes, the hunt note, the handoff line, spec §10; the release steps (the ledger, this entry, the root) below.
+  - *Tools*: cardfx compiler v1.9.9 (the `anarchReq` and `zombie` markers: 86 and 8; they survive a curated entry); curated 205;
+    coverage tool v1.1.48 (the wave's keys; `zombieBleed` left unread); arena v1.4.14 (`cardWorth` whitelisted).
+  - *Gates*: suite 2541/0 ×3 (sha `edf354fe` / `fcc9ef37` / `5fb8c69c`), canary 171/0 ×2, cardfx 341/0, hotseat 12/0, main's client
+    suite 371/1 (the guide's embed), section 175 24/0 (0/24 on v0.6.229, no abort; the review-fix cases red on the bytes before
+    them), `doc-budget.sh` PASS. The sim: the 240 IDENTICAL to v0.6.229 at `cardWorth` 0 (`ana-sim-diff` SAME-PLAY 240; version, the
+    copies' client version, timing and the manifest's new knob normalized); the V5 smoke 14 × 12 DIVERGED 34, all at the ten tables
+    holding a wave card (lasombra, ministry, salubri, toreador, ravnos SAME-PLAY); `ana-gates.py` PASS 6/6 on the 240, the 14 smoke
+    tables and one real-clock match (arena profile; no wave card drawn in it). Ledger: playable 185 → 196, partial 42 → 28; the wave's
+    rows 9 playable, 5 unseen (Privileged Position, Garibaldi-Meucci, Carver's, Piper, Día: held or undrawn), Cursed Abattoir partial.
 - **v0.6.229 (15 Nov 2026)** — The bench round (RULINGS D-117, D-118; Johan, 15 Nov 01:16: "Ja, kör :)" on the recommendation,
   `specs/spec-bench-round-2026-11-15.md`): the Toreador guide check's proposals behind knobs, each benched on the 600 (the five-seat
   table, a fresh deal per match; the variant pinned to its deck, or in every seat for a rule every deck has) and read paired against

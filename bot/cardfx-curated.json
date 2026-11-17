@@ -16,7 +16,8 @@
   "16 Oct 2026 (R4): + the six V5 masters the auto tier mis-certified (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Austria, Haven Uncovered) -- 85 lib + 20 crypt = 105.",
   "29 Oct 2026 (V5 wave 1, RULINGS D-98): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor's Hand, Sword of the Archangel, Invigorate -- 95 lib + 20 crypt = 115.",
   "3 Nov 2026 (V5 wave 4, RULINGS D-106): + Oblivion, Charisma, Depravity, Terrifying Visage, Monster, Saulot's Avenging Fist, Saulot's Guiding Wisdom, Regent, Toreador Grand Ball, Change of Target, Scalpel Tongue, Toreador Justicar -- 136 lib + 20 crypt = 156.",
-  "14 Nov 2026 (round F, bot v0.6.228): + Perfect Paragon, Elysium: The Palace of Versailles, Eyes of the Wild; Scalpel Tongue's requirement is one ('cel+pre') -- 139 lib + 51 crypt = 190 (the crypt count since crypt wave A, v0.6.219)."
+  "14 Nov 2026 (round F, bot v0.6.228): + Perfect Paragon, Elysium: The Palace of Versailles, Eyes of the Wild; Scalpel Tongue's requirement is one ('cel+pre') -- 139 lib + 51 crypt = 190 (the crypt count since crypt wave A, v0.6.219).",
+  "17 Nov 2026 (V5 wave 5a, bot v0.6.230, RULINGS D-119 / D-120): + Tension in the Ranks, Anarch Revolt, Frontal Assault, Forward Momentum, Privileged Position, Mob Connections, Garibaldi-Meucci Museum, Powerbase: Los Angeles, Carver's Meat Packing and Storage, The Rack, The Hungry Coyote, The Coven, Piper, Día de los Muertos, Cursed Abattoir; Smiling Jack names its card-worth handler (worth: jack) -- 154 lib + 51 crypt = 205."
  ],
  "lib": {
   "Blood Doll": {
@@ -1357,6 +1358,7 @@
    ],
    "unique": true,
    "persistent": true,
+   "worth": "jack",
    "modes": [
     {
      "at": null,
@@ -3122,6 +3124,325 @@
     }
    ],
    "note": "Round F (14 Nov 2026, bot v0.6.228; BOARD 'Three auto readings'). 'Only usable by a locked Gangrel. This Gangrel unlocks and attempts to block. During this action, this Gangrel can burn 1 blood to get +1 intercept. Lock this Gangrel after action resolution if they did not block this action.' The auto tier read +1 intercept on any blocker, and the intercept finder asked no clan (a Banu Haqim played it in a fixture). when:lockedBlock -- the sleeper route of _commitBlock (Second Tradition's: _bestUnlockReactFor, now with the card's clan, _entryReqOk), fx.unlock; fx.interceptPaid / interceptPaidBlood -- the paid +1 taken at the attempt when the stealth standing beats the intercept and the Gangrel keeps a blood (once each action and Gangrel: RULINGS R-45, 'During X, do Y' is usable once per X), named on the attempt line; fx.relockIfNoBlock -- a Gangrel whose block failed is locked again when the action ends (_clearPending). [ANK 20181122-2]: usable by a vampire already attempting to block -- not built (the route raises a locked body only)."
+  },
+  "Tension in the Ranks": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "worth": "tension",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "lostMinionTax": 1
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique. Put this card in play. After a ready minion is burned or sent to torpor, their controller burns 1 pool. Methuselahs can use a master phase action and discard two master cards to burn this card.' Not for an imbued [LSJ 20060409-2]; simultaneous losses are ordered by the acting Methuselah [LSJ 20090208-2]. fx.lostMinionTax: every bot bills ITSELF -- a ready minion of mine burned or sent to torpor (the burn sites, _fameTorporHook) costs 1 pool with its line and R-34's oust check (_w5MinionLost); a human is reminded in chat when the pub shows them losing one (_w5PubDiff). The burn: a master phase action and two master cards discarded (_w5TensionBurn), priced by the engine (CARD_WORTH.tension: each seat's loss rate, a prior of 0.3 a round worth three rounds); the frozen line 'NAME discards two masters to burn OWNER's Tension in the Ranks.' (L12.tensionBurn)."
+  },
+  "Anarch Revolt": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "worth": "anarch-revolt",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "noAnarchTax": 1,
+      "burnByRef": true
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Put this card in play. A Methuselah not controlling a ready Anarch burns 1 pool during their unlock phase. Vampires can call a referendum to burn this card as a +1 stealth political action.' Read at the END of the unlock phase [LSJ 20080106]; each copy in play bills [LSJ 19980225]. fx.noAnarchTax: a bot with no ready Anarch bills itself 1 pool a copy at its unlock (_w5AnarchRevoltBill, R-34); a human is reminded at their turn (_w5HumanTurn). fx.burnByRef: the burn referendum is a card-less political candidate (_w5BurnRefFor: +1 stealth is the total, R-14; no card vote), its stakes priced by the engine; on a pass the owner burns it."
+  },
+  "Frontal Assault": {
+   "t": [
+    "master"
+   ],
+   "persistent": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "frontalRush": true
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Put this card in play. Each ready minion you control can enter combat with a minion controlled by your prey as a (D) action. You gain 1 pool after a ready minion controlled by your prey is burned or sent to torpor. During your influence phase, burn this card and burn 1 pool for each ready minion controlled by your prey.' Directed, 0 stealth, once per minion (rulebook 6.1.6); the +1 pool on any cause; copies stack [LSJ 20061018]. fx.frontalRush: the look ahead (D-58, _w5FrontalPlan) -- played when k of my ready minions would take the granted rush now and the bill (1 pool per ready minion of my prey at my influence phase, about half a torpor a rush) leaves me 1 pool; the rush through _bestGrantRushFor (_w5FrontalRushFor); the gain on the prey's pub (_w5FrontalGain); the bill and the card's burn at my influence phase (_w5FrontalBill, R-34)."
+  },
+  "Forward Momentum": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "worth": "forward-momentum",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleedCounter": 1,
+      "counterUnlock": 2
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique. Put this card in play. After a vampire who follows the Path of Cathari you control bleeds, if the bleed is successful (for 1 or more), add 1 counter to this card; otherwise, burn 1 counter from this card. After a vampire who follows the Path of Cathari you control performs an action, you can burn 2 counters from this card to unlock them.' fx.bleedCounter: named counters ('momentum') -- +1 after a bleed of my Cathari that landed for 1 or more, -1 after one that did not (_w5AfterBleed); fx.counterUnlock: after my Cathari acts, 2 counters burn to unlock it -- a board source of the act-again step, before Monster (_w5FmFor)."
+  },
+  "Privileged Position": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "worth": "privileged-position",
+   "req": {
+    "path": "Power and the Inner Voice",
+    "pathN": 2
+   },
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "refPassPreyBurn": 1
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique. Requires 2 or more ready vampires who follow the Path of Power and the Inner Voice. Put this card in play. After a referendum called by a vampire you control passes, you can lock this card to burn 1 pool from your prey.' req.path / req.pathN: to PLAY it, 2 ready vampires of mine on the Path (R-42, _masterReqOk). fx.refPassPreyBurn: after a referendum my vampire called passes, lock: my prey burns 1 pool -- the frozen line 'NAME locks Privileged Position — PREY burns 1 pool.' (L12.ppBurn); a bot prey bills itself (_w5OnPpBurn, R-34), a human prey sees the line."
+  },
+  "Mob Connections": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "worth": "mob",
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "pressContinue": 1
+     }
+    },
+    {
+     "at": null,
+     "dir": true,
+     "fx": {
+      "burnCardAction": true
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique. Put this card in play. You can lock this card to give a minion you control 1 press, only usable to continue combat. Minions can burn this card as a (D) action.' fx.pressContinue: lock for 1 press, only to continue -- the press step takes it before a press card (mobCan). Mode 2, fx.burnCardAction: the (D) burn by any minion, priced by the engine (_w5AttackCands; my own copy defended by its worth, _burnWindowOpens)."
+  },
+  "Garibaldi-Meucci Museum": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "worth": "garibaldi",
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "ashSwapAnarch": 1
+     }
+    },
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "endCombatAnarch": true
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. You can lock this location and burn 1 pool during your unlock phase to exchange one card from your hand for one card in your ash heap requiring an Anarch. You can lock this location before range is determined to end a combat involving an Anarch you control and another Anarch.' fx.ashSwapAnarch: my unlock phase, lock + 1 pool: a dead hand card for an ash card whose requirement names an Anarch or a baron (cardfx anarchReq) [ANK 20250320, LSJ 20080603, LSJ 20050128], both named at once [LSJ 20000222] (_w5Garibaldi, R-34). fx.endCombatAnarch: before range, lock to end a combat between my Anarch and another Anarch -- Change of Target's test, the combat ahead worse than none (_w5GaribaldiEndFor); end-of-round cards still play [RTR 20001020]."
+  },
+  "Powerbase: Los Angeles": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "worth": "powerbase-la",
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "discardBonus": 1
+     }
+    },
+    {
+     "at": null,
+     "dir": true,
+     "fx": {
+      "stealCardAction": true,
+      "stealBy": "Anarch"
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. During your discard phase, you can lock this location to get +1 discard phase action. If you use that discard phase action to discard a card requiring an Anarch or making a vampire Anarch, you can unlock a ready Anarch. Anarchs controlled by other Methuselahs can steal this location as a (D) action.' fx.discardBonus: my discard phase, lock: +1 discard phase action (_w5PowerbaseLock); a discarded card requiring an Anarch (cardfx anarchReq; a baron card counts [LSJ 20050128]) unlocks a locked ready Anarch (_w5AfterDiscard); a card 'making a vampire Anarch' is not marked yet. Mode 2, fx.stealCardAction / stealBy: the (D) steal by an Anarch of another Methuselah [LSJ 20080604] -- the frozen line 'NAME takes an action to steal OWNER's CARD.' (L12.stealAct); a bot owner gives the card on success (_w5GiveStolen); priced by the engine as the owner's loss plus the thief's gain."
+  },
+  "Carver's Meat Packing and Storage": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "worth": "carvers",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "hostageCap": 3
+     }
+    },
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "hostageBlood": true
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. After a vampire with capacity 3 or less goes to torpor, put 1 hostage counter on them. Vampires with any hostage counters cannot be moved to the ready region or be diablerized. Lock during your master phase to add X blood to a ready vampire you control, where X is the number of vampires with any hostage counters. During any unlock phase, any ready vampire can burn 2 blood to burn any vampire's hostage counters. After this card leaves play, burn all the hostage counters.' fx.hostageCap: a vampire of capacity 3 or less that goes to torpor is a hostage (any seat, while the card is in play: _w5Hostage; the counters burn with the card, _w5HostagePrune) -- no rescue, no leave-torpor, no diablerie (_w5IsHostage at four sites); my own freed only under 2 ready bodies by a payer with 4 blood (_w5FreeHostage, once a turn [ANK 20200729]; its line L12.hostageFree drops it from every bot's count). fx.hostageBlood: my master phase, lock: X blood to a ready vampire of mine (_w5CarversLock). The hostages show as the memo token."
+  },
+  "The Rack": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "worth": "rack",
+   "memo": {
+    "human": false,
+    "roles": [
+     {
+      "role": "chosen",
+      "field": "rackVamp",
+      "token": "The Rack: 2 blood at my unlock",
+      "ballToken": "Chosen: {vamp}"
+     }
+    ]
+   },
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "rackBlood": 2
+     }
+    },
+    {
+     "at": null,
+     "dir": true,
+     "fx": {
+      "stealCardAction": true,
+      "stealBy": "vampire"
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. As this location is played or its controller changes, its controller chooses a ready vampire they control. During this location's controller's unlock phase, the chosen vampire can gain 2 blood. Vampires controlled by another Methuselah can steal this location as a (D) action.' fx.rackBlood: the controller chooses as it is played or changes controller (_w5RackPick: the most room; the new controller chooses, 'as ... its controller changes'; a Rack with no ready vampire to choose is worth nothing and held); at my unlock the chosen vampire gains 2 blood, in torpor too [PIB 20150522]; the choice follows the vampire out and back [LSJ 20010809-2] and is not made again [RTR 19960112] (_w5Rack). memo (D-113): the choice as tokens on my cards; human:false -- a human's Rack is not read. Mode 2: the (D) steal by another Methuselah's vampire, as Powerbase: Los Angeles."
+  },
+  "The Hungry Coyote": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "worth": "coyote",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "huntBonusSabbat": 1
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. Sabbat vampires you control get +1 hunt.' fx.huntBonusSabbat: +1 blood on each hunt of my Sabbat vampires, special hunts included [RTR 20030519] (_w5HuntBonus, read by the hunt branch; the hunt-or-bleed scorer does not read it yet)."
+  },
+  "The Coven": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "trifle": true,
+   "persistent": true,
+   "worth": "coven",
+   "modes": [
+    {
+     "at": null,
+     "lock": true,
+     "fx": {
+      "covenPass": true,
+      "covenBlood": 2
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique. Trifle. Put this card in play. You can lock this card to add 2 blood to a ready vampire you control. During your discard phase, your predator takes control of The Coven.' fx.covenBlood (not fx.bloodAdd: the older lock-income finder stays off it): my master phase, lock: 2 blood to a ready vampire of mine with room (the master phase is never mid-healing [PIB 20121031]; _w5CovenLock, again before the pass for a Coven played this turn). fx.covenPass: at my discard phase my predator takes control, mandatory [LSJ 20100723, PIB 20111002] -- a give, its lock kept (_w5CovenPass); a bot receiving it uses it in its own master phase. The trifle's extra master phase action comes even when it contests."
+  },
+  "Piper": {
+   "t": [
+    "master"
+   ],
+   "req": {
+    "sect": "Anarch"
+   },
+   "handler": "piper",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "piperRecruit": true
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Requires a ready Anarch. Lock a ready unlocked Anarch you control. That Anarch recruits or employs an ally or retainer from your hand (requirements and cost apply as normal). This is not an action and cannot be blocked.' req.sect: a ready Anarch of mine to play it (R-42). handler piper / fx.piperRecruit: the look ahead (D-58, _w5PiperPlan) -- played only when an unlocked ready Anarch's own scorer would recruit an ally now (_bestRecruitFor(v, {noDiscount: true})); the Anarch locks and recruits it, unblockable and not an action, no Charisma [LSJ 20090115-1]; the ally cannot act this turn [RBK recruit-ally]. Employing a retainer is not built (the equip path plays them)."
+  },
+  "Día de los Muertos": {
+   "t": [
+    "master"
+   ],
+   "handler": "dia",
+   "oncePerGame": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "autoPassRef": true
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Only one Día de los Muertos can be played in a game. The first referendum a Sabbat vampire you control calls on this turn passes automatically (skip the polling step).' oncePerGame: a copy in play or in an ash heap at any seat holds it (_w5Once). handler dia / fx.autoPassRef: the look ahead (D-58, _w5DiaPlan) -- played when a ready unlocked Sabbat of mine would call a referendum this turn and the pass it buys is worth the pool; that referendum passes with no polling: no Vote line, no ballots, no margin effects [LSJ 19980107], no Scalpel Tongue [PIB 20150105], no Yewon Ong / Alexa Draper discard (D-111 (3)); the frozen line 'Referendum passes automatically — NAME (Día de los Muertos).' (L12.autoPass)."
+  },
+  "Cursed Abattoir": {
+   "t": [
+    "master"
+   ],
+   "unique": true,
+   "persistent": true,
+   "worth": "abattoir",
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "zombieCounter": 1
+     }
+    },
+    {
+     "at": null,
+     "fx": {
+      "zombieBleed": 1
+     }
+    }
+   ],
+   "note": "V5 wave 5a (17 Nov 2026, bot v0.6.230, RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md). 'Unique location. After a zombie (ally or retainer) you control is burned, you can add 1 counter to this location. During a bleed action, you can burn 1 counter from this location to give a zombie ally you control +1 bleed.' fx.zombieCounter: after a zombie ally or retainer of mine (cardfx zombie) is burned, +1 named counter (_w5ZombieBurned). fx.zombieBleed is NOT read: allies never act in the bot, so the +1 bleed waits for the ally action -- the coverage ledger shows the card partial on purpose."
   }
  },
  "crypt": {
