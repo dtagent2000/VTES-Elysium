@@ -418,10 +418,35 @@ const CARD_HANDLERS = {
     bot.send({ t: 'drawCrypt' });
     bot.send({ t: 'log', html: '<b>' + esc(bot.o.name) + '</b> reveals a Hecata from the top of the crypt and draws it (<b>Family Gathering</b>).' });
   },
+  'piper': async function(bot){ await bot._w5Piper(); },   // v0.6.230 (V5 wave 5): Piper -- an Anarch of mine recruits in the master phase, unblockable (_w5Piper)
+  'dia': async function(bot){ bot._w5Dia = { turn: bot._turnSerial | 0, used: false }; bot._emit('w5-dia', { turn: bot._turnSerial | 0 }); },   // v0.6.230: Día de los Muertos -- the first referendum a Sabbat of mine calls this turn passes automatically (_callReferendum)
   'ashur-tablets': async function(bot){   // v1.4.2/v1.4.3 (14 July): dispatched after EVERY Ashur Tablets play -- a no-op until MY OWN third copy is in play (mandatory, immediate per rulebook -- Johan confirmed). "Only one Ashur Tablets can be played each turn" needs no new enforcement -- it falls out of the EXISTING played-name exclusion in _bestMasterFor/the master-play loop, already turn-scoped. The removal+benefit logic itself lives in _ashurResolve (v1.4.3), shared with _checkAshurTableWide's watch for someone ELSE crossing the threshold -- see that method for why.
     const mine = bot.board.filter(c => c.name === 'Ashur Tablets' && c.zone === 'ready').length;
     if(mine >= 3) await bot._ashurResolve(true);
   }
+};
+
+/* v0.6.230 (V5 wave 5, RULINGS D-119, specs/spec-v5-wave5-2026-11-17.md §2): the card-worth engine's handlers -- a card in play's FLOWS,
+   { flows: { seat: { d, g } } } (that seat's GAIN a round at t = 0, signed, and its growth a round) and `now` (a one-time gain of its owner's
+   when played), summed by Bot#_flowWorth over each seat's horizon; or { worth } when the card prices itself. A rate comes from the table (the
+   losses, hunts and passed referendums observed, blended with a prior worth three rounds); a handler never reads a hidden card. Instruction,
+   not vocabulary: a cardfx entry names its handler (`worth`). Jack's handler is D-114 / D-115's flows over the engine's horizon (O-41). */
+const W5_KNOBBED = new Set(['jack']);   // priced before the engine (D-114 / D-115): read through it only with `cardWorth` (0 = v0.6.229)
+const CARD_WORTH = {
+  jack: (bot, card, owner) => { const j = { seat: owner, card, n: Array.isArray(card.counters) ? card.counters.length : (card.counters | 0) }, f = {};
+    bot._w5Live().forEach(st => { f[st] = st === owner ? { d: -1 } : { d: -bot._jackC1(st, j), g: -1 }; }); return { flows: f }; },   // the owner moves 1 a round; every other seat pays the growing counter
+  'anarch-revolt': (bot, card, owner) => { const f = {}; bot._w5Live().forEach(st => { if(!bot._w5HasReadyAnarch(st)) f[st] = { d: -1 }; }); return { flows: f }; },   // 1 pool a round from each seat without a ready Anarch
+  tension: (bot, card, owner) => { const f = {}; bot._w5Live().forEach(st => { f[st] = { d: -bot._w5LossRate(st) }; }); return { flows: f }; },   // 1 pool for each ready minion a seat loses
+  rack: (bot, card, owner) => ({ flows: { [owner]: { d: 1.6 } } }),   // 2 blood a turn to the chosen vampire while it has room (0.8 of the time)
+  coyote: (bot, card, owner) => ({ flows: { [owner]: { d: bot._w5HuntRate(owner) } } }),   // +1 blood on each hunt of the owner's Sabbat
+  'privileged-position': (bot, card, owner) => { const pr = bot.nextLive(owner); return { flows: (pr && pr !== owner) ? { [pr]: { d: -bot._w5RefRate(owner) } } : {} }; },   // 1 pool from the owner's prey for each referendum of the owner's that passes
+  mob: (bot, card, owner) => ({ flows: { [owner]: { d: 0.25 } } }),   // a press to continue when the owner wants one
+  garibaldi: (bot, card, owner) => ({ flows: { [owner]: { d: 0.3 } } }),   // a dead card traded for a live Anarch card (1 pool), a combat between Anarchs ended
+  'powerbase-la': (bot, card, owner) => ({ flows: { [owner]: { d: 0.4 } } }),   // a discard phase action, an Anarch unlocked
+  carvers: (bot, card, owner) => ({ flows: { [owner]: { d: Math.max(0.3, bot._w5HostageN()) } } }),   // X blood a turn, X = the hostages
+  coven: (bot, card, owner) => { const live = bot._w5Live(), f = {}, n = Math.max(1, live.length); live.forEach(st => { f[st] = { d: 2 / n }; }); return { flows: f, now: owner === bot.seat ? 2 : 0 }; },   // 2 blood to each holder in turn, my predator first
+  'forward-momentum': (bot, card, owner) => ({ flows: { [owner]: { d: 0.35 } } }),   // half an action for each bleed of a Cathari that lands
+  abattoir: (bot, card, owner) => ({ flows: { [owner]: { d: 0.05 } } })   // +1 bleed for a zombie ally (no zombie of a precon is playable yet)
 };
 
 /* ---------- Board geometry (canonical 1004x616, CW 84 / CH 118) ---------- */
@@ -491,7 +516,7 @@ const L12 = {
   rush: /^(.+?) plays Deep Song \[ANI\] \u2014 rushes (.+?)'s (.+?)\.$/,   // N2: frozen -- m[2]=target OWNER seat name, m[3]=the rushed vampire; the named owner complies (lock + defender handshake)
   havenM: /^(.+?) plays Haven Uncovered \u2014 on (.+?)'s (.+?)\.$/,   // v0.6.205 (R4, F23): frozen -- m[1]=the Methuselah who placed it, m[2]=the host's OWNER, m[3]=the host; every observer records it (any minion may rush the host through it)
   burnAct: /^(.+?) takes an action to burn (.+?)'s (.+?)\.$/,   // v0.6.217 (V5 wave 4, bot grammar): m[1] the acting minion, m[2] the card's OWNER, m[3] the card in play (Toreador Grand Ball: 'Minions can burn this card as a (D) action') -- the owner's bot opens its block window, burns the card on its Pass
-  havenRush: /^(.+?) enters combat with (.+?)'s (.+?) \((Haven Uncovered|Saulot's Avenging Fist|Regent)\)\.$/,   // v0.6.217 (V5 wave 4): m[4] = the card in play that grants the (D) action -- Haven Uncovered, Saulot's Avenging Fist (on the rusher), a Regent (on the target)   // v0.6.205 (R4, F23): frozen -- m[1]=the rusher, m[2]=the host's OWNER, m[3]=the host; a +1 stealth directed action the owner may block; the host is NOT locked and the rusher is the acting minion
+  havenRush: /^(.+?) enters combat with (.+?)'s (.+?) \((Haven Uncovered|Saulot's Avenging Fist|Regent|Frontal Assault)\)\.$/,   // v0.6.230 (V5 wave 5): + Frontal Assault (a (D) rush at the owner's prey's minions)   // v0.6.217 (V5 wave 4): m[4] = the card in play that grants the (D) action -- Haven Uncovered, Saulot's Avenging Fist (on the rusher), a Regent (on the target)   // v0.6.205 (R4, F23): frozen -- m[1]=the rusher, m[2]=the host's OWNER, m[3]=the host; a +1 stealth directed action the owner may block; the host is NOT locked and the rusher is the acting minion
   fameM: /^(.+?) plays Fame \u2014 on (.+?)'s (.+?)\.$/,   // N3: frozen -- m[2]=owner, m[3]=the famed vampire; ALL observers track it, the owner arms the torpor hook
   creep: /^Creeping Sabotage \(x(\d+)\): (.+?) burns (\d+) pool\.$/,   // N3: frozen -- m[2]=the named prey complies
   rescueE: /^(.+?) rescues (.+?)\u2019s (.+?) from torpor \((.+?) pays (\d+), (.+?) pays (\d+)\)\.$/,   // v0.6.72 (#7): frozen -- m[2]=owner complies, m[3]=vamp, m[5]=their blood share
@@ -529,6 +554,10 @@ const L12 = {
   uFetch:    /^(.+?) plays (.+?) \[(tha|THA)\] \u2014 fetches (.+?)\.$/,
   uStrength: /^(.+?) plays (.+?) \[(.+?)\] \u2014 on themselves \(\+(\d+) strength\)\.$/,
   combat: /^Combat: (\d+) vs (\d+) damage dealt\.$/,
+  stealAct: /^(.+?) takes an action to steal (.+?)'s (.+?)\.$/,   // v0.6.230 (V5 wave 5, bot grammar): the (D) action that STEALS a card in play (The Rack, Powerbase: Los Angeles) -- m[1] the acting minion, m[2] the card's OWNER, m[3] the card; the owner's bot opens its block window and on its Pass gives the card to the actor's Methuselah
+  ppBurn: /^(.+?) locks Privileged Position — (.+?) burns 1 pool\.$/,   // v0.6.230 (bot grammar): m[1] the card's controller, m[2] the prey who burns the pool -- its bot pays, with its oust check
+  autoPass: /^Referendum passes automatically — (.+?) \(Día de los Muertos\)\.$/,   // v0.6.230 (bot grammar): the caller's line in place of the poll -- no seat votes, boosts or abstains
+  tensionBurn: /^(.+?) discards two masters to burn (.+?)'s Tension in the Ranks\.$/,   // v0.6.230 (bot grammar): 'Methuselahs can use a master phase action and discard two master cards to burn this card' -- the owner's bot burns it
   aimAtVamp: /^(.+?)(?: plays (.+?)|'s card action is used)\. Target: (.+?)'s (.+?)\.$/   // v0.6.155: the CLIENT's play / card-action line with its Target suffix on a VAMPIRE (a pool target reads "X's pool" and never matches m[5] to a ready vampire). Not a frozen bot line; the canary does not pin it
 };
 const poolTargetName = t => { const m = t && t.match(/^(.+)'s pool$/); return m ? m[1] : null; };
@@ -599,6 +628,7 @@ class Bot {
     combatPhases: 1,       // v0.6.165 (Johan): 1 = against a HUMAN combat opponent the bot drives the seven combat steps with his phrases and waits for the human on a clock; 0 = v0.6.164's silent handshake. Bot-vs-bot is never affected.
     jackBurn: 1,             // v0.6.224 (round B, RULINGS D-114, specs/spec-jack-burn-2026-11-13.md): 1 = a vampire of mine may burn another seat's Smiling Jack as a (D) action when its price (what Jack takes from me against what it takes from my prey, over my runway) beats the best other action, the most exposed bot first; and a burn at MY Jack is weighed by its worth to me (what it still takes from my prey). 0 = no Jack burn and T6's weight for a burn at my Jack (v0.6.223 plus step 1's guard). Default 1 since its release, after a mirror bench with no loss (the four starters, every seat, 288 matches) and a bench pinned to Nosferatu's seat for the owner's defence; with it on in every seat Nosferatu's paired VP on the 240 fell and Jack's median life with it -- the numbers: docs/elysium-bot-CHANGELOG.md v0.6.224
     jackRunway: 1,           // v0.6.226 (round D, RULINGS D-115, Johan 14 Nov: O-40's self-consistent runway): 1 = a seat's runway against Jack pays its GROWING counter -- R solves R*(c1 + fc) + R(R-1)/2 = pool, so the price over it never passes the seat's pool; 0 = v0.6.225's flat runway, pool / max(0.25, c1 + fc), whose price could pass the pool (5 of 56 burns on the 240). Read only with jackBurn. Default 1 since its release, after a mirror bench with no loss (D-114's rule) -- the numbers: docs/elysium-bot-CHANGELOG.md v0.6.226
+    cardWorth: 0,            // v0.6.230 (V5 wave 5, RULINGS D-119, specs/spec-v5-wave5-2026-11-17.md §2): 1 = Smiling Jack is priced by the card-worth engine -- my payments and every seat's over ONE horizon, each seat's min(its runway, the card's life), the life ending with the game (the longest other runway), every seat weighed by _seatW (me 1 or 2, my prey offW, the rest 0.15): O-41's answer. It reads Jack's play (held at worth <= 0), the owner's defence and a burn's value. 0 = v0.6.229 (D-114 / D-115's formulas; Jack always played). The wave's own cards read the engine at either value. To 1 after a mirror bench with no loss (D-114's rule)
     ballTurn: 1,             // v0.6.229 (default 1 after its bench, pinned to Toreador on the 600: Toreador +0.01 [-0.02, +0.05]; the free one calls on 95 % of its Ball turns, 66 % before) (the bench round, RULINGS D-117 / D-118, specs/spec-bench-round-2026-11-15.md §2): 1 = on a turn my Toreador Grand Ball is in play, its free Toreador -- when its own scorer calls a referendum -- acts before any other vampire of mine that could call one, the others leave the political cards to it, another body stays home; and the Ball waits when after its lock the free one would be the last body the posture keeps home (_minionKeyOrder, _ballGuard); 0 = v0.6.228
     keyLast: 1,              // v0.6.229 (default 1 after its benches, pinned to Toreador and to Ventrue on the 600: +0.04 [-0.05, +0.14] and +0.05 [-0.04, +0.15]; the referendum first in 3 % / 12 % of the turns, 46 % / 36 % before) (D-118, proposal 3; the Toreador guide: 'the least important action first, the most important last'): 1 = the actor whose look ahead calls the turn's best referendum acts after the cheap actions that draw blocks -- last, or just before the bodies the posture would keep home (when it would be one of them, another stays) -- and the others leave the political cards to it until its turn; with scalpelLock a referendum that would carry Scalpel Tongue's lock opens the turn instead (keyFirst-scalpel: the release's combined arm puts the referendum first more often than keyLast alone -- the numbers: CHANGELOG v0.6.229); a queue the probe order reordered is left alone (_minionKeyOrder); 0 = v0.6.228
     engineW: 6,              // v0.6.229 (default 6 after its benches on the 600: every seat in turn +0.00 [-0.09, +0.10], pinned to Toreador +0.04 [-0.07, +0.15]; Toreador's guide pick first in 67 %, 19 % before) (D-118, proposal 4; D-43: the help sheets' opening, measured): the influence planner adds engineW x the share of my other crypt cards younger than the plan's first vampire, when it can play a superior blood-stock action my library holds 4+ of (Enchant Kindred [PRE], Govern the Unaligned [DOM]; _engineY) -- on every influence plan of the game, not only the opening's (benched so); 0 = v0.6.228
@@ -1280,6 +1310,7 @@ class Bot {
         if(m.seat !== this.turnSeat && this.turnSeat && this.opp && this.opp[this.turnSeat] && this.opp[this.turnSeat].memo) this._hMemoTurnEnd(this.turnSeat);   // v0.6.225: their turn ended -- an open record resolves; the answer window closes (or lasts their next turn)
         if(m.seat !== this.turnSeat){ this._turnActN = 0; this._turnSerial = (this._turnSerial | 0) + 1; }   // v0.6.217: + the turn's serial (Monster's 'once each turn' = once in each player's turn [ANK 20180719-4])   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
         this.turnSeat = m.seat;
+        if(this.started && !this.out && m.seat !== this.seat && m.seat) this._w5HumanTurn(m.seat);   // v0.6.230 (V5 wave 5): Anarch Revolt's reminder to a human
         if(m.seat !== this.seat){ this._heldTurn = null; this._gameOverPassed = false; }   // v0.6.222: the turn moved on -- nothing is held
         if(this.started && this.out && m.seat === this.seat){   // v0.6.147 (THE HOTSEAT NET, measured: 4 of 4 bridge tables froze at the first turn handed to an ousted bot): the SERVER never gives an ousted seat the turn (nextLiveSeat), but the client's hotseat sweep walks its config, not the roster, and waits for a `pass` with no timeout. An ousted bot hands the turn straight on. Online this branch is unreachable.
           this._emit('ousted-pass', { turn: m.seat }); this.send({ t: 'pass' }); return; }
@@ -1345,7 +1376,7 @@ class Bot {
         else if(act === 'lock') c.locked = true;
         else if(act === 'unlock') c.locked = false;
         else if(act === 'flip') c.faceDown = !c.faceDown;
-        else if(act === 'burn'){ const was = c.zone; c.zone = 'burned'; this.board = this.board.filter(x => x !== c && x.attachTo !== c.name); this.note('Trainbot: ' + c.name + ' is burned' + (was === 'torpor' ? ' (diablerie or final death in torpor)' : '') + '.'); this._emit('burned-by-table', { card: c.name, from: was }); }   // v0.6.129: the table burns one of my cards -- a human's diablerie of my torpored vampire had no verb (spec to main: add Burn to the bot-element menu)
+        else if(act === 'burn'){ const was = c.zone; c.zone = 'burned'; if(was === 'ready' && (c.kind === 'crypt' || this._w5IsAlly(c.name))) this._w5MinionLost(c, 'burned'); this.board = this.board.filter(x => x !== c && x.attachTo !== c.name); this.note('Trainbot: ' + c.name + ' is burned' + (was === 'torpor' ? ' (diablerie or final death in torpor)' : '') + '.'); this._emit('burned-by-table', { card: c.name, from: was }); }   // v0.6.129: the table burns one of my cards -- a human's diablerie of my torpored vampire had no verb (spec to main: add Burn to the bot-element menu)
         else if(act === 'torpor'){ c.zone = 'torpor'; const tp = this._openSlot('torpor', c); c.x = tp.x; c.y = tp.y; this._fameTorporHook(c); }   // v0.4.5: reposition too -- a bare zone flip left x/y wherever the card used to be (e.g. still its old uncontrolled slot), off the actual torpor/ready row
         else if(act === 'untorpor'){ c.zone = 'ready'; const rp = this._openSlot('ready', c); c.x = rp.x; c.y = rp.y; this._emit('recover', { vamp: c.name, via: 'untorpor' }); }
         else return;                     // unknown verb: ignore rather than push a no-op board
@@ -1702,7 +1733,8 @@ class Bot {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib') return false;
       if(h.e.oot && !(h.e.modes || []).some(mo => mo.fx && mo.fx.burnActor)) return true;
       if((h.e.modes || []).some(mo => mo.fx && mo.fx.grandBall) && this.board.some(c => c && c.kind === 'lib' && c.gbLock && !this._outOfPlay(c))) return true;   // v0.6.217 (V5 wave 4): a second Toreador Grand Ball while mine stays -- the master loop holds it (one Ball at a time), the discard phase cycles it   // v0.6.215 (egress review): an out-of-turn master the bot never plays (Sudden Reversal: no 'as played' window between bots) is dead weight -- the discard phase cycles it, as the guide says of every card the bot cannot play
-      if((h.e.t || []).includes('master') && this._masterNoHost(h, vamps)) return true;   // v0.6.217 (V5 wave 4, the sim footprint): a master no vampire of mine may take (Oblivion while every one has [OBL], Regent with no Sabbat of capacity 8 or more) -- the master loop holds it, the discard phase cycles it
+      if((h.e.t || []).includes('master') && this._masterNoHost(h, vamps)) return true;
+      if((h.e.t || []).includes('master') && this._w5DeadMaster(h)) return true;   // v0.6.230 (V5 wave 5): one per game and played, unique and in play, or worth a pool or more below nothing -- the discard phase cycles it   // v0.6.217 (V5 wave 4, the sim footprint): a master no vampire of mine may take (Oblivion while every one has [OBL], Regent with no Sabbat of capacity 8 or more) -- the master loop holds it, the discard phase cycles it
       return (h.e.modes || []).length > 0 &&
              !(h.e.modes || []).some(mo => this._modeUsable(mo, vamps, { selfPrice: true }));   // v0.6.127: a self-price card is HELD for its moment, not dead
     });
@@ -2884,7 +2916,7 @@ class Bot {
   _strayPressBurn(){                 // N4d consumer A: burn 1 life for a press to my combatant; the ally dies to 'burned' at 0
     const st = this._findStray(); if(!st) return false;
     st.life = (st.life | 0) - 1;
-    if(st.life <= 0){ st.zone = 'burned'; this.note('Trainbot: the Stray gives its last \u2014 press granted, the animal is spent.'); }
+    if(st.life <= 0){ st.zone = 'burned'; this._w5MinionLost(st, 'burned'); this.note('Trainbot: the Stray gives its last \u2014 press granted, the animal is spent.'); }
     else this.note('Trainbot: the Stray burns 1 life \u2014 press granted (' + st.life + ' left).');
     this.push();
     return true;
@@ -2894,14 +2926,14 @@ class Bot {
     const st = this.board.find(c => { if(!c || c.zone !== 'ready' || this._outOfPlay(c)) return false;
       const h = this.fxLookup(c.name); return h && h.kind === 'lib' && ((h.e.t) || []).includes('ally') && (h.e.modes || []).some(mo => mo.fx && mo.fx.allyBurnUnlock); });
     if(!st) return false;
-    st.zone = 'burned';
+    st.zone = 'burned'; this._w5MinionLost(st, 'burned');
     vamp.locked = false;
     this.push();
     this.note('Trainbot: the Stray is burned \u2014 ' + vamp.name + ' unlocks to meet the threat.');
     this._emit('stray-unlock', { vamp: vamp.name });
     return true;
   }
-  _bestRecruitFor(vamp){             // N4d: an ally-type fx.recruitAlly card -- richest usable mode (ANI life 2 over ani life 1), pool guard
+  _bestRecruitFor(vamp, o){          // N4d: an ally-type fx.recruitAlly card -- richest usable mode (ANI life 2 over ani life 1), pool guard. v0.6.230: o.noDiscount -- Piper's recruit is no action, so no Charisma [LSJ 20090115-1]
     if(!this.fx || !vamp) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('ally')) continue;
@@ -2910,7 +2942,7 @@ class Bot {
         if(!best || (mo.fx.allyLife | 0) > (best.fx.allyLife | 0)) best = mo; });
       if(!best) continue;
       if(this._attachedFx(vamp, 'noRecruitEmploy').length) return null;   // fx.noRecruitEmploy -- v0.6.217 (V5 wave 4): Depravity -- 'This vampire cannot recruit allies or employ retainers.'
-      const dsc = this._attachedFx(vamp, 'recruitDiscount').reduce((a, b) => a + (b | 0), 0);   // fx.recruitDiscount -- v0.6.217 (V5 wave 4): Charisma -- 'Recruit ally actions cost this vampire -1 blood or pool.'
+      const dsc = (o && o.noDiscount) ? 0 : this._attachedFx(vamp, 'recruitDiscount').reduce((a, b) => a + (b | 0), 0);   // fx.recruitDiscount -- v0.6.217 (V5 wave 4): Charisma -- 'Recruit ally actions cost this vampire -1 blood or pool.'
       const cB = Math.max(0, ((h.e.cost && h.e.cost.blood) | 0) - dsc);   // v0.6.118c (Johan's ruling, 18 Sep): Underbridge Stray costs 1 BLOOD -- an [ani] ally the vampire pays for; the pool default applies only when the card names no blood cost
       const costP = ((h.e.cost && h.e.cost.blood) | 0) ? ((h.e.cost && h.e.cost.pool) | 0) : Math.max(0, (((h.e.cost && h.e.cost.pool) | 0) || 1) - dsc);   // v0.6.217: Charisma's -1 comes off the blood when the ally costs blood, else off the pool
       if(cB > (vamp.blood | 0)) continue;
@@ -2921,7 +2953,7 @@ class Bot {
   }
   _emitManifest(){                   // A2 (v0.6.73): deck intent + effective knobs
     const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {};
-    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','equipOverPlain','spyCancelMin','jackBurn','jackRunway','ballTurn','keyLast','engineW','scalpelLock','villeinKeep']) if(this.o[k] !== undefined) kn[k] = this.o[k];
+    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','equipOverPlain','spyCancelMin','jackBurn','jackRunway','cardWorth','ballTurn','keyLast','engineW','scalpelLock','villeinKeep']) if(this.o[k] !== undefined) kn[k] = this.o[k];
     this._emit('manifest', { seat: this.o.seat || null, deck: this.o.deckName || null, persona: this.o.persona, strategy: ds.strategy || null, axes: ds.axes || [], knobs: kn });   // v0.6.88: seat carried when the arena provides it -- the manifest is now self-describing for seat order
   }
   _deckAxes(){ const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {}; return ds.axes || []; }   // v0.6.107 (B1): the manifest's axes, finally read
@@ -3013,7 +3045,7 @@ class Bot {
     this._reactWindow();
     return true;
   }
-  _burnWindowOpens(who, actorVamp, card){   // v0.6.217 (V5 wave 4): an action to burn MY card in play -- the rush window's shape (directed: my unlocked minions may block), sub 'burnCard', no pool at stake (T6); my Pass complies (_complyBurnCard), a successful block fights the actor
+  _burnWindowOpens(who, actorVamp, card, steal){   // v0.6.217 (V5 wave 4): an action to burn MY card in play -- the rush window's shape (directed: my unlocked minions may block), sub 'burnCard', no pool at stake (T6); my Pass complies (_complyBurnCard), a successful block fights the actor
     if(!this.started || this.out) return false;
     const actorSeat = this._seatOfName(who); if(!actorSeat) return false;
     if(!(this.board.some(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked) || !!this._wakeCard())) return false;   // nobody to block with -- comply
@@ -3021,10 +3053,13 @@ class Bot {
     const role = (this.nextLive(actorSeat) === this.seat) ? 'prey' : (this.prevLive(actorSeat) === this.seat) ? 'predator' : 'cross';
     this.pending = { who, amount: 0, kind: 'rush', sub: 'burnCard', T: 'T6', role, actorSeat, actorUnlocked: 0, actingVampName: actorVamp, rushTarget: null, burnCardId: card.id, burnCard: card.name, targetActs: false, noLock: true, via: 'burnCard', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: false };
     if(this.o.jackBurn && this._isJackName(card.name)) this.pending.cardWorth = +this._myJackWorth(card).toFixed(2);   // v0.6.224 (D-114 spec §5): what my Jack still takes from my prey
+    else if(this._w5UseWorth(this._w5E(card.name))){ const w = this._cardWorth(card, this.seat), w2 = steal ? this._cardWorth(card, actorSeat) : null; if(w) this.pending.cardWorth = +Math.max(0, w.worth - (w2 ? w2.worth : 0)).toFixed(2); }   // v0.6.230 (V5 wave 5, D-119 (2)): the defence weighs the card's worth to me -- stolen, also what it then does for its new owner
+    if(steal) this.pending.steal = true;
     this._reactWindow();
     return true;
   }
   _complyBurnCard(p){               // v0.6.217: the action at my card went through -- the card burns (to my ash heap; off its host), and a Toreador Grand Ball's locked Toreador unlocks as normal from my next unlock phase
+    if(p && p.steal) return this._w5GiveStolen(p);   // v0.6.230 (V5 wave 5): a steal -- the card goes to the actor's Methuselah
     const c = this.board.find(x => x && x.id === p.burnCardId); if(!c || this._outOfPlay(c)) return;
     c.zone = 'ash'; c.locked = false;
     if(c.host){ const hv = this.board.find(x => x && x.id === c.host); if(hv && hv.attached) hv.attached = hv.attached.filter(id => id !== c.id); c.host = undefined; }
@@ -3297,7 +3332,7 @@ class Bot {
   }
   _bestOwnRescueFor(vamp){           // v0.6.127: the basic action the bot never had -- a ready vampire rescues one of MINE from torpor (rulebook: undirected, 0 stealth, 2 blood paid by the rescuer and / or the rescued, in any split). Until now a torpored vampire stayed down for the rest of the game unless Warsaw Station or the Chantry brought it back.
     if(!vamp) return null;
-    const torp = (this.board || []).filter(c => c && c.kind === 'crypt' && c.zone === 'torpor' && !(!c.locked && (c.blood | 0) >= 2)); if(!torp.length) return null;   // v0.6.128: an unlocked vampire with 2 blood leaves torpor on its OWN action -- no ready body is spent on it
+    const torp = (this.board || []).filter(c => c && c.kind === 'crypt' && c.zone === 'torpor' && !(!c.locked && (c.blood | 0) >= 2) && !this._w5IsHostage(c)); if(!torp.length) return null;   // v0.6.230: a hostage (Carver's) cannot be moved to ready   // v0.6.128: an unlocked vampire with 2 blood leaves torpor on its OWN action -- no ready body is spent on it
     const capOf = c => { const k = this.fxCryptCap(c.name); return typeof k === 'number' ? k : 0; };
     const T = torp.slice().sort((a, b) => (capOf(b) - capOf(a)) || ((b.blood | 0) - (a.blood | 0)))[0];
     const tb = T.blood | 0, vb = vamp.blood | 0; if(tb + vb < 3) return null;        // 2 to pay + 1 left on my actor
@@ -3357,6 +3392,7 @@ class Bot {
         if(has('fameOnTarget')){ (this._famedMine = this._famedMine || new Set()).add(host.name); (this._famedSeen = this._famedSeen || {})[host.name] = true; }
         if(has('noBlockMinion')) this._pentexVamp = host.name; } }
     this.board.push(card); this.push();
+    this._w5OnGiven(card);   // v0.6.230 (V5 wave 5): a stolen The Rack -- its new controller chooses
     this.o.log('given: ' + m.name + ' from ' + (m.from || '?') + (m.attachTo ? ' (on ' + m.attachTo + ')' : ''));
     this._emit('given', { card: m.name, from: m.from || null, attachTo: m.attachTo || null });
   }
@@ -3394,6 +3430,7 @@ class Bot {
     if(!a || typeof a !== 'object' || typeof a.idx === 'number') return null;
     if(a.kind === 'burnCard' && a.target) return 'inplay:burn|' + (a.target.seat | 0) + '|' + (a.target.cardId || a.target.card || '');
     if(a.kind !== 'rush' || (a.via !== 'haven' && a.via !== 'grant') || !a.name) return null;
+    if(a.via === 'grant' && a.name === 'Frontal Assault') return 'inplay:' + FX_NORM(a.name);   // v0.6.230: one rush per minion through the card, whatever its target (rulebook 6.1.6)
     const onMe = !!(v && (v.attached || []).some(id => { const c = this.board.find(x => x && x.id === id); return !!(c && FX_NORM(c.name) === FX_NORM(a.name)); }));
     return 'inplay:' + FX_NORM(a.name) + '|' + (onMe ? 'me' : ((a.target && a.target.seat) | 0) + '|' + ((a.target && a.target.name) || ''));
   }
@@ -3548,7 +3585,7 @@ class Bot {
       if(sp.selfAggr){
         if(v.zone === 'ready'){ down(); said.push('goes to torpor'); }
         else if((v.blood | 0) > 0){ v.blood = (v.blood | 0) - 1; said.push('burns 1 blood'); }
-        else { v.zone = 'burned'; said.push('is burned'); break; }
+        else { v.zone = 'burned'; this._w5MinionLost(v, 'burned'); said.push('is burned'); break; }
       } else if((v.blood | 0) > 0){ v.blood = (v.blood | 0) - 1; said.push('burns 1 blood'); }
       else if(v.zone === 'ready'){ down(); said.push('goes to torpor'); }
     }
@@ -3831,6 +3868,7 @@ class Bot {
       const cand = { idx, name: h.name, kind: 'political', n: Math.max(0, -(rd.deltas[prey] | 0)), st: 1, cost: e.cost || null, deltas: rd.deltas, note: rd.note, value, pass, mine, agst, forO };
       if(!best || cand.value * cand.pass > best.value * best.pass) best = cand;
     });
+    { const br = this._w5BurnRefFor(vamp); if(br && (!best || br.value * br.pass > best.value * best.pass)) best = br; }   // v0.6.230 (V5 wave 5): a referendum to burn a card in play (Anarch Revolt) -- no card from hand
     return best;
   }
   _titleRefFor(h, vamp){            // v0.6.217 (V5 wave 4, R-43): a title referendum -- 'Choose a ready Toreador. Successful referendum means this card is put on the chosen Toreador to represent the unique Camarilla title of Toreador Justicar.' The term is a ready vampire OF MINE of the card's clan and sect (a Camarilla one [LSJ 20041026]) that gains the most votes (the card replaces its printed title); never while the title is in play (unique, [LSJ 20100129]). The value is the votes gained (a pool-equivalent, D-106); the bots of the table have no pool at stake and hold their votes back, a human may vote against
@@ -3966,7 +4004,7 @@ class Bot {
   }
   async _callReferendum(v, act){     // the CALLER: terms -> announce -> block step (prey + predator) -> polling -> verdict -> effects
     const h = this.fxLookup(act.name), e = h && h.e;
-    const terms = act.titleTerm ? act.titleTermName + ' takes the title (' + act.title + ', ' + act.votes + ' votes)' : this._refTermsText(act.deltas);   // v0.6.217: a title referendum's term names the vampire (no pool term: every stake reads 0)
+    const terms = act.titleTerm ? act.titleTermName + ' takes the title (' + act.title + ', ' + act.votes + ' votes)' : act.inPlayBurn ? 'burn ' + act.inPlayBurn.owner + "'s " + act.inPlayBurn.card : this._refTermsText(act.deltas);   // v0.6.230 (V5 wave 5): a referendum to burn a card in play names it (no pool term: every stake reads from the card)   // v0.6.217: a title referendum's term names the vampire (no pool term: every stake reads 0)
     this._actingVamp.kind = 'political'; this._actingVamp.target = null;
     if(act.cost && act.cost.blood) { v.blood = Math.max(0, (v.blood | 0) - act.cost.blood); this._park(act.cost.blood, 0); }   // costs at announce (debt 1)
     if(act.cost && act.cost.pool){ this.pool = Math.max(0, (this.pool | 0) - act.cost.pool); this._park(0, act.cost.pool); if(this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: -act.cost.pool, via: 'cost', card: act.name || null, own: true, seat: this.seat })); }   // v0.6.180: paid at announce without its own line
@@ -3984,7 +4022,7 @@ class Bot {
     await sleep(150);
     if(ans.what === 'block'){
       this.note('Blocked' + (ans.who ? ' by ' + ans.who : '') + '. Combat begins.');
-      this._toAsh(act.name);
+      if(!act.inPlayBurn) this._toAsh(act.name);   // v0.6.230: a card in play is no card from hand
       this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, card: act.name, by: this._lastBlockerName || ans.who || null, kind: 'political' });
       this.send({ t: 'log', html: 'Referendum fails \u2014 <b>' + esc(act.name) + '</b>: blocked.' });
       await this._resolveCombat(v);
@@ -3993,15 +4031,19 @@ class Bot {
     /* polling */
     this._callingReferendum = true;
     const rc = this._refCall = { for: 0, against: 0, by: {}, heard: new Set(), paused: new Set(), lastA: 0, lastB: 0, closed: null, timer: null, line: null };
-    let mine = this._myTitleVotes().n + 1 + this._refReadyVotes(e, this.seat);   // v0.6.217: + Toreador Justicar's '+1 vote for each ready Toreador' (mine)
+    let mine = this._myTitleVotes().n + (act.inPlayBurn ? 0 : 1) + this._refReadyVotes(e, this.seat);   // v0.6.230: no political card, no card's vote   // v0.6.217: + Toreador Justicar's '+1 vote for each ready Toreador' (mine)
+    const w5auto = this._w5DiaFor(v);   // v0.6.230 (V5 wave 5): D\u00eda de los Muertos -- this referendum passes automatically: no polling, no vote, boost or abstain, no margin [LSJ 19980107]
     try {
+      let t;
+      if(w5auto){ this._w5Dia.used = true; this.send({ t: 'log', html: 'Referendum passes automatically \u2014 <b>' + esc(act.name) + '</b> (D\u00eda de los Muertos).' }); this._emit('w5-dia-pass', { vamp: v.name, card: act.name }); t = { f: mine, a: 0 }; }   // L12.autoPass
+      else {
       this._writeTally({ mode: 'vote', a: mine, b: 0 });
       this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> casts <b>' + mine + '</b> vote' + (mine === 1 ? '' : 's') + ' <b>for</b>.' });
       this.chat('I vote ' + mine + ' for.');
       await this._refPoll(rc);
       const tot = () => ({ f: Math.max(mine + rc.for, rc.lastA | 0, rc.line ? rc.line.a : 0), a: Math.max(rc.against, rc.lastB | 0, rc.line ? rc.line.b : 0) });
       /* the boosts are held until the count says they are needed -- and spent only when they turn it */
-      let t = tot();
+      t = tot();
       if(t.f <= t.a){
         const boosts = this._voteBoosts(v), need = t.a - t.f + 1;
         if(boosts.reduce((x, b) => x + b.n, 0) >= need){
@@ -4024,18 +4066,19 @@ class Bot {
       }
       if(t.f <= t.a && !rc.line){ const ab = this._bestAbstainFor(v, rc, t.a - t.f + 1); if(ab && this._playAbstain(v, ab, rc)){ if(!rc.line){ rc.closed = null; await this._refPoll(rc); } t = tot(); } }   /* v0.6.217 (the graded readings): the table may answer the abstain, as it may a boost -- the poll stays open after a play in it */   // v0.6.217 (V5 wave 4): Scalpel Tongue / Saulot's Guiding Wisdom -- an opposing voter abstains when that turns the count
       if(this.o.scalpelLock && t.f > t.a && !rc.line){ const lk = this._scalpelLockPlan(v, rc, t); if(lk && this._playAbstain(v, lk, rc)){ if(!rc.line){ rc.closed = null; await this._refPoll(rc); } t = tot(); } }   // v0.6.229 (D-118, proposal 6): Scalpel Tongue's lock on my prey's voter against, before my offensive actions
-      const passed = t.f > t.a;
+      }
+      const passed = w5auto || t.f > t.a;
       if(passed) this._voidOustedRefParts(v, act);   // v0.6.223 (round A): a seat ousted in the referendum's window -- its part does nothing (Parity Shift: nothing left to move)
-      this._writeTally({ mode: 'vote', a: Math.min(99, t.f), b: Math.min(99, t.a) });   // the AUTHORITATIVE count: bots' absolute tally writes race each other, the frozen `casts` lines do not
-      if(!rc.line) this.send({ t: 'log', html: 'Vote: ' + t.f + ' for vs ' + t.a + ' against \u2014 vote ' + (passed ? 'passes' : 'fails') + '.' });   // the client's frozen verdict line (skipped when a human's Resolve already wrote it)
+      if(!w5auto) this._writeTally({ mode: 'vote', a: Math.min(99, t.f), b: Math.min(99, t.a) });   // the AUTHORITATIVE count: bots' absolute tally writes race each other, the frozen `casts` lines do not
+      if(!rc.line && !w5auto) this.send({ t: 'log', html: 'Vote: ' + t.f + ' for vs ' + t.a + ' against \u2014 vote ' + (passed ? 'passes' : 'fails') + '.' });   // the client's frozen verdict line (skipped when a human's Resolve already wrote it)
       this.send({ t: 'log', html: 'Referendum ' + (passed ? 'passes' : 'fails') + ' \u2014 <b>' + esc(act.name) + '</b>: ' + (passed ? esc(terms) : 'no effect') + '.' });
       if(passed && act._voidNote){ this.note(act._voidNote); act._voidNote = null; }   // v0.6.223: the part of a seat ousted in the window, after the terms as announced
       this.chat(passed ? 'The referendum passes, ' + t.f + ' to ' + t.a + '.' : 'The referendum fails, ' + t.f + ' to ' + t.a + '.');
       this._emit('referendum', { vamp: v.name, card: act.name, passed, for: t.f, against: t.a, mine, deltas: act.deltas, closed: rc.closed });
-      if(!(passed && act.titleTerm && this._takeTitle(act))) this._toAsh(act.name);   // v0.6.217: a passed title referendum puts the card on its vampire instead
+      if(!act.inPlayBurn && !(passed && act.titleTerm && this._takeTitle(act))) this._toAsh(act.name);   // v0.6.217: a passed title referendum puts the card on its vampire instead
       this._writeTally({ mode: null, a: 0, b: 0 });
       if(passed){
-        const my = act.deltas[this.seat] | 0;
+        const my = act.inPlayBurn ? 0 : (act.deltas[this.seat] | 0);   // v0.6.230: a burn's stakes move no pool
         if(my){ const p0 = this.pool; this.pool = Math.max(0, (this.pool | 0) + my);
           if(this.pool > 0){ this.push(); this.chat(my < 0 ? 'I lose ' + (-my) + ' pool to the referendum. Pool: ' + this.pool + '.' : 'I gain ' + my + ' pool from the referendum. Pool: ' + this.pool + '.'); }   // v0.6.197 (Johan, 11 Oct: the fourth silent pool change): my OWN swing is spoken as the voters speak theirs -- and send() types the line into the event log, so it IS the ledger record (no second push)
           else if(this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: this.pool - p0, via: 'referendum', card: act.name, own: true, seat: this.seat })); }   // v0.6.180: no line at 0 (the oust below speaks) -- the ledger still gets the move
@@ -4043,8 +4086,11 @@ class Bot {
         this.say('It resolves');
         this.push();
         if(this.pool <= 0 && !this.out){ this._oust(false); return; }
-        this._maybeMarginBlood(v, t.f - t.a);   // v0.6.125: Voter Captivation -- before the act-again look, so its blood can pay Freak Drive
-        for(const k of Object.keys(act.deltas)){ const st = k | 0; if(st !== this.seat && act.deltas[st] < 0) await this._settleOust(st, -act.deltas[st]); }
+        this._w5RefPass = (this._w5RefPass | 0) + 1;   // v0.6.230: Privileged Position's rate
+        if(act.inPlayBurn && this._isHumanName(act.inPlayBurn.owner)) this.chat(act.inPlayBurn.owner + ': your ' + act.inPlayBurn.card + ' is burned (the referendum passed).');   // a bot owner reads the result line
+        { const ppPrey = this._w5PrivilegedPosition(); if(ppPrey) await this._settleOust(ppPrey, 1); }   // v0.6.230 (V5 wave 5): Privileged Position -- my prey burns 1 pool
+        if(!w5auto) this._maybeMarginBlood(v, t.f - t.a);   // v0.6.230: no margin on an automatic pass [LSJ 19980107]   // v0.6.125: Voter Captivation -- before the act-again look, so its blood can pay Freak Drive
+        for(const k of (act.inPlayBurn ? [] : Object.keys(act.deltas))){ const st = k | 0; if(st !== this.seat && act.deltas[st] < 0) await this._settleOust(st, -act.deltas[st]); }
       } else {
         this._unblockedStreak = 0;
         this.say('It resolves');                                                   // the ACTION is over either way -- clears every seat's short-term memory (decision A)
@@ -4053,7 +4099,8 @@ class Bot {
   }
   _onRefTerms(who, card, txt){       // a caller's terms line: remember my stake until the action is over
     const st = this._seatOfName(who); if(!st || st === this.seat || this.out) return;
-    const deltas = this._parseRefTerms(txt);
+    let deltas = this._parseRefTerms(txt);
+    { const bm = String(txt).match(/^burn (.+?)'s (.+)$/); if(bm){ const os = this._seatOfName(bm[1]), c = os && this._seatCards(os).find(x => x && x.kind === 'lib' && x.name === bm[2] && !this._outOfPlay(x)); deltas = (c && this._w5BurnDeltas(os, c)) || {}; } }   // v0.6.230 (V5 wave 5): a referendum to burn a card in play -- my stake is what the card takes from me
     this._refT = { who, seat: st, card, deltas, at: Date.now(), applied: false };
     this.o.log('referendum terms from ' + who + ' (' + card + '): ' + txt + ' -- mine ' + (deltas[this.seat] | 0));
   }
@@ -4080,6 +4127,7 @@ class Bot {
     if(this.pending && this.pending.sub === 'political') this._clearPending('referendum ' + (passed ? 'passed' : 'failed'));
     if(!passed){ this._refT = null; return; }
     if(rt && rt.applied) return;
+    { const bm = String(txt).match(/^burn (.+?)'s (.+)$/); if(bm){ if(rt) rt.applied = true; this._refT = null; if(bm[1] === this.seatName(this.seat)){ const c = this.board.find(x => this._w5Ok(x) && x.name === bm[2]); if(c){ c.zone = 'ash'; c.locked = false; this.push(); this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> burns <b>' + esc(c.name) + '</b> (the referendum passed).' }); this._emit('card-burned', { card: c.name, by: who }); } } return; } }   // v0.6.230 (V5 wave 5): the burn passed -- my card goes
     const deltas = this._parseRefTerms(txt), my = deltas[this.seat] | 0;
     if(rt) rt.applied = true;
     this._refT = null;
@@ -4242,6 +4290,20 @@ class Bot {
         return true;
       }
     }
+    const fm = inTorpor ? null : this._w5FmFor(v);   // v0.6.230 (V5 wave 5): Forward Momentum -- 'After a vampire who follows the Path of Cathari you control performs an action, you can burn 2 counters from this card to unlock them.' A board source, no card and no blood spent
+    if(fm){
+      const fc = { name: fm.name, cost: 0, board: true };
+      const fd = this.decide('act-again', Object.assign({ vamp: v, card: fc, outcome: la.outcome, inTorpor }, this._actAgainCtx(v, fc)));
+      this.o.log('act-again (' + v.name + '): ' + fd.why);
+      if(fd.play){
+        fm.counters.splice(0, 2); v.locked = false; this.push();
+        this._actAgainN[v.id] = (this._actAgainN[v.id] | 0) + 1;
+        this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> unlocks \u2014 <b>' + esc(fm.name) + '</b> (2 counters burned).' });
+        this._emit('act-again', { vamp: v.name, card: fm.name, outcome: la.outcome, via: 'board', blood: v.blood });
+        if(!queued()) actors.push(v);
+        return true;
+      }
+    }
     if(!inTorpor && this._monsterOk(v)){   // v0.6.217 (V5 wave 4): Monster -- after a combat that left the opposing minion not ready, 1 blood buys the unlock (a board source, no card spent), weighed like any act-again
       const mc = { name: 'Monster', cost: 1, board: true };
       const md = this.decide('act-again', Object.assign({ vamp: v, card: mc, outcome: la.outcome, inTorpor }, this._actAgainCtx(v, mc)));
@@ -4399,10 +4461,10 @@ class Bot {
     const st = this.board.find(c => { if(!c || c.kind !== 'lib' || c.zone === 'burned' || c.zone === 'ash') return false;
       const hc = this.fxLookup(c.name); return hc && hc.kind === 'lib' && (hc.e.modes || []).some(mo => mo.fx && mo.fx.warsawRescue); });
     if(!st) return;
-    const vt = this.board.find(c => { if(!c || c.kind !== 'crypt' || c.zone !== 'torpor') return false;
+    const vt = this.board.find(c => { if(!c || c.kind !== 'crypt' || c.zone !== 'torpor' || this._w5IsHostage(c)) return false;   // v0.6.230: not a hostage (Carver's)
       const h = this.fxLookup(c.name); return h && h.e && h.e.clan === 'Nosferatu'; });
     if(!vt) return;
-    st.zone = 'burned';
+    st.zone = 'burned'; this._w5MinionLost(st, 'burned');
     vt.zone = 'ready'; const pos = this._openSlot('ready', vt); vt.x = pos.x; vt.y = pos.y;
     this._emit('recover', { vamp: vt.name, via: 'warsaw' });   // A2b: torpor time's other end
     this.push();
@@ -4458,6 +4520,7 @@ class Bot {
     if(!vamp) return;
     const famed = !!(this._famedMine && this._famedMine.has(vamp.name));
     this._emit('torpor', { vamp: vamp.name, famed });
+    this._w5MinionLost(vamp, 'torpor');   // v0.6.230 (V5 wave 5): Tension in the Ranks, Carver's hostage -- every flip to torpor passes here
     if(famed){
       this.pool = Math.max(0, this.pool - 3);
       this.note('Trainbot: Fame \u2014 ' + vamp.name + ' hits torpor, 3 pool burned.');
@@ -4653,10 +4716,12 @@ class Bot {
     const offW = this._planOffW(), wDef = rd.runway < ((this.plan.reads.preyTto != null) ? this.plan.reads.preyTto : 99) ? 2 : 1;   // the tempo is against me: defence weighs double
     const ocs = ((((this.table[jk.seat] || {}).pub) || {}).cards || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked);
     const pSucc = ocs.length ? 1 - Math.max(0.05, Math.min(0.9, 0.5 + 0.35 * (this.oppIntercept(jk.seat) || 0))) : 1;   // the owner's block odds against my 0 stealth (its unlocked bodies, its shown intercept)
-    const val = pSucc * (wDef * rd.price - offW * rd.preyPrice) * ((this.persona && this.persona.aggression) || 1);
+    const eng = this.o.cardWorth ? this._cardWorth(jk.card, jk.seat) : null;   // v0.6.230 (D-119): with cardWorth the burn is worth what Jack standing costs me, every seat weighed (_seatW)
+    const val = pSucc * (eng ? -eng.worth : (wDef * rd.price - offW * rd.preyPrice)) * ((this.persona && this.persona.aggression) || 1);
     return { val, pSucc: +pSucc.toFixed(2), wDef, mine: rd.price, prey: rd.preyPrice, offW: +offW.toFixed(2), shorter: rd.shorter, wait: rd.wait };
   }
   _myJackWorth(card, myFc){          // D-114 spec §5: my Jack's worth to me when another seat acts to burn it -- what it takes from my prey over min(her runway, its life) (offW-weighed; since D-115 her runway pays the growing counter, so at most her pool) less my own counter payments over its whole life (the two horizons differ: RULINGS O-41); the plan's read when it has one (_planJack)
+    if(this.o.cardWorth){ const w = this._cardWorth(card, this.seat); return w ? Math.max(0, w.worth) : 0; }   // v0.6.230 (D-119, O-41's answer): the engine -- every flow over one horizon, the life ending with the game
     const rd = this.plan && this.plan.reads && this.plan.reads.jackOwn; if(myFc === undefined && rd && rd.cardId === card.id) return rd.worth;
     const j = { seat: this.seat, card, n: Array.isArray(card.counters) ? card.counters.length : (card.counters | 0) };
     const prey = this.preySeat(); if(!prey || prey === this.seat) return 0;
@@ -4669,20 +4734,393 @@ class Bot {
       (((this.table[k] || {}).pub || {}).cards || []).forEach(c => { if(!c || c.kind !== 'lib' || c.zone !== 'ready' || c.faceDown || this._outOfPlay(c)) return;
         const h = this.fxLookup(c.name); const mo = h && h.kind === 'lib' && (h.e.modes || []).find(m => m.fx && m.fx.burnCardAction); if(!mo) return;   // fx.burnCardAction -- a literal read for the coverage scanner
         if(this._isJackName(c.name)) return;   // v0.6.224: Smiling Jack has its own branch below (any seat, its price)
+        if(this._w5UseWorth(h.e)) return;   // v0.6.230: the card-worth engine prices it (_w5AttackCands)
         const w = Math.min(1, this._seatTitleVotes(st) / 4);
         if(!best || w > best.target.w) best = { idx: null, name: h.name, kind: 'burnCard', target: { seat: st, owner: this.seatName(st), cardId: c.id, card: c.name, w }, st: ((mo.fx.burnStealthClan || {})[this._vampClan(vamp)] | 0), n: 0 }; }); }
+    { const aggr = (this.persona && this.persona.aggression) || 1, curV = () => best ? (best.val != null ? best.val : (0.9 + 0.4 * (best.target.w || 0)) * aggr * this._planOffW()) : -Infinity;   // v0.6.230 (V5 wave 5, D-119 (3)): the card-worth engine's targets (Mob Connections' burn; The Rack's and Powerbase's steal) -- each priced in pool, against the Ball's present value
+      for(const c of this._w5AttackCands(vamp)) if(c.val > curV()) best = c; }
     if(this.o.jackBurn){   // v0.6.224 (round B, D-114): another seat's Smiling Jack, at ANY seat -- 'Vampires can burn this card as a (D) action', weighed by its price (_jackBurnValue)
       const jk = this._jackAt(), h = jk && this.fxLookup(jk.card.name), mo0 = h && h.kind === 'lib' && (h.e.modes || []).find(m => m.fx && m.fx.burnCardAction);
       const mo = mo0 && !(mo0.fx.burnBy === 'vampire' && vamp.kind !== 'crypt') ? mo0 : null;   // fx.burnBy -- the card's 'Vampires can burn' (an ally cannot)
       const jv = mo ? this._jackBurnValue(vamp, jk) : null;
       if(jv && !jv.wait && jv.val > 0){
-        const ballS = best ? (0.9 + 0.4 * (best.target.w || 0)) * ((this.persona && this.persona.aggression) || 1) * this._planOffW() : -Infinity;   // the scorer's own value of the Ball's burn
+        const ballS = best ? (best.val != null ? best.val : (0.9 + 0.4 * (best.target.w || 0)) * ((this.persona && this.persona.aggression) || 1) * this._planOffW()) : -Infinity;   // the scorer's own value of the Ball's burn (v0.6.230: or of the engine's candidate)
         if(jv.val > ballS) best = { idx: null, name: h.name, kind: 'burnCard', target: { seat: jk.seat, owner: this.seatName(jk.seat), cardId: jk.card.id, card: jk.card.name, w: 0 }, st: 0, n: 0, val: +jv.val.toFixed(2), jack: jv };
       }
     }
     return best;
   }
-  _bestGrantRushFor(vamp){          // v0.6.217 (V5 wave 4, D-106): a rush a card IN PLAY grants -- Saulot's Avenging Fist on this Salubri ('can enter combat with a non-Salubri vampire as a (D) action; if that vampire is Tremere, this is a +1 stealth action'), or a Regent on another Methuselah's vampire ('Sabbat vampires can enter combat with this vampire as a (D) action'). Haven Uncovered's machinery: no card leaves the hand (idx null), the frozen enters-combat line names the card, the target is chosen by the rush doctrine (_bestRushTargetFor)
+  /* ==================== V5 wave 5 (v0.6.230; specs/spec-v5-wave5-2026-11-17.md; RULINGS D-119, D-120): the card-worth engine and the
+     masters that stay in play. One worth for every card in play: its flows to each seat a round (CARD_WORTH), summed over each seat's
+     horizon min(its runway, the card's life), the life = min(the owner's runway, the expected end of the game: the longest runway among
+     the other live seats) -- no flow outlives the game (O-41). A pool point a seat gains is worth _seatW(seat) to me. The consumers: play
+     (the master finder), defend (the window of an action at my card), attack (an action or a referendum at another seat's card).
+     Jack reads it only with `cardWorth`; the wave's cards always. ==================== */
+  _w5E(name){ const h = name && this.fxLookup(name); return h && h.kind === 'lib' ? h.e : null; }
+  _w5Live(){ return (this.players || []).map(p => p && p.seat).filter(st => st && this.live(st)); }
+  _w5Rounds(){ return Math.max(1, this.ownTurns | 0); }
+  _w5Ok(c){ return !!(c && c.kind === 'lib' && !c.faceDown && !this._outOfPlay(c) && (!c.zone || c.zone === 'ready')); }
+  _w5InPlay(pred){                   // the cards in play at the table that match pred(entry, card): [{ seat, card, e }] -- my board and every live seat's pub (public)
+    const out = [], scan = (st, cs) => (cs || []).forEach(c => { if(!this._w5Ok(c)) return; const e = this._w5E(c.name); if(e && pred(e, c)) out.push({ seat: st, card: c, e }); });
+    if(!this.out) scan(this.seat, this.board);
+    for(const k in (this.table || {})){ const st = +k; if(st === this.seat || !this.live(st)) continue; scan(st, ((this.table[k] || {}).pub || {}).cards); }
+    return out;
+  }
+  _w5Mine(pred){ return this.out ? [] : (this.board || []).filter(c => { if(!this._w5Ok(c)) return false; const e = this._w5E(c.name); return !!(e && pred(e, c)); }); }
+  _w5IsAlly(name){ const e = this._w5E(name); return !!(e && (e.t || []).includes('ally')); }
+  _w5HasReadyAnarch(st){ return this._seatCards(st).some(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.faceDown && this._vampSect(c) === 'Anarch'); }
+  _w5LossRate(st){ const n = ((this._w5Loss || {})[st]) | 0; return (n + 0.3 * 3) / (this._w5Rounds() + 3); }   // ready minions a seat loses a round: the ones seen (pub diffs, my own torpor and burn sites), a prior of 0.3 worth three rounds
+  _w5HuntRate(st){ const me = st === this.seat; return ((me ? (this._w5Hunts | 0) : 0) + 0.5 * 3) / ((me ? this._w5Rounds() : 0) + 3); }
+  _w5RefRate(st){ const me = st === this.seat; return ((me ? (this._w5RefPass | 0) : 0) + 0.4 * 3) / ((me ? this._w5Rounds() : 0) + 3); }
+  _w5Readies(st){ return this._seatCards(st).filter(c => c && c.zone === 'ready' && !c.faceDown && (c.kind === 'crypt' || this._w5IsAlly(c.name))).length; }   // a seat's READY minions (vampires and allies), public
+  _seatW(st){                        // D-119: what a pool point GAINED by seat st is worth to me -- me 1 (2 while my turns to be ousted are fewer than my turns to oust my prey: the Jack spec's wDef), my prey -offW, every other seat -0.15 (the referendum's 'everyone else a little')
+    if(st === this.seat){ const rd = this.plan && this.plan.reads; return (rd && typeof rd.myTto === 'number' && typeof rd.preyTto === 'number' && rd.myTto < rd.preyTto) ? 2 : 1; }
+    return st === this.preySeat() ? -this._planOffW() : -0.15;
+  }
+  _runwayD(st, d, g){                // D-119: seat st's runway in rounds -- its expected damage a round (_jackFc: its predator's forecast) plus a drain d growing by g a round: R*(fc + d) + g*R(R-1)/2 = pool (D-115's root when g = 1)
+    const pool = Math.max(0, this._seatPool(st)); if(pool <= 0) return 0;
+    const a = Math.max(0, this._jackFc(st)) + Math.max(0, d || 0);
+    if(g > 0){ const b = a / g - 0.5; return Math.max(0, Math.sqrt(b * b + 2 * pool / g) - b); }
+    return pool / Math.max(0.25, a);
+  }
+  _flowWorth(flows, owner){          // D-119 (O-41 generalised): the worth to me of a card's flows { seat: { d, g } } -- each seat's gain over min(its runway, L), L = min(the owner's runway, the longest other runway)
+    const seats = this._w5Live(), R = {};
+    seats.forEach(st => { const f = flows[st] || {}; R[st] = this._runwayD(st, Math.max(0, -(f.d || 0)), Math.max(0, -(f.g || 0))); });
+    const own = R[owner] != null ? R[owner] : 0;
+    let end = 0; seats.forEach(st => { if(st !== owner) end = Math.max(end, R[st]); });
+    const life = Math.max(0, Math.min(own, end > 0 ? end : own));
+    let worth = 0; const parts = {};
+    seats.forEach(st => { const f = flows[st]; if(!f) return; const H = Math.min(R[st], life), amt = H * (f.d || 0) + (f.g || 0) * H * (H - 1) / 2;
+      parts[st] = +amt.toFixed(2); worth += this._seatW(st) * amt; });
+    return { worth, life, parts };
+  }
+  _cardWorth(card, owner){           // D-119: a card's worth to ME (its handler's flows over their horizons) -- null without a handler
+    const e = card && this._w5E(card.name), fn = e && e.worth && CARD_WORTH[e.worth]; if(!fn || !owner) return null;
+    const r = fn(this, card, owner); if(!r) return null;
+    if(typeof r.worth === 'number') return { worth: r.worth, life: 0, parts: {}, now: 0 };
+    const fw = this._flowWorth(r.flows || {}, owner); fw.now = r.now || 0; return fw;
+  }
+  _w5UseWorth(e){ return !!(e && e.worth && CARD_WORTH[e.worth] && (this.o.cardWorth || !W5_KNOBBED.has(e.worth))); }   // Jack through the engine only with cardWorth (D-119's knob); every other handler always
+  _w5Once(name){                     // 'Only one X can be played in a game' -- a copy in play or in an ash heap at any seat (public)
+    const n = FX_NORM(name), hit = cs => (cs || []).some(c => c && c.kind === 'lib' && !c.faceDown && FX_NORM(c.name || '') === n && (c.zone === 'ready' || c.zone === 'ash' || c.zone === 'burned'));
+    if(hit(this.board)) return true; for(const k in (this.table || {})) if(+k !== this.seat && hit(((this.table[k] || {}).pub || {}).cards)) return true; return false;
+  }
+  _w5MasterWorth(h){                 // D-119 (1), the play consumer: { worth, hold, why } for a master of the wave (Jack with cardWorth), null for the older paths; a look-ahead card asks its own plan (D-58)
+    const e = h.e, cost = (e.cost && e.cost.pool) || 0;
+    if(e.handler === 'piper' || (e.modes || []).some(mo => mo.fx && mo.fx.piperRecruit)){ const p = this._w5PiperPlan(); return p ? { worth: 1, hold: false, why: 'Piper: ' + p.vamp.name + ' recruits ' + p.card + ', unblockable' } : { hold: true, why: 'Piper: no recruit an Anarch of mine would take this turn' }; }
+    if(e.handler === 'dia' || (e.modes || []).some(mo => mo.fx && mo.fx.autoPassRef)){ if(this._w5Once(h.name)) return { hold: true, why: 'Día de los Muertos: one per game, played' }; const p = this._w5DiaPlan(); return p ? { worth: +(p.gain - cost).toFixed(2), hold: !(p.gain > cost), why: p.why } : { hold: true, why: 'Día de los Muertos: no referendum of a Sabbat of mine this turn' }; }
+    if((e.modes || []).some(mo => mo.fx && mo.fx.frontalRush)){ const p = this._w5FrontalPlan(); return p ? { worth: +p.worth.toFixed(2), hold: !(p.worth > 0), why: p.why } : { hold: true, why: 'Frontal Assault: no rush my minion phase would take' }; }   // fx.frontalRush
+    if(!this._w5UseWorth(e)) return null;
+    const w = this._cardWorth({ id: null, name: h.name, counters: [] }, this.seat); if(!w) return null;
+    const v = w.worth + (w.now || 0) - cost;
+    return { worth: +v.toFixed(2), hold: !(v > 0), why: h.name + ': worth ' + v.toFixed(2) + ' over ' + w.life.toFixed(1) + ' rounds' };
+  }
+  _w5DeadMaster(h){                  // the discard phase's view: a wave master held for good -- one per game and played, unique and mine in play, or worth 1 pool or more below nothing
+    const e = h.e; if(!(e.t || []).includes('master')) return false;
+    if((e.handler === 'dia' || e.oncePerGame) && this._w5Once(h.name)) return true;
+    if(e.unique && this._w5Mine((x, c) => FX_NORM(c.name) === FX_NORM(h.name)).length) return true;
+    if(!this._w5UseWorth(e)) return false;
+    const w = this._cardWorth({ id: null, name: h.name, counters: [] }, this.seat); return !!(w && w.worth + (w.now || 0) - ((e.cost && e.cost.pool) || 0) <= -1);
+  }
+  _w5HoldNote(name, why){ const k = (this.ownTurns | 0) + '|' + name; if((this._w5Held = this._w5Held || new Set()).has(k)) return; this._w5Held.add(k); this.o.log('master-play: ' + name + ' held -- ' + why); this._emit('w5-hold', { card: name, why }); }   // once a turn a card
+  _w5OnTabled(card){                 // a wave master I put in play: The Rack's vampire (the memo token), Forward Momentum's counters, Frontal Assault's turn
+    const e = this._w5E(card.name); if(!e) return;
+    if((e.modes || []).some(mo => mo.fx && mo.fx.rackBlood)){ const v = this._w5RackPick(); card.rackVamp = v ? v.id : null; if(v) this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> chooses <b>' + esc(v.name) + '</b> for <b>' + esc(card.name) + '</b>.' }); }   // fx.rackBlood
+    if((e.modes || []).some(mo => mo.fx && mo.fx.bleedCounter)) card.counters = [];   // fx.bleedCounter
+    if((e.modes || []).some(mo => mo.fx && mo.fx.frontalRush)) card.frontalTurn = this._turnSerial | 0;
+  }
+  _w5OnGiven(card){                  // a wave card another seat gave me (a steal, The Coven): The Rack's new controller chooses [ANK 20200130-2]
+    const e = this._w5E(card.name); if(!e) return;
+    if((e.modes || []).some(mo => mo.fx && mo.fx.rackBlood)){ const v = this._w5RackPick(); card.rackVamp = v ? v.id : null; this.push(); if(v) this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> chooses <b>' + esc(v.name) + '</b> for <b>' + esc(card.name) + '</b>.' }); }
+  }
+  _w5RackPick(){ const room = v => (this._capOf(v) || 99) - (v.blood | 0); return this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready').sort((a, b) => (room(b) - room(a)) || ((this._capOf(b) || 0) - (this._capOf(a) || 0)))[0] || null; }
+  _w5RoomVamp(){ const room = v => (this._capOf(v) || 99) - (v.blood | 0); return this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && room(c) > 0).sort((a, b) => room(b) - room(a))[0] || null; }
+  /* --- my unlock phase (after the unlock and the older unlock-phase effects; Anarch Revolt's bill last: 'by the end of the unlock phase' [LSJ 20080106]) --- */
+  _w5Unlock(){
+    if(!this.started || this.out) return;
+    this._w5Rack(); this._w5Garibaldi(); this._w5FreeHostage();
+    this._w5AnarchRevoltBill();
+  }
+  _w5Rack(){                         // The Rack: 'During this location's controller's unlock phase, the chosen vampire can gain 2 blood' (in torpor too; a vampire that fell out of contention is not replaced [RTR 19960112])
+    for(const c of this._w5Mine(e => (e.modes || []).some(mo => mo.fx && mo.fx.rackBlood))){
+      const fx = ((this._w5E(c.name).modes || []).find(mo => mo.fx && mo.fx.rackBlood) || {}).fx || {};
+      const v = c.rackVamp && this.board.find(x => x && x.id === c.rackVamp && x.kind === 'crypt' && (x.zone === 'ready' || x.zone === 'torpor')); if(!v) continue;
+      const n = Math.min(fx.rackBlood | 0, Math.max(0, (this._capOf(v) || 99) - (v.blood | 0))); if(n <= 0) continue;
+      v.blood = (v.blood | 0) + n; this.push();
+      this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> gains ' + n + ' blood (<b>' + esc(c.name) + '</b>).' });
+      this._emit('w5-rack', { vamp: v.name, n });
+    }
+  }
+  _w5Garibaldi(){                    // Garibaldi-Meucci Museum (a): 'lock this location and burn 1 pool during your unlock phase to exchange one card from your hand for one card in your ash heap requiring an Anarch' -- a dead hand card for an Anarch card (cardfx anarchReq) my vampires can use, pool above the floor; both named [LSJ 20000222]
+    const g = this._w5Mine((e, c) => !c.locked && (e.modes || []).some(mo => mo.fx && mo.fx.ashSwapAnarch))[0]; if(!g) return;   // fx.ashSwapAnarch
+    if((this.pool | 0) - 1 < Math.max(2, this._poolFloorEff())) return;
+    const vamps = this._deadJudgeVamps(), di = this._deadHandIndex(vamps); if(di < 0) return;
+    const live = this.board.find(c => { if(!c || c.kind !== 'lib' || c.zone !== 'ash') return false; const e = this._w5E(c.name); return !!(e && e.anarchReq && !(e.t || []).includes('master') && (!(e.modes || []).length || (e.modes || []).some(mo => this._modeUsable(mo, vamps)))); });
+    if(!live) return;
+    const out = this.hand.splice(di, 1)[0]; this._toAsh(out);
+    this.board = this.board.filter(x => x !== live); this.hand.push(live.name);
+    g.locked = true; this.pool = (this.pool | 0) - 1; this.push();
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(g.name) + '</b> and burns 1 pool: <b>' + esc(out) + '</b> for <b>' + esc(live.name) + '</b>.' });
+    this._emit('w5-garibaldi', { out, got: live.name });
+  }
+  _w5GaribaldiEndFor(myVamp){        // Garibaldi-Meucci Museum (b): 'lock this location before range is determined to end a combat involving an Anarch you control and another Anarch' -- my blocked acting Anarch, on Change of Target's test (_cotWorth)
+    const g = this._w5Mine((e, c) => !c.locked && (e.modes || []).some(mo => mo.fx && mo.fx.endCombatAnarch))[0]; if(!g) return null;   // fx.endCombatAnarch
+    if(this._vampSect(myVamp) !== 'Anarch') return null;
+    const bs = this._lastBlockerSeat | 0, bn = this._lastBlockerName, bv = bn && this._seatCards(bs).find(c => c && c.kind === 'crypt' && c.name === bn);
+    if(!bv || this._vampSect(bv) !== 'Anarch') return null;
+    const w = this._cotWorth(myVamp, bs); this.o.log('garibaldi-meucci (' + myVamp.name + '): ' + w.why);
+    return w.play ? { card: g, why: w.why } : null;
+  }
+  /* --- Carver's Meat Packing and Storage: the hostages --- */
+  _w5Carvers(){ return this._w5InPlay(e => (e.modes || []).some(mo => mo.fx && mo.fx.hostageCap)); }   // fx.hostageCap
+  _w5Hostage(v, st){                 // 'After a vampire with capacity 3 or less goes to torpor, put 1 hostage counter on them' -- any seat's, while a Carver's is in play; a hostage cannot be moved to ready or be diablerized
+    const cv = this._w5Carvers(); if(!cv.length || !v) return;
+    const capMax = ((cv[0].e.modes || []).map(mo => mo.fx && mo.fx.hostageCap).find(Boolean)) | 0;
+    const cap = this._capOf(v, st === this.seat ? this.board : this._seatCards(st)) || this.fxCryptCap(v.name) || 99; if(cap > capMax) return;
+    (this._w5Hostages = this._w5Hostages || new Map()).set(st + '|' + v.id, { seat: st, id: v.id, name: v.name });
+    if(st === this.seat){ v.w5Hostage = true; this.push(); this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> is a hostage (<b>Carver’s Meat Packing and Storage</b>): it cannot leave torpor or be rescued.' }); }
+    else if(cv.some(x => x.seat === this.seat) && this._isHumanName(this.seatName(st))) this.chat(this.seatName(st) + ': ' + v.name + ' is a hostage (Carver’s Meat Packing and Storage) — it cannot leave torpor or be rescued until a ready vampire burns 2 blood in an unlock phase.');
+  }
+  _w5HostagePrune(){ if(!this._w5Hostages) return; if(!this._w5Carvers().length){ this._w5Hostages.clear(); (this.board || []).forEach(c => { if(c && c.w5Hostage) c.w5Hostage = false; }); return; }   // 'After this card leaves play, burn all the hostage counters'
+    for(const [k, h] of this._w5Hostages){ const c = this._seatCards(h.seat).find(x => x && x.id === h.id); if(!c || c.zone !== 'torpor') this._w5Hostages.delete(k); } }
+  _w5HostageN(){ this._w5HostagePrune(); return this._w5Hostages ? this._w5Hostages.size : 0; }
+  _w5IsHostage(v){ return !!(v && v.w5Hostage && this._w5Carvers().length); }
+  _w5FreeHostage(){                  // 'During any unlock phase, any ready vampire can burn 2 blood to burn any vampire's hostage counters' (once a turn [ANK 20200729]) -- mine, when I am short of bodies and a payer keeps 2 blood
+    this._w5HostagePrune();
+    const hs = this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'torpor' && c.w5Hostage); if(!hs.length) return;
+    if(this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready').length >= 2) return;
+    const payer = this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && (c.blood | 0) >= 4).sort((a, b) => (b.blood | 0) - (a.blood | 0))[0]; if(!payer) return;
+    const h = hs.sort((a, b) => (this._capOf(b) || 0) - (this._capOf(a) || 0))[0];
+    payer.blood = (payer.blood | 0) - 2; h.w5Hostage = false; if(this._w5Hostages) this._w5Hostages.delete(this.seat + '|' + h.id); this.push();
+    this.send({ t: 'log', html: '<b>' + esc(payer.name) + '</b> burns 2 blood: <b>' + esc(h.name) + '</b>’s hostage counter is burned (<b>Carver’s Meat Packing and Storage</b>).' });
+  }
+  _w5CarversLock(){                  // 'Lock during your master phase to add X blood to a ready vampire you control, where X is the number of vampires with any hostage counters'
+    const c = this._w5Mine((e, x) => !x.locked && (e.modes || []).some(mo => mo.fx && mo.fx.hostageBlood))[0]; if(!c) return;   // fx.hostageBlood
+    const X = this._w5HostageN(); if(X < 1) return;
+    const v = this._w5RoomVamp(); if(!v) return;
+    const n = Math.min(X, (this._capOf(v) || 99) - (v.blood | 0)); c.locked = true; v.blood = (v.blood | 0) + n; this.push();
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(c.name) + '</b>: <b>' + esc(v.name) + '</b> gains ' + n + ' blood (' + X + ' hostage' + (X === 1 ? '' : 's') + ').' });
+  }
+  /* --- the minions lost (Tension in the Ranks, Frontal Assault, Carver's, Cursed Abattoir) --- */
+  _w5MinionLost(v, how){             // a READY minion of MINE was burned or sent to torpor (the torpor sites through _fameTorporHook; the burn sites): Tension in the Ranks bills me, Carver's may take it hostage, Cursed Abattoir counts a zombie
+    if(!v || !this.started) return;
+    (this._w5Loss = this._w5Loss || {})[this.seat] = (this._w5Loss[this.seat] | 0) + 1;
+    if(how === 'torpor' && v.kind === 'crypt') this._w5Hostage(v, this.seat);
+    if(how === 'burned' && v.kind !== 'crypt') this._w5ZombieBurned(v);
+    if(this.out || !this._w5InPlay(e => (e.modes || []).some(mo => mo.fx && mo.fx.lostMinionTax)).length) return;   // fx.lostMinionTax (unique: one card at most)
+    this.pool = Math.max(0, (this.pool | 0) - 1); this.push();
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> burns 1 pool (<b>Tension in the Ranks</b>: ' + esc(v.name) + (how === 'torpor' ? ' went to torpor' : ' is burned') + ').' });
+    this._emit('w5-tension', { vamp: v.name, how });
+    if(this.pool <= 0) this._oust(false);
+  }
+  _w5PubDiff(st, prev, now){         // another seat's push: its READY minions that left ready since its last push -- the loss rate, Frontal Assault's pool (my prey's), Carver's hostages, a human's Tension
+    if(!prev || !now || st === this.seat || !this.started) return;
+    const nowById = new Map((now.cards || []).filter(Boolean).map(c => [c.id, c]));
+    (prev.cards || []).forEach(c => { if(!c || c.zone !== 'ready' || c.faceDown || !(c.kind === 'crypt' || this._w5IsAlly(c.name))) return;
+      const n = nowById.get(c.id); if(n && n.zone === 'ready') return;
+      const how = n && n.zone === 'torpor' ? 'torpor' : 'burned';
+      (this._w5Loss = this._w5Loss || {})[st] = (this._w5Loss[st] | 0) + 1;
+      if(how === 'torpor' && c.kind === 'crypt') this._w5Hostage(c, st);
+      if(st === this.preySeat()) this._w5FrontalGain(c, how);
+      if(this._isHumanName(this.seatName(st)) && this._w5Mine(e => (e.modes || []).some(mo => mo.fx && mo.fx.lostMinionTax)).length) this.chat(this.seatName(st) + ': Tension in the Ranks — burn 1 pool (' + c.name + (how === 'torpor' ? ' went to torpor' : ' is burned') + ').');
+    });
+  }
+  _w5ZombieBurned(c){                // Cursed Abattoir: 'After a zombie (ally or retainer) you control is burned, you can add 1 counter to this location' (cardfx zombie)
+    const e = this._w5E(c.name); if(!(e && e.zombie)) return;
+    for(const a of this._w5Mine(x => (x.modes || []).some(mo => mo.fx && mo.fx.zombieCounter))){ a.counters = Array.isArray(a.counters) ? a.counters : []; a.counters.push('zombie'); this.push(); }   // fx.zombieCounter
+  }
+  _w5HumanTurn(st){                  // a human's turn begins (their unlock phase): the owner bot's reminder of Anarch Revolt -- the human pays by hand
+    if(!this._isHumanName(this.seatName(st)) || this._w5HasReadyAnarch(st)) return;
+    const n = this._w5Mine(e => (e.modes || []).some(mo => mo.fx && mo.fx.noAnarchTax)).length; if(!n) return;
+    const all = this._w5InPlay(e => (e.modes || []).some(mo => mo.fx && mo.fx.noAnarchTax)).length;
+    this.chat(this.seatName(st) + ': Anarch Revolt — burn ' + all + ' pool at the end of your unlock phase if you control no ready Anarch.');
+  }
+  _w5AnarchRevoltBill(){             // Anarch Revolt: 'A Methuselah not controlling a ready Anarch burns 1 pool during their unlock phase' -- per copy in play [LSJ 19980225], at the end of my unlock phase [LSJ 20080106]
+    const n = this._w5InPlay(e => (e.modes || []).some(mo => mo.fx && mo.fx.noAnarchTax)).length;   // fx.noAnarchTax
+    if(!n || this._w5HasReadyAnarch(this.seat)) return;
+    this.pool = Math.max(0, (this.pool | 0) - n); this.push();
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> burns ' + n + ' pool (<b>Anarch Revolt</b>' + (n > 1 ? ' ×' + n : '') + ': no ready Anarch).' });
+    this._emit('w5-anarch-revolt', { n });
+    if(this.pool <= 0) this._oust(false);
+  }
+  _w5BurnDeltas(owner, card){        // the stakes of a referendum to burn a card in play (Anarch Revolt): each other seat the pool the card would take from it over its horizon, the owner a loss -- my vote's direction and the caller's estimate (no pool moves on them)
+    const w = this._cardWorth(card, owner); if(!w) return null;
+    const d = {}; let sum = 0;
+    this._w5Live().forEach(st => { if(st === owner) return; const s = Math.round(Math.max(0, -(w.parts[st] || 0))); if(s){ d[st] = s; sum += s; } });
+    if(!sum) return null;
+    d[owner] = -Math.max(1, Math.round(sum / 2));
+    return d;
+  }
+  _w5BurnRefFor(vamp){               // a political action with no card from hand: 'Vampires can call a referendum to burn this card as a +1 stealth political action' (Anarch Revolt) -- no card's vote, stealth 1 (R-14), the terms 'burn NAME's CARD'
+    let best = null;
+    for(const x of this._w5InPlay(e => (e.modes || []).some(mo => mo.fx && mo.fx.burnByRef))){   // fx.burnByRef
+      if(x.seat === this.seat) continue;
+      const rd = this._w5BurnDeltas(x.seat, x.card); if(!rd) continue;
+      if((rd[this.seat] | 0) <= 0) continue;   // nothing in it for me
+      const value = this._refValue(rd); if(!(value > 0)) continue;
+      const mine = this._myTitleVotes().n + this._voteBoosts(vamp).reduce((a, b) => a + b.n, 0);
+      let agst = 0, forO = 0;
+      (this.players || []).forEach(pl => { const st = pl.seat; if(st === this.seat || !this.live(st)) return; const theirs = rd[st] | 0; if(theirs < 0) agst += this._seatTitleVotes(st); else if(theirs > 0) forO += this._seatTitleVotes(st); });
+      const pass = (mine + forO > agst) ? 0.85 : (mine + forO === agst ? 0.2 : 0.08);
+      const cand = { idx: null, name: x.card.name, kind: 'political', n: 0, st: 1, cost: null, deltas: rd, note: 'burn', value, pass, mine, agst, forO, inPlayBurn: { seat: x.seat, owner: this.seatName(x.seat), cardId: x.card.id, card: x.card.name } };
+      if(!best || cand.value * cand.pass > best.value * best.pass) best = cand;
+    }
+    return best;
+  }
+  /* --- the press, the master phase's locks, the discard phase --- */
+  _w5MobPress(){ return this._w5Mine((e, c) => !c.locked && (e.modes || []).some(mo => mo.fx && mo.fx.pressContinue))[0] || null; }   // Mob Connections: 'lock this card to give a minion you control 1 press, only usable to continue combat' (fx.pressContinue)
+  _w5CovenLock(){                    // The Coven: 'lock this card to add 2 blood to a ready vampire you control' -- before it passes to my predator
+    const c = this._w5Mine((e, x) => !x.locked && (e.modes || []).some(mo => mo.fx && mo.fx.covenPass))[0]; if(!c) return;   // fx.covenPass
+    const fx = ((this._w5E(c.name).modes || []).find(mo => mo.fx && mo.fx.covenPass) || {}).fx || {};   // fx.covenBlood: the blood
+    const v = this._w5RoomVamp(); if(!v) return;
+    const n = Math.min((fx.covenBlood | 0) || 2, (this._capOf(v) || 99) - (v.blood | 0)); c.locked = true; v.blood = (v.blood | 0) + n; this.push();
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(c.name) + '</b>: <b>' + esc(v.name) + '</b> gains ' + n + ' blood.' });
+    this._emit('w5-coven', { vamp: v.name, n });
+  }
+  _w5CovenPass(){                    // 'During your discard phase, your predator takes control of The Coven' (mandatory [LSJ 20100723]) -- `give`, its lock as it is
+    for(const c of this._w5Mine(e => (e.modes || []).some(mo => mo.fx && mo.fx.covenPass))){
+      const pred = this.predSeat(); if(!pred || pred === this.seat) continue;
+      this.board = this.board.filter(x => x !== c); if(!/^bot/.test(String(c.id))) c.id = this.gid();
+      this.send({ t: 'give', seat: pred, gid: c.id, rx: 0.5, ry: 0.5, card: { name: c.name, kind: 'lib', faceDown: false, locked: !!c.locked, owner: c.owner || this.o.name } });
+      this.push();
+      this.send({ t: 'log', html: '<b>' + esc(this.seatName(pred)) + '</b> takes control of <b>' + esc(c.name) + '</b> (' + esc(this.o.name) + '’s discard phase).' });
+      this._emit('w5-coven-pass', { to: this.seatName(pred) });
+    }
+  }
+  _w5PowerbaseLock(){                // Powerbase: Los Angeles: 'During your discard phase, you can lock this location to get +1 discard phase action' -- when a dead card waits in hand; an Anarch card discarded then unlocks a ready Anarch (_w5AfterDiscard)
+    const c = this._w5Mine((e, x) => !x.locked && (e.modes || []).some(mo => mo.fx && mo.fx.discardBonus))[0]; if(!c) return;   // fx.discardBonus
+    if(this._deadHandIndex(this._deadJudgeVamps()) < 0) return;
+    c.locked = true; this.phaseBonus.discard = (this.phaseBonus.discard | 0) + 1; this._w5PbAnarch = true; this.push();
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(c.name) + '</b>: +1 discard phase action.' });
+  }
+  _w5AfterDiscard(name){             // '... If you use that discard phase action to discard a card requiring an Anarch ..., you can unlock a ready Anarch' (cardfx anarchReq)
+    if(!this._w5PbAnarch) return; const e = this._w5E(name); if(!(e && e.anarchReq)) return; this._w5PbAnarch = false;
+    const v = this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.locked && this._vampSect(c) === 'Anarch').sort((a, b) => this._blockerWorth(b) - this._blockerWorth(a))[0]; if(!v) return;
+    v.locked = false; this.push();
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> unlocks (<b>Powerbase: Los Angeles</b>: ' + esc(name) + ' discarded).' });
+  }
+  _w5PrivilegedPosition(){           // Privileged Position: 'After a referendum called by a vampire you control passes, you can lock this card to burn 1 pool from your prey' -- always, my prey live
+    const c = this._w5Mine((e, x) => !x.locked && (e.modes || []).some(mo => mo.fx && mo.fx.refPassPreyBurn))[0]; if(!c) return null;   // fx.refPassPreyBurn
+    const prey = this.preySeat(); if(!prey || prey === this.seat || !this.live(prey)) return null;
+    c.locked = true; this.push(); const pn = this.seatName(prey);
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(c.name) + '</b> — <b>' + esc(pn) + '</b> burns 1 pool.' });   // L12.ppBurn: the prey's bot pays
+    if(this._isHumanName(pn)) this.chat(pn + ': Privileged Position — burn 1 pool.');
+    this._emit('w5-pp', { prey: pn });
+    return prey;
+  }
+  _w5OnPpBurn(who, preyName){ if(preyName !== this.seatName(this.seat) || this.out || who === this.o.name) return; this.pool = Math.max(0, (this.pool | 0) - 1); this._emit('took-pooldmg', { n: 1, pool: this.pool, via: 'privileged-position' }); if(this.pool > 0) this.push(); else this._oust(false); }
+  _w5TensionBurn(){                  // Tension in the Ranks: 'Methuselahs can use a master phase action and discard two master cards to burn this card' -- when it costs me 1.5 pool or more over its life, two masters of mine that are worth less
+    if(this._phaseAvail('master') <= 0) return;
+    const t = this._w5InPlay(e => (e.modes || []).some(mo => mo.fx && mo.fx.lostMinionTax))[0]; if(!t) return;
+    const w = this._cardWorth(t.card, t.seat); if(!w || w.worth > -1.5) return;
+    const vamps = this._deadJudgeVamps();
+    const ms = this.hand.map((n, i) => ({ n, i, h: this.fxLookup(n) })).filter(x => x.h && x.h.kind === 'lib' && (x.h.e.t || []).includes('master') && FX_NORM(x.n) !== FX_NORM(t.card.name));
+    if(ms.length < 2) return;
+    const rank = x => (this._deadHandIndex(vamps) === x.i ? 0 : 1) * 10 + ((x.h.e.cost && x.h.e.cost.pool) || 0);
+    const two = ms.sort((a, b) => rank(a) - rank(b)).slice(0, 2);
+    two.map(x => x.i).sort((a, b) => b - a).forEach(i => { const nm = this.hand.splice(i, 1)[0]; this._toAsh(nm); this.send({ t: 'draw' }); });
+    this.phaseUsed.master++;
+    const ow = this.seatName(t.seat);
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> discards two masters to burn <b>' + esc(ow) + "</b>'s <b>Tension in the Ranks</b>." });   // L12.tensionBurn (a straight apostrophe, burnAct's form)
+    if(t.seat === this.seat){ t.card.zone = 'ash'; t.card.locked = false; }
+    else if(this._isHumanName(ow)) this.chat(ow + ': your Tension in the Ranks is burned (two masters discarded).');
+    this.push(); this._emit('w5-tension-burn', { owner: ow, discarded: two.map(x => x.n) });
+  }
+  _w5OnTensionBurn(who, owner){ if(owner !== this.seatName(this.seat) || this.out) return; const c = this.board.find(x => this._w5Ok(x) && (this._w5E(x.name) || { modes: [] }).modes.some(mo => mo.fx && mo.fx.lostMinionTax)); if(!c) return; c.zone = 'ash'; c.locked = false; this.push(); this._emit('card-burned', { card: c.name, by: who }); }
+  /* --- Frontal Assault --- */
+  _w5FrontalMine(){ return this._w5Mine(e => (e.modes || []).some(mo => mo.fx && mo.fx.frontalRush)); }
+  _w5FrontalRushFor(vamp){           // 'Each ready minion you control can enter combat with a minion controlled by your prey as a (D) action' -- a granted rush at my prey, 0 stealth, once per minion and card (rulebook 6.1.6)
+    if(!vamp || vamp.zone !== 'ready' || vamp.locked || !this._w5FrontalMine().length) return null;
+    const prey = this.preySeat(); if(!prey || prey === this.seat) return null;
+    const t = this._bestRushTargetFor(vamp, { quiet: true, filter: c => (c.seat | 0) === prey }); if(!t) return null;
+    return { idx: null, name: 'Frontal Assault', kind: 'rush', via: 'grant', target: t, lockTarget: false, st: 0, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 };
+  }
+  _w5FrontalPlan(){                  // the look ahead (D-58): the minions whose own scorer would take the granted rush now; the bill at my influence phase (1 pool per ready minion of my prey still standing, about half a torpor a rush) must leave me 1 pool
+    const prey = this.preySeat(); if(!prey || prey === this.seat || !this.live(prey)) return null;
+    const preyReady = this._w5Readies(prey); let k = 0; const who = [];
+    this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && (c.blood | 0) > 0).forEach(v => {
+      const t = this._bestRushTargetFor(v, { quiet: true, filter: c => (c.seat | 0) === prey }); if(!t) return;
+      const fr = { idx: null, name: 'Frontal Assault', kind: 'rush', via: 'grant', target: t, lockTarget: false, st: 0, n: 1, exp: this._rushExpectation(v), myBlood: v.blood | 0 };
+      const ctx = this._actionCtxAdjust(v, this._actionCtxFor(v, { rush: fr }), true);
+      const out = this._decide('action', ctx); if(out && out.pick === fr){ k++; who.push(v.name); } });
+    if(!k) return null;
+    const bill = Math.max(0, preyReady - 0.5 * k), worth = k - bill;
+    if((this.pool | 0) - Math.ceil(bill) < 1) return { worth: -1, why: 'Frontal Assault: its bill (' + bill + ') would take my last pool' };
+    return { worth, why: 'Frontal Assault: ' + k + ' rush(es) (' + who.join(', ') + ') against ' + preyReady + ' ready minion(s) of my prey -- worth ' + worth.toFixed(2) };
+  }
+  _w5FrontalGain(c, how){            // 'You gain 1 pool after a ready minion controlled by your prey is burned or sent to torpor' -- while my Frontal Assault is in play (this turn)
+    for(const f of this._w5FrontalMine()){ this.pool = (this.pool | 0) + 1; this.push();
+      this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> gains 1 pool (<b>' + esc(f.name) + '</b>: ' + esc(c.name) + (how === 'torpor' ? ' went to torpor' : ' is burned') + ').' }); this._emit('w5-frontal-gain', { vamp: c.name, how }); }
+  }
+  _w5FrontalBill(){                  // 'During your influence phase, burn this card and burn 1 pool for each ready minion controlled by your prey'
+    const fs = this._w5FrontalMine(); if(!fs.length) return;
+    const prey = this.preySeat(), n = (prey && prey !== this.seat) ? this._w5Readies(prey) : 0;
+    for(const f of fs){ f.zone = 'ash'; f.locked = false;
+      this.pool = Math.max(0, (this.pool | 0) - n); this.push();
+      this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> burns <b>' + esc(f.name) + '</b> and ' + n + ' pool (' + n + ' ready minion' + (n === 1 ? '' : 's') + ' of ' + esc(this.seatName(prey)) + ').' });
+      this._emit('w5-frontal-bill', { n });
+      if(this.pool <= 0){ this._oust(false); return; } }
+  }
+  /* --- Forward Momentum, The Hungry Coyote, Piper, Día de los Muertos --- */
+  _w5FmFor(v){ if(!v || this._vampPath(v) !== 'Cathari') return null; return this._w5Mine((e, c) => (e.modes || []).some(mo => mo.fx && mo.fx.counterUnlock) && Array.isArray(c.counters) && c.counters.length >= 2)[0] || null; }   // fx.counterUnlock
+  _w5AfterBleed(v, ok){              // Forward Momentum: 'After a vampire who follows the Path of Cathari you control bleeds, if the bleed is successful (for 1 or more), add 1 counter to this card; otherwise, burn 1 counter'
+    if(!v || this._vampPath(v) !== 'Cathari') return;
+    for(const c of this._w5Mine(e => (e.modes || []).some(mo => mo.fx && mo.fx.bleedCounter))){ c.counters = Array.isArray(c.counters) ? c.counters : [];
+      if(ok) c.counters.push('momentum'); else if(c.counters.length) c.counters.pop(); else continue;
+      this.push(); this._emit('w5-momentum', { vamp: v.name, ok, n: c.counters.length }); }
+  }
+  _w5HuntBonus(v){ return (this._vampSect(v) === 'Sabbat' && this._w5Mine(e => (e.modes || []).some(mo => mo.fx && mo.fx.huntBonusSabbat)).length) ? 1 : 0; }   // The Hungry Coyote: 'Sabbat vampires you control get +1 hunt' (fx.huntBonusSabbat)
+  _w5PiperPlan(){                    // Piper (requires a ready Anarch): the look ahead (D-58) -- an unlocked ready Anarch whose own scorer would recruit now; Piper makes it unblockable and no action (no Charisma [LSJ 20090115-1])
+    let best = null;
+    this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && this._vampSect(c) === 'Anarch').forEach(v => { if(best) return;
+      const a = this._aheadPick(v), pk = a && a.pick; if(!pk || pk.kind !== 'recruit') return;
+      const r = this._bestRecruitFor(v, { noDiscount: true }); if(r) best = { vamp: v, r, card: r.name }; });
+    return best;
+  }
+  async _w5Piper(){                  // 'Lock a ready unlocked Anarch you control. That Anarch recruits or employs an ally or retainer from your hand (requirements and cost apply as normal). This is not an action and cannot be blocked.' (the ally cannot act this turn [RBK recruit-ally])
+    const p = this._w5PiperPlan(); if(!p) return;
+    const v = p.vamp, r = p.r, j = this.hand.indexOf(r.name); if(j < 0) return;
+    this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1;
+    v.locked = true; if(r.costBlood) v.blood = Math.max(0, (v.blood | 0) - r.costBlood); this.pool = Math.max(1, (this.pool | 0) - (r.costPool | 0));
+    this.board.push({ id: this.gid(), name: r.name, kind: 'lib', zone: 'ready', faceDown: false, x: 64, y: 64, locked: false, life: r.life });
+    this.push();
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> recruits <b>' + esc(r.name) + '</b> [' + esc(r.at || '') + '] (<b>Piper</b>: not an action, cannot be blocked).' });
+    this._emit('w5-piper', { vamp: v.name, card: r.name });
+  }
+  _w5DiaPlan(){                      // Día de los Muertos: the look ahead (D-58) -- a ready unlocked Sabbat of mine whose own scorer would call a referendum this turn; the card buys the rest of its pass chance (value x (1 - pass))
+    let best = null;
+    this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && this._vampSect(c) === 'Sabbat').forEach(v => {
+      const a = this._aheadPick(v), pk = a && a.pick; if(!pk || pk.kind !== 'political') return;
+      const gain = (pk.value || 0) * (1 - (pk.pass || 0)); if(!best || gain > best.gain) best = { vamp: v, gain, why: 'Día de los Muertos: ' + v.name + '’s ' + pk.name + ' (pass ' + (pk.pass || 0) + ') -- worth ' + gain.toFixed(2) }; });
+    return best;
+  }
+  _w5DiaFor(v){ return !!(this._w5Dia && this._w5Dia.turn === (this._turnSerial | 0) && !this._w5Dia.used && this._vampSect(v) === 'Sabbat'); }
+  /* --- an action that steals my card (The Rack, Powerbase: Los Angeles) --- */
+  _w5GiveStolen(p){                  // the steal went through: the card goes to the actor's Methuselah (`give`, its id kept), whose bot makes the card's choices
+    const c = this.board.find(x => x && x.id === p.burnCardId); if(!c || this._outOfPlay(c)) return;
+    const to = p.actorSeat || this._seatOfName(p.who); if(!to || to === this.seat) return;
+    this.board = this.board.filter(x => x !== c); if(!/^bot/.test(String(c.id))) c.id = this.gid();
+    this.send({ t: 'give', seat: to, gid: c.id, rx: 0.5, ry: 0.5, card: { name: c.name, kind: 'lib', faceDown: false, locked: !!c.locked, owner: c.owner || this.o.name } });
+    this.push();
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> gives <b>' + esc(c.name) + '</b> to <b>' + esc(this.seatName(to)) + '</b> (' + esc(p.actingVampName || p.who || '?') + '’s action).' });
+    this._emit('card-stolen', { card: c.name, to: this.seatName(to), by: p.actingVampName || null });
+  }
+  _w5AttackCands(vamp){              // D-119 (3): a card another seat controls that minions may burn (Mob Connections) or steal (The Rack: a vampire; Powerbase: Los Angeles: an Anarch) -- P(success) x (what its going is worth to me, plus its worth to me as mine when stolen) x aggression
+    const out = [];
+    for(const x of this._w5InPlay(e => this._w5UseWorth(e) && (e.modes || []).some(mo => mo.fx && (mo.fx.burnCardAction || mo.fx.stealCardAction)))){   // fx.stealCardAction
+      if(x.seat === this.seat || this._isJackName(x.card.name)) continue;
+      const mo = (x.e.modes || []).find(m => m.fx && (m.fx.burnCardAction || m.fx.stealCardAction)), steal = !!mo.fx.stealCardAction, by = steal ? mo.fx.stealBy : mo.fx.burnBy;   // fx.stealBy
+      if(by === 'vampire' && vamp.kind !== 'crypt') continue; if(by === 'Anarch' && this._vampSect(vamp) !== 'Anarch') continue;
+      const w0 = this._cardWorth(x.card, x.seat); if(!w0) continue;
+      const w1 = steal ? this._cardWorth(x.card, this.seat) : null, gain = -w0.worth + (w1 ? Math.max(0, w1.worth) : 0); if(!(gain > 0)) continue;
+      const ocs = this._seatCards(x.seat).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked);
+      const pSucc = ocs.length ? 1 - Math.max(0.05, Math.min(0.9, 0.5 + 0.35 * (this.oppIntercept(x.seat) || 0))) : 1;
+      out.push({ idx: null, name: x.card.name, kind: 'burnCard', target: { seat: x.seat, owner: this.seatName(x.seat), cardId: x.card.id, card: x.card.name, w: 0, steal }, st: 0, n: 0, val: +(pSucc * gain * ((this.persona && this.persona.aggression) || 1)).toFixed(2) });
+    }
+    return out;
+  }
+  _bestGrantRushFor(vamp){ const b = this._bestGrantRushFor0(vamp), fr = this._w5FrontalRushFor(vamp); return (fr && (!b || (fr.target.w || 0) > (b.target.w || 0))) ? fr : b; }   // v0.6.230 (V5 wave 5): + Frontal Assault's rush at my prey's minions
+  _bestGrantRushFor0(vamp){          // v0.6.217 (V5 wave 4, D-106): a rush a card IN PLAY grants -- Saulot's Avenging Fist on this Salubri ('can enter combat with a non-Salubri vampire as a (D) action; if that vampire is Tremere, this is a +1 stealth action'), or a Regent on another Methuselah's vampire ('Sabbat vampires can enter combat with this vampire as a (D) action'). Haven Uncovered's machinery: no card leaves the hand (idx null), the frozen enters-combat line names the card, the target is chosen by the rush doctrine (_bestRushTargetFor)
     if(!vamp || vamp.zone !== 'ready') return null;
     let best = null;
     const fist = this._attachedFx(vamp, 'rushSelf')[0];   // fx.rushSelf {notClan, stealthVs} (Saulot's Avenging Fist)
@@ -5538,6 +5976,8 @@ class Bot {
       if(h.e.oot) return;   // v0.6.215 (V5 wave 3): an OUT-OF-TURN master is never a master-phase play (cardfx v1.9.6 `oot`): Sudden Reversal and Archon Investigation were played blind here, Archon paying 3 pool for nothing. Archon Investigation has its own trigger (_maybeArchon); the rest are held
       if(!this._masterReqOk(h.e)) return;   // v0.6.215 (R-42): 'only a Methuselah who controls a ready minion who meets the requirements of a master card can play it' -- the clan icon (req.clan), a sect ('Requires a ready Anarch', req.sect) or a title (req.title)
       if(this._masterHold(h)) return;       // v0.6.215: a one-shot master whose effect has no legal or worthwhile target now is held (Unholy Sacrament, Family Gathering)
+      const w5 = this._w5MasterWorth(h);   // v0.6.230 (V5 wave 5, D-119 (1)): the card-worth engine's play read -- a wave master (Jack with cardWorth) worth nothing now is held; a look-ahead card (Frontal Assault, Piper, D\u00eda de los Muertos) asks its own plan (D-58)
+      if(w5 && w5.hold){ this._w5HoldNote(h.name, w5.why); return; }
       if(!this._mayPlay(h.name, h.e, null)) return;             // the general unique-in-play gate (forward-compatible; neither Blood Doll nor Vessel is unique today)
       const cost = (h.e.cost && h.e.cost.pool) || 0;
       if(cost && cost >= (this.pool | 0)) return;   // v0.6.210 (the sim, 19 Oct): a pool cost leaves me >= 1 pool -- paying the last one ousts me ('a Methuselah with no pool is ousted'). `cost > pool` let Vessel through at pool 1 and a Hunting Ground at pool 2: 35 bots in 33 of 240 baseline matches paid their last pool in their own master phase and played on at 0 (the ally finder's 'leave >= 1 pool' and the political finder's `>=` were already right)
@@ -5547,12 +5987,13 @@ class Bot {
       const curated = h.e.src === 'hand';
       const handler = h.e.handler || null;    // v1.4.1 (14 July): the bespoke CARD_HANDLERS key, if this entry names one
       const villein = (h.e.modes || []).some(mo => mo.fx && mo.fx.poolFromHost > 0);   // v0.6.213 (V5 wave 1): Villein -- fx.poolFromHost, a literal read for the coverage scanner
-      out.push(Object.assign({ idx, name: h.name, cost, trifle: !!h.e.trifle, known, persistent, curated, handler, archetype: !!h.e.archetype, host: h.e.host || null, rushGrant: (h.e.modes || []).some(mo => mo.fx && mo.fx.rushGrant > 0) }, villein ? { villein: true } : null));   /* v0.6.213: the flag only on Villein -- every other candidate row is the old */   // v0.6.205 (R4, F23): host 'ready' (Guardian Angel); rushGrant (Haven Uncovered) goes on an opponent's vampire   // fas C: archetype masters attach to a vampire at play, gated one-per-vampire
+      out.push(Object.assign({ idx, name: h.name, cost, trifle: !!h.e.trifle, known, persistent, curated, handler, archetype: !!h.e.archetype, host: h.e.host || null, rushGrant: (h.e.modes || []).some(mo => mo.fx && mo.fx.rushGrant > 0) }, villein ? { villein: true } : null, (w5 && typeof w5.worth === 'number') ? { worth: w5.worth } : null));   /* v0.6.230: `worth` only on the engine's candidates -- every other row is the old */   /* v0.6.213: the flag only on Villein -- every other candidate row is the old */   // v0.6.205 (R4, F23): host 'ready' (Guardian Angel); rushGrant (Haven Uncovered) goes on an opponent's vampire   // fas C: archetype masters attach to a vampire at play, gated one-per-vampire
     });
     return out;
   }
   _masterReqOk(e){                   // v0.6.215 (V5 wave 3, R-42): a master's requirements are met by a READY vampire I control -- the rulebook (card types): 'only a Methuselah who controls a ready minion who meets the requirements of a master card can play it'. Clan and sect through _entryReqOk; a title requirement (Papillon's 'a ready vampire with a city title') by any printed title (the city titles are not told apart: fail open on the kind, closed on none)
-    const r = e && e.req; if(!r || (!(r.clan && r.clan.length) && !r.sect && !r.title)) return true;
+    const r = e && e.req; if(r && r.path && r.pathN && this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._vampPath(v) === r.path).length < r.pathN) return false;   // v0.6.230 (V5 wave 5): Privileged Position -- 'Requires 2 or more ready vampires who follow the Path of Power and the Inner Voice'
+    if(!r || (!(r.clan && r.clan.length) && !r.sect && !r.title)) return true;
     return this.board.some(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._entryReqOk(e, v) && (!r.title || this._printedTitle(v)));
   }
   _printedTitle(v){ return (v && this._titleOf(v).title) || null; }   // v0.6.217: the title the vampire HOLDS -- a title card replaces the printed one (the name kept: R-42's master requirement and Carfax Abbey's baron read it)
@@ -5616,6 +6057,7 @@ class Bot {
       for(const r of d.roles) add(c[r.field], r.token);
       for(const r of d.roles) add(c.id, String(r.ballToken || '').replace('{vamp}', nm(c[r.field])));   // two tokens, not one line: two long names would pass the server's 64 characters
     }
+    for(const c of this.board) if(c && c.kind === 'crypt' && c.w5Hostage && this._w5IsHostage(c)) add(c.id, 'Hostage (Carver\u2019s Meat Packing)');   // v0.6.230 (V5 wave 5)
     return m;
   }
   _memoDesc(name){ const h = name && this.fxLookup(name); return (h && h.kind === 'lib' && h.e && h.e.memo && Array.isArray(h.e.memo.roles)) ? h.e.memo : null; }   // v0.6.225 (D-113 (4)): a card's lasting-choice descriptor (cardfx `memo`)
@@ -5631,7 +6073,7 @@ class Bot {
     const st = pl.seat;
     const m = t.match(/^(.+?) plays (.+?)\.(?: Target: (.+)\.)?$/) || t.match(/^()(.+?) was played\.(?: Target: (.+)\.)?$/);
     if(m){ const card = m[2].replace(/\s+\[[A-Za-z]+\]$/, ''), d = this._memoDesc(card);   // the client's mode tag, if any
-      if(d){ const clan = (d.pick || {}).clan || null;
+      if(d && d.human !== false){ const clan = (d.pick || {}).clan || null;   // v0.6.230: a descriptor with human:false (The Rack) is my own tokens only
         const cand = this._seatCards(st).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && !c.faceDown && (!clan || this._vampClan(c) === clan));
         const byName = n => (n && cand.find(c => c.name === n)) || null, tg = m[3] && !/'s /.test(m[3]) ? m[3] : null;   // an own card (a remote target reads NAME's X)
         const toks0 = {}; cand.forEach(c => { toks0[c.id] = (Array.isArray(c.counters) ? c.counters : []).filter(x => typeof x === 'string'); });   // the tokens already there are not this card's (the egress review: a token left by an earlier Ball)
@@ -6218,7 +6660,7 @@ class Bot {
         if(!mo.lock || mo.phase !== phaseKey || this._outOfPlay(c)) continue;
         if(typeof mo.fx.rescueTorpor !== 'number' || !clan) continue;
         const amount = mo.fx.rescueTorpor;
-        const target = this.board.find(v => v.kind === 'crypt' && v.zone === 'torpor' && this.fxLookup(v.name) && this.fxLookup(v.name).e.clan === clan);
+        const target = this.board.find(v => v.kind === 'crypt' && v.zone === 'torpor' && this.fxLookup(v.name) && this.fxLookup(v.name).e.clan === clan && !this._w5IsHostage(v));   // v0.6.230: not a hostage (Carver's)
         if(!target) continue;
         let payer = null;   // 'pool', or a ready same-clan vampire object to burn blood from
         if(this.pool - amount >= 1) payer = 'pool';   // v0.6.212 (D-97, R-34): never my last pool -- found by the V5 smoke (a 5-seat sim table: Tremere at pool 1 rescued with it, then decided at 0); at pool <= amount the blood path below, or nothing
@@ -6813,7 +7255,7 @@ class Bot {
         }
         if(ctx.burnCard){   // v0.6.217 (V5 wave 4, D-106): burn a card in play that works against me (Toreador Grand Ball: my prey's or predator's unblockable politics) -- about a 1-pool bleed, more the more votes its owner holds
           const sBc = (ctx.burnCard.val != null) ? ctx.burnCard.val : (0.9 + 0.4 * (ctx.burnCard.target.w || 0)) * P.aggression * offW; scores.burnCard = +(sBc).toFixed(2);   // v0.6.224 (D-114): Smiling Jack's candidate carries its price in pool (_jackBurnValue)
-          if(sBc > sPick){ pick = ctx.burnCard; sPick = sBc; why = 'burn ' + ctx.burnCard.target.owner + '\u2019s ' + ctx.burnCard.target.card + ' (' + (ctx.burnCard.st | 0) + ' stealth): ' + sBc.toFixed(2); }
+          if(sBc > sPick){ pick = ctx.burnCard; sPick = sBc; why = (ctx.burnCard.target.steal ? 'steal ' : 'burn ') + ctx.burnCard.target.owner + '\u2019s ' + ctx.burnCard.target.card + ' (' + (ctx.burnCard.st | 0) + ' stealth): ' + sBc.toFixed(2); }
         }
         if(ctx.rutor){
           const sRt = 1.5 * econW; scores.rutor = +(sRt).toFixed(2);   // v0.6.213 (V5 wave 1): Rutor's Hand [THA] -- an extra action every turn from the next on, for 4 blood now (an engine: the tier-1 equipment's weight; the plan's econW takes it down late)
@@ -6909,6 +7351,10 @@ class Bot {
         let pick, why;
         if(trifle && knownPlain){ pick = trifle; why = 'trifle (' + trifle.name + ') first \u2014 its bonus action affords ' + knownPlain.name + ' the SAME phase'; }
         else if(known.length){ pick = known[0]; why = 'known income asset: ' + pick.name; }
+        else if(ctx.cands.some(c => typeof c.worth === 'number')){   // v0.6.230 (V5 wave 5, D-119 (1)): the card-worth engine -- the master worth most to me now (its worth less its cost), before Johan's 14 July rule for the rest
+          pick = ctx.cands.filter(c => typeof c.worth === 'number').reduce((a, b) => b.worth > a.worth ? b : a);
+          why = 'the card-worth engine: ' + pick.name + ' worth ' + pick.worth + ' (less its cost)';
+        }
         else {
           pick = ctx.cands.reduce((a, b) => b.cost < a.cost ? b : a);
           // v1.4.0 follow-up (14 July): `known` only ever meant "recognized recurring-income fx" -- a curated Location (Parthenon/Information Highway/Ashur Tablets) correctly has none, but IS fully verified data, not a card the bot is guessing about. Distinguish on `curated` (src:'hand'), not `known`, so the log stops telling Johan a hand-checked card "might need adjusting".
@@ -6969,6 +7415,7 @@ class Bot {
       else if(t.seeded && m.seat !== this.seat && !c.faceDown && c.name && c.kind !== 'crypt' && c.zone === 'ash')
         this._noteObserved(m.seat, c.name, true);   // v0.6.118: THE ASH DIFF -- a card that went hand -> ash (reaction, combat, discard) never shows as a ready card; the ash heap is public and never misses a play
     });
+    if(m.seat !== this.seat && t.pub && t.seeded) this._w5PubDiff(m.seat, t.pub, m.pub);   // v0.6.230 (V5 wave 5): a seat's ready minions lost since its last push
     t.pub = m.pub; t.seeded = true;
     if(this._noServer && this.started && m.seat !== this.seat) this._noServerOust(m.seat, m.pub);   // v0.6.147
     if(m.seat !== this.seat) this._scanOpp(m.seat, m.pub);   // v0.6.118: the crypt half of the table model
@@ -7059,7 +7506,7 @@ class Bot {
   _maybeArchon(p){ const ar = this._archonFor(p); if(!ar) return false; this.o.log('react window: Archon Investigation \u2014 a bleed of ' + (p.amount | 0) + ' after blocks are declined: ' + p.actingVampName + ' is burned'); p.declined = true; return this._playArchon(p, ar); }
   _archonBurned(v){                  // v0.6.215: the acting bot's side -- my minion burned by the target's Archon Investigation; the action ends unsuccessful (no pool moves, no Edge), its card already resolved to the ash heap
     const av = this._actingVamp, by = av && av.archoned && av.archoned.by;
-    v.zone = 'burned'; v.locked = false;
+    v.zone = 'burned'; v.locked = false; this._w5MinionLost(v, 'burned');
     const gone = this.board.filter(x => x !== v && (x.host === v.id || (v.attached || []).includes(x.id))); v.attached = [];
     this.board = this.board.filter(x => x !== v && !gone.includes(x));
     gone.forEach(x => this._toAsh(x.name));   // the minion's cards go with it
@@ -7807,10 +8254,10 @@ class Bot {
     let line = (strikeLine ? strikeLine + ' dealt; ' : '') + myVamp.name + ' takes ' + (r.taken + r.aggr) + ' (loses ' + (r.paid + (r.aggrWound ? Math.max(0, r.aggr - (r.unmended > 0 ? 0 : 1)) : 0)) + ' blood, now ' + myVamp.blood + ').';   // v0.6.21 fix (Johan's standing question): the ORIGINAL half-finished Taste of Vitae parser read `taken` (raw damage) here, but the rulebook grants blood equal to what was LOST -- "takes N (blood M)" collapsed the two whenever unmended>0 (torpor: taken > blood-before, but paid caps at what the vampire actually HAD to lose). Explicit "loses P blood" clause added; no test asserted the old exact wording (grep-verified before changing it).
     const fx = this._cryptFxOf(myVamp.name);   // VB scanner-lesson (5th occurrence caught by the coverage facit): the local MUST be named `fx` so the source scanner sees the literal fx.burnAtDamage
     if(fx && fx.burnAtDamage != null && this._combatDmgTaken > fx.burnAtDamage){   // VB: printed "burned (WITHOUT going into torpor) if he takes MORE THAN N damage during a single combat" -- strict >, mended damage still counts as TAKEN, and the burn PREEMPTS the torpor path (no torpor entry => no Fame trigger)
-      myVamp.zone = 'burned';
+      myVamp.zone = 'burned'; this._w5MinionLost(myVamp, 'burned');
       line += ' ' + myVamp.name + ' is BURNED (took ' + this._combatDmgTaken + ' this combat, more than ' + fx.burnAtDamage + ' \u2014 his own curse; no torpor).';
     } else if(r.aggrBurn){
-      myVamp.zone = 'burned';
+      myVamp.zone = 'burned'; this._w5MinionLost(myVamp, 'burned');
       line += ' ' + myVamp.name + ' is burned (aggravated damage it cannot mend).';
     } else if(r.unmended > 0 || r.aggrWound){
       myVamp.zone = 'torpor'; this._fameTorporHook(myVamp);
@@ -8154,6 +8601,7 @@ class Bot {
       const mind = this._combatMind();
       const bundled = mind && !!this._bundledPress;                                     // v0.6.156: superior Grapple / Hidden Strength [FOR] played THIS round
       const strayCan = !press && !bundled && !!this._findStray();   // N4d: the Underbridge Stray can grant the press for a life
+      const mobCan = bundled ? null : this._w5MobPress();   // v0.6.230 (V5 wave 5): Mob Connections -- a lock, no card spent: before a press card
       const spendEnd = () => {                                                          // my press to END: the bundled optional press first, else the card
         let tag;
         if(this._bundledPress){ this._bundledPress = false; tag = 'bundled:end'; }
@@ -8172,13 +8620,18 @@ class Bot {
       } else {
       if(mind && (press || bundled || strayCan) && !(this._oppLastTaken && Date.now() - this._oppLastTaken.at < 3000 && this._oppLastTaken.at >= (this._rndAt || 0))) await this._awaitOppTaken(Math.min(1500, (this.o.askSecs || 2) * 1000));   // v0.6.202: THIS round's line (a round-1 line within 3 s passed for round 2's)   // v0.6.156: let the opponent's taken line ('now M', torpor) arrive before judging a press -- a bot answers in ms, a human table just costs the short wait
       if(sup(round)) return;   // v0.6.222: superseded while I waited for their taken line
-      const want = mind ? this._wantPress(myVamp, !!press || bundled || !!strayCan) : { press: !!press && (myVamp.blood | 0) > 1, tag: 'v155', why: 'blood > 1' };   // v0.6.156: expected value replaces the blood > 1 threshold (cmb1: 6 of 14 Tremere presses were followed by a fist)
+      const want = mind ? this._wantPress(myVamp, !!press || bundled || !!strayCan || !!mobCan) : { press: (!!press || !!mobCan) && (myVamp.blood | 0) > 1, tag: 'v155', why: 'blood > 1' };   // v0.6.156: expected value replaces the blood > 1 threshold (cmb1: 6 of 14 Tremere presses were followed by a fist)
       this.o.log('press (' + myVamp.name + '): ' + want.why);
-      if(want.press && (bundled || press || (strayCan && (mind || (myVamp.blood | 0) > 1)))) await this._combatGate(true);   // v0.6.202 (points 5, 7): a hold stops my press; a watched bot duel gets its beat
+      if(want.press && (bundled || press || mobCan || (strayCan && (mind || (myVamp.blood | 0) > 1)))) await this._combatGate(true);   // v0.6.202 (points 5, 7): a hold stops my press; a watched bot duel gets its beat
       if(sup(round)) return;   // v0.6.221: superseded before my press is spent
       if(want.press && bundled){                              // the free press first -- no card spent
         pressTag = 'bundled:' + want.tag; this._bundledPress = false;
         this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to continue (optional press).');
+        continuing = true;
+      } else if(want.press && mobCan){                       // v0.6.230 (V5 wave 5): Mob Connections -- 'You can lock this card to give a minion you control 1 press, only usable to continue combat.'
+        pressTag = 'mob:' + want.tag; mobCan.locked = true; this.push();
+        this._emitPlay('Mob Connections', 'combat-press', myVamp && myVamp.name);
+        this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to continue (Mob Connections).');   // the frozen press shape
         continuing = true;
       } else if(want.press && press){
         pressTag = press.name + ':' + want.tag;
@@ -8245,6 +8698,16 @@ class Bot {
       this._emitPlay("Saulot's Guiding Wisdom", 'combat-end', sg.bearer.name);
       this._emit('sgw-combat-end', { bearer: sg.bearer.name, vamp: myVamp.name, why: sg.why });
       this._rnd = { grapple: false, strike: null, dealt: 0, taken: 0 };   // the egress review: the round row of a combat that ended before range carries no earlier round's strike
+      return { ended: true }; } }
+    if(!continued && this.turnSeat === this.seat && this._actingVamp && this._actingVamp.v === myVamp && this._actingVamp.ifBlocked){ const gm = this._w5GaribaldiEndFor(myVamp); if(gm){   // v0.6.230 (V5 wave 5): Garibaldi-Meucci Museum -- 'lock this location before range is determined to end a combat involving an Anarch you control and another Anarch' (my blocked actor's combat, Guiding Wisdom's form)
+      await this._combatGate(true); if(stale()) return gone();
+      gm.card.locked = true; this.push();
+      this.fxClone({ name: gm.card.name, kind: 'lib' }, 'locked: combat ends');
+      this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(gm.card.name) + '</b> \u2014 the combat of <b>' + esc(myVamp.name) + '</b> ends before range.' });
+      this.send({ t: 'log', html: 'Combat ends \u2014 <b>' + esc(gm.card.name) + '</b>.' });   // L12.combatEnds: the opposing bot's combat ends (its first wait is woken)
+      this._emitPlay(gm.card.name, 'combat-end', myVamp.name);
+      this._emit('w5-garibaldi-end', { vamp: myVamp.name, why: gm.why });
+      this._rnd = { grapple: false, strike: null, dealt: 0, taken: 0 };
       return { ended: true }; } }
     this._rndAt = Date.now();   // v0.6.202: this round's start -- an opponent's taken line older than it belongs to an earlier round (the press decision read round 1's 'now 2' in round 2 and pressed into a vampire its own round-2 line put in torpor)
     this._bundledPress = false; this._stealGain = 0; this._xr = this._xrFresh();   /* v0.6.213 (V5 wave 1): the round's additional strikes, Claws of the Dead, the limit -- _xtra (v0.6.169's swallow count) is gone */ this._noStrikeRound = false; this._rnd = { grapple: false, strike: 'hands', dealt: null, taken: null };   // v0.6.156: per-round -- a bundled optional press (superior Grapple, Hidden Strength [FOR]) is usable only in the round its card was played (EC2010 ruling); _rnd feeds the combat-round trace row
@@ -8501,7 +8964,7 @@ class Bot {
         let line2 = myVamp.name + ' dodges the strike (no damage either way from it), but Carrion Crows still lands: takes ' + taken2 + ' (loses ' + paid2 + ' blood, now ' + myVamp.blood + ').';
         const fx = this._cryptFxOf(myVamp.name);
         if(fx && fx.burnAtDamage != null && this._combatDmgTaken > fx.burnAtDamage){   // VB review fix: the burn check was ALSO missing here -- a Franciscus crossing the threshold on dodge-round env damage torpored instead of burning
-          myVamp.zone = 'burned';
+          myVamp.zone = 'burned'; this._w5MinionLost(myVamp, 'burned');
           line2 += ' ' + myVamp.name + ' is BURNED (took ' + this._combatDmgTaken + ' this combat, more than ' + fx.burnAtDamage + ' \u2014 his own curse; no torpor).';
         } else if(unmended2 > 0){
           myVamp.zone = 'torpor'; this._fameTorporHook(myVamp);
@@ -8859,7 +9322,11 @@ class Bot {
     if((m = t.match(ARCHON_BURN))) return { kind: 'archon', vamp: S(m[2]), n: +m[3] };
     if((m = t.match(ABSTAIN))) return { kind: 'abstain', vamp: S(m[6]), owner: S(m[5]), card: m[2] || m[4], n: +m[8], burn: m[7] ? 1 : 0 };   // v0.6.217 (V5 wave 4): the polling-step abstain
     if((m = t.match(COT))) return { kind: 'cot', vamp: S(m[1]) };
-    if((m = t.match(L12.burnAct))) return { kind: 'burn-card', vamp: S(m[1]), owner: S(m[2]), card: S(m[3]) };   // v0.6.217 (V5 wave 4): the (D) action at a card in play   // v0.6.217 (V5 wave 4): Change of Target -- the blocked action ends, no combat   // v0.6.215: the out-of-turn burn of the acting minion (the event-log rule: a new frozen line gets its kind)
+    if((m = t.match(L12.burnAct))) return { kind: 'burn-card', vamp: S(m[1]), owner: S(m[2]), card: S(m[3]) };
+    if((m = t.match(L12.stealAct))) return { kind: 'steal-card', vamp: S(m[1]), owner: S(m[2]), card: S(m[3]) };   // v0.6.230 (V5 wave 5)
+    if((m = t.match(L12.ppBurn))) return { kind: 'pp-burn', owner: S(m[1]), prey: S(m[2]) };   // v0.6.230
+    if((m = t.match(L12.autoPass))) return { kind: 'auto-pass', card: S(m[1]) };   // v0.6.230
+    if((m = t.match(L12.tensionBurn))) return { kind: 'tension-burn', by: S(m[1]), owner: S(m[2]) };   // v0.6.230   // v0.6.217 (V5 wave 4): the (D) action at a card in play   // v0.6.217 (V5 wave 4): Change of Target -- the blocked action ends, no combat   // v0.6.215: the out-of-turn burn of the acting minion (the event-log rule: a new frozen line gets its kind)
     if((m = t.match(NET_STEALTH))) return { kind: 'stealth', vamp: S(m[1]), n: +m[2] };
     if((m = t.match(NET_STEALTH_ADJ))) return { kind: 'stealth', vamp: S(m[1]), n: (m[4] === '+' ? 1 : -1) * (+m[5]), adjust: S(m[3]) };   // v0.6.228
     if((m = t.match(/^(.+?) burns (\d+) blood \((.+?)\): \+(\d+) intercept\.$/))) return { kind: 'intercept', vamp: S(m[1]), card: m[3], n: +m[4], paid: +m[2] };
@@ -9080,7 +9547,7 @@ class Bot {
         if(seat) this._bouncedTo(seat);          // v0.6.203: the new target's block step, and the open ask follows the bleed
       }
       const mine = poolT ? (poolT === this.o.name)
-                         : (!target && who === this.predName());     // spec §5 arming rule
+                         : (who === this.predName());     // spec §5 arming rule. v0.6.230 (main's reply of 15 Nov §2): a CARD target on a bleed line is no target -- a bleed is at a pool, so it is the actor's prey's; a client cached at v2.6.174 still writes its stale card aim there (the Ball's pair), and the prey opened no window
       if(mine){
         if(this.pending && this.pending.who === who) this.o.log('pending superseded (re-announce)');
         /* v1.4.3: when a TARGET: suffix is present, this is potentially a BOUNCED
@@ -9254,6 +9721,15 @@ class Bot {
       }
       return;
     }
+    if((m = t.match(L12.stealAct))){   // v0.6.230 (V5 wave 5): an action to steal MY card in play -- a directed action I may block; on my Pass the card goes to the actor's Methuselah
+      if(m[2] === this.seatName(this.seat) && !this.out && who !== this.o.name){
+        const c = this.board.find(x => x && x.kind === 'lib' && x.name === m[3] && !this._outOfPlay(x));
+        if(c && !this._burnWindowOpens(who, m[1], c, true)){ this.say('Pass'); this._complyBurnCard({ burnCardId: c.id, who, actingVampName: m[1], steal: true, actorSeat: this._seatOfName(who) }); }
+      }
+      return;
+    }
+    if((m = t.match(L12.ppBurn))){ this._w5OnPpBurn(who, m[2]); return; }   // v0.6.230: Privileged Position -- the prey pays
+    if((m = t.match(L12.tensionBurn))){ this._w5OnTensionBurn(who, m[2]); return; }   // v0.6.230: my Tension in the Ranks burned with two masters
     if((m = t.match(L12.havenRush))){
       /* v0.6.205 (R4, F23): a rush through Haven Uncovered at one of MY vampires -- a +1 stealth directed action I may block with
          any unlocked minion (the Deep Song window, _rushWindowOpens); on my Pass the host fights WITHOUT locking, and the rusher
@@ -10746,6 +11222,7 @@ class Bot {
     this._rolloverPredPressure();        // v1.1: last round's felt pressure becomes this turn's backrush input
     await this._considerLockIncome('unlock');   // v0.6.31: Dreams of the Sphinx's pool-gain-if-Edge choice (lock-gated, not automatic -- distinct from the line above)
     await this._considerHuntingGround('unlock');   // v0.6.41: the hunting-ground family's own stated phase -- "during your unlock phase"
+    this._w5Unlock();                    // v0.6.230 (V5 wave 5): The Rack, Garibaldi-Meucci's swap, a hostage freed -- and Anarch Revolt's bill last ('by the end of the unlock phase')
     this.push();
     return n;
   }
@@ -10790,6 +11267,7 @@ class Bot {
       await this._considerLockIncome('master');   // v0.6.31: Dreams of the Sphinx's blood-add-to-uncontrolled choice (this bot's own sensible-timing pick, not a rules-mandated phase -- the card itself states no restriction)
       await this._considerLockRescue('master');   // v0.6.39: Chantry's own stated phase -- "during your master phase"
       await this._considerHandCycle('master');   // v0.6.42: The Barrens -- not phase-restricted by the card itself, master is this bot's own sensible-timing pick
+      this._w5TensionBurn(); this._w5CarversLock(); this._w5CovenLock();   // v0.6.230 (V5 wave 5): Tension in the Ranks burned with a master action and two masters; Carver's X blood; The Coven's 2 blood before it passes
       await this._considerBankIn('master');   // v0.6.205 (R4, F23): Wasserschloss Anif -- 'during your master phase, a Tremere you control can move 1 blood from themselves to this card'
       {
         const played = new Set();
@@ -10949,6 +11427,7 @@ class Bot {
                 if((_ec.e.modes || []).some(mo => mo.fx && mo.fx.handSizePerCounter)){ for(let _i = 0; _i < _n; _i++) this.send({ t: 'draw' }); this._handSizePermanentPrev = this._handSizePermanentTotal(); this._replaceExempt = (this._replaceExempt | 0) + 1;
                   this._emit('hand-size-up', { card: d.pick.name, by: _n }); } } }
             if(host){ host.attached = host.attached || []; host.attached.push(card.id); }
+            this._w5OnTabled(card);   // v0.6.230 (V5 wave 5): The Rack's vampire, Forward Momentum's counters, Frontal Assault's turn
             this.fxClone({ name: d.pick.name, kind: 'lib' }, 'is put in play');
           } else {
             this._toAsh(d.pick.name);          // v1.4.0: resolves immediately, never sat on the board to begin with (Effective Management's motivating case)
@@ -10988,7 +11467,7 @@ class Bot {
                                 .sort((a, b) => (((a.blood | 0) === 0 ? 0 : 1) - ((b.blood | 0) === 0 ? 0 : 1)) || (this._blockerWorth(a) - this._blockerWorth(b)));   // v0.5: 0-blood vampires FIRST — the mandatory-hunt precondition; v0.6.118b: then the WORST blockers first, so the body that stays home (last) is the one worth keeping
       this._probeOrder(actors);   // v0.6.143 PROBE THEN PUNCH; v0.6.206: cut out (the reservation was reset two lines after it was set -- see _probeOrder)
       this._minionKeyOrder(actors);   // v0.6.229 (the bench round, D-117 / D-118): the free Toreador of my Grand Ball before the other callers (ballTurn), or the turn's key referendum after the cheap actions (keyLast); 0 = v0.6.228
-      this.board.filter(c => c.kind === 'crypt' && c.zone === 'torpor' && !c.locked && (c.blood | 0) >= 2).forEach(c => actors.unshift(c));   // v0.6.128: a torpored vampire with 2 blood walks out on its OWN action, before any ready body considers rescuing it
+      this.board.filter(c => c.kind === 'crypt' && c.zone === 'torpor' && !c.locked && (c.blood | 0) >= 2 && !this._w5IsHostage(c)).forEach(c => actors.unshift(c));   /* v0.6.230: a hostage (Carver's) cannot be moved to ready */   // v0.6.128: a torpored vampire with 2 blood walks out on its OWN action, before any ready body considers rescuing it
       this._actorQueue = actors;   // v0.6.64 (B-fix): the LIVE queue -- Warsaw's refresh pushes the actor back on and the index loop revisits it
       this._turnAttempts = 0;   // v0.6.143: block attempts my prey has made against me THIS turn. v0.6.206: `this._probe = null` sat here, after _probeOrder had set it -- the reservation never took effect (it is reset at the top of _probeOrder now)
       this._actAgainUsed = new Set(); this._actAgainN = {}; this._lastAct = null; this._turnActs = {};   // v0.6.123: per minion phase; v0.6.129: + the per-minion ledger of what was already done this turn
@@ -11029,7 +11508,8 @@ class Bot {
             await this._resolveCombat(v);   // v0.6.22: multi-round wrapper (was the single-round primitive directly)
           } else {
             const cap = this._capOf(v);   // v0.6.217: _capOf (Oblivion's +1 capacity)
-            v.blood = Math.min(cap > 0 ? cap : 99, (v.blood | 0) + 1);   // rulebook: hunt gains 1 blood, capped at capacity
+            v.blood = Math.min(cap > 0 ? cap : 99, (v.blood | 0) + 1 + this._w5HuntBonus(v));   // rulebook: hunt gains 1 blood, capped at capacity. v0.6.230 (V5 wave 5): The Hungry Coyote's +1 for my Sabbat
+            this._w5Hunts = (this._w5Hunts | 0) + 1;
             this._maybeWarsawRefresh(v);   // N4a: hunt is undirected
             this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: 0, card: 'hunt' });
             this.say('It resolves');
@@ -11214,11 +11694,11 @@ class Bot {
              it burns the card itself (a human owner is told by my line); a block is a block: the combat follows. */
           this._actingVamp.kind = 'burnCard'; this._actingVamp.target = act.target.seat;
           this.push();
-          this.fxClone(v, 'burns ' + act.target.owner + '\u2019s ' + act.target.card);
+          this.fxClone(v, (act.target.steal ? 'steals ' : 'burns ') + act.target.owner + '\u2019s ' + act.target.card);   // v0.6.230: a steal (The Rack, Powerbase: Los Angeles)
           this._announceTallyA((act.st | 0) + this._cryptStealthMod(v, 'burnCard', true));   /* v0.6.219 (crypt wave A, D-108): + the crypt's stealth (_cryptStealthMod: Ariane's undirected -1, Devorah's pool, Frau Schädel's recruit / employ, Kalyani's hunt) */
           this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
-          this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> takes an action to burn <b>' + esc(act.target.owner) + "</b>'s <b>" + esc(act.target.card) + '</b>.' });   // L12.burnAct (bot grammar, v0.6.217)
-          const ansB = await this._askBlock('Trainbot: ' + v.name + ' takes an action to burn ' + act.target.owner + '\u2019s ' + act.target.card + ' (' + (act.st | 0) + ' stealth). Block?');
+          this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> takes an action to ' + (act.target.steal ? 'steal' : 'burn') + ' <b>' + esc(act.target.owner) + "</b>'s <b>" + esc(act.target.card) + '</b>.' });   // L12.burnAct (bot grammar, v0.6.217); v0.6.230: L12.stealAct
+          const ansB = await this._askBlock('Trainbot: ' + v.name + ' takes an action to ' + (act.target.steal ? 'steal ' : 'burn ') + act.target.owner + '\u2019s ' + act.target.card + ' (' + (act.st | 0) + ' stealth). Block?');
           await sleep(150);
           if(ansB.what === 'block'){
             this.note('Blocked' + (ansB.who ? ' by ' + ansB.who : '') + '. Combat begins.');
@@ -11229,7 +11709,7 @@ class Bot {
           } else {
             this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: 0, kind: 'burnCard', card: act.target.card, owner: act.target.owner });
             this.say('It resolves');
-            const op = (this.players || []).find(q => q && q.seat === act.target.seat); if(op && !op.bot) this.chat(act.target.owner + ': your ' + act.target.card + ' is burned.');
+            const op = (this.players || []).find(q => q && q.seat === act.target.seat); if(op && !op.bot) this.chat(act.target.owner + ': your ' + act.target.card + (act.target.steal ? ' is stolen by ' + v.name + ' \u2014 hand it to me (give it to my board).' : ' is burned.'));
           }
           this._actingVamp = null;
           this._flushDraws();
@@ -11642,12 +12122,14 @@ class Bot {
             this.say('It resolves');
             this.note(this._actingVamp.n >= 1 ? 'The bleed goes through: ' + this.seatName(this._actingVamp.target) + ', -' + this._actingVamp.n + ' pool (adjust yours).' : 'The bleed goes through at 0: ' + this.seatName(this._actingVamp.target) + ' loses no pool.');   // v0.6.200: a reduced bleed says so
             this.push();
+            this._w5BleedOk = (this._actingVamp.n >= 1 && !this._actingVamp.nullified) ? v.id : null;   // v0.6.230: Forward Momentum's 'successful (for 1 or more)'
             if(!this._actingVamp.nullified){   // v0.6.211: a bleed Spying Mission made unsuccessful is no successful action
               await this._maybeAttachMarkedPath(v, this._actingVamp.target, this._actingVamp.played);   // fas C: "after a successful directed action" -- the attach window
               this._maybePerfectionist(v); }                                   // fas C: the clean-action blood hook
             await this._settleOust(this._actingVamp.target, this._actingVamp.n);   // v0.6.103 (#2): if this could have ousted, wait for the roster before the next minion picks its prey
           }
         }
+        this._w5AfterBleed(v, this._w5BleedOk === v.id); this._w5BleedOk = null;   // v0.6.230 (V5 wave 5): Forward Momentum -- a counter for a bleed that landed, one off for one that did not
         this._settleSelfPrice(v);   // v0.6.127: 'after action resolution', blocked or not
         this._actingVamp = null;
         this._flushDraws();
@@ -11668,6 +12150,8 @@ class Bot {
          baseline via _recomputePhaseActs and this reads it generically.) */
       this._probe = null;   // v0.6.206: the reservation lives for the minion phase it was made in
       await this._announcePhase('Influence');
+      this._w5FrontalBill();   // v0.6.230 (V5 wave 5): 'During your influence phase, burn this card and burn 1 pool for each ready minion controlled by your prey'
+      if(this.out){ this.send({ t: 'pass' }); return; }
       const availInf = this._phaseAvail('influence');
       const nPlayers = Math.max(1, (this.players || []).length);
       const tableTurn = (this.ownTurns - 1) * nPlayers + this.seat;
@@ -11690,6 +12174,7 @@ class Bot {
          player table (Johan's ask) — discard gets that for free from the
          one shared place, no parallel special-case here.                  */
       await this._announcePhase('Discard');
+      this._w5PowerbaseLock();   // v0.6.230 (V5 wave 5): Powerbase: Los Angeles -- +1 discard phase action
       while(!this.out && this._phaseAvail('discard') > 0){
         let di = this._deadHandIndex(this._deadJudgeVamps());   // v0.6.200 (play-test 14 Oct, point 22, and Johan's Tremere that threw away Theft of Vitae): judged against the READY vampires only, a hand with no vampire out yet was dead from end to end and the FIRST card went -- every Tremere has [tha], so that was the only way Theft of Vitae could die
         if(di < 0){ di = this._stealthGlutIndex(); if(di >= 0){ this._emit('shed', { card: this.hand[di], why: 'stealth-glut' }); this.o.log('discard: ' + this.hand[di] + ' -- more stealth in hand than one action can use'); } }   // v0.6.120: a dead card first, then the glut
@@ -11701,7 +12186,10 @@ class Bot {
         this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> discards <b>' + esc(name) + '</b>.' });
         this.send({ t: 'draw' });
         this.phaseUsed.discard++;
+        this._w5AfterDiscard(name);   // v0.6.230: Powerbase's Anarch unlock
       }
+      this._w5PbAnarch = false;
+      this._w5CovenPass();   // v0.6.230 (V5 wave 5): 'During your discard phase, your predator takes control of The Coven'
       this._revertHandSizeBonus();
 
       await pace();

@@ -91,7 +91,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.9.8';   // 3 Nov 2026 (bot v0.6.217, V5 wave 4): 'Unique archetype.' is the archetype keyword too (Saulot's three masters were untagged: the one-archetype-per-vampire gate never saw them)
+const FXC_VERSION = '1.9.9';   // 17 Nov 2026 (bot v0.6.230, V5 wave 5): the markers anarchReq ('Requires an Anarch / a baron') and zombie (an ally or retainer named a zombie)
+// const FXC_VERSION_198 = '1.9.8';   // 3 Nov 2026 (bot v0.6.217, V5 wave 4): 'Unique archetype.' is the archetype keyword too (Saulot's three masters were untagged: the one-archetype-per-vampire gate never saw them)
 // const FXC_VERSION_197 = '1.9.7';   // 2 Nov 2026 (bot v0.6.216, KRCG's v5 dump as the source, krcg-v5.js): the v5 cost shape ({type: 'Pool', value}) read; the v5 wording 'this card is put in play / on' is persistent; a 'Requires …' sentence is found mid-line ('Title. Requires a Sabbat vampire.').
 // const FXC_VERSION_196 = '1.9.6';   // 2 Nov 2026 (bot v0.6.215, V5 wave 3): `oot` -- an out-of-turn master (keyword segment, 36 entries) the master-phase finder never offers; curated masters inherit the data's clan requirement (R-42: a clan icon on a master IS a requirement) and its out-of-turn keyword.
 // const FXC_VERSION_195 = '1.9.5';   // 29 Oct 2026 (bot v0.6.214, V5 wave 2): req.notFirstRound also reads 'Not usable the first round' / 'Not usable first round' (Eruption of Vitae, Growing Fury, Well-Aimed Car: 9 -> 12 entries; wave 1's re-review found them untagged). The curated tier's wave-2 readings (Flash, Resist Earth's Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn) need no compiler change.
@@ -794,6 +795,12 @@ function libEntry(c){
     if(rq && !(e.req && e.req.titles && /^Requires? an? (?:[a-z ]+?)(?:(?:, | or )[a-z ]+)*\.$/i.test(rq) && !/titled|vampire|anarch|sabbat|camarilla|laibon|independent|capacity/i.test(rq))){ e.req = e.req || {}; e.req.unmodelled = true; }
     if(Object.keys(ref).length) e.ref = ref;
   }
+  /* v1.9.9 (17 Nov 2026, bot v0.6.230, V5 wave 5): two markers no finder gates on. anarchReq -- the text's 'Requires an Anarch' / 'a ready
+     Anarch' / 'a baron' sentence (Garibaldi-Meucci Museum swaps a card 'requiring an Anarch' out of the ash heap, Powerbase: Los Angeles
+     unlocks an Anarch for discarding one; a baron card counts [LSJ 20050128]). zombie -- an ally or a retainer whose first line names it a
+     zombie (Cursed Abattoir's 'zombie (ally or retainer)'). */
+  if(/(?:^|[.:] +)Requires? (?:an?|a ready) (?:Anarch|baron)\b/im.test(txt)) e.anarchReq = true;
+  if((e.t.includes('ally') || e.t.includes('retainer')) && /\bzombie\b/i.test(String(txt).split('\n')[0] || '')) e.zombie = true;
   e.src = 'auto';
   return e;
 }
@@ -931,6 +938,8 @@ function compile(cards, curated){
         if(got.length){ e.req = r; reqInherited.push(name + ' ' + got.join('+')); }
       }
       if(auto && auto.oot && e.oot === undefined) e.oot = true;   // v1.9.6: a curated master keeps the data's out-of-turn keyword unless it restates it
+      if(auto && auto.anarchReq && e.anarchReq === undefined) e.anarchReq = true;   // v1.9.9: the markers survive a curated entry
+      if(auto && auto.zombie && e.zombie === undefined) e.zombie = true;
       dst[name] = e;
       curApplied.push(name);
       /* v1.9.3: a curated key that is not a printed name but a known VARIANT of one (the alias table) is ALSO written under the
