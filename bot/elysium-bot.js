@@ -9547,7 +9547,7 @@ class Bot {
         if(seat) this._bouncedTo(seat);          // v0.6.203: the new target's block step, and the open ask follows the bleed
       }
       const mine = poolT ? (poolT === this.o.name)
-                         : (who === this.predName());     // spec §5 arming rule. v0.6.230 (main's reply of 15 Nov §2): a CARD target on a bleed line is no target -- a bleed is at a pool, so it is the actor's prey's; a client cached at v2.6.174 still writes its stale card aim there (the Ball's pair), and the prey opened no window
+                         : (!target && who === this.predName());     // spec §5 arming rule
       if(mine){
         if(this.pending && this.pending.who === who) this.o.log('pending superseded (re-announce)');
         /* v1.4.3: when a TARGET: suffix is present, this is potentially a BOUNCED

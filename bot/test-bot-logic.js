@@ -13714,8 +13714,8 @@ async function connectWithRetry(client, tries = 30){
 
     /* 175) v0.6.230 -- V5 WAVE 5a (RULINGS D-119 / D-120, specs/spec-v5-wave5-2026-11-17.md): the card-worth engine (O-41 generalised:
        a card's flows to every seat over min(that seat's runway, the card's life), the life ending with the game) and the fifteen masters
-       that stay in play -- each case at its rules moment or its decision; the new frozen lines through _onLog and _evClassify; the prey
-       test of main's reply of 15 Nov §2 (a card target on a bleed line is no target). LAST LINE OF 175 is the closing brace below. */
+       that stay in play -- each case at its rules moment or its decision; the new frozen lines through _onLog and _evClassify.
+       LAST LINE OF 175 is the closing brace below. */
     {
       console.log('\n[175] v0.6.230 -- V5 wave 5a: the card-worth engine and the masters that stay in play');
       const BOTM = require('./elysium-bot.js'), ARCH5 = BOTM.ARCHETYPES, CH5 = BOTM.CARD_HANDLERS || {};
@@ -13948,14 +13948,6 @@ async function connectWithRetry(client, tries = 30){
         const hr = "Aline Gädeke enters combat with Viktor's Ariane (Frontal Assault).".match(BOTM.L12.havenRush);
         ok(r === 'steal-card,pp-burn,auto-pass,tension-burn' && hr && hr[4] === 'Frontal Assault', '175t the new lines’ event kinds, Frontal Assault’s rush line (got ' + JSON.stringify({ r, hr: hr && hr[4] }) + ')'); }
 
-      // u) main's reply of 15 Nov §2: a CARD target on a bleed line is no target -- a bleed by my predator is at me (a client cached at
-      //    v2.6.174 writes its stale card aim there); a seat whose predator did not bleed opens nothing
-      { const u = mk175(2); u.table = { 1: pub5(20, [V5('h1', 'Catalina Vega')]), 3: pub5(20, []) }; u.board = [V5('v1', 'Abraham DuSable')];
-        u._onLog('Hanna', '<b>Catalina Vega</b> bleeds for 1. Target: <b>Toreador Grand Ball</b>.'); const a = !!(u.pending && u.pending.who === 'Hanna');
-        const w = mk175(3); w.table = { 1: pub5(20, [V5('h1', 'Catalina Vega')]), 2: pub5(20, []) }; w.board = [V5('v1', 'Abraham DuSable')];
-        w._onLog('Hanna', '<b>Catalina Vega</b> bleeds for 1. Target: <b>Toreador Grand Ball</b>.'); const b = !!w.pending;
-        if(u.pending) u._clearPending('the test'); if(w.pending) w._clearPending('the test');
-        ok(a && !b, '175u a bleed line with a card target: at the actor’s prey (me, its prey), not at another seat (got ' + JSON.stringify({ a, b }) + ')'); }
     }
 
 
