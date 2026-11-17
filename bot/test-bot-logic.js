@@ -13734,15 +13734,16 @@ async function connectWithRetry(client, tries = 30){
       const html5 = (u, re) => (u.sent.filter(m => m && m.t === 'log').map(m => String(m.html || '')).find(h => re.test(h))) || '';
 
       // a) the engine's arithmetic: a seat's runway (a constant drain: pool / (fc + d); a growing one: D-115's root), a card's life = min(its
-      //    owner's runway, the longest other runway), each seat's flow over min(its runway, the life), weighed me 1 (2 while my turns to be
-      //    ousted are fewer than my turns to oust my prey), my prey -offW, the other seat -0.15
+      //    owner's runway, the longest other runway, the table's game length left: 12 rounds less those played, at least 2), each seat's flow
+      //    over min(its runway, the life), weighed me 1 (2 while my turns to be ousted are fewer than my turns to oust my prey), my prey
+      //    -offW, the other seat -0.15
       { const u = mk175(1); u.pool = 20; u.table = { 2: pub5(10, []), 3: pub5(15, []) }; u._jackFc = () => 1; u.plan = null;
         const f = x => x ? [+x.worth.toFixed(3), +x.life.toFixed(2)].join('/') : null;
         const r = IF5(u, '_flowWorth') ? { c: +u._runwayD(1, 1, 0).toFixed(2), g: +u._runwayD(1, 1, 1).toFixed(2), mine: f(u._flowWorth({ 1: { d: 2 } }, 1)), prey: f(u._flowWorth({ 2: { d: -1 } }, 1)),
                                            other: f(u._flowWorth({ 3: { d: -1 } }, 1)), w: [u._seatW(1), u._seatW(2), u._seatW(3)].join() } : null;
-        if(r){ u.plan = { reads: { myTto: 3, preyTto: 5 } }; r.w2 = u._seatW(1); }
-        ok(r && r.c === 10 && r.g === 5 && r.mine === '30/15' && r.prey === '5/15' && r.other === '1.125/10' && r.w === '1,-1,-0.15' && r.w2 === 2,
-           '175a the engine: runways 10 and 5 (the growing drain), the life ends with the game (15, 15, 10), the seats weighed 1, -offW, -0.15, me 2 behind (got ' + JSON.stringify(r) + ')'); }
+        if(r){ u.plan = { reads: { myTto: 3, preyTto: 5 } }; r.w2 = u._seatW(1); u.plan = null; u.ownTurns = 9; r.late = f(u._flowWorth({ 1: { d: 2 } }, 1)); u.ownTurns = 11; r.end = f(u._flowWorth({ 1: { d: 2 } }, 1)); }
+        ok(r && r.c === 10 && r.g === 5 && r.mine === '22/11' && r.prey === '5/11' && r.other === '1.125/10' && r.w === '1,-1,-0.15' && r.w2 === 2 && r.late === '6/3' && r.end === '4/2',
+           '175a the engine: runways 10 and 5 (the growing drain), the life ends with the game (11 rounds left at the start, the longest other runway 10, 3 after nine rounds, never under 2), the seats weighed 1, -offW, -0.15, me 2 behind (got ' + JSON.stringify(r) + ')'); }
 
       // b) O-41's answer for Smiling Jack (cardWorth 1): my payments stop where the game would stop -- the life is the longest other runway,
       //    not my own 20 rounds; cardWorth 0 never asks the engine for Jack (v0.6.229); the wave's cards use it at both; the default is 0

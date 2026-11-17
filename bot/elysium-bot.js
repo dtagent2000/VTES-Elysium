@@ -431,6 +431,7 @@ const CARD_HANDLERS = {
    when played), summed by Bot#_flowWorth over each seat's horizon; or { worth } when the card prices itself. A rate comes from the table (the
    losses, hunts and passed referendums observed, blended with a prior worth three rounds); a handler never reads a hidden card. Instruction,
    not vocabulary: a cardfx entry names its handler (`worth`). Jack's handler is D-114 / D-115's flows over the engine's horizon (O-41). */
+const W5_GAME_ROUNDS = 12;   // the game's end at most this many rounds from the start, the rounds played off (D-119): the sim tables' median game (11 rounds at four seats, 12 at five, v0.6.230's 240 and V5 smoke) -- a runway read from a forecast near 0 is no end (pool / 0.25 = 120 rounds)
 const W5_KNOBBED = new Set(['jack']);   // priced before the engine (D-114 / D-115): read through it only with `cardWorth` (0 = v0.6.229)
 const CARD_WORTH = {
   jack: (bot, card, owner) => { const j = { seat: owner, card, n: Array.isArray(card.counters) ? card.counters.length : (card.counters | 0) }, f = {};
@@ -4783,12 +4784,13 @@ class Bot {
     if(g > 0){ const b = a / g - 0.5; return Math.max(0, Math.sqrt(b * b + 2 * pool / g) - b); }
     return pool / Math.max(0.25, a);
   }
-  _flowWorth(flows, owner){          // D-119 (O-41 generalised): the worth to me of a card's flows { seat: { d, g } } -- each seat's gain over min(its runway, L), L = min(the owner's runway, the longest other runway)
+  _flowWorth(flows, owner){          // D-119 (O-41 generalised): the worth to me of a card's flows { seat: { d, g } } -- each seat's gain over min(its runway, L), L = min(the owner's runway, the longest other runway, the game length left)
     const seats = this._w5Live(), R = {};
     seats.forEach(st => { const f = flows[st] || {}; R[st] = this._runwayD(st, Math.max(0, -(f.d || 0)), Math.max(0, -(f.g || 0))); });
     const own = R[owner] != null ? R[owner] : 0;
     let end = 0; seats.forEach(st => { if(st !== owner) end = Math.max(end, R[st]); });
-    const life = Math.max(0, Math.min(own, end > 0 ? end : own));
+    const left = Math.max(2, W5_GAME_ROUNDS - this._w5Rounds());   // the table's game length left (a prior): the longest runway is no end when the forecasts are near 0
+    const life = Math.max(0, Math.min(own, end > 0 ? end : own, left));
     let worth = 0; const parts = {};
     seats.forEach(st => { const f = flows[st]; if(!f) return; const H = Math.min(R[st], life), amt = H * (f.d || 0) + (f.g || 0) * H * (H - 1) / 2;
       parts[st] = +amt.toFixed(2); worth += this._seatW(st) * amt; });
