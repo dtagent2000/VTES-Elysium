@@ -36,7 +36,7 @@
   D-107's shape A, O-41 "Livet slutar med spelet"; `specs/spec-v5-wave5-2026-11-17.md`). The card-worth engine and fifteen V5 masters
   played by their text; `bot/`'s read-only copies refreshed to main's v2.6.175 / srv-2.6.51 and its canary v1.3.0 (#75 read; the
   handoffs of v0.6.219–228 moved to `history/handoffs/`). Rides along (D-92): HOWTO's second canary needs `elysium-cardfx.json`
-  beside it (the human-Ball memo checks: 167/4 without it); the BOARD's four wave-rider lines moved into their specs' §4 (one
+  beside it (the human-Ball memo checks: 167/4 without it), and so does CI's (`bot-gates.yml`'s second canary step: red on #77 first); the BOARD's four wave-rider lines moved into their specs' §4 (one
   pointer line).
   - *The engine* (D-119, O-41 answered): `CARD_WORTH` (a handler per card: its flows to each seat a round, from public rates blended
     with a prior) summed by `_flowWorth` over each seat's min(its runway, the card's life); the life = min(the owner's runway, the
