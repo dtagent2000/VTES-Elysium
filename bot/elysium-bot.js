@@ -4761,6 +4761,7 @@ class Bot {
   _w5E(name){ const h = name && this.fxLookup(name); return h && h.kind === 'lib' ? h.e : null; }
   _w5Live(){ return (this.players || []).map(p => p && p.seat).filter(st => st && this.live(st)); }
   _w5Rounds(){ return Math.max(1, this.ownTurns | 0); }
+  _w5Pool(p0, via){ const d = (this.pool | 0) - (p0 | 0); if(d && this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: d, via, own: true, seat: this.seat })); }   // the pool ledger (the real-time invariant, v0.6.179) hears each of the wave's pool moves -- the V5 smoke's pool-drift flags
   _w5Ok(c){ return !!(c && c.kind === 'lib' && !c.faceDown && !this._outOfPlay(c) && (!c.zone || c.zone === 'ready')); }
   _w5InPlay(pred){                   // the cards in play at the table that match pred(entry, card): [{ seat, card, e }] -- my board and every live seat's pub (public)
     const out = [], scan = (st, cs) => (cs || []).forEach(c => { if(!this._w5Ok(c)) return; const e = this._w5E(c.name); if(e && pred(e, c)) out.push({ seat: st, card: c, e }); });
@@ -4862,7 +4863,7 @@ class Bot {
     if(!live) return;
     const out = this.hand.splice(di, 1)[0]; this._toAsh(out);
     this.board = this.board.filter(x => x !== live); this.hand.push(live.name);
-    g.locked = true; this.pool = (this.pool | 0) - 1; this.push();
+    g.locked = true; { const p0 = this.pool | 0; this.pool = p0 - 1; this._w5Pool(p0, 'garibaldi'); } this.push();
     this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> locks <b>' + esc(g.name) + '</b> and burns 1 pool: <b>' + esc(out) + '</b> for <b>' + esc(live.name) + '</b>.' });
     this._emit('w5-garibaldi', { out, got: live.name });
   }
@@ -4911,7 +4912,7 @@ class Bot {
     if(how === 'torpor' && v.kind === 'crypt') this._w5Hostage(v, this.seat);
     if(how === 'burned' && v.kind !== 'crypt') this._w5ZombieBurned(v);
     if(this.out || !this._w5InPlay(e => (e.modes || []).some(mo => mo.fx && mo.fx.lostMinionTax)).length) return;   // fx.lostMinionTax (unique: one card at most)
-    this.pool = Math.max(0, (this.pool | 0) - 1); this.push();
+    { const p0 = this.pool | 0; this.pool = Math.max(0, p0 - 1); this._w5Pool(p0, 'tension'); } this.push();
     this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> burns 1 pool (<b>Tension in the Ranks</b>: ' + esc(v.name) + (how === 'torpor' ? ' went to torpor' : ' is burned') + ').' });
     this._emit('w5-tension', { vamp: v.name, how });
     if(this.pool <= 0) this._oust(false);
@@ -4941,7 +4942,7 @@ class Bot {
   _w5AnarchRevoltBill(){             // Anarch Revolt: 'A Methuselah not controlling a ready Anarch burns 1 pool during their unlock phase' -- per copy in play [LSJ 19980225], at the end of my unlock phase [LSJ 20080106]
     const n = this._w5InPlay(e => (e.modes || []).some(mo => mo.fx && mo.fx.noAnarchTax)).length;   // fx.noAnarchTax
     if(!n || this._w5HasReadyAnarch(this.seat)) return;
-    this.pool = Math.max(0, (this.pool | 0) - n); this.push();
+    { const p0 = this.pool | 0; this.pool = Math.max(0, p0 - n); this._w5Pool(p0, 'anarch-revolt'); } this.push();
     this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> burns ' + n + ' pool (<b>Anarch Revolt</b>' + (n > 1 ? ' ×' + n : '') + ': no ready Anarch).' });
     this._emit('w5-anarch-revolt', { n });
     if(this.pool <= 0) this._oust(false);
@@ -5011,7 +5012,7 @@ class Bot {
     this._emit('w5-pp', { prey: pn });
     return prey;
   }
-  _w5OnPpBurn(who, preyName){ if(preyName !== this.seatName(this.seat) || this.out || who === this.o.name) return; this.pool = Math.max(0, (this.pool | 0) - 1); this._emit('took-pooldmg', { n: 1, pool: this.pool, via: 'privileged-position' }); if(this.pool > 0) this.push(); else this._oust(false); }
+  _w5OnPpBurn(who, preyName){ if(preyName !== this.seatName(this.seat) || this.out || who === this.o.name) return; { const p0 = this.pool | 0; this.pool = Math.max(0, p0 - 1); this._w5Pool(p0, 'privileged-position'); } this._emit('took-pooldmg', { n: 1, pool: this.pool, via: 'privileged-position' }); if(this.pool > 0) this.push(); else this._oust(false); }
   _w5TensionBurn(){                  // Tension in the Ranks: 'Methuselahs can use a master phase action and discard two master cards to burn this card' -- when it costs me 1.5 pool or more over its life, two masters of mine that are worth less
     if(this._phaseAvail('master') <= 0) return;
     const t = this._w5InPlay(e => (e.modes || []).some(mo => mo.fx && mo.fx.lostMinionTax))[0]; if(!t) return;
@@ -5052,14 +5053,14 @@ class Bot {
     return { worth, why: 'Frontal Assault: ' + k + ' rush(es) (' + who.join(', ') + ') against ' + preyReady + ' ready minion(s) of my prey -- worth ' + worth.toFixed(2) };
   }
   _w5FrontalGain(c, how){            // 'You gain 1 pool after a ready minion controlled by your prey is burned or sent to torpor' -- while my Frontal Assault is in play (this turn)
-    for(const f of this._w5FrontalMine()){ this.pool = (this.pool | 0) + 1; this.push();
+    for(const f of this._w5FrontalMine()){ const p0 = this.pool | 0; this.pool = p0 + 1; this._w5Pool(p0, 'frontal-assault'); this.push();
       this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> gains 1 pool (<b>' + esc(f.name) + '</b>: ' + esc(c.name) + (how === 'torpor' ? ' went to torpor' : ' is burned') + ').' }); this._emit('w5-frontal-gain', { vamp: c.name, how }); }
   }
   _w5FrontalBill(){                  // 'During your influence phase, burn this card and burn 1 pool for each ready minion controlled by your prey'
     const fs = this._w5FrontalMine(); if(!fs.length) return;
     const prey = this.preySeat(), n = (prey && prey !== this.seat) ? this._w5Readies(prey) : 0;
     for(const f of fs){ f.zone = 'ash'; f.locked = false;
-      this.pool = Math.max(0, (this.pool | 0) - n); this.push();
+      { const p0 = this.pool | 0; this.pool = Math.max(0, p0 - n); this._w5Pool(p0, 'frontal-assault'); } this.push();
       this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> burns <b>' + esc(f.name) + '</b> and ' + n + ' pool (' + n + ' ready minion' + (n === 1 ? '' : 's') + ' of ' + esc(this.seatName(prey)) + ').' });
       this._emit('w5-frontal-bill', { n });
       if(this.pool <= 0){ this._oust(false); return; } }
@@ -5084,7 +5085,7 @@ class Bot {
     const p = this._w5PiperPlan(); if(!p) return;
     const v = p.vamp, r = p.r, j = this.hand.indexOf(r.name); if(j < 0) return;
     this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1;
-    v.locked = true; if(r.costBlood) v.blood = Math.max(0, (v.blood | 0) - r.costBlood); this.pool = Math.max(1, (this.pool | 0) - (r.costPool | 0));
+    v.locked = true; if(r.costBlood) v.blood = Math.max(0, (v.blood | 0) - r.costBlood); { const p0 = this.pool | 0; this.pool = Math.max(1, p0 - (r.costPool | 0)); this._w5Pool(p0, 'cost'); }
     this.board.push({ id: this.gid(), name: r.name, kind: 'lib', zone: 'ready', faceDown: false, x: 64, y: 64, locked: false, life: r.life });
     this.push();
     this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> recruits <b>' + esc(r.name) + '</b> [' + esc(r.at || '') + '] (<b>Piper</b>: not an action, cannot be blocked).' });
