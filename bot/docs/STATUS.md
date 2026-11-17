@@ -5,7 +5,7 @@
 v1.1.3 · built against client v2.6.175 / srv-2.6.51 (the root's release);
 the read-only copies in bot/ are client v2.6.175 / protocol v2.6.175 / srv-2.6.51 and main's canary v1.3.0.
 
-**Deploy state:** `main` carries v0.6.229 (#74; main consumed v0.6.219–229 in #75). **Open PR:** V5 wave 5a (this release).
+**Deploy state:** `main` carries v0.6.229 (#74; main consumed v0.6.219–229 in #75). **Open PR:** #77, V5 wave 5a (this release).
 
 ## Last gates (v0.6.230 release bytes, 17 Nov 2026)
 Suite **2541/0 ×3** (`elysium-bot.js` `edf354fe`, `test-bot-logic.js` `fcc9ef37`, `elysium-cardfx.json` `5fb8c69c`) · canary
