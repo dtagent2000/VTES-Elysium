@@ -3546,6 +3546,97 @@
    ],
    "persistent": true,
    "note": "V5 wave 6a (18 Nov 2026, bot v0.6.233, RULINGS D-123): no modes. The auto tier read '+1 stealth' on [cel] and [tha] from 'attempt to enter combat with the attached minion as a +1 stealth (D) action' -- wrong, and inert (a combat card never reaches the stealth finder: 0 plays in the V5 smoke). '[cel] or [tha] Only usable if combat is about to end. Put this card on the opposing minion ... [CEL] or [THA] Only usable if combat would end. Instead, this vampire burns 1 blood to start a new round.' Both go with the maneuver / press grants round (BOARD); until then the bot holds the card."
+  },
+  "Shadow Cloak": {
+   "t": [
+    "mod"
+   ],
+   "req": {
+    "disc": [
+     "obl"
+    ]
+   },
+   "persistent": true,
+   "modes": [
+    {
+     "at": "obl",
+     "fx": {
+      "stealth": 1
+     }
+    },
+    {
+     "at": "OBL",
+     "when": "actSuccess",
+     "fx": {
+      "cloak": {
+       "pierce": "aus"
+      }
+     }
+    }
+   ],
+   "note": "V5 wave 6b (18 Nov 2026, bot v0.6.234, RULINGS D-124, spec-v5-wave6 §9.1). '[obl] +1 stealth. [OBL] Only usable after resolution of a successful action. Put this card on this vampire. Minions without Auspex [aus] cannot perform actions directed at this vampire. During your unlock phase, burn this card.' -- played after all combats, still during the action [PIB 20150915]; a fizzled action is a successful one (R-44). fx.cloak {pierce}: the discipline a minion needs to direct an action at the bearer (any level; sup: superior only); the bot plays it at the act-again point (_maybeCloak), its rush targeting skips a cloaked vampire (_rushCandidates), my unlock phase burns it (_cloakBurn)."
+  },
+  "Sleep Unseen": {
+   "t": [
+    "mod"
+   ],
+   "req": {
+    "disc": [
+     "obf"
+    ]
+   },
+   "persistent": true,
+   "modes": [
+    {
+     "at": "obf",
+     "when": "actSuccess",
+     "fx": {
+      "cloak": {
+       "pierce": "aus"
+      }
+     }
+    },
+    {
+     "at": "OBF",
+     "when": "actSuccess",
+     "fx": {
+      "cloak": {
+       "pierce": "aus",
+       "sup": true
+      }
+     }
+    }
+   ],
+   "note": "V5 wave 6b (18 Nov 2026, bot v0.6.234, RULINGS D-124, spec-v5-wave6 §9.1): Shadow Cloak's machinery. '[obf] Only usable at the end of a successful action (after resolving the action). Put this card on this acting vampire. Minions without Auspex [aus] cannot perform actions directed at the vampire with this card. Burn this card during your next unlock phase. [OBF] As above, but minions without superior Auspex [AUS] cannot perform actions directed at this vampire.' The data's 1 blood is inherited. In no deck."
+  },
+  "Absolute Tyranny": {
+   "t": [
+    "mod",
+    "react"
+   ],
+   "req": {
+    "disc": [
+     "pot",
+     "pre"
+    ]
+   },
+   "modes": [
+    {
+     "at": "pot+pre",
+     "fx": {
+      "votes": 3
+     }
+    },
+    {
+     "at": "POT+PRE",
+     "fx": {
+      "voteCut": {
+       "notPath": "Power and the Inner Voice"
+      }
+     }
+    }
+   ],
+   "note": "V5 wave 6b (18 Nov 2026, bot v0.6.234, RULINGS D-124, spec-v5-wave6 §9.2). 'Only usable during the polling step of a political action. [pot][pre] This vampire gets +3 votes. [POT][PRE] Vampires who do not follow the Path of Power and the Inner Voice get -1 vote.' A vampire's net negative votes count 0 [ANK 20251125]: one vote off each voting vampire off the Path; a political card's vote and the Edge's are the Methuselah's (rulebook 6.3.3.1). fx.voteCut {notPath}: applied in the caller's count (_tyrannyCut), the caller's boost and the voter's reaction (_tyrannyReactFor). The data's 1 blood is inherited."
   }
  },
  "crypt": {

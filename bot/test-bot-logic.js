@@ -14590,6 +14590,140 @@ async function connectWithRetry(client, tries = 30){
         ok(r.bleed === 'unlocked' && r.hunt === 'locked' && r.unknown === 'locked', '178p the post-block unlock under the directed condition: after a bleed, not a hunt or an unknown action (got ' + JSON.stringify(r) + ')'); }
     }
 
+    /* 179) v0.6.234 -- V5 WAVE 6b (RULINGS D-124, specs/spec-v5-wave6-2026-11-18.md section 9): Shadow Cloak [OBL] (and Sleep Unseen)
+       after a successful action -- the prior, the card on the vampire, every rush route's target skipping a cloak its rusher cannot
+       pierce, the burn in my unlock phase; Absolute Tyranny [POT][PRE] -- the cut in the caller's count, the caller's boost, the
+       line read by a bot caller, the voter's reaction (the +3 first, the cut, a wake). Both sides of each two-sided effect (L-23); the
+       old bytes lack the new methods: every call is guarded so they fail clean.
+       LAST LINE OF 179 is the closing brace below. */
+    {
+      console.log('\n[179] v0.6.234 -- V5 wave 6b: Shadow Cloak, Sleep Unseen, Absolute Tyranny');
+      const BOT9 = require('./elysium-bot.js'), IF9 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const N9 = ['Hanna', 'Viktor', 'Nora'];
+      const mk179 = (seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: N9[seat - 1], persona: 'expert', deckName: deck || 'malkavian', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} });
+        u.seat = seat; u.started = true; u.players = N9.map((n, i) => ({ seat: i + 1, name: n, online: true, bot: true }));
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxs = []; u.fxClone = (c, verb) => u.fxs.push({ name: c.name, verb }); u.say = () => {}; u.note = () => {}; u.chats = []; u.chat = t => u.chats.push(t); u._restartAskTimer = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.board = []; u.hand = []; u.pool = 20; u.turnSeat = 1; u.table = { 1: { pub: { pool: 20, cards: [] } }, 2: { pub: { pool: 20, cards: [] } }, 3: { pub: { pool: 20, cards: [] } } };
+        u._afterBeat = (k, g, f) => { if(g()) f(); }; return u; };
+      const V9 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 4, attached: [] }, o || {});
+      const txt9 = m => (m && m.t === 'log') ? String(m.html || '').replace(/<[^>]+>/g, '') : '';
+      const logs9 = u => u.sent.map(txt9).filter(Boolean);
+      const ev9 = (u, t) => u.events.filter(e => e.t === 'bot:' + t).map(e => e.d);
+      const wire9 = bots => bots.forEach(b => { const s0 = b.send; b.send = m => { s0(m); if(m && m.t === 'log') bots.filter(x => x !== b).forEach(x => x._onLog(b.o.name, m.html)); }; });
+      const LA = (v, o) => Object.assign({ vamp: v.name, outcome: 'through', kind: null, played: new Set() }, o || {});
+
+      // a) the cloak's prior at the act-again point: a Haven Uncovered on the actor, or a rusher without Auspex that rushed me and is still
+      //    ready -- the card goes on the vampire (its board shows it), the line; kept for its +1 stealth otherwise: no threat, a rusher with
+      //    Auspex, a blocked action, the [obl] already played on this action, only inferior Oblivion, already cloaked
+      { const run = (o) => { const u = mk179(1, 'lasombra'); const v = V9('y1', o.vamp || 'Yewon Ong'); u.board = [v]; u.hand = ['Shadow Cloak'];
+          u.table[2].pub.cards = [V9('r1', 'Ryan (G6)'), V9('b1', 'Belinde (G6)'), { id: 'h1', name: 'Haven Uncovered', kind: 'lib', zone: 'ready' }];
+          if(o.haven) u._havenSeen = { [v.name]: { owner: 'Hanna', seat: 1, by: 'Viktor', bySeat: 2, cardId: null } };
+          if(o.rusher && IF9(u, '_noteRushedBy')) u._noteRushedBy('Viktor', o.rusher, v.name);
+          if(o.cloaked){ u.board.push({ id: 'm9', name: 'Shadow Cloak', kind: 'lib', zone: 'ready', host: v.id }); v.attached = ['m9']; }
+          const did = IF9(u, '_maybeCloak') ? u._maybeCloak(v, LA(v, o.la)) : null;
+          const card = u.board.find(c => c && c.kind === 'lib' && c.name === 'Shadow Cloak' && c.host === v.id && c.id !== 'm9');
+          return { did, on: !!card && v.attached.includes(card.id), hand: u.hand.length, line: logs9(u).find(l => /plays Shadow Cloak on itself/.test(l)) || null, why: (ev9(u, 'cloak')[0] || {}).why || null }; };
+        const hv = run({ haven: true }), rr = run({ rusher: 'Ryan (G6)' }), ra = run({ rusher: 'Belinde (G6)' }), none = run({}), blk = run({ haven: true, la: { outcome: 'blocked' } }),
+              twice = run({ haven: true, la: { played: new Set([BOT9.FX_NORM('Shadow Cloak')]) } }), inf = run({ haven: true, vamp: 'Braden White' }), already = run({ haven: true, cloaked: true });
+        ok(hv.did === true && hv.on && hv.hand === 0 && hv.line === "Yewon Ong plays Shadow Cloak on itself — minions without Auspex cannot perform actions directed at it until Hanna's next unlock phase." && /Haven Uncovered/.test(hv.why)
+           && rr.did === true && rr.on && /Ryan \(G6\) rushed my Yewon Ong/.test(rr.why) && [ra, none, blk, twice, inf, already].every(x => !x.did && !x.on && x.hand === 1),
+           '179a Shadow Cloak after a successful action: on the vampire at a Haven Uncovered or a rusher without Auspex; kept at no threat, a rusher with Auspex, a blocked action, a second copy, inferior Oblivion, a cloaked vampire (got ' + JSON.stringify({ hv, rr, ra: ra.did, none: none.did, blk: blk.did, twice: twice.did, inf: inf.did, already: already.did }) + ')'); }
+
+      // b) the read: every rush route picks its target in _bestRushTargetFor -- a cloaked vampire is skipped by a rusher without Auspex (a
+      //    bot's cloak and a human's alike: the seat's board), taken by one with it; Sleep Unseen's [OBF] by superior Auspex only
+      { const run = (deck, rusher, cloak, sup) => { const u = mk179(1, deck); const r = V9('r1', rusher, { blood: 5 }); u.board = [r];
+          const t = V9('t1', 'Yewon Ong', { blood: 3, attached: cloak ? ['c1'] : [] }); u.table[2].pub.cards = [t];
+          if(cloak) u.table[2].pub.cards.push({ id: 'c1', name: sup ? 'Sleep Unseen' : 'Shadow Cloak', kind: 'lib', zone: 'ready', host: 't1' });
+          const b = u._bestRushTargetFor(r, { quiet: true }); return b ? b.name : null; };
+        const r = { ctl: run('nosferatu', 'Ryan (G6)', false), ryan: run('nosferatu', 'Ryan (G6)', true), belinde: run('nosferatu', 'Belinde (G6)', true),
+                    supBel: run('nosferatu', 'Belinde (G6)', true, true), supCol: run('malkavian', 'Colette (G6)', true, true) };
+        ok(r.ctl === 'Yewon Ong' && r.ryan === null && r.belinde === 'Yewon Ong' && r.supBel === null && r.supCol === 'Yewon Ong',
+           '179b the rush target: a cloaked vampire skipped without Auspex, taken with it; Sleep Unseen [OBF] pierced by superior Auspex only (got ' + JSON.stringify(r) + ')'); }
+
+      // c) my unlock phase burns every cloak on my vampires (a torpored host's too): off the board and the host, to the ash heap, the line
+      { const u = mk179(1, 'lasombra'); const v = V9('y1', 'Yewon Ong'), w = V9('a1', 'Azucena', { zone: 'torpor' }); u.board = [v, w,
+          { id: 'm1', name: 'Shadow Cloak', kind: 'lib', zone: 'ready', host: 'y1' }, { id: 'm2', name: 'Shadow Cloak', kind: 'lib', zone: 'ready', host: 'a1' }]; v.attached = ['m1']; w.attached = ['m2'];
+        if(IF9(u, '_w5Unlock')) u._w5Unlock();
+        const left = u.board.filter(c => c && c.kind === 'lib' && c.name === 'Shadow Cloak' && c.zone !== 'ash').length, ash = u.board.filter(c => c && c.name === 'Shadow Cloak' && c.zone === 'ash').length;
+        ok(left === 0 && ash === 2 && !v.attached.length && !w.attached.length && ev9(u, 'cloak-burn').length === 2 && logs9(u).filter(l => /burns Shadow Cloak from/.test(l)).length === 2,
+           '179c the cloak burns in my unlock phase, a torpored host’s too (got ' + JSON.stringify({ left, ash, att: [v.attached, w.attached], rows: ev9(u, 'cloak-burn').length }) + ')'); }
+
+      // d) the action's played set rides the last action (Shadow Cloak's [OBL] is a second copy of a modifier already played); the rush
+      //    lines at my vampire record the rusher for the prior (Deep Song, a Haven Uncovered rush); a human's chat rush names its rusher
+      { const u = mk179(1, 'lasombra'); const v = V9('y1', 'Yewon Ong'); u.board = [v];
+        u._actingVamp = { v, played: new Set([BOT9.FX_NORM('Shadow Cloak')]) }; u._emit('through', { vamp: v.name, kind: null });
+        const pl = !!(u._lastAct && u._lastAct.played && u._lastAct.played.has(BOT9.FX_NORM('Shadow Cloak'))); u._actingVamp = null;
+        u._rushWindowOpens = () => true;   // the window itself is v0.6.107's (tested there): the record comes before it
+        u._onLog('Viktor', '<b>Ryan (G6)</b> plays <b>Deep Song [ANI]</b> — rushes <b>Hanna</b>\'s <b>Yewon Ong</b>.');
+        u._onLog('Nora', '<b>Larissa Moreira (G6)</b> enters combat with <b>Hanna</b>\'s <b>Yewon Ong</b> (Haven Uncovered).');
+        const rb = (u._rushedBy || []).map(x => x.seat + ':' + x.vamp + '>' + x.target).join();
+        ok(pl && rb === '2:Ryan (G6)>Yewon Ong,3:Larissa Moreira (G6)>Yewon Ong', '179d the last action carries its played modifiers; the rush lines at my vampire record their rushers (got ' + JSON.stringify({ pl, rb }) + ')'); }
+
+      // e) Absolute Tyranny's cut in the caller's count: one vote off each voting vampire off the Path -- a seat's certain voters (_votedBy),
+      //    with the Methuselah's political-card vote beside its titles; my own voters off the Path too; a count beyond its titles cut no lower
+      { const u = mk179(1, 'pathpower'); u.board = [V9('a1', 'Aaradhya, The Callous Tyrant'), V9('s1', 'Sybren van Oosten')];
+        u.table[2].pub.cards = [V9('v1', 'Alexa Draper'), V9('v2', 'Alice Chen')]; u.table[3].pub.cards = [V9('v3', 'Horst von Brühl')];
+        const rc = { by: { Viktor: 4, Nora: 2 }, agBy: { Viktor: 4 }, tyr: { notPath: 'Power and the Inner Voice' } };
+        const c1 = IF9(u, '_tyrannyCut') ? u._tyrannyCut(rc) : {};
+        const c2 = IF9(u, '_tyrannyCut') ? u._tyrannyCut(Object.assign({}, rc, { by: { Viktor: 5, Nora: 2 }, agBy: { Viktor: 5 } })) : {};   // 4 title votes + the political card's or the Edge's
+        const c3 = IF9(u, '_tyrannyCut') ? u._tyrannyCut(Object.assign({}, rc, { by: { Viktor: 9 }, agBy: { Viktor: 9 } })) : {};   // 9 from 4 titles: not every voter is certain
+        ok(c1.against === 2 && c1.for === 2 && c2.against === 2 && c3.against === 0 && (c1.seats || []).some(x => x.name === 'Hanna' && x.vamps.join() === 'Sybren van Oosten'),
+           '179e the cut: each voting vampire off the Path, mine included; the Methuselah’s vote beside the titles; never more than the count names (got ' + JSON.stringify({ c1, c2: c2.against, c3: c3.against }) + ')'); }
+
+      // f) the caller's boost: the superior when its net cut beats the +3 (and only while I call); the +3 at a tie, for a vampire with the
+      //    inferior only, and in the plan's look (no referendum open)
+      { const mk = (by, vamp) => { const u = mk179(1, 'pathpower'); const v = V9('a1', vamp || 'Aaradhya, The Callous Tyrant', { blood: 3 }); u.board = [v]; u.hand = ['Absolute Tyranny'];
+          u.table[2].pub.cards = [V9('v1', 'Alexa Draper'), V9('v2', 'Alice Chen')]; u.table[3].pub.cards = [V9('v3', 'Horst von Brühl'), V9('v4', 'Sybren van Oosten')];
+          if(by) u._refCall = { by, agBy: Object.assign({}, by), for: 0, against: 0 };
+          const b = u._voteBoosts(v).find(x => x.name === 'Absolute Tyranny'); return b ? (b.tyranny ? 'cut ' + b.n : '+' + b.n) : null; };
+        const r = { four: mk({ Viktor: 4, Nora: 4 }), three: mk({ Viktor: 4, Nora: 2 }), inf: mk({ Viktor: 4, Nora: 4 }, 'Onkabetse, Arriviste'), plan: mk(null) };
+        ok(r.four === 'cut 4' && r.three === '+3' && r.inf === '+3' && r.plan === '+3', '179f the caller’s boost: the cut when it beats +3, else +3 (got ' + JSON.stringify(r) + ')'); }
+
+      // g) the caller plays the superior: the line (L12.tyranny), the cut from here on, a human whose votes it takes told in chat; a bot caller
+      //    reads another bot's line and cuts its count; the line's kind
+      { const u = mk179(1, 'pathpower'); const v = V9('a1', 'Aaradhya, The Callous Tyrant', { blood: 3 }); u.board = [v]; u.hand = ['Absolute Tyranny']; u.players[2].bot = false;
+        u.table[3].pub.cards = [V9('v3', 'Horst von Brühl')];
+        const rc = { by: { Nora: 2 }, agBy: { Nora: 2 }, for: 0, against: 2, closed: null };
+        const ok1 = IF9(u, '_playTyranny') ? u._playTyranny(v, { name: 'Absolute Tyranny', n: 1, cost: { blood: 1 }, tyranny: { notPath: 'Power and the Inner Voice' } }, rc) : false;
+        const line = logs9(u).find(l => /Absolute Tyranny:/.test(l)) || null, told = u.chats.find(c => /^Nora: Absolute Tyranny/.test(c)) || null;
+        const w = mk179(2, 'ventrue'); w._refCall = { by: {}, agBy: {}, closed: null };
+        w._onLog('Hanna', '<b>Aaradhya, The Callous Tyrant</b> plays <b>Absolute Tyranny</b>: vampires not on the Path of Power and the Inner Voice get -1 vote.');
+        const k = w._evClassify('Hanna', 'Aaradhya, The Callous Tyrant plays Absolute Tyranny: vampires not on the Path of Power and the Inner Voice get -1 vote.', 'log');
+        ok(ok1 === true && line === 'Aaradhya, The Callous Tyrant plays Absolute Tyranny: vampires not on the Path of Power and the Inner Voice get -1 vote.' && !!rc.tyr && v.blood === 2 && u.hand.length === 0
+           && /Horst von Brühl is not on the Path of Power and the Inner Voice: 1 vote off your votes against\./.test(told || '') && !!(w._refCall.tyr && w._refCall.tyr.notPath === 'Power and the Inner Voice') && k && k.kind === 'vote-cut',
+           '179g the caller’s superior: the line, the cut, the human told; a bot caller reads the line (got ' + JSON.stringify({ ok1, line, told, read: w._refCall.tyr || null, kind: k && k.kind }) + ')'); }
+
+      // h) the voter's half: my direction against and the referendum passing as it stands -- the +3 first when it turns it, else the cut on
+      //    the votes for (the caller's princes off the Path, its card's vote beside them); nothing when it fails already, when my direction is
+      //    for, when no mode turns it; a locked reactor behind a wake it can play (an inferior-only reactor has no cut: 179i's +3)
+      { const run = (o) => { const u = mk179(2, 'pathpower'); const re = V9('o1', 'Aaradhya, The Callous Tyrant', { blood: 3, locked: !!o.locked }); u.board = [re]; u.hand = ['Absolute Tyranny'].concat(o.wake ? ['On the Qui Vive'] : []);
+          u.table[1].pub.cards = ['Alexa Draper', 'Alice Chen', 'Horst von Brühl', 'Sybren van Oosten'].slice(0, o.princes == null ? 4 : o.princes).map((n, i) => V9('p' + i, n));
+          u._refT = { who: 'Hanna', seat: 1, card: 'Kine Resources Contested', deltas: o.mine ? { 2: 3 } : { 2: -3 }, at: Date.now() };
+          u.tally = { mode: 'vote', a: o.a, b: o.b }; u._refVotes = { for: o.a, against: o.b, by: { Hanna: o.a }, forBy: { Hanna: o.a }, agBy: {} };
+          const tr = IF9(u, '_tyrannyReactFor') ? u._tyrannyReactFor({}) : null; const row = ev9(u, 'vote-react-eval')[0] || null;
+          return { mode: tr ? tr.kind : null, cut: tr && tr.cutFor, wake: tr && tr.wake ? tr.wake.name : null, why: row && row.why }; };
+        const plus = run({ a: 5, b: 3 }), cut = run({ a: 9, b: 5 }), fails = run({ a: 4, b: 4 }), mine = run({ a: 5, b: 3, mine: true }), far = run({ a: 12, b: 3 }), lockd = run({ a: 5, b: 3, locked: true }), wk = run({ a: 5, b: 3, locked: true, wake: true });
+        ok(plus.mode === 'votes' && cut.mode === 'cut' && cut.cut === 4 && fails.mode === null && fails.why === 'it fails as it stands' && mine.mode === null && far.mode === null && far.why === 'no mode turns it'
+           && lockd.mode === null && /locked, no wake/.test(lockd.why || '') && wk.mode === 'votes' && wk.wake === 'On the Qui Vive',
+           '179h the voter’s half: +3 first, the cut when only it turns it, a wake for a locked reactor; nothing otherwise (got ' + JSON.stringify({ plus, cut, fails, mine, far, lockd, wk }) + ')'); }
+
+      // i) both sides wired: the voter plays the cut -- its line, the counter as cut (a human caller resolves from it), the bot caller reads
+      //    the line and cuts its own count (its four princes off the Path); the +3 play is District's line and the counter's against
+      { const caller = mk179(1, 'ventrue'), voter = mk179(2, 'pathpower'); wire9([caller, voter]);
+        caller.board = ['Alexa Draper', 'Alice Chen', 'Horst von Brühl', 'Sybren van Oosten'].map((n, i) => V9('p' + i, n)); caller._refCall = { by: {}, agBy: {}, for: 0, against: 0, closed: null };
+        voter.table[1].pub.cards = caller.board.map(c => Object.assign({}, c)); const re = V9('o1', 'Aaradhya, The Callous Tyrant', { blood: 3 }); voter.board = [re]; voter.hand = ['Absolute Tyranny'];
+        voter._refT = { who: 'Hanna', seat: 1, card: 'Kine Resources Contested', deltas: { 2: -3 }, at: Date.now() };
+        voter.tally = { mode: 'vote', a: 9, b: 5 }; voter._refVotes = { for: 9, against: 5, by: { Hanna: 9 }, forBy: { Hanna: 9 }, agBy: {} };
+        const tr = IF9(voter, '_tyrannyReactFor') ? voter._tyrannyReactFor({}) : null; const played = tr && IF9(voter, '_playTyrannyReact') ? await voter._playTyrannyReact(tr, {}) : false;
+        const tal = voter.sent.filter(m => m && m.t === 'tally').pop() || null, cc = caller._refCall.tyr ? caller._tyrannyCut(caller._refCall) : null;
+        const v2 = mk179(2, 'pathpower'); v2.board = [V9('o2', 'Onkabetse, Arriviste', { blood: 3 })]; v2.hand = ['Absolute Tyranny']; v2.tally = { mode: 'vote', a: 5, b: 3 };
+        v2._refT = { who: 'Hanna', seat: 1, card: 'Kine Resources Contested', deltas: { 2: -3 }, at: Date.now() }; v2._refVotes = { for: 5, against: 3, by: { Hanna: 5 }, forBy: { Hanna: 5 }, agBy: {} };
+        const t2 = IF9(v2, '_tyrannyReactFor') ? v2._tyrannyReactFor({}) : null; if(t2) await v2._playTyrannyReact(t2, {});
+        const l2 = logs9(v2).find(l => /\+3 votes against the referendum\./.test(l)) || null, b2 = (v2.sent.filter(m => m && m.t === 'tally').pop() || {}).b;
+        ok(played === true && tal && tal.a === 5 && !!(caller._refCall.tyr) && cc && cc.for === 4 && re.blood === 2 && l2 === 'Onkabetse, Arriviste plays Absolute Tyranny — +3 votes against the referendum.' && b2 === 6,
+           '179i both sides: the voter’s cut on the counter and in the bot caller’s count; the +3 as District’s line (got ' + JSON.stringify({ played, tal, read: caller._refCall.tyr || null, cc, l2, b2 }) + ')'); }
+    }
+
 
 
     }
