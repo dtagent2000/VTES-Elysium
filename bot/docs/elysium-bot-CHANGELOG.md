@@ -32,6 +32,49 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.234 (18 Nov 2026)** — V5 wave 6b: Shadow Cloak and Absolute Tyranny (RULINGS D-124; Johan, 18 Nov: "Yes vi kör på det!" on
+  all five of spec-v5-wave6 §9.4). The design and the as-built record: `specs/spec-v5-wave6-2026-11-18.md` §9.
+  - *Shadow Cloak [OBL]* (curated: `fx.cloak {pierce: 'aus'}`, when `actSuccess`; Sleep Unseen rides along, [OBF] pierced only by
+    superior Auspex): at the act-again point, before Freak Drive (`_maybeCloak`), the acting vampire — ready, superior Oblivion, the
+    card not already played on this action (`_lastAct.played`: through, blocked and fizzled) — puts it on itself when Claude's
+    prior sees a rush it stops coming: a Haven Uncovered or a Regent-class grant on it, or a vampire without Auspex that rushed one
+    of my vampires this game and is still ready (`_cloakThreat`; the rushers are the table model's, `this.opp[seat].rushedMe`,
+    from the rush lines); else the card waits for its +1 stealth. The card sits on the vampire (`host` / `attached`, with the
+    client's `sup` marker when played at superior — buildPub forwards it, and it picks Sleep Unseen's mode); `_bestRushTargetFor` —
+    every rush route — and the rescue of another's vampire (`_bestEnemyRescueFor`) skip a cloak the actor cannot pierce
+    (`_piercesCloak`); my unlock phase burns it (`_cloakBurn`). The line is a 'puts' line (a 'plays' line after the action is
+    L12.actObs's new action), event kind 'card-played'; the burn line 'card-burned'. Rows `cloak-eval`, `cloak`, `cloak-burn`.
+  - *Absolute Tyranny [POT][PRE]* (curated: `fx.voteCut {notPath}`): one vote off each voting vampire not on the Path of Power and
+    the Inner Voice (a Path followed by choice read first), a vampire's net negative counting 0 and the Methuselah's own votes (the
+    political card's, the Edge's) uncut. The caller's count cuts every seat (`_tyrannyCut`, in `tot()`; a seat's voters,
+    `_voterVamps`: a bot's first reading its titles make beside 0–2 Methuselah votes, a human's only the certain ones), when it plays
+    the card (the boost step: the superior when its net cut beats the +3, `_voteBoosts`) or reads a bot's line (`L12.tyranny`, kind
+    'vote-cut'); its counter stays uncut while the poll is open, the breakdown a note before the verdict. A voter plays it as a
+    reaction when the referendum passes as it stands and a mode turns it — the +3 first (District's line), else the cut over both
+    sides' voters off the Path — behind a wake for a locked reactor (`_tyrannyReactFor`, `_playTyrannyReact`): to a bot caller the
+    line only, to a human caller the counter as cut and what to subtract (chat). Rows `vote-react-eval`, `vote-react`, `vote-cut`,
+    `vote-cut-in`.
+  - *The polling order* (a rider, D-92; the graded readings and the egress review): a voter's card now goes before its title votes
+    (`_onVoteOpen`, `_districtReact`). A bot caller closes its poll once it has heard every seat, and a seat's casts line is how it
+    is heard: in v0.6.233's 240 every one of Protected District's 83 plays came after its seat's own title votes (its reactor is
+    titled) and was lost, 16 of them after the verdict (71 matches; the +3 would have turned 55 of those referendums).
+  - *Versions*: curated 213, coverage v1.1.51 (`cloak`, `voteCut`), the compiler unchanged (v1.9.11).
+  - *Tests*: section 179 (11 checks, 179j–k through the phases: a two-bot referendum through `_callReferendum` and `_onVoteOpen`, the
+    cloak through `_maybeActAgain`; 0/11 on v0.6.233's bytes, 3/8 on the build's, `5e1c0e5`); `test-cardfx` 361 (5 red on v0.6.233's
+    curation: the count, the three readings, the cloak as the after-success window's second class beside the act-again riders).
+  - *Gates* (the release bytes: `elysium-bot.js` `4a1342b4`, `test-bot-logic.js` `7dcc71ff`, `elysium-cardfx.json` `721c74ee`):
+    suite **2606/0 ×3** (×3 also on `340863e4`, the sims' bytes, one comment line apart); section 179 11/0 (3/8 on the build's
+    bytes, 0/11 on v0.6.233's); `test-cardfx` 361/0; canary 171/0 ×2; hotseat 12/0; HB1 11/11; main's client suite 371/1 (the
+    guide's embed: main re-embeds); the sim against v0.6.233 — the 240 DIVERGED 46, SAME-PLAY 25, IDENTICAL 169 (exactly its 71
+    District matches; VP paired each within one SE), the V5 smoke each table's District matches and every match of the four card
+    tables; `ana-gates.py` PASS on the 240, the 14 tables and the four firing series; the arena smoke PASS 7/7 (six more live
+    matches 7/7 each: two District plays before their seat's title votes, both counted). The first frozen run of the candidate
+    caught the polling step's microtask (58b, 59c, 86d, 86g: fixed, the step is synchronous unless a wake waits); the same run
+    failed section 12's real-clock arena match once (a 12-round match against its 60 s cap), not reproduced in six reruns on these
+    bytes and v0.6.233's.
+  - Egress: 9 findings (half-done 5, test-weakened 1, stale-doc 1, rule-missed 1, unproven 1), 9 fixed, 0 listed. Graded readings:
+    red 4 (the voter's card after its title votes; the voter's cut on one side; a Path followed by choice; the rescue, an action
+    directed at the vampire), all fixed; the riders listed in spec-v5-wave6 §9.5.
 - **v0.6.233 (18 Nov 2026)** — V5 wave 6a: the block side of the 11 cards with a discipline line and no mode (D-116 (3); RULINGS
   D-123; Johan, 18 Nov: "Ja vi kör på dina rekommendationer" on all five of spec-v5-wave6 §7). The design and the as-built record:
   `specs/spec-v5-wave6-2026-11-18.md` §0–§2 and §8. RULINGS made room by folding five retired stubs, then by D-101 (RULINGS 64 → 65 KB,

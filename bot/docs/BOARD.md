@@ -1,4 +1,4 @@
-# BOARD — the open asks (18 Nov 2026, v0.6.232). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (18 Nov 2026, v0.6.234). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -15,14 +15,13 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 waves**: the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim plays them; the menu only
-  Toreador) and the ledger (`docs/CARDS.md`); waves by effect class as the class map ranks them (D-98). Waves 1–5 done
-  (D-99, D-103, D-104, D-106, D-120, D-122), 6a (D-123); next: 6b -- Shadow Cloak (a window after a successful action) and Absolute
-  Tyranny (the polling's -1 vote by path), spec-v5-wave6 §3. Then the maneuver / press grants with the rush cards (Hunting the Quarry,
+  Toreador) and the ledger (`docs/CARDS.md`); waves by effect class as the class map ranks them (D-98). Waves 1–6 done
+  (D-99, D-103, D-104, D-106, D-120, D-122, D-123, D-124); next: the maneuver / press grants with the rush cards (Hunting the Quarry,
   Night Terrors' strike: combat ends), the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
   done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY`
   line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares
   them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108; `CARDS.md`; HOWTO.
-- **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8): what v1 of each wave left out, the
+- **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9): what v1 of each wave left out, the
   amber halves and the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
 - **The curation queue of wave 6's graded readings** (none in a deck; spec-v5-wave6 §8): Enkil Cog, Destilaria Estrela da
   Paraíba, Dogged Pursuit, Speak with Spirits and The Mole (leftover +1 intercept modes), Hall of Hades' Court [dom] (`_voteBoosts`
@@ -116,6 +115,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The act-again context reads `mo.fx.referendum`** (`_actAgainCtx`'s "clogged" test), which no cardfx entry carries — political
   cards carry `e.ref` — so a political action in hand never counts as another use for the vampire (the coverage scan).
   *Done when* the test reads the political type and a section covers it.
+- **The act-again point after a failed referendum**: an unblocked political action succeeded whatever its referendum did, but a
+  failed one writes no `_lastAct`, so neither Freak Drive nor Shadow Cloak follows it (v0.6.234). *Done when* it does, a section
+  through `_maybeActAgain`. Docs: RULINGS R-44.
 - **The influence floor at `poolFloor` 0**: the influence phase leaves `poolFloor` (6 for every persona; 1 with no ready minion);
   a knob of 0, which only test fixtures set, lets it spend the last pool (D-97's inventory). *Done when* the floor is at
   least 1 and the fixtures that relied on 0 are read (L-16).

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.50 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.51 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.50';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.51';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -173,6 +173,10 @@ const CLASS = {
      the acting bot's _onStealthZero); noStrikeFirstRound -- One With the Land [PRO]'s rider on the locked route (_bestUnlockReactFor, _owl); cancelBlockPay
      -- True Love's Face [OBF][PRE]'s counter, beside its cancelBlock (_bestCancelBlockFor, _payCancelWindow, _cancelPayFor). */
   stealthToZero: 'play', noStrikeFirstRound: 'paired', cancelBlockPay: 'paired',
+  /* v1.1.51 (18 Nov 2026, bot v0.6.234, V5 wave 6b, RULINGS D-124): cloak -- Shadow Cloak [OBL] / Sleep Unseen after a successful action (_maybeCloak; the
+     rush targeting reads it, _rushCandidates; my unlock phase burns it); voteCut -- Absolute Tyranny [POT][PRE] (the caller's boost, _voteBoosts; the cut in
+     its count, _tyrannyCut; the voter's reaction, _tyrannyReactFor). */
+  cloak: 'play', voteCut: 'play',
   titleCard: 'paired', votesPerReady: 'paired',   // a title referendum's terms (ref.fx), consumed through the verdict's titleCard rule
   /* v1.1.42 (2 Nov 2026, bot v0.6.215, V5 wave 3, RULINGS D-104): the wave's keys -- all on masters, read on the board or by the master loop. */
   lockStealthSect: 'paired', lockStealthAt: 'paired',   // Anarch Railroad's sect gate (_lockStealthFor); Creepshow Casino's announce window (_lockStealthAtAnnounce)
