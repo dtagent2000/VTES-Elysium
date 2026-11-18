@@ -2947,6 +2947,10 @@ class Bot {
     if(!vamps.some(c => !c.locked)) this._lockedRouteBodies(p, reacted).forEach(r => { const s2 = r.s + this._equipIntercept(r.v) + this._hostedIntercept(r.v, p) + this._cryptIntercept(r.v, p); if(s2 > best) best = s2; });
     return (best === -Infinity) ? 0 : best;
   }
+  _strayBurnFor(p){                  // v0.6.233 (V5 wave 6a): the ready ally I may burn to unlock a minion of mine for this action -- fx.allyBurnUnlock; 'directed' (Underbridge Stray: 'During an action directed at you (or a card you control), you can burn this ally ...') only when the action is directed (_pendDirected true; unknown fails closed). v0.6.232 burned it at any action
+    return this.board.find(c => { if(!c || c.zone !== 'ready' || this._outOfPlay(c)) return false;
+      const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && ((h.e.t) || []).includes('ally') && (h.e.modes || []).some(mo => mo.fx && mo.fx.allyBurnUnlock && (mo.fx.allyBurnUnlock !== 'directed' || this._pendDirected(p) === true))); }) || null;
+  }
   _findStray(){                      // N4d: a ready ally with fx.allyPressLife and life left (fx-literal identification -- the scanner lesson pre-applied)
     return this.board.find(c => { if(!c || c.zone !== 'ready' || this._outOfPlay(c) || (c.life | 0) < 1) return false;
       const h = this.fxLookup(c.name); return h && h.kind === 'lib' && ((h.e.t) || []).includes('ally') && (h.e.modes || []).some(mo => mo.fx && mo.fx.allyPressLife); }) || null;
@@ -5290,7 +5294,7 @@ class Bot {
     }
     return null;
   }
-  _bestUnlockReactFor(vamp, when){   // N1: a usable TRUE-unlock reaction for this vampire in this WINDOW -- fx.unlock, mode.when === when (curated riders; bare fx.unlock cannot tell Guard Dogs from Cats' Guidance)
+  _bestUnlockReactFor(vamp, when, p){   // N1: a usable TRUE-unlock reaction for this vampire in this WINDOW -- fx.unlock, mode.when === when (curated riders; bare fx.unlock cannot tell Guard Dogs from Cats' Guidance). v0.6.233: p = the action, for the directed condition (_dirOk: One With the Land's header)
     if(!this.fx) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('react')) continue;
@@ -5298,7 +5302,7 @@ class Bot {
       let found = null;
       for(const mo of (h.e.modes || [])){
         if(!mo.fx || !mo.fx.unlock || mo.when !== when) continue;
-        if(!this._modeUsableBy(mo, vamp) || !this._titleOk(h, vamp)) continue;
+        if(!this._modeUsableBy(mo, vamp) || !this._titleOk(h, vamp) || !this._dirOk(h.e, mo, p)) continue;
         const cB = ((h.e.cost && h.e.cost.blood) || 0) + (mo.fx.payBlood | 0); if((vamp.blood | 0) < cB) continue;   // v0.6.139: fx.payBlood = the price of THIS mode (Second Tradition's locked route burns 1 blood; its plain +2 is free)
         if(!found || mo.fx.maneuver){ found = { idx, name: h.name, cost: cB ? { blood: cB } : null, maneuverGrant: !!mo.fx.maneuver, intercept: mo.fx.intercept | 0 };   // v0.6.28's lesson, third appearance: a later RICHER usable mode overrides the earlier plain one (superior-if-able)
           if(mo.fx.interceptPaid > 0) found.paid = { n: mo.fx.interceptPaid | 0, cost: (mo.fx.interceptPaidBlood | 0) || 1 };   // v0.6.228: Eyes of the Wild -- 'During this action, this Gangrel can burn 1 blood to get +1 intercept' (taken at the attempt, _commitBlock)
@@ -5355,8 +5359,8 @@ class Bot {
     const out = [];
     (this.board || []).forEach(v => {
       if(!v || v.zone !== 'ready' || v.kind !== 'crypt' || !v.locked || (p && p.attempted && p.attempted.has(v.id)) || (this._pentexVamp && v.name === this._pentexVamp) || this._cryptCannotBlock(v, p && p.actingVampName, p)) return;
-      if(p && p.kind === 'bleed' && this._bestUnlockReactFor(v, 'bleedAtMe')){ const b = this._bestInterceptFor(v, reacted || null, p); out.push({ v, s: b ? b.s : 0, via: 'bleedAtMe' }); return; }
-      const un = this._bestUnlockReactFor(v, 'lockedBlock'); if(!un) return;
+      if(p && p.kind === 'bleed' && this._bestUnlockReactFor(v, 'bleedAtMe', p)){ const b = this._bestInterceptFor(v, reacted || null, p); out.push({ v, s: b ? b.s : 0, via: 'bleedAtMe' }); return; }
+      const un = this._bestUnlockReactFor(v, 'lockedBlock', p); if(!un) return;
       if(un.intercept | 0){ out.push({ v, s: un.intercept | 0, via: 'lockedBlock' }); return; }
       const left = (v.blood | 0) - ((un.cost && un.cost.blood) | 0), paid = (un.paid && left - un.paid.cost >= 1) ? un.paid.n : 0, b = this._bestInterceptFor(v, reacted || null, p);
       out.push({ v, s: Math.max(paid, b ? b.s : 0), via: 'lockedBlock' });
@@ -5386,6 +5390,7 @@ class Bot {
         if(mo.fx.lockInterceptClan && this._vampClan(vamp) !== mo.fx.lockInterceptClan) return;
         if(mo.fx.lockInterceptOn === 'undirected' && !(p && p.kind === 'undirected')) return;
         if(mo.fx.lockInterceptNotFirst && !(p && (this._turnActN | 0) >= 2)) return;   // the action being blocked is at least the second announced this turn (its own row counted)
+        if((h.e.onlyDirected || mo.onlyDirected) && !(p && this._pendDirected(p) === true)) return;   // v0.6.233: 'during an action directed at you' (Destilaria Estrela da Paraíba) -- without the action it fails closed, as the conditions above
         const x = { name: h.name, s: n, fromBoard: c.id, lock: true };
         if(all){ if(!out.some(o => o.name === x.name)) out.push(x); } else if(!best || n > best.s) best = x; });
     });
@@ -5417,6 +5422,7 @@ class Bot {
       (h.e.modes || []).forEach(mo => {
         const ic = mo.fx && mo.fx.intercept;
         if(mo.when === 'lockedBlock') return;   // v0.6.139: the locked-only mode is the sleeper route's, never a plain intercept
+        if(!this._dirOk(h.e, mo, p)) return;   // v0.6.233: 'Only usable during an action directed at you'
         if(typeof ic === 'number' && this._modeUsableBy(mo, vamp) &&
            (vamp.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0) && (!best || ic > best.s))
           best = { idx, name: h.name, s: ic, cost: h.e.cost || null };
@@ -5468,6 +5474,10 @@ class Bot {
       if((vamp.blood | 0) < ((h.e.cost && h.e.cost.blood) || 0)) return;
       if((h.e.modes || []).some(mo => mo.fx && mo.fx.dodge && this._modeUsableBy(mo, vamp))) n++; });
     return n;
+  }
+  _dirOk(e, mo, p){                  // v0.6.233 (V5 wave 6a, RULINGS D-123): 'Only usable during an action directed at you (or a card you control)' -- cardfx onlyDirected on the entry (the header: One With the Land, The Warrens) or on the mode (its line: Eyes of Argus [aus], Deep Ecology [ani]). At a play (p, the action I would block) only a directed action passes (_pendDirected true; unknown fails closed). Without p (an estimate: _blockerWorth, the wall's odds -- each values a bleed's defence, as their _hostedIntercept(v, 'bleed') says) the card counts. v0.6.232 read no such condition: Eyes of Argus and The Warrens spent their intercept at undirected actions 568 times in the 240.
+    if(!((e && e.onlyDirected) || (mo && mo.onlyDirected))) return true;
+    return !p || this._pendDirected(p) === true;
   }
   _entryReqOk(e, vamp){              // v0.6.213 (V5 wave 1): a card's clan and sect requirements against the vampire that would play it -- req.clan (a clan icon, 'Requires Tzimisce') against the printed clan, req.sect ('Requires an Anarch': Invigorate) against the printed sect (cardfx crypt entries). Unknown vampire = fail closed. Masters carry req.clan since cardfx v1.9.6 (R-42), read by _masterReqOk.
     const r = e && e.req; if(!r || (!(r.clan && r.clan.length) && !r.sect)) return true;
@@ -6023,10 +6033,10 @@ class Bot {
   _wakeRouteBlocker(p){              // v0.6.197 (blockCost): the LOCKED vampire _commitBlock's route would raise when no unlocked body can block -- the same three filters and the same order (an unlock reaction on a bleed, a Second Tradition-class unlock, a wake, the Stray); finders only, no side effects
     const eligible = c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p.actingVampName, p);
     const L = (this.board || []).filter(eligible); if(!L.length) return null;
-    if(p.kind === 'bleed'){ const u = L.find(c => this._bestUnlockReactFor(c, 'bleedAtMe')); if(u) return u; }
-    { const u = L.find(c => this._bestUnlockReactFor(c, 'lockedBlock')); if(u) return u; }
+    if(p.kind === 'bleed'){ const u = L.find(c => this._bestUnlockReactFor(c, 'bleedAtMe', p)); if(u) return u; }
+    { const u = L.find(c => this._bestUnlockReactFor(c, 'lockedBlock', p)); if(u) return u; }
     if(this._wakeCard()){ const u = L.find(c => this._wakeCardFor(c)); if(u) return u; }
-    return this._findStray() ? L[0] : null;
+    return this._strayBurnFor(p) ? L[0] : null;   // v0.6.233: the Stray's burn is 'during an action directed at you' (_strayBurnFor)
   }
   _wantGrapple(vamp){                // Johan: Grapple only with Roundhouse-class hand damage, active Carrion Crows or a permanent strength bonus -- never for a fist of 1. Too valuable to de-clog with.
     const r = this._myRoundDmg(vamp, { close: true });
@@ -8063,7 +8073,7 @@ class Bot {
          body in board order raised a 1-blood Crow that could not pay Eyes' +1 beside a 3-blood Dario the decision had counted. */
       { const rb = this._lockedRouteBodies(p, p.reacted), want = d && d.parts ? d.parts.body : null;
         const pick = rb.find(r => r.v.name === want) || rb.slice().sort((a, b) => (b.s - a.s) || ((b.v.blood | 0) - (a.v.blood | 0)))[0];
-        const un = pick && this._bestUnlockReactFor(pick.v, pick.via);
+        const un = pick && this._bestUnlockReactFor(pick.v, pick.via, p);
         if(un) plan = { kind: 'unlockReact', vamp: pick.v, un }; }
       if(!plan && wk){
         const want = d && d.parts && d.parts.viaWake ? d.parts.body : null;            // v0.6.120: decision == pick -- the body the EV chose wakes, when it still can
@@ -8072,8 +8082,7 @@ class Bot {
       }
       if(!plan){                     // N4d consumer B: the chain's THIRD rung -- burn the Stray for a TRUE unlock (unlockReact > wake > STRAY)
         const sCand = this.board.find(eligible);
-        const stray = sCand && this.board.find(c => { if(!c || c.zone !== 'ready' || this._outOfPlay(c)) return false;
-          const h = this.fxLookup(c.name); return h && h.kind === 'lib' && ((h.e.t) || []).includes('ally') && (h.e.modes || []).some(mo => mo.fx && mo.fx.allyBurnUnlock); });
+        const stray = sCand && this._strayBurnFor(p);   // v0.6.233: + 'During an action directed at you (or a card you control)'
         if(sCand && stray) plan = { kind: 'stray', vamp: sCand };
       }
     }
@@ -10847,7 +10856,7 @@ class Bot {
     const seen = new Set(); let S = 0, sum = 0;
     (this.hand || []).forEach(n => { const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).some(t => t === 'react' || t === 'mod') || seen.has(FX_NORM(h.name))) return;
       if(played && played.has(FX_NORM(h.name))) return; if(!this._titleOk(h, vamp)) return; if(!this._entryReqOk(h.e, vamp)) return; if(((h.e.cost && h.e.cost.blood) || 0) > (vamp.blood | 0)) return;   // v0.6.228: + the clan / sect (_bestInterceptFor's mirror)
-      let best = 0; (h.e.modes || []).forEach(mo => { if(mo.when === 'lockedBlock') return; const ic = mo.fx && mo.fx.intercept; if(typeof ic === 'number' && ic > best && this._modeUsableBy(mo, vamp)) best = ic; });
+      let best = 0; (h.e.modes || []).forEach(mo => { if(mo.when === 'lockedBlock' || !this._dirOk(h.e, mo, p)) return; const ic = mo.fx && mo.fx.intercept; if(typeof ic === 'number' && ic > best && this._modeUsableBy(mo, vamp)) best = ic; });   // v0.6.233: + the directed condition (_bestInterceptFor's mirror)
       if(best > 0){ seen.add(FX_NORM(h.name)); S++; sum += best; } });
     this._lockInterceptFor(vamp, played, p, true).forEach(lb => { S++; sum += lb.s; });   // v0.6.215: every location that locks for this blocker counts like a card
     return { S, sum };

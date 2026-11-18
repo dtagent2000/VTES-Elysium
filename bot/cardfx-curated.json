@@ -1484,7 +1484,7 @@
       "recruitAlly": true,
       "allyLife": 1,
       "allyPressLife": true,
-      "allyBurnUnlock": true
+      "allyBurnUnlock": "directed"
      }
     },
     {
@@ -1493,11 +1493,11 @@
       "recruitAlly": true,
       "allyLife": 2,
       "allyPressLife": true,
-      "allyBurnUnlock": true
+      "allyBurnUnlock": "directed"
      }
     }
    ],
-   "note": "N4d (26 July, the 100% push -- THE MINI-ALLY CLASS IS BORN). 'Animal with 1 life. 0 strength, 0 bleed. [ani] This ally can burn 1 life to give a minion you control 1 press. During an action directed at you (or a card you control), you can burn this ally if it is not blocking to unlock a ready minion you control. [ANI] As above, but this ally has 2 life and 1 strength.' The smallest honest ally model: the Stray never acts or blocks ITSELF -- it sits ready and is SPENT. Recruit = the STOCK/undirected action (Warsaw's SIXTH refresh site), [ani]-gated on the recruiter, richest mode wins (ANI = life 2); tabled as kind:'lib' with a BOT-LOCAL life field (both consumers are my-side, so life visibility is cosmetic -- zero wire risk; the [ANI] 1-strength is note-documented since the ally never strikes in this model, and combat-capable allies are the full ally class's future). Consumer A (allyPressLife): the press-decision FALLBACK in _resolveCombat -- no press card in hand, a Stray with life burns 1 (dying to 'burned' at 0) for the press. Consumer B (allyBurnUnlock): the _commitBlock locked-blocker chain's THIRD rung (unlockReact > wake > STRAY BURN -- the whole ally for a TRUE unlock of the blocker; 'if it is not blocking' is trivially satisfied, the Stray is never the blocker); the rush-at-me window = documented v1.1."
+   "note": "N4d (26 July, the 100% push -- THE MINI-ALLY CLASS IS BORN). 'Animal with 1 life. 0 strength, 0 bleed. [ani] This ally can burn 1 life to give a minion you control 1 press. During an action directed at you (or a card you control), you can burn this ally if it is not blocking to unlock a ready minion you control. [ANI] As above, but this ally has 2 life and 1 strength.' The smallest honest ally model: the Stray never acts or blocks ITSELF -- it sits ready and is SPENT. Recruit = the STOCK/undirected action (Warsaw's SIXTH refresh site), [ani]-gated on the recruiter, richest mode wins (ANI = life 2); tabled as kind:'lib' with a BOT-LOCAL life field (both consumers are my-side, so life visibility is cosmetic -- zero wire risk; the [ANI] 1-strength is note-documented since the ally never strikes in this model, and combat-capable allies are the full ally class's future). Consumer A (allyPressLife): the press-decision FALLBACK in _resolveCombat -- no press card in hand, a Stray with life burns 1 (dying to 'burned' at 0) for the press. Consumer B (allyBurnUnlock): the _commitBlock locked-blocker chain's THIRD rung (unlockReact > wake > STRAY BURN -- the whole ally for a TRUE unlock of the blocker; 'if it is not blocking' is trivially satisfied, the Stray is never the blocker); the rush-at-me window = documented v1.1. v0.6.233 (V5 wave 6a, RULINGS D-123): allyBurnUnlock 'directed' -- the burn is 'During an action directed at you (or a card you control)': the third rung and _wakeRouteBlocker burn the Stray only when _pendDirected is true (v0.6.232 burned it at any action; the recruit and the press are unconditioned)."
   },
   "Spying Mission": {
    "t": [
