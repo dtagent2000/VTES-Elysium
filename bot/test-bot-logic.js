@@ -14297,6 +14297,198 @@ async function connectWithRetry(client, tries = 30){
         ok(r === 'as-played,sr-cancel,sr-late,grove-cancel,pol-success,yawp,yawp-on,won-move,won-end,won-hunt,won-burn,yawp-damage', '177g the new lines’ event kinds (got ' + r + ')'); }
     }
 
+    /* 178) v0.6.233 -- V5 WAVE 6a (RULINGS D-123, specs/spec-v5-wave6-2026-11-18.md): the cards with a discipline line and no mode, the
+       block side -- 'during an action directed at you' read (Eyes of Argus, The Warrens, One With the Land, the Stray's burn), the
+       capacity requirement, the locked route's discipline cards (Sense the Savage Way, Sentry Signal, One With the Land, Deep Ecology),
+       One With the Land's first round, Forced Confessional [dom], True Love's Face and its counter, Night Terrors. Each case at its rules
+       moment, both sides of every two-sided effect (L-23), the new frozen lines through _onLog and _evClassify (L-56). The old bytes lack
+       the new methods: every call is guarded so they fail clean.
+       LAST LINE OF 178 is the closing brace below. */
+    {
+      console.log('\n[178] v0.6.233 -- V5 wave 6a: the directed condition, the locked route, One With the Land, Forced Confessional, True Love’s Face, Night Terrors');
+      const BOT8 = require('./elysium-bot.js'), IF8 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const N8 = ['Hanna', 'Viktor', 'Nora'];
+      const mk178 = (seat, deck, knobs) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: N8[seat - 1], persona: 'expert', deckName: deck || 'malkavian', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, knobs || {}));
+        u.seat = seat; u.started = true; u.players = N8.map((n, i) => ({ seat: i + 1, name: n, online: true, bot: true }));
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxs = []; u.fxClone = (c, verb) => u.fxs.push({ name: c.name, verb }); u.say = () => {}; u.note = () => {}; u.chats = []; u.chat = t => u.chats.push(t); u._restartAskTimer = () => {};
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.board = []; u.hand = []; u.pool = 20; u.turnSeat = 1; u.table = { 1: { pub: { pool: 20, cards: [] } }, 2: { pub: { pool: 20, cards: [] } }, 3: { pub: { pool: 20, cards: [] } } };
+        u._afterBeat = (k, g, f) => { if(g()) f(); }; return u; };
+      const V8 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 4, attached: [] }, o || {});
+      const txt8 = m => (m && m.t === 'log') ? String(m.html || '').replace(/<[^>]+>/g, '') : '';
+      const logs8 = u => u.sent.map(txt8).filter(Boolean);
+      const ev8 = (u, t) => u.events.filter(e => e.t === 'bot:' + t).map(e => e.d);
+      const wire8 = bots => bots.forEach(b => { const s0 = b.send; b.send = m => { s0(m); if(m && m.t === 'log') bots.filter(x => x !== b).forEach(x => x._onLog(b.o.name, m.html)); }; });   // the hotseat bridge's order: a line reaches the others inside its send (L-92)
+      const P8 = (o) => Object.assign({ kind: 'bleed', amount: 2, who: 'Hanna', actingVampName: 'Adisa', actorSeat: 1, attempted: new Set(), reacted: new Set(), contested: false }, o || {});
+
+      // a) 'Only usable during an action directed at you (or a card you control)': Eyes of Argus [aus] and The Warrens (its header) at a bleed
+      //    and a rush, never at an undirected action or one of unknown kind (fail closed); an estimate (no action) counts them -- the finder and
+      //    its stack mirror. v0.6.232 spent them at undirected actions: 568 times in the 240
+      { const u = mk178(2, 'malkavian'); const col = V8('c1', 'Colette (G6)'), lin = V8('l1', 'Aunt Linda (G6)'); u.board = [col, lin];
+        const at = (v, card, p) => { u.hand = [card]; const ic = u._bestInterceptFor(v, new Set(), p), st = u._interceptStack(v, new Set(), p); return (ic ? ic.s : 0) + '/' + st.sum; };
+        const r = {};
+        for(const [k, v, card] of [['eyes', col, 'Eyes of Argus'], ['warrens', lin, 'The Warrens']])
+          r[k] = [at(v, card, { kind: 'bleed' }), at(v, card, { kind: 'rush' }), at(v, card, { kind: 'undirected', sub: 'political' }), at(v, card, { kind: 'card' }), at(v, card, null)].join(' ');
+        ok(r.eyes === '2/2 2/2 0/0 0/0 2/2' && r.warrens === '2/2 2/2 0/0 0/0 2/2',
+           '178a Eyes of Argus [aus] and The Warrens: +2 at a bleed and a rush, none at an undirected action or an unknown one; an estimate counts them (got ' + JSON.stringify(r) + ')'); }
+
+      // a2) One With the Land's header conditions both modes: its [pro] +2 at a bleed, none at a political action; its [PRO] route likewise
+      { const u = mk178(2, 'tzimisce'); const adr = V8('t1', 'Adrino Manauara (G6)'), lock = V8('t2', 'Ángel Guerrero (G6)', { locked: true }); u.board = [adr, lock]; u.hand = ['One With the Land'];
+        const ic = p => { const x = u._bestInterceptFor(adr, new Set(), p); return x ? x.s : 0; }, un = p => { const x = u._bestUnlockReactFor(lock, 'lockedBlock', p); return x ? (x.noStrikeR1 ? 'route+r1' : 'route') : null; };
+        const r = { icB: ic({ kind: 'bleed' }), icU: ic({ kind: 'undirected', sub: 'political' }), unB: un({ kind: 'bleed' }), unU: un({ kind: 'undirected', sub: 'political' }) };
+        ok(r.icB === 2 && r.icU === 0 && r.unB === 'route+r1' && r.unU === null, '178a2 One With the Land’s header: both modes at a bleed only (got ' + JSON.stringify(r) + ')'); }
+
+      // a3) the Stray's burn is 'During an action directed at you (or a card you control)': at a bleed the third rung's ally, at a political
+      //     action none -- the route's estimate (_wakeRouteBlocker) agrees
+      { const u = mk178(2, 'nosferatu'); const lock = V8('n1', 'Ryan (G6)', { locked: true }), stray = { id: 's1', name: 'Underbridge Stray', kind: 'lib', zone: 'ready', life: 1 }; u.board = [lock, stray];
+        const pB = P8({ kind: 'bleed' }), pU = P8({ kind: 'undirected', sub: 'political' });
+        const r = { burnB: IF8(u, '_strayBurnFor') ? !!u._strayBurnFor(pB) : 'x', burnU: IF8(u, '_strayBurnFor') ? !!u._strayBurnFor(pU) : 'x', routeB: !!u._wakeRouteBlocker(pB), routeU: !!u._wakeRouteBlocker(pU) };
+        ok(r.burnB === true && r.burnU === false && r.routeB === true && r.routeU === false, '178a3 the Stray burns for a locked blocker at a directed action only (got ' + JSON.stringify(r) + ')'); }
+
+      // a4) the ledger: a card whose text has the sentence and no onlyDirected is PARTIAL (Eyes of Argus read FULL in v0.6.232's ledger)
+      { const COV = (() => { try { return require('./gen-deck-coverage.js'); } catch(e){ return null; } })(), cards = (() => { try { return require('./vtes.json'); } catch(e){ return null; } })();
+        const txt = cards ? ((Array.isArray(cards) ? cards : Object.values(cards)).find(c => c.name === 'Eyes of Argus') || {}).card_text : null;
+        if(!txt || !COV) ok(true, '178a4 the ledger check: skipped (no vtes.json or coverage tool beside the suite)');
+        else { const h = COV.lookup('Eyes of Argus'), e1 = JSON.parse(JSON.stringify(h.e)); (e1.modes || []).forEach(mo => delete mo.onlyDirected);
+          const now = COV.judgeLib(h, [], txt).verdict, cut = COV.judgeLib({ name: h.name, e: e1, kind: 'lib' }, [], txt).verdict;
+          ok(cut === 'PARTIAL' && now !== 'PARTIAL', '178a4 the ledger: the sentence without onlyDirected is PARTIAL (got ' + JSON.stringify({ now, cut }) + ')'); } }
+
+      // b) the locked route's discipline cards (cardfx v1.9.11's sweep): Sense the Savage Way [ANI] for a capacity-7 superior Animalism only
+      //    (Berenguela is 6, Lawbringer basic); Sentry Signal [ani] / [tha] with its 1 blood; Deep Ecology [pro] burns 1 blood (none with no
+      //    blood); the capacity also closes Sense's [ani] +1 intercept to the small vampires
+      { const u = mk178(2, 'pathcaine'); const alg = V8('a1', 'Algirdas, The Solar Prophet (G6)', { locked: true }), ber = V8('b1', 'Berenguela, The Vicious (G6)', { locked: true }), law = V8('w1', 'Lawbringer (G6)', { locked: true }),
+          sur = V8('s1', 'Surapong (G6)', { locked: true, blood: 1 }), hek = V8('h1', 'Hekla "Bonecrusher" Jónasdóttir (G6)', { locked: true }), sur0 = V8('s2', 'Surapong (G6)', { locked: true, blood: 0 });
+        const p = P8(), un = (v, card) => { u.hand = [card]; const x = u._bestUnlockReactFor(v, 'lockedBlock', p); return x ? 'route' + (x.cost && x.cost.blood ? ' ' + x.cost.blood : '') : null; };
+        const ic = (v, card) => { u.hand = [card]; const x = u._bestInterceptFor(Object.assign({}, v, { locked: false }), new Set(), p); return x ? x.s : 0; };
+        const g = u.fxLookup('Crow (G5)') ? 'Crow (G5)' : 'Crow';
+        const r = { sAlg: un(alg, 'Sense the Savage Way'), sBer: un(ber, 'Sense the Savage Way'), sLaw: un(law, 'Sense the Savage Way'), icAlg: ic(alg, 'Sense the Savage Way'), icBer: ic(ber, 'Sense the Savage Way'),
+                    sigSur: un(sur, 'Sentry Signal'), sigHek: un(hek, 'Sentry Signal'), sig0: un(sur0, 'Sentry Signal') };
+        const ug = mk178(2, 'gangrel'), crow = V8('g1', g, { locked: true, blood: 1 }), crow0 = V8('g2', g, { locked: true, blood: 0 }); ug.hand = ['Deep Ecology'];
+        const de = v => { const x = ug._bestUnlockReactFor(v, 'lockedBlock', p); return x ? 'route' + (x.cost && x.cost.blood ? ' ' + x.cost.blood : '') : null; };
+        r.deep = de(crow); r.deep0 = de(crow0);
+        ok(r.sAlg === 'route' && r.sBer === null && r.sLaw === null && r.icAlg === 1 && r.icBer === 0 && r.sigSur === 'route 1' && r.sigHek === 'route 1' && r.sig0 === null && r.deep === 'route 1' && r.deep0 === null,
+           '178b the route’s discipline cards: Sense (capacity 7, superior), Sentry Signal (either discipline, 1 blood), Deep Ecology (1 blood), the capacity on Sense’s +1 (got ' + JSON.stringify(r) + ')'); }
+
+      // b2) the wake count the plan reads (_wakesInHand) asks the route card's discipline and its blood: Sentry Signal counts for a 2-blood
+      //     Surapong (ani), not for a 1-blood one, nor for a body without Animalism or Thaumaturgy (Aunt Linda)
+      { const u = mk178(2, 'pathcaine'); u.hand = ['Sentry Signal'];
+        u.board = [V8('s1', 'Surapong (G6)', { blood: 2 })]; const two = u._wakesInHand(); u.board = [V8('s1', 'Surapong (G6)', { blood: 1 })]; const one = u._wakesInHand(); u.board = [V8('l1', 'Aunt Linda (G6)', { blood: 4 })]; const none = u._wakesInHand();
+        ok(two === 1 && one === 0 && none === 0, '178b2 the wake count reads the route card’s discipline and blood (got ' + JSON.stringify({ two, one, none }) + ')'); }
+
+      // c) One With the Land [PRO] through the block: a locked Adrino at a bleed takes the route, the line carries the rider, the verdict hands
+      //    the combat its first round (_owl, to _resolveCombat's entry); a human actor is told in chat. At a political action: no route
+      { const run = async (kind, human) => { const u = mk178(2, 'tzimisce'); const adr = V8('t1', 'Adrino Manauara (G6)', { locked: true, blood: 4 }); u.board = [adr]; u.hand = ['One With the Land'];
+          if(human) u.players[0].bot = false;
+          u.tally = { mode: 'block', a: 0, b: 0 }; const p = u.pending = P8({ kind, sub: kind === 'undirected' ? 'political' : undefined });
+          let comb = null; u._resolveCombat = async (v, o) => { comb = { v: v && v.name, o, owl: u._owl && u._owl.vamp, card: u._owl && u._owl.card }; };
+          await u._commitBlock(p, { parts: {} }); const L = logs8(u), riderOn = !!(p.noStrikeR1 && p.noStrikeR1.vamp === adr.name);
+          if(p.blockerVamp) u._verdictAsTarget(true);
+          return { route: L.some(l => l === 'Adrino Manauara (G6) plays One With the Land: unlocks; if they block, neither combatant strikes in the first round.'), riderOn, comb, chat: u.chats.find(c => /neither .* can strike in the first round/.test(c)) || null, blocker: !!p.blockerVamp }; };
+        const b = await run('bleed', false), h = await run('bleed', true), pol = await run('undirected', false);
+        ok(b.route && b.riderOn && b.comb && b.comb.owl === 'Adrino Manauara (G6)' && b.comb.card === 'One With the Land' && b.comb.o === 'Adisa' && !b.chat && h.route && !!h.chat && !pol.route && !pol.blocker,
+           '178c One With the Land [PRO]: the route at a bleed with the rider on its line, carried to the combat; a human actor told in chat; no route at a political action (got ' + JSON.stringify({ b, h, pol }) + ')'); }
+
+      // c2) the acting bot reads the rider's line at its live action (L12.noStrikeR1) -- only then; the kinds of the three new lines (L-56)
+      { const a = mk178(1, 'malkavian'); const adisa = V8('a1', 'Adisa'); a.board = [adisa]; a._actingVamp = { v: adisa, n: 2, target: 2, played: new Set() }; a._ask = { contested: true, target: 2, pausedBy: new Set() };
+        a._onLog('Viktor', '<b>Adrino Manauara (G6)</b> plays <b>One With the Land</b>: unlocks; if they block, neither combatant strikes in the first round.');
+        const owl = a._owl ? a._owl.vamp + '|' + a._owl.opp + '|' + a._owl.card : null;
+        const q = mk178(3, 'malkavian'); q._onLog('Viktor', '<b>Adrino Manauara (G6)</b> plays <b>One With the Land</b>: unlocks; if they block, neither combatant strikes in the first round.');
+        const C = t => { const r = IF8(a, '_evClassify') ? a._evClassify('Viktor', t, 'log') : null; return r && r.kind; };
+        const kinds = [C('Adrino Manauara (G6) plays One With the Land: unlocks; if they block, neither combatant strikes in the first round.'), C("Jean-François (G7) plays Night Terrors: Adisa's stealth is 0."), C("Viktor burns 1 pool to cancel True Love's Face.")].join();
+        ok(owl === 'Adisa|Adrino Manauara (G6)|One With the Land' && !q._owl && kinds === 'no-strike-r1,stealth-zero,pay-cancel',
+           '178c2 the actor reads the rider at its own action only; the new lines’ kinds (got ' + JSON.stringify({ owl, other: q._owl || null, kinds }) + ')'); }
+
+      // c3) the combat: neither combatant strikes in round 1 (each bot's frozen no-strike line, no maneuver); the rider dies with the combat
+      //     (a follow-up combat never sees it [LSJ 20010813]). Two bots through a relay (section 160's), A acting, D the blocker
+      { const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        const strip = h => String(h || '').replace(/<[^>]*>/g, '');
+        const mk = (name, seat, deckName) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName, paceMs: 0, askSecs: 3, twdKnow: 0, log: () => {} });
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = [];
+          u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); }; return u; };
+        const A = mk('Hanna', 1, 'malkavian'), D = mk('Viktor', 2, 'tzimisce');
+        const wire = (from, to) => { from.send = m => { const relay = d => setTimeout(() => { if(!to.out) to._dispatch(d); }, 0);
+          if(m && m.t === 'say'){ relay({ t: 'say', i: m.i, who: from.o.name }); return; }
+          if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
+          const txt = m.t === 'log' ? strip(m.html) : String(m.msg || ''); from._evRecord(from.o.name, txt, m.t, true); from.lines.push({ at: Date.now(), tier: m.t, txt });
+          relay(Object.assign({}, m, { who: from.o.name })); }; };
+        wire(A, D); wire(D, A);
+        const aV = { id: 'a1', name: 'Colette (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 5, attached: [] }, dV = { id: 'd1', name: 'Adrino Manauara (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 8, attached: [] };
+        A.board = [aV]; D.board = [dV]; A.hand = []; D.hand = [];
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: dV.name, zone: 'ready', blood: dV.blood }] } } }; D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: aV.name, zone: 'ready', blood: aV.blood }] } } };
+        A._actingVamp = { v: aV, n: 1, played: new Set() }; A._lastBlockerName = dV.name; D._clearCombatStashes(); D._combatArmed = true;
+        A._owl = { vamp: aV.name, opp: dV.name, card: 'One With the Land', at: Date.now() }; D._owl = { vamp: dV.name, opp: aV.name, card: 'One With the Land', at: Date.now() };
+        await Promise.race([Promise.all([A._resolveCombat(aV), D._resolveCombat(dV, aV.name)]), sleep(20000)]);
+        const r1 = u => (u.rows || []).find(r => r.round === 1) || {};
+        const ns = u => u.lines.filter(l => /gets no strike this round \(One With the Land\)\.$/.test(l.txt)).length, mv1 = u => u.lines.some(l => /maneuvers to/.test(l.txt));
+        const r = { aR1: r1(A).strike, dR1: r1(D).strike, aDealt: r1(A).dealt, dDealt: r1(D).dealt, aNs: ns(A), dNs: ns(D), mv: mv1(A) || mv1(D), left: [A._owl, D._owl, A._owlCombat, D._owlCombat].map(x => x == null ? null : 'set').join() };
+        ok(/One With the Land/.test(String(r.aR1)) && /One With the Land/.test(String(r.dR1)) && r.aDealt === 0 && r.dDealt === 0 && r.aNs === 1 && r.dNs === 1 && !r.mv && r.left === ',,,',
+           '178c3 One With the Land’s first round: no strike either side (each its line), no maneuver; the rider dies with the combat (got ' + JSON.stringify(r) + ')'); }
+
+      // d) Forced Confessional [dom]: 'The blocking minion gets -1 intercept' -- +1 stealth against the minion attempting now whatever its kind,
+      //    booked with its name: another blocker takes it off, the same one puts it back; the superior is the block-cancel (unchanged)
+      { const u = mk178(1, 'salubri'); const yael = V8('y1', 'Yael (G7)', { blood: 3 }); u.board = [yael]; u.hand = ['Forced Confessional'];
+        u.table = { 2: { pub: { pool: 20, cards: [V8('n1', 'Nik Sikko'), V8('c1', 'Catalina Vega')] } }, 3: { pub: { pool: 20, cards: [] } } };
+        const av = u._actingVamp = { v: yael, n: 1, target: 2, played: new Set(), attemptAt: Date.now() }; u._ask = { contested: true, target: 2 }; u.tally = { mode: 'block', a: 0, b: 0 };
+        u._lastBlockerName = 'Catalina Vega'; u._lastBlockerSeat = 2; u._lastBlockerAt = Date.now();
+        const st = u._bestStealthFor(yael, av.played, 2); const pick = st ? st.name + ' +' + st.s + (st.condAt ? ' @' + st.condAt : '') : null;
+        if(st) u._spendStealthCard(st, av, u._ask);
+        const a1 = u._actStealthRaw; u._noteBlockAttempt('Nik Sikko', false, 2); const a2 = u._actStealthRaw; u._noteBlockAttempt('Catalina Vega', false, 2); const a3 = u._actStealthRaw;
+        const line = logs8(u).find(l => /Forced Confessional \(/.test(l)) || null;
+        const um = mk178(1, 'salubri'); const mal = V8('m1', 'Malachi (G7)'); um.hand = ['Forced Confessional']; const cb = um._bestCancelBlockFor(mal, new Set());
+        ok(pick === 'Forced Confessional +1 @Catalina Vega' && a1 === 1 && a2 === 0 && a3 === 1 && line === 'Yael (G7) plays Forced Confessional (the blocking minion gets −1 intercept): +1 stealth.' && !!cb,
+           '178d Forced Confessional [dom]: +1 stealth against the blocker it was played at, off for another, back on for it; [DOM] still cancels (got ' + JSON.stringify({ pick, a1, a2, a3, line, cb: !!cb }) + ')'); }
+
+      // e) True Love's Face [OBF][PRE]: the finder prefers a cancel with no counter and keeps the card from a human blocker (a rider)
+      { const u = mk178(1, 'ministry'); const cry = V8('c1', 'Crystal Lynn (G6)');
+        u.hand = ["True Love's Face", 'Elder Impersonation']; const both = u._bestCancelBlockFor(cry, new Set(), { humanBlocker: false });
+        u.hand = ["True Love's Face"]; const bot = u._bestCancelBlockFor(cry, new Set(), { humanBlocker: false }), hum = u._bestCancelBlockFor(cry, new Set(), { humanBlocker: true });
+        ok(both && both.name === 'Elder Impersonation' && bot && bot.name === "True Love's Face" && bot.pay === 1 && hum === null,
+           '178e True Love’s Face: a cancel with no counter first; never against a human blocker (got ' + JSON.stringify({ both: both && both.name, bot, hum }) + ')'); }
+
+      // e2) its window, two bots wired as the hotseat bridge: the card lands as it is played (L12.asPlayed, the blocker's player named at
+      //     the shout); the blocking bot burns 1 pool to cancel it -- the attempt stands, no cancel line, the card to the actor's ash heap;
+      //     a blocker that would not pay (its block would not stand anyway, or 1 pool left) lets the cancel line follow and its attempt fails
+      { const run = async (amount, pool, aSt) => { const a = mk178(1, 'ministry'), d = mk178(2, 'malkavian'); wire8([a, d]); d._reactWindow = () => {};
+          const cry = V8('c1', 'Crystal Lynn (G6)'), col = V8('d1', 'Colette (G6)'); a.board = [cry]; a.hand = ["True Love's Face"]; d.board = [col]; d.pool = pool;
+          const ask = a._ask = { contested: false, target: 2, pausedBy: new Set() }; a._actingVamp = { v: cry, n: amount, target: 2, played: new Set(), kind: 'bleed' }; a.tally = { mode: 'block', a: 0, b: 0 };
+          const p = d.pending = P8({ kind: 'bleed', amount, who: 'Hanna', actingVampName: cry.name, contested: true, attemptVamp: col }); d.tally = { mode: 'block', a: aSt | 0, b: 0 };
+          a._onBlockAttempt('Viktor'); await sleep(30);
+          const L = logs8(a), D = logs8(d);
+          return { asPlayed: L.some(l => /^Hanna is playing True Love's Face — on Viktor's (blocking minion|Colette \(G6\))\.$/.test(l)), cancelLine: L.some(l => /cancels the block attempt by Viktor/.test(l)), pay: D.includes("Viktor burns 1 pool to cancel True Love's Face."),
+                   pool: d.pool, contested: ask.contested, ash: a.board.some(c => c && c.zone === 'ash' && c.name === "True Love's Face"), inHand: a.hand.length, decline: ev8(d, 'pay-cancel-decline').length }; };
+        const paid = await run(3, 10, 0), beaten = await run(3, 10, 2), poor = await run(3, 1, 0);
+        ok(paid.asPlayed && paid.pay && !paid.cancelLine && paid.pool === 9 && paid.contested === true && paid.ash && paid.inHand === 0
+           && beaten.asPlayed && !beaten.pay && beaten.cancelLine && beaten.pool === 10 && beaten.contested === false && beaten.decline === 1 && !poor.pay && poor.cancelLine && poor.pool === 1,
+           '178e2 True Love’s Face in its window: cancelled for 1 pool, the attempt stands; not paid for a block its stealth already beats, never the last pool (got ' + JSON.stringify({ paid, beaten, poor }) + ')'); }
+
+      // f) Night Terrors: the blocker's second look plays it when its intercept cannot reach (a Ravnos with obf+pre and its blood): the line,
+      //    the card and the blood spent; never at a human actor, a bleed of 1, a hunt, on zero stealth, by a non-Ravnos or a vampire without
+      //    Presence
+      { const run = (o) => { const u = mk178(2, 'ravnos'); const v = V8('j1', o.vamp || 'Jean-François (G7)', { blood: 2 }); u.board = [v]; u.hand = ['Night Terrors'];
+          if(o.human) u.players[0].bot = false;
+          const p = u.pending = P8(Object.assign({ contested: true, blockerVamp: v }, o.p || {})); u.tally = { mode: 'block', a: o.a == null ? 2 : o.a, b: 0 };
+          u._interceptSecondLook(); const L = logs8(u);
+          return { line: L.find(l => /plays Night Terrors: Adisa's stealth is 0\.$/.test(l)) || null, hand: u.hand.length, blood: v.blood, reacted: p.reacted.has(BOT8.FX_NORM('Night Terrors')) }; };
+        const go = run({}), hum = run({ human: true }), one = run({ p: { amount: 1 } }), hunt = run({ p: { kind: 'undirected', sub: 'hunt' } }), zero = run({ a: 0 }), roy = run({ vamp: 'Roy (G7)' }), marcel = run({ vamp: 'Marcel (G6)' });
+        ok(go.line === "Jean-François (G7) plays Night Terrors: Adisa's stealth is 0." && go.hand === 0 && go.blood === 1 && go.reacted
+           && [hum, one, hunt, zero, roy, marcel].every(x => x.line === null && x.hand === 1),
+           '178f Night Terrors in the blocker’s second look: played when the intercept cannot reach; not at a human actor, a bleed of 1, a hunt, zero stealth, nor by a non-Ravnos or a vampire without Presence (got ' + JSON.stringify({ go, hum, one, hunt, zero, roy, marcel }) + ')'); }
+
+      // f2) the acting side reads it (L12.stealthZero): its stealth off the counter ('a -X stealth modifier'), a raise allowed again; zero or
+      //     negative stealth unchanged; another vampire's action untouched
+      { const run = (raw, actor) => { const a = mk178(1, 'malkavian'); const adisa = V8('a1', 'Adisa'); a.board = [adisa]; a._actingVamp = { v: adisa, n: 2, target: 2, played: new Set() }; a._ask = { contested: true, target: 2, pausedBy: new Set() };
+          a.tally = { mode: 'block', a: raw, b: 0 }; a._actStealthRaw = raw; const wrote = []; const w0 = a._writeTally.bind(a); a._writeTally = t => { wrote.push(t.a); return w0(t); };
+          a._onLog('Viktor', "<b>Jean-François (G7)</b> plays <b>Night Terrors</b>: <b>" + (actor || 'Adisa') + "</b>'s stealth is 0.");
+          return { raw: a._actStealthRaw, wrote: wrote.join() }; };
+        const three = run(3), zero = run(0), neg = run(-1), other = run(3, 'Nik Sikko');
+        ok(three.raw === 0 && three.wrote === '0' && zero.raw === 0 && zero.wrote === '' && neg.raw === -1 && neg.wrote === '' && other.raw === 3 && other.wrote === '',
+           '178f2 the actor takes its stealth to 0 on Night Terrors’ line; zero or negative stealth unchanged; another vampire’s untouched (got ' + JSON.stringify({ three, zero, neg, other }) + ')'); }
+
+      // g) Hunting the Quarry: no modes until the grants round -- never offered as a stealth or a combat card
+      { const u = mk178(1, 'pathcaine'); const h = u.fxLookup('Hunting the Quarry'); const alg = V8('a1', 'Algirdas, The Solar Prophet (G6)'); u.board = [alg]; u.hand = ['Hunting the Quarry'];
+        u._actingVamp = { v: alg, n: 1, target: 2, played: new Set(), attemptAt: Date.now() };
+        ok(!!h && !((h.e.modes || []).length) && u._bestStealthFor(alg, new Set(), 2) === null, '178g Hunting the Quarry: no modes, never a stealth card (got ' + JSON.stringify(h && h.e.modes) + ')'); }
+    }
+
 
 
     }
