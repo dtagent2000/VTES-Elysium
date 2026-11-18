@@ -38,7 +38,8 @@ Straight apostrophes, as the other bot lines. None ends in `plays X.`; the first
 (as `plays X: +N intercept.`).
 
 ## 4. Run here
-On the release bytes (`elysium-bot.js` sha256 `<release>`, `elysium-cardfx.json` `<release>`): see the PR body for the gate numbers
+On the release bytes (`elysium-bot.js` sha256 `4ca79599cb6167f1d0e3c3dce2b98c3394518bc97a70445e8fe0ebb228e9da1a`,
+`elysium-cardfx.json` `c6b88d0f4a312a966375710b411453637b18f6e108b288a4049986c4761db4d3`): see the PR body for the gate numbers
 (your canary on `bot/`'s copies and on the root's client; your client suite in a scratch copy of `client/` with this bundle beside it;
 the bot's suite ×3, the hotseat gate, HB1, the sim footprint, the arena smoke). The root is a byte copy of `bot/`'s bundle (your
 `check-versions.js` reads it).

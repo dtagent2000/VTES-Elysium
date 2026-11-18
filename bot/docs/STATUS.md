@@ -8,7 +8,12 @@ the read-only copies in bot/ are client v2.6.175 / protocol v2.6.175 / srv-2.6.5
 **Deploy state:** `main` carries v0.6.232 (#79, V5 wave 5b). **Open PR:** V5 wave 6a (this release).
 
 ## Last gates (v0.6.233 release bytes, 18 Nov 2026)
-GATES-TBD
+Suite **2595/0 ×3** (`elysium-bot.js` `4ca79599`, `test-bot-logic.js` `76107ccd`, `elysium-cardfx.json` `c6b88d0f`) · section
+178 24/0 (2/22 on v0.6.232; the egress review's six 18/6 on the build before them), 177 27/0, 161 25/0, 163 13/0 · `test-cardfx`
+357/0 · canary **171/0** ×2 · hotseat 12/0 · HB1 11/11 · main's client suite 371/1 (the guide's embed: main re-embeds) · the sim:
+the 240 DIVERGED 233 against v0.6.232 (VP each within one SE) and 154 against §1's bytes (RED 1's estimates; the Eyes of Argus
+double plays 44 → 0; malkavian +0.11, nosferatu −0.09, ~2.2 SE each), the V5 smoke DIVERGED 10–12 of 12 a table; `ana-gates.py`
+PASS on the 240 and the 14 tables; the arena smoke PASS 7/7.
 
 ## What v0.6.233 did
 V5 wave 6a (D-123; spec-v5-wave6 §8): "during an action directed at you" is read, so Eyes of Argus and The Warrens no longer

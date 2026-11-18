@@ -66,7 +66,15 @@
     acting bot takes its raw stealth off the counter (`_onStealthZero`).
   - *Hunting the Quarry* curated with no modes (the auto tier's +1 stealth was a misread, inert); its two lines go with the grants round.
   - *Measured*: §1 alone, the 240 DIVERGED 224 against v0.6.232 (the first difference a block decision; VP within one SE; the
-    prediction's DIVERGED half held, its VP direction did not). The six cards fired on their 12-match tables (spec §8). GATES-TBD
+    prediction's DIVERGED half held, its VP direction did not); 2.1–2.5 on top of §1 changed no decision of the starters (the 240
+    the same play for play, as registered). The release: the 240 DIVERGED 233 against v0.6.232 (VP each within one SE) and 154
+    against §1 (the graded readings' RED 1: the first differences at the malkavian and tremere block decisions; Eyes of Argus played
+    twice by one vampire on one action 44 → 0; malkavian +0.11 and nosferatu −0.09 VP, each ~2.2 SE — the VP half of the prediction
+    registered for it failed). The six cards fired on their 12-match tables (spec §8).
+  - *Gates* (the release bytes `4ca79599` / `c6b88d0f`): suite 2595/0 ×3, canary 171/0 ×2, `test-cardfx` 357/0, hotseat 12/0, HB1
+    11/11, main's client suite 371/1 (the guide's embed), `ana-gates.py` PASS on the 240 and the 14 V5 tables, the arena smoke PASS
+    7/7; `gen-precon --check` and the ledger, `twda` and `ana-gates` self-tests clean; the lint clean. `docs/CARDS.md` regenerated
+    (playable 198 → 206, partial 24 → 16).
   - *Tests*: section 178 (24 checks; 2/22 on v0.6.232's bytes — a skip, and a card it never plays; 178k–p, the egress review's six,
     18/6 on the build before them); 83h, 83i, 127p moved off Eyes of Argus at an
     undirected action (127p gains the check that it is kept there); 166h and 167a count the wake's card on the action (RED 1 below;
