@@ -11839,9 +11839,10 @@ async function connectWithRetry(client, tries = 30){
            '161k the event log types ARCHON_BURN (kind archon) and a location’s intercept lock (kind intercept, n 2) (got ' + JSON.stringify({ eA, eL }) + ')');
         ok(n1 === 1 && n2 === 1 && n3 === 2 && u._obs === obsBefore && !phantom,
            '161k ...Channel 10’s counter runs on the table’s action rows (a card’s play line is no second action); Archon’s line is no action of its seat: no phantom minion, the bleed’s memory kept (got ' + JSON.stringify({ n1, n2, n3, obsKept: u._obs === obsBefore, phantom }) + ')');
-        const d = mkU161(); d.board = [V('k1', 'Crow (G5)')]; d.hand = ['Sudden Reversal']; const di = d._deadHandIndex(d.board);
+        const d = mkU161(); d.board = [V('k1', 'Crow (G5)')]; d.hand = ['Direct Intervention']; const di = d._deadHandIndex(d.board);
+        d.hand = ['Sudden Reversal']; const diSr = d._deadHandIndex(d.board);   // v0.6.232 (D-122): Sudden Reversal has its consumer now (_srFor) -- no longer dead
         d._ootDebt = 1; d._fgOwed = 2; d._dispatch({ t: 'started', players: d.players });
-        ok(di === 0 && (d._ootDebt | 0) === 0 && (d._fgOwed | 0) === 0, '161k ...Sudden Reversal (never played) is a dead card the discard phase cycles; a new game owes no out-of-turn action and no Family Gathering blood (got ' + JSON.stringify({ di, debt: d._ootDebt, fg: d._fgOwed }) + ')'); }
+        ok(di === 0 && diSr === -1 && (d._ootDebt | 0) === 0 && (d._fgOwed | 0) === 0, '161k ...an out-of-turn master the bot never plays (Direct Intervention) is a dead card the discard phase cycles, Sudden Reversal not since v0.6.232; a new game owes no out-of-turn action and no Family Gathering blood (got ' + JSON.stringify({ di, diSr, debt: d._ootDebt, fg: d._fgOwed }) + ')'); }
     }
 
     /* 162) v0.6.217 -- V5 WAVE 4 (RULINGS D-106): the masters on a vampire, Toreador Grand Ball and Toreador's last cards. A title CARD
