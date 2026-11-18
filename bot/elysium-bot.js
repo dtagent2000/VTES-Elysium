@@ -5354,9 +5354,9 @@ class Bot {
     this.push();
     return true;
   }
-  async _maybePostBlockUnlock(blocker){   // N1: Cats' Guidance -- after block resolution, a LOCKED blocker with a postBlock unlock refreshes the wall
+  async _maybePostBlockUnlock(blocker, act){   // N1: Cats' Guidance -- after block resolution, a LOCKED blocker with a postBlock unlock refreshes the wall
     if(!blocker || !blocker.locked || blocker.zone !== 'ready' || this.out) return;
-    const un = this._bestUnlockReactFor(blocker, 'postBlock');
+    const un = this._bestUnlockReactFor(blocker, 'postBlock', act || { kind: null });   // v0.6.233 (the egress review, finding 7): a play, so the action it followed (its kind, read at the verdict) -- never _dirOk's no-action estimate
     if(!un) return;
     await this._playUnlockReact(blocker, un);
     this.note('Trainbot: ' + blocker.name + ' unlocks (' + un.name + ') \u2014 the wall refreshes.');
@@ -7706,7 +7706,7 @@ class Bot {
     if(o.actor) this.fxClone({ name, kind: 'lib' }, o.verb || 'is put in play', { actor: o.actor });   // v0.6.233: a minion's card (True Love's Face) names its vampire
     else this.fxClone({ name, kind: 'lib' }, o.verb || 'is put in play');   // the card lands (moved here from the master phase's eight branches)
     if(!this._w5Live().some(st => st !== this.seat)) return { cancelled: null };   // nobody left to cancel it
-    const asp = this._asp = { card: name, at: Date.now(), cancelled: null, open: true, cands: [] };   // armed BEFORE the line goes out: an answer can arrive inside the send (L-25, L-92)
+    const asp = this._asp = { card: name, at: Date.now(), cancelled: null, open: true, cands: [], minion: !!o.actor };   // armed BEFORE the line goes out: an answer can arrive inside the send (L-25, L-92). v0.6.233: minion -- a minion's card (True Love's Face), whose only answer is its counter (_onPayCancel), never a Sudden Reversal
     const tg = o.target ? ' \u2014 on <b>' + esc(o.target.owner) + "</b>'s <b>" + esc(o.target.name) + '</b>' : '';
     this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> is playing <b>' + esc(name) + '</b>' + tg + '.' });   // L12.asPlayed
     try {
@@ -7725,7 +7725,7 @@ class Bot {
           this._emit('sr-late', { by: c.by, card: name, human: !!c.human, first: order[0].by });
         }
       }
-      this._aspLast = { card: name, at: Date.now(), cancelled: asp.cancelled };
+      if(!asp.minion) this._aspLast = { card: name, at: Date.now(), cancelled: asp.cancelled };   // v0.6.233: a master's (the Sudden Reversal 'too late' replies read it)
     }
     return { cancelled: asp.cancelled };
   }
@@ -7780,7 +7780,8 @@ class Bot {
      read in the window leaves the attempt standing -- the card spent, the contest goes on (the second look) -- else the cancel line. */
   async _payCancelWindow(av, a, cb, who){
     const bl = this._condBlockerName(av.v) || 'blocking minion';   // the attempt's line may come after the shout the card answers (pace 0): 'on Viktor's blocking minion'
-    const r = await this._asPlayed(cb.name, { target: { owner: who, name: bl }, verb: 'cancels the block', actor: av.v });
+    av._payQ = true; let r;   // no stealth of mine while the card's fate is open (the blocker's counter moves inside the window; a card spent there is lost if the attempt then fails)
+    try { r = await this._asPlayed(cb.name, { target: { owner: who, name: bl }, verb: 'cancels the block', actor: av.v }); } finally { av._payQ = false; }
     if(this._ask !== a || this._actingVamp !== av || this.out) return;   // the action resolved under the window
     if(r.cancelled){
       this._emit('pay-cancelled', { card: cb.name, by: r.cancelled, vamp: av.v.name });
@@ -7796,21 +7797,21 @@ class Bot {
   }
   _onPayCancel(owner, card){         // the actor's side: a blocking minion's controller burned the pool for my card in its open window
     const asp = this._asp;
-    if(asp && asp.open && FX_NORM(asp.card) === FX_NORM(card)){ if(!asp.cands.some(c => c.by === owner)) asp.cands.push({ by: owner, seat: this._seatOfName(owner), human: false }); return; }
+    if(asp && asp.open && asp.minion && FX_NORM(asp.card) === FX_NORM(card)){ if(!asp.cands.some(c => c.by === owner)) asp.cands.push({ by: owner, seat: this._seatOfName(owner), human: false }); return; }
     this._emit('pay-cancel-late', { by: owner, card });   // the window had closed: the cancel line already went (a real-clock race; the pool is spent)
   }
   _cancelPayFor(seat, card, owner, vamp){   // the blocker's side: cancel the actor's card as it is played, for its pool? { n, card, why } or null
     if(this.out || owner !== this.o.name || !vamp) return null;
     const h = this.fxLookup(card), mo = h && h.kind === 'lib' ? (h.e.modes || []).find(m => m.fx && m.fx.cancelBlock && (m.fx.cancelBlockPay | 0) > 0) : null; if(!mo) return null;
     const p = this.pending, bv = p && (p.blockerVamp || p.attemptVamp); if(!p || !p.contested || !bv || (vamp !== 'blocking minion' && bv.name !== vamp)) return null;   // my live attempt at this action (named, or the actor did not know the name yet: at pace 0 the card answers the shout)
-    const n = mo.fx.cancelBlockPay | 0; if((this.pool | 0) - n < 1) return null;   // the pool rule: never the last pool (R-34)
-    /* the decision (Claude's prior, registered at the build: spec-v5-wave6 \u00a77): the block is worth a pool when it stops a bleed of 2 or more, or an
+    const n = mo.fx.cancelBlockPay | 0; if((this.pool | 0) - n < 1){ p._cancelComing = { card, at: Date.now() }; return null; }   // the pool rule: never the last pool (R-34) -- the cancel line will end this attempt
+    /* the decision (Claude's prior, registered at the build: spec-v5-wave6 \u00a78): the block is worth a pool when it stops a bleed of 2 or more, or an
        undirected action that is not a hunt; and it must still stand -- the counter's intercept, or my intercept cards, reach the stealth */
     const worth = p.kind === 'bleed' ? (p.amount | 0) >= 2 : p.kind === 'undirected' ? p.sub !== 'hunt' : false;
     const t = this.tally, a = (t && t.mode === 'block') ? (t.a | 0) : 0, b = (t && t.mode === 'block') ? (t.b | 0) : 0;
     const reach = b >= a || this._interceptStack(bv, p.reacted, p).sum >= a - b;
     const row = { card, n, kind: p.kind, sub: p.sub || null, amount: p.amount | 0, a, b, worth, reach };
-    if(!worth || !reach){ this._emit('pay-cancel-decline', row); this.o.log('cancel ' + card + ': not worth ' + n + ' pool (' + JSON.stringify(row) + ')'); return null; }
+    if(!worth || !reach){ p._cancelComing = { card, at: Date.now() }; this._emit('pay-cancel-decline', row); this.o.log('cancel ' + card + ': not worth ' + n + ' pool (' + JSON.stringify(row) + ')'); return null; }   // the cancel line will end this attempt: _commitBlock and the second look spend no intercept on it
     return { n, card, why: p.kind === 'bleed' ? 'a bleed of ' + (p.amount | 0) : 'the ' + (p.sub || p.kind) };
   }
   _payCancel(d){
@@ -7826,7 +7827,7 @@ class Bot {
   }
   _onSrCancel(by, card){             // the player's side: a cancel read in my open window is a candidate (the window's close takes the first in turn order); after it, too late
     const asp = this._asp;
-    if(asp && asp.open && FX_NORM(asp.card) === FX_NORM(card)){ if(!asp.cands.some(c => c.by === by)) asp.cands.push({ by, seat: this._seatOfName(by), human: false }); return; }
+    if(asp && asp.open && !asp.minion && FX_NORM(asp.card) === FX_NORM(card)){ if(!asp.cands.some(c => c.by === by)) asp.cands.push({ by, seat: this._seatOfName(by), human: false }); return; }
     this._emit('sr-late', { by, card, human: this._isHumanName(by), first: null });
     if(this._isHumanName(by)) return this.chat(by + ': too late \u2014 my ' + card + ' has resolved; take your Sudden Reversal back.');
     this.send({ t: 'log', html: '<b>' + esc(by) + "</b>'s Sudden Reversal comes too late for <b>" + esc(this.o.name) + "</b>'s <b>" + esc(card) + '</b>.' });   // L12.srLate
@@ -7846,7 +7847,8 @@ class Bot {
     if(e.oot && (e.modes || []).some(mo => mo.fx && mo.fx.cancelMaster)){   // their Sudden Reversal
       if(this.turnSeat !== this.seat) return;
       const asp = this._asp, last = this._aspLast;
-      if(asp && asp.open){ if(!asp.cands.some(c => c.by === who)) asp.cands.push({ by: who, seat: m.seat | 0, human: true }); return; }   // a candidate, as a bot's line (the close takes the first in turn order)
+      if(asp && asp.open && asp.minion) return this.chat(who + ': Sudden Reversal cancels a master card \u2014 my ' + asp.card + ' is not one; take it back.');   // v0.6.233: a minion's card in its window (True Love's Face) -- no candidate, no 'too late' about an older master
+      if(asp && asp.open && !asp.minion){ if(!asp.cands.some(c => c.by === who)) asp.cands.push({ by: who, seat: m.seat | 0, human: true }); return; }   // a candidate, as a bot's line (the close takes the first in turn order). v0.6.233 (the egress review, finding 6): a master's window only
       if(last && Date.now() - last.at < 20000){
         if(!last.cancelled) this.chat(who + ': too late \u2014 my ' + last.card + ' has resolved; take your Sudden Reversal back.');
         else if(last.cancelled !== who) this.chat(who + ': ' + last.cancelled + '\u2019s Sudden Reversal came first \u2014 take yours back.');
@@ -8169,7 +8171,7 @@ class Bot {
       p.contested = false; p.declined = true; this.say('Pass');
       return;
     }
-    p.attemptVamp = blocker || plan.vamp;   // v0.6.233 (V5 wave 6a): the vampire this attempt raises, named before the shout -- an answer delivered inside it (the hotseat bridge, L-92: True Love's Face's 'as played' window) reads it
+    p.attemptVamp = blocker || plan.vamp; p._cancelComing = null;   // v0.6.233 (V5 wave 6a): the vampire this attempt raises, named before the shout -- an answer delivered inside it (the hotseat bridge, L-92: True Love's Face's 'as played' window) reads it; a new attempt has no cancel coming
     this.say('Block!');              // v0.6.103 (#4): a blocker exists, or a route to one does -- never a phantom Block!
     p.routeVamp = blocker ? null : ((plan && plan.vamp) || null); p.attempted.add((blocker || plan.vamp).id);   // v0.6.222 (the egress review): the route's vampire, for the verdict alone (_verdictAsTarget), and attempted from Block! on; blockerVamp waits for the route (line below) -- naming it here opened the second looks inside the beat: two intercept cards for one need. The second review: a success verdict that lands inside the route's beat (the wake, the unlock card) finds its blocker: the Terrifying Visage burn and the combat hand-off
     if(!blocker){
@@ -8214,8 +8216,9 @@ class Bot {
     const unPl = (plan && plan.kind === 'unlockReact' && plan.un) || null;
     if(unPl && unPl.paid) p.paidGrant = { vampId: blocker.id, card: unPl.name, key: 'paidIc:' + FX_NORM(unPl.name) + ':' + blocker.id, n: unPl.paid.n, cost: unPl.paid.cost };   // per Gangrel: each burns its own blood (the egress review, finding 5)
     if(unPl && unPl.relock) p.relock = (p.relock || []).concat([{ id: blocker.id, card: unPl.name }]);   // every Gangrel of this action (a failed one, then another's block: both measured on the gangrel series)
-    const pg = (!unIc && icNeeded && p.paidGrant) ? this._grantPaidIntercept(blocker, p) : null, unPaid = (pg && stealthNow <= baseIcp + pg.n) ? pg : null;
-    const ic = blocker && !unIc && !unPaid && icNeeded && this._bestInterceptFor(blocker, p.reacted, p);
+    const doomed = !!p._cancelComing;   // v0.6.233 (the egress review, finding 2a): I declined True Love's Face's counter inside my shout -- its cancel line ends this attempt: no intercept spent on it (R-12)
+    const pg = (!unIc && icNeeded && p.paidGrant && !doomed) ? this._grantPaidIntercept(blocker, p) : null, unPaid = (pg && stealthNow <= baseIcp + pg.n) ? pg : null;
+    const ic = blocker && !unIc && !unPaid && icNeeded && !doomed && this._bestInterceptFor(blocker, p.reacted, p);
     if(unIc){
       this._setTallyB(unIc + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block with +' + unIc + ' intercept (<b>' + esc(plan.un.name) + '</b>).' });
@@ -8229,6 +8232,12 @@ class Bot {
     } else if(ic){
       p._icFirst = true; await this._pace(); p._icFirst = false;   // v0.4.5: so a wake+intercept combo doesn't land as one instant double-play. v0.6.222 (the third review): the second look waits for this first card -- the echo of my own default-stealth write (or a raise) inside the beat drew a second card from a stale pick; after my write its echo re-runs the second look against the real counter
       if(this.pending !== p || !p.contested) return;   // v0.6.222 (the egress review): resolved under the beat
+      if(p._cancelComing){   // v0.6.233 (the egress review, finding 2a): True Love's Face's window reached me under the beat and I declined its counter -- the cancel line ends this attempt: the bare attempt, the card stays in hand
+        this._setTallyB(baseIcp); this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block.' });   // the frozen bare-attempt line (L12.attempt)
+        this._noteBlockAttempt(blocker.name, true); this._emit('block-made', { vamp: blocker.name }); this.push();
+        if(humanActor && this.pending === p && p.contested && !this.out) this._vwArm(p, blocker);   // the chain's end, as below
+        return;
+      }
       p.reacted.add(FX_NORM(ic.name));
       this._spendIntercept(ic, blocker, true);   // v0.6.215: a hand card or a location's lock (with the attempt line)
 
@@ -8314,7 +8323,7 @@ class Bot {
     if(success){
       if(blockerVamp && this._visageBurn(this.pending.actorSeat || this._seatOfName(this.pending.who), oppName)) return;   /* v0.6.221 (the Jack round's egress review): only MY block pays -- another seat's successful block reaches this verdict too (a bot that never blocked, or whose attempt failed, burned 1 pool: the V5 smoke's pathcathari match 12) */   /* the egress review: the combat opponent's name (a nameless pending reads the announce) */   // v0.6.217 (V5 wave 4): Terrifying Visage -- 'the blocking minion's controller burns 1 pool before block resolution' (an 'if blocked' effect: first, before anything else [ANK 20220116]); true = that pool ousted me
       const grant = this._reactManeuverGrant, gv = this._reactManeuverGrantVamp;   // v0.6.214 (V5 wave 2): _clearPending's N1 belt is for a FAILED block -- a successful one carries Guard Dogs [ANI]'s maneuver into the resulting combat (since N1 it was wiped here, before the combat: the grant never reached a fight)
-      const owl = this.pending.noStrikeR1 || null, owlWho = this.pending.who || null;   // v0.6.233: One With the Land [PRO] -- the vampire that played it on this action
+      const owl = this.pending.noStrikeR1 || null, owlWho = this.pending.who || null, act = { kind: this.pending.kind || null, peekSup: this.pending.peekSup, directed: this.pending.directed };   // v0.6.233: One With the Land [PRO] -- the vampire that played it on this action; the action's read (_pendDirected's fields) for the post-block unlock
       this._clearPending('block succeeded');
       if(blockerVamp){
         this._owl = (owl && owl.vamp === blockerVamp.name) ? { vamp: blockerVamp.name, opp: oppName || null, card: owl.card, at: Date.now() } : null;   // v0.6.233 (V5 wave 6a): no strikes in the first round of THIS combat (_resolveCombat takes it at its entry)
@@ -8323,7 +8332,7 @@ class Bot {
         this._myBlockOf = { vamp: oppName, at: Date.now() };   // v0.6.217: the vampire my block stopped -- its Change of Target ends the combat I begin here (_onCot)
         blockerVamp.locked = true;                                // v0.4.3 (rulebook): "If a block attempt is successful, then the blocking minion LOCKS and enters combat" -- the wake path arrives here already locked, idempotent either way
         const _cp = this._resolveCombat(blockerVamp, oppName), _ctok = this._combatTok;   // v0.6.221 (the egress review): the token _resolveCombat set before its first await -- a later combat of mine owns the grant
-        _cp.then(() => { if(this._combatTok === _ctok) this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
+        _cp.then(() => { if(this._combatTok === _ctok) this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp, act); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
       }
     }
     else { this.pending.contested = false; this.pending.blockerVamp = null; this.pending.routeVamp = null; if(!(this.pending.role === 'predator' && this.pending.waitingFor)) this._reactWindow(); }   // v0.6.221 (D-113): my failed attempt is over -- a later block's success verdict (another seat's) is not my combat (the Toreador report's stray blocker) // action continues, bleed still live -- M2: try again (another card, or give up -> Pass). v0.6.107: a PREDATOR-role window stays shut until the prey has declined (rulebook order)
@@ -9338,7 +9347,8 @@ class Bot {
     await this._phaseAfter(2, !!this._rnd.grapple); if(stale()) return gone();   // v0.6.165
     if(!hs){ oppG = await this._awaitOppGrapple(Math.min(200, (this.o.askSecs || 2) * 1000)); if(stale()) return gone(); }   // a human or an unknown opponent: the old short wait
     else if(!hsFirst){ oppG = await this._awaitOppGrapple(this._hsWaitMs()); if(stale()) return gone(); if(!oppG) this._hsMiss('before-strikes'); }   // v0.6.202: the acting side waits for the other bot's answer before it strikes
-    await this._phaseAsk(3); if(stale()) return gone();   // v0.6.165: human acting -> "What is your strike?" (the acting side announces first; the bot then chooses)
+    const owlR1 = !continued && !!this._owlCombat;   // v0.6.233 (the egress review, finding 1): One With the Land's first round -- nobody strikes: no strike question to a human, no wait on a human's strike, nothing taken
+    if(!owlR1){ await this._phaseAsk(3); if(stale()) return gone(); }   // v0.6.165: human acting -> "What is your strike?" (the acting side announces first; the bot then chooses)
     if(hsFirst){ const pk = await this._awaitOppStrikePeek(this._hsWaitMs()); if(stale()) return gone(); if(!pk) this._hsMiss('strike'); }   // v0.6.203 (Johan, 16 Oct: "the bot should answer known strikes"): between bots too, "the minions first choose their respective strikes (the acting minion first, then their opponent)" [6.4.3] -- I look at the acting bot's strike (it stays pending: the consuming wait after my own strike takes it) and choose knowing it
     { const tc = this._cTally(); if(this._oppEndedCombat || (this._oppStrike && this._oppStrike.ends) || (tc && this._phaseOppPlayer() && (this._cField('ce') | 0) === 1 && tc.who && tc.who !== this.o.name)){   // v0.6.202 (point 17b): the ce field is a HUMAN opponent's   // v0.6.167 (main's scripted run, bug B): the human's combat ends came FIRST -- I do not strike at all
       this._oppEndedCombat = true; this._oppStrike = null; this._rnd.strike = 'none'; this._rnd.dealt = 0; this._rnd.taken = 0;
@@ -9538,7 +9548,7 @@ class Bot {
        deadlock) and take what they actually dealt; a silent opponent (a human
        table -- no human types the strike grammar) falls back to the old
        assume-1 within askSecs, with the "tell me if it differs" chat intact. */
-    const opp = await this._phaseAfter(3, true).then(() => stale() ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs)));
+    const opp = await this._phaseAfter(3, true).then(() => (stale() || (owlR1 && this._phaseOppPlayer())) ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs)));   // v0.6.233: a human cannot strike in One With the Land's first round -- no wait for one (a bot's no-strike line still answers the wait)
     if(stale()) return gone();
     this._rnd.strikeSeen = !!opp; if(opp) this._xr.p1seen = true; if(this._stashRejects && this._stashRejects.length){ this._rnd.rejects = this._stashRejects; this._stashRejects = []; }   // v0.6.164 diag
     if((opp && opp.ends) || this._oppEndedCombat){   // v0.6.167 (main's scripted run, bug A): combat ends resolves FIRST -- my announced strike never lands, and Carrion Crows gets no strike resolution this round (VEKN ruling via main): no damage either way, no 'dealt' narration, no ph writes below 6
@@ -9569,7 +9579,7 @@ class Bot {
     if(opp && opp.dodge && this._rnd.dealt > 0){ this._rnd.dealt = 0; { const f = {}; f[this._cSide || 'b'] = 0; if(this._rnd.aggr) f['g' + (this._cSide || 'b')] = 0; this._cWrite(f); } this._xr.dTot = this._xr.gTot = 0; strikeLine += ' \u2014 dodged, 0'; }   // v0.6.167 (main v2.6.136): a dodge is counted as a rule -- my strike does not reach them, and my narration says so
     const opponentSilent = continued && !opp;
     const silentLong = !opp && !continued && this._range === 'long' && !this._oppHasRanged();   // v0.6.157 (Johan, before the deploy): a SILENT opponent (a human table) at LONG range -- their rulebook default is a hand strike, which deals 0 at long; assume 1 only when their board shows a ranged option (a gun, a steal / ranged card seen)
-    let taken = opp ? (opp.dodge ? 0 : (opp.dealt | 0)) : (continued || silentLong ? 0 : 1);
+    let taken = owlR1 ? 0 : opp ? (opp.dodge ? 0 : (opp.dealt | 0)) : (continued || silentLong ? 0 : 1);   // v0.6.233: One With the Land's first round deals nothing either way (a silent human there is not the rulebook's default strike)
     this.o.log('combat incoming (' + myVamp.name + '): ' + (opp ? (opp.dodge ? opp.vamp + ' dodged \u2014 0' : opp.vamp + ' dealt ' + opp.dealt) : silentLong ? 'no strike line within the window \u2014 long range and no ranged option seen: a hand strike deals 0' : 'no strike line within the window \u2014 assuming the rulebook default 1'));
     let _t1 = this._takePre(myVamp, taken, opp && !opp.dodge ? (opp.aggr | 0) : 0);   // v0.6.213 (V5 wave 1): the first pair's damage, cut out so an additional pair resolves the same way -- prevention on aggravated first (equipment, Guardian Angel, Wall of Filth, then a card)
     const prevent = (_t1.taken + _t1.aggr) > 0 ? this._bestPreventFor(myVamp, opp ? this._noPreventDiscIn() : null) : null;   // v0.6.4: never burn a prevent card against zero incoming (a dodge) -- the old code would have wasted it. v0.6.214: not one the strike's card bars (Soul Burn)
@@ -10960,7 +10970,7 @@ class Bot {
     return { S, sum };
   }
   _interceptSecondLook(){            // v0.6.143d (Johan, 20 Sep: 'a bot that plays ONE intercept card even when it holds more and more are needed is a clear limitation / bug'): the blocker's side of the exchange. When the tally moves and my block now FAILS, I look again: can the intercept I still hold reach their stealth? Then the next card goes down; if it cannot, the cards are kept.
-    const p = this.pending; if(!p || !p.contested || !p.blockerVamp || this.out || this.o.stealthStack === 0 || p._icFirst) return;   // v0.6.222: not while my first card is on its way (_commitBlock's beat)
+    const p = this.pending; if(!p || !p.contested || !p.blockerVamp || this.out || this.o.stealthStack === 0 || p._icFirst || p._cancelComing) return;   // v0.6.222: not while my first card is on its way (_commitBlock's beat). v0.6.233: nor for an attempt a declined True Love's Face is about to cancel
     const t = this.tally; if(!t || t.mode !== 'block') return; const b = t.b | 0, a = t.a | 0; if(b >= a) return;   // the block succeeds as it stands
     if((p.icLooks | 0) >= 4) return; p.icLooks = (p.icLooks | 0) + 1;
     const blocker = p.blockerVamp, need = a - b, stack = this._interceptStack(blocker, p.reacted, p), ic = this._bestInterceptFor(blocker, p.reacted, p);
@@ -10994,10 +11004,10 @@ class Bot {
      its intercept cards cannot reach the stealth standing, the stealth is above 0 ('on zero or negative stealth it changes nothing'
      [LSJ 20021211]) and the block would then stand (intercept 0 or more). 'Effectively a -X stealth modifier to the action' [RTR 20030519]: the
      acting bot takes its X off the counter (_onStealthZero, L12.stealthZero) and may raise again. The decision is Claude's prior (spec-v5-wave6
-     \u00a77): a bleed of 2 or more, or an undirected action that is not a hunt -- the card and its blood for the block. A human actor sets the
+     \u00a78): a bleed of 2 or more, or an undirected action that is not a hunt -- the card and its blood for the block. A human actor sets the
      counter's stealth: not played there (a rider). The superior's strike: combat ends goes with the grants round. */
   _nightTerrorsFor(blocker, p, a, b){
-    if(!blocker || !p || this.out || !(a > 0) || b < 0 || (p.who && this._isHumanName(p.who))) return null;
+    if(!blocker || !p || this.out || !(a > 0) || b < 0 || (p.who && this._isHumanName(p.who)) || !p.actingVampName) return null;   // v0.6.233 (the egress review, finding 3): no name, no line the actor can match -- the counters would differ
     const worth = p.kind === 'bleed' ? (p.amount | 0) >= 2 : p.kind === 'undirected' ? p.sub !== 'hunt' : false;
     if(!worth) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
@@ -11013,8 +11023,8 @@ class Bot {
   _playNightTerrors(nt, blocker, p){
     if(p._ntQ) return; p._ntQ = true;
     this._afterBeat('react', () => { p._ntQ = false; const t = this.tally;
-      return this.pending === p && p.contested && p.blockerVamp === blocker && !this.out && this.hand[nt.idx] === nt.name && !!(t && t.mode === 'block' && (t.b | 0) < (t.a | 0) && (t.a | 0) > 0 && (t.b | 0) >= 0); }, () => {
-      const actor = p.actingVampName || 'the acting minion', t = this.tally;
+      return this.pending === p && p.contested && p.blockerVamp === blocker && !this.out && !!p.actingVampName && this.hand[nt.idx] === nt.name && !!(t && t.mode === 'block' && (t.b | 0) < (t.a | 0) && (t.a | 0) > 0 && (t.b | 0) >= 0); }, () => {
+      const actor = p.actingVampName, t = this.tally;
       p.reacted.add(FX_NORM(nt.name));
       this.hand.splice(nt.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(nt.name);
       this._emitPlay(nt.name, 'react-stealth0', blocker.name);
@@ -11040,7 +11050,7 @@ class Bot {
     this._emit('no-strike-r1', { vamp: av.v.name, opp: vamp, card, side: 'actor' });
   }
   _stealthSecondLook(){               // v0.6.143c THE SECOND LOOK (smoke1: `need` was 1 in 20 of 20 decisions -- the first look fires on the blocker's 'Block!' SHOUT, before it has played its intercept and written the tally; and nothing ever looked again, so no second stealth card was ever played). When the tally moves and the block currently SUCCEEDS, the actor looks at the real numbers: can my remaining stealth reach it?
-    const a = this._ask, av = this._actingVamp; if(!a || !a.contested || !av || this.out || this.o.stealthStack === 0) return;
+    const a = this._ask, av = this._actingVamp; if(!a || !a.contested || !av || this.out || this.o.stealthStack === 0 || av._payQ) return;   // v0.6.233: not inside my True Love's Face's window (_payCancelWindow)
     const t = this.tally; if(!t || t.mode !== 'block') return; const b = t.b | 0, sa = t.a | 0; if(b < sa) return;   // the block fails as it stands: nothing to answer
     { const key = sa + ':' + b; if(av._lookKey === key) return; av._lookKey = key; }   // v0.6.152: the same counter state is looked at once (the chat grammar's write and its echo both arrive here)
     if((av.looks | 0) >= 4) return; av.looks = (av.looks | 0) + 1;
@@ -11114,7 +11124,7 @@ class Bot {
   }
   _queueStealthSpend(st, av, a){        // v0.6.152: a spend decided on a tally that just moved lands after the reaction beat -- if the counter still says the block succeeds and nothing else has landed meanwhile (one queued spend at a time)
     if(av._spendQ) return; av._spendQ = true;
-    this._afterBeat('react', () => { av._spendQ = false; if(this._ask !== a || this._actingVamp !== av || !a.contested || this.out) return false;
+    this._afterBeat('react', () => { av._spendQ = false; if(this._ask !== a || this._actingVamp !== av || !a.contested || this.out || av._payQ) return false;   // v0.6.233 (the egress review, finding 2b): not inside my True Love's Face's window
                                      const t = this.tally; if(!t || t.mode !== 'block' || (t.b | 0) < (t.a | 0)) return false;   // the block fails as it stands now (they withdrew, or a verdict landed)
                                      return this.hand[st.idx] === st.name || !!st.fromBoard; },
                               () => this._spendStealthCard(st, av, a));

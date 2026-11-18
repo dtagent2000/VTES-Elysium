@@ -51,19 +51,24 @@
     The Mole). `_wakesInHand` asks the route card's discipline and blood.
   - *One With the Land [PRO]*'s rider (`noStrikeFirstRound`) rides the route's line (`L12.noStrikeR1`); the blocker's pending carries
     it to the verdict, both bots' `_owl` to `_resolveCombat`'s entry: in round 1 each writes the frozen no-strike line and skips its
-    maneuver; never a follow-up combat. A human actor is told in chat.
+    maneuver; never a follow-up combat. A human actor is told in chat; in round 1 the bot neither asks the human for a strike nor
+    waits for one, and takes nothing.
   - *Forced Confessional [dom]*: `icpVs` who `this` — +1 stealth against the minion attempting now, booked by name (`_condBlockerName`).
   - *True Love's Face [OBF][PRE]* (curated, `cancelBlockPay` 1): a bot's card at a bot blocker lands in D-122's 'as played' window
     (`_payCancelWindow`, the blocker named before its attempt's line: `p.attemptVamp`); the blocking bot burns 1 pool to cancel it
     when the block stops a bleed of 2+ or a non-hunt undirected action and still stands (`_cancelPayFor`, `L12.payCancel`); then the
-    attempt stands, else the cancel line. Not at a human blocker (a rider).
+    attempt stands, else the cancel line. A declined counter keeps the blocker's intercept off the attempt it ends (inside the shout
+    or under the card's beat) and the actor's stealth out of its own window; the window is a minion card's, no master's (no Sudden
+    Reversal candidate; a human's is told). Not at a human blocker (a rider).
   - *Night Terrors* (`stealthToZero`; also Veiled Sight, Draba [CHI]): the blocker's second look plays it when its intercept cannot
-    reach, at a bleed of 2+ or a non-hunt undirected action, never at a human actor (`_nightTerrorsFor`, `L12.stealthZero`); the
+    reach, at a bleed of 2+ or a non-hunt undirected action, never at a human actor nor without the acting minion's name
+    (`_nightTerrorsFor`, `L12.stealthZero`); the
     acting bot takes its raw stealth off the counter (`_onStealthZero`).
   - *Hunting the Quarry* curated with no modes (the auto tier's +1 stealth was a misread, inert); its two lines go with the grants round.
   - *Measured*: §1 alone, the 240 DIVERGED 224 against v0.6.232 (the first difference a block decision; VP within one SE; the
     prediction's DIVERGED half held, its VP direction did not). The six cards fired on their 12-match tables (spec §8). GATES-TBD
-  - *Tests*: section 178 (18 checks; 1/17 on v0.6.232's bytes, the one pass a skip); 83h, 83i, 127p moved off Eyes of Argus at an
+  - *Tests*: section 178 (24 checks; 2/22 on v0.6.232's bytes — a skip, and a card it never plays; 178k–p, the egress review's six,
+    18/6 on the build before them); 83h, 83i, 127p moved off Eyes of Argus at an
     undirected action (127p gains the check that it is kept there); `test-cardfx` 357 (9 red on v0.6.232's compiler).
   - *The graded readings' fixes* (the combining rule, D-92): one card of a name per action — the route's and the wake's card are
     recorded on the action (the same vampire had played One With the Land [PRO] then [pro], and the starters' Eyes of Argus [AUS]
@@ -71,7 +76,8 @@
     `_wakeCardFor`); the reduce finder meets the mode — discipline, requirement, blood paid, a wake the reactor can play (Loyiso had
     played Sentry Signal's [ANI] for free); the block-cancel finder asks the card's clan; Night Terrors' X leaves a booked −1
     intercept. Tests 178h–j (red on the build before, green after).
-  - Egress: EGRESS-TBD. Graded readings (spec §8): green 3, amber the rest with their halves listed, red 2 classes fixed (above)
+  - *The post-block unlock* asks the directed condition against the action it followed (it asked with no action: an estimate).
+  - Egress: 8 findings (half-done 4, rule-missed 1, stale-doc 3), 8 fixed, 0 listed. Graded readings (spec §8): green 3, amber the rest with their halves listed, red 2 classes fixed (above)
     and 3 listed with no deck carrying them (the BOARD's curation line).
 - **v0.6.232 (18 Nov 2026)** — V5 wave 5b: the 'as played' window, Sudden Reversal, Meditative Grove's cancel, Yawp Court, Week of
   Nightmares (RULINGS D-107 shape A, D-122; Johan, 18 Nov: "Vi kan gå på dina rekommendationer" on all five of spec-v5-wave5 §12.9;

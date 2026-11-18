@@ -19,12 +19,14 @@ compares the whole page, re-embed it.
   vampire unlocks with the card and attempts to block (the route's line as before, `VAMP plays CARD: unlocks.`).
 - **One With the Land [PRO]**: its line gains the rider (below); if that block stands, neither combatant strikes in the first round
   of its combat — each bot writes the existing `VAMP gets no strike this round (One With the Land).` and a human actor is told in chat
-  ("…neither X nor Y can strike in the first round of this combat."). The bot cannot write a human's strike.
+  ("…neither X nor Y can strike in the first round of this combat."). The bot cannot write a human's strike; in that round it
+  neither asks the human for one nor waits for one.
 - **True Love's Face [OBF][PRE]** (a bot's, at a bot blocker only): the card lands in the 'as played' window of v0.6.232 — `NAME is
   playing True Love's Face — on OWNER's VAMP.` (the vampire may read `blocking minion` when the card answers the shout before the
   attempt's line) — and the blocking bot may burn 1 pool to cancel it (line below); then the cancel line as before, or nothing.
 - **Night Terrors** (a bot's, at a bot actor only): the blocking Ravnos's line below; the acting bot takes its stealth off the shared
-  counter (its `a` goes to 0) and may play stealth again.
+  counter — its `a` goes to 0, or to the −1 intercept a Forced Confessional or a Perfect Paragon booked on the blocker (that one is
+  not stealth and stays) — and may play stealth again. A human's Night Terrors at a bot actor is not read (a rider).
 - **Forced Confessional [dom]**: a stealth line in the existing shape: `VAMP plays Forced Confessional (the blocking minion gets −1
   intercept): +1 stealth.` (Perfect Paragon's shape since v0.6.228: `plays X (…): +N stealth.`).
 

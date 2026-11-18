@@ -14520,6 +14520,73 @@ async function connectWithRetry(client, tries = 30){
       { const u = mk178(1, 'pathcaine'); const h = u.fxLookup('Hunting the Quarry'); const alg = V8('a1', 'Algirdas, The Solar Prophet (G6)'); u.board = [alg]; u.hand = ['Hunting the Quarry'];
         u._actingVamp = { v: alg, n: 1, target: 2, played: new Set(), attemptAt: Date.now() };
         ok(!!h && !((h.e.modes || []).length) && u._bestStealthFor(alg, new Set(), 2) === null, '178g Hunting the Quarry: no modes, never a stealth card (got ' + JSON.stringify(h && h.e.modes) + ')'); }
+
+      // k) the egress review, finding 1: One With the Land against a HUMAN actor -- in the first round the bot asks no strike, waits for
+      //    none and takes nothing (the build asked "What is your strike?" and booked a silent human's default hand strike against itself)
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Viktor', persona: 'expert', deckName: 'tzimisce', paceMs: 0, askSecs: 0.05, phaseSecs: 0.08, log: () => {} });
+        u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.say = () => {}; u.note = () => {}; u.sentAll = []; u.send = m => u.sentAll.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
+        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Viktor', bot: true }];
+        u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
+        const v = { id: 'v1', name: 'Adrino Manauara (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 6 }; u.board = [v]; u.hand = [];
+        u._owl = { vamp: v.name, opp: 'Lisa', card: 'One With the Land', at: Date.now() };
+        await Promise.race([u._resolveCombat(v, 'Lisa'), sleep(15000)]);
+        const cr = u.rows.filter(r => r.ty === 'combat-round').map(r => r.d), r1 = cr[0] || {};
+        const r = { asked: u.chats.filter(c => c === 'What is your strike?').length, rounds: cr.length, taken: r1.taken, blood: v.blood,
+                    ns: u.sentAll.some(m => m && m.t === 'log' && /gets no strike this round \(One With the Land\)\./.test(String(m.html || '').replace(/<[^>]+>/g, ''))) };
+        ok(r.asked === 0 && r.taken === 0 && r.blood === 4 && r.ns && r.rounds === 1,
+           '178k One With the Land against a human actor: no strike asked or waited for in the first round, nothing taken, the bot\u2019s no-strike line (got ' + JSON.stringify(r) + ')'); }
+
+      // l) finding 2a: True Love's Face's counter declined -- the cancel line ends the attempt, so the blocker spends no intercept on it,
+      //    whether the window reaches it inside its shout (the hotseat bridge) or under its intercept card's beat; the card stays in hand
+      { const run = async (where) => { const a = mk178(1, 'ministry'), d = mk178(2, 'malkavian'); wire8([a, d]); d._reactWindow = () => {};
+          const cry = V8('c1', 'Crystal Lynn (G6)'), col = V8('d1', 'Colette (G6)'); a.board = [cry]; a.hand = ["True Love's Face"]; d.board = [col]; d.hand = ['Eyes of Argus'];
+          a._ask = { contested: false, target: 2, pausedBy: new Set() }; a._actingVamp = { v: cry, n: 3, target: 2, played: new Set(), kind: 'bleed' }; a.tally = { mode: 'block', a: 3, b: 0 };
+          const p = d.pending = P8({ kind: 'bleed', amount: 3, who: 'Hanna', actingVampName: cry.name }); d.tally = { mode: 'block', a: 3, b: 0 };   // stealth 3: Eyes of Argus' +2 cannot reach -- the counter is declined
+          if(where === 'shout') d.say = t => { if(t === 'Block!') a._onBlockAttempt('Viktor'); };
+          else { const p0 = d._pace.bind(d); let once = false; d._pace = async (...x) => { if(!once){ once = true; a._onBlockAttempt('Viktor'); } return p0(...x); }; }
+          await d._commitBlock(p, { why: 'test', parts: {} }); await sleep(60);
+          const D = logs8(d), A = logs8(a);
+          return { hand: d.hand.join(), bare: D.includes('Colette (G6) attempts to block.'), icLine: D.some(l => /Eyes of Argus/.test(l)), cancel: A.some(l => /cancels the block attempt by Viktor/.test(l)), decline: ev8(d, 'pay-cancel-decline').length }; };
+        const sh = await run('shout'), bt = await run('beat');
+        ok(sh.hand === 'Eyes of Argus' && sh.bare && !sh.icLine && sh.cancel && sh.decline === 1 && bt.hand === 'Eyes of Argus' && bt.bare && !bt.icLine && bt.cancel && bt.decline === 1,
+           '178l a declined True Love\u2019s Face counter: no intercept spent on the attempt it ends, inside the shout or under the card\u2019s beat (got ' + JSON.stringify({ sh, bt }) + ')'); }
+
+      // m) finding 2b: the actor's queued stealth spend never lands inside its own True Love's Face window (av._payQ); after it, it does
+      { const a = mk178(1, 'malkavian'); const adisa = V8('a1', 'Adisa'); a.board = [adisa]; a.hand = ['Lost in Crowds'];
+        const av = a._actingVamp = { v: adisa, n: 2, target: 2, played: new Set() }, ask = a._ask = { contested: true, target: 2, pausedBy: new Set() }; a.tally = { mode: 'block', a: 0, b: 1 };
+        let g = null; a._afterBeat = (k, gg) => { g = gg; };
+        const st = { idx: 0, name: 'Lost in Crowds', s: 1 };
+        a._queueStealthSpend(st, av, ask); av._payQ = true; const inWin = g ? g() : null;
+        g = null; a._queueStealthSpend(st, av, ask); av._payQ = false; const after = g ? g() : null;
+        ok(inWin === false && after === true, '178m the actor\u2019s queued stealth: not inside its own True Love\u2019s Face window, yes after it (got ' + JSON.stringify({ inWin, after }) + ')'); }
+
+      // n) finding 3: Night Terrors needs the acting minion's name -- the actor's reader matches it, so a nameless line would leave two
+      //    counters that differ
+      { const u = mk178(2, 'ravnos'); const v = V8('j1', 'Jean-François (G7)', { blood: 2 }); u.board = [v]; u.hand = ['Night Terrors'];
+        u.pending = P8({ contested: true, blockerVamp: v, actingVampName: null }); u.tally = { mode: 'block', a: 2, b: 0 };
+        u._interceptSecondLook(); const L = logs8(u);
+        ok(!L.some(l => /Night Terrors/.test(l)) && u.hand.length === 1, '178n Night Terrors: never without the acting minion\u2019s name (got ' + JSON.stringify({ L, hand: u.hand }) + ')'); }
+
+      // o) finding 6: the window of a minion's card is no master's -- no Sudden Reversal is its candidate (a bot's comes too late, a human is
+      //    told it cancels a master card), its close leaves the masters' 'too late' replies alone; the counter is its only answer
+      { const u = mk178(1, 'ministry'); const cry = V8('c1', 'Crystal Lynn (G6)'); u.board = [cry];
+        const pr = u._asPlayed("True Love's Face", { target: { owner: 'Viktor', name: 'blocking minion' }, verb: 'cancels the block', actor: cry });
+        const asp = u._asp, minion = !!(asp && asp.minion);
+        if(typeof u._onSrCancel === 'function') u._onSrCancel('Viktor', "True Love's Face"); const botCand = asp ? asp.cands.length : null;
+        u.players[2].bot = false; if(typeof u._srOnHumanFx === 'function') u._srOnHumanFx({ seat: 3, card: { name: 'Sudden Reversal' } });
+        const humCand = asp ? asp.cands.length : null, told = u.chats.some(c => /^Nora: Sudden Reversal cancels a master card/.test(c));
+        if(typeof u._onPayCancel === 'function') u._onPayCancel('Viktor', "True Love's Face"); const payCand = asp ? asp.cands.map(c => c.by).join() : null;
+        const res = await pr, last = u._aspLast || null;
+        ok(minion && botCand === 0 && humCand === 0 && told && payCand === 'Viktor' && res.cancelled === 'Viktor' && last === null,
+           '178o a minion\u2019s card\u2019s window: no Sudden Reversal candidate (a bot\u2019s, a human\u2019s told), the counter its answer, no master\u2019s too-late record (got ' + JSON.stringify({ minion, botCand, humCand, told, payCand, res, last }) + ')'); }
+
+      // p) finding 7: the post-block unlock asks the directed condition against the action it followed (a play, never the no-action
+      //    estimate): a postBlock unlock under 'Only usable during an action directed at you' refreshes the wall after a bleed only
+      { const mk = async (act) => { const u = mk178(2, 'nosferatu'); const v = V8('n1', 'Nik Sikko', { locked: true }); u.board = [v]; u.hand = ['Directed Guidance (test)'];
+          const f0 = u.fxLookup.bind(u); u.fxLookup = n => n === 'Directed Guidance (test)' ? { kind: 'lib', name: n, e: { t: ['react'], onlyDirected: true, modes: [{ at: null, when: 'postBlock', fx: { unlock: true } }] } } : f0(n);
+          await u._maybePostBlockUnlock(v, act); return v.locked ? 'locked' : 'unlocked'; };
+        const r = { bleed: await mk({ kind: 'bleed' }), hunt: await mk({ kind: 'undirected', sub: 'hunt' }), unknown: await mk({ kind: null }) };
+        ok(r.bleed === 'unlocked' && r.hunt === 'locked' && r.unknown === 'locked', '178p the post-block unlock under the directed condition: after a bleed, not a hunt or an unknown action (got ' + JSON.stringify(r) + ')'); }
     }
 
 
