@@ -3919,9 +3919,10 @@ class Bot {
     for(let k = 0; k <= 2 && n0 - k > 0; k++){ const vs = this._votedBy(st, n0 - k); if(vs.length) return vs; }
     return [];
   }
-  _tyrannyTell(c){                   // the humans whose votes the cut takes, in chat (the bots read the line)
-    (c && c.seats || []).forEach(x => { if(!x || !this._isHumanName(x.name)) return;
-      this.chat(x.name + ': Absolute Tyranny \u2014 ' + x.vamps.join(', ') + (x.vamps.length === 1 ? ' is' : ' are') + ' not on the Path of Power and the Inner Voice: ' + x.n + ' vote' + (x.n === 1 ? '' : 's') + ' off your votes ' + x.dir + '.'); });
+  _tyrannyNote(c){                   // the caller's breakdown at the verdict -- an event, so a note (the tier rule): each seat's cut and the vampires it reads
+    const ss = (c && c.seats || []).filter(x => x && x.n > 0); if(!ss.length) return null;
+    const txt = 'Absolute Tyranny: ' + ss.map(x => x.name + ' \u2212' + x.n + ' ' + x.dir + ' (' + x.vamps.join(', ') + ')').join('; ') + '.';
+    this.note(txt); return txt;
   }
   _playTyranny(v, b, rc){            // the caller's superior: the card, the line (L12.tyranny), the cut in my count from here on, the humans told
     const j = this.hand.indexOf(b.name); if(j < 0 || !rc || rc.tyr) return false;
@@ -3932,8 +3933,7 @@ class Bot {
     this.fxClone({ name: b.name, kind: 'lib' }, 'vampires not on the Path of ' + b.tyranny.notPath + ' get -1 vote', { actor: v });
     this._emitPlay(b.name, 'vote-cut', v.name);
     this._emit('vote-cut', { vamp: v.name, card: b.name, path: b.tyranny.notPath, side: 'caller', for: c.for, against: c.against, seats: c.seats.map(x => x.name + ' ' + x.dir + ' -' + x.n) });
-    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(b.name) + '</b>: vampires not on the Path of ' + esc(b.tyranny.notPath) + ' get -1 vote.' });   // L12.tyranny (bot grammar)
-    this._tyrannyTell(c);
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(b.name) + '</b>: vampires not on the Path of ' + esc(b.tyranny.notPath) + ' get -1 vote.' });   // L12.tyranny (bot grammar); the breakdown is the verdict's note (_tyrannyNote)
     this.push();
     return true;
   }
@@ -3998,7 +3998,8 @@ class Bot {
       this.send({ t: 'log', html: '<b>' + esc(tr.vamp.name) + '</b> plays <b>' + esc(tr.name) + '</b>: vampires not on the Path of ' + esc(tr.cut.notPath) + ' get -1 vote.' });   // L12.tyranny: a bot caller cuts its count
       { const c0 = this._voteCounter(m), na = Math.max(0, (c0.a | 0) - tr.cutFor), nb = Math.max(0, (c0.b | 0) - tr.mineAg);
         this.send({ t: 'tally', mode: 'vote', a: na, b: nb }); this._voteMirror('a', na); this._voteMirror('b', nb); }   // the counter as cut: what a human caller resolves from
-      this._tyrannyTell({ seats: tr.seats });
+      { const cw = this._refT ? this._refT.who : ((this.pending && this.pending.who) || (this._obs && this._obs.who) || null);   // a HUMAN caller resolves the count: told what to subtract (an instruction -- chat); a bot caller cuts its own count from the line
+        if(cw && this._isHumanName(cw)) this.chat(cw + ': Absolute Tyranny \u2014 the votes for lose ' + tr.cutFor + ' (' + tr.seats.map(x => x.vamps.join(', ')).join(', ') + ' not on the Path of Power and the Inner Voice); the counter shows it.'); }
       this._emit('vote-cut', { vamp: tr.vamp.name, card: tr.name, path: tr.cut.notPath, side: 'voter', for: tr.cutFor, against: tr.mineAg, seats: tr.seats.map(x => x.name + ' ' + x.dir + ' -' + x.n) });
     }
     this._votedThisRef = true; this._didCastRef = true;
@@ -4247,6 +4248,7 @@ class Bot {
       const passed = w5auto || t.f > t.a;
       if(passed) this._voidOustedRefParts(v, act);   // v0.6.223 (round A): a seat ousted in the referendum's window -- its part does nothing (Parity Shift: nothing left to move)
       if(!w5auto) this._writeTally({ mode: 'vote', a: Math.min(99, t.f), b: Math.min(99, t.a) });   // the AUTHORITATIVE count: bots' absolute tally writes race each other, the frozen `casts` lines do not
+      if(!rc.line && !w5auto && t.cut) this._tyrannyNote(t.cut);   // v0.6.234 (D-124): Absolute Tyranny's cut, seat by seat, before the verdict it changed
       if(!rc.line && !w5auto) this.send({ t: 'log', html: 'Vote: ' + t.f + ' for vs ' + t.a + ' against \u2014 vote ' + (passed ? 'passes' : 'fails') + '.' });   // the client's frozen verdict line (skipped when a human's Resolve already wrote it)
       this.send({ t: 'log', html: 'Referendum ' + (passed ? 'passes' : 'fails') + ' \u2014 <b>' + esc(act.name) + '</b>: ' + (passed ? esc(terms) : 'no effect') + '.' });
       if(passed && act._voidNote){ this.note(act._voidNote); act._voidNote = null; }   // v0.6.223: the part of a seat ousted in the window, after the terms as announced

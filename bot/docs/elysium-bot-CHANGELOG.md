@@ -32,6 +32,29 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.234 (18 Nov 2026)** — V5 wave 6b: Shadow Cloak and Absolute Tyranny (RULINGS D-124; Johan, 18 Nov: "Yes vi kör på det!" on
+  all five of spec-v5-wave6 §9.4). The design and the as-built record: `specs/spec-v5-wave6-2026-11-18.md` §9.
+  - *Shadow Cloak [OBL]* (curated: `fx.cloak {pierce: 'aus'}`, when `actSuccess`; Sleep Unseen rides along, [OBF] pierced only by
+    superior Auspex): at the act-again point, before Freak Drive (`_maybeCloak`), the acting vampire — ready, superior Oblivion, the
+    card not already played on this action (`_lastAct.played`) — puts it on itself when Claude's prior sees a rush it stops coming:
+    a Haven Uncovered or a Regent-class grant on it, or a vampire without Auspex that rushed one of my vampires this game and is
+    still ready (`_cloakThreat`, `_noteRushedBy` at the rush lines); else the card waits for its +1 stealth. The card sits on the
+    vampire (`host` / `attached`: every seat's board shows it, a human's cloak is read the same way); `_bestRushTargetFor` — every
+    rush route — skips a cloaked vampire its rusher cannot pierce (`_rushCandidates`, `_piercesCloak`); my unlock phase burns it
+    (`_cloakBurn`). Rows `cloak-eval`, `cloak`, `cloak-burn`.
+  - *Absolute Tyranny [POT][PRE]* (curated: `fx.voteCut {notPath}`): one vote off each voting vampire not on the Path of Power and
+    the Inner Voice, a vampire's net negative counting 0 and the Methuselah's own votes (the political card's, the Edge's) uncut. The
+    caller's count cuts every seat (`_tyrannyCut`, in `tot()`; a seat's voters are the vampires its count must include, beside the
+    Methuselah's votes: `_voterVamps`), when it plays the card (the boost step: the superior when its net cut beats the +3,
+    `_voteBoosts`) or reads a bot's line (`L12.tyranny`); the breakdown is a note before the verdict. A voter plays it as a reaction
+    when the referendum passes as it stands and a mode turns it — the +3 first (District's line), else the cut (the line and the
+    tally's `a`; a human caller told what to subtract) — behind a wake for a locked reactor (`_tyrannyReactFor`,
+    `_playTyrannyReact`). Rows `vote-react-eval`, `vote-react`, `vote-cut`, `vote-cut-in`.
+  - *Versions*: curated 213, coverage v1.1.51 (`cloak`, `voteCut`), the compiler unchanged (v1.9.11).
+  - *Tests*: section 179 (9 checks; 0/9 on v0.6.233's bytes); `test-cardfx` 361 (5 red on v0.6.233's curation: the count, the three
+    readings, the cloak as the after-success window's second class beside the act-again riders).
+  - GATES-TBD
+  - Egress: EGRESS-TBD. Graded readings: GRADED-TBD.
 - **v0.6.233 (18 Nov 2026)** — V5 wave 6a: the block side of the 11 cards with a discipline line and no mode (D-116 (3); RULINGS
   D-123; Johan, 18 Nov: "Ja vi kör på dina rekommendationer" on all five of spec-v5-wave6 §7). The design and the as-built record:
   `specs/spec-v5-wave6-2026-11-18.md` §0–§2 and §8. RULINGS made room by folding five retired stubs, then by D-101 (RULINGS 64 → 65 KB,

@@ -14685,13 +14685,14 @@ async function connectWithRetry(client, tries = 30){
         u.table[3].pub.cards = [V9('v3', 'Horst von Brühl')];
         const rc = { by: { Nora: 2 }, agBy: { Nora: 2 }, for: 0, against: 2, closed: null };
         const ok1 = IF9(u, '_playTyranny') ? u._playTyranny(v, { name: 'Absolute Tyranny', n: 1, cost: { blood: 1 }, tyranny: { notPath: 'Power and the Inner Voice' } }, rc) : false;
-        const line = logs9(u).find(l => /Absolute Tyranny:/.test(l)) || null, told = u.chats.find(c => /^Nora: Absolute Tyranny/.test(c)) || null;
+        const line = logs9(u).find(l => /Absolute Tyranny:/.test(l)) || null, chats = u.chats.length; u.notes = []; u.note = t => u.notes.push(t);
+        const told = IF9(u, '_tyrannyNote') ? u._tyrannyNote(u._tyrannyCut(rc)) : null;   // the verdict's breakdown: a note (the tier rule), never a chat
         const w = mk179(2, 'ventrue'); w._refCall = { by: {}, agBy: {}, closed: null };
         w._onLog('Hanna', '<b>Aaradhya, The Callous Tyrant</b> plays <b>Absolute Tyranny</b>: vampires not on the Path of Power and the Inner Voice get -1 vote.');
         const k = w._evClassify('Hanna', 'Aaradhya, The Callous Tyrant plays Absolute Tyranny: vampires not on the Path of Power and the Inner Voice get -1 vote.', 'log');
         ok(ok1 === true && line === 'Aaradhya, The Callous Tyrant plays Absolute Tyranny: vampires not on the Path of Power and the Inner Voice get -1 vote.' && !!rc.tyr && v.blood === 2 && u.hand.length === 0
-           && /Horst von Brühl is not on the Path of Power and the Inner Voice: 1 vote off your votes against\./.test(told || '') && !!(w._refCall.tyr && w._refCall.tyr.notPath === 'Power and the Inner Voice') && k && k.kind === 'vote-cut',
-           '179g the caller’s superior: the line, the cut, the human told; a bot caller reads the line (got ' + JSON.stringify({ ok1, line, told, read: w._refCall.tyr || null, kind: k && k.kind }) + ')'); }
+           && chats === 0 && told === 'Absolute Tyranny: Nora \u22121 against (Horst von Brühl).' && u.notes[0] === told && !!(w._refCall.tyr && w._refCall.tyr.notPath === 'Power and the Inner Voice') && k && k.kind === 'vote-cut',
+           '179g the caller’s superior: the line, the cut, the breakdown as a note; a bot caller reads the line (got ' + JSON.stringify({ ok1, line, chats, told, read: w._refCall.tyr || null, kind: k && k.kind }) + ')'); }
 
       // h) the voter's half: my direction against and the referendum passing as it stands -- the +3 first when it turns it, else the cut on
       //    the votes for (the caller's princes off the Path, its card's vote beside them); nothing when it fails already, when my direction is
@@ -14720,8 +14721,13 @@ async function connectWithRetry(client, tries = 30){
         v2._refT = { who: 'Hanna', seat: 1, card: 'Kine Resources Contested', deltas: { 2: -3 }, at: Date.now() }; v2._refVotes = { for: 5, against: 3, by: { Hanna: 5 }, forBy: { Hanna: 5 }, agBy: {} };
         const t2 = IF9(v2, '_tyrannyReactFor') ? v2._tyrannyReactFor({}) : null; if(t2) await v2._playTyrannyReact(t2, {});
         const l2 = logs9(v2).find(l => /\+3 votes against the referendum\./.test(l)) || null, b2 = (v2.sent.filter(m => m && m.t === 'tally').pop() || {}).b;
-        ok(played === true && tal && tal.a === 5 && !!(caller._refCall.tyr) && cc && cc.for === 4 && re.blood === 2 && l2 === 'Onkabetse, Arriviste plays Absolute Tyranny — +3 votes against the referendum.' && b2 === 6,
-           '179i both sides: the voter’s cut on the counter and in the bot caller’s count; the +3 as District’s line (got ' + JSON.stringify({ played, tal, read: caller._refCall.tyr || null, cc, l2, b2 }) + ')'); }
+        const v3 = mk179(2, 'pathpower'); v3.players[0].bot = false; v3.table[1].pub.cards = caller.board.map(c => Object.assign({}, c)); v3.board = [V9('o3', 'Aaradhya, The Callous Tyrant', { blood: 3 })]; v3.hand = ['Absolute Tyranny'];
+        v3.pending = { who: 'Hanna', kind: 'asked', amount: 3 }; v3.tally = { mode: 'vote', a: 9, b: 5 }; v3._refVotes = { for: 9, against: 5, by: { Hanna: 9 }, forBy: { Hanna: 9 }, agBy: {} };
+        const t3 = IF9(v3, '_tyrannyReactFor') ? v3._tyrannyReactFor({}) : null; if(t3) await v3._playTyrannyReact(t3, {});
+        const hc = v3.chats.find(c => /^Hanna: Absolute Tyranny \u2014 the votes for lose 4 \(/.test(c)) || null;
+        ok(played === true && tal && tal.a === 5 && !!(caller._refCall.tyr) && cc && cc.for === 4 && re.blood === 2 && l2 === 'Onkabetse, Arriviste plays Absolute Tyranny — +3 votes against the referendum.' && b2 === 6
+           && t3 && t3.kind === 'cut' && !!hc && !caller.chats.length,
+           '179i both sides: the voter’s cut on the counter and in the bot caller’s count; the +3 as District’s line; a human caller told what to subtract (got ' + JSON.stringify({ played, tal, read: caller._refCall.tyr || null, cc, l2, b2, t3: t3 && t3.kind, hc }) + ')'); }
     }
 
 
