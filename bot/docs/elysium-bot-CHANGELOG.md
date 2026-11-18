@@ -32,6 +32,40 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.233 (18 Nov 2026)** — V5 wave 6a: the block side of the 11 cards with a discipline line and no mode (D-116 (3); RULINGS
+  D-123; Johan, 18 Nov: "Ja vi kör på dina rekommendationer" on all five of spec-v5-wave6 §7). The design and the as-built record:
+  `specs/spec-v5-wave6-2026-11-18.md` §0–§2 and §8. RULINGS made room by folding five retired stubs, then by D-101 (RULINGS 64 → 65 KB,
+  ARCHITECTURE 15.5 → 16 KB, the standing pages 170 → 173 KB).
+  - *The directed condition* (a rules correction, no knob): "Only usable during an action directed at you (or a card you control)"
+    and its "During an action directed at you …" form were read by no one, so Eyes of Argus and The Warrens spent their intercept at
+    undirected actions — 568 of their 829 plays in v0.6.232's 240. cardfx v1.9.11 tags `onlyDirected` on the mode its line prefixes
+    or on the entry for a header (10 auto entries; not on an action card); `_dirOk` in every reaction finder (`_bestInterceptFor`,
+    `_interceptStack`, `_bestUnlockReactFor`; `_lockInterceptFor` closed without an action): at a play only a directed action passes
+    (`_pendDirected` true, unknown fails closed), an estimate counts the card. Underbridge Stray's burn is curated `directed`
+    (`_strayBurnFor`). The ledger (coverage v1.1.50) marks the sentence without the tag PARTIAL (both cards read FULL; LESSONS L-96).
+  - *The capacity*: a card's own "Requires a vampire with capacity N or more." is `req.capMin` (5 cards), read by `_entryReqOk`
+    (Sense the Savage Way's [ani] +1 had been playable by the 7 of Path of Caine's 12 vampires below 7).
+  - *The locked route* as a compiler sweep: the clean "unlocks and attempts to block" / "burns N blood to unlock" line under "Only
+    usable by a locked vampire" — Sense the Savage Way [ANI], Sentry Signal [ani]/[tha], One With the Land [PRO], Deep Ecology [pro],
+    Black Sunrise, Eluding the Arms of Morpheus; any other sentence and no mode (Dogged Pursuit, Speak with Spirits, Read the Winds,
+    The Mole). `_wakesInHand` asks the route card's discipline and blood.
+  - *One With the Land [PRO]*'s rider (`noStrikeFirstRound`) rides the route's line (`L12.noStrikeR1`); the blocker's pending carries
+    it to the verdict, both bots' `_owl` to `_resolveCombat`'s entry: in round 1 each writes the frozen no-strike line and skips its
+    maneuver; never a follow-up combat. A human actor is told in chat.
+  - *Forced Confessional [dom]*: `icpVs` who `this` — +1 stealth against the minion attempting now, booked by name (`_condBlockerName`).
+  - *True Love's Face [OBF][PRE]* (curated, `cancelBlockPay` 1): a bot's card at a bot blocker lands in D-122's 'as played' window
+    (`_payCancelWindow`, the blocker named before its attempt's line: `p.attemptVamp`); the blocking bot burns 1 pool to cancel it
+    when the block stops a bleed of 2+ or a non-hunt undirected action and still stands (`_cancelPayFor`, `L12.payCancel`); then the
+    attempt stands, else the cancel line. Not at a human blocker (a rider).
+  - *Night Terrors* (`stealthToZero`; also Veiled Sight, Draba [CHI]): the blocker's second look plays it when its intercept cannot
+    reach, at a bleed of 2+ or a non-hunt undirected action, never at a human actor (`_nightTerrorsFor`, `L12.stealthZero`); the
+    acting bot takes its raw stealth off the counter (`_onStealthZero`).
+  - *Hunting the Quarry* curated with no modes (the auto tier's +1 stealth was a misread, inert); its two lines go with the grants round.
+  - *Measured*: §1 alone, the 240 DIVERGED 224 against v0.6.232 (the first difference a block decision; VP within one SE; the
+    prediction's DIVERGED half held, its VP direction did not). The six cards fired on their 12-match tables (spec §8). GATES-TBD
+  - *Tests*: section 178 (15 checks; 1/14 on v0.6.232's bytes, the one pass a skip); 83h, 83i, 127p moved off Eyes of Argus at an
+    undirected action (127p gains the check that it is kept there); `test-cardfx` 357 (9 red on v0.6.232's compiler).
+  - Egress: EGRESS-TBD. Graded readings: GRADES-TBD.
 - **v0.6.232 (18 Nov 2026)** — V5 wave 5b: the 'as played' window, Sudden Reversal, Meditative Grove's cancel, Yawp Court, Week of
   Nightmares (RULINGS D-107 shape A, D-122; Johan, 18 Nov: "Vi kan gå på dina rekommendationer" on all five of spec-v5-wave5 §12.9;
   his note — the cancel cards are a classic meta-layer case — is a BOARD line). The 11 cards with a discipline line and no mode

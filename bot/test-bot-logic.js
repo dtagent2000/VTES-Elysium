@@ -5480,13 +5480,13 @@ async function connectWithRetry(client, tries = 30){
       ok(ap.pool === 20 && em83.includes('let-through') && !em83.includes('took-bleed'), '83g letting an undirected action through burns no pool and emits let-through, never took-bleed');
       /* 83h) end to end (offline): a grinding prey with Eyes of Argus BLOCKS a hunt */
       const e2e = mk83(2, 'tremere', 'grinder'); const seq83 = []; e2e.say = ph => seq83.push('say:' + ph); e2e.send = o => seq83.push((o && o.t) + (o && o.html ? ':' + o.html : ''));
-      e2e.board = [{ id: 'v1', name: 'Lauren', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4 }]; e2e.hand = ['Eyes of Argus']; e2e._emit = () => {};
+      e2e.board = [{ id: 'v1', name: 'Lauren', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4 }]; e2e.hand = ['Enhanced Senses']; e2e._emit = () => {};   // v0.6.233: was Eyes of Argus -- its +2 is 'Only usable during an action directed at you' (D-123), and an equip is not
       e2e._onLog('S1', '<b>Lisa Noble</b> equips <b>Bowl of Convergence</b>.');   // T2: the publisher's own 'always block' class
       await sleep(250);
-      ok(seq83.includes('say:Hold on\u2026') && seq83.includes('say:Block!') && seq83.some(x => /^log:.*Eyes of Argus/.test(x)), '83h end to end: the prey says Hold on\u2026, decides, says Block! and plays Eyes of Argus against a permanent-intercept equip (v0.6.106 never opened the window)');
+      ok(seq83.includes('say:Hold on\u2026') && seq83.includes('say:Block!') && seq83.some(x => /^log:.*Enhanced Senses/.test(x)), '83h end to end: the prey says Hold on\u2026, decides, says Block! and plays Enhanced Senses against a permanent-intercept equip (v0.6.106 never opened the window)');
       /* 83i) block-eval rides every window */
       const ev = mk83(2, 'malkavian', 'grinder'); const evs = []; ev._emit = (t, d) => { if(t === 'block-eval') evs.push(d); };
-      ev.board = [{ id: 'v1', name: 'Lauren', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4 }]; ev.hand = ['Eyes of Argus'];
+      ev.board = [{ id: 'v1', name: 'Lauren', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4 }]; ev.hand = ['Enhanced Senses'];   // v0.6.233: not Eyes of Argus (directed only, D-123)
       ev._onLog('S1', '<b>Lisa Noble</b> equips <b>Bowl of Convergence</b>.'); if(ev.pending && ev.pending.passTimer) clearTimeout(ev.pending.passTimer);
       ok(evs.length === 1 && evs[0].T === 'T2' && evs[0].role === 'prey' && evs[0].sub === 'equip' && typeof evs[0].score === 'number' && evs[0].parts && evs[0].parts.axis === 0.7, '83i block-eval carries T, role, sub, score and parts (the dossier\u2019s grading input)');
     }
@@ -8308,9 +8308,12 @@ async function connectWithRetry(client, tries = 30){
     ({ u } = mkI()); u.tally = { mode: 'block', a: 2, b: 0 }; u._aAt = Date.now() - 5000; u._obs = { who: 'Johan', at: Date.now() - 20 }; u.sent = []; const s0 = u.send; u.send = m => { u.sent.push(m); s0(m); };
     await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'bleed', actingVampName: 'Lisa' });
     ok(u.hand.includes('Eyes of Argus') && u.sent.some(m => m.t === 'tally' && m.mode === 'block' && m.a === 0), '127p v0.6.171: a STALE stealth 2 left by an earlier action is not Johan\u2019s -- no intercept card, and the counter is seeded with his true 0');
+    ({ u } = mkI()); u.tally = null; u.hand = ['Enhanced Senses'];   // v0.6.233: Eyes of Argus is 'Only usable during an action directed at you' (D-123) -- a plain intercept card here, and Eyes kept below
+    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'undirected', actingVampName: 'Lisa' });
+    ok(!u.hand.includes('Enhanced Senses'), '127p ...an undirected action carries +1 stealth: intercept is needed and played');
     ({ u } = mkI()); u.tally = null;
     await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'undirected', actingVampName: 'Lisa' });
-    ok(!u.hand.includes('Eyes of Argus'), '127p ...an undirected action carries +1 stealth: intercept is needed and played');
+    ok(u.hand.includes('Eyes of Argus'), '127p ...but never Eyes of Argus there: its +2 is for an action directed at me (v0.6.233, D-123)');
     ({ u } = mkI()); u.players[0].bot = true; u.tally = { mode: 'block', a: 0, b: 0 };
     await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
     ok(u.hand.includes('Eyes of Argus'), '127p ...and against a BOT actor too (v0.6.170, Johan: the base rules forbid stealth / intercept that is not needed)'); }
@@ -14349,8 +14352,9 @@ async function connectWithRetry(client, tries = 30){
         const txt = cards ? ((Array.isArray(cards) ? cards : Object.values(cards)).find(c => c.name === 'Eyes of Argus') || {}).card_text : null;
         if(!txt || !COV) ok(true, '178a4 the ledger check: skipped (no vtes.json or coverage tool beside the suite)');
         else { const h = COV.lookup('Eyes of Argus'), e1 = JSON.parse(JSON.stringify(h.e)); (e1.modes || []).forEach(mo => delete mo.onlyDirected);
-          const now = COV.judgeLib(h, [], txt).verdict, cut = COV.judgeLib({ name: h.name, e: e1, kind: 'lib' }, [], txt).verdict;
-          ok(cut === 'PARTIAL' && now !== 'PARTIAL', '178a4 the ledger: the sentence without onlyDirected is PARTIAL (got ' + JSON.stringify({ now, cut }) + ')'); } }
+          const ce = [(COV.lookup('Colette (G6)') || {}).e].filter(Boolean);   // a crypt that reaches the modes (Auspex)
+          const now = COV.judgeLib(h, ce, txt).verdict, cut = COV.judgeLib({ name: h.name, e: e1, kind: 'lib' }, ce, txt).verdict;
+          ok(cut === 'PARTIAL' && now === 'FULL', '178a4 the ledger: the sentence without onlyDirected is PARTIAL, with it FULL (got ' + JSON.stringify({ now, cut }) + ')'); } }
 
       // b) the locked route's discipline cards (cardfx v1.9.11's sweep): Sense the Savage Way [ANI] for a capacity-7 superior Animalism only
       //    (Berenguela is 6, Lawbringer basic); Sentry Signal [ani] / [tha] with its 1 blood; Deep Ecology [pro] burns 1 blood (none with no

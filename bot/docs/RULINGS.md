@@ -195,6 +195,7 @@ approved, the line says which part is whose ("Johan: … · built (Claude): …"
 - **D-120** (2026-11-17, Johan: kör on "5a, sedan 5b" · built v0.6.230) — V5 wave 5a: the fifteen masters of the spec's §3; each bot bills its own pool losses (Tension, Anarch Revolt, Privileged Position's prey, Frontal Assault) with R-34's check; a steal and The Coven move the card by `give`; the new bot lines go to main's §12 (handoff).
 - **D-121** (2026-11-17, Johan on O-44: "Yes det låter bra" · built v0.6.231, spec-v5-wave5 §11) — `cardWorth` prices only Jack's defence and the burns of Jack; its play and discard stay with the 14 July rule. Default 1: no bench lost (+0.00 to −0.03 VP); 0 = D-114 / D-115's price.
 - **D-122** (2026-11-18, Johan: "Vi kan gå på dina rekommendationer", kör on spec-v5-wave5 §12 · built (Claude): v0.6.232) — V5 wave 5b: a bot's master lands first and waits the beat it waited anyway, then is paid; Sudden Reversal decides by Claude's priors (§12.10), live with no knob; Meditative Grove cancels a Deep Song [ANI] rush between bots too ([LSJ 20051113]: a frenzy card that targets or affects a minion is played on it); Yawp Court against a human and a human's nightmare counter are riders. His note: Sudden Reversal and the other cancel cards are a classic case for the meta layer (BOARD).
+- **D-123** (2026-11-18, Johan: "Ja vi kör på dina rekommendationer", kör on spec-v5-wave6 §7 · built (Claude): v0.6.233) — V5 wave 6a. 'During an action directed at you (or a card you control)' is read: cardfx `onlyDirected`, the finders ask `_pendDirected` (unknown fails closed) — a rules correction, so no knob (Eyes of Argus and The Warrens had spent their intercept at undirected actions 568 times in the 240). The locked route takes the discipline cards (Sense the Savage Way, Sentry Signal, One With the Land and its first round, Deep Ecology); Forced Confessional [dom], True Love's Face's counter and Night Terrors on Claude's priors (spec §7), live with no knob; their human halves are riders. 6b is Shadow Cloak and Absolute Tyranny; Hunting the Quarry and Night Terrors' strike go with the grants round, Eagle's Sight to the meta layer.
 
 ### Process & ways of working
 - **D-85** (2026-09-09, Johan) — Sister projects: the bot owns the bot, arena, cardfx and its docs; main consumes bot RELEASES; the bot never edits client / server files.
@@ -221,14 +222,11 @@ A retired line keeps its number as a one-line stub so references stay valid.
 
 ### Stealth, intercept & block
 - **O-5** (2026-09-18) — Referendums are blocked whenever the prey / predator HOLDS intercept (~50 % on a stake-3 undirected action): right? Should the caller weigh the defenders' intercept history into `pass`? [CL 18, 44c].
-- **O-6** — retired 20 Oct (answered by D-22; `strikeAgg` on the strike lines).
 - **O-7** (2026-10-17) — The probe's "out-number" counting the prey's expected WAKES as blockers (deck read + hypergeometric) is Johan's description and on his product line (BOARD); the design is to be proposed and needs his "kör" [CL 65f, spec-next §2].
 - **O-8** (2026-10-19) — Two keep-rules on one tie: Spying Mission (last) vs Swallowed by the Night (kept for combat); Claude lets the combat card be kept [spec-cards §5].
 
 ### Combat
-- **O-9** — retired 20 Oct: answered 10 Oct (D-29; D-18's Majesty half is superseded by it).
 - **O-10** (2026-09-21) — Nosferatu's Fame → rush → torpor → rescue chain has never run; the rush is not priced in pool [CL 60d, 61, 31c]. (gap, not a question — BOARD)
-- **O-11** — retired 20 Oct (D-30; Kevlar: D-52, BOARD).
 - **O-12** (2026-10-17) — A steal pair between bots disagrees when the victim's Majesty ends the combat (the stealer books 2, the victim nothing) — older, unfixed [journal 17 Oct]. (gap, not a question — BOARD)
 
 ### Politics & referendums
@@ -244,13 +242,11 @@ A retired line keeps its number as a one-line stub so references stay valid.
 
 ### Masters & cards
 - **O-21** (2026-09-18) — A FREE block bar (Beast Meld-class) and `chosen` (Seduction-class) have tags but no consumer [CL 24c, 24l]; the crypt text part is D-108 (the ledger reads and classes it, the crypt waves curate it). (gap, not a question — BOARD)
-- **O-22** — retired 29 Oct (answered by D-98).
 - **O-23** (2026-10-16) — Wasserschloss Anif's burn-it action and Haven Uncovered's host burning the card are not built; Ventrue HQ is locked only in own referendums [spec-r4 §3]. (gap, not a question — BOARD)
 - **O-24** (2026-10-19) — Both Pentex spellings in one game are two cards to `_uniqueInPlay` (one row in `CARDS.md`, by KRCG id) [spec-cards §5].
 
 ### Timing, holds, tempo & chat
 - **O-25** (2026-09-25) — Whether the bot ASKS in chat or only LOGS number mismatches with a human (the event-log / shadow-model design) [mem 25 Sep].
-- **O-26** — retired 20 Oct (obsolete: the Reduce row, client v2.6.159, D-7).
 - **O-27** (2026-10-17) — The probe default and the chat beat have not been seen by a human at a table; main's second idea (delay the panel) is the reserve [journal 17 Oct].
 - **O-36** (2026-10-17) — Between bots a contested block's verdict waits for the actor's clock (~3 s at the arena's askSecs; by design in R4, nobody declares it sooner): keep, or shorten? [context 17 Oct, `ana-windows.py`'s "contest at the clock" rows].
 - **O-28** (2026-10-20) — The clean-up's open decisions (spec-cleanup §8): Q2 the journal and Q3 the READ-ME-FIRSTs (C1 froze both in `history/` and the ritual writes neither, as §5.5 lays out; Q2 (b) would add a short Swedish decision log), Q6 history comments (recommended (b)), Q7 paste the project instruction after the merge; Q5 (CI) is D-109. Q4 is asked of main (the docs-diet handoff) [spec-cleanup §8].
@@ -269,3 +265,4 @@ A retired line keeps its number as a one-line stub so references stay valid.
 - **O-37** (2026-11-10) — The knowledge-layer rule wants a rebuilt profile first reproduced byte for byte by the old script; for the TWD profile that cannot be done, as its TWDA input (most likely the 28 Sep upload) is not on hand. In its place (PR #58): the old script with the data repo's 14 Oct file comes within 2 decks (4,674 vs 4,672, with `dea17e9`'s cardfx and the old v3 `vtes.json`), and on the 4,465 decks both TWDA files agree on, the old and new tools give identical profiles; the archetypes reproduce byte for byte. Johan: does that stand in?
 - **O-38** (2026-11-10) — A crypt whose top two clans tie at half (6/6: 60 decks of the 8 Nov v5 TWDA) counts for the clan its card list names first, in both TWD tools, so the clan prior follows the archive's card order (40 decks flip between the v4 list and the v5 dict; shuffling the cards inside each deck moves 25 of 38 clan entries, PR #58's egress). Claude's proposal for the rebuild: count such a deck for both clans, in the profile and in the archetypes' clan counts.
 - **O-39, O-40, O-41, O-42, O-43, O-44** — retired 13–17 Nov, answered by D-114, D-115, D-119, D-117, D-117 and D-121 (O-43, Johan: "Ja men då kan vi väl köra på det", as built in v0.6.229; his note for later is in BOARD).
+- **O-6, O-9, O-11, O-22, O-26** — retired 20–29 Oct: answered by D-22 (`strikeAgg`), D-29, D-30 (Kevlar: D-52), D-98; O-26 obsolete (D-7).

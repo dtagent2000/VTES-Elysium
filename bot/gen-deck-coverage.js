@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.49 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.50 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -75,7 +75,7 @@ const botSrc = fs.readFileSync(require.resolve('./elysium-bot.js'), 'utf8');
 const REF_CALLER = /\b_refDeltas\s*\(/.test(botSrc) && /\b_callReferendum\s*\(/.test(botSrc);   // v1.1.31: the two names the politics leg's caller is specified to carry
 const NON_FX = new Set(['json', 'counts', 'normIdx', 'lib', 'crypt', 'alias']);   // loader internals, not fx keys
 const scanned = new Set();
-for (const m of botSrc.matchAll(/\bfx\.([a-zA-Z]+)\b/g)) if (!NON_FX.has(m[1])) scanned.add(m[1]);
+for (const m of botSrc.matchAll(/\bfx\.([a-zA-Z]+)\b/g)) if (!NON_FX.has(m[1])) scanned.add(m[1]);   // a key with a digit is invisible here (v1.1.50: stealthTo0 and noStrikeR1 were renamed stealthToZero and noStrikeFirstRound)
 
 /* Classification of what a scanned read MEANS (source-derived, bot v0.6.11):
    'play'    — makes an OWN card actively playable (action/modifier/reaction/combat pick)

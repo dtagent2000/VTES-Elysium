@@ -14,6 +14,7 @@
 - L-11 **Keep the rejected alternative as a document, not a code path** (16 Sep, the helper gate).
 - L-12 **Ask what the bot CANNOT do, not only which cards are inert** (18 Sep: a rule about a card's cost usually needs an action the bot lacks).
 - L-93 **A card that gets its consumer leaves the rules that held it** (18 Nov, 5b): Sudden Reversal got `_srFor`, but v0.6.215's dead-card rule (an out-of-turn master with no consumer is dead) still named only Archon Investigation's key, so the discard phase cycled it at once: the suite was green, the lasombra smoke showed no cancel. When a held card plays, grep every rule that names it or its class as held, dead or skipped (the finder, `_deadHandIndex`, the coverage verdict) and watch it fire in a sim.
+- L-96 **A ledger's FULL is about modes, not conditions** (18 Nov, 6a): Eyes of Argus and The Warrens read FULL, every mode consumed, while their printed 'Only usable during an action directed at you' was read nowhere: 568 of their 829 intercept plays in the 240 were at undirected actions. A condition sentence is a class: tag it in the compiler, ask it in every finder, and give the ledger the class so a card with the sentence and no tag is PARTIAL.
 
 ## Tests that lie
 - L-13 **A hook called by a unit test proves the hook, not its call site** (16 Oct, twice in one release: Arcane Library's lock, the probe reservation). Test a phase effect through the phase.
