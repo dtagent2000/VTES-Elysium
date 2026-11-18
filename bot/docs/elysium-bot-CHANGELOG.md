@@ -57,8 +57,8 @@
   - *True Love's Face [OBF][PRE]* (curated, `cancelBlockPay` 1): a bot's card at a bot blocker lands in D-122's 'as played' window
     (`_payCancelWindow`, the blocker named before its attempt's line: `p.attemptVamp`); the blocking bot burns 1 pool to cancel it
     when the block stops a bleed of 2+ or a non-hunt undirected action and still stands (`_cancelPayFor`, `L12.payCancel`); then the
-    attempt stands, else the cancel line. A declined counter keeps the blocker's intercept off the attempt it ends (inside the shout
-    or under the card's beat) and the actor's stealth out of its own window; the window is a minion card's, no master's (no Sudden
+    attempt stands, else the cancel line. A declined counter keeps the blocker's cards — the route's, the wake's, the intercept —
+    off the attempt it ends (inside the shout or under a card's beat) and the actor's stealth out of its own window; the window is a minion card's, no master's (no Sudden
     Reversal candidate; a human's is told). Not at a human blocker (a rider).
   - *Night Terrors* (`stealthToZero`; also Veiled Sight, Draba [CHI]): the blocker's second look plays it when its intercept cannot
     reach, at a bleed of 2+ or a non-hunt undirected action, never at a human actor nor without the acting minion's name

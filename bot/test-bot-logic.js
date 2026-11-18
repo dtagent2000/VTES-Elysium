@@ -14538,18 +14538,19 @@ async function connectWithRetry(client, tries = 30){
 
       // l) finding 2a: True Love's Face's counter declined -- the cancel line ends the attempt, so the blocker spends no intercept on it,
       //    whether the window reaches it inside its shout (the hotseat bridge) or under its intercept card's beat; the card stays in hand
-      { const run = async (where) => { const a = mk178(1, 'ministry'), d = mk178(2, 'malkavian'); wire8([a, d]); d._reactWindow = () => {};
-          const cry = V8('c1', 'Crystal Lynn (G6)'), col = V8('d1', 'Colette (G6)'); a.board = [cry]; a.hand = ["True Love's Face"]; d.board = [col]; d.hand = ['Eyes of Argus'];
+      { const run = async (where, wake) => { const a = mk178(1, 'ministry'), d = mk178(2, 'malkavian'); wire8([a, d]); d._reactWindow = () => {};
+          const cry = V8('c1', 'Crystal Lynn (G6)'), col = V8('d1', 'Colette (G6)', { locked: !!wake }); a.board = [cry]; a.hand = ["True Love's Face"]; d.board = [col]; d.hand = wake ? ['On the Qui Vive', 'Eyes of Argus'] : ['Eyes of Argus'];
           a._ask = { contested: false, target: 2, pausedBy: new Set() }; a._actingVamp = { v: cry, n: 3, target: 2, played: new Set(), kind: 'bleed' }; a.tally = { mode: 'block', a: 3, b: 0 };
           const p = d.pending = P8({ kind: 'bleed', amount: 3, who: 'Hanna', actingVampName: cry.name }); d.tally = { mode: 'block', a: 3, b: 0 };   // stealth 3: Eyes of Argus' +2 cannot reach -- the counter is declined
           if(where === 'shout') d.say = t => { if(t === 'Block!') a._onBlockAttempt('Viktor'); };
           else { const p0 = d._pace.bind(d); let once = false; d._pace = async (...x) => { if(!once){ once = true; a._onBlockAttempt('Viktor'); } return p0(...x); }; }
           await d._commitBlock(p, { why: 'test', parts: {} }); await sleep(60);
           const D = logs8(d), A = logs8(a);
-          return { hand: d.hand.join(), bare: D.includes('Colette (G6) attempts to block.'), icLine: D.some(l => /Eyes of Argus/.test(l)), cancel: A.some(l => /cancels the block attempt by Viktor/.test(l)), decline: ev8(d, 'pay-cancel-decline').length }; };
-        const sh = await run('shout'), bt = await run('beat');
-        ok(sh.hand === 'Eyes of Argus' && sh.bare && !sh.icLine && sh.cancel && sh.decline === 1 && bt.hand === 'Eyes of Argus' && bt.bare && !bt.icLine && bt.cancel && bt.decline === 1,
-           '178l a declined True Love\u2019s Face counter: no intercept spent on the attempt it ends, inside the shout or under the card\u2019s beat (got ' + JSON.stringify({ sh, bt }) + ')'); }
+          return { hand: d.hand.join(), bare: D.includes('Colette (G6) attempts to block.'), icLine: D.some(l => /Eyes of Argus/.test(l)), wakeLine: D.some(l => /On the Qui Vive/.test(l)), cancel: A.some(l => /cancels the block attempt by Viktor/.test(l)), decline: ev8(d, 'pay-cancel-decline').length }; };
+        const sh = await run('shout'), bt = await run('beat'), wk = await run('shout', true);
+        ok(sh.hand === 'Eyes of Argus' && sh.bare && !sh.icLine && sh.cancel && sh.decline === 1 && bt.hand === 'Eyes of Argus' && bt.bare && !bt.icLine && bt.cancel && bt.decline === 1
+           && wk.hand === 'On the Qui Vive,Eyes of Argus' && !wk.wakeLine && !wk.bare && !wk.icLine && wk.cancel && wk.decline === 1,
+           '178l a declined True Love\u2019s Face counter: no card spent on the attempt it ends -- no intercept inside the shout or under its beat, no wake for a locked blocker (got ' + JSON.stringify({ sh, bt, wk }) + ')'); }
 
       // m) finding 2b: the actor's queued stealth spend never lands inside its own True Love's Face window (av._payQ); after it, it does
       { const a = mk178(1, 'malkavian'); const adisa = V8('a1', 'Adisa'); a.board = [adisa]; a.hand = ['Lost in Crowds'];

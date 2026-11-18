@@ -8175,11 +8175,11 @@ class Bot {
     this.say('Block!');              // v0.6.103 (#4): a blocker exists, or a route to one does -- never a phantom Block!
     p.routeVamp = blocker ? null : ((plan && plan.vamp) || null); p.attempted.add((blocker || plan.vamp).id);   // v0.6.222 (the egress review): the route's vampire, for the verdict alone (_verdictAsTarget), and attempted from Block! on; blockerVamp waits for the route (line below) -- naming it here opened the second looks inside the beat: two intercept cards for one need. The second review: a success verdict that lands inside the route's beat (the wake, the unlock card) finds its blocker: the Terrifying Visage burn and the combat hand-off
     if(!blocker){
-      if(plan.kind === 'unlockReact'){ if(!(await this._playUnlockReact(plan.vamp, plan.un, () => this.pending === p && p.contested))) return; blocker = plan.vamp; }   // v0.6.222 (the egress review): the verdict came under the beat -- the route ends, the card stays in hand
+      if(plan.kind === 'unlockReact'){ if(!(await this._playUnlockReact(plan.vamp, plan.un, () => this.pending === p && p.contested && !p._cancelComing))) return; blocker = plan.vamp; }   // v0.6.233: nor when I declined True Love's Face's counter (its cancel line ends this attempt: the route card stays in hand)   // v0.6.222 (the egress review): the verdict came under the beat -- the route ends, the card stays in hand
       else if(plan.kind === 'wake'){
         const wk = plan.wk, wkCost = plan.wkCost, sleeper = plan.vamp;
         await this._pace();                              // v0.4.5: a beat between "Block!" and the wake reveal, instead of both firing in the same instant
-        if(this.pending !== p || !p.contested) return;   // v0.6.222 (the egress review): resolved under the beat (a verdict, a cancel) -- no wake card, no attempt line, no block tally over the combat that began
+        if(this.pending !== p || !p.contested || p._cancelComing) return;   // v0.6.222 (the egress review): resolved under the beat (a verdict, a cancel) -- no wake card, no attempt line, no block tally over the combat that began. v0.6.233: or a declined True Love's Face counter, whose cancel line ends this attempt
         this.hand.splice(wk.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
         this._toAsh(wk.name);   // v0.6.12 ash sweep
         if(wkCost) sleeper.blood = Math.max(0, (sleeper.blood | 0) - wkCost);
@@ -8188,7 +8188,7 @@ class Bot {
         this.send({ t: 'log', html: '<b>' + esc(sleeper.name) + '</b> plays <b>' + esc(wk.name) + '</b>: may block as though unlocked.' });   // steg 6 (16 July): 'untapped' -> 'unlocked', the rulebook's own rename (tap/untap died with the Deckmaster era)
         blocker = sleeper;
       }
-      else if(plan.kind === 'stray'){ if(this._strayUnlockBurn(plan.vamp)) blocker = plan.vamp; }
+      else if(plan.kind === 'stray'){ if(p._cancelComing) return; if(this._strayUnlockBurn(plan.vamp)) blocker = plan.vamp; }   // v0.6.233: no ally burned for an attempt a declined True Love's Face counter ends
       if(!blocker){                  // belt: the route failed at play time (a shift under the await) -- withdraw honestly rather than attempt with nobody
         this.o.log('block: the locked-blocker route failed at play time \u2014 declining');
         p.contested = false; p.declined = true; p.blockerVamp = null; p.routeVamp = null; this.say('Pass');
