@@ -11,14 +11,21 @@ If your embed test compares the whole page, re-embed it.
 
 ## 2. What changed (no protocol change; `log`, `chat`, `tally` as before)
 - **Shadow Cloak [OBL]**: after a bot vampire's successful action the bot may put the card on it — a card with `host` / `attached`
-  on its board, as any card on a vampire — and say so for the humans: `VAMP plays Shadow Cloak on itself — minions without Auspex
-  cannot perform actions directed at it until NAME's next unlock phase.` In its unlock phase it burns the card: `NAME burns Shadow
-  Cloak from VAMP (unlock phase).` The bots never rush a cloaked vampire — any seat's, a human's included, read from that seat's
-  board — with a vampire that lacks Auspex. A human's rush at a cloaked bot vampire is not refused (a rider).
+  on its board, as any card on a vampire, with `sup` when played at superior (the bot's pub cards now carry `sup` as your client's
+  do) — and say so for the humans: `VAMP puts Shadow Cloak on itself — minions without Auspex cannot perform actions directed at it
+  until NAME's next unlock phase.` (a 'puts' line: a 'plays' line sent after the action would read as a new action). In its
+  unlock phase it burns the card: `NAME burns Shadow Cloak from VAMP (unlock phase).` The bots never rush a cloaked vampire, nor
+  rescue one from torpor — any seat's, a human's included, read from that seat's board — with a vampire that lacks Auspex. A
+  human's rush at a cloaked bot vampire is not refused (a rider).
 - **Absolute Tyranny [POT][PRE]**: in a bot-called referendum the bot caller cuts one vote off each voting vampire not on the Path
-  of Power and the Inner Voice when it plays the card or reads a bot's line; a human whose votes it cuts is told in chat. A bot
-  voter may play the card as a reaction: its +3 against (District's existing line and the tally's `b`), or the cut (the line below,
-  and the vote tally's `a` lowered by it — what a human caller resolves from).
+  of Power and the Inner Voice when it plays the card or reads a bot's line, and notes the cut seat by seat before its verdict (a
+  note, the log tier). A bot voter may play the card as a reaction: its +3 against (District's existing line and the tally's `b`),
+  or the cut (the line below). To a bot caller the voter sends only the line (the caller cuts its own count); to a HUMAN caller it
+  also lowers the vote tally's `a` and `b` by the cut (what a human caller resolves from) and says in chat what to subtract.
+- **The polling order**: a bot voter's vote card (Protected District, Absolute Tyranny) now comes BEFORE its title votes (`NAME
+  casts N votes against.`). A bot caller closes its poll once it has heard every seat, so a card after the casts line was lost
+  (v0.6.233: most of District's plays at a bot caller). A LIVE test of yours that watches a bot voter's District line may now see
+  it before that bot's casts line; the lines themselves are unchanged.
 
 ## 3. For §12 (your call; a machine-read line, `L12` in the bot)
 - `VAMP plays CARD: vampires not on the Path of PATH get -1 vote.` (`tyranny`) — a bot caller cuts its count.

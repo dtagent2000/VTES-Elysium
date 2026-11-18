@@ -115,6 +115,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The act-again context reads `mo.fx.referendum`** (`_actAgainCtx`'s "clogged" test), which no cardfx entry carries — political
   cards carry `e.ref` — so a political action in hand never counts as another use for the vampire (the coverage scan).
   *Done when* the test reads the political type and a section covers it.
+- **The act-again point after a failed referendum**: an unblocked political action succeeded whatever its referendum did, but a
+  failed one writes no `_lastAct`, so neither Freak Drive nor Shadow Cloak follows it (v0.6.234). *Done when* it does, a section
+  through `_maybeActAgain`. Docs: RULINGS R-44.
 - **The influence floor at `poolFloor` 0**: the influence phase leaves `poolFloor` (6 for every persona; 1 with no ready minion);
   a knob of 0, which only test fixtures set, lets it spend the last pool (D-97's inventory). *Done when* the floor is at
   least 1 and the fixtures that relied on 0 are read (L-16).

@@ -3702,18 +3702,21 @@ class Bot {
     if(this._callingReferendum) return;   // v0.6.66 (the review's seam): the tally carries no WHO -- the caller sets this flag or District votes against ITSELF (its title votes are its own announce)
     /* v0.6.234 (the egress review, finding 1; the graded readings, RED 1): my vote CARD goes before my title votes. A bot caller closes
        its poll once it has heard every seat, and my casts line is how it hears me: a card played after it was lost (Protected District
-       in v0.6.233's 240: 83 plays, the referendum passed anyway in 64). The title votes follow every exit (v0.6.111's reason). */
-    let reacted = false;
+       in v0.6.233's 240: 67 of its 83 plays came after the seat's title votes). The title votes follow every exit (v0.6.111's reason). */
+    /* Synchronous unless a wake's beat comes first: v0.6.233 cast in the same tick as the open edge (the hotseat bridge and the sim
+       deliver inside the send; the suite's 58b, 86d and 86g call this unawaited), so the card and the cast stay in that tick. */
+    let reacted = false, waited = false;
     if(!this._votedThisRef){
       const tr = this._tyrannyReactFor(m, this._titleCastPreview());   // v0.6.234 (V5 wave 6b, D-124): Absolute Tyranny -- only when the referendum passes as it stands and a mode turns it
-      if(tr) reacted = await this._playTyrannyReact(tr, m);
-      if(!reacted && !this.out && this.tally && this.tally.mode === 'vote') reacted = await this._districtReact(m);
+      if(tr){ let r = this._playTyrannyReact(tr, m); if(r && typeof r.then === 'function'){ waited = true; r = await r; } reacted = r; }
+      if(!reacted && !this.out && !this._pollsClosed()){ let r = this._districtReact(m); if(r && typeof r.then === 'function'){ waited = true; r = await r; } reacted = r; }
     }
-    if(this.out || !(this.tally && this.tally.mode === 'vote')) return;   // the polls closed under a beat
+    if(this.out || (waited && this._pollsClosed())) return;   // the polls closed under a wake's beat
     this._castTitleVotes(m);         // v0.6.111 (R3, #10): my own title votes -- after my card now, never swallowed by its exits
     if(!reacted && !this._votedThisRef) this._sayAbstain();   // (it says nothing for a seat that just cast, nor after my card on a second open edge: v0.6.233's early return)
   }
-  async _districtReact(m){           // P0: a react-type votesBonus card (Protected District) against the referendum -- the v0.6.67 wake combo; true when played
+  _pollsClosed(){ return !!(this.tally && this.tally.mode !== 'vote'); }   // v0.6.234: a poll I saw open has closed (no tally seen: open -- a fixture's call)
+  _districtReact(m){                 // P0: a react-type votesBonus card (Protected District) against the referendum -- the v0.6.67 wake combo; true when played. v0.6.234: synchronous, a promise only behind a wake's beat
     if(this._refT && this._refVoteDir(this._refT.deltas).dir !== 'against') return false;   // v0.6.122: District's votes are AGAINST votes -- never spent on a referendum I want or do not care about
     const vr = this._bestVotesReactFor(); if(!vr) return false;
     const needsWakeV = !!vr.vamp.locked;                 // v0.6.67 (the combo): re-derived, the bounce precedent
@@ -3725,9 +3728,11 @@ class Bot {
       this.fxClone({ name: wkV.name, kind: 'lib' }, 'may react as though unlocked', { actor: vr.vamp });
       this.send({ t: 'log', html: '<b>' + esc(vr.vamp.name) + '</b> plays <b>' + esc(wkV.name) + '</b>: may react as though unlocked.' });
       this._emitPlay(wkV.name, 'wake', vr.vamp.name);
-      await this._pace();
-      if(this.out || !(this.tally && this.tally.mode === 'vote')) return true;   // the polls closed under the beat: the wake is spent
+      return this._pace().then(() => (this.out || this._pollsClosed()) ? true : this._districtPlay(vr, m));   // the polls closed under the beat: the wake is spent
     }
+    return this._districtPlay(vr, m);
+  }
+  _districtPlay(vr, m){              // the card itself (after any wake): the line, +N on the shared against-counter, the bubble
     const j = this.hand.indexOf(vr.name);
     if(j < 0) return false;
     this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1;
@@ -4004,16 +4009,18 @@ class Bot {
     this._emit('vote-react-eval', Object.assign(row, { play: !!best, mode: best ? best.kind : null, wake: !!(best && best.wake), why: best ? (best.kind === 'votes' ? '+' + best.n + ' against turns it' : 'the cut of ' + best.cutFor + ' on the votes for turns it') + (best.wake ? ' (behind ' + best.wake.name + ')' : '') : row.reactor ? 'no mode turns it' : 'no vampire of mine can play it (locked, no wake)' }));
     return best;
   }
-  async _playTyrannyReact(tr, m){    // the voter plays it: the +3 against as District does, or the cut (L12.tyranny; the counter as cut for a human caller -- a bot caller cuts its own count from the line)
+  _playTyrannyReact(tr, m){          // the voter plays it: the +3 against as District does, or the cut (L12.tyranny; the counter as cut for a human caller -- a bot caller cuts its own count from the line). Synchronous, a promise only behind its wake's beat (as _districtReact)
     if(tr.wake){ const wj = this.hand.indexOf(tr.wake.name); if(wj < 0) return false;
       this.hand.splice(wj, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(tr.wake.name);
       if(tr.wake.cost && tr.wake.cost.blood) tr.vamp.blood = Math.max(0, (tr.vamp.blood | 0) - tr.wake.cost.blood);
       this.fxClone({ name: tr.wake.name, kind: 'lib' }, 'may react as though unlocked', { actor: tr.vamp });
       this.send({ t: 'log', html: '<b>' + esc(tr.vamp.name) + '</b> plays <b>' + esc(tr.wake.name) + '</b>: may react as though unlocked.' });
       this._emitPlay(tr.wake.name, 'wake', tr.vamp.name);
-      await this._pace();
-      if(this.out || !(this.tally && this.tally.mode === 'vote')) return true;   // the polls closed under the beat: the wake is spent, the card stays
+      return this._pace().then(() => (this.out || this._pollsClosed()) ? true : this._tyrannyReactPlay(tr, m));   // the polls closed under the beat: the wake is spent, the card stays
     }
+    return this._tyrannyReactPlay(tr, m);
+  }
+  _tyrannyReactPlay(tr, m){          // the card itself (after any wake)
     const j = this.hand.indexOf(tr.name); if(j < 0) return false;
     this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(tr.name);
     if(tr.cost) tr.vamp.blood = Math.max(0, (tr.vamp.blood | 0) - tr.cost);
