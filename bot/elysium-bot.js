@@ -3711,7 +3711,7 @@ class Bot {
     }
     if(this.out || !(this.tally && this.tally.mode === 'vote')) return;   // the polls closed under a beat
     this._castTitleVotes(m);         // v0.6.111 (R3, #10): my own title votes -- after my card now, never swallowed by its exits
-    if(!reacted) this._sayAbstain();   // (it says nothing for a seat that just cast)
+    if(!reacted && !this._votedThisRef) this._sayAbstain();   // (it says nothing for a seat that just cast, nor after my card on a second open edge: v0.6.233's early return)
   }
   async _districtReact(m){           // P0: a react-type votesBonus card (Protected District) against the referendum -- the v0.6.67 wake combo; true when played
     if(this._refT && this._refVoteDir(this._refT.deltas).dir !== 'against') return false;   // v0.6.122: District's votes are AGAINST votes -- never spent on a referendum I want or do not care about
@@ -4269,7 +4269,7 @@ class Bot {
             this.send({ t: 'log', html: '<b>' + esc(b.kind === 'mod' ? v.name : this.o.name) + '</b> ' + (b.kind === 'mod' ? 'plays' : 'locks') + ' <b>' + esc(b.name) + '</b> \u2014 +' + b.n + ' votes for the referendum.' });
             got += b.n; }
           const add = got - cutN; mine += add; this.push();
-          if(add > 0){ this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> casts <b>' + add + '</b> vote' + (add === 1 ? '' : 's') + ' <b>for</b>.' });
+          if(add > 0 || !cutN){ this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> casts <b>' + add + '</b> vote' + (add === 1 ? '' : 's') + ' <b>for</b>.' });   // (no casts line when the cut was the whole boost; else as v0.6.233)
             this.chat('I add ' + add + ' votes for.'); }
           this._writeTally({ mode: 'vote', a: mine + rc.for });   // uncut while the poll is open: tot() takes the counter's echo beside the casts, so a cut value written here would be cut again (the egress review, finding 2); the verdict's write is the cut one
           if(!rc.line){ rc.closed = null; await this._refPoll(rc); }               // the table may answer the boost
@@ -4811,7 +4811,7 @@ class Bot {
     const p = (this.players || []).find(q => q && q.seat === seat);
     const cs = (tb && tb.pub && tb.pub.cards) || [];
     return cs.filter(c => c && c.kind === 'crypt' && c.zone === 'ready')
-      .map(c => ({ name: c.name, owner: (p && p.name) || this.seatName(seat), seat, blood: (c.blood | 0), cloak: this._cloakOn(c, cs) }));   // v0.6.234 (D-124): the cloak on it (Shadow Cloak), from that seat's board
+      .map(c => ({ name: c.name, owner: (p && p.name) || this.seatName(seat), seat, blood: (c.blood | 0), cloak: this._cloakOn(c, cs) || undefined }));   // v0.6.234 (D-124): the cloak on it (Shadow Cloak), from that seat's board -- absent when none (a decision row carries the target: no new null field in every rush row)
   }
   _rushScore(vamp, c){               // v1.1: value x feasibility - chump + Fame bonus (the frozen baseline, rush-theory section 3)
     const h = this.fxLookup(c.name); const e = (h && h.e) || {};
