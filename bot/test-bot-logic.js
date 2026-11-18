@@ -14186,21 +14186,26 @@ async function connectWithRetry(client, tries = 30){
         const off = read(); w.board.push(M7('w1', WON, { counters: ctr(10) })); const mine = read(); w.board.pop(); w.table[2].pub.cards = [M7('w2', WON, { counters: ctr(10) })]; const theirs = read();
         const d = (x, y) => x.split(',').map((v, i) => +y.split(',')[i] - +v).join();
         ok(d(off, mine) === '1,1,0,0,1' && d(off, theirs) === '1,1,0,0,1', '177f the readers: +1 bleed, +1 strength and an opposing Ravnos\' strike +1, any controller\'s card; a non-Ravnos nothing (got ' + JSON.stringify({ off, mine, theirs }) + ')'); }
-      { const w = mk177(1); const z = V7('z1', 'Zafira', { blood: 0, locked: true }), roy = V7('r1', 'Roy', { blood: 4, locked: true }); w.board = [z, roy, M7('w1', WON, { counters: ctr(10) })];
-        w.table = { 2: pub7(20, [V7('p1', 'Adisa')]), 3: pub7(20, []) }; w._askBlock = async () => ({ what: 'pass' });
-        const terr = await turn7(w), L = logs7(w);
-        const r = { terr, z: z.blood, roy: roy.blood, line: L.find(l => /^Zafira hunts \(Week of Nightmares\): steals 1 blood from Roy\.$/.test(l)) || null, normal: L.some(l => /^(Zafira|Roy) hunts\.$/.test(l)), ev: ev7(w, 'won-hunt').length };
-        ok(!terr && r.z === 1 && r.roy === 3 && !!r.line && !r.normal && r.ev === 1, '177f2 through the minion phase: my Ravnos at 0 blood steals 1 from my Ravnos with the most; no normal hunt (got ' + JSON.stringify(r) + ')'); }
+      { const mkF = what => { const w = mk177(1); const z = V7('z1', 'Zafira', { blood: 0, locked: true }), roy = V7('r1', 'Roy', { blood: 4, locked: true }); w.board = [z, roy, M7('w1', WON, { counters: ctr(10) })];
+          w.table = { 2: pub7(20, [V7('p1', 'Adisa')]), 3: pub7(20, []) }; w.asks = []; w.fights = 0;
+          w._askBlock = async q => { w.asks.push(q); return what === 'block' ? { what: 'block', who: 'Hanna' } : { what: 'pass' }; }; w._resolveCombat = async v => { if(v === z) w.fights++; }; return { w, z, roy }; };
+        const A = mkF('pass'), terr = await turn7(A.w), L = logs7(A.w), B = mkF('block'), terrB = await turn7(B.w), LB = logs7(B.w);
+        const r = { terr, z: A.z.blood, roy: A.roy.blood, asks: A.w.asks[0] || null, line: L.find(l => /^Zafira hunts \(Week of Nightmares\): steals 1 blood from Roy\.$/.test(l)) || null, roys: L.some(l => /^Roy hunts/.test(l)), ev: ev7(A.w, 'won-hunt').length,
+                    terrB, zB: B.z.blood, royB: B.roy.blood, fights: B.w.fights, lineB: LB.some(l => /Week of Nightmares\): steals/.test(l)), evB: ev7(B.w, 'won-hunt').length };
+        ok(!terr && r.z === 1 && r.roy === 3 && r.asks === 'Trainbot: Zafira hunts. Block?' && !!r.line && !r.roys && r.ev === 1 && !terrB && r.zB === 0 && r.royB === 4 && r.fights === 1 && !r.lineB && r.evB === 0,
+           '177f2 through the minion phase: my Ravnos at 0 blood hunts (the hunt\'s ask: my prey or predator may block) and steals 1 from my Ravnos with the most, not from the bank; blocked, it fights and steals nothing (got ' + JSON.stringify(r) + ')'); }
       { const ctl = mk177(1), mv = mk177(2); const z = V7('z1', 'Zafira', { blood: 2 }), roy = V7('r1', 'Roy', { blood: 5 }), card = M7('w1', WON, { counters: ctr(2) });
         ctl.board = [z, roy, card]; ctl.table = { 2: pub7(20, []), 3: pub7(20, []) };
         mv.table = { 1: pub7(20, [V7('z1', 'Zafira', { blood: 2 }), V7('r1', 'Roy', { blood: 5 }), M7('w1', WON, { counters: ctr(2) })]), 3: pub7(20, []) };
         wire7([ctl, mv]); if(IF7(ctl, '_wonUnlock')) ctl._wonUnlock(); const own = logs7(ctl).filter(l => /moves a nightmare counter/.test(l)).length;
         if(IF7(mv, '_wonUnlock')) mv._wonUnlock(); const L1 = logs7(mv).slice(), left1 = card.counters.length, tok = (ctl._memoMap().get('z1') || []).join('|');
+        const mo = mk177(3); mo.board = [V7('g1', 'Gathii', { blood: 0 })]; mo.table = { 1: pub7(20, [V7('z1', 'Zafira', { blood: 2 }), V7('r1', 'Roy', { blood: 5 }), M7('w1', WON, { counters: ctr(2) })]), 2: pub7(20, []) };
+        if(IF7(mo, '_wonUnlock')) mo._wonUnlock(); const mine0 = logs7(mo).find(l => /moves a nightmare counter/.test(l)) || null;
         mv.table[1].pub.cards[2].counters = ctr(1); if(IF7(mv, '_wonUnlock')) mv._wonUnlock();
-        const r = { own, mv1: L1.find(l => /^Viktor moves a nightmare counter to Hanna's Zafira \(Week of Nightmares: 1 left\)\.$/.test(l)) || null, left1, tok, end: logs7(ctl).find(l => /^Week of Nightmares has no counters left/.test(l)) || null,
+        const r = { own, mine0, mv1: L1.find(l => /^Viktor moves a nightmare counter to Hanna's Zafira \(Week of Nightmares: 1 left\)\.$/.test(l)) || null, left1, tok, end: logs7(ctl).find(l => /^Week of Nightmares has no counters left/.test(l)) || null,
                     z: z.blood, zone: z.zone, cardZone: card.zone, burn: logs7(ctl).find(l => /^Zafira (burns 2 blood|is burned) \(Week of Nightmares\)\.$/.test(l)) || null };
-        ok(r.own === 0 && !!r.mv1 && r.left1 === 1 && /Nightmare counters: 1/.test(r.tok) && !!r.end && r.z === 0 && r.zone === 'ready' && r.cardZone === 'ash' && !!r.burn,
-           '177f3 the counter game: the controller never moves; another bot moves one onto the Ravnos its end costs most; the controller takes it off the card; at none left the end -- each Ravnos pays, the card burns (got ' + JSON.stringify(r) + ')'); }
+        ok(r.own === 0 && /^Nora moves a nightmare counter to Hanna's Zafira \(Week of Nightmares: 1 left\)\.$/.test(String(r.mine0)) && !!r.mv1 && r.left1 === 1 && /Nightmare counters: 1/.test(r.tok) && !!r.end && r.z === 0 && r.zone === 'ready' && r.cardZone === 'ash' && !!r.burn,
+           '177f3 the counter game: the controller never moves; another bot moves one onto the Ravnos its end costs most, never onto its own; the controller takes it off the card; at none left the end -- each Ravnos pays, the card burns (got ' + JSON.stringify(r) + ')'); }
       { const w = mk177(1); w.board = [V7('z1', 'Zafira', { blood: 3 }), V7('r1', 'Roy', { blood: 3 })]; w.table = { 2: pub7(20, []), 3: pub7(20, []) };
         const e = w._w5E ? w._w5E(WON) : null, rd = () => IF7(w, '_w5MasterWorth') && e ? w._w5MasterWorth({ name: WON, e }) : null;
         const far = rd(); w.table[2].pub.pool = 3; const near = rd(); const dead = IF7(w, '_w5DeadMaster') && e ? w._w5DeadMaster({ name: WON, e }) : 'x'; w.table[2].pub.pool = 20; const dead2 = IF7(w, '_w5DeadMaster') && e ? w._w5DeadMaster({ name: WON, e }) : 'x';

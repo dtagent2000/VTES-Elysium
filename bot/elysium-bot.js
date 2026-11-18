@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.231';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.232';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -4893,10 +4893,10 @@ class Bot {
   _wonLeft(w){ const c = w && w.card; return c ? (Array.isArray(c.counters) ? c.counters.filter(x => /^Nightmare/i.test(String(x))).length : (c.counters | 0)) : 0; }
   _wonKey(seat, name){ return (seat | 0) + '|' + name; }
   _wonRavnos(){ const out = []; for(const st of this._w5Live()){ for(const c of this._seatCards(st)) if(c && c.kind === 'crypt' && !c.faceDown && (c.zone === 'ready' || c.zone === 'torpor') && this._isRavnos(c)) out.push({ seat: st, v: c, n: ((this._wonN && this._wonN.get(this._wonKey(st, c.name))) | 0) }); } return out; }
-  _wonUnlock(){                      // my unlock phase: move one counter from the card to the Ravnos its end would cost most -- never the card's controller
+  _wonUnlock(){                      // my unlock phase: move one counter from the card to another seat's Ravnos its end would cost most -- never the card's controller, never onto a Ravnos of mine
     const w = this._wonCard(); if(!w || w.seat === this.seat) return;
     const left = this._wonLeft(w); if(left <= 0) return;
-    const r = this._wonRavnos().sort((a, b) => (((a.v.blood | 0) - a.n) - ((b.v.blood | 0) - b.n)) || ((this._capOf(b.v) || 0) - (this._capOf(a.v) || 0)))[0]; if(!r) return;
+    const r = this._wonRavnos().filter(x => x.seat !== this.seat).sort((a, b) => (((a.v.blood | 0) - a.n) - ((b.v.blood | 0) - b.n)) || ((this._capOf(b.v) || 0) - (this._capOf(a.v) || 0)))[0]; if(!r) return;
     const owner = this.seatName(r.seat);
     this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> moves a nightmare counter to <b>' + esc(owner) + "</b>'s <b>" + esc(r.v.name) + '</b> (Week of Nightmares: ' + (left - 1) + ' left).' });   // L12.wonMove
     this._emit('won-move', { owner, vamp: r.v.name, left: left - 1 });
@@ -4933,20 +4933,34 @@ class Bot {
     this.board = this.board.filter(x => x !== v && !gone.includes(x));
     gone.forEach(x => this._toAsh(x.name));
   }
-  _wonHuntFrom(v){                   // the special hunt's target: another Ravnos of mine with the most blood (v1: my own; another seat's Ravnos is a rider), null when there is none at all
+  _wonHuntFrom(v){                   // the special hunt's target: another Ravnos of mine with the most blood (v1: my own; another seat's Ravnos -- a directed action -- is a rider), null when there is none at all
     const o = this.board.filter(c => c && c !== v && c.kind === 'crypt' && (c.zone === 'ready' || c.zone === 'torpor') && this._isRavnos(c)).sort((a, b) => (b.blood | 0) - (a.blood | 0));
     return o[0] || null;
   }
-  async _wonHunt(v, mandatory){      // the special hunt: +1 stealth, directed at another Ravnos (mine: nobody may block), steals 1 blood -- an empty one: the hunt is unsuccessful [LSJ 20050720-2]; blood that cannot be gained goes to the bank [LSJ 20010809-1]
+  async _wonHunt(v, mandatory){      // the special hunt: 'a +1 stealth hunt action' at another Ravnos -- mine (v1), so it is undirected: my prey or predator may block it, as a hunt (the rulebook; the egress of 5b's build) -- unblocked it steals 1 blood; an empty one: the hunt is unsuccessful [LSJ 20050720-2]; blood that cannot be gained goes to the bank [LSJ 20010809-1]
     const from = this._wonHuntFrom(v);
     v.locked = true; this._lastCombat = null; this._actingVamp = { v, n: 1, played: new Set(), hunt: true, mandatory, won: true };
     this.push();
     this.fxClone(v, 'hunts');
-    const n = from && (from.blood | 0) > 0 ? 1 : 0, cap = this._capOf(v), room = (cap > 0 ? cap : 99) - (v.blood | 0);
-    if(n){ from.blood = (from.blood | 0) - 1; if(room > 0) v.blood = (v.blood | 0) + 1; }
-    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> hunts (<b>Week of Nightmares</b>): ' + (n ? 'steals 1 blood from <b>' + esc(from.name) + '</b>' + (room > 0 ? '' : ' (to the blood bank)') : 'no blood to steal' + (from ? ' from <b>' + esc(from.name) + '</b>' : '')) + '.' });
-    this._emit('won-hunt', { vamp: v.name, from: from ? from.name : null, n, bank: n && room <= 0 ? 1 : 0, mandatory: !!mandatory });
-    this.push();
+    this._announceTallyA(this._undirectedBaseStealth(v, 'hunt') + this._cryptStealthMod(v, 'hunt', false));   // a hunt's +1 stealth -- the card's '+1 stealth hunt action'
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> hunts.' });   // the hunt's own line and ask: the table reads a hunt (the result line names the card)
+    const ans = await this._askBlock('Trainbot: ' + v.name + ' hunts. Block?');
+    await sleep(150);
+    if(ans.what === 'block'){
+      this.note('Blocked' + (ans.who ? ' by ' + ans.who : '') + '. Combat begins.');
+      this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: 0, card: null, by: this._lastBlockerName || null });
+      await this._resolveCombat(v);
+    } else {
+      const n = from && (from.blood | 0) > 0 ? 1 : 0, cap = this._capOf(v), room = (cap > 0 ? cap : 99) - (v.blood | 0);
+      if(n){ from.blood = (from.blood | 0) - 1; if(room > 0) v.blood = (v.blood | 0) + 1; }
+      this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> hunts (<b>Week of Nightmares</b>): ' + (n ? 'steals 1 blood from <b>' + esc(from.name) + '</b>' + (room > 0 ? '' : ' (to the blood bank)') : 'no blood to steal' + (from ? ' from <b>' + esc(from.name) + '</b>' : '')) + '.' });
+      this._emit('won-hunt', { vamp: v.name, from: from ? from.name : null, n, bank: n && room <= 0 ? 1 : 0, mandatory: !!mandatory });
+      this._w5Hunts = (this._w5Hunts | 0) + 1;
+      this._maybeWarsawRefresh(v);   // an undirected action, as a hunt
+      this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: 0, card: 'hunt' });
+      this.say('It resolves');
+      this.push();
+    }
     this._actingVamp = null;
     this._flushDraws();
   }
