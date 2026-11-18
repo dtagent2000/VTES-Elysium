@@ -13,6 +13,7 @@
 - L-10 **A tie-break is where a card's second job lives**; when two keep-rules can meet on one tie, say which wins and tell Johan (19 Oct).
 - L-11 **Keep the rejected alternative as a document, not a code path** (16 Sep, the helper gate).
 - L-12 **Ask what the bot CANNOT do, not only which cards are inert** (18 Sep: a rule about a card's cost usually needs an action the bot lacks).
+- L-93 **A card that gets its consumer leaves the rules that held it** (18 Nov, 5b): Sudden Reversal got `_srFor`, but v0.6.215's dead-card rule (an out-of-turn master with no consumer is dead) still named only Archon Investigation's key, so the discard phase cycled it at once: the suite was green, the lasombra smoke showed no cancel. When a held card plays, grep every rule that names it or its class as held, dead or skipped (the finder, `_deadHandIndex`, the coverage verdict) and watch it fire in a sim.
 
 ## Tests that lie
 - L-13 **A hook called by a unit test proves the hook, not its call site** (16 Oct, twice in one release: Arcane Library's lock, the probe reservation). Test a phase effect through the phase.
@@ -70,6 +71,7 @@
 - L-86 **An explanation that lives only in a report leaves its row a fault in every later gate** (11 Nov, round C2): the 225 bleeds that no seat took were all after the game's end (the Toreador report, 6 Nov), yet the ledger still printed them as faults, so no zero gate could stand on it; write the explanation into the audit as a row of its own.
 - L-91 **A mirror bench cannot fire a knob's half that needs two seats on it** (14 Nov, round B): the owner's defence needs the
   owner and a burner both at 1; a bench pinned to the owner's deck measured it. Ask which seats each half needs.
+- L-94 **On the sim table a moved clone moves the draws** (18 Nov, 5b): the window sent the master's fx clone a beat earlier and a held master no longer spent a beat; the client bridge's fx queue then delivered the next draws at other moments, and 28 of the 240 matches DIVERGED with no decision rule changed for the starters (an ablation split them 16 / 12). Predict a timing change as DIVERGED; ablate before reading one as a decision.
 
 ## Contracts, parsers and state
 - L-55 **A parser and its phrase are one contract; move the phrase's tier and the parser goes deaf** (22 Sep: six days of series with no combat handshake).
@@ -93,6 +95,7 @@
   check it after EVERY await, before the next line, write, card or wait; end the old flow's pending waits when the new one starts
   (a waiter registered before still takes the new flow's line: 166i); prove it by superseding the real flow at each wait it passes
   (166e), since a check proven at one hold point is one check proven.
+- L-95 **New per-game state is reset in `started` in the same commit** (18 Nov; the egress class five rounds running: v0.6.215, 217, 224, 230, 232 -- the ratchet): a flag or map a feature adds lives on into the next game at the table (5b's nightmare counters showed on a new game's Ravnos). Add it to the `started` reset beside its first use, and check that a new game starts clean.
 
 ## Tools and ways of working
 - L-69 **The smoke of the release is part of the release** (16 Oct): every R2–R4 release's own smoke found a bug its suite did not.

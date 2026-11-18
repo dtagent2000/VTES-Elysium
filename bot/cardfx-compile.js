@@ -91,7 +91,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.9.9';   // 17 Nov 2026 (bot v0.6.230, V5 wave 5): the markers anarchReq ('Requires an Anarch / a baron') and zombie (an ally or retainer named a zombie)
+const FXC_VERSION = '1.9.10';   // 18 Nov 2026 (bot v0.6.232, V5 wave 5b): `frenzy` -- 'opp' / 'self' on a card with a bare 'Frenzy.' segment, and on the modes of a '[abo] Frenzy.' line (Meditative Grove's cancel reads it, [LSJ 20051113])
+// const FXC_VERSION_199 = '1.9.9';   // 17 Nov 2026 (bot v0.6.230, V5 wave 5): the markers anarchReq ('Requires an Anarch / a baron') and zombie (an ally or retainer named a zombie)
 // const FXC_VERSION_198 = '1.9.8';   // 3 Nov 2026 (bot v0.6.217, V5 wave 4): 'Unique archetype.' is the archetype keyword too (Saulot's three masters were untagged: the one-archetype-per-vampire gate never saw them)
 // const FXC_VERSION_197 = '1.9.7';   // 2 Nov 2026 (bot v0.6.216, KRCG's v5 dump as the source, krcg-v5.js): the v5 cost shape ({type: 'Pool', value}) read; the v5 wording 'this card is put in play / on' is persistent; a 'Requires …' sentence is found mid-line ('Title. Requires a Sabbat vampire.').
 // const FXC_VERSION_196 = '1.9.6';   // 2 Nov 2026 (bot v0.6.215, V5 wave 3): `oot` -- an out-of-turn master (keyword segment, 36 entries) the master-phase finder never offers; curated masters inherit the data's clan requirement (R-42: a clan icon on a master IS a requirement) and its out-of-turn keyword.
@@ -663,6 +664,11 @@ function refTerms(text){
   return pool;
 }
 
+/* v1.9.10 (bot v0.6.232): a frenzy card played on a minion other than its player's own -- it names the opposing minion or vampire, or a
+   target: 'against a vampire', 'Choose a vampire', 'on any vampire', 'Put this card on a vampire' not 'you control', 'Choose X
+   minions', 'Choose an Osebo in combat', a minion 'controlled by another Methuselah' ([LSJ 20051113]: a frenzy card that targets, selects, chooses or affects a
+   minion is played on it). One test for the entry-level tag and the mode-level one. */
+const FRENZY_OPP = /opposing (?:minion|vampire)|against a vampire|choose a vampire|choose an? [\w'-]+ in combat|on any vampire|put this card on a vampire(?! you control)|choose x minions|controlled by another methuselah/i;   // 'Choose an Osebo in combat' (Battle Frenzy: any Osebo -- the graded readings)
 function libEntry(c){
   const e = { t: (c.types || []).map(t => TYPE_MAP[t] || t.toLowerCase()) };
   const cost = {};
@@ -710,6 +716,9 @@ function libEntry(c){
   const kwHit = w => txt.split('\n').some(l => l.split(/[.:]/).some(sg => new RegExp('^\\s*' + w + '\\s*$', 'i').test(sg)));
   if(kwHit('trifle')) e.trifle = true;
   if(kwHit('archetype') || kwHit('unique archetype')) e.archetype = true;   // v1.9.8 (V5 wave 4): 'Unique archetype.' (Saulot's Healing Touch, Avenging Fist, Guiding Wisdom) -- the bare-word segment missed the three
+  /* v1.9.10 (bot v0.6.232, V5 wave 5b, RULINGS D-122): FRENZY -- a 'Frenzy.' keyword segment: 'opp' by FRENZY_OPP, else 'self'.
+     Meditative Grove's cancel reads it. A mode-prefixed 'Frenzy.' ('[abo] Frenzy.') is no bare segment: the mode tag below. */
+  if(kwHit('frenzy')) e.frenzy = FRENZY_OPP.test(txt) ? 'opp' : 'self';
   if(kwHit('out-of-turn') && (e.t || []).includes('master')) e.oot = true;   // v1.9.6 (bot v0.6.215, V5 wave 3): an OUT-OF-TURN master ('Out-of-turn.' / 'Master: out-of-turn.' as a keyword segment) -- played only on another Methuselah's turn, at its own trigger (the rulebook: it uses the next master phase action). The master-phase finder never offers one; a dedicated consumer (Archon Investigation) plays it at its trigger.
   if(/\(limited\)/i.test(txt)) e.limited = true;       // rulebook reminder text: bleed-increase modifiers / additional-strike sources capped at one
   /* v1.5.0 (17 July, fas B/C sweep): the Inside Dirt / Leverage class made derivable.
@@ -759,6 +768,20 @@ function libEntry(c){
   }
   const modes = libModes(c.card_text);
   if(modes.length) e.modes = modes;
+  /* v1.9.10: a MODE-prefixed 'Frenzy.' ('[abo] Frenzy. ...': Whistling Up the Beast, Devil-Channel: Back and Hands; Deep Song's [ANI] is
+     curated) tags the modes of that line's discipline, 'opp' / 'self' by the line's own text; a superior 'As above' line inherits the line
+     before it. The [REFLEX] line of the same discipline shares that mode (one `at`, one mode), so a reflex play reads as the frenzy one --
+     accepted: the Grove reads a combat card of my opponent's in our combat only. */
+  if(e.modes && !e.frenzy){
+    let last = null;
+    txt.split('\n').forEach(l => {
+      const h = l.match(/^\s*((?:\[[A-Za-z]+\]\s*(?:or\s*)?)+)(.*)$/); if(!h) return;
+      const ats = (h[1].match(/\[[A-Za-z]+\]/g) || []).map(x => x.slice(1, -1)).filter(x => x !== 'REFLEX');
+      const fr = /^\s*Frenzy\s*[.:]/i.test(h[2]) ? (FRENZY_OPP.test(h[2]) ? 'opp' : 'self') : /^\s*As above/i.test(h[2]) ? last : null;
+      last = fr;
+      if(fr) e.modes.forEach(mo => { if(ats.includes(mo.at)) mo.frenzy = fr; });
+    });
+  }
   /* v1.5.0 (17 July, fas B/C sweep): BUILT-IN action stealth ("+2 stealth action."
      headers -- 176 pure-Action cards -- and Night Moves-style "bleed at +N stealth")
      is a property of PERFORMING the action, not a playable modifier: renamed actStealth
@@ -940,6 +963,7 @@ function compile(cards, curated){
       if(auto && auto.oot && e.oot === undefined) e.oot = true;   // v1.9.6: a curated master keeps the data's out-of-turn keyword unless it restates it
       if(auto && auto.anarchReq && e.anarchReq === undefined) e.anarchReq = true;   // v1.9.9: the markers survive a curated entry
       if(auto && auto.zombie && e.zombie === undefined) e.zombie = true;
+      if(auto && auto.frenzy && e.frenzy === undefined) e.frenzy = auto.frenzy;   // v1.9.10: the frenzy tag survives a curated entry (Rage of Apedemak's 'self')
       dst[name] = e;
       curApplied.push(name);
       /* v1.9.3: a curated key that is not a printed name but a known VARIANT of one (the alias table) is ALSO written under the

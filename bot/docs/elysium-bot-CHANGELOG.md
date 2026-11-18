@@ -32,6 +32,64 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.232 (18 Nov 2026)** — V5 wave 5b: the 'as played' window, Sudden Reversal, Meditative Grove's cancel, Yawp Court, Week of
+  Nightmares (RULINGS D-107 shape A, D-122; Johan, 18 Nov: "Vi kan gå på dina rekommendationer" on all five of spec-v5-wave5 §12.9;
+  his note — the cancel cards are a classic meta-layer case — is a BOARD line). The 11 cards with a discipline line and no mode
+  (D-116 (3)) are the next round. RULINGS made room by §12.8's cuts (861 B; D-107 kept whole, the ceiling kept).
+  - *The window* (D-107 shape A): every master a bot plays from its hand lands first — its fx clone (moved from the eight branches)
+    and `NAME is playing CARD[ — on OWNER's VAMP].` (`L12.asPlayed`) — and waits the beat the master phase waited anyway (`_pace`,
+    then `_holdGate`: a Hold on in it holds the master); at pace 0 the grace `asPlayedMs` (0 = one macrotask; arena v1.4.15 passes
+    500, `--as-played-ms`). The target picks moved before the window, so a held master spends no beat. Cancelled: to the ash heap,
+    nothing paid, no effect, no trifle action, the master phase action spent (`_asPlayedCancelled`).
+  - *Sudden Reversal* (`_srFor`, `_playSr`): out of turn only, one out-of-turn master before my next master phase (R-42); the
+    player is the one arbiter — its window keeps every cancel it reads, bot or human, and its close takes the first in turn order
+    from the player (the rulebook's sequencing); the rest are answered `srLate` (the bot takes its card back) or in chat. A human's
+    master is read from the client's fx play clone: the bots answer in turn order after the human, a quarter second apart, and one
+    that has read another's cancel holds. Rows: `sr-cancel`, `sr-cancelled`, `sr-decline`, `sr-late`, `sr-taken-back`. The decision, Claude's priors (§12.10): the engine for a card with a
+    worth handler; aimed at my minion Fame 2.5, a no-block or rush grant 2.0, any other 1.0; a hunting ground, a converter or Villein
+    through `_flowWorth`; plus the cost its owner keeps — against my next master phase action (1.0 with another master to play,
+    else 0.3). Live at the build, no knob.
+  - *Meditative Grove*: a Deep Song [ANI] rush at my Salubri is cancelled before its window ([LSJ 20051113]: a frenzy card that
+    targets or affects a minion is played on it); the rusher's card is spent, its vampire unlocks and acts again, its booking off;
+    a human's frenzy card on my Salubri in our combat or aimed at it (the line and a chat line); the other way, a human whose
+    vampire my Deep Song [ANI] rushes types `cancel`. cardfx compiler v1.9.10: the frenzy tag, 'opp' / 'self' (11 entries, Battle
+    Frenzy opp; 4 more by a mode: Whistling Up the Beast opp, the two Devil-Channels self; Deep Song's [ANI] curated).
+  - *Yawp Court*: the caller's success line (`L12.polSuccess`) only while another seat shows the card unlocked and a ready unlocked
+    Sabbat, then the beat, armed for the fight before the line; the owner fights the acting vampire as a blocker does (Claude's
+    priors: P(down) by the reach, the referendum's worth avoided; its last body asked of `_keepBlocker`); still ready — 2
+    environmental damage and the referendum; down — no referendum.
+  - *Week of Nightmares*: +1 bleed and +1 strength for every Ravnos (its keys read), an opposing Ravnos' strike +1; no normal hunt —
+    a Ravnos at 0 blood hunts another Ravnos of mine (a hunt: my prey or predator may block; the hunt value applies); the counter
+    game (never by its controller, never onto my own Ravnos), the end (Tension bills a ready Ravnos only); one per game at play and
+    discard; its worth handler (`_flowWorth` takes the card's life as a cap; the oust term read ahead from each Ravnos's scorer,
+    D-58; never a dead card); a new game resets the counters.
+  - Curated 208 (+ Sudden Reversal, Yawp Court, Week of Nightmares; the Grove's `cancelFrenzy`; Deep Song [ANI]'s frenzy);
+    gen-deck-coverage v1.1.49 (the seven keys; the four cards FULL in their decks). New bot lines (`L12` + `_evClassify`):
+    `asPlayed`, `srCancel`, `srLate`, `groveCancel`, `polSuccess`, `yawp`, `yawpOn`, `wonMove`, `wonEnd` (main's §12: the handoff).
+  - *Found in the build and fixed* (each with a check red before): Week of Nightmares' special hunt stole with no window (177f2); a
+    bot could move a nightmare counter onto its own Ravnos (177f3); through the bridge the rusher dropped a Grove cancel that arrived
+    inside its own rush line's send and fought the rush (177d6, L-25 / L-92); the discard phase still cycled Sudden Reversal as a
+    dead out-of-turn card (161k: in the first lasombra smoke no Sudden Reversal stayed in hand); Sudden Reversal's out-of-turn price
+    read wrote hold rows (ad hoc).
+  - *The reviews*: the graded readings (a fresh read-only agent): Sudden Reversal, Meditative Grove, Week of Nightmares, Deep Song
+    [ANI] and the frenzy tags red, Yawp Court amber (its riders, §12.10) — fixed: the window's turn order, a human's `cancel` of a
+    frenzy rush, the hunt value [RTR 20180511], Battle Frenzy's tag, one Week of Nightmares a game at play (the probe's find);
+    listed: a human-controlled Week of Nightmares' end for the bots' Ravnos (no menu deck holds one). Egress: 11 findings (3
+    rule-missed, 4 half-done, 1 unproven, 3 stale-doc), 10 fixed, 1 listed (a Yawp answer read after the caller's window has no
+    too-late line yet). LESSONS L-93 (a card that gets its consumer leaves the rules that held it), L-94 (a moved clone moves the
+    sim's draws), L-95 (new per-game state is reset in `started`: the egress class five rounds running).
+  - *Gates*: suite 2570/0 ×3 (sha `316b4649` / `85f48bcb` / `5c95a3d5`), section 177 27/0 (0/27 on v0.6.231), 161 25/0, 163 13/0
+    (its announce-site check takes the special hunt), `test-cardfx` 349/0 (340/9 on v0.6.231's compile), canary 171/0 ×2, hotseat
+    12/0, HB1 11/11, main's client suite 371/1 (the guide's embed: the guide changed), `doc-budget.sh` PASS. The sim: the 240
+    DIVERGED 28 against v0.6.231 — registered as SAME-PLAY (§12.7), wrong: an ablation (v0.6.231 with only the beat moved after the
+    target picks) splits it 16 (a held master no longer spends a beat) and 12 (the clone and the opener before the beat: the client
+    bridge's fx queue delivers the next draws at other moments, L-94); the release bytes' 240 is IDENTICAL to the first build's. The V5
+    smoke (14 × 12) DIVERGED 1–5 a table (lasombra 5: its Sudden Reversals). `ana-gates.py` PASS 6/6 on the 240, the 14 tables and
+    the four firing series (48 matches each, `--seeds 4`): lasombra 12 Sudden Reversals and 101 declines, every cancel taken by its
+    player; ravnos 5 Weeks of Nightmares, 34 counters, 4 special hunts, 2 burns at the end; pathcaine 2 Yawp windows and no fight
+    (the referendum was worth more to the owner); salubri the Grove played 8 times and no Deep Song rush at a Salubri. The arena
+    smoke (the real clock, the 500 ms grace) PASS 7/7. `docs/CARDS.md` from the release bytes' runs: the four cards FULL (Sudden
+    Reversal and the Grove played; Week of Nightmares and Yawp Court unseen in the 12-match smoke, played in the firing series).
 - **v0.6.231 (17 Nov 2026)** — O-44 answered (RULINGS D-121; Johan 17 Nov: "Yes det låter bra" on the split; spec-v5-wave5 §11).
   `cardWorth` prices only Smiling Jack's defence (`_myJackWorth`) and the burns of Jack (`_jackBurnValue`); Jack's play and discard
   stay with the 14 July rule at both values (`_w5PlayWorth`). At 1 in v0.6.230 the Nosferatu-pinned bench played Jack in 25 of 288
