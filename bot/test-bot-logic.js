@@ -14101,9 +14101,14 @@ async function connectWithRetry(client, tries = 30){
       // c) humans: a human's master (the client's fx clone) cancelled by my line and a chat line; a human's Sudden Reversal in my open window
       //    cancels my master; after it closed, the human is told it came too late
       { const b = mkB(2, [SR]); b.board = [V7('p1', 'Adisa')]; b.players[2] = { seat: 3, name: 'Johan', online: true, bot: false }; b.turnSeat = 3;
-        b._onFx({ t: 'fx', kind: 'play', seat: 3, card: { name: 'Fame', kind: 'lib', faceDown: false }, target: { name: 'Adisa', kind: 'crypt', faceDown: false } });
-        const L = logs7(b), r = { line: L.find(l => /Sudden Reversal — cancels Johan's Fame/.test(l)) || null, chat: b.chats.find(t => /^Johan: your Fame is cancelled/.test(t)) || null, debt: b._ootDebt | 0 };
-        ok(!!r.line && !!r.chat && r.debt === 1, '177c a human\'s master at my vampire: my Sudden Reversal\'s line and a chat line to its owner (got ' + JSON.stringify(r) + ')'); }
+        b._onFx({ t: 'fx', kind: 'play', seat: 3, card: { name: 'Fame', kind: 'lib', faceDown: false }, target: { name: 'Adisa', kind: 'crypt', faceDown: false } }); await sleep(400);   // seat 2 answers second after the human at seat 3 (seat 1 first): a quarter second
+        const L = logs7(b), r = { line: L.find(l => /Sudden Reversal — cancels Johan's Fame/.test(l)) || null, chat: b.chats.find(t => /^Johan: your Fame is cancelled/.test(t)) || null, debt: b._ootDebt | 0, row: ev7(b, 'sr-cancel').length };
+        const p2 = mkB(2, [SR]), p3 = mkB(3, [SR]); [p2, p3].forEach(x => { x.players[0] = { seat: 1, name: 'Hanna', online: true, bot: false }; x.turnSeat = 1; }); wire7([p2, p3]);
+        const hg = { t: 'fx', kind: 'play', seat: 1, card: { name: 'Academic Hunting Ground', kind: 'lib', faceDown: false } };
+        p3._onFx(hg); p2._onFx(hg); await sleep(700);   // the network's order: the later seat reads the clone first
+        const q = { p2: ev7(p2, 'sr-cancel').length, p3: ev7(p3, 'sr-cancel').length, p3hand: p3.hand.includes(SR) };
+        ok(!!r.line && !!r.chat && r.debt === 1 && r.row === 1 && q.p2 === 1 && q.p3 === 0 && q.p3hand,
+           '177c a human\'s master at my vampire: my Sudden Reversal\'s line and a chat line to its owner; two bots that would both cancel a human\'s master answer in turn order after the human -- the second reads the first\'s line and holds (got ' + JSON.stringify({ r, q }) + ')'); }
       { const a = mkB(1, []); a.turnSeat = 1; a.players[2] = { seat: 3, name: 'Johan', online: true, bot: false };
         const hsr = () => a._onFx({ t: 'fx', kind: 'play', seat: 3, card: { name: SR, kind: 'lib', faceDown: false } });
         const p = IF7(a, '_asPlayed') ? a._asPlayed('Vessel', {}) : Promise.resolve(null); hsr(); const r0 = await p;
@@ -14201,6 +14206,33 @@ async function connectWithRetry(client, tries = 30){
         const up = await runCall(true, false), dn = await runCall(true, true), no = await runCall(false, false);
         ok(!up.terr && up.succ && up.on && !up.none && up.votes && !dn.terr && dn.succ && !dn.on && dn.none && !dn.votes && !no.terr && !no.succ && no.votes,
            '177e3 the caller: the success line and the fight before the polling; still ready -- on, the votes; down -- no referendum, no votes; no Yawp Court on the table -- no line (got ' + JSON.stringify({ up, dn, no }) + ')'); }
+      { const a = mk177(1); const v = V7('l1', 'Lucinde', { blood: 3 }); a.board = [v]; a.hand = ['Kine Resources Contested'];
+        a.table = { 2: pub7(20, [V7('y1', 'Crossbreaker'), M7('yc', 'Yawp Court')]), 3: pub7(20, []) };
+        a._actingVamp = { v, n: 1, played: new Set(), target: null }; a._askBlock = async () => ({ what: 'pass' }); a._refPoll = async () => {};
+        let armed = null, atEntry = null; a._resolveCombat = async () => { atEntry = a._oppCarrionCrows ? a._oppCarrionCrows.n : null; };
+        const s0 = a.send; a.send = m => { s0(m); if(/political action succeeds/.test(txt7(m))){ armed = a._combatArmed;
+          a._onLog('Viktor', '<b>Viktor</b> locks <b>Yawp Court</b> — <b>Crossbreaker</b> enters combat with <b>Hanna</b>\'s <b>Lucinde</b>.');
+          a._onChat('Viktor', "Trainbot combat \u2014 Crossbreaker's Murder of Crows: opposing minion takes 1 environmental damage each round for the rest of this combat (unpreventable by strikes, cannot be dodged)."); } };
+        const act = { name: 'Kine Resources Contested', deltas: { 2: -2, 3: -2 }, value: 1, pass: 0.9, mine: 1, agst: 0, n: 0 };
+        let terr = null; try { await Promise.race([a._callReferendum(v, act), sleep(4000)]); } catch(e){ terr = e.message; }
+        const b = mk177(1); b.board = [V7('l1', 'Lucinde', { blood: 3 })]; b.table = { 2: pub7(20, [V7('y1', 'Crossbreaker'), M7('yc', 'Yawp Court')]), 3: pub7(20, []) };
+        const rb = IF7(b, '_yawpWindow') ? await b._yawpWindow(b.board[0], act) : 'x';
+        ok(!terr && armed === true && atEntry === 1 && rb === null && b._combatArmed === false,
+           '177e4 the caller is armed before its success line: the owner\'s early combat line (its Murder of Crows) read in the window reaches the fight; nobody answers -- disarmed again (got ' + JSON.stringify({ terr, armed, atEntry, rb, disarmed: b._combatArmed }) + ')'); }
+      { const a = mk177(1), y = mk177(2); const v = V7('l1', 'Lucinde', { blood: 3 }); a.board = [v]; a.hand = ['Kine Resources Contested'];
+        const cb = V7('y1', 'Crossbreaker', { blood: 5 }), yc = M7('yc', 'Yawp Court'); y.board = [cb, yc]; y.turnSeat = 1;
+        a.table = { 2: pub7(20, [V7('y1', 'Crossbreaker', { blood: 5 }), M7('yc', 'Yawp Court')]), 3: pub7(20, []) }; y.table = { 1: pub7(20, [V7('l1', 'Lucinde', { blood: 3 })]), 3: pub7(20, []) };
+        y._yawpFor = (seat, actor) => ({ card: yc, vamp: cb, gain: 1, why: 'the test' });
+        a._actingVamp = { v, n: 1, played: new Set(), target: null }; a._askBlock = async () => ({ what: 'pass' }); a._refPoll = async () => {};
+        wire7([a, y]);
+        const act = { name: 'Kine Resources Contested', deltas: { 2: -2, 3: -2 }, value: 1, pass: 0.9, mine: 1, agst: 0, n: 0 };
+        const t0 = Date.now(); let terr = null; try { await Promise.race([a._callReferendum(v, act), sleep(12000)]); } catch(e){ terr = e.message; }
+        await sleep(300);
+        const La = logs7(a), Ly = logs7(y);
+        const r = { terr, ms: Date.now() - t0, yawp: Ly.some(l => /^Viktor locks Yawp Court/.test(l)), aRounds: ev7(a, 'combat-round').length, yRounds: ev7(y, 'combat-round').length, vz: v.zone, vb: v.blood, cbb: cb.blood, cbz: cb.zone,
+                    on: La.some(l => /^Yawp Court — Lucinde is still ready/.test(l)), none: La.some(l => /no referendum \(Yawp Court\)/.test(l)), dmg: Ly.find(l => /environmental damage from Yawp Court/.test(l)) || null, rej: (a._stashRejects || []).length };
+        ok(!terr && r.yawp && r.aRounds >= 1 && r.aRounds === r.yRounds && (r.on ? (r.vz === 'ready' && !!r.dmg) : (r.none && r.vz !== 'ready')) && r.rej === 0,
+           '177e5 two bots through the bridge: the owner\'s Yawp fight runs both sides, then the damage and the referendum, or none (got ' + JSON.stringify(r) + ')'); }
 
       // f) Week of Nightmares: every Ravnos +1 bleed and +1 strength while it is in play at any seat (and an opposing Ravnos' expected strike);
       //    no normal hunt -- a Ravnos at 0 blood steals 1 from my Ravnos with the most blood (the special hunt); the counter game: never by the
@@ -14235,16 +14267,26 @@ async function connectWithRetry(client, tries = 30){
       { const w = mk177(1); w.board = [V7('z1', 'Zafira', { blood: 3 }), V7('r1', 'Roy', { blood: 3 })]; w.table = { 2: pub7(20, []), 3: pub7(20, []) };
         const e = w._w5E ? w._w5E(WON) : null, rd = () => IF7(w, '_w5MasterWorth') && e ? w._w5MasterWorth({ name: WON, e }) : null;
         const far = rd(); w.table[2].pub.pool = 3; const near = rd(); const dead = IF7(w, '_w5DeadMaster') && e ? w._w5DeadMaster({ name: WON, e }) : 'x'; w.table[2].pub.pool = 20; const dead2 = IF7(w, '_w5DeadMaster') && e ? w._w5DeadMaster({ name: WON, e }) : 'x';
-        w.table[2].pub.pool = 3; w.table[3].pub.cards = [M7('w2', WON, { counters: ctr(7) })]; const other = rd(); w.table[3].pub.cards = [M7('w2', WON, { zone: 'ash' })]; const ash = rd();
+        w.table[2].pub.pool = 3; const a0 = w._aheadPick; w._aheadPick = () => ({ pick: { kind: 'political', name: 'Parity Shift' }, score: 1 }); const noBleed = rd(); w._aheadPick = a0;   // the look ahead (D-58): the Ravnos would not bleed
+        w.table[3].pub.cards = [M7('w2', WON, { counters: ctr(7) })]; const other = rd(); w.table[3].pub.cards = [M7('w2', WON, { zone: 'ash' })]; const ash = rd();
         w.hand = [WON]; const offered = IF7(w, '_bestMasterFor') ? w._bestMasterFor(new Set()).some(c => c.name === WON) : 'x';
-        ok(far && far.hold === true && near && near.hold === false && dead === false && dead2 === false && other && other.hold === true && ash && ash.hold === true && offered === false,
-           '177f4 the play read: held at a prey of 20, played when the +1 on this turn\'s bleeds takes my prey out (3 pool, two Ravnos ready); never a dead card; one per game -- held while another seat\'s copy is in play or in an ash heap (got ' + JSON.stringify({ far, near, dead, dead2, other, ash, offered }) + ')'); }
+        ok(far && far.hold === true && near && near.hold === false && dead === false && dead2 === false && noBleed && noBleed.hold === true && other && other.hold === true && ash && ash.hold === true && offered === false,
+           '177f4 the play read: held at a prey of 20, played when the +1 on this turn\'s bleeds takes my prey out (3 pool, two Ravnos ready); held when the Ravnos\' own scorers would not bleed (the look ahead); never a dead card; one per game -- held while another seat\'s copy is in play or in an ash heap (got ' + JSON.stringify({ far, near, noBleed, dead, dead2, other, ash, offered }) + ')'); }
       { const run = async (fromBlood, hunterBlood) => { const w = mk177(1); const z = V7('z1', 'Iago Castille (G6)', { blood: hunterBlood }), d = V7('d1', 'Devyn (G4)', { blood: fromBlood });
           w.board = [z, d, M7('w1', WON, { counters: ctr(10) }), M7('c1', 'The Hungry Coyote')]; w.table = { 2: pub7(20, []), 3: pub7(20, []) }; w._askBlock = async () => ({ what: 'pass' });
           if(IF7(w, '_wonHunt')) await w._wonHunt(z, true); return { z: z.blood, d: d.blood, line: logs7(w).find(l => /Week of Nightmares\): /.test(l)) || null }; };
         const two = await run(4, 0), one = await run(1, 0), full = await run(4, 7);
         ok(two.z === 2 && two.d === 2 && /steals 2 blood from Devyn \(G4\)\.$/.test(String(two.line)) && one.z === 1 && one.d === 0 && /steals 1 blood/.test(String(one.line)) && full.z === 8 && full.d === 2 && /steals 2 blood from Devyn \(G4\) \(1 to the blood bank\)\.$/.test(String(full.line)),
            '177f5 the special hunt takes the hunt value [RTR 20180511]: a Sabbat Ravnos with The Hungry Coyote steals 2, never more than its target has, the blood it cannot hold to the bank (got ' + JSON.stringify({ two, one, full }) + ')'); }
+      { const end = zone => { const w = mk177(1); w.pool = 10; const z = V7('z1', 'Zafira', { blood: 1, zone }); w.board = [z, M7('w1', WON, { counters: [] })];
+          w.table = { 2: pub7(20, [M7('t1', 'Tension in the Ranks')]), 3: pub7(20, []) }; w._wonN = new Map([['1|Zafira', 2]]); if(IF7(w, '_wonEnd')) w._wonEnd();
+          return { pool: w.pool, zone: z.zone, tension: logs7(w).some(l => /Tension in the Ranks/.test(l)) }; };
+        const torpor = end('torpor'), ready = end('ready');
+        const g = mk177(1); g._wonN = new Map([['1|Zafira', 2]]); g._aspLast = { card: 'Vessel', at: Date.now(), cancelled: null }; g._srSent = { owner: 'Viktor', card: 'Fame' };
+        g._dispatch({ t: 'started', players: g.players }); g.board = [V7('z9', 'Zafira')];
+        const fresh = { wonN: g._wonN ? g._wonN.size : 0, memo: g._memoMap ? (g._memoMap().get('z9') || null) : 'x', last: g._aspLast || null, sent: g._srSent || null };
+        ok(torpor.zone === 'burned' && torpor.pool === 10 && !torpor.tension && ready.zone === 'burned' && ready.pool === 9 && ready.tension && fresh.wonN === 0 && fresh.memo === null && fresh.last === null && fresh.sent === null,
+           '177f6 the end burns a Ravnos in torpor with no Tension in the Ranks bill (a ready one is billed); a new game starts with no nightmare counters and no window or cancel on record (got ' + JSON.stringify({ torpor, ready, fresh }) + ')'); }
 
       // g) the frozen lines' kinds (L-56): every new line of the wave typed as sent
       { const u = mk177(1), C = t => { const r = IF7(u, '_evClassify') ? u._evClassify('Hanna', t, 'log') : null; return r && r.kind; };

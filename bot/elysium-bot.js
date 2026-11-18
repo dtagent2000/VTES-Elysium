@@ -448,10 +448,11 @@ const CARD_WORTH = {
   coven: (bot, card, owner) => { const live = bot._w5Live(), f = {}, n = Math.max(1, live.length); live.forEach(st => { f[st] = { d: 2 / n }; }); return { flows: f, now: owner === bot.seat ? 2 : 0 }; },   // 2 blood to each holder in turn, my predator first
   'forward-momentum': (bot, card, owner) => ({ flows: { [owner]: { d: 0.35 } } }),   // half an action for each bleed of a Cathari that lands
   abattoir: (bot, card, owner) => ({ flows: { [owner]: { d: 0.05 } } }),   // +1 bleed for a zombie ally (no zombie of a precon is playable yet)
-  /* v0.6.232 (V5 wave 5b, D-122, spec-v5-wave5 §12.5): Week of Nightmares -- +1 for each bleed of the owner's Ravnos to its prey (two of
-     three ready Ravnos bleed, 0.6 of them land), the hunts it takes, over the card's life (its 10 counters over the other seats' moves a
-     round); the end (the counters' blood or bodies, about 7) when it comes before the game's; an oust it would make this turn (+6). Its
-     worth swings with the prey's pool (situational: never a dead card for it). Claude's priors, registered at the build. */
+  /* v0.6.232 (V5 wave 5b, D-122, spec-v5-wave5 §12.5 / §12.10): Week of Nightmares -- +1 for each bleed of the owner's Ravnos to its prey
+     (two of three ready Ravnos bleed, 0.6 of them land), the hunts it takes, over the card's life (its 10 counters over the other seats'
+     moves a round); the end (the counters' blood or bodies, about 7) when it comes before the game's; an oust its +1 would make this
+     turn (+6, the oust's pool), read ahead from each Ravnos's own scorer (D-58). Its worth swings with the prey's pool (situational:
+     never a dead card for it). Claude's priors (2/3, 0.6, 7, 6), registered at the build in §12.10. */
   won: (bot, card, owner) => {
     const prey = bot.nextLive(owner), rv = bot._seatCards(owner).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && bot._isRavnos(c));
     const movers = Math.max(1, bot._w5Live().length - 1), life = (Array.isArray(card.counters) && card.counters.length ? card.counters.length : 10) / movers;
@@ -461,8 +462,11 @@ const CARD_WORTH = {
     let now = 0;
     if(owner === bot.seat){
       if(life < left) now -= 7;
-      const ready = rv.filter(c => !c.locked && (c.blood | 0) > 0), base = ready.reduce((s, c) => s + 1 + bot._cryptBleedBonus(c, true), 0), pp = prey ? bot._seatPool(prey) : 0;
-      if(pp > 0 && base < pp && base + ready.length >= pp) now += 6;   // the +1 on each of this turn's bleeds would take my prey out
+      const pp = prey ? bot._seatPool(prey) : 0; let base = 0, k = 0;
+      if(pp > 0) for(const c of rv.filter(c => !c.locked && (c.blood | 0) > 0)){   // the look-ahead rule (D-58; 5b's egress review): only a Ravnos whose OWN scorer would bleed now, by the amount it would bleed
+        const a = bot._aheadPick(c), pk = a && a.pick; if(!pk || pk.kind || pk.illegal || !((pk.n | 0) > 0)) continue;
+        base += pk.n | 0; k++; }
+      if(k && base < pp && base + k >= pp) now += 6;   // the +1 on each of this turn's planned bleeds would take my prey out (if they land: the finisher's read, a prior)
     }
     return { flows: f, now, life, situational: true };
   }
@@ -1211,6 +1215,7 @@ class Bot {
         this._ootDebt = 0; this._fgOwed = 0; this._turnActN = 0;   // v0.6.215 (egress review): a new game owes no out-of-turn master action and no Family Gathering blood
         this._jackDefer = null;   // v0.6.224 (the egress review): a new game waits for no Jack
         this._w5Loss = null; this._w5Hostages = null; this._w5Dia = null; this._w5Hunts = 0; this._w5RefPass = 0; this._w5Held = null; this._w5PbAnarch = false; this._w5BleedOk = null;   // v0.6.230 (the egress review): the wave's counts start again
+        this._wonN = null; this._asp = null; this._aspLast = null; this._srSent = null; this._srSeenHuman = null; this._yawp = null; this._yawpFight = null; this._groveCancelled = null; this._quietHold = false;   // v0.6.232 (5b's egress review): the nightmare counters, the 'as played' window, the cancels and Yawp Court start again
         this._turnSerial = (this._turnSerial | 0) + 1; this._monsterUsed = null; this._sgwEndUsed = null; this._lastCombat = null; this._cotCancel = null; this._myBlockOf = null;   // v0.6.217 (the egress review): Monster's and Guiding Wisdom's once-each-turn, the last combat, a Change of Target -- none carries into a new game
         this._holdBy = new Set(); if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }   // v0.6.95: a fresh game holds for nobody
         this._holdAnnounced = false; this._pendingTurn = null;   // v0.6.108: and carries no queued turn or stale hold announcement
@@ -1459,7 +1464,7 @@ class Bot {
      zero -- so a bare Christine at raw -1 still legally blocks a 0-stealth action);
      the raw helpers return unfloored deltas, the floor sits at the summing sites.    */
   _cryptFxOf(name){ const h = this.fxLookup(name); return (h && h.kind === 'crypt' && h.e.fx) || null; }
-  _cryptBleedBonus(vamp, noWon){ const fx = vamp && this._cryptFxOf(vamp.name); return ((fx && (fx.bleedBonus | 0)) || 0) + (noWon ? 0 : this._wonPlus(vamp)); }   /* v0.6.232 (D-122): + Week of Nightmares' +1 for a Ravnos (noWon: without it, the card's own look ahead) */   // Lenny Burkhead: +1 bleed, passive unconditional   // the local is NAMED fx so the coverage scanner's fx.<key> literal sees the read (the N4a scanner lesson, applied at birth this time -- the first draft's `f` hid all four keys)
+  _cryptBleedBonus(vamp, noWon){ const fx = vamp && this._cryptFxOf(vamp.name); return ((fx && (fx.bleedBonus | 0)) || 0) + (noWon ? 0 : this._wonPlus(vamp, 'bleed')); }   /* v0.6.232 (D-122): + Week of Nightmares' +1 for a Ravnos (noWon: without it, the card's own look ahead) */   // Lenny Burkhead: +1 bleed, passive unconditional   // the local is NAMED fx so the coverage scanner's fx.<key> literal sees the read (the N4a scanner lesson, applied at birth this time -- the first draft's `f` hid all four keys)
   _cryptStealthMod(vamp, kind, dir){ const fx = vamp && this._cryptFxOf(vamp.name); const m = fx && fx.stealthMod;   // Royce: -1 stealth when bleeding. v0.6.219 (crypt wave A, D-108): `when` is an action kind or a list of them (Kalyani 'hunt', Frau Schädel recruit + employ) or 'undirected' / 'directed' (Ariane); dir = the announce's own form (true / false), else a bleed is directed and any other form unknown -- a condition on an unknown form invents nothing; poolMax = 'while you have N or fewer pool' (Devorah), my pool at the announce
     if(!m) return 0;
     if(m.poolMax != null && !(this._poolNow() <= (m.poolMax | 0))) return 0;
@@ -1517,7 +1522,7 @@ class Bot {
     const myCap = this._ageCap(vamp), aCap = actorName ? this._ageCap(null, p, actorName) : null;   // v0.6.220 (D-111): age follows the capacity in play
     return (myCap != null && aCap != null && aCap > myCap); }                                                      // Navar McClaren: older = strictly higher CAPACITY (the age rule, v0.6.15 source-verify); unknown caps invent no restriction
   _cryptStrengthMod(vamp, oppName){ const fx = vamp && this._cryptFxOf(vamp.name); const m = fx && fx.strengthMod;   // VB: Blythe-class conditional strength (printed: "-1 strength when in combat with a Malkavian"). v0.6.219 (crypt wave A, D-108): an unconditional '+1 strength.' (Massimiliano) needs no opponent -- the planners read it outside combat too; only a vsClan condition waits for the opponent's name
-    const won = this._wonPlus(vamp);   // v0.6.232 (D-122): Week of Nightmares' +1 strength for a Ravnos, in every caller (the planners, the strike pick, the forecasts)
+    const won = this._wonPlus(vamp, 'strength');   // v0.6.232 (D-122): Week of Nightmares' +1 strength for a Ravnos, in every caller (the planners, the strike pick, the forecasts)
     if(!m) return won;
     if(m.vsClan){ if(!oppName) return won; const h = this.fxLookup(oppName); const cl = h && h.kind === 'crypt' && h.e.clan; const arr = Array.isArray(cl) ? cl : (cl ? [cl] : []);
       if(!arr.includes(m.vsClan)) return won; }
@@ -4890,7 +4895,11 @@ class Bot {
      sends L12.wonEnd, each owner pays for its Ravnos (blood, or the vampire burned) and the controller burns the card. */
   _isRavnos(v){ return this._vampClan(v) === 'Ravnos'; }
   _wonCard(){ const w = this._w5InPlay(e => (e.modes || []).some(mo => mo.fx && mo.fx.wonCounters)); return w[0] || null; }   // fx.wonCounters -- literal read; one per game
-  _wonPlus(v){ return (v && v.name && this._isRavnos(v) && this._wonCard()) ? 1 : 0; }
+  _wonPlus(v, key){                  // Week of Nightmares on the table and v a Ravnos: its +N -- key 'bleed' (fx.wonBleed), 'strength' (fx.wonStrength), 'hunt' (fx.wonStealHunt: no normal hunt, the special one) -- literal reads (5b's egress review: they were hard-coded 1)
+    const w = (v && v.name && this._isRavnos(v)) ? this._wonCard() : null; if(!w) return 0;
+    const mo = (this._w5E(w.card.name).modes || []).find(x => x.fx && x.fx.wonCounters), fx = (mo && mo.fx) || {};
+    return key === 'strength' ? (fx.wonStrength | 0) : key === 'hunt' ? (fx.wonStealHunt | 0) : (fx.wonBleed | 0);
+  }
   _wonLeft(w){ const c = w && w.card; return c ? (Array.isArray(c.counters) ? c.counters.filter(x => /^Nightmare/i.test(String(x))).length : (c.counters | 0)) : 0; }
   _wonKey(seat, name){ return (seat | 0) + '|' + name; }
   _wonRavnos(){ const out = []; for(const st of this._w5Live()){ for(const c of this._seatCards(st)) if(c && c.kind === 'crypt' && !c.faceDown && (c.zone === 'ready' || c.zone === 'torpor') && this._isRavnos(c)) out.push({ seat: st, v: c, n: ((this._wonN && this._wonN.get(this._wonKey(st, c.name))) | 0) }); } return out; }
@@ -4929,7 +4938,8 @@ class Bot {
     this.push();
   }
   _wonBurnVamp(v){                   // a Ravnos of mine burned at the end: its cards go with it (_archonBurned's shape)
-    v.zone = 'burned'; v.locked = false; this._w5MinionLost(v, 'burned');
+    const wasReady = v.zone === 'ready';
+    v.zone = 'burned'; v.locked = false; if(wasReady) this._w5MinionLost(v, 'burned');   // Tension in the Ranks bills a READY minion lost (5b's egress review: one in torpor was billed)
     const gone = this.board.filter(x => x !== v && (x.host === v.id || (v.attached || []).includes(x.id))); v.attached = [];
     this.board = this.board.filter(x => x !== v && !gone.includes(x));
     gone.forEach(x => this._toAsh(x.name));
@@ -5757,7 +5767,7 @@ class Bot {
   _expOppStrike(c){                  // v0.6.205 (R4): what the opposing strike is expected to do THIS round, before it is known -- 0 at long range against a seat that has shown no ranged strike (v0.6.157), else the table model's expected strike (_expStrikeDmg). Majesty's _ceCtx and the dodge read the same number; their crows are not in it.
     if(c === undefined) c = this._combatOpp();
     const longSafe = this._range === 'long' && !this._oppHasRanged();               // v0.6.157: a hand strike does not reach at long range
-    return { n: longSafe ? 0 : this._expStrikeDmg(c ? c.seat : 0) + (c && c.name ? this._wonPlus({ name: c.name }) : 0), longSafe };   // v0.6.232 (D-122): an opposing Ravnos under Week of Nightmares strikes for 1 more
+    return { n: longSafe ? 0 : this._expStrikeDmg(c ? c.seat : 0) + (c && c.name ? this._wonPlus({ name: c.name }, 'strength') : 0), longSafe };   // v0.6.232 (D-122): an opposing Ravnos under Week of Nightmares strikes for 1 more
   }
   _myRoundDmg(vamp, opts){           // the damage (or blood swing) my NEXT strike lands: best strike card > bare fist + strength; steal counts as its blood swing; active Carrion Crows add each round. opts.close = evaluate as if at close range (a bundled Grapple press forces close next round)
     const saveR = this._range; if(opts && opts.close) this._range = 'close';
@@ -7670,6 +7680,7 @@ class Bot {
         for(const c of order.slice(1)){
           if(c.human) this.chat(c.by + ': ' + order[0].by + '\u2019s Sudden Reversal came first \u2014 take yours back.');
           else this.send({ t: 'log', html: '<b>' + esc(c.by) + "</b>'s Sudden Reversal comes too late for <b>" + esc(this.o.name) + "</b>'s <b>" + esc(name) + '</b>.' });   // L12.srLate
+          this._emit('sr-late', { by: c.by, card: name, human: !!c.human, first: order[0].by });
         }
       }
       this._aspLast = { card: name, at: Date.now(), cancelled: asp.cancelled };
@@ -7691,7 +7702,7 @@ class Bot {
     const g = this._srGain(seat, card, e, tgt);
     let price; this._quietHold = true; try { price = this._bestMasterFor(new Set()).length ? 1.0 : 0.3; } finally { this._quietHold = false; }   // my next master phase's action: another master I would play, else the card's own option value (thresholds: Claude's, spec \u00a712.2) -- read out of turn, so no hold row (_w5HoldNote)
     const row = { owner: this.seatName(seat), card, gain: +g.gain.toFixed(2), price, why: g.why };
-    if(!(g.gain > price)){ this.o.log('sudden reversal: ' + card + ' (' + row.owner + ') not cancelled -- ' + g.why + ', gain ' + row.gain + ' against ' + price); return null; }
+    if(!(g.gain > price)){ this.o.log('sudden reversal: ' + card + ' (' + row.owner + ') not cancelled -- ' + g.why + ', gain ' + row.gain + ' against ' + price); this._emit('sr-decline', row); return null; }   // the decision's other side, a row (D-93; 5b's egress review)
     return Object.assign({ name: sr }, row);
   }
   _srGain(seat, card, e, tgt){       // what the master would be worth to me if it resolved, sign turned, with the cost its owner keeps (a cancelled master is not paid for)
@@ -7728,6 +7739,7 @@ class Bot {
   _onSrCancel(by, card){             // the player's side: a cancel read in my open window is a candidate (the window's close takes the first in turn order); after it, too late
     const asp = this._asp;
     if(asp && asp.open && FX_NORM(asp.card) === FX_NORM(card)){ if(!asp.cands.some(c => c.by === by)) asp.cands.push({ by, seat: this._seatOfName(by), human: false }); return; }
+    this._emit('sr-late', { by, card, human: this._isHumanName(by), first: null });
     if(this._isHumanName(by)) return this.chat(by + ': too late \u2014 my ' + card + ' has resolved; take your Sudden Reversal back.');
     this.send({ t: 'log', html: '<b>' + esc(by) + "</b>'s Sudden Reversal comes too late for <b>" + esc(this.o.name) + "</b>'s <b>" + esc(card) + '</b>.' });   // L12.srLate
   }
@@ -7755,7 +7767,14 @@ class Bot {
     }
     if(!(e.t || []).includes('master') || e.oot) return;
     const tn = m.target && m.target.kind === 'crypt' && m.target.name, tgt = tn && this.board.some(c => c && c.kind === 'crypt' && c.name === tn) ? { owner: this.o.name, name: tn } : null;
-    const d = this._srFor(m.seat | 0, this.fxLookup(name).name, tgt); if(d) this._playSr(m.seat | 0, who, d.card, d, true);
+    const st = m.seat | 0, card = this.fxLookup(name).name;
+    const live = this._w5Live().slice().sort((a, b) => a - b), k0 = live.indexOf(st), k1 = live.indexOf(this.seat), N = live.length || 1;
+    const dist = k0 >= 0 && k1 >= 0 ? (k1 - k0 + N) % N : 1;
+    setTimeout(() => {   // a human's master has no player to arbitrate: the bots answer in turn order after the human (the rulebook's sequencing), a quarter second apart, and one that has read another's cancel holds (5b's egress review)
+      if(this.out) return;
+      const sn = this._srSeenHuman; if(sn && sn.owner === who && FX_NORM(sn.card) === FX_NORM(card) && Date.now() - sn.at < 15000) return;
+      const d = this._srFor(st, card, tgt); if(d) this._playSr(st, who, d.card, d, true);
+    }, Math.max(0, dist - 1) * 250);
   }
   /* ---------- v0.6.232 (V5 wave 5b, D-122, spec-v5-wave5 §12.3): MEDITATIVE GROVE's cancel ----------
      'You can lock this card to cancel a frenzy card as it is played on a Salubri you control (cost is still paid).' A frenzy card that
@@ -7806,13 +7825,13 @@ class Bot {
   async _yawpWindow(v, act){         // the caller, after my unblocked political action and before the referendum -> null (no Yawp Court: poll), 'on' (fought, still ready: poll), 'stop' (no referendum)
     if(!this._yawpVisible()) return null;
     const yp = this._yawp = { open: true, by: null, vamp: null, actor: v.name };   // armed before the line (L-25, L-92)
+    this._combatArmed = true;   // and the combat too (the rusher's rule; 5b's egress review): the owner fights at once, its first combat lines may arrive inside the window -- my announce cleared the stashes, nothing clears them again
     this.send({ t: 'log', html: '<b>' + esc(v.name) + "</b>'s political action succeeds \u2014 the referendum follows." });   // L12.polSuccess
     try { if(this.o.paceMs) await this._pace(); else await sleep(Math.max(0, +this.o.asPlayedMs || 0)); await this._holdGate(); }
     finally { yp.open = false; if(this._yawp === yp) this._yawp = null; }
     if(this.out) return 'stop';
-    if(!yp.by) return null;
+    if(!yp.by){ this._combatArmed = false; return null; }
     this._emit('yawped', { vamp: v.name, by: yp.by, opp: yp.vamp, card: act.name });
-    this._clearCombatStashes(); this._combatArmed = true;
     await this._resolveCombat(v, yp.vamp);   // my acting vampire against their Sabbat: I am the acting minion, no 'if blocked' step (an opponent named)
     if(this.out) return 'stop';
     if(v.zone === 'ready'){ this.send({ t: 'log', html: 'Yawp Court \u2014 <b>' + esc(v.name) + '</b> is still ready: the referendum goes on.' }); return 'on'; }   // L12.yawpOn
@@ -7830,10 +7849,10 @@ class Bot {
     let refW = 0; if(rt) for(const k of Object.keys(rt.deltas || {})) refW += this._seatW(k | 0) * (rt.deltas[k] | 0);   // the referendum's worth to me if it passes (my seat weights)
     const avoid = -refW * 0.7;   // prevented with the actor down; 0.7 = it would pass (a prior)
     const unlocked = this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked);
-    const exposed = seat === this.prevLive(this.seat) && unlocked.length <= 1 && this._seatCards(seat).some(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && c.name !== actor);
     let best = null;
     for(const c of unlocked){
-      if(this._vampSect(c) !== 'Sabbat' || exposed) continue;
+      if(this._vampSect(c) !== 'Sabbat') continue;
+      if(!unlocked.some(x => x !== c && (x.blood | 0) > 0) && this._keepBlocker(c, [c], 0, { unlockedN: 1 })) continue;   // D-117's guard (5b's egress review): my last body stays home when the posture keeps it -- a bleeding predator within reach, the plan's quota (_ballGuard's shape); my predator acts before my next unlock whoever calls
       const r = this._rushExpectation(c), hit = r.reach || r.expDmg || 1, ab = av.blood | 0;
       const pDown = hit >= ab + 1 ? 0.85 : hit >= ab ? 0.5 : 0.15;
       const back = this._expStrikeDmg(seat) || 1;
@@ -10093,7 +10112,7 @@ class Bot {
     if((m = t.match(L12.tensionBurn))){ this._w5OnTensionBurn(who, m[2]); return; }
     if((m = t.match(L12.hostageFree))){ const st = this._seatOfName(who); if(st && this._w5Hostages) for(const [k, h] of this._w5Hostages) if(h.seat === st && h.name === m[2]) this._w5Hostages.delete(k); return; }   // v0.6.230: Carver's -- that seat's hostage freed   // v0.6.230: my Tension in the Ranks burned with two masters
     if((m = t.match(L12.asPlayed))){ if(who !== this.o.name) this._onAsPlayed(who, m[2], m[3] || null, m[4] || null); return; }   // v0.6.232 (D-122): another Methuselah's master as it is played -- my Sudden Reversal
-    if((m = t.match(L12.srCancel))){ if(who !== this.o.name && m[2] === this.o.name) this._onSrCancel(m[1], m[3]); return; }   // v0.6.232: a cancel of my master -- the first in my window wins
+    if((m = t.match(L12.srCancel))){ if(who !== this.o.name && m[2] === this.o.name) this._onSrCancel(m[1], m[3]); else if(who !== this.o.name && this._isHumanName(m[2])) this._srSeenHuman = { owner: m[2], card: m[3], at: Date.now() }; return; }   // v0.6.232: a cancel of my master -- the window's candidates; another bot's cancel of a human's master -- mine holds
     if((m = t.match(L12.srLate))){ if(who !== this.o.name && m[1] === this.o.name) this._onSrLate(m[2], m[3]); return; }      // v0.6.232: my cancel came too late -- the card back to my hand
     if((m = t.match(L12.groveCancel))){ if(who !== this.o.name) this._onGroveCancel(who, m[2]); return; }   // v0.6.232: Meditative Grove cancelled my rush as it was played
     if((m = t.match(L12.polSuccess))){ if(who !== this.o.name) this._onPolSuccess(who, m[1]); return; }   // v0.6.232: a successful political action -- my Yawp Court?
@@ -11865,7 +11884,7 @@ class Bot {
         const mandatory = (v.blood | 0) === 0 && !huntDone;
         const keep = ballFree ? null : this._keepBlocker(v, actors, _ai);   // v0.6.118 (B2 posture, doctrine 2.4): the last unlocked body stays home against a bleeder within reach. v0.6.229 (D-117): the Grand Ball's free Toreador acts; another body stays home
         if(keep){ this.o.log('posture: ' + keep.why); this._emit('keep-blocker', { vamp: v.name, tto: keep.tto, quota: keep.quota || 0 }); continue; }
-        const wonV = !huntDone && !!this._wonPlus(v);   // v0.6.232 (V5 wave 5b, D-122): Week of Nightmares -- a Ravnos does not hunt as normal; its special hunt only moves blood between my Ravnos, so it is never a choice
+        const wonV = !huntDone && !!this._wonPlus(v, 'hunt');   // v0.6.232 (V5 wave 5b, D-122): Week of Nightmares -- a Ravnos does not hunt as normal; its special hunt only moves blood between my Ravnos, so it is never a choice
         const hd = huntDone ? { hunt: false, why: 'Change of Target ended its hunt this turn' } : (wonV && !mandatory) ? { hunt: false, why: 'Week of Nightmares: a Ravnos does not hunt as normal' } : mandatory ? { hunt: true, why: 'mandatory: 0 blood (rulebook)' } : this.decide('hunt-or-bleed', { vamp: v });
         if(hd.hunt && wonV){   // the mandatory hunt of a Ravnos at 0 blood: the special hunt from another Ravnos of mine -- none at all: it cannot hunt [LSJ 19970224], so it cannot act
           if(this._wonHuntFrom(v)){ this.o.log('action (' + v.name + '): Week of Nightmares -- the special hunt (mandatory: 0 blood)'); await this._wonHunt(v, true); continue; }

@@ -148,7 +148,7 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   queue it is on the wire (the hotseat bridge delivers inside the send, L-92); `_drain` never sends inside a send.
 - **The beat rule (v0.6.152, v0.6.207).** [D-65, D-70; L-29, L-36] `_pace` waits paceMs from the LATEST visible event at the table (my own act or anybody
   else's say / log / chat / tally / fx; boards never re-anchor); `_afterBeat(kind, guard, fn)` for a synchronous handler that wants
-  a visible act to follow; paceMs 0 runs everything at once (the suite and the arena are byte-identical). The chat beat separates
+  a visible act to follow; paceMs 0 runs everything at once (the suite; the arena adds the 'as played' grace, `asPlayedMs` 500, D-122). The chat beat separates
   two CHAT bubbles and nothing else (`_lastChatWireAt`); a hold or resume line skips it.
 - **The tempo gate (v0.6.194, `docs/specs/spec-bot-tempo-2026-09-27.md`).** [D-66, D-68, D-69; L-27, L-28] A wait on a HUMAN never reads `askSecs` / `phaseSecs`
   directly: it asks `_waitPlan(kind, who)` (block / react / pq / vote / phase / damage / verdict), writes a `wait` row, has its
