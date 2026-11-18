@@ -7773,10 +7773,10 @@ class Bot {
     else if(e.frenzy === 'opp' && m.target && m.target.kind === 'crypt') vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === m.target.name) || null;
     if(vc) this._groveCancel(this.fxLookup(name).name, vc, this._humanAt(m.seat | 0));
   }
-  _onGroveCancel(who, card){         // the rusher's side: my Deep Song [ANI] at that seat's vampire was cancelled as it was played -- the open window answers 'cancelled'
+  _onGroveCancel(who, card){         // the rusher's side: my Deep Song [ANI] at that seat's vampire was cancelled as it was played -- the open window answers 'cancelled'; a line read inside my own rush line's send (the hotseat bridge, the sim) is kept for the window to come (L-25, L-92)
     const av = this._actingVamp, act = av && av.act, a = this._ask;
-    if(!act || act.kind !== 'rush' || !a || a.done || !act.target || this._seatOfName(who) !== (act.target.seat | 0)) return;
-    this._answer('cancelled', who);
+    if(!act || act.kind !== 'rush' || !act.target || this._seatOfName(who) !== (act.target.seat | 0)) return;
+    if(a && !a.done) this._answer('cancelled', who); else this._groveCancelled = who;
   }
   /* ---------- v0.6.232 (V5 wave 5b, D-122, spec-v5-wave5 §12.4): YAWP COURT ----------
      'If a political action is successful, before the referendum, you can lock this location and a ready unlocked Sabbat vampire you
@@ -12184,9 +12184,11 @@ class Bot {
           this._announceTallyA(0 + this._cryptStealthMod(v, 'rush', true));   /* v0.6.219 (crypt wave A, D-108): + the crypt's stealth (_cryptStealthMod: Ariane's undirected -1, Devorah's pool, Frau Schädel's recruit / employ, Kalyani's hunt) */
           this._combatArmed = true;   // v0.6.202: the rushed bot fights the moment it complies -- its first combat lines (Deep Song makes it the acting minion: it speaks first) may arrive before my own combat starts
           this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
+          this._groveCancelled = null;   // v0.6.232 (D-122): armed before the line -- a Meditative Grove cancel can arrive inside this send
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(act.name) + '</b> [ANI] \u2014 rushes <b>' + esc(act.target.owner) + "</b>'s <b>" + esc(act.target.name) + '</b>.' });
-          this._maybeInvigorate(v);   // v0.6.213 (V5 wave 1): Invigorate -- combat is certain on a rush; same tick, no await before the block window
-          const ansR = await this._askBlock('Trainbot: ' + v.name + ' rushes ' + act.target.name + ' (Deep Song [ANI]). Block?');
+          const gcBy = this._groveCancelled; this._groveCancelled = null;
+          if(!gcBy) this._maybeInvigorate(v);   // v0.6.213 (V5 wave 1): Invigorate -- combat is certain on a rush; same tick, no await before the block window (none when the rush was cancelled as it was played)
+          const ansR = gcBy ? { what: 'cancelled', who: gcBy } : await this._askBlock('Trainbot: ' + v.name + ' rushes ' + act.target.name + ' (Deep Song [ANI]). Block?');
           await sleep(150);
           if(ansR.what === 'cancelled'){   // v0.6.232 (D-122): Meditative Grove cancelled it as it was played -- not performed [RBK cancel-a-card]: the card is spent, my vampire unlocks and may act again
             this._toAsh(act.name); v.locked = false; this._combatArmed = false;

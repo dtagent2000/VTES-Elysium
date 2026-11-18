@@ -14142,6 +14142,13 @@ async function connectWithRetry(client, tries = 30){
         const r = { dev, line: logs7(g).find(l => /^Viktor locks Meditative Grove — Whistling Up the Beast is cancelled/.test(l)) || null, locked: g.board[2].locked, outside };
         ok(!r.dev && !!r.line && r.locked === true && !r.outside,
            '177d5 a mode-level frenzy tag: a human\'s Whistling Up the Beast in our combat is cancelled; Devil-Channel: Hands (its own vampire) and a Whistling outside our combat are not (got ' + JSON.stringify(r) + ')'); }
+      { const h = mk177(1), g = mkG(); const v = V7('l1', 'Lucinde', { blood: 5, locked: true }); h.board = [v]; h.hand = ['Deep Song']; h.table = { 2: pub7(20, [V7('s1', 'Seraphina'), V7('s2', 'Abraham DuSable'), M7('g1', 'Meditative Grove')]), 3: pub7(20, []) };
+        let calls = 0; h._decideAction = () => { calls++; return calls === 1 ? { pick: { kind: 'rush', name: 'Deep Song', idx: h.hand.indexOf('Deep Song'), n: 0, target: { seat: 2, owner: 'Viktor', name: 'Seraphina', dir: 'prey', blood: 4 } }, why: 'the test' } : { pick: null, why: 'nothing more' }; };
+        const asks = []; let fights = 0; h._askBlock = async q => { asks.push(q); return { what: 'pass' }; }; h._resolveCombat = async () => { fights++; };
+        wire7([h, g]); const terr = await turn7(h);
+        const r = { terr, calls, grove: logs7(g).some(l => /^Viktor locks Meditative Grove — Deep Song \[ANI\] is cancelled/.test(l)), ev: ev7(h, 'grove-cancelled').length, rushAsk: asks.some(q => /rushes Seraphina/.test(q)), fights, ash: h.board.some(c => c.zone === 'ash' && c.name === 'Deep Song') };
+        ok(!terr && r.grove && r.ev === 1 && !r.rushAsk && r.fights === 0 && r.ash && r.calls === 2,
+           '177d6 through the bridge (the line delivered inside the rush line\'s send): the rusher takes the Grove\'s cancel -- no window, no combat, its vampire acts again (got ' + JSON.stringify(r) + ')'); }
 
       // e) Yawp Court: the caller's window only while a seat shows the card unlocked with a ready unlocked Sabbat; the owner answers at once
       //    (the line, the locks, the fight) and its Sabbat takes 2 environmental damage only when the caller says its vampire is still ready;
