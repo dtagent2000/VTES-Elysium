@@ -1,7 +1,7 @@
 #!/bin/bash
 # doc-budget.sh -- the standing pages' check (spec-cleanup-2026-10-20.md §5.3). Run from anywhere; exit 1 on any failure.
 #   1. each standing page within its byte budget; the bootstrap (root CLAUDE.md + bot/CLAUDE.md + STATUS + BOARD) <= 50 KB;
-#      every standing page together <= 170 KB;
+#      every standing page together <= 173 KB;
 #   2. every repo path named (in backticks) in a standing page, and every bot/ path in the root CLAUDE.md, exists;
 #   3. every version STATUS.md names agrees with the code: BOT_VERSION, the arena, the sim, the cardfx compiler, the hotseat
 #      tool, the coverage tool, the read-only client / protocol / server copies in bot/ and the root's client / server (with
@@ -26,8 +26,10 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    RULINGS 62 -> 64 KB and the total 167 -> 170 KB on 15 Nov (bot v0.6.229: Johan's D-118, the bench round's answers; the register
 #    stood 675 bytes under its ceiling and the total 591 bytes over it with the line).
 #    HOWTO 21 -> 21.5 KB the same day (bot v0.6.229: the guide check's reader, ana-guide-check.py; the page stood 1 byte under its ceiling).
-PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:64000 $D/LESSONS.md:20000
-       $D/ARCHITECTURE.md:15500 $D/HARNESS.md:8000 $D/HOWTO.md:21500"
+#    RULINGS 64 -> 65 KB, ARCHITECTURE 15.5 -> 16 KB and the total 170 -> 173 KB on 18 Nov (bot v0.6.233: Johan's D-123, the wave 6a
+#    decisions, after the fold of five retired stubs; the register stood 287 bytes under its ceiling, the table 11, the total 258).
+PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:65000 $D/LESSONS.md:20000
+       $D/ARCHITECTURE.md:16000 $D/HARNESS.md:8000 $D/HOWTO.md:21500"
 total=0
 for pb in $PAGES; do
   f=${pb%:*}; lim=${pb##*:}
@@ -37,7 +39,7 @@ for pb in $PAGES; do
 done
 boot=0; for f in "$R/CLAUDE.md" "$B/CLAUDE.md" "$D/STATUS.md" "$D/BOARD.md"; do boot=$((boot + $(wc -c < "$f" | tr -d ' '))); done
 if [ "$boot" -gt 50000 ]; then bad "bootstrap is $boot bytes, budget 50000"; else ok "bootstrap $boot / 50000"; fi
-if [ "$total" -gt 170000 ]; then bad "standing pages total $total bytes, budget 170000"; else ok "standing pages $total / 170000"; fi
+if [ "$total" -gt 173000 ]; then bad "standing pages total $total bytes, budget 173000"; else ok "standing pages $total / 173000"; fi
 
 # 2. paths named in the standing pages: a backticked token that looks like a file or a folder
 missing=0

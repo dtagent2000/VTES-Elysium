@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.49 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.50 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.49';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.50';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -75,7 +75,7 @@ const botSrc = fs.readFileSync(require.resolve('./elysium-bot.js'), 'utf8');
 const REF_CALLER = /\b_refDeltas\s*\(/.test(botSrc) && /\b_callReferendum\s*\(/.test(botSrc);   // v1.1.31: the two names the politics leg's caller is specified to carry
 const NON_FX = new Set(['json', 'counts', 'normIdx', 'lib', 'crypt', 'alias']);   // loader internals, not fx keys
 const scanned = new Set();
-for (const m of botSrc.matchAll(/\bfx\.([a-zA-Z]+)\b/g)) if (!NON_FX.has(m[1])) scanned.add(m[1]);
+for (const m of botSrc.matchAll(/\bfx\.([a-zA-Z]+)\b/g)) if (!NON_FX.has(m[1])) scanned.add(m[1]);   // a key with a digit is invisible here (v1.1.50: stealthTo0 and noStrikeR1 were renamed stealthToZero and noStrikeFirstRound)
 
 /* Classification of what a scanned read MEANS (source-derived, bot v0.6.11):
    'play'    — makes an OWN card actively playable (action/modifier/reaction/combat pick)
@@ -169,6 +169,10 @@ const CLASS = {
      blocker it reaches); Versailles -- votesEach, a rider on votes (_voteBoosts: one vote per matching vampire); Eyes of the Wild -- the locked
      route's paid intercept (interceptPaidBlood, read beside interceptPaid in _bestUnlockReactFor) and its relock (_clearPending). */
   icpVs: 'play', votesEach: 'paired', interceptPaidBlood: 'paired', relockIfNoBlock: 'paired',
+  /* v1.1.50 (18 Nov 2026, bot v0.6.233, V5 wave 6a, RULINGS D-123): the block side. stealthToZero -- Night Terrors (_nightTerrorsFor / _playNightTerrors,
+     the acting bot's _onStealthZero); noStrikeFirstRound -- One With the Land [PRO]'s rider on the locked route (_bestUnlockReactFor, _owl); cancelBlockPay
+     -- True Love's Face [OBF][PRE]'s counter, beside its cancelBlock (_bestCancelBlockFor, _payCancelWindow, _cancelPayFor). */
+  stealthToZero: 'play', noStrikeFirstRound: 'paired', cancelBlockPay: 'paired',
   titleCard: 'paired', votesPerReady: 'paired',   // a title referendum's terms (ref.fx), consumed through the verdict's titleCard rule
   /* v1.1.42 (2 Nov 2026, bot v0.6.215, V5 wave 3, RULINGS D-104): the wave's keys -- all on masters, read on the board or by the master loop. */
   lockStealthSect: 'paired', lockStealthAt: 'paired',   // Anarch Railroad's sect gate (_lockStealthFor); Creepshow Casino's announce window (_lockStealthAtAnnounce)
@@ -493,6 +497,13 @@ function judgeLib(h, cryptEs, text){
   if (verdict === 'FULL' && text){   // v1.1.47: a discipline line with no mode is a mode the bot cannot play
     const gaps = discLineGaps(e, text);
     if (gaps.length){ verdict = 'PARTIAL'; gaps.forEach(k => per.push({ at: k, dir: '', consumed: false, via: 'no mode for the card text\'s [' + k + '] line', reach: cryptEs.some(ce => modeReachableBy({ at: k }, ce)), fxKeys: 'no mode', textLine: true })); }
+  }
+  /* v1.1.50 (18 Nov 2026, bot v0.6.233, V5 wave 6a, RULINGS D-123): a card whose text conditions it on 'during an action directed at you'
+     needs the condition read -- cardfx onlyDirected on the entry or a mode, or an fx value 'directed' (Underbridge Stray's allyBurnUnlock).
+     Eyes of Argus and The Warrens read FULL while the bot spent them at undirected actions (568 times in v0.6.232's 240). */
+  if (verdict === 'FULL' && text && /\bduring an action directed at you\b/i.test(text)
+      && !(e.onlyDirected || modes.some(mo => mo.onlyDirected || Object.values(mo.fx || {}).includes('directed')))){
+    verdict = 'PARTIAL'; per.push({ at: '—', dir: '', consumed: false, via: "the text's 'during an action directed at you' is not read (cardfx onlyDirected)", reach: true, fxKeys: 'no onlyDirected', textLine: true });
   }
   return { verdict, per, isMaster };
 }

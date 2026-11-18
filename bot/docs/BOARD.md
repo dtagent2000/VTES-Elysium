@@ -16,13 +16,20 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 waves**: the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim plays them; the menu only
   Toreador) and the ledger (`docs/CARDS.md`); waves by effect class as the class map ranks them (D-98). Waves 1–5 done
-  (D-99, D-103, D-104, D-106, D-120, D-122); next: the 11 cards with a discipline line and no mode (D-116 (3)). Then the maneuver / press grants
-  with the rush cards, the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
+  (D-99, D-103, D-104, D-106, D-120, D-122), 6a (D-123); next: 6b -- Shadow Cloak (a window after a successful action) and Absolute
+  Tyranny (the polling's -1 vote by path), spec-v5-wave6 §3. Then the maneuver / press grants with the rush cards (Hunting the Quarry,
+  Night Terrors' strike: combat ends), the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
   done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY`
   line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares
   them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108; `CARDS.md`; HOWTO.
-- **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10): what v1 of each wave left out, the
-  amber halves and the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-122.
+- **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8): what v1 of each wave left out, the
+  amber halves and the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
+- **The curation queue of wave 6's graded readings** (none in a deck; spec-v5-wave6 §8): Enkil Cog, Destilaria Estrela da
+  Paraíba, Dogged Pursuit, Speak with Spirits and The Mole (leftover +1 intercept modes), Hall of Hades' Court [dom] (`_voteBoosts`
+  plays it past its line's capacity), Momentary Delay (`press` misreads 'continues as if unblocked'), Faerie Wards [aus] (the directed
+  condition with an ally-or-younger clause). The general gap: `_entryReqOk` (clan, sect, capacity) is read by the reaction finders
+  only; the stealth, bleed-modifier and action finders ask none (the precons are mostly one clan). *Done when* each is curated and the
+  finders ask the requirement, a footprint read.
 - **The weapon's maneuver** (wave 2's review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
   a number — the .44 Magnum has never maneuvered, so the strike-binding rules' gun halves never run. Neighbours: a weapon's strike
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait
@@ -124,8 +131,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   against a random draw.
 - **The cancel cards** (Johan, 18 Nov: "a classic example" for the meta layer; D-122): Sudden Reversal decides on simple priors
   (spec-v5-wave5 §12.2: a master's worth to me against my next master phase action); the meta layer should price a cancel from the
-  table: the owner's threat, what the cancel denies, what my next action would buy. *Done when* it does and a lasombra-pinned
-  bench shows no loss.
+  table: the owner's threat, what the cancel denies, what my next action would buy. Eagle's Sight [AUS] (a block from a seat that
+  may not block, D-123) waits for the same layer. *Done when* it does and a lasombra-pinned bench shows no loss.
 - **Meta metrics at decision level, on padded decks** (their item 4): flip rate, a fork audit (does the option list hold opposite
   choices?), the vote-direction split, wrong-target audits, did-it-run counters, on a table padded with the cards a rule needs;
   an audit needs a known case before an alarming number is believed. *Done when* the meta layer's first bench reports them.

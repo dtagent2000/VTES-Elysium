@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.232';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.233';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -581,6 +581,9 @@ const L12 = {
   ppBurn: /^(.+?) locks Privileged Position — (.+?) burns 1 pool\.$/,   // v0.6.230 (bot grammar): m[1] the card's controller, m[2] the prey who burns the pool -- its bot pays, with its oust check
   autoPass: /^Referendum passes automatically — (.+?) \(Día de los Muertos\)\.$/,   // v0.6.230 (bot grammar): the caller's line in place of the poll -- no seat votes, boosts or abstains
   tensionBurn: /^(.+?) discards two masters to burn (.+?)'s Tension in the Ranks\.$/,
+  noStrikeR1: /^(.+?) plays (.+?): unlocks; if they block, neither combatant strikes in the first round\.$/,   // v0.6.233 (V5 wave 6a, D-123, bot grammar): One With the Land [PRO] on the locked route -- m[1] the blocking vampire, m[2] the card; the acting bot takes the rider for the combat that block begins (_owl)
+  stealthZero: /^(.+?) plays (.+?): (.+?)'s stealth is 0\.$/,   // v0.6.233 (bot grammar): Night Terrors-class (fx.stealthToZero) -- m[1] the reacting vampire, m[2] the card, m[3] the acting minion; its bot takes its stealth off the counter (_onStealthZero)
+  payCancel: /^(.+?) burns (\d+) pool to cancel (.+?)\.$/,   // v0.6.233 (bot grammar): the blocking minion's controller cancels True Love's Face [OBF][PRE] as it is played (fx.cancelBlockPay) -- m[1] the Methuselah, m[2] the pool, m[3] the card; read in the actor's as-played window (_onPayCancel)
   asPlayed: /^(.+?) is playing (.+?)(?: \u2014 on (.+?)'s (.+?))?\.$/,   // v0.6.232 (V5 wave 5b, D-122, bot grammar): a master as it is played, BEFORE its cost and effect -- the 'as played' window (D-107 shape A); m[1] the Methuselah, m[2] the card, m[3] / m[4] its target's owner and vampire
   srCancel: /^(.+?) plays Sudden Reversal \u2014 cancels (.+?)'s (.+?) \(its cost is not paid\)\.$/,   // v0.6.232 (bot grammar): m[1] the canceller, m[2] the master's Methuselah, m[3] the master -- the player takes the first it reads
   srLate: /^(.+?)'s Sudden Reversal comes too late for (.+?)'s (.+?)\.$/,   // v0.6.232 (bot grammar): the player's answer to every other cancel (its window closed, or another came first) -- m[1] takes its card back
@@ -1809,16 +1812,19 @@ class Bot {
     if(this.hand.includes(s)) return s;
     const k = FX_NORM(s); return this.hand.find(n => FX_NORM(n) === k) || null;
   }
-  _bestCancelBlockFor(vamp, played){   // fas C (16 July): Elder Impersonation-class superior -- fx.cancelBlock, played the moment a minion ATTEMPTS to block: the attempt fails outright and that minion never retries this action. Strictly stronger than spending stealth (a guarantee, not a contest), gated by the mode's own discipline requirement (OBF -- basic-obf vampires never see it).
+  _bestCancelBlockFor(vamp, played, o){   // fas C (16 July): Elder Impersonation-class superior -- fx.cancelBlock, played the moment a minion ATTEMPTS to block: the attempt fails outright and that minion never retries this action. Strictly stronger than spending stealth (a guarantee, not a contest), gated by the mode's own discipline requirement (OBF -- basic-obf vampires never see it).
     let best = null;
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('mod')) return;   // v0.6.12: the finder's WINDOW defines the card type -- an action-modifier window offers action modifiers only (all 3 cancelBlock carriers are mods today; future-proofing against the class Johan's standing question surfaced)
       if(!this._mayPlay(h.name, h.e, played)) return;
+      if(!this._entryReqOk(h.e, vamp) || !this._titleOk(h, vamp)) return;   // v0.6.233 (the graded readings): the card's clan -- Forced Confessional requires a Salubri
       const cost = (h.e.cost && h.e.cost.blood) || 0;
       if(cost > (vamp.blood | 0)) return;
       (h.e.modes || []).forEach(mo => {
         if(!mo.fx || !mo.fx.cancelBlock || !this._modeUsableBy(mo, vamp)) return;
-        if(!best) best = { idx, name: h.name, cost };
+        const pay = mo.fx.cancelBlockPay | 0;   // v0.6.233 (V5 wave 6a): True Love's Face [OBF][PRE] -- 'The blocking minion's controller can burn 1 pool to cancel this card as it is played'
+        if(pay && o && o.humanBlocker) return;   // ... a human's counter has no word yet: against a human blocker the card waits (a rider)
+        if(!best || (best.pay && !pay)) best = { idx, name: h.name, cost, pay };   // a card with no counter first
       });
     });
     return best;
@@ -1876,7 +1882,7 @@ class Bot {
         const keepLast = (h.e.modes || []).some(m2 => m2.fx && m2.fx.bleedNullify);   // v0.6.211 (Johan, 19 Oct: 'you usually play it as stealth last of the stealth cards you already have in hand'): Spying Mission's superior cancels a bounced bleed -- at equal stealth the other card goes first
         if(typeof st === 'number' && this._modeUsableBy(mo, vamp) && (!best || st > best.s || (st === best.s && this._combatMind() && best.combat && !hasCombat) || (st === best.s && best.keepLast && !keepLast && !(this._combatMind() && hasCombat && !best.combat)))){
           best = { idx, name: h.name, s: st, cost: cB ? { blood: cB } : null, combat: hasCombat, keepLast };
-          if(ms.cond) Object.assign(best, { cond: ms.cond, condWho: ms.who, condTo: ms.to }); }
+          if(ms.cond) Object.assign(best, { cond: ms.cond, condWho: ms.who, condTo: ms.to, condAt: ms.at || null }); }
       });
     });
     { const lb = this._lockStealthFor(vamp, played);   // v0.6.205 (R4, F23): The Labyrinth -- a lock, not a card: spent first on a tie (it unlocks at my unlock phase, the hand card is kept)
@@ -1899,9 +1905,17 @@ class Bot {
     const f = mo && mo.fx; if(!f) return null;
     const base = (typeof f.stealth === 'number') ? f.stealth : null, cv = mo.fx.icpVs;   // a literal read (the coverage scanner tracks fx.<key>)
     let cond = 0, kind = null;
-    if(cv && typeof cv.n === 'number' && cv.n < 0 && Array.isArray(cv.who)){ kind = this._condBlockerKind(vamp); if(kind && cv.who.includes(kind)) cond = -cv.n; }
+    let at = null;
+    if(cv && typeof cv.n === 'number' && cv.n < 0 && Array.isArray(cv.who)){ kind = this._condBlockerKind(vamp);
+      if(kind && cv.who.includes(kind)) cond = -cv.n;
+      else if(cv.who.includes('this') && (at = this._condBlockerName(vamp))){ cond = -cv.n; kind = kind || 'this'; } }   // v0.6.233 (V5 wave 6a): who 'this' -- Forced Confessional [dom]: 'The blocking minion gets -1 intercept', the minion attempting now whatever its kind (booked with its name: a later blocker it does not reach takes it off)
     if(base === null && !cond) return null;
-    return { s: (base | 0) + cond, cond, who: cond ? cv.who : null, to: cond ? kind : null };
+    return { s: (base | 0) + cond, cond, who: cond ? cv.who : null, to: cond ? kind : null, at: cond ? at : null };
+  }
+  _condBlockerName(vamp){            // v0.6.233 (V5 wave 6a): the name of the minion attempting to block MY acting vampire now -- _condBlockerKind's freshness (this attempt's line named it), or null
+    const av = this._actingVamp; if(!av || av.v !== vamp || !av.attemptAt) return null;
+    const nm = this._lastBlockerName, st = this._lastBlockerSeat | 0;
+    return (nm && st && st !== this.seat && (this._lastBlockerAt || 0) >= av.attemptAt - 50) ? nm : null;
   }
   _condBlockerKind(vamp){            // v0.6.228 (round F): the minion attempting to block MY acting vampire now, as a conditional stealth asks -- 'ally', or 'younger' / 'older' / 'same' by the capacity in play (RULINGS D-111: _ageCap / _capOf on its pub board, the printed capacity when the card is not there); null when this action has no attempt that named its minion yet (a shout before its line, a name from an earlier attempt or action): a conditional stealth fails closed
     const av = this._actingVamp; if(!av || av.v !== vamp || !av.attemptAt) return null;
@@ -1918,7 +1932,8 @@ class Bot {
   _condStealthAdjust(){              // v0.6.228 (round F): a new minion attempts to block my action after a conditional stealth was booked (Perfect Paragon [PRE] against a younger blocker, then the predator's older vampire on an undirected action, or a bounce's new target) -- the counter's stealth (a) belongs to the action, so the part that does not reach this blocker comes off (and goes back on for one it reaches)
     const av = this._actingVamp; if(!av || !av.condSt || !av.condSt.length || !this._ask) return;
     const kind = this._condBlockerKind(av.v);
-    const want = av.condSt.reduce((n, c) => n + ((kind && c.who.includes(kind)) ? c.s : 0), 0), d = want - (av.condOn | 0);
+    const nm = this._condBlockerName(av.v);
+    const want = av.condSt.reduce((n, c) => n + (((kind && c.who.includes(kind)) || (c.at && nm && c.at === nm)) ? c.s : 0), 0), d = want - (av.condOn | 0);   // v0.6.233: a 'this' stealth reaches the minion it was played against, by name
     if(!d) return;
     av.condOn = want; this._bumpTallyA(d);
     this._emit('stealth-vs', { vamp: av.v.name, blocker: this._lastBlockerName || null, kind: kind || null, adjust: d, cards: av.condSt.map(c => c.name) });
@@ -2936,16 +2951,19 @@ class Bot {
 
   interceptPotential(reacted, p){      // best single usable +intercept in hand right now (M2: the real thing plays only one per attempt, so "potential" means best immediately available, not an optimistic sum). Must agree with the once-per-action ledger the EXECUTION side enforces, or the decision commits to a block it can no longer back with a card.   // VA: p (the pending) brings kind + actingVampName so the crypt mods and the Navar filter shape the DECISION exactly like the pick/wire -- decision/pick agreement, the E1/45f principle
     if(!this.fx) return 0;
-    const wakeAvail = !!this._wakeCard();
-    const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && (!c.locked || wakeAvail) && !this._cryptCannotBlock(c, p && p.actingVampName, p)
+    const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && (!c.locked || !!this._wakeCardFor(c)) && !this._cryptCannotBlock(c, p && p.actingVampName, p)   // v0.6.233 (RED 1's decision side): the wake THIS vampire can play -- the blind _wakeCard counted a basic-Auspex body behind Eyes of Argus [AUS], which the pick (_wakeCardFor) never raises
       && !(p && p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp));   // v0.6.103 (#4): decision == pick -- a failed attempter and a Pentexed minion count for neither (the v0.4.1/v0.4.3 drift class, third occurrence)
     let best = -Infinity;
-    vamps.forEach(v => { const b = this._bestInterceptFor(v, reacted || null, p); const s2 = (b ? b.s : 0) + this._equipIntercept(v) + this._hostedIntercept(v, p) + this._cryptIntercept(v, p); if(s2 > best) best = s2; });   // v0.6.48 (uncertainty review): borne equipment (Bowl/Sport Bike) counts toward the DECISION too -- decision/pick agreement; the execution side (_setTallyB + _pickBlocker) already read it   // VA review: RAW best -- the old `best = 0` seed was an implicit floor (a lone Christine must report -1, not 0); empty candidate set still reports 0
+    vamps.forEach(v => { const wk = v.locked ? this._wakeCardFor(v) : null, b = this._bestInterceptFor(v, wk ? this._withPlayed(reacted, wk.name) : (reacted || null), p); const s2 = (b ? b.s : 0) + this._equipIntercept(v) + this._hostedIntercept(v, p) + this._cryptIntercept(v, p); if(s2 > best) best = s2; });   // v0.6.233: a woken body cannot play its wake card again for intercept   // v0.6.48 (uncertainty review): borne equipment (Bowl/Sport Bike) counts toward the DECISION too -- decision/pick agreement; the execution side (_setTallyB + _pickBlocker) already read it   // VA review: RAW best -- the old `best = 0` seed was an implicit floor (a lone Christine must report -1, not 0); empty candidate set still reports 0
     /* v0.6.228 (round F): decision == pick for the LOCKED routes -- with no unlocked body to pick, _commitBlock raises a locked one through an
        unlock reaction before any wake (Guard Dogs-class on a bleed, Second Tradition- and Eyes of the Wild-class on any action); a locked
        Toreador prince's Second Tradition counted nothing here, so the route it opens was taken only behind a wake the deck does not carry */
     if(!vamps.some(c => !c.locked)) this._lockedRouteBodies(p, reacted).forEach(r => { const s2 = r.s + this._equipIntercept(r.v) + this._hostedIntercept(r.v, p) + this._cryptIntercept(r.v, p); if(s2 > best) best = s2; });
     return (best === -Infinity) ? 0 : best;
+  }
+  _strayBurnFor(p){                  // v0.6.233 (V5 wave 6a): the ready ally I may burn to unlock a minion of mine for this action -- fx.allyBurnUnlock; 'directed' (Underbridge Stray: 'During an action directed at you (or a card you control), you can burn this ally ...') only when the action is directed (_pendDirected true; unknown fails closed). v0.6.232 burned it at any action
+    return this.board.find(c => { if(!c || c.zone !== 'ready' || this._outOfPlay(c)) return false;
+      const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && ((h.e.t) || []).includes('ally') && (h.e.modes || []).some(mo => mo.fx && mo.fx.allyBurnUnlock && (mo.fx.allyBurnUnlock !== 'directed' || this._pendDirected(p) === true))); }) || null;
   }
   _findStray(){                      // N4d: a ready ally with fx.allyPressLife and life left (fx-literal identification -- the scanner lesson pre-applied)
     return this.board.find(c => { if(!c || c.zone !== 'ready' || this._outOfPlay(c) || (c.life | 0) < 1) return false;
@@ -4385,25 +4403,32 @@ class Bot {
     if(!this.fx || !p || p.kind !== 'bleed' || (p.amount | 0) < 2 || p.reducedOnce) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('react')) continue;
-      const wakeOk = !!this._wakeCard();   // v0.6.67 (the combo): a wake in hand widens the pool to LOCKED reactors -- the bounce steg-6 pattern
+      if(p.reacted && p.reacted.has(FX_NORM(h.name))) continue;   // v0.6.233: once per action
+      const cost = (h.e.cost && h.e.cost.blood) | 0;
       for(const mo of (h.e.modes || [])){
         if(!mo.fx || !mo.fx.reduce) continue;
         const needT = mo.req && mo.req.title;
-        const pool = (vamps || []).filter(v => { if(!v || (v.locked && !wakeOk)) return false;
+        /* v0.6.233 (wave 6's graded readings, RED 2): the reactor must meet the MODE -- its discipline (Loyiso, basic Animalism, played Sentry
+           Signal's [ANI] 'reduce 3'), the card's clan / sect / capacity and title, its condition -- and pay the card's blood (and a wake's,
+           the wake it can itself play: _wakeCardFor, as the block route; v0.6.67's blind _wakeCard woke anyone). */
+        const pool = (vamps || []).filter(v => { if(!v) return false;
+          const wk = v.locked ? this._wakeCardFor(v) : null; if(v.locked && !wk) return false;
+          if(!this._modeUsableBy(mo, v) || !this._entryReqOk(h.e, v) || !this._titleOk(h, v) || !this._dirOk(h.e, mo, p)) return false;
+          if((v.blood | 0) < cost + ((wk && wk.cost && wk.cost.blood) | 0)) return false;
           if(!needT) return true;
           return String(this._titleOf(v).title || '').toLowerCase() === String(needT).toLowerCase(); });   // v0.6.217: _titleOf (a title card counts)
         pool.sort((a2, b2) => ((a2.locked ? 1 : 0) - (b2.locked ? 1 : 0)));   // unlocked PREFERRED -- never spend the wake needlessly
         if(!pool.length) continue;
-        return { idx, name: h.name, n: mo.fx.reduce, vamp: pool[0] };
+        return { idx, name: h.name, n: mo.fx.reduce, vamp: pool[0], cost };
       }
     }
     return null;
   }
   async _commitReduce(p, rd){        // N4c: the reducer IS the payer -- p.amount drops bot-locally, the log line is table-truth; then Pass closes my window. v0.6.67: async for the wake pacing beat
     const needsWake = !!rd.vamp.locked;                  // re-derived from CURRENT state (the bounce precedent) -- the vampire may have (un)locked under the think delay
-    const wk = needsWake ? this._wakeCard() : null;
+    const wk = needsWake ? this._wakeCardFor(rd.vamp) : null;   // v0.6.233: the wake THIS vampire can play
     const wkCost = (wk && wk.cost && wk.cost.blood) || 0;
-    if((needsWake && !wk) || (rd.vamp.blood | 0) < wkCost){
+    if((needsWake && !wk) || (rd.vamp.blood | 0) < wkCost + (rd.cost | 0)){
       this.o.log('reduce reconsidered (wake or blood no longer available) \u2014 re-evaluating'); return this._reactWindow();
     }
     if(wk){                                              // v0.6.67 (the combo): the wake play -- _commitBounce's sequence VERBATIM; the reactor STAYS locked ('as though unlocked' is the rule)
@@ -4413,6 +4438,7 @@ class Bot {
       this.fxClone({ name: wk.name, kind: 'lib' }, 'may react as though unlocked', { actor: rd.vamp });
       this.send({ t: 'log', html: '<b>' + esc(rd.vamp.name) + '</b> plays <b>' + esc(wk.name) + '</b>: may react as though unlocked.' });
       this._emitPlay(wk.name, 'wake', rd.vamp.name);
+      if(p.reacted) p.reacted.add(FX_NORM(wk.name));   // v0.6.233: the wake is this action's card too
       await this._pace();
     }
     const j = this.hand.indexOf(rd.name);   // v0.4.2: re-anchor by name after the think delay (and the wake splice just above shifts it AGAIN)
@@ -4420,6 +4446,8 @@ class Bot {
     this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1;
     this._toAsh(rd.name);
     this._emitPlay(rd.name, 'react-reduce', rd.vamp.name);
+    if(rd.cost) rd.vamp.blood = Math.max(0, (rd.vamp.blood | 0) - rd.cost);   // v0.6.233 (RED 2): the card's blood (Sentry Signal) -- it was never paid
+    if(p.reacted) p.reacted.add(FX_NORM(rd.name));
     p.amount = Math.max(0, (p.amount | 0) - rd.n);
     p.reducedOnce = true;
     this.fxClone({ name: rd.name, kind: 'lib' }, 'reduces the bleed by ' + rd.n, { actor: rd.vamp });
@@ -5290,7 +5318,7 @@ class Bot {
     }
     return null;
   }
-  _bestUnlockReactFor(vamp, when){   // N1: a usable TRUE-unlock reaction for this vampire in this WINDOW -- fx.unlock, mode.when === when (curated riders; bare fx.unlock cannot tell Guard Dogs from Cats' Guidance)
+  _bestUnlockReactFor(vamp, when, p){   // N1: a usable TRUE-unlock reaction for this vampire in this WINDOW -- fx.unlock, mode.when === when (curated riders; bare fx.unlock cannot tell Guard Dogs from Cats' Guidance). v0.6.233: p = the action, for the directed condition (_dirOk: One With the Land's header)
     if(!this.fx) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('react')) continue;
@@ -5298,11 +5326,12 @@ class Bot {
       let found = null;
       for(const mo of (h.e.modes || [])){
         if(!mo.fx || !mo.fx.unlock || mo.when !== when) continue;
-        if(!this._modeUsableBy(mo, vamp) || !this._titleOk(h, vamp)) continue;
+        if(!this._modeUsableBy(mo, vamp) || !this._titleOk(h, vamp) || !this._dirOk(h.e, mo, p)) continue;
         const cB = ((h.e.cost && h.e.cost.blood) || 0) + (mo.fx.payBlood | 0); if((vamp.blood | 0) < cB) continue;   // v0.6.139: fx.payBlood = the price of THIS mode (Second Tradition's locked route burns 1 blood; its plain +2 is free)
         if(!found || mo.fx.maneuver){ found = { idx, name: h.name, cost: cB ? { blood: cB } : null, maneuverGrant: !!mo.fx.maneuver, intercept: mo.fx.intercept | 0 };   // v0.6.28's lesson, third appearance: a later RICHER usable mode overrides the earlier plain one (superior-if-able)
           if(mo.fx.interceptPaid > 0) found.paid = { n: mo.fx.interceptPaid | 0, cost: (mo.fx.interceptPaidBlood | 0) || 1 };   // v0.6.228: Eyes of the Wild -- 'During this action, this Gangrel can burn 1 blood to get +1 intercept' (taken at the attempt, _commitBlock)
-          if(mo.fx.relockIfNoBlock) found.relock = true; }   // v0.6.228: '... Lock this Gangrel after action resolution if they did not block this action' (_clearPending)
+          if(mo.fx.relockIfNoBlock) found.relock = true;   // v0.6.228: '... Lock this Gangrel after action resolution if they did not block this action' (_clearPending)
+          if(mo.fx.noStrikeFirstRound) found.noStrikeR1 = true; }   // v0.6.233 (V5 wave 6a): One With the Land [PRO] -- 'If they block, neither combatant can strike during the first round of the resulting combat' (_playUnlockReact's line, _owl)
       }
       if(found) return found;
     }
@@ -5318,13 +5347,16 @@ class Bot {
     vamp.locked = false;
     if(un.maneuverGrant){ this._reactManeuverGrant = true; this._reactManeuverGrantVamp = vamp ? vamp.name : null; }   // v0.6.214 (the egress review): the rider is THIS vampire's -- another vampire's block after this one failed gets no maneuver
     this.fxClone({ name: un.name, kind: 'lib' }, 'unlocks ' + vamp.name, { actor: vamp });
-    this.send({ t: 'log', html: '<b>' + esc(vamp.name) + '</b> plays <b>' + esc(un.name) + '</b>: unlocks.' });
+    if(un.noStrikeR1){   // v0.6.233 (V5 wave 6a, D-123): One With the Land [PRO] -- the rider rides the route's line (L12.noStrikeR1: the acting bot reads it, _owl); the pending carries it to the verdict (_verdictAsTarget)
+      if(this.pending) this.pending.noStrikeR1 = { vamp: vamp.name, card: un.name };
+      this.send({ t: 'log', html: '<b>' + esc(vamp.name) + '</b> plays <b>' + esc(un.name) + '</b>: unlocks; if they block, neither combatant strikes in the first round.' });
+    } else this.send({ t: 'log', html: '<b>' + esc(vamp.name) + '</b> plays <b>' + esc(un.name) + '</b>: unlocks.' });
     this.push();
     return true;
   }
-  async _maybePostBlockUnlock(blocker){   // N1: Cats' Guidance -- after block resolution, a LOCKED blocker with a postBlock unlock refreshes the wall
+  async _maybePostBlockUnlock(blocker, act){   // N1: Cats' Guidance -- after block resolution, a LOCKED blocker with a postBlock unlock refreshes the wall
     if(!blocker || !blocker.locked || blocker.zone !== 'ready' || this.out) return;
-    const un = this._bestUnlockReactFor(blocker, 'postBlock');
+    const un = this._bestUnlockReactFor(blocker, 'postBlock', act || { kind: null });   // v0.6.233 (the egress review, finding 7): a play, so the action it followed (its kind, read at the verdict) -- never _dirOk's no-action estimate
     if(!un) return;
     await this._playUnlockReact(blocker, un);
     this.note('Trainbot: ' + blocker.name + ' unlocks (' + un.name + ') \u2014 the wall refreshes.');
@@ -5355,10 +5387,11 @@ class Bot {
     const out = [];
     (this.board || []).forEach(v => {
       if(!v || v.zone !== 'ready' || v.kind !== 'crypt' || !v.locked || (p && p.attempted && p.attempted.has(v.id)) || (this._pentexVamp && v.name === this._pentexVamp) || this._cryptCannotBlock(v, p && p.actingVampName, p)) return;
-      if(p && p.kind === 'bleed' && this._bestUnlockReactFor(v, 'bleedAtMe')){ const b = this._bestInterceptFor(v, reacted || null, p); out.push({ v, s: b ? b.s : 0, via: 'bleedAtMe' }); return; }
-      const un = this._bestUnlockReactFor(v, 'lockedBlock'); if(!un) return;
+      { const gd = (p && p.kind === 'bleed') ? this._bestUnlockReactFor(v, 'bleedAtMe', p) : null;
+        if(gd){ const b = this._bestInterceptFor(v, this._withPlayed(reacted, gd.name), p); out.push({ v, s: b ? b.s : 0, via: 'bleedAtMe' }); return; } }   // v0.6.233 (RED 1): the route's card is this action's -- never its intercept mode as well
+      const un = this._bestUnlockReactFor(v, 'lockedBlock', p); if(!un) return;
       if(un.intercept | 0){ out.push({ v, s: un.intercept | 0, via: 'lockedBlock' }); return; }
-      const left = (v.blood | 0) - ((un.cost && un.cost.blood) | 0), paid = (un.paid && left - un.paid.cost >= 1) ? un.paid.n : 0, b = this._bestInterceptFor(v, reacted || null, p);
+      const left = (v.blood | 0) - ((un.cost && un.cost.blood) | 0), paid = (un.paid && left - un.paid.cost >= 1) ? un.paid.n : 0, b = this._bestInterceptFor(v, this._withPlayed(reacted, un.name), p);
       out.push({ v, s: Math.max(paid, b ? b.s : 0), via: 'lockedBlock' });
     });
     return out;
@@ -5366,8 +5399,8 @@ class Bot {
   _wakeBlockersAfter(v){ return !!this._wakeCardFor(v); }                         // would this body still be a blocker after it locks? (it holds a wake it can play)
   _wakesInHand(){ let n = 0; for(const c of this.hand){ const h = this.fxLookup(c); if(!h || h.kind !== 'lib' || !(h.e.t || []).some(t => t === 'react' || t === 'mod')) continue;
       if((h.e.modes || []).some(m => m.fx && m.fx.wake)) n++;
-      else { const lb = (h.e.modes || []).find(m => m.when === 'lockedBlock' && m.fx && m.fx.unlock);   // v0.6.142: Second Tradition-class IS a wake (and an intercept) for a body that can pay for it and holds the title -- the plan, the critical pool and the act-again pricing all count wakes here
-        if(lb && (this.board || []).some(v => v && v.kind === 'crypt' && v.zone === 'ready' && (v.blood | 0) > (lb.fx.payBlood | 0) && this._titleOk(h, v) && this._entryReqOk(h.e, v))) n++; } }   // v0.6.228 (the egress review, finding 6): + the clan -- Eyes of the Wild is a wake for a Gangrel only
+      else { const lbs = (h.e.modes || []).filter(m => m.when === 'lockedBlock' && m.fx && m.fx.unlock), cb = (h.e.cost && h.e.cost.blood) | 0;   // v0.6.142: Second Tradition-class IS a wake (and an intercept) for a body that can pay for it and holds the title -- the plan, the critical pool and the act-again pricing all count wakes here
+        if(lbs.length && (this.board || []).some(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._titleOk(h, v) && this._entryReqOk(h.e, v) && lbs.some(lb => (v.blood | 0) > ((lb.fx.payBlood | 0) + cb) && this._modeUsableBy(lb, v)))) n++; } }   // v0.6.228 (the egress review, finding 6): + the clan -- Eyes of the Wild is a wake for a Gangrel only. v0.6.233 (V5 wave 6a): + the mode's discipline and the card's own blood (Sentry Signal [ani]/[tha], Sense the Savage Way [ANI], One With the Land [PRO], Deep Ecology [pro]: the route's discipline cards)
     return n; }
   _titleOk(h, vamp){                 // v0.6.139: a card-level TITLE requirement on a reaction ('Requires a prince or justicar' -- Second Tradition) against the vampire's PRINTED title. Until now the intercept finder never looked: any vampire could 'play' Second Tradition.
     const rq = h && h.e && h.e.req; if(!rq || !rq.title) return true;
@@ -5386,6 +5419,7 @@ class Bot {
         if(mo.fx.lockInterceptClan && this._vampClan(vamp) !== mo.fx.lockInterceptClan) return;
         if(mo.fx.lockInterceptOn === 'undirected' && !(p && p.kind === 'undirected')) return;
         if(mo.fx.lockInterceptNotFirst && !(p && (this._turnActN | 0) >= 2)) return;   // the action being blocked is at least the second announced this turn (its own row counted)
+        if((h.e.onlyDirected || mo.onlyDirected) && !(p && this._pendDirected(p) === true)) return;   // v0.6.233: 'during an action directed at you' (Destilaria Estrela da Paraíba) -- without the action it fails closed, as the conditions above
         const x = { name: h.name, s: n, fromBoard: c.id, lock: true };
         if(all){ if(!out.some(o => o.name === x.name)) out.push(x); } else if(!best || n > best.s) best = x; });
     });
@@ -5417,6 +5451,7 @@ class Bot {
       (h.e.modes || []).forEach(mo => {
         const ic = mo.fx && mo.fx.intercept;
         if(mo.when === 'lockedBlock') return;   // v0.6.139: the locked-only mode is the sleeper route's, never a plain intercept
+        if(!this._dirOk(h.e, mo, p)) return;   // v0.6.233: 'Only usable during an action directed at you'
         if(typeof ic === 'number' && this._modeUsableBy(mo, vamp) &&
            (vamp.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0) && (!best || ic > best.s))
           best = { idx, name: h.name, s: ic, cost: h.e.cost || null };
@@ -5469,11 +5504,17 @@ class Bot {
       if((h.e.modes || []).some(mo => mo.fx && mo.fx.dodge && this._modeUsableBy(mo, vamp))) n++; });
     return n;
   }
+  _withPlayed(played, name){ const s = new Set(played || []); if(name) s.add(FX_NORM(name)); return s; }   // v0.6.233: a once-per-action set with one more card (an estimate's: the route's or the wake's card)
+  _dirOk(e, mo, p){                  // v0.6.233 (V5 wave 6a, RULINGS D-123): 'Only usable during an action directed at you (or a card you control)' -- cardfx onlyDirected on the entry (the header: One With the Land, The Warrens) or on the mode (its line: Eyes of Argus [aus], Deep Ecology [ani]). At a play (p, the action I would block) only a directed action passes (_pendDirected true; unknown fails closed). Without p (an estimate: _blockerWorth, the wall's odds -- each values a bleed's defence, as their _hostedIntercept(v, 'bleed') says) the card counts. v0.6.232 read no such condition: Eyes of Argus and The Warrens spent their intercept at undirected actions 568 times in the 240.
+    if(!((e && e.onlyDirected) || (mo && mo.onlyDirected))) return true;
+    return !p || this._pendDirected(p) === true;
+  }
   _entryReqOk(e, vamp){              // v0.6.213 (V5 wave 1): a card's clan and sect requirements against the vampire that would play it -- req.clan (a clan icon, 'Requires Tzimisce') against the printed clan, req.sect ('Requires an Anarch': Invigorate) against the printed sect (cardfx crypt entries). Unknown vampire = fail closed. Masters carry req.clan since cardfx v1.9.6 (R-42), read by _masterReqOk.
-    const r = e && e.req; if(!r || (!(r.clan && r.clan.length) && !r.sect)) return true;
+    const r = e && e.req; if(!r || (!(r.clan && r.clan.length) && !r.sect && !r.capMin)) return true;
     const h = vamp && this.fxLookup(vamp.name), ce = h && h.kind === 'crypt' ? h.e : null; if(!ce) return false;
     if(r.clan && r.clan.length && !r.clan.some(c => String(ce.clan || '').split('/').includes(c))) return false;
     if(r.sect && ce.sect !== r.sect) return false;
+    if(r.capMin && !(this._capOf(vamp) >= r.capMin)) return false;   // v0.6.233 (V5 wave 6a, cardfx v1.9.11): 'Requires a vampire with capacity 7 or more' (Sense the Savage Way) -- the capacity in play (_capOf; 0 = unknown fails closed). v0.6.232 let any Path of Caine vampire play its [ani] +1 intercept: 7 of the 12 are below 7
     return true;
   }
   _aggrHandsOn(vamp){                // v0.6.213 (V5 wave 1): are this vampire's hand strikes aggravated now -- Claws of the Dead [pro] played this round (this._xr, the round's own record: it dies with the round), or Invigorate [pro] on the action this combat resolves (fx.aggrHands 'action', on the action's record)
@@ -6023,10 +6064,10 @@ class Bot {
   _wakeRouteBlocker(p){              // v0.6.197 (blockCost): the LOCKED vampire _commitBlock's route would raise when no unlocked body can block -- the same three filters and the same order (an unlock reaction on a bleed, a Second Tradition-class unlock, a wake, the Stray); finders only, no side effects
     const eligible = c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p.actingVampName, p);
     const L = (this.board || []).filter(eligible); if(!L.length) return null;
-    if(p.kind === 'bleed'){ const u = L.find(c => this._bestUnlockReactFor(c, 'bleedAtMe')); if(u) return u; }
-    { const u = L.find(c => this._bestUnlockReactFor(c, 'lockedBlock')); if(u) return u; }
+    if(p.kind === 'bleed'){ const u = L.find(c => this._bestUnlockReactFor(c, 'bleedAtMe', p)); if(u) return u; }
+    { const u = L.find(c => this._bestUnlockReactFor(c, 'lockedBlock', p)); if(u) return u; }
     if(this._wakeCard()){ const u = L.find(c => this._wakeCardFor(c)); if(u) return u; }
-    return this._findStray() ? L[0] : null;
+    return this._strayBurnFor(p) ? L[0] : null;   // v0.6.233: the Stray's burn is 'during an action directed at you' (_strayBurnFor)
   }
   _wantGrapple(vamp){                // Johan: Grapple only with Roundhouse-class hand damage, active Carrion Crows or a permanent strength bonus -- never for a fist of 1. Too valuable to de-clog with.
     const r = this._myRoundDmg(vamp, { close: true });
@@ -7662,9 +7703,10 @@ class Bot {
      decision below is the simple first reading. */
   async _asPlayed(name, o){
     o = o || {};
-    this.fxClone({ name, kind: 'lib' }, o.verb || 'is put in play');   // the card lands (moved here from the master phase's eight branches)
+    if(o.actor) this.fxClone({ name, kind: 'lib' }, o.verb || 'is put in play', { actor: o.actor });   // v0.6.233: a minion's card (True Love's Face) names its vampire
+    else this.fxClone({ name, kind: 'lib' }, o.verb || 'is put in play');   // the card lands (moved here from the master phase's eight branches)
     if(!this._w5Live().some(st => st !== this.seat)) return { cancelled: null };   // nobody left to cancel it
-    const asp = this._asp = { card: name, at: Date.now(), cancelled: null, open: true, cands: [] };   // armed BEFORE the line goes out: an answer can arrive inside the send (L-25, L-92)
+    const asp = this._asp = { card: name, at: Date.now(), cancelled: null, open: true, cands: [], minion: !!o.actor };   // armed BEFORE the line goes out: an answer can arrive inside the send (L-25, L-92). v0.6.233: minion -- a minion's card (True Love's Face), whose only answer is its counter (_onPayCancel), never a Sudden Reversal
     const tg = o.target ? ' \u2014 on <b>' + esc(o.target.owner) + "</b>'s <b>" + esc(o.target.name) + '</b>' : '';
     this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> is playing <b>' + esc(name) + '</b>' + tg + '.' });   // L12.asPlayed
     try {
@@ -7683,7 +7725,7 @@ class Bot {
           this._emit('sr-late', { by: c.by, card: name, human: !!c.human, first: order[0].by });
         }
       }
-      this._aspLast = { card: name, at: Date.now(), cancelled: asp.cancelled };
+      if(!asp.minion) this._aspLast = { card: name, at: Date.now(), cancelled: asp.cancelled };   // v0.6.233: a master's (the Sudden Reversal 'too late' replies read it)
     }
     return { cancelled: asp.cancelled };
   }
@@ -7732,13 +7774,60 @@ class Bot {
     this.push();
     return true;
   }
+  /* v0.6.233 (V5 wave 6a, RULINGS D-123): TRUE LOVE'S FACE [OBF][PRE] -- 'That attempt fails and the blocking minion cannot attempt to block
+     this action again. The blocking minion's controller can burn 1 pool to cancel this card as it is played.' The actor's card lands in its
+     'as played' window (D-122's _asPlayed, the blocker named); the blocking bot answers at once (_cancelPayFor / L12.payCancel); a cancel
+     read in the window leaves the attempt standing -- the card spent, the contest goes on (the second look) -- else the cancel line. */
+  async _payCancelWindow(av, a, cb, who){
+    const bl = this._condBlockerName(av.v) || 'blocking minion';   // the attempt's line may come after the shout the card answers (pace 0): 'on Viktor's blocking minion'
+    av._payQ = true; let r;   // no stealth of mine while the card's fate is open (the blocker's counter moves inside the window; a card spent there is lost if the attempt then fails)
+    try { r = await this._asPlayed(cb.name, { target: { owner: who, name: bl }, verb: 'cancels the block', actor: av.v }); } finally { av._payQ = false; }
+    if(this._ask !== a || this._actingVamp !== av || this.out) return;   // the action resolved under the window
+    if(r.cancelled){
+      this._emit('pay-cancelled', { card: cb.name, by: r.cancelled, vamp: av.v.name });
+      this.o.log('cancel-block: ' + cb.name + ' cancelled as it was played (' + r.cancelled + ' burned the pool) -- the attempt by ' + who + ' stands');
+      a.contested = true; this._restartAskTimer(); av._lookKey = null;
+      try { this._stealthSecondLook(); } catch(e){ this.o.log('second look error:', e.message); }   // the counter as it stands: my stealth, if it is needed and reaches
+      return;
+    }
+    this.send({ t: 'log', html: '<b>' + esc(av.v.name) + '</b> plays <b>' + esc(cb.name) + '</b>: cancels the block attempt by <b>' + esc(who) + '</b> \u2014 that minion cannot try again.' });   // L12.cancel
+    this.push();
+    a.contested = false;   // the attempt died outright; the window continues for OTHER minions
+    this._restartAskTimer();
+  }
+  _onPayCancel(owner, card){         // the actor's side: a blocking minion's controller burned the pool for my card in its open window
+    const asp = this._asp;
+    if(asp && asp.open && asp.minion && FX_NORM(asp.card) === FX_NORM(card)){ if(!asp.cands.some(c => c.by === owner)) asp.cands.push({ by: owner, seat: this._seatOfName(owner), human: false }); return; }
+    this._emit('pay-cancel-late', { by: owner, card });   // the window had closed: the cancel line already went (a real-clock race; the pool is spent)
+  }
+  _cancelPayFor(seat, card, owner, vamp){   // the blocker's side: cancel the actor's card as it is played, for its pool? { n, card, why } or null
+    if(this.out || owner !== this.o.name || !vamp) return null;
+    const h = this.fxLookup(card), mo = h && h.kind === 'lib' ? (h.e.modes || []).find(m => m.fx && m.fx.cancelBlock && (m.fx.cancelBlockPay | 0) > 0) : null; if(!mo) return null;
+    const p = this.pending, bv = p && (p.blockerVamp || p.attemptVamp); if(!p || !p.contested || !bv || (vamp !== 'blocking minion' && bv.name !== vamp)) return null;   // my live attempt at this action (named, or the actor did not know the name yet: at pace 0 the card answers the shout)
+    const n = mo.fx.cancelBlockPay | 0; if((this.pool | 0) - n < 1){ p._cancelComing = { card, at: Date.now() }; return null; }   // the pool rule: never the last pool (R-34) -- the cancel line will end this attempt
+    /* the decision (Claude's prior, registered at the build: spec-v5-wave6 \u00a78): the block is worth a pool when it stops a bleed of 2 or more, or an
+       undirected action that is not a hunt; and it must still stand -- the counter's intercept, or my intercept cards, reach the stealth */
+    const worth = p.kind === 'bleed' ? (p.amount | 0) >= 2 : p.kind === 'undirected' ? p.sub !== 'hunt' : false;
+    const t = this.tally, a = (t && t.mode === 'block') ? (t.a | 0) : 0, b = (t && t.mode === 'block') ? (t.b | 0) : 0;
+    const reach = b >= a || this._interceptStack(bv, p.reacted, p).sum >= a - b;
+    const row = { card, n, kind: p.kind, sub: p.sub || null, amount: p.amount | 0, a, b, worth, reach };
+    if(!worth || !reach){ p._cancelComing = { card, at: Date.now() }; this._emit('pay-cancel-decline', row); this.o.log('cancel ' + card + ': not worth ' + n + ' pool (' + JSON.stringify(row) + ')'); return null; }   // the cancel line will end this attempt: _commitBlock and the second look spend no intercept on it
+    return { n, card, why: p.kind === 'bleed' ? 'a bleed of ' + (p.amount | 0) : 'the ' + (p.sub || p.kind) };
+  }
+  _payCancel(d){
+    this.pool = (this.pool | 0) - d.n;
+    this._emit('pay-cancel', { card: d.card, n: d.n, why: d.why });
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> burns ' + d.n + ' pool to cancel <b>' + esc(d.card) + '</b>.' });   // L12.payCancel
+    this.push();
+  }
   _onAsPlayed(who, card, owner, vamp){   // another Methuselah's master as it is played (a bot's L12.asPlayed)
     const seat = this._seatOfName(who); if(!seat || seat === this.seat || this.out) return;
+    { const pc = this._cancelPayFor(seat, card, owner, vamp); if(pc){ this._payCancel(pc); return; } }   // v0.6.233: a minion's card at my blocker (True Love's Face)
     const d = this._srFor(seat, card, vamp ? { owner, name: vamp } : null); if(d) this._playSr(seat, who, card, d, false);
   }
   _onSrCancel(by, card){             // the player's side: a cancel read in my open window is a candidate (the window's close takes the first in turn order); after it, too late
     const asp = this._asp;
-    if(asp && asp.open && FX_NORM(asp.card) === FX_NORM(card)){ if(!asp.cands.some(c => c.by === by)) asp.cands.push({ by, seat: this._seatOfName(by), human: false }); return; }
+    if(asp && asp.open && !asp.minion && FX_NORM(asp.card) === FX_NORM(card)){ if(!asp.cands.some(c => c.by === by)) asp.cands.push({ by, seat: this._seatOfName(by), human: false }); return; }
     this._emit('sr-late', { by, card, human: this._isHumanName(by), first: null });
     if(this._isHumanName(by)) return this.chat(by + ': too late \u2014 my ' + card + ' has resolved; take your Sudden Reversal back.');
     this.send({ t: 'log', html: '<b>' + esc(by) + "</b>'s Sudden Reversal comes too late for <b>" + esc(this.o.name) + "</b>'s <b>" + esc(card) + '</b>.' });   // L12.srLate
@@ -7758,7 +7847,8 @@ class Bot {
     if(e.oot && (e.modes || []).some(mo => mo.fx && mo.fx.cancelMaster)){   // their Sudden Reversal
       if(this.turnSeat !== this.seat) return;
       const asp = this._asp, last = this._aspLast;
-      if(asp && asp.open){ if(!asp.cands.some(c => c.by === who)) asp.cands.push({ by: who, seat: m.seat | 0, human: true }); return; }   // a candidate, as a bot's line (the close takes the first in turn order)
+      if(asp && asp.open && asp.minion) return this.chat(who + ': Sudden Reversal cancels a master card \u2014 my ' + asp.card + ' is not one; take it back.');   // v0.6.233: a minion's card in its window (True Love's Face) -- no candidate, no 'too late' about an older master
+      if(asp && asp.open && !asp.minion){ if(!asp.cands.some(c => c.by === who)) asp.cands.push({ by: who, seat: m.seat | 0, human: true }); return; }   // a candidate, as a bot's line (the close takes the first in turn order). v0.6.233 (the egress review, finding 6): a master's window only
       if(last && Date.now() - last.at < 20000){
         if(!last.cancelled) this.chat(who + ': too late \u2014 my ' + last.card + ' has resolved; take your Sudden Reversal back.');
         else if(last.cancelled !== who) this.chat(who + ': ' + last.cancelled + '\u2019s Sudden Reversal came first \u2014 take yours back.');
@@ -8063,7 +8153,7 @@ class Bot {
          body in board order raised a 1-blood Crow that could not pay Eyes' +1 beside a 3-blood Dario the decision had counted. */
       { const rb = this._lockedRouteBodies(p, p.reacted), want = d && d.parts ? d.parts.body : null;
         const pick = rb.find(r => r.v.name === want) || rb.slice().sort((a, b) => (b.s - a.s) || ((b.v.blood | 0) - (a.v.blood | 0)))[0];
-        const un = pick && this._bestUnlockReactFor(pick.v, pick.via);
+        const un = pick && this._bestUnlockReactFor(pick.v, pick.via, p);
         if(un) plan = { kind: 'unlockReact', vamp: pick.v, un }; }
       if(!plan && wk){
         const want = d && d.parts && d.parts.viaWake ? d.parts.body : null;            // v0.6.120: decision == pick -- the body the EV chose wakes, when it still can
@@ -8072,8 +8162,7 @@ class Bot {
       }
       if(!plan){                     // N4d consumer B: the chain's THIRD rung -- burn the Stray for a TRUE unlock (unlockReact > wake > STRAY)
         const sCand = this.board.find(eligible);
-        const stray = sCand && this.board.find(c => { if(!c || c.zone !== 'ready' || this._outOfPlay(c)) return false;
-          const h = this.fxLookup(c.name); return h && h.kind === 'lib' && ((h.e.t) || []).includes('ally') && (h.e.modes || []).some(mo => mo.fx && mo.fx.allyBurnUnlock); });
+        const stray = sCand && this._strayBurnFor(p);   // v0.6.233: + 'During an action directed at you (or a card you control)'
         if(sCand && stray) plan = { kind: 'stray', vamp: sCand };
       }
     }
@@ -8082,14 +8171,15 @@ class Bot {
       p.contested = false; p.declined = true; this.say('Pass');
       return;
     }
+    p.attemptVamp = blocker || plan.vamp; p._cancelComing = null;   // v0.6.233 (V5 wave 6a): the vampire this attempt raises, named before the shout -- an answer delivered inside it (the hotseat bridge, L-92: True Love's Face's 'as played' window) reads it; a new attempt has no cancel coming
     this.say('Block!');              // v0.6.103 (#4): a blocker exists, or a route to one does -- never a phantom Block!
     p.routeVamp = blocker ? null : ((plan && plan.vamp) || null); p.attempted.add((blocker || plan.vamp).id);   // v0.6.222 (the egress review): the route's vampire, for the verdict alone (_verdictAsTarget), and attempted from Block! on; blockerVamp waits for the route (line below) -- naming it here opened the second looks inside the beat: two intercept cards for one need. The second review: a success verdict that lands inside the route's beat (the wake, the unlock card) finds its blocker: the Terrifying Visage burn and the combat hand-off
     if(!blocker){
-      if(plan.kind === 'unlockReact'){ if(!(await this._playUnlockReact(plan.vamp, plan.un, () => this.pending === p && p.contested))) return; blocker = plan.vamp; }   // v0.6.222 (the egress review): the verdict came under the beat -- the route ends, the card stays in hand
+      if(plan.kind === 'unlockReact'){ if(!(await this._playUnlockReact(plan.vamp, plan.un, () => this.pending === p && p.contested && !p._cancelComing))) return; blocker = plan.vamp; }   // v0.6.233: nor when I declined True Love's Face's counter (its cancel line ends this attempt: the route card stays in hand)   // v0.6.222 (the egress review): the verdict came under the beat -- the route ends, the card stays in hand
       else if(plan.kind === 'wake'){
         const wk = plan.wk, wkCost = plan.wkCost, sleeper = plan.vamp;
         await this._pace();                              // v0.4.5: a beat between "Block!" and the wake reveal, instead of both firing in the same instant
-        if(this.pending !== p || !p.contested) return;   // v0.6.222 (the egress review): resolved under the beat (a verdict, a cancel) -- no wake card, no attempt line, no block tally over the combat that began
+        if(this.pending !== p || !p.contested || p._cancelComing) return;   // v0.6.222 (the egress review): resolved under the beat (a verdict, a cancel) -- no wake card, no attempt line, no block tally over the combat that began. v0.6.233: or a declined True Love's Face counter, whose cancel line ends this attempt
         this.hand.splice(wk.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
         this._toAsh(wk.name);   // v0.6.12 ash sweep
         if(wkCost) sleeper.blood = Math.max(0, (sleeper.blood | 0) - wkCost);
@@ -8098,7 +8188,7 @@ class Bot {
         this.send({ t: 'log', html: '<b>' + esc(sleeper.name) + '</b> plays <b>' + esc(wk.name) + '</b>: may block as though unlocked.' });   // steg 6 (16 July): 'untapped' -> 'unlocked', the rulebook's own rename (tap/untap died with the Deckmaster era)
         blocker = sleeper;
       }
-      else if(plan.kind === 'stray'){ if(this._strayUnlockBurn(plan.vamp)) blocker = plan.vamp; }
+      else if(plan.kind === 'stray'){ if(p._cancelComing) return; if(this._strayUnlockBurn(plan.vamp)) blocker = plan.vamp; }   // v0.6.233: no ally burned for an attempt a declined True Love's Face counter ends
       if(!blocker){                  // belt: the route failed at play time (a shift under the await) -- withdraw honestly rather than attempt with nobody
         this.o.log('block: the locked-blocker route failed at play time \u2014 declining');
         p.contested = false; p.declined = true; p.blockerVamp = null; p.routeVamp = null; this.say('Pass');
@@ -8109,7 +8199,7 @@ class Bot {
     p.blockerVamp = blocker;         // remembered for the combat hand-off if the block succeeds (this.pending dies with the verdict)
     this._maybeRebelBlood(blocker, p.actingVampName);   // N4a: extracted for testability (the _revertHandSizeBonus precedent)
     const unIc = (typeof plan !== 'undefined' && plan && plan.kind === 'unlockReact' && plan.un && plan.un.intercept) | 0;   // v0.6.139: the unlock card carried its own intercept (Second Tradition) -- no second card, one reaction per action per card
-    if(unIc) p.reacted.add(FX_NORM(plan.un.name));
+    if(typeof plan !== 'undefined' && plan && (plan.kind === 'unlockReact' || plan.kind === 'wake') && p.reacted){ const nm = plan.kind === 'wake' ? (plan.wk && plan.wk.name) : (plan.un && plan.un.name); if(nm && blocker === plan.vamp) p.reacted.add(FX_NORM(nm)); }   // v0.6.233 (wave 6's graded readings, RED 1): the route's card and the wake's are this action's too -- the same vampire played One With the Land [PRO] then its [pro], Eyes of Argus [AUS] then its [aus] (the rulebook: one card of a name per action); v0.6.139 recorded only a card with its own intercept
     const baseSt = p.kind === 'undirected' ? 1 : 0;   // the rulebook default: directed 0, undirected +1
     const humanActor = !!(p.who && this._isHumanName(p.who));
     const aStanding = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : null;
@@ -8126,8 +8216,9 @@ class Bot {
     const unPl = (plan && plan.kind === 'unlockReact' && plan.un) || null;
     if(unPl && unPl.paid) p.paidGrant = { vampId: blocker.id, card: unPl.name, key: 'paidIc:' + FX_NORM(unPl.name) + ':' + blocker.id, n: unPl.paid.n, cost: unPl.paid.cost };   // per Gangrel: each burns its own blood (the egress review, finding 5)
     if(unPl && unPl.relock) p.relock = (p.relock || []).concat([{ id: blocker.id, card: unPl.name }]);   // every Gangrel of this action (a failed one, then another's block: both measured on the gangrel series)
-    const pg = (!unIc && icNeeded && p.paidGrant) ? this._grantPaidIntercept(blocker, p) : null, unPaid = (pg && stealthNow <= baseIcp + pg.n) ? pg : null;
-    const ic = blocker && !unIc && !unPaid && icNeeded && this._bestInterceptFor(blocker, p.reacted, p);
+    const doomed = !!p._cancelComing;   // v0.6.233 (the egress review, finding 2a): I declined True Love's Face's counter inside my shout -- its cancel line ends this attempt: no intercept spent on it (R-12)
+    const pg = (!unIc && icNeeded && p.paidGrant && !doomed) ? this._grantPaidIntercept(blocker, p) : null, unPaid = (pg && stealthNow <= baseIcp + pg.n) ? pg : null;
+    const ic = blocker && !unIc && !unPaid && icNeeded && !doomed && this._bestInterceptFor(blocker, p.reacted, p);
     if(unIc){
       this._setTallyB(unIc + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block with +' + unIc + ' intercept (<b>' + esc(plan.un.name) + '</b>).' });
@@ -8141,6 +8232,12 @@ class Bot {
     } else if(ic){
       p._icFirst = true; await this._pace(); p._icFirst = false;   // v0.4.5: so a wake+intercept combo doesn't land as one instant double-play. v0.6.222 (the third review): the second look waits for this first card -- the echo of my own default-stealth write (or a raise) inside the beat drew a second card from a stale pick; after my write its echo re-runs the second look against the real counter
       if(this.pending !== p || !p.contested) return;   // v0.6.222 (the egress review): resolved under the beat
+      if(p._cancelComing){   // v0.6.233 (the egress review, finding 2a): True Love's Face's window reached me under the beat and I declined its counter -- the cancel line ends this attempt: the bare attempt, the card stays in hand
+        this._setTallyB(baseIcp); this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block.' });   // the frozen bare-attempt line (L12.attempt)
+        this._noteBlockAttempt(blocker.name, true); this._emit('block-made', { vamp: blocker.name }); this.push();
+        if(humanActor && this.pending === p && p.contested && !this.out) this._vwArm(p, blocker);   // the chain's end, as below
+        return;
+      }
       p.reacted.add(FX_NORM(ic.name));
       this._spendIntercept(ic, blocker, true);   // v0.6.215: a hand card or a location's lock (with the attempt line)
 
@@ -8226,13 +8323,16 @@ class Bot {
     if(success){
       if(blockerVamp && this._visageBurn(this.pending.actorSeat || this._seatOfName(this.pending.who), oppName)) return;   /* v0.6.221 (the Jack round's egress review): only MY block pays -- another seat's successful block reaches this verdict too (a bot that never blocked, or whose attempt failed, burned 1 pool: the V5 smoke's pathcathari match 12) */   /* the egress review: the combat opponent's name (a nameless pending reads the announce) */   // v0.6.217 (V5 wave 4): Terrifying Visage -- 'the blocking minion's controller burns 1 pool before block resolution' (an 'if blocked' effect: first, before anything else [ANK 20220116]); true = that pool ousted me
       const grant = this._reactManeuverGrant, gv = this._reactManeuverGrantVamp;   // v0.6.214 (V5 wave 2): _clearPending's N1 belt is for a FAILED block -- a successful one carries Guard Dogs [ANI]'s maneuver into the resulting combat (since N1 it was wiped here, before the combat: the grant never reached a fight)
+      const owl = this.pending.noStrikeR1 || null, owlWho = this.pending.who || null, act = { kind: this.pending.kind || null, peekSup: this.pending.peekSup, directed: this.pending.directed };   // v0.6.233: One With the Land [PRO] -- the vampire that played it on this action; the action's read (_pendDirected's fields) for the post-block unlock
       this._clearPending('block succeeded');
       if(blockerVamp){
+        this._owl = (owl && owl.vamp === blockerVamp.name) ? { vamp: blockerVamp.name, opp: oppName || null, card: owl.card, at: Date.now() } : null;   // v0.6.233 (V5 wave 6a): no strikes in the first round of THIS combat (_resolveCombat takes it at its entry)
+        if(this._owl){ this._emit('no-strike-r1', { vamp: blockerVamp.name, opp: oppName || null, card: owl.card, side: 'blocker' }); if(owlWho && this._isHumanName(owlWho)) this.chat(owlWho + ': ' + owl.card + ' \u2014 neither ' + (oppName || 'your minion') + ' nor ' + blockerVamp.name + ' can strike in the first round of this combat.'); }   // an instruction to a human (the tier rule): the bot cannot write their strike
         this._reactManeuverGrant = grant && (!gv || gv === blockerVamp.name); this._reactManeuverGrantVamp = this._reactManeuverGrant ? gv : null;   // the egress review: only the vampire that played the card
         this._myBlockOf = { vamp: oppName, at: Date.now() };   // v0.6.217: the vampire my block stopped -- its Change of Target ends the combat I begin here (_onCot)
         blockerVamp.locked = true;                                // v0.4.3 (rulebook): "If a block attempt is successful, then the blocking minion LOCKS and enters combat" -- the wake path arrives here already locked, idempotent either way
         const _cp = this._resolveCombat(blockerVamp, oppName), _ctok = this._combatTok;   // v0.6.221 (the egress review): the token _resolveCombat set before its first await -- a later combat of mine owns the grant
-        _cp.then(() => { if(this._combatTok === _ctok) this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
+        _cp.then(() => { if(this._combatTok === _ctok) this._reactManeuverGrant = false; return this._maybePostBlockUnlock(blockerVamp, act); }).catch(e => this.o.log('resolveCombat error:', e.message));   // M2: my successful block becomes combat, blocker's side; N1: the .then chain clears the Guard Dogs maneuver-grant deterministically and runs the Cats' Guidance post-block refresh
       }
     }
     else { this.pending.contested = false; this.pending.blockerVamp = null; this.pending.routeVamp = null; if(!(this.pending.role === 'predator' && this.pending.waitingFor)) this._reactWindow(); }   // v0.6.221 (D-113): my failed attempt is over -- a later block's success verdict (another seat's) is not my combat (the Toreador report's stray blocker) // action continues, bleed still live -- M2: try again (another card, or give up -> Pass). v0.6.107: a PREDATOR-role window stays shut until the prey has declined (rulebook order)
@@ -8241,6 +8341,7 @@ class Bot {
     this._oppEndedCombat = false; this._oppStrike = null; this._oppTaken = null; this._oppPress = undefined; this._oppManeuver = undefined; this._oppGrapple = undefined; this._oppCarrionCrows = null;
     this._combatArmed = false; this._combatOppName = null; this._learnedOpp = null;   // v0.6.105: the previous combat's opponent name must not outrank the next action's blocker in _expectedOppVamp
     this._forceCloseNextRound = false; this._nextRange = null;   // v0.6.202 (found by R2's second arena smoke): 'close next round' never reaches another combat -- a superior Immortal Grapple in a combat's LAST round left both bots' next combats without a maneuver step
+    this._owl = null;   // v0.6.233 (V5 wave 6a): One With the Land's rider belongs to the action whose block played it -- the next announce or block commit drops a rider no combat took
   }
   _expectedOppVamp(){                // v0.6.103 (#1): who I am fighting (or about to fight): defender side = the announced actor (set by the caller of _resolveCombat); actor side = my blocker's vampire from the B-55e-b chat parse (valid only while I am the acting side -- _actingVamp is live)
     return this._combatOppName || (this._actingVamp ? this._lastBlockerName : null) || null;
@@ -8934,6 +9035,8 @@ class Bot {
     this._cepOpen(oppName || (this._actingVamp ? this._lastBlockerName : null) || this._learnedOpp || null); this._learnedOpp = null;   /* v0.6.182: ONE episode per combat */ this._combatDmgTaken = 0; this._cBase = Object.assign({}, this._cTally() || {}); this._cBaseRound = this._cBase;   /* v0.6.168: the field baseline for this combat (at combat ENTRY -- not per round) */   // v0.6.103 (#1): the actor side learns its opponent from the B-55e-b blocker name (a bot blocker always chats it before the verdict)   // VB: the opposing vampire's NAME when the caller knows it (defender sites: the announced actor; a blocked ACTOR's blocker stays null -- documented v1 under-claim for Blythe-as-actor) + the Franciscus-class per-combat damage accumulator   // N0: the borne crows peck every combat   // v0.6.26: per-COMBAT state (not per-round like _range) -- "only one Carrion Crows each combat", and the opponent's active one persists across every round of THIS combat, reset only when a new one starts
     if(this._inCombat){ ['_maneuverWaiter', '_preWaiter', '_strikeWaiter', '_strikePeekWaiter', '_pressWaiter', '_takenWaiter', '_xEndWaiter', '_xAnsWaiter', '_xStrikeWaiter'].forEach(k => { if(typeof this[k] === 'function'){ const old = this[k]; this[k] = null; try { old(null); } catch(e){} } }); { const ow = this._phaseWait; if(ow && !ow.done) ow.resolve('superseded'); } }   // v0.6.222 (the egress review): a combat still in flight is superseded by this one -- its line waiters and its step wait end now (null), so a line meant for this combat never feeds the old one's wait (a Deep Song-rushed Dowager's strike wait took Catalina's strike from Lenny's peek: Lenny took 1, not 3)
     this._inCombat = true;   // v0.6.103 (#1): the handshake window -- _stashAccept reads it
+    { const on = oppName || (this._actingVamp ? this._lastBlockerName : null) || null, w = this._owl;   // v0.6.233 (V5 wave 6a, D-123): One With the Land [PRO]'s 'neither combatant can strike during the first round of the resulting combat' -- this combat's when it is the one the rider's block began (my vampire, its opponent when both are known); taken here, so a follow-up combat never sees it [LSJ 20010813]
+      this._owlCombat = (w && myVamp && w.vamp === myVamp.name && (!w.opp || !on || w.opp === on)) ? w.card : null; this._owl = null; }
     const tok = (this._combatTok = (this._combatTok | 0) + 1); if(myVamp) (this._combatOppOf = this._combatOppOf || new Map()).set(myVamp.id, oppName || null);   // v0.6.221 (D-113): this combat's token -- a later combat of mine supersedes it, and a superseded one ends at its next step and leaves the live combat's fields alone (the stray combat: one bot, two blocks, the first combat outlived its action)
     let supd = false, rr = 1; const sup = r => { if(tok === this._combatTok) return false; if(!supd){ supd = true; this._emit('combat-superseded', { vamp: myVamp ? myVamp.name : null, round: r }); } return true; };   // v0.6.221 (the Jack round's egress review): a later combat of mine began while this one waited -- this one is over (its action is). v0.6.222 (the second review): checked after every await of the combat (here, in _resolveCombatRound and in their combat helpers), so it stops at the await it wakes from: no line, no tally write, no card, no blood, no row, no new wait, no next round
     this._combatAt = Date.now();   // v0.6.198: a taken line from before this combat never stands in for the board (_stealAvail)
@@ -9049,7 +9152,7 @@ class Bot {
       this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: pressTag, continuing, blood: myVamp.blood | 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156: the row serie-cmb1 had to infer (range, opponent, strike, dealt, taken)
       if(!continuing){ await this._phaseAsk(6); if(sup(round)) return; await this._phaseAfter(6, false); return; }   // v0.6.165: "Anything before ending combat?" / "I have nothing before ending combat."
     }
-    } finally { sup(rr);   /* v0.6.222: one combat-superseded row also for a combat superseded at its last wait (nothing was left to stop) */ if(myVamp && this._combatOppOf && (tok === this._combatTok || !this._combatMyVamp || this._combatMyVamp.id !== myVamp.id)) this._combatOppOf.delete(myVamp.id);   /* v0.6.222: a superseded combat of the same vampire leaves the live one's opponent */ if(tok === this._combatTok){ /* v0.6.221: a superseded combat leaves the live combat's fields alone */ try { this._noteCombatEnd(myVamp); } catch(e){ this.o.log('combat end note error: ' + e.message); }   /* v0.6.217 (V5 wave 4): Monster -- the combat's outcome is read BEFORE its fields die below */ this._xr = null; this._myPump = null; this._curRound = 0; this._cryptDodgeUsed = null; /* v0.6.219: the crypt dodge's once each combat dies with the combat (the planners between combats see it again) */ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; /* v0.6.214: the pumps, the round number and Guard Dogs' maneuver die with the combat (a rejected combat used to leak the grant into the next one) */ this._inCombat = false; this._combatArmed = false; this._combatActing = null; this._forceCloseNextRound = false; this._nextRange = null; this._setRangeNow = null; this._handStrikeOnly = false; this._range = 'close'; /* v0.6.202 (R2's second arena smoke): a range set for the NEXT round dies with this combat -- Horace's superior Grapple in the last round skipped the maneuver step of his next combat AND of his opponent's next one (one side said nothing, the other waited out the safety net and maneuvered to long alone: Roundhouse at close against Theft of Vitae at long). The same sweep: the round's range and its Grapple restriction die too -- the finders that plan between combats (a block's price, a chump bleed's cover, a rush's reach) read them, and saw "hand strikes only" (no Majesty, no dodge) or "long" (no fists) from the last round of the previous fight (16 combats in the R2 smokes began after a final-round Grapple); a new combat starts at close */ if(this.ev && this._cep) this.ev.push({ kind: 'combat-opp', opp: null, how: 'end', was: this._cep.row || null }); this._cep = null; this._invStrike = null; if(this.tally && this.tally.mode === 'combat' && this.started){ try { this._writeTally({ mode: null, res: 1 }); } catch(e){} } } }   // v0.6.103 (#1); v0.6.172 (main v2.6.137): my combat is over -- close the combat tally so the mirror is clean at once; v0.6.195 (main's reply, 9 Oct): + res 1, the client's own Combat-Resolve convention -- every human closes their Played batch and applies their own clear setting (a bare null left it open until their next action); v0.6.105: the name dies with the combat
+    } finally { sup(rr);   /* v0.6.222: one combat-superseded row also for a combat superseded at its last wait (nothing was left to stop) */ if(myVamp && this._combatOppOf && (tok === this._combatTok || !this._combatMyVamp || this._combatMyVamp.id !== myVamp.id)) this._combatOppOf.delete(myVamp.id);   /* v0.6.222: a superseded combat of the same vampire leaves the live one's opponent */ if(tok === this._combatTok){ /* v0.6.221: a superseded combat leaves the live combat's fields alone */ try { this._noteCombatEnd(myVamp); } catch(e){ this.o.log('combat end note error: ' + e.message); }   /* v0.6.217 (V5 wave 4): Monster -- the combat's outcome is read BEFORE its fields die below */ this._xr = null; this._myPump = null; this._curRound = 0; this._cryptDodgeUsed = null; /* v0.6.219: the crypt dodge's once each combat dies with the combat (the planners between combats see it again) */ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; /* v0.6.214: the pumps, the round number and Guard Dogs' maneuver die with the combat (a rejected combat used to leak the grant into the next one) */ this._owlCombat = null; /* v0.6.233: One With the Land's first round dies with its combat */ this._inCombat = false; this._combatArmed = false; this._combatActing = null; this._forceCloseNextRound = false; this._nextRange = null; this._setRangeNow = null; this._handStrikeOnly = false; this._range = 'close'; /* v0.6.202 (R2's second arena smoke): a range set for the NEXT round dies with this combat -- Horace's superior Grapple in the last round skipped the maneuver step of his next combat AND of his opponent's next one (one side said nothing, the other waited out the safety net and maneuvered to long alone: Roundhouse at close against Theft of Vitae at long). The same sweep: the round's range and its Grapple restriction die too -- the finders that plan between combats (a block's price, a chump bleed's cover, a rush's reach) read them, and saw "hand strikes only" (no Majesty, no dodge) or "long" (no fists) from the last round of the previous fight (16 combats in the R2 smokes began after a final-round Grapple); a new combat starts at close */ if(this.ev && this._cep) this.ev.push({ kind: 'combat-opp', opp: null, how: 'end', was: this._cep.row || null }); this._cep = null; this._invStrike = null; if(this.tally && this.tally.mode === 'combat' && this.started){ try { this._writeTally({ mode: null, res: 1 }); } catch(e){} } } }   // v0.6.103 (#1); v0.6.172 (main v2.6.137): my combat is over -- close the combat tally so the mirror is clean at once; v0.6.195 (main's reply, 9 Oct): + res 1, the client's own Combat-Resolve convention -- every human closes their Played batch and applies their own clear setting (a bare null left it open until their next action); v0.6.105: the name dies with the combat
   }
   async _resolveCombatRound(myVamp, continued){ // v1 CUT LINE (spec §7.5-C): announce-only, one round, applies MY side; the opponent's strike isn't modelled -- assumes the rulebook default (hands, 1) unless I prevent it. Never steps the shared ph/rd counters. v0.6.23 (standing-question fix, the multi-round loop): `continued` is a NEW, backward-compatible optional 2nd arg -- every existing call (all of 37a-37g, all 6 real call sites for round 1) passes nothing, so this defaults falsy and behaves EXACTLY as before. `_resolveCombat` passes true for round 2+ ONLY.
     const rtok = this._combatTok, stale = () => rtok !== this._combatTok, gone = () => this._cotHit(myVamp) ? { oppEnded: true, cot: true } : { superseded: true };   // v0.6.222 (the second review): a later combat of mine began while this round waited -- the round stops at the await it wakes from (no line, no tally write, no card, no blood, no new wait: a wait registered now would take the live combat's lines) and _resolveCombat ends the combat; a Change of Target that ended this combat is still resolved first (its blocker unlocks: the first cut left it locked, v0.6.221's 600 match 528); 37a-37g call the round directly, where the token never moves
@@ -9146,9 +9249,10 @@ class Bot {
       }
       if(!continued && this._cotHit(myVamp)) return { oppEnded: true, cot: true };   // v0.6.217: Change of Target before any line of mine (the step's question to a human, a table with no handshake)
       const wentLong = hs && this._range === 'long';
-      const counter = wentLong ? this._counterPick(myVamp, mv) : null;   // v0.6.214 (V5 wave 2): the acting bot went long -- my answer can take it back to close (chase)
+      const noStrR = !continued && !!this._owlCombat;   // v0.6.233: One With the Land's first round has no strikes -- a maneuver changes nothing (the next round starts at close)
+      const counter = (wentLong && !noStrR) ? this._counterPick(myVamp, mv) : null;   // v0.6.214 (V5 wave 2): the acting bot went long -- my answer can take it back to close (chase)
       if(counter){ await this._combatGate(true); if(stale()) return gone(); this._counterPlay(myVamp, counter, 'close', mv); }
-      const maneuver = wentLong ? null : this._bestManeuverFor(myVamp);   // v0.6.202: the range is already long (their maneuver) -- my maneuver to long would change nothing (v0.6.214: a counter to close is the line above)
+      const maneuver = (wentLong || noStrR) ? null : this._bestManeuverFor(myVamp);   // v0.6.202: the range is already long (their maneuver) -- my maneuver to long would change nothing (v0.6.214: a counter to close is the line above)
       let myManeuvers = counter ? 1 : 0;
       if(maneuver){
         const wl = this._combatMind() ? this._wantLong(myVamp) : null;   // v0.6.156: deck range posture (chase / snipe / wave) -- serie-cmb1: Tremere never maneuvered in 133 rounds because only a req.rangeLong card counted
@@ -9243,7 +9347,8 @@ class Bot {
     await this._phaseAfter(2, !!this._rnd.grapple); if(stale()) return gone();   // v0.6.165
     if(!hs){ oppG = await this._awaitOppGrapple(Math.min(200, (this.o.askSecs || 2) * 1000)); if(stale()) return gone(); }   // a human or an unknown opponent: the old short wait
     else if(!hsFirst){ oppG = await this._awaitOppGrapple(this._hsWaitMs()); if(stale()) return gone(); if(!oppG) this._hsMiss('before-strikes'); }   // v0.6.202: the acting side waits for the other bot's answer before it strikes
-    await this._phaseAsk(3); if(stale()) return gone();   // v0.6.165: human acting -> "What is your strike?" (the acting side announces first; the bot then chooses)
+    const owlR1 = !continued && !!this._owlCombat;   // v0.6.233 (the egress review, finding 1): One With the Land's first round -- nobody strikes: no strike question to a human, no wait on a human's strike, nothing taken
+    if(!owlR1){ await this._phaseAsk(3); if(stale()) return gone(); }   // v0.6.165: human acting -> "What is your strike?" (the acting side announces first; the bot then chooses)
     if(hsFirst){ const pk = await this._awaitOppStrikePeek(this._hsWaitMs()); if(stale()) return gone(); if(!pk) this._hsMiss('strike'); }   // v0.6.203 (Johan, 16 Oct: "the bot should answer known strikes"): between bots too, "the minions first choose their respective strikes (the acting minion first, then their opponent)" [6.4.3] -- I look at the acting bot's strike (it stays pending: the consuming wait after my own strike takes it) and choose knowing it
     { const tc = this._cTally(); if(this._oppEndedCombat || (this._oppStrike && this._oppStrike.ends) || (tc && this._phaseOppPlayer() && (this._cField('ce') | 0) === 1 && tc.who && tc.who !== this.o.name)){   // v0.6.202 (point 17b): the ce field is a HUMAN opponent's   // v0.6.167 (main's scripted run, bug B): the human's combat ends came FIRST -- I do not strike at all
       this._oppEndedCombat = true; this._oppStrike = null; this._rnd.strike = 'none'; this._rnd.dealt = 0; this._rnd.taken = 0;
@@ -9254,6 +9359,12 @@ class Bot {
     if(this._handStrikeOnly && this._rnd.gunCommitted){   // v0.6.174 (sweep pilot, the Immortal Grapple ruling [TOM 19951217]): committed to a non-hand strike by the gun's maneuver, then Grapple -- NO strike at all this round, not a hand strike
       this._rnd.strike = 'none (Grapple)'; this._rnd.dealt = 0;
       this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> gets no strike this round (committed to ' + esc(this._rnd.gunCommitted) + ' by its maneuver; Immortal Grapple).' });
+      { const f = {}; f[this._cSide || 'b'] = 0; f['s' + (this._cSide || 'b')] = 'No strike'; this._cWrite(f); }
+      this._noStrikeRound = true;
+    }
+    if(!continued && this._owlCombat && !this._noStrikeRound){   // v0.6.233 (V5 wave 6a, D-123): One With the Land [PRO] -- neither combatant strikes in the first round of the combat its block began; each bot writes the frozen no-strike line (both parse it as the round's strike: L12's 'gets no strike this round')
+      this._rnd.strike = 'none (' + this._owlCombat + ')'; this._rnd.dealt = 0;
+      this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> gets no strike this round (' + esc(this._owlCombat) + ').' });
       { const f = {}; f[this._cSide || 'b'] = 0; f['s' + (this._cSide || 'b')] = 'No strike'; this._cWrite(f); }
       this._noStrikeRound = true;
     }
@@ -9437,7 +9548,7 @@ class Bot {
        deadlock) and take what they actually dealt; a silent opponent (a human
        table -- no human types the strike grammar) falls back to the old
        assume-1 within askSecs, with the "tell me if it differs" chat intact. */
-    const opp = await this._phaseAfter(3, true).then(() => stale() ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs)));
+    const opp = await this._phaseAfter(3, true).then(() => (stale() || (owlR1 && this._phaseOppPlayer())) ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs)));   // v0.6.233: a human cannot strike in One With the Land's first round -- no wait for one (a bot's no-strike line still answers the wait)
     if(stale()) return gone();
     this._rnd.strikeSeen = !!opp; if(opp) this._xr.p1seen = true; if(this._stashRejects && this._stashRejects.length){ this._rnd.rejects = this._stashRejects; this._stashRejects = []; }   // v0.6.164 diag
     if((opp && opp.ends) || this._oppEndedCombat){   // v0.6.167 (main's scripted run, bug A): combat ends resolves FIRST -- my announced strike never lands, and Carrion Crows gets no strike resolution this round (VEKN ruling via main): no damage either way, no 'dealt' narration, no ph writes below 6
@@ -9468,7 +9579,7 @@ class Bot {
     if(opp && opp.dodge && this._rnd.dealt > 0){ this._rnd.dealt = 0; { const f = {}; f[this._cSide || 'b'] = 0; if(this._rnd.aggr) f['g' + (this._cSide || 'b')] = 0; this._cWrite(f); } this._xr.dTot = this._xr.gTot = 0; strikeLine += ' \u2014 dodged, 0'; }   // v0.6.167 (main v2.6.136): a dodge is counted as a rule -- my strike does not reach them, and my narration says so
     const opponentSilent = continued && !opp;
     const silentLong = !opp && !continued && this._range === 'long' && !this._oppHasRanged();   // v0.6.157 (Johan, before the deploy): a SILENT opponent (a human table) at LONG range -- their rulebook default is a hand strike, which deals 0 at long; assume 1 only when their board shows a ranged option (a gun, a steal / ranged card seen)
-    let taken = opp ? (opp.dodge ? 0 : (opp.dealt | 0)) : (continued || silentLong ? 0 : 1);
+    let taken = owlR1 ? 0 : opp ? (opp.dodge ? 0 : (opp.dealt | 0)) : (continued || silentLong ? 0 : 1);   // v0.6.233: One With the Land's first round deals nothing either way (a silent human there is not the rulebook's default strike)
     this.o.log('combat incoming (' + myVamp.name + '): ' + (opp ? (opp.dodge ? opp.vamp + ' dodged \u2014 0' : opp.vamp + ' dealt ' + opp.dealt) : silentLong ? 'no strike line within the window \u2014 long range and no ranged option seen: a hand strike deals 0' : 'no strike line within the window \u2014 assuming the rulebook default 1'));
     let _t1 = this._takePre(myVamp, taken, opp && !opp.dodge ? (opp.aggr | 0) : 0);   // v0.6.213 (V5 wave 1): the first pair's damage, cut out so an additional pair resolves the same way -- prevention on aggravated first (equipment, Guardian Angel, Wall of Filth, then a card)
     const prevent = (_t1.taken + _t1.aggr) > 0 ? this._bestPreventFor(myVamp, opp ? this._noPreventDiscIn() : null) : null;   // v0.6.4: never burn a prevent card against zero incoming (a dodge) -- the old code would have wasted it. v0.6.214: not one the strike's card bars (Soul Burn)
@@ -9693,6 +9804,9 @@ class Bot {
     if((m = t.match(L12.autoPass))) return { kind: 'auto-pass', card: S(m[1]) };   // v0.6.230
     if((m = t.match(L12.tensionBurn))) return { kind: 'tension-burn', by: S(m[1]), owner: S(m[2]) };
     if((m = t.match(L12.asPlayed))) return { kind: 'as-played', owner: S(m[1]), card: S(m[2]), vamp: m[4] ? S(m[4]) : null };   // v0.6.232 (V5 wave 5b, D-122): the new frozen lines' kinds (L-56)
+    if((m = t.match(L12.noStrikeR1))) return { kind: 'no-strike-r1', vamp: S(m[1]), card: S(m[2]) };   // v0.6.233 (V5 wave 6a, D-123): the new frozen lines' kinds (L-56)
+    if((m = t.match(L12.stealthZero))) return { kind: 'stealth-zero', vamp: S(m[1]), card: S(m[2]), actor: S(m[3]) };
+    if((m = t.match(L12.payCancel))) return { kind: 'pay-cancel', owner: S(m[1]), n: +m[2], card: S(m[3]) };
     if((m = t.match(L12.srCancel))) return { kind: 'sr-cancel', by: S(m[1]), owner: S(m[2]), card: S(m[3]) };
     if((m = t.match(L12.srLate))) return { kind: 'sr-late', by: S(m[1]), owner: S(m[2]), card: S(m[3]) };
     if((m = t.match(L12.groveCancel))) return { kind: 'grove-cancel', owner: S(m[1]), card: S(m[2]) };
@@ -10111,6 +10225,9 @@ class Bot {
     if((m = t.match(L12.ppBurn))){ this._w5OnPpBurn(who, m[2]); return; }   // v0.6.230: Privileged Position -- the prey pays
     if((m = t.match(L12.tensionBurn))){ this._w5OnTensionBurn(who, m[2]); return; }
     if((m = t.match(L12.hostageFree))){ const st = this._seatOfName(who); if(st && this._w5Hostages) for(const [k, h] of this._w5Hostages) if(h.seat === st && h.name === m[2]) this._w5Hostages.delete(k); return; }   // v0.6.230: Carver's -- that seat's hostage freed   // v0.6.230: my Tension in the Ranks burned with two masters
+    if((m = t.match(L12.noStrikeR1))){ if(who !== this.o.name) this._onNoStrikeR1(m[1], m[2]); return; }   // v0.6.233 (V5 wave 6a, D-123): One With the Land [PRO] at my action
+    if((m = t.match(L12.stealthZero))){ if(who !== this.o.name) this._onStealthZero(m[1], m[2], m[3]); return; }   // v0.6.233: Night Terrors at my action -- my stealth is 0
+    if((m = t.match(L12.payCancel))){ if(who !== this.o.name) this._onPayCancel(m[1], m[3]); return; }   // v0.6.233: my True Love's Face cancelled as it is played
     if((m = t.match(L12.asPlayed))){ if(who !== this.o.name) this._onAsPlayed(who, m[2], m[3] || null, m[4] || null); return; }   // v0.6.232 (D-122): another Methuselah's master as it is played -- my Sudden Reversal
     if((m = t.match(L12.srCancel))){ if(who !== this.o.name && m[2] === this.o.name) this._onSrCancel(m[1], m[3]); else if(who !== this.o.name && this._isHumanName(m[2])) this._srSeenHuman = { owner: m[2], card: m[3], at: Date.now() }; return; }   // v0.6.232: a cancel of my master -- the window's candidates; another bot's cancel of a human's master -- mine holds
     if((m = t.match(L12.srLate))){ if(who !== this.o.name && m[1] === this.o.name) this._onSrLate(m[2], m[3]); return; }      // v0.6.232: my cancel came too late -- the card back to my hand
@@ -10833,9 +10950,9 @@ class Bot {
     this._bumpTallyA(st.s);   // fas A (16 July): the spent stealth must reach the shared tally -- the v0.6.3 contested verdict is computed from a/b, and a bot attacker's stealth previously never got there (a=0 -> a wrong "block succeeds" against any stealth)
     let why = '';
     if(st.cond){   // v0.6.228 (round F): a stealth that counts against this blocker only (Perfect Paragon [PRE]) -- booked on the action so a later blocker it does not reach takes it off (_condStealthAdjust); the line says the card's own words
-      av.condSt = (av.condSt || []).concat([{ name: st.name, s: st.cond, who: st.condWho }]); av.condOn = (av.condOn | 0) + st.cond;
+      av.condSt = (av.condSt || []).concat([{ name: st.name, s: st.cond, who: st.condWho, at: st.condAt || null }]); av.condOn = (av.condOn | 0) + st.cond;
       const KW = { ally: 'allies', younger: 'younger vampires', older: 'older vampires', same: 'vampires of the same age' };
-      why = ' (' + st.condWho.map(k => KW[k] || k).join(' and ') + ' get −' + st.cond + ' intercept)';
+      why = st.condAt ? ' (the blocking minion gets −' + st.cond + ' intercept)' : ' (' + st.condWho.map(k => KW[k] || k).join(' and ') + ' get −' + st.cond + ' intercept)';   // v0.6.233: Forced Confessional's own words
       this._emit('stealth-vs', { vamp: av.v.name, card: st.name, blocker: this._lastBlockerName || null, kind: st.condTo || null, s: st.cond });
     }
     this.send({ t: 'log', html: '<b>' + esc(av.v.name) + '</b> ' + (st.fromBoard ? (st.lock ? 'locks' : 'burns') : 'plays') + ' ' + esc(st.name) + why + ': +' + st.s + ' stealth.' });   // v0.6.205: 'locks' for The Labyrinth (NET_STEALTH reads all three verbs)
@@ -10847,13 +10964,13 @@ class Bot {
     const seen = new Set(); let S = 0, sum = 0;
     (this.hand || []).forEach(n => { const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).some(t => t === 'react' || t === 'mod') || seen.has(FX_NORM(h.name))) return;
       if(played && played.has(FX_NORM(h.name))) return; if(!this._titleOk(h, vamp)) return; if(!this._entryReqOk(h.e, vamp)) return; if(((h.e.cost && h.e.cost.blood) || 0) > (vamp.blood | 0)) return;   // v0.6.228: + the clan / sect (_bestInterceptFor's mirror)
-      let best = 0; (h.e.modes || []).forEach(mo => { if(mo.when === 'lockedBlock') return; const ic = mo.fx && mo.fx.intercept; if(typeof ic === 'number' && ic > best && this._modeUsableBy(mo, vamp)) best = ic; });
+      let best = 0; (h.e.modes || []).forEach(mo => { if(mo.when === 'lockedBlock' || !this._dirOk(h.e, mo, p)) return; const ic = mo.fx && mo.fx.intercept; if(typeof ic === 'number' && ic > best && this._modeUsableBy(mo, vamp)) best = ic; });   // v0.6.233: + the directed condition (_bestInterceptFor's mirror)
       if(best > 0){ seen.add(FX_NORM(h.name)); S++; sum += best; } });
     this._lockInterceptFor(vamp, played, p, true).forEach(lb => { S++; sum += lb.s; });   // v0.6.215: every location that locks for this blocker counts like a card
     return { S, sum };
   }
   _interceptSecondLook(){            // v0.6.143d (Johan, 20 Sep: 'a bot that plays ONE intercept card even when it holds more and more are needed is a clear limitation / bug'): the blocker's side of the exchange. When the tally moves and my block now FAILS, I look again: can the intercept I still hold reach their stealth? Then the next card goes down; if it cannot, the cards are kept.
-    const p = this.pending; if(!p || !p.contested || !p.blockerVamp || this.out || this.o.stealthStack === 0 || p._icFirst) return;   // v0.6.222: not while my first card is on its way (_commitBlock's beat)
+    const p = this.pending; if(!p || !p.contested || !p.blockerVamp || this.out || this.o.stealthStack === 0 || p._icFirst || p._cancelComing) return;   // v0.6.222: not while my first card is on its way (_commitBlock's beat). v0.6.233: nor for an attempt a declined True Love's Face is about to cancel
     const t = this.tally; if(!t || t.mode !== 'block') return; const b = t.b | 0, a = t.a | 0; if(b >= a) return;   // the block succeeds as it stands
     if((p.icLooks | 0) >= 4) return; p.icLooks = (p.icLooks | 0) + 1;
     const blocker = p.blockerVamp, need = a - b, stack = this._interceptStack(blocker, p.reacted, p), ic = this._bestInterceptFor(blocker, p.reacted, p);
@@ -10872,7 +10989,7 @@ class Bot {
     else { go = true; tag = 'answer'; }
     this._emit('intercept-stack', { vamp: blocker.name, look: 1 + (p.icLooks | 0), S: stack.S, sum: stack.sum, need, answer: go, tag, amount: p.amount | 0, tally: { a, b } });
     this.o.log('blocker second look (stealth ' + a + ' vs intercept ' + b + '): ' + tag);
-    if(!go) return;
+    if(!go){ const nt = this._nightTerrorsFor(blocker, p, a, b); if(nt) this._playNightTerrors(nt, blocker, p); return; }   // v0.6.233 (V5 wave 6a): my intercept cannot reach -- the acting minion's stealth to 0
     if(p._icQ) return; p._icQ = true;
     this._afterBeat('react', () => { p._icQ = false; if(this.pending !== p || !p.contested || !p.blockerVamp || this.out) return false;   // v0.6.152: the card lands after the reaction beat, if the block still fails as the counter then stands
                                      const t2 = this.tally; return !!(t2 && t2.mode === 'block' && (t2.b | 0) < (t2.a | 0) && (ic.fromBoard ? !!(this.board.find(c => c.id === ic.fromBoard && !c.locked)) : this.hand[ic.idx] === ic.name)); }, () => {
@@ -10882,8 +10999,58 @@ class Bot {
       this._setTallyB(b2 + ic.s); this.push(); if(this._vWait) this._vWait.arm();   // v0.6.204 (F10): my answer restarts the actor's clock
     });
   }
+  /* v0.6.233 (V5 wave 6a, RULINGS D-123): NIGHT TERRORS -- '[obf][pre] Reduce the acting minion's stealth to 0. (The acting minion can still
+     increase their stealth.)' (fx.stealthToZero; the superior's 'As above' too; Veiled Sight, Draba [CHI]). The blocker's second look plays it when
+     its intercept cards cannot reach the stealth standing, the stealth is above 0 ('on zero or negative stealth it changes nothing'
+     [LSJ 20021211]) and the block would then stand (intercept 0 or more). 'Effectively a -X stealth modifier to the action' [RTR 20030519]: the
+     acting bot takes its X off the counter (_onStealthZero, L12.stealthZero) and may raise again. The decision is Claude's prior (spec-v5-wave6
+     \u00a78): a bleed of 2 or more, or an undirected action that is not a hunt -- the card and its blood for the block. A human actor sets the
+     counter's stealth: not played there (a rider). The superior's strike: combat ends goes with the grants round. */
+  _nightTerrorsFor(blocker, p, a, b){
+    if(!blocker || !p || this.out || !(a > 0) || b < 0 || (p.who && this._isHumanName(p.who)) || !p.actingVampName) return null;   // v0.6.233 (the egress review, finding 3): no name, no line the actor can match -- the counters would differ
+    const worth = p.kind === 'bleed' ? (p.amount | 0) >= 2 : p.kind === 'undirected' ? p.sub !== 'hunt' : false;
+    if(!worth) return null;
+    for(let idx = 0; idx < this.hand.length; idx++){
+      const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('react')) continue;
+      if(p.reacted && p.reacted.has(FX_NORM(h.name))) continue;   // once per action
+      if(!this._titleOk(h, blocker) || !this._entryReqOk(h.e, blocker)) continue;   // Night Terrors: 'Requires Ravnos' (the card's clan)
+      const cost = (h.e.cost && h.e.cost.blood) | 0; if((blocker.blood | 0) < cost) continue;
+      const mo = (h.e.modes || []).find(m => m.fx && m.fx.stealthToZero && this._modeUsableBy(m, blocker) && this._dirOk(h.e, m, p)); if(!mo) continue;
+      return { idx, name: h.name, cost, at: mo.at || null };
+    }
+    return null;
+  }
+  _playNightTerrors(nt, blocker, p){
+    if(p._ntQ) return; p._ntQ = true;
+    this._afterBeat('react', () => { p._ntQ = false; const t = this.tally;
+      return this.pending === p && p.contested && p.blockerVamp === blocker && !this.out && !!p.actingVampName && this.hand[nt.idx] === nt.name && !!(t && t.mode === 'block' && (t.b | 0) < (t.a | 0) && (t.a | 0) > 0 && (t.b | 0) >= 0); }, () => {
+      const actor = p.actingVampName, t = this.tally;
+      p.reacted.add(FX_NORM(nt.name));
+      this.hand.splice(nt.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(nt.name);
+      this._emitPlay(nt.name, 'react-stealth0', blocker.name);
+      if(nt.cost) blocker.blood = Math.max(0, (blocker.blood | 0) - nt.cost);
+      this.fxClone({ name: nt.name, kind: 'lib' }, actor + "'s stealth is 0", { actor: blocker });
+      this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> plays <b>' + esc(nt.name) + '</b>: <b>' + esc(actor) + "</b>'s stealth is 0." });   // L12.stealthZero
+      this._emit('stealth-zero', { vamp: blocker.name, card: nt.name, actor, a: t ? (t.a | 0) : null, b: t ? (t.b | 0) : null, kind: p.kind, sub: p.sub || null, amount: p.amount | 0 });
+      this.push(); if(this._vWait) this._vWait.arm();
+    });
+  }
+  _onStealthZero(vamp, card, actor){   // the acting side: Night Terrors at my action -- my stealth is 0 ('a -X stealth modifier to the action'), and I may raise it again (the counter's echo runs my second look)
+    const av = this._actingVamp, a = this._ask; if(!av || !a || this.out || !av.v || av.v.name !== actor) return;
+    const t = this.tally; if(!t || t.mode !== 'block') return;
+    const x = ((this._actStealthRaw != null) ? (this._actStealthRaw | 0) : (t.a | 0)) - (av.condOn | 0); if(x <= 0) return;   // on zero or negative stealth it changes nothing [LSJ 20021211]; a conditional stealth booked on the counter is the blocker's -1 intercept, not stealth (the graded readings): it stays
+    this._bumpTallyA(-x);
+    this._emit('stealth-zero-in', { vamp: av.v.name, by: vamp, card, x });
+    this.o.log('stealth: ' + card + ' (' + vamp + ') -- ' + av.v.name + '\u2019s stealth ' + x + ' -> 0');
+    this.push();
+  }
+  _onNoStrikeR1(vamp, card){         // the acting side: One With the Land [PRO] on the locked route against my action -- if that block stands, neither of us strikes in the first round of its combat (_resolveCombat takes it)
+    const av = this._actingVamp; if(!av || !av.v || !this._ask || this.out) return;
+    this._owl = { vamp: av.v.name, opp: vamp, card, at: Date.now() };
+    this._emit('no-strike-r1', { vamp: av.v.name, opp: vamp, card, side: 'actor' });
+  }
   _stealthSecondLook(){               // v0.6.143c THE SECOND LOOK (smoke1: `need` was 1 in 20 of 20 decisions -- the first look fires on the blocker's 'Block!' SHOUT, before it has played its intercept and written the tally; and nothing ever looked again, so no second stealth card was ever played). When the tally moves and the block currently SUCCEEDS, the actor looks at the real numbers: can my remaining stealth reach it?
-    const a = this._ask, av = this._actingVamp; if(!a || !a.contested || !av || this.out || this.o.stealthStack === 0) return;
+    const a = this._ask, av = this._actingVamp; if(!a || !a.contested || !av || this.out || this.o.stealthStack === 0 || av._payQ) return;   // v0.6.233: not inside my True Love's Face's window (_payCancelWindow)
     const t = this.tally; if(!t || t.mode !== 'block') return; const b = t.b | 0, sa = t.a | 0; if(b < sa) return;   // the block fails as it stands: nothing to answer
     { const key = sa + ':' + b; if(av._lookKey === key) return; av._lookKey = key; }   // v0.6.152: the same counter state is looked at once (the chat grammar's write and its echo both arrive here)
     if((av.looks | 0) >= 4) return; av.looks = (av.looks | 0) + 1;
@@ -10957,7 +11124,7 @@ class Bot {
   }
   _queueStealthSpend(st, av, a){        // v0.6.152: a spend decided on a tally that just moved lands after the reaction beat -- if the counter still says the block succeeds and nothing else has landed meanwhile (one queued spend at a time)
     if(av._spendQ) return; av._spendQ = true;
-    this._afterBeat('react', () => { av._spendQ = false; if(this._ask !== a || this._actingVamp !== av || !a.contested || this.out) return false;
+    this._afterBeat('react', () => { av._spendQ = false; if(this._ask !== a || this._actingVamp !== av || !a.contested || this.out || av._payQ) return false;   // v0.6.233 (the egress review, finding 2b): not inside my True Love's Face's window
                                      const t = this.tally; if(!t || t.mode !== 'block' || (t.b | 0) < (t.a | 0)) return false;   // the block fails as it stands now (they withdrew, or a verdict landed)
                                      return this.hand[st.idx] === st.name || !!st.fromBoard; },
                               () => this._spendStealthCard(st, av, a));
@@ -10991,7 +11158,7 @@ class Bot {
     const av = this._actingVamp;
     if(av){ av.attemptAt = Date.now(); this._condStealthAdjust(); }   // v0.6.228 (round F): this attempt's stamp -- a blocker name noted before it (an earlier attempt's) is stale for a conditional stealth (_condBlockerKind); the attempt's own line, first or after the shout, is fresh. A shout alone takes a booked conditional stealth off until its line names a blocker it reaches (the egress review, finding 4)
     if(av) av.reactionsSeen = true;   // fas C (Perfectionist's clean-action test): conservative v1 -- ANY Block! attempt marks the action dirty (the attempt almost always rides an intercept card; a bare shout is rare, and erring strict never over-gains)
-    const cb = av && this._bestCancelBlockFor(av.v, av.played);
+    const cb = av && this._bestCancelBlockFor(av.v, av.played, { humanBlocker: this._isHumanName(who) });
     if(cb){
       /* fas C (16 July): Elder Impersonation-class -- a GUARANTEED answer, checked
          BEFORE the stealth bet. The attempt fails outright; the action stays live
@@ -11008,6 +11175,7 @@ class Bot {
           this._toAsh(cb.name);   // v0.6.12 ash sweep
           this._emitPlay(cb.name, 'cancel-block', av && av.v && av.v.name);   // v0.6.139: this spend left no trace row (CLAUDE.md 43c)
           if(cb.cost) av.v.blood = Math.max(0, (av.v.blood | 0) - cb.cost);
+          if(cb.pay){ av._lookQ = (av._lookQ | 0) + 1; this._payCancelWindow(av, a, cb, who).catch(e => this.o.log('as-played error:', e.message)).finally(() => { av._lookQ = Math.max(0, (av._lookQ | 0) - 1); }); return; }   // v0.6.233 (V5 wave 6a, D-123): True Love's Face -- the card lands in its 'as played' window first (D-122's); the verdict clock waits for it
           this.fxClone({ name: cb.name, kind: 'lib' }, 'cancels the block', { actor: av.v });
           this.send({ t: 'log', html: '<b>' + esc(av.v.name) + '</b> plays <b>' + esc(cb.name) + '</b>: cancels the block attempt by <b>' + esc(who) + '</b> \u2014 that minion cannot try again.' });
 

@@ -91,7 +91,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.9.10';   // 18 Nov 2026 (bot v0.6.232, V5 wave 5b): `frenzy` -- 'opp' / 'self' on a card with a bare 'Frenzy.' segment, and on the modes of a '[abo] Frenzy.' line (Meditative Grove's cancel reads it, [LSJ 20051113])
+const FXC_VERSION = '1.9.11';   // 18 Nov 2026 (bot v0.6.233, V5 wave 6a): `onlyDirected` -- 'during an action directed at you (or a card you control)' on the entry (a line with no discipline) or on the modes of its discipline line
+// const FXC_VERSION_1910 = '1.9.10';   // 18 Nov 2026 (bot v0.6.232, V5 wave 5b): `frenzy` -- 'opp' / 'self' on a card with a bare 'Frenzy.' segment, and on the modes of a '[abo] Frenzy.' line (Meditative Grove's cancel reads it, [LSJ 20051113])
 // const FXC_VERSION_199 = '1.9.9';   // 17 Nov 2026 (bot v0.6.230, V5 wave 5): the markers anarchReq ('Requires an Anarch / a baron') and zombie (an ally or retainer named a zombie)
 // const FXC_VERSION_198 = '1.9.8';   // 3 Nov 2026 (bot v0.6.217, V5 wave 4): 'Unique archetype.' is the archetype keyword too (Saulot's three masters were untagged: the one-archetype-per-vampire gate never saw them)
 // const FXC_VERSION_197 = '1.9.7';   // 2 Nov 2026 (bot v0.6.216, KRCG's v5 dump as the source, krcg-v5.js): the v5 cost shape ({type: 'Pool', value}) read; the v5 wording 'this card is put in play / on' is persistent; a 'Requires …' sentence is found mid-line ('Title. Requires a Sabbat vampire.').
@@ -217,6 +218,7 @@ function extractFx(t0){
   if((m = t.match(/reduce (?:a|the|that) bleed[^.]{0,30}? by ([0-9]+|X)/i))) put('reduce', num(m[1]));
   else if(/reduce (?:a|the|that) bleed[^.]{0,25} to 0/i.test(t)) put('reduce', 'all');
   if(/unlocks? (?!phase)(?:this|that|a |an |all |target|them|him|her)/i.test(t)) put('unlock', true);
+  if(/\breduce the acting minion's stealth to 0\b/i.test(t)) put('stealthToZero', true);   // v1.9.11 (bot v0.6.233, V5 wave 6a, D-123): Night Terrors (its superior's 'As above' inherits it), Veiled Sight [chi], Draba [CHI] -- a blocking bot plays it when the actor's stealth beats its intercept (_nightTerrorsFor); 'Effectively gives a -X stealth modifier to the action' [RTR 20030519]
   /* threats (as seen by the card's target) */
   /* v1.5.2 (18 July, Johan's sweep-uncertainty question): ONGOING pool drains ("During
      each other Methuselah's unlock phase, they burn 1 pool" -- Contagion, Fame, Smiling
@@ -701,6 +703,8 @@ function libEntry(c){
   if(/only usable at close range/i.test(c.card_text || '')) req.rangeClose = true;
   if(/only usable at long range/i.test(c.card_text || '')) req.rangeLong = true;
   if(/(?:^|[.\n]\s*)Not usable (?:(?:on|during) )?(?:the )?first round/.test(c.card_text || '')) req.notFirstRound = true;   // v1.9.5: + 'Not usable the first round' / 'Not usable first round' (Eruption of Vitae, Growing Fury, Well-Aimed Car). v1.9.4: + 'during the first round' (Walk of Flame); a SENTENCE that starts so -- 'strikes ... that are not usable during the first round' (Shotgun Ritual, Al-Ashrad, Hector Trelane) lifts it
+  { const cm = (c.card_text || '').match(/(?:^|[.\n]\s*)Requires? a vampire with capacity (\d+) or more\./i);   // v1.9.11 (bot v0.6.233, V5 wave 6a): 'Requires a vampire with capacity 7 or more' as a sentence of its own (Sense the Savage Way and 4 more) -- the bot's _entryReqOk reads it against the vampire that would play the card. On a discipline line (Hall of Hades' Court [dom], The Missing Voice [cel]) it is that mode's, not the card's: not read
+    if(cm) req.capMin = +cm[1]; }
   if(Object.keys(req).length) e.req = req;
   const txt = c.card_text || '';
   if(/^unique\b/i.test(txt.trim())) e.unique = true;   // rulebook: unique library cards follow vampire uniqueness (one in play; a second contests)
@@ -780,6 +784,57 @@ function libEntry(c){
       const fr = /^\s*Frenzy\s*[.:]/i.test(h[2]) ? (FRENZY_OPP.test(h[2]) ? 'opp' : 'self') : /^\s*As above/i.test(h[2]) ? last : null;
       last = fr;
       if(fr) e.modes.forEach(mo => { if(ats.includes(mo.at)) mo.frenzy = fr; });
+    });
+  }
+  /* v1.9.11 (18 Nov 2026, bot v0.6.233, V5 wave 6a, RULINGS D-123): ONLY DIRECTED -- 'Only usable during an action directed at you (or a
+     card you control)' and its 'During an action directed at you ..., X can ...' form (12 library cards; 'during a BLEED action directed at
+     you' -- Elder Intervention, Guard Dogs' curated bleedAtMe -- is not this class). On a discipline line it tags the modes of that line's
+     requirement (a superior 'As above' line inherits the line before it, the frenzy tag's rule); on a line with no discipline it tags the
+     entry -- except on an action card, whose sentence is a later ability of the card in play (Marked Territory), not a condition on the
+     action. The reaction finders read it (bot: _dirOk). Found by the wave 6 analysis: Eyes of Argus and The Warrens spent their intercept at
+     undirected actions 568 times in v0.6.232's 240. A curated entry carries its own (Underbridge Stray's burn: allyBurnUnlock 'directed'). */
+  /* v1.9.11 (18 Nov 2026, bot v0.6.233, V5 wave 6a, RULINGS D-123): THE LOCKED ROUTE as a sweep (Johan's sweep rule; D-116 (4)'s route). A
+     REACTION's line 'This vampire unlocks and attempts to block.' -- or 'This vampire burns N blood to unlock.' -- under 'Only usable by a
+     locked vampire.' (on that line, or in the card's header) is Second Tradition's route: when 'lockedBlock', fx.unlock (+ payBlood N). The
+     line may also carry 'Only usable during an action directed at you (or a card you control).' (the onlyDirected tag below) and one rider the
+     bot reads: 'If they block, neither combatant can strike during the first round of the resulting combat.' (fx.noStrikeFirstRound). Any other
+     sentence on the line, or a header sentence that is neither a requirement nor one of the two conditions, and the line gets no route
+     mode: a curation case (Dogged Pursuit's relock, Speak with Spirits' paid +1, Read the Winds' +1, The Mole's 'when a non-anarch minion
+     is acting'). Built: Sense the Savage Way [ANI], Sentry Signal [ani]/[tha], One With the Land [PRO], Deep Ecology [pro], Black Sunrise,
+     Eluding the Arms of Morpheus. A line whose discipline already has an auto mode keeps it unless that mode is a bare unlock. */
+  if(e.t.includes('react')){
+    const SENT = x => String(x || '').split(/(?<=\.)\s+/).map(y => y.trim()).filter(Boolean);
+    const LOCKC = /^Only usable by a locked vampire\.$/i, DIRC = /^Only usable during an action directed at you \(or a card you control\)\.$/i, REQ = /^Requires?\b/i;
+    const DLINE = /^\s*((?:\[[A-Za-z]{3}\]\s*(?:or\s*)?)+)(.*)$/;
+    const lines = txt.split('\n'), head = lines.filter(l => !DLINE.test(l)), disc = lines.filter(l => DLINE.test(l));
+    const headS = head.flatMap(SENT), headLock = headS.some(x => LOCKC.test(x));
+    const routeOf = body => { let lock = headLock; const rest = SENT(body).filter(x => { if(LOCKC.test(x)){ lock = true; return false; } return !DIRC.test(x) && !REQ.test(x); });
+      if(!lock || !rest.length) return null;
+      const fx = { unlock: true }; let m;
+      if((m = rest[0].match(/^This vampire burns (\d+) blood to unlock\.$/i))) fx.payBlood = +m[1]; else if(!/^This vampire unlocks and attempts to block\.$/i.test(rest[0])) return null;
+      for(const r of rest.slice(1)){ if(/^If they block, neither combatant can strike during the first round of the resulting combat\.$/i.test(r)) fx.noStrikeFirstRound = true; else return null; }
+      return fx; };
+    const put = (at, fx) => { e.modes = e.modes || []; const i = e.modes.findIndex(mo => (mo.at || null) === at);
+      if(i >= 0){ const k = Object.keys(e.modes[i].fx || {}); if(k.some(x => x !== 'unlock') || e.modes[i].when) return; e.modes.splice(i, 1); }
+      e.modes.push({ at, fx, when: 'lockedBlock' }); };
+    if(!disc.length){ const fx = routeOf(head.join(' ')); if(fx) put(null, fx); }
+    else if(!headS.some(x => !REQ.test(x) && !LOCKC.test(x) && !DIRC.test(x))){
+      disc.forEach(l => { const h = l.match(DLINE), ats = (h[1].match(/\[[A-Za-z]{3}\]/g) || []).map(x => x.slice(1, -1));
+        const keys = /\]\s*or\s*\[/i.test(h[1]) ? ats : [ats.join('+')], fx = routeOf(h[2]);
+        if(fx) keys.forEach(k => put(k, Object.assign({}, fx))); });
+    }
+  }
+  if(/\bduring an action directed at you\b/i.test(txt)){
+    const DIR = /\bduring an action directed at you\b/i;
+    let last = false;
+    txt.split('\n').forEach(l => {
+      const h = l.match(/^\s*((?:\[[A-Za-z ]+\]\s*(?:or\s*)?)+)(.*)$/);
+      const ats = h ? (h[1].match(/\[[A-Za-z]{3}\]/g) || []).map(x => x.slice(1, -1)) : [];
+      if(!ats.length){ last = false; if(DIR.test(l) && !e.t.includes('action')) e.onlyDirected = true; return; }
+      const keys = /\]\s*or\s*\[/i.test(h[1]) ? ats : [ats.join('+')];
+      const on = DIR.test(h[2]) || (/^\s*As above/i.test(h[2]) && last);
+      last = on;
+      if(on && e.modes) e.modes.forEach(mo => { if(keys.includes(mo.at)) mo.onlyDirected = true; });
     });
   }
   /* v1.5.0 (17 July, fas B/C sweep): BUILT-IN action stealth ("+2 stealth action."
@@ -957,12 +1012,14 @@ function compile(cards, curated){
       if(auto && auto.req && dst === lib){
         const r = Object.assign({}, e.req || {}), got = [];
         if(r.disc === undefined && auto.req.disc){ r.disc = auto.req.disc; got.push('disc'); }
-        if(r.clan === undefined && auto.req.clan){ r.clan = auto.req.clan; got.push('clan'); }   // v1.9.6 (V5 wave 3): masters inherit the clan too -- v1.9.1's 'a clan icon on a master is not a requirement' was wrong: 'only a Methuselah who controls a ready minion who meets the requirements of a master card can play it' (the rulebook, card types), and the clan icon is a requirement (RULINGS R-42)
+        if(r.clan === undefined && auto.req.clan){ r.clan = auto.req.clan; got.push('clan'); }
+        if(r.capMin === undefined && auto.req.capMin){ r.capMin = auto.req.capMin; got.push('capMin'); }   // v1.9.11: the capacity too   // v1.9.6 (V5 wave 3): masters inherit the clan too -- v1.9.1's 'a clan icon on a master is not a requirement' was wrong: 'only a Methuselah who controls a ready minion who meets the requirements of a master card can play it' (the rulebook, card types), and the clan icon is a requirement (RULINGS R-42)
         if(got.length){ e.req = r; reqInherited.push(name + ' ' + got.join('+')); }
       }
       if(auto && auto.oot && e.oot === undefined) e.oot = true;   // v1.9.6: a curated master keeps the data's out-of-turn keyword unless it restates it
       if(auto && auto.anarchReq && e.anarchReq === undefined) e.anarchReq = true;   // v1.9.9: the markers survive a curated entry
       if(auto && auto.zombie && e.zombie === undefined) e.zombie = true;
+      if(auto && auto.onlyDirected && e.onlyDirected === undefined) e.onlyDirected = true;   // v1.9.11: the header's 'Only usable during an action directed at you' survives a curated entry (a line's own stays with the curated modes)
       if(auto && auto.frenzy && e.frenzy === undefined) e.frenzy = auto.frenzy;   // v1.9.10: the frenzy tag survives a curated entry (Rage of Apedemak's 'self')
       dst[name] = e;
       curApplied.push(name);
