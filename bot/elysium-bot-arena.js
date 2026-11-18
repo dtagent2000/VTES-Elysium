@@ -186,7 +186,7 @@ async function runMatch(mi, serverUrl, o, log){
         server: serverUrl, room, pass: 'x', name, deck,
         deckName,   // A2 (v1.2.4): the manifest reads DECK_STRATEGY[deckName] -- the yardstick needs the key
         create: i === 0, persona, cardfx: o.cardfx,
-        paceMs: o.pace, askSecs: o.askSecs, startPool: o.startPool,
+        paceMs: o.pace, askSecs: o.askSecs, startPool: o.startPool, asPlayedMs: o.asPlayedMs,
         ...(o.knobs || {}), ...((o.seatKnobs || {})[i + 1] || {}),   // v1.2.4 (#6): spread LAST -- knobs may override pace/askSecs when swept
         rig: (o.rig || [])[i] || null,
         log: () => {}, onEvent: onEvent(name)
@@ -293,7 +293,8 @@ async function runArena(opts){
   const o = Object.assign({
     matches: 3, bots: 3, personas: ['expert'], decks: ['hacking'],   // v1.3.1 (18 Sep, Johan): SHARK for every seat by default -- the bots must play correctly from their knowledge before novice/grinder deviations are measured; --personas still overrides
     startPool: 12, turnCap: 200, matchTimeoutMs: 600000,   // v1.3.3: was 120 s -- a 5p30 match runs 170-270 s, so the default silently voided it (reason 'timeout', winner by VP-so-far); pass --match-timeout for short probes
-    pace: 0, askSecs: 3, cardfx: null, trace: null, serverUrl: null, knobs: {}, seatKnobs: {},   // v1.2.4 (#6): sweep knobs -- global + per-seat (treatment vs control in ONE match)
+    pace: 0, askSecs: 3, asPlayedMs: 500, cardfx: null, trace: null, serverUrl: null, knobs: {}, seatKnobs: {},   // v1.4.15 (bot v0.6.232, D-122): the 'as played' window's grace at pace 0 -- a real server needs a round trip (the bot's default 0 is one macrotask, the hotseat bridge's)
+      // v1.2.4 (#6): sweep knobs -- global + per-seat (treatment vs control in ONE match)
     log: console.log
   }, opts || {});
   o.bots = Math.max(2, Math.min(5, o.bots));   // v1.1.4: 2–5 (server MAX_PLAYERS=6; VTES standard table tops at 5) — T1 measures the 3–5-seat curve
@@ -301,7 +302,7 @@ async function runArena(opts){
 
   let owned = null;
   const serverUrl = o.serverUrl || (owned = await spawnServer(), owned.url);   // v1.4.10: a free port, and the server alive after its boot
-  log('arena v1.4.14 — Trainbot v' + BOT_VERSION + ' · ' + o.matches + ' match(es) × ' +
+  log('arena v1.4.15 — Trainbot v' + BOT_VERSION + ' · ' + o.matches + ' match(es) × ' +
       o.bots + ' bots · personas ' + o.personas.join('/') + ' · decks ' + o.decks.join('/') + ' · start pool ' + o.startPool);
   log('  seating: ' + (FIXED_SEATS ? 'FIXED (v1.2 rotation, neighbourhoods constant)' : 'RANDOM per match, seed ' + RUN_SEED + ' (repeat with --seed ' + RUN_SEED + ')'));   // v1.3.0
   if(Object.keys(o.knobs).length || Object.keys(o.seatKnobs).length){
@@ -411,6 +412,7 @@ if(require.main === module){
     else if(a === '--rig-file') o.rigFile = next();   // v1.1.3 (Johan's practical-testing GO): JSON array, index-aligned to bot seat order (0-based); an entry can be null/omitted for a normal random deal on that seat. Shape: {"hand":[...], "unc":[...], "ready":[{"name":..,"blood":..}], "pool":N} -- see elysium-bot.js's `dealt` handler, v0.6.17.
     else if(a === '--pace') o.pace = Math.max(0, parseInt(next(), 10) || 0);
     else if(a === '--ask-secs') o.askSecs = Math.max(2, parseInt(next(), 10) || 3);
+    else if(a === '--as-played-ms') o.asPlayedMs = Math.max(0, parseInt(next(), 10) || 0);   // v1.4.15: the 'as played' window's grace at pace 0
     else if(a === '--knob'){   // v1.2.4 (#6): --knob key=val[,key=val...] with optional seat prefix N:key=val -- whitelisted so a typo warns, never silently misconfigures
       const WL = ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','twdKnow','dynFloor','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','jackBurn','jackRunway','cardWorth','ballTurn','keyLast','engineW','scalpelLock','villeinKeep'];   // v1.4.14: +cardWorth (bot v0.6.230, D-119)   // v1.4.13: +ballTurn, keyLast, engineW, scalpelLock, villeinKeep (bot v0.6.229, D-117 / D-118)   // v1.4.12: +jackRunway (bot v0.6.226, D-115)   // v1.4.11: +jackBurn (bot v0.6.224, D-114)   // v1.4.8: +dodgeOut (bot v0.6.205 -- it reached the manifest but not this list), +probeHold (bot v0.6.206)   // v1.4.7: +waveNarrow, +blockCost (bot v0.6.197)   // v1.4.6: +combatEndStats (bot v0.6.196)   // v1.4.5: +dynFloor (bot v0.6.189)   // v1.4.4: +twdKnow (bot v0.6.187)   // v1.4.3: +combatMind (bot v0.6.156)   // v1.3.4: debt 23b's switch
       o.knobs = o.knobs || {}; o.seatKnobs = o.seatKnobs || {};   // lazy-init -- the arg loop may run against a pre-defaults o

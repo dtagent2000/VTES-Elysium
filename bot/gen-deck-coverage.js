@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.48 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.49 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.48';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.49';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -186,6 +186,12 @@ const CLASS = {
   ashSwapAnarch: 'play', endCombatAnarch: 'play', discardBonus: 'play', stealCardAction: 'play', stealBy: 'paired',   // Garibaldi-Meucci Museum (_w5Garibaldi, _w5GaribaldiEndFor); Powerbase: Los Angeles (_w5PowerbaseLock); the (D) steal (_w5AttackCands, _w5GiveStolen)
   hostageCap: 'play', hostageBlood: 'play', rackBlood: 'play', huntBonusSabbat: 'play', covenPass: 'play', covenBlood: 'paired',   // Carver's (_w5Hostage, _w5CarversLock); The Rack (_w5Rack); The Hungry Coyote (_w5HuntBonus); The Coven (_w5CovenLock, _w5CovenPass)
   piperRecruit: 'play', autoPassRef: 'play', zombieCounter: 'play',   // Piper (CARD_HANDLERS.piper); Día de los Muertos (CARD_HANDLERS.dia, _callReferendum's auto-pass); Cursed Abattoir (_w5ZombieBurned)
+  /* v1.1.49 (18 Nov 2026, bot v0.6.232, V5 wave 5b, RULINGS D-122): the 'as played' window's cards. A mode's `frenzy` tag is no fx key (a mode
+     property, like `dir`): the Grove reads it through _frenzyOpp. */
+  cancelMaster: 'play',   // Sudden Reversal -- _srFor / _playSr in another seat's as-played window (L12.asPlayed) or at a human's master (_srOnHumanFx)
+  cancelFrenzy: 'play',   // Meditative Grove's lock -- _groveFor / _groveCancel (a rush at my Salubri, a human's frenzy card in our combat)
+  yawpCombat: 'play',   // Yawp Court -- _yawpFor / _onPolSuccess (the owner), _yawpVisible / _yawpWindow (the caller)
+  wonCounters: 'play', wonBleed: 'play', wonStrength: 'play', wonStealHunt: 'play',   // Week of Nightmares -- _wonUnlock / _wonEnd, _wonPlus (bleed, strength, the opposing strike), _wonHunt
   press: 'contextual',   // v1.1.5: consumed via the press@ special-case below (Apportation's clean standalone shape only) -- 'contextual' here only silences the unknown-key warning for the excluded instances (co-located maneuver/strike/stealBlood, or an unverifiable req flag)
 };
 const cls = k => String(CLASS[k] || '');
@@ -210,7 +216,8 @@ const MASTER_KEYS = new Set(['poolGain', 'bloodToPool', 'poolToBlood', 'handSize
   'endCombatLock', 'rushHostBy', 'grandBall', 'burnCardAction', 'burnStealthClan', 'burnBy',   // v1.1.43: + V5 wave 4 (the masters on a vampire read through their bearer; Toreador Grand Ball)
   'lostMinionTax', 'noAnarchTax', 'burnByRef', 'frontalRush', 'bleedCounter', 'counterUnlock', 'refPassPreyBurn', 'pressContinue', 'ashSwapAnarch',
   'endCombatAnarch', 'discardBonus', 'stealCardAction', 'stealBy', 'hostageCap', 'hostageBlood', 'rackBlood', 'huntBonusSabbat', 'covenPass', 'covenBlood',
-  'piperRecruit', 'autoPassRef', 'zombieCounter']);   // v1.1.48: + V5 wave 5a (zombieBleed stays out: Cursed Abattoir's bleed rider waits for allies that act)
+  'piperRecruit', 'autoPassRef', 'zombieCounter',   // v1.1.48: + V5 wave 5a (zombieBleed stays out: Cursed Abattoir's bleed rider waits for allies that act)
+  'cancelMaster', 'cancelFrenzy', 'yawpCombat', 'wonCounters', 'wonBleed', 'wonStrength', 'wonStealHunt']);   // v1.1.49: + V5 wave 5b
 function modeConsumed(mo, e){
   if(((e && e.t) || []).includes('master') && !Object.keys(mo.fx || {}).some(k => MASTER_KEYS.has(k)))
     return { ok: false, via: 'master: no board consumer for ' + (Object.keys(mo.fx || {}).join(',') || '\u2014') };
