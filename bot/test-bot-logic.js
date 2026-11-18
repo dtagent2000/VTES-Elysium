@@ -12761,7 +12761,7 @@ async function connectWithRetry(client, tries = 30){
         const pc = u._commitBlock(p, { why: 'test', parts: {} }); setTimeout(() => relay({ t: 'tally', mode: 'block', a: 1 }, 'Hanna'), 40);   // Hanna's stealth 1, inside the wake's beat
         await pc; await new Promise(r => setTimeout(r, 2000)); if(u._vWait && u._vWait.timer) clearTimeout(u._vWait.timer);
         const ic = plays.filter(t => /intercept/.test(t));
-        ok(ic.length === 1 && u.hand.includes('Eyes of the Wild') && !u.hand.includes('Ensnare a Beast') && S.b === 1 && p.reacted.size === 1,   // v0.6.228 (round F; its egress review, finding 8): Ensnare a Beast spent -- Eyes of the Wild is a locked GANGREL's route, never a Banu Haqim's intercept (v0.6.223 accepted either while Eyes was misread)
+        ok(ic.length === 1 && u.hand.includes('Eyes of the Wild') && !u.hand.includes('Ensnare a Beast') && S.b === 1 && p.reacted.size === 2 && p.reacted.has('onthequivive') && p.reacted.has('ensnareabeast'),   // v0.6.233 (wave 6's graded readings, RED 1): the wake's card is recorded on the action too (one card of a name per action) -- the reacted set holds the wake and the one intercept card. v0.6.228 (round F; its egress review, finding 8): Ensnare a Beast spent -- Eyes of the Wild is a locked GANGREL's route, never a Banu Haqim's intercept (v0.6.223 accepted either while Eyes was misread)
            '166h a stealth raise inside the locked-blocker route’s beat: one intercept card for one need (got ' + JSON.stringify({ plays, hand: u.hand, counter: S, reacted: [...p.reacted] }) + ')'); }
 
       // i) the egress review: a superseded combat's waiter that was already registered when the later combat began ends with it -- the
@@ -12819,7 +12819,7 @@ async function connectWithRetry(client, tries = 30){
         const pc = u._commitBlock(p, { why: 'test', parts: {} }); setTimeout(() => u._onChat('Hanna', '+1'), 40);   // inside the wake's beat (400 ms)
         await pc; await new Promise(r => setTimeout(r, 2000)); if(u._vWait && u._vWait.timer) clearTimeout(u._vWait.timer);
         const ic = plays.filter(t => /intercept/.test(t)), sc = u.events.filter(e => e.t === 'bot:stealth-chat').map(e => e.d.a);
-        ok(JSON.stringify(sc) === '[1]' && ic.length === 1 && S.a === 1 && S.b === 1 && u.hand.includes('Eyes of the Wild') && !u.hand.includes('Ensnare a Beast') && p.reacted.size === 1,   // v0.6.228 (round F; its egress review, finding 8): Ensnare a Beast spent, Eyes of the Wild kept (a Banu Haqim's)
+        ok(JSON.stringify(sc) === '[1]' && ic.length === 1 && S.a === 1 && S.b === 1 && u.hand.includes('Eyes of the Wild') && !u.hand.includes('Ensnare a Beast') && p.reacted.size === 2 && p.reacted.has('onthequivive') && p.reacted.has('ensnareabeast'),   // v0.6.233 (RED 1): the wake's card and the one intercept card recorded. v0.6.228 (round F; its egress review, finding 8): Ensnare a Beast spent, Eyes of the Wild kept (a Banu Haqim's)
            '167a Hanna’s "+1" inside the locked-blocker route’s beat: booked on the counter, and the route answers it with one intercept card (got ' + JSON.stringify({ sc, plays, counter: S, hand: u.hand }) + ')'); }
 
       // b) the directed actions at a seat ousted in their window (Cy, seat 3, is ousted while the block question is open) -- through

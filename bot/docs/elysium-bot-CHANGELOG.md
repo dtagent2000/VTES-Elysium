@@ -69,7 +69,8 @@
     prediction's DIVERGED half held, its VP direction did not). The six cards fired on their 12-match tables (spec §8). GATES-TBD
   - *Tests*: section 178 (24 checks; 2/22 on v0.6.232's bytes — a skip, and a card it never plays; 178k–p, the egress review's six,
     18/6 on the build before them); 83h, 83i, 127p moved off Eyes of Argus at an
-    undirected action (127p gains the check that it is kept there); `test-cardfx` 357 (9 red on v0.6.232's compiler).
+    undirected action (127p gains the check that it is kept there); 166h and 167a count the wake's card on the action (RED 1 below;
+    they read one card); `test-cardfx` 357 (9 red on v0.6.232's compiler).
   - *The graded readings' fixes* (the combining rule, D-92): one card of a name per action — the route's and the wake's card are
     recorded on the action (the same vampire had played One With the Land [PRO] then [pro], and the starters' Eyes of Argus [AUS]
     then [aus]), and the decision's estimates agree (`_withPlayed`; a locked body counts only behind a wake it can play,
