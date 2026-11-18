@@ -1121,7 +1121,7 @@ class Bot {
         locked: c.locked || undefined, faceDown: (this._debugHand && c.kind === 'crypt') ? undefined : (c.faceDown || undefined),   // v0.6.112 (R4): debug turns my uncontrolled crypt face UP for everyone -- Johan grading what the bot is building toward, not guessing at it
         blood: c.blood || undefined,
         counters: this._pubCounters(c, memo.get(c.id)),   // v0.6.221 (D-113): a card's named counters (Smiling Jack's), else this bot's own tokens
-        host: c.host || undefined, attached: (c.attached && c.attached.length) ? c.attached : undefined   // v0.5: master-phase permanents (Blood Doll/Vessel) attach to a vampire -- without these two fields the client's sanitizePub shape has nothing to render the link with, and the card would show as a stray unattached card on other players' boards
+        host: c.host || undefined, attached: (c.attached && c.attached.length) ? c.attached : undefined, sup: c.sup || undefined   // v0.6.234: + `sup`, the client's 'played at superior' marker (a cloak card's mode)   // v0.5: master-phase permanents (Blood Doll/Vessel) attach to a vampire -- without these two fields the client's sanitizePub shape has nothing to render the link with, and the card would show as a stray unattached card on other players' boards
       }))
     };
   }
@@ -3660,6 +3660,7 @@ class Bot {
       for(const c of (tb.pub.cards || [])){
         if(!c || c.kind !== 'crypt' || c.zone !== 'torpor') continue;
         if(!this._famedSeen[c.name]) continue;
+        { const cl = this._cloakOn(c, tb.pub.cards); if(cl && !this._piercesCloak(vamp, cl)) continue; }   // v0.6.234 (the graded readings, RED A; the egress review, finding 9): a rescue of another's vampire is an action directed at it -- Shadow Cloak stops a rescuer without Auspex
         if(this._w5Hostages && this._w5Carvers().length && this._w5Hostages.has(seat + '|' + c.id)) continue;   // v0.6.230 (the egress review): a hostage cannot be rescued
         const t = Math.min(2, (c.blood | 0));
         const mine = 2 - t;
@@ -3698,16 +3699,26 @@ class Bot {
   _voteMirror(fld, val){ if(this.tally && this.tally.mode === 'vote'){ const t = Object.assign({}, this.tally); t[fld] = val; this.tally = t; } }   // v0.6.124: my own write, mirrored at once -- the District branch runs right after the title votes, before the echo, and used to overwrite them with open-edge + its own   // v0.6.124: the counter as it stands NOW (the tally handler mirrors every message), not the open-edge snapshot
   async _onVoteOpen(m){              // P0 (the politics engine's FIRST brick): the polling window -- District's defensive votes land in the SHARED against-counter. v0.6.67: async for the wake pacing beat
     { const wait = this._refStaggerMs(); if(wait > 0){ await sleep(wait); if(this.out || !(this.tally && this.tally.mode === 'vote')) return; } }   // v0.6.124: my beat in the ring; the polls may have closed meanwhile
-    this._castTitleVotes(m);         // v0.6.111 (R3, #10): my own title votes go FIRST -- the District branch below has three abstain early-returns that would otherwise swallow them
-    if(this._callingReferendum) return;   // v0.6.66 (the review's seam): the tally carries no WHO -- when Q-work lets THIS bot call referendums, the caller sets this flag or District votes against ITSELF
-    if(this._votedThisRef) return;
-    { const tr = this._tyrannyReactFor(m); if(tr && await this._playTyrannyReact(tr, m)) return; }   // v0.6.234 (V5 wave 6b, D-124): Absolute Tyranny as a reaction -- only when the referendum passes as it stands and a mode turns it
-    if(this._refT && this._refVoteDir(this._refT.deltas).dir !== 'against'){ this._sayAbstain(); return; }   // v0.6.122: District's votes are AGAINST votes -- never spent on a referendum I want or do not care about
-    const vr = this._bestVotesReactFor();
-    if(!vr){ this._sayAbstain(); return; }
+    if(this._callingReferendum) return;   // v0.6.66 (the review's seam): the tally carries no WHO -- the caller sets this flag or District votes against ITSELF (its title votes are its own announce)
+    /* v0.6.234 (the egress review, finding 1; the graded readings, RED 1): my vote CARD goes before my title votes. A bot caller closes
+       its poll once it has heard every seat, and my casts line is how it hears me: a card played after it was lost (Protected District
+       in v0.6.233's 240: 83 plays, the referendum passed anyway in 64). The title votes follow every exit (v0.6.111's reason). */
+    let reacted = false;
+    if(!this._votedThisRef){
+      const tr = this._tyrannyReactFor(m, this._titleCastPreview());   // v0.6.234 (V5 wave 6b, D-124): Absolute Tyranny -- only when the referendum passes as it stands and a mode turns it
+      if(tr) reacted = await this._playTyrannyReact(tr, m);
+      if(!reacted && !this.out && this.tally && this.tally.mode === 'vote') reacted = await this._districtReact(m);
+    }
+    if(this.out || !(this.tally && this.tally.mode === 'vote')) return;   // the polls closed under a beat
+    this._castTitleVotes(m);         // v0.6.111 (R3, #10): my own title votes -- after my card now, never swallowed by its exits
+    if(!reacted) this._sayAbstain();   // (it says nothing for a seat that just cast)
+  }
+  async _districtReact(m){           // P0: a react-type votesBonus card (Protected District) against the referendum -- the v0.6.67 wake combo; true when played
+    if(this._refT && this._refVoteDir(this._refT.deltas).dir !== 'against') return false;   // v0.6.122: District's votes are AGAINST votes -- never spent on a referendum I want or do not care about
+    const vr = this._bestVotesReactFor(); if(!vr) return false;
     const needsWakeV = !!vr.vamp.locked;                 // v0.6.67 (the combo): re-derived, the bounce precedent
     const wkV = needsWakeV ? this._wakeCard() : null;
-    if(needsWakeV && !wkV){ this._sayAbstain(); return; }
+    if(needsWakeV && !wkV) return false;
     if(wkV){
       this.hand.splice(wkV.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
       this._toAsh(wkV.name);
@@ -3715,18 +3726,28 @@ class Bot {
       this.send({ t: 'log', html: '<b>' + esc(vr.vamp.name) + '</b> plays <b>' + esc(wkV.name) + '</b>: may react as though unlocked.' });
       this._emitPlay(wkV.name, 'wake', vr.vamp.name);
       await this._pace();
+      if(this.out || !(this.tally && this.tally.mode === 'vote')) return true;   // the polls closed under the beat: the wake is spent
     }
     const j = this.hand.indexOf(vr.name);
-    if(j < 0){ this._sayAbstain(); return; }
+    if(j < 0) return false;
     this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1;
     this._toAsh(vr.name);
     this._emitPlay(vr.name, 'react-votes', vr.vamp.name);
     this.fxClone({ name: vr.name, kind: 'lib' }, '+' + vr.n + ' votes against', { actor: vr.vamp });
     this.send({ t: 'log', html: '<b>' + esc(vr.vamp.name) + '</b> plays <b>' + esc(vr.name) + '</b> \u2014 +' + vr.n + ' votes against the referendum.' });
-    { const nb = (this._voteCounter(m).b | 0) + vr.n; this.send({ t: 'tally', mode: 'vote', b: nb }); this._voteMirror('b', nb); }   // absolute against-total; `a` rides srv-2.6.17's absent-field preserve untouched; v0.6.124: from the counter as it stands now
+    { const nb = (this._voteCounter(m).b | 0) + vr.n; this.send({ t: 'tally', mode: 'vote', b: nb }); this._voteMirror('b', nb); }   // absolute against-total; `a` rides srv-2.6.17's absent-field preserve untouched; v0.6.124: from the counter as it stands
     this.chat('I vote ' + vr.n + ' against.');   // v0.6.117: the play line + fx carry the card; the bubble is what a human says aloud
     this._votedThisRef = true;
     this.push();
+    return true;
+  }
+  _titleCastPreview(){               // v0.6.234: what _castTitleVotes is about to cast -- its direction and my title votes (the Silverson-class tax and an Alexa-class discard are not previewed: _votesToCast pays them)
+    if(this._castThisRef || this._callingReferendum || this.out) return { dir: null, n: 0 };
+    const tv = this._myTitleVotes(); if(!tv.n) return { dir: null, n: 0 };
+    const rt = this._refT;
+    if(rt){ const vd = this._refVoteDir(rt.deltas); return { dir: vd.dir || null, n: vd.dir ? tv.n : 0 }; }
+    const stake = (this.pending && this.pending.kind === 'asked') ? (this.pending.amount | 0) : (this._obs && this._obs.poolLoss > 0 ? this._obs.poolLoss | 0 : 0);
+    return stake > 0 ? { dir: 'against', n: tv.n } : { dir: null, n: 0 };
   }
   _sayAbstain(){   // v0.6.117: a referendum the bot has nothing to say against -- one bubble per referendum, the way a human says "no votes from me" (was a `Trainbot abstains.` note, invisible at the table)
     if(this._abstainSaid || this._didCastRef) return;   // v0.6.122: a seat that just CAST votes does not also say it has none (the District branch's abstain exits ran after the title votes)
@@ -3899,8 +3920,9 @@ class Bot {
      [ANK 20251125]: one vote off each VOTING vampire off the Path; a political card's vote and the Edge's are the Methuselah's (rulebook
      6.3.3.1). The bots' referendum has one count, the caller's: a bot caller cuts every seat (_tyrannyCut, in its tot()) when it plays
      the card or reads another bot's line (L12.tyranny); a seat's voters are the vampires its count must include (_votedBy: never more
-     than the count names; a District-class card's votes on an untitled vampire are not seen -- the cut errs low). A human is told in
-     chat. The caller plays the superior at the boost step when its net cut beats the +3 (_voteBoosts); a voter plays the card as a
+     than the count names; a District-class card's votes on an untitled vampire are not seen -- the cut errs low). The caller's
+     breakdown is a note at its verdict (the tier rule); a voter's cut tells a HUMAN caller what to subtract (an instruction: chat) and
+     writes the counter as cut, a bot caller cuts its own count from the line. The caller plays the superior at the boost step when its net cut beats the +3 (_voteBoosts); a voter plays the card as a
      reaction when the referendum passes as it stands and a mode turns it, the +3 first (_tyrannyReactFor). */
   _tyrannyCut(rc){                   // the caller's cut: { for, against, seats: [{ name, seat, dir, n, vamps }] } -- recomputed at every look (a later vote is cut too)
     const out = { for: 0, against: 0, seats: [] }, t = rc && rc.tyr; if(!t || !t.notPath) return out;
@@ -3915,16 +3937,24 @@ class Bot {
         if(vs.length){ out[dir] += vs.length; out.seats.push({ name: nm, seat: st, dir, n: vs.length, vamps: vs.map(c => c.name) }); } }); });
     return out;
   }
-  _voterVamps(st, n0){               // the vampires a seat's count must include: its titles alone, else beside the Methuselah's own votes (a political card's 1 and the Edge's 1, rulebook 6.3.3.1) -- none when the count is beyond them (a card's votes on an untitled vampire: the cut errs low)
-    for(let k = 0; k <= 2 && n0 - k > 0; k++){ const vs = this._votedBy(st, n0 - k); if(vs.length) return vs; }
-    return [];
+  _voterVamps(st, n0){               /* the vampires a seat's count must include. A bot's count is its titles (a bot caller's: + its political card's vote): the
+       first reading the titles can make, k = 0..2 Methuselah votes beside them. A human may also have spent the Edge or a political card
+       (rulebook 6.3.3.1): only the vampires certain under EVERY reading the titles can make (the graded readings: a lone Edge vote is no
+       primogen's). None when the count is beyond its titles and those votes (a card's votes on an untitled vampire): the cut errs low. */
+    const cs = this._seatCards(st), tv = cs.filter(c => c && c.kind === 'crypt' && c.zone === 'ready').map(c => this._titleOf(c, cs).votes | 0).filter(n => n > 0);
+    const sums = tv.reduce((S, n) => { const T = new Set(S); S.forEach(q => T.add(q + n)); return T; }, new Set([0]));
+    const human = this._isHumanName(this.seatName(st)), reads = [];
+    for(let k = 0; k <= 2 && k <= n0; k++){ const n = n0 - k; if(!sums.has(n)) continue;
+      reads.push(n === 0 ? [] : this._votedBy(st, n)); if(!human) break; }
+    if(!reads.length) return [];
+    return reads.reduce((acc, vs) => acc.filter(x => vs.some(y => y.c === x.c)));
   }
   _tyrannyNote(c){                   // the caller's breakdown at the verdict -- an event, so a note (the tier rule): each seat's cut and the vampires it reads
     const ss = (c && c.seats || []).filter(x => x && x.n > 0); if(!ss.length) return null;
     const txt = 'Absolute Tyranny: ' + ss.map(x => x.name + ' \u2212' + x.n + ' ' + x.dir + ' (' + x.vamps.join(', ') + ')').join('; ') + '.';
     this.note(txt); return txt;
   }
-  _playTyranny(v, b, rc){            // the caller's superior: the card, the line (L12.tyranny), the cut in my count from here on, the humans told
+  _playTyranny(v, b, rc){            // the caller's superior: the card, the line (L12.tyranny), the cut in my count from here on (the breakdown: _tyrannyNote at the verdict)
     const j = this.hand.indexOf(b.name); if(j < 0 || !rc || rc.tyr) return false;
     this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(b.name);
     if(b.cost && b.cost.blood) v.blood = Math.max(0, (v.blood | 0) - b.cost.blood);
@@ -3937,17 +3967,18 @@ class Bot {
     this.push();
     return true;
   }
-  _tyrannyReactFor(m){               // the voter's half: my direction is against and the count passes as it stands -- the mode that turns it (the +3 against first: no board read), an unlocked vampire of mine its reactor
+  _tyrannyReactFor(m, pre){          // the voter's half: my direction is against and the count passes as it stands -- the mode that turns it (the +3 against first: no board read), an unlocked vampire of mine its reactor. pre: my title cast, still to come (_titleCastPreview)
     if(this.out || this._callingReferendum || this._votedThisRef) return null;
     const rt = this._refT;
     const against = rt ? this._refVoteDir(rt.deltas).dir === 'against' : ((((this._obs && this._obs.poolLoss) | 0) > 0) || !!(this.pending && this.pending.kind === 'asked' && (this.pending.amount | 0) > 0));
     if(!against) return null;
     const held = this.hand.filter(n => { const h = this.fxLookup(n); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(x => x && x.fx && x.fx.voteCut)); });
     if(!held.length) return null;
-    const t = this._voteCounter(m), a = t.a | 0, b = t.b | 0;
+    const t = this._voteCounter(m), a = (t.a | 0) + ((pre && pre.dir === 'for') ? (pre.n | 0) : 0), b = (t.b | 0) + ((pre && pre.dir === 'against') ? (pre.n | 0) : 0);   // the count with my title votes in
     const row = { card: held[0], for: a, against: b };
     if(a <= b){ this._emit('vote-react-eval', Object.assign(row, { play: false, why: 'it fails as it stands' })); return null; }   // nothing to turn
-    const forBy = (this._refVotes && this._refVotes.forBy) || {};
+    const forBy = (this._refVotes && this._refVotes.forBy) || {}, agBy = (this._refVotes && this._refVotes.agBy) || {};
+    const myAg = (pre && pre.dir === 'against') || this._didCastRef;   // my title votes are against (cast, or about to be)
     let best = null;
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('react') || !(h.e.modes || []).some(x => x && x.fx && x.fx.voteCut)) continue;   // an Absolute Tyranny-class card only (District-class cards keep their own branch)
@@ -3960,12 +3991,13 @@ class Bot {
         if(typeof mo.fx.votes === 'number' && mo.fx.votes > 0){
           if(a <= b + mo.fx.votes && (!best || best.kind !== 'votes')) best = { idx, name: h.name, vamp: vv, kind: 'votes', n: mo.fx.votes, cost, wake: wakeOf(vv) };   // the +3 turns it (a tie fails the referendum)
         } else if(mo.fx.voteCut && mo.fx.voteCut.notPath){
-          const path = mo.fx.voteCut.notPath, off = c => this._vampPath(c) !== path; let cutFor = 0; const seats = [];
-          Object.keys(forBy).forEach(nm => { const st = this._seatOfName(nm), n0 = forBy[nm] | 0; if(!st || st === this.seat || n0 <= 0) return;
-            const vc = this._voterVamps(st, n0).map(x => x.c).filter(off); if(vc.length){ cutFor += vc.length; seats.push({ name: nm, seat: st, dir: 'for', n: vc.length, vamps: vc.map(c => c.name) }); } });
-          const mineAg = this._didCastRef ? this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && (this._titleOf(c).votes | 0) > 0 && off(c)).length : 0;   // my own voters off the Path lose too
-          row.cutFor = cutFor;
-          if(cutFor > 0 && a - cutFor <= b - mineAg && !best) best = { idx, name: h.name, vamp: vv, kind: 'cut', cut: mo.fx.voteCut, cutFor, mineAg, seats, cost, wake: wakeOf(vv) };
+          const path = mo.fx.voteCut.notPath, off = c => this._vampPath(c) !== path; let cutFor = 0, cutAg = 0; const seats = [];
+          [['for', forBy], ['against', agBy]].forEach(([dir, by]) => Object.keys(by).forEach(nm => { const st = this._seatOfName(nm), n0 = by[nm] | 0; if(!st || st === this.seat || n0 <= 0) return;   // every seat's voters off the Path: the card cuts both sides (the egress review, finding 3; RED 2)
+            const vc = this._voterVamps(st, n0).map(x => x.c).filter(off); if(!vc.length) return;
+            if(dir === 'for') cutFor += vc.length; else cutAg += vc.length; seats.push({ name: nm, seat: st, dir, n: vc.length, vamps: vc.map(c => c.name) }); }));
+          const mineAg = myAg ? this.board.filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && (this._titleOf(c).votes | 0) > 0 && off(c)).length : 0;   // my own voters off the Path lose too
+          row.cutFor = cutFor; row.cutAg = cutAg + mineAg;
+          if(cutFor > 0 && a - cutFor <= b - cutAg - mineAg && !best) best = { idx, name: h.name, vamp: vv, kind: 'cut', cut: mo.fx.voteCut, cutFor, cutAg, mineAg, seats, cost, wake: wakeOf(vv) };
         }
       }
     }
@@ -3996,13 +4028,15 @@ class Bot {
       this._emitPlay(tr.name, 'react-vote-cut', tr.vamp.name);
       this.fxClone({ name: tr.name, kind: 'lib' }, 'vampires not on the Path of ' + tr.cut.notPath + ' get -1 vote', { actor: tr.vamp });
       this.send({ t: 'log', html: '<b>' + esc(tr.vamp.name) + '</b> plays <b>' + esc(tr.name) + '</b>: vampires not on the Path of ' + esc(tr.cut.notPath) + ' get -1 vote.' });   // L12.tyranny: a bot caller cuts its count
-      { const c0 = this._voteCounter(m), na = Math.max(0, (c0.a | 0) - tr.cutFor), nb = Math.max(0, (c0.b | 0) - tr.mineAg);
-        this.send({ t: 'tally', mode: 'vote', a: na, b: nb }); this._voteMirror('a', na); this._voteMirror('b', nb); }   // the counter as cut: what a human caller resolves from
-      { const cw = this._refT ? this._refT.who : ((this.pending && this.pending.who) || (this._obs && this._obs.who) || null);   // a HUMAN caller resolves the count: told what to subtract (an instruction -- chat); a bot caller cuts its own count from the line
-        if(cw && this._isHumanName(cw)) this.chat(cw + ': Absolute Tyranny \u2014 the votes for lose ' + tr.cutFor + ' (' + tr.seats.map(x => x.vamps.join(', ')).join(', ') + ' not on the Path of Power and the Inner Voice); the counter shows it.'); }
-      this._emit('vote-cut', { vamp: tr.vamp.name, card: tr.name, path: tr.cut.notPath, side: 'voter', for: tr.cutFor, against: tr.mineAg, seats: tr.seats.map(x => x.name + ' ' + x.dir + ' -' + x.n) });
+      { const cw = this._refT ? this._refT.who : ((this.pending && this.pending.who) || (this._obs && this._obs.who) || null);
+        if(cw && this._isHumanName(cw)){   // a HUMAN caller resolves from the counter: the counter as cut (my own title votes still to come, uncut), and what to subtract (an instruction -- chat). A bot caller cuts its own count from the line: no counter write, it would mix with its count (the egress review, finding 2)
+          const c0 = this._voteCounter(m), ag = (tr.cutAg | 0) + (tr.mineAg | 0), na = Math.max(0, (c0.a | 0) - tr.cutFor), nb = Math.max(0, (c0.b | 0) - ag);
+          this.send({ t: 'tally', mode: 'vote', a: na, b: nb }); this._voteMirror('a', na); this._voteMirror('b', nb);
+          const side = d => tr.seats.filter(x => x.dir === d).map(x => x.vamps.join(', ')).join(', ');
+          this.chat(cw + ': Absolute Tyranny \u2014 vampires not on the Path of ' + tr.cut.notPath + ' get -1 vote: the votes for lose ' + tr.cutFor + ' (' + side('for') + ')' + (ag ? ', the votes against ' + ag + (side('against') ? ' (' + side('against') + ')' : '') : '') + '; the counter shows it.'); } }
+      this._emit('vote-cut', { vamp: tr.vamp.name, card: tr.name, path: tr.cut.notPath, side: 'voter', for: tr.cutFor, against: (tr.cutAg | 0) + (tr.mineAg | 0), seats: tr.seats.map(x => x.name + ' ' + x.dir + ' -' + x.n) });
     }
-    this._votedThisRef = true; this._didCastRef = true;
+    this._votedThisRef = true;   // (my title votes follow in _onVoteOpen)
     this.push();
     return true;
   }
@@ -4237,7 +4271,7 @@ class Bot {
           const add = got - cutN; mine += add; this.push();
           if(add > 0){ this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> casts <b>' + add + '</b> vote' + (add === 1 ? '' : 's') + ' <b>for</b>.' });
             this.chat('I add ' + add + ' votes for.'); }
-          if(cutN > 0){ const tc = tot(); this._writeTally({ mode: 'vote', a: tc.f, b: tc.a }); } else this._writeTally({ mode: 'vote', a: mine + rc.for });
+          this._writeTally({ mode: 'vote', a: mine + rc.for });   // uncut while the poll is open: tot() takes the counter's echo beside the casts, so a cut value written here would be cut again (the egress review, finding 2); the verdict's write is the cut one
           if(!rc.line){ rc.closed = null; await this._refPoll(rc); }               // the table may answer the boost
           t = tot();
         }
@@ -4364,9 +4398,16 @@ class Bot {
      Freak Drive: both 'after resolution' modifiers, the order free). The bots' one action directed at a vampire is the rush, and
      every rush route picks its target in _bestRushTargetFor, which skips a cloaked vampire its rusher cannot pierce (_rushCandidates
      reads the cloak from that seat's board -- a human's cloak the same way). My unlock phase burns it (_cloakBurn). */
-  _cloakOn(vamp, board){             // the cloak on this vampire (my board, or a seat's pub board): its cards' cloak modes, the strongest (a board does not say which mode was played)
-    const cs = this._attachedFx(vamp, 'cloak', board); if(!cs.length) return null;   // fx.cloak -- a literal read for the coverage scanner
-    return { pierce: (cs[0] && cs[0].pierce) || 'aus', sup: cs.some(x => x && x.sup) };
+  _cloakOn(vamp, board){             // the cloak on this vampire (my board, or a seat's pub board): the mode each card was played at -- the client's `sup` marker on the card (the graded readings: Sleep Unseen's [obf] and [OBF]); one cloak mode, that one
+    const bd = board || this.board || []; let out = null;
+    ((vamp && vamp.attached) || []).forEach(id => { const c = bd.find(x => x && x.id === id); if(!c || c.kind !== 'lib' || this._outOfPlay(c)) return;
+      const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') return;
+      const ms = (h.e.modes || []).filter(mo => mo.fx && mo.fx.cloak); if(!ms.length) return;   // fx.cloak -- a literal read for the coverage scanner
+      const isSup = mo => !!mo.at && mo.at === String(mo.at).toUpperCase();
+      const mo = ms.length === 1 ? ms[0] : (c.sup ? (ms.find(isSup) || ms[0]) : (ms.find(x => !isSup(x)) || ms[0]));
+      const cl = { pierce: mo.fx.cloak.pierce || 'aus', sup: !!mo.fx.cloak.sup };
+      if(!out || (cl.sup && !out.sup)) out = cl; });
+    return out;
   }
   _piercesCloak(minion, cl){         // may this minion direct an action at a vampire with this cloak? A vampire with the discipline at the level (its discipline masters count, _discOf); an ally or a retainer has none
     if(!cl) return true;
@@ -4380,7 +4421,7 @@ class Bot {
       if(!this._entryReqOk(h.e, v) || !this._titleOk(h, v)) continue;
       const cost = (h.e.cost && h.e.cost.blood) | 0; if(cost > (v.blood | 0)) continue;
       const mo = (h.e.modes || []).filter(m => m && m.when === 'actSuccess' && m.fx && m.fx.cloak && this._modeUsableBy(m, v)).sort((x, y) => (y.fx.cloak.sup ? 1 : 0) - (x.fx.cloak.sup ? 1 : 0))[0];
-      if(mo) return { idx, name: h.name, cost, cloak: { pierce: mo.fx.cloak.pierce || 'aus', sup: !!mo.fx.cloak.sup } };
+      if(mo) return { idx, name: h.name, cost, at: mo.at || null, cloak: { pierce: mo.fx.cloak.pierce || 'aus', sup: !!mo.fx.cloak.sup } };
     }
     return null;
   }
@@ -4403,15 +4444,16 @@ class Bot {
     }
     const gr = this.board.find(c => { if(!c || c.kind !== 'lib' || c.host !== v.id || this._outOfPlay(c)) return false; const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.fx && mo.fx.rushHostBy)); });
     if(gr){ const h = this.fxLookup(gr.name), rb = (h.e.modes || []).map(mo => mo.fx && mo.fx.rushHostBy).find(Boolean) || {}; if(this._unpiercedRushers(cl, rb.sect || null).length) return 'a ' + gr.name + ' on ' + v.name; }
-    const r = (this._rushedBy || []).slice().reverse().find(x => x && x.seat && x.seat !== this.seat && this.live(x.seat)
-      && this._seatCards(x.seat).some(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === x.vamp && !this._piercesCloak(c, cl)));
-    if(r) return r.vamp + ' rushed my ' + r.target + ' this game';
+    for(const pl of (this.players || [])){ if(!pl || pl.seat === this.seat || !this.live(pl.seat)) continue;
+      const oo = this.opp && this.opp[pl.seat], rs = (oo && oo.rushedMe) || [];
+      const r = rs.slice().reverse().find(x => x && this._seatCards(pl.seat).some(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === x.vamp && !this._piercesCloak(c, cl)));
+      if(r) return r.vamp + ' rushed my ' + r.target + ' this game'; }
     return null;
   }
-  _noteRushedBy(who, rusher, target){   // a rush at one of my vampires (a bot's line or a human's chat): the rusher, for the cloak's prior
+  _noteRushedBy(who, rusher, target){   // a rush at one of my vampires (a bot's line or a human's chat): the rusher, for the cloak's prior -- an opponent fact, so the table model's (this.opp, cleared at every deal: the egress review, finding 4)
     const st = this._seatOfName(who); if(!st || st === this.seat || !rusher) return;
-    (this._rushedBy = this._rushedBy || []).push({ seat: st, vamp: rusher, target: target || null, at: Date.now() });
-    if(this._rushedBy.length > 24) this._rushedBy.shift();
+    const oo = this._opp(st); (oo.rushedMe = oo.rushedMe || []).push({ vamp: rusher, target: target || null, at: Date.now() });
+    if(oo.rushedMe.length > 12) oo.rushedMe.shift();
   }
   _maybeCloak(v, la){                // the act-again point: my vampire's action succeeded -- put the cloak on it when the prior says a rush it stops is coming
     if(!la || la.outcome !== 'through' || !v || v.zone !== 'ready' || this.out || this._cloakOn(v)) return false;
@@ -4423,12 +4465,13 @@ class Bot {
     this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1;
     if(ck.cost) v.blood = Math.max(0, (v.blood | 0) - ck.cost);
     const card = { id: 'm' + (this._mSeq = (this._mSeq || 0) + 1), name: ck.name, kind: 'lib', zone: 'ready', host: v.id, faceDown: false, locked: false, blood: 0, x: v.x, y: v.y };
+    if(ck.at && ck.at === String(ck.at).toUpperCase()) card.sup = String(ck.at).toLowerCase().split('+')[0];   // the client's 'played at superior' marker (its pub's `sup`): a board says which mode it was (Sleep Unseen's two cloaks)
     this.board.push(card); v.attached = v.attached || []; v.attached.push(card.id);
     this._emitPlay(ck.name, 'cloak', v.name);
     this._emit('cloak', { vamp: v.name, card: ck.name, sup: ck.cloak.sup, why });
     this.fxClone({ name: ck.name, kind: 'lib' }, 'is put on ' + v.name, { actor: v });
     const dn = ({ aus: 'Auspex' })[ck.cloak.pierce] || ck.cloak.pierce;
-    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(ck.name) + '</b> on itself \u2014 minions without ' + (ck.cloak.sup ? 'superior ' : '') + dn + ' cannot perform actions directed at it until ' + esc(this.o.name) + "'s next unlock phase." });   // for the humans: every bot reads the cloak from my board
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> puts <b>' + esc(ck.name) + '</b> on itself \u2014 minions without ' + (ck.cloak.sup ? 'superior ' : '') + dn + ' cannot perform actions directed at it until ' + esc(this.o.name) + "'s next unlock phase." });   // for the humans: every bot reads the cloak from my board. Not a 'plays' line (the egress review, finding 8): sent after the action resolved, L12.actObs would read a new action (Marked Path's 'puts X in play' precedent)
     this.push(); this._flushDraws();
     return true;
   }
@@ -6533,7 +6576,7 @@ class Bot {
     const list = own.length ? own : ((memo && memo.length && !this._outOfPlay(c)) ? memo : []);
     return list.length ? list.slice(0, 12).map(x => String(x).slice(0, 64)) : undefined;
   }
-  _vampPath(v){ const h = v && this.fxLookup(v.name); return (h && h.kind === 'crypt' && h.e && h.e.path) || null; }   // v0.6.217: the printed Path ('Cathari', 'Death and the Soul' ...), null when none
+  _vampPath(v){ if(v && typeof v.path === 'string' && v.path) return v.path.replace(/^Path of /, ''); const h = v && this.fxLookup(v.name); return (h && h.kind === 'crypt' && h.e && h.e.path) || null; }   // v0.6.234 (the graded readings, RED 3): a Path followed by choice (the V5 Sabbat rules; the client's pub `path`, 'Path of X') first   // v0.6.217: the printed Path ('Cathari', 'Death and the Soul' ...), null when none
   _hasArchetype(v){ return (v && v.attached || []).some(id => { const c = this.board.find(x => x && x.id === id); if(!c || this._outOfPlay(c)) return false; const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && h.e.archetype); }); }   // v0.6.217: 'a vampire can have only one archetype'
   _masterHostPlan(name){             // v0.6.217 (V5 wave 4, D-106): where a master that goes ON a vampire goes -- null = not one of the wave's (the older paths decide), { hold, why } = no legal or worthwhile host now (held pre-splice: nothing paid), { host } = the pick; Toreador Grand Ball: { grandBall, freeT, lockT }
     const h = this.fxLookup(name); if(!h || h.kind !== 'lib') return null;
@@ -10648,7 +10691,7 @@ class Bot {
   if((type === 'through' || type === 'blocked') && data && data.card !== 'hunt' && (data.kind == null || data.kind === 'bleed') && (data.n | 0) > 0) this._noteMyBleed(type === 'blocked');   // v0.6.143b: my bleed-through ledger against this prey
     if(type === 'blocked') this._returnParked(); else if(type === 'through' && this._actingVamp) this._actingVamp.parked = null;   // v0.6.130 (rulebook + Johan, debt 26c): an action's cost is paid only if it SUCCEEDS
     if(type === 'through' || type === 'blocked'){ const av0 = this._actingVamp; this._lastAct = { vamp: data && data.vamp, outcome: type, kind: (data && data.kind) || null, played: (av0 && av0.played && av0.v && data && av0.v.name === data.vamp) ? new Set(av0.played) : null }; try{ this._offNote(type, data); }catch(e){} }   // v0.6.234: + the action's played modifiers (Shadow Cloak's [OBL] is a second copy of a modifier already played)
-    else if(type === 'fizzled' && data && data.vamp && data.kind !== 'referendum part') this._lastAct = { vamp: data.vamp, outcome: 'through', kind: data.kind || null, fizzled: true };   // v0.6.223 (the egress review, RULINGS R-44): a fizzled action is a SUCCESSFUL one whose effects cannot apply -- an act-again that needs success follows it (a referendum part: the referendum's own through row says it)   // v0.6.123: the act-again hook reads the SAME two emits the strategy layer's ledger rides   // v0.6.119: the strategy layer's own offensive ledger rides the two emits that already mark every resolved action
+    else if(type === 'fizzled' && data && data.vamp && data.kind !== 'referendum part'){ const av0 = this._actingVamp; this._lastAct = { vamp: data.vamp, outcome: 'through', kind: data.kind || null, fizzled: true, played: (av0 && av0.played && av0.v && av0.v.name === data.vamp) ? new Set(av0.played) : null }; }   // v0.6.234 (the egress review, finding 7): + the played modifiers   // v0.6.223 (the egress review, RULINGS R-44): a fizzled action is a SUCCESSFUL one whose effects cannot apply -- an act-again that needs success follows it (a referendum part: the referendum's own through row says it)   // v0.6.123: the act-again hook reads the SAME two emits the strategy layer's ledger rides   // v0.6.119: the strategy layer's own offensive ledger rides the two emits that already mark every resolved action
     if(this.onEvent) try{ this.onEvent('bot:' + type, data || {}); }catch(e){} }
   _flushDraws(){                     // v0.5: extracted so master-play and hunt (which `continue`s past the old inline drain) can never silently DEFER a draw-owed -- every code path that increments _drawOwed now has a nearby place to flush it instead of relying on some LATER vampire's bleed branch happening to reach it
     while((this._drawOwed || 0) > 0){ this._drawOwed--;
