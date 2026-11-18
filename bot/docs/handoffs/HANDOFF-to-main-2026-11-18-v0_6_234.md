@@ -24,7 +24,7 @@ If your embed test compares the whole page, re-embed it.
   also lowers the vote tally's `a` and `b` by the cut (what a human caller resolves from) and says in chat what to subtract.
 - **The polling order**: a bot voter's vote card (Protected District, Absolute Tyranny) now comes BEFORE its title votes (`NAME
   casts N votes against.`). A bot caller closes its poll once it has heard every seat, so a card after the casts line was lost
-  (v0.6.233: most of District's plays at a bot caller). A LIVE test of yours that watches a bot voter's District line may now see
+  (v0.6.233: every District play at a bot caller in the 240). A LIVE test of yours that watches a bot voter's District line may now see
   it before that bot's casts line; the lines themselves are unchanged.
 
 ## 3. For §12 (your call; a machine-read line, `L12` in the bot)
@@ -33,7 +33,8 @@ The cloak's two lines are for the humans (the bots read the board). The "-1" is 
 the other bot lines.
 
 ## 4. Run here
-On the release bytes (`elysium-bot.js` sha256 `<release>`, `elysium-cardfx.json` `<release>`): see the PR body for the gate numbers
+On the release bytes (`elysium-bot.js` sha256 `4a1342b4ec85f7d9b3561965dbaf77199b62c55a7dec2fc370432be226769a19`, `elysium-cardfx.json`
+`721c74ee3157ae04b6825b023ff82bcc3921f053b21fe58cdc53760e225c1ec0`): see the PR body for the gate numbers
 (your canary on `bot/`'s copies and on the root's client; your client suite in a scratch copy of `client/` with this bundle beside it;
 the bot's suite ×3, the hotseat gate, HB1, the sim footprint, the arena smoke). The root is a byte copy of `bot/`'s bundle (your
 `check-versions.js` reads it).

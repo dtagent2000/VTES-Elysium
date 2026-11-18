@@ -3702,7 +3702,7 @@ class Bot {
     if(this._callingReferendum) return;   // v0.6.66 (the review's seam): the tally carries no WHO -- the caller sets this flag or District votes against ITSELF (its title votes are its own announce)
     /* v0.6.234 (the egress review, finding 1; the graded readings, RED 1): my vote CARD goes before my title votes. A bot caller closes
        its poll once it has heard every seat, and my casts line is how it hears me: a card played after it was lost (Protected District
-       in v0.6.233's 240: 67 of its 83 plays came after the seat's title votes). The title votes follow every exit (v0.6.111's reason). */
+       in v0.6.233's 240: all 83 of its plays came after the seat's title votes -- its reactor is titled -- 16 after the verdict). The title votes follow every exit (v0.6.111's reason). */
     /* Synchronous unless a wake's beat comes first: v0.6.233 cast in the same tick as the open edge (the hotseat bridge and the sim
        deliver inside the send; the suite's 58b, 86d and 86g call this unawaited), so the card and the cast stay in that tick. */
     let reacted = false, waited = false;

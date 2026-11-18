@@ -8,13 +8,17 @@ the read-only copies in bot/ are client v2.6.175 / protocol v2.6.175 / srv-2.6.5
 **Deploy state:** `main` carries v0.6.233 (#80, V5 wave 6a). **Open PR:** V5 wave 6b (this release).
 
 ## Last gates (v0.6.234 release bytes, 18 Nov 2026)
-GATES-TBD
+Suite **2606/0 ×3** (`elysium-bot.js` `4a1342b4`, `test-bot-logic.js` `7dcc71ff`, `elysium-cardfx.json` `721c74ee`) · section
+179 11/0 (0/11 on v0.6.233) · `test-cardfx` 361/0 · canary **171/0** ×2 · hotseat 12/0 · HB1 11/11 · main's
+client suite 371/1 (the guide's embed: main re-embeds) · the sim against v0.6.233: the 240 DIVERGED 46, SAME-PLAY 25, IDENTICAL
+169 (its 71 District matches; VP each within one SE); `ana-gates.py` PASS on every run; the arena smoke 7/7.
 
 ## What v0.6.234 did
 V5 wave 6b (D-124; spec-v5-wave6 §9): Shadow Cloak [OBL] (and Sleep Unseen) after a successful action when a rush it stops is
-coming — on the vampire, every bot's rush skipping a cloak its rusher cannot pierce, burned at its controller's unlock; Absolute
-Tyranny [POT][PRE]'s −1 vote for each voting vampire off the Path of Power and the Inner Voice, cut in the caller's count, played
-by the caller and as a voter's reaction.
+coming — on the vampire, every bot's rush and rescue skipping a cloak the actor cannot pierce, burned at its controller's unlock;
+Absolute Tyranny [POT][PRE]'s −1 vote for each voting vampire off the Path of Power and the Inner Voice, cut in the caller's count,
+played by the caller and as a voter's reaction. A rider: a voter's card now goes before its title votes (District's +3 was lost at
+a bot caller in all 83 of its plays in v0.6.233's 240).
 
 ## Next
 1. The maneuver / press grants with the rush cards (Hunting the Quarry, Night Terrors' strike), then the free block bars (BOARD).
