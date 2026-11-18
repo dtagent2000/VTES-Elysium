@@ -24,6 +24,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108; `CARDS.md`; HOWTO.
 - **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8): what v1 of each wave left out, the
   amber halves and the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
+- **The curation queue of wave 6's graded readings** (none in a deck; spec-v5-wave6 §8): Enkil Cog, Destilaria Estrela da
+  Paraíba, Dogged Pursuit, Speak with Spirits and The Mole (leftover +1 intercept modes), Hall of Hades' Court [dom] (`_voteBoosts`
+  plays it past its line's capacity), Momentary Delay (`press` misreads 'continues as if unblocked'), Faerie Wards [aus] (the directed
+  condition with an ally-or-younger clause). The general gap: `_entryReqOk` (clan, sect, capacity) is read by the reaction finders
+  only; the stealth, bleed-modifier and action finders ask none (the precons are mostly one clan). *Done when* each is curated and the
+  finders ask the requirement, a footprint read.
 - **The weapon's maneuver** (wave 2's review): the compiler writes `maneuver: true` for a weapon, `_equipCombatOption` reads
   a number — the .44 Magnum has never maneuvered, so the strike-binding rules' gun halves never run. Neighbours: a weapon's strike
   sends a clone and a play row every time; the press step waits 1.5 s for a taken line after a clean dodge; Taste of Vitae's wait

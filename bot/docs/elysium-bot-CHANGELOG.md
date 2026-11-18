@@ -63,9 +63,16 @@
   - *Hunting the Quarry* curated with no modes (the auto tier's +1 stealth was a misread, inert); its two lines go with the grants round.
   - *Measured*: §1 alone, the 240 DIVERGED 224 against v0.6.232 (the first difference a block decision; VP within one SE; the
     prediction's DIVERGED half held, its VP direction did not). The six cards fired on their 12-match tables (spec §8). GATES-TBD
-  - *Tests*: section 178 (15 checks; 1/14 on v0.6.232's bytes, the one pass a skip); 83h, 83i, 127p moved off Eyes of Argus at an
+  - *Tests*: section 178 (18 checks; 1/17 on v0.6.232's bytes, the one pass a skip); 83h, 83i, 127p moved off Eyes of Argus at an
     undirected action (127p gains the check that it is kept there); `test-cardfx` 357 (9 red on v0.6.232's compiler).
-  - Egress: EGRESS-TBD. Graded readings: GRADES-TBD.
+  - *The graded readings' fixes* (the combining rule, D-92): one card of a name per action — the route's and the wake's card are
+    recorded on the action (the same vampire had played One With the Land [PRO] then [pro], and the starters' Eyes of Argus [AUS]
+    then [aus]), and the decision's estimates agree (`_withPlayed`; a locked body counts only behind a wake it can play,
+    `_wakeCardFor`); the reduce finder meets the mode — discipline, requirement, blood paid, a wake the reactor can play (Loyiso had
+    played Sentry Signal's [ANI] for free); the block-cancel finder asks the card's clan; Night Terrors' X leaves a booked −1
+    intercept. Tests 178h–j (red on the build before, green after).
+  - Egress: EGRESS-TBD. Graded readings (spec §8): green 3, amber the rest with their halves listed, red 2 classes fixed (above)
+    and 3 listed with no deck carrying them (the BOARD's curation line).
 - **v0.6.232 (18 Nov 2026)** — V5 wave 5b: the 'as played' window, Sudden Reversal, Meditative Grove's cancel, Yawp Court, Week of
   Nightmares (RULINGS D-107 shape A, D-122; Johan, 18 Nov: "Vi kan gå på dina rekommendationer" on all five of spec-v5-wave5 §12.9;
   his note — the cancel cards are a classic meta-layer case — is a BOARD line). The 11 cards with a discipline line and no mode

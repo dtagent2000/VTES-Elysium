@@ -14454,7 +14454,7 @@ async function connectWithRetry(client, tries = 30){
       { const run = async (amount, pool, aSt) => { const a = mk178(1, 'ministry'), d = mk178(2, 'malkavian'); wire8([a, d]); d._reactWindow = () => {};
           const cry = V8('c1', 'Crystal Lynn (G6)'), col = V8('d1', 'Colette (G6)'); a.board = [cry]; a.hand = ["True Love's Face"]; d.board = [col]; d.pool = pool;
           const ask = a._ask = { contested: false, target: 2, pausedBy: new Set() }; a._actingVamp = { v: cry, n: amount, target: 2, played: new Set(), kind: 'bleed' }; a.tally = { mode: 'block', a: 0, b: 0 };
-          const p = d.pending = P8({ kind: 'bleed', amount, who: 'Hanna', actingVampName: cry.name, contested: true, attemptVamp: col }); d.tally = { mode: 'block', a: aSt | 0, b: 0 };
+          d.pending = P8({ kind: 'bleed', amount, who: 'Hanna', actingVampName: cry.name, contested: true, attemptVamp: col }); d.tally = { mode: 'block', a: aSt | 0, b: 0 };
           a._onBlockAttempt('Viktor'); await sleep(30);
           const L = logs8(a), D = logs8(d);
           return { asPlayed: L.some(l => /^Hanna is playing True Love's Face — on Viktor's (blocking minion|Colette \(G6\))\.$/.test(l)), cancelLine: L.some(l => /cancels the block attempt by Viktor/.test(l)), pay: D.includes("Viktor burns 1 pool to cancel True Love's Face."),
