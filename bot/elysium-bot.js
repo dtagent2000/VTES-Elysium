@@ -1817,6 +1817,7 @@ class Bot {
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('mod')) return;   // v0.6.12: the finder's WINDOW defines the card type -- an action-modifier window offers action modifiers only (all 3 cancelBlock carriers are mods today; future-proofing against the class Johan's standing question surfaced)
       if(!this._mayPlay(h.name, h.e, played)) return;
+      if(!this._entryReqOk(h.e, vamp) || !this._titleOk(h, vamp)) return;   // v0.6.233 (the graded readings): the card's clan -- Forced Confessional requires a Salubri
       const cost = (h.e.cost && h.e.cost.blood) || 0;
       if(cost > (vamp.blood | 0)) return;
       (h.e.modes || []).forEach(mo => {
@@ -2950,11 +2951,10 @@ class Bot {
 
   interceptPotential(reacted, p){      // best single usable +intercept in hand right now (M2: the real thing plays only one per attempt, so "potential" means best immediately available, not an optimistic sum). Must agree with the once-per-action ledger the EXECUTION side enforces, or the decision commits to a block it can no longer back with a card.   // VA: p (the pending) brings kind + actingVampName so the crypt mods and the Navar filter shape the DECISION exactly like the pick/wire -- decision/pick agreement, the E1/45f principle
     if(!this.fx) return 0;
-    const wakeAvail = !!this._wakeCard();
-    const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && (!c.locked || wakeAvail) && !this._cryptCannotBlock(c, p && p.actingVampName, p)
+    const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && (!c.locked || !!this._wakeCardFor(c)) && !this._cryptCannotBlock(c, p && p.actingVampName, p)   // v0.6.233 (RED 1's decision side): the wake THIS vampire can play -- the blind _wakeCard counted a basic-Auspex body behind Eyes of Argus [AUS], which the pick (_wakeCardFor) never raises
       && !(p && p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp));   // v0.6.103 (#4): decision == pick -- a failed attempter and a Pentexed minion count for neither (the v0.4.1/v0.4.3 drift class, third occurrence)
     let best = -Infinity;
-    vamps.forEach(v => { const b = this._bestInterceptFor(v, reacted || null, p); const s2 = (b ? b.s : 0) + this._equipIntercept(v) + this._hostedIntercept(v, p) + this._cryptIntercept(v, p); if(s2 > best) best = s2; });   // v0.6.48 (uncertainty review): borne equipment (Bowl/Sport Bike) counts toward the DECISION too -- decision/pick agreement; the execution side (_setTallyB + _pickBlocker) already read it   // VA review: RAW best -- the old `best = 0` seed was an implicit floor (a lone Christine must report -1, not 0); empty candidate set still reports 0
+    vamps.forEach(v => { const wk = v.locked ? this._wakeCardFor(v) : null, b = this._bestInterceptFor(v, wk ? this._withPlayed(reacted, wk.name) : (reacted || null), p); const s2 = (b ? b.s : 0) + this._equipIntercept(v) + this._hostedIntercept(v, p) + this._cryptIntercept(v, p); if(s2 > best) best = s2; });   // v0.6.233: a woken body cannot play its wake card again for intercept   // v0.6.48 (uncertainty review): borne equipment (Bowl/Sport Bike) counts toward the DECISION too -- decision/pick agreement; the execution side (_setTallyB + _pickBlocker) already read it   // VA review: RAW best -- the old `best = 0` seed was an implicit floor (a lone Christine must report -1, not 0); empty candidate set still reports 0
     /* v0.6.228 (round F): decision == pick for the LOCKED routes -- with no unlocked body to pick, _commitBlock raises a locked one through an
        unlock reaction before any wake (Guard Dogs-class on a bleed, Second Tradition- and Eyes of the Wild-class on any action); a locked
        Toreador prince's Second Tradition counted nothing here, so the route it opens was taken only behind a wake the deck does not carry */
@@ -4403,25 +4403,32 @@ class Bot {
     if(!this.fx || !p || p.kind !== 'bleed' || (p.amount | 0) < 2 || p.reducedOnce) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('react')) continue;
-      const wakeOk = !!this._wakeCard();   // v0.6.67 (the combo): a wake in hand widens the pool to LOCKED reactors -- the bounce steg-6 pattern
+      if(p.reacted && p.reacted.has(FX_NORM(h.name))) continue;   // v0.6.233: once per action
+      const cost = (h.e.cost && h.e.cost.blood) | 0;
       for(const mo of (h.e.modes || [])){
         if(!mo.fx || !mo.fx.reduce) continue;
         const needT = mo.req && mo.req.title;
-        const pool = (vamps || []).filter(v => { if(!v || (v.locked && !wakeOk)) return false;
+        /* v0.6.233 (wave 6's graded readings, RED 2): the reactor must meet the MODE -- its discipline (Loyiso, basic Animalism, played Sentry
+           Signal's [ANI] 'reduce 3'), the card's clan / sect / capacity and title, its condition -- and pay the card's blood (and a wake's,
+           the wake it can itself play: _wakeCardFor, as the block route; v0.6.67's blind _wakeCard woke anyone). */
+        const pool = (vamps || []).filter(v => { if(!v) return false;
+          const wk = v.locked ? this._wakeCardFor(v) : null; if(v.locked && !wk) return false;
+          if(!this._modeUsableBy(mo, v) || !this._entryReqOk(h.e, v) || !this._titleOk(h, v) || !this._dirOk(h.e, mo, p)) return false;
+          if((v.blood | 0) < cost + ((wk && wk.cost && wk.cost.blood) | 0)) return false;
           if(!needT) return true;
           return String(this._titleOf(v).title || '').toLowerCase() === String(needT).toLowerCase(); });   // v0.6.217: _titleOf (a title card counts)
         pool.sort((a2, b2) => ((a2.locked ? 1 : 0) - (b2.locked ? 1 : 0)));   // unlocked PREFERRED -- never spend the wake needlessly
         if(!pool.length) continue;
-        return { idx, name: h.name, n: mo.fx.reduce, vamp: pool[0] };
+        return { idx, name: h.name, n: mo.fx.reduce, vamp: pool[0], cost };
       }
     }
     return null;
   }
   async _commitReduce(p, rd){        // N4c: the reducer IS the payer -- p.amount drops bot-locally, the log line is table-truth; then Pass closes my window. v0.6.67: async for the wake pacing beat
     const needsWake = !!rd.vamp.locked;                  // re-derived from CURRENT state (the bounce precedent) -- the vampire may have (un)locked under the think delay
-    const wk = needsWake ? this._wakeCard() : null;
+    const wk = needsWake ? this._wakeCardFor(rd.vamp) : null;   // v0.6.233: the wake THIS vampire can play
     const wkCost = (wk && wk.cost && wk.cost.blood) || 0;
-    if((needsWake && !wk) || (rd.vamp.blood | 0) < wkCost){
+    if((needsWake && !wk) || (rd.vamp.blood | 0) < wkCost + (rd.cost | 0)){
       this.o.log('reduce reconsidered (wake or blood no longer available) \u2014 re-evaluating'); return this._reactWindow();
     }
     if(wk){                                              // v0.6.67 (the combo): the wake play -- _commitBounce's sequence VERBATIM; the reactor STAYS locked ('as though unlocked' is the rule)
@@ -4431,6 +4438,7 @@ class Bot {
       this.fxClone({ name: wk.name, kind: 'lib' }, 'may react as though unlocked', { actor: rd.vamp });
       this.send({ t: 'log', html: '<b>' + esc(rd.vamp.name) + '</b> plays <b>' + esc(wk.name) + '</b>: may react as though unlocked.' });
       this._emitPlay(wk.name, 'wake', rd.vamp.name);
+      if(p.reacted) p.reacted.add(FX_NORM(wk.name));   // v0.6.233: the wake is this action's card too
       await this._pace();
     }
     const j = this.hand.indexOf(rd.name);   // v0.4.2: re-anchor by name after the think delay (and the wake splice just above shifts it AGAIN)
@@ -4438,6 +4446,8 @@ class Bot {
     this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1;
     this._toAsh(rd.name);
     this._emitPlay(rd.name, 'react-reduce', rd.vamp.name);
+    if(rd.cost) rd.vamp.blood = Math.max(0, (rd.vamp.blood | 0) - rd.cost);   // v0.6.233 (RED 2): the card's blood (Sentry Signal) -- it was never paid
+    if(p.reacted) p.reacted.add(FX_NORM(rd.name));
     p.amount = Math.max(0, (p.amount | 0) - rd.n);
     p.reducedOnce = true;
     this.fxClone({ name: rd.name, kind: 'lib' }, 'reduces the bleed by ' + rd.n, { actor: rd.vamp });
@@ -5377,10 +5387,11 @@ class Bot {
     const out = [];
     (this.board || []).forEach(v => {
       if(!v || v.zone !== 'ready' || v.kind !== 'crypt' || !v.locked || (p && p.attempted && p.attempted.has(v.id)) || (this._pentexVamp && v.name === this._pentexVamp) || this._cryptCannotBlock(v, p && p.actingVampName, p)) return;
-      if(p && p.kind === 'bleed' && this._bestUnlockReactFor(v, 'bleedAtMe', p)){ const b = this._bestInterceptFor(v, reacted || null, p); out.push({ v, s: b ? b.s : 0, via: 'bleedAtMe' }); return; }
+      { const gd = (p && p.kind === 'bleed') ? this._bestUnlockReactFor(v, 'bleedAtMe', p) : null;
+        if(gd){ const b = this._bestInterceptFor(v, this._withPlayed(reacted, gd.name), p); out.push({ v, s: b ? b.s : 0, via: 'bleedAtMe' }); return; } }   // v0.6.233 (RED 1): the route's card is this action's -- never its intercept mode as well
       const un = this._bestUnlockReactFor(v, 'lockedBlock', p); if(!un) return;
       if(un.intercept | 0){ out.push({ v, s: un.intercept | 0, via: 'lockedBlock' }); return; }
-      const left = (v.blood | 0) - ((un.cost && un.cost.blood) | 0), paid = (un.paid && left - un.paid.cost >= 1) ? un.paid.n : 0, b = this._bestInterceptFor(v, reacted || null, p);
+      const left = (v.blood | 0) - ((un.cost && un.cost.blood) | 0), paid = (un.paid && left - un.paid.cost >= 1) ? un.paid.n : 0, b = this._bestInterceptFor(v, this._withPlayed(reacted, un.name), p);
       out.push({ v, s: Math.max(paid, b ? b.s : 0), via: 'lockedBlock' });
     });
     return out;
@@ -5493,6 +5504,7 @@ class Bot {
       if((h.e.modes || []).some(mo => mo.fx && mo.fx.dodge && this._modeUsableBy(mo, vamp))) n++; });
     return n;
   }
+  _withPlayed(played, name){ const s = new Set(played || []); if(name) s.add(FX_NORM(name)); return s; }   // v0.6.233: a once-per-action set with one more card (an estimate's: the route's or the wake's card)
   _dirOk(e, mo, p){                  // v0.6.233 (V5 wave 6a, RULINGS D-123): 'Only usable during an action directed at you (or a card you control)' -- cardfx onlyDirected on the entry (the header: One With the Land, The Warrens) or on the mode (its line: Eyes of Argus [aus], Deep Ecology [ani]). At a play (p, the action I would block) only a directed action passes (_pendDirected true; unknown fails closed). Without p (an estimate: _blockerWorth, the wall's odds -- each values a bleed's defence, as their _hostedIntercept(v, 'bleed') says) the card counts. v0.6.232 read no such condition: Eyes of Argus and The Warrens spent their intercept at undirected actions 568 times in the 240.
     if(!((e && e.onlyDirected) || (mo && mo.onlyDirected))) return true;
     return !p || this._pendDirected(p) === true;
@@ -8185,7 +8197,7 @@ class Bot {
     p.blockerVamp = blocker;         // remembered for the combat hand-off if the block succeeds (this.pending dies with the verdict)
     this._maybeRebelBlood(blocker, p.actingVampName);   // N4a: extracted for testability (the _revertHandSizeBonus precedent)
     const unIc = (typeof plan !== 'undefined' && plan && plan.kind === 'unlockReact' && plan.un && plan.un.intercept) | 0;   // v0.6.139: the unlock card carried its own intercept (Second Tradition) -- no second card, one reaction per action per card
-    if(unIc) p.reacted.add(FX_NORM(plan.un.name));
+    if(typeof plan !== 'undefined' && plan && (plan.kind === 'unlockReact' || plan.kind === 'wake') && p.reacted){ const nm = plan.kind === 'wake' ? (plan.wk && plan.wk.name) : (plan.un && plan.un.name); if(nm && blocker === plan.vamp) p.reacted.add(FX_NORM(nm)); }   // v0.6.233 (wave 6's graded readings, RED 1): the route's card and the wake's are this action's too -- the same vampire played One With the Land [PRO] then its [pro], Eyes of Argus [AUS] then its [aus] (the rulebook: one card of a name per action); v0.6.139 recorded only a card with its own intercept
     const baseSt = p.kind === 'undirected' ? 1 : 0;   // the rulebook default: directed 0, undirected +1
     const humanActor = !!(p.who && this._isHumanName(p.who));
     const aStanding = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : null;
@@ -11016,7 +11028,7 @@ class Bot {
   _onStealthZero(vamp, card, actor){   // the acting side: Night Terrors at my action -- my stealth is 0 ('a -X stealth modifier to the action'), and I may raise it again (the counter's echo runs my second look)
     const av = this._actingVamp, a = this._ask; if(!av || !a || this.out || !av.v || av.v.name !== actor) return;
     const t = this.tally; if(!t || t.mode !== 'block') return;
-    const x = (this._actStealthRaw != null) ? (this._actStealthRaw | 0) : (t.a | 0); if(x <= 0) return;   // on zero or negative stealth it changes nothing [LSJ 20021211]
+    const x = ((this._actStealthRaw != null) ? (this._actStealthRaw | 0) : (t.a | 0)) - (av.condOn | 0); if(x <= 0) return;   // on zero or negative stealth it changes nothing [LSJ 20021211]; a conditional stealth booked on the counter is the blocker's -1 intercept, not stealth (the graded readings): it stays
     this._bumpTallyA(-x);
     this._emit('stealth-zero-in', { vamp: av.v.name, by: vamp, card, x });
     this.o.log('stealth: ' + card + ' (' + vamp + ') -- ' + av.v.name + '\u2019s stealth ' + x + ' -> 0');

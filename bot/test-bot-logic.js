@@ -14487,6 +14487,35 @@ async function connectWithRetry(client, tries = 30){
         ok(three.raw === 0 && three.wrote === '0' && zero.raw === 0 && zero.wrote === '' && neg.raw === -1 && neg.wrote === '' && other.raw === 3 && other.wrote === '',
            '178f2 the actor takes its stealth to 0 on Night Terrors’ line; zero or negative stealth unchanged; another vampire’s untouched (got ' + JSON.stringify({ three, zero, neg, other }) + ')'); }
 
+      // h) the graded readings' RED 1: one card of a name per action -- the route's card and the wake's are recorded, so the same vampire
+      //    never adds the same card's intercept mode (One With the Land [PRO] then [pro]; Eyes of Argus [AUS] then [aus]); the decision's
+      //    estimates agree (the route's body, a woken body: never that card again; a body that cannot play the wake is not counted)
+      { const run = async (deck, vamp, card) => { const u = mk178(2, deck); const v = V8('t1', vamp, { locked: true, blood: 4 }); u.board = [v]; u.hand = [card, card];
+          u.tally = { mode: 'block', a: 2, b: 0 }; const p = u.pending = P8({ kind: 'bleed', amount: 3 });
+          const est = u.interceptPotential(p.reacted, p), route = (u._lockedRouteBodies(p, p.reacted)[0] || {}).s;
+          await u._commitBlock(p, { parts: {} }); return { est, route: route == null ? null : route, hand: u.hand.length, reacted: p.reacted.has(BOT8.FX_NORM(card)), b: u.tally && u.tally.b, blocker: p.blockerVamp && p.blockerVamp.name }; };
+        const owl = await run('tzimisce', 'Adrino Manauara (G6)', 'One With the Land'), eyes = await run('malkavian', 'Colette (G6)', 'Eyes of Argus');
+        const u = mk178(2, 'malkavian'); u.board = [V8('m1', 'Meaghan (G6)', { locked: true })]; u.hand = ['Eyes of Argus']; const basic = u.interceptPotential(new Set(), P8({ kind: 'bleed', amount: 3 }));
+        ok(owl.blocker === 'Adrino Manauara (G6)' && owl.hand === 1 && owl.reacted && owl.b === 0 && owl.route === 0 && eyes.blocker === 'Colette (G6)' && eyes.hand === 1 && eyes.reacted && eyes.b === 0 && eyes.est === 0 && basic === 0,
+           '178h one card of a name per action: the route\u2019s and the wake\u2019s card recorded, the second copy kept; the estimates agree (got ' + JSON.stringify({ owl, eyes, basic }) + ')'); }
+
+      // i) RED 2: the reduce finder meets the mode -- Sentry Signal's [ANI] / [THA] 'reduce 3' for a superior Animalism or Thaumaturgy only,
+      //    its 1 blood paid; Deep Ecology [for] needs Fortitude (Indira has none)
+      { const u = mk178(2, 'pathcaine'); const p = P8({ kind: 'bleed', amount: 3 });
+        const alg = V8('a1', 'Algirdas, The Solar Prophet (G6)', { blood: 2 }), loy = V8('l1', 'Loyiso, The Ruthless (G6)', { blood: 2 }), alg0 = V8('a2', 'Algirdas, The Solar Prophet (G6)', { blood: 0 });
+        u.hand = ['Sentry Signal']; const r1 = u._bestReduceFor([loy], p), r2 = u._bestReduceFor([alg], p), r0 = u._bestReduceFor([alg0], p);
+        const ug = mk178(2, 'gangrel'); ug.hand = ['Deep Ecology']; const ind = ug._bestReduceFor([V8('i1', 'Indira (G6)')], p), crow = ug._bestReduceFor([V8('c1', ug.fxLookup('Crow (G5)') ? 'Crow (G5)' : 'Crow')], p);
+        let paid = null; if(r2){ u.board = [alg]; u.pending = p; u.say = () => {}; await u._commitReduce(p, r2); paid = { blood: alg.blood, amount: p.amount, reacted: p.reacted.has(BOT8.FX_NORM('Sentry Signal')) }; }
+        ok(r1 === null && r2 && r2.vamp === alg && r2.cost === 1 && r0 === null && ind === null && crow && crow.n === 2 && paid && paid.blood === 1 && paid.amount === 0 && paid.reacted,
+           '178i the reduce finder: the mode\u2019s discipline, the card\u2019s blood paid (got ' + JSON.stringify({ r1, r2: r2 && { vamp: r2.vamp.name, cost: r2.cost }, r0, ind, crow: crow && crow.n, paid }) + ')'); }
+
+      // j) the block-cancel finder asks the card's clan: Forced Confessional requires a Salubri (a Tzimisce with Dominate cannot); and Night
+      //    Terrors takes the STEALTH to 0, not a booked conditional stealth (Forced Confessional's -1 intercept stays on the counter)
+      { const u = mk178(1, 'tzimisce'); u.hand = ['Forced Confessional']; const tz = u._bestCancelBlockFor(V8('t1', 'Adrino Manauara (G6)'), new Set());
+        const a = mk178(1, 'salubri'); const yael = V8('y1', 'Yael (G7)'); a.board = [yael]; a._actingVamp = { v: yael, n: 2, target: 2, played: new Set(), condOn: 1, condSt: [{ name: 'Forced Confessional', s: 1, who: ['this'], at: 'Nik Sikko' }] }; a._ask = { contested: true, target: 2, pausedBy: new Set() };
+        a.tally = { mode: 'block', a: 3, b: 0 }; a._actStealthRaw = 3; a._onLog('Viktor', "<b>Jean-François (G7)</b> plays <b>Night Terrors</b>: <b>Yael (G7)</b>'s stealth is 0.");
+        ok(tz === null && a._actStealthRaw === 1, '178j Forced Confessional\u2019s clan in the block-cancel finder; Night Terrors leaves a booked -1 intercept on the counter (got ' + JSON.stringify({ tz, raw: a._actStealthRaw }) + ')'); }
+
       // g) Hunting the Quarry: no modes until the grants round -- never offered as a stealth or a combat card
       { const u = mk178(1, 'pathcaine'); const h = u.fxLookup('Hunting the Quarry'); const alg = V8('a1', 'Algirdas, The Solar Prophet (G6)'); u.board = [alg]; u.hand = ['Hunting the Quarry'];
         u._actingVamp = { v: alg, n: 1, target: 2, played: new Set(), attemptAt: Date.now() };
