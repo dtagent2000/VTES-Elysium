@@ -5,7 +5,7 @@
 v1.1.3 · built against client v2.6.175 / srv-2.6.51 (the root's release);
 the read-only copies in bot/ are client v2.6.175 / protocol v2.6.175 / srv-2.6.51 and main's canary v1.3.0.
 
-**Deploy state:** `main` carries v0.6.233 (#80, V5 wave 6a). **Open PR:** V5 wave 6b (this release).
+**Deploy state:** `main` carries v0.6.234 (#81, V5 wave 6b). **Open PR:** the V5 sweep's method (docs: D-125 and its spec).
 
 ## Last gates (v0.6.234 release bytes, 18 Nov 2026)
 Suite **2606/0 ×3** (`elysium-bot.js` `4a1342b4`, `test-bot-logic.js` `7dcc71ff`, `elysium-cardfx.json` `721c74ee`) · section
@@ -21,7 +21,8 @@ played by the caller and as a voter's reaction. A rider: a voter's card now goes
 a bot caller in all 83 of its plays in v0.6.233's 240).
 
 ## Next
-1. The maneuver / press grants with the rush cards (Hunting the Quarry, Night Terrors' strike), then the free block bars (BOARD).
+1. The V5 sweep (D-125, `specs/spec-card-sweep-2026-11-18.md`): step A, the set-up (the tools, the dry run, room in the docs),
+   then B, the pilot (Banu Haqim: the maneuver / press grants with the rush cards).
 2. The window opened after its line; the fizzle misread (BOARD); Q4; C5; C6; the abstract model.
 
 ## Not yet consumed from main
