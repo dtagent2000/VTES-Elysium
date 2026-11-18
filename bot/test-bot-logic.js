@@ -14646,8 +14646,10 @@ async function connectWithRetry(client, tries = 30){
           { id: 'm1', name: 'Shadow Cloak', kind: 'lib', zone: 'ready', host: 'y1' }, { id: 'm2', name: 'Shadow Cloak', kind: 'lib', zone: 'ready', host: 'a1' }]; v.attached = ['m1']; w.attached = ['m2'];
         if(IF9(u, '_w5Unlock')) u._w5Unlock();
         const left = u.board.filter(c => c && c.kind === 'lib' && c.name === 'Shadow Cloak' && c.zone !== 'ash').length, ash = u.board.filter(c => c && c.name === 'Shadow Cloak' && c.zone === 'ash').length;
-        ok(left === 0 && ash === 2 && !v.attached.length && !w.attached.length && ev9(u, 'cloak-burn').length === 2 && logs9(u).filter(l => /burns Shadow Cloak from/.test(l)).length === 2,
-           '179c the cloak burns in my unlock phase, a torpored host’s too (got ' + JSON.stringify({ left, ash, att: [v.attached, w.attached], rows: ev9(u, 'cloak-burn').length }) + ')'); }
+        const kb = u._evClassify('Hanna', logs9(u).find(l => /burns Shadow Cloak from/.test(l)) || '', 'log');   // the event log's kind (L-56)
+        ok(left === 0 && ash === 2 && !v.attached.length && !w.attached.length && ev9(u, 'cloak-burn').length === 2 && logs9(u).filter(l => /burns Shadow Cloak from/.test(l)).length === 2
+           && !!kb && kb.kind === 'card-burned' && kb.card === 'Shadow Cloak' && kb.vamp === 'Yewon Ong',
+           '179c the cloak burns in my unlock phase, a torpored host’s too; the line’s event kind (got ' + JSON.stringify({ left, ash, att: [v.attached, w.attached], rows: ev9(u, 'cloak-burn').length, kb }) + ')'); }
 
       // d) the action's played set rides the last action (Shadow Cloak's [OBL] is a second copy of a modifier already played); the rush
       //    lines at my vampire record the rusher for the prior (Deep Song, a Haven Uncovered rush); a human's chat rush names its rusher
@@ -14773,9 +14775,11 @@ async function connectWithRetry(client, tries = 30){
         const tor = V9('t1', 'Yewon Ong', { zone: 'torpor', blood: 2, attached: ['c1'] }); w.table[2].pub.cards = [tor, { id: 'c1', name: 'Shadow Cloak', kind: 'lib', zone: 'ready', host: 't1', sup: 'obl' }];
         const resc = IF9(w, '_bestEnemyRescueFor') ? w._bestEnemyRescueFor(rs) : 'n/a'; tor.attached = []; const resc0 = IF9(w, '_bestEnemyRescueFor') ? w._bestEnemyRescueFor(rs) : 'n/a';
         const pth = u._vampPath({ name: 'Lika, The Purger', path: 'Path of Caine' }), pth0 = u._vampPath({ name: 'Lika, The Purger' });
+        const kp = u._evClassify('Hanna', line, 'log');   // the cloak's line: a card played (the event log), and no action observed (L12.actObs, below)
         ok(!!card && /^Yewon Ong puts Shadow Cloak on itself/.test(line) && !/ plays /.test(line) && card.sup === 'obl' && pub.sup === 'obl' && actors.length >= 1
-           && resc === null && resc0 && resc0.name === 'Yewon Ong' && pth === 'Caine' && pth0 === 'Power and the Inner Voice',
-           '179k the cloak through _maybeActAgain (a puts line, the sup marker on its pub); a cloaked vampire in torpor skipped by a rescuer without Auspex; a chosen Path read first (got ' + JSON.stringify({ card: !!card, line, sup: card && card.sup, pub: pub.sup, resc, resc0: resc0 && resc0.name, pth, pth0 }) + ')'); }
+           && resc === null && resc0 && resc0.name === 'Yewon Ong' && pth === 'Caine' && pth0 === 'Power and the Inner Voice'
+           && !!kp && kp.kind === 'card-played' && kp.card === 'Shadow Cloak' && kp.vamp === 'Yewon Ong' && !BOT9.L12.actObs.test(line),
+           '179k the cloak through _maybeActAgain (a puts line: a card played in the event log, no action observed; the sup marker on its pub); a cloaked vampire in torpor skipped by a rescuer without Auspex; a chosen Path read first (got ' + JSON.stringify({ card: !!card, line, sup: card && card.sup, pub: pub.sup, resc, resc0: resc0 && resc0.name, pth, pth0, kp }) + ')'); }
     }
 
 
