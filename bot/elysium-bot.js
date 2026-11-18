@@ -4860,7 +4860,7 @@ class Bot {
     if(e.unique && this._w5Mine((x, c) => FX_NORM(c.name) === FX_NORM(h.name)).length) return true;
     const w = this._cardWorth({ id: null, name: h.name, counters: [] }, this.seat); return !!(w && !w.situational && w.worth + (w.now || 0) - ((e.cost && e.cost.pool) || 0) <= -1);   // v0.6.232: a situational card (Week of Nightmares: a finisher) is never dead for its worth
   }
-  _w5HoldNote(name, why){ const k = (this.ownTurns | 0) + '|' + name; if((this._w5Held = this._w5Held || new Set()).has(k)) return; this._w5Held.add(k); this.o.log('master-play: ' + name + ' held -- ' + why); this._emit('w5-hold', { card: name, why }); }   // once a turn a card
+  _w5HoldNote(name, why){ if(this._quietHold) return; const k = (this.ownTurns | 0) + '|' + name; if((this._w5Held = this._w5Held || new Set()).has(k)) return; this._w5Held.add(k); this.o.log('master-play: ' + name + ' held -- ' + why); this._emit('w5-hold', { card: name, why }); }   // once a turn a card
   _w5OnTabled(card){                 // a wave master I put in play: The Rack's vampire (the memo token), Forward Momentum's counters, Frontal Assault's turn
     const e = this._w5E(card.name); if(!e) return;
     if((e.modes || []).some(mo => mo.fx && mo.fx.rackBlood)){ const v = this._w5RackPick(); card.rackVamp = v ? v.id : null; if(v) this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> chooses <b>' + esc(v.name) + '</b> for <b>' + esc(card.name) + '</b>.' }); }   // fx.rackBlood
@@ -7674,7 +7674,7 @@ class Bot {
     const sr = this._srCard(); if(!sr) return null;
     const e = this._w5E(card); if(!e || !(e.t || []).includes('master') || e.oot) return null;   // v1: masters played in their master phase (an out-of-turn one gets no window, a rider)
     const g = this._srGain(seat, card, e, tgt);
-    const price = this._bestMasterFor(new Set()).length ? 1.0 : 0.3;   // my next master phase's action: another master I would play, else the card's own option value (thresholds: Claude's, spec \u00a712.2)
+    let price; this._quietHold = true; try { price = this._bestMasterFor(new Set()).length ? 1.0 : 0.3; } finally { this._quietHold = false; }   // my next master phase's action: another master I would play, else the card's own option value (thresholds: Claude's, spec \u00a712.2) -- read out of turn, so no hold row (_w5HoldNote)
     const row = { owner: this.seatName(seat), card, gain: +g.gain.toFixed(2), price, why: g.why };
     if(!(g.gain > price)){ this.o.log('sudden reversal: ' + card + ' (' + row.owner + ') not cancelled -- ' + g.why + ', gain ' + row.gain + ' against ' + price); return null; }
     return Object.assign({ name: sr }, row);
