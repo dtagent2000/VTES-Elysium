@@ -29,7 +29,7 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    RULINGS 64 -> 65 KB, ARCHITECTURE 15.5 -> 16 KB and the total 170 -> 173 KB on 18 Nov (bot v0.6.233: Johan's D-123, the wave 6a
 #    decisions, after the fold of five retired stubs; the register stood 287 bytes under its ceiling, the table 11, the total 258).
 #    RULINGS 65 -> 66 KB and the total 173 -> 174 KB the same day (a docs round on bot v0.6.234: Johan's D-125, the V5 sweep's
-#    method, after D-98's wave-1 list and the BOARD line's waves-done list were cut as history; the register stood 92 bytes
+#    method, after D-98's and D-102's card lists and the BOARD line's waves-done list were cut as history; the register stood 92 bytes
 #    under its ceiling and the total 3).
 PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:66000 $D/LESSONS.md:20000
        $D/ARCHITECTURE.md:16000 $D/HARNESS.md:8000 $D/HOWTO.md:21500"

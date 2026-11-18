@@ -22,7 +22,7 @@ a bot caller in all 83 of its plays in v0.6.233's 240).
 
 ## Next
 1. The V5 sweep (D-125, `specs/spec-card-sweep-2026-11-18.md`): step A, the set-up (the tools, the dry run, room in the docs),
-   then B, the pilot (Banu Haqim: the maneuver / press grants with the rush cards).
+   then B, the pilot (Banu Haqim).
 2. The window opened after its line; the fizzle misread (BOARD); Q4; C5; C6; the abstract model.
 
 ## Not yet consumed from main
