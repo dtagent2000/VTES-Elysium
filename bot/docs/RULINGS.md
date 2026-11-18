@@ -246,7 +246,7 @@ A retired line keeps its number as a one-line stub so references stay valid.
 - **O-21** (2026-09-18) — A FREE block bar (Beast Meld-class) and `chosen` (Seduction-class) have tags but no consumer [CL 24c, 24l]; the crypt text part is D-108 (the ledger reads and classes it, the crypt waves curate it). (gap, not a question — BOARD)
 - **O-23** (2026-10-16) — Wasserschloss Anif's burn-it action and Haven Uncovered's host burning the card are not built; Ventrue HQ is locked only in own referendums [spec-r4 §3]. (gap, not a question — BOARD)
 - **O-24** (2026-10-19) — Both Pentex spellings in one game are two cards to `_uniqueInPlay` (one row in `CARDS.md`, by KRCG id) [spec-cards §5].
-- **O-45** (2026-11-18) — The V5 sweep (D-125): (a) are T1 and T2 asked again for the seven finished decks' 104 library cards, first in the harvest (Claude: yes)? (b) zero-vtes's maintainer was to be asked before its use as a check (spec-cleanup T3): asked, told or dropped? Its credit waits for the licence [spec-card-sweep §4.2, §5].
+- **O-45** (2026-11-18) — The V5 sweep (D-125): (a) are the seven finished decks' 41 never hand-curated entries read again in step A, their decks first in the harvest (Claude: yes)? (b) zero-vtes's maintainer was to be asked before its use as a check (spec-cleanup T3): asked, told or dropped? Its credit waits for the licence [spec-card-sweep §4.2, §5].
 
 ### Timing, holds, tempo & chat
 - **O-25** (2026-09-25) — Whether the bot ASKS in chat or only LOGS number mismatches with a human (the event-log / shadow-model design) [mem 25 Sep].
