@@ -44,7 +44,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | Referendum | `_bestPoliticalFor`, `_callReferendum`, `_refDeltas`, the voter | `_refValue`, pass estimate, title votes | `referendum-called`, `referendum`, `ref-vote` |
 | Influence | `_planInfluence` (`_deckFit`, `_engineY`, the planner), `_riseFromUnc` | plan.floor, `_critPool`, the crypt | `influence-plan`, `influence-pick`, `raise` |
 | Masters, income, banks | `master-play` (`_bestMasterFor`: no `oot`, `_masterReqOk`, `_masterHold`), `income-drain`, `income-direction`, `bank-in`, `lock-income` (one lock, one effect) | pool (≥ 1 left), a ready vampire meeting the requirements, the hand | `play`, `income-*`, `bank`, `unc-blood` |
-| Out-of-turn answers | `_archonFor` / `_playArchon` in the react window; `_ootDebt` at my next turn | the bleed at me, pool | `archon`, `archoned`, `oot-debt` |
+| Out-of-turn answers | `_archonFor` / `_playArchon` in the react window; Sudden Reversal (`_srFor`) in a master's 'as played' window (`_asPlayed`); `_ootDebt` at my next turn | the bleed at me, a master, pool | `archon`, `archoned`, `oot-debt`, `as-played`, `sr-cancel`, `sr-late` |
 | Act again | `act-again` (`_maybeActAgain`; Monster is a board source) | the ledger, `_keepBlocker`, `_critPool` | `act-again` |
 | Masters on a vampire (v0.6.217) | `_masterHostPlan` (the host or held, `_masterHostOk`; `_grandBallPlan`: the Ball's pair, its wait `_ballGuard` (D-117); a human's Ball: `_hMemoLog` → `_humanBallFree`, D-113); `_masterNoHost` makes an unhostable one a dead card | the hand, my crypt, `_titleOf`, `_discOf`, `_capOf` | `master-play`, `grand-ball`, `ball-wait`, `memo` |
 | If blocked (v0.6.217) | `_ifBlockedStep`: Terrifying Visage, Change of Target (`_cotWorth`; `_noteCotAct` books the action) | the blocker's expected strike, my combat enders | `change-of-target`, `visage` |
@@ -57,7 +57,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | File | Role |
 |---|---|
 | `elysium-bot.js` | the bot; `BOT_VERSION`; decks (`*_DECK`, `ARCHETYPES`), `DECK_STRATEGY`, `PERSONAS`, `L12` (the frozen-line grammar), `FX_NORM`, `prepCardfx`, `class Bot`, `BOT_EXPORTS` |
-| `elysium-cardfx.json` / `.js` | the card-effect library (auto tier for the whole pool + 105 curated), built by `cardfx-compile.js` from `cardfx-curated.json` + `vtes.json` |
+| `elysium-cardfx.json` / `.js` | the card-effect library (auto tier for the whole pool + the curated entries), built by `cardfx-compile.js` from `cardfx-curated.json` + `vtes.json` |
 | `elysium-twd-profile.json` / `.js`, `elysium-twd-archetypes.json` / `.js` | the TWDA prior: per-card and per-clan shares (the profile), per-archetype card and clan counts (the labels); built by `twd-profile.py` / `twd-archetypes.py` from KRCG's v5 TWDA through `twda.py` (one deck per id, card names from `vtes.json` by KRCG id) |
 | `deck-*.json`, `rig-a1.json`, `design-balanced-serie-bal1.txt` | the decks (the embedded ones' files, Toreador's among them, and the 13 other V5 precons: test inputs the client does not offer), a rig, the balanced seat design |
 | `krcg-v5.js` | KRCG's v5 dump (`vtes-v5.json` + `expansions.json`) → the v3-shaped `vtes.json` the compiler, `gen-precon.js`, the ledger, `test-cardfx.js` and the TWD tools read |
@@ -68,7 +68,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | `elysium-bot-arena.js` | bots on a real spawned server (real clocks; the timing truth) |
 | `elysium-bot-table.js` | seat bots at a live table |
 | `elysium-bot-diag.html`, `diag-hb1-smoke.js` | the browser battery (HB1) |
-| `test-bot-logic.js` | the suite (2,247 assertions at v0.6.212, sections numbered up to 158; live sections spawn the server; it needs a heap over 2 GB, HOWTO) |
+| `test-bot-logic.js` | the suite (numbered sections, STATUS has the count; live sections spawn the server; it needs a heap over 2 GB, HOWTO) |
 | `test-bot-canary.js` | the §12 grammar contract against the client html + protocol |
 | `test-cardfx.js` | the compiler's contract (needs `vtes.json`) |
 | `test-bot-hotseat.js` | the hotseat gate (H1–H11) |
