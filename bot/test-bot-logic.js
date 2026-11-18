@@ -14217,8 +14217,10 @@ async function connectWithRetry(client, tries = 30){
       { const w = mk177(1); w.board = [V7('z1', 'Zafira', { blood: 3 }), V7('r1', 'Roy', { blood: 3 })]; w.table = { 2: pub7(20, []), 3: pub7(20, []) };
         const e = w._w5E ? w._w5E(WON) : null, rd = () => IF7(w, '_w5MasterWorth') && e ? w._w5MasterWorth({ name: WON, e }) : null;
         const far = rd(); w.table[2].pub.pool = 3; const near = rd(); const dead = IF7(w, '_w5DeadMaster') && e ? w._w5DeadMaster({ name: WON, e }) : 'x'; w.table[2].pub.pool = 20; const dead2 = IF7(w, '_w5DeadMaster') && e ? w._w5DeadMaster({ name: WON, e }) : 'x';
-        ok(far && far.hold === true && near && near.hold === false && dead === false && dead2 === false,
-           '177f4 the play read: held at a prey of 20, played when the +1 on this turn\'s bleeds takes my prey out (3 pool, two Ravnos ready); never a dead card (got ' + JSON.stringify({ far, near, dead, dead2 }) + ')'); }
+        w.table[2].pub.pool = 3; w.table[3].pub.cards = [M7('w2', WON, { counters: ctr(7) })]; const other = rd(); w.table[3].pub.cards = [M7('w2', WON, { zone: 'ash' })]; const ash = rd();
+        w.hand = [WON]; const offered = IF7(w, '_bestMasterFor') ? w._bestMasterFor(new Set()).some(c => c.name === WON) : 'x';
+        ok(far && far.hold === true && near && near.hold === false && dead === false && dead2 === false && other && other.hold === true && ash && ash.hold === true && offered === false,
+           '177f4 the play read: held at a prey of 20, played when the +1 on this turn\'s bleeds takes my prey out (3 pool, two Ravnos ready); never a dead card; one per game -- held while another seat\'s copy is in play or in an ash heap (got ' + JSON.stringify({ far, near, dead, dead2, other, ash, offered }) + ')'); }
 
       // g) the frozen lines' kinds (L-56): every new line of the wave typed as sent
       { const u = mk177(1), C = t => { const r = IF7(u, '_evClassify') ? u._evClassify('Hanna', t, 'log') : null; return r && r.kind; };

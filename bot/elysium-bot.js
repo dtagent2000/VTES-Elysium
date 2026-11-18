@@ -4844,6 +4844,7 @@ class Bot {
     if(hit(this.board)) return true; for(const k in (this.table || {})) if(+k !== this.seat && hit(((this.table[k] || {}).pub || {}).cards)) return true; return false;
   }
   _w5MasterWorth(h){                 // D-119 (1), the play consumer: { worth, hold, why } for a master of the wave (never Jack: D-121), null for the older paths; a look-ahead card asks its own plan (D-58)
+    if(h.e.oncePerGame && this._w5Once(h.name)) return { hold: true, why: h.name + ': one per game, played' };   // v0.6.232 (the graded readings): 'Only one Week of Nightmares can be played in a game' -- any seat's copy in play or in an ash heap; the discard read it, the play did not
     const e = h.e, cost = (e.cost && e.cost.pool) || 0;
     if(e.handler === 'piper' || (e.modes || []).some(mo => mo.fx && mo.fx.piperRecruit)){ const p = this._w5PiperPlan(); return p ? { worth: 1, hold: false, why: 'Piper: ' + p.vamp.name + ' recruits ' + p.card + ', unblockable' } : { hold: true, why: 'Piper: no recruit an Anarch of mine would take this turn' }; }
     if(e.handler === 'dia' || (e.modes || []).some(mo => mo.fx && mo.fx.autoPassRef)){ if(this._w5Once(h.name)) return { hold: true, why: 'Día de los Muertos: one per game, played' }; const p = this._w5DiaPlan(); return p ? { worth: +(p.gain - cost).toFixed(2), hold: !(p.gain > cost), why: p.why } : { hold: true, why: 'Día de los Muertos: no referendum of a Sabbat of mine this turn' }; }
