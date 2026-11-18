@@ -12271,11 +12271,11 @@ async function connectWithRetry(client, tries = 30){
           for (; j < src.length; j++){ if (src[j] === '(') d++; else if (src[j] === ')' && --d === 0) break; }
           const m = /this\._cryptStealthMod\(v, ([^()]+?)\)/.exec(src.slice(i, j + 1));
           got.push(m ? m[1] : 'none @ line ' + src.slice(0, i).split('\n').length); }
-        const want = ["'leaveTorpor', false", "'political', false", "'hunt', false", "'stock', false", "'ownRescue', false", "'enemyRescue', true",
+        const want = ["'leaveTorpor', false", "'political', false", "'hunt', false", "'hunt', false", "'stock', false", "'ownRescue', false", "'enemyRescue', true",   // v0.6.232: + Week of Nightmares' special hunt (_wonHunt), a hunt
           "'recruit', false", "'strength', false", "'burnCard', true", "'rutor', false", "'creep', false", "'rush', true", "'rush', true",
           "act.isRetainer ? 'employ' : 'equip', false", "'fetch', false", "'peek', !act.supMode", "'pool', true", "'bleed'"];
         ok(JSON.stringify(got) === JSON.stringify(want),
-           '163h every one of the 18 announces passes its kind and form to _cryptStealthMod: leave torpor, political, hunt, stock, own rescue undirected; enemy rescue, card burn, both rushes, pool directed; recruit, strength, Rutor’s Hand, tabling, equip / employ, fetch undirected; Revelations by its mode; the bleed (got ' + JSON.stringify(got) + ')'); }
+           '163h every one of the 19 announces passes its kind and form to _cryptStealthMod: leave torpor, political, hunt (and Week of Nightmares\u2019 special hunt, v0.6.232), stock, own rescue undirected; enemy rescue, card burn, both rushes, pool directed; recruit, strength, Rutor’s Hand, tabling, equip / employ, fetch undirected; Revelations by its mode; the bleed (got ' + JSON.stringify(got) + ')'); }
     }
 
     /* 164) v0.6.220 -- CRYPT WAVE A'S RIDERS (RULINGS D-111): the event log's random-discard line, the bot's own PRNG for what the rules
@@ -14087,6 +14087,16 @@ async function connectWithRetry(client, tries = 30){
                     lateLines: logs7(a).filter(l => /^Nora's Sudden Reversal comes too late for Hanna's Asylum Hunting Ground\.$/.test(l)).length, late, back: ev7(c, 'sr-taken-back').length };
         ok(r0 && r0.cancelled === 'Viktor' && r.bAsh && !r.bHand && r.bDebt === 1 && r.cHand && r.cAsh === 0 && r.cDebt === 0 && r.lateLines >= 1 && r.back >= 1,
            '177b2 the first cancel wins (its card spent, the debt booked); the second is answered too late and its bot takes its card back (got ' + JSON.stringify(r) + ')'); }
+      { const a = mkB(1, []), b = mkB(2, [SR]), c = mkB(3, [SR]); a.turnSeat = 1; wire7([a, c, b]);   // Nora's bot reads the opener and cancels first
+        const r0 = IF7(a, '_asPlayed') ? await a._asPlayed('Asylum Hunting Ground', {}) : null;
+        const h = mkB(1, []); h.turnSeat = 1; h.players[2] = { seat: 3, name: 'Johan', online: true, bot: false }; wire7([h, b]);
+        b.hand = [SR]; b._ootDebt = 0; b._srSent = null;
+        const pH = IF7(h, '_asPlayed') ? h._asPlayed('Asylum Hunting Ground', {}) : Promise.resolve(null);
+        h._onFx({ t: 'fx', kind: 'play', seat: 3, card: { name: SR, kind: 'lib', faceDown: false } }); const rH = await pH;
+        const r = { r0, noraLate: logs7(a).filter(l => /^Nora's Sudden Reversal comes too late for Hanna's Asylum Hunting Ground\.$/.test(l)).length, noraBack: ev7(c, 'sr-taken-back').length, viktorAsh: b.board.some(x => x.zone === 'ash' && x.name === SR),
+                    rH, came: h.chats.find(t => /^Johan: Viktor\u2019s Sudden Reversal came first/.test(t)) || null, tooLate: h.chats.some(t => /too late/.test(t)) };
+        ok(r0 && r0.cancelled === 'Viktor' && r.noraLate === 1 && r.noraBack === 1 && r.viktorAsh && rH && rH.cancelled === 'Viktor' && !!r.came && !r.tooLate,
+           '177b3 the window takes its cancels in turn order from the player: Viktor (its prey) over Nora though Nora\'s line came first, Nora answered too late and her card back; a human\'s Sudden Reversal after a bot\'s in the same window is told the bot\'s came first (got ' + JSON.stringify(r) + ')'); }
 
       // c) humans: a human's master (the client's fx clone) cancelled by my line and a chat line; a human's Sudden Reversal in my open window
       //    cancels my master; after it closed, the human is told it came too late
@@ -14150,6 +14160,14 @@ async function connectWithRetry(client, tries = 30){
         const r = { terr, calls, grove: logs7(g).some(l => /^Viktor locks Meditative Grove — Deep Song \[ANI\] is cancelled/.test(l)), ev: ev7(h, 'grove-cancelled').length, rushAsk: asks.some(q => /rushes Seraphina/.test(q)), fights, ash: h.board.some(c => c.zone === 'ash' && c.name === 'Deep Song') };
         ok(!terr && r.grove && r.ev === 1 && !r.rushAsk && r.fights === 0 && r.ash && r.calls === 2,
            '177d6 through the bridge (the line delivered inside the rush line\'s send): the rusher takes the Grove\'s cancel -- no window, no combat, its vampire acts again (got ' + JSON.stringify(r) + ')'); }
+      { const mkC = (act) => { const h = mk177(1); const v = V7('l1', 'Lucinde'); h.board = [v]; h.table = { 2: pub7(20, [V7('s1', 'Seraphina')]), 3: pub7(20, []) };
+          h.players[1] = { seat: 2, name: 'Viktor', online: true, bot: false }; h._actingVamp = { v, n: 0, played: new Set(), target: 2, act }; return h; };
+        const ask = async (h, lines) => { const p = h._askBlock('Trainbot: Lucinde rushes Seraphina. Block?'); for(const [who, t] of lines) h._onChat(who, t); return Promise.race([p, sleep(1500).then(() => ({ what: 'timeout' }))]); };
+        const ds = { kind: 'rush', name: 'Deep Song', target: { seat: 2, owner: 'Viktor', name: 'Seraphina' } };
+        const a = await ask(mkC(ds), [['Nora', 'cancel'], ['Viktor', 'cancel']]);
+        const b = await ask(mkC(Object.assign({}, ds, { via: 'haven', name: 'Haven Uncovered' })), [['Viktor', 'cancel']]);
+        ok(a && a.what === 'cancelled' && a.who === 'Viktor' && b && b.what !== 'cancelled',
+           '177d7 a human target cancels my Deep Song [ANI] rush as it is played ("cancel": Meditative Grove, an [abo] reflex); another seat\'s word and a Haven Uncovered rush are not cancels (got ' + JSON.stringify({ a, b }) + ')'); }
 
       // e) Yawp Court: the caller's window only while a seat shows the card unlocked with a ready unlocked Sabbat; the owner answers at once
       //    (the line, the locks, the fight) and its Sabbat takes 2 environmental damage only when the caller says its vampire is still ready;
@@ -14221,6 +14239,12 @@ async function connectWithRetry(client, tries = 30){
         w.hand = [WON]; const offered = IF7(w, '_bestMasterFor') ? w._bestMasterFor(new Set()).some(c => c.name === WON) : 'x';
         ok(far && far.hold === true && near && near.hold === false && dead === false && dead2 === false && other && other.hold === true && ash && ash.hold === true && offered === false,
            '177f4 the play read: held at a prey of 20, played when the +1 on this turn\'s bleeds takes my prey out (3 pool, two Ravnos ready); never a dead card; one per game -- held while another seat\'s copy is in play or in an ash heap (got ' + JSON.stringify({ far, near, dead, dead2, other, ash, offered }) + ')'); }
+      { const run = async (fromBlood, hunterBlood) => { const w = mk177(1); const z = V7('z1', 'Iago Castille (G6)', { blood: hunterBlood }), d = V7('d1', 'Devyn (G4)', { blood: fromBlood });
+          w.board = [z, d, M7('w1', WON, { counters: ctr(10) }), M7('c1', 'The Hungry Coyote')]; w.table = { 2: pub7(20, []), 3: pub7(20, []) }; w._askBlock = async () => ({ what: 'pass' });
+          if(IF7(w, '_wonHunt')) await w._wonHunt(z, true); return { z: z.blood, d: d.blood, line: logs7(w).find(l => /Week of Nightmares\): /.test(l)) || null }; };
+        const two = await run(4, 0), one = await run(1, 0), full = await run(4, 7);
+        ok(two.z === 2 && two.d === 2 && /steals 2 blood from Devyn \(G4\)\.$/.test(String(two.line)) && one.z === 1 && one.d === 0 && /steals 1 blood/.test(String(one.line)) && full.z === 8 && full.d === 2 && /steals 2 blood from Devyn \(G4\) \(1 to the blood bank\)\.$/.test(String(full.line)),
+           '177f5 the special hunt takes the hunt value [RTR 20180511]: a Sabbat Ravnos with The Hungry Coyote steals 2, never more than its target has, the blood it cannot hold to the bank (got ' + JSON.stringify({ two, one, full }) + ')'); }
 
       // g) the frozen lines' kinds (L-56): every new line of the wave typed as sent
       { const u = mk177(1), C = t => { const r = IF7(u, '_evClassify') ? u._evClassify('Hanna', t, 'log') : null; return r && r.kind; };

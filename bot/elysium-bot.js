@@ -4952,10 +4952,11 @@ class Bot {
       this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: 0, card: null, by: this._lastBlockerName || null });
       await this._resolveCombat(v);
     } else {
-      const n = from && (from.blood | 0) > 0 ? 1 : 0, cap = this._capOf(v), room = (cap > 0 ? cap : 99) - (v.blood | 0);
-      if(n){ from.blood = (from.blood | 0) - 1; if(room > 0) v.blood = (v.blood | 0) + 1; }
-      this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> hunts (<b>Week of Nightmares</b>): ' + (n ? 'steals 1 blood from <b>' + esc(from.name) + '</b>' + (room > 0 ? '' : ' (to the blood bank)') : 'no blood to steal' + (from ? ' from <b>' + esc(from.name) + '</b>' : '')) + '.' });
-      this._emit('won-hunt', { vamp: v.name, from: from ? from.name : null, n, bank: n && room <= 0 ? 1 : 0, mandatory: !!mandatory });
+      const want = 1 + this._w5HuntBonus(v);   // [RTR 20180511] 'Is affected by Hunt value': The Hungry Coyote's +1, all of it from the target -- never more than it has [LSJ 20050720-2]
+      const n = from ? Math.min(want, Math.max(0, from.blood | 0)) : 0, cap = this._capOf(v), room = Math.max(0, (cap > 0 ? cap : 99) - (v.blood | 0)), got = Math.min(n, room);
+      if(n){ from.blood = (from.blood | 0) - n; v.blood = (v.blood | 0) + got; }
+      this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> hunts (<b>Week of Nightmares</b>): ' + (n ? 'steals ' + n + ' blood from <b>' + esc(from.name) + '</b>' + (got < n ? ' (' + (n - got) + ' to the blood bank)' : '') : 'no blood to steal' + (from ? ' from <b>' + esc(from.name) + '</b>' : '')) + '.' });
+      this._emit('won-hunt', { vamp: v.name, from: from ? from.name : null, n, bank: n - got, mandatory: !!mandatory });
       this._w5Hunts = (this._w5Hunts | 0) + 1;
       this._maybeWarsawRefresh(v);   // an undirected action, as a hunt
       this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: 0, card: 'hunt' });
@@ -7653,13 +7654,26 @@ class Bot {
     o = o || {};
     this.fxClone({ name, kind: 'lib' }, o.verb || 'is put in play');   // the card lands (moved here from the master phase's eight branches)
     if(!this._w5Live().some(st => st !== this.seat)) return { cancelled: null };   // nobody left to cancel it
-    const asp = this._asp = { card: name, at: Date.now(), cancelled: null, open: true };   // armed BEFORE the line goes out: an answer can arrive inside the send (L-25, L-92)
+    const asp = this._asp = { card: name, at: Date.now(), cancelled: null, open: true, cands: [] };   // armed BEFORE the line goes out: an answer can arrive inside the send (L-25, L-92)
     const tg = o.target ? ' \u2014 on <b>' + esc(o.target.owner) + "</b>'s <b>" + esc(o.target.name) + '</b>' : '';
     this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> is playing <b>' + esc(name) + '</b>' + tg + '.' });   // L12.asPlayed
     try {
       if(this.o.paceMs) await this._pace(); else await sleep(Math.max(0, +this.o.asPlayedMs || 0));
       await this._holdGate();   // a Hold on that landed inside the beat holds the master until it is released (_pace reads the hold before its sleep only)
-    } finally { asp.open = false; if(this._asp === asp) this._asp = null; this._aspLast = { card: name, at: Date.now(), cancelled: asp.cancelled }; }
+    } finally {
+      asp.open = false; if(this._asp === asp) this._asp = null;
+      if(asp.cands.length){   // every cancel read in the window; the first in turn order from me wins -- the others answer in sequence after the player, to its left (the rulebook's sequencing; the graded readings)
+        const live = this._w5Live().slice().sort((a, b) => a - b), i0 = live.indexOf(this.seat), N = live.length || 1;
+        const dist = st => { const k = live.indexOf(st); return k < 0 ? 99 : (k - i0 + N) % N; };
+        const order = asp.cands.slice().sort((a, b) => dist(a.seat) - dist(b.seat));
+        asp.cancelled = order[0].by; this.o.log('as played: ' + name + ' -- cancelled by ' + order[0].by + (order[0].human ? ' (a human)' : '') + (order.length > 1 ? ', first in turn order of ' + order.length : ''));
+        for(const c of order.slice(1)){
+          if(c.human) this.chat(c.by + ': ' + order[0].by + '\u2019s Sudden Reversal came first \u2014 take yours back.');
+          else this.send({ t: 'log', html: '<b>' + esc(c.by) + "</b>'s Sudden Reversal comes too late for <b>" + esc(this.o.name) + "</b>'s <b>" + esc(name) + '</b>.' });   // L12.srLate
+        }
+      }
+      this._aspLast = { card: name, at: Date.now(), cancelled: asp.cancelled };
+    }
     return { cancelled: asp.cancelled };
   }
   _asPlayedCancelled(name, by){      // my master was cancelled as it was played: it goes to my ash heap and is replaced; nothing paid, no effect, no trifle action (the master phase action is spent at the call site) [LSJ 20090626]
@@ -7711,9 +7725,9 @@ class Bot {
     const seat = this._seatOfName(who); if(!seat || seat === this.seat || this.out) return;
     const d = this._srFor(seat, card, vamp ? { owner, name: vamp } : null); if(d) this._playSr(seat, who, card, d, false);
   }
-  _onSrCancel(by, card){             // the player's side: the first cancel of my open window wins; every other one is too late
+  _onSrCancel(by, card){             // the player's side: a cancel read in my open window is a candidate (the window's close takes the first in turn order); after it, too late
     const asp = this._asp;
-    if(asp && asp.open && !asp.cancelled && FX_NORM(asp.card) === FX_NORM(card)){ asp.cancelled = by; this.o.log('as played: ' + card + ' -- cancelled by ' + by); return; }
+    if(asp && asp.open && FX_NORM(asp.card) === FX_NORM(card)){ if(!asp.cands.some(c => c.by === by)) asp.cands.push({ by, seat: this._seatOfName(by), human: false }); return; }
     if(this._isHumanName(by)) return this.chat(by + ': too late \u2014 my ' + card + ' has resolved; take your Sudden Reversal back.');
     this.send({ t: 'log', html: '<b>' + esc(by) + "</b>'s Sudden Reversal comes too late for <b>" + esc(this.o.name) + "</b>'s <b>" + esc(card) + '</b>.' });   // L12.srLate
   }
@@ -7732,8 +7746,11 @@ class Bot {
     if(e.oot && (e.modes || []).some(mo => mo.fx && mo.fx.cancelMaster)){   // their Sudden Reversal
       if(this.turnSeat !== this.seat) return;
       const asp = this._asp, last = this._aspLast;
-      if(asp && asp.open && !asp.cancelled){ asp.cancelled = who; this.o.log('as played: ' + asp.card + ' -- cancelled by ' + who + ' (a human)'); return; }
-      if(last && !last.cancelled && Date.now() - last.at < 20000) this.chat(who + ': too late \u2014 my ' + last.card + ' has resolved; take your Sudden Reversal back.');
+      if(asp && asp.open){ if(!asp.cands.some(c => c.by === who)) asp.cands.push({ by: who, seat: m.seat | 0, human: true }); return; }   // a candidate, as a bot's line (the close takes the first in turn order)
+      if(last && Date.now() - last.at < 20000){
+        if(!last.cancelled) this.chat(who + ': too late \u2014 my ' + last.card + ' has resolved; take your Sudden Reversal back.');
+        else if(last.cancelled !== who) this.chat(who + ': ' + last.cancelled + '\u2019s Sudden Reversal came first \u2014 take yours back.');
+      }
       return;
     }
     if(!(e.t || []).includes('master') || e.oot) return;
@@ -9665,7 +9682,7 @@ class Bot {
     if((m = t.match(L12.yawpOn))) return { kind: 'yawp-on', vamp: S(m[1]) };
     if((m = t.match(L12.wonMove))) return { kind: 'won-move', by: S(m[1]), owner: S(m[2]), vamp: S(m[3]), left: +m[4] };
     if(L12.wonEnd.test(t)) return { kind: 'won-end' };
-    if((m = t.match(/^(.+?) hunts \(Week of Nightmares\): (?:steals 1 blood from (.+?)( \(to the blood bank\))?|no blood to steal(?: from (.+?))?)\.$/))) return { kind: 'won-hunt', vamp: S(m[1]), from: S(m[2] || m[4]) || null, n: m[2] ? 1 : 0, bank: !!m[3] };   // v0.6.232: the table lines of 5b (blood moves the invariants read)
+    if((m = t.match(/^(.+?) hunts \(Week of Nightmares\): (?:steals (\d+) blood from (.+?)(?: \((\d+) to the blood bank\))?|no blood to steal(?: from (.+?))?)\.$/))) return { kind: 'won-hunt', vamp: S(m[1]), from: S(m[3] || m[5]) || null, n: m[2] ? +m[2] : 0, bank: m[4] ? +m[4] : 0 };   // v0.6.232: the table lines of 5b (blood moves the invariants read)
     if((m = t.match(/^(.+?) burns (\d+) blood \(Week of Nightmares\)\.$/))) return { kind: 'won-burn', vamp: S(m[1]), n: +m[2] };
     if((m = t.match(/^(.+?) is burned \(Week of Nightmares\)\.$/))) return { kind: 'won-burn', vamp: S(m[1]), burned: true };
     if((m = t.match(/^(.+?) takes 2 environmental damage from Yawp Court: loses (\d+) blood, now (\d+)(, and goes to torpor)?\.$/))) return { kind: 'yawp-damage', vamp: S(m[1]), lost: +m[2], now: +m[3], down: !!m[4] };
@@ -11218,6 +11235,8 @@ class Bot {
     if(this._ask){
       if(/^\s*block\b/i.test(txt))            return this._answer('block', who);
       if(/^\s*(no|nej|through|pass)\b/i.test(txt)) return this._answer('no', who);
+      { const act = this._actingVamp && this._actingVamp.act;   // v0.6.232 (D-122, the graded readings): my frenzy rush (Deep Song [ANI]) is a frenzy card played on its target [LSJ 20051113] -- the target's owner cancels it as it is played (Meditative Grove for a Salubri, an [abo] reflex) with a word: not performed, my vampire may act again
+        if(act && act.kind === 'rush' && !act.via && act.target && this._seatOfName(who) === (act.target.seat | 0) && /^\s*cancel(?:s|led)?\b/i.test(txt) && this._frenzyOpp((act.name || '') + ' [ANI]')) return this._answer('cancelled', who); }
     }
     /* damage grammar: "bleed 2" / "vote 3" — manual fallback for when the
        normal say/log flow didn't resolve the damage. In multi-bot games the
@@ -11281,7 +11300,7 @@ class Bot {
       } }
     if(/^help\b/i.test(bodyMatch) && (namedMe || this._isSpokesBot())){
       const several = (this.players || []).filter(p => p.bot && !p.vacant).length > 1;
-      return this.chat(this.o.name + ' v' + BOT_VERSION + ' \u2014 I understand: "bleed N", "vote N", "block"/"no" (when I ask), "N"/"+N" (your intercept while you block me), "rush" or "rush <vampire>" (after playing your rush card with my vampire as Target), "help".' + (several ? ' Aim at one bot with "@Name bleed N".' : ''));
+      return this.chat(this.o.name + ' v' + BOT_VERSION + ' \u2014 I understand: "bleed N", "vote N", "block"/"no" (when I ask), "N"/"+N" (your intercept while you block me), "rush" or "rush <vampire>" (after playing your rush card with my vampire as Target), "cancel" (my frenzy rush at your vampire, as it is played), "help".' + (several ? ' Aim at one bot with "@Name bleed N".' : ''));
     }
   }
 

@@ -666,9 +666,9 @@ function refTerms(text){
 
 /* v1.9.10 (bot v0.6.232): a frenzy card played on a minion other than its player's own -- it names the opposing minion or vampire, or a
    target: 'against a vampire', 'Choose a vampire', 'on any vampire', 'Put this card on a vampire' not 'you control', 'Choose X
-   minions', a minion 'controlled by another Methuselah' ([LSJ 20051113]: a frenzy card that targets, selects, chooses or affects a
+   minions', 'Choose an Osebo in combat', a minion 'controlled by another Methuselah' ([LSJ 20051113]: a frenzy card that targets, selects, chooses or affects a
    minion is played on it). One test for the entry-level tag and the mode-level one. */
-const FRENZY_OPP = /opposing (?:minion|vampire)|against a vampire|choose a vampire|on any vampire|put this card on a vampire(?! you control)|choose x minions|controlled by another methuselah/i;
+const FRENZY_OPP = /opposing (?:minion|vampire)|against a vampire|choose a vampire|choose an? [\w'-]+ in combat|on any vampire|put this card on a vampire(?! you control)|choose x minions|controlled by another methuselah/i;   // 'Choose an Osebo in combat' (Battle Frenzy: any Osebo -- the graded readings)
 function libEntry(c){
   const e = { t: (c.types || []).map(t => TYPE_MAP[t] || t.toLowerCase()) };
   const cost = {};

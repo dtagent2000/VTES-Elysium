@@ -1,6 +1,6 @@
 {
  "fxv": 1,
- "generated": "2026-11-18T07:51:56.030Z",
+ "generated": "2026-11-18T08:51:41.291Z",
  "source": "vtes.json — 4212 cards (KRCG, Dark Pack)",
  "counts": {"crypt":1822,"lib":2391,"libWithFx":1713,"libPersistent":1238,"libLock":163,"curated":208,"alias":3347,"formats":{"v3":4212,"v5":0}},
  "crypt": {
@@ -1974,7 +1974,7 @@
   "Basilisk's Touch": {"t":["combat"],"cost":{"blood":2},"req":{"disc":["myt","pot"],"beforeRangeDetermined":true},"modes":[{"at":"myt","fx":{"torpor":true,"handStrike":true}},{"at":"MYT","fx":{"torpor":true,"handStrike":true}}],"src":"auto"},
   "Bastard Sword": {"t":["equip"],"cost":{"pool":1},"persistent":true,"src":"auto"},
   "Bastille Opera House": {"t":["master"],"unique":true,"persistent":true,"modes":[{"at":null,"lock":true,"fx":{"votes":1}}],"src":"auto"},
-  "Battle Frenzy": {"t":["master"],"req":{"clan":["Osebo"]},"frenzy":"self","oot":true,"modes":[{"at":null,"fx":{"press":true,"addStrike":true}}],"src":"auto"},
+  "Battle Frenzy": {"t":["master"],"req":{"clan":["Osebo"]},"frenzy":"opp","oot":true,"modes":[{"at":null,"fx":{"press":true,"addStrike":true}}],"src":"auto"},
   "Bauble": {"t":["action"],"cost":{"blood":2},"req":{"disc":["vic"]},"persistent":true,"modes":[{"at":null,"fx":{"actStealth":1}}],"src":"auto"},
   "Bay and Howl": {"t":["master"],"req":{"clan":["Gangrel antitribu"]},"src":"auto"},
   "Bear-Baiting": {"t":["mod"],"cost":{"blood":1},"modes":[{"at":null,"fx":{"bleed":2}}],"anarchReq":true,"src":"auto"},

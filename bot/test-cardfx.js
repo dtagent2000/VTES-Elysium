@@ -923,9 +923,9 @@ ok(fx.counts.libLock >= 140,
      'Meditative Grove: its lock cancels a frenzy card on my Salubri (fx.cancelFrenzy), its hunting-ground blood intact');
   ok(cur('Deep Song') && (ds.modes || []).some(m => m.at === 'ANI' && m.frenzy === 'opp' && m.fx.rush === true) && !(ds.modes || []).some(m => m.at === 'ani' && m.frenzy),
      'Deep Song: its [ANI] rush is a frenzy card played on its target (mode frenzy opp, [LSJ 20051113]); its [ani] bleed is no frenzy card');
-  const FO = ["Dam the Heart's River", 'Terror Frenzy', 'Drawing Out the Beast', 'Scourge of Alecto', 'Frenzy', 'Rötschreck', 'Bloodlust', 'Enrage', 'Brujah Frenzy'];
-  const frBad = FO.filter(n => !L[n] || L[n].frenzy !== 'opp').concat(['Rage of Apedemak', 'Battle Frenzy'].filter(n => !L[n] || L[n].frenzy !== 'self'));
-  ok(!frBad.length, 'the entry-level frenzy tag (v1.9.10): opp on the nine played on another minion, self on Rage of Apedemak (curated: the tag survives) and Battle Frenzy' + (frBad.length ? ' -- wrong: ' + frBad.join(', ') : ''));
+  const FO = ["Dam the Heart's River", 'Terror Frenzy', 'Drawing Out the Beast', 'Scourge of Alecto', 'Frenzy', 'Rötschreck', 'Bloodlust', 'Enrage', 'Brujah Frenzy', 'Battle Frenzy'];
+  const frBad = FO.filter(n => !L[n] || L[n].frenzy !== 'opp').concat(['Rage of Apedemak'].filter(n => !L[n] || L[n].frenzy !== 'self'));
+  ok(!frBad.length, 'the entry-level frenzy tag (v1.9.10): opp on the ten that can be played on another minion (Battle Frenzy: \u2018Choose an Osebo in combat\u2019, any Osebo -- the graded readings), self on Rage of Apedemak (curated: the tag survives)' + (frBad.length ? ' -- wrong: ' + frBad.join(', ') : ''));
   const wu = L['Whistling Up the Beast'], dh = L['Devil-Channel: Hands'], dbk = L['Devil-Channel: Back'];
   ok(!wu.frenzy && (wu.modes || []).length === 2 && wu.modes.every(m => m.frenzy === 'opp') && dh.modes.every(m => m.frenzy === 'self') && dbk.modes.every(m => m.frenzy === 'self'),
      'the mode-level frenzy tag (v1.9.10): Whistling Up the Beast’s [abo] and its [ABO] ‘As above’ are opp (the opposing vampire), the two Devil-Channels self -- no entry-level tag');
