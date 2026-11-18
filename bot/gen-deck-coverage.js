@@ -169,6 +169,10 @@ const CLASS = {
      blocker it reaches); Versailles -- votesEach, a rider on votes (_voteBoosts: one vote per matching vampire); Eyes of the Wild -- the locked
      route's paid intercept (interceptPaidBlood, read beside interceptPaid in _bestUnlockReactFor) and its relock (_clearPending). */
   icpVs: 'play', votesEach: 'paired', interceptPaidBlood: 'paired', relockIfNoBlock: 'paired',
+  /* v1.1.50 (18 Nov 2026, bot v0.6.233, V5 wave 6a, RULINGS D-123): the block side. stealthToZero -- Night Terrors (_nightTerrorsFor / _playNightTerrors,
+     the acting bot's _onStealthZero); noStrikeFirstRound -- One With the Land [PRO]'s rider on the locked route (_bestUnlockReactFor, _owl); cancelBlockPay
+     -- True Love's Face [OBF][PRE]'s counter, beside its cancelBlock (_bestCancelBlockFor, _payCancelWindow, _cancelPayFor). */
+  stealthToZero: 'play', noStrikeFirstRound: 'paired', cancelBlockPay: 'paired',
   titleCard: 'paired', votesPerReady: 'paired',   // a title referendum's terms (ref.fx), consumed through the verdict's titleCard rule
   /* v1.1.42 (2 Nov 2026, bot v0.6.215, V5 wave 3, RULINGS D-104): the wave's keys -- all on masters, read on the board or by the master loop. */
   lockStealthSect: 'paired', lockStealthAt: 'paired',   // Anarch Railroad's sect gate (_lockStealthFor); Creepshow Casino's announce window (_lockStealthAtAnnounce)

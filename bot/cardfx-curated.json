@@ -349,13 +349,24 @@
    },
    "modes": [
     {
+     "at": "dom",
+     "fx": {
+      "icpVs": {
+       "n": -1,
+       "who": [
+        "this"
+       ]
+      }
+     }
+    },
+    {
      "at": "DOM",
      "fx": {
       "cancelBlock": true
      }
     }
    ],
-   "note": "v1.5.0 (17 July, fas B/C sweep): Elder Impersonation's exact template in DOMINATE -- header 'Only usable if a minion attempts to block', [DOM] 'That attempt fails and the blocking minion cannot attempt to block this action again', zero extra conditions/costs/side-effects (the per-card condition audit that kept 13 template-mates OUT: age comparisons, blocker-type gates, 'other than the acting minion', lock/combat riders -- none of which _bestCancelBlockFor checks). [dom] basic is -1 blocker intercept: no auto vocabulary key, deliberately left unencoded rather than guessed. First cancelBlock for the default Dominate weenie archetype."
+   "note": "v1.5.0 (17 July, fas B/C sweep): Elder Impersonation's exact template in DOMINATE -- header 'Only usable if a minion attempts to block', [DOM] 'That attempt fails and the blocking minion cannot attempt to block this action again', zero extra conditions/costs/side-effects (the per-card condition audit that kept 13 template-mates OUT: age comparisons, blocker-type gates, 'other than the acting minion', lock/combat riders -- none of which _bestCancelBlockFor checks). [dom] basic is -1 blocker intercept: no auto vocabulary key, deliberately left unencoded rather than guessed. First cancelBlock for the default Dominate weenie archetype. V5 wave 6a (18 Nov 2026, bot v0.6.233, D-123): the [dom] mode -- 'The blocking minion gets -1 intercept': Perfect Paragon's icpVs (D-116 (1)) with who 'this', the minion attempting to block when it is played (_condBlockerKind names it; booked with its name, so a later blocker it does not reach takes it off, _condStealthAdjust)."
   },
   "Relentlessness": {
    "t": [
@@ -3506,6 +3517,35 @@
     }
    ],
    "note": "V5 wave 5b (18 Nov 2026, bot v0.6.232, RULINGS D-122, specs/spec-v5-wave5-2026-11-17.md §12.5). 'Only one Week of Nightmares can be played in a game. Put this card in play with 10 nightmare counters. Ravnos get +1 bleed and +1 strength and do not hunt as normal. Any Ravnos can steal 1 blood from another Ravnos as a +1 stealth hunt action. During each Methuselah's unlock phase, that Methuselah can move 1 nightmare counter from this card to a Ravnos. If this card has no counters, each Ravnos burns 1 blood for each nightmare counter on them or is burned, then burn this card and the nightmare counters.' The auto tier read it as a modifier (bleed 1, stealth 1, stealBlood 1): wrong. The special hunt once a turn [RBK action-card-or-card-in-play], directed at a vampire [LSJ 19970224], unsuccessful on an empty one [LSJ 20050720-2], blood it cannot gain to the bank [LSJ 20010809-1], hunt bonuses apply [RTR 20180511]; an action requiring Ravnos [LSJ 20080604]. fx.wonBleed / fx.wonStrength: every Ravnos at the table while it is in play (_wonPlus; _cryptBleedBonus, _cryptStrengthMod, _expOppStrike); fx.wonStealHunt: the hunt branch's special hunt (_wonPlus 'hunt', _wonHunt, _wonHuntFrom: a hunt -- my prey or predator may block); fx.wonCounters: the card's named counters, moved at each bot's unlock (_wonUnlock: never by its controller; onto another seat's Ravnos, the one its end costs most; L12.wonMove), the end at none left (L12.wonEnd, _wonEnd). One per game at play and discard (_w5Once). The play: its worth handler (CARD_WORTH.won). Riders (spec-v5-wave5 §12.10): the hunt only from another Ravnos of mine; a human's counter move; a human's Ravnos read from its board only; a human-controlled card's end for the bots' Ravnos."
+  },
+  "True Love's Face": {
+   "t": [
+    "mod"
+   ],
+   "limited": true,
+   "modes": [
+    {
+     "at": "obf+pre",
+     "fx": {
+      "bleed": 1
+     }
+    },
+    {
+     "at": "OBF+PRE",
+     "fx": {
+      "cancelBlock": true,
+      "cancelBlockPay": 1
+     }
+    }
+   ],
+   "note": "V5 wave 6a (18 Nov 2026, bot v0.6.233, RULINGS D-123). '[obf][pre] Only usable during a bleed action. +1 bleed (limited). [OBF][PRE] Only usable if a minion attempts to block. That attempt fails and the blocking minion cannot attempt to block this action again. The blocking minion's controller can burn 1 pool to cancel this card as it is played.' The [obf][pre] mode is the auto tier's, kept byte for byte. [OBF][PRE]: Elder Impersonation's cancelBlock, and fx.cancelBlockPay -- the pool the blocking minion's controller may burn to cancel the card as it is played: the actor's 'as played' window (_asPlayed, D-122's) before the cancel line, the blocker's answer _cancelPayFor / L12.payCancel. Against a human blocker the bot does not play it (the human's counter has no word yet: a rider)."
+  },
+  "Hunting the Quarry": {
+   "t": [
+    "combat"
+   ],
+   "persistent": true,
+   "note": "V5 wave 6a (18 Nov 2026, bot v0.6.233, RULINGS D-123): no modes. The auto tier read '+1 stealth' on [cel] and [tha] from 'attempt to enter combat with the attached minion as a +1 stealth (D) action' -- wrong, and inert (a combat card never reaches the stealth finder: 0 plays in the V5 smoke). '[cel] or [tha] Only usable if combat is about to end. Put this card on the opposing minion ... [CEL] or [THA] Only usable if combat would end. Instead, this vampire burns 1 blood to start a new round.' Both go with the maneuver / press grants round (BOARD); until then the bot holds the card."
   }
  },
  "crypt": {

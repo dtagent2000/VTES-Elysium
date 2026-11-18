@@ -218,6 +218,7 @@ function extractFx(t0){
   if((m = t.match(/reduce (?:a|the|that) bleed[^.]{0,30}? by ([0-9]+|X)/i))) put('reduce', num(m[1]));
   else if(/reduce (?:a|the|that) bleed[^.]{0,25} to 0/i.test(t)) put('reduce', 'all');
   if(/unlocks? (?!phase)(?:this|that|a |an |all |target|them|him|her)/i.test(t)) put('unlock', true);
+  if(/\breduce the acting minion's stealth to 0\b/i.test(t)) put('stealthToZero', true);   // v1.9.11 (bot v0.6.233, V5 wave 6a, D-123): Night Terrors (its superior's 'As above' inherits it), Veiled Sight [chi], Draba [CHI] -- a blocking bot plays it when the actor's stealth beats its intercept (_nightTerrorsFor); 'Effectively gives a -X stealth modifier to the action' [RTR 20030519]
   /* threats (as seen by the card's target) */
   /* v1.5.2 (18 July, Johan's sweep-uncertainty question): ONGOING pool drains ("During
      each other Methuselah's unlock phase, they burn 1 pool" -- Contagion, Fame, Smiling
@@ -792,6 +793,37 @@ function libEntry(c){
      entry -- except on an action card, whose sentence is a later ability of the card in play (Marked Territory), not a condition on the
      action. The reaction finders read it (bot: _dirOk). Found by the wave 6 analysis: Eyes of Argus and The Warrens spent their intercept at
      undirected actions 568 times in v0.6.232's 240. A curated entry carries its own (Underbridge Stray's burn: allyBurnUnlock 'directed'). */
+  /* v1.9.11 (18 Nov 2026, bot v0.6.233, V5 wave 6a, RULINGS D-123): THE LOCKED ROUTE as a sweep (Johan's sweep rule; D-116 (4)'s route). A
+     REACTION's line 'This vampire unlocks and attempts to block.' -- or 'This vampire burns N blood to unlock.' -- under 'Only usable by a
+     locked vampire.' (on that line, or in the card's header) is Second Tradition's route: when 'lockedBlock', fx.unlock (+ payBlood N). The
+     line may also carry 'Only usable during an action directed at you (or a card you control).' (the onlyDirected tag below) and one rider the
+     bot reads: 'If they block, neither combatant can strike during the first round of the resulting combat.' (fx.noStrikeFirstRound). Any other
+     sentence on the line, or a header sentence that is neither a requirement nor one of the two conditions, and the line gets no route
+     mode: a curation case (Dogged Pursuit's relock, Speak with Spirits' paid +1, Read the Winds' +1, The Mole's 'when a non-anarch minion
+     is acting'). Built: Sense the Savage Way [ANI], Sentry Signal [ani]/[tha], One With the Land [PRO], Deep Ecology [pro], Black Sunrise,
+     Eluding the Arms of Morpheus. A line whose discipline already has an auto mode keeps it unless that mode is a bare unlock. */
+  if(e.t.includes('react')){
+    const SENT = x => String(x || '').split(/(?<=\.)\s+/).map(y => y.trim()).filter(Boolean);
+    const LOCKC = /^Only usable by a locked vampire\.$/i, DIRC = /^Only usable during an action directed at you \(or a card you control\)\.$/i, REQ = /^Requires?\b/i;
+    const DLINE = /^\s*((?:\[[A-Za-z]{3}\]\s*(?:or\s*)?)+)(.*)$/;
+    const lines = txt.split('\n'), head = lines.filter(l => !DLINE.test(l)), disc = lines.filter(l => DLINE.test(l));
+    const headS = head.flatMap(SENT), headLock = headS.some(x => LOCKC.test(x));
+    const routeOf = body => { let lock = headLock; const rest = SENT(body).filter(x => { if(LOCKC.test(x)){ lock = true; return false; } return !DIRC.test(x) && !REQ.test(x); });
+      if(!lock || !rest.length) return null;
+      const fx = { unlock: true }; let m;
+      if((m = rest[0].match(/^This vampire burns (\d+) blood to unlock\.$/i))) fx.payBlood = +m[1]; else if(!/^This vampire unlocks and attempts to block\.$/i.test(rest[0])) return null;
+      for(const r of rest.slice(1)){ if(/^If they block, neither combatant can strike during the first round of the resulting combat\.$/i.test(r)) fx.noStrikeFirstRound = true; else return null; }
+      return fx; };
+    const put = (at, fx) => { e.modes = e.modes || []; const i = e.modes.findIndex(mo => (mo.at || null) === at);
+      if(i >= 0){ const k = Object.keys(e.modes[i].fx || {}); if(k.some(x => x !== 'unlock') || e.modes[i].when) return; e.modes.splice(i, 1); }
+      e.modes.push({ at, fx, when: 'lockedBlock' }); };
+    if(!disc.length){ const fx = routeOf(head.join(' ')); if(fx) put(null, fx); }
+    else if(!headS.some(x => !REQ.test(x) && !LOCKC.test(x) && !DIRC.test(x))){
+      disc.forEach(l => { const h = l.match(DLINE), ats = (h[1].match(/\[[A-Za-z]{3}\]/g) || []).map(x => x.slice(1, -1));
+        const keys = /\]\s*or\s*\[/i.test(h[1]) ? ats : [ats.join('+')], fx = routeOf(h[2]);
+        if(fx) keys.forEach(k => put(k, Object.assign({}, fx))); });
+    }
+  }
   if(/\bduring an action directed at you\b/i.test(txt)){
     const DIR = /\bduring an action directed at you\b/i;
     let last = false;
