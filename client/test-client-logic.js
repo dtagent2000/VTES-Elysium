@@ -6231,7 +6231,7 @@ testA('v2.6.175 the used-flag is per seat and undoable: it rides serializeGame /
   const pre = A.snapshot(); A.targetSuffix(); eq(A.state.targetUsed, true); A.restoreSnap(pre); eq(A.state.targetUsed, false, 'undo puts back the unused aim');
   const noAim = JSON.parse(used); noAim.target = null; A.restoreGame(JSON.stringify(noAim), HO); eq(A.state.targetUsed, false, 'a flag without an aim is dropped');
 });
-testB('v2.6.175 LIVE: the client\'s bleed with a card aimed at reaches the REAL prey bot -- it arms its block window and books the bleed; the v2.6.174 line (the card in the suffix) is what it read as aimed at nobody', async () => {
+testB('v2.6.175 LIVE: the client\'s bleed with a card aimed at reaches the REAL prey bot -- it arms its block window and books the bleed (the v2.6.174 line, with the card in its suffix, is what bot v0.6.225-234 read as aimed at nobody; no longer pinned since v2.6.176, the reading is the bot project\'s to widen)', async () => {
   const BOT = require('./elysium-bot.js');
   const { A, cat, fla, row, relayed } = aimTable(); A.setPhase(2);
   const mk = () => { const sent = []; const u = new BOT.Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'B2', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} });
@@ -6239,8 +6239,7 @@ testB('v2.6.175 LIVE: the client\'s bleed with a card aimed at reaches the REAL 
   A.setTarget(fla.id, true); row(cat, 'Actions', 'Bleed', 'Bleed 1').fn();
   const html = relayed(); assert(html && /bleeds for 1\.$/.test(html.replace(/<[^>]*>/g, '')), 'the bridge relayed the bleed line: ' + html);
   let u = mk(); u._onLog('You', html); assert(u.pending && u.pending.amount === 1 && u.pending.who === 'You', 'the prey bot takes the bleed (pending ' + JSON.stringify(u.pending && { a: u.pending.amount, w: u.pending.who }) + ')');
-  u = mk(); u._onLog('You', html.replace(/\.$/, ' Target: ' + '<b class="clog" data-cid="' + fla.id + '">Flávio Gonçalves</b>.'));
-  assert(!u.pending, 'control: the same bleed with the card in its suffix (v2.6.174) is not taken -- why the bleed carries a pool aim only');
+  // v2.6.176: the control that stood here (the same bleed with the card in its suffix is NOT taken) is gone -- bot v0.6.230 asked to read such a bleed as the prey's (a cached v2.6.174 page still writes it), and a test of ours that pins what the bot does not read stops them
   A.setPoolTarget(2); row(cat, 'Actions', 'Bleed', 'Bleed 1').fn();
   u = mk(); u._onLog('You', relayed()); assert(u.pending && u.pending.amount === 1, 'a pool aim at the bot still reaches it');
 });
@@ -6292,6 +6291,125 @@ testA('v2.6.175 the refused pass changes nothing at a hotseat: no new turn, the 
   eq(T.got[2].filter(m => m.t === 'turn').length, 0, 'the ousted bot is not handed a turn');
   A.net.roster[1].out = false; toasted = null;                       // the host unousts the bot: the game is on again
   eq(A.passBlockedWhy(), null, 'after an unoust the pass goes through');
+  A.localTable = false; T.HB.reset([]);
+});
+
+/* ---------- v2.6.176: the human's card clone on the hotseat bridge (bot v0.6.232's question), and a cross-board aim's own kind ---------- */
+function fxTable(){   // aimTable plus the bot seat's public board: Sully (a vampire, c9), The Rack (a location, c8) and a face-down crypt card (c7)
+  const t = aimTable();
+  t.A.net.boards[2] = { who: 'B2', ts: Date.now(), pub: { pool: 30, counts: { library: 60, crypt: 8, hand: 7, ash: 0, burned: 0, uncontrolled: 1 }, cards: [
+    { id: 'c9', name: 'Sully', kind: 'crypt', zone: 'ready', x: 10, y: 10 }, { id: 'c8', name: 'The Rack', kind: 'lib', zone: 'ready', x: 90, y: 10 }, { id: 'c7', kind: 'crypt', zone: 'uncontrolled', faceDown: true, x: 10, y: 90 }] } };
+  t.fx = () => t.T.got[2].filter(m => m.t === 'fx');
+  t.kinds = () => t.T.got[2].map(m => m.t).join(',');
+  return t;
+}
+const FX176 = (kind, card, more) => JSON.stringify(Object.assign({ t: 'fx', who: 'You', seat: 1, kind, card, target: null, actor: null, onto: null }, more || {}, { verb: (more && more.verb) || '' }));
+testA('v2.6.176 a human\'s card clone reaches the bot seats at a hotseat in the server\'s relay shape and in the online order (the clone, the board it announces, the play line): a play from the menu with another seat\'s vampire aimed at, a face-down play without its name, a play on the acting vampire, a lock clone with its verb; a remote clone and a hand reveal are not passed on, a hotseat with no bot seat sends nothing (v2.6.175: the bridge passed a bot\'s clone on and never a human\'s -- no bot saw a card a human played)', async () => {
+  const { A, T, cat, fx, kinds } = fxTable();
+  const fame = A.makeCard('Fame', 'lib'); A.move(fame, 'hand');
+  A.state.phase = 1; A.state.phaseUsed.master = 0; A.setRTarget({ seat: 2, cid: 'c9', who: 'B2', name: 'Sully', faceDown: false }, true);
+  T.clear(); await A.playFromHand(fame, false);
+  eq(kinds(), 'fx,board,log', 'the clone, then the board, then the play line -- what a bot receives online (v2.6.175: the line alone, the board on its debounce)');
+  eq(JSON.stringify(fx()[0]), FX176('play', { name: 'Fame', kind: 'lib', faceDown: false }, { target: { name: 'Sully', kind: 'crypt', faceDown: false } }), 'the server\'s s2c shape, field for field, the aimed vampire as the target');
+  const bd = T.got[2].find(m => m.t === 'board'); assert(bd && bd.seat === 1 && bd.pub.cards.some(c => c.name === 'Fame'), 'the board that follows shows the card played');
+  eq(T.got[2].find(m => m.t === 'log').html.replace(/<[^>]*>/g, ''), 'Fame was played. Target: B2\'s Sully.', 'and the play line comes last');
+  A.setPhase(2); const hid = A.makeCard('Hidden Strength', 'lib'); A.move(hid, 'hand'); T.clear(); await A.playFromHand(hid, true);
+  eq(JSON.stringify(fx()[0]), FX176('play', { name: '', kind: 'lib', faceDown: true }), 'a face-down play carries no name');
+  assert(!/Hidden Strength/.test(JSON.stringify(T.got[2])), '...not in the clone, the board or the line');
+  A.selectOnly(cat); const doll = A.makeCard('Blood Doll', 'lib'); A.move(doll, 'hand'); T.clear(); await A.playOnActive(doll, false);
+  eq(JSON.stringify(fx()[0]), FX176('play', { name: 'Blood Doll', kind: 'lib', faceDown: false }, { target: { name: 'Catalina Vega', kind: 'crypt', faceDown: false } }), 'a card played on the acting vampire names it as the target');
+  T.clear(); A.cardFx(cat, 'lock', { verb: 'bleeds for 1' });
+  eq(JSON.stringify(fx()[0]), FX176('lock', { name: 'Catalina Vega', kind: 'crypt', faceDown: false }, { verb: 'bleeds for 1' }), 'a lock clone with its verb, as the server relays it');
+  T.clear(); A.cardFx(fame, 'play', { remote: true, who: 'B2', seat: 2 }); A.cardFx(fame, 'handreveal', {});
+  eq(T.got[2].length, 0, 'a remote clone is not passed on again, and a hand reveal never rides fx');
+  let calls = 0; const real = T.HB.fxIn; T.HB.fxIn = function(){ calls++; return real.apply(this, arguments); };
+  const v1 = A.makeCard('Villein', 'lib'); A.move(v1, 'hand'); await A.playFromHand(v1, false); eq(calls, 1, 'one play, one relay');
+  delete T.HB.seats[2]; const v2 = A.makeCard('Villein', 'lib'); A.move(v2, 'hand'); await A.playFromHand(v2, false);
+  eq(calls, 1, 'a hotseat with no bot seat is what it was: the bridge is not asked');
+  const html = require('fs').readFileSync(CLIENT, 'utf8'), dc = html.slice(html.indexOf('async function dropCard(c,d){'), html.indexOf('function groupDrop(c,d){'));
+  assert(/if\(from==='hand'\)\{\s*const a=activeAnchor\(\);\s*tagPlayed\(c, a \|\| undefined\);/.test(dc), 'client source: a card DRAGGED from the hand to the table takes the same path (tagPlayed)');
+  assert(/if\(from==='hand'\)\{ qrPhasePlayed\.add\(c\.id\); cardFx\(c, 'play', \{ target \}\); \}/.test(dc), 'client source: and one dragged onto a card sends its clone with that card as the target');
+  A.localTable = false; T.HB.reset([]);
+});
+test('v2.6.176 twin (fx): the hotseat bridge\'s fxIn relays what the server\'s GAME_HANDLERS.fx relays, byte for byte -- the five kinds, a face-down card without its name, the conceal flip with it, target / actor / onto only on a play, names and the verb cleaned and cut; and both drop what the other drops', () => {
+  const { loadServer } = require('./elysium-test-harness.js');
+  const S = loadServer(require('path').join(__dirname, 'elysium-server.js')); const A = loadClient(CLIENT); const T = parityTable(A, [['You'], ['B2', true]]);
+  const frames = [];
+  const decode = (buf, cb) => { const b = Buffer.isBuffer(buf) ? buf : Buffer.from(buf); let i = 0;
+    while (i < b.length){ const op = b[i] & 0x0f, l7 = b[i + 1] & 0x7f; let off = i + 2, len = l7;
+      if (l7 === 126){ len = b.readUInt16BE(i + 2); off = i + 4; } else if (l7 === 127){ len = Number(b.readBigUInt64BE(i + 2)); off = i + 10; }
+      if (op === 1) cb(b.slice(off, off + len).toString('utf8')); i = off + len; } };
+  const mkSock = rec => ({ destroyed: false, writable: true, write(buf){ if (rec) decode(buf, t => frames.push(t)); return true; }, end(){}, destroy(){}, on(){}, once(){} });
+  const P = [{ name: 'You', sock: mkSock(false) }, { name: 'B2', sock: mkSock(true) }]; const room = { started: true, players: P, watchers: [] };
+  const long = 'x'.repeat(80), C = (name, kind, faceDown) => ({ name, kind, faceDown });
+  const cases = [
+    { kind: 'play', card: C('Fame', 'lib', false), target: C('Sully', 'crypt', false), actor: C('Catalina Vega', 'crypt', false), onto: { seat: 2, who: 'B2', extra: 1 }, verb: '[pre]', toName: '' },
+    { kind: 'play', card: C('Hidden Strength', 'lib', true), target: C('A Secret', 'crypt', true), actor: null, onto: null, verb: '' },
+    { kind: 'play', card: C('Felix "Fix" Hessian', 'crypt', false), onto: { seat: 9, who: 'nobody' }, toName: '<i>"Quoted"</i> ' + long },
+    { kind: 'play', card: C('A<b>=B\u0007' + long, 'junk', 0), target: 'not a card', actor: 7, onto: { seat: '3', who: ' <Ann> "the" Bold and quite long name ' }, verb: '<b>x=1</b> ' + long, reveal: 'yes' },
+    { kind: 'flip', card: C('Anson', 'crypt', true), reveal: false },
+    { kind: 'flip', card: C('Anson', 'crypt', false), reveal: true, target: C('Sully', 'crypt', false) },
+    { kind: 'rise', card: C('Anson', 'crypt', false), reveal: true, toName: 'B2' },
+    { kind: 'lock', card: C('Catalina Vega', 'crypt', false), verb: 'bleeds for 2', onto: { seat: 2, who: 'B2' }, actor: C('X', 'lib', false) },
+    { kind: 'unlock', card: C('Catalina Vega', 'crypt', false) },
+    { kind: 'handreveal', card: C('Fame', 'lib', false) }, { kind: 'play', card: null }, { kind: 'play', card: 'Fame' }, { kind: 'play' }, {}
+  ];
+  let relayed = 0;
+  cases.forEach((m, n) => {
+    frames.length = 0; T.clear();
+    S.GAME_HANDLERS.fx({ sock: P[0].sock }, room, P[0], Object.assign({ t: 'fx' }, m));
+    const out = T.HB.fxIn('You', 1, Object.assign({ t: 'fx' }, m));
+    const srv = frames.filter(f => JSON.parse(f).t === 'fx')[0] || null, hot = T.got[2].length ? JSON.stringify(T.got[2][0]) : null;
+    eq(hot, srv, 'case #' + n + ' ' + JSON.stringify(m)); eq(T.got[2].length, srv ? 1 : 0, 'one relay or none (#' + n + ')'); eq(out === null, srv === null, 'the return value says the same (#' + n + ')');
+    if (srv) relayed++;
+  });
+  eq(relayed, 9, 'nine relays and five drops -- a twin that never meets a drop proves nothing');
+  const w = JSON.parse(JSON.stringify(T.HB.fxIn('You', 1, cases[3])));
+  eq(w.card.name.length, 64, 'a card name is cut at 64'); assert(!/[<>=\u0007]/.test(w.card.name), 'and cleaned'); eq(w.card.kind, 'lib'); eq(w.verb.length, 40); eq(w.onto.who, 'Ann the Bold and quite l', 'a name loses its quotes and is cut at 24'); eq('reveal' in w, false, 'a reveal that is not a boolean is absent');
+  A.localTable = false; T.HB.reset([]);
+});
+test('v2.6.176 a cross-board aim carries the aimed card\'s own kind into the clone: another seat\'s vampire is a crypt card (v2.6.175 said \'lib\' for every remote card, in the play clone and in a card played onto the target), a location stays a library card, a face-down vampire keeps its back and no name, a pool aim and a card that is gone stay \'lib\'', () => {
+  const { A } = fxTable();
+  const rt = (cid, name, faceDown) => ({ seat: 2, cid, who: 'B2', name, faceDown: !!faceDown });
+  const k = A.makeCard('Fame', 'lib'); A.setRTarget(rt('c9', 'Sully'), true);
+  eq(JSON.stringify(A.curTargetCard(k)), JSON.stringify({ name: 'Sully', kind: 'crypt', faceDown: false }), 'the play clone\'s target for another seat\'s vampire aimed at (v2.6.175: kind \'lib\')');
+  eq(JSON.stringify(A.rtTargetInfo(rt('c9', 'Sully'))), JSON.stringify({ name: 'Sully', kind: 'crypt', faceDown: false }), 'a vampire');
+  eq(JSON.stringify(A.rtTargetInfo(rt('c8', 'The Rack'))), JSON.stringify({ name: 'The Rack', kind: 'lib', faceDown: false }), 'a location');
+  eq(JSON.stringify(A.rtTargetInfo(rt('c7', null, true))), JSON.stringify({ name: '', kind: 'crypt', faceDown: true }), 'a face-down crypt card: its own back, no name');
+  eq(A.rtTargetInfo(rt('pool', 'pool')).kind, 'lib', 'a pool aim is no card'); eq(A.rtTargetInfo(rt('c99', 'Gone')).kind, 'lib', 'a card no longer on that board');
+  eq(A.rtTargetInfo({ seat: 5, cid: 'c1', who: 'Nobody', name: 'X', faceDown: false }).kind, 'lib', 'a seat with no board');
+  A.setRTarget(null, true); const mine = A.makeCard('Anson', 'crypt'); A.move(mine, 'ready', { x: 500, y: 60, faceDown: false }); A.setTarget(mine.id, true);
+  eq(A.curTargetCard(k), mine, 'a local aim is the card itself, as before');
+  const B = loadClient(CLIENT), sent = []; B.toast = () => {};
+  B.net.status = 'in'; B.net.you = 'P1'; B.net.roster = [{ seat: 1, name: 'P1' }, { seat: 2, name: 'B2' }]; B.net.ws = { readyState: 1, send: j => sent.push(JSON.parse(j)) };
+  B.net.boards = { 2: A.net.boards[2] }; B.clearTable({}); B.net.rtarget = rt('c9', 'Sully');
+  const f2 = B.makeCard('Fame', 'lib'); B.move(f2, 'hand'); B.cardFx(f2, 'play', { target: B.curTargetCard(f2) });
+  eq(JSON.stringify(sent.filter(m => m.t === 'fx')[0]), JSON.stringify({ t: 'fx', kind: 'play', card: { name: 'Fame', kind: 'lib', faceDown: false }, target: { name: 'Sully', kind: 'crypt', faceDown: false }, actor: null, onto: null, verb: '', toName: '' }), 'online the client\'s own fx is what it was, with the vampire\'s kind (v2.6.175: target.kind \'lib\')');
+  eq(sent.map(m => m.t).join(','), 'fx,board', 'and the board follows it, as since v2.5.73');
+  sent.length = 0; assert(B.qrGiveToTarget(f2) === true, 'a card played onto the cross-board target');
+  const g = sent.filter(m => m.t === 'fx')[0]; assert(g && g.target && g.target.kind === 'crypt' && g.onto && g.onto.seat === 2, 'names the vampire as a crypt card too: ' + JSON.stringify(g));
+});
+testB('v2.6.176 LIVE: a human\'s master, played from the client\'s own menu path at a hotseat with another seat\'s vampire aimed at, reaches the REAL bot through the bridge and its own dispatcher -- the bot records the card played and answers with Sudden Reversal (its frozen srCancel line and the chat to the owner); v2.6.175 relayed no clone, and online its clone named the vampire as a library card', async () => {
+  const BOT = require('./elysium-bot.js');
+  if (typeof BOT.Bot.prototype._srOnHumanFx !== 'function'){ const e = new Error('SKIP -- bot v' + BOT.BOT_VERSION + ' beside the suite does not read a human\'s play clone for Sudden Reversal; this needs v0.6.232+'); e.skip = true; throw e; }
+  const { A, T, fx } = fxTable();
+  const sent = [], u = new BOT.Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'B2', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} });
+  u.seat = 2; u.started = true; u.send = m => sent.push(m); u.push = () => {}; u.chat = t => sent.push({ t: 'chat', text: t });
+  u.players = [{ seat: 1, name: 'You' }, { seat: 2, name: 'B2', bot: true }];
+  u.board = [{ id: 'c9', name: 'Sully', kind: 'crypt', zone: 'ready', blood: 4, cap: 4, locked: false, faceDown: false, counters: [] }];
+  u.hand = ['Sudden Reversal']; u.turnSeat = 1; u.pool = 20;
+  T.HB.seats[2].cb.msg = j => { const m = JSON.parse(j); T.got[2].push(m); u._dispatch(m); };   // the bridge's deliveries go through the real bot's own dispatcher
+  const fame = A.makeCard('Fame', 'lib'); A.move(fame, 'hand');
+  A.state.phase = 1; A.state.phaseUsed.master = 0; A.setRTarget({ seat: 2, cid: 'c9', who: 'B2', name: 'Sully', faceDown: false }, true);
+  T.clear(); await A.playFromHand(fame, false);
+  assert(fx().length === 1 && fx()[0].card.name === 'Fame', 'the bridge relayed the human\'s clone: ' + JSON.stringify(T.got[2].map(m => m.t)));
+  const seen = u.ev && u.ev.last && u.ev.last('card-played'); assert(seen && seen.seat === 1 && seen.card === 'Fame' && seen.src === 'fx', 'the bot\'s second feed of cards shown has it: ' + JSON.stringify(seen && { seat: seen.seat, card: seen.card, src: seen.src }));
+  await new Promise(r => setTimeout(r, 80));
+  const lines = sent.filter(m => m && m.t === 'log').map(m => String(m.html).replace(/<[^>]*>/g, ''));
+  assert(lines.indexOf('B2 plays Sudden Reversal — cancels You\'s Fame (its cost is not paid).') >= 0, 'the bot answers the master aimed at its vampire: ' + JSON.stringify(lines));
+  assert(BOT.L12.srCancel && lines.some(l => BOT.L12.srCancel.test(l)), 'in the frozen shape (L12.srCancel)');
+  assert(sent.some(m => m && m.t === 'chat' && /^You: your Fame is cancelled by my Sudden Reversal/.test(m.text)), 'and tells the owner in chat');
+  eq(u.hand.length, 0, 'the card left its hand');
   A.localTable = false; T.HB.reset([]);
 });
 
