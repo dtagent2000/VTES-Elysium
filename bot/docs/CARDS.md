@@ -87,7 +87,7 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | on hand entries only (hand-only) | 145 |
 | hand-only, on a single entry | 124 |
 
-**The sharing register** (`cardfx-sharing.json`: who else in the library prints a hand-only key; `test-cardfx.js` is its gate): backlog 145 (not asked yet) · shared 0 (0 owed: a card the row names does not carry the key) · unique 0.
+**The sharing register** (`cardfx-sharing.json`: who else in the library prints a hand-only key; `test-cardfx.js` is its gate): backlog 145 (not asked yet) · shared 0 (0 owed: the key is still hand-only, or a card the row names lacks it) · unique 0.
 
 ## The class map (what is left in the starters: unconsumed effect keys of every partial / inert row, by copies)
 

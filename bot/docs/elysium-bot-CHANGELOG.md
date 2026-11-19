@@ -22,38 +22,44 @@
   - **The sharing register** (`cardfx-sharing.json`; `cardfx-sharing.js` v1.0.0 defines and checks it): every hand-only key (an
     fx key on hand entries of the library and on no other library entry) has a row — `unique` (the entries of the one card that
     carries it), `shared` (the library cards that print the effect, at least two different cards, each hand entry that carries
-    the key among them) or `backlog` (not asked yet). The 145 keys of v0.6.234 are seeded as backlog with the entries they sit
-    on, and the seed is pinned by count and sha256: a new hand key comes with its answer, and a backlog key reaches no other
-    card before it is answered. **`test-cardfx.js` 361 → 392**: the rules against a seven-entry library with a fault planted per
-    rule, the seed attacked through the default pin, then the real file against the compile. In scratch on the real files, 16
-    planted faults (a row removed, a new key with no row / parked in the backlog / added to the seed, a backlog key given to two
-    more cards, a seven-card key filed as unique, one card under two spellings filed as shared, a malformed row, the file missing)
-    red where they should be, green where the answer is right; 31 mutants of the rules: 29 red on a check, 1 on a crash, 1
-    equivalent (the hash implies the count).
-  - **Not guarded** (the tool's header and the spec's Status; A2 decides on the dry run's data): a shared row's debt (a row is
-    owed while a card it names lacks the key: counted in the ledger, not gated); a row moved back into the backlog; whatever sits
-    outside a library entry's fx keys (entry-level and mode-level fields, `req`, crypt keys).
+    the key among them; owed while the key is still hand-only or a card named lacks it) or `backlog` (not asked yet). The 145
+    keys of v0.6.234 are seeded as backlog with the entries they sit on, and the seed is pinned by count and sha256 (in the tool
+    and in the gate): a new hand key comes with its answer, and a backlog key reaches no other card before it is answered.
+    **`test-cardfx.js` 361 → 396**: the rules against a seven-entry library with a fault planted per rule, the seed attacked
+    through the default pin, then the real file against the compile. In scratch on the real files, 16 planted faults (a row
+    removed, a new key with no row / parked in the backlog / added to the seed, a backlog key given to two more cards, a
+    seven-card key filed as unique, one card under two spellings filed as shared, a malformed row, the file missing) red where
+    they should be, green where the answer is right. Mutants of the rules: mine, 37, 36 red on a check and 1 equivalent (the
+    hash implies the count); the reviewer's 36 on the same bytes, 26 red on a check, 3 on a crash, 6 equivalent on today's data
+    or stricter, 1 whose line a fix rewrote.
+  - **Not guarded** (the tool's header and the spec's Status): whether an answer is true (any single-entry key can be filed
+    unique, a shared list can be short: read against KRCG's text and graded, HARNESS); a shared row's debt (counted in the
+    ledger, not gated); a row moved back into the backlog; whatever sits outside a library entry's fx keys (entry-level and
+    mode-level fields, `req`, crypt keys). A2 decides on the debt and the scope with the dry run's data.
   - **The docs' room.** The spec planned 2 KB under the standing pages' total and 1 KB under RULINGS by cutting history. The read
     found 0.5 KB of it (D-101's first raises, D-108's wave count, D-109's lint story; HOWTO's bench controls and its v3 note; two
     asides in CLAUDE.md): the register holds rulings and HOWTO holds how-tos. The rest is a raise by D-101: RULINGS 66 → 67 KB,
     HOWTO 21.5 → 22.5 KB, the total 174 → 177 KB. `tools/test-doc-budget.sh`'s total case reads the budgets from the check (a
     raise needed a second edit there) and pads the bootstrap's three pages as far as their budgets allow (it leaned on how full
     they happened to be); a ceiling the pages cannot reach now fails as a dead check.
-  - **Egress** (a fresh-context review on the first cut, then a re-check): 12 findings (stale-doc 4, unproven 3, rule-missed 2,
-    half-done 2, test-weakened 1), none must-fix. Fixed here: the register checked keys and not where they sat, so a backlog
-    key could spread (step B's rush and grant keys are backlog keys); unique and shared rows by names, not by cards; two
-    mutants of the seed's pin alive; a malformed row crashed the counts; four labels of the new section said more than their
-    numbers (`combatEnds` "not read", INERT, NAME-ONLY, UNREACHABLE); an unknown verdict read as playable; D-101's "Built
-    (Claude)" marker lost in the cut; the total case still leaning on two pages.
+  - **Egress** (a fresh-context review on the first cut and its re-check on the fixes): 16 findings (stale-doc 5, unproven 4,
+    half-done 3, rule-missed 2, test-weakened 2), none must-fix; 14 fixed, 2 listed (the gate for a shared row's debt and the
+    register's scope beyond fx keys: A2's). Fixed: the register checked keys and not where they sat, so a backlog key could
+    spread (step B's rush and grant keys are backlog keys); unique and shared rows by names, not by cards; mutants of the
+    seed's pin, of the spread rule and of a part's shape alive; a malformed row crashed the counts, a row keyed `__proto__` hid a
+    parked key; a shared key every named card carried by hand read as paid; four labels of the new section said more than
+    their numbers (`combatEnds` "not read", INERT, NAME-ONLY, UNREACHABLE); an unknown verdict read as playable; D-101's
+    "Built (Claude)" marker lost in the cut; the total case still leaning on two pages. The re-check's four were fixed after it
+    and proven by rerunning its own scripts, not by a third pass.
   - **Main released client v2.6.176 during the round** (#83, with `REPLY-to-bot-2026-11-19-v0.6.234.md`): merged in, STATUS names
     it and lists the reply as not yet consumed (the read-only copies stay v2.6.175: a round of its own).
   - **Gates** (19 Nov, the branch's last bytes, main's v2.6.176 at the root): `node --check` 3 files, `bash -n` 2; `test-cardfx`
-    392/0; the ledger's self-test 75/75; `gen-precon --check` no problems; `doc-budget` PASS and its destructive test every case
+    396/0; the ledger's self-test 75/75; `gen-precon --check` no problems; `doc-budget` PASS and its destructive test every case
     red; the lint 0 findings; canary 171/0 on bot/'s copies and 171/0 on the root's release (main's canary v1.4.0 beside the
     bundle: 231/0); the hotseat gate 12/0 with either client; the suite 2606/0, one run in a frozen snapshot, because the root
     moved. `elysium-bot.js` `4a1342b4`, `test-bot-logic.js` `7dcc71ff` and `elysium-cardfx.json` `721c74ee` are v0.6.234's bytes:
     no sim footprint; HB1 was not run (nothing it reads changed).
-  - **After the round:** the standing pages 175,223 of 177,000, RULINGS 65,456 of 67,000, the bootstrap 49,962 of 50,000.
+  - **After the round:** the standing pages 175,248 of 177,000, RULINGS 65,456 of 67,000, the bootstrap 49,962 of 50,000.
 - **The V5 sweep's method (18 Nov 2026, bot v0.6.234, no bot change; PR #82)** — Johan's "kör" on
   `docs/specs/spec-card-sweep-2026-11-18.md`, RULINGS D-125 (amends D-98 and D-104's waves by class, widens D-83). Measured read-only on main `6baf99b`: the
   library entries the bot can statically play went 565 → 658 in the waves' first five days and 658 → 679 in the fifteen since, the

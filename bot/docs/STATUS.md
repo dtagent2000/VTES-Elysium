@@ -14,7 +14,7 @@ Suite **2606/0 ×3** (`elysium-bot.js` `4a1342b4`, `test-bot-logic.js` `7dcc71ff
 client suite 371/1 (the guide's embed) · the sim against v0.6.233: the 240 DIVERGED 46, SAME-PLAY 25, IDENTICAL
 169 (its 71 District matches; VP each within one SE); `ana-gates.py` PASS on every run; the arena smoke 7/7.
 19 Nov, the same bytes beside main's v2.6.176: suite 2606/0 (one run) · canary 171/0 ×2 (main's v1.4.0 231/0) · hotseat 12/0
-with either client · `test-cardfx` 392/0 (A1's register gate).
+with either client · `test-cardfx` 396/0 (A1's register gate).
 
 ## What v0.6.234 did
 V5 wave 6b (D-124; spec-v5-wave6 §9): Shadow Cloak [OBL] (and Sleep Unseen) after a successful action when a rush it stops is

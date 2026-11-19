@@ -121,8 +121,8 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   list in `test-cardfx.js`. `req.titles`, `req.unmodelled` (callers fail closed).
 - **The sharing register** (`cardfx-sharing.json`, D-125) — a hand-only key (an fx key on hand entries of the library and on no
   other library entry) has a row: `unique` (the entries of the one card that carries it), `shared` (the library cards that print
-  the effect by KRCG's text: two or more, each hand entry that carries it among them; owed while a card named lacks the key —
-  counted, not gated) or `backlog` (not asked yet: the keys of 19 Nov, frozen with their entries). A new hand key, or a
+  the effect by KRCG's text: two or more, each hand entry that carries it among them; owed while the key is still hand-only or
+  a card named lacks it — counted, not gated) or `backlog` (not asked yet: the keys of 19 Nov, frozen with their entries). A new hand key, or a
   backlog key on one more card, is answered first. `node cardfx-sharing.js` reports on the COMPILED library (compile first);
   `test-cardfx.js` is the gate. Its header lists what it does not guard.
 - **The TWD profile** — `python3 twd-profile.py` / `twd-archetypes.py` (need `vtes.json`, `twda.json`; the archetypes also vtes-skill:

@@ -518,7 +518,7 @@ function main(){
   P('| hand-only, on a single entry | ' + [...handOnly.values()].filter(v => v.length === 1).length + ' |');
   P('');
   P('**The sharing register** (`cardfx-sharing.json`: who else in the library prints a hand-only key; `test-cardfx.js` is its gate): ' + (reg ?
-    'backlog ' + reg.backlog + ' (not asked yet) · shared ' + reg.shared + ' (' + reg.owed + ' owed: a card the row names does not carry the key) · unique ' + reg.unique + (reg.noRow ? ' · **no row ' + reg.noRow + '**' : '') +
+    'backlog ' + reg.backlog + ' (not asked yet) · shared ' + reg.shared + ' (' + reg.owed + ' owed: the key is still hand-only, or a card the row names lacks it) · unique ' + reg.unique + (reg.noRow ? ' · **no row ' + reg.noRow + '**' : '') +
     (regProblems.length ? ' · **' + regProblems.length + ' problem(s): `node cardfx-sharing.js`**' : '') + '.' : 'no readable file.'));
   P('');
   P('## The class map (what is left in the starters: unconsumed effect keys of every partial / inert row, by copies)');

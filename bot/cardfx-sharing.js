@@ -9,8 +9,9 @@
      unique   { key: [entries] }   one card alone prints the effect (the hand entry's remainder, the spec's T3): the entries that carry
                                    it -- one card, or one card under its two printed spellings (cardNorm)
      shared   { key: [cards] }     other library cards print it too (T2): the cards that print it by KRCG's text, at least two different
-                                   cards, every hand entry that carries the key among them; the key is owed a general source (a compiler
-                                   pattern, or the reviewed list) and the row stays when it has one
+                                   cards, every hand entry that carries the key among them. The row is OWED while the key is still
+                                   hand-only (no general source yet: a compiler pattern, or the reviewed list) or a card it names
+                                   does not carry the key; it stays when the debt is paid
      backlog  [keys]               not asked yet: keys that were hand-only when the register was seeded, each still on entries the
                                    seed found it on and on no other
      seed     { key: [entries] }   the hand-only keys of bot v0.6.234 and where they sat, frozen (SEED_COUNT, SEED_SHA256)
@@ -23,10 +24,12 @@
        entries are two different cards (then it is shared);
      - a shared row with fewer than two different cards, naming a card the library does not have, missing a hand entry that carries
        the key, or for a key no library entry carries.
-   What it does NOT guard (spec-card-sweep's Status has the list): a row moved back into the backlog (an edit a review sees); whether
-   a shared row's list is complete; a shared row's debt -- the row is OWED while a card it names does not carry the key
-   (counts().owed: the ledger prints it, a round reports it); and everything outside a library entry's fx keys (an entry-level or
-   mode-level field, `req`, a crypt key).
+   What it does NOT guard (the same list is in spec-card-sweep's Status):
+     - whether an answer is TRUE: that no other library card prints a unique key's effect, that a shared row's list is complete.
+       The answers are read against KRCG's text and graded (HARNESS); the gate checks their form;
+     - a shared row's debt: counts().owed is printed by the ledger and reported by a round, not gated;
+     - a row moved back into the backlog (an edit a review sees);
+     - everything outside a library entry's fx keys: an entry-level or mode-level field, `req`, a crypt key.
    Usage (from inside bot/): node cardfx-sharing.js          the counts and every problem (exit 1 on a problem). It reads the COMPILED
                                                               library: after a change to cardfx-curated.json, compile first
                                                               (test-cardfx.js checks its own compile)
@@ -64,7 +67,7 @@ function shape(reg){   // the register's four parts in their shapes; a malformed
   const P = [], ok = !!reg && typeof reg === 'object' && !Array.isArray(reg), r = ok ? reg : {};
   if (!ok) P.push('the register is not an object');
   const names = v => Array.isArray(v) && v.length > 0 && v.every(x => typeof x === 'string' && x);
-  const rows = part => { const o = r[part], out = {};
+  const rows = part => { const o = r[part], out = Object.create(null);   // no prototype: a row keyed `__proto__` or `constructor` is a row
     if (!o || typeof o !== 'object' || Array.isArray(o)){ P.push('`' + part + '` is not an object of rows'); return out; }
     for (const k of Object.keys(o)){ if (names(o[k])) out[k] = o[k]; else P.push('`' + k + '` (' + part + '): a row is a list of names'); }
     return out; };
@@ -108,7 +111,8 @@ function check(lib, reg, pin){   // pin = { count, sha256 } (the gate's planted 
 
 function counts(lib, reg){   // what the ledger prints; never throws on a malformed register (check() reports that)
   const ho = handOnlyKeys(lib), s = shape(reg), rows = new Set([].concat(s.backlog, Object.keys(s.shared), Object.keys(s.unique)));
-  const owed = Object.keys(s.shared).filter(k => s.shared[k].some(c => !fxKeysOf((lib || {})[c]).has(k))).length;
+  const lacks = (c, k) => !(lib && Object.prototype.hasOwnProperty.call(lib, c) && fxKeysOf(lib[c]).has(k));
+  const owed = Object.keys(s.shared).filter(k => ho.has(k) || s.shared[k].some(c => lacks(c, k))).length;   // still hand-only: no general source yet
   return { handOnly: ho.size, single: [...ho.values()].filter(v => v.length === 1).length, backlog: s.backlog.length,
     shared: Object.keys(s.shared).length, owed, unique: Object.keys(s.unique).length, noRow: [...ho.keys()].filter(k => !rows.has(k)).length };
 }
