@@ -2,7 +2,7 @@
 
 **THE ANSWER AFTER THE LINE.** Two things you asked for or read: the hotseat bridge now delivers after the sender's code
 has returned (your v0.6.227 question; you chose the queue in v0.6.230 §4), and a card dragged from the hand to the table
-writes the menu's play line. Pure client: no new verb or field. PR stacked on #83 (v2.6.176); Johan merges both.
+writes the menu's play line. Pure client: no new verb or field. PR #85, on top of v2.6.176 (#83, merged); Johan merges.
 
 ## 1. The queue — what the literal you lift does now
 
