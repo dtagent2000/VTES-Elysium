@@ -120,12 +120,16 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   overlay and once with, diff the field per curated name. Political cards: `e.ref.pool` (terms), `e.ref.tags`, `e.ref.fx`;
   never a referendum outcome in `modes[].fx`. Adding a family: `refTerms()` / `REF_PER` / `actWhen()` in the compiler + the NEG
   list in `test-cardfx.js`. `req.titles`, `req.unmodelled` (callers fail closed).
-- **The sharing register** (`cardfx-sharing.json`, D-125) — a hand-only key (an fx key on hand entries of the library and on no
-  other library entry) has a row: `unique` (the entries of the one card that carries it), `shared` (the library cards that print
-  the effect by KRCG's text: two or more, each hand entry that carries it among them; owed while the key is still hand-only or
-  a card named lacks it — counted, not gated) or `backlog` (not asked yet: the keys of 19 Nov, frozen with their entries). A new hand key, or a
-  backlog key on one more card, is answered first. `node cardfx-sharing.js` reports on the COMPILED library (compile first);
-  `test-cardfx.js` is the gate. Its header lists what it does not guard.
+- **The sharing register** (`cardfx-sharing.json`, D-125) — each hand-only key (an fx key on library hand entries only) has a
+  row: `unique` (its one card's entries), `shared` (the library cards that print the effect by KRCG's text, two or more, every hand
+  entry carrying it among them; owed while the key is hand-only or a named card lacks it: counted, not gated) or `backlog` (the keys
+  of 19 Nov, frozen with their entries). A new hand key, or a backlog key on one more card, is answered first. `node
+  cardfx-sharing.js` reports on the compiled library (compile first); `test-cardfx.js` is the gate; its header lists what it does
+  not guard.
+- **The review sheet** (`gen-review-sheet.js`, spec-card-sweep §3.1) — zero-vtes (Lionel Panhaleux's engine, MIT) is read at
+  development time only, from a clone OUTSIDE the repository: `git clone https://github.com/lionel-panhaleux/zero-vtes ~/zero-vtes`,
+  then `node gen-review-sheet.js --deck KEY --zero ~/zero-vtes --out /tmp/sheet-KEY.md` (needs `vtes.json`; refuses a clone or a
+  sheet inside the repository; names the commit it read). The sheet is scratch: what is committed is our own reading.
 - **The TWD profile** — `python3 twd-profile.py` / `twd-archetypes.py` (need `vtes.json`, `twda.json`; the archetypes also vtes-skill:
   README). Both overwrite the shipped files: run them in a scratch copy until a release; a rebuilt profile is first reproduced
   byte for byte by the old script (O-37); a new share is APPENDED.

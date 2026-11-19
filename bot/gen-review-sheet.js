@@ -22,7 +22,8 @@
    The rule of evidence (spec §5): KRCG's text and the rulings decide, zero-vtes proposes, our compiler is the second opinion. Nothing
    on a sheet is copied into the repository: what is committed is our own reading, each card checked against KRCG's text.
 
-   Usage (from inside bot/): node gen-review-sheet.js --deck KEY --zero DIR [--out FILE]   (FILE outside bot/; default: stdout)
+   Usage (from inside bot/): node gen-review-sheet.js --deck KEY --zero DIR [--out FILE]   (DIR and FILE outside the repository;
+                             FILE's default: stdout)
                              node gen-review-sheet.js --self-test                             (fixed inputs: no zero-vtes, no vtes.json) */
 
 const fs = require('fs'), path = require('path'), cp = require('child_process');
@@ -286,8 +287,10 @@ if (require.main === module){
     else { console.error('gen-review-sheet: unknown argument ' + a[i]); process.exit(2); }
   }
   if (!o.deck || !o.zero){ console.error('gen-review-sheet: --deck KEY and --zero DIR are both needed (zero-vtes: a checkout outside the repository; HOWTO)'); process.exit(2); }
+  const repo = path.resolve(__dirname, '..'), inRepo = f => f === repo || f.startsWith(repo + path.sep);   // bot/ sits at the monorepo's root
+  if (inRepo(o.zero)){ console.error('gen-review-sheet: zero-vtes is read from a checkout OUTSIDE the repository (spec-card-sweep §5), not ' + o.zero); process.exit(2); }
   if (!fs.existsSync(path.join(o.zero, 'crates', 'engine', 'src', 'cards', 'defs.rs'))){ console.error('gen-review-sheet: no crates/engine/src/cards/defs.rs under ' + o.zero); process.exit(2); }
-  if (o.out && path.resolve(o.out).startsWith(path.resolve(__dirname) + path.sep)){ console.error('gen-review-sheet: the sheet is never written inside bot/ (spec-card-sweep §3.1): write it to scratch'); process.exit(2); }
+  if (o.out && inRepo(o.out)){ console.error('gen-review-sheet: the sheet is never written inside the repository (spec-card-sweep §3.1): write it to scratch'); process.exit(2); }
   if (selfTest(true)){ console.error('gen-review-sheet: the self-test failed -- no sheet written'); process.exit(1); }
   const text = sheet(o);
   if (o.out){ fs.writeFileSync(o.out, text); console.error('gen-review-sheet v' + VERSION + ': ' + o.deck + ' -> ' + o.out); } else process.stdout.write(text + '\n');

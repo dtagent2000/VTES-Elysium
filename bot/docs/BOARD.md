@@ -15,9 +15,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 sweep** (D-125; `specs/spec-card-sweep-2026-11-18.md`): one starter at a time, every printed effect first asked who else
-  in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. A1 is done. Next: **A2**
-  (the review sheet, the dry run, the merge design; spec §4.1), **B** the pilot (Banu Haqim: the maneuver / press grants with
-  the rush cards, Hunting the Quarry and Night Terrors' strike with them), **C** the harvest, **D** the other twelve.
+  in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. A1 and A2 are done (spec §4.3;
+  §4.4 the merge's design, for Johan's "kör"). Next: the finished decks' round (below), **B** the pilot (Banu Haqim: the
+  maneuver / press grants with the rush cards, Hunting the Quarry and Night Terrors' strike with them), **C** the harvest
+  (consumers made general, lists by KRCG's text; the title family first), **D** the other twelve.
   Crypt waves (D-108): A done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES`
   + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file
   (`gen-precon.js --check` compares them). The root README credits zero-vtes when it has a licence (handoff). *Done when* the 18
@@ -65,10 +66,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   compares the card score with and without the streak.
 
 ## Known, not built (bot side)
-- **My own rescue opens a directed window** (egress review, 19 Nov): `UND_KINDS` lacks `ownRescue` and `leaveTorpor`, so the
-  predator is never heard (the 240: 313 own rescues, 0 blocked). *Done when* both are undirected, a section red on v0.6.234.
-- **Any "no…" chat answers my open Block?** (the same review): `_onChat` takes "No votes from me." from any seat, unchecked
-  against `_openLine`. *Done when* only an eligible seat's answer to the open line counts, a section red on v0.6.234.
+- **The finished decks' round** (spec-card-sweep §4.3; before B): eight rules faults live today. Bonding [DOM]'s stealth off a
+  bleed; On the Qui Vive twice by one minion between its unlock phases; Mirror Walk replaced before the discard phase;
+  Apportation's continue-only press spent to end; Instinctive Reaction against a non-predator; Forgotten Labyrinth in a bleed;
+  `UND_KINDS` lacks `ownRescue` and `leaveTorpor` (the predator never hears my own rescue); `_onChat` takes any seat's "No votes
+  from me." for my open Block?. §4.3's five latent reds and seven ambers ride where they fit. *Done when* each is a section red
+  on v0.6.234 and green after, the 240's footprint read.
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
   the merged decks' share; a few decks count twice. A v5 rebuild (scratch: 4,709 decks, Magnum under 10) drops a name the bot
   records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id

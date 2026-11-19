@@ -35,8 +35,10 @@ dry run and the seven decks' readings (§4.3, observed), the merge's design (§4
 - §4.1's "the keys are added in a scratch copy" counted only the keys that carry a whole mode (C); the cards a consumer must be
   made general for (G) or that need a rider key (R) are counted beside it, since they are most of the harvest;
 - the debt stays reported and the register stays on fx keys (§4.3, "What it changes");
-- the docs' room came from a cut of the bootstrap, not of the standing pages' history: the root `CLAUDE.md`'s zero-vtes line is
-  paid for in its own section.
+- the ledger's "what a crypt wave would build" stays as worded: D-108 keeps the crypt's waves by class (§3);
+- the room: the bootstrap's from STATUS (it drops "What v0.6.234 did" and its BOARD summary) and from the root `CLAUDE.md`'s own
+  section (the dump's history), which pay for the zero-vtes line and the finished decks' BOARD line; the standing pages' by D-101
+  (HARNESS 8.5 KB, HOWTO 23 KB, the total 179 KB; `tools/doc-budget.sh`): 1.8 KB under the total and 0.96 KB under RULINGS.
 
 ## 0. In one paragraph
 We finish the V5 sweep one starter at a time, one card at a time, and every effect we meet is first asked one question: **who else
@@ -328,6 +330,14 @@ The credit is owed, and `bot/README.md` gives it from this round on. Claude's pr
 licence, the root README's credits name zero-vtes too; that README is main's file, so it goes as a handoff (BOARD, the V5 sweep).
 `specs/spec-cardfx-sweep-sources-2026-09-25.md` stays the source mapping for KRCG, vtes-rulings and vtes-skill; this section adds
 the fourth source.
+
+**The maintainer's answer** (19 Nov, relayed by Johan): Lionel Panhaleux lets us mention and use zero-vtes as we wish and is glad
+of the credit. He points to `https://mcp.krcg.org/`, an MCP server meant as a reference for LLMs (alpha) that will later test
+rulings and decks with the engine and the bots, and offers the engine as a Rust component and the bots' open weights to anyone
+who wants an offline version. Everything is alpha: the cards come in set by set, and the interfaces will change after a later
+compaction, with no stability promised. What we take: the permission and the credit (D-125, `bot/README.md`). What we leave for now:
+the engine and the weights (this section's "not used": nothing of zero-vtes runs with the bot; an offline engine would be Johan's
+design question) and the MCP server (a tool a session may try; its answers are proposals under the rule of evidence above).
 
 ## 6. What every round reports
 - **the starter**: playable copies of 77;
