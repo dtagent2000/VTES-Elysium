@@ -1,3 +1,51 @@
+## [SVARET EFTER RADEN] (19 november 2026, eftermiddag, klient v2.6.177 / srv-2.6.51 oförändrad)
+
+PR #83 var uppe och grön. I svaret till Johan stod två saker som väntade på hans kör: drag-raden (hittad i v2.6.176)
+och brygg-kön (bottsidans fråga från v0.6.227, där de i v0.6.230 §4 sa att de föredrog kön). Johan nämnde att
+Fable-gränsen för veckan var nära och att jag kunde byta till Opus 5.5. Byta modell kan jag inte göra själv, så jag körde
+klart #83 snålt. Sedan, 13.36: "Yes kör! :)". Jag tog båda i en runda, v2.6.177, på en gren ovanpå #83.
+
+**Drag-raden.** Ett kort som dras från handen till bordet skrev en egen kopia av spelraden (`dropCard`), utan nivå och
+utan ` Target: …`. Menyns Play och dubbelklick skriver båda. Nu bygger en funktion raden (`playLineHtml`) för alla tre
+vägarna, och draget frågar efter nivån som menyn gör (`modeChooseGate`; Avbryt lämnar kortet i handen och skickar
+ingenting). På vägen hittade jag att nivån aldrig glömdes. `c._modeTxt` sattes vid valet men rensades aldrig, så ett kort
+som kom tillbaka till handen och spelades igen med väljaren avstängd skrev den gamla nivån igen. Den rensas nu där valet
+görs. Före bygget körde jag en probe i harnessen: v2.6.176 skrev "Catalina Vega plays Govern the Unaligned." medan siktet
+stod kvar oanvänt, och v2.6.177 skriver "… Target: Anson." med siktet förbrukat.
+
+**Kön.** `toBot` körde bottens hanterare inne i avsändarens anrop. Nu köar den meddelandet (serialiserat vid sändningen)
+och en drain levererar kön i ordning när avsändarens kod är klar. Det som ett levererat meddelande får en bott att svara
+går i nästa drain, ett hopp i taget som på en socket. Planen från 15 november sa att mikrotask skulle mätas mot makrotask
+med bottarnas tempo 0. Jag mätte på deras egen sim (`elysium-bot-sim.js`) i en scratch-kopia av `bot/`, 96 matcher per
+arm, med deras egna verktyg (`ana-windows.py`, `ana-gates.py`, `ana-sim-diff.py`).
+
+Resultatet blev tydligare än jag trodde. Den synkrona bryggan lät 112 av 491 modifierfönster och 272 av 1754 bleed-
+summor löpa ut på klockan (raden besvarades innan fönstret öppnades). Mikrotasken: 0 och 0, alla sex grindar gröna.
+Makrotasken (`setTimeout` 0), som jag trodde låg närmast servern, gav 26 stale-svar och föll på två av deras grindar
+(block: samma vampyr försökte blocka två gånger, ledger: tio fel). Bottarnas 0 ms-timers hann emellan hoppen. Vid
+klientens eget tempo (3100) spelade de tre armarna lika: 95 av 96 matcher spelades likadant. Jag valde mikrotasken. Den
+längsta kedjan av omedelbara svar var 3 hopp i var och en av 31 matcher, så skyddet mot en ändlös svarsloop (64 hopp i
+rad ger sidan en paus) slår aldrig till i spel. De slutliga byten är IDENTICAL med mikrotask-armen på båda profilerna.
+
+**Testerna.** 31 av de gamla testerna föll direkt, eftersom de läste en låtsas-plats direkt efter sändningen. En getter i
+`parityTable` (den tömmer kön innan den svarar) tog tjugo av dem, och resten fick `viaHB` eller en väntan på den andra
+botten. En hanterare som själv skriver i posten får inte läsa genom gettern, för då körs nästa hopp inne i det här (`flush`
+vägrar nu köra inne i en drain). Gettern är typeof-skyddad så att sviten kan köras mot v2.6.176. Där föll exakt de fem
+nya testerna, alla på beteende. Fjorton mutanter, tretton fångade. Den fjortonde (en reset som behåller kön) är
+ekvivalent: platskollen släpper ändå inget fram.
+
+**Utanför sviten.** Bottsidans hotseat-grind i en scratch-kopia: 12/0, samma bord som med v2.6.176. Soaken: 7 bord, 100
+drag, 0 fast. Jag körde headless Chromium med en riktig bott och ett riktigt musdrag från handdockan. På v2.6.177 bar
+raden siktet, och ett kort med två nivåer frågade efter nivån och skrev [obf]. Bottens drag gick över kön och kom tillbaka
+på 31 s utan sidfel. På v2.6.176 saknades båda. Kanariefågeln v1.5.0 har en sektion 10 med fyra kontroller och står på
+235/0; mot v2.6.176 blev det 231/4, exakt de fyra.
+
+**Osäkert eller otestat:** elysium.cards; ett onlinebord (kön är bara bryggans, och dragets rad går ut genom samma
+`log()`); en människa mot bottar i webbläsaren med ett omedelbart bottsvar som Meditative Grove (ordningen är fastlåst i
+sviten med en låtsas-plats som svarar direkt); touch-drag; simmen på riktig klocka. Två stale-svar finns kvar vid tempo
+0, och de hör till bottsidans vakt. Ett drag frågar fortfarande inte efter handstorleks-påminnelsen som menyns Play
+ställer; den ligger hos Johan.
+
 ## [KORTET BOTTARNA SER] (19 november 2026, klient v2.6.176 / srv-2.6.51 oförändrad)
 
 Johan, onsdag kväll: "Vi har genomfört några PR till från bottsidan, vill du kolla om det ligger någon öppen handover för

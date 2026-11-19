@@ -34,6 +34,9 @@
    Court, Week of Nightmares, One With the Land, Night Terrors, a cancel bought with pool, Absolute
    Tyranny. Section 8's control on a CARD in a bleed's suffix is no longer a check (bot v0.6.230's ask):
    it pinned what the bot did not read, so the bot project could not widen the reading.
+   v1.5.0 (19 Nov 2026, client v2.6.177): section 10 -- what the bots' readers rest on since v2.6.177: the hotseat
+   bridge delivers after the sender's code has returned (section 12.2), and a card dragged from the hand to the table
+   writes the menu's play line (section 12). Documentation and client source, positives only.
    ========================================================================== */
 
 const fs = require('fs');
@@ -520,6 +523,20 @@ ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament m
 
   ok(CLIENT.includes('  fxIn(who, seatNo, m){') && CLIENT.includes('if(inRoom()) mpSend(fxm); else hotFxSend(fxm);'), 'client source: at a hotseat a human\'s card clone goes to the bot seats through the bridge (fxIn) -- what the bots\' fx readers rest on there (v2.6.176)');
   ok(CLIENT.includes('function rtTargetInfo(rt){') && !CLIENT.includes("kind:'lib', faceDown: !!net.rtarget.faceDown"), 'client source: a cross-board aim carries the aimed card\'s own kind into the clone (v2.6.176; a vampire was \'lib\')');
+}
+
+/* ---- 10) v2.6.177: two things the bots' readers rest on. The hotseat bridge delivers after the sender's code has returned,
+   as the server does (section 12.2): a bot's line can no longer be answered before that bot has opened the window it asks in
+   (the bot project's L-92 and its BOARD line "A window can open after its line was delivered"). And a card dragged from the
+   hand to the table writes the menu's play line, its level and its aim included (section 12), so a reader of a human's play
+   line -- the Toreador Grand Ball's pair, a card aimed at a bot's vampire -- reads a dragged card as it reads one played from
+   the menu. Positives only. */
+{
+  ok(sec12.includes('the bridge delivers after the sender\'s code has returned, as the server does') && sec12.includes('a microtask') && sec12.includes('one hop at a time'), 'section 12.2 documents the queued bridge (v2.6.177): after the send returns, a microtask, one hop at a time');
+  ok(sec12.includes('since v2.6.177, a drag') && sec12.includes('`VAMP plays CARD.` / `CARD was played.`'), 'section 12 documents the card-play line and that a drag writes it (v2.6.177)');
+  ok(CLIENT.includes('this._q.push({ seat, r, txt: JSON.stringify(msg) }); this._arm(); },') && CLIENT.includes('else Promise.resolve().then(() => B.drain());'), 'client source: the bridge queues a message at the send and delivers it in a drain after the sender\'s code (v2.6.177)');
+  const dc = CLIENT.slice(CLIENT.indexOf('async function dropCard(c,d){'), CLIENT.indexOf('function groupDrop(c,d){')), pf = CLIENT.slice(CLIENT.indexOf('async function playFromHand(c,faceDown){'), CLIENT.indexOf('async function playOnActive(c,faceDown){'));
+  ok(dc.includes('log(playLineHtml(c, a));') && dc.includes('await modeChooseGate(c, false)') && pf.includes('log(playLineHtml(c, a));'), 'client source: a drag and the menu\'s Play write one play line, the level asked on both (v2.6.177)');
 }
 
 console.log('\n' + passN + '/' + failN + (failN ? ' \u2014 FAIL' : ' \u2014 all green'));

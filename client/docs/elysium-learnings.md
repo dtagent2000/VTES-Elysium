@@ -1,8 +1,25 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.176 / server v2.6.51 / bot v0.6.234 tested beside the suite, last updated 19 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.177 / server v2.6.51 / bot v0.6.234 tested beside the suite, last updated 19 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**19 Nov 2026, later (THE ANSWER AFTER THE LINE — v2.6.177: the queued bridge, the drag's play line):**
+- **The arm that looks most like the server can be the worse one.** A socket delivers in a later task, so a macrotask
+  drain looked closest. On the bot project's own sim table it failed two of their six gates (a vampire attempting to
+  block twice, ten ledger faults): the bots' 0 ms timers ran between the hops. The microtask drain passed all six and
+  answered every window. When both halves can choose, measure on the other half's own tools before choosing.
+- **A delivery inside the send is invisible at the human's pace and fatal at pace 0.** At paceMs 3100 the three arms
+  played 95 of 96 matches the same. At pace 0 the synchronous bridge let 384 windows run out their clock. Measure a
+  timing change at the fastest pace the other half uses, not only at ours.
+- **A queue changes what 'right after' means in every test that reads a fake seat.** One getter on `parityTable`'s
+  record (it flushes before it returns) fixed twenty of thirty-one failures at once; the rest had records of their own.
+  A handler that writes the record must not read it through that getter, or it runs the next hop inside its own.
+- **One builder for one line, on every path that writes it.** The drag path had its own copy of the play line, without
+  the level and the aim. A second copy of a frozen line drifts the moment the first one changes (v2.6.106's
+  `targetSuffix` and v2.6.158's level chooser never reached it).
+- **A per-play choice stored on a card outlives the play.** `c._modeTxt` was never cleared, so a card back in hand wrote
+  its old level again. Clear such a field where the choice is made, not where it is used.
 
 **19 Nov 2026 (THE CARD THE BOTS SEE — v2.6.176, bot v0.6.230–234 consumed):**
 - **'Is it sent on every path?' has a second half: 'does it arrive on every transport?'** Their question was about the
