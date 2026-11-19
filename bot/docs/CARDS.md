@@ -49,9 +49,9 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | playable (static) | HANDLER | 7 | 0 | 0 | 7 |
 | partial | PARTIAL | 184 | 178 | 6 | 0 |
 | partial | TABLED-ONLY (a master played blind) | 407 | 407 | 0 | 0 |
-| partial | UNREACHABLE (its modes need a discipline no vampire has) | 1 | 1 | 0 | 0 |
-| inert | INERT (effect data nobody reads) | 722 | 719 | 3 | 0 |
-| inert | NAME-ONLY (no effect data) | 468 | 466 | 2 | 0 |
+| partial | UNREACHABLE (its consumed modes are at a level no vampire prints) | 1 | 1 | 0 | 0 |
+| inert | INERT (modes, none with a key a play path reads) | 722 | 719 | 3 | 0 |
+| inert | NAME-ONLY (no modes) | 468 | 466 | 2 | 0 |
 | | **all** | 2391 | 2228 | 156 | 7 |
 
 **By card type** (the cardfx types; a card of two types is its own row)
@@ -76,15 +76,15 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | action/react | 6 | 0 | 0 | 1 | 0 | 0 | 5 | 0 |
 | conviction | 3 | 1 | 0 | 0 | 0 | 0 | 1 | 1 |
 
-**The vocabulary** (effect keys: the keys of a mode's `fx` and of `ref.fx`). The bot reads 200 keys (its `fx.<key>` reads, scanned): 182 are on library entries, 15 on crypt entries only, 3 on no entry (`burnCap`, `equip`, `referendum`).
+**The vocabulary** (effect keys: the keys of a mode's `fx` and of `ref.fx`). The scan is the coverage tool's: the 200 keys the bot spells `fx.<key>` (a key it reads under another spelling, as `f.<key>` or `mo.fx[k]`, is not in it). Of them 182 are on library entries, 15 on crypt entries only, 3 on no entry (`burnCap`, `equip`, `referendum`).
 
 | effect keys on library entries | keys |
 |---|---:|
 | all | 187 |
-| the bot reads | 182 |
-| the bot does not read: `combatEnds`, `dir`, `persistent`, `torpor`, `zombieBleed` | 5 |
-| the compiler gives (a compile without the curated file) | 42 |
-| only hand entries carry (hand-only) | 145 |
+| in the scan | 182 |
+| not in the scan: `combatEnds`, `dir`, `persistent`, `torpor`, `zombieBleed` | 5 |
+| given by the compiler (a compile without the curated file) | 42 |
+| on hand entries only (hand-only) | 145 |
 | hand-only, on a single entry | 124 |
 
 **The sharing register** (`cardfx-sharing.json`: who else in the library prints a hand-only key; `test-cardfx.js` is its gate): backlog 145 (not asked yet) · shared 0 (0 owed: a card the row names does not carry the key) · unique 0.

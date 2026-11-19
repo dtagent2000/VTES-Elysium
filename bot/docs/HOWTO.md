@@ -31,9 +31,9 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   table, checked like the cards; `--posture` writes the table's posture into the existing files (v1.1.0).
 - **The card ledger** — `node gen-card-ledger.js --sim DIR [--sim DIR …]` → `docs/CARDS.md`: per card the coverage verdict, tier,
   decks, rulings, the suite sections that name it and its uses per deck in the sims; the class map groups what is left by effect.
-  The whole library (v1.2.0, D-125): every library entry of the cardfx by the same verdict (every vampire offered as the crypt), by
-  tier and by card type, and the vocabulary (keys on library entries, read by the bot, given by the compiler, hand-only; the
-  register's states) -- the library numbers a sweep round reports. Static: only a starter is proven in play.
+  The whole library (D-125): every library entry by the same verdict (every vampire offered as the crypt), by tier and
+  card type, and the vocabulary (keys on library entries, in the coverage tool's scan of the bot, compiler-given, hand-only; the
+  register's states) -- what a sweep round reports. Static: only a starter is proven in play.
   With `vtes.json` beside it the crypt too (v1.1.0, D-108): every vampire (its ability, a class per sentence, its curated keys and
   the crypt readers that read them: modelled only when they cover every sentence) and the crypt class map. Its self-test runs before
   every page (`--self-test` prints it); a classifier miss or a curated crypt key with no class in `FX_CLASS` fails the run, so a round
@@ -119,11 +119,12 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   overlay and once with, diff the field per curated name. Political cards: `e.ref.pool` (terms), `e.ref.tags`, `e.ref.fx`;
   never a referendum outcome in `modes[].fx`. Adding a family: `refTerms()` / `REF_PER` / `actWhen()` in the compiler + the NEG
   list in `test-cardfx.js`. `req.titles`, `req.unmodelled` (callers fail closed).
-- **The sharing register** (`cardfx-sharing.json`, D-125) — a hand-only key (on hand entries of the compiled library and on no
-  other) has a row: `unique` (the entries that carry it), `shared` (the library cards that print the effect by KRCG's text, two or
-  more; owed until each carries the key, by a compiler pattern or the reviewed list) or `backlog` (the 145 keys of 19 Nov not asked
-  yet; its seed is pinned, so it only shrinks and a new hand key comes with its answer). `node cardfx-sharing.js` prints the counts
-  and every problem; `test-cardfx.js` is the gate.
+- **The sharing register** (`cardfx-sharing.json`, D-125) — a hand-only key (an fx key on hand entries of the library and on no
+  other library entry) has a row: `unique` (the entries of the one card that carries it), `shared` (the library cards that print
+  the effect by KRCG's text: two or more, each hand entry that carries it among them; owed while a card named lacks the key —
+  counted, not gated) or `backlog` (not asked yet: the keys of 19 Nov, frozen with their entries). A new hand key, or a
+  backlog key on one more card, is answered first. `node cardfx-sharing.js` reports on the COMPILED library (compile first);
+  `test-cardfx.js` is the gate. Its header lists what it does not guard.
 - **The TWD profile** — `python3 twd-profile.py` / `twd-archetypes.py` (need `vtes.json`, `twda.json`; the archetypes also vtes-skill:
   README). Both overwrite the shipped files: run them in a scratch copy until a release; a rebuilt profile is first reproduced
   byte for byte by the old script (O-37); a new share is APPENDED.

@@ -2,7 +2,7 @@
 // Run from inside bot/ (CI does, .github/workflows/bot-gates.yml):
 //   npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .
 // Every script in bot/ is linted (a new file is covered by itself) except main's files (the release copy elysium-server.js and
-// main's canary test-bot-canary.js: we cannot fix them in bot/, THE RULE) and the generated data wrappers -- the 25 files we own today.
+// main's canary test-bot-canary.js: we cannot fix them in bot/, THE RULE) and the generated data wrappers -- the 26 files we own today.
 // Every rule is an error, and nothing is suppressed: the lint's first run (C4) found 4 errors and 22 unused assignments, round C2
 // (bot v0.6.218) fixed them and pruned tools/eslint-suppressions.json to {}. The file stays because the command above names it and
 // CI checks that it only shrinks -- so a pull request that adds a suppression fails; never run --suppress-all / --suppress-rule.

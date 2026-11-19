@@ -40,10 +40,11 @@ out=$(DOC_BUDGET_ROOT_DRIFT=warn bash "$T/bot/tools/doc-budget.sh" 2>&1); ec=$?;
 if [ "$ec" = 1 ] && [ -n "$fl" ]; then echo "red   STATUS names a release newer than the root, outside a pull request :: ${fl#FAIL  }"; else echo "GREEN STATUS newer than the root, outside a pull request :: exit $ec  <-- the check missed it"; bad=1; fi
 fresh; pad "$T/CLAUDE.md" 12000;                                                           run "the bootstrap over 50 KB" "bootstrap is"
 # The total: every page inside its own budget and the bootstrap inside its own, the sum over the ceiling. The budgets are read from
-# the check itself (a raise there needs no second edit here, 19 Nov 2026): the pages outside the bootstrap are padded to 50 bytes
-# under their own, then BOARD as far as its own budget and the bootstrap's allow (padding the bootstrap's pages alone would trip its
-# 50 KB first, 29 Oct; leaving them alone made the case depend on how full they happened to be). A ceiling the pages' own budgets
-# cannot reach is a dead check: the case says so and fails.
+# the check itself (a raise there needs no second edit here, 19 Nov 2026). The pages outside the bootstrap are padded to 50 bytes
+# under their own; then BOARD, STATUS and bot/CLAUDE.md in turn, each as far as its own budget and the bootstrap's allow (padding
+# the bootstrap's pages alone would trip its 50 KB first, 29 Oct; leaving them alone made the case depend on how full they happened
+# to be). What is left is the root CLAUDE.md's size: the case needs it under about 6.2 KB (4.7 today), and the bootstrap's own check
+# stops it before that. A ceiling the pages' own budgets cannot reach is a dead check: the case says so and fails.
 fresh; python3 -c '
 import os, re, sys
 T = sys.argv[1]; sh = open(os.path.join(T, "bot", "tools", "doc-budget.sh"), encoding="utf8").read()
@@ -53,12 +54,13 @@ ceiling, bootcap = cap("total"), cap("boot")
 path = lambda f: os.path.join(T, "bot", f) if lim[f][0] == "B" else os.path.join(T, "bot", "docs", f)
 size = lambda f: os.path.getsize(path(f))
 grow = lambda f, n: open(path(f), "a").write("x" * max(0, n))
-BOOT = ["CLAUDE.md", "STATUS.md", "BOARD.md"]
+BOOT = ["BOARD.md", "STATUS.md", "CLAUDE.md"]
 assert len(lim) == 8 and all(f in lim for f in BOOT), sorted(lim)
 for f in lim:
     if f not in BOOT: grow(f, lim[f][1] - 50 - size(f))
-boot = os.path.getsize(os.path.join(T, "CLAUDE.md")) + sum(size(f) for f in BOOT)
-grow("BOARD.md", min(lim["BOARD.md"][1] - 50 - size("BOARD.md"), bootcap - 50 - boot))
+for f in BOOT:
+    boot = os.path.getsize(os.path.join(T, "CLAUDE.md")) + sum(size(g) for g in BOOT)
+    grow(f, min(lim[f][1] - 50 - size(f), bootcap - 50 - boot))
 total = sum(size(f) for f in lim)
 if total <= ceiling: print("      the pages can reach %d bytes inside their own budgets and the bootstrap; the ceiling of the total is %d -- a dead check, lower it" % (total, ceiling))
 ' "$T";                                                                                     run "the total over its ceiling, each page within its own" "standing pages total"

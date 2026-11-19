@@ -33,7 +33,7 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 - `node --check` on every changed file.
 - `node test-bot-logic.js` ×3, ALONE, each run in a frozen snapshot (HOWTO: "a frozen snapshot"). ~300–420 s a run: launch it
   detached with `timeout 600` and poll (`run_in_background`); never a foreground `timeout` that can cut a green run. Section 78c
-  (pace scaling) is a rare timing flake (F-Q2): if it fails, rerun once and say so in the PR.
+  (pace scaling) was a timing flake (F-Q2, closed): if it fails, rerun once and say so in the PR.
   The suite needs every owned file beside it — a missing `elysium-bot-arena.js` aborts and looks like a failure. It also needs a
   heap over 2 GB: on a ~2 GB default it dies out of memory after section 136 (`--max-old-space-size=4096`, HOWTO).
 - `node test-bot-canary.js` — the §12 grammar contract against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it (the
@@ -122,8 +122,8 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   cost wins; X is never inherited; the compile report's inherited / mismatch / X lists are read at every recompile. Every restored
   price is an unpaid cost until a finder reads `cost.blood` / `cost.pool` and its branch pays it. Costs are parked at announce and
   returned on a block (`_park` / `_returnParked`). A curated entry keyed by a printed variant is mirrored onto the printed name;
-  never rename a key a bot list uses (`fxLookup(name).name` must equal the hand's own name). A hand key the compiler does not give
-  needs its row in `cardfx-sharing.json` first: who else prints it [D-125; HOWTO].
+  never rename a key a bot list uses (`fxLookup(name).name` must equal the hand's own name). A new hand fx key on a library entry,
+  or a backlog key on one more card, is answered in `cardfx-sharing.json` first: who else prints it [D-125; HOWTO].
 - **`FX_NORM` is the client's `norm()`**, byte for byte (section 154f compares them over every cardfx name against the released
   client one level up). When main changes `norm()`, copy the table.
 - **Knob hygiene (v0.6.162).** [L-62] A decision knob gates DECISIONS only. A rules correction (what a card or strike legally does, what a

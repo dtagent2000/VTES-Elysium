@@ -57,7 +57,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | File | Role |
 |---|---|
 | `elysium-bot.js` | the bot; `BOT_VERSION`; decks (`*_DECK`, `ARCHETYPES`), `DECK_STRATEGY`, `PERSONAS`, `L12` (the frozen-line grammar), `FX_NORM`, `prepCardfx`, `class Bot`, `BOT_EXPORTS` |
-| `elysium-cardfx.json` / `.js` | the card-effect library (auto tier for the whole pool + the curated entries), built by `cardfx-compile.js` from `cardfx-curated.json` + `vtes.json`; `cardfx-sharing.json` answers who else prints each hand-only key (D-125) |
+| `elysium-cardfx.json` / `.js` | the card-effect library (auto tier for the whole pool + the curated entries), built by `cardfx-compile.js` from `cardfx-curated.json` + `vtes.json`; `cardfx-sharing.json/.js`: a row per hand-only key, who else prints it (D-125) |
 | `elysium-twd-profile.json` / `.js`, `elysium-twd-archetypes.json` / `.js` | the TWDA prior: per-card and per-clan shares (the profile), per-archetype card and clan counts (the labels); built by `twd-profile.py` / `twd-archetypes.py` from KRCG's v5 TWDA through `twda.py` (one deck per id, card names from `vtes.json` by KRCG id) |
 | `deck-*.json`, `rig-a1.json`, `design-balanced-serie-bal1.txt` | the decks (the embedded ones' files, Toreador's among them, and the 13 other V5 precons: test inputs the client does not offer), a rig, the balanced seat design |
 | `krcg-v5.js` | KRCG's v5 dump (`vtes-v5.json` + `expansions.json`) → the v3-shaped `vtes.json` the compiler, `gen-precon.js`, the ledger, `test-cardfx.js` and the TWD tools read |
