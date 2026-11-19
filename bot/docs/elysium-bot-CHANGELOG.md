@@ -205,17 +205,21 @@
     180h–l are the egress review's); `test-cardfx` 403 (7 new, all 7 red on the previous compiler; the seventh pins the narrower
     forms tagged and Protected District untagged). Sections 38 (the live ladder) and 90h–j moved off
     Forgotten Labyrinth in a bleed: Lost in Crowds [OBF] at Skulk (G5), and the finder asked for a hunt.
-  - *Gates*: (the release bytes: `elysium-bot.js` `8cc89a4c`, `test-bot-logic.js` `c677a4f3`, `elysium-cardfx.json`
-    `6ddc7acd`): suite **2613/0** (one frozen run; the ×3 after the egress review); section 180 7/0 (0/7 on v0.6.234's bytes, with
-    either cardfx); `test-cardfx` 403/0; canary 235/0 ×2; hotseat 12/0; HB1 11/0; main's client suite 380/1 (the guide's embed:
-    main re-embeds); the sim against v0.6.234 (client v2.6.177) — the 240 DIVERGED 195, SAME-PLAY 45, every diverged match
-    carrying one of the round's mechanisms (182 by a play, the 13 earlier by a decision that reads one: the stealth stack without
-    Bonding off a bleed, a block's intercept without Instinctive Reaction, a bounce's wake), VP paired each within one SE (−0.05 to
-    +0.05); the 14 precon smokes DIVERGED 6–10 of 12 each, the sewer and hacking smokes (v0.6.234 run beside) 10 and 8; each
-    fault's count in the 240 is 0 (the spec's status block); `ana-gates.py` PASS on all 17; the arena smoke: three matches, two
-    PASS 7/7, one FAIL on the handshake (its last combat: the blocker's Fame oust ended the match 4 ms after its own row, before
-    the winner's).
-  - Egress: EGRESS_PLACEHOLDER
+  - *Gates* (the release bytes: `elysium-bot.js` `9ac9d52b`, `test-bot-logic.js` `f8c54f19`, `elysium-cardfx.json` `49c143d3`):
+    suite **2618/0 ×3** (frozen); section 180 12/0 (0/12 on v0.6.234's bytes with either cardfx, 9/3 on the round's first
+    build); `test-cardfx` 403/0; canary 235/0 ×2; hotseat 12/0; HB1 11/0; main's client suite 380/1 (the guide's embed: main
+    re-embeds); the sim against v0.6.234 (client v2.6.177) — the 240 DIVERGED 195, SAME-PLAY 45, every diverged match carrying one
+    of the round's mechanisms (182 by a play, the 13 earlier by a decision that reads one: the stealth stack without Bonding off a
+    bleed, a block's intercept without Instinctive Reaction, a bounce's wake), VP paired each within one SE (−0.05 to +0.05); the 14
+    precon smokes DIVERGED 6–10 of 12 each, the sewer and hacking smokes (v0.6.234 run beside) 10 and 8; each fault's count in the
+    240 is 0 (the spec's status block); `ana-gates.py` PASS on all 17; the final bytes replay the first build's 240 and 16 smokes
+    IDENTICAL (the egress fixes change no sim play); the arena smoke: five matches, three PASS 7/7, two FAIL on the handshake, both
+    outside the round (a match's end cut its last round; a rush chosen 1 ms after the rusher's combat sent its target to torpor
+    met no opponent: BOARD).
+  - Egress: 9 findings (bug 1, half-done 2, rule-missed 3, unproven 1, stale-doc 2), 8 fixed, 1 listed (Revelations [AUS] is
+    undirected: BOARD). Graded readings of the 116 changed entries: green 107, amber 5, red 4 (latent; all four fixed: Elder
+    Intervention, Pack Tactics, Predator's Mastery [ABO], Lead Fist [VIS]); the ambers are missing benefits, C's (the burned cards'
+    hold of The Death of My Conscience, Nightmares upon Nightmares, Frenzy's restriction, Roll's and Steely Tenacity's return).
 - **v0.6.234 (18 Nov 2026)** — V5 wave 6b: Shadow Cloak and Absolute Tyranny (RULINGS D-124; Johan, 18 Nov: "Yes vi kör på det!" on
   all five of spec-v5-wave6 §9.4). The design and the as-built record: `specs/spec-v5-wave6-2026-11-18.md` §9.
   - *Shadow Cloak [OBL]* (curated: `fx.cloak {pierce: 'aus'}`, when `actSuccess`; Sleep Unseen rides along, [OBF] pierced only by

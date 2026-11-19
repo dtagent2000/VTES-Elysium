@@ -153,8 +153,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   a steal's victim lost > stole. A lead (v0.6.227, the 600's match 167): a bleed that fizzles at a seat just ousted is read by
   the next prey as its own and books the pool (likelier since v0.6.227: the 600's fizzles 3 → 6). *Done when* `ana-gates.py` passes
   there. Docs: CHANGELOG v0.6.224, v0.6.227.
-- **The handshake audit counts a combat the match's end cut** (`ana-combat2.py`): v0.6.235's first arena smoke failed on its last
-  round, whose blocker's Fame oust ended the match before the winner's row. *Done when* such a round is counted apart.
+- **Two arena handshake misses** (v0.6.235's smokes; none in the sim): a match's end cut its last round (a Fame oust), and a rush
+  chosen 1 ms after the rusher's combat sent its target to torpor met no opponent (a lagging view). *Done when* both are read.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a

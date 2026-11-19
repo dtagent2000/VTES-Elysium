@@ -9,11 +9,11 @@ copies in bot/ are client v2.6.177 / protocol v2.6.177 / srv-2.6.51 and main's c
 19 Nov consumed (#86); the sweep's step A2 (#87, on #86; no bot change); this release (on #87); main's v2.6.178 (#88).
 
 ## Last gates (v0.6.235's bytes)
-19 Nov: suite **2613/0** (one frozen run; `elysium-bot.js` `8cc89a4c`, `test-bot-logic.js` `c677a4f3`, `elysium-cardfx.json`
-`6ddc7acd`) · section 180 7/0 (0/7 on v0.6.234) · `test-cardfx` 403/0 · canary 235/0 ×2 · hotseat 12/0 · HB1 11/0 · main's
+19 Nov: suite **2618/0 ×3** (frozen; `elysium-bot.js` `9ac9d52b`, `test-bot-logic.js` `f8c54f19`, `elysium-cardfx.json`
+`49c143d3`) · section 180 12/0 (0/12 on v0.6.234) · `test-cardfx` 403/0 · canary 235/0 ×2 · hotseat 12/0 · HB1 11/0 · main's
 client suite 380/1 (the guide's embed) · the 240 against v0.6.234 DIVERGED 195, SAME-PLAY 45 (each a mechanism of the round; VP
-paired within one SE), the 16 smokes DIVERGED 6–10 of 12; `ana-gates.py` PASS on all 17; the arena smoke 2 of 3 PASS (the first's
-last combat cut by the match's end).
+paired within one SE), the 16 smokes DIVERGED 6–10 of 12, the final bytes IDENTICAL to the first build's; `ana-gates.py` PASS on
+all 17; the arena smoke 3 of 5 PASS (two misses outside the round: BOARD).
 
 ## Next
 1. The V5 sweep: **B**, the pilot (Banu Haqim), the merge built first (spec §4.4, D-127); then **C**, the harvest (§4.3's latent
