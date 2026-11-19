@@ -3294,7 +3294,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.177';   // v2.6.177 (19 Nov 2026, THE ANSWER AFTER THE LINE, pure client -- purge; srv-2.6.51 unchanged, no wire change; bot v0.6.234 beside, unchanged): (1) The hotseat bridge delivers after the sender's code has returned, as the server does (the bot project's v0.6.227 question; they chose the queue in v0.6.230 section 4): hotBridge.toBot queues the message (serialized at the send) and a drain delivers the queue in order once the sender's synchronous code is done -- a microtask; what a delivered message makes a bot send goes out in the next drain. A seat closed or dialled again before the drain gets nothing, reset() empties the queue, one bot's throw stops nobody else's delivery, and 64 hops in a row yield to the page once. Until v2.6.176 toBot ran the bot's handler inside the sender's call: at the bots' pace-0 sim table 112 of 491 bleed-modifier windows and 272 of 1754 bleed totals ran out their clock (a line answered before its window opened, the bot project's L-92); with the microtask drain none did and every bot gate passes, while a macrotask drain (setTimeout 0) failed their block and ledger gates. At the client's own pace the bots play as before (95 of 96 sim matches the same). A bot's instant answer to a human's card is now written below the human's play line, not above it. (2) A card DRAGGED from the hand to the table writes the menu's play line (playLineHtml): the level the chooser asks (modeChooseGate, now on a drag too; Cancel keeps the card in hand) and the aim's Target suffix -- a drag wrote 'VAMP plays CARD.' with neither, so an aim set before a drag rode the player's next line and the bots never read a dragged Toreador Grand Ball's pair. A level is chosen for one play: a card back in hand and played again carries no old level. PROTOCOL sections 12 and 12.2, the canary v1.5.0 (section 10).
+const VERSION='2.6.178';   // v2.6.178 (19 Nov 2026, TURN-BASED FROM THE START, pure client -- purge; srv-2.6.51 unchanged, no wire change; bot v0.6.234 beside, unchanged): Johan: a table with bots starts Turn-based. The client seeds the table's tempo (BOTCFG_SEED = Turn-based, waitSecs 3 kept for a switch to Standard or Adaptive): at a hotseat hotSpawnBots stores it in the bridge before any bot joins, and online the host's client sends it once where the room has nothing stored (botCfgSeed). It was Standard, 3 s (v2.6.139, the tempo spec's decision 3). Nothing stored still means Standard, 3 s (BOTCFG0, the merge base the server and the bridge share), and a room that already has a tempo keeps it. Any seated human can still change it in Bot settings. In Turn-based a bot waits on a human with no clock: Pass, a line, the Combat menu or the play button gives it the word; it reminds at 2 min and goes on at 4. PROTOCOL section 8 botcfg.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -11803,7 +11803,7 @@ async function netBotAdd(nm, deckKey, persona){
     if(!p) throw new Error('the room never showed '+nm+' \u2014 is it full, or is the pass wrong?');
     if(!p.deck) throw new Error(nm+' joined but its deck never arrived');
     netBotHelperLock();
-    botCfgSeed();                                                 // v2.6.139: the table's tempo starts at Standard, 3 s once a bot sits here (decision 3) -- the server stores it, every bot (now and later) is told
+    botCfgSeed();                                                 // v2.6.139: the table's tempo is seeded once a bot sits here (v2.6.178: Turn-based; it was Standard, 3 s -- decision 3) -- the server stores it, every bot (now and later) is told
     hotBotBtnShow(true);                                          // v2.6.108 review fix: the panel reads netBots too, but only the offline path ever SHOWED it
     toast('\ud83e\udd16 '+nm+' seated (pre-alpha)');
     return true;
@@ -11873,7 +11873,7 @@ async function hotSpawnBots(botSeats, players, boardMode){
   try{                                                             // v2.6.62: the silent-death class closed -- ANY spawn failure now tells the human what broke
     const { fx, twd, ark }=await hotLoadBotRes();
     hotBridge.reset(offlineCfg.map(pl=>({ name:pl.name, bot:!!pl.botP })));
-    hotBridge.botcfgIn('', BOTCFG0);                               // v2.6.139: the table starts at Standard, 3 s (tempo spec, decision 3) -- stored BEFORE any bot joins, so each bot gets it right after `joined` (the bridge's late-joiner rule) and the panel shows what the bots were told
+    hotBridge.botcfgIn('', BOTCFG_SEED);                           // v2.6.178: the table starts Turn-based (Johan; v2.6.139 seeded Standard, 3 s -- the tempo spec's decision 3) -- stored BEFORE any bot joins, so each bot gets it right after `joined` (the bridge's late-joiner rule) and the panel shows what the bots were told
     try{ hotBridge.syncRoster(net.roster); }catch(_e){}            // v2.6.122
     hotBridge._tableSetup=!!net.tableSetup; hotBridge._tableLayout=net.tableLayout||'';   // v2.6.153: mirrored too                          // v2.6.146: the room option, as srv-2.6.44's joined carries it (the reference bot does not read it yet)
     hotBridge._boardMode=boardMode||'structured';                  // v2.6.69 (the unc/uncontrolled bug's sibling class, found by Johan's sweep ask): the bot READS joined.boardMode -- classic flips caps.classic (no opening unc deal, drawCrypt as needed)
@@ -12003,9 +12003,11 @@ function hotBotsTeardown(){                                        // v2.6.68 (J
          runs that waits on a window or a question (never a hold -- that is a human's pause, released by
          that human);
      (3) a table with bots starts at Standard, 3 s: the client SEEDS it (the bridge at spawn, the host
-         online), because a bot without botcfg keeps its spawn clocks. */
+         online), because a bot without botcfg keeps its spawn clocks. v2.6.178 (Johan, 19 Nov 2026): the seed
+         is Turn-based (BOTCFG_SEED); nothing stored still means Standard, 3 s (BOTCFG0). */
 const BOTCFG_TEMPOS=['standard','adaptive','turn'];
-const BOTCFG0=Object.freeze({ tempo:'standard', waitSecs:3 });
+const BOTCFG0=Object.freeze({ tempo:'standard', waitSecs:3 });     // what NOTHING stored means -- the merge base, as the server's botcfgMerge and the bridge's botcfgIn have it (a bot that hears no tempo keeps its spawn clocks)
+const BOTCFG_SEED=Object.freeze({ tempo:'turn', waitSecs:3 });     // v2.6.178 (Johan, 19 Nov 2026): a table with bots STARTS Turn-based -- the seed, at a hotseat and from the host online (it was Standard, 3 s: decision 3). waitSecs 3 rides along, so a switch to Standard or Adaptive gets 3 s
 const BOTCFG_LABEL={ standard:'Standard', adaptive:'Adaptive', turn:'Turn-based' };
 const BOTCFG_HELP={
   standard:'Every wait on a human lasts the wait time (a question in combat: twice that); Pass, No or a line ends it at once.',   // v2.6.140, bot v0.6.196: block / reaction / pool question / vote = the slider, a combat step that asks = 2 x, the silent damage step = 1 x (and none when nothing reaches your minion)
@@ -12055,10 +12057,10 @@ function botCfgSet(part){                                          // one human'
   botPanelRender();
   return true;
 }
-function botCfgSeed(){                                             // decision (3), online half: the host seeds Standard, 3 s ONCE where the room has nothing stored -- quietly (the table's default is nobody's change: no log line)
+function botCfgSeed(){                                             // decision (3), online half: the host seeds the table's tempo ONCE where the room has nothing stored (v2.6.178: Turn-based, BOTCFG_SEED; it was Standard, 3 s) -- quietly (the table's default is nobody's change: no log line)
   if(localTable || !inRoom() || net.spect || !net.isHost || net.botcfg || botCfgWhy() || !hotHoldTableHasBots()) return false;
-  net.botcfg={ tempo:BOTCFG0.tempo, waitSecs:BOTCFG0.waitSecs };
-  mpSend({ t:'botcfg', tempo:BOTCFG0.tempo, waitSecs:BOTCFG0.waitSecs });
+  net.botcfg={ tempo:BOTCFG_SEED.tempo, waitSecs:BOTCFG_SEED.waitSecs };
+  mpSend({ t:'botcfg', tempo:BOTCFG_SEED.tempo, waitSecs:BOTCFG_SEED.waitSecs });
   return true;
 }
 let _botCfgOpen=false, _botCfgDrag=false;
