@@ -54,7 +54,8 @@ function parseCsv(text){
 }
 
 /* ---- zero-vtes's definitions (crates/engine/src/cards/defs.rs): every `static NAME: CardDef = CardDef { ... };`, its modes and their
-   tokens (Window::, Actor::, Requirement::, Effect::), one level of shared statics resolved. Token inventory, no semantics. ---- */
+   tokens (Window::, Actor::, Requirement::, Effect::, Terms::), one level of shared `static` and `const` items, macros and `const fn`
+   helpers (defs.rs's own and cards/mod.rs's) resolved. Token inventory, no semantics. ---- */
 function matchEnd(src, i, open, close){   // i at `open`; the index after its match (strings, char literals and comments skipped)
   let depth = 0, j = i;
   while (j < src.length){
@@ -87,15 +88,19 @@ function topLevelItems(body){   // the comma-separated items of a `[ ... ]` body
 /* an effect whose first argument is an enum variant is that variant's effect: Effect::Layer(Modifier::PreyOpenHand) is
    Layer(PreyOpenHand), not one of the 409 layers; a number stays out (AddStealth(1) and AddStealth(2) are one kind) */
 const TOK = /\b(Window|Actor|Requirement|Effect|Terms)::(\w+)(?:\(\s*\w+::(\w+))?/g;   // Terms: what an ability asks (The Barrens' discard is Terms::Discard, no Effect)
-function tokensOf(text, ctx, seen){   // { Window, Actor, Requirement, Effect }: the text's own, and one level of shared statics and macros
-  const t = { Window: new Set(), Actor: new Set(), Requirement: new Set(), Effect: new Set() };
+function tokensOf(text, ctx, seen){   // { Window, Actor, Requirement, Effect }: the text's own, and what its shared items, macros and helpers hold
+  const t = { Window: new Set(), Actor: new Set(), Requirement: new Set(), Effect: new Set() }, done = new Set(seen);
   const add = x => { for (const m of x.matchAll(TOK)){ if (m[1] === 'Terms') t.Effect.add('Terms:' + m[2]); else t[m[1]].add(m[1] === 'Effect' && m[3] ? m[2] + '(' + m[3] + ')' : m[2]); } };
-  add(text);
-  for (const r of new Set([...text.matchAll(/\b([A-Z][A-Z0-9_]{3,})\b/g)].map(m => m[1]))){
-    if (seen.has(r) || !ctx.statics.has(r) || ctx.statics.get(r).kind === 'CardDef') continue;
-    add(ctx.statics.get(r).body);
-  }
-  for (const r of new Set([...text.matchAll(/\b([a-z_]+)!\(/g)].map(m => m[1]))) if (ctx.macros.has(r)) add(ctx.macros.get(r));
+  const walk = (x, depth) => {   // a shared item built by a helper, a helper calling a helper: followed four levels deep, each item once
+    add(x); if (depth >= 4) return;
+    for (const r of new Set([...x.matchAll(/\b([A-Z][A-Z0-9_]{3,})\b/g)].map(m => m[1]))){
+      if (done.has(r) || !ctx.statics.has(r) || ctx.statics.get(r).kind === 'CardDef') continue;
+      done.add(r); walk(ctx.statics.get(r).body, depth + 1);
+    }
+    for (const r of new Set([...x.matchAll(/\b([a-z_]+)!\(/g)].map(m => m[1]))) if (ctx.macros.has(r) && !done.has(r + '!')){ done.add(r + '!'); walk(ctx.macros.get(r), depth + 1); }
+    for (const r of new Set([...x.matchAll(/\b([a-z_][a-z_0-9]*)\(/g)].map(m => m[1]))) if (ctx.fns.has(r) && !done.has(r + '()')){ done.add(r + '()'); walk(ctx.fns.get(r), depth + 1); }   // bleed(1, true) is a bleed modifier
+  };
+  walk(text, 0);
   return t;
 }
 function itemsOf(body, field, ctx){   // a CardDef's `modes:` or `abilities:` as items: a literal list, a static's list, or a macro's body (one item)
@@ -108,10 +113,11 @@ function itemsOf(body, field, ctx){   // a CardDef's `modes:` or `abilities:` as
   if (ref && ctx.statics.has(ref[1])){ const sb = ctx.statics.get(ref[1]).body; return sb.startsWith('[') ? topLevelItems(sb.slice(1, -1)) : [sb]; }
   return [];
 }
-function parseDefs(src){
-  const statics = new Map(), macros = new Map(), ctx = { statics, macros };
+function parseDefs(src, helpers){   // helpers: more source read for its `const fn` helpers only (cards/mod.rs)
+  const statics = new Map(), macros = new Map(), fns = new Map(), ctx = { statics, macros, fns };
   for (const m of src.matchAll(/^macro_rules!\s+(\w+)\s*\{/gm)){ const o = src.indexOf('{', m.index); macros.set(m[1], src.slice(o, matchEnd(src, o, '{', '}'))); }
-  for (const m of src.matchAll(/^(?:pub(?:\([^)]*\))? )?static (\w+): (&?\[?\w+)[^=]*= /gm)){
+  for (const t of [src, helpers || '']) for (const m of t.matchAll(/^(?:pub(?:\([^)]*\))? )?const fn ([a-z_0-9]+)\s*\(/gm)){ const o = t.indexOf('{', m.index); if (o > 0 && !fns.has(m[1])) fns.set(m[1], t.slice(o, matchEnd(t, o, '{', '}'))); }
+  for (const m of src.matchAll(/^(?:pub(?:\([^)]*\))? )?(?:static|const) ([A-Z][A-Z0-9_]*): (&?\[?\w+)[^=]*= /gm)){   // a `const` item is shared like a `static`
     const k = m[2].replace(/[&[]/g, ''), at = m.index + m[0].length;
     const open = src.slice(at).search(/[{[(]/); if (open < 0 || open > 80) continue;
     const o = at + open, ch = src[o], cl = ch === '{' ? '}' : ch === '[' ? ']' : ')';
@@ -120,7 +126,7 @@ function parseDefs(src){
   const cardDefs = [];
   for (const [name, s] of statics){
     if (s.kind !== 'CardDef') continue;
-    const nm = /\bname:\s*"((?:[^"\\]|\\.)*)"/.exec(s.body); if (!nm) continue;
+    const nm = /\bname:\s*"((?:[^"\\]|\\.)*)"/.exec(s.body); if (!nm || !nm[1]) continue;   // a template (name "") is no card
     cardDefs.push({ static: name, name: nm[1].replace(/\\"/g, '"'), body: s.body, args: '', macro: null });
   }
   for (const m of src.matchAll(/^([a-z_]+)!\(\s*([A-Z][A-Z0-9_]+)\s*,\s*"((?:[^"\\]|\\.)*)"/gm)){   // a card a macro builds: hunting_ground!(NAME, "Printed")
@@ -169,8 +175,8 @@ function sheet(o){
   const deck = JSON.parse(fs.readFileSync(here('deck-' + o.deck + '.json'), 'utf8'));
   const textOf = (canon, name) => { const k = byName.get(canon) || byName.get(name); return k ? (k.card_text || '') : null; };
   const { libRows } = COV.coverDeck(deck, textOf);
-  const zsrc = fs.readFileSync(path.join(o.zero, 'crates', 'engine', 'src', 'cards', 'defs.rs'), 'utf8');
-  const { defs, effUse } = parseDefs(zsrc);
+  const zsrc = fs.readFileSync(path.join(o.zero, 'crates', 'engine', 'src', 'cards', 'defs.rs'), 'utf8'), zmod = path.join(o.zero, 'crates', 'engine', 'src', 'cards', 'mod.rs');
+  const { defs, effUse } = parseDefs(zsrc, fs.existsSync(zmod) ? fs.readFileSync(zmod, 'utf8') : '');
   const wm = new Map(parseCsv(fs.readFileSync(path.join(o.zero, 'data', 'window-matrix-reviewed.csv'), 'utf8')).map(r => [String(r.id), r]));
   const rl = new Map(); for (const r of parseCsv(fs.readFileSync(path.join(o.zero, 'data', 'rulings-v5.csv'), 'utf8'))){ const k = String(r.card_id); if (!rl.has(k)) rl.set(k, []); rl.get(k).push(r); }
   let commit = '?'; try { commit = cp.execFileSync('git', ['-C', o.zero, 'log', '-1', '--format=%h %cs %s'], { encoding: 'utf8' }).trim(); } catch (e){ commit = '? (not a git checkout)'; }
@@ -232,47 +238,75 @@ function sheet(o){
   return L.join('\n');
 }
 
+/* ---- the repository guard: a zero-vtes clone and a sheet stay OUTSIDE the repository (spec-card-sweep §3.1, §5). A path is followed
+   through symlinks (its nearest existing ancestor's real path: an --out file need not exist yet) and, where the file system folds
+   case (win32, darwin), compared without it. ---- */
+function realish(p){
+  let cur = path.resolve(p); const rest = [];
+  while (!fs.existsSync(cur)){ const up = path.dirname(cur); if (up === cur) break; rest.unshift(path.basename(cur)); cur = up; }
+  let real = cur; try { real = fs.realpathSync.native(cur); } catch (e){ real = cur; }
+  return path.join(real, ...rest);
+}
+function insideRepo(p, repo, fold){
+  const f = x => (fold ? x.toLowerCase() : x), a = f(realish(p)), r = f(realish(repo));
+  return a === r || a.startsWith(r + path.sep);
+}
+
+/* the self-test's fixtures are invented: card names, statics and every token's variant are made up for the parser's paths; only the
+   format's structural words (CardDef, ModeDef, mode_of, the five token families, `..CARD`) are zero-vtes's, because the parser reads them */
 function selfTest(quiet){
-  let of = 0, bad = 0; const eq = (a, b, what) => { of++; if (JSON.stringify(a) === JSON.stringify(b)) return; bad++; console.error('gen-review-sheet self-test FAIL ' + what + ': ' + JSON.stringify(a) + ' != ' + JSON.stringify(b)); };
+  let of = 0, bad = 0, skipped = 0; const eq = (a, b, what) => { of++; if (JSON.stringify(a) === JSON.stringify(b)) return; bad++; console.error('gen-review-sheet self-test FAIL ' + what + ': ' + JSON.stringify(a) + ' != ' + JSON.stringify(b)); };
   eq([normName('Pentex™ Subversion'), normName('Pentex(TM) Subversion'), normName('Barrens, The'), normName('Flávio')], ['pentex subversion', 'pentex subversion', 'the barrens', 'flavio'], 'names');
   eq(parseCsv('id,name,review\n1,"a, b",ok\n2,"say ""x""\nand y",\n'), [{ id: '1', name: 'a, b', review: 'ok' }, { id: '2', name: 'say "x"\nand y', review: '' }], 'csv: commas, quotes, a newline in a field');
   const src = [
-    '/// "Only usable after action resolution. {not a brace}"',
-    'pub static FREAK: CardDef = CardDef {',
-    '    name: "Freak Drive",',
+    '/// "A comment with {a brace} in it."',
+    'pub static ALPHA: CardDef = CardDef {',
+    '    name: "Alpha Card",',
     '    modes: &[',
-    '        mode_of(&[Window::ActionAfterResolution], Actor::ActingMinion, &[Requirement::ActionSuccessful], &[Effect::UnlockActor]),',
-    '        mode_of(&[Window::ActionAfterResolution], Actor::ActingMinion, &[Requirement::ActionBlocked], &[Effect::UnlockActor]),',
+    '        mode_of(&[Window::WinOne], Actor::WhoOne, &[Requirement::NeedOne], &[Effect::DoOne]),',
+    '        mode_of(&[Window::WinOne], Actor::WhoOne, &[Requirement::NeedTwo], &[Effect::DoOne]),',
     '    ],',
     '    ..CARD',
     '};',
-    'static STEALTH_ONE: ModeDef = mode_of(&[Window::ActionStealthIntercept], Actor::ActingMinion, &[], &[Effect::Stealth(1)]);',
-    'pub static CLOAK: CardDef = CardDef { name: "Cloak the Gathering", modes: &[STEALTH_ONE, ModeDef { target: x(\'}\'), ..mode_of(&[Window::ActionStealthIntercept], Actor::ActingMinion, &[Requirement::Superior], &[Effect::Stealth(2), Effect::UnlockActor]) }], ..CARD };',
-    'pub static SHARED_MODES: CardDef = CardDef { name: "Shared, The", modes: &FREAK_MODES_X, ..CARD };' ].join('\n');
+    'static SHARED_STEP: ModeDef = mode_of(&[Window::WinTwo], Actor::WhoOne, &[], &[Effect::DoTwo(1)]);',
+    'pub static BETA: CardDef = CardDef { name: "Beta Card", modes: &[SHARED_STEP, ModeDef { target: x(\'}\'), ..mode_of(&[Window::WinTwo], Actor::WhoOne, &[Requirement::NeedThree], &[Effect::DoTwo(2), Effect::DoOne]) }], ..CARD };',
+    'pub static GAMMA: CardDef = CardDef { name: "Gamma, The", modes: &UNKNOWN_MODES, ..CARD };',
+    'pub const TEMPLATE: CardDef = CardDef { name: "", modes: &[], ..CARD };' ].join('\n');
   const src2 = src + '\n' + [
-    'macro_rules! ground_pick { ($n:expr) => { mode_of(&[Window::UnlockPhaseOwn], Actor::Controller, &[], &[Effect::HuntingGroundBlood($n)]) }; }',
-    'macro_rules! ground { ($name:ident, $printed:expr) => { pub static $name: CardDef = CardDef { name: $printed, modes: &[ground_pick!(1)], ..CARD }; }; }',
-    'ground!(ASYLUM, "Asylum Hunting Ground");',
-    'ground!(PALLA, "Palla Grande");',
-    'pub static DOLL: CardDef = CardDef { name: "Blood Doll", modes: &[mode_of(&[Window::MasterPhase], Actor::Methuselah, &[], &[Effect::PutOnTarget])], abilities: &[mode_of(&[Window::MasterPhase], Actor::Controller, &[], &[Effect::MoveBlood])], ..CARD };' ].join('\n');
-  const z = parseDefs(src2), fd = z.defs.get('freak drive'), cl = z.defs.get('cloak the gathering');
-  eq([z.defs.size, fd.modes.length, fd.modes[1].reqs, fd.effects], [6, 2, ['ActionBlocked'], ['UnlockActor']], 'defs: a card, its two modes, the comment\'s brace skipped');
-  const ag = z.defs.get('asylum hunting ground'), bd = z.defs.get('blood doll');
-  eq([ag.macro, ag.modes.length, ag.effects, z.effUse.get('HuntingGroundBlood')], ['ground', 1, ['HuntingGroundBlood'], 2], 'defs: a card a macro builds, its nested macro resolved, shared by two');
-  eq([bd.modes[0].effects, bd.abilities.length, bd.abilities[0].effects], [['PutOnTarget'], 1, ['MoveBlood']], 'defs: an in-play ability apart from the modes');
-  const z3 = parseDefs('pub static R: CardDef = CardDef { name: "Rev", modes: &[mode_of(&[], Actor::ActingMinion, &[], &[Effect::DeclareAction(ActionKind::Card), Effect::AddStealth(1), Effect::Layer(Modifier::PreyOpenHand)])], ..CARD };');
-  eq(z3.defs.get('rev').effects, ['DeclareAction(Card)', 'AddStealth', 'Layer(PreyOpenHand)'], 'an enum argument names the effect, a number does not');
-  const z4 = parseDefs('pub static B: CardDef = CardDef { name: "Barrens, The", modes: &[mode_of(&[Window::MasterPhase], Actor::Methuselah, &[], &[Effect::PutInPlay])], abilities: &[ModeDef { terms: Some(Terms::Discard { n: 1, of: CardFilter::Any }), ..mode_of(&[Window::AnyImpulse], Actor::Controller, &[Requirement::CardUnlocked], &[Effect::LockSelf]) }], ..CARD };');
-  eq(z4.defs.get('the barrens').abilities[0].effects.slice().sort(), ['LockSelf', 'Terms:Discard'], 'an ability\'s terms count as what it does (The Barrens\' discard)');
-  eq([cl.modes.length, cl.modes[0].effects, cl.modes[1].effects, cl.modes[1].reqs], [2, ['Stealth'], ['Stealth', 'UnlockActor'], ['Superior']], 'defs: a shared static resolved in a mode, a char literal brace skipped');
-  eq([z.effUse.get('UnlockActor'), z.effUse.get('Stealth')], [2, 1], 'printed by N: definitions that use the effect');
-  eq(z.defs.get('the shared').modes.length, 0, 'defs: modes by a reference no static defines are none, not a crash');
+    'macro_rules! plot_pick { ($n:expr) => { mode_of(&[Window::WinThree], Actor::WhoTwo, &[], &[Effect::Gather($n)]) }; }',
+    'macro_rules! plot { ($name:ident, $printed:expr) => { pub static $name: CardDef = CardDef { name: $printed, modes: &[plot_pick!(1)], ..CARD }; }; }',
+    'plot!(PLOT_A, "Plot Card A");',
+    'plot!(PLOT_B, "Plot Card B");',
+    'pub static DELTA: CardDef = CardDef { name: "Delta Card", modes: &[mode_of(&[Window::WinFour], Actor::WhoTwo, &[], &[Effect::PutDown])], abilities: &[mode_of(&[Window::WinFour], Actor::WhoThree, &[], &[Effect::Shift])], ..CARD };' ].join('\n');
+  const z = parseDefs(src2), al = z.defs.get('alpha card'), be = z.defs.get('beta card');
+  eq([z.defs.size, al.modes.length, al.modes[1].reqs, al.effects], [6, 2, ['NeedTwo'], ['DoOne']], 'defs: a card, its two modes, the comment\'s brace skipped, a template with no name no card');
+  const pa = z.defs.get('plot card a'), de = z.defs.get('delta card');
+  eq([pa.macro, pa.modes.length, pa.effects, z.effUse.get('Gather')], ['plot', 1, ['Gather'], 2], 'defs: a card a macro builds, its nested macro resolved, shared by two');
+  eq([de.modes[0].effects, de.abilities.length, de.abilities[0].effects], [['PutDown'], 1, ['Shift']], 'defs: an in-play ability apart from the modes');
+  const z3 = parseDefs('pub static E: CardDef = CardDef { name: "Epsilon", modes: &[mode_of(&[], Actor::WhoOne, &[], &[Effect::Begin(Kind::Thing), Effect::Plus(1), Effect::Layer(Mark::Tilt)])], ..CARD };');
+  eq(z3.defs.get('epsilon').effects, ['Begin(Thing)', 'Plus', 'Layer(Tilt)'], 'an enum argument names the effect, a number does not');
+  const z4 = parseDefs('pub static Z: CardDef = CardDef { name: "Lot, The", modes: &[mode_of(&[Window::WinFive], Actor::WhoTwo, &[], &[Effect::PutDown])], abilities: &[ModeDef { terms: Some(Terms::GiveUp { n: 1, of: Pick::Any }), ..mode_of(&[Window::WinSix], Actor::WhoThree, &[Requirement::NeedFour], &[Effect::TapIt]) }], ..CARD };');
+  eq(z4.defs.get('the lot').abilities[0].effects.slice().sort(), ['TapIt', 'Terms:GiveUp'], 'an ability\'s terms count as what it does');
+  eq([be.modes.length, be.modes[0].effects, be.modes[1].effects, be.modes[1].reqs], [2, ['DoTwo'], ['DoTwo', 'DoOne'], ['NeedThree']], 'defs: a shared static resolved in a mode, a char literal brace skipped');
+  eq([z.effUse.get('DoOne'), z.effUse.get('DoTwo')], [2, 1], 'printed by N: definitions that use the effect');
+  eq(z.defs.get('the gamma').modes.length, 0, 'defs: modes by a reference no static defines are none, not a crash');
+  const z5 = parseDefs(['const STEP_C: ModeDef = mode_of(&[Window::WinSeven], Actor::WhoOne, &[], &[Effect::DoThree]);',
+    'const fn helped(n: u8) -> ModeDef { mode_of(&[Window::WinEight], Actor::WhoFour, &[], &[outer(n)]) }',
+    'pub static ETA: CardDef = CardDef { name: "Eta Card", modes: &[STEP_C, helped(1)], ..CARD };'].join('\n'), 'pub const fn outer(n: u8) -> Effect { Effect::Outer { n } }');
+  const et = z5.defs.get('eta card');
+  eq([et.modes.length, et.modes[0].effects, et.modes[1].windows, et.modes[1].effects], [2, ['DoThree'], ['WinEight'], ['Outer']], 'a `const` item shared like a static; a `const fn` helper read, its own call to a helper of the other file too');
+  const repo = path.resolve(__dirname, '..');
+  eq([insideRepo(path.join(repo, 'bot', 'sheet.md'), repo), insideRepo(path.join(repo, 'no', 'such', 'dir', 'x.md'), repo), insideRepo(path.join(path.dirname(repo), 'beside-' + path.basename(repo), 'x.md'), repo)], [true, true, false], 'inside the repository: a file in bot/, a path not made yet, a sibling folder that only starts with its name is not');
+  eq(insideRepo(repo.toUpperCase() + path.sep + 'x.md', repo, true), true, 'inside the repository: case folded where the file system folds it (win32, darwin)');
+  let tmp = null; try { tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'grs-')); fs.symlinkSync(repo, path.join(tmp, 'link'), 'dir'); } catch (e){ tmp = null; }
+  if (tmp){ eq([insideRepo(path.join(tmp, 'link', 'bot', 'x.md'), repo), insideRepo(path.join(tmp, 'x.md'), repo)], [true, false], 'inside the repository: through a symlink'); try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e){ /* scratch */ } }
+  else { skipped++; console.error('gen-review-sheet self-test: SKIPPED the symlink check (no symlink can be made here)'); }
   const e = { src: 'hand', modes: [{ at: 'for', fx: { unlock: true, actAgain: 1 } }] }, a = { src: 'auto', modes: [{ at: 'for', fx: { unlock: true, stealth: 1 } }] };
   eq(keyOrigins(e, a), { origin: { unlock: 'compiler', actAgain: 'hand' }, dropped: ['stealth'] }, 'origins: compiler, hand, and the dropped key');
   eq(keyOrigins(a, a).dropped, [], 'an auto entry drops nothing');
   eq([registerState({ backlog: ['k'] }, 'k'), registerState({ shared: { k: ['A', 'B'] } }, 'k'), registerState({ unique: { k: ['A'] } }, 'k'), registerState({}, 'k')], ['backlog', 'shared with A, B', 'unique', 'no row'], 'the register\'s states');
   eq(discLines('Only usable after action resolution.\n[for] One.\n[FOR] Two.'), 2, 'discipline lines');
-  if (!quiet || bad) console.log('gen-review-sheet --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed'));
+  if (!quiet || bad || skipped) console.log('gen-review-sheet --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed') + (skipped ? ', ' + skipped + ' SKIPPED' : ''));
   return bad;
 }
 
@@ -287,7 +321,7 @@ if (require.main === module){
     else { console.error('gen-review-sheet: unknown argument ' + a[i]); process.exit(2); }
   }
   if (!o.deck || !o.zero){ console.error('gen-review-sheet: --deck KEY and --zero DIR are both needed (zero-vtes: a checkout outside the repository; HOWTO)'); process.exit(2); }
-  const repo = path.resolve(__dirname, '..'), inRepo = f => f === repo || f.startsWith(repo + path.sep);   // bot/ sits at the monorepo's root
+  const repo = path.resolve(__dirname, '..'), fold = process.platform === 'win32' || process.platform === 'darwin', inRepo = f => insideRepo(f, repo, fold);   // bot/ sits at the monorepo's root
   if (inRepo(o.zero)){ console.error('gen-review-sheet: zero-vtes is read from a checkout OUTSIDE the repository (spec-card-sweep §5), not ' + o.zero); process.exit(2); }
   if (!fs.existsSync(path.join(o.zero, 'crates', 'engine', 'src', 'cards', 'defs.rs'))){ console.error('gen-review-sheet: no crates/engine/src/cards/defs.rs under ' + o.zero); process.exit(2); }
   if (o.out && inRepo(o.out)){ console.error('gen-review-sheet: the sheet is never written inside the repository (spec-card-sweep §3.1): write it to scratch'); process.exit(2); }
@@ -295,4 +329,4 @@ if (require.main === module){
   const text = sheet(o);
   if (o.out){ fs.writeFileSync(o.out, text); console.error('gen-review-sheet v' + VERSION + ': ' + o.deck + ' -> ' + o.out); } else process.stdout.write(text + '\n');
 }
-module.exports = { VERSION, normName, parseCsv, parseDefs, keyOrigins, registerState, discLines };
+module.exports = { VERSION, normName, parseCsv, parseDefs, keyOrigins, registerState, discLines, insideRepo };

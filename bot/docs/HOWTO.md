@@ -122,8 +122,8 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   list in `test-cardfx.js`. `req.titles`, `req.unmodelled` (callers fail closed).
 - **The sharing register** (`cardfx-sharing.json`, D-125) — each hand-only key (an fx key on library hand entries only) has a
   row: `unique` (its one card's entries), `shared` (the library cards that print the effect by KRCG's text, two or more, every hand
-  entry carrying it among them; owed while the key is hand-only or a named card lacks it: counted, not gated) or `backlog` (the keys
-  of 19 Nov, frozen with their entries). A new hand key, or a backlog key on one more card, is answered first. `node
+  entry carrying it among them; owed while the key is hand-only or a named card lacks it: counted, not gated) or `backlog` (not asked
+  yet: the keys of 19 Nov, frozen with their entries). A new hand key, or a backlog key on one more card, is answered first. `node
   cardfx-sharing.js` reports on the compiled library (compile first); `test-cardfx.js` is the gate; its header lists what it does
   not guard.
 - **The review sheet** (`gen-review-sheet.js`, spec-card-sweep §3.1) — zero-vtes (Lionel Panhaleux's engine, MIT) is read at

@@ -66,12 +66,14 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   compares the card score with and without the streak.
 
 ## Known, not built (bot side)
-- **The finished decks' round** (spec-card-sweep §4.3; before B): eight rules faults live today. Bonding [DOM]'s stealth off a
-  bleed; On the Qui Vive twice by one minion between its unlock phases; Mirror Walk replaced before the discard phase;
-  Apportation's continue-only press spent to end; Instinctive Reaction against a non-predator; Forgotten Labyrinth in a bleed;
-  `UND_KINDS` lacks `ownRescue` and `leaveTorpor` (the predator never hears my own rescue); `_onChat` takes any seat's "No votes
-  from me." for my open Block?. §4.3's five latent reds and seven ambers ride where they fit. *Done when* each is a section red
-  on v0.6.234 and green after, the 240's footprint read.
+- **The finished decks' round** (spec-card-sweep §4.3; before B): nine rules faults live today. Bonding [DOM]'s stealth off a
+  bleed; On the Qui Vive twice by one minion between its unlock phases; Mirror Walk replaced before the discard phase; Wake with
+  Evening's Freshness replaced at a vote-discard boost; Apportation's continue-only press spent to end; Instinctive Reaction
+  against a non-predator; Forgotten Labyrinth in a bleed; `UND_KINDS` lacks `ownRescue` and `leaveTorpor`, so the predator never
+  hears my own rescue (the 240: 313, 0 blocked); `_onChat` takes any seat's "No votes from me." for my open Block?, unchecked
+  against `_openLine`. §4.3's five latent reds and seven ambers ride where they fit. *Done when* each is a section red on
+  v0.6.234 and green after (both rescue kinds undirected; only an eligible seat's answer to the open line counts), the 240's
+  footprint read.
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
   the merged decks' share; a few decks count twice. A v5 rebuild (scratch: 4,709 decks, Magnum under 10) drops a name the bot
   records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
