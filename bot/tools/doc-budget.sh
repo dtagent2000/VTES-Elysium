@@ -38,7 +38,7 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    stood 235 bytes under its ceiling and takes the sharing register now, zero-vtes's fetch line and the review sheet in step A2.
 #    HARNESS 8 -> 8.5 KB, HOWTO 22.5 -> 23 KB and the total 177 -> 179 KB on 19 Nov (the sweep's step A2, bot v0.6.234, no bot
 #    change): the charter's T2 sentence, the review sheet's how-to with zero-vtes's clone line, the dry run's lesson (L-97);
-#    HARNESS stood 53 bytes under its ceiling, HOWTO 206 and the total 566. The total keeps 1.7 KB of room for B and C (spec-card-
+#    HARNESS stood 53 bytes under its ceiling, HOWTO 206 and the total 566. The total keeps 1.4 KB of room for B and C (spec-card-
 #    sweep 4.1); STATUS gave the bootstrap the root CLAUDE.md's zero-vtes line and the finished decks' BOARD line.
 PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:67000 $D/LESSONS.md:20000
        $D/ARCHITECTURE.md:16000 $D/HARNESS.md:8500 $D/HOWTO.md:23000"

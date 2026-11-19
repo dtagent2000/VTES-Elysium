@@ -5,12 +5,12 @@
 ## Rounds without a release
 - **The V5 sweep, step A2: the review sheet, the dry run, the seven decks' readings, the merge's design (19 Nov 2026, bot
   v0.6.234, no bot change; PR #87)** — D-125 and D-126; `specs/spec-card-sweep-2026-11-18.md` §4.1 – §4.4, stacked on #86.
-  - **`gen-review-sheet.js` v1.0.0** (its self-test, 18 checks, in CI): one deck's library cards, each with KRCG's text, our entry
+  - **`gen-review-sheet.js` v1.0.0** (its self-test, 19 checks, in CI; a skip fails the step): one deck's library cards, each with KRCG's text, our entry
     (each key's origin on the card, the keys a hand entry drops, the register's rows), the verdict in the deck, and zero-vtes's
     definition from a clone OUTSIDE the repository (modes and in-play abilities, shared `static` and `const` items, macros and
     `const fn` helpers resolved; each effect with its use count; the window row and the rulings rows by KRCG id); mechanical flags
-    only. It refuses a clone or a sheet inside the repository, through a symlink too and case-folded where the file system folds
-    case. Its fixtures are invented: only the format's structural words are zero-vtes's.
+    only. It refuses a clone or a sheet inside the repository, through a symlink too (a dangling one included) and case-folded
+    where the file system folds case. Its fixtures are invented: only the format's structural words are zero-vtes's.
   - **The dry run** (scratch, §4.3): §4.1's rule gives 16 cards (a sample of 17 registered first; the 16 and the whole-mode rule
     came after the scratch dossier, both stricter). Their 220 candidates (185 cards) graded against KRCG's text: C 8 (carried by the
     key as it is read), G 22 (a consumer to make general), R 20 (a rider key), O 110 (played another way), N 60. Turned playable on
@@ -35,8 +35,9 @@
     (the maintainer agreed), spec §5 (Lionel's answer: use and credit; the engine, the weights and mcp.krcg.org left for now),
     STATUS shorter (its v0.6.234 summary is this file's); budgets by D-101: HARNESS 8.5 KB, HOWTO 23 KB, the total 179 KB. The
     lint's file count 27.
-  - **The egress review** (a fresh-context agent): 14 findings; all fixed (above, and the BOARD line keeps the folded lines'
-    done-conditions).
+  - **The egress review** (a fresh-context agent): 14 findings, all fixed (above; the BOARD line keeps the folded lines'
+    done-conditions); its re-check found 4 more (a shared item's head, a dangling link and the prefix case, CI's skip grep, one
+    fixture token), all fixed.
 - **Main's two replies of 19 Nov consumed: client v2.6.176 and v2.6.177 (19 Nov 2026, bot v0.6.234, no bot change; PR #86)** —
   STATUS Next 2, on Johan's go of 19 Nov ("Vi går på dina rekommendationer på alla punkter tänker jag"), taken before step A2
   because v2.6.177 changes the bridge the sim table runs on: A2's dry run and B's pilot measure on the new table.

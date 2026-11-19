@@ -38,7 +38,7 @@ dry run and the seven decks' readings (§4.3, observed), the merge's design (§4
 - the ledger's "what a crypt wave would build" stays as worded: D-108 keeps the crypt's waves by class (§3);
 - the room: the bootstrap's from STATUS (it drops "What v0.6.234 did" and its BOARD summary) and from the root `CLAUDE.md`'s own
   section (the dump's history), which pay for the zero-vtes line and the finished decks' BOARD line; the standing pages' by D-101
-  (HARNESS 8.5 KB, HOWTO 23 KB, the total 179 KB; `tools/doc-budget.sh`): 1.7 KB under the total and 0.95 KB under RULINGS.
+  (HARNESS 8.5 KB, HOWTO 23 KB, the total 179 KB; `tools/doc-budget.sh`): 1.4 KB under the total and 0.95 KB under RULINGS.
 
 ## 0. In one paragraph
 We finish the V5 sweep one starter at a time, one card at a time, and every effect we meet is first asked one question: **who else

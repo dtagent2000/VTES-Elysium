@@ -14,7 +14,7 @@ copies in bot/ are client v2.6.177 / protocol v2.6.177 / srv-2.6.51 and main's c
 `test-cardfx` 361/0 · canary 171/0 ×2 · hotseat 12/0 · HB1 11/11 · main's client suite 371/1 (the guide's embed) · the 240
 against v0.6.233 DIVERGED 46, SAME-PLAY 25, IDENTICAL 169; `ana-gates.py` PASS; the arena smoke 7/7.
 19 Nov, v2.6.177's table: suite 2606/0 · canary 235/0 ×2 · hotseat 12/0 · HB1 11/0 · `test-cardfx` 396/0 · the 240 against
-v2.6.175's table DIVERGED 4, SAME-PLAY 206, SAME-PLAY* 30; `ana-gates.py` PASS. A2: the review sheet's self-test 18/0 · the
+v2.6.175's table DIVERGED 4, SAME-PLAY 206, SAME-PLAY* 30; `ana-gates.py` PASS. A2: the review sheet's self-test 19/0 · the
 suite 2606/0 (one run, frozen) · `test-cardfx` 396/0 · canary 235/0 ×2 · hotseat 12/0 · the lint 0.
 
 ## Next

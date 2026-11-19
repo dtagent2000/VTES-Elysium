@@ -110,7 +110,7 @@ function itemsOf(body, field, ctx){   // a CardDef's `modes:` or `abilities:` as
   if (b >= 0 && b < 3) return topLevelItems(rest.slice(b + 1, matchEnd(rest, b, '[', ']') - 1));
   const mac = /^([a-z_]+)!\(/.exec(rest); if (mac && ctx.macros.has(mac[1])) return [ctx.macros.get(mac[1]) + rest.slice(0, matchEnd(rest, rest.indexOf('('), '(', ')'))];
   const ref = /^&?([A-Z][A-Z0-9_]+)/.exec(rest);
-  if (ref && ctx.statics.has(ref[1])){ const sb = ctx.statics.get(ref[1]).body; return sb.startsWith('[') ? topLevelItems(sb.slice(1, -1)) : [sb]; }
+  if (ref && ctx.statics.has(ref[1])){ const sb = ctx.statics.get(ref[1]).body.replace(/^&\s*/, ''); return sb.startsWith('[') ? topLevelItems(sb.slice(1, -1)) : [sb]; }
   return [];
 }
 function parseDefs(src, helpers){   // helpers: more source read for its `const fn` helpers only (cards/mod.rs)
@@ -121,7 +121,7 @@ function parseDefs(src, helpers){   // helpers: more source read for its `const 
     const k = m[2].replace(/[&[]/g, ''), at = m.index + m[0].length;
     const open = src.slice(at).search(/[{[(]/); if (open < 0 || open > 80) continue;
     const o = at + open, ch = src[o], cl = ch === '{' ? '}' : ch === '[' ? ']' : ')';
-    statics.set(m[1], { kind: k, body: src.slice(o, matchEnd(src, o, ch, cl)) });
+    statics.set(m[1], { kind: k, body: src.slice(at, matchEnd(src, o, ch, cl)).trim() });   // from after `= `: `Effect::Tick(..)` and `boost(..)` keep their head
   }
   const cardDefs = [];
   for (const [name, s] of statics){
@@ -243,7 +243,12 @@ function sheet(o){
    case (win32, darwin), compared without it. ---- */
 function realish(p){
   let cur = path.resolve(p); const rest = [];
-  while (!fs.existsSync(cur)){ const up = path.dirname(cur); if (up === cur) break; rest.unshift(path.basename(cur)); cur = up; }
+  for (let hops = 0; hops < 64; hops++){   // a link, dangling or not, is followed to its target: writing through it lands there
+    let st = null; try { st = fs.lstatSync(cur); } catch (e){ st = null; }
+    if (st && st.isSymbolicLink()){ cur = path.resolve(path.dirname(cur), fs.readlinkSync(cur)); continue; }
+    if (st) break;
+    const up = path.dirname(cur); if (up === cur) break; rest.unshift(path.basename(cur)); cur = up;
+  }
   let real = cur; try { real = fs.realpathSync.native(cur); } catch (e){ real = cur; }
   return path.join(real, ...rest);
 }
@@ -283,8 +288,8 @@ function selfTest(quiet){
   const pa = z.defs.get('plot card a'), de = z.defs.get('delta card');
   eq([pa.macro, pa.modes.length, pa.effects, z.effUse.get('Gather')], ['plot', 1, ['Gather'], 2], 'defs: a card a macro builds, its nested macro resolved, shared by two');
   eq([de.modes[0].effects, de.abilities.length, de.abilities[0].effects], [['PutDown'], 1, ['Shift']], 'defs: an in-play ability apart from the modes');
-  const z3 = parseDefs('pub static E: CardDef = CardDef { name: "Epsilon", modes: &[mode_of(&[], Actor::WhoOne, &[], &[Effect::Begin(Kind::Thing), Effect::Plus(1), Effect::Layer(Mark::Tilt)])], ..CARD };');
-  eq(z3.defs.get('epsilon').effects, ['Begin(Thing)', 'Plus', 'Layer(Tilt)'], 'an enum argument names the effect, a number does not');
+  const z3 = parseDefs('pub static E: CardDef = CardDef { name: "Epsilon", modes: &[mode_of(&[], Actor::WhoOne, &[], &[Effect::Begin(Kind::Thing), Effect::Plus(1), Effect::Wrap(Mark::Tilt)])], ..CARD };');
+  eq(z3.defs.get('epsilon').effects, ['Begin(Thing)', 'Plus', 'Wrap(Tilt)'], 'an enum argument names the effect, a number does not');
   const z4 = parseDefs('pub static Z: CardDef = CardDef { name: "Lot, The", modes: &[mode_of(&[Window::WinFive], Actor::WhoTwo, &[], &[Effect::PutDown])], abilities: &[ModeDef { terms: Some(Terms::GiveUp { n: 1, of: Pick::Any }), ..mode_of(&[Window::WinSix], Actor::WhoThree, &[Requirement::NeedFour], &[Effect::TapIt]) }], ..CARD };');
   eq(z4.defs.get('the lot').abilities[0].effects.slice().sort(), ['TapIt', 'Terms:GiveUp'], 'an ability\'s terms count as what it does');
   eq([be.modes.length, be.modes[0].effects, be.modes[1].effects, be.modes[1].reqs], [2, ['DoTwo'], ['DoTwo', 'DoOne'], ['NeedThree']], 'defs: a shared static resolved in a mode, a char literal brace skipped');
@@ -294,12 +299,18 @@ function selfTest(quiet){
     'const fn helped(n: u8) -> ModeDef { mode_of(&[Window::WinEight], Actor::WhoFour, &[], &[outer(n)]) }',
     'pub static ETA: CardDef = CardDef { name: "Eta Card", modes: &[STEP_C, helped(1)], ..CARD };'].join('\n'), 'pub const fn outer(n: u8) -> Effect { Effect::Outer { n } }');
   const et = z5.defs.get('eta card');
+  const z6 = parseDefs(['const TICK_UP: Effect = Effect::Tick(Kind::Up);', 'const BOOST_ONE: Effect = boost(1);', 'const fn boost(n: u8) -> Effect { Effect::Boost { n } }',
+    'static THETA_MODES: &[ModeDef] = &[mode_of(&[Window::WinNine], Actor::WhoOne, &[], &[TICK_UP, BOOST_ONE]), mode_of(&[Window::WinTen], Actor::WhoOne, &[], &[Effect::Rest])];',
+    'pub static THETA: CardDef = CardDef { name: "Theta Card", modes: THETA_MODES, ..CARD };'].join('\n'));
+  eq([z6.defs.get('theta card').modes.length, z6.defs.get('theta card').modes[0].effects, z6.defs.get('theta card').modes[1].effects], [2, ['Tick(Up)', 'Boost'], ['Rest']], 'a shared item that is an effect or a helper call keeps its head; a shared list behind &[...] is its items');
   eq([et.modes.length, et.modes[0].effects, et.modes[1].windows, et.modes[1].effects], [2, ['DoThree'], ['WinEight'], ['Outer']], 'a `const` item shared like a static; a `const fn` helper read, its own call to a helper of the other file too');
   const repo = path.resolve(__dirname, '..');
-  eq([insideRepo(path.join(repo, 'bot', 'sheet.md'), repo), insideRepo(path.join(repo, 'no', 'such', 'dir', 'x.md'), repo), insideRepo(path.join(path.dirname(repo), 'beside-' + path.basename(repo), 'x.md'), repo)], [true, true, false], 'inside the repository: a file in bot/, a path not made yet, a sibling folder that only starts with its name is not');
+  eq([insideRepo(path.join(repo, 'bot', 'sheet.md'), repo), insideRepo(path.join(repo, 'no', 'such', 'dir', 'x.md'), repo), insideRepo(path.join(path.dirname(repo), path.basename(repo) + '-old', 'x.md'), repo)], [true, true, false], 'inside the repository: a file in bot/, a path not made yet; a sibling folder that only starts with its name is not');
   eq(insideRepo(repo.toUpperCase() + path.sep + 'x.md', repo, true), true, 'inside the repository: case folded where the file system folds it (win32, darwin)');
   let tmp = null; try { tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'grs-')); fs.symlinkSync(repo, path.join(tmp, 'link'), 'dir'); } catch (e){ tmp = null; }
-  if (tmp){ eq([insideRepo(path.join(tmp, 'link', 'bot', 'x.md'), repo), insideRepo(path.join(tmp, 'x.md'), repo)], [true, false], 'inside the repository: through a symlink'); try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e){ /* scratch */ } }
+  if (tmp){ let dang = false; try { fs.symlinkSync(path.join(repo, 'bot', 'no-such-sheet-' + process.pid + '.md'), path.join(tmp, 'dangling.md'), 'file'); dang = true; } catch (e){ dang = false; }
+    eq([insideRepo(path.join(tmp, 'link', 'bot', 'x.md'), repo), insideRepo(path.join(tmp, 'x.md'), repo), dang && insideRepo(path.join(tmp, 'dangling.md'), repo)], [true, false, true], 'inside the repository: through a folder symlink, and a dangling file symlink into it');
+    try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e){ /* scratch */ } }
   else { skipped++; console.error('gen-review-sheet self-test: SKIPPED the symlink check (no symlink can be made here)'); }
   const e = { src: 'hand', modes: [{ at: 'for', fx: { unlock: true, actAgain: 1 } }] }, a = { src: 'auto', modes: [{ at: 'for', fx: { unlock: true, stealth: 1 } }] };
   eq(keyOrigins(e, a), { origin: { unlock: 'compiler', actAgain: 'hand' }, dropped: ['stealth'] }, 'origins: compiler, hand, and the dropped key');
