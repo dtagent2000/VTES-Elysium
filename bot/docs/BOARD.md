@@ -83,10 +83,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The gates on the root's release** (Q4, main's yes of 3 Nov): the canary, the suite's
   server and 154f, the arena, the sim and the hotseat gate read the root's client and server and `client/`'s protocol, the copies
   go, STATUS pins the main commit. *Done when* every gate reads the root and CI is green on it.
-- **A human's play read by card** (Johan's vision, 20 Nov; after the sweep, the readings must be exact first): the play line
-  carries the level and the target (`[obf]` / `[OBF]`, client v2.6.177); the bot looks the mode up and knows the effect at once,
-  the human's own numbers still winning. Today it reads the numbers and one card's choice (D-113). *Done when* a spec is ruled.
-  Its first case: **a human's Haven Uncovered** is not read. *Done when* the frozen line arms `_havenHost*` for a human's card.
+- **A human's play read by card** (Johan's vision, 20 Nov; after the sweep: the readings must be exact first): the play line
+  carries the level and the aim (`[obf]` / `[OBF]`, ` Target: …`; PROTOCOL §12); the bot looks the mode up and knows the effect
+  at once, the human's own numbers still winning. Today it reads their action lines, numbers and aim and one card's choice
+  (D-113), never a card's effect. *Done when* a spec is ruled. Its first case: **a human's Haven Uncovered** is not read. *Done
+  when* the frozen line arms `_havenHost*` for a human's card.
 - **Steal pair under a combat ends**: the stealer's side does not apply v0.6.196's rule when the victim's Majesty ends the combat.
   *Done when* `ana-ledger.py` prints equal pairs on a smoke with that case. Docs: RULINGS O-12.
 - **Nosferatu's Fame chain** (Fame → rush → torpor → rescue) has never run; the rush is not priced in pool. *Done when* a sim series
