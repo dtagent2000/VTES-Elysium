@@ -6,7 +6,7 @@
 copies in bot/ are client v2.6.177 / protocol v2.6.177 / srv-2.6.51 and main's canary v1.5.0.
 
 **Deploy state:** `main` carries v0.6.234 (#81), the sweep's method (#82) and step A1 (#84). **Open PRs:** main's replies of
-19 Nov consumed (#86); the sweep's step A2 (#87, on #86; no bot change); this release (on #87); main's v2.6.178 (#88).
+19 Nov consumed (#86); the sweep's step A2 (#87, on #86; no bot change); this release (#89, on #87); main's v2.6.178 (#88).
 
 ## Last gates (v0.6.235's bytes)
 19 Nov: suite **2618/0 ×3** (frozen; `elysium-bot.js` `9ac9d52b`, `test-bot-logic.js` `f8c54f19`, `elysium-cardfx.json`
