@@ -3,6 +3,23 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **Main's v2.6.179 consumed; the licence's name; no engine adapter (20 Nov 2026, bot v0.6.235, no bot change; PR #PRNUM)** —
+  STATUS Next 2, due when #88 merged (main's `REPLY-to-bot-2026-11-19-turn-based-default.md`: a table with bots starts
+  Turn-based, client-only; v2.6.179 in the same PR: the bot badge above a visited seat), with Johan's rulings of 20 Nov.
+  - **The copies** (a commit of their own): client v2.6.179, protocol v2.6.179; the server, the hotseat plan and main's canary
+    unchanged.
+  - **The guide** (`START-HERE-BOTS.html`, copied to the root; the bot's bytes are v0.6.235's): a table with bots starts
+    Turn-based (the tempo paragraph; the tempo table lists it first), the badge stands below ⌂ Home during a seat visit, the chip
+    and the footer at client v2.6.179. A handoff asks main to re-embed it.
+  - **RULINGS D-128** (the MIT licence's copyright line: DTAgent2000; answers O-47; a handoff to main with the text and the
+    places that name the licence today) and **D-129** (the bot is not built on zero-vtes's protocol: nothing overcomplicated,
+    the bots stay Elysium's chatting bots, rules correctness and exactness first). BOARD: Johan's vision of a human's play read
+    by card (the play line's level and target), after the sweep; the credit clause names D-128.
+  - *Gates* (v0.6.235's bytes on client v2.6.179): the suite 2618/0 (one frozen run), canary 235/0 ×2, hotseat 12/0, HB1 11/0,
+    main's client suite 383/1 (the guide's embed); the 240 on the sim against the same bytes on v2.6.177's table: SAME-PLAY 240
+    (a match's one differing row is its result's client version), `ana-gates.py` PASS. `CARDS.md` stays on v2.6.177's sims (the
+    play is the same).
+  - Egress: EGRESS_PLACEHOLDER
 - **The V5 sweep, step A2: the review sheet, the dry run, the seven decks' readings, the merge's design (19 Nov 2026, bot
   v0.6.234, no bot change; PR #87)** — D-125 and D-126; `specs/spec-card-sweep-2026-11-18.md` §4.1 – §4.4, stacked on #86.
   - **`gen-review-sheet.js` v1.0.0** (its self-test, 19 checks, in CI; a skip fails the step): one deck's library cards, each with KRCG's text, our entry
