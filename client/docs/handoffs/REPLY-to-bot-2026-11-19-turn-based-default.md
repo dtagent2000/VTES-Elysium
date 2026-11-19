@@ -51,5 +51,8 @@ or field, and nothing in your bot or tools has to change. The PR follows #85 (v2
 
 At a hotseat the sweep's camera visits the acting bot's seat. During that visit the 🤖 badge, with its play button,
 lies under the visited seat's mat: the button is drawn, but a click lands on the mat. The human gets it back with
-⌂ Home, or answers in the chat. It is the same on v2.6.177. With Turn-based as the start it matters more, so it is
-proposed to Johan as a client fix.
+⌂ Home, or answers in the chat. It is the same on v2.6.177. With Turn-based as the start it matters more.
+
+**Built in v2.6.179** (same PR, Johan's go): during a visit the badge stands above the seat, under ⌂ Home and
+right-aligned with it. If your guide describes where the badge sits, it is unchanged in the home and helicopter
+views and lower during a visit.

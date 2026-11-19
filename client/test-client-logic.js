@@ -6577,6 +6577,20 @@ testB('v2.6.178 LIVE: a REAL bot at a table seeded the way hotSpawnBots seeds it
   } finally { delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); }
 });
 
+/* ---------- v2.6.179: the bot badge during a seat visit ---------- */
+test('v2.6.179 in a seat visit the bot badge and its play button stand ABOVE the visited seat, under the visit\'s Home button and right-aligned with it (Johan; v2.6.178: the badge, z 60, lay under #rview, z 3500 -- drawn, but a click landed on the mat, and at a hotseat the sweep visits every bot\'s seat on its turn)', () => {
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const rule = sel => { const i = html.indexOf(sel + '{'); return i < 0 ? '' : html.slice(i, html.indexOf('}', i)); };
+  const num = (r, p) => { const m = new RegExp('(?:^|[;{\\s])' + p + '\\s*:\\s*(-?\\d+)').exec(r); return m ? +m[1] : null; };
+  const rv = rule('#rview'), back = rule('#rvBack'), vis = rule('body.invisit #hotBotBtn');
+  assert(vis, 'a rule for the badge in a visit exists');
+  assert(num(rv, 'z-index') != null && num(vis, 'z-index') > num(rv, 'z-index'), 'above the visit layer: ' + num(vis, 'z-index') + ' > ' + num(rv, 'z-index'));
+  assert(num(vis, 'top') >= 90, 'below the visit\'s Home button (its bottom measured at 82 px in a browser): top ' + num(vis, 'top'));
+  eq(num(vis, 'right'), num(back, 'right'), 'right-aligned with the Home button');
+  assert(/z-index:60/.test(html.slice(html.indexOf("el.id='hotBotBtn'"), html.indexOf("el.id='hotBotBtn'") + 600)), 'the badge elsewhere keeps its own place (z 60, top 74, right 14)');
+  assert(/!important/.test(vis), 'the rule wins over the badge\'s inline style');
+});
+
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

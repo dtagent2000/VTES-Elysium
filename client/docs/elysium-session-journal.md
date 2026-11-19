@@ -1,3 +1,16 @@
+## [MÄRKET RESER SIG] (19 november 2026, sen kväll, klient v2.6.179 / srv-2.6.51 oförändrad)
+
+Johan, 19.23: "Ja men fixa gärna knappen/märket så det ser bra ut". Orsaken är lagerordningen. Sätesbesöket (`#rview`) ligger på
+z 3500 direkt i sidans översta stapel, och 🤖-märket ligger fast på z 60, så besöket täckte märket. Att bara lyfta märket
+hade lagt det över nederkanten av besökets ⌂ Home. Under ett besök står märket nu precis under ⌂ Home, högerjusterat med
+den, ovanför bottens matta. På hemvyn och i helikoptervyn sitter det kvar där det satt.
+
+Jag mätte i Chromium under en botts tur i fem fönsterstorlekar, från 1024×768 till 1920×1080. Märket, ▶ och kugghjulet
+ligger överst, ⌂ Home gör det fortfarande, och högerkanterna möts. Jag tog också en bild med panelen öppen i ett besök: den
+står under ⌂ Home och ryms i fönstret. Vid 1280×720 når märkets nederkant 24 px in i hörnet av ready-regionen, precis som
+på hemvyn. I sviten finns en nål på stilmallen som jämför med `#rview` och `#rvBack`. Den föll på v2.6.178 och fångade
+fem mutanter av fem. v2.6.179 ersätter den aldrig driftsatta v2.6.178 i samma PR (#88).
+
 ## [TURN-BASED FRÅN START] (19 november 2026, kväll, klient v2.6.178 / srv-2.6.51 oförändrad)
 
 Johan, 18.40: "Jag skulle vilja att turn based är satt som default för bottarna också, är det en klientsak?" Ja. Bottarna har
