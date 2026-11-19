@@ -988,6 +988,41 @@ ok(fx.counts.libLock >= 140,
      && JSON.stringify(L['Absolute Tyranny'].t) === '["mod","react"]' && L['Absolute Tyranny'].cost.blood === 1,
      'Absolute Tyranny: [pot][pre] +3 votes kept; [POT][PRE] -1 vote for each vampire off the Path of Power and the Inner Voice (fx.voteCut); a modifier and a reaction, 1 blood');
 }
+/* The finished decks' round (19 Nov 2026, bot v0.6.235, RULINGS D-127, spec-card-sweep-2026-11-18 §4.3): the condition sentences, tagged as
+   onlyDirected is (v1.9.11) -- on the entry for a line with no discipline, on the modes of a discipline line ('As above' inherits). Each
+   reading checked against the printed text in vtes.json; the conditional forms the sentence's own wording excludes are pinned untagged,
+   and the volumes pin the sentence's reach. */
+{
+  console.log('\nThe finished decks’ round -- the condition sentences (19 Nov 2026)');
+  const L = res.out.lib, M = (n, at) => ((L[n] && L[n].modes) || []).find(mo => (mo.at || null) === at) || { fx: {}, missing: true }, E = n => L[n] || {};
+  const anyM = (e, k) => (e.modes || []).some(m => m[k] !== undefined), has = (e, k) => e[k] !== undefined || anyM(e, k), cnt = f => Object.keys(L).filter(n => f(L[n])).length;
+  ok(E('Bonding').onlyBleed === true && E('Confusion').onlyBleed === true && E('Revelation of the Serpent').onlyBleed === true
+     && M('Changeling', 'vic').onlyBleed === true && !M('Changeling', 'VIC').onlyBleed && !E('Changeling').onlyBleed
+     && M('Speak with Spirits', 'ani').onlyBleed === true && !M('Speak with Spirits', 'spi').onlyBleed && !M('Speak with Spirits', 'SPI').onlyBleed
+     && M('Virtuosa', 'mel').onlyBleed === true && !M('Virtuosa', 'pre').onlyBleed && M('Fata Morgana', 'CHI').onlyBleed === true && !M('Fata Morgana', 'chi').onlyBleed
+     && M('Iron Glare', 'POT+PRE').onlyBleed === true && !M('Iron Glare', 'pot+pre').onlyBleed
+     && M("True Love's Face", 'obf+pre').onlyBleed === true && !M("True Love's Face", 'OBF+PRE').onlyBleed && E("True Love's Face").src === 'hand',
+     'onlyBleed (v1.9.12): Bonding, Confusion, Revelation of the Serpent by the header; Changeling [vic], Speak with Spirits [ani], Virtuosa [mel], Fata Morgana [CHI], Iron Glare [POT][PRE] by their lines, never their other lines; True Love’s Face [obf][pre] in the curated file');
+  ok(!has(E('Protected District'), 'onlyBleed') && !has(E('Elder Intervention'), 'onlyBleed') && !has(E('Empowering the Puppet King'), 'onlyBleed') && !has(E('Donate'), 'onlyBleed'),
+     'onlyBleed is the sentence alone: not ‘a bleed action against you’ (Protected District), ‘directed at you’ (Elder Intervention), ‘by a ready vampire other than the acting minion’ (Empowering the Puppet King, Donate)');
+  ok(E('Forgotten Labyrinth').notBleed === true && E('Go-getter').notBleed === true && M('Shroud of Night', 'obt').notBleed === true && !M('Shroud of Night', 'OBT').notBleed && !E('Shroud of Night').notBleed,
+     'notBleed (v1.9.12): Forgotten Labyrinth and Go-getter by the header, Shroud of Night [obt] by its line (‘+1 stealth, not usable during a bleed action’), not [OBT]');
+  ok(E('Instinctive Reaction').onlyPredatorActs === true && !anyM(E('Instinctive Reaction'), 'onlyPredatorActs') && E('On the Qui Vive').oncePerUnlock === true && E('Shadow Sentinel').oncePerUnlock === true,
+     'onlyPredatorActs and oncePerUnlock (v1.9.12): Instinctive Reaction’s header; On the Qui Vive and Shadow Sentinel (‘can play only one X between their unlock phases’)');
+  ok(M('Apportation', 'tha').pressDir === 'continue' && !M('Apportation', 'THA').pressDir && E('Disengage').pressDir === 'end' && E('Dead-End Alley').pressDir === 'continue'
+     && M('Grasp of the Python', 'ser').pressDir === 'continue' && M('Grasp of the Python', 'SER').pressDir === 'continue' && M('Tranquility', 'DOM').pressDir === 'end',
+     'pressDir (v1.9.12): Apportation [tha] continues (its [THA] is a maneuver), Disengage ends, Dead-End Alley continues, Grasp of the Python both lines (‘As above’), Tranquility [DOM] ends');
+  ok(E('Mirror Walk').noReplace === 'discard' && E("Wake with Evening's Freshness").noReplace === 'unlock' && E('Glancing Blow').noReplace === 'unlock' && E('Evil Eye').noReplace === 'unlock'
+     && E('Dodge').noReplace === 'combat' && E('Disengage').noReplace === 'combat' && E('Baseball Bat').noReplace === 'action' && E('Elder Intervention').noReplace === 'action'
+     && E('Lupine Assault').noReplace === 'influence' && E('Old Friends').noReplace === 'unlock' && M('Old Friends', 'obf').onlyBleed === true,
+     'noReplace (v1.9.12): Mirror Walk until the discard phase; Wake with Evening’s Freshness, Glancing Blow, Evil Eye (‘your unlock phase’) until the unlock phase; Dodge and Disengage after combat; Baseball Bat and Elder Intervention after the action; Lupine Assault the influence phase; Old Friends both tags');
+  const vol = { ob: cnt(e => has(e, 'onlyBleed')), obE: cnt(e => e.onlyBleed !== undefined), nb: cnt(e => has(e, 'notBleed')), pa: cnt(e => has(e, 'onlyPredatorActs')), opu: cnt(e => has(e, 'oncePerUnlock')),
+    pd: cnt(e => has(e, 'pressDir')), pdE: cnt(e => e.pressDir === 'end' || (e.modes || []).some(m => m.pressDir === 'end')), nr: cnt(e => e.noReplace !== undefined) };
+  const nrBy = {}; Object.keys(L).forEach(n => { const u = L[n].noReplace; if(u) nrBy[u] = (nrBy[u] | 0) + 1; });
+  ok(vol.ob === 39 && vol.obE === 17 && vol.nb === 3 && vol.pa === 1 && vol.opu === 2 && vol.pd === 31 && vol.pdE === 15 && vol.nr === 42
+     && nrBy.combat === 12 && nrBy.action === 11 && nrBy.discard === 8 && nrBy.unlock === 10 && nrBy.influence === 1,
+     'the condition tags’ volume: onlyBleed 39 cards (17 by the header), notBleed 3, onlyPredatorActs 1, oncePerUnlock 2, pressDir 31 (15 to end), noReplace 42 (12 combat, 11 action, 8 discard, 10 unlock, 1 influence) -- got ' + JSON.stringify(vol) + ' ' + JSON.stringify(nrBy));
+}
 /* The sharing register (19 Nov 2026, bot v0.6.234; RULINGS D-125, spec-card-sweep-2026-11-18 §2 and §4.1): no hand key before "who else
    in the library prints this?" has an answer on file. cardfx-sharing.js defines a hand-only key and the register's rules; this is its gate.
    First the rules against a seven-entry library with a fault planted per rule (the lint must bite), then the real library and the real
