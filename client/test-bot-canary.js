@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================================
-   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.3.0
+   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.4.0
    ----------------------------------------------------------------------------
    PROTOCOL.md §12 is the authoritative, "frozen" bot contract. Three things
    must agree at all times: (1) what §12 DOCUMENTS, (2) what the CLIENT
@@ -28,6 +28,12 @@
    Nov): a HUMAN's Toreador Grand Ball read from the client's play line, the question to its owner and
    the answer, Smiling Jack's burn, Eyes of the Wild, the crypt dodge, the table lines with no reader,
    and the client's aim rule (one aim per action; a bleed names a Methuselah).
+   v1.4.0 (19 Nov 2026, client v2.6.176): section 9 -- bot v0.6.230-234's lines (the handoffs of 17-18
+   Nov, V5 waves 5a to 6b): a steal, Privileged Position, the referendums without a poll and to burn a
+   card in play, Tension in the Ranks, the 'as played' window, Sudden Reversal, Meditative Grove, Yawp
+   Court, Week of Nightmares, One With the Land, Night Terrors, a cancel bought with pool, Absolute
+   Tyranny. Section 8's control on a CARD in a bleed's suffix is no longer a check (bot v0.6.230's ask):
+   it pinned what the bot did not read, so the bot project could not widen the reading.
    ========================================================================== */
 
 const fs = require('fs');
@@ -360,8 +366,9 @@ ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament m
    from which of the two turns locked once the master phase ends, and -- when the bots still cannot tell -- from the owner's
    free-text answer to one bot's question in chat; the reader is the bot's memo (its `bot:memo` event), not L12. Smiling Jack
    rides the frozen burnAct line with a comma in the card's name; Eyes of the Wild rides attemptIcp; the crypt dodge is the
-   client's own strikeD line. And the client's aim rule of v2.6.175, pinned with its reason: the bots' prey test takes a
-   bleed with no target or a pool target, never a card (the control). Em-dashes and U+2019 are escapes (section 3). */
+   client's own strikeD line. And the client's aim rule of v2.6.175: the bots' prey test takes a bleed with no target or a
+   pool target. Whether it takes one with a CARD in the suffix is the bot project's reading to choose (v1.4.0: reported, not
+   checked). Em-dashes and U+2019 are escapes (section 3). */
 {
   [['VAMP plays Toreador Grand Ball. Target: X.', 'a human\'s Toreador Grand Ball, the client\'s play line the bots read'],
    ['NAME, your Toreador Grand Ball: which Toreador acts unblocked — A or B?', 'the Grand Ball question to its owner (its shape)'],
@@ -416,8 +423,103 @@ ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament m
   ok(!!(u.pending && u.pending.amount === 1 && u.pending.who === 'Johan'), 'the prey test: a human\'s bleed with no target reaches its prey bot');
   u = mk8(); u._onLog('Johan', CL('c1', 'Lisa') + ' bleeds for 1. Target: ' + B('Bot') + '\'s ' + B('pool') + '.');
   ok(!!(u.pending && u.pending.amount === 1), '...and with a pool aim at it');
+  /* v1.4.0 (client v2.6.176, bot v0.6.230's ask): a CARD in the suffix was a control here ("the prey bot does not take the
+     bleed"). A cached v2.6.174 page still writes such a line, and the bot project wants to read it as the prey's bleed; built,
+     that reading failed this file (170/1). It is the bot's reading to choose, so the line below reports it and checks nothing.
+     main pins the new reading as a positive when it consumes the release that takes it. */
   u = mk8(); u._onLog('Johan', CL('c1', 'Lisa') + ' bleeds for 1. Target: ' + B('Bot') + '\'s ' + B('Sully') + '.');
-  ok(!u.pending, 'control: with a CARD in the suffix the prey bot does not take the bleed -- why the client never writes one there (v2.6.175)');
+  console.log('  \u25cb the prey test with a CARD in the suffix (a client older than v2.6.175): this bot ' + (u.pending && u.pending.amount === 1 ? 'takes the bleed as its prey\'s' : 'reads it as aimed at nobody') + ' -- reported, not checked');
+}
+
+/* ---- 9) v2.6.176 (bot v0.6.230-234 consumed): the lines of V5 waves 5a, 5b, 6a and 6b (bot/docs/handoffs/HANDOFF-to-main-
+   2026-11-17-v0_6_230.md, -11-18-v0_6_232.md, -v0_6_233.md and -v0_6_234.md, section 3 of each). All twenty are in the bot's
+   L12: section 12 documents the shape, and L12.<key> reads a line built from it with the captures its reader keys on. Five
+   are also driven through a live bot's _onLog, where the line changes that bot's state at once: Privileged Position (the prey
+   pays), Tension in the Ranks and a referendum that burns a card in play (the owner's card goes), a hostage freed (U+2019
+   twice), and another bot's cancel of a HUMAN's master (this bot holds its own Sudden Reversal). Positives only: a check that
+   pins what a bot does NOT read stops the bot project from widening that reading (section 8's control, v1.4.0). Last, what the
+   bots' fx readers rest on at a hotseat since v2.6.176: the bridge relays a human's card clone. */
+{
+  [['VAMP takes an action to steal NAME\'s CARD.', 'a steal'],
+   ['NAME locks Privileged Position — PREY burns 1 pool.', 'Privileged Position'],
+   ['Referendum passes automatically — CARD (Día de los Muertos).', 'a referendum without a poll'],
+   ['NAME discards two masters to burn OWNER\'s Tension in the Ranks.', 'Tension in the Ranks'],
+   ['VAMP enters combat with NAME\'s VAMP (Frontal Assault).', 'the rush granted by Frontal Assault'],
+   ['PAYER burns 2 blood: VAMP’s hostage counter is burned (Carver’s Meat Packing and Storage).', 'a hostage freed (U+2019)'],
+   ['Referendum terms — CARD: burn OWNER\'s CARD.', 'a referendum to burn a card in play, its terms'],
+   ['Referendum passes — CARD: burn OWNER\'s CARD.', 'a referendum to burn a card in play, its result'],
+   ['NAME is playing CARD.', 'the \'as played\' line'],
+   ['NAME is playing CARD — on OWNER\'s VAMP.', 'the \'as played\' line with its target'],
+   ['NAME plays Sudden Reversal — cancels OWNER\'s CARD (its cost is not paid).', 'Sudden Reversal\'s cancel'],
+   ['NAME\'s Sudden Reversal comes too late for OWNER\'s CARD.', 'a Sudden Reversal that came too late'],
+   ['NAME locks Meditative Grove — CARD is cancelled (its cost is still paid).', 'Meditative Grove\'s cancel'],
+   ['VAMP\'s political action succeeds — the referendum follows.', 'the success line before a referendum'],
+   ['NAME locks Yawp Court — VAMP enters combat with OWNER\'s VAMP.', 'Yawp Court\'s combat'],
+   ['Yawp Court — VAMP is still ready: the referendum goes on.', 'Yawp Court, the referendum goes on'],
+   ['NAME moves a nightmare counter to OWNER\'s VAMP (Week of Nightmares: N left).', 'Week of Nightmares, a counter moved'],
+   ['Week of Nightmares has no counters left — each Ravnos burns 1 blood for each nightmare counter on it, or is burned.', 'Week of Nightmares, the end'],
+   ['VAMP plays CARD: unlocks; if they block, neither combatant strikes in the first round.', 'One With the Land\'s unlock line'],
+   ['VAMP gets no strike this round (One With the Land).', 'One With the Land\'s round without strikes'],
+   ['VAMP plays CARD: ACTOR\'s stealth is 0.', 'Night Terrors'],
+   ['NAME burns N pool to cancel CARD.', 'a cancel bought with pool'],
+   ['VAMP plays CARD: vampires not on the Path of PATH get -1 vote.', 'Absolute Tyranny (an ASCII hyphen-minus)'],
+   ['NAME combat — VAMP presses to continue (Mob Connections).', 'Mob Connections\' press (a reused shape)'],
+   ['Combat ends — Garibaldi-Meucci Museum.', 'Garibaldi-Meucci Museum\'s combat end (a reused shape)'],
+   ['VAMP plays Forced Confessional (the blocking minion gets −1 intercept): +1 stealth.', 'Forced Confessional\'s stealth line (listed, not pinned)'],
+   ['VAMP puts Shadow Cloak on itself — minions without Auspex cannot perform actions directed at it until NAME\'s next unlock phase.', 'Shadow Cloak\'s line for the humans (no reader)'],
+   ['NAME burns Shadow Cloak from VAMP (unlock phase).', 'Shadow Cloak burned (no reader)'],
+   ['a card target on a bleed line may be read as no target', 'the reading a bot may take of a cached client\'s bleed (v2.6.176)'],
+   ['the bridge relays a human\'s card clone', 'the hotseat bridge\'s fx relay (v2.6.176, section 12.2)'],
+   ['A human\'s cards are read from the play clone, not from a line', 'where the bots read a human\'s master, Sudden Reversal and frenzy card']
+  ].forEach(([tag, what]) => ok(sec12.includes(tag), 'PROTOCOL §12 documents ' + what + ': "' + tag + '"'));
+
+  const rd = (key, line, want, what) => { const m = line.match(L12[key] || /$^/);
+    ok(!!m && want.every((w, i) => m[i + 1] === w), 'bot L12.' + key + ' reads ' + what + (m ? ' (' + JSON.stringify(m.slice(1)) + ')' : ' -- no match: "' + line + '"')); };
+  rd('stealAct', 'Gilbert takes an action to steal Bot\'s The Rack.', ['Gilbert', 'Bot', 'The Rack'], 'the thief, the owner and the card');
+  rd('ppBurn', 'Ann locks Privileged Position — Bot burns 1 pool.', ['Ann', 'Bot'], 'the card\'s Methuselah and the prey who pays');
+  rd('autoPass', 'Referendum passes automatically — Anarch Revolt (Día de los Muertos).', ['Anarch Revolt'], 'the referendum that needed no poll');
+  rd('tensionBurn', 'Ann discards two masters to burn Bot\'s Tension in the Ranks.', ['Ann', 'Bot'], 'who burns whose Tension in the Ranks');
+  rd('havenRush', 'Gilbert enters combat with Bot\'s Sully (Frontal Assault).', ['Gilbert', 'Bot', 'Sully', 'Frontal Assault'], 'the rush granted by Frontal Assault');
+  rd('hostageFree', 'Ann burns 2 blood: Sully’s hostage counter is burned (Carver’s Meat Packing and Storage).', ['Ann', 'Sully'], 'the payer and the vampire whose hostage counter burned (U+2019)');
+  rd('refTerms', 'Referendum terms — Anarch Revolt: burn Bot\'s Anarch Revolt.', ['Anarch Revolt', 'burn Bot\'s Anarch Revolt'], 'a burn referendum\'s terms (no pool term)');
+  rd('refResult', 'Referendum passes — Anarch Revolt: burn Bot\'s Anarch Revolt.', ['passes', 'Anarch Revolt', 'burn Bot\'s Anarch Revolt'], 'the same terms on the result line');
+  rd('asPlayed', 'Ann is playing Blood Doll.', ['Ann', 'Blood Doll', undefined, undefined], 'a master as it is played');
+  rd('asPlayed', 'Ann is playing Fame — on Bot\'s Sully.', ['Ann', 'Fame', 'Bot', 'Sully'], 'a master as it is played on a vampire');
+  rd('srCancel', 'Ann plays Sudden Reversal — cancels Bot\'s Blood Doll (its cost is not paid).', ['Ann', 'Bot', 'Blood Doll'], 'the canceller, the owner and the master');
+  rd('srLate', 'Ann\'s Sudden Reversal comes too late for Bot\'s Blood Doll.', ['Ann', 'Bot', 'Blood Doll'], 'whose cancel came too late, and for which master');
+  rd('groveCancel', 'Ann locks Meditative Grove — Deep Song is cancelled (its cost is still paid).', ['Ann', 'Deep Song'], 'the Grove\'s Methuselah and the cancelled card');
+  rd('polSuccess', 'Gilbert\'s political action succeeds — the referendum follows.', ['Gilbert'], 'the acting vampire of a successful political action');
+  rd('yawp', 'Ann locks Yawp Court — Lisa enters combat with Bot\'s Gilbert.', ['Ann', 'Lisa', 'Bot', 'Gilbert'], 'the Court\'s owner, its Sabbat vampire and the acting vampire');
+  rd('yawpOn', 'Yawp Court — Gilbert is still ready: the referendum goes on.', ['Gilbert'], 'the acting vampire that stayed ready');
+  rd('wonMove', 'Ann moves a nightmare counter to Bot\'s Sully (Week of Nightmares: 3 left).', ['Ann', 'Bot', 'Sully', '3'], 'the counter\'s new vampire and how many are left');
+  ok(!!L12.wonEnd && L12.wonEnd.test('Week of Nightmares has no counters left — each Ravnos burns 1 blood for each nightmare counter on it, or is burned.'), 'bot L12.wonEnd reads the end of Week of Nightmares');
+  rd('noStrikeR1', 'Lisa plays One With the Land: unlocks; if they block, neither combatant strikes in the first round.', ['Lisa', 'One With the Land'], 'the unlocking blocker and its card');
+  rd('stealthZero', 'Lisa plays Night Terrors: Gilbert\'s stealth is 0.', ['Lisa', 'Night Terrors', 'Gilbert'], 'the blocker, the card and the acting vampire');
+  rd('payCancel', 'Ann burns 1 pool to cancel True Love\'s Face.', ['Ann', '1', 'True Love\'s Face'], 'who pays how much to cancel which card');
+  rd('tyranny', 'Lisa plays Absolute Tyranny: vampires not on the Path of Power and the Inner Voice get -1 vote.', ['Lisa', 'Absolute Tyranny', 'Power and the Inner Voice'], 'the voter, the card and the Path');
+  rd('combatEnds', 'Combat ends — Garibaldi-Meucci Museum.', ['Garibaldi-Meucci Museum'], 'Garibaldi-Meucci Museum\'s combat end');
+
+  const { Bot } = require('./elysium-bot.js');
+  const B = s => '<b>' + s + '</b>', strip = s => String(s).replace(/<[^>]*>/g, '');
+  const mk9 = () => { const sent = []; const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Bot', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} });
+    u.seat = 2; u.started = true; u.send = m => sent.push(m); u.push = () => {}; u.chat = t => sent.push({ t: 'chat', text: t });
+    u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Bot', bot: true }, { seat: 3, name: 'Ann', bot: true }];
+    u._sent = sent; return u; };
+  const inPlay = (id, name) => ({ id, name, kind: 'lib', zone: 'ready', faceDown: false, locked: false });
+  let u = mk9(); u.pool = 10; u._onLog('Ann', B('Ann') + ' locks ' + B('Privileged Position') + ' — ' + B('Bot') + ' burns 1 pool.');
+  ok(u.pool === 9, 'a live bot named as the prey pays Privileged Position\'s pool (pool ' + u.pool + ')');
+  u = mk9(); u.board = [inPlay('t1', 'Tension in the Ranks')]; u._onLog('Ann', B('Ann') + ' discards two masters to burn ' + B('Bot') + '\'s ' + B('Tension in the Ranks') + '.');
+  ok(u.board[0] && u.board[0].zone === 'ash', 'a live bot burns its Tension in the Ranks on the line that names it as the owner');
+  u = mk9(); u.board = [inPlay('r1', 'Anarch Revolt')]; u._onLog('Ann', 'Referendum passes — ' + B('Anarch Revolt') + ': burn ' + B('Bot') + '\'s ' + B('Anarch Revolt') + '.');
+  ok(u.board[0] && u.board[0].zone === 'ash' && u._sent.some(m => m && m.t === 'log' && strip(m.html) === 'Bot burns Anarch Revolt (the referendum passed).'), 'a live bot burns its card on a burn referendum\'s pass line and says so at the table');
+  u = mk9(); u._w5Hostages = new Map([['h1', { seat: 3, name: 'Sully' }], ['h2', { seat: 3, name: 'Lisa' }]]);
+  u._onLog('Ann', B('Ann') + ' burns 2 blood: ' + B('Sully') + '’s hostage counter is burned (Carver’s Meat Packing and Storage).');
+  ok(u._w5Hostages.size === 1 && u._w5Hostages.has('h2'), 'a live bot drops that hostage of the sending seat from its count, and only that one');
+  u = mk9(); u._onLog('Ann', B('Ann') + ' plays ' + B('Sudden Reversal') + ' — cancels ' + B('Johan') + '\'s ' + B('Fame') + ' (its cost is not paid).');
+  ok(!!(u._srSeenHuman && u._srSeenHuman.owner === 'Johan' && u._srSeenHuman.card === 'Fame'), 'a live bot that hears another bot cancel a HUMAN\'s master notes it (it holds its own Sudden Reversal)');
+
+  ok(CLIENT.includes('  fxIn(who, seatNo, m){') && CLIENT.includes('if(inRoom()) mpSend(fxm); else hotFxSend(fxm);'), 'client source: at a hotseat a human\'s card clone goes to the bot seats through the bridge (fxIn) -- what the bots\' fx readers rest on there (v2.6.176)');
+  ok(CLIENT.includes('function rtTargetInfo(rt){') && !CLIENT.includes("kind:'lib', faceDown: !!net.rtarget.faceDown"), 'client source: a cross-board aim carries the aimed card\'s own kind into the clone (v2.6.176; a vampire was \'lib\')');
 }
 
 console.log('\n' + passN + '/' + failN + (failN ? ' \u2014 FAIL' : ' \u2014 all green'));
