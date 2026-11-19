@@ -3,7 +3,8 @@
 /* tools/hotseat-in-browser.js v1.0.0 (14 Nov 2026, bot v0.6.227, round E; its egress review's fixes) -- the hotseat table with bots in a REAL browser: the client
    (bot/'s read-only copy, elysium-vtes-bord.html) in headless Chromium, served with the bot bundle beside it, one human seat that only
    passes and three bot seats, as a player sets it up (offlineCfg + startOfflineFromCfg). Each pass runs the client's own sweep of the
-   bot seats (passNow -> hotRunBotTurns), so the bots act through the page's hotBridge, which delivers a line in the same call. Each
+   bot seats (passNow -> hotRunBotTurns), so the bots act through the page's hotBridge (in the same call before client v2.6.177,
+   after the send since). Each
    bot's events are collected in the page (its onEvent): the bot-vs-bot bleed-modifier windows (a play in window bleed-mod, to the
    actor's next through / blocked; one the actor waited on the human for is set apart, one another bot blocked in is a contest), how
    long each took and how many outlasted 2.5 s plus the pace with no answer row between (ana-windows' reading), every stale-answer row; the page's console is kept too. A diagnostic, not a gate (Playwright; main's client is read, never edited).

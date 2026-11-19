@@ -1,4 +1,4 @@
-# BOARD — the open asks (18 Nov 2026, v0.6.234). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (19 Nov 2026, v0.6.234). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -22,9 +22,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file
   (`gen-precon.js --check` compares them). The root README credits zero-vtes when it has a licence (handoff). *Done when* the 18
   starters' rows are playable and every hand-only key has its sharing answer. Docs: RULINGS D-84, D-102, D-104, D-108, D-125,
-  O-45; `CARDS.md`; HOWTO.
+  D-126; `CARDS.md`; HOWTO.
 - **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9): what v1 of each wave left out, the
-  amber halves and the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
+  amber halves and the latent items; no line says a human's Sudden Reversal cancelled a bot's master (main, 19 Nov). *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
 - **The curation queue of wave 6's graded readings** (none in a deck; spec-v5-wave6 §8): Enkil Cog, Destilaria Estrela da
   Paraíba, Dogged Pursuit, Speak with Spirits and The Mole (leftover +1 intercept modes), Hall of Hades' Court [dom] (`_voteBoosts`
   plays it past its line's capacity), Momentary Delay (`press` misreads 'continues as if unblocked'), Faerie Wards [aus] (the directed
@@ -59,12 +59,16 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The helper lock's release** (main's answers of 3 Nov): the client locks all helpers on while a bot is seated until the bot
   proves a whole combat on lines alone. *Done when* asked, when ready. Docs: RULINGS D-62, D-94.
 - **History comments in `elysium-bot.js`** (222 KB): trim to trap comments ("why" + a rule id) in the functions a round touches
-  (spec §8 Q6, recommended (b)). *Done when* Johan has chosen; then per round.
+  (spec §8 Q6, recommended (b)); those saying the bridge delivers inside the send. *Done when* Johan has chosen; then per round.
 - **Section 69b's decay check**: `o4.pick === ctxC.card ? true : o4.pick ===
   ctxC.plain` passes for either pick and reads no score, so the streak's −0.30 on the card line is untested. *Done when* 69b
   compares the card score with and without the streak.
 
 ## Known, not built (bot side)
+- **My own rescue opens a directed window** (egress review, 19 Nov): `UND_KINDS` lacks `ownRescue` and `leaveTorpor`, so the
+  predator is never heard (the 240: 313 own rescues, 0 blocked). *Done when* both are undirected, a section red on v0.6.234.
+- **Any "no…" chat answers my open Block?** (the same review): `_onChat` takes "No votes from me." from any seat, unchecked
+  against `_openLine`. *Done when* only an eligible seat's answer to the open line counts, a section red on v0.6.234.
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
   the merged decks' share; a few decks count twice. A v5 rebuild (scratch: 4,709 decks, Magnum under 10) drops a name the bot
   records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
@@ -149,10 +153,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   a steal's victim lost > stole. A lead (v0.6.227, the 600's match 167): a bleed that fizzles at a seat just ousted is read by
   the next prey as its own and books the pool (likelier since v0.6.227: the 600's fizzles 3 → 6). *Done when* `ana-gates.py` passes
   there. Docs: CHANGELOG v0.6.224, v0.6.227.
-- **A window can open after its line was delivered** (v0.6.227's review): a synchronous bridge delivers a line that leaves inside
-  its own `send()` before `_askBlock` runs, and the target's instant Pass finds no window (pace 0 with a free token; the client
-  pace is safe by its 200 ms gaps). Defer a window-opening line's drain a macrotask, or let `_askBlock` send it? *Done when* a
-  section with a full token bucket passes. Docs: CHANGELOG v0.6.227, L-92.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a

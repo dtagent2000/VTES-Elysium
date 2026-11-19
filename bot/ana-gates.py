@@ -19,7 +19,8 @@
 #                 stray row failed a series). Wider View's burn-for-pool left INV_KNOWN with v1.1.0: bot v0.6.219's checker books the
 #                 blood a burn's note already shows (the pool-print + pool-drift +N pair was that double count), so such a flag is new.
 #     windows     the arena: an actor's window that ran out and went through (v0.6.206's gate of 0); the sim table: information only --
-#                 most bleed-modifier windows ran out there until bot v0.6.227 (the hotseat bridge delivers inside the send, L-92); a
+#                 most bleed-modifier windows ran out there until bot v0.6.227 (the hotseat bridge delivered inside the send until client
+#                 v2.6.177, L-92); a
 #                 few are still flagged and none is lost (an actor's own Spying Mission at its pace, a +0 total that reached its target
 #                 late), so it stays information there (v1.1.2)
 #   Information lines: the ledger's leads and its explained differences, the step handshake's safety net, the post-game ousts.

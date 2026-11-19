@@ -1,8 +1,8 @@
 # spec-card-sweep — finishing the V5 sweep by sharing (18 Nov 2026, on bot v0.6.234)
 
 **Status:** kör — Johan, 18 Nov ("Vi kör, med dina rekommendationer för besluten"), on the proposal this page records: the method of
-§2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör" and waits for
-his word (RULINGS O-45). On 19 Nov he answered the question about zero-vtes's maintainer (§5). The page's own round changed no
+§2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör"; he took
+its answer on 19 Nov (RULINGS D-126). On 19 Nov he answered the question about zero-vtes's maintainer (§5). The page's own round changed no
 code. Measured on main `6baf99b`.
 
 **Step A1** (19 Nov, no bot change) built §4.1's first two items: the library table (`gen-card-ledger.js` v1.2.0, "The whole
@@ -91,9 +91,9 @@ and its guide check is listed. The crypt keeps D-108's waves by class; the start
 ## 4. The order
 | step | what | done when |
 |---|---|---|
-| **A. Set up** (one round, no behaviour change) | §4.1: the tools, the dry run, the docs, the merge's design. The seven finished decks' review sheets too, if Johan confirms §4.2. | The tools run in the round's gates; the dry run's counts stand in the PR and in §4.3; Johan has the merge's design. |
+| **A. Set up** (one round, no behaviour change) | §4.1: the tools, the dry run, the docs, the merge's design. The seven finished decks' review sheets too (§4.2, D-126). | The tools run in the round's gates; the dry run's counts stand in the PR and in §4.3; Johan has the merge's design. |
 | **B. The pilot: Banu Haqim** (one round) | The new flow end to end, the merge of hand entries built first (§4.1, on Johan's "kör" on its design). Its 4 remaining cards are shared-only by §1's measure, most of them the maneuver and press grants with the rush cards; Hunting the Quarry and Night Terrors' strike (wave 6's riders) ride with them. Priority Contract (4 copies) is one of the six misreads below and is read again here. | 77 of 77 copies playable, no disagreement open on its sheet, the library table moved, the flow's friction written down. |
-| **C. The harvest** (one or two rounds) | The 145 hand-only keys asked "who else prints this?"; the seven finished decks first, if Johan confirms §4.2. The compiler's known misses (`bloodAdd` and `bloodAddTo` on 59 card-keys). The cross-check of what is already playable against zero-vtes, with the five other misreads. | No row of the sharing register is `backlog`; the number of library cards turned playable is reported. |
+| **C. The harvest** (one or two rounds) | The 145 hand-only keys asked "who else prints this?"; the seven finished decks first (§4.2, D-126). The compiler's known misses (`bloodAdd` and `bloodAddTo` on 59 card-keys). The cross-check of what is already playable against zero-vtes, with the five other misreads. | No row of the sharing register is `backlog`; the number of library cards turned playable is reported. |
 | **D. The other twelve starters** | Nearest first, re-ranked from the ledger after every starter: each round's shared effects close cards in other starters too. Appendix A has where they stand. | Each starter done as §3. |
 | **E. The strategy evaluation** | After the sweep, outside this page. | — |
 
@@ -151,7 +151,7 @@ The five finished starters with `hacking` and `sewer` hold 104 library cards:
 - **41 compiled entries never hand-curated** (the 25 Sep sweep checked those with modes by script). 37 have a zero-vtes
   definition: a review sheet checks them at once, and a disagreement becomes a review item.
 
-What waits for Johan (O-45), with Claude's answer yes to both: the 41 are read again, their seven sheets in step A; and the
+Johan's answer (19 Nov, D-126: Claude's yes to both): the 41 are read again, their seven sheets in step A2; and the
 finished decks come first in the harvest, because their consumers are the best proven (the four starters sat in 408 of the
 ledger's sim matches each).
 
@@ -212,7 +212,7 @@ cards in the sim.
 3. **"Shared" means printed by at least two library cards.**
 4. **B before C.** The pilot is small and proves the tools before the harvest leans on them.
 
-Open, not in D-125 (RULINGS O-45): the finished decks' 41 entries read again in step A and their decks first in the harvest
+Not in D-125, answered on 19 Nov (RULINGS D-126): the finished decks' 41 entries read again in step A and their decks first in the harvest
 (§4.2).
 
 ## 8. What stays and what stops
