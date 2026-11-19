@@ -15,10 +15,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 sweep** (D-125; `specs/spec-card-sweep-2026-11-18.md`): one starter at a time, every printed effect first asked who else
-  in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. A1 is done (the library
-  table, the sharing register). Next: **A2** (the review sheet, the dry run, the merge design; spec §4.1), **B** the pilot (Banu
-  Haqim: the maneuver / press grants with the rush cards, Hunting the Quarry and Night Terrors' strike with them), **C** the
-  harvest, **D** the other twelve.
+  in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. A1 is done. Next: **A2**
+  (the review sheet, the dry run, the merge design; spec §4.1), **B** the pilot (Banu Haqim: the maneuver / press grants with
+  the rush cards, Hunting the Quarry and Night Terrors' strike with them), **C** the harvest, **D** the other twelve.
   Crypt waves (D-108): A done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES`
   + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file
   (`gen-precon.js --check` compares them). The root README credits zero-vtes when it has a licence (handoff). *Done when* the 18

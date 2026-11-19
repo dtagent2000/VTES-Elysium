@@ -45,6 +45,15 @@
     mutants of the seed's pin alive; a malformed row crashed the counts; four labels of the new section said more than their
     numbers (`combatEnds` "not read", INERT, NAME-ONLY, UNREACHABLE); an unknown verdict read as playable; D-101's "Built
     (Claude)" marker lost in the cut; the total case still leaning on two pages.
+  - **Main released client v2.6.176 during the round** (#83, with `REPLY-to-bot-2026-11-19-v0.6.234.md`): merged in, STATUS names
+    it and lists the reply as not yet consumed (the read-only copies stay v2.6.175: a round of its own).
+  - **Gates** (19 Nov, the branch's last bytes, main's v2.6.176 at the root): `node --check` 3 files, `bash -n` 2; `test-cardfx`
+    392/0; the ledger's self-test 75/75; `gen-precon --check` no problems; `doc-budget` PASS and its destructive test every case
+    red; the lint 0 findings; canary 171/0 on bot/'s copies and 171/0 on the root's release (main's canary v1.4.0 beside the
+    bundle: 231/0); the hotseat gate 12/0 with either client; the suite 2606/0, one run in a frozen snapshot, because the root
+    moved. `elysium-bot.js` `4a1342b4`, `test-bot-logic.js` `7dcc71ff` and `elysium-cardfx.json` `721c74ee` are v0.6.234's bytes:
+    no sim footprint; HB1 was not run (nothing it reads changed).
+  - **After the round:** the standing pages 175,223 of 177,000, RULINGS 65,456 of 67,000, the bootstrap 49,962 of 50,000.
 - **The V5 sweep's method (18 Nov 2026, bot v0.6.234, no bot change; PR #82)** — Johan's "kör" on
   `docs/specs/spec-card-sweep-2026-11-18.md`, RULINGS D-125 (amends D-98 and D-104's waves by class, widens D-83). Measured read-only on main `6baf99b`: the
   library entries the bot can statically play went 565 → 658 in the waves' first five days and 658 → 679 in the fifteen since, the

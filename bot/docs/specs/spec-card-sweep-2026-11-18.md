@@ -8,8 +8,8 @@ code. Measured on main `6baf99b`.
 **Step A1** (19 Nov, no bot change) built §4.1's first two items: the library table (`gen-card-ledger.js` v1.2.0, "The whole
 library" in `CARDS.md`) and the sharing register with its gate (`cardfx-sharing.json`, `cardfx-sharing.js`, `test-cardfx.js`).
 Where it differs from §4.1:
-- The room is there (2.0 KB under the total, 1.5 KB under RULINGS), but not by the cut planned: the read found 0.5 KB of
-  history, the rest is a raise by D-101 (`tools/doc-budget.sh`). `tools/test-doc-budget.sh`'s total case reads the budgets from
+- The room is there (1.8 KB under the total once main's reply of 19 Nov had taken 0.3 KB of STATUS, 1.5 KB under RULINGS), but
+  not by the cut planned: the read found 0.5 KB of history, the rest is a raise by D-101 (`tools/doc-budget.sh`). `tools/test-doc-budget.sh`'s total case reads the budgets from
   the check and pads the bootstrap's three pages, so it no longer leans on how full they are.
 - The seed pins each key's entries as well as the keys: a backlog key cannot reach another card before it is answered. The
   egress review found the hole (B's rush and grant keys are backlog keys). A unique row is one card, a shared row at least two
@@ -23,7 +23,7 @@ Where it differs from §4.1:
 the dry run's data: how a shared row's debt is gated (a row is owed while a card it names lacks the key: counted and reported
 today, and §2 wants a shared effect applied in the same round); whether the register covers what sits outside a library entry's
 fx keys (on hand entries only today: 21 entry-level fields, two of them notes, 6 mode-level, 3 under `req`; and crypt keys);
-and the bootstrap's room (265 bytes of 50 KB are free; the root `CLAUDE.md`'s zero-vtes line needs a cut there first).
+and the bootstrap's room (38 bytes of its 50 KB are free: the root `CLAUDE.md`'s zero-vtes line needs a cut there first).
 
 ## 0. In one paragraph
 We finish the V5 sweep one starter at a time, one card at a time, and every effect we meet is first asked one question: **who else
