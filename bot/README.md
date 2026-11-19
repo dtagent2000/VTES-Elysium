@@ -44,3 +44,6 @@ Probes: `diag-give-probe.js`, `diag-a1-stash-probe.js`. Docs: `bash tools/doc-bu
 - `elysium-bot-CHANGELOG.md` (one entry per release) · `CARDS.md` (the card ledger, generated) · `PROJECT-INSTRUCTIONS.md` (the claude.ai project instruction) · `START-HERE-BOTS-CHAT.md`
 - `specs/` design canon · `handoffs/` open handoffs to main (main's replies: `client/docs/handoffs/REPLY-to-bot-*.md`) · `reports/` series and bench reports · `reviews/` the 11 Sep deep review and the 14 Oct play-test review · `coverage/` deck-coverage snapshots · `archive/` superseded manifests and TODOs
 - `history/` verbatim: the session journal, the project context, the dated learnings, `SKILLS-2026-10-20.md`, `CLAUDE-v2-2026-10-20.md` (the old bootstrap with its version handshake and debts 1–71), every READ-ME-FIRST (`readme/`), consumed handoffs (`handoffs/`), delivered round specs (`specs/`)
+
+## Credit
+zero-vtes (MIT, Copyright (c) 2026 Lionel Panhaleux, https://github.com/lionel-panhaleux/zero-vtes): a development-time reference for card readings and for which effects cards share (RULINGS D-125; `docs/specs/spec-card-sweep-2026-11-18.md` §5). It is read from a checkout outside the repository; nothing of it is committed or runs with the bot. The sources the tools read as data are named in their rows above (KRCG, the TWDA, vtes-skill).

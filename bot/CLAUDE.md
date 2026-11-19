@@ -206,7 +206,7 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   `wall` is an archetype fixture only. `DECK_STRATEGY` carries each manifest (the reviewer's yardstick) and `combat` posture. Eight
   decks are also embedded in `elysium-bot.js` (duplicated; BOARD; Toreador since v0.6.219). The 13 other V5 precons are
   `deck-<key>.json` (`gen-precon.js`): test inputs the sim plays, not in the client's menu until their rows in `docs/CARDS.md` are
-  playable (BOARD, the V5 waves).
+  playable (BOARD, the V5 sweep).
 - The hidden-hand design (K0 discipline priors → K1 deck templates → K2 odds; the TWD profile and archetype labels) is
   `docs/specs/spec-knowledge-layer.md`.
 

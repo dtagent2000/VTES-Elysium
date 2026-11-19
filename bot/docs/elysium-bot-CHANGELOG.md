@@ -3,6 +3,20 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **The V5 sweep's method (18 Nov 2026, bot v0.6.234, no bot change; PR #82)** — Johan's "kör" on
+  `docs/specs/spec-card-sweep-2026-11-18.md`, RULINGS D-125 (amends D-98 and D-104's waves by class, widens D-83). Measured read-only on main `6baf99b`: the
+  library entries the bot can statically play went 565 → 658 in the waves' first five days and 658 → 679 in the fifteen since, the
+  compiler's share standing still (531 → 527); the bot reads 200 effect keys, the compiler produces 42, and 145 exist only in hand
+  entries, 124 of them on a single entry. The method is Johan's three steps: every printed effect is first asked who else in the
+  library prints it; a common or shared effect lands on every card that prints it, only the unique remainder is hand-curated; one
+  starter at a time. zero-vtes is a development-time reference under KRCG's text and the rulings. The order: A the set-up (the
+  tools and the dry run, no behaviour change), B the pilot (Banu Haqim), C the harvest of the hand entries, D the other twelve
+  starters. Step A's counts carry registered predictions (spec §4.3). Open for Johan (O-45): the finished decks' never
+  hand-curated entries read again and their decks first in the harvest. Johan, 19 Nov, on zero-vtes's maintainer: "Vi kan släppa
+  nog villkoret för Lionel kanske eftersom han har MIT-licens", read as the condition dropped; `bot/README.md` credits zero-vtes.
+  Docs: D-98, D-102 and the BOARD's V5 line cut to what stands; RULINGS 65 → 66 KB and the standing pages
+  173 → 174 KB by D-101. Egress: 35 findings over the review and its two re-checks (half-done 15, unproven 8, rule-missed 8,
+  stale-doc 3, test-weakened 1), 34 fixed, 1 listed (HARNESS's charter for a T2 list is step A's).
 - **Toreador at the sim table (6 Nov 2026, bot v0.6.217, no bot change; PR #52)** — STATUS Next 1, Johan's go of 6 Nov: does the
   Toreador precon hold up beside the starters (D-98)? `docs/reports/REPORT-toreador-sim-2026-11-06.md`. The specified design (the four
   starters + toreador, every seating × 2 deals = 240 at five seats, the client profile; the prediction registered and pushed before the

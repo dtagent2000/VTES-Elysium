@@ -14,13 +14,15 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The abstract model spec**: the first of the four checks (fast rollouts over card-class distributions, probabilities not
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
-- **The V5 waves**: the generator (`gen-precon.js`), the 14 other precons as `deck-<key>.json` (the sim plays them; the menu only
-  Toreador) and the ledger (`docs/CARDS.md`); waves by effect class as the class map ranks them (D-98). Waves 1–6 done
-  (D-99, D-103, D-104, D-106, D-120, D-122, D-123, D-124); next: the maneuver / press grants with the rush cards (Hunting the Quarry,
-  Night Terrors' strike: combat ends), the free block bars, the cards without effect data, the unmodelled action cards. Crypt waves (D-108): A
-  done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY`
-  line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares
-  them). *Done when* a wave's rows turn playable. Docs: RULINGS D-84, D-98, D-102, D-104, D-108; `CARDS.md`; HOWTO.
+- **The V5 sweep** (D-125; `specs/spec-card-sweep-2026-11-18.md`): one starter at a time, every printed effect first asked who else
+  in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. Next: **A** the set-up
+  (spec §4.1; no behaviour change), **B** the pilot (Banu Haqim: the maneuver / press grants with the rush cards, Hunting the
+  Quarry and Night Terrors' strike with them), **C** the harvest, **D** the other twelve.
+  Crypt waves (D-108): A done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES`
+  + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file
+  (`gen-precon.js --check` compares them). The root README credits zero-vtes when it has a licence (handoff). *Done when* the 18
+  starters' rows are playable and every hand-only key has its sharing answer. Docs: RULINGS D-84, D-102, D-104, D-108, D-125,
+  O-45; `CARDS.md`; HOWTO.
 - **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9): what v1 of each wave left out, the
   amber halves and the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
 - **The curation queue of wave 6's graded readings** (none in a deck; spec-v5-wave6 §8): Enkil Cog, Destilaria Estrela da
@@ -100,7 +102,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The locked routes' last rungs** (round F, D-116 (5)): the block decision counts the unlock reactions, not the Underbridge Stray
   (the route's last rung, an ally burned); `_wakeBlockersAfter` (the keep-blocker read) counts wakes only; Eyes of the Wild by a
   vampire already attempting to block [ANK 20181122-2] is not built. *Done when* each reads the route, or is ruled out.
-- **Free block bars** (Beast Meld-class) and `chosen` (Seduction-class) have tags, no consumer. *Done when* a V5 wave needs them
+- **Free block bars** (Beast Meld-class) and `chosen` (Seduction-class) have tags, no consumer. *Done when* the V5 sweep needs them
   and the ledger lists them playable. Docs: RULINGS O-21.
 - **The chump gate is not the commit** (round B): `bareBlock` 'chump' passes on any chump body, then `_commitBlock` picks
   its own (`_pickBlocker`); both paths. *Done when* the commit takes the gate's body, section-tested.
