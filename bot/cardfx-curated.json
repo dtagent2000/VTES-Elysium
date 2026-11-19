@@ -3526,6 +3526,7 @@
    "modes": [
     {
      "at": "obf+pre",
+     "onlyBleed": true,
      "fx": {
       "bleed": 1
      }

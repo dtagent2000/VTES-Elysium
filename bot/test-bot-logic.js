@@ -3304,8 +3304,9 @@ async function connectWithRetry(client, tries = 30){
        version (fas A+, source-verified: "all modifications made to A MINION's
        stealth or intercept remain in effect for the duration of the action" —
        intercept never transfers between blockers). Atk bleeds 2 with Computer
-       Hacking (a=0) → d1 blocks with Enhanced (+1) → Atk SPENDS Forgotten
-       Labyrinth (+2, tally a=2) → verdict FAILS → the retry MUST be a
+       Hacking (a=0) → d1 blocks with Enhanced (+1) → Atk SPENDS Lost in Crowds
+       [OBF] (+2, tally a=2; v0.6.235: Forgotten Labyrinth, the +2 here before, is
+       'Not usable during a bleed action') → verdict FAILS → the retry MUST be a
        DIFFERENT minion (attempted-set) whose OWN card alone reaches a=2:
        Eyes of Argus (+2) is injected post-fail → b written FRESH (=2, the
        _setTallyB fix; the old bump would have said 3) → verdict SUCCEEDS at
@@ -3319,8 +3320,8 @@ async function connectWithRetry(client, tries = 30){
         onEvent: (type, m) => {
           if(type === 'turn' && m.seat === 1 && nm === 'Atk' && ++atkTurns38 === 2 && !rigged38){
             rigged38 = true;
-            botA38.board = [{ id: 'a1', name: 'Bloodfeud (G4)', kind: 'crypt', zone: 'ready', locked: false, blood: 2, x: 100, y: 100 }];
-            botA38.hand = ['Computer Hacking', 'Forgotten Labyrinth'];   // bleed 2 → spend-stealth stakes-weight 1.0 (deterministic SPEND); FL = the +2 answer
+            botA38.board = [{ id: 'a1', name: 'Skulk (G5)', kind: 'crypt', zone: 'ready', locked: false, blood: 2, x: 100, y: 100 }];   // v0.6.235: superior Obfuscate (was Bloodfeud (G4), inferior: Forgotten Labyrinth's +2)
+            botA38.hand = ['Computer Hacking', 'Lost in Crowds'];   // bleed 2 → spend-stealth stakes-weight 1.0 (deterministic SPEND); Lost in Crowds [OBF] = the +2 answer (v0.6.235: Forgotten Labyrinth is not usable during a bleed)
             botD38.board = [{ id: 'd1', name: 'Colin Flynn (G1)', kind: 'crypt', zone: 'ready', locked: false, blood: 2, x: 100, y: 100 },
                             { id: 'd2', name: 'Colin Flynn (G1)', kind: 'crypt', zone: 'ready', locked: false, blood: 2, x: 180, y: 100 }];
             botD38.hand = ['Enhanced Senses'];   // attempt 1 has ONLY +1; Eyes (+2) arrives post-fail — per-minion intercept means d2 needs a card that ALONE reaches a=2
@@ -3334,7 +3335,7 @@ async function connectWithRetry(client, tries = 30){
         }
       }, extra));
       const botA38 = mk38('Atk', { create: true, persona: 'grinder',
-        deck: { name: 'S', crypt: [{ name: 'Bloodfeud', qty: 12 }], library: [{ name: 'Computer Hacking', qty: 30 }, { name: 'Forgotten Labyrinth', qty: 30 }] } });
+        deck: { name: 'S', crypt: [{ name: 'Bloodfeud', qty: 12 }], library: [{ name: 'Computer Hacking', qty: 30 }, { name: 'Lost in Crowds', qty: 30 }] } });
       await botA38.connect();
       const botD38 = mk38('Def', { persona: 'shark',
         deck: { name: 'W', crypt: [{ name: 'Colin Flynn', qty: 12 }], library: [{ name: 'Enhanced Senses', qty: 30 }, { name: 'Eyes of Argus', qty: 30 }] } });
@@ -3346,8 +3347,8 @@ async function connectWithRetry(client, tries = 30){
       const t38 = Date.now();
       while(Date.now() - t38 < 35000 && !feed38.some(f => f.t === 'chat' && f.who === 'Atk' && /Atk combat/.test(f.s))) await sleep(150);   // v0.6.109: v0.6.108 put the PERSONA NAME in the combat prefix (chat() rewrites 'Trainbot combat' -> '<name> combat'); this bot is not named Trainbot, so the old literal never matched -- caught by the first full suite run since that release
       await sleep(600);
-      ok(feed38.some(f => f.t === 'dlog' && /Forgotten Labyrinth.*\+2 stealth\./.test(f.s)),   // v0.6.114: log tier, proven via Def's inbound (no self-echo of log)
-         'ladder: the attacker ANSWERED the block with spent stealth (Forgotten Labyrinth +2 → _bumpTallyA → a=2)');
+      ok(feed38.some(f => f.t === 'dlog' && /Lost in Crowds.*\+2 stealth\./.test(f.s)),   // v0.6.114: log tier, proven via Def's inbound (no self-echo of log)
+         'ladder: the attacker ANSWERED the block with spent stealth (Lost in Crowds [OBF] +2 → _bumpTallyA → a=2)');
       ok(feed38.some(f => f.t === 'dlog' && /Block: Stealth \d+ vs Intercept \d+ \u2014 block (fails|succeeds)\./.test(f.s)) && feed38.filter(f => f.t === 'dlog').every(f => { const m = f.s.match(/Block: Stealth (-?\d+) vs Intercept (-?\d+) \u2014 block (fails|succeeds)\./); return !m || ((+m[2] >= +m[1]) === (m[3] === 'succeeds')); }),   // v0.6.170: the exchange now runs stealth-first (no pre-committed intercept), so the exact numbers moved -- the race guard is kept as CONSISTENCY: every verdict line must agree with its own numbers
          'ladder: THE FAILS BRANCH at the EXACT true numbers — "Stealth 2 vs Intercept 1" (server v2.6.17 absent-field preserve killed the concurrent-write race; this assert was race-tolerant \\d for one session and now guards the fix — a regression to whole-state clobbering reads Intercept 0 again)');
       const blocks38 = feed38.filter(f => f.t === 'say' && f.who === 'Def' && f.i === 2).length;
@@ -6155,6 +6156,7 @@ async function connectWithRetry(client, tries = 30){
       /* round 2 -- the stealth modifier had the same gap (Forgotten Labyrinth x5 in the sewer deck played free) */
       u9.hand = ['Forgotten Labyrinth'];
       const obf = { id: 'obf', name: 'Skulk', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4 };   // real superior-OBF crypt (the sewer deck's own)
+      u9._actingVamp = { v: obf, n: 1, played: new Set(), hunt: true };   // v0.6.235: Forgotten Labyrinth is 'Not usable during a bleed action' (cardfx notBleed) -- the finder is asked for a hunt (a plan with no action in flight reads a bleed)
       const stl = u9._bestStealthFor(obf, new Set(), null);
       ok(stl && stl.s === 3 && stl.cost && stl.cost.blood === 1,
          '90h _bestStealthFor: Forgotten Labyrinth [OBF] +3 found and CARRIES cost {blood:1} (the finder never read cost.blood before -- the intercept finder has since v0.6.13)');
@@ -6163,7 +6165,7 @@ async function connectWithRetry(client, tries = 30){
          '90i _bestStealthFor: a bloodless actor cannot play a 1-blood stealth card');
       obf.blood = 4;
       u9._actingVamp = { v: obf, n: 2, played: new Set(), target: null, edgeLocked: false, limitedUsed: false };
-      u9._ask = { contested: false, q: 'Trainbot: Skulk bleeds Bob for 2. Block?', timer: null, deadline: null, pausedBy: new Set() };
+      u9._ask = { contested: false, q: 'Trainbot: Skulk acts. Block?', timer: null, deadline: null, pausedBy: new Set() };   // v0.6.235: no bleed (no target: the bot's own test) -- Forgotten Labyrinth is not usable during one
       u9.send = () => {}; u9.push = () => {}; u9._restartAskTimer = () => {};
       u9.decide = (k, c) => k === 'spend-stealth' ? { spend: true, why: 'forced' } : Bot.prototype.decide.call(u9, k, c);
       u9.o.paceMs = 0;   // v0.6.152: the human-blocker look lands after the reaction beat; the fast lane makes it synchronous here
@@ -14780,6 +14782,177 @@ async function connectWithRetry(client, tries = 30){
            && resc === null && resc0 && resc0.name === 'Yewon Ong' && pth === 'Caine' && pth0 === 'Power and the Inner Voice'
            && !!kp && kp.kind === 'card-played' && kp.card === 'Shadow Cloak' && kp.vamp === 'Yewon Ong' && !BOT9.L12.actObs.test(line),
            '179k the cloak through _maybeActAgain (a puts line: a card played in the event log, no action observed; the sup marker on its pub); a cloaked vampire in torpor skipped by a rescuer without Auspex; a chosen Path read first (got ' + JSON.stringify({ card: !!card, line, sup: card && card.sup, pub: pub.sup, resc, resc0: resc0 && resc0.name, pth, pth0, kp }) + ')'); }
+    }
+
+    /* 180) v0.6.235 -- THE FINISHED DECKS' ROUND (RULINGS D-127, specs/spec-card-sweep-2026-11-18.md section 4.3; cardfx v1.9.12): the
+       nine rules faults A2's readings and the 19 Nov egress review found. My own rescue and leaving torpor are undirected; a typed 'no'
+       answers my Block? only from a seat it asks; a stealth card printed for a bleed only (Bonding) or never in one (Forgotten
+       Labyrinth); an intercept card printed for my predator's acting minion (Instinctive Reaction) or a bleed (Speak with Spirits); one
+       On the Qui Vive per minion between its unlock phases (the block's, the bounce's and the vote's wake); a 'Do not replace until
+       ...' card's replacement held for its moment (Mirror Walk, Wake with Evening's Freshness, Dodge); Apportation's press only to
+       continue. The old bytes lack the new methods: every call is guarded so they fail clean.
+       LAST LINE OF 180 is the closing brace below. */
+    {
+      console.log('\n[180] v0.6.235 -- the finished decks’ round: undirected rescues, the typed decline, the cards’ conditions, once per unlock, held replacements, the press’s direction');
+      const IF0 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const N0 = ['Hanna', 'Viktor', 'Nora', 'Pelle'];   // me 1, my prey 2, a cross seat 3, my predator 4
+      const mk180 = (deck, o) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Hanna', persona: 'expert', deckName: deck || 'malkavian', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} });
+        u.seat = 1; u.started = true; u.players = N0.map((n, i) => ({ seat: i + 1, name: n, online: true, bot: !!(o && o.bots) }));
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.say = () => {}; u.note = () => {}; u.chats = []; u.chat = t => u.chats.push(t);
+        u._rst = 0; u._restartAskTimer = () => { u._rst++; };
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.board = []; u.hand = []; u.pool = 20; u.turnSeat = 1;
+        u.table = { 1: { pub: { pool: 20, cards: [] } }, 2: { pub: { pool: 20, cards: [] } }, 3: { pub: { pool: 20, cards: [] } }, 4: { pub: { pool: 20, cards: [] } } };
+        return u; };
+      const V0 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 4, attached: [] }, o || {});
+      const draws0 = u => u.sent.filter(m => m && m.t === 'draw').length;
+      const ev0 = (u, t) => u.events.filter(e => e.t === 'bot:' + t).map(e => e.d);
+      const quietUnlock = u => { ['_announcePhase', '_considerLockIncome', '_considerHuntingGround'].forEach(k => { u[k] = async () => {}; });   // my unlock phase without its other effects (tested in their own sections)
+        ['_applyPhaseIncome', '_emitSnapshot', '_strategize', '_menaceUnlockEngine', '_maybeGiveLock', '_maybeWarsawRescue', '_rolloverPredPressure', '_w5Unlock'].forEach(k => { u[k] = () => {}; }); };
+
+      // a) my own rescue and leaving torpor are basic undirected actions (the block gate): my prey AND my predator may block -- the
+      //    window waits for both; a rescue of another Methuselah's vampire stays directed
+      { const run = kind => { const u = mk180('malkavian'); const v = V0('a1', 'Andi Liu', { locked: true }); u.board = [v];
+          u._actingVamp = { v, n: 0, played: new Set(), kind, target: null }; u._askBlock('Trainbot: Andi Liu acts. Block?');
+          const a = u._ask; return { und: !!(a && a.undirected), elig: a && a.eligible ? [...a.eligible].sort().join() : null }; };
+        const r = { own: run('ownRescue'), torpor: run('leaveTorpor'), enemy: run('enemyRescue') };
+        ok(r.own.und && r.own.elig === 'Pelle,Viktor' && r.torpor.und && r.torpor.elig === 'Pelle,Viktor' && !r.enemy.und,
+           '180a my own rescue and leaving torpor open an undirected window (prey and predator eligible); a rescue of another Methuselah’s vampire stays directed (got ' + JSON.stringify(r) + ')'); }
+
+      // b) a typed 'no' answers my open Block? by the quick phrase's rule: a cross seat's answers nothing, a referendum's 'No votes from
+      //    me.' is no answer, the prey's and then the predator's close an undirected window; a directed one closes on its target's only;
+      //    a live contest is closed by its verdict (the clock), never by a 'no'; a bot's 'no' while my line is still queued is stale
+      { const mkA = (av, o) => { const u = mk180('malkavian', o); const v = V0('a1', 'Andi Liu'); u.board = [v]; u._actingVamp = Object.assign({ v, n: 1, played: new Set() }, av);
+          const box = {}; u._askBlock('Trainbot: Andi Liu acts. Block?').then(r => { box.r = r; }); return { u, box }; };
+        const h = mkA({ hunt: true }); h.u._onChat('Nora', 'no'); const h1 = !!h.u._ask; h.u._onChat('Viktor', 'No votes from me.'); const h2 = !!h.u._ask;
+        h.u._onChat('Viktor', 'no'); const h3 = !!h.u._ask; h.u._onChat('Pelle', 'pass'); await sleep(0); const h4 = h.u._ask;
+        const d = mkA({ target: 2 }); d.u._onChat('Pelle', 'no'); const d1 = !!d.u._ask; d.u._onChat('Viktor', 'nej'); await sleep(0); const d2 = d.u._ask;
+        const c = mkA({ target: 2 }); c.u._ask.contested = true; const rs0 = c.u._rst; c.u._onChat('Viktor', 'no'); const c1 = !!c.u._ask && c.u._rst > rs0;
+        const s = mkA({ target: 2 }, { bots: true }); const L0 = { t: 'chat', text: 'Trainbot: Andi Liu acts. Block?' }; s.u._ask.announced = false; s.u._ask.line = L0; s.u._sq = [L0];
+        s.u._onChat('Viktor', 'no'); const s1 = !!s.u._ask && ev0(s.u, 'stale-answer').length === 1;
+        ok(h1 && h2 && h3 && h4 === null && h.box.r && h.box.r.what === 'no' && h.box.r.who === 'Pelle' && d1 && d2 === null && d.box.r && d.box.r.who === 'Viktor' && c1 && s1,
+           '180b the typed decline: only an asked seat’s, the last of an undirected window’s two closing it; a referendum’s ‘No votes from me.’ no answer; a contest left to its clock; a bot’s queued-line answer stale (got ' + JSON.stringify({ h: [h1, h2, h3, h4 === null, h.box.r || null], d: [d1, d2 === null, d.box.r || null], c1, s1 }) + ')'); }
+
+      // c) the stealth a card prints for one kind of action: Bonding [DOM] in a bleed only (its 240 plays: 58 of 247 off a bleed), Forgotten
+      //    Labyrinth never in one; the finder and the stack agree; a plan for a vampire with no action in flight reads a bleed
+      { const u = mk180('malkavian'); const andi = V0('a1', 'Andi Liu'), col = V0('c1', 'Colette'); u.board = [andi, col];
+        const st = (v, av, hand) => { u.hand = hand.slice(); u._actingVamp = av ? Object.assign({ v, n: 1, played: new Set() }, av) : null;
+          const b = u._bestStealthFor(v, new Set(), av && av.target), k = u._stealthStack(v, new Set()); u._actingVamp = null; return (b ? b.name + ':' + b.s : '-') + '/' + k.S; };
+        const r = { bBleed: st(andi, { target: 2 }, ['Bonding']), bHunt: st(andi, { hunt: true }, ['Bonding']), bPol: st(andi, { kind: 'political' }, ['Bonding']), bPlan: st(andi, null, ['Bonding']),
+                    fBleed: st(col, { target: 2 }, ['Forgotten Labyrinth']), fHunt: st(col, { hunt: true }, ['Forgotten Labyrinth']), fEquip: st(col, { kind: 'equip' }, ['Forgotten Labyrinth']), fPlan: st(col, null, ['Forgotten Labyrinth']) };
+        ok(r.bBleed === 'Bonding:1/1' && r.bHunt === '-/0' && r.bPol === '-/0' && r.bPlan === 'Bonding:1/1' && r.fBleed === '-/0' && r.fHunt === 'Forgotten Labyrinth:3/1' && r.fEquip === 'Forgotten Labyrinth:3/1' && r.fPlan === '-/0',
+           '180c Bonding’s stealth in a bleed only, Forgotten Labyrinth’s never in one -- the finder and the stack; a plan reads a bleed (got ' + JSON.stringify(r) + ')'); }
+
+      // d) the intercept a card prints for one actor or one kind of action: Instinctive Reaction only when my predator's minion acts (by the
+      //    pending's seat, or a bleed's actor name; 98 of its 199 blocks in the 240 were against another seat's), Speak with Spirits [ani] in
+      //    a bleed only; without the action (an estimate) both count
+      { const u = mk180('nosferatu'); const ry = V0('r1', 'Ryan (G6)'); u.board = [ry];
+        const ic = (hand, p) => { u.hand = hand.slice(); const b = u._bestInterceptFor(ry, null, p); return b ? b.name + ':' + b.s : '-'; };
+        const P = (kind, seat, byName) => Object.assign({ kind, actingVampName: 'Lisa', amount: 1, who: N0[seat - 1] }, byName ? {} : { actorSeat: seat });
+        const r = { irPred: ic(['Instinctive Reaction'], P('bleed', 4)), irName: ic(['Instinctive Reaction'], P('bleed', 4, true)), irCross: ic(['Instinctive Reaction'], P('undirected', 3)),
+                    irPrey: ic(['Instinctive Reaction'], P('undirected', 2)), irEst: ic(['Instinctive Reaction'], null),
+                    swsBleed: ic(['Speak with Spirits'], P('bleed', 4)), swsUnd: ic(['Speak with Spirits'], P('undirected', 4)) };
+        ok(r.irPred === 'Instinctive Reaction:1' && r.irName === 'Instinctive Reaction:1' && r.irCross === '-' && r.irPrey === '-' && r.irEst === 'Instinctive Reaction:1' && r.swsBleed === 'Speak with Spirits:1' && r.swsUnd === '-',
+           '180d Instinctive Reaction against my predator’s minion only, Speak with Spirits [ani] in a bleed only; an estimate counts both (got ' + JSON.stringify(r) + ')'); }
+
+      // e) one On the Qui Vive per minion between its unlock phases (the 240: a second wake 108 times in 1,073): the minion that played one
+      //    has no wake left, another has; the bounce's finder no longer picks a body it cannot wake (it re-asked the window for the same
+      //    pick); my unlock phase gives each its next
+      { const u = mk180('malkavian'); const a1 = V0('a1', 'Andi Liu', { locked: true }), g1 = V0('g1', 'Gelasia Fotiou', { locked: true }); u.board = [a1, g1];
+        u.hand = ['On the Qui Vive', 'On the Qui Vive', 'Deflection'];
+        const w0 = u._wakeCardFor(a1); if(w0){ u.hand.splice(w0.idx, 1); u._drawOwed = 1; u._emitPlay(w0.name, 'wake', a1.name); }
+        const wA = u._wakeCardFor(a1), wG = u._wakeCardFor(g1), bA = u._bestBounceFor([a1], null), bAG = u._bestBounceFor([a1, g1], null);
+        quietUnlock(u); await u._unlockPhase(); a1.locked = true; const wU = u._wakeCardFor(a1);
+        ok(!!w0 && w0.name === 'On the Qui Vive' && wA === null && !!wG && wG.name === 'On the Qui Vive' && bA === null && !!bAG && bAG.vamp === g1 && bAG.needsWake === true && !!wU && wU.name === 'On the Qui Vive',
+           '180e one On the Qui Vive per minion between its unlock phases: no second for Andi Liu, Gelasia Fotiou’s own; the bounce picks the body that can wake; my unlock phase gives the next (got ' + JSON.stringify({ w0: w0 && w0.name, wA, wG: wG && wG.name, bA, bAG: bAG && [bAG.vamp.name, bAG.needsWake], wU: wU && wU.name }) + ')'); }
+
+      // f) 'Do not replace until ...': the replacement waits for its moment -- Mirror Walk for my discard phase (the 240: replaced at the
+      //    action's end on all 310 plays), an ordinary card beside it replaced as before, a wrong moment releases nothing; Wake with
+      //    Evening's Freshness not at a flush on another seat's action nor between actions, at my unlock phase; Dodge not during its
+      //    combat, after it; a discard for a boost is no play (replaced as before)
+      { const u = mk180('tremere'); const t1 = V0('t1', 'Trevon Parker'); u.board = [t1];
+        const play = (b, card, win, vn) => { b._drawOwed = (b._drawOwed | 0) + 1; b._emitPlay(card, win, vn || t1.name); };
+        play(u, 'Mirror Walk', 'stealth'); u._flushDraws(); const m1 = draws0(u);
+        play(u, 'Theft of Vitae', 'combat-steal'); u._flushDraws(); const m2 = draws0(u);
+        const rel = IF0(u, '_releaseHolds') ? u._releaseHolds('unlock') : null; u._flushDraws(); const m3 = draws0(u);
+        if(IF0(u, '_releaseHolds')) u._releaseHolds('discard'); u._flushDraws(); const m4 = draws0(u);
+        const w = mk180('ventrue'); const al = V0('al', 'Alexa Draper', { locked: true }); w.board = [al];
+        play(w, "Wake with Evening's Freshness", 'wake', al.name); w.pending = { kind: 'asked', who: 'Viktor' }; w._flushDraws(); const w1 = draws0(w);
+        w.pending = null; w._flushDraws(); const w2 = draws0(w); quietUnlock(w); await w._unlockPhase(); w._flushDraws(); const w3 = draws0(w);
+        const g = mk180('sewer'); play(g, 'Dodge', 'combat-dodge', 'Skidmark'); g._inCombat = true; g._flushDraws(); const g1 = draws0(g); g._inCombat = false; g._flushDraws(); const g2 = draws0(g);
+        const vd = mk180('tremere'); play(vd, 'Mirror Walk', 'vote-discard'); vd._flushDraws(); const v1 = draws0(vd);
+        const rows = [ev0(u, 'replace-held').map(x => x.card + '>' + x.until).join(), ev0(u, 'replace-released').map(x => x.card + '>' + x.until).join()];
+        ok(m1 === 0 && m2 === 1 && rel === false && m3 === 1 && m4 === 2 && w1 === 0 && w2 === 0 && w3 === 1 && g1 === 0 && g2 === 1 && v1 === 1 && rows[0] === 'Mirror Walk>discard' && rows[1] === 'Mirror Walk>discard',
+           '180f held replacements: Mirror Walk at my discard phase (an ordinary card beside it replaced, a wrong moment releases nothing), Wake with Evening’s Freshness at my unlock phase, Dodge after its combat; a discard for a boost replaced as before (got ' + JSON.stringify({ m: [m1, m2, rel, m3, m4], w: [w1, w2, w3], g: [g1, g2], v1, rows }) + ')'); }
+
+      // g) the press's printed direction: Apportation [tha] presses only to continue (12 presses to end in the 240), Disengage only to end --
+      //    the finder by direction, and the press step: their press to continue is not ended with an Apportation, it is with a Disengage
+      { const mkC = (hand) => { const u = mk180('tremere'); const tre = V0('t1', 'Trevon Parker', { locked: true, blood: 6, cap: 6 }); u.board = [tre]; u.hand = hand.slice(); u.caps.tally = true;
+          u.emits = []; u._emit = (t, d) => u.emits.push({ t, d }); u.notes = []; u.note = m => u.notes.push(m);
+          u._awaitOppStrike = () => Promise.resolve({ vamp: 'Ghoul', dodge: false, dealt: 1 }); u._awaitOppTaken = () => Promise.resolve(null); u._awaitOppManeuver = () => Promise.resolve(null); u._awaitOppGrapple = () => Promise.resolve(null);
+          let n = 0; u._awaitOppPress = () => Promise.resolve(++n === 1 ? { vamp: 'Ghoul', continue: true } : null);
+          u._combatOppName = 'Ghoul'; u._wantLong = () => ({ long: false, why: 'test: no maneuver' }); u._wantPress = () => ({ press: false, tag: 'test', why: 'test: no press to continue' }); u._wantPressToEnd = () => ({ end: true, why: 'test: end it' });
+          return { u, tre }; };
+        const fu = mkC(['Apportation']), fd = mkC(['Disengage']);
+        const fin = { appC: (fu.u._bestPressFor(fu.tre) || {}).name || null, appE: (fu.u._bestPressFor(fu.tre, 'end') || {}).name || null, disC: (fd.u._bestPressFor(fd.tre) || {}).name || null, disE: (fd.u._bestPressFor(fd.tre, 'end') || {}).name || null };
+        await fu.u._resolveCombat(fu.tre, 'Ghoul'); await fd.u._resolveCombat(fd.tre, 'Ghoul');
+        const ra = fu.u.emits.filter(e => e.t === 'combat-round').map(e => [e.d.press, e.d.continuing]), rd = fd.u.emits.filter(e => e.t === 'combat-round').map(e => [e.d.press, e.d.continuing]);
+        ok(fin.appC === 'Apportation' && fin.appE === null && fin.disC === null && fin.disE === 'Disengage' && ra.length === 2 && ra[0][0] === null && ra[0][1] === true && fu.u.hand.includes('Apportation')
+           && rd.length === 1 && rd[0][0] === 'Disengage:end' && rd[0][1] === false && !fd.u.hand.includes('Disengage'),
+           '180g the press’s direction: Apportation continues only, Disengage ends only -- their press to continue stands against an Apportation and is ended with a Disengage (got ' + JSON.stringify({ fin, ra, rd }) + ')'); }
+      // h) the egress review (findings 1 and 7a): a typed 'no' under another seat's hold -- the directed target's answer ends the wait at
+      //    once (the hold gate: an answer is never a release, and still ends its wait); in an undirected window a holder is promoted and
+      //    must answer too: the prey's and the predator's 'no' wait for the holder's
+      { const mkH = av => { const u = mk180('malkavian'); const v = V0('a1', 'Andi Liu'); u.board = [v]; u._actingVamp = Object.assign({ v, n: 1, played: new Set() }, av);
+          const box = {}; u._askBlock('Trainbot: Andi Liu acts. Block?').then(r => { box.r = r; }); return { u, box }; };
+        const d = mkH({ target: 2 }); d.u._onSay({ i: SI('Hold on…'), who: 'Nora' }); const d0 = !!d.u._ask && d.u._ask.pausedBy.has('Nora');
+        d.u._onChat('Viktor', 'no'); await sleep(0); const d1 = d.u._ask === null && d.box.r && d.box.r.who === 'Viktor';
+        const h = mkH({ hunt: true }); h.u._onSay({ i: SI('Hold on…'), who: 'Nora' }); const h0 = !!h.u._ask && h.u._ask.eligible.has('Nora');
+        h.u._onChat('Viktor', 'no'); h.u._onChat('Pelle', 'no'); const h1 = !!h.u._ask; h.u._onChat('Nora', 'pass'); await sleep(0); const h2 = h.u._ask === null && h.box.r && h.box.r.who === 'Nora';
+        ok(d0 && d1 && h0 && h1 && h2, '180h under a hold: the directed target’s typed ‘no’ ends the window at once; an undirected window waits for its promoted holder’s answer (got ' + JSON.stringify({ d: [d0, d1, d.box.r || null], h: [h0, h1, h2, h.box.r || null] }) + ')'); }
+
+      // i) the release points through their own paths (finding 7b): Dodge's hold ends in the combat's own end (_resolveCombat's finally,
+      //    no flush), Mirror Walk's draw comes in my discard phase and Lupine Assault's in my influence phase, both through _playTurn
+      { const u = mk180('sewer'); const sk = V0('s1', 'Skulk (G5)', { locked: true, blood: 1 }); u.board = [sk]; u.hand = ['Dodge']; u.caps.tally = true;
+        u.emits = []; u._emit = (t, d) => u.emits.push({ t, d }); u.notes = []; u.note = m => u.notes.push(m);
+        u._awaitOppStrike = () => Promise.resolve({ vamp: 'Ghoul', dodge: false, dealt: 1 }); u._awaitOppTaken = () => Promise.resolve(null); u._awaitOppManeuver = () => Promise.resolve(null);
+        u._awaitOppGrapple = () => Promise.resolve(null); u._awaitOppPress = () => Promise.resolve(null); u._combatOppName = 'Ghoul';
+        await u._resolveCombat(sk, 'Ghoul');
+        const dg = { played: u.emits.some(e => e.t === 'play' && e.d.card === 'Dodge'), held: u.emits.filter(e => e.t === 'replace-held').map(e => e.d.until).join(), released: u.emits.filter(e => e.t === 'replace-released').map(e => e.d.until).join(), left: (u._replHold || ['?']).length, owed: u._drawOwed | 0 };
+        const turn = async (card) => { const t = mk180('tremere'); t.unc = []; t.board = []; t.hand = []; t.pool = 20; t.turnSeat = 1; t._drawOwed = 1;
+          if(IF0(t, '_noteReplHold')) t._noteReplHold(card);
+          let terr = null; try { await t._playTurn(); } catch(e){ terr = e.message; }
+          const L = t.sent.map(m => m.t === 'draw' ? '#draw' : (m.t === 'log' ? String(m.html || '').replace(/<[^>]+>/g, '') : null)).filter(Boolean);
+          const at = re => L.findIndex(l => re.test(l));
+          return { terr, draw: at(/^#draw$/), infl: at(/^Phase: Influence/), disc: at(/^Phase: Discard/), pass: at(/Turn passed/) }; };
+        const mw = await turn('Mirror Walk'), la = await turn('Lupine Assault');
+        ok(dg.played && dg.held === 'combat' && dg.released === 'combat' && dg.left === 0 && dg.owed === 1
+           && !mw.terr && mw.disc >= 0 && mw.draw > mw.disc && mw.draw < mw.pass && !la.terr && la.infl >= 0 && la.draw > la.infl && la.draw < la.disc,
+           '180i the release points: Dodge’s hold ends with its combat (the draw still owed for the flush), Mirror Walk’s draw in my discard phase, Lupine Assault’s in my influence phase -- through the turn (got ' + JSON.stringify({ dg, mw, la }) + ')'); }
+
+      // j) the vote route's wake (finding 7c): Protected District's locked reactor needs a wake it can still play -- not after its On the
+      //    Qui Vive this unlock window, though another is in hand
+      { const u = mk180('nosferatu'); const lr = V0('l1', 'Larissa Moreira (G6)', { locked: true, blood: 3 }); u.board = [lr]; u.hand = ['Protected District', 'On the Qui Vive', 'On the Qui Vive'];
+        const v1 = u._bestVotesReactFor(); u.hand.splice(1, 1); u._drawOwed = 1; u._emitPlay('On the Qui Vive', 'wake', lr.name); const v2 = u._bestVotesReactFor();
+        ok(!!v1 && v1.vamp === lr && v2 === null, '180j the vote route: a locked primogen behind a wake it can play reacts with Protected District, not after its On the Qui Vive this unlock window (got ' + JSON.stringify({ v1: v1 && v1.vamp && v1.vamp.name, v2 }) + ')'); }
+
+      // k) a new deal owes no draw (finding 2): a replacement held at the last game's end, or any deferred draw, does not reach the new hand
+      { const u = mk180('tremere'); u._drawOwed = 2; u._replHold = [{ until: 'discard', card: 'Mirror Walk' }];
+        u._dispatch({ t: 'started', players: N0.map((n, i) => ({ seat: i + 1, name: n, online: true, bot: true })) });
+        u._dispatch({ t: 'dealt', hand: ['Govern the Unaligned', 'Bonding', 'Deflection', 'Mirror Walk', 'Apportation', 'Theft of Vitae', 'Blood Doll'], lib: 50, crypt: 12 });
+        u.sent = []; u._flushDraws(); const dr = draws0(u);
+        ok(dr === 0 && (u._drawOwed | 0) === 0, '180k a new deal owes no draw: the last game’s held and deferred replacements do not reach the fresh hand (got ' + JSON.stringify({ dr, owed: u._drawOwed }) + ')'); }
+
+      // l) the egress review's smaller findings (5, 6): a dodge's bundled press is the strike's, never a bare press (The Jones [ser]); a
+      //    play of a card already in play starts no hold; a Sudden Reversal taken back leaves no hold beyond the draws still owed
+      { const u = mk180('ministry'); const cn = V0('c1', 'Cao Nguyen (G6)'); u.board = [cn]; u.hand = ['The Jones'];
+        const jE = u._bestPressFor(cn, 'end'), jC = u._bestPressFor(cn);
+        u._drawOwed = 0; u._emitPlay('Mirror Walk', 'combat-strike', cn.name, true); const inPlay = (u._replHold || []).length;
+        u._replHold = [{ until: 'discard', card: 'Mirror Walk' }]; u._drawOwed = 1; u._srSent = { owner: 'Viktor', card: 'Govern the Unaligned', name: 'Sudden Reversal' };
+        u.board.push({ id: 'z1', name: 'Sudden Reversal', kind: 'lib', zone: 'ash' }); u._onSrLate('Viktor', 'Govern the Unaligned');
+        const afterSr = { owed: u._drawOwed | 0, holds: (u._replHold || []).length, hand: u.hand.includes('Sudden Reversal') };
+        u._drawOwed = 1; u.sent = []; u._flushDraws(); const drew = draws0(u);
+        ok(jE === null && jC === null && inPlay === 0 && afterSr.owed === 0 && afterSr.holds === 0 && afterSr.hand && drew === 1,
+           '180l The Jones’ press is its dodge’s, no bare press; a card already in play holds nothing; a Sudden Reversal taken back leaves no orphan hold -- the next card is replaced (got ' + JSON.stringify({ jE, jC, inPlay, afterSr, drew }) + ')'); }
     }
 
 

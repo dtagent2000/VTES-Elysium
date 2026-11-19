@@ -1,4 +1,4 @@
-# BOARD — the open asks (19 Nov 2026, v0.6.234). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (19 Nov 2026, v0.6.235). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -15,10 +15,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 sweep** (D-125; `specs/spec-card-sweep-2026-11-18.md`): one starter at a time, every printed effect first asked who else
-  in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. A1 and A2 are done (spec §4.3;
-  §4.4 the merge's design, for Johan's "kör"). Next: the finished decks' round (below), **B** the pilot (Banu Haqim: the
-  maneuver / press grants with the rush cards, Hunting the Quarry and Night Terrors' strike with them), **C** the harvest
-  (consumers made general, lists by KRCG's text; the title family first), **D** the other twelve.
+  in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. A1, A2 and the finished
+  decks' round are done (spec §4.3; v0.6.235). Next: **B** the pilot (Banu Haqim: the merge first, §4.4, D-127; the maneuver /
+  press grants with the rush cards, Hunting the Quarry and Night Terrors' strike with them), **C** the harvest (consumers made
+  general, lists by KRCG's text; the title family first; §4.3's five latent reds and seven ambers; the condition sentences'
+  variants the compiler leaves untagged, spec §4.3's round), **D** the other twelve.
   Crypt waves (D-108): A done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES`
   + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file
   (`gen-precon.js --check` compares them). The root README credits zero-vtes when it has a licence (handoff). *Done when* the 18
@@ -66,14 +67,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   compares the card score with and without the streak.
 
 ## Known, not built (bot side)
-- **The finished decks' round** (spec-card-sweep §4.3; before B): nine rules faults live today. Bonding [DOM]'s stealth off a
-  bleed; On the Qui Vive twice by one minion between its unlock phases; Mirror Walk replaced before the discard phase; Wake with
-  Evening's Freshness replaced at a vote-discard boost; Apportation's continue-only press spent to end; Instinctive Reaction
-  against a non-predator; Forgotten Labyrinth in a bleed; `UND_KINDS` lacks `ownRescue` and `leaveTorpor`, so the predator never
-  hears my own rescue (the 240: 313, 0 blocked); `_onChat` takes any seat's "No votes from me." for my open Block?, unchecked
-  against `_openLine`. §4.3's five latent reds and seven ambers ride where they fit. *Done when* each is a section red on
-  v0.6.234 and green after (both rescue kinds undirected; only an eligible seat's answer to the open line counts), the 240's
-  footprint read.
+- **Revelations [AUS] is undirected** (v0.6.235's egress review): my window asks only my prey and the other bots open only the
+  prey's, so no predator is asked (the 240: 182 superior peeks). *Done when* both sides ask both, a section red on v0.6.235.
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
   the merged decks' share; a few decks count twice. A v5 rebuild (scratch: 4,709 decks, Magnum under 10) drops a name the bot
   records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
@@ -158,6 +153,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   a steal's victim lost > stole. A lead (v0.6.227, the 600's match 167): a bleed that fizzles at a seat just ousted is read by
   the next prey as its own and books the pool (likelier since v0.6.227: the 600's fizzles 3 → 6). *Done when* `ana-gates.py` passes
   there. Docs: CHANGELOG v0.6.224, v0.6.227.
+- **Two arena handshake misses** (v0.6.235's smokes; none in the sim): a match's end cut its last round (a Fame oust), and a rush
+  chosen 1 ms after the rusher's combat sent its target to torpor met no opponent (a lagging view). *Done when* both are read.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
