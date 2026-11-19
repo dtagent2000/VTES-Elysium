@@ -1,8 +1,8 @@
 # spec-card-sweep — finishing the V5 sweep by sharing (18 Nov 2026, on bot v0.6.234)
 
 **Status:** kör — Johan, 18 Nov ("Vi kör, med dina rekommendationer för besluten"), on the proposal this page records: the method of
-§2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör" and waits for
-his word (RULINGS O-45). On 19 Nov he answered the question about zero-vtes's maintainer (§5). The page's own round changed no
+§2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör"; he took
+its answer on 19 Nov (RULINGS D-126). On 19 Nov he answered the question about zero-vtes's maintainer (§5). The page's own round changed no
 code. Measured on main `6baf99b`.
 
 **Step A1** (19 Nov, no bot change) built §4.1's first two items: the library table (`gen-card-ledger.js` v1.2.0, "The whole
@@ -151,7 +151,7 @@ The five finished starters with `hacking` and `sewer` hold 104 library cards:
 - **41 compiled entries never hand-curated** (the 25 Sep sweep checked those with modes by script). 37 have a zero-vtes
   definition: a review sheet checks them at once, and a disagreement becomes a review item.
 
-What waits for Johan (O-45), with Claude's answer yes to both: the 41 are read again, their seven sheets in step A; and the
+Johan's answer (19 Nov, D-126: Claude's yes to both): the 41 are read again, their seven sheets in step A2; and the
 finished decks come first in the harvest, because their consumers are the best proven (the four starters sat in 408 of the
 ledger's sim matches each).
 
@@ -212,7 +212,7 @@ cards in the sim.
 3. **"Shared" means printed by at least two library cards.**
 4. **B before C.** The pilot is small and proves the tools before the harvest leans on them.
 
-Open, not in D-125 (RULINGS O-45): the finished decks' 41 entries read again in step A and their decks first in the harvest
+Not in D-125, answered on 19 Nov (RULINGS D-126): the finished decks' 41 entries read again in step A and their decks first in the harvest
 (§4.2).
 
 ## 8. What stays and what stops

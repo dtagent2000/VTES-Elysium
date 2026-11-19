@@ -3,6 +3,28 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **Main's two replies of 19 Nov consumed: client v2.6.176 and v2.6.177 (19 Nov 2026, bot v0.6.234, no bot change; PR #86)** —
+  STATUS Next 2, on Johan's go of 19 Nov ("Vi går på dina rekommendationer på alla punkter"), and taken before step A2 because
+  v2.6.177 changes the bridge the sim table runs on: A2's dry run and B's pilot measure on the new table.
+  - **The copies** (a commit of their own): client v2.6.177, protocol v2.6.177, main's canary v1.5.0; the server and the hotseat
+    plan unchanged. Canary 235/0 on the copies and on the root, the hotseat gate 12/0, HB1 11/0, the suite 2606/0 (one run in a
+    frozen snapshot, the root's v2.6.177 one level up).
+  - **The queued bridge measured** (`elysium-bot-sim.js --client`, v0.6.234's bytes in a frozen copy of `bot/`). At pace 0 (the
+    starters × 96, main's design) main's table reproduced: windows run out 112 of 491 → 0 of 502 (modifiers), 272 of 1754 →
+    0 of 1744 (totals); stale-answer rows 1 → 2; DIVERGED 67, SAME-PLAY 22, SAME-PLAY* 7. At the client pace the 240: DIVERGED 4
+    (one winner changed), SAME-PLAY 206, SAME-PLAY* 30; the 14 smokes SAME-PLAY or SAME-PLAY* only. `ana-gates.py` PASS on every
+    run. `docs/CARDS.md` regenerated on the new table: the uses move by one or two on 12 rows, no status changes.
+  - **Closed:** BOARD's "a window can open after its line was delivered"; L-92 and CLAUDE.md's window rule now say that a bridge
+    before v2.6.177 delivered inside the send. `_draining` stays (a page cached before v2.6.177). The hotseat gate v1.3.1:
+    H12's text. ARCHITECTURE's hotseat line; the CI comment on the canary's cardfx.
+  - **Read, not traced:** the two stale Passes at pace 0 (matches 50 and 82): each reached the actor as it moved to its next
+    action, one re-ask each, no gate broke. A BOARD item.
+  - **Main's calls** (`docs/handoffs/HANDOFF-to-main-2026-11-19-queued-bridge.md`): the canary's five live-bot checks may skip
+    loudly without the cardfx (our answer: yes); a card in a bleed line's suffix dropped (no client since v2.6.175 writes one);
+    a cached page's target kind kept; a line when a human's Sudden Reversal cancels a bot's master wanted (a wave-5 rider on the
+    BOARD); the deploy notes taken (HARNESS: a purge names only the bundle files the box serves). The five answered handoffs
+    are in `docs/history/handoffs/`.
+  - **D-126:** Johan's answer to O-45 (the finished decks' 41 entries read again in A2, their decks first in the harvest).
 - **The V5 sweep, step A1: the library table and the sharing register (19 Nov 2026, bot v0.6.234, no bot change; PR #84)** —
   Johan's go of 19 Nov on step A (`docs/specs/spec-card-sweep-2026-11-18.md` §4.1, RULINGS D-125), built in two parts: A1 gives the
   sweep its measure and a gate for new hand keys; A2 is the review sheet, the dry run and the design for merging hand entries.

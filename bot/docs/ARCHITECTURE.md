@@ -91,7 +91,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 - **Online** (the server): the ledger narrates every resource change; `tally` and `bounty` are relayed; the bot is a remote
   player. The arena spawns this server.
 - **Hotseat** (the client's `hotBridge`, no server): the bot seat is a remote player inside one HTML file; the bridge fans
-  `log` / `say` / `chat` / `board` / `fx` / `tally` / `bounty` (parity since client v2.6.124); the no-server net (`joined.srv`
+  `log` / `say` / `chat` / `board` / `fx` / `tally` / `bounty` (parity since v2.6.124; after the send since v2.6.177); the no-server net (`joined.srv`
   starts `hotseat-bridge`) handles ousts and bounties, and the tally net rebuilds a missing foreign tally from the frozen lines
   (a belt timer of 60 % of askSecs, min 1.2 s). A bot spawned without `deckName` infers its deck from the object / printed name /
   exact list (explicit wins; the built-in default gets none). The browser load: `o.transport` injects the dial, `o.cardfxData` the

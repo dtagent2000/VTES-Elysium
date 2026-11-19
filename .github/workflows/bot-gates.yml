@@ -135,7 +135,7 @@ jobs:
         if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
           D="$RUNNER_TEMP/canary-root"; mkdir -p "$D"
-          cp test-bot-canary.js elysium-bot.js elysium-cardfx.json "$D/"; cp ../elysium-vtes-bord.html ../client/ELYSIUM-PROTOCOL.md "$D/"   # the cardfx: main's canary v1.3.0's human-Ball memo checks read it (167/4 without it)
+          cp test-bot-canary.js elysium-bot.js elysium-cardfx.json "$D/"; cp ../elysium-vtes-bord.html ../client/ELYSIUM-PROTOCOL.md "$D/"   # the cardfx: main's canary's live-bot checks of sections 8 and 9 read it (v1.5.0: five FAIL without it)
           (cd "$D" && node test-bot-canary.js) | tee "$RUNNER_TEMP/canary2.txt"
           if grep -q 'SKIPPED' "$RUNNER_TEMP/canary2.txt"; then echo "::error::the canary skipped against the root's release"; exit 1; fi
       - name: HB1 smoke (the browser surface)

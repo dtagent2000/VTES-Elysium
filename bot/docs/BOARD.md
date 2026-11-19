@@ -1,4 +1,4 @@
-# BOARD — the open asks (18 Nov 2026, v0.6.234). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (19 Nov 2026, v0.6.234). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -22,9 +22,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file
   (`gen-precon.js --check` compares them). The root README credits zero-vtes when it has a licence (handoff). *Done when* the 18
   starters' rows are playable and every hand-only key has its sharing answer. Docs: RULINGS D-84, D-102, D-104, D-108, D-125,
-  O-45; `CARDS.md`; HOWTO.
+  D-126; `CARDS.md`; HOWTO.
 - **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9): what v1 of each wave left out, the
-  amber halves and the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
+  amber halves and the latent items; no line says a human's Sudden Reversal cancelled a bot's master (main, 19 Nov). *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
 - **The curation queue of wave 6's graded readings** (none in a deck; spec-v5-wave6 §8): Enkil Cog, Destilaria Estrela da
   Paraíba, Dogged Pursuit, Speak with Spirits and The Mole (leftover +1 intercept modes), Hall of Hades' Court [dom] (`_voteBoosts`
   plays it past its line's capacity), Momentary Delay (`press` misreads 'continues as if unblocked'), Faerie Wards [aus] (the directed
@@ -149,10 +149,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   a steal's victim lost > stole. A lead (v0.6.227, the 600's match 167): a bleed that fizzles at a seat just ousted is read by
   the next prey as its own and books the pool (likelier since v0.6.227: the 600's fizzles 3 → 6). *Done when* `ana-gates.py` passes
   there. Docs: CHANGELOG v0.6.224, v0.6.227.
-- **A window can open after its line was delivered** (v0.6.227's review): a synchronous bridge delivers a line that leaves inside
-  its own `send()` before `_askBlock` runs, and the target's instant Pass finds no window (pace 0 with a free token; the client
-  pace is safe by its 200 ms gaps). Defer a window-opening line's drain a macrotask, or let `_askBlock` send it? *Done when* a
-  section with a full token bucket passes. Docs: CHANGELOG v0.6.227, L-92.
+- **Two stale Passes at pace 0 on the queued bridge** (client v2.6.177, the starters × 96; v2.6.176 had one): each reached the
+  actor as it moved to its next action, cost a re-ask and broke no gate. *Done when* each is traced to its line. Docs: L-92.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a
