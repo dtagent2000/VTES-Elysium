@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-card-ledger.js v1.2.0 (19 Nov 2026, bot v0.6.234, RULINGS D-125: the whole library's verdicts and the effect vocabulary;
+/* gen-card-ledger.js v1.2.1 (19 Nov 2026: the Sim line names the client the table ran on -- the queued bridge of client v2.6.177 moved
+   the uses with no bot change; v1.2.0 19 Nov 2026, bot v0.6.234, RULINGS D-125: the whole library's verdicts and the effect vocabulary;
    v1.1.3 14 Nov 2026, bot v0.6.228: the verdict asks a mode for every discipline line of KRCG's text -- coverage v1.1.47;
    v1.1.2 13 Nov 2026, bot v0.6.221: a master pick counts only when it was played; v1.1.1 12 Nov, bot v0.6.219;
    v1.1.0 6 Nov, bot v0.6.217, RULINGS D-108) -- THE CARD LEDGER: one generated row per library card of a deck set
@@ -51,7 +52,7 @@
      default decks: every deck-*.json whose name starts with "V5 " (gen-precon.js writes them).                                         */
 
 const fs = require('fs'), path = require('path');
-const LEDGER_VERSION = '1.2.0';   // v1.2.0 (19 Nov 2026, bot v0.6.234, RULINGS D-125): the whole library and the vocabulary   // v1.1.3 (14 Nov 2026, bot v0.6.228, round F): the discipline-line check (COV.coverDeck's textOf: KRCG's text when vtes.json is here)   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
+const LEDGER_VERSION = '1.2.1';   // v1.2.1 (19 Nov 2026): the Sim line names the client   // v1.2.0 (19 Nov 2026, bot v0.6.234, RULINGS D-125): the whole library and the vocabulary   // v1.1.3 (14 Nov 2026, bot v0.6.228, round F): the discipline-line check (COV.coverDeck's textOf: KRCG's text when vtes.json is here)   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
 
 /* ---- the crypt (v1.1.0): the ability text, its effect classes, the readers that model it ---- */
 const SECT = '(?:Anarch|Camarilla|Independent|Sabbat|Laibon)';
@@ -462,13 +463,14 @@ function main(){
     ' library entries with effects · ' + decks.length + ' decks (' + decks.map(d => d.key).join(', ') + ') · ' + (krcg ? 'rulings from vtes.json' : 'no vtes.json: rulings not counted') + '.');
   P('');
   if (haveSim){   // one line per design shape: the V5 smoke's 14 dirs (a new deck + the same four) read as one
-    const shape = m => !m.design ? 'unknown' : JSON.stringify([m.design.bot, m.design.seatings, m.design.seed, m.design.seeds, m.design.profile, (m.design.decks || []).slice(1)]);
+    const shape = m => !m.design ? 'unknown' : JSON.stringify([m.design.bot, m.design.client, m.design.seatings, m.design.seed, m.design.seeds, m.design.profile, (m.design.decks || []).slice(1)]);
     const groups = new Map(); simMeta.forEach(m => { const k = shape(m); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(m); });
     const seat = d => d.seatings === 'all' ? 'every seating × ' + d.seeds + ' deal(s) from seed ' + d.seed : d.seatings === 'random' ? 'random seatings from seed ' + d.seed : 'a fixed seating';
+    const table = d => 'bot v' + d.bot + (d.client ? ' on client v' + d.client : '');   // v1.2.1: the client is part of the table (its bridge delivers the lines)
     P('Sim: ' + [...groups.values()].map(g => { const d = g[0].design;
       if (!d) return g.map(m => '`' + m.dir + '` (' + m.matches + ' matches, no design.json)').join(', ');
-      if (g.length === 1) return '`' + g[0].dir + '` — ' + g[0].matches + ' matches, bot v' + d.bot + ', ' + (d.decks || []).join(',') + ', ' + seat(d);
-      return g.length + ' dirs (' + g.map(m => '`' + m.dir + '`').join(', ') + ') — ' + g.map(m => m.matches).reduce((x, y) => x + y, 0) + ' matches, bot v' + d.bot + ', each its own deck + ' + (d.decks || []).slice(1).join(',') + ', ' + seat(d);
+      if (g.length === 1) return '`' + g[0].dir + '` — ' + g[0].matches + ' matches, ' + table(d) + ', ' + (d.decks || []).join(',') + ', ' + seat(d);
+      return g.length + ' dirs (' + g.map(m => '`' + m.dir + '`').join(', ') + ') — ' + g.map(m => m.matches).reduce((x, y) => x + y, 0) + ' matches, ' + table(d) + ', each its own deck + ' + (d.decks || []).slice(1).join(',') + ', ' + seat(d);
     }).join(' · ') + '.');
   }
   else P('No sim given: FULL / HANDLER rows read "playable (static)".');

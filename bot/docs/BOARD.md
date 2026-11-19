@@ -59,12 +59,16 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The helper lock's release** (main's answers of 3 Nov): the client locks all helpers on while a bot is seated until the bot
   proves a whole combat on lines alone. *Done when* asked, when ready. Docs: RULINGS D-62, D-94.
 - **History comments in `elysium-bot.js`** (222 KB): trim to trap comments ("why" + a rule id) in the functions a round touches
-  (spec §8 Q6, recommended (b)). *Done when* Johan has chosen; then per round.
+  (spec §8 Q6, recommended (b)); those saying the bridge delivers inside the send. *Done when* Johan has chosen; then per round.
 - **Section 69b's decay check**: `o4.pick === ctxC.card ? true : o4.pick ===
   ctxC.plain` passes for either pick and reads no score, so the streak's −0.30 on the card line is untested. *Done when* 69b
   compares the card score with and without the streak.
 
 ## Known, not built (bot side)
+- **My own rescue opens a directed window** (egress review, 19 Nov): `UND_KINDS` lacks `ownRescue` and `leaveTorpor`, so the
+  predator is never heard (the 240: 313 own rescues, 0 blocked). *Done when* both are undirected, a section red on v0.6.234.
+- **Any "no…" chat answers my open Block?** (the same review): `_onChat` takes "No votes from me." from any seat, unchecked
+  against `_openLine`. *Done when* only an eligible seat's answer to the open line counts, a section red on v0.6.234.
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
   the merged decks' share; a few decks count twice. A v5 rebuild (scratch: 4,709 decks, Magnum under 10) drops a name the bot
   records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
@@ -149,8 +153,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   a steal's victim lost > stole. A lead (v0.6.227, the 600's match 167): a bleed that fizzles at a seat just ousted is read by
   the next prey as its own and books the pool (likelier since v0.6.227: the 600's fizzles 3 → 6). *Done when* `ana-gates.py` passes
   there. Docs: CHANGELOG v0.6.224, v0.6.227.
-- **Two stale Passes at pace 0 on the queued bridge** (client v2.6.177, the starters × 96; v2.6.176 had one): each reached the
-  actor as it moved to its next action, cost a re-ask and broke no gate. *Done when* each is traced to its line. Docs: L-92.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a

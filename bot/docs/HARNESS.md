@@ -66,7 +66,7 @@ Tradition's title were layer-3 misses).
 
 ## When main must act
 Write `docs/handoffs/HANDOFF-to-main-<date>-<version>.md`: the need, the frozen line or verb, the backward-compatibility
-reading, what the bot already does; the purge names only bundle files the box serves (main, 19 Nov). Main replies in `client/docs/handoffs/REPLY-to-bot-*.md`; a reply is consumed in a bot
+reading, what the bot already does; a purge names only what the box serves: `elysium-bot.js`, `elysium-cardfx.json`, the TWD pair. Main replies in `client/docs/handoffs/REPLY-to-bot-*.md`; a reply is consumed in a bot
 round (its items built or declined) and the handoff moves to `history/handoffs/`. Never both halves in one PR.
 
 ## The handshake with the client's versions

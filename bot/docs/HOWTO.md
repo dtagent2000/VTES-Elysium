@@ -11,7 +11,8 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
 ## Running
 - **The sim table** — `node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10 --trace /tmp/sim-x`: every
   seating (24 for four decks, 120 for five; `--seatings random --matches N` or `fixed`) × N deals of the headless hotseat table
-  under a virtual clock, one worker per core, ~1 s a match. `--profile client` (default: paceMs 3100, askSecs 20, deckName) or
+  under a virtual clock, one worker per core, ~1 s a match. The client is part of the table (`--client`, default `bot/`'s copy;
+  the run's design.json names it): compare two runs on one client. `--profile client` (default: paceMs 3100, askSecs 20, deckName) or
   `arena` (0 / 3). `--resume`, `--summarize DIR`, `--real` (the same table on the real clock, 4–6 min a match). The same spec gives
   the same trace byte for byte, so `python3 ana-sim-diff.py A B` compares two runs match by match (IDENTICAL / SAME-PLAY /
   DIVERGED with the first differing decision): before / after a change, or version against version (copy `bot/` to scratch with

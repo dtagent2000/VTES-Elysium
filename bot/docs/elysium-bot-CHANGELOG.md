@@ -4,27 +4,37 @@
 
 ## Rounds without a release
 - **Main's two replies of 19 Nov consumed: client v2.6.176 and v2.6.177 (19 Nov 2026, bot v0.6.234, no bot change; PR #86)** —
-  STATUS Next 2, on Johan's go of 19 Nov ("Vi går på dina rekommendationer på alla punkter"), and taken before step A2 because
-  v2.6.177 changes the bridge the sim table runs on: A2's dry run and B's pilot measure on the new table.
+  STATUS Next 2, on Johan's go of 19 Nov ("Vi går på dina rekommendationer på alla punkter tänker jag"), taken before step A2
+  because v2.6.177 changes the bridge the sim table runs on: A2's dry run and B's pilot measure on the new table.
   - **The copies** (a commit of their own): client v2.6.177, protocol v2.6.177, main's canary v1.5.0; the server and the hotseat
-    plan unchanged. Canary 235/0 on the copies and on the root, the hotseat gate 12/0, HB1 11/0, the suite 2606/0 (one run in a
-    frozen snapshot, the root's v2.6.177 one level up).
+    plan unchanged. Canary 235/0 on the copies and on the root, the hotseat gate 12/0 (also on the synchronous v2.6.175 and
+    v2.6.176), HB1 11/0, the suite 2606/0 (one run in a frozen snapshot, the root's v2.6.177 one level up; the review's own: the
+    same).
   - **The queued bridge measured** (`elysium-bot-sim.js --client`, v0.6.234's bytes in a frozen copy of `bot/`). At pace 0 (the
     starters × 96, main's design) main's table reproduced: windows run out 112 of 491 → 0 of 502 (modifiers), 272 of 1754 →
-    0 of 1744 (totals); stale-answer rows 1 → 2; DIVERGED 67, SAME-PLAY 22, SAME-PLAY* 7. At the client pace the 240: DIVERGED 4
-    (one winner changed), SAME-PLAY 206, SAME-PLAY* 30; the 14 smokes SAME-PLAY or SAME-PLAY* only. `ana-gates.py` PASS on every
-    run. `docs/CARDS.md` regenerated on the new table: the uses move by one or two on 12 rows, no status changes.
-  - **Closed:** BOARD's "a window can open after its line was delivered"; L-92 and CLAUDE.md's window rule now say that a bridge
-    before v2.6.177 delivered inside the send. `_draining` stays (a page cached before v2.6.177). The hotseat gate v1.3.1:
-    H12's text. ARCHITECTURE's hotseat line; the CI comment on the canary's cardfx.
-  - **Read, not traced:** the two stale Passes at pace 0 (matches 50 and 82): each reached the actor as it moved to its next
-    action, one re-ask each, no gate broke. A BOARD item.
+    0 of 1744 (totals); stale-answer rows 1 → 2; DIVERGED 67, SAME-PLAY 22, SAME-PLAY* 7. At the client pace the 240: DIVERGED 4,
+    SAME-PLAY 206, SAME-PLAY* 30; read: 77 and 137 are the same Ventrue decision (seat 3, deal 7: Intimidation for Kine Resources
+    Contested at round 5), 208 (its winner changed): B1's 174th decision is a block question on the old table and its own
+    hunt-or-bleed on the new, 222 a bleed target — the order a bot hears the table in. The 14 smokes SAME-PLAY or SAME-PLAY* only. `ana-gates.py` PASS on every run.
+  - **`gen-card-ledger.js` v1.2.1**: the Sim line names the client (`design.json`'s `meta.client`); `docs/CARDS.md` regenerated on
+    the new table: the uses move by one or two on 12 rows, no status changes. HOWTO: the client is part of the table.
+  - **Dropped as moot:** BOARD's "a window can open after its line was delivered" (it needs a synchronous bridge at pace 0); L-92
+    and CLAUDE.md's window rule now say a bridge before v2.6.177 delivered inside the send, and L-92 records main's macrotask arm
+    (the block and ledger gates failed at pace 0). `_draining` stays (a page cached before v2.6.177). The hotseat gate v1.3.1
+    (H12's text), the headers of `tools/hotseat-in-browser.js` and `ana-gates.py`, ARCHITECTURE's hotseat line, the CI comment.
+  - **The two stale Passes, traced by the egress review — two rules faults of ours, older than the queue (BOARD):** a bot's own
+    rescue opens a directed window (`UND_KINDS` lacks `ownRescue`, and by reading `leaveTorpor`), so the predator is never heard
+    (the 240: 313 own rescues, 0 blocked; a predator's block dropped in match 26, the same in v2.6.175's run); `_onChat` takes any
+    "no…" chat as an answer to an open Block? (a referendum bubble closed a hunt window in pace 0's match 82). For a bot release.
   - **Main's calls** (`docs/handoffs/HANDOFF-to-main-2026-11-19-queued-bridge.md`): the canary's five live-bot checks may skip
-    loudly without the cardfx (our answer: yes); a card in a bleed line's suffix dropped (no client since v2.6.175 writes one);
-    a cached page's target kind kept; a line when a human's Sudden Reversal cancels a bot's master wanted (a wave-5 rider on the
-    BOARD); the deploy notes taken (HARNESS: a purge names only the bundle files the box serves). The five answered handoffs
-    are in `docs/history/handoffs/`.
+    loudly without the cardfx, with the token `SKIPPED` (asked of main); a card in a bleed line's suffix dropped (no client since
+    v2.6.175 writes one); a cached page's target kind kept; a line when a human's Sudden Reversal cancels a bot's master wanted (a
+    wave-5 rider); the deploy notes taken (HARNESS names the files the box serves); a human's window on a bot's master is the
+    3.1 s beat: RULINGS O-46 for Johan. The five answered handoffs are in `docs/history/handoffs/`.
   - **D-126:** Johan's answer to O-45 (the finished decks' 41 entries read again in A2, their decks first in the harvest).
+  - **Egress** (a fresh-context review): 10 findings (stale-doc 3, rule-missed 3, unproven 2, half-done 2), none must-fix, all 10
+    fixed as the review proposed; for finding 6 that is the two tool headers here and a BOARD rider for the code comments in
+    `elysium-bot.js` and the suite that say the bridge delivers inside the send (trimmed by the round that touches them).
 - **The V5 sweep, step A1: the library table and the sharing register (19 Nov 2026, bot v0.6.234, no bot change; PR #84)** —
   Johan's go of 19 Nov on step A (`docs/specs/spec-card-sweep-2026-11-18.md` §4.1, RULINGS D-125), built in two parts: A1 gives the
   sweep its measure and a gate for new hand keys; A2 is the review sheet, the dry run and the design for merging hand entries.
