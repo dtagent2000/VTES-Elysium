@@ -1,8 +1,26 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.177 / server v2.6.51 / bot v0.6.234 tested beside the suite, last updated 19 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.179 / server v2.6.51 / bot v0.6.234 tested beside the suite, last updated 19 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**19 Nov 2026, evening, later (THE BADGE STANDS UP — v2.6.179):**
+- **A fixed overlay competes with every absolute layer in the root stacking context.** `#hotBotBtn` (fixed, z 60) lost to
+  `#rview` (absolute, z 3500) because no ancestor of the visit makes a context. `elementFromPoint` at the button's centre
+  shows who wins in one line; a screenshot alone showed only that the badge was gone.
+- **Raise and place together.** The badge's own spot overlapped the visit's ⌂ Home, so a z-index alone would have broken
+  a second button. Measure both rectangles before choosing where an overlay goes.
+
+**19 Nov 2026, evening (TURN-BASED FROM THE START — v2.6.178):**
+- **A default and a seed are two constants.** `BOTCFG0` was both what nothing stored means and what a new table gets. Changing
+  the seed alone left the server, the bridge's merge and the 400-write twin as they were; changing `BOTCFG0` would have moved
+  all three (mutant M4 shows the twin catching it).
+- **A LIVE test can pass vacuously on the old client.** A wait is steppable before its question is on the wire, with no clock
+  in any tempo, so 'no clock' read at that moment proves nothing. Watch the wait for longer than the question takes to
+  go out (here 2.5 s; v2.6.177 showed 2954 ms left).
+- **Make the default you are changing the common path, then walk it.** As an option, Turn-based was tried at a seat the
+  human was already looking at. As the start, it meets every bot turn, where the camera visits the bot's seat and the
+  ▶ lies under the visited mat. The click-through in the browser found that, not the suite.
 
 **19 Nov 2026, later (THE ANSWER AFTER THE LINE — v2.6.177: the queued bridge, the drag's play line):**
 - **The arm that looks most like the server can be the worse one.** A socket delivers in a later task, so a macrotask

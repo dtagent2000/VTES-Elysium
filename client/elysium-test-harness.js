@@ -291,6 +291,7 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   botGiveWordTargets: (typeof botGiveWordTargets!=='undefined'?botGiveWordTargets:undefined),   // v2.6.140: the play button's filter, tested on its own
   verAtLeast: (typeof verAtLeast!=='undefined'?verAtLeast:undefined),
   get BOTCFG0(){ return (typeof BOTCFG0!=='undefined')?BOTCFG0:undefined; },
+  get BOTCFG_SEED(){ return (typeof BOTCFG_SEED!=='undefined')?BOTCFG_SEED:undefined; },   // v2.6.178: the tempo a table with bots starts at (Turn-based)
   set botCfgOpen(v){ _botCfgOpen=!!v; },
   set botPanelOpen(v){ _botPanelOpen=!!v; },                                                                         // v2.6.132: tests read toasts                                                                   // v2.6.129: tests answer the combat prompts
   hotBotDeckMenu: (typeof hotBotDeckMenu!=='undefined'?hotBotDeckMenu:undefined),

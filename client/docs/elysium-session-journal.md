@@ -1,3 +1,46 @@
+## [MÄRKET RESER SIG] (19 november 2026, sen kväll, klient v2.6.179 / srv-2.6.51 oförändrad)
+
+Johan, 19.23: "Ja men fixa gärna knappen/märket så det ser bra ut". Orsaken är lagerordningen. Sätesbesöket (`#rview`) ligger på
+z 3500 direkt i sidans översta stapel, och 🤖-märket ligger fast på z 60, så besöket täckte märket. Att bara lyfta märket
+hade lagt det över nederkanten av besökets ⌂ Home. Under ett besök står märket nu precis under ⌂ Home, högerjusterat med
+den, ovanför bottens matta. På hemvyn och i helikoptervyn sitter det kvar där det satt.
+
+Jag mätte i Chromium under en botts tur i fem fönsterstorlekar, från 1024×768 till 1920×1080. Märket, ▶ och kugghjulet
+ligger överst, ⌂ Home gör det fortfarande, och högerkanterna möts. Jag tog också en bild med panelen öppen i ett besök: den
+står under ⌂ Home och ryms i fönstret. Vid 1280×720 når märkets nederkant 24 px in i hörnet av ready-regionen, precis som
+på hemvyn. I sviten finns en nål på stilmallen som jämför med `#rview` och `#rvBack`. Den föll på v2.6.178 och fångade
+fem mutanter av fem. v2.6.179 ersätter den aldrig driftsatta v2.6.178 i samma PR (#88).
+
+## [TURN-BASED FRÅN START] (19 november 2026, kväll, klient v2.6.178 / srv-2.6.51 oförändrad)
+
+Johan, 18.40: "Jag skulle vilja att turn based är satt som default för bottarna också, är det en klientsak?" Ja. Bottarna har
+inget eget standardtempo, utan klienten skickar bordets tempo när ett bord med bottar startar: i hotseat lägger bryggan in det
+innan första botten sätter sig, och online skickar värdens klient det en gång. Det har varit Standard, 3 s sedan v2.6.139
+(beslut 3 i tempospecen). Jag föreslog att bara byta fröet och lämna resten, och frågade om klienten också skulle minnas det
+senast valda tempot. Svaret blev "Kör :)", alltså bara fröet.
+
+**Bygget.** `BOTCFG_SEED` (Turn-based, 3 s) ligger bredvid `BOTCFG0` och används på de två ställen där fröet sätts.
+`BOTCFG0` får betyda det den alltid har betytt, att ingenting är sparat, och den är samma bas som serverns och bryggans
+sammanslagning. Därför behövde varken servern eller tvillingtestet med 400 slumpskrivningar röras. Ett rum som redan har ett
+tempo behåller det. De 3 sekunderna följer med, så den som byter till Standard får 3 s.
+
+**Testerna.** Två gamla nålar som låste Standard som frö vändes till Turn-based. De LIVE-tester som behöver Standard sätter
+det nu själva, med en kommentar. Två nya tester: fröet i hotseat och online, och ett LIVE-test där en riktig bott vid ett nytt
+bord väntar utan klocka i 2,5 s och går vidare på ▶. Första versionen av LIVE-testet var för snäll mot v2.6.177. Den läste
+klockan direkt när väntan dök upp, men en väntan kan stegas innan frågan har gått ut på tråden, och då har den ingen klocka
+i något tempo. Testet tittar nu i 2,5 s. På v2.6.177 såg det 2954 ms kvar. Mot v2.6.177 föll 4 tester (de två nålarna och de
+två nya), alla på beteende, och fem mutanter fångades av fem.
+
+**I webbläsaren** med en riktig bott och den riktiga Spela offline-dialogen, så att det var `hotSpawnBots` som satte fröet:
+kugghjulet visar Turn-based intryckt och reglaget på 3, utgråat, och bottens bleed frågar "Block? — say "block" or "no" (no
+clock — I wait for you)" utan klocka. Där hittade jag en sak: medan kameran besöker bottens plats under dess tur ligger
+🤖-märket med ▶ under bottens matta. Knappen ritas, men ett klick hamnar på mattan. Det är likadant på v2.6.177. Efter ⌂ Home
+fungerade ett riktigt klick på ▶ direkt. Med Turn-based som start spelar det större roll, så det går till Johan som förslag.
+Att bara höja märket skulle täcka nederkanten av besökets ⌂ Home, så det behöver en egen plats.
+
+**Osäkert eller otestat:** elysium.cards; ett onlinebord i webbläsaren (fröet online är enhetstestets); ett helt parti i
+Turn-based mot en människa. Bottguiden (Help ▸ Bots) säger fortfarande Standard, 3 s tills bottsidan skickar en ny.
+
 ## [SVARET EFTER RADEN] (19 november 2026, eftermiddag, klient v2.6.177 / srv-2.6.51 oförändrad)
 
 PR #83 var uppe och grön. I svaret till Johan stod två saker som väntade på hans kör: drag-raden (hittad i v2.6.176)

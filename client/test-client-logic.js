@@ -3399,7 +3399,7 @@ test('v2.6.139 the bridge keeps the table tempo like the server: botcfgIn fans t
   HB.reset([{ name: 'You' }, { name: 'B2', bot: true }, { name: 'B3', bot: true }]);
   const raw = { 2: [], 3: [] }, got = viaHB(HB, raw); const dial = k => HB.dialFor(k, 'B' + k)('x', { open(){}, msg: j => raw[k].push(JSON.parse(j)), close(){} });
   const t2 = dial(2);
-  eq(HB.botcfgIn('', A.BOTCFG0).waitSecs, 3, 'the seed stores Standard / 3 s');
+  eq(HB.botcfgIn('', A.BOTCFG_SEED || A.BOTCFG0).waitSecs, 3, 'the seed stores its pair (v2.6.178: Turn-based with 3 s kept; before, Standard / 3 s)');
   eq(got[2].filter(m => m.t === 'botcfg').length, 1, 'a seated bot hears it at once');
   HB.botcfgIn('You', { tempo: 'turn' });
   const last = got[2].filter(m => m.t === 'botcfg').pop(); eq(JSON.stringify(last), JSON.stringify({ t: 'botcfg', tempo: 'turn', waitSecs: 3, who: 'You' }), 'the whole state, named');
@@ -3410,9 +3410,9 @@ test('v2.6.139 the bridge keeps the table tempo like the server: botcfgIn fans t
   eq(HB.botcfgIn('You', { tempo: 'nope', waitSecs: 'x' }), null, 'nothing valid -> nothing stored, nothing sent');
   HB.reset([]); eq(HB.botcfg, null, 'a new table starts with none');
   const html = require('fs').readFileSync(CLIENT, 'utf8'); const sp = html.slice(html.indexOf('async function hotSpawnBots('), html.indexOf('function hotNextHuman('));
-  assert(/hotBridge\.reset\([^\n]*\n\s*hotBridge\.botcfgIn\('', BOTCFG0\);/.test(sp), 'hotSpawnBots seeds Standard / 3 s right after the reset -- BEFORE any bot joins, so each one is told at `joined`');
+  assert(/hotBridge\.reset\([^\n]*\n\s*hotBridge\.botcfgIn\('', BOTCFG_SEED\);/.test(sp), 'hotSpawnBots seeds the table\'s tempo (v2.6.178: BOTCFG_SEED, Turn-based) right after the reset -- BEFORE any bot joins, so each one is told at `joined`');
 });
-test('v2.6.139 botCfgSet: offline the bridge + ONE log line (none for a no-change), online a PARTIAL write + the line; refused for spectators, an older server and a table without bots; the host seeds Standard / 3 s once and quietly', () => {
+test('v2.6.139 botCfgSet: offline the bridge + ONE log line (none for a no-change), online a PARTIAL write + the line; refused for spectators, an older server and a table without bots; the host seeds the table\'s tempo once and quietly (v2.6.178: Turn-based; it was Standard / 3 s)', () => {
   const A = loadClient(CLIENT); const HB = A.hotBridge; const lines = () => A.errRing.map(e => e.m);
   const toasts = []; A.toast = (m) => toasts.push(String(m));
   // offline
@@ -3434,9 +3434,10 @@ test('v2.6.139 botCfgSet: offline the bridge + ONE log line (none for a no-chang
   eq(A.botCfgSeed(), false, 'and the host does not seed into a server that would drop it'); eq(sent.length, 0);
   A.net.srvV = '2.6.43'; eq(A.botCfgWhy(), '');
   const bc = () => sent.filter(m => m.t === 'botcfg');   // the wire also carries the relayed log line (mpRelay) -- read the verb itself
-  eq(A.botCfgSeed(), true, 'host + bots + nothing stored: one seed'); eq(JSON.stringify(bc().pop()), JSON.stringify({ t: 'botcfg', tempo: 'standard', waitSecs: 3 })); sent.length = 0;
+  eq(A.botCfgSeed(), true, 'host + bots + nothing stored: one seed'); eq(JSON.stringify(bc().pop()), JSON.stringify({ t: 'botcfg', tempo: 'turn', waitSecs: 3 }), 'Turn-based, with 3 s kept for a switch (v2.6.178; v2.6.177 seeded Standard)'); sent.length = 0;
   eq(lines().filter(l => /Bob set bot tempo/.test(l)).length, 0, 'quietly -- the table\'s default is nobody\'s change');
   eq(A.botCfgSeed(), false, 'once'); eq(bc().length, 0);
+  A.net.botcfg = { tempo: 'standard', waitSecs: 3 };   // v2.6.178: the rest reads a table somebody set to Standard
   A.botCfgSet({ waitSecs: 5 }); eq(JSON.stringify(bc().pop()), JSON.stringify({ t: 'botcfg', waitSecs: 5 }), 'PARTIAL: only what the click changed (a concurrent tempo change elsewhere survives)');
   eq(sent.filter(m => m.t === 'log').length, 1, 'and ONE line rides the wire with it');
   assert(lines().includes('Bob set bot tempo: Standard, 5 s.'));
@@ -3588,13 +3589,13 @@ testB('v2.6.139 LIVE with the released bot: the knowledge objects are the ones t
   eq(A.botCfgDeafVer(rows) === '', reads, reads ? 'this bot reads botcfg -- the panel stays quiet' : 'bot v' + BOT.BOT_VERSION + ' has no botcfg handler yet -- the panel says so');
   b.close(); A.localTable = false; HB.reset([]);
 });
-testB('v2.6.140 LIVE, the tempo meets the REAL bot through the bridge: the seeded Standard 3 s shortens its block window (spawned with askSecs 20), and in Turn-based it waits on the human with no clock until the play button gives it the word -- a bot that does not read botcfg (<= v0.6.193) skips loudly', async () => {
+testB('v2.6.140 LIVE, the tempo meets the REAL bot through the bridge: Standard 3 s (the seed until v2.6.178) shortens its block window (spawned with askSecs 20), and in Turn-based it waits on the human with no clock until the play button gives it the word -- a bot that does not read botcfg (<= v0.6.193) skips loudly', async () => {
   const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   HB.reset([{ name: 'You' }, { name: 'Two', bot: true }]);
   A.net.roster = [{ seat: 1, name: 'You', vp: 0 }, { seat: 2, name: 'Two', bot: true, vp: 0 }];
   A.net.you = 'You'; A.net.boards = {}; A.net.hot = { boards: { 1: JSON.stringify({ pool: 30 }), 2: '{}' }, undo: {} }; A.localTable = true; A.conv.tournament = false;
-  HB.botcfgIn('', A.BOTCFG0);   // the seed hotSpawnBots stores before any bot joins
+  HB.botcfgIn('', A.BOTCFG0);   // Standard 3 s, set on purpose (the seed until v2.6.178; since then a table starts Turn-based)
   let passes = 0; HB.onPass = s => { if (s === 2) passes++; };
   const b = new BOT.Bot({ room: 'hot', pass: '', name: 'Two', paceMs: 0, askSecs: 20, transport: HB.dialFor(2, 'Two'), deck: BOT.ARCHETYPES.ventrue, deckName: 'ventrue', persona: 'expert', log: () => {} });
   const waitOnHuman = async (ms, armed) => { const t = Date.now(); let st = null; while (Date.now() - t < ms){ st = A.botPanelRead(b); if (st.canStep && st.step && st.step !== 'release-hold' && (!armed || st.until != null)) return st; await sleep(50); } return st; };   // v2.6.162: armed -- bot v0.6.204 arms a wait's clock when its question is ON THE WIRE; while the question is still queued the wait is steppable with until: null (the bot project's handoff v0.6.204 section 3), so the Standard half waits for the clock itself
@@ -4923,7 +4924,7 @@ testB('v2.6.162 LIVE: a REAL bot\'s verdict clock (v0.6.204+) starts when its qu
   HB.reset([{ name: 'You' }, { name: 'Gatebot', bot: true }]);
   A.net.roster = [{ seat: 1, name: 'You', vp: 0 }, { seat: 2, name: 'Gatebot', bot: true, vp: 0 }];
   A.net.you = 'You'; A.net.boards = {}; A.net.hot = { boards: { 1: JSON.stringify({ pool: 30 }), 2: '{}' }, undo: {} }; A.localTable = true; A.conv.tournament = false;
-  HB.botcfgIn('', A.BOTCFG0);   // Standard 3 s, the seed hotSpawnBots stores before any bot joins
+  HB.botcfgIn('', A.BOTCFG0);   // Standard 3 s, set on purpose (the seed until v2.6.178; since then a table starts Turn-based)
   const b = new BOT.Bot({ room: 'hot', pass: '', name: 'Gatebot', paceMs: 0, askSecs: 20, transport: HB.dialFor(2, 'Gatebot'), deck: BOT.ARCHETYPES.ventrue, deckName: 'ventrue', persona: 'expert', log: () => {} });
   const dec0 = b.decide.bind(b);
   b.decide = (k, ctx) => { const d = dec0(k, ctx); return k === 'block-as-target' ? Object.assign({}, d, { block: true, bounce: false, why: 'the test: block' }) : d; };
@@ -6522,6 +6523,72 @@ testA('v2.6.177 a bot\'s instant answer to a human\'s card lands BELOW the human
   assert(iPlay < iAns, 'the human\'s play line comes first, the bot\'s answer after it (v2.6.176: the answer was written above the line it answers): ' + JSON.stringify(t.slice(-4)));
   eq(heard.join(','), 'fx,board,log', 'the bot had all three before its answer was written');
   lines.restore(); A.localTable = false; T.HB.reset([]);
+});
+
+/* ---------- v2.6.178: a table with bots starts Turn-based (Johan, 19 Nov 2026) ---------- */
+test('v2.6.178 a table with bots STARTS Turn-based (Johan; v2.6.139 seeded Standard, 3 s): the seed is Turn-based with 3 s kept for a switch -- at a hotseat a bot hears it right after `joined`, the settings read Turn-based, and a switch to Standard gets 3 s; online the host seeds it once, and a room that already has a tempo keeps it; nothing stored still means Standard, 3 s (what a bot that hears no tempo keeps)', () => {
+  const A = loadClient(CLIENT); const HB = A.hotBridge;
+  eq(JSON.stringify(A.BOTCFG_SEED), JSON.stringify({ tempo: 'turn', waitSecs: 3 }), 'the seed');
+  eq(JSON.stringify(A.BOTCFG0), JSON.stringify({ tempo: 'standard', waitSecs: 3 }), 'nothing stored: as before -- the merge base the server and the bridge share');
+  A.localTable = true; HB.reset([{ name: 'You' }, { name: 'B2', bot: true }]);
+  HB.botcfgIn('', A.BOTCFG_SEED);                                  // what hotSpawnBots stores right after its reset (pinned by the v2.6.139 test)
+  const raw = { 2: [] }, got = viaHB(HB, raw);
+  HB.dialFor(2, 'B2')('x', { open(){}, msg: j => raw[2].push(JSON.parse(j)), close(){} }).send({ t: 'join', room: 'hotseat', name: 'B2', bot: true });
+  eq(got[2].map(m => m.t).join(','), 'joined,botcfg', 'a bot that joins: joined, then the stored tempo');
+  eq(got[2][1].tempo, 'turn', 'Turn-based'); eq(got[2][1].waitSecs, 3);
+  eq(A.botCfgText(A.botCfgNow()), 'Turn-based', 'Bot settings read Turn-based');
+  HB.botcfgIn('You', { tempo: 'standard' }); eq(A.botCfgText(A.botCfgNow()), 'Standard, 3 s', 'a switch to Standard gets 3 s');
+  A.localTable = false; HB.reset([]);
+  const sent = []; A.net.ws = { readyState: 1, send: j => sent.push(JSON.parse(j)) }; A.net.status = 'in'; A.net.room = 'R'; A.net.you = 'Bob'; A.net.spect = false; A.net.srvV = '2.6.51';
+  A.net.roster = [{ seat: 1, name: 'Bob', host: true }, { seat: 2, name: 'B2', bot: true }]; A.net.isHost = true; A.net.botcfg = null;
+  eq(A.botCfgSeed(), true, 'online: the host seeds'); eq(JSON.stringify(sent.filter(m => m.t === 'botcfg').pop()), JSON.stringify({ t: 'botcfg', tempo: 'turn', waitSecs: 3 }));
+  eq(A.botCfgText(A.botCfgNow()), 'Turn-based', 'and reads it at once');
+  sent.length = 0; A.net.botcfg = { tempo: 'standard', waitSecs: 5 };
+  eq(A.botCfgSeed(), false, 'a room that already has a tempo keeps it (a restored room included)'); eq(sent.length, 0);
+  A.net.ws = null; A.net.status = 'off'; A.net.roster = []; A.net.room = null; A.net.botcfg = null;
+});
+testB('v2.6.178 LIVE: a REAL bot at a table seeded the way hotSpawnBots seeds it waits on the human with NO clock from its first question -- nobody chose Turn-based -- does not go on by itself, and goes on when the play button gives it the word (v2.6.177: the seed was Standard, 3 s, and the wait had a clock)', async () => {
+  const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  HB.reset([{ name: 'You' }, { name: 'Two', bot: true }]);
+  A.net.roster = [{ seat: 1, name: 'You', vp: 0 }, { seat: 2, name: 'Two', bot: true, vp: 0 }];
+  A.net.you = 'You'; A.net.boards = {}; A.net.hot = { boards: { 1: JSON.stringify({ pool: 30 }), 2: '{}' }, undo: {} }; A.localTable = true; A.conv.tournament = false;
+  HB.botcfgIn('', A.BOTCFG_SEED || A.BOTCFG0);                     // the seed, BEFORE any bot joins (hotSpawnBots' order); v2.6.177 had Standard here
+  let passes = 0; HB.onPass = s => { if (s === 2) passes++; };
+  const b = new BOT.Bot({ room: 'hot', pass: '', name: 'Two', paceMs: 0, askSecs: 20, transport: HB.dialFor(2, 'Two'), deck: BOT.ARCHETYPES.ventrue, deckName: 'ventrue', persona: 'expert', log: () => {} });
+  const waitOnHuman = async (ms) => { const t = Date.now(); let st = null; while (Date.now() - t < ms){ st = A.botPanelRead(b); if (st.canStep && st.step && st.step !== 'release-hold') return st; await sleep(50); } return st; };
+  try {
+    await b.connect(); const t0 = Date.now(); while ((!HB.seats[2] || !HB.seats[2].deck) && Date.now() - t0 < 6000) await sleep(40);
+    if (!(b._handlers && typeof b._handlers.botcfg === 'function')){ const e = new Error('SKIP -- bot v' + BOT.BOT_VERSION + ' beside the suite does not read botcfg; the tempo checks need v0.6.194+'); e.skip = true; throw e; }
+    assert(HB.startFor(2), 'dealt'); await sleep(300);
+    const u = b.unc.shift(); b.board.push({ id: u.id, name: u.name, kind: 'crypt', zone: 'ready', x: 0, y: 0, locked: false, faceDown: false, blood: u.cap || 5, cap: u.cap || 5 }); b.push();
+    const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false }); v.blood = 3;   // the human could block -- so the bot asks
+    A.hotBots[2] = b; await sleep(700);
+    b.hand.length = 0; HB.turn(2);                                   // a plain bleed: the flow under test is the WAIT
+    const st = await waitOnHuman(10000);
+    assert(st && st.canStep, 'the bot waits on the human: ' + JSON.stringify(st));
+    let clock = null; const ts = Date.now();                       // a wait is steppable before its question is on the wire, with no clock yet in ANY tempo: watch it for 2.5 s
+    while (Date.now() - ts < 2500){ const s2 = A.botPanelRead(b); if (s2.until != null){ clock = Math.round(s2.until - Date.now()); break; } await sleep(50); }
+    eq(clock, null, 'no clock on the wait in 2.5 s -- the table started Turn-based (v2.6.177: Standard\'s 3 s, ms left shown)');
+    eq(passes, 0, 'it does not go on by itself'); eq(A.botPanelRead(b).step, st.step, 'the same wait, 2.5 s later');
+    assert(A.botGiveWordWanted(), 'the play button is offered'); eq(A.botGiveWord(), 1, 'it gives the bot the word');
+    const t = Date.now(); while (passes < 1 && Date.now() - t < 20000) await sleep(100);
+    eq(passes, 1, 'and the turn completes');
+  } finally { delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); }
+});
+
+/* ---------- v2.6.179: the bot badge during a seat visit ---------- */
+test('v2.6.179 in a seat visit the bot badge and its play button stand ABOVE the visited seat, under the visit\'s Home button and right-aligned with it (Johan; v2.6.178: the badge, z 60, lay under #rview, z 3500 -- drawn, but a click landed on the mat, and at a hotseat the sweep visits every bot\'s seat on its turn)', () => {
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const rule = sel => { const i = html.indexOf(sel + '{'); return i < 0 ? '' : html.slice(i, html.indexOf('}', i)); };
+  const num = (r, p) => { const m = new RegExp('(?:^|[;{\\s])' + p + '\\s*:\\s*(-?\\d+)').exec(r); return m ? +m[1] : null; };
+  const rv = rule('#rview'), back = rule('#rvBack'), vis = rule('body.invisit #hotBotBtn');
+  assert(vis, 'a rule for the badge in a visit exists');
+  assert(num(rv, 'z-index') != null && num(vis, 'z-index') > num(rv, 'z-index'), 'above the visit layer: ' + num(vis, 'z-index') + ' > ' + num(rv, 'z-index'));
+  assert(num(vis, 'top') >= 90, 'below the visit\'s Home button (its bottom measured at 82 px in a browser): top ' + num(vis, 'top'));
+  eq(num(vis, 'right'), num(back, 'right'), 'right-aligned with the Home button');
+  assert(/z-index:60/.test(html.slice(html.indexOf("el.id='hotBotBtn'"), html.indexOf("el.id='hotBotBtn'") + 600)), 'the badge elsewhere keeps its own place (z 60, top 74, right 14)');
+  assert(/!important/.test(vis), 'the rule wins over the badge\'s inline style');
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */
