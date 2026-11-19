@@ -1573,9 +1573,9 @@ test('v2.6.95: hotFanOut reaches every seat EXCEPT the sender, and stays silent 
   const A = loadClient(CLIENT);
   const HB = A.hotBridge;
   HB.reset([{ name: 'You' }, { name: 'B1', bot: true }, { name: 'B2', bot: true }]);
-  const got = { 2: [], 3: [] };
-  HB.seats[2] = { cb: { msg: j => got[2].push(JSON.parse(j)) } };
-  HB.seats[3] = { cb: { msg: j => got[3].push(JSON.parse(j)) } };
+  const raw = { 2: [], 3: [] }, got = viaHB(HB, raw);
+  HB.seats[2] = { cb: { msg: j => raw[2].push(JSON.parse(j)) } };
+  HB.seats[3] = { cb: { msg: j => raw[3].push(JSON.parse(j)) } };
   A.localTable = false;
   A.hotFanOut({ t: 'log', who: 'You', html: 'x' }, 1);
   eq(got[2].length + got[3].length, 0, 'no local table -> the bus is dead (an online room must never see hotseat traffic)');
@@ -1603,9 +1603,9 @@ test("v2.6.125 (was v2.6.95): a BOT's \"Hold on…\" IS relayed to the other bot
   const A = loadClient(CLIENT);
   const HB = A.hotBridge;
   HB.reset([{ name: 'You' }, { name: 'B1', bot: true }, { name: 'B2', bot: true }]);
-  const got = { 2: [], 3: [] };
-  HB.seats[2] = { name: 'B1', cb: { msg: j => got[2].push(JSON.parse(j)) } };
-  HB.seats[3] = { name: 'B2', cb: { msg: j => got[3].push(JSON.parse(j)) } };
+  const raw = { 2: [], 3: [] }, got = viaHB(HB, raw);
+  HB.seats[2] = { name: 'B1', cb: { msg: j => raw[2].push(JSON.parse(j)) } };
+  HB.seats[3] = { name: 'B2', cb: { msg: j => raw[3].push(JSON.parse(j)) } };
   A.localTable = true;
   HB._fromBot(2, HB.seats[2], { t: 'say', who: 'B1', i: 0 });          // a bot says "Hold on..."
   eq(got[3].length, 1, 'seat 3 receives it -- v2.6.95..124 withheld it because the bot could not filter it yet; it can now'); eq(got[3][0].i, 0); eq(got[3][0].who, 'B1');
@@ -1655,8 +1655,8 @@ test('v2.6.96: hotHoldRelease clears EVERY outstanding hold by name -- the fix f
   const A = loadClient(CLIENT);
   const HB = A.hotBridge;
   HB.reset([{ name: 'Alice' }, { name: 'Bob' }, { name: 'B1', bot: true }]);
-  const got = [];
-  HB.seats[3] = { cb: { msg: j => got.push(JSON.parse(j)) } };
+  const raw = [], got = viaHB(HB, raw);
+  HB.seats[3] = { cb: { msg: j => raw.push(JSON.parse(j)) } };
   A.localTable = true;
   A.net.roster = [{ seat: 1, name: 'Alice' }, { seat: 2, name: 'Bob' }, { seat: 3, name: 'B1', bot: true }];
   A.net.you = 'Alice'; A.hotHoldNote(0);
@@ -1728,8 +1728,8 @@ test('v2.6.97: hostSetPoolHot sends forceSetPool to a bot seat and leaves a huma
   const A = loadClient(CLIENT);
   const HB = A.hotBridge;
   HB.reset([{ name: 'Alice' }, { name: 'Bot1', bot: true }]);
-  const sent = [];
-  HB.seats[2] = { cb: { msg: j => sent.push(JSON.parse(j)) } };
+  const raw = [], sent = viaHB(HB, raw);
+  HB.seats[2] = { cb: { msg: j => raw.push(JSON.parse(j)) } };
   A.localTable = true;
   A.net.roster = [{ seat: 1, name: 'Alice' }, { seat: 2, name: 'Bot1', bot: true }];
   A.net.boards = { 2: { pub: { pool: 30, counts: { hand: 7, library: 60, crypt: 12 }, cards: [] } } };
@@ -1748,8 +1748,8 @@ test('v2.6.97: draining a bot to zero routes through the full oust path -- the b
   const A = loadClient(CLIENT);
   const HB = A.hotBridge;
   HB.reset([{ name: 'Alice' }, { name: 'Bot1', bot: true }]);
-  const sent = [];
-  HB.seats[2] = { cb: { msg: j => sent.push(JSON.parse(j)) } };
+  const raw = [], sent = viaHB(HB, raw);
+  HB.seats[2] = { cb: { msg: j => raw.push(JSON.parse(j)) } };
   A.localTable = true;
   A.net.roster = [{ seat: 1, name: 'Alice' }, { seat: 2, name: 'Bot1', bot: true }];
   A.net.boards = { 2: { pub: { pool: 3, counts: { hand: 7, library: 60, crypt: 12 }, cards: [] } } };
@@ -1763,8 +1763,8 @@ test('v2.6.97: hostOustHot tells a bot seat, and the quick Pool ± steps are no 
   const A = loadClient(CLIENT);
   const HB = A.hotBridge;
   HB.reset([{ name: 'Alice' }, { name: 'Bot1', bot: true }]);
-  const sent = [];
-  HB.seats[2] = { cb: { msg: j => sent.push(JSON.parse(j)) } };
+  const raw = [], sent = viaHB(HB, raw);
+  HB.seats[2] = { cb: { msg: j => raw.push(JSON.parse(j)) } };
   A.localTable = true;
   A.net.roster = [{ seat: 1, name: 'Alice' }, { seat: 2, name: 'Bot1', bot: true }];
   A.net.boards = { 2: { pub: { pool: 12, counts: { hand: 7, library: 60, crypt: 12 }, cards: [] } } };
@@ -1782,9 +1782,9 @@ test('v2.6.98: a bot\'s board pub fans out to the OTHER bots, never back to the 
   const A = loadClient(CLIENT);
   const HB = A.hotBridge;
   HB.reset([{ name: 'Alice' }, { name: 'B1', bot: true }, { name: 'B2', bot: true }]);
-  const got = { 2: [], 3: [] };
-  HB.seats[2] = { cb: { msg: j => got[2].push(JSON.parse(j)) } };
-  HB.seats[3] = { cb: { msg: j => got[3].push(JSON.parse(j)) } };
+  const raw = { 2: [], 3: [] }, got = viaHB(HB, raw);
+  HB.seats[2] = { cb: { msg: j => raw[2].push(JSON.parse(j)) } };
+  HB.seats[3] = { cb: { msg: j => raw[3].push(JSON.parse(j)) } };
   A.localTable = true;
   HB._fromBot(2, HB.seats[2], { t: 'board', pub: { pool: 27, cards: [] } });
   eq(got[2].length, 0, 'the sender never gets its own board back');
@@ -1796,14 +1796,14 @@ test('v2.6.98: hotPushBoardNow sends the ACTIVE human\'s board to every bot seat
   const A = loadClient(CLIENT);
   const HB = A.hotBridge;
   HB.reset([{ name: 'Alice' }, { name: 'B1', bot: true }]);
-  const got = [];
+  const raw = [], got = viaHB(HB, raw);
   A.localTable = false;
   A.hotPushBoardNow();
   eq(got.length, 0, 'no local table -> nothing (online the server does this)');
   A.localTable = true;
   A.hotPushBoardNow();
   eq(got.length, 0, 'no bot seats connected -> nothing');
-  HB.seats[2] = { cb: { msg: j => got.push(JSON.parse(j)) } };
+  HB.seats[2] = { cb: { msg: j => raw.push(JSON.parse(j)) } };
   A.net.you = 'Alice';
   A.net.roster = [{ seat: 1, name: 'Alice' }, { seat: 2, name: 'B1', bot: true }];
   A.hotPushBoardNow();
@@ -2710,14 +2710,20 @@ test('v2.6.120: the four controls exist once under Table > Advanced, join the Li
 });
 
 /* === v2.6.122: THE PARITY ROUND -- online <-> hotseat parity for bots (bot-project spec, 21 Sep 2026) === */
+function viaHB(HB, rec){   // v2.6.177: a fake seat's record READ through the bridge -- every queued hop is delivered first (hotBridge.flush), as a socket would have by the time anybody looks. The seat itself writes to the raw record, never through this
+  return new Proxy(rec, { get(t, p){ if (typeof HB.flush === 'function') HB.flush(); return t[p]; } });   // a client before v2.6.177 delivers inside the send: nothing to flush
+}
 function parityTable(A, names){   // names: [['You'], ['B2', true], ...] -> a local table with FAKE bridge seats that record what they are sent
-  const HB = A.hotBridge, got = {};
+  const HB = A.hotBridge, got = {}, raw = {};
   HB.reset(names.map(n => ({ name: n[0], bot: !!n[1] })));
   A.net.roster = names.map((n, i) => ({ seat: i + 1, name: n[0], bot: !!n[1], vp: 0 }));
   A.net.you = names.find(n => !n[1])[0]; A.net.boards = {}; A.net.hot = { boards: {}, undo: {} };
-  names.forEach((n, i) => { if (n[1]){ got[i + 1] = []; HB.seats[i + 1] = { name: n[0], cb: { msg: j => got[i + 1].push(JSON.parse(j)) } }; } else A.net.hot.boards[i + 1] = JSON.stringify({ pool: 30, cards: [], zones: {} }); });
+  /* v2.6.177: the bridge delivers a task after the send (its queue, hotBridge.drain), as the server does. A fake seat READ by a test
+     is read after the sender's code has returned -- reading T.got[k] runs every queued hop first (hotBridge.flush), so the record is
+     what that seat would hold by then. The record itself is filled by the delivery only, never through this getter. */
+  names.forEach((n, i) => { if (n[1]){ const arr = raw[i + 1] = []; Object.defineProperty(got, i + 1, { enumerable: true, get(){ if (typeof HB.flush === 'function') HB.flush(); return arr; } }); HB.seats[i + 1] = { name: n[0], cb: { msg: j => arr.push(JSON.parse(j)) } }; } else A.net.hot.boards[i + 1] = JSON.stringify({ pool: 30, cards: [], zones: {} }); });
   A.localTable = true;
-  return { HB, got, from: (seat, m) => HB._fromBot(seat, HB.seats[seat], m), clear: () => Object.keys(got).forEach(k => { got[k].length = 0; }) };
+  return { HB, got, raw, from: (seat, m) => HB._fromBot(seat, HB.seats[seat], m), clear: () => Object.keys(got).forEach(k => { got[k].length = 0; }) };
 }
 test('v2.6.122 tally: the bridge keeps ONE table tally like the server -- a bot\'s partial write reaches every bot INCLUDING the sender and the human\'s avr; absent fields are preserved, a mode change starts fresh, res is relayed and never stored', () => {
   const A = loadClient(CLIENT); const T = parityTable(A, [['You'], ['B2', true], ['B3', true]]);
@@ -2872,7 +2878,7 @@ testB('v2.6.122 LIVE: two real bots over the bridge -- a forced oust of one comp
   const order = await A.hotRunBotTurns(1, 1, { idleMs: 600000 });
   eq(JSON.stringify(Array.from(order)), '[2]', 'the sweep completes the round around the fallen seat');
   b2.send({ t: 'tally', mode: 'block', b: 2 });
-  const t2 = Date.now(); while (!(A.avr && A.avr.mode === 'block' && A.avr.b === 2) && Date.now() - t2 < 4000) await new Promise(r => setTimeout(r, 25));
+  const t2 = Date.now(); while (!(A.avr && A.avr.mode === 'block' && A.avr.b === 2 && b3.tally && b3.tally.b === 2) && Date.now() - t2 < 4000) await new Promise(r => setTimeout(r, 25));   // v2.6.177: the other bot hears it a hop later, as online
   eq(A.avr.b, 2, 'avr follows a real bot\'s counter'); assert(b3.tally && b3.tally.mode === 'block' && b3.tally.b === 2 && b3.tally.who === 'Two', 'and so does the other bot');
   b2.close(); b3.close(); A.localTable = false; HB.reset([]);
 });
@@ -3391,7 +3397,7 @@ test('v2.6.139 bot tempo twin: the client\'s botCfgMerge, the hotseat bridge\'s 
 test('v2.6.139 the bridge keeps the table tempo like the server: botcfgIn fans the WHOLE state to every bot seat, a bot that joins later gets it right after `joined`, reset forgets it, and a bot cannot set it', () => {
   const A = loadClient(CLIENT); const HB = A.hotBridge;
   HB.reset([{ name: 'You' }, { name: 'B2', bot: true }, { name: 'B3', bot: true }]);
-  const got = { 2: [], 3: [] }; const dial = k => HB.dialFor(k, 'B' + k)('x', { open(){}, msg: j => got[k].push(JSON.parse(j)), close(){} });
+  const raw = { 2: [], 3: [] }, got = viaHB(HB, raw); const dial = k => HB.dialFor(k, 'B' + k)('x', { open(){}, msg: j => raw[k].push(JSON.parse(j)), close(){} });
   const t2 = dial(2);
   eq(HB.botcfgIn('', A.BOTCFG0).waitSecs, 3, 'the seed stores Standard / 3 s');
   eq(got[2].filter(m => m.t === 'botcfg').length, 1, 'a seated bot hears it at once');
@@ -4640,6 +4646,7 @@ test('v2.6.159 the bridge stays liftable: the bot project lifts `const hotBridge
    { t: 'give', seat: 2, gid: 'g1', card: { name: 'Anarch Troublemaker' } }, { t: 'bounty' }, { t: 'pass' }
   ].forEach(m => { try { HB._fromBot(1, HB.seats[1], m); } catch (e) { errs.push(m.t + (m.mode ? '/' + m.mode : '') + ': ' + e.message); } });
   eq(errs.join(' | '), '', 'every case runs in the lift (v2.6.158: "tally/combat: tallyCombatMerge is not defined")');
+  if (typeof HB.flush === 'function') HB.flush();   // v2.6.177: the lifted literal queues its deliveries too -- they arrive after the send (its flush runs them now)
   const of = (s, t) => got[s].filter(x => x.t === t);
   const ct = of(2, 'tally').find(x => x.mode === 'combat');
   assert(ct && ct.a === 2 && ct.duel && ct.duel[1] && ct.duel[1].cid === 'c1', 'the combat tally reaches the other bots, its duel included (the lift relays the base fields, as a pre-2.6.39 server did)');
@@ -6398,7 +6405,7 @@ testB('v2.6.176 LIVE: a human\'s master, played from the client\'s own menu path
   u.players = [{ seat: 1, name: 'You' }, { seat: 2, name: 'B2', bot: true }];
   u.board = [{ id: 'c9', name: 'Sully', kind: 'crypt', zone: 'ready', blood: 4, cap: 4, locked: false, faceDown: false, counters: [] }];
   u.hand = ['Sudden Reversal']; u.turnSeat = 1; u.pool = 20;
-  T.HB.seats[2].cb.msg = j => { const m = JSON.parse(j); T.got[2].push(m); u._dispatch(m); };   // the bridge's deliveries go through the real bot's own dispatcher
+  T.HB.seats[2].cb.msg = j => { const m = JSON.parse(j); T.raw[2].push(m); u._dispatch(m); };   // the bridge's deliveries go through the real bot's own dispatcher (v2.6.177: into the raw record -- reading T.got inside a delivery would run the next hop inside this one)
   const fame = A.makeCard('Fame', 'lib'); A.move(fame, 'hand');
   A.state.phase = 1; A.state.phaseUsed.master = 0; A.setRTarget({ seat: 2, cid: 'c9', who: 'B2', name: 'Sully', faceDown: false }, true);
   T.clear(); await A.playFromHand(fame, false);
@@ -6411,6 +6418,110 @@ testB('v2.6.176 LIVE: a human\'s master, played from the client\'s own menu path
   assert(sent.some(m => m && m.t === 'chat' && /^You: your Fame is cancelled by my Sudden Reversal/.test(m.text)), 'and tells the owner in chat');
   eq(u.hand.length, 0, 'the card left its hand');
   A.localTable = false; T.HB.reset([]);
+});
+
+/* ---------- v2.6.177: the drag path's play line, and the bridge's queue (delivery after the send returns, as the server delivers) ---------- */
+const LIC_FIXTURE = [
+  { id: 11, name: 'Catalina Vega', _name: 'Catalina Vega', printed_name: 'Catalina Vega', types: ['Vampire'], card_text: 'Camarilla.', capacity: 5, disciplines: ['obf', 'pre'], clans: ['Toreador'] },
+  { id: 12, name: 'Lost in Crowds', _name: 'Lost in Crowds', printed_name: 'Lost in Crowds', types: ['Action Modifier'], card_text: '[obf] +1 stealth.\n[OBF] As above, but for +2 stealth.', disciplines: ['obf'] }
+];
+testA('v2.6.177 a card DRAGGED from the hand to the table writes the menu\'s play line: the level the chooser asked, the acting vampire and the aim (used, so it clears when that action resolves) -- and the clone carries the level; Cancel in the chooser keeps the card in hand with nothing logged or sent (v2.6.176: the drag wrote its own line with no level and no target, so an aim set before a drag rode the NEXT line, and the bots never read a dragged Grand Ball\'s pair)', async () => {
+  const { A, T, cat, fx, kinds } = fxTable(); A.processCardData(LIC_FIXTURE, 'fixture');
+  const lines = captureLog(A); A.toast = () => {};
+  const asked = []; let answer = 'ok'; A.uiDialog = o => { asked.push(o); return Promise.resolve(answer); };
+  A.setPhase(2); A.selectOnly(cat); A.setRTarget({ seat: 2, cid: 'c9', who: 'B2', name: 'Sully', faceDown: false }, true);
+  const lic = A.makeCard('Lost in Crowds', 'lib'); A.move(lic, 'hand');
+  T.clear(); await A.dropCard(lic, { x: 500, y: 300, ox: 0, oy: 0 });
+  eq(lic.zone, 'ready', 'the drag played it');
+  eq(asked.length, 1, 'the level was asked, as the menu\'s Play asks it'); eq(asked[0] && asked[0].title, 'Play at which level?');
+  eq(lines.text().filter(l => /Lost in Crowds/.test(l)).pop(), 'Catalina Vega plays Lost in Crowds [obf]. Target: B2\'s Sully.', 'the menu\'s line: the acting vampire, the level, the aim (v2.6.176: "Catalina Vega plays Lost in Crowds.")');
+  eq(A.state.targetUsed, true, 'the aim is used by this line');
+  eq(kinds(), 'fx,board,log', 'a bot seat gets the clone, the board and the line, as from the menu');
+  eq(fx()[0].verb, '[obf]', 'the clone carries the level too'); eq(fx()[0].target && fx()[0].target.name, 'Sully');
+  A.setPhase(3); eq(A.net.rtarget, null, 'the used aim is gone when that action resolves (v2.6.175\'s rule, now for a dragged card too)');
+  const lic2 = A.makeCard('Lost in Crowds', 'lib'); A.move(lic2, 'hand'); A.setRTarget({ seat: 2, cid: 'c9', who: 'B2', name: 'Sully', faceDown: false }, true);
+  const n0 = lines.lines.length; answer = null; T.clear(); await A.dropCard(lic2, { x: 500, y: 300, ox: 0, oy: 0 });
+  eq(lic2.zone, 'hand', 'Cancel in the chooser: the card stays in hand'); eq(lines.text().slice(n0).filter(l => /Lost in Crowds|play/.test(l)).join(' | '), '', 'no play line'); eq(T.got[2].filter(m => m.t === 'fx' || (m.t === 'log' && /Lost in Crowds|play/.test(m.html))).map(m => m.t).join(','), '', 'no clone and no play line sent (a board push on its debounce, or an unrelated line, may pass)');
+  assert(A.net.rtarget && A.state.targetUsed === false, 'and the aim is still set and unused');
+  lines.restore(); A.localTable = false; T.HB.reset([]);
+});
+testA('v2.6.177 a level is chosen for ONE play: a card played at [OBF], back in hand and played again with the chooser off carries no level -- not on its line and not in its clone (v2.6.176 kept the old tag on the card, and the menu\'s Play wrote it again)', async () => {
+  const { A, T, cat, fx } = fxTable(); A.processCardData(LIC_FIXTURE, 'fixture');
+  const lines = captureLog(A); A.toast = () => {}; A.uiDialog = o => Promise.resolve(o && o.kind === 'choose' ? 'alt' : null);   // the level: the second choice; any other prompt (the hand-size reminder) Cancel, which plays
+  A.setPhase(2); A.selectOnly(cat);
+  const lic = A.makeCard('Lost in Crowds', 'lib'); A.move(lic, 'hand');
+  await A.playFromHand(lic, false); eq(lines.text().filter(l => /Lost in Crowds/.test(l)).pop(), 'Catalina Vega plays Lost in Crowds [OBF].', 'played at the level picked');
+  A.move(lic, 'hand'); A.net.helperPolicy = { allowLocal: false, settings: { modeChoice: false } };
+  T.clear(); await A.playFromHand(lic, false);
+  eq(lines.text().filter(l => /Lost in Crowds/.test(l)).pop(), 'Catalina Vega plays Lost in Crowds.', 'the chooser off: no level on the line (v2.6.176: "[OBF]" again)');
+  eq(fx()[0].verb, '', 'and none in the clone');
+  A.move(lic, 'hand'); T.clear(); await A.dropCard(lic, { x: 500, y: 300, ox: 0, oy: 0 });
+  eq(lines.text().filter(l => /Lost in Crowds/.test(l)).pop(), 'Catalina Vega plays Lost in Crowds.', 'nor on a drag');
+  lines.restore(); A.localTable = false; T.HB.reset([]);
+});
+test('v2.6.177 the bridge delivers after the sender\'s code has returned, as the server does (the bot project\'s v0.6.227 question): a message is queued at the send, serialized there, and a drain delivers the queue in order; what a delivered message makes a bot answer goes out in the NEXT hop; a seat closed or dialled again before the drain gets nothing; one seat\'s throw stops nobody else\'s delivery; reset empties the queue (v2.6.176 ran the bot\'s handler inside the sender\'s call)', () => {
+  const A = loadClient(CLIENT); const HB = A.hotBridge; A.localTable = true;
+  HB.reset([{ name: 'You' }, { name: 'B2', bot: true }, { name: 'B3', bot: true }]);
+  const raw = { 2: [], 3: [] }, seen = [];
+  HB.seats[2] = { name: 'B2', cb: { msg: j => { const m = JSON.parse(j); raw[2].push(m); seen.push('2:' + m.t + (m.n || '')); if (m.t === 'ping') HB._fromBot(2, HB.seats[2], { t: 'chat', msg: 'pong ' + m.n }); } } };   // an instant answer, as a bot gives one
+  HB.seats[3] = { name: 'B3', cb: { msg: j => { const m = JSON.parse(j); raw[3].push(m); seen.push('3:' + m.t); } } };
+  const out = { t: 'ping', n: 1 };
+  HB.toBot(2, out); HB.toBot(3, { t: 'log', html: 'a' }); out.n = 9;
+  eq(raw[2].length + raw[3].length, 0, 'nothing reaches a seat inside the sender\'s call (v2.6.176: both, inside it)');
+  eq(HB.drain(), 2, 'one drain delivers the queue'); eq(seen.join(' '), '2:ping1 3:log', 'in the order sent');
+  eq(raw[2][0].n, 1, 'serialized at the send: a later change to the object is not what the seat receives');
+  eq(raw[3].length, 1, 'the answer B2 gave at once is not delivered inside the hop that carried the question');
+  eq(HB.drain(), 1, 'it goes in the next hop'); eq(raw[3][1] && raw[3][1].msg, 'pong 1', 'to the other bot');
+  eq(HB.drain(), 0, 'and then nothing is left');
+  HB.toBot(3, { t: 'log', html: 'b' }); const r3 = HB.seats[3]; delete HB.seats[3];
+  eq(HB.drain(), 0, 'a seat closed before the drain gets nothing (a socket that is gone)');
+  HB.toBot(2, { t: 'log', html: 'c' }); HB.seats[2] = { name: 'B2', cb: { msg: j => raw[2].push(JSON.parse(j)) } };
+  eq(HB.drain(), 0, 'nor does a seat dialled again since the send -- a new connection never gets the old one\'s frames');
+  const cw = console.warn; let warned = ''; console.warn = (...a) => { warned += a.join(' '); };
+  try {
+    HB.seats[3] = { name: 'B3', cb: { msg: () => { throw new Error('boom'); } } };
+    HB.toBot(3, { t: 'log', html: 'd' }); HB.toBot(2, { t: 'log', html: 'e' });
+    eq(HB.drain(), 1, 'one seat\'s throw does not stop the others\' delivery'); eq(raw[2][raw[2].length - 1].html, 'e'); assert(/hotBridge: boom/.test(warned), 'and it is said, as dialFor\'s send says it');
+  } finally { console.warn = cw; }
+  HB.seats[3] = r3; HB.toBot(2, { t: 'log', html: 'f' }); HB.reset([]); eq(HB.drain(), 0, 'reset empties the queue');
+  A.localTable = false;
+});
+testA('v2.6.177 the drain is a MICROTASK: the queue arrives once the sender\'s synchronous code is done and before any timer -- measured against a macrotask with the bots\' pace-0 table (PROTOCOL §12.2); a loop of instant answers yields to the page within 64 hops, so it can never freeze it', async () => {
+  const A = loadClient(CLIENT); const HB = A.hotBridge; A.localTable = true;
+  HB.reset([{ name: 'You' }, { name: 'B2', bot: true }, { name: 'B3', bot: true }]);
+  const order = [];
+  HB.seats[2] = { name: 'B2', cb: { msg: j => order.push('deliver ' + JSON.parse(j).n) } };
+  setTimeout(() => order.push('timer'), 0);
+  HB.toBot(2, { t: 'x', n: 1 }); order.push('the sender goes on'); HB.toBot(2, { t: 'x', n: 2 });
+  await Promise.resolve();
+  eq(order.join(', '), 'the sender goes on, deliver 1, deliver 2', 'after the sender\'s code, in order, ahead of a 0 ms timer set before the send (v2.6.176: deliver 1 came first, inside the send)');
+  await new Promise(r => setTimeout(r, 5)); eq(order[order.length - 1], 'timer');
+  let hops = 0, timerAt = null;
+  const answer = (seat, other) => ({ name: 'B' + seat, cb: { msg: () => { hops++; if (hops < 400) HB._fromBot(seat, HB.seats[seat], { t: 'chat', msg: 'again' }); } } });
+  HB.seats[2] = answer(2); HB.seats[3] = answer(3);
+  setTimeout(() => { timerAt = hops; }, 0);
+  HB._fromBot(2, HB.seats[2], { t: 'chat', msg: 'start' });
+  await new Promise(r => setTimeout(r, 30));
+  assert(timerAt !== null && timerAt <= 70, 'a timer set before the loop ran within 64 hops of it: at hop ' + timerAt);
+  eq(hops, 400, 'and the loop itself ran to its end, in order');
+  let singles = 0; HB.seats[2] = { name: 'B2', cb: { msg: () => { singles++; } } };
+  for (let i = 0; i < 100; i++){ HB.toBot(2, { t: 'x', n: i }); await Promise.resolve(); }
+  eq(singles, 100, 'a hundred separate sends, each delivered right after its sender: the guard counts hops IN A ROW and starts again when a chain ends');
+  A.localTable = false; HB.reset([]);
+});
+testA('v2.6.177 a bot\'s instant answer to a human\'s card lands BELOW the human\'s own play line, and the bot has the clone, the board and the line before it answers -- as online (v2.6.176: the answer came inside cardFx, above the play line, before the line was written; Meditative Grove\'s cancel is such an answer)', async () => {
+  const { A, T } = fxTable(); const lines = captureLog(A); A.toast = () => {};
+  const heard = [];
+  T.HB.seats[2].cb.msg = j => { const m = JSON.parse(j); T.raw[2].push(m); heard.push(m.t);
+    if (m.t === 'fx' && m.kind === 'play') T.from(2, { t: 'log', html: '<b>B2</b> locks <b>Meditative Grove</b> — <b>' + m.card.name + '</b> is cancelled (its cost is still paid).' }); };   // bot v0.6.232's _groveOnHumanFx answers at once, inside its handler
+  const fame = A.makeCard('Fame', 'lib'); A.move(fame, 'hand');
+  A.state.phase = 1; A.state.phaseUsed.master = 0; A.setRTarget({ seat: 2, cid: 'c9', who: 'B2', name: 'Sully', faceDown: false }, true);
+  await A.playFromHand(fame, false); await Promise.resolve();
+  const t = lines.text(), iPlay = t.indexOf('Fame was played. Target: B2\'s Sully.'), iAns = t.findIndex(l => /locks Meditative Grove/.test(l));
+  assert(iPlay >= 0 && iAns >= 0, 'both lines are in the log: ' + JSON.stringify(t.slice(-4)));
+  assert(iPlay < iAns, 'the human\'s play line comes first, the bot\'s answer after it (v2.6.176: the answer was written above the line it answers): ' + JSON.stringify(t.slice(-4)));
+  eq(heard.join(','), 'fx,board,log', 'the bot had all three before its answer was written');
+  lines.restore(); A.localTable = false; T.HB.reset([]);
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */

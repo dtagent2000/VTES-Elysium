@@ -3294,7 +3294,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.176';   // v2.6.176 (19 Nov 2026, THE CARD THE BOTS SEE, pure client -- purge; srv-2.6.51 unchanged, no wire change; bot v0.6.234 beside, purge /elysium-bot.js and /elysium-cardfx.json): consumes bot v0.6.230-234 (the bot project's five handoffs of 17-18 Nov: V5 waves 5a to 6b). (1) Help > Bots embeds bot v0.6.234's guide (the master phase's window, 'Cards that answer yours'). (2) At a hotseat the bots see the cards a human plays: the bridge relays the human's play / lock / unlock / flip / rise clone to every bot seat in the server's shape (hotBridge.fxIn, the server's fx handler field for field; cardFx hands it over where it sends fx online, and the board follows at once, as online). The bridge passed a bot's clone on and never a human's, so offline no bot saw a human's card unless a line named it -- bot v0.6.232's Sudden Reversal against a human's master, a human's Sudden Reversal in a bot's window and Meditative Grove against a human's frenzy card could not fire there. (3) A card aimed at another seat's vampire names it as a crypt card in its clone (rtTargetInfo): the play clone and a card played onto the target said 'lib' for every remote card, so no bot read a master or a frenzy card as aimed at its vampire, online or offline, and a face-down vampire drew a library back. PROTOCOL sections 7, 8, 12 and 12.2 and the canary v1.4.0 (section 9) record bot v0.6.230-234's twenty lines; the canary's control on a card in a bleed's suffix is gone (bot v0.6.230's ask: the reading is theirs to widen).
+const VERSION='2.6.177';   // v2.6.177 (19 Nov 2026, THE ANSWER AFTER THE LINE, pure client -- purge; srv-2.6.51 unchanged, no wire change; bot v0.6.234 beside, unchanged): (1) The hotseat bridge delivers after the sender's code has returned, as the server does (the bot project's v0.6.227 question; they chose the queue in v0.6.230 section 4): hotBridge.toBot queues the message (serialized at the send) and a drain delivers the queue in order once the sender's synchronous code is done -- a microtask; what a delivered message makes a bot send goes out in the next drain. A seat closed or dialled again before the drain gets nothing, reset() empties the queue, one bot's throw stops nobody else's delivery, and 64 hops in a row yield to the page once. Until v2.6.176 toBot ran the bot's handler inside the sender's call: at the bots' pace-0 sim table 112 of 491 bleed-modifier windows and 272 of 1754 bleed totals ran out their clock (a line answered before its window opened, the bot project's L-92); with the microtask drain none did and every bot gate passes, while a macrotask drain (setTimeout 0) failed their block and ledger gates. At the client's own pace the bots play as before (95 of 96 sim matches the same). A bot's instant answer to a human's card is now written below the human's play line, not above it. (2) A card DRAGGED from the hand to the table writes the menu's play line (playLineHtml): the level the chooser asks (modeChooseGate, now on a drag too; Cancel keeps the card in hand) and the aim's Target suffix -- a drag wrote 'VAMP plays CARD.' with neither, so an aim set before a drag rode the player's next line and the bots never read a dragged Toreador Grand Ball's pair. A level is chosen for one play: a card back in hand and played again carries no old level. PROTOCOL sections 12 and 12.2, the canary v1.5.0 (section 10).
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -5039,7 +5039,12 @@ function _readyDiscSets(only){                    // {any:Set, sup:Set} of lower
   });
   return {any, sup};
 }
+function playLineHtml(c, a){                                     // v2.6.177: THE play line of a card played from the hand to the table -- the menu's Play, a double click and a drag write it alike (a drag had its own copy, with no level tag and no target suffix, so an aim set before a drag rode the player's NEXT line and the bots never read a dragged Grand Ball's pair)
+  const _mt=c._modeTxt?(' <b>'+c._modeTxt+'</b>'):'';             // v2.6.50 (R1 port): additive free-text mode tag -- old clients/bots never see it, parsers tolerate the suffix
+  return (a ? cardRefCap(a)+' plays '+cardRef(c)+_mt+'.' : cardRef(c)+_mt+' was played.')+targetSuffix();
+}
 async function modeChooseGate(c, faceDown){       // false = cancel the play (card stays in hand)
+  delete c._modeTxt;                              // v2.6.177: a level is chosen for ONE play -- the tag of an earlier play of this card (back in hand since) never rides a later line or clone
   if(faceDown || !hx('modeChoice')) return true;  // face-down plays skip in v1: a mode line would leak the card; choose at flip instead
   const modes=_cardPlayModes(c); if(!modes) return true;
   const rd=_readyDiscSets();
@@ -5073,8 +5078,7 @@ async function playFromHand(c,faceDown){
   if(faceDown){
     log(a ? cardRefCap(a)+' plays a card face down.' : 'A card was played face down.');
   } else {
-    const _mt=c._modeTxt?(' <b>'+c._modeTxt+'</b>'):'';   // v2.6.50 (R1 port): additive free-text mode tag -- old clients/bots never see it, parsers tolerate the suffix
-    log((a ? cardRefCap(a)+' plays '+cardRef(c)+_mt+'.' : cardRef(c)+_mt+' was played.')+targetSuffix());
+    log(playLineHtml(c, a));
   }
 }
 async function playOnActive(c,faceDown){   // v2.6.50 note: modeChooseGate deliberately NOT wired here in R1 (attach-to-active plays) -- revisited at R3; sibling audit on record
@@ -12312,7 +12316,7 @@ const hotBridge = {
   _out: {}, _vp: {},         // seat -> ousted / victory points -- the server's p.out / p.vp
   botcfg: null,              // v2.6.139: the server's room.botcfg (srv-2.6.43) -- the table's bot tempo {tempo, waitSecs, who}; a bot that joins later gets it right after `joined`
   players(){ return (this._cfg || []).map((p, i) => ({ name: p.name, seat: i + 1, bot: !!p.bot })); },
-  reset(cfg){ this.seats = {}; this._cfg = cfg || []; this.onPass = null; this.tally = null; this._out = {}; this._vp = {}; this.botcfg = null; },
+  reset(cfg){ this.seats = {}; this._cfg = cfg || []; this.onPass = null; this.tally = null; this._out = {}; this._vp = {}; this.botcfg = null; this._q = []; },   // v2.6.177: + the delivery queue (a table torn down delivers nothing more)
   isBot(seat){ const p = (this._cfg || [])[seat - 1]; return !!(p && p.bot); },
   botSeats(){ return Object.keys(this.seats || {}).map(k => +k); },
   predOf(seat){              // the LIVE predator: the ring predecessor, skipping ousted seats (awardBountyHot's rule; the server's GAME_HANDLERS.bounty skipped nothing until srv-2.6.38)
@@ -12404,7 +12408,37 @@ const hotBridge = {
                close(){ delete B.seats[seat]; } };
     };
   },
-  toBot(seat, msg){ const r = this.seats[seat]; if (r && r.cb) r.cb.msg(JSON.stringify(msg)); },
+  /* v2.6.177 (the bot project's v0.6.227 question, REPLY v0.6.229 §6; they chose the queue in v0.6.230 §4): the bridge DELIVERS
+     the way the server does -- after the sender's own code has returned. toBot queues the message, serialized at the send as
+     a socket frame is, and a drain delivers the queue in order once that code is done (a microtask, measured against a macrotask
+     with the bots' pace-0 table: §12.2); what a delivered message makes a bot send goes out in the NEXT drain -- one hop at a
+     time, as on a socket. Until v2.6.176 toBot ran the bot's handler INSIDE the sender's call: a bot's instant answer reached
+     the human's handlers inside the human's own log() call (above the human's own play line), and a bot's line could be
+     answered before that bot had opened the window it asked in (the bot project's L-92). A seat closed or dialled again before
+     the drain gets nothing (a socket that is gone); reset() empties the queue. Self-contained: Promise and setTimeout are in
+     the lift's context. flush() runs every hop at once -- for the client suite, which reads a fake seat right after the send. */
+  _q: [], _qArmed: false, _qHops: 0,
+  toBot(seat, msg){ const r = this.seats[seat]; if (!r || !r.cb) return; this._q.push({ seat, r, txt: JSON.stringify(msg) }); this._arm(); },
+  _arm(){                    // a MICROTASK hop (measured, §12.2: at the bots' pace-0 table a macrotask let their 0 ms timers in between, and their block and ledger gates failed); 64 hops in a row with nothing between them yield to the page once, so a loop of instant answers can never freeze it (the synchronous bridge would have overflowed its stack)
+    if (this._qArmed) return; this._qArmed = true; const B = this;
+    if (++this._qHops > 64){ this._qHops = 0; setTimeout(() => B.drain(), 0); }
+    else Promise.resolve().then(() => B.drain());
+  },
+  drain(){                   // ONE hop: what was queued when it began, in order; returns how many it delivered
+    this._qArmed = false;
+    const q = this._q; this._q = [];
+    let n = 0;
+    this._inDrain = true;
+    try {
+      for (const e of q){
+        if (this.seats[e.seat] !== e.r || !e.r.cb) continue;        // closed or dialled again since the send
+        try { e.r.cb.msg(e.txt); n++; } catch (err) { try { console.warn('hotBridge:', err && err.message); } catch (_e) {} }   // one bot's throw never stops the others' delivery (dialFor's send has the same guard)
+      }
+    } finally { this._inDrain = false; }
+    if (!this._q.length) this._qHops = 0;                          // the chain ended: nothing it delivered was answered at once
+    return n;
+  },
+  flush(){ if (this._inDrain) return this._q.length; let k = 0; while (this._q.length && k++ < 1000) this.drain(); return this._q.length; },   // never inside a delivery: that would run the next hop inside this one
   _expand(list){             // mirror of the server's expandDeck: name x qty, caps in lockstep (qty<=90, pile<=500)
     const out = [];
     (Array.isArray(list) ? list : []).forEach(e => {
@@ -14376,6 +14410,7 @@ async function dropCard(c,d){
       else move(c,'ready',{x:X,y:Y});
     } else {
       if(from==='hand' && !(await masterPlayGate(c))){ layout(); return; }    // Master-phase gate/count (same as the double-click play)
+      if(from==='hand' && !(await modeChooseGate(c, false))){ layout(); return; }   // v2.6.177: the level, as the menu's Play asks it (Cancel keeps the card in hand; nothing has reached the table)
       const fd = readyDropFace(c, from);
       const dz = (l4on() && from==='torpor') ? 'torpor' : 'ready';   // v2.6.149 (K3): torpor survives a drag on the free board; 'ready' + a face-down crypt card lands in uncontrolled (freeFaceZone, in move)
       move(c,dz,{x:X,y:Y,faceDown:fd,keepChildren:c.attached.length>0,disp:true});
@@ -14390,7 +14425,7 @@ async function dropCard(c,d){
       if(from==='hand'){
         const a=activeAnchor();
         tagPlayed(c, a || undefined);
-        log(a ? cardRefCap(a)+' plays '+cardRef(c)+'.' : cardRef(c)+' was played.');
+        log(playLineHtml(c, a));                                     // v2.6.177: the menu's line -- the level tag and the aim (targetSuffix) included
       }
       else if(c.zone!==from){                                        // v2.6.149: the line says where the card ENDED -- on the free board a face-down card stays uncontrolled and a torpored one stays in torpor (no line: a reposition)
         if(c.zone==='uncontrolled') log(who+' → the uncontrolled region.');
