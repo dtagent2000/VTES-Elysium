@@ -22,7 +22,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   variants the compiler leaves untagged, spec §4.3's round), **D** the other twelve.
   Crypt waves (D-108): A done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES`
   + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file
-  (`gen-precon.js --check` compares them). The root README credits zero-vtes when it has a licence (handoff). *Done when* the 18
+  (`gen-precon.js --check` compares them). The root README credits zero-vtes with its licence (D-128; main's, handoff). *Done when* the 18
   starters' rows are playable and every hand-only key has its sharing answer. Docs: RULINGS D-84, D-102, D-104, D-108, D-125,
   D-126; `CARDS.md`; HOWTO.
 - **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9): what v1 of each wave left out, the
