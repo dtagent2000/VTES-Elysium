@@ -169,6 +169,14 @@ test), and the 240 is IDENTICAL for a round that only gives other cards their da
    contradicts**, graded as HARNESS's charter says. Fewer than 2: the compiler reads played cards better than §1 suggests. More
    than 10: the finished decks need a round of their own before the harvest.
 
+**Registered by A2 before it measured (19 Nov).** The dry run's sample, by §4.1's rule (the finished decks' hand entries that
+carry a single-card key and that zero-vtes builds from shared effects only), is **17 cards**, not 20: the review sheet's index reads
+an effect with its variant (one layer of 409 was one effect; each variant is its own now), counts the in-play abilities and the cards
+a macro builds. The 18 Nov count read the modes only. The 17: Change of Target, Chantry, Creeping Sabotage, Creepshow Casino, Elysium:
+The Palace of Versailles, Fame, Haven Uncovered, Magic of the Smith, Misdirection, Perfectionist, Protected District, Rebel, Scalpel
+Tongue, Spying Mission, The Barrens, Toreador Justicar, Underbridge Stray. The thresholds stay as registered: prediction 1 needs at
+least 15 cards turned playable; prediction 2 at least 12 of the sample's cards (12 of 17). Prediction 3 reads the 41 entries of §4.2.
+
 The observed counts and their verdicts are written here when A is built. The pilot's and each starter's predictions are
 registered in their own rounds, before the build.
 
