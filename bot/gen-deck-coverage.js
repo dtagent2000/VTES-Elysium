@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.51 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.52 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -509,9 +509,23 @@ function judgeLib(h, cryptEs, text){
       && !(e.onlyDirected || modes.some(mo => mo.onlyDirected || Object.values(mo.fx || {}).includes('directed')))){
     verdict = 'PARTIAL'; per.push({ at: '—', dir: '', consumed: false, via: "the text's 'during an action directed at you' is not read (cardfx onlyDirected)", reach: true, fxKeys: 'no onlyDirected', textLine: true });
   }
+  /* v1.1.52 (19 Nov 2026, bot v0.6.235, the finished decks' round, RULINGS D-127): the same class for the condition sentences cardfx v1.9.12
+     tags -- the compiler's own patterns; a FULL card whose text has one and whose entry and modes lack its tag is PARTIAL (a curated entry
+     whose discipline line carries one, a 'Do not replace' on a discipline line: the bot plays past it). */
+  for (const [re, k, say] of COND_SENTENCES){
+    if (verdict === 'FULL' && text && re.test(text) && !(e[k] !== undefined || modes.some(mo => mo[k] !== undefined))){
+      verdict = 'PARTIAL'; per.push({ at: '—', dir: '', consumed: false, via: "the text's " + say + ' is not read (cardfx ' + k + ')', reach: true, fxKeys: 'no ' + k, textLine: true }); }
+  }
   return { verdict, per, isMaster };
 }
 
+const COND_SENTENCES = [   // v1.1.52: cardfx-compile v1.9.12's patterns (CONDS, NOREPL), the sentence and the tag that reads it
+  [/\bonly usable during a bleed action\.(?=\s|$)/i, 'onlyBleed', "'Only usable during a bleed action'"],
+  [/\bnot usable during a bleed action\b/i, 'notBleed', "'Not usable during a bleed action'"],
+  [/\bonly usable (?:if|when) a minion controlled by your predator is acting\b/i, 'onlyPredatorActs', "'Only usable if a minion controlled by your predator is acting'"],
+  [/\bcan play only one [^.]* between (?:their|his or her|its) unlock phases\b/i, 'oncePerUnlock', "'can play only one ... between their unlock phases'"],
+  [/\bpress,? only usable to (?:continue|end) combat\b/i, 'pressDir', "'Press, only usable to continue / end combat'"],
+  [/\bdo not replace (?:(?:this card |these cards )?until after combat|until after (?:this|the) action|until your (?:next )?(?:discard|unlock|influence) phase)\b/i, 'noReplace', "'Do not replace until ...'"] ];
 const BUCKET = v =>
   (v === 'HANDLER' || v === 'FULL') ? 'auto' :
   (v === 'PARTIAL' || v === 'TABLED-ONLY') ? 'semi' : 'dead';
