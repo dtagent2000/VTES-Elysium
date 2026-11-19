@@ -73,6 +73,12 @@
 - L-91 **A mirror bench cannot fire a knob's half that needs two seats on it** (14 Nov, round B): the owner's defence needs the
   owner and a burner both at 1; a bench pinned to the owner's deck measured it. Ask which seats each half needs.
 - L-94 **On the sim table a moved clone moves the draws** (18 Nov, 5b): the window sent the master's fx clone a beat earlier and a held master no longer spent a beat; the client bridge's fx queue then delivered the next draws at other moments, and 28 of the 240 matches DIVERGED with no decision rule changed for the starters (an ablation split them 16 / 12). Predict a timing change as DIVERGED; ablate before reading one as a decision.
+- L-97 **A card shares a key only through the path that would play it** (19 Nov, the sweep's dry run): zero-vtes's definitions
+  share an effect's building block; our single-card keys carry the actor, the window and the terms in their consumer. Of 220
+  candidates (185 cards) that shared a sample card's effect, 8 were carried by the key as it is read, 42 needed the consumer made
+  general or a rider key, 110 play the effect another way. The ledger's FULL reads a key's name, not the path: Wrong and
+  Crosswise's [DEM] votes, Monastery of Shadows' lock for stealth and Priority Contract's pool gain are read by no path that would
+  play them, and the three are FULL (L-96's case, by type). Count reach on the path, then grade by text.
 
 ## Contracts, parsers and state
 - L-55 **A parser and its phrase are one contract; move the phrase's tier and the parser goes deaf** (22 Sep: six days of series with no combat handshake).

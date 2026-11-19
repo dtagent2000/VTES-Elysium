@@ -45,7 +45,9 @@ against their sources, arithmetic by running it, a document by opening it.
 ## Graded rules readings (card waves; the charter)
 Each curated card reading is graded by a fresh read-only agent against KRCG's text and vtes-rulings: **green** (the reading does
 all the card prints, in every mode, with its costs and timing), **amber** (a printed mode or rider is missing and the entry says
-so), **red** (the reading contradicts the text or a ruling). The wave's PR lists the grades; only reds go to Johan. The five
+so), **red** (the reading contradicts the text or a ruling). The wave's PR lists the grades; only reds go to Johan. A T2 list
+(a consumer made general, with the cards it reads) is graded card by card the same way, by the same agent; zero-vtes is a third
+witness, never the judge (spec-card-sweep §3). The five
 playability layers are the checklist: source region legal · phase / type / actor gates · requirements met and costs payable ·
 the timing window allows it · the player holds priority (jol-rebuild's `timing-windows.md`; v0.6.210's last pool and Second
 Tradition's title were layer-3 misses).

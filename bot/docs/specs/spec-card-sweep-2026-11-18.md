@@ -29,9 +29,16 @@ Where it differs from §4.1:
 - what sits outside a library entry's fx keys (on hand entries only today: 21 entry-level fields, two of them notes, 6
   mode-level, 3 under `req`; and crypt keys).
 
-**Left for A2**, with the rest of §4.1 (the review sheet, the dry run, the merge design, the docs' other lines), to be decided on
-the dry run's data: whether the debt is gated and whether the register widens beyond fx keys; and the bootstrap's room (38 bytes
-of its 50 KB are free: the root `CLAUDE.md`'s zero-vtes line needs a cut there first).
+**Step A2** (19 Nov, no bot change) built the rest: the review sheet (`gen-review-sheet.js`, scratch output, a self-test in CI), the
+dry run and the seven decks' readings (§4.3, observed), the merge's design (§4.4) and the docs. Where it differs from §4.1:
+- the sample is 16 cards (§4.3 says when it was set), and all 41 of §4.2 have a definition;
+- §4.1's "the keys are added in a scratch copy" counted only the keys that carry a whole mode (C); the cards a consumer must be
+  made general for (G) or that need a rider key (R) are counted beside it, since they are most of the harvest;
+- the debt stays reported and the register stays on fx keys (§4.3, "What it changes");
+- the ledger's "what a crypt wave would build" stays as worded: D-108 keeps the crypt's waves by class (§3);
+- the room: the bootstrap's from STATUS (it drops "What v0.6.234 did" and its BOARD summary) and from the root `CLAUDE.md`'s own
+  section (the dump's history), which pay for the zero-vtes line and the finished decks' BOARD line; the standing pages' by D-101
+  (HARNESS 8.5 KB, HOWTO 23 KB, the total 179 KB; `tools/doc-budget.sh`): 1.4 KB under the total and 0.95 KB under RULINGS.
 
 ## 0. In one paragraph
 We finish the V5 sweep one starter at a time, one card at a time, and every effect we meet is first asked one question: **who else
@@ -141,7 +148,7 @@ Designed in A, built at the start of B on Johan's "kör" on the design (the pilo
   opts none in: the committed `elysium-cardfx.json` does not change. The design answers how a hand mode meets a compiled mode; how
   a merged entry drops a key the compiler set wrongly (51 of the 161 hand entries do so today) or overrides a value or a level it
   set; which `src` it carries, since the ledger's tier and the hand-only count read it; and whether the cost rule's inheritance
-  applies (CLAUDE.md).
+  applies (CLAUDE.md). The design is §4.4.
 
 ### 4.2 The finished decks (Johan, 18 Nov: should T1 and T2 be checked again for the cards already done?)
 The five finished starters with `hacking` and `sewer` hold 104 library cards:
@@ -169,8 +176,151 @@ test), and the 240 is IDENTICAL for a round that only gives other cards their da
    contradicts**, graded as HARNESS's charter says. Fewer than 2: the compiler reads played cards better than §1 suggests. More
    than 10: the finished decks need a round of their own before the harvest.
 
-The observed counts and their verdicts are written here when A is built. The pilot's and each starter's predictions are
-registered in their own rounds, before the build.
+**Registered by A2 before it measured (19 Nov).** The dry run's sample, by §4.1's rule (the finished decks' hand entries that
+carry a single-card key and that zero-vtes builds from shared effects only), is **16 cards**, not 20: the review sheet's index reads
+an effect with its variant (one layer of 409 was one effect; each variant is its own now), reads what an ability asks (The Barrens'
+discard is a term, not an effect), counts the in-play abilities and the cards a macro builds. The 18 Nov count read the modes only.
+The 16: Change of Target, Chantry, Creepshow Casino, Elysium: The Palace of Versailles, Fame, Haven Uncovered, Magic of the Smith,
+Misdirection, Perfectionist, Protected District, Rebel, Scalpel Tongue, Spying Mission, The Barrens, Toreador Justicar, Underbridge
+Stray. The thresholds stay as registered: prediction 1 needs at least 15 cards turned playable, counted only where the keys added
+carry the candidate's whole printed mode (a key on a card it half reads is a misread, not a gain); prediction 2 at least 12 of the
+sample's cards (12 of 16). Prediction 3 reads the 41 entries of §4.2. When it was set (the egress review read the times): a sample
+of 17 was registered first (commit 9cc495b); the scratch dossier of every candidate with KRCG's text and our verdicts was written 31
+seconds later; the 16, with the whole-mode rule for prediction 1, came two minutes after that (951e6d3). Both changes are stricter or
+neutral (a card out; a gain counted only when whole), and no verdict below moves with them.
+
+**Observed (19 Nov, A2's dry run and the seven decks' readings; scratch, nothing shipped).** Each candidate a sample card's chosen
+effect found was read against KRCG's text and graded (ours, for this run): **C**, carried: the same effect on the same play path,
+and the key at the text's level and value carries the whole printed mode as its consumer reads it today; **G**, generalize: the
+same effect on the same play path, but the consumer needs a parameter or a check it skips today; **R**, rider: the same effect on
+the same play path, but the mode prints more that no key carries; **O**, another path: the effect is printed but played another way
+(an action card where ours is a master, an ally's own ability, a trigger of another kind); **N**: the shared definition is only a
+building block of the candidate (a lock paid as a cost, an ally's life gain). Prediction 2 counts C, G and R; prediction 1 counts
+the C whose verdict turns playable.
+
+| card | its single-card key(s) | the effect they model (Claude's choice) | cand. | C | G | R | O | N | turned |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Change of Target | `endAction` | the blocked minion ends its own action | 3 | 0 | 0 | 1 | 2 | 0 | 0 |
+| Chantry | `rescueTorpor` | a card in play moves a clan vampire from torpor to ready | 9 | 0 | 1 | 0 | 7 | 1 | 0 |
+| Creepshow Casino | `lockStealthAt` | none: it times the shared `lockStealth` (noted, not counted) | — | | | | | | |
+| Elysium: The Palace of Versailles | `votesEach` | a lock in polling gives each matching vampire of mine +1 vote | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+| Fame | `fameOnTarget` | a vampire's controller burns pool when it goes to torpor | 1 | 0 | 0 | 0 | 1 | 0 | 0 |
+| Haven Uncovered | `rushGrant` | a master on a minion lets vampires enter combat with it as a +1 stealth action | 42 | 0 | 3 | 2 | 36 | 1 | 0 |
+| Magic of the Smith | `fetchEquip` | search the library for an equipment and equip it | 2 | 0 | 0 | 0 | 2 | 0 | 0 |
+| Misdirection | `lockMinion` | a master locks a minion | 23 | 0 | 0 | 1 | 14 | 8 | 0 |
+| Perfectionist | `bloodAfterCleanAction` | the host gains 1 blood after a successful action no reaction answered | 30 | 0 | 0 | 0 | 17 | 13 | 0 |
+| Protected District | `votesBonus` | a reaction in polling gives +N votes against | 1 | 0 | 1 | 0 | 0 | 0 | 0 |
+| Rebel | `rebelBlood` | the host gains 1 blood when it blocks a titled vampire or a political action | 30 | 0 | 0 | 0 | 17 | 13 | 0 |
+| Scalpel Tongue | `abstainVoter`, `voterBloodBurn` | the acting vampire makes a voter abstain in polling | 6 | 0 | 3 | 1 | 2 | 0 | 0 |
+| Spying Mission | `bleedNullify`, `bleedBank` | the acting vampire cancels its own bleed and banks +2 bleed against that Methuselah | 19 | 0 | 0 | 0 | 2 | 17 | 0 |
+| The Barrens | `handCycle` | lock a card in play to discard a card and draw | 9 | 0 | 0 | 2 | 0 | 7 | 0 |
+| Toreador Justicar | `titleCard`, `votesPerReady` | a title referendum: the title on a chosen vampire, +1 vote for each ready vampire of the clan | 37 | 7 | 14 | 10 | 6 | 0 | 7 |
+| Underbridge Stray | its four ally keys | a recruit whose life follows the level; an ally pays life for a press; an ally burns itself to unlock a minion | 7 | 0 | 0 | 3 | 4 | 0 | 0 |
+| **all** | | | **220** | **8** | **22** | **20** | **110** | **60** | **7** |
+
+Perfectionist and Rebel are offered the same 30 cards; each counts them with its own sample card. The cards behind the letters:
+- **C**: the seven other justicars zero-vtes defines (Malkavian, Banu Haqim, Lasombra, Nosferatu, Brujah, Tremere and Ventrue
+  Justicar: NAME-ONLY to FULL with Toreador Justicar's two keys and its title fields), and Power Structure (each Lasombra gets +1
+  vote; the auto entry reads a flat +1, a misread the ledger counts FULL before and after).
+- **G**: Warsaw Station (a burn, not a lock and a payment; it carries a hand key of its own, `warsawRescue`, for Chantry's effect);
+  Shakar: the Hunt, Hand Contract and Dirty Contract (only a chosen vampire, or a Black Hand one, may enter combat); Wrong and
+  Crosswise [DEM] (the consumer skips the mode's discipline and the blood cost); Telepathic Vote Counting [AUS], Knotted Cord and
+  Quicksilver Contemplation (an abstain without the lock, two on a younger vampire only); six Praxis Seizures and eight Crusades
+  (the title goes to the acting vampire).
+- **R**: Mirror's Visage [chi] (it locks the blocker too, and the vampire takes no more actions this turn); Priority Contract and
+  Haqim's Law: Judgment; Fear of Mekhet; Deadly Secrets [OBF]; Double Spiral Corporation and The Admonitions; the eight Crusades
+  that unlock their archbishop, Cardinal Benediction and Overseer; three allies whose life follows the level and who have abilities
+  of their own.
+
+Turned playable, by the ledger's verdict on a scratch copy of the library with the C keys added (every vampire as the crypt, the
+discipline-line check on; no other verdict moved): **7**, and **8** with Gangrel Justicar, which KRCG's text shows and zero-vtes
+does not define. The library's playable entries: 609 → 616 (617).
+
+**The verdicts.**
+1. **Prediction 1: 7, registered at least 15. Its middle band: the harvest is worth its rounds and smaller than estimated.** Its
+   size sits in G, and one family carries most of it: with one generalization (a title referendum whose title goes to the acting
+   vampire), 14 cards turn playable by zero-vtes's list and 26 by KRCG's text (14 Praxis Seizures and 12 Crusades that print
+   nothing more); 24 more need a rider key (11 Praxis Seizures raise a clan's capacity, 10 Crusades unlock their archbishop,
+   Crusade: Aragon names Lucita, and Praxis Seizure: Istanbul and Venice give a clan +1 vote and lock that clan when the prince is
+   not of it).
+2. **Prediction 2: 10 of 16, registered at least 12. Its middle band: a guide that needs the text search beside it.** The 10 are
+   the cards with a C, G or R; Creepshow Casino, Fame, Magic of the Smith, Perfectionist, Rebel and Spying Mission have none.
+   Counting the effect on any play path (O too) gives 15. The text search is needed beside it: zero-vtes, built set by set,
+   defines 7 of the 8 other justicars, 6 of the 14 plain Praxis Seizures and 8 of the 12 plain Crusades.
+3. **Prediction 3: 12 of the 41, registered between 2 and 10. Its third band: the finished decks need a round of their own before
+   the harvest.** All 41 have a zero-vtes definition (the sheet reads more than the 18 Nov count did). Red here is a reading that
+   lets the bot do what the text forbids (a gate the text prints and the entry lacks: HARNESS's five layers) or that states a value
+   the text contradicts; a missing benefit is amber, with no note since the auto tier writes none:
+   - **seven red that the bot can break today**, five of them seen in the 240 (v0.6.234 on client v2.6.177; the action read
+     from the blockers' own rows): Bonding ("Only usable during a bleed action": its [DOM] stealth is offered on any action, and 58
+     of its 247 stealth plays were on actions that are not bleeds), On the Qui Vive (one per minion between its unlock phases: a
+     second wake 108 times in 1,073), Mirror Walk (do not replace until the next discard phase: the bot draws at the action's end,
+     on all 310 plays), Apportation ([tha] presses only to continue: 12 presses to end), Instinctive Reaction (only when a minion
+     of my predator acts: 98 of its 199 blocks were against another seat's minion), Forgotten Labyrinth (not usable during a
+     bleed: its finder has no such check; the sewer deck is not in the 240) and Wake with Evening's Freshness (do not replace until
+     the next unlock phase: the bot's draws wait for its own turn, except after a vote-discard boost on another seat's referendum,
+     which the Ventrue deck can spend: Alexa Draper; in the 240, 14 such boosts and none with a Wake unreplaced);
+   - **five red, latent** (no play path reaches the contradiction with the decks as built): Cloak the Gathering ([OBF] is played by
+     a vampire other than the acting one; the finder's tie keeps [obf]), Lost in Crowds (not with Into Thin Air, which no deck
+     holds), Kevlar Vest (2 only against guns; the consumer prevents 1 against everything), Night Moves (the bleed is capped at 1
+     pool; nothing in the sewer deck bleeds for more), Sport Bike (one vehicle per minion; the equip guard is one per name, and
+     the Tremere deck holds no other vehicle);
+   - **seven amber with no note**: Faceless Night ([OBF] locks the failed blockers), Precognition and Spirit's Touch (the prevent
+     and the maneuver in the combat after the block), .44 Magnum (its maneuver: BOARD, the weapon's maneuver), Raven Spy ([ANI]'s
+     2 life), The Warrens (+1 intercept when titled), Aire of Elation (+1 for a Toreador: every play in the Toreador starter
+     bleeds 1 short);
+   - **22 green**, Dodge among them (its "do not replace until after combat" is met by the bot's deferred draws, as Skidmark's
+     crypt entry says) and Immortal Grapple ([POT]'s close range next round is built).
+
+**Found on the way** (outside the 41): Wrong and Crosswise and Monastery of Shadows are FULL by key name only, as Priority Contract
+(one of §4's six misreads) is: no play path that would play them reads their keys (a reaction's votes, a location's stealth with no
+lock, a master's pool gain with no lock). The library table's playable count is blind to the card's type, as §6 warns.
+
+**What it changes** (Claude's proposals; BOARD): the finished decks' round comes before B, with the seven live reds and the two rules
+faults the 19 Nov egress review found; in C the unit of sharing is a consumer, not a key's name (a T2 effect is a consumer made
+general, with a card list confirmed by KRCG's text, found by the text search with zero-vtes beside it); the register stays on fx
+keys (the title family shares through its `ref.fx` keys) and its debt stays reported, not gated, until C writes rows to gate.
+
+The pilot's and each starter's predictions are registered in their own rounds, before the build.
+
+### 4.4 The merge of hand entries (designed in A2; built at the start of B on Johan's "kör")
+Today `cardfx-curated.json` replaces the compiled entry whole (`cardfx-compile.js`, the overlay), and the hand entry inherits only
+the numeric cost, the discipline, clan and capacity requirements and five markers (`oot`, `anarchReq`, `zombie`, `onlyDirected`,
+`frenzy`). The merge lets a hand entry carry the remainder only.
+- **Opt-in.** A curated library entry with `"merge": true` is laid over a copy of the compiled entry of the same card (for a key
+  that is a printed variant, the printed name's entry); without it the overlay is today's, byte for byte. The crypt keeps
+  whole-entry replacement (D-108's waves). A opts none in, so the committed `elysium-cardfx.json` does not change.
+- **Modes meet by level, and only where the target is plain.** A curated mode merges into a compiled mode it names without doubt:
+  the only compiled mode with its `at` (and its `when`, when either names one), or the one `"nth": n` names among them; a curated
+  mode with `"add": true` is added after the compiled modes, in the curated order (mode order matters: a finder's tie keeps the
+  first). Anything else fails the compile: a level with two compiled modes and no `nth` (Donate, The Eldest Are Kholo, Touch of
+  Valeren, Vigilance), and two curated modes aimed at one compiled mode (18 hand entries hold two or more modes at one `at` and
+  `when` today, among them Vessel, Blood Doll, Dreams of the Sphinx, Protected District, Wider View, Wasserschloss Anif and
+  Toreador Grand Ball: each such mode says `nth` or `add`). A curated mode at a level the compiled entry lacks is added.
+- **Values.** In a merged mode `fx` is the union and a key on both takes the curated value; a mode's own fields (`lock`, `phase`,
+  `when`, `dir`, `onlyDirected` …) the same. `null` deletes: `"key": null` removes a key the compiler set wrongly (51 of the
+  161 hand entries dropped one on 18 Nov, §1; the drop becomes visible in the entry). `"drop": true` on a curated mode deletes
+  the compiled mode it names (a mode at a wrong level is dropped and re-added at the right one). Entry fields (`t`, `cost`,
+  `persistent`, `unique`, `limited`, `title`, `votes` …) follow the same rule. `req`, at the entry and on a mode, merges key by
+  key as `fx` does, so the compiled `disc`, `clan` and `capMin` stay unless the layer names them (today's overlay re-inherits
+  them, `cardfx-compile.js`); `ref.fx` merges as a mode's `fx` does; the note is the curated one.
+- **The cost rule holds unchanged.** A merged entry keeps the compiled numeric cost unless it names `cost` (an explicit curated cost
+  wins, `"cost": {}` insists a card is free); an `X` cost leaves the merge and is reported, as today. The compile report lists
+  each merged entry with what the layer changed.
+- **`src` stays `'hand'`; the merge is marked beside it.** A merged entry is curated, and five readers say so by `src === 'hand'`:
+  the bot (`elysium-bot.js`: a master's `curated` flag, which drives the decision's why text and the table's "uncurated — adjust
+  if needed" note), `test-cardfx.js` (every master in the four starters is `src: 'hand'`), `gen-deck-coverage.js` (the badge),
+  `gen-review-sheet.js` (the tier column and the dropped keys) and `cardfx-sharing.js` (the hand-only count). So the compiled entry
+  carries `src: 'hand'`, `merged: true` and `handKeys` (the sorted fx keys, a mode's `fx` and `ref.fx`, the curated layer set).
+  The register's hand-only count reads `handKeys` on a merged entry and every key on another hand entry; the ledger's tier
+  (`gen-card-ledger.js`) shows `curated, merged`; the review sheet's origins read the layer. The bot reads `src` as today and
+  neither new field: no bot byte changes.
+- **The gate** (`test-cardfx.js`): a merged entry is the compiled one with the layer applied; `null`, `drop` and `add` do what they
+  say; an unplain target fails the compile; `req` keeps the compiled subkeys; an entry that does not opt in compiles byte for
+  byte; and the committed library is byte for byte the same while no entry opts in.
+
+Opting an entry in is a reading change: it is graded as HARNESS says and, for a card of the seven finished decks, held to §4.2's
+guard.
 
 ## 5. zero-vtes: what we use and what we do not
 Used at development time, read from a checkout outside the repository and never committed:
@@ -193,6 +343,14 @@ The credit is owed, and `bot/README.md` gives it from this round on. Claude's pr
 licence, the root README's credits name zero-vtes too; that README is main's file, so it goes as a handoff (BOARD, the V5 sweep).
 `specs/spec-cardfx-sweep-sources-2026-09-25.md` stays the source mapping for KRCG, vtes-rulings and vtes-skill; this section adds
 the fourth source.
+
+**The maintainer's answer** (19 Nov, relayed by Johan): Lionel Panhaleux lets us mention and use zero-vtes as we wish and is glad
+of the credit. He points to `https://mcp.krcg.org/`, an MCP server meant as a reference for LLMs (alpha) that will later test
+rulings and decks with the engine and the bots, and offers the engine as a Rust component and the bots' open weights to anyone
+who wants an offline version. Everything is alpha: the cards come in set by set, and the interfaces will change after a later
+compaction, with no stability promised. What we take: the permission and the credit (D-125, `bot/README.md`). What we leave for now:
+the engine and the weights (this section's "not used": nothing of zero-vtes runs with the bot; an offline engine would be Johan's
+design question) and the MCP server (a tool a session may try; its answers are proposals under the rule of evidence above).
 
 ## 6. What every round reports
 - **the starter**: playable copies of 77;

@@ -3,6 +3,41 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **The V5 sweep, step A2: the review sheet, the dry run, the seven decks' readings, the merge's design (19 Nov 2026, bot
+  v0.6.234, no bot change; PR #87)** — D-125 and D-126; `specs/spec-card-sweep-2026-11-18.md` §4.1 – §4.4, stacked on #86.
+  - **`gen-review-sheet.js` v1.0.0** (its self-test, 19 checks, in CI; a skip fails the step): one deck's library cards, each with KRCG's text, our entry
+    (each key's origin on the card, the keys a hand entry drops, the register's rows), the verdict in the deck, and zero-vtes's
+    definition from a clone OUTSIDE the repository (modes and in-play abilities, shared `static` and `const` items, macros and
+    `const fn` helpers resolved; each effect with its use count; the window row and the rulings rows by KRCG id); mechanical flags
+    only. It refuses a clone or a sheet inside the repository, through a symlink too (a dangling one included) and case-folded
+    where the file system folds case. Its fixtures are invented: only the format's structural words are zero-vtes's.
+  - **The dry run** (scratch, §4.3): §4.1's rule gives 16 cards (a sample of 17 registered first; the 16 and the whole-mode rule
+    came after the scratch dossier, both stricter). Their 220 candidates (185 cards) graded against KRCG's text: C 8 (carried by the
+    key as it is read), G 22 (a consumer to make general), R 20 (a rider key), O 110 (played another way), N 60. Turned playable on
+    a scratch library: 7 (the seven other justicars zero-vtes defines), 8 with Gangrel Justicar (the text search); Power
+    Structure's flat +1 vote is a misread the ledger counts FULL. Prediction 1, 7 (at least 15 registered): its middle band, the
+    harvest worth its rounds and smaller than estimated; the title family is its largest G (26 cards by the text after one
+    generalization, 24 more with a rider key). Prediction 2, 10 of 16 (12): its middle band, a guide that needs the text search.
+  - **The seven decks' readings** (D-126): 41 entries, 12 red, 7 amber, 22 green. Seven reds the bot can break today, five seen in
+    the 240 (the action read from the blockers' own rows): Bonding [DOM]'s stealth on actions that are not bleeds (58 of 247), a
+    second On the Qui Vive by one minion between its unlock phases (108 of 1,073), Mirror Walk replaced before the discard phase
+    (all 310), Apportation's continue-only press spent to end (12), Instinctive Reaction against a minion that is not my
+    predator's (98 of 199); Forgotten Labyrinth during a bleed by the code (sewer is not in the 240), and Wake with Evening's
+    Freshness replaced at a vote-discard boost on another seat's referendum (Ventrue's Alexa Draper; none in the 240). Five latent.
+    Prediction 3, 12 (2 – 10 registered): its third band, the finished decks need a round of their own: BOARD, with the 19 Nov
+    review's two rules faults, before B.
+  - **The merge of hand entries, designed** (§4.4) for Johan's "kör": opt-in `merge`; a curated mode merges only into a compiled
+    mode it names without doubt (`nth`, `add`; anything else fails the compile); the curated value wins, `null` and `drop` delete,
+    `req` merges key by key; `src` stays `'hand'` (the bot reads it) with `merged` and `handKeys` beside it for the register and the
+    ledger; the cost rule as today. Nothing opts in: `elysium-cardfx.json` is v0.6.234's bytes.
+  - **Docs:** HOWTO (the review sheet with zero-vtes's clone line; the register's paragraph tightened), the root `CLAUDE.md`'s data
+    line for zero-vtes (the dump's history cut), HARNESS (who grades a T2 list), README (the tool), LESSONS L-97, RULINGS D-125
+    (the maintainer agreed), spec §5 (Lionel's answer: use and credit; the engine, the weights and mcp.krcg.org left for now),
+    STATUS shorter (its v0.6.234 summary is this file's); budgets by D-101: HARNESS 8.5 KB, HOWTO 23 KB, the total 179 KB. The
+    lint's file count 27.
+  - **The egress review** (a fresh-context agent): 14 findings, all fixed (above; the BOARD line keeps the folded lines'
+    done-conditions); its re-check found 4 more (a shared item's head, a dangling link and the prefix case, CI's skip grep, one
+    fixture token), all fixed.
 - **Main's two replies of 19 Nov consumed: client v2.6.176 and v2.6.177 (19 Nov 2026, bot v0.6.234, no bot change; PR #86)** —
   STATUS Next 2, on Johan's go of 19 Nov ("Vi går på dina rekommendationer på alla punkter tänker jag"), taken before step A2
   because v2.6.177 changes the bridge the sim table runs on: A2's dry run and B's pilot measure on the new table.
