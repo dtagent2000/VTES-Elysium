@@ -223,8 +223,8 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Yawp Court | Master | curated | FULL | unseen | pathcaine 1 (0/12) | 6 | 177 |  |
 | Zoo Hunting Ground | Master | curated | FULL | unseen | gangrel 1 (0/12) | 0 | 161 |  |
 | On the Qui Vive | Reaction | auto | FULL | playable | banuhaqim 4 (18/12), brujah 2 (4/12), gangrel 5 (8/12), malkavian 5 (632/408), ministry 4 (9/12), nosferatu 5 (609/408), pathcathari 3 (2/12), pathpower 5 (5/12), ravnos 4 (7/12), salubri 2 (0/12), tremere 4 (540/408), tzimisce 4 (9/12) | 3 | 14d, 41, 42g, 42j, 94a, 94b, 94c, 110 +8 |  |
-| Govern the Unaligned | Action | auto | FULL | playable | lasombra 7 (17/12), malkavian 12 (1801/408), pathdeath 4 (9/12), salubri 4 (13/12), tremere 12 (1565/408), tzimisce 6 (23/12) | 1 | 1, 8, 9, 11, 13, 14, 15, 19l +40 |  |
-| Blood Doll | Master | curated | FULL | playable | brujah 4 (19/12), gangrel 4 (19/12), malkavian 4 (663/408), ministry 4 (10/12), pathcathari 3 (8/12), pathdeath 3 (9/12), ravnos 3 (7/12), salubri 2 (10/12), tzimisce 3 (13/12), ventrue 3 (368/408) | 2 | 2, 19b, 19c, 19e, 19h, 19i, 19j, 19l +12 |  |
+| Govern the Unaligned | Action | auto | FULL | playable | lasombra 7 (17/12), malkavian 12 (1801/408), pathdeath 4 (9/12), salubri 4 (13/12), tremere 12 (1565/408), tzimisce 6 (23/12) | 1 | 1, 8, 9, 11, 13, 14, 15, 19l +41 |  |
+| Blood Doll | Master | curated | FULL | playable | brujah 4 (19/12), gangrel 4 (19/12), malkavian 4 (663/408), ministry 4 (10/12), pathcathari 3 (8/12), pathdeath 3 (9/12), ravnos 3 (7/12), salubri 2 (10/12), tzimisce 3 (13/12), ventrue 3 (368/408) | 2 | 2, 19b, 19c, 19e, 19h, 19i, 19j, 19l +13 |  |
 | Enchant Kindred | Action | auto | FULL | playable | brujah 6 (12/12), ministry 7 (19/12), pathpower 6 (17/12), toreador 6 (17/12), ventrue 8 (995/408) | 0 | 32e, 97c, 103a, 105, 108, 163, 164, 169 +2 |  |
 | Deflection | Reaction | auto | FULL | playable | lasombra 6 (6/12), malkavian 5 (189/408), pathpower 5 (3/12), salubri 3 (3/12), tremere 4 (173/408), tzimisce 3 (3/12), ventrue 6 (415/408) | 5 | 28, 29, 29c, 32, 32a, 33, 39c, 41 +19 |  |
 | Telepathic Misdirection | Reaction | auto | FULL | playable | hecata 3 (7/12), malkavian 5 (515/408), pathcathari 6 (1/12), pathdeath 2 (2/12), salubri 4 (3/12), tremere 4 (405/408) | 5 | 139, 140, 142 |  |
@@ -315,7 +315,7 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | One With the Land | Reaction | auto | FULL | playable | tzimisce 4 (13/12) | 8 | 173, 178 |  |
 | Perfect Paragon | Action Modifier | curated | FULL | playable | toreador 4 (7/12) | 2 | 173 |  |
 | Priority Contract | Master | auto | FULL | playable | banuhaqim 4 (5/12) | 3 | — |  |
-| Protected District | Reaction | curated | FULL | playable | nosferatu 4 (253/408) | 3 | 55, 55b, 58, 58b, 58c, 59a, 59c, 61 +3 |  |
+| Protected District | Reaction | curated | FULL | playable | nosferatu 4 (253/408) | 3 | 55, 55b, 58, 58b, 58c, 59a, 59c, 61 +4 |  |
 | Raven Spy | Retainer | auto | FULL | playable | gangrel 2 (3/12), nosferatu 2 (289/408) | 2 | 46a, 46b, 46c, 46d, 65, 106, 117, 127 +1 |  |
 | Relentlessness | Action Modifier | curated | FULL | playable | pathpower 4 (3/12) | 1 | — |  |
 | Revelations | Action | curated | FULL | playable | malkavian 4 (519/408) | 1 | 42, 42a, 42b, 42c, 42d, 42g, 42h, 91e +6 |  |
@@ -369,7 +369,7 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Smiling Jack, The Anarch | Master | curated | FULL | playable | gangrel 1 (2/12), nosferatu 1 (78/408) | 2 | 49d, 62a, 79h, 80b, 91e, 141, 165, 169 +3 |  |
 | Soul Burn | Combat | curated | FULL | playable | banuhaqim 2 (4/12) | 5 | 160 |  |
 | Spirit's Touch | Reaction | auto | FULL | playable | tremere 2 (200/408) | 2 | — |  |
-| Sudden Reversal | Master | curated | FULL | playable | lasombra 2 (2/12) | 7 | 161, 177, 178 |  |
+| Sudden Reversal | Master | curated | FULL | playable | lasombra 2 (2/12) | 7 | 161, 177, 178, 180 |  |
 | Tension in the Ranks | Master | curated | FULL | playable | banuhaqim 1 (4/12), pathcaine 1 (0/12) | 2 | 175, 177 |  |
 | Terrifying Visage | Master | curated | FULL | playable | pathcathari 2 (6/12) | 1 | 162, 165, 166 |  |
 | The Anarch Free Press | Master | auto | FULL | playable | brujah 1 (3/12), tzimisce 1 (4/12) | 2 | — |  |
