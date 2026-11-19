@@ -1,7 +1,7 @@
 #!/bin/bash
 # doc-budget.sh -- the standing pages' check (spec-cleanup-2026-10-20.md §5.3). Run from anywhere; exit 1 on any failure.
 #   1. each standing page within its byte budget; the bootstrap (root CLAUDE.md + bot/CLAUDE.md + STATUS + BOARD) <= 50 KB;
-#      every standing page together <= 174 KB;
+#      every standing page together <= 177 KB;
 #   2. every repo path named (in backticks) in a standing page, and every bot/ path in the root CLAUDE.md, exists;
 #   3. every version STATUS.md names agrees with the code: BOT_VERSION, the arena, the sim, the cardfx compiler, the hotseat
 #      tool, the coverage tool, the read-only client / protocol / server copies in bot/ and the root's client / server (with
@@ -31,8 +31,13 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    RULINGS 65 -> 66 KB and the total 173 -> 174 KB the same day (a docs round on bot v0.6.234: Johan's D-125, the V5 sweep's
 #    method, after D-98's and D-102's card lists and the BOARD line's waves-done list were cut as history; the register stood 92 bytes
 #    under its ceiling and the total 3).
-PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:66000 $D/LESSONS.md:20000
-       $D/ARCHITECTURE.md:16000 $D/HARNESS.md:8000 $D/HOWTO.md:21500"
+#    RULINGS 66 -> 67 KB, HOWTO 21.5 -> 22.5 KB and the total 174 -> 177 KB on 19 Nov (the V5 sweep's step A1, bot v0.6.234, no bot
+#    change). spec-card-sweep 4.1 planned 2 KB of room under the total and 1 KB under RULINGS "by cutting history the specs keep";
+#    the read found 0.5 KB of history (D-101's first raises, D-108's wave count, D-109's lint story; HOWTO's bench controls and its
+#    v3 note; two asides in CLAUDE.md), because the register holds rulings and HOWTO holds how-tos. The rest is this raise. HOWTO
+#    stood 235 bytes under its ceiling and takes the sharing register now, zero-vtes's fetch line and the review sheet in step A2.
+PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:67000 $D/LESSONS.md:20000
+       $D/ARCHITECTURE.md:16000 $D/HARNESS.md:8000 $D/HOWTO.md:22500"
 total=0
 for pb in $PAGES; do
   f=${pb%:*}; lim=${pb##*:}
@@ -42,7 +47,7 @@ for pb in $PAGES; do
 done
 boot=0; for f in "$R/CLAUDE.md" "$B/CLAUDE.md" "$D/STATUS.md" "$D/BOARD.md"; do boot=$((boot + $(wc -c < "$f" | tr -d ' '))); done
 if [ "$boot" -gt 50000 ]; then bad "bootstrap is $boot bytes, budget 50000"; else ok "bootstrap $boot / 50000"; fi
-if [ "$total" -gt 174000 ]; then bad "standing pages total $total bytes, budget 174000"; else ok "standing pages $total / 174000"; fi
+if [ "$total" -gt 177000 ]; then bad "standing pages total $total bytes, budget 177000"; else ok "standing pages $total / 177000"; fi
 
 # 2. paths named in the standing pages: a backticked token that looks like a file or a folder
 missing=0

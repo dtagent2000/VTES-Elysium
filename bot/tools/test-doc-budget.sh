@@ -39,13 +39,29 @@ fresh; sed -i.bak "s/const VERSION='\([0-9.]*\)'/const VERSION='0.0.1'/" "$T/ely
 out=$(DOC_BUDGET_ROOT_DRIFT=warn bash "$T/bot/tools/doc-budget.sh" 2>&1); ec=$?; fl=$(printf '%s\n' "$out" | grep '^FAIL' | grep -F 'a release the root cannot have had' | head -1)
 if [ "$ec" = 1 ] && [ -n "$fl" ]; then echo "red   STATUS names a release newer than the root, outside a pull request :: ${fl#FAIL  }"; else echo "GREEN STATUS newer than the root, outside a pull request :: exit $ec  <-- the check missed it"; bad=1; fi
 fresh; pad "$T/CLAUDE.md" 12000;                                                           run "the bootstrap over 50 KB" "bootstrap is"
-fresh; python3 -c "
-import os, sys
-T = sys.argv[1]
-for f, lim in [('docs/RULINGS.md', 66000), ('docs/LESSONS.md', 20000), ('docs/ARCHITECTURE.md', 16000), ('docs/HARNESS.md', 8000),
-               ('docs/HOWTO.md', 21500)]:   # the pages outside the bootstrap: padding the bootstrap's own would trip its 50 KB first (29 Oct)
-    p = os.path.join(T, 'bot', f); n = os.path.getsize(p); open(p, 'a').write('x' * max(0, lim - 50 - n))
-" "$T";                                                                                     run "the total over 174 KB, each page within its own" "standing pages total"
+# The total: every page inside its own budget and the bootstrap inside its own, the sum over the ceiling. The budgets are read from
+# the check itself (a raise there needs no second edit here, 19 Nov 2026): the pages outside the bootstrap are padded to 50 bytes
+# under their own, then BOARD as far as its own budget and the bootstrap's allow (padding the bootstrap's pages alone would trip its
+# 50 KB first, 29 Oct; leaving them alone made the case depend on how full they happened to be). A ceiling the pages' own budgets
+# cannot reach is a dead check: the case says so and fails.
+fresh; python3 -c '
+import os, re, sys
+T = sys.argv[1]; sh = open(os.path.join(T, "bot", "tools", "doc-budget.sh"), encoding="utf8").read()
+lim = dict((m.group(2), (m.group(1), int(m.group(3)))) for m in re.finditer(r"\$([BD])/([A-Za-z]+\.md):(\d+)", sh))
+cap = lambda name: int(re.search(r"\"\$" + name + r"\" -gt (\d+)", sh).group(1))
+ceiling, bootcap = cap("total"), cap("boot")
+path = lambda f: os.path.join(T, "bot", f) if lim[f][0] == "B" else os.path.join(T, "bot", "docs", f)
+size = lambda f: os.path.getsize(path(f))
+grow = lambda f, n: open(path(f), "a").write("x" * max(0, n))
+BOOT = ["CLAUDE.md", "STATUS.md", "BOARD.md"]
+assert len(lim) == 8 and all(f in lim for f in BOOT), sorted(lim)
+for f in lim:
+    if f not in BOOT: grow(f, lim[f][1] - 50 - size(f))
+boot = os.path.getsize(os.path.join(T, "CLAUDE.md")) + sum(size(f) for f in BOOT)
+grow("BOARD.md", min(lim["BOARD.md"][1] - 50 - size("BOARD.md"), bootcap - 50 - boot))
+total = sum(size(f) for f in lim)
+if total <= ceiling: print("      the pages can reach %d bytes inside their own budgets and the bootstrap; the ceiling of the total is %d -- a dead check, lower it" % (total, ceiling))
+' "$T";                                                                                     run "the total over its ceiling, each page within its own" "standing pages total"
 rm -rf "$W"
 [ "$bad" = 0 ] && echo "test-doc-budget: every case red, baseline green" || echo "test-doc-budget: FAIL"
 exit $bad

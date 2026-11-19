@@ -3,6 +3,39 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **The V5 sweep, step A1: the library table and the sharing register (19 Nov 2026, bot v0.6.234, no bot change; PR #83)** —
+  Johan's go of 19 Nov on step A (`docs/specs/spec-card-sweep-2026-11-18.md` §4.1, RULINGS D-125), built in two parts: A1 gives the
+  sweep its measure and its rule a gate; A2 is the review sheet, the dry run and the design for merging hand entries.
+  - **`gen-card-ledger.js` v1.2.0**: `docs/CARDS.md` gains "The whole library" — the 2,391 library entries of the cardfx by the
+    rows' own verdict (`judgeLib`, every vampire of the cardfx offered as the crypt, the card text's checks on), by tier and by
+    card type: playable (static) 609 (FULL 602: auto 457, curated 145; HANDLER 7), partial 592 (PARTIAL 184; a master played blind
+    407; UNREACHABLE 1: Strix, whose Striga no vampire prints), inert 1,190 (effect data nobody reads 722, no effect data 468),
+    unresolved 0. The vocabulary: 187 effect keys on library entries, 182 of them read by the bot (it reads 200: 15 more sit on
+    crypt entries only, 3 on no entry), 5 not read (`combatEnds`, `dir`, `persistent`, `torpor`, `zombieBleed`), 42 given by the
+    compiler (a compile without the curated file), 145 on hand entries only, 124 of those on a single entry. A summary, never a
+    row per card; static (only a starter is proven in play). The class map's heading no longer speaks of waves. The page is
+    regenerated from v0.6.234's runs, made again (the 240 and the 14 smokes): the unmodified tool first reproduced the committed
+    page byte for byte, and the new page differs in the version line, the section and that heading. Self-test 67 → 74 checks;
+    eight mutants of the new helpers, each red.
+  - **The sharing register** (`cardfx-sharing.json`; `cardfx-sharing.js` v1.0.0 defines and checks it): every hand-only key (on
+    hand entries of the compiled library and on no other) has a row — `unique` (the entries that carry it), `shared` (the library
+    cards that print the effect, two or more; owed until each carries the key) or `backlog` (not asked yet). The 145 keys of
+    v0.6.234 are seeded as backlog and the seed is pinned by count and sha256: a new hand key comes with its answer, the backlog
+    only shrinks. **`test-cardfx.js` 361 → 380**: the rules against a five-entry library with a fault planted per rule, then the
+    real file against the compile. Destructive, in scratch on the real files: a row removed, a key added to backlog and seed, the
+    file missing, a new hand key in the curated file — each red; the same key answered — green. Thirteen mutants of the rules,
+    each red.
+  - **The docs' room.** The spec planned 2 KB under the standing pages' total and 1 KB under RULINGS by cutting history. The read
+    found 0.5 KB of it (D-101's first raises, D-108's wave count, D-109's lint story; HOWTO's bench controls and its v3 note; two
+    asides in CLAUDE.md): the register holds rulings and HOWTO holds how-tos. The rest is a raise by D-101: RULINGS 66 → 67 KB,
+    HOWTO 21.5 → 22.5 KB, the total 174 → 177 KB. After the round: the total 174,711 of 177,000, RULINGS 65,440 of 67,000, the
+    bootstrap 49,698 of 50,000. `tools/test-doc-budget.sh`'s total case reads the budgets from the check (a raise needed a second
+    edit there) and pads BOARD as far as the bootstrap allows (it leaned on how full the bootstrap's pages happened to be); a
+    ceiling the pages cannot reach now fails as a dead check.
+  - **Gates** (19 Nov): `node --check` 3 files, `bash -n` 2; `test-cardfx` 380/0; the ledger's self-test 74/74; `gen-precon
+    --check` no problems; `doc-budget` PASS and its destructive test every case red; the lint 0 findings; canary 171/0 (bot/'s
+    copies). `elysium-bot.js` `4a1342b4`, `test-bot-logic.js` `7dcc71ff` and `elysium-cardfx.json` `721c74ee` are main's bytes: no
+    sim footprint, and the suite, the hotseat gate and HB1 were not run locally (CI runs each once).
 - **The V5 sweep's method (18 Nov 2026, bot v0.6.234, no bot change; PR #82)** — Johan's "kör" on
   `docs/specs/spec-card-sweep-2026-11-18.md`, RULINGS D-125 (amends D-98 and D-104's waves by class, widens D-83). Measured read-only on main `6baf99b`: the
   library entries the bot can statically play went 565 → 658 in the waves' first five days and 658 → 679 in the fifteen since, the

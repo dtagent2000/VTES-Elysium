@@ -33,7 +33,7 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 - `node --check` on every changed file.
 - `node test-bot-logic.js` ×3, ALONE, each run in a frozen snapshot (HOWTO: "a frozen snapshot"). ~300–420 s a run: launch it
   detached with `timeout 600` and poll (`run_in_background`); never a foreground `timeout` that can cut a green run. Section 78c
-  (pace scaling) was a timing flake (F-Q2; not seen in ~45 runs by 21 Sep): if it fails, rerun once and say so in the PR.
+  (pace scaling) is a rare timing flake (F-Q2): if it fails, rerun once and say so in the PR.
   The suite needs every owned file beside it — a missing `elysium-bot-arena.js` aborts and looks like a failure. It also needs a
   heap over 2 GB: on a ~2 GB default it dies out of memory after section 136 (`--max-old-space-size=4096`, HOWTO).
 - `node test-bot-canary.js` — the §12 grammar contract against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it (the
@@ -122,7 +122,8 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   cost wins; X is never inherited; the compile report's inherited / mismatch / X lists are read at every recompile. Every restored
   price is an unpaid cost until a finder reads `cost.blood` / `cost.pool` and its branch pays it. Costs are parked at announce and
   returned on a block (`_park` / `_returnParked`). A curated entry keyed by a printed variant is mirrored onto the printed name;
-  never rename a key a bot list uses (`fxLookup(name).name` must equal the hand's own name).
+  never rename a key a bot list uses (`fxLookup(name).name` must equal the hand's own name). A hand key the compiler does not give
+  needs its row in `cardfx-sharing.json` first: who else prints it [D-125; HOWTO].
 - **`FX_NORM` is the client's `norm()`**, byte for byte (section 154f compares them over every cardfx name against the released
   client one level up). When main changes `norm()`, copy the table.
 - **Knob hygiene (v0.6.162).** [L-62] A decision knob gates DECISIONS only. A rules correction (what a card or strike legally does, what a
@@ -204,7 +205,7 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
 - Decks: the four V5 starters (`deck-malkavian/tremere/nosferatu/ventrue.json`) + `hacking` (the tournament benchmark: its prey
   fell first 16/16 in the 4 Aug tests, so a deck-strength claim controls for prey-of-hacking) + `sewer`;
   `wall` is an archetype fixture only. `DECK_STRATEGY` carries each manifest (the reviewer's yardstick) and `combat` posture. Eight
-  decks are also embedded in `elysium-bot.js` (duplicated; BOARD; Toreador since v0.6.219). The 13 other V5 precons are
+  decks are also embedded in `elysium-bot.js` (duplicated; BOARD). The 13 other V5 precons are
   `deck-<key>.json` (`gen-precon.js`): test inputs the sim plays, not in the client's menu until their rows in `docs/CARDS.md` are
   playable (BOARD, the V5 sweep).
 - The hidden-hand design (K0 discipline priors → K1 deck templates → K2 odds; the TWD profile and archetype labels) is

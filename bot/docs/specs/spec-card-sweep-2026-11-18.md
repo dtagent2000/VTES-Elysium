@@ -2,8 +2,13 @@
 
 **Status:** kör — Johan, 18 Nov ("Vi kör, med dina rekommendationer för besluten"), on the proposal this page records: the method of
 §2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör" and waits for
-his word (RULINGS O-45). On 19 Nov he answered the question about zero-vtes's maintainer (§5). This round changes no code: step
-A (§4) is the next round. Measured on main `6baf99b`.
+his word (RULINGS O-45). On 19 Nov he answered the question about zero-vtes's maintainer (§5). The page's own round changed no
+code. **Step A1** (19 Nov, no bot change) built §4.1's first two items: the library table (`gen-card-ledger.js` v1.2.0, "The whole
+library" in `CARDS.md`) and the sharing register with its gate (`cardfx-sharing.json`, `cardfx-sharing.js`, `test-cardfx.js`). The
+room §4.1 asked for is there (2.3 KB under the total, 1.6 KB under RULINGS), but not by the cut it planned: the read found 0.5 KB
+of history, the rest is a raise by D-101 (`tools/doc-budget.sh`), and `tools/test-doc-budget.sh`'s total case now reads the
+budgets from the check. **Step A2** is the rest of §4.1: the review sheet, the dry run, the merge design, the docs' other lines.
+Measured on main `6baf99b`.
 
 ## 0. In one paragraph
 We finish the V5 sweep one starter at a time, one card at a time, and every effect we meet is first asked one question: **who else
