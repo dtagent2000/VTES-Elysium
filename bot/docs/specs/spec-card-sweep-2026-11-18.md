@@ -105,7 +105,7 @@ Built in A:
   charter says who grades a T2 list (§3.4); the ledger generator's "what the waves would build" wording; and room in the budgets:
   at least 2 KB under the standing pages' total and 1 KB under RULINGS when the round ends, by cutting history the specs keep.
   With that cut A lowers the total's ceiling again or makes `tools/test-doc-budget.sh`'s total case pad to the ceiling: the case
-  trips only while `bot/CLAUDE.md`, STATUS and BOARD together stay above 42,750 bytes (44,664 today).
+  trips only while `bot/CLAUDE.md`, STATUS and BOARD together stay above 42,750 bytes (44,733 today).
 
 Designed in A, built at the start of B on Johan's "kör" on the design (the pilot writes the first remainder with it):
 - **Merging hand entries.** `cardfx-compile.js` lets a curated entry add to the compiled entry instead of replacing it, opt-in per
