@@ -2,8 +2,36 @@
 
 **Status:** kör — Johan, 18 Nov ("Vi kör, med dina rekommendationer för besluten"), on the proposal this page records: the method of
 §2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör" and waits for
-his word (RULINGS O-45). On 19 Nov he answered the question about zero-vtes's maintainer (§5). This round changes no code: step
-A (§4) is the next round. Measured on main `6baf99b`.
+his word (RULINGS O-45). On 19 Nov he answered the question about zero-vtes's maintainer (§5). The page's own round changed no
+code. Measured on main `6baf99b`.
+
+**Step A1** (19 Nov, no bot change) built §4.1's first two items: the library table (`gen-card-ledger.js` v1.2.0, "The whole
+library" in `CARDS.md`) and the sharing register with its gate (`cardfx-sharing.json`, `cardfx-sharing.js`, `test-cardfx.js`).
+Where it differs from §4.1:
+- The room: 1.8 KB under the total, short of the 2 KB planned (main's reply of 19 Nov took 0.3 KB of STATUS), and 1.5 KB under
+  RULINGS; and not by the cut planned: the read found 0.5 KB of history, the rest is a raise by D-101 (`tools/doc-budget.sh`). `tools/test-doc-budget.sh`'s total case reads the budgets from
+  the check and pads the bootstrap's three pages, so it no longer leans on how full they are.
+- The seed pins each key's entries as well as the keys: a backlog key cannot reach another card before it is answered. The
+  egress review found the hole (B's rush and grant keys are backlog keys). A unique row is one card, a shared row at least two
+  different cards with every hand entry that carries the key among them. §4.1's "the backlog only shrinks" is, as built: no
+  key and no entry outside the frozen seed.
+- "The lint reads the repository only" holds for the check; its gate is `test-cardfx.js`, which needs `vtes.json` as before.
+- §6's two labels follow the coverage tool: INERT is "modes, none with a key a play path reads" (609 of the 722 carry only keys
+  the scan has), NAME-ONLY is "no modes". "Keys the bot reads" is the coverage tool's scan of the spelling `fx.<key>`; a key read
+  as `f.<key>` is not in it (`combatEnds` is read so).
+
+**What the gate does not guard** (the tool's header has the same list):
+- whether an answer is true. Any of the 124 single-entry keys can be filed `unique` and pass; a shared row's list can be short.
+  The answers are read against KRCG's text on the review sheet and graded as HARNESS says (§3.4): the gate checks their form;
+- a shared row's debt. A row is owed while its key is still hand-only (no general source yet) or a card it names lacks the key:
+  counted in the ledger and reported by the round, and §2 wants a shared effect applied in the same round;
+- a row moved back into the backlog (an edit a review sees);
+- what sits outside a library entry's fx keys (on hand entries only today: 21 entry-level fields, two of them notes, 6
+  mode-level, 3 under `req`; and crypt keys).
+
+**Left for A2**, with the rest of §4.1 (the review sheet, the dry run, the merge design, the docs' other lines), to be decided on
+the dry run's data: whether the debt is gated and whether the register widens beyond fx keys; and the bootstrap's room (38 bytes
+of its 50 KB are free: the root `CLAUDE.md`'s zero-vtes line needs a cut there first).
 
 ## 0. In one paragraph
 We finish the V5 sweep one starter at a time, one card at a time, and every effect we meet is first asked one question: **who else
@@ -168,7 +196,7 @@ the fourth source.
 
 ## 6. What every round reports
 - **the starter**: playable copies of 77;
-- **the library**: playable, partial, data nobody reads, no data, masters played blind (609 / 185 / 722 / 468 / 407 today, with the
+- **the library**: playable, partial, INERT (modes, none with a key a play path reads), NAME-ONLY (no modes), masters played blind (609 / 185 / 722 / 468 / 407 today, with the
   ledger's discipline-line check);
 - **the vocabulary**: hand-only keys (145 today) and the register's `backlog` rows (145 when A has seeded it; 124 of the keys sit
   on a single entry);

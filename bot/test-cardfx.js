@@ -988,5 +988,90 @@ ok(fx.counts.libLock >= 140,
      && JSON.stringify(L['Absolute Tyranny'].t) === '["mod","react"]' && L['Absolute Tyranny'].cost.blood === 1,
      'Absolute Tyranny: [pot][pre] +3 votes kept; [POT][PRE] -1 vote for each vampire off the Path of Power and the Inner Voice (fx.voteCut); a modifier and a reaction, 1 blood');
 }
+/* The sharing register (19 Nov 2026, bot v0.6.234; RULINGS D-125, spec-card-sweep-2026-11-18 §2 and §4.1): no hand key before "who else
+   in the library prints this?" has an answer on file. cardfx-sharing.js defines a hand-only key and the register's rules; this is its gate.
+   First the rules against a seven-entry library with a fault planted per rule (the lint must bite), then the real library and the real
+   file, and the frozen seed attacked through the path the real file takes (the default pin). */
+{
+  console.log('\nThe sharing register -- every hand-only key has its answer (cardfx-sharing)');
+  const SH = require('./cardfx-sharing.js');
+  const mk = (src, fxo, refFx) => Object.assign({ t: ['act'], src, modes: [{ at: 'x', fx: fxo }] }, refFx ? { ref: { fx: refFx } } : {});
+  const PT = 'P™ X', PP = 'P(TM) X';   // one card under two printed spellings
+  const L0 = { A: mk('hand', { kA: 1, common: 1 }), B: mk('hand', { kB: 1 }, { kRef: 1 }), C: mk('auto', { common: 1, kC: 1 }), D: mk('hand', { kD: 1 }), D2: mk('hand', { kD: 1 }),
+               [PT]: mk('hand', { kP: 1 }), [PP]: mk('hand', { kP: 1 }) };
+  const withE = fxo => Object.assign({}, L0, { E: mk('hand', fxo) });
+  const seed0 = () => ({ kA: ['A'], kB: ['B'], kD: ['D', 'D2'], kP: [PP, PT], kRef: ['B'] }), pin0 = { count: 5, sha256: SH.seedHash(seed0()) };
+  const R0 = () => ({ seed: seed0(), backlog: ['kA'], shared: { kD: ['D', 'D2'] }, unique: { kB: ['B'], kRef: ['B'], kP: [PP, PT] } });
+  const probs = (mut, lib, pin) => { const r = R0(); if (mut) mut(r); return SH.check(lib || L0, r, pin || pin0); };
+  const one = (P, re) => P.length === 1 && re.test(P[0]), both = (P, a, b) => P.length === 2 && P.some(x => a.test(x)) && P.some(x => b.test(x));
+  const ho0 = SH.handOnlyKeys(L0);
+  ok(JSON.stringify([...ho0.keys()].sort()) === '["kA","kB","kD","kP","kRef"]' && JSON.stringify(ho0.get('kD')) === '["D","D2"]' && !ho0.has('common') && !ho0.has('kC'),
+     'a hand-only key: on hand entries and on no other library entry (a mode’s fx and ref.fx both count; a key the auto tier also gives is not hand-only)');
+  ok(probs().length === 0, 'a clean register has no problem (a backlog key where the seed found it, shared with two cards, unique on one card -- also under its two spellings)');
+  ok(one(probs(r => { r.backlog = []; }), /`kA` is a hand-only key with no row \(on A\)/), 'planted: a hand-only key with no row fails, and names the entry that carries it');
+  { const L1 = Object.assign({}, L0, { A: mk('hand', { kA: 1, common: 1, kNew: 1 }) });
+    ok(one(probs(null, L1), /`kNew` is a hand-only key with no row/), 'planted: a NEW hand key with no answer fails');
+    ok(one(probs(r => { r.backlog.push('kNew'); }, L1), /`kNew` is in the backlog and not in the seed/), 'planted: a new hand key parked in the backlog fails');
+    ok(one(probs(r => { r.backlog.push('kNew'); r.seed.kNew = ['A']; }, L1), /the seed is not the frozen one \(6 keys/), 'planted: a new key added to the seed as well fails on the pinned seed');
+    ok(probs(r => { r.unique.kNew = ['A']; }, L1).length === 0 && probs(r => { r.shared.kNew = ['A', 'C']; }, L1).length === 0, 'a new hand key answered as unique, or as shared, passes'); }
+  ok(one(probs(null, withE({ kA: 1 })), /`kA` is in the backlog and now also on E: answer it/), 'planted: a backlog key on one more card fails (a backlog key reaches no other card before it is answered)');
+  ok(probs(r => { r.backlog = []; r.shared.kA = ['A', 'E']; }, withE({ kA: 1 })).length === 0, 'the same key answered as shared with that card passes');
+  ok(one(probs(r => { delete r.shared.kD; r.backlog.push('kD'); }, withE({ kD: 1 })), /`kD` is in the backlog and now also on E: answer it/), 'planted: a backlog key that sat on two cards fails on a third (every entry is held against the seed row)');
+  ok(probs(r => { delete r.shared.kD; r.backlog.push('kD'); }, Object.assign({}, L0, { D2: mk('hand', { other: 1 }), C: mk('auto', { common: 1, kC: 1, other: 1 }) })).length === 0, 'a backlog key that left one of its seed entries passes');
+  ok(one(probs(r => { r.unique.kA = ['A']; }), /`kA` has two rows \(backlog and unique\)/), 'planted: a key in two states fails');
+  ok(one(probs(r => { r.unique.kB = ['A']; }), /`kB` is unique to A in the register; the library has it on B/), 'planted: a unique row naming another entry fails');
+  ok(one(probs(r => { delete r.shared.kD; r.unique.kD = ['D']; }), /`kD` is unique to D in the register; the library has it on D, D2/), 'planted: a unique row naming one of the two entries that carry the key fails');
+  ok(one(probs(r => { delete r.shared.kD; r.unique.kD = ['D', 'D2']; }), /`kD` is unique in the register and 2 different cards carry it/), 'planted: a key on two different cards filed as unique fails (two cards print it: shared)');
+  ok(both(probs(r => { r.shared.kD = ['D']; }), /`kD` is shared and names 1 card:/, /`kD` is shared and its row does not name D2, a hand entry that carries it/), 'planted: a shared row with one card fails, and misses the other hand entry');
+  ok(one(probs(r => { delete r.unique.kP; r.shared.kP = [PP, PT]; }), /`kP` is shared and names 1 card:/), 'planted: a shared row naming one card under its two spellings fails');
+  ok(one(probs(r => { r.shared.kD = ['D', 'D2', 'Nobody']; }), /`kD` is shared with Nobody, which the library does not have/), 'planted: a shared row naming a card the library does not have fails');
+  ok(one(probs(null, withE({ kD: 1 })), /`kD` is shared and its row does not name E, a hand entry that carries it/), 'planted: a shared key given by hand to a card its row does not name fails');
+  ok(one(probs(r => { r.shared.kGhost = ['A', 'B']; }), /`kGhost` is shared in the register and no library entry carries it/), 'planted: a shared row for a key no entry carries fails');
+  ok(one(probs(r => { r.unique.kC = ['C']; }), /`kC` is unique in the register and is no longer hand-only/), 'planted: a unique row for a key the auto tier gives fails');
+  { const seed1 = Object.assign(seed0(), { common: ['A'] }), pin1 = { count: 6, sha256: SH.seedHash(seed1) };
+    ok(one(probs(r => { r.seed.common = ['A']; r.backlog.push('common'); }, null, pin1), /`common` is in the backlog and is no longer hand-only/), 'planted: a backlog key the auto tier now gives fails (move the row to shared, or delete it)');
+    ok(probs(r => { r.seed.common = ['A']; r.shared.common = ['A', 'C']; }, null, pin1).length === 0, 'a shared row stays when the key has its general source'); }
+  // the frozen seed: a swap that keeps the count, an entry added to a row, and the default pin (the path the real file takes)
+  ok(one(probs(r => { delete r.seed.kRef; r.seed.kX = ['B']; }), /the seed is not the frozen one \(5 keys/), 'planted: a seed key swapped for another (the count kept) fails on the hash');
+  ok(one(probs(r => { r.seed.kA = ['A', 'E']; }), /the seed is not the frozen one \(5 keys/), 'planted: an entry added to a seed row fails on the hash (the seed pins where a key sat)');
+  ok(SH.check(L0, R0()).some(x => /the seed is not the frozen one \(5 keys, .*pinned 145, /.test(x)), 'with no pin given the check uses the frozen one (SEED_COUNT, SEED_SHA256)');
+  ok(SH.SEED_COUNT === 145 && SH.SEED_SHA256 === '8028cd6e1a27e8ddbba1d7f4a1b591fe7f0e0d2875309d012dad8be2ed598490', 'the pin is pinned here as well: another frozen seed takes an edit in the register, in cardfx-sharing.js and in this line');
+  { const shapeCase = (mut, re, n) => { const P = probs(mut); return P.length === n && P.some(x => re.test(x)); };
+    ok(shapeCase(r => { r.unique = 'to do'; }, /^`unique` is not an object of rows$/, 4) && shapeCase(r => { r.shared = ['kD']; }, /^`shared` is not an object of rows$/, 2)
+       && shapeCase(r => { r.backlog = { kA: 1 }; }, /^`backlog` is not a list of keys$/, 2) && shapeCase(r => { r.seed = []; }, /^`seed` is not an object of rows$/, 3),
+       'planted: each part of the wrong shape is reported by its name, and nothing else is but what follows from it'); }
+  { const viaProto = JSON.parse(JSON.stringify(R0()).replace('"seed":{', '"seed":{"__proto__":["A"],')); viaProto.backlog.push('0');
+    const P0 = SH.check(Object.assign({}, L0, { A: mk('hand', { kA: 1, common: 1, 0: 1 }) }), viaProto, pin0), r4 = R0(); r4.backlog.push('constructor'); let P4 = null; try { P4 = SH.check(L0, r4, pin0); } catch (e){ P4 = null; }
+    ok(P0.some(x => /`0` is in the backlog and not in the seed/.test(x)) && P0.some(x => /the seed is not the frozen one \(6 keys/.test(x)) && !!P4 && one(P4.filter(x => /not in the seed/.test(x)), /`constructor` is in the backlog and not in the seed/),
+       'planted: a seed row keyed __proto__ hides no parked key, and a key named like a member of Object.prototype is a key (no throw)'); }
+  // a malformed register is reported, never thrown
+  { const bad = R0(); bad.shared.kD = 'D, D2'; let c = null, threw = false; try { c = SH.counts(L0, bad); SH.counts(L0, null); SH.counts(L0, { shared: 'x', unique: 7, backlog: {}, seed: [] }); } catch (e){ threw = true; }
+    ok(both(SH.check(L0, bad, pin0), /`kD` \(shared\): a row is a list of names/, /`kD` is a hand-only key with no row/) && !threw && c.shared === 0
+       && SH.check(L0, null, pin0).some(x => /the register is not an object/.test(x)) && SH.check(L0, { shared: 'x', unique: 7, backlog: {}, seed: [] }, pin0).length >= 4,
+       'planted: a row that is not a list of names, a part of the wrong shape and no register at all are reported; the counts do not throw'); }
+  { const c = SH.counts(L0, R0()), r3 = R0(); r3.backlog = []; const c3 = SH.counts(L0, r3);
+    const paid = R0(); paid.shared = { common: ['A', 'C'] }; paid.backlog.push('kD'); const lack = R0(); lack.shared = { common: ['A', 'C', 'B'] }; const gone = R0(); gone.shared = { common: ['A', 'C', 'Nobody'] };
+    ok(c.handOnly === 5 && c.single === 3 && c.backlog === 1 && c.shared === 1 && c.owed === 1 && c.unique === 3 && c.noRow === 0 && c3.noRow === 1 && c3.backlog === 0
+       && SH.counts(L0, paid).owed === 0 && SH.counts(L0, lack).owed === 1 && SH.counts(L0, gone).owed === 1,
+       'the counts the ledger prints: hand-only 5 (3 on a single entry), backlog 1, shared 1, unique 3; a key with no row is counted; a shared row is owed while its key is still hand-only (kD: on two hand entries, no general source) or a card it names lacks the key, and paid when neither holds'); }
+  // the real library (this compile) against the real file
+  { const by = {}; Object.keys(fx.lib).forEach(n => { const k = SH.cardNorm(n); (by[k] = by[k] || []).push(n); });
+    const twice = Object.values(by).filter(v => v.length > 1).map(v => v.slice().sort());
+    ok(JSON.stringify(twice) === JSON.stringify([['Pentex(TM) Subversion', 'Pentex™ Subversion']]), 'one card under two names: the library has exactly the Pentex pair, so cardNorm merges no two different cards (' + twice.length + ' pair(s))'); }
+  let reg = null, regErr = '';
+  try { reg = JSON.parse(fs.readFileSync(here('cardfx-sharing.json'), 'utf8')); } catch (e) { regErr = e.message; }
+  ok(!!reg, 'cardfx-sharing.json reads' + (regErr ? ' (' + regErr + ')' : ''));
+  if (reg){
+    const P = SH.check(fx.lib, reg), c = SH.counts(fx.lib, reg);
+    ok(P.length === 0, 'every hand-only key has its row, the backlog is inside the frozen seed of ' + SH.SEED_COUNT + ' keys and their entries, no row is stale: ' + c.handOnly + ' hand-only keys (' + c.single
+       + ' on a single entry) -- backlog ' + c.backlog + ', shared ' + c.shared + ' (' + c.owed + ' owed), unique ' + c.unique + (P.length ? '\n      ' + P.join('\n      ') : ''));
+    const clone = () => JSON.parse(JSON.stringify(reg)), k0 = Object.keys(reg.seed || {})[0], frozen = n => new RegExp('the seed is not the frozen one \\(' + n + ' keys');
+    const swap = clone(); swap.seed.zzSwap = swap.seed[k0]; delete swap.seed[k0];
+    const grown = clone(); grown.seed.zzNew = ['Shadow Cloak']; grown.backlog.push('zzNew');
+    const moved = clone(); moved.seed[k0] = moved.seed[k0].concat('Shadow Cloak');
+    ok(!!k0 && SH.check(fx.lib, swap).some(x => frozen(SH.SEED_COUNT).test(x)) && SH.check(fx.lib, grown).some(x => frozen(SH.SEED_COUNT + 1).test(x)) && SH.check(fx.lib, moved).some(x => frozen(SH.SEED_COUNT).test(x)),
+       'the real seed is frozen: a key swapped (the count kept), a key added to seed and backlog, an entry added to a seed row -- each fails on the pin in cardfx-sharing.js');
+  }
+}
 console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green'));
 process.exit(failN ? 1 : 0);
