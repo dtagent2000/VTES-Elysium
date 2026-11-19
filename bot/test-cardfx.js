@@ -988,5 +988,51 @@ ok(fx.counts.libLock >= 140,
      && JSON.stringify(L['Absolute Tyranny'].t) === '["mod","react"]' && L['Absolute Tyranny'].cost.blood === 1,
      'Absolute Tyranny: [pot][pre] +3 votes kept; [POT][PRE] -1 vote for each vampire off the Path of Power and the Inner Voice (fx.voteCut); a modifier and a reaction, 1 blood');
 }
+/* The sharing register (19 Nov 2026, bot v0.6.234; RULINGS D-125, spec-card-sweep-2026-11-18 §2 and §4.1): no hand key before "who else
+   in the library prints this?" has an answer on file. cardfx-sharing.js defines a hand-only key and the register's rules; this is its gate.
+   First the rules against a five-entry library with a fault planted per rule (the lint must bite), then the real library and the real file. */
+{
+  console.log('\nThe sharing register -- every hand-only key has its answer (cardfx-sharing)');
+  const SH = require('./cardfx-sharing.js');
+  const mk = (src, fxo, refFx) => Object.assign({ t: ['act'], src, modes: [{ at: 'x', fx: fxo }] }, refFx ? { ref: { fx: refFx } } : {});
+  const L0 = { A: mk('hand', { kA: 1, common: 1 }), B: mk('hand', { kB: 1 }, { kRef: 1 }), C: mk('auto', { common: 1, kC: 1 }), D: mk('hand', { kD: 1 }), D2: mk('hand', { kD: 1 }) };
+  const seed0 = ['kA', 'kB', 'kD', 'kRef'], pin0 = { count: 4, sha256: SH.seedHash(seed0) };
+  const R0 = () => ({ seed: seed0.slice(), backlog: ['kA'], shared: { kD: ['D', 'D2'] }, unique: { kB: ['B'], kRef: ['B'] } });
+  const probs = (mut, lib, pin) => { const r = R0(); if (mut) mut(r); return SH.check(lib || L0, r, pin || pin0); };
+  const one = (P, re) => P.length === 1 && re.test(P[0]);
+  const ho0 = SH.handOnlyKeys(L0);
+  ok(JSON.stringify([...ho0.keys()].sort()) === '["kA","kB","kD","kRef"]' && JSON.stringify(ho0.get('kD')) === '["D","D2"]' && !ho0.has('common') && !ho0.has('kC'),
+     'a hand-only key: on hand entries and on no other (a mode’s fx and ref.fx both count; a key the auto tier also gives is not hand-only)');
+  ok(probs().length === 0, 'a clean register has no problem (backlog, shared with two cards, unique naming its entry)');
+  ok(one(probs(r => { r.backlog = []; }), /`kA` is a hand-only key with no row \(on A\)/), 'planted: a hand-only key with no row fails, and names the entry that carries it');
+  { const L1 = Object.assign({}, L0, { A: mk('hand', { kA: 1, common: 1, kNew: 1 }) });
+    ok(one(probs(null, L1), /`kNew` is a hand-only key with no row/), 'planted: a NEW hand key with no answer fails');
+    ok(one(probs(r => { r.backlog.push('kNew'); }, L1), /`kNew` is in the backlog and not in the seed/), 'planted: a new hand key parked in the backlog fails (the backlog only shrinks)');
+    const P = probs(r => { r.backlog.push('kNew'); r.seed.push('kNew'); }, L1);
+    ok(one(P, /the seed is not the frozen one \(5 keys/), 'planted: a new key added to the seed as well fails on the pinned seed');
+    ok(probs(r => { r.unique.kNew = ['A']; }, L1).length === 0 && probs(r => { r.shared.kNew = ['A', 'C']; }, L1).length === 0, 'a new hand key answered as unique, or as shared, passes'); }
+  ok(one(probs(r => { r.unique.kA = ['A']; }), /`kA` has two rows \(backlog and unique\)/), 'planted: a key in two states fails');
+  ok(one(probs(r => { r.unique.kB = ['A']; }), /`kB` is unique to A in the register; the library has it on B/), 'planted: a unique row naming another entry fails');
+  ok(one(probs(r => { delete r.shared.kD; r.unique.kD = ['D']; }), /`kD` is unique to D in the register; the library has it on D, D2/), 'planted: a unique row naming one of the two entries that carry the key fails');
+  ok(one(probs(r => { r.shared.kD = ['D']; }), /`kD` is shared and names 1 card/), 'planted: a shared row with one card fails');
+  ok(one(probs(r => { r.shared.kD = ['D', 'Nobody']; }), /`kD` is shared with Nobody, which the library does not have/), 'planted: a shared row naming a card the library does not have fails');
+  ok(one(probs(r => { r.shared.kGhost = ['A', 'B']; }), /`kGhost` is shared in the register and no library entry carries it/), 'planted: a shared row for a key no entry carries fails');
+  ok(one(probs(r => { r.unique.kC = ['C']; }), /`kC` is unique in the register and is no longer hand-only/), 'planted: a unique row for a key the auto tier gives fails');
+  { const seed1 = seed0.concat('common'), pin1 = { count: 5, sha256: SH.seedHash(seed1) };
+    ok(one(probs(r => { r.seed = seed1.slice(); r.backlog.push('common'); }, null, pin1), /`common` is in the backlog and is no longer hand-only/), 'planted: a backlog key the auto tier now gives fails (move the row to shared, or delete it)');
+    ok(probs(r => { r.seed = seed1.slice(); r.shared.common = ['A', 'C']; }, null, pin1).length === 0, 'a shared row stays when the key has its general source'); }
+  { const c = SH.counts(L0, R0()), r2 = R0(); r2.shared.kD = ['D', 'D2', 'C']; const c2 = SH.counts(L0, r2);
+    ok(c.handOnly === 4 && c.single === 3 && c.backlog === 1 && c.shared === 1 && c.owed === 0 && c.unique === 2 && c.noRow === 0 && c2.owed === 1,
+       'the counts the ledger prints: hand-only 4 (3 on a single entry), backlog 1, shared 1, unique 2; a shared row is owed while a card it names lacks the key'); }
+  // the real library (this compile) against the real file
+  let reg = null, regErr = '';
+  try { reg = JSON.parse(fs.readFileSync(here('cardfx-sharing.json'), 'utf8')); } catch (e) { regErr = e.message; }
+  ok(!!reg, 'cardfx-sharing.json reads' + (regErr ? ' (' + regErr + ')' : ''));
+  if (reg){
+    const P = SH.check(fx.lib, reg), c = SH.counts(fx.lib, reg);
+    ok(P.length === 0, 'every hand-only key has its row, the backlog is inside the frozen seed of ' + SH.SEED_COUNT + ', no row is stale: ' + c.handOnly + ' hand-only keys (' + c.single
+       + ' on a single entry) -- backlog ' + c.backlog + ', shared ' + c.shared + ' (' + c.owed + ' owed), unique ' + c.unique + (P.length ? '\n      ' + P.join('\n      ') : ''));
+  }
+}
 console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green'));
 process.exit(failN ? 1 : 0);

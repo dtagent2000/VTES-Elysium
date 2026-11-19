@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-card-ledger.js v1.1.3 (14 Nov 2026, bot v0.6.228: the verdict asks a mode for every discipline line of KRCG's text -- coverage v1.1.47;
+/* gen-card-ledger.js v1.2.0 (19 Nov 2026, bot v0.6.234, RULINGS D-125: the whole library's verdicts and the effect vocabulary;
+   v1.1.3 14 Nov 2026, bot v0.6.228: the verdict asks a mode for every discipline line of KRCG's text -- coverage v1.1.47;
    v1.1.2 13 Nov 2026, bot v0.6.221: a master pick counts only when it was played; v1.1.1 12 Nov, bot v0.6.219;
    v1.1.0 6 Nov, bot v0.6.217, RULINGS D-108) -- THE CARD LEDGER: one generated row per library card of a deck set
-   (default: the V5 precons) and every vampire of their crypts, so a V5 wave has a definition of done ("these rows turn playable")
+   (default: the V5 precons) and every vampire of their crypts, so a V5 round has a definition of done ("these rows turn playable")
    instead of a feeling.
 
    THE LIBRARY (v1.0.0, 29 Oct 2026, bot v0.6.212). A row joins four sources, each read by the code that owns it:
@@ -20,7 +21,15 @@
    found nothing. Without a sim, FULL / HANDLER is "playable (static)". A bot's deck comes from the result row's `bots[].deck` (the
    sim's spec, whatever the profile), else its manifest: under --profile arena a bot gets no deckName, so a deck the bot does not embed
    has no key in its manifest.
-   The class map: every non-playable row's unconsumed fx keys, weighted by copies -- what a wave would build, one effect class at a time.
+   The class map: every non-playable row's unconsumed fx keys, weighted by copies -- what is left in the starters, by effect.
+
+   THE WHOLE LIBRARY (v1.2.0; RULINGS D-125, docs/specs/spec-card-sweep-2026-11-18.md 4.1). The sweep goes by SHARING: an effect a starter's
+   card prints is asked who else in the library prints it, so the page also counts what lies outside the starters. Every library entry of
+   the cardfx gets the same verdict (COV.judgeLib), with every vampire of the cardfx offered as the crypt and the card text's checks on when
+   vtes.json is here -- counted by tier and by card type, a summary and not a row per card. The vocabulary counts the effect keys (the
+   keys of a mode's `fx` and of `ref.fx`): on library entries, read by the bot, given by the compiler (a compile without the curated file:
+   needs vtes.json), carried by hand entries only -- and for those the sharing register's states (cardfx-sharing.js; test-cardfx.js is
+   its gate). Static: no sim reads an entry here, and a verdict says what the code CAN do.
 
    THE CRYPT (v1.1.0). Every vampire of the same decks, read from KRCG's text (vtes.json beside the script; without it the crypt is not
    read and the page says so): a row for each vampire with an ability, the sect-and-title-only ones listed per deck. The ability is the
@@ -41,7 +50,7 @@
      default decks: every deck-*.json whose name starts with "V5 " (gen-precon.js writes them).                                         */
 
 const fs = require('fs'), path = require('path');
-const LEDGER_VERSION = '1.1.3';   // v1.1.3 (14 Nov 2026, bot v0.6.228, round F): the discipline-line check (COV.coverDeck's textOf: KRCG's text when vtes.json is here)   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
+const LEDGER_VERSION = '1.2.0';   // v1.2.0 (19 Nov 2026, bot v0.6.234, RULINGS D-125): the whole library and the vocabulary   // v1.1.3 (14 Nov 2026, bot v0.6.228, round F): the discipline-line check (COV.coverDeck's textOf: KRCG's text when vtes.json is here)   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
 
 /* ---- the crypt (v1.1.0): the ability text, its effect classes, the readers that model it ---- */
 const SECT = '(?:Anarch|Camarilla|Independent|Sabbat|Laibon)';
@@ -134,6 +143,30 @@ function masterPlayed(lines, i, name){
     return ((x.data && x.data.hand) || []).filter(y => y === name).length < h0; }
   return false;   // no later decide row of that bot: the match ended before it -- not counted
 }
+/* ---- the whole library (v1.2.0): every library entry's verdict by tier and by type, and the effect vocabulary ---- */
+const VERDICTS = ['FULL', 'HANDLER', 'PARTIAL', 'TABLED-ONLY', 'UNREACHABLE', 'INERT', 'NAME-ONLY', 'REF-TERMS', 'HANDLER-UNREG', 'UNRESOLVED', 'IN-CRYPT?'];   // the tables' order: by status, as statusOf groups them
+const VERDICT_NOTE = { 'TABLED-ONLY': 'a master played blind', UNREACHABLE: 'its modes need a discipline no vampire has', INERT: 'effect data nobody reads', 'NAME-ONLY': 'no effect data',
+  'REF-TERMS': 'referendum terms, no caller', 'HANDLER-UNREG': 'a handler the bot does not have' };
+const TIERS = ['auto', 'curated', 'handler'];
+const tierOf = e => e ? (e.handler ? 'handler' : e.src === 'hand' ? 'curated' : 'auto') : '\u2014';
+function libCensus(lib, verdictOf){   // lib: { name: entry }; verdictOf(name, entry) -> a verdict. Counts by verdict x tier and by type x verdict
+  const byVerdict = {}, byType = {}; let n = 0;
+  for (const name of Object.keys(lib || {})){
+    const e = lib[name], v = verdictOf(name, e), tier = tierOf(e), ty = ((e && e.t) || []).join('/') || '\u2014';
+    const a = byVerdict[v] || (byVerdict[v] = { n: 0, auto: 0, curated: 0, handler: 0 }), b = byType[ty] || (byType[ty] = { n: 0 });
+    n++; a.n++; a[tier]++; b.n++; b[v] = (b[v] || 0) + 1;
+  }
+  const verdicts = VERDICTS.filter(v => byVerdict[v]).concat(Object.keys(byVerdict).filter(v => !VERDICTS.includes(v)).sort());   // a verdict this file does not know is still counted
+  return { n, byVerdict, byType, verdicts };
+}
+function libVocabulary(lib, crypt, scanned, keysOf){   // the effect keys on library entries against the bot's scanned `fx.<key>` reads
+  const keys = new Set(), cryptKeys = new Set();
+  for (const name of Object.keys(lib || {})) for (const k of keysOf(lib[name])) keys.add(k);
+  for (const name of Object.keys(crypt || {})) for (const k of Object.keys((crypt[name] && crypt[name].fx) || {})) cryptKeys.add(k);
+  const sc = [...scanned];
+  return { keys: keys.size, read: sc.filter(k => keys.has(k)).length, unread: [...keys].filter(k => !scanned.has(k)).sort(),
+    scanned: sc.length, scannedCrypt: sc.filter(k => !keys.has(k) && cryptKeys.has(k)).length, scannedNowhere: sc.filter(k => !keys.has(k) && !cryptKeys.has(k)).sort() };
+}
 function cryptSelfTest(quiet){   // returns the number of failed checks; quiet = print the failures only
   let of = 0, bad = 0;
   const eq = (a, b, what) => { of++; if (JSON.stringify(a) === JSON.stringify(b)) return; bad++; console.error('gen-card-ledger self-test FAIL ' + what + ': ' + JSON.stringify(a) + ' != ' + JSON.stringify(b)); };
@@ -221,11 +254,26 @@ function cryptSelfTest(quiet){   // returns the number of failed checks; quiet =
   eq(G({ modes: [{ at: null }] }, '[pro] +1 intercept.'), [], 'an at-less mode covers a basic line');
   eq(G({ modes: [{ at: null }] }, '[PRO] +1 intercept.'), ['PRO'], 'but not a superior one');
   eq(G({ modes: [] }, 'Requires a ready Toreador. [ACTION MODIFIER] +1 stealth.'), [], 'no discipline line, no gap');
+  // v1.2.0 (RULINGS D-125): the whole library -- the census counts each entry once, by its verdict, its tier and its type; the vocabulary
+  const ST = ['playable (static)', 'partial', 'inert', 'unresolved'], vst = VERDICTS.map(v => ST.indexOf(statusOf(v, 0, 0, false)));
+  eq(vst.every((x, i) => x >= 0 && (i === 0 || x >= vst[i - 1])), true, 'the tables\' verdict order is grouped by status, in the page\'s order');
+  eq([statusOf('FULL', 0, 0, false), statusOf('TABLED-ONLY', 0, 0, false), statusOf('NAME-ONLY', 0, 0, false), statusOf('UNRESOLVED', 0, 0, false)], ST, 'a verdict\'s static status');
+  const E = (t, src, fxo, extra) => Object.assign({ t, src, modes: fxo ? [{ at: 'x', fx: fxo }] : [] }, extra || {});
+  const lib0 = { A: E(['action'], 'auto', { bleed: 1 }), B: E(['mod', 'react'], 'hand', { kB: 1 }), C: E(['master'], 'auto', null), D: E(['action'], 'hand', { kD: 1 }, { handler: 'h' }), F: E(['action'], 'auto', { odd: 1 }, { ref: { fx: { titleCard: 1 } } }) };
+  const cen = libCensus(lib0, (name, e) => name === 'C' ? 'TABLED-ONLY' : name === 'D' ? 'HANDLER' : name === 'F' ? 'NEW-VERDICT' : e.src === 'hand' ? 'PARTIAL' : 'FULL');
+  eq([cen.n, cen.verdicts], [5, ['FULL', 'HANDLER', 'PARTIAL', 'TABLED-ONLY', 'NEW-VERDICT']], 'the census: every entry once; the verdicts in the tables\' order, an unknown one last');
+  eq([cen.byVerdict.FULL, cen.byVerdict.HANDLER, cen.byVerdict.PARTIAL], [{ n: 1, auto: 1, curated: 0, handler: 0 }, { n: 1, auto: 0, curated: 0, handler: 1 }, { n: 1, auto: 0, curated: 1, handler: 0 }], 'by tier: a handler entry is the handler tier whatever its src');
+  eq([cen.byType.action, cen.byType['mod/react'], cen.byType.master], [{ n: 3, FULL: 1, HANDLER: 1, 'NEW-VERDICT': 1 }, { n: 1, PARTIAL: 1 }, { n: 1, 'TABLED-ONLY': 1 }], 'by type: a multi-type card is its own row');
+  eq(Object.values(cen.byVerdict).reduce((s, x) => s + x.n, 0) === cen.n && Object.values(cen.byType).reduce((s, x) => s + x.n, 0) === cen.n, true, 'both tables sum to the entries');
+  const keys0 = e => Object.keys(((e.modes || [])[0] || {}).fx || {}).concat(Object.keys((e.ref && e.ref.fx) || {}));
+  eq(libVocabulary(lib0, { V: { fx: { bleedBonus: 1 } }, W: {} }, new Set(['bleed', 'kB', 'titleCard', 'bleedBonus', 'equip']), keys0),
+     { keys: 5, read: 3, unread: ['kD', 'odd'], scanned: 5, scannedCrypt: 1, scannedNowhere: ['equip'] }, 'the vocabulary: the keys on library entries, those the bot reads, a crypt key and a read no entry carries');
   if (!quiet || bad) console.log('gen-card-ledger --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed'));
   return bad;
 }
 const COV = require('./gen-deck-coverage.js');
 const B = require('./elysium-bot.js');
+const SH = require('./cardfx-sharing.js');   // v1.2.0: what a hand-only key is, and the sharing register's counts
 
 function parseArgs(argv){
   const o = { decks: null, sims: [], out: path.join(__dirname, 'docs', 'CARDS.md') };
@@ -323,7 +371,7 @@ function main(){
   for (const x of rows.values()){
     x.seated = Object.keys(x.decks).reduce((s, k) => s + (seatedBy[k] || 0), 0);
     x.status = statusOf(x.verdict, x.uses, x.seated, haveSim);
-    x.tier = x.e ? (x.e.handler ? 'handler' : x.e.src === 'hand' ? 'curated' : 'auto') : '—';
+    x.tier = tierOf(x.e);
     const kc = x.kc;
     x.rulings = kc ? (kc.rulings || []).length : null;
     x.type = kc ? (kc.types || []).join('/') : ((x.e && x.e.t) || []).join('/');
@@ -353,6 +401,17 @@ function main(){
     });
     ks.forEach(k => addClass(k, x));
   }
+
+  /* the whole library (v1.2.0, RULINGS D-125): every library ENTRY of the cardfx by the rows' own verdict, every vampire of the cardfx offered
+     as the crypt (a mode is out of reach only at a discipline level no vampire has), KRCG's text for the text checks when it is here */
+  const allCrypt = Object.values(COV.fx.crypt || {});
+  let noText = 0;   // entries KRCG has no text for: their text checks are not made, and the page says how many
+  const census = libCensus(COV.fx.lib, (name, e) => { const kc = krcgOf(name, name); if (krcg && !kc) noText++; return COV.judgeLib({ kind: 'lib', name, e }, allCrypt, kc ? (kc.card_text || '') : null).verdict; });
+  const vocab = libVocabulary(COV.fx.lib, COV.fx.crypt, COV.scanned, SH.fxKeysOf), handOnly = SH.handOnlyKeys(COV.fx.lib);
+  let compilerKeys = null;   // the keys the compiler gives with no curated file: a compile of its own, over its own copy of KRCG's cards
+  if (krcg){ const out = require('./cardfx-compile.js').compile(JSON.parse(fs.readFileSync(vp, 'utf8')), null).out; compilerKeys = new Set(); for (const n of Object.keys(out.lib || {})) for (const k of SH.fxKeysOf(out.lib[n])) compilerKeys.add(k); }
+  let register = null; try { register = JSON.parse(fs.readFileSync(path.join(__dirname, 'cardfx-sharing.json'), 'utf8')); } catch (e){ register = null; }
+  const reg = register ? SH.counts(COV.fx.lib, register) : null, regProblems = register ? SH.check(COV.fx.lib, register) : [];
 
   /* the crypt (v1.1.0, RULINGS D-108): every vampire, read from KRCG's text -- a card is its KRCG id, like a library row; its curated keys
      against the bot's crypt readers (the mechanism that reads each key) and its sentences against the keys' classes */
@@ -427,7 +486,39 @@ function main(){
     P('| ' + d.key + ' | ' + cols.map(c).join(' | ') + ' | ' + (seatedBy[d.key] || 0) + ' |');
   }
   P('');
-  P('## The class map (what the waves would build: unconsumed effect keys of every partial / inert row, by copies)');
+  /* the whole library (v1.2.0): two tables and the vocabulary -- a summary, never a row per card */
+  const stOf = v => statusOf(v, 0, 0, false), stCount = st => census.verdicts.filter(v => stOf(v) === st).reduce((t, v) => t + census.byVerdict[v].n, 0);
+  P('## The whole library (' + census.n + ' library entries of the cardfx; RULINGS D-125)');
+  P('');
+  P('Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledger get (`gen-deck-coverage.js`, `judgeLib`), with every vampire of the cardfx offered as the crypt' +
+    (krcg ? ' and the card text\'s checks on (KRCG\'s text' + (noText ? '; ' + noText + ' entries have none and are not checked' : '') + ')' : '; no `vtes.json`: the card text\'s checks are NOT made') + '. Static, no sim: FULL / HANDLER is "playable (static)", what the code can do. An entry is a cardfx key (a card under two printed names is two entries). The V5 sweep goes by sharing (`specs/spec-card-sweep-2026-11-18.md`): what an effect lands on outside the starters shows here. **By status:** ' +
+    ['playable (static)', 'partial', 'inert', 'unresolved'].map(st => st + ' ' + stCount(st)).join(' · ') + '.');
+  P('');
+  P('| status | verdict | entries | ' + TIERS.join(' | ') + ' |'); P('|---|---|---:|' + TIERS.map(() => '---:').join('|') + '|');
+  census.verdicts.forEach(v => { const c = census.byVerdict[v]; P('| ' + stOf(v) + ' | ' + v + (VERDICT_NOTE[v] ? ' (' + VERDICT_NOTE[v] + ')' : '') + ' | ' + c.n + ' | ' + TIERS.map(t => c[t]).join(' | ') + ' |'); });
+  P('| | **all** | ' + census.n + ' | ' + TIERS.map(t => census.verdicts.reduce((a, v) => a + census.byVerdict[v][t], 0)).join(' | ') + ' |');
+  P('');
+  P('**By card type** (the cardfx types; a card of two types is its own row)');
+  P('');
+  P('| type | entries | ' + census.verdicts.join(' | ') + ' |'); P('|---|---:|' + census.verdicts.map(() => '---:').join('|') + '|');
+  Object.entries(census.byType).sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0])).forEach(([ty, c]) => P('| ' + ty + ' | ' + c.n + ' | ' + census.verdicts.map(v => c[v] || 0).join(' | ') + ' |'));
+  P('');
+  P('**The vocabulary** (effect keys: the keys of a mode\'s `fx` and of `ref.fx`). The bot reads ' + vocab.scanned + ' keys (its `fx.<key>` reads, scanned): ' + vocab.read + ' are on library entries, ' + vocab.scannedCrypt + ' on crypt entries only, ' +
+    vocab.scannedNowhere.length + ' on no entry' + (vocab.scannedNowhere.length ? ' (' + vocab.scannedNowhere.map(k => '`' + k + '`').join(', ') + ')' : '') + '.');
+  P('');
+  P('| effect keys on library entries | keys |'); P('|---|---:|');
+  P('| all | ' + vocab.keys + ' |');
+  P('| the bot reads | ' + vocab.read + ' |');
+  P('| the bot does not read' + (vocab.unread.length ? ': ' + vocab.unread.map(k => '`' + k + '`').join(', ') : '') + ' | ' + vocab.unread.length + ' |');
+  P('| the compiler gives (a compile without the curated file) | ' + (compilerKeys ? compilerKeys.size : 'not counted (no `vtes.json`)') + ' |');
+  P('| only hand entries carry (hand-only) | ' + handOnly.size + ' |');
+  P('| hand-only, on a single entry | ' + [...handOnly.values()].filter(v => v.length === 1).length + ' |');
+  P('');
+  P('**The sharing register** (`cardfx-sharing.json`: who else in the library prints a hand-only key; `test-cardfx.js` is its gate): ' + (reg ?
+    'backlog ' + reg.backlog + ' (not asked yet) · shared ' + reg.shared + ' (' + reg.owed + ' owed: a card the row names does not carry the key) · unique ' + reg.unique + (reg.noRow ? ' · **no row ' + reg.noRow + '**' : '') +
+    (regProblems.length ? ' · **' + regProblems.length + ' problem(s): `node cardfx-sharing.js`**' : '') + '.' : 'no readable file.'));
+  P('');
+  P('## The class map (what is left in the starters: unconsumed effect keys of every partial / inert row, by copies)');
   P('');
   P('| effect key | copies | cards |'); P('|---|---:|---|');
   [...classes.entries()].sort((a, b) => b[1].copies - a[1].copies || a[0].localeCompare(b[0])).forEach(([k, c]) => P('| ' + k + ' | ' + c.copies + ' | ' + c.cards.join(', ') + ' |'));
@@ -493,6 +584,8 @@ function main(){
   fs.writeFileSync(o.out, L.join('\n'));
   console.log('gen-card-ledger v' + LEDGER_VERSION + ': ' + all.length + ' cards over ' + decks.length + ' decks -- ' + STATUS_ORDER.slice().reverse().map(st => st + ' ' + all.filter(x => x.status === st).length).join(', ') +
     (krcg ? ' | crypt ' + cr.length + ' -- ' + CST.map(st => st + ' ' + cr.filter(x => x.status === st).length).join(', ') + ' | readers ' + readers.size + ' keys | classifier ' + check.agree + '/' + check.of : ' | crypt not read (no vtes.json)') + ' -> ' + path.relative(process.cwd(), o.out));
+  console.log('  the whole library: ' + census.n + ' entries -- ' + ['playable (static)', 'partial', 'inert', 'unresolved'].map(st => st + ' ' + stCount(st)).join(', ') + ' | library keys ' + vocab.keys + ' (read ' + vocab.read +
+    ', compiler ' + (compilerKeys ? compilerKeys.size : '?') + ', hand-only ' + handOnly.size + ')' + (reg ? ' | register: backlog ' + reg.backlog + ', shared ' + reg.shared + ' (' + reg.owed + ' owed), unique ' + reg.unique + (regProblems.length ? ', ' + regProblems.length + ' PROBLEM(S)' : '') : ' | no register'));
   check.miss.forEach(m => console.error('  classifier miss: ' + m));
   check.noClass.forEach(m => console.error('  a curated crypt key with no class (add it to FX_CLASS): ' + m));
   return check.miss.length || check.noClass.length ? 1 : 0;
