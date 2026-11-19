@@ -14899,6 +14899,60 @@ async function connectWithRetry(client, tries = 30){
         ok(fin.appC === 'Apportation' && fin.appE === null && fin.disC === null && fin.disE === 'Disengage' && ra.length === 2 && ra[0][0] === null && ra[0][1] === true && fu.u.hand.includes('Apportation')
            && rd.length === 1 && rd[0][0] === 'Disengage:end' && rd[0][1] === false && !fd.u.hand.includes('Disengage'),
            '180g the press’s direction: Apportation continues only, Disengage ends only -- their press to continue stands against an Apportation and is ended with a Disengage (got ' + JSON.stringify({ fin, ra, rd }) + ')'); }
+      // h) the egress review (findings 1 and 7a): a typed 'no' under another seat's hold -- the directed target's answer ends the wait at
+      //    once (the hold gate: an answer is never a release, and still ends its wait); in an undirected window a holder is promoted and
+      //    must answer too: the prey's and the predator's 'no' wait for the holder's
+      { const mkH = av => { const u = mk180('malkavian'); const v = V0('a1', 'Andi Liu'); u.board = [v]; u._actingVamp = Object.assign({ v, n: 1, played: new Set() }, av);
+          const box = {}; u._askBlock('Trainbot: Andi Liu acts. Block?').then(r => { box.r = r; }); return { u, box }; };
+        const d = mkH({ target: 2 }); d.u._onSay({ i: SI('Hold on…'), who: 'Nora' }); const d0 = !!d.u._ask && d.u._ask.pausedBy.has('Nora');
+        d.u._onChat('Viktor', 'no'); await sleep(0); const d1 = d.u._ask === null && d.box.r && d.box.r.who === 'Viktor';
+        const h = mkH({ hunt: true }); h.u._onSay({ i: SI('Hold on…'), who: 'Nora' }); const h0 = !!h.u._ask && h.u._ask.eligible.has('Nora');
+        h.u._onChat('Viktor', 'no'); h.u._onChat('Pelle', 'no'); const h1 = !!h.u._ask; h.u._onChat('Nora', 'pass'); await sleep(0); const h2 = h.u._ask === null && h.box.r && h.box.r.who === 'Nora';
+        ok(d0 && d1 && h0 && h1 && h2, '180h under a hold: the directed target’s typed ‘no’ ends the window at once; an undirected window waits for its promoted holder’s answer (got ' + JSON.stringify({ d: [d0, d1, d.box.r || null], h: [h0, h1, h2, h.box.r || null] }) + ')'); }
+
+      // i) the release points through their own paths (finding 7b): Dodge's hold ends in the combat's own end (_resolveCombat's finally,
+      //    no flush), Mirror Walk's draw comes in my discard phase and Lupine Assault's in my influence phase, both through _playTurn
+      { const u = mk180('sewer'); const sk = V0('s1', 'Skulk (G5)', { locked: true, blood: 1 }); u.board = [sk]; u.hand = ['Dodge']; u.caps.tally = true;
+        u.emits = []; u._emit = (t, d) => u.emits.push({ t, d }); u.notes = []; u.note = m => u.notes.push(m);
+        u._awaitOppStrike = () => Promise.resolve({ vamp: 'Ghoul', dodge: false, dealt: 1 }); u._awaitOppTaken = () => Promise.resolve(null); u._awaitOppManeuver = () => Promise.resolve(null);
+        u._awaitOppGrapple = () => Promise.resolve(null); u._awaitOppPress = () => Promise.resolve(null); u._combatOppName = 'Ghoul';
+        await u._resolveCombat(sk, 'Ghoul');
+        const dg = { played: u.emits.some(e => e.t === 'play' && e.d.card === 'Dodge'), held: u.emits.filter(e => e.t === 'replace-held').map(e => e.d.until).join(), released: u.emits.filter(e => e.t === 'replace-released').map(e => e.d.until).join(), left: (u._replHold || ['?']).length, owed: u._drawOwed | 0 };
+        const turn = async (card) => { const t = mk180('tremere'); t.unc = []; t.board = []; t.hand = []; t.pool = 20; t.turnSeat = 1; t._drawOwed = 1;
+          if(IF0(t, '_noteReplHold')) t._noteReplHold(card);
+          let terr = null; try { await t._playTurn(); } catch(e){ terr = e.message; }
+          const L = t.sent.map(m => m.t === 'draw' ? '#draw' : (m.t === 'log' ? String(m.html || '').replace(/<[^>]+>/g, '') : null)).filter(Boolean);
+          const at = re => L.findIndex(l => re.test(l));
+          return { terr, draw: at(/^#draw$/), infl: at(/^Phase: Influence/), disc: at(/^Phase: Discard/), pass: at(/Turn passed/) }; };
+        const mw = await turn('Mirror Walk'), la = await turn('Lupine Assault');
+        ok(dg.played && dg.held === 'combat' && dg.released === 'combat' && dg.left === 0 && dg.owed === 1
+           && !mw.terr && mw.disc >= 0 && mw.draw > mw.disc && mw.draw < mw.pass && !la.terr && la.infl >= 0 && la.draw > la.infl && la.draw < la.disc,
+           '180i the release points: Dodge’s hold ends with its combat (the draw still owed for the flush), Mirror Walk’s draw in my discard phase, Lupine Assault’s in my influence phase -- through the turn (got ' + JSON.stringify({ dg, mw, la }) + ')'); }
+
+      // j) the vote route's wake (finding 7c): Protected District's locked reactor needs a wake it can still play -- not after its On the
+      //    Qui Vive this unlock window, though another is in hand
+      { const u = mk180('nosferatu'); const lr = V0('l1', 'Larissa Moreira (G6)', { locked: true, blood: 3 }); u.board = [lr]; u.hand = ['Protected District', 'On the Qui Vive', 'On the Qui Vive'];
+        const v1 = u._bestVotesReactFor(); u.hand.splice(1, 1); u._drawOwed = 1; u._emitPlay('On the Qui Vive', 'wake', lr.name); const v2 = u._bestVotesReactFor();
+        ok(!!v1 && v1.vamp === lr && v2 === null, '180j the vote route: a locked primogen behind a wake it can play reacts with Protected District, not after its On the Qui Vive this unlock window (got ' + JSON.stringify({ v1: v1 && v1.vamp && v1.vamp.name, v2 }) + ')'); }
+
+      // k) a new deal owes no draw (finding 2): a replacement held at the last game's end, or any deferred draw, does not reach the new hand
+      { const u = mk180('tremere'); u._drawOwed = 2; u._replHold = [{ until: 'discard', card: 'Mirror Walk' }];
+        u._dispatch({ t: 'started', players: N0.map((n, i) => ({ seat: i + 1, name: n, online: true, bot: true })) });
+        u._dispatch({ t: 'dealt', hand: ['Govern the Unaligned', 'Bonding', 'Deflection', 'Mirror Walk', 'Apportation', 'Theft of Vitae', 'Blood Doll'], lib: 50, crypt: 12 });
+        u.sent = []; u._flushDraws(); const dr = draws0(u);
+        ok(dr === 0 && (u._drawOwed | 0) === 0, '180k a new deal owes no draw: the last game’s held and deferred replacements do not reach the fresh hand (got ' + JSON.stringify({ dr, owed: u._drawOwed }) + ')'); }
+
+      // l) the egress review's smaller findings (5, 6): a dodge's bundled press is the strike's, never a bare press (The Jones [ser]); a
+      //    play of a card already in play starts no hold; a Sudden Reversal taken back leaves no hold beyond the draws still owed
+      { const u = mk180('ministry'); const cn = V0('c1', 'Cao Nguyen (G6)'); u.board = [cn]; u.hand = ['The Jones'];
+        const jE = u._bestPressFor(cn, 'end'), jC = u._bestPressFor(cn);
+        u._drawOwed = 0; u._emitPlay('Mirror Walk', 'combat-strike', cn.name, true); const inPlay = (u._replHold || []).length;
+        u._replHold = [{ until: 'discard', card: 'Mirror Walk' }]; u._drawOwed = 1; u._srSent = { owner: 'Viktor', card: 'Govern the Unaligned', name: 'Sudden Reversal' };
+        u.board.push({ id: 'z1', name: 'Sudden Reversal', kind: 'lib', zone: 'ash' }); u._onSrLate('Viktor', 'Govern the Unaligned');
+        const afterSr = { owed: u._drawOwed | 0, holds: (u._replHold || []).length, hand: u.hand.includes('Sudden Reversal') };
+        u._drawOwed = 1; u.sent = []; u._flushDraws(); const drew = draws0(u);
+        ok(jE === null && jC === null && inPlay === 0 && afterSr.owed === 0 && afterSr.holds === 0 && afterSr.hand && drew === 1,
+           '180l The Jones’ press is its dodge’s, no bare press; a card already in play holds nothing; a Sudden Reversal taken back leaves no orphan hold -- the next card is replaced (got ' + JSON.stringify({ jE, jC, inPlay, afterSr, drew }) + ')'); }
     }
 
 

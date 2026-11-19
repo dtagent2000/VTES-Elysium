@@ -41,16 +41,19 @@ dry run and the seven decks' readings (§4.3, observed), the merge's design (§4
   (HARNESS 8.5 KB, HOWTO 23 KB, the total 179 KB; `tools/doc-budget.sh`): 1.4 KB under the total and 0.95 KB under RULINGS.
 
 **The finished decks' round** (19 Nov, bot v0.6.235; RULINGS D-127, Johan's "kör" on the four recommendations of A2) built
-§4.3's seven live reds and the 19 Nov egress review's two faults: cardfx v1.9.12 tags the condition sentences (onlyBleed 39
+§4.3's seven live reds and the 19 Nov egress review's two faults: cardfx v1.9.12 tags the condition sentences (onlyBleed 43
 cards, notBleed 3, onlyPredatorActs 1, oncePerUnlock 2, pressDir 31, noReplace 42), the bot reads each where it plays the card,
 my own rescue and leaving torpor are undirected, and a typed 'no' answers by the quick phrase's rule. In v0.6.235's 240 each red
 reads 0 (Bonding's stealth 194 plays, all in a bleed; Instinctive Reaction 164, all against my predator's minion; On the Qui Vive
 1,014, none a second by one minion; Mirror Walk's 294 replacements held to the discard phase; Apportation no press to end); the
 sewer smoke shows Forgotten Labyrinth's (4 in a bleed on v0.6.234, 0 now). Where it differs from §4.3:
-- the tags are library-wide (the compiler reads the sentence), not the seven decks' cards only; the forms the sentence's wording
-  excludes stay untagged (Protected District's 'against you', Elder Intervention's 'directed at you', Empowering the Puppet King's
-  and Donate's 'by a ready vampire other than the acting minion'), and so do two variants found on the way (Smoke and Mirrors'
-  'Not usable during a bleed or political action', Hag's Wrinkles' 'Only usable during an equip action'): C's;
+- the tags are library-wide (the compiler reads the sentence), not the seven decks' cards only, with the narrower bleed forms ('against
+  you', 'directed at you', 'by a ready vampire other than the acting minion'), 'As [x] above' and a type segment's line (Donate) after
+  the egress review; Protected District ('... or during the polling step') stays untagged, and so do the variants the patterns miss
+  (the review's list): Smoke and Mirrors and Beast Meld [ANI][PRO] (not in a bleed or a political action; as a non-bleed action is
+  announced), Hag's Wrinkles and The Guruhi Are the Land (an equip; a bleed, hunt or equip action), Dirty Little Secrets and Deal with
+  the Devil, five press directions (Fear of the Void Below, Qetu the Evil Doer, Meat Hook, Talbot's Chainsaw, Highway Haven: RV),
+  Sonar ('until after the current turn'), Save Face (a press for another minion): C's;
 - every wake spend now asks the vampire's own wake: the bounce's and the vote's took the vampire-blind one, and the bounce's finder
   could pick a body it then could not wake (with the once-per-unlock rule it would have re-asked the window for the same pick);
 - a held replacement is drawn at the first draw after its moment (the unlock phase's with the master phase's, as every owed draw;
@@ -302,8 +305,8 @@ The pilot's and each starter's predictions are registered in their own rounds, b
 
 ### 4.4 The merge of hand entries (designed in A2, "kör" 19 Nov: D-127; built at the start of B)
 Today `cardfx-curated.json` replaces the compiled entry whole (`cardfx-compile.js`, the overlay), and the hand entry inherits only
-the numeric cost, the discipline, clan and capacity requirements and five markers (`oot`, `anarchReq`, `zombie`, `onlyDirected`,
-`frenzy`). The merge lets a hand entry carry the remainder only.
+the numeric cost, the discipline, clan and capacity requirements and the entry-level markers (`oot`, `anarchReq`, `zombie`,
+`onlyDirected`, `frenzy`; since v1.9.12 the six condition tags, the egress review of v0.6.235). The merge lets a hand entry carry the remainder only.
 - **Opt-in.** A curated library entry with `"merge": true` is laid over a copy of the compiled entry of the same card (for a key
   that is a printed variant, the printed name's entry); without it the overlay is today's, byte for byte. The crypt keeps
   whole-entry replacement (D-108's waves). A opts none in, so the committed `elysium-cardfx.json` does not change.

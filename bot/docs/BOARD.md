@@ -67,6 +67,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   compares the card score with and without the streak.
 
 ## Known, not built (bot side)
+- **Revelations [AUS] is undirected** (v0.6.235's egress review): my window asks only my prey and the other bots open only the
+  prey's, so no predator is asked (the 240: 182 superior peeks). *Done when* both sides ask both, a section red on v0.6.235.
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
   the merged decks' share; a few decks count twice. A v5 rebuild (scratch: 4,709 decks, Magnum under 10) drops a name the bot
   records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
@@ -151,9 +153,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   a steal's victim lost > stole. A lead (v0.6.227, the 600's match 167): a bleed that fizzles at a seat just ousted is read by
   the next prey as its own and books the pool (likelier since v0.6.227: the 600's fizzles 3 → 6). *Done when* `ana-gates.py` passes
   there. Docs: CHANGELOG v0.6.224, v0.6.227.
-- **The handshake audit counts a combat the match's end cut** (`ana-combat2.py`, read by `ana-gates.py`): v0.6.235's first arena
-  smoke failed on one round, its last combat, whose blocker's Fame oust ended the match 4 ms after the blocker's row and before
-  the winner's. *Done when* a round whose pair the match's end cut (the result row within a second of it) is counted apart.
+- **The handshake audit counts a combat the match's end cut** (`ana-combat2.py`): v0.6.235's first arena smoke failed on its last
+  round, whose blocker's Fame oust ended the match before the winner's row. *Done when* such a round is counted apart.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a

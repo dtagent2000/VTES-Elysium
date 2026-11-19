@@ -174,14 +174,17 @@
   bäst koll så vi kan köra på det du tror blir bäst"). The seven live reds of `specs/spec-card-sweep-2026-11-18.md` §4.3 and the 19
   Nov egress review's two faults; the as-built record is the spec's status block.
   - *cardfx v1.9.12*: the condition sentences, tagged as `onlyDirected` is (the entry for a line with no discipline, the modes of a
-    discipline line, 'As above' inherited): `onlyBleed` ('Only usable during a bleed action.', the sentence alone; 39 cards),
-    `notBleed` (3), `onlyPredatorActs` (1), `oncePerUnlock` (2), `pressDir` ('continue' / 'end', 31) and `noReplace` ('combat',
-    'action', 'discard', 'unlock', 'influence'; a line with no discipline; 42). A curated entry inherits the entry-level tags; True
-    Love's Face's [obf][pre] mode carries its own. Nothing but the tags changed (116 entries).
+    discipline line, 'As above' and 'As [x] above' inherited, a type segment's line on its own modes): `onlyBleed` ('Only usable
+    during a bleed action.' and its narrower forms — 'against you', 'directed at you', 'by a ready vampire other than the acting
+    minion' — not '… or during the polling step'; 43 cards), `notBleed` (3), `onlyPredatorActs` (1), `oncePerUnlock` (2),
+    `pressDir` ('continue' / 'end', 31) and `noReplace` ('combat', 'action', 'discard', 'unlock', 'influence'; a line with no
+    discipline; 42). A curated entry inherits the entry-level tags; True Love's Face's [obf][pre] mode carries its own. Nothing but
+    the tags changed (118 entries).
   - *The acting side*: the stealth finders and the stack ask the card's condition on the action (`_actCondOk`, `_myActIsBleed`: a
     bleed carries a target and no kind; a plan with no action in flight reads a bleed) — Bonding's [DOM] stealth in a bleed only,
     Forgotten Labyrinth's never in one; the press finder takes a direction (`_bestPressFor(vamp, dir)`) and the press step ends a
-    press to continue only with a card that may end (Apportation [tha] continues only, Disengage ends only).
+    press to continue only with a card that may end (Apportation [tha] continues only, Disengage ends only); a dodge's bundled press
+    is the strike's, never a bare press (The Jones [ser], Amria [CHI]).
   - *The reacting side*: `_dirOk` asks the action's other conditions — Instinctive Reaction only when a minion of my predator acts
     (the pending's seat, else its actor's name), Speak with Spirits [ani] in a bleed only; an estimate without the action counts both.
   - *Once between unlock phases*: a play records the minion's once-per-unlock card (`_notePlayRules`, from `_emitPlay`) and
@@ -189,14 +192,18 @@
     the vampire-blind `_wakeCard()`, and the bounce's finder could pick a body it then could not wake).
   - *Held replacements*: a 'Do not replace until …' play holds its draw (`_noteReplHold`, also at the master and the action card);
     `_flushDraws` draws the others; the hold is released after combat, after the action, at my discard (drawn at once), unlock or
-    influence phase (`_releaseHolds`). Rows `replace-held`, `replace-released`.
+    influence phase (`_releaseHolds`); a play of a card already in play holds nothing (`_emitPlay`'s `inPlay`), a Sudden Reversal
+    taken back leaves no hold beyond the owed draws, and a new deal owes no draw (`dealt`: the old carry-over of deferred draws ends
+    too). Rows `replace-held`, `replace-released`.
   - *The block window*: my own rescue and leaving torpor are undirected (`UND_KINDS`): the window waits for my predator too. A typed
     'no' answers by the quick phrase's rule (`_chatDecline`): an answer to the line on the wire, from a seat the question asks, a
-    contest left to its clock; a referendum's 'No votes from me.' is no answer.
+    contest left to its clock, the directed target's answer ending the window at once under another seat's hold (the hold gate); a
+    referendum's 'No votes from me.' is no answer.
   - *Versions*: compiler v1.9.12, coverage v1.1.52 (the condition class: a FULL card whose text has one of the sentences and lacks
     its tag is PARTIAL; none in the 308), curated 213.
-  - *Tests*: section 180 (7 checks: 7/0 on these bytes, 0/7 on v0.6.234's, with either cardfx); `test-cardfx` 403 (7 new; 6 red on
-    the previous compiler, the seventh pins the conditional forms untagged). Sections 38 (the live ladder) and 90h–j moved off
+  - *Tests*: section 180 (12 checks: 12/0 on these bytes, 0/12 on v0.6.234's with either cardfx, 9/3 on the round's first build —
+    180h–l are the egress review's); `test-cardfx` 403 (7 new, all 7 red on the previous compiler; the seventh pins the narrower
+    forms tagged and Protected District untagged). Sections 38 (the live ladder) and 90h–j moved off
     Forgotten Labyrinth in a bleed: Lost in Crowds [OBF] at Skulk (G5), and the finder asked for a hunt.
   - *Gates*: (the release bytes: `elysium-bot.js` `8cc89a4c`, `test-bot-logic.js` `c677a4f3`, `elysium-cardfx.json`
     `6ddc7acd`): suite **2613/0** (one frozen run; the ×3 after the egress review); section 180 7/0 (0/7 on v0.6.234's bytes, with

@@ -520,7 +520,7 @@ function judgeLib(h, cryptEs, text){
 }
 
 const COND_SENTENCES = [   // v1.1.52: cardfx-compile v1.9.12's patterns (CONDS, NOREPL), the sentence and the tag that reads it
-  [/\bonly usable during a bleed action\.(?=\s|$)/i, 'onlyBleed', "'Only usable during a bleed action'"],
+  [/\bonly usable during a bleed(?: action)?(?: against you| directed at you| by (?:(?! or )[^.])*)?\.(?=\s|$)/i, 'onlyBleed', "'Only usable during a bleed action'"],
   [/\bnot usable during a bleed action\b/i, 'notBleed', "'Not usable during a bleed action'"],
   [/\bonly usable (?:if|when) a minion controlled by your predator is acting\b/i, 'onlyPredatorActs', "'Only usable if a minion controlled by your predator is acting'"],
   [/\bcan play only one [^.]* between (?:their|his or her|its) unlock phases\b/i, 'oncePerUnlock', "'can play only one ... between their unlock phases'"],

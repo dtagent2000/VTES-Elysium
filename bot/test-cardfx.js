@@ -1003,8 +1003,10 @@ ok(fx.counts.libLock >= 140,
      && M('Iron Glare', 'POT+PRE').onlyBleed === true && !M('Iron Glare', 'pot+pre').onlyBleed
      && M("True Love's Face", 'obf+pre').onlyBleed === true && !M("True Love's Face", 'OBF+PRE').onlyBleed && E("True Love's Face").src === 'hand',
      'onlyBleed (v1.9.12): Bonding, Confusion, Revelation of the Serpent by the header; Changeling [vic], Speak with Spirits [ani], Virtuosa [mel], Fata Morgana [CHI], Iron Glare [POT][PRE] by their lines, never their other lines; True Love’s Face [obf][pre] in the curated file');
-  ok(!has(E('Protected District'), 'onlyBleed') && !has(E('Elder Intervention'), 'onlyBleed') && !has(E('Empowering the Puppet King'), 'onlyBleed') && !has(E('Donate'), 'onlyBleed'),
-     'onlyBleed is the sentence alone: not ‘a bleed action against you’ (Protected District), ‘directed at you’ (Elder Intervention), ‘by a ready vampire other than the acting minion’ (Empowering the Puppet King, Donate)');
+  ok(!has(E('Protected District'), 'onlyBleed') && E('Elder Intervention').onlyBleed === true && E('Pack Tactics').onlyBleed === true && E('Empowering the Puppet King').onlyBleed === true
+     && (E('Donate').modes || []).some(m => m.use === 'mod' && m.onlyBleed === true) && !(E('Donate').modes || []).some(m => m.use === 'react' && m.onlyBleed) && !E('Donate').onlyBleed
+     && M("Predator's Mastery", 'ABO').onlyBleed === true && M('Lead Fist', 'VIS').pressDir === 'continue',
+     'onlyBleed\u2019s narrower forms (the egress review): \u2018directed at you\u2019 (Elder Intervention), \u2018against you\u2019 (Pack Tactics), \u2018by a ready vampire other than the acting minion\u2019 (Empowering the Puppet King; Donate\u2019s on its [ACTION MODIFIER] segment, not its [REACTION]) -- a bleed is still necessary; not Protected District (\u2018\u2026 or during the polling step\u2019); \u2018As [x] above\u2019 inherits its line (Predator\u2019s Mastery [ABO], Lead Fist [VIS])');
   ok(E('Forgotten Labyrinth').notBleed === true && E('Go-getter').notBleed === true && M('Shroud of Night', 'obt').notBleed === true && !M('Shroud of Night', 'OBT').notBleed && !E('Shroud of Night').notBleed,
      'notBleed (v1.9.12): Forgotten Labyrinth and Go-getter by the header, Shroud of Night [obt] by its line (‘+1 stealth, not usable during a bleed action’), not [OBT]');
   ok(E('Instinctive Reaction').onlyPredatorActs === true && !anyM(E('Instinctive Reaction'), 'onlyPredatorActs') && E('On the Qui Vive').oncePerUnlock === true && E('Shadow Sentinel').oncePerUnlock === true,
@@ -1019,9 +1021,9 @@ ok(fx.counts.libLock >= 140,
   const vol = { ob: cnt(e => has(e, 'onlyBleed')), obE: cnt(e => e.onlyBleed !== undefined), nb: cnt(e => has(e, 'notBleed')), pa: cnt(e => has(e, 'onlyPredatorActs')), opu: cnt(e => has(e, 'oncePerUnlock')),
     pd: cnt(e => has(e, 'pressDir')), pdE: cnt(e => e.pressDir === 'end' || (e.modes || []).some(m => m.pressDir === 'end')), nr: cnt(e => e.noReplace !== undefined) };
   const nrBy = {}; Object.keys(L).forEach(n => { const u = L[n].noReplace; if(u) nrBy[u] = (nrBy[u] | 0) + 1; });
-  ok(vol.ob === 39 && vol.obE === 17 && vol.nb === 3 && vol.pa === 1 && vol.opu === 2 && vol.pd === 31 && vol.pdE === 15 && vol.nr === 42
+  ok(vol.ob === 43 && vol.obE === 20 && vol.nb === 3 && vol.pa === 1 && vol.opu === 2 && vol.pd === 31 && vol.pdE === 15 && vol.nr === 42
      && nrBy.combat === 12 && nrBy.action === 11 && nrBy.discard === 8 && nrBy.unlock === 10 && nrBy.influence === 1,
-     'the condition tags’ volume: onlyBleed 39 cards (17 by the header), notBleed 3, onlyPredatorActs 1, oncePerUnlock 2, pressDir 31 (15 to end), noReplace 42 (12 combat, 11 action, 8 discard, 10 unlock, 1 influence) -- got ' + JSON.stringify(vol) + ' ' + JSON.stringify(nrBy));
+     'the condition tags’ volume: onlyBleed 43 cards (20 by the header), notBleed 3, onlyPredatorActs 1, oncePerUnlock 2, pressDir 31 (15 to end), noReplace 42 (12 combat, 11 action, 8 discard, 10 unlock, 1 influence) -- got ' + JSON.stringify(vol) + ' ' + JSON.stringify(nrBy));
 }
 /* The sharing register (19 Nov 2026, bot v0.6.234; RULINGS D-125, spec-card-sweep-2026-11-18 §2 and §4.1): no hand key before "who else
    in the library prints this?" has an answer on file. cardfx-sharing.js defines a hand-only key and the register's rules; this is its gate.

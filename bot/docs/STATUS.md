@@ -12,7 +12,7 @@ copies in bot/ are client v2.6.177 / protocol v2.6.177 / srv-2.6.51 and main's c
 19 Nov: suite **2613/0** (one frozen run; `elysium-bot.js` `8cc89a4c`, `test-bot-logic.js` `c677a4f3`, `elysium-cardfx.json`
 `6ddc7acd`) · section 180 7/0 (0/7 on v0.6.234) · `test-cardfx` 403/0 · canary 235/0 ×2 · hotseat 12/0 · HB1 11/0 · main's
 client suite 380/1 (the guide's embed) · the 240 against v0.6.234 DIVERGED 195, SAME-PLAY 45 (each a mechanism of the round; VP
-paired within one SE), the 16 smokes DIVERGED 6–10 of 12; `ana-gates.py` PASS on all 17; the arena smoke 2 of 3 PASS (the third's
+paired within one SE), the 16 smokes DIVERGED 6–10 of 12; `ana-gates.py` PASS on all 17; the arena smoke 2 of 3 PASS (the first's
 last combat cut by the match's end).
 
 ## Next

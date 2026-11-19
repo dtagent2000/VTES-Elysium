@@ -840,7 +840,9 @@ function libEntry(c){
   }
   /* v1.9.12 (19 Nov 2026, bot v0.6.235, the finished decks' round: spec-card-sweep §4.3, RULINGS D-127): CONDITION SENTENCES the bot must
      ask before it plays a card, tagged as onlyDirected is (v1.9.11): on the entry for a line with no discipline, on the modes of a
-     discipline line ('As above' inherits the line before it). onlyBleed 'Only usable during a bleed action.' (40 library cards), notBleed
+     discipline line ('As above' inherits the line before it, 'As [x] above' the latest [x] line), on the modes of its type for a type
+     segment's line ('[ACTION MODIFIER] ...': Donate). onlyBleed 'Only usable during a bleed action.' and its narrower forms ('against
+     you', 'directed at you', 'by a ready vampire other than the acting minion'; not '... or during the polling step': 43 cards), notBleed
      'Not usable during a bleed action' (3), onlyPredatorActs 'Only usable if a minion controlled by your predator is acting' (1),
      oncePerUnlock '... can play only one X between their unlock phases' (2), pressDir 'Press, only usable to continue / end combat'
      ('continue' / 'end', 31). noReplace on the entry, from a line with no discipline only: 'Do not replace until after combat' ('combat'),
@@ -851,7 +853,7 @@ function libEntry(c){
      against a minion that is not the predator's, Forgotten Labyrinth during a bleed. The bot's finders read them (cardfx's header). */
   {
     const CONDS = [
-      ['onlyBleed', /\bonly usable during a bleed action\.(?=\s|$)/i, () => true],   // the sentence alone: 'during a bleed action against you' (Protected District), 'directed at you' and 'by a ready vampire other than the acting minion' are other conditions
+      ['onlyBleed', /\bonly usable during a bleed(?: action)?(?: against you| directed at you| by (?:(?! or )[^.])*)?\.(?=\s|$)/i, () => true],   // the sentence, or its narrower forms ('against you', 'directed at you', 'by a ready vampire other than the acting minion': a bleed is still necessary; the egress review); not '... or during the polling step' (Protected District: a bleed is not necessary)
       ['notBleed', /\bnot usable during a bleed action\b/i, () => true],
       ['onlyPredatorActs', /\bonly usable (?:if|when) a minion controlled by your predator is acting\b/i, () => true],
       ['oncePerUnlock', /\bcan play only one [^.]* between (?:their|his or her|its) unlock phases\b/i, () => true],
@@ -862,14 +864,18 @@ function libEntry(c){
     const DL = /^\s*((?:\[[A-Za-z ]+\]\s*(?:or\s*)?)+)(.*)$/;
     for (const [key, re, val] of CONDS){
       if(!re.test(txt)) continue;
-      let last = null;
+      let last = null; const byKey = {};   // 'As [x] above' names its line: the latest line that carries [x] (the egress review: Predator's Mastery [ABO], Lead Fist [VIS])
       txt.split('\n').forEach(l => {
         const h = l.match(DL), ats = h ? (h[1].match(/\[[A-Za-z]{3}\]/g) || []).map(x => x.slice(1, -1)) : [];
         const m = l.match(re);
-        if(!ats.length){ last = null; if(m) e[key] = val(m); return; }
+        if(!ats.length){ last = null; if(!m) return;
+          const ty = l.match(/^\s*\[(ACTION MODIFIER|REACTION|COMBAT)\]/i), use = ty && ({ 'action modifier': 'mod', reaction: 'react', combat: 'combat' })[ty[1].toLowerCase()];   // a type segment's line ([ACTION MODIFIER] ... [REACTION] ...: Donate) conditions its own modes, not the card (the egress review)
+          if(use && e.modes && e.modes.some(mo => mo.use === use)) e.modes.forEach(mo => { if(mo.use === use) mo[key] = val(m); }); else e[key] = val(m);
+          return; }
         const keys = /\]\s*or\s*\[/i.test(h[1]) ? ats : [ats.join('+')];
-        const v = m ? val(m) : (/^\s*As above/i.test(h[2]) ? last : null);
-        last = v;
+        const asN = h[2].match(/^\s*As \[([A-Za-z]{3})\] above/i);
+        const v = m ? val(m) : asN ? (byKey[asN[1]] !== undefined ? byKey[asN[1]] : null) : (/^\s*As above/i.test(h[2]) ? last : null);
+        last = v; keys.forEach(k => { byKey[k] = v; }); ats.forEach(k => { if(byKey[k] === undefined || v != null) byKey[k] = v; });
         if(v != null && e.modes) e.modes.forEach(mo => { if(keys.includes(mo.at)) mo[key] = v; });
       });
     }
