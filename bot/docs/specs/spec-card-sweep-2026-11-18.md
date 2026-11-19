@@ -2,8 +2,8 @@
 
 **Status:** kör — Johan, 18 Nov ("Vi kör, med dina rekommendationer för besluten"), on the proposal this page records: the method of
 §2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör" and waits for
-his word (RULINGS O-45). On 19 Nov he dropped the clean-up spec's condition on zero-vtes (§5). This round changes no code: step A
-(§4) is the next round. Measured on main `6baf99b`.
+his word (RULINGS O-45). On 19 Nov he answered the question about zero-vtes's maintainer (§5). This round changes no code: step
+A (§4) is the next round. Measured on main `6baf99b`.
 
 ## 0. In one paragraph
 We finish the V5 sweep one starter at a time, one card at a time, and every effect we meet is first asked one question: **who else
@@ -159,10 +159,12 @@ Not used: at runtime, as copied code, or as files in git.
 The maintainer and the credit. The clean-up spec allowed zero-vtes as a third check "only after asking its maintainer"
 (`specs/spec-cleanup-2026-10-20.md`, T3), and the repository does not show that this was done. Johan, 19 Nov: "Vi kan släppa nog
 villkoret för Lionel kanske eftersom han har MIT-licens (dock ska vi ju ge honom credit såklart), men jag ska nog ändå skriva till
-honom på Discord o ta upp att jag ska lägga till licens också". So the condition is dropped (D-125), zero-vtes is credited, and
-Johan writes to Lionel Panhaleux all the same. The credit goes in the root README with the licence Johan adds; that README is
-main's file, so it travels as a handoff with the licence. `specs/spec-cardfx-sweep-sources-2026-09-25.md` stays the source mapping
-for KRCG, vtes-rulings and vtes-skill; this section adds the fourth source.
+honom på Discord o ta upp att jag ska lägga till licens också ifall det är så att han mot förmodan skulle hitta något matnyttigt
+hos oss för sin lösning också". These pages read his "nog … kanske" as the condition dropped (D-125): step A does not wait on it.
+The credit is owed, and `bot/README.md` gives it from this round on. Claude's proposal, not ruled: when the repository has a
+licence, the root README's credits name zero-vtes too; that README is main's file, so it goes as a handoff (BOARD, the V5 sweep).
+`specs/spec-cardfx-sweep-sources-2026-09-25.md` stays the source mapping for KRCG, vtes-rulings and vtes-skill; this section adds
+the fourth source.
 
 ## 6. What every round reports
 - **the starter**: playable copies of 77;
@@ -196,7 +198,7 @@ Stops: the library's waves by class, ranked by copies in the V5 decks; a whole-c
 The standing pages stood at 172,997 of 173,000 and RULINGS at 64,908 of 65,000. Cut as history: D-98's list of wave 1's cards,
 D-102's list of wave 2's (their specs keep both) and the BOARD line's list of the waves done. D-125, O-45 and the new BOARD line
 still need room, so by D-101: RULINGS 65 → 66 KB and the standing pages 173 → 174 KB, the reason in `tools/doc-budget.sh`. After
-the round: RULINGS 65,804, the standing pages 173,987, the bootstrap 49,373 of 50,000. A real cut of history is step A's
+the round: RULINGS 65,733, the standing pages 173,985, the bootstrap 49,442 of 50,000. A real cut of history is step A's
 (§4.1, "the docs").
 
 ## 10. Unsure

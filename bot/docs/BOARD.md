@@ -20,8 +20,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Quarry and Night Terrors' strike with them), **C** the harvest, **D** the other twelve.
   Crypt waves (D-108): A done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES`
   + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file
-  (`gen-precon.js --check` compares them). *Done when* the 18 starters' rows are playable and every hand-only key has its sharing
-  answer. Docs: RULINGS D-84, D-102, D-104, D-108, D-125, O-45; `CARDS.md`; HOWTO.
+  (`gen-precon.js --check` compares them). The root README credits zero-vtes when it has a licence (handoff). *Done when* the 18
+  starters' rows are playable and every hand-only key has its sharing answer. Docs: RULINGS D-84, D-102, D-104, D-108, D-125,
+  O-45; `CARDS.md`; HOWTO.
 - **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9): what v1 of each wave left out, the
   amber halves and the latent items. *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
 - **The curation queue of wave 6's graded readings** (none in a deck; spec-v5-wave6 §8): Enkil Cog, Destilaria Estrela da

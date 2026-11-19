@@ -12,10 +12,11 @@
   starter at a time. zero-vtes is a development-time reference under KRCG's text and the rulings. The order: A the set-up (the
   tools and the dry run, no behaviour change), B the pilot (Banu Haqim), C the harvest of the hand entries, D the other twelve
   starters. Step A's counts carry registered predictions (spec §4.3). Open for Johan (O-45): the finished decks' never
-  hand-curated entries read again and their decks first in the harvest. Johan, 19 Nov: zero-vtes's maintainer need not be asked
-  first (MIT); it is credited, with the licence he adds. Docs: D-98, D-102 and the BOARD's V5 line cut to what stands; RULINGS 65 → 66 KB and the standing pages
-  173 → 174 KB by D-101. Egress: 32 findings over the review and its re-check (half-done 14, unproven 8, rule-missed 6, stale-doc
-  3, test-weakened 1), 31 fixed, 1 listed (HARNESS's charter for a T2 list is step A's).
+  hand-curated entries read again and their decks first in the harvest. Johan, 19 Nov, on zero-vtes's maintainer: "Vi kan släppa
+  nog villkoret för Lionel kanske eftersom han har MIT-licens", read as the condition dropped; `bot/README.md` credits zero-vtes.
+  Docs: D-98, D-102 and the BOARD's V5 line cut to what stands; RULINGS 65 → 66 KB and the standing pages
+  173 → 174 KB by D-101. Egress: 35 findings over the review and its two re-checks (half-done 15, unproven 8, rule-missed 8,
+  stale-doc 3, test-weakened 1), 34 fixed, 1 listed (HARNESS's charter for a T2 list is step A's).
 - **Toreador at the sim table (6 Nov 2026, bot v0.6.217, no bot change; PR #52)** — STATUS Next 1, Johan's go of 6 Nov: does the
   Toreador precon hold up beside the starters (D-98)? `docs/reports/REPORT-toreador-sim-2026-11-06.md`. The specified design (the four
   starters + toreador, every seating × 2 deals = 240 at five seats, the client profile; the prediction registered and pushed before the
