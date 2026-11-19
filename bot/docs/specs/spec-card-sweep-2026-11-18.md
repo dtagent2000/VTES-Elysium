@@ -1,9 +1,9 @@
 # spec-card-sweep — finishing the V5 sweep by sharing (18 Nov 2026, on bot v0.6.234)
 
 **Status:** kör — Johan, 18 Nov ("Vi kör, med dina rekommendationer för besluten"), on the proposal this page records: the method of
-§2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör"; it and §5's
-question about zero-vtes's maintainer wait for his word (RULINGS O-45). This round changes no code: step A (§4) is the next round.
-Measured on main `6baf99b`.
+§2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör" and waits for
+his word (RULINGS O-45). On 19 Nov he dropped the clean-up spec's condition on zero-vtes (§5). This round changes no code: step A
+(§4) is the next round. Measured on main `6baf99b`.
 
 ## 0. In one paragraph
 We finish the V5 sweep one starter at a time, one card at a time, and every effect we meet is first asked one question: **who else
@@ -63,7 +63,7 @@ and its guide check is listed. The crypt keeps D-108's waves by class; the start
 ## 4. The order
 | step | what | done when |
 |---|---|---|
-| **A. Set up** (one round, no behaviour change) | §4.1: the tools, the dry run, the docs, the merge's design. The parts that read zero-vtes (the review sheet, the dry run) wait for Johan's word on its maintainer (§5); the library table, the register and its lint do not. The seven finished decks' review sheets too, if he confirms §4.2. | The tools run in the round's gates; the dry run's counts stand in the PR and in §4.3; Johan has the merge's design. |
+| **A. Set up** (one round, no behaviour change) | §4.1: the tools, the dry run, the docs, the merge's design. The seven finished decks' review sheets too, if Johan confirms §4.2. | The tools run in the round's gates; the dry run's counts stand in the PR and in §4.3; Johan has the merge's design. |
 | **B. The pilot: Banu Haqim** (one round) | The new flow end to end, the merge of hand entries built first (§4.1, on Johan's "kör" on its design). Its 4 remaining cards are shared-only by §1's measure, most of them the maneuver and press grants with the rush cards; Hunting the Quarry and Night Terrors' strike (wave 6's riders) ride with them. Priority Contract (4 copies) is one of the six misreads below and is read again here. | 77 of 77 copies playable, no disagreement open on its sheet, the library table moved, the flow's friction written down. |
 | **C. The harvest** (one or two rounds) | The 145 hand-only keys asked "who else prints this?"; the seven finished decks first, if Johan confirms §4.2. The compiler's known misses (`bloodAdd` and `bloodAddTo` on 59 card-keys). The cross-check of what is already playable against zero-vtes, with the five other misreads. | No row of the sharing register is `backlog`; the number of library cards turned playable is reported. |
 | **D. The other twelve starters** | Nearest first, re-ranked from the ledger after every starter: each round's shared effects close cards in other starters too. Appendix A has where they stand. | Each starter done as §3. |
@@ -156,12 +156,13 @@ pattern or a card list holds only cards each checked against KRCG's text, and no
 
 Not used: at runtime, as copied code, or as files in git.
 
-Two points are Johan's and open (O-45). The clean-up spec allowed zero-vtes as a third check "only after asking its maintainer"
-(`specs/spec-cleanup-2026-10-20.md`, T3), and the repository does not show that this was done: the measurements here read its
-public definitions, and before step A builds a tool on them Johan says whether Lionel Panhaleux is asked or told. And the credit
-(zero-vtes is MIT licensed) belongs with the licence question he is weighing, in the root README, which is main's file: a handoff
-when he has decided. `specs/spec-cardfx-sweep-sources-2026-09-25.md` stays the source mapping for KRCG, vtes-rulings and vtes-skill;
-this section adds the fourth source.
+The maintainer and the credit. The clean-up spec allowed zero-vtes as a third check "only after asking its maintainer"
+(`specs/spec-cleanup-2026-10-20.md`, T3), and the repository does not show that this was done. Johan, 19 Nov: "Vi kan släppa nog
+villkoret för Lionel kanske eftersom han har MIT-licens (dock ska vi ju ge honom credit såklart), men jag ska nog ändå skriva till
+honom på Discord o ta upp att jag ska lägga till licens också". So the condition is dropped (D-125), zero-vtes is credited, and
+Johan writes to Lionel Panhaleux all the same. The credit goes in the root README with the licence Johan adds; that README is
+main's file, so it travels as a handoff with the licence. `specs/spec-cardfx-sweep-sources-2026-09-25.md` stays the source mapping
+for KRCG, vtes-rulings and vtes-skill; this section adds the fourth source.
 
 ## 6. What every round reports
 - **the starter**: playable copies of 77;
@@ -182,7 +183,7 @@ cards in the sim.
 4. **B before C.** The pilot is small and proves the tools before the harvest leans on them.
 
 Open, not in D-125 (RULINGS O-45): the finished decks' 41 entries read again in step A and their decks first in the harvest
-(§4.2); zero-vtes's maintainer, on whom step A's zero-vtes parts wait, and its credit (§5).
+(§4.2).
 
 ## 8. What stays and what stops
 Stays: the gates, the egress review, the graded readings, registered predictions, D-104's release rule (a deck is released only
@@ -195,7 +196,7 @@ Stops: the library's waves by class, ranked by copies in the V5 decks; a whole-c
 The standing pages stood at 172,997 of 173,000 and RULINGS at 64,908 of 65,000. Cut as history: D-98's list of wave 1's cards,
 D-102's list of wave 2's (their specs keep both) and the BOARD line's list of the waves done. D-125, O-45 and the new BOARD line
 still need room, so by D-101: RULINGS 65 → 66 KB and the standing pages 173 → 174 KB, the reason in `tools/doc-budget.sh`. After
-the round: RULINGS 65,773, the standing pages 173,968, the bootstrap 49,385 of 50,000. A real cut of history is step A's
+the round: RULINGS 65,804, the standing pages 173,987, the bootstrap 49,373 of 50,000. A real cut of history is step A's
 (§4.1, "the docs").
 
 ## 10. Unsure
@@ -204,7 +205,7 @@ the round: RULINGS 65,773, the standing pages 173,968, the bootstrap 49,385 of 5
 - A consumer written for one card may need work before it serves the others. The harvest finds that out key by key.
 - 73 of the 77 remaining cards and 78 of the 81 single-key cards could be read from their definitions; the rest are not counted.
 - The ledger counts the six misreads as playable (appendix A). The pilot's deck holds one of them.
-- Whether zero-vtes's maintainer has been asked (§5). zero-vtes also moves fast: the review sheet pins the commit it read.
+- zero-vtes moves fast: the review sheet pins the commit it read.
 - Two chats work in `bot/`. Rounds stay one at a time.
 
 ## Appendix A — what each starter still lacks (cards, v0.6.234)
