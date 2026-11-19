@@ -103,7 +103,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <li><a href="#setup">Setting up a table</a></li>
   <li><a href="#play">How a bot plays</a></li>
   <li><a href="#controls">Controls</a></li>
-  <li class="ver">bot v0.6.235 · client v2.6.177</li>
+  <li class="ver">bot v0.6.235 · client v2.6.179</li>
 </ul></nav>
 
 <header class="hero">
@@ -372,12 +372,12 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <p>Silence is never fatal: a bot's own question defaults to “no block” after its clock, and the <a href="#controls-panel">Bot Activity</a> panel lets you close any window early. <em>How long</em> that clock is, is the table's choice — see <a href="#tempo">the tempo</a> below.</p>
 
   <h3 id="tempo">The tempo — how long the bots wait for you</h3>
-  <p>Every wait a bot makes on a human — the block question, the reaction question, its pool question, its vote poll, each of the combat steps, and its wait for your move after it blocks you — runs on <strong>one tempo</strong> the table sets with the gear on the 🤖 badge (client v2.6.139+; any seated player may change it, and the log says so: <em>“Anna set bot tempo: Adaptive, 3 s.”</em>). A change applies to every bot at the table at once, mid-wait included. Every table with bots starts at <strong>Standard, 3 s</strong>. Each clock starts when its question appears in the chat, so the number in the question is the time you have. (A bot that never hears a tempo — an older client — waits as bots always did: 20 s for a block, up to 60 s for a combat step. A terminal-launched table can set one with the launcher's <code>--tempo standard:3</code>.)</p>
+  <p>Every wait a bot makes on a human — the block question, the reaction question, its pool question, its vote poll, each of the combat steps, and its wait for your move after it blocks you — runs on <strong>one tempo</strong> the table sets with the gear on the 🤖 badge (client v2.6.139+; any seated player may change it, and the log says so: <em>“Anna set bot tempo: Adaptive, 3 s.”</em>). A change applies to every bot at the table at once, mid-wait included. Every table with bots starts <strong>Turn-based</strong> (client v2.6.179+; before it, Standard, 3 s): no clock, the bots wait for your answer. Switch to Standard or Adaptive for a clock; the slider starts at 3 s. Each clock starts when its question appears in the chat, so the number in the question is the time you have. (A bot that never hears a tempo — an older client — waits as bots always did: 20 s for a block, up to 60 s for a combat step. A terminal-launched table can set one with the launcher's <code>--tempo standard:3</code>.)</p>
   <div class="wrap"><table>
     <tr><th>Tempo</th><th>What the bot does</th></tr>
+    <tr><td><strong>Turn-based</strong> (the start)</td><td>No clock. The question says <em>“(no clock — I wait for you)”</em> and the bot stands still until you answer — a quick phrase, a line, or the <span class="menu">▶</span> beside the 🤖, which in this mode means <em>“give the bot the word”</em> (it works in the tab that holds the bots: the host's online, the shared screen offline). Safety net: a reminder in chat after two minutes, and after four the wait resolves as a pass, so an abandoned table never hangs. A Hold on stops both; the hold shows on every seat's badge and anyone can release it.</td></tr>
     <tr><td><strong>Standard</strong></td><td>The slider (1–8 s, default 3 s) is the clock for every question; in combat the maneuver, strike and press steps get twice it, the “Anything before …?” steps once. The damage step asks nothing — it is your moment to play a prevention card — and lasts one slider (❗ Hold on stops it while you look); when the bot's strike dealt your vampire nothing (you dodged, it stole blood, fists at long range) there is nothing to prevent and it goes straight on, in every tempo. Your activity restarts the clock, and Pass / No / a card line still end a wait at once.</td></tr>
     <tr><td><strong>Adaptive</strong></td><td>The slider is the ceiling. The bot measures how fast you actually answer (a running median over your last answers) and waits about one and a half times that — never under 0.8 s, never over the ceiling. It also <em>skips</em> a question you cannot act on: no block question while you have no minion that could block (none up, or every one locked with an empty hand), no “anything before …?” in combat with an empty hand. Your strike and your press are always asked — a press is a decision, not a capability.</td></tr>
-    <tr><td><strong>Turn-based</strong></td><td>No clock. The question says <em>“(no clock — I wait for you)”</em> and the bot stands still until you answer — a quick phrase, a line, or the <span class="menu">▶</span> beside the 🤖, which in this mode means <em>“give the bot the word”</em> (it works in the tab that holds the bots: the host's online, the shared screen offline). Safety net: a reminder in chat after two minutes, and after four the wait resolves as a pass, so an abandoned table never hangs. A Hold on stops both; the hold shows on every seat's badge and anyone can release it.</td></tr>
   </table></div>
   <p>Bots waiting on <em>each other</em> keep their own short windows in every tempo — the tempo governs only waits on humans. Each wait is written to the bot's log as a <code>wait</code> row (what, which tempo, how long, how it ended), so a session can be measured with <code>ana-wait.py</code>.</p>
 
@@ -455,7 +455,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <p>Drag a card from your hand onto the bot's board — onto one of its vampires for an attachment — exactly as you would for a human. Fame and Pentex Subversion dropped on a bot's vampire <em>arm</em>: the bot tracks the Fame's torpor cost and knows the Pentexed vampire cannot block. Works online and offline.</p>
 
   <h3 id="controls-panel">The Bot Activity panel</h3>
-  <p>The <span class="menu">🤖</span> badge in the top-right corner (a number beside it counts bots waiting on someone) opens a panel with one row per bot: its name, <em>what it is waiting for</em> in table language (“block? (Anna)”, “hold: Anna”, “pool question (how much?)”, “Anna's turn”, “thinking”), a countdown where one honestly exists, and a step button.</p>
+  <p>The <span class="menu">🤖</span> badge in the top-right corner (a number beside it counts bots waiting on someone; while the camera visits a seat it stands just below ⌂ Home) opens a panel with one row per bot: its name, <em>what it is waiting for</em> in table language (“block? (Anna)”, “hold: Anna”, “pool question (how much?)”, “Anna's turn”, “thinking”), a countdown where one honestly exists, and a step button.</p>
   <ul>
     <li><span class="menu">▶ Release hold</span> — releases the bot on that row only (each bot keeps its own hold), written to the log as done from the table controls. To release every bot at once, say <span class="phrase">It resolves</span>.</li>
     <li><span class="menu">▶ Close window</span> — closes the bot's open block/reaction window exactly as its clock would have: nobody answered, so a contested window still declares its verdict from the counter.</li>
@@ -471,7 +471,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.235</b>, client <b>v2.6.177</b> / server srv-2.6.51, cardfx 213 curated / 1,715 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 19 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.235</b>, client <b>v2.6.179</b> / server srv-2.6.51, cardfx 213 curated / 1,715 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 20 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 
 <script>
