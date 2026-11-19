@@ -2566,7 +2566,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hb-setup">Setting up a table</a></li>
   <li><a href="#hb-play">How a bot plays</a></li>
   <li><a href="#hb-controls">Controls</a></li>
-  <li class="ver">bot v0.6.229 · client v2.6.174</li>
+  <li class="ver">bot v0.6.234 · client v2.6.175</li>
 </ul></nav>
 
 <header class="hero">
@@ -2708,7 +2708,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   </details>
   <details>
     <summary>Master <span class="sub">— one master a turn, trifles counted</span></summary>
-    <div><p>It plays at most one master card per master phase (plus a trifle's extra action, plus anything a Parthenon-class card grants), paying pool up front and writing the payment to the log so it can be audited. Persistent masters attach to a vampire or go on the table; one-shots resolve straight to the ash heap. A choice that lasts shows as a custom token on its own cards (hover the chip): its Toreador Grand Ball names the pair, and the two Toreador carry <em>Grand Ball: non-bleed actions unblockable</em> and <em>Grand Ball: does not unlock</em>. Fame is placed on the vampire it intends to rush, and so is Haven Uncovered — only when one of its ready vampires has a rush target that turn, otherwise it keeps the card; Guardian Angel goes on its sturdiest ready vampire; Pentex Subversion and Misdirection pick the most useful unlocked target on its prey's board. It plays a master only while it controls a <strong>ready</strong> vampire that meets the card's requirements — the clan symbol counts, so Ventrue Headquarters waits for a ready Ventrue — and never plays an out-of-turn master in its own master phase: Archon Investigation is held for a bleed of 4 or more at it, played after it declines to block (3 pool; the bleeding minion is burned and the bleed does not land). Locations that lock for stealth or intercept (Backways, Market Square, Channel 10 …) are locked only when a block needs answering; Creepshow Casino at the announce of a recruit, equip or political action. A master that is not hand-curated is played with a note: <em>“(uncurated — adjust if needed)”</em> — the bot may not know what that card does.</p></div>
+    <div><p>It plays at most one master card per master phase (plus a trifle's extra action, plus anything a Parthenon-class card grants), paying pool up front and writing the payment to the log so it can be audited. Each master <strong>lands first</strong>: its clone and <em>“Name is playing Fame — on You's Colette.”</em>, then a beat before it is paid and resolved. That beat is your window for <em>Sudden Reversal</em>: play it then (say <span class="phrase">Hold on</span> first if you need time) and the bot puts its master in its ash heap, unpaid; a Sudden Reversal after the master has resolved gets <em>“too late”</em> in chat — take it back. When two players cancel in the same beat, the first after the bot to its left wins; the other is told and takes its card back. Persistent masters attach to a vampire or go on the table; one-shots resolve straight to the ash heap. A choice that lasts shows as a custom token on its own cards (hover the chip): its Toreador Grand Ball names the pair, and the two Toreador carry <em>Grand Ball: non-bleed actions unblockable</em> and <em>Grand Ball: does not unlock</em>. Fame is placed on the vampire it intends to rush, and so is Haven Uncovered — only when one of its ready vampires has a rush target that turn, otherwise it keeps the card; Guardian Angel goes on its sturdiest ready vampire; Pentex Subversion and Misdirection pick the most useful unlocked target on its prey's board. It plays a master only while it controls a <strong>ready</strong> vampire that meets the card's requirements — the clan symbol counts, so Ventrue Headquarters waits for a ready Ventrue — and never plays an out-of-turn master in its own master phase: Archon Investigation is held for a bleed of 4 or more at it, played after it declines to block (3 pool; the bleeding minion is burned and the bleed does not land). Locations that lock for stealth or intercept (Backways, Market Square, Channel 10 …) are locked only when a block needs answering; Creepshow Casino at the announce of a recruit, equip or political action. A master that is not hand-curated is played with a note: <em>“(uncurated — adjust if needed)”</em> — the bot may not know what that card does. A master that stays in play (Anarch Revolt, The Rack, The Coven, Carver’s Meat Packing and Storage …) is played when what it brings over the rest of the game beats its cost, and held when it would cost the bot more than it gives. When such a card bills <em>you</em> (Tension in the Ranks, Anarch Revolt, Privileged Position) the bot says so in chat — pay it by hand; when a bot steals your The Rack or Powerbase: Los Angeles it asks you to hand the card to its board.</p></div>
   </details>
   <details>
     <summary>Minion <span class="sub">— actions, one bleed and one political action per vampire</span></summary>
@@ -2745,6 +2745,15 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
       <span class="bot"><b>Name:</b> Will this action cause me to lose pool? (Yes / No)</span><br>
       <span class="bot"><b>Name:</b> How much?</span>
       <p>Answer with the quick phrases <span class="phrase">Yes</span> / <span class="phrase">No</span> or type <code>yes</code>, <code>no</code>, then a number. Silence within 20 s counts as “no”; a “yes” with no number counts as 1 pool. The answer lives only for that action and is applied when you say <span class="phrase">It resolves</span>. A <span class="menu">Political action</span> from the menu opens this question by itself, no prompt needed.</p>
+    </div>
+  </details>
+  <details>
+    <summary>Cards that answer yours <span class="sub">— Sudden Reversal, Meditative Grove, Yawp Court, Week of Nightmares</span></summary>
+    <div>
+      <p><strong>Sudden Reversal.</strong> A bot may cancel a master you play (out of turn, once before its next master phase): <em>“Name plays Sudden Reversal — cancels You's Fame (its cost is not paid).”</em> and in chat <span class="bot"><b>Name:</b> You: your Fame is cancelled by my Sudden Reversal — put it in your ash heap; its cost is not paid.</span> Undo the card by hand. It reads your master from its clone, so play masters from your hand onto the table.</p>
+      <p><strong>Meditative Grove.</strong> A bot with the Grove locks it to cancel a frenzy card played on its Salubri (Deep Song's rush, Dam the Heart's River in your combat …): the log line and a chat line say so; the card's cost is still paid, take its effect back. The other way round, a bot's Deep Song [ANI] rush is a frenzy card played on your vampire: if you can cancel it (your Grove, an Abombwe reflex), type <code>cancel</code> while it asks “Block?”.</p>
+      <p><strong>Yawp Court.</strong> When a bot's political action succeeds and a seat shows an unlocked Yawp Court, the bot writes <em>“Colette's political action succeeds — the referendum follows.”</em> and waits a beat before the votes; a bot that owns the card may send a Sabbat vampire into combat with the acting vampire there (if that one is still ready afterwards, the Sabbat takes 2 damage and the referendum goes on). Your own Yawp Court, and a bot's against your political action, are not read yet: settle them by hand in chat.</p>
+      <p><strong>Week of Nightmares.</strong> The bots move nightmare counters onto Ravnos at their unlock and tell you in chat when one lands on yours (put it on by hand); when the card runs out, each Ravnos burns 1 blood for each counter on it or is burned.</p>
     </div>
   </details>
   <details>
@@ -2843,6 +2852,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <tr><td><code>vote 2</code></td><td>Political pool damage that did not reach the bot through the counters</td><td>As above, with “vote” — <code>@Name vote 2</code> to aim it.</td></tr>
     <tr><td><code>block</code> · <code>no</code></td><td>While the bot is asking “Block?”</td><td>Typed forms of <span class="phrase">Block!</span> and <span class="phrase">No block</span> (<code>nej</code>, <code>through</code> and <code>pass</code> also count as no).</td></tr>
     <tr><td><code>2</code> · <code>+1</code></td><td>While you are blocking the bot's action</td><td>A bare number is your <em>total</em> intercept right now (Sport Bike + Bowl of Convergence = <code>2</code>); <code>+N</code> adds to what is already on the counter. The bot books it on the shared counter for you — “Anna has 2 intercept (booked on the counter).” — and judges at once. Only from the blocker (or <code>@Name 2</code>); outside a contest a bare number means nothing.</td></tr>
+    <tr><td><code>cancel</code></td><td>While the bot asks “Block?” for its Deep Song [ANI] rush at your vampire</td><td>You cancel the frenzy card as it is played (Meditative Grove for a Salubri, an Abombwe reflex): the card goes to the bot's ash heap and its vampire may act again. Only the rushed vampire's owner.</td></tr>
     <tr><td><code>rush</code> · <code>rush Colette</code></td><td>After you played a rush card with the bot's vampire as Target</td><td>The bot resolves your rush: block window if it can block, else the named vampire locks and fights. <code>rush &lt;name&gt;</code> names the vampire when the aim did not reach it; <code>@Name rush …</code> aims at one bot. See <a href="#hb-play">Rushing a bot's vampire</a>.</td></tr>
     <tr><td><code>yes</code> · <code>no</code> · <code>4</code></td><td>While the bot's pool question is open</td><td>Typed answers to “Will this action cause me to lose pool?” and “How much?” (<code>ja</code>/<code>nej</code>, <code>y</code>/<code>n</code> work too).</td></tr>
     <tr><td><code>hold on</code></td><td>Any time</td><td>Typed <span class="phrase">❗ Hold on…</span>.</td></tr>
@@ -2924,7 +2934,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.229</b>, client <b>v2.6.174</b> / server srv-2.6.50, cardfx 190 curated / 1,708 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 15 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.234</b>, client <b>v2.6.175</b> / server srv-2.6.51, cardfx 213 curated / 1,715 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 18 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 <!-- @@/HELP:bots -->
 </template>
@@ -3284,7 +3294,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.175';   // v2.6.175 (15 Nov 2026, THE AIM LETS GO -- purge the client AND restart the server: srv-2.6.51 ships with it, no new verb or field; bot v0.6.229 beside, purge /elysium-bot.js and /elysium-cardfx.json): consumes bot v0.6.219-229 (the bot project's ten handoffs of 12-14 Nov; v0.6.229 sent none). (1) Help > Bots embeds bot v0.6.229's guide; Toreador, the fifth V5 starter, carries the label the other four have, and a known deck the LOADED bot lacks is not offered (an older bot file beside the client); the registry test reads the bot's registry instead of a pinned list, and the embedded-deck-list test skips the embedded Help pages (their deck table names the deck with its set and year). (2) Every aim is per-action (bot v0.6.225's ask; Johan, 15 Nov): a target that has ridden one of the player's lines clears when that action resolves, as a pool aim has since v2.6.23 -- the Toreador Grand Ball's pair rode the next hunt and bleed; an aim no line has carried stays, and the Target button's tooltip says 'your next action'. One used-flag for every aim, state.targetUsed, per seat (serializeGame / restoreGame, snapshot / restoreSnap); v2.6.23's _poolTargetUsed is gone. (3) A bleed line carries a pool aim only (bleedTargetSuffix): with a card in the suffix every bot read the bleed as aimed at nobody -- the prey opened no block window and lost no pool. (4) The game is over when every other seat is ousted (bot v0.6.221's ask): passBlockedWhy refuses the winner's pass with a reason, online and at a hotseat, where the sweep handed the winner a new turn (gameOverFor; a vacant seat or a table of one plays on). PROTOCOL sections 7, 12 and 12.2 and the canary v1.3.0 (section 8) record it all.
+const VERSION='2.6.176';   // v2.6.176 (19 Nov 2026, THE CARD THE BOTS SEE, pure client -- purge; srv-2.6.51 unchanged, no wire change; bot v0.6.234 beside, purge /elysium-bot.js and /elysium-cardfx.json): consumes bot v0.6.230-234 (the bot project's five handoffs of 17-18 Nov: V5 waves 5a to 6b). (1) Help > Bots embeds bot v0.6.234's guide (the master phase's window, 'Cards that answer yours'). (2) At a hotseat the bots see the cards a human plays: the bridge relays the human's play / lock / unlock / flip / rise clone to every bot seat in the server's shape (hotBridge.fxIn, the server's fx handler field for field; cardFx hands it over where it sends fx online, and the board follows at once, as online). The bridge passed a bot's clone on and never a human's, so offline no bot saw a human's card unless a line named it -- bot v0.6.232's Sudden Reversal against a human's master, a human's Sudden Reversal in a bot's window and Meditative Grove against a human's frenzy card could not fire there. (3) A card aimed at another seat's vampire names it as a crypt card in its clone (rtTargetInfo): the play clone and a card played onto the target said 'lib' for every remote card, so no bot read a master or a frenzy card as aimed at its vampire, online or offline, and a face-down vampire drew a library back. PROTOCOL sections 7, 8, 12 and 12.2 and the canary v1.4.0 (section 9) record bot v0.6.230-234's twenty lines; the canary's control on a card in a bleed's suffix is gone (bot v0.6.230's ask: the reading is theirs to widen).
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -9948,6 +9958,10 @@ function hotOpenHandToBots(toSeat, revoke){                  // a human's standi
   if(toSeat==='all') hotFanOut(payload, seat);
   else if(hotBotSeat(toSeat|0)){ try{ hotBridge.toBot(toSeat|0, payload); }catch(_e){} }
 }
+function hotFxSend(m){                                       // v2.6.176: the human's card clone at a hotseat (srv fx). cardFx hands it here where it sends it to the server online; the bridge relays it to every bot seat in the server's shape (hotBridge.fxIn). The human half, as hotTallySend
+  const seat=mySeat()||0; if(!seat || !hotBotsSeated()) return;      // no seat, no sender (hotPushBoardNow's rule)
+  try{ hotBridge.fxIn((net.you||state.playerName||'You'), seat, m); }catch(_e){}
+}
 const MP_QUEUE_VERBS=new Set(['chat']);   // cli-2.6.165 (C-15): speech keeps its meaning when it lands a few seconds late; a move does not (it is refused while reconnecting, see mpOfflineRefuse)
 function mpSend(o){
   if(net.ws && net.ws.readyState===1){ try{ net.ws.send(JSON.stringify(o)); }catch(err){} return true; }
@@ -12364,6 +12378,23 @@ const hotBridge = {
     this.botSeats().forEach(k => this.toBot(k, out));
     return out;
   },
+  fxIn(who, seatNo, m){      // cli-2.6.176 = srv GAME_HANDLERS.fx, field for field: a HUMAN's play / lock / unlock / flip / rise clone, in the server's relay shape, to every bot seat but the sender's. The bridge passed a bot's clone on and never a human's, so at a hotseat no bot saw a card a human played (the bots' second feed of cards shown since v0.6.186; bot v0.6.232 reads a human's master, Sudden Reversal and frenzy card from it). Self-contained (no client function behind it). Returns the relay, or null when the server would drop it
+    m = m || {};
+    const kind = (m.kind === 'lock' || m.kind === 'unlock' || m.kind === 'play' || m.kind === 'flip' || m.kind === 'rise') ? m.kind : null;
+    if (!kind) return null;
+    const cc = s => String(s || '').replace(/[\u0000-\u001f\u007f<>=]/g, '').trim().slice(0, 64);   // srv cleanCard (MAX_NAME 64)
+    const cn = s => String(s || '').replace(/[\u0000-\u001f\u007f<>"]/g, '').trim().slice(0, 24);   // srv cleanName
+    const fxc = o => (!o || typeof o !== 'object') ? null : { name: o.faceDown ? '' : cc(o.name), kind: o.kind === 'crypt' ? 'crypt' : 'lib', faceDown: !!o.faceDown };   // srv fxCard: public fields only, a face-down card never carries a name
+    const card = fxc(m.card);
+    if (!card) return null;
+    if (kind === 'flip' && m.reveal === false && m.card && typeof m.card === 'object') card.name = cc(m.card.name);   // the conceal flip: the face it turns away from was public one frame earlier
+    const play = kind === 'play';
+    const onto = (play && m.onto && typeof m.onto === 'object' && (m.onto.seat | 0) >= 1 && (m.onto.seat | 0) <= 8) ? { seat: m.onto.seat | 0, who: cn(String(m.onto.who || '')).slice(0, 40) } : null;
+    const out = { t: 'fx', who: String(who || ''), seat: seatNo | 0, kind, card, target: play ? fxc(m.target) : null, actor: play ? fxc(m.actor) : null, onto,
+                  reveal: (m.reveal === true) ? true : (m.reveal === false ? false : undefined), toName: cn(String(m.toName || '')).slice(0, 40) || undefined, verb: cc(m.verb).slice(0, 40) };
+    this.botSeats().forEach(k => { if (k !== (seatNo | 0)) this.toBot(k, out); });
+    return out;
+  },
   dialFor(seat, name){       // wsConnect's exact contract: (url, cb{open,msg,close}) -> {send(obj), close()}
     const B = this;
     return (url, cb) => {
@@ -13399,7 +13430,7 @@ function qrGiveToTarget(c){                                 // play a hand card 
                   counters:[...c.counters], owner:c.owner||'' } });
   const _rn=(net.roster.find(p=>p.seat===rt.seat)||{}).name||('Seat '+rt.seat);
   const _ga=activeAnchor();
-  cardFx({name:c.name, kind:c.kind, faceDown:false}, 'play', { actor:_ga?fxCardInfo(_ga):null, target: rt.cid?{name:rt.name||'',kind:'lib',faceDown:!!rt.faceDown}:null, onto:{seat:rt.seat, who:_rn} });
+  cardFx({name:c.name, kind:c.kind, faceDown:false}, 'play', { actor:_ga?fxCardInfo(_ga):null, target: rt.cid?rtTargetInfo(rt):null, onto:{seat:rt.seat, who:_rn} });
   return true;
 }
 function qrTap(c){                                          // single = select (ready cards) · double = hand->play (or give-to-target) / ready->lock
@@ -16331,9 +16362,13 @@ function applyFxTiming(){                                    // regenerate the c
 }
 applyFxTiming();
 let animMode = 'on';                                                        // 'on' | 'mine' (hide my own) | 'all' (hide all) — local-only, synced from conv.anim
+function rtTargetInfo(rt){                                 // v2.6.176: a cross-board aim as a clone's target, with the aimed card's OWN kind read from that seat's public board. Both callers said 'lib' for every remote card, so the play clone of a card aimed at another seat's vampire named a library card as its target (bot v0.6.232 reads a master or a frenzy card as aimed at its vampire only from target.kind 'crypt'), and a face-down vampire drew a library back
+  const rc=(rt.cid && rt.cid!=='pool') ? ((((net.boards||{})[rt.seat]||{}).pub||{}).cards||[]).find(x=>x && x.id===rt.cid) : null;
+  return { name: rt.name || '', kind: (rc && rc.kind==='crypt') ? 'crypt' : 'lib', faceDown: !!rt.faceDown };
+}
 function curTargetCard(c){                                // current target (local minion OR a cross-board minion via net.rtarget), for the play-FX arrow
   if(state.target && state.target!==(c&&c.id)){ const t=state.cards.get(state.target); if(t) return t; }
-  if(net.rtarget) return { name: net.rtarget.name || '', kind:'lib', faceDown: !!net.rtarget.faceDown };
+  if(net.rtarget) return rtTargetInfo(net.rtarget);
   return null;
 }
 function fxCardInfo(c){                                   // minimal public card info for the broadcast (a face-down card never leaks its name; EXCEPTION for conceal-flips at the mpSend site -- that face was public one frame earlier, v2.5.74)
@@ -16346,8 +16381,9 @@ function cardFx(c, kind, opts){
   opts = opts || {};
   if(kind==='play' || (kind==='lock' && opts.verb && !/^by /.test(String(opts.verb)))) dfxCancel();   // v2.6.116 self-review: the ONE non-action verb is the controller relay's 'by <name>' (8757) -- another player locking your card is not a reaction either   // v2.6.115: a card played, or a minion announcing an action, ends the Reaction window -- ABOVE the animMode returns below, so it holds for a player who renders no animations, and it runs for a remote fx exactly as for my own
   const remote = !!opts.remote;
-  if(!remote && inRoom() && kind!=='handreveal'){          // ALWAYS broadcast — everyone decides what they see in their own settings (handreveal is routed privately via t:'revealHand')
-    mpSend({ t:'fx', kind, card: (kind==='flip' && opts.reveal===false) ? { name:String((c&&c.name)||''), kind:((c&&c.kind)==='crypt'?'crypt':'lib'), faceDown:true } : fxCardInfo(c), target: (kind==='play' && opts.target) ? fxCardInfo(opts.target) : null, actor: (kind==='play' && opts.actor) ? fxCardInfo(opts.actor) : null, onto: (kind==='play' && opts.onto) ? opts.onto : null, verb: opts.verb || '', reveal: opts.reveal, toName: opts.toName || '' });
+  if(!remote && kind!=='handreveal' && (inRoom() || hotBotsSeated())){          // ALWAYS broadcast — everyone decides what they see in their own settings (handreveal is routed privately via t:'revealHand')
+    const fxm={ t:'fx', kind, card: (kind==='flip' && opts.reveal===false) ? { name:String((c&&c.name)||''), kind:((c&&c.kind)==='crypt'?'crypt':'lib'), faceDown:true } : fxCardInfo(c), target: (kind==='play' && opts.target) ? fxCardInfo(opts.target) : null, actor: (kind==='play' && opts.actor) ? fxCardInfo(opts.actor) : null, onto: (kind==='play' && opts.onto) ? opts.onto : null, verb: opts.verb || '', reveal: opts.reveal, toName: opts.toName || '' };
+    if(inRoom()) mpSend(fxm); else hotFxSend(fxm);   // v2.6.176: at a hotseat the bridge relays it to the bot seats, as the server does
     pushNow();   // v2.5.73: the clone and the board it announces travel back-to-back — the fx verb used to arrive ~600ms (schedulePush debounce) before the card itself, so opponents watched an animation for a card that wasn't there yet. Debounce untouched (it coalesces counter bursts); a discrete play/flip/rise is exactly what pushNow() is for.
   }
   if(animMode==='all') return;                             // "All hidden": render no animations locally (others still see theirs)

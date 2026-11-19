@@ -1,3 +1,76 @@
+## [KORTET BOTTARNA SER] (19 november 2026, klient v2.6.176 / srv-2.6.51 oförändrad)
+
+Johan, onsdag kväll: "Vi har genomfört några PR till från bottsidan, vill du kolla om det ligger någon öppen handover för
+dig eller om det finns öppna punkter som klientsidan behöver hantera i övrigt?". Fem handoffs låg obesvarade, v0.6.230 till
+v0.6.234 (17–18 november, PR #77–#81): V5-vågorna 5a, 5b, 6a och 6b samt O-44. Jag körde våra grindar mot rotens bunt
+först: klientsviten 371/1, exakt deras mätning (guidens inbäddning), kanariefågeln 171/0, resten grönt. Sedan läste jag
+varje fråga mot koden och föreslog en konsumtionsrunda. Torsdag lunch: "Tack det låter väl bra tycker jag!" Jag tog det
+som kör och sa att jag gjorde det.
+
+**Frågan hade ett annat svar än den ställdes för.** v0.6.232 läser en människas kort ur spelklonen (`fx`, typ `play`):
+en människas master (för bottens Sudden Reversal), en människas Sudden Reversal i bottens fönster, och ett frenzy-kort mot
+bottens Salubri (Meditative Grove). De bad oss säga till om klonen saknas i någon spelväg. Online saknas den inte. Menyns
+Play, dubbelklick, drag till bordet, drag på ett kort, spel på den agerande vampyren och spel på en annan plats bräde
+skickar alla klonen; bara ett drag från handen rakt till askhögen gör det inte, och det är ett kast. Men vid hotseat nådde
+en människas klon aldrig en bot. `cardFx` skickade den bara till en server, och bryggan reläade bottarnas kloner
+(v2.6.95) men aldrig människans. En probe visade det på en minut: loggraden kom fram till bottplatsen, klonen gjorde det
+inte. Ingen av deras tre läsare kunde alltså fungera offline, där de flesta spelar mot bottar.
+
+**Bygget.** `hotBridge.fxIn(who, seat, m)` är serverns `fx` fält för fält (typlistan, `fxCard`, dölj-vändningen, `onto`,
+rensningen och kapningarna) och lämnar serverns form till varje bottplats. `cardFx` bygger ett meddelande och skickar det
+till servern eller till bryggan (`hotFxSend`), och brädet följer direkt i båda fallen (`pushNow`). Vid hotseat får en bot
+nu klonen, brädet och spelraden i den ordningen, som online. Förut kom raden först och brädet upp till 600 ms senare.
+Metoden ligger i literalen som bottsidan lyfter och har ingen klientfunktion bakom sig; lyfttestet från v2.6.159 är grönt
+med den.
+
+**Det andra felet hittade proben.** Innan jag byggde matade jag den riktiga botten med klonen så som servern skulle ha
+skickat den. Med `target.kind: 'crypt'` spelade den Sudden Reversal mot en Fame riktad mot dess vampyr. Med `'lib'` avstod
+den. Klienten har alltid skrivit `'lib'` för varje mål på en annan plats bräde: siktet bär ingen korttyp, och två ställen
+(`curTargetCard`, `qrGiveToTarget`) skrev en fast. Bottens läsning "riktat mot min minion" har därför aldrig kunnat slå
+till mot en riktig klient, varken online eller offline. `rtTargetInfo` läser nu korttypen från den platsens publika bräde.
+En vampyr med baksidan upp ritas också med kryptans baksida i klonen i stället för bibliotekets.
+
+**Kontrollen som stod i vägen.** Kanariefågelns avsnitt 8 hade en kontroll: "med ett KORT i suffixet tar bytesbotten inte
+bleeden". Bottsidan ville läsa en sådan rad som bytets bleed, eftersom en cachad v2.6.174 fortfarande skriver den. De
+byggde det och föll på vår kontroll (170/1). Den är borta nu (v1.4.0): filen skriver ut vilken läsning botten bredvid har
+och räknar inget. Samma assert låg i vårt eget LIVE-test från v2.6.175 och är borta där också. Ett test hos oss som spikar
+vad deras bot INTE läser hindrar dem från att vidga läsningen. Avsnitt 9 har därför bara positiva kontroller.
+
+**§12 och kanariefågeln.** §12 har ett eget block för deras tjugo rader, var och en med sin `L12`-nyckel, och säger rakt
+ut var bottarna läser en människas kort: ur klonen, inte ur en rad. §7 listar spelvägarna, §8 säger att bottarna läser
+klonen, §12.2 har bryggans relä. Avsnitt 9 har 61 kontroller: 31 för dokumentationen, 23 parserläsningar, 5 genom en
+levande botts `_onLog` (bytet betalar Privileged Position; ägarens Tension in the Ranks och ett kort som en omröstning
+bränner går till askhögen; en gisslan släpps, och bara den; en annan botts avbrott av en människas master noteras) och 2
+mot klientkällan.
+
+**I webbläsaren** (headless Chromium, file://, den riktiga Play offline-dialogen, en människa och en riktig
+v0.6.234-bot som fick ett kort på handen och en vampyr i spel genom sin egen `_riseFromUnc`). Människan spelar Fame med
+bottens vampyr som mål: på skärmen står spelraden, sedan `B2 plays Sudden Reversal — cancels You's Fame (its cost is not
+paid).`, sedan bottens chattrad. Åt andra hållet skriver botten `B2 is playing Vessel.`, människan svarar med Sudden
+Reversal från handen, och bottens konsol säger `master-play: Vessel is cancelled by You’s Sudden Reversal (nothing paid)`.
+Samma två skript på v2.6.175: ingen klon på bryggan, ingen rad, och botten betalar och spelar sin Vessel. Efter passet
+spelar botten sin tur och turen är tillbaka hos människan på 35 sekunder utan sidfel, i båda versionerna.
+
+**Hittat, inte byggt.** Dragvägens spelrad saknar `Target:` och nivåtagg; menyns Play skriver båda. Följden är vår egen:
+ett sikte som sattes före ett drag används inte av den raden, så det står kvar och rider på spelarens nästa rad.
+v2.6.175:s regel rensar bara ett använt sikte. En ändring där rör en frusen rads innehåll på en spelväg, så den är Johans
+beslut. Till bottsidan, i svaret: när en människas Sudden Reversal avbryter deras master säger ingen rad det vid bordet,
+och en människa har bara deras takt (3,1 s vid hotseat) på sig om hon inte säger Hold on.
+
+**Grindar:** klient 376/0 (v0.6.234 bredvid, inga hopp; v2.6.175 mot den nya sviten 371/5: inbäddningen och de fyra nya
+testen, tre röda på beteende och tvillingen på metoden som saknas; tolv mutanter, elva fångade och en ekvivalent),
+kanariefågeln 231/0 (mot v2.6.175:s klient och protokoll 198/33, bredvid v0.6.229 206/25 med röda rader och ingen krasch),
+dispatch 95/0, endpoint 36/0, protokoll 6/0, soak `--control` (snubbeltråden löste ut) och hela batteriet (7 bord, 92
+turer, 0 fastnade), bottsidans egen hotseat-grind i en kladdkopia av `bot/` med den nya klienten 12/0 (som med v2.6.175),
+båda inbäddningskontrollerna, B1 byte-identisk, check-versions grön.
+
+**Öppet:** bryggans kö (egen runda efter Johans kör; bottsidan har bekräftat att de föredrar den); dragvägens spelrad
+(ovan); idén om "Unlock all cards?"; punkt 5 i säkerhetsplanen väntar på Johans blick i boxens logg. Inte kört:
+elysium.cards; onlinevägen i en webbläsare (klonens korttyp gick genom en falsk socket, reläets form genom tvillingtestet
+mot den riktiga serverhanteraren); en människa mot bottar i en webbläsare med Meditative Grove, Yawp Court, Week of
+Nightmares, Shadow Cloak, One With the Land, Night Terrors eller Absolute Tyranny i spel; människans sida av fönstret
+genom den riktiga handpanelen (skriptet anropade `playFromHand`, det ett dubbelklick på ett handkort anropar).
+
 ## [SIKTET SLÄPPER] (15 november 2026, klient v2.6.175 / srv-2.6.51)
 
 Johan, strax efter midnatt: "Bottsidan har lämnat lite info i handover om du vill kika". Tio handoffs låg och väntade,

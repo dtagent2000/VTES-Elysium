@@ -1,8 +1,35 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.175 / server v2.6.51 / bot v0.6.229 tested beside the suite, last updated 15 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.176 / server v2.6.51 / bot v0.6.234 tested beside the suite, last updated 19 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**19 Nov 2026 (THE CARD THE BOTS SEE — v2.6.176, bot v0.6.230–234 consumed):**
+- **'Is it sent on every path?' has a second half: 'does it arrive on every transport?'** Their question was about the
+  client's play paths, and reading them all gave 'yes'. The gap was one layer down: the hotseat bridge passed a bot's
+  clone on and never a human's. For any message the other half reads, list the transports too (the server's relay, the
+  bridge) and probe each. The probe was twenty lines: a fake bot seat, one `log` as the control, one `cardFx`.
+- **A control in OUR tests on what THEIR bot does not read is a lock on their side.** The canary's 'a card in the suffix
+  is not taken' (and its twin in our LIVE test) made their widened reading fail our file. Pin a negative only for
+  something we emit or rely on. For their readings pin positives, and report the rest in a line that counts nothing.
+- **Probe with the shape the server would send, then vary one field.** Feeding the released bot the relay as the server
+  shapes it showed the second fault at once: `target.kind:'crypt'` gave Sudden Reversal, `'lib'` gave `sr-decline`. The
+  client had written `'lib'` for every cross-board target since the clone existed; nothing of ours read the field.
+- **A cosmetic field is contract from the day the other half reads it.** The server's own comment calls `fx` cosmetic
+  ('no state trusts it'). Since bot v0.6.186 and v0.6.232 it is how the bots see a human's cards. §8 says so now; a field
+  of that message gets the care of a frozen line.
+- **One message, two transports.** `cardFx` built the message inside the `mpSend(...)` call, so the hotseat had nothing to
+  send. Build the object once, then choose the transport: the two cannot drift.
+- **A twin compares bytes and must meet the drops.** `fxIn` against the real `GAME_HANDLERS.fx`: the same fourteen messages
+  through both, the JSON text compared, nine relays and five drops with the count asserted.
+- **A filtered scratch copy of the suite makes mutants cheap.** The suite has no filter and takes about 3.5 minutes. A
+  scratch copy beside it, with `test` / `testA` / `testB` wrapped by a name filter, ran the new tests in seconds, so twelve
+  mutants cost two minutes. Delete the copy before the commit. A mutant that survives is a finding about the code: here
+  the `cid!=='pool'` guard is clarity, not behaviour.
+- **Rig a real bot through its own functions.** In the browser the bot got a vampire in play with
+  `_riseFromUnc(unc[0], 0)` (its own rise: the board push and the clone included) and a card by name into `hand`. The
+  human's dialogs were answered by replacing `uiDialog`: Cancel for the hand reminder, OK for 'Ready to pass the turn?'.
+  The first run's pass was cancelled by my own stub, and the smoke read 'the bot never took its turn'.
 
 **15 Nov 2026 (THE AIM LETS GO — v2.6.175 / srv-2.6.51, bot v0.6.219–229 consumed):**
 - **Probe the reader before you shape the line.** The ask was 'drop a stale target after a card play'. Feeding the
