@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.51';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.52';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
