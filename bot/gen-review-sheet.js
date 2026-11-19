@@ -85,10 +85,10 @@ function topLevelItems(body){   // the comma-separated items of a `[ ... ]` body
 }
 /* an effect whose first argument is an enum variant is that variant's effect: Effect::Layer(Modifier::PreyOpenHand) is
    Layer(PreyOpenHand), not one of the 409 layers; a number stays out (AddStealth(1) and AddStealth(2) are one kind) */
-const TOK = /\b(Window|Actor|Requirement|Effect)::(\w+)(?:\(\s*\w+::(\w+))?/g;
+const TOK = /\b(Window|Actor|Requirement|Effect|Terms)::(\w+)(?:\(\s*\w+::(\w+))?/g;   // Terms: what an ability asks (The Barrens' discard is Terms::Discard, no Effect)
 function tokensOf(text, ctx, seen){   // { Window, Actor, Requirement, Effect }: the text's own, and one level of shared statics and macros
   const t = { Window: new Set(), Actor: new Set(), Requirement: new Set(), Effect: new Set() };
-  const add = x => { for (const m of x.matchAll(TOK)) t[m[1]].add(m[1] === 'Effect' && m[3] ? m[2] + '(' + m[3] + ')' : m[2]); };
+  const add = x => { for (const m of x.matchAll(TOK)){ if (m[1] === 'Terms') t.Effect.add('Terms:' + m[2]); else t[m[1]].add(m[1] === 'Effect' && m[3] ? m[2] + '(' + m[3] + ')' : m[2]); } };
   add(text);
   for (const r of new Set([...text.matchAll(/\b([A-Z][A-Z0-9_]{3,})\b/g)].map(m => m[1]))){
     if (seen.has(r) || !ctx.statics.has(r) || ctx.statics.get(r).kind === 'CardDef') continue;
@@ -261,6 +261,8 @@ function selfTest(quiet){
   eq([bd.modes[0].effects, bd.abilities.length, bd.abilities[0].effects], [['PutOnTarget'], 1, ['MoveBlood']], 'defs: an in-play ability apart from the modes');
   const z3 = parseDefs('pub static R: CardDef = CardDef { name: "Rev", modes: &[mode_of(&[], Actor::ActingMinion, &[], &[Effect::DeclareAction(ActionKind::Card), Effect::AddStealth(1), Effect::Layer(Modifier::PreyOpenHand)])], ..CARD };');
   eq(z3.defs.get('rev').effects, ['DeclareAction(Card)', 'AddStealth', 'Layer(PreyOpenHand)'], 'an enum argument names the effect, a number does not');
+  const z4 = parseDefs('pub static B: CardDef = CardDef { name: "Barrens, The", modes: &[mode_of(&[Window::MasterPhase], Actor::Methuselah, &[], &[Effect::PutInPlay])], abilities: &[ModeDef { terms: Some(Terms::Discard { n: 1, of: CardFilter::Any }), ..mode_of(&[Window::AnyImpulse], Actor::Controller, &[Requirement::CardUnlocked], &[Effect::LockSelf]) }], ..CARD };');
+  eq(z4.defs.get('the barrens').abilities[0].effects.slice().sort(), ['LockSelf', 'Terms:Discard'], 'an ability\'s terms count as what it does (The Barrens\' discard)');
   eq([cl.modes.length, cl.modes[0].effects, cl.modes[1].effects, cl.modes[1].reqs], [2, ['Stealth'], ['Stealth', 'UnlockActor'], ['Superior']], 'defs: a shared static resolved in a mode, a char literal brace skipped');
   eq([z.effUse.get('UnlockActor'), z.effUse.get('Stealth')], [2, 1], 'printed by N: definitions that use the effect');
   eq(z.defs.get('the shared').modes.length, 0, 'defs: modes by a reference no static defines are none, not a crash');
