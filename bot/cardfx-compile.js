@@ -98,7 +98,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.11.1';   // 20 Nov 2026 (the Banu Haqim pilot's review, findings D1-D3): the coarse maneuver / press / dodge / additional strike reads skip a negated clause ('the opposing minion cannot dodge ...') and an opponent's grant ('the opposing minion gets an optional press') -- they were the player's own (extractFx); 'As [x] above, but (the strike is) at +N damage' replaces an inherited handBonus (Charge of the Buffalo [SPI], Lead Fist [VIS]: 1 -> 2; libModes); the whole-mode readings read 'with an additional optional maneuver' and 'but enter combat with <target>' on a rush's 'As above' line (Nose of the Hound [spi] / [SPI]), 'Strike: hand strike, aggravated.' (Donnybrook [pro]), a discipline line's own type bracket and opening '+N stealth action.' (Steely Tenacity [qui], refused by its header), and list an 'As [x] above' line whose reference they refused. Every other entry compiles byte for byte as in v1.11.0
+const FXC_VERSION = '1.11.2';   // 20 Nov 2026 (the pilot's review of executor B2, P7): two markers -- `contract` on a library entry whose keyword is 'Contract.' / 'Unique contract.' (7 cards), `noContracts` on a crypt entry that prints 'Contracts cannot be placed on <name>.' (Iliana (G2) alone). Every other entry compiles byte for byte as in v1.11.1
+// const FXC_VERSION_1111 = '1.11.1';   // 20 Nov 2026 (the Banu Haqim pilot's review, findings D1-D3): the coarse maneuver / press / dodge / additional strike reads skip a negated clause ('the opposing minion cannot dodge ...') and an opponent's grant ('the opposing minion gets an optional press') -- they were the player's own (extractFx); 'As [x] above, but (the strike is) at +N damage' replaces an inherited handBonus (Charge of the Buffalo [SPI], Lead Fist [VIS]: 1 -> 2; libModes); the whole-mode readings read 'with an additional optional maneuver' and 'but enter combat with <target>' on a rush's 'As above' line (Nose of the Hound [spi] / [SPI]), 'Strike: hand strike, aggravated.' (Donnybrook [pro]), a discipline line's own type bracket and opening '+N stealth action.' (Steely Tenacity [qui], refused by its header), and list an 'As [x] above' line whose reference they refused. Every other entry compiles byte for byte as in v1.11.0
 // const FXC_VERSION_1110 = '1.11.0';   // 20 Nov 2026 (the Banu Haqim pilot, spec-sweep-pilot-2026-11-20.md §3.1; RULINGS D-125, D-127, D-132): THE WHOLE-MODE READINGS (wholeModes below) -- the action rush (`rush`, `rushTo`) with its grant (`maneuverGrant`, `pressGrant`, `pressDir`) replacing the misread `maneuver` / `press` on that mode, and the hand strike (`handBonus` 0 and the '+N' forms, `noPreventDisc`, `nullOppWeapons`), each only on a mode whose every sentence is read (a refused mode is listed in the report); THE BAN in extractFx ('cannot strike: combat ends' is `ceBan`, never `strikeCE` / `combatEnds`; 'cannot strike: dodge' is never `dodge`); the `animal` marker on a retainer ('Animal with N life'). Every other entry compiles byte for byte as in v1.10.0
 // const FXC_VERSION_1100 = '1.10.0';   // 20 Nov 2026 (bot v0.6.235, no bot change; spec-card-sweep §4.4, RULINGS D-127): the merge of hand entries -- a curated library entry with "merge": true is laid over the compiled entry (mergeHand); every other entry compiles byte for byte as in v1.9.12
 // const FXC_VERSION_1912 = '1.9.12';   // 19 Nov 2026 (bot v0.6.235, the finished decks' round): the condition sentences -- onlyBleed, notBleed, onlyPredatorActs, oncePerUnlock, pressDir (entry or mode) and noReplace (entry)
@@ -920,6 +921,7 @@ function libEntry(c, sink){
      one-per-vampire attachments; the master-play loop hosts+gates them via e.archetype). */
   const kwHit = w => txt.split('\n').some(l => l.split(/[.:]/).some(sg => new RegExp('^\\s*' + w + '\\s*$', 'i').test(sg)));
   if(kwHit('trifle')) e.trifle = true;
+  if(kwHit('contract') || kwHit('unique contract')) e.contract = true;   // v1.11.2 (bot v0.6.236, the pilot's review P7): the 'Contract.' keyword (Priority Contract, Contract, Dirty Contract, Hand Contract, Haqim's Law: Judgment, Shakar: the Hunt, Clandestine Contract) -- what Iliana's 'Contracts cannot be placed on Iliana' bars
   if(kwHit('archetype') || kwHit('unique archetype')) e.archetype = true;   // v1.9.8 (V5 wave 4): 'Unique archetype.' (Saulot's Healing Touch, Avenging Fist, Guiding Wisdom) -- the bare-word segment missed the three
   /* v1.9.10 (bot v0.6.232, V5 wave 5b, RULINGS D-122): FRENZY -- a 'Frenzy.' keyword segment: 'opp' by FRENZY_OPP, else 'self'.
      Meditative Grove's cancel reads it. A mode-prefixed 'Frenzy.' ('[abo] Frenzy.') is no bare segment: the mode tag below. */
@@ -1161,6 +1163,7 @@ function cryptEntry(c){
     if(TITLE_VOTES[c.title] !== undefined) e.votes = TITLE_VOTES[c.title];
   }
   if(c.banned) e.banned = c.banned;
+  if(/(?:^|[.:]\s*)Contracts cannot be placed on [^.]+\./.test(ct)) e.noContracts = true;   // v1.11.2 (bot v0.6.236, the pilot's review P7): 'Contracts cannot be placed on Iliana.' -- the one vampire of the crypt that prints it; the contract's host pick reads it
   return e;
 }
 

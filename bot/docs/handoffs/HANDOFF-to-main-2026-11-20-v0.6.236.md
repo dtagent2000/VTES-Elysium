@@ -13,6 +13,9 @@ compatible (below). Your §12 and canary would record the lines in section 1; no
   at as your play line prints it, one bracket per discipline of the mode: `(Hunter's Mark [CEL][THA])`, `(Hunter's Mark [cel][tha])`,
   `(Fleetness [CEL])`, `(Sense Death [ani])`; a card with no level has none: `(Ambush)`. The regex: `m[4]` the card (no parenthesis
   or bracket in it), `m[5]` the level (absent when none) — `m[1]`–`m[4]` read as before, so a vampire named `… (ADV)` still splits.
+  The card group refuses a crypt group suffix (`G5`, `G2 ADV`, `ANY`; the pilot's review, K6): Yawp Court's own line `ME locks Yawp
+  Court — SABBAT (G6) enters combat with NAME's VAMP (G5).` is no rush line (with the client's real names the opened regex read it as a
+  rush with the card `G5`; `L12.yawp` is still tried first, in the bot's `_onLog` and `_evClassify`).
   Terms as Haven's: a directed action the target's Methuselah may block; on through the target does NOT lock and the rusher is the
   acting minion. The card goes to the ash heap blocked or through. The stealth on the counter is the card's printed `+N stealth
   action` (Fleetness, Sense Death, Umbrous Clutch … +1; Hunter's Mark 0).
@@ -28,6 +31,11 @@ compatible (below). Your §12 and canary would record the lines in section 1; no
   `NAME combat — VAMP maneuvers to close (Biothaumaturgic Experiment).` (a card on the vampire: 'gets 1 optional maneuver each
   combat'; the card is put on the minion by B2's attach finder). A granted press to end writes the existing
   `… presses to end: the press to continue is cancelled.` (no card).
+- **A rush at a locked minion that fizzles** (the pilot's review, K5; [ANK 20210124]: Fleetness [CEL], Ambush, Nose of the Hound — the
+  target unlocked before the unblocked action resolved): the rusher writes an explanation on the log tier, `Trainbot: CARD has no
+  effect: VAMP is not locked as it resolves (no combat).` (not parsed: the rushed bot reads its own vampire at its comply); no combat.
+- **A human target of Hunter's Mark [CEL][THA]** (the pilot's review, K3) is told, on through, in a chat instruction (the tier rule;
+  One With the Land's precedent): `OWNER: Hunter's Mark [CEL][THA] — VAMP cannot strike: combat ends in the first round of this combat.`
 - **Night Terrors [OBF][PRE]'s strike** writes the existing lines: `VAMP strikes: combat ends.` then `Combat ends — Night Terrors.`
   (`L12.strikeEnds`, `L12.combatEnds`) — the blocker's free strike in the first round of the combat its block began.
 - **Blood Rage-class against a weapon** writes no new line: the struck bot's own round line says `… takes 0 (loses 0 blood, now M).`
@@ -63,7 +71,10 @@ list: it opens no window and its vampire does not fight — the rusher's Block? 
 safety nets. That is a mixed-version table only. B2's lines the same way: an older bot records no Priority Contract (its cloak
 does not see the chosen coming), and opens no block window on `… — on HOST.` or `… — employs RETAINER.` (its `L12.uEquip` takes
 `VAMP plays Biothaumaturgic Experiment [tha] —` as the vampire, which names no minion on the actor's board: no window) -- the actor's
-Block? runs its clock.
+Block? runs its clock. The contract's own rush line, `VAMP enters combat with OWNER's HOST (Priority Contract).`, is the opened line
+with a fifth card in play: a v0.6.235 bot's `L12.havenRush` knows four (Haven Uncovered, Saulot's Avenging Fist, Regent, Frontal
+Assault), so it does not match it either -- the host's bot opens no window and its host does not fight, the rusher's Block? runs its
+clock and its combat waits out its safety nets (the pilot's review, P9). A mixed-version table only, as above.
 
 ## 3. What your §12 and canary would record (a suggestion; the bot does not need it to run)
 - §12: the rush line's opened form with one example per shape: `VAMP enters combat with NAME's VAMP (Hunter's Mark [CEL][THA]).`

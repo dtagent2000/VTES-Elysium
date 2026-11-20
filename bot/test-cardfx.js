@@ -1303,6 +1303,14 @@ ok(fx.counts.libLock >= 140,
        'Haven Uncovered is unchanged (rushGrant 1; no rushBy or hostOf: the bot reads their absence as any)'); }
 }
 /* end: the Banu Haqim pilot */
+/* compiler v1.11.2 (the pilot's review of executor B2, P7): the contract keyword and the vampire that bars contracts */
+{
+  const L = res.out.lib, Cr = res.out.crypt;
+  const con = Object.keys(L).filter(n => L[n].contract === true).sort(), noC = Object.keys(Cr).filter(n => Cr[n].noContracts === true).sort();
+  ok(JSON.stringify(con) === JSON.stringify(['Clandestine Contract', 'Contract', 'Dirty Contract', 'Hand Contract', "Haqim's Law: Judgment", 'Priority Contract', 'Shakar: the Hunt'])
+     && JSON.stringify(noC) === '["Iliana (G2)"]' && Cr['Iliana (G2)'].sect === 'Camarilla' && !Cr['Husamettin (G2)'].noContracts && !Cr['Zahir, Hand of the Silsila (G2)'].noContracts,
+     'the contract keyword (\u2018Contract.\u2019 / \u2018Unique contract.\u2019) marks exactly the seven contracts; \u2018Contracts cannot be placed on Iliana.\u2019 marks Iliana (G2) alone (Husamettin and Zahir only name contracts) -- got ' + con.join(', ') + ' / ' + noC.join(', '));
+}
 /* The whole-mode guards on SYNTHETIC libraries (compiler v1.11.1, the pilot's review R-data 6): no real card exercises these guards (15
    mutants of the v1.11.0 rule survived the real library), so each gets a small library of its own, compiled in-process, or a planted
    compiled entry read by wholeModes directly (a guard no text the readers accept can reach today). Each card is a fixture, not a card. */

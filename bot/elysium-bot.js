@@ -3065,6 +3065,12 @@ class Bot {
       if(hasKey(e, ['strike', 'strengthBonus', 'envDmgPerRound', 'prevent', 'maneuver', 'press', 'stealBlood', 'dodge'])) return { T: 'T3', note: info.card + ' is a combat advantage' };
       return { T: 'T6', note: info.card + ': no threat key' };
     }
+    if(sub === 'attach'){   // v0.6.236 (the pilot's review, P3): a card on a minion (Biothaumaturgic Experiment [THA], Shadow of the Beast, New Moon Sigil) -- read from its keys as the equip branch reads a card
+      const e = fxOf(info.card);
+      if(hasKey(e, ['intercept', 'wake'])) return { T: 'T2', note: info.card + ' grants intercept' };
+      if(hasKey(e, ['strengthBonus', 'maneuverEach', 'strike', 'prevent', 'maneuver', 'press', 'dodge'])) return { T: 'T3', note: info.card + ' on ' + (info.host || info.vamp) + ' is a combat advantage' };
+      return { T: 'T6', note: info.card + ': no threat key' };
+    }
     if(sub === 'strength') return { T: 'T3', note: 'permanent strength' };
     if(sub === 'recruit') return { T: 'T4b', note: 'a minion enters ' + this.seatName(actorSeat) + "'s ready region" };
     if(sub === 'rescue') return { T: 'T4b', note: 'a vampire returns to ' + this.seatName(actorSeat) + "'s ready region" };   // v0.6.127: the same class as a recruit -- a body comes (back) into play
@@ -4831,7 +4837,7 @@ class Bot {
      vampire, which keeps 1); its printed stealth (R-14); 'A vampire can have only one X' where the card prints it (cardfx oncePerVampire:
      Shadow of the Beast, New Moon Sigil; none on Biothaumaturgic Experiment). Never the last pool (R-34, D-97). Preternatural Strength
      (no attach key) stays _bestStrengthFor's, byte for byte.
-     WHERE (Claude's prior, registered with the build): on the minion of mine that fights most for my deck's posture (_attachFight) --
+     WHERE (Claude's prior, registered with the build): on the minion of mine that will fight soonest (_attachFight; it reads no posture) --
      the chosen vampire of a contract of mine first (it will enter combat), then a vampire with a rush ready (a rush card it can play,
      or a granted rush), then the most blood (in a deck that does not rush: the body that blocks and lasts); the acting vampire breaks a
      tie. The bot offers its ready vampires: 'own' also prints an ally, which the bot does not offer. WHEN: weighed as equipment is
@@ -4894,6 +4900,7 @@ class Bot {
       this.hand.forEach((rn, ri) => { if(ri === idx) return;
         const r = this.fxLookup(rn); if(!r || r.kind !== 'lib' || !((r.e.t) || []).includes('retainer') || !r.e.animal) return;   // cardfx animal
         if(this._retainerReqMet(r.e, vamp)) return;   // the plain employ: no card spent
+        if(!(r.e.modes || []).some(m => m && m.fx && Object.keys(m.fx).length && this._modeUsableBy(m, vamp))) return;   // v0.6.236 (the pilot's review, P4): a retainer whose every mode needs a discipline the employer lacks (Raven Spy, Murder of Crows ... for a vampire without Animalism) does nothing in the bot's own reading -- not offered until Johan rules whether such an employer gets the basic version ([LSJ 20080803]); the version fixed by the level used at employ [RTR 19941109] is not modelled
         const rp = (r.e.cost && r.e.cost.pool) | 0, rb = (r.e.cost && r.e.cost.blood) | 0;
         if((cp + rp) && !((this.pool | 0) > cp + rp)) return;   // R-34: both costs leave me 1 pool
         if((cb + rb) && !((vamp.blood | 0) > cb + rb)) return;  // the employer keeps 1 blood
@@ -5118,6 +5125,10 @@ class Bot {
     return out;
   }
   _contractKey(card, host){ return FX_NORM(card) + '|' + host; }
+  _contractForget(who, card){        // v0.6.236 (the pilot's review, P2): drop another placer's records of this card (a placement line naming a new host, the burn line) -- by the placer's name or seat
+    if(!this._contractSeen) return; const st = this._seatOfName(who) || null, nm = FX_NORM(card);
+    Object.keys(this._contractSeen).forEach(k => { const r = this._contractSeen[k]; if(r && FX_NORM(r.card) === nm && (r.by === who || (st && (r.bySeat | 0) === st))) delete this._contractSeen[k]; });
+  }
   _contractLive(r){                  // v0.6.236: a chosen-rush card's record (_contractSeen) still in play on its placer's board -- mine by id, another seat's by name on its pub
     const bySeat = r && (r.bySeat || this._seatOfName(r.by)); if(!bySeat) return false;
     return bySeat === this.seat ? this.board.some(c => c && c.id === r.cardId && c.kind === 'lib' && c.zone === 'ready' && !this._outOfPlay(c))
@@ -5136,10 +5147,11 @@ class Bot {
   _havenHostPick(h){                 // v0.6.205 (R4, F23; Johan, 16 Oct: 'not played until the bot can rush through it, then on an opponent's vampire'): the vampire one of my ready, unlocked rushers would rush THIS turn through it -- its best target by the rush doctrine's weights, AND the rush through the Haven is the action that rusher would choose now; null = hold the card. v0.6.236 (the Banu Haqim pilot, §3.2 item 6): by the card's KEYS (_grantOf; no card = Haven Uncovered) -- hostOf 'prey' takes my prey's vampires only; rushBy 'chosen' (Priority Contract) asks only my vampires that meet the card's requirement ('Choose a ready Banu Haqim you control': req.clan, _entryReqOk), and the rusher found is the chosen one (D-58, as the Haven: its own decide('action') takes the card's rush now)
     const g = this._grantOf(h), chosenK = g.rushBy === 'chosen', prey = this.preySeat();
     const hostOk = c => g.hostOf !== 'prey' || (c.seat | 0) === prey;   // fx.hostOf
-    const fresh = chosenK ? (c => hostOk(c) && !Object.values(this._contractSeen || {}).some(r => r && FX_NORM(r.card) === FX_NORM(g.name) && r.host === c.name && this._contractLive(r)))   // never a second copy on one host
+    const fresh = chosenK ? (c => hostOk(c) && !(g.e && g.e.contract && this._noContractsOn(c.name)) && !Object.values(this._contractSeen || {}).some(r => r && FX_NORM(r.card) === FX_NORM(g.name) && r.host === c.name && this._contractLive(r)))   // never a second copy on one host; v0.6.236 (the pilot's review, P7): never a contract on a vampire that bars contracts (Iliana: e.contract, crypt noContracts)
       : (c => hostOk(c) && !(this._havenSeen && this._havenSeen[c.name] && this._havenOnName(c.name)));   // never a second Haven on one host
     let best = null;
     (this.board || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && (c.blood | 0) > 0 && (!chosenK || this._entryReqOk(g.e, c))).forEach(v => {
+      if(chosenK){ const why = this._aheadNoAct(v); if(why){ this.o.log(g.name.toLowerCase() + ' (' + v.name + '): the chosen would not act -- ' + why); return; } }   // v0.6.236 (the pilot's review, P1): the contract only -- Haven Uncovered's pick is unchanged (its same gap: BOARD)
       const t = this._bestRushTargetFor(v, { quiet: true, filter: fresh });
       if(!t || (best && !(t.w > best.w))) return;
       /* Found by this release's own smoke (seed 4005): a target alone is not a rush. The Haven went on a vampire, then its rusher
@@ -5157,6 +5169,16 @@ class Bot {
       best = Object.assign({ rusher: v.name, why: out.why }, chosenK ? { chosen: v.name } : null, t); });
     return best;
   }
+  _aheadNoAct(v){                    // v0.6.236 (the pilot's review, P1; D-58): would the MINION LOOP keep v home or send it hunting this turn -- what it asks before decide('action'): its keep-blocker posture (_keepBlocker, in the loop's own order: 0 blood first, then the worst blockers -- _playTurn's sort, without the knob-gated _minionKeyOrder -- the actors after v still unlocked) and a quiet hunt-or-bleed (_decide: no trace row). A reason, or null
+    const ord = (this.board || []).filter(c => c && c.zone === 'ready' && c.kind === 'crypt' && !c.locked)
+      .sort((a, b) => (((a.blood | 0) === 0 ? 0 : 1) - ((b.blood | 0) === 0 ? 0 : 1)) || (this._blockerWorth(a) - this._blockerWorth(b)));
+    const i = ord.indexOf(v); if(i < 0) return null;
+    const keep = this._keepBlocker(v, ord, i, { unlockedN: ord.length - i });
+    if(keep) return keep.why;
+    const hb = this._decide('hunt-or-bleed', { vamp: v }); if(hb && hb.hunt) return 'it would hunt (' + (hb.why || '') + ')';
+    return null;
+  }
+  _noContractsOn(name){ const h = name && this.fxLookup(name); return !!(h && h.kind === 'crypt' && h.e && h.e.noContracts); }   // v0.6.236 (the pilot's review, P7): 'Contracts cannot be placed on Iliana.' (cardfx crypt noContracts)
   _bestHavenRushFor(vamp){           // v0.6.205 (R4, F23): 'Minions can enter combat with this vampire as a +1 stealth (D) action.' -- the rush through a Haven Uncovered on the table, chosen by the same doctrine as a rush card (direction weights, torpor reach, the chump lesson); no card leaves the hand (idx null), the Haven stays. v0.6.236 (the Banu Haqim pilot, §3.2 item 6): every granted rush by key -- the rushBy 'any' cards' hosts (_havenHosts) and, for my chosen vampire only, my rushBy 'chosen' cards' hosts (_contractHosts: Priority Contract); the card the target is through named (a Haven first on a shared host), its stealth its rushGrant (_grantOf)
     const hs = this._havenHosts().concat(this._contractHosts(vamp)); if(!hs.length) return null;
     const names = new Set(hs.map(h => h.name));
@@ -5514,13 +5536,18 @@ class Bot {
     (prev.cards || []).forEach(c => { if(!c || c.zone !== 'ready' || c.faceDown || !(c.kind === 'crypt' || this._w5IsAlly(c.name))) return;
       const n = nowById.get(c.id); if(n && n.zone === 'ready') return;
       const how = n && n.zone === 'torpor' ? 'torpor' : (!n || n.zone === 'ash' || n.zone === 'burned') ? 'burned' : null;
-      if(this._contractSeen) this._contractHostLeft(st, c.name, how || 'left');   // v0.6.236: Priority Contract -- its host left the ready region (any region: torpor, burned, uncontrolled ...)
+      if(this._contractSeen && !(!n && this._readyElsewhere(st, c))) this._contractHostLeft(st, c.name, how || 'left');   // v0.6.236: Priority Contract -- its host left the ready region (any region: torpor, burned, uncontrolled ...); the pilot's review (P8): not a host now ready on another seat's board (a change of control)
       if(!how) return;   // Banishment's uncontrolled region is no loss of this kind (the grading)
       { const o = this._opp(st); o.w5Loss = (o.w5Loss | 0) + 1; }   // the table model (the egress review): another seat's losses live in this.opp[st]
       if(how === 'torpor' && c.kind === 'crypt') this._w5Hostage(c, st);
       if(st === this.preySeat()) this._w5FrontalGain(c, how);
       if(this._isHumanName(this.seatName(st)) && this._w5Mine(e => (e.modes || []).some(mo => mo.fx && mo.fx.lostMinionTax)).length) this.chat(this.seatName(st) + ': Tension in the Ranks — burn 1 pool (' + c.name + (how === 'torpor' ? ' went to torpor' : ' is burned') + ').');
     });
+  }
+  _readyElsewhere(st, c){            // v0.6.236 (the pilot's review, P8): a card gone from seat st's push that is READY on another board (mine or another seat's) -- its control changed, it did not leave the ready region
+    const same = x => x && x.zone === 'ready' && (x.id === c.id || (c.kind === 'crypt' && x.kind === 'crypt' && x.name === c.name));
+    if((this.board || []).some(same)) return true;
+    return Object.keys(this.table || {}).some(k => (k | 0) !== (st | 0) && (k | 0) !== (this.seat | 0) && ((((this.table[k] || {}).pub || {}).cards) || []).some(same));
   }
   _w5ZombieBurned(c){                // Cursed Abattoir: 'After a zombie (ally or retainer) you control is burned, you can add 1 counter to this location' (cardfx zombie)
     const e = this._w5E(c.name); if(!(e && e.zombie)) return;
@@ -10830,7 +10857,12 @@ class Bot {
          host's owner reads it as a rush its cloak may stop (_cloakThreat). The record lives while the card is on its placer's
          board (_contractLive). My own placement is recorded where I play it. */
       if(who !== this.o.name){ const ch = this.fxLookup(m[2]), card = (ch && ch.name) || m[2]; this._contractSeen = this._contractSeen || {};
+        this._contractForget(who, card);   // v0.6.236 (the pilot's review, P2): a unique card -- a new placement by this placer ends its older records (an observer matches its card by name only: a second copy brought an old host back)
         this._contractSeen[this._contractKey(card, m[4])] = { card, host: m[4], owner: m[3], seat: this._seatOfName(m[3]) || null, by: who, bySeat: this._seatOfName(who) || null, cardId: null, chosen: m[5] }; }   // no note: the play line says it (the v0.6.117 duplicate rule)
+      return;
+    }
+    if((m = t.match(CONTRACT_BURN))){   // v0.6.236 (the pilot's review, P2): the placer burned its contract for its pool -- every observer's record of it ends (the event log typed it already: contract-burn)
+      if(who !== this.o.name) this._contractForget(who, m[2]);
       return;
     }
     if((m = t.match(L12.burnAct))){   // v0.6.217 (V5 wave 4): an action to burn MY card in play -- a directed action I may block; on my Pass the card burns
@@ -11925,7 +11957,8 @@ class Bot {
     if(tm){
       this._markPendingOf('opp-taken', this._narrWho || null, '_takenWaiter', e => this._takenFromEvent(e), { vamp: tm[1], n: parseInt(tm[3], 10), dmg: parseInt(tm[2], 10), down: /goes to torpor|goes into torpor|is burned/i.test(txt), now: tm[4] != null ? parseInt(tm[4], 10) : null });   /* v0.6.184: the log holds their taken line */   // v0.6.156: down = their own narration says torpor/burn; now = their blood after the round
       this._xRoundEnd(tm[1], /goes to torpor|goes into torpor|is burned/i.test(txt), tm[4] != null ? parseInt(tm[4], 10) : null);   // v0.6.213 (V5 wave 1): a pair is over on their side -- the additional-strike step's marker
-      if(this._contractSeen && /goes to torpor|goes into torpor|is burned/i.test(txt)) this._contractHostLeft(this._seatOfName(this._narrWho) || 0, tm[1], /is burned/i.test(txt) ? 'burned' : 'torpor');   // v0.6.236 (the Banu Haqim pilot): my opponent's taken line sends it down -- Priority Contract's host about to leave the ready region
+      if(this._contractSeen){ const hq = tm[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), hB = new RegExp(hq + ' is burned', 'i'), hT = new RegExp(hq + ' goes (?:in)?to torpor', 'i');   // the pilot's review (P8): the host's own burn or torpor -- a weapon burned in the same line is not the host's
+        if(hB.test(txt) || hT.test(txt)) this._contractHostLeft(this._seatOfName(this._narrWho) || 0, tm[1], hB.test(txt) ? 'burned' : 'torpor'); }   // v0.6.236 (the Banu Haqim pilot): my opponent's taken line sends it down -- Priority Contract's host about to leave the ready region
       /* v0.6.184: _oppLastTaken is the latest opp-taken event -- no copy */   // v0.6.156: a NON-consumed copy for _wantPress (the stash above is consumed by Taste of Vitae's waiter)
       /* (the waiter is resolved by _markPendingOf) */
     }
@@ -12971,6 +13004,7 @@ class Bot {
               if(j >= 0){ this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._doEquip(v, act.retainer, 0, 0); }
             }
             this._maybeWarsawRefresh(v);   // undirected
+            this._maybePerfectionist(v);   // v0.6.236 (the pilot's review, P5; L-60): a successful action, as the equip / employ branch
           }
           this._actingVamp = null;
           this._flushDraws();
