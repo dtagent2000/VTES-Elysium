@@ -39,7 +39,7 @@ BLOCK, LEDGER, INV, WINDOWS, COMBAT = (_load(n) for n in ('ana-block', 'ana-ledg
 
 BLOCK_COUNTS = {'actions', 'blocked', 'attempted but through', 'blocked with no intercept card'}
 LEDGER_COUNTS = {'1 bleed: equal', '1 bleed: more, actor modifiers', '1 bleed: less, target reduced', '1 bleed: through, reduced to nothing',
-                 '1 bleed: through after game ended', '2 names: right', '3 combat: dealt==taken', '3 combat: taken<dealt',
+                 '1 bleed: through after game ended', '2 names: right', '3 combat: dealt==taken', '3 combat: taken<dealt', '3 combat: taken<dealt, weapon nulled',
                  '3 combat: taken>dealt', '4 steal: stole', '4 steal: stolenFromMe', '4 steal pairs: equal', '5 creep: placed',
                  '5 creep: victim burns'}   # the dealt / taken differences: prevent, Crows, a combat that ends (the ledger's header)
 LEDGER_LEADS = {'4 steal pairs: STOLE > VICTIM LOST': 'BOARD: steal pair under a combat ends, O-12',
@@ -116,9 +116,9 @@ def gates(S):
              ' (VANISHED, UNEXPLAINED, unpaired before the end, names, range, victim lost > stole); balanced: bleeds %d, combat names %d' %
              (G['1 bleed: equal'], G['2 names: right']))))
     leads = [k for k in sorted(LEDGER_LEADS) if G[k]]
-    L.append(('info', 'ledger', 'leads, not gates: %s; explained: through after the game ended %d, combat taken < dealt %d, taken > dealt %d' % (
+    L.append(('info', 'ledger', 'leads, not gates: %s; explained: through after the game ended %d, combat taken < dealt %d (a weapon nulled %d), taken > dealt %d' % (
         ', '.join('%s %d (%s)' % (k, G[k], LEDGER_LEADS[k]) for k in leads) or 'none', G['1 bleed: through after game ended'],
-        G['3 combat: taken<dealt'], G['3 combat: taken>dealt'])))
+        G['3 combat: taken<dealt'], G['3 combat: taken<dealt, weapon nulled'], G['3 combat: taken>dealt'])))
     # handshake
     A = COMBAT.audit(S); tot = A['matched'] + A['unmatched']; pct = round(100 * A['matched'] / max(1, tot))
     if not tot: L.append(('PASS', 'handshake', 'no combat rounds to pair'))
