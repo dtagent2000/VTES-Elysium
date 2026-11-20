@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.54 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.55 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.54';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.55';   // v1.1.55 (20 Nov 2026, the pilot's review, pass 2: F6, F1): `modeOf` (the bot loader's mode -> entry map, bot v0.6.236 K2) is a loader internal, not an fx key -- every run had printed it as an unclassified key; modeReachableBy mirrors _modeUsableBy's new gate (a level-less mode on a card with req.disc needs one of those disciplines, Flight from the crypt's flight)   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -73,7 +73,7 @@ function lookup(name){
 /* ---------- the CONSUMED set: scan the consumer's source, classify, warn on drift ---------- */
 const botSrc = fs.readFileSync(require.resolve('./elysium-bot.js'), 'utf8');
 const REF_CALLER = /\b_refDeltas\s*\(/.test(botSrc) && /\b_callReferendum\s*\(/.test(botSrc);   // v1.1.31: the two names the politics leg's caller is specified to carry
-const NON_FX = new Set(['json', 'counts', 'normIdx', 'lib', 'crypt', 'alias']);   // loader internals, not fx keys
+const NON_FX = new Set(['json', 'counts', 'normIdx', 'lib', 'crypt', 'alias', 'modeOf']);   // loader internals, not fx keys (v1.1.55: + modeOf, this.fx.modeOf -- bot v0.6.236's mode -> entry map)
 const scanned = new Set();
 for (const m of botSrc.matchAll(/\bfx\.([a-zA-Z]+)\b/g)) if (!NON_FX.has(m[1])) scanned.add(m[1]);   // a key with a digit is invisible here (v1.1.50: stealthTo0 and noStrikeR1 were renamed stealthToZero and noStrikeFirstRound)
 
@@ -439,8 +439,13 @@ function modeConsumed(mo, e){
 const EQUIP_GRANT = ['intercept', 'prevent', 'maneuver', 'strike', 'handStrike', 'ranged', 'interceptPaid', 'interceptPaidBlood', 'strBonus', 'aggr'];   // v1.1.40: + strBonus (Sword of the Archangel's strength+1, _modeStrikeDmg) and aggr (Ivory Bow, the Sword: _equipCombatOption's aggr)
 
 /* ---------- discipline reach — mirrors Bot._modeUsableBy's gate (deck-static part) ---------- */
-function modeReachableBy(mo, cryptE){
-  if (!mo.at) return true;
+function modeReachableBy(mo, cryptE, e){
+  if (!mo.at){   // v1.1.55 (bot v0.6.236, the pilot's review, pass 2, F1): _modeUsableBy's gate -- a level-less mode on a card that requires a discipline (req.disc; not equipment, a retainer or an ally) needs a vampire with one of them; [FLIGHT] is the crypt entry's flight
+    const rd = e && e.req && e.req.disc;
+    if (!rd || !rd.length || (e.t || []).some(t => t === 'equip' || t === 'retainer' || t === 'ally')) return true;
+    const all = ((cryptE && cryptE.disc && cryptE.disc.all) || []).concat(cryptE && cryptE.flight ? ['flight'] : []);
+    return rd.some(x => all.includes(String(x).toLowerCase()));
+  }
   const d = cryptE && cryptE.disc; if (!d) return false;
   return mo.at.split('+').every(tok => tok === tok.toUpperCase()
     ? (d.sup || []).includes(tok.toLowerCase()) : (d.all || []).includes(tok.toLowerCase()));
@@ -512,9 +517,9 @@ function judgeLib(h, cryptEs, text){
   const e = h.e, modes = e.modes || [];
   const per = modes.map(mo => {
     const c = modeConsumed(mo, e);
-    if(mo.dominated) return { at: mo.at || '—', dir: mo.dir ? 'D' : '', consumed: false, dominated: true, via: 'dominated: ' + String(mo.dominated).slice(0, 60), reach: cryptEs.some(ce => modeReachableBy(mo, ce)), fxKeys: Object.keys(mo.fx || {}).join(',') || '—' };   // v1.1.40: never played by design (cardfx marks it): set aside
+    if(mo.dominated) return { at: mo.at || '—', dir: mo.dir ? 'D' : '', consumed: false, dominated: true, via: 'dominated: ' + String(mo.dominated).slice(0, 60), reach: cryptEs.some(ce => modeReachableBy(mo, ce, e)), fxKeys: Object.keys(mo.fx || {}).join(',') || '—' };   // v1.1.40: never played by design (cardfx marks it): set aside
     return { at: mo.at || '—', dir: mo.dir ? 'D' : '', consumed: c.ok, via: c.via || '',
-             reach: cryptEs.some(ce => modeReachableBy(mo, ce)),
+             reach: cryptEs.some(ce => modeReachableBy(mo, ce, e)),
              fxKeys: Object.keys(mo.fx || {}).join(',') || '—' };
   });
   const consumed = per.filter(p => p.consumed);

@@ -25,9 +25,12 @@
 #                 late), so it stays information there (v1.1.2)
 #   Information lines: the ledger's leads and its explained differences, the step handshake's safety net, the post-game ousts.
 #   --self-test: a clean synthetic series PASSes every gate; each planted fault turns its own line FAIL (the game's end included).
+#   v1.1.4 (20 Nov 2026, the pilot's review, pass 2): the version bump the K4 change of bot v0.6.236 (c4e9b50) owed -- LEDGER_COUNTS took
+#   the explained count '3 combat: taken<dealt, weapon nulled' (ana-ledger's weapon-nulled rows: my nullifier's opponent dealt N by a
+#   weapon and I took 0, Blood Rage / Blood Fury / Bollix / Soul Burn) and the ledger's information line counts it, with no bump then.
 import collections, glob, importlib.util, json, os, re, shutil, sys, tempfile
 
-VERSION = '1.1.3'
+VERSION = '1.1.4'
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 def _load(name):
