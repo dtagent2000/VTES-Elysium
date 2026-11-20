@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-review-sheet.js v1.0.0 (19 Nov 2026, bot v0.6.234; RULINGS D-125, D-126; docs/specs/spec-card-sweep-2026-11-18.md §3.1, §4.1, §5)
+/* gen-review-sheet.js v1.0.1 (20 Nov 2026, cardfx compiler v1.10.0: a merged entry's origins read its layer, spec-card-sweep §4.4;
+   v1.0.0 19 Nov 2026, bot v0.6.234; RULINGS D-125, D-126; docs/specs/spec-card-sweep-2026-11-18.md §3.1, §4.1, §5)
    -- THE REVIEW SHEET: one deck's library cards, each with what decides its reading and what proposes one, so a round splits every
    printed effect into T1 (a key the compiler gives), T2 (shared: printed by two or more library cards) and T3 (the unique remainder)
    on evidence. Generated and never committed: write it to scratch, like a series.
@@ -8,8 +9,9 @@
    Per card:
    - KRCG's text, types, cost and rulings count (vtes.json beside the tool, built by krcg-v5.js);
    - our compiled entry (elysium-cardfx.json): its tier, every mode (level, fx keys) and each key's ORIGIN on this card -- `compiler`
-     when a compile without the curated file gives the key to this card, `hand` when only the hand entry does; the keys a hand entry
-     DROPS (the compiler gives them to this card, the entry does not); each hand-only key's row in the sharing register
+     when a compile without the curated file gives the key to this card, `hand` when only the hand entry does (on a MERGED entry, a
+     layer laid over the compiled one: `hand` for the keys the layer sets, its `handKeys`, `compiler` for the rest; its tier reads
+     `curated, merged`); the keys a hand entry DROPS (the compiler gives them to this card, the entry does not); each hand-only key's row in the sharing register
      (cardfx-sharing.json);
    - the ledger's verdict in this deck (gen-deck-coverage.js's coverDeck: the deck's crypt, the card text's checks on);
    - zero-vtes, at development time only (D-125): read from a checkout OUTSIDE the repository (--zero DIR), and the sheet names the
@@ -27,7 +29,7 @@
                              node gen-review-sheet.js --self-test                             (fixed inputs: no zero-vtes, no vtes.json) */
 
 const fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 const here = f => path.join(__dirname, f);
 
 /* ---- names: KRCG's and zero-vtes's spellings meet here (NFKD, the trademark sign, an article moved to the front) ---- */
@@ -152,7 +154,8 @@ const fxKeysOf = e => { const s = new Set(); if (!e) return s;
   return s; };
 function keyOrigins(entry, autoEntry){   // { key: 'compiler' | 'hand' }, dropped: [keys the compiler gives this card that the entry lacks]
   const ours = fxKeysOf(entry), auto = fxKeysOf(autoEntry), origin = {};
-  for (const k of ours) origin[k] = auto.has(k) ? 'compiler' : 'hand';
+  const layer = entry && entry.src === 'hand' && entry.merged === true ? new Set(entry.handKeys || []) : null;   // v1.0.1: a merged entry names its layer's keys
+  for (const k of ours) origin[k] = layer ? (layer.has(k) ? 'hand' : 'compiler') : auto.has(k) ? 'compiler' : 'hand';
   return { origin, dropped: entry && entry.src === 'hand' ? [...auto].filter(k => !ours.has(k)).sort() : [] };
 }
 function registerState(reg, key){
@@ -162,6 +165,7 @@ function registerState(reg, key){
   if (reg.unique && Object.prototype.hasOwnProperty.call(reg.unique, key)) return 'unique';
   return 'no row';
 }
+const tierOf = e => (e ? (e.handler ? 'handler' : e.src === 'hand' ? (e.merged === true ? 'curated, merged' : 'curated') : 'auto') : '—');   // v1.0.1: the ledger's words
 const discLines = text => String(text || '').split('\n').filter(l => /^\s*\[[a-zA-Z]{3,4}\]/.test(l)).length;
 
 /* ---- the sheet ---- */
@@ -201,7 +205,7 @@ function sheet(o){
   P('| card | × | verdict | tier | our keys (hand-only) | zero-vtes modes | effects printed by 1 | flags |'); P('|---|---:|---|---|---|---:|---|---|');
   for (const x of rows){
     const uniq = x.zd ? x.zd.effects.filter(ef => effUse.get(ef) === 1) : [];
-    P('| ' + [x.kc ? (x.kc.printed_name || x.kc.name) : x.r.name, x.r.qty, x.r.verdict, x.e ? (x.e.handler ? 'handler' : x.e.src === 'hand' ? 'curated' : 'auto') : '—',
+    P('| ' + [x.kc ? (x.kc.printed_name || x.kc.name) : x.r.name, x.r.qty, x.r.verdict, tierOf(x.e),
       Object.keys(x.origin).length + ' (' + x.handN + ')', x.zd ? x.zd.modes.length : '—', uniq.join(', ') || '—', x.flags.length].join(' | ') + ' |');
   }
   P('');
@@ -214,7 +218,7 @@ function sheet(o){
       P(''); String(kc.card_text || '').split('\n').forEach(l => P('> ' + l)); P('');
     } else P('**KRCG**: no text for the name.\n');
     const modes = ((x.e && x.e.modes) || []).map(mo => '`[' + (mo.at || '—') + ']` ' + (Object.keys(mo.fx || {}).map(k => k + (x.origin[k] === 'hand' ? '*' : '')).join(', ') || '(no fx)'));
-    P('**Ours** (' + (x.e ? (x.e.handler ? 'handler ' + x.e.handler : x.e.src === 'hand' ? 'curated' : 'auto') : 'no entry') + '; * = a key only the hand entry gives this card): ' + (modes.join(' · ') || 'no modes') +
+    P('**Ours** (' + (x.e ? (x.e.handler ? 'handler ' + x.e.handler : tierOf(x.e)) : 'no entry') + '; * = ' + (x.e && x.e.merged === true ? 'a key the layer sets' : 'a key only the hand entry gives this card') + '): ' + (modes.join(' · ') || 'no modes') +
       (x.e && x.e.ref && x.e.ref.fx ? ' · ref ' + Object.keys(x.e.ref.fx).join(', ') : '') + (x.dropped.length ? ' · **dropped** from the compile: ' + x.dropped.join(', ') : '') + '.');
     const hk = Object.keys(x.origin).filter(k => x.origin[k] === 'hand');
     if (hk.length) P('Register: ' + hk.map(k => '`' + k + '` ' + (SH.handOnlyKeys(COV.fx.lib).has(k) ? registerState(reg, k) : 'not hand-only (the compiler gives it to other cards)')).join(' · ') + '.');
@@ -315,6 +319,10 @@ function selfTest(quiet){
   const e = { src: 'hand', modes: [{ at: 'for', fx: { unlock: true, actAgain: 1 } }] }, a = { src: 'auto', modes: [{ at: 'for', fx: { unlock: true, stealth: 1 } }] };
   eq(keyOrigins(e, a), { origin: { unlock: 'compiler', actAgain: 'hand' }, dropped: ['stealth'] }, 'origins: compiler, hand, and the dropped key');
   eq(keyOrigins(a, a).dropped, [], 'an auto entry drops nothing');
+  // v1.0.1 (cardfx v1.10.0, spec-card-sweep §4.4): a merged entry -- its layer set actAgain and restated unlock, the compiler gave lock, a null deleted stealth
+  const mg = { src: 'hand', merged: true, handKeys: ['actAgain', 'unlock'], modes: [{ at: 'for', fx: { unlock: true, actAgain: 1, lock: 1 } }] }, a2 = { src: 'auto', modes: [{ at: 'for', fx: { unlock: true, stealth: 1, lock: 1 } }] };
+  eq(keyOrigins(mg, a2), { origin: { unlock: 'hand', actAgain: 'hand', lock: 'compiler' }, dropped: ['stealth'] }, 'origins of a merged entry read its layer: a key it sets is hand even when the compiler gives it too, the rest compiler; a deleted key is dropped');
+  eq([tierOf(mg), tierOf(e), tierOf(a), tierOf({ src: 'hand', handler: 'h' }), tierOf(null)], ['curated, merged', 'curated', 'auto', 'handler', '—'], 'the tier column: curated, merged for a merged entry');
   eq([registerState({ backlog: ['k'] }, 'k'), registerState({ shared: { k: ['A', 'B'] } }, 'k'), registerState({ unique: { k: ['A'] } }, 'k'), registerState({}, 'k')], ['backlog', 'shared with A, B', 'unique', 'no row'], 'the register\'s states');
   eq(discLines('Only usable after action resolution.\n[for] One.\n[FOR] Two.'), 2, 'discipline lines');
   if (!quiet || bad || skipped) console.log('gen-review-sheet --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed') + (skipped ? ', ' + skipped + ' SKIPPED' : ''));
@@ -340,4 +348,4 @@ if (require.main === module){
   const text = sheet(o);
   if (o.out){ fs.writeFileSync(o.out, text); console.error('gen-review-sheet v' + VERSION + ': ' + o.deck + ' -> ' + o.out); } else process.stdout.write(text + '\n');
 }
-module.exports = { VERSION, normName, parseCsv, parseDefs, keyOrigins, registerState, discLines, insideRepo };
+module.exports = { VERSION, normName, parseCsv, parseDefs, keyOrigins, registerState, tierOf, discLines, insideRepo };
