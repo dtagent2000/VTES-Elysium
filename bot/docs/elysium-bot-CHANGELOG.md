@@ -3,7 +3,7 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
-- **The sweep register (20 Nov 2026, bot v0.6.236, no bot change)** — Johan's words of 19:45–19:48 recorded; the asks of 19:22
+- **The sweep register (20 Nov 2026, bot v0.6.236, no bot change; PR #96)** — Johan's words of 19:45–19:48 recorded; the asks of 19:22
   (the pilot's flow proposals, a D line on KRCG's MCP) are in STATUS, open. RULINGS R-47 closes O-49 (his 19:45 answer as Claude
   read it, with the rules directors' posts by their links: a retainer's discipline is a requirement to employ it, its effect in
   play does not depend on the holder's disciplines, and Biothaumaturgic Experiment's retainer comes in at its basic version; not

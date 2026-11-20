@@ -6,7 +6,7 @@ v1.0.0 · `ana-gates.py` v1.1.4 · built and gated against client v2.6.179 / srv
 copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51 and main's canary v1.5.0.
 
 **Deploy state:** `main` carries v0.6.236 and client v2.6.179: #93 (D-132, D-133, BOARD's fold) merged; #94 (the pilot) merged
-into its base `bot-docs-room` after #93 had landed, and #95 carried it to `main`. **Open PR:** the sweep register's docs round
+into its base `bot-docs-room` after #93 had landed, and #95 carried it to `main`. **Open PR:** #96, the sweep register's docs round
 (R-47 closes O-49, D-135, `SWEEP-REGISTER.md`; no bot change).
 
 ## Last gates (v0.6.236's bytes: `elysium-bot.js` `4c193599`)
