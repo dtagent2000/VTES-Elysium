@@ -17,8 +17,8 @@ banuhaqim and brujah as registered, four moved by the corrections · the pilot's
 all 16 · the arena smoke (one match, the four starters, real clock) PASS 7/7 · lint, `gen-precon --check` clean.
 
 ## Next
-1. The sweep register (D-135): its active entries in the next release (7.1, 7.2, 8.3, 11.1; the missed options 5.2, 10.1, 12.2
-   too if Johan says so: 3 (e)); class 1 (R-47), its design to Johan first (where another seat's retainer's version comes from).
+1. The sweep register (D-135): its active entries in the next release (7.1, 7.2, 8.3, 11.1; the missed options 5.2, 8.6, 9.8,
+   10.1, 10.2, 12.2 too if Johan says so: 3 (e)); class 1 (R-47), its design to Johan first (where another seat's retainer's version comes from).
 2. **C**, concentrated (spec-card-sweep §11.8, D-132): C1 the cross-check tool with `stealth` / `actStealth`, `intercept`, `bleed`;
    then the first reader's round, its design to Johan first (§11.6). What the sweep finds goes to the register.
 3. Johan, asked 20 Nov evening (no kör yet): (a) the pilot's flow proposals (#94's body) — 19:22: "Ditt flöde låter väl bra!";
@@ -27,7 +27,8 @@ all 16 · the arena smoke (one match, the four starters, real clock) PASS 7/7 ·
    MCP (Primogen): a development-time reference beside zero-vtes, never at run time, nothing of its text in a committed file
    beyond official ruling ids, card text and official rulings decide, its "advanced rules" a curated, unofficial synthesis;
    (c) deleting the branch `bot-sweep-pilot-fix2` (its commits are all in #94); (d) BOARD's read-through (#93); (e) D-135's next
-   release: the register's active entries only, or its missed options too (5.2, 10.1, 12.2); (f) class 1's design question.
+   release: the register's active entries only, or its missed options too (5.2, 8.6, 9.8, 10.1, 10.2, 12.2); (f) class 1's design
+   question.
 4. The fizzle misread; Q4; C5; C6 (the suite's 6 GB heap first); the abstract model.
 
 ## Not yet consumed from main

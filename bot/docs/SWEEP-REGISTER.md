@@ -1,23 +1,22 @@
 # SWEEP-REGISTER — the problems the sweep finds, by class (20 Nov 2026, on bot v0.6.236; RULINGS D-135)
 
-Johan, 19:47 (the idea) and 19:48 (kör on Claude's shape; D-135): the sweep goes on, and what it finds is collected here and
-worked off one class at a time. A round takes one class: its design to Johan and his "kör", the build, review until clean (D-133),
-a release. **A problem that changes a
-finished deck's play** (seen in the 240 or the V5 smokes, as Aunt Linda's employs were) **is fixed in the next release**; the
-rest waits here. Not a standing page (outside `tools/doc-budget.sh`): BOARD keeps one line per class and points here.
+Johan, 19:47 (the idea) and 19:48 (kör on Claude's shape; D-135): the sweep goes on, and what it finds is collected here and worked
+off one class at a time. A round takes one class: its design to Johan and his "kör", the build, review until clean (D-133), a
+release. **A problem that changes a finished deck's play** (seen in the 240 or the V5 smokes, as Aunt Linda's employs were) **is
+fixed in the next release**; the rest waits here. Not a standing page (outside `tools/doc-budget.sh`): BOARD keeps one line per
+class and points here.
 
 **An entry** is one bullet: the card or area — what is wrong; the evidence (the card's text, a ruling by its id: links stay with
 the rulings database and the archive); where it was found, in brackets; its state; a fix sketch where the fault does not make it
-evident. **States:** **active** — the bots' own play in the 240 or a V5 smoke breaks the
-rules: a play the text forbids, or a printed value or window it gets wrong (counted; D-135 sends it to the next release);
-**missed** — the bots' play there never uses a printed option (legal, weaker; counted; whether D-135 sends these to the next
-release too is Johan's, asked in STATUS); **reachable** — a deck the sims play
-holds the card, but no count shows the faulty path firing (the class's round measures it first); **latent** — no deck the sims
-play reaches it; **human** — a human's play, which the sims never make (live at a table whenever a human holds the card);
-**debt** — a trace, row or test debt with no play change. Decks are the `deck-*.json` lists of 20 Nov: the 240 plays the four
-starters; each of the 14 V5 smokes one other precon with them (HOWTO). The counts are from v0.6.236's runs of 20 Nov (the 240
-and the smokes at seed 1, HOWTO's commands); a scratch audit of their 21,760 plays against each vampire's clan, sect, title and
-capacity found one fault, 8.3 (the play rows name no discipline level).
+evident. **States:** **active** — the bots' own play in the 240 or a V5 smoke breaks the rules: a play the text forbids, or a
+printed value or window it gets wrong (counted; D-135 sends it to the next release); **missed** — the bots' play there never uses a
+printed option (legal, weaker; counted; whether D-135 sends these to the next release too is Johan's, asked in STATUS);
+**reachable** — a deck the sims play holds the card, but no count shows the faulty path firing (the class's round measures it
+first); **latent** — no deck the sims play reaches it; **human** — a human's play, which the sims never make (live at a table
+whenever a human holds the card); **debt** — a trace, row or test debt with no play change. Decks are the `deck-*.json` lists of 20
+Nov: the 240 plays the four starters; each of the 14 V5 smokes one other precon with them (HOWTO). The counts are from v0.6.236's
+runs of 20 Nov (the 240 and the smokes at seed 1, HOWTO's commands); a scratch audit of their 21,760 plays against each vampire's
+clan, sect, title and capacity found one fault, 8.3 (the play rows name no discipline level).
 
 **Adding and closing.** A round that finds a problem it does not fix adds an entry to its class (a new class when none fits). A
 fixed entry is deleted in the round that fixes it (the CHANGELOG and the PR keep it); a ruled-out one is deleted with its reason in
@@ -27,23 +26,24 @@ the PR. An active entry is fixed in the next release, not in its class's round (
 BOARD's card lines under "Known, not built" (*B*); BOARD's "The V5 waves' riders", that is the waves' own sections (*w1*–*w4*: each
 spec's §4; *w5*: `specs/spec-v5-wave5-2026-11-17.md` §10 and §12.10; *w6*: `specs/spec-v5-wave6-2026-11-18.md` §8, its curation
 queue included, and §9.1–§9.5); the V5 sweep line's problem riders (wave 2's second review, in *w2*; the latent reds, the ambers
-and the cards found on the way of `specs/spec-card-sweep-2026-11-18.md` §4.3: *sweep §4.3*); RULINGS' card gaps O-3, O-4, O-21,
-O-23 and O-24 (stubs stay there). The criterion: a line about how a card is read or played (its data, a finder's gate on it, a
-reader of its play, its record) moved; decision, ledger and estimate lines stayed (O-12's steal pair, BOARD's locked routes but
-their Eyes of the Wild rider, 10.12). The specs keep their text as history. What those sources hold that is done, or is not a
-problem, is listed at the end.
+and the cards found on the way of `specs/spec-card-sweep-2026-11-18.md` §4.3: *sweep §4.3*; its row C's misreads and known misses,
+§4: *sweep §4*); RULINGS' card gaps O-3, O-4, O-21, O-23 and O-24 (stubs stay there). The criterion: a line about how a card is
+read or played (its data, a finder's gate on it, a reader of its play, its record) moved; decision, ledger and estimate lines
+stayed (O-12's steal pair, BOARD's locked routes but their Eyes of the Wild rider, 10.12). The specs keep their text as history.
+What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
-source; 7–13: the migration's sorting, Claude's; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 5.2, 10.1,
-12.2.
+source; 7–13: the migration's sorting, Claude's; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 5.2, 8.6, 9.8,
+10.1, 10.2, 12.2.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
-[RTR 19941109] (R-46). R-47 (Johan's 19:45 answer to O-49, as Claude read it, with the rules directors' posts): the icon shows
-what it takes to employ the card; once in play the effect does not depend on the holder's disciplines (a temporary discipline
-lost later, a stolen retainer), unless the card restricts its own effect (Razor Bat: "The Gargoyle with this retainer")
-[ANK 20180612]; a retainer brought in ignoring requirements comes in at its basic version [LSJ 20100302]. The round: the version stored at entry and read by every reader of an attached retainer. Its open design question
-(for Johan first): where the version of another seat's retainer comes from.
+[RTR 19941109] (R-46). R-47 (Johan's 19:45 answer to O-49, as Claude read it, with the rules directors' posts): the icon shows what
+it takes to employ the card; once in play the effect does not depend on the holder's disciplines (a temporary discipline lost
+later, a stolen retainer), unless the card restricts its own effect (Razor Bat: "The Gargoyle with this retainer") [ANK 20180612];
+a retainer brought in ignoring requirements comes in at its basic version [LSJ 20100302]. The round: the version stored at entry
+and read by every reader of an attached retainer. Its open design question (for Johan first): where the version of another seat's
+retainer comes from.
 - **1.1 Biothaumaturgic Experiment [tha]: the employ refused** — `_bestAnimalEmployFor` offers no retainer whose every mode needs a
   discipline the employer lacks (Raven Spy or Murder of Crows for a vampire without Animalism). R-47: it comes in at its basic
   version. [pilot: the review's P4; O-49] · latent (banuhaqim holds the experiment ×1 and no animal retainer) · drop the refusal;
@@ -63,8 +63,8 @@ lost later, a stolen retainer), unless the card restricts its own effect (Razor 
   or a version is the round's reading (KRCG's text and the rulings).
 
 ## 2. `aggr` misreads
-The compiler reads "aggravated" where the card says the opposite, misses an aggravated strike (which the weapon nullifier,
-Blood Rage-class since v0.6.236, then reads as the weapon's), or drops the condition on a weapon's. [pilot]
+The compiler reads "aggravated" where the card says the opposite, misses an aggravated strike (which the weapon nullifier, Blood
+Rage-class since v0.6.236, then reads as the weapon's), or drops the condition on a weapon's. [pilot]
 - **2.1 Negated or prevented aggravation read as `aggr`** — "non-aggravated", "treats aggravated damage as normal", "prevent all
   aggravated damage" (Soak, Resilience, Skin of Night …); test-cardfx pins Bloodform [VIC]'s. · latent · the compiler's negation
   strip for `aggr`; the pin flips.
@@ -85,8 +85,8 @@ most of the class; these are left. [pilot]
   key today; a guard for when one is written).
 
 ## 4. Another seat's play the bots do not read (the readers' rounds, D-132)
-Mostly a human's: the client's line names no card, no level or no target, or the bots have no parser for it. A need on main's
-side is a handoff first. Bot-to-bot gaps are marked.
+Mostly a human's: the client's line names no card, no level or no target, or the bots have no parser for it. A need on main's side
+is a handoff first. Bot-to-bot gaps are marked.
 - **4.1 A human's rush card** — a human's rush is read from chat (`rush`, D-55's interim), naming no card: its ban and grant are not
   read (the bots read a bot's rush line with its card and level, `L12.havenRush`). [the evening's list, D-135] · human.
 - **4.2 A human's Haven Uncovered** — the frozen line does not arm `_havenHost*` for a human's card. [B] · human.
@@ -154,8 +154,6 @@ A card in play is known by its name where its record should follow the card (its
   Subversion` (R-36). [B; O-24] · reachable (only at a table with both) · compare the normalised name (one row in `CARDS.md`, by
   KRCG id).
 - **6.3 `_inPlayNorms` counts my ash heap**, so a burned unique master is never played again. [w4: over-strict] · reachable.
-- **6.4 `_uniqueInPlay` reads card names**: a printed regent or justicar on a human's table is not "the title in play". [w4:
-  over-strict] · human · check first: `_titleInPlay` (v0.6.217's egress review) reads printed titles in two finders.
 
 ## 7. Conditional and capped values
 A value the text conditions or caps, compiled as a plain number.
@@ -172,8 +170,8 @@ A value the text conditions or caps, compiled as a plain number.
 - **7.4 Night Moves** — the bleed is capped at 1 pool. [sweep §4.3: red] · latent (nothing in the sewer deck bleeds for more).
 
 ## 8. Requirements, conditions and gates
-A requirement or a condition the text prints and a finder does not ask (the five playability layers' second and third, HARNESS),
-or a legal play the bot refuses.
+A requirement or a condition the text prints and a finder does not ask (the five playability layers' second and third, HARNESS), or
+a legal play the bot refuses.
 - **8.1 `_entryReqOk` (clan, sect, capacity) in every finder** — 18 Nov: the reaction finders read it, the stealth,
   bleed-modifier and action finders ask none; 29 Oct named more that read the discipline only (allies, politics, the prevent,
   press, maneuver and combat-ends finders: Touch of Valeren). [w6 §8; w1] · reachable (the multi-clan Path precons; salubri holds
@@ -190,11 +188,12 @@ or a legal play the bot refuses.
 - **8.5 Conditions not tagged** — Faerie Wards [aus] (the directed condition with an ally-or-younger clause); the leftover +1
   intercept modes of Dogged Pursuit, The Mole and Speak with Spirits [SPI] (a locked vampire's route, "Once this action, this
   vampire can burn 1 blood to get +1 intercept", compiled as a plain +1) play at any action; the condition sentences' untagged
-  variants (BOARD's C rider). [w6 §8; B] · latent (no deck holds the named cards).
+  variants (their list: `specs/spec-card-sweep-2026-11-18.md`'s status block, "The finished decks' round"). [w6 §8; B] · latent
+  (the named cards: no deck) / reachable (the list's Protected District, "… or during the polling step": nosferatu ×4).
 - **8.6 The act-again point after a failed referendum** — an unblocked political action succeeded whatever its referendum did
   (R-44), but a failed one writes no `_lastAct`, so neither Freak Drive nor Shadow Cloak follows it (v0.6.234). [B; w6 §9.5] ·
-  reachable (ventrue holds Freak Drive ×6 and calls referendums; a missed option when it fires, not counted) · a section
-  through `_maybeActAgain`.
+  **missed** (the 240: 10 of ventrue's 47 failed referendums had Freak Drive in the caller's hand, and no act-again decision
+  followed; pass 3's count) · a section through `_maybeActAgain`.
 - **8.7 Who may play a mode** — Cloak the Gathering's [OBF] is played by a vampire other than the acting one (the finder's tie
   keeps [obf]); Lost in Crowds is not usable with Into Thin Air; Sport Bike is one vehicle per minion (the equip guard is one per
   name). [sweep §4.3: latent reds] · latent (no deck reaches the contradiction).
@@ -224,6 +223,18 @@ A key the compiler writes and a reader reads in another shape, or a sentence sha
 - **9.7 FULL by key name only** — Wrong and Crosswise and Monastery of Shadows: no play path that would play them reads their keys
   (a reaction's votes, a location's stealth with no lock), as Priority Contract's was before the pilot. [sweep §4.3: found on the
   way] · latent (no deck holds them).
+- **9.8 Form of Mist [PRO]** — "Strike: combat ends. After combat ends, if this vampire was blocked, they can burn 1 blood to
+  continue the action with +1 stealth as if unblocked" (KRCG): the entry reads a combat end and a bare +1 stealth, never the
+  continued action. [sweep §4: the six misreads, row C] · **missed** (the ministry smoke: Vivian VI, blocked as the acting vampire,
+  ended the combat with it in match 6 and the action stopped, pass 3's read; its four other combat-end plays in the ministry and
+  tzimisce smokes not sorted by role) · the continue offered after the combat end, its blood paid.
+- **9.9 Black Forest Base and Powerbase: Madrid** — the base's "Requires a ready Sabbat vampire" and its referendum to gain 2 pool
+  are missing; Madrid's counters (one in my unlock phase while it has 3 or fewer, +1 vote each for a titled Sabbat vampire) are
+  missing. [sweep §4: the six misreads] · reachable (pathpower ×1 each).
+- **9.10 Power Structure** — "lock this card to give each Lasombra you control +1 vote" read as a flat +1. [sweep §4.3: the dry run's
+  C column] · reachable (lasombra ×1; not played in the lasombra smoke).
+- **9.11 The compiler's known misses** — `bloodAdd` and `bloodAddTo` on 59 card-keys. [sweep §4: row C] · reachable (C's harvest
+  item).
 
 ## 10. Unbuilt modes, targets and riders
 A printed mode, target or rider the bots do not play on their own cards, or do not read when they meet it.
@@ -231,16 +242,21 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   entry carries the stealth only. [sweep §4.3: amber] · **missed** (the 240: 90 of its 306 plays by malkavian's three vampires
   with superior Obfuscate — Colette 41, Alexander Silverson 39, Dr. Stephen Norton 10 — always at [obf]: both modes carry +1
   stealth and `_bestStealthFor` replaces a pick only for more, so the first mode wins the tie) · the mode with the rider wins a
-  tie, and the lock is read.
-- **10.2 Wasserschloss Anif's burn-it action, Haven Uncovered's host burning the card, Ventrue Headquarters locked only in my own
-  referendums.** [O-23; B; pilot] · reachable (ventrue holds Ventrue HQ ×1; Haven Uncovered in five decks) / latent (Wasserschloss
-  Anif: no deck) · each played in a sim series.
+  tie, and the lock is read (not Cloak the Gathering's [OBF], which another vampire plays: 8.7).
+- **10.2 Burning another's card in play, and Ventrue HQ** — Wasserschloss Anif, Austria's burn-it action ("Any minion can burn this
+  card as a Ⓓ action"), Haven Uncovered's host burning the card, Pentex™ Subversion's ("Other minions can burn this card as a Ⓓ
+  action": its entry carries `noBlockMinion` only); Ventrue Headquarters locked only in my own referendums. [O-23; B; pilot; pass 3
+  found Pentex's] · **missed** (the 240: tremere's Wasserschloss banked blood in 67 matches and was never burned; nosferatu put
+  Haven Uncovered on another seat's vampire 68 times, never burned by its host; tremere's Pentex was on an opponent's minion in
+  63 matches, never burned; the 240's 33 card burns were all Smiling Jack) / reachable (Ventrue HQ in another seat's referendum) ·
+  a burn-it key the burn finder reads (`_bestBurnCardFor` reads only `burnCardAction`).
 - **10.3 Free block bars and `chosen`** — Beast Meld-class and Seduction-class have tags, no consumer. [O-21; sweep §11.10] ·
   reachable (salubri holds Seduction ×2) · built when the sweep needs them, the ledger lists them playable.
 - **10.4 Wave 1's ambers** — Sculpt the Flesh [PRO] (the card on the opposing minion, its unlock-phase burn, the +1 stealth action
   to burn it); the Sword of the Archangel's cancel (a grapple or aim card for 1 blood) and its unlock; Invigorate [dom] (allies
   cannot block) and before a block on actions other than a rush; the strength+N weapon family beyond the Sword (`strBonus`). [w1]
-  · reachable (tzimisce holds Sculpt the Flesh ×4 and Invigorate ×3, salubri the Sword).
+  · reachable (tzimisce holds Sculpt the Flesh ×4 and Invigorate ×3, salubri the Sword) / latent (the strength+N family beyond the
+  Sword: no deck).
 - **10.5 Wave 2's ambers** — Rage of Apedemak's +1 hand size, its "Frenzy." and its Path of Caine icon; Monstrous Form's superior
   action. [w2] · reachable (pathcaine ×8, tzimisce ×4).
 - **10.6 Grants from cards played outside combat** — Dread Mastiff, Form of the Bat and Monstrous Form [DOM][PRO] on the vampire,
@@ -250,7 +266,7 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   Wall Street Night's investment action; Channel 10 after a cancelled-as-played first action; Burial Site's ally life; Powerbase:
   Montreal stolen; Creepshow Casino on a rescue, a leave-torpor or an undirected action card, and at the pilot's new announces;
   Family Gathering with a mixed crypt; Archon Investigation against Secure Haven's extra cost. [w3; pilot] · reachable (most are
-  in one V5 deck each).
+  in one V5 deck each) / latent (Wall Street Night, Burial Site, Secure Haven: no deck).
 - **10.8 Wave 4's other targets** — Oblivion, Charisma and Terrifying Visage on another Methuselah's vampire; Scalpel Tongue as a
   reaction and Saulot's Guiding Wisdom's abstain on another Methuselah's referendum; a second Grand Ball with another free
   Toreador; the other seats' ready Toreadors in Toreador Justicar's estimate (bots only). [w4] · reachable (toreador holds Scalpel
@@ -321,11 +337,8 @@ Who may answer an action or a card, and in which window; a line read after its w
   pair Taste counts the last pair). [w2] · reachable (tremere's gun; Taste of Vitae in brujah, nosferatu, pathcaine) · each fixed
   with a positive test and its footprint read.
 - **12.5 A gun's maneuver binds its strike only under Immortal Grapple** (no chase deck carries a gun). [w2] · latent.
-- **12.6 The Brujah crypt's printed +1 strength** (Theo Bell, Valeriya Zinovieva) under Torn Signpost [POT]: their fist deals 3, not
-  4. [w2] · reachable (brujah) · check first: crypt wave A (v0.6.219) reads their strength halves (`_cryptStrengthMod`, the
-  planners); whether the strike under Torn Signpost adds it is the question.
-- **12.7 The weapon nullifier does not model first strike** [LSJ 20040928]. [pilot] · latent.
-- **12.8 Tested or traced less** — the mirror-image race (the acting bot declares, the answering bot meets it during its press
+- **12.6 The weapon nullifier does not model first strike** [LSJ 20040928]. [pilot] · latent.
+- **12.7 Tested or traced less** — the mirror-image race (the acting bot declares, the answering bot meets it during its press
   step's first await) is tested on the 30 ms relay only; 159p tests the human-acting question through `_xBeforeLine`, not through a
   round; the `prevent-x` row's `incoming` is the plain damage (X covers aggravated damage too); Wall of Filth is counted twice in a
   receiving bot's `cardsShown` (its fx clone and its typed line, capped at 2). [w1] · debt.
@@ -358,13 +371,16 @@ Decisions on Claude's priors; each needs a design to Johan before it changes (D-
 - *w2*: Soul Burn's opposing weapons — read since v0.6.236 (R-41). Sanguine Entrapment and Skin Trap compiled as their own — the
   pilot's negation strip (v0.6.236) ends the misread; Sanguine Entrapment's ban on the other side is 4.5. The grants from Hunter's
   Mark, Fleetness and the experiment — built by the pilot (D-134).
+- *w2*: the Brujah crypt's +1 strength under Torn Signpost — read since v0.6.219 (`_cryptStrengthMod` in the strike pick beside
+  `_pumpStr`; the brujah smoke: Valeriya Zinovieva's fist 4 under [POT], Octane's and Elen Kamjian's 3; pass 3's read).
 - *w3*: Sudden Reversal held — built in wave 5b (D-122); the masters "still played blind" — built in waves 4 and 5 (D-106, D-120).
 - *w5 §10*: the notes on what was built otherwise than §3 (Anarch Revolt's bill in `_w5Unlock`, Frontal Assault's bill and its
   worst case, Carver's freeing of my own hostage, The Rack's choice) — records of the build, not problems; its Tension and Piper
   notes are 13.5. *w5 §12.10*: its note on which built human paths are live with the menu's decks (a human's Sudden Reversal at a
   bot's master, a human's `cancel` of a Deep Song rush, a human's Week of Nightmares) — a status, not a rider; the missing line
   after a human's Sudden Reversal is 4.8.
-- *w4*: a human's Grand Ball pair — read since v0.6.225 (D-113 (3), `_humanBallFree`).
+- *w4*: a human's Grand Ball pair — read since v0.6.225 (D-113 (3), `_humanBallFree`). A printed regent or justicar on another
+  seat's table — read since v0.6.217's egress review (`_titleInPlay`, section 162w).
 - *w6 §8*: Deep Ecology's "Requires an Anarch" — every finder asks it since v0.6.236 (K2). Night Terrors' strike — built by the pilot
   (D-134), and with it the ledger's `strikeCE` reading went (its curated entry carries `ceGrant`); Hunting the Quarry — C's combat
   round (D-134; BOARD's V5 sweep line keeps it). Elder Intervention's "during a bleed action directed at you" and Speak with Spirits
@@ -373,5 +389,7 @@ Decisions on Claude's priors; each needs a design to Johan before it changes (D-
 - *B*: `_wakeCard()` vampire-blind — every site the line named reads the vampire since v0.6.233 and v0.6.235 (`_wakeCardFor`); the
   blind calls left open a window (`_rushWindowOpens`, `_burnWindowOpens`) or shade the undirected block decision's `lockCost`, not a
   play.
-- *sweep §4.3*: the seven reds the bot could break — fixed in v0.6.235 (D-127).
+- *sweep §4.3*: the seven reds the bot could break — fixed in v0.6.235 (D-127). *sweep §4*: of the six misreads, Priority Contract
+  was read again by the pilot (D-134), and Target Vitals has had no mode since the pilot's strip (unread now: C's); the other four
+  are 9.6, 9.8 and 9.9.
 - BOARD's V5 sweep line keeps C's own scope: the title family, the ledger's grade column (spec §11.10), Hunting the Quarry.
