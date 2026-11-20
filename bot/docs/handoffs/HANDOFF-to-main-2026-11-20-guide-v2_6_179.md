@@ -7,11 +7,15 @@ v2.6.179 / protocol v2.6.179 (the server, the hotseat plan and your canary were 
 - **The tempo a table starts with**: "Every table with bots starts **Turn-based** (client v2.6.179+; before it, Standard, 3 s):
   no clock, the bots wait for your answer. Switch to Standard or Adaptive for a clock; the slider starts at 3 s."
 - **The tempo table** lists Turn-based first, marked "(the start)"; the three rows' texts are unchanged.
+- **The walk-through's clock sentences** now go by tempo (they promised a clock by default; two named the 20 s of a table with
+  no tempo): the block question ("How long the window waits is the table's tempo, and the question's tail says it …"), the
+  verdict ("or let the clock run where the tempo has one"), a bot's block on your action, the pool question and the combat
+  steps (no clock at a Turn-based table: a reminder after two minutes, the default answer after four).
 - **The Bot Activity panel**: the badge sits top right and, "while the camera visits a seat it stands just below ⌂ Home".
 - The chip and the footer name client v2.6.179 and 20 November 2026.
 
-Deploy: purge `/START-HERE-BOTS.html` and re-embed it in Help ▸ Bots. One re-embed covers v0.6.235's guide change too (its
-handoff of 19 Nov asked the same for the chip and the footer). Your suite beside this bundle: 383/1, the one red its embed test.
+Deploy: nothing to purge (the box does not serve the guide, as you have told us twice); re-embed it in Help ▸ Bots. One
+re-embed covers v0.6.235's guide change too. Your suite beside this bundle: 383/1, the one red its embed test.
 
 ## 2. Run here, on your v2.6.179
 - The canary 235/0 on `bot/`'s copies and on the root's (the same bytes now), the hotseat gate 12/0 on v2.6.179's bridge, HB1

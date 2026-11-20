@@ -3,23 +3,36 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
-- **Main's v2.6.179 consumed; the licence's name; no engine adapter (20 Nov 2026, bot v0.6.235, no bot change; PR #PRNUM)** —
-  STATUS Next 2, due when #88 merged (main's `REPLY-to-bot-2026-11-19-turn-based-default.md`: a table with bots starts
-  Turn-based, client-only; v2.6.179 in the same PR: the bot badge above a visited seat), with Johan's rulings of 20 Nov.
+- **Main's v2.6.179 consumed; Johan's words of 20 Nov: the licence's name, no engine adapter now (20 Nov 2026, bot v0.6.235, no bot
+  change; PR #90)** — STATUS Next 2, due when #88 merged (main's `REPLY-to-bot-2026-11-19-turn-based-default.md`: a table with
+  bots starts Turn-based, client-only; v2.6.179 in the same PR: the bot badge above a visited seat), with Johan's rulings.
   - **The copies** (a commit of their own): client v2.6.179, protocol v2.6.179; the server, the hotseat plan and main's canary
     unchanged.
   - **The guide** (`START-HERE-BOTS.html`, copied to the root; the bot's bytes are v0.6.235's): a table with bots starts
-    Turn-based (the tempo paragraph; the tempo table lists it first), the badge stands below ⌂ Home during a seat visit, the chip
-    and the footer at client v2.6.179. A handoff asks main to re-embed it.
-  - **RULINGS D-128** (the MIT licence's copyright line: DTAgent2000; answers O-47; a handoff to main with the text and the
-    places that name the licence today) and **D-129** (the bot is not built on zero-vtes's protocol: nothing overcomplicated,
-    the bots stay Elysium's chatting bots, rules correctness and exactness first). BOARD: Johan's vision of a human's play read
-    by card (the play line's level and target), after the sweep; the credit clause names D-128.
+    Turn-based (the tempo paragraph; the tempo table lists it first); the walk-through's clock sentences go by tempo (the block
+    question, the verdict, a bot's block on your action, the pool question, the combat steps: no clock at a Turn-based table, a
+    reminder after two minutes, the default answer after four; two of them still named the 20 s of a table with no tempo); the
+    badge stands below ⌂ Home during a seat visit; the chip and the footer at client v2.6.179. A handoff asks main to re-embed it.
+  - **RULINGS D-128** (the MIT licence's copyright line: DTAgent2000; answers O-47) with a handoff to main: the text, the places
+    that name the licence today, what the grant does not cover (the game; the card data derived from KRCG's and the TWDA's files
+    that the bundle ships), the credits, and main's gate (a root-only LICENSE turns `check-versions.js` red). **D-129**: the
+    relayed suggestion to build the bot on zero-vtes's protocol is not taken now (nothing overcomplicated; it would have to fit
+    the chatting bots; rules correctness and exactness first). The register's ceiling 67 → 67.5 KB (D-101; `tools/doc-budget.sh`).
+  - **BOARD: a human's play read by card** (Johan's vision of 20 Nov: the play line's level and aim tell the bot the effect at
+    once), after the sweep. What the bots read of a human's cards today, beside the lines, the numbers and the aim: Revelations
+    with its level from the play line (`[aus]` / `[AUS]`: the vision's precedent), Change of Target (`_onCot`), a master or a
+    Sudden Reversal from its clone (`_srOnHumanFx`), a frenzy card for Meditative Grove (`_groveOnHumanFx`), Fame or Pentex given
+    onto a bot's vampire (`_onGiven`), the Ball's pair (D-113); every card shown feeds the deck read (`_noteObserved`).
+  - **Housekeeping** (the egress review): ten handoffs main answered on 1–11 Nov moved to `history/handoffs/`; v0.6.235's
+    handoff named two files the box does not serve in its purge (corrected in place).
   - *Gates* (v0.6.235's bytes on client v2.6.179): the suite 2618/0 (one frozen run), canary 235/0 ×2, hotseat 12/0, HB1 11/0,
     main's client suite 383/1 (the guide's embed); the 240 on the sim against the same bytes on v2.6.177's table: SAME-PLAY 240
     (a match's one differing row is its result's client version), `ana-gates.py` PASS. `CARDS.md` stays on v2.6.177's sims (the
     play is the same).
-  - Egress: EGRESS_PLACEHOLDER
+  - Egress: 10 findings (stale-doc 3, unproven 4, rule-missed 3), all fixed: the guide's other clock sentences; BOARD's "never a
+    card's effect" (false: the list above); the licence handoff's "none of that data is in the repository" (the derived data
+    is), its gate note, the repository's date and its wording of Johan's words; D-129's "No" for his "not now" and D-127's
+    dropped attribution; the guide handoff's purge; STATUS's "built against"; the answered handoffs still in `handoffs/`.
 - **The V5 sweep, step A2: the review sheet, the dry run, the seven decks' readings, the merge's design (19 Nov 2026, bot
   v0.6.234, no bot change; PR #87)** — D-125 and D-126; `specs/spec-card-sweep-2026-11-18.md` §4.1 – §4.4, stacked on #86.
   - **`gen-review-sheet.js` v1.0.0** (its self-test, 19 checks, in CI; a skip fails the step): one deck's library cards, each with KRCG's text, our entry
