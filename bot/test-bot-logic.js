@@ -15462,7 +15462,17 @@ async function connectWithRetry(client, tries = 30){
           psychic: await rd(mkB([{ card: 'Psychic Assault', ago: 10 }])), cardless: await rd(mkB([]), WN + ' strikes for 2.') };
         ok(r.wofNow === false && r.flareNow === false && r.wofEarlierRound === true && r.sculptEarlierCombat === true && r.otherSeat === true && r.weaponShown === true
            && r.invigorate === false && r.invigorateEarlier === true && r.clawsNow === false && r.clawsEarlierRound === true && r.psychic === true && r.cardless === false,
-           '181g an aggravated line after a NON-hand aggravated strike card shown this round is that card’s and stands (B1): Walk of Flame, Body Flare; Claws of the Dead this round, Invigorate [pro] since the action was announced -- not one of an earlier round, an earlier combat (K1c) or action, another seat (K1g) or the weapon’s own play, not Psychic Assault (no aggravated damage, cardfx v1.11.3): those are nulled as the Flamethrower’s; a cardless plain line is never the aggravated weapon (K1f) (got ' + JSON.stringify(r) + ')'); }
+           '181g an aggravated line after a NON-hand aggravated strike card shown this round is that card’s and stands (B1): Walk of Flame, Body Flare; Claws of the Dead this round, Invigorate [pro] since the action was announced -- not one of an earlier round, an earlier combat (K1c) or action, another seat (K1g) or the weapon’s own play, not Psychic Assault (no aggravated damage, cardfx v1.11.3): those are nulled as the Flamethrower’s; a cardless plain line is never the aggravated weapon (K1f) (got ' + JSON.stringify(r) + ')');
+        /* The pilot's review, pass 3 (B1 narrowed; the loop's last pass, fixed by the session): only a card whose aggravated mode is a
+           STRIKE makes the line the card's. An aggravated hand strike counts since the combat began or its vampire's action was
+           announced, as K1 had it (Uncontrollable Rage [pro] 'until the end of the action', played at the announce; Raking Talons 'for
+           the remainder of combat', an earlier round); a card with cardfx aggr and no strike key does not count: a weapon's own pump
+           (Baal's Bloody Talons) and a defensive card read as aggr (Skin of Night, Resilience: 'non-aggravated') leave the line the
+           weapon's, nulled. Red on 45340a7 (each of the five), green on d84bd63 but Walk of Flame's case above. */
+        { const r3 = { ragePre: await rd(mkB([{ card: 'Uncontrollable Rage', ago: 2500 }], { ann: true })), talonsR1: await rd(mkB([{ card: 'Raking Talons', ago: 500 }])),
+            baal: await rd(mkB([{ card: "Baal's Bloody Talons", ago: 10 }])), skin: await rd(mkB([{ card: 'Skin of Night', ago: 10 }])), resil: await rd(mkB([{ card: 'Resilience', ago: 10 }])) };
+          ok(r3.ragePre === false && r3.talonsR1 === false && r3.baal === true && r3.skin === true && r3.resil === true,
+             '181g ...an aggravated HAND strike lasts its window (Uncontrollable Rage at the announce, Raking Talons an earlier round: the line stands); a card with aggr and no strike (Baal\u2019s Bloody Talons, the weapon\u2019s pump; Skin of Night, Resilience, read from \u2018non-aggravated\u2019) leaves it the weapon\u2019s, nulled (pass 3) (got ' + JSON.stringify(r3) + ')'); } }
       //    B2 (K1e): an AGGRAVATED weapon strike in the additional pair is nulled while my nullifier holds (the .44 Magnum case above is plain)
       { const pairG = async nullW => { const x = mk181('banuhaqim'); const k = V1('k1', KB, { blood: 5 }); x.board = [k];
           x.table[2].pub.cards = [{ id: 'w1', kind: 'crypt', name: 'Wauneka (G6)', zone: 'ready', blood: 5, attached: ['g1'] }, { id: 'g1', kind: 'lib', name: 'Flamethrower', zone: 'ready' }]; x._scanOpp(2, x.table[2].pub);

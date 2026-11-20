@@ -1341,9 +1341,9 @@ ok(fx.counts.libLock >= 140,
      'F1, a hand strike beside ‘this minion cannot’ is not certified: Taming the Beast [abo] (‘This combat, this minion cannot cancel frenzy cards nor press to end’) keeps handStrike, no handBonus (the chooser never plays it); its [ABO] ‘As above, but strike: burn equipment’ has no strike left (F3); Pounce keeps +2 (its [FLIGHT] is the bot’s gate); Stutter-Step [CEL] (no bonus) unchanged -- got ' + FX('Taming the Beast', 'abo'));
   /* F3: 'As above, but' with its own strike */
   ok(FX('Coagulate Blood', 'QUI') === '{"strike":2,"ranged":true}' && FX('Coagulate Blood', 'qui') === '{"strike":1,"ranged":true}' && FX('Psychic Assault', 'AUS') === '{"strike":2,"ranged":true}'
-     && FX('Starvation of Marena', 'VIC') === '{"press":true,"strike":3,"ranged":true}' && FX('Eldritch Glimmer', 'THA') === '{"strike":"X","ranged":true}' && FX('Eldritch Glimmer', 'tha') === '{"strike":2,"ranged":true}'
+     && FX('Starvation of Marena', 'VIC') === '{"press":true,"strike":3,"ranged":true}' && FX('Eldritch Glimmer', 'THA') === '{"strike":4,"ranged":true}' && FX('Eldritch Glimmer', 'tha') === '{"strike":2,"ranged":true}'
      && FX('Soul Burn', 'THA') === '{"strike":2,"ranged":true,"noPreventDisc":"for","nullOppWeapons":true}' && FX('Charge of the Buffalo', 'SPI') === '{"handBonus":2,"handStrike":true}' && FX('Blood Fury', 'THA') === '{"handBonus":2,"handStrike":true,"noPreventDisc":"for","nullOppWeapons":true}',
-     'F3, ‘As above, but for NR damage’ is its own strike: Coagulate Blood [QUI] 2R, Psychic Assault [AUS] 2R, Starvation of Marena [VIC] 3R (its press stays), Eldritch Glimmer [THA] ‘4R + X ranged’ is X (no number); Soul Burn’s hand entry unchanged; D1’s ‘but at +N damage’ unchanged (Charge of the Buffalo, Blood Fury) -- got ' + FX('Coagulate Blood', 'QUI') + ' / ' + FX('Eldritch Glimmer', 'THA'));
+     'F3, ‘As above, but for NR damage’ is its own strike: Coagulate Blood [QUI] 2R, Psychic Assault [AUS] 2R, Starvation of Marena [VIC] 3R (its press stays), Eldritch Glimmer [THA] ‘4R + X ranged’ is 4R, its floor (pass 3); Soul Burn’s hand entry unchanged; D1’s ‘but at +N damage’ unchanged (Charge of the Buffalo, Blood Fury) -- got ' + FX('Coagulate Blood', 'QUI') + ' / ' + FX('Eldritch Glimmer', 'THA'));
   /* flight on the crypt (F1) */
   { const fl = Object.keys(Cr).filter(n => Cr[n].flight === true), printed = cards.filter(c => (c.types || []).includes('Vampire') && /Flight \[FLIGHT\]/.test(c.card_text || '')).map(c => c.name);
     ok(fl.length === 26 && JSON.stringify(fl.slice().sort()) === JSON.stringify(printed.slice().sort()) && Cr['Chalcedony (G6)'].flight === true && !Cr['Chalcedony (G6)'].disc.all.includes('flight') && !Object.keys(Cr).some(n => ((Cr[n].disc || {}).all || []).includes('flight'))
@@ -1370,17 +1370,32 @@ ok(fx.counts.libLock >= 140,
   ok(LM('[pot] Strike: 1R damage.\n[POT] As above, but for 3R damage.') === '[["pot",{"strike":1,"ranged":true}],["POT",{"strike":3,"ranged":true}]]'
      && LM('[pot] Strike: hand strike at +1 damage.\n[POT] As above, but for 2 damage.') === '[["pot",{"handBonus":1,"handStrike":true}],["POT",{"strike":2}]]'
      && LM('[pot] Strike: 2R aggravated damage.\n[POT] As above, but for 3R damage.') === '[["pot",{"aggr":true,"strike":2,"ranged":true}],["POT",{"strike":3,"ranged":true}]]'
-     && LM('[pot] Strike: 2R damage.\n[POT] As above, but for 3R + X ranged damage.') === '[["pot",{"strike":2,"ranged":true}],["POT",{"strike":"X","ranged":true}]]'
+     && LM('[pot] Strike: 2R damage.\n[POT] As above, but for 3R + X ranged damage.') === '[["pot",{"strike":2,"ranged":true}],["POT",{"strike":3,"ranged":true}]]'
      && LM('[pot] Strike: hand strike at +1 damage.\n[POT] As above, but strike: steal 1 blood.') === '[["pot",{"handBonus":1,"handStrike":true}],["POT",{"stealBlood":1}]]'
      && LM('[pot] Strike: hand strike at +1 damage.\n[POT] As above, but strike: burn equipment.') === '[["pot",{"handBonus":1,"handStrike":true}]]'
      && LM('[pot] Strike: 2 damage.\n[POT] As above, but for 3 unpreventable damage.') === '[["pot",{"strike":2}]]'
      && LM('[pot] Strike: hand strike at +1 damage.\n[POT] As above, and at +3 damage.') === '[["pot",{"handBonus":1,"handStrike":true}],["POT",{"handBonus":1,"handStrike":true}]]'
      && LM('[pot] Strike: hand strike at +1 damage.\n[POT] As above, but at +3 damage.') === '[["pot",{"handBonus":1,"handStrike":true}],["POT",{"handBonus":3,"handStrike":true}]]'
      && LM('[pot] Prevent 1 damage.\n[POT] As above, but for 2 damage.') === '[["pot",{"prevent":1}],["POT",{"prevent":1}]]',
-     'SYNTHETIC (F3): ‘As above, but for N(R) damage’ replaces the inherited strike (a hand strike or an aggravated one too), ‘for NR + X ranged damage’ is X, any other ‘but’ strike keeps only the line’s own reading (steal 1 blood; burn equipment: nothing); ‘As above, and at +N’ is no replacement (D1e), ‘but at +N’ is (D1); over a reference with no strike nothing changes');
+     'SYNTHETIC (F3): ‘As above, but for N(R) damage’ replaces the inherited strike (a hand strike or an aggravated one too), ‘for NR + X ranged damage’ is its floor N (pass 3), any other ‘but’ strike keeps only the line’s own reading (steal 1 blood; burn equipment: nothing); ‘As above, and at +N’ is no replacement (D1e), ‘but at +N’ is (D1); over a reference with no strike nothing changes');
   ok(X('This minion cannot strike this round and may press to continue combat.') === '{"press":true}' && X('This minion cannot strike this round and gets 1 optional press.') === '{"press":true}'
      && X('Strike: 1 damage. The opposing minion gets an optional maneuver.') === '{"strike":1}' && X('Strike: 1 damage. The blocking minion gets 1 optional press.') === '{"strike":1}',
      'SYNTHETIC (F9, mutants N04 and N07): the negation’s strip stops at ‘and may’ as at ‘and gets’ (the subject’s own press stays); an opponent’s ‘gets an optional maneuver’ is cut as its ‘press’ is');
+  /* The pilot's review, pass 3 (data finding 4): synthetic cases for the branches and alternatives no real card reaches (each was a
+     surviving mutant: F3k, F3g, F1h, F1n, F1o, F2d, F2j, F2m, F2n, F2r, F1e, F3i) */
+  { const ce3 = t => cryptEntry({ name: 'Syn Vampire', capacity: 6, card_text: t, disciplines: ['pot'], clans: ['Gargoyle'] });
+    ok(LM('[pot] Strike: 1R damage.\n[POT] As above, but strike: 3R damage.') === '[["pot",{"strike":1,"ranged":true}],["POT",{"strike":3,"ranged":true}]]'
+       && LM('[pot] Strike: 1R damage.\n[POT] As above, but for 3 damage.') === '[["pot",{"strike":1,"ranged":true}],["POT",{"strike":3}]]'
+       && LM('[pot] This strike is at +1 damage.\n[POT] As above, but for 3 damage.') === '[["pot",{"handBonus":1}],["POT",{"strike":3}]]',
+       'SYNTHETIC (pass 3, F3k F3g F3i): ‘As above, but strike: 3R damage’ keeps the line’s own strike; an inherited ‘ranged’ goes with the inherited strike (‘but for 3 damage’ is melee); a reference with only a hand bonus is a strike to replace');
+    ok(X('Maneuver, only usable to go to long range. The opposing minion cannot maneuver this round.') === '{"maneuver":true,"maneuverTo":"long"}' && X('Maneuver only usable to go to long range.') === '{"maneuver":true}'
+       && ce3('Camarilla: Syn Vampire may burn 1 blood to gain Flight [FLIGHT] this turn.').flight === undefined && ce3('Camarilla: Flight [FLIGHT] costs this vampire 1 blood each turn.').flight === undefined,
+       'SYNTHETIC (pass 3, F1h F1e F1n F1o): maneuverTo counts the maneuvers left after the opponent’s clauses are stripped, and needs the comma; crypt flight is the keyword sentence only (not a gained Flight, not one that runs on)');
+    ok(X('Strike: 1 damage. Maneuvers and presses cost the opposing monster 1 blood each.') === '{"strike":1}' && X('Cancel a dodge as it is played.') === '{}' && X('Cancel an additional strike as it is played.') === '{}'
+       && X('If a minion opposing the attached vampire presses, it burns 1 blood.') === '{}' && X('If a minion opposing that vampire maneuvers, it burns 1 blood.') === '{}' && X('If a minion opposing this imbued presses, it burns 1 blood.') === '{}'
+       && X('Strike: 2 damage. Any card that would make this damage aggravated has no effect, and it is not aggravated.') === '{"strike":2}'
+       && X('Strike: 2 damage. Aggravated damage from cards that would make this strike aggravated is normal damage.') === '{"strike":2}',
+       'SYNTHETIC (pass 3, F2d F2j F2m F2n F2r): the strips’ other objects -- a monster’s cost, a cancelled dodge or additional strike, a minion opposing the attached / that vampire or an imbued, a whole ‘would make ... aggravated’ sentence -- write no key of the player’s'); }
   { const ce = t => cryptEntry({ name: 'Syn Vampire', capacity: 6, card_text: t, disciplines: ['pot'], clans: ['Gargoyle'] });
     ok(ce('Camarilla: Contracts cannot be placed on Syn Vampire. Tremere slave.').noContracts === true && ce('Camarilla: Once each turn, Syn Vampire may burn a contract on a minion she controls; contracts cannot be placed on her allies.').noContracts === undefined
        && ce('Camarilla: Flight [FLIGHT]. Tremere slave.').flight === true && ce('Camarilla: Flight [FLIGHT]').flight === true && ce('Camarilla: Syn Vampire cannot be blocked by minions with flight [FLIGHT].').flight === undefined,

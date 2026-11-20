@@ -1,6 +1,6 @@
 globalThis.ELYSIUM_CARDFX = {
  "fxv": 1,
- "generated": "2026-11-20T14:43:04.249Z",
+ "generated": "2026-11-20T15:42:48.886Z",
  "source": "vtes.json — 4212 cards (KRCG, Dark Pack)",
  "counts": {"crypt":1822,"lib":2391,"libWithFx":1696,"libPersistent":1238,"libLock":163,"curated":218,"alias":3347,"formats":{"v3":4212,"v5":0}},
  "crypt": {
@@ -2472,7 +2472,7 @@ globalThis.ELYSIUM_CARDFX = {
   "Elder Kindred Network": {"t":["react"],"req":{"clan":["Ventrue"]},"src":"auto"},
   "Elder Library": {"t":["master"],"unique":true,"persistent":true,"cost":{"pool":1},"modes":[{"at":null,"fx":{"handSize":1,"handSizePermanent":true}}],"note":"R4 (16 Oct 2026, the play-test review's F23: the six masters of the V5 decks the auto tier had certified FULL while four did nothing). 'Unique location. +1 hand size.' (verified in vtes.json). The auto tier had it right: the permanent hand size is read from the freestanding board card by _handSizePermanentTotal (drawn up at once when it enters play, kept by the discard phase's revert). Curated so every master of the V5 Malkavian deck is hand-checked.","src":"hand"},
   "Elder Michaelis's Hold": {"t":["react"],"cost":{"blood":1},"modes":[{"at":null,"lock":true,"fx":{}}],"src":"auto"},
-  "Eldritch Glimmer": {"t":["combat"],"cost":{"blood":1},"req":{"disc":["tha"],"notFirstRound":true},"modes":[{"at":"tha","fx":{"strike":2,"ranged":true}},{"at":"THA","fx":{"strike":"X","ranged":true}}],"src":"auto"},
+  "Eldritch Glimmer": {"t":["combat"],"cost":{"blood":1},"req":{"disc":["tha"],"notFirstRound":true},"modes":[{"at":"tha","fx":{"strike":2,"ranged":true}},{"at":"THA","fx":{"strike":4,"ranged":true}}],"src":"auto"},
   "Elemental Stoicism": {"t":["action","combat"],"req":{"disc":["for","obf"]},"persistent":true,"modes":[{"at":"for","fx":{"aggr":true}},{"at":"for+obf","fx":{"aggr":true}},{"at":"FOR+obf","fx":{"torpor":true,"aggr":true,"actStealth":1}}],"src":"auto"},
   "Elephant Guardian": {"t":["retainer"],"cost":{"blood":1},"persistent":true,"animal":true,"src":"auto"},
   "Elixir of Distillation": {"t":["equip"],"persistent":true,"modes":[{"at":null,"lock":true,"fx":{"bloodBurn":1}}],"anarchReq":true,"src":"auto"},

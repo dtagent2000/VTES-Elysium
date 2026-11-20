@@ -6245,22 +6245,26 @@ class Bot {
     if(!e.card) return e.strike === 'aggravated' && this._oppAggrWeapon();
     if(/^a weapon$/i.test(String(e.card).trim())) return true;   // the client's line for a human's weapon strike: 'NAME strikes with a weapon for N.' (PROTOCOL §12: 'a weapon' kept distinct -- cards trigger on weapons)
     const h = this.fxLookup(e.card); return !!(h && h.kind === 'lib' && (h.e.t || []).includes('equip')); }
-  _oppAggrWeapon(){                  // v0.6.236 (the pilot's review, K1): main's aggravated strike line ('NAME strikes for N aggravated damage.', CMB_LINE.agg) names no card, so a weapon that strikes for aggravated damage (Flamethrower, Improvised Flamethrower, Ivory Bow, Jar of Skin Eaters, Waxen Poetica ...) is read from PUBLIC evidence, no new line: the opposing vampire carries such an equipment (the table model's rec.equip, _scanOpp) -- and that seat showed no card with an aggravated mode in this round (Invigorate [pro] since its vampire's action was announced; the pilot's review, pass 2, B1: below): then the line is a card's or a hand strike's and stands
+  _oppAggrWeapon(){                  // v0.6.236 (the pilot's review, K1): main's aggravated strike line ('NAME strikes for N aggravated damage.', CMB_LINE.agg) names no card, so a weapon that strikes for aggravated damage (Flamethrower, Improvised Flamethrower, Ivory Bow, Jar of Skin Eaters, Waxen Poetica ...) is read from PUBLIC evidence, no new line: the opposing vampire carries such an equipment (the table model's rec.equip, _scanOpp) -- and that seat showed no card whose aggravated mode is a strike in its window (the pilot's review, passes 2 and 3, B1: below): such a card makes the line a card's or a hand strike's, and it stands
     const c = this._combatOpp(); const eq = (c && c.rec && c.rec.equip) || []; if(!eq.length) return false;
     const lib = n => { const h = this.fxLookup(n); return (h && h.kind === 'lib') ? h.e : null; };
     if(!eq.some(n => { const e = lib(n); return !!(e && (e.t || []).includes('equip') && (e.modes || []).some(mo => mo.fx && mo.fx.aggr)); })) return false;
-    /* v0.6.236 (the pilot's review, pass 2, B1): the line is a CARD's aggravated strike, not the weapon's, when that seat showed in this
-       round any card (not equipment) with an aggravated mode -- a strike card (Walk of Flame, Body Flare, Song in the Dark, Compress,
-       Psychic Assault, Burst of Sunlight, Torment the Soul, Sculpt the Flesh [pro] ...: cardfx aggr) or one that makes its hand strikes
-       aggravated this round (Claws of the Dead [pro]: aggrHands 'round'); an action's (Invigorate [pro]: aggrHands 'action') since its
-       vampire's action was announced. K1 exempted only a hand strike made aggravated (aggrHands, or aggr beside handStrike) since the
-       combat began: a Flamethrower's bearer who struck with Walk of Flame read as the weapon, nulled to 0 by my Blood Rage. A card the
-       line names (a bot's 'strikes with CARD') is read before this (_oppWeaponNulled). The level the card was played at is not on the
-       event: a card with an aggravated mode at any level counts (Torment the Soul [nec] is not aggravated, [NEC] is) -- the damage stands */
+    /* v0.6.236 (the pilot's review, passes 2 and 3, B1): the line is a CARD's aggravated strike, not the weapon's, when that seat showed a
+       card (not equipment) whose aggravated mode is a STRIKE: an aggravated strike card in this round (Walk of Flame, Body Flare, Song in
+       the Dark, Compress, Burst of Sunlight, Torment the Soul ...: cardfx aggr beside strike or ranged); an aggravated hand strike since
+       the combat began or its vampire's action was announced (aggr beside handStrike: Sculpt the Flesh [pro], and the ones that last,
+       Uncontrollable Rage [pro] 'until the end of the action', Loose Cannon [vic], Raking Talons 'for the remainder of combat'); hands
+       made aggravated (Claws of the Dead [pro]: aggrHands 'round', this round; Invigorate [pro]: aggrHands 'action', since the announce).
+       A card with aggr and no strike key does not count: a weapon's own pump (Baal's Bloody Talons, Dragon's Breath Rounds) makes the
+       line the weapon's, and the defensive cards the compiler reads aggr on ('non-aggravated', 'treats aggravated damage as normal':
+       Skin of Night, Resilience, Leathery Hide ...) strike nothing. Not read (nulled as the weapon's, K1's way; C's): an aggravated strike
+       the compiler gives no strike key (Body of Sun, Mayaparisatya [CHI], Smite, Bone Spur, Devil-Channel: Hands). A card the line names
+       (a bot's 'strikes with CARD') is read before this (_oppWeaponNulled). The level the card was played at is not on the event: a card
+       with such a mode at any level counts (Torment the Soul [nec] is not aggravated, [NEC] is) -- the damage stands */
     const ann = this.ev ? this.ev.last('announce', x => x.vamp === c.name) : null, since = Math.min(this._combatAt || 0, ann ? (ann.t || 0) : Infinity);   // a timestamp: never `| 0` (it is past 32 bits)
     const rnd = Math.max(this._rndAt || 0, this._combatAt || 0);   // this round's start (a stamp older than this combat is no round of it)
     const shown = this.ev ? this.ev.last('card-played', x => (x.seat | 0) === (c.seat | 0) && (() => { const e = lib(x.card); if(!e || (e.t || []).includes('equip')) return false; const t = x.t || 0;
-      return (e.modes || []).some(mo => { const f = mo.fx || {}; return f.aggrHands === 'action' ? t >= since : (f.aggrHands || f.aggr) ? t >= rnd : false; }); })()) : null;   // fx.aggrHands, fx.aggr
+      return (e.modes || []).some(mo => { const f = mo.fx || {}; return (f.aggrHands === 'action' || (f.aggr && f.handStrike)) ? t >= since : (f.aggrHands || (f.aggr && (f.strike !== undefined || f.ranged))) ? t >= rnd : false; }); })()) : null;   // fx.aggrHands, fx.aggr
     return !shown;
   }
   _noPreventDiscIn(){                // v0.6.214: the discipline the strike I just took cannot be prevented by -- read from the card its line named (`strikes with CARD for N.`, the consumed strike event), its fx.noPreventDisc (Soul Burn: 'for'); null for a line with no card (a human's `strikes for N.`)
