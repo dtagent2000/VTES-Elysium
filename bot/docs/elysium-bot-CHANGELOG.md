@@ -3,6 +3,31 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **Exactness first: the library by effect (20 Nov 2026, bot v0.6.235, no bot change; PR #91)** — Johan's rulings of 20 Nov
+  morning on the V5 sweep's focus and order, recorded before B. No code changes.
+  - **RULINGS D-130** (exactness first): the focus is card-rule exactness "att börja med", the goal that the bots can judge what
+    happens when someone plays a card; after B the sweep goes through the whole library effect by effect, zero-vtes's card data
+    the map and the answer sheet, translated into our format and never copied (D-125's rule of evidence stands; its "one starter
+    at a time" amended); a family's round builds the bots' reader of that effect in a human's play; then each starter's unique
+    remainder. **D-131**: agents may do a round's execution and its reviews, each chosen for its task in model and effort.
+    **O-48**: may a development tool commit the pairing of zero-vtes's effect types with our keys? (Claude: yes, in a tool only;
+    until then a run-time argument.)
+  - **The spec** (`specs/spec-card-sweep-2026-11-18.md` §11, appendix C; pointers in the status, §0, §4, §5, §6 and §10): the
+    method (families of our keys by reach, the first `stealth`, `intercept`, `bleed`; exact = two independent readings agree,
+    or a graded read; the reader acts on exact effects only), C and D re-ordered (§11.3), what a family's round reports (§11.5),
+    the open points (§11.6). The numbers, read-only on `77da0b7` and zero-vtes `05e812e`: 1,890 definitions; 1,891 of our 2,391
+    library entries have one, all 308 starter cards; 1,543 effect types (44 on 25 or more definitions, 431 on 2 to 24, 1,068 on
+    one); the 475 shared types describe 1,054 entries (56 %) in full, the 50 most used touch 1,620 (86 %). The horizon: the 44.
+    Two predictions for the first family registered on a scratch scan of 175 entries (§11.7).
+  - **BOARD**: the V5 sweep's line re-ordered (B; C the library by effect; D the starters' remainder); "A human's play read by
+    card" deleted (C's reader; the spec's §11.2 (6) and this file's entry of 20 Nov keep its facts). **HARNESS**: agents per task
+    (D-131); the egress reviewer always one that did none of the work.
+  - **The budgets** (D-101): history cut first (0.9 KB of built stories and measurements in twelve RULINGS lines, BOARD's done
+    steps); then RULINGS 67.5 → 68 KB and the total 179 → 179.5 KB (`tools/doc-budget.sh`).
+  - *Gates* (docs only): `DOC_BUDGET_ROOT_DRIFT=fail bash tools/doc-budget.sh` PASS (the total 179,495 of 179,500, the bootstrap
+    49,819 of 50,000); `bash tools/test-doc-budget.sh`: every case red, the baseline green; the eight bundle files in `bot/` equal
+    the root's (`cmp`). No suite was run: no code changed.
+  - Egress: EGRESS_PLACEHOLDER
 - **Main's v2.6.179 consumed; Johan's words of 20 Nov: the licence's name, no engine adapter now (20 Nov 2026, bot v0.6.235, no bot
   change; PR #90)** — STATUS Next 2, due when #88 merged (main's `REPLY-to-bot-2026-11-19-turn-based-default.md`: a table with
   bots starts Turn-based, client-only; v2.6.179 in the same PR: the bot badge above a visited seat), with Johan's rulings.

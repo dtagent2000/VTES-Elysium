@@ -14,17 +14,18 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The abstract model spec**: the first of the four checks (fast rollouts over card-class distributions, probabilities not
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
-- **The V5 sweep** (D-125; `specs/spec-card-sweep-2026-11-18.md`): one starter at a time, every printed effect first asked who else
-  in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. A1, A2 and the finished
-  decks' round are done (spec §4.3; v0.6.235). Next: **B** the pilot (Banu Haqim: the merge first, §4.4, D-127; the maneuver /
-  press grants with the rush cards, Hunting the Quarry and Night Terrors' strike with them), **C** the harvest (consumers made
-  general, lists by KRCG's text; the title family first; §4.3's five latent reds and seven ambers; the condition sentences'
-  variants the compiler leaves untagged, spec §4.3's round), **D** the other twelve.
-  Crypt waves (D-108): A done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES`
-  + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file
-  (`gen-precon.js --check` compares them). The root README credits zero-vtes with its licence (D-128; main's, handoff). *Done when* the 18
-  starters' rows are playable and every hand-only key has its sharing answer. Docs: RULINGS D-84, D-102, D-104, D-108, D-125,
-  D-126; `CARDS.md`; HOWTO.
+- **The V5 sweep** (D-125, D-130: exactness first; `specs/spec-card-sweep-2026-11-18.md` §11): every printed effect first asked
+  who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. Next: **B** the
+  pilot (Banu Haqim: the merge first, §4.4, D-127; the maneuver / press grants with the rush cards, Hunting the Quarry and Night
+  Terrors' strike with them), **C** the library by effect (one family a round over the whole library: the cross-check against
+  zero-vtes, every disagreement read against KRCG's text, our entries corrected, the bots' reader of that effect in a human's
+  play; first family `stealth`, `intercept`, `bleed`; the harvest's items ride in it: the title family, §4.3's five latent reds
+  and seven ambers, the condition sentences' untagged variants; the horizon is spec §11.4), **D** the starters' remainder (where a
+  starter needs it, with its strategy baseline). Crypt waves (D-108): A done; B = the rest by class, the 13 partial copies first.
+  A deck joins the menu (`ARCHETYPES` + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY`
+  become a data file (`gen-precon.js --check` compares them). The root README credits zero-vtes with its licence (D-128; main's,
+  handoff). *Done when* C's horizon is reached, the 18 starters' rows are playable and every hand-only key has its sharing answer.
+  Docs: RULINGS D-84, D-102, D-104, D-108, D-125 – D-127, D-130; `CARDS.md`; HOWTO.
 - **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9): what v1 of each wave left out, the
   amber halves and the latent items; no line says a human's Sudden Reversal cancelled a bot's master (main, 19 Nov). *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
 - **The curation queue of wave 6's graded readings** (none in a deck; spec-v5-wave6 §8): Enkil Cog, Destilaria Estrela da
@@ -83,10 +84,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The gates on the root's release** (Q4, main's yes of 3 Nov): the canary, the suite's
   server and 154f, the arena, the sim and the hotseat gate read the root's client and server and `client/`'s protocol, the copies
   go, STATUS pins the main commit. *Done when* every gate reads the root and CI is green on it.
-- **A human's play read by card** (Johan's vision, 20 Nov; after the sweep: the readings must be exact first): the play line
-  carries the level and the aim (`[obf]` / `[OBF]`, ` Target: …`; PROTOCOL §12); the bot looks the mode up, knows the effect at
-  once and answers it, the human's numbers still winning. Today it reads their lines, numbers and aim, and a few cards by name
-  (Revelations with its level is the precedent; CHANGELOG, 20 Nov). *Done when* a spec is ruled.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.
 - **Steal pair under a combat ends**: the stealer's side does not apply v0.6.196's rule when the victim's Majesty ends the combat.
   *Done when* `ana-ledger.py` prints equal pairs on a smoke with that case. Docs: RULINGS O-12.
