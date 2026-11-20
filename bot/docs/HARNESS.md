@@ -14,7 +14,7 @@
    claim a gate passed without having run it; a gate that could not run is said so in the PR.
 5. **Commit and push as soon as a step is green** — context can run out. Small commits, English messages, the version in the
    message when it is a release.
-6. **Egress review** (fresh context, see below). Its findings are fixed or listed in the PR body.
+6. **Egress review** (fresh context, until clean: see below). Its findings are fixed or listed in the PR body.
 7. **Docs:** STATUS rewritten (version, gates, next); a CHANGELOG entry; the BOARD line deleted, found lines added; RULINGS when
    Johan ruled or a rules reading changed; LESSONS only for a new CLASS of lesson (not every story); a HANDOFF when main must act.
    `bash tools/doc-budget.sh` green.
@@ -40,7 +40,13 @@ It reports findings in classes: `stale-doc` (a page the change made wrong), `hal
 without its reset, an emit without its reader), `test-weakened` (a guard that silently skips, all-negative cases, an assertion
 loosened), `rule-missed` (a CLAUDE.md or RULINGS line the change contradicts), `unproven` (a claim with no gate behind it).
 Three findings of one class across rounds become a rule in CLAUDE.md or a lesson. The PR body carries the line
-`Egress: <n> findings (<classes>), <fixed> fixed, <listed> listed`.
+`Egress: <n> findings (<classes>) in <p> passes, <fixed> fixed, <listed> listed`.
+
+**Review until clean** (Johan, 20 Nov: D-133). The executor fixes what a pass finds and the gates run again; then a NEW reviewer,
+one that saw no earlier pass and did none of the work, checks the fixes and the whole diff. The loop ends at a clean pass or
+after three, and what is still open goes to Johan in the PR. Where the rules or the text do not reach, it stops and asks him.
+Executor and reviewer are the same model and can share a misreading: KRCG's text, the rulings and zero-vtes are the witnesses
+outside it.
 
 For particularly high-stakes work the check is also done by a separate agent that has not seen the work being produced: facts
 against their sources, arithmetic by running it, a document by opening it.
