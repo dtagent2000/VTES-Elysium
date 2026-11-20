@@ -43,7 +43,7 @@ fresh; pad "$T/CLAUDE.md" 12000;                                                
 # the check itself (a raise there needs no second edit here, 19 Nov 2026). The pages outside the bootstrap are padded to 50 bytes
 # under their own; then BOARD, STATUS and bot/CLAUDE.md in turn, each as far as its own budget and the bootstrap's allow (padding
 # the bootstrap's pages alone would trip its 50 KB first, 29 Oct; leaving them alone made the case depend on how full they happened
-# to be). What is left is the root CLAUDE.md's size: the case needs it under about 6.2 KB (4.7 today), and the bootstrap's own check
+# to be). What is left is the root CLAUDE.md's size: the case needs it under about 5.2 KB at the 180 KB total of 20 Nov (4.8 today; every byte the total's ceiling rises is a byte less), and the bootstrap's own check
 # stops it before that. A ceiling the pages' own budgets cannot reach is a dead check: the case says so and fails.
 fresh; python3 -c '
 import os, re, sys
