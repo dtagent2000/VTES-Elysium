@@ -540,7 +540,7 @@ const L12 = {
   rush: /^(.+?) plays Deep Song \[ANI\] \u2014 rushes (.+?)'s (.+?)\.$/,   // N2: frozen -- m[2]=target OWNER seat name, m[3]=the rushed vampire; the named owner complies (lock + defender handshake)
   havenM: /^(.+?) plays Haven Uncovered \u2014 on (.+?)'s (.+?)\.$/,   // v0.6.205 (R4, F23): frozen -- m[1]=the Methuselah who placed it, m[2]=the host's OWNER, m[3]=the host; every observer records it (any minion may rush the host through it)
   burnAct: /^(.+?) takes an action to burn (.+?)'s (.+?)\.$/,   // v0.6.217 (V5 wave 4, bot grammar): m[1] the acting minion, m[2] the card's OWNER, m[3] the card in play (Toreador Grand Ball: 'Minions can burn this card as a (D) action') -- the owner's bot opens its block window, burns the card on its Pass
-  havenRush: /^(.+?) enters combat with (.+?)'s (.+?) \((Haven Uncovered|Saulot's Avenging Fist|Regent|Frontal Assault)\)\.$/,   // v0.6.230 (V5 wave 5): + Frontal Assault (a (D) rush at the owner's prey's minions)   // v0.6.217 (V5 wave 4): m[4] = the card in play that grants the (D) action -- Haven Uncovered, Saulot's Avenging Fist (on the rusher), a Regent (on the target)   // v0.6.205 (R4, F23): frozen -- m[1]=the rusher, m[2]=the host's OWNER, m[3]=the host; a +1 stealth directed action the owner may block; the host is NOT locked and the rusher is the acting minion
+  havenRush: /^(.+?) enters combat with (.+?)'s (.+?) \(([^()\[\]]+?)(?: ((?:\[[A-Za-z]+\])+))?\)\.$/,   // v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 items 1-2): opened to ANY card, m[5] = the level it was played at as the client prints it ('[CEL][THA]', '[cel]'; absent for a card with no level) -- a rush card from the hand (Hunter's Mark, Fleetness [CEL], Ambush ...) takes Haven's terms (no lock, the rusher acts); the card group admits no parenthesis, so a vampire named '(ADV)' still splits at the card   // v0.6.230 (V5 wave 5): + Frontal Assault (a (D) rush at the owner's prey's minions)   // v0.6.217 (V5 wave 4): m[4] = the card in play that grants the (D) action -- Haven Uncovered, Saulot's Avenging Fist (on the rusher), a Regent (on the target)   // v0.6.205 (R4, F23): frozen -- m[1]=the rusher, m[2]=the host's OWNER, m[3]=the host; a +1 stealth directed action the owner may block; the host is NOT locked and the rusher is the acting minion
   fameM: /^(.+?) plays Fame \u2014 on (.+?)'s (.+?)\.$/,   // N3: frozen -- m[2]=owner, m[3]=the famed vampire; ALL observers track it, the owner arms the torpor hook
   creep: /^Creeping Sabotage \(x(\d+)\): (.+?) burns (\d+) pool\.$/,   // N3: frozen -- m[2]=the named prey complies
   rescueE: /^(.+?) rescues (.+?)\u2019s (.+?) from torpor \((.+?) pays (\d+), (.+?) pays (\d+)\)\.$/,   // v0.6.72 (#7): frozen -- m[2]=owner complies, m[3]=vamp, m[5]=their blood share
@@ -1223,6 +1223,7 @@ class Bot {
         this._wonN = null; this._asp = null; this._aspLast = null; this._srSent = null; this._srSeenHuman = null; this._yawp = null; this._yawpFight = null; this._groveCancelled = null; this._quietHold = false;   // v0.6.232 (5b's egress review): the nightmare counters, the 'as played' window, the cancels and Yawp Court start again
         this._turnSerial = (this._turnSerial | 0) + 1; this._monsterUsed = null; this._sgwEndUsed = null; this._lastCombat = null; this._cotCancel = null; this._myBlockOf = null;   // v0.6.217 (the egress review): Monster's and Guiding Wisdom's once-each-turn, the last combat, a Change of Target -- none carries into a new game
         this._holdBy = new Set(); if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }   // v0.6.95: a fresh game holds for nobody
+        this._ceBanRec = null; this._ceBanCombat = null; this._ntg = null; this._ntgCombat = null; this._eachMvUsed = null;   // v0.6.236 (the Banu Haqim pilot; L-95): a new game carries no rush card's ban, no Night Terrors' strike, no maneuvers each combat used
         this._replHold = []; this._perUnlock = new Map();   // v0.6.235 (the finished decks' round): a new game holds no replacement and has played no once-between-unlocks card
         this._holdAnnounced = false; this._pendingTurn = null;   // v0.6.108: and carries no queued turn or stale hold announcement
         this._holdThaw();   // v0.6.198: a wait frozen by the old game's hold runs again, as it would have unheld
@@ -3115,6 +3116,7 @@ class Bot {
     if(this.pending) this._clearPending('superseded by rush');
     const role = (this.nextLive(actorSeat) === this.seat) ? 'prey' : (this.prevLive(actorSeat) === this.seat) ? 'predator' : 'cross';
     this.pending = { who, amount: 0, kind: 'rush', sub: 'rush', T: 'T5', role, actorSeat, actorUnlocked: 0, actingVampName: rusherVamp, rushTarget: vc.name, targetActs: !(ro && ro.targetActs === false), noLock: !!(ro && ro.noLock), via: (ro && ro.via) || null, card: (ro && ro.card) || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: !!(this._famedMine && this._famedMine.has(vc.name)) };   // v0.6.202: targetActs -- Deep Song [ANI]: the rushed vampire is the acting minion of the combat
+    if(ro && ro.lvl) this.pending.lvl = ro.lvl; if(ro && ro.ceBan) this.pending.ceBan = ro.ceBan;   // v0.6.236: a rush card's level and its ban on my combat-ends strikes travel on the pending to the comply (_complyRush)
     this._reactWindow();
     return true;
   }
@@ -3145,13 +3147,14 @@ class Bot {
     const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === p.rushTarget);
     if(!vc) return;
     p.complied = true;
-    if(p.noLock){ this.push(); this.note('Trainbot: ' + vc.name + ' defends (rushed by ' + p.actingVampName + ', ' + (p.card || 'Haven Uncovered') + ').'); }   // v0.6.217: the granting card named (Saulot's Avenging Fist, Regent)   // v0.6.205 (R4, F23): a rush through Haven Uncovered locks nobody
+    if(p.noLock){ this.push(); this.note('Trainbot: ' + vc.name + ' defends (rushed by ' + p.actingVampName + ', ' + (p.card || 'Haven Uncovered') + (p.lvl ? ' ' + p.lvl : '') + ').'); }   // v0.6.217: the granting card named (Saulot's Avenging Fist, Regent)   // v0.6.205 (R4, F23): a rush through Haven Uncovered locks nobody
     else {
     vc.locked = true; this.push();
     this.note('Trainbot: ' + vc.name + ' locks and defends (rushed by ' + p.actingVampName + ').');   // v0.6.155: the rusher's name -- Deep Song's line and a human's rush by chat share this path
     }
     this._emit('rushed', { vamp: vc.name, by: p.actingVampName });
     this._clearCombatStashes(); this._combatArmed = true;
+    this._ceBanRec = p.ceBan ? { vamp: vc.name, opp: p.actingVampName || null, ban: p.ceBan, card: p.card || null, at: Date.now() } : null;   // v0.6.236 (the Banu Haqim pilot): Hunter's Mark [CEL][THA]'s ban on my combat-ends strikes, set AFTER the clear (One With the Land's _owl shape) -- _resolveCombat takes it at its entry, so a later combat never sees it
     if(p.targetActs) this._combatActing = vc.name;   // v0.6.202: Deep Song [ANI] -- my rushed vampire is the acting minion (a human's rush by chat names no card: the rusher stays acting)
     this._resolveCombat(vc, p.actingVampName).catch(e => this.o.log('rush defend error:', e.message));
   }
@@ -4684,6 +4687,7 @@ class Bot {
   }
   _bestCombatEndFor(vamp){           // Majesty-class: a COMBAT card whose strike ends combat (fx.strikeCE); the mode that also unlocks is preferred
     if(this._handStrikeOnly) return null;                                            // Immortal Grapple: hand strikes only
+    if(this._ceBanNow(vamp)) return null;                                            // v0.6.236: a rush card's ban (Hunter's Mark [CEL][THA]) -- no combat-ends strike in the banned round
     let best = null;
     (this.hand || []).forEach((nm, idx) => {
       const h = this.fxLookup(nm); if(!h || h.kind !== 'lib' || (h.e.t || []).indexOf('combat') < 0) return;
@@ -4693,6 +4697,7 @@ class Bot {
         const cand = { idx, name: h.name, cost, unlock: !!mo.fx.unlock };
         if(!best || (cand.unlock && !best.unlock)) best = cand; });
     });
+    if(this._ntgCombat && !this._pastFirstRound() && this._inCombat && vamp && this._combatMyVamp && this._combatMyVamp.name === vamp.name) best = { idx: -1, name: this._ntgCombat, cost: 0, unlock: false, free: true };   // v0.6.236 (the Banu Haqim pilot, §3.2 item 7): Night Terrors [OBF][PRE]'s strike: combat ends, in the first round of the combat my block began -- no card from the hand, before one
     return best;
   }
   _bestReduceFor(vamps, p){          // N4c: a react-type fx.reduce card + an eligible UNLOCKED reactor (req.title vs PRINTED title); threshold amount >= 2, one per action
@@ -5604,18 +5609,78 @@ class Bot {
     return card;
   }
   _bestCardRushFor(vamp, ro){        // N2: a usable rush card (fx.rush) + a live target (v0.6.204's _bestRushFor, renamed; v0.6.205: ro passed to the targeter -- { quiet } for a look ahead)
+    /* v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 1): the BEST usable rush card, not the first in hand -- each usable rush mode
+       (its discipline, the card's clan / sect / capacity (_entryReqOk), its title (_titleOk), 'Requires an Anarch' (_anarchReqOk: Line Brawl),
+       its blood and pool cost payable) is a candidate; its rushTo narrows the targets ('locked', 'younger' / 'older' by the capacity in play;
+       'vampire': every candidate already is one). The better target wins, then the richer mode (a granted maneuver / press, the opponent's
+       ban, the lock, the printed stealth) less its cost, then the hand's order. One target pass per condition: the unconditioned pass is the
+       old call with the caller's ro (its counterfactual row, once), a conditioned pass is quiet. Deep Song [ANI] (lockTarget) keeps its pick
+       byte for byte; every other card carries via 'card', its level, its cost, its printed stealth (R-14: a directed action card is at 0
+       unless it prints '+N stealth action') and its grant (spent in the rush's combat: _rushGrantFor). */
     if(!this.fx) return null;
+    const cands = [];
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('action')) continue;
-      let ok2 = false, lockT = false;
-      (h.e.modes || []).forEach(mo => { if(mo.fx && mo.fx.rush && this._modeUsableBy(mo, vamp)){ ok2 = true; if(mo.fx.lockTarget) lockT = true; } });
-      if(!ok2) continue;
-      const target = this._bestRushTargetFor(vamp, ro);
-      if(!target) return null;
-      return { idx, name: h.name, kind: 'rush', target, lockTarget: lockT, st: 0, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 };   // v0.6.74: the expectation rides the pick
+      const ms = (h.e.modes || []).filter(mo => mo.fx && mo.fx.rush && this._modeUsableBy(mo, vamp));
+      if(!ms.length) continue;
+      if(!this._entryReqOk(h.e, vamp) || !this._titleOk(h, vamp) || !this._anarchReqOk(h.e, vamp)) continue;
+      const cb = (h.e.cost && h.e.cost.blood) | 0, cp = (h.e.cost && h.e.cost.pool) | 0;
+      if(cb && (vamp.blood | 0) < cb) continue;   // the acting vampire pays the card's blood (Fleetness: 1)
+      if(cp && !((this.pool | 0) > cp)) continue;   // the pool rule (R-34): a cost leaves me at least 1 pool
+      ms.forEach(mo => cands.push({ idx, h, mo, cb, cp }));
     }
-    return null;
+    if(!cands.length) return null;
+    const passes = new Map(), passOf = key => {
+      if(passes.has(key)) return passes.get(key);
+      const t = !key ? this._bestRushTargetFor(vamp, ro) : this._bestRushTargetFor(vamp, { quiet: true, filter: c => (!(ro && ro.filter) || ro.filter(c)) && this._rushToOk(vamp, key, c) });
+      passes.set(key, t); return t; };
+    let best = null;
+    cands.forEach(c => { const key = (c.mo.fx.rushTo && c.mo.fx.rushTo !== 'vampire') ? String(c.mo.fx.rushTo) : '';   // fx.rushTo
+      const t = passOf(key); if(!t) return;
+      const f = c.mo.fx, st = this._cardActStealth(c.h.e, c.mo);
+      const x = (f.maneuverGrant | 0) + (f.pressGrant | 0) + (f.ceBan ? 1 : 0) + (f.lockTarget ? 1 : 0) + st - c.cb - c.cp;   // fx.maneuverGrant, fx.pressGrant, fx.ceBan
+      if(!best || (t.w || 0) > (best.t.w || 0) || ((t.w || 0) === (best.t.w || 0) && x > best.x)) best = { c, t, x, st }; });
+    if(!best) return null;
+    const c = best.c, f = c.mo.fx;
+    const pick = { idx: c.idx, name: c.h.name, kind: 'rush', target: best.t, lockTarget: !!f.lockTarget, st: 0, n: 1, exp: this._rushExpectation(vamp), myBlood: (vamp.blood | 0) - c.cb };   // v0.6.74: the expectation rides the pick; myBlood after the card's blood
+    if(f.lockTarget) return pick;   // Deep Song [ANI]: its own path (the lock, the target acts), byte for byte
+    pick.st = best.st; pick.via = 'card'; pick.at = c.mo.at || null; pick.lvl = this._lvlTag(c.mo.at);
+    if(c.cb || c.cp) pick.cost = Object.assign({}, c.cb ? { blood: c.cb } : null, c.cp ? { pool: c.cp } : null);
+    { const g = {}; if(f.maneuverGrant > 0) g.mv = f.maneuverGrant | 0; if(f.pressGrant > 0) g.pr = f.pressGrant | 0;
+      const pd = f.pressDir || c.mo.pressDir; if(pd) g.dir = pd;   // fx.pressDir: a granted press printed for one direction only (no real card yet)
+      if(g.mv || g.pr) pick.grant = g; }
+    return pick;
   }
+  _anarchReqOk(e, vamp){             // v0.6.236 (the Banu Haqim pilot): the compiler's anarchReq marker ('Requires an Anarch' / 'a ready Anarch' / 'a baron', cardfx v1.9.9) gated on the vampire's printed sect -- no finder read it as a requirement (Garibaldi-Meucci and Powerbase: Los Angeles read it as a class); req.sect, when the entry carries it, is _entryReqOk's. A baron card's title is not read here (none is a rush card): only the sect
+    if(!e || !e.anarchReq || (e.req && e.req.sect)) return true;   // e.anarchReq
+    return this._vampSect(vamp) === 'Anarch';   // unknown = fail closed
+  }
+  _rushToOk(vamp, key, c){           // v0.6.236: a rush card's target condition (cardfx rushTo) on a rush candidate (_rushCandidates: that seat's ready vampire) -- 'locked' (its card on that seat's board), 'younger' / 'older' by the capacity in play (RULINGS D-111: _ageCap / _capOf; strictly lower / higher); a capacity the data lacks fails closed, an unknown key too
+    const cs = ((((this.table || {})[c.seat] || {}).pub || {}).cards) || [], card = cs.find(x => x && x.kind === 'crypt' && x.zone === 'ready' && x.name === c.name) || null;
+    if(key === 'locked') return !!(card && card.locked);
+    if(key === 'younger' || key === 'older'){ const mine = this._ageCap(vamp), theirs = card ? this._capOf(card, cs) : (this.fxCryptCap(c.name) | 0);
+      if(mine == null || !(theirs > 0)) return false;
+      return key === 'younger' ? theirs < mine : theirs > mine; }
+    return false;
+  }
+  _cardActStealth(e, mo){            // v0.6.236: an action card's printed '+N stealth action' (cardfx actStealth on its level-free mode, or on the mode played) -- the total stealth of the action (R-14)
+    let st = 0; (e.modes || []).forEach(m => { if(m && m.fx && typeof m.fx.actStealth === 'number' && (!m.at || m === mo) && m.fx.actStealth > st) st = m.fx.actStealth; });
+    return st;
+  }
+  _rushLineMode(card, lvl){          // v0.6.236 (the Banu Haqim pilot, §3.2 item 2): the mode of a rush card named on the rush line (L12.havenRush m[4], its level m[5] '[CEL][THA]') -- the level's tokens joined as cardfx writes a mode ('CEL+THA'), else a mode holding every token (a client's single '[CEL]'); no level: the card's level-free rush mode, or its only one. null = not a rush card (a card in play: Saulot's Avenging Fist, a Regent, Frontal Assault); a level no rush mode reads gives a bare rush (no ban invented)
+    const h = card && this.fxLookup(card); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('action')) return null;
+    const ms = (h.e.modes || []).filter(mo => mo && mo.fx && mo.fx.rush); if(!ms.length) return null;
+    const tk = String(lvl || '').match(/\[([A-Za-z]+)\]/g); if(!tk) return ms.find(mo => !mo.at) || (ms.length === 1 ? ms[0] : { fx: { rush: true } });   // several levels and none named: a rush card, no ban read
+    const want = tk.map(x => x.slice(1, -1));
+    return ms.find(mo => mo.at && mo.at === want.join('+')) || ms.find(mo => mo.at && want.every(w => String(mo.at).split('+').includes(w))) || { fx: { rush: true } };
+  }
+  _ceBanNow(vamp){                   // v0.6.236 (the Banu Haqim pilot, §3.2 item 2): is MY vampire barred from a combat-ends strike now -- a rush card's ban against it (Hunter's Mark [CEL][THA]: 'the opposing minion cannot strike: combat ends during the first round of that combat'): 'r1' its first round, 'combat' the whole combat; the record taken at the combat's entry (_ceBanCombat), before it the comply's (_ceBanRec: the coming combat's round 1). 'round' / 'action' are read where a path carries them (none yet)
+    const w = this._inCombat ? this._ceBanCombat : this._ceBanRec; if(!w || !vamp || w.vamp !== vamp.name) return false;
+    if(w.ban === 'combat') return true;
+    if(w.ban === 'r1') return !this._pastFirstRound();
+    return false;
+  }
+  _lvlTag(at){ return at ? String(at).split('+').map(x => '[' + x + ']').join('') : ''; }   // v0.6.236: a mode's level as the client prints it after a card ('[CEL][THA]', '[cel]'); '' for a mode with no level
   _bestUnlockReactFor(vamp, when, p){   // N1: a usable TRUE-unlock reaction for this vampire in this WINDOW -- fx.unlock, mode.when === when (curated riders; bare fx.unlock cannot tell Guard Dogs from Cats' Guidance). v0.6.233: p = the action, for the directed condition (_dirOk: One With the Land's header)
     if(!this.fx) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
@@ -5965,6 +6030,14 @@ class Bot {
     });
     return best;
   }
+  _modeNullsWeapons(strike){         // v0.6.236 (the Banu Haqim pilot): the mode my strike card was played at (by its level: _bestStrikeFor's `at`) prints 'the opposing vampire's strikes with weapons inflict no damage this round' (cardfx nullOppWeapons)
+    if(!strike || strike.fromEquip) return false; const h = this.fxLookup(strike.name); if(!h || h.kind !== 'lib') return false;
+    const mo = (h.e.modes || []).find(m => (m.at || '') === (strike.at || '')); return !!(mo && mo.fx && mo.fx.nullOppWeapons); }   // fx.nullOppWeapons
+  _isVampName(name){ const h = name && this.fxLookup(name); return !!(h && h.kind === 'crypt'); }   // a vampire, not an ally (unknown = no)
+  _oppWeaponNulled(){                // v0.6.236: the strike I just took (the consumed strike event: `strikes with CARD for N.`) was made with a WEAPON -- an equipment card -- while my nullifier holds this round (_xr.nullW). A line that names no card (a human's `strikes for N.`, an aggravated strike's line) is not read as a weapon: the damage stands. Not modelled: a weapon strike with first strike [LSJ 20040928]
+    if(!(this._xr && this._xr.nullW)) return false;
+    const e = this.ev ? this.ev.last('strike', x => x.stk === 'consumed') : null; if(!e || !e.card) return false;
+    const h = this.fxLookup(e.card); return !!(h && h.kind === 'lib' && (h.e.t || []).includes('equip')); }
   _noPreventDiscIn(){                // v0.6.214: the discipline the strike I just took cannot be prevented by -- read from the card its line named (`strikes with CARD for N.`, the consumed strike event), its fx.noPreventDisc (Soul Burn: 'for'); null for a line with no card (a human's `strikes for N.`)
     const e = this.ev ? this.ev.last('strike', x => x.stk === 'consumed') : null; if(!e || !e.card) return null;
     const h = this.fxLookup(e.card); if(!h || h.kind !== 'lib') return null;
@@ -5996,7 +6069,9 @@ class Bot {
     });
     return best;
   }
-  _bestManeuverFor(vamp, dir){       // v0.6.214 (V5 wave 2): dir = 'long' (the default, v0.6.24's only direction) or 'close' (a counter to their maneuver to long); a mode that brings an optional press (Flash [CEL], Resist Earth's Grasp [cel]: pressOpt) is preferred within its card; a mode only usable toward the other direction (maneuverTo) is skipped. v0.6.24 (Johan's combat GO, the range concept): the SIMPLEST maneuver shape only (Apportation [THA]/Swallowed by the Night [OBF]: standalone, no bundled strike/press/steal, no forced accompanying strike like Aid From Bats). Same exclusion pattern as _bestPressFor exactly -- measured 93 maneuver-carrying modes, 41 clean cards (Apportation, Swallowed by the Night among them), 44 bundled (documented in combat plan §5.6-successor, not built).
+  _bestManeuverFor(vamp, dir){       // v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 items 3-4): a FREE maneuver first, before any hand card -- a rush card's granted maneuver (_rushGrantFor: 'This acting vampire gets 1 optional maneuver during that combat'), then a card on the vampire that gives one each combat (_eachManeuverFor: Biothaumaturgic Experiment [THA], Shadow of the Beast [pro], New Moon Sigil [spi]); either goes to any range. v0.6.214 (V5 wave 2): dir = 'long' (the default, v0.6.24's only direction) or 'close' (a counter to their maneuver to long); a mode that brings an optional press (Flash [CEL], Resist Earth's Grasp [cel]: pressOpt) is preferred within its card; a mode only usable toward the other direction (maneuverTo) is skipped. v0.6.24 (Johan's combat GO, the range concept): the SIMPLEST maneuver shape only (Apportation [THA]/Swallowed by the Night [OBF]: standalone, no bundled strike/press/steal, no forced accompanying strike like Aid From Bats). Same exclusion pattern as _bestPressFor exactly -- measured 93 maneuver-carrying modes, 41 clean cards (Apportation, Swallowed by the Night among them), 44 bundled (documented in combat plan §5.6-successor, not built).
+    { const g = this._rushGrantFor(vamp); if(g && g.mv > 0) return { idx: -1, name: g.card, n: 1, cost: null, fromEquip: true, fromGrant: true, rushGrant: true }; }   // v0.6.236: the rush card's maneuver
+    { const ec = this._eachManeuverFor(vamp); if(ec) return { idx: -1, name: ec.name, n: 1, cost: null, fromEquip: true, fromGrant: true, eachId: ec.id }; }   // v0.6.236: a maneuver each combat from a card on the vampire
     let best = null;
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('combat')) return;
@@ -6014,6 +6089,18 @@ class Bot {
     if(!best && this._reactManeuverGrant && (!this._reactManeuverGrantVamp || !vamp || this._reactManeuverGrantVamp === vamp.name)) best = { idx: -1, name: 'Guard Dogs', n: 1, cost: null, fromEquip: true, fromGrant: true };   // N1: the [ANI] rider -- one maneuver in the RESULTING combat (v0.6.214: of the vampire that played it)
     return best;
   }
+  _rushGrantFor(vamp){               // v0.6.236 (the Banu Haqim pilot, §3.2 item 3): the grant of the rush card my acting vampire played, while its combat lasts -- { card, mv, pr, dir } on _actingVamp (armed only when the rush went through; the comply's _clearCombatStashes never reaches it); null outside that combat or for another vampire
+    const av = this._actingVamp, g = av && av.rushGrant; return (g && this._inCombat && vamp && av.v && av.v.name === vamp.name) ? g : null; }
+  _useRushGrant(vamp, what){         // one use of the grant ('mv' a maneuver, 'pr' a press) -- one each per grant; the row proves it fired
+    const g = this._rushGrantFor(vamp); if(!g || !(g[what] > 0)) return false; g[what]--;
+    this._emit('rush-grant', { vamp: vamp.name, card: g.card, use: what === 'mv' ? 'maneuver' : 'press' }); return true; }
+  _eachManeuverFor(vamp){            // v0.6.236 (the Banu Haqim pilot, §3.2 item 4): a library card on this vampire (its attached ids, my board) whose entry prints 'gets 1 optional maneuver each combat' (cardfx maneuverEach: Biothaumaturgic Experiment [THA], Shadow of the Beast [pro], New Moon Sigil [spi]) and has one left this combat (_eachMvUsed by card id, reset at the combat's entry and end). Only an attach mode puts such a card in play, so the entry's key is read without the bearer's discipline (the card's effect, not a play). Not the equipment's maneuver (_equipCombatOption, _equipManeuverUsed: the weapon's maneuver is another round's)
+    if(!vamp) return null;
+    for(const id of (vamp.attached || [])){ const c = (this.board || []).find(x => x && x.id === id); if(!c || c.kind !== 'lib' || this._outOfPlay(c)) continue;
+      const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') continue;
+      let n = 0; (h.e.modes || []).forEach(mo => { if(mo.fx && (mo.fx.maneuverEach | 0) > n) n = mo.fx.maneuverEach | 0; });   // fx.maneuverEach
+      if(n > 0 && ((this._eachMvUsed && this._eachMvUsed.get(c.id)) | 0) < n) return { id: c.id, name: c.name }; }
+    return null; }
   _strikeBound(vamp){ return !!vamp && !!((this._xr && this._xr.commit && this._xr.commit.vamp === vamp.name) || (this._rnd && this._rnd.gunCommitted)); }   // v0.6.214 (the graded readings): my strike this round is already chosen by a strike card's or a weapon's maneuver -- 'they cannot use a second strike card or weapon to maneuver again in the same round' (the rulebook, combat step 2)
   _bestCommitManeuverFor(vamp, dir){ // v0.6.214 (V5 wave 2): a STRIKE card whose optional maneuver goes one way only -- Slam [POT] ('with 1 optional maneuver, only usable to get to close range'). Using the maneuver commits the round's strike to the card (the maneuver cannot be used if the strike cannot be [LSJ 20021028]); a hand strike under an Immortal Grapple restriction is still a strike
     if(this._strikeBound(vamp)) return null;   // a second Slam after the first one's maneuver (or after a gun's) is illegal
@@ -6095,11 +6182,12 @@ class Bot {
     return seat ? 1 + 2 * this.oppCombat(seat) : 1;
   }
   _combatEndCopies(vamp){            // v0.6.196: combat-ends strikes in my hand this vampire could play -- how precious the next one is
+    if(this._ceBanNow(vamp)) return 0;   // v0.6.236: none can be played in a banned round (a rush card's ban); _ceCtx reads the count
     let n = 0; (this.hand || []).forEach(nm => { const h = this.fxLookup(nm); if(!h || h.kind !== 'lib' || (h.e.t || []).indexOf('combat') < 0) return;
       if(((h.e.cost && h.e.cost.blood) | 0) <= (vamp.blood | 0) && (h.e.modes || []).some(mo => mo.fx && mo.fx.strikeCE && this._modeUsableBy(mo, vamp))) n++; });
     return n;
   }
-  _ceCtx(vamp){                      // v0.6.196: what decide('combat-end') weighs -- the opposing strike THIS round (known or expected), the card's worth if kept, my own strike, the range
+  _ceCtx(vamp, ce){                  // v0.6.236: ce.free (Night Terrors' granted strike) is worth nothing kept -- it lapses after the first round. v0.6.196: what decide('combat-end') weighs -- the opposing strike THIS round (known or expected), the card's worth if kept, my own strike, the range
     const c = this._combatOpp(), crows = this._oppCarrionCrows ? (this._oppCarrionCrows.n | 0) : 0;   // Johan (18 Sep): combat ends first -- their crows do not land either
     const k = this._oppStrike;                                                          // a peek: their strike line, when they declared first (the acting side, or a line that beat my choice)
     let inc;
@@ -6111,7 +6199,7 @@ class Bot {
     }
     const opps = (this.players || []).filter(p => p && p.seat !== this.seat && this.live(p.seat)).map(p => p.seat);
     const keepThreat = Math.max(1, ...opps.map(s => this._expStrikeDmg(s)));         // the most dangerous strike at the table -- what a kept card is for
-    return { inc, copies: Math.max(1, this._combatEndCopies(vamp)), keepThreat: +keepThreat.toFixed(2), mine: this._myRoundDmg(vamp).dmg | 0, posture: this._combatPosture() };
+    return { inc, copies: Math.max(1, this._combatEndCopies(vamp)), keepThreat: (ce && ce.free) ? 0 : +keepThreat.toFixed(2), mine: this._myRoundDmg(vamp).dmg | 0, posture: this._combatPosture() };
   }
   _expOppStrike(c){                  // v0.6.205 (R4): what the opposing strike is expected to do THIS round, before it is known -- 0 at long range against a seat that has shown no ranged strike (v0.6.157), else the table model's expected strike (_expStrikeDmg). Majesty's _ceCtx and the dodge read the same number; their crows are not in it.
     if(c === undefined) c = this._combatOpp();
@@ -8632,11 +8720,14 @@ class Bot {
     if(success){
       if(blockerVamp && this._visageBurn(this.pending.actorSeat || this._seatOfName(this.pending.who), oppName)) return;   /* v0.6.221 (the Jack round's egress review): only MY block pays -- another seat's successful block reaches this verdict too (a bot that never blocked, or whose attempt failed, burned 1 pool: the V5 smoke's pathcathari match 12) */   /* the egress review: the combat opponent's name (a nameless pending reads the announce) */   // v0.6.217 (V5 wave 4): Terrifying Visage -- 'the blocking minion's controller burns 1 pool before block resolution' (an 'if blocked' effect: first, before anything else [ANK 20220116]); true = that pool ousted me
       const grant = this._reactManeuverGrant, gv = this._reactManeuverGrantVamp;   // v0.6.214 (V5 wave 2): _clearPending's N1 belt is for a FAILED block -- a successful one carries Guard Dogs [ANI]'s maneuver into the resulting combat (since N1 it was wiped here, before the combat: the grant never reached a fight)
+      const ntg = this.pending.ntGrant || null;   // v0.6.236 (the Banu Haqim pilot): Night Terrors [OBF][PRE] played by my blocker on this action
       const owl = this.pending.noStrikeR1 || null, owlWho = this.pending.who || null, act = { kind: this.pending.kind || null, peekSup: this.pending.peekSup, directed: this.pending.directed };   // v0.6.233: One With the Land [PRO] -- the vampire that played it on this action; the action's read (_pendDirected's fields) for the post-block unlock
       this._clearPending('block succeeded');
       if(blockerVamp){
         this._owl = (owl && owl.vamp === blockerVamp.name) ? { vamp: blockerVamp.name, opp: oppName || null, card: owl.card, at: Date.now() } : null;   // v0.6.233 (V5 wave 6a): no strikes in the first round of THIS combat (_resolveCombat takes it at its entry)
         if(this._owl){ this._emit('no-strike-r1', { vamp: blockerVamp.name, opp: oppName || null, card: owl.card, side: 'blocker' }); if(owlWho && this._isHumanName(owlWho)) this.chat(owlWho + ': ' + owl.card + ' \u2014 neither ' + (oppName || 'your minion') + ' nor ' + blockerVamp.name + ' can strike in the first round of this combat.'); }   // an instruction to a human (the tier rule): the bot cannot write their strike
+        this._ntg = (ntg && ntg.vamp === blockerVamp.name) ? { vamp: blockerVamp.name, opp: oppName || null, card: ntg.card, at: Date.now() } : null;   // v0.6.236 (D-123's rider): 'if this vampire blocks, they can strike: combat ends during the first round of the resulting combat' -- set after the block's clear, taken at _resolveCombat's entry (One With the Land's _owl shape), never a follow-up combat [LSJ 20010813]
+        if(this._ntg) this._emit('ce-grant', { vamp: blockerVamp.name, opp: oppName || null, card: ntg.card });
         this._reactManeuverGrant = grant && (!gv || gv === blockerVamp.name); this._reactManeuverGrantVamp = this._reactManeuverGrant ? gv : null;   // the egress review: only the vampire that played the card
         this._myBlockOf = { vamp: oppName, at: Date.now() };   // v0.6.217: the vampire my block stopped -- its Change of Target ends the combat I begin here (_onCot)
         blockerVamp.locked = true;                                // v0.4.3 (rulebook): "If a block attempt is successful, then the blocking minion LOCKS and enters combat" -- the wake path arrives here already locked, idempotent either way
@@ -8651,6 +8742,7 @@ class Bot {
     this._combatArmed = false; this._combatOppName = null; this._learnedOpp = null;   // v0.6.105: the previous combat's opponent name must not outrank the next action's blocker in _expectedOppVamp
     this._forceCloseNextRound = false; this._nextRange = null;   // v0.6.202 (found by R2's second arena smoke): 'close next round' never reaches another combat -- a superior Immortal Grapple in a combat's LAST round left both bots' next combats without a maneuver step
     this._owl = null;   // v0.6.233 (V5 wave 6a): One With the Land's rider belongs to the action whose block played it -- the next announce or block commit drops a rider no combat took
+    this._ceBanRec = null; this._ntg = null;   // v0.6.236 (the Banu Haqim pilot): the same for a rush card's ban on my combat-ends strikes and Night Terrors' strike: combat ends
   }
   _expectedOppVamp(){                // v0.6.103 (#1): who I am fighting (or about to fight): defender side = the announced actor (set by the caller of _resolveCombat); actor side = my blocker's vampire from the B-55e-b chat parse (valid only while I am the acting side -- _actingVamp is live)
     return this._combatOppName || (this._actingVamp ? this._lastBlockerName : null) || null;
@@ -8910,7 +9002,9 @@ class Bot {
         if(acting && iStrike){ mine = await this._xStrikeMine(myVamp); if(ct !== this._combatTok) return; }
         if(theyStrike){ theirs = await this._xTheirs(myVamp, hs); if(ct !== this._combatTok) return; x.oppXDone++; }
         if(!acting && iStrike && myVamp.zone === 'ready'){ mine = await this._xStrikeMine(myVamp); if(ct !== this._combatTok) return; }
-        const inN = theirs && !theirs.dodge ? (theirs.dealt | 0) : 0, inG = theirs && !theirs.dodge ? (theirs.aggr | 0) : 0;
+        const nW = !!(theirs && !theirs.dodge && this._oppWeaponNulled());   // v0.6.236: my nullifier of the first pair (not dodged) holds this round -- their additional weapon strike deals me 0 too
+        if(nW) this._emit('weapon-nulled', { vamp: myVamp.name, by: theirs.vamp || null, n: theirs.dealt | 0, pair });
+        const inN = theirs && !theirs.dodge && !nW ? (theirs.dealt | 0) : 0, inG = theirs && !theirs.dodge && !nW ? (theirs.aggr | 0) : 0;
         if(inN + inG > 0){
           let t = this._takePre(myVamp, inN, inG);
           const pv = (t.taken + t.aggr) > 0 ? this._bestPreventFor(myVamp, this._noPreventDiscIn()) : null;   // v0.6.214: the additional strike's card too
@@ -9285,7 +9379,7 @@ class Bot {
     return (mv.want === 'long' && this._combatMind()) ? this._bestManeuverFor(myVamp, 'long') : null;   // the egress review: no counters at all without the combat mind (its 0-path is v0.6.213)
   }
   _playManeuver(myVamp, m, dir){     // one maneuver: the card (a board or grant maneuver never splices), its blood, the frozen line the other bot reads -- v0.6.156's statements in v0.6.156's order. A strike card's maneuver commits the round's strike (LSJ 20021028); a mode with an optional press gives this round's press [TOM 19960521]
-    if(!m.fromEquip){ this.hand.splice(m.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; } else { if(m.fromGrant){ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; } else this._equipManeuverUsed = true; }   // E1/N1: board- and grant-maneuvers never splice; each consumes its OWN once-flag
+    if(!m.fromEquip){ this.hand.splice(m.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; } else { if(m.rushGrant) this._useRushGrant(myVamp, 'mv'); else if(m.eachId){ const u = (this._eachMvUsed = this._eachMvUsed || new Map()); u.set(m.eachId, (u.get(m.eachId) | 0) + 1); this._emit('maneuver-each', { vamp: myVamp && myVamp.name, card: m.name }); } else if(m.fromGrant){ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; } else this._equipManeuverUsed = true; }   /* v0.6.236: a rush card's granted maneuver and a card's maneuver each combat spend their own once-flags (fromGrant: no card from the hand, no second clone, no row of a play) */   // E1/N1: board- and grant-maneuvers never splice; each consumes its OWN once-flag
     if(!m.fromEquip) this._toAsh(m.name);   // v0.6.214 (the egress review): a gun's maneuver left a phantom gun in the ash heap since E1 (the gun stays on its bearer), Guard Dogs' a second Guard Dogs (it went there at its unlock)
     if(!m.fromGrant) this._emitPlay(m.name, 'combat-maneuver', myVamp && myVamp.name, !!m.fromEquip);   // v0.6.139: this spend left no trace row (CLAUDE.md 43c). v0.6.214: the grant's card was played (and rowed) at its unlock
     if(m.cost && m.cost.blood) myVamp.blood = Math.max(0, (myVamp.blood | 0) - m.cost.blood);
@@ -9341,11 +9435,14 @@ class Bot {
     if(!oppName && this._actingVamp && this._actingVamp.v === myVamp && this.turnSeat === this.seat && !this._actingVamp.ifBlocked){ this._actingVamp.ifBlocked = true; if(this._ifBlockedStep(myVamp)) return; }   /* synchronous: no extra tick when nothing applies (the starters' traces stay byte for byte) */   // v0.6.217 (V5 wave 4): my action was BLOCKED -- the 'if blocked' effects first (Terrifying Visage, Change of Target); Change of Target means no combat
     this._carrionCrows = null; this._equipPreventUsed = false; this._equipManeuverUsed = false; this._hostPreventUsed = null; this._cryptDodgeUsed = null;   /* v0.6.205: Guardian Angel's once each combat; v0.6.219: the crypt's own strike: dodge (Flávio, Phaibun) */   // v0.6.103 (#1): the OPPONENT's crows are no longer reset here (an early crows announce was wiped by the late-entering attacker) -- they live in the stash set cleared at announce/commit   // E1: per-combat equipment options
     this._borneEnvDmg = this._borneEnvFor(myVamp); this._borneAnnounced = false;
+    this._eachMvUsed = null;   // v0.6.236 (the Banu Haqim pilot): a card's 'optional maneuver each combat' -- each combat starts unused (_eachManeuverFor)
     this._cepOpen(oppName || (this._actingVamp ? this._lastBlockerName : null) || this._learnedOpp || null); this._learnedOpp = null;   /* v0.6.182: ONE episode per combat */ this._combatDmgTaken = 0; this._cBase = Object.assign({}, this._cTally() || {}); this._cBaseRound = this._cBase;   /* v0.6.168: the field baseline for this combat (at combat ENTRY -- not per round) */   // v0.6.103 (#1): the actor side learns its opponent from the B-55e-b blocker name (a bot blocker always chats it before the verdict)   // VB: the opposing vampire's NAME when the caller knows it (defender sites: the announced actor; a blocked ACTOR's blocker stays null -- documented v1 under-claim for Blythe-as-actor) + the Franciscus-class per-combat damage accumulator   // N0: the borne crows peck every combat   // v0.6.26: per-COMBAT state (not per-round like _range) -- "only one Carrion Crows each combat", and the opponent's active one persists across every round of THIS combat, reset only when a new one starts
     if(this._inCombat){ ['_maneuverWaiter', '_preWaiter', '_strikeWaiter', '_strikePeekWaiter', '_pressWaiter', '_takenWaiter', '_xEndWaiter', '_xAnsWaiter', '_xStrikeWaiter'].forEach(k => { if(typeof this[k] === 'function'){ const old = this[k]; this[k] = null; try { old(null); } catch(e){} } }); { const ow = this._phaseWait; if(ow && !ow.done) ow.resolve('superseded'); } }   // v0.6.222 (the egress review): a combat still in flight is superseded by this one -- its line waiters and its step wait end now (null), so a line meant for this combat never feeds the old one's wait (a Deep Song-rushed Dowager's strike wait took Catalina's strike from Lenny's peek: Lenny took 1, not 3)
     this._inCombat = true;   // v0.6.103 (#1): the handshake window -- _stashAccept reads it
     { const on = oppName || (this._actingVamp ? this._lastBlockerName : null) || null, w = this._owl;   // v0.6.233 (V5 wave 6a, D-123): One With the Land [PRO]'s 'neither combatant can strike during the first round of the resulting combat' -- this combat's when it is the one the rider's block began (my vampire, its opponent when both are known); taken here, so a follow-up combat never sees it [LSJ 20010813]
-      this._owlCombat = (w && myVamp && w.vamp === myVamp.name && (!w.opp || !on || w.opp === on)) ? w.card : null; this._owl = null; }
+      this._owlCombat = (w && myVamp && w.vamp === myVamp.name && (!w.opp || !on || w.opp === on)) ? w.card : null; this._owl = null;
+      const bw = this._ceBanRec; this._ceBanCombat = (bw && myVamp && bw.vamp === myVamp.name && (!bw.opp || !on || bw.opp === on)) ? bw : null; this._ceBanRec = null;   // v0.6.236 (the Banu Haqim pilot): a rush card's ban on my combat-ends strikes -- THIS combat's (the rush's), taken here as _owl is
+      const nw = this._ntg; this._ntgCombat = (nw && myVamp && nw.vamp === myVamp.name && (!nw.opp || !on || nw.opp === on)) ? nw.card : null; this._ntg = null; }   // v0.6.236: Night Terrors [OBF][PRE] -- my blocker's strike: combat ends in the first round of the combat its block began, never a follow-up combat [LSJ 20010813]
     const tok = (this._combatTok = (this._combatTok | 0) + 1); if(myVamp) (this._combatOppOf = this._combatOppOf || new Map()).set(myVamp.id, oppName || null);   // v0.6.221 (D-113): this combat's token -- a later combat of mine supersedes it, and a superseded one ends at its next step and leaves the live combat's fields alone (the stray combat: one bot, two blocks, the first combat outlived its action)
     let supd = false, rr = 1; const sup = r => { if(tok === this._combatTok) return false; if(!supd){ supd = true; this._emit('combat-superseded', { vamp: myVamp ? myVamp.name : null, round: r }); } return true; };   // v0.6.221 (the Jack round's egress review): a later combat of mine began while this one waited -- this one is over (its action is). v0.6.222 (the second review): checked after every await of the combat (here, in _resolveCombatRound and in their combat helpers), so it stops at the await it wakes from: no line, no tally write, no card, no blood, no row, no new wait, no next round
     this._combatAt = Date.now();   // v0.6.198: a taken line from before this combat never stands in for the board (_stealAvail)
@@ -9374,14 +9471,16 @@ class Bot {
       if(this._xr && this._xr.p1 && !this._xr.step && this._xr.oppX > this._xr.oppXDone){ await this._xLate(myVamp); if(sup(round)) return; if(myVamp.zone !== 'ready'){ rowEnd(myVamp.zone); if(hsP) this._hsNothing(myVamp, 'press'); return; } }   // v0.6.213 (the egress review): a declaration that came during the step's first awaits -- the strikes before my press
       if(sup(round)) return;   // v0.6.221: superseded while the press step waited (the ask, the opponent's press, a late strike)
       const press = this._bestPressFor(myVamp), pressE = this._bestPressFor(myVamp, 'end');   // v0.6.235: a press to continue and a press to end are found apart (pressDir)
+      const rg = this._rushGrantFor(myVamp), gPress = (rg && rg.pr > 0 && (!rg.dir || rg.dir === 'continue')) ? rg : null, gPressE = (rg && rg.pr > 0 && (!rg.dir || rg.dir === 'end')) ? rg : null;   // v0.6.236 (the Banu Haqim pilot, §3.2 item 3): a rush card's granted press (Hunter's Mark: 'This acting vampire gets 1 optional press during that combat'), either way unless its pressDir says one -- used before any press card; _wantPress still decides
       let continuing = false, pressTag = null;
       const mind = this._combatMind();
       const bundled = mind && !!this._bundledPress;                                     // v0.6.156: superior Grapple / Hidden Strength [FOR] played THIS round
-      const strayCan = !press && !bundled && !!this._findStray();   // N4d: the Underbridge Stray can grant the press for a life
+      const strayCan = !press && !bundled && !gPress && !!this._findStray();   // N4d: the Underbridge Stray can grant the press for a life (v0.6.236: not while a granted press waits)
       const mobCan = bundled ? null : this._w5MobPress();   // v0.6.230 (V5 wave 5): Mob Connections -- a lock, no card spent: before a press card
       const spendEnd = () => {                                                          // my press to END: the bundled optional press first, else the card
         let tag;
         if(this._bundledPress){ this._bundledPress = false; tag = 'bundled:end'; }
+        else if(gPressE && gPressE.pr > 0){ this._useRushGrant(myVamp, 'pr'); tag = 'grant:end'; }   // v0.6.236: the granted press, before a press card
         else { tag = pressE.name + ':end'; this.hand.splice(pressE.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(pressE.name); this._emitPlay(pressE.name, 'combat-press-end', myVamp && myVamp.name); if(pressE.cost && pressE.cost.blood) myVamp.blood = Math.max(0, (myVamp.blood | 0) - pressE.cost.blood); this.fxClone({ name: pressE.name, kind: 'lib' }, 'presses to end', { actor: myVamp }); }   // v0.6.235: the press to END (pressE)
         this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to end: the press to continue is cancelled.');
         this._cWrite({ pr: 'end' });   // v0.6.164
@@ -9390,20 +9489,24 @@ class Bot {
       };
       if(hsFirstP && oppOpen && !oppOpen.none && oppOpen.continue){       // v0.6.202: the acting bot pressed to continue -- my answer is a press to end, or I let it stand (and say so: it waits for me)
         continuing = true;
-        const w = (mind && (pressE || this._bundledPress)) ? this._wantPressToEnd(myVamp) : null;   // v0.6.235: a card that may press to end
+        const w = (mind && (pressE || this._bundledPress || gPressE)) ? this._wantPressToEnd(myVamp) : null;   // v0.6.235: a card that may press to end (v0.6.236: or a rush card's granted press)
         if(w) this.o.log('press (' + myVamp.name + '): ' + w.why);
         if(w && w.end){ await this._combatGate(true); if(sup(round)) return; pressTag = spendEnd(); continuing = false; }
         else { await this._combatGate(false); if(sup(round)) return; this._hsNothing(myVamp, 'press'); }
       } else {
-      if(mind && (press || bundled || strayCan) && !(this._oppLastTaken && Date.now() - this._oppLastTaken.at < 3000 && this._oppLastTaken.at >= (this._rndAt || 0))) await this._awaitOppTaken(Math.min(1500, (this.o.askSecs || 2) * 1000));   // v0.6.202: THIS round's line (a round-1 line within 3 s passed for round 2's)   // v0.6.156: let the opponent's taken line ('now M', torpor) arrive before judging a press -- a bot answers in ms, a human table just costs the short wait
+      if(mind && (press || bundled || strayCan || gPress) && !(this._oppLastTaken && Date.now() - this._oppLastTaken.at < 3000 && this._oppLastTaken.at >= (this._rndAt || 0))) await this._awaitOppTaken(Math.min(1500, (this.o.askSecs || 2) * 1000));   // v0.6.202: THIS round's line (a round-1 line within 3 s passed for round 2's)   // v0.6.156: let the opponent's taken line ('now M', torpor) arrive before judging a press -- a bot answers in ms, a human table just costs the short wait
       if(sup(round)) return;   // v0.6.222: superseded while I waited for their taken line
-      const want = mind ? this._wantPress(myVamp, !!press || bundled || !!strayCan || !!mobCan) : { press: (!!press || !!mobCan) && (myVamp.blood | 0) > 1, tag: 'v155', why: 'blood > 1' };   // v0.6.156: expected value replaces the blood > 1 threshold (cmb1: 6 of 14 Tremere presses were followed by a fist)
+      const want = mind ? this._wantPress(myVamp, !!press || bundled || !!strayCan || !!mobCan || !!gPress) : { press: (!!press || !!mobCan || !!gPress) && (myVamp.blood | 0) > 1, tag: 'v155', why: 'blood > 1' };   // v0.6.236: + a rush card's granted press   // v0.6.156: expected value replaces the blood > 1 threshold (cmb1: 6 of 14 Tremere presses were followed by a fist)
       this.o.log('press (' + myVamp.name + '): ' + want.why);
-      if(want.press && (bundled || press || mobCan || (strayCan && (mind || (myVamp.blood | 0) > 1)))) await this._combatGate(true);   // v0.6.202 (points 5, 7): a hold stops my press; a watched bot duel gets its beat
+      if(want.press && (bundled || press || mobCan || gPress || (strayCan && (mind || (myVamp.blood | 0) > 1)))) await this._combatGate(true);   // v0.6.202 (points 5, 7): a hold stops my press; a watched bot duel gets its beat
       if(sup(round)) return;   // v0.6.221: superseded before my press is spent
       if(want.press && bundled){                              // the free press first -- no card spent
         pressTag = 'bundled:' + want.tag; this._bundledPress = false;
         this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to continue (optional press).');
+        continuing = true;
+      } else if(want.press && gPress){                        // v0.6.236 (the Banu Haqim pilot): a rush card's granted press -- no card spent, before Mob Connections' lock and a press card
+        pressTag = 'grant:' + want.tag; this._useRushGrant(myVamp, 'pr');
+        this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to continue (' + gPress.card + ').');   // the frozen press shape, the granting card named
         continuing = true;
       } else if(want.press && mobCan){                       // v0.6.230 (V5 wave 5): Mob Connections -- 'You can lock this card to give a minion you control 1 press, only usable to continue combat.'
         pressTag = 'mob:' + want.tag; mobCan.locked = true; this.push();
@@ -9440,7 +9543,7 @@ class Bot {
       if(oppP && oppP.none) oppP = null;                                              // v0.6.202: 'does not press.' -- no press
       if(oppP && oppP.continue){
         const wasMine = continuing;
-        if(!wasMine && mind && (pressE || this._bundledPress) && this._wantPressToEnd(myVamp).end){   // v0.6.235: a card that may press to end   // v0.6.156 (Johan): press to END -- Ventrue's use of the press; a chase/snipe deck cancels a round it would lose
+        if(!wasMine && mind && (pressE || this._bundledPress || (gPressE && gPressE.pr > 0)) && this._wantPressToEnd(myVamp).end){   // v0.6.236: + a granted press not yet spent this step   // v0.6.235: a card that may press to end   // v0.6.156 (Johan): press to END -- Ventrue's use of the press; a chase/snipe deck cancels a round it would lose
           const w = this._wantPressToEnd(myVamp); this.o.log('press (' + myVamp.name + '): ' + w.why);
           await this._combatGate(true);   // v0.6.202 (point 5): a hold stops it
           if(sup(round)) return;
@@ -9461,7 +9564,7 @@ class Bot {
       this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: pressTag, continuing, blood: myVamp.blood | 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156: the row serie-cmb1 had to infer (range, opponent, strike, dealt, taken)
       if(!continuing){ await this._phaseAsk(6); if(sup(round)) return; await this._phaseAfter(6, false); return; }   // v0.6.165: "Anything before ending combat?" / "I have nothing before ending combat."
     }
-    } finally { sup(rr);   /* v0.6.222: one combat-superseded row also for a combat superseded at its last wait (nothing was left to stop) */ if(myVamp && this._combatOppOf && (tok === this._combatTok || !this._combatMyVamp || this._combatMyVamp.id !== myVamp.id)) this._combatOppOf.delete(myVamp.id);   /* v0.6.222: a superseded combat of the same vampire leaves the live one's opponent */ if(tok === this._combatTok){ /* v0.6.221: a superseded combat leaves the live combat's fields alone */ this._releaseHolds('combat'); /* v0.6.235: 'Do not replace until after combat' (Dodge) -- owed again, drawn at the next flush */ try { this._noteCombatEnd(myVamp); } catch(e){ this.o.log('combat end note error: ' + e.message); }   /* v0.6.217 (V5 wave 4): Monster -- the combat's outcome is read BEFORE its fields die below */ this._xr = null; this._myPump = null; this._curRound = 0; this._cryptDodgeUsed = null; /* v0.6.219: the crypt dodge's once each combat dies with the combat (the planners between combats see it again) */ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; /* v0.6.214: the pumps, the round number and Guard Dogs' maneuver die with the combat (a rejected combat used to leak the grant into the next one) */ this._owlCombat = null; /* v0.6.233: One With the Land's first round dies with its combat */ this._inCombat = false; this._combatArmed = false; this._combatActing = null; this._forceCloseNextRound = false; this._nextRange = null; this._setRangeNow = null; this._handStrikeOnly = false; this._range = 'close'; /* v0.6.202 (R2's second arena smoke): a range set for the NEXT round dies with this combat -- Horace's superior Grapple in the last round skipped the maneuver step of his next combat AND of his opponent's next one (one side said nothing, the other waited out the safety net and maneuvered to long alone: Roundhouse at close against Theft of Vitae at long). The same sweep: the round's range and its Grapple restriction die too -- the finders that plan between combats (a block's price, a chump bleed's cover, a rush's reach) read them, and saw "hand strikes only" (no Majesty, no dodge) or "long" (no fists) from the last round of the previous fight (16 combats in the R2 smokes began after a final-round Grapple); a new combat starts at close */ if(this.ev && this._cep) this.ev.push({ kind: 'combat-opp', opp: null, how: 'end', was: this._cep.row || null }); this._cep = null; this._invStrike = null; if(this.tally && this.tally.mode === 'combat' && this.started){ try { this._writeTally({ mode: null, res: 1 }); } catch(e){} } } }   // v0.6.103 (#1); v0.6.172 (main v2.6.137): my combat is over -- close the combat tally so the mirror is clean at once; v0.6.195 (main's reply, 9 Oct): + res 1, the client's own Combat-Resolve convention -- every human closes their Played batch and applies their own clear setting (a bare null left it open until their next action); v0.6.105: the name dies with the combat
+    } finally { sup(rr);   /* v0.6.222: one combat-superseded row also for a combat superseded at its last wait (nothing was left to stop) */ if(myVamp && this._combatOppOf && (tok === this._combatTok || !this._combatMyVamp || this._combatMyVamp.id !== myVamp.id)) this._combatOppOf.delete(myVamp.id);   /* v0.6.222: a superseded combat of the same vampire leaves the live one's opponent */ if(tok === this._combatTok){ /* v0.6.221: a superseded combat leaves the live combat's fields alone */ this._releaseHolds('combat'); /* v0.6.235: 'Do not replace until after combat' (Dodge) -- owed again, drawn at the next flush */ try { this._noteCombatEnd(myVamp); } catch(e){ this.o.log('combat end note error: ' + e.message); }   /* v0.6.217 (V5 wave 4): Monster -- the combat's outcome is read BEFORE its fields die below */ this._xr = null; this._myPump = null; this._curRound = 0; this._cryptDodgeUsed = null; /* v0.6.219: the crypt dodge's once each combat dies with the combat (the planners between combats see it again) */ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; /* v0.6.214: the pumps, the round number and Guard Dogs' maneuver die with the combat (a rejected combat used to leak the grant into the next one) */ this._owlCombat = null; /* v0.6.233: One With the Land's first round dies with its combat */ this._ceBanCombat = null; this._ntgCombat = null; this._eachMvUsed = null; if(this._actingVamp && this._actingVamp.rushGrant) this._actingVamp.rushGrant = null; /* v0.6.236 (the Banu Haqim pilot): a rush card's ban, Night Terrors' strike, the maneuvers each combat and a rush card's grant die with their combat */ this._inCombat = false; this._combatArmed = false; this._combatActing = null; this._forceCloseNextRound = false; this._nextRange = null; this._setRangeNow = null; this._handStrikeOnly = false; this._range = 'close'; /* v0.6.202 (R2's second arena smoke): a range set for the NEXT round dies with this combat -- Horace's superior Grapple in the last round skipped the maneuver step of his next combat AND of his opponent's next one (one side said nothing, the other waited out the safety net and maneuvered to long alone: Roundhouse at close against Theft of Vitae at long). The same sweep: the round's range and its Grapple restriction die too -- the finders that plan between combats (a block's price, a chump bleed's cover, a rush's reach) read them, and saw "hand strikes only" (no Majesty, no dodge) or "long" (no fists) from the last round of the previous fight (16 combats in the R2 smokes began after a final-round Grapple); a new combat starts at close */ if(this.ev && this._cep) this.ev.push({ kind: 'combat-opp', opp: null, how: 'end', was: this._cep.row || null }); this._cep = null; this._invStrike = null; if(this.tally && this.tally.mode === 'combat' && this.started){ try { this._writeTally({ mode: null, res: 1 }); } catch(e){} } } }   // v0.6.103 (#1); v0.6.172 (main v2.6.137): my combat is over -- close the combat tally so the mirror is clean at once; v0.6.195 (main's reply, 9 Oct): + res 1, the client's own Combat-Resolve convention -- every human closes their Played batch and applies their own clear setting (a bare null left it open until their next action); v0.6.105: the name dies with the combat
   }
   async _resolveCombatRound(myVamp, continued){ // v1 CUT LINE (spec §7.5-C): announce-only, one round, applies MY side; the opponent's strike isn't modelled -- assumes the rulebook default (hands, 1) unless I prevent it. Never steps the shared ph/rd counters. v0.6.23 (standing-question fix, the multi-round loop): `continued` is a NEW, backward-compatible optional 2nd arg -- every existing call (all of 37a-37g, all 6 real call sites for round 1) passes nothing, so this defaults falsy and behaves EXACTLY as before. `_resolveCombat` passes true for round 2+ ONLY.
     const rtok = this._combatTok, stale = () => rtok !== this._combatTok, gone = () => this._cotHit(myVamp) ? { oppEnded: true, cot: true } : { superseded: true };   // v0.6.222 (the second review): a later combat of mine began while this round waited -- the round stops at the await it wakes from (no line, no tally write, no card, no blood, no new wait: a wait registered now would take the live combat's lines) and _resolveCombat ends the combat; a Change of Target that ended this combat is still resolved first (its blocker unlocks: the first cut left it locked, v0.6.221's 600 match 528); 37a-37g call the round directly, where the token never moves
@@ -9685,13 +9788,16 @@ class Bot {
       this._noStrikeRound = true;
     }
     const ce = cmt ? null : this._bestCombatEndFor(myVamp);
-    const ceD = (ce && !this._noStrikeRound) ? this.decide('combat-end', { ce, vamp: myVamp, stats: this.o.combatEndStats ? this._ceCtx(myVamp) : null }) : null;   // v0.6.196: the statistics only when the knob is on (0 = v0.6.123, byte for byte)
+    const ceD = (ce && !this._noStrikeRound) ? this.decide('combat-end', { ce, vamp: myVamp, stats: this.o.combatEndStats ? this._ceCtx(myVamp, ce) : null }) : null;   // v0.6.196: the statistics only when the knob is on (0 = v0.6.123, byte for byte)
     if(ceD && !ceD.end) this.o.log('combat-end (' + myVamp.name + '): ' + ceD.why);
     if(ceD && ceD.end){   // v0.6.123: Strike: combat ends (Majesty). On the wire it IS the dodge shape -- no damage either way this round -- plus a `Combat ends` line so a bot opponent does not press into a fight that is over. It resolves before every other strike, so environmental damage (Carrion Crows) does not land either.
+      if(ce.free) this._emit('ce-grant-used', { vamp: myVamp.name, card: ce.name });   // v0.6.236: Night Terrors' granted strike -- the card went to the ash heap as it was played: nothing leaves the hand, no cost, no second clone
+      else {
       this.hand.splice(ce.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(ce.name);
       if(ce.cost) myVamp.blood = Math.max(0, (myVamp.blood | 0) - ce.cost);
       this.fxClone({ name: ce.name, kind: 'lib' }, 'combat ends', { actor: myVamp });
       this._emitPlay(ce.name, 'combat-end', myVamp.name);
+      }
       this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> strikes: combat ends.' });   // v0.6.202 (found by R2's arena smoke): the protocol's ONE-line combat-ends strike (client v2.6.134; every bot parses it since v0.6.167, L12.strikeEnds). The dodge-shaped line ('strikes: Majesty -- no damage either way') was read as a DODGE: the opposing bot's strike resolution ran before the 'Combat ends' line below arrived, and it went on to a press step nobody answered
       this.send({ t: 'log', html: 'Combat ends \u2014 <b>' + esc(ce.name) + '</b>.' });   // the card's name for the table
       if(ce.unlock) myVamp.locked = false;
@@ -9890,7 +9996,10 @@ class Bot {
     const silentLong = !opp && !continued && this._range === 'long' && !this._oppHasRanged();   // v0.6.157 (Johan, before the deploy): a SILENT opponent (a human table) at LONG range -- their rulebook default is a hand strike, which deals 0 at long; assume 1 only when their board shows a ranged option (a gun, a steal / ranged card seen)
     let taken = owlR1 ? 0 : opp ? (opp.dodge ? 0 : (opp.dealt | 0)) : (continued || silentLong ? 0 : 1);   // v0.6.233: One With the Land's first round deals nothing either way (a silent human there is not the rulebook's default strike)
     this.o.log('combat incoming (' + myVamp.name + '): ' + (opp ? (opp.dodge ? opp.vamp + ' dodged \u2014 0' : opp.vamp + ' dealt ' + opp.dealt) : silentLong ? 'no strike line within the window \u2014 long range and no ranged option seen: a hand strike deals 0' : 'no strike line within the window \u2014 assuming the rulebook default 1'));
-    let _t1 = this._takePre(myVamp, taken, opp && !opp.dodge ? (opp.aggr | 0) : 0);   // v0.6.213 (V5 wave 1): the first pair's damage, cut out so an additional pair resolves the same way -- prevention on aggravated first (equipment, Guardian Angel, Wall of Filth, then a card)
+    if(this._xr) this._xr.nullW = !!(opp && !opp.dodge && pick.kind === 'strike' && strike && this._modeNullsWeapons(strike) && this._isVampName(opp.vamp || this._combatOppName));   /* v0.6.236 (the Banu Haqim pilot, §3.2 item 5): my strike this round was a nullifier (Blood Rage, Blood Fury, Bollix [tha], Soul Burn: 'the opposing vampire's strikes with weapons inflict no damage this round') and it was not dodged [LSJ 20040928]; an ally's weapon is not a vampire's */
+    const nullW = !!(opp && !opp.dodge && taken > 0 && this._oppWeaponNulled());
+    if(nullW){ this.o.log('combat incoming (' + myVamp.name + '): ' + opp.vamp + '\u2019s weapon strike inflicts no damage this round (my ' + strike.name + ')'); this._emit('weapon-nulled', { vamp: myVamp.name, by: opp.vamp || null, card: strike.name, n: taken }); taken = 0; }   // on my own taken line: 'takes 0'
+    let _t1 = this._takePre(myVamp, taken, opp && !opp.dodge && !nullW ? (opp.aggr | 0) : 0);   // v0.6.213 (V5 wave 1): the first pair's damage, cut out so an additional pair resolves the same way -- prevention on aggravated first (equipment, Guardian Angel, Wall of Filth, then a card)
     const prevent = (_t1.taken + _t1.aggr) > 0 ? this._bestPreventFor(myVamp, opp ? this._noPreventDiscIn() : null) : null;   // v0.6.4: never burn a prevent card against zero incoming (a dodge) -- the old code would have wasted it. v0.6.214: not one the strike's card bars (Soul Burn)
     if(prevent){
       await this._pace(); if(stale()) return gone();   // v0.4.5: a beat between the strike and the prevent card -- two combat plays no longer land in the same instant
@@ -10229,9 +10338,9 @@ class Bot {
     if((m = t.match(/^(\d+) blood banked onto an uncontrolled vampire/))) return { kind: 'blood', delta: +m[1], via: 'stock', uncontrolled: true };   // v0.6.179: superior Govern ADDS blood from the bank ("Add 3 blood to a younger vampire in your uncontrolled region") -- not a pool cost
     if((m = t.match(/^(.+?) unlocks \u2014 (.+?) \(/))) return { kind: 'unlock', vamp: S(m[1]), card: S(m[2]) };
     if((m = t.match(/^(.+?) locks and (defends|is the acting minion)/))) return { kind: 'combat-start', vamp: S(m[1]), role: m[2] === 'defends' ? 'defender' : 'actor' };
-    if((m = t.match(/^(.+?) defends \(rushed by (.+?), (?:Haven Uncovered|Saulot's Avenging Fist|Regent)\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'defender', by: S(m[2]) };   // v0.6.217: + the granted rushes   // v0.6.205 (R4): a rush through Haven Uncovered locks nobody
-    if((m = t.match(/^Combat begins: (.+?) against (.+?) \((?:Haven Uncovered|Saulot's Avenging Fist|Regent)\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'actor', opp: S(m[2]) };   // v0.6.217 (the egress review): + the granted rushes
-    if((m = t.match(L12.havenRush))) return { kind: 'announce', vamp: S(m[1]), action: 'rush', directed: true, card: m[4], owner: S(m[2]), target: S(m[3]) };   // v0.6.217: the granting card (m[4])   // v0.6.205 (R4, F23): the frozen rush line
+    if((m = t.match(/^(.+?) defends \(rushed by (.+?), [^()]+\)\.?$/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'defender', by: S(m[2]) };   // v0.6.217: + the granted rushes   // v0.6.205 (R4): a rush through Haven Uncovered locks nobody
+    if((m = t.match(/^Combat begins: (.+?) against (.+?) \([^()]+\)\.?$/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'actor', opp: S(m[2]) };   // v0.6.217 (the egress review): + the granted rushes. v0.6.236 (the Banu Haqim pilot): any card the rush line names (Frontal Assault, a rush card and its level), as L12.havenRush
+    if((m = t.match(L12.havenRush))) return Object.assign({ kind: 'announce', vamp: S(m[1]), action: 'rush', directed: true, card: m[4], owner: S(m[2]), target: S(m[3]) }, m[5] ? { lvl: m[5] } : null);   // v0.6.236: + the rush card's level (m[5]), only when the line prints one   // v0.6.217: the granting card (m[4])   // v0.6.205 (R4, F23): the frozen rush line
     if((m = t.match(/^(.+?) has no counters left \u2014 burned/))) return { kind: 'card-burned', card: S(m[1]) };
     if(/\(uncurated \u2014 adjust if needed\)|is seated\. We answer to|a bare "bleed N" goes to your prey|please play with an open hand|the next rise comes cheaper|pick the card I discard \(Revelations\)/.test(t)) return { kind: 'note' };   // v0.6.205: + the Revelations pick instruction
     return null;
@@ -10557,12 +10666,15 @@ class Bot {
          is the acting minion (Haven makes nobody else acting). */
       if(m[2] === this.seatName(this.seat) && !this.out && who !== this.o.name){
         const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === m[3]);
-        const via = m[4] === 'Haven Uncovered' ? 'haven' : 'grant';   // v0.6.217: the granted rushes take Haven's terms -- the host does not lock, the rusher is the acting minion
+        const rm = m[4] === 'Haven Uncovered' ? null : this._rushLineMode(m[4], m[5]);   // v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 2): a rush card from the hand, its mode by name and level
+        const via = m[4] === 'Haven Uncovered' ? 'haven' : rm ? 'card' : 'grant';   // v0.6.217: the granted rushes take Haven's terms -- the host does not lock, the rusher is the acting minion (v0.6.236: and every rush card but Deep Song)
+        const ro = { noLock: true, targetActs: false, via, card: m[4] };
+        if(rm){ if(m[5]) ro.lvl = m[5]; if(rm.fx && rm.fx.ceBan) ro.ceBan = rm.fx.ceBan; }   // fx.ceBan: Hunter's Mark [CEL][THA] -- 'the opposing minion cannot strike: combat ends during the first round of that combat' (my vampire)
         if(vc) this._noteRushedBy(who, m[1], vc.name);   // v0.6.234: the cloak's prior
-        if(vc && this._rushWindowOpens(who, m[1], vc, { noLock: true, targetActs: false, via, card: m[4] })) return;
+        if(vc && this._rushWindowOpens(who, m[1], vc, ro)) return;
         if(vc){
           this.say('Pass');   // nobody to block with: the window path's Pass (v0.6.202's lesson -- silent, the rusher's directed ask ran its whole clock)
-          this._complyRush({ who, actingVampName: m[1], rushTarget: vc.name, noLock: true, targetActs: false, via, card: m[4] });
+          this._complyRush(Object.assign({ who, actingVampName: m[1], rushTarget: vc.name }, ro));
         }
       }
       return;
@@ -11333,8 +11445,9 @@ class Bot {
       if(p.reacted && p.reacted.has(FX_NORM(h.name))) continue;   // once per action
       if(!this._titleOk(h, blocker) || !this._entryReqOk(h.e, blocker)) continue;   // Night Terrors: 'Requires Ravnos' (the card's clan)
       const cost = (h.e.cost && h.e.cost.blood) | 0; if((blocker.blood | 0) < cost) continue;
-      const mo = (h.e.modes || []).find(m => m.fx && m.fx.stealthToZero && this._modeUsableBy(m, blocker) && this._dirOk(h.e, m, p)); if(!mo) continue;
-      return { idx, name: h.name, cost, at: mo.at || null };
+      const ms = (h.e.modes || []).filter(m => m.fx && m.fx.stealthToZero && this._modeUsableBy(m, blocker) && this._dirOk(h.e, m, p)); if(!ms.length) continue;
+      const mo = ms.find(m => m.fx.ceGrant) || ms[0];   // v0.6.236 (the Banu Haqim pilot, §3.2 item 7): the superior mode when it is usable -- '... and if this vampire blocks, they can strike: combat ends during the first round of the resulting combat' (fx.ceGrant); .find took the first (the inferior)
+      return Object.assign({ idx, name: h.name, cost, at: mo.at || null }, mo.fx.ceGrant ? { ceGrant: mo.fx.ceGrant } : null);
     }
     return null;
   }
@@ -11344,6 +11457,7 @@ class Bot {
       return this.pending === p && p.contested && p.blockerVamp === blocker && !this.out && !!p.actingVampName && this.hand[nt.idx] === nt.name && !!(t && t.mode === 'block' && (t.b | 0) < (t.a | 0) && (t.a | 0) > 0 && (t.b | 0) >= 0); }, () => {
       const actor = p.actingVampName, t = this.tally;
       p.reacted.add(FX_NORM(nt.name));
+      if(nt.ceGrant) p.ntGrant = { vamp: blocker.name, card: nt.name, ban: nt.ceGrant };   // v0.6.236: the superior's strike rides the pending to the verdict -- only a block by THIS vampire takes it (_verdictAsTarget)
       this.hand.splice(nt.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(nt.name);
       this._emitPlay(nt.name, 'react-stealth0', blocker.name);
       if(nt.cost) blocker.blood = Math.max(0, (blocker.blood | 0) - nt.cost);
@@ -12726,6 +12840,45 @@ class Bot {
               this.say('It resolves');
               this.note('Trainbot: Combat begins: ' + v.name + ' against ' + act.target.name + ' (' + (act.name || 'Haven Uncovered') + ').');
               await this._resolveCombat(v, act.target.name);   // the host is my combat opponent
+            }
+            this._actingVamp = null;
+            this._flushDraws();
+            continue;
+          }
+          if(act.via === 'card'){
+            /* v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 1): every rush card but Deep Song -- Hunter's Mark, Fleetness [CEL],
+               Ambush, Bum's Rush, Line Brawl [pot], Sense Death, Taunt the Caged Beast [ani], Umbrous Clutch ... ('Ⓓ Enter combat with <target>.').
+               The granted rush's line, the card and the level it was played at named (L12.havenRush, opened): the target does not lock and
+               I am the acting minion. The card left the hand at the announce (the minion loop) and goes to the ash heap blocked or through;
+               its cost is parked at the announce and returned on a block (R-17, _park / _returnParked); its stealth is its printed '+N
+               stealth action' (R-14). The grant (a maneuver, a press) is armed only when the rush goes THROUGH -- a blocked action card has
+               no effect -- and lives on _actingVamp (the comply's _clearCombatStashes would wipe a stash), dying with the combat. */
+            const lbl = act.name + (act.lvl ? ' ' + act.lvl : '');
+            if(act.cost && act.cost.blood){ v.blood = Math.max(0, (v.blood | 0) - act.cost.blood); this._park(act.cost.blood, 0); }   // Fleetness: 1 blood, paid by the acting vampire
+            if(act.cost && act.cost.pool){ this.pool = Math.max(0, (this.pool | 0) - act.cost.pool); this._park(0, act.cost.pool); if(this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: -act.cost.pool, via: 'cost', card: act.name, own: true, seat: this.seat })); }   // the finder left me at least 1 pool (R-34); no rush card costs pool today
+            this.push();
+            this.fxClone({ name: act.name, kind: 'lib' }, 'enters combat with ' + act.target.name, { actor: v });
+            this._announceTallyA((act.st | 0) + this._cryptStealthMod(v, 'rush', true));
+            this._combatArmed = true;
+            this._grandBallBar(v);
+            this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> enters combat with <b>' + esc(act.target.owner) + "</b>'s <b>" + esc(act.target.name) + '</b> (' + esc(lbl) + ').' });   // L12.havenRush: m[4] the card, m[5] its level
+            this._maybeInvigorate(v);   // combat is certain on a rush; same tick, no await before the block window
+            const ansC = await this._askBlock('Trainbot: ' + v.name + ' enters combat with ' + act.target.name + ' (' + lbl + ', +' + (act.st | 0) + ' stealth). Block?');
+            await sleep(150);
+            if(ansC.what === 'block'){
+              this.note('Blocked' + (ansC.who ? ' by ' + ansC.who : '') + '. Combat begins.');
+              this._toAsh(act.name);
+              this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, kind: 'rush', via: 'card', card: act.name, dir: act.target.dir, by: this._lastBlockerName || null });
+              await this._resolveCombat(v);
+            } else if(this._fizzleIfOusted(v, act.target.seat, act.n, 'rush')){
+              this._toAsh(act.name); this._combatArmed = false;   // the target left the game with its Methuselah: the card to the ash heap, its parked cost back, no combat
+            } else {
+              this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name, kind: 'rush', via: 'card', target: act.target.name, dir: act.target.dir, owner: act.target.owner, tBlood: act.target.blood, famed: !!(this._famedSeen && this._famedSeen[act.target.name]) });
+              this.say('It resolves');
+              this._toAsh(act.name);
+              if(act.grant) this._actingVamp.rushGrant = Object.assign({ card: act.name, mv: 0, pr: 0 }, act.grant);   // the rush went through: its grant for THIS combat (_rushGrantFor)
+              this.note('Trainbot: Combat begins: ' + v.name + ' against ' + act.target.name + ' (' + lbl + ').');
+              await this._resolveCombat(v, act.target.name);   // the target is my combat opponent; I am the acting minion
             }
             this._actingVamp = null;
             this._flushDraws();
