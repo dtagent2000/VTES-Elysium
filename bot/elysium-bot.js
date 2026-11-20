@@ -1749,7 +1749,11 @@ class Bot {
     if(mo.fx && (mo.fx.selfDmg || mo.fx.selfTorpor) && !(o && o.selfPrice)) return false;   // v0.6.127 (cardfx v1.9.0): a mode that HURTS its own vampire (Daring the Dawn, Force of Will, Day Operation) is closed to every generic finder -- only a consumer that pays the price asks with { selfPrice: true } (the unpaid-cost rule, applied at birth)
     if(vamp && this.fx && this.fx.modeOf){ const e = this.fx.modeOf.get(mo); if(e && e.anarchReq && this._vampSect(vamp) !== 'Anarch') return false; }   // v0.6.236 (the pilot's review, K2; grader R-2, R-3): 'Requires an Anarch' (cardfx anarchReq) is the card's requirement in EVERY finder, not the rush finder's alone -- Bollix through _bestStrikeFor, Line Brawl [pre] through _bestBleedCardFor, and every other mode a finder asks about here (the printed sect; unknown fails closed)
     if(mo.fx && mo.fx.bounce && this.predSeat() === this.preySeat()) return false;   // v0.5 (Johan): a bounce needs "another Methuselah" per the rulebook -- in a 2-live-player table my prey IS my predator, so no legal destination ever exists. Same fact _reactWindow's bounceLegal already checks per-actor; here it's the table-structural version so discard (and anything else asking _modeUsable) treats a bounce-only card as dead fodder instead of holding it forever
-    if(!mo.at) return true;
+    if(!mo.at){   // v0.6.236 (the pilot's review, pass 2, F1): a mode with no level on a card that REQUIRES a discipline (req.disc) is played only by a minion with one of them -- the card's requirement (the rulebook: a card that requires a discipline is played by a minion that has it): Pounce, Roll, Swoop ... ([FLIGHT]: cardfx req.disc 'flight', the vampire's crypt flight -- _discOf), an imbued's virtue powers, the header mode of a discipline action (its +N stealth action). Not equipment, a retainer or an ally: their requirement is met at the equip / employ / recruit (_retainerReqMet ...), their modes are read on the bearer afterwards (Biothaumaturgic Experiment's employ ignores it). Gated only when a vampire is asked about (as the anarch gate above)
+      const e = vamp && this.fx && this.fx.modeOf ? this.fx.modeOf.get(mo) : null, rd = e && e.req && e.req.disc;
+      if(rd && rd.length && !(e.t || []).some(t => t === 'equip' || t === 'retainer' || t === 'ally')){ const d = this._discOf(vamp); return !!(d && rd.some(x => (d.all || []).includes(String(x).toLowerCase()))); }   // fx.modeOf, req.disc
+      return true;
+    }
     const d = this._discOf(vamp);   // v0.6.217 (V5 wave 4): the printed disciplines + a discipline master on the vampire (Oblivion)
     if(!d) return false;
     return mo.at.split('+').every(tok => tok === tok.toUpperCase()
@@ -2329,7 +2333,10 @@ class Bot {
       { const pv = prevV[c.name]; rec.bloodAt = (pv && pv.blood === rec.blood && pv.bloodAt) ? pv.bloodAt : Date.now(); }   // v0.6.198 (main 12 Oct §3.2): WHEN the board's count last changed -- a human's client never applies combat damage, so within a combat their own taken line can be fresher
       (c.attached || []).forEach(id => { const a = byId[id]; if(!a || a.kind !== 'lib' || !a.name) return;
         const ah = this.fxLookup(a.name); if(!ah || ah.kind !== 'lib') return;
-        const tt = ah.e.t || []; if(!tt.includes('equip') && !tt.includes('retainer')) return;
+        const tt = ah.e.t || [];
+        if(!tt.includes('equip') && !tt.includes('retainer')){   // v0.6.236 (the pilot's review, pass 2, B5): a card ON the minion that gives it a maneuver each combat (cardfx maneuverEach: Shadow of the Beast, New Moon Sigil, Biothaumaturgic Experiment [THA]) -- read as _eachManeuverFor reads mine (the entry's key, no level); the adaptive skip asks it (_phaseSkip). Written only when there is one (no new field on every record)
+          if((ah.e.modes || []).some(mo => mo.fx && (mo.fx.maneuverEach | 0) > 0)) (rec.mvEach = rec.mvEach || []).push(a.name);   // fx.maneuverEach
+          return; }
         const cats = this._cats(ah.e); rec.equip.push(a.name); o.equip[a.name] = cats; });
       o.vamps[c.name] = rec;
       if(rec.clan) o.clans[rec.clan] = (o.clans[rec.clan] || 0) + 1;
@@ -4806,8 +4813,9 @@ class Bot {
   }
   _discOf(vamp, board){              // v0.6.217 (V5 wave 4): the printed disciplines + the discipline masters on the vampire -- Oblivion's fx.discUp is +1 level (none -> inferior, inferior -> superior)
     const cv = vamp && this.fxLookup(vamp.name); const d = cv && cv.kind === 'crypt' && cv.e.disc; if(!d) return d || null;
-    const up = this._attachedFx(vamp, 'discUp', board); if(!up.length) return d;
+    const up = this._attachedFx(vamp, 'discUp', board), fl = !!cv.e.flight; if(!up.length && !fl) return d;   // v0.6.236 (the pilot's review, pass 2, F1): + Flight -- KRCG prints it in a Gargoyle's text ('Flight [FLIGHT].', cardfx crypt flight), not among its disciplines; a card requiring [FLIGHT] is req.disc 'flight'
     const all = (d.all || []).slice(), sup = (d.sup || []).slice();
+    if(fl && !all.includes('flight')) all.push('flight');
     up.forEach(x => { if(sup.includes(x)) return; if(all.includes(x)) sup.push(x); else all.push(x); });
     return { all, sup };
   }
@@ -5842,7 +5850,7 @@ class Bot {
       if(g.mv || g.pr) pick.grant = g; }
     return pick;
   }
-  _anarchReqOk(e, vamp){             // v0.6.236 (the Banu Haqim pilot): the compiler's anarchReq marker ('Requires an Anarch' / 'a ready Anarch' / 'a baron', cardfx v1.9.9) gated on the vampire's printed sect -- no finder read it as a requirement (Garibaldi-Meucci and Powerbase: Los Angeles read it as a class); req.sect, when the entry carries it, is _entryReqOk's. A baron card's title is not read here (none is a rush card): only the sect
+  _anarchReqOk(e, vamp){             // v0.6.236 (the Banu Haqim pilot): the compiler's anarchReq marker ('Requires an Anarch' / 'a ready Anarch' / 'a baron', cardfx v1.9.9) gated on the vampire's printed sect -- no finder read it as a requirement (Garibaldi-Meucci and Powerbase: Los Angeles read it as a class); req.sect, when the entry carries it, is _entryReqOk's. Only the sect is read here, never a baron card's title ('Requires a baron' is anarchReq too, [LSJ 20050128]); since K2 this gate serves every finder through _modeUsableBy, and the title is the finder's own _titleOk (req.titles) -- the finders that ask it (the rush, intercept, attach and employ finders) refuse a non-baron, but _bestBounceFor asks no title: Bait and Switch ('Requires a baron') reaches it, so a non-baron Anarch can bounce with it (a known rider; the pilot's review, pass 2, B4)
     if(!e || !e.anarchReq || (e.req && e.req.sect)) return true;   // e.anarchReq
     return this._vampSect(vamp) === 'Anarch';   // unknown = fail closed
   }
@@ -6180,7 +6188,7 @@ class Bot {
       (h.e.modes || []).forEach(mo => {
         const st = this._modeStrikeDmg(mo, vamp);   // v0.6.202 (point 18): absolute strike or hand strike + bonus
         const ag = !!(mo.fx.aggr || (mo.fx.handStrike && this._aggrHandsOn(vamp)));   // v0.6.213: aggravated by its own text (Sculpt the Flesh [pro]), or a hand strike while Claws of the Dead / Invigorate [pro] holds
-        if(typeof st === 'number' && !mo.fx.maneuver && !mo.fx.press && (!this._handStrikeOnly || mo.fx.handStrike) && !(this._range === 'long' && mo.fx.handStrike) && !(this._range === 'long' && !mo.fx.ranged) && this._modeUsableBy(mo, vamp) &&   /* v0.6.175 (the cardfx sweep): at long range only a RANGED strike (cardfx fx.ranged, the R suffix) -- a melee card strike (Talbot's Chainsaw, Burning Touch, 14 cards) cannot be used */   // v0.6.156: a hand strike (Roundhouse) cannot be used at long range -- rulebook 6.4.3   // v0.6.20: co-located maneuver/press = a bundled ability, not a clean strike bonus (Slam's superior, Lam Into) -- same guard as steal's, conservatively also excludes 2 false positives (Pounce, Taming the Beast) where "press" describes an unrelated consequence, not a granted option; a missed tag over a wrong one. v0.6.28 (Immortal Grapple): while _handStrikeOnly is active, only handStrike-tagged modes qualify -- source-verified "strikes that are not hand strikes cannot be used this round (by either combatant)"
+        if(typeof st === 'number' && !mo.fx.maneuver && !mo.fx.press && (!this._handStrikeOnly || mo.fx.handStrike) && !(this._range === 'long' && mo.fx.handStrike) && !(this._range === 'long' && !mo.fx.ranged) && this._modeUsableBy(mo, vamp) &&   /* v0.6.175 (the cardfx sweep): at long range only a RANGED strike (cardfx fx.ranged, the R suffix) -- a melee card strike (Talbot's Chainsaw, Burning Touch, 14 cards) cannot be used */   // v0.6.156: a hand strike (Roundhouse) cannot be used at long range -- rulebook 6.4.3   // v0.6.20: co-located maneuver/press = a bundled ability, not a clean strike bonus (Slam's superior, Lam Into) -- same guard as steal's. It no longer excludes Pounce and Taming the Beast (it did by accident until cardfx v1.11.1 stripped the opponent's 'gets an optional press' and the 'cannot ... press' clause from them, D3): their riders are gated elsewhere since the pilot's review, pass 2 (F1) -- Pounce's [FLIGHT] requirement by _modeUsableBy (a level-less mode on a card with req.disc), Taming the Beast's 'this minion cannot ... press to end' by the compiler (no handBonus, cardfx v1.11.3), its [ABO] 'but strike: burn equipment' too (no strike keys). v0.6.28 (Immortal Grapple): while _handStrikeOnly is active, only handStrike-tagged modes qualify -- source-verified "strikes that are not hand strikes cannot be used this round (by either combatant)"
            (vamp.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0) && (!best || val(st, ag) > val(best.n, best.aggr)))
           best = { idx, name: h.name, n: st, cost: h.e.cost || null, aggr: ag, at: mo.at || '' };
       });
@@ -6237,13 +6245,23 @@ class Bot {
     if(!e.card) return e.strike === 'aggravated' && this._oppAggrWeapon();
     if(/^a weapon$/i.test(String(e.card).trim())) return true;   // the client's line for a human's weapon strike: 'NAME strikes with a weapon for N.' (PROTOCOL §12: 'a weapon' kept distinct -- cards trigger on weapons)
     const h = this.fxLookup(e.card); return !!(h && h.kind === 'lib' && (h.e.t || []).includes('equip')); }
-  _oppAggrWeapon(){                  // v0.6.236 (the pilot's review, K1): main's aggravated strike line ('NAME strikes for N aggravated damage.', CMB_LINE.agg) names no card, so a weapon that strikes for aggravated damage (Flamethrower, Improvised Flamethrower, Ivory Bow, Jar of Skin Eaters, Waxen Poetica ...) is read from PUBLIC evidence, no new line: the opposing vampire carries such an equipment (the table model's rec.equip, _scanOpp) -- and that seat showed no card that makes its hand strike aggravated in this combat (Sculpt the Flesh, Claws of the Dead; Invigorate [pro] since its vampire's action was announced): then the line is a hand strike's and stands
+  _oppAggrWeapon(){                  // v0.6.236 (the pilot's review, K1): main's aggravated strike line ('NAME strikes for N aggravated damage.', CMB_LINE.agg) names no card, so a weapon that strikes for aggravated damage (Flamethrower, Improvised Flamethrower, Ivory Bow, Jar of Skin Eaters, Waxen Poetica ...) is read from PUBLIC evidence, no new line: the opposing vampire carries such an equipment (the table model's rec.equip, _scanOpp) -- and that seat showed no card with an aggravated mode in this round (Invigorate [pro] since its vampire's action was announced; the pilot's review, pass 2, B1: below): then the line is a card's or a hand strike's and stands
     const c = this._combatOpp(); const eq = (c && c.rec && c.rec.equip) || []; if(!eq.length) return false;
     const lib = n => { const h = this.fxLookup(n); return (h && h.kind === 'lib') ? h.e : null; };
     if(!eq.some(n => { const e = lib(n); return !!(e && (e.t || []).includes('equip') && (e.modes || []).some(mo => mo.fx && mo.fx.aggr)); })) return false;
+    /* v0.6.236 (the pilot's review, pass 2, B1): the line is a CARD's aggravated strike, not the weapon's, when that seat showed in this
+       round any card (not equipment) with an aggravated mode -- a strike card (Walk of Flame, Body Flare, Song in the Dark, Compress,
+       Psychic Assault, Burst of Sunlight, Torment the Soul, Sculpt the Flesh [pro] ...: cardfx aggr) or one that makes its hand strikes
+       aggravated this round (Claws of the Dead [pro]: aggrHands 'round'); an action's (Invigorate [pro]: aggrHands 'action') since its
+       vampire's action was announced. K1 exempted only a hand strike made aggravated (aggrHands, or aggr beside handStrike) since the
+       combat began: a Flamethrower's bearer who struck with Walk of Flame read as the weapon, nulled to 0 by my Blood Rage. A card the
+       line names (a bot's 'strikes with CARD') is read before this (_oppWeaponNulled). The level the card was played at is not on the
+       event: a card with an aggravated mode at any level counts (Torment the Soul [nec] is not aggravated, [NEC] is) -- the damage stands */
     const ann = this.ev ? this.ev.last('announce', x => x.vamp === c.name) : null, since = Math.min(this._combatAt || 0, ann ? (ann.t || 0) : Infinity);   // a timestamp: never `| 0` (it is past 32 bits)
-    const handAggr = this.ev ? this.ev.last('card-played', x => (x.seat | 0) === (c.seat | 0) && (x.t || 0) >= since && (() => { const e = lib(x.card); return !!(e && !(e.t || []).includes('equip') && (e.modes || []).some(mo => mo.fx && (mo.fx.aggrHands || (mo.fx.aggr && mo.fx.handStrike)))); })()) : null;   // fx.aggrHands
-    return !handAggr;
+    const rnd = Math.max(this._rndAt || 0, this._combatAt || 0);   // this round's start (a stamp older than this combat is no round of it)
+    const shown = this.ev ? this.ev.last('card-played', x => (x.seat | 0) === (c.seat | 0) && (() => { const e = lib(x.card); if(!e || (e.t || []).includes('equip')) return false; const t = x.t || 0;
+      return (e.modes || []).some(mo => { const f = mo.fx || {}; return f.aggrHands === 'action' ? t >= since : (f.aggrHands || f.aggr) ? t >= rnd : false; }); })()) : null;   // fx.aggrHands, fx.aggr
+    return !shown;
   }
   _noPreventDiscIn(){                // v0.6.214: the discipline the strike I just took cannot be prevented by -- read from the card its line named (`strikes with CARD for N.`, the consumed strike event), its fx.noPreventDisc (Soul Burn: 'for'); null for a line with no card (a human's `strikes for N.`)
     const e = this.ev ? this.ev.last('strike', x => x.stk === 'consumed') : null; if(!e || !e.card) return null;
@@ -6535,7 +6553,7 @@ class Bot {
     const c = this._combatOpp(); if(!c || !who) return false;
     const handN = (this.opp && this.opp[c.seat]) ? (this.opp[c.seat].handN | 0) : 1; if(handN > 0) return false;
     if(step === 0 || step === 2 || step === 6) return true;
-    if(step === 1 || step === 4) return !((c.rec && c.rec.equip) || []).length;   // a maneuver can also come from a gun on the minion, a prevention from a vest: with equipment the step is waited on
+    if(step === 1 || step === 4) return !((c.rec && c.rec.equip) || []).length && !(step === 1 && ((c.rec && c.rec.mvEach) || []).length);   // a maneuver can also come from a gun on the minion, a prevention from a vest: with equipment the step is waited on. v0.6.236 (the pilot's review, pass 2, B5): the maneuver step also with a card on the minion that gives it a maneuver each combat (rec.mvEach: Shadow of the Beast, New Moon Sigil, Biothaumaturgic Experiment [THA]) -- a legal answer with an empty hand (the tempo gate: the skip is rules-strict)
     return false;
   }
   /* ==================== v0.6.165: THE COMBAT PHASES (Johan, 22 Sep: the bot DRIVES the steps against a human) ====================

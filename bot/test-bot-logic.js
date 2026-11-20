@@ -15437,6 +15437,77 @@ async function connectWithRetry(client, tries = 30){
         const aL2 = A2.lines.map(l => l.txt);
         ok(!aL2.some(l => /presses to continue \(Hunter's Mark\)/.test(l)) && A2.evs.length === 0,
            '181g ...a granted press printed for the END only is never spent to continue (K8) (got ' + JSON.stringify({ lines: aL2.filter(l => /press/.test(l)), evs: A2.evs }) + ')'); }
+
+      /* The pilot's review, pass 2 (B1, B2 and F1's bot half; 20 Nov 2026). Each case was red on the bytes before it (d84bd63; the report
+         names which), or kills a mutant that survived 181/182 (B2: K1c, K1e, K1f, K1g, K2d, K5e). */
+      //    B1: an aggravated strike CARD (not equipment) that the opposing seat showed THIS round keeps the aggravated line the card's (it
+      //    stands) -- Walk of Flame, Body Flare; Claws of the Dead [pro] this round only, Invigorate [pro] since the action was announced; not
+      //    a card of an earlier round or combat (K1c), not another seat's card (K1g), not a weapon's own play; Psychic Assault prints no
+      //    aggravated damage (cardfx v1.11.3) -- the weapon's; a human's cardless NON-aggravated line is never the aggravated weapon (K1f)
+      { const WN = 'Wauneka (G6)';
+        const mkB = (shown, o) => { const h = mk181('banuhaqim'); o = o || {};
+          h.table[2].pub.cards = [{ id: 'w1', kind: 'crypt', name: WN, zone: 'ready', blood: 5, attached: ['g1'] }, { id: 'g1', kind: 'lib', name: 'Flamethrower', zone: 'ready' }];
+          h.table[3].pub.cards = [{ id: 'n1', kind: 'crypt', name: 'Lauren (G6)', zone: 'ready', blood: 3 }];
+          h._scanOpp(2, h.table[2].pub); h._scanOpp(3, h.table[3].pub); h._inCombat = true; h._combatOppName = WN;
+          const now = Date.now(); h._combatAt = now - 1000; h._rndAt = now - 100; h._xr = h._xrFresh(); h._xr.nullW = true;
+          if(o.ann && h.ev) h.ev.push({ kind: 'announce', vamp: WN, seat: 2, t: now - 3000 });
+          (shown || []).forEach(s => { if(h.ev) h.ev.push({ kind: 'card-played', seat: s.seat || 2, who: null, card: s.card, src: 'fx', t: now - (s.ago | 0) }); });
+          return h; };
+        const rd = async (h, line) => { h._onLog('Viktor', line || (WN + ' strikes for 2 aggravated damage.')); await h._awaitOppStrike(200); return IF1(h, '_oppAggrWeapon') ? h._oppWeaponNulled() : null; };
+        const r = { wofNow: await rd(mkB([{ card: 'Walk of Flame', ago: 10 }])), flareNow: await rd(mkB([{ card: 'Body Flare', ago: 10 }])),
+          wofEarlierRound: await rd(mkB([{ card: 'Walk of Flame', ago: 500 }])), sculptEarlierCombat: await rd(mkB([{ card: 'Sculpt the Flesh', ago: 5000 }])),
+          otherSeat: await rd(mkB([{ card: 'Walk of Flame', ago: 10, seat: 3 }])), weaponShown: await rd(mkB([{ card: 'Flamethrower', ago: 10 }])),
+          invigorate: await rd(mkB([{ card: 'Invigorate', ago: 2000 }], { ann: true })), invigorateEarlier: await rd(mkB([{ card: 'Invigorate', ago: 5000 }], { ann: true })),
+          clawsNow: await rd(mkB([{ card: 'Claws of the Dead', ago: 10 }])), clawsEarlierRound: await rd(mkB([{ card: 'Claws of the Dead', ago: 500 }])),
+          psychic: await rd(mkB([{ card: 'Psychic Assault', ago: 10 }])), cardless: await rd(mkB([]), WN + ' strikes for 2.') };
+        ok(r.wofNow === false && r.flareNow === false && r.wofEarlierRound === true && r.sculptEarlierCombat === true && r.otherSeat === true && r.weaponShown === true
+           && r.invigorate === false && r.invigorateEarlier === true && r.clawsNow === false && r.clawsEarlierRound === true && r.psychic === true && r.cardless === false,
+           '181g an aggravated line after a NON-hand aggravated strike card shown this round is that card’s and stands (B1): Walk of Flame, Body Flare; Claws of the Dead this round, Invigorate [pro] since the action was announced -- not one of an earlier round, an earlier combat (K1c) or action, another seat (K1g) or the weapon’s own play, not Psychic Assault (no aggravated damage, cardfx v1.11.3): those are nulled as the Flamethrower’s; a cardless plain line is never the aggravated weapon (K1f) (got ' + JSON.stringify(r) + ')'); }
+      //    B2 (K1e): an AGGRAVATED weapon strike in the additional pair is nulled while my nullifier holds (the .44 Magnum case above is plain)
+      { const pairG = async nullW => { const x = mk181('banuhaqim'); const k = V1('k1', KB, { blood: 5 }); x.board = [k];
+          x.table[2].pub.cards = [{ id: 'w1', kind: 'crypt', name: 'Wauneka (G6)', zone: 'ready', blood: 5, attached: ['g1'] }, { id: 'g1', kind: 'lib', name: 'Flamethrower', zone: 'ready' }]; x._scanOpp(2, x.table[2].pub);
+          x._inCombat = true; x._combatOppName = 'Wauneka (G6)'; x._combatAt = Date.now() - 1000; x._rndAt = Date.now() - 100; x._xr = x._xrFresh();
+          Object.assign(x._xr, { p1: true, oppX: 1, oppXSeen: 1, nullW }); x._hsOn = () => false; x._combatIActing = () => true; x._pace = async () => {};
+          x._xTheirs = async () => { if(x.ev){ const e = x.ev.push({ kind: 'strike', vamp: 'Wauneka (G6)', strike: 'aggravated', n: 2 }); e.stk = 'consumed'; } return { vamp: 'Wauneka (G6)', dealt: 0, aggr: 2 }; };
+          await Promise.race([x._xPairs(k), sleep(3000)]); return { blood: k.blood, zone: k.zone, nul: ev1(x, 'weapon-nulled') }; };
+        const gy = await pairG(true), gn = await pairG(false);
+        ok(gy.blood === 5 && gy.zone === 'ready' && gy.nul.length === 1 && gy.nul[0].pair === 2 && gy.nul[0].n === 2 && (gn.blood < 5 || gn.zone !== 'ready') && gn.nul.length === 0,
+           '181g ...the additional pair, aggravated (K1e): their additional Flamethrower strike for 2 aggravated deals me 0 while my nullifier holds (a weapon-nulled row, pair 2, n 2); without it the damage lands (got ' + JSON.stringify({ gy, gn }) + ')'); }
+      //    B2 (K2d): 'Requires an Anarch' fails closed on a vampire whose sect the data does not know
+      { const u = mk181('banuhaqim'); const bb = u.fxLookup('Bear-Baiting'), mo = bb && bb.e.modes[0];
+        const unk = V1('x1', 'Nobody Printed (G9)', { blood: 5 }), inez = V1('i1', 'Inez "Nurse216" Villagrande (G4)', { blood: 5 }), bg = V1('b1', 'Brandon Grime (G6)', { blood: 5 });
+        ok(!!mo && u._modeUsableBy(mo, unk) === false && u._modeUsableBy(mo, inez) === false && u._modeUsableBy(mo, bg) === true,
+           '181g Requires an Anarch fails closed (K2d): Bear-Baiting is no card for a vampire the data lacks, nor for an imbued (no printed sect); an Anarch plays it (got ' + JSON.stringify(mo ? [u._modeUsableBy(mo, unk), u._modeUsableBy(mo, inez), u._modeUsableBy(mo, bg)] : null) + ')'); }
+      //    B2 (K5e): a locked-target rush whose target the board no longer shows is not decided by the locked check (_rushTargetLockedNow:
+      //    the oust fizzle and a burn are other paths) -- no 'unlocked' fizzle
+      { const u = mk181('banuhaqim'); const me = V1('k1', KB, { blood: 5 }); u.board = [me]; u.hand = ['Fleetness']; const lt = V1('t2', 'Lauren (G6)', { blood: 2, locked: true }); u.table[2].pub.cards = [lt];
+        let first = true, combats = 0; u._decideAction = (v, ctx) => { if(first && v === me){ first = false; return { pick: ctx.rush, why: 'test' }; } return { pick: null, why: 'test' }; };
+        u._askBlock = async () => { u.table[2].pub.cards = []; return { what: 'pass' }; }; u._resolveCombat = async () => { combats++; };
+        await Promise.race([u._playTurn().catch(() => {}), sleep(8000)]);
+        const fz = ev1(u, 'fizzled').filter(f => f.why === 'unlocked');
+        ok(fz.length === 0 && combats === 1 && !u.notes.some(n => /is not locked as it resolves/.test(n)),
+           '181g ...a target gone from its board as the rush resolves is not read as unlocked (K5e): no unlocked fizzle, the combat as before (got ' + JSON.stringify({ fz, combats }) + ')'); }
+      //    F1 (the bot's half): a mode with no level on a card that REQUIRES a discipline is played only by a vampire with one of them -- Pounce
+      //    and Swoop require [FLIGHT] (a Gargoyle's 'Flight [FLIGHT].', cardfx crypt flight); Taming the Beast [abo] is no hand strike for the
+      //    chooser (its self-restriction unread: no handBonus); Backstep is a maneuver to LONG range only (maneuverTo); Dagon's Call is no
+      //    press (the press step); a discipline action's header stealth needs the discipline; equipment / retainers / allies are not gated
+      { const u = mk181('banuhaqim'); const kb = V1('k1', KB, { blood: 5 }), ch = V1('c1', 'Chalcedony (G6)', { blood: 5 }), am = V1('a1', 'Amavi (G4)', { blood: 5 }), ar = V1('r1', 'Abd al-Rashid (G2)', { blood: 5 }), md = V1('m1', 'Madison (G6)', { blood: 5 });
+        u.board = [kb, ch, am, ar, md]; u._range = 'close';
+        const nm = x => (x && x.name) || null;
+        u.hand = ['Pounce']; const pK = nm(u._bestStrikeFor(kb)), pC = nm(u._bestStrikeFor(ch));
+        u.hand = ['Taming the Beast']; const tA = nm(u._bestStrikeFor(am));
+        u.hand = ['Backstep']; const bC = nm(u._bestManeuverFor(kb, 'close')), bL = nm(u._bestManeuverFor(kb, 'long'));
+        u.hand = ['Swoop']; const sK = nm(u._bestManeuverFor(kb, 'close')), sC = nm(u._bestManeuverFor(ch, 'close')), sL = nm(u._bestManeuverFor(ch, 'long'));
+        u.hand = ["Dagon's Call"]; const dP = nm(u._bestPressFor(ar));
+        const rv = u.fxLookup('Revelations'), hdr = rv && rv.e.modes.find(m => !m.at);
+        const plant = t => { const e = { t, req: { disc: ['ani'] }, modes: [{ at: null, fx: { prevent: 1 } }], src: 'auto' }; if(u.fx && u.fx.modeOf) u.fx.modeOf.set(e.modes[0], e); return e.modes[0]; };
+        const mRet = plant(['retainer']), mEq = plant(['equip']), mAct = plant(['action']);
+        const btb = u.fxLookup('Break the Bonds'), btbM = btb && btb.e.modes.find(m => !m.at), bg = V1('b1', 'Brandon Grime (G6)', { blood: 5 }), pnM = (u.fxLookup('Pounce') || { e: { modes: [] } }).e.modes[0];
+        const got = { pK, pC, tA, bC, bL, sK, sC, sL, dP, hdrK: !!hdr && u._modeUsableBy(hdr, kb), hdrM: !!hdr && u._modeUsableBy(hdr, md), ret: u._modeUsableBy(mRet, kb), eq: u._modeUsableBy(mEq, kb), act: u._modeUsableBy(mAct, kb),
+          btbOne: !!btbM && u._modeUsableBy(btbM, bg), btbNone: !!btbM && u._modeUsableBy(btbM, V1('e1', 'Elen Kamjian (G6)', { blood: 5 })), noVamp: !!pnM && u._modeUsableBy(pnM) };
+        ok(got.pK === null && got.pC === 'Pounce' && got.tA === null && got.bC === null && got.bL === 'Backstep' && got.sK === null && got.sC === 'Swoop' && got.sL === null && got.dP === null
+           && got.hdrK === true && got.hdrM === false && got.ret === true && got.eq === true && got.act === false && got.btbOne === true && got.btbNone === false && got.noVamp === true,
+           '181h a card that requires a discipline, at no level (the pilot’s review, pass 2, F1): Pounce is no strike for Kasim (no Flight), Chalcedony’s (a Gargoyle); Taming the Beast none for Amavi; Backstep goes to long only; Swoop to close, a flyer’s; Dagon’s Call is no press; Revelations’ +1 stealth action is Kasim’s (Auspex), not Madison’s; Break the Bonds’ Bleed (‘More than one Discipline can be used’) is Brandon Grime’s by Presence alone, not Elen Kamjian’s (an Anarch with none of the three); a planted retainer or equipment is not gated, an action is; with no vampire asked nothing is gated (the anarch gate’s contract) (got ' + JSON.stringify(got) + ')'); }
     }
 
     /* 182) v0.6.236 (unreleased) -- THE BANU HAQIM PILOT, executor B2 (specs/spec-sweep-pilot-2026-11-20.md section 3.2 items 4, 6, 8;
@@ -15818,6 +15889,24 @@ async function connectWithRetry(client, tries = 30){
         const uW = mkC(); uW._onLog('Viktor', 'Viktor combat — Anxo Vilela (G6) takes 2 (loses 2 blood, now 1). The Blood Doll is burned.');
         const uT = mkC(); uT._onLog('Viktor', 'Viktor combat — Anxo Vilela (G6) takes 2 (loses 1 blood, now 0). Anxo Vilela (G6) goes to torpor.');
         ok(uW.pool === 20 && uT.pool === 23, '182i the taken line (P8): another card burned in it leaves the contract alone; the host’s own torpor burns it for 3 (got ' + JSON.stringify({ w: uW.pool, t: uT.pool }) + ')'); }
+      //    The pilot's review, pass 2 (B2: P8b): a host that becomes ready on MY board (a change of control to me) did not leave the ready
+      //    region either -- the contract stays (Anxo now mine; Viktor's push no longer shows him)
+      { const pub2 = (zone) => ({ pool: 20, cards: zone ? [{ id: 'x1', kind: 'crypt', name: AX, zone, blood: 1 }] : [] });
+        const uM = mk182('banuhaqim'); uM.board = [V2('k1', KB, { blood: 5, cap: 9 })]; myContract(uM, KB); uM.table[2] = { seen: new Set(), seeded: false }; uM._onBoard({ seat: 2, pub: pub2('ready') });
+        uM.board.push(V2('x1', AX, { blood: 1 })); uM._onBoard({ seat: 2, pub: pub2(null) }); const lM = uM.sent.map(txt2).find(l => /Priority Contract/.test(l));
+        ok(uM.pool === 20 && !lM && Object.keys(uM._contractSeen || {}).length === 1,
+           '182i ...a change of control to ME (Anxo ready on my board) is no leaving of the ready region either (P8b): no burn, the record kept (got ' + JSON.stringify({ pool: uM.pool, line: lM || null, rec: Object.keys(uM._contractSeen || {}).length }) + ')'); }
+      //    The pilot's review, pass 2 (B5): Adaptive skips a human's maneuver step only when they have no legal maneuver -- a card on their
+      //    minion that gives it a maneuver each combat (Shadow of the Beast, New Moon Sigil, Biothaumaturgic Experiment [THA]) is one, with
+      //    an empty hand; a master on it (Blood Doll) is not; the prevention step still skips (a maneuver card prevents nothing)
+      { const mkS = att => { const u = mk182('banuhaqim'); u.players[1].bot = false;
+          u.table[2].pub = { pool: 20, counts: { hand: 0 }, cards: [{ id: 'x1', kind: 'crypt', name: AX, zone: 'ready', blood: 3, attached: att ? ['s1'] : [] }].concat(att ? [{ id: 's1', kind: 'lib', name: att, zone: 'ready' }] : []) };
+          u._scanOpp(2, u.table[2].pub); u._inCombat = true; u._combatOppName = AX; return u; };
+        const sb = mkS('Shadow of the Beast');
+        const r = { none: mkS(null)._phaseSkip(1, 'Viktor'), sb: sb._phaseSkip(1, 'Viktor'), nm: mkS('New Moon Sigil')._phaseSkip(1, 'Viktor'), be: mkS(BE)._phaseSkip(1, 'Viktor'), doll: mkS('Blood Doll')._phaseSkip(1, 'Viktor'),
+          sbPrevent: sb._phaseSkip(4, 'Viktor'), gun: mkS('.44 Magnum')._phaseSkip(1, 'Viktor') };
+        ok(r.none === true && r.sb === false && r.nm === false && r.be === false && r.doll === true && r.sbPrevent === true && r.gun === false,
+           '182i Adaptive asks a human’s maneuver step when a card on their minion gives it a maneuver each combat (B5): Shadow of the Beast, New Moon Sigil, the Experiment -- waited on; with nothing, or a master (Blood Doll), skipped; the prevention step still skipped; a gun as before (got ' + JSON.stringify(r) + ')'); }
 
       //    P6: Preternatural Strength's line is read as strength, before the attach shape, by the undirected window too
       { const o = mk182('tremere', { name: 'Viktor', seat: 2 }); o._reactWindow = () => {}; o.table[1].pub.cards = [P2('k1', KB, 5)];
