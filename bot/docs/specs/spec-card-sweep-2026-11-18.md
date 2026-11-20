@@ -309,6 +309,23 @@ keys (the title family shares through its `ref.fx` keys) and its debt stays repo
 The pilot's and each starter's predictions are registered in their own rounds, before the build.
 
 ### 4.4 The merge of hand entries (designed in A2, "kör" 19 Nov: D-127; built at the start of B)
+**Built** (20 Nov 2026: cardfx compiler v1.10.0, PR #92; no bot or cardfx byte changed, nothing opts in). Where the design below
+was silent the build chose (the compiler's `mergeHand` header has the whole list):
+- a level is `at` and `when`, compared exactly: a curated mode without `when` never meets a compiled mode that names one, so it
+  is ADDED, not merged (the report says `[at] added`: read it);
+- `nth` counts from 1 in the compiled order of its level; an `nth` or a `drop` that names no compiled mode, `add` with `nth` or
+  `drop`, a dropped mode with more than its level, `modes` that are not a list, a merge with no compiled entry under its name,
+  `merge` on a crypt entry and a layer that writes `src`, `merged` or `handKeys` each fail the compile;
+- a `null` that finds nothing to delete is not written, and the report says so; a merged mode whose every key is deleted keeps
+  `fx: {}` (drop the mode instead);
+- `ref` merges key by key as `req` does: `ref.fx` as a mode's `fx`, `ref.tags` and `ref.pool` take the curated value whole;
+- a `merge` that is not `true` is no opt-in: today's overlay, the key written as it stands, and the report warns;
+- the kept numeric cost stands in the report's inherited list; an X in the X list and on the entry's merge line;
+- the ledger's census keeps its three tiers (a merged entry counts as curated); a row's tier reads `curated, merged`.
+
+The friction the pilot meets: a key the layer restates with the compiler's own value is in `handKeys`, so the register counts it
+as the hand's (write the remainder only); and opting an existing hand entry in moves its compiler-given keys out of the hand-only
+count, so a backlog key that sat only there is no longer hand-only and the register's gate asks for its row to move.
 Today `cardfx-curated.json` replaces the compiled entry whole (`cardfx-compile.js`, the overlay), and the hand entry inherits only
 the numeric cost, the discipline, clan and capacity requirements and the entry-level markers (`oot`, `anarchReq`, `zombie`,
 `onlyDirected`, `frenzy`; since v1.9.12 the six condition tags, the egress review of v0.6.235). The merge lets a hand entry carry the remainder only.

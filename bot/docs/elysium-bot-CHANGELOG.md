@@ -3,6 +3,45 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **The V5 sweep, step B's first part: the merge of hand entries (20 Nov 2026, bot v0.6.235, no bot change; PR #92)** — RULINGS
+  D-127 (Johan's "kör" of 19 Nov on the design), `specs/spec-card-sweep-2026-11-18.md` §4.4, stacked on #91. No bot byte and no
+  cardfx byte: nothing opts in.
+  - **`cardfx-compile.js` v1.10.0** (`mergeHand`): a curated library entry with `"merge": true` is laid over a copy of the
+    compiled entry (a printed variant: the printed name's, written under both names). Modes meet by level, `at` and `when`: the
+    only compiled mode at the level, or the one `nth` names (from 1); `add` appends after the compiled modes in the curated order;
+    `drop` deletes; a mode at a level the compiled entry lacks is added. The compile fails on a target that is not plain (two
+    compiled modes and no `nth`: Donate, The Eldest Are Kholo, Touch of Valeren [for], Vigilance; two curated modes at one
+    compiled mode; an `nth` or a `drop` that names none; `add` with `nth` or `drop`), on a merge with no compiled entry, on `merge`
+    in the crypt (whole-entry replacement stays) and on a layer that writes `src`, `merged` or `handKeys`. Values: `fx` the
+    union, the curated value wins, `null` deletes; `req` and `ref` key by key, `ref.fx` as `fx`; other entry fields whole; the
+    note is the curated one. The cost rule unchanged (the compiled numeric cost unless the layer names `cost`; an X leaves and is
+    reported). `src: 'hand'` with `merged: true` and `handKeys` (the sorted fx keys the layer sets). The report: a `merged
+    entries` line per entry with what its layer changed; a warning for a `merge` that is not `true`, or a mode's `nth` / `add` /
+    `drop`, on an entry that does not opt in (overlaid whole, as before).
+  - **The readers of `src`**: `cardfx-sharing.js` v1.1.0 (a merged entry's hand keys are its `handKeys`, its compiler keys count
+    as any other entry's); `gen-card-ledger.js` v1.2.2 (a row's tier `curated, merged`, the census counts it curated);
+    `gen-review-sheet.js` v1.0.1 (the origins read the layer, the tier `curated, merged`). The bot, `gen-deck-coverage.js`'s badge
+    and `test-cardfx.js`'s masters read `src === 'hand'` as before: unchanged.
+  - **Where §4.4 was silent**: the choices and the friction the pilot meets are the spec's note under §4.4 (the level compared
+    exactly, so a curated mode without `when` is added beside a compiled one that names it; `nth` from 1; a `null` that deletes
+    nothing is reported, not written; `ref.tags` / `ref.pool` whole; a restated compiler key counts as the hand's).
+  - **Docs**: HOWTO (how an entry opts in and the report's merge lines; 0.2 KB of provenance and dated tags cut as history), the
+    spec's note, the tier row of `specs/elysium-cardfx-design.md`, the curated file's comment, BOARD (B is the pilot's cards),
+    STATUS. No ceiling raised: HOWTO 22,888 of 23,000, the total 179,963 of 180,000, the bootstrap 49,977 of 50,000.
+  - *Gates* (`elysium-bot.js` `9ac9d52b`, `test-bot-logic.js` `f8c54f19`, `elysium-cardfx.json` `49c143d3`: all three unchanged):
+    `node --check` on every changed script; `test-cardfx` 425/0 (403 + 22: 20 for the merge, 2 for the register). Destructive:
+    the new file beside compiler v1.9.12 and `cardfx-sharing.js` v1.0.0 405/20, every new case red but two (the fixtures' check
+    and the "nothing opts in" guard); the mode-level `req` case is red there only because `mergeHand` is new; the merge's section
+    alone against four mutants of the new compiler (the opt-in ignored 16/4, the markers written on whole overlays 18/2, the cost
+    rule dropped from the merge 18/2, a merge that writes a second entry 19/1): each guard red on its mutant. A scratch compile
+    equals the committed `elysium-cardfx.json` and `.js` (the timestamp normalised) and v1.9.12's compile; the report the same
+    but its version line. The ledger's self-test 77/77 and the sheet's 21/21 (each new case red on a mutant with the old line);
+    on a scratch library with Conditioning merged the ledger's row reads `curated, merged` (v1.2.1: `curated`), the sheet stars
+    the layer's key, and the register asks for that key's row; today's library through the old and the new ledger and sheet: the
+    same page but the version label, so `docs/CARDS.md` stays as committed. The lint clean (suppressions `{}`); canary 235/0 ×2;
+    the suite 2618/0 (one frozen run, a sanity gate: no bot byte changed; the ×3 belongs to a release); `DOC_BUDGET_ROOT_DRIFT=fail
+    bash tools/doc-budget.sh` PASS. No sim footprint: no bot byte and no cardfx byte changed, so the sim's inputs are the same.
+  - Egress: EGRESS_PLACEHOLDER
 - **Exactness first: the library by effect (20 Nov 2026, bot v0.6.235, no bot change; PR #91)** — Johan's rulings of 20 Nov
   morning on the V5 sweep's focus and order, recorded before B. No code changes.
   - **RULINGS D-130** (exactness first): the focus is card-rule exactness "att börja med", the goal that the bots can judge what

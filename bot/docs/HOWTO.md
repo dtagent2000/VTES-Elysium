@@ -1,4 +1,4 @@
-# HOWTO — running, debugging, analysing (20 Oct 2026; distilled from SKILLS.md, whose full text is `history/SKILLS-2026-10-20.md`)
+# HOWTO — running, debugging, analysing (20 Oct 2026)
 
 Everything runs from inside `bot/`. Third-party data (`vtes.json`, the TWDA) is fetched or copied from the private data repo first
 (root `CLAUDE.md`). The card data is KRCG's v5 dump, written as the v3-shaped `vtes.json` every tool reads by `krcg-v5.js`:
@@ -17,7 +17,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   the same trace byte for byte, so `python3 ana-sim-diff.py A B` compares two runs match by match (IDENTICAL / SAME-PLAY /
   DIVERGED with the first differing decision): before / after a change, or version against version (copy `bot/` to scratch with
   the other `elysium-bot.js`). Two versions' traces differ in the result row's `bot` at least: for a clean-up release, `sed` the
-  new version to the old in a copy of its traces and expect IDENTICAL (C2). Traces are arena-shaped (`match-NNNN.jsonl`, a `result` row), ~0.5 MB each: keep them in scratch.
+  new version to the old in a copy of its traces and expect IDENTICAL. Traces are arena-shaped (`match-NNNN.jsonl`, a `result` row), ~0.5 MB each: keep them in scratch.
   SUMMARY.md lists post-game ousts and the `zeroPool` count (a bot deciding at pool ≤ 0 before its own oust = a rules fault; a payment
   of the last pool that ousts at once leaves no decision at 0 and is not counted — BOARD). When a footprint shows DIVERGED, check whether
   the two decision sequences realign once one missing row is dropped. A `--decks` key the bot does not embed plays `deck-<key>.json`
@@ -29,20 +29,20 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   compares the existing ones, and the decks embedded in the bot, by KRCG id and quantity; `--check` writes nothing (exit 1 on a DIFF or
   a name the bot cannot resolve: the check after a `vtes.json` refresh), `--list` prints the keys (`banuhaqim` … `pathpower`). Each
   precon the bot does not embed carries its combat posture (`combat`: chase / snipe / wave, D-102) from the generator's `POSTURE`
-  table, checked like the cards; `--posture` writes the table's posture into the existing files (v1.1.0).
+  table, checked like the cards; `--posture` writes the table's posture into the existing files.
 - **The card ledger** — `node gen-card-ledger.js --sim DIR [--sim DIR …]` → `docs/CARDS.md`: per card the coverage verdict, tier,
   decks, rulings, the suite sections that name it and its uses per deck in the sims; the class map groups what is left by effect.
   The whole library (D-125): every library entry by the same verdict (every vampire offered as the crypt), by tier and
   card type, and the vocabulary (keys on library entries, in the coverage tool's scan of the bot, compiler-given, hand-only; the
   register's states) -- what a sweep round reports. Static: only a starter is proven in play.
-  With `vtes.json` beside it the crypt too (v1.1.0, D-108): every vampire (its ability, a class per sentence, its curated keys and
+  With `vtes.json` beside it the crypt too (D-108): every vampire (its ability, a class per sentence, its curated keys and
   the crypt readers that read them: modelled only when they cover every sentence) and the crypt class map. Its self-test runs before
   every page (`--self-test` prints it); a classifier miss or a curated crypt key with no class in `FX_CLASS` fails the run, so a round
   adds its new keys' classes there.
   Regenerate it from the release bytes' runs: the 240 and the V5 smoke (each of the 14 new keys:
   `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`). All 12
   deal from seed 1: a single copy deep in a library is never drawn ('unseen' is then the deal, not the bot) — add `--seeds 4`
-  to see one played (v0.6.215).
+  to see one played.
 - **The suite, frozen** (the ×3 gate; three snapshots in a row, one run at a time, ~300–420 s each), from the repo root:
   ```
   S=<a scratch dir>; L=r1; D=$S/snap-$L; rm -rf $D; mkdir -p $D/bot; cp elysium-vtes-bord.html $D/     # root client one level up: 154f
@@ -51,7 +51,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   timeout 600 node --max-old-space-size=4096 test-bot-logic.js > ../suite.log 2>&1; echo "EXIT $?" >> ../suite.log   # run_in_background, then poll
   ```
   The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran. The heap flag is not optional: on a ~2 GB
-  default heap the suite dies out of memory after section 136e (29 Oct; CLAUDE.md "Gates").
+  default heap the suite dies out of memory after section 136e (CLAUDE.md "Gates").
 - **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR that touches `bot/` or the bundle, every such push to `main` and a
   daily run on `main` (03:17 UTC) run the gates that need no person and no previous bytes (the step list is the file); on any
   other PR the job `bot-gates` skips its gate steps and succeeds, so the check can be required on `main`. A gate that skips fails
@@ -86,7 +86,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   nosferatu, ventrue. `--knob` is whitelisted (`WL`; another name is ignored with a warning; not `aggression` / `blockShy`). Timer-bound (~2.5 % of a core each), so many run in parallel; 4p30 ≈ 2–4 min, 5p30 ≈ 3–4 min on the real
   clock. Launch it detached (one process per match) and poll its trace directory. Pre-flight: one match before any series on a change that
   reads live protocol state, and read the new emit rows.
-- **The mirror bench** (on the sim since round C3, 3 Nov 2026; `docs/reports/REPORT-bench-controls-sim-2026-11-03.md`) —
+- **The mirror bench** (`docs/reports/REPORT-bench-controls-sim-2026-11-03.md`) —
   `node elysium-bot-sim.js --bench SPEC --trace DIR`: SPEC `none` (the negative control), `persona=NAME`, `knob=k=v[+k=v]`; the
   variant sits in each seat of every seating once (24 × 4 = 96 for the starters; `--design design-balanced-serie-bal1.txt` = the old
   48; `--seeds K` multiplies), each match with a deal of its own, the same in every arm. `--bench-deck DECK` pins the variant to a
@@ -101,7 +101,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   minion phase per arm, the same table in every arm (~2 s per table and arm); measures decisions, never the wire's timing.
   Pattern for any once-a-match decision.
 - **The hotseat tool** — `node elysium-bot-hotseat.js --seed 11 --start-pool 12 --ask-secs 2 --out ev.jsonl` (the client html
-  beside it; `--arm tally|full|nohold`); v1.3.0's `runTable` takes `personas`, `seatKnobs`, `onEvent` (the sim uses them).
+  beside it; `--arm tally|full|nohold`); its `runTable` takes `personas`, `seatKnobs`, `onEvent` (the sim uses them).
   `test-bot-hotseat.js` is the gate; `BOT=./old-bot.js node test-bot-hotseat.js` is its destructive check. The sweep is the ONE part
   of the client the tool imitates instead of runs (it follows `hotBridge._out`): if main changes the sweep, the tool must follow.
 - **The tokens in a browser** — `bash bot/tools/tokens-in-browser.sh <vtes.json> <expansions.json>` from the root: main's play-test
@@ -114,10 +114,13 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
 - **Coverage** — `node gen-deck-coverage.js deck-<clan>.json --out docs/coverage/deck-coverage-v5-starter-<clan>-black-chantry-2020.md`
   (a master counts only through `MASTER_KEYS`; two version sites, bump both). Every `fx.` key the bot reads is in its `CLASS` map; a
   new one prints the ⚠ line — classify it in the same round. With `vtes.json` beside it a FULL card needs a mode for every discipline
-  line of its text (v1.1.47); without it that check is skipped. The ledger reads the same verdicts (`coverDeck()`).
+  line of its text; without it that check is skipped. The ledger reads the same verdicts (`coverDeck()`).
 - **cardfx** — `node cardfx-compile.js --report` (needs `vtes.json`); read the inherited / mismatch / X lists; run `test-cardfx.js`
   BEFORE the suite after adding an fx key. Audit curated vs auto before touching a curated field: compile once without the
-  overlay and once with, diff the field per curated name. Political cards: `e.ref.pool` (terms), `e.ref.tags`, `e.ref.fx`;
+  overlay and once with, diff the field per curated name. An entry with `"merge": true` (spec-card-sweep §4.4) carries its remainder
+  only, over the compiled entry: a mode meets the compiled one at its `at` and `when` (`nth` from 1 picks one of several), `add`
+  appends, `drop` deletes, `null` deletes a key, any other target fails the compile; the report's `merged entries` lines say what
+  each layer changed. Political cards: `e.ref.pool` (terms), `e.ref.tags`, `e.ref.fx`;
   never a referendum outcome in `modes[].fx`. Adding a family: `refTerms()` / `REF_PER` / `actWhen()` in the compiler + the NEG
   list in `test-cardfx.js`. `req.titles`, `req.unmodelled` (callers fail closed).
 - **The sharing register** (`cardfx-sharing.json`, D-125) — each hand-only key (an fx key on library hand entries only) has a
@@ -195,5 +198,5 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
 `sweep-pilot.py`, `sweep-pass2.py`, `sweep-full.py` (the cardfx sweeps, `REPORT-cardfx-sweep-*.md`) · `diag-give-probe.js`
 (a live give / given probe through the server, ~70 s; copy it for any feature whose two halves meet only through the server) ·
 `diag-a1-stash-probe.js` · `gen-plan-review.js` · `gen-sweep-audit.js` · `gen-forecast-calibration.js` (to revive, BOARD).
-Series and benches run on the sim (above; C3 retired the chat-era run scripts); an arena series is `elysium-bot-arena.js` itself,
+Series and benches run on the sim (above); an arena series is `elysium-bot-arena.js` itself,
 one process per match.
