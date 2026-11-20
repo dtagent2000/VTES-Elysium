@@ -15248,6 +15248,257 @@ async function connectWithRetry(client, tries = 30){
            '181f between bots: Roberto ends the combat in round 1 with Night Terrors’ strike (the existing two lines), Majesty stays in hand, the acting bot reads it and the combat is over (got ' + JSON.stringify({ dL: dL.filter(l => /combat ends|Combat ends/.test(l)), hand: D.hand, a: aR.end }) + ')'); }
     }
 
+    /* 182) v0.6.236 (unreleased) -- THE BANU HAQIM PILOT, executor B2 (specs/spec-sweep-pilot-2026-11-20.md section 3.2 items 4, 6, 8;
+       cardfx v1.11.0 + oncePerVampire on Shadow of the Beast and New Moon Sigil): (a) Haven Uncovered by key, unchanged; (b) Priority
+       Contract through a whole turn between two bots -- placed by the look-ahead on my prey's vampire for the chosen Banu Haqim (its own
+       line), the chosen rushes through it (+1 stealth, the host unlocked, the rusher acts), the host's taken line sends it to torpor and
+       the contract burns for 3 pool, once, never at play; (c) only the chosen may rush through it, once a turn (6.1.6), another
+       Methuselah's contract grants nothing; (d) no contract without a ready Banu Haqim (R-42), the chosen is one, my prey's vampire
+       only, unique, held when the chosen would not rush; (e) the pool when the host leaves the ready region elsewhere (the owner's
+       board, the oust), once, never for a host that stays; (f) the attach finder -- Biothaumaturgic Experiment [THA] paid in pool on
+       the minion that fights most (its +1 strength read on a host without Thaumaturgy), Shadow of the Beast on the acting vampire,
+       one a vampire where printed, never the last pool, Preternatural Strength unchanged -- through the minion loop and at the
+       observer; (g) Biothaumaturgic Experiment [tha] employs an animal retainer the vampire cannot employ plainly (both costs paid),
+       never one it can; (h) the new lines and their event kinds. The old bytes lack the new methods: every call is guarded.
+       LAST LINE OF 182 is the closing brace below. */
+    {
+      console.log('\n[182] v0.6.236 -- the Banu Haqim pilot (B2): Priority Contract, the attach finder, Biothaumaturgic Experiment’s employ');
+      const IF2 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const L12b = require('./elysium-bot.js').L12;
+      const N2 = ['Hanna', 'Viktor', 'Nora', 'Pelle'];   // me 1, my prey 2, a cross seat 3, my predator 4
+      const mk182 = (deck, o) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: (o && o.name) || 'Hanna', persona: 'expert', deckName: deck || 'banuhaqim', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} });
+        u.seat = (o && o.seat) || 1; u.started = true; u.players = N2.map((n, i) => ({ seat: i + 1, name: n, online: true, bot: true }));
+        u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.says = []; u.say = p => u.says.push(p); u.notes = []; u.note = t => u.notes.push(t); u.chats = []; u.chat = t => u.chats.push(t);
+        u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.board = []; u.hand = []; u.pool = 20; u.turnSeat = 1; u.cryptN = 0; u.unc = [];
+        u.table = { 1: { pub: { pool: 20, cards: [] } }, 2: { pub: { pool: 20, cards: [] } }, 3: { pub: { pool: 20, cards: [] } }, 4: { pub: { pool: 20, cards: [] } } };
+        return u; };
+      const V2 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 4, attached: [] }, o || {});
+      const P2 = (id, name, blood, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood }, o || {});
+      const ev2 = (u, t) => u.events.filter(e => e.t === 'bot:' + t).map(e => e.d);
+      const txt2 = m => m && m.t === 'log' ? String(m.html || '').replace(/<[^>]*>/g, '') : m && m.t === 'chat' ? String(m.msg || '') : '';
+      const KB = 'Kasim Bayar (G6)', BJ = 'Bijou (G6)', AX = 'Anxo Vilela (G6)', PC = 'Priority Contract', BE = 'Biothaumaturgic Experiment';
+      const ckey = (u, card, host) => IF2(u, '_contractKey') ? u._contractKey(card, host) : card.toLowerCase().replace(/[^a-z0-9]/g, '') + '|' + host;
+      const myContract = (u, chosen, o) => { const c = { id: 'pc1', name: PC, kind: 'lib', zone: 'ready', locked: false }; u.board.push(c);
+        u._contractSeen = { [ckey(u, PC, AX)]: Object.assign({ card: PC, host: AX, owner: 'Viktor', seat: 2, by: 'Hanna', bySeat: 1, cardId: 'pc1', chosen }, o || {}) }; return c; };
+      const sumR = r => r ? { name: r.name, via: r.via, st: r.st, idx: r.idx, t: r.target && r.target.name, lock: r.lockTarget } : null;
+
+      // a) HAVEN UNCOVERED BY KEY, UNCHANGED: its keys' defaults, the same pick with or without its entry, the same rush object, the same
+      //    observer record (no card named on its line: the record stays as v0.6.205 wrote it)
+      { const u = mk182('nosferatu'); const ry = V2('r1', 'Ryan (G6)', { blood: 4, cap: 4 }); u.board = [ry]; u.table[2].pub.cards = [P2('x1', AX, 1)];
+        const g = IF2(u, '_grantOf') ? u._grantOf('Haven Uncovered') : null;
+        ok(!!g && g.name === 'Haven Uncovered' && g.st === 1 && g.rushBy === 'any' && g.hostOf === 'any' && g.pool === 0,
+           '182a Haven Uncovered read by key: rushGrant 1, rushBy and hostOf default to any, no pool (got ' + JSON.stringify(g && { st: g.st, by: g.rushBy, of: g.hostOf, pool: g.pool }) + ')');
+        const p0 = u._havenHostPick(), p1 = u._havenHostPick(u.fxLookup('Haven Uncovered'));
+        ok(!!p0 && JSON.stringify(p0) === JSON.stringify(p1) && p0.name === AX && p0.rusher === 'Ryan (G6)' && !('chosen' in p0),
+           '182a ...the Haven’s pick is the same with its entry passed as without (Ryan on Viktor’s Anxo), no chosen vampire (got ' + JSON.stringify(p1 && { name: p1.name, rusher: p1.rusher, chosen: p1.chosen }) + ')');
+        u._havenSeen = { [AX]: { owner: 'Viktor', seat: 2, by: 'Viktor', bySeat: 2, cardId: null } }; u.table[2].pub.cards.push({ id: 'hv', kind: 'lib', name: 'Haven Uncovered', zone: 'ready' });
+        const hr = u._bestHavenRushFor(ry);
+        ok(!!hr && JSON.stringify(Object.keys(hr)) === JSON.stringify(['idx', 'name', 'kind', 'via', 'target', 'lockTarget', 'st', 'n', 'exp', 'myBlood']) && hr.name === 'Haven Uncovered' && hr.via === 'haven' && hr.st === 1 && hr.idx === null && hr.target.name === AX,
+           '182a ...the rush through a Haven: the same object, key for key (got ' + JSON.stringify(sumR(hr)) + ')');
+        const o = mk182('tremere', { name: 'Nora', seat: 3 }); o._onLog('Hanna', '<b>Hanna</b> plays <b>Haven Uncovered</b> — on <b>Viktor</b>\'s <b>' + AX + '</b>.');
+        ok(!!(o._havenSeen && o._havenSeen[AX]) && JSON.stringify(o._havenSeen[AX]) === JSON.stringify({ owner: 'Viktor', seat: 2, by: 'Hanna', bySeat: 1, cardId: null }) && !o._contractSeen,
+           '182a ...an observer records Haven Uncovered as before, and no contract (got ' + JSON.stringify(o._havenSeen) + ')'); }
+
+      // b) PRIORITY CONTRACT, A WHOLE TURN BETWEEN TWO BOTS: the master phase puts it on my prey's vampire for the chosen Banu Haqim, the
+      //    minion phase rushes through it, the host's taken line sends it to torpor and the contract burns for 3 pool -- once, never at play
+      { const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        const mk = (name, seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck, paceMs: 0, askSecs: 0.4, phaseSecs: 0.3, twdKnow: 0, log: () => {} });
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = []; u.evs = [];
+          u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); if(/^bot:(through|contract|contract-pool|haven)$/.test(t)) u.evs.push({ t, m }); };
+          return u; };
+        const A = mk('Hanna', 1, 'banuhaqim'), D = mk('Viktor', 2, 'tremere');
+        const wire = (from, to) => { from.send = m => {
+          if(m && m.t === 'say'){ const d = { t: 'say', i: m.i, who: from.o.name }; setTimeout(() => { if(!to.out) to._dispatch(d); }, 30); return; }
+          if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
+          const txt = txt2(m); from._evRecord(from.o.name, txt, m.t, true); from.lines.push({ at: Date.now(), tier: m.t, txt });
+          const d = Object.assign({}, m, { who: from.o.name }); setTimeout(() => { if(!to.out) to._dispatch(d); }, 30); }; };
+        wire(A, D); wire(D, A);
+        const ks = V2('k1', KB, { blood: 5, cap: 9 }), ax = V2('x1', AX, { blood: 1, cap: 6 });
+        A.board = [ks]; A.hand = [PC, 'Roundhouse']; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
+        D.board = [ax]; D.hand = []; D.pool = 20; D.turnSeat = 1;
+        A.table = { 2: { pub: { cards: [P2('p2', AX, 1)] } } }; D.table = { 1: { pub: { cards: [P2('p1', KB, 5)] } } };
+        const pools = {}; const ap = A._announcePhase.bind(A); A._announcePhase = async ph => { pools[ph] = A.pool; return ap(ph); };
+        let terr = null;
+        await Promise.race([A._playTurn().catch(e => { terr = e.message; }), sleep(15000)]);
+        const aL = A.lines.map(l => l.txt), dL = D.lines.map(l => l.txt);
+        const placed = aL.filter(l => l === 'Hanna plays Priority Contract — on Viktor\'s Anxo Vilela (G6), chosen: Kasim Bayar (G6).');
+        const rushed = aL.filter(l => l === 'Kasim Bayar (G6) enters combat with Viktor\'s Anxo Vilela (G6) (Priority Contract).');
+        const ask = A.lines.find(l => l.tier === 'chat' && /enters combat with Anxo Vilela \(G6\) \(Priority Contract, \+1 stealth\)\. Block\?/.test(l.txt));
+        const burned = aL.filter(l => /burns Priority Contract/.test(l));
+        ok(!terr && placed.length === 1 && pools.Minion === 20 && !A.hand.includes(PC) && !!(D._contractSeen && D._contractSeen[ckey(D, PC, AX)] && D._contractSeen[ckey(D, PC, AX)].chosen === KB && D._contractSeen[ckey(D, PC, AX)].by === 'Hanna'),
+           '182b master phase: the contract goes on my prey’s Anxo for the chosen Kasim, its line names both, the observer records it, and no pool comes at play (got ' + JSON.stringify({ terr, placed: placed.length, pool: pools, seen: D._contractSeen }) + ')');
+        ok(rushed.length === 1 && !!ask && dL.some(l => l === 'Anxo Vilela (G6) defends (rushed by Kasim Bayar (G6), Priority Contract).') && (A.rows.find(r => r.round === 1) || {}).hs === 'a' && ax.locked === false,
+           '182b minion phase: Kasim enters combat with Anxo through it (+1 stealth on the Block? ask), Anxo defends unlocked and Kasim acts (got ' + JSON.stringify({ rushed: rushed.length, ask: !!ask, d: dL.slice(0, 2), locked: ax.locked }) + ')');
+        ok(burned.length === 1 && burned[0] === 'Hanna burns Priority Contract and gains 3 pool (Viktor\'s Anxo Vilela (G6) went to torpor).' && ax.zone === 'torpor' && A.pool === 23 && A.board.some(c => c.name === PC && c.zone === 'ash') && A.evs.filter(e => e.t === 'bot:contract-pool').length === 1,
+           '182b ...Roundhouse sends Anxo to torpor; at its taken line the contract burns for 3 pool, once (got ' + JSON.stringify({ burned, zone: ax.zone, pool: A.pool }) + ')');
+        const ea = A.ev && A.ev.last ? A.ev.last('contract') : null, eb = A.ev && A.ev.last ? A.ev.last('contract-burn') : null, ed = D.ev && D.ev.last ? D.ev.last('contract') : null;
+        ok(!!(ea && ea.chosen === KB && ea.vamp === AX && ea.card === PC) && !!(eb && eb.n === 3 && eb.card === PC) && !!(ed && ed.by === 'Hanna'),
+           '182b ...and both event logs type the new lines (contract, contract-burn) as sent'); }
+
+      // c) ONLY THE CHOSEN MAY RUSH THROUGH IT, ONCE A TURN: my contract gives Kasim (the chosen) the rush, Bijou (another Banu Haqim of mine)
+      //    none; gone with the card; another Methuselah's contract grants me nothing; the rushed bot reads the line as a granted rush
+      { const u = mk182('banuhaqim'); const k = V2('k1', KB, { blood: 5, cap: 9 }), b = V2('b1', BJ, { blood: 3, cap: 3 }); u.board = [k, b]; u.table[2].pub.cards = [P2('x1', AX, 1)];
+        const pc = myContract(u, KB);
+        const rk = u._bestHavenRushFor(k), rb = u._bestHavenRushFor(b);
+        ok(!!rk && rk.name === PC && rk.via === 'haven' && rk.st === 1 && rk.idx === null && rk.lockTarget === false && rk.target.name === AX && rb === null,
+           '182c the chosen Kasim may enter combat with Anxo through my contract (+1 stealth, no card from hand), Bijou may not (got ' + JSON.stringify({ k: sumR(rk), b: sumR(rb) }) + ')');
+        u._turnActs = {}; const ctx = u._actionCtxFor(k); const r1 = ctx.rush; if(r1) u._noteTurnAct(k, r1);
+        const ctx2 = u._actionCtxAdjust(k, u._actionCtxFor(k), false);
+        ok(!!r1 && r1.name === PC && ctx2.rush === null, '182c ...once each turn (rulebook 6.1.6): after that rush Kasim is not offered it again even if he unlocks (got ' + JSON.stringify({ r1: sumR(r1), r2: sumR(ctx2.rush) }) + ')');
+        pc.zone = 'ash'; const gone = u._bestHavenRushFor(k);
+        const u2 = mk182('banuhaqim'); const k2 = V2('k1', KB, { blood: 5, cap: 9 }); u2.board = [k2]; u2.table[2].pub.cards = [P2('x1', AX, 1)]; u2.table[3].pub.cards = [{ id: 'npc', name: PC, kind: 'lib', zone: 'ready' }];
+        u2._contractSeen = { [ckey(u2, PC, AX)]: { card: PC, host: AX, owner: 'Viktor', seat: 2, by: 'Nora', bySeat: 3, cardId: null, chosen: KB } };
+        ok(gone === null && u2._bestHavenRushFor(k2) === null, '182c ...gone with the card, and a contract Nora placed grants me nothing even if her chosen bears my vampire’s name (got ' + JSON.stringify({ gone: sumR(gone), nora: sumR(u2._bestHavenRushFor(k2)) }) + ')');
+        const t = mk182('tremere', { name: 'Viktor', seat: 2 }); t._reactWindow = () => {}; const host = V2('h1', AX, { blood: 5, cap: 6 }); t.board = [host, V2('h2', 'Lauren (G6)', { blood: 3 })];
+        t.table[1].pub.cards = [P2('k1', KB, 5)];
+        t._onLog('Hanna', '<b>' + KB + '</b> enters combat with <b>Viktor</b>\'s <b>' + AX + '</b> (Priority Contract).');
+        const p = t.pending;
+        ok(!!(p && p.kind === 'rush' && p.noLock === true && p.targetActs === false && p.via === 'grant' && p.card === PC && p.rushTarget === AX),
+           '182c the host’s owner opens its block window on the line: the rush locks nobody, the rusher acts, the card named (got ' + JSON.stringify(p && { kind: p.kind, noLock: p.noLock, targetActs: p.targetActs, via: p.via, card: p.card }) + ')'); }
+
+      // d) WHEN IT IS PLAYED: a ready Banu Haqim I control (R-42); the chosen is one (a Tremere of mine with a better rush is no chosen);
+      //    my prey's vampire only (my predator's is no host); unique (a visible copy holds it); held when the chosen would rather bleed
+      { const u = mk182('banuhaqim'); u.board = [V2('a1', AX, { blood: 4, cap: 6 })]; u.hand = [PC]; u.table[2].pub.cards = [P2('x2', 'Lauren (G6)', 1)];
+        const noBH = u._bestMasterFor(new Set()).some(c => c.name === PC);
+        u.board.push(V2('k1', KB, { blood: 5, cap: 9, zone: 'torpor' })); const torp = u._bestMasterFor(new Set()).some(c => c.name === PC);
+        u.board[1].zone = 'ready'; const yes = u._bestMasterFor(new Set()).some(c => c.name === PC);
+        ok(!noBH && !torp && yes, '182d R-42: no contract without a READY Banu Haqim of mine (a Tremere only: none; Kasim in torpor: none; Kasim ready: a candidate) (got ' + JSON.stringify({ noBH, torp, yes }) + ')');
+        u.board[1].locked = true; const lk = u.fxLookup(PC);
+        const pT = u._havenHostPick(lk);
+        ok(pT === null, '182d ...the chosen is a Banu Haqim: with Kasim locked, Anxo (a Tremere with a rush) is no chosen -- held (got ' + JSON.stringify(pT && { rusher: pT.rusher, chosen: pT.chosen }) + ')');
+        const v = mk182('banuhaqim'); const kv = V2('k1', KB, { blood: 5, cap: 9 }); v.board = [kv]; v.table[4].pub.cards = [P2('q1', 'Lauren (G6)', 1)];
+        const pPred = v._havenHostPick(v.fxLookup(PC)), hPred = v._havenHostPick();
+        ok(pPred === null && !!hPred && hPred.seat === 4, '182d ...my prey’s vampire only: with nobody of my prey’s in reach the contract is held, where a Haven would go on my predator’s Lauren (got ' + JSON.stringify({ pc: pPred && pPred.name, haven: hPred && hPred.name }) + ')');
+        v.table[2].pub.cards = [P2('x1', AX, 1)]; const pPrey = v._havenHostPick(v.fxLookup(PC));
+        ok(!!pPrey && pPrey.name === AX && pPrey.seat === 2 && pPrey.chosen === KB && pPrey.rusher === KB, '182d ...and on my prey’s Anxo when Kasim would rush him through it (got ' + JSON.stringify(pPrey && { name: pPrey.name, chosen: pPrey.chosen }) + ')');
+        v.table[2].pub.cards[0].blood = 5; const pBleed = v._havenHostPick(v.fxLookup(PC));
+        ok(pBleed === null, '182d ...held when the chosen would rather bleed (Anxo at 5 blood: the bleed outscores the rush, D-58) (got ' + JSON.stringify(pBleed && pBleed.name) + ')');
+        const w = mk182('banuhaqim'); w.board = [V2('k1', KB, { blood: 5, cap: 9 })]; w.hand = [PC]; w.table[3].pub.cards = [{ id: 'npc', name: PC, kind: 'lib', zone: 'ready' }];
+        ok(!w._bestMasterFor(new Set()).some(c => c.name === PC) && IF2(w, '_uniqueInPlay') && w._uniqueInPlay(PC), '182d ...unique: a copy in play at Nora’s holds mine'); }
+
+      // e) THE POOL ELSEWHERE: the host's owner's board shows it in torpor -- 3 pool, once (a second push gives nothing); a host that only
+      //    locks gives nothing; a burned host; its Methuselah ousted [ANK 20180129-2]; another Methuselah's contract gives me nothing
+      { const pub2 = (zone, locked) => ({ pool: 20, cards: [{ id: 'x1', kind: 'crypt', name: AX, zone, locked: !!locked, blood: 1 }] });
+        const seat2 = u => { u.table[2] = { seen: new Set(), seeded: false }; u._onBoard({ seat: 2, pub: pub2('ready') }); };
+        const u = mk182('banuhaqim'); u.board = [V2('k1', KB, { blood: 5, cap: 9 })]; myContract(u, KB); seat2(u);
+        u._onBoard({ seat: 2, pub: pub2('ready', true) }); const afterLock = u.pool;
+        u._onBoard({ seat: 2, pub: pub2('torpor') }); const after1 = u.pool; u._onBoard({ seat: 2, pub: pub2('torpor') }); const after2 = u.pool;
+        const ln = u.sent.map(txt2).filter(l => /Priority Contract/.test(l));
+        ok(afterLock === 20 && after1 === 23 && after2 === 23 && ln.length === 1 && ln[0] === 'Hanna burns Priority Contract and gains 3 pool (Viktor\'s Anxo Vilela (G6) went to torpor).' && u.board.some(c => c.id === 'pc1' && c.zone === 'ash'),
+           '182e Viktor’s board shows Anxo in torpor: I burn the contract for 3 pool, once (a locked Anxo gave nothing, the next push gives nothing) (got ' + JSON.stringify({ afterLock, after1, after2, ln }) + ')');
+        const ub = mk182('banuhaqim'); ub.board = [V2('k1', KB, { blood: 5, cap: 9 })]; myContract(ub, KB); seat2(ub); ub._onBoard({ seat: 2, pub: { pool: 20, cards: [{ id: 'x1', kind: 'crypt', name: AX, zone: 'ash', blood: 0 }] } });
+        const lb = ub.sent.map(txt2).find(l => /Priority Contract/.test(l));
+        const uo = mk182('banuhaqim'); uo.board = [V2('k1', KB, { blood: 5, cap: 9 })]; myContract(uo, KB); seat2(uo);
+        uo._dispatch({ t: 'roster', players: N2.map((n, i) => ({ seat: i + 1, name: n, online: true, bot: true, out: i === 1 })) });
+        const lo = uo.sent.map(txt2).find(l => /Priority Contract/.test(l));
+        ok(ub.pool === 23 && lb === 'Hanna burns Priority Contract and gains 3 pool (Viktor\'s Anxo Vilela (G6) was burned).' && uo.pool === 23 && lo === 'Hanna burns Priority Contract and gains 3 pool (Anxo Vilela (G6) left the game with Viktor).',
+           '182e ...a burned host gives the 3 pool too, and so does its Methuselah’s oust: the host leaves the ready region with him [ANK 20180129-2] (got ' + JSON.stringify({ b: [ub.pool, lb], o: [uo.pool, lo] }) + ')');
+        const un = mk182('banuhaqim', { name: 'Nora', seat: 3 }); un.board = [V2('k1', KB, { blood: 5, cap: 9 })]; un.table[1].pub.cards = [{ id: 'hpc', name: PC, kind: 'lib', zone: 'ready' }];
+        un._contractSeen = { [ckey(un, PC, AX)]: { card: PC, host: AX, owner: 'Viktor', seat: 2, by: 'Hanna', bySeat: 1, cardId: null, chosen: KB } }; seat2(un); un._onBoard({ seat: 2, pub: pub2('torpor') });
+        ok(un.pool === 20 && !un.sent.some(m => /Priority Contract/.test(txt2(m))), '182e ...an observer of Hanna’s contract gains nothing when its host goes down (got ' + un.pool + ')'); }
+
+      // f) THE ATTACH FINDER: Biothaumaturgic Experiment [THA] costs 1 POOL (no blood) and goes on the minion that fights most -- the chosen
+      //    of my contract over the acting Kasim; Preternatural Strength's finder leaves it alone and stays as it was; never the last pool;
+      //    Shadow of the Beast on the acting vampire only, its blood, one a vampire; a second Experiment is no breach
+      { const u = mk182('banuhaqim'); const k = V2('k1', KB, { blood: 5, cap: 9 }), b = V2('b1', BJ, { blood: 3, cap: 3 }); u.board = [k, b]; u.hand = [BE]; u.table[2].pub.cards = [P2('x1', AX, 1)];
+        const a0 = IF2(u, '_bestAttachFor') ? u._bestAttachFor(k) : null;   // no contract: Kasim, who can rush Anxo with... nothing in hand: by blood
+        myContract(u, BJ); u.table[2].pub.cards = [];   // the contract's host out of reach this turn: Bijou has no rush now, only the contract's choice
+        const a1 = IF2(u, '_bestAttachFor') ? u._bestAttachFor(k) : null, sOld = u._bestStrengthFor(k); u.table[2].pub.cards = [P2('x1', AX, 1)];
+        ok(!!a1 && a1.kind === 'attach' && a1.name === BE && a1.at === 'THA' && a1.lvl === '[THA]' && a1.st === 1 && a1.cost && a1.cost.pool === 1 && !a1.cost.blood && a1.bonus === 1 && a1.each === 1 && a1.host === b && sOld === null && !!a0 && a0.host === k,
+           '182f Biothaumaturgic Experiment [THA]: +1 stealth action, 1 POOL (no blood), +1 strength and a maneuver each combat, on Bijou -- the chosen of my contract fights most, even with no rush this turn -- and on Kasim without one (more blood); the strength finder no longer takes it at 1 blood (got ' + JSON.stringify({ a1: a1 && { at: a1.at, st: a1.st, cost: a1.cost, host: a1.host && a1.host.name }, a0: a0 && a0.host && a0.host.name, strength: sOld && sOld.costBlood }) + ')');
+        u.pool = 1; const last = IF2(u, '_bestAttachFor') ? u._bestAttachFor(k) : 'n/a'; u.pool = 2; const two = IF2(u, '_bestAttachFor') ? u._bestAttachFor(k) : null;
+        ok(last === null && !!two, '182f ...never the last pool (R-34, D-97): at 1 pool no Experiment, at 2 it is played');
+        const n = mk182('nosferatu'); const lin = V2('l1', 'Horace Radcliffe (G6)', { blood: 4, cap: 5 }); n.board = [lin]; n.hand = ['Preternatural Strength'];
+        const ps = n._bestStrengthFor(lin), pa = IF2(n, '_bestAttachFor') ? n._bestAttachFor(lin) : null;
+        ok(!!ps && JSON.stringify(ps) === JSON.stringify({ idx: 0, name: 'Preternatural Strength', kind: 'strength', bonus: 2, at: 'POT', st: 2, n: 1, costBlood: 1 }) && pa === null,
+           '182f Preternatural Strength unchanged: the strength finder’s own pick, byte for byte, and nothing for the attach finder (got ' + JSON.stringify(ps) + ')');
+        const s = mk182('banuhaqim'); const ad = V2('a1', 'Adrino Manauara (G6)', { blood: 2, cap: 8 }), big = V2('k1', KB, { blood: 8, cap: 9 }); s.board = [ad, big]; s.hand = ['Shadow of the Beast'];
+        const sb = IF2(s, '_bestAttachFor') ? s._bestAttachFor(ad) : null; ad.blood = 1; const sbPoor = IF2(s, '_bestAttachFor') ? s._bestAttachFor(ad) : 'n/a'; ad.blood = 2;
+        s.board.push({ id: 'sb0', name: 'Shadow of the Beast', kind: 'lib', zone: 'ready' }); ad.attached = ['sb0']; const sbTwo = IF2(s, '_bestAttachFor') ? s._bestAttachFor(ad) : 'n/a';
+        ok(!!sb && sb.host === ad && sb.at === 'pro' && sb.cost && sb.cost.blood === 1 && sb.st === 0 && sb.each === 1 && sbPoor === null && sbTwo === null,
+           '182f Shadow of the Beast [pro]: on the acting vampire (not on the bigger Kasim), 1 blood it keeps 1 of, 0 stealth; one a vampire (oncePerVampire) (got ' + JSON.stringify({ sb: sb && { host: sb.host.name, cost: sb.cost, st: sb.st }, poor: sbPoor, two: sbTwo }) + ')');
+        const nm = mk182('banuhaqim'); const he = V2('h1', 'Helen Fairchild (G6)', { blood: 4, cap: 4 }), kk = V2('k1', KB, { blood: 8, cap: 9 }); nm.board = [he, kk]; nm.hand = ['New Moon Sigil'];
+        nm.board.push({ id: 'nm0', name: 'New Moon Sigil', kind: 'lib', zone: 'ready' }); kk.attached = ['nm0'];
+        const nms = IF2(nm, '_bestAttachFor') ? nm._bestAttachFor(he) : null;
+        const t2 = mk182('banuhaqim'); const k3 = V2('k1', KB, { blood: 5, cap: 9 }); t2.board = [k3, { id: 'be0', name: BE, kind: 'lib', zone: 'ready' }]; k3.attached = ['be0']; t2.hand = [BE];
+        const beTwo = IF2(t2, '_bestAttachFor') ? t2._bestAttachFor(k3) : null;
+        ok(!!nms && nms.host === he && nms.cost && nms.cost.blood === 2 && nms.st === 1 && !!beTwo && beTwo.host === k3,
+           '182f New Moon Sigil [spi] goes on a vampire of mine that has none (Kasim already bears one: Helen); a second Experiment on Kasim is allowed (none printed) (got ' + JSON.stringify({ nm: nms && nms.host && nms.host.name, be: beTwo && beTwo.host && beTwo.host.name }) + ')'); }
+
+      //    ...through the minion loop: Kasim plays it on Bijou -- its line, 1 pool at the announce, on through it is on Bijou (her +1 strength
+      //    at the [THA] Kasim played, her maneuver each combat); blocked, the pool comes back and the card goes to the ash heap
+      const turn2 = async (hand, ans, setup, want) => {
+        const u = mk182('banuhaqim'); const k = V2('k1', KB, { blood: 5, cap: 9 }), b = V2('b1', BJ, { blood: 3, cap: 3 }); u.board = [k, b]; u.hand = hand.slice(); u.table[2].pub.cards = [P2('x1', AX, 1)];
+        if(setup) setup(u, k, b);
+        const got = { asks: [], st: [] }; let first = true;
+        u._decideAction = (v, ctx) => { if(first && v === k){ first = false; got.pick = (want ? ctx[want] : ctx.attach) || null; got.ctxEquip = ctx.equip || null; return { pick: got.pick, why: 'test' }; } return { pick: null, why: 'test' }; };
+        u._askBlock = async q => { got.asks.push(q); got.poolAtAsk = u.pool; return ans; };
+        u._resolveCombat = async () => {};
+        const a0 = u._announceTallyA.bind(u); u._announceTallyA = n => { got.st.push(n); return a0(n); };
+        await Promise.race([u._playTurn().catch(e => { got.err = e.message; }), sleep(8000)]);
+        got.lines = u.sent.map(txt2).filter(Boolean); return { u, k, b, got }; };
+      { const T = await turn2([BE], { what: 'pass' }, u => myContract(u, BJ));
+        const line = T.got.lines.find(l => l === 'Kasim Bayar (G6) plays Biothaumaturgic Experiment [THA] — on Bijou (G6).');
+        const onB = T.b.attached.map(id => (T.u.board.find(c => c.id === id) || {}).name);
+        ok(!T.got.err && !!line && T.got.poolAtAsk === 19 && T.u.pool === 19 && onB.includes(BE) && T.got.st[0] === 1 && (IF2(T.u, '_strengthBonus') && T.u._strengthBonus(T.b) === 1) && !!(T.u._eachManeuverFor(T.b) || {}).name,
+           '182f through the minion loop: Kasim plays it on Bijou (its line), 1 pool at the announce, +1 stealth; on through Bijou bears it: +1 strength (the [THA] Kasim played, Bijou has none) and a maneuver each combat (got ' + JSON.stringify({ err: T.got.err, line: !!line, pool: [T.got.poolAtAsk, T.u.pool], onB, st: T.got.st, str: T.u._strengthBonus(T.b) }) + ')');
+        const B = await turn2([BE], { what: 'block', who: 'Lauren' }, u => myContract(u, BJ));
+        ok(!!B.got.pick && B.got.poolAtAsk === 19 && B.u.pool === 20 && B.b.attached.length === 0 && B.u.board.some(c => c.name === BE && c.zone === 'ash'),
+           '182f ...blocked: the pool comes back (paid only on success, R-17) and the card goes to the ash heap (got ' + JSON.stringify({ pool: [B.got.poolAtAsk, B.u.pool], att: B.b.attached }) + ')'); }
+      { const o = mk182('tremere', { name: 'Viktor', seat: 2 }); o._reactWindow = () => {}; o.table[1].pub.cards = [P2('k1', KB, 5), P2('b1', BJ, 3)];
+        o._onLog('Hanna', '<b>' + KB + '</b> plays <b>' + BE + '</b> [THA] — on <b>' + BJ + '</b>.');
+        const p = o.pending;
+        ok(!!(p && p.kind === 'undirected' && p.sub === 'attach' && p.actingVampName === KB && p.role === 'prey'),
+           '182f my prey hears the line as an undirected action of Kasim’s and opens its block window (got ' + JSON.stringify(p && { kind: p.kind, sub: p.sub, vamp: p.actingVampName, role: p.role }) + ')'); }
+
+      // g) BIOTHAUMATURGIC EXPERIMENT [tha]: an animal retainer Kasim cannot employ (Dog Pack: Gangrel) goes through the card -- both costs
+      //    (1 + 2 pool), +1 stealth, Dog Pack on Kasim, the card to the ash heap; a retainer the vampire meets is employed plainly (no card);
+      //    never the last pool; a mortal retainer is no animal; the plain finder's offer of an animal Kasim lacks the discipline for gives way
+      { const u = mk182('banuhaqim'); const k = V2('k1', KB, { blood: 5, cap: 9 }); u.board = [k]; u.hand = [BE, 'Dog Pack'];
+        const e1 = IF2(u, '_bestAnimalEmployFor') ? u._bestAnimalEmployFor(k) : null;
+        ok(!!e1 && e1.kind === 'employAnimal' && e1.name === BE && e1.retainer === 'Dog Pack' && e1.lvl === '[tha]' && e1.st === 1 && e1.cost && e1.cost.pool === 3 && !e1.cost.blood && u._bestEquipActionFor(k) === null,
+           '182g Kasim (no Gangrel) employs Dog Pack through the Experiment [tha]: +1 stealth, 1 + 2 pool; the plain employ cannot (got ' + JSON.stringify(e1 && { r: e1.retainer, lvl: e1.lvl, st: e1.st, cost: e1.cost }) + ')');
+        u.pool = 3; const last = IF2(u, '_bestAnimalEmployFor') ? u._bestAnimalEmployFor(k) : 'n/a';
+        const m = mk182('banuhaqim'); const k4 = V2('k1', KB, { blood: 5, cap: 9 }); m.board = [k4]; m.hand = [BE, 'Mr. Winthrop'];
+        const mort = IF2(m, '_bestAnimalEmployFor') ? m._bestAnimalEmployFor(k4) : 'n/a';
+        const al = mk182('banuhaqim'); const ag = V2('g1', 'Algirdas, The Solar Prophet (G6)', { blood: 5, cap: 9 }); al.board = [ag]; al.hand = [BE, 'Raven Spy'];
+        const plain = IF2(al, '_bestAnimalEmployFor') ? al._bestAnimalEmployFor(ag) : 'n/a', pe = al._bestEquipActionFor(ag);
+        ok(last === null && mort === null && plain === null && !!pe && pe.name === 'Raven Spy',
+           '182g ...never the last pool (3 pool: 1 + 2 would take it), no mortal retainer (Mr. Winthrop), and none Algirdas can employ plainly (Raven Spy: he has Animalism -- the plain employ, no card spent) (got ' + JSON.stringify({ last, mort, plain, pe: pe && pe.name }) + ')');
+        const r = mk182('banuhaqim'); const k5 = V2('k1', KB, { blood: 5, cap: 9 }); r.board = [k5]; r.hand = [BE, 'Raven Spy'];
+        const rc = r._actionCtxFor(k5);
+        ok(!!rc.employAnimal && rc.employAnimal.retainer === 'Raven Spy' && !rc.equip,
+           '182g ...Raven Spy for Kasim (no Animalism) goes through the card, and the plain finder’s offer of it (it reads no discipline) gives way (got ' + JSON.stringify({ ea: rc.employAnimal && rc.employAnimal.retainer, eq: rc.equip && rc.equip.name }) + ')'); }
+      { const T = await turn2([BE, 'Dog Pack'], { what: 'pass' }, null, 'employAnimal');
+        const line = T.got.lines.find(l => l === 'Kasim Bayar (G6) plays Biothaumaturgic Experiment [tha] — employs Dog Pack.');
+        const onK = T.k.attached.map(id => (T.u.board.find(c => c.id === id) || {}).name);
+        ok(!T.got.err && !!line && T.got.poolAtAsk === 17 && T.u.pool === 17 && onK.includes('Dog Pack') && !T.u.hand.includes('Dog Pack') && T.u.board.some(c => c.name === BE && c.zone === 'ash') && T.got.st[0] === 1,
+           '182g through the minion loop: the line names the retainer, 3 pool at the announce, +1 stealth; on through Dog Pack is Kasim’s and the card is in the ash heap (got ' + JSON.stringify({ err: T.got.err, line: !!line, pool: [T.got.poolAtAsk, T.u.pool], onK, st: T.got.st }) + ')');
+        const B = await turn2([BE, 'Dog Pack'], { what: 'block', who: 'Lauren' }, null, 'employAnimal');
+        ok(!!B.got.pick && B.got.pick.kind === 'employAnimal' && B.got.poolAtAsk === 17 && B.u.pool === 20 && B.u.hand.includes('Dog Pack') && B.k.attached.length === 0 && B.u.board.some(c => c.name === BE && c.zone === 'ash'),
+           '182g ...blocked: both costs come back, Dog Pack stays in hand, the card goes to the ash heap (got ' + JSON.stringify({ pool: B.u.pool, hand: B.u.hand }) + ')');
+        const o = mk182('tremere', { name: 'Viktor', seat: 2 }); o._reactWindow = () => {}; o.table[1].pub.cards = [P2('k1', KB, 5)];
+        o._onLog('Hanna', '<b>' + KB + '</b> plays <b>' + BE + '</b> [tha] — employs <b>Dog Pack</b>.');
+        const p = o.pending;
+        ok(!!(p && p.kind === 'undirected' && p.sub === 'equip' && p.card === 'Dog Pack' && p.actingVampName === KB),
+           '182g ...my prey hears it as Kasim’s undirected employ of Dog Pack (got ' + JSON.stringify(p && { sub: p.sub, card: p.card, vamp: p.actingVampName }) + ')'); }
+
+      // h) THE LINES AND THEIR EVENT KINDS (L-56: the specific shape before the generic one; Preternatural Strength's line keeps its own)
+      { const u = mk182('banuhaqim');
+        const cm = 'Hanna plays Priority Contract — on Viktor\'s Anxo Vilela (G6), chosen: Kasim Bayar (G6).'.match(L12b.contractM || /$^/);
+        const am = 'Kasim Bayar (G6) plays Biothaumaturgic Experiment [THA] — on Bijou (G6).'.match(L12b.uAttach || /$^/);
+        const em = 'Kasim Bayar (G6) plays Biothaumaturgic Experiment [tha] — employs Dog Pack.'.match(L12b.uEmployVia || /$^/);
+        ok(!!cm && cm[1] === 'Hanna' && cm[2] === PC && cm[3] === 'Viktor' && cm[4] === AX && cm[5] === KB && !!am && am[4] === BJ && am[3] === 'THA' && !!em && em[4] === 'Dog Pack' && em[2] === BE,
+           '182h the three new lines parse: the contract (card, owner, host, chosen), the attach (level, host), the employ through the card (the retainer)');
+        const k1 = u._evClassify('Hanna', 'Hanna plays Priority Contract — on Viktor\'s Anxo Vilela (G6), chosen: Kasim Bayar (G6).', 'log');
+        const k2 = u._evClassify('Hanna', 'Hanna burns Priority Contract and gains 3 pool (Viktor\'s Anxo Vilela (G6) went to torpor).', 'log');
+        const k3 = u._evClassify('Hanna', 'Kasim Bayar (G6) plays Biothaumaturgic Experiment [THA] — on Bijou (G6).', 'log');
+        const k4 = u._evClassify('Hanna', 'Kasim Bayar (G6) plays Biothaumaturgic Experiment [tha] — employs Dog Pack.', 'log');
+        const k5 = u._evClassify('Hanna', 'Horace Radcliffe (G6) plays Preternatural Strength [pot] — on themselves (+1 strength).', 'log');
+        ok(k1 && k1.kind === 'contract' && k1.chosen === KB && k2 && k2.kind === 'contract-burn' && k2.n === 3 && k3 && k3.kind === 'card-played' && k3.role === 'attach' && k3.host === BJ && k4 && k4.kind === 'card-played' && k4.role === 'employ' && k4.retainer === 'Dog Pack' && k4.vamp === KB && k5 && k5.kind === 'card-played' && k5.card === 'Preternatural Strength' && !k5.role,
+           '182h ...and the event log types each (contract, contract-burn, an attach, an employ through the card), Preternatural Strength’s line as before (got ' + JSON.stringify([k1, k2, k3, k4, k5].map(e => e && (e.kind + ':' + (e.role || '')))) + ')'); }
+    }
+
 
 
     }
