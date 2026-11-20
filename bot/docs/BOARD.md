@@ -56,12 +56,13 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 ## The sweep register (D-135): `SWEEP-REGISTER.md` by class; a round takes one; *done when* its class is empty
 - **The active entries** (7.1 Aire of Elation and 7.2 The Warrens: a printed +1 dropped; 8.3 Bait and Switch by a non-baron;
   11.1 Revelations' predator never asked): rules broken in the 240 or a smoke, so they go in the next release (D-135). The missed
-  options (5.2 the .44 Magnum's maneuver) wait in their classes.
+  options (5.2 the .44 Magnum's maneuver, 10.1 Faceless Night [OBF], 12.2 Precognition and Spirit's Touch [AUS]) wait in their
+  classes unless Johan sends them with the active ones (asked: STATUS 3).
 - **1. Retainers: version and holder** (R-47): next; its design question first (where another seat's retainer's version comes from).
 - **2. `aggr` misreads.**
 - **3. Another minion's sentence read as the player's** (L-98's rest).
 - **4. Another seat's play the bots do not read** (mostly a human's: the readers' rounds, D-132, the first right after C1; 4.6's
-  onward bounce and 4.17–4.19 are between bots).
+  onward bounce, 4.12's ballots and 4.17–4.19 are between bots).
 - **5. Maneuvers: direction and source.**
 - **6. Records by name.**
 - **7. Conditional and capped values** ("with an additional +N … if", a family for C).

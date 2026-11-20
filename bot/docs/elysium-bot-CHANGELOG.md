@@ -9,14 +9,16 @@
   play does not depend on the holder's disciplines, and Biothaumaturgic Experiment's retainer comes in at its basic version; not
   built yet). D-135: the sweep goes on and collects its problems by class in `SWEEP-REGISTER.md`, a round taking one class; a
   problem that changes a finished deck's play is fixed in the next release. The register (not a standing page) holds the
-  evening's six classes and seven more from the migration (Claude's sorting): the pilot's riders, BOARD's card lines under "Known,
+  evening's six classes (Claude's list, under his kör) and seven more from the migration (Claude's sorting): the pilot's riders, BOARD's card lines under "Known,
   not built", the V5 waves' riders, the V5 sweep line's problem riders (wave 6's curation queue, wave 2's second review,
   spec-card-sweep §4.3's latent reds, ambers and cards found on the way) and RULINGS' card gaps O-3, O-4, O-21, O-23 and O-24
   (stubs remain); what is done since is listed apart. Counted on v0.6.236's runs (the 240, the 14 V5 smokes at seed 1): four
   entries are active — Aire of Elation's and The Warrens' printed +1 (10 and 116 plays short), Bait and Switch by vampires that
-  are not barons (the tzimisce smoke's 4 plays) and Revelations [AUS]'s predator never asked (180) — and the .44 Magnum's
-  maneuver is a missed option (53 strikes, none). BOARD: one line per class, the waves' riders line and eleven card lines gone
-  (18.1 → 16.1 KB); HARNESS step 7 and BOARD's header send a card problem to the register. STATUS: #93 and #95 merged (#94 into
+  are not barons (the tzimisce smoke's 4 plays) and Revelations [AUS]'s predator never asked (180); three are missed options,
+  legal but never using a printed superior or option (the .44 Magnum's maneuver: 53 strikes, none; Faceless Night [OBF]: 90 of
+  306 plays by superior vampires, all at [obf]; Precognition and Spirit's Touch [AUS]: 124 of 205) — whether they ride with the
+  active ones is asked. BOARD: one line per class, the waves' riders line and eleven card lines gone
+  (18.1 → 16.2 KB); HARNESS step 7 and BOARD's header send a card problem to the register. STATUS: #93 and #95 merged (#94 into
   `bot-docs-room`). Found on the way (D-92): O-14's "Alexa discards once per referendum though the card has no such limit" was
   wrong — [ANK 20220705] rules once per referendum, as the bot does.
   *Gates:* `tools/doc-budget.sh` PASS; no code, so no suite. *Egress:* EGRESS_PENDING

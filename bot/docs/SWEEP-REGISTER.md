@@ -1,14 +1,17 @@
 # SWEEP-REGISTER — the problems the sweep finds, by class (20 Nov 2026, on bot v0.6.236; RULINGS D-135)
 
-Johan, 19:47–19:48 (D-135): the sweep goes on, and what it finds is collected here and worked off one class at a time. A round
-takes one class: its design to Johan and his "kör", the build, review until clean (D-133), a release. **A problem that changes a
+Johan, 19:47 (the idea) and 19:48 (kör on Claude's shape; D-135): the sweep goes on, and what it finds is collected here and
+worked off one class at a time. A round takes one class: its design to Johan and his "kör", the build, review until clean (D-133),
+a release. **A problem that changes a
 finished deck's play** (seen in the 240 or the V5 smokes, as Aunt Linda's employs were) **is fixed in the next release**; the
 rest waits here. Not a standing page (outside `tools/doc-budget.sh`): BOARD keeps one line per class and points here.
 
-**An entry** is one bullet: the card or area — what is wrong; the evidence (the card's text, a ruling by its id); where it was
-found, in brackets; its state; a fix sketch. **States:** **active** — the bots' own play in the 240 or a V5 smoke breaks the
+**An entry** is one bullet: the card or area — what is wrong; the evidence (the card's text, a ruling by its id: links stay with
+the rulings database and the archive); where it was found, in brackets; its state; a fix sketch where the fault does not make it
+evident. **States:** **active** — the bots' own play in the 240 or a V5 smoke breaks the
 rules: a play the text forbids, or a printed value or window it gets wrong (counted; D-135 sends it to the next release);
-**missed** — the bots' play there never uses a printed option (legal, weaker; counted); **reachable** — a deck the sims play
+**missed** — the bots' play there never uses a printed option (legal, weaker; counted; whether D-135 sends these to the next
+release too is Johan's, asked in STATUS); **reachable** — a deck the sims play
 holds the card, but no count shows the faulty path firing (the class's round measures it first); **latent** — no deck the sims
 play reaches it; **human** — a human's play, which the sims never make (live at a table whenever a human holds the card);
 **debt** — a trace, row or test debt with no play change. Decks are the `deck-*.json` lists of 20 Nov: the 240 plays the four
@@ -30,8 +33,9 @@ reader of its play, its record) moved; decision, ledger and estimate lines staye
 their Eyes of the Wild rider, 10.12). The specs keep their text as history. What those sources hold that is done, or is not a
 problem, is listed at the end.
 
-**The classes** (1–6: the evening's list, 4 and 5 broadened to another seat's play and a maneuver's source; 7–13: the
-migration's sorting, Claude's; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 5.2.
+**The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
+source; 7–13: the migration's sorting, Claude's; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 5.2, 10.1,
+12.2.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -161,7 +165,8 @@ A value the text conditions or caps, compiled as a plain number.
   finder and its readers.
 - **7.2 The Warrens** — "+2 intercept, with an additional +1 intercept if this Nosferatu is titled" (KRCG); the entry carries 2.
   [w6 §8; sweep §4.3: amber] · **active** (the 240: 178 plays, 116 of them by nosferatu's four titled vampires — Belinde a
-  prince, Larissa Moreira, Lenny Burkhead and The Dowager primogen — each 1 intercept short).
+  prince, Larissa Moreira, Lenny Burkhead and The Dowager primogen — each 1 intercept short) · the condition on the key, as
+  7.1's, read by the intercept finders and the block estimates.
 - **7.3 Kevlar Vest** — 2 only against guns; `_equipPrevent` prevents 1 against everything (sweep §4.3 calls it a red). [w1; sweep
   §4.3] · latent (tremere holds the vest and the only gun).
 - **7.4 Night Moves** — the bleed is capped at 1 pool. [sweep §4.3: red] · latent (nothing in the sewer deck bleeds for more).
@@ -186,23 +191,19 @@ or a legal play the bot refuses.
   intercept modes of Dogged Pursuit, The Mole and Speak with Spirits [SPI] (a locked vampire's route, "Once this action, this
   vampire can burn 1 blood to get +1 intercept", compiled as a plain +1) play at any action; the condition sentences' untagged
   variants (BOARD's C rider). [w6 §8; B] · latent (no deck holds the named cards).
-- **8.6 Round restrictions** — the 9 cards tagged "not usable during / on the first round" fail closed in the strike, steal,
-  press and maneuver finders (never played; from round 2 once the finders read the combat round); Eruption of Vitae, Growing
-  Fury and Well-Aimed Car print it without "on / during" and are not tagged; the combat-ends finder reads no `req`, so Riposte
-  would be played in round 1. [w1] · reachable (banuhaqim holds Walk of Flame ×2) · check what the pilot's combat work changed.
-- **8.7 The act-again point after a failed referendum** — an unblocked political action succeeded whatever its referendum did
+- **8.6 The act-again point after a failed referendum** — an unblocked political action succeeded whatever its referendum did
   (R-44), but a failed one writes no `_lastAct`, so neither Freak Drive nor Shadow Cloak follows it (v0.6.234). [B; w6 §9.5] ·
   reachable (ventrue holds Freak Drive ×6 and calls referendums; a missed option when it fires, not counted) · a section
   through `_maybeActAgain`.
-- **8.8 Who may play a mode** — Cloak the Gathering's [OBF] is played by a vampire other than the acting one (the finder's tie
+- **8.7 Who may play a mode** — Cloak the Gathering's [OBF] is played by a vampire other than the acting one (the finder's tie
   keeps [obf]); Lost in Crowds is not usable with Into Thin Air; Sport Bike is one vehicle per minion (the equip guard is one per
   name). [sweep §4.3: latent reds] · latent (no deck reaches the contradiction).
-- **8.9 Flight from a card** (Concordance [DAI], Taking the Skin: Vulture) is not read (a vampire's Flight is read from its text,
+- **8.8 Flight from a card** (Concordance [DAI], Taking the Skin: Vulture) is not read (a vampire's Flight is read from its text,
   the crypt's `flight`; Pounce needs Flight). [pilot] · latent.
-- **8.10 Over-strict: `_bestStrengthFor`** refuses a Preternatural Strength-class action on any vampire with a strength bonus
+- **8.9 Over-strict: `_bestStrengthFor`** refuses a Preternatural Strength-class action on any vampire with a strength bonus
   (Depravity, Saulot's Avenging Fist: "one per vampire" generalised to the key), and on one carrying a card put on a minion.
   [w4; pilot] · reachable (nosferatu holds Preternatural Strength ×2).
-- **8.11 Over-strict: hosts and hunting grounds** — allies are never offered as hosts for a card on a minion; "only one hunting
+- **8.10 Over-strict: hosts and hunting grounds** — allies are never offered as hosts for a card on a minion; "only one hunting
   ground each turn" is per vampire in the text, one flag per Methuselah in the code. [pilot; w3] · reachable.
 
 ## 9. Key and compiler shapes
@@ -227,11 +228,13 @@ A key the compiler writes and a reader reads in another shape, or a sentence sha
 ## 10. Unbuilt modes, targets and riders
 A printed mode, target or rider the bots do not play on their own cards, or do not read when they meet it.
 - **10.1 Faceless Night [OBF]** — "minions who attempt to block this action and fail become locked before action resolution"; the
-  entry carries the stealth only. [sweep §4.3: amber] · reachable (malkavian, ministry ×4; 306 plays in the 240, the rows name no
-  level; 3 of malkavian's 9 vampires have superior Obfuscate; both modes carry +1 stealth, so a finder's tie may never pick
-  [OBF]: missed if so, active if [OBF] is played without the lock).
+  entry carries the stealth only. [sweep §4.3: amber] · **missed** (the 240: 90 of its 306 plays by malkavian's three vampires
+  with superior Obfuscate — Colette 41, Alexander Silverson 39, Dr. Stephen Norton 10 — always at [obf]: both modes carry +1
+  stealth and `_bestStealthFor` replaces a pick only for more, so the first mode wins the tie) · the mode with the rider wins a
+  tie, and the lock is read.
 - **10.2 Wasserschloss Anif's burn-it action, Haven Uncovered's host burning the card, Ventrue Headquarters locked only in my own
-  referendums.** [O-23; B; pilot] · reachable (ventrue holds Ventrue HQ ×1) · each played in a sim series.
+  referendums.** [O-23; B; pilot] · reachable (ventrue holds Ventrue HQ ×1; Haven Uncovered in five decks) / latent (Wasserschloss
+  Anif: no deck) · each played in a sim series.
 - **10.3 Free block bars and `chosen`** — Beast Meld-class and Seduction-class have tags, no consumer. [O-21; sweep §11.10] ·
   reachable (salubri holds Seduction ×2) · built when the sweep needs them, the ledger lists them playable.
 - **10.4 Wave 1's ambers** — Sculpt the Flesh [PRO] (the card on the opposing minion, its unlock-phase burn, the +1 stealth action
@@ -262,7 +265,8 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
 - **10.11 The pilot's** — Preternatural Strength's branch calls no Perfectionist; Shadow of the Beast [PRO]'s press each combat; New
   Moon Sigil [SPI]'s paid stealth; Fleetness [cel]'s +1 stealth on a bleed (the bleed finder reads no `actStealth`: C1's); the
   sharing register's debts: the six other contracts, the rush cards with after-combat riders, Soulgrinder's and Dead Hand's
-  superior-only Fortitude rider (C's). [pilot] · reachable (banuhaqim holds Fleetness ×2, pathcaine Soulgrinder ×8).
+  superior-only Fortitude rider (C's). [pilot] · reachable (banuhaqim holds Fleetness ×2, pathcaine Soulgrinder ×8) / latent
+  (Shadow of the Beast, New Moon Sigil: no deck).
 - **10.12 The route for a vampire already attempting to block** (a woken one, [ANK 20181122-2]), Eyes of the Wild's included.
   [w6 §8; B: the locked routes' last rungs] · reachable (gangrel holds Eyes of the Wild ×6).
 - **10.13 Waits for bot diablerie** (O-15) — Depravity's stealth, Regent's move to the diablerist: bots never diablerise. [w4] ·
@@ -278,7 +282,7 @@ Who may answer an action or a card, and in which window; a line read after its w
   not its target may block it. [w6 §8] · human.
 - **11.3 Out-of-turn windows** — an out-of-turn master's window (Archon Investigation, Sudden Reversal on Sudden Reversal); the rest
   of the 36 `oot` cards wait for their own triggers; two bots' Sudden Reversals at one human master (no arbiter). [w5 §12.10; w3] ·
-  reachable (lasombra holds Sudden Reversal ×2, ravnos Archon Investigation ×1).
+  reachable (lasombra holds Sudden Reversal ×2, ravnos Archon Investigation ×1) / human (the two Reversals at a human's master).
 - **11.4 The before-range step** — Saulot's Guiding Wisdom's combat end in a combat my vampire did not start as the acting minion
   (no before-range handshake between bots); after its first wait a bot blocker does not look for the actor's Change of Target
   again before its own before-range plays (Carrion Crows, Wall of Filth, a strength pump). [w4] · reachable (salubri, toreador).
@@ -300,10 +304,12 @@ Who may answer an action or a card, and in which window; a line read after its w
   back to the acting bot after it passed; no dodge, steal or combat ends in an additional pair (Hunger of Marduk's steal there); no
   strike card that brings one (Backstab-class: a strike and `addStrike` in one mode); a human's declaration after the bot stepped
   past Damage; Taste of Vitae is decided before the presses; the combat panel's `xa` / `xb` and labels cleared at a new pair (main,
-  3 Nov §4). [w1; w2] · reachable (banuhaqim holds Hunger of Marduk ×10; Quickness in banuhaqim, brujah).
+  3 Nov §4). [w1; w2] · reachable (banuhaqim holds Hunger of Marduk ×10; Quickness in banuhaqim, brujah) / human (a human's
+  declaration after Damage).
 - **12.2 Grants into the resulting combat** — Precognition [AUS]'s prevention and Spirit's Touch [AUS]'s maneuver, if the vampire
-  blocks [LSJ 20010813]. [sweep §4.3: ambers] · reachable (tremere ×2 each, hecata Precognition ×3; 205 plays in the 240, the rows
-  name no level; 4 of tremere's 9 vampires have superior Auspex).
+  blocks [LSJ 20010813]. [sweep §4.3: ambers] · **missed** (the 240: 124 of their 205 plays — Precognition 67 of 102, Spirit's
+  Touch 57 of 103 — by tremere's four vampires with superior Auspex, always at [aus]: `_bestInterceptFor` replaces a pick only for
+  more intercept) · the mode with the rider wins a tie; the prevention and the maneuver ride into the resulting combat.
 - **12.3 Wave 1's latent combat** — Arms of Ahriman [OBL] would be offered as a plain dodge after the limit was used (the dodge is
   offered at the first strike only); Claws of the Dead checks its own blood, not a strike card's picked the same round, and is
   played at the first strike only; no prevention (the Wall included) is offered against Carrion Crows' damage. [w1] · latent
@@ -347,6 +353,8 @@ Decisions on Claude's priors; each needs a design to Johan before it changes (D-
 - **13.9 Forced Confessional [dom]** unseen in 12 matches: a pricing question first (L-9). [w6 §8] · reachable (salubri ×4).
 
 ## Not migrated: done since, or not a problem
+- *w1*: the round restrictions (the first-round strikes failing closed, three cards untagged, Riposte in round 1) — read since
+  v0.6.214 (`_roundReqOk`, Riposte's check in the combat-ends finder); compiler v1.9.5 tags the three cards.
 - *w2*: Soul Burn's opposing weapons — read since v0.6.236 (R-41). Sanguine Entrapment and Skin Trap compiled as their own — the
   pilot's negation strip (v0.6.236) ends the misread; Sanguine Entrapment's ban on the other side is 4.5. The grants from Hunter's
   Mark, Fleetness and the experiment — built by the pilot (D-134).
