@@ -6,7 +6,7 @@ v1.0.0 · `ana-gates.py` v1.1.4 · built and gated against client v2.6.179 / srv
 copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51 and main's canary v1.5.0.
 
 **Deploy state:** `main` carries v0.6.235 and client v2.6.179. **Open PRs:** #93 (the docs round of 20 Nov: D-132, D-133,
-BOARD's fold; no bot change) and, on it, the pilot's release (v0.6.236, D-134).
+BOARD's fold; no bot change) and, on it, #94: the pilot's release (v0.6.236, D-134).
 
 ## Last gates (v0.6.236's bytes: `elysium-bot.js` `4c193599`)
 20 Nov, the release: suite **2733/0 ×3** (6 GB heap) · sections 181 58/0, 182 57/0 · `test-cardfx` 500/0 · canary 235/0 ×2 ·
