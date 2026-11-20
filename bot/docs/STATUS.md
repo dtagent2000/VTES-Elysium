@@ -21,7 +21,7 @@ frozen run) · canary 235/0 ×2 · the tools' self-tests, the lint, doc-budget P
 1. The V5 sweep: **B**, the pilot (Banu Haqim), its predictions registered before the build (D-93); the merge's first opt-in.
 2. **C**, concentrated (spec §11.8, D-132): C1 the cross-check tool with `stealth` / `actStealth`, `intercept`, `bleed`; then the
    first reader's round, its design to Johan first (§11.6).
-3. BOARD's read-through: Johan's answers to the docs round's proposals (its PR).
+3. BOARD's read-through: Johan's answers to the docs round's proposal for each line (its PR).
 4. The fizzle misread; Q4; C5; C6; the abstract model.
 
 ## Not yet consumed from main

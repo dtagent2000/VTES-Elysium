@@ -35,7 +35,8 @@ always an agent that did none of the work.
 - Third-party data (`vtes.json`, the TWDA) is fetched or copied from the private data repo; never committed.
 
 ## The egress review (every round; a fresh-context agent)
-The reviewer gets: the diff, the board line, the RULINGS lines it cites, and the pages the change named — never the conversation.
+The reviewer gets: the diff, the board line, the RULINGS lines it cites, and the pages the change named; from the second pass also
+the earlier passes' findings — never the conversation.
 It reports findings in classes: `stale-doc` (a page the change made wrong), `half-done` (a path built on one side only, a flag
 without its reset, an emit without its reader), `test-weakened` (a guard that silently skips, all-negative cases, an assertion
 loosened), `rule-missed` (a CLAUDE.md or RULINGS line the change contradicts), `unproven` (a claim with no gate behind it).

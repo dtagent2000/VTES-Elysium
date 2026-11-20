@@ -8,10 +8,11 @@
   differing cards, a separate reviewer, the bots' readers in rounds of their own, which amends D-130) and D-133 (review until
   clean, HARNESS's egress section); `specs/spec-card-sweep-2026-11-18.md` §11.8 (the words, how C runs) and §11.9 (his intention
   for after the alignment, not ruled: five starters curated in parallel sweeps, the finished five as anchors); §11.6 lists #92's
-  three compile failures for his word. BOARD's read-through, first part: the card-reading asks (wave 6's curation queue, the
+  three compile failures for his word. BOARD's read-through: the card-reading asks (wave 6's curation queue, the
   weapon's maneuver, the free block bars, the ledger's grade column) fold into the V5 sweep's C riders, their words kept in
   spec-v5-wave6 §8, spec-v5-wave2 §4, spec-card-sweep §11.10 and O-21; the history comments line points to O-28. Budgets by
-  D-101: RULINGS 70 KB, HARNESS 9 KB, the total 182 KB (cut first: BOARD 1.7 KB, D-123's measurement); the bootstrap stays 50 KB.
+  D-101: RULINGS 70 KB, HARNESS 9 KB, the total 182 KB (cut first: BOARD 1.5 KB, D-123's measurement); the bootstrap stays 50 KB;
+  a proposal for each of BOARD's other lines is in the PR, for Johan.
   *Gates:* `tools/doc-budget.sh` PASS; `tools/test-doc-budget.sh` every case red, the baseline green (the check changed);
   no code, so no suite. *Egress:* in the PR (review until clean, D-133).
 - **The V5 sweep, step B's first part: the merge of hand entries (20 Nov 2026, bot v0.6.235, no bot change; PR #92)** — RULINGS

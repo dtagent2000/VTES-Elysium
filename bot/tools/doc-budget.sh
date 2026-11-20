@@ -50,8 +50,8 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    caller's read then gave back a reason the cut had taken (D-118: why the losing knob lost), which the 179.5 KB step had no room for.
 #    RULINGS 68 -> 70 KB, HARNESS 8.5 -> 9 KB and the total 180 -> 182 KB the same day (a docs round on bot v0.6.235, before the
 #    pilot): Johan's D-132 and D-133 and HARNESS's review until clean. Cut first: BOARD's card-reading asks folded into the V5
-#    sweep's C riders (1.7 KB; their words in spec-v5-wave6 §8, spec-v5-wave2 §4, spec-card-sweep §11.10 and O-21) and D-123's measurement; the bootstrap's
-#    50 KB stays. The register stood 1.2 KB over its ceiling, HARNESS 0.35 KB and the total 0.3 KB; the rest is the pilot's room.
+#    sweep's C riders (1.5 KB; their words in spec-v5-wave6 §8, spec-v5-wave2 §4, spec-card-sweep §11.10 and O-21) and D-123's measurement; the bootstrap's
+#    50 KB stays. The register stood 1.4 KB over its ceiling, HARNESS 0.4 KB and the total 0.7 KB; the rest is the pilot's room.
 PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:70000 $D/LESSONS.md:20000
        $D/ARCHITECTURE.md:16000 $D/HARNESS.md:9000 $D/HOWTO.md:23000"
 total=0

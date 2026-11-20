@@ -23,12 +23,13 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   rounds of their own, the first right after C's first. C's riders: the title family; §4.3's latent reds and ambers; the
   condition sentences' untagged variants; wave 6's curation queue and `_entryReqOk` in the stealth, bleed-modifier and action
   finders (spec-v5-wave6 §8); the weapon's maneuver and its neighbours (spec-v5-wave2 §4); the free block bars and `chosen`
-  (O-21) and the ledger's grade column (spec §11.10). **D**, the starters' remainder where a starter needs it, with its strategy
+  (O-21) and the ledger's grade column (both spec §11.10). **D**, the starters' remainder where a starter needs it, with its strategy
   baseline.
   Crypt waves (D-108): B = the rest by class, the 13 partial copies first. A deck joins the menu by D-108; before the deck
   count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares them). The root README credits
-  zero-vtes (D-128; main's, handoff). *Done when* C's horizon is reached, the 18 starters' rows are playable and every
-  hand-only key has its sharing answer. Docs: RULINGS D-84, D-102, D-104, D-108, D-125 – D-127, D-130, D-132; `CARDS.md`; HOWTO.
+  zero-vtes (D-128; main's, handoff). *Done when* C's horizon is reached, the 18 starters' rows are playable, every
+  hand-only key has its sharing answer and C's riders are done or ruled out (their done-whens: spec-v5-wave6 §8, spec §11.10,
+  spec-v5-wave2 §4). Docs: RULINGS D-84, D-102, D-104, D-108, D-125 – D-127, D-130, D-132; `CARDS.md`; HOWTO.
 - **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9): what v1 of each wave left out, the
   amber halves and the latent items; no line says a human's Sudden Reversal cancelled a bot's master (main, 19 Nov). *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct; refined by the archetypes): D-112 checks each
