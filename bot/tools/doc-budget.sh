@@ -1,7 +1,7 @@
 #!/bin/bash
 # doc-budget.sh -- the standing pages' check (spec-cleanup-2026-10-20.md §5.3). Run from anywhere; exit 1 on any failure.
 #   1. each standing page within its byte budget; the bootstrap (root CLAUDE.md + bot/CLAUDE.md + STATUS + BOARD) <= 50 KB;
-#      every standing page together <= 180 KB;
+#      every standing page together <= 182 KB;
 #   2. every repo path named (in backticks) in a standing page, and every bot/ path in the root CLAUDE.md, exists;
 #   3. every version STATUS.md names agrees with the code: BOT_VERSION, the arena, the sim, the cardfx compiler, the hotseat
 #      tool, the coverage tool, the read-only client / protocol / server copies in bot/ and the root's client / server (with
@@ -50,7 +50,7 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    caller's read then gave back a reason the cut had taken (D-118: why the losing knob lost), which the 179.5 KB step had no room for.
 #    RULINGS 68 -> 70 KB, HARNESS 8.5 -> 9 KB and the total 180 -> 182 KB the same day (a docs round on bot v0.6.235, before the
 #    pilot): Johan's D-132 and D-133 and HARNESS's review until clean. Cut first: BOARD's card-reading asks folded into the V5
-#    sweep's C riders (1.7 KB; their words in spec-v5-wave6 §8 and spec-v5-wave2 §4) and D-123's measurement; the bootstrap's
+#    sweep's C riders (1.7 KB; their words in spec-v5-wave6 §8, spec-v5-wave2 §4, spec-card-sweep §11.10 and O-21) and D-123's measurement; the bootstrap's
 #    50 KB stays. The register stood 1.2 KB over its ceiling, HARNESS 0.35 KB and the total 0.3 KB; the rest is the pilot's room.
 PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:70000 $D/LESSONS.md:20000
        $D/ARCHITECTURE.md:16000 $D/HARNESS.md:9000 $D/HOWTO.md:23000"
