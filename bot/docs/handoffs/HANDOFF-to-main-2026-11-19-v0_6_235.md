@@ -7,9 +7,9 @@ since the contract goes first.
 ## 1. The bundle
 `elysium-bot.js` (v0.6.235), `elysium-cardfx.json` / `.js` (cardfx compiler v1.9.12: six condition tags on 118 library entries;
 still 213 curated, True Love's Face's [obf][pre] mode gains its tag) and `START-HERE-BOTS.html` (the chip, the footer's versions
-and date only). The TWD files and the server are unchanged. Deploy: purge `/elysium-bot.js`, `/elysium-cardfx.json`,
-`/elysium-cardfx.js` and `/START-HERE-BOTS.html`. Your embed test compares the whole guide: re-embed it (your suite beside this
-bundle: 380/1, the one red is that test).
+and date only). The TWD files and the server are unchanged. Deploy: purge `/elysium-bot.js` and
+`/elysium-cardfx.json` (corrected 20 Nov: this line named two files the box does not serve). Your embed test compares the whole
+guide: re-embed it (your suite beside this bundle: 380/1, the one red is that test; the guide of 20 Nov supersedes this one).
 
 ## 2. What changed (no protocol change; `log`, `chat`, `say`, `tally` as before)
 - **A bot's own rescue and leaving torpor are undirected.** The bot's Block? now waits for its predator's answer as well as its

@@ -40,7 +40,10 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    change): the charter's T2 sentence, the review sheet's how-to with zero-vtes's clone line, the dry run's lesson (L-97);
 #    HARNESS stood 53 bytes under its ceiling, HOWTO 206 and the total 566. The total keeps 1.4 KB of room for B and C (spec-card-
 #    sweep 4.1); STATUS gave the bootstrap the root CLAUDE.md's zero-vtes line and the finished decks' BOARD line.
-PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:67000 $D/LESSONS.md:20000
+#    RULINGS 67 -> 67.5 KB on 20 Nov (a docs round on bot v0.6.235; the total stays): Johan's D-128 and D-129. Cut first: O-47
+#    and D-127's built story; the egress review then found the short D-129 said more than Johan had (a "No" for his "not now"),
+#    and his hedges cost 0.2 KB the register did not have (it stood 39 bytes under its ceiling).
+PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:67500 $D/LESSONS.md:20000
        $D/ARCHITECTURE.md:16000 $D/HARNESS.md:8500 $D/HOWTO.md:23000"
 total=0
 for pb in $PAGES; do

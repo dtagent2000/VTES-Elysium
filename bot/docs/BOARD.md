@@ -1,4 +1,4 @@
-# BOARD — the open asks (19 Nov 2026, v0.6.235). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (20 Nov 2026, v0.6.235). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -22,7 +22,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   variants the compiler leaves untagged, spec §4.3's round), **D** the other twelve.
   Crypt waves (D-108): A done (v0.6.219); B = the rest by class, the 13 partial copies first. A deck joins the menu (`ARCHETYPES`
   + a `DECK_STRATEGY` line) by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file
-  (`gen-precon.js --check` compares them). The root README credits zero-vtes when it has a licence (handoff). *Done when* the 18
+  (`gen-precon.js --check` compares them). The root README credits zero-vtes with its licence (D-128; main's, handoff). *Done when* the 18
   starters' rows are playable and every hand-only key has its sharing answer. Docs: RULINGS D-84, D-102, D-104, D-108, D-125,
   D-126; `CARDS.md`; HOWTO.
 - **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9): what v1 of each wave left out, the
@@ -83,6 +83,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The gates on the root's release** (Q4, main's yes of 3 Nov): the canary, the suite's
   server and 154f, the arena, the sim and the hotseat gate read the root's client and server and `client/`'s protocol, the copies
   go, STATUS pins the main commit. *Done when* every gate reads the root and CI is green on it.
+- **A human's play read by card** (Johan's vision, 20 Nov; after the sweep: the readings must be exact first): the play line
+  carries the level and the aim (`[obf]` / `[OBF]`, ` Target: …`; PROTOCOL §12); the bot looks the mode up, knows the effect at
+  once and answers it, the human's numbers still winning. Today it reads their lines, numbers and aim, and a few cards by name
+  (Revelations with its level is the precedent; CHANGELOG, 20 Nov). *Done when* a spec is ruled.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.
 - **Steal pair under a combat ends**: the stealer's side does not apply v0.6.196's rule when the victim's Majesty ends the combat.
   *Done when* `ana-ledger.py` prints equal pairs on a smoke with that case. Docs: RULINGS O-12.
