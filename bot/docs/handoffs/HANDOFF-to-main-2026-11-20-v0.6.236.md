@@ -33,12 +33,37 @@ compatible (below). Your §12 and canary would record the lines in section 1; no
 - **Blood Rage-class against a weapon** writes no new line: the struck bot's own round line says `… takes 0 (loses 0 blood, now M).`
   when its undodged Blood Rage, Blood Fury, Bollix [tha] or Soul Burn met the opposing vampire's weapon strike that round (a bot's
   `strikes with CARD for N.` naming an equipment card, or your `NAME strikes with a weapon for N.`).
+- **Executor B2's lines** (spec-sweep-pilot §3.2 items 4, 6, 8; each parsed by the bot and typed by its event log in the same release):
+  - **Priority Contract placed** (new, `L12.contractM`, log tier, after the existing as-played line `ME is playing Priority Contract —
+    on OWNER's HOST.`): `ME plays Priority Contract — on OWNER's HOST, chosen: VAMP.` — `m[1]` the Methuselah, `m[2]` the card,
+    `m[3]` the host's owner (always the placer's prey), `m[4]` the host, `m[5]` the chosen Banu Haqim (only it may enter combat with the
+    host through the card). Haven Uncovered keeps its own line (`L12.havenM`) byte for byte. Every bot records it; the host's owner
+    reads the chosen as a rush its cloak may stop.
+  - **The rush through it** is the opened rush line with a card in play: `VAMP enters combat with OWNER's HOST (Priority Contract).` (no
+    level), its Block? `… enters combat with HOST (Priority Contract, +1 stealth). Block?`; terms as Haven's (the host does not lock,
+    the rusher acts); the rushed bot's notes name it (`… defends (rushed by VAMP, Priority Contract).`).
+  - **Priority Contract burned for its pool** (new, `CONTRACT_BURN`, a log-tier explanation, not in `L12`): `ME burns Priority Contract
+    and gains 3 pool (WHY).` — WHY is `OWNER's HOST went to torpor` / `OWNER's HOST was burned` / `OWNER's HOST left the ready
+    region` / `HOST left the game with OWNER`. The card's move and the pool show on the board (your ledger narrates them online); the
+    line says why. Read by the bot's event log only (kind `contract-burn`).
+  - **A card put on a minion** (new, `L12.uAttach`, an undirected announce: the actor's prey and predator may block):
+    `VAMP plays CARD [LVL] — on HOST.` (`on themselves` for the acting vampire) — Biothaumaturgic Experiment [THA], Shadow of the Beast
+    [pro], New Moon Sigil [spi]; its Block? `… plays CARD [LVL] — on HOST (+N stealth). Block?`. Preternatural Strength keeps
+    `VAMP plays Preternatural Strength [pot] — on themselves (+1 strength).` (`L12.uStrength`, read first).
+  - **Biothaumaturgic Experiment [tha]'s employ** (new, `L12.uEmployVia`, an undirected announce): `VAMP plays Biothaumaturgic
+    Experiment [tha] — employs RETAINER.` (an animal retainer employed ignoring requirements); its Block? `… plays Biothaumaturgic
+    Experiment [tha] — employs RETAINER (+1 stealth). Block?`. Read before `L12.uEquip` (which would take `VAMP plays … —` as the
+    vampire).
+  - B1's `… maneuvers to DIR (Biothaumaturgic Experiment).` is now reached in play: the attach puts the card on the minion.
 
 ## 2. Backward compatibility (the bot ships first)
 The client parses none of these lines: it shows them. Every bot at a table comes from one bundle, so the opened line meets a bot
 that reads it. A bot older than v0.6.236 (a command-line debug bot) does not match `(Hunter's Mark [CEL][THA])` with its closed
 list: it opens no window and its vampire does not fight — the rusher's Block? runs its clock and the rusher's combat waits out its
-safety nets. That is a mixed-version table only.
+safety nets. That is a mixed-version table only. B2's lines the same way: an older bot records no Priority Contract (its cloak
+does not see the chosen coming), and opens no block window on `… — on HOST.` or `… — employs RETAINER.` (its `L12.uEquip` takes
+`VAMP plays Biothaumaturgic Experiment [tha] —` as the vampire, which names no minion on the actor's board: no window) -- the actor's
+Block? runs its clock.
 
 ## 3. What your §12 and canary would record (a suggestion; the bot does not need it to run)
 - §12: the rush line's opened form with one example per shape: `VAMP enters combat with NAME's VAMP (Hunter's Mark [CEL][THA]).`
@@ -48,6 +73,12 @@ safety nets. That is a mixed-version table only.
   bot rushed by `(Hunter's Mark [CEL][THA])` with another unlocked minion opens its window with `via 'card'`, `card "Hunter's
   Mark"`, `lvl '[CEL][THA]'`, `ceBan 'r1'`, `noLock`, `targetActs false`; with nobody else to block it says Pass and fights unlocked.
   The bot's section 181 has these cases (181b).
+- B2's (section 182b, 182c, 182f, 182g, 182h has them): §12 the three new shapes and the explanation; canary `rd('contractM',
+  "Hanna plays Priority Contract — on Viktor's Anxo Vilela (G6), chosen: Kasim Bayar (G6).", ['Hanna', 'Priority Contract', 'Viktor',
+  'Anxo Vilela (G6)', 'Kasim Bayar (G6)'])` with a live bot that records the contract and its chosen; `uAttach` on `Kasim Bayar (G6)
+  plays Biothaumaturgic Experiment [THA] — on Bijou (G6).` (m[3] `THA`, m[4] `Bijou (G6)`) with a live bot of the actor's prey opening
+  its undirected window, and Preternatural Strength's line still read by `uStrength`, not `uAttach`; `uEmployVia` on `Kasim Bayar (G6)
+  plays Biothaumaturgic Experiment [tha] — employs Dog Pack.` (m[4] `Dog Pack`), the prey's window weighing Dog Pack.
 
 ## 4. Run here
 The bot's gates on these bytes (the PR body has the numbers): its suite, your canary on `bot/`'s copies and on the root's client,
