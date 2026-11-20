@@ -15751,9 +15751,10 @@ async function connectWithRetry(client, tries = 30){
       //    the plain finder's offer of the same retainer gives way in the minion loop's ctx; Algirdas (Animalism) meets it -- no card spent
       { const u = mk182('banuhaqim'); const k = V2('k1', KB, { blood: 5, cap: 9 }), ag = V2('g1', 'Algirdas, The Solar Prophet (G6)', { blood: 5, cap: 9 }); u.board = [k]; u.hand = [BE, 'Dog Pack'];
         const dpe = u.fxLookup('Dog Pack').e, keep = dpe.req; let ek = 'n/a', ctx = null, eg = 'n/a';
-        try { dpe.req = { disc: ['ani'] }; ek = u._bestAnimalEmployFor(k); ctx = u._actionCtxFor(k); u.board = [ag]; eg = u._bestAnimalEmployFor(ag); } finally { dpe.req = keep; u.board = [k]; }
-        ok(!!ek && ek.retainer === 'Dog Pack' && !!(ctx && ctx.employAnimal && ctx.employAnimal.retainer === 'Dog Pack') && !(ctx.equip && ctx.equip.name === 'Dog Pack') && eg === null,
-           '182i ...a discipline requirement Kasim lacks sends the retainer through the card (and the plain offer of it gives way); Algirdas, who meets it, needs no card (got ' + JSON.stringify({ ek: ek && ek.retainer, ea: ctx && ctx.employAnimal && ctx.employAnimal.retainer, eq: ctx && ctx.equip && ctx.equip.name, eg }) + ')'); }
+        let pk = 'n/a', pg = 'n/a';
+        try { dpe.req = { disc: ['ani'] }; ek = u._bestAnimalEmployFor(k); ctx = u._actionCtxFor(k); pk = u._bestEquipActionFor(k); u.board = [ag]; eg = u._bestAnimalEmployFor(ag); pg = u._bestEquipActionFor(ag); } finally { dpe.req = keep; u.board = [k]; }
+        ok(!!ek && ek.retainer === 'Dog Pack' && !!(ctx && ctx.employAnimal && ctx.employAnimal.retainer === 'Dog Pack') && !(ctx.equip && ctx.equip.name === 'Dog Pack') && eg === null && pk === null && !!pg && pg.name === 'Dog Pack',
+           '182i ...a discipline requirement Kasim lacks sends the retainer through the card, and the plain finder does not offer it (E1); Algirdas, who meets it, employs it plainly -- no card (got ' + JSON.stringify({ ek: ek && ek.retainer, ea: ctx && ctx.employAnimal && ctx.employAnimal.retainer, eq: ctx && ctx.equip && ctx.equip.name, eg, pk: pk && pk.name, pg: pg && pg.name }) + ')'); }
 
       //    P6: the attach finder's discipline, requirement and host prior -- Bijou (inferior Blood Sorcery) plays no [THA]; a planted clan
       //    requirement bars Kasim; the host with a rush ready (Taunt the Caged Beast [ani]: Adrino) over the actor; the actor breaks a tie
@@ -15823,6 +15824,20 @@ async function connectWithRetry(client, tries = 30){
         o._onLog('Hanna', '<b>' + KB + '</b> plays <b>Preternatural Strength</b> [pot] — on themselves (+1 strength).');
         const p = o.pending;
         ok(!!(p && p.kind === 'undirected' && p.sub === 'strength'), '182i Preternatural Strength’s line opens a strength window, not an attach one (got ' + JSON.stringify(p && { sub: p.sub }) + ')'); }
+      // j) THE PLAIN EMPLOY READS THE RETAINER'S REQUIREMENT (the pilot's review, E1; [RTR 19941109]: 'The discipline level used to recruit
+      //    it decides which version it is' -- a vampire who has none of its levels cannot employ it): Aunt Linda (Obfuscate, Potence) employs
+      //    neither Raven Spy nor Murder of Crows [ani], but Mr. Winthrop (no requirement) still; Algirdas (Animalism) employs Raven Spy;
+      //    a combo level ([pro][ser], Hatch the Viper) needs both disciplines: Andre the Manipulator (Protean alone) cannot, Charlie Tyne can
+      { const u = mk182('nosferatu'); const al = V2('a1', 'Aunt Linda (G6)', { blood: 4, cap: 4 }), ag = V2('g1', 'Algirdas, The Solar Prophet (G6)', { blood: 5, cap: 7 });
+        const an = V2('n1', 'Andr\u00e9 the Manipulator (G5)', { blood: 5, cap: 6 }), ct = V2('c1', 'Charlie Tyne (G4)', { blood: 3, cap: 4 });
+        const pe = (v, hand) => { u.board = [v]; u.hand = hand.slice(); const r = u._bestEquipActionFor(v); return r ? r.name : null; };
+        const got = { rs: pe(al, ['Raven Spy']), mc: pe(al, ['Murder of Crows']), both: pe(al, ['Raven Spy', 'Murder of Crows']), mw: pe(al, ['Raven Spy', 'Mr. Winthrop']),
+          ag: pe(ag, ['Raven Spy']), an: pe(an, ['Hatch the Viper']), ct: pe(ct, ['Hatch the Viper']), ow: pe(al, ['Owl Companion']), owA: pe(ag, ['Owl Companion']) };
+        ok(got.rs === null && got.mc === null && got.both === null && got.mw === 'Mr. Winthrop' && got.ag === 'Raven Spy' && got.an === null && got.ct === 'Hatch the Viper' && got.ow === null && got.owA === 'Owl Companion',
+           '182j the plain employ asks the retainer\u2019s requirement (E1): Aunt Linda (no Animalism) employs neither Raven Spy nor Murder of Crows -- Mr. Winthrop yes; Algirdas employs Raven Spy; Hatch the Viper [pro][ser] needs both (Andr\u00e9: Protean alone, no; Charlie Tyne: yes); Owl Companion (Animalism, no level the compiler reads: its printed discipline) not for Aunt Linda, yes for Algirdas (got ' + JSON.stringify(got) + ')');
+        const dead = (v, hand) => { u.board = [v]; u.hand = hand.slice(); return u._deadHandIndex([v]); };
+        ok(dead(al, ['Raven Spy']) === 0 && dead(ag, ['Raven Spy']) === -1,
+           '182j ...and the discard phase cycles it for Aunt Linda as before (no mode she can use: a dead card), not for Algirdas (got ' + JSON.stringify([dead(al, ['Raven Spy']), dead(ag, ['Raven Spy'])]) + ')'); }
     }
 
 

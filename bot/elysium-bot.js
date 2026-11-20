@@ -2889,6 +2889,7 @@ class Bot {
       const tt = (h.e.t) || []; const isRet = tt.includes('retainer');
       if(!tt.includes('equip') && !isRet) return;
       if(isRet && this._attachedFx(vamp, 'noRecruitEmploy').length) return;   // v0.6.217 (V5 wave 4): Depravity -- the bearer cannot employ retainers
+      if(isRet && !this._retainerReqMet(h.e, vamp)) return;   // v0.6.236 (the pilot's review, E1; [RTR 19941109]): the plain employ meets the retainer's requirement -- its discipline too (Aunt Linda, no Animalism, employed Raven Spy and Murder of Crows); one it does not meet is Biothaumaturgic Experiment's ('ignoring requirements', _bestAnimalEmployFor) or nobody's
       const cP = (h.e.cost && h.e.cost.pool) || 0, cB = (h.e.cost && h.e.cost.blood) || 0;
       if(cP && cP >= (this.pool | 0)) return;   // v0.6.210: leave >= 1 pool (.44 Magnum costs 2 -- at pool 2 it was taken and paid at resolution, an oust)
       if(cB > 0 && (vamp.blood | 0) <= cB) return;   // employ must leave the bearer >= 1 blood
@@ -3586,7 +3587,7 @@ class Bot {
     const rush = (over && Object.prototype.hasOwnProperty.call(over, 'rush')) ? over.rush : this._bestRushFor(v);
     const ctx = { plain: { n: 1 + this._cryptBleedBonus(v) }, card: this._bestBleedCardFor(v), pd: this._bestPoolDmgActionFor(v), pol: this._bestPoliticalFor(v), stock: this._bestBloodStockFor(v), peek: this._bestPeekFor(v), equip: this._bestEquipActionFor(v), fetch: this._bestFetchFor(v), rush, creep: this._bestCreepFor(), strength: this._bestStrengthFor(v), recruit: this._bestRecruitFor(v), enemyRescue: this._bestEnemyRescueFor(v), ownRescue: this._bestOwnRescueFor(v), readyCrypt: this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready').length, edge: this.edge,
              plainBare: (1 + this._cryptBleedBonus(v)) === 1 && !this._bestBleedModifierFor(v, new Set(), false), lowPool: (this.pool | 0) <= 6, ...(() => { const rt = this._bestRutorFor(v); return rt ? { rutor: rt } : {}; })(), ...(() => { const bc = this._bestBurnCardFor(v); return bc ? { burnCard: bc } : {}; })(), ...(() => { const at = this._bestAttachFor(v); return at ? { attach: at } : {}; })(), ...(() => { const ea = this._bestAnimalEmployFor(v); return ea ? { employAnimal: ea } : {}; })() };   // v0.6.217 (V5 wave 4): the (D) action that burns a card in play (Toreador Grand Ball), only when there is one   // v0.6.213 (V5 wave 1): Rutor's Hand, only when there is one (a ctx without it is the old, byte for byte)   // v0.6.211 (Johan, 19 Oct): plainBare = the plain bleed is a bare 1 (no crypt bonus, no bleed modifier in hand to pump it); lowPool = 6 or less (Johan's floor) -- the equipment rule's two reads   // fas B: edge in the ctx -- the arena traces need it to distinguish 'Dirt unfound' from 'Edge not held' (in 2-player the opponent's intervening bleed usually reclaims it, so Dirt windows are rare and PRECIOUS)   // VA: plain bleed carries the Lenny-class crypt bonus from birth
-    if(ctx.employAnimal && ctx.equip && ctx.equip.isRetainer && ctx.equip.name === ctx.employAnimal.retainer) ctx.equip = null;   // v0.6.236: a retainer whose requirement this vampire does not meet goes through Biothaumaturgic Experiment [tha] -- the plain finder reads its clan but not its discipline (a gap: the report), so its offer of the same retainer is not legal here
+    if(ctx.employAnimal && ctx.equip && ctx.equip.isRetainer && ctx.equip.name === ctx.employAnimal.retainer) ctx.equip = null;   // v0.6.236: a retainer whose requirement this vampire does not meet goes through Biothaumaturgic Experiment [tha] -- the plain finder read its clan but not its discipline; since the pilot's review (E1) it reads both (_retainerReqMet), so the two finders never offer the same retainer: a guard
     return ctx;
   }
   _decideAction(v, ctx){
@@ -4884,9 +4885,10 @@ class Bot {
      on the sum. The retainer's effect is what the bot's readers make of it on this employer (its modes by the employer's disciplines,
      [LSJ 20080803]); its weight is its equipment tier (_equipLadderTier, the requirement not asked). The employ is not a requirement of
      the action ([LSJ 20100725]). */
-  _retainerReqMet(e, vamp){
+  _retainerReqMet(e, vamp){          // the retainer's clan / sect (_entryReqOk) and its discipline. The pilot's review (E1; [RTR 19941109]: 'The discipline level used to recruit it decides which version it is'): a retainer printed with discipline levels is employed AT one of them -- a vampire who can use none cannot employ it; a combo level ([pro][ser], Hatch the Viper) needs both, as _modeUsableBy reads it. A retainer with a discipline and no mode the compiler reads (Owl Companion, Shade ...): its printed disciplines, any one
     if(!this._entryReqOk(e, vamp)) return false;
     const ds = (e && e.req && e.req.disc) || []; if(!ds.length) return true;
+    const lv = ((e && e.modes) || []).filter(m => m && m.at); if(lv.length) return lv.some(m => this._modeUsableBy(m, vamp));
     const d = this._discOf(vamp); return !!(d && ds.some(x => (d.all || []).includes(String(x).toLowerCase())));
   }
   _bestAnimalEmployFor(vamp){
