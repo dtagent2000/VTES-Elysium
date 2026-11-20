@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.53 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.54 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.53';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.54';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -250,6 +250,10 @@ function modeConsumed(mo, e){
     return { ok: false, via: 'rush: its target condition (rushTo ' + mo.fx.rushTo + ') is unread' };
   if(mo.fx && mo.fx.rushGrant && (mo.fx.rushBy !== undefined || mo.fx.hostOf !== undefined) && !(scanned.has('rushBy') && scanned.has('hostOf')))
     return { ok: false, via: 'rushGrant: who may rush through it and on whom (rushBy / hostOf) is unread' };
+  /* v1.1.54 (20 Nov 2026, the pilot's review, R-data 3a): a card's maneuver each combat is had only once the card is ON a minion -- a
+     maneuverEach mode is consumed when the attach finder reads where it goes (fx.attach, _bestAttachFor), the way rushTo gates a rush. */
+  if(mo.fx && mo.fx.maneuverEach !== undefined && !(mo.fx.attach !== undefined && scanned.has('attach')))
+    return { ok: false, via: 'maneuverEach: where the card goes (attach) is ' + (mo.fx.attach === undefined ? 'not on the mode' : 'unread') };
   /* v1.1.31 (18 Sep 2026, found while loading Ventrue): the UNLOCK false positive. fx.unlock has exactly ONE
      consumer, _bestUnlockReactFor, which demands a REACTION mode with a curated `when` rider. Freak Drive (a
      modifier, "after action resolution") and Majesty [PRE] (combat) carry a bare fx.unlock and were certified
@@ -297,6 +301,14 @@ function modeConsumed(mo, e){
   const _ks = Object.keys(mo.fx || {});
   if(_ks.length && _ks.every(k => k === 'actStealth') && (e.modes || []).some(m2 => (m2.fx || {}).peekPreyDiscard || (m2.fx || {}).openHandPrey))
     return { ok: true, via: 'actStealth@peek-tally' };
+  /* v1.1.54 (the pilot's review, R-data 3b): the same entry-level pairing for an action card whose finder books the header's '+N stealth
+     action' itself (_cardActStealth: the card rush's st, the attach's and the experiment's employ's st) -- consumed when the SAME entry has a
+     consumed mode of that finder: a rush (Fleetness, Sense Death, Umbrous Clutch ...), an attach, an employAnimal. A bleed mode beside it
+     does not pair (the bleed finder drops the card's stealth: Fleetness [cel], C1's). */
+  if(_ks.length && _ks.every(k => k === 'actStealth') && scanned.has('actStealth')){
+    const pair = (e.modes || []).find(m2 => m2 !== mo && m2.fx && (m2.fx.rush || m2.fx.attach !== undefined || m2.fx.employAnimal) && modeConsumed(m2, e).ok);
+    if(pair) return { ok: true, via: 'actStealth@' + (pair.fx.rush ? 'rush' : pair.fx.attach !== undefined ? 'attach' : 'employ') };
+  }
   const f = mo.fx || {};
   /* v1.1.2 (Johan's grinder onboarding): bleed is CONTEXTUAL, not blanket-'paired'.
      _bestBleedModifierFor (steg 2) consumes standalone fx.bleed on mod-typed cards --

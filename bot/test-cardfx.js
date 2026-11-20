@@ -930,8 +930,9 @@ ok(fx.counts.libLock >= 140,
   const frBad = FO.filter(n => !L[n] || L[n].frenzy !== 'opp').concat(['Rage of Apedemak'].filter(n => !L[n] || L[n].frenzy !== 'self'));
   ok(!frBad.length, 'the entry-level frenzy tag (v1.9.10): opp on the ten that can be played on another minion (Battle Frenzy: \u2018Choose an Osebo in combat\u2019, any Osebo -- the graded readings), self on Rage of Apedemak (curated: the tag survives)' + (frBad.length ? ' -- wrong: ' + frBad.join(', ') : ''));
   const wu = L['Whistling Up the Beast'], dh = L['Devil-Channel: Hands'], dbk = L['Devil-Channel: Back'];
-  ok(!wu.frenzy && (wu.modes || []).length === 2 && wu.modes.every(m => m.frenzy === 'opp') && dh.modes.every(m => m.frenzy === 'self') && dbk.modes.every(m => m.frenzy === 'self'),
-     'the mode-level frenzy tag (v1.9.10): Whistling Up the Beast’s [abo] and its [ABO] ‘As above’ are opp (the opposing vampire), the two Devil-Channels self -- no entry-level tag');
+  ok(!wu.frenzy && (wu.modes || []).length === 2 && wu.modes.every(m => m.frenzy === 'opp') && dh.modes.every(m => m.frenzy === 'self') && dbk.modes.every(m => m.frenzy === 'self')
+     && wu.modes[0].at === 'abo' && JSON.stringify(wu.modes[0].fx) === '{}' && JSON.stringify(wu.modes[1].fx) === '{"maneuver":true}',
+     'the mode-level frenzy tag (v1.9.10): Whistling Up the Beast’s [abo] and its [ABO] ‘As above’ are opp (the opposing vampire), the two Devil-Channels self -- no entry-level tag (compiler v1.11.1: [abo] is a mode with no fx that carries its tag -- \u2018the opposing vampire cannot use maneuvers ... and cannot use presses\u2019 was read as the player\u2019s own maneuver and press; [ABO] keeps its own \u2018optional maneuver this round\u2019)');
   const frN = Object.keys(L).filter(n => L[n].frenzy).length, frM = Object.keys(L).filter(n => !L[n].frenzy && (L[n].modes || []).some(m => m.frenzy)).length;
   ok(frN === 11 && frM === 4, 'the frenzy tags’ volume: 11 entries, 4 more by a mode (got ' + frN + ' and ' + frM + ')');
 }
@@ -1211,18 +1212,41 @@ ok(fx.counts.libLock >= 140,
   { const rushers = Object.keys(L).filter(n => (L[n].modes || []).some(mo => mo.fx && mo.fx.rush)).sort();
     const want = ['Ambush', "Bum's Rush", 'Charge of the Buffalo', 'Deep Song', 'Fleetness', "Hunter's Mark", 'Hunting the Beast', 'Line Brawl', 'Nose of the Hound', 'Sense Death', 'Taunt the Caged Beast', 'Umbrous Clutch'];
     const modes = rushers.flatMap(n => L[n].modes.filter(mo => mo.fx && mo.fx.rush).map(mo => ({ n, mo })));
-    ok(JSON.stringify(rushers) === JSON.stringify(want) && modes.length === 16 && modes.every(({ n, mo }) => mo.dir === true && L[n].t.includes('action') && mo.fx.maneuver === undefined && mo.fx.press === undefined)
+    ok(JSON.stringify(rushers) === JSON.stringify(want) && modes.length === 18 && modes.every(({ n, mo }) => mo.dir === true && L[n].t.includes('action') && mo.fx.maneuver === undefined && mo.fx.press === undefined)
        && modes.every(({ n, mo }) => mo.fx.lockTarget === undefined || n === 'Deep Song'),
-       'the rush\u2019s volume: 16 modes on 12 cards (Deep Song\u2019s hand entry and 15 compiled modes on 11 cards), each a directed action mode with no maneuver / press beside it; lockTarget on Deep Song only -- got ' + rushers.join(', ') + ' (' + modes.length + ' modes)'); }
-  /* the rush refused: a mode with a sentence no key reads (the R cards of pilot-sharing \u00a71) */
+       'the rush\u2019s volume: 18 modes on 12 cards (Deep Song\u2019s hand entry and 17 compiled modes on 11 cards; v1.11.1: + Nose of the Hound [spi] and [SPI]), each a directed action mode with no maneuver / press beside it; lockTarget on Deep Song only -- got ' + rushers.join(', ') + ' (' + modes.length + ' modes)'); }
+  /* the rush refused: a mode with a sentence no key reads (the R cards: specs/spec-sweep-pilot-2026-11-20.md \u00a72, the rush\u2019s row) */
   { const R = ['Abuse of Power', 'Pillars Fall', 'Big Game', 'Dive Bomb', 'Clandestine Contract', 'Harass', 'Make the Misere', 'Purity of the Beast', 'Games of Instinct', 'Rumble', 'Monomancy', 'Coagulated Entity', 'Steely Tenacity', 'Consume the Dead'];
     const refused = new Set((res.wholeRefused || []).map(r => r.name));
     ok(R.every(n => !!L[n] && !anyKey(n, 'rush') && !anyKey(n, 'rushTo') && !anyKey(n, 'maneuverGrant') && !anyKey(n, 'pressGrant') && refused.has(n))
        && FX('Big Game', null) === '{"maneuver":true,"press":true}' && FX('Harass', null) === '{"press":true}' && FX('Abuse of Power', null) === '{"actStealth":1}',
        'the whole-mode rule refuses the rush on the rider cards and lists each in the report: Abuse of Power and Pillars Fall (after combat), Big Game (Red List), Dive Bomb ([FLIGHT], first round), Clandestine Contract (the card on the target), Harass (an or-condition), Make the Misere (the header), Purity of the Beast (an ally), Games of Instinct, Rumble and Monomancy (Sabbat), Coagulated Entity, Steely Tenacity, Consume the Dead -- their compiled keys untouched'); }
-  ok(FX('Nose of the Hound', 'spi') === '{"maneuver":true}' && FX('Nose of the Hound', 'SPI') === '{"maneuver":true}' && FX('Charge of the Buffalo', 'spi') === '{"handBonus":1,"handStrike":true}' && FX('Charge of the Buffalo', 'SPI') === '{"handBonus":1,"handStrike":true}'
+  ok(FX('Charge of the Buffalo', 'spi') === '{"handBonus":1,"handStrike":true}' && FX('Charge of the Buffalo', 'SPI') === '{"handBonus":2,"handStrike":true}'
      && FX('Hunting the Beast', 'AUS') === '{"bloodAdd":2}',
-     'a refused mode beside a whole one keeps its compiled keys: Nose of the Hound [spi] (\u2018an additional optional maneuver\u2019) and [SPI] (a new target), Charge of the Buffalo [spi] / [SPI] (the range and the initial strike), Hunting the Beast [AUS] (after combat)');
+     'a refused mode beside a whole one keeps its compiled keys: Charge of the Buffalo [spi] / [SPI] (the range and the initial strike), Hunting the Beast [AUS] (after combat); compiler v1.11.1: Charge [SPI] \u2018As [spi] above, but the strike is at +2 damage\u2019 carries +2 (it inherited [spi]\u2019s +1: a wrong value -- the number is the text\u2019s, the mode stays refused and listed)');
+  /* compiler v1.11.1 (the pilot's review: the grader's wrong refusals and R-1, R-data 5) */
+  { const refR = res.wholeRefused || [], rf = (n, at) => refR.filter(r => r.name === n && r.at === at);
+    ok(FX('Nose of the Hound', 'spi') === '{"rush":true,"rushTo":"locked","maneuverGrant":2}' && FX('Nose of the Hound', 'SPI') === '{"rush":true,"maneuverGrant":2}' && M('Nose of the Hound', 'SPI').dir === true && FX('Nose of the Hound', null) === '{"actStealth":1}' && !rf('Nose of the Hound', 'spi').length && !rf('Nose of the Hound', 'SPI').length,
+       'Nose of the Hound (v1.11.1, a wrong refusal fixed): [spi] \u2018As [aus] above, with an additional optional maneuver during that combat\u2019 is the locked rush with maneuverGrant 2; [SPI] \u2018As [spi] above, but enter combat with any ready minion controlled by another Methuselah\u2019 the same, its target unconditioned (the bot\u2019s own target set) -- got ' + FX('Nose of the Hound', 'spi') + ' / ' + FX('Nose of the Hound', 'SPI'));
+    ok(FX('Donnybrook', 'pro') === '{"aggr":true,"handStrike":true,"handBonus":0}' && E('Donnybrook').anarchReq === true && E('Donnybrook').req.rangeClose === true && FX('Donnybrook', 'ser') === '{"stealBlood":2}' && !rf('Donnybrook', 'pro').length,
+       'Donnybrook [pro] (v1.11.1, a wrong refusal fixed): \u2018Strike: hand strike, aggravated.\u2019 is handStrike + aggr + handBonus 0 (it had no number: the chooser never played it); the header (Anarch, close range) read -- got ' + FX('Donnybrook', 'pro'));
+    const st = rf('Steely Tenacity', 'qui');
+    ok(st.length === 1 && /^the header: If you would replace this card, instead you can take this card from your ash heap\.$/.test(st[0].why) && !anyKey('Steely Tenacity', 'rush') && FX('Steely Tenacity', 'qui') === '{"actStealth":1}',
+       'Steely Tenacity [qui] (v1.11.1): still refused, and the reason names the unread HEADER sentence (the line\u2019s own \u2018[ACTION] +1 stealth action. \u24b9 Enter combat with a minion.\u2019 is read: its type bracket and its actStealth) -- got ' + JSON.stringify(st));
+    const charge = rf('Charge of the Buffalo', 'SPI'), nose = rf('Nose of the Hound', 'SPI'), dag = rf("Dagon's Call", 'QUI'), lead = rf('Lead Fist', 'VIS');
+    ok([charge, dag, lead].every(x => x.length === 1 && /^its reference is not read whole: As /.test(x[0].why)) && nose.length === 0 && rf('Withering', 'THN').length === 1 && rf('Cobra Fangs', 'SER').length === 1,
+       'the refusal report lists an \u2018As [x] above\u2019 line of a refused mode the same way for every card (v1.11.1): Charge of the Buffalo [SPI] beside Dagon\u2019s Call [QUI] and Lead Fist [VIS] (and Withering [THN], Cobra Fangs [SER] ...); Nose of the Hound [SPI] is whole now'); }
+  /* compiler v1.11.1 (R-data 5, the same misread class as the ban): a negated clause or an opponent's grant is never the player's own
+     maneuver / press / dodge / additional strike. Target Vitals (pathdeath x4) was a press card for the bot. */
+  ok(!M('Skin Trap', 'vic') && !M('Skin Trap', 'VIC') && !anyKey('Skin Trap', 'dodge') && !anyKey('Veil of Silence', 'dodge')
+     && !anyKey('Shoulder Drop', 'press') && FX('Shoulder Drop', null) === '{"handStrike":true}' && !anyKey('Sympathetic Agony', 'press') && !anyKey('Target Vitals', 'press') && !anyKey('Target Head', 'press') && !anyKey('Target Head', 'addStrike')
+     && !anyKey('Lapse', 'maneuver') && !anyKey('Terror Frenzy', 'maneuver') && !anyKey('Terror Frenzy', 'press') && !anyKey('Ni Dieu ni Ma\u00eetre', 'maneuver') && !anyKey('Imprison', 'maneuver') && !anyKey('Imprison', 'press')
+     && !anyKey('Olid Loa', 'maneuver') && !anyKey('Olid Loa', 'press') && FX('Condemnation: Languid', 'DAI') === '{}' && M('Condemnation: Languid', 'DAI').dir === true && !anyKey('Rigor Mortis', 'addStrike') && !anyKey('Decompose', 'addStrike'),
+     'NEGATIVES (v1.11.1): \u2018the opposing minion cannot dodge / maneuver / press\u2019, \u2018cannot use (any) additional strikes\u2019 and \u2018the attached minion cannot press\u2019 give the player nothing -- Skin Trap, Veil of Silence [QUI], Shoulder Drop, Sympathetic Agony, Target Vitals, Target Head, Lapse [tem], Terror Frenzy, Ni Dieu ni Ma\u00eetre, Imprison, Olid Loa, Condemnation: Languid [DAI], Rigor Mortis [pre], Decompose');
+  ok(FX('Backstep', null) === '{"maneuver":true}' && FX('Pounce', null) === '{"handBonus":2,"handStrike":true}' && FX('Dive Bomb', null) === '{"maneuver":true,"actStealth":1}'
+     && FX('Bloodform', 'VIC') === '{"press":true,"aggr":true}' && M('Bloodform', 'VIC').pressDir === 'end' && FX('Form of the Bat', 'pro') === '{"maneuver":true}' && FX('Foldable Machine Gun', null).indexOf('"maneuver":true') >= 0
+     && FX('Rigor Mortis', 'thn') === '{"press":true}' && FX('Whistling Up the Beast', 'ABO') === '{"maneuver":true}',
+     'the same reads keep what is the player\u2019s (v1.11.1): an opponent\u2019s \u2018gets an optional press\u2019 is cut (Backstep\u2019s own maneuver, Pounce\u2019s strike, Dive Bomb\u2019s maneuver stay); \u2018cannot strike and gets 1 optional press\u2019 keeps Bloodform [VIC]\u2019s press, \u2018gets 1 optional maneuver and cannot use equipment\u2019 Form of the Bat\u2019s, \u2018This maneuver cannot be used during the first round\u2019 the gun\u2019s; Rigor Mortis [thn] \u2018with an optional press\u2019 and Whistling Up the Beast [ABO]\u2019s own maneuver stay');
   { const ds = E('Deep Song'), cds = curated && curated.lib['Deep Song'];
     ok(ds.src === 'hand' && !ds.merged && !!cds && JSON.stringify(ds.modes) === JSON.stringify(cds.modes) && FX('Deep Song', 'ANI') === '{"rush":true,"lockTarget":true}',
        'Deep Song is its hand entry, unchanged: [ANI] rush + lockTarget (\u2018Enter combat with and lock a vampire\u2019), no rushTo or grant'); }
@@ -1246,11 +1270,11 @@ ok(fx.counts.libLock >= 140,
      && !anyKey('Personal Scourge', 'nullOppWeapons') && !anyKey('Personal Scourge', 'noPreventDisc'),
      'NEGATIVES: Soulgrinder and Dead Hand print the Fortitude rider at superior only -- the struck bot reads the key by the card\u2019s name, so neither gets it; Personal Scourge\u2019s \u2018equipment or cards requiring Fortitude\u2019 is another sentence (no riders)');
   ok(['Cobra Fangs|ser', 'Dagon\'s Call|qui', 'Dagon\'s Call|QUI', 'Withering|thn', 'Creeping Infection|thn', 'Anesthetic Touch|obe', 'Grasp of the Python|ser'].every(x => { const [n, at] = x.split('|'); const mo = M(n, at); return !!mo && mo.fx.handStrike === true && mo.fx.handBonus === undefined; })
-     && FX('Lead Fist', 'VIS').indexOf('"handBonus":1') >= 0,
-     'NEGATIVES: a hand strike with a rider no key reads gets no handBonus 0 (Cobra Fangs, Dagon\u2019s Call both levels, Withering, Creeping Infection, Anesthetic Touch, Grasp of the Python); Lead Fist [VIS] \u2018but at +2\u2019 stays as compiled (its reference [vis] is not whole)');
+     && FX('Lead Fist', 'VIS') === '{"handBonus":2,"handStrike":true,"press":true}' && FX('Lead Fist', 'vis') === '{"handBonus":1,"handStrike":true,"press":true}',
+     'NEGATIVES: a hand strike with a rider no key reads gets no handBonus 0 (Cobra Fangs, Dagon\u2019s Call both levels, Withering, Creeping Infection, Anesthetic Touch, Grasp of the Python); Lead Fist [VIS] \u2018As [vis] above, but at +2 damage\u2019 keeps its compiled keys (its reference [vis] is not whole) at the text\u2019s +2 (v1.11.1: the inherited +1 was a wrong value)');
   { const zero = Object.keys(L).filter(n => (L[n].modes || []).some(mo => mo.fx && mo.fx.handBonus === 0)).sort(), nw = Object.keys(L).filter(n => anyKey(n, 'nullOppWeapons')).sort(), np = Object.keys(L).filter(n => anyKey(n, 'noPreventDisc')).sort();
-    ok(JSON.stringify(zero) === '["Blood Rage","Sculpt the Flesh"]' && L['Sculpt the Flesh'].src === 'hand' && JSON.stringify(nw) === '["Blood Fury","Blood Rage","Bollix","Soul Burn"]' && JSON.stringify(np) === '["Blood Fury","Blood Rage","Bollix","Soul Burn"]',
-       'the hand strike\u2019s volume: handBonus 0 on Blood Rage (compiled) and Sculpt the Flesh (its hand entry, V5 wave 1); nullOppWeapons and noPreventDisc on Blood Fury, Blood Rage, Bollix and Soul Burn -- got ' + [zero, nw, np].map(x => x.join(', ')).join(' / ')); }
+    ok(JSON.stringify(zero) === '["Blood Rage","Donnybrook","Sculpt the Flesh"]' && L['Sculpt the Flesh'].src === 'hand' && JSON.stringify(nw) === '["Blood Fury","Blood Rage","Bollix","Soul Burn"]' && JSON.stringify(np) === '["Blood Fury","Blood Rage","Bollix","Soul Burn"]',
+       'the hand strike\u2019s volume: handBonus 0 on Blood Rage and Donnybrook (compiled; v1.11.1: + Donnybrook) and Sculpt the Flesh (its hand entry, V5 wave 1); nullOppWeapons and noPreventDisc on Blood Fury, Blood Rage, Bollix and Soul Burn -- got ' + [zero, nw, np].map(x => x.join(', ')).join(' / ')); }
   /* the animal marker */
   { const an = Object.keys(L).filter(n => L[n].animal === true).sort();
     ok(an.length === 13 && an.every(n => L[n].t.includes('retainer')) && L['Raven Spy'].animal === true && L['Dog Pack'].animal === true && L['Murder of Crows'].animal === true && L['Murder of Crows'].src === 'hand'
@@ -1279,6 +1303,76 @@ ok(fx.counts.libLock >= 140,
        'Haven Uncovered is unchanged (rushGrant 1; no rushBy or hostOf: the bot reads their absence as any)'); }
 }
 /* end: the Banu Haqim pilot */
+/* The whole-mode guards on SYNTHETIC libraries (compiler v1.11.1, the pilot's review R-data 6): no real card exercises these guards (15
+   mutants of the v1.11.0 rule survived the real library), so each gets a small library of its own, compiled in-process, or a planted
+   compiled entry read by wholeModes directly (a guard no text the readers accept can reach today). Each card is a fixture, not a card. */
+{
+  console.log('\nThe whole-mode guards on synthetic libraries (compiler v1.11.1)');
+  const { wholeModes } = require('./cardfx-compile.js');
+  let sid = 990000;
+  const C = (name, types, text, disc) => ({ id: sid++, name, _name: name, printed_name: name, types, card_text: text, disciplines: disc || [], clans: [], rulings: [] });
+  const SYN = [
+    C('Syn Grant First Round', ['Action'], '[cel] Ⓓ Enter combat with a minion. This acting vampire gets 1 optional maneuver during the first round of that combat.', ['cel']),
+    C('Syn Grant Continue Maneuver', ['Action'], '[cel] Ⓓ Enter combat with a minion. This acting vampire gets 1 optional maneuver, only usable to continue combat, during that combat.', ['cel']),
+    C('Syn Press Continue', ['Action'], '[cel] Ⓓ Enter combat with a minion. This acting vampire gets 1 optional press, only usable to continue combat, during that combat.', ['cel']),
+    C('Syn Header Unread', ['Action'], 'Only usable during a full moon.\n[cel] Ⓓ Enter combat with a minion.', ['cel']),
+    C('Syn Header Requires', ['Action'], 'Requires a Sabbat vampire.\n[cel] Ⓓ Enter combat with a minion.', ['cel']),
+    C('Syn Header Anarch', ['Action'], 'Requires an Anarch.\n[cel] Ⓓ Enter combat with a minion.', ['cel']),
+    C('Syn Odd Bracket', ['Action'], '[cel] Ⓓ Enter combat with a minion.\n[FLIGHT] +1 stealth action.', ['cel']),
+    C('Syn As Ref Level', ['Action'], '[cel] Ⓓ Enter combat with a minion. This acting vampire gets 1 optional press during that combat.\n[pot] Ⓓ Enter combat with a locked minion.\n[CEL] As [cel] above, and this acting vampire gets 1 optional maneuver during that combat.', ['cel', 'pot']),
+    C('Syn Ban Scope', ['Action'], '[cel] Ⓓ Enter combat with a minion. The opposing minion cannot strike: combat ends during the second round of that combat.', ['cel']),
+    C('Syn Ban NoScope', ['Combat'], '[cel] Strike: 2 damage. The opposing minion cannot strike: combat ends during the second round.', ['cel']),
+    C('Syn As Above Adds', ['Combat'], '[pot] Strike: hand strike at +1 damage.\n[POT] As above, and this hand strike is at +1 damage.', ['pot']),
+    C('Syn Shared Level', ['Combat'], '[pot] Strike: hand strike.\n[pot] Strike: hand strike.', ['pot']),
+    C('Syn Strike Extra', ['Combat'], '+1 stealth action. Strike: hand strike.', []),
+    C('Syn Null', ['Combat'], "[tha] Strike: hand strike. The opposing vampire's strikes with weapons inflict no damage this round.", ['tha']),
+    C('Syn Null Wide', ['Combat'], "[tha] Strike: hand strike. The opposing minion's strikes with weapons inflict no damage this round.", ['tha']),
+    C('Syn NoPrev', ['Combat'], '[tha] Strike: hand strike. Damage from this strike cannot be prevented by cards requiring Fortitude [for].', ['tha']),
+    C('Syn NoPrev Wide', ['Combat'], '[tha] Strike: hand strike. Damage from this strike cannot be prevented by equipment or cards requiring Fortitude [for].', ['tha']),
+    C('Syn Own Stealth', ['Action'], '[cel] +2 stealth action. Ⓓ Enter combat with a minion.', ['cel']),
+    C('Syn But Ranged', ['Combat'], '[pot] Strike: 2R damage.\n[POT] As above, but at +3 damage.', ['pot'])];
+  const sr = compile(SYN, null), SL = sr.out.lib, SM = (n, at) => ((SL[n] && SL[n].modes) || []).find(mo => (mo.at === undefined ? null : mo.at) === at) || null;
+  const SF = (n, at) => JSON.stringify((SM(n, at) || { fx: 'none' }).fx), Sref = (n, at) => (sr.wholeRefused || []).filter(r => r.name === n && (at === undefined || r.at === at)).map(r => r.why);
+  const noRush = n => !((SL[n] && SL[n].modes) || []).some(mo => mo.fx && (mo.fx.rush || mo.fx.maneuverGrant || mo.fx.pressGrant));
+  ok(noRush('Syn Grant First Round') && noRush('Syn Grant Continue Maneuver') && Sref('Syn Grant First Round', 'cel').length === 1 && Sref('Syn Grant Continue Maneuver', 'cel').length === 1
+     && SF('Syn Press Continue', 'cel') === '{"rush":true,"pressGrant":1,"pressDir":"continue"}',
+     'the grant’s exclusions: a maneuver ‘during the first round of that combat’ and a maneuver ‘only usable to continue combat’ are unread (the rush refused, listed); a press ‘only usable to continue combat’ is pressDir continue -- got ' + SF('Syn Press Continue', 'cel'));
+  ok(noRush('Syn Header Unread') && JSON.stringify(Sref('Syn Header Unread', 'cel')) === '["the header: Only usable during a full moon."]' && noRush('Syn Header Requires') && JSON.stringify(Sref('Syn Header Requires', 'cel')) === '["the header: Requires a Sabbat vampire."]'
+     && SF('Syn Header Anarch', 'cel') === '{"rush":true}' && SL['Syn Header Anarch'].anarchReq === true,
+     'the header: an unread header sentence refuses every mode of the card, and ‘Requires’ is read only in the shapes the compiler reads (an Anarch: the rush is whole; a Sabbat vampire: refused)');
+  ok(noRush('Syn Odd Bracket') && JSON.stringify(Sref('Syn Odd Bracket')) === '["a line opens with a bracket that is no discipline: [FLIGHT] +1 stealth action."]' && Sref('Syn Odd Bracket', '*').length === 1,
+     'a line that opens with a bracket that is no discipline ([FLIGHT]) refuses the whole card, listed at ‘*’ with that line -- got ' + JSON.stringify((sr.wholeRefused || []).filter(r => r.name === 'Syn Odd Bracket')));
+  ok(SF('Syn As Ref Level', 'CEL') === '{"rush":true,"maneuverGrant":1,"pressGrant":1}' && SF('Syn As Ref Level', 'pot') === '{"rush":true,"rushTo":"locked"}',
+     '‘As [cel] above’ resolves to the [cel] line by its level, not to the line just before ([pot]’s locked target): [CEL] is [cel]’s rush and press plus its own maneuver -- got ' + SF('Syn As Ref Level', 'CEL'));
+  ok(SF('Syn Ban Scope', 'cel') === '{}' && JSON.stringify(Sref('Syn Ban Scope', 'cel')) === '["The opposing minion cannot strike: combat ends during the second round of that combat."]' && SF('Syn Ban NoScope', 'cel') === '{"strike":2}',
+     'the ban’s scope words: ‘during the second round’ is no scope the compiler reads -- no ceBan (not ‘combat’), and the rush’s clause is read only at ‘the first round of that combat’ (the sentence is what the refusal names) -- got ' + SF('Syn Ban NoScope', 'cel'));
+  ok(SF('Syn As Above Adds', 'POT') === '{"handBonus":2,"handStrike":true}' && SF('Syn As Above Adds', 'pot') === '{"handBonus":1,"handStrike":true}',
+     '‘As above, and this hand strike is at +1 damage’ ADDS to its reference’s +1 (2), it does not set it -- got ' + SF('Syn As Above Adds', 'POT'));
+  ok(SF('Syn Shared Level', 'pot') === '{"handStrike":true}' && Sref('Syn Shared Level', 'pot').every(w => w === 'no single compiled mode at its level') && Sref('Syn Shared Level', 'pot').length >= 1,
+     'a level two lines share is not one plain mode: ‘Strike: hand strike.’ twice at [pot] writes no handBonus 0 (refused: no single compiled mode at its level)');
+  ok(SF('Syn Strike Extra', null) === '{"stealth":1,"handStrike":true}' && JSON.stringify(Sref('Syn Strike Extra', null)) === '["compiled keys the reading does not explain: stealth"]',
+     'a strike reading on a mode whose compiled keys it does not explain (stealth) writes nothing and is listed -- got ' + SF('Syn Strike Extra', null));
+  ok(SF('Syn Null', 'tha') === '{"handStrike":true,"handBonus":0,"nullOppWeapons":true}' && SF('Syn Null Wide', 'tha') === '{"handStrike":true}' && Sref('Syn Null Wide', 'tha').length === 1
+     && SF('Syn NoPrev', 'tha') === '{"handStrike":true,"handBonus":0,"noPreventDisc":"for"}' && SF('Syn NoPrev Wide', 'tha') === '{"handStrike":true}' && Sref('Syn NoPrev Wide', 'tha').length === 1,
+     'the nullifier and the Fortitude rider are read in their one shape each: ‘the opposing VAMPIRE’s strikes with weapons’ and ‘cards requiring Fortitude’ -- the opposing minion’s (an ally’s weapons too) and ‘equipment or cards requiring Fortitude’ are unread (refused, no keys)');
+  ok(SF('Syn But Ranged', 'POT') === '{"strike":2,"ranged":true}' && SF('Syn But Ranged', 'pot') === '{"strike":2,"ranged":true}',
+     '\u2018As above, but at +N damage\u2019 replaces an inherited handBonus only: over a strike with no hand bonus (2R damage) it writes nothing -- got ' + SF('Syn But Ranged', 'POT'));
+  ok(SF('Syn Own Stealth', 'cel') === '{"actStealth":2,"rush":true}',
+     'a discipline line’s opening ‘+2 stealth action.’ is that mode’s actStealth: the rush is whole -- got ' + SF('Syn Own Stealth', 'cel'));
+  /* planted compiled entries, read by wholeModes directly: a guard the accepted texts cannot reach through extractFx today */
+  const plant = (t, modes, text) => { const e = { t, modes: JSON.parse(JSON.stringify(modes)) }, sink = []; wholeModes(e, text, 'Planted', sink); return { e, sink }; };
+  const pR = plant(['action'], [{ at: 'cel', dir: true, fx: { maneuver: true, bleed: 1 } }], '[cel] Ⓓ Enter combat with a minion. This acting vampire gets 1 optional maneuver during that combat.');
+  const pS = plant(['combat'], [{ at: 'pot', fx: { handStrike: true, aggr: true } }], '[pot] Strike: hand strike.');
+  const pA = plant(['combat'], [{ at: 'pot', fx: { handStrike: true } }], '[pot] Strike: hand strike, aggravated.');
+  const pT = plant(['action'], [{ at: 'cel', dir: true, fx: { actStealth: 1 } }], '[cel] +2 stealth action. Ⓓ Enter combat with a minion.');
+  const pB = plant(['action'], [{ at: 'cel', dir: true, fx: { ceBan: 'round' } }], '[cel] Ⓓ Enter combat with a minion. The opposing minion cannot strike: combat ends during the first round of that combat.');
+  ok(JSON.stringify(pR.e.modes[0].fx) === '{"maneuver":true,"bleed":1}' && /compiled keys the reading does not explain: bleed/.test((pR.sink[0] || {}).why)
+     && JSON.stringify(pS.e.modes[0].fx) === '{"handStrike":true,"aggr":true}' && /compiled keys the reading does not explain: aggr/.test((pS.sink[0] || {}).why)
+     && JSON.stringify(pA.e.modes[0].fx) === '{"handStrike":true}' && /no aggr/.test((pA.sink[0] || {}).why)
+     && JSON.stringify(pT.e.modes[0].fx) === '{"actStealth":1}' && /not the compiled mode/.test((pT.sink[0] || {}).why)
+     && JSON.stringify(pB.e.modes[0].fx) === '{"ceBan":"round"}' && /does not explain: ceBan/.test((pB.sink[0] || {}).why),
+     'PLANTED: a rush whose compiled mode carries a key the reading does not explain (bleed), a plain hand strike over a compiled aggr, ‘hand strike, aggravated’ over a mode without aggr, a line’s +2 stealth over a compiled +1, and the first-round ban’s clause over a compiled ceBan ‘round’ -- each mode is left as it is and listed -- got ' + JSON.stringify([pR, pS, pA, pT, pB].map(x => (x.sink[0] || {}).why || null)));
+}
 /* The sharing register (19 Nov 2026, bot v0.6.234; RULINGS D-125, spec-card-sweep-2026-11-18 §2 and §4.1): no hand key before "who else
    in the library prints this?" has an answer on file. cardfx-sharing.js defines a hand-only key and the register's rules; this is its gate.
    First the rules against a seven-entry library with a fault planted per rule (the lint must bite), then the real library and the real
