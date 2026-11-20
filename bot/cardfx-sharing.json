@@ -231,7 +231,6 @@
   "lockStealthAt",
   "lockStealthClan",
   "lockStealthSect",
-  "lockTarget",
   "lockToUnlock",
   "lostMinionTax",
   "maneuverTo",
@@ -259,7 +258,6 @@
   "relockIfNoBlock",
   "replaceBurnsCounter",
   "rescueTorpor",
-  "rushGrant",
   "rushHostBy",
   "rushSelf",
   "selfAggrImmuneBlood",
@@ -268,7 +266,6 @@
   "stealGrant",
   "strBonus",
   "strengthAction",
-  "strengthBonus",
   "strengthCombat",
   "strengthSet",
   "titleCard",
@@ -293,8 +290,19 @@
   "zombieCounter"
  ],
  "shared": {
+  "attach": ["Biothaumaturgic Experiment","Concordance","Drink the Blood of Ahriman","Enforcer","Heroic Might","Martial Ritus","New Moon Sigil","Patagia: Flaps Allowing Limited Flight","Preternatural Strength","Ritual Challenge","Shadow of the Beast","The Wildebeest"],
+  "ceGrant": ["Memory Rift","Night Terrors","Shroud of Absence"],
+  "hostOf": ["Dirty Contract","Haqim's Law: Judgment","Priority Contract","Unacceptable Appearance"],
+  "maneuverEach": ["Biothaumaturgic Experiment","New Moon Sigil","Patagia: Flaps Allowing Limited Flight","Shadow of the Beast","The Wildebeest"],
   "noPreventDisc": ["Blood Fury","Blood Rage","Bollix","Burning Touch","Dead Hand","Personal Scourge","Soul Burn","Soulgrinder"],
-  "rush": ["Abuse of Power","Ambush","Big Game","Bum's Rush","Charge of the Buffalo","Clandestine Contract","Coagulated Entity","Consume the Dead","Deep Song","Dive Bomb","Fleetness","Games of Instinct","Harass","Hunter's Mark","Hunting the Beast","Line Brawl","Make the Misere","Monomancy","Nose of the Hound","Pillars Fall","Purity of the Beast","Rumble","Sense Death","Steely Tenacity","Taunt the Caged Beast","Umbrous Clutch"]
+  "rush": ["Abuse of Power","Ambush","Big Game","Bum's Rush","Charge of the Buffalo","Clandestine Contract","Coagulated Entity","Consume the Dead","Deep Song","Dive Bomb","Fleetness","Games of Instinct","Harass","Hunter's Mark","Hunting the Beast","Line Brawl","Make the Misere","Monomancy","Nose of the Hound","Pillars Fall","Purity of the Beast","Rumble","Sense Death","Steely Tenacity","Taunt the Caged Beast","Umbrous Clutch"],
+  "rushBy": ["Contract","Dirty Contract","Hand Contract","Haqim's Law: Judgment","Priority Contract","Regent","Shakar: the Hunt","Unacceptable Appearance"],
+  "rushGrant": ["Contract","Dirty Contract","Hand Contract","Haqim's Law: Judgment","Haven Uncovered","Priority Contract","Shakar: the Hunt"],
+  "strengthBonus": ["Biothaumaturgic Experiment","Blooding by the Code","Concordance","Depravity","Drink the Blood of Ahriman","Enforcer","Heroic Might","Martial Ritus","Pack Alpha","Preternatural Strength","Ritual Challenge","Saulot's Avenging Fist","The Art of Pain","The Wildebeest"]
  },
- "unique": {}
+ "unique": {
+  "employAnimal": ["Biothaumaturgic Experiment"],
+  "lockTarget": ["Deep Song"],
+  "poolOnHostLeave": ["Priority Contract"]
+ }
 }
