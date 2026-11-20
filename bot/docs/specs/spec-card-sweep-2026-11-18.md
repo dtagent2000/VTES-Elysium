@@ -294,7 +294,7 @@ does not define. The library's playable entries: 609 → 616 (617).
      pool; nothing in the sewer deck bleeds for more), Sport Bike (one vehicle per minion; the equip guard is one per name, and
      the Tremere deck holds no other vehicle);
    - **seven amber with no note**: Faceless Night ([OBF] locks the failed blockers), Precognition and Spirit's Touch (the prevent
-     and the maneuver in the combat after the block), .44 Magnum (its maneuver: BOARD, the V5 sweep's C riders), Raven Spy ([ANI]'s
+     and the maneuver in the combat after the block), .44 Magnum (its maneuver: BOARD, the V5 sweep's C riders; since 20 Nov 2026 `SWEEP-REGISTER.md` 5.2), Raven Spy ([ANI]'s
      2 life), The Warrens (+1 intercept when titled), Aire of Elation (+1 for a Toreador: every play in the Toreador starter
      bleeds 1 short);
    - **22 green**, Dodge among them (its "do not replace until after combat" is met by the bot's deferred draws, as Skidmark's
@@ -645,7 +645,7 @@ tested at tables with anchors, whose play is the best proven). To be designed wh
   and the ledger lists them playable. Docs: RULINGS O-21.
 
 The fold moved both ahead in Johan's order (the grade column stood below C5 and C6, the block bars under "Known, not built"):
-his to reorder.
+his to reorder. Later the same day (D-135) the block bars went to `SWEEP-REGISTER.md` (10.3); the grade column stays a C rider.
 
 ## Appendix A — what each starter still lacks (cards, v0.6.234)
 | starter | playable copies of 77 | cards left | shared-only | unique remainder | not read |
