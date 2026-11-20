@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.52 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.53 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.52';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.53';   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -200,6 +200,19 @@ const CLASS = {
   cancelFrenzy: 'play',   // Meditative Grove's lock -- _groveFor / _groveCancel (a rush at my Salubri, a human's frenzy card in our combat)
   yawpCombat: 'play',   // Yawp Court -- _yawpFor / _onPolSuccess (the owner), _yawpVisible / _yawpWindow (the caller)
   wonCounters: 'play', wonBleed: 'play', wonStrength: 'play', wonStealHunt: 'play',   // Week of Nightmares -- _wonUnlock / _wonEnd, _wonPlus (bleed, strength, the opposing strike), _wonHunt
+  /* v1.1.53 (20 Nov 2026, the Banu Haqim pilot, cardfx v1.11.0; spec-sweep-pilot-2026-11-20.md §3.1 the data, §3.2 the readers it names). The rush
+     (`rush`, 'play' above) and its riders: rushTo -- the printed target condition, a filter on the rush targets (_rushCandidates); maneuverGrant /
+     pressGrant / pressDir -- the rusher's free optional maneuver / press in the resulting combat (_actingVamp's grant); ceBan -- 'the opposing
+     minion cannot strike: combat ends' (the RUSHED bot keeps it against itself, by the card named on the rush line: the opponent's read, as
+     noPreventDisc). ceGrant -- Night Terrors' strike: combat ends after its block (_bestCombatEndFor), a rider beside stealthToZero. The card on
+     a minion: maneuverEach -- a free optional maneuver each combat while attached; the attach finder plays a card for it as for strengthBonus
+     ('play'); attach -- where it goes ('self', 'own', 'ownVampire'). The granted rush on a host: rushBy / hostOf -- who may rush through it and on
+     whose minion it goes (riders of rushGrant), poolOnHostLeave -- Priority Contract's 3 pool when its host is about to leave the ready region
+     (a rider on the same master mode). employAnimal -- Biothaumaturgic Experiment [tha]'s employ ('play'). nullOppWeapons -- read by the STRUCK
+     bot from the strike line's card (as noPreventDisc). animal is an ENTRY marker (e.animal), no fx key: listed so a read spelled fx.animal is
+     classified. Until the bot reads a 'play' key the scan does not find it and its modes stay unconsumed; the restricting riders gate below. */
+  rushTo: 'paired', maneuverGrant: 'paired', pressGrant: 'paired', pressDir: 'paired', ceBan: 'meta', ceGrant: 'paired',
+  maneuverEach: 'play', attach: 'paired', rushBy: 'paired', hostOf: 'paired', poolOnHostLeave: 'paired', employAnimal: 'play', nullOppWeapons: 'meta', animal: 'meta',
   press: 'contextual',   // v1.1.5: consumed via the press@ special-case below (Apportation's clean standalone shape only) -- 'contextual' here only silences the unknown-key warning for the excluded instances (co-located maneuver/strike/stealBlood, or an unverifiable req flag)
 };
 const cls = k => String(CLASS[k] || '');
@@ -229,6 +242,14 @@ const MASTER_KEYS = new Set(['poolGain', 'bloodToPool', 'poolToBlood', 'handSize
 function modeConsumed(mo, e){
   if(((e && e.t) || []).includes('master') && !Object.keys(mo.fx || {}).some(k => MASTER_KEYS.has(k)))
     return { ok: false, via: 'master: no board consumer for ' + (Object.keys(mo.fx || {}).join(',') || '\u2014') };
+  /* v1.1.53 (cardfx v1.11.0, the Banu Haqim pilot): the RESTRICTING riders of a rush gate it -- a rush whose printed target is conditioned
+     (rushTo: Fleetness [CEL] 'a locked minion', [ANK 20210124]) and a granted rush limited to a chosen rusher or a prey's minion (rushBy,
+     hostOf: Priority Contract) are played right only when the bot reads the condition. The grants and ceBan are a benefit and the opponent's
+     read: no gate. */
+  if(mo.fx && mo.fx.rush && mo.fx.rushTo !== undefined && !scanned.has('rushTo'))
+    return { ok: false, via: 'rush: its target condition (rushTo ' + mo.fx.rushTo + ') is unread' };
+  if(mo.fx && mo.fx.rushGrant && (mo.fx.rushBy !== undefined || mo.fx.hostOf !== undefined) && !(scanned.has('rushBy') && scanned.has('hostOf')))
+    return { ok: false, via: 'rushGrant: who may rush through it and on whom (rushBy / hostOf) is unread' };
   /* v1.1.31 (18 Sep 2026, found while loading Ventrue): the UNLOCK false positive. fx.unlock has exactly ONE
      consumer, _bestUnlockReactFor, which demands a REACTION mode with a curated `when` rider. Freak Drive (a
      modifier, "after action resolution") and Majesty [PRE] (combat) carry a bare fx.unlock and were certified
