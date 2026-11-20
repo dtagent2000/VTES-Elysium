@@ -25,6 +25,9 @@
    runs the suite once, so the local ×3 stays the release gate. Johan merges and
    deletes the branch.
 
+Agents may execute a round's steps and its reviews, each chosen for its task in model and effort (D-131); the egress reviewer is
+always an agent that did none of the work.
+
 ## Working alone (sandbox habits)
 - Long runs detached (`run_in_background`, or `setsid nohup … &` + a poll loop inside the same turn); never a foreground
   `timeout` that can cut a green run; one suite run per snapshot; `pkill -f` never (kill by PID).
