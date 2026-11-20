@@ -104,7 +104,7 @@ knob; the new plays are live, as the V5 waves' were (D-122 – D-124).
   round, where the family builds that step (D-132), not to a round whose subject is a starter it is not in. Its curated entry
   stays as it is: no modes, held.
 - The rush and grant R cards (their after-combat riders), the six G contracts, Soulgrinder's and Dead Hand's superior-only
-  Fortitude rider, the weapon's maneuver (C's riders), the reaction and modifier grants (O): listed, C's.
+  Fortitude rider, the weapon's maneuver (C's riders; since 20 Nov 2026 `SWEEP-REGISTER.md` 5.2), the reaction and modifier grants (O): listed, C's.
 
 ## 4. Predictions (registered before the build; D-93, L-44)
 1. **The starter: 68 → 77 of 77 playable copies** (`docs/CARDS.md`, the discipline-line check on). 74 to 76: a card short, named
@@ -180,7 +180,7 @@ knob; the new plays are live, as the V5 waves' were (D-122 – D-124).
 - A human rushed by Hunter's Mark [CEL][THA] is told the ban in chat; a rush at a locked target that is unlocked at resolution
   fizzles [ANK 20210124].
 
-**The riders** (BOARD, "The V5 waves' riders"): each built and section-tested, or ruled out.
+**The riders** (BOARD, "The V5 waves' riders"; since 20 Nov 2026 `SWEEP-REGISTER.md`, D-135): each built and section-tested, or ruled out.
 - Haven Uncovered's look-ahead ignores the keep-home and hunt calls (the contract's no longer does).
 - A second Priority Contract is held, not cycled, while one is in play; Blood Rage [tha] (+0) is spent like a fist.
 - A card on a minion makes `_bestStrengthFor` refuse Preternatural Strength; allies are never offered as hosts; Creepshow Casino

@@ -15,7 +15,7 @@
 5. **Commit and push as soon as a step is green** — context can run out. Small commits, English messages, the version in the
    message when it is a release.
 6. **Egress review** (fresh context, until clean: see below). Its findings are fixed or listed in the PR body.
-7. **Docs:** STATUS rewritten (version, gates, next); a CHANGELOG entry; the BOARD line deleted, found lines added; RULINGS when
+7. **Docs:** STATUS rewritten (version, gates, next); a CHANGELOG entry; the BOARD line deleted, found lines added (a card problem: `SWEEP-REGISTER.md`, D-135); RULINGS when
    Johan ruled or a rules reading changed; LESSONS only for a new CLASS of lesson (not every story); a HANDOFF when main must act.
    `bash tools/doc-budget.sh` green.
 8. **PR against `main`** with: what changed and why, the gate numbers (assertion counts, canary, hotseat, HB1, cardfx), the sim

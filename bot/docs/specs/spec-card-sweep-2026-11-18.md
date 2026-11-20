@@ -294,7 +294,7 @@ does not define. The library's playable entries: 609 → 616 (617).
      pool; nothing in the sewer deck bleeds for more), Sport Bike (one vehicle per minion; the equip guard is one per name, and
      the Tremere deck holds no other vehicle);
    - **seven amber with no note**: Faceless Night ([OBF] locks the failed blockers), Precognition and Spirit's Touch (the prevent
-     and the maneuver in the combat after the block), .44 Magnum (its maneuver: BOARD, the V5 sweep's C riders), Raven Spy ([ANI]'s
+     and the maneuver in the combat after the block), .44 Magnum (its maneuver: BOARD, the V5 sweep's C riders; since 20 Nov 2026 `SWEEP-REGISTER.md` 5.2), Raven Spy ([ANI]'s
      2 life), The Warrens (+1 intercept when titled), Aire of Elation (+1 for a Toreador: every play in the Toreador starter
      bleeds 1 short);
    - **22 green**, Dodge among them (its "do not replace until after combat" is met by the bot's deferred draws, as Skidmark's
@@ -522,7 +522,7 @@ readings, D-104's release rule, §4.2's guard on the finished decks. This round 
 | step | what | done when |
 |---|---|---|
 | **B. The pilot: Banu Haqim** | Unchanged (D-127): the merge of hand entries first (§4.4), then the pilot. The merge is what lets a hand entry keep its remainder only, so a family's keys reach the hand-curated cards. | As §4. |
-| **C. The library by effect** (was: the harvest) | One family a round, two when it needs a new mechanism (as §3); since D-132 several families a round (§11.8): the cross-check of the whole library for the family, every disagreement read against KRCG's text, our entries corrected, the reader (since D-132 in a round of its own: §11.8 (3)). The harvest's items ride in it: a hand-only key is asked "who else prints this?" when its family comes up, the seven finished decks' keys first within a family (Claude's reading of D-126 under this order, §11.6); the compiler's known misses; the five other misreads; §4.3's latent reds and ambers; the condition sentences' untagged variants. A `backlog` key whose family lies beyond the horizon is answered in D, with the starter that holds its card, or when Johan sends C on. | §11.4's horizon is reached. Every disagreement on a finished family's sheet is corrected, noted or explained. The sharing register has no `backlog` row for a key of a finished family. |
+| **C. The library by effect** (was: the harvest) | One family a round, two when it needs a new mechanism (as §3); since D-132 several families a round (§11.8): the cross-check of the whole library for the family, every disagreement read against KRCG's text, our entries corrected, the reader (since D-132 in a round of its own: §11.8 (3)). The harvest's items ride in it: a hand-only key is asked "who else prints this?" when its family comes up, the seven finished decks' keys first within a family (Claude's reading of D-126 under this order, §11.6); the compiler's known misses; the five other misreads; §4.3's latent reds and ambers; the condition sentences' untagged variants (since 20 Nov 2026 these are `SWEEP-REGISTER.md` entries, D-135: 9.8–9.11, class 7, 8.5 and the others it names). A `backlog` key whose family lies beyond the horizon is answered in D, with the starter that holds its card, or when Johan sends C on. | §11.4's horizon is reached. Every disagreement on a finished family's sheet is corrected, noted or explained. The sharing register has no `backlog` row for a key of a finished family. |
 | **D. The starters' remainder** (was: the other twelve starters) | Nearest first, re-ranked from the ledger after every starter: the unique effects a starter needs, and its strategy baseline. | Each starter done as §3. |
 
 ### 11.4 What the numbers say, and the horizon (measured 20 Nov, read-only; appendix C)
@@ -645,7 +645,7 @@ tested at tables with anchors, whose play is the best proven). To be designed wh
   and the ledger lists them playable. Docs: RULINGS O-21.
 
 The fold moved both ahead in Johan's order (the grade column stood below C5 and C6, the block bars under "Known, not built"):
-his to reorder.
+his to reorder. Later the same day (D-135) the block bars went to `SWEEP-REGISTER.md` (10.3); the grade column stays a C rider.
 
 ## Appendix A — what each starter still lacks (cards, v0.6.234)
 | starter | playable copies of 77 | cards left | shared-only | unique remainder | not read |
