@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 'use strict';
-/* cardfx-sharing.js v1.0.0 (19 Nov 2026, bot v0.6.234; RULINGS D-125, docs/specs/spec-card-sweep-2026-11-18.md §2 and §4.1) --
+/* cardfx-sharing.js v1.1.0 (20 Nov 2026, compiler v1.10.0: a merged entry's hand keys are its `handKeys`, spec-card-sweep §4.4;
+   v1.0.0 19 Nov 2026, bot v0.6.234; RULINGS D-125, docs/specs/spec-card-sweep-2026-11-18.md §2 and §4.1) --
    THE SHARING REGISTER. The V5 sweep's rule: no hand key before "who else in the library prints this?" has an answer on file.
 
    A HAND-ONLY key is an fx key (a key of a mode's `fx`, or of `ref.fx`) that sits on LIBRARY entries with `src: 'hand'` and on no
    other library entry of elysium-cardfx.json: an effect only hand curation has given to cards, so the rest of the library gets
-   nothing from it. cardfx-sharing.json holds a row for each:
+   nothing from it. On a MERGED entry (`merged: true`: the curated layer laid over the compiled entry) only the keys its layer set
+   are the hand's (`handKeys`); its other keys are the compiler's and count as any other entry's. cardfx-sharing.json holds a row for each:
      unique   { key: [entries] }   one card alone prints the effect (the hand entry's remainder, the spec's T3): the entries that carry
                                    it -- one card, or one card under its two printed spellings (cardNorm)
      shared   { key: [cards] }     other library cards print it too (T2): the cards that print it by KRCG's text, at least two different
@@ -37,7 +39,7 @@
                                                               seed and the backlog (how the file was made; never over a register with answers) */
 
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const SEED_COUNT = 145, SEED_SHA256 = '8028cd6e1a27e8ddbba1d7f4a1b591fe7f0e0d2875309d012dad8be2ed598490';   // the hand-only keys of bot v0.6.234 with their entries: sha256 of seedText()
 
 const fxKeysOf = e => { const s = new Set(); if (!e) return s;
@@ -48,10 +50,12 @@ const fxKeysOf = e => { const s = new Set(); if (!e) return s;
 const cardNorm = n => String(n).normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
 const cardCount = names => new Set((names || []).map(cardNorm)).size;
 
-function keyMap(lib){   // { hand: Map key -> [hand entries, sorted], other: Set of keys on entries that are not hand, all: Set of keys }
+/* is key k the hand's on entry e: every key of a hand entry; on a merged entry (v1.1.0, compiler v1.10.0) the keys its layer set only */
+const handHas = (e, k) => !!e && e.src === 'hand' && (e.merged === true ? Array.isArray(e.handKeys) && e.handKeys.includes(k) : true);
+function keyMap(lib){   // { hand: Map key -> [entries that carry it as the hand's, sorted], other: Set of keys carried as no hand's, all: Set of keys }
   const hand = new Map(), other = new Set(), all = new Set();
   for (const name of Object.keys(lib || {}).sort()){ const e = lib[name];
-    for (const k of fxKeysOf(e)){ all.add(k); if (e.src === 'hand'){ if (!hand.has(k)) hand.set(k, []); hand.get(k).push(name); } else other.add(k); } }
+    for (const k of fxKeysOf(e)){ all.add(k); if (handHas(e, k)){ if (!hand.has(k)) hand.set(k, []); hand.get(k).push(name); } else other.add(k); } }
   return { hand, other, all };
 }
 function handOnlyKeys(lib){   // Map key -> [entry names, sorted]: on hand entries and on no other library entry
@@ -139,4 +143,4 @@ if (require.main === module){
   P.forEach(p => console.error('  ' + p));
   process.exit(P.length ? 1 : 0);
 }
-module.exports = { VERSION, SEED_COUNT, SEED_SHA256, fxKeysOf, cardNorm, keyMap, handOnlyKeys, seedText, seedHash, shape, check, counts, seedRegister, serialize };
+module.exports = { VERSION, SEED_COUNT, SEED_SHA256, fxKeysOf, handHas, cardNorm, keyMap, handOnlyKeys, seedText, seedHash, shape, check, counts, seedRegister, serialize };

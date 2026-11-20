@@ -16,6 +16,9 @@
      hand     — `cardfx-curated.json` overlays whole entries verbatim
                 (src:'hand'). The spearhead tier: bot decks + the cards that
                 actually show up at real tables get hand-verified facts.
+                Since v1.10.0 a library entry with `"merge": true` is laid
+                over the compiled entry instead (the remainder only; see
+                mergeHand below, spec-card-sweep-2026-11-18.md §4.4).
      playbook — per-bot deck lists + policy knobs, OUTSIDE this library.
 
    USAGE
@@ -91,7 +94,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.9.12';   // 19 Nov 2026 (bot v0.6.235, the finished decks' round): the condition sentences -- onlyBleed, notBleed, onlyPredatorActs, oncePerUnlock, pressDir (entry or mode) and noReplace (entry)
+const FXC_VERSION = '1.10.0';   // 20 Nov 2026 (bot v0.6.235, no bot change; spec-card-sweep §4.4, RULINGS D-127): the merge of hand entries -- a curated library entry with "merge": true is laid over the compiled entry (mergeHand); every other entry compiles byte for byte as in v1.9.12
+// const FXC_VERSION_1912 = '1.9.12';   // 19 Nov 2026 (bot v0.6.235, the finished decks' round): the condition sentences -- onlyBleed, notBleed, onlyPredatorActs, oncePerUnlock, pressDir (entry or mode) and noReplace (entry)
 // const FXC_VERSION_1911 = '1.9.11';   // 18 Nov 2026 (bot v0.6.233, V5 wave 6a): `onlyDirected` -- 'during an action directed at you (or a card you control)' on the entry (a line with no discipline) or on the modes of its discipline line
 // const FXC_VERSION_1910 = '1.9.10';   // 18 Nov 2026 (bot v0.6.232, V5 wave 5b): `frenzy` -- 'opp' / 'self' on a card with a bare 'Frenzy.' segment, and on the modes of a '[abo] Frenzy.' line (Meditative Grove's cancel reads it, [LSJ 20051113])
 // const FXC_VERSION_199 = '1.9.9';   // 17 Nov 2026 (bot v0.6.230, V5 wave 5): the markers anarchReq ('Requires an Anarch / a baron') and zombie (an ally or retainer named a zombie)
@@ -953,6 +957,142 @@ function cryptEntry(c){
   return e;
 }
 
+/* ---------------- the merge of hand entries (v1.10.0) ----------------
+   20 Nov 2026 (spec-card-sweep-2026-11-18.md §4.4, RULINGS D-127: designed in the sweep's step A2, built at the start of B). A
+   curated LIBRARY entry with `"merge": true` is laid over a COPY of the compiled entry of the same card (a key that is a printed
+   variant: the printed name's entry), so a hand entry can carry the remainder only. Without it the overlay is today's whole-entry
+   replacement, byte for byte; the crypt keeps whole-entry replacement (D-108's waves), and `merge` on a crypt entry fails the compile.
+   - MODES MEET BY LEVEL: a mode's level is its `at` and its `when` (absent reads null; compared exactly, so a curated mode with no
+     `when` never meets a compiled mode that names one). A curated mode merges into the ONLY compiled mode at its level, or into
+     the one `"nth": n` names among them (1 = the first, in the compiled order); `"add": true` adds it after the compiled modes;
+     `"drop": true` deletes the compiled mode it names (a dropped mode carries its level, `nth` and `drop`, nothing else); a mode
+     at a level the compiled entry lacks is added. Added modes follow the compiled ones in the curated order (a finder's tie keeps
+     the first). The compile FAILS on a target that is not plain: a level with two or more compiled modes and no `nth`; two curated
+     modes aimed at one compiled mode; an `nth` or a `drop` that names no compiled mode; `add` with `nth` or `drop`.
+   - VALUES: a merged mode's `fx` is the union, a key on both takes the curated value, `null` deletes; the mode's own fields the
+     same; `req` (the entry's and a mode's) and `ref` merge key by key, `ref.fx` as a mode's `fx`; every other entry field takes
+     the curated value whole (an array, an object), `null` deletes; the note is the curated one. A `null` that finds nothing to
+     delete is never written and the report says so.
+   - THE COST RULE is unchanged and lives in the overlay below: the compiled numeric cost unless the layer names `cost` (an
+     explicit cost wins, `"cost": {}` insists a card is free); an X leaves the merge and is reported.
+   - `src` stays 'hand' (five readers say curated by it: the bot, test-cardfx.js, gen-deck-coverage.js, gen-review-sheet.js,
+     cardfx-sharing.js), and the compiler writes `merged: true` and `handKeys` beside it: the sorted fx keys the layer sets (a mode's
+     `fx`, `ref.fx`), which the sharing register and the review sheet read as the hand's. The bot reads neither.
+   Returns { e (without src, cost), changes (the report's words), errors, handKeys }. */
+const MERGE_OWN = ['src', 'merged', 'handKeys'];   // the compiler's to write on a merged entry
+const isPlainObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+const jclone = v => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
+const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+function mergeKeys(dst, layer, what, changes, errors, onSet, nested){   // key by key: the curated value wins, null deletes; nested: { key: onSet } merged one level deeper
+  for(const k of Object.keys(layer)){
+    const v = layer[k];
+    if(k === '__proto__'){ errors.push(what + '__proto__ is no key'); continue; }
+    if(v === null){
+      if(hasOwn(dst, k)){ delete dst[k]; changes.push(what + '-' + k); } else changes.push(what + k + ' null (nothing to delete)');
+      continue;
+    }
+    if(nested && hasOwn(nested, k)){
+      if(!isPlainObj(v)){ errors.push(what + k + ' is an object of keys'); continue; }
+      if(!isPlainObj(dst[k])) dst[k] = {};
+      mergeKeys(dst[k], v, what + k + '.', changes, errors, nested[k]);
+      if(!Object.keys(dst[k]).length) delete dst[k];
+      continue;
+    }
+    if(!hasOwn(dst, k)) changes.push(what + '+' + k + ' ' + JSON.stringify(v));
+    else if(JSON.stringify(dst[k]) !== JSON.stringify(v)) changes.push(what + k + ' ' + JSON.stringify(dst[k]) + '→' + JSON.stringify(v));
+    dst[k] = jclone(v);
+    if(onSet) onSet(k);
+  }
+}
+function mergeHand(base, layer, name){
+  const changes = [], errors = [], hk = new Set(), addHk = k => hk.add(k);
+  const fail = s => errors.push(name + ': ' + s);
+  const e = jclone(base); delete e.src; delete e.note;
+  MERGE_OWN.forEach(k => { if(hasOwn(layer, k)) fail('"' + k + '" is the compiler\'s to write on a merged entry'); });
+  for(const k of Object.keys(layer)){
+    if(k === 'merge' || k === 'cost' || k === 'note' || MERGE_OWN.includes(k)) continue;   // the cost rule is the overlay's; the note below
+    const v = layer[k];
+    if(k === '__proto__'){ fail('__proto__ is no key'); continue; }
+    if(k === 'modes'){
+      if(!Array.isArray(v)){ fail('"modes" is a list of modes (a compiled mode is deleted by a mode with "drop": true)'); continue; }
+      const m = mergeModes(e.modes || [], v, changes, errors, name, addHk);
+      if(m.length) e.modes = m; else delete e.modes;
+      continue;
+    }
+    if((k === 'req' || k === 'ref') && v !== null){
+      if(!isPlainObj(v)){ fail('"' + k + '" is an object of keys'); continue; }
+      if(!isPlainObj(e[k])) e[k] = {};
+      mergeKeys(e[k], v, k + '.', changes, errors, null, k === 'ref' ? { fx: addHk } : null);
+      if(!Object.keys(e[k]).length) delete e[k];
+      continue;
+    }
+    mergeKeys(e, { [k]: v }, '', changes, errors);   // any other entry field: the curated value whole, null deletes
+  }
+  if(layer.note !== undefined && layer.note !== null) e.note = layer.note;   // the note is the curated one
+  return { e, changes, errors: errors.map(s => (s.startsWith(name + ': ') ? s : name + ': ' + s)), handKeys: [...hk].sort() };
+}
+function mergeModes(compiled, layerModes, changes, errors, name, addHk){
+  const lvl = mo => JSON.stringify([mo.at === undefined ? null : mo.at, mo.when === undefined ? null : mo.when]);
+  const label = mo => '[' + (mo.at === undefined || mo.at === null ? '—' : mo.at) + (mo.when ? ' when ' + mo.when : '') + ']';
+  const aimed = new Map(), plan = [];   // aimed: compiled index -> curated index
+  layerModes.forEach((cm, ci) => {
+    const who = 'curated mode ' + (ci + 1);
+    if(!isPlainObj(cm)){ errors.push(who + ' is not an object'); return; }
+    const tag = who + ' ' + label(cm);
+    let bad = false;
+    ['add', 'drop'].forEach(d => { if(hasOwn(cm, d) && cm[d] !== true){ errors.push(tag + ': "' + d + '" is true or absent'); bad = true; } });
+    if(hasOwn(cm, 'nth') && !(Number.isInteger(cm.nth) && cm.nth >= 1)){ errors.push(tag + ': "nth" is a whole number from 1'); bad = true; }
+    if(cm.add === true && (hasOwn(cm, 'nth') || cm.drop === true)){ errors.push(tag + ': "add" names no compiled mode, so it takes no "nth" or "drop"'); bad = true; }
+    if(hasOwn(cm, 'fx') && !isPlainObj(cm.fx)){ errors.push(tag + ': "fx" is an object of keys'); bad = true; }
+    if(hasOwn(cm, 'req') && cm.req !== null && !isPlainObj(cm.req)){ errors.push(tag + ': "req" is an object of keys'); bad = true; }
+    if(cm.drop === true){ const extra = Object.keys(cm).filter(k => !['at', 'when', 'nth', 'drop'].includes(k)); if(extra.length){ errors.push(tag + ': a dropped mode carries its level only (it has ' + extra.join(', ') + ')'); bad = true; } }
+    if(bad) return;
+    if(cm.add === true){ plan.push({ cm, kind: 'add' }); return; }
+    const cands = []; compiled.forEach((mo, i) => { if(lvl(mo) === lvl(cm)) cands.push(i); });
+    let idx;
+    if(hasOwn(cm, 'nth')){
+      if(cm.nth > cands.length){ errors.push(tag + ': "nth": ' + cm.nth + ' names no compiled mode (' + cands.length + ' at that level)'); return; }
+      idx = cands[cm.nth - 1];
+    } else if(cands.length === 1) idx = cands[0];
+    else if(cands.length > 1){ errors.push(tag + ': ' + cands.length + ' compiled modes at that level -- name one with "nth", or "add" the mode'); return; }
+    else {
+      if(cm.drop === true){ errors.push(tag + ': "drop" names no compiled mode (none at that level)'); return; }
+      plan.push({ cm, kind: 'add' }); return;   // a level the compiled entry lacks: added
+    }
+    if(aimed.has(idx)){ errors.push(tag + ' and curated mode ' + (aimed.get(idx) + 1) + ' are aimed at one compiled mode (the ' + (cands.indexOf(idx) + 1) + ' of ' + cands.length + ' at that level): give each its own "nth", or "add" one'); return; }
+    aimed.set(idx, ci);
+    plan.push({ cm, kind: cm.drop === true ? 'drop' : 'merge', idx });
+  });
+  const out = compiled.map(jclone), dropped = new Set();
+  for(const p of plan){
+    if(p.kind === 'drop'){ dropped.add(p.idx); changes.push(label(compiled[p.idx]) + ' dropped'); continue; }
+    if(p.kind !== 'merge') continue;
+    const dst = out[p.idx], tag = label(compiled[p.idx]) + ' ';
+    for(const k of Object.keys(p.cm)){
+      if(['at', 'when', 'nth', 'add', 'drop'].includes(k)) continue;   // the level (equal by the match) and the directives
+      const v = p.cm[k];
+      if(k === 'fx'){ if(!isPlainObj(dst.fx)) dst.fx = {}; mergeKeys(dst.fx, v, tag + 'fx ', changes, errors, addHk); continue; }
+      if(k === 'req' && v !== null){ if(!isPlainObj(dst.req)) dst.req = {}; mergeKeys(dst.req, v, tag + 'req ', changes, errors); if(!Object.keys(dst.req).length) delete dst.req; continue; }
+      mergeKeys(dst, { [k]: v }, tag, changes, errors);
+    }
+  }
+  const res = out.filter((mo, i) => !dropped.has(i));
+  for(const p of plan){
+    if(p.kind !== 'add') continue;
+    const mo = {}, tag = label(p.cm) + ' ';
+    for(const k of Object.keys(p.cm)){
+      if(['nth', 'add', 'drop'].includes(k)) continue;
+      const v = p.cm[k];
+      if(v === null){ changes.push(tag + k + ' null (nothing to delete: an added mode)'); continue; }
+      if(k === 'fx' || k === 'req'){ const o = {}; mergeKeys(o, v, tag + k + ' ', [], errors, k === 'fx' ? addHk : null); Object.keys(v).filter(x => v[x] === null).forEach(x => changes.push(tag + k + ' ' + x + ' null (nothing to delete: an added mode)')); if(k === 'fx' || Object.keys(o).length) mo[k] = o; continue; }
+      mo[k] = jclone(v);
+    }
+    changes.push(tag + 'added' + (mo.fx ? ' (fx ' + (Object.keys(mo.fx).join(', ') || 'none') + ')' : ''));
+    res.push(mo);
+  }
+  return res;
+}
+
 /* ---------------- compile ---------------- */
 function compile(cards, curated){
   const crypt = {}, lib = {};
@@ -1019,7 +1159,9 @@ function compile(cards, curated){
 
   /* curated overlay — whole-entry replacement, keys should be canonical
      vtes.json names (new names are accepted for house content but flagged
-     in the report as possible typos); src is forced to 'hand'.             */
+     in the report as possible typos); src is forced to 'hand'. A library
+     entry with "merge": true is laid over the compiled entry instead
+     (v1.10.0, mergeHand above); every other entry as before, byte for byte. */
   const curApplied = [], curNew = [], curVariant = [], costInherited = [], costMismatch = [], costX = [], reqInherited = [];
   /* v1.6.14 (16 Sep 2026, Johan's Academic Hunting Ground report -- THE INHERITED COST):
      whole-entry replacement DROPPED the auto tier's `cost` on every curated entry that did
@@ -1035,9 +1177,38 @@ function compile(cards, curated){
     if(typeof c.pool === 'number' && Number.isFinite(c.pool)) o.pool = c.pool;
     if(typeof c.blood === 'number' && Number.isFinite(c.blood)) o.blood = c.blood;
     return Object.keys(o).length ? o : null; };
+  const merged = [], mergeErrors = [], mergeIgnored = [];   // v1.10.0 (spec-card-sweep §4.4): the merged entries with what each layer changed; what fails the compile; directives on entries that do not opt in
   const overlay = (dst, entries) => {
+    const compiled = Object.assign({}, dst);   // v1.10.0: the compiled entries as the overlay found them -- a merge lays over these, never over another hand entry
     Object.keys(entries || {}).forEach(name => {
       if(name.startsWith('_')) return;                     // _comment keys etc.
+      const raw = entries[name];
+      if(raw && raw.merge === true){   // v1.10.0: the merge of hand entries (mergeHand above)
+        if(dst !== lib){ mergeErrors.push(name + ': "merge" is for library entries -- the crypt keeps whole-entry replacement (D-108)'); return; }
+        const canon = hasOwn(compiled, name) || !hasOwn(alias, name.toLowerCase()) ? null : alias[name.toLowerCase()];   // a printed variant: the printed name's entry
+        const base = canon ? compiled[canon] : compiled[name];
+        if(!base){ mergeErrors.push(name + ': "merge" needs a compiled entry to lay over -- no library card and no printed variant of one has this name'); return; }
+        const m = mergeHand(base, raw, name);
+        if(m.errors.length){ m.errors.forEach(s => mergeErrors.push(s)); return; }
+        const e = m.e, ac = base.cost;
+        if(hasOwn(raw, 'cost')){   // the cost rule (v1.6.14), unchanged: an explicit curated cost wins ("cost": {} insists a card is free; null deletes it)
+          if(raw.cost === null) delete e.cost; else e.cost = jclone(raw.cost);
+          const cv = raw.cost === null ? {} : raw.cost;
+          if(ac){ if(JSON.stringify(cv) !== JSON.stringify(ac)){ costMismatch.push(name + ' curated ' + JSON.stringify(cv) + ' vs data ' + JSON.stringify(ac)); m.changes.push('cost ' + JSON.stringify(ac) + '→' + JSON.stringify(cv)); } }
+          else if(Object.keys(cv).length){ costMismatch.push(name + ' curated ' + JSON.stringify(cv) + ' vs data (free)'); m.changes.push('cost (free)→' + JSON.stringify(cv)); }
+        } else if(ac){   // ... else the compiled numeric cost; an X leaves the merge and is reported
+          const inh = numericCost(ac), hasX = ac.pool === 'X' || ac.blood === 'X';
+          if(inh){ e.cost = inh; costInherited.push(name + ' ' + JSON.stringify(inh)); } else delete e.cost;
+          if(hasX){ costX.push(name + ' ' + JSON.stringify(ac)); m.changes.push('cost ' + JSON.stringify(ac) + ': the X left the merge'); }
+        }
+        e.src = 'hand'; e.merged = true; e.handKeys = m.handKeys;
+        dst[name] = e;
+        curApplied.push(name);
+        merged.push({ name, changes: m.changes });
+        if(canon && canon !== name){ dst[canon] = Object.assign({}, e); curVariant.push(name + ' -> ' + canon); }   // v1.9.3's rule: written under the printed name too
+        return;
+      }
+      if(raw && (hasOwn(raw, 'merge') || (Array.isArray(raw.modes) && raw.modes.some(mo => mo && ['nth', 'add', 'drop'].some(d => hasOwn(mo, d)))))) mergeIgnored.push(name);   // overlaid whole as today; the report warns
       const e = Object.assign({}, entries[name]);
       e.src = 'hand';
       const auto = dst[name];
@@ -1080,6 +1251,11 @@ function compile(cards, curated){
     overlay(lib, curated.lib);
     overlay(crypt, curated.crypt);
   }
+  if(mergeErrors.length){   // v1.10.0: a merge whose target is not plain fails the compile (spec-card-sweep §4.4); nothing is written
+    const err = new Error('cardfx compile v' + FXC_VERSION + ': the merge of hand entries failed (spec-card-sweep-2026-11-18.md §4.4):\n  ' + mergeErrors.join('\n  '));
+    err.mergeErrors = mergeErrors.slice();
+    throw err;
+  }
 
   const libModesN = Object.values(lib).filter(e => e.modes && e.modes.length).length;
   const libPersistentN = Object.values(lib).filter(e => e.persistent).length;   // v1.4.0
@@ -1100,7 +1276,7 @@ function compile(cards, curated){
     },
     crypt, lib, alias
   };
-  return { out, collisions, curApplied, curNew, curVariant, costUnknown, v5Titles, costInherited, costMismatch, costX, reqInherited };
+  return { out, collisions, curApplied, curNew, curVariant, costUnknown, v5Titles, costInherited, costMismatch, costX, reqInherited, merged, mergeIgnored };
 }
 
 /* ---------------- diff-friendly serializer ----------------
@@ -1146,6 +1322,11 @@ function report(res, verbose){
   if((res.costInherited || []).length) lines.push('  cost inherited from the data by ' + res.costInherited.length + ' curated entries (v1.6.14): ' + res.costInherited.join(', '));
   if((res.costMismatch || []).length) lines.push('  ⚠ curated cost DISAGREES with the data (curated wins -- verify against the card): ' + res.costMismatch.join('; '));
   if((res.costX || []).length) lines.push('  ⚠ X-cost cards curated without a cost (not inherited -- model the X in the entry or accept free): ' + res.costX.join(', '));
+  if((res.merged || []).length){   // v1.10.0 (spec-card-sweep §4.4): each merged entry with what its curated layer changed
+    lines.push('  merged entries (v1.10.0: the curated layer over the compiled entry; src hand, merged, handKeys): ' + res.merged.length);
+    res.merged.forEach(m => lines.push('    · ' + m.name + ': ' + (m.changes.join(' · ') || 'no change')));
+  }
+  if((res.mergeIgnored || []).length) lines.push('  ⚠ "merge" not true, or a mode\'s nth / add / drop, on an entry that does not opt in ("merge": true) -- overlaid whole, the keys written as they stand: ' + res.mergeIgnored.join(', '));
   if(verbose){
     const freq = {};
     Object.values(out.lib).forEach(e => (e.modes || []).forEach(m => Object.keys(m.fx).forEach(k => freq[k] = (freq[k] || 0) + 1)));
@@ -1194,7 +1375,9 @@ if(require.main === module){
   let curated = null;
   try{ curated = JSON.parse(fs.readFileSync(o.curated, 'utf8')); }
   catch(e){ /* overlay is optional */ }
-  const res = compile(cards, curated);
+  let res;
+  try{ res = compile(cards, curated); }
+  catch(e){ if(!e.mergeErrors) throw e; console.error(e.message); console.error('  ✗ nothing written'); process.exit(1); }   // v1.10.0: a merge that fails the compile
   if(res.out.counts.lib > 0 && res.out.counts.libWithFx === 0){
     console.error(report(res, true));
     console.error('  ✗ ZERO library cards got fx — this smells like a data-format change.');
@@ -1208,5 +1391,5 @@ if(require.main === module){
   console.log('  → ' + o.out + ' (' + fs.statSync(o.out).size + ' bytes)');
 }
 
-module.exports = { compile, refTerms, extractFx, segment, libModes, libEntry, cryptEntry, normalizeCard,
+module.exports = { compile, mergeHand, refTerms, extractFx, segment, libModes, libEntry, cryptEntry, normalizeCard,
                    serialize, report, TITLE_VOTES, TYPE_MAP, DISC_ABBR, discTri, FXC_VERSION };
