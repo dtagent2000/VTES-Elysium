@@ -15168,7 +15168,14 @@ async function connectWithRetry(client, tries = 30){
         const v = mk181('ventrue', { name: 'Viktor', seat: 2 }); const ac = V1('a1', 'Alice Chen (G6)', { blood: 5 }); v.board = [ac]; v.hand = ['Hidden Strength']; v._inCombat = true; v._combatOppName = KB;
         v._onLog('Hanna', '<b>Kasim Bayar (G6)</b> strikes with <b>Blood Rage</b> for 2.'); await v._awaitOppStrike(200); const pvBR = v._bestPreventFor(ac, v._noPreventDiscIn());
         v._onLog('Hanna', '<b>Kasim Bayar (G6)</b> strikes with <b>hands</b> for 2.'); await v._awaitOppStrike(200); const pvH = v._bestPreventFor(ac, v._noPreventDiscIn());
-        ok(pvBR === null && !!pvH && pvH.name === 'Hidden Strength', '181e ...Fortitude-proof: struck by Blood Rage, Alice plays no Hidden Strength [FOR]; struck by hands she does (got ' + JSON.stringify({ br: pvBR, hands: pvH && pvH.name }) + ')'); }
+        ok(pvBR === null && !!pvH && pvH.name === 'Hidden Strength', '181e ...Fortitude-proof: struck by Blood Rage, Alice plays no Hidden Strength [FOR]; struck by hands she does (got ' + JSON.stringify({ br: pvBR, hands: pvH && pvH.name }) + ')');
+        // the struck side's weapon read: a bot's `strikes with .44 Magnum for N.` and a human's `strikes with a weapon for N.` (the client's
+        // line) are weapons; hands and a combat card are not; nothing is nulled unless my nullifier holds this round
+        const h = mk181('banuhaqim'); h._inCombat = true; h._combatOppName = 'Lisa'; const rd = line => { h._onLog('Viktor', line); return h._awaitOppStrike(200).then(() => IF1(h, '_oppWeaponNulled') ? h._oppWeaponNulled() : null); };
+        h._xr = h._xrFresh(); h._xr.nullW = true;
+        const wH = await rd('Lisa strikes with a weapon for 2.'), wB = await rd('Lisa strikes with .44 Magnum for 2.'), wF = await rd('Lisa strikes with hands for 2.'), wC = await rd('Lisa strikes with Theft of Vitae for 2.');
+        h._xr.nullW = false; const wOff = await rd('Lisa strikes with a weapon for 2.');
+        ok(wH === true && wB === true && wF === false && wC === false && wOff === false, '181e ...the struck side reads a weapon on the strike line -- a human’s "strikes with a weapon" (the client’s shape) and a weapon card; not hands or a combat card; nothing while no nullifier holds (got ' + JSON.stringify({ wH, wB, wF, wC, wOff }) + ')'); }
 
       //    the weapon nullifier between two bots: Kasim (acting) strikes with Blood Rage, Wauneka answers with her .44 Magnum -- Kasim takes 0;
       //    with hands instead, or against a fist, the damage stands

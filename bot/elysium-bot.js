@@ -6034,9 +6034,10 @@ class Bot {
     if(!strike || strike.fromEquip) return false; const h = this.fxLookup(strike.name); if(!h || h.kind !== 'lib') return false;
     const mo = (h.e.modes || []).find(m => (m.at || '') === (strike.at || '')); return !!(mo && mo.fx && mo.fx.nullOppWeapons); }   // fx.nullOppWeapons
   _isVampName(name){ const h = name && this.fxLookup(name); return !!(h && h.kind === 'crypt'); }   // a vampire, not an ally (unknown = no)
-  _oppWeaponNulled(){                // v0.6.236: the strike I just took (the consumed strike event: `strikes with CARD for N.`) was made with a WEAPON -- an equipment card -- while my nullifier holds this round (_xr.nullW). A line that names no card (a human's `strikes for N.`, an aggravated strike's line) is not read as a weapon: the damage stands. Not modelled: a weapon strike with first strike [LSJ 20040928]
+  _oppWeaponNulled(){                // v0.6.236: the strike I just took (the consumed strike event: `strikes with CARD for N.`) was made with a WEAPON -- an equipment card, or the client's `strikes with a weapon for N.` -- while my nullifier holds this round (_xr.nullW). A line that names no card (a human's `strikes for N.`, an aggravated strike's line) is not read as a weapon: the damage stands. Not modelled: a weapon strike with first strike [LSJ 20040928]
     if(!(this._xr && this._xr.nullW)) return false;
     const e = this.ev ? this.ev.last('strike', x => x.stk === 'consumed') : null; if(!e || !e.card) return false;
+    if(/^a weapon$/i.test(String(e.card).trim())) return true;   // the client's line for a human's weapon strike: 'NAME strikes with a weapon for N.' (PROTOCOL §12: 'a weapon' kept distinct -- cards trigger on weapons)
     const h = this.fxLookup(e.card); return !!(h && h.kind === 'lib' && (h.e.t || []).includes('equip')); }
   _noPreventDiscIn(){                // v0.6.214: the discipline the strike I just took cannot be prevented by -- read from the card its line named (`strikes with CARD for N.`, the consumed strike event), its fx.noPreventDisc (Soul Burn: 'for'); null for a line with no card (a human's `strikes for N.`)
     const e = this.ev ? this.ev.last('strike', x => x.stk === 'consumed') : null; if(!e || !e.card) return null;
