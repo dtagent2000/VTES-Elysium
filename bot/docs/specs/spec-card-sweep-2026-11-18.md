@@ -4,7 +4,8 @@
 §2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör"; he took
 its answer on 19 Nov (RULINGS D-126). On 19 Nov he answered the question about zero-vtes's maintainer (§5). The page's own round changed no
 code. Measured on main `6baf99b`. On 20 Nov Johan ruled the focus, exactness first, and a new order after B: the library by
-effect, then the starters' remainder (§11, RULINGS D-130).
+effect, then the starters' remainder (§11, RULINGS D-130). Later that morning he kept the pilot first and took the
+concentrated sweep and review until clean (§11.8, RULINGS D-132, D-133); his intention for after the alignment is §11.9.
 
 **Step A1** (19 Nov, no bot change) built §4.1's first two items: the library table (`gen-card-ledger.js` v1.2.0, "The whole
 library" in `CARDS.md`) and the sharing register with its gate (`cardfx-sharing.json`, `cardfx-sharing.js`, `test-cardfx.js`).
@@ -291,7 +292,7 @@ does not define. The library's playable entries: 609 → 616 (617).
      pool; nothing in the sewer deck bleeds for more), Sport Bike (one vehicle per minion; the equip guard is one per name, and
      the Tremere deck holds no other vehicle);
    - **seven amber with no note**: Faceless Night ([OBF] locks the failed blockers), Precognition and Spirit's Touch (the prevent
-     and the maneuver in the combat after the block), .44 Magnum (its maneuver: BOARD, the weapon's maneuver), Raven Spy ([ANI]'s
+     and the maneuver in the combat after the block), .44 Magnum (its maneuver: BOARD, the V5 sweep's C riders), Raven Spy ([ANI]'s
      2 life), The Warrens (+1 intercept when titled), Aire of Elation (+1 for a Toreador: every play in the Toreador starter
      bleeds 1 short);
    - **22 green**, Dodge among them (its "do not replace until after combat" is met by the bot's deferred draws, as Skidmark's
@@ -503,7 +504,7 @@ readings, D-104's release rule, §4.2's guard on the finished decks. This round 
    the rulings, a fresh read-only agent). A disagreement is settled by neither side's data: the card is read against KRCG's text and
    the rulings, and the outcome is our entry corrected, their reading noted as the wrong one, or a difference of modelling
    explained on the sheet. A card zero-vtes does not define has one witness, so its effect is exact only by a graded read (C).
-6. **The reader, in the same round.** With a family's data exact, the bot learns to read that effect when someone plays the
+6. **The reader, in the same round** (since D-132 in a round of its own: §11.8 (3)). With a family's data exact, the bot learns to read that effect when someone plays the
    card. The play line carries the card and, when the chooser asked, the level (PROTOCOL §12: `[obf]` inferior, `[OBF]`
    superior) and the aim; the bot looks the mode up and knows the effect at once. A human's own number still wins. The reader
    acts only on exact effects, and any other card is read as today, from their lines and their numbers (C: part of a proposal
@@ -517,7 +518,7 @@ readings, D-104's release rule, §4.2's guard on the finished decks. This round 
 | step | what | done when |
 |---|---|---|
 | **B. The pilot: Banu Haqim** | Unchanged (D-127): the merge of hand entries first (§4.4), then the pilot. The merge is what lets a hand entry keep its remainder only, so a family's keys reach the hand-curated cards. | As §4. |
-| **C. The library by effect** (was: the harvest) | One family a round, two when it needs a new mechanism (as §3): the cross-check of the whole library for the family, every disagreement read against KRCG's text, our entries corrected, the reader. The harvest's items ride in it: a hand-only key is asked "who else prints this?" when its family comes up, the seven finished decks' keys first within a family (Claude's reading of D-126 under this order, §11.6); the compiler's known misses; the five other misreads; §4.3's latent reds and ambers; the condition sentences' untagged variants. A `backlog` key whose family lies beyond the horizon is answered in D, with the starter that holds its card, or when Johan sends C on. | §11.4's horizon is reached. Every disagreement on a finished family's sheet is corrected, noted or explained. The sharing register has no `backlog` row for a key of a finished family. |
+| **C. The library by effect** (was: the harvest) | One family a round, two when it needs a new mechanism (as §3); since D-132 several families a round (§11.8): the cross-check of the whole library for the family, every disagreement read against KRCG's text, our entries corrected, the reader (since D-132 in a round of its own: §11.8 (3)). The harvest's items ride in it: a hand-only key is asked "who else prints this?" when its family comes up, the seven finished decks' keys first within a family (Claude's reading of D-126 under this order, §11.6); the compiler's known misses; the five other misreads; §4.3's latent reds and ambers; the condition sentences' untagged variants. A `backlog` key whose family lies beyond the horizon is answered in D, with the starter that holds its card, or when Johan sends C on. | §11.4's horizon is reached. Every disagreement on a finished family's sheet is corrected, noted or explained. The sharing register has no `backlog` row for a key of a finished family. |
 | **D. The starters' remainder** (was: the other twelve starters) | Nearest first, re-ranked from the ledger after every starter: the unique effects a starter needs, and its strategy baseline. | Each starter done as §3. |
 
 ### 11.4 What the numbers say, and the horizon (measured 20 Nov, read-only; appendix C)
@@ -550,7 +551,7 @@ distance from 980 to 1,543, and two days of new definitions the rest.
 - **the library**: entries where either reading carries the effect; of them exact by agreement, exact by a graded read, corrected
   (ours was wrong), noted (theirs was wrong), explained (modelled differently), and single-witness (no definition, not graded);
 - **the starters**: the same counts for the cards of the 18 starters;
-- **the reader**: what the bots now read of a human's play, and its section tests;
+- **the reader**: what the bots now read of a human's play, and its section tests (since D-132 the reader's own round reports it: §11.8 (3));
 - §6's own lines, unchanged.
 
 ### 11.6 Open
@@ -564,6 +565,8 @@ distance from 980 to 1,543, and two days of new definitions the rest.
   family's round designs it. The canary's cardfx checks are main's: a shape they read differently is a handoff first.
 - **The first reader's design** goes to Johan before it is built: who moves the counter when a human plays a stealth card
   (the human, as today, or the bot from the card), and how a number entered both ways is not counted twice.
+- **#92's three compile failures beyond §4.4's letter** (the near miss on a mode's `when`, an added mode without `fx`, a half
+  opt-in): each turns a silent mistake into a compile error. Johan's word is pending; none blocks the pilot.
 - **Their wrong readings.** Claude's proposal, not ruled: the noted ones are kept as a list in each round's PR, for Johan to pass
   to zero-vtes's maintainer if he wishes.
 
@@ -580,6 +583,65 @@ or a condition.
 
 The counts and their verdicts are written here when the first family is built. The 175 is the scan's own number: the tool's
 count may differ, and then the bands are read as shares of its count.
+
+### 11.8 The concentrated sweep (Johan, 20 Nov 2026; RULINGS D-132, D-133)
+**What was said.** At 09:43 Johan wanted to push the alignment with zero-vtes through "med lite tempo" and asked what exactly the
+pilot is to do. Claude: it teaches the bots to play the Banu Haqim cards they cannot play today (Blood Rage 2, Hunter's Mark 4,
+Fleetness 2, Biothaumaturgic Experiment 1; Priority Contract 4, read again as a misread; Hunting the Quarry and Night Terrors'
+strike ride with them), so the starter is 77 of 77 playable: a small test of the sweep's flow before the harvest. And four
+points "if you want tempo": (1) skip the pilot now and move it to step D; (2) several families a round: the first builds the
+cross-check tool and takes stealth, intercept and bleed, then combat, then the rest of the horizon (Claude's guess: 3 to 4
+rounds instead of one a family); (3) parallel agents read the differing cards against KRCG's text, with a separate reviewer;
+(4) the reader in rounds of its own, the first right after round 1, so the design question about the counter does not slow the
+alignment. The price Claude named: bigger rounds and bigger diffs to review; corrected numbers change the bots' own play, so
+each round is a release with a sim footprint. Point 1 would amend D-127, point 4 D-130.
+- 09:47, Johan: "Yes okej nej men att ha den som ett prov av svepets arbetsflöde före skörden låter bra, jag ville bara bekräfta
+  din tanke. Men då kör vi på den koncentrerade svepningen efter det då? :)" Claude read "the concentrated sweep" as points 2, 3
+  and 4, and named point 4 on its own because it changes D-130.
+- 09:49, Johan: "Kan agenterna itirera utifrån sin förståelse tills de når ett utfall som är helt korrekt (som de ser det)?"
+  Claude: an agent already iterates inside its task (tests, fix, run again); what it cannot see is its own blind spots (#92's
+  executor reported everything green; the reviewer then found 8 faults and 16 mutations no test caught). What makes the loop land
+  on correct, and not only on "correct as the agent sees it", is a yardstick outside the agent: hard gates, a reviewer with fresh
+  eyes who did none of the work, and Johan where the rules or the text do not reach. The proposal: review until clean (HARNESS),
+  about 25 to 30 minutes of Opus a pass. The risk that stays: executor and reviewer are the same model; zero-vtes is valuable as
+  an independent witness.
+- 09:51, Johan: "Vi kör på det upplägget du tycker bli bra, i grund vill jag bara försöka aligna och komma ikapp med korten så
+  effektivt som möjligt." He left the setup to Claude's judgment; his aim is efficiency.
+
+**How C runs** (C: Claude's setup, which Johan left to him, D-132; the rest of §11 stands):
+1. **Rounds by families.** C1: the cross-check tool (a family's keys against zero-vtes's effect types over the whole library, the
+   disagreements listed per card, the pairing a run-time argument until O-48 is answered) and `stealth` / `actStealth`,
+   `intercept`, `bleed`. C2: combat. C3 (and C4): the rest of §11.4's horizon. Then the numbers are measured again and Johan says
+   whether the sweep goes on by effect or turns to D (§11.4).
+2. **Inside a round.** The tool lists the disagreements; agents read them in parallel batches against KRCG's text and the
+   rulings, each from a written brief; each card is corrected, noted or explained (§11.2 (5)); a separate agent reviews, until
+   clean (D-133). One agent writes in the checkout at a time; the reading agents write to scratch.
+3. **The readers** (amends D-130's "a family's round also builds the bot's reader of that effect in a human's play"): rounds of their own, the first right after C1, its
+   design to Johan first (§11.6). A reader acts only on a family that is exact (§11.2 (6)).
+4. **Each round is a release**: corrected numbers change the bots' own play, so the round carries the gates and a sim footprint.
+
+### 11.9 After the alignment: Johan's intention, not a ruling (20 Nov 2026)
+- 09:51, Johan: "Sedan kanske försöka kurera 5 okurerade startlekar samtdigti i olika svep följt av speltest och utvärdering,
+  sedan itirering osv tills de ser teoretiskt bra ut och sedan mänsklig testning :)"
+- 09:52, Johan: "Och använda våra 5 färdiga v5-startlekar som "ankare" att jämföra mot typ om det kan vara en idé"
+
+Claude's notes, not ruled: after the alignment the starters' remainders are small and independent, so the reading and the
+curation can run in parallel; the bot is one file and its suite another, so the code is woven in one starter at a time, with the
+gates between. That is steps D and E, done several starters at once. The five finished starters (Malkavian, Nosferatu, Toreador,
+Tremere, Ventrue) as anchors, in three ways: a **reference** (a new deck should land inside the anchors' spread in the sim, not beat
+them: precons differ in strength by themselves, so the anchors give a span, not a target); a **regression guard** (the anchors' own
+results should not move when a new deck comes in; if they do, something shared has changed); the **opposition** (a new deck is
+tested at tables with anchors, whose play is the best proven). To be designed when step D's parallel sweeps are planned; not built.
+
+### 11.10 Two of BOARD's asks, moved here (20 Nov 2026: BOARD folded them into the V5 sweep's C riders; their words)
+- **Graded rules readings as a ledger column** (spec-cleanup T3): every wave's PR has listed its grades since wave 1 (HARNESS,
+  the charter); `docs/CARDS.md` does not carry them. Done when the ledger shows each curated card's latest grade. Docs: HARNESS;
+  `specs/spec-cardfx-sweep-sources-2026-09-25.md`. (C's exactness counts, §11.5, are its natural home.)
+- **Free block bars** (Beast Meld-class) and `chosen` (Seduction-class) have tags, no consumer. Done when the V5 sweep needs them
+  and the ledger lists them playable. Docs: RULINGS O-21.
+
+The fold moved both ahead in Johan's order (the grade column stood below C5 and C6, the block bars under "Known, not built"):
+his to reorder.
 
 ## Appendix A — what each starter still lacks (cards, v0.6.234)
 | starter | playable copies of 77 | cards left | shared-only | unique remainder | not read |

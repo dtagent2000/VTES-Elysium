@@ -5,8 +5,9 @@
 `krcg-v5.js` v1.0.0 · `ana-gates.py` v1.1.3 · built against client v2.6.177, gated on 20 Nov against client v2.6.179 / srv-2.6.51 (the root's release); the read-only
 copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51 and main's canary v1.5.0.
 
-**Deploy state:** `main` carries v0.6.235 and client v2.6.179 (#90 merged). **Open PRs** (no bot change): #91, exactness first,
-the library by effect (RULINGS D-130, D-131, O-48; spec-card-sweep §11); #92 on #91, the merge (§4.4, D-127).
+**Deploy state:** `main` carries v0.6.235 and client v2.6.179; #91 (exactness first: D-130, D-131, O-48, spec §11) and #92 (the
+merge of hand entries, compiler v1.10.0, nothing opted in) merged 20 Nov. **Open PR** (no bot change): the docs round of 20 Nov
+(D-132, D-133, BOARD's fold, spec §11.8–§11.9).
 
 ## Last gates (v0.6.235's bytes: `elysium-bot.js` `9ac9d52b`)
 19 Nov, the release: suite **2618/0 ×3** · section 180 12/0 (0/12 on v0.6.234) · `test-cardfx` 403/0 · the 240 against v0.6.234
@@ -17,10 +18,10 @@ DIVERGED 195, SAME-PLAY 45 · `ana-gates.py` PASS on all 17 · the arena smoke 3
 frozen run) · canary 235/0 ×2 · the tools' self-tests, the lint, doc-budget PASS.
 
 ## Next
-1. The V5 sweep: **B**'s pilot cards (Banu Haqim), its predictions registered before the build (D-93).
-2. **C**, the library by effect: the first family (`stealth` / `actStealth`, `intercept`, `bleed`), its reader's design to Johan first
-   (spec §11.6).
-3. BOARD read top to bottom: a proposal per line for Johan.
+1. The V5 sweep: **B**, the pilot (Banu Haqim), its predictions registered before the build (D-93); the merge's first opt-in.
+2. **C**, concentrated (spec §11.8, D-132): C1 the cross-check tool with `stealth` / `actStealth`, `intercept`, `bleed`; then the
+   first reader's round, its design to Johan first (§11.6).
+3. BOARD's read-through: Johan's answers to the docs round's proposal for each line (its PR).
 4. The fizzle misread; Q4; C5; C6; the abstract model.
 
 ## Not yet consumed from main
