@@ -17,12 +17,16 @@ banuhaqim and brujah as registered, four moved by the corrections · the pilot's
 all 16 · the arena smoke (one match, the four starters, real clock) PASS 7/7 · lint, `gen-precon --check` clean.
 
 ## Next
-1. The sweep register (D-135): its four active entries in the next release (5.2, 7.1, 7.2, 11.1); class 1 (R-47), its design to
-   Johan first (where another seat's retainer's version comes from).
+1. The sweep register (D-135): its active entries in the next release (7.1, 7.2, 8.3, 11.1; 5.2 is a missed option, in its
+   class); class 1 (R-47), its design to Johan first (where another seat's retainer's version comes from).
 2. **C**, concentrated (spec-card-sweep §11.8, D-132): C1 the cross-check tool with `stealth` / `actStealth`, `intercept`, `bleed`;
    then the first reader's round, its design to Johan first (§11.6). What the sweep finds goes to the register.
-3. Johan: the pilot's flow proposals, a kör and an order (#94: the requirement audit, the footprint tool, the exposure check, CI as
-   the sim farm, C6 first); KRCG's MCP (Primogen) as a development-time reference (Claude's D line); BOARD's read-through (#93).
+3. Johan, asked 20 Nov evening (no kör yet): (a) the pilot's flow proposals (#94's body) — 19:22: "Ditt flöde låter väl bra!";
+   Claude asked a kör per item and proposed the order: the requirement audit and the exposure check with C1, then the footprint
+   tool, then C6, then CI as the sim farm (one worktree per executor is already adopted); (b) Claude's proposed D line on KRCG's
+   MCP (Primogen): a development-time reference beside zero-vtes, never at run time, nothing of its text in a committed file
+   beyond official ruling ids, card text and official rulings decide, its "advanced rules" a curated, unofficial synthesis;
+   (c) deleting the branch `bot-sweep-pilot-fix2` (its commits are all in #94); (d) BOARD's read-through (#93).
 4. The fizzle misread; Q4; C5; C6 (the suite's 6 GB heap first); the abstract model.
 
 ## Not yet consumed from main

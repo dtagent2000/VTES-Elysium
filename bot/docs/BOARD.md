@@ -1,4 +1,5 @@
-# BOARD — the open asks (20 Nov 2026, v0.6.236). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (20 Nov 2026, v0.6.236). A line is deleted when done; found work is added as a line (a card
+problem the sweep finds: an entry in `SWEEP-REGISTER.md`, D-135).
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -53,12 +54,14 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   compares the card score with and without the streak.
 
 ## The sweep register (D-135): `SWEEP-REGISTER.md` by class; a round takes one; *done when* its class is empty
-- **The active entries** (5.2 the .44 Magnum's maneuver, 7.1 Aire of Elation, 7.2 The Warrens, 11.1 Revelations' predator):
-  seen in the 240 or the smokes, so they go in the next release (D-135).
+- **The active entries** (7.1 Aire of Elation and 7.2 The Warrens: a printed +1 dropped; 8.3 Bait and Switch by a non-baron;
+  11.1 Revelations' predator never asked): rules broken in the 240 or a smoke, so they go in the next release (D-135). The missed
+  options (5.2 the .44 Magnum's maneuver) wait in their classes.
 - **1. Retainers: version and holder** (R-47): next; its design question first (where another seat's retainer's version comes from).
 - **2. `aggr` misreads.**
 - **3. Another minion's sentence read as the player's** (L-98's rest).
-- **4. Another seat's play the bots do not read** (mostly a human's): the readers' rounds (D-132), the first right after C1.
+- **4. Another seat's play the bots do not read** (mostly a human's: the readers' rounds, D-132, the first right after C1; 4.6's
+  onward bounce and 4.17–4.19 are between bots).
 - **5. Maneuvers: direction and source.**
 - **6. Records by name.**
 - **7. Conditional and capped values** ("with an additional +N … if", a family for C).
@@ -98,8 +101,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The minion head reads last turn's `_turnActs`** (Change of Target's ledger): it is reset after `_strategize`, `_probeOrder` and
   `_minionKeyOrder` ask. *Done when* the reset comes first, footprint read.
 - **The locked routes' last rungs** (round F, D-116 (5)): the block decision counts the unlock reactions, not the Underbridge Stray
-  (the route's last rung, an ally burned); `_wakeBlockersAfter` (the keep-blocker read) counts wakes only; Eyes of the Wild by a
-  vampire already attempting to block [ANK 20181122-2] is not built. *Done when* each reads the route, or is ruled out.
+  (the route's last rung, an ally burned); `_wakeBlockersAfter` (the keep-blocker read) counts wakes only (Eyes of the Wild by a
+  vampire already attempting to block: `SWEEP-REGISTER.md` 10.12). *Done when* each reads the route, or is ruled out.
 - **The chump gate is not the commit** (round B): `bareBlock` 'chump' passes on any chump body, then `_commitBlock` picks
   its own (`_pickBlocker`); both paths. *Done when* the commit takes the gate's body, section-tested.
 - **Bot diablerie** (the fixed-vote-majority rule). *Done when* Johan schedules it. Docs: RULINGS O-15.
