@@ -47,7 +47,7 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    Johan's D-130 and D-131 and the open O-48. Cut first: 0.9 KB of the register's built stories and measurements (D-17,
 #    D-81, D-89, D-105, D-108, D-110, D-111, D-113, D-114, D-117, D-118, D-125; the CHANGELOG and the specs keep them) and
 #    BOARD's done steps; the register stood 268 bytes over its ceiling and the total about 0.5 KB over it, and the
-#    round's review then gave back a reason it had cut (D-118: why the losing knob lost), which the 179.5 KB step had no room for.
+#    caller's read then gave back a reason the cut had taken (D-118: why the losing knob lost), which the 179.5 KB step had no room for.
 PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:68000 $D/LESSONS.md:20000
        $D/ARCHITECTURE.md:16000 $D/HARNESS.md:8500 $D/HOWTO.md:23000"
 total=0

@@ -17,7 +17,7 @@ DIVERGED 195, SAME-PLAY 45 · `ana-gates.py` PASS on all 17 · the arena smoke 3
 
 ## Next
 1. The V5 sweep: **B**, the pilot (Banu Haqim), the merge built first (spec §4.4, D-127).
-2. **C**, the library by effect: the first family (`stealth`, `intercept`, `bleed`) with its reader, whose design goes to Johan
+2. **C**, the library by effect: the first family (`stealth` / `actStealth`, `intercept`, `bleed`) with its reader, whose design goes to Johan
    first (spec §11.6).
 3. BOARD read top to bottom: a proposal per line for Johan.
 4. The fizzle misread; Q4; C5; C6; the abstract model.
