@@ -2523,9 +2523,9 @@ async function connectWithRetry(client, tries = 30){
          be offered from hand — the actStealth sweep's sibling class, living in the
          READERS instead of the database (147 stealth / 70 bleed / 9 dodge / 24 strike
          / 22 prevent non-matching cards measured). */
-      u.hand = ['Creep Show'];
-      ok(u._bestDodgeFor(zipD) === null,
-         '_bestDodgeFor: a MASTER carrying fx.dodge (Creep Show, an archetype) is NOT offered — the combat window plays combat cards only');
+      u.hand = ['Warning Sirens'];   // cardfx v1.11.3 (the pilot's review, pass 2, F2): Creep Show was this fixture -- its dodge was an opponent's trigger misread ('when a minion opposing this vampire ... dodges'), gone; Warning Sirens ('play on a minion in combat ... strike: dodge') is a master that carries one
+      ok(!!((u.fxLookup('Warning Sirens') || {}).e || { modes: [] }).modes.some(mo => mo.fx && mo.fx.dodge) && u._bestDodgeFor(zipD) === null,
+         '_bestDodgeFor: a MASTER carrying fx.dodge (Warning Sirens, an out-of-turn master) is NOT offered — the combat window plays combat cards only');
       u.hand = ['.44 Magnum'];
       ok(u._bestStrikeFor(zipD) === null,
          '_bestStrikeFor: a weapon EQUIPMENT (.44 Magnum) is NOT offered from hand — attached-gun consumption is a future board scan, not a hand play');

@@ -98,7 +98,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.11.2';   // 20 Nov 2026 (the pilot's review of executor B2, P7): two markers -- `contract` on a library entry whose keyword is 'Contract.' / 'Unique contract.' (7 cards), `noContracts` on a crypt entry that prints 'Contracts cannot be placed on <name>.' (Iliana (G2) alone). Every other entry compiles byte for byte as in v1.11.1
+const FXC_VERSION = '1.11.3';   // 20 Nov 2026 (the pilot's review, pass 2: F1-F3, F7): the coarse maneuver / press / dodge / additional strike reads also skip an opponent's cost, a restriction ('may use maneuvers or presses only if'), a cancel and the opponent's act as a trigger; 'the press step' is a time word; 'aggravated' in a negated or neutralised clause is not aggr (extractFx); 'maneuver, only usable to go / get to long / close range' is maneuverTo; a hand strike beside 'this minion cannot' gets no handBonus; 'As above, but' with its own strike replaces the inherited strike keys (libModes); `flight` on a crypt entry that prints 'Flight [FLIGHT].'; the contract, noContracts and flight markers survive a curated entry
+// const FXC_VERSION_1112 = '1.11.2';   // 20 Nov 2026 (the pilot's review of executor B2, P7): two markers -- `contract` on a library entry whose keyword is 'Contract.' / 'Unique contract.' (7 cards), `noContracts` on a crypt entry that prints 'Contracts cannot be placed on <name>.' (Iliana (G2) alone). Every other entry compiles byte for byte as in v1.11.1
 // const FXC_VERSION_1111 = '1.11.1';   // 20 Nov 2026 (the Banu Haqim pilot's review, findings D1-D3): the coarse maneuver / press / dodge / additional strike reads skip a negated clause ('the opposing minion cannot dodge ...') and an opponent's grant ('the opposing minion gets an optional press') -- they were the player's own (extractFx); 'As [x] above, but (the strike is) at +N damage' replaces an inherited handBonus (Charge of the Buffalo [SPI], Lead Fist [VIS]: 1 -> 2; libModes); the whole-mode readings read 'with an additional optional maneuver' and 'but enter combat with <target>' on a rush's 'As above' line (Nose of the Hound [spi] / [SPI]), 'Strike: hand strike, aggravated.' (Donnybrook [pro]), a discipline line's own type bracket and opening '+N stealth action.' (Steely Tenacity [qui], refused by its header), and list an 'As [x] above' line whose reference they refused. Every other entry compiles byte for byte as in v1.11.0
 // const FXC_VERSION_1110 = '1.11.0';   // 20 Nov 2026 (the Banu Haqim pilot, spec-sweep-pilot-2026-11-20.md §3.1; RULINGS D-125, D-127, D-132): THE WHOLE-MODE READINGS (wholeModes below) -- the action rush (`rush`, `rushTo`) with its grant (`maneuverGrant`, `pressGrant`, `pressDir`) replacing the misread `maneuver` / `press` on that mode, and the hand strike (`handBonus` 0 and the '+N' forms, `noPreventDisc`, `nullOppWeapons`), each only on a mode whose every sentence is read (a refused mode is listed in the report); THE BAN in extractFx ('cannot strike: combat ends' is `ceBan`, never `strikeCE` / `combatEnds`; 'cannot strike: dodge' is never `dodge`); the `animal` marker on a retainer ('Animal with N life'). Every other entry compiles byte for byte as in v1.10.0
 // const FXC_VERSION_1100 = '1.10.0';   // 20 Nov 2026 (bot v0.6.235, no bot change; spec-card-sweep §4.4, RULINGS D-127): the merge of hand entries -- a curated library entry with "merge": true is laid over the compiled entry (mergeHand); every other entry compiles byte for byte as in v1.9.12
@@ -345,13 +346,32 @@ function extractFx(t0){
      clauses: from 'cannot' to the sentence's end, or to an 'and gets' / 'and may' that hands the subject something of its own
      (Bloodform [VIC]: 'cannot strike and gets 1 optional press'), and the opponent's grant to its sentence's end. Every other key
      reads the text as before. */
+  /* v1.11.3 (the pilot's review, pass 2, F2): the rest of that class, stripped the same way before the four reads -- an OPPONENT's cost
+     ('presses cost the attached minion 1 additional blood': Decompose [THN]; 'Cards providing maneuvers and/or presses cost the opposing
+     vampire 1 additional blood': Wave of Lethargy), a RESTRICTION ('he or she may use maneuvers or presses only if they require ...':
+     Target Leg), a CANCEL ('you may cancel a maneuver used by the opposing minion': Rigor Mortis [THN]) and the opponent's act as a
+     TRIGGER ('when a minion opposing this vampire in combat dodges': Creep Show) -- each to its sentence's end. 'The press step' is a
+     time word, never a press (Dagon's Call, Necrosis [THN], Improvised Tactics [aus], Expiate, Ron Zertnert ...). */
   const tc = t.replace(/\bcannot\b(?:(?!\band (?:gets?|may)\b)[^.])*/gi, '')
-    .replace(/\b(?:the )?(?:opposing|blocking) (?:minion|vampire) gets (?:an?|1|one) optional (?:maneuver|press)[^.]*/gi, '');
+    .replace(/\b(?:the )?(?:opposing|blocking) (?:minion|vampire) gets (?:an?|1|one) optional (?:maneuver|press)[^.]*/gi, '')
+    .replace(/\b(?:cards providing )?(?:maneuvers?|presses?)(?: (?:and\/or|and|or) (?:maneuvers?|presses?))? costs? (?:the )?(?:opposing|attached|blocking) (?:minion|vampire|monster)\b[^.]*/gi, '')
+    .replace(/\bmay (?:only )?use (?:maneuvers?|presses?)(?: (?:or|and) (?:maneuvers?|presses?))? only if\b[^.]*/gi, '')
+    .replace(/\bcancel (?:a|an|the|one|that) (?:maneuver|press|dodge|additional strike)s?\b[^.]*/gi, '')
+    .replace(/\b(?:a |an |the )?(?:minion|vampire)s? opposing (?:this|the attached|that) (?:minion|vampire|imbued)\b[^.]*/gi, '');
   if(/\bmaneuvers?\b/i.test(tc)) put('maneuver', true);
-  if(/\bpress(?:es)?\b/i.test(tc)) put('press', true);
+  /* v1.11.3 (the pilot's review, pass 2, F1): 'Maneuver, only usable to go to long range' (Backstep, High Ground, Crawling Chamber [tha],
+     Leapfrog [obf]), '... to get to long range' (Amria [chi], Repulsion [pre]), '... to go / get to close range' (Swoop, Dance with the
+     Devil, Shadow Boxing, Angel's Gift, Dark Steel, Blade of Bellona; Slam [POT]'s hand entry) -- the maneuver's one direction, the key
+     _bestManeuverFor reads (it was written by hand only). Only when every maneuver of the segment is so restricted, the same way. */
+  if(fx.maneuver){ const all = tc.match(/\bmaneuvers?\b/gi) || [], to = [...tc.matchAll(/\bmaneuvers?\b[^.,]{0,30}, only usable to (?:go|get) to (long|close) range\b/gi)].map(x => x[1].toLowerCase());
+    if(to.length && to.length === all.length && to.every(x => x === to[0])) put('maneuverTo', to[0]); }
+  if(/\bpress(?:es)?\b(?!\s+step\b)/i.test(tc)) put('press', true);
   if(/\bdodges?\b/i.test(tc)) put('dodge', true);
   if(/additional strike/i.test(tc)) put('addStrike', true);
-  if(/aggravated/i.test(t)) put('aggr', true);
+  /* v1.11.3 (F2): 'aggravated' in a negated clause ('The weapon cannot ... inflict aggravated damage': Concealed Weapon) or a neutralised
+     one ('Any effect which would make damage from this strike aggravated leaves the damage normal': Psychic Assault) is no aggravated
+     damage: read from the stripped text, the 'would make ... aggravated' sentence cut too. */
+  if(/aggravated/i.test(tc.replace(/[^.]*\bwould make\b[^.]*\baggravated\b[^.]*/gi, ''))) put('aggr', true);
   if(!/prevents? (?:half|up to)\b/i.test(t) &&   // v1.5.5 (restlist read): "Prevent HALF the damage" (Rockheart) fell through the optional quantifier group as prevent:'all' -- the one WRONG VALUE on a scanned, playable, combat-typed key. 3-card class measured; only Rockheart was tagged. A missed tag is a curation task; a wrong tag mis-resolves.
      (m = t.match(/prevents? ([0-9]+|X|all|that)?\s*(?:of the )?damage/i)))
     put('prevent', m[1] ? (/^(all|that)$/i.test(m[1]) ? 'all' : num(m[1])) : 'all');
@@ -376,6 +396,11 @@ function extractFx(t0){
      damage. 36 library cards share the two patterns (25 + 11, vtes.json 14 Oct); in our six decks only Roundhouse. */
   if((m = t.match(/hand strike at \+([0-9]+|X) damage/i))) put('handBonus', num(m[1]));
   if((m = t.match(/this strike is at \+([0-9]+|X) damage/i))) put('handBonus', num(m[1]));
+  /* v1.11.3 (the pilot's review, pass 2, F1): a hand strike whose segment restricts THIS minion ('This combat, this minion cannot cancel
+     frenzy cards nor press to end.': Taming the Beast [abo]) carries a rider no key reads -- its bonus is not certified (the chooser plays
+     a handBonus); handStrike stays, as on Cobra Fangs and Dagon's Call. Today's library: Taming the Beast [abo] alone (Stutter-Step [CEL]
+     prints 'this vampire cannot' and has no bonus). */
+  if(fx.handBonus !== undefined && /\bthis (?:minion|vampire) cannot\b/i.test(t)) delete fx.handBonus;
   /* v1.6.0 (Johan's standing question, checking the strike-bonus family for
      uncertainty): a THIRD phrasing found by chance while reading Compress -- "Strike:
      N aggravated damage" (aggravated sitting BETWEEN the number and "damage" breaks
@@ -584,13 +609,29 @@ function libModes(text){
         if(!src && base && done.some(d => (d.at || '').toLowerCase() === base)) src = 'STOP';   // v1.5.5: same stop rule for plain "As above"
         for(let i = done.length - 1; i >= 0 && !src; i--){ if(worth(done[i])) src = done[i]; }
       }
-      if(src && src !== 'STOP'){ fx = Object.assign({}, src.fx, fx); if(dir === undefined) dir = src.dir; if(lock === undefined) lock = src.lock;
+      if(src && src !== 'STOP'){ const own = fx; fx = Object.assign({}, src.fx, fx); if(dir === undefined) dir = src.dir; if(lock === undefined) lock = src.lock;
+        if(own.maneuver && own.maneuverTo === undefined) delete fx.maneuverTo;   // v1.11.3 (F1): the line's own unrestricted maneuver is not its reference's one direction
         /* v1.11.1 (the pilot's review, grader R-1): 'As [x] above, but (the / this) (strike is) at +N damage' REPLACES the inherited
            strike's bonus; the patterns above read neither shape, so the line kept its reference's number (Charge of the Buffalo [SPI]
            and Lead Fist [VIS] read +1 where they print +2). Only over an inherited numeric handBonus: nothing is written where the
-           reference has none. */
-        const bm = s.text.match(/^As (?:(?:‹[A-Za-z]{3}›)+ )?above, but (?:(?:the|this) strike is )?at \+(\d+) damage\.?$/i);
-        if(bm && typeof fx.handBonus === 'number') fx.handBonus = +bm[1]; }
+           reference has none.
+           v1.11.3 (the pilot's review, pass 2, F3): an 'As above, but' line that prints its OWN strike over a reference with one (strike,
+           handStrike or handBonus) replaces the inherited strike keys (strike, handStrike, handBonus, ranged, aggr) with its own reading:
+           'but for NR damage' is strike N (ranged by the R: Coagulate Blood [QUI], Psychic Assault [AUS], Starvation of Marena [VIC]),
+           'but for NR + X ranged damage' strike 'X' (Eldritch Glimmer [THA]: X is no number, as 'Strike: X damage'); any other such line
+           ('but strike: burn equipment': Taming the Beast [ABO]; 'but for 4R damage and prevent ...') is not read -- the inherited strike
+           keys are dropped, the line's own other keys stay. They kept the reference's damage. */
+        const bc = s.text.match(/^As (?:(?:‹[A-Za-z]{3}›)+ )?above, but (.+?)\.?$/i), cl = bc ? bc[1] : '';
+        const SK = ['strike', 'handStrike', 'handBonus', 'ranged', 'aggr'], hadStrike = ['strike', 'handStrike', 'handBonus'].some(k => src.fx[k] !== undefined);
+        const bm = cl.match(/^(?:(?:the|this) strike is )?at \+(\d+) damage$/i);
+        if(bm){ if(typeof fx.handBonus === 'number') fx.handBonus = +bm[1]; }
+        else if(bc && hadStrike && /^(?:for\b.*\bdamage\b|strike:)/i.test(cl)){
+          SK.forEach(k => { delete fx[k]; });
+          let m2;
+          if((m2 = cl.match(/^for (\d+)(R)? damage$/i))){ fx.strike = +m2[1]; if(m2[2]) fx.ranged = true; }
+          else if((m2 = cl.match(/^for (\d+)(R)? \+ X( ranged)? damage$/i))){ fx.strike = 'X'; if(m2[2] || m2[3]) fx.ranged = true; }
+          else SK.forEach(k => { if(own[k] !== undefined) fx[k] = own[k]; });   // not this shape: the line's own reading only (extractFx keeps a ranged only beside its strike)
+        } }
     }
     done.push({ at: s.at, use: s.use, fx, dir, lock, when });
   });
@@ -612,6 +653,7 @@ function libModes(text){
     if(d.dir) entry.dir = true;    // any segment sharing this (at,use) key carrying Ⓓ marks the assembled mode directed
     if(d.lock) entry.lock = true;  // v1.4.0: same any-segment-sets-it-for-the-whole-mode shape as dir
     if(d.when) entry.when = d.when;   // v1.8.0: the act-again rider
+    if(d.fx.maneuver && d.fx.maneuverTo === undefined) entry.mvFree = true;   // v1.11.3 (F1): a segment of this mode prints an unrestricted maneuver
     const tgt = entry.fx;
     for(const k in d.fx){
       const v = d.fx[k];
@@ -624,6 +666,7 @@ function libModes(text){
     if(mo.use) o.use = mo.use;
     if(mo.dir) o.dir = true;    // v1.3.0: PER-MODE now (absent = undirected default, Johan's minimal-tagging call)
     if(mo.lock) o.lock = true;  // v1.4.0: PER-MODE, not entry-level -- Enkil Cog carries a flat +1 bleed (no lock) AND a separate lockable action in the SAME entry; Dreams of the Sphinx bundles three differently-timed lock effects into one mode today (an existing, already-flagged curated limit -- see cardfx-design.md §4's actGrant note), which this auto tag does not attempt to resolve
+    if(mo.mvFree) delete mo.fx.maneuverTo;   // v1.11.3 (F1): one direction only when no segment of the mode prints an unrestricted maneuver
     o.fx = mo.fx;
     if(mo.when) o.when = mo.when;   // v1.8.0
     return o;
@@ -1164,6 +1207,7 @@ function cryptEntry(c){
   }
   if(c.banned) e.banned = c.banned;
   if(/(?:^|[.:]\s*)Contracts cannot be placed on [^.]+\./.test(ct)) e.noContracts = true;   // v1.11.2 (bot v0.6.236, the pilot's review P7): 'Contracts cannot be placed on Iliana.' -- the one vampire of the crypt that prints it; the contract's host pick reads it
+  if(/(?:^|[.:]\s*)Flight \[FLIGHT\](?:\.|$)/m.test(ct)) e.flight = true;   // v1.11.3 (the pilot's review, pass 2, F1): KRCG codes Flight on a vampire as its text ('Flight [FLIGHT].': 26 vampires, the Gargoyles), not in its disciplines; a library card's requirement is req.disc 'flight' (9 cards: Pounce, Roll, Swoop ...) -- the bot's discipline gate reads this marker
   return e;
 }
 
@@ -1466,6 +1510,9 @@ function compile(cards, curated){
       if(auto && auto.anarchReq && e.anarchReq === undefined) e.anarchReq = true;   // v1.9.9: the markers survive a curated entry
       if(auto && auto.zombie && e.zombie === undefined) e.zombie = true;
       if(auto && auto.animal && e.animal === undefined) e.animal = true;   // v1.11.0: the animal marker survives a curated entry too (Murder of Crows)
+      if(auto && auto.contract && e.contract === undefined) e.contract = true;   // v1.11.3 (the pilot's review, pass 2, F7): P7's markers survive a curated entry as the others do -- the contract keyword,
+      if(auto && auto.noContracts && e.noContracts === undefined) e.noContracts = true;   // the crypt's 'Contracts cannot be placed on <name>.' (Iliana) -- no curated entry carries either today (Priority Contract is a merge),
+      if(auto && auto.flight && e.flight === undefined) e.flight = true;   // and the crypt's Flight [FLIGHT] (v1.11.3, F1; no curated Gargoyle today)
       if(auto && auto.onlyDirected && e.onlyDirected === undefined) e.onlyDirected = true;   // v1.9.11: the header's 'Only usable during an action directed at you' survives a curated entry (a line's own stays with the curated modes)
       if(auto && auto.frenzy && e.frenzy === undefined) e.frenzy = auto.frenzy;   // v1.9.10: the frenzy tag survives a curated entry (Rage of Apedemak's 'self')
       for(const k of ['onlyBleed', 'notBleed', 'onlyPredatorActs', 'oncePerUnlock', 'pressDir', 'noReplace']) if(auto && auto[k] !== undefined && e[k] === undefined) e[k] = auto[k];   // v1.9.12: the header's conditions survive a curated entry (a line's own stays with the curated modes, as onlyDirected's)
