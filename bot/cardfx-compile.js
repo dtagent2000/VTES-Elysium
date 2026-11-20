@@ -785,7 +785,7 @@ function wholeModes(e, txt, name, sink){
     : [{ keys: [null], key: null, body: head.join(' '), line: head.join(' '), base: true }];
   units.forEach((u, ui) => {   // u.kind 'rush' | 'strike' | null; u.r the reading when the unit is whole; u.strikeMode (noPreventDisc's 'every strike mode')
     let sents = WM_SENT(u.body); if(u.base) sents = sents.filter(s => !isHead(s));
-    const ab = u.base ? null : u.body.match(/^As ((?:\[[A-Za-z]{3}\])*)\s*above\b,?\s*(?:(and|but)\s+(.+))?$/i);
+    const ab = u.base ? null : u.body.match(/^As ((?:\[[A-Za-z]{3}\])*)\s*above\b,?\s*(?:(and|but)\s+)?(.*)$/i);   // a clause opened by neither 'and' nor 'but' ('with an additional ...') is read by nothing
     let res = null, listed = cand(u.line);
     if(ab){
       /* the reference: 'As [x] above' the latest earlier line at that level (exact case, then any case); 'As above' the latest earlier
