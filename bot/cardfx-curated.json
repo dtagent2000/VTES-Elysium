@@ -2365,7 +2365,8 @@
      "fx": {
       "strike": 1,
       "ranged": true,
-      "noPreventDisc": "for"
+      "noPreventDisc": "for",
+      "nullOppWeapons": true
      }
     },
     {
@@ -2373,11 +2374,111 @@
      "fx": {
       "strike": 2,
       "ranged": true,
-      "noPreventDisc": "for"
+      "noPreventDisc": "for",
+      "nullOppWeapons": true
      }
     }
    ],
-   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): (a BOARD rider of wave 1) '[tha] Strike: 1R damage. This damage cannot be prevented by cards requiring Fortitude [for]. The opposing vampire's strikes with weapons inflict no damage this round. [THA] As above, but for 2R damage.' Cost 1 blood (inherited). The auto tier read [THA] as 1R. The damage cannot be prevented by cards requiring Fortitude [LSJ 20050628]: noPreventDisc 'for' -- the struck bot reads the card on the strike line (`strikes with Soul Burn for N.`) and plays no Fortitude prevention (a human's bare `strikes for N.` names no card). Not modelled (amber): the opposing vampire's weapon strikes inflicting no damage this round, except after a dodge or with a first-strike weapon [LSJ 20040928]."
+   "note": "29 Oct 2026, V5 wave 2 (RULINGS D-102): (a BOARD rider of wave 1) '[tha] Strike: 1R damage. This damage cannot be prevented by cards requiring Fortitude [for]. The opposing vampire's strikes with weapons inflict no damage this round. [THA] As above, but for 2R damage.' Cost 1 blood (inherited). The auto tier read [THA] as 1R. The damage cannot be prevented by cards requiring Fortitude [LSJ 20050628]: noPreventDisc 'for' -- the struck bot reads the card on the strike line (`strikes with Soul Burn for N.`) and plays no Fortitude prevention (a human's bare `strikes for N.` names no card). The opposing vampire's weapon strikes inflict no damage this round: nullOppWeapons on both modes (20 Nov 2026, the Banu Haqim pilot, spec-sweep-pilot §3.1 item 4: the compiler gives the same key to Blood Rage, Blood Fury and Bollix; it was amber here), read by the struck side -- not after a dodge of this strike [LSJ 20040928]; it does not shield the target from a weapon's self-inflicted damage [LSJ 19980216]. NOT MODELLED (20 Nov 2026, the pilot's review): a weapon strike made with first strike is unaffected [LSJ 20040928] -- the bot has no first strike, so its struck side nulls such a strike too."
+  },
+  "Biothaumaturgic Experiment": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "tha",
+     "fx": {
+      "employAnimal": true
+     }
+    },
+    {
+     "at": "THA",
+     "fx": {
+      "maneuver": null,
+      "maneuverEach": 1,
+      "strengthBonus": 1,
+      "attach": "own"
+     }
+    }
+   ],
+   "note": "The Banu Haqim pilot (20 Nov 2026, spec-sweep-pilot-2026-11-20.md §3.1 items 5 and 8; the first opt-ins of the merge, spec-card-sweep §4.4): the remainder over the compiled entry, whose +1 stealth action (actStealth 1 on the base mode), 1 pool cost, [tha] requirement and persistent stay the compiler's. KRCG: '+1 stealth action. [tha] Employ an animal retainer from your hand ignoring requirements (pay cost as normal). [THA] Put this card on a minion you control. The attached minion gets 1 optional maneuver each combat and +1 strength.' [tha]: employAnimal (an animal retainer is marked `animal` by the compiler, 'Animal with N life'); the compiler had no mode here (the mode is added). [THA]: the compiled maneuver read a grant as a card play (null); maneuverEach 1 (one free optional maneuver each combat while attached), strengthBonus 1, attach 'own' (a minion you control: itself or another; no one-per-vampire limit is printed). Rulings: the employ is not a requirement of the action ([LSJ 20100725] [LSJ 20100303] [ANK 20180817]: no CrimethInc. off an Anarch retainer); playing the retainer directly later the same turn is still allowed if the vampire unlocks ([ANK 20180817]); a level-dependent card is chosen by the vampire's own disciplines ([LSJ 20080803]). Register: employAnimal unique, maneuverEach / attach / strengthBonus shared."
+  },
+  "Shadow of the Beast": {
+   "merge": true,
+   "oncePerVampire": true,
+   "modes": [
+    {
+     "at": "pro",
+     "fx": {
+      "maneuver": null,
+      "maneuverEach": 1,
+      "attach": "self"
+     }
+    },
+    {
+     "at": "PRO",
+     "fx": {
+      "maneuver": null,
+      "press": null
+     }
+    }
+   ],
+   "note": "The Banu Haqim pilot (20 Nov 2026, spec-sweep-pilot §3.1 item 5; a merge, spec-card-sweep §4.4): the attach reading of Biothaumaturgic Experiment [THA] on the mode it covers whole. KRCG: '[pro] Put this card on the acting vampire. The vampire with this card gets an optional maneuver each combat. A vampire may have only one Shadow of the Beast. [PRO] As above, and this vampire gets an optional press each combat.' [pro]: attach 'self', maneuverEach 1 (the compiled maneuver read the grant as a card play: null); 'only one' is the entry's oncePerVampire (Rutor's Hand's and Wall of Filth's key), read by the attach finder (bot v0.6.236, executor B2). [PRO]: its press each combat is a rider no key reads; its two compiled keys were the [pro] grant and that rider misread as card plays (a maneuver and a press from the hand): null (the pilot's review, pass 2, F5) -- an empty mode, so the attach finder plays the card at [pro] (recorded here: the compiler's refusal list covers only its whole-mode readings, the rush and the hand strike). The 1 blood cost and [pro] requirement stay the compiler's. No rulings in KRCG."
+  },
+  "New Moon Sigil": {
+   "merge": true,
+   "oncePerVampire": true,
+   "modes": [
+    {
+     "at": "spi",
+     "fx": {
+      "maneuver": null,
+      "maneuverEach": 1,
+      "attach": "ownVampire"
+     }
+    },
+    {
+     "at": "SPI",
+     "fx": {
+      "maneuver": null,
+      "actStealth": null
+     }
+    }
+   ],
+   "note": "The Banu Haqim pilot (20 Nov 2026, spec-sweep-pilot §3.1 item 5; a merge, spec-card-sweep §4.4): the attach reading on the mode it covers whole. KRCG: '+1 stealth action. [spi] Put this card on a vampire you control. The attached vampire gets 1 optional maneuver each combat. A vampire can have only one New Moon Sigil. [SPI] As above, and during an action, the attached vampire can burn 2 blood to get +1 stealth.' [spi]: attach 'ownVampire' (a VAMPIRE you control: not an ally, where Biothaumaturgic Experiment's 'own' says a minion), maneuverEach 1 (the compiled maneuver: null); 'only one' is the entry's oncePerVampire (Rutor's Hand's and Wall of Filth's key), read by the attach finder (bot v0.6.236, executor B2). [SPI]: the paid +1 stealth during an action is a rider no key reads; its two compiled keys were the [spi] grant misread as a card play (maneuver) and that rider misread as the action's printed stealth (actStealth 1): null (the pilot's review, pass 2, F5) -- an empty mode, so the attach finder plays the card at [spi]; the header's +1 stealth action is the base mode's (recorded here: the compiler's refusal list covers only its whole-mode readings, the rush and the hand strike). The +1 stealth action, 2 blood cost and [spi] requirement stay the compiler's. No rulings in KRCG."
+  },
+  "Priority Contract": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "drop": true
+    },
+    {
+     "at": null,
+     "add": true,
+     "fx": {
+      "rushGrant": 1,
+      "rushBy": "chosen",
+      "hostOf": "prey",
+      "poolOnHostLeave": 3
+     }
+    }
+   ],
+   "note": "The Banu Haqim pilot (20 Nov 2026, spec-sweep-pilot §3.1 item 6; one of spec-card-sweep §4's six misreads; a merge, §4.4). KRCG: 'Unique contract. Trifle. Choose a ready Banu Haqim you control and put this card on a minion controlled by your prey. The chosen Banu Haqim can enter combat with the attached minion as a +1 stealth (D) action. If the attached minion is about to leave the ready region, you can burn this card to gain 3 pool.' The compiled mode (a directed +1 stealth gaining 3 pool: no play path reads it, and it gave the pool at play) is dropped; the added mode: rushGrant 1 (the granted rush's +1 stealth, Haven Uncovered's key), rushBy 'chosen' (only the chosen Banu Haqim may rush through it), hostOf 'prey' (a minion of my prey), poolOnHostLeave 3 (burn it for 3 pool when its host is about to leave the ready region). The clan requirement (Banu Haqim), unique, trifle and persistent stay the compiler's. Rulings: it can be burned for the pool when the host leaves because its controller is ousted [ANK 20180129-2]; the trifle's master phase action is gained even if it contests [RBK contested-cards]; the granted action counts as an action requiring a Banu Haqim [LSJ 20080604]. Register: rushGrant / rushBy / hostOf shared (the contracts), poolOnHostLeave unique."
+  },
+  "Night Terrors": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "OBF+PRE",
+     "fx": {
+      "ceGrant": "r1",
+      "combatEnds": null,
+      "strikeCE": null
+     }
+    }
+   ],
+   "note": "The Banu Haqim pilot (20 Nov 2026, spec-sweep-pilot §3.1 item 7, riding with the pilot by D-123; a merge, spec-card-sweep §4.4). KRCG: '[obf][pre] Reduce the acting minion's stealth to 0. (The acting minion can still increase their stealth.) [OBF][PRE] As above, and if this vampire blocks, they can strike: combat ends during the first round of the resulting combat.' The compiled [OBF][PRE] read the granted strike as a combat-ends strike card in hand (strikeCE, combatEnds: null); ceGrant 'r1' says this blocking vampire may strike: combat ends during the first round of the combat its block starts. stealthToZero, the 1 blood cost, the Ravnos clan and the disciplines stay the compiler's. Rulings: the strike: combat ends only in the combat from a successful block, not a follow-up combat [LSJ 20010813] [LSJ 20010819-2], and again after a second block of the same action [LSJ 20010814-2]; usable without a block attempt [LSJ 20020612]; a -X stealth modifier [RTR 20030519]. Register: ceGrant shared (Memory Rift [pre] and Shroud of Absence [DOM][OBT] print the same strike for a blocked acting minion)."
   },
   "Anarch Railroad": {
    "t": [

@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.235';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.236';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -359,6 +359,7 @@ const ARCHETYPES = { hacking: DEFAULT_DECK, wall: WALL_DECK, sewer: SEWER_DECK, 
 const NET_LOCK_IC = /^(.+?) locks (.+?): \+(\d+) intercept\.$/;   // v0.6.215 (egress review): a location's intercept lock (_spendIntercept) -- read by the hotseat net and the event log like a card's L12.interceptPlay
 const ABSTAIN = /^(.+?) (?:plays (Scalpel Tongue) \[(\w+)\]|locks: (Saulot's Guiding Wisdom)) \u2014 (.+?)'s (.+?) (?:is locked(, burns 1 blood)? and )?abstains \((\d+) votes? cancelled\)\.$/;   // v0.6.217 (V5 wave 4, bot grammar): the caller's polling-step abstain -- m[2] Scalpel Tongue (m[3] its level; m[7] the superior blood) or m[4] Saulot's Guiding Wisdom, m[5] the voter's Methuselah, m[6] the vampire, m[8] the votes cancelled
 const COT = /^(.+?) plays Change of Target(?: \u2014 .+?)?\.(?: Target: .+)?$/;   /* v0.6.217 (the egress review): + the client's ' Target: X.' (targetSuffix) */   // v0.6.217 (V5 wave 4): the actor's 'if blocked' card -- m[1] the acting vampire; the bot's own line ('VAMP plays Change of Target \u2014 unlocks; the action ends unsuccessfully.') and a human's plain play line
+const CONTRACT_BURN = /^(.+?) burns (.+?) and gains (\d+) pool \((.+?)\)\.$/;   // v0.6.236 (the Banu Haqim pilot, bot grammar): Priority Contract's 'If the attached minion is about to leave the ready region, you can burn this card to gain 3 pool' -- m[1] the Methuselah, m[2] the card, m[3] the pool, m[4] why (the host went to torpor / was burned / left the ready region / left the game with its Methuselah). An explanation line (the duplicate rule: the ledger shows the pool and the card's move, not the why); read by the event log only
 const ARCHON_BURN = /^(.+?) plays Archon Investigation \u2014 (.+?) is burned \(the bleed of (\d+) is not successful\)\.$/;   // v0.6.215 (V5 wave 3): the target's out-of-turn answer to a bleed of 4+ -- the ACTING bot burns its own minion and the action ends unsuccessful (bot-emitted; owed to main's \u00a712 + the canary, the handoff)
 const NET_STEALTH_ADJ = /^(.+?): (.+?) (?:does not reach|reaches) (.+?) \(([\u2212+-])(\d+) stealth\)\.$/;   // v0.6.228 (round F; the egress review, finding 10): a conditional stealth (Perfect Paragon [PRE]) off for a later blocker it does not reach, or back on -- the tally net's third reader (bot-emitted, not in the frozen L12 contract)
 const NET_STEALTH = /^(.+?) (?:plays|burns|locks) .+?: \+(\d+) stealth\.$/, NET_UNLOCK_IC = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;   // v0.6.147: the tally net's two readers (bot-emitted lines; not part of the frozen L12 contract the canary pins)
@@ -539,8 +540,9 @@ const L12 = {
   pentexM: /^(.+?) plays Pentex(?:\(TM\)|\u2122) Subversion \u2014 on (.+?)'s (.+?)\.$/,   // M2: frozen -- TM/\u2122 tolerant; m[2]=owner, m[3]=the vampire that cannot block
   rush: /^(.+?) plays Deep Song \[ANI\] \u2014 rushes (.+?)'s (.+?)\.$/,   // N2: frozen -- m[2]=target OWNER seat name, m[3]=the rushed vampire; the named owner complies (lock + defender handshake)
   havenM: /^(.+?) plays Haven Uncovered \u2014 on (.+?)'s (.+?)\.$/,   // v0.6.205 (R4, F23): frozen -- m[1]=the Methuselah who placed it, m[2]=the host's OWNER, m[3]=the host; every observer records it (any minion may rush the host through it)
+  contractM: /^(.+?) plays (.+?) \u2014 on (.+?)'s (.+?), chosen: (.+?)\.$/,   // v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 6; bot grammar): a rushBy 'chosen' card placed (Priority Contract) -- m[1] the Methuselah who placed it, m[2] the card, m[3] the host's OWNER, m[4] the host, m[5] the chosen vampire (only it may enter combat with the host through the card); every observer records it (_contractSeen)
   burnAct: /^(.+?) takes an action to burn (.+?)'s (.+?)\.$/,   // v0.6.217 (V5 wave 4, bot grammar): m[1] the acting minion, m[2] the card's OWNER, m[3] the card in play (Toreador Grand Ball: 'Minions can burn this card as a (D) action') -- the owner's bot opens its block window, burns the card on its Pass
-  havenRush: /^(.+?) enters combat with (.+?)'s (.+?) \((Haven Uncovered|Saulot's Avenging Fist|Regent|Frontal Assault)\)\.$/,   // v0.6.230 (V5 wave 5): + Frontal Assault (a (D) rush at the owner's prey's minions)   // v0.6.217 (V5 wave 4): m[4] = the card in play that grants the (D) action -- Haven Uncovered, Saulot's Avenging Fist (on the rusher), a Regent (on the target)   // v0.6.205 (R4, F23): frozen -- m[1]=the rusher, m[2]=the host's OWNER, m[3]=the host; a +1 stealth directed action the owner may block; the host is NOT locked and the rusher is the acting minion
+  havenRush: /^(.+?) enters combat with (.+?)'s (.+?) \((?!(?:G\d+(?: ADV)?|ANY)\))([^()\[\]]+?)(?: ((?:\[[A-Za-z]+\])+))?\)\.$/,   // v0.6.236 (the pilot's review, K6): the card group refuses a crypt group suffix ('(G5)', '(G2 ADV)', '(ANY)') -- Yawp Court's line 'Ann locks Yawp Court — Lisa (G6) enters combat with Bot's Gilbert (G5).' read as a rush with the card 'G5' (L12.yawp is still tried first, in _onLog and _evClassify)   // v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 items 1-2): opened to ANY card, m[5] = the level it was played at as the client prints it ('[CEL][THA]', '[cel]'; absent for a card with no level) -- a rush card from the hand (Hunter's Mark, Fleetness [CEL], Ambush ...) takes Haven's terms (no lock, the rusher acts); the card group admits no parenthesis, so a vampire named '(ADV)' still splits at the card   // v0.6.230 (V5 wave 5): + Frontal Assault (a (D) rush at the owner's prey's minions)   // v0.6.217 (V5 wave 4): m[4] = the card in play that grants the (D) action -- Haven Uncovered, Saulot's Avenging Fist (on the rusher), a Regent (on the target)   // v0.6.205 (R4, F23): frozen -- m[1]=the rusher, m[2]=the host's OWNER, m[3]=the host; a +1 stealth directed action the owner may block; the host is NOT locked and the rusher is the acting minion
   fameM: /^(.+?) plays Fame \u2014 on (.+?)'s (.+?)\.$/,   // N3: frozen -- m[2]=owner, m[3]=the famed vampire; ALL observers track it, the owner arms the torpor hook
   creep: /^Creeping Sabotage \(x(\d+)\): (.+?) burns (\d+) pool\.$/,   // N3: frozen -- m[2]=the named prey complies
   rescueE: /^(.+?) rescues (.+?)\u2019s (.+?) from torpor \((.+?) pays (\d+), (.+?) pays (\d+)\)\.$/,   // v0.6.72 (#7): frozen -- m[2]=owner complies, m[3]=vamp, m[5]=their blood share
@@ -577,6 +579,8 @@ const L12 = {
   uTabling:  /^(.+?) plays (.+?) \u2014 puts it in play\.$/,
   uFetch:    /^(.+?) plays (.+?) \[(tha|THA)\] \u2014 fetches (.+?)\.$/,
   uStrength: /^(.+?) plays (.+?) \[(.+?)\] \u2014 on themselves \(\+(\d+) strength\)\.$/,
+  uAttach:   /^(.+?) plays (.+?) \[(.+?)\] \u2014 on (.+?)\.$/,   // v0.6.236 (the Banu Haqim pilot, §3.2 item 4; bot grammar): the attach finder's card on a minion of mine -- m[1] the acting vampire, m[2] the card, m[3] the level ('THA', 'cel][tha' for two), m[4] the host ('themselves' for the acting vampire). Read AFTER uStrength (Preternatural Strength's '... on themselves (+N strength).' would match it too)
+  uEmployVia:/^(.+?) plays (.+?) \[(.+?)\] \u2014 employs (.+?)\.$/,   // v0.6.236 (§3.2 item 8; bot grammar): Biothaumaturgic Experiment [tha] employs an animal retainer ignoring requirements -- m[1] the acting vampire, m[2] the card, m[3] its level, m[4] the retainer. Read BEFORE uEquip (whose '(employs) (.+?)' would take 'X plays CARD [tha] --' as the vampire)
   combat: /^Combat: (\d+) vs (\d+) damage dealt\.$/,
   stealAct: /^(.+?) takes an action to steal (.+?)'s (.+?)\.$/,   // v0.6.230 (V5 wave 5, bot grammar): the (D) action that STEALS a card in play (The Rack, Powerbase: Los Angeles) -- m[1] the acting minion, m[2] the card's OWNER, m[3] the card; the owner's bot opens its block window and on its Pass gives the card to the actor's Methuselah
   ppBurn: /^(.+?) locks Privileged Position — (.+?) burns 1 pool\.$/,   // v0.6.230 (bot grammar): m[1] the card's controller, m[2] the prey who burns the pool -- its bot pays, with its oust check
@@ -610,7 +614,9 @@ function prepCardfx(raw){                 // v0.6.94 (HB0): the file-free half -
   Object.keys(raw.lib).forEach(k => put(k, k));
   Object.keys(raw.crypt).forEach(k => put(k, k));
   Object.entries(raw.alias || {}).forEach(([a, c]) => put(a, c));
-  return { lib: raw.lib, crypt: raw.crypt, alias: raw.alias || {}, normIdx, counts: raw.counts || {} };
+  const modeOf = new WeakMap();   // v0.6.236 (the pilot's review, K2): a library mode -> its entry, so the one discipline gate every hand finder asks (_modeUsableBy) also reads the entry's requirement markers (anarchReq)
+  Object.keys(raw.lib).forEach(k => { const e = raw.lib[k]; (e && Array.isArray(e.modes) ? e.modes : []).forEach(mo => { if(mo && typeof mo === 'object') modeOf.set(mo, e); }); });
+  return { lib: raw.lib, crypt: raw.crypt, alias: raw.alias || {}, normIdx, counts: raw.counts || {}, modeOf };
 }
 function loadCardfx(file){
   let raw;
@@ -1223,6 +1229,7 @@ class Bot {
         this._wonN = null; this._asp = null; this._aspLast = null; this._srSent = null; this._srSeenHuman = null; this._yawp = null; this._yawpFight = null; this._groveCancelled = null; this._quietHold = false;   // v0.6.232 (5b's egress review): the nightmare counters, the 'as played' window, the cancels and Yawp Court start again
         this._turnSerial = (this._turnSerial | 0) + 1; this._monsterUsed = null; this._sgwEndUsed = null; this._lastCombat = null; this._cotCancel = null; this._myBlockOf = null;   // v0.6.217 (the egress review): Monster's and Guiding Wisdom's once-each-turn, the last combat, a Change of Target -- none carries into a new game
         this._holdBy = new Set(); if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }   // v0.6.95: a fresh game holds for nobody
+        this._ceBanRec = null; this._ceBanCombat = null; this._ntg = null; this._ntgCombat = null; this._eachMvUsed = null;   // v0.6.236 (the Banu Haqim pilot; L-95): a new game carries no rush card's ban, no Night Terrors' strike, no maneuvers each combat used
         this._replHold = []; this._perUnlock = new Map();   // v0.6.235 (the finished decks' round): a new game holds no replacement and has played no once-between-unlocks card
         this._holdAnnounced = false; this._pendingTurn = null;   // v0.6.108: and carries no queued turn or stale hold announcement
         this._holdThaw();   // v0.6.198: a wait frozen by the old game's hold runs again, as it would have unheld
@@ -1234,7 +1241,7 @@ class Bot {
         this._drawOwed = 0; this._replaceExempt = 0; this._replHold = [];   // v0.6.235 (the egress review, finding 2): a fresh hand owes no draw -- a replacement held at the last game's end (Mirror Walk, a Wake) drew an 8th card at the new game's first flush, as did any deferred draw before
         this.libN = m.lib || 0; this.cryptN = m.crypt || 0;
         this._fgOwed = 0;   // v0.6.215: the opening deal's vampires are no Family Gathering draw
-        this.pool = this.o.startPool; this.edge = false; this.board = []; this.unc = []; this._handSizeBonus = 0; this._revPick = null; this._havenSeen = null; this._hostPreventUsed = null;   /* v0.6.205 (R4, F21 / F23) */ this._handSizePermanentPrev = 0;
+        this.pool = this.o.startPool; this.edge = false; this.board = []; this.unc = []; this._handSizeBonus = 0; this._revPick = null; this._havenSeen = null; this._contractSeen = null; this._attachAt = null; /* v0.6.236 (L-95): Priority Contract's records; the levels the attach finder's cards were played at */ this._hostPreventUsed = null;   /* v0.6.205 (R4, F21 / F23) */ this._handSizePermanentPrev = 0;
         this.phaseActs = { master: 1, influence: 4, discard: 1 };
         this.phaseBonus = { master: 0, influence: 0, discard: 0 };
         this.phaseUsed = { master: 0, influence: 0, discard: 0 };
@@ -1338,6 +1345,7 @@ class Bot {
         if(this._ask && this._ask.target && !this.live(this._ask.target))   // v0.6.106 (#3): the ask's OWN target (ousted or vacant) -- the old `preySeat() && p.out` could never hold, preySeat() already skips out seats
           this._answer('no', null);                      // the target left mid-ask — the window dies with them
         this._releaseDeparted(m.players || []);          // v0.6.106 (#5): a departed holder/thinker no longer freezes the bot
+        if(this._contractSeen && this.started) this._contractOustSweep();   // v0.6.236: Priority Contract on a minion of a Methuselah now out [ANK 20180129-2]
         this._resumeHeldTurn('roster');                 // v0.6.222: an unoust / a seat taken over -- the turn I held at game over
         if(this._debugHand && this.started && !this.out) this._syncOpenHand();   // v0.6.200: the debug audience follows the roster (a human back online gets the grant again)
       },
@@ -1739,8 +1747,13 @@ class Bot {
   }
   _modeUsableBy(mo, vamp, o){       // can THIS vampire meet the mode's discipline gate?
     if(mo.fx && (mo.fx.selfDmg || mo.fx.selfTorpor) && !(o && o.selfPrice)) return false;   // v0.6.127 (cardfx v1.9.0): a mode that HURTS its own vampire (Daring the Dawn, Force of Will, Day Operation) is closed to every generic finder -- only a consumer that pays the price asks with { selfPrice: true } (the unpaid-cost rule, applied at birth)
+    if(vamp && this.fx && this.fx.modeOf){ const e = this.fx.modeOf.get(mo); if(e && e.anarchReq && this._vampSect(vamp) !== 'Anarch') return false; }   // v0.6.236 (the pilot's review, K2; grader R-2, R-3): 'Requires an Anarch' (cardfx anarchReq) is the card's requirement in EVERY finder, not the rush finder's alone -- Bollix through _bestStrikeFor, Line Brawl [pre] through _bestBleedCardFor, and every other mode a finder asks about here (the printed sect; unknown fails closed)
     if(mo.fx && mo.fx.bounce && this.predSeat() === this.preySeat()) return false;   // v0.5 (Johan): a bounce needs "another Methuselah" per the rulebook -- in a 2-live-player table my prey IS my predator, so no legal destination ever exists. Same fact _reactWindow's bounceLegal already checks per-actor; here it's the table-structural version so discard (and anything else asking _modeUsable) treats a bounce-only card as dead fodder instead of holding it forever
-    if(!mo.at) return true;
+    if(!mo.at){   // v0.6.236 (the pilot's review, pass 2, F1): a mode with no level on a card that REQUIRES a discipline (req.disc) is played only by a minion with one of them -- the card's requirement (the rulebook: a card that requires a discipline is played by a minion that has it): Pounce, Roll, Swoop ... ([FLIGHT]: cardfx req.disc 'flight', the vampire's crypt flight -- _discOf), an imbued's virtue powers, the header mode of a discipline action (its +N stealth action). Not equipment, a retainer or an ally: their requirement is met at the equip / employ / recruit (_retainerReqMet ...), their modes are read on the bearer afterwards (Biothaumaturgic Experiment's employ ignores it). Gated only when a vampire is asked about (as the anarch gate above)
+      const e = vamp && this.fx && this.fx.modeOf ? this.fx.modeOf.get(mo) : null, rd = e && e.req && e.req.disc;
+      if(rd && rd.length && !(e.t || []).some(t => t === 'equip' || t === 'retainer' || t === 'ally')){ const d = this._discOf(vamp); return !!(d && rd.some(x => (d.all || []).includes(String(x).toLowerCase()))); }   // fx.modeOf, req.disc
+      return true;
+    }
     const d = this._discOf(vamp);   // v0.6.217 (V5 wave 4): the printed disciplines + a discipline master on the vampire (Oblivion)
     if(!d) return false;
     return mo.at.split('+').every(tok => tok === tok.toUpperCase()
@@ -2320,7 +2333,10 @@ class Bot {
       { const pv = prevV[c.name]; rec.bloodAt = (pv && pv.blood === rec.blood && pv.bloodAt) ? pv.bloodAt : Date.now(); }   // v0.6.198 (main 12 Oct §3.2): WHEN the board's count last changed -- a human's client never applies combat damage, so within a combat their own taken line can be fresher
       (c.attached || []).forEach(id => { const a = byId[id]; if(!a || a.kind !== 'lib' || !a.name) return;
         const ah = this.fxLookup(a.name); if(!ah || ah.kind !== 'lib') return;
-        const tt = ah.e.t || []; if(!tt.includes('equip') && !tt.includes('retainer')) return;
+        const tt = ah.e.t || [];
+        if(!tt.includes('equip') && !tt.includes('retainer')){   // v0.6.236 (the pilot's review, pass 2, B5): a card ON the minion that gives it a maneuver each combat (cardfx maneuverEach: Shadow of the Beast, New Moon Sigil, Biothaumaturgic Experiment [THA]) -- read as _eachManeuverFor reads mine (the entry's key, no level); the adaptive skip asks it (_phaseSkip). Written only when there is one (no new field on every record)
+          if((ah.e.modes || []).some(mo => mo.fx && (mo.fx.maneuverEach | 0) > 0)) (rec.mvEach = rec.mvEach || []).push(a.name);   // fx.maneuverEach
+          return; }
         const cats = this._cats(ah.e); rec.equip.push(a.name); o.equip[a.name] = cats; });
       o.vamps[c.name] = rec;
       if(rec.clan) o.clans[rec.clan] = (o.clans[rec.clan] || 0) + 1;
@@ -2554,7 +2570,7 @@ class Bot {
     if(!bled){ take(1 + (this._cryptBleedBonus ? this._cryptBleedBonus(v) : 0), 'a plain bleed'); const c = this._bestBleedCardFor(v); if(c) take(c.n | 0, c.name); }
     const pd = this._bestPoolDmgActionFor ? this._bestPoolDmgActionFor(v) : null; if(pd) take(pd.n | 0, pd.name);
     if(!voted){ const pol = this._bestPoliticalFor(v); if(pol && (pol.pass || 0) >= 0.5) take(((pol.n | 0) + Math.max(0, (pol.deltas && pol.deltas[this.seat]) | 0)) * pol.pass, pol.name); }
-    const perm = this._bestEquipActionFor(v) || (this._bestStrengthFor ? this._bestStrengthFor(v) : null) || (this._bestRecruitFor ? this._bestRecruitFor(v) : null) || this._bestBloodStockFor(v);
+    const perm = this._bestEquipActionFor(v) || (this._bestStrengthFor ? this._bestStrengthFor(v) : null) || this._bestAttachFor(v) || this._bestAnimalEmployFor(v) || (this._bestRecruitFor ? this._bestRecruitFor(v) : null) || this._bestBloodStockFor(v);   // v0.6.236: + the attach finder and the experiment's employ (null without their cards: the old chain)
     if(perm) take(1.0, perm.name);
     return { n: best, what };
   }
@@ -2858,12 +2874,12 @@ class Bot {
     this.board.forEach(c => { if(c && c.kind === 'lib' && left[c.name]) left[c.name]--; });
     return left;
   }
-  _equipLadderTier(name, vamp, kinds){   // Johan's frozen fetch ladder: 1 = usable intercept, 2 = weapons (incl. envDmg pecking), 3 = prevent armor, 4 = other. N0: kinds defaults ['equip'] so the MotS FETCH stays equipment-only per its card text; the equip/employ finder passes ['equip','retainer'].
+  _equipLadderTier(name, vamp, kinds, ignoreReq){   // Johan's frozen fetch ladder: 1 = usable intercept, 2 = weapons (incl. envDmg pecking), 3 = prevent armor, 4 = other. N0: kinds defaults ['equip'] so the MotS FETCH stays equipment-only per its card text; the equip/employ finder passes ['equip','retainer'].
     const kk = kinds || ['equip'];
     const h = this.fxLookup(name); if(!h || h.kind !== 'lib' || !((h.e.t) || []).some(t => kk.includes(t))) return 0;
     if(h.e.unique && this._uniqueInPlay(h.name)) return 0;
     if(this._attachedEquips(vamp).some(c => c.name === h.name)) return 0;   // one-per-minion (Kevlar/vehicle wording) -- conservative for all equipment
-    if(!this._entryReqOk(h.e, vamp)) return 0;   // v0.6.213 (V5 wave 1): 'this Salubri' -- Sword of the Archangel requires Salubri
+    if(!ignoreReq && !this._entryReqOk(h.e, vamp)) return 0;   // v0.6.213 (V5 wave 1): 'this Salubri' -- Sword of the Archangel requires Salubri. v0.6.236: ignoreReq -- Biothaumaturgic Experiment [tha] employs 'ignoring requirements'
     let t = 4;
     (h.e.modes || []).forEach(mo => { const f = mo.fx || {};
       if(typeof f.intercept === 'number' && this._modeUsableBy(mo, vamp)) t = Math.min(t, 1);
@@ -2880,6 +2896,7 @@ class Bot {
       const tt = (h.e.t) || []; const isRet = tt.includes('retainer');
       if(!tt.includes('equip') && !isRet) return;
       if(isRet && this._attachedFx(vamp, 'noRecruitEmploy').length) return;   // v0.6.217 (V5 wave 4): Depravity -- the bearer cannot employ retainers
+      if(isRet && !this._retainerReqMet(h.e, vamp)) return;   // v0.6.236 (the pilot's review, E1; [RTR 19941109]): the plain employ meets the retainer's requirement -- its discipline too (Aunt Linda, no Animalism, employed Raven Spy and Murder of Crows); one it does not meet is Biothaumaturgic Experiment's ('ignoring requirements', _bestAnimalEmployFor) or nobody's
       const cP = (h.e.cost && h.e.cost.pool) || 0, cB = (h.e.cost && h.e.cost.blood) || 0;
       if(cP && cP >= (this.pool | 0)) return;   // v0.6.210: leave >= 1 pool (.44 Magnum costs 2 -- at pool 2 it was taken and paid at resolution, an oust)
       if(cB > 0 && (vamp.blood | 0) <= cB) return;   // employ must leave the bearer >= 1 blood
@@ -3056,6 +3073,12 @@ class Bot {
       if(hasKey(e, ['strike', 'strengthBonus', 'envDmgPerRound', 'prevent', 'maneuver', 'press', 'stealBlood', 'dodge'])) return { T: 'T3', note: info.card + ' is a combat advantage' };
       return { T: 'T6', note: info.card + ': no threat key' };
     }
+    if(sub === 'attach'){   // v0.6.236 (the pilot's review, P3): a card on a minion (Biothaumaturgic Experiment [THA], Shadow of the Beast, New Moon Sigil) -- read from its keys as the equip branch reads a card
+      const e = fxOf(info.card);
+      if(hasKey(e, ['intercept', 'wake'])) return { T: 'T2', note: info.card + ' grants intercept' };
+      if(hasKey(e, ['strengthBonus', 'maneuverEach', 'strike', 'prevent', 'maneuver', 'press', 'dodge'])) return { T: 'T3', note: info.card + ' on ' + (info.host || info.vamp) + ' is a combat advantage' };
+      return { T: 'T6', note: info.card + ': no threat key' };
+    }
     if(sub === 'strength') return { T: 'T3', note: 'permanent strength' };
     if(sub === 'recruit') return { T: 'T4b', note: 'a minion enters ' + this.seatName(actorSeat) + "'s ready region" };
     if(sub === 'rescue') return { T: 'T4b', note: 'a vampire returns to ' + this.seatName(actorSeat) + "'s ready region" };   // v0.6.127: the same class as a recruit -- a body comes (back) into play
@@ -3079,12 +3102,14 @@ class Bot {
     if(!this.started || this.out) return false;
     let m, sub, info;
     if((m = t.match(L12.uHunt))){ sub = 'hunt'; info = { vamp: m[1] }; }
+    else if((m = t.match(L12.uEmployVia))){ sub = 'equip'; info = { vamp: m[1], card: m[4], verb: 'employs', via: m[2] }; }   // v0.6.236: the retainer is what the window weighs
     else if((m = t.match(L12.uEquip))){ sub = 'equip'; info = { vamp: m[1], card: m[3], verb: m[2] }; }
     else if((m = t.match(L12.uRecruit))){ sub = 'recruit'; info = { vamp: m[1], card: m[2] }; }
     else if((m = t.match(L12.uStock))){ sub = 'stock'; info = { vamp: m[1], card: m[2], n: parseInt(m[3], 10) }; }
     else if((m = t.match(L12.uTabling))){ sub = 'tabling'; info = { vamp: m[1], card: m[2] }; }
     else if((m = t.match(L12.uFetch))){ sub = 'fetch'; info = { vamp: m[1], card: m[4], via: m[2] }; }
     else if((m = t.match(L12.uStrength))){ sub = 'strength'; info = { vamp: m[1], card: m[2] }; }
+    else if((m = t.match(L12.uAttach))){ sub = 'attach'; info = { vamp: m[1], card: m[2], host: m[4] }; }   // v0.6.236
     else if((m = t.match(L12.uRescue))){ sub = 'rescue'; info = { vamp: m[1] }; }   // v0.6.127 / v0.6.172: 'their own vampire'
     else if((m = t.match(L12.uCardAct))){ sub = 'card'; info = { vamp: m[1] }; }   // v0.6.172: 'Undirected card action'
     else if((m = t.match(L12.uLeave))){ sub = 'leave'; info = { vamp: m[1] }; }   // v0.6.128
@@ -3115,6 +3140,7 @@ class Bot {
     if(this.pending) this._clearPending('superseded by rush');
     const role = (this.nextLive(actorSeat) === this.seat) ? 'prey' : (this.prevLive(actorSeat) === this.seat) ? 'predator' : 'cross';
     this.pending = { who, amount: 0, kind: 'rush', sub: 'rush', T: 'T5', role, actorSeat, actorUnlocked: 0, actingVampName: rusherVamp, rushTarget: vc.name, targetActs: !(ro && ro.targetActs === false), noLock: !!(ro && ro.noLock), via: (ro && ro.via) || null, card: (ro && ro.card) || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: !!(this._famedMine && this._famedMine.has(vc.name)) };   // v0.6.202: targetActs -- Deep Song [ANI]: the rushed vampire is the acting minion of the combat
+    if(ro && ro.lvl) this.pending.lvl = ro.lvl; if(ro && ro.ceBan) this.pending.ceBan = ro.ceBan; if(ro && ro.rushTo) this.pending.rushTo = ro.rushTo;   // v0.6.236: a rush card's level and its ban on my combat-ends strikes travel on the pending to the comply (_complyRush)
     this._reactWindow();
     return true;
   }
@@ -3145,13 +3171,18 @@ class Bot {
     const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === p.rushTarget);
     if(!vc) return;
     p.complied = true;
-    if(p.noLock){ this.push(); this.note('Trainbot: ' + vc.name + ' defends (rushed by ' + p.actingVampName + ', ' + (p.card || 'Haven Uncovered') + ').'); }   // v0.6.217: the granting card named (Saulot's Avenging Fist, Regent)   // v0.6.205 (R4, F23): a rush through Haven Uncovered locks nobody
+    if(p.rushTo === 'locked' && !vc.locked){   // v0.6.236 (the pilot's review, K5; [ANK 20210124]): a rush at a LOCKED minion (Fleetness [CEL], Ambush ...) whose target I unlocked before it resolved fizzles -- no combat (the rusher reads my board the same way)
+      this._combatArmed = false; this._emit('rushed', { vamp: vc.name, by: p.actingVampName, fizzled: 'unlocked' });
+      this.o.log('rush (' + vc.name + '): ' + (p.card || 'the rush') + ' fizzles -- ' + vc.name + ' is not locked as it resolves; no combat');
+      return; }
+    if(p.noLock){ this.push(); this.note('Trainbot: ' + vc.name + ' defends (rushed by ' + p.actingVampName + ', ' + (p.card || 'Haven Uncovered') + (p.lvl ? ' ' + p.lvl : '') + ').'); }   // v0.6.217: the granting card named (Saulot's Avenging Fist, Regent)   // v0.6.205 (R4, F23): a rush through Haven Uncovered locks nobody
     else {
     vc.locked = true; this.push();
     this.note('Trainbot: ' + vc.name + ' locks and defends (rushed by ' + p.actingVampName + ').');   // v0.6.155: the rusher's name -- Deep Song's line and a human's rush by chat share this path
     }
     this._emit('rushed', { vamp: vc.name, by: p.actingVampName });
     this._clearCombatStashes(); this._combatArmed = true;
+    this._ceBanRec = p.ceBan ? { vamp: vc.name, opp: p.actingVampName || null, ban: p.ceBan, card: p.card || null, at: Date.now() } : null;   // v0.6.236 (the Banu Haqim pilot): Hunter's Mark [CEL][THA]'s ban on my combat-ends strikes, set AFTER the clear (One With the Land's _owl shape) -- _resolveCombat takes it at its entry, so a later combat never sees it
     if(p.targetActs) this._combatActing = vc.name;   // v0.6.202: Deep Song [ANI] -- my rushed vampire is the acting minion (a human's rush by chat names no card: the rusher stays acting)
     this._resolveCombat(vc, p.actingVampName).catch(e => this.o.log('rush defend error:', e.message));
   }
@@ -3561,8 +3592,10 @@ class Bot {
   }
   _actionCtxFor(v, over){            // v0.6.205: the minion phase's action ctx for v -- ONE builder for the minion loop and the Haven Uncovered play's look ahead (over.rush: a rush that does not exist yet). Every finder here is side-effect free; the rush finders are asked quietly by a look ahead (no counterfactual row)
     const rush = (over && Object.prototype.hasOwnProperty.call(over, 'rush')) ? over.rush : this._bestRushFor(v);
-    return { plain: { n: 1 + this._cryptBleedBonus(v) }, card: this._bestBleedCardFor(v), pd: this._bestPoolDmgActionFor(v), pol: this._bestPoliticalFor(v), stock: this._bestBloodStockFor(v), peek: this._bestPeekFor(v), equip: this._bestEquipActionFor(v), fetch: this._bestFetchFor(v), rush, creep: this._bestCreepFor(), strength: this._bestStrengthFor(v), recruit: this._bestRecruitFor(v), enemyRescue: this._bestEnemyRescueFor(v), ownRescue: this._bestOwnRescueFor(v), readyCrypt: this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready').length, edge: this.edge,
-             plainBare: (1 + this._cryptBleedBonus(v)) === 1 && !this._bestBleedModifierFor(v, new Set(), false), lowPool: (this.pool | 0) <= 6, ...(() => { const rt = this._bestRutorFor(v); return rt ? { rutor: rt } : {}; })(), ...(() => { const bc = this._bestBurnCardFor(v); return bc ? { burnCard: bc } : {}; })() };   // v0.6.217 (V5 wave 4): the (D) action that burns a card in play (Toreador Grand Ball), only when there is one   // v0.6.213 (V5 wave 1): Rutor's Hand, only when there is one (a ctx without it is the old, byte for byte)   // v0.6.211 (Johan, 19 Oct): plainBare = the plain bleed is a bare 1 (no crypt bonus, no bleed modifier in hand to pump it); lowPool = 6 or less (Johan's floor) -- the equipment rule's two reads   // fas B: edge in the ctx -- the arena traces need it to distinguish 'Dirt unfound' from 'Edge not held' (in 2-player the opponent's intervening bleed usually reclaims it, so Dirt windows are rare and PRECIOUS)   // VA: plain bleed carries the Lenny-class crypt bonus from birth
+    const ctx = { plain: { n: 1 + this._cryptBleedBonus(v) }, card: this._bestBleedCardFor(v), pd: this._bestPoolDmgActionFor(v), pol: this._bestPoliticalFor(v), stock: this._bestBloodStockFor(v), peek: this._bestPeekFor(v), equip: this._bestEquipActionFor(v), fetch: this._bestFetchFor(v), rush, creep: this._bestCreepFor(), strength: this._bestStrengthFor(v), recruit: this._bestRecruitFor(v), enemyRescue: this._bestEnemyRescueFor(v), ownRescue: this._bestOwnRescueFor(v), readyCrypt: this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready').length, edge: this.edge,
+             plainBare: (1 + this._cryptBleedBonus(v)) === 1 && !this._bestBleedModifierFor(v, new Set(), false), lowPool: (this.pool | 0) <= 6, ...(() => { const rt = this._bestRutorFor(v); return rt ? { rutor: rt } : {}; })(), ...(() => { const bc = this._bestBurnCardFor(v); return bc ? { burnCard: bc } : {}; })(), ...(() => { const at = this._bestAttachFor(v); return at ? { attach: at } : {}; })(), ...(() => { const ea = this._bestAnimalEmployFor(v); return ea ? { employAnimal: ea } : {}; })() };   // v0.6.217 (V5 wave 4): the (D) action that burns a card in play (Toreador Grand Ball), only when there is one   // v0.6.213 (V5 wave 1): Rutor's Hand, only when there is one (a ctx without it is the old, byte for byte)   // v0.6.211 (Johan, 19 Oct): plainBare = the plain bleed is a bare 1 (no crypt bonus, no bleed modifier in hand to pump it); lowPool = 6 or less (Johan's floor) -- the equipment rule's two reads   // fas B: edge in the ctx -- the arena traces need it to distinguish 'Dirt unfound' from 'Edge not held' (in 2-player the opponent's intervening bleed usually reclaims it, so Dirt windows are rare and PRECIOUS)   // VA: plain bleed carries the Lenny-class crypt bonus from birth
+    if(ctx.employAnimal && ctx.equip && ctx.equip.isRetainer && ctx.equip.name === ctx.employAnimal.retainer) ctx.equip = null;   // v0.6.236: a retainer whose requirement this vampire does not meet goes through Biothaumaturgic Experiment [tha] -- the plain finder read its clan but not its discipline; since the pilot's review (E1) it reads both (_retainerReqMet), so the two finders never offer the same retainer: a guard
+    return ctx;
   }
   _decideAction(v, ctx){
     this._actionCtxAdjust(v, ctx, false);
@@ -4482,8 +4515,14 @@ class Bot {
     if(hv && (hv.seat === this.seat || this._seatOfName(hv.owner) === this.seat)){
       const bySeat = hv.bySeat || this._seatOfName(hv.by);
       const inPlay = bySeat === this.seat ? this.board.some(c => c && c.id === hv.cardId && c.zone === 'ready' && !this._outOfPlay(c))
-        : this._seatCards(bySeat).some(c => c && c.kind === 'lib' && c.name === 'Haven Uncovered' && c.zone === 'ready' && !this._outOfPlay(c));
-      if(inPlay && this._unpiercedRushers(cl).length) return 'a Haven Uncovered on ' + v.name;
+        : this._seatCards(bySeat).some(c => c && c.kind === 'lib' && c.name === (hv.card || 'Haven Uncovered') && c.zone === 'ready' && !this._outOfPlay(c));   // v0.6.236: the record's card (a rushBy 'any' card; none named = Haven Uncovered)
+      if(inPlay && this._unpiercedRushers(cl).length) return 'a ' + (hv.card || 'Haven Uncovered') + ' on ' + v.name;
+    }
+    for(const r of Object.values(this._contractSeen || {})){   // v0.6.236 (the Banu Haqim pilot, §3.2 item 6): a rushBy 'chosen' card on this vampire (Priority Contract) -- its chosen vampire alone may rush it, so the threat is that one vampire, ready on its placer's board and not piercing the cloak
+      if(!r || r.host !== v.name || !(r.seat === this.seat || this._seatOfName(r.owner) === this.seat)) continue;
+      const bySeat = r.bySeat || this._seatOfName(r.by); if(!bySeat || bySeat === this.seat || !this._contractLive(r)) continue;
+      const ch = this._seatCards(bySeat).find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === r.chosen);
+      if(ch && !this._piercesCloak(ch, cl)) return 'a ' + r.card + ' on ' + v.name + ' (' + r.chosen + ')';
     }
     const gr = this.board.find(c => { if(!c || c.kind !== 'lib' || c.host !== v.id || this._outOfPlay(c)) return false; const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.fx && mo.fx.rushHostBy)); });
     if(gr){ const h = this.fxLookup(gr.name), rb = (h.e.modes || []).map(mo => mo.fx && mo.fx.rushHostBy).find(Boolean) || {}; if(this._unpiercedRushers(cl, rb.sect || null).length) return 'a ' + gr.name + ' on ' + v.name; }
@@ -4684,6 +4723,7 @@ class Bot {
   }
   _bestCombatEndFor(vamp){           // Majesty-class: a COMBAT card whose strike ends combat (fx.strikeCE); the mode that also unlocks is preferred
     if(this._handStrikeOnly) return null;                                            // Immortal Grapple: hand strikes only
+    if(this._ceBanNow(vamp)) return null;                                            // v0.6.236: a rush card's ban (Hunter's Mark [CEL][THA]) -- no combat-ends strike in the banned round
     let best = null;
     (this.hand || []).forEach((nm, idx) => {
       const h = this.fxLookup(nm); if(!h || h.kind !== 'lib' || (h.e.t || []).indexOf('combat') < 0) return;
@@ -4693,6 +4733,7 @@ class Bot {
         const cand = { idx, name: h.name, cost, unlock: !!mo.fx.unlock };
         if(!best || (cand.unlock && !best.unlock)) best = cand; });
     });
+    if(this._ntgCombat && !this._pastFirstRound() && this._inCombat && vamp && this._combatMyVamp && this._combatMyVamp.name === vamp.name) best = { idx: -1, name: this._ntgCombat, cost: 0, unlock: false, free: true };   // v0.6.236 (the Banu Haqim pilot, §3.2 item 7): Night Terrors [OBF][PRE]'s strike: combat ends, in the first round of the combat my block began -- no card from the hand, before one
     return best;
   }
   _bestReduceFor(vamps, p){          // N4c: a react-type fx.reduce card + an eligible UNLOCKED reactor (req.title vs PRINTED title); threshold amount >= 2, one per action
@@ -4756,6 +4797,7 @@ class Bot {
     let b = 0;
     ((vamp && vamp.attached) || []).forEach(id => { const c = this.board.find(x => x && x.id === id); if(!c || this._outOfPlay(c)) return;
       const h = this.fxLookup(c.name); if(h && h.kind === 'lib'){
+        if(this._attachAt && this._attachAt.has(id)){ const at = this._attachAt.get(id), mo = (h.e.modes || []).find(x => x && (x.at || null) === at); b += (mo && mo.fx && mo.fx.strengthBonus) | 0; return; }   // v0.6.236 (the Banu Haqim pilot, §3.2 item 4): a card the attach finder put on this minion -- its strength is the level the ACTING vampire played it at, kept by the card's id (L-88): Biothaumaturgic Experiment [THA] gives +1 to a host without Thaumaturgy. Every other card as before
         let m = 0;   // the PLAYED mode isn't stored on the board card -- but it's DERIVABLE from the bearer: richest-usable, the same pick the finder made (54a's own catch)
         (h.e.modes || []).forEach(mo => { if(mo.fx && mo.fx.strengthBonus && this._modeUsableBy(mo, vamp) && mo.fx.strengthBonus > m) m = mo.fx.strengthBonus; });
         b += m;
@@ -4771,8 +4813,9 @@ class Bot {
   }
   _discOf(vamp, board){              // v0.6.217 (V5 wave 4): the printed disciplines + the discipline masters on the vampire -- Oblivion's fx.discUp is +1 level (none -> inferior, inferior -> superior)
     const cv = vamp && this.fxLookup(vamp.name); const d = cv && cv.kind === 'crypt' && cv.e.disc; if(!d) return d || null;
-    const up = this._attachedFx(vamp, 'discUp', board); if(!up.length) return d;
+    const up = this._attachedFx(vamp, 'discUp', board), fl = !!cv.e.flight; if(!up.length && !fl) return d;   // v0.6.236 (the pilot's review, pass 2, F1): + Flight -- KRCG prints it in a Gargoyle's text ('Flight [FLIGHT].', cardfx crypt flight), not among its disciplines; a card requiring [FLIGHT] is req.disc 'flight'
     const all = (d.all || []).slice(), sup = (d.sup || []).slice();
+    if(fl && !all.includes('flight')) all.push('flight');
     up.forEach(x => { if(sup.includes(x)) return; if(all.includes(x)) sup.push(x); else all.push(x); });
     return { all, sup };
   }
@@ -4787,13 +4830,95 @@ class Bot {
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('action')) continue;
       let best = null, st = 0;
-      (h.e.modes || []).forEach(mo => { if(!mo.fx || !mo.fx.strengthBonus || !this._modeUsableBy(mo, vamp)) return;
+      (h.e.modes || []).forEach(mo => { if(!mo.fx || !mo.fx.strengthBonus || mo.fx.attach || !this._modeUsableBy(mo, vamp)) return;   // v0.6.236: a mode that says where it goes (fx.attach: Biothaumaturgic Experiment [THA]) is the attach finder's (_bestAttachFor: its pool cost, its host)
         if(!best || mo.fx.strengthBonus > best.fx.strengthBonus) best = mo;
         if(typeof mo.fx.actStealth === 'number' && mo.fx.actStealth > st) st = mo.fx.actStealth; });
       if(!best) continue;
       return { idx, name: h.name, kind: 'strength', bonus: best.fx.strengthBonus, at: best.at, st, n: 1, costBlood: ((h.e.cost && h.e.cost.blood) | 0) || 1 };
     }
     return null;
+  }
+  /* v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 4): THE ATTACH FINDER -- an action card whose mode puts it on a minion of
+     mine (cardfx attach: 'self' the acting vampire -- Shadow of the Beast [pro]; 'own' a minion I control -- Biothaumaturgic Experiment
+     [THA]; 'ownVampire' a vampire I control -- New Moon Sigil [spi]) for +N strength (strengthBonus) and/or one optional maneuver each
+     combat (maneuverEach, read in combat by _eachManeuverFor). The mode by the ACTING vampire's disciplines ([LSJ 20080803]); the card's
+     clan / title; its real cost (Biothaumaturgic Experiment: 1 POOL; Shadow of the Beast 1 blood, New Moon Sigil 2 blood from the acting
+     vampire, which keeps 1); its printed stealth (R-14); 'A vampire can have only one X' where the card prints it (cardfx oncePerVampire:
+     Shadow of the Beast, New Moon Sigil; none on Biothaumaturgic Experiment). Never the last pool (R-34, D-97). Preternatural Strength
+     (no attach key) stays _bestStrengthFor's, byte for byte.
+     WHERE (Claude's prior, registered with the build): on the minion of mine that will fight soonest (_attachFight; it reads no posture) --
+     the chosen vampire of a contract of mine first (it will enter combat), then a vampire with a rush ready (a rush card it can play,
+     or a granted rush), then the most blood (in a deck that does not rush: the body that blocks and lasts); the acting vampire breaks a
+     tie. The bot offers its ready vampires: 'own' also prints an ally, which the bot does not offer. WHEN: weighed as equipment is
+     (decide('action'), D-52: the weapon tier, more than a BARE plain 1-bleed; a pool cost at 6 pool or less keeps the flat price). */
+  _attachFight(v, actor){
+    let w = 0;
+    if(this._contractMine(r => r.chosen === v.name).length) w += 2;   // the chosen of a Priority Contract of mine
+    if(this._bestCardRushFor(v, { quiet: true }) || this._bestHavenRushFor(v)) w += 1;   // a rush it can make now
+    w += 0.1 * (v.blood | 0);
+    if(v === actor) w += 0.05;
+    return w;
+  }
+  _attachHosts(vamp, h, where){      // the hosts the card may go on, the one that fights most first
+    const pool = where === 'self' ? [vamp] : (this.board || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready');   // fx.attach: 'self' | 'own' | 'ownVampire'
+    const once = !!h.e.oncePerVampire;   // 'A vampire can have only one Shadow of the Beast / New Moon Sigil'
+    return pool.filter(v => v && v.zone === 'ready' && !(once && (v.attached || []).some(id => { const c = this.board.find(x => x && x.id === id); return !!(c && c.kind === 'lib' && !this._outOfPlay(c) && FX_NORM(c.name) === FX_NORM(h.name)); })))
+      .map(v => ({ v, w: this._attachFight(v, vamp) })).sort((a, b) => b.w - a.w).map(x => x.v);
+  }
+  _lvlOf(at){ return at ? '[' + String(at).split('+').join('][') + ']' : ''; }   // 'THA' -> '[THA]', 'cel+tha' -> '[cel][tha]' (the client's play line)
+  _bestAttachFor(vamp){
+    if(!this.fx || !vamp) return null;
+    let best = null;
+    for(let idx = 0; idx < this.hand.length; idx++){
+      const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('action')) continue;
+      let mo = null;
+      (h.e.modes || []).forEach(m => { const f = m && m.fx; if(!f || !f.attach || !((f.strengthBonus | 0) > 0 || (f.maneuverEach | 0) > 0) || !this._modeUsableBy(m, vamp)) return;   // fx.attach, fx.strengthBonus, fx.maneuverEach
+        if(!mo || ((f.strengthBonus | 0) + (f.maneuverEach | 0)) > ((mo.fx.strengthBonus | 0) + (mo.fx.maneuverEach | 0))) mo = m; });
+      if(!mo) continue;
+      if(!this._entryReqOk(h.e, vamp) || !this._titleOk(h, vamp)) continue;
+      const cb = (h.e.cost && h.e.cost.blood) | 0, cp = (h.e.cost && h.e.cost.pool) | 0;
+      if(cb && !((vamp.blood | 0) > cb)) continue;   // the acting vampire pays the blood and keeps 1 (the employ guard)
+      if(cp && !((this.pool | 0) > cp)) continue;    // R-34 / D-97: never the last pool
+      const hosts = this._attachHosts(vamp, h, mo.fx.attach); if(!hosts.length) continue;
+      const val = (mo.fx.strengthBonus | 0) + (mo.fx.maneuverEach | 0);
+      if(best && !(val > best.val)) continue;   // the richer card, then the hand's order
+      best = { idx, name: h.name, kind: 'attach', at: mo.at || null, lvl: this._lvlOf(mo.at), st: this._cardActStealth(h.e, mo), n: 1, host: hosts[0], bonus: mo.fx.strengthBonus | 0, each: mo.fx.maneuverEach | 0, cost: (cb || cp) ? { blood: cb, pool: cp } : null, val };
+    }
+    return best;
+  }
+  /* v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 8): Biothaumaturgic Experiment [tha] -- 'Employ an animal retainer from
+     your hand ignoring requirements (pay cost as normal).' An animal retainer (cardfx animal: 'Animal with N life') whose requirement
+     the acting vampire does NOT meet (its clan / sect, its discipline: _retainerReqMet) -- one it meets is employed plainly, no card
+     spent (_bestEquipActionFor). Both costs: the card's 1 pool and the retainer's own (the employer's blood, or pool), the pool rule
+     on the sum. The retainer's effect is what the bot's readers make of it on this employer (its modes by the employer's disciplines,
+     [LSJ 20080803]); its weight is its equipment tier (_equipLadderTier, the requirement not asked). The employ is not a requirement of
+     the action ([LSJ 20100725]). */
+  _retainerReqMet(e, vamp){          // the retainer's clan / sect (_entryReqOk) and its discipline. The pilot's review (E1; [RTR 19941109]: 'The discipline level used to recruit it decides which version it is'): a retainer printed with discipline levels is employed AT one of them -- a vampire who can use none cannot employ it; a combo level ([pro][ser], Hatch the Viper) needs both, as _modeUsableBy reads it. A retainer with a discipline and no mode the compiler reads (Owl Companion, Shade ...): its printed disciplines, any one
+    if(!this._entryReqOk(e, vamp)) return false;
+    const ds = (e && e.req && e.req.disc) || []; if(!ds.length) return true;
+    const lv = ((e && e.modes) || []).filter(m => m && m.at); if(lv.length) return lv.some(m => this._modeUsableBy(m, vamp));
+    const d = this._discOf(vamp); return !!(d && ds.some(x => (d.all || []).includes(String(x).toLowerCase())));
+  }
+  _bestAnimalEmployFor(vamp){
+    if(!this.fx || !vamp || this._attachedFx(vamp, 'noRecruitEmploy').length) return null;   // Depravity: the bearer cannot employ retainers
+    let best = null;
+    this.hand.forEach((n, idx) => {
+      const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('action')) return;
+      const mo = (h.e.modes || []).find(m => m && m.fx && m.fx.employAnimal && this._modeUsableBy(m, vamp)); if(!mo) return;   // fx.employAnimal
+      if(!this._entryReqOk(h.e, vamp) || !this._titleOk(h, vamp)) return;
+      const cp = (h.e.cost && h.e.cost.pool) | 0, cb = (h.e.cost && h.e.cost.blood) | 0;
+      this.hand.forEach((rn, ri) => { if(ri === idx) return;
+        const r = this.fxLookup(rn); if(!r || r.kind !== 'lib' || !((r.e.t) || []).includes('retainer') || !r.e.animal) return;   // cardfx animal
+        if(this._retainerReqMet(r.e, vamp)) return;   // the plain employ: no card spent
+        if(!(r.e.modes || []).some(m => m && m.fx && Object.keys(m.fx).length && this._modeUsableBy(m, vamp))) return;   // v0.6.236 (the pilot's review, P4): a retainer whose every mode needs a discipline the employer lacks (Raven Spy, Murder of Crows ... for a vampire without Animalism) does nothing in the bot's own reading -- not offered until Johan rules whether such an employer gets the basic version ([LSJ 20080803]); the version fixed by the level used at employ [RTR 19941109] is not modelled
+        const rp = (r.e.cost && r.e.cost.pool) | 0, rb = (r.e.cost && r.e.cost.blood) | 0;
+        if((cp + rp) && !((this.pool | 0) > cp + rp)) return;   // R-34: both costs leave me 1 pool
+        if((cb + rb) && !((vamp.blood | 0) > cb + rb)) return;  // the employer keeps 1 blood
+        const tier = this._equipLadderTier(r.name, vamp, ['retainer'], true); if(!tier) return;   // unique in play, one per minion; the requirement not asked
+        if(!best || tier < best.tier) best = { idx, name: h.name, kind: 'employAnimal', at: mo.at || null, lvl: this._lvlOf(mo.at), st: this._cardActStealth(h.e, mo), n: 1, retainer: r.name, tier, cost: { pool: cp + rp, blood: cb + rb } };
+      });
+    });
+    return best;
   }
   _maybeRebelBlood(blocker, actingName){   // N4a: Rebel -- 'Once each turn, if they block a titled vampire ... gains 1 blood before block resolution.' Printed titles are fxLookup-readable; acquired titles stay politics-scope. Extracted from _commitBlock's success commit for direct testability.
     if(this._rebelUsedThisTurn || !blocker || !actingName) return;
@@ -4989,46 +5114,87 @@ class Bot {
     for(const o2 of opts) if(o2.w > 0 && (!best || o2.w > best.w || (o2.w === best.w && o2.dir === 'fwd'))) best = o2;   // tie prefers FORWARD (the race clock)
     return best;
   }
-  _havenHosts(){                     // v0.6.205 (R4, F23): every Haven Uncovered on the table and its host -- anyone's (any minion may enter combat with the host through it), while the card is still in play on its placer's board and the host is READY on its owner's
+  _grantOf(h){                       // v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 6): the rush a card in play grants on its host, by KEY -- cardfx rushGrant (the rush's stealth), rushBy ('any': any minion -- Haven Uncovered; 'chosen': only the vampire named at placement -- Priority Contract), hostOf ('any', or 'prey': a minion of my prey), poolOnHostLeave (pool when its host is about to leave the ready region). h: an fxLookup result or a name; none = Haven Uncovered's defaults (rushBy / hostOf default to 'any')
+    const hh = (h && h.e) ? h : this.fxLookup(typeof h === 'string' ? h : 'Haven Uncovered'), e = (hh && hh.e) || null;
+    const mo = e && (e.modes || []).find(m => m && m.fx && m.fx.rushGrant > 0), f = (mo && mo.fx) || {};
+    return { name: (hh && hh.name) || (typeof h === 'string' ? h : 'Haven Uncovered'), e, st: (f.rushGrant | 0) || 1, rushBy: f.rushBy || 'any', hostOf: f.hostOf || 'any', pool: f.poolOnHostLeave | 0 };   // fx.rushGrant / fx.rushBy / fx.hostOf / fx.poolOnHostLeave
+  }
+  _havenHosts(){                     // v0.6.205 (R4, F23): every Haven Uncovered on the table and its host -- anyone's (any minion may enter combat with the host through it), while the card is still in play on its placer's board and the host is READY on its owner's. v0.6.236: every rushBy 'any' card the same way, the record's card named (a record without one is Haven Uncovered's: L12.havenM names no other card)
     const out = [], seen = this._havenSeen || {};
     Object.keys(seen).forEach(host => { const r = seen[host]; if(!r) return;
+      const card = r.card || 'Haven Uncovered';
       const bySeat = r.bySeat || this._seatOfName(r.by), ownSeat = r.seat || this._seatOfName(r.owner);
       if(!ownSeat || ownSeat === this.seat) return;   // a Haven on my own vampire is the others' business
       const cardIn = bySeat === this.seat ? this.board.some(c => c && c.id === r.cardId && c.zone === 'ready' && !this._outOfPlay(c))
-        : (((this.table[bySeat] || {}).pub || {}).cards || []).some(c => c && c.kind === 'lib' && c.name === 'Haven Uncovered' && c.zone === 'ready');
+        : (((this.table[bySeat] || {}).pub || {}).cards || []).some(c => c && c.kind === 'lib' && c.name === card && c.zone === 'ready');
       if(!cardIn) return;
       const hc = (((this.table[ownSeat] || {}).pub || {}).cards || []).find(c => c && c.kind === 'crypt' && c.name === host && c.zone === 'ready');
       if(!hc) return;
       const p = (this.players || []).find(q => q && q.seat === ownSeat);
-      out.push({ name: host, owner: (p && p.name) || r.owner || this.seatName(ownSeat), seat: ownSeat, blood: hc.blood | 0, by: r.by }); });
+      out.push({ name: host, owner: (p && p.name) || r.owner || this.seatName(ownSeat), seat: ownSeat, blood: hc.blood | 0, by: r.by, card }); });
+    return out;
+  }
+  _contractKey(card, host){ return FX_NORM(card) + '|' + host; }
+  _contractForget(who, card){        // v0.6.236 (the pilot's review, P2): drop another placer's records of this card (a placement line naming a new host, the burn line) -- by the placer's name or seat
+    if(!this._contractSeen) return; const st = this._seatOfName(who) || null, nm = FX_NORM(card);
+    Object.keys(this._contractSeen).forEach(k => { const r = this._contractSeen[k]; if(r && FX_NORM(r.card) === nm && (r.by === who || (st && (r.bySeat | 0) === st))) delete this._contractSeen[k]; });
+  }
+  _contractLive(r){                  // v0.6.236: a chosen-rush card's record (_contractSeen) still in play on its placer's board -- mine by id, another seat's by name on its pub
+    const bySeat = r && (r.bySeat || this._seatOfName(r.by)); if(!bySeat) return false;
+    return bySeat === this.seat ? this.board.some(c => c && c.id === r.cardId && c.kind === 'lib' && c.zone === 'ready' && !this._outOfPlay(c))
+      : (((this.table[bySeat] || {}).pub || {}).cards || []).some(c => c && c.kind === 'lib' && c.name === r.card && c.zone === 'ready' && !this._outOfPlay(c));
+  }
+  _contractHosts(vamp){              // v0.6.236 (the Banu Haqim pilot, §3.2 item 6): the hosts of MY rushBy 'chosen' cards in play (Priority Contract: 'The chosen Banu Haqim can enter combat with the attached minion as a +1 stealth (D) action') whose chosen vampire is vamp -- the card still on my board, the host READY on its owner's. Another Methuselah's contract grants me nothing (its chosen is theirs)
+    const out = [], seen = this._contractSeen || {};
+    Object.keys(seen).forEach(k => { const r = seen[k]; if(!r || (r.bySeat || this._seatOfName(r.by)) !== this.seat || !vamp || r.chosen !== vamp.name || !this._contractLive(r)) return;
+      const ownSeat = r.seat || this._seatOfName(r.owner); if(!ownSeat || ownSeat === this.seat) return;
+      const hc = (((this.table[ownSeat] || {}).pub || {}).cards || []).find(c => c && c.kind === 'crypt' && c.name === r.host && c.zone === 'ready'); if(!hc) return;
+      const p = (this.players || []).find(q => q && q.seat === ownSeat);
+      out.push({ name: r.host, owner: (p && p.name) || r.owner || this.seatName(ownSeat), seat: ownSeat, blood: hc.blood | 0, by: r.by, card: r.card, chosen: r.chosen }); });
     return out;
   }
   _havenOnName(name){ const r = this._havenSeen && this._havenSeen[name]; return !!r && this._havenHosts().some(h => h.name === name); }
-  _havenHostPick(){                  // v0.6.205 (R4, F23; Johan, 16 Oct: 'not played until the bot can rush through it, then on an opponent's vampire'): the vampire one of my ready, unlocked rushers would rush THIS turn through it -- its best target by the rush doctrine's weights, AND the rush through the Haven is the action that rusher would choose now; null = hold the card
+  _havenHostPick(h){                 // v0.6.205 (R4, F23; Johan, 16 Oct: 'not played until the bot can rush through it, then on an opponent's vampire'): the vampire one of my ready, unlocked rushers would rush THIS turn through it -- its best target by the rush doctrine's weights, AND the rush through the Haven is the action that rusher would choose now; null = hold the card. v0.6.236 (the Banu Haqim pilot, §3.2 item 6): by the card's KEYS (_grantOf; no card = Haven Uncovered) -- hostOf 'prey' takes my prey's vampires only; rushBy 'chosen' (Priority Contract) asks only my vampires that meet the card's requirement ('Choose a ready Banu Haqim you control': req.clan, _entryReqOk), and the rusher found is the chosen one (D-58, as the Haven: its own decide('action') takes the card's rush now)
+    const g = this._grantOf(h), chosenK = g.rushBy === 'chosen', prey = this.preySeat();
+    const hostOk = c => g.hostOf !== 'prey' || (c.seat | 0) === prey;   // fx.hostOf
+    const fresh = chosenK ? (c => hostOk(c) && !(g.e && g.e.contract && this._noContractsOn(c.name)) && !Object.values(this._contractSeen || {}).some(r => r && FX_NORM(r.card) === FX_NORM(g.name) && r.host === c.name && this._contractLive(r)))   // never a second copy on one host; v0.6.236 (the pilot's review, P7): never a contract on a vampire that bars contracts (Iliana: e.contract, crypt noContracts)
+      : (c => hostOk(c) && !(this._havenSeen && this._havenSeen[c.name] && this._havenOnName(c.name)));   // never a second Haven on one host
     let best = null;
-    (this.board || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && (c.blood | 0) > 0).forEach(v => {
-      const t = this._bestRushTargetFor(v, { quiet: true, filter: c => !(this._havenSeen && this._havenSeen[c.name] && this._havenOnName(c.name)) });   // never a second Haven on one host
+    (this.board || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && (c.blood | 0) > 0 && (!chosenK || this._entryReqOk(g.e, c))).forEach(v => {
+      if(chosenK){ const why = this._aheadNoAct(v); if(why){ this.o.log(g.name.toLowerCase() + ' (' + v.name + '): the chosen would not act -- ' + why); return; } }   // v0.6.236 (the pilot's review, P1): the contract only -- Haven Uncovered's pick is unchanged (its same gap: BOARD)
+      const t = this._bestRushTargetFor(v, { quiet: true, filter: fresh });
       if(!t || (best && !(t.w > best.w))) return;
       /* Found by this release's own smoke (seed 4005): a target alone is not a rush. The Haven went on a vampire, then its rusher
          equipped Raven Spy (permanents first, 98) -- and a plain bleed outscored the rush anyway (1.2 vs 1.1). The Haven is played
          only when the rush through it is what decide('action') would pick for this rusher now: the minion loop's own ctx
          (_actionCtxFor) with the Haven's rush in it, the hold-the-Govern weight applied (_actionCtxAdjust ahead), the scorer
          without its trace row. A rush card on a better target, or a Haven already on the table that does as well, needs no new one. */
-      const hv = { idx: null, name: 'Haven Uncovered', kind: 'rush', via: 'haven', target: t, lockTarget: false, st: 1, n: 1, exp: this._rushExpectation(v), myBlood: v.blood | 0 };
+      const hv = { idx: null, name: g.name, kind: 'rush', via: 'haven', target: t, lockTarget: false, st: g.st, n: 1, exp: this._rushExpectation(v), myBlood: v.blood | 0 };
       const card = this._bestCardRushFor(v, { quiet: true }), old = this._bestHavenRushFor(v);
       if(card && (card.target.w || 0) > (t.w || 0)) return;
       if(old && (old.target.w || 0) >= (t.w || 0)) return;
       const ctx = this._actionCtxAdjust(v, this._actionCtxFor(v, { rush: hv }), true);
       const out = this._decide('action', ctx);
-      if(!(out && out.pick === hv)){ this.o.log('haven (' + v.name + ' -> ' + t.name + '): the rush would not be my action -- ' + ((out && out.why) || 'no pick')); return; }
-      best = Object.assign({ rusher: v.name, why: out.why }, t); });
+      if(!(out && out.pick === hv)){ this.o.log((chosenK ? g.name.toLowerCase() : 'haven') + ' (' + v.name + ' -> ' + t.name + '): the rush would not be my action -- ' + ((out && out.why) || 'no pick')); return; }
+      best = Object.assign({ rusher: v.name, why: out.why }, chosenK ? { chosen: v.name } : null, t); });
     return best;
   }
-  _bestHavenRushFor(vamp){           // v0.6.205 (R4, F23): 'Minions can enter combat with this vampire as a +1 stealth (D) action.' -- the rush through a Haven Uncovered on the table, chosen by the same doctrine as a rush card (direction weights, torpor reach, the chump lesson); no card leaves the hand (idx null), the Haven stays
-    const hs = this._havenHosts(); if(!hs.length) return null;
+  _aheadNoAct(v){                    // v0.6.236 (the pilot's review, P1; D-58): would the MINION LOOP keep v home or send it hunting this turn -- what it asks before decide('action'): its keep-blocker posture (_keepBlocker, in the loop's own order: 0 blood first, then the worst blockers -- _playTurn's sort, without the knob-gated _minionKeyOrder -- the actors after v still unlocked) and a quiet hunt-or-bleed (_decide: no trace row). A reason, or null
+    const ord = (this.board || []).filter(c => c && c.zone === 'ready' && c.kind === 'crypt' && !c.locked)
+      .sort((a, b) => (((a.blood | 0) === 0 ? 0 : 1) - ((b.blood | 0) === 0 ? 0 : 1)) || (this._blockerWorth(a) - this._blockerWorth(b)));
+    const i = ord.indexOf(v); if(i < 0) return null;
+    const keep = this._keepBlocker(v, ord, i, { unlockedN: ord.length - i });
+    if(keep) return keep.why;
+    const hb = this._decide('hunt-or-bleed', { vamp: v }); if(hb && hb.hunt) return 'it would hunt (' + (hb.why || '') + ')';
+    return null;
+  }
+  _noContractsOn(name){ const h = name && this.fxLookup(name); return !!(h && h.kind === 'crypt' && h.e && h.e.noContracts); }   // v0.6.236 (the pilot's review, P7): 'Contracts cannot be placed on Iliana.' (cardfx crypt noContracts)
+  _bestHavenRushFor(vamp){           // v0.6.205 (R4, F23): 'Minions can enter combat with this vampire as a +1 stealth (D) action.' -- the rush through a Haven Uncovered on the table, chosen by the same doctrine as a rush card (direction weights, torpor reach, the chump lesson); no card leaves the hand (idx null), the Haven stays. v0.6.236 (the Banu Haqim pilot, §3.2 item 6): every granted rush by key -- the rushBy 'any' cards' hosts (_havenHosts) and, for my chosen vampire only, my rushBy 'chosen' cards' hosts (_contractHosts: Priority Contract); the card the target is through named (a Haven first on a shared host), its stealth its rushGrant (_grantOf)
+    const hs = this._havenHosts().concat(this._contractHosts(vamp)); if(!hs.length) return null;
     const names = new Set(hs.map(h => h.name));
     const t = this._bestRushTargetFor(vamp, { quiet: true, filter: c => names.has(c.name) }); if(!t) return null;
-    return { idx: null, name: 'Haven Uncovered', kind: 'rush', via: 'haven', target: t, lockTarget: false, st: 1, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 };
+    const hh = hs.find(h => h.name === t.name && (h.seat | 0) === (t.seat | 0)) || hs.find(h => h.name === t.name), g = this._grantOf((hh && hh.card) || 'Haven Uncovered');
+    return { idx: null, name: g.name, kind: 'rush', via: 'haven', target: t, lockTarget: false, st: g.st, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 };
   }
   _isJackName(name){ const h = this.fxLookup(name); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(m => m.fx && m.fx.jackEngine)); }   // v0.6.224: fx.jackEngine -- a literal read
   _jackAt(){                         // v0.6.224 (D-114): another live seat's Smiling Jack in play -- { seat, card, n } with its counters from the pub (public), or null
@@ -5379,12 +5545,19 @@ class Bot {
     const nowById = new Map((now.cards || []).filter(Boolean).map(c => [c.id, c]));
     (prev.cards || []).forEach(c => { if(!c || c.zone !== 'ready' || c.faceDown || !(c.kind === 'crypt' || this._w5IsAlly(c.name))) return;
       const n = nowById.get(c.id); if(n && n.zone === 'ready') return;
-      const how = n && n.zone === 'torpor' ? 'torpor' : (!n || n.zone === 'ash' || n.zone === 'burned') ? 'burned' : null; if(!how) return;   // Banishment's uncontrolled region is no loss of this kind (the grading)
+      const how = n && n.zone === 'torpor' ? 'torpor' : (!n || n.zone === 'ash' || n.zone === 'burned') ? 'burned' : null;
+      if(this._contractSeen && !(!n && this._readyElsewhere(st, c))) this._contractHostLeft(st, c.name, how || 'left');   // v0.6.236: Priority Contract -- its host left the ready region (any region: torpor, burned, uncontrolled ...); the pilot's review (P8): not a host now ready on another seat's board (a change of control)
+      if(!how) return;   // Banishment's uncontrolled region is no loss of this kind (the grading)
       { const o = this._opp(st); o.w5Loss = (o.w5Loss | 0) + 1; }   // the table model (the egress review): another seat's losses live in this.opp[st]
       if(how === 'torpor' && c.kind === 'crypt') this._w5Hostage(c, st);
       if(st === this.preySeat()) this._w5FrontalGain(c, how);
       if(this._isHumanName(this.seatName(st)) && this._w5Mine(e => (e.modes || []).some(mo => mo.fx && mo.fx.lostMinionTax)).length) this.chat(this.seatName(st) + ': Tension in the Ranks — burn 1 pool (' + c.name + (how === 'torpor' ? ' went to torpor' : ' is burned') + ').');
     });
+  }
+  _readyElsewhere(st, c){            // v0.6.236 (the pilot's review, P8): a card gone from seat st's push that is READY on another board (mine or another seat's) -- its control changed, it did not leave the ready region
+    const same = x => x && x.zone === 'ready' && (x.id === c.id || (c.kind === 'crypt' && x.kind === 'crypt' && x.name === c.name));
+    if((this.board || []).some(same)) return true;
+    return Object.keys(this.table || {}).some(k => (k | 0) !== (st | 0) && (k | 0) !== (this.seat | 0) && ((((this.table[k] || {}).pub || {}).cards) || []).some(same));
   }
   _w5ZombieBurned(c){                // Cursed Abattoir: 'After a zombie (ally or retainer) you control is burned, you can add 1 counter to this location' (cardfx zombie)
     const e = this._w5E(c.name); if(!(e && e.zombie)) return;
@@ -5514,6 +5687,37 @@ class Bot {
     for(const f of this._w5FrontalMine()){ const p0 = this.pool | 0; this.pool = p0 + 1; this._w5Pool(p0, 'frontal-assault'); this.push();
       this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> gains 1 pool (<b>' + esc(f.name) + '</b>: ' + esc(c.name) + (how === 'torpor' ? ' went to torpor' : ' is burned') + ').' }); this._emit('w5-frontal-gain', { vamp: c.name, how }); }
   }
+  /* v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 6): Priority Contract's pool -- 'If the attached minion is about to leave
+     the ready region, you can burn this card to gain 3 pool' (cardfx poolOnHostLeave), also when it leaves because its controller is
+     ousted [ANK 20180129-2]. The rules' window is BEFORE the move; the bot can only read it AFTER: (1) in my own combat, at the host's
+     taken line that sends it down (to torpor or burned: _parseCombatNarration), (2) elsewhere at its owner's next board push that shows
+     it out of the ready region (_w5PubDiff: torpor, burned, or any other region), (3) when its owner leaves the game (the roster;
+     the no-server net's inferred oust). The pool and the card's burn are the same either way; what 'after' cannot see: a host that
+     leaves and comes back between two pushes of a human's board (no burn), and a host already burned out of a human's pub before my
+     read (the card is still mine and still burnable here). The card is always burned when its window opens (Claude's: 3 pool now
+     beats a contract on a host in torpor or gone). Once: the card leaves my board, so no second path finds it. */
+  _contractBurn(r, why){
+    const c = (this.board || []).find(x => x && x.id === r.cardId && x.kind === 'lib' && x.zone === 'ready' && !this._outOfPlay(x)); if(!c || this.out) return false;
+    const n = this._grantOf(r.card).pool | 0; if(!(n > 0)) return false;
+    c.zone = 'ash'; c.locked = false;
+    { const p0 = this.pool | 0; this.pool = p0 + n; this._w5Pool(p0, 'contract'); }   // my own pool (the ledger hears it here; the line below is the why)
+    if(this._contractSeen) delete this._contractSeen[this._contractKey(r.card, r.host)];
+    this.push();
+    this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> burns <b>' + esc(r.card) + '</b> and gains ' + n + ' pool (' + esc(why) + ').' });   // CONTRACT_BURN
+    this._emit('contract-pool', { card: r.card, host: r.host, owner: r.owner, n, why, pool: this.pool });
+    return true;
+  }
+  _contractMine(pred){ return Object.values(this._contractSeen || {}).filter(r => r && (r.bySeat || this._seatOfName(r.by)) === this.seat && this._grantOf(r.card).pool > 0 && this._contractLive(r) && (!pred || pred(r))); }   // fx.poolOnHostLeave
+  _contractHostLeft(st, host, how){  // the host (seat st, name host) left the ready region: how 'torpor' | 'burned' | 'left'
+    if(!this._contractSeen || !host || this.out) return;
+    for(const r of this._contractMine(x => x.host === host && (!st || !x.seat || (x.seat | 0) === (st | 0))))
+      this._contractBurn(r, (r.owner ? r.owner + "'s " : '') + host + (how === 'torpor' ? ' went to torpor' : how === 'burned' ? ' was burned' : ' left the ready region'));
+  }
+  _contractOustSweep(){              // [ANK 20180129-2]: a host whose Methuselah is out of the game left the ready region with it
+    if(!this._contractSeen || this.out) return;
+    for(const r of this._contractMine(x => { const ps = (x.seat | 0) || this._seatOfName(x.owner); const pl = ps && (this.players || []).find(q => q && q.seat === ps); return !!(pl && pl.out); }))
+      this._contractBurn(r, r.host + ' left the game with ' + (r.owner || 'its Methuselah'));
+  }
   _w5FrontalBill(){                  // 'During your influence phase, burn this card and burn 1 pool for each ready minion controlled by your prey'
     const fs = this._w5FrontalMine(); if(!fs.length) return;
     const prey = this.preySeat(), n = (prey && prey !== this.seat) ? this._w5Readies(prey) : 0;
@@ -5604,18 +5808,81 @@ class Bot {
     return card;
   }
   _bestCardRushFor(vamp, ro){        // N2: a usable rush card (fx.rush) + a live target (v0.6.204's _bestRushFor, renamed; v0.6.205: ro passed to the targeter -- { quiet } for a look ahead)
+    /* v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 1): the BEST usable rush card, not the first in hand -- each usable rush mode
+       (its discipline, the card's clan / sect / capacity (_entryReqOk), its title (_titleOk), 'Requires an Anarch' (_anarchReqOk: Line Brawl),
+       its blood and pool cost payable) is a candidate; its rushTo narrows the targets ('locked', 'younger' / 'older' by the capacity in play;
+       'vampire': every candidate already is one). The better target wins, then the richer mode (a granted maneuver / press, the opponent's
+       ban, the lock, the printed stealth) less its cost, then the hand's order. One target pass per condition: the unconditioned pass is the
+       old call with the caller's ro (its counterfactual row, once), a conditioned pass is quiet. Deep Song [ANI] (lockTarget) keeps its pick
+       byte for byte; every other card carries via 'card', its level, its cost, its printed stealth (R-14: a directed action card is at 0
+       unless it prints '+N stealth action') and its grant (spent in the rush's combat: _rushGrantFor). */
     if(!this.fx) return null;
+    const cands = [];
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('action')) continue;
-      let ok2 = false, lockT = false;
-      (h.e.modes || []).forEach(mo => { if(mo.fx && mo.fx.rush && this._modeUsableBy(mo, vamp)){ ok2 = true; if(mo.fx.lockTarget) lockT = true; } });
-      if(!ok2) continue;
-      const target = this._bestRushTargetFor(vamp, ro);
-      if(!target) return null;
-      return { idx, name: h.name, kind: 'rush', target, lockTarget: lockT, st: 0, n: 1, exp: this._rushExpectation(vamp), myBlood: vamp.blood | 0 };   // v0.6.74: the expectation rides the pick
+      const ms = (h.e.modes || []).filter(mo => mo.fx && mo.fx.rush && this._modeUsableBy(mo, vamp));
+      if(!ms.length) continue;
+      if(!this._entryReqOk(h.e, vamp) || !this._titleOk(h, vamp) || !this._anarchReqOk(h.e, vamp)) continue;
+      const cb = (h.e.cost && h.e.cost.blood) | 0, cp = (h.e.cost && h.e.cost.pool) | 0;
+      if(cb && (vamp.blood | 0) < cb) continue;   // the acting vampire pays the card's blood (Fleetness: 1)
+      if(cp && !((this.pool | 0) > cp)) continue;   // the pool rule (R-34): a cost leaves me at least 1 pool
+      ms.forEach(mo => cands.push({ idx, h, mo, cb, cp }));
     }
-    return null;
+    if(!cands.length) return null;
+    const passes = new Map(), passOf = key => {
+      if(passes.has(key)) return passes.get(key);
+      const t = !key ? this._bestRushTargetFor(vamp, ro) : this._bestRushTargetFor(vamp, { quiet: true, filter: c => (!(ro && ro.filter) || ro.filter(c)) && this._rushToOk(vamp, key, c) });
+      passes.set(key, t); return t; };
+    let best = null;
+    cands.forEach(c => { const key = (c.mo.fx.rushTo && c.mo.fx.rushTo !== 'vampire') ? String(c.mo.fx.rushTo) : '';   // fx.rushTo
+      const t = passOf(key); if(!t) return;
+      const f = c.mo.fx, st = this._cardActStealth(c.h.e, c.mo);
+      const x = (f.maneuverGrant | 0) + (f.pressGrant | 0) + (f.ceBan ? 1 : 0) + (f.lockTarget ? 1 : 0) + st - c.cb - c.cp;   // fx.maneuverGrant, fx.pressGrant, fx.ceBan
+      if(!best || (t.w || 0) > (best.t.w || 0) || ((t.w || 0) === (best.t.w || 0) && x > best.x)) best = { c, t, x, st }; });
+    if(!best) return null;
+    const c = best.c, f = c.mo.fx;
+    const pick = { idx: c.idx, name: c.h.name, kind: 'rush', target: best.t, lockTarget: !!f.lockTarget, st: 0, n: 1, exp: this._rushExpectation(vamp), myBlood: (vamp.blood | 0) - c.cb };   // v0.6.74: the expectation rides the pick; myBlood after the card's blood
+    if(f.lockTarget) return pick;   // Deep Song [ANI]: its own path (the lock, the target acts), byte for byte
+    pick.st = best.st; pick.via = 'card'; pick.at = c.mo.at || null; pick.lvl = this._lvlTag(c.mo.at);
+    if(c.cb || c.cp) pick.cost = Object.assign({}, c.cb ? { blood: c.cb } : null, c.cp ? { pool: c.cp } : null);
+    { const g = {}; if(f.maneuverGrant > 0) g.mv = f.maneuverGrant | 0; if(f.pressGrant > 0) g.pr = f.pressGrant | 0;
+      const pd = f.pressDir || c.mo.pressDir; if(pd) g.dir = pd;   // fx.pressDir: a granted press printed for one direction only (no real card yet)
+      if(g.mv || g.pr) pick.grant = g; }
+    return pick;
   }
+  _anarchReqOk(e, vamp){             // v0.6.236 (the Banu Haqim pilot): the compiler's anarchReq marker ('Requires an Anarch' / 'a ready Anarch' / 'a baron', cardfx v1.9.9) gated on the vampire's printed sect -- no finder read it as a requirement (Garibaldi-Meucci and Powerbase: Los Angeles read it as a class); req.sect, when the entry carries it, is _entryReqOk's. Only the sect is read here, never a baron card's title ('Requires a baron' is anarchReq too, [LSJ 20050128]); since K2 this gate serves every finder through _modeUsableBy, and the title is the finder's own _titleOk (req.titles) -- the finders that ask it (the rush, intercept, attach and employ finders) refuse a non-baron, but _bestBounceFor asks no title: Bait and Switch ('Requires a baron') reaches it, so a non-baron Anarch can bounce with it (a known rider; the pilot's review, pass 2, B4)
+    if(!e || !e.anarchReq || (e.req && e.req.sect)) return true;   // e.anarchReq
+    return this._vampSect(vamp) === 'Anarch';   // unknown = fail closed
+  }
+  _rushTargetLockedNow(t){           // v0.6.236 (the pilot's review, K5): is a rush target still locked as the action resolves -- its card on its owner's board (the table model); a target the board does not show ready is not decided here (the oust fizzle, a burn)
+    const cs = ((((this.table || {})[t && t.seat] || {}).pub || {}).cards) || [], card = cs.find(x => x && x.kind === 'crypt' && x.zone === 'ready' && x.name === (t && t.name)) || null;
+    return card ? !!card.locked : true; }
+  _rushToOk(vamp, key, c){           // v0.6.236: a rush card's target condition (cardfx rushTo) on a rush candidate (_rushCandidates: that seat's ready vampire) -- 'locked' (its card on that seat's board), 'younger' / 'older' by the capacity in play (RULINGS D-111: _ageCap / _capOf; strictly lower / higher); a capacity the data lacks fails closed, an unknown key too
+    const cs = ((((this.table || {})[c.seat] || {}).pub || {}).cards) || [], card = cs.find(x => x && x.kind === 'crypt' && x.zone === 'ready' && x.name === c.name) || null;
+    if(key === 'locked') return !!(card && card.locked);
+    if(key === 'younger' || key === 'older'){ const mine = this._ageCap(vamp), theirs = card ? this._capOf(card, cs) : (this.fxCryptCap(c.name) | 0);
+      if(mine == null || !(theirs > 0)) return false;
+      return key === 'younger' ? theirs < mine : theirs > mine; }
+    return false;
+  }
+  _cardActStealth(e, mo){            // v0.6.236: an action card's printed '+N stealth action' (cardfx actStealth on its level-free mode, or on the mode played) -- the total stealth of the action (R-14)
+    let st = 0; (e.modes || []).forEach(m => { if(m && m.fx && typeof m.fx.actStealth === 'number' && (!m.at || m === mo) && m.fx.actStealth > st) st = m.fx.actStealth; });
+    return st;
+  }
+  _rushLineMode(card, lvl){          // v0.6.236 (the Banu Haqim pilot, §3.2 item 2): the mode of a rush card named on the rush line (L12.havenRush m[4], its level m[5] '[CEL][THA]') -- the level's tokens joined as cardfx writes a mode ('CEL+THA'), else a mode holding every token (a client's single '[CEL]'); no level: the card's level-free rush mode, or its only one. null = not a rush card (a card in play: Saulot's Avenging Fist, a Regent, Frontal Assault); a level no rush mode reads gives a bare rush (no ban invented)
+    const h = card && this.fxLookup(card); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('action')) return null;
+    const ms = (h.e.modes || []).filter(mo => mo && mo.fx && mo.fx.rush); if(!ms.length) return null;
+    const tk = String(lvl || '').match(/\[([A-Za-z]+)\]/g); if(!tk) return ms.find(mo => !mo.at) || (ms.length === 1 ? ms[0] : { fx: { rush: true } });   // several levels and none named: a rush card, no ban read
+    const want = tk.map(x => x.slice(1, -1));
+    return ms.find(mo => mo.at && mo.at === want.join('+')) || ms.find(mo => mo.at && want.every(w => String(mo.at).split('+').includes(w))) || { fx: { rush: true } };
+  }
+  _ceBanNow(vamp){                   // v0.6.236 (the Banu Haqim pilot, §3.2 item 2): is MY vampire barred from a combat-ends strike now -- a rush card's ban against it (Hunter's Mark [CEL][THA]: 'the opposing minion cannot strike: combat ends during the first round of that combat'): 'r1' its first round, 'combat' the whole combat; the record taken at the combat's entry (_ceBanCombat), before it the comply's (_ceBanRec: the coming combat's round 1). 'round' / 'action' are read where a path carries them (none yet)
+    const w = this._inCombat ? this._ceBanCombat : this._ceBanRec; if(!w || !vamp || w.vamp !== vamp.name) return false;
+    if(w.ban === 'combat') return true;
+    if(w.ban === 'r1') return !this._pastFirstRound();
+    return false;
+  }
+  _lvlTag(at){ return at ? String(at).split('+').map(x => '[' + x + ']').join('') : ''; }   // v0.6.236: a mode's level as the client prints it after a card ('[CEL][THA]', '[cel]'); '' for a mode with no level
   _bestUnlockReactFor(vamp, when, p){   // N1: a usable TRUE-unlock reaction for this vampire in this WINDOW -- fx.unlock, mode.when === when (curated riders; bare fx.unlock cannot tell Guard Dogs from Cats' Guidance). v0.6.233: p = the action, for the directed condition (_dirOk: One With the Land's header)
     if(!this.fx) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
@@ -5817,6 +6084,7 @@ class Bot {
     return !p || this._pendDirected(p) === true;
   }
   _entryReqOk(e, vamp){              // v0.6.213 (V5 wave 1): a card's clan and sect requirements against the vampire that would play it -- req.clan (a clan icon, 'Requires Tzimisce') against the printed clan, req.sect ('Requires an Anarch': Invigorate) against the printed sect (cardfx crypt entries). Unknown vampire = fail closed. Masters carry req.clan since cardfx v1.9.6 (R-42), read by _masterReqOk.
+    if(!this._anarchReqOk(e, vamp)) return false;   // v0.6.236 (the pilot's review, K2): the anarchReq marker is part of the card's requirement wherever the entry is checked (an ally's recruit, an equipment's bearer, a master's ready Anarch)
     const r = e && e.req; if(!r || (!(r.clan && r.clan.length) && !r.sect && !r.capMin)) return true;
     const h = vamp && this.fxLookup(vamp.name), ce = h && h.kind === 'crypt' ? h.e : null; if(!ce) return false;
     if(r.clan && r.clan.length && !r.clan.some(c => String(ce.clan || '').split('/').includes(c))) return false;
@@ -5920,7 +6188,7 @@ class Bot {
       (h.e.modes || []).forEach(mo => {
         const st = this._modeStrikeDmg(mo, vamp);   // v0.6.202 (point 18): absolute strike or hand strike + bonus
         const ag = !!(mo.fx.aggr || (mo.fx.handStrike && this._aggrHandsOn(vamp)));   // v0.6.213: aggravated by its own text (Sculpt the Flesh [pro]), or a hand strike while Claws of the Dead / Invigorate [pro] holds
-        if(typeof st === 'number' && !mo.fx.maneuver && !mo.fx.press && (!this._handStrikeOnly || mo.fx.handStrike) && !(this._range === 'long' && mo.fx.handStrike) && !(this._range === 'long' && !mo.fx.ranged) && this._modeUsableBy(mo, vamp) &&   /* v0.6.175 (the cardfx sweep): at long range only a RANGED strike (cardfx fx.ranged, the R suffix) -- a melee card strike (Talbot's Chainsaw, Burning Touch, 14 cards) cannot be used */   // v0.6.156: a hand strike (Roundhouse) cannot be used at long range -- rulebook 6.4.3   // v0.6.20: co-located maneuver/press = a bundled ability, not a clean strike bonus (Slam's superior, Lam Into) -- same guard as steal's, conservatively also excludes 2 false positives (Pounce, Taming the Beast) where "press" describes an unrelated consequence, not a granted option; a missed tag over a wrong one. v0.6.28 (Immortal Grapple): while _handStrikeOnly is active, only handStrike-tagged modes qualify -- source-verified "strikes that are not hand strikes cannot be used this round (by either combatant)"
+        if(typeof st === 'number' && !mo.fx.maneuver && !mo.fx.press && (!this._handStrikeOnly || mo.fx.handStrike) && !(this._range === 'long' && mo.fx.handStrike) && !(this._range === 'long' && !mo.fx.ranged) && this._modeUsableBy(mo, vamp) &&   /* v0.6.175 (the cardfx sweep): at long range only a RANGED strike (cardfx fx.ranged, the R suffix) -- a melee card strike (Talbot's Chainsaw, Burning Touch, 14 cards) cannot be used */   // v0.6.156: a hand strike (Roundhouse) cannot be used at long range -- rulebook 6.4.3   // v0.6.20: co-located maneuver/press = a bundled ability, not a clean strike bonus (Slam's superior, Lam Into) -- same guard as steal's. It no longer excludes Pounce and Taming the Beast (it did by accident until cardfx v1.11.1 stripped the opponent's 'gets an optional press' and the 'cannot ... press' clause from them, D3): their riders are gated elsewhere since the pilot's review, pass 2 (F1) -- Pounce's [FLIGHT] requirement by _modeUsableBy (a level-less mode on a card with req.disc), Taming the Beast's 'this minion cannot ... press to end' by the compiler (no handBonus, cardfx v1.11.3), its [ABO] 'but strike: burn equipment' too (no strike keys). v0.6.28 (Immortal Grapple): while _handStrikeOnly is active, only handStrike-tagged modes qualify -- source-verified "strikes that are not hand strikes cannot be used this round (by either combatant)"
            (vamp.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0) && (!best || val(st, ag) > val(best.n, best.aggr)))
           best = { idx, name: h.name, n: st, cost: h.e.cost || null, aggr: ag, at: mo.at || '' };
       });
@@ -5965,6 +6233,40 @@ class Bot {
     });
     return best;
   }
+  _modeNullsWeapons(strike){         // v0.6.236 (the Banu Haqim pilot): the mode my strike card was played at (by its level: _bestStrikeFor's `at`) prints 'the opposing vampire's strikes with weapons inflict no damage this round' (cardfx nullOppWeapons)
+    if(!strike || strike.fromEquip) return false; const h = this.fxLookup(strike.name); if(!h || h.kind !== 'lib') return false;
+    const mo = (h.e.modes || []).find(m => (m.at || '') === (strike.at || '')); return !!(mo && mo.fx && mo.fx.nullOppWeapons); }   // fx.nullOppWeapons
+  _nullWOn(opp, pick, strike){       // v0.6.236 (the Banu Haqim pilot, §3.2 item 5): my strike this round was a nullifier (fx.nullOppWeapons at the level played) and the opposing VAMPIRE (not an ally) did not dodge it [LSJ 20040928] -- its weapon strikes inflict no damage this round (_oppWeaponNulled reads the strike line)
+    return !!(opp && !opp.dodge && pick && pick.kind === 'strike' && strike && this._modeNullsWeapons(strike) && this._isVampName(opp.vamp || this._combatOppName)); }
+  _isVampName(name){ const h = name && this.fxLookup(name); return !!(h && h.kind === 'crypt'); }   // a vampire, not an ally (unknown = no)
+  _oppWeaponNulled(){                // v0.6.236: the strike I just took (the consumed strike event: `strikes with CARD for N.`) was made with a WEAPON -- an equipment card, or the client's `strikes with a weapon for N.` -- while my nullifier holds this round (_xr.nullW). A line that names no card (a human's `strikes for N.`) is not read as a weapon: the damage stands. An AGGRAVATED strike's line names no card either: its weapon is read from the opposing vampire's public attachments (_oppAggrWeapon; the pilot's review, K1). Not modelled: a weapon strike with first strike [LSJ 20040928]
+    if(!(this._xr && this._xr.nullW)) return false;
+    const e = this.ev ? this.ev.last('strike', x => x.stk === 'consumed') : null; if(!e) return false;
+    if(!e.card) return e.strike === 'aggravated' && this._oppAggrWeapon();
+    if(/^a weapon$/i.test(String(e.card).trim())) return true;   // the client's line for a human's weapon strike: 'NAME strikes with a weapon for N.' (PROTOCOL §12: 'a weapon' kept distinct -- cards trigger on weapons)
+    const h = this.fxLookup(e.card); return !!(h && h.kind === 'lib' && (h.e.t || []).includes('equip')); }
+  _oppAggrWeapon(){                  // v0.6.236 (the pilot's review, K1): main's aggravated strike line ('NAME strikes for N aggravated damage.', CMB_LINE.agg) names no card, so a weapon that strikes for aggravated damage (Flamethrower, Improvised Flamethrower, Ivory Bow, Jar of Skin Eaters, Waxen Poetica ...) is read from PUBLIC evidence, no new line: the opposing vampire carries such an equipment (the table model's rec.equip, _scanOpp) -- and that seat showed no card whose aggravated mode is a strike in its window (the pilot's review, passes 2 and 3, B1: below): such a card makes the line a card's or a hand strike's, and it stands
+    const c = this._combatOpp(); const eq = (c && c.rec && c.rec.equip) || []; if(!eq.length) return false;
+    const lib = n => { const h = this.fxLookup(n); return (h && h.kind === 'lib') ? h.e : null; };
+    if(!eq.some(n => { const e = lib(n); return !!(e && (e.t || []).includes('equip') && (e.modes || []).some(mo => mo.fx && mo.fx.aggr)); })) return false;
+    /* v0.6.236 (the pilot's review, passes 2 and 3, B1): the line is a CARD's aggravated strike, not the weapon's, when that seat showed a
+       card (not equipment) whose aggravated mode is a STRIKE: an aggravated strike card in this round (Walk of Flame, Body Flare, Song in
+       the Dark, Compress, Burst of Sunlight, Torment the Soul ...: cardfx aggr beside strike or ranged); an aggravated hand strike since
+       the combat began or its vampire's action was announced (aggr beside handStrike: Sculpt the Flesh [pro], and the ones that last,
+       Uncontrollable Rage [pro] 'until the end of the action', Loose Cannon [vic], Raking Talons 'for the remainder of combat'); hands
+       made aggravated (Claws of the Dead [pro]: aggrHands 'round', this round; Invigorate [pro]: aggrHands 'action', since the announce).
+       A card with aggr and no strike key does not count: a weapon's own pump (Baal's Bloody Talons, Dragon's Breath Rounds) makes the
+       line the weapon's, and the defensive cards the compiler reads aggr on ('non-aggravated', 'treats aggravated damage as normal':
+       Skin of Night, Resilience, Leathery Hide ...) strike nothing. Not read (nulled as the weapon's, K1's way; C's): an aggravated strike
+       the compiler gives no strike key (Body of Sun, Mayaparisatya [CHI], Smite, Bone Spur, Devil-Channel: Hands). A card the line names
+       (a bot's 'strikes with CARD') is read before this (_oppWeaponNulled). The level the card was played at is not on the event: a card
+       with such a mode at any level counts (Torment the Soul [nec] is not aggravated, [NEC] is) -- the damage stands */
+    const ann = this.ev ? this.ev.last('announce', x => x.vamp === c.name) : null, since = Math.min(this._combatAt || 0, ann ? (ann.t || 0) : Infinity);   // a timestamp: never `| 0` (it is past 32 bits)
+    const rnd = Math.max(this._rndAt || 0, this._combatAt || 0);   // this round's start (a stamp older than this combat is no round of it)
+    const shown = this.ev ? this.ev.last('card-played', x => (x.seat | 0) === (c.seat | 0) && (() => { const e = lib(x.card); if(!e || (e.t || []).includes('equip')) return false; const t = x.t || 0;
+      return (e.modes || []).some(mo => { const f = mo.fx || {}; return (f.aggrHands === 'action' || (f.aggr && f.handStrike)) ? t >= since : (f.aggrHands || (f.aggr && (f.strike !== undefined || f.ranged))) ? t >= rnd : false; }); })()) : null;   // fx.aggrHands, fx.aggr
+    return !shown;
+  }
   _noPreventDiscIn(){                // v0.6.214: the discipline the strike I just took cannot be prevented by -- read from the card its line named (`strikes with CARD for N.`, the consumed strike event), its fx.noPreventDisc (Soul Burn: 'for'); null for a line with no card (a human's `strikes for N.`)
     const e = this.ev ? this.ev.last('strike', x => x.stk === 'consumed') : null; if(!e || !e.card) return null;
     const h = this.fxLookup(e.card); if(!h || h.kind !== 'lib') return null;
@@ -5996,7 +6298,9 @@ class Bot {
     });
     return best;
   }
-  _bestManeuverFor(vamp, dir){       // v0.6.214 (V5 wave 2): dir = 'long' (the default, v0.6.24's only direction) or 'close' (a counter to their maneuver to long); a mode that brings an optional press (Flash [CEL], Resist Earth's Grasp [cel]: pressOpt) is preferred within its card; a mode only usable toward the other direction (maneuverTo) is skipped. v0.6.24 (Johan's combat GO, the range concept): the SIMPLEST maneuver shape only (Apportation [THA]/Swallowed by the Night [OBF]: standalone, no bundled strike/press/steal, no forced accompanying strike like Aid From Bats). Same exclusion pattern as _bestPressFor exactly -- measured 93 maneuver-carrying modes, 41 clean cards (Apportation, Swallowed by the Night among them), 44 bundled (documented in combat plan §5.6-successor, not built).
+  _bestManeuverFor(vamp, dir){       // v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 items 3-4): a FREE maneuver first, before any hand card -- a rush card's granted maneuver (_rushGrantFor: 'This acting vampire gets 1 optional maneuver during that combat'), then a card on the vampire that gives one each combat (_eachManeuverFor: Biothaumaturgic Experiment [THA], Shadow of the Beast [pro], New Moon Sigil [spi]); either goes to any range. v0.6.214 (V5 wave 2): dir = 'long' (the default, v0.6.24's only direction) or 'close' (a counter to their maneuver to long); a mode that brings an optional press (Flash [CEL], Resist Earth's Grasp [cel]: pressOpt) is preferred within its card; a mode only usable toward the other direction (maneuverTo) is skipped. v0.6.24 (Johan's combat GO, the range concept): the SIMPLEST maneuver shape only (Apportation [THA]/Swallowed by the Night [OBF]: standalone, no bundled strike/press/steal, no forced accompanying strike like Aid From Bats). Same exclusion pattern as _bestPressFor exactly -- measured 93 maneuver-carrying modes, 41 clean cards (Apportation, Swallowed by the Night among them), 44 bundled (documented in combat plan §5.6-successor, not built).
+    { const g = this._rushGrantFor(vamp); if(g && g.mv > 0) return { idx: -1, name: g.card, n: 1, cost: null, fromEquip: true, fromGrant: true, rushGrant: true }; }   // v0.6.236: the rush card's maneuver
+    { const ec = this._eachManeuverFor(vamp); if(ec) return { idx: -1, name: ec.name, n: 1, cost: null, fromEquip: true, fromGrant: true, eachId: ec.id }; }   // v0.6.236: a maneuver each combat from a card on the vampire
     let best = null;
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('combat')) return;
@@ -6014,6 +6318,18 @@ class Bot {
     if(!best && this._reactManeuverGrant && (!this._reactManeuverGrantVamp || !vamp || this._reactManeuverGrantVamp === vamp.name)) best = { idx: -1, name: 'Guard Dogs', n: 1, cost: null, fromEquip: true, fromGrant: true };   // N1: the [ANI] rider -- one maneuver in the RESULTING combat (v0.6.214: of the vampire that played it)
     return best;
   }
+  _rushGrantFor(vamp){               // v0.6.236 (the pilot's review, K5): ... and only in the combat it was armed for (g.tok, stamped at that combat's entry: a later combat that supersedes it never inherits it, L-89). v0.6.236 (the Banu Haqim pilot, §3.2 item 3): the grant of the rush card my acting vampire played, while its combat lasts -- { card, mv, pr, dir } on _actingVamp (armed only when the rush went through; the comply's _clearCombatStashes never reaches it); null outside that combat or for another vampire
+    const av = this._actingVamp, g = av && av.rushGrant; return (g && this._inCombat && g.tok === this._combatTok && vamp && av.v && av.v.name === vamp.name) ? g : null; }
+  _useRushGrant(vamp, what){         // one use of the grant ('mv' a maneuver, 'pr' a press) -- one each per grant; the row proves it fired
+    const g = this._rushGrantFor(vamp); if(!g || !(g[what] > 0)) return false; g[what]--;
+    this._emit('rush-grant', { vamp: vamp.name, card: g.card, use: what === 'mv' ? 'maneuver' : 'press' }); return true; }
+  _eachManeuverFor(vamp){            // v0.6.236 (the Banu Haqim pilot, §3.2 item 4): a library card on this vampire (its attached ids, my board) whose entry prints 'gets 1 optional maneuver each combat' (cardfx maneuverEach: Biothaumaturgic Experiment [THA], Shadow of the Beast [pro], New Moon Sigil [spi]) and has one left this combat (_eachMvUsed by card id, reset at the combat's entry and end). Only an attach mode puts such a card in play, so the entry's key is read without the bearer's discipline (the card's effect, not a play). Not the equipment's maneuver (_equipCombatOption, _equipManeuverUsed: the weapon's maneuver is another round's)
+    if(!vamp) return null;
+    for(const id of (vamp.attached || [])){ const c = (this.board || []).find(x => x && x.id === id); if(!c || c.kind !== 'lib' || this._outOfPlay(c)) continue;
+      const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') continue;
+      let n = 0; (h.e.modes || []).forEach(mo => { if(mo.fx && (mo.fx.maneuverEach | 0) > n) n = mo.fx.maneuverEach | 0; });   // fx.maneuverEach
+      if(n > 0 && ((this._eachMvUsed && this._eachMvUsed.get(c.id)) | 0) < n) return { id: c.id, name: c.name }; }
+    return null; }
   _strikeBound(vamp){ return !!vamp && !!((this._xr && this._xr.commit && this._xr.commit.vamp === vamp.name) || (this._rnd && this._rnd.gunCommitted)); }   // v0.6.214 (the graded readings): my strike this round is already chosen by a strike card's or a weapon's maneuver -- 'they cannot use a second strike card or weapon to maneuver again in the same round' (the rulebook, combat step 2)
   _bestCommitManeuverFor(vamp, dir){ // v0.6.214 (V5 wave 2): a STRIKE card whose optional maneuver goes one way only -- Slam [POT] ('with 1 optional maneuver, only usable to get to close range'). Using the maneuver commits the round's strike to the card (the maneuver cannot be used if the strike cannot be [LSJ 20021028]); a hand strike under an Immortal Grapple restriction is still a strike
     if(this._strikeBound(vamp)) return null;   // a second Slam after the first one's maneuver (or after a gun's) is illegal
@@ -6095,11 +6411,12 @@ class Bot {
     return seat ? 1 + 2 * this.oppCombat(seat) : 1;
   }
   _combatEndCopies(vamp){            // v0.6.196: combat-ends strikes in my hand this vampire could play -- how precious the next one is
+    if(this._ceBanNow(vamp)) return 0;   // v0.6.236: none can be played in a banned round (a rush card's ban); _ceCtx reads the count
     let n = 0; (this.hand || []).forEach(nm => { const h = this.fxLookup(nm); if(!h || h.kind !== 'lib' || (h.e.t || []).indexOf('combat') < 0) return;
       if(((h.e.cost && h.e.cost.blood) | 0) <= (vamp.blood | 0) && (h.e.modes || []).some(mo => mo.fx && mo.fx.strikeCE && this._modeUsableBy(mo, vamp))) n++; });
     return n;
   }
-  _ceCtx(vamp){                      // v0.6.196: what decide('combat-end') weighs -- the opposing strike THIS round (known or expected), the card's worth if kept, my own strike, the range
+  _ceCtx(vamp, ce){                  // v0.6.236: ce.free (Night Terrors' granted strike) is worth nothing kept -- it lapses after the first round. v0.6.196: what decide('combat-end') weighs -- the opposing strike THIS round (known or expected), the card's worth if kept, my own strike, the range
     const c = this._combatOpp(), crows = this._oppCarrionCrows ? (this._oppCarrionCrows.n | 0) : 0;   // Johan (18 Sep): combat ends first -- their crows do not land either
     const k = this._oppStrike;                                                          // a peek: their strike line, when they declared first (the acting side, or a line that beat my choice)
     let inc;
@@ -6111,7 +6428,7 @@ class Bot {
     }
     const opps = (this.players || []).filter(p => p && p.seat !== this.seat && this.live(p.seat)).map(p => p.seat);
     const keepThreat = Math.max(1, ...opps.map(s => this._expStrikeDmg(s)));         // the most dangerous strike at the table -- what a kept card is for
-    return { inc, copies: Math.max(1, this._combatEndCopies(vamp)), keepThreat: +keepThreat.toFixed(2), mine: this._myRoundDmg(vamp).dmg | 0, posture: this._combatPosture() };
+    return { inc, copies: Math.max(1, this._combatEndCopies(vamp)), keepThreat: (ce && ce.free) ? 0 : +keepThreat.toFixed(2), mine: this._myRoundDmg(vamp).dmg | 0, posture: this._combatPosture() };
   }
   _expOppStrike(c){                  // v0.6.205 (R4): what the opposing strike is expected to do THIS round, before it is known -- 0 at long range against a seat that has shown no ranged strike (v0.6.157), else the table model's expected strike (_expStrikeDmg). Majesty's _ceCtx and the dodge read the same number; their crows are not in it.
     if(c === undefined) c = this._combatOpp();
@@ -6240,7 +6557,7 @@ class Bot {
     const c = this._combatOpp(); if(!c || !who) return false;
     const handN = (this.opp && this.opp[c.seat]) ? (this.opp[c.seat].handN | 0) : 1; if(handN > 0) return false;
     if(step === 0 || step === 2 || step === 6) return true;
-    if(step === 1 || step === 4) return !((c.rec && c.rec.equip) || []).length;   // a maneuver can also come from a gun on the minion, a prevention from a vest: with equipment the step is waited on
+    if(step === 1 || step === 4) return !((c.rec && c.rec.equip) || []).length && !(step === 1 && ((c.rec && c.rec.mvEach) || []).length);   // a maneuver can also come from a gun on the minion, a prevention from a vest: with equipment the step is waited on. v0.6.236 (the pilot's review, pass 2, B5): the maneuver step also with a card on the minion that gives it a maneuver each combat (rec.mvEach: Shadow of the Beast, New Moon Sigil, Biothaumaturgic Experiment [THA]) -- a legal answer with an empty hand (the tempo gate: the skip is rules-strict)
     return false;
   }
   /* ==================== v0.6.165: THE COMBAT PHASES (Johan, 22 Sep: the bot DRIVES the steps against a human) ====================
@@ -6478,8 +6795,8 @@ class Bot {
   }
   _masterReqOk(e){                   // v0.6.215 (V5 wave 3, R-42): a master's requirements are met by a READY vampire I control -- the rulebook (card types): 'only a Methuselah who controls a ready minion who meets the requirements of a master card can play it'. Clan and sect through _entryReqOk; a title requirement (Papillon's 'a ready vampire with a city title') by any printed title (the city titles are not told apart: fail open on the kind, closed on none)
     const r = e && e.req; if(r && r.path && r.pathN && this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._vampPath(v) === r.path).length < r.pathN) return false;   // v0.6.230 (V5 wave 5): Privileged Position -- 'Requires 2 or more ready vampires who follow the Path of Power and the Inner Voice'
-    if(!r || (!(r.clan && r.clan.length) && !r.sect && !r.title)) return true;
-    return this.board.some(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._entryReqOk(e, v) && (!r.title || this._printedTitle(v)));
+    if(!(e && e.anarchReq) && (!r || (!(r.clan && r.clan.length) && !r.sect && !r.title))) return true;   // v0.6.236 (K2): 'Requires a ready Anarch' (anarchReq: Carfax Abbey, The Anarch Free Press, Piper ...) is met by a ready Anarch I control
+    return this.board.some(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._entryReqOk(e, v) && (!(r && r.title) || this._printedTitle(v)));
   }
   _printedTitle(v){ return (v && this._titleOf(v).title) || null; }   // v0.6.217: the title the vampire HOLDS -- a title card replaces the printed one (the name kept: R-42's master requirement and Carfax Abbey's baron read it)
   _masterHold(h){                    // v0.6.215: a master whose effect needs something the table does not offer now -- held in hand, never played blind
@@ -7697,7 +8014,9 @@ class Bot {
              permanents in a hand are few, so the rule limits itself; the intercept tier goes first, then the higher plain score. */
           const cands = [ctx.equip && { c: ctx.equip, s: ctx.equip.tier === 1 ? 1.5 : 1.15, what: 'equip ' + ctx.equip.name + (ctx.equip.tier === 1 ? ' (intercept)' : '') },
                          ctx.strength && { c: ctx.strength, s: 0.9 + 0.15 * ctx.strength.bonus, what: ctx.strength.name + ' +' + ctx.strength.bonus + ' strength' },
-                         ctx.recruit && { c: ctx.recruit, s: 0.85 + 0.1 * ctx.recruit.life, what: 'recruit ' + ctx.recruit.name }].filter(Boolean).sort((a, b) => b.s - a.s);
+                         ctx.recruit && { c: ctx.recruit, s: 0.85 + 0.1 * ctx.recruit.life, what: 'recruit ' + ctx.recruit.name },
+                         ctx.attach && { c: ctx.attach, s: 1.15, what: ctx.attach.name + ' on ' + ctx.attach.host.name },   // v0.6.236: the attach finder's card is a permanent too (absent without one: the old list)
+                         ctx.employAnimal && { c: ctx.employAnimal, s: ctx.employAnimal.tier === 1 ? 1.5 : 1.15, what: 'employ ' + ctx.employAnimal.retainer + ' (' + ctx.employAnimal.name + ')' }].filter(Boolean).sort((a, b) => b.s - a.s);
           if(cands.length){ pick = cands[0].c; sPick = 98; scores.permFirst = 98; why = 'permanents first: ' + cands[0].what + ' before any pressure (the deck builds its board; prey ' + (this.plan ? this.plan.reads.preyTto + ' turns away' : 'not in reach') + ')'; }
         }
         if(ctx.pd){
@@ -7783,6 +8102,15 @@ class Bot {
           }
           scores.equip = +(sEq).toFixed(2);
           if(sEq > sPick){ pick = ctx.equip; sPick = sEq; why = 'equip ' + ctx.equip.name + ' (tier ' + ctx.equip.tier + '): ' + sEq.toFixed(2); }
+        }
+        for(const k of ['attach', 'employAnimal']){   // v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 items 4 and 8): a card put on a minion of mine (_bestAttachFor) and an animal retainer employed through Biothaumaturgic Experiment [tha] (_bestAnimalEmployFor) -- weighed as equipment is (D-52): the attach at the weapon tier, the employ at its retainer's tier; more than a BARE plain 1-bleed under equipOverPlain's terms (no lunge, a pool cost at 6 pool or less keeps the flat price). Ties go to the earlier line (the plain employ before the card)
+          const c = ctx[k]; if(!c) continue;
+          const tier = k === 'attach' ? 2 : (c.tier | 0);
+          let sA = (tier === 1 ? 1.5 : 1.15) * econW;
+          if(this.o.equipOverPlain !== 0 && (tier === 2 || tier === 3) && ctx.plainBare && !((c.cost && c.cost.pool) && ctx.lowPool) && !(this.plan && (this.plan.posture === 'lunge' || this.plan.reads.preyTto <= 1.5))){
+            const sPlain = 1 * P.aggression * offW; if(sA <= sPlain){ sA = sPlain + 0.05; scores[k + 'OverPlain'] = true; } }
+          scores[k] = +(sA).toFixed(2);
+          if(sA > sPick){ pick = c; sPick = sA; why = k === 'attach' ? (c.name + ' ' + c.lvl + ' on ' + c.host.name + (c.bonus ? ' (+' + c.bonus + ' strength' : ' (') + (c.each ? (c.bonus ? ', ' : '') + c.each + ' maneuver each combat' : '') + '): ' + sA.toFixed(2)) : (c.name + ' ' + c.lvl + ' employs ' + c.retainer + ' ignoring requirements (tier ' + tier + '): ' + sA.toFixed(2)); }
         }
         if(ctx.fetch){
           const sF = (1.35 + (ctx.fetch.tier === 1 ? 0.35 : 0)) * econW; scores.fetch = +(sF).toFixed(2);   // E1: the tutor beats the raw equip slightly (card selection), tier-1 targets more still
@@ -8632,11 +8960,14 @@ class Bot {
     if(success){
       if(blockerVamp && this._visageBurn(this.pending.actorSeat || this._seatOfName(this.pending.who), oppName)) return;   /* v0.6.221 (the Jack round's egress review): only MY block pays -- another seat's successful block reaches this verdict too (a bot that never blocked, or whose attempt failed, burned 1 pool: the V5 smoke's pathcathari match 12) */   /* the egress review: the combat opponent's name (a nameless pending reads the announce) */   // v0.6.217 (V5 wave 4): Terrifying Visage -- 'the blocking minion's controller burns 1 pool before block resolution' (an 'if blocked' effect: first, before anything else [ANK 20220116]); true = that pool ousted me
       const grant = this._reactManeuverGrant, gv = this._reactManeuverGrantVamp;   // v0.6.214 (V5 wave 2): _clearPending's N1 belt is for a FAILED block -- a successful one carries Guard Dogs [ANI]'s maneuver into the resulting combat (since N1 it was wiped here, before the combat: the grant never reached a fight)
+      const ntg = this.pending.ntGrant || null;   // v0.6.236 (the Banu Haqim pilot): Night Terrors [OBF][PRE] played by my blocker on this action
       const owl = this.pending.noStrikeR1 || null, owlWho = this.pending.who || null, act = { kind: this.pending.kind || null, peekSup: this.pending.peekSup, directed: this.pending.directed };   // v0.6.233: One With the Land [PRO] -- the vampire that played it on this action; the action's read (_pendDirected's fields) for the post-block unlock
       this._clearPending('block succeeded');
       if(blockerVamp){
         this._owl = (owl && owl.vamp === blockerVamp.name) ? { vamp: blockerVamp.name, opp: oppName || null, card: owl.card, at: Date.now() } : null;   // v0.6.233 (V5 wave 6a): no strikes in the first round of THIS combat (_resolveCombat takes it at its entry)
         if(this._owl){ this._emit('no-strike-r1', { vamp: blockerVamp.name, opp: oppName || null, card: owl.card, side: 'blocker' }); if(owlWho && this._isHumanName(owlWho)) this.chat(owlWho + ': ' + owl.card + ' \u2014 neither ' + (oppName || 'your minion') + ' nor ' + blockerVamp.name + ' can strike in the first round of this combat.'); }   // an instruction to a human (the tier rule): the bot cannot write their strike
+        this._ntg = (ntg && ntg.vamp === blockerVamp.name) ? { vamp: blockerVamp.name, opp: oppName || null, card: ntg.card, at: Date.now() } : null;   // v0.6.236 (D-123's rider): 'if this vampire blocks, they can strike: combat ends during the first round of the resulting combat' -- set after the block's clear, taken at _resolveCombat's entry (One With the Land's _owl shape), never a follow-up combat [LSJ 20010813]
+        if(this._ntg) this._emit('ce-grant', { vamp: blockerVamp.name, opp: oppName || null, card: ntg.card });
         this._reactManeuverGrant = grant && (!gv || gv === blockerVamp.name); this._reactManeuverGrantVamp = this._reactManeuverGrant ? gv : null;   // the egress review: only the vampire that played the card
         this._myBlockOf = { vamp: oppName, at: Date.now() };   // v0.6.217: the vampire my block stopped -- its Change of Target ends the combat I begin here (_onCot)
         blockerVamp.locked = true;                                // v0.4.3 (rulebook): "If a block attempt is successful, then the blocking minion LOCKS and enters combat" -- the wake path arrives here already locked, idempotent either way
@@ -8651,6 +8982,7 @@ class Bot {
     this._combatArmed = false; this._combatOppName = null; this._learnedOpp = null;   // v0.6.105: the previous combat's opponent name must not outrank the next action's blocker in _expectedOppVamp
     this._forceCloseNextRound = false; this._nextRange = null;   // v0.6.202 (found by R2's second arena smoke): 'close next round' never reaches another combat -- a superior Immortal Grapple in a combat's LAST round left both bots' next combats without a maneuver step
     this._owl = null;   // v0.6.233 (V5 wave 6a): One With the Land's rider belongs to the action whose block played it -- the next announce or block commit drops a rider no combat took
+    this._ceBanRec = null; this._ntg = null;   // v0.6.236 (the Banu Haqim pilot): the same for a rush card's ban on my combat-ends strikes and Night Terrors' strike: combat ends
   }
   _expectedOppVamp(){                // v0.6.103 (#1): who I am fighting (or about to fight): defender side = the announced actor (set by the caller of _resolveCombat); actor side = my blocker's vampire from the B-55e-b chat parse (valid only while I am the acting side -- _actingVamp is live)
     return this._combatOppName || (this._actingVamp ? this._lastBlockerName : null) || null;
@@ -8910,7 +9242,9 @@ class Bot {
         if(acting && iStrike){ mine = await this._xStrikeMine(myVamp); if(ct !== this._combatTok) return; }
         if(theyStrike){ theirs = await this._xTheirs(myVamp, hs); if(ct !== this._combatTok) return; x.oppXDone++; }
         if(!acting && iStrike && myVamp.zone === 'ready'){ mine = await this._xStrikeMine(myVamp); if(ct !== this._combatTok) return; }
-        const inN = theirs && !theirs.dodge ? (theirs.dealt | 0) : 0, inG = theirs && !theirs.dodge ? (theirs.aggr | 0) : 0;
+        const nW = !!(theirs && !theirs.dodge && this._oppWeaponNulled());   // v0.6.236: my nullifier of the first pair (not dodged) holds this round -- their additional weapon strike deals me 0 too
+        if(nW) this._emit('weapon-nulled', { vamp: myVamp.name, by: theirs.vamp || null, n: (theirs.dealt | 0) + (theirs.aggr | 0), pair });   // K1: an aggravated additional weapon strike is nulled too (inG below)
+        const inN = theirs && !theirs.dodge && !nW ? (theirs.dealt | 0) : 0, inG = theirs && !theirs.dodge && !nW ? (theirs.aggr | 0) : 0;
         if(inN + inG > 0){
           let t = this._takePre(myVamp, inN, inG);
           const pv = (t.taken + t.aggr) > 0 ? this._bestPreventFor(myVamp, this._noPreventDiscIn()) : null;   // v0.6.214: the additional strike's card too
@@ -9285,7 +9619,7 @@ class Bot {
     return (mv.want === 'long' && this._combatMind()) ? this._bestManeuverFor(myVamp, 'long') : null;   // the egress review: no counters at all without the combat mind (its 0-path is v0.6.213)
   }
   _playManeuver(myVamp, m, dir){     // one maneuver: the card (a board or grant maneuver never splices), its blood, the frozen line the other bot reads -- v0.6.156's statements in v0.6.156's order. A strike card's maneuver commits the round's strike (LSJ 20021028); a mode with an optional press gives this round's press [TOM 19960521]
-    if(!m.fromEquip){ this.hand.splice(m.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; } else { if(m.fromGrant){ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; } else this._equipManeuverUsed = true; }   // E1/N1: board- and grant-maneuvers never splice; each consumes its OWN once-flag
+    if(!m.fromEquip){ this.hand.splice(m.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; } else { if(m.rushGrant) this._useRushGrant(myVamp, 'mv'); else if(m.eachId){ const u = (this._eachMvUsed = this._eachMvUsed || new Map()); u.set(m.eachId, (u.get(m.eachId) | 0) + 1); this._emit('maneuver-each', { vamp: myVamp && myVamp.name, card: m.name }); } else if(m.fromGrant){ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; } else this._equipManeuverUsed = true; }   /* v0.6.236: a rush card's granted maneuver and a card's maneuver each combat spend their own once-flags (fromGrant: no card from the hand, no second clone, no row of a play) */   // E1/N1: board- and grant-maneuvers never splice; each consumes its OWN once-flag
     if(!m.fromEquip) this._toAsh(m.name);   // v0.6.214 (the egress review): a gun's maneuver left a phantom gun in the ash heap since E1 (the gun stays on its bearer), Guard Dogs' a second Guard Dogs (it went there at its unlock)
     if(!m.fromGrant) this._emitPlay(m.name, 'combat-maneuver', myVamp && myVamp.name, !!m.fromEquip);   // v0.6.139: this spend left no trace row (CLAUDE.md 43c). v0.6.214: the grant's card was played (and rowed) at its unlock
     if(m.cost && m.cost.blood) myVamp.blood = Math.max(0, (myVamp.blood | 0) - m.cost.blood);
@@ -9341,12 +9675,16 @@ class Bot {
     if(!oppName && this._actingVamp && this._actingVamp.v === myVamp && this.turnSeat === this.seat && !this._actingVamp.ifBlocked){ this._actingVamp.ifBlocked = true; if(this._ifBlockedStep(myVamp)) return; }   /* synchronous: no extra tick when nothing applies (the starters' traces stay byte for byte) */   // v0.6.217 (V5 wave 4): my action was BLOCKED -- the 'if blocked' effects first (Terrifying Visage, Change of Target); Change of Target means no combat
     this._carrionCrows = null; this._equipPreventUsed = false; this._equipManeuverUsed = false; this._hostPreventUsed = null; this._cryptDodgeUsed = null;   /* v0.6.205: Guardian Angel's once each combat; v0.6.219: the crypt's own strike: dodge (Flávio, Phaibun) */   // v0.6.103 (#1): the OPPONENT's crows are no longer reset here (an early crows announce was wiped by the late-entering attacker) -- they live in the stash set cleared at announce/commit   // E1: per-combat equipment options
     this._borneEnvDmg = this._borneEnvFor(myVamp); this._borneAnnounced = false;
+    this._eachMvUsed = null;   // v0.6.236 (the Banu Haqim pilot): a card's 'optional maneuver each combat' -- each combat starts unused (_eachManeuverFor)
     this._cepOpen(oppName || (this._actingVamp ? this._lastBlockerName : null) || this._learnedOpp || null); this._learnedOpp = null;   /* v0.6.182: ONE episode per combat */ this._combatDmgTaken = 0; this._cBase = Object.assign({}, this._cTally() || {}); this._cBaseRound = this._cBase;   /* v0.6.168: the field baseline for this combat (at combat ENTRY -- not per round) */   // v0.6.103 (#1): the actor side learns its opponent from the B-55e-b blocker name (a bot blocker always chats it before the verdict)   // VB: the opposing vampire's NAME when the caller knows it (defender sites: the announced actor; a blocked ACTOR's blocker stays null -- documented v1 under-claim for Blythe-as-actor) + the Franciscus-class per-combat damage accumulator   // N0: the borne crows peck every combat   // v0.6.26: per-COMBAT state (not per-round like _range) -- "only one Carrion Crows each combat", and the opponent's active one persists across every round of THIS combat, reset only when a new one starts
     if(this._inCombat){ ['_maneuverWaiter', '_preWaiter', '_strikeWaiter', '_strikePeekWaiter', '_pressWaiter', '_takenWaiter', '_xEndWaiter', '_xAnsWaiter', '_xStrikeWaiter'].forEach(k => { if(typeof this[k] === 'function'){ const old = this[k]; this[k] = null; try { old(null); } catch(e){} } }); { const ow = this._phaseWait; if(ow && !ow.done) ow.resolve('superseded'); } }   // v0.6.222 (the egress review): a combat still in flight is superseded by this one -- its line waiters and its step wait end now (null), so a line meant for this combat never feeds the old one's wait (a Deep Song-rushed Dowager's strike wait took Catalina's strike from Lenny's peek: Lenny took 1, not 3)
     this._inCombat = true;   // v0.6.103 (#1): the handshake window -- _stashAccept reads it
     { const on = oppName || (this._actingVamp ? this._lastBlockerName : null) || null, w = this._owl;   // v0.6.233 (V5 wave 6a, D-123): One With the Land [PRO]'s 'neither combatant can strike during the first round of the resulting combat' -- this combat's when it is the one the rider's block began (my vampire, its opponent when both are known); taken here, so a follow-up combat never sees it [LSJ 20010813]
-      this._owlCombat = (w && myVamp && w.vamp === myVamp.name && (!w.opp || !on || w.opp === on)) ? w.card : null; this._owl = null; }
-    const tok = (this._combatTok = (this._combatTok | 0) + 1); if(myVamp) (this._combatOppOf = this._combatOppOf || new Map()).set(myVamp.id, oppName || null);   // v0.6.221 (D-113): this combat's token -- a later combat of mine supersedes it, and a superseded one ends at its next step and leaves the live combat's fields alone (the stray combat: one bot, two blocks, the first combat outlived its action)
+      this._owlCombat = (w && myVamp && w.vamp === myVamp.name && (!w.opp || !on || w.opp === on)) ? w.card : null; this._owl = null;
+      const bw = this._ceBanRec; this._ceBanCombat = (bw && myVamp && bw.vamp === myVamp.name && (!bw.opp || !on || bw.opp === on)) ? bw : null; this._ceBanRec = null;   // v0.6.236 (the Banu Haqim pilot): a rush card's ban on my combat-ends strikes -- THIS combat's (the rush's), taken here as _owl is
+      const nw = this._ntg; this._ntgCombat = (nw && myVamp && nw.vamp === myVamp.name && (!nw.opp || !on || nw.opp === on)) ? nw.card : null; this._ntg = null; }   // v0.6.236: Night Terrors [OBF][PRE] -- my blocker's strike: combat ends in the first round of the combat its block began, never a follow-up combat [LSJ 20010813]
+    const tok = (this._combatTok = (this._combatTok | 0) + 1); if(myVamp) (this._combatOppOf = this._combatOppOf || new Map()).set(myVamp.id, oppName || null);
+    { const rg = this._actingVamp && this._actingVamp.rushGrant; if(rg && rg.tok === undefined && this._actingVamp.v && myVamp && this._actingVamp.v.name === myVamp.name) rg.tok = tok; }   // v0.6.236 (the pilot's review, K5): the rush card's grant belongs to the first combat after it was armed -- this one   // v0.6.221 (D-113): this combat's token -- a later combat of mine supersedes it, and a superseded one ends at its next step and leaves the live combat's fields alone (the stray combat: one bot, two blocks, the first combat outlived its action)
     let supd = false, rr = 1; const sup = r => { if(tok === this._combatTok) return false; if(!supd){ supd = true; this._emit('combat-superseded', { vamp: myVamp ? myVamp.name : null, round: r }); } return true; };   // v0.6.221 (the Jack round's egress review): a later combat of mine began while this one waited -- this one is over (its action is). v0.6.222 (the second review): checked after every await of the combat (here, in _resolveCombatRound and in their combat helpers), so it stops at the await it wakes from: no line, no tally write, no card, no blood, no row, no new wait, no next round
     this._combatAt = Date.now();   // v0.6.198: a taken line from before this combat never stands in for the board (_stealAvail)
     this._combatMyVamp = myVamp;   // v0.6.160: the victim side of a steal needs to know whose blood goes
@@ -9374,14 +9712,16 @@ class Bot {
       if(this._xr && this._xr.p1 && !this._xr.step && this._xr.oppX > this._xr.oppXDone){ await this._xLate(myVamp); if(sup(round)) return; if(myVamp.zone !== 'ready'){ rowEnd(myVamp.zone); if(hsP) this._hsNothing(myVamp, 'press'); return; } }   // v0.6.213 (the egress review): a declaration that came during the step's first awaits -- the strikes before my press
       if(sup(round)) return;   // v0.6.221: superseded while the press step waited (the ask, the opponent's press, a late strike)
       const press = this._bestPressFor(myVamp), pressE = this._bestPressFor(myVamp, 'end');   // v0.6.235: a press to continue and a press to end are found apart (pressDir)
+      const rg = this._rushGrantFor(myVamp), gPress = (rg && rg.pr > 0 && (!rg.dir || rg.dir === 'continue')) ? rg : null, gPressE = (rg && rg.pr > 0 && (!rg.dir || rg.dir === 'end')) ? rg : null;   // v0.6.236 (the Banu Haqim pilot, §3.2 item 3): a rush card's granted press (Hunter's Mark: 'This acting vampire gets 1 optional press during that combat'), either way unless its pressDir says one -- used before any press card; _wantPress still decides
       let continuing = false, pressTag = null;
       const mind = this._combatMind();
       const bundled = mind && !!this._bundledPress;                                     // v0.6.156: superior Grapple / Hidden Strength [FOR] played THIS round
-      const strayCan = !press && !bundled && !!this._findStray();   // N4d: the Underbridge Stray can grant the press for a life
+      const strayCan = !press && !bundled && !gPress && !!this._findStray();   // N4d: the Underbridge Stray can grant the press for a life (v0.6.236: not while a granted press waits)
       const mobCan = bundled ? null : this._w5MobPress();   // v0.6.230 (V5 wave 5): Mob Connections -- a lock, no card spent: before a press card
       const spendEnd = () => {                                                          // my press to END: the bundled optional press first, else the card
         let tag;
         if(this._bundledPress){ this._bundledPress = false; tag = 'bundled:end'; }
+        else if(gPressE && gPressE.pr > 0){ this._useRushGrant(myVamp, 'pr'); tag = 'grant:end'; }   // v0.6.236: the granted press, before a press card
         else { tag = pressE.name + ':end'; this.hand.splice(pressE.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(pressE.name); this._emitPlay(pressE.name, 'combat-press-end', myVamp && myVamp.name); if(pressE.cost && pressE.cost.blood) myVamp.blood = Math.max(0, (myVamp.blood | 0) - pressE.cost.blood); this.fxClone({ name: pressE.name, kind: 'lib' }, 'presses to end', { actor: myVamp }); }   // v0.6.235: the press to END (pressE)
         this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to end: the press to continue is cancelled.');
         this._cWrite({ pr: 'end' });   // v0.6.164
@@ -9390,20 +9730,24 @@ class Bot {
       };
       if(hsFirstP && oppOpen && !oppOpen.none && oppOpen.continue){       // v0.6.202: the acting bot pressed to continue -- my answer is a press to end, or I let it stand (and say so: it waits for me)
         continuing = true;
-        const w = (mind && (pressE || this._bundledPress)) ? this._wantPressToEnd(myVamp) : null;   // v0.6.235: a card that may press to end
+        const w = (mind && (pressE || this._bundledPress || gPressE)) ? this._wantPressToEnd(myVamp) : null;   // v0.6.235: a card that may press to end (v0.6.236: or a rush card's granted press)
         if(w) this.o.log('press (' + myVamp.name + '): ' + w.why);
         if(w && w.end){ await this._combatGate(true); if(sup(round)) return; pressTag = spendEnd(); continuing = false; }
         else { await this._combatGate(false); if(sup(round)) return; this._hsNothing(myVamp, 'press'); }
       } else {
-      if(mind && (press || bundled || strayCan) && !(this._oppLastTaken && Date.now() - this._oppLastTaken.at < 3000 && this._oppLastTaken.at >= (this._rndAt || 0))) await this._awaitOppTaken(Math.min(1500, (this.o.askSecs || 2) * 1000));   // v0.6.202: THIS round's line (a round-1 line within 3 s passed for round 2's)   // v0.6.156: let the opponent's taken line ('now M', torpor) arrive before judging a press -- a bot answers in ms, a human table just costs the short wait
+      if(mind && (press || bundled || strayCan || gPress) && !(this._oppLastTaken && Date.now() - this._oppLastTaken.at < 3000 && this._oppLastTaken.at >= (this._rndAt || 0))) await this._awaitOppTaken(Math.min(1500, (this.o.askSecs || 2) * 1000));   // v0.6.202: THIS round's line (a round-1 line within 3 s passed for round 2's)   // v0.6.156: let the opponent's taken line ('now M', torpor) arrive before judging a press -- a bot answers in ms, a human table just costs the short wait
       if(sup(round)) return;   // v0.6.222: superseded while I waited for their taken line
-      const want = mind ? this._wantPress(myVamp, !!press || bundled || !!strayCan || !!mobCan) : { press: (!!press || !!mobCan) && (myVamp.blood | 0) > 1, tag: 'v155', why: 'blood > 1' };   // v0.6.156: expected value replaces the blood > 1 threshold (cmb1: 6 of 14 Tremere presses were followed by a fist)
+      const want = mind ? this._wantPress(myVamp, !!press || bundled || !!strayCan || !!mobCan || !!gPress) : { press: (!!press || !!mobCan || !!gPress) && (myVamp.blood | 0) > 1, tag: 'v155', why: 'blood > 1' };   // v0.6.236: + a rush card's granted press   // v0.6.156: expected value replaces the blood > 1 threshold (cmb1: 6 of 14 Tremere presses were followed by a fist)
       this.o.log('press (' + myVamp.name + '): ' + want.why);
-      if(want.press && (bundled || press || mobCan || (strayCan && (mind || (myVamp.blood | 0) > 1)))) await this._combatGate(true);   // v0.6.202 (points 5, 7): a hold stops my press; a watched bot duel gets its beat
+      if(want.press && (bundled || press || mobCan || gPress || (strayCan && (mind || (myVamp.blood | 0) > 1)))) await this._combatGate(true);   // v0.6.202 (points 5, 7): a hold stops my press; a watched bot duel gets its beat
       if(sup(round)) return;   // v0.6.221: superseded before my press is spent
       if(want.press && bundled){                              // the free press first -- no card spent
         pressTag = 'bundled:' + want.tag; this._bundledPress = false;
         this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to continue (optional press).');
+        continuing = true;
+      } else if(want.press && gPress){                        // v0.6.236 (the Banu Haqim pilot): a rush card's granted press -- no card spent, before Mob Connections' lock and a press card
+        pressTag = 'grant:' + want.tag; this._useRushGrant(myVamp, 'pr');
+        this.note('Trainbot combat \u2014 ' + myVamp.name + ' presses to continue (' + gPress.card + ').');   // the frozen press shape, the granting card named
         continuing = true;
       } else if(want.press && mobCan){                       // v0.6.230 (V5 wave 5): Mob Connections -- 'You can lock this card to give a minion you control 1 press, only usable to continue combat.'
         pressTag = 'mob:' + want.tag; mobCan.locked = true; this.push();
@@ -9440,7 +9784,7 @@ class Bot {
       if(oppP && oppP.none) oppP = null;                                              // v0.6.202: 'does not press.' -- no press
       if(oppP && oppP.continue){
         const wasMine = continuing;
-        if(!wasMine && mind && (pressE || this._bundledPress) && this._wantPressToEnd(myVamp).end){   // v0.6.235: a card that may press to end   // v0.6.156 (Johan): press to END -- Ventrue's use of the press; a chase/snipe deck cancels a round it would lose
+        if(!wasMine && mind && (pressE || this._bundledPress || (gPressE && gPressE.pr > 0)) && this._wantPressToEnd(myVamp).end){   // v0.6.236: + a granted press not yet spent this step   // v0.6.235: a card that may press to end   // v0.6.156 (Johan): press to END -- Ventrue's use of the press; a chase/snipe deck cancels a round it would lose
           const w = this._wantPressToEnd(myVamp); this.o.log('press (' + myVamp.name + '): ' + w.why);
           await this._combatGate(true);   // v0.6.202 (point 5): a hold stops it
           if(sup(round)) return;
@@ -9461,7 +9805,7 @@ class Bot {
       this._emit('combat-round', Object.assign({ round, vamp: myVamp.name, opp: this._combatOppName || this._rowOpp || null, press: pressTag, continuing, blood: myVamp.blood | 0, posture: this._combatPosture() }, this._rnd || {}));   // v0.6.156: the row serie-cmb1 had to infer (range, opponent, strike, dealt, taken)
       if(!continuing){ await this._phaseAsk(6); if(sup(round)) return; await this._phaseAfter(6, false); return; }   // v0.6.165: "Anything before ending combat?" / "I have nothing before ending combat."
     }
-    } finally { sup(rr);   /* v0.6.222: one combat-superseded row also for a combat superseded at its last wait (nothing was left to stop) */ if(myVamp && this._combatOppOf && (tok === this._combatTok || !this._combatMyVamp || this._combatMyVamp.id !== myVamp.id)) this._combatOppOf.delete(myVamp.id);   /* v0.6.222: a superseded combat of the same vampire leaves the live one's opponent */ if(tok === this._combatTok){ /* v0.6.221: a superseded combat leaves the live combat's fields alone */ this._releaseHolds('combat'); /* v0.6.235: 'Do not replace until after combat' (Dodge) -- owed again, drawn at the next flush */ try { this._noteCombatEnd(myVamp); } catch(e){ this.o.log('combat end note error: ' + e.message); }   /* v0.6.217 (V5 wave 4): Monster -- the combat's outcome is read BEFORE its fields die below */ this._xr = null; this._myPump = null; this._curRound = 0; this._cryptDodgeUsed = null; /* v0.6.219: the crypt dodge's once each combat dies with the combat (the planners between combats see it again) */ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; /* v0.6.214: the pumps, the round number and Guard Dogs' maneuver die with the combat (a rejected combat used to leak the grant into the next one) */ this._owlCombat = null; /* v0.6.233: One With the Land's first round dies with its combat */ this._inCombat = false; this._combatArmed = false; this._combatActing = null; this._forceCloseNextRound = false; this._nextRange = null; this._setRangeNow = null; this._handStrikeOnly = false; this._range = 'close'; /* v0.6.202 (R2's second arena smoke): a range set for the NEXT round dies with this combat -- Horace's superior Grapple in the last round skipped the maneuver step of his next combat AND of his opponent's next one (one side said nothing, the other waited out the safety net and maneuvered to long alone: Roundhouse at close against Theft of Vitae at long). The same sweep: the round's range and its Grapple restriction die too -- the finders that plan between combats (a block's price, a chump bleed's cover, a rush's reach) read them, and saw "hand strikes only" (no Majesty, no dodge) or "long" (no fists) from the last round of the previous fight (16 combats in the R2 smokes began after a final-round Grapple); a new combat starts at close */ if(this.ev && this._cep) this.ev.push({ kind: 'combat-opp', opp: null, how: 'end', was: this._cep.row || null }); this._cep = null; this._invStrike = null; if(this.tally && this.tally.mode === 'combat' && this.started){ try { this._writeTally({ mode: null, res: 1 }); } catch(e){} } } }   // v0.6.103 (#1); v0.6.172 (main v2.6.137): my combat is over -- close the combat tally so the mirror is clean at once; v0.6.195 (main's reply, 9 Oct): + res 1, the client's own Combat-Resolve convention -- every human closes their Played batch and applies their own clear setting (a bare null left it open until their next action); v0.6.105: the name dies with the combat
+    } finally { sup(rr);   /* v0.6.222: one combat-superseded row also for a combat superseded at its last wait (nothing was left to stop) */ { const rg = this._actingVamp && this._actingVamp.rushGrant; if(rg && rg.tok === tok) this._actingVamp.rushGrant = null; }   /* v0.6.236 (the pilot's review, K5; L-89): a rush card's grant dies with ITS combat, even one a later combat superseded */ if(myVamp && this._combatOppOf && (tok === this._combatTok || !this._combatMyVamp || this._combatMyVamp.id !== myVamp.id)) this._combatOppOf.delete(myVamp.id);   /* v0.6.222: a superseded combat of the same vampire leaves the live one's opponent */ if(tok === this._combatTok){ /* v0.6.221: a superseded combat leaves the live combat's fields alone */ this._releaseHolds('combat'); /* v0.6.235: 'Do not replace until after combat' (Dodge) -- owed again, drawn at the next flush */ try { this._noteCombatEnd(myVamp); } catch(e){ this.o.log('combat end note error: ' + e.message); }   /* v0.6.217 (V5 wave 4): Monster -- the combat's outcome is read BEFORE its fields die below */ this._xr = null; this._myPump = null; this._curRound = 0; this._cryptDodgeUsed = null; /* v0.6.219: the crypt dodge's once each combat dies with the combat (the planners between combats see it again) */ this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; /* v0.6.214: the pumps, the round number and Guard Dogs' maneuver die with the combat (a rejected combat used to leak the grant into the next one) */ this._owlCombat = null; /* v0.6.233: One With the Land's first round dies with its combat */ this._ceBanCombat = null; this._ntgCombat = null; this._eachMvUsed = null; /* v0.6.236 (the Banu Haqim pilot): a rush card's ban, Night Terrors' strike and the maneuvers each combat die with their combat (the grant: below, superseded or not) */ this._inCombat = false; this._combatArmed = false; this._combatActing = null; this._forceCloseNextRound = false; this._nextRange = null; this._setRangeNow = null; this._handStrikeOnly = false; this._range = 'close'; /* v0.6.202 (R2's second arena smoke): a range set for the NEXT round dies with this combat -- Horace's superior Grapple in the last round skipped the maneuver step of his next combat AND of his opponent's next one (one side said nothing, the other waited out the safety net and maneuvered to long alone: Roundhouse at close against Theft of Vitae at long). The same sweep: the round's range and its Grapple restriction die too -- the finders that plan between combats (a block's price, a chump bleed's cover, a rush's reach) read them, and saw "hand strikes only" (no Majesty, no dodge) or "long" (no fists) from the last round of the previous fight (16 combats in the R2 smokes began after a final-round Grapple); a new combat starts at close */ if(this.ev && this._cep) this.ev.push({ kind: 'combat-opp', opp: null, how: 'end', was: this._cep.row || null }); this._cep = null; this._invStrike = null; if(this.tally && this.tally.mode === 'combat' && this.started){ try { this._writeTally({ mode: null, res: 1 }); } catch(e){} } } }   // v0.6.103 (#1); v0.6.172 (main v2.6.137): my combat is over -- close the combat tally so the mirror is clean at once; v0.6.195 (main's reply, 9 Oct): + res 1, the client's own Combat-Resolve convention -- every human closes their Played batch and applies their own clear setting (a bare null left it open until their next action); v0.6.105: the name dies with the combat
   }
   async _resolveCombatRound(myVamp, continued){ // v1 CUT LINE (spec §7.5-C): announce-only, one round, applies MY side; the opponent's strike isn't modelled -- assumes the rulebook default (hands, 1) unless I prevent it. Never steps the shared ph/rd counters. v0.6.23 (standing-question fix, the multi-round loop): `continued` is a NEW, backward-compatible optional 2nd arg -- every existing call (all of 37a-37g, all 6 real call sites for round 1) passes nothing, so this defaults falsy and behaves EXACTLY as before. `_resolveCombat` passes true for round 2+ ONLY.
     const rtok = this._combatTok, stale = () => rtok !== this._combatTok, gone = () => this._cotHit(myVamp) ? { oppEnded: true, cot: true } : { superseded: true };   // v0.6.222 (the second review): a later combat of mine began while this round waited -- the round stops at the await it wakes from (no line, no tally write, no card, no blood, no new wait: a wait registered now would take the live combat's lines) and _resolveCombat ends the combat; a Change of Target that ended this combat is still resolved first (its blocker unlocks: the first cut left it locked, v0.6.221's 600 match 528); 37a-37g call the round directly, where the token never moves
@@ -9685,13 +10029,16 @@ class Bot {
       this._noStrikeRound = true;
     }
     const ce = cmt ? null : this._bestCombatEndFor(myVamp);
-    const ceD = (ce && !this._noStrikeRound) ? this.decide('combat-end', { ce, vamp: myVamp, stats: this.o.combatEndStats ? this._ceCtx(myVamp) : null }) : null;   // v0.6.196: the statistics only when the knob is on (0 = v0.6.123, byte for byte)
+    const ceD = (ce && !this._noStrikeRound) ? this.decide('combat-end', { ce, vamp: myVamp, stats: this.o.combatEndStats ? this._ceCtx(myVamp, ce) : null }) : null;   // v0.6.196: the statistics only when the knob is on (0 = v0.6.123, byte for byte)
     if(ceD && !ceD.end) this.o.log('combat-end (' + myVamp.name + '): ' + ceD.why);
     if(ceD && ceD.end){   // v0.6.123: Strike: combat ends (Majesty). On the wire it IS the dodge shape -- no damage either way this round -- plus a `Combat ends` line so a bot opponent does not press into a fight that is over. It resolves before every other strike, so environmental damage (Carrion Crows) does not land either.
+      if(ce.free) this._emit('ce-grant-used', { vamp: myVamp.name, card: ce.name });   // v0.6.236: Night Terrors' granted strike -- the card went to the ash heap as it was played: nothing leaves the hand, no cost, no second clone
+      else {
       this.hand.splice(ce.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(ce.name);
       if(ce.cost) myVamp.blood = Math.max(0, (myVamp.blood | 0) - ce.cost);
       this.fxClone({ name: ce.name, kind: 'lib' }, 'combat ends', { actor: myVamp });
       this._emitPlay(ce.name, 'combat-end', myVamp.name);
+      }
       this.send({ t: 'log', html: '<b>' + esc(myVamp.name) + '</b> strikes: combat ends.' });   // v0.6.202 (found by R2's arena smoke): the protocol's ONE-line combat-ends strike (client v2.6.134; every bot parses it since v0.6.167, L12.strikeEnds). The dodge-shaped line ('strikes: Majesty -- no damage either way') was read as a DODGE: the opposing bot's strike resolution ran before the 'Combat ends' line below arrived, and it went on to a press step nobody answered
       this.send({ t: 'log', html: 'Combat ends \u2014 <b>' + esc(ce.name) + '</b>.' });   // the card's name for the table
       if(ce.unlock) myVamp.locked = false;
@@ -9890,7 +10237,10 @@ class Bot {
     const silentLong = !opp && !continued && this._range === 'long' && !this._oppHasRanged();   // v0.6.157 (Johan, before the deploy): a SILENT opponent (a human table) at LONG range -- their rulebook default is a hand strike, which deals 0 at long; assume 1 only when their board shows a ranged option (a gun, a steal / ranged card seen)
     let taken = owlR1 ? 0 : opp ? (opp.dodge ? 0 : (opp.dealt | 0)) : (continued || silentLong ? 0 : 1);   // v0.6.233: One With the Land's first round deals nothing either way (a silent human there is not the rulebook's default strike)
     this.o.log('combat incoming (' + myVamp.name + '): ' + (opp ? (opp.dodge ? opp.vamp + ' dodged \u2014 0' : opp.vamp + ' dealt ' + opp.dealt) : silentLong ? 'no strike line within the window \u2014 long range and no ranged option seen: a hand strike deals 0' : 'no strike line within the window \u2014 assuming the rulebook default 1'));
-    let _t1 = this._takePre(myVamp, taken, opp && !opp.dodge ? (opp.aggr | 0) : 0);   // v0.6.213 (V5 wave 1): the first pair's damage, cut out so an additional pair resolves the same way -- prevention on aggravated first (equipment, Guardian Angel, Wall of Filth, then a card)
+    if(this._xr) this._xr.nullW = this._nullWOn(opp, pick, strike);   /* v0.6.236 (the pilot's review, K8: the predicate is a method, its conditions tested one by one) */   /* v0.6.236 (the Banu Haqim pilot, §3.2 item 5): my strike this round was a nullifier (Blood Rage, Blood Fury, Bollix [tha], Soul Burn: 'the opposing vampire's strikes with weapons inflict no damage this round') and it was not dodged [LSJ 20040928]; an ally's weapon is not a vampire's */
+    const nullW = !!(opp && !opp.dodge && (taken > 0 || (opp.aggr | 0) > 0) && this._oppWeaponNulled());   // v0.6.236 (the pilot's review, K1): an aggravated weapon strike (its damage on opp.aggr) is nulled too
+    if(nullW){ this.o.log('combat incoming (' + myVamp.name + '): ' + opp.vamp + '\u2019s weapon strike inflicts no damage this round (my ' + strike.name + ')'); this._emit('weapon-nulled', { vamp: myVamp.name, by: opp.vamp || null, card: strike.name, n: taken + (opp.aggr | 0) }); taken = 0; }   // on my own taken line: 'takes 0'
+    let _t1 = this._takePre(myVamp, taken, opp && !opp.dodge && !nullW ? (opp.aggr | 0) : 0);   // v0.6.213 (V5 wave 1): the first pair's damage, cut out so an additional pair resolves the same way -- prevention on aggravated first (equipment, Guardian Angel, Wall of Filth, then a card)
     const prevent = (_t1.taken + _t1.aggr) > 0 ? this._bestPreventFor(myVamp, opp ? this._noPreventDiscIn() : null) : null;   // v0.6.4: never burn a prevent card against zero incoming (a dodge) -- the old code would have wasted it. v0.6.214: not one the strike's card bars (Soul Burn)
     if(prevent){
       await this._pace(); if(stale()) return gone();   // v0.4.5: a beat between the strike and the prevent card -- two combat plays no longer land in the same instant
@@ -10107,6 +10457,8 @@ class Bot {
     if((m = t.match(ARCHON_BURN))) return { kind: 'archon', vamp: S(m[2]), n: +m[3] };
     if((m = t.match(ABSTAIN))) return { kind: 'abstain', vamp: S(m[6]), owner: S(m[5]), card: m[2] || m[4], n: +m[8], burn: m[7] ? 1 : 0 };   // v0.6.217 (V5 wave 4): the polling-step abstain
     if((m = t.match(COT))) return { kind: 'cot', vamp: S(m[1]) };
+    if((m = t.match(L12.contractM))) return { kind: 'contract', by: S(m[1]), card: S(m[2]), owner: S(m[3]), vamp: S(m[4]), chosen: S(m[5]) };   // v0.6.236 (the Banu Haqim pilot): Priority Contract placed (L-56: before the generic play shape)
+    if((m = t.match(CONTRACT_BURN))) return { kind: 'contract-burn', by: S(m[1]), card: S(m[2]), n: +m[3], why: S(m[4]) };   // v0.6.236: the card burned for its pool as its host left the ready region -- the pool itself is booked where it moves (_w5Pool), not from this line
     if((m = t.match(L12.burnAct))) return { kind: 'burn-card', vamp: S(m[1]), owner: S(m[2]), card: S(m[3]) };
     if((m = t.match(L12.stealAct))) return { kind: 'steal-card', vamp: S(m[1]), owner: S(m[2]), card: S(m[3]) };   // v0.6.230 (V5 wave 5)
     if((m = t.match(L12.ppBurn))) return { kind: 'pp-burn', owner: S(m[1]), prey: S(m[2]) };   // v0.6.230
@@ -10164,6 +10516,8 @@ class Bot {
     if((m = t.match(L12.uRescueOld))) return { kind: 'announce', vamp: S(m[1]), action: 'rescue', directed: true };
     /* v0.6.180's 'X plays CARD: prevents N damage' shape moved ABOVE the generic prevent shape (v0.6.203) */
     if((m = t.match(/^equipment prevents (\d+)/))) return { kind: 'prevent', n: +m[1], equipment: true };
+    if((m = t.match(L12.uEmployVia))){ const c = S(m[2]), r = S(m[4]); return { kind: 'card-played', vamp: S(m[1]), card: this.fxLookup(c) ? this.fxLookup(c).name : c, role: 'employ', retainer: this.fxLookup(r) ? this.fxLookup(r).name : r }; }   // v0.6.236: Biothaumaturgic Experiment [tha] -- before uEquip (L-56)
+    if(!L12.uStrength.test(t) && (m = t.match(L12.uAttach))){ const c = S(m[2]); return { kind: 'card-played', vamp: S(m[1]), card: this.fxLookup(c) ? this.fxLookup(c).name : c, role: 'attach', host: S(m[4]) }; }   // v0.6.236: the attach finder's card (Preternatural Strength's own line stays the generic shape's)
     if((m = t.match(L12.uEquip))){ const c = S(m[3]); return this.fxLookup(c) ? { kind: 'card-played', vamp: S(m[1]), card: (this.fxLookup(c).name || c), role: m[2] === 'employs' ? 'employ' : 'equip' } : { kind: 'announce', vamp: S(m[1]), action: m[2] === 'employs' ? 'employ' : 'equip', directed: false }; }   /* v0.6.186 */
     if((m = t.match(/^(.+?) recruits (.+?)(?: \[.*?\])?\.$/))){ const c = S(m[2]); return this.fxLookup(c) ? { kind: 'card-played', vamp: S(m[1]), card: (this.fxLookup(c).name || c), role: 'recruit' } : { kind: 'announce', vamp: S(m[1]), action: 'recruit', directed: false }; }
     if((m = t.match(/^(.+?) puts (.+?) on itself \u2014 minions without /))){ const c = S(m[2]); return { kind: 'card-played', vamp: S(m[1]), card: this.fxLookup(c) ? this.fxLookup(c).name : c }; }   // v0.6.234 (D-124): the cloak's line (Shadow Cloak, Sleep Unseen) -- a 'puts' line, not an L12.actObs one (the egress review, finding 8)
@@ -10229,9 +10583,9 @@ class Bot {
     if((m = t.match(/^(\d+) blood banked onto an uncontrolled vampire/))) return { kind: 'blood', delta: +m[1], via: 'stock', uncontrolled: true };   // v0.6.179: superior Govern ADDS blood from the bank ("Add 3 blood to a younger vampire in your uncontrolled region") -- not a pool cost
     if((m = t.match(/^(.+?) unlocks \u2014 (.+?) \(/))) return { kind: 'unlock', vamp: S(m[1]), card: S(m[2]) };
     if((m = t.match(/^(.+?) locks and (defends|is the acting minion)/))) return { kind: 'combat-start', vamp: S(m[1]), role: m[2] === 'defends' ? 'defender' : 'actor' };
-    if((m = t.match(/^(.+?) defends \(rushed by (.+?), (?:Haven Uncovered|Saulot's Avenging Fist|Regent)\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'defender', by: S(m[2]) };   // v0.6.217: + the granted rushes   // v0.6.205 (R4): a rush through Haven Uncovered locks nobody
-    if((m = t.match(/^Combat begins: (.+?) against (.+?) \((?:Haven Uncovered|Saulot's Avenging Fist|Regent)\)/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'actor', opp: S(m[2]) };   // v0.6.217 (the egress review): + the granted rushes
-    if((m = t.match(L12.havenRush))) return { kind: 'announce', vamp: S(m[1]), action: 'rush', directed: true, card: m[4], owner: S(m[2]), target: S(m[3]) };   // v0.6.217: the granting card (m[4])   // v0.6.205 (R4, F23): the frozen rush line
+    if((m = t.match(/^(.+?) defends \(rushed by (.+?), [^()]+\)\.?$/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'defender', by: S(m[2]) };   // v0.6.217: + the granted rushes   // v0.6.205 (R4): a rush through Haven Uncovered locks nobody
+    if((m = t.match(/^Combat begins: (.+?) against (.+?) \([^()]+\)\.?$/))) return { kind: 'combat-start', vamp: S(m[1]), role: 'actor', opp: S(m[2]) };   // v0.6.217 (the egress review): + the granted rushes. v0.6.236 (the Banu Haqim pilot): any card the rush line names (Frontal Assault, a rush card and its level), as L12.havenRush
+    if((m = t.match(L12.havenRush))) return Object.assign({ kind: 'announce', vamp: S(m[1]), action: 'rush', directed: true, card: m[4], owner: S(m[2]), target: S(m[3]) }, m[5] ? { lvl: m[5] } : null);   // v0.6.236: + the rush card's level (m[5]), only when the line prints one   // v0.6.217: the granting card (m[4])   // v0.6.205 (R4, F23): the frozen rush line
     if((m = t.match(/^(.+?) has no counters left \u2014 burned/))) return { kind: 'card-burned', card: S(m[1]) };
     if(/\(uncurated \u2014 adjust if needed\)|is seated\. We answer to|a bare "bleed N" goes to your prey|please play with an open hand|the next rise comes cheaper|pick the card I discard \(Revelations\)/.test(t)) return { kind: 'note' };   // v0.6.205: + the Revelations pick instruction
     return null;
@@ -10521,6 +10875,20 @@ class Bot {
         this._havenSeen[m[3]] = { owner: m[2], seat: this._seatOfName(m[2]) || null, by: who, bySeat: this._seatOfName(who) || null, cardId: null }; }   // no note: the play line says it (the v0.6.117 duplicate rule)
       return;
     }
+    if((m = t.match(L12.contractM))){
+      /* v0.6.236 (the Banu Haqim pilot, §3.2 item 6): a rushBy 'chosen' card landed on a minion (Priority Contract) -- EVERY observer
+         records it: its chosen vampire alone may enter combat with the host through it (the placer's _contractHosts), and the
+         host's owner reads it as a rush its cloak may stop (_cloakThreat). The record lives while the card is on its placer's
+         board (_contractLive). My own placement is recorded where I play it. */
+      if(who !== this.o.name){ const ch = this.fxLookup(m[2]), card = (ch && ch.name) || m[2]; this._contractSeen = this._contractSeen || {};
+        this._contractForget(who, card);   // v0.6.236 (the pilot's review, P2): a unique card -- a new placement by this placer ends its older records (an observer matches its card by name only: a second copy brought an old host back)
+        this._contractSeen[this._contractKey(card, m[4])] = { card, host: m[4], owner: m[3], seat: this._seatOfName(m[3]) || null, by: who, bySeat: this._seatOfName(who) || null, cardId: null, chosen: m[5] }; }   // no note: the play line says it (the v0.6.117 duplicate rule)
+      return;
+    }
+    if((m = t.match(CONTRACT_BURN))){   // v0.6.236 (the pilot's review, P2): the placer burned its contract for its pool -- every observer's record of it ends (the event log typed it already: contract-burn)
+      if(who !== this.o.name) this._contractForget(who, m[2]);
+      return;
+    }
     if((m = t.match(L12.burnAct))){   // v0.6.217 (V5 wave 4): an action to burn MY card in play -- a directed action I may block; on my Pass the card burns
       if(m[2] === this.seatName(this.seat) && !this.out && who !== this.o.name){
         const c = this.board.find(x => x && x.kind === 'lib' && x.name === m[3] && !this._outOfPlay(x));
@@ -10557,12 +10925,15 @@ class Bot {
          is the acting minion (Haven makes nobody else acting). */
       if(m[2] === this.seatName(this.seat) && !this.out && who !== this.o.name){
         const vc = this.board.find(c => c && c.kind === 'crypt' && c.zone === 'ready' && c.name === m[3]);
-        const via = m[4] === 'Haven Uncovered' ? 'haven' : 'grant';   // v0.6.217: the granted rushes take Haven's terms -- the host does not lock, the rusher is the acting minion
+        const rm = m[4] === 'Haven Uncovered' ? null : this._rushLineMode(m[4], m[5]);   // v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 2): a rush card from the hand, its mode by name and level
+        const via = m[4] === 'Haven Uncovered' ? 'haven' : rm ? 'card' : 'grant';   // v0.6.217: the granted rushes take Haven's terms -- the host does not lock, the rusher is the acting minion (v0.6.236: and every rush card but Deep Song)
+        const ro = { noLock: true, targetActs: false, via, card: m[4] };
+        if(rm){ if(m[5]) ro.lvl = m[5]; if(rm.fx && rm.fx.ceBan) ro.ceBan = rm.fx.ceBan; if(rm.fx && rm.fx.rushTo === 'locked') ro.rushTo = 'locked'; }   // fx.rushTo: the locked-target fizzle at my comply (K5)   // fx.ceBan: Hunter's Mark [CEL][THA] -- 'the opposing minion cannot strike: combat ends during the first round of that combat' (my vampire)
         if(vc) this._noteRushedBy(who, m[1], vc.name);   // v0.6.234: the cloak's prior
-        if(vc && this._rushWindowOpens(who, m[1], vc, { noLock: true, targetActs: false, via, card: m[4] })) return;
+        if(vc && this._rushWindowOpens(who, m[1], vc, ro)) return;
         if(vc){
           this.say('Pass');   // nobody to block with: the window path's Pass (v0.6.202's lesson -- silent, the rusher's directed ask ran its whole clock)
-          this._complyRush({ who, actingVampName: m[1], rushTarget: vc.name, noLock: true, targetActs: false, via, card: m[4] });
+          this._complyRush(Object.assign({ who, actingVampName: m[1], rushTarget: vc.name }, ro));
         }
       }
       return;
@@ -11323,7 +11694,8 @@ class Bot {
      [LSJ 20021211]) and the block would then stand (intercept 0 or more). 'Effectively a -X stealth modifier to the action' [RTR 20030519]: the
      acting bot takes its X off the counter (_onStealthZero, L12.stealthZero) and may raise again. The decision is Claude's prior (spec-v5-wave6
      \u00a78): a bleed of 2 or more, or an undirected action that is not a hunt -- the card and its blood for the block. A human actor sets the
-     counter's stealth: not played there (a rider). The superior's strike: combat ends goes with the grants round. */
+     counter's stealth: not played there (a rider). The superior's strike: combat ends is read since v0.6.236 (the Banu Haqim pilot, §3.2 item 7):
+     fx.ceGrant 'r1' -- the superior mode when it is usable, the free strike in the first round of that block's combat (_ntg, _bestCombatEndFor). */
   _nightTerrorsFor(blocker, p, a, b){
     if(!blocker || !p || this.out || !(a > 0) || b < 0 || (p.who && this._isHumanName(p.who)) || !p.actingVampName) return null;   // v0.6.233 (the egress review, finding 3): no name, no line the actor can match -- the counters would differ
     const worth = p.kind === 'bleed' ? (p.amount | 0) >= 2 : p.kind === 'undirected' ? p.sub !== 'hunt' : false;
@@ -11333,8 +11705,9 @@ class Bot {
       if(p.reacted && p.reacted.has(FX_NORM(h.name))) continue;   // once per action
       if(!this._titleOk(h, blocker) || !this._entryReqOk(h.e, blocker)) continue;   // Night Terrors: 'Requires Ravnos' (the card's clan)
       const cost = (h.e.cost && h.e.cost.blood) | 0; if((blocker.blood | 0) < cost) continue;
-      const mo = (h.e.modes || []).find(m => m.fx && m.fx.stealthToZero && this._modeUsableBy(m, blocker) && this._dirOk(h.e, m, p)); if(!mo) continue;
-      return { idx, name: h.name, cost, at: mo.at || null };
+      const ms = (h.e.modes || []).filter(m => m.fx && m.fx.stealthToZero && this._modeUsableBy(m, blocker) && this._dirOk(h.e, m, p)); if(!ms.length) continue;
+      const mo = ms.find(m => m.fx.ceGrant) || ms[0];   // v0.6.236 (the Banu Haqim pilot, §3.2 item 7): the superior mode when it is usable -- '... and if this vampire blocks, they can strike: combat ends during the first round of the resulting combat' (fx.ceGrant); .find took the first (the inferior)
+      return Object.assign({ idx, name: h.name, cost, at: mo.at || null }, mo.fx.ceGrant ? { ceGrant: mo.fx.ceGrant } : null);
     }
     return null;
   }
@@ -11344,6 +11717,7 @@ class Bot {
       return this.pending === p && p.contested && p.blockerVamp === blocker && !this.out && !!p.actingVampName && this.hand[nt.idx] === nt.name && !!(t && t.mode === 'block' && (t.b | 0) < (t.a | 0) && (t.a | 0) > 0 && (t.b | 0) >= 0); }, () => {
       const actor = p.actingVampName, t = this.tally;
       p.reacted.add(FX_NORM(nt.name));
+      if(nt.ceGrant) p.ntGrant = { vamp: blocker.name, card: nt.name, ban: nt.ceGrant };   // v0.6.236: the superior's strike rides the pending to the verdict -- only a block by THIS vampire takes it (_verdictAsTarget)
       this.hand.splice(nt.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(nt.name);
       this._emitPlay(nt.name, 'react-stealth0', blocker.name);
       if(nt.cost) blocker.blood = Math.max(0, (blocker.blood | 0) - nt.cost);
@@ -11607,6 +11981,8 @@ class Bot {
     if(tm){
       this._markPendingOf('opp-taken', this._narrWho || null, '_takenWaiter', e => this._takenFromEvent(e), { vamp: tm[1], n: parseInt(tm[3], 10), dmg: parseInt(tm[2], 10), down: /goes to torpor|goes into torpor|is burned/i.test(txt), now: tm[4] != null ? parseInt(tm[4], 10) : null });   /* v0.6.184: the log holds their taken line */   // v0.6.156: down = their own narration says torpor/burn; now = their blood after the round
       this._xRoundEnd(tm[1], /goes to torpor|goes into torpor|is burned/i.test(txt), tm[4] != null ? parseInt(tm[4], 10) : null);   // v0.6.213 (V5 wave 1): a pair is over on their side -- the additional-strike step's marker
+      if(this._contractSeen){ const hq = tm[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), hB = new RegExp(hq + ' is burned', 'i'), hT = new RegExp(hq + ' goes (?:in)?to torpor', 'i');   // the pilot's review (P8): the host's own burn or torpor -- a weapon burned in the same line is not the host's
+        if(hB.test(txt) || hT.test(txt)) this._contractHostLeft(this._seatOfName(this._narrWho) || 0, tm[1], hB.test(txt) ? 'burned' : 'torpor'); }   // v0.6.236 (the Banu Haqim pilot): my opponent's taken line sends it down -- Priority Contract's host about to leave the ready region
       /* v0.6.184: _oppLastTaken is the latest opp-taken event -- no copy */   // v0.6.156: a NON-consumed copy for _wantPress (the stash above is consumed by Taste of Vitae's waiter)
       /* (the waiter is resolved by _markPendingOf) */
     }
@@ -12062,6 +12438,7 @@ class Bot {
       const wasMyPrey = !this.out && this.preySeat() === seat;
       pl.out = true; pl._outInferred = true;
       this._emit('oust-inferred', { seat, name: pl.name, myPrey: wasMyPrey });
+      if(this._contractSeen) this._contractOustSweep();   // v0.6.236: Priority Contract's host left the game with its Methuselah [ANK 20180129-2]
       if(this._ask && this._ask.target === seat) this._answer('no', null);
       if(wasMyPrey){ this._bountyFrom = this._bountyFrom || new Set();
         if(!this._bountyFrom.has(pl.name)){ this._bountyFrom.add(pl.name); this.pool += 6; this.push();
@@ -12209,7 +12586,8 @@ class Bot {
           const _hvM = !!(_lk && _lk.kind === 'lib' && (_lk.e.modes || []).some(mo => mo.fx && mo.fx.rushGrant > 0));   // v0.6.205 (R4, F23): fx.rushGrant -- literal read (Haven Uncovered)
           let _hvT = null;
           if(_hvM){
-            _hvT = this._havenHostPick();   // Johan (16 Oct, decision 5): only on the vampire a rusher of mine would rush THIS turn through it (its target, and the rush is its action) -- an opponent's vampire, never my own
+            if(_lk.e.unique && this._uniqueInPlay(d.pick.name)){ played.add(FX_NORM(d.pick.name)); continue; }   // v0.6.236: Priority Contract is unique -- never played into a visible copy (Haven Uncovered is not unique: no change)
+            _hvT = this._havenHostPick(_lk);   // Johan (16 Oct, decision 5): only on the vampire a rusher of mine would rush THIS turn through it (its target, and the rush is its action) -- an opponent's vampire, never my own. v0.6.236: by the card's keys (rushBy, hostOf): Priority Contract on my prey's vampire, for the chosen Banu Haqim whose own action it would be
             if(!_hvT){ this.o.log('master-play: ' + d.pick.name + ' held -- no rusher of mine would rush through it this turn'); played.add(FX_NORM(d.pick.name)); continue; }   // HOLD pre-splice
           }
           const _sjM = !!(_lk && _lk.kind === 'lib' && (_lk.e.modes || []).some(mo => mo.fx && mo.fx.jackEngine));   // N3: fx.jackEngine -- literal read
@@ -12273,13 +12651,23 @@ class Bot {
           if(_hvM && _hvT){
             /* v0.6.205 (R4, F23): Haven Uncovered -- tabled on MY board (Fame's placement: the card cannot sit on another
                Methuselah's mat), the frozen line names owner and host so EVERY observer records it; any minion may now
-               enter combat with the host as a +1 stealth (D) action (_bestHavenRushFor). */
+               enter combat with the host as a +1 stealth (D) action (_bestHavenRushFor). v0.6.236 (the Banu Haqim pilot, §3.2
+               item 6): a rushBy 'chosen' card (Priority Contract) the same way, its own frozen line naming the chosen vampire too
+               (L12.contractM) -- every observer records it in _contractSeen; only the chosen may rush the host through it, and
+               when the host is about to leave the ready region I burn the card for its pool (_contractHostLeft). */
             const hid = this.gid();
             this.board.push({ id: hid, name: d.pick.name, kind: 'lib', zone: 'ready', faceDown: false, x: 64, y: 64, locked: false });
-            this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> plays <b>Haven Uncovered</b> \u2014 on <b>' + esc(this.seatName(_hvT.seat)) + "</b>'s <b>" + esc(_hvT.name) + '</b>.' });
+            if(_hvT.chosen){
+              this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> plays <b>' + esc(d.pick.name) + '</b> \u2014 on <b>' + esc(this.seatName(_hvT.seat)) + "</b>'s <b>" + esc(_hvT.name) + '</b>, chosen: <b>' + esc(_hvT.chosen) + '</b>.' });   // L12.contractM
+              this._contractSeen = this._contractSeen || {};
+              this._contractSeen[this._contractKey(d.pick.name, _hvT.name)] = { card: d.pick.name, host: _hvT.name, owner: this.seatName(_hvT.seat), seat: _hvT.seat, by: this.o.name, bySeat: this.seat, cardId: hid, chosen: _hvT.chosen };
+              this._emit('contract', { card: d.pick.name, host: _hvT.name, owner: this.seatName(_hvT.seat), chosen: _hvT.chosen, w: +(_hvT.w || 0).toFixed(2), dir: _hvT.dir || null });
+            } else {
+            this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> plays <b>' + esc(d.pick.name) + '</b> \u2014 on <b>' + esc(this.seatName(_hvT.seat)) + "</b>'s <b>" + esc(_hvT.name) + '</b>.' });   // L12.havenM (Haven Uncovered: the bytes of v0.6.205)
             this._havenSeen = this._havenSeen || {};
-            this._havenSeen[_hvT.name] = { owner: this.seatName(_hvT.seat), seat: _hvT.seat, by: this.o.name, bySeat: this.seat, cardId: hid };
+            this._havenSeen[_hvT.name] = { owner: this.seatName(_hvT.seat), seat: _hvT.seat, by: this.o.name, bySeat: this.seat, cardId: hid, card: d.pick.name };
             this._emit('haven', { host: _hvT.name, owner: this.seatName(_hvT.seat), rusher: _hvT.rusher, w: +(_hvT.w || 0).toFixed(2), dir: _hvT.dir || null });
+            }
             this.push();
             played.add(FX_NORM(d.pick.name));
             this.phaseUsed.master++;
@@ -12600,6 +12988,52 @@ class Bot {
           this._flushDraws();
           continue;
         }
+        if(act.kind === 'attach' || act.kind === 'employAnimal'){
+          /* v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 items 4 and 8): an UNDIRECTED action card (my prey and my predator may
+             block): (a) 'attach' -- the card goes on a minion of mine (_bestAttachFor: Biothaumaturgic Experiment [THA] on any of my
+             vampires, Shadow of the Beast [pro] on the acting one, New Moon Sigil [spi] on a vampire), its own frozen line naming the
+             host (L12.uAttach); (b) 'employAnimal' -- Biothaumaturgic Experiment [tha] employs an animal retainer from my hand ignoring
+             requirements (L12.uEmployVia), the card to the ash heap. The stealth is the card's printed '+N stealth action' (R-14). The
+             costs (the acting vampire's blood, my pool: the card's and the retainer's) are paid at the announce and parked -- a blocked
+             action pays nothing (R-17, _returnParked); blocked, the card goes to the ash heap and the retainer stays in my hand. On
+             through the card (or the retainer) goes on its host by _doEquip (its id in the host's attached: _strengthBonus,
+             _eachManeuverFor), and an attached card's level is kept by its id (_attachAt). */
+          const att = act.kind === 'attach';
+          this._actingVamp.kind = act.kind;
+          if(act.cost && act.cost.blood){ v.blood = Math.max(0, (v.blood | 0) - act.cost.blood); this._park(act.cost.blood, 0); }
+          if(act.cost && act.cost.pool){ this.pool = Math.max(0, (this.pool | 0) - act.cost.pool); this._park(0, act.cost.pool); if(this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: -act.cost.pool, via: 'cost', card: act.name, own: true, seat: this.seat })); }   // the finder left me at least 1 pool (R-34)
+          this.push();
+          const hn = att ? (act.host === v ? 'themselves' : act.host.name) : null;
+          const tail = att ? ' \u2014 on ' + hn : ' \u2014 employs ' + act.retainer;
+          this.fxClone({ name: act.name, kind: 'lib' }, act.lvl + (att ? ' on ' + hn : ' employs ' + act.retainer), { actor: v });
+          this._announceTallyA((act.st | 0) + this._cryptStealthMod(v, att ? 'attach' : 'employ', false));
+          this._grandBallBar(v);
+          this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(act.name) + '</b> ' + esc(act.lvl) + (att ? ' \u2014 on <b>' + esc(hn) + '</b>.' : ' \u2014 employs <b>' + esc(act.retainer) + '</b>.') });   // L12.uAttach / L12.uEmployVia (bot grammar)
+          const ansT = await this._askBlock('Trainbot: ' + v.name + ' plays ' + act.name + ' ' + act.lvl + tail + ' (+' + (act.st | 0) + ' stealth). Block?');
+          await sleep(150);
+          if(ansT.what === 'block'){
+            this.note('Blocked' + (ansT.who ? ' by ' + ansT.who : '') + '. Combat begins.');
+            this._toAsh(act.name);
+            this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, by: this._lastBlockerName || null });
+            await this._resolveCombat(v);
+          } else {
+            this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name, kind: act.kind, host: att ? act.host.name : v.name, retainer: att ? undefined : act.retainer });
+            this.say('It resolves');
+            if(att){
+              if(act.host && act.host.zone === 'ready'){ const id = this._doEquip(act.host, act.name, 0, 0); (this._attachAt = this._attachAt || new Map()).set(id, act.at || null); }
+              else this._toAsh(act.name);   // the host left the ready region during the action: the card has nowhere to go
+            } else {
+              this._toAsh(act.name);
+              const j = this.hand.indexOf(act.retainer);
+              if(j >= 0){ this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._doEquip(v, act.retainer, 0, 0); }
+            }
+            this._maybeWarsawRefresh(v);   // undirected
+            this._maybePerfectionist(v);   // v0.6.236 (the pilot's review, P5; L-60): a successful action, as the equip / employ branch
+          }
+          this._actingVamp = null;
+          this._flushDraws();
+          continue;
+        }
         if(act.kind === 'burnCard'){
           /* v0.6.217 (V5 wave 4): the (D) action that burns another Methuselah's card in play (Toreador Grand Ball). Its own frozen line
              (L12.burnAct, bot grammar) -- the owner's bot opens its block window on it (directed: only its minions may block); on its Pass
@@ -12726,6 +13160,59 @@ class Bot {
               this.say('It resolves');
               this.note('Trainbot: Combat begins: ' + v.name + ' against ' + act.target.name + ' (' + (act.name || 'Haven Uncovered') + ').');
               await this._resolveCombat(v, act.target.name);   // the host is my combat opponent
+            }
+            this._actingVamp = null;
+            this._flushDraws();
+            continue;
+          }
+          if(act.via === 'card'){
+            /* v0.6.236 (the Banu Haqim pilot, spec-sweep-pilot §3.2 item 1): every rush card but Deep Song -- Hunter's Mark, Fleetness [CEL],
+               Ambush, Bum's Rush, Line Brawl [pot], Sense Death, Taunt the Caged Beast [ani], Umbrous Clutch ... ('Ⓓ Enter combat with <target>.').
+               The granted rush's line, the card and the level it was played at named (L12.havenRush, opened): the target does not lock and
+               I am the acting minion. The card left the hand at the announce (the minion loop) and goes to the ash heap blocked or through;
+               its cost is parked at the announce and returned on a block (R-17, _park / _returnParked); its stealth is its printed '+N
+               stealth action' (R-14). The grant (a maneuver, a press) is armed only when the rush goes THROUGH -- a blocked action card has
+               no effect -- and lives on _actingVamp (the comply's _clearCombatStashes would wipe a stash), dying with the combat. */
+            const lbl = act.name + (act.lvl ? ' ' + act.lvl : '');
+            if(act.cost && act.cost.blood){ v.blood = Math.max(0, (v.blood | 0) - act.cost.blood); this._park(act.cost.blood, 0); }   // Fleetness: 1 blood, paid by the acting vampire
+            if(act.cost && act.cost.pool){ this.pool = Math.max(0, (this.pool | 0) - act.cost.pool); this._park(0, act.cost.pool); if(this.ev) this._invOnEvent(this.ev.push({ kind: 'pool', delta: -act.cost.pool, via: 'cost', card: act.name, own: true, seat: this.seat })); }   // the finder left me at least 1 pool (R-34); no rush card costs pool today
+            this.push();
+            this.fxClone({ name: act.name, kind: 'lib' }, 'enters combat with ' + act.target.name, { actor: v });
+            this._announceTallyA((act.st | 0) + this._cryptStealthMod(v, 'rush', true));
+            this._combatArmed = true;
+            this._grandBallBar(v);
+            this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> enters combat with <b>' + esc(act.target.owner) + "</b>'s <b>" + esc(act.target.name) + '</b> (' + esc(lbl) + ').' });   // L12.havenRush: m[4] the card, m[5] its level
+            this._maybeInvigorate(v);   // combat is certain on a rush; same tick, no await before the block window
+            const ansC = await this._askBlock('Trainbot: ' + v.name + ' enters combat with ' + act.target.name + ' (' + lbl + ', +' + (act.st | 0) + ' stealth). Block?');
+            await sleep(150);
+            if(ansC.what === 'block'){
+              this.note('Blocked' + (ansC.who ? ' by ' + ansC.who : '') + '. Combat begins.');
+              this._toAsh(act.name);
+              this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, kind: 'rush', via: 'card', card: act.name, dir: act.target.dir, by: this._lastBlockerName || null });
+              await this._resolveCombat(v);
+            } else if(this._fizzleIfOusted(v, act.target.seat, act.n, 'rush')){
+              this._toAsh(act.name); this._combatArmed = false;   // the target left the game with its Methuselah: the card to the ash heap, its parked cost back, no combat
+            } else {
+              this._unblockedStreak = (this._unblockedStreak | 0) + 1; this._emit('through', { vamp: v.name, n: act.n, card: act.name, kind: 'rush', via: 'card', target: act.target.name, dir: act.target.dir, owner: act.target.owner, tBlood: act.target.blood, famed: !!(this._famedSeen && this._famedSeen[act.target.name]) });
+              this.say('It resolves');
+              this._toAsh(act.name);
+              const rmo = this._rushLineMode(act.name, act.lvl), rfx = (rmo && rmo.fx) || {};
+              if(rfx.rushTo === 'locked' && !this._rushTargetLockedNow(act.target)){
+                /* v0.6.236 (the pilot's review, K5; [ANK 20210124]): a rush whose printed target is a LOCKED minion (Fleetness [CEL], Ambush,
+                   Nose of the Hound) and whose target is unlocked when the action resolves unblocked 'fizzles': it is successful (the card
+                   spent, its cost paid), with no effect -- no combat, no grant. The rushed bot reads its own vampire at its comply. */
+                this._combatArmed = false;
+                this.note('Trainbot: ' + act.name + ' has no effect: ' + act.target.name + ' is not locked as it resolves (no combat).');   // a WHY the table cannot see (the duplicate rule)
+                this._emit('fizzled', { vamp: v.name, n: 0, kind: 'rush', seat: act.target.seat, card: act.name, target: act.target.name, why: 'unlocked' });
+                this.push();
+              } else {
+              if(act.grant) this._actingVamp.rushGrant = Object.assign({ card: act.name, mv: 0, pr: 0 }, act.grant);   // the rush went through: its grant for THIS combat (_rushGrantFor; stamped with that combat's token at its entry)
+              if(rfx.ceBan && this._isHumanName(act.target.owner)){   // v0.6.236 (the pilot's review, K3): an instruction to a human (the tier rule; One With the Land's precedent) -- the bot cannot keep the human from playing it
+                const sc = rfx.ceBan === 'r1' ? 'in the first round of this combat' : rfx.ceBan === 'round' ? 'this round' : rfx.ceBan === 'action' ? 'during this action' : 'in this combat';
+                this.chat(act.target.owner + ': ' + lbl + ' \u2014 ' + act.target.name + ' cannot strike: combat ends ' + sc + '.'); }
+              this.note('Trainbot: Combat begins: ' + v.name + ' against ' + act.target.name + ' (' + lbl + ').');
+              await this._resolveCombat(v, act.target.name);   // the target is my combat opponent; I am the acting minion
+              }
             }
             this._actingVamp = null;
             this._flushDraws();
