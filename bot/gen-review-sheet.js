@@ -166,6 +166,18 @@ function registerState(reg, key){
   return 'no row';
 }
 const tierOf = e => (e ? (e.handler ? 'handler' : e.src === 'hand' ? (e.merged === true ? 'curated, merged' : 'curated') : 'auto') : '—');   // v1.0.1: the ledger's words
+/* v1.0.1 (the egress review, LESSONS L-13): the summary row and the "Ours" line, each in one function the sheet and the self-test both
+   call -- so the self-test renders them through the code that writes the sheet */
+function sheetRow(x, effUse){
+  const uniq = x.zd ? x.zd.effects.filter(ef => effUse.get(ef) === 1) : [];
+  return '| ' + [x.kc ? (x.kc.printed_name || x.kc.name) : x.r.name, x.r.qty, x.r.verdict, tierOf(x.e),
+    Object.keys(x.origin).length + ' (' + x.handN + ')', x.zd ? x.zd.modes.length : '—', uniq.join(', ') || '—', x.flags.length].join(' | ') + ' |';
+}
+function oursLine(x){
+  const modes = ((x.e && x.e.modes) || []).map(mo => '`[' + (mo.at || '—') + ']` ' + (Object.keys(mo.fx || {}).map(k => k + (x.origin[k] === 'hand' ? '*' : '')).join(', ') || '(no fx)'));
+  return '**Ours** (' + (x.e ? (x.e.handler ? 'handler ' + x.e.handler : tierOf(x.e)) : 'no entry') + '; * = ' + (x.e && x.e.merged === true ? 'a key the layer sets' : 'a key only the hand entry gives this card') + '): ' + (modes.join(' · ') || 'no modes') +
+    (x.e && x.e.ref && x.e.ref.fx ? ' · ref ' + Object.keys(x.e.ref.fx).join(', ') : '') + (x.dropped.length ? ' · **dropped** from the compile: ' + x.dropped.join(', ') : '') + '.';
+}
 const discLines = text => String(text || '').split('\n').filter(l => /^\s*\[[a-zA-Z]{3,4}\]/.test(l)).length;
 
 /* ---- the sheet ---- */
@@ -203,11 +215,7 @@ function sheet(o){
   P('`gen-review-sheet.js` v' + VERSION + ' · bot v' + require('./elysium-bot.js').BOT_VERSION + ' · cardfx ' + (COV.fx.counts.curated || '?') + ' curated · zero-vtes `' + commit + '` (' + defs.size + ' definitions) · ' + libRows.length + ' library cards. Generated, never committed (spec-card-sweep §3.1). KRCG\'s text and the rulings decide, zero-vtes proposes, our compiler is the second opinion.');
   P('');
   P('| card | × | verdict | tier | our keys (hand-only) | zero-vtes modes | effects printed by 1 | flags |'); P('|---|---:|---|---|---|---:|---|---|');
-  for (const x of rows){
-    const uniq = x.zd ? x.zd.effects.filter(ef => effUse.get(ef) === 1) : [];
-    P('| ' + [x.kc ? (x.kc.printed_name || x.kc.name) : x.r.name, x.r.qty, x.r.verdict, tierOf(x.e),
-      Object.keys(x.origin).length + ' (' + x.handN + ')', x.zd ? x.zd.modes.length : '—', uniq.join(', ') || '—', x.flags.length].join(' | ') + ' |');
-  }
+  for (const x of rows) P(sheetRow(x, effUse));
   P('');
   for (const x of rows){
     const kc = x.kc, nm = kc ? (kc.printed_name || kc.name) : x.r.name;
@@ -217,9 +225,7 @@ function sheet(o){
       P('**KRCG** (id ' + kc.id + '; ' + [kc.blood_cost ? kc.blood_cost + ' blood' : '', kc.pool_cost ? kc.pool_cost + ' pool' : ''].filter(Boolean).join(', ') + (kc.blood_cost || kc.pool_cost ? '; ' : '') + (kc.rulings || []).length + ' rulings):');
       P(''); String(kc.card_text || '').split('\n').forEach(l => P('> ' + l)); P('');
     } else P('**KRCG**: no text for the name.\n');
-    const modes = ((x.e && x.e.modes) || []).map(mo => '`[' + (mo.at || '—') + ']` ' + (Object.keys(mo.fx || {}).map(k => k + (x.origin[k] === 'hand' ? '*' : '')).join(', ') || '(no fx)'));
-    P('**Ours** (' + (x.e ? (x.e.handler ? 'handler ' + x.e.handler : tierOf(x.e)) : 'no entry') + '; * = ' + (x.e && x.e.merged === true ? 'a key the layer sets' : 'a key only the hand entry gives this card') + '): ' + (modes.join(' · ') || 'no modes') +
-      (x.e && x.e.ref && x.e.ref.fx ? ' · ref ' + Object.keys(x.e.ref.fx).join(', ') : '') + (x.dropped.length ? ' · **dropped** from the compile: ' + x.dropped.join(', ') : '') + '.');
+    P(oursLine(x));
     const hk = Object.keys(x.origin).filter(k => x.origin[k] === 'hand');
     if (hk.length) P('Register: ' + hk.map(k => '`' + k + '` ' + (SH.handOnlyKeys(COV.fx.lib).has(k) ? registerState(reg, k) : 'not hand-only (the compiler gives it to other cards)')).join(' · ') + '.');
     P('');
@@ -323,6 +329,12 @@ function selfTest(quiet){
   const mg = { src: 'hand', merged: true, handKeys: ['actAgain', 'unlock'], modes: [{ at: 'for', fx: { unlock: true, actAgain: 1, lock: 1 } }] }, a2 = { src: 'auto', modes: [{ at: 'for', fx: { unlock: true, stealth: 1, lock: 1 } }] };
   eq(keyOrigins(mg, a2), { origin: { unlock: 'hand', actAgain: 'hand', lock: 'compiler' }, dropped: ['stealth'] }, 'origins of a merged entry read its layer: a key it sets is hand even when the compiler gives it too, the rest compiler; a deleted key is dropped');
   eq([tierOf(mg), tierOf(e), tierOf(a), tierOf({ src: 'hand', handler: 'h' }), tierOf(null)], ['curated, merged', 'curated', 'auto', 'handler', '—'], 'the tier column: curated, merged for a merged entry');
+  // the egress review (L-13): the summary row and the "Ours" line rendered through the sheet's own two functions
+  const rowX = (en, au) => Object.assign({ r: { name: 'Synthetic Card', qty: 2, verdict: 'FULL' }, kc: null, e: en, zd: null, flags: [], handN: 1 }, keyOrigins(en, au));
+  const xm = rowX(mg, a2), xh = rowX(e, a);
+  eq([sheetRow(xm, new Map()), sheetRow(xh, new Map())], ['| Synthetic Card | 2 | FULL | curated, merged | 3 (1) | — | — | 0 |', '| Synthetic Card | 2 | FULL | curated | 2 (1) | — | — | 0 |'], 'a summary row as the sheet writes it: curated, merged for a merged entry, curated for a whole one');
+  eq([oursLine(xm), oursLine(xh)], ['**Ours** (curated, merged; * = a key the layer sets): `[for]` unlock*, actAgain*, lock · **dropped** from the compile: stealth.',
+    '**Ours** (curated; * = a key only the hand entry gives this card): `[for]` unlock, actAgain* · **dropped** from the compile: stealth.'], 'the "Ours" line as the sheet writes it: the layer\'s keys starred on a merged entry, the hand-only keys on a whole one');
   eq([registerState({ backlog: ['k'] }, 'k'), registerState({ shared: { k: ['A', 'B'] } }, 'k'), registerState({ unique: { k: ['A'] } }, 'k'), registerState({}, 'k')], ['backlog', 'shared with A, B', 'unique', 'no row'], 'the register\'s states');
   eq(discLines('Only usable after action resolution.\n[for] One.\n[FOR] Two.'), 2, 'discipline lines');
   if (!quiet || bad || skipped) console.log('gen-review-sheet --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed') + (skipped ? ', ' + skipped + ' SKIPPED' : ''));
@@ -348,4 +360,4 @@ if (require.main === module){
   const text = sheet(o);
   if (o.out){ fs.writeFileSync(o.out, text); console.error('gen-review-sheet v' + VERSION + ': ' + o.deck + ' -> ' + o.out); } else process.stdout.write(text + '\n');
 }
-module.exports = { VERSION, normName, parseCsv, parseDefs, keyOrigins, registerState, tierOf, discLines, insideRepo };
+module.exports = { VERSION, normName, parseCsv, parseDefs, keyOrigins, registerState, tierOf, sheetRow, oursLine, discLines, insideRepo };

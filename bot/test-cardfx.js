@@ -1027,14 +1027,15 @@ ok(fx.counts.libLock >= 140,
 }
 /* The merge of hand entries (20 Nov 2026, compiler v1.10.0; spec-card-sweep-2026-11-18 §4.4, RULINGS D-127): a curated library entry with
    "merge": true is laid over the compiled entry instead of replacing it, so a hand entry can carry the remainder only. Synthetic layers
-   over ten real cards compiled here from KRCG's text: every expectation is built from the compiled entry (a copy with the layer applied
-   by hand), never written from memory. Every case runs through compile() (one, the mode's `req`, through mergeHand: no compiled mode
-   carries a `req`). The four cards of §4.4 with two compiled modes at one level are Donate, The Eldest Are Kholo, Touch of Valeren [for]
-   and Vigilance. Then the real curated file: nothing opts in, and an entry that opts in changes no other entry. */
+   over eleven real cards compiled here from KRCG's text: every expectation is built from the compiled entry (a copy with the layer
+   applied by hand), never written from memory. Every case runs through compile() (one, the mode's `req`, through mergeHand: no compiled
+   mode carries a `req`; one through the command line). The four cards of §4.4 with two compiled modes at one level are Donate, The
+   Eldest Are Kholo, Touch of Valeren [for] and Vigilance; Freak Drive's [for] names its `when`. Then the real curated file: nothing opts
+   in, and an entry that opts in changes no other entry. The egress review of 20 Nov added the cases from "the near miss" on. */
 {
   console.log('\nThe merge of hand entries (spec-card-sweep §4.4)');
   const CC = require('./cardfx-compile.js');
-  const NAMES = ['Conditioning', 'Donate', 'The Eldest Are Kholo', 'Touch of Valeren', 'Vigilance', 'Computer Hacking', 'Kine Resources Contested', 'Awe', 'Pentex™ Subversion', 'Black Sunrise'];
+  const NAMES = ['Conditioning', 'Donate', 'The Eldest Are Kholo', 'Touch of Valeren', 'Vigilance', 'Computer Hacking', 'Kine Resources Contested', 'Awe', 'Pentex™ Subversion', 'Black Sunrise', 'Freak Drive'];
   const sub = cards.filter(c => NAMES.includes(c.name));
   const sortKeys = (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, kk) => { o[kk] = x[kk]; return o; }, {}) : x);
   const same = (a, b) => JSON.stringify(a, sortKeys) === JSON.stringify(b, sortKeys), cl = v => JSON.parse(JSON.stringify(v));
@@ -1106,9 +1107,65 @@ ok(fx.counts.libLock >= 140,
        'the compile report lists each merged entry with what its layer changed -- got ' + JSON.stringify(txt.split('\n').filter(l => /merged|· (Conditioning|Awe)/.test(l)))); }
   { const lay = { modes: [{ at: 'dom', fx: { bleed: 5 } }], note: 'whole' }, got = M('Conditioning', lay), b = B['Conditioning'];
     const exp = { modes: [{ at: 'dom', fx: { bleed: 5 } }], note: 'whole', src: 'hand', cost: b.cost, req: b.req, onlyBleed: true };
-    const mf = run({ Conditioning: Object.assign({ merge: false }, lay) }), mfE = mf.r && mf.r.out.lib.Conditioning;
-    ok(same(got, exp) && JSON.stringify(Object.keys(got)) === '["modes","note","src","cost","req","onlyBleed"]' && !!mfE && mfE.merge === false && !mfE.merged && (mf.r.mergeIgnored || []).includes('Conditioning'),
-       'an entry that does not opt in is today’s whole-entry overlay, byte for byte (the curated keys, src, then the inherited cost, requirement and markers); "merge": false is no opt-in -- written as it stands, and the report warns'); }
+    ok(same(got, exp) && JSON.stringify(Object.keys(got)) === '["modes","note","src","cost","req","onlyBleed"]',
+       'an entry that does not opt in is today’s whole-entry overlay, byte for byte (the curated keys, src, then the inherited cost, requirement and markers)'); }
+  // ---- the egress review of 20 Nov (8 findings; the decisions are in spec-card-sweep §4.4's note) ----
+  { const fd = B['Freak Drive'], w = M('Freak Drive', { merge: true, modes: [{ at: 'for', when: 'actSuccess', fx: { kW: 1 } }] }), ew = cl(fd); ew.modes[0].fx.kW = 1; hand(ew, ['kW']);
+    const ad = M('Freak Drive', { merge: true, modes: [{ at: 'for', add: true, fx: { kW: 1 } }] }), ea = cl(fd); ea.modes.push({ at: 'for', fx: { kW: 1 } }); hand(ea, ['kW']);
+    const dw = M('Freak Drive', { merge: true, modes: [{ at: 'for', when: 'actSuccess', drop: true }, { at: 'for', when: 'actFailed', add: true, fx: { unlock: true } }] }), ed = cl(fd); ed.modes = [ed.modes[1], { at: 'for', when: 'actFailed', fx: { unlock: true } }]; hand(ed, ['unlock']);
+    const near = /^Freak Drive: curated mode 1 \[for( when actBlocked)?\]: no compiled mode at \[for\] has (no "when"|when actBlocked) \(the compiled when: actSuccess\) -- name the "when", or say "add"/;
+    ok(fd.modes[0].at === 'for' && fd.modes[0].when === 'actSuccess' && same(w, ew) && same(ad, ea) && same(dw, ed)
+       && fails({ 'Freak Drive': { merge: true, modes: [{ at: 'for', fx: { kW: 1 } }] } }, near) && fails({ 'Freak Drive': { merge: true, modes: [{ at: 'for', when: null, fx: { kW: 1 } }] } }, near)
+       && fails({ 'Freak Drive': { merge: true, modes: [{ at: 'for', when: 'actBlocked', fx: { kW: 1 } }] } }, near) && fails({ 'Freak Drive': { merge: true, modes: [{ at: 'for', drop: true }] } }, near),
+       'the near miss: at Freak Drive’s [for] (when actSuccess) a layer naming the when merges; a forgotten when, when null, another when (and a drop with none) each fail and name the compiled when; with "add": true the mode is added; drop and add change a when'); }
+  { const nf = fails({ Conditioning: { merge: true, modes: [{ at: 'DOM2', lock: true }] } }, /^Conditioning: curated mode 1 \[DOM2\]: a mode the layer adds carries an "fx" object/)
+       && fails({ Conditioning: { merge: true, modes: [{ at: 'dom', add: true, lock: true }] } }, /a mode the layer adds carries an "fx" object/);
+    const g = M('Conditioning', { merge: true, modes: [{ at: 'DOM2', lock: true, fx: {} }] });
+    ok(nf && !!g && same(g.modes[2], { at: 'DOM2', lock: true, fx: {} }), 'a mode the layer adds without an fx object fails the compile (at an `at` the entry lacks, or with "add"); an explicit "fx": {} is written'); }
+  { const noFx = lib => { const out = []; for (const n of Object.keys(lib || {})) ((lib[n] && lib[n].modes) || []).forEach((m, i) => { if (!m || !m.fx || typeof m.fx !== 'object' || Array.isArray(m.fx)) out.push(n + ' mode ' + (i + 1)); }); return out; };
+    const real = noFx(fx.lib), planted = noFx({ A: { modes: [{ at: null, fx: {} }, { at: 'x', lock: true }] }, B: { modes: [{ at: null, fx: [] }] } });
+    let rep = null; try { rep = CC.report({ out: { counts: fx.counts, source: 's', lib: { A: { t: ['master'], modes: [{ at: null }] } } }, collisions: [], curNew: [] }, true); } catch (e) { rep = null; }
+    ok(real.length === 0 && JSON.stringify(planted) === '["A mode 2","B mode 1"]' && !!rep,
+       'every library mode of the compiled output carries an fx object (' + real.length + ' without one' + (real.length ? ': ' + real.slice(0, 5).join(', ') : '') + '; the two planted are found), and the verbose report reads a mode without fx without throwing'); }
+  { const os = require('os'), cp = require('child_process'), tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cardfx-merge-'));
+    fs.writeFileSync(path.join(tmp, 'vtes.json'), JSON.stringify(sub)); fs.writeFileSync(path.join(tmp, 'bad.json'), JSON.stringify({ lib: { Donate: { merge: true, modes: [{ at: null, fx: { x: 1 } }] } } }));
+    fs.writeFileSync(path.join(tmp, 'good.json'), JSON.stringify({ lib: { Donate: { merge: true, modes: [{ at: null, nth: 2, fx: { x: 1 } }] } } }));
+    fs.writeFileSync(path.join(tmp, 'nofx.json'), JSON.stringify({ lib: { Conditioning: { merge: true, modes: [{ at: 'DOM2', lock: true }] } } }));   // the review's probe: v1.10.0 as first built wrote both files, then its report threw
+    const cli = (cur, out, more) => cp.spawnSync(process.execPath, [here('cardfx-compile.js'), '--vtes', path.join(tmp, 'vtes.json'), '--curated', path.join(tmp, cur), '--out', path.join(tmp, out)].concat(more || []), { encoding: 'utf8' });
+    const r1 = cli('bad.json', 'a.json', ['--report']), r2 = cli('bad.json', 'b.json'), r3 = cli('good.json', 'c.json', ['--report']), r4 = cli('nofx.json', 'd.json', ['--report']);
+    const none = f => !fs.existsSync(path.join(tmp, f + '.json')) && !fs.existsSync(path.join(tmp, f + '.js'));
+    const okRun = r3.status === 0 && fs.existsSync(path.join(tmp, 'c.json')) && fs.existsSync(path.join(tmp, 'c.js')) && /merged entries/.test(r3.stdout);
+    const wrote = { a: !none('a'), b: !none('b'), d: !none('d') };   // read before the scratch folder goes
+    try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) { /* scratch */ }
+    ok(r1.status === 1 && !wrote.a && /the merge of hand entries failed/.test(r1.stderr) && r2.status === 1 && !wrote.b && okRun && r4.status === 1 && !wrote.d,
+       'the command line: a failed merge exits 1 and writes neither library file, with --report or without (an added mode without fx too); the same entry with its nth writes both and reports the merge (exits ' + [r1.status, r2.status, r3.status, r4.status].join(', ') + '; files written by the failed runs: ' + JSON.stringify(wrote) + ')'); }
+  ok(fails({ Conditioning: { merge: false, modes: [{ at: 'dom', fx: { bleed: 5 } }] } }, /^Conditioning: "merge" is true or absent \(it is false\)/)
+     && fails({ Conditioning: { merge: 'true' } }, /^Conditioning: "merge" is true or absent \(it is "true"\)/)
+     && fails({ Conditioning: { modes: [{ at: 'dom', add: true, fx: {} }] } }, /^Conditioning: a mode carries "nth", "add" or "drop", which only a merge reads/)
+     && fails({ Donate: { modes: [{ at: null, nth: 2, fx: {} }] } }, /only a merge reads/) && fails({ Donate: { modes: [{ at: null, drop: true }] } }, /only a merge reads/)
+     && (() => { try { compile(sub, { lib: {}, crypt: { 'Some Vampire (G1)': { merge: false, fx: {} } } }); return false; } catch (e) { return !!(e.mergeErrors && /"merge" is true or absent/.test(e.mergeErrors[0])); } })(),
+     'no half opt-in: a "merge" that is present and not true (false, "true"; in the crypt too) fails the compile, and so does a mode’s nth, add or drop on an entry that does not opt in');
+  { const got = M('Conditioning', { merge: true, modes: [{ at: 'dom', fx: { kZ: 1, bleed: 2 } }] });
+    ok(!!got && B['Conditioning'].modes[0].fx.bleed === 2 && JSON.stringify(got.handKeys) === '["bleed","kZ"]', 'handKeys are sorted, and a key the layer restates with the compiler’s own value (bleed 2) is the layer’s -- got ' + JSON.stringify(got && got.handKeys)); }
+  { const x = run({ 'Pentex(TM) Subversion': { t: ['master'], modes: [{ at: null, fx: { kW: 1 } }] }, 'Pentex™ Subversion': { merge: true, modes: [{ at: null, fx: { kM: 1 } }] } });
+    const L = x.r ? x.r.out.lib : {}, exp = cl(B['Pentex™ Subversion']); exp.modes[0].fx.kM = 1; hand(exp, ['kM']);
+    ok(same(L['Pentex™ Subversion'], exp) && !!L['Pentex(TM) Subversion'] && L['Pentex(TM) Subversion'].src === 'hand' && !L['Pentex(TM) Subversion'].merged,
+       'a merge lays over the COMPILED entry, never over a hand entry the overlay wrote before it (a whole entry under the printed variant, mirrored onto the printed name first) -- got ' + JSON.stringify(L['Pentex™ Subversion'])); }
+  ok(fails({ Conditioning: { merge: true, merged: true } }, /"merged" is the compiler's to write/) && fails({ Conditioning: { merge: true, handKeys: ['bleed'] } }, /"handKeys" is the compiler's to write/),
+     'a layer that writes merged or handKeys fails the compile, as one that writes src');
+  { const x = run({ Conditioning: { merge: true, cost: null } }), e = x.r && x.r.out.lib.Conditioning;
+    ok(!!e && !Object.prototype.hasOwnProperty.call(e, 'cost') && (x.r.costMismatch || []).includes('Conditioning curated {} vs data {"blood":1}'), 'cost: null deletes the cost (the card is free) and stands in the mismatch list'); }
+  { const rq = M('Conditioning', { merge: true, req: { disc: null } }), rf = M('Kine Resources Contested', { merge: true, ref: { pool: null, tags: null, fx: null } }), rx = M('Kine Resources Contested', { merge: true, ref: { fx: { poolDmg: null } } });
+    const has = (o, k) => !!o && Object.prototype.hasOwnProperty.call(o, k);
+    ok(!!rq && same(B['Conditioning'].req, { disc: ['dom'] }) && !has(rq, 'req') && !!rf && !has(rf, 'ref') && !!rx && has(rx, 'ref') && !has(rx.ref, 'fx') && !!rx.ref.pool,
+       'an emptied req, ref or ref.fx is removed, never written as {} (Conditioning’s req, Kine Resources Contested’s ref and its fx)'); }
+  { const got = M('Conditioning', { merge: true, modes: [{ at: 'pre', fx: { a: 1 } }, { at: 'pre', fx: { b: 1 } }] }), exp = cl(B['Conditioning']);
+    exp.modes.push({ at: 'pre', fx: { a: 1 } }, { at: 'pre', fx: { b: 1 } }); hand(exp, ['a', 'b']);
+    ok(same(got, exp), 'two curated modes at an `at` the compiled entry lacks are both added, in the curated order -- got ' + JSON.stringify(got && got.modes)); }
+  { const x = run({ Conditioning: { merge: true, modes: [{ at: 'pre', phase: null, dir: null, fx: { k: 1, z: null }, req: { a: null } }, { at: null, fx: { k2: 1 } }] } });
+    const e = x.r && x.r.out.lib.Conditioning, txt = x.r ? CC.report(x.r, false) : '';
+    ok(!!e && JSON.stringify(e.modes.slice(2)) === '[{"at":"pre","fx":{"k":1}},{"at":null,"fx":{"k2":1}}]' && /\[pre\] phase null \(nothing to delete: an added mode\)/.test(txt) && /\[pre\] fx z null \(nothing to delete/.test(txt),
+       'a null on an added mode is not written and is reported (phase, dir, an fx key, an emptied req); an added mode keeps its at, null too (the base level) -- got ' + JSON.stringify(e && e.modes.slice(2))); }
   { const realOpt = Object.keys((curated && curated.lib) || {}).filter(n => curated.lib[n] && curated.lib[n].merge === true);
     const layered = curated ? cl(curated) : { lib: {}, crypt: {} };
     layered.lib['Conditioning'] = { merge: true, modes: [{ at: 'dom', fx: { bleed: 5 } }] };

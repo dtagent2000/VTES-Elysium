@@ -962,17 +962,25 @@ function cryptEntry(c){
    curated LIBRARY entry with `"merge": true` is laid over a COPY of the compiled entry of the same card (a key that is a printed
    variant: the printed name's entry), so a hand entry can carry the remainder only. Without it the overlay is today's whole-entry
    replacement, byte for byte; the crypt keeps whole-entry replacement (D-108's waves), and `merge` on a crypt entry fails the compile.
-   - MODES MEET BY LEVEL: a mode's level is its `at` and its `when` (absent reads null; compared exactly, so a curated mode with no
-     `when` never meets a compiled mode that names one). A curated mode merges into the ONLY compiled mode at its level, or into
-     the one `"nth": n` names among them (1 = the first, in the compiled order); `"add": true` adds it after the compiled modes;
-     `"drop": true` deletes the compiled mode it names (a dropped mode carries its level, `nth` and `drop`, nothing else); a mode
-     at a level the compiled entry lacks is added. Added modes follow the compiled ones in the curated order (a finder's tie keeps
-     the first). The compile FAILS on a target that is not plain: a level with two or more compiled modes and no `nth`; two curated
-     modes aimed at one compiled mode; an `nth` or a `drop` that names no compiled mode; `add` with `nth` or `drop`.
+   - MODES MEET BY LEVEL: a mode's level is its `at` and its `when` (absent reads null; compared exactly). A curated mode merges
+     into the ONLY compiled mode at its level, or into the one `"nth": n` names among them (1 = the first, in the compiled order);
+     `"add": true` adds it after the compiled modes; `"drop": true` deletes the compiled mode it names; a mode at an `at` the
+     compiled entry lacks altogether is added. Added modes follow the compiled ones in the curated order (a finder's tie keeps the
+     first) and carry their `at` (null: the base level). A `when` is changed or deleted by dropping the mode and adding it again.
    - VALUES: a merged mode's `fx` is the union, a key on both takes the curated value, `null` deletes; the mode's own fields the
      same; `req` (the entry's and a mode's) and `ref` merge key by key, `ref.fx` as a mode's `fx`; every other entry field takes
-     the curated value whole (an array, an object), `null` deletes; the note is the curated one. A `null` that finds nothing to
-     delete is never written and the report says so.
+     the curated value whole (an array, an object), `null` deletes; an emptied `req`, `ref` or `ref.fx` is removed; the note is
+     the curated one. A `null` that finds nothing to delete (on an added mode: every `null`) is never written; the report says so.
+   - WHAT FAILS THE COMPILE (nothing is written; the CLI exits 1). A target that is not plain: a level with two or more compiled
+     modes and no `nth`; two curated modes aimed at one compiled mode; an `nth` or a `drop` that names no compiled mode; a near
+     miss -- a mode without `add` that meets no compiled mode by `at` and `when` while the compiled entry has a mode at its `at`
+     (a forgotten, null or other `when`: name the `when`, or say add). The layer's shape: `add` or `drop` not `true`; `nth` not a
+     whole number from 1; `add` with `nth` or `drop`; a dropped mode that carries more than `at`, `when`, `nth` and `drop`; a mode
+     that is not an object, whose `fx` is not an object or whose `req` is neither an object nor null; a mode the layer adds without an `fx` object ("fx": {} for
+     none); `modes` that are not a list; `req` or `ref` that is not an object (or null); a layer that writes `src`, `merged` or
+     `handKeys`; a key `__proto__`. The entry: a merge with no compiled entry under its name or a printed variant's; `merge` on a
+     crypt entry. And on an entry that does NOT opt in: a `merge` that is present and not `true`, or a mode's `nth`, `add` or
+     `drop` (only a merge reads them). The egress review of 20 Nov added the near miss, the added mode's `fx` and the last two.
    - THE COST RULE is unchanged and lives in the overlay below: the compiled numeric cost unless the layer names `cost` (an
      explicit cost wins, `"cost": {}` insists a card is free); an X leaves the merge and is reported.
    - `src` stays 'hand' (five readers say curated by it: the bot, test-cardfx.js, gen-deck-coverage.js, gen-review-sheet.js,
@@ -1047,8 +1055,18 @@ function mergeModes(compiled, layerModes, changes, errors, name, addHk){
     if(hasOwn(cm, 'req') && cm.req !== null && !isPlainObj(cm.req)){ errors.push(tag + ': "req" is an object of keys'); bad = true; }
     if(cm.drop === true){ const extra = Object.keys(cm).filter(k => !['at', 'when', 'nth', 'drop'].includes(k)); if(extra.length){ errors.push(tag + ': a dropped mode carries its level only (it has ' + extra.join(', ') + ')'); bad = true; } }
     if(bad) return;
-    if(cm.add === true){ plan.push({ cm, kind: 'add' }); return; }
+    const addMode = () => {   // v1.10.0 (the egress review): a mode the layer adds is written whole, so it carries its fx ("fx": {} for none) -- every library mode has one
+      if(!isPlainObj(cm.fx)){ errors.push(tag + ': a mode the layer adds carries an "fx" object (write "fx": {} for none)'); return; }
+      plan.push({ cm, kind: 'add' });
+    };
+    if(cm.add === true){ addMode(); return; }
     const cands = []; compiled.forEach((mo, i) => { if(lvl(mo) === lvl(cm)) cands.push(i); });
+    const atOf = mo => (mo.at === undefined ? null : mo.at), near = compiled.filter(mo => atOf(mo) === atOf(cm));
+    if(!cands.length && near.length){   // v1.10.0 (the egress review): a near miss is no plain target -- the compiled entry has modes at this `at`, none with this `when`
+      const ws = [...new Set(near.map(mo => (mo.when === undefined || mo.when === null ? 'none' : mo.when)))];
+      errors.push(tag + ': no compiled mode at [' + (atOf(cm) === null ? '—' : atOf(cm)) + '] has ' + (cm.when === undefined || cm.when === null ? 'no "when"' : 'when ' + cm.when) + ' (the compiled when: ' + ws.join(', ') + ') -- name the "when", or say "add" (a "when" is changed by drop and add)');
+      return;
+    }
     let idx;
     if(hasOwn(cm, 'nth')){
       if(cm.nth > cands.length){ errors.push(tag + ': "nth": ' + cm.nth + ' names no compiled mode (' + cands.length + ' at that level)'); return; }
@@ -1057,7 +1075,7 @@ function mergeModes(compiled, layerModes, changes, errors, name, addHk){
     else if(cands.length > 1){ errors.push(tag + ': ' + cands.length + ' compiled modes at that level -- name one with "nth", or "add" the mode'); return; }
     else {
       if(cm.drop === true){ errors.push(tag + ': "drop" names no compiled mode (none at that level)'); return; }
-      plan.push({ cm, kind: 'add' }); return;   // a level the compiled entry lacks: added
+      addMode(); return;   // an `at` the compiled entry lacks altogether: added
     }
     if(aimed.has(idx)){ errors.push(tag + ' and curated mode ' + (aimed.get(idx) + 1) + ' are aimed at one compiled mode (the ' + (cands.indexOf(idx) + 1) + ' of ' + cands.length + ' at that level): give each its own "nth", or "add" one'); return; }
     aimed.set(idx, ci);
@@ -1079,15 +1097,15 @@ function mergeModes(compiled, layerModes, changes, errors, name, addHk){
   const res = out.filter((mo, i) => !dropped.has(i));
   for(const p of plan){
     if(p.kind !== 'add') continue;
-    const mo = {}, tag = label(p.cm) + ' ';
+    const mo = { at: p.cm.at === undefined ? null : p.cm.at }, tag = label(p.cm) + ' ';   // the level first, as on a compiled mode: `at: null` is the base level, not a deletion
     for(const k of Object.keys(p.cm)){
-      if(['nth', 'add', 'drop'].includes(k)) continue;
+      if(['at', 'nth', 'add', 'drop'].includes(k)) continue;
       const v = p.cm[k];
       if(v === null){ changes.push(tag + k + ' null (nothing to delete: an added mode)'); continue; }
       if(k === 'fx' || k === 'req'){ const o = {}; mergeKeys(o, v, tag + k + ' ', [], errors, k === 'fx' ? addHk : null); Object.keys(v).filter(x => v[x] === null).forEach(x => changes.push(tag + k + ' ' + x + ' null (nothing to delete: an added mode)')); if(k === 'fx' || Object.keys(o).length) mo[k] = o; continue; }
       mo[k] = jclone(v);
     }
-    changes.push(tag + 'added' + (mo.fx ? ' (fx ' + (Object.keys(mo.fx).join(', ') || 'none') + ')' : ''));
+    changes.push(tag + 'added (fx ' + (Object.keys(mo.fx).join(', ') || 'none') + ')');
     res.push(mo);
   }
   return res;
@@ -1177,7 +1195,7 @@ function compile(cards, curated){
     if(typeof c.pool === 'number' && Number.isFinite(c.pool)) o.pool = c.pool;
     if(typeof c.blood === 'number' && Number.isFinite(c.blood)) o.blood = c.blood;
     return Object.keys(o).length ? o : null; };
-  const merged = [], mergeErrors = [], mergeIgnored = [];   // v1.10.0 (spec-card-sweep §4.4): the merged entries with what each layer changed; what fails the compile; directives on entries that do not opt in
+  const merged = [], mergeErrors = [];   // v1.10.0 (spec-card-sweep §4.4): the merged entries with what each layer changed; what fails the compile
   const overlay = (dst, entries) => {
     const compiled = Object.assign({}, dst);   // v1.10.0: the compiled entries as the overlay found them -- a merge lays over these, never over another hand entry
     Object.keys(entries || {}).forEach(name => {
@@ -1208,7 +1226,8 @@ function compile(cards, curated){
         if(canon && canon !== name){ dst[canon] = Object.assign({}, e); curVariant.push(name + ' -> ' + canon); }   // v1.9.3's rule: written under the printed name too
         return;
       }
-      if(raw && (hasOwn(raw, 'merge') || (Array.isArray(raw.modes) && raw.modes.some(mo => mo && ['nth', 'add', 'drop'].some(d => hasOwn(mo, d)))))) mergeIgnored.push(name);   // overlaid whole as today; the report warns
+      if(raw && hasOwn(raw, 'merge')){ mergeErrors.push(name + ': "merge" is true or absent (it is ' + JSON.stringify(raw.merge) + ')'); return; }   // v1.10.0 (the egress review): no half opt-in
+      if(raw && Array.isArray(raw.modes) && raw.modes.some(mo => mo && ['nth', 'add', 'drop'].some(d => hasOwn(mo, d)))){ mergeErrors.push(name + ': a mode carries "nth", "add" or "drop", which only a merge reads -- say "merge": true, or take them out'); return; }
       const e = Object.assign({}, entries[name]);
       e.src = 'hand';
       const auto = dst[name];
@@ -1276,7 +1295,7 @@ function compile(cards, curated){
     },
     crypt, lib, alias
   };
-  return { out, collisions, curApplied, curNew, curVariant, costUnknown, v5Titles, costInherited, costMismatch, costX, reqInherited, merged, mergeIgnored };
+  return { out, collisions, curApplied, curNew, curVariant, costUnknown, v5Titles, costInherited, costMismatch, costX, reqInherited, merged };
 }
 
 /* ---------------- diff-friendly serializer ----------------
@@ -1326,10 +1345,9 @@ function report(res, verbose){
     lines.push('  merged entries (v1.10.0: the curated layer over the compiled entry; src hand, merged, handKeys): ' + res.merged.length);
     res.merged.forEach(m => lines.push('    · ' + m.name + ': ' + (m.changes.join(' · ') || 'no change')));
   }
-  if((res.mergeIgnored || []).length) lines.push('  ⚠ "merge" not true, or a mode\'s nth / add / drop, on an entry that does not opt in ("merge": true) -- overlaid whole, the keys written as they stand: ' + res.mergeIgnored.join(', '));
   if(verbose){
     const freq = {};
-    Object.values(out.lib).forEach(e => (e.modes || []).forEach(m => Object.keys(m.fx).forEach(k => freq[k] = (freq[k] || 0) + 1)));
+    Object.values(out.lib).forEach(e => (e.modes || []).forEach(m => Object.keys((m && m.fx) || {}).forEach(k => freq[k] = (freq[k] || 0) + 1)));   // v1.10.0: a mode without fx (test-cardfx.js forbids it) never throws here
     lines.push('  fx key frequency:');
     Object.entries(freq).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => lines.push('    ' + k.padEnd(11) + v));
     const bare = Object.entries(out.lib).filter(([n, e]) => e.t.includes('action') && !e.modes).slice(0, 8);
@@ -1384,10 +1402,11 @@ if(require.main === module){
     console.error('    See elysium-cardfx-design.md (Format compatibility) and the client parser field map in SKILLS.md.');
     process.exit(1);
   }
-  fs.writeFileSync(o.out, serialize(res.out));
+  const text = serialize(res.out), rep = report(res, o.report);   // v1.10.0 (the egress review): everything that can throw comes before the first write -- a failed run leaves no half-written library
+  fs.writeFileSync(o.out, text);
   fs.writeFileSync(o.out.replace(/\.json$/, '.js'),                       // v1.6.13 (HB2c-file, 8 Aug): the file:// sibling --
-    'globalThis.ELYSIUM_CARDFX = ' + serialize(res.out) + ';\n');          // a classic <script> is CORS-exempt on file:// where fetch() is not, so double-click hotseat bots get the full database with zero friction
-  console.log(report(res, o.report));
+    'globalThis.ELYSIUM_CARDFX = ' + text + ';\n');          // a classic <script> is CORS-exempt on file:// where fetch() is not, so double-click hotseat bots get the full database with zero friction
+  console.log(rep);
   console.log('  → ' + o.out + ' (' + fs.statSync(o.out).size + ' bytes)');
 }
 

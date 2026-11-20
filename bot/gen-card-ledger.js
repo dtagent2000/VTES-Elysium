@@ -278,6 +278,10 @@ function cryptSelfTest(quiet){   // returns the number of failed checks; quiet =
   const mrg = E(['mod'], 'hand', { kM: 1 }, { merged: true, handKeys: ['kM'] }), cenM = libCensus({ M: mrg, B: lib0.B, A: lib0.A }, () => 'FULL');
   eq([tierLabel(mrg), tierLabel(lib0.B), tierLabel(lib0.A), tierLabel(lib0.D), tierLabel(null)], ['curated, merged', 'curated', 'auto', 'handler', '\u2014'], 'the tier a row shows: a merged hand entry is curated, merged; another hand entry curated');
   eq(cenM.byVerdict.FULL, { n: 3, auto: 1, curated: 2, handler: 0 }, 'the census counts a merged entry in the curated tier');
+  // the egress review (L-13): a ROW rendered through the page's own two functions, a merged entry and a whole hand entry
+  const rowOf = e => rowLine(finishRow({ card: 'Synthetic Card', e, decks: { malkavian: 2 }, verdict: 'FULL', uses: 0, usesBy: {}, kc: null, names: [], per: [] }, {}, false, () => []), false, {});
+  eq([rowOf(mrg), rowOf(lib0.B)], ['| Synthetic Card | mod | curated, merged | FULL | playable (static) | malkavian 2 | — | — |  |', '| Synthetic Card | mod/react | curated | FULL | playable (static) | malkavian 2 | — | — |  |'],
+     'a row as the page writes it: a merged entry\'s tier reads curated, merged; a whole hand entry\'s curated');
   if (!quiet || bad) console.log('gen-card-ledger --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed'));
   return bad;
 }
@@ -301,6 +305,23 @@ function parseArgs(argv){
 
 const STATUS_ORDER = ['unresolved', 'inert', 'partial', 'not seated', 'unseen', 'playable (static)', 'playable'];
 const PLAYS = st => st === 'playable' || st === 'playable (static)';   // a row with nothing missing
+/* v1.2.2 (the egress review, LESSONS L-13): a library row's derived fields and its line, each in one function the page and the self-test
+   both call -- so the self-test renders a row through the code that writes the page */
+function finishRow(x, seatedBy, haveSim, suiteSections){
+  x.seated = Object.keys(x.decks).reduce((s, k) => s + (seatedBy[k] || 0), 0);
+  x.status = statusOf(x.verdict, x.uses, x.seated, haveSim);
+  x.tier = tierLabel(x.e);
+  const kc = x.kc;
+  x.rulings = kc ? (kc.rulings || []).length : null;
+  x.type = kc ? (kc.types || []).join('/') : ((x.e && x.e.t) || []).join('/');
+  x.suite = suiteSections([x.card, ...x.names]);
+  x.missing = x.per.filter(p => !p.consumed).map(p => '[' + p.at + (p.dir ? ' D' : '') + '] ' + p.fxKeys);
+  return x;
+}
+function rowLine(x, haveSim, seatedBy){
+  return '| ' + x.card + ' | ' + (x.type || '—') + ' | ' + x.tier + ' | ' + x.verdict + ' | ' + x.status + ' | ' + Object.entries(x.decks).sort().map(([k, n]) => k + ' ' + n + (haveSim ? ' (' + (x.usesBy[k] || 0) + '/' + (seatedBy[k] || 0) + ')' : '')).join(', ') +
+    ' | ' + (x.rulings == null ? '—' : x.rulings) + ' | ' + (x.suite.length ? x.suite.slice(0, 8).join(', ') + (x.suite.length > 8 ? ' +' + (x.suite.length - 8) : '') : '—') + ' | ' + (PLAYS(x.status) || x.status === 'unseen' || x.status === 'not seated' ? '' : x.missing.join('; ')) + ' |';
+}
 function statusOf(verdict, uses, seated, haveSim){
   if (verdict === 'UNRESOLVED' || verdict === 'IN-CRYPT?') return 'unresolved';
   if (['INERT', 'NAME-ONLY', 'REF-TERMS', 'HANDLER-UNREG'].includes(verdict)) return 'inert';
@@ -379,16 +400,7 @@ function main(){
     }
   }
   const haveSim = o.sims.length > 0;
-  for (const x of rows.values()){
-    x.seated = Object.keys(x.decks).reduce((s, k) => s + (seatedBy[k] || 0), 0);
-    x.status = statusOf(x.verdict, x.uses, x.seated, haveSim);
-    x.tier = tierLabel(x.e);
-    const kc = x.kc;
-    x.rulings = kc ? (kc.rulings || []).length : null;
-    x.type = kc ? (kc.types || []).join('/') : ((x.e && x.e.t) || []).join('/');
-    x.suite = suiteSections([x.card, ...x.names]);
-    x.missing = x.per.filter(p => !p.consumed).map(p => '[' + p.at + (p.dir ? ' D' : '') + '] ' + p.fxKeys);
-  }
+  for (const x of rows.values()) finishRow(x, seatedBy, haveSim, suiteSections);
 
   // the class map: unconsumed fx keys of every non-playable row, weighted by copies
   const meaningful = k => k && k !== '—' && !['paired', 'meta', 'crypt'].includes(String(COV.CLASS[k] || ''));
@@ -538,10 +550,7 @@ function main(){
   P('## The ledger');
   P('');
   P('| card | type | tier | verdict | status | decks: copies' + (haveSim ? ' (uses / matches seated)' : '') + ' | rulings | suite § | missing modes |'); P('|---|---|---|---|---|---|---:|---|---|');
-  for (const x of all){
-    P('| ' + x.card + ' | ' + (x.type || '—') + ' | ' + x.tier + ' | ' + x.verdict + ' | ' + x.status + ' | ' + Object.entries(x.decks).sort().map(([k, n]) => k + ' ' + n + (haveSim ? ' (' + (x.usesBy[k] || 0) + '/' + (seatedBy[k] || 0) + ')' : '')).join(', ') +
-      ' | ' + (x.rulings == null ? '—' : x.rulings) + ' | ' + (x.suite.length ? x.suite.slice(0, 8).join(', ') + (x.suite.length > 8 ? ' +' + (x.suite.length - 8) : '') : '—') + ' | ' + (PLAYS(x.status) || x.status === 'unseen' || x.status === 'not seated' ? '' : x.missing.join('; ')) + ' |');
-  }
+  for (const x of all) P(rowLine(x, haveSim, seatedBy));
   P('');
   /* the crypt (v1.1.0): after the library, so the library half of the page reads as before */
   const CST = ['unmodelled', 'partial', 'modelled', 'no ability', 'unresolved'];
