@@ -23,7 +23,7 @@
     card" deleted (C's reader; the spec's §11.2 (6) and this file's entry of 20 Nov keep its facts). **HARNESS**: agents per task
     (D-131); the egress reviewer always one that did none of the work.
   - **The budgets** (D-101): history cut first (0.9 KB of built stories and measurements in twelve RULINGS lines, BOARD's done
-    steps); then RULINGS 67.5 → 68 KB and the total 179 → 179.5 KB (`tools/doc-budget.sh`).
+    steps); then RULINGS 67.5 → 68 KB and the total 179 → 180 KB (`tools/doc-budget.sh`).
   - *Gates* (docs only): `DOC_BUDGET_ROOT_DRIFT=fail bash tools/doc-budget.sh` PASS (the total 179,495 of 179,500, the bootstrap
     49,819 of 50,000); `bash tools/test-doc-budget.sh`: every case red, the baseline green; the eight bundle files in `bot/` equal
     the root's (`cmp`). No suite was run: no code changed.

@@ -462,9 +462,10 @@ readings, D-104's release rule, §4.2's guard on the finished decks. This round 
    types are a development-time lookup. The translation is not always one to one: several of their types may be one key of ours
    and a condition tag; a concept they model that we lack and the bot needs gets a key of ours, named by us and read from KRCG's
    text; what the bot does not need is not translated.
-4. **Where their names may stand.** In no card data, not in the bot, not in the bundle, not in a pattern or a card list (§5). The
-   one place that knows them today is the development tool that reads their file (`gen-review-sheet.js`: its parser, and a few
-   of their identifiers in its comments; its self-test uses invented names). A family's pairing, which of their effect types
+4. **Where their names may stand.** In no card data, not in the bot, not in the bundle, not in a pattern or a card list (§5). They
+   stand in two places today, both development material: the tool that reads their file (`gen-review-sheet.js`: its parser, and
+   a few of their identifiers in its comments; its self-test uses invented names), and appendix B of this page, which names the
+   enum their effects belong to. A family's pairing, which of their effect types
    answer our key, is given to the tool when it runs and is printed on its scratch sheet; the round's report says it in our
    words. Whether a pairing table may be committed inside a development tool is open (§11.6).
 5. **Exact.** An effect on a card at a level is *exact* when two independent readings agree on it: ours, read from KRCG's text by
@@ -485,7 +486,7 @@ readings, D-104's release rule, §4.2's guard on the finished decks. This round 
 | step | what | done when |
 |---|---|---|
 | **B. The pilot: Banu Haqim** | Unchanged (D-127): the merge of hand entries first (§4.4), then the pilot. The merge is what lets a hand entry keep its remainder only, so a family's keys reach the hand-curated cards. | As §4. |
-| **C. The library by effect** (was: the harvest) | One family a round, two when it needs a new mechanism: the cross-check of the whole library for the family, every disagreement read against KRCG's text, our entries corrected, the reader. The harvest's items ride in it: a hand-only key is asked "who else prints this?" when its family comes up; the compiler's known misses; the five other misreads; §4.3's latent reds and ambers; the condition sentences' untagged variants. | §11.4's horizon is reached. Every disagreement on a finished family's sheet is corrected, noted or explained. The sharing register has no `backlog` row for a key of a finished family. |
+| **C. The library by effect** (was: the harvest) | One family a round, two when it needs a new mechanism: the cross-check of the whole library for the family, every disagreement read against KRCG's text, our entries corrected, the reader. The harvest's items ride in it: a hand-only key is asked "who else prints this?" when its family comes up, the seven finished decks' keys first within a family (D-126); the compiler's known misses; the five other misreads; §4.3's latent reds and ambers; the condition sentences' untagged variants. | §11.4's horizon is reached. Every disagreement on a finished family's sheet is corrected, noted or explained. The sharing register has no `backlog` row for a key of a finished family. |
 | **D. The starters' remainder** (was: the other twelve starters) | Nearest first, re-ranked from the ledger after every starter: the unique effects a starter needs, and its strategy baseline. | Each starter done as §3. |
 
 ### 11.4 What the numbers say, and the horizon (measured 20 Nov, read-only; appendix C)
