@@ -14956,7 +14956,7 @@ async function connectWithRetry(client, tries = 30){
            '180l The Jones’ press is its dodge’s, no bare press; a card already in play holds nothing; a Sudden Reversal taken back leaves no orphan hold -- the next card is replaced (got ' + JSON.stringify({ jE, jC, inPlay, afterSr, drew }) + ')'); }
     }
 
-    /* 181) v0.6.236 (unreleased) -- THE BANU HAQIM PILOT, executor B1 (specs/spec-sweep-pilot-2026-11-20.md section 3.2 items 1, 2, 3, 5,
+    /* 181) v0.6.236 -- THE BANU HAQIM PILOT, the readers (B1) (specs/spec-sweep-pilot-2026-11-20.md section 3.2 items 1, 2, 3, 5,
        7; cardfx v1.11.0): (a) the card rush -- the best usable rush card, its level, cost, printed stealth and target condition; every
        card but Deep Song announces on the granted rush's line, the target does not lock, the rusher acts, the card goes to the ash heap
        blocked or through, its grant armed only when it goes through; (b) the rushed bot reads that line for any card and keeps the
@@ -15520,7 +15520,7 @@ async function connectWithRetry(client, tries = 30){
            '181h a card that requires a discipline, at no level (the pilot’s review, pass 2, F1): Pounce is no strike for Kasim (no Flight), Chalcedony’s (a Gargoyle); Taming the Beast none for Amavi; Backstep goes to long only; Swoop to close, a flyer’s; Dagon’s Call is no press; Revelations’ +1 stealth action is Kasim’s (Auspex), not Madison’s; Break the Bonds’ Bleed (‘More than one Discipline can be used’) is Brandon Grime’s by Presence alone, not Elen Kamjian’s (an Anarch with none of the three); a planted retainer or equipment is not gated, an action is; with no vampire asked nothing is gated (the anarch gate’s contract) (got ' + JSON.stringify(got) + ')'); }
     }
 
-    /* 182) v0.6.236 (unreleased) -- THE BANU HAQIM PILOT, executor B2 (specs/spec-sweep-pilot-2026-11-20.md section 3.2 items 4, 6, 8;
+    /* 182) v0.6.236 -- THE BANU HAQIM PILOT, the masters and the action side (B2) (specs/spec-sweep-pilot-2026-11-20.md section 3.2 items 4, 6, 8;
        cardfx v1.11.0 + oncePerVampire on Shadow of the Beast and New Moon Sigil): (a) Haven Uncovered by key, unchanged; (b) Priority
        Contract through a whole turn between two bots -- placed by the look-ahead on my prey's vampire for the chosen Banu Haqim (its own
        line), the chosen rushes through it (+1 stealth, the host unlocked, the rusher acts), the host's taken line sends it to torpor and
