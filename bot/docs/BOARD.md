@@ -1,4 +1,4 @@
-# BOARD — the open asks (20 Nov 2026, v0.6.235). A line is deleted when done; found work is added as a line.
+# BOARD — the open asks (20 Nov 2026, v0.6.236). A line is deleted when done; found work is added as a line.
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
@@ -19,18 +19,14 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   pilot, is built (v0.6.236, D-134). Next **C**, concentrated (§11.8): several families a round over the whole library, the first building
   the cross-check tool and taking `stealth` / `actStealth`, `intercept`, `bleed`, then combat, then the rest of §11.4's horizon;
   parallel readers of the differing cards against KRCG's text, a separate reviewer; the bots' readers of a human's play in
-  rounds of their own, the first right after C's first. C's riders: the title family; §4.3's latent reds and ambers; the
-  condition sentences' untagged variants; wave 6's curation queue and `_entryReqOk` in the stealth, bleed-modifier and action
-  finders (spec-v5-wave6 §8); the weapon's maneuver and its neighbours (spec-v5-wave2 §4); the free block bars and `chosen`
-  (O-21) and the ledger's grade column (both spec §11.10); Hunting the Quarry (`specs/spec-sweep-pilot-2026-11-20.md` §3.3). **D**, the starters' remainder where a starter needs it, with its strategy
-  baseline.
+  rounds of their own, the first right after C's first. C's riders: the title family; the ledger's grade column (spec §11.10);
+  Hunting the Quarry (`specs/spec-sweep-pilot-2026-11-20.md` §3.3). The problems the sweep finds, and its earlier riders, are in
+  `SWEEP-REGISTER.md` (D-135; below). **D**, the starters' remainder where a starter needs it, with its strategy baseline.
   Crypt waves (D-108): B = the rest by class, the 13 partial copies first. A deck joins the menu by D-108; before the deck
   count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares them). The root README credits
   zero-vtes (D-128; main's, handoff). *Done when* C's horizon is reached, the 18 starters' rows are playable, every
-  hand-only key has its sharing answer and C's riders are done or ruled out (their done-whens: spec-v5-wave6 §8, spec §11.10,
-  spec-v5-wave2 §4). Docs: RULINGS D-84, D-102, D-104, D-108, D-125 – D-127, D-130, D-132, D-134; `CARDS.md`; HOWTO.
-- **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9; the pilot's §6): what v1 of each wave left out, the
-  amber halves and the latent items; no line says a human's Sudden Reversal cancelled a bot's master (main, 19 Nov). *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, R-46, D-99 – D-123, D-134.
+  hand-only key has its sharing answer and C's riders are done or ruled out. Docs: RULINGS D-84, D-102, D-104, D-108,
+  D-125 – D-127, D-130, D-132, D-134, D-135; `CARDS.md`; HOWTO.
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct; refined by the archetypes): D-112 checks each
   strategy line against its guide; Toreador's is done (D-118). *Done when* each deck's proposals have Johan's "kör" or "no".
   Docs: RULINGS D-43, O-33, D-112, D-118.
@@ -56,30 +52,34 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   ctxC.plain` passes for either pick and reads no score, so the streak's −0.30 on the card line is untested. *Done when* 69b
   compares the card score with and without the streak.
 
+## The sweep register (D-135): `SWEEP-REGISTER.md` by class; a round takes one; *done when* its class is empty
+- **The active entries** (5.2 the .44 Magnum's maneuver, 7.1 Aire of Elation, 7.2 The Warrens, 11.1 Revelations' predator):
+  seen in the 240 or the smokes, so they go in the next release (D-135).
+- **1. Retainers: version and holder** (R-47): next; its design question first (where another seat's retainer's version comes from).
+- **2. `aggr` misreads.**
+- **3. Another minion's sentence read as the player's** (L-98's rest).
+- **4. Another seat's play the bots do not read** (mostly a human's): the readers' rounds (D-132), the first right after C1.
+- **5. Maneuvers: direction and source.**
+- **6. Records by name.**
+- **7. Conditional and capped values** ("with an additional +N … if", a family for C).
+- **8. Requirements, conditions and gates.**
+- **9. Key and compiler shapes.**
+- **10. Unbuilt modes, targets and riders.**
+- **11. Windows: who is asked, and when.**
+- **12. Combat's steps** (C2's neighbours).
+- **13. Choices around a card**: Claude's priors, each a design to Johan first (D-87).
+
 ## Known, not built (bot side)
-- **Revelations [AUS] is undirected**: my window asks only my prey and the other bots open only the
-  prey's, so no predator is asked (the 240: 182 superior peeks). *Done when* both sides ask both, a section red on v0.6.235.
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
   the merged decks' share; a few decks count twice. A v5 rebuild (scratch: 4,709 decks, Magnum under 10) drops a name the bot
   records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
   (or they carry every cardfx name), every deck's library names hit a key, and the rebuild ships with a sim footprint.
   Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
-- **A human's bounce of a bot's bleed** is not read by the acting bot; a bot that is a bounce's new target cannot bounce onward.
-  *Done when* the client's bounce play line (a pool target) is parsed and section-tested. Docs: RULINGS O-3.
-- **A human's Change of Target after a right-click action** (main, 11 Nov §1) names no vampire or another: `_onCot` misses it.
-  Main: such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. *Done when* a section shows it read.
 - **Hand names out of the console outside debug** (main, 11 Nov: the security plan's item 6): an online host can read a bot's
   console, which names hand cards. *Done when* only debug names them, section-tested.
 - **The gates on the root's release** (Q4, main's yes of 3 Nov): the canary, the suite's
   server and 154f, the arena, the sim and the hotseat gate read the root's client and server and `client/`'s protocol, the copies
   go, STATUS pins the main commit. *Done when* every gate reads the root and CI is green on it.
-- **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.
-- **Haven Uncovered's record is by name** (the pilot's review; L-60: P2 fixed the contract's): `_havenHosts` finds another
-  placer's Haven by its name on that board, so one that left play while its host stays ready reads live if the placer holds
-  another (a rush through a gone Haven, a cloak spent for it). *Done when* the record follows the card, as the contract's does.
-- **Adaptive skips a maneuver a human holds without a card** (the pilot's review; since v0.6.194): with an empty hand
-  `_phaseSkip(1)` skips a vampire's own maneuver each combat (Abaddon, salubri; no crypt key) and one granted this combat (Guard
-  Dogs [ANI], a rush card's `maneuverGrant`); only a card on the minion is read. *Done when* it reads them, or never skips step 1.
 - **Steal pair under a combat ends**: the stealer's side does not apply v0.6.196's rule when the victim's Majesty ends the combat.
   *Done when* `ana-ledger.py` prints equal pairs on a smoke with that case. Docs: RULINGS O-12.
 - **Nosferatu's Fame chain** (Fame → rush → torpor → rescue) has never run; the rush is not priced in pool. *Done when* a sim series
@@ -97,8 +97,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   Docs: `history/specs/spec-home-pricing-2026-09-19.md`.
 - **The minion head reads last turn's `_turnActs`** (Change of Target's ledger): it is reset after `_strategize`, `_probeOrder` and
   `_minionKeyOrder` ask. *Done when* the reset comes first, footprint read.
-- **`_wakeCard()` is vampire-blind** at the bounce, vote and reduce routes and in `interceptPotential` (`_wakeCardFor(v)` exists).
-  *Done when* every site reads the vampire.
 - **The locked routes' last rungs** (round F, D-116 (5)): the block decision counts the unlock reactions, not the Underbridge Stray
   (the route's last rung, an ally burned); `_wakeBlockersAfter` (the keep-blocker read) counts wakes only; Eyes of the Wild by a
   vampire already attempting to block [ANK 20181122-2] is not built. *Done when* each reads the route, or is ruled out.
@@ -108,16 +106,6 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Vote-count residue**: three channels at once (menu line, counter, both) under-count; Protected District's votes come from the
   counter only. *Done when* main ships the additive counter verb or the client writes both. Docs:
   `specs/spec-referendum-terms-2026-09-18.md`.
-- **Wasserschloss Anif's burn action, Haven Uncovered's host burning it, Ventrue HQ in others' referendums.** *Done when* each is
-  played in a sim series. Docs: RULINGS O-23.
-- **Two Pentex spellings** are two cards to `_uniqueInPlay`. *Done when* `_uniqueInPlay` compares the normalised name. Docs:
-  RULINGS O-24.
-- **The act-again context reads `mo.fx.referendum`** (`_actAgainCtx`'s "clogged" test), which no cardfx entry carries — political
-  cards carry `e.ref` — so a political action in hand never counts as another use for the vampire (the coverage scan).
-  *Done when* the test reads the political type and a section covers it.
-- **The act-again point after a failed referendum**: an unblocked political action succeeded whatever its referendum did, but a
-  failed one writes no `_lastAct`, so neither Freak Drive nor Shadow Cloak follows it (v0.6.234). *Done when* it does, a section
-  through `_maybeActAgain`. Docs: RULINGS R-44.
 - **The influence floor at `poolFloor` 0**: the influence phase leaves `poolFloor` (6 for every persona; 1 with no ready minion);
   a knob of 0, which only test fixtures set, lets it spend the last pool (D-97's inventory). *Done when* the floor is at
   least 1 and the fixtures that relied on 0 are read (L-16).
