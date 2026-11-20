@@ -14,7 +14,8 @@
   D-101: RULINGS 70 KB, HARNESS 9 KB, the total 182 KB (cut first: BOARD 1.5 KB, D-123's measurement); the bootstrap stays 50 KB;
   a proposal for each of BOARD's other lines is in the PR, for Johan.
   *Gates:* `tools/doc-budget.sh` PASS; `tools/test-doc-budget.sh` every case red, the baseline green (the check changed);
-  no code, so no suite. *Egress:* in the PR (review until clean, D-133).
+  no code, so no suite. *Egress:* 18 findings (stale-doc 12, half-done 3, unproven 2, rule-missed 1) in 3 passes, all fixed
+  (the third pass's four without a fourth review: the loop's limit, D-133).
 - **The V5 sweep, step B's first part: the merge of hand entries (20 Nov 2026, bot v0.6.235, no bot change; PR #92)** — RULINGS
   D-127 (Johan's "kör" of 19 Nov on the design), `specs/spec-card-sweep-2026-11-18.md` §4.4, stacked on #91. No bot byte and no
   cardfx byte: nothing opts in.

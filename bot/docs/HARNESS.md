@@ -44,7 +44,7 @@ Three findings of one class across rounds become a rule in CLAUDE.md or a lesson
 `Egress: <n> findings (<classes>) in <p> passes, <fixed> fixed, <listed> listed`.
 
 **Review until clean** (Johan, 20 Nov: D-133). The executor fixes what a pass finds and the gates run again; then a NEW reviewer,
-one that saw no earlier pass and did none of the work, checks the fixes and the whole diff. The loop ends at a clean pass or
+one that took no part in an earlier pass and did none of the work, checks the fixes and the whole diff. The loop ends at a clean pass or
 after three, and what is still open goes to Johan in the PR. Where the rules or the text do not reach, it stops and asks him.
 Executor and reviewer are the same model and can share a misreading: KRCG's text, the rulings and zero-vtes are the witnesses
 outside it.
