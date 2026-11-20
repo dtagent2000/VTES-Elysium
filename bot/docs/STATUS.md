@@ -13,7 +13,7 @@ the library by effect (RULINGS D-130, D-131, O-48; spec-card-sweep §11); #92 on
 DIVERGED 195, SAME-PLAY 45 · `ana-gates.py` PASS on all 17 · the arena smoke 3 of 5 PASS (two misses outside the round: BOARD).
 20 Nov, on client v2.6.179: suite 2618/0 (one frozen run) · canary 235/0 ×2 · hotseat 12/0 · HB1 11/0 · main's client suite
 383/1 (the guide's embed) · the 240 SAME-PLAY 240 against v2.6.177's table.
-20 Nov, #92 (no bot or cardfx byte): `test-cardfx` 425/0 · a scratch compile = the committed library · suite 2618/0 (one
+20 Nov, #92 (no bot or cardfx byte): `test-cardfx` 437/0 · a scratch compile = the committed library · suite 2618/0 (one
 frozen run) · canary 235/0 ×2 · the tools' self-tests, the lint, doc-budget PASS.
 
 ## Next

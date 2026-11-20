@@ -5,7 +5,7 @@ Everything runs from inside `bot/`. Third-party data (`vtes.json`, the TWDA) is 
 `curl -o vtes-v5.json https://static.krcg.org/data/v5/vtes.json && curl -o expansions.json https://static.krcg.org/data/v5/expansions.json
 && node krcg-v5.js` (`--compare OLD.json` prints the field diff against a v3 file by card id). When the network policy blocks it (a 403
 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and copy the two dump files in. KRCG's v3 file
-(static.krcg.org/data/v4/vtes.json) stopped at Sabbat V5: only a `--compare` input now. The TWDA: `twda.json`, KRCG's
+(static.krcg.org/data/v4/vtes.json) is only a `--compare` input now. The TWDA: `twda.json`, KRCG's
 v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twda.py` refuses the old list). Check what a reader `open()`s before naming a file.
 
 ## Running
@@ -64,7 +64,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   say so in the PR; `test-cardfx` / `gen-precon --check` red with no card change -- KRCG's data moved, a round of its own; a
   doc-budget version line on a PR -- main released (a scheduled run or a push only warns), refresh STATUS in the PR. The correctness lint by
   hand, from `bot/`: `npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .`
-  -- every finding fails; the suppressions file is `{}` since C2 and only shrinks (never `--suppress-all` / `--suppress-rule`:
+  -- every finding fails; the suppressions file is `{}` and only shrinks (never `--suppress-all` / `--suppress-rule`:
   CI fails a PR that adds one).
 - **The canary against main's release** (the second canary run): a scratch dir with `bot/test-bot-canary.js`, `bot/elysium-bot.js`,
   `bot/elysium-cardfx.json` (the human-Ball memo checks), the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; `node test-bot-canary.js` there.
@@ -119,8 +119,9 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   BEFORE the suite after adding an fx key. Audit curated vs auto before touching a curated field: compile once without the
   overlay and once with, diff the field per curated name. An entry with `"merge": true` (spec-card-sweep §4.4) carries its remainder
   only, over the compiled entry: a mode meets the compiled one at its `at` and `when` (`nth` from 1 picks one of several), `add`
-  appends, `drop` deletes, `null` deletes a key, any other target fails the compile; the report's `merged entries` lines say what
-  each layer changed. Political cards: `e.ref.pool` (terms), `e.ref.tags`, `e.ref.fx`;
+  appends, `drop` deletes, `null` deletes a key; a mode meeting none where one sits at its `at` fails the compile (name the
+  `when`, or `add`; a `when` changes by `drop` and `add`), as does each case `mergeHand` lists; the report's `merged entries`
+  lines name each layer's changes. Political cards: `e.ref.pool` (terms), `e.ref.tags`, `e.ref.fx`;
   never a referendum outcome in `modes[].fx`. Adding a family: `refTerms()` / `REF_PER` / `actWhen()` in the compiler + the NEG
   list in `test-cardfx.js`. `req.titles`, `req.unmodelled` (callers fail closed).
 - **The sharing register** (`cardfx-sharing.json`, D-125) — each hand-only key (an fx key on library hand entries only) has a
@@ -144,7 +145,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   VICTIM LOST` row is a lead; dealt vs taken; `LESS, UNEXPLAINED`) · `ana-block.py` (0 violations) · `ana-inv.py` (invariants;
   ~1 flag in 3 matches is the baseline; a new flag kind or a jump = a line the log cannot type (add its kind) or a real bookkeeping
   difference; `ELY_POOL_TRACE=1` names the code line behind a pool change) · `ana-windows.py` (the actor's reactions-only windows: ran out
-  and went through = 0 — since v1.1 past 2.5 s plus the bots' pace, with the table quiet that long inside the window; a slower window
+  and went through = 0 — past 2.5 s plus the bots' pace, with the table quiet that long inside the window; a slower window
   of paced answers is 'answered at the pace'; contests at the clock split blocked / failed; every `stale-answer` row read) · `ana-rare.py` (the rare paths a section proves:
   superseded combats, held / released turns, rush complies by path, fizzles, resolutions at an ousted seat) · `ana-jack.py` (Smiling Jack's
   plays, how each left play, its rounds in play; the burns the knob `jackBurn` picked, by deck, and how many were blocked) · `ana-guide-check.py DIR [DECK]`
@@ -194,7 +195,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   tail-append to a line ending in a comment; copy raw characters (em-dash, curly quotes) from the file.
 
 ## One-off tools (each reproduces a committed report; not gates)
-`ana-combat-sum.py` (`REPORT-combat-series-table.txt`) · `REPORT-bench-controls.md` (the arena bench, 27 Sep) ·
+`ana-combat-sum.py` (`REPORT-combat-series-table.txt`) · `REPORT-bench-controls.md` (the arena bench) ·
 `sweep-pilot.py`, `sweep-pass2.py`, `sweep-full.py` (the cardfx sweeps, `REPORT-cardfx-sweep-*.md`) · `diag-give-probe.js`
 (a live give / given probe through the server, ~70 s; copy it for any feature whose two halves meet only through the server) ·
 `diag-a1-stash-probe.js` · `gen-plan-review.js` · `gen-sweep-audit.js` · `gen-forecast-calibration.js` (to revive, BOARD).

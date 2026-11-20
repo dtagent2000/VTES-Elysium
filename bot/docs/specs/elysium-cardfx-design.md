@@ -153,7 +153,10 @@ decks and temperaments share one library and never share policy.
 | **playbook** | per-bot deck JSON + knobs (OUTSIDE this library) | Strategy: priorities, thresholds, aggression, block willingness. |
 
 Compile order: auto first, then `hand` entries REPLACE whole auto entries (no deep
-merge — predictable precedence). The compiled artifact is `elysium-cardfx.json`.
+merge — predictable precedence), except a library entry with `"merge": true` (compiler v1.10.0):
+it is laid over the compiled entry by the rules of `spec-card-sweep-2026-11-18.md` §4.4 (modes
+meet by `at` and `when`; a target the layer cannot name without doubt fails the compile). The
+crypt stays whole. The compiled artifact is `elysium-cardfx.json`.
 
 ## 3. Consumers and their contracts
 
