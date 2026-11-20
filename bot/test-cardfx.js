@@ -1186,6 +1186,99 @@ ok(fx.counts.libLock >= 140,
        'the real opt-ins are the pilot\u2019s five (' + realOpt.length + ': ' + realOpt.join(', ') + '): exactly their compiled and committed entries carry merged and handKeys (until v1.11.0 this guard held that none opted in)'); }
 }
 /* end: the merge of hand entries */
+/* The Banu Haqim pilot (20 Nov 2026, compiler v1.11.0; spec-sweep-pilot-2026-11-20.md §3.1, RULINGS D-125 / D-127 / D-132): the whole-mode
+   readings (the action rush and its grant, the hand strike), the ban, the animal marker, and the first merged entries. Each case on real
+   cards, each reading checked against KRCG's text in vtes.json; the negatives pin the whole-mode rule (a mode with a sentence no key
+   reads gets nothing from a pattern). */
+{
+  console.log('\nThe Banu Haqim pilot -- the whole-mode readings, the ban, the animal marker, the first merges (compiler v1.11.0)');
+  const L = res.out.lib, E = n => L[n] || {}, M = (n, at) => ((L[n] && L[n].modes) || []).find(mo => (mo.at === undefined ? null : mo.at) === at) || null;
+  const FX = (n, at) => JSON.stringify((M(n, at) || { fx: 'none' }).fx), anyKey = (n, k) => ((L[n] && L[n].modes) || []).some(mo => mo.fx && mo.fx[k] !== undefined);
+  /* the rush and its grant */
+  ok(FX("Hunter's Mark", 'cel+tha') === '{"rush":true,"pressGrant":1}' && M("Hunter's Mark", 'cel+tha').dir === true
+     && FX("Hunter's Mark", 'CEL+THA') === '{"ceBan":"r1","rush":true,"pressGrant":1}' && M("Hunter's Mark", 'CEL+THA').dir === true,
+     'Hunter\u2019s Mark (banuhaqim \u00d74): [cel][tha] \u2018Enter combat with a minion. This acting vampire gets 1 optional press during that combat.\u2019 is rush + pressGrant 1 (no press: a grant, not a card play); [CEL][THA] adds ceBan r1 (\u2018the opposing minion cannot strike: combat ends during the first round\u2019) and no strikeCE / combatEnds -- got ' + FX("Hunter's Mark", 'cel+tha') + ' / ' + FX("Hunter's Mark", 'CEL+THA'));
+  ok(FX('Fleetness', 'CEL') === '{"rush":true,"rushTo":"locked","maneuverGrant":1}' && FX('Fleetness', null) === '{"actStealth":1}' && FX('Fleetness', 'cel') === '{"bleedAct":true}' && E('Fleetness').cost.blood === 1,
+     'Fleetness (banuhaqim \u00d72): [CEL] \u2018Enter combat with a locked minion\u2019 + 1 optional maneuver -> rushTo locked, maneuverGrant 1 ([ANK 20210124]: an unlocked target fizzles); the +1 stealth action and the 1 blood stay; [cel] stays a bleed');
+  ok(FX('Ambush', null) === '{"rush":true,"rushTo":"locked","maneuverGrant":1}' && FX("Bum's Rush", null) === '{"rush":true,"maneuverGrant":1}' && E("Bum's Rush").noReplace === 'action',
+     'Ambush (a locked minion, 1 maneuver) and Bum\u2019s Rush (a minion, 1 maneuver; \u2018Do not replace until after this action\u2019 is its noReplace) -- whole, the header sentence read');
+  ok(FX('Line Brawl', 'pot') === '{"rush":true}' && FX('Line Brawl', 'cel') === '{}' && FX('Line Brawl', 'pre') === '{"bleedAct":true,"bleed":1}' && E('Line Brawl').anarchReq === true,
+     'Line Brawl [pot] (brujah \u00d76): \u2018Enter combat with a minion.\u2019 is a bare rush (no rushTo); \u2018Requires an Anarch\u2019 is the compiler\u2019s anarchReq; [cel] and [pre] unchanged');
+  ok(FX('Sense Death', 'ani') === '{"rush":true,"rushTo":"younger"}' && FX('Sense Death', 'val') === '{"rush":true,"pressGrant":1}' && FX('Sense Death', 'VAL') === '{"rush":true,"maneuverGrant":1,"pressGrant":1}'
+     && FX('Taunt the Caged Beast', 'ani') === '{"rush":true,"rushTo":"vampire","maneuverGrant":1}' && FX('Umbrous Clutch', 'obl') === '{"rush":true}' && FX('Umbrous Clutch', 'OBL') === '{"rush":true,"maneuverGrant":1}'
+     && FX('Hunting the Beast', 'aus') === '{"rush":true,"rushTo":"vampire"}' && FX('Charge of the Buffalo', 'for') === '{"rush":true,"rushTo":"locked"}' && FX('Nose of the Hound', 'aus') === '{"rush":true,"rushTo":"locked","maneuverGrant":1}',
+     'the rest of the library: Sense Death (younger; [val] \u2018during this combat\u2019 press; [VAL] \u2018As [val] above, and\u2019 a maneuver too), Taunt [ani] (\u2018with an optional maneuver in that combat\u2019), Umbrous Clutch (\u2018As above, and\u2019), Hunting the Beast [aus], Charge of the Buffalo [for], Nose of the Hound [aus] (a ready locked minion of another Methuselah)');
+  { const rushers = Object.keys(L).filter(n => (L[n].modes || []).some(mo => mo.fx && mo.fx.rush)).sort();
+    const want = ['Ambush', "Bum's Rush", 'Charge of the Buffalo', 'Deep Song', 'Fleetness', "Hunter's Mark", 'Hunting the Beast', 'Line Brawl', 'Nose of the Hound', 'Sense Death', 'Taunt the Caged Beast', 'Umbrous Clutch'];
+    const modes = rushers.flatMap(n => L[n].modes.filter(mo => mo.fx && mo.fx.rush).map(mo => ({ n, mo })));
+    ok(JSON.stringify(rushers) === JSON.stringify(want) && modes.length === 16 && modes.every(({ n, mo }) => mo.dir === true && L[n].t.includes('action') && mo.fx.maneuver === undefined && mo.fx.press === undefined)
+       && modes.every(({ n, mo }) => mo.fx.lockTarget === undefined || n === 'Deep Song'),
+       'the rush\u2019s volume: 16 modes on 12 cards (Deep Song\u2019s hand entry and 15 compiled modes on 11 cards), each a directed action mode with no maneuver / press beside it; lockTarget on Deep Song only -- got ' + rushers.join(', ') + ' (' + modes.length + ' modes)'); }
+  /* the rush refused: a mode with a sentence no key reads (the R cards of pilot-sharing \u00a71) */
+  { const R = ['Abuse of Power', 'Pillars Fall', 'Big Game', 'Dive Bomb', 'Clandestine Contract', 'Harass', 'Make the Misere', 'Purity of the Beast', 'Games of Instinct', 'Rumble', 'Monomancy', 'Coagulated Entity', 'Steely Tenacity', 'Consume the Dead'];
+    const refused = new Set((res.wholeRefused || []).map(r => r.name));
+    ok(R.every(n => !!L[n] && !anyKey(n, 'rush') && !anyKey(n, 'rushTo') && !anyKey(n, 'maneuverGrant') && !anyKey(n, 'pressGrant') && refused.has(n))
+       && FX('Big Game', null) === '{"maneuver":true,"press":true}' && FX('Harass', null) === '{"press":true}' && FX('Abuse of Power', null) === '{"actStealth":1}',
+       'the whole-mode rule refuses the rush on the rider cards and lists each in the report: Abuse of Power and Pillars Fall (after combat), Big Game (Red List), Dive Bomb ([FLIGHT], first round), Clandestine Contract (the card on the target), Harass (an or-condition), Make the Misere (the header), Purity of the Beast (an ally), Games of Instinct, Rumble and Monomancy (Sabbat), Coagulated Entity, Steely Tenacity, Consume the Dead -- their compiled keys untouched'); }
+  ok(FX('Nose of the Hound', 'spi') === '{"maneuver":true}' && FX('Nose of the Hound', 'SPI') === '{"maneuver":true}' && FX('Charge of the Buffalo', 'spi') === '{"handBonus":1,"handStrike":true}' && FX('Charge of the Buffalo', 'SPI') === '{"handBonus":1,"handStrike":true}'
+     && FX('Hunting the Beast', 'AUS') === '{"bloodAdd":2}',
+     'a refused mode beside a whole one keeps its compiled keys: Nose of the Hound [spi] (\u2018an additional optional maneuver\u2019) and [SPI] (a new target), Charge of the Buffalo [spi] / [SPI] (the range and the initial strike), Hunting the Beast [AUS] (after combat)');
+  { const ds = E('Deep Song'), cds = curated && curated.lib['Deep Song'];
+    ok(ds.src === 'hand' && !ds.merged && !!cds && JSON.stringify(ds.modes) === JSON.stringify(cds.modes) && FX('Deep Song', 'ANI') === '{"rush":true,"lockTarget":true}',
+       'Deep Song is its hand entry, unchanged: [ANI] rush + lockTarget (\u2018Enter combat with and lock a vampire\u2019), no rushTo or grant'); }
+  /* the ban */
+  ok(FX('Sanguine Entrapment', 'CEL+QUI') === '{"ceBan":"round"}' && !M('Sanguine Entrapment', 'cel+qui') && !anyKey('Sanguine Entrapment', 'dodge') && !anyKey('Sanguine Entrapment', 'strikeCE') && !anyKey('Sanguine Entrapment', 'combatEnds'),
+     'Sanguine Entrapment: \u2018The opposing minion cannot strike: combat ends this round\u2019 is ceBan round, never a combat-ends strike; \u2018cannot strike: dodge\u2019 is never a dodge (that mode is gone: no key carries the dodge ban)');
+  ok(FX('Mind of the Wilds', 'ani+aus') === '{"ceBan":"action","maneuver":true}' && FX('Mind of the Wilds', 'ANI+AUS') === '{"ceBan":"action","maneuver":true,"stealth":1}' && FX('Dog Pack', null) === '{"ceBan":"combat"}',
+     'Mind of the Wilds: \u2018If this action is blocked, ... the blocking minion cannot strike: combat ends\u2019 is ceBan action ([LSJ 20100308]: for the duration of the action), its maneuver kept; Dog Pack: \u2018Minions in combat with the employer cannot strike: combat ends\u2019 is ceBan combat');
+  { const banned = Object.keys(L).filter(n => anyKey(n, 'ceBan')).sort();
+    ok(JSON.stringify(banned) === JSON.stringify(['Dog Pack', "Hunter's Mark", 'Mind of the Wilds', 'Sanguine Entrapment']) && banned.every(n => !anyKey(n, 'strikeCE') && !anyKey(n, 'combatEnds')),
+       'the ban\u2019s volume: exactly the four cards that print \u2018cannot strike: combat ends\u2019 carry ceBan, none a strikeCE or combatEnds -- got ' + banned.join(', ')); }
+  /* the hand strike */
+  ok(FX('Blood Rage', 'tha') === '{"handStrike":true,"handBonus":0,"noPreventDisc":"for","nullOppWeapons":true}' && FX('Blood Rage', 'THA') === '{"handStrike":true,"handBonus":1,"noPreventDisc":"for","nullOppWeapons":true}' && E('Blood Rage').req.rangeClose === true,
+     'Blood Rage (banuhaqim \u00d72): [tha] \u2018Strike: hand strike.\u2019 is handBonus 0 (a number: the chooser plays it), Fortitude-proof and weapons-null; [THA] \u2018As above, and this hand strike is at +1 damage\u2019 is handBonus 1 ([TOM 19960225]: it inherits the properties); close range only');
+  ok(FX('Blood Fury', 'tha') === '{"handBonus":1,"handStrike":true,"noPreventDisc":"for","nullOppWeapons":true}' && FX('Blood Fury', 'THA') === '{"handBonus":2,"handStrike":true,"noPreventDisc":"for","nullOppWeapons":true}'
+     && FX('Bollix', 'tha') === '{"handBonus":1,"handStrike":true,"noPreventDisc":"for","nullOppWeapons":true}' && FX('Bollix', 'cel') === '{"maneuver":true,"press":true}',
+     'Blood Fury [THA] \u2018As above, but at +2 damage\u2019 is handBonus 2 (it read +1); Bollix [tha] gets both riders (its only strike mode prints them); Bollix [cel] unchanged');
+  ok(FX('Soul Burn', 'tha') === '{"strike":1,"ranged":true,"noPreventDisc":"for","nullOppWeapons":true}' && FX('Soul Burn', 'THA') === '{"strike":2,"ranged":true,"noPreventDisc":"for","nullOppWeapons":true}' && E('Soul Burn').src === 'hand' && !E('Soul Burn').merged,
+     'Soul Burn (banuhaqim, a whole hand entry): nullOppWeapons on both modes beside its noPreventDisc');
+  ok(!anyKey('Soulgrinder', 'noPreventDisc') && !anyKey('Dead Hand', 'noPreventDisc') && FX('Soulgrinder', 'THA') === '{"handBonus":2,"handStrike":true}' && FX('Dead Hand', 'NEC') === '{"handBonus":1,"handStrike":true}'
+     && !anyKey('Personal Scourge', 'nullOppWeapons') && !anyKey('Personal Scourge', 'noPreventDisc'),
+     'NEGATIVES: Soulgrinder and Dead Hand print the Fortitude rider at superior only -- the struck bot reads the key by the card\u2019s name, so neither gets it; Personal Scourge\u2019s \u2018equipment or cards requiring Fortitude\u2019 is another sentence (no riders)');
+  ok(['Cobra Fangs|ser', 'Dagon\'s Call|qui', 'Dagon\'s Call|QUI', 'Withering|thn', 'Creeping Infection|thn', 'Anesthetic Touch|obe', 'Grasp of the Python|ser'].every(x => { const [n, at] = x.split('|'); const mo = M(n, at); return !!mo && mo.fx.handStrike === true && mo.fx.handBonus === undefined; })
+     && FX('Lead Fist', 'VIS').indexOf('"handBonus":1') >= 0,
+     'NEGATIVES: a hand strike with a rider no key reads gets no handBonus 0 (Cobra Fangs, Dagon\u2019s Call both levels, Withering, Creeping Infection, Anesthetic Touch, Grasp of the Python); Lead Fist [VIS] \u2018but at +2\u2019 stays as compiled (its reference [vis] is not whole)');
+  { const zero = Object.keys(L).filter(n => (L[n].modes || []).some(mo => mo.fx && mo.fx.handBonus === 0)).sort(), nw = Object.keys(L).filter(n => anyKey(n, 'nullOppWeapons')).sort(), np = Object.keys(L).filter(n => anyKey(n, 'noPreventDisc')).sort();
+    ok(JSON.stringify(zero) === '["Blood Rage","Sculpt the Flesh"]' && L['Sculpt the Flesh'].src === 'hand' && JSON.stringify(nw) === '["Blood Fury","Blood Rage","Bollix","Soul Burn"]' && JSON.stringify(np) === '["Blood Fury","Blood Rage","Bollix","Soul Burn"]',
+       'the hand strike\u2019s volume: handBonus 0 on Blood Rage (compiled) and Sculpt the Flesh (its hand entry, V5 wave 1); nullOppWeapons and noPreventDisc on Blood Fury, Blood Rage, Bollix and Soul Burn -- got ' + [zero, nw, np].map(x => x.join(', ')).join(' / ')); }
+  /* the animal marker */
+  { const an = Object.keys(L).filter(n => L[n].animal === true).sort();
+    ok(an.length === 13 && an.every(n => L[n].t.includes('retainer')) && L['Raven Spy'].animal === true && L['Dog Pack'].animal === true && L['Murder of Crows'].animal === true && L['Murder of Crows'].src === 'hand'
+       && !L['Mr. Winthrop'].animal && !L['Corpse Balloon'].animal && !L['Underbridge Stray'].animal,
+       'animal: the 13 retainers printed \u2018Animal with N life\u2019 (Raven Spy, Dog Pack ...; Murder of Crows\u2019 hand entry keeps it, as the zombie marker); not Mr. Winthrop (a mortal), Corpse Balloon (a ghoul) or the animal ALLY Underbridge Stray -- got ' + an.length); }
+  /* the first merged entries (spec-card-sweep \u00a74.4): each is the compiled entry with its layer applied */
+  { const NM = ['Biothaumaturgic Experiment', 'Shadow of the Beast', 'New Moon Sigil', 'Priority Contract', 'Night Terrors', 'Haven Uncovered'];
+    const B0 = compile(cards.filter(c => NM.includes(c.name)), null).out.lib, cl = v => JSON.parse(JSON.stringify(v));
+    const strip = e => { const o = cl(e); delete o.note; return o; };
+    const be = cl(B0['Biothaumaturgic Experiment']); delete be.modes[1].fx.maneuver; Object.assign(be.modes[1].fx, { maneuverEach: 1, strengthBonus: 1, attach: 'own' }); be.modes.push({ at: 'tha', fx: { employAnimal: true } });
+    Object.assign(be, { src: 'hand', merged: true, handKeys: ['attach', 'employAnimal', 'maneuverEach', 'strengthBonus'] });
+    ok(JSON.stringify(strip(E('Biothaumaturgic Experiment'))) === JSON.stringify(be) && E('Biothaumaturgic Experiment').cost.pool === 1 && M('Biothaumaturgic Experiment', null).fx.actStealth === 1,
+       'Biothaumaturgic Experiment (merged): [THA] maneuverEach 1, strengthBonus 1, attach own (its compiled maneuver deleted), [tha] employAnimal added; the +1 stealth action, the 1 pool, [tha] and persistent are the compiler\u2019s -- got ' + JSON.stringify(strip(E('Biothaumaturgic Experiment'))));
+    const sb = cl(B0['Shadow of the Beast']); delete sb.modes[0].fx.maneuver; Object.assign(sb.modes[0].fx, { maneuverEach: 1, attach: 'self' }); Object.assign(sb, { src: 'hand', merged: true, handKeys: ['attach', 'maneuverEach'] });
+    const nm = cl(B0['New Moon Sigil']); { const mo = nm.modes.find(x => x.at === 'spi'); delete mo.fx.maneuver; Object.assign(mo.fx, { maneuverEach: 1, attach: 'ownVampire' }); } Object.assign(nm, { src: 'hand', merged: true, handKeys: ['attach', 'maneuverEach'] });
+    ok(JSON.stringify(strip(E('Shadow of the Beast'))) === JSON.stringify(sb) && JSON.stringify(strip(E('New Moon Sigil'))) === JSON.stringify(nm) && FX('Shadow of the Beast', 'PRO') === '{"maneuver":true,"press":true}' && FX('New Moon Sigil', 'SPI') === '{"maneuver":true,"actStealth":1}',
+       'Shadow of the Beast [pro] (attach self: \u2018on the acting vampire\u2019) and New Moon Sigil [spi] (attach ownVampire: \u2018a vampire you control\u2019): maneuverEach 1, the compiled maneuver deleted; [PRO] and [SPI] carry a rider and are left as compiled');
+    const pc = cl(B0['Priority Contract']); pc.modes = [{ at: null, fx: { rushGrant: 1, rushBy: 'chosen', hostOf: 'prey', poolOnHostLeave: 3 } }]; Object.assign(pc, { src: 'hand', merged: true, handKeys: ['hostOf', 'poolOnHostLeave', 'rushBy', 'rushGrant'] });
+    ok(JSON.stringify(strip(E('Priority Contract'))) === JSON.stringify(pc) && E('Priority Contract').unique === true && E('Priority Contract').trifle === true && E('Priority Contract').persistent === true && JSON.stringify(E('Priority Contract').req) === '{"clan":["Banu Haqim"]}'
+       && !anyKey('Priority Contract', 'poolGain') && !anyKey('Priority Contract', 'stealth') && !M('Priority Contract', null).dir,
+       'Priority Contract (merged): the misread mode (a directed +1 stealth gaining 3 pool) dropped; rushGrant 1, rushBy chosen, hostOf prey, poolOnHostLeave 3 added; the clan, unique, trifle and persistent are the compiler\u2019s');
+    const nt = cl(B0['Night Terrors']); { const mo = nt.modes.find(x => x.at === 'OBF+PRE'); delete mo.fx.combatEnds; delete mo.fx.strikeCE; mo.fx.ceGrant = 'r1'; } Object.assign(nt, { src: 'hand', merged: true, handKeys: ['ceGrant'] });
+    ok(JSON.stringify(strip(E('Night Terrors'))) === JSON.stringify(nt) && FX('Night Terrors', 'OBF+PRE') === '{"stealthToZero":true,"ceGrant":"r1"}' && FX('Night Terrors', 'obf+pre') === '{"stealthToZero":true}',
+       'Night Terrors (merged): [OBF][PRE] ceGrant r1 (\u2018if this vampire blocks, they can strike: combat ends during the first round\u2019), its compiled strikeCE and combatEnds deleted; [obf][pre] and the cost are the compiler\u2019s');
+    ok(JSON.stringify(E('Haven Uncovered').modes) === '[{"at":null,"fx":{"rushGrant":1}}]' && !E('Haven Uncovered').merged,
+       'Haven Uncovered is unchanged (rushGrant 1; no rushBy or hostOf: the bot reads their absence as any)'); }
+}
+/* end: the Banu Haqim pilot */
 /* The sharing register (19 Nov 2026, bot v0.6.234; RULINGS D-125, spec-card-sweep-2026-11-18 §2 and §4.1): no hand key before "who else
    in the library prints this?" has an answer on file. cardfx-sharing.js defines a hand-only key and the register's rules; this is its gate.
    First the rules against a seven-entry library with a fault planted per rule (the lint must bite), then the real library and the real
