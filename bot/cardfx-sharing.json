@@ -238,7 +238,6 @@
   "marginToPool",
   "noAnarchTax",
   "noBlockMinion",
-  "noPreventDisc",
   "noRecruitEmploy",
   "openHandPrey",
   "peekPreyDiscard",
@@ -260,7 +259,6 @@
   "relockIfNoBlock",
   "replaceBurnsCounter",
   "rescueTorpor",
-  "rush",
   "rushGrant",
   "rushHostBy",
   "rushSelf",
@@ -294,6 +292,9 @@
   "zombieBleed",
   "zombieCounter"
  ],
- "shared": {},
+ "shared": {
+  "noPreventDisc": ["Blood Fury","Blood Rage","Bollix","Burning Touch","Dead Hand","Personal Scourge","Soul Burn","Soulgrinder"],
+  "rush": ["Abuse of Power","Ambush","Big Game","Bum's Rush","Charge of the Buffalo","Clandestine Contract","Coagulated Entity","Consume the Dead","Deep Song","Dive Bomb","Fleetness","Games of Instinct","Harass","Hunter's Mark","Hunting the Beast","Line Brawl","Make the Misere","Monomancy","Nose of the Hound","Pillars Fall","Purity of the Beast","Rumble","Sense Death","Steely Tenacity","Taunt the Caged Beast","Umbrous Clutch"]
+ },
  "unique": {}
 }

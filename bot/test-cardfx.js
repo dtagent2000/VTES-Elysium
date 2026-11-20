@@ -743,7 +743,7 @@ ok(fx.counts.libLock >= 140,
   const mj = L['Majesty'];
   ok(mj.modes.every(mo => mo.fx.strikeCE === true && mo.fx.combatEnds === true) && mj.modes.find(mo => mo.at === 'PRE').fx.unlock === true && !mj.modes.find(mo => mo.at === 'pre').fx.unlock, 'Majesty: strikeCE on both modes, unlock on [PRE] only');
   const nCE = Object.keys(L).filter(k => (L[k].modes || []).some(mo => mo.fx.strikeCE)).length, nAll = Object.keys(L).filter(k => (L[k].modes || []).some(mo => mo.fx.combatEnds)).length;
-  ok(nCE === 45 && nAll === 64, 'strikeCE is the PLAYABLE subset of combatEnds: ' + nCE + ' of ' + nAll);
+  ok(nCE === 41 && nAll === 60, 'strikeCE is the PLAYABLE subset of combatEnds: ' + nCE + ' of ' + nAll + ' (45 of 64 until compiler v1.11.0: the four cards that print \u2018cannot strike: combat ends\u2019 -- Hunter\u2019s Mark, Sanguine Entrapment, Mind of the Wilds, Dog Pack -- are a ban on the opponent, ceBan, never the player\u2019s own strike)');
 }
 
 /* ---- v1.9.0: the block bar + self damage sweep (Johan's sweep rule, 18 Sep 2026 late) ---- */
