@@ -31,11 +31,11 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 
 ## Gates (the one complete list; HARNESS and the root CLAUDE.md point here; STATUS has the last known green numbers)
 - `node --check` on every changed file.
-- `node test-bot-logic.js` ×3, ALONE, each run in a frozen snapshot (HOWTO: "a frozen snapshot"). ~300–420 s a run: launch it
-  detached with `timeout 600` and poll (`run_in_background`); never a foreground `timeout` that can cut a green run. Section 78c
+- `node test-bot-logic.js` ×3, ALONE, each run in a frozen snapshot (HOWTO: "a frozen snapshot"). ~300–600 s a run: launch it
+  detached with `timeout 900` and poll (`run_in_background`); never a foreground `timeout` that can cut a green run. Section 78c
   (pace scaling) was a timing flake (F-Q2, closed): if it fails, rerun once and say so in the PR.
   The suite needs every owned file beside it — a missing `elysium-bot-arena.js` aborts and looks like a failure. It also needs a
-  heap over 2 GB: on a ~2 GB default it dies out of memory after section 136 (`--max-old-space-size=4096`, HOWTO).
+  big heap: at 4 GB it dies out of memory in section 180 since v0.6.236 (`--max-old-space-size=6144`, HOWTO; C6).
 - `node test-bot-canary.js` — the §12 grammar contract against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it (the
   read-only copies); without them it skips loudly, never fakes a pass. Run it a second time against main's current release
   (HOWTO: "the canary against main's release").

@@ -22,7 +22,7 @@ Riding with them (D-123): **Night Terrors**' strike (ravnos ×4: [OBF][PRE] if t
 the first round of the resulting combat) and **Hunting the Quarry** (pathcaine ×6; §3.8).
 
 ## 2. The split and who else prints each effect
-Read by a fresh read-only agent from KRCG's text, with zero-vtes as the map (scratch: `pilot-sharing.md`; grades as
+Read by a fresh read-only agent from KRCG's text, with zero-vtes as the map (scratch pilot-sharing.md, not kept; grades as
 spec-card-sweep §4.3: C carried, G generalize, R rider, O another path, N building block).
 
 | effect | tier | who else prints it (the library) |
@@ -59,7 +59,7 @@ knob; the new plays are live, as the V5 waves' were (D-122 – D-124).
    reads the key by the card's name, not its level: Soulgrinder and Dead Hand are listed). **`nullOppWeapons`** from "the
    opposing vampire's strikes with weapons inflict no damage this round"; Soul Burn's hand entry gains it.
 5. **The card on a minion** (a reviewed list, by merge): **`maneuverEach: 1`** with the existing `strengthBonus`, and where it
-   goes (`attach: 'own'` a minion you control, `'self'` the acting vampire). Biothaumaturgic Experiment [THA] (its compiled
+   goes (`attach: 'own'` a minion you control, `'self'` the acting vampire, `'ownVampire'` a vampire you control: New Moon Sigil [spi]). Biothaumaturgic Experiment [THA] (its compiled
    `maneuver: true` dropped), Shadow of the Beast [pro], New Moon Sigil [spi]; a mode with a further rider is not given it.
 6. **The granted rush** (by merge): Haven Uncovered read by key, not name (`rushGrant` 1; **`rushBy`** `'any'`, **`hostOf`**
    `'any'` its defaults); Priority Contract: its misread mode dropped, `rushGrant: 1`, `rushBy: 'chosen'`, `hostOf: 'prey'`,
@@ -69,7 +69,9 @@ knob; the new plays are live, as the V5 waves' were (D-122 – D-124).
    text says it is an animal (**`animal: true`**).
 9. **The register** (`cardfx-sharing.json`): every new hand key comes with its answer; `rush`, `lockTarget`, `rushGrant`,
    `noPreventDisc` leave the backlog as `shared`, with the cards that print them (a card that prints one and lacks it is the
-   row's debt, reported); `poolOnHostLeave`, `employAnimal`, `ceGrant` `unique`.
+   row's debt, reported); `poolOnHostLeave`, `employAnimal`, `ceGrant` `unique`. As built (§6): `ceGrant` is `shared` (Memory
+   Rift [pre] and Shroud of Absence [DOM][OBT] print the same strike), and six more rows are `shared`: `attach`, `hostOf`,
+   `maneuverEach`, `maneuverTo`, `rushBy`, `strengthBonus`.
 
 ### 3.2 The bot
 1. **The card rush** (`_bestCardRushFor`): the best usable rush card, not the first; its cost carried and paid (Fleetness's
@@ -123,9 +125,119 @@ knob; the new plays are live, as the V5 waves' were (D-122 – D-124).
    misread's +3 gone); `ana-gates.py` PASS on every audit; each of Hunter's Mark, Fleetness, Blood Rage and Priority Contract is
    played at least once (Biothaumaturgic Experiment's one copy is reported, not predicted).
 
-## 5. The flow's friction (written as the round meets it)
-- The review sheet gives each card's effects and "printed by N", but not who else prints them in KRCG's wording: the sharing
-  answers took a second reader over the text (an agent, about 15 minutes, `pilot-sharing.md`). C's cross-check tool should
+## 5. The flow's friction (written as the round met it)
+- **Who else prints it.** The review sheet gives each card's effects and "printed by N", not the other cards in KRCG's wording: a
+  second reader went through the text (an agent, about 15 minutes, scratch pilot-sharing.md, not kept). C's cross-check tool should
   print that list.
-- One effect in the pilot's cards is a misread of four cards library-wide ("cannot strike: combat ends"): the cross-check by
-  effect finds what the sheet by card does not.
+- **The effect view finds what the card view does not.** One of the pilot's effects was a misread of four cards library-wide
+  ("cannot strike: combat ends" compiled as the player's own strike); the review then found the same class on about thirty more
+  ("the opposing minion cannot dodge / maneuver / press"). LESSONS L-98.
+- **The whole-mode rule needs a synthetic case per guard.** It is what keeps a pattern from half-reading a card, but no real card
+  exercised half its guards: fifteen mutants of them survived until test-cardfx got small synthetic libraries.
+- **Data before readers is a window.** Between the data commits and the readers, the old bot read the new keys wrongly (Priority
+  Contract played as a Haven Uncovered; the experiment through the strength finder for 1 blood). The data and its readers must
+  ship in one release; the review caught it before one was cut.
+- **The register undercounts.** A `shared` list is easy to leave short (a maneuver each combat: 5 of 37 cards at first; a card on a
+  minion: 12 of about 140): a key's definition in the register must be narrow, and its list complete for that definition.
+- **The agents.** Execution split by file and by family worked (A the data; B1 the rush and combat readers; B2 the masters and the
+  action side; a fixer for each review pass), each from a written brief and each pushing its commits; reviewers ran in parallel on
+  halves (data, bot) from exported copies, so they never met a half-edited file. A session restart stopped the first fixer
+  mid-work; it resumed from its transcript. The second fixer had a worktree and a branch of its own, fast-forwarded in, so the
+  session's uncommitted docs and its commits never met. Review until clean: pass 1 found 28 faults (and the graders 6 reds), pass 2
+  15 (the data side's 9: the negation strip had exposed three cards a misread key hid, and its class was larger; the bot side's 6:
+  a bug in pass 1's own fix), pass 3 6 (that fix's exemption both too wide and too narrow, seen from both sides; fixed by the
+  session without a fourth review, the loop's limit). Two are listed (BOARD). Each pass took 30–35 minutes a reviewer.
+- **The suite outgrew its heap.** At 4 GB it died in section 180 (each `new Bot` parses its own cardfx, about 2.9 MB of heap: a likely
+  share, not profiled): 6 GB now, C6.
+- **The sweep finds rules errors in the finished decks too.** Aunt Linda (Nosferatu, no Animalism) employed Raven Spy and Murder of
+  Crows: the plain employ asked no requirement (R-46), found while the experiment's employ was built. A scratch audit of the traces
+  (each play's card against its vampire's disciplines) finds her 14 employs in the 240 and Zafira's Feral Hound in the ravnos smoke
+  before the fix, and none after in the 240, the 14 smokes and the 48: a gate that would have caught them rounds ago.
+- **A footprint is hard to account for by hand.** Three fixes found in the round (D3, E1, K2) moved decks the prediction had
+  called IDENTICAL; telling them from the pilot's own changes took runs at three commits (§7). The trace rows' context objects are
+  written at the match's end (BOARD), so a payload difference points at the wrong row.
+
+## 6. As built (bot v0.6.236) and the riders
+**Built** as §3 says, with these differences:
+- Hunting the Quarry is not built (§3.3).
+- The compiler strips every "cannot" clause and every grant to the opposing minion from the player's own keys (the review's D3),
+  not only "cannot strike: combat ends": 26 entries; Target Vitals (pathdeath ×4) is the only starter card among them. The second
+  pass took the rest of the class: an opposing minion's cost, restriction or cancel, its act as a trigger, "the press step" (a
+  time), "aggravated" in a negated clause (16 entries, none in a deck). A dropped misread key had kept Pounce, Taming the Beast and
+  Backstep out of the choosers (L-98): a level-less mode now needs its card's discipline (a vampire's Flight is read from its text:
+  the crypt's `flight`); "this minion cannot" leaves a hand strike no bonus; "maneuver, only usable to go to long range" is
+  `maneuverTo` (13 cards; Dance with the Devil in pathcaine); "As above, but" with its own strike replaces the inherited one.
+- Blood Rage-class nulls the opposing vampire's weapon strike, never an aggravated strike card that seat showed this round, nor an
+  aggravated hand strike since its combat or action began (Uncontrollable Rage, Raking Talons, Invigorate); a card with `aggr` and
+  no strike (a weapon's pump, a defensive misread) does not count (passes 2 and 3). A human's card giving a maneuver each combat
+  keeps Adaptive's maneuver step. Eldritch Glimmer [THA] reads its printed floor, 4R (compiler v1.11.4). `maneuverTo` narrows a
+  compiled maneuver; it is no whole-mode reading (D-134 names the rush and the hand strike).
+- "Requires an Anarch" is asked by every finder (`_modeUsableBy`, `_entryReqOk`, `_masterReqOk`), not only the rush's.
+- The experiment's [tha] employs only a retainer whose text the vampire can use (O-49 for Johan); the plain employ asks a
+  retainer's requirement (R-46, a rules correction in its own commit); contracts are never placed on Iliana (G2).
+- Priority Contract is held when its chosen vampire would stay home or hunt this turn (`_aheadNoAct`), and burned for its pool
+  only when the host itself goes down, not when it changes controller.
+- A human rushed by Hunter's Mark [CEL][THA] is told the ban in chat; a rush at a locked target that is unlocked at resolution
+  fizzles [ANK 20210124].
+
+**The riders** (BOARD, "The V5 waves' riders"): each built and section-tested, or ruled out.
+- Haven Uncovered's look-ahead ignores the keep-home and hunt calls (the contract's no longer does).
+- A second Priority Contract is held, not cycled, while one is in play; Blood Rage [tha] (+0) is spent like a fist.
+- A card on a minion makes `_bestStrengthFor` refuse Preternatural Strength; allies are never offered as hosts; Creepshow Casino
+  is not offered at the new announces; Preternatural Strength's branch calls no Perfectionist.
+- Equipment with a discipline requirement is equipped without it (Baleful Doll, Canopic Jar, Inscription, Tinglestripe; in no
+  starter): R-46's twin. `_bestBounceFor` asks no title (a baron).
+- The compiler: Stutter-Step's "not usable as an additional strike"; `aggr` read from "non-aggravated", "treats aggravated damage
+  as normal" or "prevent all aggravated damage" (Soak, Resilience, Skin of Night …; test-cardfx pins Bloodform [VIC]'s), and the
+  aggravated strikes it gives no strike key (Body of Sun, Mayaparisatya [CHI], Smite, Bone Spur, Devil-Channel: Hands: the
+  nullifier reads their line as the weapon's, as K1 did); a weapon's conditional `aggr` (Dagger, Poker against a Kiasyd; Blade of
+  Enoch against Brujah) counts as an aggravated weapon; Expiate's `combatEnds` (a time), Battle Frenzy's `addStrike` (the chosen
+  Osebo's), Necrosis [THN]'s rider, Ron Zertnert's press-step lock; Crawling Chamber's [VIS] requirement lifted onto the whole card
+  (its [tha] `maneuverTo` unused); Mind of a Killer is Ⓓ (a `strengthBonus` on it would let `_bestStrengthFor` play it on my own
+  vampire); two synthetic-only shapes (an 'As above' maneuver the other way; 'but for N environmental damage' over a strike).
+- Flight from a card (Concordance [DAI], Taking the Skin: Vulture) is not read; an equipment's `maneuverTo` is not read
+  (`_equipCombatOption`); Haven Uncovered's record is by name, and Adaptive skips a maneuver a human has from no card on the
+  minion (Abaddon's own, Guard Dogs', a rush grant: BOARD).
+- The ban's readers on the opponent's side: Mind of the Wilds [ANI][AUS] (the action), Dog Pack (every combat with the employer),
+  Sanguine Entrapment (the round); a human's Priority Contract names no chosen vampire, so no bot records it: the readers' rounds
+  (D-132).
+- The weapon nullifier does not model first strike [LSJ 20040928], and a human's aggravated card logged before my round starts
+  reads as the weapon's; Night Terrors' strike after a second block of the same action [LSJ 20010814-2]; the employed retainer's
+  version is not stored [RTR 19941109].
+- Fleetness [cel]'s +1 stealth on a bleed (the bleed finder reads no `actStealth`): C1's.
+- Shadow of the Beast [PRO]'s press each combat; New Moon Sigil [SPI]'s paid stealth; a Haven's host burning it (O-23).
+- The register's debts: the six other contracts, the rush cards with after-combat riders, Soulgrinder's and Dead Hand's
+  superior-only Fortitude rider: C's.
+- `_aheadNoAct` follows the minion loop's actor order but not `_minionKeyOrder`; a rush grant of 0 cannot be written (`_grantOf`).
+
+## 7. The predictions, observed
+Measured on the release bytes (`elysium-bot.js` `4c193599`; their runs equal those of `45340a7`, the second pass's head, match for
+match, the version normalized) against v0.6.235's runs (`65eab87`), the pilot's own changes alone at `7fd0e66` (after pass 1's
+fixes, before E1). E1 and K2 are rules corrections the round found (R-46); predictions 3 and 4 were registered before them.
+1. **The starter, 68 → 77 of 77: held.** `docs/CARDS.md`: banuhaqim 77 playable, none unseen, partial or inert.
+2. **The library, 609 → at least 618: failed, 609 → 610** (612 after the first pass). Up 12: the four starter cards that were not
+   playable (Biothaumaturgic Experiment, Blood Rage, Fleetness, Hunter's Mark), five rush cards (Ambush, Bum's Rush, Nose of the
+   Hound, Sense Death, Umbrous Clutch: the registered "at least five" held) and three the second pass made exact (Backstep, Pounce,
+   Necrosis). Down 11: the registered one (Sanguine Entrapment) and nine more of the misread class, "cannot X" or another minion's
+   sentence read as the player's own (Mind of the Wilds, Rigor Mortis, Shoulder Drop, Skin Trap, Sword of Troile, Sympathetic
+   Agony, Target Head, Target Vitals, Dagon's Call), and Blade of Bellona, whose direction is now read and no reader takes it. The
+   band's stated cause is wrong: the shared effects landed; the misread class was larger than the analysis knew (§5, L-98).
+3. **The 240, IDENTICAL: held for the pilot** (IDENTICAL 240 at `7fd0e66`). The release against v0.6.235: DIVERGED 14, SAME-PLAY 5,
+   IDENTICAL 221. The 14 and four SAME-PLAY are E1: Aunt Linda (no Animalism) no longer employs Murder of Crows (12) or Raven Spy
+   (2) — no card action instead 10 times, Creeping Sabotage 3, Haven Uncovered 1; the four lose the retainer from a decision's
+   context. The fifth (match 168) is the second pass's discipline gate: Ashley reserves no blood for Revelations, which she cannot
+   play. VP paired: malkavian +0.04 (SE 0.02), nosferatu +0.00, tremere −0.00, ventrue −0.04 (0.02) — a map, not a verdict (L-94).
+4. **The V5 smokes: half held.** banuhaqim DIVERGED 12 and brujah DIVERGED 7, SAME-PLAY 5 as registered (Line Brawl [pot] is
+   played as a rush; the base played it as its [pre] bleed); hecata, lasombra, ministry, pathcathari, pathpower, salubri and
+   toreador IDENTICAL. Failed: ravnos is IDENTICAL for the pilot — Night Terrors was played twice, both times by Luciano Carvalho
+   (inferior Presence), so the [OBF][PRE] strike was never there (section 181f is its proof), and E1 moves it: DIVERGED 1,
+   SAME-PLAY 4 (Zafira, no Animalism, employed Feral Hound); four of the eleven moved by the corrections: pathdeath DIVERGED 1
+   (D3: Target Vitals' misread press), tzimisce SAME-PLAY 4 (K2: The Anarch Free Press waits for a ready Anarch), E1's gangrel
+   SAME-PLAY 3 (Indira, Joaquín, Ruslan) and pathcaine SAME-PLAY 3 (Dread Mastiff). The second pass changed no smoke. `ana-gates.py` PASS 6/6
+   on each.
+5. **The pilot at the table: held.** Handshake 3416 of 3416; Priority Contract placed 35 times and rushed through 43 times, its 3
+   pool taken 21 times, each after the host left the ready region (19 to torpor, 1 burned, 1 with its ousted Methuselah), never at
+   play; `ana-gates.py` PASS 6/6; Hunter's Mark 70 rushes (25 blocked), Fleetness 45 (6 blocked), Blood Rage 54 plays;
+   Biothaumaturgic Experiment attached 7 times, a maneuver from it 16 times. Latent at this table: the weapon nullifier, the
+   blocker's combat ends, the fizzle (0 each).
+A scratch audit (§5) finds no card played by a vampire without its discipline in the 240, the 14 smokes and the 48.

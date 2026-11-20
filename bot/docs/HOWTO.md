@@ -43,15 +43,15 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`). All 12
   deal from seed 1: a single copy deep in a library is never drawn ('unseen' is then the deal, not the bot) — add `--seeds 4`
   to see one played.
-- **The suite, frozen** (the ×3 gate; three snapshots in a row, one run at a time, ~300–420 s each), from the repo root:
+- **The suite, frozen** (the ×3 gate; three snapshots in a row, one run at a time, ~300–600 s each), from the repo root:
   ```
   S=<a scratch dir>; L=r1; D=$S/snap-$L; rm -rf $D; mkdir -p $D/bot; cp elysium-vtes-bord.html $D/     # root client one level up: 154f
   (cd bot && tar --exclude='./serie-*' --exclude='./bench-*' -cf - .) | tar -xf - -C $D/bot
   cd $D/bot && sha256sum elysium-bot.js test-bot-logic.js elysium-cardfx.json > ../sha.txt
-  timeout 600 node --max-old-space-size=4096 test-bot-logic.js > ../suite.log 2>&1; echo "EXIT $?" >> ../suite.log   # run_in_background, then poll
+  timeout 900 node --max-old-space-size=6144 test-bot-logic.js > ../suite.log 2>&1; echo "EXIT $?" >> ../suite.log   # run_in_background, then poll
   ```
-  The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran. The heap flag is not optional: on a ~2 GB
-  default heap the suite dies out of memory after section 136e (CLAUDE.md "Gates").
+  The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran. The heap flag is not optional: at 4 GB
+  the suite dies out of memory in section 180 since v0.6.236 (CLAUDE.md "Gates"; C6: each `new Bot` parses its own cardfx, ~2.9 MB of heap -- a likely share, not profiled).
 - **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR that touches `bot/` or the bundle, every such push to `main` and a
   daily run on `main` (03:17 UTC) run the gates that need no person and no previous bytes (the step list is the file); on any
   other PR the job `bot-gates` skips its gate steps and succeeds, so the check can be required on `main`. A gate that skips fails
@@ -115,7 +115,8 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   (a master counts only through `MASTER_KEYS`; two version sites, bump both). Every `fx.` key the bot reads is in its `CLASS` map; a
   new one prints the ⚠ line — classify it in the same round. With `vtes.json` beside it a FULL card needs a mode for every discipline
   line of its text; without it that check is skipped. The ledger reads the same verdicts (`coverDeck()`).
-- **cardfx** — `node cardfx-compile.js --report` (needs `vtes.json`); read the inherited / mismatch / X lists; run `test-cardfx.js`
+- **cardfx** — `node cardfx-compile.js --report` (needs `vtes.json`); read the inherited / mismatch / X lists and the whole-mode
+  refusals (a mode a pattern refused, with its unread sentence: D-134); run `test-cardfx.js`
   BEFORE the suite after adding an fx key. Audit curated vs auto before touching a curated field: compile once without the
   overlay and once with, diff the field per curated name. An entry with `"merge": true` (spec-card-sweep §4.4) carries its remainder
   only, over the compiled entry: a mode meets the compiled one at its `at` and `when` (`nth` from 1 picks one of several), `add`

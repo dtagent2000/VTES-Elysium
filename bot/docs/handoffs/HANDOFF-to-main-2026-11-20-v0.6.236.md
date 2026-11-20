@@ -1,6 +1,6 @@
-# Handoff to main — bot v0.6.236 (20 Nov 2026): the Banu Haqim pilot's lines (executor B1; B2 appends its own)
+# Handoff to main — bot v0.6.236 (20 Nov 2026): the Banu Haqim pilot's lines
 
-Built on bot v0.6.235 (`65eab87`) and your v2.6.179 / srv-2.6.51, with cardfx v1.11.0 (spec-sweep-pilot-2026-11-20.md §3.1).
+Built on bot v0.6.235 (`65eab87`) and your v2.6.179 / srv-2.6.51, with cardfx v1.11.4 (spec-sweep-pilot-2026-11-20.md §3.1, §6).
 No new verb, field or wire shape: `log`, `chat`, `say`, `tally` as before. What is new is one frozen bot line OPENED (the rush line
 takes any rush card and the level it was played at) and the card a few existing shapes now name. The bot ships first: backward
 compatible (below). Your §12 and canary would record the lines in section 1; nothing in the client has to change.
@@ -29,7 +29,7 @@ compatible (below). Your §12 and canary would record the lines in section 1; no
   `NAME combat — VAMP maneuvers to long (Fleetness).` (the rush card's 'gets 1 optional maneuver during that combat'),
   `NAME combat — VAMP presses to continue (Hunter's Mark).` (its press), and
   `NAME combat — VAMP maneuvers to close (Biothaumaturgic Experiment).` (a card on the vampire: 'gets 1 optional maneuver each
-  combat'; the card is put on the minion by B2's attach finder). A granted press to end writes the existing
+  combat'; the card is put on the minion by the attach finder, below). A granted press to end writes the existing
   `… presses to end: the press to continue is cancelled.` (no card).
 - **A rush at a locked minion that fizzles** (the pilot's review, K5; [ANK 20210124]: Fleetness [CEL], Ambush, Nose of the Hound — the
   target unlocked before the unblocked action resolved): the rusher writes an explanation on the log tier, `Trainbot: CARD has no
@@ -41,7 +41,7 @@ compatible (below). Your §12 and canary would record the lines in section 1; no
 - **Blood Rage-class against a weapon** writes no new line: the struck bot's own round line says `… takes 0 (loses 0 blood, now M).`
   when its undodged Blood Rage, Blood Fury, Bollix [tha] or Soul Burn met the opposing vampire's weapon strike that round (a bot's
   `strikes with CARD for N.` naming an equipment card, or your `NAME strikes with a weapon for N.`).
-- **Executor B2's lines** (spec-sweep-pilot §3.2 items 4, 6, 8; each parsed by the bot and typed by its event log in the same release):
+- **The masters' and the action side's lines** (spec-sweep-pilot §3.2 items 4, 6, 8; each parsed by the bot and typed by its event log in the same release):
   - **Priority Contract placed** (new, `L12.contractM`, log tier, after the existing as-played line `ME is playing Priority Contract —
     on OWNER's HOST.`): `ME plays Priority Contract — on OWNER's HOST, chosen: VAMP.` — `m[1]` the Methuselah, `m[2]` the card,
     `m[3]` the host's owner (always the placer's prey), `m[4]` the host, `m[5]` the chosen Banu Haqim (only it may enter combat with the
@@ -53,7 +53,8 @@ compatible (below). Your §12 and canary would record the lines in section 1; no
   - **Priority Contract burned for its pool** (new, `CONTRACT_BURN`, a log-tier explanation, not in `L12`): `ME burns Priority Contract
     and gains 3 pool (WHY).` — WHY is `OWNER's HOST went to torpor` / `OWNER's HOST was burned` / `OWNER's HOST left the ready
     region` / `HOST left the game with OWNER`. The card's move and the pool show on the board (your ledger narrates them online); the
-    line says why. Read by the bot's event log only (kind `contract-burn`).
+    line says why. Read by the bot's event log (kind `contract-burn`) and by every other bot's `_onLog`, which ends its record of
+    that contract (the pilot's review, P2).
   - **A card put on a minion** (new, `L12.uAttach`, an undirected announce: the actor's prey and predator may block):
     `VAMP plays CARD [LVL] — on HOST.` (`on themselves` for the acting vampire) — Biothaumaturgic Experiment [THA], Shadow of the Beast
     [pro], New Moon Sigil [spi]; its Block? `… plays CARD [LVL] — on HOST (+N stealth). Block?`. Preternatural Strength keeps
@@ -62,13 +63,13 @@ compatible (below). Your §12 and canary would record the lines in section 1; no
     Experiment [tha] — employs RETAINER.` (an animal retainer employed ignoring requirements); its Block? `… plays Biothaumaturgic
     Experiment [tha] — employs RETAINER (+1 stealth). Block?`. Read before `L12.uEquip` (which would take `VAMP plays … —` as the
     vampire).
-  - B1's `… maneuvers to DIR (Biothaumaturgic Experiment).` is now reached in play: the attach puts the card on the minion.
+  - The `… maneuvers to DIR (Biothaumaturgic Experiment).` above is reached in play: the attach puts the card on the minion.
 
 ## 2. Backward compatibility (the bot ships first)
 The client parses none of these lines: it shows them. Every bot at a table comes from one bundle, so the opened line meets a bot
 that reads it. A bot older than v0.6.236 (a command-line debug bot) does not match `(Hunter's Mark [CEL][THA])` with its closed
 list: it opens no window and its vampire does not fight — the rusher's Block? runs its clock and the rusher's combat waits out its
-safety nets. That is a mixed-version table only. B2's lines the same way: an older bot records no Priority Contract (its cloak
+safety nets. That is a mixed-version table only. The masters' and the action side's lines the same way: an older bot records no Priority Contract (its cloak
 does not see the chosen coming), and opens no block window on `… — on HOST.` or `… — employs RETAINER.` (its `L12.uEquip` takes
 `VAMP plays Biothaumaturgic Experiment [tha] —` as the vampire, which names no minion on the actor's board: no window) -- the actor's
 Block? runs its clock. The contract's own rush line, `VAMP enters combat with OWNER's HOST (Priority Contract).`, is the opened line
@@ -84,13 +85,22 @@ clock and its combat waits out its safety nets (the pilot's review, P9). A mixed
   bot rushed by `(Hunter's Mark [CEL][THA])` with another unlocked minion opens its window with `via 'card'`, `card "Hunter's
   Mark"`, `lvl '[CEL][THA]'`, `ceBan 'r1'`, `noLock`, `targetActs false`; with nobody else to block it says Pass and fights unlocked.
   The bot's section 181 has these cases (181b).
-- B2's (section 182b, 182c, 182f, 182g, 182h has them): §12 the three new shapes and the explanation; canary `rd('contractM',
+- The masters' and the action side's (section 182b, 182c, 182f, 182g, 182h has them): §12 the three new shapes and the explanation; canary `rd('contractM',
   "Hanna plays Priority Contract — on Viktor's Anxo Vilela (G6), chosen: Kasim Bayar (G6).", ['Hanna', 'Priority Contract', 'Viktor',
   'Anxo Vilela (G6)', 'Kasim Bayar (G6)'])` with a live bot that records the contract and its chosen; `uAttach` on `Kasim Bayar (G6)
   plays Biothaumaturgic Experiment [THA] — on Bijou (G6).` (m[3] `THA`, m[4] `Bijou (G6)`) with a live bot of the actor's prey opening
   its undirected window, and Preternatural Strength's line still read by `uStrength`, not `uAttach`; `uEmployVia` on `Kasim Bayar (G6)
   plays Biothaumaturgic Experiment [tha] — employs Dog Pack.` (m[4] `Dog Pack`), the prey's window weighing Dog Pack.
+  `CONTRACT_BURN` on `Hanna burns Priority Contract and gains 3 pool (Viktor's Anxo Vilela (G6) went to torpor).` (m[1] `Hanna`,
+  m[2] `Priority Contract`, m[3] `3`, m[4] the why), with a live observer whose record of the contract ends.
 
 ## 4. Run here
 The bot's gates on these bytes (the PR body has the numbers): its suite, your canary on `bot/`'s copies and on the root's client,
-`test-cardfx`, and the 240-match sim footprint against v0.6.235 (IDENTICAL: none of the four starters' plays changed).
+`test-cardfx`, your client suite beside the bundle (red once by design: `START-HERE-BOTS.html` changed, so its embed wants
+re-embedding), and the 240-match sim footprint against v0.6.235 (the version normalized): DIVERGED 14, SAME-PLAY 5, IDENTICAL 221.
+None of the pilot's new lines appears there (no starter holds its cards); every difference is a rules correction the round found
+(RULINGS R-46): Aunt Linda (Nosferatu, no Animalism) no longer employs Raven Spy or Murder of Crows, and a card's discipline is asked
+of a mode with no level (two drain decisions' context in one match). No line changed shape for them.
+- The guide (`START-HERE-BOTS.html`): the rush section says the bots play their own rush cards (yours still go by `rush` in chat), and
+  a paragraph under "Where its understanding ends" shows Priority Contract's placement, rush and burn lines, a rush card's line with
+  its level, Hunter's Mark's chat and the line for a card put on a vampire.

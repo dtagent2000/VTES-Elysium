@@ -15,23 +15,22 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 sweep** (D-125, D-130, D-132: exactness first; `specs/spec-card-sweep-2026-11-18.md` §11): every printed effect first
-  asked who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. Next:
-  **B**, the pilot (Banu Haqim: the rush cards with their maneuver / press grants, Hunting the Quarry, Night Terrors' strike;
-  §4.4's merge is built); then **C**, concentrated (§11.8): several families a round over the whole library, the first building
+  asked who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. **B**, the
+  pilot, is built (v0.6.236, D-134). Next **C**, concentrated (§11.8): several families a round over the whole library, the first building
   the cross-check tool and taking `stealth` / `actStealth`, `intercept`, `bleed`, then combat, then the rest of §11.4's horizon;
   parallel readers of the differing cards against KRCG's text, a separate reviewer; the bots' readers of a human's play in
   rounds of their own, the first right after C's first. C's riders: the title family; §4.3's latent reds and ambers; the
   condition sentences' untagged variants; wave 6's curation queue and `_entryReqOk` in the stealth, bleed-modifier and action
   finders (spec-v5-wave6 §8); the weapon's maneuver and its neighbours (spec-v5-wave2 §4); the free block bars and `chosen`
-  (O-21) and the ledger's grade column (both spec §11.10). **D**, the starters' remainder where a starter needs it, with its strategy
+  (O-21) and the ledger's grade column (both spec §11.10); Hunting the Quarry (`specs/spec-sweep-pilot-2026-11-20.md` §3.3). **D**, the starters' remainder where a starter needs it, with its strategy
   baseline.
   Crypt waves (D-108): B = the rest by class, the 13 partial copies first. A deck joins the menu by D-108; before the deck
   count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares them). The root README credits
   zero-vtes (D-128; main's, handoff). *Done when* C's horizon is reached, the 18 starters' rows are playable, every
   hand-only key has its sharing answer and C's riders are done or ruled out (their done-whens: spec-v5-wave6 §8, spec §11.10,
-  spec-v5-wave2 §4). Docs: RULINGS D-84, D-102, D-104, D-108, D-125 – D-127, D-130, D-132; `CARDS.md`; HOWTO.
-- **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9): what v1 of each wave left out, the
-  amber halves and the latent items; no line says a human's Sudden Reversal cancelled a bot's master (main, 19 Nov). *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, D-99 – D-123.
+  spec-v5-wave2 §4). Docs: RULINGS D-84, D-102, D-104, D-108, D-125 – D-127, D-130, D-132, D-134; `CARDS.md`; HOWTO.
+- **The V5 waves' riders** (each wave spec's §4; wave 5's §10 and §12.10; wave 6's §8 and §9; the pilot's §6): what v1 of each wave left out, the
+  amber halves and the latent items; no line says a human's Sudden Reversal cancelled a bot's master (main, 19 Nov). *Done when* each is built and section-tested, or ruled out. Docs: RULINGS R-39 – R-43, R-46, D-99 – D-123, D-134.
 - **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct; refined by the archetypes): D-112 checks each
   strategy line against its guide; Toreador's is done (D-118). *Done when* each deck's proposals have Johan's "kör" or "no".
   Docs: RULINGS D-43, O-33, D-112, D-118.
@@ -47,7 +46,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   the manifest emits the registry. Docs: spec T5, T7, T9; RULINGS O-2, O-29, O-31.
 - **C6 — the faster suite**: ~87 % of the suite's time is its own sleeps (151 s of literal `sleep`s in the 400 no-server sections);
   pilot a second runner that plays those sections under the sim's virtual clock, live sections on the real clock; sharding is the
-  fallback. The suite also grows past a 2 GB heap by section 136 (29 Oct): find what it keeps. *Done when* one runner gives the same
+  fallback. The suite needs a 6 GB heap since v0.6.236 (4 GB dies in section 180): each `new Bot` parses its own cardfx (~2.9 MB of heap; a likely share, not profiled); share one parse, and find what the suite keeps. *Done when* one runner gives the same
   assertion count, green ×3, on node's default heap. Docs: spec §5.7, §7.
 - **The helper lock's release** (main's answers of 3 Nov): the client locks all helpers on while a bot is seated until the bot
   proves a whole combat on lines alone. *Done when* asked, when ready. Docs: RULINGS D-62, D-94.
@@ -75,6 +74,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   server and 154f, the arena, the sim and the hotseat gate read the root's client and server and `client/`'s protocol, the copies
   go, STATUS pins the main commit. *Done when* every gate reads the root and CI is green on it.
 - **A human's Haven Uncovered** is not read by the bots. *Done when* the frozen line arms `_havenHost*` for a human's card.
+- **Haven Uncovered's record is by name** (the pilot's review; L-60: P2 fixed the contract's): `_havenHosts` finds another
+  placer's Haven by its name on that board, so one that left play while its host stays ready reads live if the placer holds
+  another (a rush through a gone Haven, a cloak spent for it). *Done when* the record follows the card, as the contract's does.
+- **Adaptive skips a maneuver a human holds without a card** (the pilot's review; since v0.6.194): with an empty hand
+  `_phaseSkip(1)` skips a vampire's own maneuver each combat (Abaddon, salubri; no crypt key) and one granted this combat (Guard
+  Dogs [ANI], a rush card's `maneuverGrant`); only a card on the minion is read. *Done when* it reads them, or never skips step 1.
 - **Steal pair under a combat ends**: the stealer's side does not apply v0.6.196's rule when the victim's Majesty ends the combat.
   *Done when* `ana-ledger.py` prints equal pairs on a smoke with that case. Docs: RULINGS O-12.
 - **Nosferatu's Fame chain** (Fame → rush → torpor → rescue) has never run; the rush is not priced in pool. *Done when* a sim series
