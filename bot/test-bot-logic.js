@@ -7310,7 +7310,7 @@ async function connectWithRetry(client, tries = 30){
   ok(c.pool === 20 && x.blood === 3, '104c pool costs too; blood never above capacity (Brock: 3 of 3)');
   const src = require('fs').readFileSync(require.resolve('./elysium-bot.js'), 'utf8');
   const paid = (src.match(/this\._park\(act\.cost\.blood, 0\)/g) || []).length + (src.match(/this\._park\(act\.costBlood, 0\)/g) || []).length;
-  ok(paid === 9 && !/v\.blood = Math\.max\(0, \(v\.blood \| 0\) - act\.cost\.blood\);(?! this\._park)/.test(src), '104d every announce-time blood cost in the action branches is parked (' + paid + ' sites; v0.6.236: + the card rush\u2019s, Fleetness)');
+  ok(paid === 10 && !/v\.blood = Math\.max\(0, \(v\.blood \| 0\) - act\.cost\.blood\);(?! this\._park)/.test(src), '104d every announce-time blood cost in the action branches is parked (' + paid + ' sites; v0.6.236: + the card rush\u2019s, Fleetness; + the attach / the experiment\u2019s employ, Shadow of the Beast and New Moon Sigil)');
     }
 
     /* 105) v0.6.131 — debt 23b: when a referendum beats build-first */
@@ -12277,10 +12277,11 @@ async function connectWithRetry(client, tries = 30){
           const m = /this\._cryptStealthMod\(v, ([^()]+?)\)/.exec(src.slice(i, j + 1));
           got.push(m ? m[1] : 'none @ line ' + src.slice(0, i).split('\n').length); }
         const want = ["'leaveTorpor', false", "'political', false", "'hunt', false", "'hunt', false", "'stock', false", "'ownRescue', false", "'enemyRescue', true",   // v0.6.232: + Week of Nightmares' special hunt (_wonHunt), a hunt
-          "'recruit', false", "'strength', false", "'burnCard', true", "'rutor', false", "'creep', false", "'rush', true", "'rush', true", "'rush', true",   // v0.6.236 (the Banu Haqim pilot): + the card rush's announce (Haven / granted, the card rush, Deep Song)
+          "'recruit', false", "'strength', false", "att ? 'attach' : 'employ', false", "'burnCard', true",   // v0.6.236 (B2): + the attach finder's card and Biothaumaturgic Experiment [tha]'s employ (one undirected announce)
+          "'rutor', false", "'creep', false", "'rush', true", "'rush', true", "'rush', true",   // v0.6.236 (the Banu Haqim pilot): + the card rush's announce (Haven / granted, the card rush, Deep Song)
           "act.isRetainer ? 'employ' : 'equip', false", "'fetch', false", "'peek', !act.supMode", "'pool', true", "'bleed'"];
         ok(JSON.stringify(got) === JSON.stringify(want),
-           '163h every one of the 20 announces passes its kind and form to _cryptStealthMod: leave torpor, political, hunt (and Week of Nightmares\u2019 special hunt, v0.6.232), stock, own rescue undirected; enemy rescue, card burn, the three rushes (v0.6.236: + a rush card\u2019s), pool directed; recruit, strength, Rutor’s Hand, tabling, equip / employ, fetch undirected; Revelations by its mode; the bleed (got ' + JSON.stringify(got) + ')'); }
+           '163h every one of the 21 announces passes its kind and form to _cryptStealthMod: leave torpor, political, hunt (and Week of Nightmares\u2019 special hunt, v0.6.232), stock, own rescue undirected; enemy rescue, card burn, the three rushes (v0.6.236: + a rush card\u2019s), pool directed; recruit, strength, the attach / the experiment\u2019s employ (v0.6.236), Rutor’s Hand, tabling, equip / employ, fetch undirected; Revelations by its mode; the bleed (got ' + JSON.stringify(got) + ')'); }
     }
 
     /* 164) v0.6.220 -- CRYPT WAVE A'S RIDERS (RULINGS D-111): the event log's random-discard line, the bot's own PRNG for what the rules
