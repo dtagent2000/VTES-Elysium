@@ -2404,6 +2404,7 @@
   },
   "Shadow of the Beast": {
    "merge": true,
+   "oncePerVampire": true,
    "modes": [
     {
      "at": "pro",
@@ -2414,10 +2415,11 @@
      }
     }
    ],
-   "note": "The Banu Haqim pilot (20 Nov 2026, spec-sweep-pilot §3.1 item 5; a merge, spec-card-sweep §4.4): the attach reading of Biothaumaturgic Experiment [THA] on the mode it covers whole. KRCG: '[pro] Put this card on the acting vampire. The vampire with this card gets an optional maneuver each combat. A vampire may have only one Shadow of the Beast. [PRO] As above, and this vampire gets an optional press each combat.' [pro]: attach 'self', maneuverEach 1 (the compiled maneuver read the grant as a card play: null); 'only one' is the attach finder's one-per-vampire guard (as Preternatural Strength's). [PRO] is left as compiled: its press each combat is a rider no key reads (the refusal list). The 1 blood cost and [pro] requirement stay the compiler's. No rulings in KRCG."
+   "note": "The Banu Haqim pilot (20 Nov 2026, spec-sweep-pilot §3.1 item 5; a merge, spec-card-sweep §4.4): the attach reading of Biothaumaturgic Experiment [THA] on the mode it covers whole. KRCG: '[pro] Put this card on the acting vampire. The vampire with this card gets an optional maneuver each combat. A vampire may have only one Shadow of the Beast. [PRO] As above, and this vampire gets an optional press each combat.' [pro]: attach 'self', maneuverEach 1 (the compiled maneuver read the grant as a card play: null); 'only one' is the entry's oncePerVampire (Rutor's Hand's and Wall of Filth's key), read by the attach finder (bot v0.6.236, executor B2). [PRO] is left as compiled: its press each combat is a rider no key reads (the refusal list). The 1 blood cost and [pro] requirement stay the compiler's. No rulings in KRCG."
   },
   "New Moon Sigil": {
    "merge": true,
+   "oncePerVampire": true,
    "modes": [
     {
      "at": "spi",
@@ -2428,7 +2430,7 @@
      }
     }
    ],
-   "note": "The Banu Haqim pilot (20 Nov 2026, spec-sweep-pilot §3.1 item 5; a merge, spec-card-sweep §4.4): the attach reading on the mode it covers whole. KRCG: '+1 stealth action. [spi] Put this card on a vampire you control. The attached vampire gets 1 optional maneuver each combat. A vampire can have only one New Moon Sigil. [SPI] As above, and during an action, the attached vampire can burn 2 blood to get +1 stealth.' [spi]: attach 'ownVampire' (a VAMPIRE you control: not an ally, where Biothaumaturgic Experiment's 'own' says a minion), maneuverEach 1 (the compiled maneuver: null); 'only one' is the attach finder's one-per-vampire guard. [SPI] is left as compiled: the paid +1 stealth during an action is a rider no key reads (its compiled actStealth 1 is that rider misread; the refusal list). The +1 stealth action, 2 blood cost and [spi] requirement stay the compiler's. No rulings in KRCG."
+   "note": "The Banu Haqim pilot (20 Nov 2026, spec-sweep-pilot §3.1 item 5; a merge, spec-card-sweep §4.4): the attach reading on the mode it covers whole. KRCG: '+1 stealth action. [spi] Put this card on a vampire you control. The attached vampire gets 1 optional maneuver each combat. A vampire can have only one New Moon Sigil. [SPI] As above, and during an action, the attached vampire can burn 2 blood to get +1 stealth.' [spi]: attach 'ownVampire' (a VAMPIRE you control: not an ally, where Biothaumaturgic Experiment's 'own' says a minion), maneuverEach 1 (the compiled maneuver: null); 'only one' is the entry's oncePerVampire (Rutor's Hand's and Wall of Filth's key), read by the attach finder (bot v0.6.236, executor B2). [SPI] is left as compiled: the paid +1 stealth during an action is a rider no key reads (its compiled actStealth 1 is that rider misread; the refusal list). The +1 stealth action, 2 blood cost and [spi] requirement stay the compiler's. No rulings in KRCG."
   },
   "Priority Contract": {
    "merge": true,
