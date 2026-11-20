@@ -164,5 +164,5 @@ jobs:
       - name: The suite, once (the local x3 stays the release gate)
         if: ${{ !cancelled() && steps.diff.outputs.bot == 'true' }}
         run: |
-          node --max-old-space-size=4096 test-bot-logic.js | tee "$RUNNER_TEMP/suite.txt"
+          node --max-old-space-size=6144 test-bot-logic.js | tee "$RUNNER_TEMP/suite.txt"
           if grep -qE '\([0-9]+[a-z]* skipped:' "$RUNNER_TEMP/suite.txt"; then echo "::error::a suite section skipped (its input is missing): $(grep -oE '\([0-9]+[a-z]* skipped:[^)]*' "$RUNNER_TEMP/suite.txt" | head -1)"; exit 1; fi

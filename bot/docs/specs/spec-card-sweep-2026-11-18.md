@@ -6,6 +6,8 @@ its answer on 19 Nov (RULINGS D-126). On 19 Nov he answered the question about z
 code. Measured on main `6baf99b`. On 20 Nov Johan ruled the focus, exactness first, and a new order after B: the library by
 effect, then the starters' remainder (§11, RULINGS D-130). Later that morning he kept the pilot first and took the
 concentrated sweep and review until clean (§11.8, RULINGS D-132, D-133); his intention for after the alignment is §11.9.
+Step B, the pilot (Banu Haqim), is built: bot v0.6.236, RULINGS D-134, `specs/spec-sweep-pilot-2026-11-20.md` (its design, its
+predictions and what was observed, its friction and its riders).
 
 **Step A1** (19 Nov, no bot change) built §4.1's first two items: the library table (`gen-card-ledger.js` v1.2.0, "The whole
 library" in `CARDS.md`) and the sharing register with its gate (`cardfx-sharing.json`, `cardfx-sharing.js`, `test-cardfx.js`).
@@ -310,6 +312,8 @@ keys (the title family shares through its `ref.fx` keys) and its debt stays repo
 The pilot's and each starter's predictions are registered in their own rounds, before the build.
 
 ### 4.4 The merge of hand entries (designed in A2, "kör" 19 Nov: D-127; built at the start of B)
+**The first opt-ins** (the pilot, bot v0.6.236): five entries merge — Biothaumaturgic Experiment, New Moon Sigil, Night Terrors,
+Priority Contract, Shadow of the Beast; the lines below that say nothing opts in describe #92 as built.
 **Built** (20 Nov 2026: cardfx compiler v1.10.0, PR #92; no bot or cardfx byte changed, nothing opts in). Where the design below
 was silent the build chose (the header of the compiler's `mergeHand` lists every case that fails the compile):
 - a level is `at` and `when`, compared exactly; `nth` counts from 1 in the compiled order of its level; a mode at an `at` the

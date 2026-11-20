@@ -24,7 +24,7 @@ board       push() → buildPub at drain time (the cards; a card's named counter
 pacing      _pace(kind) / _afterBeat ; the tempo (_waitPlan) ; the hold (_holdFreeze / _holdThaw) ; status() / step() for the
             Bot button
 trace       emit(kind, data) → the arena's / sim's match-NNNN.jsonl (manifest, snapshot, decide, play, plan, through, blocked,
-            block-made, combat-round, wait, game-over, combat-superseded, fizzled, game-resumed, memo, …; 109 kinds)
+            block-made, combat-round, wait, game-over, combat-superseded, fizzled, game-resumed, memo, contract, …; 116 kinds)
 ```
 The three rules that keep the layers apart: tactics READ the plan and never recompute it; every read about an opponent goes
 through `this.opp[seat]` (public evidence only); a decision knob gates decisions only (CLAUDE.md, binding rules).
@@ -32,15 +32,15 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 ## Where each decision lives
 | Decision | Scorer / site | Reads | Row |
 |---|---|---|---|
-| What a minion does this phase | `decide('action')` ← `_decideAction`, the finders, the turn ledger (`_turnActs`), the probe (`_probe`); the queue's key referendum (`_minionKeyOrder`, `_polHold`, the Ball's keep skip `_ballFreeId`) | plan, `_twdExpect`, `oppForecast`, the hand | `decide` q `action` (scores per candidate), `key-order`, `pol-hold` |
+| What a minion does this phase | `decide('action')` ← `_decideAction`, the finders, the turn ledger (`_turnActs`), the probe (`_probe`); a card on a minion (`_bestAttachFor`, host `_attachFight`) and the experiment's employ (`_bestAnimalEmployFor`; both employs ask `_retainerReqMet`); the queue's key referendum (`_minionKeyOrder`, `_polHold`, the Ball's keep skip `_ballFreeId`) | plan, `_twdExpect`, `oppForecast`, the hand | `decide` q `action` (scores per candidate), `key-order`, `pol-hold` |
 | Who to bleed / bounce to | `bleed-target` | prey, the bounce rule (always my prey today) | `decide` |
 | Pump a bleed | `bleed-modifier` | the total, the blocker's intercept history, `_pPump` | `play` window `bleed-mod`, `bleed-total` |
 | Block or not (as target) | `block-as-target` ← `_blockRisk`, `_keepBlocker`, the threat classes T1–T6 | plan.home, `oppCombatCost`, the deck axes; `_actionClass` (offensive / economy / utility; the hit rate divides blocked by offensive only) | `block-eval`, `block-made`, `defence-plan` |
 | Bounce timing | `_reactWindow`, `_bounceReserve` | the TOTAL after modifiers, the reserve | `play` window `react-bounce`; `bounce-total` / `bounce-kept` tags |
 | Stealth on a contested action | `spend-stealth`, `_stealthStack` (`_actCondOk`), `_stealthSecondLook`, the ahead rule | the counter, my stack, `_pCat` | `stealth-stack`, `stealth-ahead`, `play` |
 | Intercept as blocker | `_commitBlock`, `_interceptSecondLook`, `_spendIntercept` (a card or a location's lock, `_lockInterceptFor`); Night Terrors (`_nightTerrorsFor`); every finder asks `_dirOk` (D-123, D-127) | the counter, my hand, my locations | `intercept-stack`, `stealth-zero`, `play` |
-| Combat, each step | `_resolveCombat` (the seven steps), `_wantGrapple` / `_wantPress` / `_wantPressToEnd` / `_wantLong`, `combat-strike` (`_strikePick`, the dodge), `combat-end` | `DECK_STRATEGY.combat`, `_expOppStrike`, the known strike (peek) | `combat-round`, `combat-phase`, `play` windows `combat-*` |
-| Rush | the rush targeter in the action finder, `_rushExpectation`; a cloak its rusher cannot pierce is skipped (D-124) | target blood, my kit, env damage | `rush-counterfactual`, `rushed` |
+| Combat, each step | `_resolveCombat` (the seven steps), `_wantGrapple` / `_wantPress` / `_wantPressToEnd` / `_wantLong`, `combat-strike` (`_strikePick`, the dodge), `combat-end`; free first: a rush card's maneuver / press (`_rushGrantFor`), a card on the minion (`_eachManeuverFor`); the struck side's weapon nullifier (`_oppWeaponNulled`); Night Terrors' round-1 combat ends | `DECK_STRATEGY.combat`, `_expOppStrike`, the known strike (peek) | `combat-round`, `combat-phase`, `play` windows `combat-*` |
+| Rush | `_bestRushFor`: a card (`_bestCardRushFor`: `rushTo`, its cost, its printed stealth), a Haven or a contract by key (`_grantOf`, `_bestHavenRushFor`), a granted rush; `_rushExpectation`; the rushed bot reads card and level from the line (`_rushLineMode`: a `ceBan` against it); a locked target unlocked at resolution fizzles (R-46); a cloak its rusher cannot pierce is skipped (D-124) | target blood, my kit, env damage | `rush-counterfactual`, `rushed`, `rush-grant`, `contract-pool` |
 | Referendum | `_bestPoliticalFor`, `_callReferendum`, `_refDeltas`, the voter; Absolute Tyranny's cut (`_tyrannyCut`, `_tyrannyReactFor`) | `_refValue`, pass estimate, title votes | `referendum-called`, `referendum`, `ref-vote`, `vote-cut` |
 | Influence | `_planInfluence` (`_deckFit`, `_engineY`, the planner), `_riseFromUnc` | plan.floor, `_critPool`, the crypt | `influence-plan`, `influence-pick`, `raise` |
 | Masters, income, banks | `master-play` (`_bestMasterFor`: no `oot`, `_masterReqOk`, `_masterHold`), `income-drain`, `income-direction`, `bank-in`, `lock-income` (one lock, one effect) | pool (≥ 1 left), a ready vampire meeting the requirements, the hand | `play`, `income-*`, `bank`, `unc-blood` |
@@ -50,7 +50,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
 | If blocked | `_ifBlockedStep`: Terrifying Visage, Change of Target (`_cotWorth`; `_noteCotAct` books the action) | the blocker's expected strike, my combat enders | `change-of-target`, `visage` |
 | Polling-step abstain | `_bestAbstainFor` / `_playAbstain` in `_callReferendum` (the poll reopens after it); the lock on my prey's voter (`_scalpelLockPlan`) | `rc.agBy`, the seat's title votes, my queue | `abstain` (`use: 'lock'`) |
 | Burn a card in play (Jack D-114) | `burnCard` (`_bestBurnCardFor`; Jack `_jackBurnValue`); the owner's `_complyBurnCard`; my Jack's worth on `_burnWindowOpens` | the owner's votes; `_planJack`'s reads | `burn-card`, `card-burned` |
-| Set-up cards (Haven) | the look-ahead through `_actionCtxFor` + `_actionCtxAdjust(…, ahead)` + `_decide` | the real action ctx | `haven` |
+| Set-up cards (Haven, Priority Contract) | `_havenHostPick(card)`: the look-ahead through `_actionCtxFor` + `_actionCtxAdjust(…, ahead)` + `_decide` (the contract's chosen also by `_aheadNoAct`); the contract's 3 pool `_contractBurn` | the real action ctx | `haven`, `contract` |
 | Waits on a human | `_waitPlan(kind, who)`; block / react / pq / vote / phase / damage / verdict | the tempo (`botcfg`), the hold | `wait`, `tempo` |
 
 ## Files

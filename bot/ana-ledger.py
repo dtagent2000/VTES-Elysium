@@ -8,7 +8,9 @@
 #           table) is its own row, 'through after game ended' -- every 'THROUGH, NO SEAT TOOK IT' of the sims since v0.6.213 was one (225 on the 240-match
 #           design; the Toreador report checked them). Before the end the row stays a fault.
 #  2 combat names: round-1 rows whose opponent is null / not the vampire that names me back
-#  3 combat numbers: my dealt vs the opponent's taken on reciprocal rows (prevent / Crows / combat ends explain the differences)
+#  3 combat numbers: my dealt vs the opponent's taken on reciprocal rows (prevent / Crows / combat ends explain the differences); v0.6.236 (the pilot's review, K4): a
+#           weapon strike the struck side nulled (its `weapon-nulled` row: Blood Rage / Blood Fury / Bollix [tha] / Soul Burn not dodged, the striker's
+#           weapon inflicts no damage this round) is a one-sided row by design -- the striker cannot know -- and is counted as explained, apart
 #  4 steal: stole (stealer) vs stolenFromMe (victim) totals; v0.6.196: and PER ROUND -- each stealer row paired with its victim's row (a total can hide two errors behind one excuse: 'capping' hid the stealer gaining from an empty vampire)
 #  5 creep: Creeping Sabotage placements vs victim took-pooldmg via creep
 import json,glob,sys,collections
@@ -61,7 +63,8 @@ def audit(S):   # one series directory -> its counts (C2: importable, ana-gates.
                 if d.get('range')!=o.get('range'): R['3 combat: RANGE DISAGREES']+=1
                 if isinstance(d.get('dealt'),(int,float)) and isinstance(o.get('taken'),(int,float)):
                     df=o['taken']-d['dealt']
-                    R['3 combat: dealt==taken' if df==0 else ('3 combat: taken<dealt' if df<0 else '3 combat: taken>dealt')]+=1
+                    nulled=df<0 and any(x['type']=='weapon-nulled' and x['bot']==back[0]['bot'] and x['data'].get('vamp')==o.get('vamp') and x['data'].get('by') in (None,d.get('vamp')) and abs(x['t']-back[0]['t'])<4000 for x in rows)   # v0.6.236 (K4)
+                    R['3 combat: dealt==taken' if df==0 else ('3 combat: taken<dealt, weapon nulled' if nulled else ('3 combat: taken<dealt' if df<0 else '3 combat: taken>dealt'))]+=1
         R['5 creep: placed']+=sum(1 for r in rows if r['type']=='through' and r['data'].get('card')=='Creeping Sabotage')
         R['5 creep: victim burns']+=sum(1 for r in rows if r['type']=='took-pooldmg' and r['data'].get('via')=='creep')
     return R

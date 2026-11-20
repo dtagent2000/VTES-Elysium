@@ -299,6 +299,60 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.236 (20 Nov 2026)** — The V5 sweep's step B, the Banu Haqim pilot (RULINGS D-134; Johan, 20 Nov: "Kör B:s andra del,
+  Banu Haqim-piloten"), on Claude's design: `specs/spec-sweep-pilot-2026-11-20.md` (§3 the design; §4 the predictions, registered
+  before the build; §5 the flow's friction; §6 as built and the riders; §7 observed). Built by agents (D-131): one for the data,
+  one for the rush and combat readers, one for the masters and the action side, a fixer for each of the first two review passes;
+  reviewed until clean (D-133) in three passes.
+  - *cardfx v1.10.0 → v1.11.4* (`cardfx-compile.js`): the whole-mode readings — a pattern writes only on a mode whose every
+    sentence it reads, and the report lists the refusals: the action rush (`rush`, `rushTo` locked / vampire / younger / older),
+    its grant (`maneuverGrant`, `pressGrant`, `pressDir`), the hand strike (`handStrike`, `handBonus` 0 / +N, `noPreventDisc`,
+    `nullOppWeapons`). Misreads fixed library-wide: "cannot strike: combat ends" is `ceBan` against the opponent, never the
+    player's strike; the coarse maneuver / press / dodge / additional-strike / aggravated reads skip a "cannot" clause, the
+    opposing minion's grant, cost, restriction or cancel, its act as a trigger and "the press step" (a time) — 42 entries (Target
+    Vitals' misread press among them, pathdeath ×4);
+    "maneuver, only usable to go / get to long / close range" is `maneuverTo` (13 cards); "As above, but" with its own strike
+    replaces the inherited one (4; an "N + X" its floor); "this minion cannot" leaves a hand strike no bonus. Markers: `animal`
+    (13 retainers), `contract` (7), `noContracts` (Iliana), the crypt's `flight` (26 vampires print Flight only in their text).
+    §4.4's first opt-ins, five merged hand entries: Biothaumaturgic Experiment, New Moon Sigil, Night Terrors, Priority Contract,
+    Shadow of the Beast. The register: `rush`, `lockTarget`, `rushGrant`, `rushBy`, `hostOf`, `noPreventDisc`, `ceGrant`,
+    `attach`, `maneuverEach`, `strengthBonus`, `maneuverTo` shared; `poolOnHostLeave`, `employAnimal` unique. Curated 218; library
+    entries with an effect 1715 → 1696; the whole library's playable (static) 609 → 610 (§7).
+  - *The bot*: the card rush (`_bestCardRushFor`: `rushTo`, cost, printed stealth; the rushed bot reads card and level from the
+    opened line, `_rushLineMode`, and the ban, `_ceBanNow`; a locked target unlocked at resolution fizzles [ANK 20210124]); the
+    granted maneuver and press (`_rushGrantFor`); a maneuver each combat from a card on the minion (`_eachManeuverFor`); Blood
+    Rage-class nulls the opposing vampire's weapon strike, never an aggravated strike card that seat showed this round nor an
+    aggravated hand strike in its window (`_oppWeaponNulled`, `_oppAggrWeapon`); Night Terrors [OBF][PRE]'s round-1 combat ends;
+    Priority Contract by key and by the look-ahead for the chosen Banu Haqim (`_havenHostPick(card)`, `_aheadNoAct`), never on
+    Iliana, its 3 pool at the host's move (`_contractBurn`); a card put on a minion (`_bestAttachFor`) and the experiment's employ
+    (`_bestAnimalEmployFor`: only a retainer whose text the vampire can use, O-49); a human's card giving a maneuver each combat
+    keeps Adaptive's maneuver step.
+  - *Rules corrections the round found* (R-46): the plain employ asks a retainer's discipline (E1, its own commit: Aunt Linda, no
+    Animalism, employed Raven Spy and Murder of Crows; Zafira, Feral Hound); 'Requires a (ready) Anarch' is asked by every finder,
+    masters too (K2: The Anarch Free Press); a level-less mode needs its card's discipline (Pounce needs Flight).
+  - *Lines* (`docs/handoffs/HANDOFF-to-main-2026-11-20-v0.6.236.md`; the bot ships first, backward compatible): the rush line opened
+    to any rush card and its level, its Block?, the combat notes naming the card, a granted maneuver / press naming its card,
+    `L12.contractM`, `CONTRACT_BURN`, `L12.uAttach`, `L12.uEmployVia`, the fizzle's note, Hunter's Mark's chat to a human. The
+    guide: the bots' rush cards, Priority Contract, the card on a minion; a human's rush cards still go by `rush`.
+  - *Tools*: coverage v1.1.55 (the pilot's keys; `modeOf` the loader's; the discipline gate mirrored); `ana-gates.py` v1.1.4 and
+    `ana-ledger.py` (a weapon nulled explains a taken < dealt).
+  - *Tests*: sections 181 (58) and 182 (57), each case red on the bytes before it or killing a named mutant; `test-cardfx` 437 →
+    500; fixtures that broke a rule corrected (five for K2; 32d's master with a dodge). The suite needs a 6 GB heap (4 GB dies in
+    section 180): CLAUDE.md, HOWTO, CI; C6.
+  - *Gates* (the release bytes: `elysium-bot.js` `4c193599`, `test-bot-logic.js` `94d4006e`, `elysium-cardfx.json` `b937ae3d`):
+    suite **2733/0 ×3** (frozen, 6 GB heap); sections 181 58/0 and 182 57/0, each new case red on the bytes before it
+    (181: 55/2 on `d84bd63`, 57/1 on `45340a7`; 182: 56/1 on `d84bd63`); `test-cardfx` 500/0 (480/17 on `d84bd63`'s compiler);
+    canary 235/0 ×2; hotseat 12/0; HB1 11/0; main's client suite 383/1 (the guide's embed: main re-embeds); the lint and
+    `gen-precon --check` clean; doc-budget PASS and test-doc-budget every case red, the baseline green (the check changed). The
+    sims on these bytes equal `45340a7`'s match for match, the version normalized: the 240 against v0.6.235 DIVERGED 14,
+    SAME-PLAY 5, IDENTICAL 221 — E1's Aunt Linda (the 14 and four SAME-PLAY) and the discipline gate's drain context (match 168);
+    VP paired within 2 SE (malkavian +0.04, ventrue −0.04, the others ±0.00); the 14 V5 smokes and the pilot's 48 as the spec's
+    §7; `ana-gates.py` PASS 6/6 on all 16; the arena smoke (one match, the four starters, real clock) PASS 7/7, handshake 48/48.
+  - Egress: 49 findings in 3 passes (pass 1: 28 and the graders' 6 reds; pass 2: 15 — misread 5, half-done 4, unproven 3, bug 1,
+    rule-missed 1, stale-doc 1; pass 3: 6 — bug 2, the same fix from both sides, half-done 1, misread 1, stale-doc 1, unproven 1),
+    47 fixed (pass 3's by the session, without a fourth review: the loop's limit), 2 listed (BOARD: Haven Uncovered's record by
+    name; Adaptive's maneuver step for a maneuver from no card on the minion). Graded readings: pass 1's graders 6 reds, fixed;
+    pass 3's grades of the 59 entries the second pass changed: green 28, amber 31, red 0.
 - **v0.6.235 (19 Nov 2026)** — The finished decks' round: nine rules faults (RULINGS D-127; Johan, 19 Nov: "Jag tänker att du har
   bäst koll så vi kan köra på det du tror blir bäst"). The seven live reds of `specs/spec-card-sweep-2026-11-18.md` §4.3 and the 19
   Nov egress review's two faults; the as-built record is the spec's status block.

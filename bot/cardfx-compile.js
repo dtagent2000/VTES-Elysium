@@ -19,6 +19,10 @@
                 Since v1.10.0 a library entry with `"merge": true` is laid
                 over the compiled entry instead (the remainder only; see
                 mergeHand below, spec-card-sweep-2026-11-18.md §4.4).
+                Since v1.11.0 a few patterns read a WHOLE MODE (wholeModes
+                below): their keys land only on a mode whose every sentence
+                some key reads; a mode with an unread sentence gets nothing
+                from them and is listed in the report.
      playbook — per-bot deck lists + policy knobs, OUTSIDE this library.
 
    USAGE
@@ -94,7 +98,12 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.10.0';   // 20 Nov 2026 (bot v0.6.235, no bot change; spec-card-sweep §4.4, RULINGS D-127): the merge of hand entries -- a curated library entry with "merge": true is laid over the compiled entry (mergeHand); every other entry compiles byte for byte as in v1.9.12
+const FXC_VERSION = '1.11.4';   // 20 Nov 2026 (the pilot's review, pass 3): 'As above, but for NR + X ranged damage' is strike N, the printed floor (Eldritch Glimmer [THA] 4R), as the compiler reads every 'N + X'
+// const FXC_VERSION_1113 = '1.11.3';   // 20 Nov 2026 (the pilot's review, pass 2: F1-F3, F7): the coarse maneuver / press / dodge / additional strike reads also skip an opponent's cost, a restriction ('may use maneuvers or presses only if'), a cancel and the opponent's act as a trigger; 'the press step' is a time word; 'aggravated' in a negated or neutralised clause is not aggr (extractFx); 'maneuver, only usable to go / get to long / close range' is maneuverTo; a hand strike beside 'this minion cannot' gets no handBonus; 'As above, but' with its own strike replaces the inherited strike keys (libModes); `flight` on a crypt entry that prints 'Flight [FLIGHT].'; the contract, noContracts and flight markers survive a curated entry
+// const FXC_VERSION_1112 = '1.11.2';   // 20 Nov 2026 (the pilot's review of executor B2, P7): two markers -- `contract` on a library entry whose keyword is 'Contract.' / 'Unique contract.' (7 cards), `noContracts` on a crypt entry that prints 'Contracts cannot be placed on <name>.' (Iliana (G2) alone). Every other entry compiles byte for byte as in v1.11.1
+// const FXC_VERSION_1111 = '1.11.1';   // 20 Nov 2026 (the Banu Haqim pilot's review, findings D1-D3): the coarse maneuver / press / dodge / additional strike reads skip a negated clause ('the opposing minion cannot dodge ...') and an opponent's grant ('the opposing minion gets an optional press') -- they were the player's own (extractFx); 'As [x] above, but (the strike is) at +N damage' replaces an inherited handBonus (Charge of the Buffalo [SPI], Lead Fist [VIS]: 1 -> 2; libModes); the whole-mode readings read 'with an additional optional maneuver' and 'but enter combat with <target>' on a rush's 'As above' line (Nose of the Hound [spi] / [SPI]), 'Strike: hand strike, aggravated.' (Donnybrook [pro]), a discipline line's own type bracket and opening '+N stealth action.' (Steely Tenacity [qui], refused by its header), and list an 'As [x] above' line whose reference they refused. Every other entry compiles byte for byte as in v1.11.0
+// const FXC_VERSION_1110 = '1.11.0';   // 20 Nov 2026 (the Banu Haqim pilot, spec-sweep-pilot-2026-11-20.md §3.1; RULINGS D-125, D-127, D-132): THE WHOLE-MODE READINGS (wholeModes below) -- the action rush (`rush`, `rushTo`) with its grant (`maneuverGrant`, `pressGrant`, `pressDir`) replacing the misread `maneuver` / `press` on that mode, and the hand strike (`handBonus` 0 and the '+N' forms, `noPreventDisc`, `nullOppWeapons`), each only on a mode whose every sentence is read (a refused mode is listed in the report); THE BAN in extractFx ('cannot strike: combat ends' is `ceBan`, never `strikeCE` / `combatEnds`; 'cannot strike: dodge' is never `dodge`); the `animal` marker on a retainer ('Animal with N life'). Every other entry compiles byte for byte as in v1.10.0
+// const FXC_VERSION_1100 = '1.10.0';   // 20 Nov 2026 (bot v0.6.235, no bot change; spec-card-sweep §4.4, RULINGS D-127): the merge of hand entries -- a curated library entry with "merge": true is laid over the compiled entry (mergeHand); every other entry compiles byte for byte as in v1.9.12
 // const FXC_VERSION_1912 = '1.9.12';   // 19 Nov 2026 (bot v0.6.235, the finished decks' round): the condition sentences -- onlyBleed, notBleed, onlyPredatorActs, oncePerUnlock, pressDir (entry or mode) and noReplace (entry)
 // const FXC_VERSION_1911 = '1.9.11';   // 18 Nov 2026 (bot v0.6.233, V5 wave 6a): `onlyDirected` -- 'during an action directed at you (or a card you control)' on the entry (a line with no discipline) or on the modes of its discipline line
 // const FXC_VERSION_1910 = '1.9.10';   // 18 Nov 2026 (bot v0.6.232, V5 wave 5b): `frenzy` -- 'opp' / 'self' on a card with a bare 'Frenzy.' segment, and on the modes of a '[abo] Frenzy.' line (Meditative Grove's cancel reads it, [LSJ 20051113])
@@ -312,12 +321,58 @@ function extractFx(t0){
   }
   /* politics */
   if((m = t.match(/\+([0-9]+|X) votes?/i))) put('votes', num(m[1]));
+  /* v1.11.0 (20 Nov 2026, the Banu Haqim pilot, spec-sweep-pilot §3.1 item 3): THE BAN, a misread fixed library-wide. 'X cannot strike:
+     combat ends' forbids the OPPONENT a strike; the patterns below read 'strike: combat ends' and gave the card's own player a
+     combat-ends strike (strikeCE, combatEnds) on all four cards that print it -- live for Sanguine Entrapment, a combat card. It is
+     `ceBan` now, by the text's scope: 'during the first round' 'r1' (Hunter's Mark [CEL][THA]), 'this round' 'round' (Sanguine
+     Entrapment [CEL][QUI]), a sentence opened by 'If this action is blocked' 'action' (Mind of the Wilds: [LSJ 20100308] 'for the
+     duration of the action'), no scope 'combat' (Dog Pack: every combat with its employer); another scope writes nothing. The
+     clause is stripped, so nothing below reads it. 'cannot strike: dodge' (Sanguine Entrapment [cel][qui]) is stripped the same
+     way: it was read as the player's own dodge; no key carries the ban yet. */
+  { const BAN = /cannot strike:\s*combat ends([^.]*)/i;
+    if((m = t.match(BAN))){
+      const rest = m[1], lead = t.slice(0, m.index).split('.').pop();
+      const scope = /^\s*during the first round\b/i.test(rest) ? 'r1' : /^\s*this round\b/i.test(rest) ? 'round'
+        : !rest.trim() && /\bif this action is blocked\b/i.test(lead) ? 'action' : !rest.trim() ? 'combat' : null;
+      if(scope) fx.ceBan = scope;
+      t = t.replace(BAN, '');
+    }
+    t = t.replace(/cannot strike:\s*dodge[^.]*/gi, ''); }
   /* combat (coarse in v1 — the M2 combat module will grow this block) */
-  if(/\bmaneuvers?\b/i.test(t)) put('maneuver', true);
-  if(/\bpress(?:es)?\b/i.test(t)) put('press', true);
-  if(/\bdodges?\b/i.test(t)) put('dodge', true);
-  if(/additional strike/i.test(t)) put('addStrike', true);
-  if(/aggravated/i.test(t)) put('aggr', true);
+  /* v1.11.1 (20 Nov 2026, the pilot's review, R-data 5): the four coarse words below are the PLAYER's own maneuver / press / dodge /
+     additional strike. A negated clause ('the opposing minion cannot dodge this round', 'cannot maneuver or press to continue', 'the
+     attached minion cannot press in combat', 'cannot use additional strikes') and an opponent's grant ('the opposing / blocking minion
+     gets an optional press') forbid or give them to SOMEONE ELSE: they were read as the player's (Skin Trap's dodge, Target Vitals'
+     and Shoulder Drop's press, Lapse's and Ni Dieu ni Maître's maneuver ...). These four reads now see the text without those
+     clauses: from 'cannot' to the sentence's end, or to an 'and gets' / 'and may' that hands the subject something of its own
+     (Bloodform [VIC]: 'cannot strike and gets 1 optional press'), and the opponent's grant to its sentence's end. Every other key
+     reads the text as before. */
+  /* v1.11.3 (the pilot's review, pass 2, F2): the rest of that class, stripped the same way before the four reads -- an OPPONENT's cost
+     ('presses cost the attached minion 1 additional blood': Decompose [THN]; 'Cards providing maneuvers and/or presses cost the opposing
+     vampire 1 additional blood': Wave of Lethargy), a RESTRICTION ('he or she may use maneuvers or presses only if they require ...':
+     Target Leg), a CANCEL ('you may cancel a maneuver used by the opposing minion': Rigor Mortis [THN]) and the opponent's act as a
+     TRIGGER ('when a minion opposing this vampire in combat dodges': Creep Show) -- each to its sentence's end. 'The press step' is a
+     time word, never a press (Dagon's Call, Necrosis [THN], Improvised Tactics [aus], Expiate, Ron Zertnert ...). */
+  const tc = t.replace(/\bcannot\b(?:(?!\band (?:gets?|may)\b)[^.])*/gi, '')
+    .replace(/\b(?:the )?(?:opposing|blocking) (?:minion|vampire) gets (?:an?|1|one) optional (?:maneuver|press)[^.]*/gi, '')
+    .replace(/\b(?:cards providing )?(?:maneuvers?|presses?)(?: (?:and\/or|and|or) (?:maneuvers?|presses?))? costs? (?:the )?(?:opposing|attached|blocking) (?:minion|vampire|monster)\b[^.]*/gi, '')
+    .replace(/\bmay (?:only )?use (?:maneuvers?|presses?)(?: (?:or|and) (?:maneuvers?|presses?))? only if\b[^.]*/gi, '')
+    .replace(/\bcancel (?:a|an|the|one|that) (?:maneuver|press|dodge|additional strike)s?\b[^.]*/gi, '')
+    .replace(/\b(?:a |an |the )?(?:minion|vampire)s? opposing (?:this|the attached|that) (?:minion|vampire|imbued)\b[^.]*/gi, '');
+  if(/\bmaneuvers?\b/i.test(tc)) put('maneuver', true);
+  /* v1.11.3 (the pilot's review, pass 2, F1): 'Maneuver, only usable to go to long range' (Backstep, High Ground, Crawling Chamber [tha],
+     Leapfrog [obf]), '... to get to long range' (Amria [chi], Repulsion [pre]), '... to go / get to close range' (Swoop, Dance with the
+     Devil, Shadow Boxing, Angel's Gift, Dark Steel, Blade of Bellona; Slam [POT]'s hand entry) -- the maneuver's one direction, the key
+     _bestManeuverFor reads (it was written by hand only). Only when every maneuver of the segment is so restricted, the same way. */
+  if(fx.maneuver){ const all = tc.match(/\bmaneuvers?\b/gi) || [], to = [...tc.matchAll(/\bmaneuvers?\b[^.,]{0,30}, only usable to (?:go|get) to (long|close) range\b/gi)].map(x => x[1].toLowerCase());
+    if(to.length && to.length === all.length && to.every(x => x === to[0])) put('maneuverTo', to[0]); }
+  if(/\bpress(?:es)?\b(?!\s+step\b)/i.test(tc)) put('press', true);
+  if(/\bdodges?\b/i.test(tc)) put('dodge', true);
+  if(/additional strike/i.test(tc)) put('addStrike', true);
+  /* v1.11.3 (F2): 'aggravated' in a negated clause ('The weapon cannot ... inflict aggravated damage': Concealed Weapon) or a neutralised
+     one ('Any effect which would make damage from this strike aggravated leaves the damage normal': Psychic Assault) is no aggravated
+     damage: read from the stripped text, the 'would make ... aggravated' sentence cut too. */
+  if(/aggravated/i.test(tc.replace(/[^.]*\bwould make\b[^.]*\baggravated\b[^.]*/gi, ''))) put('aggr', true);
   if(!/prevents? (?:half|up to)\b/i.test(t) &&   // v1.5.5 (restlist read): "Prevent HALF the damage" (Rockheart) fell through the optional quantifier group as prevent:'all' -- the one WRONG VALUE on a scanned, playable, combat-typed key. 3-card class measured; only Rockheart was tagged. A missed tag is a curation task; a wrong tag mis-resolves.
      (m = t.match(/prevents? ([0-9]+|X|all|that)?\s*(?:of the )?damage/i)))
     put('prevent', m[1] ? (/^(all|that)$/i.test(m[1]) ? 'all' : num(m[1])) : 'all');
@@ -342,6 +397,11 @@ function extractFx(t0){
      damage. 36 library cards share the two patterns (25 + 11, vtes.json 14 Oct); in our six decks only Roundhouse. */
   if((m = t.match(/hand strike at \+([0-9]+|X) damage/i))) put('handBonus', num(m[1]));
   if((m = t.match(/this strike is at \+([0-9]+|X) damage/i))) put('handBonus', num(m[1]));
+  /* v1.11.3 (the pilot's review, pass 2, F1): a hand strike whose segment restricts THIS minion ('This combat, this minion cannot cancel
+     frenzy cards nor press to end.': Taming the Beast [abo]) carries a rider no key reads -- its bonus is not certified (the chooser plays
+     a handBonus); handStrike stays, as on Cobra Fangs and Dagon's Call. Today's library: Taming the Beast [abo] alone (Stutter-Step [CEL]
+     prints 'this vampire cannot' and has no bonus). */
+  if(fx.handBonus !== undefined && /\bthis (?:minion|vampire) cannot\b/i.test(t)) delete fx.handBonus;
   /* v1.6.0 (Johan's standing question, checking the strike-bonus family for
      uncertainty): a THIRD phrasing found by chance while reading Compress -- "Strike:
      N aggravated damage" (aggravated sitting BETWEEN the number and "damage" breaks
@@ -550,7 +610,30 @@ function libModes(text){
         if(!src && base && done.some(d => (d.at || '').toLowerCase() === base)) src = 'STOP';   // v1.5.5: same stop rule for plain "As above"
         for(let i = done.length - 1; i >= 0 && !src; i--){ if(worth(done[i])) src = done[i]; }
       }
-      if(src && src !== 'STOP'){ fx = Object.assign({}, src.fx, fx); if(dir === undefined) dir = src.dir; if(lock === undefined) lock = src.lock; }
+      if(src && src !== 'STOP'){ const own = fx; fx = Object.assign({}, src.fx, fx); if(dir === undefined) dir = src.dir; if(lock === undefined) lock = src.lock;
+        if(own.maneuver && own.maneuverTo === undefined) delete fx.maneuverTo;   // v1.11.3 (F1): the line's own unrestricted maneuver is not its reference's one direction
+        /* v1.11.1 (the pilot's review, grader R-1): 'As [x] above, but (the / this) (strike is) at +N damage' REPLACES the inherited
+           strike's bonus; the patterns above read neither shape, so the line kept its reference's number (Charge of the Buffalo [SPI]
+           and Lead Fist [VIS] read +1 where they print +2). Only over an inherited numeric handBonus: nothing is written where the
+           reference has none.
+           v1.11.3 (the pilot's review, pass 2, F3): an 'As above, but' line that prints its OWN strike over a reference with one (strike,
+           handStrike or handBonus) replaces the inherited strike keys (strike, handStrike, handBonus, ranged, aggr) with its own reading:
+           'but for NR damage' is strike N (ranged by the R: Coagulate Blood [QUI], Psychic Assault [AUS], Starvation of Marena [VIC]),
+           'but for NR + X ranged damage' strike N, its floor (Eldritch Glimmer [THA] 4R, v1.11.4 -- the pilot's review, pass 3: the
+           compiler reads the floor of every 'N + X', and its [tha] reads 2R the same way); any other such line
+           ('but strike: burn equipment': Taming the Beast [ABO]; 'but for 4R damage and prevent ...') is not read -- the inherited strike
+           keys are dropped, the line's own other keys stay. They kept the reference's damage. */
+        const bc = s.text.match(/^As (?:(?:‹[A-Za-z]{3}›)+ )?above, but (.+?)\.?$/i), cl = bc ? bc[1] : '';
+        const SK = ['strike', 'handStrike', 'handBonus', 'ranged', 'aggr'], hadStrike = ['strike', 'handStrike', 'handBonus'].some(k => src.fx[k] !== undefined);
+        const bm = cl.match(/^(?:(?:the|this) strike is )?at \+(\d+) damage$/i);
+        if(bm){ if(typeof fx.handBonus === 'number') fx.handBonus = +bm[1]; }
+        else if(bc && hadStrike && /^(?:for\b.*\bdamage\b|strike:)/i.test(cl)){
+          SK.forEach(k => { delete fx[k]; });
+          let m2;
+          if((m2 = cl.match(/^for (\d+)(R)? damage$/i))){ fx.strike = +m2[1]; if(m2[2]) fx.ranged = true; }
+          else if((m2 = cl.match(/^for (\d+)(R)? \+ X( ranged)? damage$/i))){ fx.strike = +m2[1]; if(m2[2] || m2[3]) fx.ranged = true; }   // v1.11.4: the printed floor, as the compiler reads every 'N + X' (the reference's own 'can burn X blood to get +X' is unread there too)
+          else SK.forEach(k => { if(own[k] !== undefined) fx[k] = own[k]; });   // not this shape: the line's own reading only (extractFx keeps a ranged only beside its strike)
+        } }
     }
     done.push({ at: s.at, use: s.use, fx, dir, lock, when });
   });
@@ -572,6 +655,7 @@ function libModes(text){
     if(d.dir) entry.dir = true;    // any segment sharing this (at,use) key carrying Ⓓ marks the assembled mode directed
     if(d.lock) entry.lock = true;  // v1.4.0: same any-segment-sets-it-for-the-whole-mode shape as dir
     if(d.when) entry.when = d.when;   // v1.8.0: the act-again rider
+    if(d.fx.maneuver && d.fx.maneuverTo === undefined) entry.mvFree = true;   // v1.11.3 (F1): a segment of this mode prints an unrestricted maneuver
     const tgt = entry.fx;
     for(const k in d.fx){
       const v = d.fx[k];
@@ -584,6 +668,7 @@ function libModes(text){
     if(mo.use) o.use = mo.use;
     if(mo.dir) o.dir = true;    // v1.3.0: PER-MODE now (absent = undirected default, Johan's minimal-tagging call)
     if(mo.lock) o.lock = true;  // v1.4.0: PER-MODE, not entry-level -- Enkil Cog carries a flat +1 bleed (no lock) AND a separate lockable action in the SAME entry; Dreams of the Sphinx bundles three differently-timed lock effects into one mode today (an existing, already-flagged curated limit -- see cardfx-design.md §4's actGrant note), which this auto tag does not attempt to resolve
+    if(mo.mvFree) delete mo.fx.maneuverTo;   // v1.11.3 (F1): one direction only when no segment of the mode prints an unrestricted maneuver
     o.fx = mo.fx;
     if(mo.when) o.when = mo.when;   // v1.8.0
     return o;
@@ -676,7 +761,164 @@ function refTerms(text){
    minions', 'Choose an Osebo in combat', a minion 'controlled by another Methuselah' ([LSJ 20051113]: a frenzy card that targets, selects, chooses or affects a
    minion is played on it). One test for the entry-level tag and the mode-level one. */
 const FRENZY_OPP = /opposing (?:minion|vampire)|against a vampire|choose a vampire|choose an? [\w'-]+ in combat|on any vampire|put this card on a vampire(?! you control)|choose x minions|controlled by another methuselah/i;   // 'Choose an Osebo in combat' (Battle Frenzy: any Osebo -- the graded readings)
-function libEntry(c){
+/* ---------------- the whole-mode readings (v1.11.0) ----------------
+   20 Nov 2026 (the Banu Haqim pilot, spec-sweep-pilot-2026-11-20.md §3.1 items 1, 2 and 4; RULINGS D-125). THE WHOLE-MODE RULE: a
+   key these patterns write lands only on a mode whose EVERY sentence is read by some key -- its own line's sentences, an 'As above'
+   line's reference (whole itself) and clause, and the card's header (the lines with no discipline): '+N stealth action.' (actStealth)
+   and the requirement and condition sentences the compiler already reads (anarchReq, capMin, noReplace, the range requirements). A
+   mode with a sentence no key reads gets nothing from them, keeps its compiled keys byte for byte, and goes to the report's refusal
+   list with the sentences it could not read ("half a mode is a misread"). A line that opens with a bracket that is no discipline
+   ([ACTION], [FLIGHT] ...) refuses the card. Sentences are read by exact shapes; nothing is guessed.
+   THE RUSH (an Action card): 'Ⓓ Enter combat with <target>.' -> rush: true, and rushTo where the target is conditioned: 'a/any
+   minion' and 'a/any ready minion controlled by another Methuselah' none (the bot's own target set), 'a (ready) locked minion
+   (controlled by another Methuselah)' 'locked', 'a/any vampire' 'vampire', 'a younger vampire' 'younger', 'an older vampire
+   (controlled by another Methuselah)' 'older'. Any other target -- an or-condition, an ally, a sect, a clan, a blood count -- is
+   unread. lockTarget is never written here: "Enter combat with and lock" is Deep Song's hand entry.
+   THE GRANT, only on a mode the rush took: 'This acting vampire|minion gets 1|an optional maneuver|press during|in that|this combat.'
+   (and its 'As above, and ...' clause; 'with an optional maneuver in that combat' after the target) -> maneuverGrant N / pressGrant
+   N, pressDir 'continue' for a press printed 'only usable to continue combat'; the mode's compiled maneuver / press go (they read a
+   grant as a card play). 'during the first round', 'an additional', 'or' are unread.
+   THE HAND STRIKE (a Combat card): 'Strike: hand strike.' -> handStrike, handBonus 0; 'Strike: hand strike at +N damage.' N; 'As
+   above, and this hand strike is at +N damage.' the reference's + N; 'As above, but at +N damage.' N. 'Damage from this strike / This
+   damage / The damage from this strike cannot be prevented by cards requiring Fortitude [for].' -> noPreventDisc 'for', written only
+   when EVERY strike mode of the entry is read whole and prints it (the struck bot reads the key by the card's name, not its level:
+   Soulgrinder and Dead Hand print it at superior only). 'The opposing vampire's strikes with weapons inflict no damage this round.'
+   -> nullOppWeapons on each mode that prints it ('As above' included).
+   THE BAN's clause ('the opposing minion cannot strike: combat ends during the first round of that combat') is read on a rush mode
+   when extractFx wrote its ceBan there. */
+const WM_HEAD = [/^\+\d+ stealth action\.$/i, /^Requires an? (?:ready )?(?:Anarch|baron)\.$/i, /^Requires a vampire with capacity \d+ or more\.$/i,
+  /^Do not replace until after (?:this action|combat)\.$/i, /^Only usable at (?:close|long) range\.$/i, /^Only usable before range is determined\.$/i];
+const WM_SENT = s => String(s || '').split(/(?<=\.)\s+/).map(x => x.trim()).filter(Boolean);
+const WM_N = w => (/^(?:1|an|one)$/i.test(w) ? 1 : /^(?:2|two)$/i.test(w) ? 2 : null);
+function wmTarget(s){   // the printed target of 'Enter combat with <target>' -> { to } (to: null = no condition), or null when unread
+  const T = [[/^(?:a|any) minion$/i, null], [/^(?:a|any) ready minion controlled by another Methuselah$/i, null],
+    [/^(?:a|any) (?:ready )?locked minion(?: controlled by another Methuselah)?$/i, 'locked'], [/^(?:a|any) vampire$/i, 'vampire'],
+    [/^a younger vampire$/i, 'younger'], [/^an older vampire(?: controlled by another Methuselah)?$/i, 'older']];
+  const hit = T.find(([re]) => re.test(s.trim()));
+  return hit ? { to: hit[1] } : null;
+}
+function wmGrant(s){   // a grant sentence or clause -> { mv, pr, dir } or null
+  const m = s.match(/^this acting (?:vampire|minion) gets (1|an|one) optional (maneuver|press)(, only usable to continue combat,)? (?:during|in) (?:that|this) combat\.?$/i);
+  if(!m) return null;
+  const n = WM_N(m[1]), g = { mv: 0, pr: 0, dir: null };
+  if(/maneuver/i.test(m[2])){ if(m[3]) return null; g.mv = n; } else { g.pr = n; if(m[3]) g.dir = 'continue'; }
+  return g;
+}
+const WM_NOPREV = /^(?:damage from this strike|this damage|the damage from this strike) cannot be prevented by cards requiring Fortitude \[for\]\.?$/i;
+const WM_NULLW = /^the opposing vampire's strikes with weapons inflict no damage this round\.?$/i;
+function wholeModes(e, txt, name, sink){
+  const isAct = e.t.includes('action'), isCmb = e.t.includes('combat');
+  if(!(isAct || isCmb) || !e.modes) return;
+  const RUSHY = /\u24b9\s*Enter combat with/, STRIKY = /strike: hand strike(?! at| or)|this hand strike is at|but at \+\d+ damage|strikes with weapons inflict no damage|cannot be prevented by cards requiring Fortitude/i;
+  const cand = l => (isAct && RUSHY.test(l)) || (isCmb && STRIKY.test(l));   // a line the patterns would write on: its refusal is listed
+  const lines = String(txt || '').split('\n').filter(l => l.trim());
+  const DL = /^\s*((?:\[[A-Za-z]{3}\]\s*(?:or\s*)?)+)(.*)$/;
+  const refuse = (at, why) => { if(sink) sink.push({ name, at, why }); };
+  const odd = lines.find(l => /^\s*\[/.test(l) && !DL.test(l));
+  if(odd){ if(lines.some(cand)) refuse('*', 'a line opens with a bracket that is no discipline: ' + odd.trim()); return; }
+  const head = lines.filter(l => !DL.test(l)), disc = lines.filter(l => DL.test(l));
+  const strip = s => s.replace(/^\u24b9\s*/, '');
+  const isHead = s => WM_HEAD.some(re => re.test(s));
+  const readRush = sents => {   // a mode's own sentences -> { r } or { unread }
+    const r = { to: null, mv: 0, pr: 0, dir: null, ban: false }, unread = []; let rush = false;
+    sents.forEach((s0, i) => { const s = strip(s0); let m;
+      if(i === 0 && (m = s.match(/^Enter combat with (.+?)(, with (?:an|one|1) optional maneuver in that combat)?\.$/i))){
+        const t = wmTarget(m[1]); if(!t){ unread.push(s0); return; }
+        rush = true; r.to = t.to; if(m[2]) r.mv += 1; return; }
+      const g = rush ? wmGrant(s) : null; if(g){ r.mv += g.mv; r.pr += g.pr; if(g.dir) r.dir = g.dir; return; }
+      if(rush && /^the opposing minion cannot strike: combat ends during the first round of that combat\.$/i.test(s)){ r.ban = true; return; }
+      unread.push(s0); });
+    return rush && !unread.length ? { r } : { unread: unread.length ? unread : sents.slice(0, 1) };
+  };
+  const readStrike = sents => {
+    const r = { bonus: null, noPrev: false, nullW: false, aggr: false }, unread = [];
+    sents.forEach((s, i) => { let m;
+      if(i === 0 && /^Strike: hand strike\.$/i.test(s)){ r.bonus = 0; return; }
+      if(i === 0 && /^Strike: hand strike, aggravated\.$/i.test(s)){ r.bonus = 0; r.aggr = true; return; }   // v1.11.1 (grader): Donnybrook [pro], Sculpt the Flesh [pro]
+      if(i === 0 && (m = s.match(/^Strike: hand strike at \+(\d+) damage\.$/i))){ r.bonus = +m[1]; return; }
+      if(r.bonus !== null && WM_NOPREV.test(s)){ r.noPrev = true; return; }
+      if(r.bonus !== null && WM_NULLW.test(s)){ r.nullW = true; return; }
+      unread.push(s); });
+    return r.bonus !== null && !unread.length ? { r } : { unread: unread.length ? unread : sents.slice(0, 1) };
+  };
+  /* the header (a card with discipline lines): every sentence must be one the compiler reads, else no mode of the card is whole */
+  const headUnread = disc.length ? head.flatMap(WM_SENT).filter(s => !isHead(s)) : [];
+  if(disc.length && head.some(cand)) refuse('header', 'the effect is printed in the header, outside the discipline lines: ' + head.join(' '));
+  const units = disc.length ? disc.map(l => { const h = l.match(DL); const ats = (h[1].match(/\[[A-Za-z]{3}\]/g) || []).map(x => x.slice(1, -1));
+      return { keys: /\]\s*or\s*\[/i.test(h[1]) ? ats : [ats.join('+')], key: ats.join('+'), body: h[2].trim(), line: l }; })
+    : [{ keys: [null], key: null, body: head.join(' '), line: head.join(' '), base: true }];
+  const refuseU = (u, why) => { u.refused = true; refuse(u.key, why); };   // v1.11.1: a unit refused and listed (an 'As [x] above' line that names it is listed too)
+  units.forEach((u, ui) => {   // u.kind 'rush' | 'strike' | null; u.r the reading when the unit is whole; u.strikeMode (noPreventDisc's 'every strike mode')
+    /* v1.11.1 (grader, Steely Tenacity [qui]): a discipline line's own type bracket ('[qui] [ACTION] ...') is the mode's `use`, not a
+       sentence; a '+N stealth action.' that opens the line is that mode's actStealth (held against the compiled mode below) */
+    if(!u.base){ const tb = u.body.match(/^\[([A-Z][A-Z ]{2,20})\]\s*/); if(tb && TYPE_BRACKET[tb[1].toUpperCase()]) u.body = u.body.slice(tb[0].length); }
+    let sents = WM_SENT(u.body); if(u.base) sents = sents.filter(s => !isHead(s));
+    if(!u.base && sents.length > 1){ const sm = sents[0].match(/^\+(\d+) stealth action\.$/i); if(sm){ u.ownSt = +sm[1]; sents = sents.slice(1); } }
+    const ab = u.base ? null : u.body.match(/^As ((?:\[[A-Za-z]{3}\])*)\s*above\b,?\s*(?:(and|but)\s+)?(.*)$/i);   // a clause opened by neither 'and' nor 'but' is read only in its one shape below ('with an additional optional maneuver ...')
+    let res = null, listed = cand(u.line);
+    if(ab){
+      /* the reference: 'As [x] above' the latest earlier line at that level (exact case, then any case); 'As above' the latest earlier
+         line of the same discipline whatever its case, else the line just before */
+      const ref = ab[1] ? (ab[1].match(/\[[A-Za-z]{3}\]/g) || []).map(x => x.slice(1, -1)).join('+') : null;
+      let src = null;
+      for(let i = ui - 1; i >= 0 && !src; i--) if(ref && units[i].key === ref) src = units[i];
+      for(let i = ui - 1; i >= 0 && !src; i--) if(ref && units[i].key.toLowerCase() === ref.toLowerCase()) src = units[i];
+      for(let i = ui - 1; i >= 0 && !src; i--) if(!ref && units[i].key.toLowerCase() === u.key.toLowerCase()) src = units[i];
+      if(!src && !ref && ui > 0) src = units[ui - 1];
+      u.strikeMode = !!(src && src.strikeMode); u.kind = src ? src.kind : null;
+      if(src && src.r && (src.kind === 'rush' || src.r.bonus === 0 || src.r.noPrev || src.r.nullW)) listed = true;   // an 'As above' line of a mode these patterns write on
+      if(src && src.refused) listed = true;   // v1.11.1 (grader): ... and of a mode they refused and listed (Nose of the Hound [SPI] and Charge of the Buffalo [SPI] were missing)
+      const cl = String(ab[3] || '').replace(/\.$/, ''), how = String(ab[2] || '').toLowerCase(); let m, g, tg;
+      if(!src || !src.r) res = { unread: ['its reference is not read whole: ' + u.body] };
+      else { const r = JSON.parse(JSON.stringify(src.r));
+        if(u.kind === 'rush' && how === 'and' && (g = wmGrant(cl))){ r.mv += g.mv; r.pr += g.pr; if(g.dir) r.dir = g.dir; res = { r }; }
+        /* v1.11.1 (grader, Nose of the Hound): '[spi] As [aus] above, with an additional optional maneuver during that combat.' (one more
+           maneuver: 2 in all) and '[SPI] As [spi] above, but enter combat with <target>.' (the target replaced, read like the rush's own) */
+        else if(u.kind === 'rush' && !how && /^with an additional optional maneuver (?:during|in) that combat$/i.test(cl)){ r.mv += 1; res = { r }; }
+        else if(u.kind === 'rush' && how === 'but' && (m = cl.match(/^enter combat with (.+)$/i)) && (tg = wmTarget(m[1]))){ r.to = tg.to; res = { r }; }
+        else if(u.kind === 'rush' && how === 'and' && /^the opposing minion cannot strike: combat ends during the first round of that combat$/i.test(cl)){ r.ban = true; res = { r }; }
+        else if(u.kind === 'strike' && how === 'and' && (m = cl.match(/^this hand strike is at \+(\d+) damage$/i))){ r.bonus += +m[1]; res = { r }; }
+        else if(u.kind === 'strike' && how === 'but' && (m = cl.match(/^at \+(\d+) damage$/i))){ r.bonus = +m[1]; res = { r }; }
+        else if(u.kind === 'strike' && how === 'and' && WM_NOPREV.test(cl)){ r.noPrev = true; res = { r }; }
+        else if(u.kind === 'strike' && how === 'and' && WM_NULLW.test(cl)){ r.nullW = true; res = { r }; }
+        else res = { unread: [u.body] }; }
+    } else if(isAct && RUSHY.test(u.body)){ u.kind = 'rush'; res = readRush(sents); }
+    else if(isCmb && /^Strike:/i.test(sents[0] || '')){ u.strikeMode = true;
+      if(/^Strike: hand strike/i.test(sents[0])){ u.kind = 'strike'; res = readStrike(sents); } else res = { unread: sents.slice(0, 1) }; }
+    if(!u.kind || !res) return;
+    if(res.unread){ if(listed) refuseU(u, res.unread.join(' | ')); return; }
+    if(headUnread.length){ if(listed) refuseU(u, 'the header: ' + headUnread.join(' | ')); return; }
+    u.r = res.r;
+  });
+  /* the compiled modes the readings land on: the one mode at each key (a key two lines share, or a level with two modes, is not plain) */
+  const seen = new Map(); units.forEach(u => u.keys.forEach(k => seen.set(k, (seen.get(k) || 0) + 1)));
+  const modeAt = k => { const ms = e.modes.filter(mo => (mo.at === undefined ? null : mo.at) === k); return ms.length === 1 && seen.get(k) === 1 ? ms[0] : null; };
+  const strikeUnits = units.filter(u => u.strikeMode), everyNoPrev = strikeUnits.length > 0 && strikeUnits.every(u => u.r && u.kind === 'strike' && u.r.noPrev);
+  units.forEach(u => {
+    if(!u.r) return;
+    const ms = u.keys.map(modeAt);
+    if(ms.some(mo => !mo)){ if(u.kind === 'rush' || u.r.bonus === 0 || u.r.noPrev || u.r.nullW) refuseU(u, 'no single compiled mode at its level'); return; }
+    if(u.ownSt !== undefined && ms.some(mo => mo.fx.actStealth !== u.ownSt)){ refuseU(u, 'its \u2018+' + u.ownSt + ' stealth action\u2019 is not the compiled mode\u2019s actStealth'); return; }   // v1.11.1
+    if(u.kind === 'rush'){
+      /* the compiled keys the reading explains: actStealth (the header), the grant's misread maneuver / press, and ceBan 'r1' when the
+         ban's clause was read; any other compiled key is a reading this pattern does not explain -- the mode is left as it is */
+      const extra = ms.flatMap(mo => Object.keys(mo.fx).filter(k => !['actStealth', 'maneuver', 'press'].includes(k) && !(k === 'ceBan' && u.r.ban && mo.fx.ceBan === 'r1')));
+      if(extra.length || (u.r.ban && ms.some(mo => mo.fx.ceBan !== 'r1'))){ refuseU(u, 'compiled keys the reading does not explain: ' + (extra.join(', ') || 'no ceBan')); return; }
+      ms.forEach(mo => { delete mo.fx.maneuver; delete mo.fx.press;
+        mo.fx.rush = true; if(u.r.to) mo.fx.rushTo = u.r.to;
+        if(u.r.mv) mo.fx.maneuverGrant = u.r.mv; if(u.r.pr) mo.fx.pressGrant = u.r.pr; if(u.r.pr && u.r.dir) mo.fx.pressDir = u.r.dir; });
+    } else {
+      const extra = ms.flatMap(mo => Object.keys(mo.fx).filter(k => !['handStrike', 'handBonus'].includes(k) && !(k === 'aggr' && u.r.aggr)));   // v1.11.1: 'aggravated' is read
+      if(extra.length || (u.r.aggr && ms.some(mo => mo.fx.aggr !== true))){ refuseU(u, 'compiled keys the reading does not explain: ' + (extra.join(', ') || 'no aggr')); return; }
+      ms.forEach(mo => { mo.fx.handStrike = true; mo.fx.handBonus = u.r.bonus;
+        if(u.r.noPrev && everyNoPrev) mo.fx.noPreventDisc = 'for';
+        if(u.r.nullW) mo.fx.nullOppWeapons = true; });
+      if(u.r.noPrev && !everyNoPrev) refuseU(u, 'noPreventDisc: not every strike mode of the entry prints it (the struck bot reads the key by the card\u2019s name, not its level)');
+    }
+  });
+}
+
+function libEntry(c, sink){
   const e = { t: (c.types || []).map(t => TYPE_MAP[t] || t.toLowerCase()) };
   const cost = {};
   if(c.pool_cost !== undefined) cost.pool = num(String(c.pool_cost));
@@ -724,6 +966,7 @@ function libEntry(c){
      one-per-vampire attachments; the master-play loop hosts+gates them via e.archetype). */
   const kwHit = w => txt.split('\n').some(l => l.split(/[.:]/).some(sg => new RegExp('^\\s*' + w + '\\s*$', 'i').test(sg)));
   if(kwHit('trifle')) e.trifle = true;
+  if(kwHit('contract') || kwHit('unique contract')) e.contract = true;   // v1.11.2 (bot v0.6.236, the pilot's review P7): the 'Contract.' keyword (Priority Contract, Contract, Dirty Contract, Hand Contract, Haqim's Law: Judgment, Shakar: the Hunt, Clandestine Contract) -- what Iliana's 'Contracts cannot be placed on Iliana' bars
   if(kwHit('archetype') || kwHit('unique archetype')) e.archetype = true;   // v1.9.8 (V5 wave 4): 'Unique archetype.' (Saulot's Healing Touch, Avenging Fist, Guiding Wisdom) -- the bare-word segment missed the three
   /* v1.9.10 (bot v0.6.232, V5 wave 5b, RULINGS D-122): FRENZY -- a 'Frenzy.' keyword segment: 'opp' by FRENZY_OPP, else 'self'.
      Meditative Grove's cancel reads it. A mode-prefixed 'Frenzy.' ('[abo] Frenzy.') is no bare segment: the mode tag below. */
@@ -782,13 +1025,18 @@ function libEntry(c){
      before it. The [REFLEX] line of the same discipline shares that mode (one `at`, one mode), so a reflex play reads as the frenzy one --
      accepted: the Grove reads a combat card of my opponent's in our combat only. */
   if(e.modes && !e.frenzy){
-    let last = null;
+    let last = null; const before = new Set();
     txt.split('\n').forEach(l => {
       const h = l.match(/^\s*((?:\[[A-Za-z]+\]\s*(?:or\s*)?)+)(.*)$/); if(!h) return;
       const ats = (h[1].match(/\[[A-Za-z]+\]/g) || []).map(x => x.slice(1, -1)).filter(x => x !== 'REFLEX');
       const fr = /^\s*Frenzy\s*[.:]/i.test(h[2]) ? (FRENZY_OPP.test(h[2]) ? 'opp' : 'self') : /^\s*As above/i.test(h[2]) ? last : null;
       last = fr;
+      /* v1.11.1: a frenzy line whose every other sentence gives no key keeps a mode for its tag (fx {}) -- Whistling Up the Beast [abo]
+         ('the opposing vampire cannot use maneuvers ... presses') lost the misread maneuver / press that made its mode, and a human's
+         '[abo]' play must still read as a frenzy card on my vampire (_frenzyOpp, Meditative Grove) */
+      if(fr && ats.length === 1 && !e.modes.some(mo => mo.at === ats[0])) e.modes.splice(e.modes.filter(mo => before.has(mo.at)).length, 0, { at: ats[0], fx: {} });
       if(fr) e.modes.forEach(mo => { if(ats.includes(mo.at)) mo.frenzy = fr; });
+      ats.forEach(a => before.add(a));
     });
   }
   /* v1.9.11 (18 Nov 2026, bot v0.6.233, V5 wave 6a, RULINGS D-123): ONLY DIRECTED -- 'Only usable during an action directed at you (or a
@@ -905,6 +1153,7 @@ function libEntry(c){
       if(mo.fx && typeof mo.fx.stealth === 'number'){ mo.fx.actStealth = mo.fx.stealth; delete mo.fx.stealth; }
     });
   }
+  if(!e.t.includes('political')) wholeModes(e, txt, c.name, sink);   // v1.11.0: the whole-mode readings (the rush and its grant, the hand strike)
   if(/(?:minion|vampire) can play only one [^.]{2,60} each turn/i.test(txt)) e.oncePerTurn = true;   // v1.8.0: "A vampire can play only one Forced March each turn" -- the act-again consumer must not chain the same card
   if(e.t.includes('political')){   // v1.7.0: see "referendum terms" above
     const ref = {}, moved = {}, tags = new Set();
@@ -928,6 +1177,11 @@ function libEntry(c){
      zombie (Cursed Abattoir's 'zombie (ally or retainer)'). */
   if(/(?:^|[.:] +)Requires? (?:an?|a ready) (?:Anarch|baron)\b/im.test(txt)) e.anarchReq = true;
   if((e.t.includes('ally') || e.t.includes('retainer')) && /\bzombie\b/i.test(String(txt).split('\n')[0] || '')) e.zombie = true;
+  /* v1.11.0 (the Banu Haqim pilot, spec-sweep-pilot §3.1 item 8): `animal` -- a RETAINER whose first line names it an animal ('Animal with
+     N life.': 13 retainers, Raven Spy, Dog Pack, Dread Mastiff ...). Biothaumaturgic Experiment [tha] employs an animal retainer from the
+     hand ignoring requirements (its curated employAnimal); the marker says which retainers it may employ. An animal ALLY (Underbridge
+     Stray) is not a retainer. No finder gates on it today. */
+  if(e.t.includes('retainer') && /^\s*(?:unique )?animal with \d+ life\b/i.test(String(txt).split('\n')[0] || '')) e.animal = true;
   e.src = 'auto';
   return e;
 }
@@ -954,6 +1208,8 @@ function cryptEntry(c){
     if(TITLE_VOTES[c.title] !== undefined) e.votes = TITLE_VOTES[c.title];
   }
   if(c.banned) e.banned = c.banned;
+  if(/(?:^|[.:]\s*)Contracts cannot be placed on [^.]+\./.test(ct)) e.noContracts = true;   // v1.11.2 (bot v0.6.236, the pilot's review P7): 'Contracts cannot be placed on Iliana.' -- the one vampire of the crypt that prints it; the contract's host pick reads it
+  if(/(?:^|[.:]\s*)Flight \[FLIGHT\](?:\.|$)/m.test(ct)) e.flight = true;   // v1.11.3 (the pilot's review, pass 2, F1): KRCG codes Flight on a vampire as its text ('Flight [FLIGHT].': 26 vampires, the Gargoyles), not in its disciplines; a library card's requirement is req.disc 'flight' (9 cards: Pounce, Roll, Swoop ...) -- the bot's discipline gate reads this marker
   return e;
 }
 
@@ -1129,6 +1385,7 @@ function compile(cards, curated){
   };
 
   const fmtN = { v3: 0, v5: 0 };
+  const wholeRefused = [];   // v1.11.0: the modes the whole-mode readings refused (wholeModes), for the report
   let costUnknown = 0, v5Titles = 0;
   const normd = cards.map(c => c && normalizeCard(c)).filter(n => n && n.rec.name);
   normd.sort((a, b) => String(a.rec.name).localeCompare(String(b.rec.name)));
@@ -1137,7 +1394,7 @@ function compile(cards, curated){
     if(rec._costUnknown) costUnknown++;
     if(fmt === 'v5' && rec.title) v5Titles++;
     if(rec._crypt) crypt[rec.name] = cryptEntry(rec);
-    else lib[rec.name] = libEntry(rec);
+    else lib[rec.name] = libEntry(rec, wholeRefused);
     noteAlias(rec._name, rec.name);
     (rec.name_variants || []).forEach(v => noteAlias(v, rec.name));
     { const am = String(rec.name).match(/^(.*), (The|An|A)$/); if(am) noteAlias(am[2] + ' ' + am[1], rec.name); }   // v1.9.6 (main's KRCG v5 reply, 1 Nov 2026, item 5.2): the client now names library cards article-first from KRCG's v5 dump ('An Anarch Manifesto'); the v3 key is 'Anarch Manifesto, An' and its variants lacked that spelling (the one miss of 4,149, measured)
@@ -1254,6 +1511,10 @@ function compile(cards, curated){
       if(auto && auto.oot && e.oot === undefined) e.oot = true;   // v1.9.6: a curated master keeps the data's out-of-turn keyword unless it restates it
       if(auto && auto.anarchReq && e.anarchReq === undefined) e.anarchReq = true;   // v1.9.9: the markers survive a curated entry
       if(auto && auto.zombie && e.zombie === undefined) e.zombie = true;
+      if(auto && auto.animal && e.animal === undefined) e.animal = true;   // v1.11.0: the animal marker survives a curated entry too (Murder of Crows)
+      if(auto && auto.contract && e.contract === undefined) e.contract = true;   // v1.11.3 (the pilot's review, pass 2, F7): P7's markers survive a curated entry as the others do -- the contract keyword,
+      if(auto && auto.noContracts && e.noContracts === undefined) e.noContracts = true;   // the crypt's 'Contracts cannot be placed on <name>.' (Iliana) -- no curated entry carries either today (Priority Contract is a merge),
+      if(auto && auto.flight && e.flight === undefined) e.flight = true;   // and the crypt's Flight [FLIGHT] (v1.11.3, F1; no curated Gargoyle today)
       if(auto && auto.onlyDirected && e.onlyDirected === undefined) e.onlyDirected = true;   // v1.9.11: the header's 'Only usable during an action directed at you' survives a curated entry (a line's own stays with the curated modes)
       if(auto && auto.frenzy && e.frenzy === undefined) e.frenzy = auto.frenzy;   // v1.9.10: the frenzy tag survives a curated entry (Rage of Apedemak's 'self')
       for(const k of ['onlyBleed', 'notBleed', 'onlyPredatorActs', 'oncePerUnlock', 'pressDir', 'noReplace']) if(auto && auto[k] !== undefined && e[k] === undefined) e[k] = auto[k];   // v1.9.12: the header's conditions survive a curated entry (a line's own stays with the curated modes, as onlyDirected's)
@@ -1295,7 +1556,7 @@ function compile(cards, curated){
     },
     crypt, lib, alias
   };
-  return { out, collisions, curApplied, curNew, curVariant, costUnknown, v5Titles, costInherited, costMismatch, costX, reqInherited, merged };
+  return { out, collisions, curApplied, curNew, curVariant, costUnknown, v5Titles, costInherited, costMismatch, costX, reqInherited, merged, wholeRefused };
 }
 
 /* ---------------- diff-friendly serializer ----------------
@@ -1344,6 +1605,14 @@ function report(res, verbose){
   if((res.merged || []).length){   // v1.10.0 (spec-card-sweep §4.4): each merged entry with what its curated layer changed
     lines.push('  merged entries (v1.10.0: the curated layer over the compiled entry; src hand, merged, handKeys): ' + res.merged.length);
     res.merged.forEach(m => lines.push('    · ' + m.name + ': ' + (m.changes.join(' · ') || 'no change')));
+  }
+  { /* v1.11.0: the whole-mode readings -- what they wrote on the compiled (auto) entries, and every mode they refused with the sentences
+       no key reads (a refused card whose entry is curated says so: the hand entry is what ships) */
+    const auto = Object.values(out.lib).filter(e => e.src === 'auto'), nm = (pred) => auto.reduce((n, e) => n + (e.modes || []).filter(mo => mo.fx && pred(mo.fx)).length, 0);
+    const ref = res.wholeRefused || [];
+    lines.push('  whole-mode readings (v1.11.0): rush on ' + nm(f => f.rush) + ' auto modes (grant: maneuver ' + nm(f => f.maneuverGrant) + ', press ' + nm(f => f.pressGrant) + ') · hand strike at +0 on '
+      + nm(f => f.handBonus === 0) + ', noPreventDisc on ' + nm(f => f.noPreventDisc) + ', nullOppWeapons on ' + nm(f => f.nullOppWeapons) + ' · refused ' + ref.length + ' mode(s)' + (verbose ? ':' : ' (--report lists them)'));
+    if(verbose) ref.forEach(r => lines.push('    · ' + r.name + ' [' + (r.at === null ? '—' : r.at) + ']' + (out.lib[r.name] && out.lib[r.name].src === 'hand' ? ' (a hand entry ships)' : '') + ': ' + r.why));
   }
   if(verbose){
     const freq = {};
@@ -1410,5 +1679,5 @@ if(require.main === module){
   console.log('  → ' + o.out + ' (' + fs.statSync(o.out).size + ' bytes)');
 }
 
-module.exports = { compile, mergeHand, refTerms, extractFx, segment, libModes, libEntry, cryptEntry, normalizeCard,
+module.exports = { compile, mergeHand, refTerms, extractFx, segment, libModes, libEntry, cryptEntry, normalizeCard, wholeModes,   // v1.11.1: wholeModes for test-cardfx's planted entries
                    serialize, report, TITLE_VOTES, TYPE_MAP, DISC_ABBR, discTri, FXC_VERSION };
