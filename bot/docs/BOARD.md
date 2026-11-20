@@ -15,9 +15,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 sweep** (D-125, D-130: exactness first; `specs/spec-card-sweep-2026-11-18.md` §11): every printed effect first asked
-  who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. Next: **B** the
-  pilot (Banu Haqim: the merge first, §4.4, D-127; the maneuver / press grants with the rush cards, Hunting the Quarry and Night
-  Terrors' strike with them), **C** the library by effect (one family a round over the whole library: the cross-check against
+  who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. Next: **B**, the
+  pilot's cards (Banu Haqim: the maneuver / press grants with the rush cards, Hunting the Quarry and Night Terrors'
+  strike; §4.4's merge is built), **C** the library by effect (one family a round over the whole library: the cross-check against
   zero-vtes, every disagreement read against KRCG's text, our entries corrected, the bots' reader of that effect in a human's
   play; first family `stealth` / `actStealth`, `intercept`, `bleed`; the harvest's items ride in it: the title family, §4.3's five latent reds
   and seven ambers, the condition sentences' untagged variants; the horizon is spec §11.4), **D** the starters' remainder (where a

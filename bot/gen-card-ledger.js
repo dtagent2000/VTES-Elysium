@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-card-ledger.js v1.2.1 (19 Nov 2026: the Sim line names the client the table ran on -- the queued bridge of client v2.6.177 moved
+/* gen-card-ledger.js v1.2.2 (20 Nov 2026, cardfx compiler v1.10.0: a merged entry's tier reads `curated, merged`, spec-card-sweep §4.4;
+   v1.2.1 19 Nov 2026: the Sim line names the client the table ran on -- the queued bridge of client v2.6.177 moved
    the uses with no bot change; v1.2.0 19 Nov 2026, bot v0.6.234, RULINGS D-125: the whole library's verdicts and the effect vocabulary;
    v1.1.3 14 Nov 2026, bot v0.6.228: the verdict asks a mode for every discipline line of KRCG's text -- coverage v1.1.47;
    v1.1.2 13 Nov 2026, bot v0.6.221: a master pick counts only when it was played; v1.1.1 12 Nov, bot v0.6.219;
@@ -11,7 +12,8 @@
    THE LIBRARY (v1.0.0, 29 Oct 2026, bot v0.6.212). A row joins four sources, each read by the code that owns it:
    - the VERDICT: gen-deck-coverage.js's own coverDeck() (the three-tier name ladder, the bot's consumed fx keys, the discipline reach) --
      the same function the per-deck reports use, so the ledger cannot drift from them;
-   - the TIER: curated (cardfx `src: 'hand'`), auto, or handler; the RULINGS count from vtes.json (when it is beside the script);
+   - the TIER: curated (cardfx `src: 'hand'`; `curated, merged` when the hand entry is a layer merged over the compiled one, v1.2.2), auto,
+     or handler; the RULINGS count from vtes.json (when it is beside the script);
    - the SUITE: the test-bot-logic.js sections that name the card (a section starts at its `/* NNN)` marker);
    - USES in the sim (any number of --sim DIRs): the decisions that play the card from hand (`decide` action / master-play picks) plus
      every card play the bot emits in a window (`play` rows: stealth, intercept, combat, modifiers, votes ...), per deck from the
@@ -52,7 +54,7 @@
      default decks: every deck-*.json whose name starts with "V5 " (gen-precon.js writes them).                                         */
 
 const fs = require('fs'), path = require('path');
-const LEDGER_VERSION = '1.2.1';   // v1.2.1 (19 Nov 2026): the Sim line names the client   // v1.2.0 (19 Nov 2026, bot v0.6.234, RULINGS D-125): the whole library and the vocabulary   // v1.1.3 (14 Nov 2026, bot v0.6.228, round F): the discipline-line check (COV.coverDeck's textOf: KRCG's text when vtes.json is here)   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
+const LEDGER_VERSION = '1.2.2';   // v1.2.2 (20 Nov 2026, cardfx v1.10.0): a merged entry's tier is `curated, merged` (the census counts it curated)   // v1.2.1 (19 Nov 2026): the Sim line names the client   // v1.2.0 (19 Nov 2026, bot v0.6.234, RULINGS D-125): the whole library and the vocabulary   // v1.1.3 (14 Nov 2026, bot v0.6.228, round F): the discipline-line check (COV.coverDeck's textOf: KRCG's text when vtes.json is here)   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
 
 /* ---- the crypt (v1.1.0): the ability text, its effect classes, the readers that model it ---- */
 const SECT = '(?:Anarch|Camarilla|Independent|Sabbat|Laibon)';
@@ -151,6 +153,7 @@ const VERDICT_NOTE = { 'TABLED-ONLY': 'a master played blind', UNREACHABLE: 'its
   'REF-TERMS': 'referendum terms, no caller', 'HANDLER-UNREG': 'a handler the bot does not have' };   // gen-deck-coverage.js's own definitions, in short
 const TIERS = ['auto', 'curated', 'handler'];
 const tierOf = e => e ? (e.handler ? 'handler' : e.src === 'hand' ? 'curated' : 'auto') : '\u2014';
+const tierLabel = e => tierOf(e) + (e && e.src === 'hand' && e.merged === true ? ', merged' : '');   // v1.2.2 (spec-card-sweep §4.4): a row's tier; the census keeps the three tiers
 function libCensus(lib, verdictOf){   // lib: { name: entry }; verdictOf(name, entry) -> a verdict. Counts by verdict x tier and by type x verdict
   const byVerdict = {}, byType = {}; let n = 0;
   for (const name of Object.keys(lib || {})){
@@ -271,6 +274,14 @@ function cryptSelfTest(quiet){   // returns the number of failed checks; quiet =
   const keys0 = e => Object.keys(((e.modes || [])[0] || {}).fx || {}).concat(Object.keys((e.ref && e.ref.fx) || {}));
   eq(libVocabulary(lib0, { V: { fx: { bleedBonus: 1 } }, W: {} }, new Set(['bleed', 'kB', 'titleCard', 'bleedBonus', 'equip']), keys0),
      { keys: 5, read: 3, unread: ['kD', 'odd'], scanned: 5, scannedCrypt: 1, scannedNowhere: ['equip'] }, 'the vocabulary: the keys on library entries, those the bot reads, a crypt key and a read no entry carries');
+  // v1.2.2 (cardfx v1.10.0, spec-card-sweep §4.4): a merged entry is curated -- its row reads `curated, merged`, the census counts it curated
+  const mrg = E(['mod'], 'hand', { kM: 1 }, { merged: true, handKeys: ['kM'] }), cenM = libCensus({ M: mrg, B: lib0.B, A: lib0.A }, () => 'FULL');
+  eq([tierLabel(mrg), tierLabel(lib0.B), tierLabel(lib0.A), tierLabel(lib0.D), tierLabel(null)], ['curated, merged', 'curated', 'auto', 'handler', '\u2014'], 'the tier a row shows: a merged hand entry is curated, merged; another hand entry curated');
+  eq(cenM.byVerdict.FULL, { n: 3, auto: 1, curated: 2, handler: 0 }, 'the census counts a merged entry in the curated tier');
+  // the egress review (L-13): a ROW rendered through the page's own two functions, a merged entry and a whole hand entry
+  const rowOf = e => rowLine(finishRow({ card: 'Synthetic Card', e, decks: { malkavian: 2 }, verdict: 'FULL', uses: 0, usesBy: {}, kc: null, names: [], per: [] }, {}, false, () => []), false, {});
+  eq([rowOf(mrg), rowOf(lib0.B)], ['| Synthetic Card | mod | curated, merged | FULL | playable (static) | malkavian 2 | — | — |  |', '| Synthetic Card | mod/react | curated | FULL | playable (static) | malkavian 2 | — | — |  |'],
+     'a row as the page writes it: a merged entry\'s tier reads curated, merged; a whole hand entry\'s curated');
   if (!quiet || bad) console.log('gen-card-ledger --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed'));
   return bad;
 }
@@ -294,6 +305,23 @@ function parseArgs(argv){
 
 const STATUS_ORDER = ['unresolved', 'inert', 'partial', 'not seated', 'unseen', 'playable (static)', 'playable'];
 const PLAYS = st => st === 'playable' || st === 'playable (static)';   // a row with nothing missing
+/* v1.2.2 (the egress review, LESSONS L-13): a library row's derived fields and its line, each in one function the page and the self-test
+   both call -- so the self-test renders a row through the code that writes the page */
+function finishRow(x, seatedBy, haveSim, suiteSections){
+  x.seated = Object.keys(x.decks).reduce((s, k) => s + (seatedBy[k] || 0), 0);
+  x.status = statusOf(x.verdict, x.uses, x.seated, haveSim);
+  x.tier = tierLabel(x.e);
+  const kc = x.kc;
+  x.rulings = kc ? (kc.rulings || []).length : null;
+  x.type = kc ? (kc.types || []).join('/') : ((x.e && x.e.t) || []).join('/');
+  x.suite = suiteSections([x.card, ...x.names]);
+  x.missing = x.per.filter(p => !p.consumed).map(p => '[' + p.at + (p.dir ? ' D' : '') + '] ' + p.fxKeys);
+  return x;
+}
+function rowLine(x, haveSim, seatedBy){
+  return '| ' + x.card + ' | ' + (x.type || '—') + ' | ' + x.tier + ' | ' + x.verdict + ' | ' + x.status + ' | ' + Object.entries(x.decks).sort().map(([k, n]) => k + ' ' + n + (haveSim ? ' (' + (x.usesBy[k] || 0) + '/' + (seatedBy[k] || 0) + ')' : '')).join(', ') +
+    ' | ' + (x.rulings == null ? '—' : x.rulings) + ' | ' + (x.suite.length ? x.suite.slice(0, 8).join(', ') + (x.suite.length > 8 ? ' +' + (x.suite.length - 8) : '') : '—') + ' | ' + (PLAYS(x.status) || x.status === 'unseen' || x.status === 'not seated' ? '' : x.missing.join('; ')) + ' |';
+}
 function statusOf(verdict, uses, seated, haveSim){
   if (verdict === 'UNRESOLVED' || verdict === 'IN-CRYPT?') return 'unresolved';
   if (['INERT', 'NAME-ONLY', 'REF-TERMS', 'HANDLER-UNREG'].includes(verdict)) return 'inert';
@@ -372,16 +400,7 @@ function main(){
     }
   }
   const haveSim = o.sims.length > 0;
-  for (const x of rows.values()){
-    x.seated = Object.keys(x.decks).reduce((s, k) => s + (seatedBy[k] || 0), 0);
-    x.status = statusOf(x.verdict, x.uses, x.seated, haveSim);
-    x.tier = tierOf(x.e);
-    const kc = x.kc;
-    x.rulings = kc ? (kc.rulings || []).length : null;
-    x.type = kc ? (kc.types || []).join('/') : ((x.e && x.e.t) || []).join('/');
-    x.suite = suiteSections([x.card, ...x.names]);
-    x.missing = x.per.filter(p => !p.consumed).map(p => '[' + p.at + (p.dir ? ' D' : '') + '] ' + p.fxKeys);
-  }
+  for (const x of rows.values()) finishRow(x, seatedBy, haveSim, suiteSections);
 
   // the class map: unconsumed fx keys of every non-playable row, weighted by copies
   const meaningful = k => k && k !== '—' && !['paired', 'meta', 'crypt'].includes(String(COV.CLASS[k] || ''));
@@ -531,10 +550,7 @@ function main(){
   P('## The ledger');
   P('');
   P('| card | type | tier | verdict | status | decks: copies' + (haveSim ? ' (uses / matches seated)' : '') + ' | rulings | suite § | missing modes |'); P('|---|---|---|---|---|---|---:|---|---|');
-  for (const x of all){
-    P('| ' + x.card + ' | ' + (x.type || '—') + ' | ' + x.tier + ' | ' + x.verdict + ' | ' + x.status + ' | ' + Object.entries(x.decks).sort().map(([k, n]) => k + ' ' + n + (haveSim ? ' (' + (x.usesBy[k] || 0) + '/' + (seatedBy[k] || 0) + ')' : '')).join(', ') +
-      ' | ' + (x.rulings == null ? '—' : x.rulings) + ' | ' + (x.suite.length ? x.suite.slice(0, 8).join(', ') + (x.suite.length > 8 ? ' +' + (x.suite.length - 8) : '') : '—') + ' | ' + (PLAYS(x.status) || x.status === 'unseen' || x.status === 'not seated' ? '' : x.missing.join('; ')) + ' |');
-  }
+  for (const x of all) P(rowLine(x, haveSim, seatedBy));
   P('');
   /* the crypt (v1.1.0): after the library, so the library half of the page reads as before */
   const CST = ['unmodelled', 'partial', 'modelled', 'no ability', 'unresolved'];

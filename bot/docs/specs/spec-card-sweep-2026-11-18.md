@@ -309,6 +309,32 @@ keys (the title family shares through its `ref.fx` keys) and its debt stays repo
 The pilot's and each starter's predictions are registered in their own rounds, before the build.
 
 ### 4.4 The merge of hand entries (designed in A2, "kör" 19 Nov: D-127; built at the start of B)
+**Built** (20 Nov 2026: cardfx compiler v1.10.0, PR #92; no bot or cardfx byte changed, nothing opts in). Where the design below
+was silent the build chose (the header of the compiler's `mergeHand` lists every case that fails the compile):
+- a level is `at` and `when`, compared exactly; `nth` counts from 1 in the compiled order of its level; a mode at an `at` the
+  compiled entry lacks altogether is added and keeps its `at` (null: the base level);
+- an `nth` or a `drop` that names no compiled mode, `add` with `nth` or `drop`, a dropped mode with more than its level, `modes`
+  that are not a list, a merge with no compiled entry under its name, `merge` on a crypt entry and a layer that writes `src`,
+  `merged` or `handKeys` each fail the compile, and the command line then writes nothing;
+- a `null` that finds nothing to delete is not written, and the report says so; on a mode the layer adds every `null` is such a
+  one; a merged mode whose every key is deleted keeps `fx: {}` (drop the mode instead); an emptied `req`, `ref` or `ref.fx` goes;
+- `ref` merges key by key as `req` does: `ref.fx` as a mode's `fx`, `ref.tags` and `ref.pool` take the curated value whole;
+- the kept numeric cost stands in the report's inherited list; an X in the X list and on the entry's merge line;
+- the ledger's census keeps its three tiers (a merged entry counts as curated); a row's tier reads `curated, merged`.
+
+After the egress review (20 Nov), the build's reading of "only where the target is plain", each a compile failure:
+- **the near miss**: a curated mode without `"add": true` that meets no compiled mode by `at` and `when` while the compiled
+  entry has a mode at its `at` (a forgotten `when`, `when: null`, another `when`); the message names the compiled `when` values
+  there: name the `when`, or say `add`. A `when` is changed or deleted by dropping the mode and adding it again;
+- **no half opt-in**: a `merge` that is present and not `true`, and a mode's `nth`, `add` or `drop` on an entry that does not
+  opt in (none of the 213 curated entries carries one; as first built these were warnings);
+- **an added mode carries `fx`**: a mode the layer adds without an `fx` object (`"fx": {}` is allowed), as every library
+  mode has one.
+
+The friction the pilot meets: a key the layer restates with the compiler's own value is in `handKeys`, so the register counts it
+as the hand's (write the remainder only); and opting an existing hand entry in moves its compiler-given keys out of the hand-only
+count, so a backlog key that sat only there is no longer hand-only and the register's gate asks for its row to move.
+
 Today `cardfx-curated.json` replaces the compiled entry whole (`cardfx-compile.js`, the overlay), and the hand entry inherits only
 the numeric cost, the discipline, clan and capacity requirements and the entry-level markers (`oot`, `anarchReq`, `zombie`,
 `onlyDirected`, `frenzy`; since v1.9.12 the six condition tags, the egress review of v0.6.235). The merge lets a hand entry carry the remainder only.
