@@ -3,7 +3,8 @@
 **Status:** kör — Johan, 18 Nov ("Vi kör, med dina rekommendationer för besluten"), on the proposal this page records: the method of
 §2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör"; he took
 its answer on 19 Nov (RULINGS D-126). On 19 Nov he answered the question about zero-vtes's maintainer (§5). The page's own round changed no
-code. Measured on main `6baf99b`.
+code. Measured on main `6baf99b`. On 20 Nov Johan ruled the focus, exactness first, and a new order after B: the library by
+effect, then the starters' remainder (§11, RULINGS D-130).
 
 **Step A1** (19 Nov, no bot change) built §4.1's first two items: the library table (`gen-card-ledger.js` v1.2.0, "The whole
 library" in `CARDS.md`) and the sharing register with its gate (`cardfx-sharing.json`, `cardfx-sharing.js`, `test-cardfx.js`).
@@ -64,7 +65,8 @@ sewer smoke shows Forgotten Labyrinth's (4 in a bleed on v0.6.234, 0 now). Where
 We finish the V5 sweep one starter at a time, one card at a time, and every effect we meet is first asked one question: **who else
 in the library prints this?** Common and shared effects go into the general tier and land on every library card that prints them.
 Only the unique remainder is hand-curated. zero-vtes's card definitions are the answer sheet each card is checked against at
-development time. Every round reports its numbers on the whole library, not only on the 308 starter cards.
+development time. Every round reports its numbers on the whole library, not only on the 308 starter cards. Since 20 Nov the
+order after B is the library by effect, then the starters' remainder (§11).
 
 ## 1. Why change
 | measured 18 Nov, read-only (appendix B) | |
@@ -123,6 +125,8 @@ and its guide check is listed. The crypt keeps D-108's waves by class; the start
 | **C. The harvest** (one or two rounds) | The 145 hand-only keys asked "who else prints this?"; the seven finished decks first (§4.2, D-126). The compiler's known misses (`bloodAdd` and `bloodAddTo` on 59 card-keys). The cross-check of what is already playable against zero-vtes, with the five other misreads. | No row of the sharing register is `backlog`; the number of library cards turned playable is reported. |
 | **D. The other twelve starters** | Nearest first, re-ranked from the ledger after every starter: each round's shared effects close cards in other starters too. Appendix A has where they stand. | Each starter done as §3. |
 | **E. The strategy evaluation** | After the sweep, outside this page. | — |
+
+Rows C and D are amended by §11.3 (20 Nov, D-130): C is the library by effect, D the starters' remainder.
 
 **The six misreads** (compiled entries the ledger counts as playable, found by the zero-vtes comparison of 18 Nov and upheld by
 KRCG's text; none is in a menu deck): Priority Contract (banuhaqim 4: read as a directed +1 stealth mode gaining 3 pool; the
@@ -354,6 +358,9 @@ pattern or a card list holds only cards each checked against KRCG's text, and no
 
 Not used: at runtime, as copied code, or as files in git.
 
+Since 20 Nov zero-vtes is also the map of the sweep's order: its definitions say which cards print an effect (§11.2). The pairing
+of its effect types with our keys is not committed (§11.2 (4), §11.6).
+
 The maintainer and the credit. The clean-up spec allowed zero-vtes as a third check "only after asking its maintainer"
 (`specs/spec-cleanup-2026-10-20.md`, T3), and the repository does not show that this was done. Johan, 19 Nov: "Vi kan släppa nog
 villkoret för Lionel kanske eftersom han har MIT-licens (dock ska vi ju ge honom credit såklart), men jag ska nog ändå skriva till
@@ -381,7 +388,7 @@ design question) and the MCP server (a tool a session may try; its answers are p
 - **the hand entries written this round** and how many keys each carries. The target is the remainder only.
 
 The library numbers are static readiness: every mode has a reader. Only a starter is proven in play, because only a deck seats its
-cards in the sim.
+cards in the sim. A family's round of the library by effect reports more: §11.5.
 
 ## 7. The decisions (taken 18 Nov as recommended; RULINGS D-125)
 1. **D-83 widened.** zero-vtes is a development-time reference for card readings and effect sharing, under §5's rule of evidence.
@@ -415,6 +422,125 @@ the round: RULINGS 65,733, the standing pages 173,985, the bootstrap 49,442 of 5
 - The ledger counts the six misreads as playable (appendix A). The pilot's deck holds one of them.
 - zero-vtes moves fast: the review sheet pins the commit it read.
 - Two chats work in `bot/`. Rounds stay one at a time.
+- The counts of §11.4 use zero-vtes's vocabulary as a stand-in for ours: a family of ours need not be one of their types.
+- The first reader changes how a human's stealth is counted at the table: a design question that goes to Johan first (§11.6).
+
+## 11. Exactness first: the library by effect (Johan, 20 Nov 2026; RULINGS D-130)
+
+**Status:** kör — Johan, 20 Nov ("Yes det låter superbra! Då kan vi gå vidare"), on the method of §11.2: his own proposal of that
+morning with two refinements of Claude's, and Claude's answer to his question about the format. It amends §3's flow and §4's
+order after B. Everything this section does not name stands: §2's three tiers, §5's rule of evidence, the gates, the graded
+readings, D-104's release rule, §4.2's guard on the finished decks. This round changes no code. Measured on main `77da0b7`
+(bot v0.6.235) and a zero-vtes checkout at `05e812e` (19 Nov).
+
+### 11.1 What Johan ruled
+- **The focus and the goal.** "då kör vi fokus på kortregelexaktheten att börja med helt enkelt med målsättning att bottarna ska
+  kunna bedöma vad som händer när någon spelar kort".
+- **The method**, as his question: should we just as well sweep the library from the card data zero-vtes already has first
+  "och sedan handkurera det som är kvar och behövs per startlek?" Claude answered yes, with two refinements: by effect and not by
+  card; their data as the map and the answer sheet, not as content.
+- **The format**, as his next question: do we use their tagging and classifications "rakt av", or translate them into the format
+  we have used ourselves? Claude answered that we translate.
+- **His answer to both:** "Yes det låter superbra! Då kan vi gå vidare". This page reads it as his kör on the method and on the
+  format as Claude had put them (§11.2).
+- §2's method of 18 Nov is not replaced. It is the same three tiers in a new order: the whole library first, the starters last.
+
+### 11.2 The method
+1. **The library first, effect by effect.** An effect family is one or a few of OUR keys. The first is `stealth`, `intercept` and
+   `bleed`: the numbers of the block and of the bleed. Families are taken by reach (how many of zero-vtes's definitions print the
+   effect; among equals, the one more starter cards print). A family is done on the WHOLE library in its round, the entries with
+   no play path included: a card the bots cannot play is still a card somebody plays against them.
+2. **zero-vtes is the map and the answer sheet.** Its definitions say which cards print an effect, at which level and with which
+   value: that is where we look and what we compare with. What enters `elysium-cardfx.json` is our own reading of KRCG's text: a
+   compiler pattern where the wording is regular, a reviewed card list otherwise, the curated remainder for what is unique (§2,
+   §5). Nothing of theirs is copied. Three reasons, with the day's numbers: exactness (their own table of when a card may be
+   played carries a hand-review mark on 893 of its 1,890 rows, and 161 of those were corrected); coverage (500 of our 2,391
+   library entries have no definition there, and a pattern over KRCG's text reads those too); independence (their format moves
+   daily, and D-125 keeps it out of git and out of the bundle).
+3. **Our format stays; theirs is translated, never adopted.** Their classification is built for an engine that executes every
+   rule; ours for a bot that judges and talks, and it is what the bot, the suites and the client's canary read. Their effect
+   types are a development-time lookup. The translation is not always one to one: several of their types may be one key of ours
+   and a condition tag; a concept they model that we lack and the bot needs gets a key of ours, named by us and read from KRCG's
+   text; what the bot does not need is not translated.
+4. **Where their names may stand.** In no card data, not in the bot, not in the bundle, not in a pattern or a card list (§5). The
+   one place that knows them today is the development tool that reads their file (`gen-review-sheet.js`: its parser, and a few
+   of their identifiers in its comments; its self-test uses invented names). A family's pairing, which of their effect types
+   answer our key, is given to the tool when it runs and is printed on its scratch sheet; the round's report says it in our
+   words. Whether a pairing table may be committed inside a development tool is open (§11.6).
+5. **Exact.** An effect on a card at a level is *exact* when two independent readings agree on it: ours, read from KRCG's text by
+   a pattern or by hand, and zero-vtes's definition. Or when a graded read says green (HARNESS's charter: KRCG's text and the
+   rulings, a fresh read-only agent). A disagreement is settled by neither side's data: the card is read against KRCG's text and
+   the rulings, and the outcome is our entry corrected, their reading noted as the wrong one, or a difference of modelling
+   explained on the sheet. A card zero-vtes does not define has one witness, so its effect is exact only by a graded read.
+6. **The reader, in the same round.** With a family's data exact, the bot learns to read that effect when someone plays the
+   card. The play line carries the card and, when the chooser asked, the level (PROTOCOL §12: `[obf]` inferior, `[OBF]`
+   superior) and the aim; the bot looks the mode up and knows the effect at once. A human's own number still wins. The reader
+   acts only on exact effects: any other card is read as today, from their lines and their numbers. Revelations, read with its
+   level from the play line, is the precedent, and the CHANGELOG's entry of 20 Nov lists what else the bots read by name today.
+7. **Then the starters' remainder.** What is left is the effects that exist on one card. They are hand-curated only where a
+   starter needs them, with the starter's strategy baseline (§3.5, D-112). §3's sheet, grading and done-condition stand for
+   that part.
+
+### 11.3 The order (amends §4's rows C and D; A, B and E stand)
+| step | what | done when |
+|---|---|---|
+| **B. The pilot: Banu Haqim** | Unchanged (D-127): the merge of hand entries first (§4.4), then the pilot. The merge is what lets a hand entry keep its remainder only, so a family's keys reach the hand-curated cards. | As §4. |
+| **C. The library by effect** (was: the harvest) | One family a round, two when it needs a new mechanism: the cross-check of the whole library for the family, every disagreement read against KRCG's text, our entries corrected, the reader. The harvest's items ride in it: a hand-only key is asked "who else prints this?" when its family comes up; the compiler's known misses; the five other misreads; §4.3's latent reds and ambers; the condition sentences' untagged variants. | §11.4's horizon is reached. Every disagreement on a finished family's sheet is corrected, noted or explained. The sharing register has no `backlog` row for a key of a finished family. |
+| **D. The starters' remainder** (was: the other twelve starters) | Nearest first, re-ranked from the ledger after every starter: the unique effects a starter needs, and its strategy baseline. | Each starter done as §3. |
+
+### 11.4 What the numbers say, and the horizon (measured 20 Nov, read-only; appendix C)
+| | |
+|---|---|
+| zero-vtes's library definitions | 1,890 (1,717 rows in its windows table on 18 Nov) |
+| our library entries with a definition there, of 2,391 | 1,891 (79 %); 500 have none |
+| cards of the 18 starters with a definition, of 308 | 308 |
+| effect types in the definitions, as `gen-review-sheet.js` counts a type | 1,543: 44 on 25 or more definitions, 431 on 2 to 24, 1,068 on one |
+| entries the 50 most used effect types touch · describe in full | 1,620 (86 %) · 375 (20 %) |
+| entries the 100 most used describe in full | 537 (28 %) |
+| entries all 475 shared effect types describe in full | 1,054 (56 %) |
+| the starters' 77 inert or partial cards described in full by shared effect types | 43 (§1's measure of 18 Nov: 43) |
+
+So a sweep by effect gives nearly every card a part of its reading and a little over half of the cards all of it. The rest
+carries an effect that exists on one card: hand work, done where a starter needs it. That is Johan's split.
+
+Appendix B counted 980 effect types on 18 Nov (the count behind §1's measures) by another count (an effect's name only); the 1,543 here split an effect by
+its first argument when that is a variant, as the tool does. The two numbers are not a trend.
+
+**The horizon.** C runs through the effect types on 25 or more definitions (44 today), grouped into our families as each round
+names them. Then the numbers are measured again and Johan says whether the sweep goes on by effect or turns to D.
+
+### 11.5 What a family's round reports (adds to §6)
+- **the family**: our keys, and the pairing in our words;
+- **the library**: entries where either reading carries the effect; of them exact by agreement, exact by a graded read, corrected
+  (ours was wrong), noted (theirs was wrong), explained (modelled differently), and single-witness (no definition, not graded);
+- **the starters**: the same counts for the cards of the 18 starters;
+- **the reader**: what the bots now read of a human's play, and its section tests;
+- §6's own lines, unchanged.
+
+### 11.6 Open
+- **The pairing table** (RULINGS O-48): may a development tool commit a table that pairs their effect
+  types with our keys? Without one a fresh session rebuilds the pairing every round and two runs need not agree. Claude's
+  answer: yes, in a development tool only, never in the bundle or in the card data. Until Johan says so the pairing stays a
+  run-time argument.
+- **How the bundle tells the bot that an effect is exact** (a field of the entry, or a list beside the library): the first
+  family's round designs it. The canary's cardfx checks are main's: a shape they read differently is a handoff first.
+- **The first reader's design** goes to Johan before it is built: who moves the counter when a human plays a stealth card
+  (the human, as today, or the bot from the card), and how a number entered both ways is not counted twice.
+- **Their wrong readings.** Claude's proposal, not ruled: the noted ones are kept as a list in each round's PR, for Johan to pass
+  to zero-vtes's maintainer if he wishes.
+
+### 11.7 Predictions for the first family (registered before its tool exists; D-93, L-44)
+A scratch scan on 20 Nov (appendix C; action modifiers and reactions only, the levels joined crudely): 443 entries, 376 with a
+definition; 175 carry a plain stealth, intercept or bleed number in either reading. Of the 175: 98 agree level by level as the
+two readings list their modes; 35 more carry the same numbers and list their modes differently; 34 differ; 8 go by a formula
+or a condition.
+1. **With the levels joined properly, at least 125 of the 175 agree level by level.** Between 110 and 124: the join is harder than
+   the scan suggests. Fewer than 110: the scan overstated the agreement.
+2. **Of the entries that differ, between 5 and 15 carry a reading of ours that KRCG's text contradicts.** Fewer than 5: the
+   compiler's numbers are better than the differences suggest. More than 15: the family takes a second round.
+
+The counts and their verdicts are written here when the first family is built. The 175 is the scan's own number: the tool's
+count may differ, and then the bands are read as shares of its count.
 
 ## Appendix A — what each starter still lacks (cards, v0.6.234)
 | starter | playable copies of 77 | cards left | shared-only | unique remainder | not read |
@@ -455,3 +581,20 @@ fresh-context reviewer recounted them with its own code before this page was mer
   definition shares at least one effect type found on 2 to 24 definitions with a hand-curated card, and uses no effect type
   beyond those and the 29 common ones (128 when only the playable hand-curated cards lend their types). It says how far the hand
   entries' effects reach, not how many cards will turn.
+
+## Appendix C — how the numbers of 20 Nov were made (§11)
+Read-only scratch scripts outside the repository, on main `77da0b7` (bot v0.6.235) and a zero-vtes checkout at `05e812e` (19 Nov).
+- **Definitions and effect types.** `gen-review-sheet.js` v1.0.0's `parseDefs` over `crates/engine/src/cards/defs.rs`, with
+  `crates/engine/src/cards/mod.rs` for its helpers; the definitions joined to `elysium-cardfx.json`'s `lib` by the tool's
+  `normName`. An effect type is a token as the tool counts it: an effect's name, split by its first argument when that is a
+  variant, numbers left out.
+- **Touch and in full.** A set of effect types touches an entry when the entry's definition uses at least one of them, and
+  describes it in full when every effect type of the definition is in the set. "The N most used" ranks the types by the number
+  of definitions that use them.
+- **The starters.** `docs/CARDS.md`'s ledger rows: 308 cards (205 playable, 63 inert, 14 partial, 26 unseen).
+- **The windows table's review marks.** `data/window-matrix-reviewed.csv`, its column of review marks: 732 marked as checked, 161 as corrected, 997 unmarked.
+- **The scratch scan (§11.7).** Entries whose `t` holds `mod` or `react`. Ours: a mode's numeric `fx.stealth`, `fx.intercept` and
+  `fx.bleed`. Theirs: the numbers of the stealth-adding effect, the intercept-adding effect and the bleed modifier in each mode
+  of the definition, by a text scan of the mode. "Level by level" compares the modes in the order each reading lists them, and
+  only where both list the same number of modes (113 entries: 98 agree, 15 differ); the other 54 are compared as sets of numbers
+  (35 the same, 19 not). The 8 entries whose value is a formula or hangs on a condition in either reading are set aside.
