@@ -95,7 +95,7 @@ for (const f of ['split_client.py', 'elysium-build.js', 'elysium-test-harness.js
 
 // --- the monorepo root is the download (12 Oct 2026) ---
 // (v2.6.173) The two lists live at the top level now: the SHA256SUMS check below compares them with sha256sums.js's.
-const ROOT_ONLY = new Set(['CLAUDE.md', 'README.md']);
+const ROOT_ONLY = new Set(['CLAUDE.md', 'README.md', 'LICENSE']);   // 23 Nov 2026: + LICENSE -- the repository's licence (MIT, Johan; the bot project's handoff of 20 Nov), the root's own file like README.md
 // The bot bundle is the ONLY thing the root takes from bot/. Everything else must equal client/ --
 // bot/ also carries read-only copies of OUR server, client and protocol, and a stale root server
 // matching bot/'s old copy must not pass as current.
@@ -103,7 +103,7 @@ const BOT_BUNDLE = new Set(['elysium-bot.js', 'elysium-cardfx.json', 'elysium-ca
                             'elysium-twd-archetypes.json', 'elysium-twd-archetypes.js', 'START-HERE-BOTS.html']);
 // When this directory is the monorepo's client/ (a parent with CLAUDE.md, bot/ and client/), every
 // regular file at the root must equal client/<name> or bot/<name> byte for byte. Root-only files
-// (the root CLAUDE.md, README.md, dotfiles) are skipped; a root file with no twin on either side
+// (the root CLAUDE.md, README.md, LICENSE, dotfiles) are skipped; a root file with no twin on either side
 // warns too -- nothing lands at the root by hand.
 {
   const root = path.dirname(dir);
@@ -120,6 +120,12 @@ const BOT_BUNDLE = new Set(['elysium-bot.js', 'elysium-cardfx.json', 'elysium-ca
       if (!fs.readFileSync(rp).equals(fs.readFileSync(twin))) { bad++; warn('root/' + f + ' differs from ' + path.relative(root, twin) + ' -- copy the release to the root, or the root is stale'); }
     }
     row('repo root (the download)', bad ? (bad + ' of ' + n + ' files drift') : (n + ' files, each a byte copy of client/ or bot/'));
+    // 23 Nov 2026: the repository's licence -- Johan's MIT, its holder DTAgent2000 (the bot project's handoff, 20 Nov).
+    // A root file of its own, so the twin rule above skips it; this row says it is there and still the licence he chose.
+    let lic = null; try { lic = fs.readFileSync(path.join(root, 'LICENSE'), 'utf8'); } catch (e) {}
+    const licOk = !!lic && /^MIT License\n\nCopyright \(c\) \d{4} DTAgent2000\n/.test(lic.replace(/\r\n/g, '\n'));
+    row('LICENSE (root)', lic === null ? 'MISSING' : (licOk ? 'MIT, Copyright (c) ' + lic.match(/\(c\) (\d{4})/)[1] + ' DTAgent2000' : 'not the MIT licence with DTAgent2000 as holder'));
+    if (!licOk) warn(lic === null ? 'root/LICENSE missing -- the repository is MIT-licensed (Johan, 20 Nov 2026)' : 'root/LICENSE is not the MIT licence with DTAgent2000 as holder -- Johan\'s choice (20 Nov 2026); change it only on his word');
   }
 }
 

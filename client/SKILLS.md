@@ -98,7 +98,7 @@ A full game in a real browser, one human against the bots, recorded and measured
 ## The gates in CI — v2.6.165 (`.github/workflows/client-gates.yml`)
 
 1. **What runs:** on every PR and every push to `main` that touches `client/` or a root file we release (the client,
-   the server, `START-HERE.html`, the host guide, `start-*`), plus `workflow_dispatch` for any branch: the bot bundle
+   the server, `START-HERE.html`, the host guide, `start-*`) or the root `LICENSE` (23 Nov 2026), plus `workflow_dispatch` for any branch: the bot bundle
    copied from the root beside the suite, then `check-versions.js`, the dispatch suite, the protocol lint, the client
    suite, the canary, the error endpoint, the soak `--control`, the served-bytes watchdog test (`test-served-check.js`,
    v2.6.173), both `embed-help --check` and B1 (split and build in `$RUNNER_TEMP` via `SPLIT_SRC` / `SPLIT_OUT`, then
@@ -125,6 +125,11 @@ The project lives in https://github.com/dtagent2000/VTES-Elysium: `/` = the down
 3. Change `client/` only; version = bytes; gates from `client/` (`node check-versions.js` first and last — its final row asserts the root is a byte copy of the halves; outside a monorepo checkout the row is absent).
 4. Living docs in `client/docs/` + `client/CLAUDE.md` + this file. Our replies to the bot project: `client/docs/handoffs/REPLY-to-bot-<date>-<topic>.md`; their asks: `bot/docs/handoffs/HANDOFF-to-main-*.md`.
 5. A release: copy `elysium-vtes-bord.html`, `elysium-server.js`, the start scripts, `START-HERE.html`, `Elysium_-_Host_Guide.docx` from `client/` to `/`; `check-versions.js` green; bump the version block in `START-HERE-CLIENT-CHAT.md`.
+   **The root's own files** are not copies of a release: `CLAUDE.md`, `README.md` and `LICENSE` (23 Nov 2026) -- `ROOT_ONLY` in
+   `check-versions.js` and `sha256sums.js` (one list, two copies; `check-versions.js` warns when they differ). A new file of that
+   kind joins both lists, gets a check of its own in `check-versions.js` (the twin rule skips it; `LICENSE (root)` is the pattern:
+   red when it is missing or changed in a way nobody decided) and, if CI should notice it, a line in the workflow's `paths`. It is
+   not hashed in `SHA256SUMS`.
 6. Commit (English; what + why; the attribution trailers the session asks for), `git fetch origin main` (rebase if moved), push, `gh pr create --base main`. Johan merges and deploys. Delete `elysium-rooms.json` / `elysium-saves.json` after live probes (gitignored, but a stale one breaks the next probe).
 
 ## Consume a bot release (a handoff from Elysium Bots) — v2.6.140

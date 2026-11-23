@@ -19,6 +19,8 @@ it had stood still at v2.6.142). The versions live in this file only.
 
 **Deploy v2.6.183 (THE NAME STACKS UP, 23 Nov, PR #98 -- it carries v2.6.181 and v2.6.182 too, neither deployed; stacked on #97, merge #97 first):** purge the client; nothing else changes.
 
+**PR #99 (THE LICENCE, 23 Nov, on top of #98):** no deploy -- a root `LICENSE`, the README, PROTOCOL §13 and the gate lists; nothing a server serves changes.
+
 **Deploy v2.6.180 (THE CAMERA PANS, 23 Nov, PR #97):** purge the client; nothing else changes (the server, the bot bundle and the TWD files are as merged; bot v0.6.235–236 brought their own purges of `/elysium-bot.js` and `/elysium-cardfx.json`).
 
 **Deploy v2.6.179 (THE BADGE STANDS UP, 19 Nov, PR #88 -- carries v2.6.178, never deployed):** purge the client; nothing else changes. Rooms that already have a tempo keep it; new tables start Turn-based.
@@ -91,8 +93,13 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
   pool zone ('i globzonen i bottenpanelen precis som L2' -- v2.6.181 had put it on the globe on the felt) and the fixed-width
   globe, then (v2.6.183) long names stacked upward in a 92 px window. Merge #97 first; this PR carries its two commits until then.
 - **Not built, could follow:** the Edge token stays put when you move your globe after taking the Edge.
-- **For the bot project (read, not built):** v0.6.236's §12 record and canary checks, the licence (a `LICENSE`, the README, PROTOCOL §13,
-  credits; `check-versions.js`'s root gate), and the canary's loud skip from their 19 Nov reply. Answered in a round of its own.
+- **Built (PR #99, on top of #98, no client release):** the repository's licence -- the root `LICENSE` (MIT, DTAgent2000),
+  `LICENSE` a root file of its own in `check-versions.js` / `sha256sums.js` with a row that checks it, the README's 'License'
+  and 'Credits', PROTOCOL §13 (the bot project's handoff of 20 Nov; reply `docs/handoffs/REPLY-to-bot-2026-11-23-licence.md`).
+  Johan reads the README's 'does not cover' list. zero-vtes's page about us says 'no license file': telling its maintainer
+  is Johan's call.
+- **For the bot project (read, not built):** v0.6.236's §12 record and canary checks, and the canary's loud skip from their
+  19 Nov reply. Answered in a round of their own.
 - **Not reproduced:** Johan's 'no card, then two' on a double-click of the library. The one mechanism found: two `uiDialog`s open at
   once (it does not queue, so one OK answers both); nothing opened two in the runs. Johan tests again with the counter fixed.
 - **Not built, offered earlier:** remembering the tempo a player chose last, for the next table.
