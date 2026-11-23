@@ -1,3 +1,139 @@
+## [NAMNET STAPLAS] (23 november 2026, natt, klient v2.6.183 / srv-2.6.51 oförändrad)
+
+Johan 22.26: "Jag tänker att låååånga namn kanske istället får staplas inom ett fönster som radbryter texten istället för att
+den ska löpa hela längden ut eller vad tycker du? Så den expanderar uppåt från poolgloben då så att säga". Jag höll med,
+injicerade en prototyp med CSS i Chromium och skickade en före/efter-bild med förslaget: ett fönster på 92 px som växer
+uppåt, högst två rader och sedan "…", och hela namnet som tooltip. 22.49 svarade han "kör".
+
+**Fönstret.** Namnraden är nu en plats som är en rad hög, 13 px plus 3 px marginal, vilket är de 16 px som sitsplatserna
+räknar med ovanför cirkeln. Tidigare var etikettens höjd typsnittets normala radhöjd, 12 px med reservtypsnittet här, så nu
+står cirkeln på samma ställe oavsett typsnitt. Själva namnet ligger i ett fönster som är förankrat i platsens nederkant och
+växer uppåt. Fönstret är 92 px brett, alltså globen plus mellanrummet på 14 px till kryptkorten på var sida, och det har
+högst två rader innan "…" tar över. Namnet bryts vid mellanslag och bindestreck, och ett enda långt ord bryts mitt i.
+Skuggan ligger som filter på platsen i stället för text-shadow, eftersom fönstrets overflow:hidden annars skulle kapa den.
+
+**Pricken.** Med ett enda långt ord blev spelarens färgprick ensam kvar på första raden. Chrome bryter efter ett
+inline-block även när ett WORD JOINER står emellan; jag provade varianter sida vid sida på en testsida. Nu delar pricken och
+namnets första tecken ett span med white-space:nowrap, och det första tecknet tas som ett helt grafem, så en emoji inte delas.
+
+**Tooltipen.** Globens tooltip börjar med hela namnet, och för en motståndare följer högerklickstipset efter. Då såg jag att
+`refreshPoolTargetMarks` sedan v2.6.22 tog bort globens title, i tron att globen inte hade någon, så motståndarens
+högerklickstips försvann vid första uppdateringen. Nu byggs titeln om där, med målraden efter.
+
+**Token.** En Edge-token ovanför en glob lyfts med den andra namnraden.
+
+**Testerna.** Ett nytt test täcker markupen i båda vägarna, grafemet, escaping, titlarna, att en måluppdatering behåller
+titeln, tokenplatsen för en och två rader och CSS:en. v2.6.182:s breddtest förlorade sina flex-nålar. Sviten står på 397/0, och v2.6.182 mot den nya sviten blir 396/1. Tretton nya mutanter fångades, liksom de tjugotvå från v2.6.181 och v2.6.182 som fortfarande gäller; två försvann med flex-CSS:en de satt på. Kanariefågeln 235/0, dispatch 95/0, endpoint 36/0, protokollet 6/0, soakens kontroll slog till och batteriet gick igenom (7 bord, 99 drag, 0 fast), bottprojektets hotseat-grind i en kopia 12/0, båda inbäddningskontrollerna, B1 byte-identisk och check-versions grön.
+
+**Kört i Chromium.** Fem namn vid ett bord med fem platser: You, Kristoffer Andersson, Johan Svensson-Lindqvist, Maximiliana
+Wolfensteiner von Habsburg-Lothringen och Pneumonoultramicroscopicsilicovolcanoconiosis. Alla fönster är högst 92 px breda
+och två rader höga, med nedersta raden i platsen och centrerade på cirkeln, och cirkeln ligger 16 px under globens topp. De
+går fria från kryptkorten åt båda hållen och håller sig på filten, och pricken är hel och står på första raden. You får en
+rad, Kristoffer två, och de två längsta får "…". Edge-token går fri ovanför ett tvåradigt namn (25/25). v2.6.182:s 43
+kontroller gick igenom igen.
+
+**Inte kört:** Firefox och Safari (båda har `-webkit-line-clamp` och `Intl.Segmenter`, men det är inte kört här) och
+elysium.cards med Cinzel laddat.
+
+## [EDGE I PANELEN] (23 november 2026, sen kväll, klient v2.6.182 / srv-2.6.51 oförändrad)
+
+Johan svarade 20.16 på v2.6.181: "Ah dumt av mig men jag tänker att edge-knappen skulle sitta i globzonen i bottenpanelen
+precis som L2, inte vid Globen på brädet. Eller missförstod jag dig? Om det behöver rättas kan du ta med fixen av den sista
+punkten med äldre felet också." Det var jag som missförstod. På Classic-bordet finns två saker som kan kallas poolgloben:
+globen på filten och poolzonen i bottenpanelen. Han menade zonen, och jag läste globen utan att säga vilken jag valde. I L2
+sitter Edge-knappen i poolzonen på mattan, uppe till höger. Motsvarigheten i L4 är poolzonen i bottenpanelen.
+
+**Knappen i panelen.** `#dockEdge` ligger i `#z-pool`, bredvid panelens poolglob, uppe till höger. Den visas bara i L4, och
+bara när zonen syns: när hela panelen är öppen, eller alltid i den diskreta panelens poolficka. Där syns den i fickans
+remsa, och när man håller musen över fickan reser den sig och knappen följer med. Den är matt tills du har Edge och tänd
+medan du har den, och klick eller E tar och släpper Edge. När hela panelen är stängd försvinner knappen med den. E fungerar
+ändå, och brädet visar vem som har Edge. Knappen speglas i `updateEdge` som `#edgeChrome`, och den räknas som krom, så den
+startar ingen markering. L2 och L3 är som förut.
+
+**Globerna på brädet.** Edge-ikonen på globen är bara en markering, likadan på alla glober, även din. Din glob följer
+v2.6.151:s regel igen: den tänds när du har Edge utan egen token ute. I v2.6.181 var den en knapp och lyste även med token.
+
+**Det långa namnet.** Globen har nu cirkelns bredd, 64 px, vad namnet än är, och namnet centreras över cirkeln. Ett långt
+namn sticker ut lika mycket åt båda hållen och tar inga klick från korten under. Cirkeln glider alltså inte längre in över
+första kryptkortet i det föreslagna bordet. I Chromium såg jag att spelarens färgprick försvann när namnet var långt: ett
+tomt flex-element krymper till ingenting. `flex:none` på pricken löste det.
+
+**Testerna.** v2.6.181:s test för globknappen är ersatt av två nya, ett för panelens knapp, globmarkeringarna och tutorialen
+och ett för den fasta globbredden. v2.6.151-nålen läser `l4EdgeMarkHTML()`. Sviten står på 396/0, och v2.6.181 mot den
+nya sviten blir 393/3. Tjugofyra mutanter över v2.6.181 och v2.6.182, alla fångade. Kanariefågeln 235/0, dispatch 95/0, endpoint 36/0, protokollet 6/0, soakens kontroll slog till och batteriet gick igenom (7 bord, 97 drag, 0 fast), bottprojektets hotseat-grind i en kopia 12/0, båda inbäddningskontrollerna, B1 byte-identisk och check-versions grön.
+
+**Kört i Chromium, 43 av 43.** Knappen sitter uppe till höger i poolzonen och går fri från panelens nål- och lägesknappar.
+Ett verkligt klick tar Edge och tänder knappen utan att ändra panelen eller nålen, och token läggs vid globen. Din glob har
+ingen markering när din token ligger ute men den tända markeringen utan token, och den går inte att klicka på. Ett andra
+klick släpper Edge. Är panelen stängd syns ingen knapp, och E tar Edge. I den diskreta panelen syns knappen i fickans remsa,
+fickan reser sig och ett klick tar Edge. L2 och L3 har ingen panelknapp. Med namnen "Johan Svensson-Lindqvist", "Kristoffer"
+och "You" slutar cirkeln före första kryptkortet, namnet står centrerat och pricken är hel. Alla kontroller från v2.6.181
+gick igenom igen.
+
+**Inte kört:** autoscroll i Windows, Firefox, Safari, en riktig pekskärm och elysium.cards. Ett mycket långt namn hamnar med
+sina sista bokstäver över första kryptkortets övre hörn, som text ovanpå kortet; den tar inga klick.
+
+## [MITTEN ÄR EN SPELARES] (23 november 2026, kväll, klient v2.6.181 / srv-2.6.51 oförändrad)
+
+Johan skickade 14.54, i samma meddelande som kameran, ett skärmklipp från öppna bordet (L4): tre platser, 1909×949, och
+mitt på filten låg rundräknaren, matchklockan och Edge-knappen, rakt ovanför Brams kort. Hans idé var att fästa Edge-ikonen
+vid poolgloben även i den här vyn och flytta rundräknaren och timern till Table-fliken. Jag mätte och föreslog, och 18.21
+svarade han: "1. Bra i panelen 2. Den kan placeras ovanför spelarens glob på brädet om det går". Han lade också till en ny
+sak: enkelklick och håll med mittknappen ska dra runt vyn, oavsett vilket element musen står över.
+
+**Mitten av filten.** I L4 ligger inget i mitten längre. `renderL4` sätter `l3centerOnFelt=false` och bygger ingen
+`#l3timer`, så runda och klocka står i Table-panelens översta rad, `#statsL3Info`, som helikoptern redan gör vid tre, fyra
+och sex platser. `updateL3Timer` returnerade tidigt när det inte fanns någon filttimer, och då hade raden aldrig målats om i
+L4. Nu målar den raden i båda fallen. `#edge` göms i L4 genom samma `!l3centerOnFelt` som vid andra platsantal än fem.
+
+**Edge på globen.** Ordet EDGE från v2.6.151, som satt uppe till höger och hamnade under långa namn, är nu VTES-symbolen i
+en liten rund knapp på globens nedre högra skuldra. På din egen glob är det Edge-knappen i L4. Den syns alltid, är matt
+tills du har Edge och tänd medan du har den, och du trycker på den eller på E. Den lyser även när din token ligger ute,
+eftersom den är kontrollen, precis som `#edge`. En annan spelares glob tänder samma ikon när den spelaren har Edge utan en
+egen token på filten; det är v2.6.151:s regel, och den står kvar. Ett tryck på knappen drar inte globen: dragningen tar
+pekaren, och klicket hade då landat på globen. Ctrl- eller Shift-klick på knappen räknas inte som poolens. Tutorialens
+Edge-steg pekar på knappen i L4.
+
+**Token ovanför globen.** När du tar Edge i L4 läggs token ovanför din glob, centrerad över cirkeln (`l4EdgeSpot`). Glob
+och token ritas båda i `l2pub.s*L4_TOKEN_S`, så i pub-enheter är var och en sin CSS-storlek gånger 0,7. Sitter globen vid
+överkanten, som översta raden i det föreslagna bordet, finns ingen plats ovanför, och då hamnar token under sitsbrickan.
+Vid sidorna hålls den inne på bordet. En position som följer med Edge, ett släpp på din matta eller ett sparat bord,
+vinner som förut. Token följer inte med om du flyttar globen efteråt.
+
+**Mittknappen.** Tryck ned hjulet och håll, så följer vyn musen i helikoptern och i Classic, över ett kort, en glob, en
+token, docken eller filten. Lyssnaren sitter på document i capture-fasen, så inget under pekaren ser trycket eller
+släppet. Det som ett tryck annars stänger, menyn, en fäst förhandsvisning och räknarstegaren, stängs här, eftersom deras
+stängare lyssnar senare. Panoreringen slutar när mittknappen släpper. `buttons` läses vid varje rörelse, för håller man
+en annan knapp kvar blir mittknappens släpp en rörelse och inte en pointerup. Webbläsarens egen mittknapp (autoscroll i
+Windows, inklistring i Linux) nekas över bordet i de två vyerna, medan panelerna bredvid behåller sin. L2, ett besök, ett
+finger och de andra knapparna lämnas ifred. Filtdraget finns kvar (L3: bar filt, L4: dubbelklick och håll), och ?-listan
+och två tutorials nämner mittknappen.
+
+**Funnet på vägen.** Första klicket på TABLE-fliken vid ett nytt bord gjorde ingenting. Startskärmen stänger panelen utan
+att säga det till `statsOpen`, så första klicket "stängde" en stängd panel och först det andra öppnade den. Nu läser
+`toggleStats` det som syns. Det spelar roll nu när rundan bor i panelen.
+
+**Testerna.** Fem nya: filtens mitt, Edge på globerna, tokenplatsen, mittknappen och TABLE-klicket. v2.6.151-nålen läser
+ikonen. Harnessen har fått ett frivilligt storleksfrö, `__stubEl._dims`, så att panoreringens aritmetik kan testas. Sviten
+står på 395/0 med bot v0.6.236 bredvid, och v2.6.180 mot den nya sviten blir 389/6: de fem nya och v2.6.151-nålen.
+Sjutton mutanter, alla fångade; den sjuttonde först sedan testet fått en rörelse innan vyn lämnas. Kanariefågeln 235/0,
+dispatch 95/0, endpoint 36/0, protokollet 6/0, soakens kontroll slog till och batteriet (7 bord, 80 drag, 0 fast), båda
+inbäddningskontrollerna, B1 byte-identisk och check-versions grön.
+
+**Kört i Chromium, 28 av 28.** L4 vid 1909×949 och tre platser: ingen `#l3timer`, `#edge` syns inte, och panelraden säger
+"Round 1 · Turn 1". Ett verkligt klick på globknappen tar Edge, tänder den och lägger token under den översta radens glob,
+centrerad. En annan plats med Edge och utan token visar den tända ikonen, och ett andra klick släpper. Ett verkligt
+mittknappsdrag över ett kryptkort panorerar 150/70 utan att kortet rör sig, och markören är "grabbing". Över globen
+panorerar det också, med globen och poolen orörda. Från TABLE-fliken händer ingenting, och filtens dubbelklick-och-håll
+panorerar fortfarande. I L3 panorerar ett drag över ett mattkort, och i L2 lämnas trycket ifred. Samma sak vid 1280×720 och
+1500×900 med fyra och fem platser. Med touch-emulering ligger knappen under plusknappen med en pixels marginal, och ett tryck
+tar Edge. v2.6.180 faller på samma skript redan vid de första sex kontrollerna.
+
+**Sett men inte ändrat.** I det föreslagna bordet gör ett långt namn globen bredare, och cirkeln, som centreras under
+namnet, glider in över första kryptkortet. Det är äldre än den här releasen, eftersom sitsplatserna räknar med en glob på 64
+px, och Edge-knappen följer med cirkeln. **Inte kört:** autoscroll i Windows (Linux Chromium har ingen att neka), Firefox,
+Safari, en riktig pekskärm och elysium.cards.
+
 ## [KAMERAN PANORERAR] (23 november 2026, klient v2.6.180 / srv-2.6.51 oförändrad)
 
 Johan, 14.22, tre saker. Att scrolla på korträknaren i bottenpanelen verkade inte längre ändra handstorleken, och när han

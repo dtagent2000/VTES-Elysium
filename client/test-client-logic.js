@@ -4400,7 +4400,7 @@ test('v2.6.151: a seat that holds the Edge shows it on its pool globe unless it 
   const html = require('fs').readFileSync(CLIENT, 'utf8');
   assert(html.indexOf("l4GlobeEdges();                                                   // v2.6.151\n  renderL4OppCards();") > 0, 'every board update refreshes the marks');
   assert(html.indexOf("if(typeof l4Globes!=='undefined' && l4Globes.size) l4GlobeEdges();   // v2.6.151: my own globe's Edge mark") > 0, 'and so does taking or releasing the Edge');
-  assert(html.indexOf(`'<span class="l4gedge" title="Holds the Edge">EDGE</span>'`) > 0, 'the mark is in the globe');
+  assert(html.indexOf(`+_clanImg+l4EdgeMarkHTML()+`) > 0 && html.indexOf(`<div class="l4gedge" title="Holds the Edge">`) > 0, 'the mark is in the globe (v2.6.181: the Edge icon, not the word EDGE)');
   assert(html.indexOf(">🪑'+ordinal(o.seat)+'</span>'") > 0, 'the Table panel chip');
   assert(html.indexOf("font-size:16.5px\">'+ordinal(seat)+'</span>'") > 0, 'the seat visit header');
   assert(html.indexOf("ps.textContent=sx ? '🪑'+ordinal(sx) : '';") > 0, 'the own pool name');
@@ -6739,6 +6739,219 @@ test('v2.6.180 the pan\'s CSS: only while html.campan is on, #tableArea is the n
   assert(sw.indexOf("if(!hotBridge.seats[seat]) await new Promise(()=>{});") > 0, 'a table torn down during a pan parks the sweep, as hotAwaitPass does');
   const pn = html.slice(html.indexOf('async function passNow(){'), html.indexOf('function archiveTurn(){'));
   assert(pn.indexOf('if(!localTable) return;') > pn.indexOf('await hotRunBotTurns(net.turnSeat, nxt)'), 'no turn, cue or save for a table left during the sweep');
+});
+
+/* ---------- v2.6.181: the centre of the Classic felt is a player's, the Edge rides the pool globe, the middle button pans (Johan, 23 Nov 2026) ---------- */
+test('v2.6.181 the Classic board (L4) keeps the felt\'s centre free (Johan: the Edge button and the round counter sat on a player\'s cards) -- no centre timer: Round + clock stand in the Table panel\'s top row ("Bra i panelen"), painted with no felt timer; the felt\'s #edge is hidden; back in L2 the row goes', () => {
+  const A = loadClient(CLIENT), D = A.__doc, T = A.__stubEl.classList._t;
+  A.net.ws = { readyState: 1, send(){} };
+  A.MP_HANDLERS.joined({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(3), boardMode: 'classic', lobby: false, srv: '2.6.45', myPub: { cards: [] } });
+  const row = { hidden: true, innerHTML: '' }, eg = { hidden: false, style: {}, classList: { add(){}, remove(){}, toggle(){ return false; }, contains(){ return false; } }, querySelector(){ return {}; }, innerHTML: '' };
+  D._ids.statsL3Info = row; D._ids.edge = eg; D._ids.l3timer = null; D._ids.matchClock = { offsetParent: {}, textContent: '⏳ 1:23:45' };
+  try {
+    T.add('l3mode'); T.add('l4mode');
+    A.renderL4();
+    eq(A.l3centerOnFelt, false, 'nothing lives on the felt\'s centre in L4 (v2.6.180: true, always)');
+    eq(eg.hidden, true, 'the felt\'s Edge button is gone -- it is in the bottom panel\'s pool zone now (v2.6.182)');
+    eq(row.hidden, false, 'the Table panel\'s top row shows instead');
+    assert(row.innerHTML.indexOf('Round 1 · Turn 1') > 0 && row.innerHTML.indexOf('⏳ 1:23:45') > 0, 'with the round and the clock: ' + row.innerHTML);
+    A.net.roundNo = 2; A.net.turnNo = 5; A.updateL3Timer();
+    assert(row.innerHTML.indexOf('Round 2 · Turn 5') > 0, 'the turn counter repaints it with no felt timer on the board (it returned early without one)');
+    T.delete('l4mode'); T.delete('l3mode'); A.updateL3PanelInfo();
+    eq(row.hidden, true, 'back in L2 the row goes');
+  } finally { T.delete('l4mode'); T.delete('l3mode'); for (const k of ['statsL3Info', 'edge', 'l3timer', 'matchClock']) delete D._ids[k]; }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const r4 = html.slice(html.indexOf('function renderL4(){'), html.indexOf('function exitL3(){'));
+  assert(r4.indexOf("l3centerOnFelt=false;") > 0 && r4.indexOf("tm.id='l3timer'") < 0, 'renderL4 builds no felt timer');
+  assert(html.indexOf("const show=l3on() && (l4on() || !l3centerOnFelt);") > 0, 'L4 always shows the panel row');
+  assert(html.indexOf("l3centerOnFelt=(N===5);") > 0, 'the helicopter view is as it was: the 5-seat pentagon keeps the centrepiece, other counts use the panel');
+});
+test('v2.6.182 the Edge button on the Classic board sits in the bottom panel\'s pool zone (Johan: "i globzonen i bottenpanelen precis som L2" -- v2.6.181 had put it on the globe on the board): mirrored like #edgeChrome, a click takes or releases it; the board globes carry the Edge icon as a mark for every seat alike, yours included (v2.6.151\'s rule: holding it, no Edge token of your own out); the Classic tutorial points at the button, or at the panel\'s bar while the panel is shut', () => {
+  const A = loadClient(CLIENT), D = A.__doc;
+  A.net.ws = { readyState: 1, send(){} };
+  A.MP_HANDLERS.joined({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(3), boardMode: 'classic', lobby: false, srv: '2.6.45', myPub: { cards: [] } });
+  A.conv.edgeToken = true;
+  const lit = new Set(), de = { innerHTML: '', classList: { toggle: (c, v) => { if (v) lit.add(c); else lit.delete(c); return !!v; }, add(){}, remove(){}, contains: c => lit.has(c) }, querySelector(){ return null; }, getClientRects: () => [1] };
+  const eg = { hidden: false, innerHTML: '', classList: { toggle(){ return false; }, add(){}, remove(){}, contains(){ return false; } }, querySelector(){ return {}; } }, bar = {};
+  D._ids.dockEdge = de; D._ids.edge = eg; D._ids.l2dock = bar;
+  const on = new Map();
+  A.l4Globes.clear(); A.renderL4Globes();
+  A.l4Globes.forEach(g => { g.el = { classList: { toggle(c, v){ if (c === 'l4gedgeon') on.set(g.seat, !!v); return !!v; }, add(){}, remove(){}, contains(){ return false; } }, querySelector(){ return null; }, querySelectorAll(){ return []; }, style: {} }; });
+  try {
+    A.state.edge = true; A.updateEdge();
+    eq(lit.has('lit'), true, 'the panel\'s Edge button lights while you hold the Edge');
+    assert(/class="vtesmark/.test(de.innerHTML), 'and draws the VTES symbol, as #edge does');
+    A.state.edge = false; A.updateEdge(); eq(lit.has('lit'), false, 'dim while you do not');
+    A.state.edge = true; A.ensureEdgeToken(); A.l4GlobeEdges();
+    assert(A.tokens.get('edge'), 'your Edge token lies on the felt');
+    eq(on.get(1), false, 'so your globe carries no mark -- nobody\'s does with a token out (v2.6.181: lit, it was the button)');
+    A.removeEdgeToken(); A.l4GlobeEdges();
+    eq(on.get(1), true, 'no token out: your globe says it, as anyone\'s does');
+    A.state.edge = false; A.l4GlobeEdges(); eq(on.get(1), false, 'not holding it: no mark');
+    const counts = { hand: 7, library: 40, crypt: 8 };
+    A.net.boards[2] = { who: 'Anna', pub: { cards: [], counts, edge: true } };
+    A.net.boards[3] = { who: 'Erik', pub: { cards: [], counts, edge: true, tokens: [{ type: 'edge', x: 1, y: 1 }] } };
+    A.l4GlobeEdges();
+    eq(on.get(2), true, 'Anna holds it with no token out (a bot publishes exactly this): her globe lights');
+    eq(on.get(3), false, 'Erik has a token out: the token says it');
+    const mark = A.l4EdgeMarkHTML();
+    assert(/class="vtesmark/.test(mark) && mark.indexOf('title="Holds the Edge"') > 0 && mark.indexOf('data-tip') < 0 && mark.indexOf('EDGE') < 0, 'the mark: the VTES symbol, the same on every globe -- no button, not the word');
+    const step = A.TUT_SECTIONS['classic-play'].steps.find(s => s.id === 'cp-edge');
+    eq(step.target(), eg, 'outside L4 the tutorial points at #edge, as before');
+    l4mode149(A, true);
+    try {
+      eq(step.target(), de, 'L4 with the panel open: at the panel\'s Edge button (v2.6.181: the globe\'s)');
+      de.getClientRects = () => [];
+      eq(step.target(), bar, 'L4 with the panel shut: at its bar, which opens it');
+    } finally { l4mode149(A, false); }
+  } finally { for (const k of ['dockEdge', 'edge', 'l2dock']) delete D._ids[k]; }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const zp = html.slice(html.indexOf('<div class="zone" id="z-pool">'), html.indexOf('<div class="zone" id="z-pool">') + 600);
+  assert(zp.indexOf('<div id="dockEdge" data-tip="The Edge — grants +1 pool at Unlock"></div>') > zp.indexOf('id="dpplus"'), 'the button is in the bottom panel\'s pool zone, beside the dock\'s pool globe');
+  assert(html.indexOf('#dockEdge{ display:none; position:absolute; top:calc(8px * var(--dock-s)); right:calc(8px * var(--dock-s));') > 0 && html.indexOf('#board.l4mode #dockEdge{ display:grid; }') > 0, 'at the zone\'s top right, on the Classic board only (L2 and the helicopter keep #edge / #edgeChrome)');
+  assert(html.indexOf("$('#dockEdge')?.addEventListener('click',toggleEdge);") > 0, 'a click takes or releases the Edge');
+  assert(html.indexOf("const BOARD_CHROME = '.card,.l4globe,.l4pbtn,#edge,#dockEdge,") === 0 || html.indexOf("const BOARD_CHROME = '.card,.l4globe,.l4pbtn,#edge,#dockEdge,") > 0, 'it is chrome, not felt (no wheel zoom, no felt pan from it)');
+  assert(html.indexOf("'.card,.avc,.qrc,.pile,#poolWrap,#edge,#dockEdge,#phases,") > 0, 'and a press on it starts no marquee');
+  assert(html.indexOf('.l4globe-mine .l4gedge') < 0 && html.indexOf('l4EdgeClick') < 0 && html.indexOf("bindPoolModClick(el, '.l4pbtn');") > 0, 'the board globe carries no button any more');
+});
+test('v2.6.182 the pool globe on the board keeps the circle\'s width whatever the name (seen in v2.6.181: a long name widened it, and its circle, centred under the name, slid onto the first crypt card of the suggested setup) -- the name centres over the circle and overflows evenly, taking no clicks', () => {
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf('.l4globe{ position:absolute; width:64px; text-align:center;') > 0, 'the globe is the circle\'s width');
+  assert(/\.l4globe \.l4glabel\{[^}]*pointer-events:none/.test(html), 'the name takes no clicks from the cards under it (v2.6.183: it wraps in a window above the circle instead of overflowing sideways)');
+  assert(html.indexOf('.l4globe .l4gseat{ display:flex; justify-content:center;') > 0, 'the seat chip centres under the circle');
+  const A = loadClient(CLIENT);
+  eq(A.l4SeatGeo().gw, 64 * A.L4_TOKEN_S, 'the seat spots count the same 64 px circle');
+});
+test('v2.6.181 the free Edge token\'s first spot in L4 is above your pool globe (Johan: "ovanför spelarens glob på brädet om det går"), below it when the globe sits at the top edge, inside the table at the sides; the button takes it there; outside L4, and with a position that came with the Edge, as before', () => {
+  const A = loadClient(CLIENT);
+  A.net.ws = { readyState: 1, send(){} };
+  A.MP_HANDLERS.joined({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(3), boardMode: 'classic', lobby: false, srv: '2.6.45', myPub: { cards: [] } });
+  A.conv.edgeToken = true;
+  A.l4Globes.clear(); A.renderL4Globes();
+  const g = A.l4Globes.get(1), T = A.pubBox();
+  const at = (x, y) => { g.x = x; g.y = y; A.state.edge = false; A.removeEdgeToken(); A.state.edge = true; A.ensureEdgeToken(); const t = A.tokens.get('edge'); return t.x + ',' + t.y; };
+  l4mode149(A, true);
+  try {
+    eq(at(400, 300), '387,228', 'mid-table: centred over the globe\'s circle (64 px at token scale), its foot just above the name');
+    eq(at(26, 25), '16,97', 'the top row of the suggested setup: no room above, so just below the seat chip -- and not off the table\'s left edge');
+    assert(97 > T.y && Math.abs(16 - T.x) < 1, 'at the table box\'s left edge, not past it');
+    eq(at(933, 341), '918,269', 'the right edge of the lower row: above, and kept inside the table');
+    g.x = 400; g.y = 300; A.state.edge = false; A.removeEdgeToken();
+    A.toggleEdge();
+    eq(A.state.edge, true); { const t = A.tokens.get('edge'); eq(t.x + ',' + t.y, '387,228', 'taking the Edge with the button puts the token there'); }
+    A.state.edge = false; A.removeEdgeToken();
+    A.MP_HANDLERS.edgePass({ toSeat: 1, fromName: 'Anna', pos: { x: 111, y: 222 } });
+    { const t = A.tokens.get('edge'); eq(t.x + ',' + t.y, '111,222', 'a position that came with the Edge (a drop on your mat) still wins'); }
+  } finally { l4mode149(A, false); }
+  eq(at(400, 300) === '387,228', false, 'outside L4: the lower right of the Ready region, as before');
+  A.l4Globes.clear(); l4mode149(A, true);
+  try { eq(A.l4EdgeSpot(), null, 'no globe on the board: no spot, the ready default stands'); } finally { l4mode149(A, false); }
+});
+test('v2.6.181 the middle button pans the table from anywhere (Johan: "enkelklick+håll med mittknappen ... oavsett om man hade musen ovanför något annat element") -- over a card or a globe, in the helicopter view and the Classic board; the press, its moves and its release are the pan\'s; it ends when the middle button lets go, even with another still down; L2, a finger, the other buttons, the panels beside the table and the empty-table card are left alone', () => {
+  const A = loadClient(CLIENT), T = A.__stubEl.classList._t, dims = A.__stubEl._dims;
+  dims.clientWidth = 1004; dims.clientHeight = 616; dims.getBoundingClientRect = () => ({ left: 0, top: 0, right: 1004, bottom: 616, width: 1004, height: 616, x: 0, y: 0 });
+  const inBoard = { closest: sel => (sel === '#board' ? {} : null) }, inEmpty = { closest: () => ({}) }, beside = { closest: () => null };
+  const ev = o => { const e = Object.assign({ type: 'pointerdown', button: 1, buttons: 4, pointerType: 'mouse', pointerId: 1, clientX: 0, clientY: 0, target: inBoard }, o); e.prevented = false; e.stopped = false; e.preventDefault = () => { e.prevented = true; }; e.stopPropagation = () => { e.stopped = true; }; return e; };
+  try {
+    T.add('l3mode'); T.add('l4mode'); A.l3pan = { x: 0, y: 0 };
+    const d = ev({ clientX: 100, clientY: 100 }); A.midPanStart(d);
+    assert(d.prevented && d.stopped, 'the press is the pan\'s: no browser default (autoscroll), and nothing under it -- a card, a globe -- sees it');
+    assert(A._mpan, 'the pan is on');
+    const m1 = ev({ type: 'pointermove', clientX: 160, clientY: 130 }); A.midPanMove(m1);
+    assert(m1.stopped, 'its moves are its own');
+    const u = ev({ type: 'pointerup', buttons: 0, clientX: 160, clientY: 130 }); A.midPanEnd(u);
+    eq(A._mpan, null, 'the release ends it'); assert(u.stopped, 'and is its own too');
+    eq(JSON.stringify(A.l3pan), '{"x":60,"y":30}', 'the view followed the mouse');
+    A.midPanStart(ev({}));
+    A.midPanMove(ev({ type: 'pointermove', buttons: 5, clientX: -40, clientY: 10 }));
+    eq(A._mpan.lx, -40, 'the left button joins: still the pan');
+    A.midPanMove(ev({ type: 'pointermove', buttons: 1, clientX: -90, clientY: 50 }));
+    eq(A._mpan, null, 'the middle button lets go while the left stays down -- a move, not a pointerup -- and the pan ends');
+    eq(JSON.stringify(A.l3pan), '{"x":20,"y":40}', 'where the middle button last held it');
+    A.midPanStart(ev({}));
+    A.midPanMove(ev({ type: 'pointermove', pointerId: 7, clientX: 500, clientY: 500 })); eq(A._mpan.lx, 0, 'another pointer is not the pan\'s');
+    A.midPanEnd(ev({ type: 'pointercancel', buttons: 0 })); eq(A._mpan, null, 'a cancel ends it');
+    for (const [why, o] of [['the left button', { button: 0, buttons: 1 }], ['the right button', { button: 2, buttons: 2 }], ['a finger', { pointerType: 'touch' }], ['a press beside the table (the panels keep their middle button)', { target: beside }], ['the empty-table card', { target: inEmpty }]]) {
+      const e = ev(o); A.midPanStart(e); assert(!e.prevented && !e.stopped && !A._mpan, why + ': not the pan\'s');
+    }
+    eq(A.midTableBtn(ev({ type: 'mousedown' })), true, 'its mousedown and auxclick defaults are refused over the table');
+    T.delete('l4mode');
+    { const e = ev({}); A.midPanStart(e); assert(e.prevented && A._mpan, 'the helicopter view pans too'); A.midPanEnd(ev({ type: 'pointerup', buttons: 0 })); }
+    T.delete('l3mode');
+    { const e = ev({}); A.midPanStart(e); assert(!e.prevented && !e.stopped && !A._mpan, 'L2 and a seat visit: the press is left alone'); }
+    eq(A.midTableBtn(ev({ type: 'mousedown' })), false, '...and so is its mousedown');
+    T.add('l3mode');
+    A.midPanStart(ev({})); const before = JSON.stringify(A.l3pan);
+    A.midPanMove(ev({ type: 'pointermove', clientX: 50, clientY: 0 })); eq(A._mpan.lx, 50, 'a move in the helicopter view (its frame not drawn yet)');
+    T.delete('l3mode');
+    A.midPanMove(ev({ type: 'pointermove', clientX: 300, clientY: 300 }));
+    eq(A._mpan, null, 'the view left the helicopter mid-drag: the pan is over'); eq(JSON.stringify(A.l3pan), before, 'and nothing is written into a view that is gone');
+  } finally { T.delete('l3mode'); T.delete('l4mode'); for (const k of Object.keys(dims)) delete dims[k]; }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("document.addEventListener('pointerdown', midPanStart, true);") > 0, 'document capture: it runs before anything under the pointer');
+  assert(html.indexOf("document.addEventListener('mousedown', e=>{ if(midTableBtn(e)) e.preventDefault(); }, true);") > 0 && html.indexOf("document.addEventListener('auxclick', e=>{ if(midTableBtn(e)) e.preventDefault(); }, true);") > 0, 'mousedown and auxclick defaults refused');
+  const ms = html.slice(html.indexOf('function midPanStart(e){'), html.indexOf('function midPanApply(){'));
+  assert(ms.indexOf('if(_mpan || drag||tdrag||pileDrag||giveDrag||mq) return;') > ms.indexOf('e.preventDefault(); e.stopPropagation();'), 'a gesture already running keeps the pointer (the press is still refused its default)');
+  assert(ms.indexOf('hideMenu(); hideCtStepper(); if(_hoverPin){ _hoverPin=false; hideHoverCard(); }') > 0, 'what any press closes, this press closes (their closers listen later)');
+  assert(html.indexOf('if(now-_l4PanPrev>380){ _l4PanPrev=now; return; }') > 0, 'the felt drag stays: double-click and hold on the open felt');
+  assert(html.indexOf('#board.l3panning, #board.l3panning *{ cursor:grabbing !important; }') > 0, 'the hand stays closed over cards and globes');
+  assert(html.indexOf('<kbd>Middle button</kbd> hold + drag = pan the table from anywhere (Helicopter · Classic)') > 0, 'the ? controls list it');
+  assert(html.indexOf('or hold down the <b>mouse wheel</b> and drag, from anywhere on the table.') > 0 && html.indexOf('(hold down the <b>mouse wheel</b> and drag to pan from anywhere)') > 0, 'and both tutorials that teach panning');
+});
+
+test('v2.6.181 the first click on the TABLE tab at a new table opens the panel (found verifying "Bra i panelen": the start screen closes the dock without telling statsOpen, so the first click "closed" a closed panel and nothing happened; the second opened it)', () => {
+  const A = loadClient(CLIENT), D = A.__doc;
+  const cls = new Set(), arrow = { textContent: '' };
+  D._ids.statsDock = { classList: { add: c => cls.add(c), remove: c => cls.delete(c), toggle: (c, on) => { if (on) cls.add(c); else cls.delete(c); return !!on; }, contains: c => cls.has(c) } };
+  D._ids.statsArrow = arrow;
+  try {
+    eq(A.statsOpen, true, 'the saved state says open (the default)');
+    cls.delete('open');                                              // what the start screen does: closes the dock, statsOpen untouched
+    A.toggleStats();
+    eq(cls.has('open'), true, 'one click opens it (v2.6.180: it stayed shut)'); eq(arrow.textContent, '▾');
+    A.toggleStats(); eq(cls.has('open'), false, 'the next closes it');
+    A.toggleStats(); eq(cls.has('open'), true, 'and the next opens it again');
+    eq(A.__ls.getItem('elysium.stats'), '1', 'the choice is saved as before');
+  } finally { delete D._ids.statsDock; delete D._ids.statsArrow; }
+});
+
+test('v2.6.183 a long name on the board globe wraps inside a 92 px window and grows upward from the globe (Johan: "staplas inom ett fönster som radbryter texten ... expanderar uppåt från poolgloben") -- two lines at most, then an ellipsis; the slot stays one line high, so the circle and the seat spots do not move; the full name is the globe\'s tooltip; the Edge token above a globe clears a second line', () => {
+  const A = loadClient(CLIENT);
+  const fresh = { firstChild: null, innerHTML: '', title: '', querySelector(){ return null; } };
+  A.updateL4GlobeHTML({ seat: 2, el: fresh, mine: false }, 'Johan Svensson-Lindqvist', 30);
+  assert(/^<div class="l4glabel"><span class="l4gname"><span class="l4gnw">(<span class="l4gdot"[^>]*><\/span>)?J<\/span>ohan Svensson-Lindqvist<\/span><\/div><div class="l4gpool"/.test(fresh.innerHTML), 'the name sits in its window inside the slot, above the circle; the colour dot and the first letter share a no-wrap span (one long word left the dot alone on the first line): ' + fresh.innerHTML.slice(0, 140));
+  eq(fresh.title, 'Johan Svensson-Lindqvist\nRight-click: ash heap · host tools', 'the tooltip starts with the full name');
+  const lbl = { innerHTML: '' }, el2 = { firstChild: {}, title: '', querySelector: sel => (sel === '.l4glabel' ? lbl : null), querySelectorAll: () => [] };
+  A.updateL4GlobeHTML({ seat: 2, el: el2, mine: false }, 'Kristoffer Andersson', 30);
+  assert(/^<span class="l4gname"><span class="l4gnw">(<span class="l4gdot"[^>]*><\/span>)?K<\/span>ristoffer Andersson<\/span>$/.test(lbl.innerHTML), 'a later update keeps the window: ' + lbl.innerHTML);
+  eq(A.l4NameHTML(null, '', '\u{1F987}Vlad &amp; Co'), '<span class="l4gname"><span class="l4gnw">\u{1F987}</span>Vlad &amp;amp; Co</span>', 'the first character is a whole grapheme (an emoji is not split), and the name is escaped');
+  eq(A.l4NameHTML(null, '', ''), '<span class="l4gname"><span class="l4gnw">?</span></span>', 'no name: a question mark');
+  eq(el2.title.split('\n')[0], 'Kristoffer Andersson', 'and the tooltip follows the name');
+  eq(A.l4GlobeTitle({ mine: true }, 'You'), 'You', 'your own globe: just the name');
+  eq(A.l4GlobeTitle({ mine: false, off: true }, 'Bram'), 'Bram\nOffline — waiting for them to reconnect. Right-click: ash heap · host tools', 'an offline seat still says so');
+  eq(A.l4GlobeTitle({ mine: false }, ''), '?\nRight-click: ash heap · host tools', 'no name: a question mark, as on the felt');
+  A.net.ws = { readyState: 1, send(){} };
+  A.MP_HANDLERS.joined({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(3), boardMode: 'classic', lobby: false, srv: '2.6.45', myPub: { cards: [] } });
+  A.l4Globes.clear(); A.renderL4Globes();
+  A.l4Globes.forEach(gg => { gg.el = { classList: { toggle(){ return false; }, add(){}, remove(){}, contains(){ return false; } }, title: 'stale', removeAttribute(a){ if (a === 'title') this.title = ''; } }; });
+  A.refreshPoolTargetMarks();
+  eq(A.l4Globes.get(2).el.title, 'Anna\nRight-click: ash heap · host tools', 'a pool-target refresh rebuilds the tooltip (v2.6.22 removed it there, and an opponent\'s right-click hint with it)');
+  eq(A.l4Globes.get(1).el.title, 'Johan', 'yours: your name');
+  const g = A.l4Globes.get(1); g.x = 400; g.y = 300;
+  let nameH = 28;
+  g.el = { querySelector: sel => (sel === '.l4gname' ? { offsetHeight: nameH } : null), offsetWidth: 64, offsetHeight: 100 };
+  l4mode149(A, true);
+  try {
+    eq(JSON.stringify(A.l4EdgeSpot()), '{"x":387,"y":218}', 'a two-line name: the token rises by the second line (15 px at token scale) and stays centred');
+    nameH = 14; eq(JSON.stringify(A.l4EdgeSpot()), '{"x":387,"y":227}', 'one line: where it was (the line is a pixel above the 13 px slot)');
+  } finally { l4mode149(A, false); }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf('.l4globe .l4glabel{ position:relative; height:13px; margin-bottom:3px;') > 0, 'the slot is one line high: 13 + 3 is the 16 px l4SeatGeo counts above the circle, whatever the font');
+  eq(A.l4SeatGeo().lbl, 16 * A.L4_TOKEN_S, 'which it still counts');
+  assert(html.indexOf('.l4globe .l4gname{ position:absolute; left:50%; bottom:0; transform:translateX(-50%); width:max-content; max-width:92px; line-height:14px; text-align:center; white-space:normal; overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }') > 0, 'the window: 92 px wide, anchored at the slot\'s bottom (it grows upward), two lines then an ellipsis, a break anywhere for one long word');
+  assert(html.indexOf('.l4globe .l4gnw{ white-space:nowrap; }') > 0, 'the dot and the first letter do not part');
+  const lblRule = html.slice(html.indexOf('.l4globe .l4glabel{'), html.indexOf('}', html.indexOf('.l4globe .l4glabel{')));
+  assert(lblRule.indexOf('filter:drop-shadow(0 2px 4px #000)') > 0 && lblRule.indexOf('text-shadow') < 0, 'the shadow is a filter on the slot, so the clamped window does not cut it');
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */
