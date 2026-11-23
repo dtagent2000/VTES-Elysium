@@ -4400,7 +4400,7 @@ test('v2.6.151: a seat that holds the Edge shows it on its pool globe unless it 
   const html = require('fs').readFileSync(CLIENT, 'utf8');
   assert(html.indexOf("l4GlobeEdges();                                                   // v2.6.151\n  renderL4OppCards();") > 0, 'every board update refreshes the marks');
   assert(html.indexOf("if(typeof l4Globes!=='undefined' && l4Globes.size) l4GlobeEdges();   // v2.6.151: my own globe's Edge mark") > 0, 'and so does taking or releasing the Edge');
-  assert(html.indexOf(`+_clanImg+l4EdgeMarkHTML(glob.mine)+`) > 0 && html.indexOf(`' title="Holds the Edge"'`) > 0, 'the mark is in the globe (v2.6.181: the Edge icon, not the word EDGE)');
+  assert(html.indexOf(`+_clanImg+l4EdgeMarkHTML()+`) > 0 && html.indexOf(`<div class="l4gedge" title="Holds the Edge">`) > 0, 'the mark is in the globe (v2.6.181: the Edge icon, not the word EDGE)');
   assert(html.indexOf(">🪑'+ordinal(o.seat)+'</span>'") > 0, 'the Table panel chip');
   assert(html.indexOf("font-size:16.5px\">'+ordinal(seat)+'</span>'") > 0, 'the seat visit header');
   assert(html.indexOf("ps.textContent=sx ? '🪑'+ordinal(sx) : '';") > 0, 'the own pool name');
@@ -6752,7 +6752,7 @@ test('v2.6.181 the Classic board (L4) keeps the felt\'s centre free (Johan: the 
     T.add('l3mode'); T.add('l4mode');
     A.renderL4();
     eq(A.l3centerOnFelt, false, 'nothing lives on the felt\'s centre in L4 (v2.6.180: true, always)');
-    eq(eg.hidden, true, 'the felt\'s Edge button is gone -- it is on your pool globe now');
+    eq(eg.hidden, true, 'the felt\'s Edge button is gone -- it is in the bottom panel\'s pool zone now (v2.6.182)');
     eq(row.hidden, false, 'the Table panel\'s top row shows instead');
     assert(row.innerHTML.indexOf('Round 1 · Turn 1') > 0 && row.innerHTML.indexOf('⏳ 1:23:45') > 0, 'with the round and the clock: ' + row.innerHTML);
     A.net.roundNo = 2; A.net.turnNo = 5; A.updateL3Timer();
@@ -6766,43 +6766,63 @@ test('v2.6.181 the Classic board (L4) keeps the felt\'s centre free (Johan: the 
   assert(html.indexOf("const show=l3on() && (l4on() || !l3centerOnFelt);") > 0, 'L4 always shows the panel row');
   assert(html.indexOf("l3centerOnFelt=(N===5);") > 0, 'the helicopter view is as it was: the 5-seat pentagon keeps the centrepiece, other counts use the panel');
 });
-test('v2.6.181 the Edge on the pool globes -- yours is THE Edge button in L4: always there, lit while you hold it (token out or not), a click takes or releases it and stays off the globe; another seat\'s globe lights while that seat holds it with no token of its own out (v2.6.151, kept); the icon, not the word EDGE; the Classic tutorial points at your button', () => {
+test('v2.6.182 the Edge button on the Classic board sits in the bottom panel\'s pool zone (Johan: "i globzonen i bottenpanelen precis som L2" -- v2.6.181 had put it on the globe on the board): mirrored like #edgeChrome, a click takes or releases it; the board globes carry the Edge icon as a mark for every seat alike, yours included (v2.6.151\'s rule: holding it, no Edge token of your own out); the Classic tutorial points at the button, or at the panel\'s bar while the panel is shut', () => {
   const A = loadClient(CLIENT), D = A.__doc;
   A.net.ws = { readyState: 1, send(){} };
   A.MP_HANDLERS.joined({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(3), boardMode: 'classic', lobby: false, srv: '2.6.45', myPub: { cards: [] } });
   A.conv.edgeToken = true;
+  const lit = new Set(), de = { innerHTML: '', classList: { toggle: (c, v) => { if (v) lit.add(c); else lit.delete(c); return !!v; }, add(){}, remove(){}, contains: c => lit.has(c) }, querySelector(){ return null; }, getClientRects: () => [1] };
+  const eg = { hidden: false, innerHTML: '', classList: { toggle(){ return false; }, add(){}, remove(){}, contains(){ return false; } }, querySelector(){ return {}; } }, bar = {};
+  D._ids.dockEdge = de; D._ids.edge = eg; D._ids.l2dock = bar;
   const on = new Map();
   A.l4Globes.clear(); A.renderL4Globes();
   A.l4Globes.forEach(g => { g.el = { classList: { toggle(c, v){ if (c === 'l4gedgeon') on.set(g.seat, !!v); return !!v; }, add(){}, remove(){}, contains(){ return false; } }, querySelector(){ return null; }, querySelectorAll(){ return []; }, style: {} }; });
-  A.state.edge = true; A.ensureEdgeToken(); A.l4GlobeEdges();
-  assert(A.tokens.get('edge'), 'my Edge token lies on the felt');
-  eq(on.get(1), true, 'and my globe\'s button is lit all the same: it is the control (v2.6.151: the mark went out while my token lay out)');
-  A.state.edge = false; A.removeEdgeToken(); A.l4GlobeEdges(); eq(on.get(1), false, 'not holding it: dim');
-  const counts = { hand: 7, library: 40, crypt: 8 };
-  A.net.boards[2] = { who: 'Anna', pub: { cards: [], counts, edge: true } };
-  A.net.boards[3] = { who: 'Erik', pub: { cards: [], counts, edge: true, tokens: [{ type: 'edge', x: 1, y: 1 }] } };
-  A.l4GlobeEdges();
-  eq(on.get(2), true, 'Anna holds it with no token out (a bot publishes exactly this): her globe lights');
-  eq(on.get(3), false, 'Erik has a token out: the token says it');
-  let stopped = false;
-  A.l4EdgeClick({ stopPropagation(){ stopped = true; } });
-  eq(A.state.edge, true, 'a click on my button takes the Edge'); assert(stopped, 'and the click stays off the globe (a Ctrl/Shift+click there is the pool\'s)');
-  A.l4EdgeClick({ stopPropagation(){} }); eq(A.state.edge, false, 'a second click releases it');
-  const mine = A.l4EdgeMarkHTML(true), theirs = A.l4EdgeMarkHTML(false);
-  assert(/class="vtesmark/.test(mine) && /class="vtesmark/.test(theirs) && mine.indexOf('EDGE') < 0, 'the VTES symbol, as #edge draws it -- not the word');
-  assert(mine.indexOf('data-tip="The Edge — grants +1 pool at Unlock"') > 0 && theirs.indexOf('title="Holds the Edge"') > 0, 'yours explains the Edge as #edge does; theirs says who holds it');
-  const step = A.TUT_SECTIONS['classic-play'].steps.find(s => s.id === 'cp-edge'), eg = { hidden: false };
-  D._ids.edge = eg;
   try {
+    A.state.edge = true; A.updateEdge();
+    eq(lit.has('lit'), true, 'the panel\'s Edge button lights while you hold the Edge');
+    assert(/class="vtesmark/.test(de.innerHTML), 'and draws the VTES symbol, as #edge does');
+    A.state.edge = false; A.updateEdge(); eq(lit.has('lit'), false, 'dim while you do not');
+    A.state.edge = true; A.ensureEdgeToken(); A.l4GlobeEdges();
+    assert(A.tokens.get('edge'), 'your Edge token lies on the felt');
+    eq(on.get(1), false, 'so your globe carries no mark -- nobody\'s does with a token out (v2.6.181: lit, it was the button)');
+    A.removeEdgeToken(); A.l4GlobeEdges();
+    eq(on.get(1), true, 'no token out: your globe says it, as anyone\'s does');
+    A.state.edge = false; A.l4GlobeEdges(); eq(on.get(1), false, 'not holding it: no mark');
+    const counts = { hand: 7, library: 40, crypt: 8 };
+    A.net.boards[2] = { who: 'Anna', pub: { cards: [], counts, edge: true } };
+    A.net.boards[3] = { who: 'Erik', pub: { cards: [], counts, edge: true, tokens: [{ type: 'edge', x: 1, y: 1 }] } };
+    A.l4GlobeEdges();
+    eq(on.get(2), true, 'Anna holds it with no token out (a bot publishes exactly this): her globe lights');
+    eq(on.get(3), false, 'Erik has a token out: the token says it');
+    const mark = A.l4EdgeMarkHTML();
+    assert(/class="vtesmark/.test(mark) && mark.indexOf('title="Holds the Edge"') > 0 && mark.indexOf('data-tip') < 0 && mark.indexOf('EDGE') < 0, 'the mark: the VTES symbol, the same on every globe -- no button, not the word');
+    const step = A.TUT_SECTIONS['classic-play'].steps.find(s => s.id === 'cp-edge');
     eq(step.target(), eg, 'outside L4 the tutorial points at #edge, as before');
     l4mode149(A, true);
-    const t = step.target(); assert(t && t !== eg, 'in L4 at the button on your globe (v2.6.180: the felt\'s #edge)');
-  } finally { l4mode149(A, false); delete D._ids.edge; }
+    try {
+      eq(step.target(), de, 'L4 with the panel open: at the panel\'s Edge button (v2.6.181: the globe\'s)');
+      de.getClientRects = () => [];
+      eq(step.target(), bar, 'L4 with the panel shut: at its bar, which opens it');
+    } finally { l4mode149(A, false); }
+  } finally { for (const k of ['dockEdge', 'edge', 'l2dock']) delete D._ids[k]; }
   const html = require('fs').readFileSync(CLIENT, 'utf8');
-  assert(html.indexOf("if(e.target.closest('.l4pbtn,.l4gedge')) return;") > 0, 'a press on the button does not drag the globe (the drag captures the pointer, and the click would land on the globe)');
-  assert(html.indexOf("bindPoolModClick(el, '.l4pbtn,.l4gedge');") > 0 && html.indexOf("{ const eb=el.querySelector('.l4gedge'); if(eb) eb.addEventListener('click', l4EdgeClick); }") > 0, 'your globe binds the button, and its Ctrl/Shift+click is not the pool\'s');
-  assert(html.indexOf('.l4globe-mine .l4gedge{ display:flex; pointer-events:auto; cursor:pointer; }') > 0, 'yours is always shown');
-  assert(html.indexOf('.l4globe.l4gedgeon .l4gedge{ display:flex; background:radial-gradient(circle at 50% 20%, #6b1a20, #2c0a0c);') > 0, 'lit as #edge.lit is');
+  const zp = html.slice(html.indexOf('<div class="zone" id="z-pool">'), html.indexOf('<div class="zone" id="z-pool">') + 600);
+  assert(zp.indexOf('<div id="dockEdge" data-tip="The Edge — grants +1 pool at Unlock"></div>') > zp.indexOf('id="dpplus"'), 'the button is in the bottom panel\'s pool zone, beside the dock\'s pool globe');
+  assert(html.indexOf('#dockEdge{ display:none; position:absolute; top:calc(8px * var(--dock-s)); right:calc(8px * var(--dock-s));') > 0 && html.indexOf('#board.l4mode #dockEdge{ display:grid; }') > 0, 'at the zone\'s top right, on the Classic board only (L2 and the helicopter keep #edge / #edgeChrome)');
+  assert(html.indexOf("$('#dockEdge')?.addEventListener('click',toggleEdge);") > 0, 'a click takes or releases the Edge');
+  assert(html.indexOf("const BOARD_CHROME = '.card,.l4globe,.l4pbtn,#edge,#dockEdge,") === 0 || html.indexOf("const BOARD_CHROME = '.card,.l4globe,.l4pbtn,#edge,#dockEdge,") > 0, 'it is chrome, not felt (no wheel zoom, no felt pan from it)');
+  assert(html.indexOf("'.card,.avc,.qrc,.pile,#poolWrap,#edge,#dockEdge,#phases,") > 0, 'and a press on it starts no marquee');
+  assert(html.indexOf('.l4globe-mine .l4gedge') < 0 && html.indexOf('l4EdgeClick') < 0 && html.indexOf("bindPoolModClick(el, '.l4pbtn');") > 0, 'the board globe carries no button any more');
+});
+test('v2.6.182 the pool globe on the board keeps the circle\'s width whatever the name (seen in v2.6.181: a long name widened it, and its circle, centred under the name, slid onto the first crypt card of the suggested setup) -- the name centres over the circle and overflows evenly, taking no clicks', () => {
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf('.l4globe{ position:absolute; width:64px; text-align:center;') > 0, 'the globe is the circle\'s width');
+  assert(html.indexOf('.l4globe .l4glabel{ display:flex; align-items:center; justify-content:center;') > 0, 'the name is flex-centred: a long one overflows evenly on both sides (a block runs off to the right)');
+  assert(/\.l4globe \.l4glabel\{[^}]*pointer-events:none/.test(html), 'an overflowing name takes no clicks from the cards under it');
+  assert(html.indexOf('.l4globe .l4gseat{ display:flex; justify-content:center;') > 0, 'the seat chip centres the same way');
+  assert(html.indexOf('.l4globe .l4gdot{ display:inline-block; flex:none;') > 0, 'and the player\'s colour dot keeps its size (an empty flex item shrinks to nothing once the name overflows)');
+  const A = loadClient(CLIENT);
+  eq(A.l4SeatGeo().gw, 64 * A.L4_TOKEN_S, 'the seat spots count the same 64 px circle');
 });
 test('v2.6.181 the free Edge token\'s first spot in L4 is above your pool globe (Johan: "ovanför spelarens glob på brädet om det går"), below it when the globe sits at the top edge, inside the table at the sides; the button takes it there; outside L4, and with a position that came with the Edge, as before', () => {
   const A = loadClient(CLIENT);

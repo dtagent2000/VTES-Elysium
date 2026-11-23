@@ -1,3 +1,41 @@
+## [EDGE I PANELEN] (23 november 2026, sen kväll, klient v2.6.182 / srv-2.6.51 oförändrad)
+
+Johan svarade 20.16 på v2.6.181: "Ah dumt av mig men jag tänker att edge-knappen skulle sitta i globzonen i bottenpanelen
+precis som L2, inte vid Globen på brädet. Eller missförstod jag dig? Om det behöver rättas kan du ta med fixen av den sista
+punkten med äldre felet också." Det var jag som missförstod. På Classic-bordet finns två saker som kan kallas poolgloben:
+globen på filten och poolzonen i bottenpanelen. Han menade zonen, och jag läste globen utan att säga vilken jag valde. I L2
+sitter Edge-knappen i poolzonen på mattan, uppe till höger. Motsvarigheten i L4 är poolzonen i bottenpanelen.
+
+**Knappen i panelen.** `#dockEdge` ligger i `#z-pool`, bredvid panelens poolglob, uppe till höger. Den visas bara i L4, och
+bara när zonen syns: när hela panelen är öppen, eller alltid i den diskreta panelens poolficka. Där syns den i fickans
+remsa, och när man håller musen över fickan reser den sig och knappen följer med. Den är matt tills du har Edge och tänd
+medan du har den, och klick eller E tar och släpper Edge. När hela panelen är stängd försvinner knappen med den. E fungerar
+ändå, och brädet visar vem som har Edge. Knappen speglas i `updateEdge` som `#edgeChrome`, och den räknas som krom, så den
+startar ingen markering. L2 och L3 är som förut.
+
+**Globerna på brädet.** Edge-ikonen på globen är bara en markering, likadan på alla glober, även din. Din glob följer
+v2.6.151:s regel igen: den tänds när du har Edge utan egen token ute. I v2.6.181 var den en knapp och lyste även med token.
+
+**Det långa namnet.** Globen har nu cirkelns bredd, 64 px, vad namnet än är, och namnet centreras över cirkeln. Ett långt
+namn sticker ut lika mycket åt båda hållen och tar inga klick från korten under. Cirkeln glider alltså inte längre in över
+första kryptkortet i det föreslagna bordet. I Chromium såg jag att spelarens färgprick försvann när namnet var långt: ett
+tomt flex-element krymper till ingenting. `flex:none` på pricken löste det.
+
+**Testerna.** v2.6.181:s test för globknappen är ersatt av två nya, ett för panelens knapp, globmarkeringarna och tutorialen
+och ett för den fasta globbredden. v2.6.151-nålen läser `l4EdgeMarkHTML()`. Sviten står på 396/0, och v2.6.181 mot den
+nya sviten blir 393/3. Tjugofyra mutanter över v2.6.181 och v2.6.182, alla fångade. Kanariefågeln 235/0, dispatch 95/0, endpoint 36/0, protokollet 6/0, soakens kontroll slog till och batteriet gick igenom (7 bord, 97 drag, 0 fast), bottprojektets hotseat-grind i en kopia 12/0, båda inbäddningskontrollerna, B1 byte-identisk och check-versions grön.
+
+**Kört i Chromium, 43 av 43.** Knappen sitter uppe till höger i poolzonen och går fri från panelens nål- och lägesknappar.
+Ett verkligt klick tar Edge och tänder knappen utan att ändra panelen eller nålen, och token läggs vid globen. Din glob har
+ingen markering när din token ligger ute men den tända markeringen utan token, och den går inte att klicka på. Ett andra
+klick släpper Edge. Är panelen stängd syns ingen knapp, och E tar Edge. I den diskreta panelen syns knappen i fickans remsa,
+fickan reser sig och ett klick tar Edge. L2 och L3 har ingen panelknapp. Med namnen "Johan Svensson-Lindqvist", "Kristoffer"
+och "You" slutar cirkeln före första kryptkortet, namnet står centrerat och pricken är hel. Alla kontroller från v2.6.181
+gick igenom igen.
+
+**Inte kört:** autoscroll i Windows, Firefox, Safari, en riktig pekskärm och elysium.cards. Ett mycket långt namn hamnar med
+sina sista bokstäver över första kryptkortets övre hörn, som text ovanpå kortet; den tar inga klick.
+
 ## [MITTEN ÄR EN SPELARES] (23 november 2026, kväll, klient v2.6.181 / srv-2.6.51 oförändrad)
 
 Johan skickade 14.54, i samma meddelande som kameran, ett skärmklipp från öppna bordet (L4): tre platser, 1909×949, och

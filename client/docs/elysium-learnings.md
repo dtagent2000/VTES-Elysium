@@ -1,8 +1,17 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.181 / server v2.6.51 / bot v0.6.236 tested beside the suite, last updated 23 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.182 / server v2.6.51 / bot v0.6.236 tested beside the suite, last updated 23 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**23 Nov 2026, late evening (THE EDGE IN THE PANEL — v2.6.182):**
+- **A word that names two things on screen gets a picture in the proposal.** On the Classic board 'the pool globe' is the
+  globe on the felt AND the pool zone in the bottom panel. Johan meant the zone (L2's Edge sits in its pool zone), v2.6.181
+  built the globe, and a whole release went to the wrong one. When a request's noun has two candidates, the proposal names
+  the one it means -- with a screenshot or the element's place ('the panel's pool zone, top right') -- before building.
+- **An empty flex item shrinks to nothing.** The player's colour dot is an empty inline-block; inside a flex container it
+  has a min-content width of 0, so once the name overflowed the 64 px globe the dot was squeezed away. Anything with a
+  fixed size and no content in a flex row gets `flex:none`. Only the browser showed it -- the CSS pins were all green.
 
 **23 Nov 2026, evening (THE CENTRE IS A PLAYER'S — v2.6.181):**
 - **A centrepiece belongs to a fixed layout.** The felt's clock and Edge button were placed for the 5-seat pentagon's empty
