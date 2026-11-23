@@ -1,3 +1,40 @@
+## [NAMNET STAPLAS] (23 november 2026, natt, klient v2.6.183 / srv-2.6.51 oförändrad)
+
+Johan 22.26: "Jag tänker att låååånga namn kanske istället får staplas inom ett fönster som radbryter texten istället för att
+den ska löpa hela längden ut eller vad tycker du? Så den expanderar uppåt från poolgloben då så att säga". Jag höll med,
+injicerade en prototyp med CSS i Chromium och skickade en före/efter-bild med förslaget: ett fönster på 92 px som växer
+uppåt, högst två rader och sedan "…", och hela namnet som tooltip. 22.49 svarade han "kör".
+
+**Fönstret.** Namnraden är nu en plats som är en rad hög, 13 px plus 3 px marginal, vilket är de 16 px som sitsplatserna
+räknar med ovanför cirkeln. Tidigare var etikettens höjd typsnittets normala radhöjd, 12 px med reservtypsnittet här, så nu
+står cirkeln på samma ställe oavsett typsnitt. Själva namnet ligger i ett fönster som är förankrat i platsens nederkant och
+växer uppåt. Fönstret är 92 px brett, alltså globen plus mellanrummet på 14 px till kryptkorten på var sida, och det har
+högst två rader innan "…" tar över. Namnet bryts vid mellanslag och bindestreck, och ett enda långt ord bryts mitt i.
+Skuggan ligger som filter på platsen i stället för text-shadow, eftersom fönstrets overflow:hidden annars skulle kapa den.
+
+**Pricken.** Med ett enda långt ord blev spelarens färgprick ensam kvar på första raden. Chrome bryter efter ett
+inline-block även när ett WORD JOINER står emellan; jag provade varianter sida vid sida på en testsida. Nu delar pricken och
+namnets första tecken ett span med white-space:nowrap, och det första tecknet tas som ett helt grafem, så en emoji inte delas.
+
+**Tooltipen.** Globens tooltip börjar med hela namnet, och för en motståndare följer högerklickstipset efter. Då såg jag att
+`refreshPoolTargetMarks` sedan v2.6.22 tog bort globens title, i tron att globen inte hade någon, så motståndarens
+högerklickstips försvann vid första uppdateringen. Nu byggs titeln om där, med målraden efter.
+
+**Token.** En Edge-token ovanför en glob lyfts med den andra namnraden.
+
+**Testerna.** Ett nytt test täcker markupen i båda vägarna, grafemet, escaping, titlarna, att en måluppdatering behåller
+titeln, tokenplatsen för en och två rader och CSS:en. v2.6.182:s breddtest förlorade sina flex-nålar. Sviten står på 397/0, och v2.6.182 mot den nya sviten blir 396/1. Tretton nya mutanter fångades, liksom de tjugotvå från v2.6.181 och v2.6.182 som fortfarande gäller; två försvann med flex-CSS:en de satt på. Kanariefågeln 235/0, dispatch 95/0, endpoint 36/0, protokollet 6/0, soakens kontroll slog till och batteriet gick igenom (7 bord, 99 drag, 0 fast), bottprojektets hotseat-grind i en kopia 12/0, båda inbäddningskontrollerna, B1 byte-identisk och check-versions grön.
+
+**Kört i Chromium.** Fem namn vid ett bord med fem platser: You, Kristoffer Andersson, Johan Svensson-Lindqvist, Maximiliana
+Wolfensteiner von Habsburg-Lothringen och Pneumonoultramicroscopicsilicovolcanoconiosis. Alla fönster är högst 92 px breda
+och två rader höga, med nedersta raden i platsen och centrerade på cirkeln, och cirkeln ligger 16 px under globens topp. De
+går fria från kryptkorten åt båda hållen och håller sig på filten, och pricken är hel och står på första raden. You får en
+rad, Kristoffer två, och de två längsta får "…". Edge-token går fri ovanför ett tvåradigt namn (25/25). v2.6.182:s 43
+kontroller gick igenom igen.
+
+**Inte kört:** Firefox och Safari (båda har `-webkit-line-clamp` och `Intl.Segmenter`, men det är inte kört här) och
+elysium.cards med Cinzel laddat.
+
 ## [EDGE I PANELEN] (23 november 2026, sen kväll, klient v2.6.182 / srv-2.6.51 oförändrad)
 
 Johan svarade 20.16 på v2.6.181: "Ah dumt av mig men jag tänker att edge-knappen skulle sitta i globzonen i bottenpanelen

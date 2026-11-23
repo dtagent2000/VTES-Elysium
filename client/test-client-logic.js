@@ -6817,10 +6817,8 @@ test('v2.6.182 the Edge button on the Classic board sits in the bottom panel\'s 
 test('v2.6.182 the pool globe on the board keeps the circle\'s width whatever the name (seen in v2.6.181: a long name widened it, and its circle, centred under the name, slid onto the first crypt card of the suggested setup) -- the name centres over the circle and overflows evenly, taking no clicks', () => {
   const html = require('fs').readFileSync(CLIENT, 'utf8');
   assert(html.indexOf('.l4globe{ position:absolute; width:64px; text-align:center;') > 0, 'the globe is the circle\'s width');
-  assert(html.indexOf('.l4globe .l4glabel{ display:flex; align-items:center; justify-content:center;') > 0, 'the name is flex-centred: a long one overflows evenly on both sides (a block runs off to the right)');
-  assert(/\.l4globe \.l4glabel\{[^}]*pointer-events:none/.test(html), 'an overflowing name takes no clicks from the cards under it');
-  assert(html.indexOf('.l4globe .l4gseat{ display:flex; justify-content:center;') > 0, 'the seat chip centres the same way');
-  assert(html.indexOf('.l4globe .l4gdot{ display:inline-block; flex:none;') > 0, 'and the player\'s colour dot keeps its size (an empty flex item shrinks to nothing once the name overflows)');
+  assert(/\.l4globe \.l4glabel\{[^}]*pointer-events:none/.test(html), 'the name takes no clicks from the cards under it (v2.6.183: it wraps in a window above the circle instead of overflowing sideways)');
+  assert(html.indexOf('.l4globe .l4gseat{ display:flex; justify-content:center;') > 0, 'the seat chip centres under the circle');
   const A = loadClient(CLIENT);
   eq(A.l4SeatGeo().gw, 64 * A.L4_TOKEN_S, 'the seat spots count the same 64 px circle');
 });
@@ -6915,6 +6913,45 @@ test('v2.6.181 the first click on the TABLE tab at a new table opens the panel (
     A.toggleStats(); eq(cls.has('open'), true, 'and the next opens it again');
     eq(A.__ls.getItem('elysium.stats'), '1', 'the choice is saved as before');
   } finally { delete D._ids.statsDock; delete D._ids.statsArrow; }
+});
+
+test('v2.6.183 a long name on the board globe wraps inside a 92 px window and grows upward from the globe (Johan: "staplas inom ett fönster som radbryter texten ... expanderar uppåt från poolgloben") -- two lines at most, then an ellipsis; the slot stays one line high, so the circle and the seat spots do not move; the full name is the globe\'s tooltip; the Edge token above a globe clears a second line', () => {
+  const A = loadClient(CLIENT);
+  const fresh = { firstChild: null, innerHTML: '', title: '', querySelector(){ return null; } };
+  A.updateL4GlobeHTML({ seat: 2, el: fresh, mine: false }, 'Johan Svensson-Lindqvist', 30);
+  assert(/^<div class="l4glabel"><span class="l4gname"><span class="l4gnw">(<span class="l4gdot"[^>]*><\/span>)?J<\/span>ohan Svensson-Lindqvist<\/span><\/div><div class="l4gpool"/.test(fresh.innerHTML), 'the name sits in its window inside the slot, above the circle; the colour dot and the first letter share a no-wrap span (one long word left the dot alone on the first line): ' + fresh.innerHTML.slice(0, 140));
+  eq(fresh.title, 'Johan Svensson-Lindqvist\nRight-click: ash heap · host tools', 'the tooltip starts with the full name');
+  const lbl = { innerHTML: '' }, el2 = { firstChild: {}, title: '', querySelector: sel => (sel === '.l4glabel' ? lbl : null), querySelectorAll: () => [] };
+  A.updateL4GlobeHTML({ seat: 2, el: el2, mine: false }, 'Kristoffer Andersson', 30);
+  assert(/^<span class="l4gname"><span class="l4gnw">(<span class="l4gdot"[^>]*><\/span>)?K<\/span>ristoffer Andersson<\/span>$/.test(lbl.innerHTML), 'a later update keeps the window: ' + lbl.innerHTML);
+  eq(A.l4NameHTML(null, '', '\u{1F987}Vlad &amp; Co'), '<span class="l4gname"><span class="l4gnw">\u{1F987}</span>Vlad &amp;amp; Co</span>', 'the first character is a whole grapheme (an emoji is not split), and the name is escaped');
+  eq(A.l4NameHTML(null, '', ''), '<span class="l4gname"><span class="l4gnw">?</span></span>', 'no name: a question mark');
+  eq(el2.title.split('\n')[0], 'Kristoffer Andersson', 'and the tooltip follows the name');
+  eq(A.l4GlobeTitle({ mine: true }, 'You'), 'You', 'your own globe: just the name');
+  eq(A.l4GlobeTitle({ mine: false, off: true }, 'Bram'), 'Bram\nOffline — waiting for them to reconnect. Right-click: ash heap · host tools', 'an offline seat still says so');
+  eq(A.l4GlobeTitle({ mine: false }, ''), '?\nRight-click: ash heap · host tools', 'no name: a question mark, as on the felt');
+  A.net.ws = { readyState: 1, send(){} };
+  A.MP_HANDLERS.joined({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(3), boardMode: 'classic', lobby: false, srv: '2.6.45', myPub: { cards: [] } });
+  A.l4Globes.clear(); A.renderL4Globes();
+  A.l4Globes.forEach(gg => { gg.el = { classList: { toggle(){ return false; }, add(){}, remove(){}, contains(){ return false; } }, title: 'stale', removeAttribute(a){ if (a === 'title') this.title = ''; } }; });
+  A.refreshPoolTargetMarks();
+  eq(A.l4Globes.get(2).el.title, 'Anna\nRight-click: ash heap · host tools', 'a pool-target refresh rebuilds the tooltip (v2.6.22 removed it there, and an opponent\'s right-click hint with it)');
+  eq(A.l4Globes.get(1).el.title, 'Johan', 'yours: your name');
+  const g = A.l4Globes.get(1); g.x = 400; g.y = 300;
+  let nameH = 28;
+  g.el = { querySelector: sel => (sel === '.l4gname' ? { offsetHeight: nameH } : null), offsetWidth: 64, offsetHeight: 100 };
+  l4mode149(A, true);
+  try {
+    eq(JSON.stringify(A.l4EdgeSpot()), '{"x":387,"y":218}', 'a two-line name: the token rises by the second line (15 px at token scale) and stays centred');
+    nameH = 14; eq(JSON.stringify(A.l4EdgeSpot()), '{"x":387,"y":227}', 'one line: where it was (the line is a pixel above the 13 px slot)');
+  } finally { l4mode149(A, false); }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf('.l4globe .l4glabel{ position:relative; height:13px; margin-bottom:3px;') > 0, 'the slot is one line high: 13 + 3 is the 16 px l4SeatGeo counts above the circle, whatever the font');
+  eq(A.l4SeatGeo().lbl, 16 * A.L4_TOKEN_S, 'which it still counts');
+  assert(html.indexOf('.l4globe .l4gname{ position:absolute; left:50%; bottom:0; transform:translateX(-50%); width:max-content; max-width:92px; line-height:14px; text-align:center; white-space:normal; overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }') > 0, 'the window: 92 px wide, anchored at the slot\'s bottom (it grows upward), two lines then an ellipsis, a break anywhere for one long word');
+  assert(html.indexOf('.l4globe .l4gnw{ white-space:nowrap; }') > 0, 'the dot and the first letter do not part');
+  const lblRule = html.slice(html.indexOf('.l4globe .l4glabel{'), html.indexOf('}', html.indexOf('.l4globe .l4glabel{')));
+  assert(lblRule.indexOf('filter:drop-shadow(0 2px 4px #000)') > 0 && lblRule.indexOf('text-shadow') < 0, 'the shadow is a filter on the slot, so the clamped window does not cut it');
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */

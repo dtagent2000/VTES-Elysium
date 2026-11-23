@@ -1,8 +1,21 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.182 / server v2.6.51 / bot v0.6.236 tested beside the suite, last updated 23 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.183 / server v2.6.51 / bot v0.6.236 tested beside the suite, last updated 23 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**23 Nov 2026, night (THE NAME STACKS UP — v2.6.183):**
+- **A word joiner does not glue an inline-block.** Chrome keeps a line break after an atomic inline (the colour dot) even
+  with U+2060 after it, so one long word left the dot alone on the first line. What holds: a `white-space:nowrap` span
+  around the inline-block and the name's first grapheme. A line-breaking question is settled fastest on a `setContent`
+  page with every variant side by side, measured (a Range over the first character against the dot).
+- **`-webkit-line-clamp` needs `overflow:hidden`, and that cuts `text-shadow`.** Put the shadow on an unclipped ancestor
+  as `filter:drop-shadow(...)`: the filter draws from what is visible, after the clip.
+- **'Restore the pristine state' by removing an attribute assumes there was none.** `refreshPoolTargetMarks` removed the
+  globe's title after a clear, believing the globe had no tooltip; an opponent's globe did (the right-click hint), and
+  lost it at the first refresh, unnoticed since v2.6.22. Rebuild the owner's value instead of deleting it.
+- **A prototype picture made a design question a one-word answer.** Injected CSS in the real client, a before/after
+  crop, the defaults named in the proposal (92 px, two lines, the tooltip) -- the reply was 'kör'.
 
 **23 Nov 2026, late evening (THE EDGE IN THE PANEL — v2.6.182):**
 - **A word that names two things on screen gets a picture in the proposal.** On the Classic board 'the pool globe' is the

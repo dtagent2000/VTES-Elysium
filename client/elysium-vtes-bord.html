@@ -1171,9 +1171,11 @@ body.inl4 #l3zoomCtl{ display:none; }
 body.inl4.l3zoomopen #l3zoomCtl{ display:flex; }
 /* L4 pool globes */
 .l4globe{ position:absolute; width:64px; text-align:center; pointer-events:auto; user-select:none; z-index:72; }   /* v2.6.182 (Johan): the circle's width, whatever the name -- a long name widened the globe and its circle, centred under the name, slid onto the first crypt card of the suggested setup (the seat spots count a 64 px globe) */
-.l4globe .l4glabel{ display:flex; align-items:center; justify-content:center; font:600 11px "Cinzel",serif; color:var(--bone); white-space:nowrap; margin-bottom:3px; text-shadow:0 2px 4px #000; pointer-events:none; }   /* v2.6.182: flex centring -- a name wider than the globe overflows evenly on both sides, centred over the circle (a block would run off to the right) */
+.l4globe .l4glabel{ position:relative; height:13px; margin-bottom:3px; font:600 11px "Cinzel",serif; color:var(--bone); pointer-events:none; filter:drop-shadow(0 2px 4px #000); }   /* v2.6.183 (Johan): the name's SLOT -- one line high, so the circle sits where the seat spots count it (13 + 3 = l4SeatGeo's 16) whatever the font; the shadow is a filter here, so the clamped name below keeps it (a text-shadow would be cut by its overflow) */
+.l4globe .l4gname{ position:absolute; left:50%; bottom:0; transform:translateX(-50%); width:max-content; max-width:92px; line-height:14px; text-align:center; white-space:normal; overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }   /* v2.6.183 (Johan): a long name wraps inside a 92 px window -- the globe plus the gap to its crypt cards on each side, so it never reaches a card -- and grows UPWARD from the slot (its bottom line is where the one line always was); two lines at most, then an ellipsis (a third would leave the felt at the suggested setup's top row); breaks at spaces and hyphens, one long word anywhere. The full name is the globe's tooltip (l4GlobeTitle) */
+.l4globe .l4gnw{ white-space:nowrap; }   /* v2.6.183: the colour dot and the name's first character stay together (l4NameHTML) */
 .l4globe .l4gseat{ display:flex; justify-content:center; margin-top:3px; font:600 10.5px "Cinzel",serif; letter-spacing:.04em; color:#d9b45f; opacity:.92; text-shadow:0 2px 4px #000; pointer-events:none; white-space:nowrap; }   /* v2.6.150 (Johan): the seat chip sits UNDER the globe, the name alone above it (v2.6.146 had both in the name line) */   /* v2.6.146: the seat's place in the turn order ('1st', '2nd' ...) -- brass and nearly opaque; it was a faint digit */
-.l4globe .l4gdot{ display:inline-block; flex:none; width:9px; height:9px; border-radius:50%; margin-right:4px; vertical-align:middle; box-shadow:inset 0 0 0 1px rgba(255,255,255,.25), 0 0 4px rgba(0,0,0,.5); }   /* v2.6.182: flex:none -- in the flex-centred name an empty item shrinks to nothing once a long name overflows */
+.l4globe .l4gdot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; vertical-align:middle; box-shadow:inset 0 0 0 1px rgba(255,255,255,.25), 0 0 4px rgba(0,0,0,.5); }
 .l4globe .l4gpool{ width:64px; height:64px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #b83030, #8a1e1e 55%, #5c1010); border:2.5px solid; display:flex; align-items:center; justify-content:center; margin:0 auto; box-shadow:0 4px 12px rgba(0,0,0,.5), inset 0 2px 6px rgba(255,255,255,.10), inset 0 -4px 8px rgba(0,0,0,.45); cursor:default; position:relative; }
 .l4globe-mine .l4gpool{ cursor:grab; }
 .l4globe .l4gedge{ display:none; position:absolute; right:-12px; bottom:-8px; width:24px; height:24px; border-radius:50%; border:1px solid var(--brass2); background:#1a140c; color:var(--bone); align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,.65); pointer-events:none; z-index:3; }   /* v2.6.181: the Edge ICON at the globe's lower right shoulder (v2.6.151: the word EDGE, top right, under a long name). v2.6.182: a mark only, on every globe alike -- the button is in the bottom panel's pool zone (#dockEdge) */
@@ -3330,7 +3332,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.182';   // v2.6.182 (23 Nov 2026, THE EDGE IN THE PANEL, pure client -- purge; srv-2.6.51 unchanged, no wire change; bot v0.6.236 beside, unchanged; PR #98, on top of v2.6.181, which was never deployed): Johan read v2.6.181's Edge button on the board globe and meant something else: 'i globzonen i bottenpanelen precis som L2'. (1) On the Classic board the Edge button now sits in the bottom panel's pool zone, at its top right, as L2 has it in the pool zone on the mat; dim until you hold the Edge, lit while you do (click it, or E). In the discreet panel it shows in the pool pocket's strip; with the full panel shut it is out of sight with the panel, and E still works. (2) The pool globes on the board carry the Edge icon as a mark only, the same for every seat, yours included: holding the Edge with no Edge token of your own out (v2.6.151's rule, which v2.6.181 had changed for your globe). (3) The globe on the board keeps the circle's width whatever the name, with the name centred over it, so a long name no longer pushes the circle onto the first crypt card of the suggested setup. The rest of v2.6.181 stands: nothing on the felt's centre, Round + clock in the Table panel, the token above your globe, the middle-button pan, the TABLE tab's first click.
+const VERSION='2.6.183';   // v2.6.183 (23 Nov 2026, THE NAME STACKS UP, pure client -- purge; srv-2.6.51 unchanged, no wire change; bot v0.6.236 beside, unchanged; PR #98, on top of v2.6.181 and v2.6.182, neither deployed): Johan: 'låååånga namn kanske istället får staplas inom ett fönster som radbryter texten ... så den expanderar uppåt från poolgloben'. (1) The name over a pool globe on the board wraps inside a 92 px window -- the globe plus the gap to its crypt cards on each side, so it never reaches a card -- and grows upward: its bottom line stands where the one line always did, so the circle and the seat spots do not move. (2) Two lines at most, then an ellipsis; it breaks at spaces and hyphens, one long word anywhere, and the colour dot stays with the name's first letter. (3) The globe's tooltip starts with the full name; an opponent's goes on with the right-click hint, which a pool-target refresh used to wipe. (4) The Edge token laid above a globe clears a second name line.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -4899,9 +4901,10 @@ function refreshPoolTargetMarks(){                            // v2.6.21: two-si
     const ownT=(g.seat===mySeat() && mineTaggers.length>0);
     g.el.classList.toggle('pooltarget', aimed);
     g.el.classList.toggle('pooltarget-own', ownT);
-    if(ownT) g.el.title='⌖ pool targeted by '+mineTaggers.join(', ');
-    else if(aimed) g.el.title='⌖ your pool target';
-    else g.el.removeAttribute('title');   // v2.6.22: stale-tooltip fix -- the globe carries no title of its own, so removal restores the pristine state after a clear
+    const base=l4GlobeTitle(g, g.name);                             // v2.6.183: the globe's own tooltip (the full name, and an opponent's right-click hint) -- v2.6.22 removed the title here, thinking the globe had none, and an opponent's hint went with the first refresh
+    if(ownT) g.el.title=base+'\n⌖ pool targeted by '+mineTaggers.join(', ');
+    else if(aimed) g.el.title=base+'\n⌖ your pool target';
+    else g.el.title=base;
   });
   const dp=$('#dockPool'); if(dp){ if(dp.dataset.t0===undefined) dp.dataset.t0=dp.title;   // v2.6.22: remember the ORIGINAL tooltip ("Scroll to adjust · click +/−") once -- v2.6.21 clobbered it with '' forever after the first aim
     dp.classList.toggle('pooltarget-own', mineTaggers.length>0); dp.title=mineTaggers.length ? ('⌖ pool targeted by '+mineTaggers.join(', ')) : dp.dataset.t0; }
@@ -8300,13 +8303,27 @@ function createL4Globe(seat, name, pool, mine){
   } else {
     el.addEventListener('contextmenu',e=>{ e.preventDefault(); e.stopPropagation(); showMenu(oppPoolMenuItems(seat), e.clientX, e.clientY); });
   }
-  if(seat!==mySeat()){ glob.el.classList.add('matpool'); glob.el.dataset.seat=seat; glob.el.title='Right-click: ash heap · host tools'; }   // v2.6.28 (Johan): the opponent GLOBE itself joins the .matpool delegate — ash heap + the host referee kit (Set/±pool, oust, pass) right where the eye already is
+  if(seat!==mySeat()){ glob.el.classList.add('matpool'); glob.el.dataset.seat=seat; glob.el.title=l4GlobeTitle(glob, name); }   // v2.6.28 (Johan): the opponent GLOBE itself joins the .matpool delegate — ash heap + the host referee kit (Set/±pool, oust, pass) right where the eye already is
   l4Globes.set(seat, glob);
   board.appendChild(el);
   return glob;
 }
 
+function l4FirstGrapheme(s){                                      // v2.6.183: the first user-perceived character (an emoji, a letter with its accent)
+  try{ if(typeof Intl!=='undefined' && Intl.Segmenter){ const it=new Intl.Segmenter(undefined, {granularity:'grapheme'}).segment(s)[Symbol.iterator]().next(); if(!it.done) return it.value.segment; } }catch(_e){}
+  return Array.from(s)[0]||'';
+}
+function l4NameHTML(col, colHex, name){                           // v2.6.183 (Johan): the name in its window -- wraps at 92 px, grows upward, two lines at most (CSS .l4gname)
+  const n=String(name||'?'), f=l4FirstGrapheme(n);
+  return '<span class="l4gname"><span class="l4gnw">'+(col?'<span class="l4gdot" style="background:'+colHex+'"></span>':'')+esc(f)+'</span>'+esc(n.slice(f.length))+'</span>';   // the dot and the first character share a no-wrap span: a break after an inline-block survives even a word joiner, and one long word left the dot alone on the first line
+}
+function l4GlobeTitle(glob, name){                                 // v2.6.183: the globe's tooltip starts with the full name (a long one is cut to two lines on the felt); an opponent's goes on with the right-click hint
+  const n=name||'?';
+  if(glob.mine) return n;
+  return n+'\n'+(glob.off?'Offline \u2014 waiting for them to reconnect. ':'')+'Right-click: ash heap \u00b7 host tools';
+}
 function updateL4GlobeHTML(glob, name, pool){
+  glob.name=name||'?';                                              // v2.6.183: kept for the tooltip (refreshPoolTargetMarks rebuilds it)
   const col=seatColor(glob.seat), colHex=col?col.hex:'#c43b3b';
   const _clan=glob.mine?(typeof activeClan==='function'?activeClan():null):((net.boards[glob.seat]||{}).pub||{}).clan||null;
   if(!glob.el.firstChild){
@@ -8314,9 +8331,10 @@ function updateL4GlobeHTML(glob, name, pool){
     // is safe here since bindHold/wheel/contextmenu are attached by the CALLER right after this returns.
     const _clanImg=_clan?'<img class="clansym-pool" src="'+clanSymUrl(_clan)+'" alt="'+esc(_clan)+'">':'';
     glob.el.innerHTML=
-      '<div class="l4glabel">'+(col?'<span class="l4gdot" style="background:'+colHex+'"></span>':'')+esc(name||'?')+'</div>'+
+      '<div class="l4glabel">'+l4NameHTML(col, colHex, name)+'</div>'+
       '<div class="l4gpool" style="border-color:'+colHex+';'+((conv.poolPlayerColor&&col)?'background:'+poolGradient(colHex):'')+'"><span class="l4gpoolnum">'+pool+'</span>'+_clanImg+l4EdgeMarkHTML()+(glob.mine?'<button class="l4pbtn l4pminus" title="-1 pool">−</button><button class="l4pbtn l4pplus" title="+1 pool">+</button>':'')+'</div>'+
       '<div class="l4gseat">\u{1FA91}\u00a0'+ordinal(glob.seat)+'</div>';   // v2.6.150: the seat chip under the globe
+    glob.el.title=l4GlobeTitle(glob, name);
     return;
   }
   // Subsequent calls (clan/name/pool changed on an EXISTING globe, e.g. refreshClanDisplay/updateL4Opponents):
@@ -8326,7 +8344,8 @@ function updateL4GlobeHTML(glob, name, pool){
   // when updateMyClan()'s call sites went from 1 to 5; wheel/contextmenu are on the persistent glob.el itself
   // so those were never actually affected, only the buttons, which live inside the replaced innerHTML).
   const lbl=glob.el.querySelector('.l4glabel');
-  if(lbl) lbl.innerHTML=(col?'<span class="l4gdot" style="background:'+colHex+'"></span>':'')+esc(name||'?');
+  if(lbl) lbl.innerHTML=l4NameHTML(col, colHex, name);
+  glob.el.title=l4GlobeTitle(glob, name);
   { const sc=glob.el.querySelector('.l4gseat'); if(sc) sc.textContent='\u{1FA91}\u00a0'+ordinal(glob.seat); }   // v2.6.150: the chip under the globe keeps pace (a seat number never changes, but the element is rebuilt by the same path)
   const poolDiv=glob.el.querySelector('.l4gpool');
   if(poolDiv){
@@ -8586,7 +8605,7 @@ function renderL4Globes(){
     else if(_setup){ const so=l4SeatOf(p.seat), sp=l4SeatSpot(so.idx, so.N); glob.x=sp.x; glob.y=sp.y; }   // v2.6.146: the suggested table setup -- every seat starts at its own spot
     else { glob.x=Math.round(cx+R*Math.cos(angle)-32); glob.y=Math.round(cy+R*Math.sin(angle)-32); }   // first render: default circle
     glob.off=(!mine && p.online===false);                           // v2.6.149 (K6): a dropped seat says so on the felt (it said so only in the Table panel and the log)
-    if(glob.off){ glob.el.classList.add('l4goff'); glob.el.title='Offline \u2014 waiting for them to reconnect. Right-click: ash heap \u00b7 host tools'; }
+    if(glob.off){ glob.el.classList.add('l4goff'); glob.el.title=l4GlobeTitle(glob, p.name); }
     placeL4Globe(glob);
   });
   // Pulsing hint for first-time positioning (only until the user drags their globe once)
@@ -8652,7 +8671,9 @@ function l4EdgeSpot(){                                             // v2.6.181 (
   const k=L4_TOKEN_S, ts=TOKEN_DEFS.edge.size*k, T=pubBox();         // globe and token both draw at l2pub.s*L4_TOKEN_S: in pub units each is its CSS size times k
   const gw=((g.el && g.el.offsetWidth)||64)*k, gh=((g.el && g.el.offsetHeight)||100)*k;   // the whole globe: name, circle, seat chip (the harness has no layout: the circle's 64 and a typical 100)
   const x=Math.max(T.x, Math.min(T.x+T.w-ts, g.x+gw/2-ts/2));
-  const up=g.y-ts-2;                                                // the triangle's own foot (9 % of its box) is the rest of the gap
+  const nm=g.el && g.el.querySelector ? g.el.querySelector('.l4gname') : null;
+  const over=Math.max(0, ((nm && nm.offsetHeight)||0)-13)*k;        // v2.6.183: a second name line rises above the globe's top (the slot is 13 px)
+  const up=g.y-over-ts-2;                                           // the triangle's own foot (9 % of its box) is the rest of the gap
   const y=up>=T.y ? up : Math.max(T.y, Math.min(T.y+T.h-ts, g.y+gh+2));
   return {x:Math.round(x), y:Math.round(y)};
 }
