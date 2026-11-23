@@ -24,7 +24,7 @@ The client can seat automated opponents — offline (hot-seat) or online. The bo
 read opponents against). Open **`START-HERE-BOTS.html`** for the player guide: what the bots know, the three
 experience levels (Novice / Experienced / Expert), how to seat them and how a bot plays at your table.
 
-Current bot: **v0.6.198** (12 Oct 2026), built against client v2.6.141 / server srv-2.6.43.
+`START-HERE-BOTS.html` names the bot's current version.
 
 ## Repository layout
 
@@ -38,3 +38,28 @@ This repository is a monorepo for two sister projects that only consume each oth
 
 `CLAUDE.md` at the root states the one rule (each half never edits the other's files; deploy = copy to the root).
 Developers start in `bot/CLAUDE.md` or `client/CLAUDE.md`.
+
+## License
+
+The code and documentation in this repository are licensed under the [MIT License](LICENSE), Copyright (c) 2026 DTAgent2000.
+
+The MIT License covers what this project wrote. It does not cover:
+
+- **The game.** Vampire: The Eternal Struggle, its card names, texts and images, and the World of Darkness belong to Paradox Interactive AB. Elysium is an unofficial, non-commercial fan project under Paradox's [Dark Pack agreement](https://www.paradoxinteractive.com/games/world-of-darkness/community/dark-pack-agreement). It is not affiliated with, endorsed by, or sponsored by Paradox Interactive AB or Black Chantry Productions.
+- **Data taken from other sources, where the repository carries it.**
+  - `elysium-cardfx.json` / `.js` hold the cards' names, types, costs and requirements and the crypt's clans, disciplines and capacities, taken from KRCG's card data, beside this project's own effect tags.
+  - The bots' decks (in `elysium-bot.js` and `bot/deck-*.json`) are lists of the game's cards.
+  - `elysium-twd-profile.*` and `elysium-twd-archetypes.*` are statistics over VEKN's Tournament Winning Deck Archive (through KRCG), with vtes-skill's classification.
+
+  The raw files (the card data, the deck archive, the card images) are never committed here: the client and the tools fetch them from their sources.
+
+Portions of the materials are the copyrights and trademarks of Paradox Interactive AB, and are used with permission. All rights reserved. For more information please visit [worldofdarkness.com](https://www.worldofdarkness.com).
+
+## Credits
+
+- **KRCG** ([static.krcg.org](https://static.krcg.org)): the card data and card images the client loads, the card data the bots' effect library is compiled from, and the dump of the Tournament Winning Deck Archive behind the bots' tournament prior. With thanks.
+- **VDB** ([vdb.im](https://vdb.im)): deck building, and the deck exports the client reads.
+- **VEKN's Tournament Winning Deck Archive**: the decks the bots' tournament prior is counted from.
+- **vtes-skill** ([vtes-biased/vtes-skill](https://github.com/vtes-biased/vtes-skill), MIT): its archetype classification is in `elysium-twd-archetypes.json`.
+- **vtes-rulings** ([vtes-biased/vtes-rulings](https://github.com/vtes-biased/vtes-rulings), MIT): read for the bots' card sweep.
+- **zero-vtes** ([lionel-panhaleux/zero-vtes](https://github.com/lionel-panhaleux/zero-vtes), MIT, Copyright (c) 2026 Lionel Panhaleux): a development-time reference for the bots' card readings. Nothing of it is committed or runs.

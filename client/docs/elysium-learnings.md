@@ -4,6 +4,12 @@
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
 
+**23 Nov 2026, late night (THE LICENCE — no client release):**
+- **A repository's own file is a root-only file, and a root-only file gets a check of its own.** The twin rule skips
+  `ROOT_ONLY`, so a `LICENSE` that vanished or changed holder would pass it silently; `check-versions.js` now has a row that
+  is red when the licence is missing or is not the one Johan chose. Whatever a list exempts from a gate needs its own
+  assertion, or the exemption is a hole.
+
 **23 Nov 2026, night (THE NAME STACKS UP — v2.6.183):**
 - **A word joiner does not glue an inline-block.** Chrome keeps a line break after an atomic inline (the colour dot) even
   with U+2060 after it, so one long word left the dot alone on the first line. What holds: a `white-space:nowrap` span

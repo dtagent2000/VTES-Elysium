@@ -575,7 +575,9 @@ A human at the same screen reads the one shared log, so nothing is sent to a hum
 
 ## 13. Licensing note
 
-The protocol and Elysium's code are Johan's to open as he wishes. **Card images, card data and VTES
-IP are NOT part of this contract** — they come from KRCG under Paradox Interactive's Dark Pack terms
-(free, non-commercial, attribution + legal text required). A third-party deployment must carry its
-own Dark Pack compliance.
+The protocol and Elysium's code are open under the **MIT License** (`LICENSE` at the repository root,
+Copyright (c) 2026 DTAgent2000; since 23 Nov 2026). **Card images, card data and VTES IP are NOT part
+of this contract, nor of that grant** — they come from KRCG under Paradox Interactive's Dark Pack terms
+(free, non-commercial, attribution + legal text required). The same goes for the card data and the
+deck statistics inside the bot bundle; the root `README.md` ("License") lists what the MIT grant does
+not cover. A third-party deployment must carry its own Dark Pack compliance.

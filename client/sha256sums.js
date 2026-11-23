@@ -13,7 +13,8 @@
        shasum -a 256 -c client/SHA256SUMS      (macOS)
 
    Which files: every regular file at the root that is OURS -- not the
-   root's own CLAUDE.md / README.md, not a dotfile, and not the bot bundle.
+   root's own CLAUDE.md / README.md / LICENSE, not a dotfile, and not the
+   bot bundle.
    The bundle is the bot project's release: it changes with their merges,
    which our gates never see run, so listing it here would turn our CI red
    the day after each bot release (the 6 Nov lesson, 'TWENTY-ONE SECONDS').
@@ -30,7 +31,7 @@
    ============================================================ */
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 
-const ROOT_ONLY = new Set(['CLAUDE.md', 'README.md']);
+const ROOT_ONLY = new Set(['CLAUDE.md', 'README.md', 'LICENSE']);   // the same three as check-versions.js (it asserts the two lists agree); LICENSE since 23 Nov 2026
 const BOT_BUNDLE = new Set(['elysium-bot.js', 'elysium-cardfx.json', 'elysium-cardfx.js', 'elysium-twd-profile.json', 'elysium-twd-profile.js',
                             'elysium-twd-archetypes.json', 'elysium-twd-archetypes.js', 'START-HERE-BOTS.html']);   // the same eight as check-versions.js (it asserts the two lists agree)
 

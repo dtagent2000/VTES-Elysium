@@ -1,3 +1,30 @@
+## [LICENSEN] (23 november 2026, sent på natten, ingen klientrelease: klient v2.6.183 / srv-2.6.51)
+
+Johan 23.24: "Perfekt! Orkar du ta MIT-licensfilen också?" Det gäller bottprojektets handoff från 20 november. Johan hade
+redan bestämt MIT (18 november) och att DTAgent2000 står som innehavare (20 november).
+
+**Filen.** `LICENSE` ligger i roten och är byte för byte blocket i handoffen: standardtexten för MIT, "Copyright (c) 2026
+DTAgent2000". Det är också samma MIT-text som i zero-vtes, med en annan innehavare. Bottsidan hade mätt att en ensam fil i
+roten gör `check-versions.js` röd, eftersom roten ska vara en kopia av releaserna. Jag reproducerade det och valde det andra
+av deras två sätt: `LICENSE` blir en av rotens egna filer, bredvid `CLAUDE.md` och `README.md`, i båda listorna
+(`check-versions.js` och `sha256sums.js`). Licensen hör till hela repot och är ingen av våra releasefiler. `check-versions.js`
+fick också en rad som är röd om filen saknas eller inte är MIT med DTAgent2000. Jag provade det destruktivt: utan fil blir
+den röd, med en annan innehavare röd och med CRLF grön. Arbetsflödet för klientgrindarna körs nu också när `LICENSE` ändras.
+
+**README.** Raden "Current bot: v0.6.198" var inaktuell. Nu hänvisar den till `START-HERE-BOTS.html`, som visar
+bottversionen. Avsnittet "License" är byggt som i zero-vtes README, som jag läste via en grund klon eftersom sidan var
+rate-limitad. Först MIT med länk, sedan vad MIT inte täcker: själva spelet, som hör till Paradox och används under Dark
+Pack, och data från andra källor som repot bär. Det är cardfx-fälten från KRCG, bottarnas lekar och TWD-statistiken.
+Sist kommer Paradox-texten, med samma ordalydelse som About-dialogen. Ett avsnitt "Credits" listar KRCG, VDB, VEKN:s TWDA,
+vtes-skill, vtes-rulings och zero-vtes. De tre GitHub-länkarna kontrollerade jag med `git ls-remote`.
+
+**Protokollet.** §13 säger nu att protokollet och koden är öppna under MIT, och att kortdata och IP står utanför. För
+listan hänvisar det till README.
+
+**Svar till botten:** `docs/handoffs/REPLY-to-bot-2026-11-23-licence.md`. Johan ska läsa listan över vad MIT inte täcker,
+eftersom ingen av oss är jurist och handoffen lämnar formuleringen till honom. Två av bottarnas handoffs är fortfarande
+öppna: §12-posten och kanariefågelns högljudda skip.
+
 ## [NAMNET STAPLAS] (23 november 2026, natt, klient v2.6.183 / srv-2.6.51 oförändrad)
 
 Johan 22.26: "Jag tänker att låååånga namn kanske istället får staplas inom ett fönster som radbryter texten istället för att
