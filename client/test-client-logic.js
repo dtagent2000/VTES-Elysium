@@ -4097,7 +4097,7 @@ test('v2.6.148: arriving at a running game -- a watcher is "watching" only once 
   assert(html.indexOf("$('#empty').style.display = (state.cards.size || _watching) ? 'none' : 'grid';") > 0, 'the welcome layer');
   assert(html.indexOf("if(was!=='re') mpLandAtTable();") > 0, 'joined goes to the table -- but an automatic reconnect keeps the view the player had');
   assert(/if\(!net\.spect\) schedulePush\(\);\n    mpLandAtTable\(\);/.test(html), 'started takes a spectator along too');
-  assert(html.indexOf("function goHome(){ switchView(mpWatching() ? mpLandView() : baseView());") > 0, 'Esc / Home lead a watcher to the same place');
+  assert(html.indexOf("function goHome(){ camGo(mpWatching() ? mpLandView() : baseView());") > 0, 'Esc / Home lead a watcher to the same place (v2.6.180: through camGo, which pans only a seat move)');
   assert(html.indexOf("if(typeof v==='number' && net.view!=='l2') switchView(baseView());") > 0, 'a seat visit is entered through the home frame (from the start view it drew bare felt)');
   assert(html.indexOf("if(shownModal()==='mpModal') closeOverlay();") > 0, 'and the Join dialog closes');
 });
@@ -6589,6 +6589,156 @@ test('v2.6.179 in a seat visit the bot badge and its play button stand ABOVE the
   eq(num(vis, 'right'), num(back, 'right'), 'right-aligned with the Home button');
   assert(/z-index:60/.test(html.slice(html.indexOf("el.id='hotBotBtn'"), html.indexOf("el.id='hotBotBtn'") + 600)), 'the badge elsewhere keeps its own place (z 60, top 74, right 14)');
   assert(/!important/.test(vis), 'the rule wins over the badge\'s inline style');
+});
+
+/* ---------- v2.6.180: the hand counter, the camera pans, the helicopter view holds (Johan, 23 Nov 2026) ---------- */
+test('v2.6.180 the hand counter follows max hand size at once -- the wheel, the menu\'s +1 / -1 and Reset all repaint it (Johan: scrolling the counter seemed to do nothing, then it read 8/4 -- the wheel called renderHand(), a no-op stub since v2.5.11, the menu called nothing, and only the next layout() showed the max that had moved)', () => {
+  const A = loadClient(CLIENT), D = A.__doc;
+  const cnt = { textContent: '' }, zh = { title: '' };
+  D._ids['cnt-hand'] = cnt; D._ids['z-hand'] = zh;
+  A.clearTable({}); A.state.maxHand = 7;
+  for (let i = 0; i < 7; i++) A.move(A.makeCard('Card ' + i, 'lib'), 'hand', {});
+  eq(cnt.textContent, '7/7', 'layout() paints it (both versions)');
+  cnt.textContent = ''; zh.title = '';
+  A.adjustMaxHand(-1);
+  eq(cnt.textContent, '7/6', 'a step down shows at once (v2.6.179: nothing until the next layout)');
+  assert(zh.title.indexOf('7/6') > 0 && /scroll to adjust max hand size/.test(zh.title), 'the hover text follows too: ' + zh.title);
+  A.adjustMaxHand(-1); A.adjustMaxHand(-1); A.adjustMaxHand(-1);
+  eq(cnt.textContent, '7/3', 'three more steps down: what Johan scrolled into without seeing it');
+  A.adjustMaxHand(1); eq(cnt.textContent, '7/4');
+  A.state.maxHand = 1; cnt.textContent = ''; A.adjustMaxHand(-1);
+  eq(cnt.textContent, '7/1', 'at the floor nothing changes, and the counter is still painted');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const wh = html.slice(html.indexOf("$('#z-hand').addEventListener('wheel'"), html.indexOf("$('#z-library').addEventListener('contextmenu'"));
+  assert(wh.indexOf('adjustMaxHand(') > 0 && !/\brenderHand\(\);/.test(wh), 'the wheel leaves the counter to adjustMaxHand (the no-op renderHand() call is gone)');
+  assert(/Max hand size reset to <b>7<\/b>\.'\); saveDirty=true; \} renderHandCount\(\); \}/.test(html), 'Reset to 7 repaints it, changed or not');
+  const lay = html.slice(html.indexOf('function layout(){'), html.indexOf('function renderPileGhost(z){'));
+  assert(lay.indexOf('renderHandCount();') > 0 && lay.indexOf("$('#cnt-hand').textContent") < 0, 'layout() uses the same painter: one place writes the counter');
+});
+test('v2.6.180 the camera\'s two pure deciders: camBlocked -- a seat move pans only with View Transitions and when nothing would be covered or frozen by the moving table (each rung alone); camDir -- the shorter way round the table, a tie goes on, +1 = the next seat (the right arrow\'s way) comes in from the right', () => {
+  const A = loadClient(CLIENT);
+  assert(typeof A.camBlocked === 'function' && typeof A.camDir === 'function', 'the deciders exist');
+  const ok = { api: true, inside: false, hidden: false, reduce: false, modal: false, menu: false, drag: false, tut: false, classic: false };
+  eq(A.camBlocked(ok), '', 'all clear: it pans');
+  assert(A.camBlocked(Object.assign({}, ok, { api: false })) !== '', 'no View Transitions in the browser: the switch happens at once');
+  for (const k of ['inside', 'hidden', 'reduce', 'modal', 'menu', 'drag', 'tut', 'classic'])
+    assert(A.camBlocked(Object.assign({}, ok, { [k]: true })) !== '', k + ' alone blocks the pan');
+  eq(A.camWhy(), A.camBlocked(Object.assign({}, ok, { api: false })), 'the live reading under the harness: no API, nothing else');
+  const s3 = [1, 2, 3], s4 = [1, 2, 3, 4];
+  eq(A.camDir(1, 2, s3), 1, 'to your prey: on'); eq(A.camDir(2, 3, s3), 1); eq(A.camDir(3, 1, s3), 1, 'home after the last bot is the next seat: on');
+  eq(A.camDir(1, 3, s3), -1, 'to your predator: back'); eq(A.camDir(2, 1, s3), -1, 'from your prey home: back');
+  eq(A.camDir(1, 3, s4), 1, 'opposite: a tie goes on'); eq(A.camDir(1, 4, s4), -1); eq(A.camDir(4, 1, s4), 1);
+  eq(A.camDir(1, 9, s3), 1, 'a seat out of play: on'); eq(A.camDir(2, 2, s3), 1, 'no move: on');
+});
+testA('v2.6.180 the bot sweep leaves the helicopter view alone (Johan: in L3 nothing happens when the turn passes, so the zoom stays) -- from L3 no seat is visited and the sweep ends in L3; from L2 the camera visits each bot and comes home; a switch to L3 during a bot\'s turn holds for the rest of the sweep; a table torn down during the last beat gets no camera move (v2.6.179: L3 visited every bot and ended in L2)', async () => {
+  const A = loadClient(CLIENT), HB = A.hotBridge;
+  const run = async (startView, onTurn) => {
+    HB.reset([{ name: 'You' }, { name: 'Two', bot: true }, { name: 'Three', bot: true }]);
+    HB.seats[2] = { name: 'Two', deck: {}, lib: [], crypt: [] }; HB.seats[3] = { name: 'Three', deck: {}, lib: [], crypt: [] };
+    A.net.roster = [{ seat: 1, name: 'You' }, { seat: 2, name: 'Two', bot: true }, { seat: 3, name: 'Three', bot: true }];
+    const pub = { pool: 30, cards: [], counts: { hand: 7, library: 40, crypt: 8 } };
+    A.net.boards = { 2: { who: 'Two', pub }, 3: { who: 'Three', pub } };
+    A.net.you = 'You'; A.net.turnSeat = 1; A.localTable = true; A.net.view = startView;
+    const seen = [];
+    HB.turn = seat => { seen.push(seat + ':' + A.net.view); if (onTurn) onTurn(seat); setTimeout(() => { if (HB.onPass) HB.onPass(seat); }, 0); };
+    const order = await A.hotRunBotTurns(1, 1);
+    return { order: JSON.stringify(order), seen: seen.join(' '), end: String(A.net.view), turn: A.net.turnSeat };
+  };
+  try {
+    const ov = await run('ov');
+    eq(ov.order, '[2,3]', 'both bots play');
+    eq(ov.seen, '2:ov 3:ov', 'each bot\'s turn begins with the player still in the helicopter view');
+    eq(ov.end, 'ov', 'and the sweep ends there (v2.6.179: l2)');
+    eq(ov.turn, 1, 'the human\'s seat is back before pass() writes the next one');
+    const l2 = await run('l2');
+    eq(l2.seen, '2:2 3:3', 'from L2 the camera is on each bot when its turn begins');
+    eq(l2.end, 'l2', 'and comes home');
+    const mid = await run('l2', seat => { if (seat === 2) A.switchView('ov'); });
+    eq(mid.seen, '2:2 3:ov', 'the player zoomed out during the first bot\'s turn: the second bot leaves them there');
+    eq(mid.end, 'ov', 'and the sweep ends in L3');
+    const gone = await (async () => {                                  // the table is left during the beat after the last bot
+      const p = run('l2', seat => { if (seat === 3) setTimeout(() => { HB.seats = {}; A.localTable = false; }, 60); });
+      return p;
+    })();
+    eq(gone.end, '3', 'no camera move after the table went away (the sweep used to switch home onto whatever view came next)');
+  } finally { A.localTable = false; A.net.roster = []; HB.reset([]); }
+});
+testA('v2.6.180 your own seat moves pan (Johan: "even when I switch table view myself, with the arrows or Tab, so I clearly see the view change") -- the arrows, Tab, a seat and Home run the switch INSIDE a View Transition: the next seat comes in from the right, a step back from the left (html.camback); a level change and a move with a dialog open switch at once; without the API nothing pans (v2.6.179: no transition at all)', async () => {
+  const A = loadClient(CLIENT), D = A.__doc;
+  const cls = new Set(), vts = [];
+  const de = { classList: { add: (...c) => c.forEach(x => cls.add(x)), remove: (...c) => c.forEach(x => cls.delete(x)), toggle: (c, on) => { if (on) cls.add(c); else cls.delete(c); return !!on; }, contains: c => cls.has(c) }, style: { setProperty(){} } };
+  const fakeVT = cb => { const rec = { classes: [...cls].sort().join(' '), before: String(A.net.view) }; vts.push(rec); let done;
+    const finished = new Promise(r => { done = r; });
+    setTimeout(() => { cb(); rec.after = String(A.net.view); done(); }, 0);
+    return { finished, ready: Promise.resolve(), updateCallbackDone: Promise.resolve(), skipTransition(){} }; };
+  const tick = () => new Promise(r => setTimeout(r, 15));
+  A.net.roster = [{ seat: 1, name: 'Me' }, { seat: 2, name: 'Astrid' }, { seat: 3, name: 'Bo' }];
+  const pub = { pool: 30, cards: [], counts: { hand: 7, library: 40, crypt: 8 } };
+  A.net.boards = { 2: { who: 'Astrid', pub }, 3: { who: 'Bo', pub } };
+  A.net.you = 'Me'; A.localTable = true; A.net.turnSeat = 3; A.net.view = 'l2';
+  try {
+    A.stepSeat(1); await tick(); eq(A.net.view, 2, 'without View Transitions the arrow still moves the view, at once');
+    eq(vts.length, 0, 'and nothing pans');
+    A.net.view = 'l2';
+    D.documentElement = de; D.startViewTransition = fakeVT;
+    A.stepSeat(1); await tick();
+    eq(vts.length, 1, 'the right arrow: one pan'); eq(vts[0].before, 'l2', 'the switch waits for the browser\'s picture of the old board'); eq(vts[0].after, '2', 'and runs inside the transition');
+    eq(vts[0].classes, 'campan', 'the next seat comes in from the right');
+    A.stepSeat(1); await tick(); eq(vts.length, 2); eq(vts[1].after, '3'); eq(vts[1].classes, 'campan', 'seat to seat: on');
+    A.stepSeat(1); await tick(); eq(vts.length, 3); eq(vts[2].after, 'l2', 'on past the last seat: home'); eq(vts[2].classes, 'campan', 'home is the next seat after 3');
+    A.stepSeat(-1); await tick(); eq(vts[3].after, '3'); eq(vts[3].classes, 'camback campan', 'the left arrow: from the left');
+    A.goHome(); await tick(); eq(vts[4].after, 'l2'); eq(vts[4].classes, 'campan', 'Home from your predator: the shorter way is on');
+    A.toggleActiveHome(); await tick(); eq(vts.length, 6, 'Tab pans'); eq(vts[5].after, '3', 'to the active seat'); eq(vts[5].classes, 'camback campan', 'your predator is one step back');
+    A.toggleActiveHome(); await tick(); eq(vts[6].after, 'l2', 'and Tab again goes home'); eq(vts[6].classes, 'campan');
+    eq(cls.has('campan'), false, 'the class is gone once the transition is over');
+    const n0 = vts.length;
+    A.switchView('ov'); await tick(); eq(vts.length, n0, 'a level change (L2 -> the helicopter view) does not pan');
+    A.jumpSeat(2); await tick(); eq(vts.length, n0, 'nor does a visit from the helicopter view (a level AND a seat change)'); eq(A.net.view, 2);
+    A.goHome(); await tick(); eq(vts.length, n0 + 1, 'from that visit Home is a seat move again');
+    D._ids.overlay = { classList: { contains: c => c === 'show' } }; const qsa = D.querySelectorAll; D.querySelectorAll = sel => sel === '.modal' ? [{ id: 'dialogModal', style: { display: 'flex' } }] : qsa(sel);
+    A.jumpSeat(2); await tick(); eq(vts.length, n0 + 1, 'a dialog is open: no pan (the moving table would be drawn over it)'); eq(A.net.view, 2, 'the switch itself happens');
+    D.querySelectorAll = qsa; delete D._ids.overlay;
+  } finally { delete D.startViewTransition; A.localTable = false; A.net.roster = []; A.net.boards = {}; }
+});
+testA('v2.6.180 a pass in a two-human hotseat keeps the helicopter view (the next player\'s turn starts in L3), and from L2 the hand-off runs inside a pan to the next player\'s table (v2.6.179: the hand-off always went Home, at once)', async () => {
+  const deck = 'Crypt:\n12x Tupdog\nLibrary:\n60x Computer Hacking\n';
+  const A = loadClient(CLIENT), D = A.__doc;
+  A.startHotseat([{ name: 'Ann', deckText: deck }, { name: 'Bo', deckText: deck }], 'structured');
+  eq(A.net.you, 'Ann'); eq(A.net.view, 'l2');
+  A.switchView('ov');
+  await A.passNow();
+  eq(A.net.you, 'Bo', 'the device went to Bo'); eq(A.net.view, 'ov', 'and the view stayed in the helicopter (v2.6.179: l2)');
+  const B = loadClient(CLIENT), E = B.__doc, vts = [];
+  E.documentElement = { classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } }, style: { setProperty(){} } };
+  E.startViewTransition = cb => { const rec = { youBefore: B.net.you }; vts.push(rec); let done; const finished = new Promise(r => { done = r; });
+    setTimeout(() => { cb(); rec.youAfter = B.net.you; done(); }, 0); return { finished, ready: Promise.resolve(), updateCallbackDone: Promise.resolve(), skipTransition(){} }; };
+  B.startHotseat([{ name: 'Ann', deckText: deck }, { name: 'Bo', deckText: deck }], 'structured');
+  await B.passNow();
+  eq(vts.length, 1, 'one pan for the hand-off'); eq(vts[0].youBefore, 'Ann', 'pictured on Ann\'s table'); eq(vts[0].youAfter, 'Bo', 'and Bo\'s table comes in');
+  eq(B.net.view, 'l2');
+  A.leaveHotseat(); B.leaveHotseat();
+});
+test('v2.6.180 the pan\'s CSS: only while html.campan is on, #tableArea is the named, clipped group that slides one table width (next: out left, in from the right; html.camback: the other way); the page root swaps without a fade; the chrome over the table (the bot badge, the Played and Ready tabs, the prey/predator tabs, the pinned hand, the log peek) is named so it is drawn above the moving table', () => {
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const css = html.slice(0, html.indexOf('<script'));
+  assert(/html\.campan #tableArea\{ view-transition-name:elytable; \}/.test(css), '#tableArea is named only during a pan');
+  assert(!/(^|[\s{;])view-transition-name:/m.test(css.replace(/html\.campan #[A-Za-z0-9]+\{ view-transition-name:[a-z]+; \}/g, '')), 'no element carries a view-transition-name outside html.campan');
+  for (const id of ['hotBotBtn', 'playedTab', 'readyTab', 'readyPeek', 'l2preyTab', 'l2predTab', 'ohStrip', 'logPeek'])
+    assert(new RegExp('html\\.campan #' + id + '\\{ view-transition-name:ely[a-z]+; \\}').test(css), id + ' is drawn above the moving table');
+  const names = (css.match(/view-transition-name:([a-z]+)/g) || []).map(x => x.split(':')[1]);
+  eq(new Set(names).size, names.length, 'every name is unique (a duplicate makes the browser skip the transition)');
+  assert(/html\.campan::view-transition-old\(root\), html\.campan::view-transition-new\(root\)\{ animation:none; \}/.test(css), 'the root swaps at once: the side panel and the header stand still');
+  assert(/html\.campan::view-transition-group\(elytable\)\{ overflow:clip;/.test(css), 'the slide is clipped to the table area');
+  assert(/html\.campan::view-transition-old\(elytable\)\{ animation-name:camOutL; \}/.test(css) && /html\.campan::view-transition-new\(elytable\)\{ animation-name:camInR; \}/.test(css), 'on: out left, in from the right');
+  assert(/html\.campan\.camback::view-transition-old\(elytable\)\{ animation-name:camOutR; \}/.test(css) && /html\.campan\.camback::view-transition-new\(elytable\)\{ animation-name:camInL; \}/.test(css), 'back: the mirror');
+  assert(/@keyframes camOutL\{ to\{ transform:translateX\(-100%\); \} \}/.test(css) && /@keyframes camInR\{ from\{ transform:translateX\(100%\); \} \}/.test(css), 'one full table width');
+  const js = html.slice(html.indexOf('function camPan('), html.indexOf('function camGo('));
+  assert(/\[vt\.ready, vt\.updateCallbackDone\]\.forEach\(pr=>\{ if\(pr && pr\.catch\) pr\.catch\(\(\)=>\{\}\); \}\);/.test(js), 'a skipped pan rejects ready and updateCallbackDone: caught, so the crash telemetry never sees them');
+  assert(/Promise\.race\(\[vt\.finished\.then\(\(\)=>true, \(\)=>true\), new Promise\(r=>setTimeout\(\(\)=>r\(true\), dur\*2\+400\)\)\]\)/.test(js), 'the sweep awaits the pan, behind a timer');
+  const sw = html.slice(html.indexOf('async function hotRunBotTurns('), html.indexOf('const HOT_PASS_IDLE_MS='));
+  assert(sw.indexOf("if(!hotBridge.seats[seat]) await new Promise(()=>{});") > 0, 'a table torn down during a pan parks the sweep, as hotAwaitPass does');
+  const pn = html.slice(html.indexOf('async function passNow(){'), html.indexOf('function archiveTurn(){'));
+  assert(pn.indexOf('if(!localTable) return;') > pn.indexOf('await hotRunBotTurns(net.turnSeat, nxt)'), 'no turn, cue or save for a table left during the sweep');
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */
