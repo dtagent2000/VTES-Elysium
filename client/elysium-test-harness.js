@@ -27,6 +27,7 @@ function makeStub() {
      behaviour under every long-settled test. Empty by default, so contains() answers false for
      everything exactly as before; a test seeds it (see loadClient's `__stubEl`) to exercise a
      view-mode branch such as l4on()'s 'l4mode'. */
+  const dims = {};   /* v2.6.181: a TEST-ONLY seed for size reads (clientWidth, getBoundingClientRect, ...), like classList._t below -- empty by default, so every size still reads 0; a test seeds the shared element (__stubEl._dims) for a pan's arithmetic and clears it */
   const classList = { _t:new Set(), add(){}, remove(){}, toggle(){return false;}, contains(c){return this._t.has(c);}, item(){return null;}, get length(){ return this._t.size; }, [Symbol.iterator]: function*(){ yield* this._t; } };   // v2.6.72: iterable (startHotseat's UI chain spreads a classList) -- yields the seeded test set, empty by default
   const stub = new Proxy(f, {
     get(t, p) {
@@ -34,6 +35,8 @@ function makeStub() {
       if (p === Symbol.iterator) return function* () {};
       if (p === 'length') return 0;
       if (typeof p === 'string') {
+        if (p === '_dims') return dims;
+        if (Object.prototype.hasOwnProperty.call(dims, p)) return dims[p];
         if (/(width|Width|height|Height|Top|Left|Right|Bottom|^x$|^y$|scroll|client|offset|page|inner)/.test(p)) return 0;
         if (p === 'style') return makeStub();
         if (p === 'dataset') return {};
@@ -447,7 +450,13 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   adjustMaxHand: (typeof adjustMaxHand!=='undefined'?adjustMaxHand:undefined), renderHandCount: (typeof renderHandCount!=='undefined'?renderHandCount:undefined),   // v2.6.180: the hand counter's one painter
   camBlocked: (typeof camBlocked!=='undefined'?camBlocked:undefined), camWhy: (typeof camWhy!=='undefined'?camWhy:undefined), camDir: (typeof camDir!=='undefined'?camDir:undefined), camSeats: (typeof camSeats!=='undefined'?camSeats:undefined), camSeatOf: (typeof camSeatOf!=='undefined'?camSeatOf:undefined),   // v2.6.180: the camera pans
   camPan: (typeof camPan!=='undefined'?camPan:undefined), camGo: (typeof camGo!=='undefined'?camGo:undefined), jumpSeat: (typeof jumpSeat!=='undefined'?jumpSeat:undefined), goHome: (typeof goHome!=='undefined'?goHome:undefined), stepSeat: (typeof stepSeat!=='undefined'?stepSeat:undefined), passNow: (typeof passNow!=='undefined'?passNow:undefined),
-  get CAM_SWEEP_MS(){ return (typeof CAM_SWEEP_MS!=='undefined')?CAM_SWEEP_MS:undefined; }, get CAM_STEP_MS(){ return (typeof CAM_STEP_MS!=='undefined')?CAM_STEP_MS:undefined; }, get _camUpd(){ return (typeof _camUpd!=='undefined')?_camUpd:undefined; }
+  get CAM_SWEEP_MS(){ return (typeof CAM_SWEEP_MS!=='undefined')?CAM_SWEEP_MS:undefined; }, get CAM_STEP_MS(){ return (typeof CAM_STEP_MS!=='undefined')?CAM_STEP_MS:undefined; }, get _camUpd(){ return (typeof _camUpd!=='undefined')?_camUpd:undefined; },
+  updateL3Timer: (typeof updateL3Timer!=='undefined'?updateL3Timer:undefined), updateL3PanelInfo: (typeof updateL3PanelInfo!=='undefined'?updateL3PanelInfo:undefined), get l3centerOnFelt(){ return (typeof l3centerOnFelt!=='undefined')?l3centerOnFelt:undefined; },   // v2.6.181: L4's Round + clock in the Table panel
+  ensureEdgeToken: (typeof ensureEdgeToken!=='undefined'?ensureEdgeToken:undefined), removeEdgeToken: (typeof removeEdgeToken!=='undefined'?removeEdgeToken:undefined), tokens: (typeof tokens!=='undefined'?tokens:undefined),
+  l4EdgeSpot: (typeof l4EdgeSpot!=='undefined'?l4EdgeSpot:undefined), l4EdgeMarkHTML: (typeof l4EdgeMarkHTML!=='undefined'?l4EdgeMarkHTML:undefined), l4EdgeClick: (typeof l4EdgeClick!=='undefined'?l4EdgeClick:undefined),   // v2.6.181: the Edge on the globe
+  TUT_SECTIONS: (typeof TUT_SECTIONS!=='undefined'?TUT_SECTIONS:undefined), toggleStats: (typeof toggleStats!=='undefined'?toggleStats:undefined), get statsOpen(){ return (typeof statsOpen!=='undefined')?statsOpen:undefined; },
+  midTableBtn: (typeof midTableBtn!=='undefined'?midTableBtn:undefined), midPanStart: (typeof midPanStart!=='undefined'?midPanStart:undefined), midPanMove: (typeof midPanMove!=='undefined'?midPanMove:undefined), midPanEnd: (typeof midPanEnd!=='undefined'?midPanEnd:undefined),   // v2.6.181: the middle button pans
+  get _mpan(){ return (typeof _mpan!=='undefined')?_mpan:undefined; }, get l3pan(){ return (typeof l3pan!=='undefined')?l3pan:undefined; }, set l3pan(v){ l3pan=v; }, get l3zoom(){ return (typeof l3zoom!=='undefined')?l3zoom:undefined; }
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',

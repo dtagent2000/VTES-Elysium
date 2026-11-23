@@ -1,8 +1,30 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.180 / server v2.6.51 / bot v0.6.236 tested beside the suite, last updated 23 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.181 / server v2.6.51 / bot v0.6.236 tested beside the suite, last updated 23 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**23 Nov 2026, evening (THE CENTRE IS A PLAYER'S — v2.6.181):**
+- **A centrepiece belongs to a fixed layout.** The felt's clock and Edge button were placed for the 5-seat pentagon's empty
+  middle (v2.5.47 calibrated it); on the free Classic board the centre is wherever a seat lands, and at three seats it was
+  Bram's. On a board where players place things, nothing of the table's own sits on the felt: it goes to a panel, or to the
+  player's own object (the Edge on the pool globe).
+- **An early return also skips the side duty.** `updateL3Timer` returned when there was no felt timer, and its last line
+  painted the Table panel's row: taking the timer away would have frozen the row. When a function returns early, read what
+  runs after the return, not only what the guard protects.
+- **A flag beside a DOM state drifts the first time someone touches only one of them.** The start screen removed
+  `#statsDock.open` and left `statsOpen` true, so the first TABLE click at every new table 'closed' a closed panel. A
+  toggle reads what is on screen (`!classList.contains('open')`), and the flag follows it.
+- **A chorded button release is a move.** Pointer Events send one pointerdown for the first button and one pointerup for
+  the last; a button pressed or released in between arrives as a pointermove with new `buttons`. A gesture bound to one
+  button reads `buttons` on every move (`!(buttons & 4)` ends the middle-button pan), or it outlives its button.
+- **Document capture stops the closers too.** A pan that must win over every element under the pointer listens on
+  document in the capture phase and stops propagation -- which also stops the bubble-phase 'any press closes this'
+  listeners (the menu, the pinned preview, the counter stepper). Run them yourself, or the menu stays open over a moving
+  table.
+- **A harness that reads 0 for every size clamps every pan to 0.** `clampL3Pan` bounds the pan by the board's size, so in
+  the stub no pan arithmetic was visible. The stub's shared element has an opt-in size seed (`__stubEl._dims`); a test
+  seeds it, runs, and clears it in `finally`.
 
 **23 Nov 2026 (THE CAMERA PANS — v2.6.180):**
 - **A no-op stub keeps its callers' expectations alive.** `renderHand()` was parked as a stub so 'live refresh paths still

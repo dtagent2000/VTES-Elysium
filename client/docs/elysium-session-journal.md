@@ -1,3 +1,64 @@
+## [MITTEN ÄR EN SPELARES] (23 november 2026, kväll, klient v2.6.181 / srv-2.6.51 oförändrad)
+
+Johan skickade 14.54, i samma meddelande som kameran, ett skärmklipp från öppna bordet (L4): tre platser, 1909×949, och
+mitt på filten låg rundräknaren, matchklockan och Edge-knappen, rakt ovanför Brams kort. Hans idé var att fästa Edge-ikonen
+vid poolgloben även i den här vyn och flytta rundräknaren och timern till Table-fliken. Jag mätte och föreslog, och 18.21
+svarade han: "1. Bra i panelen 2. Den kan placeras ovanför spelarens glob på brädet om det går". Han lade också till en ny
+sak: enkelklick och håll med mittknappen ska dra runt vyn, oavsett vilket element musen står över.
+
+**Mitten av filten.** I L4 ligger inget i mitten längre. `renderL4` sätter `l3centerOnFelt=false` och bygger ingen
+`#l3timer`, så runda och klocka står i Table-panelens översta rad, `#statsL3Info`, som helikoptern redan gör vid tre, fyra
+och sex platser. `updateL3Timer` returnerade tidigt när det inte fanns någon filttimer, och då hade raden aldrig målats om i
+L4. Nu målar den raden i båda fallen. `#edge` göms i L4 genom samma `!l3centerOnFelt` som vid andra platsantal än fem.
+
+**Edge på globen.** Ordet EDGE från v2.6.151, som satt uppe till höger och hamnade under långa namn, är nu VTES-symbolen i
+en liten rund knapp på globens nedre högra skuldra. På din egen glob är det Edge-knappen i L4. Den syns alltid, är matt
+tills du har Edge och tänd medan du har den, och du trycker på den eller på E. Den lyser även när din token ligger ute,
+eftersom den är kontrollen, precis som `#edge`. En annan spelares glob tänder samma ikon när den spelaren har Edge utan en
+egen token på filten; det är v2.6.151:s regel, och den står kvar. Ett tryck på knappen drar inte globen: dragningen tar
+pekaren, och klicket hade då landat på globen. Ctrl- eller Shift-klick på knappen räknas inte som poolens. Tutorialens
+Edge-steg pekar på knappen i L4.
+
+**Token ovanför globen.** När du tar Edge i L4 läggs token ovanför din glob, centrerad över cirkeln (`l4EdgeSpot`). Glob
+och token ritas båda i `l2pub.s*L4_TOKEN_S`, så i pub-enheter är var och en sin CSS-storlek gånger 0,7. Sitter globen vid
+överkanten, som översta raden i det föreslagna bordet, finns ingen plats ovanför, och då hamnar token under sitsbrickan.
+Vid sidorna hålls den inne på bordet. En position som följer med Edge, ett släpp på din matta eller ett sparat bord,
+vinner som förut. Token följer inte med om du flyttar globen efteråt.
+
+**Mittknappen.** Tryck ned hjulet och håll, så följer vyn musen i helikoptern och i Classic, över ett kort, en glob, en
+token, docken eller filten. Lyssnaren sitter på document i capture-fasen, så inget under pekaren ser trycket eller
+släppet. Det som ett tryck annars stänger, menyn, en fäst förhandsvisning och räknarstegaren, stängs här, eftersom deras
+stängare lyssnar senare. Panoreringen slutar när mittknappen släpper. `buttons` läses vid varje rörelse, för håller man
+en annan knapp kvar blir mittknappens släpp en rörelse och inte en pointerup. Webbläsarens egen mittknapp (autoscroll i
+Windows, inklistring i Linux) nekas över bordet i de två vyerna, medan panelerna bredvid behåller sin. L2, ett besök, ett
+finger och de andra knapparna lämnas ifred. Filtdraget finns kvar (L3: bar filt, L4: dubbelklick och håll), och ?-listan
+och två tutorials nämner mittknappen.
+
+**Funnet på vägen.** Första klicket på TABLE-fliken vid ett nytt bord gjorde ingenting. Startskärmen stänger panelen utan
+att säga det till `statsOpen`, så första klicket "stängde" en stängd panel och först det andra öppnade den. Nu läser
+`toggleStats` det som syns. Det spelar roll nu när rundan bor i panelen.
+
+**Testerna.** Fem nya: filtens mitt, Edge på globerna, tokenplatsen, mittknappen och TABLE-klicket. v2.6.151-nålen läser
+ikonen. Harnessen har fått ett frivilligt storleksfrö, `__stubEl._dims`, så att panoreringens aritmetik kan testas. Sviten
+står på 395/0 med bot v0.6.236 bredvid, och v2.6.180 mot den nya sviten blir 389/6: de fem nya och v2.6.151-nålen.
+Sjutton mutanter, alla fångade; den sjuttonde först sedan testet fått en rörelse innan vyn lämnas. Kanariefågeln 235/0,
+dispatch 95/0, endpoint 36/0, protokollet 6/0, soakens kontroll slog till och batteriet (7 bord, 80 drag, 0 fast), båda
+inbäddningskontrollerna, B1 byte-identisk och check-versions grön.
+
+**Kört i Chromium, 28 av 28.** L4 vid 1909×949 och tre platser: ingen `#l3timer`, `#edge` syns inte, och panelraden säger
+"Round 1 · Turn 1". Ett verkligt klick på globknappen tar Edge, tänder den och lägger token under den översta radens glob,
+centrerad. En annan plats med Edge och utan token visar den tända ikonen, och ett andra klick släpper. Ett verkligt
+mittknappsdrag över ett kryptkort panorerar 150/70 utan att kortet rör sig, och markören är "grabbing". Över globen
+panorerar det också, med globen och poolen orörda. Från TABLE-fliken händer ingenting, och filtens dubbelklick-och-håll
+panorerar fortfarande. I L3 panorerar ett drag över ett mattkort, och i L2 lämnas trycket ifred. Samma sak vid 1280×720 och
+1500×900 med fyra och fem platser. Med touch-emulering ligger knappen under plusknappen med en pixels marginal, och ett tryck
+tar Edge. v2.6.180 faller på samma skript redan vid de första sex kontrollerna.
+
+**Sett men inte ändrat.** I det föreslagna bordet gör ett långt namn globen bredare, och cirkeln, som centreras under
+namnet, glider in över första kryptkortet. Det är äldre än den här releasen, eftersom sitsplatserna räknar med en glob på 64
+px, och Edge-knappen följer med cirkeln. **Inte kört:** autoscroll i Windows (Linux Chromium har ingen att neka), Firefox,
+Safari, en riktig pekskärm och elysium.cards.
+
 ## [KAMERAN PANORERAR] (23 november 2026, klient v2.6.180 / srv-2.6.51 oförändrad)
 
 Johan, 14.22, tre saker. Att scrolla på korträknaren i bottenpanelen verkade inte längre ändra handstorleken, och när han

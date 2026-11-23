@@ -1170,8 +1170,12 @@ body.inl4.l3zoomopen #l3zoomCtl{ display:flex; }
 .l4globe .l4gdot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; vertical-align:middle; box-shadow:inset 0 0 0 1px rgba(255,255,255,.25), 0 0 4px rgba(0,0,0,.5); }
 .l4globe .l4gpool{ width:64px; height:64px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #b83030, #8a1e1e 55%, #5c1010); border:2.5px solid; display:flex; align-items:center; justify-content:center; margin:0 auto; box-shadow:0 4px 12px rgba(0,0,0,.5), inset 0 2px 6px rgba(255,255,255,.10), inset 0 -4px 8px rgba(0,0,0,.45); cursor:default; position:relative; }
 .l4globe-mine .l4gpool{ cursor:grab; }
-.l4globe .l4gedge{ display:none; position:absolute; top:-6px; right:-10px; padding:1px 5px; border-radius:7px; background:#4a0a0e; border:1px solid #d6a868; color:#f3dcc0; font:700 8px/1.3 "Cinzel",serif; letter-spacing:.1em; box-shadow:0 1px 4px rgba(0,0,0,.6); pointer-events:none; z-index:3; }
-.l4globe.l4gedgeon .l4gedge{ display:block; }   /* v2.6.151: a seat holding the Edge says so on its globe when no Edge token of its own lies on the felt (a bot's pub carries edge:true and no token) */
+.l4globe .l4gedge{ display:none; position:absolute; right:-12px; bottom:-8px; width:24px; height:24px; border-radius:50%; border:1px solid var(--brass2); background:#1a140c; color:var(--bone); align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,.65); pointer-events:none; z-index:3; transition:background .25s, border-color .25s, box-shadow .25s; }   /* v2.6.181 (Johan): the Edge ICON at the globe's lower right shoulder (v2.6.151: the word EDGE, top right, under a long name) -- on your own globe it IS the Edge button in L4, where the felt's #edge is gone (the centre of the felt is a player's) */
+.l4globe .l4gedge svg{ display:block; width:14px; height:14px; margin-bottom:1px; opacity:.55; }   /* the VTES symbol, as #edge draws it */
+.l4globe-mine .l4gedge{ display:flex; pointer-events:auto; cursor:pointer; }   /* yours: always there, dim until you hold the Edge -- a click takes or releases it (E does too) */
+.l4globe-mine .l4gedge:hover{ border-color:var(--brass); }
+.l4globe.l4gedgeon .l4gedge{ display:flex; background:radial-gradient(circle at 50% 20%, #6b1a20, #2c0a0c); border-color:var(--brass); box-shadow:0 0 12px rgba(156,31,38,.6); }   /* v2.6.151: a seat holding the Edge says so on its globe when no Edge token of its own lies on the felt (a bot's pub carries edge:true and no token); v2.6.181: yours is lit whenever you hold it, as #edge is */
+.l4globe.l4gedgeon .l4gedge svg{ opacity:.95; }
 .l4globe.l4goff .l4gpool{ filter:grayscale(.85) brightness(.6); }   /* v2.6.149 (K6): a seat that has dropped off says so on the felt, where the eye is */
 .l4globe.l4goff::after{ content:'offline'; display:block; margin-top:3px; font:italic 600 13px "Spectral",Georgia,serif; color:#f0a48c; text-shadow:0 2px 4px #000; pointer-events:none; }
 .l4globe .l4gpoolnum{ font:700 24px "Cinzel",serif; color:#f3ece0; text-shadow:0 2px 4px rgba(0,0,0,.6); line-height:1; transform:translateY(0.04em); position:relative; z-index:2; }
@@ -1234,7 +1238,7 @@ body.inov.l3zoomopen #l3zoomCtl{ display:flex; }   /* open — position set by J
 #l1zoomCtl button:hover{ background:#36290f; }
 #l1zoomSlider{ width:94px; accent-color:var(--brass); cursor:pointer; }
 #l1zoomVal{ min-width:38px; text-align:center; letter-spacing:.03em; color:rgba(232,217,184,.85); }
-#board.l3panning{ cursor:grabbing; }
+#board.l3panning, #board.l3panning *{ cursor:grabbing !important; }   /* v2.6.181: the hand stays closed over whatever passes under it -- the middle button pans from over cards and globes, and they have cursors of their own */
 #board.l3mode #l3table{ cursor:grab; }
 .l3timer{ position:absolute; transform:translate(-50%,-50%); z-index:1; pointer-events:none; text-align:center;
   color:rgba(232,201,143,.78); font:600 13px "Spectral", Georgia, serif; text-shadow:0 1px 3px #000; }
@@ -1569,6 +1573,7 @@ body.touchui .blueb, body.touchui .greenb{ transform:scale(1.3); }
   .pbtn,#dockPool .pbtn,.l4globe-mine .l4pbtn{ opacity:1; }                     /* the hover-reveal can't fire on touch */
   .pbtn,#dockPool .pbtn{ transform:translateY(-50%) scale(1.3); }              /* scale in place: grows visual AND hit box without touching left/right offsets */
   .l4globe-mine .l4pbtn{ transform:translateY(-50%) scale(1.4); }
+  .l4globe-mine .l4gedge{ transform:translate(3px,4px) scale(1.25); }        /* v2.6.181: the globe's Edge button -- grown, and a step clear of the grown + above it */
   .keychip{ min-height:36px; }
   .btn:active,.mi:active{ background:#2c2010; }                                /* tactile feedback replacing :hover */
 }
@@ -1757,7 +1762,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     </div>
   </aside>
 
-  <div id="tableArea"><div id="l1zoomWrap"><div id="l1zoomCtl" aria-label="Board zoom"><button id="l1zoomMinus" title="Zoom out">−</button><input id="l1zoomSlider" type="range" min="0.45" max="1" step="0.01" value="1"><button id="l1zoomPlus" title="Zoom in (fit)">+</button><span id="l1zoomVal">100%</span><button id="l1zoomReset" title="Fit to window">⛶</button></div><button id="edgeChrome" title="The Edge — grants +1 pool at Unlock" aria-label="The Edge" hidden></button><button id="l3resetBtn" title="Reset view" aria-label="Reset view" hidden>⛶</button><button id="l1zoomToggle" title="Zoom" aria-label="Toggle zoom"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="10" y1="10" x2="14" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button id="helpToggle" title="Controls & help" aria-label="Help">?</button></div><div id="helpOverlay" hidden><div class="helpHd">Controls<button id="helpClose" aria-label="Close" title="Close">×</button></div><div class="helpBody"><kbd>Drag</kbd> move · <kbd>Double-click</kbd> lock · <kbd>Right-click</kbd> menu<br><kbd>Click</kbd> select / set active minion · <kbd>Drag on felt</kbd> box-select (<kbd>Shift</kbd> adds)<br><kbd>Scroll</kbd> on a card · <kbd>Ctrl+click</kbd> +1 · <kbd>Shift+click</kbd> −1 &mdash; adjust the token under the pointer (blood / blue / green) · <kbd>+/−</kbd> adjust blood on the selected card (or pool if none selected)<br><kbd>D</kbd> draw · <kbd>Ctrl+click library</kbd> undo last draw<br><kbd>Ctrl</kbd> (panel hidden) preview the card at the pointer<br><kbd>Touch</kbd> long-press = menu · pinch = zoom · drag felt = pan (L4) · tap ± / badges = counters</div><div id="helpActionFlow" hidden style="margin-top:9px;border-top:1px solid #2a2216;padding-top:8px;font:12px 'Spectral',Georgia,serif;line-height:1.7;color:#7a7058"><span style="color:var(--brass2);font:600 9px 'Cinzel',serif;letter-spacing:.25em;text-transform:uppercase">Played tab · Action flow — what closes the batch</span><br>Bleed · Hunt · Rescue · Diablerie · Card action<br>&#128172; “It resolves” quick phrase · a <b>Vote/Combat Resolve</b><br>New action card played (card DB on)<br>Phase advance &mdash; all batches<br><span style="color:#4a4238">Block · other phrases: do NOT close the batch</span></div></div><div id="board">
+  <div id="tableArea"><div id="l1zoomWrap"><div id="l1zoomCtl" aria-label="Board zoom"><button id="l1zoomMinus" title="Zoom out">−</button><input id="l1zoomSlider" type="range" min="0.45" max="1" step="0.01" value="1"><button id="l1zoomPlus" title="Zoom in (fit)">+</button><span id="l1zoomVal">100%</span><button id="l1zoomReset" title="Fit to window">⛶</button></div><button id="edgeChrome" title="The Edge — grants +1 pool at Unlock" aria-label="The Edge" hidden></button><button id="l3resetBtn" title="Reset view" aria-label="Reset view" hidden>⛶</button><button id="l1zoomToggle" title="Zoom" aria-label="Toggle zoom"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="10" y1="10" x2="14" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button id="helpToggle" title="Controls & help" aria-label="Help">?</button></div><div id="helpOverlay" hidden><div class="helpHd">Controls<button id="helpClose" aria-label="Close" title="Close">×</button></div><div class="helpBody"><kbd>Drag</kbd> move · <kbd>Double-click</kbd> lock · <kbd>Right-click</kbd> menu<br><kbd>Click</kbd> select / set active minion · <kbd>Drag on felt</kbd> box-select (<kbd>Shift</kbd> adds)<br><kbd>Scroll</kbd> on a card · <kbd>Ctrl+click</kbd> +1 · <kbd>Shift+click</kbd> −1 &mdash; adjust the token under the pointer (blood / blue / green) · <kbd>+/−</kbd> adjust blood on the selected card (or pool if none selected)<br><kbd>D</kbd> draw · <kbd>Ctrl+click library</kbd> undo last draw<br><kbd>Ctrl</kbd> (panel hidden) preview the card at the pointer<br><kbd>Middle button</kbd> hold + drag = pan the table from anywhere (Helicopter · Classic)<br><kbd>Touch</kbd> long-press = menu · pinch = zoom · drag felt = pan (L4) · tap ± / badges = counters</div><div id="helpActionFlow" hidden style="margin-top:9px;border-top:1px solid #2a2216;padding-top:8px;font:12px 'Spectral',Georgia,serif;line-height:1.7;color:#7a7058"><span style="color:var(--brass2);font:600 9px 'Cinzel',serif;letter-spacing:.25em;text-transform:uppercase">Played tab · Action flow — what closes the batch</span><br>Bleed · Hunt · Rescue · Diablerie · Card action<br>&#128172; “It resolves” quick phrase · a <b>Vote/Combat Resolve</b><br>New action card played (card DB on)<br>Phase advance &mdash; all batches<br><span style="color:#4a4238">Block · other phrases: do NOT close the batch</span></div></div><div id="board">
     <div class="zone" id="z-uncontrolled"><span class="zlabel">Uncontrolled</span></div>
     <div class="zone" id="z-torpor"><span class="zlabel">Torpor</span></div>
     <div class="zone" id="z-ready"><span class="zlabel">Ready Region</span></div>
@@ -3322,7 +3327,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.180';   // v2.6.180 (23 Nov 2026, THE CAMERA PANS, pure client -- purge; srv-2.6.51 unchanged, no wire change; bot v0.6.236 beside: Help > Bots embeds its guide): Johan, three things. (1) Scrolling the hand counter in the dock seemed to do nothing, then it read 8/4: the wheel and the menu's +1/-1/Reset changed the max hand size but only layout() drew the counter (the wheel called renderHand(), a no-op stub since v2.5.11), so the max moved in silence -- renderHandCount() is the one painter now. (2) A seat move pans the table area: the browser's View Transitions slide the table one table width while the next board comes in -- the bot sweep (to each bot, between them, home, 0.5 s), your own moves (the arrows, Tab, a seat, Home and Esc, 0.34 s, both times the Animation length setting) and the two-human hand-off; the next seat comes in from the right, a step back from the left. No pan without the API, under reduced motion, with a dialog, menu or drag open, in the tutorial or at a Classic table: the switch then happens at once, as before. (3) A pass never takes you out of the helicopter view: the sweep moves no camera there and ends there, zoom and pan kept, the acting bot's mat takes the turn glow; the two-human hand-off keeps it too.
+const VERSION='2.6.181';   // v2.6.181 (23 Nov 2026, THE CENTRE IS A PLAYER'S, pure client -- purge; srv-2.6.51 unchanged, no wire change; bot v0.6.236 beside, unchanged): Johan, from a three-seat Classic table. (1) The felt's centre held the round label, the match clock and the Edge button -- at some sizes on a player's cards. Nothing sits there in L4 now: Round + clock stand in the Table panel's top row (as the helicopter view does at 3/4/6 seats), and the Edge button rides your pool globe -- the VTES symbol at its lower right, dim until you hold the Edge, lit while you do (click it, or E). Another seat's globe lights the same icon while that seat holds the Edge with no token of its own out (v2.6.151's rule; the icon replaces the word EDGE). (2) Taking the Edge in L4 puts its token above your pool globe, below it when the globe sits at the top edge; a position that comes with the Edge (a drop on your mat, a saved board) still wins. (3) The middle button pans: press the wheel and hold, anywhere on the table -- a card, a globe, the felt -- in the helicopter view and the Classic board; the felt drag stays, and the ? list and two tutorials say so. (4) Found checking (1): the first click on the TABLE tab at a new table did nothing -- the start screen closes the panel without telling its flag -- and it opens now.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -8285,7 +8290,8 @@ function createL4Globe(seat, name, pool, mine){
     el.querySelectorAll('.l4pbtn').forEach(btn=>bindHold(btn, ()=>bumpPool(btn.classList.contains('l4pminus')?-1:1)));   // T2: hold-to-repeat (was a delegated click); globe drag already ignores .l4pbtn targets
     el.addEventListener('wheel',e=>{ e.preventDefault(); e.stopPropagation(); const now=Date.now(); if(now-state.wlast<160) return; state.wlast=now; bumpPool(e.deltaY<0?1:-1); },{passive:false});
     el.addEventListener('contextmenu',e=>{ e.preventDefault(); e.stopPropagation(); showMenu(selfPoolMenuItems(), e.clientX, e.clientY); });
-    bindPoolModClick(el, '.l4pbtn');
+    bindPoolModClick(el, '.l4pbtn,.l4gedge');                       // v2.6.181: a Ctrl/Shift+click on the Edge button is not the pool's
+    { const eb=el.querySelector('.l4gedge'); if(eb) eb.addEventListener('click', l4EdgeClick); }   // v2.6.181 (Johan): THE Edge button in L4 (#edge left the felt's centre)
   } else {
     el.addEventListener('contextmenu',e=>{ e.preventDefault(); e.stopPropagation(); showMenu(oppPoolMenuItems(seat), e.clientX, e.clientY); });
   }
@@ -8304,7 +8310,7 @@ function updateL4GlobeHTML(glob, name, pool){
     const _clanImg=_clan?'<img class="clansym-pool" src="'+clanSymUrl(_clan)+'" alt="'+esc(_clan)+'">':'';
     glob.el.innerHTML=
       '<div class="l4glabel">'+(col?'<span class="l4gdot" style="background:'+colHex+'"></span>':'')+esc(name||'?')+'</div>'+
-      '<div class="l4gpool" style="border-color:'+colHex+';'+((conv.poolPlayerColor&&col)?'background:'+poolGradient(colHex):'')+'"><span class="l4gpoolnum">'+pool+'</span>'+_clanImg+'<span class="l4gedge" title="Holds the Edge">EDGE</span>'+(glob.mine?'<button class="l4pbtn l4pminus" title="-1 pool">−</button><button class="l4pbtn l4pplus" title="+1 pool">+</button>':'')+'</div>'+
+      '<div class="l4gpool" style="border-color:'+colHex+';'+((conv.poolPlayerColor&&col)?'background:'+poolGradient(colHex):'')+'"><span class="l4gpoolnum">'+pool+'</span>'+_clanImg+l4EdgeMarkHTML(glob.mine)+(glob.mine?'<button class="l4pbtn l4pminus" title="-1 pool">−</button><button class="l4pbtn l4pplus" title="+1 pool">+</button>':'')+'</div>'+
       '<div class="l4gseat">\u{1FA91}\u00a0'+ordinal(glob.seat)+'</div>';   // v2.6.150: the seat chip under the globe
     return;
   }
@@ -8323,7 +8329,7 @@ function updateL4GlobeHTML(glob, name, pool){
     poolDiv.style.background=(conv.poolPlayerColor&&col)?poolGradient(colHex):'';
     const pn=poolDiv.querySelector('.l4gpoolnum'); if(pn) pn.textContent=pool;
     poolDiv.querySelectorAll('.clansym-pool').forEach(e=>e.remove());
-    if(!poolDiv.querySelector('.l4gedge')){ const eb=document.createElement('span'); eb.className='l4gedge'; eb.title='Holds the Edge'; eb.textContent='EDGE'; const fb=poolDiv.querySelector('.l4pbtn'); if(fb) poolDiv.insertBefore(eb, fb); else poolDiv.appendChild(eb); }   // v2.6.151: a globe built before this element existed
+    if(!poolDiv.querySelector('.l4gedge')){ const tmp=document.createElement('div'); tmp.innerHTML=l4EdgeMarkHTML(glob.mine); const eb=tmp.firstChild; if(eb){ if(glob.mine) eb.addEventListener('click', l4EdgeClick); const fb=poolDiv.querySelector('.l4pbtn'); if(fb) poolDiv.insertBefore(eb, fb); else poolDiv.appendChild(eb); } }   // v2.6.151: a globe built before this element existed (v2.6.181: the icon, and on yours the button)
     if(_clan){
       const img=document.createElement('img');
       img.className='clansym-pool'; img.alt=_clan; img.title=_clan; img.src=clanSymUrl(_clan);
@@ -8343,11 +8349,15 @@ function placeL4Globe(glob){
 }
 
 function layoutL4Globes(){ l4Globes.forEach(placeL4Globe); }
+function l4EdgeMarkHTML(mine){                                    // v2.6.181 (Johan): the Edge ICON on a pool globe (v2.6.151 wrote the word EDGE) -- on yours it is the Edge button in L4: always there, dim, lit while you hold it
+  return '<div class="l4gedge"'+(mine?' data-tip="The Edge — grants +1 pool at Unlock"':' title="Holds the Edge"')+'>'+vtesSymbol({size:14, noOpacity:true})+'</div>';
+}
+function l4EdgeClick(e){ e.stopPropagation(); toggleEdge(); }      // v2.6.181: your globe's Edge button -- the click stays off the globe (a Ctrl/Shift+click there is the pool's)
 function l4GlobeEdges(){                                           // v2.6.151: the Edge on the globe of the seat that holds it -- unless that seat has an Edge token of its own on the felt (then the token says it)
   const me=mySeat();
   l4Globes.forEach(g=>{
     let on=false;
-    if(g.seat===me) on=!!state.edge && !(conv.edgeToken && tokens.get('edge'));
+    if(g.seat===me) on=!!state.edge;                               // v2.6.181: yours is the BUTTON -- lit whenever you hold the Edge, token or not, as #edge is (it was the mark: off while your token lay out)
     else { const pub=(net.boards[g.seat]||{}).pub; on=!!(pub && pub.edge && !(pub.tokens||[]).some(t=>t && t.type==='edge')); }
     g.el.classList.toggle('l4gedgeon', on);
   });
@@ -8595,7 +8605,7 @@ function bindL4GlobeDrag(glob){
   let gd=null;
   el.addEventListener('pointerdown',e=>{
     if(e.button!==0) return;
-    if(e.target.closest('.l4pbtn')) return;
+    if(e.target.closest('.l4pbtn,.l4gedge')) return;               // v2.6.181: the Edge button is pressed, not dragged (a drag would capture the pointer and the click would land on the globe)
     if(!e.isPrimary||drag||tdrag||pileDrag||mq||giveDrag) return;   // T0c
     const _h=$('#l4hint'); if(_h) _h.remove(); l4hintDone=true;
     e.preventDefault(); e.stopPropagation();
@@ -8633,15 +8643,28 @@ function bindL4GlobeDrag(glob){
 }
 
 /* ----- The Edge, as a token in the family ----- */
+function l4EdgeSpot(){                                             // v2.6.181 (Johan): "ovanför spelarens glob på brädet om det går" -- the free Edge token's first spot in L4, in pub units: centred ABOVE your pool globe; BELOW it when the globe sits at the top edge (the top row of the suggested setup); null without a globe
+  const g=l4Globes.get(mySeat()); if(!g) return null;
+  const k=L4_TOKEN_S, ts=TOKEN_DEFS.edge.size*k, T=pubBox();         // globe and token both draw at l2pub.s*L4_TOKEN_S: in pub units each is its CSS size times k
+  const gw=((g.el && g.el.offsetWidth)||64)*k, gh=((g.el && g.el.offsetHeight)||100)*k;   // the whole globe: name, circle, seat chip (the harness has no layout: the circle's 64 and a typical 100)
+  const x=Math.max(T.x, Math.min(T.x+T.w-ts, g.x+gw/2-ts/2));
+  const up=g.y-ts-2;                                                // the triangle's own foot (9 % of its box) is the rest of the gap
+  const y=up>=T.y ? up : Math.max(T.y, Math.min(T.y+T.h-ts, g.y+gh+2));
+  return {x:Math.round(x), y:Math.round(y)};
+}
 function ensureEdgeToken(){
   if(!conv.edgeToken){ removeToken('edge'); return; }
   let tok=tokens.get('edge');
   if(!tok){
     tok=makeToken('edge');
-    const r=zoneRect('ready'), sz=TOKEN_DEFS.edge.size;
-    const dx=r.x + r.w - sz - 18, dy=r.y + r.h - sz - 18;        // default: lower-right of the Ready region
-    const cc = l2pub.on ? pubInv(dx,dy) : {x:dx,y:dy};
-    tok.x=cc.x; tok.y=cc.y;
+    const at=l4on() ? l4EdgeSpot() : null;                          // v2.6.181: L4 -- by your globe (a position that came with the Edge, a drop or a saved board, is set by the caller after this)
+    if(at){ tok.x=at.x; tok.y=at.y; }
+    else {
+      const r=zoneRect('ready'), sz=TOKEN_DEFS.edge.size;
+      const dx=r.x + r.w - sz - 18, dy=r.y + r.h - sz - 18;      // default: lower-right of the Ready region
+      const cc = l2pub.on ? pubInv(dx,dy) : {x:dx,y:dy};
+      tok.x=cc.x; tok.y=cc.y;
+    }
   }
   tok.z=++state.topZ; placeToken(tok);
   if(typeof l4Globes!=='undefined' && l4Globes.size) l4GlobeEdges();   // v2.6.151: a token on the felt replaces the globe's mark
@@ -8858,7 +8881,7 @@ function applyStatsOpen(){
   $('#statsArrow').textContent=statsOpen?'▾':'▸';
 }
 function toggleStats(){
-  statsOpen=!statsOpen;
+  statsOpen=!$('#statsDock').classList.contains('open');            // v2.6.181: from what is on screen -- the start screen closes the dock without telling statsOpen, so the first click at a new table "closed" a closed panel and did nothing (the panel holds L4's Round + clock now)
   applyStatsOpen();
   try{ localStorage.setItem(STATS_KEY, statsOpen?'1':'0'); }catch(err){}
 }
@@ -15280,20 +15303,22 @@ function l3TimerStrings(){                                        // v2.5.47: sh
   return {clkTxt, turn};
 }
 function updateL3Timer(){
-  const tm=$('#l3timer'); if(!tm) return;
-  tm.hidden=!l3centerOnFelt;                                       // v2.5.47: N!=5 has no calibrated felt hole for this - relocated to the Table panel (updateL3PanelInfo below)
-  if(l3centerOnFelt){
-    const {clkTxt,turn}=l3TimerStrings();
-    tm.innerHTML='<div class="l3clk">'+(clkTxt?esc(clkTxt):'')+'</div><div class="l3turn">'+esc(turn||'')+'</div>';
-    let ts=1;                                                     // normal size when there's room; compress as the centre hole shrinks (zoom-independent — both scale together)
-    if(l3holeR>0){ const dw=tm.offsetWidth||120, dh=tm.offsetHeight||46, diag=Math.hypot(dw,dh)||120; ts=Math.max(0.5, Math.min(1, (2*l3holeR*0.86)/diag)); }
-    tm.style.transform='translate(-50%,-50%) scale('+ts+')';
+  const tm=$('#l3timer');
+  if(tm){                                                          // v2.6.181: L4 has no felt timer at all -- the panel row below is painted either way (this returned early without one)
+    tm.hidden=!l3centerOnFelt;                                     // v2.5.47: N!=5 has no calibrated felt hole for this - relocated to the Table panel (updateL3PanelInfo below)
+    if(l3centerOnFelt){
+      const {clkTxt,turn}=l3TimerStrings();
+      tm.innerHTML='<div class="l3clk">'+(clkTxt?esc(clkTxt):'')+'</div><div class="l3turn">'+esc(turn||'')+'</div>';
+      let ts=1;                                                   // normal size when there's room; compress as the centre hole shrinks (zoom-independent — both scale together)
+      if(l3holeR>0){ const dw=tm.offsetWidth||120, dh=tm.offsetHeight||46, diag=Math.hypot(dw,dh)||120; ts=Math.max(0.5, Math.min(1, (2*l3holeR*0.86)/diag)); }
+      tm.style.transform='translate(-50%,-50%) scale('+ts+')';
+    }
   }
   updateL3PanelInfo();
 }
-function updateL3PanelInfo(){                                     // v2.5.47: Round+Timer, relocated to the top of the Table panel for L3 counts without a calibrated felt hole
+function updateL3PanelInfo(){                                     // v2.5.47: Round+Timer, relocated to the top of the Table panel for L3 counts without a calibrated felt hole -- and v2.6.181: always in L4
   const row=$('#statsL3Info'); if(!row) return;
-  const show=l3on() && !l4on() && !l3centerOnFelt;                 // l4on() belt-and-suspenders: L4's single-board view never wants this even though l3on() is also true there
+  const show=l3on() && (l4on() || !l3centerOnFelt);                // v2.6.181 (Johan): "Bra i panelen" -- L4 shows it here (it said !l4on(): the felt's centre had it)
   row.hidden=!show;
   if(!show) return;
   const {clkTxt,turn}=l3TimerStrings();
@@ -15441,8 +15466,8 @@ function exitL4(){
   layout();
 }
 function renderL4(){
-  l3centerOnFelt=true;                                              // v2.5.47 defensive: L4 is a single-board "helicopter" view with no seat-count squeeze - always keep the felt centerpiece here, regardless of any stale L3 state (l3on() is true during L4 too)
-  // Stage: table background + centre timer (no opponent mats)
+  l3centerOnFelt=false;                                             // v2.6.181 (Johan): nothing on the felt's centre in L4 -- a seat sits there at some table sizes, and the clock and the Edge button sat on that player's cards. Round + clock live in the Table panel's top row (updateL3PanelInfo, as in L3 at 3/4/6 seats), the Edge on your pool globe (l4GlobeEdges). v2.5.47 kept the centrepiece here always
+  // Stage: table background (no opponent mats, no centre timer)
   let stage=$('#l3stage');
   if(!stage){ stage=document.createElement('div'); stage.id='l3stage'; board.appendChild(stage); }
   stage.innerHTML='';
@@ -15450,17 +15475,12 @@ function renderL4(){
   const g=l3geom(), W=g.W, H=g.H;
   // L4: the entire felt IS your board — no slot subdivision
   l3myslot={x:g.ax, y:g.ay, w:g.aw, h:g.ah};
-  l3clockCy=g.ay+g.ah*0.45; l3holeR=0;
+  l3holeR=0;
   // Table background
   const table=document.createElement('div'); table.id='l3table'; table.className='l3table sq';
   table.style.left=g.ax+'px'; table.style.top=g.ay+'px'; table.style.width=g.aw+'px'; table.style.height=g.ah+'px';
   stage.appendChild(table);
-  // Centre timer (match clock + round/turn label) — same rendering as L3
-  const ccx=g.ax+g.aw/2, ccy=l3clockCy;
-  const tm=document.createElement('div'); tm.id='l3timer'; tm.className='l3timer';
-  tm.style.left=ccx+'px'; tm.style.top=ccy+'px';
-  stage.appendChild(tm);
-  updateL3Timer();
+  updateL3Timer();                                                  // v2.6.181: no felt timer -- this paints the Table panel's Round + clock row
   // Apply zoom/pan transform to the stage
   l3applyStageTransform();
   // Set up l2pub + position zones/edge via setCenterFrameA (zone boxes hidden by L4 CSS)
@@ -15532,6 +15552,46 @@ board.addEventListener('pointerdown', e=>{
   const up=ev=>{ if(ev&&ev.pointerId!==pid) return; document.removeEventListener('pointermove',mv); document.removeEventListener('pointerup',up); document.removeEventListener('pointercancel',up); if(raf) cancelAnimationFrame(raf); apply(); board.classList.remove('l3panning'); };
   document.addEventListener('pointermove',mv); document.addEventListener('pointerup',up); document.addEventListener('pointercancel',up);   // T0c hygiene
 });
+/* ---------- v2.6.181 (Johan): THE MIDDLE BUTTON PANS -- press the wheel and hold, anywhere on the table ----------
+   Over a card, a globe, a token, the dock or the felt: the view follows the mouse, in the two views that pan (the
+   helicopter view and the Classic board). The felt drag above stays as it was (L3: bare felt; L4: double-click and
+   hold). Document capture, so nothing under the pointer sees the press or its release; the closers that any press
+   runs (the menu, a pinned preview, the counter stepper) listen later, so this runs them. The pan arithmetic is the
+   felt drag's. It ends when the MIDDLE button lets go: `buttons` is read on every move, because with another button
+   still held, the middle one's release is a move, not a pointerup (a pointerup comes with the last button only).
+   The browser's own middle button (autoscroll on Windows, a paste on Linux) is refused over the table while these
+   views are on; the panels beside it keep theirs. */
+let _mpan=null;
+function midTableBtn(e){ const t=e.target; return e.button===1 && e.pointerType!=='touch' && l3on() && !!t && !!t.closest && !!t.closest('#board') && !t.closest('#empty'); }
+function midPanStart(e){
+  if(!midTableBtn(e)) return;
+  e.preventDefault(); e.stopPropagation();
+  if(_mpan || drag||tdrag||pileDrag||giveDrag||mq) return;        // another gesture owns the pointer: the press is still the table's, but no pan starts
+  hideMenu(); hideCtStepper(); if(_hoverPin){ _hoverPin=false; hideHoverCard(); }
+  const r=board.getBoundingClientRect();
+  _mpan={ pid:e.pointerId, sx:e.clientX, sy:e.clientY, px0:l3pan.x, py0:l3pan.y, bpx:board.clientWidth/(r.width||1), lx:0, ly:0, raf:0 };   // bpx: board px per screen px -- l3pan lives in the design space
+  board.classList.add('l3panning');
+  document.addEventListener('pointermove', midPanMove, true); document.addEventListener('pointerup', midPanEnd, true); document.addEventListener('pointercancel', midPanEnd, true);
+}
+function midPanApply(){ const m=_mpan; if(!m) return; m.raf=0; if(!l3on()) return; l3pan.x=m.px0+m.lx; l3pan.y=m.py0+m.ly; clampL3Pan(); applyL3Transform(); }
+function midPanMove(e){
+  const m=_mpan; if(!m || e.pointerId!==m.pid) return;
+  if(!(e.buttons & 4) || !l3on()){ midPanEnd(); return; }         // the middle button let go while another stayed down -- or the view left the panning levels mid-drag
+  e.stopPropagation();
+  m.lx=(e.clientX-m.sx)*m.bpx; m.ly=(e.clientY-m.sy)*m.bpx;
+  if(!m.raf) m.raf=requestAnimationFrame(midPanApply);
+}
+function midPanEnd(e){
+  const m=_mpan; if(!m || (e && e.pointerId!==m.pid)) return;
+  if(e && e.type==='pointerup') e.stopPropagation();               // the release is the pan's too
+  document.removeEventListener('pointermove', midPanMove, true); document.removeEventListener('pointerup', midPanEnd, true); document.removeEventListener('pointercancel', midPanEnd, true);
+  if(m.raf) cancelAnimationFrame(m.raf);
+  midPanApply(); _mpan=null;
+  board.classList.remove('l3panning');
+}
+document.addEventListener('pointerdown', midPanStart, true);
+document.addEventListener('mousedown', e=>{ if(midTableBtn(e)) e.preventDefault(); }, true);   // belt and braces: a canceled pointerdown sends no mousedown, and the autoscroll hangs on that one
+document.addEventListener('auxclick', e=>{ if(midTableBtn(e)) e.preventDefault(); }, true);    // ...and no middle-click default at the release
 /* ---------- Pinch-to-zoom + two-finger pan (v2.5.41 · T3a, touch only) ----------
    Document-capture tracker for touch pointers while l3on() (L3 + L4). Two fingers down =
    pinch: zoom about the CURRENT midpoint via l3zoomTo (absolute dist/dist0 mapping - no
@@ -15702,12 +15762,12 @@ function setCenterFrameA(fx, fy, fw, fh){                 // fx..fh are BASE (zo
         pg.style.borderWidth=Math.max(1,Math.round(l2pub.s*2))+'px';
         pg.style.boxShadow='0 '+(6*k).toFixed(2)+'px '+(16*k).toFixed(2)+'px rgba(0,0,0,.7), inset 0 '+(3*k).toFixed(2)+'px '+(8*k).toFixed(2)+'px rgba(255,255,255,.12), inset 0 '+(-6*k).toFixed(2)+'px '+(12*k).toFixed(2)+'px rgba(0,0,0,.55)'; } }
     const eg=$('#edge');
-    if(eg) eg.hidden=!l3centerOnFelt;                              // v2.5.47: N!=5 relocates the felt Edge marker to #edgeChrome - only the calibrated 5p pentagon keeps it on the felt
+    if(eg) eg.hidden=!l3centerOnFelt;                              // v2.5.47: N!=5 relocates the felt Edge marker to #edgeChrome - only the calibrated 5p pentagon keeps it on the felt. v2.6.181: L4 too is false -- its Edge button is on your pool globe
     if(eg && l3centerOnFelt){   // follows the board: pan+zoom for BOTH position and size (scale Z), so it behaves like every other L3 element (no inverse-zoom)
       const _ek=(typeof touchUI==='function'&&touchUI())?1.3:1;   // T5: the parked coarse Edge-button sizing - folded into the placement (CSS can't win over this inline transform); -16*_ek keeps the CENTRE anchored while the 0 0-origin scale grows it
       eg.style.left=(Px+Z*(fx+fw/2-16*_ek))+'px'; eg.style.top=(Py+Z*(l3clockCy+12))+'px'; eg.style.right='auto'; eg.style.bottom='auto';
       eg.style.transformOrigin='0 0'; eg.style.transform='scale('+(Z*_ek)+')'; }
-    { const ec=$('#edgeChrome'); if(ec) ec.hidden = l3centerOnFelt || l4on(); }   // v2.5.47: the inverse of the felt marker - visible exactly when the felt one isn't (never in L4)
+    { const ec=$('#edgeChrome'); if(ec) ec.hidden = l3centerOnFelt || l4on(); }   // v2.5.47: the inverse of the felt marker - visible exactly when the felt one isn't (never in L4: v2.6.181, the button rides your pool globe there)
     positionL3Hand();
     setPname();
   } else {                                                 // L2 columns: framed Pool box + Edge, scaled into your column
@@ -18940,7 +19000,7 @@ const TUT_SECTIONS = {
         text:'The <b>?</b> button lists every control, and <b>Settings</b> (in the ☰ Menu) lets you edit the keyboard shortcuts and screen brightness.',
         advance:{on:'manual'} },
       { id:'ci-zoom', target:()=>$('#l1zoomToggle'), place:'top', freeInteract:true,
-        text:'Try the <b>zoom</b> &mdash; use the controls here, or just <b>scroll over the felt</b> to zoom in and out. Then <b>pan</b> the felt by <b>double-clicking and dragging</b> it. The fit button (⛶) snaps the view back to the start.',
+        text:'Try the <b>zoom</b> &mdash; use the controls here, or just <b>scroll over the felt</b> to zoom in and out. Then <b>pan</b> the felt by <b>double-clicking and dragging</b> it &mdash; or hold down the <b>mouse wheel</b> and drag, from anywhere on the table. The fit button (⛶) snaps the view back to the start.',
         advance:{on:'manual'} },
       { id:'ci-table', target:()=>$('#statsTab'), place:'left', freeInteract:true, ringRect:tutTableRect,
         text:'The <b>Table</b> tab opens an overview &mdash; the pool, library size and victory points for each player, plus whose turn it is. Click it to expand the panel.',
@@ -19062,7 +19122,7 @@ const TUT_SECTIONS = {
       { id:'cp-bleed', target:()=>{ const v=tutFaceUpVampObj(); return v?v.el:null; }, place:'left', freeInteract:true, menuHi:['Actions','Bleed','Bleed 1'],
         text:'Now make your vampire act: <b>right-click it &rarr; Actions &rarr; Bleed &rarr; Bleed 1</b> to bleed your prey for 1 (Bleed 2/3/X cover boosted bleeds). Watch the <b>log</b> &mdash; it records the action so everyone at the table can follow what happened.',
         advance:{on:'event', name:'minion-action'}, orContinue:true },
-      { id:'cp-edge', target:()=>{ const el=$('#edge'); return (el && !el.hidden) ? el : $('#edgeChrome'); }, place:'bottom', freeInteract:true,   // v2.5.47: the 2p tutorial is one of the relocated counts - point at whichever marker is actually visible
+      { id:'cp-edge', target:()=>{ if(l4on()){ const gb=$('.l4globe-mine .l4gedge'); if(gb) return gb; } const el=$('#edge'); return (el && !el.hidden) ? el : $('#edgeChrome'); }, place:'bottom', freeInteract:true,   // v2.5.47: the 2p tutorial is one of the relocated counts - point at whichever marker is actually visible. v2.6.181: in L4 the button is on your pool globe
         text:'One more marker worth knowing: <b>the Edge</b> (the ankh icon) shows who currently holds it in the struggle with their predator. <b>Click the Edge button</b> to take it. Once you have it, its <b>token</b> appears on the felt &mdash; feel free to <b>drag it</b> wherever suits you, e.g. tucked in close to your own play area.',
         gate:function(){ return !!state.edge; }, gateHint:'Click the Edge button to take the Edge.', advance:{on:'manual'} },
       { id:'cp-pass', target:()=>$('.phase.pass'), place:'bottom', freeInteract:true,
@@ -19243,7 +19303,7 @@ const TUT_SECTIONS = {
         text:'For the full picture, press <b>\u00a7</b> (or <b>`</b>) on your keyboard to toggle the <b>Overview</b> &mdash; a helicopter view of <b>every board at once</b>. You can also press <b>\u2191</b> (up arrow). Try it now.',
         gate:function(){ if(net.view==='ov') tut._wasOV=true; return !!tut._wasOV; }, gateHint:'Press \u00a7 or \u2191 to open the Overview.', advance:{on:'manual'} },
       { id:'si-overview-note', target:()=>null, place:'center', freeInteract:true,
-        text:'In the Overview, every seat is visible &mdash; their zones, pool, and cards. You can <b>play the game normally</b> from here, and <b>scroll to zoom in</b> on any part of the table. <b>Drag the open felt</b> to pan around &mdash; panning works on the felt between boards, but not inside the zone areas themselves. The hand pane at the bottom shows your hand when you hover it. Press <b>\u00a7</b> again (or <b>\u2193</b>) to return home.',
+        text:'In the Overview, every seat is visible &mdash; their zones, pool, and cards. You can <b>play the game normally</b> from here, and <b>scroll to zoom in</b> on any part of the table. <b>Drag the open felt</b> to pan around &mdash; panning works on the felt between boards, but not inside the zone areas themselves (hold down the <b>mouse wheel</b> and drag to pan from anywhere). The hand pane at the bottom shows your hand when you hover it. Press <b>\u00a7</b> again (or <b>\u2193</b>) to return home.',
         gate:function(){ return net.view!=='ov'; }, gateHint:'Press \u00a7 or \u2193 to return to your board.', advance:{on:'manual'} },
       { id:'si-arrows', target:()=>null, place:'center', freeInteract:true,
         onEnter:function(){ tut._visitedSeat=false; },
