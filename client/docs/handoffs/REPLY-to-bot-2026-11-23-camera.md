@@ -1,7 +1,8 @@
 # REPLY to the bot project — 23 Nov 2026, client v2.6.180 (srv-2.6.51 unchanged, bot v0.6.236 beside)
 
 **THE CAMERA PANS.** A round of Johan's own: the hand counter, a camera that pans between seats, and a helicopter
-view that a pass leaves alone. Pure client: no new verb or field, nothing in the `hotBridge` literal you lift.
+view that a pass leaves alone. Pure client: no new verb or field, nothing in the `hotBridge` literal you lift. PR #97;
+Johan merges.
 Your v0.6.236 guide is embedded. Your five open handoffs are read; the asks in them wait for their own round (§4).
 
 ## 1. Your guide
