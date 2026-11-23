@@ -1,3 +1,79 @@
+## [KAMERAN PANORERAR] (23 november 2026, klient v2.6.180 / srv-2.6.51 oförändrad)
+
+Johan, 14.22, tre saker. Att scrolla på korträknaren i bottenpanelen verkade inte längre ändra handstorleken, och när han
+drog förbi sju kort stod det plötsligt 8/4. Efter en discard gav ett dubbelklick på biblioteket inget kort, och nästa gav två.
+I structured table ville han ha en övergång när vyn går till nästa spelares bord efter ett pass. Och står han i
+helikoptervyn (L3) ska ett pass inte ta honom till nästa spelares bord alls. Jag mätte och reproducerade först och skickade
+ett förslag. 14.54 kom "vi kan köra på dessa fixar nu iallafall", plus en önskan till: samma övergång när han själv byter
+bordsvy med pilarna eller Tab.
+
+**Räknaren.** Scrollen ändrade max hand size, och loggen skrev varje steg, men räknaren ritades bara av `layout()`. Hjulet
+anropade `renderHand()`, en tom stubbe sedan v2.5.11, och menyns +1, −1 och Reset anropade ingenting. Maxet gled alltså i
+tysthet och syntes först vid nästa drag. I Chromium gav tre steg ned och ett upp max 5 medan räknaren stod på 7/7, och
+nästa drag frågade "Draw anyway? (7/5)" och lämnade 8/5. Nu har räknaren en enda målare, `renderHandCount()`, som `layout()`,
+hjulet och menyn delar.
+
+"Inget kort, sedan två" kunde jag inte återskapa. Med max 4 frågar varje drag vid sju kort eller fler om man vill dra ändå.
+Fem sätt att dubbelklicka och svara gav ett kort per Ja. Den enda mekanism jag hittade som gör två kort av ett svar är två
+öppna frågor samtidigt: `uiDialog` köar inte, så ett OK svarar på båda. Inget i mina körningar öppnade två. Johan minns inte
+om frågan kom upp, och han testar igen nu när räknaren visar maxet.
+
+**Kameran.** Så här såg det ut, mätt per bildruta: första flytten till en bott tonade in på 0,2 s med 48 px glid, bott till
+bott hade ingen animation alls och vägen hem var ett hårt klipp. Bott till bott-glidet startade aldrig. `.off`-tricket i
+`switchView` (lägg till klassen, tvinga en reflow, ta bort den) animerar bara från `display:none`; på ett överlägg som redan
+syns startar övergången och vänds i samma stilberäkning.
+
+Nu flyttar `camGo` kameran mellan två platsers bord, där hemmet i L2 och ett besök båda räknas som en plats. Det byggs med
+webbläsarens View Transitions. Bordsytan (`#tableArea`, namngiven bara medan `html.campan` sitter på) glider en bordsbredd
+medan nästa bord kommer in, klippt till bordsytan, och sidopanelen och headern står still. Nästa plats kommer in från höger,
+åt det håll högerpilen går. Ett steg tillbaka kommer från vänster, och annars tar kameran den kortare vägen runt bordet
+(`camDir`; lika långt räknas som framåt). Svepet panorerar på 0,5 s och väntar in kameran innan botten får turen, och egna
+byten tar 0,34 s; båda följer Animation length. Hem efter sista botten är nästa plats, så hela svepet rör sig åt samma håll.
+Det som ligger över bordsytan (🤖-märket, Played- och Ready-flikarna, prey- och predator-flikarna, det fästa handstripet och
+loggtittaren) namnges också, så att det ritas ovanför det rörliga bordet och inte under.
+
+Ingen panorering sker utan API:et, vid reduced motion, med en dialog, en meny eller ett drag öppet, i tutorialen eller vid
+ett Classic-bord. Det avgör `camBlocked`, en ren funktion, och bytet sker då direkt som förut. En nivåväxling mellan L2 och
+helikoptern är ingen platsflytt och panorerar inte. Tvåmänniskors-överlämningen i L2 panorerar till nästa spelares bord.
+
+**Helikoptern.** Svepet flyttar bara kameran när spelaren inte står i L3. I L3 står allt still, zoom och panorering är
+orörda, och den agerande bottens matta får turglöden direkt, eftersom `renderL3()` körs vid varje turbyte som online-handlern
+`turn` redan gör. Den som zoomar ut mitt i svepet får stå kvar där resten av svepet, och svepet slutar där spelaren står. I
+en hotseat med två människor behåller ett pass i L3 helikoptern (`setActivePlayer(..., {keepView:true})`).
+
+**Ett nytt fönster.** Svepet väntar nu på kameran, och det väntade redan på en takt på 900 ms efter varje bott. Lämnar man
+bordet under en sådan väntan fanns det redan ett fönster där svepet skrev vidare i ett bord som var borta. Nu parkerar
+svepet om bottens plats på bryggan har försvunnit efter en panorering, som `hotAwaitPass` gör på ett rivet bord. `finally`
+flyttar ingen kamera utan bryggplatser, och `passNow` går inte vidare in i ett bord som är borta: ingen tur, ingen ledtråd
+och ingen sparning.
+
+**Bottguiden.** Bottsidans v0.6.235 och v0.6.236 hade släppt nya guider, så våra grindar var röda på main
+(inbäddningstestet). Help ▸ Bots bäddar nu in v0.6.236:s guide. Deras fem handoffs är lästa men inte besvarade i sak:
+§12-posten och kanariefågeln för v0.6.236:s rader, licensen och kanariefågelns högljudda skip väntar på en egen runda.
+Svaret `REPLY-to-bot-2026-11-23-camera.md` säger vad i guiden som gäller kameran nu.
+
+**Testerna.** Sex nya: räknarens målare, kamerans två rena beslut, svepet i L3, i L2, mitt i och på ett rivet bord, egna
+byten under en falsk View Transition (riktningsklasserna, nivåväxlingen, dialogen), tvåmänniskors-överlämningen i L3 och i
+L2, och CSS:en. v2.6.148-nålen på `goHome` läser `camGo` nu. Sviten står på 390/0 med bot v0.6.236 bredvid, och mot
+v2.6.179 blir det 382/8: de sex nya, guidens inbäddning och `goHome`-nålen. Bottsidans hotseat-grind i en scratch-kopia
+av `bot/` med den nya klienten: 12/0. Soaken: 7 bord, 105 drag, 0 fast. Fjorton
+mutanter: sviten fångar tretton. Den fjortonde, en visit som tonar in med sitt eget glid inne i panoreringen, syns bara i
+en webbläsare, och där fångar Chromium den (opaciteten 0,00 mitt i panoreringen mot 1,00).
+
+**I webbläsaren** (headless Chromium, 1500×900). Ett riktigt hjul över räknaren i docken ger 7/6, 7/5, 7/4, 7/5 steg för
+steg; v2.6.179 stod kvar på 7/7. Svepet från L2 med falska bottar ger tre panoreringar framåt. Från L3 ger det ingen, zoom
+1,6 och panoreringen är orörda och den agerande bottens matta glöder; v2.6.179 lämnade L3 och nollställde zoomen. Egna byten
+(höger, höger, höger, vänster, Home, Tab, Tab) ger sju panoreringar med riktningarna fram, fram, fram, tillbaka, fram,
+tillbaka, fram. Reduced motion ger inga panoreringar, och med en dialog öppen sker bytet direkt. Med två riktiga bottar
+(v0.6.236) sittande genom Spela offline-dialogen gav ett pass från L2 tre panoreringar och turen tillbaka efter 39 s, och ett
+pass från L3 lämnade vyn i helikoptern utan panorering, 38 s. Inga sidfel. Rörelsen bedömde jag med CDP-screencast: en
+vanlig skärmdump under en övergång kan visa ett tomt bord eller en bild som inte är klippt, och det ritar kompositorn aldrig.
+
+**Osäkert eller otestat:** känslan på en riktig skärm (0,5 och 0,34 s är startvärden att justera); Firefox och Safari
+(API:et finns i Firefox 144+ och Safari 18+, men jag har bara kört Chromium); touch; elysium.cards; att ett klick under
+själva panoreringen går till sidroten och tappas; att ett Classic-bord inte panorerar alls. Högerpilen går till nästa plats
+(prey), som sitter till vänster i L2- och L3-geometrin, och panoreringen följer pilen, inte platsens sida.
+
 ## [MÄRKET RESER SIG] (19 november 2026, sen kväll, klient v2.6.179 / srv-2.6.51 oförändrad)
 
 Johan, 19.23: "Ja men fixa gärna knappen/märket så det ser bra ut". Orsaken är lagerordningen. Sätesbesöket (`#rview`) ligger på

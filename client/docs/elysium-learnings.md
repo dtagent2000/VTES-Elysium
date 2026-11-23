@@ -1,8 +1,31 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.179 / server v2.6.51 / bot v0.6.234 tested beside the suite, last updated 19 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.180 / server v2.6.51 / bot v0.6.236 tested beside the suite, last updated 23 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**23 Nov 2026 (THE CAMERA PANS — v2.6.180):**
+- **A no-op stub keeps its callers' expectations alive.** `renderHand()` was parked as a stub so 'live refresh paths still
+  call it'; the hand wheel called it to redraw the counter, and since v2.5.11 nothing redrew. The value changed, the log
+  said so, the display did not, and the next `layout()` made it look like a jump (8/4). When a function becomes a stub,
+  read what each caller expected it to draw, and give that one owner (`renderHandCount`).
+- **The add-class / reflow / remove-class trick only animates from `display:none`.** On an element already shown, the
+  transition starts at the reflow and is reversed in the same style pass, so nothing moves: the visit-to-visit slide in
+  `switchView` never ran. Sample the computed style per frame before believing a transition exists.
+- **View Transitions, the shape that works here:** name the moving element only while it moves (a class on `html`), give
+  the root's old and new pictures `animation:none` so the rest of the page swaps at once, and clip the group
+  (`overflow:clip`). Everything that floats over the named area (fixed tabs, the bot badge) must be named too, or it is
+  drawn under the moving picture. A skipped transition rejects `ready` and `updateCallbackDone`: catch both, or the
+  crash telemetry sees them. While it runs, pointer events go to the page root (a click is lost).
+- **A transition that is AWAITED opens a teardown window.** The sweep now waits for the camera; a table left during that
+  half second must not be written into. After every await on a table, check that the table still exists (here: the
+  bridge seat), and park the way the existing awaits park, instead of resolving into a dead table.
+- **Headless screenshots during a View Transition lie.** `page.screenshot` forced a frame that showed an empty table
+  area, and another with the picture unclipped over the side panel. The CDP screencast (the compositor's own frames)
+  showed neither. Judge motion from the screencast.
+- **Make the choice that a test can see.** The pan's rules live in two pure functions (`camBlocked`, `camDir`), so the
+  suite walks every rung and every direction without a browser; the browser run then only has to show that the pure
+  answers reach the screen.
 
 **19 Nov 2026, evening, later (THE BADGE STANDS UP — v2.6.179):**
 - **A fixed overlay competes with every absolute layer in the root stacking context.** `#hotBotBtn` (fixed, z 60) lost to
