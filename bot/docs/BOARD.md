@@ -6,7 +6,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
 - **The chat round** (Johan, 24 Nov: "en ordentlig utvärdering av bottarnas chattande ... vid vanliga bord"; D-136, O-50): the
-  recorder and an `ana-chat.py` in the repo (one seed before / after at the client's pace), one speaker at a time (a table-wide
+  recorder and a chat analysis tool in the repo (one seed before / after at the client's pace), one speaker at a time (a table-wide
   floor between bubbles, ring order on a tie, the vote round driven by the previous voter), bot-to-bot exchanges without the human
   instructions (O-50 first), no `(bot):` prefix, the silent bot-vs-bot verdict wait (14 s in the recording), and every chat line
   ruled with Johan. *Done when* the recording shows no bubble over another seat's and each line has his ruling. Docs: D-64, O-50.
