@@ -206,6 +206,14 @@ a legal play the bot refuses.
   [w4; pilot] · reachable (nosferatu holds Preternatural Strength ×2).
 - **8.10 Over-strict: hosts and hunting grounds** — allies are never offered as hosts for a card on a minion; "only one hunting
   ground each turn" is per vampire in the text, one flag per Methuselah in the code. [pilot; w3] · reachable.
+- **8.11 Dreams of the Sphinx is hosted as an income master and pays 1 pool every unlock phase** — "Put this card in play … You
+  can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn this card if it has 3 counters" (KRCG).
+  Its curated `poolGain` mode is phase-tagged, so the master finder's `known` (a phase-tagged `poolGain` / `bloodToPool`, meant for
+  Blood Doll and Vessel) puts it on a vampire; `_considerLockIncome` reads freestanding cards only, so its lock modes (the Edge's
+  pool, +2 hand size, the blood to an uncontrolled vampire) never run, and `_applyPhaseIncome`'s `poolGain` rung pays +1 every
+  unlock phase with no lock, no Edge, no counter, and the card never burns (v0.6.236: pool 10 → 11 without the Edge, a scratch
+  check). The 240: 104 placements, all malkavian. Fix sketch: `known` excludes a lock mode (or a card not put on a minion), so it
+  stays freestanding. [the playtest round's egress, found on the way] · **active** (malkavian ×1).
 
 ## 9. Key and compiler shapes
 A key the compiler writes and a reader reads in another shape, or a sentence shape the compiler misreads or skips.
@@ -294,6 +302,11 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   the wrong place, and the placer-side readers (`_havenHosts`, `_contractLive`, `_pentexWatch`) look for it on the placer's board. A
   give with `attachTo` needs those readers moved to the host's board, and Priority Contract's own burn a `recall` (the bots handle
   none). [the playtest round, 24 Nov] · reachable (nosferatu, tremere, banuhaqim; presentation: the effect is right).
+- **10.15 A vampire of mine burned in my own combat keeps the cards on it** (aggravated damage it cannot mend, a burn-at-damage
+  curse: `_takenLine` sets the zone and no more): its income masters, equipment and a Fame another player gave stay on my board,
+  their host burned. A burn by the table (`ctrl`), Archon Investigation and the Ravnos burn sweep them (v0.6.237's egress review:
+  the table's burn by host and id too). What reads a card whose host is burned is not audited. [the playtest round's egress review]
+  · reachable (any deck).
 
 ## 11. Windows: who is asked, and when
 Who may answer an action or a card, and in which window; a line read after its window closed.

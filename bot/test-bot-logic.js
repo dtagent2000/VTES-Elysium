@@ -7773,7 +7773,7 @@ async function connectWithRetry(client, tries = 30){
   ok(/adds \+0 bleed \(= ' \+ this\._actingVamp\.n \+ '\)\./.test(src119) && /\(tgtBot \|\| humanWantsTotal\) && !pumped && curAns\.what !== 'block' && !this\._actingVamp\.bounced/.test(src119), '119f ACTOR: a bleed that was not pumped opens ONE reactions-only window on its total, in the frozen L12.add grammar (+0) -- before, it resolved with no window and a held bounce was lost');
   ok('<b>Alice Chen</b> adds +0 bleed (= 3).'.replace(/<[^>]+>/g, '').match(/^(.+?) adds \+(\d+) bleed \(= (\d+)\)\.(?: Target: (.+?)\.)?$/), '119f ...and that line parses with the frozen L12.add regex (no protocol change)');
   ok(/this\._actingVamp\.bounced = true;/.test(src119) && /the bleed was bounced \\u2014 no pump/.test(src119), '119g Johan: a bot does not pump a bleed after it was bounced');
-  ok(/no block\. Any bleed modifiers\?' : 'any more bleed modifiers\?'\) \+ ' I may still react to the total/.test(src119) && /this\._lateWordWait\(p, 'first'\)/.test(src119), '119h against a HUMAN actor the bot asks for the modifiers and waits for the actor\'s word (v0.6.237: under the tempo, not a fixed grace -- section 183e drives it)');
+  ok(/'no block\. Any bleed modifiers\? I may still react to the total/.test(src119) && /this\._lateWordWait\(p, 'first'\)/.test(src119), '119h against a HUMAN actor the bot asks for the modifiers and waits for the actor\'s word (v0.6.237: under the tempo, not a fixed grace -- section 183e drives it)');
     }
 
     /* 120) v0.6.146 — the dynamic bounce reserve */
@@ -8961,7 +8961,7 @@ async function connectWithRetry(client, tries = 30){
       let f2 = 0; const h = u._heldTimeout(() => { f2 = 1; }, 50); h.cancel(); await sleep(120); ok(!f2 && !u._heldTimers.has(h), '137k ...cancel() stops it and drops it');
       let f3 = 0; u._heldTimeout(() => { f3 = 1; }, 50); await sleep(150); ok(f3 === 1 && u._heldTimers.size === 0, '137k ...no hold: an ordinary timer, gone once it fired');
       const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
-      ok(/w\.timer = this\._heldTimeout\(\(\) => this\._lateWordGo\(p, 'clock'\), plan\.ms\)/.test(src) && /if\(w\.timer\)\{ if\(w\.timer\.cancel\) w\.timer\.cancel\(\)/.test(src), '137k the late-bounce wait runs on it (the bounce used to land while the human held; v0.6.237: the wait for the actor\'s word)'); }
+      ok(/const lw = this\.pending && this\.pending\.lateWait;[^\n]*\n    if\(lw && !lw\.done\)\{ this\._freezeWait\(lw\); speak = true; \}/.test(src) && /if\(lw && !lw\.done && lw\.arm\) lw\.arm\(\);/.test(src), '137k the late-bounce wait stands under a hold too (the bounce used to land while the human held; v0.6.237: the wait for the actor\'s word, frozen and re-armed by the hold gate like the verdict wait -- 183e drives it)'); }
     // m) a new game thaws what the old game's hold froze (review: the frozen wait never re-armed); a second poll starts with no held mark
     { const { u } = mk(std1); u._obs = polObs(); u._onAnyBlocks('Johan', 'Any blocks?'); u._onSay({ who: 'Johan', i: 0 });
       ok(u._pq && u._pq.timer === null, '137m fixture: a pool question frozen by a hold');
@@ -15950,6 +15950,11 @@ async function connectWithRetry(client, tries = 30){
        (f) a human target bounces my bleed by chat: 'bounce <name>' and the panel's 'X bounces the bleed to Y', a name by any part that
        points at one seat, a question for an ambiguous, unknown or own name, only from the bleed's human target; my re-announce re-aims
        the bleed, a bot at the new seat arms and answers, and an observer counts one action; (g) the panel's line has its event kind.
+       The egress review's round: Fame's receiver names its giver as the owner and a third seat credits the giver; Fame is held when its
+       seat cannot take the give; a burn by the table takes the cards on the vampire with it; the actor's word waits under a hold, is asked
+       again after a modifier, ends 'left' with its pending; a start of a name needs 3 letters and a '?' line is talk; a bounce between my
+       windows waits for my next step (the re-announce and the new target's window in one tick), one after the bleed resolved or was
+       blocked is answered; an observer keeps the bleed across a modifier's play line.
        The old bytes lack _spoken, _actClone, _lateWordWait, _seatByNamePart and _humanBounce: every call is guarded.
        LAST LINE OF 183 is the closing brace below. */
     {
@@ -16000,7 +16005,24 @@ async function connectWithRetry(client, tries = 30){
            '183b ...the receiver links it to Nassir (host, attached) and arms its torpor hook (got ' + JSON.stringify({ fame: fd && { host: fd.host, id: fd.id }, att: na.attached, famed: D._famedMine && [...D._famedMine] }) + ')');
         const h = mk3('Viktor', 2, 'tremere', P); const ay = V3('c7', 'Ayelech', { x: 300, y: 200 }); h.board = [ay];
         h._handlers.given({ t: 'given', from: 'Alice', gid: 'h9', name: 'Fame', kind: 'lib', attachTo: 'c7' }); const hf = h.board.find(c => c && c.name === 'Fame');
-        ok(!!hf && hf.host === 'c7' && ay.attached.includes('h9') && hf.x === 300 && hf.y === 200, '183b ...a human’s Fame given onto my vampire lies ON it too, not loose at 64,64 (got ' + JSON.stringify(hf && { host: hf.host, x: hf.x, y: hf.y }) + ')'); }
+        ok(!!hf && hf.host === 'c7' && ay.attached.includes('h9') && hf.x === 300 && hf.y === 200, '183b ...a human’s Fame given onto my vampire lies ON it too, not loose at 64,64 (got ' + JSON.stringify(hf && { host: hf.host, x: hf.x, y: hf.y }) + ')');
+        const fpub = (D.buildPub().cards || []).find(c => c && c.name === 'Fame');
+        const O = mk3('Mira', 3, 'ventrue', P.concat([{ seat: 3, name: 'Mira', bot: true }]));
+        O._onBoard({ seat: 2, pub: { cards: [V3('n1', 'Nassir', { blood: 5 })] } }); O._onBoard({ seat: 2, pub: { cards: [V3('n1', 'Nassir', { blood: 5, attached: fpub ? [fpub.id] : [] })].concat(fpub ? [Object.assign({}, fpub)] : []) } });
+        const oc = st => (((O.opp && O.opp[st] && O.opp[st].cards) || {}).Fame) | 0;
+        ok(!!fpub && fpub.owner === 'Hanna' && oc(1) === 1 && oc(2) === 0 && !(D.buildPub().cards || []).some(c => c && c.name === 'Nassir' && c.owner),
+           '183b ...the receiver’s board names Hanna as the Fame’s owner (its own cards name none), and a third seat credits the play to Hanna, not to Viktor (the egress review) (got ' + JSON.stringify({ owner: fpub && fpub.owner, hanna: oc(1), viktor: oc(2) }) + ')');
+        const P2 = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true, online: false }];
+        const A2 = mk3('Hanna', 1, 'nosferatu', P2, { askSecs: 0.4 }); wire3(A2, []);
+        A2.board = [V3('r1', 'Ryan (G6)', { cap: 4 })]; A2.hand = ['Fame']; A2.pool = 20; A2.cryptN = 0; A2.unc = []; A2.turnSeat = 1; A2.table = { 2: { pub: { cards: [V3('n1', 'Nassir', { blood: 5, cap: 7 })] } } };
+        await Promise.race([A2._playTurn().catch(() => {}), sleep(8000)]);
+        ok(A2.gives.length === 0 && !A2.lines.some(l => /plays Fame/.test(l.txt)) && !A2.board.some(c => c && c.name === 'Fame' && c.zone === 'ready'),
+           '183b ...Fame at a seat that is offline is held: the server would refuse the give and the card would be lost (got ' + JSON.stringify({ gives: A2.gives.length, lines: A2.lines.filter(l => /Fame/.test(l.txt)).map(l => l.txt) }) + ')');
+        const k = mk3('Viktor', 2, 'tremere', P); k.note = () => {};
+        k.board = [V3('n1', 'Nassir', { attached: ['f1', 'v1'] }), L3('f1', 'Fame', { host: 'n1', attachTo: 'n1', owner: 'Hanna' }), L3('v1', 'Vessel', { host: 'n1' }), V3('n2', 'Lutz')];
+        k._handlers.ctrl({ cid: 'n1', act: 'burn' });
+        ok(!k.board.some(c => c && (c.id === 'n1' || c.id === 'f1' || c.id === 'v1')) && k.board.some(c => c && c.name === 'Vessel' && c.zone === 'ash') && !k.board.some(c => c && c.name === 'Fame') && k.board.some(c => c && c.id === 'n2'),
+           '183b ...the table burns the famed vampire: the cards on it go with it (by host and by id), mine to my ash heap, the giver’s Fame not onto mine (got ' + JSON.stringify(k.board.map(c => c.id + ':' + c.name + ':' + c.zone)) + ')'); }
 
       // c) A CARDLESS ACTION IS THE VAMPIRE ACTING: the plain bleed through the minion phase is a 'lock' clone with its verb and its aim
       { const P = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
@@ -16036,28 +16058,40 @@ async function connectWithRetry(client, tries = 30){
         { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(250);
           const q = u.chats.slice(), waiting = !!(u.pending && u.pending.lateWait); await sleep(1500); const early = bounced(u);
           u._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await sleep(150);
-          ok(waiting && q.length === 1 && /no block\. Any bleed modifiers\? I may still react to the total — say "no" or "it resolves" when you are done \(3s → I react\)$/.test(q[0]) && !early && bounced(u) && u.pool === 20,
-             '183e a human actor’s total: the question carries the tempo’s clock, no bounce before the word, and It resolves BOUNCES it -- no pool lost (got ' + JSON.stringify({ q, waiting, early, bounced: bounced(u), pool: u.pool }) + ')'); }
+          ok(waiting && q.length === 1 && /no block\. Any bleed modifiers\? I may still react to the total — say "no" or "it resolves" when you are done \(3s → I react\)$/.test(q[0]) && !early && bounced(u) && u.pool === 20 && ((u._rt && u._rt.Johan) || []).length === 1,
+             '183e a human actor’s total: the question carries the tempo’s clock, no bounce before the word, and It resolves BOUNCES it -- no pool lost; the word is Adaptive’s measurement (got ' + JSON.stringify({ q, waiting, early, bounced: bounced(u), pool: u.pool, rt: u._rt && u._rt.Johan }) + ')'); }
         { const u = mkT({ askSecs: 1 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(600); const early = bounced(u); await sleep(800);
           ok(!early && bounced(u) && u.pool === 20, '183e ...silence: the clock bounces it, not a fixed grace (got ' + JSON.stringify({ early, late: bounced(u) }) + ')'); }
         { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(200); u._onLog('Johan', '<b>Lisa</b> adds +1 bleed (= 3).'); await sleep(700);
-          const afterMod = bounced(u), st = u.status(); u._onSay({ who: 'Johan', i: SAY.indexOf('No') }); await sleep(150);
+          const afterMod = bounced(u), st = u.status(), ch = u.chats.slice(); u._onSay({ who: 'Johan', i: SAY.indexOf('No') }); await sleep(150);
+          ok(ch.length === 2 && /^Trainbot: bleed now 3 — any more\? Say "no" or "it resolves" when you are done \(3s → I react\)$/.test(ch[1]),
+             '183e ...after a modifier the question is asked again, short, with its fresh clock (the egress review: a silent re-arm) (got ' + JSON.stringify(ch) + ')');
           ok(!afterMod && st.step === 'resolve-late' && bounced(u) && u.sent.some(m => txt3(m) === 'Lisa bleeds for 3. Target: Hanna\'s pool.'),
              '183e ...a modifier re-arms the wait (no bounce one react delay later), status names it, and No bounces the total of 3 (got ' + JSON.stringify({ afterMod, step: st.step, lines: u.sent.map(txt3).filter(Boolean) }) + ')'); }
         { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(200); u._onChat('Johan', 'no more'); await sleep(150); const typed = bounced(u);
           const v = mkT({ askSecs: 3 }); v._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(200); const r = v.step(); await sleep(100);
           ok(typed && r.did === 'resolve-late' && bounced(v), '183e ...a typed "no more" and the table controls give the word too (got ' + JSON.stringify({ typed, did: r.did, step: bounced(v) }) + ')'); }
-        { const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
-          ok(!/this\.o\.modGraceMs/.test(src) && /w\.timer = this\._heldTimeout\(\(\) => this\._lateWordGo\(p, 'clock'\), plan\.ms\)/.test(src) && /const plan = this\._waitPlan\('react', p\.who\)/.test(src),
-             '183e ...the wait is a tempo wait (_waitPlan react) on the hold-aware timer; the fixed 4 s grace is gone'); } }
+        { const P4 = P.concat([{ seat: 4, name: 'Lina', bot: false }]); const u = mkT({ askSecs: 1 }); u.players = P4.map(q => Object.assign({ online: true }, q));
+          u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(250); const lw0 = u.pending && u.pending.lateWait;
+          u._onSay({ who: 'Lina', i: 0 }); await sleep(1400); const frozen = !!(lw0 && lw0._held && lw0.deadline === null && !lw0.timer && !lw0.done), held = bounced(u);
+          u._onChat('Lina', 'carry on'); await sleep(500); const early = bounced(u); await sleep(900);
+          const row = u.evs.filter(e => e.t === 'wait' && e.m.late).pop();
+          ok(frozen && !held && !early && bounced(u) && !!row && row.m.held === 1 && row.m.end === 'clock',
+             '183e ...a hold stands the wait (no clock, no deadline, no bounce), the release starts a full clock, and its row says held (the egress review) (got ' + JSON.stringify({ frozen, held, early, late: bounced(u), row: row && row.m }) + ')'); }
+        { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(250); const w0 = u.pending && u.pending.lateWait;
+          u._onLog('Johan', '<b>Lisa</b> bleeds for 1.'); await sleep(30); const row = u.evs.filter(e => e.t === 'wait' && e.m.late).pop();
+          ok(!!w0 && w0.done && !!row && row.m.end === 'left' && !(u.pending && u.pending.lateWait && u.pending.lateWait === w0),
+             '183e ...a new action’s pending ends the old wait, "left" (its clock and reminder died with it only on a clear) (got ' + JSON.stringify({ done: w0 && w0.done, row: row && row.m }) + ')');
+          const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
+          ok(!/this\.o\.modGraceMs/.test(src) && /const pl = w\.plan = this\._waitPlan\('react', p\.who\);/.test(src), '183e ...the wait is a tempo wait (_waitPlan react); the fixed 4 s grace is gone'); } }
 
       // f) A HUMAN'S BOUNCE BY CHAT: my bleed at Johan Sigvard; parts of names; questions; only the target; a bot at the new seat answers
       { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan Sigvard', bot: false }, { seat: 3, name: 'Hanna Bergström', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
         const A = mk3('Viktor', 1, 'ventrue', P, { askSecs: 1.2 }), H = mk3('Hanna Bergström', 3, 'malkavian', P, { askSecs: 1.2 }); wire3(A, [H]); wire3(H, [A]);
         const parts = q => IF3(A, '_seatByNamePart') ? A._seatByNamePart(q, [3, 4]) : { seat: -1, cands: [] };
-        const nm = { hanna: parts('Hanna').seat, berg: parts('bergstrom').seat, hb: parts('hanna berg').seat, hannes: parts('HANNES').seat, hann: parts('hann'), nobody: parts('xyz').seat };
-        ok(nm.hanna === 3 && nm.berg === 3 && nm.hb === 3 && nm.hannes === 4 && nm.hann.seat === 0 && nm.hann.cands.length === 2 && nm.nobody === 0,
-           '183f a seat by any part of its name: a word, an accent-free surname, the start, any case; two seats = ambiguous, none = none (got ' + JSON.stringify(nm) + ')');
+        const nm = { hanna: parts('Hanna').seat, berg: parts('bergstrom').seat, hb: parts('hanna berg').seat, hannes: parts('HANNES').seat, hann: parts('hann'), nobody: parts('xyz').seat, h: parts('h').seat, ha: parts('ha').seat, be: parts('be').seat, ber: parts('ber').seat };
+        ok(nm.hanna === 3 && nm.berg === 3 && nm.hb === 3 && nm.hannes === 4 && nm.hann.seat === 0 && nm.hann.cands.length === 2 && nm.nobody === 0 && nm.h === 0 && nm.ha === 0 && nm.be === 0 && nm.ber === 3,
+           '183f a seat by any part of its name: a word, an accent-free surname, a start of 3 letters or more, any case; two seats = ambiguous, none = none, "h", "ha" and "be" none -- "be" was Bergström (got ' + JSON.stringify(nm) + ')');
         A.board = [V3('a1', 'Alice Chen (G6)', { blood: 5, cap: 6 })]; A.hand = []; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
         H.board = [V3('h1', 'Colette', { cap: 5 })]; H.hand = []; H.pool = 20; H.turnSeat = 1;
         A.table = { 2: { pub: { cards: [V3('j1', 'Lisa')] } }, 3: { pub: { cards: [V3('h1', 'Colette')] } }, 4: { pub: { cards: [] } } };
@@ -16066,6 +16100,7 @@ async function connectWithRetry(client, tries = 30){
         for(let i = 0; i < 80 && !A.lines.some(l => l.tier === 'chat' && /Block\?/.test(l.txt)); i++) await sleep(50);
         A._onChat('Johan Sigvard', 'bounce hann'); await sleep(40); A._onChat('Johan Sigvard', 'bounce Viktor'); await sleep(40); A._onChat('Johan Sigvard', 'bounce'); await sleep(40);
         A._onChat('Hannes', 'bounce Hanna'); await sleep(40);
+        A._onChat('Johan Sigvard', 'Bounce? Nah.'); await sleep(40); A._onChat('Johan Sigvard', 'bounce me'); await sleep(40); A._onChat('Johan Sigvard', 'Bounce. Nah'); await sleep(40);
         const before = A._actingVamp && A._actingVamp.target;
         A._onChat('Johan Sigvard', 'Johan Sigvard bounces the bleed to Bergström'); await sleep(40);
         const mid = A._actingVamp && { target: A._actingVamp.target, bounced: A._actingVamp.bounced };
@@ -16073,6 +16108,9 @@ async function connectWithRetry(client, tries = 30){
         const qs = A.lines.filter(l => l.tier === 'chat').map(l => l.txt);
         ok(qs.some(t => t === 'Johan Sigvard: which one — Hanna Bergström or Hannes? Type bounce <name> (Hanna Bergström, Hannes).') && qs.some(t => /^Johan Sigvard: my own bleed cannot be bounced to me\./.test(t)) && qs.some(t => /^Johan Sigvard: bounce to whom\?/.test(t)) && before === 2,
            '183f the target’s ambiguous, own and bare bounces get a question; another seat’s is not read (got ' + JSON.stringify({ before, qs: qs.slice(1, 4) }) + ')');
+        const rp = qs.filter(t => /^Johan Sigvard: /.test(t));
+        ok(rp.length === 4 && rp[3] === 'Johan Sigvard: I see nobody called "me" here. Type bounce <name> (Hanna Bergström, Hannes).',
+           '183f ...talk is not a bounce: "Bounce? Nah." and "Bounce. Nah" get nothing (the egress review: "nah" read as Hannah), "bounce me" names nobody (got ' + JSON.stringify(rp) + ')');
         ok(!terr && !!mid && mid.target === 3 && mid.bounced === true && A.lines.some(l => l.tier === 'log' && l.txt === 'Alice Chen (G6) bleeds for 1. Target: Hanna Bergström\'s pool.') && A.evs.some(e => e.t === 'bounce-read' && e.m.to === 'Hanna Bergström'),
            '183f ...the panel’s line with a part of the name re-aims my bleed: the frozen re-announce, no pump after it, a bounce-read row (got ' + JSON.stringify({ terr, mid, logs: A.lines.filter(l => l.tier === 'log').map(l => l.txt).filter(t => /bleeds/.test(t)) }) + ')');
         const hRec = H.opp && H.opp[1] && H.opp[1].minions && H.opp[1].minions['Alice Chen (G6)'];
@@ -16085,7 +16123,49 @@ async function connectWithRetry(client, tries = 30){
         O._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Johan Sigvard\'s pool.'); O._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Hannes\'s pool.');
         const r = O.opp && O.opp[1] && O.opp[1].minions && O.opp[1].minions['Alice Chen (G6)'];
         ok((O._turnActN | 0) === 1 && !!r && r.actions === 1 && r.bleeds === 1 && !!O._obs && O._obs.targetSeat === 4,
-           '183f ...an observer reads the acting bot\u2019s re-announce as the same action re-aimed: one action row, one bleed, the aim moved (got ' + JSON.stringify({ n: O._turnActN, rec: r && { a: r.actions, b: r.bleeds }, aim: O._obs && O._obs.targetSeat }) + ')'); }
+           '183f ...an observer reads the acting bot\u2019s re-announce as the same action re-aimed: one action row, one bleed, the aim moved (got ' + JSON.stringify({ n: O._turnActN, rec: r && { a: r.actions, b: r.bleeds }, aim: O._obs && O._obs.targetSeat }) + ')');
+        const O2 = mk3('Hanna Bergstr\u00f6m', 3, 'malkavian', P); O2.turnSeat = 1; O2.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen (G6)')] } } };
+        O2._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1.'); O2._onLog('Viktor', '<b>Alice Chen (G6)</b> plays <b>Leverage</b>: +1 bleed.'); O2._onLog('Viktor', '<b>Alice Chen (G6)</b> adds +1 bleed (= 2).');
+        O2._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 2. Target: Hannes\'s pool.');
+        const r2 = O2.opp && O2.opp[1] && O2.opp[1].minions && O2.opp[1].minions['Alice Chen (G6)'];
+        ok((O2._turnActN | 0) === 1 && !!r2 && r2.bleeds === 1 && !!O2._obs && O2._obs.targetSeat === 4 && /^bleeds for /.test(O2._obs.verb || ''),
+           '183f ...and so with a modifier\u2019s play line between the announce and the re-announce (the egress review: the play line hid the bleed -- a second action row and a second bleed) (got ' + JSON.stringify({ n: O2._turnActN, rec: r2 && { a: r2.actions, b: r2.bleeds }, obs: O2._obs && { aim: O2._obs.targetSeat, verb: O2._obs.verb } }) + ')'); }
+
+      // f3) A BOUNCE BETWEEN MY WINDOWS (the egress review): it waits for my next step, which re-announces it and opens the new target's window
+      //     in the same tick; one after the bleed resolved, or was blocked, is answered, never applied
+      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan Sigvard', bot: false }, { seat: 3, name: 'Hanna Bergström', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
+        { const u = mk3('Viktor', 1, 'ventrue', P); u.sent = []; u.send = m => u.sent.push(m); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true; u.tally = { mode: 'block', a: 1, b: 2 };
+          u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set() };
+          const r = IF3(u, '_humanBounce') ? u._humanBounce('Johan Sigvard', 'bounce to Hannes!') : null, pb = u._actingVamp.pendingBounce, logs0 = u.sent.filter(m => m.t === 'log').length;
+          const pr = IF3(u, '_bounceGate') ? u._bounceGate({ what: 'no', who: 'Johan Sigvard' }) : Promise.resolve(null);
+          const logs = u.sent.filter(m => m.t === 'log').map(txt3), a = u._ask, q = u.chats[u.chats.length - 1];
+          const oneTick = logs.length === 1 && logs[0] === "Alice Chen (G6) bleeds for 2. Target: Hannes's pool." && !!a && a.target === 4 && a.reactionsOnly && u._actingVamp.blockStepSeat === 4 && u.tally.b === 0;
+          u._onSay({ who: 'Hannes', i: SAY.indexOf('No block') }); const ans = await Promise.race([pr, sleep(3000).then(() => 'stuck')]);
+          ok(r === true && !!pb && pb.seat === 4 && logs0 === 0 && oneTick && /^Trainbot: Alice Chen now bleeds Hannes for 2 \(Johan Sigvard bounced it\) — Hannes may block it \(the bounce allows that\), react, or say "no"/.test(q || '')
+             && ans && ans.what === 'no' && u._actingVamp.target === 4 && u._actingVamp.bounced === true && !u._actingVamp.pendingBounce,
+             '183f3 a bounce with no window of mine open waits (nothing re-aimed, nothing sent); my next step sends the re-announce and opens Hannes’s window in one tick -- the block step, a fresh intercept -- and his answer closes it (got ' + JSON.stringify({ r, pb, logs0, logs, ask: a && { t: a.target, ro: a.reactionsOnly }, q, ans, tally: u.tally }) + ')'); }
+        { const u = mk3('Viktor', 1, 'ventrue', P); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true;
+          u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set(), resolving: 'blocked' };
+          const r1 = IF3(u, '_humanBounce') && u._humanBounce('Johan Sigvard', 'bounce Hannes'); u._actingVamp.resolving = true; const r2 = IF3(u, '_humanBounce') && u._humanBounce('Johan Sigvard', 'bounce Hannes');
+          u._actingVamp = null; u._acting = false; u.turnSeat = 1; u._lastBleed = { seat: 2, vamp: 'Alice Chen (G6)', at: Date.now(), how: true };
+          const r3 = IF3(u, '_humanBounce') && u._humanBounce('Johan Sigvard', 'Johan Sigvard bounces the bleed to Hannes'), r4 = IF3(u, '_humanBounce') && u._humanBounce('Hannes', 'bounce Johan');
+          u.turnSeat = 2; const r5 = IF3(u, '_humanBounce') && u._humanBounce('Johan Sigvard', 'bounce Hannes');
+          ok(r1 === true && r2 === true && r3 === true && !r4 && !r5 && u.chats.length === 3 && u.chats[0] === 'Johan Sigvard: Alice Chen’s bleed was blocked — there is nothing to bounce.'
+             && u.chats[1] === 'Johan Sigvard: too late — Alice Chen’s bleed has resolved.' && u.chats[2] === u.chats[1],
+             '183f3 ...after a block, after It resolves, or just after the bleed (still my turn) a bounce is answered and applies to nothing; another seat’s, or one in somebody else’s turn, is not mine to answer (got ' + JSON.stringify({ r1, r2, r3, r4, r5, chats: u.chats }) + ')'); }
+        { const A = mk3('Viktor', 1, 'ventrue', P, { askSecs: 1.2 }), H = mk3('Hanna Bergström', 3, 'malkavian', P, { askSecs: 1.2 }); wire3(A, [H]); wire3(H, [A]);
+          A.board = [V3('a1', 'Alice Chen (G6)', { blood: 5, cap: 6 })]; A.hand = []; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
+          H.board = [V3('h1', 'Colette', { cap: 5, locked: true })]; H.hand = []; H.pool = 20; H.turnSeat = 1;
+          A.table = { 2: { pub: { cards: [V3('j1', 'Lisa')] } }, 3: { pub: { cards: [V3('h1', 'Colette', { locked: true })] } }, 4: { pub: { cards: [] } } };
+          H.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen (G6)')] } }, 2: { pub: { cards: [V3('j1', 'Lisa')] } }, 4: { pub: { cards: [] } } };
+          let terr = null; const turn = A._playTurn().catch(e => { terr = e.message; });
+          for(let i = 0; i < 80 && !A.lines.some(l => l.tier === 'chat' && /Block\?/.test(l.txt)); i++) await sleep(50);
+          A._onSay({ who: 'Johan Sigvard', i: SAY.indexOf('No block') }); A._onChat('Johan Sigvard', 'bounce Hanna');
+          const pend = A._actingVamp && A._actingVamp.pendingBounce, tgt0 = A._actingVamp && A._actingVamp.target;
+          await Promise.race([turn, sleep(8000)]); await sleep(150);
+          const L = A.lines.map(l => l.tier + ':' + l.txt), i1 = L.indexOf("log:Alice Chen (G6) bleeds for 1. Target: Hanna Bergström's pool.");
+          ok(!terr && !!pend && pend.seat === 3 && tgt0 === 2 && i1 >= 0 && /^chat:Viktor \(bot\): Alice Chen now bleeds Hanna Bergström for 1 \(Johan Sigvard bounced it\) — Hanna Bergström may block it/.test(L[i1 + 1] || '') && H.pool === 19,
+             '183f3 ...through a whole turn: the Block? window closed on Johan’s No block and his bounce came in the same tick -- the re-announce and Hanna’s window go out together, she answers in it, and the bleed lands on her (got ' + JSON.stringify({ terr, pend, tgt0, at: i1, next: L[i1 + 1], hpool: H.pool }) + ')'); } }
 
       // g) THE PANEL'S LINE HAS ITS EVENT KIND
       { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan', bot: false }]; const u = mk3('Viktor', 1, 'ventrue', P);
