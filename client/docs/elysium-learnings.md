@@ -1,8 +1,29 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.186 / server v2.6.53 / bot v0.6.236 tested beside the suite, last updated 24 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.187 / server v2.6.53 / bot v0.6.236 tested beside the suite, last updated 24 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**24 Nov 2026, evening (THE BOT RING — v2.6.187):**
+- **What grows into place takes clicks where it is drawn on the way.** The ring's groups unfold from scale .72, and at
+  that scale ring 3 (146–178 px) lies over ring 2 (92–140). With the pointer switched on together with the class, a tap
+  on Reduce reduced the bleed by 3, and a fast mouse click had the same trap. A layer that animates in takes the pointer
+  once it has arrived (`.live`, 170 ms after `.on`). The suite could not see it; a browser with real taps did.
+- **A touch has no hover.** `pointerenter` fires for a touch just before `pointerdown`, so hover logic runs on every tap
+  and opens the next ring under the finger. Hover belongs to the mouse and the pen; a touch opens a parent with its tap.
+- **Fit the part that is open, not the whole.** One rotation for every fan at once left Block's fan 12 px off screen at
+  the hub's home corner and 46 px in a corner. Each fan now slides along its own ring the least it can, and a sweep of
+  every place the hub can stand, in six window sizes, pins that nothing leaves the window.
+- **What fades out is still there when it starts to fade.** The hub placed itself when the visit ended, while ⌂ Home was
+  still fading, and stayed below Home's old place. A cheap placement every tick (unless held or open) beats a change
+  detector that fires one tick early.
+- **A light is a promise.** At a hotseat with several humans the ring lit Reduce for a bleed at Anna while You played,
+  and the bot reads a Reduce only from the seat it bleeds: the press went out and vanished. Lighting an answer the
+  reader will ignore is worse than no light. Read the reader's rule (here `_onSay`'s `m.who === curTarget` and
+  `L12.reduceBy`'s sender), then light, grey or say whose seat answers.
+- **A line for people and a line for machines can travel together.** The bounce writes a sentence no bot reads, then the
+  re-announce in the shape the bots already parse (their own bounce's). The canary pins both halves: the first matches no
+  `L12` pattern, the second parses, and live bots follow it.
 
 **24 Nov 2026, afternoon (THE TOUR CATCHES UP — v2.6.186):**
 - **A tutorial is a second copy of the interface's words, and nothing tells it when the first copy changes.** Months of
@@ -1417,6 +1438,7 @@ Quick rule: when something is "buried", find its band below, then check the **st
 - `9999` `#cardTip` (tooltip) · `9900` `#libDragGhost`/`#cryptDragGhost` (pile drag ghosts) · `9800` `.flycard` (fly-to-pile) · `9000` `.rhghost` + reaction HUD preview.
 - `8600` `#logInspect` · `8500` `#logPeek`.
 - `6050` `#turnFx` · `6000` `#decideFx` · `5900` `#cardFx` (trapped in `#board`) · `5800` `#sayFx`.
+- `5950` `#botRing` · `5940` `#botBox` · `5900` `#holdBadge` · `4900` `#hotBotBtn` (the bot hub, v2.6.187: above the open dock 4800 and a visit's `#rview` 3500 everywhere; it steps out of the hold badge's and ⌂ Home's way instead of sitting under them).
 - `5000` `.card.dragging` (+ JS group-drag) — a card mid-drag jumps here.
 - `800` `#overlay` — the modal backdrop AND every modal inside it (alerts/`#dialogModal`, Settings, Deck Lab). Modals are ~800, BELOW the tutorial — that is why `tutTick` only hides the tutorial for `#dialogModal` (transient alerts), not content modals.
 

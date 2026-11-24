@@ -660,7 +660,46 @@ body.hotseat #z-hand:hover .card .back{opacity:0}
 #board.l2mode:not(.l3mode) #pseat{ display:block; z-index:4700; }
 body.invisit #pseat{ display:none !important; }
 body.invisit #edge{ display:none !important; }
-body.invisit #hotBotBtn{ top:90px !important; right:16px !important; z-index:3600 !important; max-height:calc(100vh - 106px) !important; }   /* v2.6.179 (Johan): in a seat visit the bot badge and its play button lay UNDER the visited seat (#rview is z 3500, the badge 60) -- drawn, but a click landed on the mat, and the sweep visits every bot's seat on its turn. It stands under the visit's Home button, right-aligned with it (#rvBack: right 16px, bottom at 82), above the seat */
+/* v2.6.187 (Johan, THE BOT RING): the bot hub (#hotBotBtn), its rings (#botRing) and the bot box (#botBox). The hub stands
+   where its player put it, above the table's chrome -- the open dock (4800), a seat visit's #rview (3500; v2.6.179's badge
+   lay under it at 60) -- and the rings and the box above the hub. v2.6.179's place under the visit's Home button is gone:
+   botHubAvoid steps the hub out of Home's and the hold badge's way instead, wherever the player keeps it. */
+#hotBotBtn{ position:fixed; left:-200px; top:-200px; width:56px; height:56px; margin:-28px 0 0 -28px; box-sizing:border-box; border-radius:50%; z-index:4900;
+  display:flex; align-items:center; justify-content:center; background:#1c160e; border:1px solid var(--brass2); color:var(--bone);
+  box-shadow:0 3px 14px rgba(0,0,0,.6); cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; transition:border-color .2s, box-shadow .2s }
+#hotBotBtn:hover, #hotBotBtn.open{ border-color:var(--brass) }
+#hotBotBtn:focus-visible{ outline:2px solid var(--brass); outline-offset:3px }
+#hotBotBtn.ctx{ border:2px solid #f3c969; box-shadow:0 0 0 3px rgba(243,201,105,.16), 0 3px 14px rgba(0,0,0,.6) }   /* a bot (or a bleed) waits on a human at this screen */
+#hotBotBtn.drag{ cursor:grabbing }
+#hotBotBtn .bhFace{ width:28px; height:28px; pointer-events:none }
+#hotBotBtn .bhCnt{ position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; box-sizing:border-box; border-radius:9px; background:var(--blood); color:var(--bone); font:600 11px/18px "Cinzel",serif; text-align:center; pointer-events:none }
+#botGiveWord{ position:absolute; right:-12px; bottom:-8px; width:26px; height:26px; box-sizing:border-box; border-radius:50%; padding:0; margin:0; display:flex; align-items:center; justify-content:center; background:#241c12; border:1px solid #f3c969; color:#f3c969; cursor:pointer }
+#botGiveWord svg{ width:13px; height:13px; pointer-events:none }
+#hotBotBtn [hidden], #botRing [hidden]{ display:none !important }
+#botRing{ position:fixed; left:0; top:0; right:0; bottom:0; z-index:5950; pointer-events:none }
+#botRing > svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible }
+#botRing .brG{ opacity:0; transform:scale(.72); transition:opacity .15s ease-out, transform .15s ease-out }
+#botRing .brG.on{ opacity:1; transform:none }
+#botRing .brG.now{ transition:none }
+#botRing .brG.on.live .brS{ pointer-events:auto; cursor:pointer }   /* live once grown: at scale .72 a growing ring 3 lies over ring 2 and took the click meant for it (a tap on Reduce reduced by 3) */
+#botRing .brS{ color:var(--bone) }
+#botRing .brSeg{ fill:rgba(24,19,12,.95); stroke:var(--brass2); stroke-width:1 }
+#botRing .brS.hov .brSeg{ fill:#3a2d19 }
+#botRing .brS.hl{ color:#f3c969 }
+#botRing .brS.hl .brSeg{ stroke:#f3c969; stroke-width:2.5 }
+#botRing .brS.off{ color:#6f6553 }
+#botRing .brG.on.live .brS.off{ cursor:default }
+#botRing .brS.off .brSeg{ fill:rgba(24,19,12,.82) }
+#botRing .brS.off.hov .brSeg{ fill:rgba(40,32,20,.9) }
+#botRing .brIco, #botRing text{ pointer-events:none }
+#botRing .brTxt{ font:600 13px "Cinzel",serif; fill:currentColor }
+#botRing .brQ{ font:700 11px "Cinzel",serif; fill:currentColor }
+#botRingLbl{ position:fixed; max-width:250px; padding:5px 9px; border-radius:6px; background:#241c12; border:1px solid var(--brass2); color:var(--bone);
+  font:12px/1.35 "Spectral",Georgia,serif; box-shadow:0 3px 14px rgba(0,0,0,.6); pointer-events:none }
+#botRingLbl b{ display:block; font:600 11px "Cinzel",serif; letter-spacing:.1em; text-transform:uppercase; color:var(--brass) }
+#botBox{ position:fixed; z-index:5940; width:300px; max-width:calc(100vw - 16px); max-height:calc(100vh - 16px); overflow-y:auto; box-sizing:border-box;
+  background:#17120c; border:1px solid var(--brass2); border-radius:10px; color:var(--bone); font:13px/1.4 "Spectral",Georgia,serif; box-shadow:0 6px 24px rgba(0,0,0,.65) }
+@media (prefers-reduced-motion: reduce){ #botRing .brG{ transition:none } }
 #board.tableEmpty #edge{ display:none !important; }   /* E1: empty board = the #empty overlay (z 80) is showing; the L4 Edge button (z 4700) must not cover its ⚙ Settings box. Cards present -> class off -> button returns. */
 #board.l3mode #pseat{ display:none; }   /* hidden in L3: name not editable mid-game */
 #poolWrap.l2pool{ display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:5px; padding-top:44px; box-sizing:border-box; border:1px dashed rgba(176,141,79,.22); border-radius:10px; }
@@ -1070,6 +1109,8 @@ option{ background:#14100b; color:var(--bone); }   /* dark dropdown popups (deck
    (each named group keeps the browser's own short cross-fade, which on an unchanged element shows nothing). */
 html.campan #tableArea{ view-transition-name:elytable; }
 html.campan #hotBotBtn{ view-transition-name:elyhotbot; }
+html.campan #botRing{ view-transition-name:elybotring; }
+html.campan #botBox{ view-transition-name:elybotbox; }
 html.campan #playedTab{ view-transition-name:elyplayed; }
 html.campan #readyTab{ view-transition-name:elyready; }
 html.campan #readyPeek{ view-transition-name:elyreadypeek; }
@@ -3334,7 +3375,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.186';   // v2.6.186 (24 Nov 2026, THE TOUR CATCHES UP, pure client -- purge; srv-2.6.53 unchanged, no wire change; bot v0.6.236 beside, unchanged): Johan: 'inventera och utvärdera vår tutorial'. All 12 chapters (199 steps) were driven in headless Chromium with real gestures, then the findings were fixed ('Dina förslag låter bra!'). (1) Structured: the Overview is V or the arrows -- since v2.6.118 the fixed key moved to the phase cycle, so the step changed the phase; the texts name the current binding (tutKey). (2) Start a game switches Suggested table setup off for the tutorial's own table (lob-setup; tutEnd puts the box back) -- Crypt & influence asked for four crypt cards that were already out; Interacting double-clicks the Crypt. (3) The Edge step says to open the dock, where the button sits in the pool zone, and drops 'the ankh icon'. (4) In a seat visit End tutorial moves below the Home button it covered. (5) The duel view text matches the panel (ACTING / BLOCKING, Join as acting, Change). (6) Texts retired by v2.6.116 and v2.6.184 corrected: the tournament lock is no helper choice, the room list shows itself, a save needs the room's password. (7) The Structured chapters run with All helpers on. (8) The step counter skips the branch not taken; YOUR TURN! is cleared when the tutorial starts its table; the stack steps keep the bubble below the fanned stack; the steps after the dock close a pinned dock; the counter step's bubble stands right of the tray. (9) Interacting names the seats ('the 1st seat (You)'), and smaller wordings: Set as target, the target glyph, the Resolve setting's name, Fill table, the Unlock question, the Structured II shortcut. (10) The offline dialog and the hotseat log point at the Table panel (the PRIORITY bar is off), and a hotseat seat's deck line no longer sends the player to New deal.
+const VERSION='2.6.187';   // v2.6.187 (24 Nov 2026, THE BOT RING, pure client -- purge; srv-2.6.53 unchanged, no new verb or field; bot v0.6.236 beside, unchanged): Johan: 'en effektiv och modern bott-kontrollpanel'. The blue Bot Activity panel became the bot hub: the robot in a brass circle that each player drags where it suits their own screen (saved in this browser as the distance from the nearest corner, kept 90 px from every edge; Reset in the box). Hover it (tap on a touch screen) and a segmented ring unfolds with what a player says to the bots most: Hold on (Release while a hold stands), Yes, No, Block and reaction (Block! and which minion blocks, Any blocks?, No block, No reaction, Any reaction?), the blood drop (Bleed, +Bleed and Reduce, each 1 / 2 / 3 / X, and Bounce to another Methuselah), Pass and It resolves (the gavel) -- every quick phrase is one segment, sent on the path the phrase always took, and the minion lines are the menus' own (minionAct / minionBleed / minionBleedAdd / minionReduce, moved out of cardMenu). The ring lights what the bots wait on (their status() rows) and what a bleed aimed at you allows (bleedIn, read from the frozen bleed lines any seat writes); the hub glows then and counts the bots a step can move; a segment that cannot act now is grey and says why. Open, the robot is a gear: it opens the bot box -- the rows, Run bot turns and the bot settings, as the panel had them; the Turn-based play button rides the hub's rim. Bounce writes 'NAME bounces the bleed to WHO.' (Johan: never 'redirects' -- Redirection is a card), the acting minion's bleed re-announced at WHO's pool (the shape a bot's own bounce writes) and Pass: PROTOCOL section 12, canary v1.6.0. The fans slide along their ring to stay inside the window; the keyboard walks the ring (Enter, the arrows, Esc). Before the merge (Johan: 'yes det kan du göra'): at a hotseat with several humans the ring answers from the seat the bot asked -- a bot reads a decline only from the seat it asked and a Reduce only from the seat it bleeds, so for another human the hub glows, says whose seat to take and lights nothing, and Reduce and Bounce are grey; and a tab in the background starts its title with a dot while the table waits on this screen. Icons: Tabler Icons (MIT), the notice beside the paths.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3383,7 +3424,9 @@ function tallyCombatMerge(m, prev){   // the srv-2.6.39 tallyCombat rule, field 
    released bot already parses (L12.strikeH/strikeC/strikeD/combatEnds, _parseCombatNarration); setr / extra / prev
    are new (PROTOCOL SS12, bot follow-up). Wording and the em-dash are load-bearing. */
 const BLEED_LINE={   // v2.6.159 (bot v0.6.201's ask, Johan 16 Oct: the interim for every reduction card the bots do not know yet): the TARGET's reacting minion says by how much it reduced the bleed. Effect only, like CMB_LINE; frozen in PROTOCOL section 12 and pinned by the canary against the bot's L12.reduceBy
-  reduce: (n,x)=>n+' reduces the bleed by '+x+'.'                                              // NOT the bot's own shape ('NAME plays CARD — reduces the bleed by N (now M).'): no em dash, no '(now N)' -- the bot counts each reduction once
+  reduce: (n,x)=>n+' reduces the bleed by '+x+'.',                                             // NOT the bot's own shape ('NAME plays CARD — reduces the bleed by N (now M).'): no em dash, no '(now N)' -- the bot counts each reduction once
+  bounce: (n,w)=>n+' bounces the bleed to '+w+'.',                                             // v2.6.187 (Johan, the bot ring's Bounce): the BLED Methuselah tells the table where the bleed goes. 'bounces', not 'redirects': Redirection is a card. No reader -- the line below is what the bots read
+  bounced: (v,x,w)=>v+' bleeds for '+x+'. Target: '+w+"'s pool."                              // v2.6.187: ...the re-announce the bots' own bounce writes (bot _commitBounce): v = the acting minion as its own bleed line named it, x = the total now, w = the new target. The acting bot retargets on it whoever sends it (bot L12.bleed, steg 2); a bot that becomes the target arms on it
 };
 const CMB_LINE={   // v2.6.134 (Johan): EFFECT ONLY -- no card names (the card's own 'plays' line already shows it), one line per choice
   hand:   (n,x)=>x===1 ? n+' strikes (hands) for 1.' : n+' strikes with hands for '+x+'.',   // both shapes the released bot parses (L12.strikeH / strikeC)
@@ -3405,7 +3448,7 @@ const CMB_STEP_SHORT=['Before range','Range','Before strikes','Strike','Damage',
 const CMB_STEP_HINT=['Cards and effects played before range is determined.','Maneuvers change the range. Close is the default.','Cards and effects played before strikes are chosen.','Choose strikes, acting minion first. They resolve together.','Prevent damage, then mend it with blood.','An uncancelled press to continue starts a new round.','End-of-round effects. This step happens even if the combat ended early.'];
 let _cmbSerial=0, _cmbSnap=null, _cmbDone='', _cmbLastAct=null, _cmbLastBlock=null, _cmbHist=[], _actUndir=false;   // v2.6.137: + my current action is undirected (Hunt, Political action, Undirected card action) -- +1 stealth when I open its block counter   // v2.6.135: + this combat's finished rounds (local, rebuilt by every screen from the same tally)   // v2.6.134: + the minion that last took an action / blocked (the default combatant)   // v2.6.129: combat identity, the blood snapshot taken on entering Damage, and the once-per-round taken-line key (declared early: avrRender runs at load)
 let playedPinned=false, playedShowT=null, playedHideT=null, playedAutoPin=false;   // v2.6.149 (K5): the Played tray's state, declared HERE beside avr (TDZ discipline -- avrRender runs during start-up and now reads both). playedAutoPin = pinned because a RESOLVER opened it (anyone's tally, or a combat started from the card menu), not by the player
-let avr=avrFresh(null), _avrSendT=null, _avrLastBleed=0;   // v2.6.175: v2.6.23's _poolTargetUsed is state.targetUsed now -- one used-flag for every aim, per seat. v2.6.20: the Played-tab resolver state, declared EARLY (TDZ discipline, same class as conv) -- schedulePush / hidePlayedSoon / renderAltIfOpen read avr.mode and are reachable from load-time restore paths; full docs at the resolver block (search "Played-tab resolvers")
+let avr=avrFresh(null), _avrSendT=null, _avrLastBleed=0, _avrBleedCid=null;   // v2.6.187: _avrBleedCid = the minion whose bleed this action announced (the bot ring's +Bleed). v2.6.175: v2.6.23's _poolTargetUsed is state.targetUsed now -- one used-flag for every aim, per seat. v2.6.20: the Played-tab resolver state, declared EARLY (TDZ discipline, same class as conv) -- schedulePush / hidePlayedSoon / renderAltIfOpen read avr.mode and are reachable from load-time restore paths; full docs at the resolver block (search "Played-tab resolvers")
 const AVR_DEFS={
   block:  { icoA:'disc/sup/obl', icoB:'disc/sup/aus', fbA:'\ud83d\udd76', fbB:'\ud83d\udc41', lblA:'Stealth', lblB:'Intercept',
             line:(a,b)=>'Block: Stealth '+a+' vs Intercept '+b+' \u2014 block '+(b>=a?'succeeds':'fails')+'.' },
@@ -4003,7 +4046,7 @@ function l3on(){ return board.classList.contains('l3mode'); }   // true in L3 / 
    opponents' mats ARE the table, and in L3 they are most of the screen -- block
    them and there is nowhere left to zoom. Johan's rule: chrome and cards swallow
    the wheel (with or without an effect of their own), open board zooms. */
-const BOARD_CHROME = '.card,.l4globe,.l4pbtn,#edge,#dockEdge,.mateye,#poolWrap,#dockPool,#z-hand,.zone.pile,#phases,#l2dock,#l2dockbg,#dockLog,#l3zoomCtl,#holdBadge,#hotBotBtn,#ohStrip';   // v2.6.166: +#ohStrip -- the pinned hand sits over the table too   // v2.6.108: +#hotBotBtn -- the bot panel is a control that sits over the table, so it swallows the wheel and never starts a pan. Adding it HERE is the whole point of the constant: one line, both gestures
+const BOARD_CHROME = '.card,.l4globe,.l4pbtn,#edge,#dockEdge,.mateye,#poolWrap,#dockPool,#z-hand,.zone.pile,#phases,#l2dock,#l2dockbg,#dockLog,#l3zoomCtl,#holdBadge,#hotBotBtn,#botRing,#botBox,#ohStrip';   // v2.6.187: +#botRing, #botBox -- the bot ring's segments and the bot box sit over the table too   // v2.6.166: +#ohStrip -- the pinned hand sits over the table too   // v2.6.108: +#hotBotBtn -- the bot panel is a control that sits over the table, so it swallows the wheel and never starts a pan. Adding it HERE is the whole point of the constant: one line, both gestures
 function isBoardChrome(el){ return !!(el && typeof el.closest==='function' && el.closest(BOARD_CHROME)); }
 function effectiveL3Shape(){ return 'square'; }   // PARKED: circle/round helicopter retired -> kodarkivering.md. Square is the only L3 layout now (ignores conv.l3shape + net.l3shapeLock).
 function effectiveL3CollapseOusted(){ return !!conv.l3collapseOusted; }   // LOCAL view option: when on, L3 drops ousted seats and re-flows to the living players (off -> dead boards stay in place with a skull). Could be promoted to a host lock later, like l3shape.
@@ -5218,6 +5261,24 @@ function pileSub(c){
     {label:'Shuffle in', fn:()=>returnToPile(c,'shuffle')}
   ]};
 }
+/* v2.6.187 (THE BOT RING): a minion's announce lines, lifted out of its right-click menu so the bot ring takes the same path --
+   the bodies are the menu's closures as they were (v2.6.16 Bleed X, v2.6.18 +X bleed, v2.6.115 the Reaction-window cancel,
+   v2.6.137/138 actStart and the undirected flag, v2.6.159 Reduce). A second caller must not grow a second copy. */
+function minionAct(c, verb, fxv, resolve=true, undir=false){ dfxCancel(); if(resolve) actStart(c);   // v2.6.115: Block and friends end the Reaction window. The lock clone carries it to the other screens; this line is for the case where autoLock is off or the minion is already locked, so no clone is emitted
+             if(resolve){ resolvePlayedActions(); _actUndir=!!undir; }   // v2.6.138: the undirected flag is set AFTER the batch-close (which ends the previous action and clears it). True actions close the current card-play batch; Block (reaction) passes resolve=false -- and the batch-close MUST stay ahead of targetSuffix() (pool-aim used-flag semantics, see resolvePlayedActions)
+             const _tn=targetShortRef();                          // v2.6.55 (Johan): the lock-clone verb was the ONE surface hiding the target ("X rescues" with no victim) -- ride the short ref on the same free-text channel Bleed X uses
+             if(conv.autoLock && !c.locked){ setLocked(c, true, fxv+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' '+verb+targetSuffix()); tutNotify('minion-action', fxv); if(fxv==='blocks') _cmbLastBlock=c.id; else if(resolve) _cmbLastAct=c.id; }
+function minionBleed(c, n){ dfxCancel(); actStart(c); resolvePlayedActions();   // v2.6.16 Bleed X: act()'s batch-close + autoLock semantics, but the amount rides BOTH the log line and the lock-clone's verb string -- fx `verb` is free text (<=40 chars server-side), so remote clones show the number with zero fx-protocol changes
+             const _tn=bleedTargetShortRef(); if(conv.autoLock && !c.locked){ setLocked(c, true, 'bleeds for '+n+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' bleeds for '+n+'.'+bleedTargetSuffix()); tutNotify('minion-action', 'bleeds'); _avrLastBleed=n; _cmbLastAct=c.id; _avrBleedCid=c.id; }   // v2.6.187: + which minion bled (the ring's +Bleed)
+function minionBleedAdd(c, x){ const t=Math.min(99,(_avrLastBleed|0)+x); _avrLastBleed=t;   // v2.6.18: announce a bleed INCREMENT (Conditioning & co land after the base announce) -- running total is batch-scoped
+             const vb='adds +'+x+' bleed (= '+t+')'; cardFx(c, 'lock', { verb: vb });   // presentational clone only (cardFx is state-free and broadcasts itself); the minion is already locked from the base bleed, no batch close, no autoLock
+             log(cardRefCap(c)+' adds +'+x+' bleed (= '+t+').'+bleedTargetSuffix()); tutNotify('bleed-add'); }
+function minionReduce(c, x, who){ dfxCancel();   // v2.6.159 (bot v0.6.201's ask, Johan 16 Oct): the BLED player's reaction -- a reduction card the bots may not know; the line says by how much, and a bot bleeding you lowers its bleed (a bleed of 0 moves no Edge). A reaction, not an action: no lock, no batch close (the bleed is still live), no target suffix (the bot's L12.reduceBy ends at the period); it ends the Reaction window like Block does
+             if(c) cardFx(c, 'lock', { verb:'reduces the bleed by '+x });                       // presentational clone only, like +X bleed
+             log(BLEED_LINE.reduce(c ? cardRefCap(c) : '<b>'+esc(who||net.you||state.playerName||'You')+'</b>', x)); }   // v2.6.187: from the bot ring with no minion selected the line names the bled Methuselah -- the bots read who SENDS it and the number (L12.reduceBy), never the name
+async function askBleedX(){ const v=await uiDialog({kind:'prompt', title:'Bleed X', message:'Bleed amount:', def:'4'}); if(v==null) return 0; return Math.max(1, Math.min(99, parseInt(v,10)||0)); }   // v2.6.187: the menus' X prompts, shared with the ring's X segments
+async function askBleedAdd(){ const v=await uiDialog({kind:'prompt', title:'Add bleed', message:'Additional bleed (modifiers landing after the announce):', def:'1'}); if(v==null) return 0; const raw=parseInt(v,10); return (!raw || raw<1) ? 0 : Math.min(99,raw); }
+async function askReduce(){ const v=await uiDialog({kind:'prompt', title:'Reduce bleed', message:'Reduce the bleed by:', def:'1'}); if(v==null) return 0; const raw=parseInt(v,10); return (!raw || raw<1) ? 0 : Math.min(99,raw); }
 function cardMenu(c,x,y){
   const n='<b>'+escapeHtml(c.name)+'</b>';
   const items=[];
@@ -5236,18 +5297,10 @@ function cardMenu(c,x,y){
     if((c.owner||'') && (c.owner||'')!==(net.you||'') && ((net.hot&&!inRoom())||(inRoom()&&!net.spect)))
       items.push({label:'\u21aa Give back to '+(c.owner||''), fn:()=>giveBack(c)});   // v2.5.62 (2.4.a): the holder-side mirror of the owner's "Take back"
     if(c.zone==='ready' && isMinion(c)){
-      const act=(verb,fxv,resolve=true,undir=false)=>()=>{ dfxCancel(); if(resolve) actStart(c);   // v2.6.115: Block and friends end the Reaction window. The lock clone carries it to the other screens; this line is for the case where autoLock is off or the minion is already locked, so no clone is emitted
-             if(resolve){ resolvePlayedActions(); _actUndir=!!undir; }   // v2.6.138: the undirected flag is set AFTER the batch-close (which ends the previous action and clears it). True actions close the current card-play batch; Block (reaction) passes resolve=false -- and the batch-close MUST stay ahead of targetSuffix() (pool-aim used-flag semantics, see resolvePlayedActions)
-             const _tn=targetShortRef();                          // v2.6.55 (Johan): the lock-clone verb was the ONE surface hiding the target ("X rescues" with no victim) -- ride the short ref on the same free-text channel Bleed X uses
-             if(conv.autoLock && !c.locked){ setLocked(c, true, fxv+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' '+verb+targetSuffix()); tutNotify('minion-action', fxv); if(fxv==='blocks') _cmbLastBlock=c.id; else if(resolve) _cmbLastAct=c.id; };   // v2.6.134: remembered as the default combatant
-      const actBleed=n=>()=>{ dfxCancel(); actStart(c); resolvePlayedActions();   // v2.6.16 Bleed X: act()'s batch-close + autoLock semantics, but the amount rides BOTH the log line and the lock-clone's verb string -- fx `verb` is free text (<=40 chars server-side), so remote clones show the number with zero fx-protocol changes
-             const _tn=bleedTargetShortRef(); if(conv.autoLock && !c.locked){ setLocked(c, true, 'bleeds for '+n+(_tn?' \u2192 '+_tn:'')); } log(cardRefCap(c)+' bleeds for '+n+'.'+bleedTargetSuffix()); tutNotify('minion-action', 'bleeds'); _avrLastBleed=n; _cmbLastAct=c.id; };
-      const actBleedAdd=x=>()=>{ const t=Math.min(99,(_avrLastBleed|0)+x); _avrLastBleed=t;   // v2.6.18: announce a bleed INCREMENT (Conditioning & co land after the base announce) -- running total is batch-scoped
-             const vb='adds +'+x+' bleed (= '+t+')'; cardFx(c, 'lock', { verb: vb });   // presentational clone only (cardFx is state-free and broadcasts itself); the minion is already locked from the base bleed, no batch close, no autoLock
-             log(cardRefCap(c)+' adds +'+x+' bleed (= '+t+').'+bleedTargetSuffix()); tutNotify('bleed-add'); };   // v2.6.26: tutorial breadcrumb (Structured II's +X step advances on the real thing)
-      const actReduce=x=>()=>{ dfxCancel();   // v2.6.159 (bot v0.6.201's ask, Johan 16 Oct): the BLED player's reaction -- a reduction card the bots may not know; the line says by how much, and a bot bleeding you lowers its bleed (a bleed of 0 moves no Edge). A reaction, not an action: no lock, no batch close (the bleed is still live), no target suffix (the bot's L12.reduceBy ends at the period); it ends the Reaction window like Block does
-             cardFx(c, 'lock', { verb:'reduces the bleed by '+x });                       // presentational clone only, like +X bleed
-             log(BLEED_LINE.reduce(cardRefCap(c), x)); };
+      const act=(verb,fxv,resolve=true,undir=false)=>()=>minionAct(c, verb, fxv, resolve, undir);   // v2.6.187: the four bodies are minionAct / minionBleed / minionBleedAdd / minionReduce now -- one path for this menu and the bot ring
+      const actBleed=n=>()=>minionBleed(c, n);
+      const actBleedAdd=x=>()=>minionBleedAdd(c, x);
+      const actReduce=x=>()=>minionReduce(c, x);
       const actVote=dir=>async()=>{   // v2.6.106: casting votes is NOT an action -- no batch close, no autoLock (a minion with a title keeps its votes while locked). Pure announce, so a bot can weigh a referendum it cannot otherwise see
              const v=await uiDialog({kind:'prompt', title:'Cast votes', message:'How many votes '+dir+'?', def:'1'});
              if(v==null) return; const n=Math.max(1, Math.min(99, parseInt(v,10)||0)); if(!n) return;
@@ -5258,12 +5311,12 @@ function cardMenu(c,x,y){
           {label:'Bleed 1', fn:actBleed(1)},
           {label:'Bleed 2', fn:actBleed(2)},
           {label:'Bleed 3', fn:actBleed(3)},
-          {label:'Bleed X…', fn:async()=>{ const v=await uiDialog({kind:'prompt', title:'Bleed X', message:'Bleed amount:', def:'4'}); if(v==null) return; const n=Math.max(1, Math.min(99, parseInt(v,10)||0)); if(n) actBleed(n)(); }},
-          {label:'+X bleed…', fn:async()=>{ const v=await uiDialog({kind:'prompt', title:'Add bleed', message:'Additional bleed (modifiers landing after the announce):', def:'1'}); if(v==null) return; const raw=parseInt(v,10); if(!raw || raw<1) return; actBleedAdd(Math.min(99,raw))(); }},
+          {label:'Bleed X…', fn:async()=>{ const n=await askBleedX(); if(n) actBleed(n)(); }},
+          {label:'+X bleed…', fn:async()=>{ const x=await askBleedAdd(); if(x) actBleedAdd(x)(); }},
           '-',
           {label:'Reduce bleed −1', title:'A bleed aimed at you was reduced (your reaction card): tells the table, and a bot bleeding you, by how much', fn:actReduce(1)},   // v2.6.159
           {label:'Reduce bleed −2', title:'A bleed aimed at you was reduced (your reaction card): tells the table, and a bot bleeding you, by how much', fn:actReduce(2)},
-          {label:'Reduce bleed −X…', title:'A bleed aimed at you was reduced (your reaction card): tells the table, and a bot bleeding you, by how much', fn:async()=>{ const v=await uiDialog({kind:'prompt', title:'Reduce bleed', message:'Reduce the bleed by:', def:'1'}); if(v==null) return; const raw=parseInt(v,10); if(!raw || raw<1) return; actReduce(Math.min(99,raw))(); }}
+          {label:'Reduce bleed −X…', title:'A bleed aimed at you was reduced (your reaction card): tells the table, and a bot bleeding you, by how much', fn:async()=>{ const x=await askReduce(); if(x) actReduce(x)(); }}
         ]},
         {label:'Vote', sub:[
           {label:'Political action', fn:act('calls a political action.','calls a vote',true,true)},   // v2.6.106 (Johan): an ACTION like the others -- locks, closes the play batch, carries the target suffix -- so a bot's block step runs on it exactly as it does on a bleed
@@ -9412,7 +9465,7 @@ function isMaster(c){                                      // master-type card (
 function resolvePlayedActions(){                           // the current action is over → its played cards become resolved (loose permanents like allies leave the contested tray)
   _actUndir=false;   // v2.6.138: the action is over -- its undirected +1 must not reach the next one (an action declared by playing a card never passes the Actions menu)
   if(avr.mode==='block'){ avrSendCancel(); avr=avrFresh(null); avrRender(); if(mySeat() && mySeat()===(net.turnSeat|0)) tallySendNull(); }   // v2.6.137: ...and the ACTOR's client now says so on the wire (the server / hotseat table kept the old stealth, and a bot read it as the next action's). v2.6.28 (Johan): the Block referendum dies with its ACTION — every client runs this on the same triggers (It resolves / res / basic resolve), so the clear is symmetric without a broadcast. v2.6.29: the pending tally DEBOUNCE dies with it too — an adjust ≤120 ms before the resolve used to fire after the clear and resurrect the counters table-wide
-  _avrLastBleed=0;                                         // v2.6.18: the announced bleed total dies with the batch (see the resolver block)
+  _avrLastBleed=0; _avrBleedCid=null;                      // v2.6.18: the announced bleed total dies with the batch (v2.6.187: and so does the minion that announced it) (see the resolver block)
   if(state.targetUsed){ state.targetUsed=false; if(state.target || net.rtarget) clearAnyTarget(true); }   // v2.6.175 (bot v0.6.225's ask; Johan, 15 Nov: every aim is per-action): v2.6.23's pool rule now covers card and name aims too. A card target used to stick until cleared and rode every later line -- the Grand Ball's pair rode the next hunt and bleed, and a bot reads a bleed with a card target as aimed at nobody. Same two guarantees: a fresh aim survives the batch-close ahead of its own line, and another player's resolve never touches your unused aim. The v2.6.23 note follows. v2.6.23 (Johan's call): a pool aim is PER-ACTION -- it clears when the action that USED it resolves. The used-flag (set by targetSuffix, reset by setPoolTarget) is what makes this safe: actBleed closes the PREVIOUS batch before logging, so an unconditional clear here would eat a fresh aim before its own bleed line; and someone ELSE's resolve never touches your fresh, unused aim. Card targets stay sticky by design (ongoing hostility markers).
   let any=false;
   state.zones.ready.forEach(id=>{ const c=state.cards.get(id); if(c && c.actSt==='played'){ c.actSt='resolved'; any=true; } });
@@ -9949,6 +10002,7 @@ function cleanAddr(a, sec){
   return s;
 }
 function mpRelay(html){
+  try{ bleedInTrack(net.you||state.playerName||'You', html); }catch(_e){}   // v2.6.187: the bot ring reads a bleed aimed at a human here -- my own lines too (a bounce re-announce, a reduction)
   if(net.status==='in' && !net.spect && net.ws && net.ws.readyState===1){   // v2.6.148: a spectator's log lines are its own -- the server refuses them like the board. cli-2.6.165: a log line is NOT queued while reconnecting -- the line an offline path writes then ('The library is empty.') is not this table's
     try{ net.ws.send(JSON.stringify({t:'log', html})); }catch(err){}
   }
@@ -10746,7 +10800,7 @@ const MP_HANDLERS = {
     else return;
     renderCounters(c); c.el.title=cardTitle(c); pushNow();   // v2.5.59: same immediate push as recall - the owner's optimistic copy heals fastest this way
   },
-  say(m){ showSay(m.i, m.who||'?', m.seat|0); hotHoldMark(m.who||'?', m.i|0); if(SAY[m.i|0]==='It resolves') resolvePlayedActions(); },   // v2.6.101: another player's hold is visible too, so a frozen online table explains itself   // v2.6.17: the verbal resolve closes the batch for EVERYONE, not just the speaker — the sender-side check in saySend() never reached remote clients, despite the help text's promise
+  say(m){ showSay(m.i, m.who||'?', m.seat|0); hotHoldMark(m.who||'?', m.i|0); if(SAY[m.i|0]==='It resolves'){ resolvePlayedActions(); bleedIn=null; } },   // v2.6.187: It resolves ends the bleed in flight too   // v2.6.101: another player's hold is visible too, so a frozen online table explains itself   // v2.6.17: the verbal resolve closes the batch for EVERYONE, not just the speaker — the sender-side check in saySend() never reached remote clients, despite the help text's promise
   decide(m){ runDecide(m.secs||5, m.who||null); },
   fx(m){ cardFx(m.card||null, m.kind, { remote:true, seat:m.seat|0, who:m.who||'', target:m.target||null, actor:m.actor||null, onto:m.onto||null, verb:m.verb||'', reveal:m.reveal, toName:m.toName||'' }); },
   botcfg(m){ const c=botCfgMerge(m.tempo, m.waitSecs, net.botcfg); if(!c) return; net.botcfg=c; try{ botPanelRender(); }catch(_e){} },   // v2.6.139 / srv-2.6.43: the table's bot tempo -- the server sends the WHOLE state (its echo of our own change too); merged tolerantly all the same. The change's log line is the SENDER's own; this only updates what the panel shows
@@ -10897,6 +10951,7 @@ const MP_HANDLERS = {
     mpStatus(why); toast('\u26d4 '+why, 6000);
   },
   log(m){ log('<span class="rwho">['+esc(m.who)+']</span> '+sanRemote(m.html), true);
+    try{ bleedInTrack(m.who, m.html); }catch(_e){}   // v2.6.187: ...and every other seat's, a bot's included (the hotseat bridge delivers here too)
     maybeVerdictPulse(String(m.html||''), m.who, (net.roster.find(q=>q.name===m.who)||{}).seat); },   // v2.6.30/31: the frozen verdict lines double as presentation (the say-style pulse)
   edgeTake(m){   // someone took the Edge (via their button) → I lose it if I had it
     if(+m.bySeat!==mySeat() && state.edge){ state.edge=false; updateEdge(); removeEdgeToken(); if(!m.clearOnly) log('<b>'+esc((net.roster||[]).find(p=>p.seat===+m.bySeat)?.name||'An opponent')+'</b> took <b>the Edge</b>.'); }
@@ -12228,7 +12283,7 @@ function botCfgSeed(){                                             // decision (
   mpSend({ t:'botcfg', tempo:BOTCFG_SEED.tempo, waitSecs:BOTCFG_SEED.waitSecs });
   return true;
 }
-let _botCfgOpen=false, _botCfgDrag=false;
+let _botCfgDrag=false;   // v2.6.187: _botCfgOpen went with the gear on the badge -- the hub's gear opens the bot box, and the settings are always in it
 function botGiveWordTargets(rows){ return (rows||botPanelSeats().map(r=>({ key:r.key, bot:r.bot, st:botPanelRead(r.bot) }))).filter(r=>r.st.canStep && r.st.step && r.st.step!=='release-hold'); }   // v2.6.140: a FILTER, never an allow-list (the bot project's v0.6.195 ask) -- every rung a bot can be stepped past except a hold: resolve-ask, resolve-pq, resolve-phase (a combat step), resolve-vote (a vote poll), resolve-verdict (v2.6.162, bot v0.6.204: its block on your action waits for your word), and whatever rung a later bot names. A hold is a human's pause, released by that human
 function botGiveWordWanted(rows){ return botCfgNow().tempo==='turn' && botGiveWordTargets(rows).length>0; }
 function botGiveWord(){                                            // decision (2): Turn-based's "give the bot the word" -- the same step() the panel's rows use, for every bot this tab runs that waits on a human (a window, a question, a combat step, a vote poll, a block verdict -- never a hold)
@@ -12242,34 +12297,30 @@ function botCfgDeafVer(rows){                                      // the bots t
   for(const r of (rows||[])){ const h=r.bot && r.bot._handlers; if(h && typeof h==='object' && typeof h.botcfg!=='function') return String((typeof ElysiumBot!=='undefined' && ElysiumBot.BOT_VERSION) || '?'); }
   return '';
 }
-function botCfgSig(rows, give){ const c=botCfgNow(); return (_botCfgOpen?'g':'-')+':'+c.tempo+':'+c.waitSecs+':'+(botCfgRaw()?1:0)+':'+botCfgWhy()+':'+(give?1:0)+':'+botCfgDeafVer(rows); }
-function botGiveWordBtn(){ return '<button type="button" id="botGiveWord" title="Give the bots the word (Turn-based): every bot waiting on you goes on \u2014 a window, a question, a combat step, a vote or a block verdict; never a hold" aria-label="Give the bots the word" style="all:unset;cursor:pointer;padding:5px 6px;font-size:14px;color:#f3c969">\u25b6</button>'; }
-function botCfgGearBtn(open){ const on=open&&_botCfgOpen; return '<button type="button" id="botCfgGear" title="Bot settings \u2014 '+esc(botCfgText())+'" aria-label="Bot settings" aria-expanded="'+(on?'true':'false')+'" style="all:unset;cursor:pointer;'+(open?'padding:0 4px;':'padding:6px 11px 6px 4px;')+'font-size:14px;opacity:'+(on?'1':'.7')+'">\u2699</button>'; }
+function botCfgSig(rows, give){ const c=botCfgNow(); return c.tempo+':'+c.waitSecs+':'+(botCfgRaw()?1:0)+':'+botCfgWhy()+':'+(give?1:0)+':'+botCfgDeafVer(rows); }
+function botGiveWordBtn(){ return '<button type="button" id="botGiveWord" title="Give the bots the word (Turn-based): every bot waiting on you goes on — a window, a question, a combat step, a vote or a block verdict; never a hold" aria-label="Give the bots the word" hidden><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round">'+botIconPaths('play')+'</svg></button>'; }   // v2.6.187: the play button sits on the hub's rim
 function botPanelEmptyText(){ return (!localTable && inRoom() && !botPanelSeats().length) ? 'The bots run in the host\u2019s tab \u2014 the host sees what they are waiting for.' : 'No bots seated.'; }
 function botCfgHtml(rows){                                         // the Bot settings block: the segmented Tempo, the Wait slider (greyed in Turn-based), one line on the mode, who it applies to, and every honest caveat
   const c=botCfgNow(), why=botCfgWhy(), turn=c.tempo==='turn';
   const seg=t=>'<button type="button" class="botCfgTempo" data-t="'+t+'" aria-pressed="'+(c.tempo===t?'true':'false')+'"'+(why?' disabled':'')
     +' style="all:unset;cursor:'+(why?'default':'pointer')+';flex:1 1 0;text-align:center;padding:4px 2px;border-radius:7px;font-size:12px;'
-    +'background:rgba(122,167,240,'+(c.tempo===t?'.45':'.10')+');'+(c.tempo===t?'font-weight:700;':'')+(why?'opacity:.6;':'')+'">'+BOTCFG_LABEL[t]+'</button>';
+    +'background:rgba(176,141,79,'+(c.tempo===t?'.45':'.10')+');'+(c.tempo===t?'font-weight:700;':'')+(why?'opacity:.6;':'')+'">'+BOTCFG_LABEL[t]+'</button>';
   const deaf=botCfgDeafVer(rows);
-  let h='<div style="padding:6px 10px 9px;border-top:1px solid rgba(232,235,242,.10)">'
-    +'<b style="display:block;font-size:11px;letter-spacing:.06em;opacity:.8">BOT SETTINGS</b>'
+  let h='<div style="padding:6px 10px 9px;border-top:1px solid rgba(176,141,79,.18)">'
+    +'<b style="display:block;font:600 11px &quot;Cinzel&quot;,serif;letter-spacing:.14em;color:var(--brass)">BOT SETTINGS</b>'
     +'<div role="group" aria-label="Bot tempo" style="display:flex;gap:4px;margin-top:6px">'+BOTCFG_TEMPOS.map(seg).join('')+'</div>'
     +'<label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;opacity:'+(turn?'.45':'1')+'">'
       +'<span style="flex:0 0 auto">Wait time</span>'
       +'<input type="range" id="botCfgWait" min="1" max="8" step="0.5" value="'+c.waitSecs+'" aria-label="Wait time in seconds"'+((why||turn)?' disabled':'')+' style="flex:1 1 auto;min-width:0">'
       +'<span id="botCfgWaitVal" style="flex:0 0 auto;min-width:32px;text-align:right;font-variant-numeric:tabular-nums">'+botCfgSecs(c.waitSecs)+' s</span></label>'
-    +'<div style="margin-top:6px;font-size:11.5px;line-height:1.35;opacity:.75">'+esc(BOTCFG_HELP[c.tempo]||'')+(turn && (rows||[]).length ? ' '+esc('\u25b6 beside the \ud83e\udd16 gives the bots the word.') : '')+'</div>'
+    +'<div style="margin-top:6px;font-size:11.5px;line-height:1.35;opacity:.75">'+esc(BOTCFG_HELP[c.tempo]||'')+(turn && (rows||[]).length ? ' '+esc('▶ on the robot’s rim gives the bots the word.') : '')+'</div>'
     +(botCfgHoldLine() ? '<div style="margin-top:4px;font-size:11.5px;line-height:1.35;opacity:.75">'+esc(botCfgHoldLine())+'</div>' : '')
     +'<div style="margin-top:4px;font-size:11px;line-height:1.3;opacity:.55">Anyone at the table can change this; it applies to every bot at once.</div>';
   if(deaf) h+='<div style="margin-top:5px;font-size:11px;line-height:1.3;color:#f3c969">'+esc('This bot file'+(deaf!=='?'?' (v'+deaf+')':'')+' does not read the tempo yet \u2014 its own clocks stay until a bot release that does.')+'</div>';
   if(why) h+='<div style="margin-top:5px;font-size:11px;line-height:1.3;color:#f3c969">'+esc(why)+'</div>';
   return h+'</div>';
 }
-function botCfgWire(el){                                           // the panel's new controls; the slider sends on RELEASE (change), the label follows the drag (input), and the 4 Hz loop never rebuilds under a dragging thumb (_botCfgDrag)
-  const gear=el.querySelector('#botCfgGear');
-  if(gear) gear.onclick=()=>{ if(!_botPanelOpen){ _botPanelOpen=true; try{ localStorage.setItem('elysiumBotPanelOpen','1'); }catch(err){} _botCfgOpen=true; } else _botCfgOpen=!_botCfgOpen; botPanelRender(); };
-  const gw=el.querySelector('#botGiveWord'); if(gw) gw.onclick=botGiveWord;
+function botCfgWire(el){                                           // the box's tempo controls (v2.6.187: the gear and the play button live on the hub); the slider sends on RELEASE (change), the label follows the drag (input), and the 4 Hz loop never rebuilds under a dragging thumb (_botCfgDrag)
   Array.prototype.forEach.call(el.querySelectorAll('.botCfgTempo'), b=>{ b.onclick=()=>{ if(!b.disabled) botCfgSet({ tempo:b.dataset.t }); }; });
   const wr=el.querySelector('#botCfgWait');
   if(wr){
@@ -12367,95 +12418,600 @@ function botPanelCountdown(until, now){                            // a hold has
   return left+'s';
 }
 let _botPanelOpen=false, _botPanelT=null;
-try{ _botPanelOpen = localStorage.getItem('elysiumBotPanelOpen')==='1'; }catch(err){}
-/* v2.6.108: the \u25b6 sweep did not go away -- it MOVED IN. step() pulls a single
+try{ _botPanelOpen = localStorage.getItem('elysiumBotBoxOpen')==='1'; }catch(err){}   // v2.6.187: the bot box has a key of its own -- a player who kept the old panel open does not meet an open box at the first table
+/* v2.6.108: the ▶ sweep did not go away -- it MOVED IN. step() pulls a single
    wait forward; it does not play a turn, so the offline sweep is still the only
    way to run the bot seats by hand and it is now a row in the panel instead of a
-   second floating button competing for the same corner.                        */
+   second floating button competing for the same corner.
+   v2.6.187 (THE BOT RING): the badge became the hub of the bot ring (below) and the panel became the bot box the
+   hub's gear opens -- the rows, the sweep and the settings, as they were. */
 function hotBotBtnShow(on){
   let el=document.getElementById('hotBotBtn');
   if(!on && !botBtnWanted()){                                       // v2.6.139: hide only when NOTHING wants it -- no bot in this tab AND not a seated human at an online bot table (v2.6.109: a remove of one of three bots must not kill the panel)
+    botRingClose(); botTitleMark(false);
     if(el) el.remove();
+    const bx=document.getElementById('botBox'); if(bx) bx.remove();
     if(_botPanelT){ clearInterval(_botPanelT); _botPanelT=null; }
     return;
   }
   if(!el){
-    el=document.createElement('div'); el.id='hotBotBtn';
-    el.style.cssText='position:fixed;right:14px;top:74px;z-index:60;border-radius:10px;background:rgba(122,167,240,.22);border:1px solid rgba(122,167,240,.65);color:#e8ebf2;font-size:13px;max-width:min(320px,86vw);max-height:calc(100vh - 90px);overflow-y:auto';   // v2.6.139: max-height + scroll -- with Bot settings open and several bots the panel can outgrow a landscape phone   // v2.6.112 (Johan): was bottom:64px, where the pool globe covers it on a laptop. Top-right, clear of the menu bar
-    document.body.appendChild(el);
+    el=botHubMount();                                               // v2.6.187: the hub -- built once, painted in place (a rebuild under the pointer loses the click, v2.6.108)
     botPanelRender();
   }
   if(!_botPanelT) _botPanelT=setInterval(botPanelRender, 250);     // 4 Hz: fast enough that a countdown does not visibly stutter, slow enough to cost nothing
 }
 function botPanelToggle(){
   _botPanelOpen=!_botPanelOpen;
-  try{ localStorage.setItem('elysiumBotPanelOpen', _botPanelOpen?'1':'0'); }catch(err){}
+  try{ localStorage.setItem('elysiumBotBoxOpen', _botPanelOpen?'1':'0'); }catch(err){}
   botPanelRender();
 }
 function botPanelRender(){
-  const el=document.getElementById('hotBotBtn'); if(!el) return;
+  const hub=document.getElementById('hotBotBtn'); if(!hub) return;
   const rows=botPanelSeats().map(r=>({ key:r.key, bot:r.bot, st:botPanelRead(r.bot) }));
   const now=Date.now(), waiting=rows.filter(r=>r.st.canStep).length;
-  const give=botGiveWordWanted(rows);                              // v2.6.139: Turn-based -- the play button beside the bot badge (decision 2)
+  const give=botGiveWordWanted(rows);                              // v2.6.139: Turn-based -- the play button on the hub (decision 2)
+  const hs=botHubState(rows);
+  botHubPaint(hub, hs);                                            // v2.6.187: the hub is painted in place, never rebuilt
+  botTitleMark(!!(hs.wait && document.hidden));                    // and a tab in the background says so while the table waits on this screen
+  if(!_bhDown && !_bring.open) botHubPlace();                      // every tick: the hub steps out of a seat visit's Home button and the hold badge, and back once they are gone (a visit's Home fades out -- a place taken when the visit ended still saw it)
+  if(_bring.open) botRingSync(rows);
+  const el=document.getElementById('botBox');
+  if(!_botPanelOpen){ if(el && el.style) el.style.display='none'; return; }
+  const box=el || botBoxMount();
   /* v2.6.108 review fix: the loop runs at 4 Hz, and a button rebuilt under the
      pointer between mousedown and mouseup loses the click. So the DOM is rebuilt
      only when its SHAPE changes -- rows, names, reasons, step rungs, open state --
      and a plain tick only rewrites the countdown text in place. */
-  const sig=(_botPanelOpen?'o':'c')+'|'+rows.map(r=>r.key+':'+r.st.name+':'+r.st.waitingFor+':'+(r.st.step||'')+':'+(r.st.canStep?1:0)+':'+(r.st.until==null?'-':'t')).join('|')+'|'+waiting+'|'+(localTable?'L':'N')+'|'+botCfgSig(rows, give);
-  if(_botCfgDrag && el._botSig && el._botSig!==sig) return;   // v2.6.139: never rebuild under a dragging slider thumb -- the first tick after the release catches up
-  if(el._botSig===sig){
-    Array.prototype.forEach.call(el.querySelectorAll('.botPanelCd'), c=>{ const r=rows[+c.dataset.i]; if(r) c.textContent=botPanelCountdown(r.st.until, now); });
+  const sig='o|'+rows.map(r=>r.key+':'+r.st.name+':'+r.st.waitingFor+':'+(r.st.step||'')+':'+(r.st.canStep?1:0)+':'+(r.st.until==null?'-':'t')).join('|')+'|'+waiting+'|'+(localTable?'L':'N')+'|'+botCfgSig(rows, give);
+  if(box.style) box.style.display='';
+  if(_botCfgDrag && box._botSig && box._botSig!==sig) return;     // v2.6.139: never rebuild under a dragging slider thumb -- the first tick after the release catches up
+  if(box._botSig===sig){
+    Array.prototype.forEach.call(box.querySelectorAll('.botPanelCd'), c=>{ const r=rows[+c.dataset.i]; if(r) c.textContent=botPanelCountdown(r.st.until, now); });
+    botBoxPlace(box);
     return;
   }
-  el._botSig=sig;
-  if(!_botPanelOpen){
-    el.innerHTML='<div style="display:flex;align-items:center"><button type="button" id="botPanelHead" title="Bot activity \u2014 what each bot is waiting for" '
-      +'style="all:unset;cursor:pointer;display:block;padding:7px 8px 7px 13px;font-size:17px">\ud83e\udd16'
-      +(waiting?' <span style="font-size:12px;vertical-align:2px;color:#f3c969">'+waiting+'</span>':'')+'</button>'
-      +(give?botGiveWordBtn():'')+botCfgGearBtn(false)+'</div>';   // v2.6.139: the gear IN the Bot button (spec section 1), and the play button in Turn-based
-  } else {
-    let h='<div style="display:flex;align-items:center;gap:8px;padding:7px 10px 5px">'
-      +'<button type="button" id="botPanelHead" style="all:unset;cursor:pointer;font-size:15px">\ud83e\udd16</button>'
-      +'<b style="font-size:12px;letter-spacing:.06em;opacity:.8">BOT ACTIVITY</b>'
-      +'<span style="margin-left:auto;display:flex;align-items:center;gap:2px">'+(give?botGiveWordBtn():'')+botCfgGearBtn(true)
-      +'<button type="button" id="botPanelHide" title="Collapse" style="all:unset;cursor:pointer;opacity:.6;padding:0 4px">\u2715</button></span></div>';
-    if(_botCfgOpen) h+=botCfgHtml(rows);                           // v2.6.139: Bot settings, under the header
-    if(!rows.length) h+='<div style="padding:2px 10px 9px;opacity:.6">'+esc(botPanelEmptyText())+'</div>';
-    rows.forEach((r,i)=>{
-      const lbl=BOT_STEP_LABEL[r.st.step]||'Step';
-      h+='<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-top:1px solid rgba(232,235,242,.10)">'
-        +'<span style="flex:1 1 auto;min-width:0">'
-          +'<b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.st.name)+'</b>'
-          +'<span style="opacity:.72;font-size:12px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.st.waitingFor||r.st.state)+'</span>'
-        +'</span>'
-        +'<span class="botPanelCd" data-i="'+i+'" style="flex:0 0 auto;font-variant-numeric:tabular-nums;opacity:.8;min-width:30px;text-align:right">'+botPanelCountdown(r.st.until, now)+'</span>'
-        +'<button type="button" class="botPanelStep" data-i="'+i+'"'+(r.st.canStep?'':' disabled')
-          +' title="'+(r.st.canStep?esc(lbl):'This wait is readable but not steppable \u2014 the bot is pacing, or a human is still answering')+'"'
-          +' style="all:unset;cursor:'+(r.st.canStep?'pointer':'default')+';flex:0 0 auto;padding:3px 7px;border-radius:7px;font-size:12px;'
-          +'background:rgba(122,167,240,'+(r.st.canStep?'.30':'.08')+');opacity:'+(r.st.canStep?'1':'.35')+'">\u25b6 '+esc(lbl)+'</button>'
-        +'</div>';
-    });
-    if(localTable && Object.keys(hotBots||{}).length)
-      h+='<div style="padding:6px 10px 9px;border-top:1px solid rgba(232,235,242,.10)">'
-        +'<button type="button" id="botPanelSweep" title="Run the bot turns (alpha) \u2014 the same range the Pass handover would play" '
-        +'style="all:unset;cursor:pointer;display:block;text-align:center;padding:5px;border-radius:8px;background:rgba(122,167,240,.20)">\u25b6 Run bot turns</button></div>';
-    el.innerHTML=h;
-  }
-  const head=el.querySelector('#botPanelHead'); if(head) head.onclick=botPanelToggle;
-  const hid=el.querySelector('#botPanelHide'); if(hid) hid.onclick=botPanelToggle;
-  botCfgWire(el);                                                  // v2.6.139: the gear, the tempo buttons, the slider, the play button
-  Array.prototype.forEach.call(el.querySelectorAll('.botPanelStep'), b=>{
+  box._botSig=sig;
+  let h='<div style="display:flex;align-items:center;gap:8px;padding:8px 10px 6px">'
+    +'<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;color:var(--brass)">'+botIconPaths('robotFace')+'</svg>'
+    +'<b style="font:600 11px &quot;Cinzel&quot;,serif;letter-spacing:.14em;color:var(--brass)">BOTS</b>'
+    +'<button type="button" id="botPanelHide" title="Close" aria-label="Close the bot box" style="all:unset;cursor:pointer;margin-left:auto;opacity:.65;padding:0 4px">✕</button></div>';
+  if(!rows.length) h+='<div style="padding:2px 10px 9px;opacity:.6">'+esc(botPanelEmptyText())+'</div>';
+  rows.forEach((r,i)=>{
+    const lbl=BOT_STEP_LABEL[r.st.step]||'Step';
+    h+='<div style="display:flex;align-items:center;gap:7px;padding:5px 10px;border-top:1px solid rgba(176,141,79,.18)">'
+      +'<span style="flex:1 1 auto;min-width:0">'
+        +'<b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.st.name)+'</b>'
+        +'<span style="opacity:.72;font-size:12px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.st.waitingFor||r.st.state)+'</span>'
+      +'</span>'
+      +'<span class="botPanelCd" data-i="'+i+'" style="flex:0 0 auto;font-variant-numeric:tabular-nums;opacity:.8;min-width:30px;text-align:right">'+botPanelCountdown(r.st.until, now)+'</span>'
+      +'<button type="button" class="botPanelStep" data-i="'+i+'"'+(r.st.canStep?'':' disabled')
+        +' title="'+(r.st.canStep?esc(lbl):'This wait is readable but not steppable — the bot is pacing, or a human is still answering')+'"'
+        +' style="all:unset;cursor:'+(r.st.canStep?'pointer':'default')+';flex:0 0 auto;padding:3px 7px;border-radius:7px;font-size:12px;'
+        +'background:rgba(176,141,79,'+(r.st.canStep?'.30':'.08')+');opacity:'+(r.st.canStep?'1':'.35')+'">▶ '+esc(lbl)+'</button>'
+      +'</div>';
+  });
+  if(localTable && Object.keys(hotBots||{}).length)
+    h+='<div style="padding:6px 10px 9px;border-top:1px solid rgba(176,141,79,.18)">'
+      +'<button type="button" id="botPanelSweep" title="Run the bot turns (alpha) — the same range the Pass handover would play" '
+      +'style="all:unset;cursor:pointer;display:block;text-align:center;padding:5px;border-radius:8px;background:rgba(176,141,79,.20)">▶ Run bot turns</button></div>';
+  h+=botCfgHtml(rows);                                             // v2.6.187: the gear opens this box, so the settings are always in it
+  h+='<div style="padding:0 10px 9px"><button type="button" id="botHubReset" title="Put the bot hub back in its corner (top right)" style="all:unset;cursor:pointer;font-size:11.5px;opacity:.7;text-decoration:underline">Reset the hub’s place</button></div>';
+  box.innerHTML=h;
+  const hid=box.querySelector('#botPanelHide'); if(hid) hid.onclick=botPanelToggle;
+  const rs=box.querySelector('#botHubReset'); if(rs) rs.onclick=botHubReset;
+  botCfgWire(box);                                                 // v2.6.139: the tempo buttons and the slider
+  Array.prototype.forEach.call(box.querySelectorAll('.botPanelStep'), b=>{
     b.onclick=()=>{ const r=rows[+b.dataset.i]; if(!r||!r.st.canStep) return;
       let out=null; try{ out=r.bot.step(); }catch(_e){ out={ did:null, why:'the bot refused the step' }; }
-      if(out && out.did) toast('\ud83e\udd16 '+r.st.name+': '+(out.why||out.did));
+      if(out && out.did) toast('🤖 '+r.st.name+': '+(out.why||out.did));
       if(out && out.did==='release-hold') hotHoldAfterPanelRelease();   // v2.6.142: the badge clears once no bot this tab runs is held
-      else if(out) toast('\ud83e\udd16 '+r.st.name+': '+(out.why||'nothing to step'));
+      else if(out) toast('🤖 '+r.st.name+': '+(out.why||'nothing to step'));
       botPanelRender(); };
   });
-  const sw=el.querySelector('#botPanelSweep');
+  const sw=box.querySelector('#botPanelSweep');
   if(sw) sw.onclick=async()=>{ sw.style.opacity='.5';
-    try{ await hotRunBotTurns(net.turnSeat, hotNextHuman(net.turnSeat)); toast('\ud83e\udd16 done \u2014 your turn.'); }
+    try{ await hotRunBotTurns(net.turnSeat, hotNextHuman(net.turnSeat)); toast('🤖 done — your turn.'); }
     finally{ sw.style.opacity='1'; } };
+  botBoxPlace(box);
+}
+const BOT_TITLE_MARK='● ';
+function botTitleMark(on){                                         // v2.6.187: the tab's title starts with a dot while a bot (or a bleed) waits on this screen and the tab is in the background
+  if(typeof document==='undefined' || typeof document.title!=='string') return;
+  const t=document.title, has=t.indexOf(BOT_TITLE_MARK)===0;
+  if(on && !has) document.title=BOT_TITLE_MARK+t;
+  else if(!on && has) document.title=t.slice(BOT_TITLE_MARK.length);
+}
+function botBoxMount(){
+  const el=document.createElement('div'); el.id='botBox'; el.setAttribute('role','dialog'); el.setAttribute('aria-label','Bots');
+  document.body.appendChild(el);
+  el.addEventListener('contextmenu', e=>{ e.preventDefault(); e.stopPropagation(); });
+  return el;
+}
+function botBoxPlace(box){                                         // beside the hub, on the side that faces the table, inside the window
+  if(!box || !box.style || typeof innerWidth!=='number') return;
+  const c=botHubCenter(); if(!c) return;
+  const W=innerWidth, H=innerHeight, bw=Math.min(300, W-16), bh=box.offsetHeight||0;
+  const x=c.x>W/2 ? c.x-40-bw : c.x+40;
+  box.style.left=Math.max(8, Math.min(W-bw-8, x))+'px';
+  box.style.top=Math.max(8, Math.min(H-bh-8, c.y-28))+'px';
+}
+
+/* ======================= v2.6.187: THE BOT RING (Johan, 24 Nov 2026) ==========================
+   Johan: 'en effektiv och modern bott-kontrollpanel'. The robot stays, in a circle -- the hub -- and each player drags it
+   where it suits their own screen. Hover it (tap on a touch screen) and a segmented ring unfolds with what a player says to
+   the bots most often; the robot turns into a gear, and the gear opens the bot box (the rows, the sweep and the tempo of
+   v2.6.108 / v2.6.139). Decided with Johan over a sketch:
+     ring 1   Hold on... / Yes / No / Block and reaction / Bleed / Pass / It resolves -- Pass and It resolves are two
+              phrases to the bots ('my part is done', 'the table moves on'); the gavel is It resolves
+     ring 2   Block and reaction: Block! / Any blocks? / No block / No reaction / Any reaction? (the shield and the arrow;
+              a ? asks, a slash declines).  Bleed: Bleed / +Bleed / Reduce / Bounce (the bleeding side, the bled side)
+     ring 3   Block!: your ready minions -- the menu's 'NAME blocks.' and then Block!, one gesture for the two.
+              Bleed, +Bleed, Reduce: 1 2 3 X (X asks for a number, as the menus do).  Bounce: who the bleed may go to.
+   Nothing new goes on the wire but the bounce: a segment sends an existing say{i} or writes the line its menu row writes;
+   the bounce writes 'NAME bounces the bleed to WHO.' and the re-announce the bots' own bounce writes (BLEED_LINE).
+   The ring reads what the table waits on -- the bots' status() where they run, a bleed aimed at a human at this screen
+   (bleedIn, from the frozen lines), the player's own open bleed and the hold -- to light the answers that fit, and opens
+   on the branch a bot asks about. Placement: the hub keeps BRING_EDGE from every edge, so ring 1 always opens around it
+   without moving it under the pointer (Johan: '90 px räcker'), and the rings turn toward the table in 15-degree steps
+   -- the turn that keeps every ring inside the window, as close to facing the table as it can. */
+/* The icons are Tabler Icons 3.52 outline paths (24 x 24, stroked with currentColor). Tabler Icons: MIT License,
+   Copyright (c) 2020-2026 Paweł Kuna. Permission is hereby granted, free of charge, to any person obtaining a copy of
+   this software and associated documentation files (the "Software"), to deal in the Software without restriction,
+   including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following
+   conditions: The above copyright notice and this permission notice shall be included in all copies or substantial
+   portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+   INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
+const BOT_ICON={
+  robotFace:['M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2','M9 16c1 .667 2 1 3 1s2 -.333 3 -1','M9 7l-1 -4','M15 7l1 -4','M9 12v-1','M15 12v-1'],
+  gear:['M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065','M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0'],
+  thumbUp:['M7 11v8a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1v-7a1 1 0 0 1 1 -1h3a4 4 0 0 0 4 -4v-1a2 2 0 0 1 4 0v5h3a2 2 0 0 1 2 2l-1 5a2 3 0 0 1 -2 2h-7a3 3 0 0 1 -3 -3'],
+  thumbDown:['M7 13v-8a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v7a1 1 0 0 0 1 1h3a4 4 0 0 1 4 4v1a2 2 0 0 0 4 0v-5h3a2 2 0 0 0 2 -2l-1 -5a2 3 0 0 0 -2 -2h-7a3 3 0 0 0 -3 3'],
+  gavel:['M13 10l7.383 7.418c.823 .82 .823 2.148 0 2.967a2.11 2.11 0 0 1 -2.976 0l-7.407 -7.385','M6 9l4 4','M13 10l-4 -4','M3 21h7','M6.793 15.793l-3.586 -3.586a1 1 0 0 1 0 -1.414l2.293 -2.293l.5 .5l3 -3l-.5 -.5l2.293 -2.293a1 1 0 0 1 1.414 0l3.586 3.586a1 1 0 0 1 0 1.414l-2.293 2.293l-.5 -.5l-3 3l.5 .5l-2.293 2.293a1 1 0 0 1 -1.414 0'],
+  handStop:['M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5','M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5','M14 5.5a1.5 1.5 0 0 1 3 0v6.5','M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47'],
+  play:['M7 4v16l13 -8l-13 -8'],
+  next:['M3 5v14l8 -7l-8 -7','M14 5v14l8 -7l-8 -7'],
+  reaction:['M9 14l-4 -4l4 -4','M5 10h11a4 4 0 1 1 0 8h-1'],
+  droplet:['M7.502 19.423c2.602 2.105 6.395 2.105 8.996 0c2.602 -2.105 3.262 -5.708 1.566 -8.546l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546'],
+  dropletShare:['M18.884 13.025a6.591 6.591 0 0 0 -.82 -2.148l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546a7.125 7.125 0 0 0 4.498 1.58','M16 22l5 -5','M21 21.5v-4.5h-4.5'],
+  dropletPlus:['M18.602 12.004a6.66 6.66 0 0 0 -.538 -1.127l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546a7.16 7.16 0 0 0 5.033 1.56','M16 19h6','M19 16v6'],
+  dropletMinus:['M18.946 15.083a6.538 6.538 0 0 0 -.882 -4.206l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546a7.163 7.163 0 0 0 5.089 1.555','M16 19h6'],
+  shield:['M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3'],
+  shieldAsk:['M15.065 19.732c-.95 .557 -1.98 .986 -3.065 1.268a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3a12 12 0 0 0 8.5 3c.51 1.738 .617 3.55 .333 5.303','M19 22v.01','M19 19a2.003 2.003 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483'],
+  shieldOff:['M17.67 17.667a12 12 0 0 1 -5.67 3.333a12 12 0 0 1 -8.5 -15c.794 .036 1.583 -.006 2.357 -.124m3.128 -.926a11.997 11.997 0 0 0 3.015 -1.95a12 12 0 0 0 8.5 3a12 12 0 0 1 -1.116 9.376','M3 3l18 18'],
+  bounce:['M10 18h4','M3 8a9 9 0 0 1 9 9v1l1.428 -4.285a12 12 0 0 1 6.018 -6.938l.554 -.277','M15 6h5v5'],
+  slash:['M3 3l18 18'],
+  ask:['M19 22v.01','M19 19a2.003 2.003 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483']
+};
+function botIconPaths(name){ return (BOT_ICON[name]||[]).map(d=>'<path d="'+d+'"/>').join(''); }
+function botIconG(names, x, y, s){                                // one or more icons drawn over each other, centred on (x, y), s px wide
+  const k=s/24;
+  return '<g class="brIco" transform="translate('+(x-s/2).toFixed(1)+' '+(y-s/2).toFixed(1)+') scale('+k.toFixed(3)+')" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+names.map(botIconPaths).join('')+'</g>';
+}
+/* The ring's nodes. say: the quick-phrase index the segment sends (SAY, append-only on the wire); kids: its own ring --
+   a list, or a source built from the table ('blockers', 'targets', 'n:<kind>' for 1 2 3 X). */
+const BRING={
+  hold:{ ic:['handStop'], label:'Hold on…', say:0, note:'Pause every bot until someone releases it' },
+  yes:{ ic:['thumbUp'], label:'Yes', say:5, note:'The pool question; on a reaction question: I am reacting' },
+  no:{ ic:['thumbDown'], label:'No', say:6, note:'The pool question; closes a reactions-only question' },
+  act:{ ic:['reaction'], label:'Block and reaction', kids:['blk','ablk','nblk','nrx','arx'], w:26, note:'Blocks, reactions and the prompts for your own action' },
+  bld:{ ic:['droplet'], label:'Bleed', kids:['bl','add','red','bnc'], w:28, note:'Your bleed, or a bleed aimed at you' },
+  pass:{ ic:['next'], label:'Pass', say:7, note:'Nothing more from me: declines a block, ends your adds, no votes' },
+  res:{ ic:['gavel'], label:'It resolves', say:4, note:'The table moves on: closes the window or the poll, releases a hold, lands your own bleed' },
+  blk:{ ic:['shield'], label:'Block!', say:2, kids:'blockers', note:'You block — pick the minion, or click to say it now' },
+  ablk:{ ic:['shieldAsk'], label:'Any blocks?', say:8, note:'Your action: ask the bot whether it blocks' },
+  nblk:{ ic:['shieldOff'], label:'No block', say:1, note:'Decline the block; the bot may still pump and ask for reactions' },
+  nrx:{ ic:['reaction','slash'], label:'No reaction', say:3, note:'Decline everything: no block, no bounce, no reduction' },
+  arx:{ ic:['reaction'], q:1, label:'Any reaction?', say:9, note:'Your action: invite the bot’s bounce or reduction' },
+  bl:{ ic:['dropletShare'], label:'Bleed', kids:'n:bl', note:'Announce a bleed with the selected minion' },
+  add:{ ic:['dropletPlus'], label:'+Bleed', kids:'n:add', note:'Add to your own bleed' },
+  red:{ ic:['dropletMinus'], label:'Reduce', kids:'n:red', note:'Reduce the bleed aimed at you' },
+  bnc:{ ic:['bounce'], label:'Bounce', kids:'targets', note:'Bounce the bleed aimed at you to another Methuselah' }
+};
+const BRING_ROOT=['hold','yes','no','act','bld','pass','res'];
+const BRING_R=[null,[34,86],[92,140],[146,178]];                   // the rings' inner and outer radii, px
+const BRING_EDGE=90;                                                // Johan (24 Nov): the hub keeps this far from every edge -- ring 1 (86 px) opens around it, where it stands
+const BRING_HOME={ h:'r', x:110, v:'t', y:140 };                    // where a hub nobody has moved stands: top right, under the menu bar
+const BRING_POS_KEY='elysiumBotHub';                                // localStorage: {h, x, v, y} -- the distance from the nearest corner, so a resize keeps the hub there
+let _bring={ open:false, path:[], hov:null, pendT:null, closeT:null, openT:null, at:null, rot:0, sgn:1, segs:[], kb:null, ctx:null, dyn:'' };
+let _bhDown=null;
+/* ---- what the table waits on (pure: the hub, the ring and the tests read the same answers) ---- */
+function botLocalHuman(name){                                       // a human whose answers this screen gives: every human seat offline (one device), yourself online
+  if(!name) return false;
+  const p=(net.roster||[]).find(q=>q && q.name===name);
+  if(!p || p.bot || p.out || p.vacant) return false;
+  return localTable ? true : name===net.you;
+}
+function botRingAnswersAs(){ return net.you||state.playerName||'You'; }   // the name this screen's phrases and lines go out under -- at a hotseat, the seat being played now
+function botRingContext(rows){                                      // -> { hl:Set of node ids to light, path:the branch to open, wait:true when a bot or a bleed waits on a human here, elsewhere:the hotseat human asked when it is not the seat being played }
+  const hl=new Set(), me=botRingAnswersAs(); let path=[], wait=false, elsewhere=null;
+  (rows||botPanelSeats().map(r=>({ key:r.key, bot:r.bot, st:botPanelRead(r.bot) }))).forEach(r=>{
+    const st=r.st||{}, m=/\(([^()]*)\)\s*$/.exec(String(st.waitingFor||'')), names=m ? m[1].replace(/\s+thinking$/,'').split(/,\s*/) : [];
+    if(st.step==='release-hold'){ hl.add('hold'); return; }
+    const local=names.filter(botLocalHuman); if(!local.length) return;
+    wait=true;
+    if(local.indexOf(me)<0){ if(!elsewhere) elsewhere=local[0]; return; }   // a bot reads the answer from the seat it asked: at a hotseat the answer waits until that seat is played (a phrase from this seat would be ignored)
+    if(st.step==='resolve-ask' && !/^block verdict/.test(String(st.waitingFor||''))){ ['act','blk','nblk','nrx'].forEach(k=>hl.add(k)); if(!path.length) path=['act']; }
+    else if(st.step==='resolve-pq'){ hl.add('yes'); hl.add('no'); }
+    else if(st.step==='resolve-phase'){ hl.add('no'); hl.add('pass'); }
+    else if(st.step==='resolve-vote' || st.step==='resolve-verdict' || st.step==='resolve-ask'){ hl.add('pass'); hl.add('res'); }
+  });
+  const bl=bleedOnLocal();
+  if(bl){ wait=true;
+    if(bl.target===me){ ['bld','red','act','nrx'].forEach(k=>hl.add(k)); if(botRingBounceTargets().length) hl.add('bnc'); }
+    else if(!elsewhere) elsewhere=bl.target; }
+  if(botRingAddMinion()){ ['bld','add','res'].forEach(k=>hl.add(k)); }
+  if(hotHoldBy.size) hl.add('hold');
+  return { hl, path, wait, elsewhere };
+}
+function botRingSeatHint(name){ return 'Take '+name+'’s seat in the Table panel to answer.'; }   // a hotseat with several humans: a bot reads a reaction from the seat it asked
+function botRingBleeder(){ const c=activeAnchor(); return (c && isMinion(c)) ? c : null; }    // Bleed: the selected minion in play
+function botRingReactor(){ return botRingBleeder(); }                                         // Reduce: the selected minion names the line, else your own name does
+function botRingAddMinion(){                                        // +Bleed: the minion whose bleed this action announced, while the action lasts
+  if(!((_avrLastBleed|0)>0) || !_avrBleedCid) return null;
+  const c=state.cards.get(_avrBleedCid); return (c && c.zone==='ready') ? c : null;
+}
+function botRingBlockers(){ return cmbMyReady().slice().sort((a,b)=>(a.locked?1:0)-(b.locked?1:0)).slice(0,6); }   // unlocked first; six at most, the rest are in each minion's menu
+function botRingBounceTargets(){                                    // Deflection & co: another Methuselah, never the acting minion's controller -- and not the one being bled
+  const b=bleedOnLocal(); if(!b) return [];
+  return (net.roster||[]).filter(p=>p && !p.out && !p.vacant && p.name!==b.target && p.name!==b.actor).sort((x,y)=>x.seat-y.seat).map(p=>p.name);
+}
+function botRingKids(id){
+  const n=BRING[id]; if(!n || !n.kids) return [];
+  if(Array.isArray(n.kids)) return n.kids;
+  if(n.kids==='blockers') return botRingBlockers().map(c=>'m:'+c.id);
+  if(n.kids==='targets') return botRingBounceTargets().map(nm=>'t:'+nm);
+  if(n.kids.slice(0,2)==='n:'){ const k=n.kids.slice(2); return ['1','2','3','X'].map(v=>k+':'+v); }
+  return [];
+}
+function botRingNode(id){                                           // every node, the dynamic ones included: { label, ic | txt, note }
+  if(BRING[id]){ const n=BRING[id]; if(id==='hold' && hotHoldBy.size) return Object.assign({}, n, { ic:['play'], label:'Release', note:'Release the hold — the bots go on' }); return n; }
+  const i=id.indexOf(':'), base=id.slice(0,i), arg=id.slice(i+1);
+  if(base==='m'){ const c=state.cards.get(arg); const nm=c ? c.name : '?'; return { txt:botRingInitials(nm), label:nm, note:'Writes "'+nm+' blocks." and says Block!'+(c && c.locked ? ' (locked)' : '') }; }
+  if(base==='t'){ return { txt:botRingInitials(arg), label:'Bounce to '+arg, note:'The bleed now aims at '+arg+', who may block it', seat:(net.roster||[]).find(p=>p && p.name===arg) }; }
+  const sign=base==='add' ? '+' : base==='red' ? '−' : '';
+  const what=base==='bl' ? 'Bleed' : base==='add' ? 'Add to your bleed' : 'Reduce the bleed by';
+  return { txt:sign+arg, label:what+(arg==='X' ? '…' : ' '+(base==='add' ? '+' : '')+arg), note:arg==='X' ? 'Asks for a number' : '' };
+}
+function botRingInitials(nm){ const w=String(nm||'').replace(/[^\p{L}\p{N}\s]/gu,' ').trim().split(/\s+/).filter(Boolean); return (w.length>1 ? w[0][0]+w[1][0] : (w[0]||'?').slice(0,2)).toUpperCase(); }
+function botRingWhy(id){                                            // '' = the segment works now; else why it is grey
+  if(net.spect) return 'Spectators cannot answer the bots.';
+  const base=id.indexOf(':')>0 ? id.slice(0, id.indexOf(':')) : id;
+  if(base==='bl') return botRingBleeder() ? '' : 'Select the minion that bleeds first.';
+  if(base==='add') return botRingAddMinion() ? '' : 'Only while your own bleed is announced.';
+  if(base==='red' || base==='bnc' || base==='t'){
+    const b=bleedOnLocal(); if(!b) return 'Only while a bleed is aimed at you.';
+    if(b.target!==botRingAnswersAs()) return 'The bleed is aimed at '+b.target+'. '+botRingSeatHint(b.target);   // a hotseat with several humans: the bot reads a Reduce only from the seat it bleeds, and the Pass after a Bounce would be this seat's own
+    if(base==='red') return '';
+    return botRingBounceTargets().length ? '' : 'There is no one else to bounce it to.';
+  }
+  return '';
+}
+/* ---- the geometry (pure): angles in degrees, 0 = up, clockwise ---- */
+const BRING_PAD=2;                                                  // px every ring keeps from the window's edge (ring 1, 86 px, stands 4 px in at the 90 px margin)
+function botRingOver(a0, a1, r, fit){                               // how far the arc from a0 to a1 at radius r reaches past the window, px (<= 0: inside)
+  let o=-1e9; const n=Math.max(2, Math.ceil(Math.abs(a1-a0)/8));
+  for(let k=0;k<=n;k++){ const t=(a0+(a1-a0)*k/n)*Math.PI/180, x=fit.cx+r*Math.sin(t), y=fit.cy-r*Math.cos(t); o=Math.max(o, BRING_PAD-x, x-(fit.W-BRING_PAD), BRING_PAD-y, y-(fit.H-BRING_PAD)); }
+  return o;
+}
+function botRingSlide(p, span, r, fit){                             // the least turn (degrees) that keeps a fan of `span` degrees centred on p at radius r inside the window
+  if(!fit) return 0;
+  let best=0, bo=botRingOver(p-span/2, p+span/2, r, fit); if(bo<=0) return 0;
+  for(let m=2;m<=180;m+=2) for(const d of [m,-m]){ const o=botRingOver(p+d-span/2, p+d+span/2, r, fit); if(o<=0) return d; if(o<bo-0.5){ bo=o; best=d; } }
+  return best;
+}
+function botRingLayout(rot, sgn, fit){                              // fit = {cx, cy, W, H}: each fan slides along its ring, the least it can, to stay inside the window -- a hub in a corner keeps every segment on screen
+  const out=[], w1=360/BRING_ROOT.length;
+  BRING_ROOT.forEach((id,k)=>out.push({ id, ring:1, grp:'root', par:[], a:k*w1+rot, w:w1, gap:3, sl:0 }));
+  [2,3].forEach(ring=>{
+    out.filter(s=>s.ring===ring-1).forEach(p=>{
+      const kids=botRingKids(p.id); if(!kids.length) return;
+      const w=ring===2 ? ((BRING[p.id]||{}).w||26) : (kids.length>4 ? 20 : 24), sl=botRingSlide(p.a, kids.length*w, BRING_R[ring][1], fit);
+      kids.forEach((id,k)=>out.push({ id, ring, grp:p.id, par:p.par.concat([p.id]), a:p.a+sl+sgn*(k-(kids.length-1)/2)*w, w, gap:2, sl }));
+    });
+  });
+  return out;
+}
+function botRingFit(cx, cy, W, H){                                  // the ring's turn: the two branches (Block and reaction, Bleed) face the table in 15-degree steps; a turn away from it only when ring 1 itself would leave the window; the fans slide (botRingLayout)
+  const dx=W/2-cx, dy=H/2-cy, fit={ cx, cy, W, H };
+  const face=Math.hypot(dx,dy)<60 ? 180 : Math.round(((Math.atan2(dx,-dy)*180/Math.PI+360)%360)/15)*15;
+  let best=null;
+  for(const d of [0,15,-15,30,-30,45,-45,60,-60,90,-90,135,-135,180]){
+    const rot=face-180+d, segs=botRingLayout(rot, 1, fit);
+    let over=-1e9; segs.forEach(s=>{ over=Math.max(over, botRingOver(s.a-s.w/2, s.a+s.w/2, BRING_R[s.ring][1], fit)); });
+    if(!best || over<best.over-0.5) best={ rot, sgn:1, over, segs };
+    if(over<=0) return best;
+  }
+  return best;
+}
+function botRingArc(cx, cy, r1, r2, a0, a1){
+  const P=(r,a)=>{ const t=a*Math.PI/180; return (cx+r*Math.sin(t)).toFixed(1)+' '+(cy-r*Math.cos(t)).toFixed(1); };
+  const L=(a1-a0)>180 ? 1 : 0;
+  return 'M'+P(r2,a0)+'A'+r2+' '+r2+' 0 '+L+' 1 '+P(r2,a1)+'L'+P(r1,a1)+'A'+r1+' '+r1+' 0 '+L+' 0 '+P(r1,a0)+'Z';
+}
+/* ---- the hub ---- */
+function botHubSaved(){ try{ const p=JSON.parse(localStorage.getItem(BRING_POS_KEY)||'null'); if(p && (p.h==='l'||p.h==='r') && (p.v==='t'||p.v==='b') && isFinite(p.x) && isFinite(p.y)) return p; }catch(_e){} return null; }
+function botHubClamp(x, y, W, H){ return { x:Math.max(BRING_EDGE, Math.min(Math.max(BRING_EDGE, W-BRING_EDGE), x)), y:Math.max(BRING_EDGE, Math.min(Math.max(BRING_EDGE, H-BRING_EDGE), y)) }; }
+function botHubWanted(W, H){ const p=botHubSaved()||BRING_HOME; return botHubClamp(p.h==='r' ? W-p.x : p.x, p.v==='b' ? H-p.y : p.y, W, H); }
+function botHubAvoid(c, rects){                                     // v2.6.179's lesson: raise AND place -- the hub never stands on the visit's Home button or the hold badge
+  let y=c.y;
+  (rects||[]).forEach(r=>{ if(r && r.width && c.x+28>r.left-6 && c.x-28<r.right+6 && y+28>r.top-6 && y-28<r.bottom+6) y=r.bottom+6+28; });
+  return { x:c.x, y };
+}
+function botHubCenter(){ const el=document.getElementById('hotBotBtn'); if(!el || !el.style) return null; const x=parseFloat(el.style.left), y=parseFloat(el.style.top); return (isFinite(x) && isFinite(y)) ? { x, y } : null; }
+function botHubPlace(){
+  const el=document.getElementById('hotBotBtn'); if(!el || !el.style || typeof innerWidth!=='number') return;
+  const rects=['#rvBack','#holdBadge'].map(s=>{ const e=$(s); return (e && !e.hidden && e.getBoundingClientRect) ? e.getBoundingClientRect() : null; });
+  const c=botHubAvoid(botHubWanted(innerWidth, innerHeight), rects);
+  el.style.left=c.x+'px'; el.style.top=c.y+'px';
+}
+function botHubSave(c){
+  const W=window.innerWidth, H=window.innerHeight, p={ h:c.x>W/2 ? 'r' : 'l', x:Math.round(c.x>W/2 ? W-c.x : c.x), v:c.y>H/2 ? 'b' : 't', y:Math.round(c.y>H/2 ? H-c.y : c.y) };
+  try{ localStorage.setItem(BRING_POS_KEY, JSON.stringify(p)); }catch(_e){}
+  return p;
+}
+function botHubReset(){ try{ localStorage.removeItem(BRING_POS_KEY); }catch(_e){} botRingClose(); botHubPlace(); botPanelRender(); }
+function botHubState(rows){                                         // what the hub shows (pure): the count of bots a step can move, the Turn-based play button, the glow, the hold
+  const ctx=botRingContext(rows);
+  return { waiting:(rows||[]).filter(r=>r.st.canStep).length, give:botGiveWordWanted(rows), wait:ctx.wait, elsewhere:ctx.elsewhere||null, held:hotHoldBy.size>0, open:_bring.open };
+}
+function botHubPaint(el, hs){
+  if(!el || !el.classList) return;
+  el.classList.toggle('ctx', !!hs.wait);
+  el.classList.toggle('open', !!hs.open);
+  el.setAttribute('aria-expanded', hs.open ? 'true' : 'false');
+  const face=el.querySelector('.bhFace'), face2=hs.open ? 'gear' : 'robotFace';
+  if(face && face.dataset && face.dataset.ic!==face2){ face.innerHTML=botIconPaths(face2); face.dataset.ic=face2; }
+  const cnt=el.querySelector('.bhCnt'); if(cnt){ cnt.textContent=hs.waiting ? String(hs.waiting) : ''; cnt.hidden=!hs.waiting || hs.open; }
+  const gw=el.querySelector('#botGiveWord'); if(gw) gw.hidden=!hs.give || hs.open;
+  el.title=hs.open ? 'Bot settings — click the gear' : hs.elsewhere ? hs.elsewhere+' is asked. '+botRingSeatHint(hs.elsewhere) : 'Bots — hover for quick answers, drag to move'+(hs.waiting ? ' ('+hs.waiting+' waiting)' : '');
+}
+function botHubMount(){
+  const el=document.createElement('div'); el.id='hotBotBtn'; el.tabIndex=0;
+  el.setAttribute('role','button'); el.setAttribute('aria-haspopup','menu'); el.setAttribute('aria-label','Bots: quick answers and settings');
+  el.innerHTML='<svg class="bhFace" data-ic="robotFace" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+botIconPaths('robotFace')+'</svg>'
+    +'<span class="bhCnt" hidden></span>'+botGiveWordBtn();
+  document.body.appendChild(el);
+  botHubPlace();
+  el.addEventListener('pointerenter', e=>{ botRingCancelClose(); if(e.pointerType==='mouse' && !_bhDown && !_bring.open){ clearTimeout(_bring.openT); _bring.openT=setTimeout(()=>botRingOpen('hover'), 110); } else if(_bring.open) botRingHover(null); });
+  el.addEventListener('pointerleave', ()=>{ clearTimeout(_bring.openT); });
+  el.addEventListener('pointerdown', e=>{ if(e.pointerType==='mouse' && e.button!==0) return; _bhDown={ x:e.clientX, y:e.clientY, c0:botHubCenter(), moved:false, t:e.pointerType }; try{ el.setPointerCapture(e.pointerId); }catch(_e){} });
+  el.addEventListener('pointermove', e=>{
+    if(!_bhDown) return;
+    const dx=e.clientX-_bhDown.x, dy=e.clientY-_bhDown.y;
+    if(!_bhDown.moved && Math.hypot(dx,dy)>6){ _bhDown.moved=true; clearTimeout(_bring.openT); botRingClose(); el.classList.add('drag'); }
+    if(_bhDown.moved && _bhDown.c0){ const c=botHubClamp(_bhDown.c0.x+dx, _bhDown.c0.y+dy, innerWidth, innerHeight); el.style.left=c.x+'px'; el.style.top=c.y+'px'; const bx=document.getElementById('botBox'); if(bx && _botPanelOpen) botBoxPlace(bx); }
+  });
+  const up=e=>{ const d=_bhDown; _bhDown=null; el.classList.remove('drag'); if(!d) return;
+    if(d.moved){ const c=botHubCenter(); if(c) botHubSave(c); return; }
+    if(e.type==='pointercancel') return;
+    if(!_bring.open){ botRingOpen(d.t==='mouse' ? 'hover' : 'tap'); return; }
+    botRingClose(); botPanelToggle();                               // the gear: the bot box
+  };
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  el.addEventListener('keydown', botRingKey);
+  el.addEventListener('contextmenu', e=>{ e.preventDefault(); e.stopPropagation(); });
+  const gw=el.querySelector('#botGiveWord');
+  if(gw){ gw.addEventListener('pointerdown', e=>e.stopPropagation()); gw.addEventListener('pointerup', e=>e.stopPropagation()); gw.addEventListener('click', e=>{ e.stopPropagation(); botGiveWord(); }); }
+  botRingGlobals();
+  return el;
+}
+/* ---- the ring ---- */
+function botRingEl(){
+  let el=document.getElementById('botRing');
+  if(!el || !el.isConnected){
+    el=document.createElement('div'); el.id='botRing';
+    el.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" role="menu" aria-label="Quick answers to the bots"></svg><div id="botRingLbl" hidden></div>';
+    document.body.appendChild(el);
+    el.addEventListener('contextmenu', e=>{ e.preventDefault(); e.stopPropagation(); });
+  }
+  return el;
+}
+function botRingOpen(how){
+  const c=botHubCenter(); if(!c || typeof innerWidth!=='number') return false;
+  const fit=botRingFit(c.x, c.y, innerWidth, innerHeight);
+  const ctx=botRingContext();
+  clearTimeout(_bring.pendT); clearTimeout(_bring.closeT); clearTimeout(_bring.openT);   // the last ring's timers die with it -- a late close would shut this one
+  _bring={ open:true, path:ctx.path.filter(id=>!botRingWhy(id) && botRingKids(id).length), hov:null, pendT:null, closeT:null, openT:null, at:c, rot:fit.rot, sgn:fit.sgn, segs:fit.segs, kb:how==='key' ? { ring:1, i:0 } : null, ctx, dyn:botRingDyn() };
+  botRingBuild();
+  botPanelRender();
+  return true;
+}
+function botRingClose(){
+  clearTimeout(_bring.pendT); clearTimeout(_bring.closeT); clearTimeout(_bring.openT);
+  const was=_bring.open;
+  _bring.open=false; _bring.path=[]; _bring.hov=null; _bring.kb=null; _bring.pendT=_bring.closeT=_bring.openT=null;
+  const el=document.getElementById('botRing');
+  if(el && el.isConnected){ Array.prototype.forEach.call(el.querySelectorAll('.brG'), g=>{ clearTimeout(g._liveT); g.classList.remove('on', 'live'); }); const l=el.querySelector('#botRingLbl'); if(l) l.hidden=true; }
+  if(was){ const hub=document.getElementById('hotBotBtn'); if(hub) botHubPaint(hub, botHubState(botPanelSeats().map(r=>({ key:r.key, bot:r.bot, st:botPanelRead(r.bot) })))); }
+}
+function botRingBuild(){
+  const el=botRingEl(), svg=el.querySelector('svg'); if(!svg) return;
+  const { x:cx, y:cy }=_bring.at, hl=_bring.ctx.hl, groups={};
+  _bring.segs.forEach(s=>{ (groups[s.grp]=groups[s.grp]||[]).push(s); });
+  let h='';
+  Object.keys(groups).forEach(g=>{
+    h+='<g class="brG" data-g="'+esc(g)+'" style="transform-origin:'+cx+'px '+cy+'px">';
+    groups[g].forEach(s=>{
+      const n=botRingNode(s.id), why=botRingWhy(s.id), rr=BRING_R[s.ring], mid=(rr[0]+rr[1])/2, t=s.a*Math.PI/180;
+      const x=cx+mid*Math.sin(t), y=cy-mid*Math.cos(t);
+      const col=n.seat ? seatColor(n.seat.seat) : null;
+      const aria=esc(n.label+(why ? ' — '+why : ''));               // the attribute is markup: escaped once, here
+      h+='<g class="brS'+(hl.has(s.id) && !why ? ' hl' : '')+(why ? ' off' : '')+'" data-id="'+esc(s.id)+'" role="menuitem" aria-label="'+aria+'"'+(why ? ' aria-disabled="true"' : '')+'>'
+        +'<path class="brSeg" d="'+botRingArc(cx, cy, rr[0], rr[1], s.a-s.w/2+s.gap/2, s.a+s.w/2-s.gap/2)+'"'+(col ? ' style="stroke:'+esc(col.hex)+'"' : '')+'/>'
+        +(n.txt ? '<text class="brTxt" x="'+x.toFixed(1)+'" y="'+(y+4).toFixed(1)+'" text-anchor="middle">'+esc(n.txt)+'</text>'
+               : botIconG(n.ic||[], x, y, s.ring===1 ? 22 : 19)+(n.q ? '<text class="brQ" x="'+(x+8).toFixed(1)+'" y="'+(y-5).toFixed(1)+'" text-anchor="middle">?</text>' : ''))
+        +'</g>';
+    });
+    h+='</g>';
+  });
+  svg.innerHTML=h;
+  Array.prototype.forEach.call(svg.querySelectorAll('.brS'), g=>{
+    const id=g.getAttribute('data-id');
+    g.addEventListener('pointerenter', e=>{ if(e.pointerType!=='touch') botRingHover(id); });   // a touch has no hover: its tap opens a parent (botRingActivate)
+    g.addEventListener('click', e=>{ e.stopPropagation(); botRingActivate(id, e.pointerType||''); });
+  });
+  requestAnimationFrame(()=>botRingShow());
+}
+function botRingSeg(id){ return _bring.segs.find(s=>s.id===id) || null; }
+function botRingShow(){                                             // which rings are open, the hovered segment, the label
+  const el=document.getElementById('botRing'); if(!el || !_bring.open) return;
+  const fast=_bring.fast; _bring.fast=false;                       // a rebuild while open (botRingSync): what was open shows at once, and takes the pointer at once
+  Array.prototype.forEach.call(el.querySelectorAll('.brG'), g=>{
+    const k=g.getAttribute('data-g'), on=(k==='root' || _bring.path.indexOf(k)>=0), was=g.classList.contains('on');
+    if(on && !was){
+      clearTimeout(g._liveT);
+      if(fast){ g.classList.add('now', 'on', 'live'); requestAnimationFrame(()=>g.classList.remove('now')); }
+      else { g.classList.add('on'); g._liveT=setTimeout(()=>{ if(g.classList.contains('on')) g.classList.add('live'); }, 170); }   // the pointer reaches a ring once it has grown (.15 s)
+    } else if(!on && was){ clearTimeout(g._liveT); g.classList.remove('on', 'live'); }
+  });
+  Array.prototype.forEach.call(el.querySelectorAll('.brS'), g=>g.classList.toggle('hov', g.getAttribute('data-id')===_bring.hov));
+  const lbl=el.querySelector('#botRingLbl'), s=_bring.hov ? botRingSeg(_bring.hov) : null, ew=_bring.ctx && _bring.ctx.elsewhere;
+  if(!lbl) return;
+  if(!s && !ew){ lbl.hidden=true; return; }
+  if(s){ const n=botRingNode(s.id), why=botRingWhy(s.id); lbl.innerHTML='<b>'+esc(n.label)+'</b>'+((why||n.note) ? '<span>'+esc(why||n.note)+'</span>' : ''); }
+  else lbl.innerHTML='<b>'+esc(ew+' is asked')+'</b><span>'+esc(botRingSeatHint(ew))+'</span>';   // a hotseat: the question waits for another human's seat
+  lbl.hidden=false;
+  /* the caption stands under the open rings (over them for a hub in the lower half), centred on the hub -- one place to
+     read, and it never covers a segment the pointer is on its way to (it stood beside the hovered segment, over ring 2) */
+  const ext={ top:_bring.at.y-28, bottom:_bring.at.y+28 };
+  _bring.segs.forEach(q=>{ if(q.grp!=='root' && _bring.path.indexOf(q.grp)<0) return; const R=BRING_R[q.ring][1];
+    [q.a-q.w/2, q.a, q.a+q.w/2].forEach(a=>{ const y=_bring.at.y-R*Math.cos(a*Math.PI/180); if(y<ext.top) ext.top=y; if(y>ext.bottom) ext.bottom=y; }); });
+  const w=lbl.offsetWidth||200, hh=lbl.offsetHeight||40, low=_bring.at.y>innerHeight/2;
+  let y=low ? ext.top-10-hh : ext.bottom+10;
+  if(y<6 || y+hh>innerHeight-6) y=low ? ext.bottom+10 : ext.top-10-hh;   // no room on that side: the other one
+  lbl.style.left=Math.max(6, Math.min(innerWidth-w-6, _bring.at.x-w/2))+'px';
+  lbl.style.top=Math.max(6, Math.min(innerHeight-hh-6, y))+'px';
+}
+function botRingDyn(){ return botRingKids('blk').join(',')+'|'+botRingKids('bnc').join(','); }   // the two fans that follow the table: my blockers, and whom a bleed aimed at me can bounce to
+function botRingSync(rows){                                         // the 4 Hz loop while open: the lights follow the table; the ring is rebuilt only when a fan's members change (a bleed arrives while it is open: the bounce targets)
+  const el=document.getElementById('botRing'); if(!el || !el.isConnected) return;
+  const ew0=_bring.ctx && _bring.ctx.elsewhere, ctx=botRingContext(rows); _bring.ctx=ctx;
+  if((ctx.elsewhere||null)!==(ew0||null)) botRingShow();          // the caption names the seat that answers
+  const dyn=botRingDyn();
+  if(dyn!==_bring.dyn && _bring.at){
+    const fit=botRingFit(_bring.at.x, _bring.at.y, window.innerWidth, window.innerHeight);
+    Object.assign(_bring, { dyn, rot:fit.rot, sgn:fit.sgn, segs:fit.segs, path:_bring.path.filter(id=>botRingKids(id).length) });
+    if(_bring.hov && !botRingSeg(_bring.hov)) _bring.hov=null;
+    _bring.fast=true; botRingBuild(); return;
+  }
+  Array.prototype.forEach.call(el.querySelectorAll('.brS'), g=>{ const id=g.getAttribute('data-id'), why=botRingWhy(id); g.classList.toggle('hl', ctx.hl.has(id) && !why); g.classList.toggle('off', !!why); });
+}
+const botRingIsPre=(a,b)=>a.length<=b.length && a.every((x,i)=>x===b[i]);
+function botRingHover(id){                                          // a deeper ring opens at once; leaving it waits 240 ms, so a diagonal move toward it does not fold it on the way
+  botRingCancelClose();
+  if(!_bring.open) return;
+  if(id==null){ _bring.hov=null; botRingShow(); return; }
+  _bring.hov=id;
+  const s=botRingSeg(id); if(!s){ botRingShow(); return; }
+  const want=(botRingKids(id).length && !botRingWhy(id)) ? s.par.concat([id]) : s.par;
+  clearTimeout(_bring.pendT); _bring.pendT=null;
+  if(botRingIsPre(_bring.path, want)) _bring.path=want;
+  else if(!(botRingIsPre(want, _bring.path) && _bring.path.length===want.length+1 && _bring.path[_bring.path.length-1]===id)) _bring.pendT=setTimeout(()=>{ _bring.pendT=null; if(_bring.open){ _bring.path=want; botRingShow(); } }, 240);
+  botRingShow();
+}
+function botRingActivate(id, ptype){                                // a click or a tap: a parent opens its ring first (a touch has no hover); then it does what it says
+  if(!_bring.open) return;
+  const why=botRingWhy(id); if(why){ _bring.hov=id; botRingShow(); return; }
+  const s=botRingSeg(id), kids=botRingKids(id);
+  if(kids.length && s && _bring.path.indexOf(id)<0){ _bring.path=s.par.concat([id]); _bring.hov=id; botRingShow(); return; }
+  if(kids.length && (!BRING[id] || BRING[id].say==null)){ _bring.hov=id; botRingShow(); return; }   // a parent with nothing of its own to say
+  botRingClose();
+  botRingDo(id);
+}
+async function botRingDo(id){                                       // what a segment does -- the paths the quick phrases and the menus take, nothing of its own
+  const why=botRingWhy(id); if(why){ toast(why); return false; }
+  if(BRING[id] && BRING[id].say!=null){
+    if(id==='hold' && hotHoldBy.size) return hotHoldRelease();      // Release: the hold badge's own click
+    saySend(BRING[id].say); return true;
+  }
+  const i=id.indexOf(':'), base=id.slice(0,i), arg=id.slice(i+1);
+  if(base==='m'){ const c=state.cards.get(arg); if(!c || c.zone!=='ready') return false; minionAct(c, 'blocks.', 'blocks', false); saySend(SAY.indexOf('Block!')); return true; }   // the Block row of the minion's menu, then the phrase: the bot does not ask "Who blocks?"
+  if(base==='t') return bleedBounce(arg);
+  const v=arg==='X' ? await (base==='bl' ? askBleedX() : base==='add' ? askBleedAdd() : askReduce()) : (+arg|0);
+  if(!v) return false;
+  if(base==='bl'){ const c=botRingBleeder(); if(!c) return false; minionBleed(c, v); return true; }
+  if(base==='add'){ const c=botRingAddMinion(); if(!c) return false; minionBleedAdd(c, v); return true; }
+  if(base==='red'){ const b=bleedOnLocal(); if(!b) return false; minionReduce(botRingReactor(), v, b.target); return true; }
+  return false;
+}
+function botRingCancelClose(){ if(_bring.closeT){ clearTimeout(_bring.closeT); _bring.closeT=null; } }
+function botRingScheduleClose(){ if(_bring.open && !_bring.closeT && !_bring.kb) _bring.closeT=setTimeout(()=>{ _bring.closeT=null; botRingClose(); }, 380); }
+function botRingKey(e){                                             // the keyboard: Enter / Space / arrow down opens; the arrows walk a ring; Enter goes in or does it; Backspace / Esc steps back
+  const k=e.key;
+  if(['Enter',' ','ArrowDown','ArrowUp','ArrowLeft','ArrowRight','Escape','Backspace'].indexOf(k)>=0) e.stopPropagation();   // the hub's keys are the hub's: the global keymap would take Enter to the chat line and the arrows around the table
+  if(!_bring.open){ if(k==='Enter' || k===' ' || k==='ArrowDown'){ e.preventDefault(); botRingOpen('key'); botRingKeyMark(); } return; }
+  if(!_bring.kb) _bring.kb={ ring:Math.max(1, _bring.path.length+1), i:0 };
+  const kb=_bring.kb, list=botRingKeyList(kb.ring);
+  if(k==='ArrowRight' || k==='ArrowDown'){ e.preventDefault(); kb.i=(kb.i+1)%Math.max(1,list.length); }
+  else if(k==='ArrowLeft' || k==='ArrowUp'){ e.preventDefault(); kb.i=(kb.i-1+list.length)%Math.max(1,list.length); }
+  else if(k==='Enter' || k===' '){ e.preventDefault(); const id=list[kb.i]; if(!id) return;
+    const kids=botRingKids(id);
+    if(kids.length && !botRingWhy(id) && (kb.ring<3)){ const s=botRingSeg(id); _bring.path=s.par.concat([id]); kb.ring++; kb.i=0; }
+    else { botRingClose(); botRingDo(id); return; } }
+  else if(k==='Backspace' || k==='Escape'){ e.preventDefault(); if(kb.ring>1){ _bring.path=_bring.path.slice(0, kb.ring-2); kb.ring--; kb.i=0; } else { botRingClose(); return; } }
+  else if(k==='Tab'){ botRingClose(); return; }
+  else return;
+  botRingKeyMark();
+}
+function botRingKeyList(ring){ const par=ring===1 ? 'root' : _bring.path[ring-2]; return _bring.segs.filter(s=>s.ring===ring && s.grp===par).map(s=>s.id); }
+function botRingKeyMark(){ if(!_bring.kb) return; const list=botRingKeyList(_bring.kb.ring); _bring.hov=list[_bring.kb.i]||null; botRingShow(); }
+let _bringGlobals=false;
+function botRingGlobals(){                                          // once: a pointer that leaves the ring closes it (380 ms), a press elsewhere at once; Esc; a resize places the hub again
+  if(_bringGlobals) return; _bringGlobals=true;
+  document.addEventListener('pointermove', e=>{
+    if(!_bring.open || _bhDown || e.pointerType==='touch') return;
+    const t=e.target, on=t && t.closest && t.closest('#hotBotBtn, #botRing .brS');
+    if(on) botRingCancelClose(); else botRingScheduleClose();
+  }, true);
+  document.addEventListener('pointerdown', e=>{ if(!_bring.open) return; const t=e.target; if(t && t.closest && t.closest('#hotBotBtn, #botRing .brS')) return; botRingClose(); }, true);
+  document.addEventListener('keydown', e=>{ if(_bring.open && e.key==='Escape' && !(e.target && e.target.id==='hotBotBtn')){ botRingClose(); } });
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) botTitleMark(false); });   // back in the tab: the dot goes at once (the loop runs slower in a background tab)
+  window.addEventListener('resize', ()=>{ botRingClose(); botHubPlace(); const bx=document.getElementById('botBox'); if(bx && _botPanelOpen) botBoxPlace(bx); });
+}
+/* ---- the bleed aimed at someone right now, read from the frozen lines any seat writes (PROTOCOL section 12) ---- */
+let bleedIn=null;                                                   // { actor: the bleeding Methuselah, vamp: the acting minion as its line names it, n: the total now, target, turn }
+const BLEED_IN_RE={
+  bleed:/^(.+?) bleeds for (\d+)\.(?: Target: (.+?)'s pool\.)?$/,
+  add:/^(.+?) adds \+(\d+) bleed \(= (\d+)\)\./,
+  reduceBy:/^([^—]+?) reduces the bleed by (\d+)(?: \((?!now \d)([^()]+)\))?\.$/,
+  reduceNow:/^(.+?) plays (.+?) — reduces the bleed by (\d+) \(now (\d+)\)\.$/,
+  spyNull:/^(.+?) plays Spying Mission \[OBF\] — the bleed is unsuccessful and burns no pool\.$/,
+  done:/^(The bleed goes through|Block: Stealth -?\d+ vs Intercept -?\d+ — block succeeds\.)/
+};
+function bleedInPlain(html){ return String(html||'').replace(/<[^>]*>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&').trim(); }
+function bleedPreyOf(name){                                         // a bleed with no Target: suffix aims at the actor's prey -- the next live seat around the table
+  const seats=(net.roster||[]).filter(p=>p && !p.out && !p.vacant).sort((a,b)=>a.seat-b.seat);
+  const i=seats.findIndex(p=>p.name===name); return (i>=0 && seats.length>1) ? seats[(i+1)%seats.length].name : null;
+}
+function bleedInTrack(who, html){
+  const t=bleedInPlain(html); let m;
+  if((m=BLEED_IN_RE.bleed.exec(t))){
+    const vamp=m[1], tgt=m[3]||null, live=bleedInLive();
+    const actor=(live && tgt && live.vamp===vamp) ? live.actor : who;   // the same minion re-announced at a new target is a bounce: the minion is still the actor's
+    bleedIn={ actor, vamp, n:+m[2], target:tgt || bleedPreyOf(actor), turn:net.turnSeat|0 };
+    return;
+  }
+  const b=bleedInLive(); if(!b) return;
+  if((m=BLEED_IN_RE.add.exec(t)) && m[1]===b.vamp){ b.n=+m[3]; return; }
+  if((m=BLEED_IN_RE.reduceBy.exec(t)) && who===b.target){ b.n=Math.max(0, b.n-(+m[2])); return; }
+  if((m=BLEED_IN_RE.reduceNow.exec(t)) && who===b.target){ b.n=+m[4]; return; }
+  if(BLEED_IN_RE.spyNull.test(t)){ b.n=0; return; }
+  if(BLEED_IN_RE.done.test(t)) bleedIn=null;
+}
+function bleedInLive(){ if(bleedIn && bleedIn.turn!==(net.turnSeat|0)) bleedIn=null; return bleedIn; }   // a bleed never outlives its turn
+function bleedOnLocal(){ const b=bleedInLive(); return (b && botLocalHuman(b.target)) ? b : null; }
+function bleedBounce(to){                                           // the bled Methuselah sends the bleed on: a line for the humans, the re-announce the bots retarget on (their own bounce's shape), then Pass as their bounce says it (it ends the bouncer's own pause)
+  const b=bleedOnLocal(); if(!b){ toast('No bleed is aimed at you.'); return false; }
+  if(botRingBounceTargets().indexOf(to)<0) return false;
+  dfxCancel();
+  log(BLEED_LINE.bounce('<b>'+esc(b.target)+'</b>', '<b>'+esc(to)+'</b>'));
+  log(BLEED_LINE.bounced('<b>'+esc(b.vamp)+'</b>', b.n|0, '<b>'+esc(to)+'</b>'));
+  saySend(SAY.indexOf('Pass'));
+  return true;
 }
 
 /* ---------- HB2b (v2.6.59): the hotseat bot BRIDGE core ----------------
@@ -17065,7 +17621,7 @@ function saySend(i){
   }
   hotHoldNote(i);                                                                    // v2.6.96: the badge follows the local human's own hold/release
   if(!inRoom()){ try{ showSay(i, net.you||state.playerName||'You', typeof mySeat==='function'?mySeat():0); }catch(_e){ dbg('showSay', _e); } }   // v2.5.77: net.you tracks the ACTIVE hotseat seat's name (net.roster is populated in hotseat too -- see startHotseat) and is what sayIdentity's roster lookup needs to find a match; state.playerName is the SOLO-mode name and was wrongly used unconditionally here, which silently showed no colour/clan medallion whenever a hotseat game sent a quick phrase
-  if(SAY[i|0]==='It resolves') resolvePlayedActions();   // verbal resolve signal closes the card-play batch just like a basic action; string-checked so it survives SAY reordering
+  if(SAY[i|0]==='It resolves'){ resolvePlayedActions(); bleedIn=null; }   // verbal resolve signal closes the card-play batch just like a basic action; string-checked so it survives SAY reordering. v2.6.187: and ends the bleed in flight
   tut._lastSaidIdx=i;  // tutorial breadcrumb: which quick-phrase was sent
   tutNotify('said');   // tutorial breadcrumb: a quick-phrase was sent
 }
@@ -17571,6 +18127,7 @@ const MOUSE_FIXED=[
   ["Right-click a rival's card",'Set as target · Visit their board'],
   ['Double-click a card in hand','Play it — onto the selected card in play, if any'],
   ['❗ button','Quick “Hold on…” — ask for a beat before things resolve'],
+  ['Bot hub (tables with bots)','Hover the robot (tap on a touch screen): the quick answers to the bots in a ring -- the gear opens the bot box; drag the robot anywhere'],
   ['⏱ button','Reaction window: a countdown the whole table sees'],
   ['Double-click the empty felt','Quick phrases — “No block”, “It resolves”… shown to the whole table'],
   ['Esc','Clear selection / cancel targeting / leave remote view / close menus']
