@@ -48,8 +48,10 @@ on your side; §12 may note the second sender.
 - **Bot bubbles name a vampire without KRCG's group tag** (`Aunt Linda`, not `Aunt Linda (G6)`; `(ADV)` kept) in the influence
   sentence and the questions to the table; every frozen line keeps the card name.
 
-- **A card another player gave a bot carries `owner` in the bot's pub** (the giver's name, as your own pub does since srv-2.6.47),
-  so your mats and the other bots credit the giver: a bot's Fame on a bot's vampire names its giver. A bot holds its Fame when the
+- **A card another player owns carries `owner` in a bot's pub** (as your own pub does since srv-2.6.47): its owner's name, the
+  player who played it — a card handed on (a Troublemaker, The Coven) keeps its first owner. So your mats and the other bots credit
+  the owner: a bot's Fame on a bot's vampire names the bot that played it. The bots credit such a card as the owner's play only
+  where it first appears (a card that moved with its id is no second play). A bot holds its Fame when the
   famed vampire's seat is offline (your server refuses the give: "the card stays with you").
 
 ## 4. The guide

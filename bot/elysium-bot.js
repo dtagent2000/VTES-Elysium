@@ -8246,11 +8246,13 @@ class Bot {
     (m.pub.cards || []).forEach(c => {
       if(t.seen.has(c.id)) return;
       t.seen.add(c.id);
-      { const os = (c.owner && m.seat !== this.seat) ? this._seatOfName(c.owner) : 0;   /* v0.6.237 (the egress review): a card another seat gave this one (a bot's Fame on
-           this seat's vampire, a Troublemaker, a Pentex) -- its play is the OWNER's: the owner's hand lost it, the owner's deck holds it (before
-           the give, the placer tabled it on its own board and every reader credited the placer). An owner the roster does not know: as before */
+      { const os = (c.owner && m.seat !== this.seat) ? this._seatOfName(c.owner) : 0;   /* v0.6.237 (the egress review): a card another seat put on this one
+           at its play (a bot's Fame on this seat's vampire, a human's Pentex) is the OWNER's play: the owner's hand lost it, the owner's deck holds it
+           (before the give the placer tabled it on its own board, and every reader credited the placer). One that moved here with its id (a
+           Troublemaker, The Coven, a steal) was credited where it first lay (pass 3). An owner the roster does not know: as before */
         if(os && os !== m.seat){
-          if(os !== this.seat && c.name && c.kind !== 'crypt'){ const ho = this._handIntel(os); if(ho){ const ix = ho.cards.findIndex(x => x.name === c.name); if(ix >= 0) ho.cards.splice(ix, 1); }
+          const moved = !!(this.table[os] && this.table[os].seen && this.table[os].seen.has(c.id));   // the egress review, pass 3: a card that lay on its owner's board before and moved (its id kept) is no new play
+          if(!moved && os !== this.seat && c.name && c.kind !== 'crypt'){ const ho = this._handIntel(os); if(ho){ const ix = ho.cards.findIndex(x => x.name === c.name); if(ix >= 0) ho.cards.splice(ix, 1); }
             if(t.seeded && !c.faceDown && c.zone === 'ready') fresh.push({ seat: os, c }); }
           return;
         } }
@@ -8697,6 +8699,7 @@ class Bot {
     if(d.tag) this._emit('defence-plan', { tag: d.tag, amount: p.amount | 0, hasBounce: !!bounce, bounceN: bounceCards, reserve: d.reserve != null ? d.reserve : null, stealthBleeder: sbRead, pool: this.pool | 0, crit: cpD.crit });
     this._emit('block-eval', { kind: p.kind, sub: p.sub || null, T: p.T || 'T1', role: p.role || 'target', block: !!d.block, bounce: !!d.bounce, score: (typeof d.score === 'number') ? +d.score.toFixed(2) : null, parts: d.parts || null, why: d.why,
       model: actorSeat ? { forecast: this.oppForecast(actorSeat), tto: this.turnsToOust(actorSeat), oppCombat: this.oppCombat(actorSeat), oppStealth: this.oppStealth(actorSeat), axes: this.oppAxes(actorSeat).axes } : null });   // v0.6.118: the table-model reads at decision time -- the arena calibrates the priors against them   // v0.6.107 (B1): every window is evaluable
+    if(d.bounce && bounce && this.o.lateBounce !== 0 && p.declined && !actorP.bot) p.lateDue = true;   // v0.6.237 (the egress review, pass 3): I mean to bounce on the total -- the actor's word in my react delay is kept from now, not only after a first question
     const reactMs = this.decide('react-delay', {}).ms;
     p.reactAt = Date.now() + reactMs;   // v0.6.109 (#1): the widget can SHOW this wait ("reacting to Alice's bleed, 1.2s") but step() deliberately does not resolve it -- the only honest resolutions here are the bot's own decision (which is already running) or the actor resolving their action, and inventing a third would let a button reach a game state the bot could not reach alone
     p.passTimer = setTimeout(() => {
@@ -8848,6 +8851,7 @@ class Bot {
       this.o.log('bounce read (between windows, my next step applies it): ' + who + ' → ' + this.seatName(r.seat));
       return true;
     }
+    if(this._ask.pausedBy) this._ask.pausedBy.delete(who);   // the egress review, pass 3: the bounce answers the window -- the bouncer's own pause ends with it, as a No block's does (CLAUDE.md: an answer ends a wait at once)
     this._applyHumanBounce(av, who, r.seat, t);
     this._bouncedTo(r.seat);
     return true;
@@ -8913,6 +8917,7 @@ class Bot {
        pool-targeting someone and clicking "Bleed N" (targetSuffix() appends "Target: X's pool."). */
     const actVamp = p.actingVampName || 'A minion';   // fallback if the vampire name wasn't captured (a legacy pending, or a human's log line where m[1] wasn't a vampire name we recognize -- belt-and-suspenders, shouldn't happen in practice)
     this.send({ t: 'log', html: '<b>' + esc(actVamp) + '</b> bleeds for ' + p.amount + '. Target: ' + esc(newPreyName) + "'s pool." });
+    if(p.lateDue && p._lateWord === 'It resolves' && this._isHumanName(p.who)) this.chat('Trainbot: ' + p.who + ', I bounced it to ' + newPreyName + ' \u2014 say It resolves again once ' + newPreyName + ' has answered.');   // v0.6.237 (the egress review, pass 3): the bounce came on the actor's It resolves -- the new target waits for theirs (it vanished)
 
     this.say('Pass');   // steg 2 fix (15 July, found via diag-steg2.js): _reactWindow ALWAYS opens with 'Hold on…', pausing any actor's _ask (a.pausedBy.add + timer cleared) -- but until now bounce never sent ANY of the three phrases _onSay's pausedBy.delete() listens for, so a bouncing reactor stayed "still thinking" forever from the actor's point of view: the ask's timer never restarts, and even a CORRECTLY-tracked new target's own Pass can't resolve it (blocked by `!a.pausedBy.size`). Bounce IS a "not blocking" outcome exactly like _reactWindow's own plain pass branch just below -- same phrase, same meaning.
     this.push();
@@ -10867,7 +10872,7 @@ class Bot {
         let targetSeat = tgtName ? this._seatOfName(tgtName) : 0;
         if(!targetSeat && /^takes (a card|an undirected) action$/.test(m[2]) && prevObs && prevObs.who === who && prevObs.vamp === m[1] && /^plays /.test(prevObs.verb || '') && Date.now() - prevObs.at < 30000) targetSeat = prevObs.targetSeat || 0;
         const ob = (this._bleedOpen || {})[oseat], bleedOf = ob && ob.vamp === m[1] && Date.now() - ob.at < 120000 ? ob.obs : null;   // the bleed this seat's vampire has open -- a modifier's play line, or the bled human's own Deflection line, may sit between it and a re-announce (the egress review, passes 1 and 2)
-        const reAim = !!(bleedOf && m[3] && tgtName && ((this.players || []).find(q => q && q.seat === oseat) || {}).bot);   // v0.6.237: the acting BOT's own re-announce after a human bounced its bleed (_humanBounce) -- the same action re-aimed: no second action row, no second bleed in the minion's record
+        const reAim = !!(bleedOf && m[3] && tgtName && oseat === this.turnSeat && ((this.players || []).find(q => q && q.seat === oseat) || {}).bot);   // v0.6.237: the acting BOT's own re-announce after a human bounced its bleed (_humanBounce) -- the same action re-aimed: no second action row, no second bleed in the minion's record
         if(reAim){ bleedOf.targetSeat = targetSeat || bleedOf.targetSeat; bleedOf.line = t; bleedOf.directed = this._actDirected(m[2], null, oseat, bleedOf.targetSeat); this._obs = bleedOf; } else {
         this._obs = { who, seat: oseat, vamp: m[1], verb: m[2], card: m[4] || null, line: t, at: Date.now(), poolLoss: null, targetSeat: targetSeat || null, directed: this._actDirected(m[2], m[4] || null, oseat, targetSeat) };
         if(!m[4]){ const bo = this._bleedOpen = this._bleedOpen || {}; if(m[3]) bo[oseat] = { vamp: m[1], obs: this._obs, at: Date.now() }; else delete bo[oseat]; }   // v0.6.237: an action row -- a bleed opens the seat's bleed (its re-announce is the same action), any other action closes it
@@ -13689,7 +13694,10 @@ class Bot {
           while(true){
             if(this._actingVamp.archoned) break;   // v0.6.215: burned by Archon Investigation -- no more modifiers
             if(this._actingVamp.bounced && this.o.lateBounce !== 0){ this.o.log('bleed-modifier: the bleed was bounced \u2014 no pump on somebody else\'s prey'); break; }   // v0.6.144
-            if(this._actingVamp.pendingBounce) break;   // v0.6.237 (the egress review): a human's bounce between my windows -- _bounceGate below applies it
+            if(this._actingVamp.pendingBounce){   // v0.6.237 (the egress review): a human's bounce between my windows -- _bounceGate applies it
+              if(this.o.lateBounce !== 0) break;   // below, after the loop
+              curAns = await this._bounceGate(curAns); if(curAns.what === 'block') break; continue;   // pass 3: lateBounce 0 pumps on after a bounce wherever it landed
+            }
             if(!spyBankTried){ spyBankTried = true;   // v0.6.211: a Spying Mission banked against this Methuselah -- 'the next time this vampire is about to successfully bleed the same Methuselah': the +2 first, then a reactions-only window (a modifier's own shape)
               if(this._playSpyBank(v)){ pumped++;
                 curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +2 bleed (Spying Mission) \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
@@ -13707,6 +13715,7 @@ class Bot {
             this.o.log('bleed-modifier (' + v.name + '): ' + d.why);
             if(!d.play) break;
             await pace();
+            if(this._actingVamp.pendingBounce && this.o.lateBounce === 0){ curAns = await this._bounceGate(curAns); if(curAns.what === 'block') break; continue; }   // pass 3: lateBounce 0 -- the bounce first, then the loop weighs the modifier again
             if((this._actingVamp.bounced && this.o.lateBounce !== 0) || this._actingVamp.pendingBounce) break;   // v0.6.237 (the egress review): bounced under the pace -- no pump on somebody else's prey (the loop top's rule: lateBounce 0 pumps on)
             if(!this._playBleedModifier(v, mod)) break;   // card/vampire shifted under the await -- stop rather than loop forever
             pumped++;   // v0.6.206: the window opens WITH its line, no beat between -- an answer to the add line found no ask open in that gap (see the bleed total below)
