@@ -1,3 +1,39 @@
+## [RUNDTUREN HINNER IKAPP] (24 november 2026, eftermiddag, klient v2.6.186 / srv-2.6.53 oförändrad)
+
+Johan: "JAg tänkte om vi vill inventera och utvärdera vår tutorial eftersom vi fixat en del grejer och även kosmetiskt
+som kanske ändrat något". Jag körde alla tolv kapitel, 199 steg, i headless Chromium med riktiga musrörelser och
+tangenttryck, sparade varje stegs mål, ring, bubbla, grind och ledtråd och läste dem bredvid skärmbilderna. Fynden och
+förslagen gick till Johan, som svarade "Dina förslag låter bra!". Det blev runda 1 med båda mina rekommendationer.
+
+Det mesta var text som inte längre stämde med klienten. Det allvarligaste: Structured-kapitlet sa åt spelaren att
+trycka § för översikten, men § byter fas sedan v2.6.118. Nu nämner texten V, eller den tangent spelaren själv har
+valt, plus pilarna. Kantsteget talade om en ankh-ikon; nu står det att man öppnar docken, där Edge-knappen sitter i
+poolzonen. Duellvyn har ACTING och BLOCKING och "Join as acting" i stället för en ⚔ Join-knapp. Hosting-kapitlet
+nämnde ett turneringslås bland hjälparna, en "List rooms"-knapp och att lösenordet kunde lämnas tomt, men sedan v2.6.184
+kan ett rum utan lösenord inte spara sin match.
+
+Andra fynd gällde bordet. Med "Suggested table setup" påslaget låg fyra kryptkort redan ute när Crypt & influence bad
+spelaren dra fram dem, så lobbykapitlet har ett nytt steg som slår av rutan för turens bord. När turen slutar sätts
+rutan tillbaka som den var. Structured-kapitlen kör nu med "All helpers on". YOUR TURN! låg kvar över de första stegen
+tills man klickat Unlock; den tas bort när turen startar sitt bord. Stegräknaren i Playing cards räknade båda grenarna
+och hoppade från 5/20 till 9/20; nu går den 1 till 17. I ett besök på en annans bräde täckte End tutorial knappen
+⌂ Home, så ett klick på Home avslutade turen. Den knappen ligger nu under Home. Interacting with opponents sa
+"Player 1" om en plats som ingenstans på skärmen heter så. Nu står det till exempel "the 1st seat (You)", med namnet från
+Table-panelen. Utanför turen pekade offline-dialogen och hotseat-raden på PRIORITY-baren, som är avslagen, och en
+hotseat-plats fick rådet att välja New deal fast handen redan var given.
+
+Sviten har nio nya tester, 410/0, och v2.6.185 får 401/9 mot dem. Arton mutanter fångades. I Chromium gick hela
+förstagångskedjan och varje kapitel igenom på nya klienten. Tre stopp var mitt eget skripts fel. En diagonal väg in i
+en undermeny passerar föräldramenyns andra rader och öppnar deras undermenyer, så "+X bleed…" klickades aldrig. Ett drag
+som startade inom en sekund efter en vändning tog tag i vändningens animation mitt på skärmen; den går att klicka bort
+och tar emot musen. Det tredje var en tidsflake vid cx-p1-play.
+
+Osäkert och otestat: ett kapitel som spelas om från väljaren börjar om på tur 1 med första platsen vid draget, så
+Interactings sikt- och överlämningssteg passar inte en omspelning. Globerna kommer också tillbaka på sina
+standardplatser. Båda hör till runda 2. Ett drag som börjar under en vändningsanimation mitt på skärmen gör ingenting
+på ungefär en sekund, och det gäller hela klienten, inte bara turen. Touch, Firefox, Safari och riktiga kortbilder är
+otestade, och onlinekapitlen kördes bara mot sin demolobby.
+
 ## [SÖKNINGEN BERÄTTAS] (24 november 2026, förmiddag, klient v2.6.185 / srv-2.6.53, samma PR #100)
 
 Johan: "Ja kör G också :)". Det här är G: servern skickade bibliotekssökningen i lekordning och lämnade både
