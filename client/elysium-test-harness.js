@@ -459,7 +459,8 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   midTableBtn: (typeof midTableBtn!=='undefined'?midTableBtn:undefined), midPanStart: (typeof midPanStart!=='undefined'?midPanStart:undefined), midPanMove: (typeof midPanMove!=='undefined'?midPanMove:undefined), midPanEnd: (typeof midPanEnd!=='undefined'?midPanEnd:undefined),   // v2.6.181: the middle button pans
   get _mpan(){ return (typeof _mpan!=='undefined')?_mpan:undefined; }, get l3pan(){ return (typeof l3pan!=='undefined')?l3pan:undefined; }, set l3pan(v){ l3pan=v; }, get l3zoom(){ return (typeof l3zoom!=='undefined')?l3zoom:undefined; },
   saveMatchName: (typeof saveMatchName!=='undefined'?saveMatchName:undefined), saveMatchSend: (typeof saveMatchSend!=='undefined'?saveMatchSend:undefined), saveMatchNow: (typeof saveMatchNow!=='undefined'?saveMatchNow:undefined),   // v2.6.184: the saves dialog
-  saveExistsAsk: (typeof saveExistsAsk!=='undefined'?saveExistsAsk:undefined), renderSaves: (typeof renderSaves!=='undefined'?renderSaves:undefined), openSaves: (typeof openSaves!=='undefined'?openSaves:undefined)
+  saveExistsAsk: (typeof saveExistsAsk!=='undefined'?saveExistsAsk:undefined), renderSaves: (typeof renderSaves!=='undefined'?renderSaves:undefined), openSaves: (typeof openSaves!=='undefined'?openSaves:undefined),
+  srvLogsPiles: (typeof srvLogsPiles!=='undefined'?srvLogsPiles:undefined), netBrowseOpen: (typeof netBrowseOpen!=='undefined'?netBrowseOpen:undefined)   // v2.6.185: G
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',
@@ -560,6 +561,7 @@ function loadServer(serverPath) {
   saveGroupOk: (typeof saveGroupOk!=='undefined'?saveGroupOk:undefined), saveList: (typeof saveList!=='undefined'?saveList:undefined), SAVE_NEEDS_PASS: (typeof SAVE_NEEDS_PASS!=='undefined'?SAVE_NEEDS_PASS:undefined),   // srv-2.6.52: THE SAVES HOLD
   scheduleSnapshot: (typeof scheduleSnapshot!=='undefined'?scheduleSnapshot:undefined), snapAfter: (typeof snapAfter!=='undefined'?snapAfter:undefined), seatBoards: (typeof seatBoards!=='undefined'?seatBoards:undefined),
   SNAP_FAST_MS: (typeof SNAP_FAST_MS!=='undefined'?SNAP_FAST_MS:undefined), SNAP_SLOW_MS: (typeof SNAP_SLOW_MS!=='undefined'?SNAP_SLOW_MS:undefined), SNAP_SKIP: (typeof SNAP_SKIP!=='undefined'?SNAP_SKIP:undefined),
+  pileSorted: (typeof pileSorted!=='undefined'?pileSorted:undefined), pileAnnounce: (typeof pileAnnounce!=='undefined'?pileAnnounce:undefined),   // srv-2.6.53: G
   get _snapAt(){ return (typeof snapAt!=='undefined')?snapAt:undefined; }, get _snapN(){ return (typeof snapN!=='undefined')?snapN:undefined; }, get _snapPending(){ return (typeof snapT!=='undefined')?!!snapT:undefined; },
   _snapCancel: (typeof snapT!=='undefined') ? function(){ if(snapT){ clearTimeout(snapT); snapT=null; snapAt=0; } } : undefined   // test-only: a clean start for the scheduler's next check (defined in the server's scope; the server has no such door)
 };`;

@@ -1,3 +1,23 @@
+## [SÖKNINGEN BERÄTTAS] (24 november 2026, förmiddag, klient v2.6.185 / srv-2.6.53, samma PR #100)
+
+Johan: "Ja kör G också :)". Det här är G: servern skickade bibliotekssökningen i lekordning och lämnade både
+bordets rad och omblandningen åt klienten. En modifierad klient kunde alltså läsa sin egen leks ordning, eller ta ett
+kort ur leken, utan att bordet fick veta något.
+
+Nu listar servern sökningen sorterad på namn och berättar själv för bordet. Tre händelser får en sys-rad från
+servern: sökningen ("Ann searches their library."), kortet hon tar ur den ("Ann fetches a card from their library.")
+och kort parkerade från toppen ("Ann parks the top 3 cards of their library face down."). Ingen av raderna nämner
+något kort. Ett kort som tas ur sökningen hittas på namnet, och servern tar exemplaret närmast toppen, eftersom
+listans index inte längre pekar på någon position.
+
+Klienten skriver inga egna rader för detta mot en server från 2.6.53. Mot en äldre server skriver den sina rader som
+förut. Medan Johan inte har purgat visar en gammal klient på ny server varje rad två gånger. Returer till leken,
+dragningar och blandningar har kvar klientens egna rader, eftersom deras resultat syns på bordet. En klient som också
+fejkar sitt bord kan servern inte se.
+
+I Chromium blev det 9 av 9 med de nya versionerna och 2 av 9 med de gamla. Jag hittade också att protokollets rad för
+`reveal` sa att `revealed` sändes till alla, men den har alltid bara gått till ägaren. Det är rättat.
+
 ## [SPARNINGARNA HÅLLER] (24 november 2026, klient v2.6.184 / srv-2.6.52, starta om servern och purga klienten)
 
 Johan vidarebefordrade frågor från HeySteev. Kan någon skumma andras dolda kort i data som ligger sparad, som Lackeys

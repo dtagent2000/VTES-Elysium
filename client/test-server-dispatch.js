@@ -1920,5 +1920,57 @@ test('srv-2.6.52 an existing save of the group is replaced only with overwrite:t
   S.saves.clear(); S.rooms.clear();
 });
 
+/* === srv-2.6.53 THE SEARCH IS TOLD (Johan's 'kör G', 24 Nov 2026) === */
+test('srv-2.6.53 a search lists the pile by NAME, never in its order, and the server tells the table -- srv-2.6.52 sent it top-first and left the line to the client, so a modified client could read its own library order in silence', () => {
+  const { room, cs } = seatTable(['P1', 'P2']);
+  const order = ['Zeta', 'Alpha', 'Mid', 'Alpha', 'Beta'];                   // index 4 is the top
+  room.players[0].game = { deckName:'D', deckLib: order.slice(), deckCrypt:['Vc', 'Va'], lib: order.slice(), crypt:['Vc', 'Va'] };
+  S.handle(cs[0], JSON.stringify({ t:'browse', pile:'library' }));
+  const pl = cs[0].sock.msgs.find(m => m.t === 'pileList');
+  eq(JSON.stringify(pl && pl.names), JSON.stringify(['Alpha', 'Alpha', 'Beta', 'Mid', 'Zeta']), 'sorted by name (srv-2.6.52 sent Beta, Alpha, Mid, Alpha, Zeta -- the order)');
+  assert(!cs[1].sock.msgs.some(m => m.t === 'pileList'), 'the list goes to its owner alone');
+  for (const c of cs) assert(c.sock.msgs.some(m => m.t === 'sys' && m.msg === 'P1 searches their library.'), 'every seat hears it from the server');
+  eq(JSON.stringify(room.players[0].game.lib), JSON.stringify(order), 'a search moves nothing');
+  cs.forEach(c => { c.sock.msgs.length = 0; });
+  S.handle(cs[0], JSON.stringify({ t:'browse', pile:'crypt' }));
+  eq(JSON.stringify(cs[0].sock.msgs.find(m => m.t === 'pileList').names), '["Va","Vc"]', 'the crypt too');
+  assert(cs[1].sock.msgs.some(m => m.t === 'sys' && m.msg === 'P1 searches their crypt.'));
+  S.rooms.clear();
+});
+test('srv-2.6.53 a fetch from the search takes the card by name -- the copy nearest the top, whatever index the sorted list gave it -- and is told without naming it; a name not in the pile is refused', () => {
+  const { room, cs } = seatTable(['P1', 'P2']);
+  room.players[0].game = { deckName:'D', deckLib:[], deckCrypt:[], lib:['Alpha', 'Beta', 'Alpha', 'Zeta'], crypt:['Vb', 'Va'] };
+  S.handle(cs[0], JSON.stringify({ t:'pileTake', pile:'library', name:'Alpha', i: 3 }));   // i 3 pointed at the bottom Alpha under srv-2.6.52's top-first index
+  const dr = cs[0].sock.msgs.find(m => m.t === 'drew');
+  assert(dr && dr.name === 'Alpha' && dr.took === true && dr.zone === 'hand', 'taken: ' + JSON.stringify(dr));
+  eq(JSON.stringify(room.players[0].game.lib), '["Alpha","Beta","Zeta"]', 'the copy nearest the top went (index 2), not the one the list index pointed at (srv-2.6.52 took index 0: Beta, Alpha, Zeta)');
+  for (const c of cs) assert(c.sock.msgs.some(m => m.t === 'sys' && m.msg === 'P1 fetches a card from their library.'), 'told to every seat');
+  assert(!cs[1].sock.msgs.some(m => m.t === 'sys' && /Alpha/.test(m.msg)), 'no card named');
+  cs.forEach(c => { c.sock.msgs.length = 0; });
+  S.handle(cs[0], JSON.stringify({ t:'pileTake', pile:'crypt', name:'Va' }));
+  assert(cs[0].sock.msgs.some(m => m.t === 'drew' && m.zone === 'uncontrolled' && m.name === 'Va'));
+  assert(cs[1].sock.msgs.some(m => m.t === 'sys' && m.msg === 'P1 fetches a card from their crypt to their uncontrolled region.'));
+  cs.forEach(c => { c.sock.msgs.length = 0; });
+  S.handle(cs[0], JSON.stringify({ t:'pileTake', pile:'library', name:'Nothere' }));
+  assert(cs[0].sock.msgs.some(m => m.t === 'err' && /no longer there/.test(m.msg)), 'refused');
+  assert(!cs[1].sock.msgs.some(m => m.t === 'sys'), 'and nothing told');
+  S.rooms.clear();
+});
+test('srv-2.6.53 a park from the top is told by the server (the owner sees those cards): the count, the pile, no names; a lobby hears nothing', () => {
+  const { room, cs } = seatTable(['P1', 'P2']);
+  room.players[0].game = { deckName:'D', deckLib:[], deckCrypt:[], lib:['A', 'B', 'C', 'D'], crypt:['V1', 'V2'] };
+  S.handle(cs[0], JSON.stringify({ t:'reveal', n: 3 }));
+  eq(JSON.stringify(cs[0].sock.msgs.find(m => m.t === 'revealed').names), '["D","C","B"]', 'the owner gets the top three, in order');
+  assert(cs[1].sock.msgs.some(m => m.t === 'sys' && m.msg === 'P1 parks the top 3 cards of their library face down.'), 'told: ' + JSON.stringify(cs[1].sock.msgs));
+  cs.forEach(c => { c.sock.msgs.length = 0; });
+  S.handle(cs[0], JSON.stringify({ t:'reveal', kind:'crypt', n: 1 }));
+  assert(cs[1].sock.msgs.some(m => m.t === 'sys' && m.msg === 'P1 parks the top card of their crypt face down.'));
+  const lob = seatTable(['L1', 'L2'], { lobby: true });
+  const msgs = [];
+  S.pileAnnounce(lob.room, { name:'L1' }, 'x'); lob.cs.forEach(c => msgs.push(...c.sock.msgs));
+  eq(msgs.filter(m => m.t === 'sys').length, 0, 'not at a table that has not started');
+  S.rooms.clear();
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));
 process.exit(fail ? 1 : 0);

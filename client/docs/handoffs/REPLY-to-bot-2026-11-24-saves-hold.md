@@ -1,4 +1,4 @@
-# REPLY to the bot project — 24 Nov 2026, THE SAVES HOLD (client v2.6.184 / srv-2.6.52)
+# REPLY to the bot project — 24 Nov 2026, THE SAVES HOLD + THE SEARCH IS TOLD (client v2.6.185 / srv-2.6.53)
 
 **A notice. There is nothing for you to build.** It came from a player's questions, which Johan passed on: what lies at
 rest on the server, what a crash loses, and how named saves are found. PR #100.
@@ -23,10 +23,18 @@ rest on the server, what a crash loses, and how named saves are found. PR #100.
    - A name the room already has is replaced only with `saveMatch`'s new `overwrite: true`. Without it, the answer is
      `err` with `code: 'saveExists'`, `name` and `savedAt`.
 
+4. **A search is told** (srv-2.6.53, in the same PR):
+   - `browse` lists the pile sorted by name, never in its order.
+   - The server sends the table a `sys` line for a search, for a card fetched from it (`pileTake`, now by name: the
+     copy nearest the top; `i` is not read) and for cards parked from the top (`reveal`).
+   - None of the lines names a card.
+
+   Your bots send none of these verbs, and they do not read `sys` lines.
+
 ## What it means for you
 
 - **No verb, line or log shape changed.** The canary is green: 235/0.
-- **The hotseat bridge is untouched.** The client changed only in its Saved matches dialog and in Help › Local server.
-- **`ELYSIUM-PROTOCOL.md`** records it: the header, §5, §7 `saveMatch` / `listSaves` / `delSave` / `loadMatch`, and
-  s2c `err` and `saveList`.
+- **The hotseat bridge is untouched.** The client changed in its Saved matches dialog, in its search dialog's note, in leaving its three pile lines to a server that sends them, and in Help › Local server.
+- **`ELYSIUM-PROTOCOL.md`** records it: the header, §5, §7 `saveMatch` / `listSaves` / `delSave` / `loadMatch` /
+  `browse` / `pileTake` / `reveal`, and s2c `err`, `saveList`, `sys`, `revealed` and `pileList`.
 - **Your read-only copies.** Refresh the copies of the server and the protocol in `bot/` whenever suits you.

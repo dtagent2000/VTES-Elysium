@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.52';   // srv-2.6.52 (24 Nov 2026, THE SAVES HOLD -- restart; ships with client v2.6.184): HeySteev's questions through Johan ('a lost game', the same room name and password every week). (1) The snapshot follows the table: every message that can change what it stores schedules a write, 250 ms after a deck, seat, turn, score or roster change and 2 s after a board push or a hand escrow; the 60 s tick and the exit flush stay. Measured on srv-2.6.51 with a real process: kill -9 a minute in brought the library back as it was at the tick, so the card drawn since came up again; kill -9 inside the first minute lost the room; SIGTERM kept everything. (2) The snapshot keeps each seat's own board (pubOwn; the public board others are sent is made from it at the restore) -- a restart kept the decks and lost the boards. (3) Named saves belong to the room's name AND password (the hosting plan's D4 said per room; the code counted per password): two groups sharing a password shared, overwrote and deleted each other's saves, and every room without a password shared one list of three. A room without a password cannot save (err code saveNeedsPass; listSaves answers needPass). An existing save of the group is replaced only with overwrite:true (err code saveExists, with name and savedAt; an older client gets the sentence). The default name carries the time. Every save has carried roomName since the first server; one without it keeps the password-only rule.
+const VERSION = '2.6.53';   // srv-2.6.53 (24 Nov 2026, THE SEARCH IS TOLD -- restart; ships with client v2.6.185; carries srv-2.6.52's THE SAVES HOLD, never deployed, same PR #100): Johan's 'kör G'. A search of your own pile (browse) answers with the names sorted -- srv-2.6.52 sent the pile top-first, so a modified client could read its own library order -- and the server tells the table ('NAME searches their library.'). A fetch from it (pileTake) is found by name, the copy nearest the top (the list's index names no position any more), and told ('NAME fetches a card from their library.' / '... from their crypt to their uncontrolled region.'). A park from the top (reveal) is told ('NAME parks the top 3 cards of their library face down.'). Before, only the client wrote these lines, so a modified client could look or fetch without the table knowing. They are sys lines, sent only at a started table, and none names a card.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -642,6 +642,8 @@ function expandDeck(list){
   return out;
 }
 function pileCounts(g){ return { lib: g.lib.length, crypt: g.crypt.length }; }
+function pileSorted(pile){ return [...pile].sort((a, b) => a.localeCompare(b, 'en')); }   // srv-2.6.53: a search lists the pile by name, never in its order
+function pileAnnounce(room, p, msg){ if(room && room.started) sys(room, msg); }       // srv-2.6.53: a look into a hidden pile is the server's to tell the table (in a lobby there is no table yet)
 function dealNow(p, room){
   const g = p.game;
   g.lib   = [...g.deckLib];   shuffle(g.lib);
@@ -895,24 +897,29 @@ const GAME_HANDLERS = {
     shuffle(m.pile === 'crypt' ? p.game.crypt : p.game.lib);
     wsSend(conn.sock, Object.assign({ t:'pileN' }, pileCounts(p.game)));
   },
+  /* srv-2.6.53 (Johan, 24 Nov 2026 -- G, after HeySteev's 'data at rest'): a search of your own pile is the server's to
+     announce, and its list says nothing about the order. srv-2.6.52 sent the pile top-first and left the table's line
+     ('The library is being browsed.') and the reshuffle to the client, so a modified client could read its own library
+     order, or fetch a card, without the table knowing. Now: the list is sorted by name, the server tells the table
+     about the search (`pileAnnounce`), and a fetch is found by name and told too. A reference client from v2.6.185
+     writes no line of its own for these on such a server (`srvLogsPiles`). */
   browse(conn, room, p, m){
     if(!p.game) return wsSend(conn.sock, { t:'err', msg:'Import a deck first.' });
-    const pile = m.pile === 'crypt' ? p.game.crypt : p.game.lib;
-    /* Owner-only: the list goes to this socket and nowhere else */
-    wsSend(conn.sock, { t:'pileList', pile: m.pile === 'crypt' ? 'crypt' : 'library', names: [...pile].reverse() });
+    const crypt = m.pile === 'crypt', pile = crypt ? p.game.crypt : p.game.lib;
+    /* Owner-only: the list goes to this socket and nowhere else -- sorted, so it tells nothing about the order */
+    wsSend(conn.sock, { t:'pileList', pile: crypt ? 'crypt' : 'library', names: pileSorted(pile) });
+    pileAnnounce(room, p, p.name + ' searches their ' + (crypt ? 'crypt' : 'library') + '.');
   },
   pileTake(conn, room, p, m){
     if(!p.game) return;
     const crypt = m.pile === 'crypt';
     const pile = crypt ? p.game.crypt : p.game.lib;
     const name = cleanCard(m.name);
-    let idx = pile.length - 1 - (parseInt(m.i, 10) || 0);     // client lists top-first
-    if(pile[idx] !== name){                                    // pile shifted — find by name from the top
-      idx = pile.lastIndexOf(name);
-    }
-    if(idx < 0 || idx >= pile.length) return wsSend(conn.sock, { t:'err', msg:'That card is no longer there.' });
+    const idx = pile.lastIndexOf(name);                        // srv-2.6.53: by name, the copy nearest the top -- the list is sorted, so its index (`i`) names no position
+    if(idx < 0) return wsSend(conn.sock, { t:'err', msg:'That card is no longer there.' });
     pile.splice(idx, 1);
     sendDrew(p, crypt ? 'uncontrolled' : 'hand', crypt ? 'crypt' : 'lib', name, { took: true, pile: crypt ? 'crypt' : 'library' });
+    pileAnnounce(room, p, crypt ? p.name + ' fetches a card from their crypt to their uncontrolled region.' : p.name + ' fetches a card from their library.');
   },
   reveal(conn, room, p, m){
     if(!p.game) return wsSend(conn.sock, { t:'err', msg:'Import a deck first.' });
@@ -923,6 +930,7 @@ const GAME_HANDLERS = {
     const names = [];
     for(let i = 0; i < n; i++) names.push(pile.pop());
     wsSend(conn.sock, Object.assign({ t:'revealed', names, kind: isCrypt ? 'crypt' : 'lib' }, pileCounts(p.game)));
+    pileAnnounce(room, p, p.name + ' parks the top ' + (n === 1 ? 'card' : n + ' cards') + ' of their ' + (isCrypt ? 'crypt' : 'library') + ' face down.');   // srv-2.6.53: the owner sees these cards -- the table hears it from the server
   },
   pileBulk(conn, room, p, m){
     if(!p.game) return;

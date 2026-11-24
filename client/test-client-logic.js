@@ -7022,6 +7022,35 @@ testA('v2.6.184 the Saved matches dialog: a room without a password says so inst
   assert(html.indexOf('The server stores the hand only as a blob it cannot read') < 0, 'and Help > Local server no longer says the server cannot read the hand (About was corrected in v2.6.173)');
 });
 
+/* === v2.6.185 THE SEARCH IS TOLD (srv-2.6.53; Johan's 'kör G') === */
+testA('v2.6.185 on a server from srv-2.6.53 the client writes no line of its own for a search, a fetch from it or a park from the top -- the server tells the table, which would otherwise read it twice -- and an older server still gets the client\'s lines', async () => {
+  const A = loadClient(CLIENT);
+  if (typeof A.srvLogsPiles !== 'function') throw new Error('srvLogsPiles missing (v2.6.184)');
+  A.toast = () => {};
+  A.net.status = 'in'; A.net.room = 'R'; A.net.you = 'Ann'; A.net.deckUp = true; A.net.libN = 10; A.net.cryptN = 4; A.net.spect = false;
+  const sent = sentLog(A);
+  const lines = re => sent.filter(m => m.t === 'log' && re.test(m.html || '')).length;
+  const run = srv => {
+    A.net.srvV = srv; sent.length = 0;
+    A.browse('library');
+    A.MP_HANDLERS.drew({ t:'drew', zone:'hand', kind:'lib', name:'Fetched Card', took:true, pile:'library', lib:9, crypt:4 });
+    A.MP_HANDLERS.revealed({ t:'revealed', names:['Top A', 'Top B'], kind:'lib', lib:7, crypt:4 });
+    return { browse: sent.filter(m => m.t === 'browse').length, searched: lines(/is being browsed/), fetched: lines(/fetched from the library/), parked: lines(/Parked the top/) };
+  };
+  const nw = run('2.6.53');
+  eq(nw.browse, 1, 'the search goes out');
+  eq(nw.searched + nw.fetched + nw.parked, 0, 'srv-2.6.53: none of the three lines is ours: ' + JSON.stringify(nw));
+  eq(A.state.zones.hand.length >= 1 && A.state.zones.ready.length >= 2, true, 'the fetch and the park still land on the board');
+  const ol = run('2.6.52');
+  eq(JSON.stringify(ol), '{"browse":1,"searched":1,"fetched":1,"parked":1}', 'srv-2.6.52: the client still writes all three: ' + JSON.stringify(ol));
+  eq(A.srvLogsPiles(), false); A.net.srvV = ''; eq(A.srvLogsPiles(), false, 'an unknown server version: our lines'); A.net.srvV = '2.7.0'; eq(A.srvLogsPiles(), true);
+  A.net.srvV = '2.6.53';
+  A.__doc._ids['browseNote'] = { textContent:'' }; A.__doc._ids['browseTitle'] = { textContent:'' };
+  A.__doc._ids['browseGrid'] = { innerHTML:'', appendChild(){}, querySelectorAll: () => [] };
+  try { A.netBrowseOpen('library', ['Alpha', 'Beta']); } catch (e) {}
+  assert(/Listed by name, not in pile order/.test(A.__doc._ids['browseNote'].textContent), 'the search says the list is by name: ' + A.__doc._ids['browseNote'].textContent);
+});
+
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

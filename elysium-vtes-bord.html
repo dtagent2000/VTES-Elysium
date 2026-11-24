@@ -2985,7 +2985,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hs-table">Running a table</a></li>
   <li><a href="#hs-checklist">Hosting checklist</a></li>
   <li><a href="#hs-reference">Reference</a></li>
-  <li class="ver">server srv-2.6.52 · client v2.6.184</li>
+  <li class="ver">server srv-2.6.53 · client v2.6.185</li>
 </ul></nav>
 
 <header class="hero">
@@ -3265,7 +3265,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <tr><td>Referee key</td><td>10 wrong keys within 10 minutes from one address lock the key out for that address for 10 minutes — the in-game key, the log pull and the maintenance window count together. Behind a tunnel without <code>--trust-proxy</code> every player counts as the same address, which gets 40 tries instead of 10; turn the option on so each player has their own count.</td></tr>
     <tr><td>Room creation</td><td>Max 4 new rooms per address per hour (the host's own machine is exempt, as is the referee key). Of the 50 room slots, 10 are always held for rooms that have ever seated a player, so squatters cannot fill the server.</td></tr>
     <tr><td>Identity</td><td>A token per browser tab (survives a refresh, dies with the tab). Name + password reclaims an offline seat; a name that is online can never be taken over.</td></tr>
-    <tr><td>Hidden information</td><td>Library and crypt live on the server — in its memory, and in its snapshot file and named saves so a table survives a restart — and the server deals your draws. It never sends your browser another player's library, hand or face-down cards (unless they open their hand to you; a bot added from the lobby runs in the host's browser, which holds that bot's cards). Face-down card names are stripped from every board the server relays (its own copy of your board keeps them, for you alone); your hand is never relayed to another player.</td></tr>
+    <tr><td>Hidden information</td><td>Library and crypt live on the server — in its memory, and in its snapshot file and named saves so a table survives a restart — and the server deals your draws. It never sends your browser another player's library, hand or face-down cards (unless they open their hand to you; a bot added from the lobby runs in the host's browser, which holds that bot's cards). Searching your own library lists it by name, never in its order, and the server tells the table about a search, a card fetched from it and cards parked from the top (srv-2.6.53). Face-down card names are stripped from every board the server relays (its own copy of your board keeps them, for you alone); your hand is never relayed to another player.</td></tr>
     <tr><td>Hand escrow</td><td>Your hand is encrypted in your browser with a key derived from the room password. Reconnecting, taking over a seat and loading a saved match restore your exact hand — while the save file, the snapshot and the other players only ever see an opaque blob. The server is not kept out: it deals your draws and reads the room password at every join, so it is trusted like a dealer. Obfuscation-grade, not an audited cipher.</td></tr>
     <tr><td>Sanitisation</td><td>Every field passing through the server is cleaned and clamped (lengths, ranges, control characters); angle brackets and double quotes are stripped from names on the server, and card fields lose any <code>=</code>, on top of the client escaping everything it renders, quotes included.</td></tr>
     <tr><td>Crash isolation</td><td>Every message is handled in a guarded context; one malformed message cannot take the server down or drop the rooms.</td></tr>
@@ -3333,7 +3333,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.184';   // v2.6.184 (24 Nov 2026, THE SAVES HOLD -- purge; ships with srv-2.6.52, restart; bot v0.6.236 beside, unchanged): HeySteev's questions through Johan. (1) Saving a match under a name the group already uses asks 'Overwrite?' (the server's err code saveExists) and sends it again with overwrite:true; an empty name becomes the room's name and the local date and time. (2) A room without a password says so in the Saved matches dialog (the server's needPass) instead of offering the save field. (3) The dialog's texts follow the server: saves belong to the room's name and password, hands come back with the password (it said 'Hand cards aren't restored'), and saves last 90 days after their last save or load (it said they 'won't expire after 24 hours'). (4) Help > Local server: the same, and the server is trusted with the hand like a dealer (it said the server 'cannot read' the blob; About was corrected in v2.6.173, this line was missed); its security table says the library and crypt are also in the server's snapshot file and saves (it said 'only in server memory'), and the persistence line gives srv-2.6.52's cadence.
+const VERSION='2.6.185';   // v2.6.185 (24 Nov 2026, THE SEARCH IS TOLD -- purge; ships with srv-2.6.53, restart; carries v2.6.184's THE SAVES HOLD, never deployed, same PR #100; bot v0.6.236 beside, unchanged): Johan's 'kör G'. On a server from srv-2.6.53 (srvLogsPiles, PILE_LOG_SRV_MIN) the client writes no line of its own for a search of a pile, a fetch from it or a park from the top -- the server tells the table, and the table would read it twice -- while an older server still gets the client's lines. The search dialog says the list is by name, not in pile order, and that the table is told.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -6410,10 +6410,14 @@ function _makeBrowseCard(c){
   im.addEventListener('error',()=>{ im.style.display='none'; d.querySelector('.bfall').style.display='block'; });
   return d;
 }
+/* v2.6.185 (srv-2.6.53, G): a server that announces a look into a pile itself -- the search, a fetch from it, a park
+   from the top -- gets no line of ours for it (the table would read it twice); an older one still gets ours. */
+const PILE_LOG_SRV_MIN='2.6.53';
+function srvLogsPiles(){ return !!net.srvV && verAtLeast(net.srvV, PILE_LOG_SRV_MIN); }
 function browse(z, mode){
   if((z==='library'||z==='crypt') && mpOfflineRefuse('look through the deck')) return;   // cli-2.6.165
   if(netGame() && (z==='library'||z==='crypt')){
-    log('<b>'+(z==='library'?'The library':'The crypt')+'</b> is being browsed.');
+    if(!srvLogsPiles()) log('<b>'+(z==='library'?'The library':'The crypt')+'</b> is being browsed.');
     mpSend({t:'browse', pile:z==='crypt'?'crypt':'library'});
     return;
   }
@@ -10593,7 +10597,7 @@ const MP_HANDLERS = {
     updateUndoBtn();
     setPileN(m);
     const n='<b>'+esc(m.name)+'</b>';
-    if(m.took) log(m.pile==='crypt' ? 'A card was fetched from the crypt to uncontrolled.' : 'A card was fetched from the library.');
+    if(m.took){ if(!srvLogsPiles()) log(m.pile==='crypt' ? 'A card was fetched from the crypt to uncontrolled.' : 'A card was fetched from the library.'); }   // v2.6.185: srv-2.6.53 tells the table itself
     else if(z==='hand') log('Drew <b>1 card</b> from the library.');
     else if(z==='uncontrolled'){ if(!_su) log('Drew <b>1 crypt card</b> to the uncontrolled region.'); }   // the deal line already announced the setup cards -- four more lines per player would bury everyone's log at the start
     else if(z==='ash') log('Discarded the top card of the library: '+n+'.');
@@ -10625,7 +10629,7 @@ const MP_HANDLERS = {
       });
       addSel(ids);
       undoStack.length=0; updateUndoBtn();
-      log('Parked the top <b>'+names.length+'</b> card'+(names.length>1?'s':'')+' of the '+(m.kind==='crypt'?'crypt':'library')+' face down '+parkWhere(m.kind==='crypt'?'crypt':'lib')+'.');
+      if(!srvLogsPiles()) log('Parked the top <b>'+names.length+'</b> card'+(names.length>1?'s':'')+' of the '+(m.kind==='crypt'?'crypt':'library')+' face down '+parkWhere(m.kind==='crypt'?'crypt':'lib')+'.');   // v2.6.185: srv-2.6.53 tells the table itself
     }
     setPileN(m);
   },
@@ -17115,9 +17119,10 @@ function netBrowseOpen(pile, names){
   browseZone = pile==='crypt' ? 'crypt' : 'library';
   browseDirty=false;
   $('#browseTitle').textContent='Browse: '+(pile==='crypt'?'crypt':'library');
-  $('#browseNote').textContent = pile==='crypt'
+  $('#browseNote').textContent = (pile==='crypt'
     ? 'Double-click a card to fetch it. The crypt is always reshuffled when you close.'
-    : 'Double-click a card to fetch it. The library is always reshuffled when you close.';
+    : 'Double-click a card to fetch it. The library is always reshuffled when you close.')
+    + (srvLogsPiles() ? ' Listed by name, not in pile order; the table is told about the search.' : '');   // v2.6.185 (srv-2.6.53)
   const grid=$('#browseGrid'); grid.innerHTML='';
   names.forEach((nm,i)=>{
     const d=document.createElement('div'); d.className='bcard';
