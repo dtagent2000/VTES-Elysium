@@ -2985,7 +2985,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hs-table">Running a table</a></li>
   <li><a href="#hs-checklist">Hosting checklist</a></li>
   <li><a href="#hs-reference">Reference</a></li>
-  <li class="ver">server srv-2.6.50 · client v2.6.173</li>
+  <li class="ver">server srv-2.6.53 · client v2.6.185</li>
 </ul></nav>
 
 <header class="hero">
@@ -3159,7 +3159,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
         <li><strong>Hosting (★) passes on</strong> to the next player if the host leaves for good. <span class="menu">Menu → Leave seat</span> asks a host with company whether to leave alone or close the table for everyone.</li>
         <li><strong>Leaving mid-game opens the seat</strong> (srv-2.6.48): the deck and the board stay, nobody else changes seat, and the turn stays where it is (it moves on if it was the leaver's). The host can promote a spectator into the open seat, including the player who left: they join as a spectator under their name, and the host promotes them back. Older servers removed the seat and moved everyone after it up one place.</li>
         <li><strong>Rooms expire</strong> when everyone has been offline for 60 minutes; a room nobody ever sat in is cleaned up after 10 minutes, and a room with bots but no human online after 10 minutes as well (the bots live in the host's tab). While the server runs, a room otherwise lives as long as you want it to.</li>
-        <li><strong>Persistence.</strong> The rooms — hidden piles, points, tokens and the encrypted hand blobs — are written to <code>elysium-rooms.json</code> every minute and on <kbd>Ctrl</kbd>+<kbd>C</kbd>. A restarted server restores them — board style, referee password and the bots' tempo included (srv-2.6.43; older servers forgot those, and swept a restored table within ten minutes unless somebody rejoined it) — and the players reconnect into their seats; a restored table nobody returns to closes after an hour, like any idle table. The file is ignored if it is older than 24 hours.</li>
+        <li><strong>Persistence.</strong> The rooms — hidden piles, points, tokens, each player's own board and the encrypted hand blobs — are written to <code>elysium-rooms.json</code> moments after each change (srv-2.6.52: a quarter of a second after a draw, two seconds after a board), every minute, and on <kbd>Ctrl</kbd>+<kbd>C</kbd> or a service stop. Before srv-2.6.52 only the minute and the stop wrote it, so a power cut or a killed process lost up to a minute — a card drawn in it could be drawn again. A restarted server restores them — board style, referee password and the bots' tempo included (srv-2.6.43; older servers forgot those, and swept a restored table within ten minutes unless somebody rejoined it) — and the players reconnect into their seats; a restored table nobody returns to closes after an hour, like any idle table. The file is ignored if it is older than 24 hours.</li>
         <li><strong>Spectators</strong> need the room password if there is one, can only chat (if the host allows it), and do not keep a room alive.</li>
         <li><strong>The match clock</strong> lives on the room; the server announces “Time is called” once when it reaches zero.</li>
       </ul>
@@ -3189,16 +3189,17 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <details>
     <summary>Saving and loading a match <span class="sub">— continue next week</span></summary>
     <div>
-      <p>Beyond the automatic room snapshot, the host can save a running match under a name and keep it — to continue a game next week, or to recover after a long break.</p>
+      <p>The server saves every table by itself, moments after each change, so a running game survives a server restart. That autosave keeps only the latest state and goes when the room closes (everyone offline for an hour). To keep a match longer — to continue next week, or after a long break — the host saves it under a name.</p>
       <h4>Saving</h4>
       <ul>
-        <li>In a running game, click <span class="menu">💾 matches</span> in the room bar (host and referee only), type a name — <em>Friday game</em> — and <span class="menu">Save match</span>.</li>
-        <li>A save captures every seat's deck as it stands, public board, victory points, the turn — and each player's <em>encrypted hand</em>. The server stores the hand only as a blob it cannot read.</li>
-        <li>Saves are kept per <em>room password</em> (the same password = the same group of friends): three per group, and a save untouched for 90 days expires.</li>
+        <li>In a running game, click <span class="menu">💾 matches</span> in the room bar (host and referee only), type a name — <em>Friday game</em> — and <span class="menu">Save match</span>. Left empty, the name is the room's name with the date and time.</li>
+        <li>A save captures every seat's deck as it stands, its boards, the victory points, the turn — and each player's <em>encrypted hand</em>. The hand is encrypted with a key from the room password; the server holds no key, but it sees the password at every join and deals the cards, so it is trusted like a dealer.</li>
+        <li>Saves belong to the room's <em>name and password</em> (your group of friends): three per room, and a save expires 90 days after its last save or load. A room without a password cannot save.</li>
+        <li>Saving under a name the room already has asks before it replaces that save.</li>
       </ul>
       <h4>Loading</h4>
       <ul>
-        <li>Create a <em>fresh room</em> with the <em>same password</em> the match originally used — the password is how a save is found and how the seats are protected.</li>
+        <li>Create a <em>fresh room</em> with the <em>same name and password</em> the match was saved under — that is how a save is found and how the seats are protected.</li>
         <li>Open <span class="menu">💾 matches</span>: the group's saves appear. <span class="menu">Load</span> drops you straight into your own seat (log in with the name you played under); the other seats wait offline.</li>
         <li>Everyone else joins the new room with <em>their own name + the same password</em> and lands in their seat — board, deck and hand restored. A hand is restored from the blob only when the password was just typed; a plain page refresh restores it from the browser's own autosave instead.</li>
       </ul>
@@ -3264,7 +3265,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     <tr><td>Referee key</td><td>10 wrong keys within 10 minutes from one address lock the key out for that address for 10 minutes — the in-game key, the log pull and the maintenance window count together. Behind a tunnel without <code>--trust-proxy</code> every player counts as the same address, which gets 40 tries instead of 10; turn the option on so each player has their own count.</td></tr>
     <tr><td>Room creation</td><td>Max 4 new rooms per address per hour (the host's own machine is exempt, as is the referee key). Of the 50 room slots, 10 are always held for rooms that have ever seated a player, so squatters cannot fill the server.</td></tr>
     <tr><td>Identity</td><td>A token per browser tab (survives a refresh, dies with the tab). Name + password reclaims an offline seat; a name that is online can never be taken over.</td></tr>
-    <tr><td>Hidden information</td><td>Library and crypt exist only in server memory, and the server deals your draws. Face-down card names are stripped before anything is relayed; your hand is never relayed to another player.</td></tr>
+    <tr><td>Hidden information</td><td>Library and crypt live on the server — in its memory, and in its snapshot file and named saves so a table survives a restart — and the server deals your draws. It never sends your browser another player's library, hand or face-down cards (unless they open their hand to you; a bot added from the lobby runs in the host's browser, which holds that bot's cards). Searching your own library lists it by name, never in its order, and the server tells the table about a search, a card fetched from it and cards parked from the top (srv-2.6.53). Face-down card names are stripped from every board the server relays (its own copy of your board keeps them, for you alone); your hand is never relayed to another player.</td></tr>
     <tr><td>Hand escrow</td><td>Your hand is encrypted in your browser with a key derived from the room password. Reconnecting, taking over a seat and loading a saved match restore your exact hand — while the save file, the snapshot and the other players only ever see an opaque blob. The server is not kept out: it deals your draws and reads the room password at every join, so it is trusted like a dealer. Obfuscation-grade, not an audited cipher.</td></tr>
     <tr><td>Sanitisation</td><td>Every field passing through the server is cleaned and clamped (lengths, ranges, control characters); angle brackets and double quotes are stripped from names on the server, and card fields lose any <code>=</code>, on top of the client escaping everything it renders, quotes included.</td></tr>
     <tr><td>Crash isolation</td><td>Every message is handled in a guarded context; one malformed message cannot take the server down or drop the rooms.</td></tr>
@@ -3332,7 +3333,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.183';   // v2.6.183 (23 Nov 2026, THE NAME STACKS UP, pure client -- purge; srv-2.6.51 unchanged, no wire change; bot v0.6.236 beside, unchanged; PR #98, on top of v2.6.181 and v2.6.182, neither deployed): Johan: 'låååånga namn kanske istället får staplas inom ett fönster som radbryter texten ... så den expanderar uppåt från poolgloben'. (1) The name over a pool globe on the board wraps inside a 92 px window -- the globe plus the gap to its crypt cards on each side, so it never reaches a card -- and grows upward: its bottom line stands where the one line always did, so the circle and the seat spots do not move. (2) Two lines at most, then an ellipsis; it breaks at spaces and hyphens, one long word anywhere, and the colour dot stays with the name's first letter. (3) The globe's tooltip starts with the full name; an opponent's goes on with the right-click hint, which a pool-target refresh used to wipe. (4) The Edge token laid above a globe clears a second name line.
+const VERSION='2.6.185';   // v2.6.185 (24 Nov 2026, THE SEARCH IS TOLD -- purge; ships with srv-2.6.53, restart; carries v2.6.184's THE SAVES HOLD, never deployed, same PR #100; bot v0.6.236 beside, unchanged): Johan's 'kör G'. On a server from srv-2.6.53 (srvLogsPiles, PILE_LOG_SRV_MIN) the client writes no line of its own for a search of a pile, a fetch from it or a park from the top -- the server tells the table, and the table would read it twice -- while an older server still gets the client's lines. The search dialog says the list is by name, not in pile order, and that the table is told.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -6409,10 +6410,14 @@ function _makeBrowseCard(c){
   im.addEventListener('error',()=>{ im.style.display='none'; d.querySelector('.bfall').style.display='block'; });
   return d;
 }
+/* v2.6.185 (srv-2.6.53, G): a server that announces a look into a pile itself -- the search, a fetch from it, a park
+   from the top -- gets no line of ours for it (the table would read it twice); an older one still gets ours. */
+const PILE_LOG_SRV_MIN='2.6.53';
+function srvLogsPiles(){ return !!net.srvV && verAtLeast(net.srvV, PILE_LOG_SRV_MIN); }
 function browse(z, mode){
   if((z==='library'||z==='crypt') && mpOfflineRefuse('look through the deck')) return;   // cli-2.6.165
   if(netGame() && (z==='library'||z==='crypt')){
-    log('<b>'+(z==='library'?'The library':'The crypt')+'</b> is being browsed.');
+    if(!srvLogsPiles()) log('<b>'+(z==='library'?'The library':'The crypt')+'</b> is being browsed.');
     mpSend({t:'browse', pile:z==='crypt'?'crypt':'library'});
     return;
   }
@@ -10345,6 +10350,7 @@ function mpLeave(){
   try{ netBotsTeardown(); }catch(_e){}                 // v2.6.99: the host's bots live in this tab and die with the room
   hotHoldBy.clear(); try{ hotHoldSync(); }catch(_e){}   // v2.6.101: no table, no hold
   net.pass=''; net.escrowKey=null; net.escrowSalt=null; net._escrowKeyFor=null; lastHandSig=''; net._createHelpers=null;   // v2.6.51: the create-time Helpers choice is per-room, like the password
+  net.saves=[]; net.savesNeedPass=false;   // v2.6.184: the next room's list (and whether it can save) comes from its own server answer
   net.helperPolicy=null; applyHelper();
   _lastPubSent=''; _openHandSent={}; _ohSeen=null;     // cli-2.6.165 (C-12/13): what was sent belongs to the room we left
   net.outbox=[]; net.retryN=0; net.srvPass=''; net.srvPassAt=null;   // cli-2.6.165 (C-14/15): so does the queue, the back-off and the remembered server password
@@ -10499,6 +10505,7 @@ const MP_HANDLERS = {
   },
   saveList(m){
     net.saves=m.saves||[];
+    net.savesNeedPass=!!m.needPass;   // v2.6.184 (srv-2.6.52): this room has no password, so it cannot save
     if(shownModal()==='savesModal') renderSaves();
   },
   roll(m){
@@ -10532,7 +10539,9 @@ const MP_HANDLERS = {
     mpLandAtTable();                                               // online game opens at the table -- v2.6.148: for a spectator too (they were left on the start screen)
   },
   err(m){
-    if(net._rlTimer){ clearTimeout(net._rlTimer); net._rlTimer=null; }   // v2.5.97: ANY err during the browse window means the server answered -- the 1.5s "predates the lobby" fallback would overwrite the real message (e.g. wrong --server-pass) with a misleading one
+    if(net._rlTimer){ clearTimeout(net._rlTimer); net._rlTimer=null; }
+    if(m.code==='saveExists' && m.name){ saveExistsAsk(m.name, m.savedAt); return; }   // v2.6.184 (srv-2.6.52): the group already has a save by that name -- ask, do not toast
+    if(m.code==='saveNeedsPass'){ net.savesNeedPass=true; if(shownModal()==='savesModal') renderSaves(); }   // v2.6.184: and the toast below says why   // v2.5.97: ANY err during the browse window means the server answered -- the 1.5s "predates the lobby" fallback would overwrite the real message (e.g. wrong --server-pass) with a misleading one
     if(net.giving && /offline|no such seat|your own board/i.test(m.msg||'')) net.giving=null;
     if(net.recalling && /offline|no such seat|your own board/i.test(m.msg||'')){ if(m.cid && net.recalling[m.cid]){ delete net.recalling[m.cid]; document.querySelectorAll('.card.rc[data-cid="'+m.cid+'"]').forEach(el=>el.classList.remove('recallPend')); } else if(!m.cid){ net.recalling={}; document.querySelectorAll('.card.rc.recallPend').forEach(el=>el.classList.remove('recallPend')); } }   // v2.5.56 (backlog 2.4.b): a recall bounce clears ONLY the echoed cid's guard entry - two concurrent recalls where one holder is offline no longer drop the other's protection. No cid in the err (old server) -> the old wholesale clear. v2.5.59: the optimistic dim is lifted the same way (targeted / wholesale)
     mpStatus('⚠ '+m.msg);
@@ -10588,7 +10597,7 @@ const MP_HANDLERS = {
     updateUndoBtn();
     setPileN(m);
     const n='<b>'+esc(m.name)+'</b>';
-    if(m.took) log(m.pile==='crypt' ? 'A card was fetched from the crypt to uncontrolled.' : 'A card was fetched from the library.');
+    if(m.took){ if(!srvLogsPiles()) log(m.pile==='crypt' ? 'A card was fetched from the crypt to uncontrolled.' : 'A card was fetched from the library.'); }   // v2.6.185: srv-2.6.53 tells the table itself
     else if(z==='hand') log('Drew <b>1 card</b> from the library.');
     else if(z==='uncontrolled'){ if(!_su) log('Drew <b>1 crypt card</b> to the uncontrolled region.'); }   // the deal line already announced the setup cards -- four more lines per player would bury everyone's log at the start
     else if(z==='ash') log('Discarded the top card of the library: '+n+'.');
@@ -10620,7 +10629,7 @@ const MP_HANDLERS = {
       });
       addSel(ids);
       undoStack.length=0; updateUndoBtn();
-      log('Parked the top <b>'+names.length+'</b> card'+(names.length>1?'s':'')+' of the '+(m.kind==='crypt'?'crypt':'library')+' face down '+parkWhere(m.kind==='crypt'?'crypt':'lib')+'.');
+      if(!srvLogsPiles()) log('Parked the top <b>'+names.length+'</b> card'+(names.length>1?'s':'')+' of the '+(m.kind==='crypt'?'crypt':'library')+' face down '+parkWhere(m.kind==='crypt'?'crypt':'lib')+'.');   // v2.6.185: srv-2.6.53 tells the table itself
     }
     setPileN(m);
   },
@@ -10930,13 +10939,16 @@ function updateRoomBar(){
 function openSaves(){ if(!inRoom()) return; openOverlay('savesModal'); mpSend({t:'listSaves'}); renderSaves(); }
 function renderSaves(){
   const list=$('#savesList'); if(!list) return;
-  const started=!net.lobby;
-  $('#saveNew').hidden=!started;        // you can only save a running game
+  const started=!net.lobby, needPass=!!net.savesNeedPass;
+  $('#saveNew').hidden=!started || needPass;        // you can only save a running game -- v2.6.184: in a room with a password
+  const sn=$('#saveName'); if(sn) sn.placeholder='Name this match (empty: '+saveMatchName()+')';
   $('#savesHint').innerHTML = started
-    ? 'Save this running match under a name. It is kept on the server and <b>won’t expire after 24 hours</b> — load it later from a fresh lobby to continue. Players rejoin with their names.'
-    : 'Pick a saved match to load into this lobby and continue it. <b>Hand cards aren’t restored</b> — they live only in each player’s browser, so players who kept their tab or a saved game file resume their hand; otherwise hands start empty. Only matches saved with this room’s password appear here.';
+    ? (needPass
+        ? 'This room has no password, so its matches cannot be saved. The room’s <b>name and password</b> keep your saves to your group — create the room with a password to save.'
+        : 'Save this running match under a name. It stays on the server for <b>90 days after its last save or load</b> — load it later from a fresh lobby with this room’s <b>name and password</b> to continue. Players rejoin with their names, and each player’s hand comes back with them.')
+    : 'Pick a saved match to load into this lobby and continue it. Each player’s hand comes back when they rejoin with the room’s password. Only matches saved in a room with this <b>name and password</b> appear here.';   // v2.6.184: hands have come back since the escrow (it said they were not restored); the group is the name and the password (srv-2.6.52)
   const saves=net.saves||[];
-  if(!saves.length){ list.innerHTML='<p class="note saveempty">'+(started?'No saved matches yet — name and save one above.':'No saved matches for this password. Create the room with the match’s original password to see its saves.')+'</p>'; return; }
+  if(!saves.length){ list.innerHTML='<p class="note saveempty">'+(started?(needPass?'No saved matches in this room.':'No saved matches yet — name and save one above.'):'No saved matches for this room name and password. Create the room with the match’s original name and password to see its saves.')+'</p>'; return; }
   list.innerHTML=saves.map(s=>{
     const w=new Date(s.savedAt);
     const when=w.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+w.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
@@ -17107,9 +17119,10 @@ function netBrowseOpen(pile, names){
   browseZone = pile==='crypt' ? 'crypt' : 'library';
   browseDirty=false;
   $('#browseTitle').textContent='Browse: '+(pile==='crypt'?'crypt':'library');
-  $('#browseNote').textContent = pile==='crypt'
+  $('#browseNote').textContent = (pile==='crypt'
     ? 'Double-click a card to fetch it. The crypt is always reshuffled when you close.'
-    : 'Double-click a card to fetch it. The library is always reshuffled when you close.';
+    : 'Double-click a card to fetch it. The library is always reshuffled when you close.')
+    + (srvLogsPiles() ? ' Listed by name, not in pile order; the table is told about the search.' : '');   // v2.6.185 (srv-2.6.53)
   const grid=$('#browseGrid'); grid.innerHTML='';
   names.forEach((nm,i)=>{
     const d=document.createElement('div'); d.className='bcard';
@@ -17156,8 +17169,23 @@ $('#savesModal').addEventListener('click',async e=>{
     if(await uiConfirm('Delete the saved match “'+name+'”? This can’t be undone.')) mpSend({t:'delSave', name});
   }
 });
-$('#saveBtn').addEventListener('click',()=>{ mpSend({t:'saveMatch', name:$('#saveName').value.trim()}); });
-$('#saveName').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); mpSend({t:'saveMatch', name:$('#saveName').value.trim()}); } });
+/* v2.6.184 (srv-2.6.52): a save under a name the group already uses is answered with err code saveExists -- the
+   client asks and sends it again with overwrite:true. An empty name becomes the room's name and the LOCAL date and
+   time (the server's own default is UTC, for older clients), so two saves the same day no longer share a name. */
+function saveMatchName(d){
+  d=d||new Date(); const z=n=>String(n).padStart(2,'0');
+  const at=d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+' '+z(d.getHours())+':'+z(d.getMinutes());
+  return ((String(net.room||'Match').slice(0, 40-at.length-1))+' '+at).trim();
+}
+function saveMatchSend(name, overwrite){ mpSend(overwrite ? {t:'saveMatch', name, overwrite:true} : {t:'saveMatch', name}); }
+function saveMatchNow(){ const sn=$('#saveName'); saveMatchSend((sn && sn.value.trim()) || saveMatchName()); }
+async function saveExistsAsk(name, savedAt){
+  const w=new Date(savedAt||0);
+  const when=(savedAt>0) ? w.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+w.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'}) : 'earlier';
+  if(await uiConfirm('A saved match named “'+String(name)+'” already exists (saved '+when+'). Overwrite it with this match?', 'Overwrite saved match')) saveMatchSend(String(name), true);
+}
+$('#saveBtn').addEventListener('click',()=>{ saveMatchNow(); });
+$('#saveName').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); saveMatchNow(); } });
 $('#savesClose').addEventListener('click',closeOverlay);
 
 /* ---------- Tools: coin, dice & seating ---------- */

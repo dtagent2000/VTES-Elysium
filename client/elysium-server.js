@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.51';   // srv-2.6.51 (15 Nov 2026, THE AIM LETS GO -- restart; ships with client v2.6.175; no new verb or field): bot v0.6.221's ask. When every OTHER seat is ousted the game is over and `pass` is ignored silently -- the turn stays where it is. It came straight back to the passer, whose bot (or client) then played a turn after the game had ended; turnOnFromOusted has left the marker alone in this case since srv-2.6.38. A vacant seat beside the passer (still in the game) or a table of one keeps the turn coming back; after an unoust the next pass moves it on.
+const VERSION = '2.6.53';   // srv-2.6.53 (24 Nov 2026, THE SEARCH IS TOLD -- restart; ships with client v2.6.185; carries srv-2.6.52's THE SAVES HOLD, never deployed, same PR #100): Johan's 'kör G'. A search of your own pile (browse) answers with the names sorted -- srv-2.6.52 sent the pile top-first, so a modified client could read its own library order -- and the server tells the table ('NAME searches their library.'). A fetch from it (pileTake) is found by name, the copy nearest the top (the list's index names no position any more), and told ('NAME fetches a card from their library.' / '... from their crypt to their uncontrolled region.'). A park from the top (reveal) is told ('NAME parks the top 3 cards of their library face down.'). Before, only the client wrote these lines, so a modified client could look or fetch without the table knowing. They are sys lines, sent only at a started table, and none names a card.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -642,6 +642,8 @@ function expandDeck(list){
   return out;
 }
 function pileCounts(g){ return { lib: g.lib.length, crypt: g.crypt.length }; }
+function pileSorted(pile){ return [...pile].sort((a, b) => a.localeCompare(b, 'en')); }   // srv-2.6.53: a search lists the pile by name, never in its order
+function pileAnnounce(room, p, msg){ if(room && room.started) sys(room, msg); }       // srv-2.6.53: a look into a hidden pile is the server's to tell the table (in a lobby there is no table yet)
 function dealNow(p, room){
   const g = p.game;
   g.lib   = [...g.deckLib];   shuffle(g.lib);
@@ -895,24 +897,29 @@ const GAME_HANDLERS = {
     shuffle(m.pile === 'crypt' ? p.game.crypt : p.game.lib);
     wsSend(conn.sock, Object.assign({ t:'pileN' }, pileCounts(p.game)));
   },
+  /* srv-2.6.53 (Johan, 24 Nov 2026 -- G, after HeySteev's 'data at rest'): a search of your own pile is the server's to
+     announce, and its list says nothing about the order. srv-2.6.52 sent the pile top-first and left the table's line
+     ('The library is being browsed.') and the reshuffle to the client, so a modified client could read its own library
+     order, or fetch a card, without the table knowing. Now: the list is sorted by name, the server tells the table
+     about the search (`pileAnnounce`), and a fetch is found by name and told too. A reference client from v2.6.185
+     writes no line of its own for these on such a server (`srvLogsPiles`). */
   browse(conn, room, p, m){
     if(!p.game) return wsSend(conn.sock, { t:'err', msg:'Import a deck first.' });
-    const pile = m.pile === 'crypt' ? p.game.crypt : p.game.lib;
-    /* Owner-only: the list goes to this socket and nowhere else */
-    wsSend(conn.sock, { t:'pileList', pile: m.pile === 'crypt' ? 'crypt' : 'library', names: [...pile].reverse() });
+    const crypt = m.pile === 'crypt', pile = crypt ? p.game.crypt : p.game.lib;
+    /* Owner-only: the list goes to this socket and nowhere else -- sorted, so it tells nothing about the order */
+    wsSend(conn.sock, { t:'pileList', pile: crypt ? 'crypt' : 'library', names: pileSorted(pile) });
+    pileAnnounce(room, p, p.name + ' searches their ' + (crypt ? 'crypt' : 'library') + '.');
   },
   pileTake(conn, room, p, m){
     if(!p.game) return;
     const crypt = m.pile === 'crypt';
     const pile = crypt ? p.game.crypt : p.game.lib;
     const name = cleanCard(m.name);
-    let idx = pile.length - 1 - (parseInt(m.i, 10) || 0);     // client lists top-first
-    if(pile[idx] !== name){                                    // pile shifted — find by name from the top
-      idx = pile.lastIndexOf(name);
-    }
-    if(idx < 0 || idx >= pile.length) return wsSend(conn.sock, { t:'err', msg:'That card is no longer there.' });
+    const idx = pile.lastIndexOf(name);                        // srv-2.6.53: by name, the copy nearest the top -- the list is sorted, so its index (`i`) names no position
+    if(idx < 0) return wsSend(conn.sock, { t:'err', msg:'That card is no longer there.' });
     pile.splice(idx, 1);
     sendDrew(p, crypt ? 'uncontrolled' : 'hand', crypt ? 'crypt' : 'lib', name, { took: true, pile: crypt ? 'crypt' : 'library' });
+    pileAnnounce(room, p, crypt ? p.name + ' fetches a card from their crypt to their uncontrolled region.' : p.name + ' fetches a card from their library.');
   },
   reveal(conn, room, p, m){
     if(!p.game) return wsSend(conn.sock, { t:'err', msg:'Import a deck first.' });
@@ -923,6 +930,7 @@ const GAME_HANDLERS = {
     const names = [];
     for(let i = 0; i < n; i++) names.push(pile.pop());
     wsSend(conn.sock, Object.assign({ t:'revealed', names, kind: isCrypt ? 'crypt' : 'lib' }, pileCounts(p.game)));
+    pileAnnounce(room, p, p.name + ' parks the top ' + (n === 1 ? 'card' : n + ' cards') + ' of their ' + (isCrypt ? 'crypt' : 'library') + ' face down.');   // srv-2.6.53: the owner sees these cards -- the table hears it from the server
   },
   pileBulk(conn, room, p, m){
     if(!p.game) return;
@@ -1425,8 +1433,10 @@ const GAME_HANDLERS = {
   },
   handEscrow(conn, room, p, m){
     /* an opaque, client-encrypted hand blob. The server stores and routes it but
-       never decrypts it (it has no key). It is never broadcast — only handed back
-       to the seat's owner on reconnect or to whoever takes the seat over / loads it. */
+       never decrypts it: it holds no key -- though it sees the room password at every
+       join, from which the key is derived, so it is trusted like a dealer (srv-2.6.52's
+       note). It is never broadcast — only handed back to the seat's owner on reconnect
+       or to whoever takes the seat over / loads it. */
     if(typeof m.blob === 'string' && m.blob.length <= 200000) p.handBlob = m.blob;
     else if(m.blob === null) p.handBlob = undefined;     // explicit clear (empty hand)
   },
@@ -1449,17 +1459,21 @@ const GAME_HANDLERS = {
   saveMatch(conn, room, p, m){
     if(!hostOrRef(conn, room, p)) return wsSend(conn.sock, { t:'err', msg:'Only the host can save the match.' });
     if(!room.started) return wsSend(conn.sock, { t:'err', msg:'Start the game before saving a match.' });
+    if(!room.hasPass) return wsSend(conn.sock, { t:'err', code:'saveNeedsPass', msg: SAVE_NEEDS_PASS });   // srv-2.6.52: every room without a password hashed the same empty one -- one shared list of three for all of them
     let nm = cleanCard(m.name).slice(0, 40).trim();
-    if(!nm) nm = room.name + ' ' + new Date().toISOString().slice(0, 10);
+    if(!nm){ const at = new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC'; nm = (room.name.slice(0, 40 - at.length - 1) + ' ' + at).trim(); }   // srv-2.6.52: with the time -- a second save the same day took the first one's name (the reference client names its own saves in local time)
     const clash = saves.get(nm);                          // v2.6.19 (uncertainty round): saveMatch never checked passHash on OVERWRITE --
-    if(clash && clash.passHash !== room.passHash)         // delSave always did. Pre-existing cross-group clobber; on a public instance it is
+    if(clash && !saveGroupOk(clash, room))                // delSave always did. Pre-existing cross-group clobber; on a public instance it is
       return wsSend(conn.sock, { t:'err', msg:'That save name is taken by another table. Pick a different name.' });   // a griefing vector (guess a name, destroy the save)
+    if(clash && m.overwrite !== true)                     // srv-2.6.52: the group's own save is replaced only when the host says so (an older client gets the sentence)
+      return wsSend(conn.sock, { t:'err', code:'saveExists', name: nm, savedAt: clash.savedAt || 0,
+        msg:'A saved match named \u201c' + nm + '\u201d already exists (saved ' + new Date(clash.savedAt || 0).toISOString().slice(0, 16).replace('T', ' ') + ' UTC). Pick another name, or delete it first.' });
     if(!saves.has(nm) && saves.size >= MAX_SAVES)
       return wsSend(conn.sock, { t:'err', msg:'Saved-match limit reached (' + MAX_SAVES + '). Delete one first.' });
-    if(!saves.has(nm)){                                   // H1-e (D4): per password-group cap -- overwriting an existing save never counts
-      let g = 0; saves.forEach(sv => { if(sv.passHash === room.passHash) g++; });
+    if(!saves.has(nm)){                                   // H1-e (D4): per group cap -- overwriting an existing save never counts
+      let g = 0; saves.forEach(sv => { if(saveGroupOk(sv, room)) g++; });
       if(g >= SAVES_PER_GROUP)
-        return wsSend(conn.sock, { t:'err', msg:'Saved-match limit for this password group (' + SAVES_PER_GROUP + ') is reached. Delete one first.' });
+        return wsSend(conn.sock, { t:'err', msg:'Saved-match limit for this room and password (' + SAVES_PER_GROUP + ') is reached. Delete one first.' });
     }
     saves.set(nm, buildSave(room, nm));
     persistSaves();
@@ -1469,21 +1483,21 @@ const GAME_HANDLERS = {
   },
   listSaves(conn, room, p, m){
     if(!hostOrRef(conn, room, p)) return wsSend(conn.sock, { t:'err', msg:'Only the host can manage saved matches.' });
-    wsSend(conn.sock, { t:'saveList', saves: saveList(room) });
+    wsSend(conn.sock, { t:'saveList', saves: saveList(room), needPass: !room.hasPass || undefined });   // srv-2.6.52: needPass -- this room cannot save (the client says why before the host tries)
   },
   delSave(conn, room, p, m){
     if(!hostOrRef(conn, room, p)) return wsSend(conn.sock, { t:'err', msg:'Only the host can manage saved matches.' });
     const s = saves.get(String(m.name || ''));
-    if(s && s.passHash === room.passHash){ saves.delete(s.name); persistSaves(); }
-    wsSend(conn.sock, { t:'saveList', saves: saveList(room) });
+    if(s && saveGroupOk(s, room)){ saves.delete(s.name); persistSaves(); }
+    wsSend(conn.sock, { t:'saveList', saves: saveList(room), needPass: !room.hasPass || undefined });
   },
   loadMatch(conn, room, p, m){
     if(!hostOrRef(conn, room, p)) return wsSend(conn.sock, { t:'err', msg:'Only the host can load a saved match.' });
     if(room.started) return wsSend(conn.sock, { t:'err', msg:'Load into a fresh lobby — finish or leave the current game first.' });
     const sv = saves.get(String(m.name || ''));
     if(!sv) return wsSend(conn.sock, { t:'err', msg:'No such saved match.' });
-    if(sv.passHash !== room.passHash)
-      return wsSend(conn.sock, { t:'err', msg:'That match has a different password. Create the room with the match’s original password, then load.' });
+    if(!saveGroupOk(sv, room))                            // srv-2.6.52: the password AND the room name (a save from before srv-2.6.52 without a room name: the password alone)
+      return wsSend(conn.sock, { t:'err', msg:'That match was saved in a room with another name or password. Create the room with the match\u2019s original name and password, then load.' });
     const myName = p.name.toLowerCase();
     const mine = (sv.players || []).find(sp => !sp.vacant && sp.name.toLowerCase() === myName);   // srv-2.6.48: an open seat is nobody's to load as
     if(!mine) return wsSend(conn.sock, { t:'err', msg:'Your name “' + p.name + '” wasn’t a player in this match. Rejoin the lobby as one of: ' + (sv.players || []).filter(s => !s.vacant).map(s => s.name).join(', ') + ' — then load.' });
@@ -1564,6 +1578,7 @@ function handle(conn, raw){
   let m;
   try { m = JSON.parse(raw); } catch(err) { return; }
   if(!m || typeof m.t !== 'string') return;
+  const hadRoom = !!conn.room;   // srv-2.6.52: a leave / close takes the room off the connection -- it still changed what the snapshot holds
   try {
 
   /* ---- create room ---- */
@@ -1789,6 +1804,8 @@ function handle(conn, raw){
   } catch(err){
     console.log('[error] message handler threw on a "' + (m && m.t) + '" message: ' + (err && err.message));
     try { wsSend(conn.sock, { t:'err', msg:'That action could not be processed.' }); } catch(e){}
+  } finally {
+    try { snapAfter(conn, m, hadRoom); } catch(e){}   // srv-2.6.52: the table reaches the disk within moments of a change, not on the next minute's tick (a finally that threw would replace the message's own outcome)
   }
 }
 
@@ -2262,13 +2279,19 @@ function roomSnap(r){
     botcfg: r.botcfg || null,
     players: r.players.map(p => ({ name: p.name, token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon || undefined,
       bot: p.bot ? true : undefined,
-      vp: p.vp || 0, out: !!p.out, vpSeat: p.vpSeat || undefined, game: p.game || null, handBlob: p.handBlob || null }))   // srv-2.6.48: + vpSeat
+      vp: p.vp || 0, out: !!p.out, vpSeat: p.vpSeat || undefined, game: p.game || null, handBlob: p.handBlob || null,   // srv-2.6.48: + vpSeat
+      pubOwn: p.pubOwn || null }))   // srv-2.6.52: the seat's own board (hidden names kept, like a named save's pubOwn) -- a restart kept the decks and lost the boards, so a player back on another device, or after clearing the browser, had nothing to restore
   };
+}
+function seatBoards(own){                                  // srv-2.6.52: a stored own board -> { pubOwn, pub }, both through the whitelist again
+  const pubOwn = (own && typeof own === 'object') ? sanitizePub(own, true) : null;
+  return pubOwn ? { pubOwn, pub: sanitizePub(pubOwn, false) } : {};
 }
 function roomUnsnap(r){
   const players = (r.players || []).map(p => ({ name: cleanName(p.name), token: p.token, seatPick: p.seatPick || null, muted: !!p.muted, vacant: !!p.vacant, anon: !!p.anon,   // srv-2.6.47: cleanName -- a name stored by srv-2.6.46 may carry a quote, and every lookup now cleans what it is given. srv-2.6.48: that comment had been put IN FRONT of seatPick / muted / vacant / anon, so srv-2.6.47 restored none of them (an open seat came back as an offline seat its old name could reclaim; a muted player came back unmuted)
     sock: null, last: Date.now(), off: Date.now(), bot: p.bot === true ? true : undefined,
-    vp: p.vp || 0, out: !!p.out, vpSeat: (p.vpSeat | 0) || undefined, game: p.game || null, handBlob: p.handBlob || null }));   // srv-2.6.48: + vpSeat
+    vp: p.vp || 0, out: !!p.out, vpSeat: (p.vpSeat | 0) || undefined, game: p.game || null, handBlob: p.handBlob || null,   // srv-2.6.48: + vpSeat
+    ...seatBoards(p.pubOwn) }));   // srv-2.6.52: the own board back, and the public one others are sent (joinReply) made from it
   const bc = (r.botcfg && typeof r.botcfg === 'object') ? botcfgMerge(r.botcfg.tempo, r.botcfg.waitSecs, null) : null;
   const mm = r.matchMins | 0;
   return {
@@ -2295,6 +2318,33 @@ function snapshot(sync){
     else writeStore(json);                                // H1-d: the 60s tick no longer blocks the event loop
   }catch(err){ /* persistence is best-effort */ }
 }
+/* srv-2.6.52 (Johan, 24 Nov 2026 -- HeySteev's 'a lost game'): the snapshot went to disk on the 60 s tick and on a
+   clean stop only. Measured on srv-2.6.51 with a real process: kill -9 a minute after the deal brought the table back with
+   its library as it was at the tick, so the card drawn since was drawn AGAIN (it was already in the hand); kill -9 inside
+   the first minute lost the room ('No such room.'); SIGTERM kept everything. Now every message that can change what
+   roomSnap stores schedules a write: 250 ms after a deck, seat, turn, score or roster change (a burst rides one write),
+   2 s after a board push or a hand escrow (the client pushes its board every second or so). The tick and the exit
+   flush stay. A message that changes nothing persisted (chat, a phrase, a resolver count, a relay, a read) and anything
+   from a socket that is not at a table schedules nothing. What is left: a hard crash inside those 250 ms (or 2 s for a
+   board) -- the draw has reached the player by then. */
+const SNAP_FAST_MS = 250, SNAP_SLOW_MS = 2000;
+const SNAP_SKIP = new Set(['hello', 'log', 'chat', 'say', 'decide', 'tally', 'fx', 'revealHand', 'logTo', 'openHand', 'tool', 'roll',
+                           'ledgerGet', 'listSaves', 'browse', 'edgePass', 'edgeTake', 'give', 'recall', 'recalled', 'ctrl']);
+const SNAP_SLOW = new Set(['board', 'handEscrow']);
+let snapT = null, snapAt = 0, snapN = 0;
+function scheduleSnapshot(ms){
+  const at = Date.now() + ms;
+  if(snapT && snapAt <= at) return;                       // a write is already due sooner -- this change rides along
+  if(snapT) clearTimeout(snapT);
+  snapAt = at;
+  snapT = setTimeout(() => { snapT = null; snapAt = 0; snapN++; snapshot(); }, ms);
+  if(snapT && snapT.unref) snapT.unref();
+}
+function snapAfter(conn, m, hadRoom){
+  if(!m || SNAP_SKIP.has(m.t)) return;
+  if(!(hadRoom || (conn && conn.room))) return;           // a socket that is not at a table changed no table
+  scheduleSnapshot(SNAP_SLOW.has(m.t) ? SNAP_SLOW_MS : SNAP_FAST_MS);
+}
 function restore(){
   try{
     if(!fs.existsSync(STORE)) return;
@@ -2318,10 +2368,12 @@ process.on('SIGINT',  _sleep);
 process.on('SIGTERM', _sleep);   // v2.6.9: SIGTERM is what systemd stop / docker stop / plain kill actually send — the exact signals an always-on named-tunnel/VPS deployment uses. Without this, those paths died un-flushed (losing up to 60s of room state, per the setInterval(snapshot, 60000) cadence); Ctrl+C (SIGINT) was the only graceful exit.
 
 /* ---------- Named match saves: a host can store a game under a name and
-   load it back later. Unlike the room snapshot above, these NEVER expire
-   on age — they live until the host deletes them. Hands stay client-side
-   (the server never sees them), so a loaded match restores every seat's
-   deck + public board with an empty hand, exactly like a seat takeover. */
+   load it back later. Unlike the room snapshot above, these do not expire with
+   the room: they live until the host deletes them, or 90 days after their last
+   save or load (H1-e). A save holds every seat's deck, boards and escrowed hand
+   blob; the blob comes back to whoever rejoins with the room's password (the
+   server holds no key, but it sees that password at every join and deals the
+   cards -- it is trusted like a dealer, srv-2.6.52's correction of this note). */
 const SAVES = path.resolve(DATA_DIR, 'elysium-saves.json');
 const saves = new Map();
 const writeSaves = makeAsyncFileWriter(SAVES);
@@ -2383,10 +2435,21 @@ function buildSave(room, name){
     }))
   };
 }
-/* the host only sees saves that match their room's password (their own group's saves) */
+/* srv-2.6.52 (the hosting plan's D4 said 'per room'; the code counted per password): a save belongs to the room NAME and
+   the password it was saved under. Two groups that happen to share a password ('vtes') saw, overwrote and deleted each
+   other's saves, and every room without a password shared one list of three. A save written before srv-2.6.52 always
+   carries roomName (buildSave has stored it from the start); one without it keeps the password-only rule. The name is
+   compared case-blind, trimmed. */
+const SAVE_NEEDS_PASS = 'Saving needs a room password \u2014 the room\u2019s name and password keep your saves to your group. Create the room with a password to save matches.';
+function saveRoomKey(n){ return cleanName(String(n || '')).trim().toLowerCase(); }
+function saveGroupOk(s, room){
+  if(!s || !room || s.passHash !== room.passHash) return false;
+  return !s.roomName || saveRoomKey(s.roomName) === saveRoomKey(room.name);
+}
+/* the host only sees saves of their own group: this room's name and password */
 function saveList(room){
   return [...saves.values()]
-    .filter(s => s.passHash === room.passHash)
+    .filter(s => saveGroupOk(s, room))
     .sort((a, b) => b.savedAt - a.savedAt)
     .map(s => ({ name: s.name, savedAt: s.savedAt, roomName: s.roomName,
                  turn: s.turnSeat || 1, players: (s.players || []).filter(q => !q.vacant).map(q => q.name) }));   // srv-2.6.48: an open seat is nobody's

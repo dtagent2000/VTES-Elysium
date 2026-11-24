@@ -6954,6 +6954,103 @@ test('v2.6.183 a long name on the board globe wraps inside a 92 px window and gr
   assert(lblRule.indexOf('filter:drop-shadow(0 2px 4px #000)') > 0 && lblRule.indexOf('text-shadow') < 0, 'the shadow is a filter on the slot, so the clamped window does not cut it');
 });
 
+/* === v2.6.184 THE SAVES HOLD (srv-2.6.52; HeySteev through Johan, 24 Nov 2026) === */
+function savesDom184(A){
+  const el = () => ({ hidden:false, innerHTML:'', value:'', placeholder:'', textContent:'', classList:{ add(){}, remove(){}, toggle(){}, contains:()=>false } });
+  const ids = { saveNew: el(), savesHint: el(), savesList: el(), saveName: el() };
+  Object.assign(A.__doc._ids, ids);
+  return ids;
+}
+testA('v2.6.184 saving under a name the group already uses asks "Overwrite?" (the server\'s err code saveExists) and sends it again with overwrite:true; No sends nothing, and the err is not toasted -- v2.6.183 had no question, srv-2.6.51 replaced the save silently', async () => {
+  const A = loadClient(CLIENT); const toasts = []; A.toast = m => toasts.push(String(m));
+  if (typeof A.saveExistsAsk !== 'function') throw new Error('saveExistsAsk missing (v2.6.183 has no question)');
+  A.net.status = 'in'; A.net.room = 'Fredag'; A.net.you = 'Johan';
+  const sent = sentLog(A);
+  let asked = null; A.uiDialog = o => { asked = o; return Promise.resolve(true); };
+  A.MP_HANDLERS.err({ t:'err', code:'saveExists', name:'Friday game', savedAt: Date.UTC(2026, 10, 17, 19, 5), msg:'A saved match named "Friday game" already exists.' });
+  await new Promise(r => setTimeout(r, 0));
+  assert(asked && /Friday game/.test(asked.message) && /Overwrite/.test(asked.message), 'asked: ' + JSON.stringify(asked));
+  eq(JSON.stringify(sent.filter(m => m.t === 'saveMatch')), '[{"t":"saveMatch","name":"Friday game","overwrite":true}]', 'Yes sends it again, said out loud');
+  eq(toasts.length, 0, 'the question replaces the toast: ' + toasts.join(' | '));
+  sent.length = 0; A.uiDialog = () => Promise.resolve(false);
+  A.MP_HANDLERS.err({ t:'err', code:'saveExists', name:'Friday game', savedAt: 1, msg:'x' });
+  await new Promise(r => setTimeout(r, 0));
+  eq(sent.filter(m => m.t === 'saveMatch').length, 0, 'No sends nothing');
+  A.MP_HANDLERS.err({ t:'err', msg:'That save name is taken by another table. Pick a different name.' });
+  assert(toasts.some(t => /another table/.test(t)), 'any other err is still a toast');
+});
+testA('v2.6.184 an empty save name becomes the room\'s name and the LOCAL date and time (two saves the same day shared a name: the room and the date); a typed name is sent as typed; a long room name is cut, never the time', async () => {
+  const A = loadClient(CLIENT);
+  if (typeof A.saveMatchName !== 'function') throw new Error('saveMatchName missing (v2.6.183)');
+  A.net.status = 'in'; A.net.room = 'Fredag';
+  eq(A.saveMatchName(new Date(2026, 10, 24, 7, 5)), 'Fredag 2026-11-24 07:05');
+  A.net.room = 'R'.repeat(32);
+  const long = A.saveMatchName(new Date(2026, 0, 2, 3, 4));
+  assert(long.length <= 40 && / 2026-01-02 03:04$/.test(long), 'cut to 40, the time kept: ' + long);
+  A.net.room = 'Fredag'; const ids = savesDom184(A); const sent = sentLog(A);
+  ids.saveName.value = '   '; A.saveMatchNow();
+  const sv = () => sent.filter(m => m.t === 'saveMatch');
+  assert(sv().length === 1 && /^Fredag \d{4}-\d\d-\d\d \d\d:\d\d$/.test(sv()[0].name) && !('overwrite' in sv()[0]), 'empty: the default, no overwrite: ' + JSON.stringify(sv()));
+  ids.saveName.value = ' Friday game '; A.saveMatchNow();
+  eq(sv()[1].name, 'Friday game', 'typed: as typed (trimmed)');
+});
+testA('v2.6.184 the Saved matches dialog: a room without a password says so instead of offering the save field (the server\'s needPass), the texts follow srv-2.6.52 -- hands come back, the name and the password find a save, 90 days -- and leaving the room forgets both', async () => {
+  const A = loadClient(CLIENT);
+  if (typeof A.renderSaves !== 'function') throw new Error('renderSaves not exposed');
+  const ids = savesDom184(A);
+  A.net.status = 'in'; A.net.room = 'Open'; A.net.lobby = false;
+  A.MP_HANDLERS.saveList({ t:'saveList', saves: [], needPass: true });
+  eq(A.net.savesNeedPass, true, 'the room cannot save');
+  A.renderSaves();
+  eq(ids.saveNew.hidden, true, 'no save field');
+  assert(/no password/.test(ids.savesHint.innerHTML) && /name and password/.test(ids.savesHint.innerHTML), 'the hint says why: ' + ids.savesHint.innerHTML);
+  A.MP_HANDLERS.saveList({ t:'saveList', saves: [] });
+  eq(A.net.savesNeedPass, false, 'a room with a password (no needPass)'); A.renderSaves();
+  eq(ids.saveNew.hidden, false, 'the save field is back');
+  assert(/90 days after its last save or load/.test(ids.savesHint.innerHTML) && /hand comes back/.test(ids.savesHint.innerHTML), 'the running-game hint: ' + ids.savesHint.innerHTML);
+  assert(/^Name this match \(empty: Open \d{4}-\d\d-\d\d \d\d:\d\d\)$/.test(ids.saveName.placeholder), 'the field shows the default name: ' + ids.saveName.placeholder);
+  A.net.lobby = true; A.renderSaves();
+  assert(/hand comes back/.test(ids.savesHint.innerHTML) && /name and password/.test(ids.savesHint.innerHTML) && !/aren.t restored/.test(ids.savesHint.innerHTML), 'the lobby hint: ' + ids.savesHint.innerHTML);
+  assert(/room name and password/.test(ids.savesList.innerHTML), 'the empty list names both: ' + ids.savesList.innerHTML);
+  A.MP_HANDLERS.err({ t:'err', code:'saveNeedsPass', msg:'Saving needs a room password.' });
+  eq(A.net.savesNeedPass, true, 'the save refusal sets it too');
+  A.net.saves = [{ name:'x' }];
+  A.mpLeave();
+  eq(A.net.savesNeedPass, false, 'leaving forgets it'); eq(A.net.saves.length, 0, 'and the list');
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf('Hand cards aren’t restored') < 0 && html.indexOf('won’t expire after 24 hours') < 0, 'the two old dialog sentences are gone');
+  assert(html.indexOf('The server stores the hand only as a blob it cannot read') < 0, 'and Help > Local server no longer says the server cannot read the hand (About was corrected in v2.6.173)');
+});
+
+/* === v2.6.185 THE SEARCH IS TOLD (srv-2.6.53; Johan's 'kör G') === */
+testA('v2.6.185 on a server from srv-2.6.53 the client writes no line of its own for a search, a fetch from it or a park from the top -- the server tells the table, which would otherwise read it twice -- and an older server still gets the client\'s lines', async () => {
+  const A = loadClient(CLIENT);
+  if (typeof A.srvLogsPiles !== 'function') throw new Error('srvLogsPiles missing (v2.6.184)');
+  A.toast = () => {};
+  A.net.status = 'in'; A.net.room = 'R'; A.net.you = 'Ann'; A.net.deckUp = true; A.net.libN = 10; A.net.cryptN = 4; A.net.spect = false;
+  const sent = sentLog(A);
+  const lines = re => sent.filter(m => m.t === 'log' && re.test(m.html || '')).length;
+  const run = srv => {
+    A.net.srvV = srv; sent.length = 0;
+    A.browse('library');
+    A.MP_HANDLERS.drew({ t:'drew', zone:'hand', kind:'lib', name:'Fetched Card', took:true, pile:'library', lib:9, crypt:4 });
+    A.MP_HANDLERS.revealed({ t:'revealed', names:['Top A', 'Top B'], kind:'lib', lib:7, crypt:4 });
+    return { browse: sent.filter(m => m.t === 'browse').length, searched: lines(/is being browsed/), fetched: lines(/fetched from the library/), parked: lines(/Parked the top/) };
+  };
+  const nw = run('2.6.53');
+  eq(nw.browse, 1, 'the search goes out');
+  eq(nw.searched + nw.fetched + nw.parked, 0, 'srv-2.6.53: none of the three lines is ours: ' + JSON.stringify(nw));
+  eq(A.state.zones.hand.length >= 1 && A.state.zones.ready.length >= 2, true, 'the fetch and the park still land on the board');
+  const ol = run('2.6.52');
+  eq(JSON.stringify(ol), '{"browse":1,"searched":1,"fetched":1,"parked":1}', 'srv-2.6.52: the client still writes all three: ' + JSON.stringify(ol));
+  eq(A.srvLogsPiles(), false); A.net.srvV = ''; eq(A.srvLogsPiles(), false, 'an unknown server version: our lines'); A.net.srvV = '2.7.0'; eq(A.srvLogsPiles(), true);
+  A.net.srvV = '2.6.53';
+  A.__doc._ids['browseNote'] = { textContent:'' }; A.__doc._ids['browseTitle'] = { textContent:'' };
+  A.__doc._ids['browseGrid'] = { innerHTML:'', appendChild(){}, querySelectorAll: () => [] };
+  try { A.netBrowseOpen('library', ['Alpha', 'Beta']); } catch (e) {}
+  assert(/Listed by name, not in pile order/.test(A.__doc._ids['browseNote'].textContent), 'the search says the list is by name: ' + A.__doc._ids['browseNote'].textContent);
+});
+
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

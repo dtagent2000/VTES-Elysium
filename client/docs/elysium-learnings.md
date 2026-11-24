@@ -1,8 +1,27 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.183 / server v2.6.51 / bot v0.6.236 tested beside the suite, last updated 23 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.185 / server v2.6.53 / bot v0.6.236 tested beside the suite, last updated 24 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**24 Nov 2026, morning (THE SEARCH IS TOLD — v2.6.185 / srv-2.6.53):**
+- **What only the client says, a modified client can leave unsaid.** A search, a fetch and a park were announced by
+  the client alone; the server that performs them now tells the table, and the client stays quiet only on a server
+  that does (`srvLogsPiles`), so no mix of versions loses a line -- the worst mix says it twice.
+- **A list that is not an order must not carry one.** The search list was the pile, top-first; sorted by name it shows
+  what is in the pile and nothing about where.
+
+**24 Nov 2026 (THE SAVES HOLD — v2.6.184 / srv-2.6.52):**
+- **A persistence promise is tested by killing the process, not by stopping it.** 'The table survives a restart' was
+  true for SIGTERM and false for kill -9 (a card drawn twice; a young room lost) -- the clean stop flushes, so every test
+  that stopped the server cleanly passed. The live section in `test-error-endpoint.js` kills with SIGKILL.
+- **A group key is what the users think the group is.** Saves grouped by password alone joined strangers who chose the
+  same phrase, and the empty password made every open room one group. Check what a key collides on, not only what it
+  separates.
+- **A claim about where hidden data lives is checked against the disk too.** 'Library and crypt exist only in server
+  memory' was false since the first server: the snapshot and the saves carry them.
+- **An exemption list gets a classification test.** `SNAP_SKIP` is pinned against every in-game verb, so a new verb must
+  be named as persisted or skipped; skipping by mistake loses data, listing by mistake costs one coalesced write.
 
 **23 Nov 2026, late night (THE LICENCE — no client release):**
 - **A repository's own file is a root-only file, and a root-only file gets a check of its own.** The twin rule skips
