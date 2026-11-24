@@ -1370,6 +1370,7 @@ class Bot {
           this._clearPending('turn change');
         }
         if(m.seat !== this.turnSeat && this.turnSeat && this.opp && this.opp[this.turnSeat] && this.opp[this.turnSeat].memo) this._hMemoTurnEnd(this.turnSeat);   // v0.6.225: their turn ended -- an open record resolves; the answer window closes (or lasts their next turn)
+        if(m.seat !== this.turnSeat){ this._srWindowClosed('the turn changed'); if(this._releaseHolds('action', 'combat')) this._replaceLate(); }   // v0.6.239 (the egress review, findings 1 and 2): the last turn's 'as played' windows, actions and combats are over -- a reaction's 'Do not replace until after this action' is released here, never inside its action (_flushDraws releases in my own turn only), and drawn before the next turn starts (turnSeat is still the last turn's here)
         if(m.seat !== this.turnSeat){ this._turnActN = 0; this._turnSerial = (this._turnSerial | 0) + 1; }   // v0.6.217: + the turn's serial (Monster's 'once each turn' = once in each player's turn [ANK 20180719-4])   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
         this.turnSeat = m.seat;
         if(this.started && !this.out && m.seat !== this.seat && m.seat) this._w5HumanTurn(m.seat);   // v0.6.230 (V5 wave 5): Anarch Revolt's reminder to a human
@@ -8443,8 +8444,9 @@ class Bot {
   _playSr(seat, owner, card, d, human){   // my Sudden Reversal: to my ash heap (replaced after the window), my next master phase's action (R-42), the frozen line; a human owner is told in chat
     const i = this.hand.indexOf(d.name); if(i < 0) return false;
     this.hand.splice(i, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(d.name);
+    if(!human){ (this._replHold || (this._replHold = [])).push({ until: 'srWindow', card: d.name }); this._emit('replace-held', { card: d.name, until: 'srWindow' }); }   // v0.6.239 (the egress review, finding 1): [LSJ 20061207] 'Cards are not replaced during the "as played" window.' -- held until the window closes (_srWindowClosed: the owner's next line, or the turn change) or my cancel comes too late (_onSrLate takes the hold back with the card); _replaceLate drew it at the end of this very dispatch, inside the window, and a late cancel then left 8 cards. A human's master has no window (the cancel stands at once)
     this._ootDebt = (this._ootDebt | 0) + 1;
-    this._srSent = { owner, card, name: d.name, at: Date.now() };
+    this._srSent = { owner, card, name: d.name, at: Date.now(), hold: !human };
     this._emitPlay(d.name, 'sudden-reversal', null);
     this._emit('sr-cancel', { owner, card, gain: d.gain, price: d.price, why: d.why, human: !!human });
     this.fxClone({ name: d.name, kind: 'lib' }, 'cancels ' + card);
@@ -8510,6 +8512,11 @@ class Bot {
     this._emit('sr-late', { by, card, human: this._isHumanName(by), first: null });
     if(this._isHumanName(by)) return this.chat(by + ': too late \u2014 my ' + card + ' has resolved; take your Sudden Reversal back.');
     this.send({ t: 'log', html: '<b>' + esc(by) + "</b>'s Sudden Reversal comes too late for <b>" + esc(this.o.name) + "</b>'s <b>" + esc(card) + '</b>.' });   // L12.srLate
+  }
+  _srWindowClosed(why){              // v0.6.239 (the egress review, finding 1): my Sudden Reversal's window has closed and my cancel stood -- the owner arbitrates at the window's close and answers every other cancel with L12.srLate before it moves on, so its next other line (or the turn change) means mine was not answered: the replacement is owed again
+    const s = this._srSent; if(!s) return;
+    this._srSent = null;
+    if(this._releaseHolds('srWindow')){ this.o.log('sudden reversal: my ' + s.name + ' on ' + s.owner + '\u2019s ' + s.card + ' stands (' + why + ') -- replaced now'); this._replaceLate(); }   // drawn before the line that shows the window closed takes effect: a bleed at me would hold it (_replaceLate waits out a window on me)
   }
   _onSrLate(owner, card){            // my cancel came too late (the window had closed, or another came first): my Sudden Reversal back to my hand, no out-of-turn debt
     const s = this._srSent; if(!s || s.owner !== owner || FX_NORM(s.card) !== FX_NORM(card)) return;
@@ -10861,6 +10868,7 @@ class Bot {
     if(this.out || !this.started) return;
     const t = stripTags(html).trim();
     if(who !== this.o.name) this._evRecord(who, t, 'log');   // v0.6.176: the event log (my own lines are recorded at send)
+    if(this._srSent && this._srSent.hold && who === this._srSent.owner && !L12.srLate.test(t) && !L12.srCancel.test(t)) this._srWindowClosed('the owner\u2019s next line');   // v0.6.239 (the egress review, finding 1): a Sudden Reversal line is the window's own answer (another cancel's 'too late' can come before mine); any other line of the owner's comes after the window
     let m;
     if(who !== this.o.name){ if(L12.debugOn.test(t)) this._debugSeatSet(who, true); else if(L12.debugOff.test(t)) this._debugSeatSet(who, false); }   // v0.6.201: a bot at the table announced DEBUG mode -- I look away from its open hand
     if(who !== this.o.name) this._hMemoLog(who, t);   // v0.6.225 (D-113 (3)): a human's lasting choice (Toreador Grand Ball's pair)
@@ -11343,7 +11351,7 @@ class Bot {
     else if(type === 'fizzled' && data && data.vamp && data.kind !== 'referendum part'){ const av0 = this._actingVamp; this._lastAct = { vamp: data.vamp, outcome: 'through', kind: data.kind || null, fizzled: true, played: (av0 && av0.played && av0.v && av0.v.name === data.vamp) ? new Set(av0.played) : null }; }   // v0.6.234 (the egress review, finding 7): + the played modifiers   // v0.6.223 (the egress review, RULINGS R-44): a fizzled action is a SUCCESSFUL one whose effects cannot apply -- an act-again that needs success follows it (a referendum part: the referendum's own through row says it)   // v0.6.123: the act-again hook reads the SAME two emits the strategy layer's ledger rides   // v0.6.119: the strategy layer's own offensive ledger rides the two emits that already mark every resolved action
     if(this.onEvent) try{ this.onEvent('bot:' + type, data || {}); }catch(e){} }
   _flushDraws(){                     // v0.5: extracted so master-play and hunt (which `continue`s past the old inline drain) can never silently DEFER a draw-owed -- every code path that increments _drawOwed now has a nearby place to flush it instead of relying on some LATER vampire's bleed branch happening to reach it
-    if(!this._actingVamp && !this.pending && !this._inCombat) this._releaseHolds('action', 'combat');   // v0.6.235: no action and no combat in flight -- 'after this action' and 'after combat' have come
+    if(!this._actingVamp && !this.pending && !this._inCombat) this._releaseHolds(...(this.turnSeat === this.seat ? ['action', 'combat'] : ['combat']));   // v0.6.235: no action and no combat in flight -- 'after this action' and 'after combat' have come. v0.6.239 (the egress review, finding 2): 'after this action' in my own turn only -- in another seat's turn no action of mine is ever in flight, so _replaceLate's flush released a reaction's hold (Read the Winds, Pack Tactics, Elder Intervention) inside the very action it was played in; there the turn change releases it (the turn handler). 'After combat' reads my own combat (_inCombat) in either turn
     const held = Math.min(this._drawOwed | 0, (this._replHold || []).length);   // v0.6.235: a 'Do not replace until ...' card's replacement stays owed (_noteReplHold)
     while((this._drawOwed || 0) > held){ this._drawOwed--;
       if((this._replaceExempt | 0) > 0){ this._replaceExempt--; this.send({ t: 'draw' }); continue; }   // v0.6.125: "replace a card OTHER THAN this card" -- the Capuchin's own replacement is an ordinary draw
