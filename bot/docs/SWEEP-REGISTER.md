@@ -399,15 +399,18 @@ found these.
   when it falls (an Elder Library burned or stolen) nothing discards down, against the rule's "immediately". [v0.6.239's egress] ·
   latent (no card the sims play burns or steals a hand size master) · discard down at the recompute, the least useful cards first.
 - **14.6 A reaction's 'Do not replace until after this action'** played in another seat's turn (Read the Winds, Pack Tactics, Elder
-  Intervention, Ministry) is held until that turn ends (the turn handler), and when the next turn is mine until my master phase's
-  flush: the bot reads no end of another seat's action. Late, never early (before v0.6.239's egress review the next table message
-  released it, inside the action). [v0.6.239's egress] · latent (no deck the sims play holds one) · release it at the acting
+  Intervention, Ministry) is held until that turn ends (the turn handler) and drawn then, or, when the next turn is mine, at my
+  master phase's flush (owed and counted until then): the bot reads no end of another seat's action. Late, never early (v0.6.239's
+  first bytes released it at the next table message, inside the action). [v0.6.239's egress] · latent (no deck the sims play holds one) · release it at the acting
   seat's next action line or its "It resolves" (the short-term action memory, `_obs`).
-- **14.7 A Sudden Reversal's window is read as closed at the owner's next line** — the owner answers a cancel that reaches it after
-  its window 'too late' at once, after any lines it sent before it read the cancel; if one of those arrives first, the replacement
-  is drawn before the take-back and the hand holds 8. [v0.6.239's egress] · latent (it needs a round trip longer than the window:
-  the sims and the hotseat bridge deliver an answer inside the send, the arena's window is 500 ms, a paced table's a beat) · an
-  answer line from the owner to the cancel that stands (a bot grammar change: L12, the canary).
+- **14.7 A Sudden Reversal's window is read as closed at the owner's next master or phase line** (or the turn change): no line
+  says a cancel stood. A cancel that reaches the owner after its window is answered 'too late' at once, after any lines the owner
+  sent before it read the cancel; if its next master or phase line was among them, the replacement is drawn first, and the
+  take-back then discards a card down to the hand size (the card back in hand is one over it) where nothing should have been
+  drawn; a 'too late' after the turn change is not read (the record ends with the turn: the card stays in the ash heap, the
+  out-of-turn debt stands). [v0.6.239's egress] · latent (a round trip longer than the window: the sims and the hotseat bridge
+  deliver an answer inside the send, the arena's window is 500 ms, a paced table's a beat) · an answer line from the owner to the
+  cancel that stands (a bot grammar change: L12, the canary).
 
 ## Not migrated: done since, or not a problem
 - *w1*: the round restrictions (the first-round strikes failing closed, three cards untagged, Riposte in round 1) — read since

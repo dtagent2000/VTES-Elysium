@@ -368,6 +368,23 @@
     36, SAME-PLAY 12, the 12 exactly the matches where lasombra cancels a master: 12 cancels, 12 `srWindow` holds, 12 releases,
     each after the owner's window closed (3.3–3.9 s later at the client's pace, before the owner's next action), no take-back,
     no 'too late'; `ana-gates.py` PASS 6/6 on all three. The prediction held.
+  - *The egress review's pass 2* (a new reviewer; 5 findings): **the window's close** was read from any line of the owner's
+    but a Sudden Reversal line, and an owner's archetype note can come inside its window (the speaking bot's `_archetypeSay`,
+    which a card's fx clone can set off) -- the replacement drawn inside the window again, and a later 'too late' dropped (the
+    record cleared): the card lost to the ash heap, the out-of-turn debt standing. Now the owner's next master line
+    (L12.asPlayed) or phase line closes it, or the turn change; the record stays, marked closed, until the turn change, and a
+    'too late' after the close is honoured: one owed draw fewer, or, when the replacement was drawn, a discard down to the hand
+    size (the rulebook's "Whenever an effect ... adds or removes cards from your hand, immediately discard down"). **The turn
+    change into the bot's own turn** drew the released replacements while `turnSeat` was still the last turn's (pass 1's second
+    commit): at pace 0 the card was still in flight when Dreams' +2 read the hand (`_handCount`), drawing one too many (the
+    reviewer's probe: 3 for 2, the hand at 10 of 9). The turn change now only releases: the end of the dispatch draws in another
+    seat's turn, the bot's own flush in its own (the owed card counted meanwhile, as before pass 1). 185f gained the negative
+    cases (another seat's master line, the owner's note) the owner check lacked; the register's 14.6 and 14.7 say what the code
+    does.
+    *Prediction* (D-93; registered before the runs): the 240 and the five starters' 120 IDENTICAL against the first bytes (as
+    pass 1's; no starter holds a card the changes read); the lasombra smoke IDENTICAL 48/48 against pass 1's bytes, unless an
+    owner's note fell between a window and its next master or phase line (that match SAME-PLAY: the release one line later); no
+    `sr-shed` row (the sim delivers every cancel inside its window).
   - *Tests*: section 185 (7 cases: a–e all red on v0.6.238; f and g, pass 1's, red on the first bytes `5b8f55a7`; c–e through
     a whole turn, the server's draws arriving later). *Gates* (the bytes after pass 1, `b62e6b96` / `25c9a0b7`, cardfx
     `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2803/0 ×3, canary 235/0 ×2, main's canary v1.6.0 247/0,
