@@ -1,3 +1,31 @@
+## [SPARNINGARNA HÅLLER] (24 november 2026, klient v2.6.184 / srv-2.6.52, starta om servern och purga klienten)
+
+Johan vidarebefordrade frågor från HeySteev. Kan någon skumma andras dolda kort i data som ligger sparad, som Lackeys
+"Cain Mode" (autosave-filen på varje spelares disk)? Vad händer med "ett förlorat parti" efter en krasch? Kan man spola
+tillbaka till turens början, som Lackey gör? Han ville också ha transfer med ett klick. Jag läste koden, körde en
+krasch-probe mot riktiga servern och skrev ett svar på engelska som Johan kan skicka. Johan frågade sedan om autosave,
+seeds och om samma rumsnamn och lösenord varje vecka kan skriva över något. Han valde mina rekommendationer: A, E, F
+och D nu, medan B (tillbakaspolning) och C (transfer) väntar på Steevs svar.
+
+**Mätt före bygget (srv-2.6.51):** SIGTERM behöll allt. kill -9 en minut in tog tillbaka bordet med leken som den var
+vid minutskrivningen, så kortet som dragits efteråt kom upp en gång till. kill -9 inom första minuten gav "No such room.".
+
+**A.** Varje meddelande som kan ändra det snapshoten lagrar schemalägger en skrivning: 250 ms efter en leks-, plats-,
+tur-, poäng- eller rosterändring och 2 s efter en brädpush eller handescrow. Den som ska skrivas först vinner.
+Reläer och läsningar hoppas över, och en socket som inte sitter vid ett bord schemalägger inget. Snapshoten tar också
+med varje plats eget bräde, så en spelare på en annan enhet efter en krasch får sitt bräde och sin hand erbjudna.
+
+**F.** En sparning hör till rummets namn och lösenord. Förut räckte lösenordet, så två gäng med "vtes" delade lista
+och kunde skriva över och radera varandras sparningar, och alla lösenordslösa rum delade en lista. Ett rum utan
+lösenord kan inte spara. **E.** Ett namn som redan finns frågar "Overwrite?" i stället för att skriva över tyst,
+och standardnamnet får klockslag. **D.** Hjälpen sa att servern "cannot read" handen och att leken bara låg i
+serverns minne. Båda var fel: servern litas på som en dealer, och leken ligger i snapshoten och sparningarna. Samma
+rättelse gjordes i säkerhetsmanifestet.
+
+Ett fynd som inte är byggt: `browse` skickar bibliotekssökningen i lekordning och lämnar logg och omblandning åt
+klienten. En modifierad klient kan alltså tyst lära sig sin egen leks ordning, och utkastet till Steev sa "not even your
+own". Det är Johans beslut. I Chromium blev det 13 av 13 med det nya paret och 5 av 12 med det gamla.
+
 ## [LICENSEN] (23 november 2026, sent på natten, ingen klientrelease: klient v2.6.183 / srv-2.6.51)
 
 Johan 23.24: "Perfekt! Orkar du ta MIT-licensfilen också?" Det gäller bottprojektets handoff från 20 november. Johan hade

@@ -40,12 +40,12 @@ This section is the genomlysning proper. Every claim below was verified against 
 | Room creation | 4 / hour | per IP, loopback exempt; global bucket at 4× when all-loopback | ✔ restored by `--trust-proxy` |
 | Rooms (global) | 50 | global | n/a |
 | Players per room | 6 (+ spectators, **no per-room spectator cap found** — H1 item) | per room | — |
-| Named saves | 50 global, never expire, deletion gated on the room passHash | global | — (policy decision D4) |
+| Named saves | 50 global, never expire, deletion gated on the room passHash | global | — (policy decision D4; built as H1-e per password, made per room name and password by srv-2.6.52) |
 
 ### 2.4 Room & data lifecycle
 
 - Empty rooms are deleted immediately on last leave. Rooms where **everyone** has been offline > 60 min expire (both verified). So a public instance self-cleans; junk cannot accumulate beyond MAX_ROOMS for more than an hour.
-- Persistence: `elysium-rooms.json` + `elysium-saves.json`, snapshot every 60 s + on SIGINT **and** SIGTERM (srv-2.6.9 — built specifically for the systemd/always-on case). Writes are `writeFileSync` to `.tmp` then rename — atomic, but blocking (known debt; a few ms at this data size, H1 makes it async as belt-and-braces).
+- Persistence: `elysium-rooms.json` + `elysium-saves.json`, snapshot every 60 s + on SIGINT **and** SIGTERM (srv-2.6.9 — built specifically for the systemd/always-on case; srv-2.6.52 also writes it moments after each change, so kill -9 no longer loses up to a minute). Writes are `writeFileSync` to `.tmp` then rename — atomic, but blocking (known debt; a few ms at this data size, H1 makes it async as belt-and-braces).
 - `uncaughtException`/`unhandledRejection` are logged-and-survived — one malformed message can't take the table down.
 
 ### 2.5 Protocol security invariants (PROTOCOL §4, all verified present)

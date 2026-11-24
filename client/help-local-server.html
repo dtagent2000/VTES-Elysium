@@ -17,7 +17,7 @@
   <li><a href="#table">Running a table</a></li>
   <li><a href="#checklist">Hosting checklist</a></li>
   <li><a href="#reference">Reference</a></li>
-  <li class="ver">server srv-2.6.50 · client v2.6.173</li>
+  <li class="ver">server srv-2.6.52 · client v2.6.184</li>
 </ul></nav>
 
 <header class="hero">
@@ -191,7 +191,7 @@
         <li><strong>Hosting (★) passes on</strong> to the next player if the host leaves for good. <span class="menu">Menu → Leave seat</span> asks a host with company whether to leave alone or close the table for everyone.</li>
         <li><strong>Leaving mid-game opens the seat</strong> (srv-2.6.48): the deck and the board stay, nobody else changes seat, and the turn stays where it is (it moves on if it was the leaver's). The host can promote a spectator into the open seat, including the player who left: they join as a spectator under their name, and the host promotes them back. Older servers removed the seat and moved everyone after it up one place.</li>
         <li><strong>Rooms expire</strong> when everyone has been offline for 60 minutes; a room nobody ever sat in is cleaned up after 10 minutes, and a room with bots but no human online after 10 minutes as well (the bots live in the host's tab). While the server runs, a room otherwise lives as long as you want it to.</li>
-        <li><strong>Persistence.</strong> The rooms — hidden piles, points, tokens and the encrypted hand blobs — are written to <code>elysium-rooms.json</code> every minute and on <kbd>Ctrl</kbd>+<kbd>C</kbd>. A restarted server restores them — board style, referee password and the bots' tempo included (srv-2.6.43; older servers forgot those, and swept a restored table within ten minutes unless somebody rejoined it) — and the players reconnect into their seats; a restored table nobody returns to closes after an hour, like any idle table. The file is ignored if it is older than 24 hours.</li>
+        <li><strong>Persistence.</strong> The rooms — hidden piles, points, tokens, each player's own board and the encrypted hand blobs — are written to <code>elysium-rooms.json</code> moments after each change (srv-2.6.52: a quarter of a second after a draw, two seconds after a board), every minute, and on <kbd>Ctrl</kbd>+<kbd>C</kbd> or a service stop. Before srv-2.6.52 only the minute and the stop wrote it, so a power cut or a killed process lost up to a minute — a card drawn in it could be drawn again. A restarted server restores them — board style, referee password and the bots' tempo included (srv-2.6.43; older servers forgot those, and swept a restored table within ten minutes unless somebody rejoined it) — and the players reconnect into their seats; a restored table nobody returns to closes after an hour, like any idle table. The file is ignored if it is older than 24 hours.</li>
         <li><strong>Spectators</strong> need the room password if there is one, can only chat (if the host allows it), and do not keep a room alive.</li>
         <li><strong>The match clock</strong> lives on the room; the server announces “Time is called” once when it reaches zero.</li>
       </ul>
@@ -221,16 +221,17 @@
   <details>
     <summary>Saving and loading a match <span class="sub">— continue next week</span></summary>
     <div>
-      <p>Beyond the automatic room snapshot, the host can save a running match under a name and keep it — to continue a game next week, or to recover after a long break.</p>
+      <p>The server saves every table by itself, moments after each change, so a running game survives a server restart. That autosave keeps only the latest state and goes when the room closes (everyone offline for an hour). To keep a match longer — to continue next week, or after a long break — the host saves it under a name.</p>
       <h4>Saving</h4>
       <ul>
-        <li>In a running game, click <span class="menu">💾 matches</span> in the room bar (host and referee only), type a name — <em>Friday game</em> — and <span class="menu">Save match</span>.</li>
-        <li>A save captures every seat's deck as it stands, public board, victory points, the turn — and each player's <em>encrypted hand</em>. The server stores the hand only as a blob it cannot read.</li>
-        <li>Saves are kept per <em>room password</em> (the same password = the same group of friends): three per group, and a save untouched for 90 days expires.</li>
+        <li>In a running game, click <span class="menu">💾 matches</span> in the room bar (host and referee only), type a name — <em>Friday game</em> — and <span class="menu">Save match</span>. Left empty, the name is the room's name with the date and time.</li>
+        <li>A save captures every seat's deck as it stands, its boards, the victory points, the turn — and each player's <em>encrypted hand</em>. The hand is encrypted with a key from the room password; the server holds no key, but it sees the password at every join and deals the cards, so it is trusted like a dealer.</li>
+        <li>Saves belong to the room's <em>name and password</em> (your group of friends): three per room, and a save expires 90 days after its last save or load. A room without a password cannot save.</li>
+        <li>Saving under a name the room already has asks before it replaces that save.</li>
       </ul>
       <h4>Loading</h4>
       <ul>
-        <li>Create a <em>fresh room</em> with the <em>same password</em> the match originally used — the password is how a save is found and how the seats are protected.</li>
+        <li>Create a <em>fresh room</em> with the <em>same name and password</em> the match was saved under — that is how a save is found and how the seats are protected.</li>
         <li>Open <span class="menu">💾 matches</span>: the group's saves appear. <span class="menu">Load</span> drops you straight into your own seat (log in with the name you played under); the other seats wait offline.</li>
         <li>Everyone else joins the new room with <em>their own name + the same password</em> and lands in their seat — board, deck and hand restored. A hand is restored from the blob only when the password was just typed; a plain page refresh restores it from the browser's own autosave instead.</li>
       </ul>
@@ -296,7 +297,7 @@
     <tr><td>Referee key</td><td>10 wrong keys within 10 minutes from one address lock the key out for that address for 10 minutes — the in-game key, the log pull and the maintenance window count together. Behind a tunnel without <code>--trust-proxy</code> every player counts as the same address, which gets 40 tries instead of 10; turn the option on so each player has their own count.</td></tr>
     <tr><td>Room creation</td><td>Max 4 new rooms per address per hour (the host's own machine is exempt, as is the referee key). Of the 50 room slots, 10 are always held for rooms that have ever seated a player, so squatters cannot fill the server.</td></tr>
     <tr><td>Identity</td><td>A token per browser tab (survives a refresh, dies with the tab). Name + password reclaims an offline seat; a name that is online can never be taken over.</td></tr>
-    <tr><td>Hidden information</td><td>Library and crypt exist only in server memory, and the server deals your draws. Face-down card names are stripped before anything is relayed; your hand is never relayed to another player.</td></tr>
+    <tr><td>Hidden information</td><td>Library and crypt live on the server — in its memory, and in its snapshot file and named saves so a table survives a restart — and the server deals your draws. It never sends your browser another player's library, hand or face-down cards (unless they open their hand to you; a bot added from the lobby runs in the host's browser, which holds that bot's cards). Face-down card names are stripped from every board the server relays (its own copy of your board keeps them, for you alone); your hand is never relayed to another player.</td></tr>
     <tr><td>Hand escrow</td><td>Your hand is encrypted in your browser with a key derived from the room password. Reconnecting, taking over a seat and loading a saved match restore your exact hand — while the save file, the snapshot and the other players only ever see an opaque blob. The server is not kept out: it deals your draws and reads the room password at every join, so it is trusted like a dealer. Obfuscation-grade, not an audited cipher.</td></tr>
     <tr><td>Sanitisation</td><td>Every field passing through the server is cleaned and clamped (lengths, ranges, control characters); angle brackets and double quotes are stripped from names on the server, and card fields lose any <code>=</code>, on top of the client escaping everything it renders, quotes included.</td></tr>
     <tr><td>Crash isolation</td><td>Every message is handled in a guarded context; one malformed message cannot take the server down or drop the rooms.</td></tr>

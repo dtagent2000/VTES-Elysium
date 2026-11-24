@@ -219,6 +219,61 @@ function lines(){ try { return fs.readFileSync(LOG, 'utf8').trim().split('\n').f
   const nw = F.rooms.find(r => r.name === 'New50');
   ok(JSON.stringify(F.saves.map(x => x.passHash)) === before && (typeof WebSocket !== 'function' || (nw && nw.passHash === fri.passHash)),
      'the salt is adopted from the files: the new room\'s hash equals the old save\'s, so its save list still shows it');
+  /* srv-2.6.52 THE SAVES HOLD: a hard crash keeps the draw, the room and the board. srv-2.6.51 wrote the snapshot on the
+     60 s tick and on a clean stop only: kill -9 a minute in gave the card drawn since a second time, and kill -9 inside
+     the first minute lost the room ('No such room.'). The whole run below takes a few seconds, so srv-2.6.51 fails it at
+     the room. */
+  if (typeof WebSocket === 'function'){
+    const DATA52 = fs.mkdtempSync(path.join(os.tmpdir(), 'ely-errtest52-'));
+    const PORT52 = 20000 + Math.floor(Math.random() * 20000);
+    const boot52 = async () => {
+      const c = spawn(process.execPath, [SRV, String(PORT52), '--data-dir', DATA52], { stdio: ['ignore', 'pipe', 'pipe'] });
+      let out = ''; c.stdout.on('data', d => { out += d; }); c.stderr.on('data', () => {});
+      const t = Date.now(); while (!/Data:/.test(out) && Date.now() - t < 8000) await sleep(50);
+      return c;
+    };
+    const sock52 = () => {
+      const ws = new WebSocket('ws://127.0.0.1:' + PORT52), got = [];
+      ws.onmessage = ev => { try { got.push(JSON.parse(String(ev.data))); } catch (e) {} };
+      const open = new Promise(r => { ws.onopen = r; ws.onerror = r; });
+      const wait = async (t, ms) => { const s0 = Date.now(); while (Date.now() - s0 < (ms || 4000)){ const i = got.findIndex(m => m.t === t || m.t === 'err'); if (i >= 0) return got.splice(i, 1)[0]; await sleep(20); } return null; };
+      return { ws, open, send: m => ws.send(JSON.stringify(m)), wait };
+    };
+    const lib52 = Array.from({ length: 20 }, (_, i) => ({ name: 'Card' + String(i + 1).padStart(2, '0'), qty: 1 }));
+    const crypt52 = Array.from({ length: 12 }, (_, i) => ({ name: 'Vamp' + String(i + 1).padStart(2, '0'), qty: 1 }));
+    let c52 = await boot52();
+    const kill9 = async () => { const gone = new Promise(r => c52.on('exit', r)); c52.kill('SIGKILL'); await gone; c52 = await boot52(); };
+    const A = sock52(); await A.open;
+    A.send({ t: 'create', room: 'Crash52', name: 'Ann', pass: 'pw', lobby: true });
+    const j1 = await A.wait('joined');
+    A.send({ t: 'deck', name: 'Probe', library: lib52, crypt: crypt52 }); await A.wait('deckok');
+    A.send({ t: 'seat', seat: 1 }); await sleep(100); A.send({ t: 'start' });
+    const dealt = await A.wait('dealt');
+    A.send({ t: 'draw' }); const d1 = await A.wait('drew');
+    await sleep(700);                                                    // the draw's 250 ms write has landed, the minute's tick is far away
+    await kill9();
+    const B = sock52(); await B.open;
+    B.send({ t: 'join', room: 'Crash52', name: 'Ann', pass: 'pw', token: j1 && j1.token });
+    const j2 = await B.wait('joined');
+    ok(j2 && j2.t === 'joined', 'srv-2.6.52: after kill -9 a few seconds in, the room is back' + (j2 && j2.t === 'err' ? ' -- got "' + j2.msg + '"' : (j2 ? '' : ' -- no answer')));
+    ok(!!(dealt && d1 && j2 && j2.t === 'joined' && j2.lib === d1.lib), 'kill -9 0.7 s after a draw: the library is as it was after the draw (' + (j2 && j2.lib) + ' cards, the draw left ' + (d1 && d1.lib) + ')');
+    let d2 = null; if (j2 && j2.t === 'joined'){ B.send({ t: 'draw' }); d2 = await B.wait('drew'); }
+    ok(!!(d1 && d2 && d2.t === 'drew' && d2.name !== d1.name), 'the next draw is the next card, not the one drawn before the crash (' + (d1 && d1.name) + ' then ' + (d2 && d2.name) + ')');
+    if (j2 && j2.t === 'joined'){
+      B.send({ t: 'board', pub: { pool: 29, cards: [{ id: 'c1', name: 'Card99', kind: 'lib', zone: 'ready', x: 10, y: 10 }, { id: 'c2', name: 'Vamp99', kind: 'crypt', zone: 'uncontrolled', faceDown: true, x: 40, y: 10 }] } });
+      await sleep(2600);                                                 // the board's 2 s write has landed
+      await kill9();
+    }
+    const C = sock52(); await C.open;
+    C.send({ t: 'join', room: 'Crash52', name: 'Ann', pass: 'pw', token: j1 && j1.token });
+    const j3 = await C.wait('joined');
+    const mp = j3 && j3.myPub;
+    ok(!!(mp && mp.pool === 29 && mp.cards.length === 2 && mp.cards[1].name === 'Vamp99'), 'kill -9 2.6 s after a board push: the owner is offered the board back, the face-down name kept for the owner');
+    try { C.ws.close(); } catch (e) {}
+    try { A.ws.close(); B.ws.close(); } catch (e) {}
+    const end = new Promise(r => c52.on('exit', r)); c52.kill('SIGTERM'); await Promise.race([end, sleep(2000)]); try { c52.kill('SIGKILL'); } catch (e) {}
+    try { fs.rmSync(DATA52, { recursive: true, force: true }); } catch (e) {}
+  } else console.log('  (the srv-2.6.52 crash checks need Node 22\'s WebSocket -- skipped here)');
   try { fs.rmSync(DATA3, { recursive: true, force: true }); } catch (e) {}
   try { fs.rmSync(DATA, { recursive: true, force: true }); } catch (e) {}
   try { fs.rmSync(DATA2, { recursive: true, force: true }); } catch (e) {}

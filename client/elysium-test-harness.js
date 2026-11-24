@@ -457,7 +457,9 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   updateL4GlobeHTML: (typeof updateL4GlobeHTML!=='undefined'?updateL4GlobeHTML:undefined), l4NameHTML: (typeof l4NameHTML!=='undefined'?l4NameHTML:undefined), l4GlobeTitle: (typeof l4GlobeTitle!=='undefined'?l4GlobeTitle:undefined), refreshPoolTargetMarks: (typeof refreshPoolTargetMarks!=='undefined'?refreshPoolTargetMarks:undefined),   // v2.6.183: the name's window
   TUT_SECTIONS: (typeof TUT_SECTIONS!=='undefined'?TUT_SECTIONS:undefined), toggleStats: (typeof toggleStats!=='undefined'?toggleStats:undefined), get statsOpen(){ return (typeof statsOpen!=='undefined')?statsOpen:undefined; },
   midTableBtn: (typeof midTableBtn!=='undefined'?midTableBtn:undefined), midPanStart: (typeof midPanStart!=='undefined'?midPanStart:undefined), midPanMove: (typeof midPanMove!=='undefined'?midPanMove:undefined), midPanEnd: (typeof midPanEnd!=='undefined'?midPanEnd:undefined),   // v2.6.181: the middle button pans
-  get _mpan(){ return (typeof _mpan!=='undefined')?_mpan:undefined; }, get l3pan(){ return (typeof l3pan!=='undefined')?l3pan:undefined; }, set l3pan(v){ l3pan=v; }, get l3zoom(){ return (typeof l3zoom!=='undefined')?l3zoom:undefined; }
+  get _mpan(){ return (typeof _mpan!=='undefined')?_mpan:undefined; }, get l3pan(){ return (typeof l3pan!=='undefined')?l3pan:undefined; }, set l3pan(v){ l3pan=v; }, get l3zoom(){ return (typeof l3zoom!=='undefined')?l3zoom:undefined; },
+  saveMatchName: (typeof saveMatchName!=='undefined'?saveMatchName:undefined), saveMatchSend: (typeof saveMatchSend!=='undefined'?saveMatchSend:undefined), saveMatchNow: (typeof saveMatchNow!=='undefined'?saveMatchNow:undefined),   // v2.6.184: the saves dialog
+  saveExistsAsk: (typeof saveExistsAsk!=='undefined'?saveExistsAsk:undefined), renderSaves: (typeof renderSaves!=='undefined'?renderSaves:undefined), openSaves: (typeof openSaves!=='undefined'?openSaves:undefined)
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',
@@ -554,7 +556,12 @@ function loadServer(serverPath) {
   PASS_RE: (typeof PASS_RE!=='undefined'?PASS_RE:undefined), PASS_OK: (typeof PASS_OK!=='undefined'?PASS_OK:undefined), PASS_OK_MAX: (typeof PASS_OK_MAX!=='undefined'?PASS_OK_MAX:undefined),
   passBootDone: (typeof passBootDone!=='undefined'?passBootDone:undefined), get _passSalt(){ return (typeof passSaltHex!=='undefined')?passSaltHex:undefined; },
   cspScriptHashes: (typeof cspScriptHashes!=='undefined'?cspScriptHashes:undefined), cspPolicy: (typeof cspPolicy!=='undefined'?cspPolicy:undefined),   // srv-2.6.50: the page's report-only policy
-  pageHeaders: (typeof pageHeaders!=='undefined'?pageHeaders:undefined), IMG_CSP: (typeof IMG_CSP!=='undefined'?IMG_CSP:undefined)
+  pageHeaders: (typeof pageHeaders!=='undefined'?pageHeaders:undefined), IMG_CSP: (typeof IMG_CSP!=='undefined'?IMG_CSP:undefined),
+  saveGroupOk: (typeof saveGroupOk!=='undefined'?saveGroupOk:undefined), saveList: (typeof saveList!=='undefined'?saveList:undefined), SAVE_NEEDS_PASS: (typeof SAVE_NEEDS_PASS!=='undefined'?SAVE_NEEDS_PASS:undefined),   // srv-2.6.52: THE SAVES HOLD
+  scheduleSnapshot: (typeof scheduleSnapshot!=='undefined'?scheduleSnapshot:undefined), snapAfter: (typeof snapAfter!=='undefined'?snapAfter:undefined), seatBoards: (typeof seatBoards!=='undefined'?seatBoards:undefined),
+  SNAP_FAST_MS: (typeof SNAP_FAST_MS!=='undefined'?SNAP_FAST_MS:undefined), SNAP_SLOW_MS: (typeof SNAP_SLOW_MS!=='undefined'?SNAP_SLOW_MS:undefined), SNAP_SKIP: (typeof SNAP_SKIP!=='undefined'?SNAP_SKIP:undefined),
+  get _snapAt(){ return (typeof snapAt!=='undefined')?snapAt:undefined; }, get _snapN(){ return (typeof snapN!=='undefined')?snapN:undefined; }, get _snapPending(){ return (typeof snapT!=='undefined')?!!snapT:undefined; },
+  _snapCancel: (typeof snapT!=='undefined') ? function(){ if(snapT){ clearTimeout(snapT); snapT=null; snapAt=0; } } : undefined   // test-only: a clean start for the scheduler's next check (defined in the server's scope; the server has no such door)
 };`;
   const factory = new Function('require', 'module', 'exports', '__dirname', '__filename', src + expose);
   const mod = { exports: {} };

@@ -654,7 +654,7 @@ test('a room admits at most MAX_WATCHERS spectators; the next join gets a clear 
 test('named saves cap at SAVES_PER_GROUP per password group; overwrite never counts; another group is unaffected', () => {
   if (!S.saves || !S.GAME_HANDLERS_saveMatch) throw new Error('saves/saveMatch not exposed');
   S.saves.clear();
-  const mkRoom = ph => ({ name:'SaveRoom' + ph, passHash: ph, hostToken:'tok' + ph, started: true, players: [{ name:'H' + ph }] });
+  const mkRoom = ph => ({ name:'SaveRoom' + ph, passHash: ph, hasPass: true, hostToken:'tok' + ph, started: true, players: [{ name:'H' + ph }] });   // srv-2.6.52: a room without a password cannot save
   const rA = mkRoom('HA'), pA = { token:'tokHA', name:'HHA' };
   const sock = recSock(), connA = { sock };
   for (let i = 1; i <= S.SAVES_PER_GROUP; i++)
@@ -662,8 +662,8 @@ test('named saves cap at SAVES_PER_GROUP per password group; overwrite never cou
   eq(S.saves.size, S.SAVES_PER_GROUP, 'group A fills to the cap');
   S.GAME_HANDLERS_saveMatch(connA, rA, pA, { name: 'save-toomany' });
   eq(S.saves.size, S.SAVES_PER_GROUP, 'a 4th NEW save in the same group must be refused');
-  assert(sock.msgs.some(m => m.t === 'err' && /password group/.test(m.msg || '')), 'the refusal must name the group cap');
-  S.GAME_HANDLERS_saveMatch(connA, rA, pA, { name: 'save1' });                       // overwrite an existing name
+  assert(sock.msgs.some(m => m.t === 'err' && /room and password/.test(m.msg || '')), 'the refusal must name the group cap');
+  S.GAME_HANDLERS_saveMatch(connA, rA, pA, { name: 'save1', overwrite: true });      // overwrite an existing name (srv-2.6.52: said out loud)
   eq(S.saves.size, S.SAVES_PER_GROUP, 'overwriting an existing save never counts against the cap');
   const rB = mkRoom('HB'), pB = { token:'tokHB', name:'HHB' };
   S.GAME_HANDLERS_saveMatch({ sock: recSock() }, rB, pB, { name: 'other-group' });
@@ -694,15 +694,15 @@ test('CFG carries the --bind flag (default null = all interfaces) and the global
 /* === 18. v2.6.19 uncertainty round: same-name overwrite from another password group must bounce === */
 test('a save name owned by one password group cannot be overwritten (clobbered) from another', () => {
   S.saves.clear();
-  const rA = { name:'ClA', passHash:'GH-A', hostToken:'ta', started:true, players:[{ name:'A' }] };
-  const rB = { name:'ClB', passHash:'GH-B', hostToken:'tb', started:true, players:[{ name:'B' }] };
+  const rA = { name:'ClA', passHash:'GH-A', hasPass:true, hostToken:'ta', started:true, players:[{ name:'A' }] };
+  const rB = { name:'ClB', passHash:'GH-B', hasPass:true, hostToken:'tb', started:true, players:[{ name:'B' }] };
   S.GAME_HANDLERS_saveMatch({ sock: recSock() }, rA, { token:'ta', name:'A' }, { name: 'friday-game' });
   const spy = recSock();
   S.GAME_HANDLERS_saveMatch({ sock: spy }, rB, { token:'tb', name:'B' }, { name: 'friday-game' });
   assert(spy.msgs.some(m => m.t === 'err' && /another table/.test(m.msg || '')), 'the cross-group overwrite must be refused with the taken-name err');
   eq(S.saves.get('friday-game').passHash, 'GH-A', 'the original group keeps its save untouched');
   eq(S.saves.size, 1, 'no second save sneaks in under the same name');
-  S.GAME_HANDLERS_saveMatch({ sock: recSock() }, rA, { token:'ta', name:'A' }, { name: 'friday-game' });
+  S.GAME_HANDLERS_saveMatch({ sock: recSock() }, rA, { token:'ta', name:'A' }, { name: 'friday-game', overwrite: true });
   eq(S.saves.get('friday-game').passHash, 'GH-A', 'the OWNING group may still overwrite its own save');
   S.saves.clear();
 });
@@ -1510,6 +1510,7 @@ test('srv-2.6.48 a named save keeps an open seat (marked) and the board style; l
   S.saves.clear();
   let { room, cs } = seatTable(['P1', 'P2', 'P3']);
   room.boardMode = 'classic'; room.tableSetup = true; room.tableLayout = 'large'; room.turnSeat = 3;
+  room.hasPass = true;                                   // srv-2.6.52: a room without a password cannot save
   S.handle(cs[1], JSON.stringify({ t:'leave' }));
   S.handle(cs[0], JSON.stringify({ t:'saveMatch', name:'sv48' }));
   const sv = S.saves.get('sv48'); assert(sv, 'saved: ' + JSON.stringify(cs[0].sock.msgs.filter(x => x.t === 'err')));
@@ -1521,7 +1522,7 @@ test('srv-2.6.48 a named save keeps an open seat (marked) and the board style; l
   const cC = { ip:'127.0.2.3', sock: recSock() };
   S.handle(cC, JSON.stringify({ t:'create', room:'LD48', name:'P3', lobby:true }));
   const lr = S.rooms.get('LD48'); eq(lr.boardMode, 'structured', 'a Structured lobby');
-  sv.passHash = lr.passHash;
+  sv.passHash = lr.passHash; sv.roomName = lr.name;      // srv-2.6.52: a save loads into a room with its name and password
   S.handle(cC, JSON.stringify({ t:'loadMatch', name:'sv48' }));
   const tk = cC.sock.msgs.find(x => x.t === 'took'); assert(tk, 'loaded: ' + JSON.stringify(cC.sock.msgs.filter(x => x.t === 'err')));
   eq(lr.players.length, 3); eq(lr.players[1].vacant, true, 'the open seat is still open'); eq(lr.players[1].off, 0, 'with no offline clock');
@@ -1530,7 +1531,7 @@ test('srv-2.6.48 a named save keeps an open seat (marked) and the board style; l
   S.rooms.clear();
   const cB = { ip:'127.0.2.2', sock: recSock() };
   S.handle(cB, JSON.stringify({ t:'create', room:'LB48', name:'P2', lobby:true }));
-  sv.passHash = S.rooms.get('LB48').passHash;
+  sv.passHash = S.rooms.get('LB48').passHash; sv.roomName = 'LB48';
   S.handle(cB, JSON.stringify({ t:'loadMatch', name:'sv48' }));
   const er = cB.sock.msgs.find(x => x.t === 'err'); assert(er && /one of: P1, P3 —/.test(er.msg), 'the open seat\'s old name cannot load it: ' + JSON.stringify(er));
   S.rooms.clear();
@@ -1781,6 +1782,142 @@ test('srv-2.6.51 (bot v0.6.221\'s ask) the game is over when every OTHER seat is
   ps = mk(['A', 'B', 'C']); ps[2].out = true; room = { started: true, players: ps, watchers: [], turnSeat: 1 };
   S.GAME_HANDLERS.pass({ sock: ps[0].sock }, room, ps[0], { t: 'pass' });
   eq(room.turnSeat, 2, 'one opponent left: the prey takes the turn');
+});
+
+/* === srv-2.6.52 THE SAVES HOLD (HeySteev through Johan, 24 Nov 2026) === */
+test('srv-2.6.52 every message that can change what the snapshot stores schedules a write -- 250 ms after a pile, seat, turn, score or roster change, 2 s after a board or hand escrow, the sooner one wins; relays, reads and a socket at no table schedule nothing', () => {
+  if (!S.snapAfter || !S._snapCancel) throw new Error('the snapshot scheduler is not exposed (srv-2.6.51 has none)');
+  eq(S.SNAP_FAST_MS, 250); eq(S.SNAP_SLOW_MS, 2000);
+  const { room, cs } = seatTable(['P1', 'P2']);
+  room.players.forEach(q => { q.game = { deckName:'D', deckLib:['a','b','c'], deckCrypt:['v'], lib:['a','b','c'], crypt:['v'] }; });
+  const due = () => S._snapPending ? S._snapAt - Date.now() : null;
+  S._snapCancel(); S.handle(cs[0], JSON.stringify({ t:'draw' }));
+  assert(due() !== null && due() <= 250, 'a draw: a write within 250 ms (' + due() + ')');
+  S._snapCancel(); S.handle(cs[0], JSON.stringify({ t:'board', pub:{ pool:30, cards:[] } }));
+  assert(due() !== null && due() > 1500 && due() <= 2000, 'a board push: within 2 s (' + due() + ')');
+  S.handle(cs[0], JSON.stringify({ t:'drawCrypt' }));
+  assert(due() <= 250, 'a draw after it brings the write forward (' + due() + ')');
+  S.handle(cs[1], JSON.stringify({ t:'board', pub:{ pool:30, cards:[] } }));
+  assert(due() <= 250, 'a board after a draw rides the sooner write');
+  for (const t of ['chat', 'say', 'tally', 'fx', 'log', 'tool', 'roll', 'browse', 'ledgerGet', 'listSaves']){
+    S._snapCancel(); S.handle(cs[0], JSON.stringify({ t, msg:'x', i: 1, kind:'coin', pile:'library' }));
+    eq(S._snapPending, false, t + ' schedules nothing');
+  }
+  S._snapCancel(); S.handle({ ip:'10.9.9.9', sock: recSock() }, JSON.stringify({ t:'draw' }));
+  eq(S._snapPending, false, 'a socket at no table schedules nothing (its draw is refused)');
+  S._snapCancel(); S.handle({ ip:'10.9.9.8', sock: recSock() }, JSON.stringify({ t:'create', room:'Fresh52', name:'Ny', lobby:true }));
+  assert(S._snapPending && due() <= 250, 'a new room is on disk within moments (srv-2.6.51 lost a room younger than a minute on kill -9)');
+  const lob = seatTable(['L1', 'L2'], { lobby: true });
+  S._snapCancel(); S.handle(lob.cs[1], JSON.stringify({ t:'leave' }));
+  assert(S._snapPending, 'a leave takes the room off the connection and still schedules a write');
+  const persisted = ['deck', 'redeal', 'draw', 'drawCrypt', 'pileTop', 'pileReturn', 'shufPile', 'pileTake', 'reveal', 'pileBulk', 'pass', 'seat', 'start',
+                     'botcfg', 'bounty', 'vp', 'unoust', 'hostSetPool', 'hostOust', 'hostUnoust', 'hostPass', 'hostSetClock', 'setHelperPolicy',
+                     'kick', 'closeRoom', 'demote', 'promote', 'mute', 'saveMatch', 'delSave', 'loadMatch', 'leave', 'board', 'handEscrow'];
+  for (const t of persisted) assert(!S.SNAP_SKIP.has(t), t + ' changes what the snapshot stores');
+  const all = Object.keys(S.GAME_HANDLERS);
+  eq(all.filter(t => !S.SNAP_SKIP.has(t) && persisted.indexOf(t) < 0).join(','), '', 'every in-game verb is classified (a new one: put it in SNAP_SKIP only if it changes nothing roomSnap stores)');
+  S._snapCancel(); S.rooms.clear();
+});
+test('srv-2.6.52 the snapshot keeps each seat\'s own board: the owner gets it back with its hidden names, the others the public board made from it (srv-2.6.51 kept the decks and lost the boards)', () => {
+  if (!S.seatBoards) throw new Error('seatBoards is not exposed (srv-2.6.51)');
+  const { room, cs } = seatTable(['P1', 'P2']);
+  const own = { deckName:'Secret Deck', pool: 27, cards:[{ id:'c1', name:'Open Card', kind:'lib', zone:'ready', x:5, y:6 }, { id:'c2', name:'Secret Vamp', kind:'crypt', zone:'uncontrolled', faceDown:true, x:9, y:9, blood:2 }] };
+  S.handle(cs[0], JSON.stringify({ t:'board', pub: own }));
+  const disk = JSON.parse(JSON.stringify(S.roomSnap(room)));
+  assert(disk.players[0].pubOwn && disk.players[0].pubOwn.cards.length === 2, 'written: ' + JSON.stringify(disk.players[0].pubOwn));
+  eq(disk.players[0].pubOwn.cards[1].name, 'Secret Vamp', 'the own board keeps the face-down name (like a named save\'s pubOwn)');
+  const back = S.roomUnsnap(disk);
+  eq(back.players[0].pubOwn.cards[1].name, 'Secret Vamp', 'read back for the owner');
+  eq(back.players[0].pub.cards[1].name, undefined, 'the public board made from it hides the face-down name');
+  eq(back.players[0].pub.deckName, '', 'and the deck name');
+  eq(back.players[0].pub.pool, 27);
+  eq(back.players[1].pubOwn, undefined, 'a seat that never pushed a board has none'); eq(back.players[1].pub, undefined);
+  S.rooms.clear(); S.rooms.set(back.name, back);
+  const me = recSock(), them = recSock();
+  back.players[0].sock = me; back.players[1].sock = them;
+  S.joinReply(me, back, back.players[0]); S.joinReply(them, back, back.players[1]);
+  const j = me.msgs.find(m => m.t === 'joined');
+  eq(j.myPub.cards[1].name, 'Secret Vamp', 'the owner rejoining after a restart is offered its board, hidden names and all');
+  const bd = them.msgs.find(m => m.t === 'board' && m.seat === 1);
+  assert(bd && bd.pub.cards.length === 2 && bd.pub.cards[1].name === undefined, 'another seat sees the board, not the hidden name: ' + JSON.stringify(bd && bd.pub.cards));
+  const legacy = JSON.parse(JSON.stringify(disk)); delete legacy.players[0].pubOwn;
+  eq(S.roomUnsnap(legacy).players[0].pubOwn, undefined, 'a srv-2.6.51 record: no board, as before');
+  const junk = JSON.parse(JSON.stringify(disk)); junk.players[0].pubOwn = 'oops';
+  eq(S.roomUnsnap(junk).players[0].pubOwn, undefined, 'a garbled board is dropped');
+  S.rooms.clear();
+});
+test('srv-2.6.52 a named save belongs to the room\'s name AND password: another room with the same password neither sees, deletes, overwrites nor loads it; the name is compared case-blind; a save without roomName keeps the password-only rule', () => {
+  if (!S.saveGroupOk) throw new Error('saveGroupOk is not exposed (srv-2.6.51)');
+  const room = { name:'Fredag', passHash:'PH' }, sv = { name:'s', passHash:'PH', roomName:'Fredag' };
+  eq(S.saveGroupOk(sv, room), true);
+  eq(S.saveGroupOk(sv, { name:'  fredag ', passHash:'PH' }), true, 'case and spaces do not split a group');
+  eq(S.saveGroupOk(sv, { name:'Lördag', passHash:'PH' }), false, 'same password, another room name');
+  eq(S.saveGroupOk(sv, { name:'Fredag', passHash:'XX' }), false, 'same name, another password');
+  eq(S.saveGroupOk({ name:'old', passHash:'PH' }, { name:'Anything', passHash:'PH' }), true, 'no roomName: the password alone, as before');
+  S.saves.clear(); S.rooms.clear();
+  const mk = (name, ip) => { const c = { ip, sock: recSock() }; S.handle(c, JSON.stringify({ t:'create', room:name, name:'Host', pass:'vtes', lobby:true })); const r = S.rooms.get(name); r.started = true; c.sock.msgs.length = 0; return { c, r }; };
+  const A = mk('Fredag', '10.52.0.1'), B = mk('Strangers', '10.52.0.2');
+  eq(A.r.passHash, B.r.passHash, 'set up: two groups that happen to share a password');
+  S.handle(A.c, JSON.stringify({ t:'saveMatch', name:'Friday game' }));
+  assert(S.saves.has('Friday game'), 'group A saved: ' + JSON.stringify(A.c.sock.msgs.filter(m => m.t === 'err')));
+  S.handle(B.c, JSON.stringify({ t:'listSaves' }));
+  eq(B.c.sock.msgs.find(m => m.t === 'saveList').saves.length, 0, 'the strangers do not see it (srv-2.6.51 listed it, players and all)');
+  S.handle(B.c, JSON.stringify({ t:'delSave', name:'Friday game' }));
+  assert(S.saves.has('Friday game'), 'nor delete it');
+  S.handle(B.c, JSON.stringify({ t:'saveMatch', name:'Friday game', overwrite:true }));
+  assert(B.c.sock.msgs.some(m => m.t === 'err' && /another table/.test(m.msg || '')), 'nor overwrite it');
+  eq(S.saves.get('Friday game').roomName, 'Fredag');
+  B.r.started = false; B.c.sock.msgs.length = 0;
+  S.handle(B.c, JSON.stringify({ t:'loadMatch', name:'Friday game' }));
+  assert(B.c.sock.msgs.some(m => m.t === 'err' && /another name or password/.test(m.msg || '')), 'nor load it: ' + JSON.stringify(B.c.sock.msgs));
+  S.handle(A.c, JSON.stringify({ t:'listSaves' }));
+  const al = A.c.sock.msgs.filter(m => m.t === 'saveList').pop();
+  eq(al.saves.length, 1, 'the group itself sees its save'); eq(al.needPass, undefined, 'and may save');
+  S.saves.clear(); S.rooms.clear();
+});
+test('srv-2.6.52 a room without a password cannot save (every one of them hashed the same empty password: one shared list of three); listSaves says so before the host tries', () => {
+  S.saves.clear(); S.rooms.clear();
+  const c = { ip:'10.52.1.1', sock: recSock() };
+  S.handle(c, JSON.stringify({ t:'create', room:'Open', name:'Host', lobby:true }));
+  const r = S.rooms.get('Open'); r.started = true; c.sock.msgs.length = 0;
+  S.handle(c, JSON.stringify({ t:'saveMatch', name:'x' }));
+  const er = c.sock.msgs.find(m => m.t === 'err');
+  assert(er && er.code === 'saveNeedsPass' && /password/.test(er.msg), 'refused with a code and a sentence: ' + JSON.stringify(er));
+  eq(S.saves.size, 0, 'nothing stored');
+  S.handle(c, JSON.stringify({ t:'listSaves' }));
+  eq(c.sock.msgs.find(m => m.t === 'saveList').needPass, true, 'the list says the room cannot save');
+  S.rooms.clear();
+});
+test('srv-2.6.52 an existing save of the group is replaced only with overwrite:true -- without it the answer is err code saveExists with the name and when it was saved (srv-2.6.51 replaced it silently); an empty name carries the time', () => {
+  S.saves.clear(); S.rooms.clear();
+  const c = { ip:'10.52.2.1', sock: recSock() };
+  S.handle(c, JSON.stringify({ t:'create', room:'Weekly', name:'Host', pass:'pw', lobby:true }));
+  S.rooms.get('Weekly').started = true;
+  S.handle(c, JSON.stringify({ t:'saveMatch', name:'Friday game' }));
+  const first = S.saves.get('Friday game'); assert(first, 'saved');
+  first.savedAt -= 60000; const was = first.savedAt;
+  c.sock.msgs.length = 0;
+  S.handle(c, JSON.stringify({ t:'saveMatch', name:'Friday game' }));
+  const er = c.sock.msgs.find(m => m.t === 'err');
+  assert(er && er.code === 'saveExists' && er.name === 'Friday game' && er.savedAt === was, 'asked, not replaced: ' + JSON.stringify(er));
+  assert(/already exists/.test(er.msg), 'with a sentence an older client can show');
+  eq(S.saves.get('Friday game').savedAt, was, 'the save is untouched');
+  S.handle(c, JSON.stringify({ t:'saveMatch', name:'Friday game', overwrite:true }));
+  assert(S.saves.get('Friday game').savedAt > was, 'overwrite:true replaces it');
+  assert(c.sock.msgs.some(m => m.t === 'matchSaved'), 'and says so');
+  c.sock.msgs.length = 0;
+  S.handle(c, JSON.stringify({ t:'saveMatch', name:'' }));
+  const ms = c.sock.msgs.find(m => m.t === 'matchSaved');
+  assert(ms && /^Weekly \d{4}-\d\d-\d\d \d\d:\d\d UTC$/.test(ms.name), 'an empty name: the room and the time: ' + JSON.stringify(ms && ms.name));
+  S.saves.clear();
+  const long = 'L'.repeat(32);
+  S.rooms.clear(); const c2 = { ip:'10.52.2.2', sock: recSock() };
+  S.handle(c2, JSON.stringify({ t:'create', room: long, name:'Host', pass:'pw', lobby:true }));
+  const r2 = [...S.rooms.values()][0]; r2.started = true;
+  S.handle(c2, JSON.stringify({ t:'saveMatch', name:'' }));
+  const nm = [...S.saves.keys()][0] || '';
+  assert(nm.length <= 40 && / UTC$/.test(nm), 'a long room name is cut, never the time: ' + JSON.stringify(nm));
+  S.saves.clear(); S.rooms.clear();
 });
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed' + (fail ? '  - ' + failed.join(', ') : ''));
