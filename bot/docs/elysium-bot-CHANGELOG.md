@@ -341,6 +341,18 @@
     371 of 2,880 to under 40 (a replacement held until the unlock phase, an empty library); the plays in the reaction windows
     (react-intercept, react-bounce, react-unlock, wake: 4,422) rise, by 1 to 15 %; ventrue's `replace-counter` rows rise (the
     discard phase's replacements); no deck's VP/match moves by more than 0.3 (paired); `ana-gates.py` PASS, zeroPool 0.
+    *Observed* (the version string normalized): IDENTICAL 0, SAME-PLAY 4, DIVERGED 236; the unlock snapshots of rounds 2–4 under 7
+    cards 371 → 7; the reaction windows' plays 4,422 → 4,802 (+8.6 %: react-intercept 1,361 → 1,488, react-bounce 597 → 626,
+    react-unlock 503 → 580, wake 1,961 → 2,108); VP/match malkavian −0.03, nosferatu +0.13 (95 % [−0.01, +0.28]), tremere −0.04,
+    ventrue −0.07 (paired SE 0.07–0.10); `ana-gates.py` PASS 6/6, zeroPool 0. Ventrue's `replace-counter` rows 319 → 312, not the
+    rise predicted: a Capuchin's four counters cap them, so the discard phase's replacements change when a counter burns, not how
+    many. The rest held.
+  - *Tests*: section 185 (5 cases, all red on v0.6.238; c–e through a whole turn, the server's draws arriving later). *Gates*
+    (the release bytes `5b8f55a7` / `fefbe871`, cardfx `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2801/0 ×3
+    (on cardfx `b937ae3d`; the release's cardfx adds aliases only, its 240 IDENTICAL in #103), canary 235/0 ×2, main's canary
+    v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.187) 422/1 (the guide's embed), the arena smoke
+    (one match, the four starters, the real clock: the bot draws in other seats' turns now) PASS 7/7, the five starters' 120 PASS
+    6/6, `client/check-versions.js` everything agrees.
 - **v0.6.238 (24 Nov 2026; PR #105)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
   Dreams kan rättas nu. Det är ju ett kort i spel som inte är fäst vid någon vampyr"). KRCG: "Put this card in play. Add 1 counter
   to this card each time you lock it … You can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn

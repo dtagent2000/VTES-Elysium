@@ -1,34 +1,33 @@
 # STATUS — Elysium Bots (rewritten at every release; 24 November 2026)
 
-**Bot v0.6.238** (24 Nov 2026, Dreams of the Sphinx) · arena v1.4.16 · sim table v1.1.0 · cardfx compiler v1.11.4, curated 218 ·
-hotseat tool v1.4.1 · coverage tool v1.1.55 · card ledger v1.2.2 · review sheet v1.0.1 · precon generator v1.1.1 · `krcg-v5.js`
-v1.0.0 · `ana-gates.py` v1.1.4 · the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51 and main's
-canary v1.5.0; the root's release is client v2.6.187 / srv-2.6.53 (the canary's second run).
+**Bot v0.6.239** (24 Nov 2026, hand size and replacement) · arena v1.4.16 · sim table v1.1.0 · cardfx compiler v1.11.4, curated
+218 · hotseat tool v1.4.1 · coverage tool v1.1.55 · card ledger v1.2.2 · review sheet v1.0.1 · precon generator v1.1.1 ·
+`krcg-v5.js` v1.0.0 · `ana-gates.py` v1.1.4 · the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51
+and main's canary v1.5.0; the root's release is client v2.6.187 / srv-2.6.53 (the canary's second run).
 
-**Deploy state:** `main` carries v0.6.236 and client v2.6.187 (the bot ring, PR #102). **Open PRs:** #103, the playtest round
-(branch `bot-playtest-fixes`, v0.6.237; D-136; its handoff `docs/handoffs/HANDOFF-to-main-2026-11-24-v0.6.237.md`), and on
-top of it #105, Dreams of the Sphinx (branch `bot-dreams-fix`, v0.6.238; the register's 8.11, Johan's go of 24 Nov): #103 first.
-Main's #104 (client v2.6.188: the ring at the pointer; no wire change) is open: merged first, STATUS's root line follows it.
+**Deploy state:** `main` carries v0.6.236 and client v2.6.187 (the bot ring, PR #102). **Open PRs, a stack, merged in order:**
+#103 the playtest round (`bot-playtest-fixes`, v0.6.237, D-136; with KRCG's card data of 24 Nov, `test-cardfx` green again),
+#105 Dreams of the Sphinx (`bot-dreams-fix`, v0.6.238), #106 this release (`bot-hand-replacement`, v0.6.239). Main's #104
+(client v2.6.188, no wire change) is open: merged first, the bot PRs' root line follows it.
 
-## Last gates (v0.6.238's release bytes, `0648bf88`)
-24 Nov: the suite 2796/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.187), main's v1.6.0 247/0 · hotseat 12/0 · HB1
-11/0 · lint clean · main's client suite (v2.6.187) 422/1 (the guide's embed) · section 184 11/0 · the 240 against v0.6.237:
-IDENTICAL 120, SAME-PLAY 8, DIVERGED 112, every divergence malkavian's; malkavian −0.09 VP/match (SE 0.06) · `ana-gates.py`
-PASS 6/6. The predictions (D-93): the CHANGELOG. v0.6.237's gates: its entry.
+## Last gates (v0.6.239's release bytes, `5b8f55a7`, cardfx `fe5f60bf`)
+24 Nov: the suite 2801/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.187), main's v1.6.0 247/0 · hotseat 12/0 · HB1
+11/0 · lint clean · main's client suite (v2.6.187) 422/1 (the guide's embed) · section 185 5/0 · the arena smoke PASS 7/7 ·
+the 240 against v0.6.238: DIVERGED 236, SAME-PLAY 4; the unlock hands of rounds 2–4 under 7 cards 371 → 7; no deck's VP moved
+by 0.3 · `ana-gates.py` PASS 6/6. The predictions (D-93): the CHANGELOG.
 
 ## Next
-1. **The chat round** (BOARD; D-136): Johan on O-50 (24 Nov, RULINGS): bubbles; whether shorter he asked Claude. Claude's
-   answer (one speaker at a time, the content kept) waits for his kör. Then the recorder, the chat tool, the lines ruled with
-   him. `askHumansTotal` (C5) belongs near it.
-2. The sweep register (D-135): its active entries (7.1, 7.2, 8.3, 11.1, 14.1–14.3), not in v0.6.237 or v0.6.238 (Johan's
-   playtest, then his go on Dreams; Claude took no other entry in): the next round's unless he says otherwise (asked); class 1
-   (R-47); 4.6's onward bounce, missed.
-3. v2.6.187 consumed: the guide's hub, ring and bot box (main's ask 2), the read-only copies refreshed. The card data is
-   recompiled from KRCG's dump of 24 Nov in #103 (1,674 translated names; `test-cardfx` green again).
+1. **The chat round** (v0.6.240; D-137, Johan's kör): a recording first, then one speaker at a time (a short phrase holds the
+   floor 1.5 s), no "(bot):" prefix, a bot's question to a bot without the human's tail; a recording after. The recorder and
+   a chat tool in bot/tools. `askHumansTotal` (C5) belongs near it.
+2. The sweep register's other active entries (7.1, 7.2, 8.3, 11.1: v0.6.241, D-135, D-137), then class 1 (R-47); the missed
+   options (4.6's onward bounce among them) wait in their classes.
+3. v2.6.187 consumed: the guide's hub, ring and bot box (main's ask 2), the read-only copies refreshed.
 4. **C**, concentrated (spec-card-sweep §11.8, D-132): C1 the cross-check tool, then the first reader's round (§11.6).
 5. Johan, asked 20 Nov (no kör yet): the pilot's flow proposals; the D line on KRCG's MCP; deleting `bot-sweep-pilot-fix2`;
-   BOARD's read-through; D-135's next release (the missed options too?); class 1's design question.
-6. The fizzle misread; Q4; C5; C6 (the suite's 6 GB heap first); the abstract model.
+   BOARD's read-through; class 1's design question.
+6. The fizzle misread; Q4; C5; C6 (the suite's 6 GB heap first); the abstract model; a hand size lowered in play (no
+   discard-down yet); a draw in flight is not counted in the hand.
 
 ## Not yet consumed from main
 Client v2.6.187 (PR #102, the bot ring): its reply is answered in v0.6.237's handoff; the guide and the copies next (Next 3).

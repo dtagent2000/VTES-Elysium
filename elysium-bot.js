@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.238';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.239';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -1169,6 +1169,8 @@ class Bot {
     if(BEAT_VERBS.has(m.t) && m.who && m.who !== this.o.name) this._lastTableAt = Date.now();   // v0.6.152 (Johan: 'the bot answers quick phrases and blocks the same instant'): a visible act by SOMEBODY ELSE re-anchors my beat -- _pace waits paceMs from the latest of my own act and the table's, so a human's 'No block' / Block! / tally is always followed by a breath before I move. Server ledger lines carry no who and never re-anchor (they echo MY acts).
     try{ h(m); }                       // one bad message must never kill the process --
     catch(e){ this.o.log('handler error (' + m.t + '):', e.message); }   // the launcher seats a whole table in ONE process
+    try{ this._replaceLate(); }        // v0.6.239 (the sweep register 14.1): a card played in another seat's turn is replaced once my part in its action is over
+    catch(e){ this.o.log('replace error:', e.message); }
   }
 
   _mkHandlers(){
@@ -6799,7 +6801,7 @@ class Bot {
       if(cost && cost >= (this.pool | 0)) return;   // v0.6.210 (the sim, 19 Oct): a pool cost leaves me >= 1 pool -- paying the last one ousts me ('a Methuselah with no pool is ousted'). `cost > pool` let Vessel through at pool 1 and a Hunting Ground at pool 2: 35 bots in 33 of 240 baseline matches paid their last pool in their own master phase and played on at 0 (the ally finder's 'leave >= 1 pool' and the political finder's `>=` were already right)
       const known = (h.e.modes || []).some(mo => mo.phase && mo.fx && (typeof mo.fx.poolGain === 'number' || typeof mo.fx.bloodToPool === 'number'));
       const lockIncome = known && !this._hostIncome(h.e);   // v0.6.238 (the sweep register 8.11): a known income asset whose pool comes by a LOCK only (Dreams of the Sphinx) -- decide('master-play') still counts it known; it is played on my board with no host
-      // v1.4.0 follow-up (14 July): `persistent`/`curated` are SEPARATE questions from `known` -- known only ever meant "has a phase-tagged income fx that attaches to a host vampire" (true for exactly Blood Doll/Vessel). Parthenon/Information Highway/Ashur Tablets are now curated too but are Locations (no host) with no recognized income fx, so they'd have been wrongly bucketed as "uncurated" by the old known-only messaging -- see the MASTER play loop and decide('master-play') below.
+      // v1.4.0 follow-up (14 July): `persistent`/`curated` are SEPARATE questions from `known` -- known only ever meant "has a phase-tagged income fx" (v0.6.238: Blood Doll and Vessel go on a vampire; Dreams of the Sphinx is known too, but its income is a lock, so its row says lockIncome and it stays on my board). Parthenon/Information Highway/Ashur Tablets are now curated too but are Locations (no host) with no recognized income fx, so they'd have been wrongly bucketed as "uncurated" by the old known-only messaging -- see the MASTER play loop and decide('master-play') below.
       const persistent = !!h.e.persistent;
       const curated = h.e.src === 'hand';
       const handler = h.e.handler || null;    // v1.4.1 (14 July): the bespoke CARD_HANDLERS key, if this entry names one
@@ -7326,7 +7328,7 @@ class Bot {
   _handCount(){                      // v0.6.238 (the egress review): the cards that count against the hand size -- the hand and the replacements owed (_drawOwed: drawn at the next _flushDraws, or held by a card's 'Do not replace until'). The rulebook (drawing cards): 'The number of cards in your hand should always match your hand size (cards that are replaced later reduce your hand size for the duration of the effect)'; [ANK 20180318]: 'Cards that are not replaced count against the hand size.' A draw-up that read the hand alone drew the owed cards twice (Dreams' +2 in the master phase, Elder Library's entry at the turn start: the flush that follows draws them again)
     return this.hand.length + (this._drawOwed | 0);
   }
-  _recomputeHandSizeBaseline(){   // v0.6.33: the passive-permanent sibling of _recomputePhaseActs's own "refresh the baseline from whatever's in play right now" pattern -- called once per turn (turn start). A NEWLY entered permanent (Elder Library etc.) means the true target rose since last check; draw up to it now, mirroring the same "immediately draw up to your hand size" rule Dreams of the Sphinx's temporary bonus already implements. Never discards on a DECREASE (a permanent leaving play mid-game is rare and not handled this round -- documented, not silently wrong: this only ever draws up, never claims to shed the difference).
+  _recomputeHandSizeBaseline(){   // v0.6.239: also right after a master enters play (14.2: the rulebook's 'immediately'), so the turn start's call finds the baseline moved   // v0.6.33: the passive-permanent sibling of _recomputePhaseActs's own "refresh the baseline from whatever's in play right now" pattern -- called once per turn (turn start). A NEWLY entered permanent (Elder Library etc.) means the true target rose since last check; draw up to it now, mirroring the same "immediately draw up to your hand size" rule Dreams of the Sphinx's temporary bonus already implements. Never discards on a DECREASE (a permanent leaving play mid-game is rare and not handled this round -- documented, not silently wrong: this only ever draws up, never claims to shed the difference).
     const total = this._handSizePermanentTotal();
     const prev = this._handSizePermanentPrev || 0;
     this._handSizePermanentPrev = total;
@@ -11352,6 +11354,11 @@ class Bot {
         this.push(); continue; }
       this.send({ t: 'draw' }); }
   }
+  _replaceLate(){                    // v0.6.239 (the sweep register 14.1): the rulebook, drawing cards: 'Whenever you play a card from your hand, you draw another from your library to replace it (unless card text says otherwise).' _flushDraws ran in my own turn (and after a vote's discard), so a reaction's, a block's, a wake's or a combat card's replacement in another seat's turn waited for my next master phase (the first v0.6.238 bytes' 240: 371 of 2,880 unlock snapshots of rounds 2-4 under 7 cards). Now, after each table message (_dispatch), once nothing of mine is in flight (no window on me, no combat, no action of mine), the owed cards are drawn; a card's own 'Do not replace until ...' stays held (_flushDraws), and my own turn keeps its flushes (an action's end, the master phase)
+    if(!this.started || this.out || this.turnSeat === this.seat || this.pending || this._inCombat || this._actingVamp) return;
+    const held = Math.min(this._drawOwed | 0, (this._replHold || []).length);
+    if((this._drawOwed | 0) > held) this._flushDraws();
+  }
   _replaceCounterCard(){             // v0.6.125: an in-play card whose counters stand in for my replacements (fx.replaceBurnsCounter)
     return (this.board || []).find(c => { if(!c || c.kind !== 'lib' || this._outOfPlay(c) || !((c.counters | 0) > 0)) return false;
       const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.fx && mo.fx.replaceBurnsCounter)); }) || null;
@@ -12768,7 +12775,8 @@ class Bot {
          (rulebook), independent of any bespoke `actGrant` source (e.g.
          Parthenon) which just adds to the SAME phaseBonus.master pool from
          a different origin. A KNOWN card (curated `phase`-tagged income fx)
-         attaches to a vampire exactly as before. v1.4.0 follow-up (14 July):
+         attaches to a vampire when its income is a host's (_hostInc, v0.6.238:
+         Blood Doll, Vessel; Dreams of the Sphinx's lock stays on my board). v1.4.0 follow-up (14 July):
          a PERSISTENT card (known or not) is placed on the board as before;
          a NON-persistent one (Effective Management: no location/put-in-play
          text) now resolves and goes straight to the PUBLIC ash heap instead
@@ -12796,7 +12804,7 @@ class Bot {
           const _hostInc = d.pick.known && !d.pick.lockIncome;   // v0.6.238 (the sweep register 8.11): a known income asset goes on a vampire when its income is a host's (Blood Doll, Vessel); Dreams of the Sphinx ('Put this card in play') goes on my board, with or without a vampire
           const host = _w4 ? _w4.host : _vlP ? _vlP.host : d.pick.host === 'ready' ? this._hostReadyFor(d.pick.name) : (_hostInc || d.pick.archetype) ? this._hostVampFor(d.pick.archetype, d.pick.archetype ? (this.fxLookup(d.pick.name) || {}).e : null, _hostInc && !d.pick.archetype ? d.pick.name : null) : null;   // fas C: archetype masters (Perfectionist) attach too -- and the archetype-aware picker enforces one-per-vampire. v0.6.205 (R4, F23): Guardian Angel goes on a READY vampire of mine
           if(d.pick.host === 'ready' && !host){ played.add(FX_NORM(d.pick.name)); continue; }   // v0.6.205: no ready vampire to put it on -- held, the next candidate is tried (pre-splice: nothing paid)
-          if((_hostInc || d.pick.archetype) && !host) break;     // a known income asset (or an archetype with no eligible vampire) needs a host — hold the card rather than misplay it
+          if((_hostInc || d.pick.archetype) && !host) break;     // a host's income (Blood Doll, Vessel; v0.6.238) or an archetype with no eligible vampire needs a host — hold the card rather than misplay it (the phase ends here: the register's 13.10)
           this.o.log('master-play: ' + d.why);
           if(this.hand.indexOf(d.pick.name) < 0 || (d.pick.cost && d.pick.cost >= (this.pool | 0))){ played.add(FX_NORM(d.pick.name)); continue; }   // v0.6.210: the finder's own rule (leave >= 1 pool). v0.6.232 (D-122): the beat moved into the 'as played' window below -- a master's target is chosen as it is played, before the window
           const _lk = this.fxLookup(d.pick.name);
@@ -12956,6 +12964,7 @@ class Bot {
               if(_n > 0){ card.counters = _n;
                 if((_ec.e.modes || []).some(mo => mo.fx && mo.fx.handSizePerCounter)){ for(let _i = 0; _i < _n; _i++) this.send({ t: 'draw' }); this._handSizePermanentPrev = this._handSizePermanentTotal(); this._replaceExempt = (this._replaceExempt | 0) + 1;
                   this._emit('hand-size-up', { card: d.pick.name, by: _n }); } } }
+            this._recomputeHandSizeBaseline();   // v0.6.239 (the sweep register 14.2): 'Whenever an effect changes your hand size ... immediately ... draw up to match your hand size' (the rulebook) -- a hand-size permanent (Elder Library) is drawn up for as it enters, not at my next turn start (the Capuchin's own draw above already moved the baseline: nothing twice)
             if(host && _hostInc && !d.pick.archetype){   // v0.6.237: the income master's host, traced -- the spread's own row (spreadIncome); `stacked` = a copy already on it while another ready vampire of mine had none
               const cp = v => (v.attached || []).filter(id => { const c = this.board.find(x => x && x.id === id); return !!(c && c.kind === 'lib' && !this._outOfPlay(c) && FX_NORM(c.name) === FX_NORM(d.pick.name)); }).length;
               const on = cp(host), free = this.board.filter(v => v && v !== host && v.kind === 'crypt' && v.zone === 'ready' && cp(v) === 0).length;
@@ -13843,13 +13852,14 @@ class Bot {
         this._toAsh(name);
         this.push();
         this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> discards <b>' + esc(name) + '</b>.' });
-        this.send({ t: 'draw' });
+        this._drawOwed = (this._drawOwed || 0) + 1;   // v0.6.239 (the sweep register 14.3): the replacement is OWED, drawn after the end of turn's discard-down (below) -- a draw sent here was still in flight when _revertHandSizeBonus counted the hand (Dreams' expiring +2 shed one card too few after a discard-phase action: 4 of 20 reverts in v0.6.238's 240), and a replacement is what Visit from the Capuchin turns into a counter ('Each time you would replace a card ... instead burn 1 counter')
         this.phaseUsed.discard++;
         this._w5AfterDiscard(name);   // v0.6.230: Powerbase's Anarch unlock
       }
       this._w5PbAnarch = false;
       this._w5CovenLock(); this._w5CovenPass();   // a Coven played this turn is locked for its 2 blood before it passes (the grading)   // v0.6.230 (V5 wave 5): 'During your discard phase, your predator takes control of The Coven'
       this._revertHandSizeBonus();
+      this._flushDraws();   // v0.6.239 (14.3): the discard phase actions' replacements, after the discard-down counted them (_handCount)
 
       await pace();
       if(this.out){ this.send({ t: 'pass' }); }   // v0.6.140 THE FREEZE: a bot ousted on its OWN turn (Fame, a referendum of its own, a self-inflicted cost) never passed -- the server gives the turn only to the seat that holds it, so the table froze until the arena's 600 s timeout (serie-bal3 run 7: 451 s of silence). The server's pass handler accepts the turn seat whether or not it is out and skips ousted seats.
