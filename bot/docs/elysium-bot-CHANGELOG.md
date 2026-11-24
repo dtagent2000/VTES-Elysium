@@ -320,6 +320,26 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.238 (24 Nov 2026)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
+  Dreams kan rättas nu. Det är ju ett kort i spel som inte är fäst vid någon vampyr"). KRCG: "Put this card in play. Add 1 counter
+  to this card each time you lock it … You can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn
+  this card if it has 3 counters." Its curated `poolGain` mode is phase-tagged and a lock mode, and the master phase's host rule
+  read `known` (a phase-tagged `poolGain` / `bloodToPool`), so the card went on a vampire, `_considerLockIncome` (freestanding
+  cards only) never read its three locks, and `_applyPhaseIncome` paid 1 pool every unlock phase with no lock, no Edge and no
+  counter, and it never burned. A rules correction, no knob (L-62).
+  - *The host rule* (`_hostIncome`): a host's income is a phase-tagged `poolGain` / `bloodToPool` on a mode with no lock (Blood
+    Doll, Vessel). The finder's row for a known income asset whose income is a lock only says `lockIncome` (Dreams' alone); the
+    master phase puts a known asset on a vampire only when its income is a host's (`_hostInc`), so Dreams goes on the bot's own
+    board, with or without a vampire in play (it was held with none). The choice of a master is unchanged: `known` still counts
+    Dreams for `decide('master-play')` (a trifle first, Dreams in the same phase). The spread's count of income masters on a
+    vampire and `_applyPhaseIncome` read the same rule (a lock mode is a choice, never paid by the phase).
+  - *Prediction* (D-93; registered before the 240): a rules correction, so a footprint only where the card is. Against v0.6.237's
+    240 (`00ed0cbd`; 104 placements of Dreams, all malkavian, in 105 matches where it was a master candidate): the other matches
+    stay IDENTICAL (≥ 135); the 105 are SAME-PLAY (the candidate row gains `lockIncome`) or DIVERGED from Dreams' first play (its
+    line names no vampire) or its first unlock phase after (no pool without the Edge). No `income-host` row names Dreams;
+    `lock-income` decisions name it, and some copies burn at their third counter. Malkavian's VP/match falls, by at most 0.2 (the
+    hosted card paid at most 469 pool over the 104 placements, 4.5 a placement, which three locks replace; likely within the noise,
+    2 SE ≈ 0.16). `ana-gates.py` PASS, zeroPool 0.
 - **v0.6.237 (24 Nov 2026; PR #103)** — The playtest round (RULINGS D-136): Johan's offline hotseat, four bots and a human, and his "Yes det
   mesta låter bra" on Claude's analysis, with his change on the bounce (read from chat, not the card). A scratch recording of a
   bots-only hotseat at the client's pace (paceMs 3100, askSecs 20, the four starters, 5 rounds) measured the chat for the next round.
