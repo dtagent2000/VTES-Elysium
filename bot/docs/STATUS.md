@@ -24,8 +24,8 @@ PASS 7/7 · the mirror bench (D-93's prediction, 480 paired): the stacking seat 
    near it: after a No block a bot with no modifier resolves in 150 ms, so a human bounces in the Block? window.
 2. The sweep register (D-135): its active entries (7.1, 7.2, 8.3, 8.11 found in this round: Dreams of the Sphinx hosted, 1 pool
    every unlock; 11.1; the missed options if Johan says so), class 1 (R-47).
-3. v2.6.187 consumed: the guide's hub, ring and bot box (main's ask 2), the read-only copies refreshed (the next round). And
-   `test-cardfx` red on main's daily runs since 22 Nov (KRCG's data moved; no card change of ours): a round of its own.
+3. v2.6.187 consumed: the guide's hub, ring and bot box (main's ask 2), the read-only copies refreshed (the next round). The
+   card data is recompiled from KRCG's dump of 24 Nov in this PR (1,674 translated names; `test-cardfx` green again).
 4. **C**, concentrated (spec-card-sweep §11.8, D-132): C1 the cross-check tool, then the first reader's round (§11.6).
 5. Johan, asked 20 Nov (no kör yet): the pilot's flow proposals; the D line on KRCG's MCP; deleting `bot-sweep-pilot-fix2`;
    BOARD's read-through; D-135's next release (active entries only, or the missed options too); class 1's design question.
