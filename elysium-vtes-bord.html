@@ -666,7 +666,8 @@ body.invisit #edge{ display:none !important; }
    botHubAvoid steps the hub out of Home's and the hold badge's way instead, wherever the player keeps it. */
 #hotBotBtn{ position:fixed; left:-200px; top:-200px; width:56px; height:56px; margin:-28px 0 0 -28px; box-sizing:border-box; border-radius:50%; z-index:4900;
   display:flex; align-items:center; justify-content:center; background:#1c160e; border:1px solid var(--brass2); color:var(--bone);
-  box-shadow:0 3px 14px rgba(0,0,0,.6); cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; transition:border-color .2s, box-shadow .2s }
+  box-shadow:0 3px 14px rgba(0,0,0,.6); cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; transition:border-color .2s, box-shadow .2s, opacity .2s }
+#hotBotBtn.away{ opacity:0; pointer-events:none }   /* v2.6.188: the player hid the hub (the bot box) -- the ring opens at the pointer; out again while the table waits on this screen */
 #hotBotBtn:hover, #hotBotBtn.open{ border-color:var(--brass) }
 #hotBotBtn:focus-visible{ outline:2px solid var(--brass); outline-offset:3px }
 #hotBotBtn.ctx{ border:2px solid #f3c969; box-shadow:0 0 0 3px rgba(243,201,105,.16), 0 3px 14px rgba(0,0,0,.6) }   /* a bot (or a bleed) waits on a human at this screen */
@@ -694,6 +695,10 @@ body.invisit #edge{ display:none !important; }
 #botRing .brIco, #botRing text{ pointer-events:none }
 #botRing .brTxt{ font:600 13px "Cinzel",serif; fill:currentColor }
 #botRing .brQ{ font:700 11px "Cinzel",serif; fill:currentColor }
+#botRing .brC{ color:var(--bone) }                                  /* v2.6.188: the centre of a ring opened at the pointer -- the hub's gear (the bot box) */
+#botRing .brC .brCd{ fill:#1c160e; stroke:var(--brass); stroke-width:1.5 }
+#botRing .brC.hov .brCd{ fill:#3a2d19 }
+#botRing .brG.on.live .brC{ pointer-events:auto; cursor:pointer }
 #botRingLbl{ position:fixed; max-width:250px; padding:5px 9px; border-radius:6px; background:#241c12; border:1px solid var(--brass2); color:var(--bone);
   font:12px/1.35 "Spectral",Georgia,serif; box-shadow:0 3px 14px rgba(0,0,0,.6); pointer-events:none }
 #botRingLbl b{ display:block; font:600 11px "Cinzel",serif; letter-spacing:.1em; text-transform:uppercase; color:var(--brass) }
@@ -2111,6 +2116,10 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
           <span class="sl">Card image on hover while the side panel is collapsed.</span>
           <select id="convHoverPreview"><option value="key">Ctrl + hover</option><option value="always">Always</option></select>
         </div>
+        <div class="set-row">
+          <span class="sl" title="At a table with bots: hold the right mouse button on the table and the quick answers open where the pointer is; a short right-click opens the card's or the table's menu as before. A key can open it too: Keys, Bot ring at the pointer.">Bot ring at the pointer (tables with bots).</span>
+          <select id="convBotRingHold"><option value="right">Hold the right mouse button</option><option value="off">Off</option></select>
+        </div>
         <label class="set-row">
           <span class="sl">Show the welcome card (&ldquo;The table is set&rdquo;) on an empty table.</span>
           <input type="checkbox" id="convShowWelcome">
@@ -3375,7 +3384,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.187';   // v2.6.187 (24 Nov 2026, THE BOT RING, pure client -- purge; srv-2.6.53 unchanged, no new verb or field; bot v0.6.236 beside, unchanged): Johan: 'en effektiv och modern bott-kontrollpanel'. The blue Bot Activity panel became the bot hub: the robot in a brass circle that each player drags where it suits their own screen (saved in this browser as the distance from the nearest corner, kept 90 px from every edge; Reset in the box). Hover it (tap on a touch screen) and a segmented ring unfolds with what a player says to the bots most: Hold on (Release while a hold stands), Yes, No, Block and reaction (Block! and which minion blocks, Any blocks?, No block, No reaction, Any reaction?), the blood drop (Bleed, +Bleed and Reduce, each 1 / 2 / 3 / X, and Bounce to another Methuselah), Pass and It resolves (the gavel) -- every quick phrase is one segment, sent on the path the phrase always took, and the minion lines are the menus' own (minionAct / minionBleed / minionBleedAdd / minionReduce, moved out of cardMenu). The ring lights what the bots wait on (their status() rows) and what a bleed aimed at you allows (bleedIn, read from the frozen bleed lines any seat writes); the hub glows then and counts the bots a step can move; a segment that cannot act now is grey and says why. Open, the robot is a gear: it opens the bot box -- the rows, Run bot turns and the bot settings, as the panel had them; the Turn-based play button rides the hub's rim. Bounce writes 'NAME bounces the bleed to WHO.' (Johan: never 'redirects' -- Redirection is a card), the acting minion's bleed re-announced at WHO's pool (the shape a bot's own bounce writes) and Pass: PROTOCOL section 12, canary v1.6.0. The fans slide along their ring to stay inside the window; the keyboard walks the ring (Enter, the arrows, Esc). Before the merge (Johan: 'yes det kan du göra'): at a hotseat with several humans the ring answers from the seat the bot asked -- a bot reads a decline only from the seat it asked and a Reduce only from the seat it bleeds, so for another human the hub glows, says whose seat to take and lights nothing, and Reduce and Bounce are grey; and a tab in the background starts its title with a dot while the table waits on this screen. Icons: Tabler Icons (MIT), the notice beside the paths.
+const VERSION='2.6.188';   // v2.6.188 (24 Nov 2026, THE RING AT THE POINTER, pure client -- purge; srv-2.6.53 unchanged, no wire change; bot v0.6.236 beside, unchanged): Johan: 'Skulle långklick kunna öppna bottpanelen ... (men kanske göra den ombindbar också då i settings)'. At a table with bots, hold the right mouse button on the table for 450 ms and the bot ring opens where the pointer is (90 px from every edge; its centre is the hub's gear, which opens the bot box beside it); released on a segment the hold picks it, released anywhere else the ring stays for a click. A short right-click keeps every menu it had: the browsers send the right button's contextmenu at the PRESS on macOS and Linux and at the RELEASE on Windows, so while the button is down the first one is held back and handed to its menu at the release (the touch long-press engine's way), and after a hold the release's contextmenu is swallowed on Windows. Settings: 'Bot ring at the pointer' -- Hold the right mouse button (the default) or Off (conv.botRingHold); the key list has 'Bot ring at the pointer', unbound, for a trackpad: it opens the ring where the mouse last was and the key again shuts it. Only a mouse, only #tableArea, never in a text field, a menu or a dialog; touch is unchanged (a long-press is its right-click). A ring at the pointer leaves the hub a robot; a click on the hub brings the ring home. Johan, while it was built: (1) the bot box can hide the hub ('Hide the hub', conv.botHubHide, off by default) -- the ring then opens at the pointer, and the hub comes out by itself while the table waits on this screen (a bot asks you, a bleed at you, Turn-based's play button); never on a touch screen, nor with the hold off and no key bound. (2) The tutorial plays on the full panel: a player who chose the discreet panel met it in the tutorial, whose steps point at the dock; a chapter holds the full panel (across the 'Continue?' prompt too) and hides the mode button, the choice itself is never written.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3391,7 +3400,7 @@ const net={ ws:null, status:'off', addr:'', sec:false, room:null, token:null, yo
 /* Convenience helpers — opt-in and off by default, except auto-lock
    which preserves the original behavior and defaults to on */
 const CONV_KEY='elysium.convenience';
-let conv={cardDB:true, dbDefault:true, uiMode:'full', uiProf:{}, modeHintDone:false, poolToPredator:true, autoLock:true, anim:'on', animSpeed:1.0, sayDur:1.0, chatDur:1.0, sayText:'normal', chatText:'crisp', drawClick:'double', pco:'mine', pcoNeutral:false, qrView:true, l3shape:'square', l3collapseOusted:false, cardTip:true, defaultView:'normal', sfxVol:0, sfxIndiv:{unlock:150,lock:150,logEvent:125}, tournament:true, legalDeck:true, legalCards:true, edgeToken:true, poolPlayerColor:false, hoverPreview:'key', chatBubbles:'others', imgFmt:'webp', imgCache:false, localImg:false, jsonSync:true, imgSync:false, showWelcome:true, debug:false, tutDone:[], playedSort:'new', avrResolveClear:'off', shiftPeek:false, touchUI:'auto', dockDrag:'leave', handRim:'dock', errPing:true};
+let conv={cardDB:true, dbDefault:true, uiMode:'full', uiProf:{}, modeHintDone:false, poolToPredator:true, autoLock:true, anim:'on', animSpeed:1.0, sayDur:1.0, chatDur:1.0, sayText:'normal', chatText:'crisp', drawClick:'double', pco:'mine', pcoNeutral:false, qrView:true, l3shape:'square', l3collapseOusted:false, cardTip:true, defaultView:'normal', sfxVol:0, sfxIndiv:{unlock:150,lock:150,logEvent:125}, tournament:true, legalDeck:true, legalCards:true, edgeToken:true, poolPlayerColor:false, hoverPreview:'key', chatBubbles:'others', imgFmt:'webp', imgCache:false, localImg:false, jsonSync:true, imgSync:false, showWelcome:true, debug:false, tutDone:[], playedSort:'new', avrResolveClear:'off', shiftPeek:false, touchUI:'auto', dockDrag:'leave', handRim:'dock', errPing:true, botRingHold:'right', botHubHide:false};
 const SAY_TEXT_MODES=['soft','normal','crisp'];   // v2.6.120: the three text recipes a say/chat bubble can wear (.txt-<mode> on .sayb)
 const CONV_DEFAULTS=Object.freeze(JSON.parse(JSON.stringify(conv)));   // v2.6.91: the literal above, captured before localStorage is merged in -- settingsDefaults() reads the Settings-dialog subset of it (the two modes differ only in UI_PRESET's trio)
 const RING_MAX=200;   // B-63: the report ring depth (was an inline 40 in B-54); crash pings still send only the last 10
@@ -3528,6 +3537,8 @@ try{
   if(typeof s.shiftPeek==='boolean') conv.shiftPeek=s.shiftPeek;
   if(s.dockDrag==='leave'||s.dockDrag==='close') conv.dockDrag=s.dockDrag;
   if(s.handRim==='dock'||s.handRim==='rim') conv.handRim=s.handRim;   // v2.6.152: the free board's bottom edge -- the dock, or pockets tucked into the table rim
+  if(s.botRingHold==='right'||s.botRingHold==='off') conv.botRingHold=s.botRingHold;   // v2.6.188: a held right button opens the bot ring at the pointer
+  if(typeof s.botHubHide==='boolean') conv.botHubHide=s.botHubHide;   // v2.6.188: the bot box can hide the hub (the ring at the pointer is the way in)
   if(s.touchUI==='auto'||s.touchUI==='on'||s.touchUI==='off') conv.touchUI=s.touchUI;
   if(typeof s.qrView==='boolean') conv.qrView=s.qrView;
   if(s.l3shape==='circle'||s.l3shape==='square') conv.l3shape=s.l3shape;
@@ -3967,6 +3978,7 @@ const AUTOSAVE_KEY='elysium.autosave';
 let saveEnabled=false, saveSkip=false, saveDirty=false, autosaveInterval=null;
 const TUT_GAME_KEY='elysium.tut.game';    // dedicated key for the persisted tutorial game (kept apart from the regular autosave so neither can ever clobber the other)
 let tutGameLive=false, tutSaveT=null;     // tutGameLive = the live hotseat IS the tutorial game (set by tutStart for classic-*); tutSaveT = debounce handle
+let tutPanelRun=false, tutPanelBridge=false;   // v2.6.188 (Johan): the tutorial plays on the FULL panel -- tutPanelRun while a chapter runs (tutStart / tutEnd), tutPanelBridge across the 'Continue to the next section?' prompt (tutFinishSection); rimOn() reads them through tutPanelFull(), conv.handRim is never written. Declared here, not beside `tut`: rimOn() runs from layout()
 let autoSaveMode='minute';
 try{ const _m=localStorage.getItem(AUTOSAVE_KEY); if(_m==='minute'||_m==='pass'||_m==='off') autoSaveMode=_m; }catch(err){}
 function saveKey(){
@@ -8516,7 +8528,8 @@ function tableLayoutSync(render){                                   // the card 
   return true;
 }
 const TABLE_LAYOUT_OLD_SRV_NOTE='This server does not know the table layout yet (it needs server v2.6.46 or later) — the table uses the standard layout.';
-function rimOn(){ return l4on() && conv.handRim==='rim'; }
+function tutPanelFull(){ return tutPanelRun || tutPanelBridge; }   // v2.6.188: the tutorial's steps point at the dock (its piles, its Edge button, 'hover the bottom edge'), so a chapter shows the full panel whatever the player chose
+function rimOn(){ return l4on() && conv.handRim==='rim' && !tutPanelFull(); }
 let rimUp=null, rimT=null;                                          // the raised pocket (zone name) and the raise timer
 const RIM_ZONES=['crypt','library','ash','hand'];                   // the pockets that hold cards
 const RIM_POCKETS=['crypt','library','ash','hand','pool'];           // ... and the pool globe's
@@ -8567,7 +8580,8 @@ function rimSync(){                                                 // on enteri
 function rimModeUI(){                                               // the design button and the Settings select say what is on
   const on=(conv.handRim==='rim'), b=$('#l2dockMode');
   if(b){ const t=on ? 'Discreet panel. Click for full panel' : 'Full panel. Click for discreet panel';   // v2.6.156 (Johan): the two say the same thing
-    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on?'true':'false'); b.title=t; b.setAttribute('aria-label', t); }
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on?'true':'false'); b.title=t; b.setAttribute('aria-label', t);
+    b.style.display=tutPanelFull() ? 'none' : ''; }   // v2.6.188: no switch while the tutorial holds the full panel -- the player's choice comes back with the button
   const sel=$('#convHandRim'); if(sel) sel.value=conv.handRim;
 }
 function rimPinUI(){ const b=$('#rimPin'); if(!b) return; b.classList.toggle('on', rimPinHand); b.setAttribute('aria-pressed', rimPinHand?'true':'false'); b.title=rimPinHand?'Hand pinned up. Click to let it tuck away':'Pin your hand up'; }
@@ -8577,6 +8591,18 @@ function rimPinToggle(){                                            // v2.6.154:
 function rimToggle(){                                               // the button: one click between the dock and the table edge -- your own choice, saved
   conv.handRim=(conv.handRim==='rim') ? 'dock' : 'rim'; saveConv();
   if(l4on()){ rimSync(); layout(); if(typeof updateL4Opponents==='function') updateL4Opponents(); } else rimModeUI();
+}
+function tutPanelFollow(){                                          // v2.6.188: the tutorial took or gave back the full panel -- the board follows at once
+  if(l4on()){
+    const was=board.classList.contains('l4rim'), want=rimOn();
+    if(was!==want){
+      rimSync();
+      if(was) setL2Dock(false);                                     // from the pockets to a closed dock, as a chapter expects it ('hover the bottom edge to open the dock'); rimSync left it open
+      layout(); if(typeof updateL4Opponents==='function') updateL4Opponents();
+      return;
+    }
+  }
+  rimModeUI();
 }
 function rimSet(z){                                                 // raise pocket z (null: sink all) and re-lay its cards
   if(z===rimUp) return;
@@ -12418,6 +12444,7 @@ function botPanelCountdown(until, now){                            // a hold has
   return left+'s';
 }
 let _botPanelOpen=false, _botPanelT=null;
+let _botBoxAt=null;                                                // v2.6.188: where the box stands when the gear of a ring at the pointer opened it (else beside the hub)
 try{ _botPanelOpen = localStorage.getItem('elysiumBotBoxOpen')==='1'; }catch(err){}   // v2.6.187: the bot box has a key of its own -- a player who kept the old panel open does not meet an open box at the first table
 /* v2.6.108: the ▶ sweep did not go away -- it MOVED IN. step() pulls a single
    wait forward; it does not play a turn, so the offline sweep is still the only
@@ -12440,8 +12467,9 @@ function hotBotBtnShow(on){
   }
   if(!_botPanelT) _botPanelT=setInterval(botPanelRender, 250);     // 4 Hz: fast enough that a countdown does not visibly stutter, slow enough to cost nothing
 }
-function botPanelToggle(){
+function botPanelToggle(at){
   _botPanelOpen=!_botPanelOpen;
+  _botBoxAt=(_botPanelOpen && at) ? { x:at.x, y:at.y } : null;   // v2.6.188: the gear of a ring at the pointer opens it there
   try{ localStorage.setItem('elysiumBotBoxOpen', _botPanelOpen?'1':'0'); }catch(err){}
   botPanelRender();
 }
@@ -12462,7 +12490,7 @@ function botPanelRender(){
      pointer between mousedown and mouseup loses the click. So the DOM is rebuilt
      only when its SHAPE changes -- rows, names, reasons, step rungs, open state --
      and a plain tick only rewrites the countdown text in place. */
-  const sig='o|'+rows.map(r=>r.key+':'+r.st.name+':'+r.st.waitingFor+':'+(r.st.step||'')+':'+(r.st.canStep?1:0)+':'+(r.st.until==null?'-':'t')).join('|')+'|'+waiting+'|'+(localTable?'L':'N')+'|'+botCfgSig(rows, give);
+  const sig='o|'+rows.map(r=>r.key+':'+r.st.name+':'+r.st.waitingFor+':'+(r.st.step||'')+':'+(r.st.canStep?1:0)+':'+(r.st.until==null?'-':'t')).join('|')+'|'+waiting+'|'+(localTable?'L':'N')+'|'+botCfgSig(rows, give)+'|'+(conv.botHubHide?1:0)+botHubHideWhy();
   if(box.style) box.style.display='';
   if(_botCfgDrag && box._botSig && box._botSig!==sig) return;     // v2.6.139: never rebuild under a dragging slider thumb -- the first tick after the release catches up
   if(box._botSig===sig){
@@ -12495,10 +12523,12 @@ function botPanelRender(){
       +'<button type="button" id="botPanelSweep" title="Run the bot turns (alpha) — the same range the Pass handover would play" '
       +'style="all:unset;cursor:pointer;display:block;text-align:center;padding:5px;border-radius:8px;background:rgba(176,141,79,.20)">▶ Run bot turns</button></div>';
   h+=botCfgHtml(rows);                                             // v2.6.187: the gear opens this box, so the settings are always in it
+  h+=botHubHideHtml();                                             // v2.6.188 (Johan): hide the hub, the ring at the pointer is the way in
   h+='<div style="padding:0 10px 9px"><button type="button" id="botHubReset" title="Put the bot hub back in its corner (top right)" style="all:unset;cursor:pointer;font-size:11.5px;opacity:.7;text-decoration:underline">Reset the hub’s place</button></div>';
   box.innerHTML=h;
   const hid=box.querySelector('#botPanelHide'); if(hid) hid.onclick=botPanelToggle;
   const rs=box.querySelector('#botHubReset'); if(rs) rs.onclick=botHubReset;
+  const hh=box.querySelector('#botHubHide'); if(hh) hh.onchange=()=>{ conv.botHubHide=!!hh.checked; saveConv(); botPanelRender(); };   // v2.6.188
   botCfgWire(box);                                                 // v2.6.139: the tempo buttons and the slider
   Array.prototype.forEach.call(box.querySelectorAll('.botPanelStep'), b=>{
     b.onclick=()=>{ const r=rows[+b.dataset.i]; if(!r||!r.st.canStep) return;
@@ -12527,10 +12557,10 @@ function botBoxMount(){
   el.addEventListener('contextmenu', e=>{ e.preventDefault(); e.stopPropagation(); });
   return el;
 }
-function botBoxPlace(box){                                         // beside the hub, on the side that faces the table, inside the window
-  if(!box || !box.style || typeof innerWidth!=='number') return;
-  const c=botHubCenter(); if(!c) return;
-  const W=innerWidth, H=innerHeight, bw=Math.min(300, W-16), bh=box.offsetHeight||0;
+function botBoxPlace(box){                                         // beside the hub (or the ring at the pointer whose gear opened it), on the side that faces the table, inside the window
+  if(!box || !box.style || typeof window.innerWidth!=='number') return;
+  const c=_botBoxAt || botHubCenter(); if(!c) return;
+  const W=window.innerWidth, H=window.innerHeight, bw=Math.min(300, W-16), bh=box.offsetHeight||0;
   const x=c.x>W/2 ? c.x-40-bw : c.x+40;
   box.style.left=Math.max(8, Math.min(W-bw-8, x))+'px';
   box.style.top=Math.max(8, Math.min(H-bh-8, c.y-28))+'px';
@@ -12616,7 +12646,7 @@ const BRING_R=[null,[34,86],[92,140],[146,178]];                   // the rings'
 const BRING_EDGE=90;                                                // Johan (24 Nov): the hub keeps this far from every edge -- ring 1 (86 px) opens around it, where it stands
 const BRING_HOME={ h:'r', x:110, v:'t', y:140 };                    // where a hub nobody has moved stands: top right, under the menu bar
 const BRING_POS_KEY='elysiumBotHub';                                // localStorage: {h, x, v, y} -- the distance from the nearest corner, so a resize keeps the hub there
-let _bring={ open:false, path:[], hov:null, pendT:null, closeT:null, openT:null, at:null, rot:0, sgn:1, segs:[], kb:null, ctx:null, dyn:'' };
+let _bring={ open:false, path:[], hov:null, pendT:null, closeT:null, openT:null, at:null, free:false, rot:0, sgn:1, segs:[], kb:null, ctx:null, dyn:'' };
 let _bhDown=null;
 /* ---- what the table waits on (pure: the hub, the ring and the tests read the same answers) ---- */
 function botLocalHuman(name){                                       // a human whose answers this screen gives: every human seat offline (one device), yourself online
@@ -12755,13 +12785,27 @@ function botHubSave(c){
 }
 function botHubReset(){ try{ localStorage.removeItem(BRING_POS_KEY); }catch(_e){} botRingClose(); botHubPlace(); botPanelRender(); }
 function botHubState(rows){                                         // what the hub shows (pure): the count of bots a step can move, the Turn-based play button, the glow, the hold
-  const ctx=botRingContext(rows);
-  return { waiting:(rows||[]).filter(r=>r.st.canStep).length, give:botGiveWordWanted(rows), wait:ctx.wait, elsewhere:ctx.elsewhere||null, held:hotHoldBy.size>0, open:_bring.open };
+  const ctx=botRingContext(rows), give=botGiveWordWanted(rows), open=_bring.open && !_bring.free;   // v2.6.188: a ring at the pointer leaves the hub a robot
+  const away=!!conv.botHubHide && !botHubHideWhy() && !ctx.wait && !give && !open && !_bhDown;   // v2.6.188 (Johan): hidden by the player's choice, out again while the table waits on this screen (a question, a bleed, Turn-based's play button)
+  return { waiting:(rows||[]).filter(r=>r.st.canStep).length, give, wait:ctx.wait, elsewhere:ctx.elsewhere||null, held:hotHoldBy.size>0, open, away };
+}
+function botRingKeyBound(){ try{ return !!(keyBinds && keyBinds.botRing); }catch(_e){ return false; } }   // v2.6.188: is a key bound to the ring at the pointer? (keyBinds is declared further down: a read before it would throw)
+function botHubHideWhy(){                                           // v2.6.188: '' when the player may hide the hub, else why not -- there must be another way to the ring
+  if(touchUI()) return 'On a touch screen the hub stays: a long press is the right-click there.';
+  if(conv.botRingHold==='off' && !botRingKeyBound()) return 'Turn on Settings ▸ Bot ring at the pointer, or bind a key to it, first.';
+  return '';
+}
+function botHubHideHtml(){                                          // v2.6.188: the bot box's row for it -- the player's own choice, saved with their settings
+  const why=botHubHideWhy(), tip=esc(why || 'Open the ring by holding the right mouse button on the table, or with your key. The hub comes back by itself while a bot waits on you.');
+  return '<div style="padding:0 10px 7px"><label title="'+tip+'" style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:'+(why ? 'default' : 'pointer')+';opacity:'+(why ? '.55' : '1')+'">'
+    +'<input type="checkbox" id="botHubHide"'+(conv.botHubHide ? ' checked' : '')+(why ? ' disabled' : '')+' style="margin:0">Hide the hub (hold the right button for the ring)</label></div>';
 }
 function botHubPaint(el, hs){
   if(!el || !el.classList) return;
   el.classList.toggle('ctx', !!hs.wait);
   el.classList.toggle('open', !!hs.open);
+  el.classList.toggle('away', !!hs.away);                           // v2.6.188: hidden by the player's choice -- still focusable, so the key's ring is walked from it
+  { const ti=hs.away ? -1 : 0; if(el.tabIndex!==ti) el.tabIndex=ti; }
   el.setAttribute('aria-expanded', hs.open ? 'true' : 'false');
   const face=el.querySelector('.bhFace'), face2=hs.open ? 'gear' : 'robotFace';
   if(face && face.dataset && face.dataset.ic!==face2){ face.innerHTML=botIconPaths(face2); face.dataset.ic=face2; }
@@ -12776,7 +12820,7 @@ function botHubMount(){
     +'<span class="bhCnt" hidden></span>'+botGiveWordBtn();
   document.body.appendChild(el);
   botHubPlace();
-  el.addEventListener('pointerenter', e=>{ botRingCancelClose(); if(e.pointerType==='mouse' && !_bhDown && !_bring.open){ clearTimeout(_bring.openT); _bring.openT=setTimeout(()=>botRingOpen('hover'), 110); } else if(_bring.open) botRingHover(null); });
+  el.addEventListener('pointerenter', e=>{ if(_bring.open && _bring.free) return; botRingCancelClose(); if(e.pointerType==='mouse' && !_bhDown && !_bring.open){ clearTimeout(_bring.openT); _bring.openT=setTimeout(()=>botRingOpen('hover'), 110); } else if(_bring.open) botRingHover(null); });
   el.addEventListener('pointerleave', ()=>{ clearTimeout(_bring.openT); });
   el.addEventListener('pointerdown', e=>{ if(e.pointerType==='mouse' && e.button!==0) return; _bhDown={ x:e.clientX, y:e.clientY, c0:botHubCenter(), moved:false, t:e.pointerType }; try{ el.setPointerCapture(e.pointerId); }catch(_e){} });
   el.addEventListener('pointermove', e=>{
@@ -12788,7 +12832,7 @@ function botHubMount(){
   const up=e=>{ const d=_bhDown; _bhDown=null; el.classList.remove('drag'); if(!d) return;
     if(d.moved){ const c=botHubCenter(); if(c) botHubSave(c); return; }
     if(e.type==='pointercancel') return;
-    if(!_bring.open){ botRingOpen(d.t==='mouse' ? 'hover' : 'tap'); return; }
+    if(!_bring.open || _bring.free){ botRingOpen(d.t==='mouse' ? 'hover' : 'tap'); return; }   // v2.6.188: a click on the hub while a ring stands at the pointer brings it home
     botRingClose(); botPanelToggle();                               // the gear: the bot box
   };
   el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
@@ -12810,15 +12854,25 @@ function botRingEl(){
   }
   return el;
 }
-function botRingOpen(how){
-  const c=botHubCenter(); if(!c || typeof innerWidth!=='number') return false;
-  const fit=botRingFit(c.x, c.y, innerWidth, innerHeight);
+function botRingOpen(how, at){                                      // at: a point -- v2.6.188, the ring at the pointer (a held right button, the bound key); else around the hub
+  const c=at || botHubCenter(); if(!c || typeof window.innerWidth!=='number') return false;
+  const fit=botRingFit(c.x, c.y, window.innerWidth, window.innerHeight);
   const ctx=botRingContext();
   clearTimeout(_bring.pendT); clearTimeout(_bring.closeT); clearTimeout(_bring.openT);   // the last ring's timers die with it -- a late close would shut this one
-  _bring={ open:true, path:ctx.path.filter(id=>!botRingWhy(id) && botRingKids(id).length), hov:null, pendT:null, closeT:null, openT:null, at:c, rot:fit.rot, sgn:fit.sgn, segs:fit.segs, kb:how==='key' ? { ring:1, i:0 } : null, ctx, dyn:botRingDyn() };
+  _bring={ open:true, path:ctx.path.filter(id=>!botRingWhy(id) && botRingKids(id).length), hov:null, pendT:null, closeT:null, openT:null, at:c, free:!!at, rot:fit.rot, sgn:fit.sgn, segs:fit.segs, kb:how==='key' ? { ring:1, i:0 } : null, ctx, dyn:botRingDyn() };
   botRingBuild();
   botPanelRender();
   return true;
+}
+function botRingOpenAt(x, y, how){                                  // v2.6.188: the same ring where the pointer is, 90 px from every edge; its centre is the hub's gear
+  if(typeof window.innerWidth!=='number' || !botBtnWanted()) return false;
+  return botRingOpen(how||'hold', botHubClamp(x, y, window.innerWidth, window.innerHeight));
+}
+function botRingGear(){                                             // the centre of a ring at the pointer: the bot box, beside it
+  const at=_bring.at ? { x:_bring.at.x, y:_bring.at.y } : null;
+  botRingClose();
+  if(_botPanelOpen){ _botBoxAt=at; const bx=document.getElementById('botBox'); if(bx) botBoxPlace(bx); }
+  else botPanelToggle(at);
 }
 function botRingClose(){
   clearTimeout(_bring.pendT); clearTimeout(_bring.closeT); clearTimeout(_bring.openT);
@@ -12835,6 +12889,7 @@ function botRingBuild(){
   let h='';
   Object.keys(groups).forEach(g=>{
     h+='<g class="brG" data-g="'+esc(g)+'" style="transform-origin:'+cx+'px '+cy+'px">';
+    if(g==='root' && _bring.free) h+='<g class="brC" role="menuitem" aria-label="Bot settings"><circle class="brCd" cx="'+cx+'" cy="'+cy+'" r="26"/>'+botIconG(['gear'], cx, cy, 22)+'</g>';   // v2.6.188: a ring at the pointer has no hub in its middle -- the gear stands there
     groups[g].forEach(s=>{
       const n=botRingNode(s.id), why=botRingWhy(s.id), rr=BRING_R[s.ring], mid=(rr[0]+rr[1])/2, t=s.a*Math.PI/180;
       const x=cx+mid*Math.sin(t), y=cy-mid*Math.cos(t);
@@ -12849,6 +12904,8 @@ function botRingBuild(){
     h+='</g>';
   });
   svg.innerHTML=h;
+  const cg=svg.querySelector('.brC');
+  if(cg){ cg.addEventListener('pointerenter', ()=>{ botRingCancelClose(); cg.classList.add('hov'); }); cg.addEventListener('pointerleave', ()=>cg.classList.remove('hov')); cg.addEventListener('click', e=>{ e.stopPropagation(); botRingGear(); }); }
   Array.prototype.forEach.call(svg.querySelectorAll('.brS'), g=>{
     const id=g.getAttribute('data-id');
     g.addEventListener('pointerenter', e=>{ if(e.pointerType!=='touch') botRingHover(id); });   // a touch has no hover: its tap opens a parent (botRingActivate)
@@ -12880,11 +12937,11 @@ function botRingShow(){                                             // which rin
   const ext={ top:_bring.at.y-28, bottom:_bring.at.y+28 };
   _bring.segs.forEach(q=>{ if(q.grp!=='root' && _bring.path.indexOf(q.grp)<0) return; const R=BRING_R[q.ring][1];
     [q.a-q.w/2, q.a, q.a+q.w/2].forEach(a=>{ const y=_bring.at.y-R*Math.cos(a*Math.PI/180); if(y<ext.top) ext.top=y; if(y>ext.bottom) ext.bottom=y; }); });
-  const w=lbl.offsetWidth||200, hh=lbl.offsetHeight||40, low=_bring.at.y>innerHeight/2;
+  const W=window.innerWidth, H=window.innerHeight, w=lbl.offsetWidth||200, hh=lbl.offsetHeight||40, low=_bring.at.y>H/2;
   let y=low ? ext.top-10-hh : ext.bottom+10;
-  if(y<6 || y+hh>innerHeight-6) y=low ? ext.bottom+10 : ext.top-10-hh;   // no room on that side: the other one
-  lbl.style.left=Math.max(6, Math.min(innerWidth-w-6, _bring.at.x-w/2))+'px';
-  lbl.style.top=Math.max(6, Math.min(innerHeight-hh-6, y))+'px';
+  if(y<6 || y+hh>H-6) y=low ? ext.bottom+10 : ext.top-10-hh;   // no room on that side: the other one
+  lbl.style.left=Math.max(6, Math.min(W-w-6, _bring.at.x-w/2))+'px';
+  lbl.style.top=Math.max(6, Math.min(H-hh-6, y))+'px';
 }
 function botRingDyn(){ return botRingKids('blk').join(',')+'|'+botRingKids('bnc').join(','); }   // the two fans that follow the table: my blockers, and whom a bleed aimed at me can bounce to
 function botRingSync(rows){                                         // the 4 Hz loop while open: the lights follow the table; the ring is rebuilt only when a fan's members change (a bleed arrives while it is open: the bounce targets)
@@ -12964,14 +13021,97 @@ function botRingGlobals(){                                          // once: a p
   if(_bringGlobals) return; _bringGlobals=true;
   document.addEventListener('pointermove', e=>{
     if(!_bring.open || _bhDown || e.pointerType==='touch') return;
-    const t=e.target, on=t && t.closest && t.closest('#hotBotBtn, #botRing .brS');
+    const t=e.target, on=t && t.closest && (t.closest('#botRing .brS, #botRing .brC') || (!_bring.free && t.closest('#hotBotBtn')));   // v2.6.188: a ring at the pointer is its segments and its centre; the hub is elsewhere
     if(on) botRingCancelClose(); else botRingScheduleClose();
   }, true);
-  document.addEventListener('pointerdown', e=>{ if(!_bring.open) return; const t=e.target; if(t && t.closest && t.closest('#hotBotBtn, #botRing .brS')) return; botRingClose(); }, true);
+  document.addEventListener('pointerdown', e=>{ if(!_bring.open) return; const t=e.target; if(t && t.closest && t.closest('#hotBotBtn, #botRing .brS, #botRing .brC')) return; botRingClose(); }, true);
   document.addEventListener('keydown', e=>{ if(_bring.open && e.key==='Escape' && !(e.target && e.target.id==='hotBotBtn')){ botRingClose(); } });
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) botTitleMark(false); });   // back in the tab: the dot goes at once (the loop runs slower in a background tab)
   window.addEventListener('resize', ()=>{ botRingClose(); botHubPlace(); const bx=document.getElementById('botBox'); if(bx && _botPanelOpen) botBoxPlace(bx); });
 }
+/* ---- v2.6.188: the ring at the pointer (Johan, 24 Nov: 'Skulle långklick kunna öppna bottpanelen ... (men kanske göra den
+   ombindbar också då i settings)'). Hold the right mouse button on the table and the ring opens where the pointer is; a
+   short right-click keeps every menu it had. The browsers disagree on WHEN the right button's contextmenu comes: at the
+   PRESS on macOS and Linux, at the RELEASE on Windows. So while the button is down the first contextmenu is held back; a
+   release before RHOLD_MS dispatches a genuine one at the press (every menu handler runs unchanged -- the touch long-press
+   engine's way), and a hold opens the ring instead (on Windows the contextmenu after that release is swallowed). Released
+   on a segment, the hold picks it (a pie menu's flick); anywhere else the ring stays for a click. Only at tables with bots
+   (botBtnWanted), only on the table (#tableArea), only for a mouse; Settings turns it off (conv.botRingHold), and the
+   key list has 'Bot ring at the pointer' (unbound) for a trackpad. ---- */
+const RHOLD_MS=450, RHOLD_SLOP=10;
+const rhold={ t:0, down:null, cm:null, fired:false, swallowUntil:0 };
+function rholdArmable(e){                                           // may this press start a hold?
+  if(!e || e.button!==2 || e.pointerType!=='mouse' || conv.botRingHold==='off' || !botBtnWanted()) return false;
+  const t=e.target; if(!t || !t.closest || !t.closest('#tableArea')) return false;
+  if(t.closest('input,textarea,select,[contenteditable],#menu,#submenu,#submenu2,#ctStepper')) return false;
+  const ov=$('#overlay'); if(ov && ov.classList.contains('show')) return false;
+  return !state.picking;
+}
+function rholdReset(){ clearTimeout(rhold.t); rhold.t=0; rhold.down=null; rhold.cm=null; }
+function rholdDown(e){
+  if(!e || e.pointerType!=='mouse') return;
+  if(e.button===2) rhold.swallowUntil=0;                            // a new right press: nothing left to swallow
+  if(!rholdArmable(e)) return;
+  rholdReset(); rhold.fired=false;
+  rhold.down={ x:e.clientX, y:e.clientY, id:e.pointerId, target:e.target, sawCM:false, moved:false };
+  rhold.t=setTimeout(rholdFire, RHOLD_MS);
+}
+function rholdMove(e){
+  const d=rhold.down; if(!d || e.pointerId!==d.id) return;
+  if(typeof e.buttons==='number' && !(e.buttons & 2)){ const cm=rhold.cm, fired=rhold.fired; rholdReset(); if(!fired && cm) rholdMenu(cm); return; }   // released where no pointerup reached us (outside the window)
+  if(!rhold.fired && !d.moved && Math.hypot(e.clientX-d.x, e.clientY-d.y)>RHOLD_SLOP){ d.moved=true; clearTimeout(rhold.t); rhold.t=0; }   // a moving press is no hold: its release opens the menu
+}
+function rholdFire(){
+  rhold.t=0; const d=rhold.down; if(!d || d.moved) return;
+  rhold.fired=true; rhold.cm=null;                                  // the held-back contextmenu (macOS, Linux) is dropped: the ring, not the menu
+  if(!botRingOpenAt(d.x, d.y, 'hold')){ rholdReset(); rhold.fired=false; }
+}
+function rholdUp(e){
+  if(!e || e.button!==2) return;
+  const d=rhold.down; if(!d) return;
+  clearTimeout(rhold.t); rhold.t=0;
+  if(rhold.fired){
+    rhold.down=null; rhold.cm=null;
+    if(!d.sawCM) rhold.swallowUntil=Date.now()+600;                 // Windows: the release's contextmenu is still to come
+    const seg=e.target && e.target.closest && e.target.closest('#botRing .brS');
+    if(seg && _bring.open) botRingActivate(seg.getAttribute('data-id'), 'hold');   // released on a segment: that one (a parent opens its ring)
+    return;
+  }
+  const cm=rhold.cm; rhold.down=null; rhold.cm=null;
+  if(cm) rholdMenu(cm);                                             // macOS / Linux: the menu the press asked for, now (Windows: its contextmenu comes after this release, and passes)
+}
+function rholdMenuEvent(x, y){                                      // a contextmenu as the touch engine dispatches it
+  const o={ bubbles:true, cancelable:true, clientX:x, clientY:y, button:2 };
+  try{ return new MouseEvent('contextmenu', o); }catch(_e){}
+  try{ const ev=new Event('contextmenu', o); ev.clientX=x; ev.clientY=y; return ev; }catch(_e){}
+  return Object.assign({ type:'contextmenu' }, o);
+}
+function rholdMenu(cm){ const el=cm && cm.target; if(!el || el.isConnected===false || typeof el.dispatchEvent!=='function') return; el.dispatchEvent(rholdMenuEvent(cm.x, cm.y)); }
+function rholdCM(e){                                                // window, capture: before every menu handler
+  if(!e || e.isTrusted===false) return;                             // our own dispatch and the touch engine's pass
+  if(rhold.down){
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(!rhold.fired){ rhold.down.sawCM=true; rhold.cm={ target:e.target, x:e.clientX, y:e.clientY }; }   // macOS / Linux: held back until the release
+    return;
+  }
+  if(rhold.swallowUntil && Date.now()<rhold.swallowUntil){ rhold.swallowUntil=0; e.preventDefault(); e.stopImmediatePropagation(); }   // Windows: the hold's own release
+}
+let _ptrAt=null;                                                    // the mouse's last place (the bound key opens the ring there)
+function botPtrNote(e){ if(e && e.pointerType==='mouse') _ptrAt={ x:e.clientX, y:e.clientY }; }
+function botRingAtPointerWanted(){ return botBtnWanted(); }
+function botRingAtPointerKey(){                                     // the bound key: the ring at the pointer, the key again shuts it
+  if(_bring.open){ botRingClose(); return; }
+  const c=_ptrAt || botHubCenter(); if(!c) return;
+  if(botRingOpenAt(c.x, c.y, 'keyAt')){ const hub=document.getElementById('hotBotBtn'); try{ if(hub && hub.focus) hub.focus({ preventScroll:true }); }catch(_e){} }   // the arrows and Enter walk it from the hub (botRingKey)
+}
+try{
+  window.addEventListener('pointerdown', rholdDown, true);
+  window.addEventListener('pointermove', e=>{ botPtrNote(e); rholdMove(e); }, true);
+  window.addEventListener('pointerup', rholdUp, true);
+  window.addEventListener('pointercancel', e=>{ if(rhold.down && e.pointerId===rhold.down.id) rholdReset(); }, true);
+  window.addEventListener('contextmenu', rholdCM, true);
+  window.addEventListener('blur', ()=>{ rholdReset(); rhold.swallowUntil=0; });
+}catch(_e){}
 /* ---- the bleed aimed at someone right now, read from the frozen lines any seat writes (PROTOCOL section 12) ---- */
 let bleedIn=null;                                                   // { actor: the bleeding Methuselah, vamp: the acting minion as its line names it, n: the total now, target, turn }
 const BLEED_IN_RE={
@@ -18087,6 +18227,7 @@ const ACTIONS=[
   {id:'phaseNext',   grp:'adv',   def:'§',  label:'Phase: next (cycle Unlock → Discard → Unlock)', fn:phaseNext},   // v2.6.118 (feedback): one cycling key beside F1-F5
   {id:'chatFocus',   grp:'adv',   def:'Enter', label:'Focus the chat line (when it is not already active)', fn:chatFocus, nav:true, when:chatFocusWanted},   // v2.6.118 (feedback)
   {id:'cycleView',   grp:'adv',   def:'V',  label:'Cycle views: the table overview ⇄ home (in a room)', fn:cycleView, nav:true, when:tableView},   // v2.6.118: was the FIXED § / ` (MOUSE_FIXED) -- § went to the phase cycle (Johan's call, alt. A); ` is a dead key on Swedish keyboards so it was never the Swedish way in
+  {id:'botRing',     grp:'adv',   def:'',   label:'Bot ring at the pointer (tables with bots)', fn:()=>botRingAtPointerKey(), nav:true, when:()=>botRingAtPointerWanted()},   // v2.6.188 (Johan): unbound -- for a trackpad, where holding the right button is awkward
   {id:'activeHome',  grp:'adv',   def:'Tab', label:'Active player\u2019s board ⇄ home (in a room)', fn:toggleActiveHome, nav:true, when:tableView},   // v2.6.118: was the FIXED Tab. nav:true = a view/UI move, never an undo point; when() gates the whole dispatch so the browser keeps the key when the action does not apply
   {id:'flipSel',     grp:'adv',   def:'F', label:'Flip selected',                    fn:flipSelected},
   {id:'alignSel',   grp:'adv',   def:'A', label:'Align selected side by side',  fn:alignSelected},
@@ -18128,6 +18269,7 @@ const MOUSE_FIXED=[
   ['Double-click a card in hand','Play it — onto the selected card in play, if any'],
   ['❗ button','Quick “Hold on…” — ask for a beat before things resolve'],
   ['Bot hub (tables with bots)','Hover the robot (tap on a touch screen): the quick answers to the bots in a ring -- the gear opens the bot box; drag the robot anywhere'],
+  ['Hold the right button (tables with bots)','The same ring at the pointer -- release on a segment to pick it, or click one; a short right-click keeps its menu. Settings turns it off; a key can be bound; the bot box can hide the hub'],
   ['⏱ button','Reaction window: a countdown the whole table sees'],
   ['Double-click the empty felt','Quick phrases — “No block”, “It resolves”… shown to the whole table'],
   ['Esc','Clear selection / cancel targeting / leave remote view / close menus']
@@ -18189,6 +18331,8 @@ function importSettings(){
           if(typeof c.animSpeed==='number') conv.animSpeed=Math.min(2,Math.max(0.5,c.animSpeed));
           if(c.drawClick==='single'||c.drawClick==='double') conv.drawClick=c.drawClick;
           if(c.touchUI==='auto'||c.touchUI==='on'||c.touchUI==='off') conv.touchUI=c.touchUI;
+          if(c.botRingHold==='right'||c.botRingHold==='off') conv.botRingHold=c.botRingHold;
+          if(typeof c.botHubHide==='boolean') conv.botHubHide=c.botHubHide;
           if(c.pco==='on'||c.pco==='home'||c.pco==='mine'||c.pco==='all') conv.pco=c.pco;
           if(typeof c.pcoNeutral==='boolean') conv.pcoNeutral=c.pcoNeutral;
           if(typeof c.qrView==='boolean') conv.qrView=c.qrView;
@@ -18343,6 +18487,7 @@ function openSettings(){
   $('#convDrawClick').value=conv.drawClick;
   $('#convDockDrag').value=conv.dockDrag;
   { const _hr=$('#convHandRim'); if(_hr) _hr.value=conv.handRim; }
+  { const _rh=$('#convBotRingHold'); if(_rh) _rh.value=conv.botRingHold; }
   $('#convTouchUI').value=conv.touchUI;
   $('#convPco').value=conv.pco;
   $('#convPcoNeutral').checked=conv.pcoNeutral;
@@ -18412,7 +18557,7 @@ $('#keysReset').addEventListener('click',()=>{
    Reset is refused while a table or lobby is live (same guard as the Lite|Full switch): a hotseat
    overrides conv.tournament / helperAllOn for the session, and resetting under it would change
    the running table.                                                                             */
-const SETTINGS_CONV_KEYS=['anim','animSpeed','sayDur','chatDur','sayText','chatText','pco','pcoNeutral','poolPlayerColor','drawClick','cardTip','hoverPreview','chatBubbles','showWelcome','dockDrag','handRim','touchUI','playedSort','avrResolveClear','l3collapseOusted','errPing','tournament','autoLock','poolToPredator','legalDeck','legalCards','edgeToken','cardDB','imgCache','localImg','jsonSync','imgSync','imgFmt','sfxVol','shiftPeek'];
+const SETTINGS_CONV_KEYS=['anim','animSpeed','sayDur','chatDur','sayText','chatText','pco','pcoNeutral','poolPlayerColor','drawClick','cardTip','hoverPreview','chatBubbles','showWelcome','dockDrag','handRim','touchUI','playedSort','avrResolveClear','l3collapseOusted','errPing','tournament','autoLock','poolToPredator','legalDeck','legalCards','edgeToken','cardDB','imgCache','localImg','jsonSync','imgSync','imgFmt','sfxVol','shiftPeek','botRingHold','botHubHide'];
 function settingsDefaults(mode){                                  // pure: the profile a fresh install of `mode` would show
   mode=(mode==='lite')?'lite':'full';
   const c={}; for(const k of SETTINGS_CONV_KEYS) c[k]=CONV_DEFAULTS[k];
@@ -19183,6 +19328,7 @@ $('#convAnim').addEventListener('change',e=>{
 });
 $('#convDrawClick').addEventListener('change',e=>{ conv.drawClick=e.target.value; saveConv(); });
 $('#convDockDrag')?.addEventListener('change',e=>{ conv.dockDrag=e.target.value; saveConv(); });
+$('#convBotRingHold')?.addEventListener('change',e=>{ conv.botRingHold=(e.target.value==='off')?'off':'right'; saveConv(); });   // v2.6.188
 $('#convHandRim')?.addEventListener('change',e=>{ conv.handRim=(e.target.value==='rim')?'rim':'dock'; saveConv(); if(l4on()){ rimSync(); layout(); if(typeof updateL4Opponents==='function') updateL4Opponents(); } else rimModeUI(); });   // v2.6.152: takes effect on the open table
 { const _dm=document.getElementById('l2dockMode'); if(_dm){ _dm.addEventListener('pointerdown', e=>e.stopPropagation()); _dm.addEventListener('click', e=>{ e.stopPropagation(); rimToggle(); }); } }   // v2.6.153: the design button (never a marquee, never a felt tap)
 rimModeUI();
@@ -20281,6 +20427,7 @@ function openTutorial(){
 function tutStart(secId){
   const sec=TUT_SECTIONS[secId]; if(!sec || !sec.steps || !sec.steps.length) return;
   tut.active=true; tut.secId=secId; tut.steps=sec.steps; tut.idx=-1; tut._bubblePin=null; tut._bubblePinIdx=-1;
+  tutPanelRun=true; tutPanelFollow();   // v2.6.188 (Johan): the full panel for the tutorial, whatever the player chose -- their choice is not touched
   if(secId.indexOf('classic')===0 && localTable && net.boardMode==='classic'){
     tutGameLive=true;   // the live Classic game is now the tutorial game -> persist & resume it
     try{ const _ck=tutChapKey(secId); if(!localStorage.getItem(_ck)){ const _es=tutGameSnapshot(); if(_es) localStorage.setItem(_ck, _es); } }catch(e){}   // capture THIS chapter's entry board once so a later replay restores exactly this starting point
@@ -20472,6 +20619,7 @@ function tutEnd(){
   tutClearAdvance();
   if(tut.esc){ document.removeEventListener('keydown', tut.esc, true); tut.esc=null; }
   tut.active=false; tut.secId=null; tut.steps=[]; tut.idx=-1; tut._dlMode=null;
+  tutPanelRun=false; tutPanelFollow();  // v2.6.188: the player's own panel comes back -- unless the 'Continue?' prompt holds it (tutPanelBridge)
   if(tut._offSetupWas!==undefined){ const _c=$('#offSetup'); if(_c) _c.checked=tut._offSetupWas; tut._offSetupWas=undefined; }   // v2.6.186: lob-setup switched Suggested table setup off for the tutorial's own table -- the next Play offline finds the box as the player left it
   const L=$('#tutLayer'); if(L) L.classList.remove('on');
   const fxT=$('#cardFxTop'); if(fxT) fxT.innerHTML='';   // clear the top-level tutorial clone host
@@ -20748,6 +20896,7 @@ function tutFinishSection(){
   const secId=tut.secId;
   const sec=TUT_SECTIONS[secId];
   const name=sec?sec.name:'';
+  tutPanelBridge=!!tutNextReady(secId);       // v2.6.188: the full panel holds across 'Continue to the next section?' -- the board does not switch to the player's own panel behind the prompt and back
   tutEnd();                                   // tear down first so the dim is gone behind any prompt
   if(typeof endYourTurn==='function'){ try{ endYourTurn(); }catch(e){} }   // clear a just-fired "Your turn" cue (e.g. lobby Start) so it does not sit behind the next-section prompt
   tutMarkDone(secId);
@@ -20757,8 +20906,10 @@ function tutFinishSection(){
     const nextName=TUT_SECTIONS[nextId].name;
     uiConfirm('Section complete: '+name+'.\n\nContinue to the next section, '+nextName+'?', 'Tutorial')
       .then(function(yes){
-        if(yes){ tutLaunch(nextId); }
-        else { closeOverlay(); toast('Tutorial section complete: '+name+'  \u2713'); }   // done -> close Deck Lab, back to start
+        try{
+          if(yes){ tutLaunch(nextId); }
+          else { closeOverlay(); toast('Tutorial section complete: '+name+'  \u2713'); }   // done -> close Deck Lab, back to start
+        } finally { tutPanelBridge=false; tutPanelFollow(); }   // v2.6.188: a section that started holds the panel itself (tutPanelRun); otherwise the player's own comes back
       });
   } else {
     closeOverlay();                                          // no further section -> close Deck Lab / Import, reveal the start screen

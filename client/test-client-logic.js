@@ -7512,6 +7512,196 @@ testB('v2.6.187 LIVE: the ring\'s Bounce, read by REAL bots through the bridge -
   } finally { for (const u of [vb, hb]){ try { u.out = true; if (u.pending) u._clearPending && u._clearPending('test end'); } catch (_e){} } A.localTable = false; T.HB.reset([]); }
 });
 
+/* ---------- v2.6.188: THE RING AT THE POINTER (Johan, 24 Nov: a long right-click opens the bot ring; rebindable in Settings) ---------- */
+function holdEv(over){   // a mouse event at the table that records what the engine does with it
+  return Object.assign({ button: 2, buttons: 2, pointerType: 'mouse', pointerId: 7, clientX: 600, clientY: 400, isTrusted: true, prevented: 0, stopped: 0,
+    preventDefault(){ this.prevented++; }, stopImmediatePropagation(){ this.stopped++; } }, over || {});
+}
+function holdTarget(also){   // an element inside #tableArea; also: one more selector it sits in (a text field, a menu...)
+  return { isConnected: true, sent: [], dispatchEvent(e){ this.sent.push({ type: e.type, x: e.clientX, y: e.clientY }); return true; },
+    closest(q){ if (q === '#tableArea') return {}; if (also && q.split(',').map(x => x.trim()).includes(also)) return {}; return null; } };
+}
+const onSeg = id => ({ closest: q => q === '#botRing .brS' ? { getAttribute: () => id } : null });   // a release over a segment of the ring
+function holdTable(A){   // a hotseat with bots this tab runs, and a ring element the engine can draw into
+  const T = ringTable(A); A.toast = () => {};
+  A.hotBots[2] = { status: () => ({ name: 'Viktor', state: 'idle' }), step: () => ({}), _handlers: {} };
+  const ring = fakeEl(), svg = fakeEl(); ring.q.svg = svg; ring.q['#botRingLbl'] = fakeEl(); A.__doc._ids.botRing = ring;
+  return { T, svg, done(){ try { A.botRingClose(); A.rholdReset(); } catch (_e){} delete A.hotBots[2]; delete A.__doc._ids.botRing; A.localTable = false; T.HB.reset([]); } };
+}
+test('v2.6.188 THE RING AT THE POINTER, macOS and Linux (the contextmenu comes at the PRESS): a short right-click is held back and handed to its menu at the release, at the press point; a 450 ms hold opens the ring where the pointer is, 90 px from the edges, its centre the gear, and the menu never comes', () => {
+  const A = loadClient(CLIENT); const H = holdTable(A);
+  try {
+    eq(A.RHOLD_MS, 450, 'the touch engine\'s long-press'); eq(A.botBtnWanted(), true, 'a table with bots');
+    let tg = holdTarget(); A.rholdDown(holdEv({ target: tg }));
+    let cm = holdEv({ target: tg }); A.rholdCM(cm); eq(cm.prevented, 1, 'the press\'s contextmenu is held back'); eq(cm.stopped, 1, 'before any menu handler sees it');
+    A.rholdUp(holdEv({ target: tg, buttons: 0 }));
+    eq(JSON.stringify(tg.sent), JSON.stringify([{ type: 'contextmenu', x: 600, y: 400 }]), 'the release hands it to its menu, at the press point'); eq(A.bring.open, false, 'no ring');
+    const ours = holdEv({ isTrusted: false, target: tg }); A.rholdCM(ours); eq(ours.prevented, 0, 'that dispatch passes (and the touch engine\'s)');
+    tg = holdTarget(); A.rholdDown(holdEv({ target: tg, clientX: 30, clientY: 20 }));
+    cm = holdEv({ target: tg, clientX: 30, clientY: 20 }); A.rholdCM(cm);
+    A.rholdFire();
+    eq(A.bring.open, true, 'the hold opens the ring'); eq(A.bring.free, true, 'at the pointer, not at the hub');
+    eq(JSON.stringify(A.bring.at), JSON.stringify({ x: 90, y: 90 }), '90 px from the edges, as the hub');
+    assert(/class="brC"/.test(H.svg.innerHTML) && /aria-label="Bot settings"/.test(H.svg.innerHTML), 'its centre is the gear');
+    A.rholdUp(holdEv({ target: tg, buttons: 0, clientX: 30, clientY: 20 }));
+    eq(tg.sent.length, 0, 'its menu never comes'); eq(A.rhold.swallowUntil, 0, 'nothing left to swallow: its contextmenu came at the press');
+    const next = holdEv({ target: tg }); A.rholdCM(next); eq(next.prevented, 0, 'the next right-click is its own');
+    eq(A.bring.open, true, 'released off a segment: the ring stays for a click');
+  } finally { H.done(); }
+});
+test('v2.6.188 the same on Windows (the contextmenu comes at the RELEASE): a short right-click passes untouched; after a hold the release\'s contextmenu is swallowed, once; a hold released on a segment picks it (a pie menu\'s flick), on a branch opens it', () => {
+  const A = loadClient(CLIENT); const H = holdTable(A), T = H.T;
+  try {
+    const tg = holdTarget();
+    A.rholdDown(holdEv({ target: tg })); A.rholdUp(holdEv({ target: tg, buttons: 0 }));
+    let cm = holdEv({ target: tg }); A.rholdCM(cm); eq(cm.prevented, 0, 'a short right-click: its own contextmenu, untouched'); eq(tg.sent.length, 0, 'nothing dispatched');
+    A.rholdDown(holdEv({ target: tg })); A.rholdFire(); eq(A.bring.open, true);
+    A.rholdUp(holdEv({ target: tg, buttons: 0 })); assert(A.rhold.swallowUntil > Date.now(), 'its contextmenu is still to come');
+    cm = holdEv({ target: tg }); A.rholdCM(cm); eq(cm.prevented + cm.stopped, 2, 'swallowed');
+    const cm2 = holdEv({ target: tg }); A.rholdCM(cm2); eq(cm2.prevented, 0, 'once');
+    A.botRingClose();
+    T.clear(); A.rholdDown(holdEv({ target: tg })); A.rholdFire();
+    A.rholdUp(holdEv({ buttons: 0, target: onSeg('yes') }));
+    eq(A.bring.open, false, 'the pick closes the ring'); eq(T.got[2].filter(m => m.t === 'say').map(m => A.SAY[m.i]).join(), 'Yes', 'and says Yes to every bot');
+    A.rholdDown(holdEv({ target: tg })); A.rholdFire();
+    A.rholdUp(holdEv({ buttons: 0, target: onSeg('act') }));
+    eq(A.bring.open, true, 'released on a branch: it opens'); eq(A.bring.path.join(), 'act');
+  } finally { H.done(); }
+});
+test('v2.6.188 the hold is the table\'s, at a table with bots, for a mouse, and Settings switches it off: nothing without bots, when off, with the left button, a touch or a pen, in a text field, a menu, a dialog or outside the table (the side panel, the chat); a press that moves is no hold (its release opens the menu); a button let go outside the window ends it', () => {
+  const A = loadClient(CLIENT); const T = ringTable(A);
+  try {
+    const tg = holdTarget();
+    eq(A.rholdArmable(holdEv({ target: tg })), false, 'no bots this tab runs');
+    A.hotBots[2] = { status: () => ({ name: 'Viktor', state: 'idle' }), step: () => ({}), _handlers: {} };
+    eq(A.rholdArmable(holdEv({ target: tg })), true, 'a table with bots');
+    eq(A.rholdArmable(holdEv({ target: tg, button: 0 })), false, 'the left button');
+    for (const pt of ['touch', 'pen']) eq(A.rholdArmable(holdEv({ target: tg, pointerType: pt })), false, pt + ': the touch long-press stays the menu');
+    for (const sel of ['input', 'textarea', '[contenteditable]', '#menu', '#submenu', '#ctStepper']) eq(A.rholdArmable(holdEv({ target: holdTarget(sel) })), false, sel);
+    eq(A.rholdArmable(holdEv({ target: { closest: () => null } })), false, 'outside the table');
+    A.conv.botRingHold = 'off'; eq(A.rholdArmable(holdEv({ target: tg })), false, 'Settings: Off'); A.conv.botRingHold = 'right';
+    A.rholdDown(holdEv({ target: tg })); const cm = holdEv({ target: tg }); A.rholdCM(cm);
+    A.rholdMove(holdEv({ clientX: 620, clientY: 400 })); eq(A.rhold.t, 0, 'moved 20 px: no hold');
+    A.rholdFire(); eq(A.bring.open, false, 'even when its timer fires');
+    A.rholdUp(holdEv({ target: tg, buttons: 0 })); eq(tg.sent.length, 1, 'its release opens the menu');
+    const tg2 = holdTarget(); A.rholdDown(holdEv({ target: tg2 })); A.rholdCM(holdEv({ target: tg2 }));
+    A.rholdMove(holdEv({ buttons: 0 })); eq(A.rhold.down, null, 'a move with the button up ends it'); eq(tg2.sent.length, 1, 'and hands on the menu it held back');
+    const off = holdEv({ target: tg }); A.conv.botRingHold = 'off'; A.rholdDown(holdEv({ target: tg })); A.rholdCM(off); eq(off.prevented, 0, 'Off: the contextmenu is never touched'); A.conv.botRingHold = 'right';
+  } finally { A.rholdReset(); delete A.hotBots[2]; A.localTable = false; T.HB.reset([]); }
+});
+test('v2.6.188 Settings: Bot ring at the pointer -- Hold the right mouse button (the default) or Off; stored, read back and imported; part of the profile (Reset restores it)', () => {
+  const A = loadClient(CLIENT), html = require('fs').readFileSync(CLIENT, 'utf8');
+  eq(A.CONV_DEFAULTS.botRingHold, 'right'); assert(A.SETTINGS_CONV_KEYS.includes('botRingHold'), 'in the profile');
+  assert(/<select id="convBotRingHold"><option value="right">Hold the right mouse button<\/option><option value="off">Off<\/option><\/select>/.test(html), 'the row');
+  assert(html.indexOf("$('#convBotRingHold')?.addEventListener('change',e=>{ conv.botRingHold=(e.target.value==='off')?'off':'right'; saveConv(); });") > 0, 'a change is saved');
+  assert(html.indexOf("if(s.botRingHold==='right'||s.botRingHold==='off') conv.botRingHold=s.botRingHold;") > 0 && html.indexOf("if(c.botRingHold==='right'||c.botRingHold==='off') conv.botRingHold=c.botRingHold;") > 0, 'read back at start, and from an imported settings file');
+  assert(html.indexOf("{ const _rh=$('#convBotRingHold'); if(_rh) _rh.value=conv.botRingHold; }") > 0, 'the dialog shows the stored choice');
+  A.conv.botRingHold = 'off'; eq(JSON.stringify(A.settingsDiff(A.settingsProfile(), A.settingsDefaults('full'))), JSON.stringify(['conv.botRingHold']), 'Off is a deviation Reset undoes'); A.conv.botRingHold = 'right';
+});
+test('v2.6.188 the key: "Bot ring at the pointer" is in the key list, unbound -- a trackpad player binds one; it opens the ring where the mouse last was, and the key again shuts it; it is left to the browser at a table without bots', () => {
+  const A = loadClient(CLIENT); const H = holdTable(A);
+  try {
+    const a = A.ACTIONS.find(x => x.id === 'botRing'); assert(a, 'in the list');
+    eq(a.def, ''); eq(a.grp, 'adv'); eq(a.nav, true, 'not an undo point'); eq(A.keyBinds.botRing, '', 'unbound');
+    eq(a.when(), true);
+    A.keyBinds.botRing = 'Q'; A.rebuildKeymap();
+    A.botPtrNote({ pointerType: 'touch', clientX: 10, clientY: 10 }); A.botPtrNote({ pointerType: 'mouse', clientX: 500, clientY: 300 });
+    const ev = key => ({ key, target: { matches: () => false }, preventDefault(){} });
+    eq(A.keyDispatch(ev('q')), true); eq(A.bring.open, true); eq(A.bring.free, true); eq(JSON.stringify(A.bring.at), '{"x":500,"y":300}', 'where the mouse was (a touch is no pointer to aim at)');
+    eq(A.keyDispatch(ev('q')), true); eq(A.bring.open, false, 'the key again shuts it');
+    delete A.hotBots[2]; eq(a.when(), false, 'no bots: the key is not taken');
+  } finally { H.done(); }
+});
+test('v2.6.188 a ring at the pointer leaves the hub a robot; its centre gear opens the bot box beside it (the hub\'s gear beside the hub); a click on the hub while it stands brings the ring home', () => {
+  const A = loadClient(CLIENT), html = require('fs').readFileSync(CLIENT, 'utf8'); const H = holdTable(A);
+  const { box, done } = fakeHubBox(A);
+  try {
+    A.botPanelOpen = false;
+    eq(A.botRingOpenAt(700, 500), true); eq(A.botHubState([]).open, false, 'the hub stays a robot (its ring is not open)');
+    A.botRingGear(); eq(A.bring.open, false, 'the gear closes the ring'); eq(JSON.stringify(A.botBoxAt), '{"x":700,"y":500}', 'and opens the box there');
+    eq(box.style.left, (700 - 40 - 300) + 'px', 'beside the ring\'s centre, toward the table'); eq(box.style.top, (500 - 28) + 'px');
+    A.botPanelToggle(); eq(A.botBoxAt, null, 'shut: the place is forgotten');
+    A.botPanelToggle(); eq(A.botBoxAt, null, 'the hub\'s gear: beside the hub');
+    A.botPanelToggle();
+    assert(/if\(!_bring\.open \|\| _bring\.free\)\{ botRingOpen\(d\.t==='mouse' \? 'hover' : 'tap'\); return; \}/.test(html), 'the hub\'s click brings a ring at the pointer home');
+    assert(/t\.closest\('#botRing \.brS, #botRing \.brC'\) \|\| \(!_bring\.free && t\.closest\('#hotBotBtn'\)\)/.test(html), 'and the hub keeps no ring at the pointer open by being hovered');
+    assert(/\['Hold the right button \(tables with bots\)'/.test(html), 'the Controls list says it');
+  } finally { done(); H.done(); }
+});
+test('v2.6.188 the bot box can hide the hub (Johan: "toggla i bottkugghjulet om man vill dölja ikonen ... så man bara kör på långklicket") -- hidden it takes no pointer and no Tab and the ring opens at the pointer; it comes out by itself while the table waits on this screen (a bot asks you, a bleed at you, Turn-based\'s play button) and while its own ring is open; never on a touch screen, nor with the hold off and no key bound; saved with the settings', () => {
+  const A = loadClient(CLIENT), html = require('fs').readFileSync(CLIENT, 'utf8'); const H = holdTable(A);
+  const { hub, done } = fakeHubBox(A);
+  try {
+    if (typeof A.botHubHideWhy !== 'function') throw new Error('botHubHideWhy missing (v2.6.188 before the hide)');
+    eq(A.CONV_DEFAULTS.botHubHide, false, 'shown by default'); assert(A.SETTINGS_CONV_KEYS.includes('botHubHide'), 'in the profile');
+    eq(A.botHubState([]).away, false, 'not hidden unless asked');
+    A.conv.botHubHide = true;
+    eq(A.botHubHideWhy(), '', 'a mouse and the hold on: it may hide');
+    let hs = A.botHubState([]); eq(hs.away, true, 'hidden while nothing waits');
+    A.botHubPaint(hub, hs); assert(hub.classList.contains('away'), 'painted away'); eq(hub.tabIndex, -1, 'and out of the Tab order');
+    hs = A.botHubState([{ key: 'B2', bot: {}, st: { name: 'Viktor', step: 'resolve-pq', waitingFor: 'pool question (You)', canStep: true } }]);
+    eq(hs.wait, true); eq(hs.away, false, 'a bot asks you: the hub is out, glowing');
+    A.botHubPaint(hub, hs); assert(!hub.classList.contains('away'), 'painted back'); eq(hub.tabIndex, 0, 'and in the Tab order');
+    A.net.turnSeat = 2; A.bleedInTrack('Viktor', RING_BLEED); eq(A.botHubState([]).away, false, 'a bleed aimed at you: out'); A.bleedIn = null; A.net.turnSeat = 1;
+    const own = [{ key: 'B2', bot: {}, st: { name: 'Viktor', step: 'resolve-ask', waitingFor: 'its turn', canStep: true } }];
+    eq(A.botHubState(own).away, true, 'a steppable bot waiting on nobody here, at Standard: still hidden');
+    H.T.HB.botcfgIn('You', { tempo: 'turn' }); hs = A.botHubState(own);
+    eq(hs.give, true); eq(hs.away, false, 'Turn-based: the play button lives on the hub, so the hub is out');
+    H.T.HB.botcfgIn('You', { tempo: 'standard' });
+    Object.assign(A.bring, { open: true, free: false }); eq(A.botHubState([]).away, false, 'its own ring open: out (a ring opened at the hub while it waited)');
+    A.bring.free = true; eq(A.botHubState([]).away, true, 'a ring at the pointer: the hub stays hidden'); A.bring.open = false; A.bring.free = false;
+    A.conv.botRingHold = 'off'; assert(/Bot ring at the pointer/.test(A.botHubHideWhy()), 'the hold off and no key: no way in -- ' + A.botHubHideWhy());
+    eq(A.botHubState([]).away, false, 'so the hub stays');
+    assert(/id="botHubHide" checked disabled/.test(A.botHubHideHtml()), 'the box shows the choice, greyed, with the reason');
+    A.keyBinds.botRing = 'Q'; eq(A.botHubHideWhy(), '', 'a key bound: a way in again'); eq(A.botHubState([]).away, true);
+    A.keyBinds.botRing = ''; A.conv.botRingHold = 'right';
+    A.conv.touchUI = 'on'; assert(/touch screen/.test(A.botHubHideWhy()), 'a touch screen: a long press is its right-click'); eq(A.botHubState([]).away, false); A.conv.touchUI = 'auto';
+    assert(/<input type="checkbox" id="botHubHide" checked style/.test(A.botHubHideHtml()), 'the box\'s row, ticked');
+    A.conv.botHubHide = false; assert(/<input type="checkbox" id="botHubHide" style/.test(A.botHubHideHtml()), 'and unticked');
+    A.conv.botHubHide = true; eq(JSON.stringify(A.settingsDiff(A.settingsProfile(), A.settingsDefaults('full'))), JSON.stringify(['conv.botHubHide']), 'a deviation Reset undoes'); A.conv.botHubHide = false;
+    assert(html.indexOf("const hh=box.querySelector('#botHubHide'); if(hh) hh.onchange=()=>{ conv.botHubHide=!!hh.checked; saveConv(); botPanelRender(); };") > 0, 'the box saves a change and repaints');
+    assert(html.indexOf("+'|'+(conv.botHubHide?1:0)+botHubHideWhy();") > 0, 'and rebuilds when the choice or its reason changes (a box is rebuilt only on a new signature)');
+    assert(html.indexOf("if(typeof s.botHubHide==='boolean') conv.botHubHide=s.botHubHide;") > 0 && html.indexOf("if(typeof c.botHubHide==='boolean') conv.botHubHide=c.botHubHide;") > 0, 'read back at start, and from an imported settings file');
+    assert(html.indexOf('#hotBotBtn.away{ opacity:0; pointer-events:none }') > 0, 'hidden: no pointer (a click reaches the table), still focusable (the key\'s ring is walked from it)');
+  } finally { done(); H.done(); }
+});
+
+testA('v2.6.188 the tutorial plays on the full panel (Johan: with the discreet panel chosen the tutorial used it, and its steps point at the dock) -- a chapter holds it, across the "Continue?" prompt between chapters too, with the mode button hidden; the choice itself is never written, and it is back when the tutorial ends, at End tutorial, and at a No between chapters', async () => {
+  const A = loadClient(CLIENT), html = require('fs').readFileSync(CLIENT, 'utf8');
+  const CLS = A.__stubEl.classList._t, mode = fakeEl(); A.__doc._ids.l2dockMode = mode;   // no guard: an older client runs this and fails on what it does (v2.6.187: rimOn() stays on in a chapter)
+  const hadW = 'innerWidth' in globalThis, W0 = globalThis.innerWidth, H0 = globalThis.innerHeight;
+  globalThis.innerWidth = 1500; globalThis.innerHeight = 900;   // the tutorial's bubble reads the bare window size
+  let answer = null; A.uiDialog = () => new Promise(r => { answer = r; }); A.toast = () => {};
+  const tick = () => new Promise(r => setTimeout(r, 0));
+  try {
+    CLS.add('l4mode'); A.conv.handRim = 'rim'; A.rimModeUI();
+    eq(A.rimOn(), true, 'outside the tutorial: the discreet panel, as chosen'); assert(mode.style.display !== 'none', 'with its button');
+    A.TUT_SECTIONS.__a = { name: 'A', steps: [{ id: 'a1', place: 'center', text: 'a' }] };
+    A.TUT_SECTIONS.__b = { name: 'B', steps: [{ id: 'b1', place: 'center', text: 'b' }] };
+    A.TUT_ORDER.push('__a', '__b');
+    A.tutStart('__a');
+    eq(A.tut.active, true); eq(A.rimOn(), false, 'a chapter: the full panel'); eq(mode.style.display, 'none', 'no mode button while it holds');
+    eq(A.conv.handRim, 'rim', 'the choice is not written');
+    A.tutFinishSection();
+    eq(A.tut.active, false); eq(A.tutPanelBridge, true); eq(A.rimOn(), false, 'held across "Continue to the next section?" -- nothing switches behind the prompt');
+    answer(true); await tick();
+    eq(A.tut.secId, '__b', 'Yes: the next chapter'); eq(A.tutPanelBridge, false); eq(A.rimOn(), false, 'which holds it itself');
+    A.tutFinishSection();
+    eq(A.tutPanelBridge, false, 'the last chapter: no prompt to hold across'); eq(A.rimOn(), true, 'the tutorial is over: the discreet panel again'); eq(mode.style.display, '', 'and its button');
+    A.tutStart('__a'); A.tutFinishSection(); answer(false); await tick();
+    eq(A.tut.active, false); eq(A.rimOn(), true, 'No at the prompt: the player\'s own panel'); eq(A.tutPanelBridge, false);
+    A.tutStart('__a'); eq(A.rimOn(), false); A.tutEnd(); eq(A.rimOn(), true, 'End tutorial: back at once');
+    A.conv.handRim = 'dock'; A.tutStart('__a'); eq(A.rimOn(), false); A.tutEnd(); eq(A.rimOn(), false, 'a player on the full panel sees no change');
+    eq(A.conv.handRim, 'dock');
+    assert(/function rimOn\(\)\{ return l4on\(\) && conv\.handRim==='rim' && !tutPanelFull\(\); \}/.test(html) && !/function rimOn\(\)\{[^}]*\btut\./.test(html), 'rimOn reads the two flags, never `tut` (layout() runs before the tutorial object exists)');
+    assert(html.indexOf('let tutPanelRun=false, tutPanelBridge=false;') > 0 && html.indexOf('let tutPanelRun=false, tutPanelBridge=false;') < html.indexOf('function rimOn(){'), 'declared early');
+    assert(html.indexOf("rimSync();\n      if(was) setL2Dock(false);") > 0, 'from the pockets the dock is left closed, as a chapter expects it (the switch itself is a browser check)');
+  } finally {
+    CLS.delete('l4mode'); delete A.__doc._ids.l2dockMode;
+    if (hadW){ globalThis.innerWidth = W0; globalThis.innerHeight = H0; } else { delete globalThis.innerWidth; delete globalThis.innerHeight; }
+  }
+});
+
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

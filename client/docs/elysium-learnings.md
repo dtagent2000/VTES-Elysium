@@ -1,8 +1,28 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.187 / server v2.6.53 / bot v0.6.236 tested beside the suite, last updated 24 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.188 / server v2.6.53 / bot v0.6.236 tested beside the suite, last updated 24 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**24 Nov 2026, evening, later (THE RING AT THE POINTER — v2.6.188):**
+- **The right button's `contextmenu` has no fixed moment.** macOS and Linux send it at the press, Windows at the release.
+  A gesture that must tell a short right-click from a long one therefore holds back what the press already started and
+  hands it on at the release. The touch long-press engine had solved the same problem: dispatch a genuine
+  `contextmenu` at the press point, so every menu handler runs unchanged. Write both orders as tests with fake events,
+  because a browser on one OS only ever shows one of them.
+- **A gesture added to a shared input gets a narrow gate.** Only where it is wanted (tables with bots, the table area,
+  a mouse), never where the old behaviour is the point (text fields keep the native menu, touch keeps its long-press),
+  and a setting to switch it off. The only cost left is the menu opening at the release on macOS and Linux, and Off
+  removes it.
+- **A control a player may hide needs a way in and a way back.** The hub hides only while the ring at the pointer can be
+  opened (the hold on, or a key bound, and never on touch), and it comes back by itself whenever the table waits on the
+  player: a question, a bleed, Turn-based's play button. Hidden is `opacity:0; pointer-events:none` and out of the Tab
+  order, but still focusable, so the keyboard path that focuses it keeps working.
+- **A tutorial that teaches the default layout holds it without touching the player's choice.** The override is read
+  where the choice is read (`rimOn()`), from flags that live while a chapter runs and across the prompt between two
+  chapters, so the board does not switch behind the prompt and back. Declare such flags early: a function that
+  `layout()` calls can run before a `const` further down the file exists, and reading it there is a TDZ error that kills
+  the page.
 
 **24 Nov 2026, evening (THE BOT RING — v2.6.187):**
 - **What grows into place takes clicks where it is drawn on the way.** The ring's groups unfold from scale .72, and at
