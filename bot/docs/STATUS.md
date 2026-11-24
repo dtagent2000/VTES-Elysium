@@ -20,7 +20,7 @@ PASS 6/6. The predictions (D-93): the CHANGELOG. v0.6.237's gates: its entry.
 1. **The chat round** (BOARD; D-136): Johan on O-50 (24 Nov, RULINGS): bubbles; whether shorter he asked Claude. Claude's
    answer (one speaker at a time, the content kept) waits for his kör. Then the recorder, the chat tool, the lines ruled with
    him. `askHumansTotal` (C5) belongs near it.
-2. The sweep register (D-135): its active entries (7.1, 7.2, 8.3, 11.1, 14.1, 14.2), not in v0.6.237 or v0.6.238 (Johan's
+2. The sweep register (D-135): its active entries (7.1, 7.2, 8.3, 11.1, 14.1–14.3), not in v0.6.237 or v0.6.238 (Johan's
    playtest, then his go on Dreams; Claude took no other entry in): the next round's unless he says otherwise (asked); class 1
    (R-47); 4.6's onward bounce, missed.
 3. v2.6.187 consumed: the guide's hub, ring and bot box (main's ask 2), the read-only copies refreshed. And

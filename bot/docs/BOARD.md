@@ -60,8 +60,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 
 ## The sweep register (D-135): `SWEEP-REGISTER.md` by class; a round takes one; *done when* its class is empty
 - **The active entries** (7.1 Aire of Elation and 7.2 The Warrens: a printed +1 dropped; 8.3 Bait and Switch by a non-baron;
-  11.1 Revelations' predator never asked; 14.1 a replacement and 14.2 a hand size drawn late): rules broken in the 240 or a smoke, so they go in the
-  next release (D-135; v0.6.237–238 were Johan's detours: STATUS). The missed
+  11.1 Revelations' predator never asked; 14.1–14.3 replacements and hand sizes): rules broken in the 240 or a smoke, so they go in
+  the next release (D-135; v0.6.237–238: Johan's playtest, his go on Dreams: STATUS). The missed
   options (4.6 the onward bounce, 5.2 the .44 Magnum's maneuver, 8.6 Freak Drive after a failed referendum, 9.8 Form of Mist's
   continue, 10.1 Faceless Night [OBF], 10.2 burning another's card, 12.2 Precognition and Spirit's Touch [AUS]) wait in their
   classes unless Johan sends them with the active ones (asked: STATUS).
@@ -79,7 +79,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **11. Windows: who is asked, and when.**
 - **12. Combat's steps** (C2's neighbours).
 - **13. Choices around a card**: Claude's priors, each a design to Johan first (D-87).
-- **14. Hand size and replacement** (14.1 and 14.2 active: the next release).
+- **14. Hand size and replacement** (14.1–14.3 active: the next release).
 
 ## Known, not built (bot side)
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only

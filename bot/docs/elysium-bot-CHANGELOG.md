@@ -341,7 +341,7 @@
     `lock-income` decisions name it, and some copies burn at their third counter. Malkavian's VP/match falls, by at most 0.2 (the
     hosted card paid at most 469 pool over the 104 placements, 4.5 a placement, which three locks replace; likely within the noise,
     2 SE ≈ 0.16). `ana-gates.py` PASS, zeroPool 0.
-    *Observed* (the 240 against v0.6.237, the version string normalized): IDENTICAL 135, SAME-PLAY 9, DIVERGED 96, every
+    *Observed* (the first bytes `1cf70697`' 240 against v0.6.237, the version string normalized): IDENTICAL 135, SAME-PLAY 9, DIVERGED 96, every
     divergence from malkavian's first `lock-income` on Dreams; no `income-host` row names it; 242 locks in 96 matches (a blood to
     an uncontrolled vampire 158, the Edge's pool 62, the hand size 22), 66 copies burned at their third counter, none locked a
     fourth time; malkavian 1.73 → 1.63 VP/match (−0.10, paired SE 0.06, 95 % [−0.21, +0.01]; wins 107 → 97), ventrue +0.11
@@ -355,7 +355,9 @@
     in a board and its pub with its zone changed, and counted as in play, so a burned Dreams kept every later copy out for the game
     (sewer runs three). Registered, not fixed: 13.10 (above) and **14.1, active**: a card played in another seat's turn is
     replaced at the bot's own next flush (the first bytes' 240: 371 of 2,880 unlock snapshots of rounds 2–4 under 7 cards); pass 2
-    added **14.2, active**: a hand size raised in play (Elder Library) is drawn up only at the next turn start.
+    added **14.2, active**: a hand size raised in play (Elder Library) is drawn up only at the next turn start; pass 3 **14.3,
+    active**: the discard phase's replacement is drawn at once, outside the owed count, so Dreams' expiring +2 sheds one card too
+    few after a discard-phase action (4 of 20 reverts in the release bytes' 240; 10 malkavian turns over size follow).
   - *Prediction 2* (D-93; registered after pass 1, before the release bytes' 240): the hand count and the Unique gate are rules
     corrections. Against the first v0.6.238 bytes' 240 (`1cf70697`): DIVERGED only where malkavian draws up its hand size with a
     replacement owed (Elder Library's entry with a short hand at the next turn start: 19 matches; Dreams' hand-size lock under 7
@@ -367,7 +369,7 @@
     1 and 2 — the count read
     the owed card from the unlock snapshot's hand, but Elder Library's draw-up runs before the unlock phase, so a hand topped up to
     7 hid it (match 8: 6 in hand and 1 owed; 9 cards after, 8 now). No malkavian hand above 8 outside a turn of Dreams' +2, none
-    above 10 (109 and 5 in the first bytes); malkavian's VP/match flat, 1.63 → 1.64 (+0.01, SE 0.02), not the fall predicted;
+    above 10 (109 and 5 in the first bytes) — but 8 on a hand size of 7 after 4 reverts (14.3); malkavian's VP/match flat, 1.63 → 1.64 (+0.01, SE 0.02), not the fall predicted;
     `ana-gates.py` PASS 6/6. The mechanism held; the count and the VP's direction did not (a map, D-93). Against v0.6.237 (the
     version normalized): IDENTICAL 120, SAME-PLAY 8, DIVERGED 112, every divergence malkavian's; malkavian 1.73 → 1.64 (−0.09,
     paired SE 0.06), ventrue +0.12 (95 % [+0.02, +0.22]).
@@ -383,6 +385,10 @@
     holding a usable bounce bounces every bleed of 2 or more (345 of 345) and takes most bleeds of 1 (350 taken, 252 bounced: the
     reserve). No new target bounces onward (the 21 bleeds of 2 or more taken while holding a bounce were all new targets'): the
     register's 4.6, now counted (missed).
+  - *Egress*: 16 findings in 3 passes (half-done 5, stale-doc 6, unproven 3, rule-missed 2), 14 fixed, 2 listed — pass 3's half-done
+    (registered as 14.3) and its stale comments in the master phase's code (`known` "true for exactly Blood Doll/Vessel"; a comment
+    fix would move the release bytes after their gates: the next round that touches the master phase). Pass 3's fixes without a
+    fourth review (the loop's limit, D-133).
 - **v0.6.237 (24 Nov 2026; PR #103)** — The playtest round (RULINGS D-136): Johan's offline hotseat, four bots and a human, and his "Yes det
   mesta låter bra" on Claude's analysis, with his change on the bounce (read from chat, not the card). A scratch recording of a
   bots-only hotseat at the client's pace (paceMs 3100, askSecs 20, the four starters, 5 rounds) measured the chat for the next round.
