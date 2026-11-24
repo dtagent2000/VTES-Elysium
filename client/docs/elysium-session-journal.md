@@ -1,3 +1,60 @@
+## [BOTTRINGEN] (24 november 2026, kväll, klient v2.6.187 / srv-2.6.53 oförändrad)
+
+Johan: "en effektiv och modern bott-kontrollpanel istället för den vi har just nu". Robotansiktet skulle vara kvar men i
+en cirkel som varje spelare kan dra dit den vill, en segmenterad ring som fälls ut när man hovrar, och robotansiktet
+som blir ett kugghjul som öppnar bottinställningarna. Jag inventerade vad en människa säger till bottarna (de tio
+snabbfraserna, block-raden, Bleed-menyns rader och vad bottarnas status() väntar på) och föreslog en ring. Johans svar:
+Pass och It resolves blir två segment med domarklubban på It resolves, ringen bara vid bord med bottar, Bounce redan nu
+och 90 px marginal räcker. Sedan: "bounces" i stället för "redirects", eftersom Redirection är ett kort, och Bounce,
+Reduce och +Bleed samlade under en blodsdroppe där Reduce och +Bleed får 1/2/3/X. Jag lade till Bleed 1/2/3/X med den
+markerade minionen i droppen, och han sa "kör".
+
+Den blå panelen är borta. Navet är roboten i en mässingscirkel (#hotBotBtn). Den sparar sin plats i webbläsaren som
+avståndet från närmaste hörn, så den står kvar där när fönstret byter storlek, och håller sig 90 px från varje kant.
+Hovra (eller tryck på en pekskärm) och ring 1 fälls ut: Hold on (Release medan någon håller), Yes, No, Block och
+reaktion, Bleed, Pass och It resolves. Block och reaktion öppnar Block! (och vilken minion som blockerar), Any blocks?,
+No block, No reaction och Any reaction?. Blodsdroppen öppnar Bleed, +Bleed, Reduce och Bounce. Alla tio snabbfraser
+finns i ringen, en gång var, och går ut samma väg som förut. Minionraderna är menyernas egna: act() och dess syskon
+flyttade ut ur cardMenu till minionAct, minionBleed, minionBleedAdd och minionReduce, så meny och ring skriver samma
+rader. Ringen tänder det som bottarna väntar på enligt sin status() och det som en bleed mot dig tillåter. Navet glöder
+då och räknar bottarna som ett steg kan flytta. Ett segment som inte går att använda nu är grått och säger varför.
+Öppen är roboten ett kugghjul, och kugghjulet öppnar bottlådan: raderna, Run bot turns och inställningarna, som panelen
+hade dem. Turn-based-knappen sitter på navets kant. Lådan sparar sitt läge under en egen nyckel, så den som hade den
+gamla panelen öppen inte möts av en öppen låda.
+
+Bounce skriver tre saker: "NAME bounces the bleed to WHO." för människorna (ingen bottregex läser den), den agerande
+minionens bleed omannonserad mot WHO:s pool (samma form som en botts egen bounce) och sedan Pass. Klienten följer en
+bleed mot dig ur de frysta raderna (bleedIn). En omannonsering av samma minion mot ett nytt mål behåller sin aktör,
+och bleeden glöms vid It resolves, när den gått igenom, när ett block lyckas och vid nästa tur. PROTOCOL §12 har
+bouncens tre rader, och kanariefågeln v1.6.0 har en sektion 11 där en riktig agerande bot följer sin bleed och ett
+riktigt nytt mål beväpnar den från minionens ägare.
+
+Webbläsaren hittade tre saker som sviten inte såg. (1) Vid hemhörnet stack Block-grenens ring delvis utanför fönstret,
+och i hörnen upp till 52 px, eftersom ringen vreds för alla grenar på en gång. Nu glider varje solfjäder längs sin ring
+så lite som möjligt för att hålla sig inne, och ett test går igenom varje plats navet kan stå på i sex fönsterstorlekar.
+(2) Ett tryck på Reduce minskade bleeden med 3. Ring 3 växer fram från skala .72 och ligger under tillväxten precis över
+ring 2, så trycket landade på "−3". Nu tar en ring emot pekaren först när den har vuxit klart (170 ms), och ett tryck
+hovrar inte. Samma fälla fanns för en snabb musklickare. (3) Efter ett platsbesök stod navet kvar under Home-knappens
+plats, eftersom besöket tonar ut och navet placerades medan knappen fortfarande syntes. Nu placeras navet vid varje
+tick när ingen håller det och ringen är stängd.
+
+Sviten: nio gamla tester flyttade till nav och låda, elva nya, 421/0 med bot v0.6.236 bredvid. v2.6.186 får 401/20 mot
+den nya sviten. Tjugo mutanter fångades, fyra av dem för webbläsarfynden; en omritning av navet i 4 Hz-loopen fångades
+först efter en ny kontroll. Dispatch 103/0, protokoll 6/0, kanariefågel 247/0, endpoint 40/0, soak --control (utlöstes)
+och batteriet (7 bord, 98 turer, 0 fast), served-check 7/0, bottprojektets hotseat-grind i en skrapkopia 12/0, båda
+embed-kontrollerna, B1 byte-identisk. I Chromium: mus, alla fyra hörn utan ett segment utanför, en bleed som kommer
+medan ringen är öppen, bounce, besök, lådan, tangentbordet och pekskärm (emulerad). Med två riktiga bottar vid ett
+hotseatbord tände en botts blockfönster mot mig Block och reaktion, och navet glödde med räknare och ▶. En riktig botts
+bleed mot mig tände droppen, och när jag bouncade den med riktig mus till den andra botten gick den igenom där: det nya
+målet sa Pass, den agerande botten sa It resolves och skrev "The bleed goes through: Viktor, -1 pool", och min pool
+stod kvar.
+
+Osäkert och otestat: en riktig pekskärm (bara Chromiums emulering), Firefox och Safari, ett onlinebord i webbläsare och
+en hel match. Vid ett hotseatbord med flera människor skrivs Reduce i den aktiva spelarens namn
+på tråden, så en bot ignorerar den om den som blöds inte är den aktiva (som menyn redan gjorde); Bounce påverkas inte.
+Hjälpsidan Bots är bottprojektets text och beskriver fortfarande den gamla 🤖-panelen; det står i svaret till dem.
+Ikonerna kommer från Tabler Icons (MIT), med licenstexten bredvid i klienten och i README.
+
 ## [RUNDTUREN HINNER IKAPP] (24 november 2026, eftermiddag, klient v2.6.186 / srv-2.6.53 oförändrad, PR #101)
 
 Johan: "JAg tänkte om vi vill inventera och utvärdera vår tutorial eftersom vi fixat en del grejer och även kosmetiskt

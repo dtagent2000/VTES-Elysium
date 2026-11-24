@@ -2365,9 +2365,14 @@ test('v2.6.109: the panel shows and hides SYMMETRICALLY on both bot paths, and t
 });
 test('v2.6.109: the 4 Hz loop rebuilds the DOM only when the panel\'s SHAPE changes -- a plain tick never eats a click', () => {
   const html = require('fs').readFileSync(CLIENT, 'utf8');
-  const r = html.slice(html.indexOf('function botPanelRender(){'), html.indexOf('function botPanelRender(){') + 5000);
-  assert(/const sig=\(_botPanelOpen\?'o':'c'\)/.test(r), 'a shape signature (open state, rows, names, reasons, rungs, steppability, has-deadline)');
-  assert(/if\(el\._botSig===sig\)\{/.test(r), 'an unchanged shape short-circuits');
+  const r = html.slice(html.indexOf('function botPanelRender(){'), html.indexOf('function botBoxMount(){'));   // v2.6.187: the rows live in the bot box the hub's gear opens
+  assert(/const sig='o\|'\+rows\.map\(/.test(r), 'a shape signature (rows, names, reasons, rungs, steppability, has-deadline, the settings) -- v2.6.187: the box exists only open, so the open state left it');
+  assert(/if\(box\._botSig===sig\)\{/.test(r), 'an unchanged shape short-circuits');
+  const iPaint = r.indexOf('botHubPaint(hub, botHubState(rows));'), iShut = r.indexOf('if(!_botPanelOpen)');
+  assert(iPaint > 0 && iShut > iPaint, 'v2.6.187: the hub is painted every tick, box open or not');
+  const paint = html.slice(html.indexOf('function botHubPaint('), html.indexOf('function botHubMount('));
+  assert(!/\bel\.innerHTML=/.test(paint) && /face\.dataset\.ic!==face2/.test(paint), 'and IN PLACE -- classes, the count, the face only when it changes -- never rebuilt under the pointer');
+  assert(!/\bhub\.innerHTML\s*=/.test(r), 'the render loop never writes the hub\'s markup (it is built once, in botHubMount)');
   assert(/c\.textContent=botPanelCountdown\(r\.st\.until, now\)/.test(r), 'and only rewrites the countdown text in place');
   assert(/class="botPanelCd" data-i="'\+i\+'"/.test(r), 'the countdown span is addressable for that in-place update');
   const sigLine = r.slice(r.indexOf('const sig='), r.indexOf('\n', r.indexOf('const sig=')));
@@ -2425,12 +2430,13 @@ test('v2.6.112: a helper key the locked policy never mentions falls through to l
   eq(A.hx('on'), false);
   A.net.helperPolicy = null; A.net.status = 'off';
 });
-test('v2.6.112: the bot panel sits top-right, clear of the pool globe', () => {
-  const html = require('fs').readFileSync(CLIENT, 'utf8');
-  const at = html.indexOf("el.id='hotBotBtn'");
-  const css = html.slice(html.indexOf("cssText='", at) + 9, html.indexOf("';", html.indexOf("cssText='", at)));   // the STYLE STRING only -- the comment beside it says "was bottom:64px", and a prose match would read it (third time this session; match code, not words)
-  assert(/top:74px/.test(css), 'under the menu bar');
-  assert(!/bottom:/.test(css), 'and no longer anchored to the bottom, where a laptop viewport puts the pool globe over it');
+test('v2.6.112: the bot panel sits top-right, clear of the pool globe (v2.6.187: the bot hub -- each player may drag it; one nobody has moved stands top right, under the menu bar)', () => {
+  const A = loadClient(CLIENT);
+  eq(A.BRING_HOME.h, 'r', 'right'); eq(A.BRING_HOME.v, 't', 'anchored to the top -- not the bottom, where a laptop viewport puts the pool globe over it');
+  const c = A.botHubWanted(1280, 800);
+  eq(c.x, 1280 - A.BRING_HOME.x); eq(c.y, A.BRING_HOME.y);
+  assert(c.y - 28 >= 74, 'the 56 px hub stands under the menu bar (v2.6.112: top 74): its top edge at ' + (c.y - 28));
+  assert(c.y >= A.BRING_EDGE && 1280 - c.x >= A.BRING_EDGE, 'and its ring opens where it stands');
 });
 
 /* ---------- v2.6.113: WHOSE BUBBLE ---------- */
@@ -2533,8 +2539,9 @@ test('v2.6.115: a quick phrase, a played card and an announced action all end th
   const iCancel = fx.indexOf('dfxCancel()'), iAnim = fx.indexOf("if(animMode==='all') return;");
   assert(iCancel > -1 && iAnim > iCancel, 'the cancel sits ABOVE the animMode early-returns -- a player who renders no animations still gets it, and a remote fx cancels exactly as my own play does');
   assert(/kind==='play' \|\| \(kind==='lock' && opts\.verb && !\/\^by \/\.test\(String\(opts\.verb\)\)\)/.test(fx), "a bare Lock carries no verb and is not an answer; an announced action's clone always does");
-  const acts = html.slice(html.indexOf('const act=(verb,fxv,resolve=true'), html.indexOf('const act=(verb,fxv,resolve=true') + 1500);   // v2.6.137: the signature gained undir
-  assert((acts.match(/dfxCancel\(\)/g) || []).length >= 2, 'act() and actBleed() cancel locally too, for the autoLock-off case where no clone is emitted at all');
+  const acts = html.slice(html.indexOf('function minionAct('), html.indexOf('function minionBleedAdd('));   // v2.6.187: act() and actBleed() left cardMenu -- the bot ring announces through them too
+  assert((acts.match(/dfxCancel\(\)/g) || []).length >= 2, 'minionAct() and minionBleed() cancel locally too, for the autoLock-off case where no clone is emitted at all');
+  assert(html.indexOf('const act=(verb,fxv,resolve=true,undir=false)=>()=>minionAct(c, verb, fxv, resolve, undir);') > 0 && html.indexOf('const actBleed=n=>()=>minionBleed(c, n);') > 0, 'and the card menu goes through them');
   // and the resolver counters deliberately do NOT: a bot writes its stealth tally at every announce
   const tally = html.slice(html.indexOf('  tally(m){'), html.indexOf('  tally(m){') + 700);
   assert(!/dfxCancel/.test(tally), 'a tally is not evidence that anybody reacted');
@@ -2712,6 +2719,19 @@ test('v2.6.120: the four controls exist once under Table > Advanced, join the Li
 /* === v2.6.122: THE PARITY ROUND -- online <-> hotseat parity for bots (bot-project spec, 21 Sep 2026) === */
 function viaHB(HB, rec){   // v2.6.177: a fake seat's record READ through the bridge -- every queued hop is delivered first (hotBridge.flush), as a socket would have by the time anybody looks. The seat itself writes to the raw record, never through this
   return new Proxy(rec, { get(t, p){ if (typeof HB.flush === 'function') HB.flush(); return t[p]; } });   // a client before v2.6.177 delivers inside the send: nothing to flush
+}
+function fakeEl(){   // v2.6.187: a small element the hub and box tests read back -- classes, attributes, named children (q), the box's inline style
+  const cls = new Set(), attrs = {};
+  return { innerHTML: '', textContent: '', hidden: false, title: '', _botSig: null, dataset: {}, style: {}, q: {}, isConnected: true,
+    classList: { add: c => cls.add(c), remove: c => cls.delete(c), contains: c => cls.has(c), toggle(c, on){ if (on === undefined) on = !cls.has(c); if (on) cls.add(c); else cls.delete(c); return on; } },
+    setAttribute(k, v){ attrs[k] = String(v); }, getAttribute(k){ return k in attrs ? attrs[k] : null; },
+    querySelector(sel){ return this.q[sel] || null; }, querySelectorAll(){ return []; }, remove(){} };
+}
+function fakeHubBox(A){   // v2.6.187: the hub (painted in place: the face, the count, the play button) and the box the gear opens (the rows, the sweep, the settings)
+  const hub = fakeEl(), box = fakeEl();
+  ['.bhFace', '.bhCnt', '#botGiveWord'].forEach(sel => { hub.q[sel] = fakeEl(); });
+  A.__doc._ids.hotBotBtn = hub; A.__doc._ids.botBox = box;
+  return { hub, box, done(){ delete A.__doc._ids.hotBotBtn; delete A.__doc._ids.botBox; } };
 }
 function parityTable(A, names){   // names: [['You'], ['B2', true], ...] -> a local table with FAKE bridge seats that record what they are sent
   const HB = A.hotBridge, got = {}, raw = {};
@@ -3455,25 +3475,33 @@ test('v2.6.139 the badge: the bots this tab runs, or ANY seated human at an onli
   A.net.spect = true; eq(A.botBtnWanted(), false, 'a spectator watches');
   A.net.spect = false; A.net.roster = [{ seat: 1, name: 'Ann' }]; eq(A.botBtnWanted(), false, 'no bots, no badge');
   A.net.status = 'off'; A.net.roster = [];
-  // the render: a fake element catches the markup
-  const el = { innerHTML: '', _botSig: null, querySelector: () => null, querySelectorAll: () => [], remove(){} }; A.__doc._ids.hotBotBtn = el;
+  // the render (v2.6.187): the hub is painted in place, the box its gear opens holds the rows and the settings -- fake elements catch both
+  const { hub, box, done } = fakeHubBox(A);
   A.localTable = true; HB.reset([{ name: 'Lisa' }, { name: 'B2', bot: true }]); HB.seats[2] = { cb: { msg(){} }, name: 'B2' }; HB.botcfgIn('', A.BOTCFG0);
   const fake = { status: () => ({ name: 'B2', state: 'asking', waitingFor: 'block decision', until: null, step: 'resolve-ask', canStep: true }), step: () => ({ did: 'resolve-ask', why: 'window closed' }), _handlers: { tally(){}, say(){} } };
   A.hotBots[2] = fake;
   A.botPanelOpen = false; A.botPanelRender();
-  assert(/id="botCfgGear"/.test(el.innerHTML), 'the gear IN the Bot button (spec section 1)'); assert(!/id="botGiveWord"/.test(el.innerHTML), 'Standard: no give-the-word button');
+  eq(hub.q['#botGiveWord'].hidden, true, 'Standard: no give-the-word button'); eq(hub.q['.bhCnt'].textContent, '1', 'the hub counts the bots a step can move');
+  eq(box.style.display, 'none', 'the box stays shut until the gear opens it');
+  const rows = A.botPanelSeats().map(r => ({ key: r.key, bot: r.bot, st: A.botPanelRead(r.bot) }));
+  A.botHubPaint(hub, Object.assign({}, A.botHubState(rows), { open: true }));
+  eq(hub.q['.bhFace'].dataset.ic, 'gear', 'the open ring turns the robot into the gear (spec section 1: the gear opens the settings)'); eq(hub.getAttribute('aria-expanded'), 'true');
+  A.botHubPaint(hub, A.botHubState(rows)); eq(hub.q['.bhFace'].dataset.ic, 'robotFace', 'shut, the robot again');
   HB.botcfgIn('Lisa', { tempo: 'turn' }); A.botPanelRender();
-  assert(/id="botGiveWord"/.test(el.innerHTML), 'Turn-based + a bot waiting on a window: the play button beside the badge');
+  eq(hub.q['#botGiveWord'].hidden, false, 'Turn-based + a bot waiting on a window: the play button on the hub\'s rim');
+  A.botHubPaint(hub, Object.assign({}, A.botHubState(rows), { open: true })); eq(hub.q['#botGiveWord'].hidden, true, 'hidden while the ring is open (the ring is the answer then)');
+  A.botHubPaint(hub, A.botHubState(rows));
   let stepped = 0; fake.step = () => { stepped++; return { did: 'resolve-ask', why: 'window closed' }; };
   eq(A.botGiveWord(), 1, 'it steps the waiting bot'); eq(stepped, 1);
   fake.status = () => ({ name: 'B2', state: 'held', waitingFor: 'held by Lisa', until: null, step: 'release-hold', canStep: true });
   eq(A.botGiveWordWanted(), false, 'never a hold -- that is a human\'s pause, released by that human');
-  A.botPanelOpen = true; A.botCfgOpen = true; el._botSig = null; A.botPanelRender();
-  assert(/BOT SETTINGS/.test(el.innerHTML), 'the settings block'); assert(/data-t="turn" aria-pressed="true"/.test(el.innerHTML), 'the current tempo is pressed');
-  assert(/id="botCfgWait"[^>]*disabled/.test(el.innerHTML), 'Turn-based greys the wait slider');
-  assert(/does not read the tempo yet/.test(el.innerHTML), 'a bot file with no botcfg handler (bot <= v0.6.193) is named honestly -- its own clocks stay');
-  fake._handlers.botcfg = () => {}; el._botSig = null; A.botPanelRender(); assert(!/does not read the tempo yet/.test(el.innerHTML), '...and the line goes away for a bot that reads it');
-  delete A.hotBots[2]; A.localTable = false; HB.reset([]); delete A.__doc._ids.hotBotBtn;
+  A.botPanelOpen = true; box._botSig = null; A.botPanelRender();
+  eq(box.style.display, '', 'the gear opened the box');
+  assert(/BOT SETTINGS/.test(box.innerHTML), 'the settings block'); assert(/data-t="turn" aria-pressed="true"/.test(box.innerHTML), 'the current tempo is pressed');
+  assert(/id="botCfgWait"[^>]*disabled/.test(box.innerHTML), 'Turn-based greys the wait slider');
+  assert(/does not read the tempo yet/.test(box.innerHTML), 'a bot file with no botcfg handler (bot <= v0.6.193) is named honestly -- its own clocks stay');
+  fake._handlers.botcfg = () => {}; box._botSig = null; A.botPanelRender(); assert(!/does not read the tempo yet/.test(box.innerHTML), '...and the line goes away for a bot that reads it');
+  A.botPanelOpen = false; delete A.hotBots[2]; A.localTable = false; HB.reset([]); done();
   const h2 = (() => { A.net.status = 'in'; A.net.room = 'R'; A.net.srvV = '2.6.43'; A.net.roster = [{ seat: 1, name: 'Ann' }, { seat: 2, name: 'B2', bot: true }]; const x = A.botCfgHtml([]); A.net.status = 'off'; A.net.roster = []; return x; })();
   assert(!/disabled/.test(h2.replace(/id="botCfgWait"[^>]*>/, '')), 'a non-host human may press the tempo buttons');
 });
@@ -3485,19 +3513,19 @@ test('v2.6.140 bot v0.6.195\'s two new rungs: resolve-phase (an open combat step
     row('hold', 'release-hold', true), row('later', 'resolve-later', true), row('pacing', 'resolve-phase', false), row('none', null, true)];
   eq(A.botGiveWordTargets(rows).map(r => r.key).join(','), 'ask,pq,phase,vote,later', 'every steppable rung but a hold; a wait the bot will not let go of (canStep false) and a wait with no rung stay put');
   // the panel: a row's button reads its label off the rung, and in Turn-based the play button steps a bot that waits in a combat step
-  const el = { innerHTML: '', _botSig: null, querySelector: () => null, querySelectorAll: () => [], remove(){} }; A.__doc._ids.hotBotBtn = el;
+  const { hub, box, done } = fakeHubBox(A);   // v2.6.187: the rows are in the bot box, the play button on the hub
   A.localTable = true; HB.reset([{ name: 'Lisa' }, { name: 'B2', bot: true }]); HB.seats[2] = { cb: { msg(){} }, name: 'B2' }; HB.botcfgIn('', A.BOTCFG0); HB.botcfgIn('Lisa', { tempo: 'turn' });
   let stepped = 0;
   const fake = { status: () => ({ name: 'B2', state: 'waiting', waitingFor: 'combat step maneuvers (Lisa)', until: null, step: 'resolve-phase', canStep: true }),
     step: () => { stepped++; return { did: 'resolve-phase', why: 'closed the step' }; }, _handlers: { botcfg(){} } };
   A.hotBots[2] = fake;
-  A.botPanelOpen = true; A.botCfgOpen = false; A.botPanelRender();
-  assert(/Close step<\/button>/.test(el.innerHTML), 'the combat-step row says Close step');
-  assert(/id="botGiveWord"/.test(el.innerHTML), 'Turn-based + a bot waiting in a combat step: the play button is there (an allow-list of the first two rungs would hide it)');
+  A.botPanelOpen = true; A.botPanelRender();
+  assert(/Close step<\/button>/.test(box.innerHTML), 'the combat-step row says Close step');
+  eq(hub.q['#botGiveWord'].hidden, false, 'Turn-based + a bot waiting in a combat step: the play button is there (an allow-list of the first two rungs would hide it)');
   eq(A.botGiveWord(), 1, 'and it steps the combat step'); eq(stepped, 1);
-  fake.status = () => ({ name: 'B2', state: 'waiting', waitingFor: 'votes (Lisa)', until: null, step: 'resolve-vote', canStep: true }); el._botSig = null; A.botPanelRender();
-  assert(/Close poll<\/button>/.test(el.innerHTML), 'the vote-poll row says Close poll');
-  delete A.hotBots[2]; A.localTable = false; HB.reset([]); delete A.__doc._ids.hotBotBtn;
+  fake.status = () => ({ name: 'B2', state: 'waiting', waitingFor: 'votes (Lisa)', until: null, step: 'resolve-vote', canStep: true }); box._botSig = null; A.botPanelRender();
+  assert(/Close poll<\/button>/.test(box.innerHTML), 'the vote-poll row says Close poll');
+  A.botPanelOpen = false; delete A.hotBots[2]; A.localTable = false; HB.reset([]); done();
 });
 test('v2.6.140 the Stolen read-out follows bot v0.6.196\'s steal rule: a dodge OR a first-pair combat-ends strike stops the steal (as it stops the damage), in a later pair the first pair\'s steal stood; and Bot settings says the damage step waits once, a question in combat twice', () => {
   const A = loadClient(CLIENT);
@@ -4853,21 +4881,22 @@ test('v2.6.162 bot v0.6.204\'s new rung: resolve-verdict (a bot blocked YOUR act
   const A = loadClient(CLIENT); const HB = A.hotBridge;
   eq(A.BOT_STEP_LABEL['resolve-verdict'], 'Declare verdict', 'the label the bot project suggested');
   ['release-hold', 'resolve-ask', 'resolve-pq', 'resolve-phase', 'resolve-vote'].forEach(k => assert(A.BOT_STEP_LABEL[k] && A.BOT_STEP_LABEL[k] !== 'Declare verdict', 'every older rung keeps its own label: ' + k));
-  const el = { innerHTML: '', _botSig: null, querySelector: () => null, querySelectorAll: () => [], remove(){} }; A.__doc._ids.hotBotBtn = el;
+  const { hub, box, done } = fakeHubBox(A);   // v2.6.187: the rows are in the bot box, the play button on the hub
   A.localTable = true; HB.reset([{ name: 'Lisa' }, { name: 'B2', bot: true }]); HB.seats[2] = { cb: { msg(){} }, name: 'B2' }; HB.botcfgIn('', A.BOTCFG0); HB.botcfgIn('Lisa', { tempo: 'turn' });
   let stepped = 0;
   const fake = { status: () => ({ name: 'B2', state: 'asking', waitingFor: 'block verdict (Lisa)', until: null, step: 'resolve-verdict', canStep: true }),
     step: () => { stepped++; return { did: 'resolve-verdict', why: 'declared the block verdict from the counter the way the clock would have' }; }, _handlers: { botcfg(){} } };
   A.hotBots[2] = fake;
   try {
-    A.botPanelOpen = true; A.botCfgOpen = false; A.botPanelRender();
-    assert(/\u25b6 Declare verdict<\/button>/.test(el.innerHTML), 'the row says Declare verdict (v2.6.161: Step)');
-    assert(/block verdict \(Lisa\)/.test(el.innerHTML), 'what it waits for, in the bot\'s own words');
-    assert(/class="botPanelCd" data-i="0"[^>]*>\u2014<\/span>/.test(el.innerHTML), 'no clock yet: the dash (bot v0.6.204: the clock starts when the question is sent; until then until is null)');
-    assert(!/class="botPanelStep" data-i="0" disabled/.test(el.innerHTML), 'and the button is live meanwhile -- an answer before the question is on the wire still counts');
-    assert(/id="botGiveWord" title="[^"]*a block verdict; never a hold"/.test(el.innerHTML), 'Turn-based: the play button is there, and its title names the block verdict');
+    A.botPanelOpen = true; A.botPanelRender();
+    assert(/\u25b6 Declare verdict<\/button>/.test(box.innerHTML), 'the row says Declare verdict (v2.6.161: Step)');
+    assert(/block verdict \(Lisa\)/.test(box.innerHTML), 'what it waits for, in the bot\'s own words');
+    assert(/class="botPanelCd" data-i="0"[^>]*>\u2014<\/span>/.test(box.innerHTML), 'no clock yet: the dash (bot v0.6.204: the clock starts when the question is sent; until then until is null)');
+    assert(!/class="botPanelStep" data-i="0" disabled/.test(box.innerHTML), 'and the button is live meanwhile -- an answer before the question is on the wire still counts');
+    eq(hub.q['#botGiveWord'].hidden, false, 'Turn-based: the play button is on the hub');
+    assert(/id="botGiveWord" title="[^"]*a block verdict; never a hold"/.test(A.botGiveWordBtn()), 'and its title names the block verdict');
     eq(A.botGiveWord(), 1, 'the play button steps it (a filter since v2.6.140, so no allow-list to grow)'); eq(stepped, 1);
-  } finally { delete A.hotBots[2]; A.localTable = false; HB.reset([]); delete A.__doc._ids.hotBotBtn; }
+  } finally { A.botPanelOpen = false; delete A.hotBots[2]; A.localTable = false; HB.reset([]); done(); }
 });
 testB('v2.6.162 LIVE: a REAL bot (v0.6.204+) blocks your bleed and waits for your word -- the panel reads "block verdict (You)" and Declare verdict, no clock in Turn-based, the play button gives it the word, the verdict line comes from the BLOCKER\'s seat (its `who` is the bot, the name the bubble shows) and the combat counter follows; an older bot skips loudly', async () => {
   const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
@@ -4884,7 +4913,7 @@ testB('v2.6.162 LIVE: a REAL bot (v0.6.204+) blocks your bleed and waits for you
   const logs = [], chats = []; const log0 = A.MP_HANDLERS.log, chat0 = A.MP_HANDLERS.chat;
   A.MP_HANDLERS.log = m => { logs.push({ who: m.who, txt: String(m.html || '').replace(/<[^>]*>/g, '') }); return log0(m); };
   A.MP_HANDLERS.chat = m => { chats.push({ who: m.who, msg: String(m.msg || '') }); return chat0(m); };
-  const el = { innerHTML: '', _botSig: null, querySelector: () => null, querySelectorAll: () => [], remove(){} };
+  let fk = null;
   try {
     await b.connect(); await until(() => HB.seats[2] && HB.seats[2].deck, 6000);
     assert(HB.startFor(2), 'dealt'); await sleep(300);
@@ -4903,8 +4932,8 @@ testB('v2.6.162 LIVE: a REAL bot (v0.6.204+) blocks your bleed and waits for you
     assert(qm, 'the question names the counter, whose move it is and the tempo (Turn-based: no clock): ' + JSON.stringify(chats.map(c => c.msg)));
     const B = +qm[1], ok = B >= 0;   // a crypt card may carry its own intercept (Dowager-class); the deal is random, so the test reads the number the bot wrote
     eq(A.avr.mode, 'block', 'the shared counter is open in block mode');
-    A.__doc._ids.hotBotBtn = el; A.botPanelOpen = true; A.botCfgOpen = false; A.botPanelRender();
-    assert(/\u25b6 Declare verdict<\/button>/.test(el.innerHTML), 'the real bot\'s rung reads Declare verdict (v2.6.161: Step)');
+    fk = fakeHubBox(A); A.botPanelOpen = true; A.botPanelRender();   // v2.6.187: the rows are in the bot box the hub's gear opens
+    assert(/\u25b6 Declare verdict<\/button>/.test(fk.box.innerHTML), 'the real bot\'s rung reads Declare verdict (v2.6.161: Step)');
     assert(A.botGiveWordWanted(), 'Turn-based: the play button is offered');
     const n0 = logs.length;
     eq(A.botGiveWord(), 1, 'the play button gives the bot the word');
@@ -4914,7 +4943,7 @@ testB('v2.6.162 LIVE: a REAL bot (v0.6.204+) blocks your bleed and waits for you
     eq(vline.who, 'Wallbot', 'from the BLOCKER\'s seat -- the bubble (maybeVerdictPulse) names the bot that declared it, as a human\'s Resolve names that human');
     assert(logs.slice(n0).some(l => l.who === 'Wallbot' && /block verdict declared from the table controls\.$/.test(l.txt)), 'the press is said out loud');
     if (ok) eq(await until(() => A.avr.mode === 'combat' ? 'combat' : null, 5000), 'combat', 'the counter becomes the combat counter (block -> combat, as after a bot actor\'s own verdict)');
-  } finally { delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); A.MP_HANDLERS.log = log0; A.MP_HANDLERS.chat = chat0; A.net.roster = []; A.net.hot = null; delete A.__doc._ids.hotBotBtn; }
+  } finally { A.botPanelOpen = false; delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); A.MP_HANDLERS.log = log0; A.MP_HANDLERS.chat = chat0; A.net.roster = []; A.net.hot = null; if (fk) fk.done(); }
 });
 testB('v2.6.162 LIVE: a REAL bot\'s verdict clock (v0.6.204+) starts when its question reaches you -- the question arrives with no clock running, then the panel counts the seeded Standard 3 s from that moment (not less), and on the clock the blocker declares the verdict itself', async () => {
   const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
@@ -6578,17 +6607,22 @@ testB('v2.6.178 LIVE: a REAL bot at a table seeded the way hotSpawnBots seeds it
 });
 
 /* ---------- v2.6.179: the bot badge during a seat visit ---------- */
-test('v2.6.179 in a seat visit the bot badge and its play button stand ABOVE the visited seat, under the visit\'s Home button and right-aligned with it (Johan; v2.6.178: the badge, z 60, lay under #rview, z 3500 -- drawn, but a click landed on the mat, and at a hotseat the sweep visits every bot\'s seat on its turn)', () => {
-  const html = require('fs').readFileSync(CLIENT, 'utf8');
+test('v2.6.179 in a seat visit the bot badge and its play button stand ABOVE the visited seat, under the visit\'s Home button and right-aligned with it (Johan; v2.6.178: the badge, z 60, lay under #rview, z 3500 -- drawn, but a click landed on the mat, and at a hotseat the sweep visits every bot\'s seat on its turn) -- v2.6.187: the hub, its ring and its box stand above the visit layer everywhere, and the hub steps out of the Home button\'s and the hold badge\'s way', () => {
+  const html = require('fs').readFileSync(CLIENT, 'utf8'); const A = loadClient(CLIENT);
   const rule = sel => { const i = html.indexOf(sel + '{'); return i < 0 ? '' : html.slice(i, html.indexOf('}', i)); };
   const num = (r, p) => { const m = new RegExp('(?:^|[;{\\s])' + p + '\\s*:\\s*(-?\\d+)').exec(r); return m ? +m[1] : null; };
-  const rv = rule('#rview'), back = rule('#rvBack'), vis = rule('body.invisit #hotBotBtn');
-  assert(vis, 'a rule for the badge in a visit exists');
-  assert(num(rv, 'z-index') != null && num(vis, 'z-index') > num(rv, 'z-index'), 'above the visit layer: ' + num(vis, 'z-index') + ' > ' + num(rv, 'z-index'));
-  assert(num(vis, 'top') >= 90, 'below the visit\'s Home button (its bottom measured at 82 px in a browser): top ' + num(vis, 'top'));
-  eq(num(vis, 'right'), num(back, 'right'), 'right-aligned with the Home button');
-  assert(/z-index:60/.test(html.slice(html.indexOf("el.id='hotBotBtn'"), html.indexOf("el.id='hotBotBtn'") + 600)), 'the badge elsewhere keeps its own place (z 60, top 74, right 14)');
-  assert(/!important/.test(vis), 'the rule wins over the badge\'s inline style');
+  const zv = num(rule('#rview'), 'z-index'), zh = num(rule('#holdBadge'), 'z-index');
+  for (const id of ['hotBotBtn', 'botBox', 'botRing']) assert(num(rule('#' + id), 'z-index') > zv, '#' + id + ' above the visit layer: ' + num(rule('#' + id), 'z-index') + ' > ' + zv);
+  assert(num(rule('#hotBotBtn'), 'z-index') < zh && num(rule('#botRing'), 'z-index') > zh, 'the hold badge above the hub (it is placed clear of it), the open ring above both');
+  eq(html.indexOf('body.invisit #hotBotBtn{'), -1, 'no visit-only rule: the hub has its own place everywhere');
+  const back = { left: 1180, right: 1264, top: 50, bottom: 82, width: 84, height: 32 };   // the visit's Home button, as measured in a browser (v2.6.179: its bottom at 82 px)
+  const c = A.botHubAvoid({ x: 1200, y: 90 }, [back]);
+  eq(c.x, 1200, 'the hub keeps its column'); eq(c.y, 82 + 6 + 28, 'and steps below the Home button');
+  eq(A.botHubAvoid({ x: 1170, y: 140 }, [back]).y, 140, 'a hub clear of it stays where its player put it');
+  eq(A.botHubAvoid({ x: 1200, y: 90 }, [{ left: 1180, right: 1264, top: 50, bottom: 82, width: 0, height: 0 }, null]).y, 90, 'a hidden element (no width) is no obstacle');
+  const pr = html.slice(html.indexOf('function botPanelRender(){'), html.indexOf('function botBoxMount(){'));
+  assert(/if\(!_bhDown && !_bring\.open\) botHubPlace\(\);/.test(pr), 'the 4 Hz loop places the hub every tick -- not while it is held or its ring is open -- so it steps aside when a visit or the hold badge comes and back once it has gone (a visit\'s Home fades out: a place taken when the visit ended still saw it, found in Chromium)');
+  assert(/\['#rvBack','#holdBadge'\]/.test(html.slice(html.indexOf('function botHubPlace('), html.indexOf('function botHubSave('))), 'botHubPlace reads both obstacles');
 });
 
 /* ---------- v2.6.180: the hand counter, the camera pans, the helicopter view holds (Johan, 23 Nov 2026) ---------- */
@@ -6723,7 +6757,7 @@ test('v2.6.180 the pan\'s CSS: only while html.campan is on, #tableArea is the n
   const css = html.slice(0, html.indexOf('<script'));
   assert(/html\.campan #tableArea\{ view-transition-name:elytable; \}/.test(css), '#tableArea is named only during a pan');
   assert(!/(^|[\s{;])view-transition-name:/m.test(css.replace(/html\.campan #[A-Za-z0-9]+\{ view-transition-name:[a-z]+; \}/g, '')), 'no element carries a view-transition-name outside html.campan');
-  for (const id of ['hotBotBtn', 'playedTab', 'readyTab', 'readyPeek', 'l2preyTab', 'l2predTab', 'ohStrip', 'logPeek'])
+  for (const id of ['hotBotBtn', 'botRing', 'botBox', 'playedTab', 'readyTab', 'readyPeek', 'l2preyTab', 'l2predTab', 'ohStrip', 'logPeek'])   // v2.6.187: + the bot ring and the bot box
     assert(new RegExp('html\\.campan #' + id + '\\{ view-transition-name:ely[a-z]+; \\}').test(css), id + ' is drawn above the moving table');
   const names = (css.match(/view-transition-name:([a-z]+)/g) || []).map(x => x.split(':')[1]);
   eq(new Set(names).size, names.length, 'every name is unique (a duplicate makes the browser skip the transition)');
@@ -7199,6 +7233,239 @@ test('v2.6.186: the hotseat points at the Table panel, where seats are switched 
   assert(/Imported deck/.test(rec) && !/New deal/.test(rec), 'dealt: ' + rec);
   A.__htmlRec.start(); A.buildDeck(A.parseDeck(deck)); rec = A.__htmlRec.stop().filter(h => /Imported deck/.test(h)).join(' ');
   assert(/Pick <b>New deal<\/b>/.test(rec), 'a deck loaded on its own still points at New deal: ' + rec);
+});
+
+/* ---------- v2.6.187: THE BOT RING (Johan, 24 Nov 2026: 'en effektiv och modern bott-kontrollpanel') ---------- */
+function ringTable(A, extra){   // a hotseat: You, Viktor (a bot), Hanna (a bot) [, more]; a bleed can be aimed and the ring read
+  const T = parityTable(A, [['You'], ['Viktor', true], ['Hanna', true]].concat(extra || []));
+  A.net.turnSeat = 1; A.bleedIn = null; A.clearTable({});
+  return T;
+}
+const RING_BLEED = "<b>Anneke</b> bleeds for 3. Target: <b>You</b>'s pool.";
+const BOT_L12_REDUCE_BY = /^([^—]+?) reduces the bleed by (\d+)(?: \((?!now \d)([^()]+)\))?\.$/;   // the bot's L12.reduceBy, as PROTOCOL section 12 documents it (the canary checks the bot's own)
+test('v2.6.187 THE BOT RING: ring 1 is Hold on / Yes / No / Block and reaction / Bleed / Pass / It resolves (Johan: Pass and It resolves two segments, the gavel It resolves); every quick phrase is ONE segment, said by its own SAY index; the blood drop holds Bleed, +Bleed, Reduce (each 1 / 2 / 3 / X) and Bounce; every icon is drawn, Tabler\'s MIT notice beside the paths', () => {
+  const A = loadClient(CLIENT), html = require('fs').readFileSync(CLIENT, 'utf8');
+  eq(A.BRING_ROOT.join(','), 'hold,yes,no,act,bld,pass,res');
+  const want = { hold: 'Hold on…', yes: 'Yes', no: 'No', pass: 'Pass', res: 'It resolves', blk: 'Block!', ablk: 'Any blocks?', nblk: 'No block', nrx: 'No reaction', arx: 'Any reaction?' };
+  for (const [id, ph] of Object.entries(want)) eq(A.SAY[A.BRING[id].say], ph, id + ' says ' + ph);
+  const said = Object.values(A.BRING).filter(n => n.say != null).map(n => n.say);
+  eq(new Set(said).size, said.length, 'no phrase twice'); eq(said.length, A.SAY.length, 'and every quick phrase is in the ring (an index appended to SAY must get a segment)');
+  eq(A.BRING.act.kids.join(','), 'blk,ablk,nblk,nrx,arx', 'Block and reaction: Block! (and who blocks), Any blocks?, No block, No reaction, Any reaction?');
+  eq(A.BRING.bld.kids.join(','), 'bl,add,red,bnc', 'Johan: Bleed, +Bleed, Reduce and Bounce under the blood drop');
+  for (const k of ['bl', 'add', 'red']) eq(A.botRingKids(k).join(','), ['1', '2', '3', 'X'].map(v => k + ':' + v).join(','), k + ': 1 / 2 / 3 / X');
+  eq(A.BRING.res.ic.join(), 'gavel'); eq(A.BRING.bnc.label, 'Bounce', 'Johan: "bounces", never "redirects" (Redirection is a card)');
+  eq(A.BLEED_LINE.bounce('B', 'C'), 'B bounces the bleed to C.'); assert(!/redirect/i.test(html.slice(html.indexOf('const BRING={'), html.indexOf('const BRING_ROOT='))), 'no "redirect" in the ring');
+  Object.values(A.BRING).forEach(n => (n.ic || []).forEach(ic => assert(A.BOT_ICON[ic] && A.BOT_ICON[ic].length, 'icon ' + ic)));
+  ['robotFace', 'gear', 'play'].forEach(ic => assert(A.BOT_ICON[ic] && A.BOT_ICON[ic].length, 'the hub draws ' + ic));
+  Object.values(A.BOT_ICON).forEach(ps => ps.forEach(d => assert(/^[MmLlHhVvCcSsQqTtAaZz0-9.,\s-]+$/.test(d), 'path data only: ' + d.slice(0, 40))));
+  assert(html.indexOf('Copyright (c) 2020-2026 Paweł Kuna') > 0 && html.indexOf('Permission is hereby granted, free of charge') > 0, 'Tabler Icons are MIT: the notice travels with the paths');
+});
+test('v2.6.187 the ring\'s geometry: ring 1 is seven even segments; a fan is centred on its parent unless the window is in the way, then it slides along its ring the least it can -- for every place the hub may stand, in six window sizes (a phone included), every segment of every fan is inside the window; the two branches face the table', () => {
+  const A = loadClient(CLIENT); const T = ringTable(A, [['Anna'], ['Bo', true]]);
+  for (let i = 0; i < 6; i++){ const v = A.makeCard('Vamp ' + i, 'crypt'); A.move(v, 'ready', { x: 10 * i, y: 0, faceDown: false }); }   // six blockers: the widest fan
+  A.net.turnSeat = 2; A.bleedInTrack('Viktor', RING_BLEED);
+  eq(A.botRingKids('blk').length, 6, 'six blockers'); eq(A.botRingKids('bnc').join(), 't:Hanna,t:Anna,t:Bo', 'three to bounce to (not Viktor, whose minion acts, not me)');
+  const L = A.botRingLayout(0, 1), r1 = L.filter(s => s.ring === 1);
+  eq(r1.length, 7); r1.forEach((s, k) => approx(s.a, k * 360 / 7, 1e-9));
+  for (const p of ['act', 'bld', 'blk', 'bl', 'add', 'red', 'bnc']){
+    const par = L.find(s => s.id === p), kids = L.filter(s => s.grp === p);
+    assert(kids.length > 0, p + ' has a fan'); approx(kids.reduce((t, s) => t + s.a, 0) / kids.length, par.a, 1e-9);
+    eq(kids[0].ring, par.ring + 1, p + '\'s fan is one ring out');
+  }
+  const inside = (f, W, H) => { let o = -1e9; f.segs.forEach(s => { const r = A.BRING_R[s.ring][1]; for (let k = 0; k <= 12; k++){ const t = (s.a - s.w / 2 + s.w * k / 12) * Math.PI / 180, x = f.cx + r * Math.sin(t), y = f.cy - r * Math.cos(t); o = Math.max(o, -x, x - W, -y, y - H); } }); return o; };
+  for (const [W, H] of [[1280, 800], [1024, 640], [1920, 1080], [800, 600], [600, 400], [390, 844]]){
+    let worst = -1e9, at = null, slide = -1e9;
+    for (let x = 0; x <= W; x += 40) for (let y = 0; y <= H; y += 40){
+      const c = A.botHubClamp(x, y, W, H), f = A.botRingFit(c.x, c.y, W, H); f.cx = c.x; f.cy = c.y;
+      const o = inside(f, W, H); if (o > worst){ worst = o; at = c; }
+      if (W >= 1024) f.segs.forEach(s => { if (s.ring > 1){ const par = f.segs.find(q => q.id === s.grp), span = f.segs.filter(q => q.grp === s.grp).length * s.w; slide = Math.max(slide, Math.abs(s.sl) - (span / 2 + par.w / 2)); } });
+    }
+    assert(worst <= 0, W + 'x' + H + ': every segment inside the window -- ' + worst.toFixed(1) + ' px out at ' + JSON.stringify(at));
+    assert(slide < 0, W + 'x' + H + ': and a slid fan still touches its parent (' + slide.toFixed(1) + ')');
+  }
+  const f = A.botRingFit(1170, 140, 1280, 800), act = f.segs.find(s => s.id === 'act'), bld = f.segs.find(s => s.id === 'bld');
+  const toTable = (Math.atan2(640 - 1170, -(400 - 140)) * 180 / Math.PI + 360) % 360, mid = ((act.a + bld.a) / 2 + 360) % 360;
+  assert(Math.abs(((mid - toTable + 540) % 360) - 180) <= 7.5, 'at the home corner the two branches straddle the way to the table: ' + mid.toFixed(1) + ' vs ' + toTable.toFixed(1));
+  A.localTable = false; T.HB.reset([]);
+});
+test('v2.6.187 the hub\'s place is each player\'s own: dragged anywhere, it keeps 90 px from every edge (Johan: the ring opens where it stands); saved as the distance from the nearest corner, so a resized window keeps it there; a broken save falls back to the home corner; Reset forgets it', () => {
+  const A = loadClient(CLIENT);
+  eq(A.BRING_EDGE, 90);
+  [[0, 0], [5000, 5000], [-50, 400], [640, -10], [1280, 800]].forEach(([x, y]) => { const c = A.botHubClamp(x, y, 1280, 800); assert(c.x >= 90 && c.x <= 1190 && c.y >= 90 && c.y <= 710, 'clamped: ' + JSON.stringify(c)); });
+  const tiny = A.botHubClamp(500, 500, 150, 150); eq(tiny.x, 90); eq(tiny.y, 90, 'a window narrower than two margins: the margin wins');
+  eq(A.botHubSaved(), null, 'nobody moved it');
+  const p = A.botHubSave({ x: 1080, y: 650 });   // the harness window is 1280 x 800
+  eq(JSON.stringify(p), '{"h":"r","x":200,"v":"b","y":150}', 'bottom right, 200 and 150 px in');
+  eq(JSON.stringify(A.botHubSaved()), JSON.stringify(p), 'read back');
+  const w = A.botHubWanted(1920, 1080); eq(w.x, 1720); eq(w.y, 930, 'a bigger window: the same distance from the same corner');
+  eq(JSON.stringify(A.botHubSave({ x: 300, y: 200 })), '{"h":"l","x":300,"v":"t","y":200}', 'top left');
+  A.__ls.setItem('elysiumBotHub', '{"h":"x","x":1,"v":"t","y":2}'); eq(A.botHubSaved(), null, 'a corner it does not know');
+  A.__ls.setItem('elysiumBotHub', 'not json'); eq(A.botHubSaved(), null); eq(A.botHubWanted(1280, 800).x, 1280 - A.BRING_HOME.x, 'a broken save: the home corner');
+  A.botHubSave({ x: 300, y: 200 }); A.botHubReset(); eq(A.botHubSaved(), null, 'Reset (the box\'s link) forgets it');
+});
+test('v2.6.187 the ring lights what the table waits on, read from the bots\' own status() -- the rows the box shows: a block window opens Block and reaction on its own, a pool question lights Yes / No, a combat step No / Pass, a poll or a block verdict Pass / It resolves, a hold the hand; only for a human THIS screen answers for (online: you; offline: every human seat); a bleed aimed at me lights the drop, Reduce, Bounce and No reaction; my own announced bleed lights +Bleed and It resolves', () => {
+  const A = loadClient(CLIENT);
+  A.net.status = 'in'; A.net.room = 'R'; A.net.you = 'You'; A.localTable = false; A.net.spect = false; A.bleedIn = null;
+  A.net.roster = [{ seat: 1, name: 'You' }, { seat: 2, name: 'B2', bot: true }, { seat: 3, name: 'Anna' }];
+  const ctx = (step, wf) => A.botRingContext([{ key: 'B2', bot: {}, st: { name: 'B2', step, waitingFor: wf, canStep: true } }]);
+  let c = ctx('resolve-ask', 'block decision (You)');
+  ['act', 'blk', 'nblk', 'nrx'].forEach(k => assert(c.hl.has(k), 'a block window lights ' + k)); eq(c.path.join(), 'act', 'and opens its branch'); eq(c.wait, true, 'the hub glows');
+  c = ctx('resolve-pq', 'pool question (You)'); assert(c.hl.has('yes') && c.hl.has('no') && !c.hl.has('act'), 'a pool question: Yes / No');
+  c = ctx('resolve-phase', 'combat step maneuvers (You)'); assert(c.hl.has('no') && c.hl.has('pass'), 'a combat step: No / Pass');
+  c = ctx('resolve-vote', 'votes (Anna, You)'); assert(c.hl.has('pass') && c.hl.has('res'), 'a poll: Pass / It resolves -- me among several');
+  c = ctx('resolve-verdict', 'block verdict (You)'); assert(c.hl.has('pass') && c.hl.has('res') && !c.hl.has('act'), 'a block verdict: Pass / It resolves');
+  c = ctx('resolve-ask', 'reactions (You thinking)'); eq(c.wait, true, 'a "thinking" suffix is still me');
+  c = ctx('resolve-ask', 'block decision (Anna)'); eq(c.hl.size, 0, 'Anna answers on her own screen'); eq(c.wait, false);
+  c = ctx('release-hold', 'held by Anna'); assert(c.hl.has('hold') && c.wait === false, 'a hold lights the hand for anyone');
+  c = ctx(null, 'its turn'); eq(c.hl.size, 0, 'a bot on its own turn waits on nobody');
+  A.localTable = true; A.net.status = 'off';
+  c = ctx('resolve-ask', 'block decision (Anna)'); eq(c.wait, true, 'offline every human seat is answered from this screen');
+  A.net.turnSeat = 2; A.bleedInTrack('B2', RING_BLEED);
+  c = A.botRingContext([]); ['bld', 'red', 'act', 'nrx', 'bnc'].forEach(k => assert(c.hl.has(k), 'a bleed aimed at me lights ' + k)); eq(c.wait, true);
+  A.bleedIn = null; A.net.turnSeat = 1;
+  const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false }); A.selectOnly(v);
+  A.minionBleed(v, 2); c = A.botRingContext([]); ['bld', 'add', 'res'].forEach(k => assert(c.hl.has(k), 'my own bleed lights ' + k));
+  eq(A.botRingAddMinion(), v, '+Bleed adds to the minion that bled');
+  A.resolvePlayedActions(); eq(A.botRingAddMinion(), null, 'until the action resolves');
+  A.localTable = false; A.net.roster = []; A.net.room = null; A.clearTable({});
+});
+test('v2.6.187 a grey segment says why, and pressing it does nothing but say so: Bleed wants a selected minion; +Bleed your own bleed in flight; Reduce and Bounce a bleed aimed at you (Bounce: someone to send it to); a spectator answers nothing', () => {
+  const A = loadClient(CLIENT); const T = ringTable(A);
+  let toasted = []; A.toast = m => toasted.push(String(m));
+  eq(A.botRingWhy('bl'), 'Select the minion that bleeds first.'); eq(A.botRingWhy('bl:2'), 'Select the minion that bleeds first.', 'the numbers too');
+  const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false }); A.selectOnly(v);
+  eq(A.botRingWhy('bl'), ''); eq(A.botRingBleeder(), v);
+  eq(A.botRingWhy('add'), 'Only while your own bleed is announced.');
+  eq(A.botRingWhy('red'), 'Only while a bleed is aimed at you.'); eq(A.botRingWhy('bnc'), 'Only while a bleed is aimed at you.'); eq(A.botRingWhy('t:Hanna'), 'Only while a bleed is aimed at you.');
+  T.clear(); A.botRingDo('red:2'); eq(T.got[2].length + T.got[3].length, 0, 'a grey Reduce sends nothing'); eq(toasted.pop(), 'Only while a bleed is aimed at you.', 'it says why');
+  A.net.turnSeat = 2; A.bleedInTrack('Viktor', RING_BLEED);
+  eq(A.botRingWhy('red'), ''); eq(A.botRingWhy('bnc'), ''); eq(A.botRingBounceTargets().join(), 'Hanna', 'never back to Viktor, whose minion acts');
+  A.net.roster = A.net.roster.map(p => p.name === 'Hanna' ? Object.assign({}, p, { out: true }) : p);
+  eq(A.botRingWhy('bnc'), 'There is no one else to bounce it to.', 'Hanna is out: nobody left');
+  A.net.spect = true; eq(A.botRingWhy('yes'), 'Spectators cannot answer the bots.'); A.net.spect = false;
+  A.localTable = false; T.HB.reset([]);
+});
+test('v2.6.187 the bleed in flight, read from the frozen lines any seat writes (PROTOCOL section 12): the announce (a Target: suffix, else the actor\'s prey), +X, the TARGET\'s own reductions (by N, or now N), Spying Mission\'s null, a bounce (the same minion re-announced at a new target stays its actor\'s), and its ends -- the bleed goes through, a block that succeeds, It resolves (mine or theirs), the next turn', () => {
+  const A = loadClient(CLIENT); const T = ringTable(A);
+  A.net.turnSeat = 2;
+  A.bleedInTrack('Viktor', RING_BLEED);
+  eq(JSON.stringify(A.bleedIn), '{"actor":"Viktor","vamp":"Anneke","n":3,"target":"You","turn":2}');
+  eq(A.bleedOnLocal(), A.bleedIn, 'aimed at a human this screen answers for');
+  A.bleedInTrack('Viktor', '<b>Anneke</b> adds +2 bleed (= 5).'); eq(A.bleedIn.n, 5, '+X: the total the line names');
+  A.bleedInTrack('Hanna', '<b>Hanna</b> reduces the bleed by 2.'); eq(A.bleedIn.n, 5, 'only the target reduces the bleed aimed at it');
+  A.bleedInTrack('You', '<b>You</b> reduces the bleed by 2.'); eq(A.bleedIn.n, 3);
+  A.bleedInTrack('You', '<b>Lisa</b> plays <b>Telepathic Misdirection</b> — reduces the bleed by 1 (now 2).'); eq(A.bleedIn.n, 2, 'the bot-style line names the total');
+  A.bleedInTrack('You', '<b>You</b> bounces the bleed to <b>Hanna</b>.'); eq(A.bleedIn.target, 'You', 'the line for the humans moves nothing');
+  A.bleedInTrack('You', "<b>Anneke</b> bleeds for 2. Target: <b>Hanna</b>'s pool.");
+  eq(A.bleedIn.actor, 'Viktor', 'the re-announce comes from me, but the bleed is still Viktor\'s'); eq(A.bleedIn.target, 'Hanna'); eq(A.bleedOnLocal(), null, 'a bot\'s to answer now');
+  A.bleedInTrack('Hanna', '<b>Lenny</b> bleeds for 1.'); eq(A.bleedIn.actor, 'Hanna', 'another minion: a new bleed'); eq(A.bleedIn.target, 'You', 'no suffix: Hanna\'s prey, the next live seat');
+  A.bleedInTrack('Hanna', 'The bleed goes through: You, -1 pool (adjust yours).'); eq(A.bleedIn, null, 'it went through');
+  A.bleedInTrack('Viktor', RING_BLEED); A.bleedInTrack('Hanna', 'Block: Stealth 0 vs Intercept 1 — block fails.'); assert(A.bleedIn, 'a failed block leaves it');
+  A.bleedInTrack('You', 'Block: Stealth 0 vs Intercept 1 — block succeeds.'); eq(A.bleedIn, null, 'a block that succeeds ends it');
+  A.bleedInTrack('Viktor', RING_BLEED); A.bleedInTrack('Viktor', '<b>Viktor</b> plays Spying Mission [OBF] — the bleed is unsuccessful and burns no pool.'); eq(A.bleedIn.n, 0, 'Spying Mission: 0');
+  A.saySend(A.SAY.indexOf('It resolves')); eq(A.bleedIn, null, 'my It resolves ends it');
+  A.bleedInTrack('Viktor', RING_BLEED); A.MP_HANDLERS.say({ t: 'say', who: 'Viktor', seat: 2, i: A.SAY.indexOf('It resolves') }); eq(A.bleedIn, null, 'theirs too');
+  A.MP_HANDLERS.log({ t: 'log', who: 'Viktor', html: RING_BLEED }); eq(A.bleedIn && A.bleedIn.target, 'You', 'the log relay feeds it (online and the bridge)');
+  A.net.turnSeat = 3; eq(A.bleedOnLocal(), null, 'a bleed never outlives its turn'); eq(A.bleedIn, null);
+  A.localTable = false; T.HB.reset([]);
+});
+test('v2.6.187 every leaf takes the path its quick phrase or its menu row takes, and the bots read the same wire: a phrase by its SAY index to every bot seat; a blocker writes "NAME blocks." and THEN says Block!; Bleed 2 with the selected minion, +1 on top; Reduce with no minion selected names the bled Methuselah; Bounce writes the line for the humans, the re-announce the bots retarget on, then Pass; Hold on, then Release (the badge\'s own click)', () => {
+  const A = loadClient(CLIENT); const T = ringTable(A); const L = captureLog(A); A.toast = () => {};
+  const says = k => T.got[k].filter(m => m.t === 'say').map(m => A.SAY[m.i]);
+  const lines = k => T.got[k].filter(m => m.t === 'log').map(m => String(m.html).replace(/<[^>]*>/g, ''));
+  for (const id of ['yes', 'no', 'pass', 'res', 'ablk', 'nblk', 'nrx', 'arx']){ T.clear(); A.botRingDo(id); eq(says(2).join(), A.SAY[A.BRING[id].say], id); eq(says(3).join(), A.SAY[A.BRING[id].say], id + ', to every bot'); }
+  T.clear(); A.botRingDo('hold'); eq(says(2).join(), 'Hold on…'); assert(A.hotHoldBy.has('You'), 'the hold badge holds'); eq(A.botRingNode('hold').label, 'Release', 'the hand becomes Release');
+  T.clear(); A.botRingDo('hold'); eq(A.hotHoldBy.size, 0, 'Release: the hold badge\'s own click'); eq(says(2).join(), 'It resolves', 'It resolves under the holder\'s name, as the badge sends it');
+  const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false });
+  eq(A.botRingKids('blk').join(), 'm:' + v.id, 'my ready minion is a blocker');
+  T.clear(); A.botRingDo('m:' + v.id);
+  eq(lines(2).join('|'), 'Lisa blocks.'); eq(says(2).join(), 'Block!');
+  const order = T.got[2].map(m => m.t === 'say' ? 'say' : m.t === 'log' ? 'log' : null).filter(Boolean); eq(order.join(), 'log,say', 'the line before the phrase: the bot reads who blocks, then hears Block!');
+  A.clearTable({}); const w = A.makeCard('Lisa', 'crypt'); A.move(w, 'ready', { x: 100, y: 60, faceDown: false }); A.selectOnly(w);
+  T.clear(); A.botRingDo('bl:2'); eq(lines(2).join('|'), 'Lisa bleeds for 2.', 'the Bleed menu\'s line');
+  T.clear(); A.botRingDo('add:1'); eq(lines(2).join('|'), 'Lisa adds +1 bleed (= 3).', 'the +X menu\'s line');
+  A.resolvePlayedActions(); A.clearSel();
+  A.net.turnSeat = 2; A.bleedInTrack('Viktor', RING_BLEED);
+  T.clear(); A.botRingDo('red:2'); eq(lines(2).join('|'), 'You reduces the bleed by 2.', 'no minion selected: the line names the bled Methuselah'); eq(A.bleedIn.n, 1, 'and my own line moved my tracker');
+  assert(lines(2)[0].match(BOT_L12_REDUCE_BY), 'the bots\' L12.reduceBy shape');
+  T.clear(); A.botRingDo('t:Hanna');
+  eq(lines(2).join('|'), "You bounces the bleed to Hanna.|Anneke bleeds for 1. Target: Hanna's pool.", 'the line for the humans, then the re-announce (the bots\' own bounce shape)');
+  eq(says(2).join(), 'Pass', 'then Pass, as a bot\'s own bounce says it'); eq(JSON.stringify(lines(3)), JSON.stringify(lines(2)), 'every bot hears the same');
+  eq(A.bleedIn.target, 'Hanna'); eq(A.bleedIn.actor, 'Viktor');
+  L.restore(); A.localTable = false; T.HB.reset([]);
+});
+testA('v2.6.187 the X segments ask as the menus ask (one prompt each: Bleed X, Add bleed, Reduce bleed) and Cancel sends nothing; the card menu\'s Bleed 2 and the ring\'s Bleed 2 write the same line', async () => {
+  const A = loadClient(CLIENT); const T = ringTable(A); const L = captureLog(A); A.toast = () => {};
+  const lines = k => T.got[k].filter(m => m.t === 'log').map(m => String(m.html).replace(/<[^>]*>/g, ''));
+  const asked = []; let answer = '5'; A.uiDialog = o => { asked.push(o.title); return Promise.resolve(answer); };
+  const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false }); A.selectOnly(v);
+  T.clear(); eq(await A.botRingDo('bl:X'), true); eq(lines(2).join(), 'Lisa bleeds for 5.'); eq(asked.pop(), 'Bleed X');
+  answer = '2'; T.clear(); eq(await A.botRingDo('add:X'), true); eq(lines(2).join(), 'Lisa adds +2 bleed (= 7).'); eq(asked.pop(), 'Add bleed');
+  answer = null; T.clear(); eq(await A.botRingDo('add:X'), false, 'Cancel'); eq(T.got[2].length, 0, 'sends nothing'); eq(A._avrLastBleed, 7, 'and adds nothing');
+  A.resolvePlayedActions(); A.clearSel();
+  A.net.turnSeat = 2; A.bleedInTrack('Viktor', RING_BLEED);
+  answer = '3'; T.clear(); eq(await A.botRingDo('red:X'), true); eq(lines(2).join(), 'You reduces the bleed by 3.'); eq(asked.pop(), 'Reduce bleed'); eq(A.bleedIn.n, 0);
+  A.bleedIn = null; A.net.turnSeat = 1; A.selectOnly(v);
+  let shown = null; A.showMenu = items => { shown = items; };
+  A.cardMenu(v, 0, 0); T.clear(); shown.find(x => x.label === 'Actions').sub.find(x => x.label === 'Bleed').sub.find(x => x && x.label === 'Bleed 2').fn();
+  const viaMenu = lines(2).join(); A.resolvePlayedActions(); v.locked = false;
+  T.clear(); A.botRingDo('bl:2'); eq(lines(2).join(), viaMenu, 'one path: ' + viaMenu);
+  L.restore(); A.localTable = false; T.HB.reset([]);
+});
+test('v2.6.187 the hub, the ring and the box are chrome: never dragged with the table, drawn above a pan, and spoken to by name (aria) -- the segment\'s label is escaped once; the old blue panel\'s gear and its separate open flag are gone', () => {
+  const A = loadClient(CLIENT), html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(/#holdBadge,#hotBotBtn,#botRing,#botBox,#ohStrip'/.test(html), 'BOARD_CHROME names them: a press there is not a table press');
+  const build = html.slice(html.indexOf('function botRingBuild(){'), html.indexOf('function botRingSeg('));
+  assert(/role="menuitem" aria-label="'\+aria\+'"/.test(build) && /const aria=esc\(n\.label/.test(build), 'the label is escaped once, into the attribute');
+  assert(/aria-disabled="true"/.test(build), 'a grey segment says so to a screen reader');
+  assert(html.indexOf("el.setAttribute('aria-haspopup','menu')") > 0 && html.indexOf("aria-label','Bots: quick answers and settings'") > 0, 'the hub names itself');
+  eq(html.indexOf('botCfgGear'), -1, 'the gear left the panel: it is the hub\'s face now');
+  assert(html.indexOf("localStorage.getItem('elysiumBotBoxOpen')==='1'") > 0 && html.indexOf("'elysiumBotPanelOpen'") < 0, 'the box keeps its open state under a key of its own: a player who kept the old panel open does not meet an open box');
+  assert(!/let _botCfgOpen|_botCfgOpen=|\(_botCfgOpen|_botCfgOpen\)/.test(html) && /\n  h\+=botCfgHtml\(rows\);/.test(html.slice(html.indexOf('function botPanelRender(){'), html.indexOf('function botBoxMount(){'))), 'and the settings have no open flag of their own -- they are always in the box');
+  const css = html.slice(0, html.indexOf('<script'));
+  assert(/#botRing \.brG\.on\.live \.brS\{ pointer-events:auto;/.test(css) && !/#botRing \.brG\.on \.brS\{ pointer-events:auto/.test(css), 'a ring takes the pointer once it has GROWN: at scale .72 a growing ring 3 lies over ring 2, and a tap on Reduce reduced by 3 (found in Chromium, touch and a fast mouse)');
+  const show = html.slice(html.indexOf('function botRingShow(){'), html.indexOf('function botRingDyn('));
+  assert(/g\._liveT=setTimeout\(\(\)=>\{ if\(g\.classList\.contains\('on'\)\) g\.classList\.add\('live'\); \}, 170\)/.test(show), 'live 170 ms after it opens (the growth is .15 s)');
+  assert(/addEventListener\('pointerenter', e=>\{ if\(e\.pointerType!=='touch'\) botRingHover\(id\); \}\)/.test(build), 'a touch has no hover: its tap opens a parent');
+  eq(typeof A.botRingKey, 'function');
+  const keys = html.slice(html.indexOf('function botRingKey(e){'), html.indexOf('function botRingKeyList('));
+  assert(/'Enter',' ','ArrowDown','ArrowUp','ArrowLeft','ArrowRight','Escape','Backspace'\]\.indexOf\(k\)>=0\) e\.stopPropagation\(\)/.test(keys), 'the hub\'s keys are the hub\'s: the global keymap took Enter to the chat line (found in Chromium)');
+});
+test('v2.6.187 the ring follows the table while it is open: the lights at 4 Hz, and a fan whose members change -- a bleed arrives, so there is someone to bounce to -- is drawn again at once (it was built only when the ring opened); an unchanged table draws nothing again (a rebuild under the pointer loses the click, v2.6.108)', () => {
+  const A = loadClient(CLIENT); const T = ringTable(A);
+  const ring = fakeEl(), svg = fakeEl(); ring.q.svg = svg; ring.q['#botRingLbl'] = fakeEl(); A.__doc._ids.botRing = ring;
+  try {
+    const f = A.botRingFit(1170, 140, 1280, 800);
+    Object.assign(A.bring, { open: true, path: [], at: { x: 1170, y: 140 }, rot: f.rot, sgn: f.sgn, segs: f.segs, ctx: A.botRingContext([]), dyn: A.botRingDyn() });
+    eq(A.bring.segs.filter(s => s.grp === 'bnc').length, 0, 'no bleed: nobody to bounce to');
+    svg.innerHTML = 'as built'; A.botRingSync([]); eq(svg.innerHTML, 'as built', 'nothing changed: nothing drawn again');
+    A.net.turnSeat = 2; A.bleedInTrack('Viktor', RING_BLEED);
+    A.botRingSync([]);
+    eq(A.bring.segs.filter(s => s.grp === 'bnc').map(s => s.id).join(), 't:Hanna', 'the bleed arrived: the Bounce fan holds Hanna');
+    assert(/data-id="t:Hanna"/.test(svg.innerHTML) && /data-id="red:2"/.test(svg.innerHTML), 'and the ring was drawn again');
+    assert(A.bring.ctx.hl.has('bnc') && A.bring.ctx.hl.has('red'), 'lit');
+    svg.innerHTML = 'as built'; A.botRingSync([]); eq(svg.innerHTML, 'as built', 'the next tick: nothing drawn again');
+  } finally { A.botRingClose(); delete A.__doc._ids.botRing; A.localTable = false; T.HB.reset([]); }
+});
+testB('v2.6.187 LIVE: the ring\'s Bounce, read by REAL bots through the bridge -- the acting bot follows its bleed to the new target (its own minion re-announced with a Target: suffix, bot steg 2) and the new target arms the bleed from the acting bot\'s Methuselah (the owner from the published boards, bot v1.4.3), at the amount the client tracked', async () => {
+  const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const T = ringTable(A); A.toast = () => {};
+  const mk = (seat, name) => { const u = new BOT.Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 30, log: () => {} });
+    u.seat = seat; u.started = true; u.send = () => {}; u.push = () => {}; u.chat = () => {};
+    u.players = [{ seat: 1, name: 'You' }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Hanna', bot: true }];
+    T.HB.seats[seat].cb.msg = j => { const m = JSON.parse(j); T.raw[seat].push(m); u._dispatch(m); };
+    return u; };
+  const vb = mk(2, 'Viktor'), hb = mk(3, 'Hanna');
+  try {
+    vb._actingVamp = { v: { name: 'Anneke' }, name: 'Anneke', n: 3, target: 1, kind: 'bleed' };
+    hb.table = { 2: { pub: { cards: [{ id: 'c1', name: 'Anneke', kind: 'crypt', zone: 'ready', faceDown: false }] } } };
+    A.net.turnSeat = 2; T.from(2, { t: 'log', html: RING_BLEED }); T.HB.flush();
+    eq(A.bleedOnLocal() && A.bleedOnLocal().actor, 'Viktor', 'the client read Viktor\'s bleed off the bridge');
+    eq(hb.pending, null, 'Hanna is not the target yet');
+    A.botRingDo('t:Hanna'); T.HB.flush();
+    eq(vb._actingVamp.target, 3, 'Viktor\'s bleed now aims at Hanna\'s seat'); eq(vb._actingVamp.bounced, true, 'and it knows it was bounced');
+    assert(hb.pending, 'Hanna armed the bleed aimed at her');
+    eq(hb.pending.actingVampName, 'Anneke'); eq(hb.pending.who, 'Viktor', 'from Viktor, who controls Anneke -- not from me, who sent the line'); eq(hb.pending.amount, 3);
+  } finally { for (const u of [vb, hb]){ try { u.out = true; if (u.pending) u._clearPending && u._clearPending('test end'); } catch (_e){} } A.localTable = false; T.HB.reset([]); }
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */
