@@ -375,9 +375,9 @@
     and the ring in a window, which v0.6.236 already followed); the egress review's pass 1 cases (14) red on the round's first bytes
     (`1c7d00f`), pass 2's (9) on pass 1's (`0b0ba19`), pass 3's (6) on pass 2's (`5b22b83`), the ring's (5) on pass 3's (`05d73f7`);
     119h, 122a, 137k, 182b follow the new wording. *Gates* (the release bytes `00ed0cbd` / `c58ea351`, cardfx
-    `b937ae3d` unchanged): the suite 2785/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.186) and main's canary v1.6.0 with
-    the ring's client v2.6.187 247/0, hotseat 12/0 (12/0 with v2.6.187), HB1 11/0, lint clean, main's client suite 409/1 (the
-    guide's embed), the arena smoke PASS 7/7, `tools/doc-budget.sh` PASS.
+    `b937ae3d` unchanged): the suite 2785/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.187, main merged in) and main's
+    canary v1.6.0 247/0, hotseat 12/0 (12/0 with v2.6.187), HB1 11/0, lint clean, main's client suite (v2.6.187, its LIVE ring
+    bounce through real bots included) 422/1 (the guide's embed), the arena smoke PASS 7/7, `tools/doc-budget.sh` PASS.
     *The 240* against v0.6.236 (the release bytes; the round's first bytes gave the same): DIVERGED 136, SAME-PLAY 104 — every
     divergence the spread's (`--knob spreadIncome=0` against v0.6.236: SAME-PLAY 240; the egress fixes and the ring change no
     play of the 240: IDENTICAL 240 against pass 1's bytes and against the bench's); 83 outcomes moved (winner, VP or rounds; 38 winners), VP/match within the noise
