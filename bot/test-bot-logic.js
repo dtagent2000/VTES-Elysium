@@ -16406,6 +16406,67 @@ async function connectWithRetry(client, tries = 30){
         ok(!!r && r.id === 'a', '184d the spread counts no Dreams of the Sphinx as an income master on a vampire: a tie, board order (got ' + (r && r.id) + ')'); }
     }
 
+    /* 185) v0.6.239 -- HAND SIZE AND REPLACEMENT (the sweep register's class 14). The rulebook, drawing cards: "Whenever you play a
+       card from your hand, you draw another from your library to replace it (unless card text says otherwise). ... Whenever an
+       effect changes your hand size ... immediately discard down to or draw up to match your hand size."
+       14.1: a card played in another seat's turn waited for my next master phase to be replaced (_flushDraws ran in my own turn):
+       (a) a Deflection in another seat's turn is replaced at the next table message once nothing of mine is in flight; (b) not
+       while a window is on me, a combat of mine runs, or in my own turn (its own flushes), and a card's 'Do not replace until'
+       stays held. 14.2: (c) Elder Library's +1 is drawn for in the turn it enters, not at my next turn start. 14.3: (d) the discard
+       phase's replacement is owed, so Dreams' expiring +2 sheds the right number of cards when a draw is still in flight, and
+       (e) Visit from the Capuchin turns a discard phase action's replacement into a counter ('Each time you would replace a card
+       other than this card, instead burn 1 counter'). (c)-(e) run a whole turn with the server's draws arriving later (setTimeout); (d) and (e) at two seats, where a bounce has
+       nowhere to go and the discard phase sheds a Deflection.
+       LAST LINE OF 185 is the closing brace below. */
+    {
+      console.log('\n[185] v0.6.239 -- hand size and replacement (the sweep register 14.1-14.3)');
+      const mk5 = (o, deliver, two) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Hanna', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 0.4, phaseSecs: 0.3, twdKnow: 0, log: () => {} }, o || {}));
+        u.seat = 1; u.started = true; u.players = [{ seat: 1, name: 'Hanna', bot: true, online: true }, { seat: 2, name: 'Viktor', bot: true, online: true }].concat(two ? [] : [{ seat: 3, name: 'Mara', bot: true, online: true }]);   /* two seats: a bounce has nowhere to go, so the discard phase sheds a Deflection */
+        u.push = () => {}; u.sent = []; u.fxClone = () => {};
+        u.send = m => { u.sent.push(m); if(deliver && m && m.t === 'draw') setTimeout(() => u._dispatch({ t: 'drew', zone: 'hand', name: deliver, lib: 50 }), 1); };
+        return u; };
+      const draws5 = u => u.sent.filter(m => m && m.t === 'draw').length;
+      const GEL = () => ({ id: 'v1', name: 'Gelasia Fotiou (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4, attached: [] });
+      const pend5 = () => ({ who: 'Viktor', amount: 2, actingVampName: 'Ryan (G4)', contested: false, reacted: new Set(), blockerVamp: null, declined: false });
+
+      // a) 14.1: a Deflection in another seat's turn is replaced at the next table message
+      { const u = mk5(); u.turnSeat = 2; u.board = [GEL()]; u.hand = ['Deflection']; u.pool = 20; u.pending = pend5();
+        const b = u._bestBounceFor(u.board, new Set()); await u._commitBounce(u.pending, b);
+        const atBounce = { owed: u._drawOwed | 0, draws: draws5(u) };
+        u._dispatch({ t: 'say', who: 'Viktor', i: 7 });
+        ok(!!b && atBounce.owed === 1 && atBounce.draws === 0 && draws5(u) === 1 && (u._drawOwed | 0) === 0,
+           '185a a Deflection played in another seat’s turn is replaced at the next table message, not at my next master phase (got ' + JSON.stringify({ bounce: b && b.name, atBounce, after: draws5(u), owed: u._drawOwed | 0 }) + ')'); }
+
+      // b) 14.1's guards: a window on me, a combat of mine, my own turn -- the replacement waits; a 'Do not replace until' stays held
+      { const r = set => { const u = mk5(); u.turnSeat = 2; u._drawOwed = 1; set(u); u._dispatch({ t: 'say', who: 'Viktor', i: 7 }); return draws5(u); };
+        const got = { window: r(u => { u.pending = pend5(); }), combat: r(u => { u._inCombat = true; }), myTurn: r(u => { u.turnSeat = 1; }),
+          held: r(u => { u._replHold = [{ until: 'unlock', card: "Wake with Evening's Freshness" }]; }), idle: r(() => {}) };
+        ok(got.window === 0 && got.combat === 0 && got.myTurn === 0 && got.held === 0 && got.idle === 1,
+           '185b the replacement waits while a window is on me, in my combat and in my own turn (its own flushes), and a held one stays held; idle in another seat’s turn it is drawn (got ' + JSON.stringify(got) + ')'); }
+
+      // c) 14.2 through a whole turn: Elder Library's +1 is drawn for in the turn it enters
+      { const u = mk5(null, 'Deflection'); u.board = [GEL()]; u.hand = ['Elder Library'].concat(Array(6).fill('Deflection')); u.pool = 10; u.edge = false; u.cryptN = 0; u.unc = []; u.turnSeat = 1; u.table = { 2: { pub: { pool: 20, cards: [] } } };
+        let terr = null; await Promise.race([u._playTurn().catch(e => { terr = e.message; }), sleep(8000)]); await sleep(80);
+        const el = u.board.find(c => c && c.name === 'Elder Library');
+        ok(!terr && !!el && !el.host && u.hand.length === 8 && u._handSizePermanentPrev === 1,
+           '185c Elder Library’s +1 hand size is drawn for in the turn it enters: 8 cards at the turn’s end, the baseline moved (got ' + JSON.stringify({ terr, inPlay: !!el, hand: u.hand.length, prev: u._handSizePermanentPrev, draws: draws5(u) }) + ')'); }
+
+      // d) 14.3 through a whole turn: Dreams' +2 expires after a discard phase action with its draw still in flight -- the hand ends at 7
+      { const u = mk5(null, 'Govern the Unaligned', true); u.board = [GEL(), { id: 'd1', name: 'Dreams of the Sphinx', kind: 'lib', zone: 'ready', locked: false }]; u.hand = Array(7).fill('Deflection'); u.pool = 10; u.edge = false; u.cryptN = 0; u.unc = []; u.turnSeat = 1; u.table = { 2: { pub: { pool: 20, cards: [] } } };
+        let terr = null; await Promise.race([u._playTurn().catch(e => { terr = e.message; }), sleep(8000)]); await sleep(80);
+        const lines = u.sent.filter(m => m && m.t === 'log').map(m => String(m.html || '').replace(/<[^>]*>/g, ''));
+        ok(!terr && lines.some(l => /locks Dreams of the Sphinx for \+2 hand size/.test(l)) && lines.some(l => /discards Deflection\.$/.test(l)) && u.hand.length === 7 && (u._drawOwed | 0) === 0,
+           '185d Dreams’ +2 expiring after a discard phase action (its draw in flight) leaves 7 cards, the hand size (got ' + JSON.stringify({ terr, hand: u.hand.length, owed: u._drawOwed | 0, lines: lines.filter(l => /Dreams|discards/.test(l)) }) + ')'); }
+
+      // e) 14.3: Visit from the Capuchin turns a discard phase action's replacement into a counter
+      { const u = mk5(null, 'Deflection', true); u.board = [GEL(), { id: 'c1', name: 'Visit from the Capuchin', kind: 'lib', zone: 'ready', locked: false, counters: 4 }]; u._handSizePermanentPrev = 4; u.hand = Array(11).fill('Deflection'); u.pool = 10; u.edge = false; u.cryptN = 0; u.unc = []; u.turnSeat = 1; u.table = { 2: { pub: { pool: 20, cards: [] } } };
+        let terr = null; await Promise.race([u._playTurn().catch(e => { terr = e.message; }), sleep(8000)]); await sleep(80);
+        const cap = u.board.find(c => c && c.name === 'Visit from the Capuchin'), lines = u.sent.filter(m => m && m.t === 'log').map(m => String(m.html || '').replace(/<[^>]*>/g, ''));
+        const discarded = lines.filter(l => /discards Deflection\.$/.test(l)).length;
+        ok(!terr && discarded === 1 && !!cap && cap.counters === 3 && draws5(u) === 0 && u.hand.length === 10,
+           '185e Visit from the Capuchin: a discard phase action’s replacement burns a counter instead of a draw (got ' + JSON.stringify({ terr, discarded, counters: cap && cap.counters, draws: draws5(u), hand: u.hand.length }) + ')'); }
+    }
+
 
 
     }
