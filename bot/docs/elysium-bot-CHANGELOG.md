@@ -388,6 +388,17 @@
     *Observed*: the 240 IDENTICAL 240/240 and the five starters' 120 IDENTICAL 120/120; the lasombra smoke IDENTICAL 48/48 (no
     note fell inside a window there; its 12 releases where pass 1's were), no `sr-shed` row; `ana-gates.py` PASS 6/6 on all
     three. The prediction held.
+  - *The egress review's pass 3* (a new reviewer, the last D-133 allows): nothing to fix before merge, 5 findings to list. Three
+    small ones are fixed after it (read by no reviewer; the gates ran on them): 185f gained the phase line's negative case
+    (another seat's "Phase:" holds the window, the owner's closes it; a mutant reading any seat's phase line now fails 185f); the
+    event log reads the new "NAME discards X (hand size)." as the revert's shape (`via: 'hand-size'`, not a card named "X (hand
+    size)"; L-56); `_playSr`'s comment says what pass 2 built. Two went to the register: 14.4's second path (a draw 14.1 makes
+    at another seat's turn's end can still be in flight when the bot's turn starts: at pace 0 on a real server, the arena only,
+    Dreams' +2 lock draws one too many) and, in 14.7, the empty library (the take-back's discard is then one too many). L-87
+    (stale-doc, 6 of the round's 15 findings) now asks for the grep before each pass, the last pass's fix included.
+    *Prediction* (D-93; registered before the runs): IDENTICAL to pass 2's bytes everywhere -- the 240 (so to the first bytes'
+    too), the five starters' 120, the lasombra smoke 48/48: no sim emits the new discard line, and the other two changes are a
+    comment and a test.
   - *Tests*: section 185 (7 cases: a–e red on v0.6.238; f and g, the egress review's, red on the first bytes `5b8f55a7` and on
     pass 1's `b62e6b96`; c–e through a whole turn, the server's draws arriving later). *Gates* (the bytes after pass 2,
     `bd3de0c1` / `704594e9`, cardfx `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2803/0 ×3, canary 235/0

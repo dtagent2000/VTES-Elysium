@@ -16471,7 +16471,7 @@ async function connectWithRetry(client, tries = 30){
 
       // f) the egress review's finding 1, with pass 2's findings 1, 4 and 5: a Sudden Reversal's replacement waits out its 'as played'
       //    window ([LSJ 20061207]: 'Cards are not replaced during the "as played" window.') -- through the dispatch that played it,
-      //    another seat's master line, the owner's own note (an archetype read can come inside its window) and another cancel's 'too
+      //    another seat's master or phase line, the owner's own note (an archetype read can come inside its window) and another cancel's 'too
       //    late' (which can come before mine). Drawn at the owner's next master or phase line, before that line is handled, or at the
       //    turn change -- left owed, and counted, when the next turn is mine (its flush draws it). Taken back with the card when mine
       //    is too late; a 'too late' after the window read as closed costs one owed draw, or sheds a card when the replacement was
@@ -16482,6 +16482,7 @@ async function connectWithRetry(client, tries = 30){
         const AS = '<b>Viktor</b> is playing <b>Blood Doll</b>.', NEXT = '<b>Viktor</b> is playing <b>Vessel</b>.', PHASE = 'Phase: <b>Minion</b>.', LATE = by => '<b>' + by + "</b>'s Sudden Reversal comes too late for <b>Viktor</b>'s <b>Blood Doll</b>.";
         const NOTE = "Viktor (bot) reads Hanna's deck as Lasombra Oblivion (5 of 6 cards typical).", sheds = u => u.sent.filter(m => m && m.t === 'log' && /discards .+ \(hand size\)\.$/.test(String(m.html || '').replace(/<[^>]*>/g, ''))).length;
         const a = mkS(); L(a, AS); const a0 = { draws: draws5(a), owed: a._drawOwed | 0, held: (a._replHold || []).map(x => x.until).join(), cancel: a.sent.some(m => m && m.t === 'log' && /plays <b>Sudden Reversal<\/b>/.test(m.html)) };
+        const p = mkS(); L(p, AS); L(p, PHASE, 'Mara'); const p0 = { draws: draws5(p), held: (p._replHold || []).length }; L(p, PHASE); const p1 = draws5(p);   /* pass 3, finding 2: another seat's phase line holds, the owner's closes */
         L(a, '<b>Mara</b> is playing <b>Vessel</b>.', 'Mara'); L(a, NOTE); L(a, LATE('Mara')); const a1 = { draws: draws5(a), held: (a._replHold || []).length };
         let atLine = null; const oAP = a._onAsPlayed.bind(a); a._onAsPlayed = (...x) => { atLine = draws5(a); return oAP(...x); };   /* the owner's next line is handled after the draw (a bleed at me there would hold it) */
         L(a, NEXT); const a2 = { draws: draws5(a), atLine, owed: a._drawOwed | 0, held: (a._replHold || []).length, closed: !!(a._srSent && a._srSent.closed) };
@@ -16494,12 +16495,12 @@ async function connectWithRetry(client, tries = 30){
         const e = mkS(); L(e, AS); e.pending = pend5(); L(e, PHASE); const e0 = { draws: draws5(e), owed: e._drawOwed | 0, held: (e._replHold || []).length }; L(e, LATE('Hanna'));
         const e1 = { draws: draws5(e), sheds: sheds(e), owed: e._drawOwed | 0, hand: e.hand.includes('Sudden Reversal') };
         const h = mkS(); h._playSr(2, 'Viktor', 'Blood Doll', Object.assign({}, DEC), true); const h0 = (h._replHold || []).length; h._dispatch({ t: 'say', who: 'Viktor', i: 7 }); const h1 = draws5(h);
-        ok(a0.draws === 0 && a0.owed === 1 && a0.held === 'srWindow' && a0.cancel && a1.draws === 0 && a1.held === 1 && a2.draws === 1 && a2.atLine === 1 && a2.owed === 0 && a2.held === 0 && a2.closed
+        ok(a0.draws === 0 && a0.owed === 1 && a0.held === 'srWindow' && a0.cancel && p0.draws === 0 && p0.held === 1 && p1 === 1 && a1.draws === 0 && a1.held === 1 && a2.draws === 1 && a2.atLine === 1 && a2.owed === 0 && a2.held === 0 && a2.closed
            && b0.draws === 0 && b0.owed === 0 && b0.held === 0 && b0.hand && b0.debt === 0 && c0.draws === 1 && c0.owed === 0 && c0.held === 0 && c0.sr === null
            && m0.draws === 0 && m0.owed === 1 && m0.held === 0 && m0.count === 1
            && d0 === 1 && d1.draws === 1 && d1.sheds === 1 && d1.hand.length === 1 && d1.hand[0] === 'Sudden Reversal' && d1.owed === 0 && d1.debt === 0 && d1.ash.includes('Deflection') && !d1.ash.includes('Sudden Reversal')
            && e0.draws === 0 && e0.owed === 1 && e0.held === 0 && e1.draws === 0 && e1.sheds === 0 && e1.owed === 0 && e1.hand && h0 === 0 && h1 === 1,
-           '185f a Sudden Reversal’s replacement waits out its window: held through another seat’s master line, the owner’s note and another cancel’s ‘too late’; drawn at the owner’s next master or phase line (before it is handled) or the turn change, left owed when the next turn is mine; taken back with the card when mine is too late, and a late ‘too late’ costs an owed draw or sheds a card; a human’s master has no window (got ' + JSON.stringify({ a0, a1, a2, b0, c0, m0, d0, d1, e0, e1, h: [h0, h1] }) + ')'); }
+           '185f a Sudden Reversal’s replacement waits out its window: held through another seat’s master line, the owner’s note and another cancel’s ‘too late’; drawn at the owner’s next master or phase line (before it is handled) or the turn change, left owed when the next turn is mine; taken back with the card when mine is too late, and a late ‘too late’ costs an owed draw or sheds a card; a human’s master has no window (got ' + JSON.stringify({ a0, p: [p0, p1], a1, a2, b0, c0, m0, d0, d1, e0, e1, h: [h0, h1] }) + ')'); }
 
       // g) the egress review's finding 2: a reaction's 'Do not replace until after this action' (Read the Winds) played in another
       //    seat's turn stays held through the table's messages -- no action of mine is in flight there, so the flush must not read

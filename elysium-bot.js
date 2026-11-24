@@ -8444,7 +8444,7 @@ class Bot {
   _playSr(seat, owner, card, d, human){   // my Sudden Reversal: to my ash heap (replaced after the window), my next master phase's action (R-42), the frozen line; a human owner is told in chat
     const i = this.hand.indexOf(d.name); if(i < 0) return false;
     this.hand.splice(i, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(d.name);
-    if(!human){ (this._replHold || (this._replHold = [])).push({ until: 'srWindow', card: d.name }); this._emit('replace-held', { card: d.name, until: 'srWindow' }); }   // v0.6.239 (the egress review, finding 1): [LSJ 20061207] 'Cards are not replaced during the "as played" window.' -- held until the window closes (_srWindowClosed: the owner's next line, or the turn change) or my cancel comes too late (_onSrLate takes the hold back with the card); _replaceLate drew it at the end of this very dispatch, inside the window, and a late cancel then left 8 cards. A human's master has no window (the cancel stands at once)
+    if(!human){ (this._replHold || (this._replHold = [])).push({ until: 'srWindow', card: d.name }); this._emit('replace-held', { card: d.name, until: 'srWindow' }); }   // v0.6.239 (the egress review, finding 1): [LSJ 20061207] 'Cards are not replaced during the "as played" window.' -- held until the window closes (_srWindowClosed: the owner's next master or phase line, or the turn change) or my cancel comes too late (_onSrLate takes the hold back with the card; after the close, one owed draw fewer, or a discard down when the replacement was drawn); _replaceLate drew it at the end of this very dispatch, inside the window, and a late cancel then left 8 cards. A human's master has no window (the cancel stands at once)
     this._ootDebt = (this._ootDebt | 0) + 1;
     this._srSent = { owner, card, name: d.name, at: Date.now(), hold: !human };
     this._emitPlay(d.name, 'sudden-reversal', null);
@@ -10795,7 +10795,7 @@ class Bot {
     if((m = t.match(/^(.+?) discards (.+?) — \+(\d+) bleed\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'bleed' };
     if((m = t.match(/^(.+?) discards (.+?) \(([^()]+)\): \+(\d+) bleed\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'bleed', holder: S(m[3]) };
     if((m = t.match(/^(.+?) discards (.+?) \(Revelations\) and draws\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'revelations' };
-    if((m = t.match(/^(.+?) discards (.+?) \(hand size bonus expired\)\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'hand-size' };
+    if((m = t.match(/^(.+?) discards (.+?) \(hand size(?: bonus expired)?\)\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'hand-size' };   // v0.6.239 (the egress review's pass 3, finding 3): + a Sudden Reversal taken back after its replacement (_onSrLate) -- specific shapes before the generic one (L-56)
     if((m = t.match(/^(.+?) discards (.+?)\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]) };
     if((m = t.match(/^(.+?) pays (\d+) pool for (.+?) \(pool (\d+)\)/))) return { kind: 'pool', by: S(m[1]), delta: -m[2], pool: +m[4], card: S(m[3]), via: 'cost' };
     if((m = t.match(/^Gained (\d+) pool from the Edge/))) return { kind: 'pool', delta: +m[1], via: 'edge' };

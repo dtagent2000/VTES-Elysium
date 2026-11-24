@@ -391,10 +391,16 @@ hand size." [ANK 20180318]: "Cards that are not replaced count against the hand 
 played in another seat's turn, Elder Library's +1 in the turn it enters, the discard phase's replacement); its egress review
 found these.
 - **14.4 A draw in flight is not in the hand count** — `_handCount` adds the replacements owed, not the draws sent whose card has
-  not arrived. My discard phase draws a 'discard' hold's replacement at its start (Mirror Walk); when Dreams of the Sphinx's +2
-  expires after it (`_revertHandSizeBonus`) before that card arrives, the excess is counted one short and the hand ends a card
-  over. [v0.6.239's egress] · latent (tremere and pathdeath hold Mirror Walk, neither Dreams) · count the draws in flight (sent,
-  not yet arrived) in `_handCount`.
+  not arrived. Two paths: (a) my discard phase draws a 'discard' hold's replacement at its start (Mirror Walk), and Dreams of the
+  Sphinx's +2 expiring after it (`_revertHandSizeBonus`) before that card arrives counts the excess one short, the hand ending a
+  card over; (b) a replacement 14.1 draws at the end of another seat's turn (at its "Turn passed.") can still be in flight when my
+  turn starts, and at pace 0 `_playTurn` reaches Dreams' +2 lock with no wait: it draws one too many (the egress review's pass 3
+  probe: 3 for 2, the hand at 10 of 9; at the turn's end the +2 expires and the hand is shed down again). [v0.6.239's egress] ·
+  (a) latent (tremere and pathdeath hold Mirror Walk, neither Dreams); (b) reachable in the arena only (pace 0 on a real server;
+  malkavian holds Dreams and reacts out of turn) — at the client's pace the turn start waits a beat after "Turn passed." and the
+  card lands first (the 240, the hotseat, a paced table) · count the draws in flight in `_handCount`: + each draw sent, − at a
+  hand `drew` and at the server's "The library is empty." `err`, reset at `dealt` (the hotseat bridge answers an empty library
+  with nothing: read `libN` too).
 - **14.5 A hand size lowered in play is not discarded down** — `_recomputeHandSizeBaseline` draws up when the permanent bonus rises;
   when it falls (an Elder Library burned or stolen) nothing discards down, against the rule's "immediately". [v0.6.239's egress] ·
   latent (no card the sims play burns or steals a hand size master) · discard down at the recompute, the least useful cards first.
@@ -407,7 +413,9 @@ found these.
   says a cancel stood. A cancel that reaches the owner after its window is answered 'too late' at once, after any lines the owner
   sent before it read the cancel; if its next master or phase line was among them, the replacement is drawn first, and the
   take-back then discards a card down to the hand size (the card back in hand is one over it) where nothing should have been
-  drawn; a 'too late' after the turn change is not read (the record ends with the turn: the card stays in the ash heap, the
+  drawn — one card too many when the library was empty and the server refused that draw ("If your library is empty, then you do
+  not draw to replenish your hand"), and its pick is the dead card or the front of the hand (not the revert's surplus-stealth and
+  endgame steps); a 'too late' after the turn change is not read (the record ends with the turn: the card stays in the ash heap, the
   out-of-turn debt stands). [v0.6.239's egress] · latent (a round trip longer than the window: the sims and the hotseat bridge
   deliver an answer inside the send, the arena's window is 500 ms, a paced table's a beat) · an answer line from the owner to the
   cancel that stands (a bot grammar change: L12, the canary).

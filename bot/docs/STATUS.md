@@ -5,10 +5,9 @@
 `krcg-v5.js` v1.0.0 · `ana-gates.py` v1.1.4 · the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51
 and main's canary v1.5.0; the root's release is client v2.6.187 / srv-2.6.53 (the canary's second run).
 
-**Deploy state:** `main` carries v0.6.238 and client v2.6.187: #103 the playtest round (v0.6.237, D-136, with KRCG's card
-data of 24 Nov) and #106 Dreams of the Sphinx (#105's commits: #105 had merged into its base). **Open:** #107 this release
-(`bot-hand-replacement`, v0.6.239, base main). Main's #104 (client v2.6.188, no wire change) is open: merged first, the root
-line above follows it. A merged PR's branch is deleted automatically (24 Nov).
+**Deploy state:** `main` carries v0.6.238 and client v2.6.187 (#103, v0.6.237 with KRCG's data of 24 Nov; #106, #105's
+commits). **Open:** #107 this release (`bot-hand-replacement`, base main); main's #104 (client v2.6.188, no wire change):
+merged first, the root line above follows it. A merged PR's branch is deleted automatically (24 Nov).
 
 ## Last gates (v0.6.239 after the egress review's pass 2, `bd3de0c1`, cardfx `fe5f60bf`)
 24 Nov: the suite 2803/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.187), main's v1.6.0 247/0 · hotseat 12/0 · HB1
