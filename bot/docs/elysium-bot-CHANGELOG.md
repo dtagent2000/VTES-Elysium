@@ -331,8 +331,9 @@
     `attached`, its x/y) — a human's Fame on a bot's vampire lay loose at 64,64. The receiver's pub names the giver as the card's
     `owner` (as the client's does), and every reader credits the play to the owner — its hand, its deck (`_onBoard`), as the
     tabling did. Fame is held when the famed seat is offline (`_canTakeGive`: the server refuses that give). A burn by the table
-    (`ctrl`) takes the cards on the vampire by host and id too, mine to my ash heap (a burn in my own combat does not yet:
-    SWEEP-REGISTER 10.15). Haven Uncovered, Priority Contract and Pentex keep the tabling (SWEEP-REGISTER 10.14).
+    (`ctrl`) takes the cards on the vampire by host and id too; it, Archon Investigation's and the Ravnos burn send mine to my ash
+    heap and leave a given card to its giver (`_mineCard`); a burn in my own combat sweeps nothing yet (SWEEP-REGISTER 10.15).
+    Haven Uncovered, Priority Contract and Pentex keep the tabling (SWEEP-REGISTER 10.14).
   - *Lock clones* (`_actClone`): a cardless minion action (the plain bleed, with its aim; the hunts, rescue, leaving torpor, a burn
     or steal, the burn referendum) is an `fx` of kind `lock` with its verb, as the client's own; a `play` clone of the vampire was
     captioned "<player> plays <vampire>" (10 in the recording).
@@ -345,23 +346,28 @@
     resolves / No reaction (said or typed `no more`, `done` …) or another modifier (after which it asks again, short: "bleed now
     N — any more?"), under the tempo (`_waitPlan` react: the clock in the question, none in Turn-based, a reminder there; the hold
     gate stands its clock, deadline and reminder and re-arms it fresh, as the verdict wait), steppable (`resolve-late`), a `wait`
-    row (`late: true`, `held`; `left` when its pending is replaced or cleared; the word is Adaptive's measurement). It went after a
-    fixed 4 s (`modGraceMs`, gone) or one react delay after a modifier, and the actor's It resolves applied the bleed with no
-    bounce at all (`_applyPending`), against START-HERE.
+    row (`late: true`, `held`; `left` when its pending is replaced or cleared; the word is Adaptive's measurement). A word in a gap
+    — my react delay after their modifier, the beat after their first word — is kept for the total (`lateDue`, `_lateWord`): the
+    bounce comes, and if I Pass after all (no bounce left) an It resolves already said lands the bleed then (`_lateSettle`); a Pass
+    of mine ends a live wait. It went after a fixed 4 s (`modGraceMs`, gone) or one react delay after a modifier, and the actor's
+    It resolves applied the bleed with no bounce at all (`_applyPending`), against START-HERE.
   - *A human's bounce by chat* (`_humanBounce`, `_seatByNamePart`): the client's coming bot panel's `Johan bounces the bleed to Hanna`
     and a typed `bounce Hanna` (`bounce to …`, `bounced it to …`, `@Bot bounce …`), from the human the bleed is aimed at, chat or log
     tier; a name by any part that fits one seat (a start needs 3 letters; a line with a `?` is talk); a question for two, none, the
     bot itself or no name. From the bleed's Block? until its It resolves: in one of the bot's windows the bounce lands at once —
     the bot re-aims, writes its own re-announce (`L12.bleed`; a bot at the new seat arms from it), and the window follows the bleed
-    with the new target's block step (`_bouncedTo`); between its windows (a beat, a modifier's pace, a window whose clock just ran
-    out) it waits for the bot's next step (`_bounceGate`: the re-announce and the new target's window in one tick, a fresh
-    intercept); after It resolves or a block the bouncer is told it came too late (`_lastBleed` for 30 s of the bot's turn).
+    with the new target's block step (`_bouncedTo`); between its windows (the 150 ms after a window closes, a modifier's pace) it
+    waits for the bot's next step (`_bounceGate`: the re-announce and the new target's window in one tick, a fresh intercept, the
+    block step Adaptive keeps); after It resolves or a block the bouncer is told it came too late (`_lastBleed` for 30 s of the
+    bot's turn). At a hotseat (one device) a typed bounce, or the panel's line naming the bled human, is the bled human's whoever
+    the device sends it as. A bounce with no name ("bounce it") is asked for one; `bounces` is the panel's third person only.
     Observers read the acting bot's re-announce of its open bleed as the same action re-aimed (no second action row or bleed in the
-    table model), across a modifier's play line too (`bleedOf`). `_evClassify` kind `bounce`. The card itself is not read (Johan).
+    table model), across a modifier's play line or the bled human's own bounce card line (`_bleedOpen`: each seat's open bleed).
+    `_evClassify` kind `bounce`. The card itself is not read (Johan).
   - *Arena* v1.4.16 (`spreadIncome` in the `--knob` whitelist).
-  - *Tests*: section 183 (33 cases), each red on v0.6.236 but one (the influence event, a non-regression), the egress review's 14
-    red on the round's first bytes (`1c7d00f`); 119h, 122a, 137k, 182b follow the new wording. *Gates*: see the PR (the suite ×3,
-    canary ×2, hotseat, HB1, main's client suite, lint).
+  - *Tests*: section 183 (42 cases), each red on v0.6.236 but one (the influence event, a non-regression); the egress review's
+    pass 1 cases (14) red on the round's first bytes (`1c7d00f`), pass 2's (9) on pass 1's (`0b0ba19`); 119h, 122a, 137k, 182b follow
+    the new wording. *Gates*: see the PR (the suite ×3, canary ×2, hotseat, HB1, main's client suite, lint).
     *The 240* against v0.6.236 (the version normalized; the round's first bytes): DIVERGED 136, SAME-PLAY 104 — every divergence
     the spread's (`--knob spreadIncome=0` against v0.6.236: SAME-PLAY 240); 83 outcomes moved, VP/match within the noise (nosferatu
     0.40 → 0.48, malkavian 1.77 → 1.73); `ana-gates.py` PASS 6/6, zeroPool 0. Handoff: `docs/handoffs/HANDOFF-to-main-2026-11-24-v0.6.237.md`.

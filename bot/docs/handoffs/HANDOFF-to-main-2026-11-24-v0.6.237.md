@@ -16,12 +16,14 @@ as before. The bot ships first: backward compatible (each item says why). One th
 - **Typed, the same**: `bounce Hanna`, `bounce to Hanna`, `bounced it to Hanna`, `I bounce the bleed to Hanna`, `@Bot bounce Hanna`.
 - **The card is not read** (Johan: many cards bounce, not only Deflection): the line is what moves the bleed.
 - **When**: from the bot's `Block?` window until its `It resolves`. In one of its windows (the `Block?`, a reactions window after a
-  modifier) the bounce lands at once. Between its windows (the window's clock just ran out, a beat after a `No block`, a modifier's
-  pace) it waits for the bot's next step, which writes the re-announce and opens the new target's window together. After `It
-  resolves`, or after a block, the bot answers `Johan: too late — VAMP's bleed has resolved.` (or `… was blocked`) and nothing moves.
-  A bot that plays no modifier resolves its bleed about a beat after a `No block` (the human's bleed-total window, knob
-  `askHumansTotal`, is still off: BOARD C5), so a panel that sends the line well after `No block` comes too late. Please send it
-  from the `Block?` step, the panel's bounce standing for the decline.
+  modifier) the bounce lands at once. Between its windows (the 150 ms after a window closes, a modifier's pace) it waits for the
+  bot's next step, which writes the re-announce and opens the new target's window together. After `It resolves`, or after a block,
+  the bot answers `Johan: too late — VAMP's bleed has resolved.` (or `… was blocked`) and nothing moves. A bot that plays no
+  modifier resolves its bleed 150 ms after a `No block` — at once, for a human (the human's bleed-total window, knob
+  `askHumansTotal`, is still off: BOARD C5), so a panel line sent after `No block` comes too late. Please send it from the `Block?`
+  step, the panel's bounce standing for the decline.
+- **A hotseat** (one device; the chat goes out under whichever human is active there): the panel's line counts when its first
+  name is the bled human, whoever sends it; a typed `bounce Hanna` is taken as the bled human's.
 - **What the bot does**: re-aims its bleed (no pump after it), writes its own re-announce (section 2), and gives the new target its
   block step (the bounce cards: "that Methuselah can attempt to block"); a human new target is asked in chat as before (`… now bleeds
   Hanna for N — Hanna may block it …`). Section 183f of the bot suite drives it.

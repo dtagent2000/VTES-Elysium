@@ -15954,7 +15954,11 @@ async function connectWithRetry(client, tries = 30){
        seat cannot take the give; a burn by the table takes the cards on the vampire with it; the actor's word waits under a hold, is asked
        again after a modifier, ends 'left' with its pending; a start of a name needs 3 letters and a '?' line is talk; a bounce between my
        windows waits for my next step (the re-announce and the new target's window in one tick), one after the bleed resolved or was
-       blocked is answered; an observer keeps the bleed across a modifier's play line.
+       blocked is answered; an observer keeps the bleed across a modifier's play line. Pass 2: the actor's word in a gap (my react delay
+       after a modifier, the beat after a word) bounces the total, and lands the bleed when I Pass after all; a Pass on a live wait
+       ends it; the other burn sweeps leave a given card to its giver; Adaptive keeps the bounce's block step; a hotseat's bled human
+       bounces under whichever name the device sends; a bare 'bounce it' is a question, 'Bounces are fun' talk; an observer keeps the
+       bleed across the bled human's own Deflection line.
        The old bytes lack _spoken, _actClone, _lateWordWait, _seatByNamePart and _humanBounce: every call is guarded.
        LAST LINE OF 183 is the closing brace below. */
     {
@@ -16022,7 +16026,11 @@ async function connectWithRetry(client, tries = 30){
         k.board = [V3('n1', 'Nassir', { attached: ['f1', 'v1'] }), L3('f1', 'Fame', { host: 'n1', attachTo: 'n1', owner: 'Hanna' }), L3('v1', 'Vessel', { host: 'n1' }), V3('n2', 'Lutz')];
         k._handlers.ctrl({ cid: 'n1', act: 'burn' });
         ok(!k.board.some(c => c && (c.id === 'n1' || c.id === 'f1' || c.id === 'v1')) && k.board.some(c => c && c.name === 'Vessel' && c.zone === 'ash') && !k.board.some(c => c && c.name === 'Fame') && k.board.some(c => c && c.id === 'n2'),
-           '183b ...the table burns the famed vampire: the cards on it go with it (by host and by id), mine to my ash heap, the giver’s Fame not onto mine (got ' + JSON.stringify(k.board.map(c => c.id + ':' + c.name + ':' + c.zone)) + ')'); }
+           '183b ...the table burns the famed vampire: the cards on it go with it (by host and by id), mine to my ash heap, the giver’s Fame not onto mine (got ' + JSON.stringify(k.board.map(c => c.id + ':' + c.name + ':' + c.zone)) + ')');
+        const sweep = fn => { const q = mk3('Viktor', 2, 'tremere', P); q.note = () => {}; const hv = V3('n1', 'Nassir', { attached: ['f1', 'v1'] });
+          q.board = [hv, L3('f1', 'Fame', { host: 'n1', attachTo: 'n1', owner: 'Hanna' }), L3('v1', 'Vessel', { host: 'n1' })]; fn(q, hv); return q.board.filter(c => c && c.zone === 'ash').map(c => c.name).sort().join(','); };
+        const won = sweep((q, hv) => q._wonBurnVamp(hv)), arc = sweep((q, hv) => { q._actingVamp = { v: hv, archoned: { by: 'Hanna' } }; q._archonBurned(hv); q._actingVamp = null; });
+        ok(won === 'Vessel' && arc === 'Vessel', '183b ...and so do the Ravnos burn and Archon Investigation: my Vessel to my ash heap, the giver’s Fame not (the egress review, pass 2) (got ' + JSON.stringify({ won, arc }) + ')'); }
 
       // c) A CARDLESS ACTION IS THE VAMPIRE ACTING: the plain bleed through the minion phase is a 'lock' clone with its verb and its aim
       { const P = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
@@ -16083,7 +16091,28 @@ async function connectWithRetry(client, tries = 30){
           ok(!!w0 && w0.done && !!row && row.m.end === 'left' && !(u.pending && u.pending.lateWait && u.pending.lateWait === w0),
              '183e ...a new action’s pending ends the old wait, "left" (its clock and reminder died with it only on a clear) (got ' + JSON.stringify({ done: w0 && w0.done, row: row && row.m }) + ')');
           const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
-          ok(!/this\.o\.modGraceMs/.test(src) && /const pl = w\.plan = this\._waitPlan\('react', p\.who\);/.test(src), '183e ...the wait is a tempo wait (_waitPlan react); the fixed 4 s grace is gone'); } }
+          ok(!/this\.o\.modGraceMs/.test(src) && /const pl = w\.plan = this\._waitPlan\('react', p\.who\);/.test(src), '183e ...the wait is a tempo wait (_waitPlan react); the fixed 4 s grace is gone'); }
+        const askedT = async u => { for(let i = 0; i < 80 && !(u.pending && u.pending.lateWait); i++) await sleep(50); return !!(u.pending && u.pending.lateWait); };
+        const nB = u => u.sent.filter(m => /redirected to/.test(txt3(m))).length;
+        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); const asked = await askedT(u);
+          u._onLog('Johan', '<b>Lisa</b> adds +1 bleed (= 3).'); await sleep(150); const gap = !!(u.pending && !u.pending.lateWait && u.pending.lateDue);
+          u._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await sleep(2600);
+          ok(asked && gap && nB(u) === 1 && u.pool === 20 && u.sent.some(m => txt3(m) === 'Lisa bleeds for 3. Target: Hanna\'s pool.'),
+             '183e ...at the client\u2019s pace, It resolves in my react delay after a modifier (no wait open) bounces the total of 3 -- it landed the bleed (the egress review, pass 2) (got ' + JSON.stringify({ asked, gap, bounces: nB(u), pool: u.pool }) + ')'); }
+        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); const asked = await askedT(u);
+          u._dispatch({ t: 'say', i: SAY.indexOf('No'), who: 'Johan' }); await sleep(100); const inBeat = !!(u.pending && !u.pending.lateWait && u.pending.lateDue) && nB(u) === 0;   // through the wire: the beat runs from the table's last event
+          u._dispatch({ t: 'say', i: SAY.indexOf('It resolves'), who: 'Johan' }); await sleep(2600);
+          ok(asked && inBeat && nB(u) === 1 && u.pool === 20, '183e ...No, then It resolves in my beat: one bounce, nothing lands (got ' + JSON.stringify({ asked, inBeat, bounces: nB(u), pool: u.pool }) + ')'); }
+        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); const asked = await askedT(u);
+          u._dispatch({ t: 'say', i: SAY.indexOf('No'), who: 'Johan' }); await sleep(100); u.hand = [];   // my Deflection is gone before the beat ends
+          u._dispatch({ t: 'say', i: SAY.indexOf('It resolves'), who: 'Johan' }); await sleep(2600);
+          ok(asked && nB(u) === 0 && u.says.includes('Pass') && u.pool === 18 && !u.pending,
+             '183e ...and when no bounce is left after the beat I Pass, and the It resolves already said lands the bleed (it vanished) (got ' + JSON.stringify({ asked, bounces: nB(u), says: u.says, pool: u.pool, pending: !!u.pending }) + ')'); }
+        { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(250); const w0 = u.pending && u.pending.lateWait;
+          u.board[0].locked = true; u._onLog('Johan', '<b>Lisa</b> adds +1 bleed (= 3).'); await sleep(200); const live = !!(u.pending && u.pending.lateWait);
+          u._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await sleep(150);
+          ok(!!w0 && w0.done && !live && u.says.includes('Pass') && u.pool === 17,
+             '183e ...my bouncer locked before the modifier: I Pass, the wait ends with it, and It resolves lands the 3 -- the live wait swallowed it (the egress review, pass 2) (got ' + JSON.stringify({ w0: !!w0, done: w0 && w0.done, live, says: u.says, pool: u.pool }) + ')'); } }
 
       // f) A HUMAN'S BOUNCE BY CHAT: my bleed at Johan Sigvard; parts of names; questions; only the target; a bot at the new seat answers
       { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan Sigvard', bot: false }, { seat: 3, name: 'Hanna Bergström', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
@@ -16129,7 +16158,12 @@ async function connectWithRetry(client, tries = 30){
         O2._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 2. Target: Hannes\'s pool.');
         const r2 = O2.opp && O2.opp[1] && O2.opp[1].minions && O2.opp[1].minions['Alice Chen (G6)'];
         ok((O2._turnActN | 0) === 1 && !!r2 && r2.bleeds === 1 && !!O2._obs && O2._obs.targetSeat === 4 && /^bleeds for /.test(O2._obs.verb || ''),
-           '183f ...and so with a modifier\u2019s play line between the announce and the re-announce (the egress review: the play line hid the bleed -- a second action row and a second bleed) (got ' + JSON.stringify({ n: O2._turnActN, rec: r2 && { a: r2.actions, b: r2.bleeds }, obs: O2._obs && { aim: O2._obs.targetSeat, verb: O2._obs.verb } }) + ')'); }
+           '183f ...and so with a modifier\u2019s play line between the announce and the re-announce (the egress review: the play line hid the bleed -- a second action row and a second bleed) (got ' + JSON.stringify({ n: O2._turnActN, rec: r2 && { a: r2.actions, b: r2.bleeds }, obs: O2._obs && { aim: O2._obs.targetSeat, verb: O2._obs.verb } }) + ')');
+        const O3 = mk3('Hanna Bergstr\u00f6m', 3, 'malkavian', P); O3.turnSeat = 1; O3.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen (G6)')] } } };
+        O3._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1.'); O3._onLog('Johan Sigvard', '<b>Lisa</b> plays <b>Deflection</b>.'); O3._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Hannes\'s pool.');
+        const r3 = O3.opp && O3.opp[1] && O3.opp[1].minions && O3.opp[1].minions['Alice Chen (G6)'];
+        ok((O3._turnActN | 0) === 1 && !!r3 && r3.actions === 1 && r3.bleeds === 1 && !!O3._obs && O3._obs.vamp === 'Alice Chen (G6)' && O3._obs.targetSeat === 4,
+           '183f ...and with the bled human\u2019s own bounce card line between, the line START-HERE asks for (the egress review, pass 2: two actions, two bleeds) (got ' + JSON.stringify({ n: O3._turnActN, rec: r3 && { a: r3.actions, b: r3.bleeds }, obs: O3._obs && { vamp: O3._obs.vamp, aim: O3._obs.targetSeat } }) + ')'); }
 
       // f3) A BOUNCE BETWEEN MY WINDOWS (the egress review): it waits for my next step, which re-announces it and opens the new target's window
       //     in the same tick; one after the bleed resolved, or was blocked, is answered, never applied
@@ -16153,6 +16187,23 @@ async function connectWithRetry(client, tries = 30){
           ok(r1 === true && r2 === true && r3 === true && !r4 && !r5 && u.chats.length === 3 && u.chats[0] === 'Johan Sigvard: Alice Chen’s bleed was blocked — there is nothing to bounce.'
              && u.chats[1] === 'Johan Sigvard: too late — Alice Chen’s bleed has resolved.' && u.chats[2] === u.chats[1],
              '183f3 ...after a block, after It resolves, or just after the bleed (still my turn) a bounce is answered and applies to nothing; another seat’s, or one in somebody else’s turn, is not mine to answer (got ' + JSON.stringify({ r1, r2, r3, r4, r5, chats: u.chats }) + ')'); }
+        { const u = mk3('Viktor', 1, 'ventrue', P); u.sent = []; u.send = m => u.sent.push(m); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true;
+          u.tempo = { mode: 'adaptive', waitSecs: 1 }; u.table = { 4: { pub: { cards: [V3('x1', 'Mira')] } } }; u._opp(4).handN = 0;
+          u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set(), pendingBounce: { seat: 4, by: 'Johan Sigvard', line: 'bounce Hannes' } };
+          const pr = IF3(u, '_bounceGate') ? u._bounceGate({ what: 'no', who: 'Johan Sigvard' }) : Promise.resolve(null); const asked = !!u._ask && u._ask.target === 4;
+          if(u._ask) u._answer('no', 'Hannes'); await Promise.race([pr, sleep(2000)]);
+          ok(asked && u._seatCanBlock(4, true) === false, '183f3 ...Adaptive asks a bounce\u2019s new target with an empty hand: it may block (the egress review, pass 2: the reactions-only skip took its block step) (got ' + JSON.stringify({ asked }) + ')'); }
+        { const P2 = P.map(q => q.seat === 4 ? Object.assign({}, q, { name: 'Lina' }) : q);
+          const hb = (hot, from, line) => { const u = mk3('Viktor', 1, 'ventrue', P2); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true; u._noServer = hot; u._ask = null;
+            u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set() };
+            const r = IF3(u, '_humanBounce') ? u._humanBounce(from, line) : null; const pb = u._actingVamp.pendingBounce; return { r, seat: pb ? pb.seat : 0, by: pb ? pb.by : null, chats: u.chats }; };
+          const got = { typed: hb(true, 'Lina', 'bounce Hanna'), panel: hb(true, 'Lina', 'Johan Sigvard bounces the bleed to Hanna'), other: hb(true, 'Lina', 'Lina bounces the bleed to Hanna'), online: hb(false, 'Lina', 'bounce Hanna') };
+          ok(got.typed.seat === 3 && got.typed.by === 'Johan Sigvard' && got.panel.seat === 3 && got.panel.by === 'Johan Sigvard' && !got.other.r && !got.online.r,
+             '183f3 ...a hotseat sends the chat under its active human: a typed bounce, or the panel\u2019s line naming the bled human, is the bled human\u2019s; a panel line naming another, or the same line online, is not (the egress review, pass 2) (got ' + JSON.stringify(got) + ')'); }
+        { const u = mk3('Viktor', 1, 'ventrue', P); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true; u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set() };
+          const r = ['bounce it', 'bounce to', 'bounced the bleed', 'Bounces are fun'].map(l => IF3(u, '_humanBounce') ? u._humanBounce('Johan Sigvard', l) : null);
+          ok(r[0] === true && r[1] === true && r[2] === true && r[3] === false && u.chats.length === 3 && u.chats.every(c => /^Johan Sigvard: bounce to whom\?/.test(c)),
+             '183f3 ...a bounce with no name is asked for one ("it", "to" and "the bleed" are no names); "Bounces are fun" is talk (the egress review, pass 2) (got ' + JSON.stringify({ r, chats: u.chats }) + ')'); }
         { const A = mk3('Viktor', 1, 'ventrue', P, { askSecs: 1.2 }), H = mk3('Hanna Bergström', 3, 'malkavian', P, { askSecs: 1.2 }); wire3(A, [H]); wire3(H, [A]);
           A.board = [V3('a1', 'Alice Chen (G6)', { blood: 5, cap: 6 })]; A.hand = []; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
           H.board = [V3('h1', 'Colette', { cap: 5, locked: true })]; H.hand = []; H.pool = 20; H.turnSeat = 1;
