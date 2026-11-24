@@ -320,7 +320,7 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.238 (24 Nov 2026)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
+- **v0.6.238 (24 Nov 2026; PR #105)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
   Dreams kan rättas nu. Det är ju ett kort i spel som inte är fäst vid någon vampyr"). KRCG: "Put this card in play. Add 1 counter
   to this card each time you lock it … You can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn
   this card if it has 3 counters." Its curated `poolGain` mode is phase-tagged and a lock mode, and the master phase's host rule
