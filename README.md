@@ -52,6 +52,7 @@ The MIT License covers what this project wrote. It does not cover:
   - `elysium-twd-profile.*` and `elysium-twd-archetypes.*` are statistics over VEKN's Tournament Winning Deck Archive (through KRCG), with vtes-skill's classification.
 
   The raw files (the card data, the deck archive, the card images) are never committed here: the client and the tools fetch them from their sources.
+- **Code taken from other projects.** The icons of the bot hub and its ring in `elysium-vtes-bord.html` are path data from Tabler Icons (MIT, Copyright (c) 2020-2026 Paweł Kuna). Their licence notice stands in the file beside the paths.
 
 Portions of the materials are the copyrights and trademarks of Paradox Interactive AB, and are used with permission. All rights reserved. For more information please visit [worldofdarkness.com](https://www.worldofdarkness.com).
 
@@ -62,4 +63,5 @@ Portions of the materials are the copyrights and trademarks of Paradox Interacti
 - **VEKN's Tournament Winning Deck Archive**: the decks the bots' tournament prior is counted from.
 - **vtes-skill** ([vtes-biased/vtes-skill](https://github.com/vtes-biased/vtes-skill), MIT): its archetype classification is in `elysium-twd-archetypes.json`.
 - **vtes-rulings** ([vtes-biased/vtes-rulings](https://github.com/vtes-biased/vtes-rulings), MIT): read for the bots' card sweep.
+- **Tabler Icons** ([tabler.io/icons](https://tabler.io/icons), [tabler/tabler-icons](https://github.com/tabler/tabler-icons), MIT, Copyright (c) 2020-2026 Paweł Kuna): the icons of the bot hub and its ring (v3.52.0).
 - **zero-vtes** ([lionel-panhaleux/zero-vtes](https://github.com/lionel-panhaleux/zero-vtes), MIT, Copyright (c) 2026 Lionel Panhaleux): a development-time reference for the bots' card readings. Nothing of it is committed or runs.

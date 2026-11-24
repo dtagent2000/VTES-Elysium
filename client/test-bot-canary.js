@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================================
-   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.4.0
+   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.6.0
    ----------------------------------------------------------------------------
    PROTOCOL.md §12 is the authoritative, "frozen" bot contract. Three things
    must agree at all times: (1) what §12 DOCUMENTS, (2) what the CLIENT
@@ -37,6 +37,11 @@
    v1.5.0 (19 Nov 2026, client v2.6.177): section 10 -- what the bots' readers rest on since v2.6.177: the hotseat
    bridge delivers after the sender's code has returned (section 12.2), and a card dragged from the hand to the table
    writes the menu's play line (section 12). Documentation and client source, positives only.
+   v1.6.0 (24 Nov 2026, client v2.6.187): section 11 -- the bot ring's Bounce (Johan: "bounces", never "redirects";
+   Redirection is a card). The client writes a line for the humans that NO bot shape reads, then the re-announce of the
+   SAME acting minion with the new target's pool -- the shape a bot's own bounce writes -- then Pass. The re-announce is
+   built by the client's own BLEED_LINE and read by L12.bleed; a live acting bot follows it to the new target, and a live
+   new target arms the bleed from the minion's controller. (The header said v1.4.0 through v1.5.0; the number caught up.)
    ========================================================================== */
 
 const fs = require('fs');
@@ -537,6 +542,50 @@ ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament m
   ok(CLIENT.includes('this._q.push({ seat, r, txt: JSON.stringify(msg) }); this._arm(); },') && CLIENT.includes('else Promise.resolve().then(() => B.drain());'), 'client source: the bridge queues a message at the send and delivers it in a drain after the sender\'s code (v2.6.177)');
   const dc = CLIENT.slice(CLIENT.indexOf('async function dropCard(c,d){'), CLIENT.indexOf('function groupDrop(c,d){')), pf = CLIENT.slice(CLIENT.indexOf('async function playFromHand(c,faceDown){'), CLIENT.indexOf('async function playOnActive(c,faceDown){'));
   ok(dc.includes('log(playLineHtml(c, a));') && dc.includes('await modeChooseGate(c, false)') && pf.includes('log(playLineHtml(c, a));'), 'client source: a drag and the menu\'s Play write one play line, the level asked on both (v2.6.177)');
+}
+
+/* ---- 11) v2.6.187: the bot ring's Bounce. A human the bleed is aimed at sends it on to another Methuselah (Deflection and
+   friends: never the acting minion's controller). Three things go out, in order: `NAME bounces the bleed to WHO.` for the
+   humans -- matched by NO L12 shape, so no bot counts it as an action or a reaction; `VAMP bleeds for N. Target: WHO's pool.`
+   -- the same minion re-announced at the new target, exactly what a bot's own bounce writes (bot v1.4.3), read by L12.bleed;
+   then the quick phrase Pass. A live acting bot follows its bleed to the new target whoever sends the line (bot steg 2), and
+   a live new target arms it from the minion's CONTROLLER, looked up on the published boards (bot v1.4.3). */
+{
+  const blm = CLIENT.match(/const BLEED_LINE=\{[\s\S]*?\n\};/);
+  ok(!!blm, 'extraction anchor: BLEED_LINE block found (section 11)');
+  const BL = blm ? new Function('return (' + blm[0].replace(/^const BLEED_LINE=/, '').replace(/;$/, '') + ');')() : {};
+  const strip = s => String(s).replace(/<[^>]*>/g, '');
+  ok(typeof BL.bounce === 'function' && typeof BL.bounced === 'function', 'BLEED_LINE carries bounce and bounced (client >= v2.6.187)');
+  if (typeof BL.bounce === 'function' && typeof BL.bounced === 'function'){
+    const info = strip(BL.bounce('<b>Johan</b>', '<b>Ann</b>')), re = strip(BL.bounced('<b>Anneke</b>', 3, '<b>Ann</b>'));
+    ok(info === 'Johan bounces the bleed to Ann.', 'the line for the humans: "' + info + '"');
+    const hits = Object.entries(L12).filter(([k, r]) => r instanceof RegExp && r.test(info)).map(([k]) => k);
+    ok(hits.length === 0, 'and no bot shape reads it (no action, no reaction counted): ' + JSON.stringify(hits));
+    ok(!/redirect/i.test(info), 'it says bounces, never redirects (Redirection is a card)');
+    ok(re === "Anneke bleeds for 3. Target: Ann's pool.", 'the re-announce: "' + re + '"');
+    const m = re.match(L12.bleed);
+    ok(!!m && m[1] === 'Anneke' && m[2] === '3' && m[3] === "Ann's pool", 'bot L12.bleed parses it: the same minion, the amount, the new target\'s pool');
+    const { Bot } = require('./elysium-bot.js');
+    const mk11 = name => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 30, log: () => {} });
+      u.seat = name === 'Bot' ? 2 : 3; u.started = true; u.send = () => {}; u.push = () => {}; u.chat = () => {};
+      u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Bot', bot: true }, { seat: 3, name: 'Ann', bot: true }]; return u; };
+    const actor = mk11('Bot');
+    actor._actingVamp = { v: { name: 'Anneke' }, name: 'Anneke', n: 3, target: 1, kind: 'bleed' };
+    actor._onLog('Johan', BL.bounce('<b>Johan</b>', '<b>Ann</b>'));
+    ok(actor._actingVamp.target === 1 && !actor._actingVamp.bounced, 'a live acting bot: the line for the humans moves nothing');
+    actor._onLog('Johan', BL.bounced('<b>Anneke</b>', 3, '<b>Ann</b>'));
+    ok(actor._actingVamp.target === 3 && actor._actingVamp.bounced === true, 'a live acting bot follows its bleed to the new target (sent by the human who bounced it)');
+    const tgt = mk11('Ann');
+    tgt.table = { 2: { pub: { cards: [{ id: 'c1', name: 'Anneke', kind: 'crypt', zone: 'ready', faceDown: false }] } } };
+    tgt._onLog('Johan', BL.bounced('<b>Anneke</b>', 3, '<b>Ann</b>'));
+    ok(!!tgt.pending && tgt.pending.actingVampName === 'Anneke' && tgt.pending.who === 'Bot' && tgt.pending.amount === 3, 'a live new target arms the bleed from the minion\'s controller, not from the sender: ' + JSON.stringify(tgt.pending && { who: tgt.pending.who, v: tgt.pending.actingVampName, n: tgt.pending.amount }));
+    try { if (tgt.pending && tgt._clearPending) tgt._clearPending('canary end'); } catch (_e) {}
+    tgt.out = true; actor.out = true;
+  }
+  ok(sec12.includes('`NAME bounces the bleed to WHO.`') && sec12.includes("`VAMP bleeds for N. Target: WHO's pool.`"), 'PROTOCOL section 12 documents the bounce pair (v2.6.187)');
+  const bb = CLIENT.slice(CLIENT.indexOf('function bleedBounce(to){'), CLIENT.indexOf('/* ---------- HB2b (v2.6.59)'));
+  const i1 = bb.indexOf('log(BLEED_LINE.bounce('), i2 = bb.indexOf('log(BLEED_LINE.bounced('), i3 = bb.indexOf("saySend(SAY.indexOf('Pass'));");
+  ok(i1 > 0 && i2 > i1 && i3 > i2, 'client source: the line, the re-announce, then Pass -- in that order');
 }
 
 console.log('\n' + passN + '/' + failN + (failN ? ' \u2014 FAIL' : ' \u2014 all green'));
