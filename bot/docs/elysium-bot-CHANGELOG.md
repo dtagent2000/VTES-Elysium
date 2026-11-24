@@ -320,6 +320,27 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.239 (24 Nov 2026)** — Hand size and replacement (the sweep register's class 14, D-135; the order of the rounds Claude's,
+  D-137). The rulebook, drawing cards: "Whenever you play a card from your hand, you draw another from your library to replace it
+  (unless card text says otherwise). … Whenever an effect changes your hand size … immediately discard down to or draw up to
+  match your hand size." Rules corrections, no knob (L-62).
+  - *14.1* — a card played in another seat's turn (a reaction, a wake, an intercept, a block's or a combat card) waited for the
+    bot's next master phase to be replaced: `_flushDraws` ran in its own turn (and after a vote's discard). `_replaceLate`, after
+    every table message (`_dispatch`): in another seat's turn, once nothing of the bot's is in flight (no window on it, no combat,
+    no action of its own), the owed cards are drawn; a card's own "Do not replace until …" stays held; the bot's own turn keeps
+    its flushes.
+  - *14.2* — a hand-size permanent (Elder Library) was drawn up for at the next turn start: the master phase now draws up as it
+    enters (`_recomputeHandSizeBaseline` after the placement; the Capuchin's own draw already moves the baseline).
+  - *14.3* — the discard phase's replacement is owed and drawn after the end of turn's discard-down, so Dreams' expiring +2 counts
+    it (a draw in flight was not), and Visit from the Capuchin turns it into a counter ("Each time you would replace a card other
+    than this card, instead burn 1 counter").
+  - Also: v0.6.238's pass 3 listed stale comments in the master phase's code (`known` "true for exactly Blood Doll/Vessel"):
+    corrected.
+  - *Prediction* (D-93; registered before the 240): against v0.6.238's 240 (`0648bf88`), DIVERGED in nearly every match (at least
+    220 of 240: every starter plays reactions in other seats' turns); the unlock snapshots of rounds 2–4 under 7 cards fall from
+    371 of 2,880 to under 40 (a replacement held until the unlock phase, an empty library); the plays in the reaction windows
+    (react-intercept, react-bounce, react-unlock, wake: 4,422) rise, by 1 to 15 %; ventrue's `replace-counter` rows rise (the
+    discard phase's replacements); no deck's VP/match moves by more than 0.3 (paired); `ana-gates.py` PASS, zeroPool 0.
 - **v0.6.238 (24 Nov 2026; PR #105)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
   Dreams kan rättas nu. Det är ju ett kort i spel som inte är fäst vid någon vampyr"). KRCG: "Put this card in play. Add 1 counter
   to this card each time you lock it … You can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn
