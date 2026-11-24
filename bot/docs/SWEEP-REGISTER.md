@@ -33,8 +33,8 @@ stayed (O-12's steal pair, BOARD's locked routes but their Eyes of the Wild ride
 What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
-source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's egress; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1, 14.1–14.3. Missed: 4.6, 5.2,
-8.6, 9.8, 10.1, 10.2, 12.2.
+source; 7–13: the migration's sorting, Claude's; Claude orders the rounds, D-137). Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 4.6,
+5.2, 8.6, 9.8, 10.1, 10.2, 12.2.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -382,25 +382,6 @@ Decisions on Claude's priors; each needs a design to Johan before it changes (D-
   the master phase's loop, so a later candidate (Dreams of the Sphinx, a Location) waits a turn; Guardian Angel's own case tries
   the next. [v0.6.238's egress] · reachable (the first v0.6.238 bytes' 240: Dreams behind such a pick 4 times, never with no
   vampire).
-
-## 14. Hand size and replacement
-A card's replacement, or the hand size's draw-up and discard-down, against the rulebook's drawing cards: "Whenever you play a card
-from your hand, you draw another from your library to replace it (unless card text says otherwise)."
-- **14.1 A card played in another seat's turn is replaced at the bot's own next flush** — `_flushDraws` runs in the bot's own turn
-  (and after a vote's discard in another seat's referendum), so a reaction, a block's or a combat's card leaves the hand short
-  until its own master phase (the first v0.6.238 bytes' 240: 371 of 2,880 unlock snapshots of rounds 2–4 under 7 cards). [v0.6.238's
-  egress, found on the way] · **active** (every deck).
-- **14.2 A hand size raised in play is drawn up at the next turn start** — "Whenever an effect changes your hand size … immediately
-  discard down to or draw up to match your hand size" (the rulebook); `_recomputeHandSizeBaseline` runs at the turn start only, so
-  Elder Library (+1 hand size) gives its card a turn late (the release bytes' 240: 71 Elder Library plays; the hand stayed at 7 for
-  the rest of that round in 68). Fix sketch: draw up when a hand-size permanent enters play (`_handCount` makes that safe before the
-  flush). [v0.6.238's egress, pass 2] · **active** (malkavian ×1).
-- **14.3 The discard phase draws its replacement at once, outside the owed count** — a `draw` sent, not owed, and
-  `_revertHandSizeBonus` runs in the same tick, before the card arrives: Dreams' expiring +2 sheds one card too few (the release
-  bytes' 240: 4 of 20 reverts, all after a discard-phase action; 10 malkavian turns above the hand size follow). The same shape
-  skips Visit from the Capuchin ("Each time you would replace a card other than this card, instead burn 1 counter"). Fix sketch:
-  the replacement through `_drawOwed`, a flush after the revert. [v0.6.238's egress, pass 3] · **active** (malkavian ×1) /
-  reachable (ventrue ×1: the Capuchin).
 
 ## Not migrated: done since, or not a problem
 - *w1*: the round restrictions (the first-round strikes failing closed, three cards untagged, Riposte in round 1) — read since
