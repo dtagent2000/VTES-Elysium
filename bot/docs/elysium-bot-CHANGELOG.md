@@ -340,6 +340,21 @@
     `lock-income` decisions name it, and some copies burn at their third counter. Malkavian's VP/match falls, by at most 0.2 (the
     hosted card paid at most 469 pool over the 104 placements, 4.5 a placement, which three locks replace; likely within the noise,
     2 SE ≈ 0.16). `ana-gates.py` PASS, zeroPool 0.
+    *Observed* (the 240 against v0.6.237, the version string normalized): IDENTICAL 135, SAME-PLAY 9, DIVERGED 96, every
+    divergence from malkavian's first `lock-income` on Dreams; no `income-host` row names it; 242 locks in 96 matches (a blood to
+    an uncontrolled vampire 158, the Edge's pool 62, the hand size 22), 66 copies burned at their third counter, none locked a
+    fourth time; malkavian 1.73 → 1.63 VP/match (−0.10, paired SE 0.06, 95 % [−0.21, +0.01]; wins 107 → 97), ventrue +0.11
+    (95 % [+0.02, +0.20]); `ana-gates.py` PASS 6/6, zeroPool 0. The prediction held.
+  - *Tests*: section 184 (7 cases), 6 red on v0.6.237 (green: the choice of a master, a non-regression); 183d's source pin follows
+    the host rule's name (`_hostInc`). *Gates* (the release bytes `1cf70697` / `3e409f8c`, cardfx `b937ae3d` unchanged): the suite
+    2792/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.187), main's canary v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean,
+    main's client suite (v2.6.187) 422/1 (the guide's embed), `client/check-versions.js` everything agrees. No arena smoke: neither
+    the wire nor the real clock changed.
+  - *Found on the way* (Johan's question of 17:03, the starters' bounces; a scratch count on the 240 and on the five starters,
+    120 matches at `--seeds 1`): every bounce goes to the bouncer's prey (595 and 292); in the 240, 255 landed on the new target
+    for their full amount (459 pool), 317 were blocked by it, 23 came to 0 (the bleeder's Spying Mission, the new target's
+    Protected District); none landed on the bouncer. A bleed of 2 or more is bounced 345 times of 366 when the target holds a
+    usable bounce; one of 1 mostly taken (the reserve). No new target bounces onward: the register's 4.6, now counted (missed).
 - **v0.6.237 (24 Nov 2026; PR #103)** — The playtest round (RULINGS D-136): Johan's offline hotseat, four bots and a human, and his "Yes det
   mesta låter bra" on Claude's analysis, with his change on the bounce (read from chat, not the card). A scratch recording of a
   bots-only hotseat at the client's pace (paceMs 3100, askSecs 20, the four starters, 5 rounds) measured the chat for the next round.

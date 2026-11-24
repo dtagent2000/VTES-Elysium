@@ -102,8 +102,8 @@ is a handoff first. Bot-to-bot gaps are marked.
   human to a bot arms too), and a typed `bounce <name>` (the bot writes the re-announce); the card's play line is not read, Johan:
   many cards bounce. Left: a bot that is a bounce's new target cannot bounce onward (that half is the bot's own play); a bounce
   card played from the hand with no ring and no typed line still moves nothing. [B; O-3; the playtest round] · **missed** (the
-  onward bounce; v0.6.237's 240, a scratch count: of 592 bounces the new target held a usable bounce of its own in 145, and 58 of
-  those landed on it, 20 of them bleeds of 2 or more, which a first target bounces 343 times of 363) / human.
+  onward bounce; v0.6.238's 240, a scratch count: of 595 bounces the new target held a usable bounce of its own in 146, and 62 of
+  those landed on it, 21 of them bleeds of 2 or more, which a first target bounces 345 times of 366) / human.
 - **4.7 A human's Change of Target after a right-click action** names no vampire or another: `_onCot` misses it. Main (11 Nov §1):
   such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. [B] · human (toreador ×2).
 - **4.8 A human's Sudden Reversal at a bot's master**: no line says it cancelled the master (main, 19 Nov). [B: the waves' riders
