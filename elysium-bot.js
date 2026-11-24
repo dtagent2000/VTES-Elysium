@@ -1370,7 +1370,7 @@ class Bot {
           this._clearPending('turn change');
         }
         if(m.seat !== this.turnSeat && this.turnSeat && this.opp && this.opp[this.turnSeat] && this.opp[this.turnSeat].memo) this._hMemoTurnEnd(this.turnSeat);   // v0.6.225: their turn ended -- an open record resolves; the answer window closes (or lasts their next turn)
-        if(m.seat !== this.turnSeat){ this._srWindowClosed('the turn changed'); if(this._releaseHolds('action', 'combat')) this._replaceLate(); }   // v0.6.239 (the egress review, findings 1 and 2): the last turn's 'as played' windows, actions and combats are over -- a reaction's 'Do not replace until after this action' is released here, never inside its action (_flushDraws releases in my own turn only), and drawn before the next turn starts (turnSeat is still the last turn's here)
+        if(m.seat !== this.turnSeat){ this._srWindowClosed('the turn changed', false); this._srSent = null; this._releaseHolds('action', 'combat'); }   // v0.6.239 (the egress review, findings 1 and 2): the last turn's 'as played' windows, actions and combats are over -- a reaction's 'Do not replace until after this action' is released here, never inside its action (_flushDraws releases in my own turn only). Drawn at the end of this dispatch when the next turn is another seat's; when it is mine, at my master phase's flush, counted in _handCount until then (pass 2, finding 4: a draw sent here was still in flight when Dreams' +2 read the hand)
         if(m.seat !== this.turnSeat){ this._turnActN = 0; this._turnSerial = (this._turnSerial | 0) + 1; }   // v0.6.217: + the turn's serial (Monster's 'once each turn' = once in each player's turn [ANK 20180719-4])   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
         this.turnSeat = m.seat;
         if(this.started && !this.out && m.seat !== this.seat && m.seat) this._w5HumanTurn(m.seat);   // v0.6.230 (V5 wave 5): Anarch Revolt's reminder to a human
@@ -8513,17 +8513,24 @@ class Bot {
     if(this._isHumanName(by)) return this.chat(by + ': too late \u2014 my ' + card + ' has resolved; take your Sudden Reversal back.');
     this.send({ t: 'log', html: '<b>' + esc(by) + "</b>'s Sudden Reversal comes too late for <b>" + esc(this.o.name) + "</b>'s <b>" + esc(card) + '</b>.' });   // L12.srLate
   }
-  _srWindowClosed(why){              // v0.6.239 (the egress review, finding 1): my Sudden Reversal's window has closed and my cancel stood -- the owner arbitrates at the window's close and answers every other cancel with L12.srLate before it moves on, so its next other line (or the turn change) means mine was not answered: the replacement is owed again
-    const s = this._srSent; if(!s) return;
-    this._srSent = null;
-    if(this._releaseHolds('srWindow')){ this.o.log('sudden reversal: my ' + s.name + ' on ' + s.owner + '\u2019s ' + s.card + ' stands (' + why + ') -- replaced now'); this._replaceLate(); }   // drawn before the line that shows the window closed takes effect: a bleed at me would hold it (_replaceLate waits out a window on me)
+  _srWindowClosed(why, drawNow){     // v0.6.239 (the egress review, finding 1): my Sudden Reversal's window has closed and my cancel stood. The owner arbitrates at the window's close and answers every other cancel with L12.srLate before it moves on; what shows it moved on is its next master's line (L12.asPlayed), its next phase's line or the turn change -- not any line of its own (pass 2, finding 1: an archetype note can come inside its window). The record stays, marked closed, until the turn change: a 'too late' that still comes (a cancel that reached the owner after its window, the register's 14.7) is honoured (_onSrLate)
+    const s = this._srSent; if(!s || s.closed) return;
+    s.closed = true;
+    if(this._releaseHolds('srWindow')){ this.o.log('sudden reversal: my ' + s.name + ' on ' + s.owner + '\u2019s ' + s.card + ' stands (' + why + ') -- replaced'); if(drawNow) this._replaceLate(); }   // drawNow (the owner's line): drawn before that line is handled. At the turn change (pass 2, finding 4) the end of the dispatch draws in another seat's turn, and my own turn's flush in mine -- _handCount counts the owed card meanwhile
   }
   _onSrLate(owner, card){            // my cancel came too late (the window had closed, or another came first): my Sudden Reversal back to my hand, no out-of-turn debt
     const s = this._srSent; if(!s || s.owner !== owner || FX_NORM(s.card) !== FX_NORM(card)) return;
     this._srSent = null;
     const k = this.board.map(c => !!(c && c.zone === 'ash' && c.name === s.name)).lastIndexOf(true); if(k >= 0) this.board.splice(k, 1);
-    this.hand.push(s.name); if((this._drawOwed | 0) > 0) this._drawOwed--;
-    { const H = this._replHold || [], k = H.findIndex(x => FX_NORM(x.card) === FX_NORM(s.name)); if(k >= 0) H.splice(k, 1); if(H.length > (this._drawOwed | 0)) H.length = this._drawOwed | 0; }   // v0.6.235 (the egress review, finding 6): the card back in hand holds no replacement, and no hold outlives the draw it held
+    this.hand.push(s.name);
+    { const H = this._replHold || [], k = H.findIndex(x => FX_NORM(x.card) === FX_NORM(s.name)); if(k >= 0) H.splice(k, 1); }   // v0.6.235 (the egress review, finding 6): the card back in hand holds no replacement
+    if(!s.closed){ if((this._drawOwed | 0) > 0) this._drawOwed--; }   // its window had not closed: its own replacement is still owed
+    else if((this._drawOwed | 0) > (this._replHold || []).length) this._drawOwed--;   // v0.6.239 (the egress review's pass 2, finding 1): closed, its replacement released but not drawn yet (a window on me held it) -- one owed draw fewer
+    else {   // closed and drawn: the card back in hand is one over the hand size -- the rulebook, drawing cards: 'Whenever an effect ... adds or removes cards from your hand, immediately discard down to or draw up to match your hand size.'
+      const di = Math.max(0, this._deadHandIndex(this._deadJudgeVamps())), shed = this.hand.splice(di, 1)[0];
+      this._toAsh(shed); this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> discards <b>' + esc(shed) + '</b> (hand size).' }); this._emit('sr-shed', { card: shed });
+    }
+    { const H = this._replHold || []; if(H.length > (this._drawOwed | 0)) H.length = this._drawOwed | 0; }   // no hold outlives the draw it held
     if((this._ootDebt | 0) > 0) this._ootDebt--;
     this._emit('sr-taken-back', { owner, card });
     this.push();
@@ -10868,7 +10875,7 @@ class Bot {
     if(this.out || !this.started) return;
     const t = stripTags(html).trim();
     if(who !== this.o.name) this._evRecord(who, t, 'log');   // v0.6.176: the event log (my own lines are recorded at send)
-    if(this._srSent && this._srSent.hold && who === this._srSent.owner && !L12.srLate.test(t) && !L12.srCancel.test(t)) this._srWindowClosed('the owner\u2019s next line');   // v0.6.239 (the egress review, finding 1): a Sudden Reversal line is the window's own answer (another cancel's 'too late' can come before mine); any other line of the owner's comes after the window
+    if(this._srSent && this._srSent.hold && !this._srSent.closed && who === this._srSent.owner && (L12.asPlayed.test(t) || /^Phase: /.test(t))) this._srWindowClosed('the owner\u2019s next ' + (L12.asPlayed.test(t) ? 'master' : 'phase'), true);   // v0.6.239 (the egress review, finding 1; pass 2, finding 1): the owner's next master or phase line comes after its window -- not a Sudden Reversal line (another cancel's 'too late' can come before mine), nor a note (an archetype read can come inside the window)
     let m;
     if(who !== this.o.name){ if(L12.debugOn.test(t)) this._debugSeatSet(who, true); else if(L12.debugOff.test(t)) this._debugSeatSet(who, false); }   // v0.6.201: a bot at the table announced DEBUG mode -- I look away from its open hand
     if(who !== this.o.name) this._hMemoLog(who, t);   // v0.6.225 (D-113 (3)): a human's lasting choice (Toreador Grand Ball's pair)
