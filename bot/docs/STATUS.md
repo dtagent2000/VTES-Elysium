@@ -11,10 +11,10 @@ v0.6.237; RULINGS D-136), reviewed in three egress passes. Its handoff to main: 
 re-embed, a `resolve-late` label), and answers main's reply on the bot ring (PR #102, v2.6.187: its canary 247/0 on
 v0.6.237).
 
-## Last gates (v0.6.237's release bytes, `176d4da6`)
-24 Nov: the suite 2781/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.186) · hotseat 12/0 · HB1 11/0 · lint clean · main's
-client suite 409/1 (the guide's embed) · section 183 52/0 (49 red on v0.6.236) · the 240 against v0.6.236: DIVERGED 136, SAME-PLAY
-104, every divergence the spread's (`spreadIncome=0`: SAME-PLAY 240); 0 of 1,191 income placements stacked while a ready vampire
+## Last gates (v0.6.237's release bytes, `00ed0cbd`)
+24 Nov: the suite 2785/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.186), main's v1.6.0 with the ring's v2.6.187 247/0 ·
+hotseat 12/0 (with v2.6.187 too) · HB1 11/0 · lint clean · main's client suite 409/1 (the guide's embed) · section 183 52/0
+(49 red on v0.6.236) · the 240 against v0.6.236: DIVERGED 136, SAME-PLAY 104, every divergence the spread's (`spreadIncome=0`: SAME-PLAY 240); 0 of 1,191 income placements stacked while a ready vampire
 had none (252 of 1,189 at 0) · `ana-gates.py` PASS 6/6 on the 240 · the arena smoke (one match, the four starters, real clock)
 PASS 7/7 · the mirror bench (D-93's prediction, 480 paired): the stacking seat +0.01 VP (SE 0.02), the prediction held.
 

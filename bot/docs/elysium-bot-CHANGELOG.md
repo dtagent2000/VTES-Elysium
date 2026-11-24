@@ -374,20 +374,22 @@
   - *Tests*: section 183 (52 cases), 49 red on v0.6.236 (green: the influence event and the mirror's records, non-regressions,
     and the ring in a window, which v0.6.236 already followed); the egress review's pass 1 cases (14) red on the round's first bytes
     (`1c7d00f`), pass 2's (9) on pass 1's (`0b0ba19`), pass 3's (6) on pass 2's (`5b22b83`), the ring's (5) on pass 3's (`05d73f7`);
-    119h, 122a, 137k, 182b follow the new wording. *Gates* (the release bytes `176d4da6` / `43e04b17`, cardfx
-    `b937ae3d` unchanged): the suite 2781/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.186), hotseat 12/0, HB1 11/0, lint
-    clean, main's client suite 409/1 (the guide's embed), the arena smoke PASS 7/7, `tools/doc-budget.sh` PASS.
+    119h, 122a, 137k, 182b follow the new wording. *Gates* (the release bytes `00ed0cbd` / `c58ea351`, cardfx
+    `b937ae3d` unchanged): the suite 2785/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.186) and main's canary v1.6.0 with
+    the ring's client v2.6.187 247/0, hotseat 12/0 (12/0 with v2.6.187), HB1 11/0, lint clean, main's client suite 409/1 (the
+    guide's embed), the arena smoke PASS 7/7, `tools/doc-budget.sh` PASS.
     *The 240* against v0.6.236 (the release bytes; the round's first bytes gave the same): DIVERGED 136, SAME-PLAY 104 — every
-    divergence the spread's (`--knob spreadIncome=0` against v0.6.236: SAME-PLAY 240; the egress fixes change no play of the 240:
-    IDENTICAL 240 against pass 1's bytes); 83 outcomes moved (winner, VP or rounds; 38 winners), VP/match within the noise
+    divergence the spread's (`--knob spreadIncome=0` against v0.6.236: SAME-PLAY 240; the egress fixes and the ring change no
+    play of the 240: IDENTICAL 240 against pass 1's bytes and against the bench's); 83 outcomes moved (winner, VP or rounds; 38 winners), VP/match within the noise
     (nosferatu 0.40 → 0.48, malkavian 1.77 → 1.73); `ana-gates.py` PASS 6/6, zeroPool 0. Handoff: `docs/handoffs/HANDOFF-to-main-2026-11-24-v0.6.237.md`.
     *Egress*: 32 findings in 3 passes (half-done 20, stale-doc 7, rule-missed 3, test-weakened 1, unproven 1), all fixed — pass 3's
     six without a fourth review (the loop's limit, D-133); between the passes the suite found two reds in pass 1's fixes (fixed).
+    After pass 3, main's reply on the ring (PR #102) moved the bounce's panel half to its re-announce: unreviewed by a fresh pass.
   - *Prediction* (D-93; registered after the 240 above, before the mirror bench): spreading the income masters is a change of
     presentation more than of strength — a seat that stacks them (`--bench knob=spreadIncome=0`, every seating, the stacking seat in
     each position, a fresh deal per match) scores level with the table: its edge within 2 SE of 0 (each copy moves at most 1 blood
     a turn either way, in torpor too; where the copies sit changes which vampire pays, not how much). The next report evaluates it.
-    *Observed* (the release bytes, 480 matches a arm, `--seeds 5`, paired against `--bench none`): the stacking seat's VP 0.95 →
+    *Observed* (`176d4da6`, whose 240 the release bytes repeat identically; 480 matches a arm, `--seeds 5`, paired against `--bench none`): the stacking seat's VP 0.95 →
     0.95, +0.01 (paired SE 0.02; 95 % [−0.04, +0.05]), wins 111 → 113, its edge −0.05 in both arms (±0.13); 111 of 480 matches
     played differently. The prediction held: the spread is presentation, not strength.
 - **v0.6.236 (20 Nov 2026)** — The V5 sweep's step B, the Banu Haqim pilot (RULINGS D-134; Johan, 20 Nov: "Kör B:s andra del,
