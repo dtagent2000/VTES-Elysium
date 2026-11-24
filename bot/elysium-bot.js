@@ -3525,7 +3525,7 @@ class Bot {
       if(host && hg && hg.kind === 'lib'){ const has = k => (hg.e.modes || []).some(mo => mo.fx && mo.fx[k]);
         if(has('fameOnTarget')){ (this._famedMine = this._famedMine || new Set()).add(host.name); (this._famedSeen = this._famedSeen || {})[host.name] = true; }
         if(has('noBlockMinion')) this._pentexVamp = host.name; }
-      if(host){ card.host = host.id; host.attached = host.attached || []; if(!host.attached.includes(card.id)) host.attached.push(card.id); card.x = host.x; card.y = host.y; } }   // v0.6.237: ON its host -- my board shows it attached (the pub's host / attached), and it leaves with the host; until now it lay loose at 64,64
+      if(host){ card.host = host.id; host.attached = host.attached || []; if(!host.attached.includes(card.id)) host.attached.push(card.id); if(typeof host.x === 'number'){ card.x = host.x; card.y = host.y; } } }   // v0.6.237: ON its host -- my board shows it attached (the pub's host / attached), and it leaves with the host; until now it lay loose at 64,64
     this.board.push(card); this.push();
     this._w5OnGiven(card);   // v0.6.230 (V5 wave 5): a stolen The Rack -- its new controller chooses
     this.o.log('given: ' + m.name + ' from ' + (m.from || '?') + (m.attachTo ? ' (on ' + m.attachTo + ')' : ''));
