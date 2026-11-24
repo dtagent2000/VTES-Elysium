@@ -5,13 +5,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
-- **The chat round** (Johan, 24 Nov: "en ordentlig utvärdering av bottarnas chattande ... vid vanliga bord"; D-136; his kör on
-  the shape, D-137): the recorder and a chat analysis tool in the repo (one seed before / after at the client's pace); the bubbles
-  stay and keep their content; one speaker at a time (a seat's bubble waits until another seat's has left the screen, a short
-  phrase holds the floor 1.5 s; ring order on a tie, the vote round driven by the previous voter); a bot's question to a bot
-  without the human's instruction tail; no `(bot):` prefix; the silent bot-vs-bot verdict wait (14 s in the recording); every
-  chat line ruled with Johan. *Done when* the recording shows no bubble over another seat's and each line has his ruling. Docs:
-  D-64, D-137.
+- **The chat round** (D-136, D-137): the recorder and a chat analysis tool in the repo (one seed before / after at the client's
+  pace); the bubbles stay and keep their content; one speaker at a time (a seat's bubble waits until another seat's has left the
+  screen, a short phrase holds the floor 1.5 s; ring order on a tie, the vote round driven by the previous voter); a bot's
+  question to a bot without the human's instruction tail; no `(bot):` prefix; the silent bot-vs-bot verdict wait (14 s in the
+  recording); every chat line ruled with Johan. *Done when* the recording shows no bubble over another seat's and each line has
+  his ruling. Docs: D-64, D-137.
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). The bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the vest
   prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
@@ -81,8 +80,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **11. Windows: who is asked, and when.**
 - **12. Combat's steps** (C2's neighbours).
 - **13. Choices around a card**: Claude's priors, each a design to Johan first (D-87).
-- **14. Hand size and replacement** (14.4–14.7, all latent: a draw in flight, a hand size lowered in play, a reaction's 'after
-  this action' in another seat's turn, a Sudden Reversal's window read late).
+- **14. Hand size and replacement** (14.4–14.7, all latent).
 
 ## Known, not built (bot side)
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only

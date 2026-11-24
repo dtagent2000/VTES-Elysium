@@ -364,12 +364,17 @@
     match where lasombra cancels a master is SAME-PLAY or DIVERGED from the cancel (its `srWindow` hold and release, the draw at
     the owner's next line), the others IDENTICAL; every hold released at the owner's next line or the turn change; no take-back
     (one Sudden Reversal deck at the table, and the sim delivers the cancel inside the window).
-  - *Tests*: section 185 (5 cases, all red on v0.6.238; c–e through a whole turn, the server's draws arriving later). *Gates*
-    (the release bytes `5b8f55a7` / `fefbe871`, cardfx `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2801/0 ×3
-    (on cardfx `b937ae3d`; the release's cardfx adds aliases only, its 240 IDENTICAL in #103), canary 235/0 ×2, main's canary
-    v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.187) 422/1 (the guide's embed), the arena smoke
-    (one match, the four starters, the real clock: the bot draws in other seats' turns now) PASS 7/7, the five starters' 120 PASS
-    6/6, `client/check-versions.js` everything agrees.
+    *Observed*: the 240 IDENTICAL 240/240 and the five starters' 120 IDENTICAL 120/120; the lasombra smoke (48 matches) IDENTICAL
+    36, SAME-PLAY 12, the 12 exactly the matches where lasombra cancels a master: 12 cancels, 12 `srWindow` holds, 12 releases,
+    each after the owner's window closed (3.3–3.9 s later at the client's pace, before the owner's next action), no take-back,
+    no 'too late'; `ana-gates.py` PASS 6/6 on all three. The prediction held.
+  - *Tests*: section 185 (7 cases: a–e all red on v0.6.238; f and g, pass 1's, red on the first bytes `5b8f55a7`; c–e through
+    a whole turn, the server's draws arriving later). *Gates* (the bytes after pass 1, `b62e6b96` / `25c9a0b7`, cardfx
+    `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2803/0 ×3, canary 235/0 ×2, main's canary v1.6.0 247/0,
+    hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.187) 422/1 (the guide's embed), the arena smoke (one match, the
+    four starters, the real clock) PASS 7/7, `client/check-versions.js` everything agrees. The first bytes (`5b8f55a7` /
+    `fefbe871`) passed the same gates: the suite 2801/0 ×3 on cardfx `b937ae3d` and again on `fe5f60bf`, the arena smoke PASS
+    7/7 (the bot draws in other seats' turns now), the five starters' 120 PASS 6/6.
 - **v0.6.238 (24 Nov 2026; PR #105)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
   Dreams kan rättas nu. Det är ju ett kort i spel som inte är fäst vid någon vampyr"). KRCG: "Put this card in play. Add 1 counter
   to this card each time you lock it … You can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn

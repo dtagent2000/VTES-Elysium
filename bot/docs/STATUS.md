@@ -5,16 +5,16 @@
 `krcg-v5.js` v1.0.0 · `ana-gates.py` v1.1.4 · the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51
 and main's canary v1.5.0; the root's release is client v2.6.187 / srv-2.6.53 (the canary's second run).
 
-**Deploy state:** `main` carries v0.6.236 and client v2.6.187 (the bot ring, PR #102). **Open PRs, a stack, merged in order:**
-#103 the playtest round (`bot-playtest-fixes`, v0.6.237, D-136; with KRCG's card data of 24 Nov, `test-cardfx` green again),
-#105 Dreams of the Sphinx (`bot-dreams-fix`, v0.6.238), #106 this release (`bot-hand-replacement`, v0.6.239). Main's #104
-(client v2.6.188, no wire change) is open: merged first, the bot PRs' root line follows it.
+**Deploy state:** `main` carries v0.6.238 and client v2.6.187: #103 the playtest round (v0.6.237, D-136, with KRCG's card
+data of 24 Nov) and #106 Dreams of the Sphinx (#105's commits: #105 had merged into its base). **Open:** #107 this release
+(`bot-hand-replacement`, v0.6.239, base main). Main's #104 (client v2.6.188, no wire change) is open: merged first, the root
+line above follows it. A merged PR's branch is deleted automatically (24 Nov).
 
-## Last gates (v0.6.239's release bytes, `5b8f55a7`, cardfx `fe5f60bf`)
-24 Nov: the suite 2801/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.187), main's v1.6.0 247/0 · hotseat 12/0 · HB1
-11/0 · lint clean · main's client suite (v2.6.187) 422/1 (the guide's embed) · section 185 5/0 · the arena smoke PASS 7/7 ·
-the 240 against v0.6.238: DIVERGED 236, SAME-PLAY 4; the unlock hands of rounds 2–4 under 7 cards 371 → 7; no deck's VP moved
-by 0.3 · `ana-gates.py` PASS 6/6. The predictions (D-93): the CHANGELOG.
+## Last gates (v0.6.239 after the egress review's pass 1, `b62e6b96`, cardfx `fe5f60bf`)
+24 Nov: the suite 2803/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.187), main's v1.6.0 247/0 · hotseat 12/0 · HB1
+11/0 · lint clean · main's client suite (v2.6.187) 422/1 (the guide's embed) · section 185 7/0 · the arena smoke PASS 7/7 ·
+the 240 and the five starters' 120 IDENTICAL to the first bytes'; the lasombra smoke SAME-PLAY in its 12 cancels only ·
+`ana-gates.py` PASS 6/6. The first bytes' 240 against v0.6.238 and the predictions (D-93): the CHANGELOG.
 
 ## Next
 1. **The chat round** (v0.6.240; D-137, Johan's kör): a recording first, then one speaker at a time (a short phrase holds the
@@ -26,8 +26,8 @@ by 0.3 · `ana-gates.py` PASS 6/6. The predictions (D-93): the CHANGELOG.
 4. **C**, concentrated (spec-card-sweep §11.8, D-132): C1 the cross-check tool, then the first reader's round (§11.6).
 5. Johan, asked 20 Nov (no kör yet): the pilot's flow proposals; the D line on KRCG's MCP; deleting `bot-sweep-pilot-fix2`;
    BOARD's read-through; class 1's design question.
-6. The fizzle misread; Q4; C5; C6 (the suite's 6 GB heap first); the abstract model; a hand size lowered in play (no
-   discard-down yet); a draw in flight is not counted in the hand.
+6. The fizzle misread; Q4; C5; C6 (the suite's 6 GB heap first); the abstract model; the register's class 14 (14.4–14.7,
+   latent: a draw in flight, a hand size lowered in play, a reaction's late release, a Sudden Reversal's window read late).
 
 ## Not yet consumed from main
 Client v2.6.187 (PR #102, the bot ring): its reply is answered in v0.6.237's handoff; the guide and the copies next (Next 3).
