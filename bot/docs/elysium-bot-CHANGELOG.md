@@ -461,6 +461,12 @@
     *Observed* (`176d4da6`, whose 240 the release bytes repeat identically; 480 matches a arm, `--seeds 5`, paired against `--bench none`): the stacking seat's VP 0.95 →
     0.95, +0.01 (paired SE 0.02; 95 % [−0.04, +0.05]), wins 111 → 113, its edge −0.05 in both arms (±0.13); 111 of 480 matches
     played differently. The prediction held: the spread is presentation, not strength.
+  - *The card data refreshed* (24 Nov, after the review; D-92): `test-cardfx`'s drift guard was red on this PR and on main's daily
+    runs since 22 Nov. KRCG's dump of 24 Nov adds 1,674 translated names (Spanish and French; 427 crypt, 1,247 library), so a fresh
+    compile's alias table grows 3,347 → 5,021. No crypt or library entry changed, every old alias maps as before, and no old norm
+    key moves (7,528 → 9,178 keys; `fxLookup` tries the exact name first). `elysium-cardfx.json/.js` recompiled (`fe5f60bf`) and
+    released at the root. Gates: `test-cardfx` 500/0, canary 235/0 ×2, the 240 IDENTICAL to the release bytes' (240 of 240),
+    `ana-gates.py` PASS 6/6.
 - **v0.6.236 (20 Nov 2026)** — The V5 sweep's step B, the Banu Haqim pilot (RULINGS D-134; Johan, 20 Nov: "Kör B:s andra del,
   Banu Haqim-piloten"), on Claude's design: `specs/spec-sweep-pilot-2026-11-20.md` (§3 the design; §4 the predictions, registered
   before the build; §5 the flow's friction; §6 as built and the riders; §7 observed). Built by agents (D-131): one for the data,
