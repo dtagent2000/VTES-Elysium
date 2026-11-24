@@ -3,14 +3,14 @@
 Johan, 19:47 (the idea) and 19:48 (kör on Claude's shape; D-135): the sweep goes on, and what it finds is collected here and worked
 off one class at a time. A round takes one class: its design to Johan and his "kör", the build, review until clean (D-133), a
 release. **A problem that changes a finished deck's play** (seen in the 240 or the V5 smokes, as Aunt Linda's employs were) **is
-fixed in the next release**; the rest waits here. Not a standing page (outside `tools/doc-budget.sh`): BOARD keeps one line per
-class and points here.
+fixed in a release of its own**, ahead of its class's round (Claude orders those releases, D-137); the rest waits here. Not a
+standing page (outside `tools/doc-budget.sh`): BOARD keeps one line per class and points here.
 
 **An entry** is one bullet: the card or area — what is wrong; the evidence (the card's text, a ruling by its id: links stay with
 the rulings database and the archive); where it was found, in brackets; its state; a fix sketch where the fault does not make it
 evident. **States:** **active** — the bots' own play in the 240 or a V5 smoke breaks the rules: a play the text forbids, or a
-printed value or window it gets wrong (counted; D-135 sends it to the next release); **missed** — the bots' play there never uses a
-printed option (legal, weaker; counted; whether D-135 sends these to the next release too is Johan's, asked in STATUS);
+printed value or window it gets wrong (counted; D-135 sends it to a release of its own, D-137 orders them); **missed** — the bots'
+play there never uses a printed option (legal, weaker; counted; it waits for its class's round, D-137);
 **reachable** — a deck the sims play holds the card, but no count shows the faulty path firing (the class's round measures it
 first); **latent** — no deck the sims play reaches it; **human** — a human's play, which the sims never make (live at a table
 whenever a human holds the card); **debt** — a trace, row or test debt with no play change. Decks are the `deck-*.json` lists of 20
@@ -20,7 +20,8 @@ clan, sect, title and capacity found one fault, 8.3 (the play rows name no disci
 
 **Adding and closing.** A round that finds a problem it does not fix adds an entry to its class (a new class when none fits). A
 fixed entry is deleted in the round that fixes it (the CHANGELOG and the PR keep it); a ruled-out one is deleted with its reason in
-the PR. An active entry is fixed in the next release, not in its class's round (D-135); it stays listed until then.
+the PR. An active entry is fixed in a release of its own, not in its class's round (D-135; the order, D-137); it stays listed
+until then.
 
 **Migrated on 20 Nov** (each entry names its source): the pilot's riders (`specs/spec-sweep-pilot-2026-11-20.md` §6: *pilot*);
 BOARD's card lines under "Known, not built" (*B*); BOARD's "The V5 waves' riders", that is the waves' own sections (*w1*–*w4*: each
@@ -33,8 +34,8 @@ stayed (O-12's steal pair, BOARD's locked routes but their Eyes of the Wild ride
 What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
-source; 7–13: the migration's sorting, Claude's; Claude orders the rounds, D-137). Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 4.6,
-5.2, 8.6, 9.8, 10.1, 10.2, 12.2.
+source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's and v0.6.239's egress reviews; Claude orders the rounds, D-137).
+Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 12.2.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -382,6 +383,31 @@ Decisions on Claude's priors; each needs a design to Johan before it changes (D-
   the master phase's loop, so a later candidate (Dreams of the Sphinx, a Location) waits a turn; Guardian Angel's own case tries
   the next. [v0.6.238's egress] · reachable (the first v0.6.238 bytes' 240: Dreams behind such a pick 4 times, never with no
   vampire).
+
+## 14. Hand size and replacement
+The rulebook, drawing cards: "Whenever you play a card from your hand, you draw another from your library to replace it (unless
+card text says otherwise). ... Whenever an effect changes your hand size ... immediately discard down to or draw up to match your
+hand size." [ANK 20180318]: "Cards that are not replaced count against the hand size." 14.1–14.3 were fixed in v0.6.239 (a card
+played in another seat's turn, Elder Library's +1 in the turn it enters, the discard phase's replacement); its egress review
+found these.
+- **14.4 A draw in flight is not in the hand count** — `_handCount` adds the replacements owed, not the draws sent whose card has
+  not arrived. My discard phase draws a 'discard' hold's replacement at its start (Mirror Walk); when Dreams of the Sphinx's +2
+  expires after it (`_revertHandSizeBonus`) before that card arrives, the excess is counted one short and the hand ends a card
+  over. [v0.6.239's egress] · latent (tremere and pathdeath hold Mirror Walk, neither Dreams) · count the draws in flight (sent,
+  not yet arrived) in `_handCount`.
+- **14.5 A hand size lowered in play is not discarded down** — `_recomputeHandSizeBaseline` draws up when the permanent bonus rises;
+  when it falls (an Elder Library burned or stolen) nothing discards down, against the rule's "immediately". [v0.6.239's egress] ·
+  latent (no card the sims play burns or steals a hand size master) · discard down at the recompute, the least useful cards first.
+- **14.6 A reaction's 'Do not replace until after this action'** played in another seat's turn (Read the Winds, Pack Tactics, Elder
+  Intervention, Ministry) is held until that turn ends (the turn handler), and when the next turn is mine until my master phase's
+  flush: the bot reads no end of another seat's action. Late, never early (before v0.6.239's egress review the next table message
+  released it, inside the action). [v0.6.239's egress] · latent (no deck the sims play holds one) · release it at the acting
+  seat's next action line or its "It resolves" (the short-term action memory, `_obs`).
+- **14.7 A Sudden Reversal's window is read as closed at the owner's next line** — the owner answers a cancel that reaches it after
+  its window 'too late' at once, after any lines it sent before it read the cancel; if one of those arrives first, the replacement
+  is drawn before the take-back and the hand holds 8. [v0.6.239's egress] · latent (it needs a round trip longer than the window:
+  the sims and the hotseat bridge deliver an answer inside the send, the arena's window is 500 ms, a paced table's a beat) · an
+  answer line from the owner to the cancel that stands (a bot grammar change: L12, the canary).
 
 ## Not migrated: done since, or not a problem
 - *w1*: the round restrictions (the first-round strikes failing closed, three cards untagged, Riposte in round 1) — read since
