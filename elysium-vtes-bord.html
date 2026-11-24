@@ -1505,6 +1505,7 @@ body.inov.l3zoomopen #l3zoomCtl{ display:flex; }   /* open — position set by J
 #tutBubble.place-center::after{ display:none; }
 #tutEnd{ position:fixed; top:54px; right:16px; z-index:100003; pointer-events:auto; background:rgba(20,15,10,.92); border:1px solid var(--brass2,#6b5836); color:var(--bone,#e8d9b8); border-radius:8px; padding:7px 12px; font:600 12px "Cinzel",serif; letter-spacing:.04em; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.5); }
 #tutEnd:hover{ border-color:var(--brass,#b08d4f); color:#fff; }
+body.invisit #tutEnd{ top:98px; }   /* v2.6.186: in a seat visit the button covered \u2302 Home (#rvBack, top right of #rview) -- a click meant for Home ended the tutorial */
 #tutPickList{ display:flex; flex-direction:column; gap:8px; margin-top:6px; }
 .tutPickItem{ display:flex; align-items:center; gap:12px; text-align:left; padding:11px 14px; border-radius:9px; border:1px solid var(--brass2,#6b5836); background:#1d1610; color:var(--bone,#e8d9b8); cursor:pointer; font-family:"Spectral",serif; }
 .tutPickItem:hover:not(:disabled){ border-color:var(--brass,#b08d4f); background:#2a2014; }
@@ -2509,7 +2510,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <div class="modal" id="offlineModal">
     <h3>Play offline &mdash; hotseat</h3>
     <div class="mbody">
-      <p class="note" style="margin-top:0">Seat each player and give them a deck &mdash; one screen, pass-and-play. Take priority from the <b>PRIORITY</b> bar to control whoever's acting; a player's hand stays hidden until you take their seat.</p>
+      <p class="note" style="margin-top:0">Seat each player and give them a deck &mdash; one screen, pass-and-play. Take whoever is acting from the <b>Table</b> panel (click their row); a player's hand stays hidden until you take their seat.</p>
       <div class="mpfield" style="margin-bottom:6px"><label>Board style</label><select id="offBoard"><option value="classic">Classic (open table)</option><option value="structured">Structured</option></select></div>
       <label class="mpcheck" id="offSetupRow" style="margin:0 0 8px" title="Classic tables: every seat starts at its own spot around the table, in turn order, and each player's first four crypt cards are placed face down beside their pool. Everything can still be moved."><input type="checkbox" id="offSetup" checked> Suggested table setup</label>   <!-- v2.6.146 -->
       <div class="mpfield" id="offLayoutRow" style="margin-bottom:6px" title="Classic tables. Large cards: every card a fifth larger and the lower seat row at the table's bottom edge. Made for the table edge (the button beside the dock's pin)."><label>Table layout</label><select id="offLayout"><option value="standard">Standard</option><option value="large">Large cards</option></select></div>   <!-- v2.6.153 -->
@@ -3333,7 +3334,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.185';   // v2.6.185 (24 Nov 2026, THE SEARCH IS TOLD -- purge; ships with srv-2.6.53, restart; carries v2.6.184's THE SAVES HOLD, never deployed, same PR #100; bot v0.6.236 beside, unchanged): Johan's 'kör G'. On a server from srv-2.6.53 (srvLogsPiles, PILE_LOG_SRV_MIN) the client writes no line of its own for a search of a pile, a fetch from it or a park from the top -- the server tells the table, and the table would read it twice -- while an older server still gets the client's lines. The search dialog says the list is by name, not in pile order, and that the table is told.
+const VERSION='2.6.186';   // v2.6.186 (24 Nov 2026, THE TOUR CATCHES UP, pure client -- purge; srv-2.6.53 unchanged, no wire change; bot v0.6.236 beside, unchanged): Johan: 'inventera och utvärdera vår tutorial'. All 12 chapters (199 steps) were driven in headless Chromium with real gestures, then the findings were fixed ('Dina förslag låter bra!'). (1) Structured: the Overview is V or the arrows -- since v2.6.118 the fixed key moved to the phase cycle, so the step changed the phase; the texts name the current binding (tutKey). (2) Start a game switches Suggested table setup off for the tutorial's own table (lob-setup; tutEnd puts the box back) -- Crypt & influence asked for four crypt cards that were already out; Interacting double-clicks the Crypt. (3) The Edge step says to open the dock, where the button sits in the pool zone, and drops 'the ankh icon'. (4) In a seat visit End tutorial moves below the Home button it covered. (5) The duel view text matches the panel (ACTING / BLOCKING, Join as acting, Change). (6) Texts retired by v2.6.116 and v2.6.184 corrected: the tournament lock is no helper choice, the room list shows itself, a save needs the room's password. (7) The Structured chapters run with All helpers on. (8) The step counter skips the branch not taken; YOUR TURN! is cleared when the tutorial starts its table; the stack steps keep the bubble below the fanned stack; the steps after the dock close a pinned dock; the counter step's bubble stands right of the tray. (9) Interacting names the seats ('the 1st seat (You)'), and smaller wordings: Set as target, the target glyph, the Resolve setting's name, Fill table, the Unlock question, the Structured II shortcut. (10) The offline dialog and the hotseat log point at the Table panel (the PRIORITY bar is off), and a hotseat seat's deck line no longer sends the player to New deal.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -7331,7 +7332,7 @@ function clearTable(opts){
   updatePool(); updateEdge(); setPhase(-1, opts.restore ? { restore:true } : undefined);   // cli-2.6.164 (B-7): a hotseat hand-off empties the seat it is about to restore -- that is not a phase change either (it re-baselined the Played tray before the restore could skip it)
   layout();
 }
-function buildDeck(parsed){
+function buildDeck(parsed, opts){   // v2.6.186: opts.dealt -- the caller deals at once (a hotseat seat), so the line does not send the player to New deal
   if(inRoom()){
     clearTable();
     net.deckUp=false; net.libN=0; net.cryptN=0;
@@ -7350,7 +7351,7 @@ function buildDeck(parsed){
   parsed.library.forEach(e=>{ for(let i=0;i<e.qty;i++){ const c=makeCard(e.name,'lib'); state.zones.library.push(c.id); c.zone='library'; } });
   const nc=state.zones.crypt.length, nl=state.zones.library.length;
   resetForDeal();
-  log('Imported deck: <b>'+nc+'</b> crypt cards, <b>'+nl+'</b> library cards — shuffled. Pick <b>New deal</b> (☰ menu) to deal your opening hand.');
+  log('Imported deck: <b>'+nc+'</b> crypt cards, <b>'+nl+'</b> library cards — shuffled.'+((opts && opts.dealt) ? '' : ' Pick <b>New deal</b> (☰ menu) to deal your opening hand.'));
 }
 
 /* ---------- Deck lab: preconstructed starters + editor ---------- */
@@ -11530,7 +11531,7 @@ function startHotseat(players, boardMode, opts){                         board.c
   players.forEach((p,i)=>{                                    // build each seat's full board, then capture its public view
     const seat=i+1;
     if(p.boardJson) restoreGame(p.boardJson, {keepLog:true, silent:true});
-    else if(p.deckText) { buildDeck(parseDeck(p.deckText)); dealOpeningSync(seat); }
+    else if(p.deckText) { buildDeck(parseDeck(p.deckText), {dealt:true}); dealOpeningSync(seat); }
     else clearTable({keepLog:true});
     net.hot.boards[seat]=serializeGame();
     net.boards[seat]={ who:net.roster[i].name, pub:buildPub(), ts:Date.now() };
@@ -11542,7 +11543,7 @@ function startHotseat(players, boardMode, opts){                         board.c
   updateRoomBar();                                            // v2.6.95: brings the chat line up for the hotseat (the room bar itself stays hidden -- net.status is still 'off')
   hotPushBoardNow();                                          // v2.6.98: seed the bots with the human's opening board -- online a joiner is handed every existing pub, so a bot is never blind at turn 1
   if(_act===1){ resetTurnTracking(); startYourTurn(); }        // seat 1's turn begins (first-turn cue, like online); with a bot at seat 1 the cue comes from the opening sweep's handover (hotSpawnBots)
-  log('<span class="sysline">Hotseat — '+net.roster.length+' players seated. Use the <b>PRIORITY</b> bar to take control of a player; their board, hand and Alt-view follow.</span>', true);
+  log('<span class="sysline">Hotseat — '+net.roster.length+' players seated. Take a player&rsquo;s seat from the <b>Table</b> panel (click their row); their board and hand follow.</span>', true);   // v2.6.186: the PRIORITY bar is switched off (updateHotHud) and the Alt-view parked
   if(net.tableSetup && !tableSetupOn()) log('<span class="sysline">'+TABLE_SETUP_BOT_NOTE+'</span>', true);
   log('<span class="sysline">▶ '+turnLabel()+' — '+esc(net.roster[0].name)+'.</span>', true);
   toast('Hotseat: '+net.roster.length+' players');
@@ -18888,6 +18889,22 @@ function tutTableRect(){            // #statsTab is shifted up via translateY(-8
   if(dock && dock.classList.contains('open') && panel){ const pb=panel.getBoundingClientRect(); if(pb.width>0&&pb.height>0){ L=Math.min(L,pb.left); T=Math.min(T,pb.top); R=Math.max(R,pb.right); B=Math.max(B,pb.bottom); } }
   return {left:L,top:T,right:R,bottom:B,width:R-L,height:B-T};
 }
+function tutSeatName(seat){ const p=(net.roster||[]).find(function(q){ return q && q.seat===seat; }); return p ? String(p.name||('Seat '+seat)) : ('Seat '+seat); }
+function tutSeatLabel(seat){ return seat ? 'the '+ordinal(seat)+' seat (<b>'+escapeHtml(tutSeatName(seat))+'</b>)' : 'the other seat'; }   // v2.6.186: "Player 1" named nothing on screen -- the Table panel shows each seat's name and its 1st/2nd chip, so the text names both (escaped: a hotseat name is the player's own text)
+function tutActorSeat(){ return (typeof tut._handoffSeat==='number') ? tut._handoffSeat : mySeat(); }   // Interacting with opponents: the seat whose turn it is (the one you play after Pass) -- fixed at the hand-off, mySeat() before it
+function tutReactorSeat(){                                         // ... and the seat that just passed: the one the reaction demo hands control to (the predecessor in seat order)
+  const me=tutActorSeat(), seats=(net.roster||[]).map(function(q){ return q && q.seat; }).filter(function(x){ return typeof x==='number'; }).sort(function(a,b){ return a-b; });
+  const i=seats.indexOf(me); return (i<0 || seats.length<2) ? null : seats[(i-1+seats.length)%seats.length];
+}
+function tutStackRect(){                                           // v2.6.186: the vampire plus the room its attachment stack fans into (up and to the right, ADX/ADY per card, one more for the next attach) -- the bubble keeps clear of it
+  const v=tutFaceUpVampObj(); if(!v || !v.el) return null;
+  const b=v.el.getBoundingClientRect(); if(!(b.width>0 && b.height>0)) return null;
+  const k=Math.max(b.width, b.height)/CH, n=((v.attached||[]).length)+1;
+  const L=b.left, T=b.top-n*ADY*k-8, R=b.right+n*ADX*k+8, B=b.bottom;
+  return {left:L, top:T, right:R, bottom:B, width:R-L, height:B-T};
+}
+function tutDockAside(){ try{ if(board.classList.contains('l2dockopen') && !(typeof rimOn==='function' && rimOn())) setL2Dock(false); }catch(e){} }   // v2.6.186: a dock pinned open in the step before covers the ? and the zoom button the next two steps point at -- an explicit close also releases the pin
+function tutKey(id, dflt){ try{ if(typeof keyBinds!=='undefined' && keyBinds && Object.prototype.hasOwnProperty.call(keyBinds, id)) return String(keyBinds[id]||''); }catch(e){} return dflt; }   // v2.6.186: the key an action is bound to NOW -- the shortcuts are editable, and the Overview moved from the fixed § to V in v2.6.118
 const TUT_ORDER = ['introduction','decklab','lobby','classic-intro','classic-crypt','classic-play','classic-interact','structured-intro','structured-helpers','online-join','online-hosting','online-selfhost'];
 const TUT_ADVANCED = new Set(['structured-intro','structured-helpers','online-join','online-hosting','online-selfhost']);   // v2.5.91: optional, independent of each other and of the basics chain -- always selectable from the picker, never gated behind a previous section, and never auto-suggested by the "continue to the next section?" prompt (Johan's design call)
 const TUT_SECTIONS = {
@@ -19011,6 +19028,10 @@ const TUT_SECTIONS = {
       { id:'lob-board', target:()=>$('#offBoard'), place:'bottom', scroll:()=>$('#offBoard'),
         text:'<b>Board style</b> sets the table layout. Leave it on <b>Classic</b> (the open table) for this tutorial; Structured is the tidy column view.',
         advance:{on:'manual'} },
+      { id:'lob-setup', target:()=>$('#offSetupRow'), place:'bottom', scroll:()=>$('#offSetupRow'),
+        onEnter:function(){ const c=$('#offSetup'); if(c){ if(tut._offSetupWas===undefined) tut._offSetupWas=c.checked; c.checked=false; } },   // v2.6.186: the tutorials teach the hand-made setup (startHotseat's note says so) -- with the box on, Crypt & influence asked for four crypt cards that were already out; tutEnd puts the box back
+        text:'<b>Suggested table setup</b> seats everyone around the table and lays each player&rsquo;s first four crypt cards face down beside their pool. For this tutorial we have <b>switched it off</b>, so you set up your own corner by hand and learn each move &mdash; in your own games it can do this for you. (<b>Table layout</b> just below can make every card a fifth larger; leave it on Standard.)',
+        advance:{on:'manual'} },
       { id:'lob-tourn', target:()=>$('#offHelpers'), place:'bottom', scroll:()=>$('#offHelpers'),
         text:'<b>Helpers</b> decides how much the table helps you. <b>Tournament mode</b> turns every convenience helper off for a clean game &mdash; Classic selects it automatically.',
         advance:{on:'manual'} },
@@ -19026,7 +19047,7 @@ const TUT_SECTIONS = {
         text:'<b>+ Add player</b> seats another player (up to six). We will keep it to two for this game.',
         advance:{on:'manual'} },
       { id:'lob-fill', target:()=>$('#offFill'), place:'top', scroll:()=>$('#offFill'),
-        text:'<b>Fill table</b> drops in random opponents to fill the empty seats &mdash; up to <b>5 players</b> total &mdash; a quick way to a full table when you just want to play.',
+        text:'<b>Fill table</b> re-seats the whole table in one click &mdash; <b>five players</b> with random decks from your saved ones, in a random seating order, your own seat included &mdash; a quick way to a full game when you just want to play.',
         advance:{on:'manual'} },
       { id:'lob-start', target:()=>$('#offStart'), place:'top', scroll:()=>$('#offStart'), clickThrough:true,
         text:'<b>Start hotseat</b> begins the game with your two seated players, each with their own deck.',
@@ -19044,15 +19065,15 @@ const TUT_SECTIONS = {
         text:'This is your <b>pool</b> (your life total). <b>Drag it</b> to a spot you want as your play area &mdash; your cards will live around it.',
         gate:function(){ const g=$('.l4globe-mine'); if(!g || !tut._poolPos) return false; const b=g.getBoundingClientRect(); return Math.abs(b.left-tut._poolPos.x)>5 || Math.abs(b.top-tut._poolPos.y)>5; }, gateHint:'Drag your pool to your play area.', advance:{on:'manual'} },
       { id:'ci-dock', target:()=>$('#l2dock'), ringRect:tutDockRect, place:'top', freeInteract:true,
-        text:'Your piles live in the <b>dock</b> along the bottom, with the running <b>log</b> leading the row: <b>Crypt</b> (your vampires &mdash; you influence them out from here), <b>Library</b> (draw cards), <b>Ash heap</b> (your discard pile), your <b>Hand</b>, and your <b>pool</b>. Hover the bottom edge to slide it open &mdash; and <b>clicking its open background</b> (not a card or button) <b>pins</b> it there with a glowing edge, until you click again.',
+        text:'Your piles live in the <b>dock</b> along the bottom, with the running <b>log</b> leading the row: <b>Crypt</b> (your vampires &mdash; you influence them out from here), <b>Library</b> (draw cards), <b>Ash heap</b> (your discard pile), your <b>Hand</b>, and your <b>pool</b>. Hover the bottom edge to slide it open &mdash; and <b>clicking its open background</b> (not a card or button), or the <b>pin</b> in its top-right corner, <b>pins</b> it there with a glowing edge, until you click again.',
         onEnter:function(){ tut._dockSeen=false; }, gate:function(){ if(board.classList.contains('l2dockopen')) tut._dockSeen=true; return !!tut._dockSeen; }, gateHint:'Hover the bottom edge to open the dock.', advance:{on:'manual'} },
       { id:'ci-nav', target:()=>null, place:'center',
         text:'A few navigation habits, like most games: <b>left-click</b> selects, drags and navigates; <b>double-click</b> performs the most common action for an element; <b>right-click</b> opens a context menu. Most things support all three.',
         advance:{on:'manual'} },
-      { id:'ci-help', target:()=>$('#helpToggle'), place:'left', freeInteract:true,
+      { id:'ci-help', target:()=>$('#helpToggle'), place:'left', freeInteract:true, onEnter:tutDockAside,
         text:'The <b>?</b> button lists every control, and <b>Settings</b> (in the ☰ Menu) lets you edit the keyboard shortcuts and screen brightness.',
         advance:{on:'manual'} },
-      { id:'ci-zoom', target:()=>$('#l1zoomToggle'), place:'top', freeInteract:true,
+      { id:'ci-zoom', target:()=>$('#l1zoomToggle'), place:'top', freeInteract:true, onEnter:tutDockAside,
         text:'Try the <b>zoom</b> &mdash; use the controls here, or just <b>scroll over the felt</b> to zoom in and out. Then <b>pan</b> the felt by <b>double-clicking and dragging</b> it &mdash; or hold down the <b>mouse wheel</b> and drag, from anywhere on the table. The fit button (⛶) snaps the view back to the start.',
         advance:{on:'manual'} },
       { id:'ci-table', target:()=>$('#statsTab'), place:'left', freeInteract:true, ringRect:tutTableRect,
@@ -19158,11 +19179,11 @@ const TUT_SECTIONS = {
         onEnter:function(){ const v=tutFaceUpVampObj(); tut._attachBase=v?v.attached.length:0; },
         text:'Cards can be <b>attached</b> to a vampire &mdash; equipment, retainers, and the like. <b>Drag a card from your hand onto your vampire</b> to attach it. This also works with a card already <b>on the table</b> &mdash; just drag it onto the vampire.',
         gate:function(){ const v=tutFaceUpVampObj(); return !!v && v.attached.length > (tut._attachBase||0); }, gateHint:'Drag a card from your hand onto your vampire.', advance:{on:'manual'} },
-      { id:'cp-stack', target:()=>{ const v=tutFaceUpVampObj(); return v?v.el:null; }, place:'top', freeInteract:true,
+      { id:'cp-stack', target:()=>{ const v=tutFaceUpVampObj(); return v?v.el:null; }, place:'bottom', avoidRect:tutStackRect, freeInteract:true,   // v2.6.186: the stack fans up and to the right -- a bubble above covered it
         onEnter:function(){ const v=tutFaceUpVampObj(); tut._stackBase=v?v.attached.length:0; },
         text:'Attached cards <b>stack</b> on the vampire. <b>Attach a couple more cards</b> from your hand. <b>Hover the stack</b> of attached cards and it fans out so you can read every card.',
         gate:function(){ const v=tutFaceUpVampObj(); return !!v && v.attached.length >= (tut._stackBase||0)+2; }, gateHint:function(){ const v=tutFaceUpVampObj(); const need=(tut._stackBase||0)+2; const n=v?v.attached.length:0; return n>=need ? 'Nice stack \u2014 press Continue.' : ('Attach '+(need-n)+' more card'+((need-n)===1?'':'s')+' to build the stack.'); }, advance:{on:'manual'} },
-      { id:'cp-unstack', target:()=>{ const v=tutFaceUpVampObj(); return v?v.el:null; }, place:'top', freeInteract:true,
+      { id:'cp-unstack', target:()=>{ const v=tutFaceUpVampObj(); return v?v.el:null; }, place:'bottom', avoidRect:tutStackRect, freeInteract:true,
         onEnter:function(){ const v=tutFaceUpVampObj(); tut._stackPeak=v?v.attached.length:0; tut._detached=false; },
         text:'To take a card <b>off</b> the stack, <b>hover the stack</b> to fan it out, then <b>drag one card away</b> and drop it on the table. (Right-click a card &rarr; <b>Detach</b> does the same.)',
         gate:function(){ const v=tutFaceUpVampObj(); if(!v) return false; const n=v.attached.length; if(n>tut._stackPeak) tut._stackPeak=n; if(n<tut._stackPeak) tut._detached=true; return tut._detached; }, gateHint:'Drag a card off the stack onto the table.', advance:{on:'manual'} },
@@ -19176,8 +19197,8 @@ const TUT_SECTIONS = {
         text:'Now make your vampire act: <b>right-click it &rarr; Actions &rarr; Bleed &rarr; Bleed 1</b> to bleed your prey for 1 (Bleed 2/3/X cover boosted bleeds). Watch the <b>log</b> &mdash; it records the action so everyone at the table can follow what happened.',
         advance:{on:'event', name:'minion-action'}, orContinue:true },
       { id:'cp-edge', target:()=>{ if(l4on()){ const de=$('#dockEdge'); return (de && de.getClientRects().length) ? de : $('#l2dock'); } const el=$('#edge'); return (el && !el.hidden) ? el : $('#edgeChrome'); }, place:'bottom', freeInteract:true,   // v2.5.47: the 2p tutorial is one of the relocated counts - point at whichever marker is actually visible. v2.6.182: in L4 the button in the bottom panel's pool zone -- the panel's bar while it is shut
-        text:'One more marker worth knowing: <b>the Edge</b> (the ankh icon) shows who currently holds it in the struggle with their predator. <b>Click the Edge button</b> to take it. Once you have it, its <b>token</b> appears on the felt &mdash; feel free to <b>drag it</b> wherever suits you, e.g. tucked in close to your own play area.',
-        gate:function(){ return !!state.edge; }, gateHint:'Click the Edge button to take the Edge.', advance:{on:'manual'} },
+        text:'One more marker worth knowing: <b>the Edge</b> shows who currently holds it in the struggle with their predator. <b>Open the dock</b> (hover the bottom edge): the <b>Edge button</b>, with the VTES symbol, sits in the top-right corner of its pool zone &mdash; <b>click it</b> to take the Edge. Once you have it, its <b>token</b> appears on the felt &mdash; feel free to <b>drag it</b> wherever suits you, e.g. tucked in close to your own play area.',
+        gate:function(){ return !!state.edge; }, gateHint:'Open the dock and click the Edge button to take the Edge.', advance:{on:'manual'} },
       { id:'cp-pass', target:()=>$('.phase.pass'), place:'bottom', freeInteract:true,
         onEnter:function(){ tut._passSeat=mySeat(); },
         text:'That&rsquo;s a full turn! When you&rsquo;re done, press <b>Pass</b> to end your turn. In Classic Tournament the <b>Pass</b> button is all you need &mdash; control then passes to the next player.',
@@ -19188,13 +19209,14 @@ const TUT_SECTIONS = {
     name:'Interacting with opponents', desc:'Targeting, simulating a reaction, the Played tab.',
     steps:[
       { id:'cx-intro', target:()=>null, place:'center',
-        text:'Pressing <b>Pass</b> moved the turn on &mdash; now you&rsquo;re playing as the <b>next player</b> at the table, and your opponent still has their vampires in play across the felt. Let&rsquo;s quickly set up your own board, then look at how players <b>interact</b>.',
+        onEnter:function(){ tut._handoffSeat=null; },   // v2.6.186: the hand-off seat of an earlier run would name the wrong seats
+        text:function(){ return 'Pressing <b>Pass</b> moved the turn on &mdash; you&rsquo;re now playing as the <b>next player</b>, '+tutSeatLabel(tutActorSeat())+', and your opponent in '+tutSeatLabel(tutReactorSeat())+' still has their vampires in play across the felt. Let&rsquo;s quickly set up your own board, then look at how players <b>interact</b>.'; },
         advance:{on:'manual'} },
       { id:'cx-pool', target:()=>$('.l4globe-mine'), place:'right', freeInteract:true,
         text:'First, your <b>pool</b> &mdash; <b>drag your pool globe</b> to a spot you want as your play area, just like before.',
         advance:{on:'event', name:'pool-moved', hint:'Drag your pool globe to your play area.'}, orContinue:true },
       { id:'cx-crypt', target:()=>null, freeInteract:true, ringRect:tutFaceDownVampRect,
-        text:'Bring out a couple of vampires: <b>click your Crypt pile</b> a few times. Then <b>drag a box</b> around them and press <b>A</b> to align them neatly (also on the right-click menu).',
+        text:'Bring out a couple of vampires: open the dock and <b>double-click your Crypt pile</b> a few times (or drag cards out of it). Then <b>drag a box</b> around them and press <b>A</b> to align them neatly (also on the right-click menu).',
         gate:function(){ return state.selected.size>=2; }, gateHint:'Box-select your crypt cards to continue.', advance:{on:'manual'} },
       { id:'cx-flip', target:()=>null, freeInteract:true, ringRect:tutFaceDownVampRect,
         text:'Now <b>double-click one</b> of them to flip it <b>face-up</b> and bring it into play.',
@@ -19205,7 +19227,7 @@ const TUT_SECTIONS = {
         gate:function(){ return qrPhasePlayed.size > (tut._playBase||0); }, gateHint:'Play a card from your hand.', advance:{on:'manual'} },
       { id:'cx-target', target:()=>$('#btnTarget'), place:'bottom', freeInteract:true,
         onEnter:function(){ if(typeof closePlayed==='function') closePlayed(); },
-        text:'Now aiming. First <b>click one of your own vampires</b> to select it. Then press the <b>Target</b> button (⌖) and click one of your <b>opponent&rsquo;s vampires</b> across the felt &mdash; or <b>right-click it &rarr; Target</b>. A crimson reticle marks it, and it reads clearly in the <b>log</b>, so the table knows exactly what you&rsquo;re aiming at.',
+        text:'Now aiming. First <b>click one of your own vampires</b> to select it. Then press the <b>Target</b> button (⌖) and click one of your <b>opponent&rsquo;s vampires</b> across the felt &mdash; or <b>right-click it &rarr; Set as target</b>. A crimson reticle marks it, and it reads clearly in the <b>log</b>, so the table knows exactly what you&rsquo;re aiming at.',
         gate:function(){ return tutVampSelected() && !!(net.rtarget && net.rtarget.cid); }, gateHint:'Select a vampire, then target an opponent.', advance:{on:'manual'} },
       { id:'cx-target-play', target:()=>null, freeInteract:true,
         onEnter:function(){ tut._tgtPlayBase=qrPhasePlayed.size; },
@@ -19217,11 +19239,11 @@ const TUT_SECTIONS = {
         gate:function(){ return !!tut._reactClicked; }, gateHint:'Click the Reaction timer (⏱) to continue.', advance:{on:'manual'} },
       { id:'cx-handoff', target:()=>$('#statsTab'), place:'left', freeInteract:true, ringRect:tutTableRect,
         onEnter:function(){ tut._handoffSeat=mySeat(); },
-        text:'This next part is <b>hotseat-only</b> &mdash; online, every opponent reacts on their own screen in real time. To simulate a reaction here, open the <b>Table</b> tab and <b>click Player 1&rsquo;s row</b> to switch control to their seat.',
-        gate:function(){ return mySeat() !== tut._handoffSeat; }, gateHint:'Open the Table tab and click Player 1 to take control of their seat.', advance:{on:'manual'} },
+        text:function(){ return 'This next part is <b>hotseat-only</b> &mdash; online, every opponent reacts on their own screen in real time. To simulate a reaction here, open the <b>Table</b> tab and <b>click the row</b> of '+tutSeatLabel(tutReactorSeat())+' to switch control to that seat.'; },
+        gate:function(){ return mySeat() !== tut._handoffSeat; }, gateHint:function(){ const r=tutReactorSeat(); return r ? 'Open the Table tab and click the '+ordinal(r)+' seat\u2019s row ('+tutSeatName(r)+').' : 'Open the Table tab and click the other player\u2019s row.'; }, advance:{on:'manual'} },
       { id:'cx-signal', target:()=>null, freeInteract:true,
         onEnter:function(){ tut._lastSaidIdx=-1; },
-        text:'You&rsquo;re now playing as <b>Player 1</b>, reacting to the action. <b>Right-click the felt</b> anywhere empty to open the quick-phrase menu, and choose <b>&ldquo;Hold on&hellip;&rdquo;</b> &mdash; the signal that you want a beat before things resolve.',
+        text:function(){ return 'You&rsquo;re now playing as '+tutSeatLabel(tutReactorSeat())+', reacting to the action. <b>Right-click the felt</b> anywhere empty to open the quick-phrase menu, and choose <b>&ldquo;Hold on&hellip;&rdquo;</b> &mdash; the signal that you want a beat before things resolve.'; },
         gate:function(){ return tut._lastSaidIdx===0; }, gateHint:'Right-click the felt and choose \u201cHold on\u2026\u201d.', advance:{on:'manual'} },
       { id:'cx-holdbtn', target:()=>$('#btnHoldOn'), place:'bottom', freeInteract:true,
         onEnter:function(){ tut._lastSaidIdx=-1; },
@@ -19229,12 +19251,12 @@ const TUT_SECTIONS = {
         gate:function(){ return tut._lastSaidIdx===0; }, gateHint:'Click the ❗ button.', advance:{on:'manual'} },
       { id:'cx-p1-play', target:()=>null, freeInteract:true,
         onEnter:function(){ tut._p1PlayBase=qrPhasePlayed.size; },
-        text:'Still as <b>Player 1</b>: <b>click one of their vampires</b> to select it, then play a card or two from their hand onto the felt.',
+        text:function(){ return 'Still as '+tutSeatLabel(tutReactorSeat())+': <b>click one of their vampires</b> to select it, then play a card or two from their hand onto the felt.'; },
         gate:function(){ return tutVampSelected() && qrPhasePlayed.size > (tut._p1PlayBase||0); }, gateHint:'Select a vampire, then play a card.', advance:{on:'manual'} },
       { id:'cx-played', target:()=>$('#playedTab'), place:'right', freeInteract:true,
-        text:'Now the interaction tools. <b>Click the Played tab</b> at the top to pin it open. It lists <b>every card played this phase</b> &mdash; yours <b>and</b> your opponents&rsquo; &mdash; each in its owner&rsquo;s colour. With cards on the felt from both <b>Player 1</b> and <b>Player 2</b> now, you can see exactly how that plays out. Here you get a quick read on <b>stealth</b> and <b>intercept</b> cards, <b>votes</b>, and the like between players.',
+        text:function(){ return 'Now the interaction tools. <b>Click the Played tab</b> at the top to pin it open. It lists <b>every card played this phase</b> &mdash; yours <b>and</b> your opponents&rsquo; &mdash; each in its owner&rsquo;s colour. With cards on the felt from both '+tutSeatLabel(tutReactorSeat())+' and '+tutSeatLabel(tutActorSeat())+' now, you can see exactly how that plays out. Here you get a quick read on <b>stealth</b> and <b>intercept</b> cards, <b>votes</b>, and the like between players.'; },
         gate:function(){ const o=$('#playedOverlay'); return !!(o && o.classList.contains('show')); }, gateHint:'Click the Played tab to open it.', advance:{on:'manual'} },
-      { id:'cx-counter', target:()=>$('#avrLive'), place:'bottom', freeInteract:true,
+      { id:'cx-counter', target:()=>$('#avrLive'), place:'right', freeInteract:true,   // v2.6.186: below the counter the bubble covered the tray's cards; they line up from the left
         onEnter:function(){ try{ pinPlayed(); }catch(e){} },
         text:'Notice the small <b>counter</b> beside the tray, sitting at <b>A vs B</b>, 0 each. It is always available &mdash; even here in <b>Tournament mode</b>, which hides the named Block/Vote/Combat resolvers &mdash; since it carries no rules meaning of its own; the table decides what it counts (stealth vs. intercept, votes, anything at all). Adjust the numbers with the board&rsquo;s counter idiom: the <b>+/&minus;</b> buttons (Shift = &times;5), <b>scroll</b> on a number, <b>Ctrl+click</b> +1, <b>Shift+click</b> &minus;1.',
         gate:function(){ return avr.mode==='free' && ((avr.a|0)>0 || (avr.b|0)>0); }, gateHint:'Adjust the A or B counter.', advance:{on:'manual'} },
@@ -19250,7 +19272,7 @@ const TUT_SECTIONS = {
         advance:{on:'manual'} },
       { id:'cx-outro', target:()=>null, place:'center',
         onEnter:function(){ if(typeof tut._handoffSeat==='number' && mySeat()!==tut._handoffSeat) setActivePlayer(tut._handoffSeat, {quiet:true}); },
-        text:'That&rsquo;s the whole <b>Classic walkthrough</b>! You can build a deck, start a game, find your way around the table, influence vampires, play cards and take actions, and interact with your opponents. Remember the rhythm: <b>single-click</b> marks and drags cards, <b>double-click</b> does the obvious thing, <b>right-click</b> always has more options, and you can rebind the <b>shortcuts</b> in Settings. One more thing &mdash; you&rsquo;re back in <b>your own seat</b> now; control returned to you automatically once the reaction demo wrapped up, so you&rsquo;re no longer playing as Player 1.',
+        text:function(){ return 'That&rsquo;s the whole <b>Classic walkthrough</b>! You can build a deck, start a game, find your way around the table, influence vampires, play cards and take actions, and interact with your opponents. Remember the rhythm: <b>single-click</b> marks and drags cards, <b>double-click</b> does the obvious thing, <b>right-click</b> always has more options, and you can rebind the <b>shortcuts</b> in Settings.' + (function(){ const a=tutActorSeat(); return a ? ' One more thing &mdash; control went back to '+tutSeatLabel(a)+', whose turn it is, once the reaction demo wrapped up.' : ''; })(); },
         advance:{on:'manual'} },
       { id:'cx-leave', target:()=>$('#btnMenu'), place:'left', freeInteract:true,
         // Intentionally does NOT open the menu: the global outside-click listener closes it on the very
@@ -19272,18 +19294,18 @@ const TUT_SECTIONS = {
         advance:{on:'manual'} },
       { id:'si-lobby-open', target:()=>null, place:'center',
         onEnter:function(){ offlineCfg=[]; openOffline(); },
-        text:'This is the offline lobby. Notice the two settings at the top &mdash; we need <b>Board style: Structured</b> and <b>Tournament mode</b> unchecked.',
+        text:'This is the offline lobby. Notice the settings at the top &mdash; for this tutorial we need <b>Board style: Structured</b> and <b>Helpers: All helpers on</b>.',
         advance:{on:'manual'} },
       { id:'si-board-style', target:()=>$('#offBoard'), place:'bottom', scroll:()=>$('#offBoard'),
         onEnter:function(){ const el=$('#offBoard'); if(el) el.value='structured'; syncOffTournament(); },
         text:'<b>Board style</b> is now set to <b>Structured</b> &mdash; the guided-zone column view with predefined areas for Ready, Uncontrolled, Torpor and your Pool. The Classic tutorial used the open free-form table; Structured organises it for you.',
         advance:{on:'manual'} },
       { id:'si-tournament', target:()=>$('#offHelpers'), place:'bottom', scroll:()=>$('#offHelpers'),
-        onEnter:function(){ const el=$('#offHelpers'); if(el) el.value='local'; },   // v2.6.51: the checkbox became a three-way select -- 'local' IS the old unchecked state (your own Settings apply)
-        text:'<b>Tournament mode</b> is <b>off</b> &mdash; this enables the <b>phase helpers</b>: the turn-structure buttons that guide you through Unlock, Master, Minion, Influence, Discard. We will look at those once we are at the table.',
+        onEnter:function(){ const el=$('#offHelpers'); if(el) el.value='all'; },   // v2.6.186: All helpers on (as a bot table runs) -- 'local' left the phase helpers to the player's own switches, and the select read 'Your local settings' under a text about Tournament mode
+        text:'<b>Helpers</b> is set to <b>All helpers on</b> &mdash; every convenience helper on for this table, whatever your own Settings say. That includes the <b>phase helpers</b>: the turn-structure buttons that guide you through Unlock, Master, Minion, Influence, Discard. We will look at those once we are at the table.',
         advance:{on:'manual'} },
       { id:'si-fill', target:()=>$('#offFill'), place:'top', scroll:()=>$('#offFill'), clickThrough:true,
-        text:'Now press <b>Fill table</b> to add opponents and fill all five seats with random decks &mdash; a quick way to a full game.',
+        text:'Now press <b>Fill table</b> to seat <b>five players</b> with random decks from your saved ones &mdash; in a random seating order, so your own seat may move &mdash; a quick way to a full game.',
         gate:function(){ return offlineCfg.length>=5; }, gateHint:'Press Fill table to continue.', advance:{on:'manual'} },
       { id:'si-start', target:()=>$('#offStart'), place:'top', scroll:()=>$('#offStart'), clickThrough:true,
         text:'Five players seated. Press <b>Start hotseat</b> to begin!',
@@ -19315,16 +19337,16 @@ const TUT_SECTIONS = {
         text:'Here is the big difference with Tournament mode off: the <b>phase bar</b>. It shows the five VTES phases &mdash; <b>Unlock</b>, <b>Master</b>, <b>Minion</b>, <b>Influence</b>, <b>Discard</b> &mdash; plus <b>Pass</b>. Click a phase to activate it; the helpers guide you through your turn. In Classic Tournament you only had <b>Pass</b>.',
         advance:{on:'manual'} },
       { id:'si-unlock', target:()=>document.querySelector('#phases .phase:not(.pass)'), place:'bottom', freeInteract:true,
-        text:'Start your turn by clicking <b>Unlock</b>. The helper will offer to <b>unlock all your cards</b> and, if you hold the Edge, to <b>gain 1 pool</b>. Try it &mdash; click <b>Unlock</b>.',
+        text:'Start your turn by clicking <b>Unlock</b>. When cards are locked, the helper offers to <b>unlock them all</b>, and if you hold the Edge, to <b>gain 1 pool</b> &mdash; on this first turn there is nothing to unlock yet. Click <b>Unlock</b>.',
         gate:function(){ return state.phase===0; }, gateHint:'Click the Unlock phase button.', advance:{on:'manual'} },
       { id:'si-master', target:()=>document.querySelectorAll('#phases .phase:not(.pass)')[1], place:'bottom', freeInteract:true,
-        text:'Now click <b>Master</b>. See the <b>action count</b> on the button &mdash; it shows how many Master plays you have left (normally 1). When you play a Master card, the count ticks down and the helper warns you if you go over.',
+        text:'Now click <b>Master</b>. On the way out of Unlock the helper asks whether you have used your <b>unlock-triggered abilities</b> &mdash; answer <b>OK</b>. Then see the <b>action count</b> on the button &mdash; it shows how many Master plays you have left (normally 1). When you play a Master card, the count ticks down and the helper warns you if you go over.',
         gate:function(){ return state.phase>=1; }, gateHint:'Click the Master phase button.', advance:{on:'manual'} },
       { id:'si-counts', target:()=>$('#phases'), place:'bottom', freeInteract:true,
         text:'Each phase button shows its <b>remaining actions</b>. Master and Discard start at <b>1</b>; Minion shows your <b>unlocked minions</b>; Influence shows your <b>transfers</b> (4 from your second turn; 1/2/3 in the opening). You can <b>right-click a phase button</b> to adjust its count (for cards like Information Highway), and <b>scroll on it</b> for quick +/\u2212.',
         advance:{on:'manual'} },
       { id:'si-phase-warn', target:()=>$('#phases'), place:'bottom', freeInteract:true,
-        text:'When you advance to the next phase with actions still available, the helper asks if you really want to skip them. And if you play more Masters than your count allows, it warns you before the play goes through. You can turn individual helpers on and off in <b>Settings</b>.',
+        text:'When you advance to the next phase with actions still available, the helper asks if you really want to skip them. And if you play more Masters than your count allows, it warns you before the play goes through. This table runs with <b>All helpers on</b>; at your own tables you turn individual helpers on and off in <b>Settings</b>.',
         advance:{on:'manual'} },
 
       // ---- Crypt cards and influence (Structured differences) ----
@@ -19353,17 +19375,17 @@ const TUT_SECTIONS = {
         gate:function(){ return !!net.l2fold.pred; }, gateHint:'Click the predator column header or tab to fold it back.', advance:{on:'manual'} },
       { id:'si-overview', target:()=>null, place:'center', freeInteract:true,
         onEnter:function(){ tut._wasOV=false; },
-        text:'For the full picture, press <b>\u00a7</b> (or <b>`</b>) on your keyboard to toggle the <b>Overview</b> &mdash; a helicopter view of <b>every board at once</b>. You can also press <b>\u2191</b> (up arrow). Try it now.',
-        gate:function(){ if(net.view==='ov') tut._wasOV=true; return !!tut._wasOV; }, gateHint:'Press \u00a7 or \u2191 to open the Overview.', advance:{on:'manual'} },
+        text:function(){ const k=tutKey('cycleView','V'); return 'For the full picture, '+(k ? 'press <b>'+escapeHtml(k)+'</b> on your keyboard to toggle' : 'open')+' the <b>Overview</b> &mdash; a helicopter view of <b>every board at once</b>. <b>\u2191</b> (up arrow) zooms out to it too. Try it now.'; },   // v2.6.186: \u00a7 cycles the phase since v2.6.118 (pressing it here moved the phase) and ` does nothing -- the Overview is V
+        gate:function(){ if(net.view==='ov') tut._wasOV=true; return !!tut._wasOV; }, gateHint:function(){ const k=tutKey('cycleView','V'); return 'Press '+(k ? k+' or ' : '')+'\u2191 to open the Overview.'; }, advance:{on:'manual'} },
       { id:'si-overview-note', target:()=>null, place:'center', freeInteract:true,
-        text:'In the Overview, every seat is visible &mdash; their zones, pool, and cards. You can <b>play the game normally</b> from here, and <b>scroll to zoom in</b> on any part of the table. <b>Drag the open felt</b> to pan around &mdash; panning works on the felt between boards, but not inside the zone areas themselves (hold down the <b>mouse wheel</b> and drag to pan from anywhere). The hand pane at the bottom shows your hand when you hover it. Press <b>\u00a7</b> again (or <b>\u2193</b>) to return home.',
-        gate:function(){ return net.view!=='ov'; }, gateHint:'Press \u00a7 or \u2193 to return to your board.', advance:{on:'manual'} },
+        text:function(){ return 'In the Overview, every seat is visible &mdash; their zones, pool, and cards. You can <b>play the game normally</b> from here, and <b>scroll to zoom in</b> on any part of the table. <b>Drag the open felt</b> to pan around &mdash; panning works on the felt between boards, but not inside the zone areas themselves (hold down the <b>mouse wheel</b> and drag to pan from anywhere). The hand pane at the bottom shows your hand when you hover it.' + (function(){ const k=tutKey('cycleView','V'); return ' Press '+(k ? '<b>'+escapeHtml(k)+'</b> again (or <b>\u2193</b>)' : '<b>\u2193</b>')+' to return home.'; })(); },
+        gate:function(){ return net.view!=='ov'; }, gateHint:function(){ const k=tutKey('cycleView','V'); return 'Press '+(k ? k+' or ' : '')+'\u2193 to return to your board.'; }, advance:{on:'manual'} },
       { id:'si-arrows', target:()=>null, place:'center', freeInteract:true,
         onEnter:function(){ tut._visitedSeat=false; },
         text:'You can also <b>visit</b> any opponent directly: press <b>\u2190</b> / <b>\u2192</b> (left/right arrows) to walk around the table, seat by seat. Your own seat brings you home. Try pressing <b>\u2192</b> a couple of times.',
         gate:function(){ if(typeof net.view==='number') tut._visitedSeat=true; return !!tut._visitedSeat; }, gateHint:'Press \u2192 (right arrow) to visit the next seat.', advance:{on:'manual'} },
       { id:'si-arrows-home', target:()=>null, place:'center', freeInteract:true,
-        text:'You are visiting an opponent&rsquo;s board &mdash; a read-only view of their cards. Press <b>Tab</b> to flip back to your own board, or keep pressing <b>\u2190</b> / <b>\u2192</b> until you reach your own seat.',
+        text:'You are visiting an opponent&rsquo;s board &mdash; a read-only view of their cards. Press <b>Tab</b> to flip back to your own board, click <b>\u2302 Home</b> at the top right, or keep pressing <b>\u2190</b> / <b>\u2192</b> until you reach your own seat.',
         gate:function(){ return net.view!==null && typeof net.view!=='number'; }, gateHint:'Press Tab or navigate to your seat to go home.', advance:{on:'manual'}, orContinue:true },
       { id:'si-tab', target:()=>null, place:'center', freeInteract:true,
         text:'<b>Tab</b> is your quick home key &mdash; it flips between <b>your board</b> and the <b>active player&rsquo;s board</b>. In hotseat, that is whoever&rsquo;s turn it is; online, it is a fast way to peek at what the current player is doing and jump straight back.',
@@ -19397,8 +19419,8 @@ const TUT_SECTIONS = {
         text:'Welcome to <b>Structured part 2 &mdash; Table helpers</b>! This chapter covers the <b>resolver family</b>: shared counters for blocks, referendums and combat, the <b>duel view</b>, <b>pool targeting</b> and the <b>+X bleed</b> idiom. Elysium stays a sandbox throughout &mdash; these are arithmetic aids the whole table shares, never rules enforcement. Basics and part 1 are assumed.',
         advance:{on:'manual'} },
       { id:'sh-lobby', target:()=>null, place:'center',
-        onEnter:function(){ offlineCfg=[]; openOffline(); const b=$('#offBoard'); if(b){ b.value='structured'; syncOffTournament(); } const t=$('#offHelpers'); if(t) t.value='local'; },   // v2.6.51: 'local' = the old unchecked Tournament box
-        text:'We set the lobby up exactly like part 1: <b>Board style: Structured</b>, <b>Tournament mode off</b> (already done for you). Tournament mode matters more than ever in this chapter &mdash; it hides everything you are about to learn.',
+        onEnter:function(){ offlineCfg=[]; openOffline(); const b=$('#offBoard'); if(b){ b.value='structured'; syncOffTournament(); } const t=$('#offHelpers'); if(t) t.value='all'; },   // v2.6.186: All helpers on, as in part 1 (was 'local' = the player's own switches)
+        text:'We set the lobby up exactly like part 1: <b>Board style: Structured</b>, <b>Helpers: All helpers on</b> (already done for you). Tournament mode matters more than ever in this chapter &mdash; it hides everything you are about to learn.',
         advance:{on:'manual'} },
       { id:'sh-fill', target:()=>$('#offFill'), place:'top', scroll:()=>$('#offFill'), clickThrough:true,
         text:'Press <b>Fill table</b> for a full five-seat game &mdash; part 2 needs opponents for the duel view and pool targeting.',
@@ -19410,7 +19432,7 @@ const TUT_SECTIONS = {
       // ---- The helper family ----
       { id:'sh-helpers', target:()=>$('#btnMenu'), place:'left', freeInteract:true,
         onExit:function(){ try{ closeOverlay(); }catch(e){} },
-        text:'The three resolvers are <b>table helpers</b>. Open the <b>Menu &rarr; Settings</b> and find the helper list: <b>Block resolver</b>, <b>Vote resolver</b> and <b>Combat resolver</b> must all be ON to continue (they are on by default). Like every helper they vanish in <b>tournament mode</b> and can be <b>locked by the host</b> online &mdash; the table decides how much assistance it wants.',
+        text:'The three resolvers are <b>table helpers</b>: <b>Block resolver</b>, <b>Vote resolver</b> and <b>Combat resolver</b>. This table runs with <b>All helpers on</b>, so they are on here; at your own tables you find them under <b>Menu &rarr; Settings &rarr; Play helpers</b> (on by default). Like every helper they vanish in <b>tournament mode</b> and can be <b>locked by the host</b> online &mdash; the table decides how much assistance it wants.',
         gate:function(){ return hx('resBlock') && hx('resVote') && hx('resCombat'); }, gateHint:'Enable all three resolver helpers in Settings (and make sure tournament mode is off).', advance:{on:'manual'} },
       { id:'sh-peek', target:()=>$('#playedTab'), place:'left', freeInteract:true,
         text:'The resolvers live in the <b>Played tab</b> &mdash; hover it to peek, click to pin. Open it now. Top row: <b>Block</b>, <b>Vote</b>, <b>Combat</b> and the ever-present <b>&#8644; Pass</b>. Pass is not a helper &mdash; it is a quick phrase, the table&rsquo;s way of saying &ldquo;done with my reaction window&rdquo;, and it never disappears.',
@@ -19418,7 +19440,7 @@ const TUT_SECTIONS = {
 
       // ---- Block ----
       { id:'sh-minion', target:()=>null, place:'center', freeInteract:true,
-        text:'For the next parts you need <b>one ready minion</b>. Do it properly like part 1 (draw crypt &rarr; influence out &rarr; unlock next turn) &mdash; or take the tutorial shortcut: <b>click your crypt pile to draw</b>, then <b>drag the card from Uncontrolled into your Ready zone</b> and flip it face up. The sandbox allows both.',
+        text:'For the next parts you need <b>one ready minion</b>. Do it properly like part 1 (blood on it first, then into Ready) &mdash; or take the tutorial shortcut: <b>drag one of the face-down cards in your Uncontrolled region straight into your Ready zone</b>; it flips face up, ready to act. The sandbox allows both.',
         gate:function(){ return state.zones.ready.some(function(id){ const c=state.cards.get(id); return c && c.kind==='crypt' && !c.locked; }); }, gateHint:'Get one unlocked vampire into your Ready zone.', advance:{on:'manual'} },
       { id:'sh-block-select', target:()=>null, place:'center', freeInteract:true,
         text:'<b>Click your ready vampire</b> to select it. The Block button is <b>gated on an active ready minion</b> &mdash; blocking is something a specific minion does, so the table always sees who is attempting it.',
@@ -19431,7 +19453,7 @@ const TUT_SECTIONS = {
         text:'Adjust the numbers with the board&rsquo;s counter idiom: the <b>+/&minus;</b> buttons (Shift = &times;5), <b>scroll</b> on a number, <b>Ctrl+click</b> +1, <b>Shift+click</b> &minus;1. Set any stealth and intercept you like.',
         gate:function(){ return avr.mode==='block' && ((avr.a|0)>0 || (avr.b|0)>0); }, gateHint:'Adjust at least one counter.', advance:{on:'manual'} },
       { id:'sh-block-resolve', target:()=>$('#avrResolve'), place:'bottom', freeInteract:true,
-        text:'Press <b>Resolve</b>. A fixed line lands in the log &mdash; <i>block succeeds when Intercept &ge; Stealth</i> &mdash; and the counters clear for everyone. Two things to notice: the line&rsquo;s exact wording is <b>machine-readable</b> (Elysium&rsquo;s training bots parse it), and a Block resolve <b>never closes the card-play batch</b>: a failed block means the action continues, a successful one becomes combat within the same action. If your <b>Settings &rarr; Resolver Resolve</b> choice is on, you are <i>asked</i> about clearing the Played tab instead.',
+        text:'Press <b>Resolve</b>. A fixed line lands in the log &mdash; <i>block succeeds when Intercept &ge; Stealth</i> &mdash; and the counters clear for everyone. Two things to notice: the line&rsquo;s exact wording is <b>machine-readable</b> (Elysium&rsquo;s training bots parse it), and a Block resolve <b>never closes the card-play batch</b>: a failed block means the action continues, a successful one becomes combat within the same action. If your Settings choice <b>After a resolver&rsquo;s Resolve</b> is not Off, you are <i>asked</i> about clearing the Played tab instead.',
         advance:{on:'event', name:'resolver-resolve'} },
 
       // ---- Vote ----
@@ -19439,7 +19461,7 @@ const TUT_SECTIONS = {
         text:'Now press <b>Vote</b> &mdash; note the <b>gold accents</b>. Left: votes <b>for</b>, right: <b>against</b>. Tally them as the table casts votes; a referendum <i>passes only with MORE votes for than against</i> (ties fail).',
         advance:{on:'predicate', test:function(){ return avr.mode==='vote'; }} },
       { id:'sh-vote-resolve', target:()=>$('#avrResolve'), place:'bottom', freeInteract:true,
-        text:'Set any numbers and <b>Resolve</b>. Unlike Block, a Vote resolve <b>closes the card-play batch</b> &mdash; exactly like the &ldquo;It resolves&rdquo; quick phrase &mdash; and applies your local <b>Resolver Resolve</b> setting (Off / Clear the view / Clear + discard mine).',
+        text:'Set any numbers and <b>Resolve</b>. Unlike Block, a Vote resolve <b>closes the card-play batch</b> &mdash; exactly like the &ldquo;It resolves&rdquo; quick phrase &mdash; and applies your local Settings choice <b>After a resolver&rsquo;s Resolve</b> (Off / Clear the view / Clear + discard mine).',
         advance:{on:'event', name:'resolver-resolve'} },
 
       // ---- Combat + the duel view ----
@@ -19447,15 +19469,15 @@ const TUT_SECTIONS = {
         text:'With your vampire still selected, press <b>Combat</b> (red accents). The row becomes the <b>step rail</b>: the rulebook&rsquo;s seven steps per round &mdash; Before range &middot; Range &middot; Before strikes &middot; Strike &middot; Damage &middot; Press &middot; End &mdash; with the round number and the current range. <b>&#9656;</b> moves on, or click any step. Each step shows only what it needs: the <b>range switch</b> for maneuvers, <b>damage both ways</b> in Strike, what each side <b>loses</b> in Damage, the <b>press switch</b> in Press. At End of round, <b>&#9656;</b> starts the next round if someone pressed to continue &mdash; otherwise it ends the combat. The same controls live on your vampire&rsquo;s right-click menu under <b>Combat</b>.',
         advance:{on:'predicate', test:function(){ return avr.mode==='combat'; }} },
       { id:'sh-duel', target:()=>$('#avrDuel'), place:'bottom', freeInteract:true,
-        text:'This is the <b>duel view</b>. Press <b>&#9876; Join</b> to announce your selected vampire as a combatant &mdash; your panel appears with card art, blood, tokens and attached cards. <b>Your side is manageable</b> (the blood row opens the counter stepper; attached names open the normal card menu). <b>Either side</b>&rsquo;s card art and attached names can be hovered for a preview, and clicking the card art pins the full view &mdash; tokens and every attached card, exactly like a log card-name click. An opponent&rsquo;s side is otherwise <b>view-only</b>, live from their board &mdash; the same authority rule as everywhere: you only ever touch your own cards. &#9876; Swap changes minions, &#10005; leave withdraws.',
-        gate:function(){ return !!(avr.duel && avr.duel[mySeat()]); }, gateHint:'Press ⚔ Join (with your minion selected).', advance:{on:'manual'} },
+        text:'This is the <b>duel view</b>: <b>ACTING</b> on the left, <b>BLOCKING</b> on the right. The vampire you had selected is already in as the acting combatant &mdash; its panel shows card art, blood, tokens and attached cards (with nothing selected, <b>&#9876; Join as acting &#9662;</b> picks one of your ready minions). <b>Your side is manageable</b> (the blood row opens the counter stepper; attached names open the normal card menu). <b>Either side</b>&rsquo;s card art and attached names can be hovered for a preview, and clicking the card art pins the full view &mdash; tokens and every attached card, exactly like a log card-name click. An opponent&rsquo;s side is otherwise <b>view-only</b>, live from their board &mdash; the same authority rule as everywhere: you only ever touch your own cards. <b>&#8644; Change &#9662;</b> picks another of your minions, <b>&#10005; leave</b> withdraws; a blocker comes in on the right with &#9876; Join as blocking.',
+        gate:function(){ return !!(avr.duel && avr.duel[mySeat()]); }, gateHint:'Join the duel: \u2694 Join as acting picks one of your ready minions.', advance:{on:'manual'} },
       { id:'sh-combat-resolve', target:()=>$('#avrResolve'), place:'bottom', freeInteract:true,
         text:'<b>Resolve</b> the combat &mdash; the damage line goes to the log and the duel view folds away.',
         advance:{on:'event', name:'resolver-resolve'} },
 
       // ---- Pool targeting + the +X bleed idiom ----
       { id:'sh-pooltarget', target:()=>null, place:'center', freeInteract:true,
-        text:'<b>Pool targeting</b>: right-click any opponent&rsquo;s <b>pool</b> (their globe, or their row in the Table panel) and pick <b>&#8918; Target their pool</b>. A crimson ring marks your aim, the owner sees an amber cue on theirs &mdash; and your next bleed line will read <i>&ldquo;Target: NAME&rsquo;s pool.&rdquo;</i> Without an aim, a bleed targets your <b>prey</b> by default, exactly like at the table &mdash; the aim exists for <b>Deflection</b> situations, when a bleed gets redirected.',
+        text:'<b>Pool targeting</b>: right-click any opponent&rsquo;s <b>pool</b> (their globe, or their row in the Table panel) and pick <b>&#8982; Target their pool</b>. A crimson ring marks your aim, the owner sees an amber cue on theirs &mdash; and your next bleed line will read <i>&ldquo;Target: NAME&rsquo;s pool.&rdquo;</i> Without an aim, a bleed targets your <b>prey</b> by default, exactly like at the table &mdash; the aim exists for <b>Deflection</b> situations, when a bleed gets redirected.',
         gate:function(){ return !!(net.rtarget && net.rtarget.cid==='pool'); }, gateHint:'Right-click an opponent’s pool → Target their pool.', advance:{on:'manual'} },
       { id:'sh-plusx', target:()=>null, place:'center', freeInteract:true,
         text:'Now the bleed idiom: <b>right-click your vampire &rarr; Actions &rarr; Bleed &rarr; Bleed 1</b> to announce the base bleed &mdash; then <b>Actions &rarr; Bleed &rarr; +X bleed&hellip;</b> for modifiers that land <i>after</i> the announce (Conditioning &amp; co). The log shows a running total: <i>&ldquo;adds +2 bleed (= 3).&rdquo;</i> The total is <b>batch-scoped</b> &mdash; it dies when the action resolves. Notice your pool aim rode the bleed line; it will <b>auto-clear</b> when this action resolves.',
@@ -19467,7 +19489,7 @@ const TUT_SECTIONS = {
 
       // ---- Outro ----
       { id:'sh-outro', target:()=>null, place:'center',
-        text:'That is the <b>table-helper family</b>! Remember: every piece of this chapter is a <b>helper</b> &mdash; flip on <b>tournament mode</b> (or join a tournament-locked room) and the resolvers, the duel view and the phase aids all vanish for a clean, unassisted table. The log lines they produce stay human-readable and machine-readable alike. <b>Good hunting!</b>',
+        text:'That is the <b>table-helper family</b>! Remember: every piece of this chapter is a <b>helper</b> &mdash; flip on <b>tournament mode</b> (or join a table whose host chose Tournament mode under Helpers) and the resolvers, the duel view and the phase aids all vanish for a clean, unassisted table. The log lines they produce stay human-readable and machine-readable alike. <b>Good hunting!</b>',
         advance:{on:'manual'} },
       { id:'sh-leave', target:()=>$('#btnMenu'), place:'left', freeInteract:true,
         onExit:function(){ try{ hideMenu(); }catch(e){} },
@@ -19553,10 +19575,10 @@ const TUT_SECTIONS = {
         text:'<b>Your name</b> &mdash; how you appear to everyone at the table. Elysium remembers it between sessions.',
         advance:{on:'manual'} },
       { id:'oh-room', target:()=>$('#mpRoom'), place:'bottom', scroll:()=>$('#mpRoom'),
-        text:'<b>Room name</b> &mdash; pick anything you like (e.g. &ldquo;Friday Fangs&rdquo;). You create the room with this name; guests type the same name to join, or find it under 🔍 List rooms. One server hosts many rooms side by side, so choose something your group will recognise at a glance.',
+        text:'<b>Room name</b> &mdash; pick anything you like (e.g. &ldquo;Friday Fangs&rdquo;). You create the room with this name; guests type the same name to join, or click it in <b>Join game</b>&rsquo;s room list, which appears by itself. One server hosts many rooms side by side, so choose something your group will recognise at a glance.',
         advance:{on:'manual'} },
       { id:'oh-pass', target:()=>$('#mpPass'), place:'bottom', scroll:()=>$('#mpPass'),
-        text:'<b>Password</b> &mdash; optional, and set at creation. Guests must then enter the same password to join, and the room carries a 🔒 in the list. On a public server this is what keeps a table yours; for a casual game it can stay blank. Make up a fun phrase &mdash; never reuse a real password from anywhere else.',
+        text:'<b>Password</b> &mdash; optional, and set at creation. Guests must then enter the same password to join, and the room carries a 🔒 in the list. On a public server this is what keeps a table yours &mdash; and <b>&#128190; matches</b> needs it: a room without a password cannot save its game. Make up a fun phrase &mdash; never reuse a real password from anywhere else.',
         advance:{on:'manual'} },
       { id:'oh-srvpass', target:()=>$('#mpSrvPass'), place:'bottom', scroll:()=>$('#mpSrvPass'),
         text:'<b>Server password</b> &mdash; a different thing from the room password: a lock on the <b>whole server</b>, where browsing, creating and joining all require it. It belongs to privately run servers started with <b>--server-pass</b>; elysium.cards has none.',
@@ -19628,7 +19650,7 @@ const TUT_SECTIONS = {
 
       // ---- Outro ----
       { id:'oh-outro', target:()=>null, place:'center',
-        text:'That&rsquo;s <b>hosting</b>! To recap: open <b>elysium.cards</b>, <b>Create game</b> with a name, a password if you want one, and your <b>board style</b>, <b>Helpers</b> and <b>Tournament lock</b> choices under Game settings &mdash; then share the room name and wait in the <b>lobby</b>. Your guests install nothing. Once everyone is seated with a deck: <b>Start game</b>. Good hunting!',
+        text:'That&rsquo;s <b>hosting</b>! To recap: open <b>elysium.cards</b>, <b>Create game</b> with a name, a password (it also lets you save the match), and your <b>board style</b> and <b>Helpers</b> under Game settings &mdash; then share the room name and wait in the <b>lobby</b>. Your guests install nothing. Once everyone is seated with a deck: <b>Start game</b>. Good hunting!',
         advance:{on:'manual'} },
     ]
   },
@@ -19893,6 +19915,7 @@ function tutEnd(){
   tutClearAdvance();
   if(tut.esc){ document.removeEventListener('keydown', tut.esc, true); tut.esc=null; }
   tut.active=false; tut.secId=null; tut.steps=[]; tut.idx=-1; tut._dlMode=null;
+  if(tut._offSetupWas!==undefined){ const _c=$('#offSetup'); if(_c) _c.checked=tut._offSetupWas; tut._offSetupWas=undefined; }   // v2.6.186: lob-setup switched Suggested table setup off for the tutorial's own table -- the next Play offline finds the box as the player left it
   const L=$('#tutLayer'); if(L) L.classList.remove('on');
   const fxT=$('#cardFxTop'); if(fxT) fxT.innerHTML='';   // clear the top-level tutorial clone host
   try{ closeOverlay(); }catch(e){}                        // close any modal the tutorial left open (e.g. the online tutorial's #mpModal)
@@ -19943,6 +19966,7 @@ function tutVisibleInfo(){
   let total=0, pos=0;
   for(let i=0;i<tut.steps.length;i++){
     const s=tut.steps[i];
+    if(s.skip){ let _sk=false; try{ _sk=!!s.skip(); }catch(e){} if(_sk) continue; }   // v2.6.186: a branch tutGo skips is no step the player sees -- Playing cards counted both of its branches (5/20, then 9/20)
     let shown = (s.place==='center' || !s.allowSkip);
     if(!shown){ try{ shown=!!(s.target && s.target()); }catch(e){ shown=false; } }
     if(shown){ total++; if(i<=tut.idx) pos++; }
@@ -20011,6 +20035,7 @@ function tutNotify(name,data){
   if(!tut.active || !tut.evName || tut.evName!==name) return;
   const s=tut.steps[tut.idx]; if(!s || !s.advance) return;
   if(typeof s.advance.match==='function' && !s.advance.match(data)) return;
+  if(name==='hotseat-started' && typeof endYourTurn==='function'){ try{ endYourTurn(); }catch(e){} }   // v2.6.186: the tutorial's own table -- its first steps talk over the felt, and "YOUR TURN!" sat on it until Unlock was clicked (all of Structured II)
   tutGo(1);
 }
 

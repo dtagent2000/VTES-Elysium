@@ -1,8 +1,23 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.185 / server v2.6.53 / bot v0.6.236 tested beside the suite, last updated 24 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.186 / server v2.6.53 / bot v0.6.236 tested beside the suite, last updated 24 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**24 Nov 2026, afternoon (THE TOUR CATCHES UP — v2.6.186):**
+- **A tutorial is a second copy of the interface's words, and nothing tells it when the first copy changes.** Months of
+  releases after it was written it still taught § for the Overview (the phase key since v2.6.118: pressing it changed the
+  phase), an ankh icon, a ⚔ Join button, a 'List rooms' button and a blank password that can no longer save. The audit
+  that finds this drives every chapter in a real browser with real gestures; a lint of the retired words keeps them out.
+- **A key named in prose is read from the binding.** `tutKey('cycleView','V')` follows the player's own keymap; a literal
+  in a text is a second source of truth that goes stale the day the default moves.
+- **A browser script's stall is the script's until a probe says otherwise.** Two of three were ours: a diagonal path into a
+  submenu crosses the parent menu's other rows and re-opens their submenus (enter sideways, then down), and a press under a
+  centre-stage clone lands on the clone (`elementFromPoint` at the press point names it). Ask the page what is under the
+  pointer before reading a stuck gate as a client bug.
+- **What a guided tour changes for its own table it puts back.** `lob-setup` unchecks Suggested table setup and `tutEnd`
+  restores it; a tour that leaves a player's lobby different from how they left it is a bug report waiting to happen.
+- **A step counter counts what the player sees.** The branch `tutGo` skips was counted, so the counter jumped 5/20 to 9/20.
 
 **24 Nov 2026, morning (THE SEARCH IS TOLD — v2.6.185 / srv-2.6.53):**
 - **What only the client says, a modified client can leave unsaid.** A search, a fetch and a park were announced by

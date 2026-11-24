@@ -7051,6 +7051,156 @@ testA('v2.6.185 on a server from srv-2.6.53 the client writes no line of its own
   assert(/Listed by name, not in pile order/.test(A.__doc._ids['browseNote'].textContent), 'the search says the list is by name: ' + A.__doc._ids['browseNote'].textContent);
 });
 
+/* === v2.6.186: THE TOUR CATCHES UP -- the tutorial against the client it teaches ===
+   An audit drove all twelve chapters in headless Chromium with real gestures. Every target existed (the v2.6.52
+   test held), yet the words had drifted: the Overview key moved in v2.6.118, the lock stopped being a choice in
+   v2.6.116, the table setup came in v2.6.146, the Edge button and the duel view were redrawn. These pin what the
+   texts may no longer say, the seat names, and the engine fixes (the counter, the cue, the setup box). */
+const TUT186 = (A) => { const out = []; for (const k of A.TUT_ORDER) for (const s of A.TUT_SECTIONS[k].steps) { let t = '', h = ''; try { t = typeof s.text === 'function' ? s.text() : s.text; } catch (e) { t = 'TEXT-ERROR ' + e.message; } try { h = typeof s.gateHint === 'function' ? s.gateHint() : (s.gateHint || ''); } catch (e) { h = 'HINT-ERROR ' + e.message; } out.push({ k, id: s.id, t: String(t), h: String(h) }); } return out; };
+test('v2.6.186: the Overview steps name V (the shortcut table\'s cycleView) -- not the § that cycles the phase since v2.6.118 (pressing it there moved the phase) nor the ` that does nothing -- and follow a rebinding', () => {
+  const A = loadClient(CLIENT), by = id => A.ACTIONS.find(a => a.id === id);
+  eq(by('cycleView').def, 'V'); eq(by('phaseNext').def, '§', 'the phase cycle owns §');
+  const sec = A.TUT_SECTIONS['structured-intro'].steps, ov = sec.find(s => s.id === 'si-overview'), note = sec.find(s => s.id === 'si-overview-note');
+  const all = () => [ov.text(), ov.gateHint(), note.text(), note.gateHint()].join(' | ');
+  assert(/<b>V<\/b> on your keyboard/.test(ov.text()) && /^Press V or ↑/.test(ov.gateHint()) && /<b>V<\/b> again \(or <b>↓<\/b>\)/.test(note.text()) && /^Press V or ↓/.test(note.gateHint()), 'V by default: ' + all());
+  assert(!/§|`/.test(all()), 'no § and no backtick: ' + all());
+  const kb = A.keyBinds, had = Object.prototype.hasOwnProperty.call(kb, 'cycleView'), was = kb.cycleView;
+  try {
+    kb.cycleView = 'O'; assert(/<b>O<\/b> on your keyboard/.test(ov.text()) && /^Press O or/.test(ov.gateHint()), 'a rebinding is named: ' + all());
+    kb.cycleView = ''; assert(!/<b><\/b>/.test(all()) && /↑/.test(ov.text()) && /^Press ↑/.test(ov.gateHint()) && /<b>↓<\/b> to return home/.test(note.text()), 'unbound: the arrows alone: ' + all());
+  } finally { if (had) kb.cycleView = was; else delete kb.cycleView; }
+  for (const x of TUT186(A)) assert(!/§/.test(x.t + x.h), x.id + ' still names §');
+});
+test('v2.6.186: the step counter counts the branch a player walks -- Playing cards counted both of its branches (Step 5 / 20, then 9 / 20, with 17 shown)', () => {
+  const A = loadClient(CLIENT), t = A.tut, steps = A.TUT_SECTIONS['classic-play'].steps;
+  const prev = { steps: t.steps, idx: t.idx, w: t._playWithVamp };
+  try {
+    t.steps = steps;
+    const walk = br => { t._playWithVamp = br; const out = []; steps.forEach((s, i) => { let sk = false; try { sk = !!(s.skip && s.skip()); } catch (e) {} if (sk) return; t.idx = i; out.push(A.tutVisibleInfo()); }); return out; };
+    for (const br of [true, false, undefined]) {
+      const v = walk(br);
+      eq(v.length, 17, 'branch ' + br + ': seventeen steps shown');
+      eq(v.map(x => x.pos).join(','), Array.from({ length: 17 }, (_, i) => i + 1).join(','), 'branch ' + br + ': 1, 2, 3 ... with no gap');
+      assert(v.every(x => x.total === 17), 'branch ' + br + ': 17 throughout: ' + v.map(x => x.total).join(','));
+    }
+    eq(steps.filter(s => s.skip).length, 6, 'two branches of three (cp-a-*, cp-b-*)');
+  } finally { t.steps = prev.steps; t.idx = prev.idx; t._playWithVamp = prev.w; }
+});
+test('v2.6.186: Start a game switches Suggested table setup off for the tutorial\'s own table -- with the box on (its default), Crypt & influence asked for four crypt cards that were already out -- and tutEnd puts the box back as the player left it', () => {
+  const A = loadClient(CLIENT), lob = A.TUT_SECTIONS.lobby.steps, ids = lob.map(s => s.id), t = A.tut;
+  eq(ids.indexOf('lob-setup'), ids.indexOf('lob-board') + 1, 'right after Board style, in the dialog\'s own order');
+  const st = lob.find(s => s.id === 'lob-setup'), box = { checked: true }, row = { id: 'offSetupRow' };
+  A.__doc._ids.offSetup = box; A.__doc._ids.offSetupRow = row;
+  try {
+    eq(st.target(), row, 'it spotlights the row');
+    st.onEnter(); eq(box.checked, false, 'the step switches it off');
+    st.onEnter(); eq(t._offSetupWas, true, 'and remembers the first answer');
+    A.tutEnd(); eq(box.checked, true, 'tutEnd puts it back'); eq(t._offSetupWas, undefined, 'and forgets');
+    box.checked = false; st.onEnter(); A.tutEnd(); eq(box.checked, false, 'a box the player had off stays off');
+    box.checked = true; A.tutEnd(); eq(box.checked, true, 'a teardown without the step touches nothing');
+    assert(/Suggested table setup/.test(st.text) && /switched it off/.test(st.text), st.text);
+  } finally { delete A.__doc._ids.offSetup; delete A.__doc._ids.offSetupRow; }
+  assert(/<input type="checkbox" id="offSetup" checked>/.test(require('fs').readFileSync(CLIENT, 'utf8')), 'the dialog still defaults to on -- the tutorial is what turns it off');
+  assert(/drag four cards out of your Crypt/.test(A.TUT_SECTIONS['classic-crypt'].steps.find(s => s.id === 'cc-draw').text), 'Crypt & influence teaches the hand-made setup -- its table has one to make now');
+  const cx = A.TUT_SECTIONS['classic-interact'].steps.find(s => s.id === 'cx-crypt').text;
+  assert(/double-click your Crypt pile/.test(cx) && !/<b>click your Crypt pile<\/b>/.test(cx), 'a single click on the Crypt draws nothing: ' + cx);
+  eq(A.conv.drawClick, 'double', 'piles draw on a double-click by default');
+});
+test('v2.6.186: the Structured chapters run with All helpers on -- the phase helpers and the resolvers no longer hang on the player\'s own switches, and no text speaks of a Tournament box the select never shows', () => {
+  const A = loadClient(CLIENT), sel = { value: 'local' };
+  A.__doc._ids.offHelpers = sel;
+  try {
+    const si = A.TUT_SECTIONS['structured-intro'].steps.find(s => s.id === 'si-tournament');
+    si.onEnter(); eq(sel.value, 'all', 'Structured: All helpers on');
+    assert(/All helpers on/.test(si.text) && !/Tournament mode<\/b> is <b>off/.test(si.text), si.text);
+    sel.value = 'local';
+    const sh = A.TUT_SECTIONS['structured-helpers'].steps.find(s => s.id === 'sh-lobby');
+    try { sh.onEnter(); } catch (e) {}
+    eq(sel.value, 'all', 'Structured II: the same');
+    assert(/Helpers: All helpers on/.test(sh.text), sh.text);
+  } finally { delete A.__doc._ids.offHelpers; }
+  const open = A.TUT_SECTIONS['structured-intro'].steps.find(s => s.id === 'si-lobby-open').text;
+  assert(/Helpers: All helpers on/.test(open) && !/unchecked/.test(open), open);
+  assert(/This table runs with <b>All helpers on<\/b>/.test(A.TUT_SECTIONS['structured-helpers'].steps.find(s => s.id === 'sh-helpers').text), 'sh-helpers says where the resolvers live at the player\'s own tables');
+});
+test('v2.6.186: no tutorial step says what the client stopped doing -- the ankh icon, List rooms, a Tournament lock choice, a lock that hides helpers, Player 1, the PRIORITY bar, Resolver Resolve, Fill table filling empty seats, a single click on the Crypt, ⚔ Join for a combatant already in, the ⋖ glyph, a password that can stay blank', () => {
+  const A = loadClient(CLIENT);
+  A.net.roster = [{ seat: 1, name: 'You' }, { seat: 2, name: 'Astrid' }]; A.net.you = 'Astrid';
+  const retired = [[/ankh/i, 'the Edge button carries the VTES symbol'], [/List rooms/, 'the room list shows itself (v2.6.80)'], [/Tournament lock<\/b> choices/, 'no lock choice since v2.6.116'], [/tournament-locked room\) and/, 'the lock is no helper switch (v2.6.116)'], [/Player [12]\b/, 'the table names its seats'], [/PRIORITY/, 'the PRIORITY bar is off'], [/Resolver Resolve/, 'the row reads After a resolver’s Resolve'], [/fill the empty seats/, 'Fill table re-seats all five'], [/<b>click your Crypt pile<\/b>/, 'a click draws nothing by default'], [/Press <b>&#9876; Join<\/b>/, 'the selected vampire is already in'], [/&#8918;|⋖/, 'the menu says ⌖'], [/for a casual game it can stay blank/, 'a save needs the password (v2.6.184)'], [/Tournament mode<\/b> unchecked/, 'Helpers is a select']];
+  const rows = TUT186(A);
+  for (const x of rows) for (const [re, why] of retired) assert(!re.test(x.t + ' ' + x.h), x.k + ':' + x.id + ' -- ' + why + ': ' + (x.t + ' ' + x.h).slice(0, 160));
+  eq(rows.filter(x => /TEXT-ERROR|HINT-ERROR/.test(x.t + x.h)).map(x => x.id).join(','), '', 'every text and hint renders');
+  const S = (k, id) => A.TUT_SECTIONS[k].steps.find(s => s.id === id);
+  assert(/Open the dock/.test(S('classic-play', 'cp-edge').text) && /pool zone/.test(S('classic-play', 'cp-edge').text), 'the Edge step sends the player to the dock, where the button is');
+  assert(/ACTING/.test(S('structured-helpers', 'sh-duel').text) && /&#8644; Change/.test(S('structured-helpers', 'sh-duel').text), 'the duel text matches the panel');
+  assert(/&#8982; Target their pool/.test(S('structured-helpers', 'sh-pooltarget').text), 'the menu\'s glyph');
+  assert(/Set as target/.test(S('classic-interact', 'cx-target').text), 'a rival card\'s menu says Set as target');
+});
+test('v2.6.186: Interacting with opponents names the seats as the Table panel shows them -- "Player 1" named nothing on screen, and the outro called the seat you play your own while the row named You was the other one', () => {
+  const A = loadClient(CLIENT), t = A.tut, ev = 'Ann <img src=x onerror=1>';
+  A.net.roster = [{ seat: 1, name: 'You' }, { seat: 2, name: ev }];
+  const S = id => A.TUT_SECTIONS['classic-interact'].steps.find(s => s.id === id), prev = t._handoffSeat;
+  try {
+    t._handoffSeat = 1; A.net.you = ev; S('cx-intro').onEnter();
+    eq(t._handoffSeat, null, 'the chapter forgets an earlier hand-off');
+    eq(A.mySeat(), 2, 'after the pass you play the 2nd seat'); eq(A.tutActorSeat(), 2); eq(A.tutReactorSeat(), 1, 'the seat that passed');
+    const intro = S('cx-intro').text();
+    assert(intro.indexOf('the 2nd seat (<b>Ann &lt;img src=x onerror=1&gt;</b>)') > 0 && intro.indexOf('the 1st seat (<b>You</b>)') > 0, 'both seats, escaped: ' + intro);
+    assert(/the 1st seat \(<b>You<\/b>\)/.test(S('cx-handoff').text()) && /the 1st seat’s row \(You\)/.test(S('cx-handoff').gateHint()), S('cx-handoff').gateHint());
+    S('cx-handoff').onEnter(); eq(t._handoffSeat, 2);
+    A.net.you = 'You'; eq(A.mySeat(), 1, 'the hand-off: you react as the 1st seat');
+    eq(A.tutReactorSeat(), 1); eq(A.tutActorSeat(), 2, 'the turn is still the 2nd seat’s');
+    assert(/now playing as the 1st seat/.test(S('cx-signal').text()) && /^Still as the 1st seat/.test(S('cx-p1-play').text()), S('cx-p1-play').text());
+    assert(/from both the 1st seat \(<b>You<\/b>\) and the 2nd seat/.test(S('cx-played').text()), S('cx-played').text());
+    assert(/control went back to the 2nd seat \(<b>Ann &lt;img/.test(S('cx-outro').text()), 'the outro names where control went');
+    eq(A.tutSeatLabel(null), 'the other seat');
+    A.net.roster = [{ seat: 1, name: 'A' }, { seat: 2, name: 'B' }, { seat: 3, name: 'C' }]; t._handoffSeat = 1; eq(A.tutReactorSeat(), 3, 'three seats: the predecessor wraps');
+  } finally { t._handoffSeat = prev; }
+});
+test('v2.6.186: the tutorial\'s own table starts without YOUR TURN! over its felt -- the cue sat on Structured I\'s zone tour and all of Structured II -- and only a step waiting for that start clears it', () => {
+  const A = loadClient(CLIENT), t = A.tut, removed = [];
+  A.__doc._ids.turnFx = { classList: { remove: c => removed.push(c), add(){}, toggle(){ return false; }, contains(){ return false; } } };
+  const keep = { active: t.active, secId: t.secId, steps: t.steps, idx: t.idx, evName: t.evName };
+  try {
+    t.active = false; A.tutNotify('hotseat-started'); eq(removed.length, 0, 'no tutorial: the cue is the game\'s');
+    t.active = true; t.secId = 'online-selfhost'; t.steps = [{ id: 'w', target: () => null, place: 'center', text: 'w', advance: { on: 'event', name: 'minion-action' } }, { id: 'n', target: () => null, place: 'center', text: 'n', advance: { on: 'manual' } }]; t.idx = 0; t.evName = 'minion-action';
+    A.tutNotify('hotseat-started'); eq(removed.length, 0, 'a step waiting for something else: untouched');
+    t.steps[0].advance = { on: 'event', name: 'hotseat-started' }; t.evName = 'hotseat-started';
+    try { A.tutNotify('hotseat-started'); } catch (e) {}
+    assert(removed.indexOf('show') >= 0, 'the start the step waits for clears the cue');
+  } finally { try { A.tutEnd(); } catch (e) {} Object.assign(t, keep); delete A.__doc._ids.turnFx; }
+});
+test('v2.6.186: the bubble and End tutorial keep clear of what a step is about -- below the fanned attachment stack, right of the tray\'s counter, a pinned dock closed before the two buttons it covers, End tutorial below ⌂ Home in a seat visit', () => {
+  const A = loadClient(CLIENT);
+  const P = A.TUT_SECTIONS['classic-play'].steps, X = A.TUT_SECTIONS['classic-interact'].steps, I = A.TUT_SECTIONS['classic-intro'].steps;
+  for (const id of ['cp-stack', 'cp-unstack']) { const s = P.find(q => q.id === id); eq(s.place, 'bottom', id); eq(s.avoidRect, A.tutStackRect, id + ' keeps clear of the stack'); }
+  eq(X.find(q => q.id === 'cx-counter').place, 'right', 'the tray\'s cards line up from the left');
+  for (const id of ['ci-help', 'ci-zoom']) eq(I.find(q => q.id === id).onEnter, A.tutDockAside, id + ' closes a pinned dock first');
+  assert(/or the <b>pin<\/b> in its top-right corner/.test(I.find(q => q.id === 'ci-dock').text), 'the dock step names the visible pin too');
+  const v = A.makeCard('Stacked One', 'crypt'); A.move(v, 'ready', { x: 120, y: 60, faceDown: false });
+  v.el = { getBoundingClientRect: () => ({ left: 100, top: 200, right: 162, bottom: 287, width: 62, height: 87 }) };
+  v.attached = [];
+  const r0 = A.tutStackRect(); v.attached = ['x', 'y'];
+  const r2 = A.tutStackRect();
+  assert(r0 && r2, 'a rect for the face-up vampire');
+  eq(r0.left, 100); eq(r0.bottom, 287, 'it starts at the vampire');
+  assert(r0.top < 200 && r0.right > 162, 'grown up and right for the next card: ' + JSON.stringify(r0));
+  assert(r2.top < r0.top && r2.right > r0.right, 'and for every card the stack holds: ' + JSON.stringify(r2));
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf('body.invisit #tutEnd{ top:98px; }') > 0 && /#rvBack\{position:absolute; right:16px;/.test(html), 'in a visit End tutorial stands below ⌂ Home, which shares its top right');
+});
+test('v2.6.186: the hotseat points at the Table panel, where seats are switched (the PRIORITY bar is off, the Alt-view parked) -- and a dealt seat\'s deck line no longer sends the player to New deal', () => {
+  const A = loadClient(CLIENT), html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf('Take whoever is acting from the <b>Table</b> panel (click their row)') > 0 && html.indexOf('Take priority from the <b>PRIORITY</b> bar') < 0, 'the offline dialog');
+  assert(html.indexOf("Take a player&rsquo;s seat from the <b>Table</b> panel (click their row); their board and hand follow.") > 0 && html.indexOf('Use the <b>PRIORITY</b> bar') < 0, 'the hotseat\'s first log line');
+  assert(html.indexOf("buildDeck(parseDeck(p.deckText), {dealt:true}); dealOpeningSync(seat);") > 0, 'startHotseat deals at once and says so');
+  const deck = 'Crypt:\n12xAmavi\nLibrary:\n60xAshur Tablets';
+  A.__htmlRec.start(); A.buildDeck(A.parseDeck(deck), { dealt: true }); let rec = A.__htmlRec.stop().filter(h => /Imported deck/.test(h)).join(' ');
+  assert(/Imported deck/.test(rec) && !/New deal/.test(rec), 'dealt: ' + rec);
+  A.__htmlRec.start(); A.buildDeck(A.parseDeck(deck)); rec = A.__htmlRec.stop().filter(h => /Imported deck/.test(h)).join(' ');
+  assert(/Pick <b>New deal<\/b>/.test(rec), 'a deck loaded on its own still points at New deal: ' + rec);
+});
+
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){

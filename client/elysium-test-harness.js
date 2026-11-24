@@ -460,7 +460,10 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   get _mpan(){ return (typeof _mpan!=='undefined')?_mpan:undefined; }, get l3pan(){ return (typeof l3pan!=='undefined')?l3pan:undefined; }, set l3pan(v){ l3pan=v; }, get l3zoom(){ return (typeof l3zoom!=='undefined')?l3zoom:undefined; },
   saveMatchName: (typeof saveMatchName!=='undefined'?saveMatchName:undefined), saveMatchSend: (typeof saveMatchSend!=='undefined'?saveMatchSend:undefined), saveMatchNow: (typeof saveMatchNow!=='undefined'?saveMatchNow:undefined),   // v2.6.184: the saves dialog
   saveExistsAsk: (typeof saveExistsAsk!=='undefined'?saveExistsAsk:undefined), renderSaves: (typeof renderSaves!=='undefined'?renderSaves:undefined), openSaves: (typeof openSaves!=='undefined'?openSaves:undefined),
-  srvLogsPiles: (typeof srvLogsPiles!=='undefined'?srvLogsPiles:undefined), netBrowseOpen: (typeof netBrowseOpen!=='undefined'?netBrowseOpen:undefined)   // v2.6.185: G
+  srvLogsPiles: (typeof srvLogsPiles!=='undefined'?srvLogsPiles:undefined), netBrowseOpen: (typeof netBrowseOpen!=='undefined'?netBrowseOpen:undefined),   // v2.6.185: G
+  get tut(){ return (typeof tut!=='undefined')?tut:undefined; }, tutVisibleInfo: (typeof tutVisibleInfo!=='undefined'?tutVisibleInfo:undefined), tutNotify: (typeof tutNotify!=='undefined'?tutNotify:undefined), tutKey: (typeof tutKey!=='undefined'?tutKey:undefined),   // v2.6.186: the tutorial catches up
+  tutSeatName: (typeof tutSeatName!=='undefined'?tutSeatName:undefined), tutSeatLabel: (typeof tutSeatLabel!=='undefined'?tutSeatLabel:undefined), tutActorSeat: (typeof tutActorSeat!=='undefined'?tutActorSeat:undefined), tutReactorSeat: (typeof tutReactorSeat!=='undefined'?tutReactorSeat:undefined),
+  tutStackRect: (typeof tutStackRect!=='undefined'?tutStackRect:undefined), tutDockAside: (typeof tutDockAside!=='undefined'?tutDockAside:undefined), buildDeck: (typeof buildDeck!=='undefined'?buildDeck:undefined)
 };`;
   const factory = new Function(
     'document','window','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame',
