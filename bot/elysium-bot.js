@@ -1370,7 +1370,7 @@ class Bot {
           this._clearPending('turn change');
         }
         if(m.seat !== this.turnSeat && this.turnSeat && this.opp && this.opp[this.turnSeat] && this.opp[this.turnSeat].memo) this._hMemoTurnEnd(this.turnSeat);   // v0.6.225: their turn ended -- an open record resolves; the answer window closes (or lasts their next turn)
-        if(m.seat !== this.turnSeat){ this._srWindowClosed('the turn changed'); this._releaseHolds('action', 'combat'); }   // v0.6.239 (the egress review, findings 1 and 2): the last turn's 'as played' windows, actions and combats are over -- a reaction's 'Do not replace until after this action' is released here, never inside its action (_flushDraws releases in my own turn only)
+        if(m.seat !== this.turnSeat){ this._srWindowClosed('the turn changed'); if(this._releaseHolds('action', 'combat')) this._replaceLate(); }   // v0.6.239 (the egress review, findings 1 and 2): the last turn's 'as played' windows, actions and combats are over -- a reaction's 'Do not replace until after this action' is released here, never inside its action (_flushDraws releases in my own turn only), and drawn before the next turn starts (turnSeat is still the last turn's here)
         if(m.seat !== this.turnSeat){ this._turnActN = 0; this._turnSerial = (this._turnSerial | 0) + 1; }   // v0.6.217: + the turn's serial (Monster's 'once each turn' = once in each player's turn [ANK 20180719-4])   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
         this.turnSeat = m.seat;
         if(this.started && !this.out && m.seat !== this.seat && m.seat) this._w5HumanTurn(m.seat);   // v0.6.230 (V5 wave 5): Anarch Revolt's reminder to a human
@@ -8516,7 +8516,7 @@ class Bot {
   _srWindowClosed(why){              // v0.6.239 (the egress review, finding 1): my Sudden Reversal's window has closed and my cancel stood -- the owner arbitrates at the window's close and answers every other cancel with L12.srLate before it moves on, so its next other line (or the turn change) means mine was not answered: the replacement is owed again
     const s = this._srSent; if(!s) return;
     this._srSent = null;
-    if(this._releaseHolds('srWindow')) this.o.log('sudden reversal: my ' + s.name + ' on ' + s.owner + '\u2019s ' + s.card + ' stands (' + why + ') -- replaced now');
+    if(this._releaseHolds('srWindow')){ this.o.log('sudden reversal: my ' + s.name + ' on ' + s.owner + '\u2019s ' + s.card + ' stands (' + why + ') -- replaced now'); this._replaceLate(); }   // drawn before the line that shows the window closed takes effect: a bleed at me would hold it (_replaceLate waits out a window on me)
   }
   _onSrLate(owner, card){            // my cancel came too late (the window had closed, or another came first): my Sudden Reversal back to my hand, no out-of-turn debt
     const s = this._srSent; if(!s || s.owner !== owner || FX_NORM(s.card) !== FX_NORM(card)) return;

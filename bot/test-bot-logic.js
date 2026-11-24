@@ -16478,14 +16478,15 @@ async function connectWithRetry(client, tries = 30){
         const AS = '<b>Viktor</b> is playing <b>Blood Doll</b>.', NEXT = '<b>Viktor</b> is playing <b>Vessel</b>.', LATE = by => '<b>' + by + "</b>'s Sudden Reversal comes too late for <b>Viktor</b>'s <b>Blood Doll</b>.";
         const a = mkS(); L(a, AS); const a0 = { draws: draws5(a), owed: a._drawOwed | 0, held: (a._replHold || []).map(x => x.until).join(), cancel: a.sent.some(m => m && m.t === 'log' && /plays <b>Sudden Reversal<\/b>/.test(m.html)) };
         L(a, LATE('Mara')); const a1 = draws5(a);
-        L(a, NEXT); const a2 = { draws: draws5(a), owed: a._drawOwed | 0, held: (a._replHold || []).length, sr: a._srSent };
+        let atLine = null; const oAP = a._onAsPlayed.bind(a); a._onAsPlayed = (...x) => { atLine = draws5(a); return oAP(...x); };   /* the owner's next line is handled after the draw (a bleed at me there would hold it) */
+        L(a, NEXT); const a2 = { draws: draws5(a), atLine, owed: a._drawOwed | 0, held: (a._replHold || []).length, sr: a._srSent };
         const b = mkS(); L(b, AS); L(b, LATE('Mara')); L(b, LATE('Hanna')); L(b, NEXT);
         const b0 = { draws: draws5(b), owed: b._drawOwed | 0, held: (b._replHold || []).length, hand: b.hand.includes('Sudden Reversal') };
         const c = mkS(); L(c, AS); c._dispatch({ t: 'turn', seat: 3 }); const c0 = { draws: draws5(c), owed: c._drawOwed | 0, held: (c._replHold || []).length };
         const h = mkS(); h._playSr(2, 'Viktor', 'Blood Doll', Object.assign({}, DEC), true); const h0 = (h._replHold || []).length; h._dispatch({ t: 'say', who: 'Viktor', i: 7 }); const h1 = draws5(h);
-        ok(a0.draws === 0 && a0.owed === 1 && a0.held === 'srWindow' && a0.cancel && a1 === 0 && a2.draws === 1 && a2.owed === 0 && a2.held === 0 && a2.sr === null
+        ok(a0.draws === 0 && a0.owed === 1 && a0.held === 'srWindow' && a0.cancel && a1 === 0 && a2.draws === 1 && a2.atLine === 1 && a2.owed === 0 && a2.held === 0 && a2.sr === null
            && b0.draws === 0 && b0.owed === 0 && b0.held === 0 && b0.hand && c0.draws === 1 && c0.owed === 0 && c0.held === 0 && h0 === 0 && h1 === 1,
-           '185f a Sudden Reversal’s replacement waits out its window: held through the dispatch that played it and another cancel’s ‘too late’, drawn at the owner’s next line or the turn change, taken back with the card when mine is too late; a human’s master has no window (got ' + JSON.stringify({ a0, a1, a2, b0, c0, h: [h0, h1] }) + ')'); }
+           '185f a Sudden Reversal’s replacement waits out its window: held through the dispatch that played it and another cancel’s ‘too late’, drawn at the owner’s next line (before it is handled) or the turn change, taken back with the card when mine is too late; a human’s master has no window (got ' + JSON.stringify({ a0, a1, a2, b0, c0, h: [h0, h1] }) + ')'); }
 
       // g) the egress review's finding 2: a reaction's 'Do not replace until after this action' (Read the Winds) played in another
       //    seat's turn stays held through the table's messages -- no action of mine is in flight there, so the flush must not read
