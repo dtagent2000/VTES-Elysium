@@ -320,7 +320,7 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.237 (24 Nov 2026)** — The playtest round (RULINGS D-136): Johan's offline hotseat, four bots and a human, and his "Yes det
+- **v0.6.237 (24 Nov 2026; PR #103)** — The playtest round (RULINGS D-136): Johan's offline hotseat, four bots and a human, and his "Yes det
   mesta låter bra" on Claude's analysis, with his change on the bounce (read from chat, not the card). A scratch recording of a
   bots-only hotseat at the client's pace (paceMs 3100, askSecs 20, the four starters, 5 rounds) measured the chat for the next round.
   - *Spoken names* (`_spoken`): a bubble no bot parses (the influence sentence, the questions to the table, "currently has N stealth",

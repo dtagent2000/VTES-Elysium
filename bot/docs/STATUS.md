@@ -5,7 +5,7 @@ hotseat tool v1.4.1 · coverage tool v1.1.55 · card ledger v1.2.2 · review she
 v1.0.0 · `ana-gates.py` v1.1.4 · the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51 and main's
 canary v1.5.0; the root's release is client v2.6.186 / srv-2.6.53 (the canary's second run).
 
-**Deploy state:** `main` carries v0.6.236 and client v2.6.186. **Open PR:** the playtest round (branch `bot-playtest-fixes`,
+**Deploy state:** `main` carries v0.6.236 and client v2.6.186. **Open PR:** #103, the playtest round (branch `bot-playtest-fixes`,
 v0.6.237; RULINGS D-136), reviewed in three egress passes. Its handoff to main: `docs/handoffs/HANDOFF-to-main-2026-11-24-v0.6.237.md`
 (the bot panel's bounce line and its timing, the re-announce's second sender, Fame's give and owner, the lock clones, the guide to
 re-embed, a `resolve-late` label), and answers main's reply on the bot ring (PR #102, v2.6.187: its canary 247/0 on
