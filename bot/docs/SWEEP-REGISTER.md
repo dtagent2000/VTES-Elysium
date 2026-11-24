@@ -97,11 +97,12 @@ is a handoff first. Bot-to-bot gaps are marked.
   read them, or never skip step 1.
 - **4.5 The ban on the opponent's side** — Mind of the Wilds [ANI][AUS] (the action), Dog Pack (every combat with the employer),
   Sanguine Entrapment (the round): the banned side does not read it. [pilot] · latent (no deck holds them).
-- **4.6 The bounce's other halves** — a human's bounce of a bot's bleed is read from chat since v0.6.237 (D-136: the client panel's
-  `X bounces the bleed to Y`, a typed `bounce <name>`; the card's play line is not read, Johan: many cards bounce). Left: a bot that
-  is a bounce's new target cannot bounce onward (that half is the bot's own play); a HUMAN's bleed bounced by a human to a bot (no
-  bot actor writes the re-announce, so the bot never arms; the bounce line names no vampire or amount). [B; O-3; the playtest
-  round] · reachable (the onward bounce between bots: malkavian, tremere and ventrue hold Deflection) / human.
+- **4.6 The bounce's other halves** — a human's bounce of a bot's bleed is read since v0.6.237 (D-136): the client's bot ring
+  (v2.6.187) writes the re-announce the acting bot follows and a bot at the new seat arms from (so a HUMAN's bleed bounced by a
+  human to a bot arms too), and a typed `bounce <name>` (the bot writes the re-announce); the card's play line is not read, Johan:
+  many cards bounce. Left: a bot that is a bounce's new target cannot bounce onward (that half is the bot's own play); a bounce
+  card played from the hand with no ring and no typed line still moves nothing. [B; O-3; the playtest round] · reachable (the
+  onward bounce between bots: malkavian, tremere and ventrue hold Deflection) / human.
 - **4.7 A human's Change of Target after a right-click action** names no vampire or another: `_onCot` misses it. Main (11 Nov §1):
   such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. [B] · human (toreador ×2).
 - **4.8 A human's Sudden Reversal at a bot's master**: no line says it cancelled the master (main, 19 Nov). [B: the waves' riders

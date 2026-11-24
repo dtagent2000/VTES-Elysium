@@ -8800,18 +8800,20 @@ class Bot {
     for(const r of rungs){ const hit = cs.filter(r); if(hit.length) return hit.length === 1 ? { seat: hit[0].seat, cands: [hit[0].name] } : { seat: 0, cands: hit.map(c => c.name) }; }
     return { seat: 0, cands: [] };
   }
-  /* v0.6.237: a HUMAN target bounced my bleed (Deflection, Telepathic Misdirection, Redirection ... -- the card is not read, Johan: 'wait
-     with flagging the effect, it is many more cards than Deflection'): the panel's 'Johan bounces the bleed to Hanna' or a typed
-     'bounce Hanna' / 'bounce to Hanna' / 'bounced it to Hanna' ('@Bot bounce Hanna' too), from the seat my bleed is aimed at, while that
-     bleed is live (my turn, not resolved, not blocked). At a hotseat (one device, whichever human is active sends the chat) the panel's
-     line counts when it names the bled human, a typed one is the bled human's. The new target by _seatByNamePart among the live seats
-     other than mine (the acting minion's controller) and the bouncer's; a name that fits none or several gets a question, a bare
-     'bounce' too; a line with a '?' is talk. In one of my windows it lands at once -- exactly what a bot bouncer's line does to me: the
-     bleed re-aimed, no pump after it, I write the re-announce (L12.bleed) a bot at the new seat arms from, and the open window follows
-     the bleed (_bouncedTo). BETWEEN my windows (the 150 ms after a window closes -- a No block, a clock that ran out -- or a modifier's
-     pace) it waits for my next step (_bounceGate: the re-announce and the new target's window in one tick -- the egress review: it
-     re-aimed the bleed with no window open, and the bleed resolved on the new target with no block step). After It resolves, or a
-     block, it is too late, and the bouncer is told so. true = the line was one. */
+  /* v0.6.237: a HUMAN target bounces my bleed (Deflection, Telepathic Misdirection, Redirection ... -- the card is not read, Johan: 'wait
+     with flagging the effect, it is many more cards than Deflection'). Two ways. (1) The client's bot ring (v2.6.187, main's reply of
+     24 Nov) writes 'Johan bounces the bleed to Hanna.' for the humans, then the re-announce itself ('VAMP bleeds for N. Target:
+     Hanna's pool.') and Pass: the re-announce moves my bleed (the steg-2 reader in _onLog, as for a bot bouncer's); the info line is
+     answered only when it comes too late. (2) A typed 'bounce Hanna' / 'bounce to Hanna' / 'bounced it to Hanna' ('@Bot bounce
+     Hanna' too) from the seat my bleed is aimed at, while that bleed is live (my turn, not resolved, not blocked); at a hotseat (one
+     device, whichever human is active sends the chat) it is the bled human's. The new target by _seatByNamePart among the live
+     seats other than mine (the acting minion's controller) and the bouncer's; a name that fits none or several gets a question, a
+     bare 'bounce' too; a line with a '?' is talk. In one of my windows it lands at once -- what a bot bouncer's line does to me: the
+     bleed re-aimed, no pump after it, I write the re-announce (L12.bleed) a bot at the new seat arms from, and the open window
+     follows the bleed (_bouncedTo). BETWEEN my windows (the 150 ms after a window closes -- a No block, a clock that ran out -- or a
+     modifier's pace) it waits for my next step (_bounceGate: the re-announce and the new target's window in one tick -- the egress
+     review: it re-aimed the bleed with no window open, and the bleed resolved on the new target with no block step). After It
+     resolves, or a block, it is too late, and the bouncer is told so. true = the line was one. */
   _humanBounce(who, txt){
     if(this.out || !this._isHumanName(who)) return false;
     const t = String(txt || '').trim().replace(nameRe0(this), '');
@@ -8834,6 +8836,7 @@ class Bot {
       this.chat(who + ': ' + (late.how === 'blocked' ? this._spoken(late.vamp) + '’s bleed was blocked — there is nothing to bounce.' : 'too late — ' + this._spoken(late.vamp) + '’s bleed has resolved.'));
       return true;
     }
+    if(panelBy) return false;   // the ring's line for the humans: its own re-announce follows and moves my bleed (main's contract, its canary's section 11: no bot reads this line as an action)
     if(from !== av.target) return false;   // only the human my bleed is aimed at (a bot bounces with its card and the re-announce)
     const cands = (this.players || []).filter(q => q && q.seat !== av.target && q.seat !== this.seat && this.live(q.seat)).map(q => q.seat);
     const names = cands.map(s => this.seatName(s)).join(', ');
@@ -8847,6 +8850,7 @@ class Bot {
       return true;
     }
     if(!this._ask){   // between my windows: my next step applies it (_bounceGate)
+      if(av.pendingBounce && av.pendingBounce.seat === r.seat) return true;   // told twice (typed, and the ring's re-announce): one bounce
       av.pendingBounce = { seat: r.seat, by: who, line: t.slice(0, 60) };
       this.o.log('bounce read (between windows, my next step applies it): ' + who + ' → ' + this.seatName(r.seat));
       return true;
@@ -10898,11 +10902,20 @@ class Bot {
          original prey. Independent of `mine` just below (that's about being the
          TARGET of a bleed; this is about being its SOURCE). */
       if(this._actingVamp && poolT && vampName === this._actingVamp.v.name){
-        const seat = ((this.players || []).find(q => q.name === poolT) || {}).seat;
-        if(seat) this._actingVamp.target = seat;
-        this._actingVamp.bounced = true;   // v0.6.144 (Johan): a bot very rarely pumps a bleed AFTER it was bounced (only a strong meta reason -- table talk a bot does not have)
-        this._actingVamp.reactionsSeen = true;   // fas C: a bounce IS a reaction card played -- Perfectionist's clean-action test fails
+        const av = this._actingVamp, seat = ((this.players || []).find(q => q.name === poolT) || {}).seat, human = this._isHumanName(who);
+        /* v0.6.237: a HUMAN's re-announce of my bleed -- the client's bot ring writes it after its 'X bounces the bleed to Y.' (main's reply,
+           24 Nov). Too late (my bleed resolved or was blocked): it moves nothing (the ring's line got the answer). The bounce told twice
+           (a typed one and the ring's, the target already that seat): nothing moves twice. Between my windows: my next step applies it
+           with the new target's window (_bounceGate, as a typed bounce). A bot bouncer's line: as ever. */
+        if(human && av.resolving) this.o.log('re-announce of my bleed after it ' + (av.resolving === 'blocked' ? 'was blocked' : 'resolved') + ' (' + who + ') -- too late, nothing moves');
+        else if(seat && av.bounced && av.target === seat) this.o.log('re-announce of my bleed at ' + poolT + ' told twice (' + who + ') -- one bounce');
+        else if(human && seat && this._acting && !this._ask){ if(!(av.pendingBounce && av.pendingBounce.seat === seat)){ av.pendingBounce = { seat, by: who, line: t.slice(0, 60) }; this.o.log('bounce read (a re-announce between my windows, my next step applies it): ' + who + ' \u2192 ' + poolT); } }
+        else {
+        if(seat) av.target = seat;
+        av.bounced = true;   // v0.6.144 (Johan): a bot very rarely pumps a bleed AFTER it was bounced (only a strong meta reason -- table talk a bot does not have)
+        av.reactionsSeen = true;   // fas C: a bounce IS a reaction card played -- Perfectionist's clean-action test fails
         if(seat) this._bouncedTo(seat);          // v0.6.203: the new target's block step, and the open ask follows the bleed
+        }
       }
       const mine = poolT ? (poolT === this.o.name)
                          : (!target && who === this.predName());     // spec §5 arming rule

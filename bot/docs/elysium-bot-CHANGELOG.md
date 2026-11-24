@@ -352,26 +352,29 @@
     bleed then (`_lateSettle`); a Pass of mine ends a live wait. A bounce on their It resolves asks them to say it again for the new
     target, whose pending waits for it (the bleed vanished). It went after a fixed 4 s (`modGraceMs`, gone) or one react delay after a modifier, and the actor's
     It resolves applied the bleed with no bounce at all (`_applyPending`), against START-HERE.
-  - *A human's bounce by chat* (`_humanBounce`, `_seatByNamePart`): the client's coming bot panel's `Johan bounces the bleed to Hanna`
-    and a typed `bounce Hanna` (`bounce to …`, `bounced it to …`, `@Bot bounce …`), from the human the bleed is aimed at, chat or log
-    tier; a name by any part that fits one seat (a start needs 3 letters; a line with a `?` is talk); a question for two, none, the
-    bot itself or no name. From the bleed's Block? until its It resolves: in one of the bot's windows the bounce lands at once —
-    the bot re-aims, writes its own re-announce (`L12.bleed`; a bot at the new seat arms from it), and the window follows the bleed
-    with the new target's block step (`_bouncedTo`); between its windows (the 150 ms after a window closes, a modifier's pace) it
-    waits for the bot's next step (`_bounceGate`: the re-announce and the new target's window in one tick, a fresh intercept, the
-    block step Adaptive keeps); after It resolves or a block the bouncer is told it came too late (`_lastBleed` for 30 s of the
-    bot's turn). At a hotseat (one device) a typed bounce, or the panel's line naming the bled human, is the bled human's whoever
-    the device sends it as. A bounce with no name ("bounce it") is asked for one; `bounces` is the panel's third person only. A
-    bounce answers the window: its sender's Hold on pause ends with it. `lateBounce: 0` pumps on after a bounce between windows
-    too (the gate, then the loop).
-    Observers read the acting bot's re-announce of its open bleed as the same action re-aimed (no second action row or bleed in the
-    table model), across a modifier's play line or the bled human's own bounce card line (`_bleedOpen`: each seat's open bleed;
-    only the acting seat re-aims — a mirror's bot bouncer is no re-aim).
-    `_evClassify` kind `bounce`. The card itself is not read (Johan).
+  - *A human's bounce* (`_humanBounce`, `_seatByNamePart`; the card itself is not read, Johan). Two ways. The client's bot ring
+    (v2.6.187, main's PR #102 and reply of 24 Nov, read on its branch before its merge) writes `Johan bounces the bleed to Hanna.`
+    for the humans, then the re-announce itself, then Pass: the re-announce moves the bleed (the steg-2 reader, as v0.6.236 did in
+    main's live test), the line for the humans is answered only when it comes too late (main's canary v1.6.0: 247/0 on v0.6.237).
+    A typed `bounce Hanna` (`bounce to …`, `bounced it to …`, `@Bot bounce …`), from the human the bleed is aimed at; a name by any
+    part that fits one seat (a start needs 3 letters; a line with a `?` is talk); a question for two, none, the bot itself or no
+    name ("bounce it" is asked for one; `bounces` is the ring's third person only); at a hotseat (one device) it is the bled
+    human's whoever the device sends it as. From the bleed's Block? until its It resolves: in one of the bot's windows a typed
+    bounce lands at once — the bot re-aims, writes its own re-announce (`L12.bleed`; a bot at the new seat arms from it), and the
+    window follows the bleed with the new target's block step (`_bouncedTo`); a bounce answers the window (its sender's Hold on
+    pause ends). Between its windows (the 150 ms after a window closes, a modifier's pace) a typed bounce or the ring's
+    re-announce waits for the bot's next step (`_bounceGate`: the bot's re-announce and the new target's window in one tick, a
+    fresh intercept, the block step Adaptive keeps); `lateBounce: 0` pumps on after it (the gate, then the loop). After It
+    resolves or a block the bouncer is told it came too late (`_lastBleed` for 30 s of the bot's turn) and a human's re-announce
+    moves nothing; a bounce told twice (typed and the ring's) is one. Observers read the acting bot's re-announce of its open
+    bleed as the same action re-aimed (no second action row or bleed in the table model), across a modifier's play line or the
+    bled human's own bounce card line (`_bleedOpen`: each seat's open bleed; only the acting seat re-aims — a mirror's bot
+    bouncer is no re-aim). `_evClassify` kind `bounce` for the ring's line (the event log only).
   - *Arena* v1.4.16 (`spreadIncome` in the `--knob` whitelist).
-  - *Tests*: section 183 (48 cases), each red on v0.6.236 but one (the influence event, a non-regression); the egress review's
-    pass 1 cases (14) red on the round's first bytes (`1c7d00f`), pass 2's (9) on pass 1's (`0b0ba19`), pass 3's (6) on pass 2's
-    (`5b22b83`); 119h, 122a, 137k, 182b follow the new wording. *Gates* (the release bytes `176d4da6` / `43e04b17`, cardfx
+  - *Tests*: section 183 (52 cases), 49 red on v0.6.236 (green: the influence event and the mirror's records, non-regressions,
+    and the ring in a window, which v0.6.236 already followed); the egress review's pass 1 cases (14) red on the round's first bytes
+    (`1c7d00f`), pass 2's (9) on pass 1's (`0b0ba19`), pass 3's (6) on pass 2's (`5b22b83`), the ring's (5) on pass 3's (`05d73f7`);
+    119h, 122a, 137k, 182b follow the new wording. *Gates* (the release bytes `176d4da6` / `43e04b17`, cardfx
     `b937ae3d` unchanged): the suite 2781/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.186), hotseat 12/0, HB1 11/0, lint
     clean, main's client suite 409/1 (the guide's embed), the arena smoke PASS 7/7, `tools/doc-budget.sh` PASS.
     *The 240* against v0.6.236 (the release bytes; the round's first bytes gave the same): DIVERGED 136, SAME-PLAY 104 — every
