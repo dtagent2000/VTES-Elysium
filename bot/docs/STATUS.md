@@ -10,11 +10,12 @@ data of 24 Nov) and #106 Dreams of the Sphinx (#105's commits: #105 had merged i
 (`bot-hand-replacement`, v0.6.239, base main). Main's #104 (client v2.6.188, no wire change) is open: merged first, the root
 line above follows it. A merged PR's branch is deleted automatically (24 Nov).
 
-## Last gates (v0.6.239 after the egress review's pass 1, `b62e6b96`, cardfx `fe5f60bf`)
+## Last gates (v0.6.239 after the egress review's pass 2, `bd3de0c1`, cardfx `fe5f60bf`)
 24 Nov: the suite 2803/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.187), main's v1.6.0 247/0 · hotseat 12/0 · HB1
 11/0 · lint clean · main's client suite (v2.6.187) 422/1 (the guide's embed) · section 185 7/0 · the arena smoke PASS 7/7 ·
-the 240 and the five starters' 120 IDENTICAL to the first bytes'; the lasombra smoke SAME-PLAY in its 12 cancels only ·
-`ana-gates.py` PASS 6/6. The first bytes' 240 against v0.6.238 and the predictions (D-93): the CHANGELOG.
+the 240 and the five starters' 120 IDENTICAL to the first bytes'; the lasombra smoke IDENTICAL to pass 1's (SAME-PLAY in its
+12 cancels against the first bytes) · `ana-gates.py` PASS 6/6. The first bytes' 240 against v0.6.238 and the predictions
+(D-93): the CHANGELOG.
 
 ## Next
 1. **The chat round** (v0.6.240; D-137, Johan's kör): a recording first, then one speaker at a time (a short phrase holds the

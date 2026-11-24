@@ -385,14 +385,18 @@
     pass 1's; no starter holds a card the changes read); the lasombra smoke IDENTICAL 48/48 against pass 1's bytes, unless an
     owner's note fell between a window and its next master or phase line (that match SAME-PLAY: the release one line later); no
     `sr-shed` row (the sim delivers every cancel inside its window).
-  - *Tests*: section 185 (7 cases: a–e all red on v0.6.238; f and g, pass 1's, red on the first bytes `5b8f55a7`; c–e through
-    a whole turn, the server's draws arriving later). *Gates* (the bytes after pass 1, `b62e6b96` / `25c9a0b7`, cardfx
-    `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2803/0 ×3, canary 235/0 ×2, main's canary v1.6.0 247/0,
-    hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.187) 422/1 (the guide's embed), the arena smoke (one match, the
-    four starters, the real clock) PASS 7/7, `client/check-versions.js` everything agrees. The first bytes (`5b8f55a7` /
-    `fefbe871`) passed the same gates: the suite 2801/0 ×3 on cardfx `b937ae3d` and again on `fe5f60bf`, the arena smoke PASS
-    7/7 (the bot draws in other seats' turns now), the five starters' 120 PASS 6/6.
-- **v0.6.238 (24 Nov 2026; PR #105)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
+    *Observed*: the 240 IDENTICAL 240/240 and the five starters' 120 IDENTICAL 120/120; the lasombra smoke IDENTICAL 48/48 (no
+    note fell inside a window there; its 12 releases where pass 1's were), no `sr-shed` row; `ana-gates.py` PASS 6/6 on all
+    three. The prediction held.
+  - *Tests*: section 185 (7 cases: a–e red on v0.6.238; f and g, the egress review's, red on the first bytes `5b8f55a7` and on
+    pass 1's `b62e6b96`; c–e through a whole turn, the server's draws arriving later). *Gates* (the bytes after pass 2,
+    `bd3de0c1` / `704594e9`, cardfx `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2803/0 ×3, canary 235/0
+    ×2, main's canary v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.187) 422/1 (the guide's
+    embed), the arena smoke (one match, the four starters, the real clock) PASS 7/7, `client/check-versions.js` everything
+    agrees. The first bytes (`5b8f55a7` / `fefbe871`) passed the same gates: the suite 2801/0 ×3 on cardfx `b937ae3d` and again
+    on `fe5f60bf`, the arena smoke PASS 7/7 (the bot draws in other seats' turns now), the five starters' 120 PASS 6/6; pass 1's
+    bytes (`b62e6b96`) the same again (the suite 2803/0 ×3, the arena smoke PASS 7/7).
+- **v0.6.238 (24 Nov 2026; PR #105, on main by #106)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
   Dreams kan rättas nu. Det är ju ett kort i spel som inte är fäst vid någon vampyr"). KRCG: "Put this card in play. Add 1 counter
   to this card each time you lock it … You can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn
   this card if it has 3 counters." Its curated `poolGain` mode is phase-tagged and a lock mode, and the master phase's host rule
