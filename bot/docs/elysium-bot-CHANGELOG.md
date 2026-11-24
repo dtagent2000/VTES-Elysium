@@ -347,6 +347,23 @@
     ventrue −0.07 (paired SE 0.07–0.10); `ana-gates.py` PASS 6/6, zeroPool 0. Ventrue's `replace-counter` rows 319 → 312, not the
     rise predicted: a Capuchin's four counters cap them, so the discard phase's replacements change when a counter burns, not how
     many. The rest held.
+  - *The egress review's pass 1* found two faults of 14.1's own, fixed here (D-92). **A Sudden Reversal's replacement** was drawn
+    at the end of the very dispatch that played it, inside its 'as played' window ([LSJ 20061207]: "Cards are not replaced during
+    the 'as played' window."), and a cancel that came too late then left 8 cards (the take-back found no draw owed): it is held
+    (`srWindow`) until the window closes, read as the owner's next line other than a Sudden Reversal line (another cancel's 'too
+    late' can come before mine) or the turn change (`_srWindowClosed`), and drawn there before that line is handled; a too-late
+    cancel takes the hold back with the card; a human's master has no window. **A reaction's "Do not replace until after this
+    action"** (Read the Winds, Pack Tactics) played in another seat's turn was released by `_replaceLate`'s flush at the next
+    table message, inside its action (`_flushDraws` read "no action of mine in flight" as the action's end): `_flushDraws`
+    releases it in the bot's own turn only; in another's the turn change does, drawn before the next turn starts (late, never
+    early: the register's 14.6). The rest went to the register (class 14 again: 14.4–14.7, all latent); BOARD's and the
+    register's lines cite D-137, BOARD is on v0.6.239.
+    *Prediction* (D-93; registered before the runs): the 240 and the five starters' 120 IDENTICAL against the first bytes
+    (`5b8f55a7`; 240/240, 120/120): no starter holds a Sudden Reversal or an 'after this action' / 'after combat' card, so no hold
+    is noted or released otherwise. The lasombra smoke (`--seatings random --matches 12 --seeds 4`, the first bytes and these): a
+    match where lasombra cancels a master is SAME-PLAY or DIVERGED from the cancel (its `srWindow` hold and release, the draw at
+    the owner's next line), the others IDENTICAL; every hold released at the owner's next line or the turn change; no take-back
+    (one Sudden Reversal deck at the table, and the sim delivers the cancel inside the window).
   - *Tests*: section 185 (5 cases, all red on v0.6.238; c–e through a whole turn, the server's draws arriving later). *Gates*
     (the release bytes `5b8f55a7` / `fefbe871`, cardfx `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2801/0 ×3
     (on cardfx `b937ae3d`; the release's cardfx adds aliases only, its 240 IDENTICAL in #103), canary 235/0 ×2, main's canary
