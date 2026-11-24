@@ -3375,7 +3375,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.187';   // v2.6.187 (24 Nov 2026, THE BOT RING, pure client -- purge; srv-2.6.53 unchanged, no new verb or field; bot v0.6.236 beside, unchanged): Johan: 'en effektiv och modern bott-kontrollpanel'. The blue Bot Activity panel became the bot hub: the robot in a brass circle that each player drags where it suits their own screen (saved in this browser as the distance from the nearest corner, kept 90 px from every edge; Reset in the box). Hover it (tap on a touch screen) and a segmented ring unfolds with what a player says to the bots most: Hold on (Release while a hold stands), Yes, No, Block and reaction (Block! and which minion blocks, Any blocks?, No block, No reaction, Any reaction?), the blood drop (Bleed, +Bleed and Reduce, each 1 / 2 / 3 / X, and Bounce to another Methuselah), Pass and It resolves (the gavel) -- every quick phrase is one segment, sent on the path the phrase always took, and the minion lines are the menus' own (minionAct / minionBleed / minionBleedAdd / minionReduce, moved out of cardMenu). The ring lights what the bots wait on (their status() rows) and what a bleed aimed at you allows (bleedIn, read from the frozen bleed lines any seat writes); the hub glows then and counts the bots a step can move; a segment that cannot act now is grey and says why. Open, the robot is a gear: it opens the bot box -- the rows, Run bot turns and the bot settings, as the panel had them; the Turn-based play button rides the hub's rim. Bounce writes 'NAME bounces the bleed to WHO.' (Johan: never 'redirects' -- Redirection is a card), the acting minion's bleed re-announced at WHO's pool (the shape a bot's own bounce writes) and Pass: PROTOCOL section 12, canary v1.6.0. The fans slide along their ring to stay inside the window; the keyboard walks the ring (Enter, the arrows, Esc). Icons: Tabler Icons (MIT), the notice beside the paths.
+const VERSION='2.6.187';   // v2.6.187 (24 Nov 2026, THE BOT RING, pure client -- purge; srv-2.6.53 unchanged, no new verb or field; bot v0.6.236 beside, unchanged): Johan: 'en effektiv och modern bott-kontrollpanel'. The blue Bot Activity panel became the bot hub: the robot in a brass circle that each player drags where it suits their own screen (saved in this browser as the distance from the nearest corner, kept 90 px from every edge; Reset in the box). Hover it (tap on a touch screen) and a segmented ring unfolds with what a player says to the bots most: Hold on (Release while a hold stands), Yes, No, Block and reaction (Block! and which minion blocks, Any blocks?, No block, No reaction, Any reaction?), the blood drop (Bleed, +Bleed and Reduce, each 1 / 2 / 3 / X, and Bounce to another Methuselah), Pass and It resolves (the gavel) -- every quick phrase is one segment, sent on the path the phrase always took, and the minion lines are the menus' own (minionAct / minionBleed / minionBleedAdd / minionReduce, moved out of cardMenu). The ring lights what the bots wait on (their status() rows) and what a bleed aimed at you allows (bleedIn, read from the frozen bleed lines any seat writes); the hub glows then and counts the bots a step can move; a segment that cannot act now is grey and says why. Open, the robot is a gear: it opens the bot box -- the rows, Run bot turns and the bot settings, as the panel had them; the Turn-based play button rides the hub's rim. Bounce writes 'NAME bounces the bleed to WHO.' (Johan: never 'redirects' -- Redirection is a card), the acting minion's bleed re-announced at WHO's pool (the shape a bot's own bounce writes) and Pass: PROTOCOL section 12, canary v1.6.0. The fans slide along their ring to stay inside the window; the keyboard walks the ring (Enter, the arrows, Esc). Before the merge (Johan: 'yes det kan du göra'): at a hotseat with several humans the ring answers from the seat the bot asked -- a bot reads a decline only from the seat it asked and a Reduce only from the seat it bleeds, so for another human the hub glows, says whose seat to take and lights nothing, and Reduce and Bounce are grey; and a tab in the background starts its title with a dot while the table waits on this screen. Icons: Tabler Icons (MIT), the notice beside the paths.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -12428,7 +12428,7 @@ try{ _botPanelOpen = localStorage.getItem('elysiumBotBoxOpen')==='1'; }catch(err
 function hotBotBtnShow(on){
   let el=document.getElementById('hotBotBtn');
   if(!on && !botBtnWanted()){                                       // v2.6.139: hide only when NOTHING wants it -- no bot in this tab AND not a seated human at an online bot table (v2.6.109: a remove of one of three bots must not kill the panel)
-    botRingClose();
+    botRingClose(); botTitleMark(false);
     if(el) el.remove();
     const bx=document.getElementById('botBox'); if(bx) bx.remove();
     if(_botPanelT){ clearInterval(_botPanelT); _botPanelT=null; }
@@ -12450,7 +12450,9 @@ function botPanelRender(){
   const rows=botPanelSeats().map(r=>({ key:r.key, bot:r.bot, st:botPanelRead(r.bot) }));
   const now=Date.now(), waiting=rows.filter(r=>r.st.canStep).length;
   const give=botGiveWordWanted(rows);                              // v2.6.139: Turn-based -- the play button on the hub (decision 2)
-  botHubPaint(hub, botHubState(rows));                             // v2.6.187: the hub is painted in place, never rebuilt
+  const hs=botHubState(rows);
+  botHubPaint(hub, hs);                                            // v2.6.187: the hub is painted in place, never rebuilt
+  botTitleMark(!!(hs.wait && document.hidden));                    // and a tab in the background says so while the table waits on this screen
   if(!_bhDown && !_bring.open) botHubPlace();                      // every tick: the hub steps out of a seat visit's Home button and the hold badge, and back once they are gone (a visit's Home fades out -- a place taken when the visit ended still saw it)
   if(_bring.open) botRingSync(rows);
   const el=document.getElementById('botBox');
@@ -12511,6 +12513,13 @@ function botPanelRender(){
     try{ await hotRunBotTurns(net.turnSeat, hotNextHuman(net.turnSeat)); toast('🤖 done — your turn.'); }
     finally{ sw.style.opacity='1'; } };
   botBoxPlace(box);
+}
+const BOT_TITLE_MARK='● ';
+function botTitleMark(on){                                         // v2.6.187: the tab's title starts with a dot while a bot (or a bleed) waits on this screen and the tab is in the background
+  if(typeof document==='undefined' || typeof document.title!=='string') return;
+  const t=document.title, has=t.indexOf(BOT_TITLE_MARK)===0;
+  if(on && !has) document.title=BOT_TITLE_MARK+t;
+  else if(!on && has) document.title=t.slice(BOT_TITLE_MARK.length);
 }
 function botBoxMount(){
   const el=document.createElement('div'); el.id='botBox'; el.setAttribute('role','dialog'); el.setAttribute('aria-label','Bots');
@@ -12616,23 +12625,29 @@ function botLocalHuman(name){                                       // a human w
   if(!p || p.bot || p.out || p.vacant) return false;
   return localTable ? true : name===net.you;
 }
-function botRingContext(rows){                                      // -> { hl:Set of node ids to light, path:the branch to open, wait:true when a bot or a bleed waits on a human here }
-  const hl=new Set(); let path=[], wait=false;
+function botRingAnswersAs(){ return net.you||state.playerName||'You'; }   // the name this screen's phrases and lines go out under -- at a hotseat, the seat being played now
+function botRingContext(rows){                                      // -> { hl:Set of node ids to light, path:the branch to open, wait:true when a bot or a bleed waits on a human here, elsewhere:the hotseat human asked when it is not the seat being played }
+  const hl=new Set(), me=botRingAnswersAs(); let path=[], wait=false, elsewhere=null;
   (rows||botPanelSeats().map(r=>({ key:r.key, bot:r.bot, st:botPanelRead(r.bot) }))).forEach(r=>{
     const st=r.st||{}, m=/\(([^()]*)\)\s*$/.exec(String(st.waitingFor||'')), names=m ? m[1].replace(/\s+thinking$/,'').split(/,\s*/) : [];
     if(st.step==='release-hold'){ hl.add('hold'); return; }
-    if(!names.some(botLocalHuman)) return;
+    const local=names.filter(botLocalHuman); if(!local.length) return;
     wait=true;
+    if(local.indexOf(me)<0){ if(!elsewhere) elsewhere=local[0]; return; }   // a bot reads the answer from the seat it asked: at a hotseat the answer waits until that seat is played (a phrase from this seat would be ignored)
     if(st.step==='resolve-ask' && !/^block verdict/.test(String(st.waitingFor||''))){ ['act','blk','nblk','nrx'].forEach(k=>hl.add(k)); if(!path.length) path=['act']; }
     else if(st.step==='resolve-pq'){ hl.add('yes'); hl.add('no'); }
     else if(st.step==='resolve-phase'){ hl.add('no'); hl.add('pass'); }
     else if(st.step==='resolve-vote' || st.step==='resolve-verdict' || st.step==='resolve-ask'){ hl.add('pass'); hl.add('res'); }
   });
-  if(bleedOnLocal()){ wait=true; ['bld','red','act','nrx'].forEach(k=>hl.add(k)); if(botRingBounceTargets().length) hl.add('bnc'); }
+  const bl=bleedOnLocal();
+  if(bl){ wait=true;
+    if(bl.target===me){ ['bld','red','act','nrx'].forEach(k=>hl.add(k)); if(botRingBounceTargets().length) hl.add('bnc'); }
+    else if(!elsewhere) elsewhere=bl.target; }
   if(botRingAddMinion()){ ['bld','add','res'].forEach(k=>hl.add(k)); }
   if(hotHoldBy.size) hl.add('hold');
-  return { hl, path, wait };
+  return { hl, path, wait, elsewhere };
 }
+function botRingSeatHint(name){ return 'Take '+name+'’s seat in the Table panel to answer.'; }   // a hotseat with several humans: a bot reads a reaction from the seat it asked
 function botRingBleeder(){ const c=activeAnchor(); return (c && isMinion(c)) ? c : null; }    // Bleed: the selected minion in play
 function botRingReactor(){ return botRingBleeder(); }                                         // Reduce: the selected minion names the line, else your own name does
 function botRingAddMinion(){                                        // +Bleed: the minion whose bleed this action announced, while the action lasts
@@ -12667,8 +12682,12 @@ function botRingWhy(id){                                            // '' = the 
   const base=id.indexOf(':')>0 ? id.slice(0, id.indexOf(':')) : id;
   if(base==='bl') return botRingBleeder() ? '' : 'Select the minion that bleeds first.';
   if(base==='add') return botRingAddMinion() ? '' : 'Only while your own bleed is announced.';
-  if(base==='red') return bleedOnLocal() ? '' : 'Only while a bleed is aimed at you.';
-  if(base==='bnc' || base==='t'){ if(!bleedOnLocal()) return 'Only while a bleed is aimed at you.'; return botRingBounceTargets().length ? '' : 'There is no one else to bounce it to.'; }
+  if(base==='red' || base==='bnc' || base==='t'){
+    const b=bleedOnLocal(); if(!b) return 'Only while a bleed is aimed at you.';
+    if(b.target!==botRingAnswersAs()) return 'The bleed is aimed at '+b.target+'. '+botRingSeatHint(b.target);   // a hotseat with several humans: the bot reads a Reduce only from the seat it bleeds, and the Pass after a Bounce would be this seat's own
+    if(base==='red') return '';
+    return botRingBounceTargets().length ? '' : 'There is no one else to bounce it to.';
+  }
   return '';
 }
 /* ---- the geometry (pure): angles in degrees, 0 = up, clockwise ---- */
@@ -12737,7 +12756,7 @@ function botHubSave(c){
 function botHubReset(){ try{ localStorage.removeItem(BRING_POS_KEY); }catch(_e){} botRingClose(); botHubPlace(); botPanelRender(); }
 function botHubState(rows){                                         // what the hub shows (pure): the count of bots a step can move, the Turn-based play button, the glow, the hold
   const ctx=botRingContext(rows);
-  return { waiting:(rows||[]).filter(r=>r.st.canStep).length, give:botGiveWordWanted(rows), wait:ctx.wait, held:hotHoldBy.size>0, open:_bring.open };
+  return { waiting:(rows||[]).filter(r=>r.st.canStep).length, give:botGiveWordWanted(rows), wait:ctx.wait, elsewhere:ctx.elsewhere||null, held:hotHoldBy.size>0, open:_bring.open };
 }
 function botHubPaint(el, hs){
   if(!el || !el.classList) return;
@@ -12748,7 +12767,7 @@ function botHubPaint(el, hs){
   if(face && face.dataset && face.dataset.ic!==face2){ face.innerHTML=botIconPaths(face2); face.dataset.ic=face2; }
   const cnt=el.querySelector('.bhCnt'); if(cnt){ cnt.textContent=hs.waiting ? String(hs.waiting) : ''; cnt.hidden=!hs.waiting || hs.open; }
   const gw=el.querySelector('#botGiveWord'); if(gw) gw.hidden=!hs.give || hs.open;
-  el.title=hs.open ? 'Bot settings — click the gear' : 'Bots — hover for quick answers, drag to move'+(hs.waiting ? ' ('+hs.waiting+' waiting)' : '');
+  el.title=hs.open ? 'Bot settings — click the gear' : hs.elsewhere ? hs.elsewhere+' is asked. '+botRingSeatHint(hs.elsewhere) : 'Bots — hover for quick answers, drag to move'+(hs.waiting ? ' ('+hs.waiting+' waiting)' : '');
 }
 function botHubMount(){
   const el=document.createElement('div'); el.id='hotBotBtn'; el.tabIndex=0;
@@ -12850,11 +12869,11 @@ function botRingShow(){                                             // which rin
     } else if(!on && was){ clearTimeout(g._liveT); g.classList.remove('on', 'live'); }
   });
   Array.prototype.forEach.call(el.querySelectorAll('.brS'), g=>g.classList.toggle('hov', g.getAttribute('data-id')===_bring.hov));
-  const lbl=el.querySelector('#botRingLbl'), s=_bring.hov ? botRingSeg(_bring.hov) : null;
+  const lbl=el.querySelector('#botRingLbl'), s=_bring.hov ? botRingSeg(_bring.hov) : null, ew=_bring.ctx && _bring.ctx.elsewhere;
   if(!lbl) return;
-  if(!s){ lbl.hidden=true; return; }
-  const n=botRingNode(s.id), why=botRingWhy(s.id);
-  lbl.innerHTML='<b>'+esc(n.label)+'</b>'+((why||n.note) ? '<span>'+esc(why||n.note)+'</span>' : '');
+  if(!s && !ew){ lbl.hidden=true; return; }
+  if(s){ const n=botRingNode(s.id), why=botRingWhy(s.id); lbl.innerHTML='<b>'+esc(n.label)+'</b>'+((why||n.note) ? '<span>'+esc(why||n.note)+'</span>' : ''); }
+  else lbl.innerHTML='<b>'+esc(ew+' is asked')+'</b><span>'+esc(botRingSeatHint(ew))+'</span>';   // a hotseat: the question waits for another human's seat
   lbl.hidden=false;
   /* the caption stands under the open rings (over them for a hub in the lower half), centred on the hub -- one place to
      read, and it never covers a segment the pointer is on its way to (it stood beside the hovered segment, over ring 2) */
@@ -12870,7 +12889,8 @@ function botRingShow(){                                             // which rin
 function botRingDyn(){ return botRingKids('blk').join(',')+'|'+botRingKids('bnc').join(','); }   // the two fans that follow the table: my blockers, and whom a bleed aimed at me can bounce to
 function botRingSync(rows){                                         // the 4 Hz loop while open: the lights follow the table; the ring is rebuilt only when a fan's members change (a bleed arrives while it is open: the bounce targets)
   const el=document.getElementById('botRing'); if(!el || !el.isConnected) return;
-  const ctx=botRingContext(rows); _bring.ctx=ctx;
+  const ew0=_bring.ctx && _bring.ctx.elsewhere, ctx=botRingContext(rows); _bring.ctx=ctx;
+  if((ctx.elsewhere||null)!==(ew0||null)) botRingShow();          // the caption names the seat that answers
   const dyn=botRingDyn();
   if(dyn!==_bring.dyn && _bring.at){
     const fit=botRingFit(_bring.at.x, _bring.at.y, window.innerWidth, window.innerHeight);
@@ -12949,6 +12969,7 @@ function botRingGlobals(){                                          // once: a p
   }, true);
   document.addEventListener('pointerdown', e=>{ if(!_bring.open) return; const t=e.target; if(t && t.closest && t.closest('#hotBotBtn, #botRing .brS')) return; botRingClose(); }, true);
   document.addEventListener('keydown', e=>{ if(_bring.open && e.key==='Escape' && !(e.target && e.target.id==='hotBotBtn')){ botRingClose(); } });
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) botTitleMark(false); });   // back in the tab: the dot goes at once (the loop runs slower in a background tab)
   window.addEventListener('resize', ()=>{ botRingClose(); botHubPlace(); const bx=document.getElementById('botBox'); if(bx && _botPanelOpen) botBoxPlace(bx); });
 }
 /* ---- the bleed aimed at someone right now, read from the frozen lines any seat writes (PROTOCOL section 12) ---- */

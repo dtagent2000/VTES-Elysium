@@ -22,6 +22,11 @@ Johan has already told you what the bounce sends; this records it.
    the phrase, the order PROTOCOL §12 settled on 15 Sep.
 5. **Reduce from the ring** writes the Reduce line you read (`L12.reduceBy`). With no minion selected, NAME is the bled
    Methuselah's name. You read the sender and the number, so nothing changes for you.
+6. **At a hotseat with several humans the ring answers from the seat you asked.** We read your rules: a decline counts
+   only from the seat you asked (`_onSay`, `m.who === curTarget`), and a Reduce only from the seat you bleed. So when you
+   ask Anna while another human's seat is being played, the hub glows and says 'Anna is asked. Take Anna’s seat in the
+   Table panel to answer.', and Reduce and Bounce are grey until that seat is taken. Your rules are unchanged; the ring no
+   longer sends answers you would ignore.
 
 ## The bounce (PROTOCOL §12, canary v1.6.0 section 11)
 

@@ -38,10 +38,18 @@ hovrar inte. Samma fälla fanns för en snabb musklickare. (3) Efter ett platsbe
 plats, eftersom besöket tonar ut och navet placerades medan knappen fortfarande syntes. Nu placeras navet vid varje
 tick när ingen håller det och ringen är stängd.
 
-Sviten: nio gamla tester flyttade till nav och låda, elva nya, 421/0 med bot v0.6.236 bredvid. v2.6.186 får 401/20 mot
-den nya sviten. Tjugo mutanter fångades, fyra av dem för webbläsarfynden; en omritning av navet i 4 Hz-loopen fångades
-först efter en ny kontroll. Dispatch 103/0, protokoll 6/0, kanariefågel 247/0, endpoint 40/0, soak --control (utlöstes)
-och batteriet (7 bord, 98 turer, 0 fast), served-check 7/0, bottprojektets hotseat-grind i en skrapkopia 12/0, båda
+Före merge bad Johan om två saker till ("yes det kan du göra"). Vid ett hotseatbord med flera människor svarar ringen
+nu från den plats botten frågade. Botten läser ett nej bara från den plats den frågade och en Reduce bara från den plats
+den blöder, så ett svar från fel plats försvann tyst. För en annan människa glöder navet nu, men inget tänds; navets
+tooltip och ringens bildtext säger "Anna is asked. Take Anna’s seat in the Table panel to answer.", och Reduce och
+Bounce är grå. Även Bounce, eftersom Pass efter en bounce annars går ut från den här platsen och kan läsas som dess
+eget "no block" om den är det nya målet. Från Annas plats fungerar båda, och raden går ut i hennes namn. Dessutom får
+fliken en prick först i titeln när bordet väntar på den här skärmen och fliken ligger i bakgrunden.
+
+Sviten: nio gamla tester flyttade till nav och låda, tretton nya, 423/0 med bot v0.6.236 bredvid. v2.6.186 får 401/22
+mot den nya sviten. Tjugosex mutanter fångades, fyra för webbläsarfynden och sex för de två tilläggen; en omritning av
+navet i 4 Hz-loopen fångades först efter en ny kontroll. Dispatch 103/0, protokoll 6/0, kanariefågel 247/0, endpoint 40/0, soak --control (utlöstes)
+och batteriet (7 bord, 86 turer, 0 fast), served-check 7/0, bottprojektets hotseat-grind i en skrapkopia 12/0, båda
 embed-kontrollerna, B1 byte-identisk. I Chromium: mus, alla fyra hörn utan ett segment utanför, en bleed som kommer
 medan ringen är öppen, bounce, besök, lådan, tangentbordet och pekskärm (emulerad). Med två riktiga bottar vid ett
 hotseatbord tände en botts blockfönster mot mig Block och reaktion, och navet glödde med räknare och ▶. En riktig botts
@@ -50,8 +58,8 @@ målet sa Pass, den agerande botten sa It resolves och skrev "The bleed goes thr
 stod kvar.
 
 Osäkert och otestat: en riktig pekskärm (bara Chromiums emulering), Firefox och Safari, ett onlinebord i webbläsare och
-en hel match. Vid ett hotseatbord med flera människor skrivs Reduce i den aktiva spelarens namn
-på tråden, så en bot ignorerar den om den som blöds inte är den aktiva (som menyn redan gjorde); Bounce påverkas inte.
+en hel match. Pricken i titeln är bara provad med en simulerad bakgrundsflik; Chrome saktar ner en dold fliks timers,
+efter fem minuter till en gång i minuten, så pricken kan komma så sent.
 Hjälpsidan Bots är bottprojektets text och beskriver fortfarande den gamla 🤖-panelen; det står i svaret till dem.
 Ikonerna kommer från Tabler Icons (MIT), med licenstexten bredvid i klienten och i README.
 

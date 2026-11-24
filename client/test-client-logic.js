@@ -2368,8 +2368,8 @@ test('v2.6.109: the 4 Hz loop rebuilds the DOM only when the panel\'s SHAPE chan
   const r = html.slice(html.indexOf('function botPanelRender(){'), html.indexOf('function botBoxMount(){'));   // v2.6.187: the rows live in the bot box the hub's gear opens
   assert(/const sig='o\|'\+rows\.map\(/.test(r), 'a shape signature (rows, names, reasons, rungs, steppability, has-deadline, the settings) -- v2.6.187: the box exists only open, so the open state left it');
   assert(/if\(box\._botSig===sig\)\{/.test(r), 'an unchanged shape short-circuits');
-  const iPaint = r.indexOf('botHubPaint(hub, botHubState(rows));'), iShut = r.indexOf('if(!_botPanelOpen)');
-  assert(iPaint > 0 && iShut > iPaint, 'v2.6.187: the hub is painted every tick, box open or not');
+  const iPaint = r.indexOf('botHubPaint(hub, hs);'), iShut = r.indexOf('if(!_botPanelOpen)');
+  assert(/const hs=botHubState\(rows\);/.test(r) && iPaint > 0 && iShut > iPaint, 'v2.6.187: the hub is painted every tick, box open or not');
   const paint = html.slice(html.indexOf('function botHubPaint('), html.indexOf('function botHubMount('));
   assert(!/\bel\.innerHTML=/.test(paint) && /face\.dataset\.ic!==face2/.test(paint), 'and IN PLACE -- classes, the count, the face only when it changes -- never rebuilt under the pointer');
   assert(!/\bhub\.innerHTML\s*=/.test(r), 'the render loop never writes the hub\'s markup (it is built once, in botHubMount)');
@@ -7319,7 +7319,7 @@ test('v2.6.187 the ring lights what the table waits on, read from the bots\' own
   c = ctx('release-hold', 'held by Anna'); assert(c.hl.has('hold') && c.wait === false, 'a hold lights the hand for anyone');
   c = ctx(null, 'its turn'); eq(c.hl.size, 0, 'a bot on its own turn waits on nobody');
   A.localTable = true; A.net.status = 'off';
-  c = ctx('resolve-ask', 'block decision (Anna)'); eq(c.wait, true, 'offline every human seat is answered from this screen');
+  c = ctx('resolve-ask', 'block decision (Anna)'); eq(c.wait, true, 'offline every human seat is at this screen: the hub glows'); eq(c.elsewhere, 'Anna', 'but the answer is Anna\'s seat\'s'); eq(c.hl.size, 0, 'so nothing is lit for the seat being played');
   A.net.turnSeat = 2; A.bleedInTrack('B2', RING_BLEED);
   c = A.botRingContext([]); ['bld', 'red', 'act', 'nrx', 'bnc'].forEach(k => assert(c.hl.has(k), 'a bleed aimed at me lights ' + k)); eq(c.wait, true);
   A.bleedIn = null; A.net.turnSeat = 1;
@@ -7446,6 +7446,50 @@ test('v2.6.187 the ring follows the table while it is open: the lights at 4 Hz, 
     assert(A.bring.ctx.hl.has('bnc') && A.bring.ctx.hl.has('red'), 'lit');
     svg.innerHTML = 'as built'; A.botRingSync([]); eq(svg.innerHTML, 'as built', 'the next tick: nothing drawn again');
   } finally { A.botRingClose(); delete A.__doc._ids.botRing; A.localTable = false; T.HB.reset([]); }
+});
+test('v2.6.187 a hotseat with several humans: the ring answers from the seat the bot asked -- a bot reads a decline only from the seat it asked and a Reduce only from the seat it bleeds, so for another human the hub glows, lights nothing, says whose seat to take, and Reduce and Bounce are grey with the reason (a press sends nothing); from that seat they work, and the line goes out in that name', () => {
+  const A = loadClient(CLIENT); const T = parityTable(A, [['You'], ['Viktor', true], ['Anna']]); A.toast = () => {};
+  A.bleedIn = null; A.clearTable({});
+  const row = (step, wf) => [{ key: 'Viktor', bot: {}, st: { name: 'Viktor', step, waitingFor: wf, canStep: true } }];
+  eq(A.botRingAnswersAs(), 'You', 'the seat being played');
+  let c = A.botRingContext(row('resolve-ask', 'block? (Anna)'));
+  eq(c.wait, true, 'the device must act: the hub glows'); eq(c.elsewhere, 'Anna'); eq(c.hl.size, 0, 'nothing lit for You');
+  c = A.botRingContext(row('resolve-ask', 'block? (You)')); eq(c.elsewhere, null); assert(c.hl.has('nblk'), 'my own question lights as before');
+  A.net.turnSeat = 2; A.bleedInTrack('Viktor', "<b>Anneke</b> bleeds for 3. Target: <b>Anna</b>'s pool.");
+  eq(A.bleedOnLocal() && A.bleedOnLocal().target, 'Anna', 'a bleed at Anna is at this device');
+  c = A.botRingContext([]); eq(c.wait, true); eq(c.elsewhere, 'Anna'); assert(!c.hl.has('red') && !c.hl.has('bnc'), 'Reduce and Bounce are not lit for You');
+  const why = 'The bleed is aimed at Anna. Take Anna\u2019s seat in the Table panel to answer.';
+  for (const id of ['red', 'red:2', 'bnc', 't:You']) eq(A.botRingWhy(id), why, id + ' says whose seat answers');
+  let toasted = []; A.toast = m => toasted.push(String(m));
+  T.clear(); A.botRingDo('red:2'); eq(T.got[2].length, 0, 'a grey Reduce sends nothing (the bot would ignore it from this seat)'); eq(toasted.pop(), why);
+  const { hub, done } = fakeHubBox(A);
+  A.botHubPaint(hub, A.botHubState([])); eq(hub.title, 'Anna is asked. Take Anna\u2019s seat in the Table panel to answer.', 'the hub\'s tooltip says it'); eq(A.botHubState([]).elsewhere, 'Anna');
+  done();
+  A.net.you = 'Anna';                                                                   // what setActivePlayer does to the screen's name (the Table panel's row)
+  eq(A.botRingWhy('red'), '', 'from Anna\'s seat Reduce works'); eq(A.botRingWhy('bnc'), '', 'and Bounce');
+  c = A.botRingContext([]); eq(c.elsewhere, null); assert(c.hl.has('red'), 'lit');
+  T.clear(); A.botRingDo('red:2');
+  const m = T.got[2].find(x => x.t === 'log'); assert(m, 'the line went out'); eq(m.who, 'Anna', 'in Anna\'s name: the bot reads it (L12.reduceBy from the seat it bleeds)'); eq(String(m.html).replace(/<[^>]*>/g, ''), 'Anna reduces the bleed by 2.');
+  A.localTable = false; T.HB.reset([]);
+});
+test('v2.6.187 the tab in the background: while the table waits on this screen (a bot asks a human here, or a bleed is aimed at one) the title starts with a dot, once; it goes when the wait ends, when the tab comes back, and with the hub', () => {
+  const A = loadClient(CLIENT), html = require('fs').readFileSync(CLIENT, 'utf8'); const HB = A.hotBridge;
+  const base = 'Elysium: a digital VTES table'; A.__doc.title = base;
+  A.botTitleMark(true); eq(A.__doc.title, A.BOT_TITLE_MARK + base); A.botTitleMark(true); eq(A.__doc.title, A.BOT_TITLE_MARK + base, 'never two dots');
+  A.botTitleMark(false); eq(A.__doc.title, base); A.botTitleMark(false); eq(A.__doc.title, base, 'nothing to take away');
+  const { done } = fakeHubBox(A);
+  A.localTable = true; HB.reset([{ name: 'Lisa' }, { name: 'B2', bot: true }]); HB.seats[2] = { cb: { msg(){} }, name: 'B2' }; HB.botcfgIn('', A.BOTCFG0);
+  A.net.roster = [{ seat: 1, name: 'Lisa' }, { seat: 2, name: 'B2', bot: true }]; A.net.you = 'Lisa';
+  let wf = 'block? (Lisa)';
+  A.hotBots[2] = { status: () => ({ name: 'B2', state: 'asking', waitingFor: wf, until: null, step: 'resolve-ask', canStep: true }), step: () => ({}), _handlers: { botcfg(){} } };
+  try {
+    A.__doc.hidden = false; A.botPanelRender(); eq(A.__doc.title, base, 'in front: no dot (the hub glows)');
+    A.__doc.hidden = true; A.botPanelRender(); eq(A.__doc.title, A.BOT_TITLE_MARK + base, 'in the background: the dot');
+    wf = 'block? (Ann)'; A.botPanelRender(); eq(A.__doc.title, base, 'the wait moved on: the dot goes');
+    wf = 'block? (Lisa)'; A.botPanelRender(); eq(A.__doc.title, A.BOT_TITLE_MARK + base);
+    delete A.hotBots[2]; HB.reset([]); A.net.roster = []; A.hotBotBtnShow(false); eq(A.__doc.title, base, 'the hub goes: so does the dot');
+  } finally { delete A.hotBots[2]; A.localTable = false; HB.reset([]); A.__doc.hidden = false; delete A.__doc.title; done(); }
+  assert(/document\.addEventListener\('visibilitychange', \(\)=>\{ if\(!document\.hidden\) botTitleMark\(false\); \}\);/.test(html), 'back in the tab: the dot goes at once (a background tab runs the loop slower)');
 });
 testB('v2.6.187 LIVE: the ring\'s Bounce, read by REAL bots through the bridge -- the acting bot follows its bleed to the new target (its own minion re-announced with a Target: suffix, bot steg 2) and the new target arms the bleed from the acting bot\'s Methuselah (the owner from the published boards, bot v1.4.3), at the amount the client tracked', async () => {
   const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const T = ringTable(A); A.toast = () => {};

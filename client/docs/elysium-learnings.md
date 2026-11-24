@@ -17,6 +17,10 @@
 - **What fades out is still there when it starts to fade.** The hub placed itself when the visit ended, while ⌂ Home was
   still fading, and stayed below Home's old place. A cheap placement every tick (unless held or open) beats a change
   detector that fires one tick early.
+- **A light is a promise.** At a hotseat with several humans the ring lit Reduce for a bleed at Anna while You played,
+  and the bot reads a Reduce only from the seat it bleeds: the press went out and vanished. Lighting an answer the
+  reader will ignore is worse than no light. Read the reader's rule (here `_onSay`'s `m.who === curTarget` and
+  `L12.reduceBy`'s sender), then light, grey or say whose seat answers.
 - **A line for people and a line for machines can travel together.** The bounce writes a sentence no bot reads, then the
   re-announce in the shape the bots already parse (their own bounce's). The canary pins both halves: the first matches no
   `L12` pattern, the second parses, and live bots follow it.

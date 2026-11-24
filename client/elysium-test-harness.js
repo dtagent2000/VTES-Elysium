@@ -382,6 +382,8 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   botRingBounceTargets: (typeof botRingBounceTargets!=='undefined'?botRingBounceTargets:undefined), botRingBlockers: (typeof botRingBlockers!=='undefined'?botRingBlockers:undefined),
   botRingBleeder: (typeof botRingBleeder!=='undefined'?botRingBleeder:undefined), botRingAddMinion: (typeof botRingAddMinion!=='undefined'?botRingAddMinion:undefined),
   botLocalHuman: (typeof botLocalHuman!=='undefined'?botLocalHuman:undefined),
+  botRingAnswersAs: (typeof botRingAnswersAs!=='undefined'?botRingAnswersAs:undefined), botRingSeatHint: (typeof botRingSeatHint!=='undefined'?botRingSeatHint:undefined), botTitleMark: (typeof botTitleMark!=='undefined'?botTitleMark:undefined),
+  get BOT_TITLE_MARK(){ return (typeof BOT_TITLE_MARK!=='undefined')?BOT_TITLE_MARK:undefined; }, setActivePlayer: (typeof setActivePlayer!=='undefined'?setActivePlayer:undefined),
   bleedInTrack: (typeof bleedInTrack!=='undefined'?bleedInTrack:undefined), bleedOnLocal: (typeof bleedOnLocal!=='undefined'?bleedOnLocal:undefined),
   bleedBounce: (typeof bleedBounce!=='undefined'?bleedBounce:undefined), bleedPreyOf: (typeof bleedPreyOf!=='undefined'?bleedPreyOf:undefined),
   get bleedIn(){ return (typeof bleedIn!=='undefined')?bleedIn:undefined; }, set bleedIn(v){ bleedIn=v; },
