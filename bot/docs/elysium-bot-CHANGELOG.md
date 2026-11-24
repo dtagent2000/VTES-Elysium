@@ -320,6 +320,75 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.238 (24 Nov 2026; PR #105)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
+  Dreams kan rättas nu. Det är ju ett kort i spel som inte är fäst vid någon vampyr"). KRCG: "Put this card in play. Add 1 counter
+  to this card each time you lock it … You can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn
+  this card if it has 3 counters." Its curated `poolGain` mode is phase-tagged and a lock mode, and the master phase's host rule
+  read `known` (a phase-tagged `poolGain` / `bloodToPool`), so the card went on a vampire, `_considerLockIncome` (freestanding
+  cards only) never read its three locks, and `_applyPhaseIncome` paid 1 pool every unlock phase with no lock, no Edge and no
+  counter, and it never burned. A rules correction, no knob (L-62).
+  - *The host rule* (`_hostIncome`): a host's income is a phase-tagged `poolGain` / `bloodToPool` on a mode with no lock (Blood
+    Doll, Vessel). The finder's row for a known income asset whose income is a lock only says `lockIncome` (Dreams' alone); the
+    master phase puts a known asset on a vampire only when its income is a host's (`_hostInc`), so Dreams goes on the bot's own
+    board, with or without a vampire in play when it is the pick (it was held with none; a Blood Doll or Vessel picked first with
+    no vampire still ends the phase: the register's 13.10). The choice of a master is unchanged: `known` still counts
+    Dreams for `decide('master-play')` (a trifle first, Dreams in the same phase). The spread's count of income masters on a
+    vampire and `_applyPhaseIncome` read the same rule (a lock mode is a choice, never paid by the phase).
+  - *Prediction* (D-93; registered before the 240): a rules correction, so a footprint only where the card is. Against v0.6.237's
+    240 (`00ed0cbd`; 104 placements of Dreams, all malkavian, in 105 matches where it was a master candidate): the other matches
+    stay IDENTICAL (≥ 135); the 105 are SAME-PLAY (the candidate row gains `lockIncome`) or DIVERGED from Dreams' first play (its
+    line names no vampire) or its first unlock phase after (no pool without the Edge). No `income-host` row names Dreams;
+    `lock-income` decisions name it, and some copies burn at their third counter. Malkavian's VP/match falls, by at most 0.2 (the
+    hosted card paid at most 469 pool over the 104 placements, 4.5 a placement, which three locks replace; likely within the noise,
+    2 SE ≈ 0.16). `ana-gates.py` PASS, zeroPool 0.
+    *Observed* (the first bytes `1cf70697`' 240 against v0.6.237, the version string normalized): IDENTICAL 135, SAME-PLAY 9, DIVERGED 96, every
+    divergence from malkavian's first `lock-income` on Dreams; no `income-host` row names it; 242 locks in 96 matches (a blood to
+    an uncontrolled vampire 158, the Edge's pool 62, the hand size 22), 66 copies burned at their third counter, none locked a
+    fourth time; malkavian 1.73 → 1.63 VP/match (−0.10, paired SE 0.06, 95 % [−0.21, +0.01]; wins 107 → 97), ventrue +0.11
+    (95 % [+0.02, +0.20]); `ana-gates.py` PASS 6/6, zeroPool 0. The prediction held.
+  - *The egress review's pass 1* (7 findings) found two rules faults the freestanding card made live, fixed here (D-92): **the
+    hand count** (`_handCount`: the hand and the replacements owed, `_drawOwed`; the rulebook's drawing cards, "cards that are
+    replaced later reduce your hand size", and [ANK 20180318]): Dreams' +2 drew up from the hand alone and the master phase's
+    flush then drew the owed cards again (11 of the 22 hand-size locks, 17 cards); Elder Library's draw-up at the turn start did the
+    same since v0.6.33 (the hand then stayed over its size for the game: 66 malkavian turns above 9 cards in v0.6.237's 240), and
+    the end of turn's discard-down counted the hand alone too. **The Unique gate** (`_inPlayNorms`): a burned or ashed card stays
+    in a board and its pub with its zone changed, and counted as in play, so a burned Dreams kept every later copy out for the game
+    (sewer runs three). Registered, not fixed: 13.10 (above) and **14.1, active**: a card played in another seat's turn is
+    replaced at the bot's own next flush (the first bytes' 240: 371 of 2,880 unlock snapshots of rounds 2–4 under 7 cards); pass 2
+    added **14.2, active**: a hand size raised in play (Elder Library) is drawn up only at the next turn start; pass 3 **14.3,
+    active**: the discard phase's replacement is drawn at once, outside the owed count, so Dreams' expiring +2 sheds one card too
+    few after a discard-phase action (4 of 20 reverts in the release bytes' 240; 10 malkavian turns over size follow).
+  - *Prediction 2* (D-93; registered after pass 1, before the release bytes' 240): the hand count and the Unique gate are rules
+    corrections. Against the first v0.6.238 bytes' 240 (`1cf70697`): DIVERGED only where malkavian draws up its hand size with a
+    replacement owed (Elder Library's entry with a short hand at the next turn start: 19 matches; Dreams' hand-size lock under 7
+    cards: 11), at most 30 matches; IDENTICAL elsewhere (the Unique gate changes no play: every starter runs one copy of each
+    unique card, and their names differ); no malkavian hand above 8 outside a turn of Dreams' +2, nor above 10 in one (66 turns
+    above 9 in the first bytes); malkavian's VP/match falls again, by at most 0.15 (within the noise); `ana-gates.py` PASS.
+    *Observed* (the release bytes' 240 against the first bytes'): IDENTICAL 199, SAME-PLAY 3, DIVERGED 38, all 41 in matches where
+    malkavian's draw-up ran (Elder Library, Dreams' lock): DIVERGED 29 of the 30 counted and 9 more Elder Library matches, SAME-PLAY
+    1 and 2 — the count read
+    the owed card from the unlock snapshot's hand, but Elder Library's draw-up runs before the unlock phase, so a hand topped up to
+    7 hid it (match 8: 6 in hand and 1 owed; 9 cards after, 8 now). No malkavian hand above 8 outside a turn of Dreams' +2, none
+    above 10 (109 and 5 in the first bytes) — but 8 on a hand size of 7 after 4 reverts (14.3); malkavian's VP/match flat, 1.63 → 1.64 (+0.01, SE 0.02), not the fall predicted;
+    `ana-gates.py` PASS 6/6. The mechanism held; the count and the VP's direction did not (a map, D-93). Against v0.6.237 (the
+    version normalized): IDENTICAL 120, SAME-PLAY 8, DIVERGED 112, every divergence malkavian's; malkavian 1.73 → 1.64 (−0.09,
+    paired SE 0.06), ventrue +0.12 (95 % [+0.02, +0.22]).
+  - *Tests*: section 184 (11 cases): 10 red on v0.6.237 (green: the choice of a master, a non-regression), and f–i (the hand
+    count, the Unique gate) red on the first v0.6.238 bytes; 183d's source pin follows the host rule's name (`_hostInc`). *Gates*
+    (the release bytes `0648bf88` / `3bb1df3e`, cardfx `b937ae3d` unchanged): the suite 2796/0 ×3, canary 235/0 ×2 (the copies;
+    the root's v2.6.187), main's canary v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.187) 422/1 (the
+    guide's embed), `client/check-versions.js` everything agrees. No arena smoke: neither the wire nor the real clock changed.
+  - *Found on the way* (Johan's question of 17:03, the starters' bounces; a scratch count on the release bytes' 240 and on the five
+    starters, 120 matches at `--seeds 1`): every bounce goes to the bouncer's prey (597 and 292); in the 240, 253 landed on the new
+    target for their full amount (457 pool), 321 were blocked by it, 23 came to 0 (the bleeder's Spying Mission, the new target's
+    Protected District); none landed on the bouncer. Toreador, a new target only: 45 taken (102 pool), 19 blocked. A first target
+    holding a usable bounce bounces every bleed of 2 or more (345 of 345) and takes most bleeds of 1 (350 taken, 252 bounced: the
+    reserve). No new target bounces onward (the 21 bleeds of 2 or more taken while holding a bounce were all new targets'): the
+    register's 4.6, now counted (missed).
+  - *Egress*: 16 findings in 3 passes (half-done 5, stale-doc 6, unproven 3, rule-missed 2), 14 fixed, 2 listed — pass 3's half-done
+    (registered as 14.3) and its stale comments in the master phase's code (`known` "true for exactly Blood Doll/Vessel"; a comment
+    fix would move the release bytes after their gates: the next round that touches the master phase). Pass 3's fixes without a
+    fourth review (the loop's limit, D-133).
 - **v0.6.237 (24 Nov 2026; PR #103)** — The playtest round (RULINGS D-136): Johan's offline hotseat, four bots and a human, and his "Yes det
   mesta låter bra" on Claude's analysis, with his change on the bounce (read from chat, not the card). A scratch recording of a
   bots-only hotseat at the client's pace (paceMs 3100, askSecs 20, the four starters, 5 rounds) measured the chat for the next round.

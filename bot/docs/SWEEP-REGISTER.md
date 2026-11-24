@@ -33,8 +33,8 @@ stayed (O-12's steal pair, BOARD's locked routes but their Eyes of the Wild ride
 What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
-source; 7–13: the migration's sorting, Claude's; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 5.2, 8.6, 9.8,
-10.1, 10.2, 12.2.
+source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's egress; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1, 14.1–14.3. Missed: 4.6, 5.2,
+8.6, 9.8, 10.1, 10.2, 12.2.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -101,8 +101,9 @@ is a handoff first. Bot-to-bot gaps are marked.
   (v2.6.187) writes the re-announce the acting bot follows and a bot at the new seat arms from (so a HUMAN's bleed bounced by a
   human to a bot arms too), and a typed `bounce <name>` (the bot writes the re-announce); the card's play line is not read, Johan:
   many cards bounce. Left: a bot that is a bounce's new target cannot bounce onward (that half is the bot's own play); a bounce
-  card played from the hand with no ring and no typed line still moves nothing. [B; O-3; the playtest round] · reachable (the
-  onward bounce between bots: malkavian, tremere and ventrue hold Deflection) / human.
+  card played from the hand with no ring and no typed line still moves nothing. [B; O-3; the playtest round] · **missed** (the
+  onward bounce; v0.6.238's 240, a scratch count: of 597 bounces the new target held a usable bounce of its own in 146, and 62 of
+  those landed on it, 21 of them bleeds of 2 or more, which a first target bounces every time: 345 of 345) / human.
 - **4.7 A human's Change of Target after a right-click action** names no vampire or another: `_onCot` misses it. Main (11 Nov §1):
   such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. [B] · human (toreador ×2).
 - **4.8 A human's Sudden Reversal at a bot's master**: no line says it cancelled the master (main, 19 Nov). [B: the waves' riders
@@ -207,14 +208,6 @@ a legal play the bot refuses.
   [w4; pilot] · reachable (nosferatu holds Preternatural Strength ×2).
 - **8.10 Over-strict: hosts and hunting grounds** — allies are never offered as hosts for a card on a minion; "only one hunting
   ground each turn" is per vampire in the text, one flag per Methuselah in the code. [pilot; w3] · reachable.
-- **8.11 Dreams of the Sphinx is hosted as an income master and pays 1 pool every unlock phase** — "Put this card in play … You
-  can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn this card if it has 3 counters" (KRCG).
-  Its curated `poolGain` mode is phase-tagged, so the master finder's `known` (a phase-tagged `poolGain` / `bloodToPool`, meant for
-  Blood Doll and Vessel) puts it on a vampire; `_considerLockIncome` reads freestanding cards only, so its lock modes (the Edge's
-  pool, +2 hand size, the blood to an uncontrolled vampire) never run, and `_applyPhaseIncome`'s `poolGain` rung pays +1 every
-  unlock phase with no lock, no Edge, no counter, and the card never burns (v0.6.236: pool 10 → 11 without the Edge, a scratch
-  check). The 240: 104 placements, all malkavian. Fix sketch: `known` excludes a lock mode (or a card not put on a minion), so it
-  stays freestanding. [the playtest round's egress, found on the way] · **active** (malkavian ×1).
 
 ## 9. Key and compiler shapes
 A key the compiler writes and a reader reads in another shape, or a sentence shape the compiler misreads or skips.
@@ -385,6 +378,29 @@ Decisions on Claude's priors; each needs a design to Johan before it changes (D-
 - **13.8 The voter's preview** skips a Silverson-class tax and an Alexa-class discard. [w6 §9.5] · reachable (ventrue holds Alexa
   Draper).
 - **13.9 Forced Confessional [dom]** unseen in 12 matches: a pricing question first (L-9). [w6 §8] · reachable (salubri ×4).
+- **13.10 A host's income with no host ends the master phase** — a Blood Doll or Vessel picked with no vampire to carry it `break`s
+  the master phase's loop, so a later candidate (Dreams of the Sphinx, a Location) waits a turn; Guardian Angel's own case tries
+  the next. [v0.6.238's egress] · reachable (the first v0.6.238 bytes' 240: Dreams behind such a pick 4 times, never with no
+  vampire).
+
+## 14. Hand size and replacement
+A card's replacement, or the hand size's draw-up and discard-down, against the rulebook's drawing cards: "Whenever you play a card
+from your hand, you draw another from your library to replace it (unless card text says otherwise)."
+- **14.1 A card played in another seat's turn is replaced at the bot's own next flush** — `_flushDraws` runs in the bot's own turn
+  (and after a vote's discard in another seat's referendum), so a reaction, a block's or a combat's card leaves the hand short
+  until its own master phase (the first v0.6.238 bytes' 240: 371 of 2,880 unlock snapshots of rounds 2–4 under 7 cards). [v0.6.238's
+  egress, found on the way] · **active** (every deck).
+- **14.2 A hand size raised in play is drawn up at the next turn start** — "Whenever an effect changes your hand size … immediately
+  discard down to or draw up to match your hand size" (the rulebook); `_recomputeHandSizeBaseline` runs at the turn start only, so
+  Elder Library (+1 hand size) gives its card a turn late (the release bytes' 240: 71 Elder Library plays; the hand stayed at 7 for
+  the rest of that round in 68). Fix sketch: draw up when a hand-size permanent enters play (`_handCount` makes that safe before the
+  flush). [v0.6.238's egress, pass 2] · **active** (malkavian ×1).
+- **14.3 The discard phase draws its replacement at once, outside the owed count** — a `draw` sent, not owed, and
+  `_revertHandSizeBonus` runs in the same tick, before the card arrives: Dreams' expiring +2 sheds one card too few (the release
+  bytes' 240: 4 of 20 reverts, all after a discard-phase action; 10 malkavian turns above the hand size follow). The same shape
+  skips Visit from the Capuchin ("Each time you would replace a card other than this card, instead burn 1 counter"). Fix sketch:
+  the replacement through `_drawOwed`, a flush after the revert. [v0.6.238's egress, pass 3] · **active** (malkavian ×1) /
+  reachable (ventrue ×1: the Capuchin).
 
 ## Not migrated: done since, or not a problem
 - *w1*: the round restrictions (the first-round strikes failing closed, three cards untagged, Riposte in round 1) — read since

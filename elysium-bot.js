@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.237';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.238';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -1722,10 +1722,10 @@ class Bot {
     return true;
   }
   _inPlayNorms(){                    // norm'd names IN PLAY table-wide (ready/torpor; uncontrolled is not in play)
-    const out = new Set();
-    this.board.forEach(c => { if(c.zone !== 'uncontrolled' && c.name) out.add(FX_NORM(c.name)); });
+    const out = new Set();   // v0.6.238 (the egress review): nor a card that left play -- a burned or ashed card stays in a board (and its pub) with its zone changed (_outOfPlay), and a burned Dreams of the Sphinx (3 counters) kept every later copy out of play for the game
+    this.board.forEach(c => { if(c.zone !== 'uncontrolled' && c.name && !this._outOfPlay(c)) out.add(FX_NORM(c.name)); });
     Object.values(this.table).forEach(t => (t.pub && t.pub.cards || []).forEach(c => {
-      if(c.zone !== 'uncontrolled' && c.name && !c.faceDown) out.add(FX_NORM(c.name));
+      if(c.zone !== 'uncontrolled' && c.name && !c.faceDown && !this._outOfPlay(c)) out.add(FX_NORM(c.name));
     }));
     return out;
   }
@@ -6798,14 +6798,18 @@ class Bot {
       const cost = (h.e.cost && h.e.cost.pool) || 0;
       if(cost && cost >= (this.pool | 0)) return;   // v0.6.210 (the sim, 19 Oct): a pool cost leaves me >= 1 pool -- paying the last one ousts me ('a Methuselah with no pool is ousted'). `cost > pool` let Vessel through at pool 1 and a Hunting Ground at pool 2: 35 bots in 33 of 240 baseline matches paid their last pool in their own master phase and played on at 0 (the ally finder's 'leave >= 1 pool' and the political finder's `>=` were already right)
       const known = (h.e.modes || []).some(mo => mo.phase && mo.fx && (typeof mo.fx.poolGain === 'number' || typeof mo.fx.bloodToPool === 'number'));
+      const lockIncome = known && !this._hostIncome(h.e);   // v0.6.238 (the sweep register 8.11): a known income asset whose pool comes by a LOCK only (Dreams of the Sphinx) -- decide('master-play') still counts it known; it is played on my board with no host
       // v1.4.0 follow-up (14 July): `persistent`/`curated` are SEPARATE questions from `known` -- known only ever meant "has a phase-tagged income fx that attaches to a host vampire" (true for exactly Blood Doll/Vessel). Parthenon/Information Highway/Ashur Tablets are now curated too but are Locations (no host) with no recognized income fx, so they'd have been wrongly bucketed as "uncurated" by the old known-only messaging -- see the MASTER play loop and decide('master-play') below.
       const persistent = !!h.e.persistent;
       const curated = h.e.src === 'hand';
       const handler = h.e.handler || null;    // v1.4.1 (14 July): the bespoke CARD_HANDLERS key, if this entry names one
       const villein = (h.e.modes || []).some(mo => mo.fx && mo.fx.poolFromHost > 0);   // v0.6.213 (V5 wave 1): Villein -- fx.poolFromHost, a literal read for the coverage scanner
-      out.push(Object.assign({ idx, name: h.name, cost, trifle: !!h.e.trifle, known, persistent, curated, handler, archetype: !!h.e.archetype, host: h.e.host || null, rushGrant: (h.e.modes || []).some(mo => mo.fx && mo.fx.rushGrant > 0) }, villein ? { villein: true } : null, (w5 && typeof w5.worth === 'number') ? { worth: w5.worth } : null));   /* v0.6.230: `worth` only on the engine's candidates -- every other row is the old */   /* v0.6.213: the flag only on Villein -- every other candidate row is the old */   // v0.6.205 (R4, F23): host 'ready' (Guardian Angel); rushGrant (Haven Uncovered) goes on an opponent's vampire   // fas C: archetype masters attach to a vampire at play, gated one-per-vampire
+      out.push(Object.assign({ idx, name: h.name, cost, trifle: !!h.e.trifle, known, persistent, curated, handler, archetype: !!h.e.archetype, host: h.e.host || null, rushGrant: (h.e.modes || []).some(mo => mo.fx && mo.fx.rushGrant > 0) }, villein ? { villein: true } : null, lockIncome ? { lockIncome: true } : null, (w5 && typeof w5.worth === 'number') ? { worth: w5.worth } : null));   /* v0.6.230: `worth` only on the engine's candidates -- every other row is the old */   /* v0.6.213: the flag only on Villein -- every other candidate row is the old */   // v0.6.205 (R4, F23): host 'ready' (Guardian Angel); rushGrant (Haven Uncovered) goes on an opponent's vampire   // fas C: archetype masters attach to a vampire at play, gated one-per-vampire
     });
     return out;
+  }
+  _hostIncome(e){                    // v0.6.238 (the sweep register 8.11): an income master that goes ON a vampire and pays at its own phase with no choice -- a phase-tagged poolGain or bloodToPool on a mode with no lock (Blood Doll, Vessel). A LOCK mode is a choice of a card in play on its own: Dreams of the Sphinx ('Put this card in play ... You can lock this card during your unlock phase to gain 1 pool if you have the Edge ... Burn this card if it has 3 counters', KRCG) was put on a vampire and paid 1 pool every unlock phase with no lock, no Edge and no counter; it stays freestanding now, where _considerLockIncome reads its three locks (decide('master-play') still counts it a known income asset: the finder's row carries lockIncome)
+    return !!(e && (e.modes || []).some(mo => mo.phase && !mo.lock && mo.fx && (typeof mo.fx.poolGain === 'number' || typeof mo.fx.bloodToPool === 'number')));
   }
   _masterReqOk(e){                   // v0.6.215 (V5 wave 3, R-42): a master's requirements are met by a READY vampire I control -- the rulebook (card types): 'only a Methuselah who controls a ready minion who meets the requirements of a master card can play it'. Clan and sect through _entryReqOk; a title requirement (Papillon's 'a ready vampire with a city title') by any printed title (the city titles are not told apart: fail open on the kind, closed on none)
     const r = e && e.req; if(r && r.path && r.pathN && this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && this._vampPath(v) === r.path).length < r.pathN) return false;   // v0.6.230 (V5 wave 5): Privileged Position -- 'Requires 2 or more ready vampires who follow the Path of Power and the Inner Voice'
@@ -6854,7 +6858,7 @@ class Bot {
     if(spread && this.o.spreadIncome !== 0){   /* v0.6.237 (Johan's playtest, 24 Nov: 'the Vessels seem to go on one and the same vampire instead of being spread out,
          which is the usual'; knob spreadIncome, 0 = the first vampire in board order, every copy on it): an income master (Blood Doll, Vessel) goes
          on the vampire with the fewest copies of it, then the fewest income masters of any name; a tie keeps board order. Ready first, torpor as before. */
-      const inc = c => { const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.phase && mo.fx && (typeof mo.fx.poolGain === 'number' || typeof mo.fx.bloodToPool === 'number'))); };   // _bestMasterFor's `known`
+      const inc = c => { const h = this.fxLookup(c.name); return !!(h && h.kind === 'lib' && this._hostIncome(h.e)); };   // a host's income (v0.6.238: _hostIncome, the master phase's host rule -- Blood Doll, Vessel; Dreams of the Sphinx's lock is none)
       const count = (v, f) => (v.attached || []).reduce((n, id) => { const c = this.board.find(x => x && x.id === id); return n + (c && c.kind === 'lib' && !this._outOfPlay(c) && f(c) ? 1 : 0); }, 0);
       const pick = zone => this.board.filter(c => c && c.kind === 'crypt' && c.zone === zone && ok(c)).map((v, i) => ({ v, i, same: count(v, c => FX_NORM(c.name) === FX_NORM(spread)), any: count(v, inc) }))
         .sort((a, b) => (a.same - b.same) || (a.any - b.any) || (a.i - b.i))[0];
@@ -7319,13 +7323,16 @@ class Bot {
     });
     return total;
   }
+  _handCount(){                      // v0.6.238 (the egress review): the cards that count against the hand size -- the hand and the replacements owed (_drawOwed: drawn at the next _flushDraws, or held by a card's 'Do not replace until'). The rulebook (drawing cards): 'The number of cards in your hand should always match your hand size (cards that are replaced later reduce your hand size for the duration of the effect)'; [ANK 20180318]: 'Cards that are not replaced count against the hand size.' A draw-up that read the hand alone drew the owed cards twice (Dreams' +2 in the master phase, Elder Library's entry at the turn start: the flush that follows draws them again)
+    return this.hand.length + (this._drawOwed | 0);
+  }
   _recomputeHandSizeBaseline(){   // v0.6.33: the passive-permanent sibling of _recomputePhaseActs's own "refresh the baseline from whatever's in play right now" pattern -- called once per turn (turn start). A NEWLY entered permanent (Elder Library etc.) means the true target rose since last check; draw up to it now, mirroring the same "immediately draw up to your hand size" rule Dreams of the Sphinx's temporary bonus already implements. Never discards on a DECREASE (a permanent leaving play mid-game is rare and not handled this round -- documented, not silently wrong: this only ever draws up, never claims to shed the difference).
     const total = this._handSizePermanentTotal();
     const prev = this._handSizePermanentPrev || 0;
     this._handSizePermanentPrev = total;
     if(total > prev){
       const target = 7 + total + (this._handSizeBonus || 0);
-      const owed = target - this.hand.length;
+      const owed = target - this._handCount();   // v0.6.238: the replacements owed count (_handCount)
       for(let i = 0; i < owed; i++) this.send({ t: 'draw' });
     }
   }
@@ -7344,7 +7351,7 @@ class Bot {
   _revertHandSizeBonus(){   // v0.6.32 (Johan's ask, continuing Dreams of the Sphinx): extracted from the discard-phase loop specifically so it's directly testable on its own -- "until the end of the turn" expires HERE (discard phase is the turn's last phase), and per the SAME rule that granted it ("discard down to or draw up to your hand size" whenever it changes), reverting to the base 7 means discarding any excess now. Prefers a genuinely dead-hand card if one remains (worthless to hold regardless); falls back to the front of the hand for any remainder -- WHICH excess card to shed is a real strategic question this v1 doesn't weigh, matching Dreams of the Sphinx's own "ignore the 3-counter budget" simplification already noted at the lock-income decide() case.
     if(!(this._handSizeBonus > 0)) return;
     const base = 7 + this._handSizePermanentTotal();   // v0.6.33: revert to base+PERMANENT, not flat 7 -- a temporary bonus expiring should never strip away Elder Library etc.'s own still-active permanent contribution
-    let excess = this.hand.length - base;
+    let excess = this._handCount() - base;   // v0.6.238: the replacements owed count (_handCount)
     while(excess > 0){
       const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt');
       let di = this._deadHandIndex(this._deadJudgeVamps());   // v0.6.200 (point 22): dead = no vampire of mine can use it
@@ -7459,7 +7466,7 @@ class Bot {
           this.push();
         } else if(typeof mo.fx.handSize === 'number'){
           const target = 7 + this._handSizePermanentTotal() + (this._handSizeBonus || 0) + mo.fx.handSize;   // v0.6.32/33 (Johan's ask, continuing Dreams of the Sphinx): source-verified vekn.net first -- hand size is NOT a passive ceiling, it's an ACTIVE target: "whenever they don't match... immediately discard down to or draw up to your hand size". 7 is VTES's universal base, UNIFIED with any permanent sources already in play (Elder Library etc.) and any temporary bonus already active THIS turn (a second lock-based card, stacking) -- computing this mode's amount in isolation would under-draw whenever another source is simultaneously active. Only worth locking if there's something to actually gain THIS moment (hand already below the new target) -- otherwise it spends one of the card's 3 total lock-uses for zero benefit, same "don't waste a lock" spirit as Life in the City's own capacity check.
-          const owed = target - this.hand.length;
+          const owed = target - this._handCount();   // v0.6.238 (the egress review): the replacements owed count -- the master phase's _flushDraws draws them after this lock (11 of the first v0.6.238 bytes' 22 hand-size locks drew them twice)
           if(owed <= 0) continue;
           const d = this.decide('lock-income', { name: c.name, kind: 'handSize', amount: mo.fx.handSize });
           if(!d.lock) continue;
@@ -7575,7 +7582,7 @@ class Bot {
       const host = this.board.find(v => v.id === c.host); if(!host) return;
       const h = this.fxLookup(c.name); if(!h || h.kind !== 'lib') return;
       (h.e.modes || []).forEach(mo => {
-        if(mo.phase !== phaseKey || !mo.fx || this._outOfPlay(c)) return;   // v0.6.36: same defensive re-check as _considerLockIncome -- no current _applyPhaseIncome-consumed card burns mid-iteration, but a future one combining host-attached income with a counter/burn mechanic would hit the identical class of bug without this
+        if(mo.phase !== phaseKey || !mo.fx || mo.lock || this._outOfPlay(c)) return;   // v0.6.238 (the sweep register 8.11): a LOCK mode is a choice (_considerLockIncome reads it), never paid here -- a Dreams of the Sphinx on a vampire paid 1 pool every unlock phase with no lock and no Edge   // v0.6.36: same defensive re-check as _considerLockIncome -- no current _applyPhaseIncome-consumed card burns mid-iteration, but a future one combining host-attached income with a counter/burn mechanic would hit the identical class of bug without this
         if(typeof mo.fx.poolToBlood === 'number'){   // v0.6.125 (Johan's remaining-cards round): THE REVERSE DIRECTION -- Blood Doll / Vessel 'may move' either way. v0, deliberately narrow so it cannot oscillate with the drain below: only a host at 0 BLOOD is fed (1 pool buys back the action a forced hunt would cost), only from a comfortable pool, once per card per phase.
           const d = this.decide('income-direction', { host, pool: this.pool, cap: this.fxCryptCap(host.name) });
           if(d.toBlood){
@@ -12786,9 +12793,10 @@ class Bot {
           if(d.pick.villein && !_vlP){ played.add(FX_NORM(d.pick.name)); continue; }   // held pre-splice: nothing paid
           const _w4 = this._masterHostPlan(d.pick.name);   // v0.6.217 (V5 wave 4, D-106): the masters that go ON a vampire (and Toreador Grand Ball's pair) choose their host here, or are held
           if(_w4 && _w4.hold){ this.o.log('master-play: ' + d.pick.name + ' held -- ' + _w4.why); played.add(FX_NORM(d.pick.name)); continue; }   // held pre-splice: nothing paid
-          const host = _w4 ? _w4.host : _vlP ? _vlP.host : d.pick.host === 'ready' ? this._hostReadyFor(d.pick.name) : (d.pick.known || d.pick.archetype) ? this._hostVampFor(d.pick.archetype, d.pick.archetype ? (this.fxLookup(d.pick.name) || {}).e : null, d.pick.known && !d.pick.archetype ? d.pick.name : null) : null;   // fas C: archetype masters (Perfectionist) attach too -- and the archetype-aware picker enforces one-per-vampire. v0.6.205 (R4, F23): Guardian Angel goes on a READY vampire of mine
+          const _hostInc = d.pick.known && !d.pick.lockIncome;   // v0.6.238 (the sweep register 8.11): a known income asset goes on a vampire when its income is a host's (Blood Doll, Vessel); Dreams of the Sphinx ('Put this card in play') goes on my board, with or without a vampire
+          const host = _w4 ? _w4.host : _vlP ? _vlP.host : d.pick.host === 'ready' ? this._hostReadyFor(d.pick.name) : (_hostInc || d.pick.archetype) ? this._hostVampFor(d.pick.archetype, d.pick.archetype ? (this.fxLookup(d.pick.name) || {}).e : null, _hostInc && !d.pick.archetype ? d.pick.name : null) : null;   // fas C: archetype masters (Perfectionist) attach too -- and the archetype-aware picker enforces one-per-vampire. v0.6.205 (R4, F23): Guardian Angel goes on a READY vampire of mine
           if(d.pick.host === 'ready' && !host){ played.add(FX_NORM(d.pick.name)); continue; }   // v0.6.205: no ready vampire to put it on -- held, the next candidate is tried (pre-splice: nothing paid)
-          if((d.pick.known || d.pick.archetype) && !host) break;     // a known income asset (or an archetype with no eligible vampire) needs a host — hold the card rather than misplay it
+          if((_hostInc || d.pick.archetype) && !host) break;     // a known income asset (or an archetype with no eligible vampire) needs a host — hold the card rather than misplay it
           this.o.log('master-play: ' + d.why);
           if(this.hand.indexOf(d.pick.name) < 0 || (d.pick.cost && d.pick.cost >= (this.pool | 0))){ played.add(FX_NORM(d.pick.name)); continue; }   // v0.6.210: the finder's own rule (leave >= 1 pool). v0.6.232 (D-122): the beat moved into the 'as played' window below -- a master's target is chosen as it is played, before the window
           const _lk = this.fxLookup(d.pick.name);
@@ -12948,7 +12956,7 @@ class Bot {
               if(_n > 0){ card.counters = _n;
                 if((_ec.e.modes || []).some(mo => mo.fx && mo.fx.handSizePerCounter)){ for(let _i = 0; _i < _n; _i++) this.send({ t: 'draw' }); this._handSizePermanentPrev = this._handSizePermanentTotal(); this._replaceExempt = (this._replaceExempt | 0) + 1;
                   this._emit('hand-size-up', { card: d.pick.name, by: _n }); } } }
-            if(host && d.pick.known && !d.pick.archetype){   // v0.6.237: the income master's host, traced -- the spread's own row (spreadIncome); `stacked` = a copy already on it while another ready vampire of mine had none
+            if(host && _hostInc && !d.pick.archetype){   // v0.6.237: the income master's host, traced -- the spread's own row (spreadIncome); `stacked` = a copy already on it while another ready vampire of mine had none
               const cp = v => (v.attached || []).filter(id => { const c = this.board.find(x => x && x.id === id); return !!(c && c.kind === 'lib' && !this._outOfPlay(c) && FX_NORM(c.name) === FX_NORM(d.pick.name)); }).length;
               const on = cp(host), free = this.board.filter(v => v && v !== host && v.kind === 'crypt' && v.zone === 'ready' && cp(v) === 0).length;
               this._emit('income-host', { card: d.pick.name, host: host.name, copies: on, freeReady: free, stacked: on > 0 && free > 0 }); }

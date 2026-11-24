@@ -16065,7 +16065,7 @@ async function connectWithRetry(client, tries = 30){
         ok(got.one === 'b' && got.tie === 'a' && got.doll === 'a' && got.none === 'a' && got.off === 'a',
            '183d a Vessel goes on the vampire with none and no income master, a tie keeps board order, a Blood Doll where no Doll is yet; no card named = the first, spreadIncome 0 = the first (got ' + JSON.stringify(got) + ')');
         const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
-        ok(/_hostVampFor\(d\.pick\.archetype, [^\n]*d\.pick\.known && !d\.pick\.archetype \? d\.pick\.name : null\)/.test(src), '183d ...and the master phase names the card for a known income master only (an archetype keeps its own rule)'); }
+        ok(/_hostVampFor\(d\.pick\.archetype, [^\n]*_hostInc && !d\.pick\.archetype \? d\.pick\.name : null\)/.test(src), '183d ...and the master phase names the card for a known income master only (an archetype keeps its own rule; v0.6.238: one whose income is a host’s, _hostInc)'); }
 
       // e) THE ACTOR'S WORD before the late bounce (a human bleeds my Ayelech, Deflection in hand, stealth 1 on the counter)
       { const P = [{ seat: 1, name: 'Johan', bot: false }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Hanna', bot: true }];
@@ -16312,6 +16312,98 @@ async function connectWithRetry(client, tries = 30){
       { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan', bot: false }]; const u = mk3('Viktor', 1, 'ventrue', P);
         const ev = u._evClassify('Johan', 'Johan bounces the bleed to Hanna');
         ok(!!ev && ev.kind === 'bounce' && ev.by === 'Johan' && ev.to === 'Hanna', '183g "X bounces the bleed to Y" is a bounce event (got ' + JSON.stringify(ev) + ')'); }
+    }
+
+    /* 184) v0.6.238 -- DREAMS OF THE SPHINX STAYS IN PLAY ON ITS OWN (the sweep register 8.11; Johan, 24 Nov: 'it is a card in play
+       that is not attached to any vampire'). 'Put this card in play. Add 1 counter to this card each time you lock it ... You can lock
+       this card during your unlock phase to gain 1 pool if you have the Edge ... Burn this card if it has 3 counters' (KRCG). Its
+       curated poolGain mode is phase-tagged AND a lock mode, and the master finder's `known` (a host's income: Blood Doll, Vessel) took
+       it for one: it went on a vampire and paid 1 pool every unlock phase with no lock, no Edge and no counter. (a) The host rule no
+       longer takes a lock mode for a host's income -- _hostIncome, shared with the spread; the finder's row says lockIncome, and the
+       choice of a master keeps `known` (the old decision: the trifle first); (b) a whole turn plays it on my board with no host,
+       and on that board the unlock phase gains nothing without the Edge, one lock for 1 pool and a counter with it; (c) a Dreams
+       already on a vampire (the old placement) is paid nothing by the phase income -- a lock mode is a choice, read by
+       _considerLockIncome only; (d) the spread counts no Dreams as an income master on a vampire; (e) with no vampire in play it is
+       still played (a host's income is held then). The egress review: (f) the hand-size lock counts the replacements owed (the
+       master phase's flush drew them twice: the rulebook's 'cards that are replaced later reduce your hand size', [ANK 20180318]),
+       and so do (g) Elder Library's draw-up at the turn start and (h) the end of turn's discard-down; (i) a burned or ashed copy
+       is out of play: the Unique gate lets the next copy in (mine or another seat's), a live one still keeps it out.
+       The old bytes lack _hostIncome: its call is guarded.
+       LAST LINE OF 184 is the closing brace below. */
+    {
+      console.log('\n[184] v0.6.238 -- Dreams of the Sphinx stays in play on its own (the sweep register 8.11)');
+      const mk4 = (o) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Hanna', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 0.4, phaseSecs: 0.3, twdKnow: 0, log: () => {} }, o || {}));
+        u.seat = 1; u.started = true; u.players = [{ seat: 1, name: 'Hanna', bot: true, online: true }, { seat: 2, name: 'Viktor', bot: true, online: true }];
+        u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m); u.fxClone = () => {}; return u; };
+      const V4 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 3, attached: [] }, o || {});
+      const L4 = (id, name, o) => Object.assign({ id, name, kind: 'lib', zone: 'ready', locked: false }, o || {});
+      const txt4 = m => m && m.t === 'log' ? String(m.html || '').replace(/<[^>]*>/g, '') : '';
+      const DS = 'Dreams of the Sphinx';
+
+      // a) THE FINDER: Dreams of the Sphinx is no host's income (lockIncome on its row); the choice of a master is the old one -- known, the trifle first
+      { const u = mk4(); u.hand = [DS, 'Blood Doll', 'Vessel']; u.pool = 10;
+        const c = u._bestMasterFor(new Set()), k = n => { const r = c.find(x => x.name === n); return r ? [r.known, !!r.lockIncome] : null; };
+        const hi = typeof u._hostIncome === 'function' ? [DS, 'Blood Doll', 'Vessel'].map(n => u._hostIncome((u.fxLookup(n) || {}).e)) : null;
+        ok(JSON.stringify([k(DS), k('Blood Doll'), k('Vessel')]) === '[[true,true],[true,false],[true,false]]' && JSON.stringify(hi) === '[false,true,true]',
+           '184a the master finder: Dreams of the Sphinx (a lock mode) is no host’s income -- its row says lockIncome, Blood Doll’s and Vessel’s do not; all three stay known (got ' + JSON.stringify({ rows: c.map(x => [x.name, x.known, !!x.lockIncome]), hi }) + ')');
+        u.hand = ['Wider View', DS]; const d = u.decide('master-play', { cands: u._bestMasterFor(new Set()) });
+        ok(!!d.pick && d.pick.name === 'Wider View' && /affords Dreams of the Sphinx the SAME phase/.test(d.why),
+           '184a ...and the choice is the old one: the trifle first, Dreams of the Sphinx in the same phase (got ' + JSON.stringify(d && { pick: d.pick && d.pick.name, why: d.why }) + ')'); }
+
+      // b) A WHOLE TURN: played on my board with no host; then that board's unlock phase -- nothing without the Edge, a lock with it
+      { const u = mk4(); const v = V4('v1', 'Donny Kowalczyk');
+        u.board = [v]; u.hand = [DS]; u.pool = 10; u.edge = false; u.cryptN = 0; u.unc = []; u.turnSeat = 1; u.table = { 2: { pub: { pool: 20, cards: [] } } };
+        let terr = null; await Promise.race([u._playTurn().catch(e => { terr = e.message; }), sleep(8000)]); await sleep(100);
+        const d = u.board.find(c => c && c.name === DS), line = u.sent.map(txt4).find(l => /plays Dreams of the Sphinx/.test(l));
+        ok(!terr && !!d && !d.host && !(v.attached || []).includes(d.id) && line === 'Hanna plays Dreams of the Sphinx.' && u.pool === 9,
+           '184b a whole turn plays Dreams of the Sphinx on my board, no host: the vampire carries nothing, the line names no vampire, 1 pool paid (got ' + JSON.stringify({ terr, host: d && d.host, attached: v.attached, line, pool: u.pool }) + ')');
+        if(d){ d.locked = false; u.edge = false; const p0 = u.pool; u._applyPhaseIncome('unlock');   /* the turn's bleed may have won the Edge */ await u._considerLockIncome('unlock'); const noEdge = { pool: u.pool - p0, locked: !!d.locked, counters: d.counters | 0 };
+          u.edge = true; const p1 = u.pool; await u._considerLockIncome('unlock'); const edge = { pool: u.pool - p1, locked: !!d.locked, counters: d.counters | 0 };
+          ok(noEdge.pool === 0 && !noEdge.locked && noEdge.counters === 0 && edge.pool === 1 && edge.locked && edge.counters === 1 && d.zone !== 'burned',
+             '184b ...and on my board its unlock phase gains nothing without the Edge; with the Edge one lock for 1 pool, 1 counter of 3 (got ' + JSON.stringify({ noEdge, edge }) + ')'); } }
+
+      // c) THE OLD PLACEMENT: a Dreams of the Sphinx already on a vampire is paid nothing by the unlock phase's income -- with or without the Edge
+      { const r = edge => { const u = mk4(); u.board = [V4('v1', 'Donny Kowalczyk', { attached: ['d1'] }), L4('d1', DS, { host: 'v1' })]; u.pool = 10; u.edge = edge;
+          u._applyPhaseIncome('unlock'); const d = u.board[1]; return { pool: u.pool, locked: !!d.locked, counters: d.counters | 0 }; };
+        const no = r(false), yes = r(true);
+        ok(no.pool === 10 && !no.locked && no.counters === 0 && yes.pool === 10 && !yes.locked,
+           '184c a Dreams of the Sphinx on a vampire (the old placement) is paid nothing by the phase income: a lock mode is a choice, never an automatic trigger (got ' + JSON.stringify({ no, yes }) + ')'); }
+
+      // e) NO VAMPIRE IN PLAY: Dreams of the Sphinx needs none ('Put this card in play') -- played, where a host's income is held
+      { const u = mk4(); u.board = []; u.hand = [DS]; u.pool = 10; u.edge = false; u.cryptN = 0; u.unc = []; u.turnSeat = 1; u.table = { 2: { pub: { pool: 20, cards: [] } } };
+        let terr = null; await Promise.race([u._playTurn().catch(e => { terr = e.message; }), sleep(8000)]); await sleep(100);
+        const d = u.board.find(c => c && c.name === DS);
+        ok(!terr && !!d && !d.host && u.pool === 9 && !u.hand.includes(DS),
+           '184e with no vampire in play Dreams of the Sphinx is still played, on my board (got ' + JSON.stringify({ terr, inPlay: !!d, pool: u.pool, hand: u.hand }) + ')'); }
+
+      // f) THE HAND-SIZE LOCK COUNTS THE REPLACEMENTS OWED: 5 in hand, 2 owed, +2 -- the lock draws 2, the flush 2 (9 in all)
+      { const u = mk4(); u.board = [L4('d1', DS)]; u.unc = []; u.hand = Array(5).fill('Govern the Unaligned'); u._drawOwed = 2; u._replHold = []; u.pool = 10;
+        await u._considerLockIncome('master'); const atLock = u.sent.filter(m => m && m.t === 'draw').length; u._flushDraws();
+        const all = u.sent.filter(m => m && m.t === 'draw').length, line = u.sent.map(txt4).find(l => /hand size/.test(l));
+        ok(atLock === 2 && all === 4 && /drawing 2 cards up to the new limit/.test(String(line)) && u.board[0].locked === true,
+           '184f the hand-size lock counts the replacements owed: 5 in hand and 2 owed under +2 draw 2 at the lock and 2 at the flush, 9 in all (got ' + JSON.stringify({ atLock, all, line }) + ')'); }
+
+      // g) ELDER LIBRARY'S DRAW-UP at the turn start counts them too: 6 in hand, 1 owed, hand size 8 -- one draw
+      { const u = mk4(); u.board = [V4('v1', 'Donny Kowalczyk'), L4('e1', 'Elder Library')]; u._handSizePermanentPrev = 0; u.hand = Array(6).fill('Govern the Unaligned'); u._drawOwed = 1;
+        u._recomputeHandSizeBaseline(); const n = u.sent.filter(m => m && m.t === 'draw').length;
+        ok(n === 1, '184g Elder Library\u2019s draw-up at the turn start counts the replacement owed: 6 in hand and 1 owed draw 1 to 8 (got ' + n + ')'); }
+
+      // h) THE END OF TURN'S DISCARD-DOWN counts them: +2 expires with 9 in hand and 1 owed -- down to 6 (7 with the owed card)
+      { const u = mk4(); u.board = []; u.hand = Array(9).fill('Govern the Unaligned'); u._drawOwed = 1; u._handSizeBonus = 2;
+        u._revertHandSizeBonus();
+        ok(u.hand.length === 6, '184h the end of turn\u2019s discard-down counts the replacement owed: 9 in hand and 1 owed under an expiring +2 keep 6 (got ' + u.hand.length + ')'); }
+
+      // i) THE UNIQUE GATE: a burned or ashed copy is out of play -- the next copy may come in (mine or another seat's); a live one keeps it out
+      { const mk = (mine, theirs) => { const u = mk4(); u.board = mine ? [L4('b1', DS, { zone: mine, counters: 3 })] : []; u.table = { 2: { pub: { pool: 20, cards: theirs ? [L4('t1', DS, { zone: theirs })] : [] } } };
+          u.hand = [DS]; u.pool = 10; return u._bestMasterFor(new Set()).some(x => x.name === DS); };
+        const got = { burned: mk('burned', null), ash: mk('ash', null), live: mk('ready', null), theirsBurned: mk(null, 'burned'), theirsLive: mk(null, 'ready') };
+        ok(got.burned && got.ash && !got.live && got.theirsBurned && !got.theirsLive,
+           '184i the Unique gate: a burned or ashed Dreams of the Sphinx is out of play (mine or another seat\u2019s) and the next copy may be played; a live one keeps it out (got ' + JSON.stringify(got) + ')'); }
+
+      // d) THE SPREAD: a Dreams on a vampire is no income master there -- two vampires tie, board order picks
+      { const u = mk4(); u.board = [V4('a', 'Donny Kowalczyk', { attached: ['d1'] }), V4('b', 'Ashley'), L4('d1', DS, { host: 'a' })];
+        const r = u._hostVampFor(false, null, 'Blood Doll');
+        ok(!!r && r.id === 'a', '184d the spread counts no Dreams of the Sphinx as an income master on a vampire: a tie, board order (got ' + (r && r.id) + ')'); }
     }
 
 
