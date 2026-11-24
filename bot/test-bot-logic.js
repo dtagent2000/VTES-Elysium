@@ -15939,6 +15939,160 @@ async function connectWithRetry(client, tries = 30){
            '182j ...and the discard phase cycles it for Aunt Linda as before (no mode she can use: a dead card), not for Algirdas (got ' + JSON.stringify([dead(al, ['Raven Spy']), dead(ag, ['Raven Spy'])]) + ')'); }
     }
 
+    /* 183) v0.6.237 -- THE PLAYTEST ROUND (Johan's hotseat of 24 Nov 2026, four bots and a human; RULINGS D-136): (a) a vampire is
+       spoken without KRCG's group tag in the influence sentence and the questions ('(ADV)' kept), the frozen lines keep the card's
+       name; (b) Fame goes ON the famed vampire -- a give with attachTo through a whole master phase, nothing on my own board, the
+       receiver links it to its host and arms its hook; a human's Fame given onto my vampire is linked too; (c) a cardless minion action
+       is a 'lock' clone with its verb (the plain bleed through the minion phase, aimed at the prey) -- never a 'play' clone of the
+       vampire; (d) income masters spread (spreadIncome), the 0-path stacks as before; (e) against a HUMAN actor the late bounce waits for
+       the actor's word: nothing before it, It resolves / No / a typed 'no more' / the clock / the table controls bounce on the total --
+       It resolves no longer lands the bleed past the bounce; a modifier re-arms the wait; the question carries the tempo's clock;
+       (f) a human target bounces my bleed by chat: 'bounce <name>' and the panel's 'X bounces the bleed to Y', a name by any part that
+       points at one seat, a question for an ambiguous, unknown or own name, only from the bleed's human target; my re-announce re-aims
+       the bleed, a bot at the new seat arms and answers, and an observer counts one action; (g) the panel's line has its event kind.
+       The old bytes lack _spoken, _actClone, _lateWordWait, _seatByNamePart and _humanBounce: every call is guarded.
+       LAST LINE OF 183 is the closing brace below. */
+    {
+      console.log('\n[183] v0.6.237 -- the playtest round: spoken names, Fame on its vampire, lock clones, spread income, the actor’s word, a human’s bounce');
+      const IF3 = (o, fn) => !!(o && typeof o[fn] === 'function');
+      const txt3 = m => m && m.t === 'log' ? String(m.html || '').replace(/<[^>]*>/g, '') : m && m.t === 'chat' ? String(m.msg || '') : '';
+      const V3 = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood: 4, attached: [] }, o || {});
+      const L3 = (id, name, o) => Object.assign({ id, name, kind: 'lib', zone: 'ready', locked: false }, o || {});
+      const mk3 = (name, seat, deck, players, o) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck, paceMs: 0, askSecs: 1, phaseSecs: 0.3, twdKnow: 0, log: () => {} }, o || {}));
+        u.seat = seat; u.started = true; u.players = players.map(p => Object.assign({ online: true }, p)); u.push = () => {}; u.lines = []; u.fxs = []; u.gives = []; u.evs = [];
+        u.fxClone = (c, verb, op) => { u.fxs.push({ name: c && c.name, ck: c && c.kind, verb, kind: (op && op.kind) || 'play', actor: !!(op && op.actor) }); };
+        u.onEvent = (t, m) => { if(/^bot:(bounce-read|through|wait)$/.test(t)) u.evs.push({ t: t.slice(4), m }); };
+        return u; };
+      const wire3 = (from, tos) => { from.send = m => {
+        if(m && m.t === 'give'){ from.gives.push(m); const g = { t: 'given', from: from.o.name, gid: m.gid, name: m.card && m.card.name, kind: m.card && m.card.kind, attachTo: m.attachTo, owner: from.o.name };
+          tos.forEach(to => setTimeout(() => { if(!to.out && to.seat === m.seat) to._dispatch(g); }, 20)); return; }
+        if(m && m.t === 'say'){ from.lines.push({ tier: 'say', txt: SAY[m.i] }); const d = { t: 'say', i: m.i, who: from.o.name }; tos.forEach(to => setTimeout(() => { if(!to.out) to._dispatch(d); }, 20)); return; }
+        if(!m || (m.t !== 'log' && m.t !== 'chat')) return;
+        const tx = txt3(m); from._evRecord(from.o.name, tx, m.t, true); from.lines.push({ tier: m.t, txt: tx });
+        const d = Object.assign({}, m, { who: from.o.name }); tos.forEach(to => setTimeout(() => { if(!to.out) to._dispatch(d); }, 20)); }; };
+
+      // a) SPOKEN NAMES: the group tag off, '(ADV)' kept; the influence sentence and a question; a frozen line untouched
+      { const P = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }]; const u = mk3('Hanna', 1, 'nosferatu', P);
+        const sp = IF3(u, '_spoken') ? u._spoken('Larissa Moreira (G6), Theo Bell (G2 ADV), Kemintiri (ADV), Colette') : null;
+        ok(sp === 'Larissa Moreira, Theo Bell (ADV), Kemintiri (ADV), Colette', '183a a vampire spoken: KRCG’s group tag off, an advanced one keeps (ADV) (got ' + JSON.stringify(sp) + ')');
+        const s1 = u._influenceSentence([{ kind: 'raise', rise: true, n: 3, name: 'Larissa Moreira (G6)' }, { kind: 'raise', rise: false, n: 1, name: 'Wauneka (G6)' }, { kind: 'raise', rise: true, n: 0, name: 'Aunt Linda (G6)' }]);
+        ok(s1 === 'I influence 3 blood to Larissa Moreira, who enters play, and 1 blood to an uncontrolled vampire, and Aunt Linda enters play at capacity.',
+           '183a ...the influence sentence names the vampire as a player says it -- the partial fill still names none (got ' + JSON.stringify(s1) + ')');
+        const ev = u._evClassify('Hanna', s1); ok(!!ev && ev.kind === 'influence' && ev.n === 4, '183a ...and still reads as the same influence event (got ' + JSON.stringify(ev) + ')');
+        u.chats = []; u.chat = t => u.chats.push(t); u._actingVamp = { v: V3('r1', 'Ryan (G6)'), n: 1, target: 2, played: new Set() };
+        const pa = u._askBlock('Trainbot: Ryan (G6) bleeds Viktor for 1. Block?'); await sleep(30);
+        ok(u.chats.length === 1 && /^Trainbot: Ryan bleeds Viktor for 1\. Block\? — say "block" or "no"/.test(u.chats[0]), '183a ...a question to the table names it so too (got ' + JSON.stringify(u.chats) + ')');
+        u._answer('no', 'Viktor'); await pa; u._actingVamp = null; }
+
+      // b) FAME ON ITS VAMPIRE: a whole master phase -- the give, the frozen line, nothing on my board; the receiver links it and arms
+      { const P = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
+        const A = mk3('Hanna', 1, 'nosferatu', P, { askSecs: 0.4 }), D = mk3('Viktor', 2, 'tremere', P, { askSecs: 0.4 });
+        wire3(A, [D]); wire3(D, [A]);
+        const ry = V3('r1', 'Ryan (G6)', { cap: 4 }), na = V3('n1', 'Nassir', { blood: 5, cap: 7 });
+        A.board = [ry]; A.hand = ['Fame']; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1; D.board = [na]; D.hand = []; D.pool = 20; D.turnSeat = 1;
+        A.table = { 2: { pub: { cards: [Object.assign({}, na)] } } }; D.table = { 1: { pub: { cards: [Object.assign({}, ry)] } } };
+        let terr = null; await Promise.race([A._playTurn().catch(e => { terr = e.message; }), sleep(8000)]); await sleep(200);
+        const g = A.gives[0], line = A.lines.some(l => l.tier === 'log' && l.txt === 'Hanna plays Fame — on Viktor\'s Nassir.');
+        ok(!terr && A.gives.length === 1 && g.seat === 2 && g.attachTo === 'n1' && g.card && g.card.name === 'Fame' && /^bot/.test(String(g.gid)) && line && !A.board.some(c => c && c.name === 'Fame'),
+           '183b Fame goes ON the famed vampire: a give to its seat attached to it (a table id), the frozen line as before, nothing on my own board (got ' + JSON.stringify({ terr, gives: A.gives.map(x => ({ seat: x.seat, att: x.attachTo, card: x.card && x.card.name })), line, mine: A.board.map(c => c.name) }) + ')');
+        const fd = D.board.find(c => c && c.name === 'Fame');
+        ok(!!fd && fd.host === 'n1' && (na.attached || []).includes(fd.id) && !!(D._famedMine && D._famedMine.has('Nassir')),
+           '183b ...the receiver links it to Nassir (host, attached) and arms its torpor hook (got ' + JSON.stringify({ fame: fd && { host: fd.host, id: fd.id }, att: na.attached, famed: D._famedMine && [...D._famedMine] }) + ')');
+        const h = mk3('Viktor', 2, 'tremere', P); const ay = V3('c7', 'Ayelech', { x: 300, y: 200 }); h.board = [ay];
+        h._handlers.given({ t: 'given', from: 'Alice', gid: 'h9', name: 'Fame', kind: 'lib', attachTo: 'c7' }); const hf = h.board.find(c => c && c.name === 'Fame');
+        ok(!!hf && hf.host === 'c7' && ay.attached.includes('h9') && hf.x === 300 && hf.y === 200, '183b ...a human’s Fame given onto my vampire lies ON it too, not loose at 64,64 (got ' + JSON.stringify(hf && { host: hf.host, x: hf.x, y: hf.y }) + ')'); }
+
+      // c) A CARDLESS ACTION IS THE VAMPIRE ACTING: the plain bleed through the minion phase is a 'lock' clone with its verb and its aim
+      { const P = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
+        const A = mk3('Hanna', 1, 'nosferatu', P, { askSecs: 0.4 }), D = mk3('Viktor', 2, 'tremere', P, { askSecs: 0.4 }); wire3(A, [D]); wire3(D, [A]);
+        A.board = [V3('r1', 'Ryan (G6)', { cap: 4 })]; A.hand = []; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1; D.board = [V3('n1', 'Nassir', { blood: 5, cap: 7 })]; D.hand = []; D.pool = 20; D.turnSeat = 1;
+        A.table = { 2: { pub: { cards: [V3('n1', 'Nassir', { blood: 5 })] } } }; D.table = { 1: { pub: { cards: [V3('r1', 'Ryan (G6)')] } } };
+        await Promise.race([A._playTurn().catch(() => {}), sleep(8000)]);
+        const vc = A.fxs.filter(f => f.ck === 'crypt' && f.kind !== 'rise');
+        ok(vc.length >= 1 && vc.every(f => f.kind === 'lock' && !f.actor) && vc.some(f => f.verb === 'bleeds for 1 → Viktor'),
+           '183c the plain bleed is a lock clone of the vampire with its verb and aim ("Ryan bleeds for 1 → Viktor"), never a play clone captioned "plays Ryan" (got ' + JSON.stringify(vc) + ')');
+        const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
+        ok(!/this\.fxClone\(v, '(hunts|leaves torpor|rescues |calls a referendum to burn )/.test(src) && (src.match(/this\._actClone\(v, /g) || []).length >= 7,
+           '183c ...and every cardless action site sends one (hunt twice, rescue, leave torpor, burn / steal, the burn referendum, the bleed)'); }
+
+      // d) INCOME MASTERS SPREAD: the vampire with the fewest copies, then the fewest income masters; board order on a tie; the 0-path stacks
+      { const P = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
+        const pick = (k, board, nm) => { const u = mk3('Hanna', 1, 'nosferatu', P, k); u.board = board(); const r = u._hostVampFor(false, null, nm); return r ? r.id : null; };
+        const b1 = () => [V3('a', 'Ryan (G6)', { attached: ['v1'] }), V3('b', 'Belinde (G6)'), V3('c', 'Wauneka (G6)', { attached: ['d1'] }), L3('v1', 'Vessel'), L3('d1', 'Blood Doll')];
+        const b2 = () => [V3('a', 'Ryan (G6)', { attached: ['v1'] }), V3('b', 'Belinde (G6)', { attached: ['v2'] }), L3('v1', 'Vessel'), L3('v2', 'Vessel')];
+        const b3 = () => [V3('a', 'Ryan (G6)', { attached: ['v1'] }), V3('b', 'Belinde (G6)', { attached: ['d1'] }), L3('v1', 'Vessel'), L3('d1', 'Blood Doll')];
+        const got = { one: pick({}, b1, 'Vessel'), tie: pick({}, b2, 'Vessel'), doll: pick({}, b3, 'Blood Doll'), none: pick({}, b1, null), off: pick({ spreadIncome: 0 }, b1, 'Vessel') };
+        ok(got.one === 'b' && got.tie === 'a' && got.doll === 'a' && got.none === 'a' && got.off === 'a',
+           '183d a Vessel goes on the vampire with none and no income master, a tie keeps board order, a Blood Doll where no Doll is yet; no card named = the first, spreadIncome 0 = the first (got ' + JSON.stringify(got) + ')');
+        const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
+        ok(/_hostVampFor\(d\.pick\.archetype, [^\n]*d\.pick\.known && !d\.pick\.archetype \? d\.pick\.name : null\)/.test(src), '183d ...and the master phase names the card for a known income master only (an archetype keeps its own rule)'); }
+
+      // e) THE ACTOR'S WORD before the late bounce (a human bleeds my Ayelech, Deflection in hand, stealth 1 on the counter)
+      { const P = [{ seat: 1, name: 'Johan', bot: false }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Hanna', bot: true }];
+        const mkT = (o) => { const u = mk3('Viktor', 2, 'tremere', P, o); u.sent = []; u.send = m => u.sent.push(m); u.says = []; u.say = p => u.says.push(p); u.chats = []; u.chat = t => u.chats.push(t); u.note = () => {};
+          u.tally = { mode: 'block', a: 1, b: 0 }; u.board = [V3('v1', 'Ayelech', { blood: 5, cap: 8 })]; u.hand = ['Deflection']; u.pool = 20; u.turnSeat = 1;
+          u.table = { 1: { pub: { pool: 20, cards: [V3('j1', 'Lisa')] } }, 3: { pub: { pool: 20, cards: [] } } }; return u; };
+        const bounced = u => u.sent.some(m => /redirected to/.test(txt3(m)));
+        { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(250);
+          const q = u.chats.slice(), waiting = !!(u.pending && u.pending.lateWait); await sleep(1500); const early = bounced(u);
+          u._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await sleep(150);
+          ok(waiting && q.length === 1 && /no block\. Any bleed modifiers\? I may still react to the total — say "no" or "it resolves" when you are done \(3s → I react\)$/.test(q[0]) && !early && bounced(u) && u.pool === 20,
+             '183e a human actor’s total: the question carries the tempo’s clock, no bounce before the word, and It resolves BOUNCES it -- no pool lost (got ' + JSON.stringify({ q, waiting, early, bounced: bounced(u), pool: u.pool }) + ')'); }
+        { const u = mkT({ askSecs: 1 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(600); const early = bounced(u); await sleep(800);
+          ok(!early && bounced(u) && u.pool === 20, '183e ...silence: the clock bounces it, not a fixed grace (got ' + JSON.stringify({ early, late: bounced(u) }) + ')'); }
+        { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(200); u._onLog('Johan', '<b>Lisa</b> adds +1 bleed (= 3).'); await sleep(700);
+          const afterMod = bounced(u), st = u.status(); u._onSay({ who: 'Johan', i: SAY.indexOf('No') }); await sleep(150);
+          ok(!afterMod && st.step === 'resolve-late' && bounced(u) && u.sent.some(m => txt3(m) === 'Lisa bleeds for 3. Target: Hanna\'s pool.'),
+             '183e ...a modifier re-arms the wait (no bounce one react delay later), status names it, and No bounces the total of 3 (got ' + JSON.stringify({ afterMod, step: st.step, lines: u.sent.map(txt3).filter(Boolean) }) + ')'); }
+        { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(200); u._onChat('Johan', 'no more'); await sleep(150); const typed = bounced(u);
+          const v = mkT({ askSecs: 3 }); v._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(200); const r = v.step(); await sleep(100);
+          ok(typed && r.did === 'resolve-late' && bounced(v), '183e ...a typed "no more" and the table controls give the word too (got ' + JSON.stringify({ typed, did: r.did, step: bounced(v) }) + ')'); }
+        { const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
+          ok(!/this\.o\.modGraceMs/.test(src) && /w\.timer = this\._heldTimeout\(\(\) => this\._lateWordGo\(p, 'clock'\), plan\.ms\)/.test(src) && /const plan = this\._waitPlan\('react', p\.who\)/.test(src),
+             '183e ...the wait is a tempo wait (_waitPlan react) on the hold-aware timer; the fixed 4 s grace is gone'); } }
+
+      // f) A HUMAN'S BOUNCE BY CHAT: my bleed at Johan Sigvard; parts of names; questions; only the target; a bot at the new seat answers
+      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan Sigvard', bot: false }, { seat: 3, name: 'Hanna Bergström', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
+        const A = mk3('Viktor', 1, 'ventrue', P, { askSecs: 1.2 }), H = mk3('Hanna Bergström', 3, 'malkavian', P, { askSecs: 1.2 }); wire3(A, [H]); wire3(H, [A]);
+        const parts = q => IF3(A, '_seatByNamePart') ? A._seatByNamePart(q, [3, 4]) : { seat: -1, cands: [] };
+        const nm = { hanna: parts('Hanna').seat, berg: parts('bergstrom').seat, hb: parts('hanna berg').seat, hannes: parts('HANNES').seat, hann: parts('hann'), nobody: parts('xyz').seat };
+        ok(nm.hanna === 3 && nm.berg === 3 && nm.hb === 3 && nm.hannes === 4 && nm.hann.seat === 0 && nm.hann.cands.length === 2 && nm.nobody === 0,
+           '183f a seat by any part of its name: a word, an accent-free surname, the start, any case; two seats = ambiguous, none = none (got ' + JSON.stringify(nm) + ')');
+        A.board = [V3('a1', 'Alice Chen (G6)', { blood: 5, cap: 6 })]; A.hand = []; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
+        H.board = [V3('h1', 'Colette', { cap: 5 })]; H.hand = []; H.pool = 20; H.turnSeat = 1;
+        A.table = { 2: { pub: { cards: [V3('j1', 'Lisa')] } }, 3: { pub: { cards: [V3('h1', 'Colette')] } }, 4: { pub: { cards: [] } } };
+        H.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen (G6)')] } }, 2: { pub: { cards: [V3('j1', 'Lisa')] } }, 4: { pub: { cards: [] } } };
+        let terr = null; const turn = A._playTurn().catch(e => { terr = e.message; });
+        for(let i = 0; i < 80 && !A.lines.some(l => l.tier === 'chat' && /Block\?/.test(l.txt)); i++) await sleep(50);
+        A._onChat('Johan Sigvard', 'bounce hann'); await sleep(40); A._onChat('Johan Sigvard', 'bounce Viktor'); await sleep(40); A._onChat('Johan Sigvard', 'bounce'); await sleep(40);
+        A._onChat('Hannes', 'bounce Hanna'); await sleep(40);
+        const before = A._actingVamp && A._actingVamp.target;
+        A._onChat('Johan Sigvard', 'Johan Sigvard bounces the bleed to Bergström'); await sleep(40);
+        const mid = A._actingVamp && { target: A._actingVamp.target, bounced: A._actingVamp.bounced };
+        await Promise.race([turn, sleep(8000)]);
+        const qs = A.lines.filter(l => l.tier === 'chat').map(l => l.txt);
+        ok(qs.some(t => t === 'Johan Sigvard: which one — Hanna Bergström or Hannes? Type bounce <name> (Hanna Bergström, Hannes).') && qs.some(t => /^Johan Sigvard: my own bleed cannot be bounced to me\./.test(t)) && qs.some(t => /^Johan Sigvard: bounce to whom\?/.test(t)) && before === 2,
+           '183f the target’s ambiguous, own and bare bounces get a question; another seat’s is not read (got ' + JSON.stringify({ before, qs: qs.slice(1, 4) }) + ')');
+        ok(!terr && !!mid && mid.target === 3 && mid.bounced === true && A.lines.some(l => l.tier === 'log' && l.txt === 'Alice Chen (G6) bleeds for 1. Target: Hanna Bergström\'s pool.') && A.evs.some(e => e.t === 'bounce-read' && e.m.to === 'Hanna Bergström'),
+           '183f ...the panel’s line with a part of the name re-aims my bleed: the frozen re-announce, no pump after it, a bounce-read row (got ' + JSON.stringify({ terr, mid, logs: A.lines.filter(l => l.tier === 'log').map(l => l.txt).filter(t => /bleeds/.test(t)) }) + ')');
+        const hRec = H.opp && H.opp[1] && H.opp[1].minions && H.opp[1].minions['Alice Chen (G6)'];
+        ok(H.lines.some(l => l.tier === 'say' && (l.txt === 'Block!' || l.txt === 'No block' || l.txt === 'Pass')) && (H._turnActN | 0) === 1 && !!hRec && hRec.actions === 1 && hRec.bleeds === 1,
+           '183f ...the bot at the new seat arms and answers, and counts one action and one bleed, not two (got ' + JSON.stringify({ h: H.lines.filter(l => l.tier === 'say').map(l => l.txt), n: H._turnActN, rec: hRec && { a: hRec.actions, b: hRec.bleeds } }) + ')'); }
+
+      // f2) AN OBSERVER of the acting bot's re-announce: the same action re-aimed (one action row, one bleed in the minion's record)
+      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan Sigvard', bot: false }, { seat: 3, name: 'Hanna Bergstr\u00f6m', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
+        const O = mk3('Hanna Bergstr\u00f6m', 3, 'malkavian', P); O.turnSeat = 1; O.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen (G6)')] } } };
+        O._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Johan Sigvard\'s pool.'); O._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Hannes\'s pool.');
+        const r = O.opp && O.opp[1] && O.opp[1].minions && O.opp[1].minions['Alice Chen (G6)'];
+        ok((O._turnActN | 0) === 1 && !!r && r.actions === 1 && r.bleeds === 1 && !!O._obs && O._obs.targetSeat === 4,
+           '183f ...an observer reads the acting bot\u2019s re-announce as the same action re-aimed: one action row, one bleed, the aim moved (got ' + JSON.stringify({ n: O._turnActN, rec: r && { a: r.actions, b: r.bleeds }, aim: O._obs && O._obs.targetSeat }) + ')'); }
+
+      // g) THE PANEL'S LINE HAS ITS EVENT KIND
+      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan', bot: false }]; const u = mk3('Viktor', 1, 'ventrue', P);
+        const ev = u._evClassify('Johan', 'Johan bounces the bleed to Hanna');
+        ok(!!ev && ev.kind === 'bounce' && ev.by === 'Johan' && ev.to === 'Hanna', '183g "X bounces the bleed to Y" is a bounce event (got ' + JSON.stringify(ev) + ')'); }
+    }
+
 
 
     }
