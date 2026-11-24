@@ -33,7 +33,7 @@ stayed (O-12's steal pair, BOARD's locked routes but their Eyes of the Wild ride
 What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
-source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's egress; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1, 14.1. Missed: 4.6, 5.2,
+source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's egress; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1, 14.1, 14.2. Missed: 4.6, 5.2,
 8.6, 9.8, 10.1, 10.2, 12.2.
 
 ## 1. Retainers: version and holder
@@ -103,7 +103,7 @@ is a handoff first. Bot-to-bot gaps are marked.
   many cards bounce. Left: a bot that is a bounce's new target cannot bounce onward (that half is the bot's own play); a bounce
   card played from the hand with no ring and no typed line still moves nothing. [B; O-3; the playtest round] · **missed** (the
   onward bounce; v0.6.238's 240, a scratch count: of 597 bounces the new target held a usable bounce of its own in 146, and 62 of
-  those landed on it, 21 of them bleeds of 2 or more, which a first target bounces 345 times of 366) / human.
+  those landed on it, 21 of them bleeds of 2 or more, which a first target bounces every time: 345 of 345) / human.
 - **4.7 A human's Change of Target after a right-click action** names no vampire or another: `_onCot` misses it. Main (11 Nov §1):
   such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. [B] · human (toreador ×2).
 - **4.8 A human's Sudden Reversal at a bot's master**: no line says it cancelled the master (main, 19 Nov). [B: the waves' riders
@@ -387,8 +387,14 @@ Decisions on Claude's priors; each needs a design to Johan before it changes (D-
 A card's replacement, or the hand size's draw-up and discard-down, against the rulebook's drawing cards: "Whenever you play a card
 from your hand, you draw another from your library to replace it (unless card text says otherwise)."
 - **14.1 A card played in another seat's turn is replaced at the bot's own next flush** — `_flushDraws` runs in the bot's own turn
-  only, so a reaction, a block's or a combat's card leaves the hand short until its own master phase (the first v0.6.238 bytes'
-  240: 371 of 2,880 unlock snapshots of rounds 2–4 under 7 cards). [v0.6.238's egress, found on the way] · **active** (every deck).
+  (and after a vote's discard in another seat's referendum), so a reaction, a block's or a combat's card leaves the hand short
+  until its own master phase (the first v0.6.238 bytes' 240: 371 of 2,880 unlock snapshots of rounds 2–4 under 7 cards). [v0.6.238's
+  egress, found on the way] · **active** (every deck).
+- **14.2 A hand size raised in play is drawn up at the next turn start** — "Whenever an effect changes your hand size … immediately
+  discard down to or draw up to match your hand size" (the rulebook); `_recomputeHandSizeBaseline` runs at the turn start only, so
+  Elder Library (+1 hand size) gives its card a turn late (the release bytes' 240: 71 Elder Library plays; the hand stayed at 7 for
+  the rest of that round in 68). Fix sketch: draw up when a hand-size permanent enters play (`_handCount` makes that safe before the
+  flush). [v0.6.238's egress, pass 2] · **active** (malkavian ×1).
 
 ## Not migrated: done since, or not a problem
 - *w1*: the round restrictions (the first-round strikes failing closed, three cards untagged, Riposte in round 1) — read since

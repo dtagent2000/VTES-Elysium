@@ -354,7 +354,8 @@
     the end of turn's discard-down counted the hand alone too. **The Unique gate** (`_inPlayNorms`): a burned or ashed card stays
     in a board and its pub with its zone changed, and counted as in play, so a burned Dreams kept every later copy out for the game
     (sewer runs three). Registered, not fixed: 13.10 (above) and **14.1, active**: a card played in another seat's turn is
-    replaced at the bot's own next flush (the first bytes' 240: 371 of 2,880 unlock snapshots of rounds 2–4 under 7 cards).
+    replaced at the bot's own next flush (the first bytes' 240: 371 of 2,880 unlock snapshots of rounds 2–4 under 7 cards); pass 2
+    added **14.2, active**: a hand size raised in play (Elder Library) is drawn up only at the next turn start.
   - *Prediction 2* (D-93; registered after pass 1, before the release bytes' 240): the hand count and the Unique gate are rules
     corrections. Against the first v0.6.238 bytes' 240 (`1cf70697`): DIVERGED only where malkavian draws up its hand size with a
     replacement owed (Elder Library's entry with a short hand at the next turn start: 19 matches; Dreams' hand-size lock under 7
@@ -362,7 +363,8 @@
     unique card, and their names differ); no malkavian hand above 8 outside a turn of Dreams' +2, nor above 10 in one (66 turns
     above 9 in the first bytes); malkavian's VP/match falls again, by at most 0.15 (within the noise); `ana-gates.py` PASS.
     *Observed* (the release bytes' 240 against the first bytes'): IDENTICAL 199, SAME-PLAY 3, DIVERGED 38, all 41 in matches where
-    malkavian's draw-up ran (Elder Library, Dreams' lock): 29 of the 30 counted and 9 more Elder Library matches — the count read
+    malkavian's draw-up ran (Elder Library, Dreams' lock): DIVERGED 29 of the 30 counted and 9 more Elder Library matches, SAME-PLAY
+    1 and 2 — the count read
     the owed card from the unlock snapshot's hand, but Elder Library's draw-up runs before the unlock phase, so a hand topped up to
     7 hid it (match 8: 6 in hand and 1 owed; 9 cards after, 8 now). No malkavian hand above 8 outside a turn of Dreams' +2, none
     above 10 (109 and 5 in the first bytes); malkavian's VP/match flat, 1.63 → 1.64 (+0.01, SE 0.02), not the fall predicted;
@@ -377,9 +379,10 @@
   - *Found on the way* (Johan's question of 17:03, the starters' bounces; a scratch count on the release bytes' 240 and on the five
     starters, 120 matches at `--seeds 1`): every bounce goes to the bouncer's prey (597 and 292); in the 240, 253 landed on the new
     target for their full amount (457 pool), 321 were blocked by it, 23 came to 0 (the bleeder's Spying Mission, the new target's
-    Protected District); none landed on the bouncer. Toreador, a new target only: 45 taken (102 pool), 19 blocked. A bleed of 2 or
-    more is bounced 345 times of 366 when the target holds a usable bounce; one of 1 mostly taken (the reserve). No new target
-    bounces onward: the register's 4.6, now counted (missed).
+    Protected District); none landed on the bouncer. Toreador, a new target only: 45 taken (102 pool), 19 blocked. A first target
+    holding a usable bounce bounces every bleed of 2 or more (345 of 345) and takes most bleeds of 1 (350 taken, 252 bounced: the
+    reserve). No new target bounces onward (the 21 bleeds of 2 or more taken while holding a bounce were all new targets'): the
+    register's 4.6, now counted (missed).
 - **v0.6.237 (24 Nov 2026; PR #103)** — The playtest round (RULINGS D-136): Johan's offline hotseat, four bots and a human, and his "Yes det
   mesta låter bra" on Claude's analysis, with his change on the bounce (read from chat, not the card). A scratch recording of a
   bots-only hotseat at the client's pace (paceMs 3100, askSecs 20, the four starters, 5 rounds) measured the chat for the next round.
