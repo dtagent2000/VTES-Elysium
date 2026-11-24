@@ -1,4 +1,4 @@
-## [BOTTRINGEN] (24 november 2026, kväll, klient v2.6.187 / srv-2.6.53 oförändrad)
+## [BOTTRINGEN] (24 november 2026, kväll, klient v2.6.187 / srv-2.6.53 oförändrad, PR #102)
 
 Johan: "en effektiv och modern bott-kontrollpanel istället för den vi har just nu". Robotansiktet skulle vara kvar men i
 en cirkel som varje spelare kan dra dit den vill, en segmenterad ring som fälls ut när man hovrar, och robotansiktet
