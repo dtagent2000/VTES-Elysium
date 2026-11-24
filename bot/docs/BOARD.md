@@ -1,10 +1,15 @@
-# BOARD — the open asks (20 Nov 2026, v0.6.236). A line is deleted when done; found work is added as a line (a card
+# BOARD — the open asks (24 Nov 2026, v0.6.237). A line is deleted when done; found work is added as a line (a card
 problem the sweep finds: an entry in `SWEEP-REGISTER.md`, D-135).
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
+- **The chat round** (Johan, 24 Nov: "en ordentlig utvärdering av bottarnas chattande ... vid vanliga bord"; D-136, O-50): the
+  recorder and an `ana-chat.py` in the repo (one seed before / after at the client's pace), one speaker at a time (a table-wide
+  floor between bubbles, ring order on a tie, the vote round driven by the previous voter), bot-to-bot exchanges without the human
+  instructions (O-50 first), no `(bot):` prefix, the silent bot-vs-bot verdict wait (14 s in the recording), and every chat line
+  ruled with Johan. *Done when* the recording shows no bubble over another seat's and each line has his ruling. Docs: D-64, O-50.
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). The bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the vest
   prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an

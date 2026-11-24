@@ -320,6 +320,39 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.237 (24 Nov 2026)** — The playtest round (RULINGS D-136): Johan's offline hotseat, four bots and a human, and his "Yes det
+  mesta låter bra" on Claude's analysis, with his change on the bounce (read from chat, not the card). A scratch recording of a
+  bots-only hotseat at the client's pace (paceMs 3100, askSecs 20, the four starters, 5 rounds) measured the chat for the next round.
+  - *Spoken names* (`_spoken`): a bubble no bot parses (the influence sentence, the questions to the table, "currently has N stealth",
+    the bounce's "now bleeds") names a vampire without KRCG's group tag (`Aunt Linda (G6)` → `Aunt Linda`; `(ADV)` kept). The
+    embedded Nosferatu and Ventrue crypts carry the tag on all nine names; 23 bubbles in the recording. Frozen lines keep the name.
+  - *Fame on its vampire*: a `give` with `attachTo` to the famed vampire's seat (the path a human's Fame takes), the frozen line
+    unchanged; it was tabled on the bot's own mat since N3. `_onGiven` links a card given with `attachTo` to its host (`host`,
+    `attached`, its x/y) — a human's Fame on a bot's vampire lay loose at 64,64. Haven Uncovered, Priority Contract and Pentex keep
+    the tabling (SWEEP-REGISTER 10.14).
+  - *Lock clones* (`_actClone`): a cardless minion action (the plain bleed, with its aim; the hunts, rescue, leaving torpor, a burn
+    or steal, the burn referendum) is an `fx` of kind `lock` with its verb, as the client's own; a `play` clone of the vampire was
+    captioned "<player> plays <vampire>" (10 in the recording).
+  - *Spread income masters* (knob `spreadIncome`, 1; 0 = the first vampire in board order): Blood Doll, Vessel and Dreams of the
+    Sphinx go on the vampire with the fewest copies, then the fewest income masters; a new `income-host` row traces each placement.
+    The 240: 0 of 1,191 placements stacked while a ready vampire of the seat had none (252 of 1,189 with the knob at 0).
+  - *The actor's word* (`_lateWordWait` / `_lateWordGo`): against a HUMAN actor the late bounce waits for the actor's No / Pass / It
+    resolves / No reaction (said or typed `no more`, `done` …) or another modifier (which re-arms it), under the tempo (`_waitPlan`
+    react: the clock in the question, none in Turn-based, a reminder there), hold-aware, steppable (`resolve-late`), a `wait` row
+    (`late: true`). It went after a fixed 4 s (`modGraceMs`, gone) or one react delay after a modifier, and the actor's It resolves
+    applied the bleed with no bounce at all (`_applyPending`), against START-HERE.
+  - *A human's bounce by chat* (`_humanBounce`, `_seatByNamePart`): the client's coming bot panel's `Johan bounces the bleed to Hanna`
+    and a typed `bounce Hanna` (`bounce to …`, `bounced it to …`, `@Bot bounce …`), from the human the bleed is aimed at, chat or log
+    tier; a name by any part that fits one seat; a question for two, none, the bot itself or no name. The bot re-aims, writes its own
+    re-announce (`L12.bleed`; a bot at the new seat arms from it), and gives the new target its block step (`_bouncedTo`). Observers
+    read the acting bot's re-announce of its open bleed as the same action re-aimed (no second action row or bleed in the table
+    model). `_evClassify` kind `bounce`. The card itself is not read (Johan).
+  - *Arena* v1.4.16 (`spreadIncome` in the `--knob` whitelist).
+  - *Tests*: section 183 (23 cases), each red on v0.6.236 but one (the influence event, a non-regression); 119h, 122a, 137k, 182b
+    follow the new wording. *Gates*: see the PR (the suite ×3, canary ×2, hotseat, HB1, main's client suite, lint).
+    *The 240* against v0.6.236 (the version normalized): DIVERGED 136, SAME-PLAY 104 — every divergence the spread's
+    (`--knob spreadIncome=0` against v0.6.236: SAME-PLAY 240); 83 outcomes moved, VP/match within the noise (nosferatu 0.40 → 0.48,
+    malkavian 1.77 → 1.73); `ana-gates.py` PASS 6/6, zeroPool 0. Handoff: `docs/handoffs/HANDOFF-to-main-2026-11-24-v0.6.237.md`.
 - **v0.6.236 (20 Nov 2026)** — The V5 sweep's step B, the Banu Haqim pilot (RULINGS D-134; Johan, 20 Nov: "Kör B:s andra del,
   Banu Haqim-piloten"), on Claude's design: `specs/spec-sweep-pilot-2026-11-20.md` (§3 the design; §4 the predictions, registered
   before the build; §5 the flow's friction; §6 as built and the riders; §7 observed). Built by agents (D-131): one for the data,
@@ -2093,6 +2126,7 @@
 - **elysium-bot-table.js v1.1.0 (11 Sep 2026)** — `--decks a,b,c` rotates the registered ARCHETYPES over the seats (every live-table bot used to play DEFAULT_DECK); CLI main guarded, `parseArgs`/`resolveDeck` exported for the suite.
 
 ## Arena
+- **v1.4.16 (24 Nov 2026)** — the `--knob` whitelist gains `spreadIncome` (bot v0.6.237).
 - **v1.4.8 (17 Oct 2026)** — the `--knob` whitelist gains `dodgeOut` (bot v0.6.205's knob; `--knob dodgeOut=0` was ignored with a warning) and `probeHold` (bot v0.6.206).
 - **v1.4.3 (22 Sep 2026)** — `--knob` whitelist + `combatMind` (bot v0.6.156).
 - **v1.2.9 (16 Sep 2026)** — the v1.0.1 tally seed at match start removed; bot v0.6.113 no longer decides on `caps.tally`, so the arena runs the same block/verdict path a human table does.

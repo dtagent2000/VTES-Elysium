@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.236';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.237';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -12838,6 +12838,10 @@ class Bot {
               if(_n > 0){ card.counters = _n;
                 if((_ec.e.modes || []).some(mo => mo.fx && mo.fx.handSizePerCounter)){ for(let _i = 0; _i < _n; _i++) this.send({ t: 'draw' }); this._handSizePermanentPrev = this._handSizePermanentTotal(); this._replaceExempt = (this._replaceExempt | 0) + 1;
                   this._emit('hand-size-up', { card: d.pick.name, by: _n }); } } }
+            if(host && d.pick.known && !d.pick.archetype){   // v0.6.237: the income master's host, traced -- the spread's own row (spreadIncome); `stacked` = a copy already on it while another ready vampire of mine had none
+              const cp = v => (v.attached || []).filter(id => { const c = this.board.find(x => x && x.id === id); return !!(c && c.kind === 'lib' && !this._outOfPlay(c) && FX_NORM(c.name) === FX_NORM(d.pick.name)); }).length;
+              const on = cp(host), free = this.board.filter(v => v && v !== host && v.kind === 'crypt' && v.zone === 'ready' && cp(v) === 0).length;
+              this._emit('income-host', { card: d.pick.name, host: host.name, copies: on, freeReady: free, stacked: on > 0 && free > 0 }); }
             if(host){ host.attached = host.attached || []; host.attached.push(card.id); }
             this._w5OnTabled(card);   // v0.6.230 (V5 wave 5): The Rack's vampire, Forward Momentum's counters, Frontal Assault's turn
           } else {
