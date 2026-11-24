@@ -1,4 +1,4 @@
-## [RUNDTUREN HINNER IKAPP] (24 november 2026, eftermiddag, klient v2.6.186 / srv-2.6.53 oförändrad)
+## [RUNDTUREN HINNER IKAPP] (24 november 2026, eftermiddag, klient v2.6.186 / srv-2.6.53 oförändrad, PR #101)
 
 Johan: "JAg tänkte om vi vill inventera och utvärdera vår tutorial eftersom vi fixat en del grejer och även kosmetiskt
 som kanske ändrat något". Jag körde alla tolv kapitel, 199 steg, i headless Chromium med riktiga musrörelser och
