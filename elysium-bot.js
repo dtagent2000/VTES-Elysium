@@ -10911,9 +10911,9 @@ class Bot {
         else if(seat && av.bounced && av.target === seat) this.o.log('re-announce of my bleed at ' + poolT + ' told twice (' + who + ') -- one bounce');
         else if(human && seat && this._acting && !this._ask){ if(!(av.pendingBounce && av.pendingBounce.seat === seat)){ av.pendingBounce = { seat, by: who, line: t.slice(0, 60) }; this.o.log('bounce read (a re-announce between my windows, my next step applies it): ' + who + ' \u2192 ' + poolT); } }
         else {
-        if(seat) av.target = seat;
-        av.bounced = true;   // v0.6.144 (Johan): a bot very rarely pumps a bleed AFTER it was bounced (only a strong meta reason -- table talk a bot does not have)
-        av.reactionsSeen = true;   // fas C: a bounce IS a reaction card played -- Perfectionist's clean-action test fails
+        if(seat) this._actingVamp.target = seat;
+        this._actingVamp.bounced = true;   // v0.6.144 (Johan): a bot very rarely pumps a bleed AFTER it was bounced (only a strong meta reason -- table talk a bot does not have)
+        this._actingVamp.reactionsSeen = true;   // fas C: a bounce IS a reaction card played -- Perfectionist's clean-action test fails
         if(seat) this._bouncedTo(seat);          // v0.6.203: the new target's block step, and the open ask follows the bleed
         }
       }
