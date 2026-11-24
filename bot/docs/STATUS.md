@@ -10,17 +10,18 @@ canary v1.5.0; the root's release is client v2.6.187 / srv-2.6.53 (the canary's 
 top of it #105, Dreams of the Sphinx (branch `bot-dreams-fix`, v0.6.238; the register's 8.11, Johan's go of 24 Nov): #103 first.
 Main's #104 (client v2.6.188: the ring at the pointer; no wire change) is open: merged first, STATUS's root line follows it.
 
-## Last gates (v0.6.238's release bytes, `1cf70697`)
-24 Nov: the suite 2792/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.187), main's v1.6.0 247/0 · hotseat 12/0 · HB1
-11/0 · lint clean · main's client suite (v2.6.187) 422/1 (the guide's embed) · section 184 7/0 (6 red on v0.6.237) · the 240
-against v0.6.237: IDENTICAL 135, SAME-PLAY 9, DIVERGED 96, every divergence malkavian's first lock of Dreams; malkavian −0.10
-VP/match (SE 0.06), the prediction held · `ana-gates.py` PASS 6/6. v0.6.237's gates: its CHANGELOG entry.
+## Last gates (v0.6.238's release bytes, `0648bf88`)
+24 Nov: the suite 2796/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.187), main's v1.6.0 247/0 · hotseat 12/0 · HB1
+11/0 · lint clean · main's client suite (v2.6.187) 422/1 (the guide's embed) · section 184 11/0 · the 240 against v0.6.237:
+IDENTICAL 120, SAME-PLAY 8, DIVERGED 112, every divergence malkavian's; malkavian −0.09 VP/match (SE 0.06) · `ana-gates.py`
+PASS 6/6. The predictions (D-93): the CHANGELOG. v0.6.237's gates: its entry.
 
 ## Next
-1. **The chat round** (BOARD; D-136): Johan on O-50 (24 Nov): the bubbles stay, the humans follow the play; whether shorter he
-   asked Claude. Claude's answer (one speaker at a time, the content kept; the recording's cost +24 to +36 % of the time) waits
-   for his kör. Then the recorder, the chat tool, the lines ruled with him. `askHumansTotal` (C5) belongs near it.
-2. The sweep register (D-135): its active entries (7.1, 7.2, 8.3, 11.1), class 1 (R-47); 4.6's onward bounce counted, missed.
+1. **The chat round** (BOARD; D-136): Johan on O-50 (24 Nov, RULINGS): bubbles; whether shorter he asked Claude. Claude's
+   answer (one speaker at a time, the content kept) waits for his kör. Then the recorder, the chat tool, the lines ruled with
+   him. `askHumansTotal` (C5) belongs near it.
+2. The sweep register (D-135): its active entries (7.1, 7.2, 8.3, 11.1, 14.1), not in v0.6.237 or v0.6.238 (Johan's detour,
+   then his go on Dreams alone): the next round's, unless he says otherwise (asked); class 1 (R-47); 4.6's onward bounce, missed.
 3. v2.6.187 consumed: the guide's hub, ring and bot box (main's ask 2), the read-only copies refreshed. And
    `test-cardfx` red on main's daily runs since 22 Nov (KRCG's data moved; no card change of ours): a round of its own.
 4. **C**, concentrated (spec-card-sweep §11.8, D-132): C1 the cross-check tool, then the first reader's round (§11.6).

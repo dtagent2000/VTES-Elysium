@@ -361,16 +361,25 @@
     cards: 11), at most 30 matches; IDENTICAL elsewhere (the Unique gate changes no play: every starter runs one copy of each
     unique card, and their names differ); no malkavian hand above 8 outside a turn of Dreams' +2, nor above 10 in one (66 turns
     above 9 in the first bytes); malkavian's VP/match falls again, by at most 0.15 (within the noise); `ana-gates.py` PASS.
-  - *Tests*: section 184 (7 cases), 6 red on v0.6.237 (green: the choice of a master, a non-regression); 183d's source pin follows
-    the host rule's name (`_hostInc`). *Gates* (the release bytes `1cf70697` / `3e409f8c`, cardfx `b937ae3d` unchanged): the suite
-    2792/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.187), main's canary v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean,
-    main's client suite (v2.6.187) 422/1 (the guide's embed), `client/check-versions.js` everything agrees. No arena smoke: neither
-    the wire nor the real clock changed.
-  - *Found on the way* (Johan's question of 17:03, the starters' bounces; a scratch count on the 240 and on the five starters,
-    120 matches at `--seeds 1`): every bounce goes to the bouncer's prey (595 and 292); in the 240, 255 landed on the new target
-    for their full amount (459 pool), 317 were blocked by it, 23 came to 0 (the bleeder's Spying Mission, the new target's
-    Protected District); none landed on the bouncer. A bleed of 2 or more is bounced 345 times of 366 when the target holds a
-    usable bounce; one of 1 mostly taken (the reserve). No new target bounces onward: the register's 4.6, now counted (missed).
+    *Observed* (the release bytes' 240 against the first bytes'): IDENTICAL 199, SAME-PLAY 3, DIVERGED 38, all 41 in matches where
+    malkavian's draw-up ran (Elder Library, Dreams' lock): 29 of the 30 counted and 9 more Elder Library matches — the count read
+    the owed card from the unlock snapshot's hand, but Elder Library's draw-up runs before the unlock phase, so a hand topped up to
+    7 hid it (match 8: 6 in hand and 1 owed; 9 cards after, 8 now). No malkavian hand above 8 outside a turn of Dreams' +2, none
+    above 10 (109 and 5 in the first bytes); malkavian's VP/match flat, 1.63 → 1.64 (+0.01, SE 0.02), not the fall predicted;
+    `ana-gates.py` PASS 6/6. The mechanism held; the count and the VP's direction did not (a map, D-93). Against v0.6.237 (the
+    version normalized): IDENTICAL 120, SAME-PLAY 8, DIVERGED 112, every divergence malkavian's; malkavian 1.73 → 1.64 (−0.09,
+    paired SE 0.06), ventrue +0.12 (95 % [+0.02, +0.22]).
+  - *Tests*: section 184 (11 cases): 10 red on v0.6.237 (green: the choice of a master, a non-regression), and f–i (the hand
+    count, the Unique gate) red on the first v0.6.238 bytes; 183d's source pin follows the host rule's name (`_hostInc`). *Gates*
+    (the release bytes `0648bf88` / `3bb1df3e`, cardfx `b937ae3d` unchanged): the suite 2796/0 ×3, canary 235/0 ×2 (the copies;
+    the root's v2.6.187), main's canary v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.187) 422/1 (the
+    guide's embed), `client/check-versions.js` everything agrees. No arena smoke: neither the wire nor the real clock changed.
+  - *Found on the way* (Johan's question of 17:03, the starters' bounces; a scratch count on the release bytes' 240 and on the five
+    starters, 120 matches at `--seeds 1`): every bounce goes to the bouncer's prey (597 and 292); in the 240, 253 landed on the new
+    target for their full amount (457 pool), 321 were blocked by it, 23 came to 0 (the bleeder's Spying Mission, the new target's
+    Protected District); none landed on the bouncer. Toreador, a new target only: 45 taken (102 pool), 19 blocked. A bleed of 2 or
+    more is bounced 345 times of 366 when the target holds a usable bounce; one of 1 mostly taken (the reserve). No new target
+    bounces onward: the register's 4.6, now counted (missed).
 - **v0.6.237 (24 Nov 2026; PR #103)** — The playtest round (RULINGS D-136): Johan's offline hotseat, four bots and a human, and his "Yes det
   mesta låter bra" on Claude's analysis, with his change on the bounce (read from chat, not the card). A scratch recording of a
   bots-only hotseat at the client's pace (paceMs 3100, askSecs 20, the four starters, 5 rounds) measured the chat for the next round.

@@ -59,7 +59,9 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    total 3.1 KB (185,140 bytes).
 #    RULINGS 72 -> 73 KB and the total 186 -> 187 KB on 24 Nov (bot v0.6.237, the playtest round): Johan's D-136 and the open O-50,
 #    BOARD's chat round. Nothing cut: the register's history went in the rounds of 20 Nov; RULINGS stood 0.97 KB over, the total 14 bytes.
-PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:73000 $D/LESSONS.md:20500
+#    RULINGS 73 -> 73.5 KB the same day (bot v0.6.238, Dreams of the Sphinx): Johan's partial answer on O-50, his words; the register
+#    stood 4 bytes under its ceiling (its egress review, pass 1: STATUS said it while RULINGS said "not answered").
+PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:73500 $D/LESSONS.md:20500
        $D/ARCHITECTURE.md:17000 $D/HARNESS.md:9000 $D/HOWTO.md:23500"
 total=0
 for pb in $PAGES; do
