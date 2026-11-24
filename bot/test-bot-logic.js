@@ -16324,7 +16324,10 @@ async function connectWithRetry(client, tries = 30){
        and on that board the unlock phase gains nothing without the Edge, one lock for 1 pool and a counter with it; (c) a Dreams
        already on a vampire (the old placement) is paid nothing by the phase income -- a lock mode is a choice, read by
        _considerLockIncome only; (d) the spread counts no Dreams as an income master on a vampire; (e) with no vampire in play it is
-       still played (a host's income is held then).
+       still played (a host's income is held then). The egress review: (f) the hand-size lock counts the replacements owed (the
+       master phase's flush drew them twice: the rulebook's 'cards that are replaced later reduce your hand size', [ANK 20180318]),
+       and so do (g) Elder Library's draw-up at the turn start and (h) the end of turn's discard-down; (i) a burned or ashed copy
+       is out of play: the Unique gate lets the next copy in (mine or another seat's), a live one still keeps it out.
        The old bytes lack _hostIncome: its call is guarded.
        LAST LINE OF 184 is the closing brace below. */
     {
@@ -16372,6 +16375,30 @@ async function connectWithRetry(client, tries = 30){
         const d = u.board.find(c => c && c.name === DS);
         ok(!terr && !!d && !d.host && u.pool === 9 && !u.hand.includes(DS),
            '184e with no vampire in play Dreams of the Sphinx is still played, on my board (got ' + JSON.stringify({ terr, inPlay: !!d, pool: u.pool, hand: u.hand }) + ')'); }
+
+      // f) THE HAND-SIZE LOCK COUNTS THE REPLACEMENTS OWED: 5 in hand, 2 owed, +2 -- the lock draws 2, the flush 2 (9 in all)
+      { const u = mk4(); u.board = [L4('d1', DS)]; u.unc = []; u.hand = Array(5).fill('Govern the Unaligned'); u._drawOwed = 2; u._replHold = []; u.pool = 10;
+        await u._considerLockIncome('master'); const atLock = u.sent.filter(m => m && m.t === 'draw').length; u._flushDraws();
+        const all = u.sent.filter(m => m && m.t === 'draw').length, line = u.sent.map(txt4).find(l => /hand size/.test(l));
+        ok(atLock === 2 && all === 4 && /drawing 2 cards up to the new limit/.test(String(line)) && u.board[0].locked === true,
+           '184f the hand-size lock counts the replacements owed: 5 in hand and 2 owed under +2 draw 2 at the lock and 2 at the flush, 9 in all (got ' + JSON.stringify({ atLock, all, line }) + ')'); }
+
+      // g) ELDER LIBRARY'S DRAW-UP at the turn start counts them too: 6 in hand, 1 owed, hand size 8 -- one draw
+      { const u = mk4(); u.board = [V4('v1', 'Donny Kowalczyk'), L4('e1', 'Elder Library')]; u._handSizePermanentPrev = 0; u.hand = Array(6).fill('Govern the Unaligned'); u._drawOwed = 1;
+        u._recomputeHandSizeBaseline(); const n = u.sent.filter(m => m && m.t === 'draw').length;
+        ok(n === 1, '184g Elder Library\u2019s draw-up at the turn start counts the replacement owed: 6 in hand and 1 owed draw 1 to 8 (got ' + n + ')'); }
+
+      // h) THE END OF TURN'S DISCARD-DOWN counts them: +2 expires with 9 in hand and 1 owed -- down to 6 (7 with the owed card)
+      { const u = mk4(); u.board = []; u.hand = Array(9).fill('Govern the Unaligned'); u._drawOwed = 1; u._handSizeBonus = 2;
+        u._revertHandSizeBonus();
+        ok(u.hand.length === 6, '184h the end of turn\u2019s discard-down counts the replacement owed: 9 in hand and 1 owed under an expiring +2 keep 6 (got ' + u.hand.length + ')'); }
+
+      // i) THE UNIQUE GATE: a burned or ashed copy is out of play -- the next copy may come in (mine or another seat's); a live one keeps it out
+      { const mk = (mine, theirs) => { const u = mk4(); u.board = mine ? [L4('b1', DS, { zone: mine, counters: 3 })] : []; u.table = { 2: { pub: { pool: 20, cards: theirs ? [L4('t1', DS, { zone: theirs })] : [] } } };
+          u.hand = [DS]; u.pool = 10; return u._bestMasterFor(new Set()).some(x => x.name === DS); };
+        const got = { burned: mk('burned', null), ash: mk('ash', null), live: mk('ready', null), theirsBurned: mk(null, 'burned'), theirsLive: mk(null, 'ready') };
+        ok(got.burned && got.ash && !got.live && got.theirsBurned && !got.theirsLive,
+           '184i the Unique gate: a burned or ashed Dreams of the Sphinx is out of play (mine or another seat\u2019s) and the next copy may be played; a live one keeps it out (got ' + JSON.stringify(got) + ')'); }
 
       // d) THE SPREAD: a Dreams on a vampire is no income master there -- two vampires tie, board order picks
       { const u = mk4(); u.board = [V4('a', 'Donny Kowalczyk', { attached: ['d1'] }), V4('b', 'Ashley'), L4('d1', DS, { host: 'a' })];

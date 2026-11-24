@@ -330,7 +330,8 @@
   - *The host rule* (`_hostIncome`): a host's income is a phase-tagged `poolGain` / `bloodToPool` on a mode with no lock (Blood
     Doll, Vessel). The finder's row for a known income asset whose income is a lock only says `lockIncome` (Dreams' alone); the
     master phase puts a known asset on a vampire only when its income is a host's (`_hostInc`), so Dreams goes on the bot's own
-    board, with or without a vampire in play (it was held with none). The choice of a master is unchanged: `known` still counts
+    board, with or without a vampire in play when it is the pick (it was held with none; a Blood Doll or Vessel picked first with
+    no vampire still ends the phase: the register's 13.10). The choice of a master is unchanged: `known` still counts
     Dreams for `decide('master-play')` (a trifle first, Dreams in the same phase). The spread's count of income masters on a
     vampire and `_applyPhaseIncome` read the same rule (a lock mode is a choice, never paid by the phase).
   - *Prediction* (D-93; registered before the 240): a rules correction, so a footprint only where the card is. Against v0.6.237's
@@ -345,6 +346,21 @@
     an uncontrolled vampire 158, the Edge's pool 62, the hand size 22), 66 copies burned at their third counter, none locked a
     fourth time; malkavian 1.73 → 1.63 VP/match (−0.10, paired SE 0.06, 95 % [−0.21, +0.01]; wins 107 → 97), ventrue +0.11
     (95 % [+0.02, +0.20]); `ana-gates.py` PASS 6/6, zeroPool 0. The prediction held.
+  - *The egress review's pass 1* (7 findings) found two rules faults the freestanding card made live, fixed here (D-92): **the
+    hand count** (`_handCount`: the hand and the replacements owed, `_drawOwed`; the rulebook's drawing cards, "cards that are
+    replaced later reduce your hand size", and [ANK 20180318]): Dreams' +2 drew up from the hand alone and the master phase's
+    flush then drew the owed cards again (11 of the 22 hand-size locks, 17 cards); Elder Library's draw-up at the turn start did the
+    same since v0.6.33 (the hand then stayed over its size for the game: 66 malkavian turns above 9 cards in v0.6.237's 240), and
+    the end of turn's discard-down counted the hand alone too. **The Unique gate** (`_inPlayNorms`): a burned or ashed card stays
+    in a board and its pub with its zone changed, and counted as in play, so a burned Dreams kept every later copy out for the game
+    (sewer runs three). Registered, not fixed: 13.10 (above) and **14.1, active**: a card played in another seat's turn is
+    replaced at the bot's own next flush (the first bytes' 240: 371 of 2,880 unlock snapshots of rounds 2–4 under 7 cards).
+  - *Prediction 2* (D-93; registered after pass 1, before the release bytes' 240): the hand count and the Unique gate are rules
+    corrections. Against the first v0.6.238 bytes' 240 (`1cf70697`): DIVERGED only where malkavian draws up its hand size with a
+    replacement owed (Elder Library's entry with a short hand at the next turn start: 19 matches; Dreams' hand-size lock under 7
+    cards: 11), at most 30 matches; IDENTICAL elsewhere (the Unique gate changes no play: every starter runs one copy of each
+    unique card, and their names differ); no malkavian hand above 8 outside a turn of Dreams' +2, nor above 10 in one (66 turns
+    above 9 in the first bytes); malkavian's VP/match falls again, by at most 0.15 (within the noise); `ana-gates.py` PASS.
   - *Tests*: section 184 (7 cases), 6 red on v0.6.237 (green: the choice of a master, a non-regression); 183d's source pin follows
     the host rule's name (`_hostInc`). *Gates* (the release bytes `1cf70697` / `3e409f8c`, cardfx `b937ae3d` unchanged): the suite
     2792/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.187), main's canary v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean,

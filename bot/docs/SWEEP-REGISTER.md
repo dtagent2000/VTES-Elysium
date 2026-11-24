@@ -33,8 +33,8 @@ stayed (O-12's steal pair, BOARD's locked routes but their Eyes of the Wild ride
 What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
-source; 7–13: the migration's sorting, Claude's; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 4.6, 5.2, 8.6,
-9.8, 10.1, 10.2, 12.2.
+source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's egress; Johan orders them). Active entries: 7.1, 7.2, 8.3, 11.1, 14.1. Missed: 4.6, 5.2,
+8.6, 9.8, 10.1, 10.2, 12.2.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -378,6 +378,17 @@ Decisions on Claude's priors; each needs a design to Johan before it changes (D-
 - **13.8 The voter's preview** skips a Silverson-class tax and an Alexa-class discard. [w6 §9.5] · reachable (ventrue holds Alexa
   Draper).
 - **13.9 Forced Confessional [dom]** unseen in 12 matches: a pricing question first (L-9). [w6 §8] · reachable (salubri ×4).
+- **13.10 A host's income with no host ends the master phase** — a Blood Doll or Vessel picked with no vampire to carry it `break`s
+  the master phase's loop, so a later candidate (Dreams of the Sphinx, a Location) waits a turn; Guardian Angel's own case tries
+  the next. [v0.6.238's egress] · reachable (the first v0.6.238 bytes' 240: Dreams behind such a pick 4 times, never with no
+  vampire).
+
+## 14. Hand size and replacement
+A card's replacement, or the hand size's draw-up and discard-down, against the rulebook's drawing cards: "Whenever you play a card
+from your hand, you draw another from your library to replace it (unless card text says otherwise)."
+- **14.1 A card played in another seat's turn is replaced at the bot's own next flush** — `_flushDraws` runs in the bot's own turn
+  only, so a reaction, a block's or a combat's card leaves the hand short until its own master phase (the first v0.6.238 bytes'
+  240: 371 of 2,880 unlock snapshots of rounds 2–4 under 7 cards). [v0.6.238's egress, found on the way] · **active** (every deck).
 
 ## Not migrated: done since, or not a problem
 - *w1*: the round restrictions (the first-round strikes failing closed, three cards untagged, Riposte in round 1) — read since

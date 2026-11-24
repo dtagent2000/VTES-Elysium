@@ -1722,10 +1722,10 @@ class Bot {
     return true;
   }
   _inPlayNorms(){                    // norm'd names IN PLAY table-wide (ready/torpor; uncontrolled is not in play)
-    const out = new Set();
-    this.board.forEach(c => { if(c.zone !== 'uncontrolled' && c.name) out.add(FX_NORM(c.name)); });
+    const out = new Set();   // v0.6.238 (the egress review): nor a card that left play -- a burned or ashed card stays in a board (and its pub) with its zone changed (_outOfPlay), and a burned Dreams of the Sphinx (3 counters) kept every later copy out of play for the game
+    this.board.forEach(c => { if(c.zone !== 'uncontrolled' && c.name && !this._outOfPlay(c)) out.add(FX_NORM(c.name)); });
     Object.values(this.table).forEach(t => (t.pub && t.pub.cards || []).forEach(c => {
-      if(c.zone !== 'uncontrolled' && c.name && !c.faceDown) out.add(FX_NORM(c.name));
+      if(c.zone !== 'uncontrolled' && c.name && !c.faceDown && !this._outOfPlay(c)) out.add(FX_NORM(c.name));
     }));
     return out;
   }
@@ -7323,13 +7323,16 @@ class Bot {
     });
     return total;
   }
+  _handCount(){                      // v0.6.238 (the egress review): the cards that count against the hand size -- the hand and the replacements owed (_drawOwed: drawn at the next _flushDraws, or held by a card's 'Do not replace until'). The rulebook (drawing cards): 'The number of cards in your hand should always match your hand size (cards that are replaced later reduce your hand size for the duration of the effect)'; [ANK 20180318]: 'Cards that are not replaced count against the hand size.' A draw-up that read the hand alone drew the owed cards twice (Dreams' +2 in the master phase, Elder Library's entry at the turn start: the flush that follows draws them again)
+    return this.hand.length + (this._drawOwed | 0);
+  }
   _recomputeHandSizeBaseline(){   // v0.6.33: the passive-permanent sibling of _recomputePhaseActs's own "refresh the baseline from whatever's in play right now" pattern -- called once per turn (turn start). A NEWLY entered permanent (Elder Library etc.) means the true target rose since last check; draw up to it now, mirroring the same "immediately draw up to your hand size" rule Dreams of the Sphinx's temporary bonus already implements. Never discards on a DECREASE (a permanent leaving play mid-game is rare and not handled this round -- documented, not silently wrong: this only ever draws up, never claims to shed the difference).
     const total = this._handSizePermanentTotal();
     const prev = this._handSizePermanentPrev || 0;
     this._handSizePermanentPrev = total;
     if(total > prev){
       const target = 7 + total + (this._handSizeBonus || 0);
-      const owed = target - this.hand.length;
+      const owed = target - this._handCount();   // v0.6.238: the replacements owed count (_handCount)
       for(let i = 0; i < owed; i++) this.send({ t: 'draw' });
     }
   }
@@ -7348,7 +7351,7 @@ class Bot {
   _revertHandSizeBonus(){   // v0.6.32 (Johan's ask, continuing Dreams of the Sphinx): extracted from the discard-phase loop specifically so it's directly testable on its own -- "until the end of the turn" expires HERE (discard phase is the turn's last phase), and per the SAME rule that granted it ("discard down to or draw up to your hand size" whenever it changes), reverting to the base 7 means discarding any excess now. Prefers a genuinely dead-hand card if one remains (worthless to hold regardless); falls back to the front of the hand for any remainder -- WHICH excess card to shed is a real strategic question this v1 doesn't weigh, matching Dreams of the Sphinx's own "ignore the 3-counter budget" simplification already noted at the lock-income decide() case.
     if(!(this._handSizeBonus > 0)) return;
     const base = 7 + this._handSizePermanentTotal();   // v0.6.33: revert to base+PERMANENT, not flat 7 -- a temporary bonus expiring should never strip away Elder Library etc.'s own still-active permanent contribution
-    let excess = this.hand.length - base;
+    let excess = this._handCount() - base;   // v0.6.238: the replacements owed count (_handCount)
     while(excess > 0){
       const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt');
       let di = this._deadHandIndex(this._deadJudgeVamps());   // v0.6.200 (point 22): dead = no vampire of mine can use it
@@ -7463,7 +7466,7 @@ class Bot {
           this.push();
         } else if(typeof mo.fx.handSize === 'number'){
           const target = 7 + this._handSizePermanentTotal() + (this._handSizeBonus || 0) + mo.fx.handSize;   // v0.6.32/33 (Johan's ask, continuing Dreams of the Sphinx): source-verified vekn.net first -- hand size is NOT a passive ceiling, it's an ACTIVE target: "whenever they don't match... immediately discard down to or draw up to your hand size". 7 is VTES's universal base, UNIFIED with any permanent sources already in play (Elder Library etc.) and any temporary bonus already active THIS turn (a second lock-based card, stacking) -- computing this mode's amount in isolation would under-draw whenever another source is simultaneously active. Only worth locking if there's something to actually gain THIS moment (hand already below the new target) -- otherwise it spends one of the card's 3 total lock-uses for zero benefit, same "don't waste a lock" spirit as Life in the City's own capacity check.
-          const owed = target - this.hand.length;
+          const owed = target - this._handCount();   // v0.6.238 (the egress review): the replacements owed count -- the master phase's _flushDraws draws them after this lock (11 of the first v0.6.238 bytes' 22 hand-size locks drew them twice)
           if(owed <= 0) continue;
           const d = this.decide('lock-income', { name: c.name, kind: 'handSize', amount: mo.fx.handSize });
           if(!d.lock) continue;
