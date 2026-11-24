@@ -8669,9 +8669,7 @@ class Bot {
        (the arena) is unchanged. */
     if(this.o.paceMs && ((this.players || []).find(q => q && q.name === p.who) || {}).bot) p._thinkQ = true; else this.say('Hold on\u2026');
     const stealthA = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : 0;
-    p._lateGen = (p._lateGen | 0) + 1;   // v0.6.204: a grace still waiting for the wire is void too
     if(p.lateWait) this._lateWordEnd(p, 'answer');   // v0.6.237: the human actor's modifier ended the wait for their word (it re-arms below when the bounce still waits for the total)
-    if(p.lateTimer){ if(p.lateTimer.cancel) p.lateTimer.cancel(); else clearTimeout(p.lateTimer); p.lateTimer = null; }   // v0.6.198: a hold-aware handle (_heldTimeout)
     const cpD = this._critPool(), actorP = (this.players || []).find(q => q.name === p.who) || {};
     const sbRead = actorSeat ? ((this.oppAxes(actorSeat).axes || []).includes('stealth-bleed') || this.oppStealth(actorSeat) >= 1) : false;   // 'this predator is a stealth bleeder': what the table model has seen (clan / disciplines / a TWD baseline are the later, better reads -- Johan)
     const pumpSeen = actorSeat ? Math.max(0, ...Object.values((this._opp(actorSeat).minions) || {}).map(mm => mm.hitMax | 0)) : 0;
@@ -10471,9 +10469,7 @@ class Bot {
     if(!this.pending) return;
     this._flushRelock(this.pending, reason);
     if(this.pending.passTimer) clearTimeout(this.pending.passTimer);
-    this.pending._lateGen = (this.pending._lateGen | 0) + 1;   // v0.6.204: a grace still waiting for the wire dies too
     if(this.pending.lateWait) this._lateWordEnd(this.pending, 'answer');   // v0.6.237: the wait for the actor's word dies with its pending
-    if(this.pending.lateTimer){ if(this.pending.lateTimer.cancel) this.pending.lateTimer.cancel(); else clearTimeout(this.pending.lateTimer); }   // v0.6.198: the late-bounce grace dies with its pending
     this.o.log('pending cleared (' + reason + ')');
     this.pending = null;
   }
@@ -12756,7 +12752,7 @@ class Bot {
                vampire, a `give` with `attachTo` to its seat -- the path a human's Fame takes onto another seat's vampire (the
                client's qrGiveToTarget); since N3 it was tabled on MY board (the M2 placement). The receiver links it to its host
                (_onGiven). Haven Uncovered, Priority Contract and Pentex keep the tabling: their readers look for the card on the
-               placer's board (SWEEP-REGISTER 10.13). */
+               placer's board (SWEEP-REGISTER 10.14). */
             this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> plays <b>Fame</b> \u2014 on <b>' + esc(this.seatName(_fmT.seat)) + "</b>'s <b>" + esc(_fmT.name) + '</b>.' });
             this.send({ t: 'give', seat: _fmT.seat, gid: this.gid(), attachTo: _fmT.id || null, rx: 0.5, ry: 0.5, card: { name: d.pick.name, kind: 'lib', faceDown: false, locked: false, owner: this.o.name } });
             this._famedSeen = this._famedSeen || {};

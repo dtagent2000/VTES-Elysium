@@ -97,9 +97,11 @@ is a handoff first. Bot-to-bot gaps are marked.
   read them, or never skip step 1.
 - **4.5 The ban on the opponent's side** — Mind of the Wilds [ANI][AUS] (the action), Dog Pack (every combat with the employer),
   Sanguine Entrapment (the round): the banned side does not read it. [pilot] · latent (no deck holds them).
-- **4.6 A human's bounce of a bot's bleed** is not read by the acting bot; a bot that is a bounce's new target cannot bounce onward
-  (that half is the bot's own play). [B; O-3] · human (Deflection in eight decks) / reachable (the onward bounce between bots:
-  malkavian, tremere and ventrue hold Deflection) · parse the client's bounce play line (a pool target), section-tested.
+- **4.6 The bounce's other halves** — a human's bounce of a bot's bleed is read from chat since v0.6.237 (D-136: the client panel's
+  `X bounces the bleed to Y`, a typed `bounce <name>`; the card's play line is not read, Johan: many cards bounce). Left: a bot that
+  is a bounce's new target cannot bounce onward (that half is the bot's own play); a HUMAN's bleed bounced by a human to a bot (no
+  bot actor writes the re-announce, so the bot never arms; the bounce line names no vampire or amount). [B; O-3; the playtest
+  round] · reachable (the onward bounce between bots: malkavian, tremere and ventrue hold Deflection) / human.
 - **4.7 A human's Change of Target after a right-click action** names no vampire or another: `_onCot` misses it. Main (11 Nov §1):
   such a line from the blocked seat within `_myBlockOf`'s 30 s is that vampire's. [B] · human (toreador ×2).
 - **4.8 A human's Sudden Reversal at a bot's master**: no line says it cancelled the master (main, 19 Nov). [B: the waves' riders
@@ -287,6 +289,11 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   [w6 §8; B: the locked routes' last rungs] · reachable (gangrel holds Eyes of the Wild ×6).
 - **10.13 Waits for bot diablerie** (O-15) — Depravity's stealth, Regent's move to the diablerist: bots never diablerise. [w4] ·
   latent.
+- **10.14 Haven Uncovered, Priority Contract and Pentex™ Subversion lie on the placer's mat**, not on the vampire they were put on
+  (since M2 / N3; Fame moved onto its vampire in v0.6.237, D-136): the effect rides the frozen line, but the table shows the card in
+  the wrong place, and the placer-side readers (`_havenHosts`, `_contractLive`, `_pentexWatch`) look for it on the placer's board. A
+  give with `attachTo` needs those readers moved to the host's board, and Priority Contract's own burn a `recall` (the bots handle
+  none). [the playtest round, 24 Nov] · reachable (nosferatu, tremere, banuhaqim; presentation: the effect is right).
 
 ## 11. Windows: who is asked, and when
 Who may answer an action or a card, and in which window; a line read after its window closed.

@@ -7773,7 +7773,7 @@ async function connectWithRetry(client, tries = 30){
   ok(/adds \+0 bleed \(= ' \+ this\._actingVamp\.n \+ '\)\./.test(src119) && /\(tgtBot \|\| humanWantsTotal\) && !pumped && curAns\.what !== 'block' && !this\._actingVamp\.bounced/.test(src119), '119f ACTOR: a bleed that was not pumped opens ONE reactions-only window on its total, in the frozen L12.add grammar (+0) -- before, it resolved with no window and a held bounce was lost');
   ok('<b>Alice Chen</b> adds +0 bleed (= 3).'.replace(/<[^>]+>/g, '').match(/^(.+?) adds \+(\d+) bleed \(= (\d+)\)\.(?: Target: (.+?)\.)?$/), '119f ...and that line parses with the frozen L12.add regex (no protocol change)');
   ok(/this\._actingVamp\.bounced = true;/.test(src119) && /the bleed was bounced \\u2014 no pump/.test(src119), '119g Johan: a bot does not pump a bleed after it was bounced');
-  ok(/Any bleed modifiers\? I may still react to the total\./.test(src119) && /modGraceMs != null \? this\.o\.modGraceMs : 4000/.test(src119), '119h against a HUMAN actor the bot asks for the modifiers and bounces after a grace if none come');
+  ok(/no block\. Any bleed modifiers\?' : 'any more bleed modifiers\?'\) \+ ' I may still react to the total/.test(src119) && /this\._lateWordWait\(p, 'first'\)/.test(src119), '119h against a HUMAN actor the bot asks for the modifiers and waits for the actor\'s word (v0.6.237: under the tempo, not a fixed grace -- section 183e drives it)');
     }
 
     /* 120) v0.6.146 — the dynamic bounce reserve */
@@ -7872,7 +7872,7 @@ async function connectWithRetry(client, tries = 30){
   const chats = u => u.sent.filter(m => m.t === 'chat').map(m => m.msg), stealthLogs = u => u.sent.filter(m => m.t === 'log' && /stealth\./.test(m.html));
   // a) THE BUG: Govern at superior, counter 1-0, a human shouts Block! -> no card, the line
   const a = mk122(); a.hand = ['Lost in Crowds', 'Cloak the Gathering']; a.tally = { mode: 'block', a: 1, b: 0 }; a._onBlockAttempt('Johan');
-  ok(a.hand.length === 2 && stealthLogs(a).length === 0 && chats(a).some(c => /Colette \(G6\) currently has 1 stealth/.test(c)) && a._ask.contested === true, '122a JOHAN\'S BUG: stealth 1 vs intercept 0 at the shout -> NO stealth card (it used to spend one at once); the bot says "currently has 1 stealth" and the contest stays open (' + JSON.stringify(chats(a)) + ')');
+  ok(a.hand.length === 2 && stealthLogs(a).length === 0 && chats(a).some(c => /Colette currently has 1 stealth/.test(c)) && a._ask.contested === true, '122a JOHAN\'S BUG: stealth 1 vs intercept 0 at the shout -> NO stealth card (it used to spend one at once); the bot says "currently has 1 stealth" and the contest stays open (' + JSON.stringify(chats(a)) + ')');
   ok(a.events.some(e => e.t === 'bot:stealth-ahead' && e.d.tally.a === 1 && e.d.tally.b === 0), '122a ...traced as stealth-ahead');
   // b) the human plays intercept and moves the counter -> the second look answers on the real numbers
   a._dispatch({ t: 'tally', who: 'Johan', mode: 'block', a: 1, b: 1, ph: 0, rd: 1 });
@@ -8961,7 +8961,7 @@ async function connectWithRetry(client, tries = 30){
       let f2 = 0; const h = u._heldTimeout(() => { f2 = 1; }, 50); h.cancel(); await sleep(120); ok(!f2 && !u._heldTimers.has(h), '137k ...cancel() stops it and drops it');
       let f3 = 0; u._heldTimeout(() => { f3 = 1; }, 50); await sleep(150); ok(f3 === 1 && u._heldTimers.size === 0, '137k ...no hold: an ordinary timer, gone once it fired');
       const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
-      ok(/p\.lateTimer = this\._heldTimeout\(/.test(src) && /p\.lateTimer\.cancel\) p\.lateTimer\.cancel\(\)/.test(src), '137k the late-bounce grace runs on it (the bounce used to land while the human held)'); }
+      ok(/w\.timer = this\._heldTimeout\(\(\) => this\._lateWordGo\(p, 'clock'\), plan\.ms\)/.test(src) && /if\(w\.timer\)\{ if\(w\.timer\.cancel\) w\.timer\.cancel\(\)/.test(src), '137k the late-bounce wait runs on it (the bounce used to land while the human held; v0.6.237: the wait for the actor\'s word)'); }
     // m) a new game thaws what the old game's hold froze (review: the frozen wait never re-armed); a second poll starts with no held mark
     { const { u } = mk(std1); u._obs = polObs(); u._onAnyBlocks('Johan', 'Any blocks?'); u._onSay({ who: 'Johan', i: 0 });
       ok(u._pq && u._pq.timer === null, '137m fixture: a pool question frozen by a hold');
@@ -15594,7 +15594,7 @@ async function connectWithRetry(client, tries = 30){
         const aL = A.lines.map(l => l.txt), dL = D.lines.map(l => l.txt);
         const placed = aL.filter(l => l === 'Hanna plays Priority Contract — on Viktor\'s Anxo Vilela (G6), chosen: Kasim Bayar (G6).');
         const rushed = aL.filter(l => l === 'Kasim Bayar (G6) enters combat with Viktor\'s Anxo Vilela (G6) (Priority Contract).');
-        const ask = A.lines.find(l => l.tier === 'chat' && /enters combat with Anxo Vilela \(G6\) \(Priority Contract, \+1 stealth\)\. Block\?/.test(l.txt));
+        const ask = A.lines.find(l => l.tier === 'chat' && /enters combat with Anxo Vilela \(Priority Contract, \+1 stealth\)\. Block\?/.test(l.txt));
         const burned = aL.filter(l => /burns Priority Contract/.test(l));
         ok(!terr && placed.length === 1 && pools.Minion === 20 && !A.hand.includes(PC) && !!(D._contractSeen && D._contractSeen[ckey(D, PC, AX)] && D._contractSeen[ckey(D, PC, AX)].chosen === KB && D._contractSeen[ckey(D, PC, AX)].by === 'Hanna'),
            '182b master phase: the contract goes on my prey’s Anxo for the chosen Kasim, its line names both, the observer records it, and no pool comes at play (got ' + JSON.stringify({ terr, placed: placed.length, pool: pools, seen: D._contractSeen }) + ')');
