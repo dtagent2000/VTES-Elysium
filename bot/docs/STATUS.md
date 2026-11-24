@@ -6,20 +6,23 @@ v1.0.0 · `ana-gates.py` v1.1.4 · the read-only copies in bot/ are client v2.6.
 canary v1.5.0; the root's release is client v2.6.186 / srv-2.6.53 (the canary's second run).
 
 **Deploy state:** `main` carries v0.6.236 and client v2.6.186. **Open PR:** the playtest round (branch `bot-playtest-fixes`,
-v0.6.237; RULINGS D-136). Its handoff to main: `docs/handoffs/HANDOFF-to-main-2026-11-24-v0.6.237.md` (the bot panel's bounce line,
-the re-announce's second sender, Fame's give, the lock clones, the guide to re-embed).
+v0.6.237; RULINGS D-136), reviewed in three egress passes. Its handoff to main: `docs/handoffs/HANDOFF-to-main-2026-11-24-v0.6.237.md`
+(the bot panel's bounce line and its timing, the re-announce's second sender, Fame's give and owner, the lock clones, the guide to
+re-embed, a `resolve-late` label).
 
-## Last gates (v0.6.237's bytes)
-24 Nov: canary 235/0 ×2 (the copies; the root's v2.6.186) · hotseat 12/0 · HB1 11/0 · lint clean · main's client suite 409/1 (the
-guide's embed) · section 183 23/0 (22 red on v0.6.236) · the 240 against v0.6.236: DIVERGED 136, SAME-PLAY 104, every divergence the
-spread's (`spreadIncome=0`: SAME-PLAY 240); 0 of 1,191 income placements stacked while a ready vampire had none (252 of 1,189 at
-0) · `ana-gates.py` PASS 6/6 on the 240 · the arena smoke (one match, the four starters, real clock) PASS 7/7. The suite ×3: the PR.
+## Last gates (v0.6.237's release bytes, `176d4da6`)
+24 Nov: the suite 2781/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.186) · hotseat 12/0 · HB1 11/0 · lint clean · main's
+client suite 409/1 (the guide's embed) · section 183 48/0 (47 red on v0.6.236) · the 240 against v0.6.236: DIVERGED 136, SAME-PLAY
+104, every divergence the spread's (`spreadIncome=0`: SAME-PLAY 240); 0 of 1,191 income placements stacked while a ready vampire
+had none (252 of 1,189 at 0) · `ana-gates.py` PASS 6/6 on the 240 · the arena smoke (one match, the four starters, real clock)
+PASS 7/7 · the mirror bench (D-93's prediction, 480 paired): the stacking seat +0.01 VP (SE 0.02), the prediction held.
 
 ## Next
 1. **The chat round** (BOARD; D-136): O-50 to Johan first (bot-to-bot exchanges as short bubbles or log only); then the recorder
    and a chat analysis tool, one speaker at a time, the chat lines ruled with him. The human's bleed-total window (`askHumansTotal`, C5) belongs
-   near it: after a No block a bot with no modifier resolves at once, so a human bounces in the Block? window.
-2. The sweep register (D-135): its active entries (7.1, 7.2, 8.3, 11.1; the missed options if Johan says so), class 1 (R-47).
+   near it: after a No block a bot with no modifier resolves in 150 ms, so a human bounces in the Block? window.
+2. The sweep register (D-135): its active entries (7.1, 7.2, 8.3, 8.11 found in this round: Dreams of the Sphinx hosted, 1 pool
+   every unlock; 11.1; the missed options if Johan says so), class 1 (R-47).
 3. **C**, concentrated (spec-card-sweep §11.8, D-132): C1 the cross-check tool, then the first reader's round (§11.6).
 4. Johan, asked 20 Nov (no kör yet): the pilot's flow proposals; the D line on KRCG's MCP; deleting `bot-sweep-pilot-fix2`;
    BOARD's read-through; D-135's next release (active entries only, or the missed options too); class 1's design question.

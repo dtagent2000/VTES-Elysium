@@ -1136,6 +1136,7 @@ class Bot {
         locked: c.locked || undefined, faceDown: (this._debugHand && c.kind === 'crypt') ? undefined : (c.faceDown || undefined),   // v0.6.112 (R4): debug turns my uncontrolled crypt face UP for everyone -- Johan grading what the bot is building toward, not guessing at it
         blood: c.blood || undefined,
         counters: this._pubCounters(c, memo.get(c.id)),   // v0.6.221 (D-113): a card's named counters (Smiling Jack's), else this bot's own tokens
+        owner: (c.owner && c.owner !== this.o.name) ? c.owner : undefined,   // v0.6.237 (the egress review): a card another player gave me (their Fame on my vampire) -- the client's pub says so too (srv-2.6.47 relays it); every reader credits its play to the owner
         host: c.host || undefined, attached: (c.attached && c.attached.length) ? c.attached : undefined, sup: c.sup || undefined   // v0.6.234: + `sup`, the client's 'played at superior' marker (a cloak card's mode)   // v0.5: master-phase permanents (Blood Doll/Vessel) attach to a vampire -- without these two fields the client's sanitizePub shape has nothing to render the link with, and the card would show as a stray unattached card on other players' boards
       }))
     };
@@ -1231,7 +1232,7 @@ class Bot {
         this.started = true; this.players = m.players || this.players;
         this.seat = (this.players.find(p => p.name === this.o.name) || { seat: this.seat }).seat;
         this.out = false; this.ownTurns = 0; this.inf = 0; this._tableBlockAttempts = 0;
-        this._ootDebt = 0; this._fgOwed = 0; this._turnActN = 0;   // v0.6.215 (egress review): a new game owes no out-of-turn master action and no Family Gathering blood
+        this._ootDebt = 0; this._fgOwed = 0; this._turnActN = 0; this._bleedOpen = null; this._lastBleed = null;   // v0.6.215 (egress review): a new game owes no out-of-turn master action and no Family Gathering blood; v0.6.237: no open bleed, no bleed of mine to call too late
         this._jackDefer = null;   // v0.6.224 (the egress review): a new game waits for no Jack
         this._w5Loss = null; this._w5Hostages = null; this._w5Dia = null; this._w5Hunts = 0; this._w5RefPass = 0; this._w5Held = null; this._w5PbAnarch = false; this._w5BleedOk = null;   // v0.6.230 (the egress review): the wave's counts start again
         this._wonN = null; this._asp = null; this._aspLast = null; this._srSent = null; this._srSeenHuman = null; this._yawp = null; this._yawpFight = null; this._groveCancelled = null; this._quietHold = false;   // v0.6.232 (5b's egress review): the nightmare counters, the 'as played' window, the cancels and Yawp Court start again
@@ -1435,7 +1436,7 @@ class Bot {
         else if(act === 'lock') c.locked = true;
         else if(act === 'unlock') c.locked = false;
         else if(act === 'flip') c.faceDown = !c.faceDown;
-        else if(act === 'burn'){ const was = c.zone; c.zone = 'burned'; if(was === 'ready' && (c.kind === 'crypt' || this._w5IsAlly(c.name))) this._w5MinionLost(c, 'burned'); this.board = this.board.filter(x => x !== c && x.attachTo !== c.name); this.note('Trainbot: ' + c.name + ' is burned' + (was === 'torpor' ? ' (diablerie or final death in torpor)' : '') + '.'); this._emit('burned-by-table', { card: c.name, from: was }); }   // v0.6.129: the table burns one of my cards -- a human's diablerie of my torpored vampire had no verb (spec to main: add Burn to the bot-element menu)
+        else if(act === 'burn'){ const was = c.zone; c.zone = 'burned'; if(was === 'ready' && (c.kind === 'crypt' || this._w5IsAlly(c.name))) this._w5MinionLost(c, 'burned'); const gone = this.board.filter(x => x !== c && (x.attachTo === c.name || (c.id && (x.host === c.id || x.attachTo === c.id)))); this.board = this.board.filter(x => x !== c && !gone.includes(x)); gone.forEach(x => { if(this._mineCard(x)) this._toAsh(x.name); }); this.note('Trainbot: ' + c.name + ' is burned' + (was === 'torpor' ? ' (diablerie or final death in torpor)' : '') + '.'); this._emit('burned-by-table', { card: c.name, from: was }); }   // v0.6.237 (the egress review): the cards on it go with it -- by host or id as well as by name (a given card's attachTo is an id since srv-2.6.47; an income master's link is host), mine to my ash heap (_archonBurned's shape; a card that came by a give -- an owner, or an attachTo -- is the giver's). v0.6.129: the table burns one of my cards -- a human's diablerie of my torpored vampire had no verb (spec to main: add Burn to the bot-element menu)
         else if(act === 'torpor'){ c.zone = 'torpor'; const tp = this._openSlot('torpor', c); c.x = tp.x; c.y = tp.y; this._fameTorporHook(c); }   // v0.4.5: reposition too -- a bare zone flip left x/y wherever the card used to be (e.g. still its old uncontrolled slot), off the actual torpor/ready row
         else if(act === 'untorpor'){ c.zone = 'ready'; const rp = this._openSlot('ready', c); c.x = rp.x; c.y = rp.y; this._emit('recover', { vamp: c.name, via: 'untorpor' }); }
         else return;                     // unknown verb: ignore rather than push a no-op board
@@ -3525,7 +3526,7 @@ class Bot {
       if(host && hg && hg.kind === 'lib'){ const has = k => (hg.e.modes || []).some(mo => mo.fx && mo.fx[k]);
         if(has('fameOnTarget')){ (this._famedMine = this._famedMine || new Set()).add(host.name); (this._famedSeen = this._famedSeen || {})[host.name] = true; }
         if(has('noBlockMinion')) this._pentexVamp = host.name; }
-      if(host){ card.host = host.id; host.attached = host.attached || []; if(!host.attached.includes(card.id)) host.attached.push(card.id); if(typeof host.x === 'number'){ card.x = host.x; card.y = host.y; } } }   // v0.6.237: ON its host -- my board shows it attached (the pub's host / attached), and it leaves with the host; until now it lay loose at 64,64
+      if(host){ card.host = host.id; host.attached = host.attached || []; if(!host.attached.includes(card.id)) host.attached.push(card.id); if(typeof host.x === 'number'){ card.x = host.x; card.y = host.y; } } }   // v0.6.237: ON its host -- my board shows it attached (the pub's host / attached); until now it lay loose at 64,64. It leaves with its host when the table burns that (ctrl 'burn', by host or id now); a burn in my own combat does not sweep attached cards yet (SWEEP-REGISTER 10.15)
     this.board.push(card); this.push();
     this._w5OnGiven(card);   // v0.6.230 (V5 wave 5): a stolen The Rack -- its new controller chooses
     this.o.log('given: ' + m.name + ' from ' + (m.from || '?') + (m.attachTo ? ' (on ' + m.attachTo + ')' : ''));
@@ -5444,7 +5445,7 @@ class Bot {
     v.zone = 'burned'; v.locked = false; if(wasReady) this._w5MinionLost(v, 'burned');   // Tension in the Ranks bills a READY minion lost (5b's egress review: one in torpor was billed)
     const gone = this.board.filter(x => x !== v && (x.host === v.id || (v.attached || []).includes(x.id))); v.attached = [];
     this.board = this.board.filter(x => x !== v && !gone.includes(x));
-    gone.forEach(x => this._toAsh(x.name));
+    gone.forEach(x => { if(this._mineCard(x)) this._toAsh(x.name); });   // v0.6.237 (the egress review, pass 2): a card another player gave me goes to theirs, not my ash heap
   }
   _wonHuntFrom(v){                   // the special hunt's target: another Ravnos of mine with the most blood (v1: my own; another seat's Ravnos -- a directed action -- is a rider), null when there is none at all
     const o = this.board.filter(c => c && c !== v && c.kind === 'crypt' && (c.zone === 'ready' || c.zone === 'torpor') && this._isRavnos(c)).sort((a, b) => (b.blood | 0) - (a.blood | 0));
@@ -6526,8 +6527,11 @@ class Bot {
     const pw = this._phaseWait; if(pw && pw.arm) pw.arm();
     const rc = this._refCall; if(rc && !rc.closed && rc.arm && !(rc.paused && rc.paused.size)) rc.arm();
     if(this._vWait && this._vWait.arm) this._vWait.arm();   // v0.6.204 (F10)
+    { const lw = this.pending && this.pending.lateWait; if(lw && !lw.done && lw.arm) lw.arm(); }   // v0.6.237: the wait for a human actor's word follows the new tempo too
   }
   _humanAt(seat){ const p = (this.players || []).find(q => q && q.seat === seat); return (p && !p.bot && !p.vacant) ? p.name : null; }
+  _mineCard(c){ return !!c && (c.owner ? c.owner === this.o.name : !c.attachTo); }   // v0.6.237: a card on my board that is mine to ash -- one another player gave me carries their name (owner) or came with attachTo (_onGiven)
+  _canTakeGive(seat){ const q = (this.players || []).find(x => x && x.seat === seat); return !!(q && !q.out && !q.vacant && q.online !== false); }   // v0.6.237: a seat the server hands a `give` to (it refuses an offline one: 'the card stays with you')
   _rtNote(who, ms){                                                         // Adaptive's measurement: a human's answer time, kept per human over the last tempoHist answers
     if(!who || !this._isHumanName(who) || !(ms >= 0)) return;
     const r = this._rt[who] = this._rt[who] || []; r.push(ms); const n = this.o.tempoHist || 7; while(r.length > n) r.shift();
@@ -8242,9 +8246,19 @@ class Bot {
     (m.pub.cards || []).forEach(c => {
       if(t.seen.has(c.id)) return;
       t.seen.add(c.id);
+      { const os = (c.owner && m.seat !== this.seat) ? this._seatOfName(c.owner) : 0;   /* v0.6.237 (the egress review): a card another seat put on this one
+           at its play (a bot's Fame on this seat's vampire, a human's Pentex) is the OWNER's play: the owner's hand lost it, the owner's deck holds it
+           (before the give the placer tabled it on its own board, and every reader credited the placer). One that moved here with its id (a
+           Troublemaker, The Coven, a steal) was credited where it first lay (pass 3). An owner the roster does not know: as before */
+        if(os && os !== m.seat){
+          const moved = !!(this.table[os] && this.table[os].seen && this.table[os].seen.has(c.id));   // the egress review, pass 3: a card that lay on its owner's board before and moved (its id kept) is no new play
+          if(!moved && os !== this.seat && c.name && c.kind !== 'crypt'){ const ho = this._handIntel(os); if(ho){ const ix = ho.cards.findIndex(x => x.name === c.name); if(ix >= 0) ho.cards.splice(ix, 1); }
+            if(t.seeded && !c.faceDown && c.zone === 'ready') fresh.push({ seat: os, c }); }
+          return;
+        } }
       if(hi && c.name && c.kind !== 'crypt'){ const ix = hi.cards.findIndex(x => x.name === c.name); if(ix >= 0) hi.cards.splice(ix, 1); }   // a known name visibly left their hand (played/ashed/anywhere); face-down plays stay honest-unknown
       if(t.seeded && m.seat !== this.seat && !c.faceDown && c.name && c.kind !== 'crypt' && c.zone === 'ready')
-        fresh.push(c);
+        fresh.push({ seat: m.seat, c });
       else if(t.seeded && m.seat !== this.seat && !c.faceDown && c.name && c.kind !== 'crypt' && c.zone === 'ash')
         this._noteObserved(m.seat, c.name, true);   // v0.6.118: THE ASH DIFF -- a card that went hand -> ash (reaction, combat, discard) never shows as a ready card; the ash heap is public and never misses a play
     });
@@ -8277,7 +8291,7 @@ class Bot {
         }
       }
     }
-    fresh.forEach(c => this._threatNote(m.seat, c));
+    fresh.forEach(f => this._threatNote(f.seat, f.c));
     if(m.seat !== this.seat && this.opp && this.opp[m.seat] && this.opp[m.seat].memo) this._hMemoBoard(m.seat);   // v0.6.225 (the egress review): a human's lasting choice read on their board after the Phase line
   }
   _threatNote(seat, c){
@@ -8301,6 +8315,7 @@ class Bot {
   predName(){ return this.seatName(this.prevLive(this.seat)); }
   _armPending(who, amount, actingVampName, owner, kind, extra){   // v0.6.220: `extra` -- fields the window's first decision must see (Revelations' form). v1.4.3 (14 July): added `actingVampName` + `owner`. `owner` is the Methuselah who CONTROLS the acting minion — equals `who` (the message sender) for a DIRECT bleed, but differs for a BOUNCED re-announce: BotB sends the re-announce (who='BotB'), but the acting minion still belongs to Johan (owner='Johan'). If `owner` is null/undefined, falls back to `who` (the common, direct case). Every downstream check that asks "whose action is this" reads `pending.who` (set to `owner`), not the message-level `who` — so +X adds (sent by the original owner, not the bouncer), 'It resolves' (said by the original owner), and Edge assignment all route correctly regardless of HOW the bleed reached this target.
     const realOwner = owner || who;
+    if(this.pending && this.pending.lateWait) this._lateWordEnd(this.pending, 'left');   // v0.6.237 (the egress review): its wait for the actor's word ends with it (its reminder fired on a dead pending)
     if(this.pending) this._flushRelock(this.pending, 'replaced');   // v0.6.228 (the egress review, finding 5): a new action's pending ends the last one -- its Eyes of the Wild Gangrels lock again
     this.pending = { who: realOwner, amount, kind: kind || 'bleed', actingVampName: actingVampName || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
     if(extra) Object.assign(this.pending, extra);   // v0.6.220 (wave A's riders): set BEFORE _reactWindow -- a block decision taken in this tick reads them (peekSup set after it gave Castellan and The Dowager 0 on every Revelations)   // fas B (16 July): kind 'bleed' | 'pool' -- pool damage is NOT a bleed: _reactWindow suppresses bounce, _applyPending skips the Edge transfer   // fas A+ (16 July): vampire IDs that already made a FAILED block attempt this action -- the rulebook (Johan's steg-3 reading, verified steg 5): a failed attempt means retrying with a DIFFERENT minion; the same one never goes again   // steg 3 (15 July): `declined` -- see _reactWindow
@@ -8342,7 +8357,7 @@ class Bot {
     v.zone = 'burned'; v.locked = false; this._w5MinionLost(v, 'burned');
     const gone = this.board.filter(x => x !== v && (x.host === v.id || (v.attached || []).includes(x.id))); v.attached = [];
     this.board = this.board.filter(x => x !== v && !gone.includes(x));
-    gone.forEach(x => this._toAsh(x.name));   // the minion's cards go with it
+    gone.forEach(x => { if(this._mineCard(x)) this._toAsh(x.name); });   // the minion's cards go with it (v0.6.237: mine to my ash heap; a card another player gave me is theirs)
     this._unblockedStreak = 0;
     this._emit('through', { vamp: v.name, n: 0, card: null, final: 0, archoned: true });
     this.o.log('archon: ' + v.name + ' is burned (' + (by || 'the target') + '\u2019s Archon Investigation) -- the bleed is not successful');   // the duplicate rule: the target's line says it at the table
@@ -8631,6 +8646,8 @@ class Bot {
     if(!this.pending || this.out) return;
     const p = this.pending;
     if(p.passTimer) clearTimeout(p.passTimer);
+    if(p.lateWait) this._lateWordEnd(p, 'answer');   // v0.6.237: the human actor's modifier ended the wait for their word -- here, before the early returns (the egress review, pass 2: a Pass below left the wait live, and it swallowed the actor's It resolves)
+    p._lateGen = (p._lateGen | 0) + 1;              // and a late bounce already on its beat (_lateWordGo) is void: this evaluation decides
     if(this._blockBar && this._blockBar.who === p.who && this._blockBar.bar !== 'allies' && !p.declined){ p.declined = true; p.barred = this._blockBar.card; this.o.log('react window: ' + this._blockBar.card + ' \u2014 my vampires cannot block this action (reactions only)'); this._emit('block-barred', { by: p.who, card: this._blockBar.card }); }   // v0.6.127 (L12.blockBar): every blocker I have is a vampire -- the block is off the table, a bounce or a reducer is not
     if(!p.declined && this._humanBallFree(p)){ p.declined = true; p.barred = 'Toreador Grand Ball'; this.o.log('react window: a human\u2019s Toreador Grand Ball -- a non-bleed action of a Toreador of theirs is not blocked'); this._emit('block-barred', { by: p.who, card: 'Toreador Grand Ball', human: true }); }   // v0.6.217 (the graded readings)
     const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt');
@@ -8662,14 +8679,13 @@ class Bot {
        Johan's block-finality rule to reactions too). Only when declined AND
        nothing to bounce with is the immediate no-theatre Pass right. */
     if(p.declined && this._maybeArchon(p)) return;   // v0.6.215 (V5 wave 3): a reopened window (a modifier raised the bleed to 4+) after blocks are declined
-    if(p.declined && !bounce){ this.say('Pass'); return; }
+    if(p.declined && !bounce){ this.say('Pass'); this._lateSettle(p); return; }   // v0.6.237: a late flow's word heard in a gap settles here (_lateSettle)
     /* v0.6.204 (R3, play-test 14 Oct F6, cosmetic): against a BOT actor my 'Hold on...' is theatre (bots never operate the hold), and at
        the client's pace it reached the table between the actor's announce and its question ("Block? (21s -> no)" 0.2 s after it). It
        now waits for that question, and is dropped once my answer has gone out. Against a human it is said at once, as before; paceMs 0
        (the arena) is unchanged. */
     if(this.o.paceMs && ((this.players || []).find(q => q && q.name === p.who) || {}).bot) p._thinkQ = true; else this.say('Hold on\u2026');
     const stealthA = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : 0;
-    if(p.lateWait) this._lateWordEnd(p, 'answer');   // v0.6.237: the human actor's modifier ended the wait for their word (it re-arms below when the bounce still waits for the total)
     const cpD = this._critPool(), actorP = (this.players || []).find(q => q.name === p.who) || {};
     const sbRead = actorSeat ? ((this.oppAxes(actorSeat).axes || []).includes('stealth-bleed') || this.oppStealth(actorSeat) >= 1) : false;   // 'this predator is a stealth bleeder': what the table model has seen (clan / disciplines / a TWD baseline are the later, better reads -- Johan)
     const pumpSeen = actorSeat ? Math.max(0, ...Object.values((this._opp(actorSeat).minions) || {}).map(mm => mm.hitMax | 0)) : 0;
@@ -8683,22 +8699,25 @@ class Bot {
     if(d.tag) this._emit('defence-plan', { tag: d.tag, amount: p.amount | 0, hasBounce: !!bounce, bounceN: bounceCards, reserve: d.reserve != null ? d.reserve : null, stealthBleeder: sbRead, pool: this.pool | 0, crit: cpD.crit });
     this._emit('block-eval', { kind: p.kind, sub: p.sub || null, T: p.T || 'T1', role: p.role || 'target', block: !!d.block, bounce: !!d.bounce, score: (typeof d.score === 'number') ? +d.score.toFixed(2) : null, parts: d.parts || null, why: d.why,
       model: actorSeat ? { forecast: this.oppForecast(actorSeat), tto: this.turnsToOust(actorSeat), oppCombat: this.oppCombat(actorSeat), oppStealth: this.oppStealth(actorSeat), axes: this.oppAxes(actorSeat).axes } : null });   // v0.6.118: the table-model reads at decision time -- the arena calibrates the priors against them   // v0.6.107 (B1): every window is evaluable
+    if(d.bounce && bounce && this.o.lateBounce !== 0 && p.declined && !actorP.bot) p.lateDue = true;   // v0.6.237 (the egress review, pass 3): I mean to bounce on the total -- the actor's word in my react delay is kept from now, not only after a first question
     const reactMs = this.decide('react-delay', {}).ms;
     p.reactAt = Date.now() + reactMs;   // v0.6.109 (#1): the widget can SHOW this wait ("reacting to Alice's bleed, 1.2s") but step() deliberately does not resolve it -- the only honest resolutions here are the bot's own decision (which is already running) or the actor resolving their action, and inventing a third would let a button reach a game state the bot could not reach alone
     p.passTimer = setTimeout(() => {
       p._thinkQ = false;   // v0.6.204 (F6): my answer goes out now -- a thinking line after it would be out of order
       if(this.pending !== p || this.out) return;
       if(this._archonFor(p)){ this._maybeArchon(p); return; }   // v0.6.215 (V5 wave 3): a bleed of 4+ at me and Archon Investigation in hand -- I decline the block (only my minions may block a bleed at me) and burn the bleeder: worth more than a bounce (the 4+ goes nowhere) and than a block (no combat to win)
-      if(d.bounce && bounce && this.o.lateBounce !== 0 && p.declined && !actorP.bot){ this.o.log('react window: ' + d.why + ' \u2192 waiting for ' + p.who + '\u2019s word on the total'); this._lateWordWait(p, p._lateAsked ? null : 'more'); }   // v0.6.237: a HUMAN actor's total (after a modifier, or past a block bar) -- the bounce waits for their word, not the react delay
+      if(d.bounce && bounce && this.o.lateBounce !== 0 && p.declined && !actorP.bot){
+        if(p.lateDue && p._lateWord){ this.o.log('react window: ' + d.why + ' \u2192 ' + p.who + ' gave the word in my react delay (' + p._lateWord + '): the bounce on the total now'); this._lateBounceNow(p); }   // the egress review, pass 2: the word came while I weighed the modifier -- it stands
+        else { this.o.log('react window: ' + d.why + ' \u2192 waiting for ' + p.who + '\u2019s word on the total'); this._lateWordWait(p, p._lateAsked ? 'again' : 'more'); } }   // v0.6.237: a HUMAN actor's total (after a modifier, or past a block bar) -- the bounce waits for their word, not the react delay
       else if(d.bounce && bounce) this._commitBounce(p, bounce).catch(e => this.o.log('commitBounce error:', e.message));   // steg 6: async now (may pace a wake->bounce combo) -- fire-and-forget like _commitBlock just below
       else if(d.block && !p.declined) this._commitBlock(p, d).catch(e => this.o.log('commitBlock error:', e.message));   // v0.4.5: _commitBlock is now async (paces a wake->intercept combo) -- fire-and-forget like _playTurn(); steg 5: the !declined belt to the decide()-level suspender -- a block after a final decline must never fire from EITHER layer
-      else if(rd) this._commitReduce(p, rd).catch(e => this.o.log('reduce commit error:', e.message));   // N4c: the FOURTH outcome; v0.6.68: .catch -- fire-and-forget async must never kill the process (the _resolveCombat precedent)
+      else if(rd) this._commitReduce(p, rd).then(() => this._lateSettle(p)).catch(e => this.o.log('reduce commit error:', e.message));   // N4c: the FOURTH outcome; v0.6.68: .catch -- fire-and-forget async must never kill the process (the _resolveCombat precedent)
       else if(bounce && this.o.lateBounce !== 0 && !p.declined && !actorP.bot && (p.amount | 0) >= 2){   // v0.6.144: a HUMAN actor may resolve without ever opening a window on the total -- so I ASK (Johan: 'the bot should ask for any bleed modifiers before the bleed resolves') and, if no modifier comes, bounce after a short grace
         this.o.log('react window: ' + d.why + ' \u2192 no block; asking for the total');
         this._emit('defence-plan', { tag: 'ask-total', amount: p.amount | 0 });
         this._lateWordWait(p, 'first');   // v0.6.237: the wait for the actor's word under the tempo (was a fixed 4 s grace, modGraceMs; v0.6.198 made it hold-aware, v0.6.204 started it on the wire)
       }
-      else { this.o.log('react window: ' + d.why); p.declined = true; this.say('Pass'); if(p.burnCardId) this._complyBurnCard(p); else if(p.kind === 'rush') this._complyRush(p); }   // v0.6.217: an action at my card burns it on my Pass. v0.6.107 (B1): declining a rush = the rushed vampire locks and fights   // steg 3: the decline itself -- final for BLOCKS (never set on a failed ATTEMPT; that path re-enters via _onLog's L12.block fail handler with declined still false). steg 5: no longer final for the whole window -- see above.
+      else { this.o.log('react window: ' + d.why); p.declined = true; this.say('Pass'); if(p.burnCardId) this._complyBurnCard(p); else if(p.kind === 'rush') this._complyRush(p); this._lateSettle(p); }   // v0.6.217: an action at my card burns it on my Pass. v0.6.107 (B1): declining a rush = the rushed vampire locks and fights   // steg 3: the decline itself -- final for BLOCKS (never set on a failed ATTEMPT; that path re-enters via _onLog's L12.block fail handler with declined still false). steg 5: no longer final for the whole window -- see above.
     }, reactMs);
   }
   /* v0.6.237 (Johan's playtest, 24 Nov: 'it did not wait for my reaction after it asked -- it played Deflection right after'): against a
@@ -8710,40 +8729,66 @@ class Bot {
   _lateWordWait(p, ask){
     if(!p || this.pending !== p || this.out) return;
     if(p.lateWait) this._lateWordEnd(p, 'answer');
-    p.declined = true;
-    const plan = this._waitPlan('react', p.who), w = p.lateWait = { plan, t0: null, timer: null, deadline: null, done: false, _remT: null };
-    if(ask){ p._lateAsked = true;
-      this.chat('Trainbot: ' + (ask === 'first' ? 'no block. Any bleed modifiers?' : 'any more bleed modifiers?') + ' I may still react to the total \u2014 say "no" or "it resolves" when you are done' + this._waitTail(plan, 'I react')); }
-    const arm = () => {
+    p.declined = true; p.lateDue = true;   // the late flow: from here to my bounce or my Pass the actor's word never lands the bleed past the bounce (_lateWord)
+    const w = p.lateWait = { who: p.who, plan: this._waitPlan('react', p.who), t0: Date.now(), timer: null, deadline: null, done: false, _remT: null };
+    if(ask){ p._lateAsked = true;   /* the egress review: after a modifier the question is asked again, short (it was a silent re-arm -- the human could not see that the clock had started over) */
+      this.chat('Trainbot: ' + (ask === 'first' ? 'no block. Any bleed modifiers? I may still react to the total \u2014 say "no" or "it resolves" when you are done'
+        : ask === 'again' ? 'bleed now ' + (p.amount | 0) + ' \u2014 any more? Say "no" or "it resolves" when you are done'
+        : 'any more bleed modifiers? I may still react to the total \u2014 say "no" or "it resolves" when you are done') + this._waitTail(w.plan, 'I react')); }
+    w.arm = () => {                    // the tempo's wait (_vwArm's shape): a hold stands it (_holdFreeze / _holdThaw), the clock starts when the question is on the wire, Turn-based has no clock and a reminder
       if(w.done || this.pending !== p || p.lateWait !== w || this.out) return;
-      if(!w.t0) w.t0 = Date.now();
-      w.deadline = Date.now() + plan.ms;
-      w.timer = this._heldTimeout(() => this._lateWordGo(p, 'clock'), plan.ms);
-      this._remindArm(w, plan, () => p.who + ': say "no" or "it resolves" when your bleed modifiers are done \u2014 I may still react to the total.');
+      if(w.timer){ clearTimeout(w.timer); w.timer = null; }
+      const pl = w.plan = this._waitPlan('react', p.who);
+      if(this._held()){ this._freezeWait(w); this._holdAnnounce(); return; }
+      if(this._wireWait(w, () => w.arm())) return;
+      w.deadline = pl.noClock ? null : Date.now() + pl.ms; w.timer = setTimeout(() => this._lateWordGo(p, 'clock'), pl.ms);
+      this._remindArm(w, pl, () => p.who + ': say "no" or "it resolves" when your bleed modifiers are done \u2014 I may still react to the total.');
     };
-    this._afterWire(arm);   // v0.6.204 (F3): the clock starts when the question is on the wire
+    w.arm();
   }
-  _lateWordEnd(p, end){                // the wait ends (its row says how); the bounce is the caller's
+  _lateWordEnd(p, end){                // the wait ends (its row says how: answer | clock | button | left); the bounce is the caller's
     const w = p && p.lateWait; if(!w) return null;
     w.done = true; p.lateWait = null;
-    if(w.timer){ if(w.timer.cancel) w.timer.cancel(); else clearTimeout(w.timer); w.timer = null; }
+    if(w.timer){ clearTimeout(w.timer); w.timer = null; }
     if(w._remT){ clearTimeout(w._remT); w._remT = null; }
-    this._waitRow('react', w.plan, w.t0 || Date.now(), end || 'answer', { late: true });
+    if(end === 'answer' && w._wired && !w._held) this._rtNote(w.who, Date.now() - w.t0);   // Adaptive's measurement: the actor's own word (or modifier)
+    this._waitRow('react', w.plan, w.t0, end || 'answer', { late: true, held: w._held ? 1 : undefined });
     return w;
   }
-  _lateWordGo(p, why){                 // the actor's word, the clock or the table controls: no more modifiers -- I react to the total
+  _lateWordGo(p, why, word){           // the actor's word, the clock or the table controls: no more modifiers -- I react to the total
     if(!p || !p.lateWait || this.pending !== p) return false;
+    if(word) p._lateWord = word;
     this._lateWordEnd(p, why === 'clock' ? 'clock' : why === 'button' ? 'button' : 'answer');
     if(this.out) return true;
-    const go = () => { if(this.pending !== p || this.out) return;
-      const b2 = this._bestBounceFor(this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt'), p.reacted);
-      if(b2) this._commitBounce(p, b2).catch(e => this.o.log('late bounce error:', e.message)); else this.say('Pass'); };
+    const gen = p._lateGen | 0, go = () => { if(this.pending === p && !this.out && (p._lateGen | 0) === gen) this._lateBounceNow(p); };   // a modifier in the beat re-opens the window, which decides instead
     if(why === 'clock' || why === 'button') go(); else this._afterBeat('react', () => this.pending === p && !this.out, go);   // an answer gets the react beat; the clock and the button already waited
     return true;
   }
+  /* v0.6.237 (the egress review, pass 2): the actor's word reaches me while no wait is open -- in my react delay after their modifier,
+     or in the beat after their first word -- and It resolves there applied the bleed past my bounce (_applyPending). The late flow
+     (p.lateDue, from my first question to my bounce or my Pass) keeps the word instead: the bounce on the total comes as it would have,
+     and when I Pass after all, an It resolves already said lands the bleed then (_lateSettle). It resolves outranks a No. */
+  _lateWord(p, word){
+    if(!p || this.pending !== p) return false;
+    if(p.lateWait) return this._lateWordGo(p, 'answer', word);
+    if(!p.lateDue) return false;
+    if(word === 'It resolves' || p._lateWord !== 'It resolves') p._lateWord = word;
+    this.o.log('late word in a gap: ' + word + ' (' + p.who + ') -- kept for the total');
+    return true;
+  }
+  _lateBounceNow(p){                   // no more modifiers: the bounce on the total -- or, with no bounce left, Pass
+    const b2 = this._bestBounceFor(this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt'), p.reacted);
+    if(b2){ this._commitBounce(p, b2).catch(e => this.o.log('late bounce error:', e.message)); return; }
+    this.say('Pass'); this._lateSettle(p);
+  }
+  _lateSettle(p){                      // my Pass (or my reduction) ends a late flow: an It resolves the actor said in a gap lands the bleed now
+    if(!p || !p.lateDue) return;
+    p.lateDue = false; const w = p._lateWord; p._lateWord = null;
+    if(w === 'It resolves' && this.pending === p) this._applyPending("say 'It resolves' (the actor's word came while I weighed the total)");
+  }
   /* v0.6.237 (Johan, 24 Nov: 'recognise it in chat -- the client's new bot panel writes "Johan bounces the bleed to Hanna", and a player can
      type bounce <name>; can part of a longer or a multi-part name be read right too?'): a seat named by any part that points at ONE seat --
-     the whole name, one of its words, the start of the name or of one of its words, or (3 letters or more) anywhere in it; case, accents
+     the whole name, one of its words, or (3 letters or more) the start of the name or of one of its words, or anywhere in it; case, accents
      and a '(bot)' tag ignored. The first rung with a match decides: one seat = that seat, several = ambiguous (cands, for the caller's
      question). */
   _seatByNamePart(q, seats){
@@ -8751,41 +8796,85 @@ class Bot {
     const qq = fold(q); if(!qq) return { seat: 0, cands: [] };
     const cs = (seats || []).map(s => ({ seat: s, name: this.seatName(s), f: fold(this.seatName(s)) })).filter(c => c.f);
     const words = c => c.f.split(/[ '-]+/).filter(Boolean);
-    const rungs = [c => c.f === qq, c => words(c).includes(qq), c => c.f.startsWith(qq), c => words(c).some(w => w.startsWith(qq)), c => qq.length >= 3 && c.f.includes(qq)];
+    const rungs = [c => c.f === qq, c => words(c).includes(qq), c => qq.length >= 3 && c.f.startsWith(qq), c => qq.length >= 3 && words(c).some(w => w.startsWith(qq)), c => qq.length >= 3 && c.f.includes(qq)];   // the egress review: a start needs 3 letters too ('bounce h' was Hanna)
     for(const r of rungs){ const hit = cs.filter(r); if(hit.length) return hit.length === 1 ? { seat: hit[0].seat, cands: [hit[0].name] } : { seat: 0, cands: hit.map(c => c.name) }; }
     return { seat: 0, cands: [] };
   }
   /* v0.6.237: a HUMAN target bounced my bleed (Deflection, Telepathic Misdirection, Redirection ... -- the card is not read, Johan: 'wait
      with flagging the effect, it is many more cards than Deflection'): the panel's 'Johan bounces the bleed to Hanna' or a typed
-     'bounce Hanna' / 'bounce to Hanna' ('@Bot bounce Hanna' too), from the seat my bleed is aimed at. The new target by _seatByNamePart
-     among the live seats other than mine (the acting minion's controller) and the bouncer's; a name that fits none or several gets a
-     question, a bare 'bounce' too. Then exactly what a bot bouncer's line does to me: the bleed re-aimed, no pump after it, the new
-     target's block step (_bouncedTo) -- and I write the re-announce (L12.bleed) a bot at the new seat arms from. true = the line was one. */
+     'bounce Hanna' / 'bounce to Hanna' / 'bounced it to Hanna' ('@Bot bounce Hanna' too), from the seat my bleed is aimed at, while that
+     bleed is live (my turn, not resolved, not blocked). At a hotseat (one device, whichever human is active sends the chat) the panel's
+     line counts when it names the bled human, a typed one is the bled human's. The new target by _seatByNamePart among the live seats
+     other than mine (the acting minion's controller) and the bouncer's; a name that fits none or several gets a question, a bare
+     'bounce' too; a line with a '?' is talk. In one of my windows it lands at once -- exactly what a bot bouncer's line does to me: the
+     bleed re-aimed, no pump after it, I write the re-announce (L12.bleed) a bot at the new seat arms from, and the open window follows
+     the bleed (_bouncedTo). BETWEEN my windows (the 150 ms after a window closes -- a No block, a clock that ran out -- or a modifier's
+     pace) it waits for my next step (_bounceGate: the re-announce and the new target's window in one tick -- the egress review: it
+     re-aimed the bleed with no window open, and the bleed resolved on the new target with no block step). After It resolves, or a
+     block, it is too late, and the bouncer is told so. true = the line was one. */
   _humanBounce(who, txt){
-    const av = this._actingVamp; if(!av || !av.v || !av.target || !(av.kind === 'bleed' || av.kind == null)) return false;
+    if(this.out || !this._isHumanName(who)) return false;
     const t = String(txt || '').trim().replace(nameRe0(this), '');
     let m = t.match(/^(.+?)\s+bounces\s+the\s+bleed\s+to\s+(.+?)\s*[.!]*$/i), to = null, bare = false;
+    const panelBy = m ? String(m[1]).trim() : null;
     if(m) to = m[2];
-    else if((m = t.match(/^(?:i\s+)?bounce(?:s|d)?\b(?:\s+(?:it|the\s+bleed))?(?:\s+to\b)?\s*[:,]?\s*(.*?)\s*[.!]*$/i))){ to = m[1]; bare = !to; }   // 'bounce Hanna', 'bounce to Hanna', 'bounced it to Hanna', 'I bounce the bleed to Hanna'
+    else if(/^(?:i\s+)?bounced?(?:\s+(?:it|the\s+bleed))?(?:\s+to)?\s*[.!]*$/i.test(t)) bare = true;   // 'bounce', 'bounce it', 'bounce to', 'bounced the bleed' -- no name (tried first: the egress review, pass 2, found 'it' read as a name)
+    else if((m = t.match(/^(?:i\s+)?bounced?(?:\s+(?:it|the\s+bleed))?(?:\s+to)?(?:\s*[:,]\s*|\s+)([^\s.!?,:].*?)\s*[.!]*$/i))) to = m[1];   // 'bounce Hanna', 'bounce to Hanna', 'bounced it to Hanna', 'I bounce the bleed to: Hanna' ('bounces' is the panel's third person only: 'Bounces are fun' is talk)
     else return false;
-    if(!this._isHumanName(who) || this._seatOfName(who) !== av.target) return false;   // only the human my bleed is aimed at (a bot bounces with its card and the re-announce)
+    if(t.indexOf('?') >= 0) return false;   // the egress review: 'Bounce? Nah.' is talk, not a bounce (it read 'nah' as Hannah)
+    const av = this._actingVamp, lb = this._lastBleed;
+    const live = !!(this._acting && av && av.v && av.target && (av.kind === 'bleed' || av.kind == null));
+    const tgt = live ? av.target : (lb ? lb.seat : 0), tgtHuman = tgt ? this._humanAt(tgt) : null;
+    if(this._noServer && tgtHuman && who !== tgtHuman && (!panelBy || this._seatOfName(panelBy) === tgt)) who = tgtHuman;   // a hotseat: the bled human, whoever's name the device sends under (the egress review, pass 2)
+    const from = this._seatOfName(who);
+    if(!live || av.resolving){   // nothing of mine to bounce: a word to the bouncer when it was my bleed on them
+      const late = live ? (from === av.target ? { vamp: av.v.name, how: av.resolving } : null)
+        : (lb && from === lb.seat && Date.now() - lb.at < 30000 && (this._acting || this.turnSeat === this.seat)) ? lb : null;
+      if(!late) return false;
+      this.chat(who + ': ' + (late.how === 'blocked' ? this._spoken(late.vamp) + '’s bleed was blocked — there is nothing to bounce.' : 'too late — ' + this._spoken(late.vamp) + '’s bleed has resolved.'));
+      return true;
+    }
+    if(from !== av.target) return false;   // only the human my bleed is aimed at (a bot bounces with its card and the re-announce)
     const cands = (this.players || []).filter(q => q && q.seat !== av.target && q.seat !== this.seat && this.live(q.seat)).map(q => q.seat);
     const names = cands.map(s => this.seatName(s)).join(', ');
-    if(this._ask && this._ask.contested){ this.chat(who + ': a bounce comes after blocks are declined \u2014 resolve the block first.'); return true; }
+    if(this._ask && this._ask.contested){ this.chat(who + ': a bounce comes after blocks are declined — resolve the block first.'); return true; }
     if(bare){ this.chat(who + ': bounce to whom? Type bounce <name> (' + names + ').'); return true; }
-    to = String(to).replace(/[\u2019']s\s+pool$/i, '').trim();
+    to = String(to).replace(/[’']s\s+pool$/i, '').trim();
     const r = this._seatByNamePart(to, cands);
     if(!r.seat){
       const me = this._seatByNamePart(to, [this.seat]).seat;
-      this.chat(who + ': ' + (me ? 'my own bleed cannot be bounced to me.' : r.cands.length ? 'which one \u2014 ' + r.cands.join(' or ') + '?' : 'I see nobody called "' + to + '" here.') + ' Type bounce <name> (' + names + ').');
+      this.chat(who + ': ' + (me ? 'my own bleed cannot be bounced to me.' : r.cands.length ? 'which one — ' + r.cands.join(' or ') + '?' : 'I see nobody called "' + to + '" here.') + ' Type bounce <name> (' + names + ').');
       return true;
     }
-    av.target = r.seat; av.bounced = true; av.reactionsSeen = true;
-    this.o.log('bounce read: ' + who + ' bounced ' + av.v.name + '\u2019s bleed to ' + this.seatName(r.seat) + ' ("' + t.slice(0, 60) + '")');
-    this._emit('bounce-read', { by: who, to: this.seatName(r.seat), vamp: av.v.name, n: av.n | 0 });
-    this.send({ t: 'log', html: '<b>' + esc(av.v.name) + '</b> bleeds for ' + (av.n | 0) + '. Target: ' + esc(this.seatName(r.seat)) + "'s pool." });   // the frozen re-announce (L12.bleed): a bot at the new seat arms from it, as from a bot bouncer's
+    if(!this._ask){   // between my windows: my next step applies it (_bounceGate)
+      av.pendingBounce = { seat: r.seat, by: who, line: t.slice(0, 60) };
+      this.o.log('bounce read (between windows, my next step applies it): ' + who + ' → ' + this.seatName(r.seat));
+      return true;
+    }
+    if(this._ask.pausedBy) this._ask.pausedBy.delete(who);   // the egress review, pass 3: the bounce answers the window -- the bouncer's own pause ends with it, as a No block's does (CLAUDE.md: an answer ends a wait at once)
+    this._applyHumanBounce(av, who, r.seat, t);
     this._bouncedTo(r.seat);
     return true;
+  }
+  _applyHumanBounce(av, by, seat, line){   // the bleed re-aimed and re-announced -- the caller opens (or re-aims) the new target's window in the same tick
+    av.target = seat; av.bounced = true; av.reactionsSeen = true;
+    this.o.log('bounce read: ' + by + ' bounced ' + av.v.name + '’s bleed to ' + this.seatName(seat) + ' ("' + String(line || '').slice(0, 60) + '")');
+    this._emit('bounce-read', { by, to: this.seatName(seat), vamp: av.v.name, n: av.n | 0 });
+    this.send({ t: 'log', html: '<b>' + esc(av.v.name) + '</b> bleeds for ' + (av.n | 0) + '. Target: ' + esc(this.seatName(seat)) + "'s pool." });   // the frozen re-announce (L12.bleed): a bot at the new seat arms from it, as from a bot bouncer's
+  }
+  async _bounceGate(ans){                  // my next step after a human's bounce that came between windows: the re-announce and the new target's window, in one tick. ans = the answer so far (returned when nothing is pending)
+    for(let i = 0; i < 4; i++){            // the new target may bounce on in that window (a human's line lands there at once); four is more than a table plays
+      const av = this._actingVamp, pb = av && av.pendingBounce;
+      if(!pb || this.out || (ans && ans.what === 'block')) break;
+      av.pendingBounce = null;
+      if(!this.live(pb.seat) || pb.seat === this.seat || pb.seat === av.target){ this.o.log('bounce gate: ' + this.seatName(pb.seat) + ' is no longer a target -- dropped'); continue; }
+      this._applyHumanBounce(av, pb.by, pb.seat, pb.line);
+      av.blockStepSeat = pb.seat;            // the bounce's own rule: the new target may attempt to block (_bouncedTo's block step)
+      if(this.tally && this.tally.mode === 'block' && (this.tally.b | 0) !== 0) this._writeTally({ mode: 'block', b: 0 });   // the old target's intercept is stale for the new one
+      ans = await this._askBlock('Trainbot: ' + av.v.name + ' now bleeds ' + this.seatName(pb.seat) + ' for ' + (av.n | 0) + ' (' + pb.by + ' bounced it)', { reactionsOnly: true, blockStep: this.seatName(pb.seat) });
+      await sleep(150);
+    }
+    return ans;
   }
   async _commitBounce(p, bounce){          // Deflection & co (rulebook, source-verified): redirects to ANY Methuselah other than the acting minion's controller -- v1 defaults to MY OWN prey, the conventional choice (pass the bleed downstream, same as a real player usually does). v1.4.3 (14 July): the log line is now a SPEC-CORRECT L12.bleed re-announce with a Target: suffix, not a freeform prose line -- fixed because (a) the diagnostic run proved the old freeform line didn't match any L12 pattern at all, so the NEW target's pending never armed, and (b) the real human client uses exactly this mechanism (pool-targeting + targetSuffix() on the next log line) for the same operation, confirmed from klientkoden. Johan, 14 July: "man sätter target på den man vill Bounca till och spelar kortet, som då genom klonamination och logg visar vem som är target." steg 6 (16 July): now async -- a LOCKED reactor spends a wake FIRST (rulebook glossary: a woken vampire "can ... play reaction cards as though unlocked for the duration of the action"; it STAYS locked -- wake ≠ unlock), mirroring _commitBlock's own wake path, with a pace beat between the two plays.
     const cost = (bounce.cost && bounce.cost.blood) || 0;
@@ -8828,6 +8917,7 @@ class Bot {
        pool-targeting someone and clicking "Bleed N" (targetSuffix() appends "Target: X's pool."). */
     const actVamp = p.actingVampName || 'A minion';   // fallback if the vampire name wasn't captured (a legacy pending, or a human's log line where m[1] wasn't a vampire name we recognize -- belt-and-suspenders, shouldn't happen in practice)
     this.send({ t: 'log', html: '<b>' + esc(actVamp) + '</b> bleeds for ' + p.amount + '. Target: ' + esc(newPreyName) + "'s pool." });
+    if(p.lateDue && p._lateWord === 'It resolves' && this._isHumanName(p.who)) this.chat('Trainbot: ' + p.who + ', I bounced it to ' + newPreyName + ' \u2014 say It resolves again once ' + newPreyName + ' has answered.');   // v0.6.237 (the egress review, pass 3): the bounce came on the actor's It resolves -- the new target waits for theirs (it vanished)
 
     this.say('Pass');   // steg 2 fix (15 July, found via diag-steg2.js): _reactWindow ALWAYS opens with 'Hold on…', pausing any actor's _ask (a.pausedBy.add + timer cleared) -- but until now bounce never sent ANY of the three phrases _onSay's pausedBy.delete() listens for, so a bouncing reactor stayed "still thinking" forever from the actor's point of view: the ask's timer never restarts, and even a CORRECTLY-tracked new target's own Pass can't resolve it (blocked by `!a.pausedBy.size`). Bounce IS a "not blocking" outcome exactly like _reactWindow's own plain pass branch just below -- same phrase, same meaning.
     this.push();
@@ -10469,7 +10559,7 @@ class Bot {
     if(!this.pending) return;
     this._flushRelock(this.pending, reason);
     if(this.pending.passTimer) clearTimeout(this.pending.passTimer);
-    if(this.pending.lateWait) this._lateWordEnd(this.pending, 'answer');   // v0.6.237: the wait for the actor's word dies with its pending
+    if(this.pending.lateWait) this._lateWordEnd(this.pending, 'left');   // v0.6.237: the wait for the actor's word dies with its pending
     this.o.log('pending cleared (' + reason + ')');
     this.pending = null;
   }
@@ -10760,8 +10850,8 @@ class Bot {
     if(who !== this.o.name) this._evRecord(who, t, 'log');   // v0.6.176: the event log (my own lines are recorded at send)
     let m;
     if(who !== this.o.name){ if(L12.debugOn.test(t)) this._debugSeatSet(who, true); else if(L12.debugOff.test(t)) this._debugSeatSet(who, false); }   // v0.6.201: a bot at the table announced DEBUG mode -- I look away from its open hand
-    if(who !== this.o.name) this._hMemoLog(who, t);
-    if(who !== this.o.name && this._actingVamp && / bounces the bleed to /i.test(t) && this._humanBounce(who, t)) return;   // v0.6.237: the panel's bounce line on the log tier (it is chat today; either reaches me)   // v0.6.225 (D-113 (3)): a human's lasting choice (Toreador Grand Ball's pair)
+    if(who !== this.o.name) this._hMemoLog(who, t);   // v0.6.225 (D-113 (3)): a human's lasting choice (Toreador Grand Ball's pair)
+    if(who !== this.o.name && / bounces the bleed to /i.test(t) && this._humanBounce(who, t)) return;   // v0.6.237: the panel's bounce line on the log tier (it is chat today; either reaches me)
     /* v0.6.110 (R2, #11, Johan's decision A): the SHORT-TERM ACTION MEMORY.
        Any action-shaped line from another seated player replaces what I
        remember; the memory lives until the actor's "It resolves" or until the
@@ -10781,9 +10871,11 @@ class Bot {
         const prevObs = this._obs, tgtName = (t.match(/ Target: (.+?)'s /) || [])[1] || null;
         let targetSeat = tgtName ? this._seatOfName(tgtName) : 0;
         if(!targetSeat && /^takes (a card|an undirected) action$/.test(m[2]) && prevObs && prevObs.who === who && prevObs.vamp === m[1] && /^plays /.test(prevObs.verb || '') && Date.now() - prevObs.at < 30000) targetSeat = prevObs.targetSeat || 0;
-        const reAim = !!(prevObs && prevObs.who === who && prevObs.vamp === m[1] && m[3] && tgtName && /^bleeds for /.test(prevObs.verb || '') && Date.now() - prevObs.at < 120000 && ((this.players || []).find(q => q && q.seat === oseat) || {}).bot);   // v0.6.237: the acting BOT's own re-announce after a human bounced its bleed (_humanBounce) -- the same action re-aimed: no second action row, no second bleed in the minion's record
-        if(reAim){ prevObs.targetSeat = targetSeat || prevObs.targetSeat; prevObs.line = t; prevObs.directed = this._actDirected(m[2], null, oseat, prevObs.targetSeat); } else {
+        const ob = (this._bleedOpen || {})[oseat], bleedOf = ob && ob.vamp === m[1] && Date.now() - ob.at < 120000 ? ob.obs : null;   // the bleed this seat's vampire has open -- a modifier's play line, or the bled human's own Deflection line, may sit between it and a re-announce (the egress review, passes 1 and 2)
+        const reAim = !!(bleedOf && m[3] && tgtName && oseat === this.turnSeat && ((this.players || []).find(q => q && q.seat === oseat) || {}).bot);   // v0.6.237: the acting BOT's own re-announce after a human bounced its bleed (_humanBounce) -- the same action re-aimed: no second action row, no second bleed in the minion's record
+        if(reAim){ bleedOf.targetSeat = targetSeat || bleedOf.targetSeat; bleedOf.line = t; bleedOf.directed = this._actDirected(m[2], null, oseat, bleedOf.targetSeat); this._obs = bleedOf; } else {
         this._obs = { who, seat: oseat, vamp: m[1], verb: m[2], card: m[4] || null, line: t, at: Date.now(), poolLoss: null, targetSeat: targetSeat || null, directed: this._actDirected(m[2], m[4] || null, oseat, targetSeat) };
+        if(!m[4]){ const bo = this._bleedOpen = this._bleedOpen || {}; if(m[3]) bo[oseat] = { vamp: m[1], obs: this._obs, at: Date.now() }; else delete bo[oseat]; }   // v0.6.237: an action row -- a bleed opens the seat's bleed (its re-announce is the same action), any other action closes it
         if(!m[4] && oseat === this.turnSeat) this._turnActN = (this._turnActN | 0) + 1;   // v0.6.215: an action ROW (bleeds / hunts / calls / takes … action / attempts …), not a card play line -- a card action's row follows its play line, so each action counts once
         if(this._blockBar){ if(this._blockBar.who === who && this._blockBar.fresh) this._blockBar.fresh = false; else if(this._blockBar.who !== who) this._blockBar = null; }   // v0.6.127: the bar belongs to the announce that follows it; another Methuselah's action ends it
         /* v0.6.118: the per-minion ledger the forecast reads -- flush the previous action's stealth first */
@@ -10869,6 +10961,7 @@ class Bot {
         this.pending.amount = this.pending.reducedOnce ? Math.max(0, (this.pending.amount | 0) + parseInt(m[2], 10)) : parseInt(m[3], 10);   // T, the running total. v0.6.200 (point 15): after MY reduction the actor's '(= T)' still counts the bleed before it (a human's client, an older bot) -- the +N on top of the reduced amount is the rules' number; Viktor took 3 after Protected District said 'now 0'
         this.pending.contested = false;
         if(((this.players || []).find(q => q && q.name === this.pending.who) || {}).bot) this.pending.declined = true;   // v0.6.203: a BOT actor plays a modifier only after its block question closed -- blocks are over, the reopened window takes reactions only (a Block! here is refused and used to cost the bleed). A human actor may be out of turn: the block stays mine to offer.
+        this.pending._lateWord = null;                               // v0.6.237: a modifier after the actor's word voids the word (they went on)
         this._reactWindow();                                         // every +X REOPENS the window
       }
       return;
@@ -11355,6 +11448,8 @@ class Bot {
     if(this._vWait && !this._vWait.done){ this._freezeWait(this._vWait); speak = true; }   // v0.6.204 (F10)
     const pw = this._phaseWait;
     if(pw && !pw.done){ this._freezeWait(pw); speak = true; }
+    const lw = this.pending && this.pending.lateWait;   // v0.6.237 (the egress review): the wait for a human actor's word on the bleed total
+    if(lw && !lw.done){ this._freezeWait(lw); speak = true; }
     (this._heldTimers ? [...this._heldTimers] : []).forEach(h => h.freeze());   // the one-shot waits on a human (_heldTimeout) stop too
     if(speak) this._holdAnnounce();                                         // main (12 Oct): a bot frozen inside a step never reaches _holdGate, so the hold went unannounced
   }
@@ -11364,6 +11459,7 @@ class Bot {
     const pw = this._phaseWait; if(pw && !pw.done && pw.arm) pw.arm();
     const rc = this._refCall; if(rc && !rc.closed && rc.arm) rc.arm();
     if(this._vWait && this._vWait.arm) this._vWait.arm();   // v0.6.204 (F10)
+    { const lw = this.pending && this.pending.lateWait; if(lw && !lw.done && lw.arm) lw.arm(); }   // v0.6.237
     (this._heldTimers ? [...this._heldTimers] : []).forEach(h => h.arm());   // and the one-shot waits start their full grace again
   }
   _releaseDeparted(players){         // v0.6.106 (#5): anyone offline, vacant or out can no longer say 'It resolves' -- drop their Hold on and their ask pause
@@ -11495,7 +11591,7 @@ class Bot {
     if(this._vWait && m.who === this._vWait.who && (phrase === 'Pass' || phrase === 'No' || phrase === 'No reaction' || phrase === 'It resolves') && this._vwResolve('pass', phrase === 'It resolves')) return;   // v0.6.204 (F10): the actor adds no stealth -- the verdict from the counter, now (It resolves over a failed verdict lands the action); nothing to declare: the old paths below
     /* as TARGET: resolution + contest signals for the pending bleed */
     if(this.pending){
-      if(this.pending.lateWait && m.who === this.pending.who && (phrase === 'It resolves' || phrase === 'No' || phrase === 'Pass' || phrase === 'No reaction')){ this._lateWordGo(this.pending, 'answer'); return; }   // v0.6.237: the actor's word -- no more modifiers; I react to the total now (It resolves no longer lands the bleed past my bounce)
+      if((this.pending.lateWait || this.pending.lateDue) && m.who === this.pending.who && (phrase === 'It resolves' || phrase === 'No' || phrase === 'Pass' || phrase === 'No reaction') && this._lateWord(this.pending, phrase)) return;   // v0.6.237: the actor's word -- no more modifiers; I react to the total now (It resolves no longer lands the bleed past my bounce)
       if(this.pending.role === 'predator' && this.pending.waitingFor === m.who && (phrase === 'No block' || phrase === 'No reaction' || phrase === 'Pass')){   // v0.6.107 (B1): the prey declined -- the predator's window opens now (rulebook: prey first, then predator)
         this.pending.waitingFor = null; this.pending.contested = false; this._reactWindow(); return;
       }
@@ -12164,8 +12260,8 @@ class Bot {
     if(this._refCall && !this._refCall.closed && /^(no votes from me|i abstain|abstain)\.?$/i.test(txt)){ this._refCall.heard.add(who); this._refCall.paused.delete(who); this._refCall.arm(); }   // v0.6.122: a bot's abstain bubble (and a human typing the same) counts as having spoken
     this._narrWho = who; this._parseCombatNarration(txt); this._narrWho = null;   /* v0.6.183 */   // v0.6.156: the four opp-parsers (taken / press / maneuver / Crows / Grapple) now live in ONE method fed from BOTH tiers -- see _parseCombatNarration
     if(this._vWait && who === this._vWait.who && /^(pass|no|nope|done|it resolves|resolve( it)?|go on)\b[.!]*$/i.test(txt) && this._vwResolve('pass', /^it resolves/i.test(txt))) return;   // v0.6.204 (F10): typed, the same answer
-    if(this.pending && this.pending.lateWait && who === this.pending.who && /^(no|nope|pass|done|no more|that'?s all|it resolves|resolve( it)?)\b[.!]*$/i.test(txt)){ this._lateWordGo(this.pending, 'answer'); return; }   // v0.6.237: typed, the actor's word
-    if(this._actingVamp && this._humanBounce(who, txt)) return;   // v0.6.237: 'bounce <name>' / the panel's 'X bounces the bleed to Y' -- a human target bounced my bleed
+    if(this.pending && (this.pending.lateWait || this.pending.lateDue) && who === this.pending.who && /^(no|nope|pass|done|no more|that'?s all|it resolves|resolve( it)?)\b[.!]*$/i.test(txt) && this._lateWord(this.pending, /resolve/i.test(txt) ? 'It resolves' : 'No')){ return; }   // v0.6.237: typed, the actor's word
+    if(this._humanBounce(who, txt)) return;   // v0.6.237: 'bounce <name>' / the panel's 'X bounces the bleed to Y' -- a human target bounced my bleed (or was told it came too late)
     if(this._revPick && who === this._revPick.who){ const body0 = txt.replace(new RegExp('^\\s*@?' + this.o.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[,:!]?\\s*', 'i'), '');   // v0.6.205 (R4, F21): the actor of a Revelations [aus] at me names the card in chat -- bare, or '@Name discard X' (the bleed grammar's address)
       const dm0 = body0.match(/^\s*(?:@?trainbot[:,]?\s*)?discard\s+(.+?)\s*[.!]*\s*$/i);
       if(dm0){ const nm0 = this._revCardByName(dm0[1].replace(/^"(.*)"$/, '$1')); if(nm0) return this._revDiscard(nm0); this.note('Trainbot: I do not hold ' + dm0[1] + ' \u2014 name a card I revealed.'); return; } }
@@ -12458,7 +12554,8 @@ class Bot {
     askOpts = askOpts || {};
     question = this._spoken(question);   // v0.6.237: the question is a bubble for the table, never parsed (the bots answer the announce line; _evClassify reads its tail) -- names as spoken
     const reactionsOnly = !!askOpts.reactionsOnly;   // v0.6.114: after blocks were declined, only reactions remain (rulebook "Detailed course of an action": a modifier never reopens blocks)
-    const tailFor = plan => reactionsOnly ? ' \u2014 reduce, bounce or say "no reaction"' + this._waitTail(plan, 'resolves') : ' \u2014 say "block" or "no"' + this._waitTail(plan, 'no');   // v0.6.194: the clock in the tail is the tempo's, not askSecs
+    const tailFor = plan => askOpts.blockStep ? ' \u2014 ' + askOpts.blockStep + ' may block it (the bounce allows that), react, or say "no"' + this._waitTail(plan, 'resolves')   // v0.6.237: a human's bounce between my windows (_bounceGate)
+      : reactionsOnly ? ' \u2014 reduce, bounce or say "no reaction"' + this._waitTail(plan, 'resolves') : ' \u2014 say "block" or "no"' + this._waitTail(plan, 'no');   // v0.6.194: the clock in the tail is the tempo's, not askSecs
     return new Promise(resolve => {
       const targetSeat = (this._actingVamp && this._actingVamp.target) || this.preySeat();   // steg 2 (15 July): the CURRENT target (may differ from prey after a mid-action bounce), falling back to prey for hunt
       const av = this._actingVamp;
@@ -12490,7 +12587,7 @@ class Bot {
       }
       const preyOut = (this.players || []).some(p => p.seat === targetSeat && p.out);
       if(preyOut) return resolve({ what: 'no', who: null });   // never wait on ghosts: an ousted target can't block
-      if(adaptive && this._humanAt(targetSeat) && !this._seatCanBlock(targetSeat, reactionsOnly)){ skipRow([this.seatName(targetSeat)], [targetSeat]); return resolve({ what: 'no', who: null }); }   // v0.6.194 (Adaptive): the question the human cannot act on is skipped
+      if(adaptive && this._humanAt(targetSeat) && !this._seatCanBlock(targetSeat, reactionsOnly && !askOpts.blockStep)){ skipRow([this.seatName(targetSeat)], [targetSeat]); return resolve({ what: 'no', who: null }); }   // v0.6.237 (the egress review, pass 2): a bounce's new target may block -- its window is skipped only when it could not even block   // v0.6.194 (Adaptive): the question the human cannot act on is skipped
       this._ask = { resolve, timer: null, pausedBy: new Set(), contested: false, target: targetSeat, reactionsOnly, t0: Date.now() };   // v0.6.106 (#3): the roster hook reads THIS
       this._askSeen(this._ask);   // v0.6.206
       this.chat(question + tailFor(this._askPlan(this._ask)));
@@ -12693,7 +12790,7 @@ class Bot {
           if(_fmM){
             if(this._uniqueInPlay(d.pick.name)){ played.add(FX_NORM(d.pick.name)); continue; }
             _fmT = this._bestNeutralizeTarget(this.preySeat(), {});   // the rush doctrine: Fame the vampire you intend to rush -- the value pick
-            if(!_fmT){ played.add(FX_NORM(d.pick.name)); continue; }
+            if(!_fmT || !this._canTakeGive(_fmT.seat)){ played.add(FX_NORM(d.pick.name)); continue; }   // v0.6.237 (the egress review): the card goes to that seat by `give`, which the server refuses for an offline seat -- the card is held, not lost
           }
           const _hvM = !!(_lk && _lk.kind === 'lib' && (_lk.e.modes || []).some(mo => mo.fx && mo.fx.rushGrant > 0));   // v0.6.205 (R4, F23): fx.rushGrant -- literal read (Haven Uncovered)
           let _hvT = null;
@@ -13569,6 +13666,7 @@ class Bot {
         const ans = await this._askBlock(q);
         await sleep(150);
         if(ans.what === 'block'){
+          this._actingVamp.resolving = 'blocked';      // v0.6.237 (the egress review): a human's bounce from here is answered, not applied (_humanBounce)
           this.note('Blocked' + (ans.who ? ' by ' + ans.who : '') + '. Combat begins.');
           if(act.name) this._toAsh(act.name);          // a blocked action card still resolves to the ash heap
           this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: act.n, by: this._lastBlockerName || ans.who || null });
@@ -13596,6 +13694,10 @@ class Bot {
           while(true){
             if(this._actingVamp.archoned) break;   // v0.6.215: burned by Archon Investigation -- no more modifiers
             if(this._actingVamp.bounced && this.o.lateBounce !== 0){ this.o.log('bleed-modifier: the bleed was bounced \u2014 no pump on somebody else\'s prey'); break; }   // v0.6.144
+            if(this._actingVamp.pendingBounce){   // v0.6.237 (the egress review): a human's bounce between my windows -- _bounceGate applies it
+              if(this.o.lateBounce !== 0) break;   // below, after the loop
+              curAns = await this._bounceGate(curAns); if(curAns.what === 'block') break; continue;   // pass 3: lateBounce 0 pumps on after a bounce wherever it landed
+            }
             if(!spyBankTried){ spyBankTried = true;   // v0.6.211: a Spying Mission banked against this Methuselah -- 'the next time this vampire is about to successfully bleed the same Methuselah': the +2 first, then a reactions-only window (a modifier's own shape)
               if(this._playSpyBank(v)){ pumped++;
                 curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +2 bleed (Spying Mission) \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
@@ -13613,12 +13715,15 @@ class Bot {
             this.o.log('bleed-modifier (' + v.name + '): ' + d.why);
             if(!d.play) break;
             await pace();
+            if(this._actingVamp.pendingBounce && this.o.lateBounce === 0){ curAns = await this._bounceGate(curAns); if(curAns.what === 'block') break; continue; }   // pass 3: lateBounce 0 -- the bounce first, then the loop weighs the modifier again
+            if((this._actingVamp.bounced && this.o.lateBounce !== 0) || this._actingVamp.pendingBounce) break;   // v0.6.237 (the egress review): bounced under the pace -- no pump on somebody else's prey (the loop top's rule: lateBounce 0 pumps on)
             if(!this._playBleedModifier(v, mod)) break;   // card/vampire shifted under the await -- stop rather than loop forever
             pumped++;   // v0.6.206: the window opens WITH its line, no beat between -- an answer to the add line found no ask open in that gap (see the bleed total below)
             curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +' + mod.n + ' bleed \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });   // v0.6.114 (Johan's rule): blocks were finally declined before the modifier -- this window takes REACTIONS only (reduce/bounce); a Block! is refused, not contested   // steg 5 (16 July, rulebook-verified): a modifier NEVER reopens blocks ("Detailed course of an action", C: only a target change does) -- so the prompt invites REACTIONS (Deflection/Pass), not a block. Sandbox tolerance below is deliberate: if a human insists on a late block anyway, the table is the referee (house rule, agreed take-back) -- the bot follows the rules itself but never enforces them on others.
             await sleep(150);
             if(curAns.what === 'block') break;   // a late block ends the window outright -- combat, not more offers (sandbox: the table allowed it, so honour it)
           }
+          if(this._actingVamp.pendingBounce) curAns = await this._bounceGate(curAns);   // v0.6.237 (the egress review): a human's bounce that came between my windows -- its re-announce and the new target's window now
           /* v0.6.144 THE BLEED TOTAL (Johan, 20 Sep: 'experienced players always ask for the bleed total after blocks are declined -- it is established custom that a bounce is played AFTER the +bleed modifiers'). When I pumped, the window after the
              last modifier WAS that moment. When I did not, nobody ever got one: the bleed resolved straight after the blocks were declined, so a defender holding its bounce for the total never got to play it. One reactions-only window on the total, in the
              frozen L12.add grammar with +0 (no protocol change: every client and bot already reopens its window on that line). */
@@ -13634,6 +13739,8 @@ class Bot {
             curAns = await this._askBlock('Trainbot: ' + v.name + ' \u2014 bleed total ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + ', no more modifiers. Any reaction before it resolves?', { reactionsOnly: true });
             await sleep(150);
           }
+          if(this._actingVamp.pendingBounce) curAns = await this._bounceGate(curAns);   // v0.6.237: and one that came during the total's window's beat
+          this._actingVamp.resolving = curAns.what === 'block' ? 'blocked' : true;   // v0.6.237 (the egress review): from here a human's bounce is too late (_humanBounce says so)
           if(this._actingVamp.archoned){
             this._archonBurned(v);   // v0.6.215 (V5 wave 3): the target's Archon Investigation -- the minion is burned, the bleed is not successful (no pool, no Edge)
           } else if(curAns.what === 'block'){
@@ -13659,6 +13766,7 @@ class Bot {
         }
         this._w5AfterBleed(v, this._w5BleedOk === v.id); this._w5BleedOk = null;   // v0.6.230 (V5 wave 5): Forward Momentum -- a counter for a bleed that landed, one off for one that did not
         this._settleSelfPrice(v);   // v0.6.127: 'after action resolution', blocked or not
+        if(this._actingVamp && this._actingVamp.target) this._lastBleed = { seat: this._actingVamp.target, vamp: v.name, at: Date.now(), how: this._actingVamp.resolving };   // v0.6.237: a human's late bounce is told it came too late (_humanBounce)
         this._actingVamp = null;
         this._flushDraws();
       }
