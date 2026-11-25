@@ -16713,6 +16713,88 @@ async function connectWithRetry(client, tries = 30){
         u._dispatch({ t: 'started', players: u.players }); ok((u._floorUntil | 0) === 0 && u._refHeard === null, '186j a new game starts with a free floor and no vote round (got ' + JSON.stringify({ floor: u._floorUntil, heard: u._refHeard }) + ')'); }
     }
 
+    /* 187) v0.6.241 -- the exactness round (Claude's playtests of 25 Nov 2026; Johan's kör 20:43): the table bugs the two games found
+       (a)-(d), then the base starters' card gaps (e)-. (a) A1: a contest a human's Pass ended (Turn-based) leaves no safety net armed
+       behind it -- the next question waits for its own answer (a 4-min timer fired 70 s into a new question at the table); (b) A2: an
+       undirected contest whose last human has passed is a bot-only window -- the bots' clock declares the verdict, through the say and
+       the chat paths (three 4-min stalls at the table: the bot blocker never says Pass); (c) A3: a bleed modifier's add line waits for a
+       free floor, so its question goes out with it and the target's answer comes after (D-137's gap); (d) A4: the turn watchdog says
+       nothing while I wait on the table -- the polls, a combat step -- and still speaks when I am thinking.
+       LAST LINE OF 187 is the closing brace below. */
+    {
+      console.log('\n[187] v0.6.241 -- the exactness round: the playtests’ table bugs and the base starters’ card gaps');
+      const mkT7 = (extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'T', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 0.3, phaseSecs: 0.4, log: () => {} }, extra || {}));
+        u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m); u.says = []; u.say = m => u.says.push(m); u.notes = []; u.note = m => u.notes.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
+        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'T', bot: true }, { seat: 3, name: 'B3', bot: true }];
+        u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } }, 3: { pub: { cards: [{ id: 'k1', name: 'Kim', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
+        u.opp = u.opp || {}; u.opp[1] = Object.assign(u.opp[1] || {}, { handN: 5 }); u.opp[3] = Object.assign(u.opp[3] || {}, { handN: 5 });
+        const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
+        u._actingVamp = { v, n: 1, played: new Set(), target: 1, kind: 'bleed' };
+        return { u, v }; };
+      const race7 = (p, ms) => Promise.race([p, sleep(ms).then(() => ({ what: 'timeout' }))]);
+
+      // a) A1: Johan blocks, the verdict waits on him (Turn-based), his Pass declares it; the next question then waits for its own answer
+      { const { u } = mkT7({ tempo: { tempo: 'turn' }, tempoRemindMs: 60000, tempoGiveUpMs: 300 });
+        const p1 = u._askBlock('Q1?'); await sleep(10);
+        const a1 = u._ask; a1.contested = true; u.tally = { mode: 'block', a: 0, b: 1 }; u._restartAskTimer();   // his block attempt: a contested wait, its safety net re-armed
+        await sleep(40); u._onSay({ who: 'Johan', i: SAY.indexOf('Pass') });   // v0.6.194: the human's Pass ends the exchange at once -- the verdict from the counter
+        const r1 = await race7(p1, 1000);
+        u.o.tempoGiveUpMs = 4000; u.notes = [];
+        const p2 = u._askBlock('Q2?'); await sleep(500);   // the first wait's 300 ms net is long past
+        const open2 = !!u._ask && !u._ask.done, noted = u.notes.filter(n => /no answer in/.test(n));
+        u._onChat('Johan', 'no'); const r2 = await race7(p2, 1000);
+        ok(r1.what === 'block' && open2 && !noted.length && r2.what === 'no',
+           '187a a contest Johan’s Pass ended leaves no clock behind: the next question stays open for its own answer (got ' + JSON.stringify({ r1: r1.what, open2, noted, r2: r2.what }) + '; v0.6.240: its net fired into the new question, "no answer in 4 min" 70 s after it was asked)'); }
+
+      // b) A2: an undirected contest -- the prey B3 (a bot) blocks, the predator Johan passes -- is declared by the bots' clock, not the 4-min net
+      for(const via of ['say', 'chat']){
+        const { u } = mkT7({ tempo: { tempo: 'turn' }, tempoRemindMs: 60000, tempoGiveUpMs: 5000 });   // askSecs 0.3 = the bots' clock
+        u._actingVamp = { v: u.board[0], n: 0, played: new Set(), target: null, kind: 'political' };     // undirected (a referendum, as the stalls were): seat 2's prey (B3) and predator (Johan) may block
+        const t0 = Date.now(); const p = u._askBlock('Sully calls Kine Resources Contested. Block?'); await sleep(10);
+        const a = u._ask, elig = a && a.eligible ? [...a.eligible].sort().join() : '';
+        a.contested = true; u.tally = { mode: 'block', a: 1, b: 1 }; u._restartAskTimer();               // B3 blocks with its intercept on the counter: the verdict waits on Johan (no clock) and on B3
+        await sleep(30); if(via === 'say') u._onSay({ who: 'Johan', i: SAY.indexOf('Pass') }); else u._onChat('Johan', 'Pass');
+        const r = await race7(p, 2500), dt = Date.now() - t0;
+        ok(elig === 'B3,Johan' && r.what === 'block' && dt < 2500,
+           '187b ' + via + ': an undirected contest whose last human has passed is a bot-only window -- the bots’ clock declares the verdict from the counter (got ' + JSON.stringify({ elig, what: r.what, dt }) + '; v0.6.240 waited out the 4-min net: the bot blocker never says Pass)');
+        if(u._ask) u._answer('no', null); }
+
+      // c) A3: a modifier's add line is followed by its question -- the board waits behind it (the real queue: the 200 ms cascade between sends)
+      { const strip7 = h => String(h || '').replace(/<[^>]*>/g, '');
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        const mk = (name, seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 60, chatFloor: 1, askSecs: 2, twdKnow: 0, log: () => {} });
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.o.deckName = deck; u.fxClone = () => {}; u.lines = []; return u; };
+        const A = mk('Hanna', 1, 'tremere'), D = mk('Viktor', 2, 'nosferatu');
+        const wire = (from, to) => { from.ws = { send: m => {   // the socket under the real queue: every send is on the wire in its drain order
+          const at = Date.now(), d = m && m.t === 'say' ? { t: 'say', i: m.i, who: from.o.name } : (m && (m.t === 'log' || m.t === 'chat')) ? Object.assign({}, m, { who: from.o.name }) : null;
+          from.lines.push({ at, tier: m && m.t, txt: m && m.t === 'log' ? strip7(m.html) : m && m.t === 'chat' ? String(m.msg || '') : m && m.t === 'say' ? SAY[m.i] : '' });
+          if(d) setTimeout(() => { if(!to.out) to._dispatch(d); }, 30); } }; };
+        wire(A, D); wire(D, A);
+        const lb = { id: 'l1', name: 'Lloyd Brooks', kind: 'crypt', zone: 'ready', locked: false, blood: 6, cap: 6, attached: [] };
+        const dv = { id: 'd1', name: 'Baixinho (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3, cap: 3, attached: [] };
+        A.board = [lb]; A.hand = ['Conditioning']; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
+        D.board = [dv]; D.hand = []; D.pool = 20; D.turnSeat = 1;
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: dv.name, zone: 'ready', blood: 3, locked: true }] } } };
+        D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: lb.name, zone: 'ready', blood: 6 }] } } };
+        let terr = null; await race7(A._playTurn().catch(e => { terr = e.message; }), 25000);
+        const ix = A.lines.findIndex(l => l.tier === 'log' && /adds \+\d+ bleed \(= \d+\)\./.test(l.txt)), nx = ix >= 0 ? A.lines[ix + 1] : null, add = ix >= 0 ? A.lines[ix] : null;
+        ok(!terr && !!add && !!nx && nx.tier === 'chat' && /adds \+\d+ bleed — now \d+ on Viktor\. Any reaction\?/.test(nx.txt) && nx.at - add.at < 350,
+           '187c a modifier’s add line is followed on the wire by its question, one cascade step later; the board waits behind it (got ' + JSON.stringify({ terr, add: add && add.txt, next: nx && (nx.tier + ': ' + nx.txt), gap: add && nx ? nx.at - add.at : null }) + '; v0.6.240: the board took that slot, and a bot target answered the add line before the question was out)'); }
+
+      // d) A4: the watchdog's heartbeat -- silent while a poll or a combat step waits on the table, said while I am the one thinking
+      { const wd = setup => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'W', persona: 'expert', paceMs: 300, log: () => {} });
+          u.seat = 1; u.started = true; u.turnSeat = 1; u.players = [{ seat: 1, name: 'W', bot: true }, { seat: 2, name: 'Johan' }]; u.chats = []; u.chat = m => u.chats.push(m); u.push = () => {};
+          setup(u);
+          const orig = global.setTimeout; let cb = null;
+          global.setTimeout = (f, ms, ...r) => { if(ms === 30000 && !cb){ cb = f; return { unref(){} }; } return orig(f, ms, ...r); };
+          try { u._watchdogArm(); } finally { global.setTimeout = orig; }
+          if(cb){ global.setTimeout = (f, ms, ...r) => (ms === 30000 ? { unref(){} } : orig(f, ms, ...r)); try { cb(); } finally { global.setTimeout = orig; } }
+          return cb ? u.chats.some(c => /Still thinking/.test(c)) : 'no timer'; };
+        const g = { poll: wd(u => { u._refCall = { closed: false, paused: new Set(), heard: new Set() }; }), combat: wd(u => { u._phaseWait = { step: 0, done: false, who: 'Johan' }; }), thinking: wd(u => { u._acting = true; }) };
+        ok(g.poll === false && g.combat === false && g.thinking === true,
+           '187d the turn watchdog stays silent while my poll or a combat step waits on the table, and still says it is thinking when I am (got ' + JSON.stringify(g) + '; v0.6.240 said "Still thinking…" over both waits)'); }
+    }
+
 
 
     }

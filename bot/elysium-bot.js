@@ -9074,8 +9074,8 @@ class Bot {
        log lines directly above already carry the announce in full (the play
        line + the frozen L12.add re-announce). So the chat is deleted, not
        demoted: there was nothing in it the log did not already say. */
-    this.push();
-    return true;
+    Promise.resolve().then(() => this.push());   // v0.6.241 (A3, the playtests of 25 Nov): the board after my question -- queued here it took the slot between the add line and
+    return true;                                 // the question (the 200 ms cascade each), and a bot target answered the add line before the question was out (Pass +0.3 s, the question +1.8 s)
   }
   _pickBlocker(reacted, attempted, p){  // v0.4.3: the DECISION (interceptPotential) sums capability across ALL vampires -- the pick must agree, or a wrong-disc vampire first in board order leaves the counted card unplayable (proven: Zip picked while only Abderrahim could use the aus intercept). Best usable intercept wins; ties/no-cards fall back to board order. fas A+ (16 July): `attempted` excludes vampires whose block attempt already FAILED this action -- same-minion retries are illegal.   // VA: p brings kind + actingVampName for the crypt mods + the Navar age filter
     let best = null, bestS = -1;
@@ -11713,8 +11713,8 @@ class Bot {
               return this._answer('no', m.who);
             }
           }
-          if(!a.pausedBy.size && !a.timer) this._restartAskTimer();
-          return;
+          if(!a.pausedBy.size && (!a.timer || (a.contested && a.plan && a.plan.noClock && !this._askWho(a).length))) this._restartAskTimer();   // v0.6.241 (A2, the playtests of 25 Nov: three stalls of 4 min): a contest whose last human has passed
+          return;                                                     // is a bot-only window now -- re-plan it (the bots' clock, as at a bots-only table); its bot blocker never says Pass, so 'everyone passed' never came
         }
         const curTarget = this.seatName((this._actingVamp && this._actingVamp.target) || this.preySeat());
         if(m.who === curTarget && !a.pausedBy.size){
@@ -12549,7 +12549,7 @@ class Bot {
           return this._answer('no', who);
         }
       }
-      if(!a.pausedBy.size && !a.timer) this._restartAskTimer();
+      if(!a.pausedBy.size && (!a.timer || (a.contested && a.plan && a.plan.noClock && !this._askWho(a).length))) this._restartAskTimer();   // v0.6.241 (A2): the say branch's rule, mirrored
       return;
     }
     const cur = this.seatName((this._actingVamp && this._actingVamp.target) || this.preySeat());
@@ -12595,7 +12595,7 @@ class Bot {
       if(!a.deadline || Date.now() + wait < a.deadline){
         if(a.timer) clearTimeout(a.timer);
         a.deadline = Date.now() + wait;
-        a.timer = setTimeout(() => this._askTimeout(), wait);
+        a.timer = setTimeout(() => { if(this._ask === a) this._askTimeout(); }, wait);
       }
     }, (this.o.reactClockMs != null ? this.o.reactClockMs : 7000) + this._qFloorLeft());   // v0.6.109 (#13): was a hardcoded 5000 -- see o.reactClockMs
   }
@@ -12623,7 +12623,7 @@ class Bot {
          already shows the reaction countdown / the hold ack, and saying
          "still thinking" there would be plainly wrong. Re-arm either way
          so the heartbeat resumes once the table hands control back. */
-      if(!this._ask && !(this._holdBy && this._holdBy.size)) this.chat('\u231b Still thinking\u2026');
+      { const st = this.status().state; if(st !== 'asking' && st !== 'held') this.chat('\u231b Still thinking\u2026'); }   // v0.6.241 (A4, the playtests of 25 Nov): every wait the panel shows as 'asking' -- the polls, the combat steps, the verdict and late waits -- is a wait on the table, not thinking (was: the block ask and a hold only)
       this._watchdogArm();
     }, 30000);
   }
@@ -12646,7 +12646,7 @@ class Bot {
     if(this._wireWait(a, () => { if(this._ask === a) this._restartAskTimer(); })){ a.plan = this._askPlan(a); if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; } return; }   // v0.6.204 (F3 / F11): my question -- or another line of mine -- is still queued: the clock starts when it reaches the wire
     const plan = a.plan = this._askPlan(a), wait = plan.ms;   // v0.6.194: the tempo decides the clock (v0.6.204: from the wire; legacy = askSecs, computed ONCE and stamped -- v0.6.109 #1 -- so status() reports the deadline the timer actually holds)
     a.deadline = plan.noClock ? null : Date.now() + wait;   // Turn-based: no deadline to count down -- the widget shows its button instead (the hold's rule)
-    a.timer = setTimeout(() => this._askTimeout(), wait);
+    a.timer = setTimeout(() => { if(this._ask === a) this._askTimeout(); }, wait);   // v0.6.241 (A1): a timer times out its own ask only
     this._remindArm(a, plan, () => this._askRemindText(a));
     if(!plan.noClock) this._armReactTimer();   // v0.6.115 (self-review): the stopwatch is "N s of table SILENCE" -- silence restarts on activity, so every restart re-arms it. Was armed only at the window's opening (3 sites vs 15 restarts): one reaction played after the ring handed the table a fresh 20 s with no stopwatch -- the dead air v0.6.114 removed, back in exactly the case that happens at a table. Every window now ends <= reactClockMs + reactSecs + grace after the LAST activity, whatever askSecs is. v0.6.194: never in Turn-based -- the ring re-stamps the deadline, and Turn-based has none.
     else if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; }
@@ -12664,8 +12664,9 @@ class Bot {
   }
   _askTimeout(){
     const a = this._ask; if(!a) return;
+    if(a.timer){ clearTimeout(a.timer); a.timer = null; }   // v0.6.241 (A1, Claude's playtest of 25 Nov): a direct call (Turn-based's human Pass, the widget's step) left the safety net armed; it fired 240 s later into whatever ask was open then ("no answer in 4 min" 70 s after a new question)
     if(a.contested && this._deferredPending()){   // v0.6.153 (self-review after v0.6.152): with `--ask-secs 3` the clock could beat a deferred stealth / cancel card (react beat 1.5 s + a 2.4 s chat hold after "currently has N stealth") and declare a block that the card was about to break. Wait in short steps until it has landed; _spendStealthCard's own restart then runs the clock afresh.
-      if((a._deferWaits | 0) < 20){ a._deferWaits = (a._deferWaits | 0) + 1; a.deadline = Date.now() + 400; a.timer = setTimeout(() => this._askTimeout(), 400); return; } }
+      if((a._deferWaits | 0) < 20){ a._deferWaits = (a._deferWaits | 0) + 1; a.deadline = Date.now() + 400; a.timer = setTimeout(() => { if(this._ask === a) this._askTimeout(); }, 400); return; } }
       if(a._remT){ clearTimeout(a._remT); a._remT = null; }
       if(a.plan && a.plan.noClock && !a._end && a.t0) this.note('Trainbot: no answer in ' + Math.round(a.plan.ms / 60000) + ' min \u2014 ' + (a.contested ? 'resolving the block from the counter.' : 'going on as if nobody blocks.'));   // v0.6.194: Turn-based's safety net spoke
       if(a.contested && this.tally && this.tally.mode === 'block' && a.t0){ this._waitRow('block', a.plan, a.t0, a._end || 'clock', { what: 'verdict', contested: true, held: a._held ? 1 : undefined }); a.t0 = 0; }   // v0.6.194: the contested verdict resolves below without _answer -- its wait row is written here
@@ -13872,6 +13873,7 @@ class Bot {
             await pace();
             if(this._actingVamp.pendingBounce && this.o.lateBounce === 0){ curAns = await this._bounceGate(curAns); if(curAns.what === 'block') break; continue; }   // pass 3: lateBounce 0 -- the bounce first, then the loop weighs the modifier again
             if((this._actingVamp.bounced && this.o.lateBounce !== 0) || this._actingVamp.pendingBounce) break;   // v0.6.237 (the egress review): bounced under the pace -- no pump on somebody else's prey (the loop top's rule: lateBounce 0 pumps on)
+            if(this._floorHeld()){ await this._floorClear(); if(this.out) break; if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue; }   // v0.6.241 (A3, D-137's gap; the playtests of 25 Nov: a bot target's Pass 0.3 s after the add line, the question 1.5 s later): the add line and its question with a free floor, as the total's and Spying Mission's
             if(!this._playBleedModifier(v, mod)) break;   // card/vampire shifted under the await -- stop rather than loop forever
             pumped++;   // v0.6.206: the window opens WITH its line, no beat between -- an answer to the add line found no ask open in that gap (see the bleed total below)
             curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +' + mod.n + ' bleed \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });   // v0.6.114 (Johan's rule): blocks were finally declined before the modifier -- this window takes REACTIONS only (reduce/bounce); a Block! is refused, not contested   // steg 5 (16 July, rulebook-verified): a modifier NEVER reopens blocks ("Detailed course of an action", C: only a target change does) -- so the prompt invites REACTIONS (Deflection/Pass), not a block. Sandbox tolerance below is deliberate: if a human insists on a late block anyway, the table is the referee (house rule, agreed take-back) -- the bot follows the rules itself but never enforces them on others.
