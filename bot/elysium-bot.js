@@ -492,6 +492,13 @@ const SAY = ['Hold on\u2026', 'No block', 'Block!', 'No reaction', 'It resolves'
 const UND_KINDS = new Set(['stock', 'recruit', 'strength', 'creep', 'equip', 'fetch', 'political', 'rutor', 'ownRescue', 'leaveTorpor']);   // v0.6.235 (the finished decks' round, BOARD): rescuing my own vampire and leaving torpor are BASIC undirected actions (the block gate's list, CLAUDE.md) -- my predator may block them too; they opened a directed window (the 240: 313 own rescues, never blocked). v0.6.122: a political action is undirected (+1 stealth) -- prey and predator answer its Block? v0.6.213: Rutor's Hand (the egress review: it asked the prey only)
 const NOT_FROM_HAND = new Set(['vote-discard', 'bleed-discard', 'larissa-boost', 'inplay-votes', 'stealth-lock', 'intercept-lock']);   // v0.6.235 (the finished decks' round): _emitPlay windows that are no play from my hand -- a discard for a boost, a lock of a card in play (_notePlayRules)
 const sayIdx = phrase => SAY.indexOf(phrase);
+/* v0.6.240 (the chat round, RULINGS D-137: "one speaker at a time"): the floor. A seat's bubble waits until another seat's bubble has
+   left the screen; a quick phrase holds the floor 1.5 s. The client's own numbers (elysium-vtes-bord.html sayBubbleMs / chatBubble):
+   a chat bubble shows its text clamped at 180 characters + '…' for max(3000, min(9000, 3000 + (n - 20) * 45)) ms at the player's
+   multiplier 1.0 (a local setting nobody else can know); a frozen verdict LOG line pulses the quick phrases' bubble (VERDICT_RE). */
+const FLOOR_SAY_MS = 1500, FLOOR_TIE_MS = 250;   // a quick phrase's floor; ring order on a tie: one step a seat from the seat whose turn it is
+const bubbleMs = text => { const t = String(text == null ? '' : text), n = t.length > 180 ? 181 : t.length; return Math.max(3000, Math.min(9000, 3000 + Math.max(0, n - 20) * 45)); };
+const VERDICT_PULSE = /^(?:Block: Stealth -?\d+ vs Intercept -?\d+ — block (?:succeeds|fails)|Vote: \d+ for vs \d+ against — vote (?:passes|fails))\.$/;
 
 /* Named personality presets — knobs for the decide() seam (bot-spec §7).
    A persona is HOW the bot weighs the same facts; cardfx stays shared truth. */
@@ -955,6 +962,7 @@ class Bot {
       const holdLine = !!(nx && this._holdTags && this._holdTags.has(nx));
       let gw = this._lastSendAt ? this._lastSendAt + 200 - now : 0;
       if(nx && nx.t === 'chat' && !holdLine && this._lastChatWireAt) gw = Math.max(gw, this._lastChatWireAt + beat - now);
+      if(nx && this.o.chatFloor !== 0 && this._isBubbleMsg(nx)) gw = Math.max(gw, this._floorWaitMs(now));   // v0.6.240 (D-137): one speaker at a time -- my bubble waits until another seat's has left the floor (a hold line too: it waits 1.5 s for the human's own Hold on); one queue, so what follows it waits with it
       if(gw > 0) return later(gw);
     }
     this._tok -= 1;
@@ -980,6 +988,7 @@ class Bot {
       this._draining = true; try { this.ws.send(obj); } finally { this._draining = false; }
       this._lastSendAt = Date.now(); this._lastSentT = obj && obj.t;
       if(obj && obj.t === 'chat'){ this._lastChatAt = this._lastSendAt; this._lastChatWireAt = this._lastSendAt; }   // the bubble starts when the wire carries it -- _pace's chat-hold and _chatSettleMs read _lastChatAt; v0.6.207: the drain's beat reads _lastChatWireAt (the last CHAT on the wire, never a say's queue stamp)
+      else if(obj && obj.t === 'say' && this.o.chatFloor !== 0) this._lastChatAt = Math.max(this._lastChatAt || 0, this._lastSendAt);   // v0.6.240 (D-137): a quick phrase the floor held is stamped again when the table sees it (_pace's chat-hold; say() stamps it at the queue)
       if(ht !== undefined) this._holdShown = ht;   // v0.6.204 (F4): what the table last SAW of my hold
     }catch(e){ this.o.log('drain error:', e.message); }   // one bad frame must never stop the queue
     finally{
@@ -989,22 +998,18 @@ class Bot {
     }
   }
   chat(msg, opt){
-    /* v0.6.109 (FOUND BY THE SUITE, section 5): the v0.6.108 rewrite protected the
-       combat handshake prefix with `.replace(/Trainbot combat/, name + ' combat')`
-       FIRST -- which is a no-op when the bot is literally named "Trainbot" (the
-       default, i.e. every human table where nobody renames it), so the second
-       replace then mangled it to "Trainbot (bot) combat". The suite's
-       /Trainbot combat/ never matched, and every receiving bot's
-       `^(?:\S+ combat \u2014 )?(.+?) presses to` captured "Trainbot (bot) combat
-       \u2014 Lisa" as the vampire name. The arena rotates names and never sees the
-       literal, and the suite was not run at v0.6.108 -- so it shipped. A
-       sentinel makes the protection independent of what the name happens to be. */
-    const S = '\u0001';
-    const out = String(msg).replace(/Trainbot combat/g, S).replace(/Trainbot/g, this.o.name + ' (bot)').replace(new RegExp(S, 'g'), this.o.name + ' combat');
+    /* (v0.6.109's sentinel -- a bot literally named "Trainbot" turned 'Trainbot combat' into 'Trainbot (bot) combat' -- lives on in
+       note(); chat() adds no ' (bot)', so 'Trainbot combat' and 'Trainbot' map to the same name.) */
+    /* v0.6.240 (the chat round, RULINGS D-137): no "Name (bot): " prefix and no "(bot)" in a bubble -- the client's bubble already names
+       its speaker (sayLabel), and the log line names the seat. A leading 'Trainbot: ' is dropped, as note() drops it; any other
+       'Trainbot' is my name ('Trainbot combat -- ', the combat narration the opposing bot parses, stays 'NAME combat -- '). The log
+       tier keeps 'NAME (bot)' (note(): L12.debugOn / debugOff and _evClassify read it there). No chat parser read the prefix:
+       _onChat's last one was retired in v0.6.106, and _evClassify strips a speaker's prefix of either shape. */
+    const out = String(msg).replace(/^Trainbot:\s*/, '').replace(/Trainbot/g, this.o.name);
     const obj = { t: 'chat', msg: out.slice(0, 300) };
     if(opt && opt.hold !== undefined) this._sendHold(obj, !!opt.hold); else this.send(obj);   // v0.6.204 (F4): { hold: true | false } = a hold / resume line
     if(this._wdT) this._watchdogArm();
-  }   // v0.6.108: persona name + (bot) suffix; re-arm watchdog on visible output
+  }   // v0.6.108: persona name; re-arm watchdog on visible output
   /* v0.6.204 (R3, play-test 14 Oct F4): the hold and resume lines. Both sat in the ordinary queue, so a '\u25b6 Resuming.' reached the
      table after the NEXT hold, and a '\u23f8 Holding' 14 s late, behind a question and after the step had moved on. They go to the HEAD
      of the queue now (chat(msg, { hold })) (behind earlier hold lines, in order), tagged with the hold state they describe; _drain drops a line whose state
@@ -1036,6 +1041,31 @@ class Bot {
     const gen = w._wireGen = (w._wireGen | 0) + 1;                        // a newer arm supersedes a pending one: the clock starts after everything queued at the LAST arm
     this._afterWire(() => { if(w._wireGen !== gen) return; if(!w._wired){ w._wired = true; w.t0 = Date.now(); } w._wireGo = true; try { rearm(); } finally { w._wireGo = false; } });
     return true;
+  }
+  /* v0.6.240 (the chat round, RULINGS D-137: one speaker at a time). Another seat's bubble holds the FLOOR: a chat for as long as the
+     client shows it (bubbleMs), a quick phrase or a verdict pulse 1.5 s. A bubble of mine (chat, say, my verdict line) waits in _drain
+     until the floor is free, plus FLOOR_TIE_MS a step round the ring from the seat whose turn it is -- the ring order on a tie, when
+     two seats waited out the same bubble. My own bubbles never hold my floor (the chat beat spaces them). Paced tables only: _drain's
+     gate sits inside its paceMs branch, so paceMs 0 (the suite, the arena) runs as before; o.chatFloor 0 switches the floor off (an
+     ablation, not a decision knob). The stamp is the moment the bubble reached me -- the moment it reached the screen, near enough. */
+  _isBubbleMsg(o){ return !!o && (o.t === 'chat' || o.t === 'say' || (o.t === 'log' && VERDICT_PULSE.test(stripTags(o.html).trim()))); }
+  _floorSeen(m){
+    if(!m || !m.who || m.who === this.o.name || !(this._seatOfName(m.who) > 0)) return;   // a spectator's chat pops no bubble (the client's chatBubble wants a seat)
+    const hold = m.t === 'chat' ? bubbleMs(m.msg) : m.t === 'say' ? (SAY[m.i] ? FLOOR_SAY_MS : 0) : (m.t === 'log' && VERDICT_PULSE.test(stripTags(m.html).trim())) ? FLOOR_SAY_MS : 0;
+    if(hold > 0) this._floorUntil = Math.max(this._floorUntil || 0, Date.now() + hold);
+  }
+  _floorRank(){                      // my place in the ring from the seat whose turn it is (0 = that seat speaks first on a tie)
+    const n = (this.players || []).length, t = this.turnSeat; if(!t || !this.seat || !n || !this.live(t)) return 0;
+    let s = t, k = 0; while(s !== this.seat && k < n){ s = this.nextLive(s); k++; }
+    return s === this.seat ? k : 0;
+  }
+  _floorWaitMs(now){ const u = this._floorUntil || 0; return u ? Math.max(0, u + this._floorRank() * FLOOR_TIE_MS - (now || Date.now())) : 0; }
+  _bubblesOut(){                     // resolves when the last bubble I have queued is on the wire (at once when none is; never later than the longest floor)
+    let last = null; for(let i = this._sq.length - 1; i >= 0 && !last; i--) if(this._isBubbleMsg(this._sq[i])) last = this._sq[i];
+    if(!last || !this.ws) return Promise.resolve();
+    return new Promise(res => { let done = false; const go = () => { if(!done){ done = true; res(); } };
+      const m = this._wireCbs || (this._wireCbs = new WeakMap()), l = m.get(last); if(l) l.push(go); else m.set(last, [go]);
+      setTimeout(go, 9000 + 8 * FLOOR_TIE_MS + 1000); });
   }
   /* v0.6.114 (Johan, THE THREE TIERS): the bot's SYSTEM text. PROTOCOL §12.0 has three
      render tiers -- `log` (status, no bubble), `chat` (a calm bubble), `say` (the quick-
@@ -1078,6 +1108,7 @@ class Bot {
     const wait = Math.max(anchor + ms - Date.now(), chatHold);
     this._beatUntil = wait > 0 ? Date.now() + wait : 0;   // v0.6.109 (#1): READABLE, never steppable. A beat is 2 s of the bot thinking out loud, not a deadlock, and sleep() cannot be cut short without making the gate interruptible everywhere -- so the widget shows the number and leaves the button disabled, which is exactly the honest answer.
     if(wait > 0) await sleep(wait);
+    if(this.o.chatFloor !== 0 && this._sq.some(o => this._isBubbleMsg(o))) await this._bubblesOut();   // v0.6.240 (D-137): a bubble of mine that the floor still holds goes out first and the late hold below waits it out -- else my next act rode out 200 ms behind it (Johan's v0.6.100 rule)
     const lateHold = this._lastChatAt ? (this._lastChatAt + cp - Date.now()) : 0;   // v0.6.101 (Johan's simultaneous-vampires report): a bubble that DRAINED while we slept -- the pre-sleep chatHold read a stale stamp, so a raise's chat (queued, gap-held ~5 s) let the NEXT raise fire mid-bubble and the __board dedup swallowed its push into one two-vampire diff. The post-sleep re-check waits the late bubble out; boards drain between acts, diffs separate, cards fly one at a time.
     if(lateHold > 0) await sleep(lateHold);
     await this._holdGate();   // v0.6.101 amend (the sweep): the sleeps are ~5 s now -- a Hold on... arriving MID-sleep must still bite BEFORE the act fires, so the gate re-checks at the tail too (top + tail = airtight)
@@ -1166,6 +1197,7 @@ class Bot {
        same channel, prefixed so they can never collide with wire verbs.      */
     const h = this._handlers[m.t];
     if(!h) return;                     // unknown-verb rule: silently ignore the rest
+    if((m.t === 'chat' || m.t === 'say' || m.t === 'log') && m.who && m.who !== this.o.name){ this._floorSeen(m); this._refHeardOf(m); }   // v0.6.240 (D-137): another seat's bubble holds the floor -- stamped before any handler queues my answer; the vote round hears its voters
     if(BEAT_VERBS.has(m.t) && m.who && m.who !== this.o.name) this._lastTableAt = Date.now();   // v0.6.152 (Johan: 'the bot answers quick phrases and blocks the same instant'): a visible act by SOMEBODY ELSE re-anchors my beat -- _pace waits paceMs from the latest of my own act and the table's, so a human's 'No block' / Block! / tally is always followed by a breath before I move. Server ledger lines carry no who and never re-anchor (they echo MY acts).
     try{ h(m); }                       // one bad message must never kill the process --
     catch(e){ this.o.log('handler error (' + m.t + '):', e.message); }   // the launcher seats a whole table in ONE process
@@ -1243,6 +1275,7 @@ class Bot {
         this._ceBanRec = null; this._ceBanCombat = null; this._ntg = null; this._ntgCombat = null; this._eachMvUsed = null;   // v0.6.236 (the Banu Haqim pilot; L-95): a new game carries no rush card's ban, no Night Terrors' strike, no maneuvers each combat used
         this._replHold = []; this._perUnlock = new Map();   // v0.6.235 (the finished decks' round): a new game holds no replacement and has played no once-between-unlocks card
         this._holdAnnounced = false; this._pendingTurn = null;   // v0.6.108: and carries no queued turn or stale hold announcement
+        this._floorUntil = 0; this._refHeard = null; if(this._refHeardW){ this._refHeardW.go(); this._refHeardW = null; }   // v0.6.240 (D-137; L-95): a new game's floor is free and no vote round is in flight
         this._holdThaw();   // v0.6.198: a wait frozen by the old game's hold runs again, as it would have unheld
         this.o.log('game started — I am seat ' + this.seat + ', my prey is ' + this.seatName(this.preySeat()));
       },
@@ -1403,7 +1436,7 @@ class Bot {
         if(this._vWait && m.who && m.who !== this.o.name){ if(m.mode === 'block') this._vWait.arm(); else this._vwEnd('left'); }   // v0.6.204 (F10): the actor moved the counter -- a fresh clock; the counter closed or changed mode -- the wait's premise is gone
         if(m.mode === 'block' && this.pending && this.pending.contested && this.pending.blockerVamp && !this.out){ try { this._interceptSecondLook(); } catch(e){ this.o.log('blocker second-look error:', e.message); } }   // v0.6.143d
         if(m.mode === 'block' && this._oppLastAct && (m.a | 0) > (this._oppLastAct.a | 0)) this._oppLastAct.a = m.a | 0;   // v0.6.118: announced stealth, remembered per action (the max the window reached)
-        if(m.mode === 'vote' && !wasVote && !this.out) this._onVoteOpen(m).catch(e => this.o.log('vote-open error:', e.message));   // P0: the polling window IS this edge; v0.6.68: .catch (fire-and-forget hardening)
+        if(m.mode === 'vote' && !wasVote && !this.out){ this._refHeard = new Set(); this._onVoteOpen(m).catch(e => this.o.log('vote-open error:', e.message)); }   // P0: the polling window IS this edge; v0.6.68: .catch (fire-and-forget hardening); v0.6.240: the voters heard in this poll (_refHeardOf)
         if(this._refCall && !this._refCall.closed){ const rc = this._refCall;   // v0.6.122: my referendum is polling -- a counter moved by hand (+/- or the client's Votes menu) is a vote too; the counter CLOSING under me is a human's Resolve
           if(m.mode === 'vote'){ if((m.a | 0) !== (rc.lastA | 0) || (m.b | 0) !== (rc.lastB | 0)){ rc.lastA = m.a | 0; rc.lastB = m.b | 0; rc.arm(); } }
           else if(wasVote) rc.done('the counter was closed'); }
@@ -3778,10 +3811,37 @@ class Bot {
     for(let k = 0; k < n && st !== this.seat; k++){ st = this.nextLive(st); d++; }
     return d * Math.max(200, Math.min(600, (this.o.paceMs | 0) || 250));
   }
+  /* v0.6.240 (the chat round, D-137; BOARD: "the vote round driven by the previous voter"). On a paced table every voter waited a fixed
+     600 ms a seat from the caller (_refStaggerMs), so three vote bubbles landed 600 ms apart, each over the last. Now a voter waits for
+     the BOT before it in the ring from a bot caller -- its vote bubble ('I vote N against.', 'No votes from me.', a Pass), which it
+     sends after its counter write and casts line, so the counter stays read in turn (v0.6.124's reason) -- and the floor spaces the
+     bubbles. A human between us is not waited for (they vote when they like; a bot always speaks in a poll). Safety: 6 s a seat of
+     mine from the caller, the polls closing, or a new game end the wait. paceMs 0 and o.chatFloor 0 keep the old stagger. */
+  _refHeardOf(m){                    // another seat's bubble while a poll is open -- the voter has spoken
+    if(!this._refHeard || !(m.t === 'chat' || (m.t === 'say' && SAY[m.i] && m.i !== 0))) return;
+    this._refHeard.add(m.who);
+    const w = this._refHeardW; if(w && w.who === m.who) w.go();
+  }
+  _refPrevVoter(){                   // the nearest bot before me in the ring from the caller, and my distance from the caller; null when none
+    const rt = this._refT, n = (this.players || []).length; if(!rt || !rt.seat || rt.seat === this.seat || !n) return null;
+    const ring = [rt.seat]; let s = rt.seat; for(let k = 0; k < n; k++){ s = this.nextLive(s); if(s === rt.seat) break; ring.push(s); }
+    const i = ring.indexOf(this.seat); if(i <= 0) return null;
+    for(let j = i - 1; j >= 0; j--){ const p = (this.players || []).find(q => q && q.seat === ring[j]); if(p && p.bot) return { name: p.name, d: i }; }
+    return null;
+  }
+  _refTurnWait(){
+    const pv = this._refPrevVoter(); if(!pv || !this._refHeard || this._refHeard.has(pv.name)) return Promise.resolve();
+    if(this._refHeardW) this._refHeardW.go();
+    return new Promise(res => {
+      const w = { who: pv.name, done: false, timer: null, go: () => { if(w.done) return; w.done = true; if(w.timer) clearTimeout(w.timer); if(this._refHeardW === w) this._refHeardW = null; res(); } };
+      this._refHeardW = w; w.timer = setTimeout(w.go, (this.o.refTurnCapMs != null ? this.o.refTurnCapMs : 6000) * pv.d);   // o.refTurnCapMs: the safety net a seat (tests shorten it)
+    });
+  }
   _voteCounter(m){ return (this.tally && this.tally.mode === 'vote') ? this.tally : (m || {}); }
   _voteMirror(fld, val){ if(this.tally && this.tally.mode === 'vote'){ const t = Object.assign({}, this.tally); t[fld] = val; this.tally = t; } }   // v0.6.124: my own write, mirrored at once -- the District branch runs right after the title votes, before the echo, and used to overwrite them with open-edge + its own   // v0.6.124: the counter as it stands NOW (the tally handler mirrors every message), not the open-edge snapshot
   async _onVoteOpen(m){              // P0 (the politics engine's FIRST brick): the polling window -- District's defensive votes land in the SHARED against-counter. v0.6.67: async for the wake pacing beat
-    { const wait = this._refStaggerMs(); if(wait > 0){ await sleep(wait); if(this.out || !(this.tally && this.tally.mode === 'vote')) return; } }   // v0.6.124: my beat in the ring; the polls may have closed meanwhile
+    if(this.o.paceMs && this.o.chatFloor !== 0 && this._refT && this._refT.seat){ await this._refTurnWait(); if(this.out || !(this.tally && this.tally.mode === 'vote')) return; }   // v0.6.240 (D-137, BOARD: the vote round driven by the previous voter): I vote once the bot before me in the ring has spoken -- its bubble, after its counter write -- and the floor spaces the bubbles; a human before me is not waited for
+    else { const wait = this._refStaggerMs(); if(wait > 0){ await sleep(wait); if(this.out || !(this.tally && this.tally.mode === 'vote')) return; } }   // v0.6.124: my beat in the ring; the polls may have closed meanwhile
     if(this._callingReferendum) return;   // v0.6.66 (the review's seam): the tally carries no WHO -- the caller sets this flag or District votes against ITSELF (its title votes are its own announce)
     /* v0.6.234 (the egress review, finding 1; the graded readings, RED 1): my vote CARD goes before my title votes. A bot caller closes
        its poll once it has heard every seat, and my casts line is how it hears me: a card played after it was lost (Protected District
@@ -3842,7 +3902,7 @@ class Bot {
     this._abstainSaid = true;
     this.chat('No votes from me.');
   }
-  _onVoteClose(){ this._votedThisRef = false; this._castThisRef = false; this._refVotes = null; this._abstainSaid = false; this._didCastRef = false; }   // P0: the once-per-referendum guard re-arms on the mode-exit edge; v0.6.111 (R3): so do the title-vote guard and the running count
+  _onVoteClose(){ this._votedThisRef = false; this._castThisRef = false; this._refVotes = null; this._abstainSaid = false; this._didCastRef = false; this._refHeard = null; if(this._refHeardW) this._refHeardW.go(); }   // v0.6.240: a voter still waiting for the one before it goes on (and finds the polls closed)   // P0: the once-per-referendum guard re-arms on the mode-exit edge; v0.6.111 (R3): so do the title-vote guard and the running count
   /* v0.6.111 (R3, #10) ------------------------------------------------------
      My own TITLE votes. The cardfx crypt entries carry `title` and `votes`, so
      this is READ, not inferred. A locked titled minion still votes (rulebook,
@@ -6584,6 +6644,7 @@ class Bot {
      combat line for the step, a quick phrase (No / Pass / Nothing / Go on / Done ...), a human moving `ph` past the step, or the clock
      (restarted by the human's activity, like stealth / votes). Bot-vs-bot and combatPhases 0 skip it entirely.                    */
   _phaseOppPlayer(){ const c = this._combatOpp(); if(!c) return null; const p = (this.players || [])[c.seat - 1]; return p && !p.bot ? p.name : null; }
+  _combatTell(tail){ const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return p && p.bot ? '' : tail; }   // v0.6.240 (the chat round, D-137): a combat line's 'tell me if your side differs' is the human's instruction -- none to a bot opponent (it reads the line itself, _parseCombatNarration; the tail was never part of the shape); an unknown opponent keeps it
   _phasesOn(){ return this.o.combatPhases !== 0 && this._inCombat && !!this._phaseOppPlayer(); }
   _phaseAsk(step){ return this._phaseStep(step, 'ask', false); }         // before my play in the step (human acting: ask first)
   _phaseAfter(step, played){ return this._phaseStep(step, 'after', played); }   // after my play in the step (bot acting: announce / 'nothing', then wait)
@@ -10264,7 +10325,7 @@ class Bot {
       if(ce.unlock) myVamp.locked = false;
       this._rnd.strike = ce.name; this._rnd.dealt = 0; this._rnd.taken = 0; this._stealSettle(myVamp, 'combat ends');   // v0.6.196: combat ends first -- a parked steal never lands
       if(!(hs && !hsFirst)){ const o2 = await this._phaseAfter(3, true).then(() => stale() ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs))); if(stale()) return gone(); if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // consume their strike line (the dodge branch's reason): keeps the one-slot stash clean for the NEXT combat. v0.6.203: not when I am the acting bot -- the answering bot sees my combat ends first and strikes no more (an older bot's late line is dropped at the next announce, _clearCombatStashes)
-      { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' plays ' + ce.name + ': combat ends, no damage either way' + (ce.unlock ? '; ' + myVamp.name + ' unlocks' : '') + '.'; if(this._phasesOn()) this.note(ln); else this.chat(ln + ' Tell me if your side differs.'); }   // v0.6.204 (lever c)
+      { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' plays ' + ce.name + ': combat ends, no damage either way' + (ce.unlock ? '; ' + myVamp.name + ' unlocks' : '') + '.'; if(this._phasesOn()) this.note(ln); else this.chat(ln + this._combatTell(' Tell me if your side differs.')); }   // v0.6.204 (lever c)
       this.push();
       return { ended: true };
     }
@@ -10330,14 +10391,14 @@ class Bot {
         }
         if(this._xBeforeNeed(myVamp)) await this._xBeforeLine(myVamp);   // v0.6.213: the acting bot's additional strike goes before its round line
         if(stale()) return gone();
-        if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + line2); else this.chat('Trainbot combat \u2014 ' + line2 + ' Tell me if your side differs.');   // v0.6.204 (lever c)
+        if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + line2); else this.chat('Trainbot combat \u2014 ' + line2 + this._combatTell(' Tell me if your side differs.'));   // v0.6.204 (lever c)
         this.push();
         if(this._xAfterNeed(myVamp)) await this._xAfterLine(myVamp);   // v0.6.213: the additional strikes
         return;
       }
       if(this._xBeforeNeed(myVamp)) await this._xBeforeLine(myVamp);   // v0.6.213: the acting bot's additional strike goes before its round line
       if(stale()) return gone();
-      { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' dodges: no damage dealt or taken this round.'; if(this._phasesOn()) this.note(ln); else this.chat(ln + ' Tell me if your side differs.'); }   // v0.6.204 (lever c)
+      { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' dodges: no damage dealt or taken this round.'; if(this._phasesOn()) this.note(ln); else this.chat(ln + this._combatTell(' Tell me if your side differs.')); }   // v0.6.204 (lever c)
       this.push();
       if(this._xAfterNeed(myVamp)) await this._xAfterLine(myVamp);   // v0.6.213: the additional strikes (Arms of Ahriman [OBL]'s own among them)
       return;
@@ -10475,7 +10536,7 @@ class Bot {
     const line = this._takenLine(myVamp, _r1, strikeLine);
     if(this._xBeforeNeed(myVamp)) await this._xBeforeLine(myVamp);   // v0.6.213 (V5 wave 1): the acting bot's additional strike goes BEFORE its round line -- the answering bot reads it from that line on
     if(stale()) return gone();
-    if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + line); else this.chat('Trainbot combat \u2014 ' + line + ' One round \u2014 tell me if your side\u2019s damage differs.');   // v0.6.204 (play-test 14 Oct F12, lever c): a phased combat against a human walked every step, so its summary is a report on the log tier -- as a chat it cost the next question a 5 s bubble (F3)   // v0.6.167 (main: carried over from the last reply) -- a phased combat against a human already walked every step
+    if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + line); else this.chat('Trainbot combat \u2014 ' + line + this._combatTell(' One round \u2014 tell me if your side\u2019s damage differs.'));   // v0.6.204 (play-test 14 Oct F12, lever c): a phased combat against a human walked every step, so its summary is a report on the log tier -- as a chat it cost the next question a 5 s bubble (F3)   // v0.6.167 (main: carried over from the last reply) -- a phased combat against a human already walked every step
     this.push();
     if(this._xAfterNeed(myVamp)) await this._xAfterLine(myVamp);   // v0.6.213: the answering bot's decision, the answers, the additional pairs
     /* v0.6.21 (Johan's combat GO, Taste of Vitae -- completing the half-finished
@@ -10781,7 +10842,7 @@ class Bot {
     if((m = t.match(/^(.+?) casts (\d+) votes? (for|against)/))) return { kind: 'vote', n: +m[2], side: m[3], by: S(m[1]) };
     if((m = t.match(/^The referendum (passes|fails), (\d+) to (\d+)/))) return { kind: 'ref-result', passes: m[1] === 'passes', for: +m[2], against: +m[3] };
     if((m = t.match(/^(.+?) is ousted/))) return { kind: 'oust', who: S(m[1]).replace(/ \(bot\)$/, '') };
-    if(/Block\? \u2014 say "block"|Any reaction before it resolves\?|Any reaction\? \u2014|blocks were declined this action/.test(t)) return { kind: 'ask', what: /Block\?/.test(t) ? 'block' : 'reaction' };
+    if(/Block\?(?: \u2014 say "block"|$)|Any reaction before it resolves\?|Any reaction\?(?: \u2014|$)|blocks were declined this action/.test(t)) return { kind: 'ask', what: /Block\?/.test(t) ? 'block' : 'reaction' };   // v0.6.240 (D-137): + a question to bots only, which ends at its '?' (no human tail)
     if((m = t.match(/^(.+?) adds \+(\d+) bleed \u2014 now (\d+) on (.+?)\./))) return { kind: 'bleed-mod', vamp: S(m[1]), n: +m[2], total: +m[3], target: S(m[4]) };
     if((m = t.match(L12.combatEnds))) return { kind: 'strike', strike: 'ends', card: S(m[1]) };
     if((m = t.match(/^Referendum terms \u2014 (.+?): (.+)\.$/))) return { kind: 'ref-terms', card: S(m[1]), terms: S(m[2]) };
@@ -12596,7 +12657,8 @@ class Bot {
     askOpts = askOpts || {};
     question = this._spoken(question);   // v0.6.237: the question is a bubble for the table, never parsed (the bots answer the announce line; _evClassify reads its tail) -- names as spoken
     const reactionsOnly = !!askOpts.reactionsOnly;   // v0.6.114: after blocks were declined, only reactions remain (rulebook "Detailed course of an action": a modifier never reopens blocks)
-    const tailFor = plan => askOpts.blockStep ? ' \u2014 ' + askOpts.blockStep + ' may block it (the bounce allows that), react, or say "no"' + this._waitTail(plan, 'resolves')   // v0.6.237: a human's bounce between my windows (_bounceGate)
+    const tailFor = plan => !(plan && plan.who && plan.who.length) ? ''   // v0.6.240 (the chat round, D-137): a question only bots are asked carries no human instruction tail -- they answer the announce line (_askWho: no human to wait on)
+      : askOpts.blockStep ? ' \u2014 ' + askOpts.blockStep + ' may block it (the bounce allows that), react, or say "no"' + this._waitTail(plan, 'resolves')   // v0.6.237: a human's bounce between my windows (_bounceGate)
       : reactionsOnly ? ' \u2014 reduce, bounce or say "no reaction"' + this._waitTail(plan, 'resolves') : ' \u2014 say "block" or "no"' + this._waitTail(plan, 'no');   // v0.6.194: the clock in the tail is the tempo's, not askSecs
     return new Promise(resolve => {
       const targetSeat = (this._actingVamp && this._actingVamp.target) || this.preySeat();   // steg 2 (15 July): the CURRENT target (may differ from prey after a mid-action bounce), falling back to prey for hunt
