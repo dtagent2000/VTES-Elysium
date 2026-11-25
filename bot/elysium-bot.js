@@ -3679,7 +3679,7 @@ class Bot {
   }
   _actionCtxFor(v, over){            // v0.6.205: the minion phase's action ctx for v -- ONE builder for the minion loop and the Haven Uncovered play's look ahead (over.rush: a rush that does not exist yet). Every finder here is side-effect free; the rush finders are asked quietly by a look ahead (no counterfactual row)
     const rush = (over && Object.prototype.hasOwnProperty.call(over, 'rush')) ? over.rush : this._bestRushFor(v);
-    const ctx = { plain: { n: 1 + this._cryptBleedBonus(v) }, card: this._bestBleedCardFor(v), pd: this._bestPoolDmgActionFor(v), pol: this._bestPoliticalFor(v), stock: this._bestBloodStockFor(v), peek: this._bestPeekFor(v), equip: this._bestEquipActionFor(v), fetch: this._bestFetchFor(v), rush, creep: this._bestCreepFor(), strength: this._bestStrengthFor(v), recruit: this._bestRecruitFor(v), enemyRescue: this._bestEnemyRescueFor(v), ownRescue: this._bestOwnRescueFor(v), readyCrypt: this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready').length, edge: this.edge,
+    const ctx = { plain: { n: 1 + this._cryptBleedBonus(v) }, card: this._bestBleedCardFor(v), pd: this._bestPoolDmgActionFor(v), pol: this._bestPoliticalFor(v), stock: this._bestBloodStockFor(v), peek: this._bestPeekFor(v), equip: this._bestEquipActionFor(v), fetch: this._bestFetchFor(v), rush, creep: this._bestCreepFor(v), strength: this._bestStrengthFor(v), recruit: this._bestRecruitFor(v), enemyRescue: this._bestEnemyRescueFor(v), ownRescue: this._bestOwnRescueFor(v), readyCrypt: this.board.filter(c => c.kind === 'crypt' && c.zone === 'ready').length, edge: this.edge,
              plainBare: (1 + this._cryptBleedBonus(v)) === 1 && !this._bestBleedModifierFor(v, new Set(), false), lowPool: (this.pool | 0) <= 6, ...(() => { const rt = this._bestRutorFor(v); return rt ? { rutor: rt } : {}; })(), ...(() => { const bc = this._bestBurnCardFor(v); return bc ? { burnCard: bc } : {}; })(), ...(() => { const at = this._bestAttachFor(v); return at ? { attach: at } : {}; })(), ...(() => { const ea = this._bestAnimalEmployFor(v); return ea ? { employAnimal: ea } : {}; })() };   // v0.6.217 (V5 wave 4): the (D) action that burns a card in play (Toreador Grand Ball), only when there is one   // v0.6.213 (V5 wave 1): Rutor's Hand, only when there is one (a ctx without it is the old, byte for byte)   // v0.6.211 (Johan, 19 Oct): plainBare = the plain bleed is a bare 1 (no crypt bonus, no bleed modifier in hand to pump it); lowPool = 6 or less (Johan's floor) -- the equipment rule's two reads   // fas B: edge in the ctx -- the arena traces need it to distinguish 'Dirt unfound' from 'Edge not held' (in 2-player the opponent's intervening bleed usually reclaims it, so Dirt windows are rare and PRECIOUS)   // VA: plain bleed carries the Lenny-class crypt bonus from birth
     if(ctx.employAnimal && ctx.equip && ctx.equip.isRetainer && ctx.equip.name === ctx.employAnimal.retainer) ctx.equip = null;   // v0.6.236: a retainer whose requirement this vampire does not meet goes through Biothaumaturgic Experiment [tha] -- the plain finder read its clan but not its discipline; since the pilot's review (E1) it reads both (_retainerReqMet), so the two finders never offer the same retainer: a guard
     return ctx;
@@ -5119,14 +5119,16 @@ class Bot {
     if(this._famedSeen && this._famedSeen[c.name]) sc += 8; // the Fame-synergy pool bridge
     return sc;
   }
-  _bestCreepFor(){                   // N3: Creeping Sabotage in hand (fx.preyBurnPerCopy) -- its OWN finder so the bare-actStealth misplay guard stays intact
+  _bestCreepFor(vamp){               // N3: Creeping Sabotage in hand (fx.preyBurnPerCopy) -- its OWN finder so the bare-actStealth misplay guard stays intact. v0.6.241 (the exactness round's fidelity pass): 'Cost: X blood' (KRCG), 'X is the number of copies of this card you control' -- the copies already in play when it is announced (the first is free, the second 1 blood ...); the acting vampire pays it, so one that cannot is not offered
     if(!this.fx) return null;
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('action')) continue;
       const mo = (h.e.modes || []).find(m => m.fx && m.fx.preyBurnPerCopy);
       if(!mo) continue;
       let st = 0; (h.e.modes || []).forEach(m => { if(m.fx && typeof m.fx.actStealth === 'number' && m.fx.actStealth > st) st = m.fx.actStealth; });
-      return { idx, name: h.name, kind: 'creep', st, n: 1 };
+      const X = (this.board || []).filter(c => c && c.kind === 'lib' && c.name === h.name && !this._outOfPlay(c)).length;   // v0.6.241: the X blood
+      if(vamp && X > (vamp.blood | 0)) return null;
+      return Object.assign({ idx, name: h.name, kind: 'creep', st, n: 1 }, X ? { cost: { blood: X } } : null);
     }
     return null;
   }
@@ -13503,6 +13505,7 @@ class Bot {
           /* N3: Creeping Sabotage -- the undirected tabling template (the [AUS]/M2
              family): announce, ask, on through the card ENTERS PLAY persistent. */
           this._actingVamp.kind = 'creep';
+          if(act.cost && act.cost.blood){ v.blood = Math.max(0, (v.blood | 0) - act.cost.blood); this._park(act.cost.blood, 0); }   // v0.6.241: Creeping Sabotage's X blood (the copies already in play), paid by the acting vampire at announce
           this.push();
           this.fxClone({ name: act.name, kind: 'lib' }, 'puts in play', { actor: v });
           this._announceTallyA((act.st | 0) + this._cryptStealthMod(v, 'creep', false));   /* v0.6.219 (crypt wave A, D-108): + the crypt's stealth (_cryptStealthMod: Ariane's undirected -1, Devorah's pool, Frau Schädel's recruit / employ, Kalyani's hunt) */

@@ -16728,6 +16728,7 @@ async function connectWithRetry(client, tries = 30){
        Eyes of Argus [AUS] then On the Qui Vive for one bleed) -- the record is the action's own. (i) Mirror Walk [THA] (Claude's spot
        check): a superior Thaumaturgy vampire takes the rider mode on the stealth tie, and its play line names the level; blocked, the
        blocker is locked and the action ends with no combat (BLOCKED_LOCK), the blocker's bot keeps its vampire locked, no combat.
+       (j) Creeping Sabotage's 'Cost: X blood' (the fidelity pass): X the copies already in play, paid by the acting vampire.
        LAST LINE OF 187 is the closing brace below. */
     {
       console.log('\n[187] v0.6.241 -- the exactness round: the playtests’ table bugs and the base starters’ card gaps');
@@ -16889,6 +16890,18 @@ async function connectWithRetry(client, tries = 30){
         ok(got.sup === 'THA' && got.inf === 'tha' && got.pl === 'Rosalina Cortez (G6) plays Mirror Walk [THA]: +1 stealth.' && got.booked && got.line === "Rosalina Cortez (G6) is blocked — Mirror Walk [THA]: Sven's Lisa is locked; the action ends unsuccessfully." && got.combat === false
            && got.cancel && got.hit === true && got.lisaLocked === true && got.kind === 'blocked-lock' && got.evBlocker === 'Lisa',
            '187i Mirror Walk [THA]: a superior Thaumaturgy vampire takes the rider mode on the tie ([tha] for an inferior one), its play line names the level; blocked, it locks the blocker and ends the action with no combat, and the blocker’s bot keeps its vampire locked with no combat (got ' + JSON.stringify(got) + '; v0.6.240 played [tha] and fought)');
+      }
+      // j) Creeping Sabotage costs X blood, X the copies already in play (the fidelity pass; KRCG 'Cost: X blood')
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'J', persona: 'grinder', log: () => {} });
+        const v = { id: 'j1', name: 'Agrippina (G1)', kind: 'crypt', zone: 'ready', locked: false, blood: 1 };
+        u.board = [v, { id: 'j0', name: 'Creeping Sabotage', kind: 'lib', zone: 'ash' }]; u.hand = ['Creeping Sabotage'];
+        const cost = c => c === null ? 'none' : ((c.cost && c.cost.blood) | 0);
+        const got = { zero: cost(u._bestCreepFor(v)) };   // one in the ash heap only: free
+        u.board.push({ id: 'j2', name: 'Creeping Sabotage', kind: 'lib', zone: 'ready', locked: false }); got.one = cost(u._bestCreepFor(v));
+        u.board.push({ id: 'j3', name: 'Creeping Sabotage', kind: 'lib', zone: 'ready', locked: false }); got.two = cost(u._bestCreepFor(v));   // 2 blood, the vampire has 1
+        v.blood = 2; got.twoPaid = cost(u._bestCreepFor(v));
+        ok(got.zero === 0 && got.one === 1 && got.two === 'none' && got.twoPaid === 2,
+           '187j Creeping Sabotage costs X blood, X the copies already in play: free with none, 1 with one, not offered to a vampire that cannot pay 2 (got ' + JSON.stringify(got) + '; v0.6.240 played every copy free)');
       }
     }
 
