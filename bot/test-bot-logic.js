@@ -16719,7 +16719,11 @@ async function connectWithRetry(client, tries = 30){
        undirected contest whose last human has passed is a bot-only window -- the bots' clock declares the verdict, through the say and
        the chat paths (three 4-min stalls at the table: the bot blocker never says Pass); (c) A3: a bleed modifier's add line waits for a
        free floor, so its question goes out with it and the target's answer comes after (D-137's gap); (d) A4: the turn watchdog says
-       nothing while I wait on the table -- the polls, a combat step -- and still speaks when I am thinking.
+       nothing while I wait on the table -- the polls, a combat step -- and still speaks when I am thinking. (e) the sweep register 7.1:
+       Aire of Elation's 'with an additional +1 bleed if this vampire is Toreador' (fx.plusIf, _plusIf) -- a Toreador's [pre] is +2 and
+       [PRE] +3, any other clan's +1 / +2; (f) 7.2: The Warrens' 'with an additional +1 intercept if this Nosferatu is titled' -- a titled
+       Nosferatu's +3, an untitled one's +2, through both readers (_bestInterceptFor, _interceptStack), only on a directed action; a
+       condition the reader does not know fails closed.
        LAST LINE OF 187 is the closing brace below. */
     {
       console.log('\n[187] v0.6.241 -- the exactness round: the playtests’ table bugs and the base starters’ card gaps');
@@ -16793,6 +16797,33 @@ async function connectWithRetry(client, tries = 30){
         const g = { poll: wd(u => { u._refCall = { closed: false, paused: new Set(), heard: new Set() }; }), combat: wd(u => { u._phaseWait = { step: 0, done: false, who: 'Johan' }; }), thinking: wd(u => { u._acting = true; }) };
         ok(g.poll === false && g.combat === false && g.thinking === true,
            '187d the turn watchdog stays silent while my poll or a combat step waits on the table, and still says it is thinking when I am (got ' + JSON.stringify(g) + '; v0.6.240 said "Still thinking…" over both waits)'); }
+
+      // e) 7.1: Aire of Elation -- the additional +1 bleed for a Toreador ([pre] +1 / [PRE] +2 printed; KRCG's text)
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'E', persona: 'grinder', log: () => {} });
+        const tor = { id: 'e1', name: 'Adrianne (G1)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 };          // Toreador, [pre]
+        const torS = { id: 'e2', name: 'Aisha az-Zahra (G5)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 };    // Toreador, [PRE]
+        const bru = { id: 'e3', name: 'Adelino Da Silva (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 };   // Brujah, [pre]
+        u.board = [tor, torS, bru]; u.hand = ['Aire of Elation']; u.edge = false;
+        const n = v => { const m = u._bestBleedModifierFor(v, new Set(), false); return m && m.name === 'Aire of Elation' ? m.n : null; };
+        const got = { tor: n(tor), torS: n(torS), bru: n(bru) };
+        ok(got.tor === 2 && got.torS === 3 && got.bru === 1,
+           '187e Aire of Elation adds +1 more bleed when its vampire is Toreador: [pre] +2 and [PRE] +3 for a Toreador, +1 for a Brujah (got ' + JSON.stringify(got) + '; v0.6.240 read +1 / +2 / +1)');
+        const mo = { at: null, fx: { bleed: 1, plusIf: { add: { bleed: 1 }, if: { selfClan: 'Toreador', actorTitled: true } } } };
+        ok(typeof u._plusIf === 'function' && u._plusIf(mo, 'bleed', tor) === 0 && u._plusIf({ fx: { bleed: 1, plusIf: { add: { bleed: 1 }, if: { selfClan: 'Toreador' } } } }, 'intercept', tor) === 0,
+           '187e a condition the reader does not know fails closed (no bonus), and a bonus for another key adds nothing here');
+      }
+
+      // f) 7.2: The Warrens -- the additional +1 intercept for a titled Nosferatu, on an action directed at me
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'F', persona: 'grinder', log: () => {} });
+        const baron = { id: 'f1', name: 'Baron Dieudonne (G4)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 };   // Nosferatu, prince
+        const agr = { id: 'f2', name: 'Agrippina (G1)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 };           // Nosferatu, untitled
+        u.board = [baron, agr]; u.hand = ['The Warrens'];
+        const bleedAtMe = { kind: 'bleed' }, undirected = { kind: 'undirected' };
+        const ic = (v, p) => { const b = u._bestInterceptFor(v, null, p); return b && b.name === 'The Warrens' ? b.s : null; };
+        const got = { baron: ic(baron, bleedAtMe), agr: ic(agr, bleedAtMe), baronStack: u._interceptStack(baron, null, bleedAtMe).sum, agrStack: u._interceptStack(agr, null, bleedAtMe).sum, undirected: ic(baron, undirected) };
+        ok(got.baron === 3 && got.agr === 2 && got.baronStack === 3 && got.agrStack === 2 && got.undirected === null,
+           '187f The Warrens gives a titled Nosferatu +3 intercept and an untitled one +2, in the finder and the stack alike, and nothing on an undirected action (got ' + JSON.stringify(got) + '; v0.6.240 read +2 for both)');
+      }
     }
 
 

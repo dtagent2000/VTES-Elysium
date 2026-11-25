@@ -3742,6 +3742,57 @@
     }
    ],
    "note": "V5 wave 6b (18 Nov 2026, bot v0.6.234, RULINGS D-124, spec-v5-wave6 §9.2). 'Only usable during the polling step of a political action. [pot][pre] This vampire gets +3 votes. [POT][PRE] Vampires who do not follow the Path of Power and the Inner Voice get -1 vote.' A vampire's net negative votes count 0 [ANK 20251125]: one vote off each voting vampire off the Path; a political card's vote and the Edge's are the Methuselah's (rulebook 6.3.3.1). fx.voteCut {notPath}: applied in the caller's count (_tyrannyCut), the caller's boost and the voter's reaction (_tyrannyReactFor). The data's 1 blood is inherited."
+  },
+  "Aire of Elation": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "pre",
+     "fx": {
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "selfClan": "Toreador"
+       }
+      }
+     }
+    },
+    {
+     "at": "PRE",
+     "fx": {
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "selfClan": "Toreador"
+       }
+      }
+     }
+    }
+   ],
+   "note": "The exactness round (25 Nov 2026, bot v0.6.241; the sweep register 7.1, active: the toreador smoke's 10 plays, all by Toreador vampires, each 1 bleed short; Johan's kör 20:43). KRCG: '[pre] +1 bleed, with an additional +1 bleed if this vampire is Toreador (limited). [PRE] +2 bleed, with an additional +1 bleed if this vampire is Toreador (limited).' A merge over the compiled entry (its bleed 1 / 2, cost, limited and onlyBleed stay the compiler's): the condition kept on the key, class 7's shape -- fx.plusIf {add: {bleed: 1}, if: {selfClan: 'Toreador'}}, read through _plusIf by _bestBleedModifierFor (a condition the reader cannot see fails closed: no bonus)."
+  },
+  "The Warrens": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "selfTitled": true
+       }
+      }
+     }
+    }
+   ],
+   "note": "The exactness round (25 Nov 2026, bot v0.6.241; the sweep register 7.2, active: the 240's 178 plays, 116 of them by nosferatu's four titled vampires, each 1 intercept short; Johan's kör 20:43). KRCG: 'Only usable during an action directed at you (or a card you control). +2 intercept, with an additional +1 intercept if this Nosferatu is titled.' A merge over the compiled entry (its +2, cost, clan and onlyDirected stay the compiler's): fx.plusIf {add: {intercept: 1}, if: {selfTitled: true}} -- a title printed or carried (_titleOf), read through _plusIf by _bestInterceptFor and _interceptStack."
   }
  },
  "crypt": {

@@ -2048,7 +2048,16 @@ class Bot {
     if(!has) return;
     av._lookKey = null; try { this._stealthSecondLook(); } catch(e){ this.o.log('second look error:', e.message); }
   }
-  _vampClan(vamp){ const h = vamp && this.fxLookup(vamp.name); return (h && h.kind === 'crypt' && h.e && h.e.clan) || null; }   // v0.6.205: the printed clan of a vampire (cardfx crypt entry), null when unknown -- a clan gate fails closed
+  _vampClan(vamp){ const h = vamp && this.fxLookup(vamp.name); return (h && h.kind === 'crypt' && h.e && h.e.clan) || null; }
+  _plusIf(mo, key, vamp){            // v0.6.241 (the exactness round; the sweep register's class 7: 7.1 Aire of Elation, 7.2 The Warrens): 'with an additional +N <key> if this vampire
+    const pi = mo && mo.fx && mo.fx.plusIf;   // is <clan>' / 'if this Nosferatu is titled' -- the condition kept on the key: fx.plusIf {add: {<key>: N}, if: {selfClan, selfTitled}}. The
+    if(!pi || !pi.add || typeof pi.add[key] !== 'number' || !vamp) return 0;   // vampire is the one playing the card; a condition this reader cannot see fails closed (no bonus)
+    const c = pi.if || {};
+    if(c.selfClan && !String(this._vampClan(vamp) || '').split('/').includes(c.selfClan)) return 0;
+    if(c.selfTitled && !this._titleOf(vamp).title) return 0;
+    if(Object.keys(c).some(k => k !== 'selfClan' && k !== 'selfTitled')) return 0;   // a condition no reader knows yet (Protection Racket's acting minion, Sense the Sin's corruption): no bonus
+    return pi.add[key] | 0;
+  }   // v0.6.205: the printed clan of a vampire (cardfx crypt entry), null when unknown -- a clan gate fails closed
   _vampSect(vamp){ const h = vamp && this.fxLookup(vamp.name); return (h && h.kind === 'crypt' && h.e && h.e.sect) || null; }   // v0.6.215: the printed sect, null when unknown
   _lockStealthAtAnnounce(v, kind){   // v0.6.215 (V5 wave 3): Creepshow Casino -- 'You can lock this card as a vampire you control announces an undirected action to give that vampire +1 stealth, even if stealth is not yet needed.' Its only window is the announce, so the block gate's 'stealth only when needed' (R-12) does not reach it: the card says so. Spent on the undirected actions worth defending -- a recruit, an employ, an equip, a political action -- never on a hunt (nobody's hunt is worth a lock it could spend on a referendum this turn). Returns the stealth added (the announce books it into tally a); the lock line follows the announce line (the caller sends it).
     if(!v || kind === 'hunt') return null;
@@ -2324,7 +2333,8 @@ class Bot {
           const ts = this._actingVamp && this._actingVamp.target, tp = ts && this.table[ts] && this.table[ts].pub;
           if(!tp || typeof tp.pool !== 'number' || tp.pool > mo.req.targetPoolMax) return;
         }
-        if(!best || mo.fx.bleed > best.n) best = { idx, name: h.name, n: mo.fx.bleed, cost: h.e.cost || null, costEdge: !!h.e.costEdge, edgeLock: !!h.e.edgeLock, limited: !!h.e.limited };
+        const bn = mo.fx.bleed + this._plusIf(mo, 'bleed', vamp);   // v0.6.241 (7.1): Aire of Elation's +1 for a Toreador
+        if(!best || bn > best.n) best = { idx, name: h.name, n: bn, cost: h.e.cost || null, costEdge: !!h.e.costEdge, edgeLock: !!h.e.edgeLock, limited: !!h.e.limited };
       });
     });
     return best;
@@ -6117,7 +6127,7 @@ class Bot {
       if(!this._titleOk(h, vamp)) return;   // v0.6.139
       if(!this._entryReqOk(h.e, vamp)) return;   // v0.6.228 (round F, BOARD 'Three auto readings'): the card's clan / sect -- a Banu Haqim played Eyes of the Wild in a fixture
       (h.e.modes || []).forEach(mo => {
-        const ic = mo.fx && mo.fx.intercept;
+        const ic = mo.fx && typeof mo.fx.intercept === 'number' ? mo.fx.intercept + this._plusIf(mo, 'intercept', vamp) : (mo.fx && mo.fx.intercept);   // v0.6.241 (7.2): The Warrens' +1 for a titled Nosferatu
         if(mo.when === 'lockedBlock') return;   // v0.6.139: the locked-only mode is the sleeper route's, never a plain intercept
         if(!this._dirOk(h.e, mo, p)) return;   // v0.6.233: 'Only usable during an action directed at you'
         if(typeof ic === 'number' && this._modeUsableBy(mo, vamp) &&
@@ -11999,7 +12009,7 @@ class Bot {
     const seen = new Set(); let S = 0, sum = 0;
     (this.hand || []).forEach(n => { const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).some(t => t === 'react' || t === 'mod') || seen.has(FX_NORM(h.name))) return;
       if(played && played.has(FX_NORM(h.name))) return; if(!this._titleOk(h, vamp)) return; if(!this._entryReqOk(h.e, vamp)) return; if(((h.e.cost && h.e.cost.blood) || 0) > (vamp.blood | 0)) return;   // v0.6.228: + the clan / sect (_bestInterceptFor's mirror)
-      let best = 0; (h.e.modes || []).forEach(mo => { if(mo.when === 'lockedBlock' || !this._dirOk(h.e, mo, p)) return; const ic = mo.fx && mo.fx.intercept; if(typeof ic === 'number' && ic > best && this._modeUsableBy(mo, vamp)) best = ic; });   // v0.6.233: + the directed condition (_bestInterceptFor's mirror)
+      let best = 0; (h.e.modes || []).forEach(mo => { if(mo.when === 'lockedBlock' || !this._dirOk(h.e, mo, p)) return; const ic = mo.fx && typeof mo.fx.intercept === 'number' ? mo.fx.intercept + this._plusIf(mo, 'intercept', vamp) : null; if(typeof ic === 'number' && ic > best && this._modeUsableBy(mo, vamp)) best = ic; });   // v0.6.241 (7.2): + The Warrens' titled +1   // v0.6.233: + the directed condition (_bestInterceptFor's mirror)
       if(best > 0){ seen.add(FX_NORM(h.name)); S++; sum += best; } });
     this._lockInterceptFor(vamp, played, p, true).forEach(lb => { S++; sum += lb.s; });   // v0.6.215: every location that locks for this blocker counts like a card
     return { S, sum };
