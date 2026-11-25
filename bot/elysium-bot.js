@@ -1065,6 +1065,7 @@ class Bot {
     const r = this._floorRank(), base = Math.max(this._floorUntil || 0, r ? (this._lastTableAt || 0) : 0);
     return base ? Math.max(0, base + r * FLOOR_TIE_MS - (now || Date.now())) : 0;
   }
+  _floorHeld(){ return !!this.o.paceMs && this.o.chatFloor !== 0 && this._floorWaitMs(Date.now()) > 0; }   // a window's line awaits _floorClear only then: no await at all on a free floor or at paceMs 0, so the line and its window keep their tick (183f3)
   async _floorClear(){               // waits until no other seat holds the floor (and my ring step) -- before an act or a window's opening line; paced tables only, never with o.chatFloor 0
     if(!this.o.paceMs || this.o.chatFloor === 0) return;
     for(let k = 0; k < 12; k++){ const w = this._floorWaitMs(Date.now()); if(w <= 0) return; await sleep(w); }
@@ -8963,7 +8964,7 @@ class Bot {
   }
   async _bounceGate(ans){                  // my next step after a human's bounce that came between windows: the re-announce and the new target's window, in one tick. ans = the answer so far (returned when nothing is pending)
     for(let i = 0; i < 4; i++){            // the new target may bounce on in that window (a human's line lands there at once); four is more than a table plays
-      if(this._actingVamp && this._actingVamp.pendingBounce) await this._floorClear();   // v0.6.240 (D-137): the re-announce and its question with a free floor (state re-read below)
+      if(this._actingVamp && this._actingVamp.pendingBounce && this._floorHeld()) await this._floorClear();   // v0.6.240 (D-137): the re-announce and its question with a free floor (state re-read below)
       const av = this._actingVamp, pb = av && av.pendingBounce;
       if(!pb || this.out || (ans && ans.what === 'block')) break;
       av.pendingBounce = null;
@@ -13826,13 +13827,13 @@ class Bot {
               if(this.o.lateBounce !== 0) break;   // below, after the loop
               curAns = await this._bounceGate(curAns); if(curAns.what === 'block') break; continue;   // pass 3: lateBounce 0 pumps on after a bounce wherever it landed
             }
-            if(!spyBankTried){ spyBankTried = true; await this._floorClear(); if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue;   // v0.6.240 (D-137): the add line and its question only with a free floor (re-read after the wait). v0.6.211: a Spying Mission banked against this Methuselah -- 'the next time this vampire is about to successfully bleed the same Methuselah': the +2 first, then a reactions-only window (a modifier's own shape)
+            if(!spyBankTried){ spyBankTried = true; if(this._floorHeld()){ await this._floorClear(); if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue; }   // v0.6.240 (D-137): the add line and its question only with a free floor (re-read after the wait). v0.6.211: a Spying Mission banked against this Methuselah -- 'the next time this vampire is about to successfully bleed the same Methuselah': the +2 first, then a reactions-only window (a modifier's own shape)
               if(this._playSpyBank(v)){ pumped++;
                 curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +2 bleed (Spying Mission) \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
                 await sleep(150);
                 if(curAns.what === 'block') break;
                 continue; } }
-            if(this._haqimLawFor(v)){ await this._floorClear(); if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue; }   // v0.6.240 (D-137): when the card may play, its add line and question with a free floor (re-read after the wait)
+            if(this._floorHeld() && this._haqimLawFor(v)){ await this._floorClear(); if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue; }   // v0.6.240 (D-137): when the card may play, its add line and question with a free floor (re-read after the wait)
             if(this._playHaqimLaw(v)){ pumped++;   // v0.6.215 (V5 wave 3): Haqim's Law: Retribution -- each copy once per action, before the cards (a card in hand stays a card)
               curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +1 bleed (Haqim\u2019s Law) \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
               await sleep(150);
@@ -13859,7 +13860,8 @@ class Bot {
           const tgtBot = !!((this.players || []).find(q => q.seat === this._actingVamp.target) || {}).bot;   // a BOT target holds its bounce for this window; a human target was already asked 'Any reaction?' at the announce and answers in its own time -- a second full ask on every bleed would cost a human table askSecs per bleed (the suite's live table showed it)
           const tgtName = this.seatName(this._actingVamp.target), ld = this._lastDecline; const humanWantsTotal = !!this.o.askHumansTotal && !tgtBot && ld && ld.who === tgtName && ld.phrase === 'No block' && Date.now() - ld.at < 60000;   /* knob askHumansTotal, OFF until the suite's human harness learns to answer the second question: it declines with 'No block' everywhere and then stays silent, so every bleed waited a full askSecs (suite abort at 'turn back after bot turn 4') */   // v0.6.144 (Johan: 'it should ask human players too -- it decides a lot and it is how humans play each other'): a human who said 'No block' declined the block ONLY and hears the total; one who said 'No reaction' / 'Pass' declined everything; one who said nothing is not there. Answer with No / No reaction (closes at once) or Yes (wait for me).
           if(this.o.lateBounce !== 0 && (tgtBot || humanWantsTotal) && !pumped && curAns.what !== 'block' && !this._actingVamp.bounced && !this._actingVamp.archoned && (this._actingVamp.n | 0) >= 1 && this._actingVamp.target){
-            await this._floorClear();   // v0.6.240 (D-137): the total's line and question with a free floor -- else the target answered the line while the question waited, and the question showed after its answer (the window rule: the await comes BEFORE the line)
+            let held = false; if(this._floorHeld()){ held = true; await this._floorClear(); }   // v0.6.240 (D-137): the total's line and question with a free floor -- else the target answered the line while the question waited, and the question showed after its answer (the window rule: the await comes BEFORE the line)
+            if(!(held && (this.out || this._actingVamp.bounced || this._actingVamp.archoned || this._actingVamp.pendingBounce))){   // what the wait may have changed: a bounce (the gate below), Archon Investigation, an oust
             this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> adds +0 bleed (= ' + this._actingVamp.n + ').' });
             this._emit('bleed-total', { vamp: v.name, n: this._actingVamp.n, pumped: 0 });
             /* v0.6.206 (found by the release's own smoke): no beat between the line and its window. A 150 ms sleep sat here and after a
@@ -13868,6 +13870,7 @@ class Bot {
                never taken up: the bleed landed on the blocker (a desperate Nosferatu ousted by a bleed it had blocked, section 152). */
             curAns = await this._askBlock('Trainbot: ' + v.name + ' \u2014 bleed total ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + ', no more modifiers. Any reaction before it resolves?', { reactionsOnly: true });
             await sleep(150);
+            }
           }
           if(this._actingVamp.pendingBounce) curAns = await this._bounceGate(curAns);   // v0.6.237: and one that came during the total's window's beat
           this._actingVamp.resolving = curAns.what === 'block' ? 'blocked' : true;   // v0.6.237 (the egress review): from here a human's bounce is too late (_humanBounce says so)

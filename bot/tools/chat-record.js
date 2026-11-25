@@ -7,7 +7,8 @@
    of 5 rounds takes 10-15 minutes, so launch it detached and poll. The deal is seeded (the same seed deals the same cards); the timing
    is the real clock's, so two recordings of the same bytes agree in shape, not byte for byte.
      usage (from bot/): node tools/chat-record.js --out FILE.jsonl [--bot FILE] [--client FILE] [--seed 7] [--rounds 5] [--pace 3100]
-                        [--ask-secs 20] [--decks malkavian,tremere,nosferatu,ventrue] [--names Mara,Tobias,Nadja,Viktor]
+                        [--ask-secs 20] [--decks malkavian,tremere,nosferatu,ventrue] [--names Mara,Tobias,Nadja,Viktor] [--knob k=v ...]
+   --knob k=v (repeatable): a bot option for every seat, as the sim's --knob (a number when it reads as one) -- an ablation, e.g. chatFloor=0.
    The first row is { t: 'meta', ... } (the bot and client versions, the options, how the table ended); then one row per message:
    { ms, round, turn, seat, who, t } and chat: text · say: i · log: text (tags stripped) · fx: kind, card, ck, actor, verb · tally: mode, a, b ·
    decide: nothing more (the ring itself is the event).
@@ -22,6 +23,7 @@ const o = {
   seed: +arg('--seed', 7), rounds: +arg('--rounds', 5), paceMs: +arg('--pace', 3100), askSecs: +arg('--ask-secs', 20),
   decks: arg('--decks', 'malkavian,tremere,nosferatu,ventrue').split(','), names: arg('--names', 'Mara,Tobias,Nadja,Viktor').split(','),
 };
+o.knobs = {}; args.forEach((a, i) => { if(a === '--knob' && args[i + 1]){ const m = String(args[i + 1]).match(/^([A-Za-z]\w*)=(.*)$/); if(m) o.knobs[m[1]] = (m[2] !== '' && !isNaN(+m[2])) ? +m[2] : m[2]; } });
 if(o.names.length < o.decks.length){ console.error('--names needs one name per deck'); process.exit(2); }
 const HT = require(path.join(B, 'elysium-bot-hotseat.js'));
 const rows = [];
@@ -37,11 +39,11 @@ function onWire(w){
   rows.push(row);
 }
 const write = meta => fs.writeFileSync(OUT, [JSON.stringify(Object.assign({ t: 'meta', tool: 'chat-record 1.0.0' }, meta))].concat(rows.map(r => JSON.stringify(r))).join('\n') + '\n');
-const opts = { o: { seed: o.seed, rounds: o.rounds, paceMs: o.paceMs, askSecs: o.askSecs, decks: o.decks, names: o.names.slice(0, o.decks.length) } };
+const opts = { o: { seed: o.seed, rounds: o.rounds, paceMs: o.paceMs, askSecs: o.askSecs, decks: o.decks, names: o.names.slice(0, o.decks.length), knobs: o.knobs } };
 const t0 = Date.now();
 const tick = setInterval(() => write(Object.assign({ partial: true }, opts)), 30000);   // a long run leaves its rows on disk as it goes
 HT.runTable({ decks: o.decks, names: o.names.slice(0, o.decks.length), seed: o.seed, rounds: o.rounds, paceMs: o.paceMs, askSecs: o.askSecs, deckname: true,
-  persona: 'expert', startPool: 30, bot: o.bot, client: o.client, stuckMs: 600000, onWire,
+  persona: 'expert', startPool: 30, bot: o.bot, client: o.client, stuckMs: 600000, onWire, knobs: o.knobs,
   progress: l => process.stderr.write(l + '\n') })
   .then(res => {
     clearInterval(tick);

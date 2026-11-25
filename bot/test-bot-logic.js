@@ -16248,8 +16248,8 @@ async function connectWithRetry(client, tries = 30){
           const pend = A._actingVamp && A._actingVamp.pendingBounce, tgt0 = A._actingVamp && A._actingVamp.target;
           await Promise.race([turn, sleep(8000)]); await sleep(150);
           const L = A.lines.map(l => l.tier + ':' + l.txt), i1 = L.indexOf("log:Alice Chen (G6) bleeds for 1. Target: Hanna Bergström's pool.");
-          ok(!terr && !!pend && pend.seat === 3 && tgt0 === 2 && i1 >= 0 && /^chat:Viktor \(bot\): Alice Chen now bleeds Hanna Bergström for 1 \(Johan Sigvard bounced it\) — Hanna Bergström may block it/.test(L[i1 + 1] || '') && H.pool === 19,
-             '183f3 ...through a whole turn: the Block? window closed on Johan’s No block and his bounce came in the same tick -- the re-announce and Hanna’s window go out together, she answers in it, and the bleed lands on her (got ' + JSON.stringify({ terr, pend, tgt0, at: i1, next: L[i1 + 1], hpool: H.pool }) + ')'); } }
+          ok(!terr && !!pend && pend.seat === 3 && tgt0 === 2 && i1 >= 0 && (L[i1 + 1] || '') === 'chat:Alice Chen now bleeds Hanna Bergström for 1 (Johan Sigvard bounced it)' && H.pool === 19,
+             '183f3 ...through a whole turn: the Block? window closed on Johan’s No block and his bounce came in the same tick -- the re-announce and Hanna’s window go out together, she answers in it, and the bleed lands on her (v0.6.240: the question to the bot Hanna as sent now, no prefix, no human tail -- D-137) (got ' + JSON.stringify({ terr, pend, tgt0, at: i1, next: L[i1 + 1], hpool: H.pool }) + ')'); } }
 
       // f4) PASS 3 on the acting side: a bounce ends its sender's pause on the window; lateBounce 0 pumps on after a bounce between windows
       { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan', bot: false }, { seat: 3, name: 'Hanna', bot: true }];
