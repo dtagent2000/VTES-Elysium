@@ -11520,7 +11520,14 @@ async function connectWithRetry(client, tries = 30){
           'Hanna combat \u2014 Alexa Draper (G6) strikes with hands for 0 (long range) dealt; Alexa Draper (G6) takes 0 (loses 0 blood, now 4).', 'Hanna combat \u2014 Alexa Draper (G6) does not press.', 'Viktor combat \u2014 Anxo Vilela (G6) does not press.'];
         const got2 = seq(g2);
         ok(JSON.stringify(got2) === JSON.stringify(want2),
-           '160n ...and the answering bot\u2019s maneuver nobody answers (its new before-strikes wait): the old lines, line for line (got ' + JSON.stringify(got2) + ')'); }
+           '160n ...and the answering bot\u2019s maneuver nobody answers (its new before-strikes wait): the old lines, line for line (got ' + JSON.stringify(got2) + ')');
+        // v0.6.240 (the chat round): the first combat again with a round's summary on the log tier (o.combatNotes 1 -- what a table the floor paces sends a bot
+        // opponent): the same lines in the same order, the two summaries log lines where the fast table sent bubbles, the rows as before
+        const g3 = duel160({ delay: 10, aHand: ['Apportation', 'Theft of Vitae'], dHand: [], aOpts: { combatNotes: 1 }, dOpts: { combatNotes: 1 } });
+        await g3.run();
+        const got3 = seq(g3), sum = h => h.A.lines.concat(h.D.lines).filter(l => / dealt; /.test(l.txt)).map(l => l.tier), a3 = r1(g3.A), d3 = r1(g3.D);
+        ok(JSON.stringify(got3) === JSON.stringify(want1) && JSON.stringify(sum(g3)) === '["log","log"]' && JSON.stringify(sum(g)) === '["chat","chat"]' && a3.range === 'long' && d3.range === 'long',
+           '160n ...and with a round\u2019s summary on the log tier (combatNotes 1, as a floor-paced table sends it to a bot): the same lines in the same order; the fast table keeps the bubbles (got ' + JSON.stringify({ got3, log: sum(g3), fast: sum(g) }) + ')'); }
 
       // o) the coverage verdicts of the wave's cards in their decks
       { let cov = null; try { cov = require('./gen-deck-coverage.js'); } catch(e){}
@@ -16522,7 +16529,7 @@ async function connectWithRetry(client, tries = 30){
        no "(bot):" prefix; a bot's question to a bot without the human's instruction tail. (a) chat() on the wire: no prefix and no
        '(bot)', the combat narration's 'NAME combat' kept, a note keeps 'NAME (bot)'; (b) _askBlock's tail only to a human addressee
        (directed, undirected, reactions-only); (c) a combat line's 'tell me if your side differs' only to a human or unknown opponent,
-       and to a bot opponent the line goes on the log tier (160n and 159q: through a combat between two bots); (d) the event log still types a tail-less question as an ask; (e) the
+       and to a bot opponent the line goes on the log tier where the floor paces the table (160n: through a combat between two bots, both tiers); (d) the event log still types a tail-less question as an ask; (e) the
        floor's stamps (another seat's chat as long as it shows, a quick phrase or a verdict pulse 1.5 s; not my own, not a spectator's);
        (f) _drain holds a bubble of mine until the floor is free, plus a ring step from the turn seat on a tie, and what follows it
        waits with it -- never at paceMs 0, never with chatFloor 0; (g) two bots on a 300 ms relay: the answer waits out the question;
@@ -16574,9 +16581,9 @@ async function connectWithRetry(client, tries = 30){
         const at = seat => { u._combatOpp = () => seat ? { seat, name: 'X', o: {}, rec: null } : null; return IF6(u, '_combatTell') ? u._combatTell(T) : 'no method'; };
         const g = { bot: at(2), human: at(3), unknown: at(0) };
         const tier = (seat, o) => { const w = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Johan'], [true, true, false]), o); w._combatOpp = () => seat ? { seat, name: 'X', o: {}, rec: null } : null; return IF6(w, '_combatNoteToBot') ? w._combatNoteToBot() : 'no method'; };
-        const n = { bot: tier(2), human: tier(3), unknown: tier(0), off: tier(2, { combatNotes: 0 }) };
-        ok(g.bot === '' && g.human === T && g.unknown === T && n.bot === true && n.human === false && n.unknown === false && n.off === false,
-           '186c a combat line tells a human or unknown opponent "tell me if your side differs", a bot opponent nothing -- and to a bot it is a log line (combatNotes 0: the old bubble) (got ' + JSON.stringify({ g, n }) + ') [new methods: red on the old bytes proves only that; 160n and 159q run it through a combat between two bots]'); }
+        const P3 = { paceMs: 3100 }, n = { bot: tier(2, P3), human: tier(3, P3), unknown: tier(0, P3), off: tier(2, { paceMs: 3100, combatNotes: 0 }), fast: tier(2), forced: tier(2, { combatNotes: 1 }) };
+        ok(g.bot === '' && g.human === T && g.unknown === T && n.bot === true && n.human === false && n.unknown === false && n.off === false && n.fast === false && n.forced === true,
+           '186c a combat line tells a human or unknown opponent "tell me if your side differs", a bot opponent nothing -- and to a bot at a table the floor paces it is a log line; a fast table keeps the bubble (combatNotes 0: the bubble, 1: the log line, at any pace) (got ' + JSON.stringify({ g, n }) + ') [new methods: red on the old bytes proves only that; 160n runs both tiers through a combat between two bots]'); }
 
       // d) the event log types a question to bots as an ask, as it typed the one with the tail
       { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor'], [true, true]));

@@ -6659,8 +6659,10 @@ class Bot {
   /* v0.6.240 (the chat round; Johan's ruling asked, 25 Nov -- see RULINGS): a combat line to a BOT opponent goes on the log tier, as it does to a human
      under the combat phases. Without its human instruction tail (D-137) it is an event, and the tier rule's events are notes (D-64). As a chat bubble
      it held the floor ~9 s, two a round, and the opposing bot's press step (1.5 s) missed it: the 240's combat handshake fell to 95 %, 159q's watched
-     duel ran into its safety net. The opposing bot reads it from either tier (_parseCombatNarration). o.combatNotes 0 = the chat bubble of v0.6.239. */
-  _combatNoteToBot(){ if(this.o.combatNotes === 0) return false; const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return !!(p && p.bot); }
+     duel ran into its safety net. The opposing bot reads it from either tier (_parseCombatNarration). A table the floor does not pace (_floorOn: the
+     arena's 0, the suite's fast paces) keeps the bubble, tail-less to a bot (_combatTell), as v0.6.239 sent it: nobody reads it there, nothing waits on
+     a floor, and the live sections pin it (36, 38). o.combatNotes 0 = the bubble at any pace, 1 = the log line at any pace (a test). */
+  _combatNoteToBot(){ if(this.o.combatNotes === 0 || (this.o.combatNotes !== 1 && !this._floorOn())) return false; const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return !!(p && p.bot); }
   _combatTell(tail){ const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return p && p.bot ? '' : tail; }   // v0.6.240 (the chat round, D-137): a combat line's 'tell me if your side differs' is the human's instruction -- none to a bot opponent (it reads the line itself, _parseCombatNarration; the tail was never part of the shape); an unknown opponent keeps it
   _phasesOn(){ return this.o.combatPhases !== 0 && this._inCombat && !!this._phaseOppPlayer(); }
   _phaseAsk(step){ return this._phaseStep(step, 'ask', false); }         // before my play in the step (human acting: ask first)
