@@ -16594,9 +16594,12 @@ async function connectWithRetry(client, tries = 30){
         const rank = IF6(a, '_floorRank') ? a._floorRank() : null;   // seat 2 is one step from the turn seat 1
         const b = mkF({ paceMs: 0 }); const t1 = Date.now(); b._floorUntil = t1 + 500; b.say('Pass'); const fb = b.wire.length ? b.wire[0].at - t1 : null;
         const c = mkF({ chatFloor: 0 }); const t2 = Date.now(); c._floorUntil = t2 + 500; c.say('Pass'); await until6(() => c.wire.length >= 1, 1000); const fc = c.wire.length ? c.wire[0].at - t2 : null;
-        const tie = mkF(), fr = u => IF6(u, '_floorRank') ? u._floorRank() : null; tie.turnSeat = 2; const r0 = fr(tie); tie.turnSeat = 3; const r2 = fr(tie);   // the turn seat speaks first; from seat 3 the ring is 3, 1, 2
-        ok(fa.length === 2 && fa[0][0] === 'Pass' && fa[0][1] >= 500 + 250 - 20 && fa[1][0] === 'after the bubble' && fa[1][1] >= fa[0][1] && rank === 1 && fb !== null && fb < 50 && fc !== null && fc < 150 && r0 === 0 && r2 === 2,
-           '186f my quick phrase waits for the floor and one ring step (seat 2 after the turn seat 1: +250 ms), the log line behind it goes after it; at paceMs 0 and with chatFloor 0 it goes at once; on a tie the turn seat first, then round the ring (got ' + JSON.stringify({ fa, rank, fb, fc, r0, r2 }) + ')'); }
+        const tie = mkF(), fr = u => IF6(u, '_floorRank') ? u._floorRank() : null; tie.turnSeat = 2; const r0 = fr(tie); tie.turnSeat = 3; const r2 = fr(tie);
+        const one = mkF(), lead = mkF(); lead.seat = 1; const t3 = Date.now(); one._lastTableAt = t3; lead._lastTableAt = t3; one.say('Pass'); lead.say('Pass');   // one line moved both: the turn seat speaks at once, seat 2 a ring step later
+        await until6(() => one.wire.length >= 1, 1000); const s1 = one.wire.length ? one.wire[0].at - t3 : null, s0 = lead.wire.length ? lead.wire[0].at - t3 : null;   // the turn seat speaks first; from seat 3 the ring is 3, 1, 2
+        ok(fa.length === 2 && fa[0][0] === 'Pass' && fa[0][1] >= 500 + 250 - 20 && fa[1][0] === 'after the bubble' && fa[1][1] >= fa[0][1] && rank === 1 && fb !== null && fb < 50 && fc !== null && fc < 150 && r0 === 0 && r2 === 2
+           && s0 !== null && s0 < 50 && s1 !== null && s1 >= 250 - 20,
+           '186f my quick phrase waits for the floor and one ring step (seat 2 after the turn seat 1: +250 ms), the log line behind it goes after it; at paceMs 0 and with chatFloor 0 it goes at once; on a tie the turn seat first, then round the ring -- also when one line moved both (got ' + JSON.stringify({ fa, rank, fb, fc, r0, r2, s0, s1 }) + ')'); }
 
       // g) two bots on a 300 ms relay: the answer waits out the question bubble (the real _dispatch and _drain on both sides)
       { const P = P6(['Hanna', 'Viktor'], [true, true]); const A = mk6('Hanna', 1, P, { paceMs: 300 }), B = mk6('Viktor', 2, P, { paceMs: 300 }); A.turnSeat = 1; B.turnSeat = 1;

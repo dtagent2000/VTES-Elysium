@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.239';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.240';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -1045,7 +1045,8 @@ class Bot {
   /* v0.6.240 (the chat round, RULINGS D-137: one speaker at a time). Another seat's bubble holds the FLOOR: a chat for as long as the
      client shows it (bubbleMs), a quick phrase or a verdict pulse 1.5 s. A bubble of mine (chat, say, my verdict line) waits in _drain
      until the floor is free, plus FLOOR_TIE_MS a step round the ring from the seat whose turn it is -- the ring order on a tie, when
-     two seats waited out the same bubble. My own bubbles never hold my floor (the chat beat spaces them). Paced tables only: _drain's
+     two seats waited out the same bubble or one line moved both (two combatants' round summaries; a step counts from the last table
+     event too). My own bubbles never hold my floor (the chat beat spaces them). Paced tables only: _drain's
      gate sits inside its paceMs branch, so paceMs 0 (the suite, the arena) runs as before; o.chatFloor 0 switches the floor off (an
      ablation, not a decision knob). The stamp is the moment the bubble reached me -- the moment it reached the screen, near enough. */
   _isBubbleMsg(o){ return !!o && (o.t === 'chat' || o.t === 'say' || (o.t === 'log' && VERDICT_PULSE.test(stripTags(o.html).trim()))); }
@@ -1059,7 +1060,10 @@ class Bot {
     let s = t, k = 0; while(s !== this.seat && k < n){ s = this.nextLive(s); k++; }
     return s === this.seat ? k : 0;
   }
-  _floorWaitMs(now){ const u = this._floorUntil || 0; return u ? Math.max(0, u + this._floorRank() * FLOOR_TIE_MS - (now || Date.now())) : 0; }
+  _floorWaitMs(now){                // the floor's end -- or, for a seat after the turn seat, the last table event (two seats moved by the same line speak in ring order) -- plus my ring steps
+    const r = this._floorRank(), base = Math.max(this._floorUntil || 0, r ? (this._lastTableAt || 0) : 0);
+    return base ? Math.max(0, base + r * FLOOR_TIE_MS - (now || Date.now())) : 0;
+  }
   _bubblesOut(){                     // resolves when the last bubble I have queued is on the wire (at once when none is; never later than the longest floor)
     let last = null; for(let i = this._sq.length - 1; i >= 0 && !last; i--) if(this._isBubbleMsg(this._sq[i])) last = this._sq[i];
     if(!last || !this.ws) return Promise.resolve();
