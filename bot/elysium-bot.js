@@ -962,7 +962,7 @@ class Bot {
       const holdLine = !!(nx && this._holdTags && this._holdTags.has(nx));
       let gw = this._lastSendAt ? this._lastSendAt + 200 - now : 0;
       if(nx && nx.t === 'chat' && !holdLine && this._lastChatWireAt) gw = Math.max(gw, this._lastChatWireAt + beat - now);
-      if(nx && this.o.chatFloor !== 0 && this._isBubbleMsg(nx)) gw = Math.max(gw, this._floorWaitMs(now));   // v0.6.240 (D-137): one speaker at a time -- my bubble waits until another seat's has left the floor (a hold line too: it waits 1.5 s for the human's own Hold on); one queue, so what follows it waits with it
+      if(nx && this._floorOn() && this._isBubbleMsg(nx)) gw = Math.max(gw, this._floorWaitMs(now));   // v0.6.240 (D-137): one speaker at a time -- my bubble waits until another seat's has left the floor (a hold line too: it waits 1.5 s for the human's own Hold on); one queue, so what follows it waits with it
       if(gw > 0) return later(gw);
     }
     this._tok -= 1;
@@ -971,7 +971,7 @@ class Bot {
       obj = ent = this._sq.shift();
       const ht = (ent && this._holdTags) ? this._holdTags.get(ent) : undefined;   // v0.6.204 (play-test 14 Oct, F4): a hold / resume line carries the hold state it describes
       if(ht !== undefined && this._holdLineStale(ht)){ this._tok += 1; this.o.log('hold line dropped (the table moved on): ' + ent.msg); return; }
-      if(this.o.chatFloor !== 0 && this._thinkTags && this._thinkTags.has(ent) && this._sq.some(o => o && o.t === 'say' && (o.i === 1 || o.i === 2 || o.i === 3 || o.i === 7))){ this._tok += 1; this.o.log('thinking line dropped (my answer goes out with it)'); return; }   // v0.6.240 (D-137): the floor held my 'Hold on...' until my answer was queued behind it -- 'wait for me' 200 ms before the answer says nothing   // a resume heard during the NEXT hold, a hold after its release, a resume of a hold the table never saw -- dropped; the finally still re-enters and starts any wait armed on it
+      if(this._floorOn() && this._thinkTags && this._thinkTags.has(ent) && this._sq.some(o => o && o.t === 'say' && (o.i === 1 || o.i === 2 || o.i === 3 || o.i === 7))){ this._tok += 1; this.o.log('thinking line dropped (my answer goes out with it)'); return; }   // v0.6.240 (D-137): the floor held my 'Hold on...' until my answer was queued behind it -- 'wait for me' 200 ms before the answer says nothing   // a resume heard during the NEXT hold, a hold after its release, a resume of a hold the table never saw -- dropped; the finally still re-enters and starts any wait armed on it
       if(obj && obj.__board){
         this._pushQ = false; obj = { t: 'board', pub: this.buildPub() };
         /* v0.6.112 (R4): the open-hand grant re-syncs HERE and nowhere else.
@@ -989,7 +989,7 @@ class Bot {
       this._draining = true; try { this.ws.send(obj); } finally { this._draining = false; }
       this._lastSendAt = Date.now(); this._lastSentT = obj && obj.t;
       if(obj && obj.t === 'chat'){ this._lastChatAt = this._lastSendAt; this._lastChatWireAt = this._lastSendAt; }   // the bubble starts when the wire carries it -- _pace's chat-hold and _chatSettleMs read _lastChatAt; v0.6.207: the drain's beat reads _lastChatWireAt (the last CHAT on the wire, never a say's queue stamp)
-      else if(obj && obj.t === 'say' && this.o.chatFloor !== 0) this._lastChatAt = Math.max(this._lastChatAt || 0, this._lastSendAt);   // v0.6.240 (D-137): a quick phrase the floor held is stamped again when the table sees it (_pace's chat-hold; say() stamps it at the queue)
+      else if(obj && obj.t === 'say' && this._floorOn()) this._lastChatAt = Math.max(this._lastChatAt || 0, this._lastSendAt);   // v0.6.240 (D-137): a quick phrase the floor held is stamped again when the table sees it (_pace's chat-hold; say() stamps it at the queue)
       if(ht !== undefined) this._holdShown = ht;   // v0.6.204 (F4): what the table last SAW of my hold
     }catch(e){ this.o.log('drain error:', e.message); }   // one bad frame must never stop the queue
     finally{
@@ -1047,9 +1047,10 @@ class Bot {
      client shows it (bubbleMs), a quick phrase or a verdict pulse 1.5 s. A bubble of mine (chat, say, my verdict line) waits in _drain
      until the floor is free, plus FLOOR_TIE_MS a step round the ring from the seat whose turn it is -- the ring order on a tie, when
      two seats waited out the same bubble or one line moved both (two combatants' round summaries; a step counts from the last table
-     event too). My own bubbles never hold my floor (the chat beat spaces them). Paced tables only: _drain's
-     gate sits inside its paceMs branch, so paceMs 0 (the suite, the arena) runs as before; o.chatFloor 0 switches the floor off (an
-     ablation, not a decision knob). The stamp is the moment the bubble reached me -- the moment it reached the screen, near enough. */
+     event too). My own bubbles never hold my floor (the chat beat spaces them). A table paced for people only (_floorOn: paceMs of
+     1.5 s or more -- the client's 3.1 s; the suite's fast paces and the arena's 0 run as before); o.chatFloor 0 switches the floor
+     off, 1 forces it at any pace (an ablation and the tests, not a decision knob). The stamp is the moment the bubble reached me -- the moment it reached the screen, near enough. */
+  _floorOn(){ return this.o.chatFloor === 1 || (this.o.chatFloor !== 0 && (this.o.paceMs | 0) >= FLOOR_SAY_MS); }   // a table paced for people (the client's 3100 ms, the bot's default 1500); a test's fast pace (120-400 ms) is no table anyone reads, and o.chatFloor 1 forces it there
   _isBubbleMsg(o){ return !!o && (o.t === 'chat' || o.t === 'say' || (o.t === 'log' && VERDICT_PULSE.test(stripTags(o.html).trim()))); }
   _floorSeen(m){
     if(!m || !m.who || m.who === this.o.name || !(this._seatOfName(m.who) > 0)) return;   // a spectator's chat pops no bubble (the client's chatBubble wants a seat)
@@ -1065,9 +1066,9 @@ class Bot {
     const r = this._floorRank(), base = Math.max(this._floorUntil || 0, r ? (this._lastTableAt || 0) : 0);
     return base ? Math.max(0, base + r * FLOOR_TIE_MS - (now || Date.now())) : 0;
   }
-  _floorHeld(){ return !!this.o.paceMs && this.o.chatFloor !== 0 && this._floorWaitMs(Date.now()) > 0; }   // a window's line awaits _floorClear only then: no await at all on a free floor or at paceMs 0, so the line and its window keep their tick (183f3)
+  _floorHeld(){ return this._floorOn() && this._floorWaitMs(Date.now()) > 0; }   // a window's line awaits _floorClear only then: no await at all on a free floor or at paceMs 0, so the line and its window keep their tick (183f3)
   async _floorClear(){               // waits until no other seat holds the floor (and my ring step) -- before an act or a window's opening line; paced tables only, never with o.chatFloor 0
-    if(!this.o.paceMs || this.o.chatFloor === 0) return;
+    if(!this._floorOn()) return;
     for(let k = 0; k < 12; k++){ const w = this._floorWaitMs(Date.now()); if(w <= 0) return; await sleep(w); }
   }
   _bubblesOut(){                     // resolves when the last bubble I have queued is on the wire (at once when none is; never later than the longest floor)
@@ -1118,7 +1119,7 @@ class Bot {
     const wait = Math.max(anchor + ms - Date.now(), chatHold);
     this._beatUntil = wait > 0 ? Date.now() + wait : 0;   // v0.6.109 (#1): READABLE, never steppable. A beat is 2 s of the bot thinking out loud, not a deadlock, and sleep() cannot be cut short without making the gate interruptible everywhere -- so the widget shows the number and leaves the button disabled, which is exactly the honest answer.
     if(wait > 0) await sleep(wait);
-    if(this.o.chatFloor !== 0 && this._sq.some(o => this._isBubbleMsg(o))) await this._bubblesOut();   // v0.6.240 (D-137): a bubble of mine that the floor still holds goes out first and the late hold below waits it out -- else my next act rode out 200 ms behind it (Johan's v0.6.100 rule)
+    if(this._floorOn() && this._sq.some(o => this._isBubbleMsg(o))) await this._bubblesOut();   // v0.6.240 (D-137): a bubble of mine that the floor still holds goes out first and the late hold below waits it out -- else my next act rode out 200 ms behind it (Johan's v0.6.100 rule)
     const lateHold = this._lastChatAt ? (this._lastChatAt + cp - Date.now()) : 0;   // v0.6.101 (Johan's simultaneous-vampires report): a bubble that DRAINED while we slept -- the pre-sleep chatHold read a stale stamp, so a raise's chat (queued, gap-held ~5 s) let the NEXT raise fire mid-bubble and the __board dedup swallowed its push into one two-vampire diff. The post-sleep re-check waits the late bubble out; boards drain between acts, diffs separate, cards fly one at a time.
     if(lateHold > 0) await sleep(lateHold);
     await this._floorClear();   // v0.6.240 (D-137): my act waits until no other seat holds the floor -- an action's line and its question go out together, never after the answer to them
@@ -3851,7 +3852,7 @@ class Bot {
   _voteCounter(m){ return (this.tally && this.tally.mode === 'vote') ? this.tally : (m || {}); }
   _voteMirror(fld, val){ if(this.tally && this.tally.mode === 'vote'){ const t = Object.assign({}, this.tally); t[fld] = val; this.tally = t; } }   // v0.6.124: my own write, mirrored at once -- the District branch runs right after the title votes, before the echo, and used to overwrite them with open-edge + its own   // v0.6.124: the counter as it stands NOW (the tally handler mirrors every message), not the open-edge snapshot
   async _onVoteOpen(m){              // P0 (the politics engine's FIRST brick): the polling window -- District's defensive votes land in the SHARED against-counter. v0.6.67: async for the wake pacing beat
-    if(this.o.paceMs && this.o.chatFloor !== 0 && this._refT && this._refT.seat){ await this._refTurnWait(); if(this.out || !(this.tally && this.tally.mode === 'vote')) return; }   // v0.6.240 (D-137, BOARD: the vote round driven by the previous voter): I vote once the bot before me in the ring has spoken -- its bubble, after its counter write -- and the floor spaces the bubbles; a human before me is not waited for
+    if(this._floorOn() && this._refT && this._refT.seat){ await this._refTurnWait(); if(this.out || !(this.tally && this.tally.mode === 'vote')) return; }   // v0.6.240 (D-137, BOARD: the vote round driven by the previous voter): I vote once the bot before me in the ring has spoken -- its bubble, after its counter write -- and the floor spaces the bubbles; a human before me is not waited for
     else { const wait = this._refStaggerMs(); if(wait > 0){ await sleep(wait); if(this.out || !(this.tally && this.tally.mode === 'vote')) return; } }   // v0.6.124: my beat in the ring; the polls may have closed meanwhile
     if(this._callingReferendum) return;   // v0.6.66 (the review's seam): the tally carries no WHO -- the caller sets this flag or District votes against ITSELF (its title votes are its own announce)
     /* v0.6.234 (the egress review, finding 1; the graded readings, RED 1): my vote CARD goes before my title votes. A bot caller closes
@@ -12546,7 +12547,7 @@ class Bot {
       a.resolve({ what, who }); }   // v0.6.110 (R2, #12): a resolved ask never asks who blocked
   }
   _qFloorLeft(){                       // v0.6.240 (D-137): a window only bots are asked starts its silence clock when my question has left the screen -- the bots answer after its floor (and their ring steps)
-    const a = this._ask; if(!a || !a._qAt || !this.o.paceMs || this.o.chatFloor === 0 || this._askWho(a).length) return 0;
+    const a = this._ask; if(!a || !a._qAt || !this._floorOn() || this._askWho(a).length) return 0;
     return Math.max(0, a._qAt + (a._qMs | 0) + 3 * FLOOR_TIE_MS - Date.now());
   }
   _qStamp(a){                          // v0.6.240 (D-137): when my question reached the wire and how long it holds the floor -- now when it went at once, else when it does

@@ -16530,14 +16530,16 @@ async function connectWithRetry(client, tries = 30){
        human between is skipped), the polls closing or the safety net ends the wait; (j) a new game starts with a free floor (L-95);
        (k) my act waits for a free floor (the action's line and its question together, never after their answer); (l) a window only
        bots are asked starts its silence clock when my question has left the screen; (m) a thinking line the floor held is dropped
-       once my answer is queued behind it.
+       once my answer is queued behind it; (n) the floor is on at a pace people read (1.5 s and more), off at the suite's fast paces
+       and at 0 (the sections above force it with chatFloor 1).
        LAST LINE OF 186 is the closing brace below. */
     {
       console.log('\n[186] v0.6.240 -- the chat round (D-137): no prefix, no human tail to bots, one speaker at a time');
       const IF6 = (u, f) => !!u && typeof u[f] === 'function', { L12 } = require('./elysium-bot.js');
       const bubbleMs6 = t => { const n = String(t).length > 180 ? 181 : String(t).length; return Math.max(3000, Math.min(9000, 3000 + Math.max(0, n - 20) * 45)); };   // the client's sayBubbleMs at 1.0
       const P6 = (names, bots) => names.map((n, i) => ({ seat: i + 1, name: n, bot: bots[i], online: true }));
-      const mk6 = (name, seat, players, o) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 3, twdKnow: 0, log: () => {} }, o || {}));
+      const mk6 = (name, seat, players, o) => { o = Object.assign({}, o || {}); if((o.paceMs | 0) > 0 && o.chatFloor === undefined) o.chatFloor = 1;   // the floor forced at the tests' fast pace (on by itself from 1.5 s: 186n)
+        const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 3, twdKnow: 0, log: () => {} }, o));
         u.seat = seat; u.started = true; u.players = players.map(p => Object.assign({}, p)); u.push = () => {}; u.fxClone = () => {}; u._emit = () => {};
         u.wire = []; u.ws = { send: m => u.wire.push({ at: Date.now(), m }) }; return u; };
       const txt6 = w => w.m.t === 'chat' ? w.m.msg : w.m.t === 'say' ? SAY[w.m.i] : w.m.t === 'log' ? String(w.m.html || '').replace(/<[^>]*>/g, '') : w.m.t;
@@ -16659,6 +16661,12 @@ async function connectWithRetry(client, tries = 30){
         [a, b].forEach(u => { u.pending = null; });
         ok(JSON.stringify(ga) === JSON.stringify(['Pass']) && JSON.stringify(gb) === JSON.stringify(['Hold on\u2026']),
            '186m a thinking line the floor held is dropped when my answer is queued behind it, and still said when nothing is (got ' + JSON.stringify({ ga, gb }) + ')'); }
+
+      // n) the floor is on at a pace people read (1.5 s and more: the client's 3.1 s, the bot's default 1.5 s), off at the suite's fast paces and at 0
+      { const on = (paceMs, chatFloor) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', paceMs, log: () => {} }, chatFloor === undefined ? {} : { chatFloor })); return IF6(u, '_floorOn') ? u._floorOn() : null; };
+        const g = { p0: on(0), p300: on(300), p1500: on(1500), p3100: on(3100), dflt: (() => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', log: () => {} }); return IF6(u, '_floorOn') ? u._floorOn() : null; })(), forced: on(300, 1), off: on(3100, 0) };
+        ok(g.p0 === false && g.p300 === false && g.p1500 === true && g.p3100 === true && g.dflt === true && g.forced === true && g.off === false,
+           '186n the floor: on from a 1.5 s pace (the client\u2019s 3.1 s, the bot\u2019s default), off at the suite\u2019s fast paces and at 0; chatFloor 1 forces it, 0 switches it off (got ' + JSON.stringify(g) + ')'); }
 
       // j) L-95: a new game's floor is free and no vote round is in flight
       { const u = mk6('Viktor', 2, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300 }); u._floorUntil = Date.now() + 5000; u._refHeard = new Set(['Hanna']);
