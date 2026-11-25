@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* elysium-bot-hotseat.js v1.4.1 (13 Nov 2026) -- THE HOTSEAT TABLE, headless.
+/* elysium-bot-hotseat.js v1.5.0 (25 Nov 2026) -- THE HOTSEAT TABLE, headless.
    Lifts `const hotBridge = {...}` and `function hotFanOut` VERBATIM out of the client source beside it (elysium-vtes-bord.html, READ-ONLY here) and drives real
    Bot instances through them the way the client's hotRunBotTurns does: one `turn` per bot seat round the ring from the CONFIG (not the roster), waiting for
    that seat's `pass`. Whatever the bridge drops is dropped here too -- this is the client's relay, not a model of it.
@@ -17,6 +17,9 @@
    v1.3.0 (19 Oct 2026, the sim table): three OPTIONAL inputs for elysium-bot-sim.js; absent, the table plays as v1.2.0 did (the gate passes none of them):
    o.personas (one per seat, else o.persona), o.seatKnobs ({seat: {knob: v}}, merged over o.knobs), o.onEvent(e) (called with every bot event as it is
    pushed). The result also names the seats (res.names) and the persona each bot played (res.personas).
+   v1.5.0 (25 Nov 2026, bot v0.6.240, the chat round, D-137): two more OPTIONAL inputs for tools/chat-record.js; absent, the table plays as v1.4.1 did
+   (the gate and the sim pass neither): o.names (one seat name each, else 'B<seat>-<deck>') and o.onWire(row) (called with every message a bot hands
+   the bridge, BEFORE the bridge relays it: { ms, round, turn, seat, who, m }, ms from the table's start, turn = the seat whose turn it is).
    v1.4.1 (13 Nov 2026, bot v0.6.220, RULINGS D-111): every bot gets rngSeed from the table's seed and its seat -- its own PRNG for
    what the rules call random (Phaibun's discard), so a trace still repeats byte for byte; the table's own seeded Math.random stays the deal's.
    v1.4.0 (29 Oct 2026, bot v0.6.212, V5 round 0): a deck key the bot does not embed (ARCHETYPES) is read from deck-<key>.json in o.deckDir (default: beside
@@ -49,7 +52,9 @@ async function runTable(opts){
     const HB = ctx.hotBridge, orig = HB._fromBot.bind(HB), room = { tally: null }, roster = [];
     let holdsRelayed = 0; const toBot0 = HB.toBot.bind(HB); HB.toBot = function(seat, m){ if(m && m.t === 'say' && m.i === 0 && ((HB._cfg || [])[(m.seat | 0) - 1] || {}).bot) holdsRelayed++; return toBot0(seat, m); };   // v1.1.0: how many times one bot's 'Hold on...' reached another bot
     const HANDLED = new Set((L.bridgeSrc.match(/case '([A-Za-z]+)'/g) || []).map(x => x.slice(6, -1)));   // v1.0.1: read from the LIFTED source -- when main adds a case, the verb leaves the dropped list by itself
+    let round = 0, turnSeat = 0; const wireT0 = Date.now();   // v1.5.0: round and turnSeat are read by o.onWire (round was declared below the bots before)
     HB._fromBot = function(seat, rec, m){
+      if(o.onWire) o.onWire({ ms: Date.now() - wireT0, round, turn: turnSeat, seat, who: rec && rec.name, m });   // v1.5.0: what the bot handed the bridge, before the bridge relays it
       if(m && typeof m.t === 'string' && !HANDLED.has(m.t)) dropped[m.t] = (dropped[m.t] || 0) + 1;   // counted in every arm: what a bot SAID that the shipped bridge has no case for
       if(o.arm !== 'asis' && m && m.t === 'tally'){   // the server's handler, field for field
         const mode = ['block', 'vote', 'combat', 'free'].includes(m.mode) ? m.mode : null, prev = (room.tally && room.tally.mode === mode) ? room.tally : null;
@@ -65,7 +70,7 @@ async function runTable(opts){
       return orig(seat, rec, m);
     };
     const cardfxData = JSON.parse(fs.readFileSync(o.cardfx, 'utf8'));
-    const names = o.decks.map((d, i) => 'B' + (i + 1) + '-' + d), ev = [], bots = []; let round = 0;
+    const names = o.decks.map((d, i) => (o.names && o.names[i]) || ('B' + (i + 1) + '-' + d)), ev = [], bots = [];   // v1.5.0: o.names
     HB.reset(names.map(n => ({ name: n, bot: true }))); names.forEach((n, i) => roster.push({ seat: i + 1, name: n, bot: true, out: false }));
     for(let i = 0; i < o.decks.length; i++){ const seat = i + 1;
       const deck = deckFor(ARCHETYPES, o.decks[i], o.deckDir);   // a COPY, as the client embeds them -- never the registry object itself
@@ -80,12 +85,13 @@ async function runTable(opts){
         if(o.arm === 'full' && roster[seat - 1].out) continue;
         if(HB._out && HB._out[seat]) continue;   // v1.1.0: client >= v2.6.122 keeps the roster in the bridge and its sweep skips ousted seats -- follow it; an older bridge has no _out and the config walk stands
         if(bots[seat - 1].out) turnsToOusted++;
+        turnSeat = seat;
         const okPass = await new Promise(res => { const to = setTimeout(() => res(false), o.stuckMs); HB.onPass = s2 => { if(s2 === seat){ clearTimeout(to); res(true); } }; HB.turn(seat); });
         if(o.progress) o.progress('r' + round + 's' + seat + (okPass ? '' : ' !STUCK') + ' ' + Math.round((Date.now() - t0) / 1000) + 's pools=' + bots.map(b => b.pool).join('/'));
         if(!okPass){ stuck = { round, seat, seatOut: !!bots[seat - 1].out }; break outer; }
         if(bots.filter(b => !b.out).length <= 1) break outer; } }
     const c = t => ev.filter(e => e.type === t), plays = c('play'), w = x => plays.filter(e => e.d.window === x).length;
-    const res = { tool: 'elysium-bot-hotseat 1.4.1', bot: BOT_VERSION, client: L.version, names, personas: names.map((n, i) => (o.personas && o.personas[i]) || o.persona), combatMerge: !!L.cmbSrc, arm: o.arm, deckNamePassed: !!o.deckname, seed: o.seed, decks: o.decks, rounds: Math.min(round, o.rounds), secs: Math.round((Date.now() - t0) / 1000),
+    const res = { tool: 'elysium-bot-hotseat 1.5.0', bot: BOT_VERSION, client: L.version, names, personas: names.map((n, i) => (o.personas && o.personas[i]) || o.persona), combatMerge: !!L.cmbSrc, arm: o.arm, deckNamePassed: !!o.deckname, seed: o.seed, decks: o.decks, rounds: Math.min(round, o.rounds), secs: Math.round((Date.now() - t0) / 1000),
       finished: !stuck && bots.filter(b => !b.out).length <= 1, stuck, alive: bots.filter(b => !b.out).map(b => b.o.name), pools: bots.map(b => b.pool), turnsHandedToOustedBots: turnsToOusted, droppedVerbs: dropped, botHoldsRelayedToBots: holdsRelayed,
       manifest: c('manifest').map(e => ({ deck: e.deck, key: e.d.deck, axes: e.d.axes })),
       counts: { through: c('through').length, blocked: c('blocked').length, blockMade: c('block-made').length, stealthCards: w('stealth'), interceptCards: w('react-intercept'), stealthLooks: c('stealth-stack').length,
