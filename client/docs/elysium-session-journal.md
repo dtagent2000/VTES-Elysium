@@ -1,3 +1,71 @@
+## [RINGEN VID PEKAREN] (24 november 2026, kväll, klient v2.6.188 / srv-2.6.53 oförändrad)
+
+Johan, medan v2.6.187 väntade på merge: "visst använder vi inte långklick med höger musknapp till någonting? Skulle
+långklick kunna öppna bottpanelen ... (men kanske göra den ombindbar också då i settings)". Det används inte. Ett vanligt
+högerklick öppnar klientens menyer, mittenknappen panorerar, och på pekskärm är ett långt tryck redan själva
+högerklicket. Jag föreslog att bygga det efter merge, och när han hade mergat v2.6.187 körde jag.
+
+Vid ett bord med bottar öppnar 450 ms med höger knapp nedtryckt på bordet samma ring där pekaren står, minst 90 px från
+kanten. I mitten sitter navets kugghjul, som öppnar bottlådan bredvid ringen. Släpper man knappen på ett segment väljs
+det, som i en tårtmeny. Släpper man den någon annanstans ligger ringen kvar för klick. Ett kort högerklick öppnar samma
+menyer som förut.
+
+Haken var att webbläsarna skickar högerklicket vid olika tillfällen. På macOS och Linux kommer `contextmenu` när knappen
+trycks ner, på Windows när den släpps. Därför håller klienten nu inne det första högerklicket medan knappen är nere, och
+lämnar det till menyn när knappen släpps, på samma ställe som trycket. Det är samma knep som pekskärmsmotorn använder, så
+alla menyer fungerar orörda. Efter ett långt tryck sväljs Windows högerklick vid släppet, en gång. Det gäller bara mus,
+bara bordet (`#tableArea`) och aldrig i textfält, menyer eller dialoger. Vid bord utan bottar är allt som förut.
+
+Ombindbart, som Johan ville: Settings har raden "Bot ring at the pointer" med valen Hold the right mouse button (förvalt)
+och Off. Tangentlistan har "Bot ring at the pointer" utan tangent från början, för styrplattor där man inte gärna håller
+två fingrar nere. Tangenten öppnar ringen där musen senast var, fokuserar navet så att piltangenterna går runt ringen, och
+stänger den vid nästa tryck. En ring vid pekaren lämnar navet som robot, och ett klick på navet tar hem ringen.
+
+Sviten fick sex nya tester för greppet, och tolv mutanter i greppets kod fångades. Övriga grindar är gröna;
+siffrorna står i CLAUDE.md. I Chromium (Linux, alltså macOS-ordningen) öppnas ringen inte vid 150 ms men vid 600 ms,
+och släpp på Yes säger Yes. Ett kort högerklick på filten och på ett kort ger sina menyer vid släppet. Ett långt tryck
+på ett kort ger ringen och inte kortets meny, och kugghjulet öppnar lådan bredvid. Off ger menyn direkt vid trycket
+igen, Q (bunden i testet) öppnar och stänger ringen, och vid ett bord utan bottar är allt som förut.
+
+Medan rundan byggdes kom två saker till från Johan, och båda följer med i v2.6.188.
+
+Den första gällde tutorialen: "tutorialen använde den tuckade panelen om man har den inställd sedan innan, den skulle
+behöva defaulta automatiskt till full panel för just tutorialen". Classic-kapitlen pekar på dockans delar: högarna,
+Edge-knappen och "hovra över nederkanten". Med fickorna stämde de inte. Nu håller ett kapitel full panel medan det
+pågår, och även över frågan "Continue to the next section?" mellan två kapitel, så att brädet inte byter läge bakom
+frågan. Knappen som byter läge är dold så länge. Spelarens val skrivs aldrig om. `rimOn()` läser två flaggor,
+`tutPanelRun` och `tutPanelBridge`, som deklareras tidigt eftersom `layout()` kan köras innan tutorialobjektet finns.
+Valet kommer tillbaka när tutorialen slutar, vid End tutorial och vid ett Nej mellan kapitlen. I Chromium fick en
+Classic-spelare med fickor full panel i kapitlet. Dockan var stängd vid steget ci-dock och öppnades när pekaren gick
+till nederkanten. Full panel låg kvar bakom frågan och i nästa kapitel, och efter ett Nej kom fickorna tillbaka.
+Samma skript på v2.6.187 visar fickorna hela vägen, och där godkändes ci-dock direkt eftersom dockan redan räknades
+som öppen.
+
+Den andra var att kunna gömma navet: "toggla i bottkugghjulet om man vill dölja ikonen på brädet så man bara kör på
+långklicket". Jag föreslog en ruta i bottlådan, och att navet ändå kommer fram när bordet väntar på en. Johan svarade
+"ta det samtidigt" och att navet hellre ska komma fram när botten har ställt en fråga. Rutan heter "Hide the hub (hold
+the right button for the ring)". Den sparas med inställningarna (`conv.botHubHide`) och är av från början. Ett gömt
+nav har opacity 0, tar inga klick och ligger utanför Tab-ordningen. Det går ändå att fokusera, så att tangentens ring
+kan stegas med piltangenterna. Navet kommer fram av sig självt medan bordet väntar på den här skärmen: när en bott
+frågar, vid en bleed mot en och när Turn-based väntar på ▶. Det syns också medan dess egen ring är öppen. På en
+pekskärm går navet inte att gömma, och inte heller när hållet är avstängt och ingen tangent är bunden. Då är rutan grå
+och säger varför.
+
+I Chromium gömde rutan navet. Under dess plats låg bordet, och en hovring där öppnade ingenting. Hållet öppnade ringen vid pekaren, och dess
+kugghjul öppnade lådan. En fråga till You tog fram navet glödande; den väntan lades in i en riktig botts `status()`,
+eftersom en bott inte ställer frågan på beställning. Efter svaret gick navet undan igen. I Turn-based syntes navet med
+▶. Med hållet avstängt öppnade Q ringen och fokuserade det gömda navet, så att pilarna stegade. Utan tangent, och med
+pekskärmsläget på, kom navet tillbaka.
+
+Sviten har åtta nya tester i rundan och ger 431/0. v2.6.187 får 423/8 mot den. Femtiosju mutanter fångades, nitton av
+dem för de två tilläggen. En lucka finns kvar: online vet en spelare som inte är värd inget om frågor från bottar som
+körs i värdens flik, precis som glöden i v2.6.187. Där kommer navet bara fram vid en bleed mot en själv.
+
+Osäkert och otestat: Windows-ordningen är bara provad i sviten med låtsade händelser, eftersom Chromium på Linux alltid
+ger Linux-ordningen. Inte heller provat: macOS med styrplatta eller Ctrl-klick, Firefox och Safari. På macOS och Linux
+kommer menyn för ett kort högerklick vid bord med bottar nu när knappen släpps, inte när den trycks ner. Det är en liten
+skillnad i känsla, och Off tar bort den.
+
 ## [BOTTRINGEN] (24 november 2026, kväll, klient v2.6.187 / srv-2.6.53 oförändrad, PR #102)
 
 Johan: "en effektiv och modern bott-kontrollpanel istället för den vi har just nu". Robotansiktet skulle vara kvar men i
