@@ -496,7 +496,7 @@ const sayIdx = phrase => SAY.indexOf(phrase);
    left the screen; a quick phrase holds the floor 1.5 s. The client's own numbers (elysium-vtes-bord.html sayBubbleMs / chatBubble):
    a chat bubble shows its text clamped at 180 characters + '…' for max(3000, min(9000, 3000 + (n - 20) * 45)) ms at the player's
    multiplier 1.0 (a local setting nobody else can know); a frozen verdict LOG line pulses the quick phrases' bubble (VERDICT_RE). */
-const FLOOR_SAY_MS = 1500, FLOOR_TIE_MS = 250;   // a quick phrase's floor; ring order on a tie: one step a seat from the seat whose turn it is
+const FLOOR_SAY_MS = 1500, FLOOR_TIE_MS = 250, FLOOR_ASK_MIN_S = 10;   // a quick phrase's floor; ring order on a tie: one step a seat from the seat whose turn it is
 const bubbleMs = text => { const t = String(text == null ? '' : text), n = t.length > 180 ? 181 : t.length; return Math.max(3000, Math.min(9000, 3000 + Math.max(0, n - 20) * 45)); };
 const VERDICT_PULSE = /^(?:Block: Stealth -?\d+ vs Intercept -?\d+ — block (?:succeeds|fails)|Vote: \d+ for vs \d+ against — vote (?:passes|fails))\.$/;
 
@@ -1050,8 +1050,10 @@ class Bot {
      two seats waited out the same bubble or one line moved both (two combatants' round summaries; a step counts from the last table
      event too). My own bubbles never hold my floor (the chat beat spaces them). A table paced for people only (_floorOn: paceMs of
      1.5 s or more -- the client's 3.1 s; the suite's fast paces and the arena's 0 run as before); o.chatFloor 0 switches the floor
-     off, 1 forces it at any pace above 0 (at 0 _drain paces nothing; an ablation and the tests, not a decision knob). The stamp is the moment the bubble reached me -- the moment it reached the screen, near enough. */
-  _floorOn(){ const p = this.o.paceMs | 0; return p > 0 && (this.o.chatFloor === 1 || (this.o.chatFloor !== 0 && p >= FLOOR_SAY_MS)); }   // a table paced for people (the client's 3100 ms, the bot's default 1500); a test's fast pace (120-400 ms) is no table anyone reads, and o.chatFloor 1 forces it there
+     off, 1 forces it at any pace above 0 (at 0 _drain paces nothing; an ablation and the tests, not a decision knob). Only with an ask
+     clock of 10 s or more (FLOOR_ASK_MIN_S; the client's 20, the bot's 25): a floor holds an answer up to 9 s and three ring steps, and
+     a bot-only window or a poll on a shorter clock would close before it (the egress review). The stamp is the moment the bubble reached me -- the moment it reached the screen, near enough. */
+  _floorOn(){ const p = this.o.paceMs | 0; return p > 0 && (this.o.chatFloor === 1 || (this.o.chatFloor !== 0 && p >= FLOOR_SAY_MS && (this.o.askSecs | 0) >= FLOOR_ASK_MIN_S)); }   // a table paced for people (the client's 3100 ms, the bot's default 1500); a test's fast pace (120-400 ms) is no table anyone reads, and o.chatFloor 1 forces it there
   _isBubbleMsg(o){ return !!o && (o.t === 'chat' || o.t === 'say' || (o.t === 'log' && VERDICT_PULSE.test(stripTags(o.html).trim()))); }
   _floorSeen(m){
     if(!m || !m.who || m.who === this.o.name || !(this._seatOfName(m.who) > 0)) return;   // a spectator's chat pops no bubble (the client's chatBubble wants a seat)
@@ -1754,6 +1756,12 @@ class Bot {
     const cnt = {}; combat.forEach(o => { cnt[FX_NORM(o.nm)] = (cnt[FX_NORM(o.nm)] | 0) + 1; });
     combat.sort((a, b) => (cnt[FX_NORM(b.nm)] - cnt[FX_NORM(a.nm)]) || (a.i - b.i));
     return { idx: combat[0].i, name: combat[0].nm, why: ousts ? 'ousts' : 'spare' };
+  }
+  _spyAddMay(v){                     // v0.6.240 (the egress review): _playSpyBank's own conditions, read only -- the floor is waited out before its +2 only when it will come
+    const av = this._actingVamp; return !!(av && !av.bounced && av.target && (av.n | 0) >= 1 && this._spyBankFor(v, av.target));
+  }
+  _haqimAddMay(v){                   // v0.6.240 (the egress review): _playHaqimLaw's own conditions, read only (the discard pick reads the hand) -- no floor wait for a copy that keeps its cards
+    const av = this._actingVamp; return !!(av && !av.bounced && av.target && (av.n | 0) >= 1 && this._haqimLawFor(v) && this._haqimDiscardPick(v, av.target));
   }
   _playHaqimLaw(v){                  // v0.6.215: the +1 -- the combat card to the ash heap, the frozen L12.add re-announce (Spying Mission's bank shape)
     const av = this._actingVamp; if(!av || av.bounced || !av.target || (av.n | 0) < 1) return false;
@@ -6665,8 +6673,8 @@ class Bot {
      duel ran into its safety net. The opposing bot reads it from either tier (_parseCombatNarration). A table the floor does not pace (_floorOn: the
      arena's 0, the suite's fast paces) keeps the bubble, tail-less to a bot (_combatTell), as v0.6.239 sent it: nobody reads it there, nothing waits on
      a floor, and the live sections pin it (36, 38). No switch brings the bubble back under the floor: it would wait behind the other combatant's
-     summary and the press step would miss it again (knob hygiene: a timing race is never behind a knob). o.chatFloor 0 = v0.6.239's bubbles and
-     timing as a whole; o.combatNotes 1 = the log line at any pace (a test). */
+     summary and the press step would miss it again (knob hygiene: a timing race is never behind a knob). o.chatFloor 0 = v0.6.239's timing and
+     tiers (the text stays D-137's: no prefix, no tail to a bot); o.combatNotes 1 = the log line at any pace (a test). */
   _combatNoteToBot(){ if(this.o.combatNotes !== 1 && !this._floorOn()) return false; const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return !!(p && p.bot); }
   _combatTell(tail){ const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return p && p.bot ? '' : tail; }   // v0.6.240 (the chat round, D-137): a combat line's 'tell me if your side differs' is the human's instruction -- none to a bot opponent (it reads the line itself, _parseCombatNarration; the tail was never part of the shape); an unknown opponent keeps it
   _phasesOn(){ return this.o.combatPhases !== 0 && this._inCombat && !!this._phaseOppPlayer(); }
@@ -13839,13 +13847,13 @@ class Bot {
               if(this.o.lateBounce !== 0) break;   // below, after the loop
               curAns = await this._bounceGate(curAns); if(curAns.what === 'block') break; continue;   // pass 3: lateBounce 0 pumps on after a bounce wherever it landed
             }
-            if(!spyBankTried){ spyBankTried = true; if(this._floorHeld() && this._spyBankFor(v, this._actingVamp.target)){ await this._floorClear(); if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue; }   // v0.6.240 (D-137): when a bank is there, the add line and its question only with a free floor (re-read after the wait). v0.6.211: a Spying Mission banked against this Methuselah -- 'the next time this vampire is about to successfully bleed the same Methuselah': the +2 first, then a reactions-only window (a modifier's own shape)
+            if(!spyBankTried){ spyBankTried = true; if(this._floorHeld() && this._spyAddMay(v)){ await this._floorClear(); if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue; }   // v0.6.240 (D-137): when a bank is there, the add line and its question only with a free floor (re-read after the wait). v0.6.211: a Spying Mission banked against this Methuselah -- 'the next time this vampire is about to successfully bleed the same Methuselah': the +2 first, then a reactions-only window (a modifier's own shape)
               if(this._playSpyBank(v)){ pumped++;
                 curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +2 bleed (Spying Mission) \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
                 await sleep(150);
                 if(curAns.what === 'block') break;
                 continue; } }
-            if(this._floorHeld() && this._haqimLawFor(v)){ await this._floorClear(); if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue; }   // v0.6.240 (D-137): when the card may play, its add line and question with a free floor (re-read after the wait)
+            if(this._floorHeld() && this._haqimAddMay(v)){ await this._floorClear(); if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue; }   // v0.6.240 (D-137): when the card will play (_haqimAddMay), its add line and question with a free floor (re-read after the wait)
             if(this._playHaqimLaw(v)){ pumped++;   // v0.6.215 (V5 wave 3): Haqim's Law: Retribution -- each copy once per action, before the cards (a card in hand stays a card)
               curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +1 bleed (Haqim\u2019s Law) \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
               await sleep(150);

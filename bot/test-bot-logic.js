@@ -10985,13 +10985,17 @@ async function connectWithRetry(client, tries = 30){
         const u = mk157(three); const v = { id: 'c1', kind: 'crypt', name: 'Colette (G6)', zone: 'ready', blood: 3, locked: true, attached: ['m9'] };
         u.board = [v, { id: 'm9', name: 'Spying Mission', kind: 'lib', zone: 'ready', host: 'c1', spyTarget: 1, spyBank: 2 }];
         u._actingVamp = { v, target: 3, n: 1, bounced: false, played: new Set(), kind: 'bleed' };
-        const other = u._playSpyBank(v);
+        const sMay = () => typeof u._spyAddMay === 'function' ? u._spyAddMay(v) : 'no method';   // v0.6.240: the floor's wait before the +2 reads this
+        const mOther = sMay(), other = u._playSpyBank(v);
         u._actingVamp = { v, target: 1, n: 1, bounced: false, played: new Set(), kind: 'bleed' };
-        const did = u._playSpyBank(v), L = u.sent.map(m => m.t === 'log' ? strip157(m.html) : null).filter(Boolean);
+        const mDid = sMay(), did = u._playSpyBank(v), mAfter = sMay(), L = u.sent.map(m => m.t === 'log' ? strip157(m.html) : null).filter(Boolean);
         ok(!other && did && u._actingVamp.n === 3 && !u.board.some(c => c.id === 'm9') && !(v.attached || []).includes('m9') && L.some(l => /^Colette \(G6\) adds \+2 bleed \(= 3\)\.$/.test(l) && L12.add.test(l)),
            '157k the bank: not against another Methuselah; against seat 1 the card burns for +2 (1 -> 3) with the frozen add line (got ' + JSON.stringify(L) + ')');
         u.board.push({ id: 'm8', name: 'Spying Mission', kind: 'lib', zone: 'ready', host: 'c1', spyTarget: 1, spyBank: 2 }); u._actingVamp = { v, target: 1, n: 2, bounced: true, played: new Set(), kind: 'bleed' };
-        ok(!u._playSpyBank(v), '157l ...and not on a bleed that was bounced (it is no longer the same bleed of mine on them)'); }
+        const mBounced = sMay();
+        ok(!u._playSpyBank(v), '157l ...and not on a bleed that was bounced (it is no longer the same bleed of mine on them)');
+        ok(mOther === false && mDid === true && mAfter === false && mBounced === false,
+           '157l ...and _spyAddMay (the floor waits before the +2 only then) says exactly when the bank pays: another Methuselah no, seat 1 yes, the bank spent no, a bounced bleed no (got ' + JSON.stringify({ mOther, mDid, mAfter, mBounced }) + ')'); }
     }
 
     /* 158) v0.6.212 -- CHANTRY NEVER TAKES MY LAST POOL (found by V5 round 0's smoke, 29 Oct 2026: on a five-seat sim table a Tremere bot at
@@ -11786,15 +11790,19 @@ async function connectWithRetry(client, tries = 30){
       // g) Haqim's Law: Retribution in my own modifier window: a spare combat card for +1 bleed and the frozen add line; two kept; once per copy per action
       { const mk = (hand, copies) => { const u = mkU161(); const k = V('g1', 'Kasim Bayar (G6)', { blood: 6, cap: 9 }); u.board = [k]; for(let i = 0; i < copies; i++) u.board.push(L('gl' + i, "Haqim's Law: Retribution")); u.hand = hand.slice();
           u.table = { 1: { pub: { pool: 20 } } }; u._actingVamp = { v: k, n: 2, played: new Set(), target: 1 }; return { u, k }; };
-        const A = mk(['Hunger of Marduk', 'Hunger of Marduk', 'Flash'], 2), r1 = IF1(A.u, '_playHaqimLaw') ? A.u._playHaqimLaw(A.k) : false, r2 = IF1(A.u, '_playHaqimLaw') ? A.u._playHaqimLaw(A.k) : false, r3 = IF1(A.u, '_playHaqimLaw') ? A.u._playHaqimLaw(A.k) : false;
+        const may = (u, k) => IF1(u, '_haqimAddMay') ? u._haqimAddMay(k) : 'no method';   // v0.6.240: the floor's wait before the add reads this -- it must say exactly when the play comes
+        const A = mk(['Hunger of Marduk', 'Hunger of Marduk', 'Flash'], 2), m1 = may(A.u, A.k), r1 = IF1(A.u, '_playHaqimLaw') ? A.u._playHaqimLaw(A.k) : false, m2 = may(A.u, A.k), r2 = IF1(A.u, '_playHaqimLaw') ? A.u._playHaqimLaw(A.k) : false, r3 = IF1(A.u, '_playHaqimLaw') ? A.u._playHaqimLaw(A.k) : false;
         ok(r1 && !r2 && !r3 && A.u._actingVamp.n === 3 && A.u.hand.length === 2 && A.u.hand.filter(x => x === 'Hunger of Marduk').length === 1 && logs(A.u).includes('Kasim Bayar (G6) adds +1 bleed (= 3).'),
            '161g Haqim’s Law: three combat cards -> a Hunger of Marduk (the card held twice) for +1, the frozen add line; then two are kept, the second copy waits (got ' + JSON.stringify({ r1, r2, r3, n: A.u._actingVamp.n, hand: A.u.hand, logs: logs(A.u) }) + ')');
         const B = mk(['Flash', 'Pursuit'], 1); B.u.table = { 1: { pub: { pool: 3 } } };
-        const b1 = IF1(B.u, '_playHaqimLaw') ? B.u._playHaqimLaw(B.k) : false, b2 = IF1(B.u, '_playHaqimLaw') ? B.u._playHaqimLaw(B.k) : false;
+        const mb1 = may(B.u, B.k), b1 = IF1(B.u, '_playHaqimLaw') ? B.u._playHaqimLaw(B.k) : false, mb2 = may(B.u, B.k), b2 = IF1(B.u, '_playHaqimLaw') ? B.u._playHaqimLaw(B.k) : false;
         ok(b1 && !b2 && B.u._actingVamp.n === 3, '161g ...with two combat cards it still pays when the point ousts the prey (pool 3, bleed 2 -> 3), each copy once per action (got ' + JSON.stringify({ b1, b2, n: B.u._actingVamp.n }) + ')');
         const C = mk(['Flash', 'Pursuit', 'Quickness'], 1); C.u.board[0] = Object.assign(C.u.board[0], { name: 'Crow (G5)' }); C.u._actingVamp.v = C.u.board[0];
-        const c1 = IF1(C.u, '_playHaqimLaw') ? C.u._playHaqimLaw(C.u.board[0]) : false;
-        ok(!c1, '161g ...and only an Assamite (Banu Haqim) uses it'); }
+        const mc1 = may(C.u, C.u.board[0]), c1 = IF1(C.u, '_playHaqimLaw') ? C.u._playHaqimLaw(C.u.board[0]) : false;
+        ok(!c1, '161g ...and only an Assamite (Banu Haqim) uses it');
+        const D = mk(['Hunger of Marduk', 'Hunger of Marduk', 'Flash'], 1); D.u._actingVamp.bounced = true; const md = may(D.u, D.k), d1 = IF1(D.u, '_playHaqimLaw') ? D.u._playHaqimLaw(D.k) : false;
+        ok(m1 === true && r1 && m2 === false && !r2 && mb1 === true && b1 && mb2 === false && !b2 && mc1 === false && md === false && !d1,
+           '161g ...and _haqimAddMay (the floor waits before the add only then) says exactly when the play comes: a spare card yes, two kept no, the ousting point yes, a used copy no, not an Assamite no, a bounced bleed no (got ' + JSON.stringify({ m1, m2, mb1, mb2, mc1, md }) + ')'); }
 
       // h) Club Illusion at the bleed announce: an Anarch with blood to spare; not at 2 blood unless the point ousts; never a non-Anarch
       { const ci = (vName, blood, preyPool) => { const u = mkU161(); const v = V('h1', vName, { blood, cap: 6 }); u.board = [v, L('hl1', 'Club Illusion')]; u.table = { 1: { pub: { pool: preyPool } } };
@@ -16637,9 +16645,9 @@ async function connectWithRetry(client, tries = 30){
           u._refT = { who: 'Hanna', seat: 1, card: 'Kine Resources Contested', deltas: { 1: 4, 2: 4, 3: 4 }, at: Date.now(), applied: false };
           u._dispatch({ t: 'tally', who: 'Hanna', mode: 'vote', a: 1, b: 0 }); return u; };
         const spoke = u => u.wire.some(w => w.m.t === 'chat');
-        const v1 = mkV(P); const armed1 = !!v1._refHeardW; await sleep(150); const early = spoke(v1); v1._dispatch({ t: 'chat', who: 'Mara', msg: 'No votes from me.' }); const woke1 = armed1 && !v1._refHeardW; await until6(() => spoke(v1), 4000);
+        const v1 = mkV(P); const armed1 = !!v1._refHeardW; await sleep(150); const early = spoke(v1); v1._dispatch({ t: 'chat', who: 'Mara', msg: 'No votes from me.' }); const woke1 = armed1 && !v1._refHeardW; await until6(() => spoke(v1), 8000);   // generous: the floor releases it at ~3.5 s, no time is asserted
         const pv1 = IF6(v1, '_refPrevVoter') ? v1._refPrevVoter() : null;
-        const v2 = mkV(P6(['Hanna', 'Johan', 'Viktor'], [true, false, true])); const armed2 = !!v2._refHeardW; const pv2 = IF6(v2, '_refPrevVoter') ? v2._refPrevVoter() : null; v2._dispatch({ t: 'chat', who: 'Hanna', msg: 'I vote 1 for.' }); const woke2 = armed2 && !v2._refHeardW; await until6(() => spoke(v2), 4000);
+        const v2 = mkV(P6(['Hanna', 'Johan', 'Viktor'], [true, false, true])); const armed2 = !!v2._refHeardW; const pv2 = IF6(v2, '_refPrevVoter') ? v2._refPrevVoter() : null; v2._dispatch({ t: 'chat', who: 'Hanna', msg: 'I vote 1 for.' }); const woke2 = armed2 && !v2._refHeardW; await until6(() => spoke(v2), 8000);
         const v3 = mkV(P); const t3 = Date.now(); await until6(() => spoke(v3), 4000); const cap = Date.now() - t3;
         const v4 = mkV(P); await sleep(50); v4._dispatch({ t: 'tally', who: 'Hanna', mode: null, a: 0, b: 0 }); await sleep(100); const closed = !spoke(v4) && !v4._refHeardW;
         ok(!early && woke1 && spoke(v1) && !!pv1 && pv1.name === 'Mara' && !!pv2 && pv2.name === 'Hanna' && woke2 && spoke(v2) && spoke(v3) && cap >= 800 - 30 && closed,
@@ -16651,7 +16659,7 @@ async function connectWithRetry(client, tries = 30){
         const v6 = mk6('Viktor', 3, P, { paceMs: 300, refTurnCapMs: 400 }); v6.turnSeat = 1; v6.hand = []; v6.board = [];
         v6._refT = { who: 'Hanna', seat: 1, card: 'Kine Resources Contested', deltas: { 1: 4, 2: 4, 3: 4 }, at: Date.now(), applied: false };
         v6._tyrannyReactFor = () => ({ name: 'Absolute Tyranny' }); v6._playTyrannyReact = () => { v6._votedThisRef = true; return true; };   // the cut's own lines (fx, log) without a bubble
-        v6._dispatch({ t: 'tally', who: 'Hanna', mode: 'vote', a: 1, b: 0 }); v6._dispatch({ t: 'chat', who: 'Mara', msg: 'No votes from me.' }); await until6(() => spoke(v6), 4500);   // Mara's bubble holds the floor 3 s
+        v6._dispatch({ t: 'tally', who: 'Hanna', mode: 'vote', a: 1, b: 0 }); v6._dispatch({ t: 'chat', who: 'Mara', msg: 'No votes from me.' }); await until6(() => spoke(v6), 8000);   // Mara's bubble holds the floor 3 s
         const said6 = v6.wire.filter(w => w.m.t === 'chat').map(w => w.m.msg);
         ok(fresh && JSON.stringify(said6) === JSON.stringify(['No votes from me.']),
            '186i ...a new game while I wait ends my turn in the old poll (nothing said, no vote written), and a voter whose reaction said nothing still says its bubble (got ' + JSON.stringify({ armed5, fresh, said6 }) + ')'); }
@@ -16690,10 +16698,10 @@ async function connectWithRetry(client, tries = 30){
            '186m a thinking line the floor held is dropped when my answer is queued behind it, and still said when nothing is (got ' + JSON.stringify({ ga, gb }) + ')'); }
 
       // n) the floor is on at a pace people read (1.5 s and more: the client's 3.1 s, the bot's default 1.5 s), off at the suite's fast paces and at 0
-      { const on = (paceMs, chatFloor) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', paceMs, log: () => {} }, chatFloor === undefined ? {} : { chatFloor })); return IF6(u, '_floorOn') ? u._floorOn() : null; };
-        const g = { p0: on(0), p300: on(300), p1500: on(1500), p3100: on(3100), dflt: (() => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', log: () => {} }); return IF6(u, '_floorOn') ? u._floorOn() : null; })(), forced: on(300, 1), forced0: on(0, 1), off: on(3100, 0) };
-        ok(g.p0 === false && g.p300 === false && g.p1500 === true && g.p3100 === true && g.dflt === true && g.forced === true && g.forced0 === false && g.off === false,
-           '186n the floor: on from a 1.5 s pace (the client\u2019s 3.1 s, the bot\u2019s default), off at the suite\u2019s fast paces and at 0; chatFloor 1 forces it at any pace above 0, 0 switches it off (got ' + JSON.stringify(g) + ')'); }
+      { const on = (paceMs, chatFloor, askSecs) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', paceMs, log: () => {} }, chatFloor === undefined ? {} : { chatFloor }, askSecs === undefined ? {} : { askSecs })); return IF6(u, '_floorOn') ? u._floorOn() : null; };
+        const g = { p0: on(0), p300: on(300), p1500: on(1500), p3100: on(3100), dflt: (() => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', log: () => {} }); return IF6(u, '_floorOn') ? u._floorOn() : null; })(), forced: on(300, 1), forced0: on(0, 1), off: on(3100, 0), ask20: on(3100, undefined, 20), ask3: on(3100, undefined, 3) };
+        ok(g.p0 === false && g.p300 === false && g.p1500 === true && g.p3100 === true && g.dflt === true && g.forced === true && g.forced0 === false && g.off === false && g.ask20 === true && g.ask3 === false,
+           '186n the floor: on from a 1.5 s pace (the client\u2019s 3.1 s, the bot\u2019s default) with an ask clock of 10 s or more (the client\u2019s 20), off at the suite\u2019s fast paces, at 0 and on a 3 s ask clock; chatFloor 1 forces it at any pace above 0, 0 switches it off (got ' + JSON.stringify(g) + ')'); }
 
       // j) L-95: a new game's floor is free and no vote round is in flight
       { const u = mk6('Viktor', 2, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300 }); u._floorUntil = Date.now() + 5000; u._refHeard = new Set(['Hanna']);
