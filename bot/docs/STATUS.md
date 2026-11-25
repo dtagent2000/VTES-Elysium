@@ -13,11 +13,11 @@ this release, stacked on it (`bot-exact-round`; merge #108 first, L-84); Johan's
 GATES-STATUS
 
 ## Next
-1. **Johan's rulings on the chat lines** (O-51) and on the playtests' questions (`claude/playtest-claude-game1/2-2026-11-25.md` in
-   the project: the bounce after "No block", voting as a human, the caller's last word, the resolution panel) and the pool floor
+1. **Johan's rulings on the chat lines** (O-51) and on the playtests' questions (the project's two playtest docs of 25 Nov,
+   claude/playtest-claude-game1 and -game2: the bounce after "No block", voting as a human, the caller's last word, the resolution panel) and the pool floor
    (O-52): what he asks for is built next.
 2. The fidelity pass (D-138, BOARD): the other 13 V5 decks' cards, a deck a round or with C's families; CARDS.md's `exact`
-   column is the measure (the five starters: malkavian 55/77, nosferatu 59/77, toreador 68/77, tremere 62/77, ventrue 59/77).
+   column is the measure (the five starters: malkavian 55/77, nosferatu 51/77, toreador 68/77, tremere 58/77, ventrue 59/77).
 3. The register's active entries 8.3 and 11.1 (D-135, D-137), then class 1 (R-47); the missed options wait in their classes
    (10.1 Faceless Night [OBF] among them, its own design).
 4. v2.6.187 and v2.6.188 consumed: the guide's hub, ring and bot box (main's ask 2), the read-only copies refreshed; the canary case

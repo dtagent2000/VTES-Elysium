@@ -35,7 +35,7 @@ What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
 source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's and v0.6.239's egress reviews; Claude orders the rounds, D-137).
-Active entries: 8.3, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 12.2.
+Active entries: 8.3, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 10.16, 12.2.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -247,8 +247,9 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   Deflection or Guard Dogs [ANK 20171017], on every minion that attempted and failed, across a bounce: a design of its own.
 - **10.2 Burning another's card in play, and Ventrue HQ** — Wasserschloss Anif, Austria's burn-it action ("Any minion can burn this
   card as a Ⓓ action"), Haven Uncovered's host burning the card, Pentex™ Subversion's ("Other minions can burn this card as a Ⓓ
-  action": its entry carries `noBlockMinion` only); Ventrue Headquarters locked only in my own referendums. [O-23; B; pilot; pass 3
-  found Pentex's] · **missed** (the 240: tremere's Wasserschloss banked blood in 67 matches and was never burned; nosferatu put
+  action": its entry carries `noBlockMinion` only), Creeping Sabotage's ("Minions can burn this card as a Ⓓ action") and Revelations
+  [AUS]'s ("Any minion can burn this card as a Ⓓ action"); Ventrue Headquarters locked only in my own referendums. [O-23; B; pilot; pass 3
+  found Pentex's; the exactness round's egress review the last two] · **missed** (the 240: tremere's Wasserschloss banked blood in 67 matches and was never burned; nosferatu put
   Haven Uncovered on another seat's vampire 68 times, never burned by its host; tremere's Pentex was on an opponent's minion in
   63 matches, never burned; the 240's 33 card burns were all Smiling Jack) / reachable (Ventrue HQ in another seat's referendum) ·
   a burn-it key the burn finder reads (`_bestBurnCardFor` reads only `burnCardAction`).
@@ -300,9 +301,11 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   the table's burn by host and id too). What reads a card whose host is burned is not audited. [the playtest round's egress review]
   · reachable (any deck).
 - **10.16 Options the starters' curated entries leave out** — Anarch Troublemaker's "or burn an equipment on one of their minions"
-  (the entry carries the two locks only); Vessel's "you can burn a card named <Blood Doll> (if any)". [the exactness round's
-  fidelity pass] · reachable (ventrue ×1: Anarch Troublemaker, against tremere's equipment) / latent (Vessel: nosferatu and
-  tremere hold no Blood Doll) · the burn as the giver's choice when an equipment is worth more than the two locks.
+  (the entry carries the two locks only); Vessel's "you can burn a card named <Blood Doll> (if any)": any Blood Doll in play,
+  another Methuselah's too [LSJ 20071012, LSJ 20090811]. [the exactness round's fidelity pass; its egress review: Vessel's state]
+  · missed (Vessel; v0.6.241's 240: 594 of its 890 plays came after another seat's Blood Doll in the same match, 170 matches; no
+  bot burns one) / reachable (ventrue ×1: Anarch Troublemaker, against tremere's equipment) · the burn of
+  an opponent's Blood Doll when Vessel is played; the equipment burn as the giver's choice when it is worth more than two locks.
 
 ## 11. Windows: who is asked, and when
 Who may answer an action or a card, and in which window; a line read after its window closed.

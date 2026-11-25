@@ -29,15 +29,15 @@ Sim: `fin-240` — 240 matches, bot v0.6.241 on client v2.6.179, malkavian,treme
 | lasombra | 57 | 4 | 2 | 14 | 0 | 12 | 29/77 | 22/77 |
 | malkavian | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 55/77 |
 | ministry | 64 | 1 | 9 | 3 | 0 | 12 | 29/77 | 21/77 |
-| nosferatu | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 59/77 |
+| nosferatu | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 51/77 |
 | pathcaine | 51 | 8 | 0 | 18 | 0 | 12 | 8/77 | 3/77 |
 | pathcathari | 57 | 3 | 2 | 15 | 0 | 12 | 24/77 | 12/77 |
 | pathdeath | 41 | 6 | 1 | 29 | 0 | 12 | 12/77 | 7/77 |
 | pathpower | 49 | 10 | 0 | 18 | 0 | 12 | 35/77 | 24/77 |
 | ravnos | 51 | 4 | 13 | 9 | 0 | 12 | 31/77 | 31/77 |
-| salubri | 57 | 3 | 5 | 12 | 0 | 12 | 35/77 | 18/77 |
+| salubri | 57 | 3 | 5 | 12 | 0 | 12 | 35/77 | 16/77 |
 | toreador | 76 | 1 | 0 | 0 | 0 | 12 | 77/77 | 68/77 |
-| tremere | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 62/77 |
+| tremere | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 58/77 |
 | tzimisce | 59 | 1 | 9 | 8 | 0 | 12 | 27/77 | 23/77 |
 | ventrue | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 59/77 |
 
@@ -216,51 +216,51 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Regent | Master | curated | FULL | unseen | pathpower 1 (0/12) | 2 | 162 |  | — |
 | Week of Nightmares | Master | curated | FULL | unseen | ravnos 1 (0/12) | 7 | 163, 177 |  | — |
 | Yawp Court | Master | curated | FULL | unseen | pathcaine 1 (0/12) | 6 | 177, 181 |  | — |
-| On the Qui Vive | Reaction | auto | FULL | playable | banuhaqim 4 (28/12), brujah 2 (5/12), gangrel 5 (8/12), malkavian 5 (684/408), ministry 4 (11/12), nosferatu 5 (660/408), pathcathari 3 (3/12), pathpower 5 (5/12), ravnos 4 (10/12), salubri 2 (0/12), tremere 4 (579/408), tzimisce 4 (9/12) | 3 | 14d, 41, 42g, 42j, 94a, 94b, 94c, 110 +9 |  | checked |
-| Govern the Unaligned | Action | auto | FULL | playable | lasombra 7 (18/12), malkavian 12 (1851/408), pathdeath 4 (9/12), salubri 4 (14/12), tremere 12 (1636/408), tzimisce 6 (26/12) | 1 | 1, 8, 9, 11, 13, 14, 15, 19l +43 |  | checked |
-| Blood Doll | Master | curated | FULL | playable | brujah 4 (21/12), gangrel 4 (18/12), malkavian 4 (687/408), ministry 4 (13/12), pathcathari 3 (7/12), pathdeath 3 (9/12), ravnos 3 (7/12), salubri 2 (10/12), tzimisce 3 (14/12), ventrue 3 (381/408) | 2 | 2, 19b, 19c, 19e, 19h, 19i, 19j, 19l +17 |  | checked |
-| Enchant Kindred | Action | auto | FULL | playable | brujah 6 (16/12), ministry 7 (21/12), pathpower 6 (16/12), toreador 6 (20/12), ventrue 8 (1002/408) | 0 | 32e, 97c, 103a, 105, 108, 163, 164, 169 +2 |  | checked |
-| Deflection | Reaction | auto | FULL | playable | lasombra 6 (7/12), malkavian 5 (227/408), pathpower 5 (3/12), salubri 3 (4/12), tremere 4 (216/408), tzimisce 3 (2/12), ventrue 6 (487/408) | 5 | 28, 29, 29c, 32, 32a, 33, 39c, 41 +21 |  | 4.6 missed |
-| Telepathic Misdirection | Reaction | auto | FULL | playable | hecata 3 (5/12), malkavian 5 (586/408), pathcathari 6 (5/12), pathdeath 2 (1/12), salubri 4 (4/12), tremere 4 (441/408) | 5 | 139, 140, 142 |  | 4.6 missed |
-| Kine Resources Contested | Political Action | auto | FULL | playable | lasombra 3 (2/12), pathpower 5 (13/12), toreador 8 (21/12), ventrue 7 (818/408) | 3 | 95, 96a, 96b, 96d, 96e, 98a, 98b, 98d +19 |  | checked |
-| Freak Drive | Action Modifier | auto | FULL | playable | hecata 4 (10/12), pathcathari 4 (8/12), pathpower 4 (5/12), salubri 4 (19/12), ventrue 6 (790/408) | 4 | 97, 97a, 97b, 97c, 99b, 101b, 102a, 102b +6 |  | 8.6 missed |
+| On the Qui Vive | Reaction | auto | FULL | playable | banuhaqim 4 (28/12), brujah 2 (5/12), gangrel 5 (8/12), malkavian 5 (688/408), ministry 4 (11/12), nosferatu 5 (667/408), pathcathari 3 (3/12), pathpower 5 (5/12), ravnos 4 (10/12), salubri 2 (0/12), tremere 4 (583/408), tzimisce 4 (9/12) | 3 | 14d, 41, 42g, 42j, 94a, 94b, 94c, 110 +9 |  | checked |
+| Govern the Unaligned | Action | auto | FULL | playable | lasombra 7 (18/12), malkavian 12 (1865/408), pathdeath 4 (9/12), salubri 4 (14/12), tremere 12 (1645/408), tzimisce 6 (26/12) | 1 | 1, 8, 9, 11, 13, 14, 15, 19l +43 |  | checked |
+| Blood Doll | Master | curated | FULL | playable | brujah 4 (21/12), gangrel 4 (18/12), malkavian 4 (690/408), ministry 4 (13/12), pathcathari 3 (7/12), pathdeath 3 (9/12), ravnos 3 (7/12), salubri 2 (10/12), tzimisce 3 (14/12), ventrue 3 (380/408) | 2 | 2, 19b, 19c, 19e, 19h, 19i, 19j, 19l +17 |  | checked |
+| Enchant Kindred | Action | auto | FULL | playable | brujah 6 (16/12), ministry 7 (21/12), pathpower 6 (16/12), toreador 6 (20/12), ventrue 8 (998/408) | 0 | 32e, 97c, 103a, 105, 108, 163, 164, 169 +2 |  | checked |
+| Deflection | Reaction | auto | FULL | playable | lasombra 6 (7/12), malkavian 5 (229/408), pathpower 5 (3/12), salubri 3 (4/12), tremere 4 (214/408), tzimisce 3 (2/12), ventrue 6 (488/408) | 5 | 28, 29, 29c, 32, 32a, 33, 39c, 41 +21 |  | 4.6 missed |
+| Telepathic Misdirection | Reaction | auto | FULL | playable | hecata 3 (5/12), malkavian 5 (586/408), pathcathari 6 (5/12), pathdeath 2 (1/12), salubri 4 (4/12), tremere 4 (443/408) | 5 | 139, 140, 142 |  | 4.6 missed |
+| Kine Resources Contested | Political Action | auto | FULL | playable | lasombra 3 (2/12), pathpower 5 (13/12), toreador 8 (21/12), ventrue 7 (814/408) | 3 | 95, 96a, 96b, 96d, 96e, 98a, 98b, 98d +19 |  | checked |
+| Freak Drive | Action Modifier | auto | FULL | playable | hecata 4 (10/12), pathcathari 4 (8/12), pathpower 4 (5/12), salubri 4 (19/12), ventrue 6 (787/408) | 4 | 97, 97a, 97b, 97c, 99b, 101b, 102a, 102b +6 |  | 8.6 missed |
 | Second Tradition: Domain | Reaction | curated | FULL | playable | banuhaqim 8 (35/12), lasombra 6 (10/12), toreador 4 (8/12), ventrue 4 (411/408) | 6 | 92i, 113, 116, 121, 127, 145, 162, 167 +1 |  | checked |
 | Villein | Master | curated | FULL | playable | banuhaqim 4 (22/12), hecata 3 (8/12), lasombra 3 (3/12), pathcaine 3 (2/12), pathpower 3 (3/12), toreador 6 (12/12) | 3 | 127, 145, 159, 174 |  | checked |
-| Eyes of Argus | Reaction | auto | FULL | playable | hecata 3 (5/12), malkavian 5 (834/408), pathcathari 3 (5/12), salubri 4 (8/12), tremere 6 (899/408) | 3 | 38, 41, 42i, 79e, 79f, 79g, 83h, 83i +5 |  | checked |
-| Majesty | Combat | auto | FULL | playable | pathpower 3 (4/12), ravnos 4 (9/12), toreador 6 (21/12), ventrue 6 (674/408) | 1 | 97, 97a, 97c, 97d, 101c, 101e, 117, 127 +7 |  | checked |
-| Cats' Guidance | Reaction | curated | FULL | playable | gangrel 4 (9/12), nosferatu 4 (567/408), ravnos 4 (10/12), tzimisce 4 (14/12) | 2 | 42j, 47a, 47d, 147 |  | checked |
-| Lost in Crowds | Action Modifier | auto | FULL | playable | malkavian 4 (551/408), ministry 4 (6/12), nosferatu 4 (372/408), ravnos 4 (10/12) | 0 | 2, 10, 11, 38, 69c, 94d, 115, 117 +7 |  | 8.7 latent |
-| Bonding | Action Modifier | auto | FULL | playable | malkavian 4 (525/408), salubri 4 (13/12), tremere 6 (844/408) | 2 | 27b, 27c, 42j, 94d, 157, 180 |  | checked |
-| Swallowed by the Night | Action Modifier/Combat | auto | FULL | playable | banuhaqim 6 (13/12), malkavian 4 (429/408), ravnos 4 (1/12) | 0 | 2, 37j, 94d, 125, 127 |  | checked |
-| Parity Shift | Political Action | auto | FULL | playable | banuhaqim 2 (3/12), lasombra 2 (4/12), toreador 4 (5/12), ventrue 5 (428/408) | 4 | 95, 96a, 96b, 96d, 98c, 103a, 105, 127 +4 |  | checked |
-| Deep Song | Action | curated | FULL | playable | gangrel 6 (20/12), nosferatu 6 (771/408) | 2 | 48, 48b, 48c, 61, 63, 63a, 65, 66b +17 |  | checked |
-| Roundhouse | Combat | auto | FULL | playable | brujah 4 (10/12), nosferatu 8 (1077/408) | 0 | 32g, 37n, 66a, 66b, 107, 116, 125, 126 +11 |  | checked |
-| Taste of Vitae | Combat | curated | FULL | playable | brujah 4 (6/12), nosferatu 4 (450/408), pathcaine 4 (5/12) | 4 | 37g, 37n, 66a, 125, 159, 160, 166 |  | 12.1 reachable, 12.4 reachable |
-| Hidden Strength | Combat | curated | FULL | playable | gangrel 4 (9/12), salubri 3 (7/12), ventrue 4 (515/408) | 5 | 97d, 116, 125, 127, 139, 144, 159, 160 +2 |  | 12.3 reachable |
+| Eyes of Argus | Reaction | auto | FULL | playable | hecata 3 (5/12), malkavian 5 (837/408), pathcathari 3 (5/12), salubri 4 (8/12), tremere 6 (906/408) | 3 | 38, 41, 42i, 79e, 79f, 79g, 83h, 83i +5 |  | checked |
+| Majesty | Combat | auto | FULL | playable | pathpower 3 (4/12), ravnos 4 (9/12), toreador 6 (21/12), ventrue 6 (672/408) | 1 | 97, 97a, 97c, 97d, 101c, 101e, 117, 127 +7 |  | checked |
+| Cats' Guidance | Reaction | curated | FULL | playable | gangrel 4 (9/12), nosferatu 4 (569/408), ravnos 4 (10/12), tzimisce 4 (14/12) | 2 | 42j, 47a, 47d, 147, 187 |  | checked |
+| Lost in Crowds | Action Modifier | auto | FULL | playable | malkavian 4 (559/408), ministry 4 (6/12), nosferatu 4 (375/408), ravnos 4 (10/12) | 0 | 2, 10, 11, 38, 69c, 94d, 115, 117 +7 |  | 8.7 latent |
+| Bonding | Action Modifier | auto | FULL | playable | malkavian 4 (527/408), salubri 4 (13/12), tremere 6 (848/408) | 2 | 27b, 27c, 42j, 94d, 157, 180 |  | checked |
+| Swallowed by the Night | Action Modifier/Combat | auto | FULL | playable | banuhaqim 6 (13/12), malkavian 4 (435/408), ravnos 4 (1/12) | 0 | 2, 37j, 94d, 125, 127 |  | checked |
+| Parity Shift | Political Action | auto | FULL | playable | banuhaqim 2 (3/12), lasombra 2 (4/12), toreador 4 (5/12), ventrue 5 (425/408) | 4 | 95, 96a, 96b, 96d, 98c, 103a, 105, 127 +4 |  | checked |
+| Deep Song | Action | curated | FULL | playable | gangrel 6 (20/12), nosferatu 6 (776/408) | 2 | 48, 48b, 48c, 61, 63, 63a, 65, 66b +17 |  | checked |
+| Roundhouse | Combat | auto | FULL | playable | brujah 4 (10/12), nosferatu 8 (1085/408) | 0 | 32g, 37n, 66a, 66b, 107, 116, 125, 126 +11 |  | checked |
+| Taste of Vitae | Combat | curated | FULL | playable | brujah 4 (6/12), nosferatu 4 (457/408), pathcaine 4 (5/12) | 4 | 37g, 37n, 66a, 125, 159, 160, 166 |  | 12.1 reachable, 12.4 reachable |
+| Hidden Strength | Combat | curated | FULL | playable | gangrel 4 (9/12), salubri 3 (7/12), ventrue 4 (508/408) | 5 | 97d, 116, 125, 127, 139, 144, 159, 160 +2 |  | 12.3 reachable |
 | Pass Through Shadow | Combat | auto | FULL | playable | hecata 4 (6/12), lasombra 4 (5/12), pathdeath 3 (1/12) | 1 | — |  | — |
 | Hunger of Marduk | Combat | curated | FULL | playable | banuhaqim 10 (53/12) | 1 | 160, 161 |  | — |
-| Immortal Grapple | Combat | auto | FULL | playable | brujah 6 (22/12), nosferatu 4 (496/408) | 5 | 5b, 19l, 37n, 42j, 45c, 66a, 79a, 97d +8 |  | 12.5 latent |
+| Immortal Grapple | Combat | auto | FULL | playable | brujah 6 (22/12), nosferatu 4 (499/408) | 5 | 5b, 19l, 37n, 42j, 45c, 66a, 79a, 97d +8 |  | 12.5 latent |
 | Resist Earth's Grasp | Action Modifier/Combat | curated | FULL | playable | banuhaqim 2 (5/12), toreador 8 (12/12) | 1 | 160 |  | checked |
 | Shadow Cloak | Action Modifier | curated | FULL | playable | hecata 3 (4/12), lasombra 4 (6/12), pathdeath 3 (4/12) | 1 | 163, 179 |  | — |
 | Shroud of Decay | Action | auto | FULL | playable | hecata 6 (15/12), pathdeath 4 (7/12) | 1 | — |  | — |
-| Theft of Vitae | Combat | auto | FULL | playable | tremere 10 (1265/408) | 2 | 37f, 37g, 125, 126, 127, 139, 141, 146 +4 |  | checked |
-| Vessel | Master | curated | FULL | playable | nosferatu 4 (532/408), salubri 2 (6/12), tremere 4 (605/408) | 2 | 2, 19b, 19c, 19e, 19i, 84h, 84i, 87 +9 |  | 10.16 latent |
+| Theft of Vitae | Combat | auto | FULL | playable | tremere 10 (1274/408) | 2 | 37f, 37g, 125, 126, 127, 139, 141, 146 +4 |  | checked |
+| Vessel | Master | curated | FULL | playable | nosferatu 4 (537/408), salubri 2 (6/12), tremere 4 (609/408) | 2 | 2, 19b, 19c, 19e, 19i, 84h, 84i, 87 +9 |  | 10.16 missed |
 | Voter Captivation | Action Modifier | curated | FULL | playable | pathpower 2 (5/12), toreador 6 (16/12), ventrue 2 (198/408) | 3 | 99, 99b, 127, 145 |  | checked |
 | Where the Veil Thins | Action Modifier | auto | FULL | playable | hecata 3 (4/12), lasombra 4 (9/12), pathdeath 3 (1/12) | 1 | — |  | — |
-| Mirror Walk | Action Modifier | curated, merged | FULL | playable | pathdeath 3 (0/12), tremere 6 (595/408) | 4 | 180, 187 |  | checked |
+| Mirror Walk | Action Modifier | curated, merged | FULL | playable | pathdeath 3 (0/12), tremere 6 (599/408) | 4 | 121, 180, 187 |  | 4.20 human |
 | Organized Resistance | Reaction | auto | FULL | playable | brujah 6 (5/12), tzimisce 3 (2/12) | 5 | 14a, 14d |  | — |
 | Quickness | Combat | curated | FULL | playable | banuhaqim 4 (15/12), brujah 5 (19/12) | 1 | 159, 161 |  | — |
 | Bewitching Oration | Action Modifier | auto | FULL | playable | toreador 4 (7/12), ventrue 4 (159/408) | 1 | 96e |  | checked |
-| Carrion Crows | Combat | auto | FULL | playable | gangrel 6 (18/12), nosferatu 2 (362/408) | 1 | 37l, 37m, 37n, 46e, 79a, 79b, 92b, 107 +4 |  | 12.3 reachable, 11.4 reachable |
-| Cloak the Gathering | Action Modifier | auto | FULL | playable | malkavian 4 (711/408), ravnos 4 (8/12) | 3 | 2, 69c, 71, 94d, 117, 118, 122, 125 +1 |  | 8.7 latent |
-| Conditioning | Action Modifier | auto | FULL | playable | malkavian 4 (569/408), ventrue 4 (523/408) | 0 | 27b, 27c, 31, 42j, 87, 87c, 87g, 89b +11 |  | checked |
+| Carrion Crows | Combat | auto | FULL | playable | gangrel 6 (18/12), nosferatu 2 (366/408) | 1 | 37l, 37m, 37n, 46e, 79a, 79b, 92b, 107 +5 |  | 12.3 reachable, 11.4 reachable |
+| Cloak the Gathering | Action Modifier | auto | FULL | playable | malkavian 4 (715/408), ravnos 4 (8/12) | 3 | 2, 69c, 71, 94d, 117, 118, 122, 125 +1 |  | 8.7 latent |
+| Conditioning | Action Modifier | auto | FULL | playable | malkavian 4 (568/408), ventrue 4 (520/408) | 0 | 27b, 27c, 31, 42j, 87, 87c, 87g, 89b +11 |  | checked |
 | Enthrall | Action | auto | FULL | playable | pathcathari 8 (27/12) | 2 | — |  | — |
-| Faceless Night | Action Modifier | auto | FULL | playable | malkavian 4 (482/408), ministry 4 (10/12) | 3 | 94d |  | 10.1 missed |
-| Guard Dogs | Reaction | curated | FULL | playable | nosferatu 4 (441/408), ravnos 4 (15/12) | 2 | 47a, 47b, 47c, 47d, 160, 165, 166, 181 |  | checked |
+| Faceless Night | Action Modifier | auto | FULL | playable | malkavian 4 (489/408), ministry 4 (10/12) | 3 | 94d |  | 10.1 missed |
+| Guard Dogs | Reaction | curated | FULL | playable | nosferatu 4 (444/408), ravnos 4 (15/12) | 2 | 47a, 47b, 47c, 47d, 160, 165, 166, 181 |  | checked |
 | Protection Racket | Reaction | auto | FULL | playable | gangrel 4 (8/12), ravnos 4 (5/12) | 1 | — |  | — |
 | Rage of Apedemak | Combat | curated | FULL | playable | pathcaine 8 (18/12) | 1 | 160, 177 |  | — |
 | Soulgrinder | Combat | auto | FULL | playable | pathcaine 8 (7/12) | 2 | — |  | — |
-| Spying Mission | Action Modifier | curated | FULL | playable | malkavian 4 (462/408), ministry 4 (2/12) | 4 | 2, 80e, 81b, 94d, 157 |  | 11.7 reachable |
+| Spying Mission | Action Modifier | curated | FULL | playable | malkavian 4 (471/408), ministry 4 (2/12) | 4 | 2, 80e, 81b, 94d, 157 |  | 11.7 reachable |
 | Earth Control | Action Modifier | auto | FULL | playable | gangrel 4 (2/12), tzimisce 3 (10/12) | 0 | — |  | — |
 | Form of Mist | Combat | auto | FULL | playable | ministry 4 (12/12), tzimisce 3 (2/12) | 6 | 159, 160 |  | — |
 | Shadow Cast | Action Modifier | curated | FULL | playable | hecata 3 (2/12), lasombra 4 (2/12) | 2 | — |  | — |
@@ -278,18 +278,18 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Bait and Switch | Reaction | auto | FULL | playable | brujah 2 (2/12), tzimisce 3 (5/12) | 6 | 14a, 19h, 28, 29, 29c, 32, 32a, 32b +2 |  | — |
 | Earth Meld | Combat | auto | FULL | playable | ministry 5 (11/12) | 1 | — |  | — |
 | Flash | Combat | curated | FULL | playable | banuhaqim 5 (19/12) | 1 | 160, 161 |  | — |
-| Foreshadowing Destruction | Action Modifier | curated | FULL | playable | malkavian 2 (274/408), tzimisce 3 (14/12) | 2 | 80e, 81a |  | checked |
-| Haven Uncovered | Master | curated | FULL | playable | brujah 1 (6/12), gangrel 1 (0/12), nosferatu 1 (354/408), pathcaine 1 (6/12), tzimisce 1 (17/12) | 0 | 149, 162, 167, 177, 179, 181, 182 |  | 10.2 missed, 10.14 reachable, 6.1 latent |
+| Foreshadowing Destruction | Action Modifier | curated | FULL | playable | malkavian 2 (277/408), tzimisce 3 (14/12) | 2 | 80e, 81a |  | checked |
+| Haven Uncovered | Master | curated | FULL | playable | brujah 1 (6/12), gangrel 1 (0/12), nosferatu 1 (359/408), pathcaine 1 (6/12), tzimisce 1 (17/12) | 0 | 149, 162, 167, 177, 179, 181, 182 |  | 10.2 missed, 10.14 reachable, 6.1 latent |
 | Party Out Of Bounds | Reaction | auto | FULL | playable | ministry 5 (6/12) | 2 | — |  | — |
 | Precognition | Reaction | auto | FULL | playable | hecata 3 (5/12), tremere 2 (165/408) | 3 | — |  | 12.2 missed |
 | Subversion | Action Modifier | auto | FULL | playable | pathcathari 5 (3/12) | 1 | 44, 44a, 44c, 44d, 103e, 121, 157 |  | — |
 | Swift Cover | Action Modifier/Combat | auto | FULL | playable | pathcathari 5 (8/12) | 1 | — |  | — |
 | Torn Signpost | Combat | curated | FULL | playable | brujah 5 (23/12) | 2 | 92b, 160, 166 |  | — |
 | Truth in Darkness | Reaction | auto | FULL | playable | hecata 3 (3/12), lasombra 2 (2/12) | 0 | — |  | — |
-| Wider View | Master | curated | FULL | playable | malkavian 1 (113/408), ministry 1 (2/12), tremere 1 (121/408), ventrue 2 (251/408) | 1 | 19l, 127, 144, 184 |  | checked |
-| Apportation | Combat | auto | FULL | playable | tremere 4 (417/408) | 0 | 37h, 37i, 37j, 37k, 125, 126, 127, 141 +4 |  | checked |
+| Wider View | Master | curated | FULL | playable | malkavian 1 (115/408), ministry 1 (2/12), tremere 1 (122/408), ventrue 2 (250/408) | 1 | 19l, 127, 144, 184 |  | checked |
+| Apportation | Combat | auto | FULL | playable | tremere 4 (421/408) | 0 | 37h, 37i, 37j, 37k, 125, 126, 127, 141 +4 |  | checked |
 | Consanguineous Boon | Political Action | auto | FULL | playable | toreador 4 (15/12) | 0 | 95, 96d |  | checked |
-| Creeping Sabotage | Action | curated | FULL | playable | nosferatu 4 (504/408) | 0 | 49c, 49d, 49e, 52a, 62c, 83b, 127, 139 +2 |  | checked |
+| Creeping Sabotage | Action | curated | FULL | playable | nosferatu 4 (510/408) | 0 | 49c, 49d, 49e, 52a, 62c, 83b, 104, 127 +3 |  | 10.2 missed |
 | Dance with the Devil | Combat | auto | FULL | playable | pathcaine 4 (1/12) | 1 | — |  | — |
 | Dust Up | Combat | auto | FULL | playable | brujah 4 (16/12) | 4 | 181 |  | — |
 | Ensnare a Beast | Reaction | auto | FULL | playable | pathcaine 4 (5/12) | 3 | 70b, 166, 167 |  | — |
@@ -299,9 +299,9 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Form of the Cobra | Action Modifier/Combat | auto | FULL | playable | ministry 4 (9/12) | 0 | — |  | — |
 | Haqim's Law: Retribution | Master | curated | FULL | playable | banuhaqim 4 (99/12) | 4 | 161 |  | — |
 | Hunter's Mark | Action | auto | FULL | playable | banuhaqim 4 (17/12) | 0 | 181 |  | — |
-| Instinctive Reaction | Reaction | auto | FULL | playable | nosferatu 4 (248/408) | 2 | 118, 180 |  | checked |
-| Intimidation | Action | auto | FULL | playable | ventrue 4 (645/408) | 0 | — |  | checked |
-| Misdirection | Master | curated | FULL | playable | pathcathari 2 (2/12), tremere 1 (97/408), ventrue 1 (174/408) | 0 | 43, 43a, 43b, 43c, 102d, 139, 140, 142 +2 |  | checked |
+| Instinctive Reaction | Reaction | auto | FULL | playable | nosferatu 4 (252/408) | 2 | 118, 180 |  | checked |
+| Intimidation | Action | auto | FULL | playable | ventrue 4 (643/408) | 0 | — |  | checked |
+| Misdirection | Master | curated | FULL | playable | pathcathari 2 (2/12), tremere 1 (99/408), ventrue 1 (176/408) | 0 | 43, 43a, 43b, 43c, 102d, 139, 140, 142 +2 |  | checked |
 | Murder of Crows | Retainer | curated | FULL | playable | gangrel 2 (3/12), nosferatu 2 (279/408) | 6 | 46b, 46c, 46e, 106, 107, 127, 144, 177 +1 |  | 1.3 reachable |
 | My Enemy's Enemy | Reaction | auto | FULL | playable | pathcathari 2 (2/12), salubri 2 (1/12) | 5 | 142 |  | — |
 | Night Terrors | Reaction | curated, merged | FULL | playable | ravnos 4 (3/12) | 6 | 178, 181 |  | — |
@@ -310,37 +310,37 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | One With the Land | Reaction | auto | FULL | playable | tzimisce 4 (12/12) | 8 | 173, 178 |  | — |
 | Perfect Paragon | Action Modifier | curated | FULL | playable | toreador 4 (8/12) | 2 | 173 |  | checked |
 | Priority Contract | Master | curated, merged | FULL | playable | banuhaqim 4 (40/12) | 3 | 182 |  | — |
-| Protected District | Reaction | curated | FULL | playable | nosferatu 4 (272/408) | 3 | 55, 55b, 58, 58b, 58c, 59a, 59c, 61 +4 |  | 8.5 reachable |
-| Raven Spy | Retainer | auto | FULL | playable | gangrel 2 (2/12), nosferatu 2 (288/408) | 2 | 46a, 46b, 46c, 46d, 65, 106, 117, 127 +2 |  | 1.3 reachable |
+| Protected District | Reaction | curated | FULL | playable | nosferatu 4 (274/408) | 3 | 55, 55b, 58, 58b, 58c, 59a, 59c, 61 +4 |  | 8.5 reachable |
+| Raven Spy | Retainer | auto | FULL | playable | gangrel 2 (2/12), nosferatu 2 (290/408) | 2 | 46a, 46b, 46c, 46d, 65, 106, 117, 127 +2 |  | 1.3 reachable |
 | Relentlessness | Action Modifier | curated | FULL | playable | pathpower 4 (3/12) | 1 | — |  | — |
-| Revelations | Action | curated | FULL | playable | malkavian 4 (506/408) | 1 | 42, 42a, 42b, 42c, 42d, 42g, 42h, 91e +7 |  | 11.1 active |
+| Revelations | Action | curated | FULL | playable | malkavian 4 (510/408) | 1 | 42, 42a, 42b, 42c, 42d, 42g, 42h, 91e +7 |  | 11.1 active, 10.2 missed |
 | Scalpel Tongue | Action Modifier/Reaction | curated | FULL | playable | toreador 4 (3/12) | 1 | 162, 173, 174 |  | 10.8 reachable |
 | Sculpt the Flesh | Combat | curated | FULL | playable | tzimisce 4 (7/12) | 0 | 159, 181 |  | — |
 | Sense the Savage Way | Reaction | auto | FULL | playable | pathcaine 4 (11/12) | 4 | 178 |  | — |
 | Sentry Signal | Reaction | auto | FULL | playable | pathcaine 4 (12/12) | 4 | 178 |  | — |
 | Slam | Combat | curated | FULL | playable | brujah 4 (19/12) | 2 | 32g, 160 |  | — |
-| The Warrens | Reaction | curated, merged | FULL | playable | nosferatu 4 (261/408) | 0 | 117, 118, 178, 187 |  | checked |
+| The Warrens | Reaction | curated, merged | FULL | playable | nosferatu 4 (265/408) | 0 | 117, 118, 178, 187 |  | checked |
 | Toreador Grand Ball | Master | curated | FULL | playable | toreador 4 (4/12) | 3 | 162, 165, 167, 170, 173, 174 |  | 10.8 reachable |
-| Underbridge Stray | Ally | curated | FULL | playable | nosferatu 2 (172/408), tzimisce 2 (6/12) | 2 | 56, 56a, 56b, 56c, 83b, 91e, 127, 162 +5 |  | checked |
+| Underbridge Stray | Ally | curated | FULL | playable | nosferatu 2 (176/408), tzimisce 2 (6/12) | 2 | 56, 56a, 56b, 56c, 83b, 91e, 127, 162 +5 |  | checked |
 | Visions of Zapathasura | Reaction | auto | FULL | playable | ravnos 4 (4/12) | 1 | — |  | — |
 | Wake with Evening's Freshness | Reaction | auto | FULL | playable | ventrue 4 (580/408) | 4 | 32a, 32b, 33, 115, 116, 127, 180, 185 +1 |  | checked |
 | Absolute Tyranny | Action Modifier/Reaction | curated | FULL | playable | pathpower 3 (1/12) | 1 | 179, 186 |  | — |
-| Anarch Troublemaker | Master | curated | FULL | playable | pathcathari 1 (4/12), salubri 1 (4/12), ventrue 1 (180/408) | 1 | 102, 102c, 102d, 183 |  | 10.16 reachable |
+| Anarch Troublemaker | Master | curated | FULL | playable | pathcathari 1 (4/12), salubri 1 (4/12), ventrue 1 (179/408) | 1 | 102, 102c, 102d, 183 |  | 10.16 reachable |
 | Catatonic Fear | Combat | auto | FULL | playable | pathpower 3 (2/12) | 6 | — |  | — |
 | Creepshow Casino | Master | curated | FULL | playable | hecata 1 (0/12), pathpower 1 (15/12), toreador 1 (0/12) | 0 | 161 |  | 10.7 reachable |
 | Dreams of the Sphinx | Master | curated | FULL | playable | malkavian 1 (156/408), ministry 1 (2/12), pathcathari 1 (3/12) | 6 | 2, 19c, 19l, 161, 175, 184, 185 |  | checked |
-| Fame | Master | curated | FULL | playable | brujah 1 (7/12), gangrel 1 (4/12), nosferatu 1 (112/408) | 1 | 49, 49a, 49d, 50, 50c, 61, 63, 71 +10 |  | 10.15 reachable |
+| Fame | Master | curated | FULL | playable | brujah 1 (7/12), gangrel 1 (4/12), nosferatu 1 (113/408) | 1 | 49, 49a, 49d, 50, 50c, 61, 63, 71 +10 |  | 10.15 reachable |
 | Family Gathering | Master | handler | HANDLER | playable | hecata 3 (7/12) | 1 | 161 |  | — |
 | Glancing Blow | Combat | auto | FULL | playable | pathdeath 3 (6/12) | 2 | — |  | — |
-| Guardian Angel | Master | curated | FULL | playable | brujah 1 (4/12), nosferatu 1 (148/408), salubri 1 (4/12) | 0 | 148 |  | checked |
+| Guardian Angel | Master | curated | FULL | playable | brujah 1 (4/12), nosferatu 1 (150/408), salubri 1 (4/12) | 0 | 148 |  | checked |
 | Indomitability | Combat | auto | FULL | playable | salubri 3 (7/12) | 2 | — |  | — |
 | Redirection | Reaction | auto | FULL | playable | pathdeath 3 (3/12) | 5 | 142 |  | — |
 | Revenant | Retainer | auto | FULL | playable | tzimisce 3 (11/12) | 1 | — |  | — |
 | Veil the Legions | Action Modifier | auto | FULL | playable | ravnos 3 (8/12) | 2 | — |  | — |
 | Aire of Elation | Action Modifier | curated, merged | FULL | playable | toreador 2 (11/12) | 0 | 174, 187 |  | checked |
-| Ancilla Empowerment | Political Action | auto | FULL | playable | lasombra 1 (1/12), ventrue 1 (68/408) | 1 | 95, 96a, 96b, 155 |  | checked |
+| Ancilla Empowerment | Political Action | auto | FULL | playable | lasombra 1 (1/12), ventrue 1 (69/408) | 1 | 95, 96a, 96b, 155 |  | checked |
 | Arms of Ahriman | Combat | curated | FULL | playable | lasombra 2 (6/12) | 0 | 159 |  | — |
-| Bear's Skin | Combat | auto | FULL | playable | gangrel 2 (3/12) | 0 | — |  | — |
+| Bear's Skin | Combat | auto | FULL | playable | gangrel 2 (2/12) | 0 | — |  | — |
 | Blood Rage | Combat | auto | FULL | playable | banuhaqim 2 (12/12) | 4 | 181 |  | — |
 | Bowl of Convergence | Equipment | curated | FULL | playable | salubri 1 (2/12), tremere 1 (54/408) | 0 | 45a, 45d, 45e, 45f, 83b, 83h, 83i, 127 +1 |  | checked |
 | Change of Target | Action Modifier | curated | FULL | playable | toreador 2 (4/12) | 9 | 162, 163, 165, 166 |  | checked |
@@ -351,19 +351,19 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Fiendish Tongue | Action | auto | FULL | playable | pathcaine 2 (4/12) | 0 | — |  | — |
 | Fleetness | Action | auto | FULL | playable | banuhaqim 2 (12/12) | 1 | 104, 181 |  | — |
 | Form of the Wolf | Combat | curated | FULL | playable | gangrel 2 (2/12) | 1 | 160 |  | — |
-| Information Highway | Master | curated | FULL | playable | lasombra 1 (0/12), ventrue 1 (121/408) | 0 | 24, 71, 102d, 177 |  | checked |
+| Information Highway | Master | curated | FULL | playable | lasombra 1 (0/12), ventrue 1 (120/408) | 0 | 24, 71, 102d, 177 |  | checked |
 | Ivory Bow | Equipment | auto | FULL | playable | ministry 1 (12/12), salubri 1 (3/12) | 0 | 159, 181 |  | — |
 | KRCG News Radio | Master | curated | FULL | playable | pathdeath 1 (7/12), salubri 1 (4/12) | 1 | — |  | — |
 | Life in the City | Master | handler | HANDLER | playable | malkavian 2 (403/408) | 0 | 187 |  | checked |
-| Magic of the Smith | Action | curated | FULL | playable | tremere 2 (279/408) | 6 | 45e, 46c, 91e, 139, 150, 156 |  | checked |
+| Magic of the Smith | Action | curated | FULL | playable | tremere 2 (280/408) | 6 | 45e, 46c, 91e, 139, 150, 156 |  | checked |
 | Oblivion | Master | curated | FULL | playable | hecata 1 (2/12), lasombra 1 (2/12) | 0 | 162, 163, 164, 179, 185 |  | — |
-| Pentex™ Subversion | Master | curated | FULL | playable | pathcathari 1 (0/12), tremere 1 (148/408) | 0 | 44, 44a, 44c, 44d, 157 |  | 10.2 missed, 10.14 reachable, 6.2 reachable |
+| Pentex™ Subversion | Master | curated | FULL | playable | pathcathari 1 (0/12), tremere 1 (150/408) | 0 | 44, 44a, 44c, 44d, 157 |  | 10.2 missed, 10.14 reachable, 6.2 reachable |
 | Piper | Master | handler | HANDLER | playable | tzimisce 2 (1/12) | 7 | 175 |  | — |
-| Preternatural Strength | Action | curated | FULL | playable | nosferatu 2 (168/408) | 0 | 54, 54a, 54b, 66a, 83b, 106, 141, 146 +2 |  | 8.9 reachable |
+| Preternatural Strength | Action | curated | FULL | playable | nosferatu 2 (169/408) | 0 | 54, 54a, 54b, 66a, 83b, 106, 141, 146 +2 |  | 8.9 reachable |
 | Rego Motum | Combat | auto | FULL | playable | banuhaqim 2 (6/12) | 3 | — |  | — |
 | Rutor's Hand | Action | curated | FULL | playable | banuhaqim 1 (4/12), pathdeath 1 (0/12) | 1 | 159 |  | — |
 | Show of Force | Action | auto | FULL | playable | brujah 2 (7/12) | 0 | — |  | — |
-| Smiling Jack, The Anarch | Master | curated | FULL | playable | gangrel 1 (4/12), nosferatu 1 (85/408) | 2 | 49d, 62a, 79h, 80b, 91e, 141, 165, 169 +3 |  | checked |
+| Smiling Jack, The Anarch | Master | curated | FULL | playable | gangrel 1 (4/12), nosferatu 1 (86/408) | 2 | 49d, 62a, 79h, 80b, 91e, 141, 165, 169 +3 |  | checked |
 | Soul Burn | Combat | curated | FULL | playable | banuhaqim 2 (9/12) | 5 | 160 |  | — |
 | Spirit's Touch | Reaction | auto | FULL | playable | tremere 2 (202/408) | 2 | — |  | 12.2 missed |
 | Sudden Reversal | Master | curated | FULL | playable | lasombra 2 (2/12) | 7 | 161, 177, 178, 180, 185 |  | — |
@@ -374,11 +374,11 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | True Love's Face | Action Modifier | curated | FULL | playable | ministry 2 (12/12) | 0 | 178 |  | — |
 | Voracious Vermin | Combat | auto | FULL | playable | ravnos 2 (4/12) | 0 | — |  | — |
 | Walk of Flame | Combat | auto | FULL | playable | banuhaqim 2 (3/12) | 0 | 160, 181 |  | — |
-| .44 Magnum | Equipment | auto | FULL | playable | tremere 1 (139/408) | 2 | 32d, 32g, 45c, 45d, 45e, 79a, 79b, 83b +9 |  | 5.2 missed, 12.5 latent |
-| Academic Hunting Ground | Master | curated | FULL | playable | tremere 1 (158/408) | 0 | 19l, 91, 91e, 177 |  | checked |
+| .44 Magnum | Equipment | auto | FULL | playable | tremere 1 (143/408) | 2 | 32d, 32g, 45c, 45d, 45e, 79a, 79b, 83b +9 |  | 5.2 missed, 12.5 latent |
+| Academic Hunting Ground | Master | curated | FULL | playable | tremere 1 (157/408) | 0 | 19l, 91, 91e, 177 |  | checked |
 | Anarch Railroad | Master | curated | FULL | playable | gangrel 1 (7/12) | 0 | 32d, 161 |  | — |
 | Anarch Revolt | Master | curated | FULL | playable | tzimisce 1 (8/12) | 2 | 164, 175, 176 |  | — |
-| Arcane Library | Master | curated | FULL | playable | tremere 1 (158/408) | 0 | 19l, 148 |  | checked |
+| Arcane Library | Master | curated | FULL | playable | tremere 1 (161/408) | 0 | 19l, 148 |  | checked |
 | Archon Investigation | Master | curated | FULL | playable | ravnos 1 (1/12) | 2 | 161, 177, 183 |  | — |
 | Art Museum | Master | curated | FULL | playable | toreador 1 (1/12) | 0 | 161 |  | checked |
 | Asylum Hunting Ground | Master | curated | FULL | playable | malkavian 1 (192/408) | 0 | 19l, 127, 156, 177 |  | checked |
@@ -389,8 +389,8 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Carfax Abbey | Master | curated | FULL | playable | brujah 1 (4/12) | 0 | 161 |  | — |
 | Carver's Meat Packing and Storage | Master | curated | FULL | playable | brujah 1 (1/12) | 1 | 175 |  | — |
 | Channel 10 | Master | curated | FULL | playable | hecata 1 (5/12) | 1 | 161 |  | — |
-| Chantry | Master | curated | FULL | playable | tremere 1 (158/408) | 0 | 19l, 127, 158 |  | checked |
-| Elder Library | Master | curated | FULL | playable | malkavian 1 (134/408) | 1 | 19l, 184, 185 |  | 14.5 latent |
+| Chantry | Master | curated | FULL | playable | tremere 1 (159/408) | 0 | 19l, 127, 158 |  | checked |
+| Elder Library | Master | curated | FULL | playable | malkavian 1 (135/408) | 1 | 19l, 184, 185 |  | 14.5 latent |
 | Elysium: The Palace of Versailles | Master | curated | FULL | playable | toreador 1 (2/12) | 0 | 173 |  | checked |
 | Forward Momentum | Master | curated | FULL | playable | pathcathari 1 (6/12) | 0 | 175 |  | — |
 | Frontal Assault | Master | curated | FULL | playable | brujah 1 (8/12) | 1 | 175 |  | — |
@@ -405,7 +405,7 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Power Structure | Master | auto | FULL | playable | lasombra 1 (4/12) | 1 | — |  | — |
 | Powerbase: Los Angeles | Master | curated | FULL | playable | ravnos 1 (4/12) | 2 | 175 |  | — |
 | Powerbase: Madrid | Master | auto | FULL | playable | pathpower 1 (1/12) | 0 | — |  | — |
-| Rebel | Master | curated | FULL | playable | nosferatu 1 (85/408) | 0 | 53, 53c, 71, 127 |  | checked |
+| Rebel | Master | curated | FULL | playable | nosferatu 1 (84/408) | 0 | 53, 53c, 71, 127 |  | checked |
 | Saulot's Avenging Fist | Master | curated | FULL | playable | salubri 1 (3/12) | 1 | 162, 181 |  | — |
 | Saulot's Guiding Wisdom | Master | curated | FULL | playable | salubri 1 (5/12) | 0 | 162 |  | — |
 | Saulot's Healing Touch | Master | auto | FULL | playable | salubri 1 (4/12) | 2 | 162 |  | — |
@@ -416,17 +416,17 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Temple Hunting Ground | Master | curated | FULL | playable | ministry 1 (4/12) | 0 | — |  | — |
 | The Coven | Master | curated | FULL | playable | hecata 1 (7/12) | 3 | 175 |  | — |
 | The Hungry Coyote | Master | curated | FULL | playable | pathcathari 1 (4/12) | 1 | 175, 177 |  | — |
-| The Labyrinth | Master | curated | FULL | playable | nosferatu 1 (432/408) | 0 | 121, 148 |  | checked |
+| The Labyrinth | Master | curated | FULL | playable | nosferatu 1 (434/408) | 0 | 121, 148 |  | checked |
 | The Rack | Master | curated | FULL | playable | gangrel 1 (4/12) | 5 | 10, 175 |  | — |
 | Toreador Justicar | Political Action | curated | FULL | playable | toreador 1 (5/12) | 2 | 162, 163 |  | checked |
 | Underworld Hunting Ground | Master | curated | FULL | playable | banuhaqim 1 (3/12) | 0 | — |  | — |
-| Uptown Hunting Ground | Master | curated | FULL | playable | ventrue 1 (120/408) | 0 | — |  | checked |
+| Uptown Hunting Ground | Master | curated | FULL | playable | ventrue 1 (119/408) | 0 | — |  | checked |
 | Ventrue Headquarters | Master | curated | FULL | playable | ventrue 1 (142/408) | 0 | 98, 98d, 161 |  | 10.2 missed |
-| Visit from the Capuchin | Master | curated | FULL | playable | ventrue 1 (221/408) | 2 | 99, 99c, 165, 185 |  | checked |
+| Visit from the Capuchin | Master | curated | FULL | playable | ventrue 1 (220/408) | 2 | 99, 99c, 165, 185 |  | checked |
 | Wall Street Night, Financial Newspaper | Master | curated | FULL | playable | pathdeath 1 (5/12) | 0 | 161 |  | — |
-| Warsaw Station | Master | curated | FULL | playable | nosferatu 1 (104/408) | 4 | 53, 53a, 53b, 57, 175 |  | checked |
+| Warsaw Station | Master | curated | FULL | playable | nosferatu 1 (106/408) | 4 | 53, 53a, 53b, 57, 175 |  | checked |
 | Warzone Hunting Ground | Master | curated | FULL | playable | brujah 1 (1/12) | 0 | — |  | — |
-| Wasserschloss Anif, Austria | Master | curated | FULL | playable | tremere 1 (187/408) | 1 | 148 |  | 10.2 missed |
+| Wasserschloss Anif, Austria | Master | curated | FULL | playable | tremere 1 (186/408) | 1 | 148 |  | 10.2 missed |
 | Zoo Hunting Ground | Master | curated | FULL | playable | gangrel 1 (1/12) | 0 | 161 |  | — |
 
 ## The crypt (every vampire; RULINGS D-108)

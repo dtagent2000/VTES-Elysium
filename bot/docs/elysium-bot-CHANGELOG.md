@@ -321,65 +321,70 @@
 
 ## Bot
 - **v0.6.241 (25 Nov 2026)** — The exactness round (RULINGS D-138; Johan, 20:43: "Superbra, ja vi kör!" on Claude's proposal after his
-  question at 20:38 whether 77/77 really means every card works): Claude's two playtest games against the bots on main's rig
-  (`claude/playtest-claude-game1/2-2026-11-25.md` in the project) and a spot check of the base starters' auto entries
-  (`claude/card-fidelity-spotcheck-2026-11-25.md`). Stacked on v0.6.240 (#108). Under D-92's combining rule the playtests' table bugs,
-  the register's two active class-7 entries and what the fidelity pass found ride together.
-  - *The table bugs (A1–A4)* — A1: `_askTimeout` clears the timer it was called by, and each of its three timers fires only for the
-    ask that armed it (a contest a human's Pass ended under Turn-based left its 4-min net armed into the next question: "no answer in
-    4 min" 70 s after it was asked). A2: an undirected contest whose last human has passed is a bot-only window, so the bots' clock
-    declares the verdict (three 4-min stalls: the bot blocker never says Pass; the say and the chat paths). A3: the generic bleed
-    modifier waits for a free floor before its add line, and the board push goes behind the line (`push()` deferred a tick), so the
-    question is the next wire item after the add and a bot target's answer comes after it (D-137's gap: three times in game 1). A4:
-    the turn watchdog says nothing while I wait on the table -- a poll (`_refCall`), a combat step (`_phaseWait`), a verdict or a late
-    word (`status()` 'asking' or 'held') -- and still says "Still thinking…" when I am thinking.
+  question at 20:38 whether 77/77 really means every card works): Claude's two playtest games against the bots on main's rig and a
+  spot check of the base starters' auto entries (the project's docs of 25 Nov: claude/playtest-claude-game1, -game2 and
+  claude/card-fidelity-spotcheck). Stacked on v0.6.240 (#108). Under D-92 the playtests' table bugs, the register's two active
+  class-7 entries and what the fidelity pass found ride together.
+  - *The table bugs (A1–A4)* — A1: `_askTimeout` clears the timer it was called by, and each of its three timers fires only for
+    the ask that armed it (under Turn-based a contest a human's Pass ended left its 4-min net armed: "no answer in 4 min" 70 s into
+    the next question). A2: an undirected contest whose last human has passed is a bot-only window, so the bots' clock declares
+    the verdict (three 4-min stalls: the bot blocker never says Pass; the say and the chat paths). A3: the generic bleed modifier
+    waits for a free floor before its add line and the board push goes a tick behind it, so the question is the next wire item
+    after the add and a bot target's answer comes after it (D-137's gap). A4: the turn watchdog says nothing while I wait on the
+    table (a poll, a combat step, a verdict, a late word: `status()` 'asking' or 'held') and still says "Still thinking…" when I think.
   - *Cards* — **Aire of Elation** (register 7.1, active) and **The Warrens** (7.2, active) read their printed additional +1:
-    `fx.plusIf {add: {<key>: N}, if: {selfClan | selfTitled}}`, the condition kept on the key; `_plusIf` reads it beside `fx.bleed`
-    (`_bestBleedModifierFor`) and `fx.intercept` (`_bestInterceptFor`, `_interceptStack`), and a condition it does not know fails
-    closed. **Mirror Walk [THA]**: `fx.blockedLockEnd` on its [THA] mode; on the stealth tie the card's own rider mode wins (a superior
-    Thaumaturgy vampire played [tha] before: the first mode kept the tie); the play books it on the action and names its level
-    (`plays Mirror Walk [THA]: +1 stealth.`); blocked, `_ifBlockedStep` locks the blocker and ends the action before block
-    resolution, ahead of any other card [ANK 20220116; RTR 20180719], with a new bot line, `VAMP is blocked — CARD [THA]: NAME's
-    BLOCKER is locked; the action ends unsuccessfully.` (`BLOCKED_LOCK`, `_evClassify` kind `blocked-lock`; owed to main's §12:
-    the handoff); the blocker's bot reads it (`_onCot` with `lock`), begins no combat and keeps its vampire locked [ANK 20191204].
-    **Life in the City** is held while I control no ready vampire (`_masterHold`; the advanced rules 3.1.3, no legal object, no
-    play; game 1: turn 1, the card lost). **The second wake**: a wake played for a vampire is kept on the action's pending
-    (`p.woken`; `_awake`, `_markWoken`), and the block route, the bounce and the reduce read it, so a vampire woken for its block
-    bounces in the same action with no second wake, and one with no wake card left still can (the vote reacts keep their own wake:
-    in a poll `this.pending` can be another action's, and the suite's 59c caught a stale record waking a locked vampire there) (game 1: Eyes of
-    Argus [AUS], then On the Qui Vive, for one bleed). **Creeping Sabotage**: "Cost: X blood", X the copies already in play
-    (KRCG), paid by the acting vampire at announce, the card not offered to one that cannot pay (every copy was free).
-  - *The measure* (D-138) — `cardfx-fidelity.json` (new): the five starters' 92 library cards, each read clause by clause against
-    KRCG's text (the spot check's 30 auto entries, this round's pass over the other 62: 58 curated, three equipment, four political
-    actions), with the open register entries that are each card's own gaps. `gen-card-ledger.js` v1.3.0 prints per deck
-    `text-checked` and `exact` (playable, checked, no gap in a play-changing state: active, missed, reachable) and a row's fidelity;
-    a gap the register no longer lists fails its run and `test-cardfx.js`. On the release bytes' sims: GATED-BELOW.
-  - *The register* — 7.1 and 7.2 deleted (fixed); 4.20 a human's Mirror Walk [THA] (the bot blocker cannot know it); 10.16 the
-    options Anarch Troublemaker (an equipment burn) and Vessel (a Blood Doll burn) leave out; 10.1 notes the tie half built.
-    Found and fixed here, not registered: Life in the City, the second wake, Creeping Sabotage's cost, Mirror Walk [THA] (missed:
-    the tie kept [tha]; the spot check's "they should have avoided the combat" was the missed option, not a broken rule).
-    Left in the register with their reasons: Faceless Night [OBF] (10.1: its lock lands at resolution, after a failed blocker's
-    Deflection or Guard Dogs [ANK 20171017], on every minion that attempted, across a bounce — a design of its own), Cloak the
-    Gathering (8.7, latent: the tie keeps [obf]), Raven Spy (1.3: class 1's design question).
-  - *Tools* — `gen-deck-coverage.js` v1.1.56 (`plusIf`, `blockedLockEnd` in the CLASS map); `cardfx-sharing.json` (`plusIf` shared:
-    Aire of Elation, Ministry, Protection Racket, Sense the Sin, The Mausoleum, Venice, The Warrens; `blockedLockEnd` shared:
-    Claiming the Body, Mirror Walk, Mirror's Visage; each read in KRCG's text, with its definition); cardfx curated 218 → 221 (three
-    merges; the compile changes only those entries).
-  - *Prediction* (D-93; registered 25 Nov 20:32 UTC, after the run started, before any output was read) and *observed* (the 240
-    against v0.6.240's release bytes, the same client): (1) DIVERGED in most matches, ≥ 150: **196**, SAME-PLAY 44 — held. (2)
-    `ana-gates.py` PASS 6/6 — held (handshake 9,236/9,236, ledger 0, zeroPool 0). (3) Mirror Walk [THA]'s rider fires 5–40 times:
-    **127**, every one with the blocker's lock and no combat (127 `cot-cancelled` with `lock`) — missed: Claude under-counted how
-    often tremere's bleeds are still blocked after its stealth (326 → 315 Mirror Walk plays). (4) a second wake for one vampire in
-    one action: 19 → **0** — held. (5) Life in the City with no ready vampire: 54 round-1 picks → **0** (195 → 193 picks) — held.
-    (6) Creeping Sabotage's plays fall within −25 %: 248 → **243**, 81 of them paid (70 at 1 blood, 10 at 2, 1 at 3) — held. (7) VP
-    a match within ±0.05 a deck: malkavian 1.63 → 1.61, ventrue 1.19 → **1.34**, nosferatu 0.60 → **0.53**, tremere 0.59 → **0.53**
-    — missed for three decks: the woken record lets a woken vampire bounce with no wake card left (bounces: ventrue 264 → 298,
-    tremere 108 → 129, malkavian 249 → 255), which Claude had counted as a wasted card saved, not as bounces gained.
-  - *Tests*: section 187 (a–j, 12 checks): 187a–d the table bugs, 187e Aire of Elation, 187f The Warrens, 187g Life in the City,
-    187h the second wake, 187i Mirror Walk [THA] (both sides), 187j Creeping Sabotage — green on the new bytes (12/0); every check
-    red on v0.6.240 (a–i 0/11 with the new data, j 0/1); 187e's first check, 187f and 187i also red on the new bot with the data
-    from before their merges (187e's second, a fail-closed check on a synthetic mode, passes there as it should). *Gates*:
-    GATES-BELOW.
+    `fx.plusIf {add: {<key>: N}, if: {selfClan | selfTitled}}`, read by `_plusIf` beside `fx.bleed` (`_bestBleedModifierFor`) and
+    `fx.intercept` (`_bestInterceptFor`, `_interceptStack`); a condition it does not know fails closed. **Mirror Walk [THA]**
+    (`fx.blockedLockEnd`): with knob `riderTie` 1 the card's own rider mode wins its stealth tie (0 = the first mode, v0.6.240's
+    [tha]: the choice is a decision, HARNESS step 3; a rider mode picked any other way still applies its rider); the play books it
+    on the action and names its level (`plays Mirror Walk [THA]: +1 stealth.`); blocked, `_ifBlockedStep` locks the blocker and
+    ends the action before block resolution, ahead of any other card [ANK 20220116; RTR 20180719], with a new bot line,
+    `VAMP is blocked — CARD [THA]: NAME's BLOCKER is locked; the action ends unsuccessfully.` (`BLOCKED_LOCK`, `_evClassify`
+    kind `blocked-lock`; owed to main's §12, the handoff), on a leave-torpor action too, where the blocker gets no diablerie
+    [PIB 20121216]. A bot blocker hears the rider at the actor's stealth line (`RIDER_STEALTH`, `pending.riderLock`): at its own
+    successful verdict its vampire is locked [ANK 20191204] and no combat begins, so nothing of one is spent and no "after block
+    resolution" card follows; one that missed it reads the line (`_onCot` with lock), and the before-range step re-checks a cancel
+    before each card. **Life in the City** is held while I control no ready vampire (`_masterHold`; the advanced rules 3.1.3: no
+    legal object, no play). **The second wake**: the block route records a wake on the action's pending (`p.woken`, `_markWoken`),
+    the bounce and the reduce read it (`_awake`), so a vampire woken for its block bounces with no second wake, and one with no
+    wake card left still can; the vote reacts keep their own wake (in a poll `this.pending` can be another action's: the suite's
+    59c caught a stale record waking a locked vampire). **Creeping Sabotage**: "Cost: X blood", X the copies already in play,
+    paid by the acting vampire at announce and returned on a block (every copy was free).
+  - *The measure* (D-138) — `cardfx-fidelity.json` (new): the five starters' 92 library cards read clause by clause against KRCG's
+    text, each with the open register entries that are its own gaps. `gen-card-ledger.js` v1.3.0: per deck `text-checked` and `exact`
+    (playable, checked, no gap that changes play: active, missed, reachable) and a row's fidelity; a gap the register no longer lists
+    fails the ledger and `test-cardfx.js`. On the release bytes' 240 and V5 smokes: text-checked 77/77 for each starter, exact
+    malkavian 55, nosferatu 51, toreador 68, tremere 58, ventrue 59 of 77.
+  - *The register* — 7.1 and 7.2 deleted; 4.20 a human's Mirror Walk [THA] (the bot blocker cannot know it); 10.16 Anarch
+    Troublemaker's equipment burn and Vessel's Blood Doll burn (any Blood Doll in play [LSJ 20071012], missed: 594 of the 240's 890
+    Vessel plays came after another seat's Blood Doll); 10.2 names Creeping Sabotage's and Revelations [AUS]'s burn; 10.1 notes the
+    tie half built. Left with their reasons: Faceless Night [OBF] (10.1: its lock lands at resolution, after a failed blocker's
+    Deflection or Guard Dogs [ANK 20171017], across a bounce), Cloak the Gathering (8.7, latent), Raven Spy (1.3: class 1).
+  - *Tools* — `gen-deck-coverage.js` v1.1.56 (`plusIf`, `blockedLockEnd`); `cardfx-sharing.json` (`plusIf`: Aire of Elation,
+    Ministry, Protection Racket, Sense the Sin, The Mausoleum, Venice, The Warrens; `blockedLockEnd`: Claiming the Body, Mirror Walk,
+    Mirror's Visage, Red Herring [CHI]); cardfx curated 218 → 221 (three merges; the compile changes only those entries).
+  - *Prediction* (D-93; registered 25 Nov 20:32 UTC, after the first run started, before any output was read) and *observed* (the
+    240 on the release bytes against v0.6.240's, the same client): (1) DIVERGED ≥ 150: **196**, SAME-PLAY 44 — held. (2)
+    `ana-gates.py` PASS 6/6 — held (handshake 9,320/9,320, ledger 0, zeroPool 0). (3) Mirror Walk [THA]'s rider 5–40 times:
+    **131** (317 Mirror Walk plays; 108 blockers ended at their own verdict, 23 by the line), no combat after any and no
+    before-range card spent first (the pre-fix bytes spent Carrion Crows 4 times) — missed: tremere's bleeds stay blocked after
+    its stealth far more often than Claude counted. (4) a second wake in one action: 19 → **0** — held. (5) Life in the City with no
+    ready vampire: 54 round-1 picks → **0** (195 → 193 picks) — held. (6) Creeping Sabotage within −25 %: 248 → **249** picks, 85
+    paid (72 at 1 blood, 12 at 2, 1 at 3) — held. (7) VP a match within ±0.05: malkavian 1.63 → 1.61, ventrue 1.19 → **1.33**,
+    nosferatu 0.60 → **0.54**, tremere 0.59 → **0.52** — missed for three decks: a woken vampire now bounces with no wake card
+    left (bounces ventrue 264 → 299, tremere 108 → 127, malkavian 249 → 256), which Claude counted as a card saved, not bounces
+    gained. The 14 V5 smokes: PASS 6/6 but banuhaqim's ledger (one steal pair, the victim lost 2, the stealer booked 1: BOARD's
+    measurement debt "a steal's victim lost > stole"; v0.6.240's run of that smoke played other games in 11 of 12 matches).
+  - *The egress review* — pass 1 (9 findings: rule-missed 5, unproven 2, half-done 1, stale-doc 1), all fixed: the blocker's race
+    with BLOCKED_LOCK (above); the handoff's purge names `elysium-cardfx.json`; Mirror Walk [THA] on a leave-torpor action; the
+    fidelity file's missing gaps (Vessel 10.16 missed, Creeping Sabotage and Revelations 10.2); the tie behind `riderTie`; Red
+    Herring [CHI] in the sharing row; the doc budgets (the round's lines cut first, then RULINGS, LESSONS and the total raised);
+    this entry's figures on the final bytes; the creep branch's payment tested. EGRESS-PASS-2
+  - *Tests*: section 187 (a–j, 17 checks): a–d the table bugs, e Aire of Elation, f The Warrens, g Life in the City, h the second
+    wake, i Mirror Walk [THA] (the tie and its knob, the line, the blocker on both paths, the after-block card, leave torpor), j
+    Creeping Sabotage (the finder and the branch) — green on the new bytes; red on v0.6.240 and, for the review's cases, on the
+    bytes before each fix; e, f and i red on the new bot with the data from before their merges. 59c, 104d and 121f follow the
+    sources. *Gates*: GATES-BELOW.
 - **v0.6.240 (25 Nov 2026; PR #108)** — The chat round (D-137, Johan's kör of 24 Nov 21:25; BOARD's chat-round line): what a
   table of people sees in the bubbles. The bubbles stay and keep their content; one speaker at a time; no "(bot):" prefix; a
   question to a bot without the human's tail. The recorder and the analyser are in the repo now (`tools/chat-record.js`,

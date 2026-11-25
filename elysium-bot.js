@@ -358,6 +358,7 @@ const TOREADOR_DECK = {   // v0.6.219 (12 Nov 2026, crypt wave A, RULINGS D-108)
 const ARCHETYPES = { hacking: DEFAULT_DECK, wall: WALL_DECK, sewer: SEWER_DECK, malkavian: MALKAVIAN_DECK, tremere: TREMERE_DECK, nosferatu: NOSFERATU_DECK, ventrue: VENTRUE_DECK, toreador: TOREADOR_DECK };
 const NET_LOCK_IC = /^(.+?) locks (.+?): \+(\d+) intercept\.$/;   // v0.6.215 (egress review): a location's intercept lock (_spendIntercept) -- read by the hotseat net and the event log like a card's L12.interceptPlay
 const ABSTAIN = /^(.+?) (?:plays (Scalpel Tongue) \[(\w+)\]|locks: (Saulot's Guiding Wisdom)) \u2014 (.+?)'s (.+?) (?:is locked(, burns 1 blood)? and )?abstains \((\d+) votes? cancelled\)\.$/;   // v0.6.217 (V5 wave 4, bot grammar): the caller's polling-step abstain -- m[2] Scalpel Tongue (m[3] its level; m[7] the superior blood) or m[4] Saulot's Guiding Wisdom, m[5] the voter's Methuselah, m[6] the vampire, m[8] the votes cancelled
+const RIDER_STEALTH = /^(.+?) plays (.+?) \[([A-Za-z]+)\]: \+(\d+) stealth\.$/;   // v0.6.241 (the egress review, finding 1): the actor's stealth line naming a rider mode's level ('plays Mirror Walk [THA]: +1 stealth.'), heard by a blocker -- it knows the action ends at a block before the actor's BLOCKED_LOCK line can reach it
 const BLOCKED_LOCK = /^(.+?) is blocked \u2014 (.+?)(?: \[([A-Za-z]+)\])?: (?:(.+?)'s )?(.+?) is locked; the action ends unsuccessfully\.$/;   // v0.6.241 (the exactness round, bot grammar): an 'if blocked' card that locks the blocker and ends the action (Mirror Walk [THA]) -- m[1] the acting vampire, m[2] the card, m[3] its level, m[4] the blocker's Methuselah, m[5] the blocker; owed to main's PROTOCOL §12 (bot/docs/handoffs)
 const COT = /^(.+?) plays Change of Target(?: \u2014 .+?)?\.(?: Target: .+)?$/;   /* v0.6.217 (the egress review): + the client's ' Target: X.' (targetSuffix) */   // v0.6.217 (V5 wave 4): the actor's 'if blocked' card -- m[1] the acting vampire; the bot's own line ('VAMP plays Change of Target \u2014 unlocks; the action ends unsuccessfully.') and a human's plain play line
 const CONTRACT_BURN = /^(.+?) burns (.+?) and gains (\d+) pool \((.+?)\)\.$/;   // v0.6.236 (the Banu Haqim pilot, bot grammar): Priority Contract's 'If the attached minion is about to leave the ready region, you can burn this card to gain 3 pool' -- m[1] the Methuselah, m[2] the card, m[3] the pool, m[4] why (the host went to torpor / was burned / left the ready region / left the game with its Methuselah). An explanation line (the duplicate rule: the ledger shows the pool and the card's move, not the why); read by the event log only
@@ -687,6 +688,7 @@ class Bot {
     engineW: 6,              // v0.6.229 (default 6 after its benches on the 600: every seat in turn +0.00 [-0.09, +0.10], pinned to Toreador +0.04 [-0.07, +0.15]; Toreador's guide pick first in 67 %, 19 % before) (D-118, proposal 4; D-43: the help sheets' opening, measured): the influence planner adds engineW x the share of my other crypt cards younger than the plan's first vampire, when it can play a superior blood-stock action my library holds 4+ of (Enchant Kindred [PRE], Govern the Unaligned [DOM]; _engineY) -- on every influence plan of the game, not only the opening's (benched so); 0 = v0.6.228
     scalpelLock: 1,          // v0.6.229 (default 1 after its bench, pinned to Toreador on the 600: +0.03 [+0.01, +0.05]; 71 locks) (D-118, proposal 6; the Toreador guide: 'Scalpel Tongue on the prey's vampire that voted, before offensive actions'): 1 = my passed referendum locks my prey's ready, unlocked vampire that voted against, when an actor of mine is still to act this turn (_scalpelLockPlan); 0 = v0.6.228 (Scalpel Tongue only turns a lost count)
     villeinKeep: 1,          // v0.6.229 (default 1 after its bench, pinned to Toreador on the 600: +0.00 [-0.06, +0.06]; a calm Villein leaves its host at 1 blood 104 times, 324 before) (D-118, proposal 8; the Toreador guide: Villein 'without draining the vampire'): 1 = a calm Villein leaves its host the blood for its two dearest blood-cost cards in hand it could play (cap 3, _reserveTwo) instead of the dearest one; 0 = v0.6.228
+    riderTie: 1,             // v0.6.241 (the exactness round's egress review, HARNESS step 3): 1 = an 'if blocked' rider mode (Mirror Walk [THA], fx.blockedLockEnd) wins its own card's stealth tie -- blocked, the action ends with the blocker locked instead of a combat; 0 = the first mode keeps the tie (v0.6.240: [tha]). A rider mode picked for any other reason still applies its rider (it is printed)
     spreadIncome: 1,         // v0.6.237 (Johan's playtest, 24 Nov): 1 = an income master (Blood Doll, Vessel) goes on the vampire with the fewest copies of it (_hostVampFor); 0 = the first vampire in board order (every copy stacked: the previous behaviour)
     dynFloor: 1,             // v0.6.189 (THE KNOWLEDGE LAYER, brick 2 -- 'do not oust yourself'): 1 = the critical pool also counts the RECURRING losses I paid over my last full turn cycle (Creeping Sabotage ticks, Smiling Jack, Fame), read from the event log; 0 = the predator burst alone. v0.6.193: default 1 -- the re-bench (arm dyn2, 48, every seat, the floor PROVEN to fire in 23 of 48 matches) came out -0.12 +/- 0.39 against the control's +0.14 +/- 0.45: inside the noise, no loss shown
     arkChat: 1,              // v0.6.192 (archetype labels, explanation only): 1 = the bot says once per seat what it reads the deck as (a CONFIDENT label: margin >= 2 and >= 85 % of the shown cards typical), and names the closest archetype in its trace; 0 = trace only. Labels never drive a decision on their own.
@@ -1984,7 +1986,7 @@ class Bot {
         const hasCombat = (h.e.t || []).includes('combat');   // v0.6.156 (Johan): Swallowed by the Night is stealth AND the deck's only defensive maneuver -- at equal stealth spend the pure stealth card first and keep the dual card for combat
         const keepLast = (h.e.modes || []).some(m2 => m2.fx && m2.fx.bleedNullify);   // v0.6.211 (Johan, 19 Oct: 'you usually play it as stealth last of the stealth cards you already have in hand'): Spying Mission's superior cancels a bounced bleed -- at equal stealth the other card goes first
         const ble = !!(mo.fx && mo.fx.blockedLockEnd);   // v0.6.241 (the exactness round): Mirror Walk [THA] -- 'if this action is blocked, lock the blocking minion and end the action before block resolution'; on the stealth tie the card's own rider mode wins (its [tha] came first and kept it)
-        if(typeof st === 'number' && this._modeUsableBy(mo, vamp) && this._actCondOk(h.e, mo, bl) && (!best || st > best.s || (st === best.s && ble && best.idx === idx && !best.blockedLockEnd) || (st === best.s && this._combatMind() && best.combat && !hasCombat) || (st === best.s && best.keepLast && !keepLast && !(this._combatMind() && hasCombat && !best.combat)))){
+        if(typeof st === 'number' && this._modeUsableBy(mo, vamp) && this._actCondOk(h.e, mo, bl) && (!best || st > best.s || (st === best.s && ble && this.o.riderTie !== 0 && best.idx === idx && !best.blockedLockEnd) || (st === best.s && this._combatMind() && best.combat && !hasCombat) || (st === best.s && best.keepLast && !keepLast && !(this._combatMind() && hasCombat && !best.combat)))){
           best = { idx, name: h.name, s: st, cost: cB ? { blood: cB } : null, combat: hasCombat, keepLast };
           if(ble) Object.assign(best, { blockedLockEnd: true, at: mo.at || null });
           if(ms.cond) Object.assign(best, { cond: ms.cond, condWho: ms.who, condTo: ms.to, condAt: ms.at || null }); }
@@ -3129,7 +3131,7 @@ class Bot {
   }
   _emitManifest(){                   // A2 (v0.6.73): deck intent + effective knobs
     const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {};
-    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','equipOverPlain','spyCancelMin','jackBurn','jackRunway','cardWorth','ballTurn','keyLast','engineW','scalpelLock','villeinKeep','spreadIncome']) if(this.o[k] !== undefined) kn[k] = this.o[k];
+    const kn = {}; for(const k of ['rushBackWeight','rushFwdWeight','crossRushWeight','poolFloor','paceMs','askSecs','polOverBuild','permFirst','fitWeight','critRisk','homeWeight','stealthStack','lateBounce','bounceSpare','combatMind','combatPhases','twdKnow','dynFloor','arkChat','combatEndStats','waveNarrow','blockCost','dodgeOut','probeHold','equipOverPlain','spyCancelMin','jackBurn','jackRunway','cardWorth','ballTurn','keyLast','engineW','scalpelLock','villeinKeep','spreadIncome','riderTie']) if(this.o[k] !== undefined) kn[k] = this.o[k];
     this._emit('manifest', { seat: this.o.seat || null, deck: this.o.deckName || null, persona: this.o.persona, strategy: ds.strategy || null, axes: ds.axes || [], knobs: kn });   // v0.6.88: seat carried when the arena provides it -- the manifest is now self-describing for seat order
   }
   _deckAxes(){ const ds = (typeof DECK_STRATEGY !== 'undefined' && DECK_STRATEGY[this.o.deckName]) || {}; return ds.axes || []; }   // v0.6.107 (B1): the manifest's axes, finally read
@@ -3562,7 +3564,12 @@ class Bot {
     const ans = await this._askBlock('Trainbot: ' + v.name + ' attempts to leave torpor (+1 stealth). Block?');
     await sleep(150);
     if(ans.what === 'block'){
-      this.note('Blocked' + (ans.who ? ' by ' + ans.who : '') + ' \u2014 ' + v.name + ' stays in torpor. No combat: a blocking vampire may diablerise instead.');
+      const bl = this._actingVamp && this._actingVamp.blockedLock;   // v0.6.241 (the egress review, finding 3): Mirror Walk [THA] on my leave-torpor action -- the blocker is locked and the action ends before block resolution: no diablerie [PIB 20121216]
+      if(bl){ const bs = this._lastBlockerSeat | 0, bp = (this.players || []).find(q => q && q.seat === bs), owner = bp ? bp.name : (bs ? this.seatName(bs) : null), bn = this._lastBlockerName || null;
+        this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> is blocked \u2014 <b>' + esc(bl.card) + '</b>' + (bl.at ? ' [' + esc(bl.at) + ']' : '') + ': ' + (owner ? '<b>' + esc(owner) + "</b>'s " : '') + '<b>' + esc(bn || 'the blocking minion') + '</b> is locked; the action ends unsuccessfully.' });   // BLOCKED_LOCK
+        this._emit('blocked-lock-end', { vamp: v.name, card: bl.card, blocker: bn, by: owner, human: !!(bp && !bp.bot), kind: 'leaveTorpor' });
+        this.note('Blocked' + (ans.who ? ' by ' + ans.who : '') + ' \u2014 ' + v.name + ' stays in torpor; no diablerie (' + bl.card + ').'); }
+      else this.note('Blocked' + (ans.who ? ' by ' + ans.who : '') + ' \u2014 ' + v.name + ' stays in torpor. No combat: a blocking vampire may diablerise instead.');
       this._unblockedStreak = 0; this._emit('blocked', { vamp: v.name, n: 0, kind: 'leaveTorpor', by: this._lastBlockerName || ans.who || null });
       this.say('It resolves');
     } else {
@@ -9310,8 +9317,16 @@ class Bot {
       if(blockerVamp && this._visageBurn(this.pending.actorSeat || this._seatOfName(this.pending.who), oppName)) return;   /* v0.6.221 (the Jack round's egress review): only MY block pays -- another seat's successful block reaches this verdict too (a bot that never blocked, or whose attempt failed, burned 1 pool: the V5 smoke's pathcathari match 12) */   /* the egress review: the combat opponent's name (a nameless pending reads the announce) */   // v0.6.217 (V5 wave 4): Terrifying Visage -- 'the blocking minion's controller burns 1 pool before block resolution' (an 'if blocked' effect: first, before anything else [ANK 20220116]); true = that pool ousted me
       const grant = this._reactManeuverGrant, gv = this._reactManeuverGrantVamp;   // v0.6.214 (V5 wave 2): _clearPending's N1 belt is for a FAILED block -- a successful one carries Guard Dogs [ANI]'s maneuver into the resulting combat (since N1 it was wiped here, before the combat: the grant never reached a fight)
       const ntg = this.pending.ntGrant || null;   // v0.6.236 (the Banu Haqim pilot): Night Terrors [OBF][PRE] played by my blocker on this action
+      const rider = this.pending.riderLock || null;   // v0.6.241: the actor's Mirror Walk [THA] (RIDER_STEALTH), read before _clearPending
       const owl = this.pending.noStrikeR1 || null, owlWho = this.pending.who || null, act = { kind: this.pending.kind || null, peekSup: this.pending.peekSup, directed: this.pending.directed };   // v0.6.233: One With the Land [PRO] -- the vampire that played it on this action; the action's read (_pendDirected's fields) for the post-block unlock
       this._clearPending('block succeeded');
+      if(blockerVamp && rider){   /* v0.6.241 (the egress review, finding 1): the action ends before block resolution [ANK 20220116; RTR 20180719] -- my blocker
+           is locked (by the card, whatever lets it block unlocked: ANK 20191204), no combat begins, so nothing of it is spent or granted and no
+           'after block resolution' card follows; _myBlockOf stays unset, so the actor's BLOCKED_LOCK line that follows cancels nothing later. */
+        blockerVamp.locked = true; this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null; this._owl = null; this._ntg = null;
+        this._emit('cot-cancelled', { vamp: blockerVamp.name, actor: rider.vamp, lock: true, early: true, card: rider.card });
+        this.push(); return;
+      }
       if(blockerVamp){
         this._owl = (owl && owl.vamp === blockerVamp.name) ? { vamp: blockerVamp.name, opp: oppName || null, card: owl.card, at: Date.now() } : null;   // v0.6.233 (V5 wave 6a): no strikes in the first round of THIS combat (_resolveCombat takes it at its entry)
         if(this._owl){ this._emit('no-strike-r1', { vamp: blockerVamp.name, opp: oppName || null, card: owl.card, side: 'blocker' }); if(owlWho && this._isHumanName(owlWho)) this.chat(owlWho + ': ' + owl.card + ' \u2014 neither ' + (oppName || 'your minion') + ' nor ' + blockerVamp.name + ' can strike in the first round of this combat.'); }   // an instruction to a human (the tier rule): the bot cannot write their strike
@@ -10209,6 +10224,7 @@ class Bot {
       const cc = this._bestCarrionCrowsFor(myVamp);
       if(cc){
         await this._combatGate(true); if(stale()) return gone();   // v0.6.202: a hold stops it; a watched bot duel gets its beat
+        if(!continued && this._cotHit(myVamp)) return { oppEnded: true, cot: true };   // v0.6.241 (the egress review, finding 1): a cancel heard under the gate -- the card stays in hand
         this.hand.splice(cc.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
         this._toAsh(cc.name);
         if(cc.cost && cc.cost.blood) myVamp.blood = Math.max(0, (myVamp.blood | 0) - cc.cost.blood);
@@ -10220,8 +10236,10 @@ class Bot {
         this.push();
       }
     }
+    if(!continued && this._cotHit(myVamp)) return { oppEnded: true, cot: true };   // v0.6.241: the same, before Wall of Filth
     if(this._bestWallFor(myVamp) && await this._playWallOfFilth(myVamp)) ccPlayed = true;   // v0.6.213 (V5 wave 1): Wall of Filth -- 'only usable before range is determined'
     if(stale()) return gone();
+    if(!continued && this._cotHit(myVamp)) return { oppEnded: true, cot: true };   // v0.6.241: the same, before the pumps
     if(this._brCands(myVamp).length && await this._beforeRangePlay(myVamp)) ccPlayed = true;   // v0.6.214 (V5 wave 2): the strength pumps and Hunger of Marduk -- only when one is in hand (a round without one is the old round, byte for byte)
     if(stale()) return gone(); await this._phaseAfter(0, ccPlayed); if(stale()) return gone();   // v0.6.165: bot acting -> "I have nothing before range." (or the Crows line), then the human's turn
     this._range = 'close';
@@ -11399,6 +11417,10 @@ class Bot {
       const av = this._actingVamp;
       if(av && av.v && av.v.name === m[2] && !av.archoned){ av.archoned = { by: who, n: parseInt(m[3], 10) | 0 }; this._emit('archoned', { vamp: m[2], by: who, n: av.archoned.n }); }
       return;
+    }
+    if(who !== this.o.name && this.pending && (m = t.match(RIDER_STEALTH))){   // v0.6.241 (the egress review, finding 1): an 'if blocked' rider booked on the action I may block -- at my successful verdict the action ends before block resolution (_verdictAsTarget), no combat begins and no card of mine is spent in one (Carrion Crows raced the actor's BLOCKED_LOCK line 4 times in 128 on the 240)
+      const h = this.fxLookup(m[2]);
+      if(h && h.kind === 'lib' && (h.e.modes || []).some(mo => mo.at === m[3] && mo.fx && mo.fx.blockedLockEnd) && (!this.pending.actingVampName || this.pending.actingVampName === m[1])) this.pending.riderLock = { vamp: m[1], card: h.name, at: m[3] };   // fx.blockedLockEnd -- a literal read
     }
     if((m = t.match(NET_STEALTH)) && who !== this.o.name){   // v0.6.147 (THE HOTSEAT NET): the ACTOR's stealth line, heard by the blocker -- same rule, mirrored
       const p1 = this.pending;

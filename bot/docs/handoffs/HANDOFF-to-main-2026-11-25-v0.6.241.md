@@ -9,7 +9,7 @@ the new line is backward compatible (a human reads it as any log line).
 ## 1. The bundle
 `elysium-bot.js` (v0.6.241), `elysium-cardfx.json` / `.js` (curated 218 → 221: Aire of Elation, The Warrens, Mirror Walk), and
 `START-HERE-BOTS.html` (the version chip and the footer: bot v0.6.241, cardfx 221 curated). The TWD files and the server are
-unchanged. Deploy: purge `/elysium-bot.js` and `/elysium-cardfx.js`. Your embed test compares the whole guide: re-embed it.
+unchanged. Deploy: purge `/elysium-bot.js` and `/elysium-cardfx.json` (what the box serves; the `.js` sibling is the download's). Your embed test compares the whole guide: re-embed it.
 
 ## 2. A new bot line for §12
 - **An 'if blocked' card that locks the blocker and ends the action** (Mirror Walk [THA]; the acting bot's line after a successful
