@@ -148,6 +148,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   there. Docs: CHANGELOG v0.6.224, v0.6.227.
 - **Two arena handshake misses** (v0.6.235's smokes; none in the sim): a match's end cut its last round (a Fame oust), and a rush
   chosen 1 ms after the rusher's combat sent its target to torpor met no opponent (a lagging view). *Done when* both are read.
+- **`ana-windows.py` does not know the floor** (v0.6.240): at the client's pace a bot answers a window after its question has left
+  the screen; the 240's audit calls 3,578 of 3,906 bleed totals "ran out" (v0.6.239: 4), none lost. *Done when* it adds the floor.
 - **A rushed acting vampire's maneuver wait** (Deep Song: the rushed vampire acts) ran into its safety net once in 240 (v0.6.215,
   match 74). *Done when* the race is found or a series shows it gone.
 - **The sim writes a match's rows at its end, by reference** (`elysium-bot-sim.js` `onEvent`): a decide row's ctx objects (a

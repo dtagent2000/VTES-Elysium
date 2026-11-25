@@ -41,7 +41,7 @@
 - L-27 **A wait's clock starts when its question reaches the wire; a send queue is not a timeline** (15–16 Oct).
 - L-28 **Time the whole flow, not the wait you changed** (9 Oct); a shortened wait that was somebody's only window becomes an asked step.
 - L-29 **Pace the thing the rule is about** (17 Oct, the chat beat): the beat was separating everything, not two bubbles.
-- L-99 **A bubble is the bots' transport too** (25 Nov, the floor): a rule for the humans' eyes held the bots' own answers, and the 240 had 8 ledger faults and a 95 % handshake before acts, window lines and bot-only clocks learned it. Run the sim's gates on a chat change, not only the recording.
+- L-99 **A bubble is the bots' transport too** (25 Nov, the floor): a rule for the humans' eyes held the bots' answers; the 240 had 8 ledger faults and a 95 % handshake until acts, windows and clocks learned it. Run the sim's gates on a chat change.
 - L-30 **A race at human pace is invisible at paceMs 0** (15 Oct); reproduce it on the 300 ms relay. A synchronous spin cannot be raced in-process.
 - L-31 **A wait that guards a race must wait for an EVENT, not for time** (16 Oct); two clocks with no coupling means the longer one always wins (16 Sep).
 - L-32 **Two pause mechanisms are one rule only where they agree** (12 Oct, the hold): a pause outliving the release hung the poll.
