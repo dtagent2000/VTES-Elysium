@@ -358,6 +358,7 @@ const TOREADOR_DECK = {   // v0.6.219 (12 Nov 2026, crypt wave A, RULINGS D-108)
 const ARCHETYPES = { hacking: DEFAULT_DECK, wall: WALL_DECK, sewer: SEWER_DECK, malkavian: MALKAVIAN_DECK, tremere: TREMERE_DECK, nosferatu: NOSFERATU_DECK, ventrue: VENTRUE_DECK, toreador: TOREADOR_DECK };
 const NET_LOCK_IC = /^(.+?) locks (.+?): \+(\d+) intercept\.$/;   // v0.6.215 (egress review): a location's intercept lock (_spendIntercept) -- read by the hotseat net and the event log like a card's L12.interceptPlay
 const ABSTAIN = /^(.+?) (?:plays (Scalpel Tongue) \[(\w+)\]|locks: (Saulot's Guiding Wisdom)) \u2014 (.+?)'s (.+?) (?:is locked(, burns 1 blood)? and )?abstains \((\d+) votes? cancelled\)\.$/;   // v0.6.217 (V5 wave 4, bot grammar): the caller's polling-step abstain -- m[2] Scalpel Tongue (m[3] its level; m[7] the superior blood) or m[4] Saulot's Guiding Wisdom, m[5] the voter's Methuselah, m[6] the vampire, m[8] the votes cancelled
+const BLOCKED_LOCK = /^(.+?) is blocked \u2014 (.+?)(?: \[([A-Za-z]+)\])?: (?:(.+?)'s )?(.+?) is locked; the action ends unsuccessfully\.$/;   // v0.6.241 (the exactness round, bot grammar): an 'if blocked' card that locks the blocker and ends the action (Mirror Walk [THA]) -- m[1] the acting vampire, m[2] the card, m[3] its level, m[4] the blocker's Methuselah, m[5] the blocker; owed to main's PROTOCOL §12 (bot/docs/handoffs)
 const COT = /^(.+?) plays Change of Target(?: \u2014 .+?)?\.(?: Target: .+)?$/;   /* v0.6.217 (the egress review): + the client's ' Target: X.' (targetSuffix) */   // v0.6.217 (V5 wave 4): the actor's 'if blocked' card -- m[1] the acting vampire; the bot's own line ('VAMP plays Change of Target \u2014 unlocks; the action ends unsuccessfully.') and a human's plain play line
 const CONTRACT_BURN = /^(.+?) burns (.+?) and gains (\d+) pool \((.+?)\)\.$/;   // v0.6.236 (the Banu Haqim pilot, bot grammar): Priority Contract's 'If the attached minion is about to leave the ready region, you can burn this card to gain 3 pool' -- m[1] the Methuselah, m[2] the card, m[3] the pool, m[4] why (the host went to torpor / was burned / left the ready region / left the game with its Methuselah). An explanation line (the duplicate rule: the ledger shows the pool and the card's move, not the why); read by the event log only
 const ARCHON_BURN = /^(.+?) plays Archon Investigation \u2014 (.+?) is burned \(the bleed of (\d+) is not successful\)\.$/;   // v0.6.215 (V5 wave 3): the target's out-of-turn answer to a bleed of 4+ -- the ACTING bot burns its own minion and the action ends unsuccessful (bot-emitted; owed to main's \u00a712 + the canary, the handoff)
@@ -1982,8 +1983,10 @@ class Bot {
         const ms = this._modeStealth(mo, vamp), st = ms ? ms.s : null;   // v0.6.228 (round F): + a stealth that counts only against this blocker (Perfect Paragon [PRE], fx.icpVs)
         const hasCombat = (h.e.t || []).includes('combat');   // v0.6.156 (Johan): Swallowed by the Night is stealth AND the deck's only defensive maneuver -- at equal stealth spend the pure stealth card first and keep the dual card for combat
         const keepLast = (h.e.modes || []).some(m2 => m2.fx && m2.fx.bleedNullify);   // v0.6.211 (Johan, 19 Oct: 'you usually play it as stealth last of the stealth cards you already have in hand'): Spying Mission's superior cancels a bounced bleed -- at equal stealth the other card goes first
-        if(typeof st === 'number' && this._modeUsableBy(mo, vamp) && this._actCondOk(h.e, mo, bl) && (!best || st > best.s || (st === best.s && this._combatMind() && best.combat && !hasCombat) || (st === best.s && best.keepLast && !keepLast && !(this._combatMind() && hasCombat && !best.combat)))){
+        const ble = !!(mo.fx && mo.fx.blockedLockEnd);   // v0.6.241 (the exactness round): Mirror Walk [THA] -- 'if this action is blocked, lock the blocking minion and end the action before block resolution'; on the stealth tie the card's own rider mode wins (its [tha] came first and kept it)
+        if(typeof st === 'number' && this._modeUsableBy(mo, vamp) && this._actCondOk(h.e, mo, bl) && (!best || st > best.s || (st === best.s && ble && best.idx === idx && !best.blockedLockEnd) || (st === best.s && this._combatMind() && best.combat && !hasCombat) || (st === best.s && best.keepLast && !keepLast && !(this._combatMind() && hasCombat && !best.combat)))){
           best = { idx, name: h.name, s: st, cost: cB ? { blood: cB } : null, combat: hasCombat, keepLast };
+          if(ble) Object.assign(best, { blockedLockEnd: true, at: mo.at || null });
           if(ms.cond) Object.assign(best, { cond: ms.cond, condWho: ms.who, condTo: ms.to, condAt: ms.at || null }); }
       });
     });
@@ -4687,6 +4690,11 @@ class Bot {
     const vis = this._attachedFx(v, 'blockedPoolBurn').reduce((a, b) => a + (b | 0), 0);
     const bs = this._lastBlockerSeat | 0, bp = (this.players || []).find(q => q && q.seat === bs);
     if(vis > 0){ if(bp && !bp.bot) this.chat('Terrifying Visage: ' + bp.name + ' burns ' + vis + ' pool before the combat.'); this._emit('visage', { vamp: v.name, by: bp ? bp.name : null, n: vis, human: !!(bp && !bp.bot) }); }
+    { const bl = this._actingVamp && this._actingVamp.v === v ? this._actingVamp.blockedLock : null;   // v0.6.241 (the exactness round): Mirror Walk [THA], played on this action -- 'lock the blocking minion and end the action before block resolution'; the action ends unsuccessfully at once, no other modifier or reaction after it [RTR 20180719], so no Change of Target either
+      if(bl){ const bn = this._lastBlockerName || null, owner = bp ? bp.name : (bs ? this.seatName(bs) : null);
+        this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> is blocked \u2014 <b>' + esc(bl.card) + '</b>' + (bl.at ? ' [' + esc(bl.at) + ']' : '') + ': ' + (owner ? '<b>' + esc(owner) + "</b>'s " : '') + '<b>' + esc(bn || 'the blocking minion') + '</b> is locked; the action ends unsuccessfully.' });   // BLOCKED_LOCK (bot grammar): the blocker's bot stays locked and begins no combat (_onCot), a human locks their own minion
+        this._emit('blocked-lock-end', { vamp: v.name, card: bl.card, blocker: bn, by: owner, human: !!(bp && !bp.bot) });
+        this._actingVamp.blockedLock = null; return true; } }
     const c = this._cotFor(v); if(!c) return false;
     const w = this._cotWorth(v, bs);
     this.o.log('change of target (' + v.name + '): ' + w.why);
@@ -4723,17 +4731,18 @@ class Bot {
     const w = this._cotWorth(myVamp, this._lastBlockerSeat | 0); this.o.log('saulot\u2019s guiding wisdom (' + myVamp.name + '): ' + w.why);
     return w.play ? { bearer, why: w.why } : null;
   }
-  _onCot(who, vampName){            // v0.6.217: the actor's Change of Target -- if I am the blocker of that vampire, the combat I began at my verdict never begins (_cotHit ends it at its first step)
+  _onCot(who, vampName, lock){      // v0.6.217: the actor's Change of Target -- if I am the blocker of that vampire, the combat I began at my verdict never begins (_cotHit ends it at its first step). v0.6.241: lock -- an 'if blocked' card that locks the blocker as it ends the action (Mirror Walk [THA], BLOCKED_LOCK): my blocker stays locked
     const mb = this._myBlockOf; if(!mb || mb.vamp !== vampName || Date.now() - mb.at > 30000) return;   // only the blocker of THAT vampire
-    this._cotCancel = { vamp: vampName, who, at: Date.now() };
+    this._cotCancel = { vamp: vampName, who, at: Date.now(), lock: !!lock };
     if(this._inCombat && typeof this._maneuverWaiter === 'function'){ const w = this._maneuverWaiter; this._maneuverWaiter = null; try { w({ none: true, cot: true }); } catch(e){} }   // my first wait was for the acting minion's line: it will not come
   }
   _cotHit(myVamp){                  // v0.6.217: is the combat I am in the one a Change of Target ended? The blocker never locked (the card comes before it does [LSJ 19980224]): it unlocks
     const c = this._cotCancel; if(!c || Date.now() - c.at > 30000) return false;
     const opp = (myVamp && this._combatOppOf && this._combatOppOf.get(myVamp.id)) || this._combatOppName || null; if(opp && opp !== c.vamp) return false;   // v0.6.221 (the Jack round, D-113): the combat's OWN opponent first -- v0.6.220's 600, match 528: a later block's combat had rewritten the shared name, so The Dowager's cancelled combat read Catalina and fought on
     this._cotCancel = null;
-    if(myVamp && myVamp.zone === 'ready' && myVamp.locked){ myVamp.locked = false; this.push(); }
-    this._emit('cot-cancelled', { vamp: myVamp ? myVamp.name : null, actor: c.vamp });
+    if(c.lock){ if(myVamp && myVamp.zone === 'ready' && !myVamp.locked){ myVamp.locked = true; this.push(); } }   // v0.6.241: Mirror Walk [THA] locks the blocker, whatever lets it block unlocked [ANK 20191204]
+    else if(myVamp && myVamp.zone === 'ready' && myVamp.locked){ myVamp.locked = false; this.push(); }
+    this._emit('cot-cancelled', Object.assign({ vamp: myVamp ? myVamp.name : null, actor: c.vamp }, c.lock ? { lock: true } : null));
     return true;
   }
   _noteCombatEnd(myVamp){            // v0.6.217 (V5 wave 4): what the combat's end leaves for Monster -- 'Once each turn after a combat involving this vampire ends, this vampire can burn 1 blood to unlock if the opposing minion is not ready.' Called first in _resolveCombat's finally (the opponent's name dies there). On another Methuselah's turn the unlock is decided here (my vampire blocked or was rushed: it can block again); on my own turn _maybeActAgain decides it with the act-again doctrine
@@ -10796,6 +10805,7 @@ class Bot {
     if((m = t.match(ARCHON_BURN))) return { kind: 'archon', vamp: S(m[2]), n: +m[3] };
     if((m = t.match(ABSTAIN))) return { kind: 'abstain', vamp: S(m[6]), owner: S(m[5]), card: m[2] || m[4], n: +m[8], burn: m[7] ? 1 : 0 };   // v0.6.217 (V5 wave 4): the polling-step abstain
     if((m = t.match(COT))) return { kind: 'cot', vamp: S(m[1]) };
+    if((m = t.match(BLOCKED_LOCK))) return { kind: 'blocked-lock', vamp: S(m[1]), card: S(m[2]), at: m[3] || null, owner: S(m[4]), blocker: S(m[5]) };   // v0.6.241
     if((m = t.match(L12.contractM))) return { kind: 'contract', by: S(m[1]), card: S(m[2]), owner: S(m[3]), vamp: S(m[4]), chosen: S(m[5]) };   // v0.6.236 (the Banu Haqim pilot): Priority Contract placed (L-56: before the generic play shape)
     if((m = t.match(CONTRACT_BURN))) return { kind: 'contract-burn', by: S(m[1]), card: S(m[2]), n: +m[3], why: S(m[4]) };   // v0.6.236: the card burned for its pool as its host left the ready region -- the pool itself is booked where it moves (_w5Pool), not from this line
     if((m = t.match(L12.burnAct))) return { kind: 'burn-card', vamp: S(m[1]), owner: S(m[2]), card: S(m[3]) };
@@ -11333,7 +11343,8 @@ class Bot {
     if(this._parseUndirected(who, t)) return;   // v0.6.107 (B1): the undirected family -- arms a window for the actor's prey/predator
     if((m = t.match(L12.combatEnds))){ if(who !== this.o.name && this._inCombat){ this._oppEndedCombat = true; if(typeof this._maneuverWaiter === 'function'){ const w = this._maneuverWaiter; this._maneuverWaiter = null; try { w({ none: true, ended: true }); } catch(e){} } } return; }   // v0.6.123. v0.6.217 (V5 wave 4): a combat ended BEFORE RANGE (Saulot's Guiding Wisdom) wakes my wait for the acting minion's first line
     if((m = t.match(ABSTAIN))){ this._onAbstain(m); return; }   // v0.6.217 (V5 wave 4)
-    if((m = t.match(COT)) && who !== this.o.name){ this._onCot(who, m[1]); return; }   // v0.6.217 (V5 wave 4): Change of Target -- a combat I began as the blocker does not happen
+    if((m = t.match(COT)) && who !== this.o.name){ this._onCot(who, m[1]); return; }
+    if((m = t.match(BLOCKED_LOCK)) && who !== this.o.name){ this._onCot(who, m[1], true); return; }   // v0.6.241: Mirror Walk [THA] -- the block stays, its combat never begins, my blocker stays locked   // v0.6.217 (V5 wave 4): Change of Target -- a combat I began as the blocker does not happen
     if((m = t.match(L12.refTerms))){ this._onRefTerms(who, m[1], m[2]); return; }          // v0.6.122: a bot caller's terms (arrive BEFORE its announce)
     if((m = t.match(L12.refResult))){ this._onRefResult(who, m[1] === 'passes', m[2], m[3]); return; }
     if((m = t.match(L12.vote))){ const rc = this._refCall; if(rc && !rc.closed && who !== this.o.name){ rc.line = { a: parseInt(m[1], 10) | 0, b: parseInt(m[2], 10) | 0 }; rc.done('the tally was resolved by ' + who); } return; }   // v0.6.122: a human pressed Resolve on the vote counter -- I announce the outcome at once
@@ -12010,7 +12021,8 @@ class Bot {
       why = st.condAt ? ' (the blocking minion gets −' + st.cond + ' intercept)' : ' (' + st.condWho.map(k => KW[k] || k).join(' and ') + ' get −' + st.cond + ' intercept)';   // v0.6.233: Forced Confessional's own words
       this._emit('stealth-vs', { vamp: av.v.name, card: st.name, blocker: this._lastBlockerName || null, kind: st.condTo || null, s: st.cond });
     }
-    this.send({ t: 'log', html: '<b>' + esc(av.v.name) + '</b> ' + (st.fromBoard ? (st.lock ? 'locks' : 'burns') : 'plays') + ' ' + esc(st.name) + why + ': +' + st.s + ' stealth.' });   // v0.6.205: 'locks' for The Labyrinth (NET_STEALTH reads all three verbs)
+    if(st.blockedLockEnd && av) av.blockedLock = { card: st.name, at: st.at || null };   // v0.6.241: Mirror Walk [THA]'s rider, applied if the action is blocked (_ifBlockedStep)
+    this.send({ t: 'log', html: '<b>' + esc(av.v.name) + '</b> ' + (st.fromBoard ? (st.lock ? 'locks' : 'burns') : 'plays') + ' ' + esc(st.name) + (st.blockedLockEnd && st.at ? ' [' + esc(st.at) + ']' : '') + why + ': +' + st.s + ' stealth.' });   // v0.6.241: a rider mode names its level, so the table knows what a block brings   // v0.6.205: 'locks' for The Labyrinth (NET_STEALTH reads all three verbs)
 
     this.push();
     this._restartAskTimer();             // the table resolves the contest (§12 Block line / prey pass)

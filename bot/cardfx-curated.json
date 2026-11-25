@@ -3793,6 +3793,18 @@
     }
    ],
    "note": "The exactness round (25 Nov 2026, bot v0.6.241; the sweep register 7.2, active: the 240's 178 plays, 116 of them by nosferatu's four titled vampires, each 1 intercept short; Johan's kör 20:43). KRCG: 'Only usable during an action directed at you (or a card you control). +2 intercept, with an additional +1 intercept if this Nosferatu is titled.' A merge over the compiled entry (its +2, cost, clan and onlyDirected stay the compiler's): fx.plusIf {add: {intercept: 1}, if: {selfTitled: true}} -- a title printed or carried (_titleOf), read through _plusIf by _bestInterceptFor and _interceptStack."
+  },
+  "Mirror Walk": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "THA",
+     "fx": {
+      "blockedLockEnd": true
+     }
+    }
+   ],
+   "note": "The exactness round (25 Nov 2026, bot v0.6.241; Claude's spot check of the base starters' auto entries, Johan's kör 20:43; tremere holds 6). KRCG: '[tha] +1 stealth. [THA] As above, and if this action is blocked, lock the blocking minion and end the action before block resolution.' A merge over the compiled entry (its two +1 stealth modes and noReplace stay the compiler's): fx.blockedLockEnd on [THA] -- _bestStealthFor takes the [THA] mode over [tha] on the stealth tie (a vampire with superior Thaumaturgy), the play books it on the action (_actingVamp.blockedLock), and _ifBlockedStep applies it when the action is blocked: the blocker is locked and the action ends unsuccessfully, before any other card [ANK 20220116; RTR 20180719]. The blocker's bot reads the line (BLOCKED_LOCK, _onCot with lock) and stays locked with no combat; a human locks their own minion."
   }
  },
  "crypt": {

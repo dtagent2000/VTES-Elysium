@@ -1,8 +1,8 @@
 globalThis.ELYSIUM_CARDFX = {
  "fxv": 1,
- "generated": "2026-11-25T19:59:22.315Z",
+ "generated": "2026-11-25T20:14:51.767Z",
  "source": "vtes.json — 4212 cards (KRCG, Dark Pack)",
- "counts": {"crypt":1822,"lib":2391,"libWithFx":1696,"libPersistent":1238,"libLock":163,"curated":220,"alias":5021,"formats":{"v3":4212,"v5":0}},
+ "counts": {"crypt":1822,"lib":2391,"libWithFx":1696,"libPersistent":1238,"libLock":163,"curated":221,"alias":5021,"formats":{"v3":4212,"v5":0}},
  "crypt": {
   "\"Coach\" Tyrone Soros (G6)": {"cap":3,"clan":"Ministry","sect":"Anarch","group":"6","disc":{"all":["obf","pre"],"sup":[]}},
   "\"Mother\" Anja Giovanni (G6)": {"cap":8,"clan":"Hecata","sect":"Independent","group":"6","disc":{"all":["aus","dom","for","obl","pot"],"sup":["aus","for","obl"]}},
@@ -3089,7 +3089,7 @@ globalThis.ELYSIUM_CARDFX = {
   "Minor Curse": {"t":["action"],"req":{"disc":["mal"]},"persistent":true,"modes":[{"at":null,"fx":{"actStealth":1}},{"at":"mal","dir":true,"fx":{}},{"at":"MAL","dir":true,"fx":{}}],"src":"auto"},
   "Minor Irritation": {"t":["react"],"src":"auto"},
   "Mirror Image": {"t":["mod","combat"],"cost":{"blood":1},"req":{"disc":["chi"]},"modes":[{"at":"chi","use":"mod","fx":{"stealth":1}},{"at":"CHI","use":"combat","fx":{"combatEnds":true,"strikeCE":true}}],"src":"auto"},
-  "Mirror Walk": {"t":["mod"],"req":{"disc":["tha"]},"modes":[{"at":"tha","fx":{"stealth":1}},{"at":"THA","fx":{"stealth":1}}],"noReplace":"discard","src":"auto"},
+  "Mirror Walk": {"t":["mod"],"req":{"disc":["tha"]},"modes":[{"at":"tha","fx":{"stealth":1}},{"at":"THA","fx":{"stealth":1,"blockedLockEnd":true}}],"noReplace":"discard","note":"The exactness round (25 Nov 2026, bot v0.6.241; Claude's spot check of the base starters' auto entries, Johan's kör 20:43; tremere holds 6). KRCG: '[tha] +1 stealth. [THA] As above, and if this action is blocked, lock the blocking minion and end the action before block resolution.' A merge over the compiled entry (its two +1 stealth modes and noReplace stay the compiler's): fx.blockedLockEnd on [THA] -- _bestStealthFor takes the [THA] mode over [tha] on the stealth tie (a vampire with superior Thaumaturgy), the play books it on the action (_actingVamp.blockedLock), and _ifBlockedStep applies it when the action is blocked: the blocker is locked and the action ends unsuccessfully, before any other card [ANK 20220116; RTR 20180719]. The blocker's bot reads the line (BLOCKED_LOCK, _onCot with lock) and stays locked with no combat; a human locks their own minion.","src":"hand","merged":true,"handKeys":["blockedLockEnd"]},
   "Mirror's Visage": {"t":["mod"],"cost":{"blood":1},"req":{"disc":["chi"]},"modes":[{"at":"chi","fx":{"unlock":true}},{"at":"CHI","fx":{"stealth":2}}],"src":"auto"},
   "Misdirection": {"t":["master"],"cost":{"pool":1},"modes":[{"at":null,"fx":{"lockMinion":true}}],"note":"M1 (25 July, elysium-bot-tremere-plan.md). Full card text: 'Lock a minion.' One-shot targeted lock, resolves to ash. Consumer: the master loop's lockMinion branch -- target via _bestNeutralizeTarget (Johan's heuristic: prey's vampire, capacity + dom/aus weight with superior extra + handIntel bounce-boost; UNLOCKED is a REQUIREMENT for this card -- locking a locked minion is a wasted card). Hold the card when no worthwhile target exists (pre-splice guard).","src":"hand"},
   "Mistaken Identity": {"t":["react"],"cost":{"blood":1},"modes":[{"at":null,"fx":{"torpor":true}}],"src":"auto"},

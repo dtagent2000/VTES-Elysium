@@ -16725,7 +16725,9 @@ async function connectWithRetry(client, tries = 30){
        Nosferatu's +3, an untitled one's +2, through both readers (_bestInterceptFor, _interceptStack), only on a directed action; a
        condition the reader does not know fails closed. (g) the playtests' Life in the City: held while I have no ready vampire (game 1,
        turn 1); (h) the playtests' second wake: a vampire woken for its block bounces in the same action with no second wake (game 1,
-       Eyes of Argus [AUS] then On the Qui Vive for one bleed) -- the record is the action's own.
+       Eyes of Argus [AUS] then On the Qui Vive for one bleed) -- the record is the action's own. (i) Mirror Walk [THA] (Claude's spot
+       check): a superior Thaumaturgy vampire takes the rider mode on the stealth tie, and its play line names the level; blocked, the
+       blocker is locked and the action ends with no combat (BLOCKED_LOCK), the blocker's bot keeps its vampire locked, no combat.
        LAST LINE OF 187 is the closing brace below. */
     {
       console.log('\n[187] v0.6.241 -- the exactness round: the playtests’ table bugs and the base starters’ card gaps');
@@ -16855,6 +16857,38 @@ async function connectWithRetry(client, tries = 30){
         u.hand = ["Wake with Evening's Freshness", 'Bait and Switch']; const bNew = u._bestBounceFor(u.board, new Set(), mkP()); got.newAction = bNew ? bNew.needsWake : 'none';
         ok(got.woke && got.needsWake === false && got.wakeKept && got.bounced && got.noWakeCard && got.newAction === true,
            '187h a vampire woken for its block bounces in the same action with no second wake (the wake card kept, or none needed in hand); a new action needs a wake again (got ' + JSON.stringify(got) + '; v0.6.240 spent a second wake)');
+      }
+      // i) Mirror Walk [THA]: the rider mode wins the stealth tie; blocked, the blocker is locked and the action ends with no combat; the blocker's bot stays locked
+      { const mkI = name => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'grinder', paceMs: 0, log: () => {} });
+          u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }]; u.started = true; u.caps.tally = true;
+          u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; return u; };
+        const u = mkI('Henrik'); u.seat = 2; u.turnSeat = 2;
+        const ros = { id: 'i1', name: 'Rosalina Cortez (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3 };   // Tremere, [THA]
+        const ays = { id: 'i2', name: 'Ayse Dhanial (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3 };      // Tremere, [tha]
+        u.board = [ros, ays]; u.hand = ['Mirror Walk'];
+        const sR = u._bestStealthFor(ros, new Set()), sA = u._bestStealthFor(ays, new Set());
+        const got = { sup: sR ? (sR.blockedLockEnd ? sR.at : 'tha') : null, inf: sA ? (sA.blockedLockEnd ? sA.at : 'tha') : null };
+        u._actingVamp = { v: ros, n: 1, played: new Set(), target: 1, kind: 'bleed' };
+        u._lastBlockerName = 'Lisa'; u._lastBlockerSeat = 3;
+        u.tally = { mode: 'block', a: 0, b: 1, ph: 0, rd: 1 };
+        if(sR) u._spendStealthCard(sR, u._actingVamp, {});   // the stealth play: books the rider on the action, names the level
+        got.pl = u.sent.filter(m => m.t === 'log').map(m => String(m.html).replace(/<[^>]*>/g, '')).find(l => /Mirror Walk/.test(l)) || null;
+        got.booked = !!(u._actingVamp.blockedLock && u._actingVamp.blockedLock.at === 'THA');
+        await u._resolveCombat(ros);   // the block succeeded: the combat's entry runs the 'if blocked' step first
+        const lines = u.sent.filter(m => m.t === 'log').map(m => String(m.html).replace(/<[^>]*>/g, ''));
+        const line = lines.find(l => /is locked; the action ends unsuccessfully\./.test(l)) || null;
+        got.line = line; got.combat = !!u._inCombat || u.sent.some(m => m.t === 'tally' && m.mode === 'combat');
+        // the blocker's bot: Sven's Lisa blocked Rosalina; the line ends the combat its verdict began, and Lisa stays locked
+        const b = mkI('Sven'); b.seat = 3; b.turnSeat = 2;
+        const lisa = { id: 'i3', name: 'Lisa', kind: 'crypt', zone: 'ready', locked: true, blood: 4 }; b.board = [lisa];
+        b._myBlockOf = { vamp: 'Rosalina Cortez (G6)', at: Date.now() };
+        if(line) b._onLog('Henrik', '<b>Rosalina Cortez (G6)</b> is blocked — <b>Mirror Walk</b> [THA]: <b>Sven</b>\'s <b>Lisa</b> is locked; the action ends unsuccessfully.');
+        got.cancel = !!(b._cotCancel && b._cotCancel.lock); got.hit = b._cotHit(lisa); got.lisaLocked = lisa.locked;
+        const ev = b._evClassify('Henrik', 'Rosalina Cortez (G6) is blocked — Mirror Walk [THA]: Sven\'s Lisa is locked; the action ends unsuccessfully.');
+        got.kind = ev && ev.kind; got.evBlocker = ev && ev.blocker;
+        ok(got.sup === 'THA' && got.inf === 'tha' && got.pl === 'Rosalina Cortez (G6) plays Mirror Walk [THA]: +1 stealth.' && got.booked && got.line === "Rosalina Cortez (G6) is blocked — Mirror Walk [THA]: Sven's Lisa is locked; the action ends unsuccessfully." && got.combat === false
+           && got.cancel && got.hit === true && got.lisaLocked === true && got.kind === 'blocked-lock' && got.evBlocker === 'Lisa',
+           '187i Mirror Walk [THA]: a superior Thaumaturgy vampire takes the rider mode on the tie ([tha] for an inferior one), its play line names the level; blocked, it locks the blocker and ends the action with no combat, and the blocker’s bot keeps its vampire locked with no combat (got ' + JSON.stringify(got) + '; v0.6.240 played [tha] and fought)');
       }
     }
 
