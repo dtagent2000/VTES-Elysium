@@ -7,7 +7,7 @@ the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.5
 the root's release is client v2.6.188 / srv-2.6.53 (the canary's second run).
 
 **Deploy state:** `main` carries v0.6.239 (#107) and client v2.6.188 (#104). **Open:** #108 v0.6.240 (`bot-chat-round`) and
-this release, stacked on it (`bot-exact-round`; merge #108 first, L-84); Johan's rulings on the chat lines (O-51).
+#109 v0.6.241, stacked on it (`bot-exact-round`; merge #108 first, L-84); Johan's rulings on the chat lines (O-51).
 
 ## Last gates (v0.6.241's release bytes, `d797e1fd`, test `a8557422`, cardfx `4627ff1c`)
 26 Nov: the suite 2841/0 ×3 · canary 235/0 ×2, main's v1.6.0 247/0 · cardfx 503/0 · hotseat 12/0 · HB1 11/0 · lint clean ·

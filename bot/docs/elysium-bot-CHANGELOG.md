@@ -320,7 +320,7 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.241 (25 Nov 2026)** — The exactness round (RULINGS D-138; Johan, 20:43: "Superbra, ja vi kör!" on Claude's proposal after his
+- **v0.6.241 (25 Nov 2026; PR #109)** — The exactness round (RULINGS D-138; Johan, 20:43: "Superbra, ja vi kör!" on Claude's proposal after his
   question at 20:38 whether 77/77 really means every card works): Claude's two playtest games against the bots on main's rig and a
   spot check of the base starters' auto entries (the project's docs of 25 Nov: claude/playtest-claude-game1, -game2 and
   claude/card-fidelity-spotcheck). Stacked on v0.6.240 (#108). Under D-92 the playtests' table bugs, the register's two active
