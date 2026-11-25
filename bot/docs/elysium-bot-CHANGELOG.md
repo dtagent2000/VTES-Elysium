@@ -320,7 +320,7 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.240 (25 Nov 2026; PR #PRNUM)** — The chat round (D-137, Johan's kör of 24 Nov 21:25; BOARD's chat-round line): what a
+- **v0.6.240 (25 Nov 2026; PR #108)** — The chat round (D-137, Johan's kör of 24 Nov 21:25; BOARD's chat-round line): what a
   table of people sees in the bubbles. The bubbles stay and keep their content; one speaker at a time; no "(bot):" prefix; a
   question to a bot without the human's tail. The recorder and the analyser are in the repo now (`tools/chat-record.js`,
   `tools/ana-chat.py`; HOWTO), and every line before and after went to Johan in a ruling doc (O-51): the BOARD line stays until
@@ -384,10 +384,11 @@
     guard now fails it); the tail's wording here and the recording's bytes in STATUS.
   - *Tests*: section 186 (a–n, 16 checks; red on v0.6.239 where they pin a new behaviour, on the pre-fix bytes for the reviews'
     cases); 160n (the same combat with the summaries on the log tier); 157l and 161g (the add predicates); 183a, 183e, 183f3
-    and 145h read the lines as sent now; 89a's message. *Gates* (the release bytes `e29c0185` / test `890067de`, cardfx
-    `fe5f60bf`): the suite 2822/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.188), main's
+    and 145h read the lines as sent now; 89a's message. *Gates* (the release bytes after pass 3, `ab16c175` / test `532a8e27`,
+    cardfx `fe5f60bf`; pass 2's `e29c0185` / `890067de` passed the same, the ablation ran there): the suite 2822/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.188), main's
     canary v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.188) 430/1 (the guide's embed), the
-    arena smoke (one match, the four starters, the real clock) PASS 7/7, `client/check-versions.js` everything agrees. A first
+    arena smoke (one match, the four starters, the real clock) PASS 7/7, the 240 IDENTICAL 240/240 to pass 2's,
+    `client/check-versions.js` everything agrees, CI's bot-gates green. A first
     run of the suite on pass 1's bytes missed 186f once by its 1 s poll (2819/1; the other two 2820/0): widened, the times still
     asserted.
 - **v0.6.239 (24 Nov 2026; PR #107)** — Hand size and replacement (the sweep register's class 14, D-135; the order of the rounds Claude's,

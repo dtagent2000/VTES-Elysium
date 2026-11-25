@@ -7,14 +7,14 @@ the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.5
 the root's release is client v2.6.188 / srv-2.6.53 (the canary's second run).
 
 **Deploy state:** `main` carries v0.6.239 (#107) and client v2.6.188 (#104), merged 25 Nov; #104 changed no wire, so the
-read-only copies needed no refresh for it. **Open:** this release (`bot-chat-round`, base main) and Johan's rulings on its chat
-lines (O-51).
+read-only copies needed no refresh for it. **Open:** #108 this release (`bot-chat-round`, base main) and Johan's rulings on its
+chat lines (O-51).
 
-## Last gates (v0.6.240's release bytes, `e29c0185`, test `890067de`, cardfx `fe5f60bf`)
+## Last gates (v0.6.240's release bytes, `ab16c175`, test `532a8e27`, cardfx `fe5f60bf`)
 25 Nov: the suite 2822/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.188), main's v1.6.0 247/0 · hotseat 12/0 · HB1
 11/0 · lint clean · main's client suite (v2.6.188) 430/1 (the guide's embed) · the arena smoke PASS 7/7 · the 240 against
-v0.6.239 DIVERGED 76 / SAME-PLAY 164, `ana-gates.py` PASS 6/6, with chatFloor 0 the same rows · the chat recording GATE PASS
-(pass 1's bytes).
+v0.6.239 DIVERGED 76 / SAME-PLAY 164, `ana-gates.py` PASS 6/6, with chatFloor 0 the same rows (pass 2's bytes; the 240
+IDENTICAL to theirs) · the chat recording GATE PASS (pass 1's bytes).
 The predictions (D-93) and the footprint: the CHANGELOG.
 
 ## Next
