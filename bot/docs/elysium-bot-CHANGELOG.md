@@ -344,8 +344,9 @@
     the handoff); the blocker's bot reads it (`_onCot` with `lock`), begins no combat and keeps its vampire locked [ANK 20191204].
     **Life in the City** is held while I control no ready vampire (`_masterHold`; the advanced rules 3.1.3, no legal object, no
     play; game 1: turn 1, the card lost). **The second wake**: a wake played for a vampire is kept on the action's pending
-    (`p.woken`; `_awake`, `_markWoken`), and the block route, the bounce, the reduce and the two vote reacts read it, so a vampire
-    woken for its block bounces in the same action with no second wake, and one with no wake card left still can (game 1: Eyes of
+    (`p.woken`; `_awake`, `_markWoken`), and the block route, the bounce and the reduce read it, so a vampire woken for its block
+    bounces in the same action with no second wake, and one with no wake card left still can (the vote reacts keep their own wake:
+    in a poll `this.pending` can be another action's, and the suite's 59c caught a stale record waking a locked vampire there) (game 1: Eyes of
     Argus [AUS], then On the Qui Vive, for one bleed). **Creeping Sabotage**: "Cost: X blood", X the copies already in play
     (KRCG), paid by the acting vampire at announce, the card not offered to one that cannot pay (every copy was free).
   - *The measure* (D-138) — `cardfx-fidelity.json` (new): the five starters' 92 library cards, each read clause by clause against

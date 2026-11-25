@@ -7310,7 +7310,7 @@ async function connectWithRetry(client, tries = 30){
   ok(c.pool === 20 && x.blood === 3, '104c pool costs too; blood never above capacity (Brock: 3 of 3)');
   const src = require('fs').readFileSync(require.resolve('./elysium-bot.js'), 'utf8');
   const paid = (src.match(/this\._park\(act\.cost\.blood, 0\)/g) || []).length + (src.match(/this\._park\(act\.costBlood, 0\)/g) || []).length;
-  ok(paid === 10 && !/v\.blood = Math\.max\(0, \(v\.blood \| 0\) - act\.cost\.blood\);(?! this\._park)/.test(src), '104d every announce-time blood cost in the action branches is parked (' + paid + ' sites; v0.6.236: + the card rush\u2019s, Fleetness; + the attach / the experiment\u2019s employ, Shadow of the Beast and New Moon Sigil)');
+  ok(paid === 11 && !/v\.blood = Math\.max\(0, \(v\.blood \| 0\) - act\.cost\.blood\);(?! this\._park)/.test(src), '104d every announce-time blood cost in the action branches is parked (' + paid + ' sites; v0.6.241: + Creeping Sabotage\u2019s X blood; v0.6.236: + the card rush\u2019s, Fleetness; + the attach / the experiment\u2019s employ, Shadow of the Beast and New Moon Sigil)');
     }
 
     /* 105) v0.6.131 — debt 23b: when a referendum beats build-first */
@@ -7858,7 +7858,7 @@ async function connectWithRetry(client, tries = 30){
   const src121 = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
   const NS = /^(.+?) (?:plays|burns|locks) .+?: \+(\d+) stealth\.$/, NU = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;   // v0.6.205: + 'locks' (The Labyrinth)
   ok(NS.test('Colette plays Lost in Crowds: +1 stealth.') && NS.test('Colette burns The Path of Night: +1 stealth.') && NS.test('Ryan (G6) locks The Labyrinth: +1 stealth.') && NU.test('Oshri attempts to block with +2 intercept (Second Tradition: Domain).'), '121f the net\'s two readers match the bot\'s own stealth line and the unlock-reaction attempt line');
-  ok(/\(st\.fromBoard \? \(st\.lock \? 'locks' : 'burns'\) : 'plays'\) \+ ' ' \+ esc\(st\.name\) \+ why \+ ': \+' \+ st\.s \+ ' stealth\.'/.test(src121) && /attempts to block with \+' \+ unIc \+ ' intercept \(<b>'/.test(src121), '121f ...and those strings are still what the source emits (v0.6.228: a conditional stealth\'s rider sits before the colon, `why`; the reader still matches -- 173b)');
+  ok(/\(st\.fromBoard \? \(st\.lock \? 'locks' : 'burns'\) : 'plays'\) \+ ' ' \+ esc\(st\.name\) \+ \(st\.blockedLockEnd && st\.at \? ' \[' \+ esc\(st\.at\) \+ '\]' : ''\) \+ why \+ ': \+' \+ st\.s \+ ' stealth\.'/.test(src121) && NS.test('Rosalina Cortez plays Mirror Walk [THA]: +1 stealth.') && /attempts to block with \+' \+ unIc \+ ' intercept \(<b>'/.test(src121), '121f ...and those strings are still what the source emits (v0.6.228: a conditional stealth\'s rider sits before the colon, `why`; the reader still matches -- 173b)');
     }
 
     /* 122) v0.6.152 — THE BREATH: the beat anchored on the table's last event, the stealth first look after the beat, 'I currently have N stealth', intercept by chat */

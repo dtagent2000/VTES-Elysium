@@ -3835,10 +3835,10 @@ class Bot {
       for(const mo of (h.e.modes || [])){
         if(!mo.fx || !mo.fx.votesBonus) continue;
         const needT = mo.req && mo.req.title;
-        const pool = this.board.filter(v => { if(!v || v.kind !== 'crypt' || v.zone !== 'ready' || (!this._awake(v, this.pending) && !this._wakeCardFor(v))) return false;   // v0.6.67 (the combo): the vote window gets the same widening. v0.6.235: the wake THIS reactor can play (_districtReact spends it)
+        const pool = this.board.filter(v => { if(!v || v.kind !== 'crypt' || v.zone !== 'ready' || (v.locked && !this._wakeCardFor(v))) return false;   // v0.6.67 (the combo): the vote window gets the same widening. v0.6.235: the wake THIS reactor can play (_districtReact spends it)
           if(!needT) return true;
           return String(this._titleOf(v).title || '').toLowerCase() === String(needT).toLowerCase(); });   // v0.6.217: _titleOf (a title card counts)
-        pool.sort((a2, b2) => ((this._awake(a2, this.pending) ? 0 : 1) - (this._awake(b2, this.pending) ? 0 : 1)));
+        pool.sort((a2, b2) => ((a2.locked ? 1 : 0) - (b2.locked ? 1 : 0)));
         if(!pool.length) continue;
         return { idx, name: h.name, n: mo.fx.votesBonus, vamp: pool[0] };
       }
@@ -3903,7 +3903,7 @@ class Bot {
   _districtReact(m){                 // P0: a react-type votesBonus card (Protected District) against the referendum -- the v0.6.67 wake combo; true when played. v0.6.234: synchronous, a promise only behind a wake's beat
     if(this._refT && this._refVoteDir(this._refT.deltas).dir !== 'against') return false;   // v0.6.122: District's votes are AGAINST votes -- never spent on a referendum I want or do not care about
     const vr = this._bestVotesReactFor(); if(!vr) return false;
-    const needsWakeV = !this._awake(vr.vamp, this.pending);   // v0.6.241: woken this action already = no second wake. v0.6.67 (the combo): re-derived, the bounce precedent
+    const needsWakeV = !!vr.vamp.locked;                 // v0.6.67 (the combo): re-derived, the bounce precedent. v0.6.241: the vote reacts do not read the woken record (_awake) -- this.pending in a poll can be another action's, and a stale record would let a locked vampire react unwoken
     const wkV = needsWakeV ? this._wakeCardFor(vr.vamp) : null;   // v0.6.235: the wake this vampire can play (was the vampire-blind _wakeCard)
     if(needsWakeV && !wkV) return false;
     if(wkV){
@@ -3911,7 +3911,6 @@ class Bot {
       this._toAsh(wkV.name);
       this.fxClone({ name: wkV.name, kind: 'lib' }, 'may react as though unlocked', { actor: vr.vamp });
       this.send({ t: 'log', html: '<b>' + esc(vr.vamp.name) + '</b> plays <b>' + esc(wkV.name) + '</b>: may react as though unlocked.' });
-      this._markWoken(vr.vamp, this.pending);   // v0.6.241
       this._emitPlay(wkV.name, 'wake', vr.vamp.name);
       return this._pace().then(() => (this.out || this._pollsClosed()) ? true : this._districtPlay(vr, m));   // the polls closed under the beat: the wake is spent
     }
@@ -4173,8 +4172,8 @@ class Bot {
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('react') || !(h.e.modes || []).some(x => x && x.fx && x.fx.voteCut)) continue;   // an Absolute Tyranny-class card only (District-class cards keep their own branch)
       const cost = (h.e.cost && h.e.cost.blood) | 0;
-      const wakeOf = v => { if(this._awake(v, this.pending)) return null; const w = this._wakeCardFor(v); return (w && w.name !== h.name && (v.blood | 0) >= cost + ((w.cost && w.cost.blood) | 0)) ? w : null; };   // a locked reactor behind a wake it can play (District's v0.6.67 combo)
-      const vs = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && (v.blood | 0) >= cost && this._entryReqOk(h.e, v) && (this._awake(v, this.pending) || wakeOf(v))).sort((x, y) => (this._awake(x, this.pending) ? 0 : 1) - (this._awake(y, this.pending) ? 0 : 1));   // the unlocked (or woken this action, v0.6.241) first: no wake spent
+      const wakeOf = v => { if(!v.locked) return null; const w = this._wakeCardFor(v); return (w && w.name !== h.name && (v.blood | 0) >= cost + ((w.cost && w.cost.blood) | 0)) ? w : null; };   // a locked reactor behind a wake it can play (District's v0.6.67 combo)
+      const vs = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && (v.blood | 0) >= cost && this._entryReqOk(h.e, v) && (!v.locked || wakeOf(v))).sort((x, y) => (x.locked ? 1 : 0) - (y.locked ? 1 : 0));   // the unlocked first: no wake spent
       for(const mo of (h.e.modes || [])){ if(!mo.fx) continue;
         const vv = vs.find(v => this._modeUsableBy(mo, v)); if(!vv) continue;
         row.reactor = true;
@@ -4200,7 +4199,6 @@ class Bot {
       if(tr.wake.cost && tr.wake.cost.blood) tr.vamp.blood = Math.max(0, (tr.vamp.blood | 0) - tr.wake.cost.blood);
       this.fxClone({ name: tr.wake.name, kind: 'lib' }, 'may react as though unlocked', { actor: tr.vamp });
       this.send({ t: 'log', html: '<b>' + esc(tr.vamp.name) + '</b> plays <b>' + esc(tr.wake.name) + '</b>: may react as though unlocked.' });
-      this._markWoken(tr.vamp, this.pending);   // v0.6.241
       this._emitPlay(tr.wake.name, 'wake', tr.vamp.name);
       return this._pace().then(() => (this.out || this._pollsClosed()) ? true : this._tyrannyReactPlay(tr, m));   // the polls closed under the beat: the wake is spent, the card stays
     }
@@ -6072,7 +6070,7 @@ class Bot {
     }
     return null;
   }
-  _awake(v, p){                      // v0.6.241 (the exactness round; Claude's playtest game 1, 2296.1: Ayelech played On the Qui Vive after Eyes of Argus [AUS] had woken her for the same action): a vampire is up for a reaction or a block when it is unlocked, or when a wake was played for it in THIS action -- 'they ignore the requirement to be unlocked for playing reaction cards and attempting to block until the end of the action' (On the Qui Vive, Eyes of Argus [AUS], Wake with Evening's Freshness; KRCG's text). The record is the action's own pending (p.woken): a new action, a new record -- at worst a wake spent twice, never a locked vampire reacting without one
+  _awake(v, p){                      // v0.6.241 (the exactness round; Claude's playtest game 1, 2296.1: Ayelech played On the Qui Vive after Eyes of Argus [AUS] had woken her for the same action): a vampire is up for a reaction or a block when it is unlocked, or when a wake was played for it in THIS action -- 'they ignore the requirement to be unlocked for playing reaction cards and attempting to block until the end of the action' (On the Qui Vive, Eyes of Argus [AUS], Wake with Evening's Freshness; KRCG's text). The record is the action's own pending (p.woken), read where the pending is passed in (the block route, the bounce, the reduce): a new action, a new record -- at worst a wake spent twice, never a locked vampire reacting without one. The vote reacts keep their own wake (in a poll this.pending can be another action's)
     return !!v && (!v.locked || !!(p && p.woken && p.woken.has(v.id)));
   }
   _markWoken(v, p){ if(v && p) (p.woken || (p.woken = new Set())).add(v.id); }   // v0.6.241: the wake just played, on the action's record (_awake)
