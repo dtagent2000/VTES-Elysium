@@ -16521,8 +16521,8 @@ async function connectWithRetry(client, tries = 30){
        seat's has left the screen, a short phrase holds the floor 1.5 s; ring order on a tie, the vote round driven by the previous voter);
        no "(bot):" prefix; a bot's question to a bot without the human's instruction tail. (a) chat() on the wire: no prefix and no
        '(bot)', the combat narration's 'NAME combat' kept, a note keeps 'NAME (bot)'; (b) _askBlock's tail only to a human addressee
-       (directed, undirected, reactions-only); (c) a combat line's 'tell me if your side differs' only to a human or unknown opponent
-       (160n is the same through the combat between two bots); (d) the event log still types a tail-less question as an ask; (e) the
+       (directed, undirected, reactions-only); (c) a combat line's 'tell me if your side differs' only to a human or unknown opponent,
+       and to a bot opponent the line goes on the log tier (160n and 159q: through a combat between two bots); (d) the event log still types a tail-less question as an ask; (e) the
        floor's stamps (another seat's chat as long as it shows, a quick phrase or a verdict pulse 1.5 s; not my own, not a spectator's);
        (f) _drain holds a bubble of mine until the floor is free, plus a ring step from the turn seat on a tie, and what follows it
        waits with it -- never at paceMs 0, never with chatFloor 0; (g) two bots on a 300 ms relay: the answer waits out the question;
@@ -16571,7 +16571,10 @@ async function connectWithRetry(client, tries = 30){
       { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Johan'], [true, true, false])); const T = ' Tell me if your side differs.';
         const at = seat => { u._combatOpp = () => seat ? { seat, name: 'X', o: {}, rec: null } : null; return IF6(u, '_combatTell') ? u._combatTell(T) : 'no method'; };
         const g = { bot: at(2), human: at(3), unknown: at(0) };
-        ok(g.bot === '' && g.human === T && g.unknown === T, '186c a combat line tells a human or unknown opponent "tell me if your side differs", a bot opponent nothing (got ' + JSON.stringify(g) + ') [a new method: red on the old bytes proves only that]'); }
+        const tier = (seat, o) => { const w = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Johan'], [true, true, false]), o); w._combatOpp = () => seat ? { seat, name: 'X', o: {}, rec: null } : null; return IF6(w, '_combatNoteToBot') ? w._combatNoteToBot() : 'no method'; };
+        const n = { bot: tier(2), human: tier(3), unknown: tier(0), off: tier(2, { combatNotes: 0 }) };
+        ok(g.bot === '' && g.human === T && g.unknown === T && n.bot === true && n.human === false && n.unknown === false && n.off === false,
+           '186c a combat line tells a human or unknown opponent "tell me if your side differs", a bot opponent nothing -- and to a bot it is a log line (combatNotes 0: the old bubble) (got ' + JSON.stringify({ g, n }) + ') [new methods: red on the old bytes proves only that; 160n and 159q run it through a combat between two bots]'); }
 
       // d) the event log types a question to bots as an ask, as it typed the one with the tail
       { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor'], [true, true]));

@@ -6655,7 +6655,11 @@ class Bot {
      combat line for the step, a quick phrase (No / Pass / Nothing / Go on / Done ...), a human moving `ph` past the step, or the clock
      (restarted by the human's activity, like stealth / votes). Bot-vs-bot and combatPhases 0 skip it entirely.                    */
   _phaseOppPlayer(){ const c = this._combatOpp(); if(!c) return null; const p = (this.players || [])[c.seat - 1]; return p && !p.bot ? p.name : null; }
-  _combatNoteToBot(){ if(!this.o.combatNotes) return false; const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return !!(p && p.bot); }   // EXPERIMENT (not shipped without Johan's ruling): a bot opponent's combat line on the log tier
+  /* v0.6.240 (the chat round; Johan's ruling asked, 25 Nov -- see RULINGS): a combat line to a BOT opponent goes on the log tier, as it does to a human
+     under the combat phases. Without its human instruction tail (D-137) it is an event, and the tier rule's events are notes (D-64). As a chat bubble
+     it held the floor ~9 s, two a round, and the opposing bot's press step (1.5 s) missed it: the 240's combat handshake fell to 95 %, 159q's watched
+     duel ran into its safety net. The opposing bot reads it from either tier (_parseCombatNarration). o.combatNotes 0 = the chat bubble of v0.6.239. */
+  _combatNoteToBot(){ if(this.o.combatNotes === 0) return false; const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return !!(p && p.bot); }
   _combatTell(tail){ const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return p && p.bot ? '' : tail; }   // v0.6.240 (the chat round, D-137): a combat line's 'tell me if your side differs' is the human's instruction -- none to a bot opponent (it reads the line itself, _parseCombatNarration; the tail was never part of the shape); an unknown opponent keeps it
   _phasesOn(){ return this.o.combatPhases !== 0 && this._inCombat && !!this._phaseOppPlayer(); }
   _phaseAsk(step){ return this._phaseStep(step, 'ask', false); }         // before my play in the step (human acting: ask first)
