@@ -320,7 +320,95 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.238 (24 Nov 2026; PR #105)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
+- **v0.6.239 (24 Nov 2026; PR #107)** — Hand size and replacement (the sweep register's class 14, D-135; the order of the rounds Claude's,
+  D-137). The rulebook, drawing cards: "Whenever you play a card from your hand, you draw another from your library to replace it
+  (unless card text says otherwise). … Whenever an effect changes your hand size … immediately discard down to or draw up to
+  match your hand size." Rules corrections, no knob (L-62).
+  - *14.1* — a card played in another seat's turn (a reaction, a wake, an intercept, a block's or a combat card) waited for the
+    bot's next master phase to be replaced: `_flushDraws` ran in its own turn (and after a vote's discard). `_replaceLate`, after
+    every table message (`_dispatch`): in another seat's turn, once nothing of the bot's is in flight (no window on it, no combat,
+    no action of its own), the owed cards are drawn; a card's own "Do not replace until …" stays held; the bot's own turn keeps
+    its flushes.
+  - *14.2* — a hand-size permanent (Elder Library) was drawn up for at the next turn start: the master phase now draws up as it
+    enters (`_recomputeHandSizeBaseline` after the placement; the Capuchin's own draw already moves the baseline).
+  - *14.3* — the discard phase's replacement is owed and drawn after the end of turn's discard-down, so Dreams' expiring +2 counts
+    it (a draw in flight was not), and Visit from the Capuchin turns it into a counter ("Each time you would replace a card other
+    than this card, instead burn 1 counter").
+  - Also: v0.6.238's pass 3 listed stale comments in the master phase's code (`known` "true for exactly Blood Doll/Vessel"):
+    corrected.
+  - *Prediction* (D-93; registered before the 240): against v0.6.238's 240 (`0648bf88`), DIVERGED in nearly every match (at least
+    220 of 240: every starter plays reactions in other seats' turns); the unlock snapshots of rounds 2–4 under 7 cards fall from
+    371 of 2,880 to under 40 (a replacement held until the unlock phase, an empty library); the plays in the reaction windows
+    (react-intercept, react-bounce, react-unlock, wake: 4,422) rise, by 1 to 15 %; ventrue's `replace-counter` rows rise (the
+    discard phase's replacements); no deck's VP/match moves by more than 0.3 (paired); `ana-gates.py` PASS, zeroPool 0.
+    *Observed* (the version string normalized): IDENTICAL 0, SAME-PLAY 4, DIVERGED 236; the unlock snapshots of rounds 2–4 under 7
+    cards 371 → 7; the reaction windows' plays 4,422 → 4,802 (+8.6 %: react-intercept 1,361 → 1,488, react-bounce 597 → 626,
+    react-unlock 503 → 580, wake 1,961 → 2,108); VP/match malkavian −0.03, nosferatu +0.13 (95 % [−0.01, +0.28]), tremere −0.04,
+    ventrue −0.07 (paired SE 0.07–0.10); `ana-gates.py` PASS 6/6, zeroPool 0. Ventrue's `replace-counter` rows 319 → 312, not the
+    rise predicted: a Capuchin's four counters cap them, so the discard phase's replacements change when a counter burns, not how
+    many. The rest held.
+  - *The egress review's pass 1* found two faults of 14.1's own, fixed here (D-92). **A Sudden Reversal's replacement** was drawn
+    at the end of the very dispatch that played it, inside its 'as played' window ([LSJ 20061207]: "Cards are not replaced during
+    the 'as played' window."), and a cancel that came too late then left 8 cards (the take-back found no draw owed): it is held
+    (`srWindow`) until the window closes, read as the owner's next line other than a Sudden Reversal line (another cancel's 'too
+    late' can come before mine) or the turn change (`_srWindowClosed`), and drawn there before that line is handled; a too-late
+    cancel takes the hold back with the card; a human's master has no window. **A reaction's "Do not replace until after this
+    action"** (Read the Winds, Pack Tactics) played in another seat's turn was released by `_replaceLate`'s flush at the next
+    table message, inside its action (`_flushDraws` read "no action of mine in flight" as the action's end): `_flushDraws`
+    releases it in the bot's own turn only; in another's the turn change does, drawn before the next turn starts (late, never
+    early: the register's 14.6). The rest went to the register (class 14 again: 14.4–14.7, all latent); BOARD's and the
+    register's lines cite D-137, BOARD is on v0.6.239.
+    *Prediction* (D-93; registered before the runs): the 240 and the five starters' 120 IDENTICAL against the first bytes
+    (`5b8f55a7`; 240/240, 120/120): no starter holds a Sudden Reversal or an 'after this action' / 'after combat' card, so no hold
+    is noted or released otherwise. The lasombra smoke (`--seatings random --matches 12 --seeds 4`, the first bytes and these): a
+    match where lasombra cancels a master is SAME-PLAY or DIVERGED from the cancel (its `srWindow` hold and release, the draw at
+    the owner's next line), the others IDENTICAL; every hold released at the owner's next line or the turn change; no take-back
+    (one Sudden Reversal deck at the table, and the sim delivers the cancel inside the window).
+    *Observed*: the 240 IDENTICAL 240/240 and the five starters' 120 IDENTICAL 120/120; the lasombra smoke (48 matches) IDENTICAL
+    36, SAME-PLAY 12, the 12 exactly the matches where lasombra cancels a master: 12 cancels, 12 `srWindow` holds, 12 releases,
+    each after the owner's window closed (3.3–3.9 s later at the client's pace, before the owner's next action), no take-back,
+    no 'too late'; `ana-gates.py` PASS 6/6 on all three. The prediction held.
+  - *The egress review's pass 2* (a new reviewer; 5 findings): **the window's close** was read from any line of the owner's
+    but a Sudden Reversal line, and an owner's archetype note can come inside its window (the speaking bot's `_archetypeSay`,
+    which a card's fx clone can set off) -- the replacement drawn inside the window again, and a later 'too late' dropped (the
+    record cleared): the card lost to the ash heap, the out-of-turn debt standing. Now the owner's next master line
+    (L12.asPlayed) or phase line closes it, or the turn change; the record stays, marked closed, until the turn change, and a
+    'too late' after the close is honoured: one owed draw fewer, or, when the replacement was drawn, a discard down to the hand
+    size (the rulebook's "Whenever an effect ... adds or removes cards from your hand, immediately discard down"). **The turn
+    change into the bot's own turn** drew the released replacements while `turnSeat` was still the last turn's (pass 1's second
+    commit): at pace 0 the card was still in flight when Dreams' +2 read the hand (`_handCount`), drawing one too many (the
+    reviewer's probe: 3 for 2, the hand at 10 of 9). The turn change now only releases: the end of the dispatch draws in another
+    seat's turn, the bot's own flush in its own (the owed card counted meanwhile, as before pass 1). 185f gained the negative
+    cases (another seat's master line, the owner's note) the owner check lacked; the register's 14.6 and 14.7 say what the code
+    does.
+    *Prediction* (D-93; registered before the runs): the 240 and the five starters' 120 IDENTICAL against the first bytes (as
+    pass 1's; no starter holds a card the changes read); the lasombra smoke IDENTICAL 48/48 against pass 1's bytes, unless an
+    owner's note fell between a window and its next master or phase line (that match SAME-PLAY: the release one line later); no
+    `sr-shed` row (the sim delivers every cancel inside its window).
+    *Observed*: the 240 IDENTICAL 240/240 and the five starters' 120 IDENTICAL 120/120; the lasombra smoke IDENTICAL 48/48 (no
+    note fell inside a window there; its 12 releases where pass 1's were), no `sr-shed` row; `ana-gates.py` PASS 6/6 on all
+    three. The prediction held.
+  - *The egress review's pass 3* (a new reviewer, the last D-133 allows): nothing to fix before merge, 5 findings to list. Three
+    small ones are fixed after it (read by no reviewer; the gates ran on them): 185f gained the phase line's negative case
+    (another seat's "Phase:" holds the window, the owner's closes it; a mutant reading any seat's phase line now fails 185f); the
+    event log reads the new "NAME discards X (hand size)." as the revert's shape (`via: 'hand-size'`, not a card named "X (hand
+    size)"; L-56); `_playSr`'s comment says what pass 2 built. Two went to the register: 14.4's second path (a draw 14.1 makes
+    at another seat's turn's end can still be in flight when the bot's turn starts: at pace 0 on a real server, the arena only,
+    Dreams' +2 lock draws one too many) and, in 14.7, the empty library (the take-back's discard is then one too many). L-87
+    (stale-doc, 6 of the round's 15 findings) now asks for the grep before each pass, the last pass's fix included.
+    *Prediction* (D-93; registered before the runs): IDENTICAL to pass 2's bytes everywhere -- the 240 (so to the first bytes'
+    too), the five starters' 120, the lasombra smoke 48/48: no sim emits the new discard line, and the other two changes are a
+    comment and a test. *Observed*: the 240 IDENTICAL 240/240, the five starters' 120 IDENTICAL 120/120, the lasombra smoke
+    IDENTICAL 48/48; `ana-gates.py` PASS 6/6 on each. The prediction held.
+  - *Tests*: section 185 (7 cases: a–e red on v0.6.238; f and g, the egress review's, red on the first bytes `5b8f55a7` and on
+    pass 1's `b62e6b96`; c–e through a whole turn, the server's draws arriving later). *Gates* (the release bytes, after pass
+    3, `6e29f566` / `417c3c6e`, cardfx `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2803/0 ×3, canary 235/0
+    ×2, main's canary v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.187) 422/1 (the guide's
+    embed), the arena smoke (one match, the four starters, the real clock) PASS 7/7, `client/check-versions.js` everything
+    agrees. The first bytes (`5b8f55a7` / `fefbe871`) passed the same gates: the suite 2801/0 ×3 on cardfx `b937ae3d` and again
+    on `fe5f60bf`, the arena smoke PASS 7/7 (the bot draws in other seats' turns now), the five starters' 120 PASS 6/6; pass 1's
+    bytes (`b62e6b96`) and pass 2's (`bd3de0c1`) the same again (the suite 2803/0 ×3, the arena smoke PASS 7/7).
+- **v0.6.238 (24 Nov 2026; PR #105, on main by #106)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
   Dreams kan rättas nu. Det är ju ett kort i spel som inte är fäst vid någon vampyr"). KRCG: "Put this card in play. Add 1 counter
   to this card each time you lock it … You can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn
   this card if it has 3 counters." Its curated `poolGain` mode is phase-tagged and a lock mode, and the master phase's host rule

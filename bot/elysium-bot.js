@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.238';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.239';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of Johan's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -1169,6 +1169,8 @@ class Bot {
     if(BEAT_VERBS.has(m.t) && m.who && m.who !== this.o.name) this._lastTableAt = Date.now();   // v0.6.152 (Johan: 'the bot answers quick phrases and blocks the same instant'): a visible act by SOMEBODY ELSE re-anchors my beat -- _pace waits paceMs from the latest of my own act and the table's, so a human's 'No block' / Block! / tally is always followed by a breath before I move. Server ledger lines carry no who and never re-anchor (they echo MY acts).
     try{ h(m); }                       // one bad message must never kill the process --
     catch(e){ this.o.log('handler error (' + m.t + '):', e.message); }   // the launcher seats a whole table in ONE process
+    try{ this._replaceLate(); }        // v0.6.239 (the sweep register 14.1): a card played in another seat's turn is replaced once my part in its action is over
+    catch(e){ this.o.log('replace error:', e.message); }
   }
 
   _mkHandlers(){
@@ -1368,6 +1370,7 @@ class Bot {
           this._clearPending('turn change');
         }
         if(m.seat !== this.turnSeat && this.turnSeat && this.opp && this.opp[this.turnSeat] && this.opp[this.turnSeat].memo) this._hMemoTurnEnd(this.turnSeat);   // v0.6.225: their turn ended -- an open record resolves; the answer window closes (or lasts their next turn)
+        if(m.seat !== this.turnSeat){ this._srWindowClosed('the turn changed', false); this._srSent = null; this._releaseHolds('action', 'combat'); }   // v0.6.239 (the egress review, findings 1 and 2): the last turn's 'as played' windows, actions and combats are over -- a reaction's 'Do not replace until after this action' is released here, never inside its action (_flushDraws releases in my own turn only). Drawn at the end of this dispatch when the next turn is another seat's; when it is mine, at my master phase's flush, counted in _handCount until then (pass 2, finding 4: a draw sent here was still in flight when Dreams' +2 read the hand)
         if(m.seat !== this.turnSeat){ this._turnActN = 0; this._turnSerial = (this._turnSerial | 0) + 1; }   // v0.6.217: + the turn's serial (Monster's 'once each turn' = once in each player's turn [ANK 20180719-4])   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
         this.turnSeat = m.seat;
         if(this.started && !this.out && m.seat !== this.seat && m.seat) this._w5HumanTurn(m.seat);   // v0.6.230 (V5 wave 5): Anarch Revolt's reminder to a human
@@ -6799,7 +6802,7 @@ class Bot {
       if(cost && cost >= (this.pool | 0)) return;   // v0.6.210 (the sim, 19 Oct): a pool cost leaves me >= 1 pool -- paying the last one ousts me ('a Methuselah with no pool is ousted'). `cost > pool` let Vessel through at pool 1 and a Hunting Ground at pool 2: 35 bots in 33 of 240 baseline matches paid their last pool in their own master phase and played on at 0 (the ally finder's 'leave >= 1 pool' and the political finder's `>=` were already right)
       const known = (h.e.modes || []).some(mo => mo.phase && mo.fx && (typeof mo.fx.poolGain === 'number' || typeof mo.fx.bloodToPool === 'number'));
       const lockIncome = known && !this._hostIncome(h.e);   // v0.6.238 (the sweep register 8.11): a known income asset whose pool comes by a LOCK only (Dreams of the Sphinx) -- decide('master-play') still counts it known; it is played on my board with no host
-      // v1.4.0 follow-up (14 July): `persistent`/`curated` are SEPARATE questions from `known` -- known only ever meant "has a phase-tagged income fx that attaches to a host vampire" (true for exactly Blood Doll/Vessel). Parthenon/Information Highway/Ashur Tablets are now curated too but are Locations (no host) with no recognized income fx, so they'd have been wrongly bucketed as "uncurated" by the old known-only messaging -- see the MASTER play loop and decide('master-play') below.
+      // v1.4.0 follow-up (14 July): `persistent`/`curated` are SEPARATE questions from `known` -- known only ever meant "has a phase-tagged income fx" (v0.6.238: Blood Doll and Vessel go on a vampire; Dreams of the Sphinx is known too, but its income is a lock, so its row says lockIncome and it stays on my board). Parthenon/Information Highway/Ashur Tablets are now curated too but are Locations (no host) with no recognized income fx, so they'd have been wrongly bucketed as "uncurated" by the old known-only messaging -- see the MASTER play loop and decide('master-play') below.
       const persistent = !!h.e.persistent;
       const curated = h.e.src === 'hand';
       const handler = h.e.handler || null;    // v1.4.1 (14 July): the bespoke CARD_HANDLERS key, if this entry names one
@@ -7326,7 +7329,7 @@ class Bot {
   _handCount(){                      // v0.6.238 (the egress review): the cards that count against the hand size -- the hand and the replacements owed (_drawOwed: drawn at the next _flushDraws, or held by a card's 'Do not replace until'). The rulebook (drawing cards): 'The number of cards in your hand should always match your hand size (cards that are replaced later reduce your hand size for the duration of the effect)'; [ANK 20180318]: 'Cards that are not replaced count against the hand size.' A draw-up that read the hand alone drew the owed cards twice (Dreams' +2 in the master phase, Elder Library's entry at the turn start: the flush that follows draws them again)
     return this.hand.length + (this._drawOwed | 0);
   }
-  _recomputeHandSizeBaseline(){   // v0.6.33: the passive-permanent sibling of _recomputePhaseActs's own "refresh the baseline from whatever's in play right now" pattern -- called once per turn (turn start). A NEWLY entered permanent (Elder Library etc.) means the true target rose since last check; draw up to it now, mirroring the same "immediately draw up to your hand size" rule Dreams of the Sphinx's temporary bonus already implements. Never discards on a DECREASE (a permanent leaving play mid-game is rare and not handled this round -- documented, not silently wrong: this only ever draws up, never claims to shed the difference).
+  _recomputeHandSizeBaseline(){   // v0.6.239: also right after a master enters play (14.2: the rulebook's 'immediately'), so the turn start's call finds the baseline moved   // v0.6.33: the passive-permanent sibling of _recomputePhaseActs's own "refresh the baseline from whatever's in play right now" pattern -- called once per turn (turn start). A NEWLY entered permanent (Elder Library etc.) means the true target rose since last check; draw up to it now, mirroring the same "immediately draw up to your hand size" rule Dreams of the Sphinx's temporary bonus already implements. Never discards on a DECREASE (a permanent leaving play mid-game is rare and not handled this round -- documented, not silently wrong: this only ever draws up, never claims to shed the difference).
     const total = this._handSizePermanentTotal();
     const prev = this._handSizePermanentPrev || 0;
     this._handSizePermanentPrev = total;
@@ -8441,8 +8444,9 @@ class Bot {
   _playSr(seat, owner, card, d, human){   // my Sudden Reversal: to my ash heap (replaced after the window), my next master phase's action (R-42), the frozen line; a human owner is told in chat
     const i = this.hand.indexOf(d.name); if(i < 0) return false;
     this.hand.splice(i, 1); this._drawOwed = (this._drawOwed || 0) + 1; this._toAsh(d.name);
+    if(!human){ (this._replHold || (this._replHold = [])).push({ until: 'srWindow', card: d.name }); this._emit('replace-held', { card: d.name, until: 'srWindow' }); }   // v0.6.239 (the egress review, finding 1): [LSJ 20061207] 'Cards are not replaced during the "as played" window.' -- held until the window closes (_srWindowClosed: the owner's next master or phase line, or the turn change) or my cancel comes too late (_onSrLate takes the hold back with the card; after the close, one owed draw fewer, or a discard down when the replacement was drawn); _replaceLate drew it at the end of this very dispatch, inside the window, and a late cancel then left 8 cards. A human's master has no window (the cancel stands at once)
     this._ootDebt = (this._ootDebt | 0) + 1;
-    this._srSent = { owner, card, name: d.name, at: Date.now() };
+    this._srSent = { owner, card, name: d.name, at: Date.now(), hold: !human };
     this._emitPlay(d.name, 'sudden-reversal', null);
     this._emit('sr-cancel', { owner, card, gain: d.gain, price: d.price, why: d.why, human: !!human });
     this.fxClone({ name: d.name, kind: 'lib' }, 'cancels ' + card);
@@ -8509,12 +8513,24 @@ class Bot {
     if(this._isHumanName(by)) return this.chat(by + ': too late \u2014 my ' + card + ' has resolved; take your Sudden Reversal back.');
     this.send({ t: 'log', html: '<b>' + esc(by) + "</b>'s Sudden Reversal comes too late for <b>" + esc(this.o.name) + "</b>'s <b>" + esc(card) + '</b>.' });   // L12.srLate
   }
+  _srWindowClosed(why, drawNow){     // v0.6.239 (the egress review, finding 1): my Sudden Reversal's window has closed and my cancel stood. The owner arbitrates at the window's close and answers every other cancel with L12.srLate before it moves on; what shows it moved on is its next master's line (L12.asPlayed), its next phase's line or the turn change -- not any line of its own (pass 2, finding 1: an archetype note can come inside its window). The record stays, marked closed, until the turn change: a 'too late' that still comes (a cancel that reached the owner after its window, the register's 14.7) is honoured (_onSrLate)
+    const s = this._srSent; if(!s || s.closed) return;
+    s.closed = true;
+    if(this._releaseHolds('srWindow')){ this.o.log('sudden reversal: my ' + s.name + ' on ' + s.owner + '\u2019s ' + s.card + ' stands (' + why + ') -- replaced'); if(drawNow) this._replaceLate(); }   // drawNow (the owner's line): drawn before that line is handled. At the turn change (pass 2, finding 4) the end of the dispatch draws in another seat's turn, and my own turn's flush in mine -- _handCount counts the owed card meanwhile
+  }
   _onSrLate(owner, card){            // my cancel came too late (the window had closed, or another came first): my Sudden Reversal back to my hand, no out-of-turn debt
     const s = this._srSent; if(!s || s.owner !== owner || FX_NORM(s.card) !== FX_NORM(card)) return;
     this._srSent = null;
     const k = this.board.map(c => !!(c && c.zone === 'ash' && c.name === s.name)).lastIndexOf(true); if(k >= 0) this.board.splice(k, 1);
-    this.hand.push(s.name); if((this._drawOwed | 0) > 0) this._drawOwed--;
-    { const H = this._replHold || [], k = H.findIndex(x => FX_NORM(x.card) === FX_NORM(s.name)); if(k >= 0) H.splice(k, 1); if(H.length > (this._drawOwed | 0)) H.length = this._drawOwed | 0; }   // v0.6.235 (the egress review, finding 6): the card back in hand holds no replacement, and no hold outlives the draw it held
+    this.hand.push(s.name);
+    { const H = this._replHold || [], k = H.findIndex(x => FX_NORM(x.card) === FX_NORM(s.name)); if(k >= 0) H.splice(k, 1); }   // v0.6.235 (the egress review, finding 6): the card back in hand holds no replacement
+    if(!s.closed){ if((this._drawOwed | 0) > 0) this._drawOwed--; }   // its window had not closed: its own replacement is still owed
+    else if((this._drawOwed | 0) > (this._replHold || []).length) this._drawOwed--;   // v0.6.239 (the egress review's pass 2, finding 1): closed, its replacement released but not drawn yet (a window on me held it) -- one owed draw fewer
+    else {   // closed and drawn: the card back in hand is one over the hand size -- the rulebook, drawing cards: 'Whenever an effect ... adds or removes cards from your hand, immediately discard down to or draw up to match your hand size.'
+      const di = Math.max(0, this._deadHandIndex(this._deadJudgeVamps())), shed = this.hand.splice(di, 1)[0];
+      this._toAsh(shed); this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> discards <b>' + esc(shed) + '</b> (hand size).' }); this._emit('sr-shed', { card: shed });
+    }
+    { const H = this._replHold || []; if(H.length > (this._drawOwed | 0)) H.length = this._drawOwed | 0; }   // no hold outlives the draw it held
     if((this._ootDebt | 0) > 0) this._ootDebt--;
     this._emit('sr-taken-back', { owner, card });
     this.push();
@@ -10779,7 +10795,7 @@ class Bot {
     if((m = t.match(/^(.+?) discards (.+?) — \+(\d+) bleed\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'bleed' };
     if((m = t.match(/^(.+?) discards (.+?) \(([^()]+)\): \+(\d+) bleed\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'bleed', holder: S(m[3]) };
     if((m = t.match(/^(.+?) discards (.+?) \(Revelations\) and draws\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'revelations' };
-    if((m = t.match(/^(.+?) discards (.+?) \(hand size bonus expired\)\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'hand-size' };
+    if((m = t.match(/^(.+?) discards (.+?) \(hand size(?: bonus expired)?\)\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]), via: 'hand-size' };   // v0.6.239 (the egress review's pass 3, finding 3): + a Sudden Reversal taken back after its replacement (_onSrLate) -- specific shapes before the generic one (L-56)
     if((m = t.match(/^(.+?) discards (.+?)\.$/))) return { kind: 'discard', by: S(m[1]), card: S(m[2]) };
     if((m = t.match(/^(.+?) pays (\d+) pool for (.+?) \(pool (\d+)\)/))) return { kind: 'pool', by: S(m[1]), delta: -m[2], pool: +m[4], card: S(m[3]), via: 'cost' };
     if((m = t.match(/^Gained (\d+) pool from the Edge/))) return { kind: 'pool', delta: +m[1], via: 'edge' };
@@ -10859,6 +10875,7 @@ class Bot {
     if(this.out || !this.started) return;
     const t = stripTags(html).trim();
     if(who !== this.o.name) this._evRecord(who, t, 'log');   // v0.6.176: the event log (my own lines are recorded at send)
+    if(this._srSent && this._srSent.hold && !this._srSent.closed && who === this._srSent.owner && (L12.asPlayed.test(t) || /^Phase: /.test(t))) this._srWindowClosed('the owner\u2019s next ' + (L12.asPlayed.test(t) ? 'master' : 'phase'), true);   // v0.6.239 (the egress review, finding 1; pass 2, finding 1): the owner's next master or phase line comes after its window -- not a Sudden Reversal line (another cancel's 'too late' can come before mine), nor a note (an archetype read can come inside the window)
     let m;
     if(who !== this.o.name){ if(L12.debugOn.test(t)) this._debugSeatSet(who, true); else if(L12.debugOff.test(t)) this._debugSeatSet(who, false); }   // v0.6.201: a bot at the table announced DEBUG mode -- I look away from its open hand
     if(who !== this.o.name) this._hMemoLog(who, t);   // v0.6.225 (D-113 (3)): a human's lasting choice (Toreador Grand Ball's pair)
@@ -11341,7 +11358,7 @@ class Bot {
     else if(type === 'fizzled' && data && data.vamp && data.kind !== 'referendum part'){ const av0 = this._actingVamp; this._lastAct = { vamp: data.vamp, outcome: 'through', kind: data.kind || null, fizzled: true, played: (av0 && av0.played && av0.v && av0.v.name === data.vamp) ? new Set(av0.played) : null }; }   // v0.6.234 (the egress review, finding 7): + the played modifiers   // v0.6.223 (the egress review, RULINGS R-44): a fizzled action is a SUCCESSFUL one whose effects cannot apply -- an act-again that needs success follows it (a referendum part: the referendum's own through row says it)   // v0.6.123: the act-again hook reads the SAME two emits the strategy layer's ledger rides   // v0.6.119: the strategy layer's own offensive ledger rides the two emits that already mark every resolved action
     if(this.onEvent) try{ this.onEvent('bot:' + type, data || {}); }catch(e){} }
   _flushDraws(){                     // v0.5: extracted so master-play and hunt (which `continue`s past the old inline drain) can never silently DEFER a draw-owed -- every code path that increments _drawOwed now has a nearby place to flush it instead of relying on some LATER vampire's bleed branch happening to reach it
-    if(!this._actingVamp && !this.pending && !this._inCombat) this._releaseHolds('action', 'combat');   // v0.6.235: no action and no combat in flight -- 'after this action' and 'after combat' have come
+    if(!this._actingVamp && !this.pending && !this._inCombat) this._releaseHolds(...(this.turnSeat === this.seat ? ['action', 'combat'] : ['combat']));   // v0.6.235: no action and no combat in flight -- 'after this action' and 'after combat' have come. v0.6.239 (the egress review, finding 2): 'after this action' in my own turn only -- in another seat's turn no action of mine is ever in flight, so _replaceLate's flush released a reaction's hold (Read the Winds, Pack Tactics, Elder Intervention) inside the very action it was played in; there the turn change releases it (the turn handler). 'After combat' reads my own combat (_inCombat) in either turn
     const held = Math.min(this._drawOwed | 0, (this._replHold || []).length);   // v0.6.235: a 'Do not replace until ...' card's replacement stays owed (_noteReplHold)
     while((this._drawOwed || 0) > held){ this._drawOwed--;
       if((this._replaceExempt | 0) > 0){ this._replaceExempt--; this.send({ t: 'draw' }); continue; }   // v0.6.125: "replace a card OTHER THAN this card" -- the Capuchin's own replacement is an ordinary draw
@@ -11351,6 +11368,11 @@ class Bot {
         if(cap.counters <= 0){ cap.zone = 'burned'; this.send({ t: 'log', html: '<b>' + esc(cap.name) + '</b> has no counters left \u2014 burned.' }); }
         this.push(); continue; }
       this.send({ t: 'draw' }); }
+  }
+  _replaceLate(){                    // v0.6.239 (the sweep register 14.1): the rulebook, drawing cards: 'Whenever you play a card from your hand, you draw another from your library to replace it (unless card text says otherwise).' _flushDraws ran in my own turn (and after a vote's discard), so a reaction's, a block's, a wake's or a combat card's replacement in another seat's turn waited for my next master phase (the first v0.6.238 bytes' 240: 371 of 2,880 unlock snapshots of rounds 2-4 under 7 cards). Now, after each table message (_dispatch), once nothing of mine is in flight (no window on me, no combat, no action of mine), the owed cards are drawn; a card's own 'Do not replace until ...' stays held (_flushDraws), and my own turn keeps its flushes (an action's end, the master phase)
+    if(!this.started || this.out || this.turnSeat === this.seat || this.pending || this._inCombat || this._actingVamp) return;
+    const held = Math.min(this._drawOwed | 0, (this._replHold || []).length);
+    if((this._drawOwed | 0) > held) this._flushDraws();
   }
   _replaceCounterCard(){             // v0.6.125: an in-play card whose counters stand in for my replacements (fx.replaceBurnsCounter)
     return (this.board || []).find(c => { if(!c || c.kind !== 'lib' || this._outOfPlay(c) || !((c.counters | 0) > 0)) return false;
@@ -12768,7 +12790,8 @@ class Bot {
          (rulebook), independent of any bespoke `actGrant` source (e.g.
          Parthenon) which just adds to the SAME phaseBonus.master pool from
          a different origin. A KNOWN card (curated `phase`-tagged income fx)
-         attaches to a vampire exactly as before. v1.4.0 follow-up (14 July):
+         attaches to a vampire when its income is a host's (_hostInc, v0.6.238:
+         Blood Doll, Vessel; Dreams of the Sphinx's lock stays on my board). v1.4.0 follow-up (14 July):
          a PERSISTENT card (known or not) is placed on the board as before;
          a NON-persistent one (Effective Management: no location/put-in-play
          text) now resolves and goes straight to the PUBLIC ash heap instead
@@ -12796,7 +12819,7 @@ class Bot {
           const _hostInc = d.pick.known && !d.pick.lockIncome;   // v0.6.238 (the sweep register 8.11): a known income asset goes on a vampire when its income is a host's (Blood Doll, Vessel); Dreams of the Sphinx ('Put this card in play') goes on my board, with or without a vampire
           const host = _w4 ? _w4.host : _vlP ? _vlP.host : d.pick.host === 'ready' ? this._hostReadyFor(d.pick.name) : (_hostInc || d.pick.archetype) ? this._hostVampFor(d.pick.archetype, d.pick.archetype ? (this.fxLookup(d.pick.name) || {}).e : null, _hostInc && !d.pick.archetype ? d.pick.name : null) : null;   // fas C: archetype masters (Perfectionist) attach too -- and the archetype-aware picker enforces one-per-vampire. v0.6.205 (R4, F23): Guardian Angel goes on a READY vampire of mine
           if(d.pick.host === 'ready' && !host){ played.add(FX_NORM(d.pick.name)); continue; }   // v0.6.205: no ready vampire to put it on -- held, the next candidate is tried (pre-splice: nothing paid)
-          if((_hostInc || d.pick.archetype) && !host) break;     // a known income asset (or an archetype with no eligible vampire) needs a host — hold the card rather than misplay it
+          if((_hostInc || d.pick.archetype) && !host) break;     // a host's income (Blood Doll, Vessel; v0.6.238) or an archetype with no eligible vampire needs a host — hold the card rather than misplay it (the phase ends here: the register's 13.10)
           this.o.log('master-play: ' + d.why);
           if(this.hand.indexOf(d.pick.name) < 0 || (d.pick.cost && d.pick.cost >= (this.pool | 0))){ played.add(FX_NORM(d.pick.name)); continue; }   // v0.6.210: the finder's own rule (leave >= 1 pool). v0.6.232 (D-122): the beat moved into the 'as played' window below -- a master's target is chosen as it is played, before the window
           const _lk = this.fxLookup(d.pick.name);
@@ -12956,6 +12979,7 @@ class Bot {
               if(_n > 0){ card.counters = _n;
                 if((_ec.e.modes || []).some(mo => mo.fx && mo.fx.handSizePerCounter)){ for(let _i = 0; _i < _n; _i++) this.send({ t: 'draw' }); this._handSizePermanentPrev = this._handSizePermanentTotal(); this._replaceExempt = (this._replaceExempt | 0) + 1;
                   this._emit('hand-size-up', { card: d.pick.name, by: _n }); } } }
+            this._recomputeHandSizeBaseline();   // v0.6.239 (the sweep register 14.2): 'Whenever an effect changes your hand size ... immediately ... draw up to match your hand size' (the rulebook) -- a hand-size permanent (Elder Library) is drawn up for as it enters, not at my next turn start (the Capuchin's own draw above already moved the baseline: nothing twice)
             if(host && _hostInc && !d.pick.archetype){   // v0.6.237: the income master's host, traced -- the spread's own row (spreadIncome); `stacked` = a copy already on it while another ready vampire of mine had none
               const cp = v => (v.attached || []).filter(id => { const c = this.board.find(x => x && x.id === id); return !!(c && c.kind === 'lib' && !this._outOfPlay(c) && FX_NORM(c.name) === FX_NORM(d.pick.name)); }).length;
               const on = cp(host), free = this.board.filter(v => v && v !== host && v.kind === 'crypt' && v.zone === 'ready' && cp(v) === 0).length;
@@ -13843,13 +13867,14 @@ class Bot {
         this._toAsh(name);
         this.push();
         this.send({ t: 'log', html: '<b>' + esc(this.o.name) + '</b> discards <b>' + esc(name) + '</b>.' });
-        this.send({ t: 'draw' });
+        this._drawOwed = (this._drawOwed || 0) + 1;   // v0.6.239 (the sweep register 14.3): the replacement is OWED, drawn after the end of turn's discard-down (below) -- a draw sent here was still in flight when _revertHandSizeBonus counted the hand (Dreams' expiring +2 shed one card too few after a discard-phase action: 4 of 20 reverts in v0.6.238's 240), and a replacement is what Visit from the Capuchin turns into a counter ('Each time you would replace a card ... instead burn 1 counter')
         this.phaseUsed.discard++;
         this._w5AfterDiscard(name);   // v0.6.230: Powerbase's Anarch unlock
       }
       this._w5PbAnarch = false;
       this._w5CovenLock(); this._w5CovenPass();   // a Coven played this turn is locked for its 2 blood before it passes (the grading)   // v0.6.230 (V5 wave 5): 'During your discard phase, your predator takes control of The Coven'
       this._revertHandSizeBonus();
+      this._flushDraws();   // v0.6.239 (14.3): the discard phase actions' replacements, after the discard-down counted them (_handCount)
 
       await pace();
       if(this.out){ this.send({ t: 'pass' }); }   // v0.6.140 THE FREEZE: a bot ousted on its OWN turn (Fame, a referendum of its own, a self-inflicted cost) never passed -- the server gives the turn only to the seat that holds it, so the table froze until the arena's 600 s timeout (serie-bal3 run 7: 451 s of silence). The server's pass handler accepts the turn seat whether or not it is out and skips ousted seats.

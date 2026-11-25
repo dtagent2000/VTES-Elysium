@@ -1,15 +1,16 @@
-# BOARD — the open asks (24 Nov 2026, v0.6.237). A line is deleted when done; found work is added as a line (a card
+# BOARD — the open asks (24 Nov 2026, v0.6.239). A line is deleted when done; found work is added as a line (a card
 problem the sweep finds: an entry in `SWEEP-REGISTER.md`, D-135).
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
-- **The chat round** (Johan, 24 Nov: "en ordentlig utvärdering av bottarnas chattande ... vid vanliga bord"; D-136, O-50): the
-  recorder and a chat analysis tool in the repo (one seed before / after at the client's pace), one speaker at a time (a table-wide
-  floor between bubbles, ring order on a tie, the vote round driven by the previous voter), bot-to-bot exchanges without the human
-  instructions (O-50 first), no `(bot):` prefix, the silent bot-vs-bot verdict wait (14 s in the recording), and every chat line
-  ruled with Johan. *Done when* the recording shows no bubble over another seat's and each line has his ruling. Docs: D-64, O-50.
+- **The chat round** (D-136, D-137): the recorder and a chat analysis tool in the repo (one seed before / after at the client's
+  pace); the bubbles stay and keep their content; one speaker at a time (a seat's bubble waits until another seat's has left the
+  screen, a short phrase holds the floor 1.5 s; ring order on a tie, the vote round driven by the previous voter); a bot's
+  question to a bot without the human's instruction tail; no `(bot):` prefix; the silent bot-vs-bot verdict wait (14 s in the
+  recording); every chat line ruled with Johan. *Done when* the recording shows no bubble over another seat's and each line has
+  his ruling. Docs: D-64, D-137.
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). The bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the vest
   prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
@@ -60,11 +61,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 
 ## The sweep register (D-135): `SWEEP-REGISTER.md` by class; a round takes one; *done when* its class is empty
 - **The active entries** (7.1 Aire of Elation and 7.2 The Warrens: a printed +1 dropped; 8.3 Bait and Switch by a non-baron;
-  11.1 Revelations' predator never asked; 14.1–14.3 replacements and hand sizes): rules broken in the 240 or a smoke, so they go in
-  the next release (D-135; v0.6.237–238: Johan's playtest, his go on Dreams: STATUS). The missed
+  11.1 Revelations' predator never asked): rules broken in the 240 or a smoke; their round comes after the chat round (D-137:
+  Claude orders the rounds). The missed
   options (4.6 the onward bounce, 5.2 the .44 Magnum's maneuver, 8.6 Freak Drive after a failed referendum, 9.8 Form of Mist's
   continue, 10.1 Faceless Night [OBF], 10.2 burning another's card, 12.2 Precognition and Spirit's Touch [AUS]) wait in their
-  classes unless Johan sends them with the active ones (asked: STATUS).
+  classes until their class's round.
 - **1. Retainers: version and holder** (R-47): next; its design question first (where another seat's retainer's version comes from).
 - **2. `aggr` misreads.**
 - **3. Another minion's sentence read as the player's** (L-98's rest).
@@ -79,7 +80,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **11. Windows: who is asked, and when.**
 - **12. Combat's steps** (C2's neighbours).
 - **13. Choices around a card**: Claude's priors, each a design to Johan first (D-87).
-- **14. Hand size and replacement** (14.1–14.3 active: the next release).
+- **14. Hand size and replacement** (14.4–14.7, all latent).
 
 ## Known, not built (bot side)
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
