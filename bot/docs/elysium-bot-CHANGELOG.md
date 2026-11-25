@@ -328,14 +328,15 @@
   - *The prefix* — `chat()` drops "Name (bot): " and every "(bot)": the client's bubble names its speaker, the log line names the
     seat. Notes keep `NAME (bot)` (`L12.debugOn` / `debugOff`, `_evClassify`). The readers were checked first: `_onChat`'s last
     prefix parser went in v0.6.106, `_evClassify` strips either shape, and the client, the server, main's canary and tests read none.
-  - *The tail* — a question only bots are asked ends at its "?" (`_askBlock`); a human asked keeps `— say "block" or "no" (20s →
+  - *The tail* — a question to a bot carries no instruction tail (`_askBlock`); a human asked keeps `— say "block" or "no" (20s →
     no)`. A round's combat summary says "tell me if your side differs" only to a human or an unknown opponent (`_combatTell`).
     `_evClassify` types a tail-less question as an ask.
   - *The floor* — another seat's chat holds the floor as long as the client shows it (`bubbleMs`: `sayBubbleMs` at multiplier 1.0,
     the 180-character clamp), a quick phrase or a verdict pulse 1.5 s (`_floorSeen`; a spectator's none). A bubble of mine waits in
     `_drain` until the floor is free, plus 250 ms a ring step from the turn seat (also from the last table event: two seats moved by
     one line speak in ring order). Only where the table is paced for people (`_floorOn`: paceMs 1.5 s or more and an ask clock of
-    10 s or more, the client's 3.1 s and 20 s); `o.chatFloor` 0 switches it off (v0.6.239's timing and tiers; the text stays
+    10 s or more, the client's 3.1 s and 20 s; not under a clocked tempo at a table with a human, Standard or Adaptive, whose
+    0.8–8 s clocks close before the floor lets the bots' answers out; Turn-based, the client's start, keeps it); `o.chatFloor` 0 switches it off (v0.6.239's timing and tiers; the text stays
     D-137's), 1 forces it at any pace above 0 (the tests).
   - *The bots' protocol rides on bubbles* (L-99), found by the recording and the 240: acts and a window's opening line wait for a
     free floor (`_floorClear`, awaited only when held: a free floor or paceMs 0 keeps a line and its window in one tick, the window
@@ -363,7 +364,8 @@
     ±0.02 a deck (paired SE 0.02–0.03); `ana-gates.py` PASS 6/6 (handshake 9,910/9,910, ledger 0, zeroPool 0); with chatFloor
     0 every row is v0.6.239's but the result row's knob list (the tool's SAME-PLAY 240): held. The bot-only bleed total now
     waits out its question (median 200 ms → 7.1 s over the 240), which `ana-windows.py` reads as "ran out" (BOARD). The
-    recording ran on pass 1's bytes; pass 2's touch none of its four decks (the 240 IDENTICAL 240/240 to pass 1's).
+    recording ran on pass 1's bytes; pass 2's and pass 3's changes change none of its four decks' play (the 240 IDENTICAL
+    240/240 to pass 1's; the recording sends no tempo).
   - *The egress review* — pass 1 (15 findings: rule-missed 4, half-done 4, test-weakened 3, stale-doc 3, unproven 1): the doc
     budget raised after cutting the round's own lines; a new game or the polls closing end a waiting voter's turn; a voter whose
     reaction said nothing still speaks (`_refSpoke`); the floor needs a pace above 0; no switch brings the combat summary back
@@ -374,7 +376,12 @@
     come, the predicates matched to the plays (`_spyAddMay`, `_haqimAddMay`; 157l, 161g); the floor wants an ask clock of
     10 s or more (a short clock closed a bot-only window or a poll before the floor let the answer out; 186n); 186i's polls
     generous; `chatFloor` 0 is v0.6.239's timing and tiers, not its text; the handoff purges only the bot file; a question to
-    a bot carries no instruction (a bounce re-announce has no "?"). PASS3
+    a bot carries no instruction (a bounce re-announce has no "?"). Pass 3 (a new reviewer, the last D-133 allows; 3 findings:
+    half-done 1, test-weakened 1, stale-doc 1), fixed after it (read by no reviewer; the gates ran on them): the floor is off
+    under a clocked tempo at a table with a human (Standard, Adaptive; the reviewer's scratch section at Standard 3 s: a later
+    bot voter's bubble at 7.0 s on a 3 s poll clock, a bot's Block! to a hunt shared with a human 4.6 s after a 3 s question;
+    `_tempoShortClock`, 186n); 186i's polls-closing case looks 1.2 s and at the queue and the counter (a mutant without the
+    guard now fails it); the tail's wording here and the recording's bytes in STATUS.
   - *Tests*: section 186 (a–n, 16 checks; red on v0.6.239 where they pin a new behaviour, on the pre-fix bytes for the reviews'
     cases); 160n (the same combat with the summaries on the log tier); 157l and 161g (the add predicates); 183a, 183e, 183f3
     and 145h read the lines as sent now; 89a's message. *Gates* (the release bytes `e29c0185` / test `890067de`, cardfx

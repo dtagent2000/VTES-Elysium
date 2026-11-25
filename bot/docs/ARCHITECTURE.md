@@ -100,7 +100,7 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
   the no-server net keys on `joined.srv`, not on what the bridge relays, so with *Pool to predator* OFF a bot predator marks the
   human out and takes the 6 pool by itself offline, while online it does neither; revisit if main or a tester objects.
 - **Human tables**: the tempo (Standard / Adaptive / Turn-based), the hold, the chat beat, the floor (D-137: a bubble waits until
-  another seat's has left the screen; `_floorOn`: a 1.5 s pace, a 10 s ask clock), one spokesbot, the debug hand. The arena never sees them
+  another seat's has left the screen; `_floorOn`: a 1.5 s pace, a 10 s ask clock, no clocked tempo with a human), one spokesbot, the debug hand. The arena never sees them
   (paceMs 0 zeroes every beat; bots never operate the hold); the sim's client profile (paceMs 3100) has the beats and the floor.
 
 ## Running a game in three commands

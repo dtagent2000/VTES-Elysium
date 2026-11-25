@@ -16649,7 +16649,8 @@ async function connectWithRetry(client, tries = 30){
         const pv1 = IF6(v1, '_refPrevVoter') ? v1._refPrevVoter() : null;
         const v2 = mkV(P6(['Hanna', 'Johan', 'Viktor'], [true, false, true])); const armed2 = !!v2._refHeardW; const pv2 = IF6(v2, '_refPrevVoter') ? v2._refPrevVoter() : null; v2._dispatch({ t: 'chat', who: 'Hanna', msg: 'I vote 1 for.' }); const woke2 = armed2 && !v2._refHeardW; await until6(() => spoke(v2), 8000);
         const v3 = mkV(P); const t3 = Date.now(); await until6(() => spoke(v3), 4000); const cap = Date.now() - t3;
-        const v4 = mkV(P); await sleep(50); v4._dispatch({ t: 'tally', who: 'Hanna', mode: null, a: 0, b: 0 }); await sleep(100); const closed = !spoke(v4) && !v4._refHeardW;
+        const v4 = mkV(P); await sleep(50); v4._dispatch({ t: 'tally', who: 'Hanna', mode: null, a: 0, b: 0 }); await sleep(1200);   // long enough for a bubble queued after the close to drain (the egress review's pass 3)
+        const closed = !spoke(v4) && !v4._sq.some(o => o && o.t === 'chat') && !v4.wire.some(w => w.m.t === 'tally' && w.m.mode === 'vote') && !v4._refHeardW;
         ok(!early && woke1 && spoke(v1) && !!pv1 && pv1.name === 'Mara' && !!pv2 && pv2.name === 'Hanna' && woke2 && spoke(v2) && spoke(v3) && cap >= 800 - 30 && closed,
            '186i the vote round: I vote after the bot before me in the ring has spoken (Mara: her bubble ends my wait at once), a human between us is skipped (the caller Hanna), the safety net (400 ms a seat, 2 seats) and the polls closing end the wait (got ' + JSON.stringify({ early, woke1, pv1, pv2, woke2, cap, closed }) + ')');
         // a new game while I wait: my turn in the old poll is over -- no vote, no abstain into the new game (L-95; the egress review)
@@ -16700,8 +16701,12 @@ async function connectWithRetry(client, tries = 30){
       // n) the floor is on at a pace people read (1.5 s and more: the client's 3.1 s, the bot's default 1.5 s), off at the suite's fast paces and at 0
       { const on = (paceMs, chatFloor, askSecs) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', paceMs, log: () => {} }, chatFloor === undefined ? {} : { chatFloor }, askSecs === undefined ? {} : { askSecs })); return IF6(u, '_floorOn') ? u._floorOn() : null; };
         const g = { p0: on(0), p300: on(300), p1500: on(1500), p3100: on(3100), dflt: (() => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', log: () => {} }); return IF6(u, '_floorOn') ? u._floorOn() : null; })(), forced: on(300, 1), forced0: on(0, 1), off: on(3100, 0), ask20: on(3100, undefined, 20), ask3: on(3100, undefined, 3) };
-        ok(g.p0 === false && g.p300 === false && g.p1500 === true && g.p3100 === true && g.dflt === true && g.forced === true && g.forced0 === false && g.off === false && g.ask20 === true && g.ask3 === false,
-           '186n the floor: on from a 1.5 s pace (the client\u2019s 3.1 s, the bot\u2019s default) with an ask clock of 10 s or more (the client\u2019s 20), off at the suite\u2019s fast paces, at 0 and on a 3 s ask clock; chatFloor 1 forces it at any pace above 0, 0 switches it off (got ' + JSON.stringify(g) + ')'); }
+        const tm = (mode, waitSecs, human) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', paceMs: 3100, log: () => {} }); u.seat = 1;
+          u.players = [{ seat: 1, name: 'N', bot: true }, { seat: 2, name: human ? 'Johan' : 'Mara', bot: !human }]; u.tempo = { mode, waitSecs, who: 'Johan', at: Date.now() }; return IF6(u, '_floorOn') ? u._floorOn() : null; };
+        Object.assign(g, { std3: tm('standard', 3, true), adapt: tm('adaptive', 8, true), turn: tm('turn', 3, true), stdBots: tm('standard', 3, false) });
+        ok(g.p0 === false && g.p300 === false && g.p1500 === true && g.p3100 === true && g.dflt === true && g.forced === true && g.forced0 === false && g.off === false && g.ask20 === true && g.ask3 === false
+           && g.std3 === false && g.adapt === false && g.turn === true && g.stdBots === true,
+           '186n the floor: on from a 1.5 s pace (the client\u2019s 3.1 s, the bot\u2019s default) with an ask clock of 10 s or more (the client\u2019s 20), off at the suite\u2019s fast paces, at 0 and on a 3 s ask clock, and under a clocked tempo at a table with a human (Standard 3 s, Adaptive; Turn-based and a bots-only table keep it); chatFloor 1 forces it at any pace above 0, 0 switches it off (got ' + JSON.stringify(g) + ')'); }
 
       // j) L-95: a new game's floor is free and no vote round is in flight
       { const u = mk6('Viktor', 2, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300 }); u._floorUntil = Date.now() + 5000; u._refHeard = new Set(['Hanna']);

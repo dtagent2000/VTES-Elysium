@@ -13,7 +13,8 @@ lines (O-51).
 ## Last gates (v0.6.240's release bytes, `e29c0185`, test `890067de`, cardfx `fe5f60bf`)
 25 Nov: the suite 2822/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.188), main's v1.6.0 247/0 · hotseat 12/0 · HB1
 11/0 · lint clean · main's client suite (v2.6.188) 430/1 (the guide's embed) · the arena smoke PASS 7/7 · the 240 against
-v0.6.239 DIVERGED 76 / SAME-PLAY 164, `ana-gates.py` PASS 6/6, with chatFloor 0 the same rows · the chat recording GATE PASS.
+v0.6.239 DIVERGED 76 / SAME-PLAY 164, `ana-gates.py` PASS 6/6, with chatFloor 0 the same rows · the chat recording GATE PASS
+(pass 1's bytes).
 The predictions (D-93) and the footprint: the CHANGELOG.
 
 ## Next

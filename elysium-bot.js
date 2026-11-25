@@ -1052,8 +1052,13 @@ class Bot {
      1.5 s or more -- the client's 3.1 s; the suite's fast paces and the arena's 0 run as before); o.chatFloor 0 switches the floor
      off, 1 forces it at any pace above 0 (at 0 _drain paces nothing; an ablation and the tests, not a decision knob). Only with an ask
      clock of 10 s or more (FLOOR_ASK_MIN_S; the client's 20, the bot's 25): a floor holds an answer up to 9 s and three ring steps, and
-     a bot-only window or a poll on a shorter clock would close before it (the egress review). The stamp is the moment the bubble reached me -- the moment it reached the screen, near enough. */
-  _floorOn(){ const p = this.o.paceMs | 0; return p > 0 && (this.o.chatFloor === 1 || (this.o.chatFloor !== 0 && p >= FLOOR_SAY_MS && (this.o.askSecs | 0) >= FLOOR_ASK_MIN_S)); }   // a table paced for people (the client's 3100 ms, the bot's default 1500); a test's fast pace (120-400 ms) is no table anyone reads, and o.chatFloor 1 forces it there
+     a bot-only window or a poll on a shorter clock would close before it (the egress review) -- the same for the tempo's clocks at a
+     table with a human (_tempoShortClock: Standard and Adaptive turn the floor off, Turn-based keeps it). The stamp is the moment the bubble reached me -- the moment it reached the screen, near enough. */
+  _floorOn(){ const p = this.o.paceMs | 0; return p > 0 && (this.o.chatFloor === 1 || (this.o.chatFloor !== 0 && p >= FLOOR_SAY_MS && (this.o.askSecs | 0) >= FLOOR_ASK_MIN_S && !this._tempoShortClock())); }
+  _tempoShortClock(){                // v0.6.240 (the egress review's pass 3): a clocked tempo (Standard, Adaptive: 0.8-8 s) times every wait on a human, and a window or poll shared with one closes before the floor lets the bots' answers out (a later voter lost, a bot's Block! too late) -- so no floor there; Turn-based (the client's start) and no tempo keep it
+    const m = this._tempoMode(); if(!(m === 'adaptive' || (m === 'standard' && ((this.tempo.waitSecs || 3) | 0) < FLOOR_ASK_MIN_S))) return false;
+    return (this.players || []).some(q => q && !q.bot && !q.vacant && !q.out);   // the tempo waits on humans only: a bots-only table keeps the floor
+  }   // a table paced for people (the client's 3100 ms, the bot's default 1500); a test's fast pace (120-400 ms) is no table anyone reads, and o.chatFloor 1 forces it there
   _isBubbleMsg(o){ return !!o && (o.t === 'chat' || o.t === 'say' || (o.t === 'log' && VERDICT_PULSE.test(stripTags(o.html).trim()))); }
   _floorSeen(m){
     if(!m || !m.who || m.who === this.o.name || !(this._seatOfName(m.who) > 0)) return;   // a spectator's chat pops no bubble (the client's chatBubble wants a seat)

@@ -16,8 +16,9 @@ guide). Your embed test compares the whole guide: re-embed it (your suite beside
   tier keeps `NAME (bot)` (notes: the DEBUG announcement your canary pins, the deck reads).
 - **A question to a bot carries no instruction tail**: `Colette hunts. Block?`; a human asked still gets `— say "block" or "no"
   (20s → no)`. A round's combat summary keeps `tell me if your side differs` only for a human or an unknown opponent.
-- **One speaker at a time**, on a table paced for people (the bot's `paceMs` 1.5 s or more with an ask clock of 10 s or more;
-  your client spawns its bots at 3.1 s and 20 s): a bot's bubble — a chat, a quick phrase, its verdict line — waits until
+- **One speaker at a time**, on a table paced for people (the bot's `paceMs` 1.5 s or more with an ask clock of 10 s or more,
+  and no Standard or Adaptive tempo while a human sits: their 0.8–8 s clocks would close before the bots' answers; your client
+  spawns its bots at 3.1 s and 20 s, Turn-based): a bot's bubble — a chat, a quick phrase, its verdict line — waits until
   another seat's bubble has left the screen. A chat holds the floor for your `sayBubbleMs` at multiplier 1.0 (the
   180-character clamp included), a quick phrase or a verdict pulse 1.5 s; on a tie the seats speak in ring order from the turn
   seat (250 ms a step). A bot's acts and a window's opening line wait for the floor too, so a question never shows after its own
