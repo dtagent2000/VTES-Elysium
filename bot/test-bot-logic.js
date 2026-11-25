@@ -16723,7 +16723,9 @@ async function connectWithRetry(client, tries = 30){
        Aire of Elation's 'with an additional +1 bleed if this vampire is Toreador' (fx.plusIf, _plusIf) -- a Toreador's [pre] is +2 and
        [PRE] +3, any other clan's +1 / +2; (f) 7.2: The Warrens' 'with an additional +1 intercept if this Nosferatu is titled' -- a titled
        Nosferatu's +3, an untitled one's +2, through both readers (_bestInterceptFor, _interceptStack), only on a directed action; a
-       condition the reader does not know fails closed.
+       condition the reader does not know fails closed. (g) the playtests' Life in the City: held while I have no ready vampire (game 1,
+       turn 1); (h) the playtests' second wake: a vampire woken for its block bounces in the same action with no second wake (game 1,
+       Eyes of Argus [AUS] then On the Qui Vive for one bleed) -- the record is the action's own.
        LAST LINE OF 187 is the closing brace below. */
     {
       console.log('\n[187] v0.6.241 -- the exactness round: the playtests’ table bugs and the base starters’ card gaps');
@@ -16823,6 +16825,36 @@ async function connectWithRetry(client, tries = 30){
         const got = { baron: ic(baron, bleedAtMe), agr: ic(agr, bleedAtMe), baronStack: u._interceptStack(baron, null, bleedAtMe).sum, agrStack: u._interceptStack(agr, null, bleedAtMe).sum, undirected: ic(baron, undirected) };
         ok(got.baron === 3 && got.agr === 2 && got.baronStack === 3 && got.agrStack === 2 && got.undirected === null,
            '187f The Warrens gives a titled Nosferatu +3 intercept and an untitled one +2, in the finder and the stack alike, and nothing on an undirected action (got ' + JSON.stringify(got) + '; v0.6.240 read +2 for both)');
+      }
+      // g) Life in the City is held with no ready vampire of mine: 'Add 1 blood to a ready vampire' needs its object (game 1, 61.8: turn 1)
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'G', persona: 'grinder', log: () => {} });
+        u.pool = 20; u.hand = ['Life in the City']; u.board = [];
+        const has = () => (u._bestMasterFor() || []).some(m => m.name === 'Life in the City');
+        const got = { none: has() };
+        u.board = [{ id: 'g1', name: 'Adrianne (G1)', kind: 'crypt', zone: 'torpor', locked: false, blood: 0 }]; got.torpor = has();
+        u.board.push({ id: 'g2', name: 'Barth (G3)', kind: 'crypt', zone: 'ready', locked: true, blood: 2 }); got.ready = has();
+        ok(got.none === false && got.torpor === false && got.ready === true,
+           '187g Life in the City waits for a ready vampire of mine: held with none in play and with one in torpor, offered once one is ready (locked or not) (got ' + JSON.stringify(got) + '; v0.6.240 played it on turn 1)');
+      }
+
+      // h) a vampire woken in this action needs no second wake (game 1, 2266.4 / 2296.1: Eyes of Argus [AUS], then On the Qui Vive, for one bleed)
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'H', persona: 'grinder', paceMs: 0, log: () => {} });
+        u.players = [{ seat: 1, name: 'Attacker' }, { seat: 2, name: 'H' }, { seat: 3, name: 'Prey' }]; u.seat = 2; u.caps.tally = true;
+        const at = { id: 'h1', name: 'Atiena (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 };   // an Anarch baron (Bait and Switch's player, section 32)
+        u.board = [at]; u.hand = ['On the Qui Vive'];
+        const mkP = () => ({ who: 'Attacker', amount: 2, kind: 'bleed', actingVampName: 'Ghoul', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() });
+        const p = mkP(); u.pending = p;
+        await u._commitBlock(p, { why: 'test (187h)' }); if(u._vWait) u._vwEnd(null);
+        const got = { woke: !u.hand.includes('On the Qui Vive') && !!(p.woken && p.woken.has('h1')) };
+        u.pending = p; p.contested = false; p.declined = true;   // the block failed; the same bleed goes on
+        u.hand = ["Wake with Evening's Freshness", 'Bait and Switch'];
+        const b = u._bestBounceFor(u.board, p.reacted, p); got.needsWake = b ? b.needsWake : 'none';
+        if(b) await u._commitBounce(p, b);
+        got.wakeKept = u.hand.includes("Wake with Evening's Freshness"); got.bounced = !u.hand.includes('Bait and Switch');
+        u.hand = ['Bait and Switch']; const bNo = u._bestBounceFor(u.board, new Set(), p); got.noWakeCard = !!(bNo && bNo.vamp === at && !bNo.needsWake);
+        u.hand = ["Wake with Evening's Freshness", 'Bait and Switch']; const bNew = u._bestBounceFor(u.board, new Set(), mkP()); got.newAction = bNew ? bNew.needsWake : 'none';
+        ok(got.woke && got.needsWake === false && got.wakeKept && got.bounced && got.noWakeCard && got.newAction === true,
+           '187h a vampire woken for its block bounces in the same action with no second wake (the wake card kept, or none needed in hand); a new action needs a wake again (got ' + JSON.stringify(got) + '; v0.6.240 spent a second wake)');
       }
     }
 

@@ -3832,10 +3832,10 @@ class Bot {
       for(const mo of (h.e.modes || [])){
         if(!mo.fx || !mo.fx.votesBonus) continue;
         const needT = mo.req && mo.req.title;
-        const pool = this.board.filter(v => { if(!v || v.kind !== 'crypt' || v.zone !== 'ready' || (v.locked && !this._wakeCardFor(v))) return false;   // v0.6.67 (the combo): the vote window gets the same widening. v0.6.235: the wake THIS reactor can play (_districtReact spends it)
+        const pool = this.board.filter(v => { if(!v || v.kind !== 'crypt' || v.zone !== 'ready' || (!this._awake(v, this.pending) && !this._wakeCardFor(v))) return false;   // v0.6.67 (the combo): the vote window gets the same widening. v0.6.235: the wake THIS reactor can play (_districtReact spends it)
           if(!needT) return true;
           return String(this._titleOf(v).title || '').toLowerCase() === String(needT).toLowerCase(); });   // v0.6.217: _titleOf (a title card counts)
-        pool.sort((a2, b2) => ((a2.locked ? 1 : 0) - (b2.locked ? 1 : 0)));
+        pool.sort((a2, b2) => ((this._awake(a2, this.pending) ? 0 : 1) - (this._awake(b2, this.pending) ? 0 : 1)));
         if(!pool.length) continue;
         return { idx, name: h.name, n: mo.fx.votesBonus, vamp: pool[0] };
       }
@@ -3900,7 +3900,7 @@ class Bot {
   _districtReact(m){                 // P0: a react-type votesBonus card (Protected District) against the referendum -- the v0.6.67 wake combo; true when played. v0.6.234: synchronous, a promise only behind a wake's beat
     if(this._refT && this._refVoteDir(this._refT.deltas).dir !== 'against') return false;   // v0.6.122: District's votes are AGAINST votes -- never spent on a referendum I want or do not care about
     const vr = this._bestVotesReactFor(); if(!vr) return false;
-    const needsWakeV = !!vr.vamp.locked;                 // v0.6.67 (the combo): re-derived, the bounce precedent
+    const needsWakeV = !this._awake(vr.vamp, this.pending);   // v0.6.241: woken this action already = no second wake. v0.6.67 (the combo): re-derived, the bounce precedent
     const wkV = needsWakeV ? this._wakeCardFor(vr.vamp) : null;   // v0.6.235: the wake this vampire can play (was the vampire-blind _wakeCard)
     if(needsWakeV && !wkV) return false;
     if(wkV){
@@ -3908,6 +3908,7 @@ class Bot {
       this._toAsh(wkV.name);
       this.fxClone({ name: wkV.name, kind: 'lib' }, 'may react as though unlocked', { actor: vr.vamp });
       this.send({ t: 'log', html: '<b>' + esc(vr.vamp.name) + '</b> plays <b>' + esc(wkV.name) + '</b>: may react as though unlocked.' });
+      this._markWoken(vr.vamp, this.pending);   // v0.6.241
       this._emitPlay(wkV.name, 'wake', vr.vamp.name);
       return this._pace().then(() => (this.out || this._pollsClosed()) ? true : this._districtPlay(vr, m));   // the polls closed under the beat: the wake is spent
     }
@@ -4169,8 +4170,8 @@ class Bot {
     for(let idx = 0; idx < this.hand.length; idx++){
       const h = this.fxLookup(this.hand[idx]); if(!h || h.kind !== 'lib' || !((h.e.t) || []).includes('react') || !(h.e.modes || []).some(x => x && x.fx && x.fx.voteCut)) continue;   // an Absolute Tyranny-class card only (District-class cards keep their own branch)
       const cost = (h.e.cost && h.e.cost.blood) | 0;
-      const wakeOf = v => { if(!v.locked) return null; const w = this._wakeCardFor(v); return (w && w.name !== h.name && (v.blood | 0) >= cost + ((w.cost && w.cost.blood) | 0)) ? w : null; };   // a locked reactor behind a wake it can play (District's v0.6.67 combo)
-      const vs = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && (v.blood | 0) >= cost && this._entryReqOk(h.e, v) && (!v.locked || wakeOf(v))).sort((x, y) => (x.locked ? 1 : 0) - (y.locked ? 1 : 0));   // the unlocked first: no wake spent
+      const wakeOf = v => { if(this._awake(v, this.pending)) return null; const w = this._wakeCardFor(v); return (w && w.name !== h.name && (v.blood | 0) >= cost + ((w.cost && w.cost.blood) | 0)) ? w : null; };   // a locked reactor behind a wake it can play (District's v0.6.67 combo)
+      const vs = this.board.filter(v => v && v.kind === 'crypt' && v.zone === 'ready' && (v.blood | 0) >= cost && this._entryReqOk(h.e, v) && (this._awake(v, this.pending) || wakeOf(v))).sort((x, y) => (this._awake(x, this.pending) ? 0 : 1) - (this._awake(y, this.pending) ? 0 : 1));   // the unlocked (or woken this action, v0.6.241) first: no wake spent
       for(const mo of (h.e.modes || [])){ if(!mo.fx) continue;
         const vv = vs.find(v => this._modeUsableBy(mo, v)); if(!vv) continue;
         row.reactor = true;
@@ -4196,6 +4197,7 @@ class Bot {
       if(tr.wake.cost && tr.wake.cost.blood) tr.vamp.blood = Math.max(0, (tr.vamp.blood | 0) - tr.wake.cost.blood);
       this.fxClone({ name: tr.wake.name, kind: 'lib' }, 'may react as though unlocked', { actor: tr.vamp });
       this.send({ t: 'log', html: '<b>' + esc(tr.vamp.name) + '</b> plays <b>' + esc(tr.wake.name) + '</b>: may react as though unlocked.' });
+      this._markWoken(tr.vamp, this.pending);   // v0.6.241
       this._emitPlay(tr.wake.name, 'wake', tr.vamp.name);
       return this._pace().then(() => (this.out || this._pollsClosed()) ? true : this._tyrannyReactPlay(tr, m));   // the polls closed under the beat: the wake is spent, the card stays
     }
@@ -4861,12 +4863,12 @@ class Bot {
            Signal's [ANI] 'reduce 3'), the card's clan / sect / capacity and title, its condition -- and pay the card's blood (and a wake's,
            the wake it can itself play: _wakeCardFor, as the block route; v0.6.67's blind _wakeCard woke anyone). */
         const pool = (vamps || []).filter(v => { if(!v) return false;
-          const wk = v.locked ? this._wakeCardFor(v) : null; if(v.locked && !wk) return false;
+          const up = this._awake(v, p), wk = up ? null : this._wakeCardFor(v); if(!up && !wk) return false;   // v0.6.241: a vampire woken this action reacts with no second wake
           if(!this._modeUsableBy(mo, v) || !this._entryReqOk(h.e, v) || !this._titleOk(h, v) || !this._dirOk(h.e, mo, p)) return false;
           if((v.blood | 0) < cost + ((wk && wk.cost && wk.cost.blood) | 0)) return false;
           if(!needT) return true;
           return String(this._titleOf(v).title || '').toLowerCase() === String(needT).toLowerCase(); });   // v0.6.217: _titleOf (a title card counts)
-        pool.sort((a2, b2) => ((a2.locked ? 1 : 0) - (b2.locked ? 1 : 0)));   // unlocked PREFERRED -- never spend the wake needlessly
+        pool.sort((a2, b2) => ((this._awake(a2, p) ? 0 : 1) - (this._awake(b2, p) ? 0 : 1)));   // unlocked (or woken this action, v0.6.241) PREFERRED -- never spend the wake needlessly
         if(!pool.length) continue;
         return { idx, name: h.name, n: mo.fx.reduce, vamp: pool[0], cost };
       }
@@ -4874,7 +4876,7 @@ class Bot {
     return null;
   }
   async _commitReduce(p, rd){        // N4c: the reducer IS the payer -- p.amount drops bot-locally, the log line is table-truth; then Pass closes my window. v0.6.67: async for the wake pacing beat
-    const needsWake = !!rd.vamp.locked;                  // re-derived from CURRENT state (the bounce precedent) -- the vampire may have (un)locked under the think delay
+    const needsWake = !this._awake(rd.vamp, p);          // v0.6.241: woken this action already = no second wake (_awake). Re-derived from CURRENT state (the bounce precedent) -- the vampire may have (un)locked under the think delay
     const wk = needsWake ? this._wakeCardFor(rd.vamp) : null;   // v0.6.233: the wake THIS vampire can play
     const wkCost = (wk && wk.cost && wk.cost.blood) || 0;
     if((needsWake && !wk) || (rd.vamp.blood | 0) < wkCost + (rd.cost | 0)){
@@ -4886,6 +4888,7 @@ class Bot {
       if(wkCost) rd.vamp.blood = Math.max(0, (rd.vamp.blood | 0) - wkCost);
       this.fxClone({ name: wk.name, kind: 'lib' }, 'may react as though unlocked', { actor: rd.vamp });
       this.send({ t: 'log', html: '<b>' + esc(rd.vamp.name) + '</b> plays <b>' + esc(wk.name) + '</b>: may react as though unlocked.' });
+      this._markWoken(rd.vamp, p);   // v0.6.241
       this._emitPlay(wk.name, 'wake', rd.vamp.name);
       if(p.reacted) p.reacted.add(FX_NORM(wk.name));   // v0.6.233: the wake is this action's card too
       await this._pace();
@@ -6057,6 +6060,10 @@ class Bot {
     }
     return null;
   }
+  _awake(v, p){                      // v0.6.241 (the exactness round; Claude's playtest game 1, 2296.1: Ayelech played On the Qui Vive after Eyes of Argus [AUS] had woken her for the same action): a vampire is up for a reaction or a block when it is unlocked, or when a wake was played for it in THIS action -- 'they ignore the requirement to be unlocked for playing reaction cards and attempting to block until the end of the action' (On the Qui Vive, Eyes of Argus [AUS], Wake with Evening's Freshness; KRCG's text). The record is the action's own pending (p.woken): a new action, a new record -- at worst a wake spent twice, never a locked vampire reacting without one
+    return !!v && (!v.locked || !!(p && p.woken && p.woken.has(v.id)));
+  }
+  _markWoken(v, p){ if(v && p) (p.woken || (p.woken = new Set())).add(v.id); }   // v0.6.241: the wake just played, on the action's record (_awake)
   _wakeBlockers(p){                  // v0.6.120 (THE WAKE BLOCK): LOCKED bodies that could block right now behind a wake they can play -- the bare block's second bench. v0.6.228 (round F): or behind an unlock reaction the route takes first (_lockedRouteBodies)
     const route = new Set(this._lockedRouteBodies(p).map(r => r.v.id));
     return this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && c.locked && !(p && p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp) && !this._cryptCannotBlock(c, p && p.actingVampName, p) && (!!this._wakeCardFor(c) || route.has(c.id)));
@@ -6139,7 +6146,7 @@ class Bot {
       if(lb && (!best || lb.s >= best.s)) best = lb; }
     return best;
   }
-  _bestBounceFor(vamps, played){     // Deflection & co: find a usable bounce card (redirect target is decided by the caller). v1.4.3: also returns `lock` from the mode (true for [dom]-style "Lock this reacting vampire", absent/undefined for [DOM]-style "do not lock") so _commitBounce can decide whether to lock. steg 6 (16 July, rulebook glossary): a WAKE in hand widens the candidate pool to LOCKED vampires too -- "a vampire that wakes during an action can ... play reaction cards as though unlocked for the duration of the action". An UNLOCKED candidate is always preferred (never spend the wake needlessly); `needsWake` tells _commitBounce to play the wake first.
+  _bestBounceFor(vamps, played, p){  // v0.6.241: p, the action -- a vampire woken in it already is up (_awake); the planning callers pass none. Deflection & co: find a usable bounce card (redirect target is decided by the caller). v1.4.3: also returns `lock` from the mode (true for [dom]-style "Lock this reacting vampire", absent/undefined for [DOM]-style "do not lock") so _commitBounce can decide whether to lock. steg 6 (16 July, rulebook glossary): a WAKE in hand widens the candidate pool to LOCKED vampires too -- "a vampire that wakes during an action can ... play reaction cards as though unlocked for the duration of the action". An UNLOCKED candidate is always preferred (never spend the wake needlessly); `needsWake` tells _commitBounce to play the wake first.
     let best = null;
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).some(t => t === 'react' || t === 'mod')) return;   // v0.6.13: reaction-family type filter (Contingency Planning, a MASTER, carries fx.bounce)
@@ -6147,8 +6154,8 @@ class Bot {
       (h.e.modes || []).forEach(mo => {
         if(best || !(mo.fx && mo.fx.bounce)) return;
         const usable = vv => this._modeUsableBy(mo, vv) && (vv.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0);
-        const vUn = vamps.find(vv => !vv.locked && usable(vv));
-        const v = vUn || vamps.find(vv => vv.locked && usable(vv) && !!this._wakeCardFor(vv));   // v0.6.235 (the finished decks' round): the wake THIS reactor can play (_wakeCardFor: its discipline, its blood, once between its unlock phases) -- _commitBounce spends that one; the blind _wakeCard() picked a body it then could not wake, and re-asked the window for the same pick
+        const vUn = vamps.find(vv => this._awake(vv, p) && usable(vv));   // v0.6.241: unlocked, or woken this action
+        const v = vUn || vamps.find(vv => !this._awake(vv, p) && usable(vv) && !!this._wakeCardFor(vv));   // v0.6.235 (the finished decks' round): the wake THIS reactor can play (_wakeCardFor: its discipline, its blood, once between its unlock phases) -- _commitBounce spends that one; the blind _wakeCard() picked a body it then could not wake, and re-asked the window for the same pick
         if(v) best = { idx, name: h.name, cost: h.e.cost || null, vamp: v, lock: mo.lock, needsWake: !vUn };   // v1.4.3: mo.lock carried through (true = lock, undefined/absent = don't lock; mirrors cardfx's own three-state)
       });
     });
@@ -6935,6 +6942,7 @@ class Bot {
       if((this.pool | 0) - cost < Math.max(1, this._poolFloorEff())) return true;   // the influence floor: 3 pool for 3 blood is a transfer by another road, and the transfers stop at the floor too
       return !this._uncBloodTarget(h.name);
     }
+    if(hd === 'life-in-the-city') return !this.board.some(c => c && c.kind === 'crypt' && c.zone === 'ready');   // v0.6.241 (the exactness round; Claude's playtest game 1, 61.8: Mara played it on turn 1, no vampire in play, the card lost): 'Add 1 blood to a ready vampire' needs its object to be played (the advanced rules 3.1.3, LSJ 20041026: no legal object, no play); the handler picks a ready vampire of mine, so with none it is held -- a full one stays a legal choice (the handler logs the blood it cannot add)
     if(hd === 'family-gathering'){ const mo = (h.e.modes || []).find(m => m.fx && m.fx.drawCrypt); return !mo || !(this.cryptN > 0) || !this._cryptAllClan(mo.fx.drawCryptClan); }   // fx.drawCrypt / fx.drawCryptClan   // [RTR 20000501]: not with an empty crypt; and only when the revealed card is a Hecata whatever it is
     return false;
   }
@@ -8790,7 +8798,7 @@ class Bot {
        the same single other seat), there is no legal destination and bounce
        must not even be offered as an option.                               */
     const bounceLegal = !!actorSeat && this.preySeat() !== actorSeat && p.kind !== 'pool' && p.kind !== 'undirected' && p.kind !== 'rush' && p.kind !== 'asked';   // v0.6.110 (R2): an action I only know as "costs me N pool" is not a bleed -- Deflection has nothing to redirect   // v0.6.107 (B1): only a BLEED can be redirected   // fas B: pool damage is NOT a bleed -- Deflection & co are, per their own text, "only usable by the Methuselah being bled"; no bounce window exists against Inside Dirt
-    let bounce = bounceLegal ? this._bestBounceFor(vamps, p.reacted) : null;
+    let bounce = bounceLegal ? this._bestBounceFor(vamps, p.reacted, p) : null;
     if(bounce){                        // v0.6.79 (match improvement 1): save the LAST bounce for lethal hits -- amount/pool danger gate
       const bounceN = this.hand.filter(n2 => { const h2 = this.fxLookup(n2); return h2 && h2.kind === 'lib' && this._cats(h2.e).includes('bounce'); }).length;
       const danger = (p.amount | 0) / Math.max(1, this.pool);
@@ -8908,7 +8916,7 @@ class Bot {
     return true;
   }
   _lateBounceNow(p){                   // no more modifiers: the bounce on the total -- or, with no bounce left, Pass
-    const b2 = this._bestBounceFor(this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt'), p.reacted);
+    const b2 = this._bestBounceFor(this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt'), p.reacted, p);
     if(b2){ this._commitBounce(p, b2).catch(e => this.o.log('late bounce error:', e.message)); return; }
     this.say('Pass'); this._lateSettle(p);
   }
@@ -9014,7 +9022,7 @@ class Bot {
   }
   async _commitBounce(p, bounce){          // Deflection & co (rulebook, source-verified): redirects to ANY Methuselah other than the acting minion's controller -- v1 defaults to MY OWN prey, the conventional choice (pass the bleed downstream, same as a real player usually does). v1.4.3 (14 July): the log line is now a SPEC-CORRECT L12.bleed re-announce with a Target: suffix, not a freeform prose line -- fixed because (a) the diagnostic run proved the old freeform line didn't match any L12 pattern at all, so the NEW target's pending never armed, and (b) the real human client uses exactly this mechanism (pool-targeting + targetSuffix() on the next log line) for the same operation, confirmed from klientkoden. Johan, 14 July: "man sätter target på den man vill Bounca till och spelar kortet, som då genom klonamination och logg visar vem som är target." steg 6 (16 July): now async -- a LOCKED reactor spends a wake FIRST (rulebook glossary: a woken vampire "can ... play reaction cards as though unlocked for the duration of the action"; it STAYS locked -- wake ≠ unlock), mirroring _commitBlock's own wake path, with a pace beat between the two plays.
     const cost = (bounce.cost && bounce.cost.blood) || 0;
-    const needsWake = !!bounce.vamp.locked;              // re-derived from CURRENT state, not the scored-time flag -- the vampire may have (un)locked under the think delay
+    const needsWake = !this._awake(bounce.vamp, p);      // v0.6.241: woken this action already = no second wake (_awake). Re-derived from CURRENT state, not the scored-time flag -- the vampire may have (un)locked under the think delay
     const wk = needsWake ? this._wakeCardFor(bounce.vamp) : null;   // v0.6.235: the wake this vampire can play (was the vampire-blind _wakeCard)
     const wkCost = (wk && wk.cost && wk.cost.blood) || 0;
     if(this.hand.indexOf(bounce.name) < 0 || (needsWake && !wk) || (bounce.vamp.blood | 0) < cost + wkCost){
@@ -9028,6 +9036,7 @@ class Bot {
       if(wkCost) bounce.vamp.blood = Math.max(0, (bounce.vamp.blood | 0) - wkCost);
       this.fxClone({ name: wk.name, kind: 'lib' }, 'may react as though unlocked', { actor: bounce.vamp });
       this.send({ t: 'log', html: '<b>' + esc(bounce.vamp.name) + '</b> plays <b>' + esc(wk.name) + '</b>: may react as though unlocked.' });
+      this._markWoken(bounce.vamp, p);   // v0.6.241
       await this._pace();                                // a beat between the wake reveal and the bounce itself, mirroring _commitBlock's wake->intercept pacing
     }
     const j = this.hand.indexOf(bounce.name);            // v0.4.2: the idx was computed BEFORE the think delay -- re-anchor by name; the hand may have shifted under us (and steg 6: the wake splice just above shifts it AGAIN)
@@ -9152,6 +9161,7 @@ class Bot {
         this.fxClone({ name: wk.name, kind: 'lib' }, 'may block as though unlocked', { actor: sleeper });
         this._emitPlay(wk.name, 'wake', sleeper.name);   // v0.6.120: the block route's wake never emitted a play -- the 15-match read counted ONE wake because only the vote/reduce routes reported theirs
         this.send({ t: 'log', html: '<b>' + esc(sleeper.name) + '</b> plays <b>' + esc(wk.name) + '</b>: may block as though unlocked.' });   // steg 6 (16 July): 'untapped' -> 'unlocked', the rulebook's own rename (tap/untap died with the Deckmaster era)
+        this._markWoken(sleeper, p);   // v0.6.241: woken for the rest of this action -- a bounce or a reduce after a failed block needs no second wake
         blocker = sleeper;
       }
       else if(plan.kind === 'stray'){ if(p._cancelComing) return; if(this._strayUnlockBurn(plan.vamp)) blocker = plan.vamp; }   // v0.6.233: no ally burned for an attempt a declined True Love's Face counter ends
