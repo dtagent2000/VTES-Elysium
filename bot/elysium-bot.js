@@ -970,7 +970,8 @@ class Bot {
     try{
       obj = ent = this._sq.shift();
       const ht = (ent && this._holdTags) ? this._holdTags.get(ent) : undefined;   // v0.6.204 (play-test 14 Oct, F4): a hold / resume line carries the hold state it describes
-      if(ht !== undefined && this._holdLineStale(ht)){ this._tok += 1; this.o.log('hold line dropped (the table moved on): ' + ent.msg); return; }   // a resume heard during the NEXT hold, a hold after its release, a resume of a hold the table never saw -- dropped; the finally still re-enters and starts any wait armed on it
+      if(ht !== undefined && this._holdLineStale(ht)){ this._tok += 1; this.o.log('hold line dropped (the table moved on): ' + ent.msg); return; }
+      if(this.o.chatFloor !== 0 && this._thinkTags && this._thinkTags.has(ent) && this._sq.some(o => o && o.t === 'say' && (o.i === 1 || o.i === 2 || o.i === 3 || o.i === 7))){ this._tok += 1; this.o.log('thinking line dropped (my answer goes out with it)'); return; }   // v0.6.240 (D-137): the floor held my 'Hold on...' until my answer was queued behind it -- 'wait for me' 200 ms before the answer says nothing   // a resume heard during the NEXT hold, a hold after its release, a resume of a hold the table never saw -- dropped; the finally still re-enters and starts any wait armed on it
       if(obj && obj.__board){
         this._pushQ = false; obj = { t: 'board', pub: this.buildPub() };
         /* v0.6.112 (R4): the open-hand grant re-syncs HERE and nowhere else.
@@ -1006,7 +1007,7 @@ class Bot {
        tier keeps 'NAME (bot)' (note(): L12.debugOn / debugOff and _evClassify read it there). No chat parser read the prefix:
        _onChat's last one was retired in v0.6.106, and _evClassify strips a speaker's prefix of either shape. */
     const out = String(msg).replace(/^Trainbot:\s*/, '').replace(/Trainbot/g, this.o.name);
-    const obj = { t: 'chat', msg: out.slice(0, 300) };
+    const obj = this._lastChatObj = { t: 'chat', msg: out.slice(0, 300) };   // v0.6.240: _qStamp reads the question it just sent
     if(opt && opt.hold !== undefined) this._sendHold(obj, !!opt.hold); else this.send(obj);   // v0.6.204 (F4): { hold: true | false } = a hold / resume line
     if(this._wdT) this._watchdogArm();
   }   // v0.6.108: persona name; re-arm watchdog on visible output
@@ -1064,6 +1065,10 @@ class Bot {
     const r = this._floorRank(), base = Math.max(this._floorUntil || 0, r ? (this._lastTableAt || 0) : 0);
     return base ? Math.max(0, base + r * FLOOR_TIE_MS - (now || Date.now())) : 0;
   }
+  async _floorClear(){               // waits until no other seat holds the floor (and my ring step) -- before an act or a window's opening line; paced tables only, never with o.chatFloor 0
+    if(!this.o.paceMs || this.o.chatFloor === 0) return;
+    for(let k = 0; k < 12; k++){ const w = this._floorWaitMs(Date.now()); if(w <= 0) return; await sleep(w); }
+  }
   _bubblesOut(){                     // resolves when the last bubble I have queued is on the wire (at once when none is; never later than the longest floor)
     let last = null; for(let i = this._sq.length - 1; i >= 0 && !last; i--) if(this._isBubbleMsg(this._sq[i])) last = this._sq[i];
     if(!last || !this.ws) return Promise.resolve();
@@ -1115,6 +1120,7 @@ class Bot {
     if(this.o.chatFloor !== 0 && this._sq.some(o => this._isBubbleMsg(o))) await this._bubblesOut();   // v0.6.240 (D-137): a bubble of mine that the floor still holds goes out first and the late hold below waits it out -- else my next act rode out 200 ms behind it (Johan's v0.6.100 rule)
     const lateHold = this._lastChatAt ? (this._lastChatAt + cp - Date.now()) : 0;   // v0.6.101 (Johan's simultaneous-vampires report): a bubble that DRAINED while we slept -- the pre-sleep chatHold read a stale stamp, so a raise's chat (queued, gap-held ~5 s) let the NEXT raise fire mid-bubble and the __board dedup swallowed its push into one two-vampire diff. The post-sleep re-check waits the late bubble out; boards drain between acts, diffs separate, cards fly one at a time.
     if(lateHold > 0) await sleep(lateHold);
+    await this._floorClear();   // v0.6.240 (D-137): my act waits until no other seat holds the floor -- an action's line and its question go out together, never after the answer to them
     await this._holdGate();   // v0.6.101 amend (the sweep): the sleeps are ~5 s now -- a Hold on... arriving MID-sleep must still bite BEFORE the act fires, so the gate re-checks at the tail too (top + tail = airtight)
     this._lastActAt = Date.now();
   }
@@ -6648,6 +6654,7 @@ class Bot {
      combat line for the step, a quick phrase (No / Pass / Nothing / Go on / Done ...), a human moving `ph` past the step, or the clock
      (restarted by the human's activity, like stealth / votes). Bot-vs-bot and combatPhases 0 skip it entirely.                    */
   _phaseOppPlayer(){ const c = this._combatOpp(); if(!c) return null; const p = (this.players || [])[c.seat - 1]; return p && !p.bot ? p.name : null; }
+  _combatNoteToBot(){ if(!this.o.combatNotes) return false; const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return !!(p && p.bot); }   // EXPERIMENT (not shipped without Johan's ruling): a bot opponent's combat line on the log tier
   _combatTell(tail){ const c = this._combatOpp(), p = c && (this.players || [])[c.seat - 1]; return p && p.bot ? '' : tail; }   // v0.6.240 (the chat round, D-137): a combat line's 'tell me if your side differs' is the human's instruction -- none to a bot opponent (it reads the line itself, _parseCombatNarration; the tail was never part of the shape); an unknown opponent keeps it
   _phasesOn(){ return this.o.combatPhases !== 0 && this._inCombat && !!this._phaseOppPlayer(); }
   _phaseAsk(step){ return this._phaseStep(step, 'ask', false); }         // before my play in the step (human acting: ask first)
@@ -8956,6 +8963,7 @@ class Bot {
   }
   async _bounceGate(ans){                  // my next step after a human's bounce that came between windows: the re-announce and the new target's window, in one tick. ans = the answer so far (returned when nothing is pending)
     for(let i = 0; i < 4; i++){            // the new target may bounce on in that window (a human's line lands there at once); four is more than a table plays
+      if(this._actingVamp && this._actingVamp.pendingBounce) await this._floorClear();   // v0.6.240 (D-137): the re-announce and its question with a free floor (state re-read below)
       const av = this._actingVamp, pb = av && av.pendingBounce;
       if(!pb || this.out || (ans && ans.what === 'block')) break;
       av.pendingBounce = null;
@@ -9538,7 +9546,7 @@ class Bot {
           this._noteOppCombat(this._combatOppName, r.taken + r.aggr, true);
           if(this._rnd) this._rnd.takenX = (this._rnd.takenX | 0) + r.taken + r.aggr;
           const ln = this._takenLine(myVamp, r, mine ? mine.line : null);
-          if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + ln); else this.chat('Trainbot combat \u2014 ' + ln);
+          if(this._phasesOn() || this._combatNoteToBot()) this.note('Trainbot combat \u2014 ' + ln); else this.chat('Trainbot combat \u2014 ' + ln);
           this.push();
         }
         if(hs && mine && (mine.dealt + mine.aggr) > 0){ const e = await this._awaitOppRoundEnd(k0, this._hsWaitMs()); if(ct !== this._combatTok) return; if(!e) this._hsMiss('round line'); else x.oppDownX = e.down; }
@@ -10329,7 +10337,7 @@ class Bot {
       if(ce.unlock) myVamp.locked = false;
       this._rnd.strike = ce.name; this._rnd.dealt = 0; this._rnd.taken = 0; this._stealSettle(myVamp, 'combat ends');   // v0.6.196: combat ends first -- a parked steal never lands
       if(!(hs && !hsFirst)){ const o2 = await this._phaseAfter(3, true).then(() => stale() ? null : this._awaitOppStrike(this._strikeWaitHs(continued, hs))); if(stale()) return gone(); if(o2 && o2.vamp) this._learnOpp(o2.vamp); }   // consume their strike line (the dodge branch's reason): keeps the one-slot stash clean for the NEXT combat. v0.6.203: not when I am the acting bot -- the answering bot sees my combat ends first and strikes no more (an older bot's late line is dropped at the next announce, _clearCombatStashes)
-      { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' plays ' + ce.name + ': combat ends, no damage either way' + (ce.unlock ? '; ' + myVamp.name + ' unlocks' : '') + '.'; if(this._phasesOn()) this.note(ln); else this.chat(ln + this._combatTell(' Tell me if your side differs.')); }   // v0.6.204 (lever c)
+      { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' plays ' + ce.name + ': combat ends, no damage either way' + (ce.unlock ? '; ' + myVamp.name + ' unlocks' : '') + '.'; if(this._phasesOn() || this._combatNoteToBot()) this.note(ln); else this.chat(ln + this._combatTell(' Tell me if your side differs.')); }   // v0.6.204 (lever c)
       this.push();
       return { ended: true };
     }
@@ -10395,14 +10403,14 @@ class Bot {
         }
         if(this._xBeforeNeed(myVamp)) await this._xBeforeLine(myVamp);   // v0.6.213: the acting bot's additional strike goes before its round line
         if(stale()) return gone();
-        if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + line2); else this.chat('Trainbot combat \u2014 ' + line2 + this._combatTell(' Tell me if your side differs.'));   // v0.6.204 (lever c)
+        if(this._phasesOn() || this._combatNoteToBot()) this.note('Trainbot combat \u2014 ' + line2); else this.chat('Trainbot combat \u2014 ' + line2 + this._combatTell(' Tell me if your side differs.'));   // v0.6.204 (lever c)
         this.push();
         if(this._xAfterNeed(myVamp)) await this._xAfterLine(myVamp);   // v0.6.213: the additional strikes
         return;
       }
       if(this._xBeforeNeed(myVamp)) await this._xBeforeLine(myVamp);   // v0.6.213: the acting bot's additional strike goes before its round line
       if(stale()) return gone();
-      { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' dodges: no damage dealt or taken this round.'; if(this._phasesOn()) this.note(ln); else this.chat(ln + this._combatTell(' Tell me if your side differs.')); }   // v0.6.204 (lever c)
+      { const ln = 'Trainbot combat \u2014 ' + myVamp.name + ' dodges: no damage dealt or taken this round.'; if(this._phasesOn() || this._combatNoteToBot()) this.note(ln); else this.chat(ln + this._combatTell(' Tell me if your side differs.')); }   // v0.6.204 (lever c)
       this.push();
       if(this._xAfterNeed(myVamp)) await this._xAfterLine(myVamp);   // v0.6.213: the additional strikes (Arms of Ahriman [OBL]'s own among them)
       return;
@@ -10540,7 +10548,7 @@ class Bot {
     const line = this._takenLine(myVamp, _r1, strikeLine);
     if(this._xBeforeNeed(myVamp)) await this._xBeforeLine(myVamp);   // v0.6.213 (V5 wave 1): the acting bot's additional strike goes BEFORE its round line -- the answering bot reads it from that line on
     if(stale()) return gone();
-    if(this._phasesOn()) this.note('Trainbot combat \u2014 ' + line); else this.chat('Trainbot combat \u2014 ' + line + this._combatTell(' One round \u2014 tell me if your side\u2019s damage differs.'));   // v0.6.204 (play-test 14 Oct F12, lever c): a phased combat against a human walked every step, so its summary is a report on the log tier -- as a chat it cost the next question a 5 s bubble (F3)   // v0.6.167 (main: carried over from the last reply) -- a phased combat against a human already walked every step
+    if(this._phasesOn() || this._combatNoteToBot()) this.note('Trainbot combat \u2014 ' + line); else this.chat('Trainbot combat \u2014 ' + line + this._combatTell(' One round \u2014 tell me if your side\u2019s damage differs.'));   // v0.6.204 (play-test 14 Oct F12, lever c): a phased combat against a human walked every step, so its summary is a report on the log tier -- as a chat it cost the next question a 5 s bubble (F3)   // v0.6.167 (main: carried over from the last reply) -- a phased combat against a human already walked every step
     this.push();
     if(this._xAfterNeed(myVamp)) await this._xAfterLine(myVamp);   // v0.6.213: the answering bot's decision, the answers, the additional pairs
     /* v0.6.21 (Johan's combat GO, Taste of Vitae -- completing the half-finished
@@ -12372,7 +12380,7 @@ class Bot {
     if(this._revPick && who === this._revPick.who){ const body0 = txt.replace(new RegExp('^\\s*@?' + this.o.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[,:!]?\\s*', 'i'), '');   // v0.6.205 (R4, F21): the actor of a Revelations [aus] at me names the card in chat -- bare, or '@Name discard X' (the bleed grammar's address)
       const dm0 = body0.match(/^\s*(?:@?trainbot[:,]?\s*)?discard\s+(.+?)\s*[.!]*\s*$/i);
       if(dm0){ const nm0 = this._revCardByName(dm0[1].replace(/^"(.*)"$/, '$1')); if(nm0) return this._revDiscard(nm0); this.note('Trainbot: I do not hold ' + dm0[1] + ' \u2014 name a card I revealed.'); return; } }
-    if(this.pending && this.pending._thinkQ && who === this.pending.who){ this.pending._thinkQ = false; this.say('Hold on\u2026'); }   // v0.6.204 (F6): the bot actor's question is on the table -- now my thinking
+    if(this.pending && this.pending._thinkQ && who === this.pending.who){ this.pending._thinkQ = false; this.say('Hold on\u2026'); const e = this._sq[this._sq.length - 1]; if(e && e.t === 'say' && e.i === 0) (this._thinkTags || (this._thinkTags = new WeakSet())).add(e); }   // v0.6.240: a thinking line the floor holds is tagged (_drain drops it when my answer is queued behind it)   // v0.6.204 (F6): the bot actor's question is on the table -- now my thinking
     /* v0.6.110 (R2, #11): typed answers to MY pool question, and the typed form
        of the prompt itself -- the quick phrases are the fast path, chat is the
        fallback the feedback explicitly asked for ("snabbfrasa eller chattskriva"). */
@@ -12532,6 +12540,15 @@ class Bot {
       if(a.t0){ const end = who ? 'answer' : (a._end || 'clock'); if(who && !a.contested && !a._held && a._wired && a.plan && a.plan.who && a.plan.who.includes(who)) this._rtNote(who, Date.now() - a.t0); this._waitRow(a.reactionsOnly ? 'react' : 'block', a.plan, a.t0, end, { what, contested: !!a.contested, held: a._held ? 1 : undefined }); }   // v0.6.198: no Adaptive measurement across a hold   // v0.6.194: the wait row + Adaptive's measurement (a human's own answer to an uncontested window; a contested one measures the exchange, not the human)
       a.resolve({ what, who }); }   // v0.6.110 (R2, #12): a resolved ask never asks who blocked
   }
+  _qFloorLeft(){                       // v0.6.240 (D-137): a window only bots are asked starts its silence clock when my question has left the screen -- the bots answer after its floor (and their ring steps)
+    const a = this._ask; if(!a || !a._qAt || !this.o.paceMs || this.o.chatFloor === 0 || this._askWho(a).length) return 0;
+    return Math.max(0, a._qAt + (a._qMs | 0) + 3 * FLOOR_TIE_MS - Date.now());
+  }
+  _qStamp(a){                          // v0.6.240 (D-137): when my question reached the wire and how long it holds the floor -- now when it went at once, else when it does
+    const q = this._lastChatObj; if(!a || !q) return;
+    a._qMs = bubbleMs(q.msg);
+    if(this._sq.indexOf(q) >= 0 && this.ws) this._afterWire(() => { a._qAt = Date.now(); }); else a._qAt = Date.now();   // the hook goes in before _restartAskTimer's own wire hook: stamped first
+  }
   _armReactTimer(){                    // v0.3.10 (Johan): after 5 s of silence, ring the table's EXISTING Reaction timer — the server broadcasts who + the room's reactSecs, every client shows the countdown. The bot's own patient window (askSecs) is untouched: the stopwatch prompts, the ask decides.
     if(this._ask && this._ask.plan && this._ask.plan.noClock){ if(this._rcT){ clearTimeout(this._rcT); this._rcT = null; } return; }   // v0.6.194 (Turn-based): no stopwatch -- its ring would re-stamp a deadline the mode does not have
     if(this._rcT) clearTimeout(this._rcT);
@@ -12554,7 +12571,7 @@ class Bot {
         a.deadline = Date.now() + wait;
         a.timer = setTimeout(() => this._askTimeout(), wait);
       }
-    }, (this.o.reactClockMs != null ? this.o.reactClockMs : 7000));   // v0.6.109 (#13): was a hardcoded 5000 -- see o.reactClockMs
+    }, (this.o.reactClockMs != null ? this.o.reactClockMs : 7000) + this._qFloorLeft());   // v0.6.109 (#13): was a hardcoded 5000 -- see o.reactClockMs
   }
   /* v0.6.108: am I the bot that speaks for the table? The lowest-seated bot
      answers table-wide questions ("help") so N bots don't all reply at once.
@@ -12689,7 +12706,7 @@ class Bot {
         if(!elig.size) return resolve({ what: 'no', who: null });
         this._ask = { resolve, timer: null, pausedBy: new Set(), contested: false, target: targetSeat, undirected: true, eligible: elig, passed: new Set(), reactionsOnly, t0: Date.now() };
         this._askSeen(this._ask);   // v0.6.206: before the question is queued -- what the table can answer is what I sent before it
-        this.chat(question + tailFor(this._askPlan(this._ask)));
+        this.chat(question + tailFor(this._askPlan(this._ask))); this._qStamp(this._ask);
         this._restartAskTimer();
         return;
       }
@@ -12698,7 +12715,7 @@ class Bot {
       if(adaptive && this._humanAt(targetSeat) && !this._seatCanBlock(targetSeat, reactionsOnly && !askOpts.blockStep)){ skipRow([this.seatName(targetSeat)], [targetSeat]); return resolve({ what: 'no', who: null }); }   // v0.6.237 (the egress review, pass 2): a bounce's new target may block -- its window is skipped only when it could not even block   // v0.6.194 (Adaptive): the question the human cannot act on is skipped
       this._ask = { resolve, timer: null, pausedBy: new Set(), contested: false, target: targetSeat, reactionsOnly, t0: Date.now() };   // v0.6.106 (#3): the roster hook reads THIS
       this._askSeen(this._ask);   // v0.6.206
-      this.chat(question + tailFor(this._askPlan(this._ask)));
+      this.chat(question + tailFor(this._askPlan(this._ask))); this._qStamp(this._ask);
       this._restartAskTimer();                                 // v0.3.10: 5 s of table silence → the ROOM's Reaction timer (decide verb) is armed inside (v0.6.194: never in Turn-based); the ask still waits its full clock
     });
   }
@@ -13809,12 +13826,13 @@ class Bot {
               if(this.o.lateBounce !== 0) break;   // below, after the loop
               curAns = await this._bounceGate(curAns); if(curAns.what === 'block') break; continue;   // pass 3: lateBounce 0 pumps on after a bounce wherever it landed
             }
-            if(!spyBankTried){ spyBankTried = true;   // v0.6.211: a Spying Mission banked against this Methuselah -- 'the next time this vampire is about to successfully bleed the same Methuselah': the +2 first, then a reactions-only window (a modifier's own shape)
+            if(!spyBankTried){ spyBankTried = true; await this._floorClear(); if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue;   // v0.6.240 (D-137): the add line and its question only with a free floor (re-read after the wait). v0.6.211: a Spying Mission banked against this Methuselah -- 'the next time this vampire is about to successfully bleed the same Methuselah': the +2 first, then a reactions-only window (a modifier's own shape)
               if(this._playSpyBank(v)){ pumped++;
                 curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +2 bleed (Spying Mission) \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
                 await sleep(150);
                 if(curAns.what === 'block') break;
                 continue; } }
+            if(this._haqimLawFor(v)){ await this._floorClear(); if(this._actingVamp.archoned || this._actingVamp.pendingBounce || this._actingVamp.bounced) continue; }   // v0.6.240 (D-137): when the card may play, its add line and question with a free floor (re-read after the wait)
             if(this._playHaqimLaw(v)){ pumped++;   // v0.6.215 (V5 wave 3): Haqim's Law: Retribution -- each copy once per action, before the cards (a card in hand stays a card)
               curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +1 bleed (Haqim\u2019s Law) \u2014 now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
               await sleep(150);
@@ -13841,6 +13859,7 @@ class Bot {
           const tgtBot = !!((this.players || []).find(q => q.seat === this._actingVamp.target) || {}).bot;   // a BOT target holds its bounce for this window; a human target was already asked 'Any reaction?' at the announce and answers in its own time -- a second full ask on every bleed would cost a human table askSecs per bleed (the suite's live table showed it)
           const tgtName = this.seatName(this._actingVamp.target), ld = this._lastDecline; const humanWantsTotal = !!this.o.askHumansTotal && !tgtBot && ld && ld.who === tgtName && ld.phrase === 'No block' && Date.now() - ld.at < 60000;   /* knob askHumansTotal, OFF until the suite's human harness learns to answer the second question: it declines with 'No block' everywhere and then stays silent, so every bleed waited a full askSecs (suite abort at 'turn back after bot turn 4') */   // v0.6.144 (Johan: 'it should ask human players too -- it decides a lot and it is how humans play each other'): a human who said 'No block' declined the block ONLY and hears the total; one who said 'No reaction' / 'Pass' declined everything; one who said nothing is not there. Answer with No / No reaction (closes at once) or Yes (wait for me).
           if(this.o.lateBounce !== 0 && (tgtBot || humanWantsTotal) && !pumped && curAns.what !== 'block' && !this._actingVamp.bounced && !this._actingVamp.archoned && (this._actingVamp.n | 0) >= 1 && this._actingVamp.target){
+            await this._floorClear();   // v0.6.240 (D-137): the total's line and question with a free floor -- else the target answered the line while the question waited, and the question showed after its answer (the window rule: the await comes BEFORE the line)
             this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> adds +0 bleed (= ' + this._actingVamp.n + ').' });
             this._emit('bleed-total', { vamp: v.name, n: this._actingVamp.n, pumped: 0 });
             /* v0.6.206 (found by the release's own smoke): no beat between the line and its window. A 150 ms sleep sat here and after a

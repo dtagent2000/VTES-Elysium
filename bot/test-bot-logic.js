@@ -16527,7 +16527,10 @@ async function connectWithRetry(client, tries = 30){
        (f) _drain holds a bubble of mine until the floor is free, plus a ring step from the turn seat on a tie, and what follows it
        waits with it -- never at paceMs 0, never with chatFloor 0; (g) two bots on a 300 ms relay: the answer waits out the question;
        (h) _pace waits for a bubble of mine the floor holds; (i) the vote round: a voter waits for the bot before it in the ring (a
-       human between is skipped), the polls closing or the safety net ends the wait; (j) a new game starts with a free floor (L-95).
+       human between is skipped), the polls closing or the safety net ends the wait; (j) a new game starts with a free floor (L-95);
+       (k) my act waits for a free floor (the action's line and its question together, never after their answer); (l) a window only
+       bots are asked starts its silence clock when my question has left the screen; (m) a thinking line the floor held is dropped
+       once my answer is queued behind it.
        LAST LINE OF 186 is the closing brace below. */
     {
       console.log('\n[186] v0.6.240 -- the chat round (D-137): no prefix, no human tail to bots, one speaker at a time');
@@ -16629,6 +16632,30 @@ async function connectWithRetry(client, tries = 30){
         const v4 = mkV(P); await sleep(50); v4._dispatch({ t: 'tally', who: 'Hanna', mode: null, a: 0, b: 0 }); await sleep(100); const closed = !spoke(v4) && !v4._refHeardW;
         ok(!early && spoke(v1) && !!pv1 && pv1.name === 'Mara' && !!pv2 && pv2.name === 'Hanna' && spoke(v2) && spoke(v3) && cap >= 800 - 30 && closed,
            '186i the vote round: I vote after the bot before me in the ring has spoken (Mara), a human between us is skipped (the caller Hanna), the safety net (400 ms a seat, 2 seats) and the polls closing end the wait (got ' + JSON.stringify({ early, pv1, pv2, cap, closed }) + ')'); }
+
+      // k) my act waits for a free floor (an action's line and its question go out together, never after the answer to them)
+      { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300, chatPaceMs: 100 }); u.turnSeat = 1; const t0 = Date.now();
+        u._floorUntil = t0 + 700; u._lastActAt = t0; await u._pace(); const dt = Date.now() - t0;
+        const v = mk6('Hanna', 1, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300, chatPaceMs: 100, chatFloor: 0 }); v.turnSeat = 1; const t1 = Date.now(); v._floorUntil = t1 + 700; v._lastActAt = t1; await v._pace(); const dv = Date.now() - t1;
+        ok(dt >= 700 - 20 && dv < 600, '186k my next act waits until another seat’s bubble has left the floor (' + dt + ' ms; with chatFloor 0 only the beat: ' + dv + ' ms)'); }
+
+      // l) a window only bots are asked starts its silence clock when my question has left the screen
+      { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Johan'], [true, true, false]), { paceMs: 300 }); const t0 = Date.now();
+        const qf = (target, o) => { u._ask = Object.assign({ target, contested: false, _qAt: t0, _qMs: 4000 }, o || {}); return IF6(u, '_qFloorLeft') ? u._qFloorLeft() : null; };
+        const bot = qf(2), human = qf(3); const z = mk6('Hanna', 1, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 0 }); z._ask = { target: 2, _qAt: t0, _qMs: 4000 }; const pace0 = IF6(z, '_qFloorLeft') ? z._qFloorLeft() : null;
+        u._ask = null; z._ask = null;
+        ok(bot !== null && bot >= 4000 + 750 - 30 && bot <= 4750 && human === 0 && pace0 === 0,
+           '186l a bot-only window keeps its silence clock until my question has left the screen (+' + bot + ' ms), not when a human is asked (' + human + ') nor at paceMs 0 (' + pace0 + ') [a new method: red on the old bytes proves only that]'); }
+
+      // m) the floor held my thinking line until my answer was queued behind it: the answer goes out alone; a thinking line with nothing behind it still goes
+      { const mkT = () => { const u = mk6('Viktor', 2, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300 }); u.turnSeat = 1; u.pending = { who: 'Hanna', _thinkQ: true, amount: 1 }; return u; };
+        const a = mkT(); a._floorUntil = Date.now() + 300; a._onChat('Hanna', 'Lisa bleeds Viktor for 1. Block?'); a.say('Pass');
+        await until6(() => a.wire.length >= 1, 2000); await sleep(400); const ga = a.wire.map(txt6);
+        const b = mkT(); b._floorUntil = Date.now() + 300; b._onChat('Hanna', 'Lisa bleeds Viktor for 1. Block?');
+        await until6(() => b.wire.length >= 1, 2000); const gb = b.wire.map(txt6);
+        [a, b].forEach(u => { u.pending = null; });
+        ok(JSON.stringify(ga) === JSON.stringify(['Pass']) && JSON.stringify(gb) === JSON.stringify(['Hold on\u2026']),
+           '186m a thinking line the floor held is dropped when my answer is queued behind it, and still said when nothing is (got ' + JSON.stringify({ ga, gb }) + ')'); }
 
       // j) L-95: a new game's floor is free and no vote round is in flight
       { const u = mk6('Viktor', 2, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300 }); u._floorUntil = Date.now() + 5000; u._refHeard = new Set(['Hanna']);
