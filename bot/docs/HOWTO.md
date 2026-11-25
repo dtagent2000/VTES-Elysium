@@ -108,6 +108,11 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   rig as it is; an in-page bot's Grand Ball pair and Jack, each chip and hover text, a screenshot. A diagnostic.
 - **The hotseat in a browser** — `node tools/hotseat-in-browser.js [--bot F] [--sweeps N]`: the client's hotseat with three bots
   in Chromium (NODE_PATH: playwright); counts stale-dropped answers.
+- **The chat at the client's pace** (D-137) — `node tools/chat-record.js --out REC.jsonl [--bot F] [--seed 7] [--knob k=v]`: four
+  bots on the hotseat table at paceMs 3100 / askSecs 20, real clock, 10–15 min (detach and poll); every bubble, log, fx, tally and
+  `decide` row with its time. `python3 tools/ana-chat.py REC.jsonl [AFTER.jsonl] [--lines] [--gate]`: the floor, the screen, the
+  three-bubble limit, prefixes, tails, silences, seconds a turn, the chat lines before | after; `--gate` exits 1 on a bubble over
+  the floor, a prefix or a tail. A chat change: the same seed on both bytes; the 240 too (a bubble is the bots' transport, L-99).
 - **A human's Grand Ball** — `bot/tools/playtest-ball/scenario.json` (its `about` has the steps) and a Toreador test deck, at main's rig.
 - **A debug bot at a live table** — `node elysium-bot.js --server ws://HOST:8123 --room R --pass P --debug [--no-debug-weights]`;
   refused at a Tournament table; its hand goes to the whole table and the other bots look away.

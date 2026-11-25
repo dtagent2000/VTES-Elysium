@@ -19,7 +19,7 @@ decide      decide(q, ctx) → _decide(q, ctx): one row per real decision (q = a
             bleed-modifier, bleed-target, combat-strike, combat-end, act-again, income-drain, income-direction, master-play,
             block-bar, bank-in, spy-cancel, cancel-block, lock-*, give-lock, hunt-or-bleed, wave, react-delay, ashur-retrieve)
 speech      note() (log tier, events) · chat() (questions and instructions to a human) · say() (the quick phrases) → the send
-            queue (_drain: the 200 ms cascade, the chat beat, the hold) → wire
+            queue (_drain: the 200 ms cascade, the chat beat, the floor, the hold) → wire
 board       push() → buildPub at drain time (the cards; a card's named counters, else the bot's own tokens, _memoMap, D-113) → wire
 pacing      _pace(kind) / _afterBeat ; the tempo (_waitPlan) ; the hold (_holdFreeze / _holdThaw) ; status() / step() for the
             Bot button
@@ -99,8 +99,9 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
   top-level collision. The sim and the hotseat gate drive this bridge headless. A known asymmetry, left in deliberately (70g):
   the no-server net keys on `joined.srv`, not on what the bridge relays, so with *Pool to predator* OFF a bot predator marks the
   human out and takes the 6 pool by itself offline, while online it does neither; revisit if main or a tester objects.
-- **Human tables**: the tempo (Standard / Adaptive / Turn-based), the hold, the chat beat, one spokesbot, the debug hand.
-  Nothing here reaches the arena or the sim (paceMs 0 zeroes every beat; bots never operate the hold).
+- **Human tables**: the tempo (Standard / Adaptive / Turn-based), the hold, the chat beat, the floor (D-137: a bubble waits until
+  another seat's has left the screen; `_floorOn` from a pace of 1.5 s), one spokesbot, the debug hand. The arena never sees them
+  (paceMs 0 zeroes every beat; bots never operate the hold); the sim's client profile (paceMs 3100) has the beats and the floor.
 
 ## Running a game in three commands
 ```

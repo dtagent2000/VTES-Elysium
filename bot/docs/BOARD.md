@@ -1,16 +1,14 @@
-# BOARD — the open asks (24 Nov 2026, v0.6.239). A line is deleted when done; found work is added as a line (a card
+# BOARD — the open asks (25 Nov 2026, v0.6.240). A line is deleted when done; found work is added as a line (a card
 problem the sweep finds: an entry in `SWEEP-REGISTER.md`, D-135).
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
-- **The chat round** (D-136, D-137): the recorder and a chat analysis tool in the repo (one seed before / after at the client's
-  pace); the bubbles stay and keep their content; one speaker at a time (a seat's bubble waits until another seat's has left the
-  screen, a short phrase holds the floor 1.5 s; ring order on a tie, the vote round driven by the previous voter); a bot's
-  question to a bot without the human's instruction tail; no `(bot):` prefix; the silent bot-vs-bot verdict wait (14 s in the
-  recording); every chat line ruled with Johan. *Done when* the recording shows no bubble over another seat's and each line has
-  his ruling. Docs: D-64, D-137.
+- **The chat round's rulings** (D-137, O-51): v0.6.240 built the floor, dropped the `(bot):` prefix and the human's tail to a
+  bot, and brought the recorder (`tools/chat-record.js`, `tools/ana-chat.py`); Johan rules every line and the questions R1–R9
+  in the ruling doc (O-51), the silent bot-vs-bot verdict wait among them (O-36). *Done when* each line has his ruling and
+  what he asks for is built, with a recording before and after. Docs: D-64, D-137, O-36, O-51.
 - **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). The bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the vest
   prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
